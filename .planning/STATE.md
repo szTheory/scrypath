@@ -24,6 +24,11 @@ See: .planning/PROJECT.md (updated 2026-04-15)
 - Sync modes for v1 are inline, Oban, and manual
 - Postgres-native search is outside the v1 product boundary
 
+## Reference Material
+
+- The local `prompts/` directory is part of project memory and should be consulted during discuss, plan, and execute flows when relevant.
+- Treat the prompt docs as authoritative local guidance for search-library tradeoffs, Elixir and Ecto best practices, Phoenix ergonomics, and OSS CI/CD conventions.
+
 ## Next Command
 
 - `$gsd-discuss-phase 1`

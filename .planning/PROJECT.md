@@ -34,6 +34,8 @@ Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-fi
 
 This repository also includes local reference docs under `prompts/` covering search-library use cases, Elixir and Ecto best practices, OSS library ergonomics, and CI/CD conventions. Those documents informed the initial framing and should continue to serve as project context during planning.
 
+When running future GSD discuss, plan, and execute flows, consult the relevant files under `prompts/` as authoritative local reference material whenever phase decisions touch API design, Phoenix and Ecto ergonomics, OSS release practices, or project positioning.
+
 ## Constraints
 
 - **Tech stack**: Elixir OSS library with Ecto-first APIs and Phoenix-friendly integrations - the ecosystem fit is central to adoption.

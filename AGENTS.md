@@ -7,6 +7,8 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
+**Local reference material:** Consult relevant files under `prompts/` during discuss, planning, and execution whenever decisions touch search-library architecture, Elixir or Ecto or Phoenix best practices, OSS release engineering, or brand and positioning tradeoffs.
+
 ### Constraints
 
 - **Tech stack**: Elixir OSS library with Ecto-first APIs and Phoenix-friendly integrations - the ecosystem fit is central to adoption.
