@@ -110,7 +110,8 @@ defmodule Scrypath.SyncTest do
       %SearchablePost{id: 2, title: "Two", body: "Second"}
     ]
 
-    assert {:ok, %{document_ids: [1, 2], sync_mode: :manual}} =
+    assert {:ok,
+            %{document_ids: [1, 2], sync_mode: :manual, mode: :manual, status: :accepted}} =
              Scrypath.sync_records(SearchablePost, records,
                backend: RecordingBackend,
                sync_mode: :manual
@@ -127,13 +128,14 @@ defmodule Scrypath.SyncTest do
   test "delete APIs share the same delete orchestration" do
     record = %SearchablePost{id: 10, title: "Ten", body: "Body"}
 
-    assert {:ok, %{document_ids: [10], sync_mode: :inline}} =
+    assert {:ok, %{document_ids: [10], sync_mode: :inline, mode: :inline, status: :completed}} =
              Scrypath.delete_record(SearchablePost, record, backend: RecordingBackend)
 
     assert_received {:delete_documents, SearchablePost, [10], inline_config}
     assert inline_config[:sync_mode] == :inline
 
-    assert {:ok, %{document_ids: ["post:11"], sync_mode: :manual}} =
+    assert {:ok,
+            %{document_ids: ["post:11"], sync_mode: :manual, mode: :manual, status: :accepted}} =
              Scrypath.delete_document(SearchablePost, "post:11",
                backend: RecordingBackend,
                sync_mode: :manual
@@ -142,7 +144,8 @@ defmodule Scrypath.SyncTest do
     assert_received {:delete_documents, SearchablePost, ["post:11"], manual_config}
     assert manual_config[:sync_mode] == :manual
 
-    assert {:ok, %{document_ids: ["post:12", "post:13"], sync_mode: :inline}} =
+    assert {:ok,
+            %{document_ids: ["post:12", "post:13"], sync_mode: :inline, mode: :inline, status: :completed}} =
              Scrypath.delete_documents(SearchablePost, ["post:12", "post:13"],
                backend: RecordingBackend
              )
@@ -175,7 +178,8 @@ defmodule Scrypath.SyncTest do
 
     record = %SearchablePost{id: 77, title: "Inline", body: "Success"}
 
-    assert {:ok, %{task: %{uid: 301, status: :succeeded, index_uid: "tenant_searchable_post"}}} =
+    assert {:ok,
+            %{mode: :inline, status: :completed, task: %{uid: 301, status: :succeeded, index_uid: "tenant_searchable_post"}}} =
              Scrypath.sync_record(SearchablePost, record,
                backend: Scrypath.Meilisearch,
                index_prefix: "tenant",
@@ -233,12 +237,47 @@ defmodule Scrypath.SyncTest do
 
     assert raw["error"]["code"] == "index_not_found"
 
-    assert {:ok, %{task: %{uid: 301, status: "enqueued"}}} =
+    assert {:ok, %{mode: :manual, status: :accepted, task: %{uid: 301, status: "enqueued"}}} =
              Scrypath.sync_record(SearchablePost, record,
                backend: Scrypath.Meilisearch,
                meilisearch_url: "http://localhost:7700",
                req_options: [plug: {Req.Test, req_stub(agent)}],
                sync_mode: :manual
+             )
+  end
+
+  test "manual and inline share verbs while producing different completion states", %{
+    task_responses: agent
+  } do
+    Agent.update(agent, fn _ ->
+      [
+        {:ok,
+         %{
+           "uid" => 301,
+           "status" => "succeeded",
+           "indexUid" => "scrypath_searchable_post",
+           "type" => "documentAdditionOrUpdate"
+         }}
+      ]
+    end)
+
+    record = %SearchablePost{id: 81, title: "Shared", body: "Verb"}
+
+    assert {:ok, %{mode: :manual, status: :accepted, task: %{status: "enqueued"}}} =
+             Scrypath.sync_record(SearchablePost, record,
+               backend: Scrypath.Meilisearch,
+               meilisearch_url: "http://localhost:7700",
+               req_options: [plug: {Req.Test, req_stub(agent)}],
+               sync_mode: :manual
+             )
+
+    assert {:ok, %{mode: :inline, status: :completed, task: %{status: :succeeded}}} =
+             Scrypath.sync_record(SearchablePost, record,
+               backend: Scrypath.Meilisearch,
+               meilisearch_url: "http://localhost:7700",
+               req_options: [plug: {Req.Test, req_stub(agent)}],
+               inline_poll_interval: 1,
+               inline_timeout: 50
              )
   end
 
