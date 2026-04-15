@@ -1,6 +1,12 @@
 defmodule Scrypath do
   @moduledoc false
 
+  defmacro __using__(opts) do
+    quote do
+      use Scrypath.Schema, unquote(opts)
+    end
+  end
+
   @spec schema_config(module()) :: map()
   def schema_config(schema_module) do
     schema_module.__scrypath__(:config)
