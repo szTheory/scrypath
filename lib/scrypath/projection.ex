@@ -1,5 +1,15 @@
 defmodule Scrypath.Projection do
-  @moduledoc false
+  @moduledoc """
+  Document projection for schemas declared with `use Scrypath`.
+
+  `Scrypath.Projection.document/2` projects the declared `fields: [...]` by default.
+  When a schema exports `search_document/1`, that hook takes precedence and the
+  document source becomes `:custom`.
+
+  Association-derived data requires explicit preload work before projection. Scrypath
+  does not reach through unloaded associations or infer extra queries on behalf of the
+  caller.
+  """
 
   alias Scrypath.Document
 

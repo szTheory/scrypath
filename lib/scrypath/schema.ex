@@ -1,5 +1,22 @@
 defmodule Scrypath.Schema do
-  @moduledoc false
+  @moduledoc """
+  Metadata-only schema declaration support for `use Scrypath`.
+
+  `Scrypath.Schema` validates declaration options, stores normalized metadata on the
+  schema module, and exposes that metadata through `__scrypath__/1`.
+
+  Phase 1 supports these `__scrypath__/1` keys:
+
+  - `:config`
+  - `:fields`
+  - `:filterable`
+  - `:sortable`
+  - `:document_id`
+  - `:document_source`
+  - `:backend`
+
+  The macro does not generate runtime APIs such as `search/2` or `reindex/1`.
+  """
 
   alias Scrypath.Options
 
