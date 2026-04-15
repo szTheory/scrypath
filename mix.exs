@@ -23,7 +23,9 @@ defmodule Scrypath.MixProject do
   defp deps do
     [
       {:ecto, "~> 3.13"},
-      {:nimble_options, "~> 1.1"}
+      {:nimble_options, "~> 1.1"},
+      {:req, "~> 0.5"},
+      {:jason, "~> 1.4"}
     ]
   end
 

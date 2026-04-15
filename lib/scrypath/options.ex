@@ -54,6 +54,26 @@ defmodule Scrypath.Options do
       type: {:in, [:inline, :manual, :oban]},
       default: :inline,
       doc: "Synchronization mode to use for write operations."
+    ],
+    meilisearch_url: [
+      type: {:custom, __MODULE__, :validate_optional_string, []},
+      default: nil,
+      doc: "Base URL for the configured Meilisearch server."
+    ],
+    meilisearch_api_key: [
+      type: {:custom, __MODULE__, :validate_optional_string, []},
+      default: nil,
+      doc: "Optional API key for Meilisearch requests."
+    ],
+    inline_poll_interval: [
+      type: {:custom, __MODULE__, :validate_positive_integer, []},
+      default: 100,
+      doc: "Polling interval in milliseconds while waiting for inline task completion."
+    ],
+    inline_timeout: [
+      type: {:custom, __MODULE__, :validate_positive_integer, []},
+      default: 5_000,
+      doc: "Inline task wait timeout in milliseconds."
     ]
   ]
 
@@ -79,6 +99,9 @@ defmodule Scrypath.Options do
 
   def validate_optional_module(value) when is_atom(value) or is_nil(value), do: {:ok, value}
   def validate_optional_module(_value), do: {:error, "expected a module or nil"}
+
+  def validate_positive_integer(value) when is_integer(value) and value > 0, do: {:ok, value}
+  def validate_positive_integer(_value), do: {:error, "expected a positive integer"}
 
   defp validate!(opts, schema) do
     case NimbleOptions.validate(opts, schema) do
