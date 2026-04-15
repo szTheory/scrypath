@@ -53,49 +53,39 @@ defmodule Scrypath.SyncTest do
     end
   end
 
-  defmodule SequencedMeilisearchClient do
-    def upsert_documents(index_name, documents, config) do
-      send(self(), {:meili_upsert, index_name, documents, config})
-
-      {:ok,
-       %{
-         "taskUid" => 301,
-         "indexUid" => index_name,
-         "status" => "enqueued",
-         "type" => "documentAdditionOrUpdate"
-       }}
-    end
-
-    def delete_documents(index_name, document_ids, config) do
-      send(self(), {:meili_delete, index_name, document_ids, config})
-
-      {:ok,
-       %{
-         "taskUid" => 302,
-         "indexUid" => index_name,
-         "status" => "enqueued",
-         "type" => "documentDeletion"
-       }}
-    end
-
-    def task(task_uid, config) do
-      agent = Keyword.fetch!(config, :task_responses)
-      send(self(), {:meili_task, task_uid, config})
-
-      Agent.get_and_update(agent, fn
-        [next | rest] -> {next, rest}
-        [] -> {{:ok, %{"uid" => task_uid, "status" => "succeeded"}}, []}
-      end)
-    end
-
-    def search(_index_name, _query, _config) do
-      {:ok, %{"hits" => []}}
-    end
-  end
-
   setup do
     {:ok, agent} = Agent.start_link(fn -> [] end)
     %{task_responses: agent}
+  end
+
+  defp req_stub(agent) do
+    stub = Module.concat(__MODULE__, "ReqStub#{System.unique_integer([:positive])}")
+
+    Req.Test.stub(stub, fn conn ->
+      send(self(), {:meili_request, conn.method, conn.request_path, conn.body_params})
+
+      case {conn.method, conn.request_path} do
+        {"POST", path} ->
+          [_, index_name, _] = String.split(path, "/", trim: true)
+          Req.Test.json(conn, %{
+            "taskUid" => 301,
+            "indexUid" => index_name,
+            "status" => "enqueued",
+            "type" => "documentAdditionOrUpdate"
+          })
+
+        {"GET", "/tasks/301"} ->
+          case Agent.get_and_update(agent, fn
+                 [next | rest] -> {next, rest}
+                 [] -> {{:ok, %{"uid" => 301, "status" => "succeeded"}}, []}
+               end) do
+            {:ok, body} -> Req.Test.json(conn, body)
+            {:error, {status, body}} -> conn |> Plug.Conn.put_status(status) |> Req.Test.json(body)
+          end
+      end
+    end)
+
+    stub
   end
 
   test "Scrypath.sync_record/3 projects one record and delegates through shared sync orchestration" do
@@ -188,15 +178,15 @@ defmodule Scrypath.SyncTest do
     assert {:ok, %{task: %{uid: 301, status: :succeeded, index_uid: "tenant_searchable_post"}}} =
              Scrypath.sync_record(SearchablePost, record,
                backend: Scrypath.Meilisearch,
-               meilisearch_client: SequencedMeilisearchClient,
-               task_responses: agent,
                index_prefix: "tenant",
+               meilisearch_url: "http://localhost:7700",
+               req_options: [plug: {Req.Test, req_stub(agent)}],
                inline_poll_interval: 1,
                inline_timeout: 50
              )
 
-    assert_received {:meili_upsert, "tenant_searchable_post", _, _}
-    assert_received {:meili_task, 301, _}
+    assert_received {:meili_request, "POST", "/indexes/tenant_searchable_post/documents", _}
+    assert_received {:meili_request, "GET", "/tasks/301", %{}}
   end
 
   test "inline timeout returns a distinct error tuple", %{task_responses: agent} do
@@ -209,8 +199,8 @@ defmodule Scrypath.SyncTest do
     assert {:error, {:timeout, %{uid: 301, status: :processing}}} =
              Scrypath.sync_record(SearchablePost, record,
                backend: Scrypath.Meilisearch,
-               meilisearch_client: SequencedMeilisearchClient,
-               task_responses: agent,
+               meilisearch_url: "http://localhost:7700",
+               req_options: [plug: {Req.Test, req_stub(agent)}],
                inline_poll_interval: 5,
                inline_timeout: 10
              )
@@ -235,19 +225,19 @@ defmodule Scrypath.SyncTest do
     assert {:error, {:task_failed, %{uid: 301, status: :failed, raw: raw}}} =
              Scrypath.sync_record(SearchablePost, record,
                backend: Scrypath.Meilisearch,
-               meilisearch_client: SequencedMeilisearchClient,
-               task_responses: agent,
+               meilisearch_url: "http://localhost:7700",
+               req_options: [plug: {Req.Test, req_stub(agent)}],
                inline_poll_interval: 1,
                inline_timeout: 50
              )
 
     assert raw["error"]["code"] == "index_not_found"
 
-    assert {:ok, %{task: %{uid: 301, status: :enqueued}}} =
+    assert {:ok, %{task: %{uid: 301, status: "enqueued"}}} =
              Scrypath.sync_record(SearchablePost, record,
                backend: Scrypath.Meilisearch,
-               meilisearch_client: SequencedMeilisearchClient,
-               task_responses: agent,
+               meilisearch_url: "http://localhost:7700",
+               req_options: [plug: {Req.Test, req_stub(agent)}],
                sync_mode: :manual
              )
   end
@@ -264,8 +254,8 @@ defmodule Scrypath.SyncTest do
     assert {:error, {:cancelled, %{uid: 301, status: :cancelled, raw: raw}}} =
              Scrypath.sync_record(SearchablePost, record,
                backend: Scrypath.Meilisearch,
-               meilisearch_client: SequencedMeilisearchClient,
-               task_responses: agent,
+               meilisearch_url: "http://localhost:7700",
+               req_options: [plug: {Req.Test, req_stub(agent)}],
                inline_poll_interval: 1,
                inline_timeout: 50
              )

@@ -65,6 +65,11 @@ defmodule Scrypath.Options do
       default: nil,
       doc: "Optional API key for Meilisearch requests."
     ],
+    req_options: [
+      type: {:custom, __MODULE__, :validate_keyword_list, []},
+      default: [],
+      doc: "Optional Req overrides passed through to Meilisearch transport calls."
+    ],
     inline_poll_interval: [
       type: {:custom, __MODULE__, :validate_positive_integer, []},
       default: 100,
@@ -99,6 +104,12 @@ defmodule Scrypath.Options do
 
   def validate_optional_module(value) when is_atom(value) or is_nil(value), do: {:ok, value}
   def validate_optional_module(_value), do: {:error, "expected a module or nil"}
+
+  def validate_keyword_list(value) when is_list(value) do
+    if Keyword.keyword?(value), do: {:ok, value}, else: {:error, "expected a keyword list"}
+  end
+
+  def validate_keyword_list(_value), do: {:error, "expected a keyword list"}
 
   def validate_positive_integer(value) when is_integer(value) and value > 0, do: {:ok, value}
   def validate_positive_integer(_value), do: {:error, "expected a positive integer"}
