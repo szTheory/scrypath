@@ -7,9 +7,9 @@
 
 ### Schema Declaration
 
-- [ ] **SCMA-01**: Developer can declare a searchable Ecto schema with a small, explicit `use Scrypath` configuration.
-- [ ] **SCMA-02**: Developer can define how a source record is projected into a search document.
-- [ ] **SCMA-03**: Developer can inspect declared search metadata for a schema at runtime.
+- [x] **SCMA-01**: Developer can declare a searchable Ecto schema with a small, explicit `use Scrypath` configuration.
+- [x] **SCMA-02**: Developer can define how a source record is projected into a search document.
+- [x] **SCMA-03**: Developer can inspect declared search metadata for a schema at runtime.
 
 ### Sync Lifecycle
 
@@ -45,7 +45,7 @@
 ### Backend Foundation
 
 - [ ] **BACK-01**: Developer can use Scrypath with Meilisearch as the supported public backend in v1.
-- [ ] **BACK-02**: The internal architecture preserves a path to future backend support without forcing a premature public abstraction.
+- [x] **BACK-02**: The internal architecture preserves a path to future backend support without forcing a premature public abstraction.
 
 ## v2 Requirements
 
@@ -77,10 +77,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCMA-01 | Phase 1 | Pending |
-| SCMA-02 | Phase 1 | Pending |
-| SCMA-03 | Phase 1 | Pending |
-| BACK-02 | Phase 1 | Pending |
+| SCMA-01 | Phase 1 | Complete |
+| SCMA-02 | Phase 1 | Complete |
+| SCMA-03 | Phase 1 | Complete |
+| BACK-02 | Phase 1 | Complete |
 | BACK-01 | Phase 2 | Pending |
 | SYNC-01 | Phase 2 | Pending |
 | SYNC-02 | Phase 2 | Pending |
@@ -109,4 +109,4 @@
 
 ---
 *Requirements defined: 2026-04-15*
-*Last updated: 2026-04-15 after initialization*
+*Last updated: 2026-04-15 after phase 1 execution*
