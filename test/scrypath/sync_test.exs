@@ -3,6 +3,24 @@ defmodule Scrypath.SyncTest do
 
   alias Scrypath.Document
 
+  defmodule HookedIdentityPost do
+    use Ecto.Schema
+
+    use Scrypath, fields: [:title], document_id: :external_id
+
+    embedded_schema do
+      field(:external_id, :string)
+      field(:legacy_id, :string)
+      field(:title, :string)
+    end
+
+    def search_document(_post) do
+      raise "delete identity should not require search_document/1"
+    end
+
+    def search_document_id(%__MODULE__{legacy_id: legacy_id}) when is_binary(legacy_id), do: legacy_id
+  end
+
   defmodule RecordingBackend do
     @behaviour Scrypath.Backend
 
@@ -95,5 +113,14 @@ defmodule Scrypath.SyncTest do
              )
 
     assert_received {:delete_documents, SearchablePost, ["post:12", "post:13"], _}
+  end
+
+  test "delete_record/3 resolves ids without calling search_document/1" do
+    record = %HookedIdentityPost{external_id: "db-42", legacy_id: "legacy-42", title: "Ignored"}
+
+    assert {:ok, %{document_ids: ["legacy-42"], sync_mode: :inline}} =
+             Scrypath.delete_record(HookedIdentityPost, record, backend: RecordingBackend)
+
+    assert_received {:delete_documents, HookedIdentityPost, ["legacy-42"], _}
   end
 end
