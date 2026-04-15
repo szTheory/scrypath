@@ -45,7 +45,7 @@
 
 Plans:
 - [x] 02-01-PLAN.md - Common sync facade and delete identity contract
-- [ ] 02-02-PLAN.md - Meilisearch backend, client, and runtime config
+- [x] 02-02-PLAN.md - Meilisearch backend, client, and runtime config
 - [ ] 02-03-PLAN.md - Inline task waiting and failure semantics
 - [ ] 02-04-PLAN.md - Manual batch workflows and Phase 2 documentation
 
