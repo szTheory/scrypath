@@ -118,12 +118,12 @@ defmodule Scrypath.MeilisearchTest do
 
     assert_received {:request, "POST", "/indexes/tenant_searchable_post/documents", headers, body}
     assert {"x-meili-api-key", "secret-key"} in headers
-    assert body == [%{"id" => 5, "title" => "Hello"}]
+    assert body == %{"_json" => [%{"id" => 5, "title" => "Hello"}]}
 
     assert {:ok, %{"taskUid" => 22, "status" => "enqueued"}} =
              Scrypath.Meilisearch.Client.delete_documents("tenant_searchable_post", ["post:5"], config)
 
-    assert_received {:request, "POST", "/indexes/tenant_searchable_post/documents/delete-batch", _, ["post:5"]}
+    assert_received {:request, "POST", "/indexes/tenant_searchable_post/documents/delete-batch", _, %{"_json" => ["post:5"]}}
 
     assert {:ok, %{"uid" => 22, "status" => "succeeded"}} =
              Scrypath.Meilisearch.Client.task(22, config)

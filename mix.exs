@@ -25,7 +25,8 @@ defmodule Scrypath.MixProject do
       {:ecto, "~> 3.13"},
       {:nimble_options, "~> 1.1"},
       {:req, "~> 0.5"},
-      {:jason, "~> 1.4"}
+      {:jason, "~> 1.4"},
+      {:plug, "~> 1.18", only: :test}
     ]
   end
 
