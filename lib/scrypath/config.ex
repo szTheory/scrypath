@@ -14,4 +14,24 @@ defmodule Scrypath.Config do
   def fetch_backend!(config) do
     Keyword.fetch!(config, :backend)
   end
+
+  @spec fetch_meilisearch_url!(keyword()) :: String.t()
+  def fetch_meilisearch_url!(config) do
+    Keyword.fetch!(config, :meilisearch_url)
+  end
+
+  @spec meilisearch_api_key(keyword()) :: String.t() | nil
+  def meilisearch_api_key(config) do
+    Keyword.get(config, :meilisearch_api_key)
+  end
+
+  @spec inline_poll_interval(keyword()) :: pos_integer()
+  def inline_poll_interval(config) do
+    Keyword.fetch!(config, :inline_poll_interval)
+  end
+
+  @spec inline_timeout(keyword()) :: pos_integer()
+  def inline_timeout(config) do
+    Keyword.fetch!(config, :inline_timeout)
+  end
 end
