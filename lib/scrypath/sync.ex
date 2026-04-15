@@ -43,6 +43,7 @@ defmodule Scrypath.Sync do
 
     backend.upsert_documents(schema_module, documents, config)
     |> maybe_wait_for_task(config)
+    |> decorate_result(config)
   end
 
   defp dispatch_delete(schema_module, document_ids, config) do
@@ -50,6 +51,7 @@ defmodule Scrypath.Sync do
 
     backend.delete_documents(schema_module, document_ids, config)
     |> maybe_wait_for_task(config)
+    |> decorate_result(config)
   end
 
   defp maybe_wait_for_task({:ok, %{task: task} = result}, config) when is_map(task) do
@@ -69,4 +71,21 @@ defmodule Scrypath.Sync do
   end
 
   defp maybe_wait_for_task(result, _config), do: result
+
+  defp decorate_result({:ok, result}, config) when is_map(result) do
+    {:ok,
+     result
+     |> Map.put(:mode, Keyword.fetch!(config, :sync_mode))
+     |> Map.put(:status, result_status(config))}
+  end
+
+  defp decorate_result(result, _config), do: result
+
+  defp result_status(config) do
+    case Keyword.fetch!(config, :sync_mode) do
+      :inline -> :completed
+      :manual -> :accepted
+      :oban -> :accepted
+    end
+  end
 end
