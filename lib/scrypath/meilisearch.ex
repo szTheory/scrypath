@@ -1,5 +1,15 @@
 defmodule Scrypath.Meilisearch do
-  @moduledoc false
+  @moduledoc """
+  Meilisearch-specific runtime entrypoints for Scrypath.
+
+  `Scrypath.*` remains the common path for syncing records and deleting documents.
+  This namespace is the explicit escape hatch for Meilisearch-native behavior that
+  should stay visible instead of being tunneled through generic options.
+
+  In Phase 2, that means the common sync verbs may be configured with
+  `backend: Scrypath.Meilisearch`, while task-native details remain attached to
+  the returned result.
+  """
 
   @behaviour Scrypath.Backend
 

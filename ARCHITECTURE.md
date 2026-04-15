@@ -2,13 +2,18 @@
 
 ## Public Surface
 
-Phase 1 exposes three core modules:
+Phase 2 keeps one common runtime surface and one explicit backend-specific escape hatch:
 
-- `Scrypath` for runtime reflection helpers
+- `Scrypath` for runtime reflection helpers plus common sync verbs
 - `Scrypath.Schema` for the metadata declaration contract
 - `Scrypath.Projection` for document projection rules
+- `Scrypath.Meilisearch` for backend-native operations that do not belong on the common path
 
 Schemas opt in through `use Scrypath`, then runtime code reads normalized metadata through `Scrypath.*` functions instead of generated per-schema APIs.
+
+The common path covers document projection, canonical delete identity, index resolution, and explicit sync verbs such as `Scrypath.sync_record/3` and `Scrypath.delete_document/3`.
+
+`Scrypath.Meilisearch.*` is the explicit escape hatch for Meilisearch-specific behavior such as task-native results and later index-level operations. That keeps backend-native power visible without forcing Meilisearch concepts into every common call.
 
 ## Projection Flow
 
@@ -40,6 +45,14 @@ Backend-specific power remains a later concern for explicit namespaces such as `
 `Scrypath.Config.resolve!/1` treats explicit runtime options as canonical input and only falls back to `Application.get_env(:scrypath, :defaults, [])` as convenience defaults.
 
 That keeps the contract legible for later inline, manual, and Oban-backed sync paths while avoiding hidden global behavior in the core library.
+
+## Sync Guarantees
+
+Sync is explicit orchestration code that should run after successful repo persistence.
+
+`sync_mode: :inline` waits for terminal backend success before returning `{:ok, result}`, but it does not make database and search writes atomic.
+
+`sync_mode: :manual` uses the same verbs and result shape, while returning accepted task metadata immediately for operator-controlled workflows such as imports and migrations.
 
 ## Deferred Work
 
