@@ -2,6 +2,7 @@ defmodule Scrypath.Sync do
   @moduledoc false
 
   alias Scrypath.Config
+  alias Scrypath.Identity
   alias Scrypath.Projection
 
   @spec sync_record(module(), struct() | map(), keyword()) :: {:ok, term()} | {:error, term()}
@@ -20,7 +21,7 @@ defmodule Scrypath.Sync do
   @spec delete_record(module(), struct() | map(), keyword()) :: {:ok, term()} | {:error, term()}
   def delete_record(schema_module, record, opts \\ []) do
     schema_module
-    |> resolve_record_document_id(record)
+    |> Identity.document_id(record)
     |> List.wrap()
     |> then(&delete_documents(schema_module, &1, opts))
   end
@@ -53,21 +54,6 @@ defmodule Scrypath.Sync do
       :inline -> backend.delete_documents(schema_module, document_ids, config)
       :manual -> backend.delete_documents(schema_module, document_ids, config)
       :oban -> backend.delete_documents(schema_module, document_ids, config)
-    end
-  end
-
-  defp resolve_record_document_id(schema_module, source_record) when is_map(source_record) do
-    document_id_field = schema_module.__scrypath__(:document_id)
-
-    cond do
-      Map.has_key?(source_record, document_id_field) ->
-        Map.fetch!(source_record, document_id_field)
-
-      Map.has_key?(source_record, Atom.to_string(document_id_field)) ->
-        Map.fetch!(source_record, Atom.to_string(document_id_field))
-
-      true ->
-        raise ArgumentError, "missing delete identity #{inspect(document_id_field)} in source record"
     end
   end
 end
