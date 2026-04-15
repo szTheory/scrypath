@@ -53,6 +53,51 @@ defmodule Scrypath.SyncTest do
     end
   end
 
+  defmodule SequencedMeilisearchClient do
+    def upsert_documents(index_name, documents, config) do
+      send(self(), {:meili_upsert, index_name, documents, config})
+
+      {:ok,
+       %{
+         "taskUid" => 301,
+         "indexUid" => index_name,
+         "status" => "enqueued",
+         "type" => "documentAdditionOrUpdate"
+       }}
+    end
+
+    def delete_documents(index_name, document_ids, config) do
+      send(self(), {:meili_delete, index_name, document_ids, config})
+
+      {:ok,
+       %{
+         "taskUid" => 302,
+         "indexUid" => index_name,
+         "status" => "enqueued",
+         "type" => "documentDeletion"
+       }}
+    end
+
+    def task(task_uid, config) do
+      agent = Keyword.fetch!(config, :task_responses)
+      send(self(), {:meili_task, task_uid, config})
+
+      Agent.get_and_update(agent, fn
+        [next | rest] -> {next, rest}
+        [] -> {{:ok, %{"uid" => task_uid, "status" => "succeeded"}}, []}
+      end)
+    end
+
+    def search(_index_name, _query, _config) do
+      {:ok, %{"hits" => []}}
+    end
+  end
+
+  setup do
+    {:ok, agent} = Agent.start_link(fn -> [] end)
+    %{task_responses: agent}
+  end
+
   test "Scrypath.sync_record/3 projects one record and delegates through shared sync orchestration" do
     record = %SearchablePost{id: 123, title: "Hello", body: "World"}
 
@@ -122,5 +167,109 @@ defmodule Scrypath.SyncTest do
              Scrypath.delete_record(HookedIdentityPost, record, backend: RecordingBackend)
 
     assert_received {:delete_documents, HookedIdentityPost, ["legacy-42"], _}
+  end
+
+  test "inline sync waits for terminal backend task success", %{task_responses: agent} do
+    Agent.update(agent, fn _ ->
+      [
+        {:ok, %{"uid" => 301, "status" => "processing"}},
+        {:ok,
+         %{
+           "uid" => 301,
+           "status" => "succeeded",
+           "indexUid" => "tenant_searchable_post",
+           "type" => "documentAdditionOrUpdate"
+         }}
+      ]
+    end)
+
+    record = %SearchablePost{id: 77, title: "Inline", body: "Success"}
+
+    assert {:ok, %{task: %{uid: 301, status: :succeeded, index_uid: "tenant_searchable_post"}}} =
+             Scrypath.sync_record(SearchablePost, record,
+               backend: Scrypath.Meilisearch,
+               meilisearch_client: SequencedMeilisearchClient,
+               task_responses: agent,
+               index_prefix: "tenant",
+               inline_poll_interval: 1,
+               inline_timeout: 50
+             )
+
+    assert_received {:meili_upsert, "tenant_searchable_post", _, _}
+    assert_received {:meili_task, 301, _}
+  end
+
+  test "inline timeout returns a distinct error tuple", %{task_responses: agent} do
+    Agent.update(agent, fn _ ->
+      List.duplicate({:ok, %{"uid" => 301, "status" => "processing"}}, 5)
+    end)
+
+    record = %SearchablePost{id: 78, title: "Inline", body: "Timeout"}
+
+    assert {:error, {:timeout, %{uid: 301, status: :processing}}} =
+             Scrypath.sync_record(SearchablePost, record,
+               backend: Scrypath.Meilisearch,
+               meilisearch_client: SequencedMeilisearchClient,
+               task_responses: agent,
+               inline_poll_interval: 5,
+               inline_timeout: 10
+             )
+  end
+
+  test "inline backend failure stays distinct while manual mode remains non-waiting", %{
+    task_responses: agent
+  } do
+    Agent.update(agent, fn _ ->
+      [
+        {:ok,
+         %{
+           "uid" => 301,
+           "status" => "failed",
+           "error" => %{"code" => "index_not_found"}
+         }}
+      ]
+    end)
+
+    record = %SearchablePost{id: 79, title: "Inline", body: "Failure"}
+
+    assert {:error, {:task_failed, %{uid: 301, status: :failed, raw: raw}}} =
+             Scrypath.sync_record(SearchablePost, record,
+               backend: Scrypath.Meilisearch,
+               meilisearch_client: SequencedMeilisearchClient,
+               task_responses: agent,
+               inline_poll_interval: 1,
+               inline_timeout: 50
+             )
+
+    assert raw["error"]["code"] == "index_not_found"
+
+    assert {:ok, %{task: %{uid: 301, status: :enqueued}}} =
+             Scrypath.sync_record(SearchablePost, record,
+               backend: Scrypath.Meilisearch,
+               meilisearch_client: SequencedMeilisearchClient,
+               task_responses: agent,
+               sync_mode: :manual
+             )
+  end
+
+  test "inline cancellation returns a distinct cancellation tuple", %{task_responses: agent} do
+    Agent.update(agent, fn _ ->
+      [
+        {:ok, %{"uid" => 301, "status" => "canceled", "canceledBy" => %{"uid" => 9}}}
+      ]
+    end)
+
+    record = %SearchablePost{id: 80, title: "Inline", body: "Cancelled"}
+
+    assert {:error, {:cancelled, %{uid: 301, status: :cancelled, raw: raw}}} =
+             Scrypath.sync_record(SearchablePost, record,
+               backend: Scrypath.Meilisearch,
+               meilisearch_client: SequencedMeilisearchClient,
+               task_responses: agent,
+               inline_poll_interval: 1,
+               inline_timeout: 50
+             )
+
+    assert raw["canceledBy"]["uid"] == 9
   end
 end
