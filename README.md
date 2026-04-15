@@ -61,6 +61,79 @@ Phase 1 exposes a small reflective surface for later sync and query code:
 
 These helpers are intended to keep runtime code centralized under `Scrypath.*` modules instead of generating APIs such as `Post.search/2`.
 
+## Sync
+
+Phase 2 adds explicit context-level sync verbs under `Scrypath`:
+
+- `Scrypath.sync_record/3`
+- `Scrypath.sync_records/3`
+- `Scrypath.delete_record/3`
+- `Scrypath.delete_document/3`
+- `Scrypath.delete_documents/3`
+
+Call sync after successful repo persistence. Inline sync improves immediacy, but it does not make database and search writes atomic.
+
+```elixir
+post =
+  %Post{}
+  |> Post.changeset(attrs)
+  |> Repo.insert!()
+
+{:ok, result} =
+  Scrypath.sync_record(Post, post,
+    backend: Scrypath.Meilisearch,
+    sync_mode: :inline
+  )
+
+result.mode
+# :inline
+```
+
+`sync_mode: :inline` waits for terminal backend success before returning `{:ok, result}`. The returned result still includes Meilisearch task metadata so the backend's asynchronous execution is visible.
+
+```elixir
+{:ok, result} =
+  Scrypath.sync_record(Post, post,
+    backend: Scrypath.Meilisearch,
+    sync_mode: :inline
+  )
+
+result.status
+# :completed
+```
+
+`sync_mode: :manual` uses the same verbs, but returns accepted work immediately for imports, migrations, and operator-controlled flows.
+
+```elixir
+{:ok, result} =
+  Scrypath.sync_records(Post, posts,
+    backend: Scrypath.Meilisearch,
+    sync_mode: :manual
+  )
+
+result.mode
+# :manual
+
+result.status
+# :accepted
+```
+
+Delete flows use the schema's configured document id by default. When a record needs a different stable delete identity, define `search_document_id/1`. Use `Scrypath.delete_document/3` or `Scrypath.delete_documents/3` when no source struct is available.
+
+```elixir
+def search_document_id(post), do: "post:#{post.legacy_id}"
+```
+
+```elixir
+{:ok, _result} =
+  Scrypath.delete_document(Post, "post:123",
+    backend: Scrypath.Meilisearch,
+    sync_mode: :manual
+  )
+```
+
+Common sync examples should stay explicit in your Ecto contexts rather than hidden behind callbacks or transaction hooks.
+
 ## Roadmap
 
 Phase 1 establishes the declaration and projection contracts.
