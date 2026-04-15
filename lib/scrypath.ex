@@ -44,4 +44,29 @@ defmodule Scrypath do
   def document_id_field(schema_module) do
     schema_module.__scrypath__(:document_id)
   end
+
+  @spec sync_record(module(), struct() | map(), keyword()) :: {:ok, term()} | {:error, term()}
+  def sync_record(schema_module, record, opts \\ []) do
+    Scrypath.Sync.sync_record(schema_module, record, opts)
+  end
+
+  @spec sync_records(module(), [struct() | map()], keyword()) :: {:ok, term()} | {:error, term()}
+  def sync_records(schema_module, records, opts \\ []) do
+    Scrypath.Sync.sync_records(schema_module, records, opts)
+  end
+
+  @spec delete_record(module(), struct() | map(), keyword()) :: {:ok, term()} | {:error, term()}
+  def delete_record(schema_module, record, opts \\ []) do
+    Scrypath.Sync.delete_record(schema_module, record, opts)
+  end
+
+  @spec delete_document(module(), term(), keyword()) :: {:ok, term()} | {:error, term()}
+  def delete_document(schema_module, document_id, opts \\ []) do
+    Scrypath.Sync.delete_document(schema_module, document_id, opts)
+  end
+
+  @spec delete_documents(module(), [term()], keyword()) :: {:ok, term()} | {:error, term()}
+  def delete_documents(schema_module, document_ids, opts \\ []) do
+    Scrypath.Sync.delete_documents(schema_module, document_ids, opts)
+  end
 end
