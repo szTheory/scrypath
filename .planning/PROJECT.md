@@ -12,13 +12,14 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ### Validated
 
-(None yet - ship to validate)
+- [x] Schema metadata declarations and runtime inspection validated in Phase 1.
+- [x] Meilisearch-backed sync for insert, update, delete, inline, and manual workflows validated in Phase 2.
 
 ### Active
 
-- [ ] Provide a schema-level declaration that makes Ecto-backed records searchable with minimal setup.
-- [ ] Keep search index synchronization reliable and explicit across insert, update, delete, and reindex workflows.
-- [ ] Deliver first-class Phoenix-facing ergonomics on top of an Ecto-first core.
+- [ ] Deliver the search query API, filtering, sorting, pagination, and hydration on top of the completed indexing core.
+- [ ] Add Oban-backed sync and first-class Telemetry instrumentation for production operation.
+- [ ] Deliver reindexing, operator workflows, and Phoenix-facing polish without weakening the Ecto-first core.
 
 ### Out of Scope
 
@@ -53,9 +54,13 @@ When running future GSD discuss, plan, and execute flows, consult the relevant f
 | Position the product as the missing Searchkick or Scout for Ecto and Phoenix | The real gap is the integration and sync layer, not another thin HTTP client | - Pending |
 | Start with Meilisearch as the public v1 backend | The market gap is stronger and it keeps v1 focused while preserving an internal adapter seam | - Pending |
 | Keep the core Ecto-first and Phoenix-friendly | Ecto is the stable architectural center, while Phoenix ergonomics are critical for adoption | - Pending |
-| Support inline, Oban, and manual sync modes in v1 | Teams need a simple local path, a production queue path, and an explicit escape hatch | - Pending |
+| Support inline, Oban, and manual sync modes in v1 | Teams need a simple local path, a production queue path, and an explicit escape hatch | Phase 2 validated inline and manual; Oban remains active scope |
 | Exclude Postgres-native full-text search from the v1 product surface | It solves a different problem and would blur the product story too early | - Pending |
 | Defer public multi-backend support and advanced relevance features | Premature abstraction and feature breadth would increase API risk before the core is validated | - Pending |
+
+## Current State
+
+Phase 2 is complete. Scrypath now has a real Meilisearch backend, explicit `Scrypath.*` sync and delete verbs, stable delete identity resolution, inline task waiting, manual operator flows, and docs that state the write-path guarantees directly. The next major gap is the developer-facing search query API in Phase 3.
 
 ## Evolution
 
@@ -75,4 +80,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-15 after initialization*
+*Last updated: 2026-04-15 after phase 2 execution*

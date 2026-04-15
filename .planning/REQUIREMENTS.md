@@ -13,12 +13,12 @@
 
 ### Sync Lifecycle
 
-- [ ] **SYNC-01**: Developer can synchronize searchable records on insert.
-- [ ] **SYNC-02**: Developer can synchronize searchable records on update.
-- [ ] **SYNC-03**: Developer can remove searchable records from the index on delete without requiring the source record to still exist.
-- [ ] **SYNC-04**: Developer can choose inline synchronization for simple or local workflows.
+- [x] **SYNC-01**: Developer can synchronize searchable records on insert.
+- [x] **SYNC-02**: Developer can synchronize searchable records on update.
+- [x] **SYNC-03**: Developer can remove searchable records from the index on delete without requiring the source record to still exist.
+- [x] **SYNC-04**: Developer can choose inline synchronization for simple or local workflows.
 - [ ] **SYNC-05**: Developer can choose Oban-backed asynchronous synchronization for production workflows.
-- [ ] **SYNC-06**: Developer can choose manual synchronization for imports, migrations, or operator-controlled flows.
+- [x] **SYNC-06**: Developer can choose manual synchronization for imports, migrations, or operator-controlled flows.
 
 ### Search Querying
 
@@ -44,7 +44,7 @@
 
 ### Backend Foundation
 
-- [ ] **BACK-01**: Developer can use Scrypath with Meilisearch as the supported public backend in v1.
+- [x] **BACK-01**: Developer can use Scrypath with Meilisearch as the supported public backend in v1.
 - [x] **BACK-02**: The internal architecture preserves a path to future backend support without forcing a premature public abstraction.
 
 ## v2 Requirements
@@ -81,12 +81,12 @@
 | SCMA-02 | Phase 1 | Complete |
 | SCMA-03 | Phase 1 | Complete |
 | BACK-02 | Phase 1 | Complete |
-| BACK-01 | Phase 2 | Pending |
-| SYNC-01 | Phase 2 | Pending |
-| SYNC-02 | Phase 2 | Pending |
-| SYNC-03 | Phase 2 | Pending |
-| SYNC-04 | Phase 2 | Pending |
-| SYNC-06 | Phase 2 | Pending |
+| BACK-01 | Phase 2 | Complete |
+| SYNC-01 | Phase 2 | Complete |
+| SYNC-02 | Phase 2 | Complete |
+| SYNC-03 | Phase 2 | Complete |
+| SYNC-04 | Phase 2 | Complete |
+| SYNC-06 | Phase 2 | Complete |
 | SRCH-01 | Phase 3 | Pending |
 | SRCH-02 | Phase 3 | Pending |
 | SRCH-03 | Phase 3 | Pending |
@@ -109,4 +109,4 @@
 
 ---
 *Requirements defined: 2026-04-15*
-*Last updated: 2026-04-15 after phase 1 execution*
+*Last updated: 2026-04-15 after phase 2 execution*

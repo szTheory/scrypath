@@ -39,6 +39,8 @@
 
 **Goal:** Make Scrypath useful end to end for one real backend by delivering safe core indexing flows.
 
+**Status:** Complete (2026-04-15)
+
 **Requirements:** BACK-01, SYNC-01, SYNC-02, SYNC-03, SYNC-04, SYNC-06
 
 **Plans:** 4 plans
@@ -47,7 +49,7 @@ Plans:
 - [x] 02-01-PLAN.md - Common sync facade and delete identity contract
 - [x] 02-02-PLAN.md - Meilisearch backend, client, and runtime config
 - [x] 02-03-PLAN.md - Inline task waiting and failure semantics
-- [ ] 02-04-PLAN.md - Manual batch workflows and Phase 2 documentation
+- [x] 02-04-PLAN.md - Manual batch workflows and Phase 2 documentation
 
 **Success criteria:**
 1. A developer can synchronize searchable records to Meilisearch on insert and update.
@@ -123,4 +125,4 @@ Plans:
 - Phase 6 depends on the product shape being mostly stable across Phases 1 through 5.
 
 ---
-*Last updated: 2026-04-15 after phase 1 execution*
+*Last updated: 2026-04-15 after phase 2 execution*
