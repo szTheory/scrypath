@@ -41,6 +41,14 @@
 
 **Requirements:** BACK-01, SYNC-01, SYNC-02, SYNC-03, SYNC-04, SYNC-06
 
+**Plans:** 4 plans
+
+Plans:
+- [ ] 02-01-PLAN.md - Common sync facade and delete identity contract
+- [ ] 02-02-PLAN.md - Meilisearch backend, client, and runtime config
+- [ ] 02-03-PLAN.md - Inline task waiting and failure semantics
+- [ ] 02-04-PLAN.md - Manual batch workflows and Phase 2 documentation
+
 **Success criteria:**
 1. A developer can synchronize searchable records to Meilisearch on insert and update.
 2. A developer can remove documents from the index safely after deletes.
