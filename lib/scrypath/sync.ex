@@ -3,6 +3,7 @@ defmodule Scrypath.Sync do
 
   alias Scrypath.Config
   alias Scrypath.Identity
+  alias Scrypath.Meilisearch.Tasks
   alias Scrypath.Projection
 
   @spec sync_record(module(), struct() | map(), keyword()) :: {:ok, term()} | {:error, term()}
@@ -40,20 +41,32 @@ defmodule Scrypath.Sync do
   defp dispatch_upsert(schema_module, documents, config) do
     backend = Config.fetch_backend!(config)
 
-    case Keyword.fetch!(config, :sync_mode) do
-      :inline -> backend.upsert_documents(schema_module, documents, config)
-      :manual -> backend.upsert_documents(schema_module, documents, config)
-      :oban -> backend.upsert_documents(schema_module, documents, config)
-    end
+    backend.upsert_documents(schema_module, documents, config)
+    |> maybe_wait_for_task(config)
   end
 
   defp dispatch_delete(schema_module, document_ids, config) do
     backend = Config.fetch_backend!(config)
 
+    backend.delete_documents(schema_module, document_ids, config)
+    |> maybe_wait_for_task(config)
+  end
+
+  defp maybe_wait_for_task({:ok, %{task: task} = result}, config) when is_map(task) do
     case Keyword.fetch!(config, :sync_mode) do
-      :inline -> backend.delete_documents(schema_module, document_ids, config)
-      :manual -> backend.delete_documents(schema_module, document_ids, config)
-      :oban -> backend.delete_documents(schema_module, document_ids, config)
+      :inline ->
+        case Tasks.wait_for_task(task, config) do
+          {:ok, waited_task} -> {:ok, %{result | task: waited_task}}
+          {:error, reason} -> {:error, reason}
+        end
+
+      :manual ->
+        {:ok, result}
+
+      :oban ->
+        {:ok, result}
     end
   end
+
+  defp maybe_wait_for_task(result, _config), do: result
 end
