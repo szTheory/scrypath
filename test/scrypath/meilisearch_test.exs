@@ -1,0 +1,138 @@
+defmodule Scrypath.MeilisearchTest do
+  use ExUnit.Case, async: true
+
+  alias Scrypath.Document
+
+  defmodule RecordingClient do
+    def upsert_documents(index_name, documents, config) do
+      send(self(), {:client_upsert, index_name, documents, config})
+
+      {:ok,
+       %{
+         "taskUid" => 17,
+         "indexUid" => index_name,
+         "status" => "enqueued",
+         "type" => "documentAdditionOrUpdate"
+       }}
+    end
+
+    def delete_documents(index_name, document_ids, config) do
+      send(self(), {:client_delete, index_name, document_ids, config})
+
+      {:ok,
+       %{
+         "taskUid" => 18,
+         "indexUid" => index_name,
+         "status" => "enqueued",
+         "type" => "documentDeletion"
+       }}
+    end
+
+    def task(task_uid, config) do
+      send(self(), {:client_task, task_uid, config})
+      {:ok, %{"uid" => task_uid, "status" => "succeeded"}}
+    end
+
+    def search(index_name, query, config) do
+      send(self(), {:client_search, index_name, query, config})
+      {:ok, %{"hits" => [%{"id" => 99}], "query" => query}}
+    end
+  end
+
+  test "Scrypath.Meilisearch satisfies backend name and index naming" do
+    assert Scrypath.Meilisearch.name() == :meilisearch
+    assert Scrypath.Meilisearch.index_name(SearchablePost, index_prefix: "tenant") == "tenant_searchable_post"
+    assert Scrypath.Meilisearch.index_name(SearchablePost, []) == "scrypath_searchable_post"
+  end
+
+  test "upsert_documents/3 keeps writes list-oriented and exposes task metadata" do
+    documents = [
+      %Document{id: 1, data: %{title: "One"}, source: :fields},
+      %Document{id: 2, data: %{title: "Two"}, source: :custom}
+    ]
+
+    assert {:ok, %{index: "tenant_searchable_post", document_ids: [1, 2], task: %{uid: 17}}} =
+             Scrypath.Meilisearch.upsert_documents(SearchablePost, documents,
+               index_prefix: "tenant",
+               meilisearch_client: RecordingClient
+             )
+
+    assert_received {:client_upsert, "tenant_searchable_post", ^documents, config}
+    assert config[:index_prefix] == "tenant"
+  end
+
+  test "delete_documents/3 delegates canonical ids through the client" do
+    assert {:ok, %{index: "tenant_searchable_post", document_ids: ["post:1"], task: %{uid: 18}}} =
+             Scrypath.Meilisearch.delete_documents(SearchablePost, ["post:1"],
+               index_prefix: "tenant",
+               meilisearch_client: RecordingClient
+             )
+
+    assert_received {:client_delete, "tenant_searchable_post", ["post:1"], _config}
+  end
+
+  test "search/3 remains a minimal callback wrapper over the client" do
+    assert {:ok, %{"hits" => [%{"id" => 99}], "query" => "hello"}} =
+             Scrypath.Meilisearch.search(SearchablePost, "hello",
+               index_prefix: "tenant",
+               meilisearch_client: RecordingClient
+             )
+
+    assert_received {:client_search, "tenant_searchable_post", "hello", _config}
+  end
+
+  test "client shapes document writes, deletes, and task lookups for sync flows" do
+    stub = Module.concat(__MODULE__, ReqStub)
+
+    Req.Test.stub(stub, fn conn ->
+      send(
+        self(),
+        {:request, conn.method, conn.request_path, conn.req_headers, conn.body_params}
+      )
+
+      case {conn.method, conn.request_path} do
+        {"POST", "/indexes/tenant_searchable_post/documents"} ->
+          Req.Test.json(conn, %{"taskUid" => 21, "status" => "enqueued"})
+
+        {"POST", "/indexes/tenant_searchable_post/documents/delete-batch"} ->
+          Req.Test.json(conn, %{"taskUid" => 22, "status" => "enqueued"})
+
+        {"GET", "/tasks/22"} ->
+          Req.Test.json(conn, %{"uid" => 22, "status" => "succeeded"})
+
+        {"POST", "/indexes/tenant_searchable_post/search"} ->
+          Req.Test.json(conn, %{"hits" => [], "query" => conn.body_params["q"]})
+      end
+    end)
+
+    config = [
+      meilisearch_url: "http://localhost:7700",
+      meilisearch_api_key: "secret-key",
+      req_options: [plug: {Req.Test, stub}]
+    ]
+
+    documents = [%Document{id: 5, data: %{title: "Hello"}, source: :fields}]
+
+    assert {:ok, %{"taskUid" => 21, "status" => "enqueued"}} =
+             Scrypath.Meilisearch.Client.upsert_documents("tenant_searchable_post", documents, config)
+
+    assert_received {:request, "POST", "/indexes/tenant_searchable_post/documents", headers, body}
+    assert {"x-meili-api-key", "secret-key"} in headers
+    assert body == [%{"id" => 5, "title" => "Hello"}]
+
+    assert {:ok, %{"taskUid" => 22, "status" => "enqueued"}} =
+             Scrypath.Meilisearch.Client.delete_documents("tenant_searchable_post", ["post:5"], config)
+
+    assert_received {:request, "POST", "/indexes/tenant_searchable_post/documents/delete-batch", _, ["post:5"]}
+
+    assert {:ok, %{"uid" => 22, "status" => "succeeded"}} =
+             Scrypath.Meilisearch.Client.task(22, config)
+
+    assert_received {:request, "GET", "/tasks/22", _, %{}}
+
+    assert {:ok, %{"hits" => [], "query" => "hello"}} =
+             Scrypath.Meilisearch.Client.search("tenant_searchable_post", "hello", config)
+
+    assert_received {:request, "POST", "/indexes/tenant_searchable_post/search", _, %{"q" => "hello"}}
+  end
+end
