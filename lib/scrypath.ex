@@ -19,7 +19,7 @@ defmodule Scrypath do
 
   @spec document_source(module()) :: atom()
   def document_source(schema_module) do
-    schema_module.__scrypath__(:document_source)
+    Scrypath.Projection.document_source(schema_module)
   end
 
   @spec document_id_field(module()) :: atom()
