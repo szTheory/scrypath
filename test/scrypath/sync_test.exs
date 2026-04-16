@@ -365,6 +365,26 @@ defmodule Scrypath.SyncTest do
     refute_received {:delete_documents, _, _, _}
   end
 
+  test "empty sync and delete batches return a no-op envelope across inline, manual, and oban" do
+    for mode <- [:inline, :manual, :oban] do
+      opts =
+        [backend: RecordingBackend, sync_mode: mode]
+        |> maybe_put_oban(mode)
+
+      assert {:ok, %{mode: ^mode, status: :noop, document_ids: [], document_count: 0}} =
+               Scrypath.sync_records(SearchablePost, [], opts)
+
+      refute_received {:upsert_documents, _, _, _}
+      refute_received {:oban_insert, _}
+
+      assert {:ok, %{mode: ^mode, status: :noop, document_ids: [], document_count: 0}} =
+               Scrypath.delete_documents(SearchablePost, [], opts)
+
+      refute_received {:delete_documents, _, _, _}
+      refute_received {:oban_insert, _}
+    end
+  end
+
   test "sync_mode :oban fails clearly when the dependency is unavailable" do
     record = %SearchablePost{id: 91, title: "Queued", body: "Missing"}
 
@@ -423,4 +443,10 @@ defmodule Scrypath.SyncTest do
 
     assert raw["canceledBy"]["uid"] == 9
   end
+
+  defp maybe_put_oban(opts, :oban) do
+    Keyword.merge(opts, oban: EnqueueOban, oban_queue: :search_sync)
+  end
+
+  defp maybe_put_oban(opts, _mode), do: opts
 end

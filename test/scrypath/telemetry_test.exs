@@ -148,6 +148,34 @@ defmodule Scrypath.TelemetryTest do
     assert hd(stop_events).metadata.document_count == 2
   end
 
+  test "no-op sync telemetry keeps explicit mode and zero-count metadata" do
+    events = capture_events([[:scrypath, :sync, :upsert], [:scrypath, :sync, :delete]], fn ->
+      assert {:ok, %{mode: :manual, status: :noop, document_ids: [], document_count: 0}} =
+               Scrypath.sync_records(SearchablePost, [], backend: RecordingBackend, sync_mode: :manual)
+
+      assert {:ok, %{mode: :oban, status: :noop, document_ids: [], document_count: 0}} =
+               Scrypath.delete_documents(SearchablePost, [],
+                 backend: RecordingBackend,
+                 sync_mode: :oban,
+                 oban: Scrypath.SyncTest.EnqueueOban,
+                 oban_queue: :search_sync
+               )
+    end)
+
+    upsert_stop = find_event(events, [:scrypath, :sync, :upsert, :stop])
+    delete_stop = find_event(events, [:scrypath, :sync, :delete, :stop])
+
+    assert upsert_stop.metadata.status == :noop
+    assert upsert_stop.metadata.mode == :manual
+    assert upsert_stop.metadata.sync_mode == :manual
+    assert upsert_stop.metadata.document_count == 0
+
+    assert delete_stop.metadata.status == :noop
+    assert delete_stop.metadata.mode == :oban
+    assert delete_stop.metadata.sync_mode == :oban
+    assert delete_stop.metadata.document_count == 0
+  end
+
   test "meilisearch request and task wait emit backend-specific spans", %{task_responses: agent} do
     Agent.update(agent, fn _ ->
       [
