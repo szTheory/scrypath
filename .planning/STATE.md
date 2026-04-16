@@ -6,15 +6,15 @@ current_phase: 06
 current_phase_name: phoenix-ergonomics-and-public-facing-polish
 current_plan: 1
 status: executing
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-04-16T15:44:48.411Z"
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-04-16T15:49:41.610Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 21
-  completed_plans: 19
-  percent: 90
+  completed_plans: 20
+  percent: 95
 ---
 
 # Project State
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-04-15)
 ## Current Position
 
 Phase: 06 (phoenix-ergonomics-and-public-facing-polish) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Current Phase: 06
 Current Phase Name: phoenix-ergonomics-and-public-facing-polish
 Current Plan: 1
@@ -58,6 +58,8 @@ Progress: [██████████] 100%
 - [Phase 06]: Kept ExDoc as the ordered public docs shell and grouped extras by learning path instead of expanding README further.
 - [Phase 06]: Defined Phoenix example fixtures as plain compile-trustworthy modules in test support so guide examples can stay anchored without adding a full Phoenix app.
 - [Phase 06]: Locked the context-first Phoenix boundary and sync visibility wording in docs contract tests before deeper copy work.
+- [Phase 06]: Kept the README fast and practical by moving from installation to a real context-first path before audience qualification.
+- [Phase 06]: Used the fixture modules as the source of truth for README and guide function names so Phoenix docs and tests keep teaching one boundary.
 
 ### Blockers/Concerns
 
@@ -66,8 +68,8 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-04-16T15:44:48.408Z
-Stopped at: Completed 06-01-PLAN.md
+Last session: 2026-04-16T15:49:41.169Z
+Stopped at: Completed 06-02-PLAN.md
 Resume file: None
 
 ## Current Status
