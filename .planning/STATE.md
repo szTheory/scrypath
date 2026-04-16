@@ -5,9 +5,9 @@ milestone_name: release-hardening-and-public-launch-readiness
 current_phase: 10
 current_phase_name: launch-verification-and-release-confidence
 current_plan: 3
-status: completed
+status: verifying
 stopped_at: Completed 10-03-PLAN.md
-last_updated: "2026-04-16T19:34:00.000Z"
+last_updated: "2026-04-16T19:27:45.642Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 3
@@ -33,7 +33,7 @@ Plan: 3 of 3
 Current Phase: 10
 Current Phase Name: launch-verification-and-release-confidence
 Current Plan: 3
-Status: Phase 10 execution complete
+Status: Phase complete — ready for verification
 Last activity: 2026-04-16
 Last Activity Description: Phase 10 Plan 03 executed
 
@@ -73,6 +73,8 @@ Progress: [██████████] 100%
 - [Phase 10]: Locked the maintainer runbook wording to mix verify.phase10 with docs contract assertions so the credential boundary stays explicit.
 - [Phase 10]: Accepted the maintainer-owned Hex dry-run failure as valid manual evidence because the goal is traceable credential-boundary proof on the candidate commit, not a forced successful publish rehearsal.
 - [Phase 10]: Added one explicit recorded-metadata sentence in 10-VERIFICATION.md so the checkpoint acceptance grep matches the documented evidence without changing the result.
+- [Phase 10]: Kept Phase 08 and Phase 09 requirement ownership explicit in the v1.1 audit while using Phase 10 only as the verification and closeout layer.
+- [Phase 10]: Updated the active planning files to reference the final evidence chain directly instead of relying on implicit milestone memory.
 
 ### Blockers/Concerns
 
@@ -87,7 +89,7 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-04-16T19:34:00.000Z
+Last session: 2026-04-16T19:27:45.639Z
 Stopped at: Completed 10-03-PLAN.md
 Resume file: None
 

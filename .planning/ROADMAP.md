@@ -42,7 +42,7 @@ Plans:
 
 **Goal:** Close the remaining launch-readiness gaps so maintainers can trust the release path and point to current evidence for the hardened surface.
 **Requirements:** `SHIP-01`, `SHIP-02`
-**Plans:** 3/3 plans executed
+**Plans:** 3/3 plans complete
 Plans:
 - [x] `10-01-PLAN.md` — Add the thin auth-free `mix verify.phase10` gate and wire the release runbook to it.
 - [x] `10-02-PLAN.md` — Run the Phase 10 gate, write `10-VERIFICATION.md`, and capture the manual Hex dry-run evidence.
