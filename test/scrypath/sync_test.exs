@@ -58,6 +58,16 @@ defmodule Scrypath.SyncTest do
   defmodule ReadyOban do
   end
 
+  defmodule EnqueueOban do
+    def insert(changeset) do
+      job = Ecto.Changeset.apply_changes(changeset)
+
+      send(self(), {:oban_insert, job})
+
+      {:ok, %{job | id: 501, state: "available"}}
+    end
+  end
+
   setup do
     {:ok, agent} = Agent.start_link(fn -> [] end)
     %{task_responses: agent}
@@ -304,24 +314,54 @@ defmodule Scrypath.SyncTest do
       %SearchablePost{id: 2, title: "Two", body: "Second"}
     ]
 
-    assert {:ok, %{mode: :oban, status: :accepted, document_ids: [1, 2]}} =
+    assert {:ok,
+            %{
+              mode: :oban,
+              status: :accepted,
+              document_ids: [1, 2],
+              document_count: 2,
+              job: %{
+                id: 501,
+                worker: "Scrypath.Oban.UpsertWorker",
+                queue: "search_sync",
+                state: "available"
+              }
+            }} =
              Scrypath.sync_records(SearchablePost, records,
                backend: RecordingBackend,
                sync_mode: :oban,
-               oban: ReadyOban,
+               oban: EnqueueOban,
                oban_queue: :search_sync
              )
 
+    assert_received {:oban_insert, upsert_job}
+    assert upsert_job.args["document_ids"] == [1, 2]
+    assert Enum.map(upsert_job.args["documents"], & &1["id"]) == [1, 2]
     refute_received {:upsert_documents, _, _, _}
 
-    assert {:ok, %{mode: :oban, status: :accepted, document_ids: ["post:2", "post:3"]}} =
+    assert {:ok,
+            %{
+              mode: :oban,
+              status: :accepted,
+              document_ids: ["post:2", "post:3"],
+              document_count: 2,
+              job: %{
+                id: 501,
+                worker: "Scrypath.Oban.DeleteWorker",
+                queue: "search_sync",
+                state: "available"
+              }
+            }} =
              Scrypath.delete_documents(SearchablePost, ["post:2", "post:3"],
                backend: RecordingBackend,
                sync_mode: :oban,
-               oban: ReadyOban,
+               oban: EnqueueOban,
                oban_queue: :search_sync
              )
 
+    assert_received {:oban_insert, delete_job}
+    assert delete_job.args["document_ids"] == ["post:2", "post:3"]
+    refute Map.has_key?(delete_job.args, "documents")
     refute_received {:delete_documents, _, _, _}
   end
 
@@ -349,6 +389,18 @@ defmodule Scrypath.SyncTest do
                      sync_mode: :oban
                    )
                  end
+  end
+
+  test "mix project keeps Oban optional" do
+    oban_dep =
+      Scrypath.MixProject.project()[:deps]
+      |> Enum.find(fn
+        {:oban, _requirement, _opts} -> true
+        _other -> false
+      end)
+
+    assert {:oban, "~> 2.21", opts} = oban_dep
+    assert Keyword.get(opts, :optional) == true
   end
 
   test "inline cancellation returns a distinct cancellation tuple", %{task_responses: agent} do
