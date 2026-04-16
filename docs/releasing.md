@@ -42,6 +42,8 @@ That command must stay out of the always-on CI gate.
    curl -Ifs https://hexdocs.pm/scrypath/X.Y.Z
    ```
 
+   The last command should return the versioned HexDocs page for `X.Y.Z`, not the moving latest-doc redirect.
+
 5. Run the public manual smoke path from a throwaway app:
 
    ```bash
