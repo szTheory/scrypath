@@ -6,6 +6,7 @@ defmodule Scrypath do
 
   - `schema_config/1`
   - `schema_fields/1`
+  - `schema_settings/1`
   - `document_source/1`
   - `document_id_field/1`
 
@@ -33,6 +34,11 @@ defmodule Scrypath do
   @spec schema_fields(module()) :: [atom()]
   def schema_fields(schema_module) do
     schema_module.__scrypath__(:fields)
+  end
+
+  @spec schema_settings(module()) :: map()
+  def schema_settings(schema_module) do
+    schema_module.__scrypath__(:settings)
   end
 
   @spec document_source(module()) :: atom()
