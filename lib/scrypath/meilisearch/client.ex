@@ -29,7 +29,7 @@ defmodule Scrypath.Meilisearch.Client do
 
   @spec swap_indexes({String.t(), String.t()}, keyword()) :: {:ok, map()} | {:error, term()}
   def swap_indexes({source_index, target_index}, config) do
-    payload = %{"indexes" => [%{"indexes" => [source_index, target_index]}]}
+    payload = [%{"indexes" => [source_index, target_index]}]
 
     run_request(
       :post,
@@ -43,10 +43,12 @@ defmodule Scrypath.Meilisearch.Client do
 
   @spec upsert_documents(String.t(), [Document.t()], keyword()) :: {:ok, map()} | {:error, term()}
   def upsert_documents(index_name, documents, config) when is_list(documents) do
+    document_id_field = Keyword.get(config, :document_id_field, :id)
+
     run_request(
       :post,
       "/indexes/#{index_name}/documents",
-      [json: Enum.map(documents, &document_payload/1)],
+      [json: Enum.map(documents, &document_payload(&1, document_id_field))],
       config,
       index: index_name
     )
@@ -121,8 +123,8 @@ defmodule Scrypath.Meilisearch.Client do
   defp response_metadata({:ok, %Req.Response{status: status}}), do: %{status_code: status}
   defp response_metadata({:error, exception}), do: %{error: inspect(exception)}
 
-  defp document_payload(%Document{id: id, data: data}) when is_map(data) do
-    Map.put(data, :id, id)
+  defp document_payload(%Document{id: id, data: data}, document_id_field) when is_map(data) do
+    Map.put(data, document_id_field, id)
   end
 
   defp search_payload(%CommonQuery{} = query), do: MeilisearchQuery.to_payload(query)
