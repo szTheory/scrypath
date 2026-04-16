@@ -4,6 +4,8 @@ defmodule Scrypath.MixProject do
   @version "0.1.0"
   @source_url "https://github.com/szTheory/scrypath"
   @source_ref "v#{@version}"
+  @hexdocs_url "https://hexdocs.pm/scrypath"
+  @release_docs_url "#{@hexdocs_url}/#{@version}"
 
   def project do
     [
@@ -94,9 +96,9 @@ defmodule Scrypath.MixProject do
       files: ~w(lib .formatter.exs mix.exs README.md ARCHITECTURE.md CHANGELOG.md guides docs),
       links: %{
         "GitHub" => @source_url,
-        "HexDocs" => "https://hexdocs.pm/scrypath",
-        "Changelog" => "#{@source_url}/blob/main/CHANGELOG.md",
-        "Guides" => "https://hexdocs.pm/scrypath/readme.html"
+        "HexDocs" => @release_docs_url,
+        "Changelog" => "#{@source_url}/blob/#{@source_ref}/CHANGELOG.md",
+        "Guides" => "#{@release_docs_url}/readme.html"
       }
     ]
   end

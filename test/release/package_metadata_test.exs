@@ -12,16 +12,19 @@ defmodule Scrypath.Release.PackageMetadataTest do
   end
 
   test "package metadata exposes links and release docs" do
-    package = MixProject.project()[:package]
+    project = MixProject.project()
+    package = project[:package]
+    version = project[:version]
+    source_ref = project[:source_ref]
 
     assert package[:licenses] == ["Apache-2.0"]
     assert "docs" in package[:files]
 
     assert package[:links] == %{
              "GitHub" => "https://github.com/szTheory/scrypath",
-             "HexDocs" => "https://hexdocs.pm/scrypath",
-             "Changelog" => "https://github.com/szTheory/scrypath/blob/main/CHANGELOG.md",
-             "Guides" => "https://hexdocs.pm/scrypath/readme.html"
+             "HexDocs" => "https://hexdocs.pm/scrypath/#{version}",
+             "Changelog" => "https://github.com/szTheory/scrypath/blob/#{source_ref}/CHANGELOG.md",
+             "Guides" => "https://hexdocs.pm/scrypath/#{version}/readme.html"
            }
   end
 
