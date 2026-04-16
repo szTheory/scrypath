@@ -3,6 +3,8 @@ defmodule Scrypath.TelemetryTest do
 
   alias Scrypath.SearchResult
   alias Scrypath.TestSupport.FakeRepo
+  alias Scrypath.Meilisearch.Client
+  alias Scrypath.Meilisearch.Tasks
 
   defmodule RecordingBackend do
     @behaviour Scrypath.Backend
@@ -41,9 +43,21 @@ defmodule Scrypath.TelemetryTest do
     end
   end
 
+  defmodule SequencedClient do
+    def task(task_uid, config) do
+      agent = Keyword.fetch!(config, :task_responses)
+
+      Agent.get_and_update(agent, fn
+        [next | rest] -> {next, rest}
+        [] -> {{:ok, %{"uid" => task_uid, "status" => "succeeded"}}, []}
+      end)
+    end
+  end
+
   setup do
     FakeRepo.reset()
-    :ok
+    {:ok, agent} = Agent.start_link(fn -> [] end)
+    %{task_responses: agent}
   end
 
   test "common sync emits span-based upsert and delete events with stable low-cardinality metadata" do
@@ -134,6 +148,74 @@ defmodule Scrypath.TelemetryTest do
     assert hd(stop_events).metadata.document_count == 2
   end
 
+  test "meilisearch request and task wait emit backend-specific spans", %{task_responses: agent} do
+    Agent.update(agent, fn _ ->
+      [
+        {:ok, %{"uid" => 101, "status" => "processing", "type" => "documentAdditionOrUpdate"}},
+        {:ok,
+         %{
+           "uid" => 101,
+           "status" => "succeeded",
+           "type" => "documentAdditionOrUpdate",
+           "indexUid" => "telemetry_posts"
+         }}
+      ]
+    end)
+
+    client_events =
+      capture_events([[:scrypath, :meilisearch, :request]], fn ->
+        assert {:ok, %{"taskUid" => 301, "status" => "enqueued"}} =
+                 Client.upsert_documents(
+                   "telemetry_posts",
+                   [
+                     %Scrypath.Document{
+                       id: 1,
+                       data: %{title: "One", body: "First"},
+                       source: :fields
+                     }
+                   ],
+                   meilisearch_url: "http://localhost:7700",
+                   req_options: [plug: {Req.Test, req_stub()}]
+                 )
+      end)
+
+    request_stop = find_event(client_events, [:scrypath, :meilisearch, :request, :stop])
+    assert request_stop.metadata.method == :post
+    assert request_stop.metadata.path == "/indexes/telemetry_posts/documents"
+    assert request_stop.metadata.status_code == 202
+    assert request_stop.metadata.index == "telemetry_posts"
+
+    wait_events =
+      capture_events([[:scrypath, :meilisearch, :task_wait]], fn ->
+        assert {:ok, %{uid: 101, status: :succeeded}} =
+                 Tasks.wait_for_task(
+                   %{uid: 101, status: "enqueued", type: "documentAdditionOrUpdate"},
+                   meilisearch_client: SequencedClient,
+                   task_responses: agent,
+                   inline_poll_interval: 1,
+                   inline_timeout: 50
+                 )
+      end)
+
+    wait_stop = find_event(wait_events, [:scrypath, :meilisearch, :task_wait, :stop])
+    assert wait_stop.metadata.task_uid == 101
+    assert wait_stop.metadata.poll_count == 2
+    assert wait_stop.metadata.final_status == :succeeded
+  end
+
+  test "docs explain the sync mode matrix and async lifecycle contract" do
+    readme = File.read!("README.md")
+    architecture = File.read!("ARCHITECTURE.md")
+
+    assert readme =~ "requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded"
+    assert readme =~ "`sync_mode: :oban` means durable enqueue accepted, not search visibility completed."
+    assert readme =~ "retries, discarded jobs, stale deletes, and drift are normal operational realities"
+
+    assert architecture =~ "| `:inline` | waits for terminal backend task success before returning |"
+    assert architecture =~ "| `:manual` | returns accepted backend work immediately |"
+    assert architecture =~ "| `:oban` | returns durable enqueue acceptance only |"
+  end
+
   defp capture_events(prefixes, fun) do
     parent = self()
     ref = make_ref()
@@ -179,5 +261,30 @@ defmodule Scrypath.TelemetryTest do
 
   def handle_event(event_name, measurements, metadata, {parent, ref}) do
     send(parent, {ref, %{name: event_name, measurements: measurements, metadata: metadata}})
+  end
+
+  defp req_stub do
+    stub = Module.concat(__MODULE__, "ReqStub#{System.unique_integer([:positive])}")
+
+    Req.Test.stub(stub, fn conn ->
+      case {conn.method, conn.request_path} do
+        {"POST", path} ->
+          [_, index_name, _] = String.split(path, "/", trim: true)
+
+          conn
+          |> Plug.Conn.put_status(202)
+          |> Req.Test.json(%{
+            "taskUid" => 301,
+            "indexUid" => index_name,
+            "status" => "enqueued",
+            "type" => "documentAdditionOrUpdate"
+          })
+
+        {"GET", "/tasks/301"} ->
+          Req.Test.json(conn, %{"uid" => 301, "status" => "succeeded"})
+      end
+    end)
+
+    stub
   end
 end
