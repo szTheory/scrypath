@@ -95,4 +95,10 @@ defmodule Scrypath do
   def reindex(schema_module, opts \\ []) do
     Scrypath.Reindex.run(schema_module, opts)
   end
+
+  @spec sync_status(module(), keyword()) ::
+          {:ok, Scrypath.Operator.Status.t()} | {:error, term()}
+  def sync_status(schema_module, opts \\ []) do
+    Scrypath.Operator.sync_status(schema_module, opts)
+  end
 end

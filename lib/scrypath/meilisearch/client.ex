@@ -70,6 +70,11 @@ defmodule Scrypath.Meilisearch.Client do
     run_request(:get, "/tasks/#{task_uid}", [], config, task_uid: task_uid)
   end
 
+  @spec tasks(keyword(), keyword()) :: {:ok, map()} | {:error, term()}
+  def tasks(filters, config) when is_list(filters) do
+    run_request(:get, "/tasks", [params: encode_task_filters(filters)], config, filters: filters)
+  end
+
   @spec search(String.t(), CommonQuery.t() | map() | String.t(), keyword()) ::
           {:ok, map()} | {:error, term()}
   def search(index_name, query, config) do
@@ -133,6 +138,26 @@ defmodule Scrypath.Meilisearch.Client do
 
   defp maybe_put_primary_key(payload, nil), do: payload
   defp maybe_put_primary_key(payload, primary_key), do: Map.put(payload, "primaryKey", to_string(primary_key))
+
+  defp encode_task_filters(filters) do
+    Enum.reduce(filters, %{}, fn
+      {_key, nil}, acc ->
+        acc
+
+      {key, value}, acc when is_list(value) ->
+        Map.put(acc, camelize_filter(key), Enum.join(Enum.map(value, &to_string/1), ","))
+
+      {key, value}, acc ->
+        Map.put(acc, camelize_filter(key), to_string(value))
+    end)
+  end
+
+  defp camelize_filter(key) do
+    key
+    |> to_string()
+    |> Macro.camelize()
+    |> then(&String.replace_prefix(&1, String.first(&1), String.downcase(String.first(&1))))
+  end
 
   defp default_headers(config) do
     case Config.meilisearch_api_key(config) do

@@ -10,6 +10,36 @@ defmodule Scrypath.Meilisearch.Tasks do
 
   @queued_statuses [:enqueued, :processing]
 
+  @spec list_sync_tasks(String.t(), keyword()) :: {:ok, [Task.t()]} | {:error, term()}
+  def list_sync_tasks(index_uid, config) when is_binary(index_uid) do
+    filters = [
+      index_uids: [index_uid],
+      types: ["documentAdditionOrUpdate", "documentDeletion"]
+    ]
+
+    case client(config).tasks(filters, config) do
+      {:ok, response} ->
+        response
+        |> Map.get(:results, Map.get(response, "results", []))
+        |> Enum.reduce_while({:ok, []}, fn payload, {:ok, acc} ->
+          case Meilisearch.normalize_task(payload, :poll) do
+            {:ok, normalized_task} ->
+              {:cont, {:ok, [Operations.task_from_backend(normalized_task, source: :meilisearch) | acc]}}
+
+            {:error, reason} ->
+              {:halt, {:error, reason}}
+          end
+        end)
+        |> case do
+          {:ok, tasks} -> {:ok, Enum.reverse(tasks)}
+          {:error, reason} -> {:error, reason}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
   @spec wait_for_task(map() | Task.t(), keyword()) :: {:ok, Task.t()} | {:error, term()}
   def wait_for_task(task, config) when is_map(task) do
     started_at = System.monotonic_time(:millisecond)
