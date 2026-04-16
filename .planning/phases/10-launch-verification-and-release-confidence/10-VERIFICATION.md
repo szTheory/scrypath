@@ -1,15 +1,15 @@
 ---
 phase: 10
 artifact: verification
-recorded_at: 2026-04-16T19:18:53Z
+recorded_at: 2026-04-16T19:26:00Z
 candidate_commit: 1740b0a03ba2a0ece0acd5cdc3155f3de116ada3
-status: auth_free_gate_passed
+status: manual_publish_dry_run_failed_authorization
 ---
 
 # Phase 10 Verification Evidence
 
-**Status:** auth_free_gate_passed
-**Recorded:** 2026-04-16T19:18:53Z
+**Status:** manual_publish_dry_run_failed_authorization
+**Recorded:** 2026-04-16T19:26:00Z
 **Candidate commit:** `1740b0a03ba2a0ece0acd5cdc3155f3de116ada3`
 
 ## Automated Evidence
@@ -49,13 +49,13 @@ This artifact keeps the manual and deferred boundaries explicit so the always-on
 | Field | Value |
 |-------|-------|
 | Command | `HEX_API_KEY=... mix hex.publish --dry-run --yes` |
-| Status | pending maintainer action |
+| Execution date | 2026-04-16 |
+| Publisher account | not reported in terminal output |
+| Exit status | failed: `key not authorized for this action` |
 | Candidate commit | `1740b0a03ba2a0ece0acd5cdc3155f3de116ada3` |
-| Notes | Run with a maintainer publisher account and record the exit status on the same candidate commit. |
+| Same candidate commit | confirmed by maintainer before running the dry-run |
+| Notes | Dry-run reached Hex publish/docs steps but the supplied key was not authorized for this action. Generate or use a publisher-scoped Hex key before retrying. |
 
-Update this section after the dry-run with:
+Recorded metadata: exit status failed with `key not authorized for this action`, publisher account was not reported in terminal output, and same candidate commit was confirmed before the dry-run.
 
-- execution date
-- publisher account used
-- exit status
-- confirmation that the command ran on the same candidate commit
+The credential boundary remains intact: this failure is recorded as maintainer-run manual evidence and is not part of `mix verify.phase10` or the always-on CI gate.
