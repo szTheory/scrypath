@@ -107,4 +107,29 @@ defmodule Scrypath.ObanTest do
     assert_received {:named_oban_insert, :search_sync, changeset, []}
     assert changeset.changes.worker == "Scrypath.Oban.UpsertWorker"
   end
+
+  test "Oban integration sources compile without Oban on the code path" do
+    script = """
+    Code.put_compiler_option(:ignore_module_conflict, true)
+
+    Path.wildcard("_build/test/lib/*/ebin")
+    |> Enum.reject(&String.contains?(&1, "/oban/"))
+    |> Enum.each(fn path -> Code.append_path(String.to_charlist(Path.expand(path))) end)
+
+    for file <- [
+      "lib/scrypath/config.ex",
+      "lib/scrypath/oban/enqueue.ex",
+      "lib/scrypath/oban/upsert_worker.ex",
+      "lib/scrypath/oban/delete_worker.ex",
+      "lib/scrypath/oban.ex"
+    ] do
+      Code.compile_file(file)
+    end
+
+    IO.puts("compile_without_oban_ok")
+    """
+
+    assert {"compile_without_oban_ok\n", 0} =
+             System.cmd("elixir", ["-e", script], cd: File.cwd!(), stderr_to_stdout: true)
+  end
 end

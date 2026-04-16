@@ -20,6 +20,11 @@ defmodule Scrypath.Config do
     config
   end
 
+  @spec oban_dependency_available?() :: boolean()
+  def oban_dependency_available? do
+    Code.ensure_loaded?(Oban) and Code.ensure_loaded?(Oban.Job)
+  end
+
   @spec fetch_backend!(keyword()) :: module()
   def fetch_backend!(config) do
     Keyword.fetch!(config, :backend)
@@ -61,7 +66,7 @@ defmodule Scrypath.Config do
   end
 
   defp maybe_ensure_oban_dependency!(config) do
-    if oban_module(config) == Oban and not Code.ensure_loaded?(Oban) do
+    if oban_module(config) == Oban and not oban_dependency_available?() do
       raise ArgumentError,
             "Oban dependency is required for sync_mode :oban. Add {:oban, \"~> 2.21\", optional: true} to your deps."
     end
@@ -82,12 +87,17 @@ defmodule Scrypath.Config do
                 "configured Oban instance #{inspect(module)} is not available for sync_mode :oban"
         end
 
-      _ -> raise ArgumentError, "oban must be a module when sync_mode is :oban"
+      _ ->
+        raise ArgumentError, "oban must be a module when sync_mode is :oban"
     end
 
     case oban_max_attempts(config) do
-      attempts when is_integer(attempts) and attempts > 0 -> :ok
-      _ -> raise ArgumentError, "oban_max_attempts must be a positive integer when sync_mode is :oban"
+      attempts when is_integer(attempts) and attempts > 0 ->
+        :ok
+
+      _ ->
+        raise ArgumentError,
+              "oban_max_attempts must be a positive integer when sync_mode is :oban"
     end
   end
 end

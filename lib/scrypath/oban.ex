@@ -2,6 +2,7 @@ defmodule Scrypath.Oban do
   @moduledoc """
   Narrow Oban helpers for composing Scrypath sync jobs into `Ecto.Multi`.
   """
+  @compile {:no_warn_undefined, Oban}
 
   alias Ecto.Multi
   alias Scrypath.Config
