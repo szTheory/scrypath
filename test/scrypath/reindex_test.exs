@@ -63,6 +63,20 @@ defmodule Scrypath.ReindexTest do
     end
   end
 
+  defmodule RecordingTaskClient do
+    def task(task_uid, _config) do
+      send(self(), {:task_wait, task_uid})
+
+      {:ok,
+       %{
+         uid: task_uid,
+         status: "succeeded",
+         indexUid: "waited_#{task_uid}",
+         type: "documentAdditionOrUpdate"
+       }}
+    end
+  end
+
   defmodule RecordingBackfill do
     alias Scrypath.Operations
     alias Scrypath.Operations.Result
@@ -142,6 +156,7 @@ defmodule Scrypath.ReindexTest do
                batch_size: 100,
                target_index: "posts_rebuild_v2",
                settings: %{searchableAttributes: ["title"]},
+               meilisearch_client: RecordingTaskClient,
                meilisearch: RecordingMeilisearch,
                backfill: RecordingBackfill
              )
@@ -157,6 +172,12 @@ defmodule Scrypath.ReindexTest do
 
     assert_receive {:swap_indexes, QueryablePost, swap_config}
     assert swap_config[:target_index] == "posts_rebuild_v2"
+    assert_received {:task_wait, 10}
+    assert_received {:task_wait, 11}
+    assert_received {:task_wait, 21}
+    assert_received {:task_wait, 22}
+    assert_received {:task_wait, 23}
+    assert_received {:task_wait, 12}
   end
 
   test "reindex with cutover?: false leaves the live index untouched and returns target counts" do
@@ -174,6 +195,7 @@ defmodule Scrypath.ReindexTest do
                repo: Scrypath.BackfillTest.BackfillRepo,
                batch_size: 100,
                cutover?: false,
+               meilisearch_client: RecordingTaskClient,
                meilisearch: RecordingMeilisearch,
                backfill: RecordingBackfill
              )
@@ -183,6 +205,11 @@ defmodule Scrypath.ReindexTest do
     assert_receive {:apply_settings, QueryablePost, "scrypath_queryable_post__reindex", _}
     assert_receive {:backfill, QueryablePost, backfill_config}
     assert backfill_config[:index_name] == "scrypath_queryable_post__reindex"
+    assert_received {:task_wait, 10}
+    assert_received {:task_wait, 11}
+    assert_received {:task_wait, 21}
+    assert_received {:task_wait, 22}
+    assert_received {:task_wait, 23}
   end
 
   test "reindex exposes the workflow result fields operators need to inspect what happened" do
@@ -192,6 +219,7 @@ defmodule Scrypath.ReindexTest do
                repo: Scrypath.BackfillTest.BackfillRepo,
                batch_size: 100,
                cutover?: false,
+               meilisearch_client: RecordingTaskClient,
                meilisearch: RecordingMeilisearch,
                backfill: RecordingBackfill
              )
@@ -212,6 +240,7 @@ defmodule Scrypath.ReindexTest do
                batch_size: 100,
                target_index: "passive_posts",
                cutover?: false,
+               meilisearch_client: RecordingTaskClient,
                meilisearch: RecordingMeilisearch,
                backfill: RecordingBackfill
              )
@@ -222,5 +251,10 @@ defmodule Scrypath.ReindexTest do
     assert_receive {:apply_settings, QueryablePost, "passive_posts", _}
     assert_receive {:backfill, QueryablePost, backfill_config}
     assert backfill_config[:index_name] == "passive_posts"
+    assert_received {:task_wait, 10}
+    assert_received {:task_wait, 11}
+    assert_received {:task_wait, 21}
+    assert_received {:task_wait, 22}
+    assert_received {:task_wait, 23}
   end
 end

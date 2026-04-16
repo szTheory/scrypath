@@ -3,7 +3,10 @@ defmodule Scrypath.Backfill do
 
   import Ecto.Query
 
+  alias Scrypath.Meilisearch.Operations, as: MeilisearchOperations
   alias Scrypath.Options
+  alias Scrypath.Operations.Result
+  alias Scrypath.Operations.Task
   alias Scrypath.Projection
 
   @spec backfill(module(), keyword()) :: {:ok, map()} | {:error, term()}
@@ -50,12 +53,13 @@ defmodule Scrypath.Backfill do
 
         with {:ok, backend_result} <-
                upsert_documents(schema_module, documents, Keyword.fetch!(config, :backend), config, index) do
-          batch_result = %{
-            index: Map.get(backend_result, :index, index),
-            documents: length(documents),
-            last_primary_key: last_primary_key,
-            task: Map.get(backend_result, :task)
-          }
+          batch_result =
+            batch_result(
+              backend_result,
+              index,
+              length(documents),
+              last_primary_key
+            )
 
           run_batches(
             base_query,
@@ -90,7 +94,52 @@ defmodule Scrypath.Backfill do
   end
 
   defp upsert_documents(schema_module, documents, backend, config, index) do
-    backend.upsert_documents(schema_module, documents, Keyword.put(config, :index_name, index))
+    config = Keyword.put(config, :index_name, index)
+
+    case backend do
+      Scrypath.Meilisearch -> MeilisearchOperations.upsert_documents(schema_module, documents, config)
+      _other -> backend.upsert_documents(schema_module, documents, config)
+    end
+  end
+
+  defp batch_result(%Result{} = result, index, documents, last_primary_key) do
+    %{
+      index: Map.get(result.metadata, :index, index),
+      documents: documents,
+      last_primary_key: last_primary_key,
+      task: public_task(result.task)
+    }
+    |> maybe_drop_nil(:task)
+  end
+
+  defp batch_result(result, index, documents, last_primary_key) when is_map(result) do
+    %{
+      index: Map.get(result, :index, index),
+      documents: documents,
+      last_primary_key: last_primary_key,
+      task: public_task(Map.get(result, :task))
+    }
+    |> maybe_drop_nil(:task)
+  end
+
+  defp public_task(%Task{} = task) do
+    %{
+      uid: task.id,
+      status: task.state,
+      index_uid: Map.get(task.reference, :index_uid),
+      type: Map.get(task.metadata, :type),
+      raw: task.raw
+    }
+  end
+
+  defp public_task(task) when is_map(task), do: task
+  defp public_task(_task), do: nil
+
+  defp maybe_drop_nil(map, key) do
+    case Map.get(map, key) do
+      nil -> Map.delete(map, key)
+      _value -> map
+    end
   end
 
   defp last_primary_key([]), do: nil
