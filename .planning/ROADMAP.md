@@ -15,7 +15,7 @@
 ## Phases
 
 - [x] **Phase 11: Public Release Contract** - Validate one real public release path, consumer smoke flow, and maintainer recovery contract. (completed 2026-04-16)
-- [x] **Phase 12: Internal Operations Seam** - Extract Scrypath-owned operations boundaries under the Meilisearch-first public surface. (in progress) (completed 2026-04-16)
+- [x] **Phase 12: Internal Operations Seam** - Extract Scrypath-owned operations boundaries under the Meilisearch-first public surface. (completed 2026-04-16)
 - [ ] **Phase 13: Operator Primitives** - Expose status, failure inspection, retry, and reconcile APIs through Scrypath-owned operator types.
 - [ ] **Phase 14: Mix Tasks and Guides** - Put thin CLI ergonomics and sync-mode guides on top of the operator surface without widening common search.
 
@@ -48,7 +48,7 @@ Plans:
 Plans:
 - [x] 12-01-PLAN.md - Define the internal operations contracts in the pattern-map layout before runtime wiring begins. (completed 2026-04-16)
 - [x] 12-02-PLAN.md - Move Meilisearch task waiting, Oban enqueue, and sync orchestration onto the seam with direct adapter tests. (completed 2026-04-16)
-- [ ] 12-03-PLAN.md - Move backfill and reindex onto the seam, then lock the Meilisearch-first boundary in docs and telemetry.
+- [x] 12-03-PLAN.md - Move backfill and reindex onto the seam, then lock the Meilisearch-first boundary in docs and telemetry. (completed 2026-04-16)
 
 ### Phase 13: Operator Primitives
 **Goal**: Operators can inspect sync state, failed work, and recovery actions through durable Scrypath APIs that stay explicit about eventual consistency and drift.
