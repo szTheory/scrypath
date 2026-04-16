@@ -3,6 +3,8 @@ defmodule Scrypath.DocsContractTest do
 
   @readme File.read!("README.md")
   @architecture File.read!("ARCHITECTURE.md")
+  @ci_workflow File.read!(".github/workflows/ci.yml")
+  @release_docs File.read!("docs/releasing.md")
   @guide_paths [
     "guides/getting-started.md",
     "guides/phoenix-walkthrough.md",
@@ -28,6 +30,8 @@ defmodule Scrypath.DocsContractTest do
     assert String.contains?(@readme, "Scrypath, the Ecto-native search indexing library")
     assert ordered?(@readme, "## Installation", "## When Scrypath Fits")
     assert ordered?(@readme, "## Quick Path", "## When Scrypath Fits")
+    assert @readme =~ ~S|{:scrypath, "~> 0.1.0"}|
+    refute @readme =~ ~S|{:scrypath, path: "../scrypath"}|
 
     assert_contains_all(@readme, [
       "MyApp.Content",
@@ -99,6 +103,23 @@ defmodule Scrypath.DocsContractTest do
       "defmodule MyAppWeb.PostController",
       "defmodule MyAppWeb.PostLive",
       "defmodule MyAppWeb.Api.PostController"
+    ])
+  end
+
+  test "release docs and CI keep the package gate auth-free" do
+    assert_contains_all(@ci_workflow, [
+      "mix test test/release/package_metadata_test.exs",
+      "mix hex.build --unpack"
+    ])
+
+    refute @ci_workflow =~ "mix hex.publish --dry-run"
+
+    assert_contains_all(@release_docs, [
+      "mix test test/release/package_metadata_test.exs",
+      "mix hex.build --unpack",
+      "HEX_API_KEY",
+      "mix hex.publish --dry-run --yes",
+      "always-on CI gate"
     ])
   end
 

@@ -89,8 +89,8 @@ jobs:
       - name: Validate release workflow config
         run: grep -nE "release-please|manifest-file|config-file|release-type" .github/workflows/release-please.yml release-please-config.json .release-please-manifest.json
 
-      - name: Dry-run Hex publish
-        run: mix hex.publish --dry-run
+      - name: Verify package metadata contract
+        run: mix test test/release/package_metadata_test.exs
 
       - name: Build and inspect Hex package
         run: |
