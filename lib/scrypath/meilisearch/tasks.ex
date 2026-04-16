@@ -2,33 +2,50 @@ defmodule Scrypath.Meilisearch.Tasks do
   @moduledoc false
 
   alias Scrypath.Config
+  alias Scrypath.Meilisearch
   alias Scrypath.Meilisearch.Client
   alias Scrypath.Telemetry
 
-  @queued_statuses ~w(enqueued processing queued)a
+  @queued_statuses [:enqueued, :processing]
 
   @spec wait_for_task(map(), keyword()) :: {:ok, map()} | {:error, term()}
   def wait_for_task(task, config) when is_map(task) do
     started_at = System.monotonic_time(:millisecond)
     poll_interval = Config.inline_poll_interval(config)
     timeout = Config.inline_timeout(config)
-    normalized_task = normalize_task(task)
 
-    Telemetry.span(
-      [:scrypath, :meilisearch, :task_wait],
-      %{
-        task_uid: normalized_task.uid,
-        initial_status: normalized_task.status,
-        poll_interval_ms: poll_interval,
-        timeout_ms: timeout
-      },
-      fn ->
-        {result, polls} =
-          do_wait_for_task(normalized_task, config, started_at, poll_interval, timeout, 0)
+    case Meilisearch.normalize_task(task, :initial) do
+      {:ok, normalized_task} ->
+        Telemetry.span(
+          [:scrypath, :meilisearch, :task_wait],
+          %{
+            task_uid: normalized_task.uid,
+            initial_status: normalized_task.status,
+            poll_interval_ms: poll_interval,
+            timeout_ms: timeout
+          },
+          fn ->
+            {result, polls} =
+              do_wait_for_task(normalized_task, config, started_at, poll_interval, timeout, 0)
 
-        {result, task_wait_metadata(result, polls)}
-      end
-    )
+            {result, task_wait_metadata(result, polls)}
+          end
+        )
+
+      {:error, {:invalid_task_payload, details}} = error ->
+        Telemetry.span(
+          [:scrypath, :meilisearch, :task_wait],
+          %{
+            task_uid: details.task_uid,
+            initial_status: nil,
+            poll_interval_ms: poll_interval,
+            timeout_ms: timeout
+          },
+          fn ->
+            {error, task_wait_metadata(error, 0)}
+          end
+        )
+    end
   end
 
   defp do_wait_for_task(task, _config, _started_at, _poll_interval, _timeout, polls)
@@ -55,9 +72,13 @@ defmodule Scrypath.Meilisearch.Tasks do
 
       case client(config).task(task.uid, config) do
         {:ok, response} ->
-          response
-          |> normalize_task()
-          |> do_wait_for_task(config, started_at, poll_interval, timeout, polls + 1)
+          case Meilisearch.normalize_task(response, :poll) do
+            {:ok, normalized_task} ->
+              do_wait_for_task(normalized_task, config, started_at, poll_interval, timeout, polls + 1)
+
+            {:error, reason} ->
+              {{:error, reason}, polls + 1}
+          end
 
         {:error, reason} ->
           {{:error, reason}, polls + 1}
@@ -66,7 +87,7 @@ defmodule Scrypath.Meilisearch.Tasks do
   end
 
   defp do_wait_for_task(task, _config, _started_at, _poll_interval, _timeout, polls) do
-    {{:ok, task}, polls}
+    {{:error, {:invalid_task_payload, invalid_task_payload(task, :poll)}}, polls}
   end
 
   defp task_wait_metadata({:ok, task}, polls) do
@@ -89,30 +110,14 @@ defmodule Scrypath.Meilisearch.Tasks do
     Keyword.get(config, :meilisearch_client) || Client
   end
 
-  defp normalize_task(task) do
-    status =
-      task
-      |> Map.get("status", Map.get(task, :status))
-      |> normalize_status()
+  defp invalid_task_payload(task, stage) do
+    task_uid = Map.get(task, :uid)
 
     %{
-      uid:
-        Map.get(task, "taskUid") || Map.get(task, :taskUid) || Map.get(task, "uid") ||
-          Map.get(task, :uid),
-      status: status,
-      type: Map.get(task, "type") || Map.get(task, :type),
-      index_uid: Map.get(task, "indexUid") || Map.get(task, :indexUid),
-      raw: task
+      stage: stage,
+      task_uid: if(is_integer(task_uid), do: task_uid, else: nil),
+      problems: [status: :unknown],
+      payload: Map.get(task, :raw, task)
     }
   end
-
-  defp normalize_status(status) when is_atom(status), do: status
-  defp normalize_status("succeeded"), do: :succeeded
-  defp normalize_status("failed"), do: :failed
-  defp normalize_status("canceled"), do: :cancelled
-  defp normalize_status("cancelled"), do: :cancelled
-  defp normalize_status("enqueued"), do: :enqueued
-  defp normalize_status("processing"), do: :processing
-  defp normalize_status("queued"), do: :queued
-  defp normalize_status(status), do: status
 end

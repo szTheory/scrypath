@@ -15,12 +15,13 @@ defmodule Scrypath.Meilisearch.Settings do
   def apply(schema_module, index_name, config) do
     settings = resolve(schema_module, config)
 
-    with {:ok, response} <- client(config).update_settings(index_name, settings, config) do
+    with {:ok, response} <- client(config).update_settings(index_name, settings, config),
+         {:ok, task} <- Meilisearch.normalize_task(response) do
       {:ok,
        %{
          index: index_name,
          settings: settings,
-         task: Meilisearch.normalize_task(response)
+         task: task
        }}
     end
   end

@@ -19,12 +19,13 @@ defmodule Scrypath.Meilisearch.IndexManagement do
     live_index = live_index_name(schema_module, config)
     target_index = target_index_name(schema_module, config)
 
-    with {:ok, response} <- client(config).create_index(target_index, primary_key, config) do
+    with {:ok, response} <- client(config).create_index(target_index, primary_key, config),
+         {:ok, task} <- Meilisearch.normalize_task(response) do
       {:ok,
        %{
          live_index: live_index,
          target_index: target_index,
-         task: Meilisearch.normalize_task(response)
+         task: task
        }}
     end
   end
@@ -34,12 +35,13 @@ defmodule Scrypath.Meilisearch.IndexManagement do
     live_index = live_index_name(schema_module, config)
     target_index = target_index_name(schema_module, config)
 
-    with {:ok, response} <- client(config).swap_indexes({live_index, target_index}, config) do
+    with {:ok, response} <- client(config).swap_indexes({live_index, target_index}, config),
+         {:ok, task} <- Meilisearch.normalize_task(response) do
       {:ok,
        %{
          live_index: live_index,
          target_index: target_index,
-         task: Meilisearch.normalize_task(response)
+         task: task
        }}
     end
   end
