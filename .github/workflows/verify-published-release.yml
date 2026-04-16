@@ -1,0 +1,80 @@
+name: Verify Published Release
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-published-release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-latest-published-release:
+    runs-on: ubuntu-latest
+    outputs:
+      published: ${{ steps.resolve-version.outputs.published }}
+      version: ${{ steps.resolve-version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Resolve latest published Scrypath version
+        id: resolve-version
+        run: |
+          set -euo pipefail
+
+          status_code="$(curl -sS -o package.json -w "%{http_code}" https://hex.pm/api/packages/scrypath)"
+
+          if [ "$status_code" = "404" ]; then
+            echo "published=false" >> "$GITHUB_OUTPUT"
+            echo "version=" >> "$GITHUB_OUTPUT"
+            echo "Scrypath is not published on Hex yet. Skipping ongoing published-release verification." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if [ "$status_code" != "200" ]; then
+            echo "Unexpected Hex package API status: $status_code" >&2
+            cat package.json >&2 || true
+            exit 1
+          fi
+
+          version="$(jq -r '.latest_stable_version // .latest_version // empty' package.json)"
+
+          if [ -z "$version" ] || [ "$version" = "null" ]; then
+            echo "Could not determine the latest published Scrypath version from Hex." >&2
+            cat package.json >&2
+            exit 1
+          fi
+
+          echo "published=true" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Latest published Scrypath version: $version" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: erlef/setup-beam@v1
+        if: ${{ steps.resolve-version.outputs.published == 'true' }}
+        with:
+          elixir-version: "1.19.0"
+          otp-version: "28.0"
+
+      - name: Install Hex
+        if: ${{ steps.resolve-version.outputs.published == 'true' }}
+        run: mix local.hex --force
+
+      - name: Install Rebar
+        if: ${{ steps.resolve-version.outputs.published == 'true' }}
+        run: mix local.rebar --force
+
+      - name: Install dependencies
+        if: ${{ steps.resolve-version.outputs.published == 'true' }}
+        run: mix deps.get
+
+      - name: Verify the latest published Scrypath release
+        if: ${{ steps.resolve-version.outputs.published == 'true' }}
+        env:
+          SCRYPATH_RELEASE_VERIFY_ATTEMPTS: "10"
+          SCRYPATH_RELEASE_VERIFY_SLEEP_MS: "15000"
+        run: mix verify.release_publish "${{ steps.resolve-version.outputs.version }}"

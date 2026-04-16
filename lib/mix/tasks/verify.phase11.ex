@@ -11,13 +11,6 @@ defmodule Mix.Tasks.Verify.Phase11 do
   manifest, and publish workflow still describe the same tagged release path.
   """
 
-  @release_contract_pattern "release_created|tag_name|mix hex.publish --yes|manifest-file|config-file|release-type"
-  @release_contract_paths [
-    ".github/workflows/release-please.yml",
-    "release-please-config.json",
-    ".release-please-manifest.json"
-  ]
-
   @impl true
   def run(args) do
     Mix.Task.run("app.start")
@@ -52,8 +45,76 @@ defmodule Mix.Tasks.Verify.Phase11 do
 
     run_system_command!(
       "grep",
-      ["-nE", @release_contract_pattern | @release_contract_paths],
-      "release workflow contract validation"
+      ["-nF", "config-file: release-please-config.json", ".github/workflows/release-please.yml"],
+      "release workflow config-file validation"
+    )
+
+    run_system_command!(
+      "grep",
+      [
+        "-nF",
+        "manifest-file: .release-please-manifest.json",
+        ".github/workflows/release-please.yml"
+      ],
+      "release workflow manifest-file validation"
+    )
+
+    run_system_command!(
+      "grep",
+      [
+        "-nF",
+        "if: ${{ needs.release-please.outputs.release_created == 'true' }}",
+        ".github/workflows/release-please.yml"
+      ],
+      "publish job release_created guard validation"
+    )
+
+    run_system_command!(
+      "grep",
+      [
+        "-nF",
+        "ref: ${{ needs.release-please.outputs.tag_name }}",
+        ".github/workflows/release-please.yml"
+      ],
+      "publish job tag checkout validation"
+    )
+
+    run_system_command!(
+      "grep",
+      [
+        "-nF",
+        "run: grep -n \"@version \\\"${{ needs.release-please.outputs.version }}\\\"\" mix.exs",
+        ".github/workflows/release-please.yml"
+      ],
+      "publish job version validation"
+    )
+
+    run_system_command!(
+      "grep",
+      ["-nF", "run: mix verify.phase11", ".github/workflows/release-please.yml"],
+      "publish job release gate validation"
+    )
+
+    run_system_command!(
+      "grep",
+      ["-nF", "run: mix hex.publish --dry-run --yes", ".github/workflows/release-please.yml"],
+      "publish job dry-run validation"
+    )
+
+    run_system_command!(
+      "grep",
+      ["-nF", "run: mix hex.publish --yes", ".github/workflows/release-please.yml"],
+      "publish job hex publish validation"
+    )
+
+    run_system_command!(
+      "grep",
+      [
+        "-nF",
+        "run: mix verify.release_publish \"${{ needs.release-please.outputs.version }}\"",
+        ".github/workflows/release-please.yml"
+      ],
+      "publish job post-publish verification validation"
     )
 
     run_system_command!(
