@@ -29,7 +29,11 @@
   1. Maintainer can cut a release from the canonical GitHub flow and confirm the tag, changelog, manifest, package version, and Hex artifact all agree.
   2. Maintainer can install the published package in a clean consumer flow, reach HexDocs, and run a basic Scrypath usage path successfully.
   3. Maintainer can follow one documented recovery path for tag or version drift, failed publish attempts, and published-artifact mismatch without ad hoc spelunking.
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 11-01-PLAN.md - Enforce version/tag/manifest/package alignment with a canonical `mix verify.phase11` gate.
+- [ ] 11-02-PLAN.md - Add clean-consumer smoke proof and maintainer recovery runbooks to the Phase 11 release contract.
 
 ### Phase 12: Internal Operations Seam
 **Goal**: Scrypath's sync and reindex internals depend on a Scrypath-owned operations seam instead of direct Meilisearch task payloads, while keeping Meilisearch as the only public backend and preserving backend-native power boundaries.
@@ -67,7 +71,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 11. Public Release Contract | 0/TBD | Not started | - |
+| 11. Public Release Contract | 0/2 | Not started | - |
 | 12. Internal Operations Seam | 0/TBD | Not started | - |
 | 13. Operator Primitives | 0/TBD | Not started | - |
 | 14. Mix Tasks and Guides | 0/TBD | Not started | - |
