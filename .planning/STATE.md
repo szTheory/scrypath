@@ -5,16 +5,16 @@ milestone_name: milestone
 current_phase: 06
 current_phase_name: phoenix-ergonomics-and-public-facing-polish
 current_plan: 1
-status: executing
-stopped_at: Completed 06-02-PLAN.md
-last_updated: "2026-04-16T15:49:41.610Z"
+status: verifying
+stopped_at: Completed 06-03-PLAN.md
+last_updated: "2026-04-16T15:56:28.126Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 21
-  completed_plans: 20
-  percent: 95
+  completed_plans: 21
+  percent: 100
 ---
 
 # Project State
@@ -33,7 +33,7 @@ Plan: 3 of 3
 Current Phase: 06
 Current Phase Name: phoenix-ergonomics-and-public-facing-polish
 Current Plan: 1
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-16
 Last Activity Description: Phase 06 execution started
 
@@ -60,6 +60,9 @@ Progress: [██████████] 100%
 - [Phase 06]: Locked the context-first Phoenix boundary and sync visibility wording in docs contract tests before deeper copy work.
 - [Phase 06]: Kept the README fast and practical by moving from installation to a real context-first path before audience qualification.
 - [Phase 06]: Used the fixture modules as the source of truth for README and guide function names so Phoenix docs and tests keep teaching one boundary.
+- [Phase 06]: Used Release Please's native elixir release type in manifest mode so versioning and changelog updates stay on the standard path.
+- [Phase 06]: Kept the human release checklist short and pushed repeatable docs/package checks into CI and Mix commands.
+- [Phase 06]: Included guides and the maintainer release note in Hex package metadata so the published tarball matches the docs quality bar.
 
 ### Blockers/Concerns
 
@@ -68,8 +71,8 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-04-16T15:49:41.169Z
-Stopped at: Completed 06-02-PLAN.md
+Last session: 2026-04-16T15:56:28.124Z
+Stopped at: Completed 06-03-PLAN.md
 Resume file: None
 
 ## Current Status
