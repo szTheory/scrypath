@@ -1,13 +1,13 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: release-hardening-and-public-launch-readiness
-current_phase: 10
-current_phase_name: launch-verification-and-release-confidence
-current_plan: 3
-status: verifying
-stopped_at: Completed 10-03-PLAN.md
-last_updated: "2026-04-16T19:27:45.642Z"
+milestone: none
+milestone_name: none
+current_phase: none
+current_phase_name: none
+current_plan: none
+status: ready_for_new_milestone
+stopped_at: Archived v1.1 milestone
+last_updated: "2026-04-16T19:37:50Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 3
@@ -24,18 +24,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Phase 10 — launch-verification-and-release-confidence
+**Current focus:** milestone close complete; ready to define the next milestone
 
 ## Current Position
 
-Phase: 10 (launch-verification-and-release-confidence) — COMPLETE
-Plan: 3 of 3
-Current Phase: 10
-Current Phase Name: launch-verification-and-release-confidence
-Current Plan: 3
-Status: Phase complete — ready for verification
+Phase: None
+Plan: None
+Current Phase: None
+Current Phase Name: None
+Current Plan: None
+Status: Ready for new milestone
 Last activity: 2026-04-16
-Last Activity Description: Phase 10 Plan 03 executed
+Last Activity Description: Archived milestone v1.1 after closing Phases 08 through 10.
 
 Progress: [██████████] 100%
 
@@ -81,6 +81,13 @@ Progress: [██████████] 100%
 - Phase 08's focused fast verification is green, but the live `mix verify.phase8` path still needs a reachable Meilisearch instance via `SCRYPATH_MEILISEARCH_URL`.
 - Phase 10 evidence is complete, but a publisher-scoped `HEX_API_KEY` is still needed for a successful Hex dry-run retry.
 
+### Deferred Items
+
+| Category | Item | Status |
+|----------|------|--------|
+| verification | Live Phase 08 Meilisearch verification | Deferred until a reachable `SCRYPATH_MEILISEARCH_URL` is available |
+| release | Hex publish dry-run retry with publisher-scoped key | Deferred until a publisher-scoped `HEX_API_KEY` is available |
+
 ### Quick Tasks Completed
 
 | # | Description | Date | Commit | Directory |
@@ -96,15 +103,14 @@ Resume file: None
 ## Current Status
 
 - v1.0 remains archived with the full Meilisearch-first core, search, Oban, reindex, docs, and release baseline shipped.
-- Phase 08 Reliability and Contract Hardening is complete with strict task normalization, explicit empty-batch no-op behavior, and `mix verify.phase8`.
-- Phase 09 Public Docs and Example Safety is complete with a narrowed install contract, safe JSON pagination docs, and realistic request-shape coverage.
-- Phase 10 execution complete: `10-VALIDATION.md`, `10-VERIFICATION.md`, and `.planning/v1.1-MILESTONE-AUDIT.md` now provide the final launch-readiness evidence chain.
+- v1.1 is archived with reliability hardening, docs-safety fixes, `mix verify.phase10`, and the milestone-close evidence chain.
 - Fast docs verification passes locally; live Phase 08 verification still depends on a reachable Meilisearch endpoint.
-- Milestone v1.1 closeout preserves Phase 08 and Phase 09 ownership while indexing their evidence from the Phase 10 milestone audit.
+- The release-confidence artifact records the failed manual Hex dry-run cleanly; a publisher-scoped key is still needed for a successful retry.
+- No active milestone is open.
 
 ## Next Command
 
-- `/gsd-complete-milestone`
+- `/gsd-new-milestone`
 
 ---
-*Last updated: 2026-04-16 after completing Phase 10 Plan 03*
+*Last updated: 2026-04-16 after archiving milestone v1.1*

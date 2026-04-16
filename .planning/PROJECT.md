@@ -17,12 +17,13 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] Common search, validated filter/sort/page handling, raw-hit access, and explicit hydration validated in v1.0.
 - [x] Backfill, managed reindex, settings application, and recovery guidance validated in v1.0.
 - [x] Phoenix docs, examples, release automation, and package trust signals validated in v1.0.
+- [x] Launch-readiness hardening for Meilisearch edge cases, copied Phoenix docs safety, and milestone-close release evidence validated in v1.1.
 
 ### Active
 
-- [ ] Deliver a launch-readiness milestone that hardens Scrypath's existing v1 surface before broad public adoption.
-- [ ] Resolve the remaining advisory debt from Phase 2 and Phase 6 so copied examples and Meilisearch task handling are trustworthy.
-- [ ] Close the remaining release-confidence gaps around validation coverage, public docs safety, and maintainer release flow integrity.
+- [ ] Validate the first real tagged/public package release with publisher-scoped Hex credentials and confirm the Release Please publish path end to end.
+- [ ] Decide the next milestone focus between backend breadth, deeper operator tooling, and richer backend-native search power based on early adoption pressure.
+- [ ] Turn the current hardening evidence chain into real public adoption feedback instead of planning against assumptions alone.
 
 ### Out of Scope
 
@@ -53,34 +54,32 @@ When running future GSD discuss, plan, and execute flows, consult the relevant f
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Use `Scrypath` as the working project name | The name is available on Hex and matches the intended brand posture | - Pending |
-| Position the product as the missing Searchkick or Scout for Ecto and Phoenix | The real gap is the integration and sync layer, not another thin HTTP client | - Pending |
-| Start with Meilisearch as the public v1 backend | The market gap is stronger and it keeps v1 focused while preserving an internal adapter seam | - Pending |
-| Keep the core Ecto-first and Phoenix-friendly | Ecto is the stable architectural center, while Phoenix ergonomics are critical for adoption | - Pending |
-| Support inline, Oban, and manual sync modes in v1 | Teams need a simple local path, a production queue path, and an explicit escape hatch | Phase 2 validated inline and manual; Oban remains active scope |
-| Exclude Postgres-native full-text search from the v1 product surface | It solves a different problem and would blur the product story too early | - Pending |
-| Defer public multi-backend support and advanced relevance features | Premature abstraction and feature breadth would increase API risk before the core is validated | - Pending |
+| Use `Scrypath` as the project and package identity | The name is available on Hex and matches the intended brand posture | Retained through v1.1 hardening |
+| Position the product as the missing Searchkick or Scout for Ecto and Phoenix | The real gap is the integration and sync layer, not another thin HTTP client | Reinforced by v1.0 and v1.1 |
+| Start with Meilisearch as the public v1 backend | The market gap is stronger and it keeps v1 focused while preserving an internal adapter seam | Validated in v1.0 and retained in v1.1 |
+| Keep the core Ecto-first and Phoenix-friendly | Ecto is the stable architectural center, while Phoenix ergonomics are critical for adoption | Validated in shipped API and docs |
+| Support inline, Oban, and manual sync modes in v1 | Teams need a simple local path, a production queue path, and an explicit escape hatch | Validated in v1.0 |
+| Exclude Postgres-native full-text search from the v1 product surface | It solves a different problem and would blur the product story too early | Still out of scope after v1.1 |
+| Defer public multi-backend support and advanced relevance features | Premature abstraction and feature breadth would increase API risk before the core is validated | Still deferred pending adoption feedback |
 
 ## Current State
 
-Scrypath v1.0 is archived. The shipped milestone includes schema declaration and projection contracts, Meilisearch-backed sync flows, the common search and hydration path, Oban-backed async support, reindex/backfill workflows, Phoenix-facing docs, release automation, and repaired milestone verification history.
+Scrypath has two archived milestones:
 
-The library is functionally complete for its v1 product boundary. The next constraint is not missing product breadth; it is public trust. Remaining debt clusters around Meilisearch task-wait edge cases, a handful of copied-example hazards in the public docs, and the maintainer confidence needed to treat Hex/GitHub release automation as ready for real users.
+- `v1.0` shipped the Meilisearch-first Ecto-native indexing core, search/hydration path, Oban support, reindex workflows, public Phoenix docs, and release automation baseline.
+- `v1.1` shipped the release-hardening pass that tightened Meilisearch task contracts, closed copied-doc hazards, added `mix verify.phase10`, and built the final launch-readiness evidence chain.
 
-## Current Milestone: v1.1 Release Hardening and Public Launch Readiness
+The library is functionally complete for its current public boundary. The next unknown is not basic product breadth; it is how the package and release story behave under real public adoption and where real users push hardest on backend breadth, operator tooling, or backend-native search power.
 
-**Goal:** Make Scrypath feel safe to adopt publicly by removing footguns, tightening edge-case behavior, and closing the remaining release-confidence gaps around docs, verification, and maintainer workflows.
+## Current Milestone
 
-**Target features:**
-- Harden Meilisearch task waiting and shared sync/delete edge-case contracts so failures stay explicit and no-op flows are defined.
-- Fix public install and Phoenix example hazards so copied README, controller, and LiveView examples model safe behavior.
-- Close launch-readiness gaps in validation, release documentation, and maintainer publish confidence without widening the public product surface.
+No active milestone. `v1.1` is archived and the project is ready for the next milestone-definition cycle.
 
 ## Next Milestone Goals
 
-- Treat `v1.1` as a launch-readiness milestone rather than a breadth milestone.
-- Resolve the advisory issues around Meilisearch task payloads, empty-batch semantics, README install guidance, JSON pagination robustness, and LiveView string-key fixtures.
-- Finish the remaining verification and release-confidence work needed before inviting broader public adoption.
+- Confirm one successful real release with the correct publisher-scoped Hex credentials and the existing GitHub Actions publish path.
+- Decide whether the next milestone should deepen the current operator surface or widen the backend/search surface.
+- Use real adoption signals to choose the next milestone instead of widening the API by default.
 
 ## Evolution
 
@@ -100,4 +99,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-16 after starting milestone v1.1*
+*Last updated: 2026-04-16 after archiving milestone v1.1*
