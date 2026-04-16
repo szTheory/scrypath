@@ -1,7 +1,6 @@
 defmodule Scrypath.TelemetryTest do
   use ExUnit.Case, async: false
 
-  alias Scrypath.Document
   alias Scrypath.SearchResult
   alias Scrypath.TestSupport.FakeRepo
 
@@ -146,15 +145,7 @@ defmodule Scrypath.TelemetryTest do
         prefix ++ [suffix]
       end
 
-    :ok =
-      :telemetry.attach_many(
-        handler_id,
-        event_names,
-        fn event_name, measurements, metadata, _config ->
-          send(parent, {ref, %{name: event_name, measurements: measurements, metadata: metadata}})
-        end,
-        nil
-      )
+    :ok = :telemetry.attach_many(handler_id, event_names, &__MODULE__.handle_event/4, {parent, ref})
 
     fun.()
 
@@ -184,5 +175,9 @@ defmodule Scrypath.TelemetryTest do
     end)
 
     event
+  end
+
+  def handle_event(event_name, measurements, metadata, {parent, ref}) do
+    send(parent, {ref, %{name: event_name, measurements: measurements, metadata: metadata}})
   end
 end

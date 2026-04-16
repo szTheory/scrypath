@@ -6,6 +6,7 @@ defmodule Scrypath.Sync do
   alias Scrypath.Meilisearch.Tasks
   alias Scrypath.Oban.Enqueue
   alias Scrypath.Projection
+  alias Scrypath.Telemetry
 
   @spec sync_record(module(), struct() | map(), keyword()) :: {:ok, term()} | {:error, term()}
   def sync_record(schema_module, record, opts \\ []) do
@@ -17,7 +18,15 @@ defmodule Scrypath.Sync do
     config = Config.resolve!(opts)
     documents = Enum.map(records, &Projection.document(schema_module, &1))
 
-    dispatch_upsert(schema_module, documents, config)
+    metadata =
+      Telemetry.common_metadata(schema_module, config,
+        document_count: length(documents)
+      )
+
+    Telemetry.span([:scrypath, :sync, :upsert], metadata, fn ->
+      result = dispatch_upsert(schema_module, documents, config)
+      {result, Telemetry.stop_metadata(result)}
+    end)
   end
 
   @spec delete_record(module(), struct() | map(), keyword()) :: {:ok, term()} | {:error, term()}
@@ -36,7 +45,16 @@ defmodule Scrypath.Sync do
   @spec delete_documents(module(), [term()], keyword()) :: {:ok, term()} | {:error, term()}
   def delete_documents(schema_module, document_ids, opts \\ []) when is_list(document_ids) do
     config = Config.resolve!(opts)
-    dispatch_delete(schema_module, document_ids, config)
+
+    metadata =
+      Telemetry.common_metadata(schema_module, config,
+        document_count: length(document_ids)
+      )
+
+    Telemetry.span([:scrypath, :sync, :delete], metadata, fn ->
+      result = dispatch_delete(schema_module, document_ids, config)
+      {result, Telemetry.stop_metadata(result)}
+    end)
   end
 
   defp dispatch_upsert(schema_module, documents, config) do

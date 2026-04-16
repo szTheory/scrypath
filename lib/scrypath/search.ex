@@ -5,17 +5,25 @@ defmodule Scrypath.Search do
   alias Scrypath.Hydration
   alias Scrypath.Query
   alias Scrypath.SearchResult
+  alias Scrypath.Telemetry
 
   @spec search(module(), String.t(), keyword()) :: {:ok, SearchResult.t()} | {:error, term()}
   def search(schema_module, text, opts \\ []) when is_binary(text) and is_list(opts) do
     search_opts = Scrypath.Options.validate_search_options!(schema_module, opts)
     config = Config.resolve!(runtime_opts(opts))
     query = Query.new(text, search_opts)
-    backend = Config.fetch_backend!(config)
+    metadata = Telemetry.common_metadata(schema_module, config)
 
-    with {:ok, raw_result} <- backend.search(schema_module, query, config) do
-      {:ok, decorate_result(schema_module, query, raw_result, config)}
-    end
+    Telemetry.span([:scrypath, :search], metadata, fn ->
+      backend = Config.fetch_backend!(config)
+
+      result =
+        with {:ok, raw_result} <- backend.search(schema_module, query, config) do
+          {:ok, decorate_result(schema_module, query, raw_result, config)}
+        end
+
+      {result, Telemetry.stop_metadata(result)}
+    end)
   end
 
   @spec search!(module(), String.t(), keyword()) :: SearchResult.t()
