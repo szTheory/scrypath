@@ -33,6 +33,14 @@ defmodule Scrypath.Telemetry do
 
   def stop_metadata({:ok, %_{} = result}, extra), do: stop_metadata({:ok, Map.from_struct(result)}, extra)
 
+  def stop_metadata({:ok, %{status: :noop, document_count: 0} = result}, extra) do
+    %{}
+    |> maybe_put(:status, :noop)
+    |> maybe_put(:mode, Map.get(result, :mode))
+    |> Map.put(:document_count, 0)
+    |> Map.merge(Map.new(extra))
+  end
+
   def stop_metadata({:ok, result}, extra) when is_map(result) do
     result
     |> result_metadata()
@@ -51,7 +59,7 @@ defmodule Scrypath.Telemetry do
     %{}
     |> maybe_put(:status, Map.get(result, :status))
     |> maybe_put(:mode, Map.get(result, :mode))
-    |> maybe_put(:document_count, count(Map.get(result, :document_ids)))
+    |> maybe_put(:document_count, Map.get(result, :document_count) || count(Map.get(result, :document_ids)))
     |> maybe_put(:record_count, count(Map.get(result, :records)))
     |> maybe_put(:hit_count, count(Map.get(result, :hits)))
     |> maybe_put(:missing_count, count(Map.get(result, :missing_ids)))
