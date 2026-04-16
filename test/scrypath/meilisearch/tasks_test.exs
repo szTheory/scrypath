@@ -14,6 +14,11 @@ defmodule Scrypath.Meilisearch.TasksTest do
         [] -> {{:ok, %{"uid" => task_uid, "status" => "succeeded"}}, []}
       end)
     end
+
+    def tasks(filters, config) do
+      send(self(), {:client_tasks, filters, config})
+      {:ok, %{results: Keyword.get(config, :task_history, [])}}
+    end
   end
 
   setup do
@@ -52,6 +57,41 @@ defmodule Scrypath.Meilisearch.TasksTest do
     assert task.metadata.type == "documentAdditionOrUpdate"
     assert raw["status"] == "succeeded"
     assert_received {:client_task, 101, _}
+  end
+
+  test "list_sync_tasks/2 filters history through seam-owned operation tasks" do
+    task_history = [
+      %{
+        "uid" => 401,
+        "status" => "enqueued",
+        "type" => "documentAdditionOrUpdate",
+        "indexUid" => "tenant_posts"
+      },
+      %{
+        "uid" => 402,
+        "status" => "failed",
+        "type" => "documentDeletion",
+        "indexUid" => "tenant_posts",
+        "error" => %{"code" => "index_not_found"}
+      }
+    ]
+
+    assert {:ok, [%OperationTask{} = first, %OperationTask{} = second]} =
+             Tasks.list_sync_tasks("tenant_posts",
+               meilisearch_client: SequencedClient,
+               task_history: task_history
+             )
+
+    assert first.id == 401
+    assert first.state == :enqueued
+    assert first.reference.index_uid == "tenant_posts"
+    assert second.id == 402
+    assert second.state == :failed
+    assert second.raw["error"]["code"] == "index_not_found"
+
+    assert_received {:client_tasks, filters, _config}
+    assert filters[:index_uids] == ["tenant_posts"]
+    assert filters[:types] == ["documentAdditionOrUpdate", "documentDeletion"]
   end
 
   test "backend task failure returns a distinct failure shape", %{task_responses: agent} do
