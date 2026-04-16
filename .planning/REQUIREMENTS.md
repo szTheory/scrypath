@@ -20,7 +20,7 @@
 
 ### Launch Confidence
 
-- [ ] **SHIP-01**: Maintainer can verify the release path from CI/package checks through GitHub Actions Hex publishing with canonical source and package metadata.
+- [x] **SHIP-01**: Maintainer can verify the release path from CI/package checks through GitHub Actions Hex publishing with canonical source and package metadata.
 - [ ] **SHIP-02**: Maintainer can point to current verification artifacts for the hardening work and the remaining launch-readiness surface without milestone bookkeeping gaps.
 
 ## v1.2+ Requirements
@@ -55,7 +55,7 @@
 | DOCS-01 | Phase 9 | Complete |
 | DOCS-02 | Phase 9 | Complete |
 | DOCS-03 | Phase 9 | Complete |
-| SHIP-01 | Phase 10 | Pending |
+| SHIP-01 | Phase 10 | Complete |
 | SHIP-02 | Phase 10 | Pending |
 
 **Coverage:**
@@ -65,4 +65,4 @@
 
 ---
 *Requirements defined: 2026-04-16*
-*Last updated: 2026-04-16 after completing Phase 09*
+*Last updated: 2026-04-16 after completing Phase 10 Plan 01*

@@ -42,6 +42,11 @@ Plans:
 
 **Goal:** Close the remaining launch-readiness gaps so maintainers can trust the release path and point to current evidence for the hardened surface.
 **Requirements:** `SHIP-01`, `SHIP-02`
+**Plans:** 1/3 plans executed
+Plans:
+- [x] `10-01-PLAN.md` — Add the thin auth-free `mix verify.phase10` gate and wire the release runbook to it.
+- [ ] `10-02-PLAN.md` — Run the Phase 10 gate, write `10-VERIFICATION.md`, and capture the manual Hex dry-run evidence.
+- [ ] `10-03-PLAN.md` — Create the v1.1 milestone audit and update active status files to the final evidence chain.
 **Success criteria:**
 1. The maintainer release flow is verified end to end around CI checks, package metadata, and GitHub Actions Hex publishing.
 2. The milestone artifacts clearly capture what was hardened and how launch readiness was verified.
@@ -56,4 +61,4 @@ Plans:
 - Deeper operator tooling for drift inspection and recovery once real-world maintainer workflows surface the right abstractions.
 
 ---
-*Last updated: 2026-04-16 after completing Phase 09*
+*Last updated: 2026-04-16 after completing Phase 10 Plan 01*

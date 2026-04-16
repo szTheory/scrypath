@@ -1,20 +1,20 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Release Hardening and Public Launch Readiness
+milestone: v1.0
+milestone_name: milestone
 current_phase: 10
-current_phase_name: Launch Verification and Release Confidence
-current_plan: None
-status: ready_for_planning
-stopped_at: Phase 09 execution complete
-last_updated: "2026-04-16T18:41:00Z"
-last_activity: 2026-04-16 -- Phase 09 execution complete
+current_phase_name: launch-verification-and-release-confidence
+current_plan: 2
+status: executing
+stopped_at: Completed 10-01-PLAN.md
+last_updated: "2026-04-16T19:16:16.126Z"
+last_activity: 2026-04-16
 progress:
   total_phases: 3
   completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
-  percent: 67
+  total_plans: 9
+  completed_plans: 7
+  percent: 78
 ---
 
 # Project State
@@ -24,20 +24,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Phase 10 planning and launch verification
+**Current focus:** Phase 10 — launch-verification-and-release-confidence
 
 ## Current Position
 
-Phase: 10
-Plan: -
+Phase: 10 (launch-verification-and-release-confidence) — EXECUTING
+Plan: 2 of 3
 Current Phase: 10
-Current Phase Name: Launch Verification and Release Confidence
-Current Plan: None
-Status: Ready for planning
-Last activity: 2026-04-16 -- Phase 09 execution complete
-Last Activity Description: Completed Phase 09 Public Docs and Example Safety with 3/3 plans and the docs safety suite passing.
+Current Phase Name: launch-verification-and-release-confidence
+Current Plan: 2
+Status: Executing Phase 10
+Last activity: 2026-04-16 -- Phase 10 Plan 01 executed
+Last Activity Description: Phase 10 Plan 01 executed
 
-Progress: [######----] 67%
+Progress: [########--] 78%
 
 ## Accumulated Context
 
@@ -69,6 +69,8 @@ Progress: [######----] 67%
 - [Phase 09]: Narrowed the public install contract to the direct `:scrypath` dependency and kept Oban guidance optional.
 - [Phase 09]: Replaced crash-prone JSON pagination parsing with non-raising normalization to page `1`.
 - [Phase 09]: Aligned LiveView docs fixtures with realistic string-keyed nested attrs and added a narrow Plug-decoded request-shape smoke test.
+- [Phase 10]: Kept mix verify.phase10 as the single auth-free release-confidence entrypoint and left publish validation manual behind HEX_API_KEY.
+- [Phase 10]: Locked the maintainer runbook wording to mix verify.phase10 with docs contract assertions so the credential boundary stays explicit.
 
 ### Blockers/Concerns
 
@@ -83,8 +85,8 @@ Progress: [######----] 67%
 
 ## Session Continuity
 
-Last session: 2026-04-16T17:35:00Z
-Stopped at: Created milestone v1.1 roadmap
+Last session: 2026-04-16T19:16:16.123Z
+Stopped at: Completed 10-01-PLAN.md
 Resume file: None
 
 ## Current Status
@@ -92,13 +94,13 @@ Resume file: None
 - v1.0 remains archived with the full Meilisearch-first core, search, Oban, reindex, docs, and release baseline shipped.
 - Phase 08 Reliability and Contract Hardening is complete with strict task normalization, explicit empty-batch no-op behavior, and `mix verify.phase8`.
 - Phase 09 Public Docs and Example Safety is complete with a narrowed install contract, safe JSON pagination docs, and realistic request-shape coverage.
+- Phase 10 Plan 01 is complete with `mix verify.phase10`, release-workflow config validation, and a runbook/docs contract anchored to the new gate.
 - Fast docs verification passes locally; live Phase 08 verification still depends on a reachable Meilisearch endpoint.
-- Milestone v1.1 now advances to Phase 10 Launch Verification and Release Confidence.
+- Milestone v1.1 remains in Phase 10 for the proof-artifact and milestone-close steps in Plans 02 and 03.
 
 ## Next Command
 
-- `$gsd-discuss-phase 10`
-- `$gsd-plan-phase 10`
+- `/gsd-execute-phase 10`
 
 ---
-*Last updated: 2026-04-16 after completing Phase 09*
+*Last updated: 2026-04-16 after completing Phase 10 Plan 01*
