@@ -34,7 +34,7 @@
 - [ ] **OPER-01**: Developer can bulk backfill an index from existing Ecto records.
 - [ ] **OPER-02**: Developer can trigger a reindex workflow intentionally rather than reimplementing it ad hoc.
 - [ ] **OPER-03**: Developer can apply index settings as part of managed indexing workflows.
-- [ ] **OPER-04**: Developer can observe indexing and query workflows through Telemetry events.
+- [x] **OPER-04**: Developer can observe indexing and query workflows through Telemetry events.
 - [ ] **OPER-05**: Developer can understand eventual consistency, failure modes, and recovery workflows from the official documentation.
 
 ### Phoenix Ergonomics
@@ -94,7 +94,7 @@
 | SRCH-05 | Phase 3 | Pending |
 | SRCH-06 | Phase 3 | Pending |
 | SYNC-05 | Phase 4 | Complete |
-| OPER-04 | Phase 4 | Pending |
+| OPER-04 | Phase 4 | Complete |
 | OPER-01 | Phase 5 | Pending |
 | OPER-02 | Phase 5 | Pending |
 | OPER-03 | Phase 5 | Pending |
@@ -109,4 +109,4 @@
 
 ---
 *Requirements defined: 2026-04-15*
-*Last updated: 2026-04-15 after phase 2 execution*
+*Last updated: 2026-04-16 after phase 4 plan 04-03 execution*
