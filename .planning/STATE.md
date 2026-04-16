@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Public Release Trust and Operator Visibility
-current_phase: 12
-current_phase_name: internal-operations-seam
-current_plan: 3
-status: verifying
-stopped_at: Completed 12-03-PLAN.md
-last_updated: "2026-04-16T21:41:28.201Z"
+current_phase: 13
+current_phase_name: operator primitives
+current_plan: Not started
+status: ready_to_plan
+stopped_at: Phase 12 complete; ready to plan Phase 13
+last_updated: "2026-04-16T21:53:01.253Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 4
@@ -30,12 +30,12 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 
 Phase: 12 (internal-operations-seam) — COMPLETE
 Plan: 3 of 3
-Current Phase: 12
-Current Phase Name: internal-operations-seam
-Current Plan: 3
-Status: Phase complete — ready for verification
+Current Phase: 13
+Current Phase Name: operator primitives
+Current Plan: Not started
+Status: Ready to plan
 Last activity: 2026-04-16
-Last Activity Description: Completed Phase 12 Plan 03 and closed the internal operations seam phase.
+Last Activity Description: Completed Phase 12 and advanced the roadmap state to Phase 13 planning
 
 Progress: [██████████] 100%
 
@@ -103,7 +103,7 @@ Resume file: None
 
 ## Next Command
 
-- `$gsd-execute-phase 13`
+- `$gsd-plan-phase 13`
 
 ## Performance Metrics
 
