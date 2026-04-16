@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Release Hardening and Public Launch Readiness
-current_phase: 09
-current_phase_name: Public Docs and Example Safety
+current_phase: 10
+current_phase_name: Launch Verification and Release Confidence
 current_plan: None
 status: ready_for_planning
-stopped_at: Phase 08 execution complete
-last_updated: "2026-04-16T18:00:33Z"
-last_activity: 2026-04-16 -- Phase 08 execution complete
+stopped_at: Phase 09 execution complete
+last_updated: "2026-04-16T18:41:00Z"
+last_activity: 2026-04-16 -- Phase 09 execution complete
 progress:
   total_phases: 3
-  completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
-  percent: 33
+  completed_phases: 2
+  total_plans: 6
+  completed_plans: 6
+  percent: 67
 ---
 
 # Project State
@@ -24,20 +24,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Phase 09 planning and execution
+**Current focus:** Phase 10 planning and launch verification
 
 ## Current Position
 
-Phase: 09
+Phase: 10
 Plan: -
-Current Phase: 09
-Current Phase Name: Public Docs and Example Safety
+Current Phase: 10
+Current Phase Name: Launch Verification and Release Confidence
 Current Plan: None
 Status: Ready for planning
-Last activity: 2026-04-16 -- Phase 08 execution complete
-Last Activity Description: Completed Phase 08 Reliability and Contract Hardening with 3/3 plans and fast verification passing; live Meilisearch verification remains pending a reachable service.
+Last activity: 2026-04-16 -- Phase 09 execution complete
+Last Activity Description: Completed Phase 09 Public Docs and Example Safety with 3/3 plans and the docs safety suite passing.
 
-Progress: [###-------] 33%
+Progress: [######----] 67%
 
 ## Accumulated Context
 
@@ -66,11 +66,14 @@ Progress: [###-------] 33%
 - [Phase 06]: Moved Hex publish dry-run validation into maintainer-only release docs behind an explicit HEX_API_KEY requirement.
 - [Phase 06]: Locked the Phoenix JSON page normalization contract in both public docs and fixture-backed tests so copied examples stay valid.
 - [Phase 06]: Kept the always-on CI release gate auth-free by validating package metadata and unpack behavior instead of publish credentials.
+- [Phase 09]: Narrowed the public install contract to the direct `:scrypath` dependency and kept Oban guidance optional.
+- [Phase 09]: Replaced crash-prone JSON pagination parsing with non-raising normalization to page `1`.
+- [Phase 09]: Aligned LiveView docs fixtures with realistic string-keyed nested attrs and added a narrow Plug-decoded request-shape smoke test.
 
 ### Blockers/Concerns
 
 - Phase 08's focused fast verification is green, but the live `mix verify.phase8` path still needs a reachable Meilisearch instance via `SCRYPATH_MEILISEARCH_URL`.
-- The common search contract is stable, so v1.1 should avoid widening search breadth before the public docs and example path is hardened.
+- Phase 10 still needs maintainer-facing launch verification and milestone-close evidence before broader public promotion.
 
 ### Quick Tasks Completed
 
@@ -88,13 +91,14 @@ Resume file: None
 
 - v1.0 remains archived with the full Meilisearch-first core, search, Oban, reindex, docs, and release baseline shipped.
 - Phase 08 Reliability and Contract Hardening is complete with strict task normalization, explicit empty-batch no-op behavior, and `mix verify.phase8`.
-- Fast Phase 08 verification passes locally; live verification is ready once a Meilisearch endpoint is available.
-- Milestone v1.1 now advances to Phase 09 Public Docs and Example Safety.
+- Phase 09 Public Docs and Example Safety is complete with a narrowed install contract, safe JSON pagination docs, and realistic request-shape coverage.
+- Fast docs verification passes locally; live Phase 08 verification still depends on a reachable Meilisearch endpoint.
+- Milestone v1.1 now advances to Phase 10 Launch Verification and Release Confidence.
 
 ## Next Command
 
-- `$gsd-discuss-phase 9`
-- `$gsd-plan-phase 9`
+- `$gsd-discuss-phase 10`
+- `$gsd-plan-phase 10`
 
 ---
-*Last updated: 2026-04-16 after completing Phase 08*
+*Last updated: 2026-04-16 after completing Phase 09*
