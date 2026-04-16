@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 06
 current_phase_name: phoenix-ergonomics-and-public-facing-polish
 current_plan: 1
-status: verifying
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-04-16T15:56:28.126Z"
+status: executing
+stopped_at: Completed 06-04-PLAN.md
+last_updated: "2026-04-16T16:15:08.067Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 6
   completed_phases: 6
-  total_plans: 21
-  completed_plans: 21
+  total_plans: 22
+  completed_plans: 22
   percent: 100
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-04-15)
 ## Current Position
 
 Phase: 06 (phoenix-ergonomics-and-public-facing-polish) — EXECUTING
-Plan: 3 of 3
+Plan: 2 of 4
 Current Phase: 06
 Current Phase Name: phoenix-ergonomics-and-public-facing-polish
 Current Plan: 1
-Status: Phase complete — ready for verification
+Status: Ready to execute
 Last activity: 2026-04-16
 Last Activity Description: Phase 06 execution started
 
@@ -63,6 +63,9 @@ Progress: [██████████] 100%
 - [Phase 06]: Used Release Please's native elixir release type in manifest mode so versioning and changelog updates stay on the standard path.
 - [Phase 06]: Kept the human release checklist short and pushed repeatable docs/package checks into CI and Mix commands.
 - [Phase 06]: Included guides and the maintainer release note in Hex package metadata so the published tarball matches the docs quality bar.
+- [Phase 06]: Moved Hex publish dry-run validation into maintainer-only release docs behind an explicit HEX_API_KEY requirement.
+- [Phase 06]: Locked the Phoenix JSON page normalization contract in both public docs and fixture-backed tests so copied examples stay valid.
+- [Phase 06]: Kept the always-on CI release gate auth-free by validating package metadata and unpack behavior instead of publish credentials.
 
 ### Blockers/Concerns
 
@@ -71,8 +74,8 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-04-16T15:56:28.124Z
-Stopped at: Completed 06-03-PLAN.md
+Last session: 2026-04-16T16:14:57.792Z
+Stopped at: Completed 06-04-PLAN.md
 Resume file: None
 
 ## Current Status
