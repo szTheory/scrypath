@@ -35,6 +35,7 @@ defmodule Scrypath.MixProject do
     [
       preferred_envs: [
         "verify.phase5": :test,
+        "verify.phase8": :test,
         credo: :test,
         dialyzer: :test
       ]
@@ -74,14 +75,14 @@ defmodule Scrypath.MixProject do
       ],
       groups_for_extras: [
         "Getting Started": ["README.md", "guides/getting-started.md"],
-        "Phoenix": [
+        Phoenix: [
           "guides/phoenix-walkthrough.md",
           "guides/phoenix-contexts.md",
           "guides/phoenix-controllers-and-json.md",
           "guides/phoenix-liveview.md"
         ],
-        "Operations": ["ARCHITECTURE.md", "guides/sync-modes-and-visibility.md"],
-        "Maintainers": ["docs/releasing.md"]
+        Operations: ["ARCHITECTURE.md", "guides/sync-modes-and-visibility.md"],
+        Maintainers: ["docs/releasing.md"]
       ]
     ]
   end
