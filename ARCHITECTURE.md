@@ -80,6 +80,28 @@ Sync is explicit orchestration code that should run after successful repo persis
 
 `sync_mode: :manual` uses the same verbs and result shape, while returning accepted task metadata immediately for operator-controlled workflows such as imports and migrations.
 
+| Sync Mode | Contract |
+|-----------|----------|
+| `:inline` | waits for terminal backend task success before returning |
+| `:manual` | returns accepted backend work immediately |
+| `:oban` | returns durable enqueue acceptance only |
+
+`sync_mode: :oban` keeps the public verbs on `Scrypath.*`, inserts durable jobs through Oban, and stops there. It does not imply backend completion or search visibility.
+
+All three modes share one operator-facing lifecycle:
+
+`requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded`
+
+That wording is intentional. Retry exhaustion, discarded jobs, stale deletes, and search drift are normal operational cases that applications need to observe and recover from.
+
+## Observability
+
+Phase 4 adds layered telemetry instead of flattening everything into one event family:
+
+- `[:scrypath, :sync, ...]`, `[:scrypath, :search, ...]`, and `[:scrypath, :hydration, ...]` are the stable common-path spans.
+- `[:scrypath, :meilisearch, :request, ...]` and `[:scrypath, :meilisearch, :task_wait, ...]` are explicit backend spans for request detail, task ids, poll counts, and wait outcomes.
+- Oban job lifecycle remains on Oban's own telemetry events. Scrypath emits search semantics, not a second queue lifecycle.
+
 ## Deferred Work
 
 Phase 1 intentionally does not implement:
