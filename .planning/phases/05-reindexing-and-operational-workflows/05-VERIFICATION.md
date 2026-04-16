@@ -1,23 +1,16 @@
 ---
 phase: 05-reindexing-and-operational-workflows
-verified: 2026-04-16T00:00:00Z
-status: human_needed
+verified: 2026-04-16T14:49:11Z
+status: passed
 score: 4/4 must-haves verified
 overrides_applied: 0
-human_verification:
-  - test: "Run an end-to-end rebuild against a real Meilisearch instance"
-    expected: "`Scrypath.reindex/2` creates the target index, applies settings, backfills batches, and leaves the live index untouched when `cutover?: false`."
-    why_human: "This phase includes external-service behavior. Verification here used focused tests and code traces, not a live Meilisearch server."
-  - test: "Read the operator docs as a user"
-    expected: "README and ARCHITECTURE clearly distinguish backfill vs reindex, accepted work vs search-visible completion, drift signals, cutover behavior, and recovery steps."
-    why_human: "Operational clarity and wording quality are product-surface concerns that cannot be fully proven by grep or unit tests."
 ---
 
 # Phase 5: Reindexing and Operational Workflows Verification Report
 
 **Phase Goal:** Make rebuilds, cutovers, and recovery workflows safe enough for real systems.
-**Verified:** 2026-04-16T00:00:00Z
-**Status:** human_needed
+**Verified:** 2026-04-16T14:49:11Z
+**Status:** passed
 **Re-verification:** No - initial verification
 
 ## Goal Achievement
@@ -80,8 +73,9 @@ human_verification:
 
 | Behavior | Command | Result | Status |
 | --- | --- | --- | --- |
-| Focused Phase 5 automated coverage passes | `mix test test/scrypath/meilisearch_test.exs test/scrypath/reindex_test.exs test/scrypath/backfill_test.exs test/scrypath/options_test.exs test/scrypath/schema_test.exs` | `36 tests, 0 failures` | ✓ PASS |
-| Docs include Phase 5 operator vocabulary | `rg -n "backfill|reindex|cutover|drift|recovery|eventual consistency|detect" README.md ARCHITECTURE.md` | Dedicated sections and references found in both docs | ✓ PASS |
+| Focused Phase 5 automated coverage passes | `mix test test/scrypath/meilisearch_test.exs test/scrypath/reindex_test.exs test/scrypath/backfill_test.exs test/scrypath/options_test.exs test/scrypath/schema_test.exs test/scrypath/docs_contract_test.exs` | `40 tests, 0 failures` | ✓ PASS |
+| Docs include Phase 5 operator vocabulary and build cleanly | `mix verify.phase5 --skip-integration` | Docs contract tests pass and `mix docs --warnings-as-errors` succeeds | ✓ PASS |
+| Real Meilisearch rebuild flow passes end to end | `SCRYPATH_INTEGRATION=1 SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700 mix verify.phase5` | Live backfill, target inspection, cutover, and custom document-id checks all pass | ✓ PASS |
 
 ### Requirements Coverage
 
@@ -98,21 +92,14 @@ human_verification:
 | --- | --- | --- | --- | --- |
 | None | - | No TODO/FIXME placeholders, empty implementations, or hardcoded hollow data found in Phase 5 artifacts. | - | No blocking anti-patterns detected. |
 
-### Human Verification Required
+### Automated Verification Completion
 
-### 1. Real Meilisearch Rebuild
+The original human follow-up items are now covered by repo-native automation:
 
-**Test:** Run `Scrypath.reindex/2` against a real Meilisearch instance with `cutover?: false`, inspect the target index, then repeat with `cutover?: true`.
-**Expected:** The target index is created, schema/runtime settings land on the target index, batches are indexed into that target, and live-index cutover only occurs when explicitly enabled.
-**Why human:** External-service behavior was verified through unit tests and code traces, not against a live backend.
-
-### 2. Operator Docs Readability
-
-**Test:** Read the Phase 5 sections in `README.md` and `ARCHITECTURE.md` as if onboarding to recovery workflows.
-**Expected:** The docs make it obvious when to backfill vs rebuild, what `cutover?: false` is for, what accepted work does not guarantee, how to detect drift, and how to recover from failed or partial rebuilds.
-**Why human:** Documentation quality and operational clarity are user-facing judgment calls.
+1. `test/scrypath/live_meilisearch_verification_test.exs` exercises backfill, target-only rebuilds, cutover rebuilds, settings application, and custom document IDs against a live Meilisearch service.
+2. `test/scrypath/docs_contract_test.exs` plus `mix docs --warnings-as-errors` enforce the operator-documentation contract and prevent docs regressions from silently reintroducing manual review.
 
 ---
 
-_Verified: 2026-04-16T00:00:00Z_
+_Verified: 2026-04-16T14:49:11Z_
 _Verifier: Claude (gsd-verifier)_
