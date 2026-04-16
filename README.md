@@ -134,6 +134,34 @@ def search_document_id(post), do: "post:#{post.legacy_id}"
 
 Common sync examples should stay explicit in your Ecto contexts rather than hidden behind callbacks or transaction hooks.
 
+### Sync Mode Contract Matrix
+
+| Mode | What Scrypath does before returning | Result shape meaning | What it does not mean |
+|------|-------------------------------------|----------------------|-----------------------|
+| `:inline` | waits for terminal backend task success before returning | `status: :completed` means the backend accepted and finished the write task | database and search visibility are not atomic |
+| `:manual` | returns accepted backend work immediately | `status: :accepted` means Scrypath asked the backend to do the work | the document may not be searchable yet |
+| `:oban` | returns durable enqueue acceptance only | `status: :accepted` means the job insert succeeded and a worker can process it later | the backend write has not happened yet, and the document may not be searchable |
+
+`sync_mode: :oban` means durable enqueue accepted, not search visibility completed.
+
+### Async Lifecycle
+
+Scrypath uses one operator-facing lifecycle across inline waiting, manual control, and Oban-backed execution:
+
+`requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded`
+
+- `requested` means your application asked Scrypath to sync or delete documents.
+- `enqueued` means work was accepted by the next system in the chain: the backend task queue for `:manual`, or the Oban jobs table for `:oban`.
+- `processing` means a worker or backend task is actively doing the write.
+- `backend_accepted` means Meilisearch accepted the document or delete task and assigned backend task state.
+- `completed` means the backend reported terminal success.
+- `retrying` means the job or backend interaction failed transiently and another attempt is expected.
+- `discarded` means retries are exhausted or the job was cancelled as impossible work.
+
+retries, discarded jobs, stale deletes, and drift are normal operational realities. They are not edge cases to hide with optimistic wording.
+
+For `sync_mode: :oban`, a successful return only means the enqueue is durable. Search visibility happens later when the worker runs and the backend task completes.
+
 ## Search
 
 Phase 3 adds the common search path under `Scrypath.search/3` and `Scrypath.search!/3`.

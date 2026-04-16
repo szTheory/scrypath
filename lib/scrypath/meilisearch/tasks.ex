@@ -3,6 +3,7 @@ defmodule Scrypath.Meilisearch.Tasks do
 
   alias Scrypath.Config
   alias Scrypath.Meilisearch.Client
+  alias Scrypath.Telemetry
 
   @queued_statuses ~w(enqueued processing queued)a
 
@@ -11,31 +12,44 @@ defmodule Scrypath.Meilisearch.Tasks do
     started_at = System.monotonic_time(:millisecond)
     poll_interval = Config.inline_poll_interval(config)
     timeout = Config.inline_timeout(config)
+    normalized_task = normalize_task(task)
 
-    task
-    |> normalize_task()
-    |> do_wait_for_task(config, started_at, poll_interval, timeout)
+    Telemetry.span(
+      [:scrypath, :meilisearch, :task_wait],
+      %{
+        task_uid: normalized_task.uid,
+        initial_status: normalized_task.status,
+        poll_interval_ms: poll_interval,
+        timeout_ms: timeout
+      },
+      fn ->
+        {result, polls} =
+          do_wait_for_task(normalized_task, config, started_at, poll_interval, timeout, 0)
+
+        {result, task_wait_metadata(result, polls)}
+      end
+    )
   end
 
-  defp do_wait_for_task(task, _config, _started_at, _poll_interval, _timeout)
+  defp do_wait_for_task(task, _config, _started_at, _poll_interval, _timeout, polls)
        when task.status == :succeeded do
-    {:ok, task}
+    {{:ok, task}, polls}
   end
 
-  defp do_wait_for_task(task, _config, _started_at, _poll_interval, _timeout)
+  defp do_wait_for_task(task, _config, _started_at, _poll_interval, _timeout, polls)
        when task.status == :failed do
-    {:error, {:task_failed, task}}
+    {{:error, {:task_failed, task}}, polls}
   end
 
-  defp do_wait_for_task(task, _config, _started_at, _poll_interval, _timeout)
+  defp do_wait_for_task(task, _config, _started_at, _poll_interval, _timeout, polls)
        when task.status == :cancelled do
-    {:error, {:cancelled, task}}
+    {{:error, {:cancelled, task}}, polls}
   end
 
-  defp do_wait_for_task(task, config, started_at, poll_interval, timeout)
+  defp do_wait_for_task(task, config, started_at, poll_interval, timeout, polls)
        when task.status in @queued_statuses do
     if timed_out?(started_at, timeout) do
-      {:error, {:timeout, task}}
+      {{:error, {:timeout, task}}, polls}
     else
       Process.sleep(poll_interval)
 
@@ -43,16 +57,28 @@ defmodule Scrypath.Meilisearch.Tasks do
         {:ok, response} ->
           response
           |> normalize_task()
-          |> do_wait_for_task(config, started_at, poll_interval, timeout)
+          |> do_wait_for_task(config, started_at, poll_interval, timeout, polls + 1)
 
         {:error, reason} ->
-          {:error, reason}
+          {{:error, reason}, polls + 1}
       end
     end
   end
 
-  defp do_wait_for_task(task, _config, _started_at, _poll_interval, _timeout) do
-    {:ok, task}
+  defp do_wait_for_task(task, _config, _started_at, _poll_interval, _timeout, polls) do
+    {{:ok, task}, polls}
+  end
+
+  defp task_wait_metadata({:ok, task}, polls) do
+    %{poll_count: polls, final_status: task.status}
+  end
+
+  defp task_wait_metadata({:error, {_reason, task}}, polls) when is_map(task) do
+    %{poll_count: polls, final_status: Map.get(task, :status)}
+  end
+
+  defp task_wait_metadata({:error, reason}, polls) do
+    %{poll_count: polls, error: inspect(reason)}
   end
 
   defp timed_out?(started_at, timeout) do
