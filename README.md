@@ -144,7 +144,7 @@ All three modes share one operator-facing lifecycle:
 
 `requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded`
 
-Retries, discarded jobs, stale deletes, and drift are normal operational realities. They are not edge cases to hide with optimistic wording.
+In practice, retries, discarded jobs, stale deletes, and drift are normal operational realities. They are not edge cases to hide with optimistic wording.
 
 ## Search
 
