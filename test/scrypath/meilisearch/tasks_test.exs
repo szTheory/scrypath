@@ -1,6 +1,7 @@
 defmodule Scrypath.Meilisearch.TasksTest do
   use ExUnit.Case, async: true
 
+  alias Scrypath.Operations.Task, as: OperationTask
   alias Scrypath.Meilisearch.Tasks
 
   defmodule SequencedClient do
@@ -36,7 +37,7 @@ defmodule Scrypath.Meilisearch.TasksTest do
       ]
     end)
 
-    assert {:ok, %{uid: 101, status: :succeeded, index_uid: "tenant_posts", raw: raw}} =
+    assert {:ok, %OperationTask{id: 101, state: :succeeded, raw: raw} = task} =
              Tasks.wait_for_task(
                %{uid: 101, status: "enqueued", type: "documentAdditionOrUpdate"},
                meilisearch_client: SequencedClient,
@@ -45,6 +46,10 @@ defmodule Scrypath.Meilisearch.TasksTest do
                inline_timeout: 50
              )
 
+    assert task.source == :meilisearch
+    assert task.kind == :backend_task
+    assert task.reference == %{task_uid: 101, index_uid: "tenant_posts"}
+    assert task.metadata.type == "documentAdditionOrUpdate"
     assert raw["status"] == "succeeded"
     assert_received {:client_task, 101, _}
   end
@@ -61,7 +66,7 @@ defmodule Scrypath.Meilisearch.TasksTest do
       ]
     end)
 
-    assert {:error, {:task_failed, %{uid: 102, status: :failed, raw: raw}}} =
+    assert {:error, {:task_failed, %OperationTask{id: 102, state: :failed, raw: raw} = task}} =
              Tasks.wait_for_task(
                %{uid: 102, status: "enqueued"},
                meilisearch_client: SequencedClient,
@@ -70,6 +75,7 @@ defmodule Scrypath.Meilisearch.TasksTest do
                inline_timeout: 50
              )
 
+    assert task.source == :meilisearch
     assert raw["error"]["code"] == "index_not_found"
   end
 
@@ -142,7 +148,7 @@ defmodule Scrypath.Meilisearch.TasksTest do
       List.duplicate({:ok, %{"uid" => 103, "status" => "processing"}}, 6)
     end)
 
-    assert {:error, {:timeout, %{uid: 103, status: status, raw: raw}}} =
+    assert {:error, {:timeout, %OperationTask{id: 103, state: status, raw: raw}}} =
              Tasks.wait_for_task(
                %{uid: 103, status: "enqueued"},
                meilisearch_client: SequencedClient,
@@ -168,7 +174,7 @@ defmodule Scrypath.Meilisearch.TasksTest do
       ]
     end)
 
-    assert {:error, {:cancelled, %{uid: 104, status: :cancelled, raw: raw}}} =
+    assert {:error, {:cancelled, %OperationTask{id: 104, state: :cancelled, raw: raw} = task}} =
              Tasks.wait_for_task(
                %{uid: 104, status: "enqueued", type: "documentDeletion"},
                meilisearch_client: SequencedClient,
@@ -177,6 +183,7 @@ defmodule Scrypath.Meilisearch.TasksTest do
                inline_timeout: 50
              )
 
+    assert task.metadata.type == "documentDeletion"
     assert raw["canceledBy"]["uid"] == 7
   end
 
@@ -195,5 +202,39 @@ defmodule Scrypath.Meilisearch.TasksTest do
                inline_poll_interval: 1,
                inline_timeout: 50
              )
+  end
+
+  defmodule RecordingClient do
+    def upsert_documents(index, documents, config) do
+      send(self(), {:client_upsert, index, documents, config})
+
+      {:ok,
+       %{
+         "taskUid" => 17,
+         "indexUid" => index,
+         "status" => "enqueued",
+         "type" => "documentAdditionOrUpdate"
+       }}
+    end
+  end
+
+  test "Scrypath.Meilisearch keeps the public namespace while delegating writes through operations" do
+    documents = [%Scrypath.Document{id: 1, data: %{title: "One"}, source: :fields}]
+
+    assert {:ok,
+            %{index: "tenant_searchable_post", document_ids: [1], task: %{uid: 17, status: :enqueued}}} =
+             Scrypath.Meilisearch.upsert_documents(SearchablePost, documents,
+               index_prefix: "tenant",
+               meilisearch_client: RecordingClient
+             )
+
+    assert {:ok, %Scrypath.Operations.Result{} = result} =
+             Scrypath.Meilisearch.Operations.upsert_documents(SearchablePost, documents,
+               index_prefix: "tenant",
+               meilisearch_client: RecordingClient
+             )
+
+    assert %OperationTask{id: 17, state: :enqueued} = result.task
+    assert_received {:client_upsert, "tenant_searchable_post", ^documents, _}
   end
 end
