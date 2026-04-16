@@ -82,10 +82,22 @@ defmodule Scrypath.PhoenixExamplesTest do
     assert updated.search.query == "search"
   end
 
-  test "liveview write events still call the context boundary" do
+  test "liveview write events still call the context boundary with string-keyed attrs" do
     socket = PostLive.mount()
 
-    assert socket == PostLive.handle_event("publish", %{"id" => 1, "post" => %{title: "Published"}}, socket)
+    assert socket ==
+             PostLive.handle_event(
+               "publish",
+               %{"id" => 1, "post" => %{"title" => "Published"}},
+               socket
+             )
+  end
+
+  test "fixture content publish path reads realistic string-keyed attrs" do
+    post = Content.get_post!(1)
+
+    assert {:ok, %Post{title: "Published", status: :published}} =
+             Content.publish_post(post, %{"title" => "Published"})
   end
 
   defp module_section(name, parent \\ nil) do
