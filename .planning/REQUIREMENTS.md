@@ -7,9 +7,9 @@
 
 ### Schema Declaration
 
-- [x] **SCMA-01**: Developer can declare a searchable Ecto schema with a small, explicit `use Scrypath` configuration.
-- [x] **SCMA-02**: Developer can define how a source record is projected into a search document.
-- [x] **SCMA-03**: Developer can inspect declared search metadata for a schema at runtime.
+- [ ] **SCMA-01**: Developer can declare a searchable Ecto schema with a small, explicit `use Scrypath` configuration.
+- [ ] **SCMA-02**: Developer can define how a source record is projected into a search document.
+- [ ] **SCMA-03**: Developer can inspect declared search metadata for a schema at runtime.
 
 ### Sync Lifecycle
 
@@ -45,7 +45,7 @@
 ### Backend Foundation
 
 - [x] **BACK-01**: Developer can use Scrypath with Meilisearch as the supported public backend in v1.
-- [x] **BACK-02**: The internal architecture preserves a path to future backend support without forcing a premature public abstraction.
+- [ ] **BACK-02**: The internal architecture preserves a path to future backend support without forcing a premature public abstraction.
 
 ## v2 Requirements
 
@@ -77,22 +77,22 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCMA-01 | Phase 1 | Complete |
-| SCMA-02 | Phase 1 | Complete |
-| SCMA-03 | Phase 1 | Complete |
-| BACK-02 | Phase 1 | Complete |
+| SCMA-01 | Phase 7 | Pending |
+| SCMA-02 | Phase 7 | Pending |
+| SCMA-03 | Phase 7 | Pending |
+| BACK-02 | Phase 7 | Pending |
 | BACK-01 | Phase 2 | Complete |
 | SYNC-01 | Phase 2 | Complete |
 | SYNC-02 | Phase 2 | Complete |
 | SYNC-03 | Phase 2 | Complete |
 | SYNC-04 | Phase 2 | Complete |
 | SYNC-06 | Phase 2 | Complete |
-| SRCH-01 | Phase 3 | Pending |
-| SRCH-02 | Phase 3 | Pending |
-| SRCH-03 | Phase 3 | Pending |
-| SRCH-04 | Phase 3 | Pending |
-| SRCH-05 | Phase 3 | Pending |
-| SRCH-06 | Phase 3 | Pending |
+| SRCH-01 | Phase 7 | Pending |
+| SRCH-02 | Phase 7 | Pending |
+| SRCH-03 | Phase 7 | Pending |
+| SRCH-04 | Phase 7 | Pending |
+| SRCH-05 | Phase 7 | Pending |
+| SRCH-06 | Phase 7 | Pending |
 | SYNC-05 | Phase 4 | Complete |
 | OPER-04 | Phase 4 | Complete |
 | OPER-01 | Phase 5 | Pending |
