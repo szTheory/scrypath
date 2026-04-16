@@ -24,20 +24,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Phase 12 — internal-operations-seam
+**Current focus:** Phase 13 — operator-primitives
 
 ## Current Position
 
-Phase: 12 (internal-operations-seam) — EXECUTING
+Phase: 12 (internal-operations-seam) — COMPLETE
 Plan: 3 of 3
 Current Phase: 12
 Current Phase Name: internal-operations-seam
 Current Plan: 3
 Status: Phase complete — ready for verification
 Last activity: 2026-04-16
-Last Activity Description: Completed Phase 12 Plan 02 seam runtime rewiring and advanced to Plan 03.
+Last Activity Description: Completed Phase 12 Plan 03 and closed the internal operations seam phase.
 
-Progress: [████████░░] 80%
+Progress: [██████████] 100%
 
 ## Accumulated Context
 
@@ -98,21 +98,22 @@ Resume file: None
 - Phase 11 Plan 02 is complete with a packaged clean-consumer smoke harness, maintainer recovery runbooks, and the expanded Phase 11 docs contract recorded in `.planning/phases/11-public-release-contract/11-public-release-contract-02-SUMMARY.md`.
 - Phase 11 is now hardened with a live published-release verifier, a same-workflow pre-publish dry-run gate, a manual recovery workflow, and a scheduled published-release monitor.
 - The only remaining external validation for Phase 11 is the first real public release run; after that publish exists, the monitor keeps re-verifying the latest Hex release automatically.
+- Phase 12 is complete with sync, backfill, and reindex all exchanging Scrypath-owned operation references internally while preserving the Meilisearch-first public boundary in docs and telemetry.
 - No second public backend is planned in this milestone, and backend-native power remains outside the common search contract.
 
 ## Next Command
 
-- `$gsd-execute-phase 12`
+- `$gsd-execute-phase 13`
 
 ## Performance Metrics
 
 | Phase | Plan | Duration | Tasks | Files | Date |
 |-------|------|----------|-------|-------|------|
+| 12 | 03 | 3 min | 2 | 7 | 2026-04-16 |
 | 12 | 02 | 5 min | 2 | 8 | 2026-04-16 |
 | 12 | 01 | 2 min | 1 | 4 | 2026-04-16 |
 | 11 | 02 | 10min | 3 | 4 | 2026-04-16 |
 | 11 | hardening | follow-up | release automation, recovery workflow, published-release monitor | 2026-04-16 |
 
 ---
-*Last updated: 2026-04-16 after completing Phase 12 Plan 02*
-| Phase 12 P03 | 3 min | 2 tasks | 7 files |
+*Last updated: 2026-04-16 after completing Phase 12 Plan 03*
