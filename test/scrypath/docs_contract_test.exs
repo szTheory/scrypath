@@ -122,7 +122,7 @@ defmodule Scrypath.DocsContractTest do
     refute @ci_workflow =~ "mix hex.publish --dry-run"
 
     assert_contains_all(@release_docs, [
-      "mix verify.phase10",
+      "mix verify.phase11",
       "HEX_API_KEY",
       "mix hex.publish --dry-run --yes",
       "HEX_API_KEY=... mix hex.publish --dry-run --yes",
