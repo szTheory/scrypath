@@ -8,8 +8,8 @@
 
 ### Release Trust
 
-- [x] **REL-01**: Maintainer can publish Scrypath from the canonical GitHub release flow with aligned tag, changelog, manifest, package version, and Hex artifact state.
-- [x] **REL-02**: Maintainer can verify the published package from a clean consumer flow that confirms install, docs availability, and basic runtime usability.
+- [ ] **REL-01**: Maintainer can publish Scrypath from the canonical GitHub release flow with aligned tag, changelog, manifest, package version, and Hex artifact state.
+- [ ] **REL-02**: Maintainer can verify the published package from a clean consumer flow that confirms install, docs availability, and basic runtime usability.
 - [x] **REL-03**: Maintainer can recover from common release failures using documented runbooks for tag/version drift, failed publish, and published-artifact mismatch.
 
 ### Operator Visibility
@@ -48,16 +48,16 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REL-01 | Phase 11 | Complete |
-| REL-02 | Phase 11 | Complete |
+| REL-01 | Phase 17 | Pending |
+| REL-02 | Phase 17 | Pending |
 | REL-03 | Phase 11 | Complete |
 | SEAM-01 | Phase 12 | Complete |
 | SEAM-02 | Phase 12 | Complete |
-| OPS-01 | Phase 13 | Pending |
-| OPS-02 | Phase 13 | Pending |
-| OPS-03 | Phase 13 | Pending |
-| OPS-04 | Phase 14 | Pending |
-| SEAM-03 | Phase 14 | Pending |
+| OPS-01 | Phase 15 | Pending |
+| OPS-02 | Phase 15 | Pending |
+| OPS-03 | Phase 15 | Pending |
+| OPS-04 | Phase 16 | Pending |
+| SEAM-03 | Phase 16 | Pending |
 
 **Coverage:**
 - v1.2 requirements: 10 total
