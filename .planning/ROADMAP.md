@@ -63,7 +63,17 @@ Plans:
 
 **Goal:** Provide the developer-facing search API that turns the indexing core into a usable product.
 
+**Status:** Complete (2026-04-15)
+
 **Requirements:** SRCH-01, SRCH-02, SRCH-03, SRCH-04, SRCH-05, SRCH-06
+
+**Plans:** 4 plans
+
+Plans:
+- [x] 03-01-PLAN.md - Common search facade and normalized query contract
+- [x] 03-02-PLAN.md - Backend search execution and Meilisearch translation
+- [x] 03-03-PLAN.md - Stable result envelope and explicit hydration
+- [x] 03-04-PLAN.md - Search docs and native-path boundary
 
 **Success criteria:**
 1. A developer can run a search against a declared schema through a consistent API.
@@ -125,4 +135,4 @@ Plans:
 - Phase 6 depends on the product shape being mostly stable across Phases 1 through 5.
 
 ---
-*Last updated: 2026-04-15 after phase 2 execution*
+*Last updated: 2026-04-15 after phase 3 execution*
