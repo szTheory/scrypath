@@ -39,8 +39,8 @@
 
 ### Phoenix Ergonomics
 
-- [ ] **PHNX-01**: Phoenix developer can follow first-class guides and examples for using Scrypath in Phoenix applications.
-- [ ] **PHNX-02**: Phoenix developer can use Scrypath patterns cleanly from controllers, contexts, and LiveView flows without relying on hidden magic.
+- [x] **PHNX-01**: Phoenix developer can follow first-class guides and examples for using Scrypath in Phoenix applications.
+- [x] **PHNX-02**: Phoenix developer can use Scrypath patterns cleanly from controllers, contexts, and LiveView flows without relying on hidden magic.
 
 ### Backend Foundation
 
@@ -99,8 +99,8 @@
 | OPER-02 | Phase 5 | Pending |
 | OPER-03 | Phase 5 | Pending |
 | OPER-05 | Phase 5 | Pending |
-| PHNX-01 | Phase 6 | Pending |
-| PHNX-02 | Phase 6 | Pending |
+| PHNX-01 | Phase 6 | Complete |
+| PHNX-02 | Phase 6 | Complete |
 
 **Coverage:**
 - v1 requirements: 24 total

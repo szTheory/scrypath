@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 5 of 6 (reindexing and operational workflows)
-current_phase_name: reindexing and operational workflows
-current_plan: Not started
-status: completed
-stopped_at: Completed 04-03-PLAN.md
-last_updated: "2026-04-16T02:22:58.229Z"
+current_phase: 06
+current_phase_name: phoenix-ergonomics-and-public-facing-polish
+current_plan: 1
+status: executing
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-04-16T15:44:48.411Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 6
-  completed_phases: 4
-  total_plans: 14
-  completed_plans: 14
-  percent: 100
+  completed_phases: 5
+  total_plans: 21
+  completed_plans: 19
+  percent: 90
 ---
 
 # Project State
@@ -24,16 +24,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-15)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Phase 5 - Reindexing and Operational Workflows
+**Current focus:** Phase 06 — phoenix-ergonomics-and-public-facing-polish
 
 ## Current Position
 
-Current Phase: 5 of 6 (reindexing and operational workflows)
-Current Phase Name: reindexing and operational workflows
-Current Plan: Not started
-Status: Phase complete
-Last Activity: 2026-04-16
-Last Activity Description: Phase 04 complete, transitioned to Phase 5
+Phase: 06 (phoenix-ergonomics-and-public-facing-polish) — EXECUTING
+Plan: 2 of 3
+Current Phase: 06
+Current Phase Name: phoenix-ergonomics-and-public-facing-polish
+Current Plan: 1
+Status: Ready to execute
+Last activity: 2026-04-16
+Last Activity Description: Phase 06 execution started
 
 Progress: [██████████] 100%
 
@@ -53,6 +55,9 @@ Progress: [██████████] 100%
 - [Phase 04]: Kept public Scrypath telemetry low-cardinality around schema, backend, index, sync mode, and workflow counts.
 - [Phase 04]: Put Meilisearch request and task-wait detail on explicit backend prefixes so task uid and poll counts never leak onto the common path.
 - [Phase 04]: Documented sync_mode :oban as durable enqueue acceptance only, with one shared async lifecycle for operators.
+- [Phase 06]: Kept ExDoc as the ordered public docs shell and grouped extras by learning path instead of expanding README further.
+- [Phase 06]: Defined Phoenix example fixtures as plain compile-trustworthy modules in test support so guide examples can stay anchored without adding a full Phoenix app.
+- [Phase 06]: Locked the context-first Phoenix boundary and sync visibility wording in docs contract tests before deeper copy work.
 
 ### Blockers/Concerns
 
@@ -61,8 +66,8 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-04-16T02:07:32.693Z
-Stopped at: Completed 04-03-PLAN.md
+Last session: 2026-04-16T15:44:48.408Z
+Stopped at: Completed 06-01-PLAN.md
 Resume file: None
 
 ## Current Status
