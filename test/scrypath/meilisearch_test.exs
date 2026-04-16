@@ -193,4 +193,63 @@ defmodule Scrypath.MeilisearchTest do
     assert_received {:request, "POST", "/indexes/tenant_searchable_post/search", _,
                      %{"q" => "hello"}}
   end
+
+  test "client can create an index through the explicit indexes endpoint" do
+    stub = Module.concat(__MODULE__, CreateIndexReqStub)
+
+    Req.Test.stub(stub, fn conn ->
+      send(self(), {:request, conn.method, conn.request_path, conn.body_params})
+      Req.Test.json(conn, %{"taskUid" => 31, "status" => "enqueued", "indexUid" => "rebuild_v2"})
+    end)
+
+    config = [
+      meilisearch_url: "http://localhost:7700",
+      req_options: [plug: {Req.Test, stub}]
+    ]
+
+    assert {:ok, %{"taskUid" => 31, "indexUid" => "rebuild_v2"}} =
+             Scrypath.Meilisearch.Client.create_index("rebuild_v2", "id", config)
+
+    assert_received {:request, "POST", "/indexes", %{"uid" => "rebuild_v2", "primaryKey" => "id"}}
+  end
+
+  test "client applies settings to the explicit index settings endpoint with caller payload" do
+    stub = Module.concat(__MODULE__, UpdateSettingsReqStub)
+    settings = %{"searchableAttributes" => ["title"], "sortableAttributes" => ["inserted_at"]}
+
+    Req.Test.stub(stub, fn conn ->
+      send(self(), {:request, conn.method, conn.request_path, conn.body_params})
+      Req.Test.json(conn, %{"taskUid" => 32, "status" => "enqueued"})
+    end)
+
+    config = [
+      meilisearch_url: "http://localhost:7700",
+      req_options: [plug: {Req.Test, stub}]
+    ]
+
+    assert {:ok, %{"taskUid" => 32, "status" => "enqueued"}} =
+             Scrypath.Meilisearch.Client.update_settings("rebuild_v2", settings, config)
+
+    assert_received {:request, "PATCH", "/indexes/rebuild_v2/settings", ^settings}
+  end
+
+  test "client swaps indexes through the explicit Meilisearch swap endpoint" do
+    stub = Module.concat(__MODULE__, SwapIndexesReqStub)
+
+    Req.Test.stub(stub, fn conn ->
+      send(self(), {:request, conn.method, conn.request_path, conn.body_params})
+      Req.Test.json(conn, %{"taskUid" => 33, "status" => "enqueued"})
+    end)
+
+    config = [
+      meilisearch_url: "http://localhost:7700",
+      req_options: [plug: {Req.Test, stub}]
+    ]
+
+    assert {:ok, %{"taskUid" => 33, "status" => "enqueued"}} =
+             Scrypath.Meilisearch.Client.swap_indexes({"live_posts", "rebuild_posts_v2"}, config)
+
+    assert_received {:request, "POST", "/swap-indexes",
+                     %{"indexes" => [%{"indexes" => ["live_posts", "rebuild_posts_v2"]}]}}
+  end
 end
