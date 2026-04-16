@@ -7,9 +7,9 @@
 
 ### Schema Declaration
 
-- [ ] **SCMA-01**: Developer can declare a searchable Ecto schema with a small, explicit `use Scrypath` configuration.
-- [ ] **SCMA-02**: Developer can define how a source record is projected into a search document.
-- [ ] **SCMA-03**: Developer can inspect declared search metadata for a schema at runtime.
+- [x] **SCMA-01**: Developer can declare a searchable Ecto schema with a small, explicit `use Scrypath` configuration.
+- [x] **SCMA-02**: Developer can define how a source record is projected into a search document.
+- [x] **SCMA-03**: Developer can inspect declared search metadata for a schema at runtime.
 
 ### Sync Lifecycle
 
@@ -22,20 +22,20 @@
 
 ### Search Querying
 
-- [ ] **SRCH-01**: Developer can execute a search against a searchable schema using a small, consistent API.
-- [ ] **SRCH-02**: Developer can filter search results using declared filterable fields.
-- [ ] **SRCH-03**: Developer can sort search results using declared sortable fields.
-- [ ] **SRCH-04**: Developer can paginate search results.
-- [ ] **SRCH-05**: Developer can access raw backend hit metadata when needed.
-- [ ] **SRCH-06**: Developer can hydrate search hits back into Ecto records.
+- [x] **SRCH-01**: Developer can execute a search against a searchable schema using a small, consistent API.
+- [x] **SRCH-02**: Developer can filter search results using declared filterable fields.
+- [x] **SRCH-03**: Developer can sort search results using declared sortable fields.
+- [x] **SRCH-04**: Developer can paginate search results.
+- [x] **SRCH-05**: Developer can access raw backend hit metadata when needed.
+- [x] **SRCH-06**: Developer can hydrate search hits back into Ecto records.
 
 ### Reindexing and Operations
 
-- [ ] **OPER-01**: Developer can bulk backfill an index from existing Ecto records.
-- [ ] **OPER-02**: Developer can trigger a reindex workflow intentionally rather than reimplementing it ad hoc.
-- [ ] **OPER-03**: Developer can apply index settings as part of managed indexing workflows.
+- [x] **OPER-01**: Developer can bulk backfill an index from existing Ecto records.
+- [x] **OPER-02**: Developer can trigger a reindex workflow intentionally rather than reimplementing it ad hoc.
+- [x] **OPER-03**: Developer can apply index settings as part of managed indexing workflows.
 - [x] **OPER-04**: Developer can observe indexing and query workflows through Telemetry events.
-- [ ] **OPER-05**: Developer can understand eventual consistency, failure modes, and recovery workflows from the official documentation.
+- [x] **OPER-05**: Developer can understand eventual consistency, failure modes, and recovery workflows from the official documentation.
 
 ### Phoenix Ergonomics
 
@@ -45,7 +45,7 @@
 ### Backend Foundation
 
 - [x] **BACK-01**: Developer can use Scrypath with Meilisearch as the supported public backend in v1.
-- [ ] **BACK-02**: The internal architecture preserves a path to future backend support without forcing a premature public abstraction.
+- [x] **BACK-02**: The internal architecture preserves a path to future backend support without forcing a premature public abstraction.
 
 ## v2 Requirements
 
@@ -77,28 +77,28 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCMA-01 | Phase 7 | Pending |
-| SCMA-02 | Phase 7 | Pending |
-| SCMA-03 | Phase 7 | Pending |
-| BACK-02 | Phase 7 | Pending |
+| SCMA-01 | Phase 1 | Complete |
+| SCMA-02 | Phase 1 | Complete |
+| SCMA-03 | Phase 1 | Complete |
+| BACK-02 | Phase 1 | Complete |
 | BACK-01 | Phase 2 | Complete |
 | SYNC-01 | Phase 2 | Complete |
 | SYNC-02 | Phase 2 | Complete |
 | SYNC-03 | Phase 2 | Complete |
 | SYNC-04 | Phase 2 | Complete |
 | SYNC-06 | Phase 2 | Complete |
-| SRCH-01 | Phase 7 | Pending |
-| SRCH-02 | Phase 7 | Pending |
-| SRCH-03 | Phase 7 | Pending |
-| SRCH-04 | Phase 7 | Pending |
-| SRCH-05 | Phase 7 | Pending |
-| SRCH-06 | Phase 7 | Pending |
+| SRCH-01 | Phase 3 | Complete |
+| SRCH-02 | Phase 3 | Complete |
+| SRCH-03 | Phase 3 | Complete |
+| SRCH-04 | Phase 3 | Complete |
+| SRCH-05 | Phase 3 | Complete |
+| SRCH-06 | Phase 3 | Complete |
 | SYNC-05 | Phase 4 | Complete |
 | OPER-04 | Phase 4 | Complete |
-| OPER-01 | Phase 5 | Pending |
-| OPER-02 | Phase 5 | Pending |
-| OPER-03 | Phase 5 | Pending |
-| OPER-05 | Phase 5 | Pending |
+| OPER-01 | Phase 5 | Complete |
+| OPER-02 | Phase 5 | Complete |
+| OPER-03 | Phase 5 | Complete |
+| OPER-05 | Phase 5 | Complete |
 | PHNX-01 | Phase 6 | Complete |
 | PHNX-02 | Phase 6 | Complete |
 
@@ -109,4 +109,4 @@
 
 ---
 *Requirements defined: 2026-04-15*
-*Last updated: 2026-04-16 after phase 4 plan 04-03 execution*
+*Last updated: 2026-04-16 after phase 7 verification backfill and traceability repair*

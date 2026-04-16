@@ -146,8 +146,8 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 07-01-PLAN.md - Backfill the missing Phase 1 verification report from current code and focused tests
-- [ ] 07-02-PLAN.md - Backfill the missing Phase 3 verification report from current code and focused tests
+- [x] 07-01-PLAN.md - Backfill the missing Phase 1 verification report from current source and focused tests
+- [x] 07-02-PLAN.md - Backfill the missing Phase 3 verification report from current source and focused tests
 - [ ] 07-03-PLAN.md - Repair requirements, roadmap, state, and milestone audit traceability after verification backfill
 
 **Success criteria:**
@@ -169,4 +169,4 @@ Plans:
 - Phase 7 depends on completed milestone code being present in Phases 1 through 6 and exists only to repair milestone audit evidence and traceability.
 
 ---
-*Last updated: 2026-04-16 after phase 4 plan 04-03 execution*
+*Last updated: 2026-04-16 after phase 7 verification backfill and traceability repair*
