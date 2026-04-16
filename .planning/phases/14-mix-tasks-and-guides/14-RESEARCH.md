@@ -386,22 +386,23 @@ ExDoc officially supports grouped extras in the generated sidebar. [CITED: https
 | A3 | A small shared `lib/scrypath/cli/` helper area may be useful if task formatting duplicates. | Recommended Project Structure | Low — can be omitted if tasks stay tiny. |
 | A4 | A one-task umbrella CLI with subcommands is technically possible but not worth the complexity here. | Alternatives Considered | Low — planner can still choose it, but it is less aligned with current repo style. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **What exact task names should Scrypath expose?**
-   - What we know: The roadmap requires documented `mix scrypath.*` commands, but does not lock exact verbs. [VERIFIED: `.planning/ROADMAP.md`]
-   - What's unclear: Whether “failed” vs “failed_work” and whether reindex visibility gets its own task or stays under `reconcile`. [VERIFIED: roadmap wording is generic]
-   - Recommendation: Lock names early in planning and mirror the root API nouns as closely as Mix naming allows. [VERIFIED: `lib/scrypath.ex` + `https://hexdocs.pm/mix/Mix.Task.html`]
+   - Decision: Ship `mix scrypath.status`, `mix scrypath.failed`, `mix scrypath.retry`, and `mix scrypath.reconcile`. [RESOLVED: `14-01-PLAN.md`]
+   - Rationale: These names stay close to the root operator verbs while keeping Mix task names short and readable. [VERIFIED: `lib/scrypath.ex` + `14-01-PLAN.md`]
 
-2. **Should the sync-mode content stay in one guide or split into three guides?**
-   - What we know: There is already a concise `guides/sync-modes-and-visibility.md`. [VERIFIED: file exists and is published in `mix.exs`]
-   - What's unclear: Whether Phase 14 can expand that file cleanly without turning it into a wall of prose. [ASSUMED]
-   - Recommendation: Keep one overview page, but structure it with three explicit subsections or linked child guides only if the examples become too long. [ASSUMED]
+2. **Should reindex visibility get its own task or stay under `reconcile`?**
+   - Decision: Keep reindex visibility under `mix scrypath.reconcile`; do not add a separate reindex-visibility task in Phase 14. [RESOLVED: `14-01-PLAN.md`]
+   - Rationale: Reconcile is already the report-first operator surface for drift and rebuild state, and a separate task would widen the CLI without a new root API contract. [VERIFIED: `.planning/ROADMAP.md` + `lib/scrypath.ex` + `14-01-PLAN.md`]
 
-3. **Does Phase 14 need machine-readable output formats?**
-   - What we know: The roadmap asks for thin ergonomics, not a new automation surface. [VERIFIED: `.planning/ROADMAP.md`]
-   - What's unclear: Whether maintainers want `--json` output immediately for scripts. [ASSUMED]
-   - Recommendation: Default to human-readable output in Phase 14; treat machine-readable output as follow-up work unless a current requirement depends on it. [ASSUMED]
+3. **Should the sync-mode content stay in one guide or split into three guides?**
+   - Decision: Keep one canonical `guides/sync-modes-and-visibility.md` page with explicit sections for `:inline`, `:oban`, and `:manual`. [RESOLVED: `14-02-PLAN.md`]
+   - Rationale: This keeps HexDocs navigation compact while still giving each mode first-class coverage. [VERIFIED: `mix.exs` + `14-02-PLAN.md`]
+
+4. **Does Phase 14 need machine-readable output formats?**
+   - Decision: No `--json` or machine-readable output contract in Phase 14; output is explicitly human-readable only. [RESOLVED: `14-01-PLAN.md` + `14-02-PLAN.md`]
+   - Rationale: The roadmap asks for thin operator ergonomics, not a second automation surface. Machine-readable output remains follow-up work unless a current requirement demands it. [VERIFIED: `.planning/ROADMAP.md` + `14-01-PLAN.md`]
 
 ## Environment Availability
 
