@@ -5,16 +5,16 @@ milestone_name: Public Release Trust and Operator Visibility
 current_phase: 12
 current_phase_name: internal-operations-seam
 current_plan: 3
-status: ready_to_execute
-stopped_at: Completed 12-02-PLAN.md
-last_updated: "2026-04-16T21:36:34.492Z"
+status: verifying
+stopped_at: Completed 12-03-PLAN.md
+last_updated: "2026-04-16T21:41:28.201Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
-  completed_plans: 4
-  percent: 80
+  completed_plans: 5
+  percent: 100
 ---
 
 # Project State
@@ -33,7 +33,7 @@ Plan: 3 of 3
 Current Phase: 12
 Current Phase Name: internal-operations-seam
 Current Plan: 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-16
 Last Activity Description: Completed Phase 12 Plan 02 seam runtime rewiring and advanced to Plan 03.
 
@@ -61,6 +61,8 @@ Progress: [████████░░] 80%
 - [Phase 12]: Use one Scrypath-owned task struct for backend tasks and queue jobs, separating source and kind from public sync projection. — This keeps lifecycle vocabulary Scrypath-owned while still preserving a path back to the existing sync result map.
 - [Phase 12]: Keep `Scrypath.Meilisearch` as the explicit public namespace and push seam normalization into `Scrypath.Meilisearch.Operations`. — This preserves the Meilisearch-first public contract while moving backend task normalization behind the internal seam.
 - [Phase 12]: Convert seam-owned `Scrypath.Operations.Result` and `Task` values back into the current public sync maps only at the `Scrypath.Sync` boundary. — Phase 13 can now build operator primitives on the seam without changing the caller-facing sync contract.
+- [Phase 12]: Route Meilisearch backfill writes through the internal operations adapter so batch summaries can be built from Scrypath-owned results.
+- [Phase 12]: Treat the presence of a followable operation task as the reindex waiting contract instead of branching on a concrete backend module.
 
 ### Blockers/Concerns
 
@@ -83,8 +85,8 @@ Progress: [████████░░] 80%
 
 ## Session Continuity
 
-Last session: 2026-04-16T21:36:27.292Z
-Stopped at: Completed 12-02-PLAN.md
+Last session: 2026-04-16T21:41:28.198Z
+Stopped at: Completed 12-03-PLAN.md
 Resume file: None
 
 ## Current Status
@@ -113,3 +115,4 @@ Resume file: None
 
 ---
 *Last updated: 2026-04-16 after completing Phase 12 Plan 02*
+| Phase 12 P03 | 3 min | 2 tasks | 7 files |
