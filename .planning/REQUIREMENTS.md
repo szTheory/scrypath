@@ -17,7 +17,7 @@
 - [x] **SYNC-02**: Developer can synchronize searchable records on update.
 - [x] **SYNC-03**: Developer can remove searchable records from the index on delete without requiring the source record to still exist.
 - [x] **SYNC-04**: Developer can choose inline synchronization for simple or local workflows.
-- [ ] **SYNC-05**: Developer can choose Oban-backed asynchronous synchronization for production workflows.
+- [x] **SYNC-05**: Developer can choose Oban-backed asynchronous synchronization for production workflows.
 - [x] **SYNC-06**: Developer can choose manual synchronization for imports, migrations, or operator-controlled flows.
 
 ### Search Querying
@@ -93,7 +93,7 @@
 | SRCH-04 | Phase 3 | Pending |
 | SRCH-05 | Phase 3 | Pending |
 | SRCH-06 | Phase 3 | Pending |
-| SYNC-05 | Phase 4 | Pending |
+| SYNC-05 | Phase 4 | Complete |
 | OPER-04 | Phase 4 | Pending |
 | OPER-01 | Phase 5 | Pending |
 | OPER-02 | Phase 5 | Pending |
