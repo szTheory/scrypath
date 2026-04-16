@@ -28,6 +28,11 @@ Plans:
 
 **Goal:** Make the public adoption path copy-paste safe by removing misleading install guidance and hardening Phoenix examples around real request shapes.
 **Requirements:** `DOCS-01`, `DOCS-02`, `DOCS-03`
+**Plans:** 3 plans
+Plans:
+- [x] `09-01-PLAN.md` — Remove misleading install guidance from the README and install-adjacent onboarding.
+- [x] `09-02-PLAN.md` — Harden the Phoenix JSON controller example around safe page normalization.
+- [x] `09-03-PLAN.md` — Align LiveView examples with realistic string-keyed attrs and add a narrow request-shape smoke test.
 **Success criteria:**
 1. The README install path reflects the real consumer contract and no longer asks users to pin internal transport dependencies.
 2. The Phoenix JSON example models safe invalid-page handling instead of crash-prone parsing.
@@ -51,4 +56,4 @@ Plans:
 - Deeper operator tooling for drift inspection and recovery once real-world maintainer workflows surface the right abstractions.
 
 ---
-*Last updated: 2026-04-16 after starting milestone v1.1*
+*Last updated: 2026-04-16 after completing Phase 09*

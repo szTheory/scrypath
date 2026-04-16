@@ -14,9 +14,9 @@
 
 ### Public Docs Safety
 
-- [ ] **DOCS-01**: Phoenix developer can install Scrypath from the README without copying unnecessary direct dependencies or misleading setup steps.
-- [ ] **DOCS-02**: Phoenix developer can copy the JSON controller pagination example and get safe handling for invalid page params instead of a 500-prone example.
-- [ ] **DOCS-03**: Phoenix developer can copy the LiveView and context examples knowing the fixture-backed docs tests model real Phoenix string-keyed parameter shapes.
+- [x] **DOCS-01**: Phoenix developer can install Scrypath from the README without copying unnecessary direct dependencies or misleading setup steps.
+- [x] **DOCS-02**: Phoenix developer can copy the JSON controller pagination example and get safe handling for invalid page params instead of a 500-prone example.
+- [x] **DOCS-03**: Phoenix developer can copy the LiveView and context examples knowing the fixture-backed docs tests model real Phoenix string-keyed parameter shapes.
 
 ### Launch Confidence
 
@@ -52,9 +52,9 @@
 | HARD-01 | Phase 8 | Pending |
 | HARD-02 | Phase 8 | Pending |
 | HARD-03 | Phase 8 | Pending |
-| DOCS-01 | Phase 9 | Pending |
-| DOCS-02 | Phase 9 | Pending |
-| DOCS-03 | Phase 9 | Pending |
+| DOCS-01 | Phase 9 | Complete |
+| DOCS-02 | Phase 9 | Complete |
+| DOCS-03 | Phase 9 | Complete |
 | SHIP-01 | Phase 10 | Pending |
 | SHIP-02 | Phase 10 | Pending |
 
@@ -65,4 +65,4 @@
 
 ---
 *Requirements defined: 2026-04-16*
-*Last updated: 2026-04-16 after initial v1.1 definition*
+*Last updated: 2026-04-16 after completing Phase 09*
