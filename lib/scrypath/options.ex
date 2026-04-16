@@ -130,6 +130,82 @@ defmodule Scrypath.Options do
     ]
   ]
 
+  @backfill_options [
+    backend: [
+      type: {:custom, __MODULE__, :validate_module, []},
+      required: true,
+      doc: "Backend module responsible for bulk indexing operations."
+    ],
+    repo: [
+      type: {:custom, __MODULE__, :validate_module, []},
+      required: true,
+      doc: "Ecto repo used to read source records for the backfill."
+    ],
+    batch_size: [
+      type: {:custom, __MODULE__, :validate_positive_integer, []},
+      required: true,
+      doc: "Positive batch size for bulk reads and writes."
+    ],
+    query: [
+      type: :any,
+      default: nil,
+      doc: "Optional explicit queryable override for the source dataset."
+    ],
+    index_name: [
+      type: {:custom, __MODULE__, :validate_optional_string, []},
+      default: nil,
+      doc: "Optional explicit index target override."
+    ],
+    settings: [
+      type: {:custom, __MODULE__, :validate_settings, []},
+      default: %{},
+      doc: "Optional explicit settings override applied by orchestration layers."
+    ],
+    sync_mode: [
+      type: {:in, [:inline, :manual, :oban]},
+      default: :manual,
+      doc: "Execution mode for the bulk workflow."
+    ]
+  ]
+
+  @reindex_options [
+    backend: [
+      type: {:custom, __MODULE__, :validate_module, []},
+      required: true,
+      doc: "Backend module responsible for reindex operations."
+    ],
+    repo: [
+      type: {:custom, __MODULE__, :validate_module, []},
+      required: true,
+      doc: "Ecto repo used to read source records for the rebuild."
+    ],
+    batch_size: [
+      type: {:custom, __MODULE__, :validate_positive_integer, []},
+      required: true,
+      doc: "Positive batch size for rebuild reads and writes."
+    ],
+    target_index: [
+      type: {:custom, __MODULE__, :validate_optional_string, []},
+      default: nil,
+      doc: "Optional explicit target index name override."
+    ],
+    cutover?: [
+      type: :boolean,
+      default: true,
+      doc: "Whether the managed rebuild should perform cutover."
+    ],
+    settings: [
+      type: {:custom, __MODULE__, :validate_settings, []},
+      default: %{},
+      doc: "Optional explicit settings override applied during rebuild."
+    ],
+    sync_mode: [
+      type: {:in, [:inline, :manual, :oban]},
+      default: :manual,
+      doc: "Execution mode for the reindex workflow."
+    ]
+  ]
+
   @spec validate_schema_options!(keyword()) :: map()
   def validate_schema_options!(opts) do
     opts
@@ -143,6 +219,20 @@ defmodule Scrypath.Options do
     opts
     |> validate!(@runtime_options)
     |> validate_oban_runtime_options!()
+  end
+
+  @spec validate_backfill_options!(keyword()) :: keyword()
+  def validate_backfill_options!(opts) do
+    opts
+    |> validate!(@backfill_options)
+    |> validate_bulk_sync_mode!()
+  end
+
+  @spec validate_reindex_options!(keyword()) :: keyword()
+  def validate_reindex_options!(opts) do
+    opts
+    |> validate!(@reindex_options)
+    |> validate_bulk_sync_mode!()
   end
 
   @spec validate_search_options!(module(), keyword()) :: keyword()
@@ -160,6 +250,9 @@ defmodule Scrypath.Options do
   def validate_optional_string(value) when is_binary(value), do: {:ok, value}
   def validate_optional_string(nil), do: {:ok, nil}
   def validate_optional_string(_value), do: {:error, "expected a string or nil"}
+
+  def validate_module(value) when is_atom(value), do: {:ok, value}
+  def validate_module(_value), do: {:error, "expected a module"}
 
   def validate_settings(value) when is_map(value), do: {:ok, value}
 
@@ -255,6 +348,14 @@ defmodule Scrypath.Options do
   defp validate_oban_runtime_options!(opts) do
     if Keyword.get(opts, :sync_mode) == :oban and is_nil(Keyword.get(opts, :oban_queue)) do
       raise ArgumentError, "oban_queue is required when sync_mode is :oban"
+    end
+
+    opts
+  end
+
+  defp validate_bulk_sync_mode!(opts) do
+    if Keyword.get(opts, :sync_mode) == :oban do
+      raise ArgumentError, "sync_mode :oban is not supported for bulk workflows"
     end
 
     opts

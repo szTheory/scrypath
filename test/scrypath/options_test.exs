@@ -1,6 +1,8 @@
 defmodule Scrypath.OptionsTest do
   use ExUnit.Case, async: true
 
+  import Ecto.Query
+
   alias Scrypath.Config
   alias Scrypath.TestSupport.FakeBackend
 
@@ -76,6 +78,85 @@ defmodule Scrypath.OptionsTest do
       Scrypath.Options.validate_runtime_options!(
         backend: FakeBackend,
         meilisearch_url: 123
+      )
+    end
+  end
+
+  test "validate_backfill_options!/1 requires backend and repo and accepts explicit overrides" do
+    query = from("posts")
+
+    config =
+      Scrypath.Options.validate_backfill_options!(
+        backend: FakeBackend,
+        repo: Scrypath.TestRepo,
+        batch_size: 500,
+        query: query,
+        index_name: "posts_v2",
+        settings: %{filterableAttributes: ["status"]},
+        sync_mode: :manual
+      )
+
+    assert config[:backend] == FakeBackend
+    assert config[:repo] == Scrypath.TestRepo
+    assert config[:batch_size] == 500
+    assert config[:query] == query
+    assert config[:index_name] == "posts_v2"
+    assert config[:settings] == %{filterableAttributes: ["status"]}
+    assert config[:sync_mode] == :manual
+  end
+
+  test "validate_reindex_options!/1 requires backend and repo and validates cutover contract" do
+    config =
+      Scrypath.Options.validate_reindex_options!(
+        backend: FakeBackend,
+        repo: Scrypath.TestRepo,
+        batch_size: 1_000,
+        target_index: "posts_tmp",
+        cutover?: false,
+        settings: %{sortableAttributes: ["inserted_at"]},
+        sync_mode: :manual
+      )
+
+    assert config[:backend] == FakeBackend
+    assert config[:repo] == Scrypath.TestRepo
+    assert config[:batch_size] == 1_000
+    assert config[:target_index] == "posts_tmp"
+    assert config[:cutover?] == false
+    assert config[:settings] == %{sortableAttributes: ["inserted_at"]}
+    assert config[:sync_mode] == :manual
+  end
+
+  test "bulk workflow validators reject impossible values before execution" do
+    assert_raise ArgumentError, ~r/repo/, fn ->
+      Scrypath.Options.validate_backfill_options!(
+        backend: FakeBackend,
+        batch_size: 100
+      )
+    end
+
+    assert_raise ArgumentError, ~r/batch_size/, fn ->
+      Scrypath.Options.validate_backfill_options!(
+        backend: FakeBackend,
+        repo: Scrypath.TestRepo,
+        batch_size: 0
+      )
+    end
+
+    assert_raise ArgumentError, ~r/sync_mode/, fn ->
+      Scrypath.Options.validate_backfill_options!(
+        backend: FakeBackend,
+        repo: Scrypath.TestRepo,
+        batch_size: 100,
+        sync_mode: :oban
+      )
+    end
+
+    assert_raise ArgumentError, ~r/sync_mode/, fn ->
+      Scrypath.Options.validate_reindex_options!(
+        backend: FakeBackend,
+        repo: Scrypath.TestRepo,
+        batch_size: 100,
+        sync_mode: :oban
       )
     end
   end
