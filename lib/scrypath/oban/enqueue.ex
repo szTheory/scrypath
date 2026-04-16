@@ -5,6 +5,7 @@ defmodule Scrypath.Oban.Enqueue do
   alias Ecto.Changeset
   alias Scrypath.Config
   alias Scrypath.Oban.Payload
+  alias Scrypath.Operations
 
   @upsert_worker "Scrypath.Oban.UpsertWorker"
   @delete_worker "Scrypath.Oban.DeleteWorker"
@@ -66,25 +67,28 @@ defmodule Scrypath.Oban.Enqueue do
     insert_job(oban, changeset)
     |> case do
       {:ok, job} ->
+        public_job = %{
+          id: job.id,
+          worker: job.worker,
+          queue: job.queue,
+          state: job.state,
+          attempt: job.attempt,
+          max_attempts: job.max_attempts
+        }
+
+        result =
+          Operations.result_from_enqueue(
+            %{
+              job: public_job,
+              document_ids: job.args["document_ids"],
+              document_count: job.args["document_count"]
+            },
+            mode: :oban,
+            status: :accepted
+          )
+
         {:ok,
-         %{
-           index: job.args["index"],
-           document_ids: job.args["document_ids"],
-           document_count: job.args["document_count"],
-           job: %{
-             id: job.id,
-             worker: job.worker,
-             queue: job.queue,
-             state: job.state,
-             attempt: job.attempt,
-             max_attempts: job.max_attempts
-           },
-           oban: %{
-             queue: queue,
-             max_attempts: max_attempts,
-             name: oban
-           }
-         }}
+         %{result | metadata: %{index: job.args["index"], oban: %{queue: queue, max_attempts: max_attempts, name: oban}}}}
 
       {:error, _reason} = error ->
         error

@@ -16,6 +16,7 @@ defmodule Scrypath.Meilisearch do
   alias Scrypath.Document
   alias Scrypath.Meilisearch.Client
   alias Scrypath.Meilisearch.IndexManagement
+  alias Scrypath.Meilisearch.Operations
   alias Scrypath.Meilisearch.Settings
   alias Scrypath.Query
 
@@ -37,37 +38,15 @@ defmodule Scrypath.Meilisearch do
   @impl true
   @spec upsert_documents(module(), [Document.t()], keyword()) :: {:ok, map()} | {:error, term()}
   def upsert_documents(schema_module, documents, config) when is_list(documents) do
-    index = Keyword.get(config, :index_name) || index_name(schema_module, config)
-    document_id_field = Scrypath.document_id_field(schema_module)
-
-    with {:ok, response} <-
-           client(config).upsert_documents(
-             index,
-             documents,
-             Keyword.put(config, :document_id_field, document_id_field)
-           ),
-         {:ok, task} <- normalize_task(response) do
-      {:ok,
-       %{
-         index: index,
-         document_ids: Enum.map(documents, & &1.id),
-         task: task
-       }}
+    with {:ok, result} <- Operations.upsert_documents(schema_module, documents, config) do
+      {:ok, Operations.to_public_result(result)}
     end
   end
 
   @impl true
   def delete_documents(schema_module, document_ids, config) when is_list(document_ids) do
-    index = Keyword.get(config, :index_name) || index_name(schema_module, config)
-
-    with {:ok, response} <- client(config).delete_documents(index, document_ids, config),
-         {:ok, task} <- normalize_task(response) do
-      {:ok,
-       %{
-         index: index,
-         document_ids: document_ids,
-         task: task
-       }}
+    with {:ok, result} <- Operations.delete_documents(schema_module, document_ids, config) do
+      {:ok, Operations.to_public_result(result)}
     end
   end
 
