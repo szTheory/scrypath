@@ -93,7 +93,7 @@ Plans:
 
 Plans:
 - [x] 04-01-PLAN.md - Common Oban sync contract, option validation, and JSON-safe payloads
-- [ ] 04-02-PLAN.md - Durable Oban enqueue, workers, and transactional helper
+- [x] 04-02-PLAN.md - Durable Oban enqueue, workers, and transactional helper
 - [ ] 04-03-PLAN.md - Telemetry spans, async operator docs, and focused observability tests
 
 **Success criteria:**
@@ -142,4 +142,4 @@ Plans:
 - Phase 6 depends on the product shape being mostly stable across Phases 1 through 5.
 
 ---
-*Last updated: 2026-04-16 after phase 4 plan 04-01 execution*
+*Last updated: 2026-04-16 after phase 4 plan 04-02 execution*
