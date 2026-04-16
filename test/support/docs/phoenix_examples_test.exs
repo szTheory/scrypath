@@ -3,7 +3,7 @@ defmodule Scrypath.PhoenixExamplesTest do
 
   @fixture_source File.read!("test/support/docs/phoenix_example_case.ex")
 
-  alias Scrypath.TestSupport.Docs.PhoenixExampleCase.ApiPostController
+  alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Api.PostController, as: ApiPostController
   alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Content
   alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Post
   alias Scrypath.TestSupport.Docs.PhoenixExampleCase.PostController
@@ -52,6 +52,12 @@ defmodule Scrypath.PhoenixExamplesTest do
     assert updated.query == "search"
     assert [%Post{}] = updated.posts
     assert updated.search.query == "search"
+  end
+
+  test "liveview write events still call the context boundary" do
+    socket = PostLive.mount()
+
+    assert socket == PostLive.handle_event("publish", %{"id" => 1, "post" => %{title: "Published"}}, socket)
   end
 
   defp module_section(name) do
