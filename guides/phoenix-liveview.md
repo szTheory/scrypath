@@ -5,7 +5,7 @@ LiveView is a strong fit for search interfaces, but the recommended Scrypath bou
 ## Handle Params Through The Context
 
 ```elixir
-defmodule MyAppWeb.PostLive.Index do
+defmodule MyAppWeb.PostLive do
   use MyAppWeb, :live_view
 
   alias MyApp.Content
@@ -42,6 +42,17 @@ The context should own:
 - backend selection
 - `Scrypath.search/3` options
 - write-path sync and delete orchestration
+
+The same context boundary can back a publish event:
+
+```elixir
+def handle_event("publish", %{"id" => id, "post" => attrs}, socket) do
+  post = load_post!(id)
+  {:ok, _post} = Content.publish_post(post, attrs)
+
+  {:noreply, socket}
+end
+```
 
 ## Keep Visibility Wording Precise
 
