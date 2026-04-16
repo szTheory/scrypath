@@ -2,6 +2,7 @@ defmodule Scrypath.BackendTest do
   use ExUnit.Case, async: false
 
   alias Scrypath.Document
+  alias Scrypath.Query
   alias Scrypath.TestSupport.FakeBackend
 
   setup do
@@ -51,6 +52,17 @@ defmodule Scrypath.BackendTest do
 
     assert FakeBackend.upsert_documents(SearchablePost, documents, []) == {:ok, [1, 2]}
     assert FakeBackend.delete_documents(SearchablePost, [1, 2], []) == {:ok, [1, 2]}
-    assert FakeBackend.search(SearchablePost, "hello", []) == {:ok, %{query: "hello", hits: []}}
+
+    query = %Query{text: "hello", filter: [], sort: [], page: %{}}
+
+    assert {:ok,
+            %{
+              query: ^query,
+              hits: [],
+              page: 1,
+              hitsPerPage: 20,
+              totalHits: 0,
+              normalized_query?: true
+            }} = FakeBackend.search(SearchablePost, query, [])
   end
 end

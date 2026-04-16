@@ -2,12 +2,17 @@ defmodule Scrypath.Meilisearch.Client do
   @moduledoc false
 
   alias Scrypath.Config
+  alias Scrypath.Meilisearch.Query, as: MeilisearchQuery
   alias Scrypath.Document
+  alias Scrypath.Query, as: CommonQuery
 
   @spec upsert_documents(String.t(), [Document.t()], keyword()) :: {:ok, map()} | {:error, term()}
   def upsert_documents(index_name, documents, config) when is_list(documents) do
     request(config)
-    |> Req.post(url: "/indexes/#{index_name}/documents", json: Enum.map(documents, &document_payload/1))
+    |> Req.post(
+      url: "/indexes/#{index_name}/documents",
+      json: Enum.map(documents, &document_payload/1)
+    )
     |> normalize_response()
   end
 
@@ -25,7 +30,8 @@ defmodule Scrypath.Meilisearch.Client do
     |> normalize_response()
   end
 
-  @spec search(String.t(), term(), keyword()) :: {:ok, map()} | {:error, term()}
+  @spec search(String.t(), CommonQuery.t() | map() | String.t(), keyword()) ::
+          {:ok, map()} | {:error, term()}
   def search(index_name, query, config) do
     request(config)
     |> Req.post(url: "/indexes/#{index_name}/search", json: search_payload(query))
@@ -59,6 +65,7 @@ defmodule Scrypath.Meilisearch.Client do
     Map.put(data, :id, id)
   end
 
+  defp search_payload(%CommonQuery{} = query), do: MeilisearchQuery.to_payload(query)
   defp search_payload(query) when is_binary(query), do: %{q: query}
   defp search_payload(query) when is_map(query), do: query
 

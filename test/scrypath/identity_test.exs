@@ -12,7 +12,8 @@ defmodule Scrypath.IdentityTest do
       field(:title, :string)
     end
 
-    def search_document_id(%__MODULE__{legacy_id: legacy_id}) when is_binary(legacy_id), do: legacy_id
+    def search_document_id(%__MODULE__{legacy_id: legacy_id}) when is_binary(legacy_id),
+      do: legacy_id
   end
 
   defmodule MissingIdentityPost do

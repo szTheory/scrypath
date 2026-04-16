@@ -27,7 +27,15 @@ defmodule Scrypath.TestSupport.FakeBackend do
 
   @impl true
   def search(_schema_module, query, _config) do
-    {:ok, %{query: query, hits: [], normalized_query?: match?(%Query{}, query)}}
+    {:ok,
+     %{
+       query: query,
+       hits: [],
+       page: 1,
+       hitsPerPage: 20,
+       totalHits: 0,
+       normalized_query?: match?(%Query{}, query)
+     }}
   end
 
   defp document_id(%Document{id: id}), do: id

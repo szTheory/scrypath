@@ -65,6 +65,11 @@ defmodule Scrypath.Options do
       default: nil,
       doc: "Optional API key for Meilisearch requests."
     ],
+    meilisearch_client: [
+      type: {:custom, __MODULE__, :validate_optional_module, []},
+      default: nil,
+      doc: "Optional Meilisearch client override for tests."
+    ],
     req_options: [
       type: {:custom, __MODULE__, :validate_keyword_list, []},
       default: [],
@@ -79,6 +84,11 @@ defmodule Scrypath.Options do
       type: {:custom, __MODULE__, :validate_positive_integer, []},
       default: 5_000,
       doc: "Inline task wait timeout in milliseconds."
+    ],
+    preload: [
+      type: {:custom, __MODULE__, :validate_preload, []},
+      default: [],
+      doc: "Optional preload list applied only to repo-side hydration."
     ]
   ]
 
@@ -119,7 +129,7 @@ defmodule Scrypath.Options do
     sortable = MapSet.new(schema_module.__scrypath__(:sortable))
 
     opts
-    |> Keyword.take([:filter, :sort, :page])
+    |> Keyword.drop(runtime_option_keys())
     |> validate!(@search_options)
     |> validate_filterable_fields!(filterable)
     |> validate_sortable_fields!(sortable)
@@ -143,6 +153,11 @@ defmodule Scrypath.Options do
 
   def validate_positive_integer(value) when is_integer(value) and value > 0, do: {:ok, value}
   def validate_positive_integer(_value), do: {:error, "expected a positive integer"}
+
+  def validate_preload(nil), do: {:ok, []}
+  def validate_preload(value) when is_atom(value), do: {:ok, [value]}
+  def validate_preload(value) when is_list(value), do: {:ok, value}
+  def validate_preload(_value), do: {:error, "expected a preload atom, list, or nil"}
 
   def validate_search_filter(value) when is_list(value) do
     if Keyword.keyword?(value) do
@@ -216,7 +231,8 @@ defmodule Scrypath.Options do
     Keyword.put(opts, :sort, sort)
   end
 
-  defp validate_filter_entry!({operator, _value}, _filterable) when operator in [:or, :and, :not] do
+  defp validate_filter_entry!({operator, _value}, _filterable)
+       when operator in [:or, :and, :not] do
     raise ArgumentError, "boolean composition is not supported in common search filters"
   end
 
@@ -285,5 +301,9 @@ defmodule Scrypath.Options do
         required: false
       ]
     ]
+  end
+
+  defp runtime_option_keys do
+    Keyword.keys(@runtime_options)
   end
 end

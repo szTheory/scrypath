@@ -2,6 +2,7 @@ defmodule Scrypath.MeilisearchTest do
   use ExUnit.Case, async: true
 
   alias Scrypath.Document
+  alias Scrypath.SearchResult
 
   defmodule RecordingClient do
     def upsert_documents(index_name, documents, config) do
@@ -41,7 +42,10 @@ defmodule Scrypath.MeilisearchTest do
 
   test "Scrypath.Meilisearch satisfies backend name and index naming" do
     assert Scrypath.Meilisearch.name() == :meilisearch
-    assert Scrypath.Meilisearch.index_name(SearchablePost, index_prefix: "tenant") == "tenant_searchable_post"
+
+    assert Scrypath.Meilisearch.index_name(SearchablePost, index_prefix: "tenant") ==
+             "tenant_searchable_post"
+
     assert Scrypath.Meilisearch.index_name(SearchablePost, []) == "scrypath_searchable_post"
   end
 
@@ -81,6 +85,50 @@ defmodule Scrypath.MeilisearchTest do
     assert_received {:client_search, "tenant_searchable_post", "hello", _config}
   end
 
+  test "common search translates normalized query fields into Meilisearch payloads" do
+    stub = Module.concat(__MODULE__, QueryReqStub)
+
+    Req.Test.stub(stub, fn conn ->
+      send(self(), {:search_request, conn.method, conn.request_path, conn.body_params})
+
+      Req.Test.json(conn, %{
+        "hits" => [%{"id" => 99}],
+        "page" => 2,
+        "hitsPerPage" => 20,
+        "totalHits" => 1
+      })
+    end)
+
+    assert {:ok, %SearchResult{hits: [%{"id" => 99}]}} =
+             Scrypath.search(SearchablePost, "hello",
+               backend: Scrypath.Meilisearch,
+               meilisearch_url: "http://localhost:7700",
+               req_options: [plug: {Req.Test, stub}],
+               filter: [status: [eq: "published", gte: "archived"]],
+               sort: [desc: :inserted_at],
+               page: [number: 2, size: 20]
+             )
+
+    assert_received {:search_request, "POST", "/indexes/scrypath_searchable_post/search", body}
+    assert body["q"] == "hello"
+    assert body["sort"] == ["inserted_at:desc"]
+    assert body["page"] == 2
+    assert body["hitsPerPage"] == 20
+    assert body["filter"] == ["status = \"published\"", "status >= \"archived\""]
+  end
+
+  test "native Meilisearch search remains available for backend-specific payloads" do
+    payload = %{"q" => "hello", "facets" => ["status"]}
+
+    assert {:ok, %{"hits" => [%{"id" => 99}], "query" => ^payload}} =
+             Scrypath.Meilisearch.search(SearchablePost, payload,
+               index_prefix: "tenant",
+               meilisearch_client: RecordingClient
+             )
+
+    assert_received {:client_search, "tenant_searchable_post", ^payload, _config}
+  end
+
   test "client shapes document writes, deletes, and task lookups for sync flows" do
     stub = Module.concat(__MODULE__, ReqStub)
 
@@ -114,16 +162,25 @@ defmodule Scrypath.MeilisearchTest do
     documents = [%Document{id: 5, data: %{title: "Hello"}, source: :fields}]
 
     assert {:ok, %{"taskUid" => 21, "status" => "enqueued"}} =
-             Scrypath.Meilisearch.Client.upsert_documents("tenant_searchable_post", documents, config)
+             Scrypath.Meilisearch.Client.upsert_documents(
+               "tenant_searchable_post",
+               documents,
+               config
+             )
 
     assert_received {:request, "POST", "/indexes/tenant_searchable_post/documents", headers, body}
     assert {"x-meili-api-key", "secret-key"} in headers
     assert body == %{"_json" => [%{"id" => 5, "title" => "Hello"}]}
 
     assert {:ok, %{"taskUid" => 22, "status" => "enqueued"}} =
-             Scrypath.Meilisearch.Client.delete_documents("tenant_searchable_post", ["post:5"], config)
+             Scrypath.Meilisearch.Client.delete_documents(
+               "tenant_searchable_post",
+               ["post:5"],
+               config
+             )
 
-    assert_received {:request, "POST", "/indexes/tenant_searchable_post/documents/delete-batch", _, %{"_json" => ["post:5"]}}
+    assert_received {:request, "POST", "/indexes/tenant_searchable_post/documents/delete-batch",
+                     _, %{"_json" => ["post:5"]}}
 
     assert {:ok, %{"uid" => 22, "status" => "succeeded"}} =
              Scrypath.Meilisearch.Client.task(22, config)
@@ -133,6 +190,7 @@ defmodule Scrypath.MeilisearchTest do
     assert {:ok, %{"hits" => [], "query" => "hello"}} =
              Scrypath.Meilisearch.Client.search("tenant_searchable_post", "hello", config)
 
-    assert_received {:request, "POST", "/indexes/tenant_searchable_post/search", _, %{"q" => "hello"}}
+    assert_received {:request, "POST", "/indexes/tenant_searchable_post/search", _,
+                     %{"q" => "hello"}}
   end
 end

@@ -134,13 +134,45 @@ def search_document_id(post), do: "post:#{post.legacy_id}"
 
 Common sync examples should stay explicit in your Ecto contexts rather than hidden behind callbacks or transaction hooks.
 
+## Search
+
+Phase 3 adds the common search path under `Scrypath.search/3` and `Scrypath.search!/3`.
+
+```elixir
+{:ok, result} =
+  Scrypath.search(MyApp.Post, "ecto",
+    backend: Scrypath.Meilisearch,
+    repo: Repo,
+    filter: [status: "published"],
+    sort: [desc: :inserted_at],
+    page: [number: 2, size: 20],
+    preload: [:author]
+  )
+
+result.records
+result.hits
+result.missing_ids
+result.page
+```
+
+The common path keeps the public query shape small: search text plus structured `filter:`,
+`sort:`, and `page:` options. It rejects raw backend filter strings and other Meilisearch-native
+payloads.
+
+`repo:` is explicit. When you pass a repo, Scrypath runs one batch hydration query, restores
+search hit order in Elixir, and surfaces stale rows through `missing_ids` instead of dropping
+them silently. Raw backend hits remain available on the same result struct.
+
+Use `Scrypath.Meilisearch.search/3` when you need native Meilisearch request payloads that do
+not belong on the common path.
+
 ## Roadmap
 
 Phase 1 establishes the declaration and projection contracts.
 
 Phase 2 adds the Meilisearch-backed sync path for insert, update, delete, and manual workflows.
 
-Phase 3 adds the search API, filtering, sorting, pagination, and hydration.
+Phase 3 adds the common search API, filtering, sorting, pagination, and explicit hydration.
 
 Phase 4 adds Oban-backed synchronization and Telemetry instrumentation.
 
