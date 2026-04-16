@@ -24,9 +24,19 @@ defmodule Scrypath.OperationsTest do
     assert task.raw == payload.raw
   end
 
+  test "normalizes canceled atom states to the canonical cancelled task state" do
+    assert %Task{state: :cancelled} =
+             Operations.task_from_backend(%{uid: 302, status: :canceled}, source: :meilisearch)
+  end
+
   test "normalizes oban enqueue metadata without collapsing queue state into lifecycle state" do
     payload = %{
-      job: %{id: 901, state: "available", worker: "Scrypath.Oban.UpsertWorker", queue: "search_sync"},
+      job: %{
+        id: 901,
+        state: "available",
+        worker: "Scrypath.Oban.UpsertWorker",
+        queue: "search_sync"
+      },
       document_ids: [11, 12],
       document_count: 2
     }
@@ -41,7 +51,13 @@ defmodule Scrypath.OperationsTest do
     assert task.kind == :queue_job
     assert task.id == 901
     assert task.state == :queued
-    assert task.reference == %{job_id: 901, worker: "Scrypath.Oban.UpsertWorker", queue: "search_sync"}
+
+    assert task.reference == %{
+             job_id: 901,
+             worker: "Scrypath.Oban.UpsertWorker",
+             queue: "search_sync"
+           }
+
     assert task.metadata.oban_state == "available"
   end
 

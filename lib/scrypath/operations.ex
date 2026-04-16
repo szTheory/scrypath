@@ -68,10 +68,13 @@ defmodule Scrypath.Operations do
     end
   end
 
+  defp normalize_backend_state(:canceled), do: :cancelled
   defp normalize_backend_state(status) when is_atom(status), do: status
   defp normalize_backend_state(_status), do: :unknown
 
-  defp normalize_queue_state(state) when state in ["available", "scheduled", "executing"], do: :queued
+  defp normalize_queue_state(state) when state in ["available", "scheduled", "executing"],
+    do: :queued
+
   defp normalize_queue_state(state) when state in ["completed"], do: :completed
   defp normalize_queue_state(state) when state in ["discarded", "cancelled"], do: :failed
   defp normalize_queue_state(state) when is_atom(state), do: state

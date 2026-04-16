@@ -2,6 +2,7 @@ defmodule Scrypath.Reindex do
   @moduledoc false
 
   alias Scrypath.Meilisearch.Tasks
+  alias Scrypath.Operations
   alias Scrypath.Options
   alias Scrypath.Operations.Result
   alias Scrypath.Operations.Task, as: OperationTask
@@ -29,7 +30,8 @@ defmodule Scrypath.Reindex do
              |> backfill_config()
              |> Keyword.put(:index_name, target_index)
            ),
-         {:ok, _backfill_result} <- maybe_wait_for_backfill_tasks(backfill_result, workflow_config),
+         {:ok, _backfill_result} <-
+           maybe_wait_for_backfill_tasks(backfill_result, workflow_config),
          {:ok, cutover} <- maybe_cutover(schema_module, workflow_config, meilisearch) do
       {:ok,
        %{
@@ -52,7 +54,8 @@ defmodule Scrypath.Reindex do
             {:error, reason} -> {:error, reason}
           end
 
-        {:error, reason} -> {:error, reason}
+        {:error, reason} ->
+          {:error, reason}
       end
     else
       {:ok, false}
@@ -61,8 +64,11 @@ defmodule Scrypath.Reindex do
 
   defp maybe_wait_for_result_task(result, config) do
     case followable_task(result) do
-      %OperationTask{} = task ->
+      %OperationTask{source: :meilisearch} = task ->
         wait_for_result_task(result, task, config)
+
+      %OperationTask{} ->
+        {:ok, result}
 
       nil ->
         {:ok, result}
@@ -86,8 +92,11 @@ defmodule Scrypath.Reindex do
       end
     end)
     |> case do
-      {:ok, waited_batch_results} -> {:ok, %{result | batch_results: Enum.reverse(waited_batch_results)}}
-      {:error, reason} -> {:error, reason}
+      {:ok, waited_batch_results} ->
+        {:ok, %{result | batch_results: Enum.reverse(waited_batch_results)}}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -95,7 +104,10 @@ defmodule Scrypath.Reindex do
 
   defp followable_task(%Result{task: %OperationTask{} = task}), do: task
   defp followable_task(%{task: %OperationTask{} = task}), do: task
-  defp followable_task(%{task: task}) when is_map(task), do: task
+
+  defp followable_task(%{task: task}) when is_map(task),
+    do: Operations.task_from_backend(task, source: :meilisearch)
+
   defp followable_task(_result), do: nil
 
   defp put_followable_task(%Result{} = result, task), do: %{result | task: task}
