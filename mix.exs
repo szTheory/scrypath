@@ -1,10 +1,13 @@
 defmodule Scrypath.MixProject do
   use Mix.Project
 
+  @version "0.1.0"
+  @source_url "https://github.com/jon/scrypath"
+
   def project do
     [
       app: :scrypath,
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -52,7 +55,28 @@ defmodule Scrypath.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: ["README.md", "ARCHITECTURE.md"]
+      source_url: @source_url,
+      source_ref: "v#{@version}",
+      extras: [
+        "README.md",
+        "ARCHITECTURE.md",
+        "guides/getting-started.md",
+        "guides/phoenix-walkthrough.md",
+        "guides/phoenix-contexts.md",
+        "guides/phoenix-controllers-and-json.md",
+        "guides/phoenix-liveview.md",
+        "guides/sync-modes-and-visibility.md"
+      ],
+      groups_for_extras: [
+        "Getting Started": ["README.md", "guides/getting-started.md"],
+        "Phoenix": [
+          "guides/phoenix-walkthrough.md",
+          "guides/phoenix-contexts.md",
+          "guides/phoenix-controllers-and-json.md",
+          "guides/phoenix-liveview.md"
+        ],
+        "Operations": ["ARCHITECTURE.md", "guides/sync-modes-and-visibility.md"]
+      ]
     ]
   end
 
@@ -60,7 +84,8 @@ defmodule Scrypath.MixProject do
     [
       licenses: ["Apache-2.0"],
       links: %{
-        "GitHub" => "https://github.com/jon/scrypath"
+        "GitHub" => @source_url,
+        "HexDocs" => "https://hexdocs.pm/scrypath"
       }
     ]
   end
