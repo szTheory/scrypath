@@ -115,17 +115,19 @@ defmodule Scrypath.DocsContractTest do
   test "release docs and CI keep the package gate auth-free" do
     assert_contains_all(@ci_workflow, [
       "mix test test/release/package_metadata_test.exs",
-      "mix hex.build --unpack"
+      "mix hex.build --unpack",
+      "Validate release workflow config"
     ])
 
     refute @ci_workflow =~ "mix hex.publish --dry-run"
 
     assert_contains_all(@release_docs, [
-      "mix test test/release/package_metadata_test.exs",
-      "mix hex.build --unpack",
+      "mix verify.phase10",
       "HEX_API_KEY",
       "mix hex.publish --dry-run --yes",
-      "always-on CI gate"
+      "HEX_API_KEY=... mix hex.publish --dry-run --yes",
+      "always-on CI gate",
+      "must stay out of the always-on CI gate"
     ])
   end
 

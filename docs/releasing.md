@@ -4,15 +4,15 @@ Release Please owns the version bump and changelog PR flow. CI already runs the 
 
 ## Automated Release Gate
 
-Run these commands locally when you want the same package checks outside CI:
+Run `mix verify.phase10` when you want the same auth-free package checks outside CI from one canonical maintainer entrypoint:
 
 ```bash
-mix docs --warnings-as-errors
-mix test test/release/package_metadata_test.exs
-mix hex.build --unpack
+mix verify.phase10
 ```
 
-After `mix hex.build --unpack`, inspect the unpacked package contents:
+That command runs the focused release-doc and package metadata contract tests, builds docs with warnings as errors, validates the Release Please workflow/config files, and unpacks the Hex package locally.
+
+If you want to inspect the unpacked package contents after `mix verify.phase10`, run:
 
 ```bash
 find scrypath-* -maxdepth 3 -type f | grep -E '^scrypath-[^/]+/(README.md|CHANGELOG.md|ARCHITECTURE.md|docs/releasing.md|guides/|lib/|mix.exs)'
