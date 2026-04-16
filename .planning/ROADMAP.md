@@ -14,6 +14,11 @@ Goal: harden the shipped v1 surface until README examples, Meilisearch edge case
 
 **Goal:** Remove edge-case ambiguity from the Meilisearch and shared sync contracts so hard failures stay explicit and no-op paths are well-defined.
 **Requirements:** `HARD-01`, `HARD-02`, `HARD-03`
+**Plans:** 3 plans
+Plans:
+- [ ] `08-01-PLAN.md` — Harden Meilisearch task normalization and inline wait contract tests.
+- [ ] `08-02-PLAN.md` — Define shared empty-batch no-op semantics and telemetry coverage.
+- [ ] `08-03-PLAN.md` — Keep live reliability verification narrow and add the phase verification Mix task.
 **Success criteria:**
 1. Inline task waiting handles malformed payloads and terminal error states through stable explicit result tuples.
 2. Shared sync/delete batch entrypoints document and implement defined empty-input behavior.
