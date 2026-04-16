@@ -36,6 +36,7 @@ defmodule Scrypath.MixProject do
       preferred_envs: [
         "verify.phase5": :test,
         "verify.phase8": :test,
+        "verify.phase10": :test,
         credo: :test,
         dialyzer: :test
       ]
