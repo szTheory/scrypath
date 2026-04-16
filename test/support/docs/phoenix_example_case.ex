@@ -24,7 +24,7 @@ defmodule Scrypath.TestSupport.Docs.PhoenixExampleCase do
     end
 
     def publish_post(%Post{} = post, attrs) when is_map(attrs) do
-      {:ok, %{post | title: Map.get(attrs, :title, post.title), status: :published}}
+      {:ok, %{post | title: Map.get(attrs, "title", post.title), status: :published}}
     end
 
     def get_post!(id), do: %Post{id: id, title: "Draft", status: :draft}

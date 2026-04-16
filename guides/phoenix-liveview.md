@@ -54,6 +54,8 @@ def handle_event("publish", %{"id" => id, "post" => attrs}, socket) do
 end
 ```
 
+Keep `attrs` string-keyed at this boundary. That matches the nested params LiveView receives from the browser before your context decides how to validate or persist them.
+
 ## Keep Visibility Wording Precise
 
 If a LiveView event updates a record and then triggers sync work, the UI should not imply immediate search visibility unless the context chose `:inline` and waited for terminal backend success.
