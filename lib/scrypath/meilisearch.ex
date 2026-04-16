@@ -38,8 +38,14 @@ defmodule Scrypath.Meilisearch do
   @spec upsert_documents(module(), [Document.t()], keyword()) :: {:ok, map()} | {:error, term()}
   def upsert_documents(schema_module, documents, config) when is_list(documents) do
     index = Keyword.get(config, :index_name) || index_name(schema_module, config)
+    document_id_field = Scrypath.document_id_field(schema_module)
 
-    with {:ok, response} <- client(config).upsert_documents(index, documents, config) do
+    with {:ok, response} <-
+           client(config).upsert_documents(
+             index,
+             documents,
+             Keyword.put(config, :document_id_field, document_id_field)
+           ) do
       {:ok,
        %{
          index: index,
@@ -67,7 +73,11 @@ defmodule Scrypath.Meilisearch do
   @spec search(module(), Query.t() | map() | String.t(), keyword()) ::
           {:ok, map()} | {:error, term()}
   def search(schema_module, query, config) do
-    index = index_name(schema_module, config)
+    index =
+      Keyword.get(config, :index_name) ||
+        Keyword.get(config, :target_index) ||
+        index_name(schema_module, config)
+
     client(config).search(index, query, config)
   end
 

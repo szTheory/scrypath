@@ -4,6 +4,17 @@ defmodule Scrypath.MeilisearchTest do
   alias Scrypath.Document
   alias Scrypath.SearchResult
 
+  defmodule CustomIdPost do
+    use Ecto.Schema
+
+    use Scrypath, fields: [:title], document_id: :external_id
+
+    embedded_schema do
+      field(:external_id, :string)
+      field(:title, :string)
+    end
+  end
+
   defmodule RecordingClient do
     def create_index(index_name, primary_key, config) do
       send(self(), {:client_create_index, index_name, primary_key, config})
@@ -120,6 +131,17 @@ defmodule Scrypath.MeilisearchTest do
     assert_received {:client_search, "tenant_searchable_post", "hello", _config}
   end
 
+  test "search/3 honors explicit target index overrides for reindex inspection" do
+    assert {:ok, %{"hits" => [%{"id" => 99}], "query" => "hello"}} =
+             Scrypath.Meilisearch.search(SearchablePost, "hello",
+               index_prefix: "tenant",
+               target_index: "tenant_searchable_post__reindex",
+               meilisearch_client: RecordingClient
+             )
+
+    assert_received {:client_search, "tenant_searchable_post__reindex", "hello", _config}
+  end
+
   test "common search translates normalized query fields into Meilisearch payloads" do
     stub = Module.concat(__MODULE__, QueryReqStub)
 
@@ -229,6 +251,33 @@ defmodule Scrypath.MeilisearchTest do
                      %{"q" => "hello"}}
   end
 
+  test "client shapes document writes with the configured document id field" do
+    stub = Module.concat(__MODULE__, CustomDocumentIdReqStub)
+
+    Req.Test.stub(stub, fn conn ->
+      send(self(), {:request, conn.method, conn.request_path, conn.body_params})
+      Req.Test.json(conn, %{"taskUid" => 34, "status" => "enqueued"})
+    end)
+
+    config = [
+      meilisearch_url: "http://localhost:7700",
+      req_options: [plug: {Req.Test, stub}],
+      document_id_field: :external_id
+    ]
+
+    documents = [%Document{id: "post-5", data: %{title: "Hello"}, source: :fields}]
+
+    assert {:ok, %{"taskUid" => 34, "status" => "enqueued"}} =
+             Scrypath.Meilisearch.Client.upsert_documents(
+               "tenant_custom_id_post",
+               documents,
+               config
+             )
+
+    assert_received {:request, "POST", "/indexes/tenant_custom_id_post/documents",
+                     %{"_json" => [%{"external_id" => "post-5", "title" => "Hello"}]}}
+  end
+
   test "client can create an index through the explicit indexes endpoint" do
     stub = Module.concat(__MODULE__, CreateIndexReqStub)
 
@@ -285,7 +334,7 @@ defmodule Scrypath.MeilisearchTest do
              Scrypath.Meilisearch.Client.swap_indexes({"live_posts", "rebuild_posts_v2"}, config)
 
     assert_received {:request, "POST", "/swap-indexes",
-                     %{"indexes" => [%{"indexes" => ["live_posts", "rebuild_posts_v2"]}]}}
+                     %{"_json" => [%{"indexes" => ["live_posts", "rebuild_posts_v2"]}]}}
   end
 
   test "apply_settings/3 resolves schema settings and applies them to the explicit target index" do
@@ -329,5 +378,18 @@ defmodule Scrypath.MeilisearchTest do
 
     assert_received {:client_swap_indexes, {"tenant_searchable_post", "tenant_searchable_post_v2"}, config}
     assert config[:target_index] == "tenant_searchable_post_v2"
+  end
+
+  test "backend upsert preserves schema-configured document id fields" do
+    documents = [%Document{id: "post-9", data: %{title: "Hello"}, source: :fields}]
+
+    assert {:ok, %{index: "tenant_custom_id_post", document_ids: ["post-9"], task: %{uid: 17}}} =
+             Scrypath.Meilisearch.upsert_documents(CustomIdPost, documents,
+               index_prefix: "tenant",
+               meilisearch_client: RecordingClient
+             )
+
+    assert_received {:client_upsert, "tenant_custom_id_post", ^documents, config}
+    assert config[:document_id_field] == :external_id
   end
 end

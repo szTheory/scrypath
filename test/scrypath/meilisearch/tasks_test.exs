@@ -78,7 +78,7 @@ defmodule Scrypath.Meilisearch.TasksTest do
       List.duplicate({:ok, %{"uid" => 103, "status" => "processing"}}, 6)
     end)
 
-    assert {:error, {:timeout, %{uid: 103, status: :processing}}} =
+    assert {:error, {:timeout, %{uid: 103, status: :processing, raw: raw}}} =
              Tasks.wait_for_task(
                %{uid: 103, status: "enqueued"},
                meilisearch_client: SequencedClient,
@@ -86,6 +86,8 @@ defmodule Scrypath.Meilisearch.TasksTest do
                inline_poll_interval: 5,
                inline_timeout: 10
              )
+
+    assert raw["status"] == "processing"
   end
 
   test "cancelled backend tasks return a distinct cancellation error", %{task_responses: agent} do
