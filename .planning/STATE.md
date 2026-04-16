@@ -69,8 +69,8 @@ Progress: [----------] 0%
 
 ### Blockers/Concerns
 
-- Phase 2 review left two advisory warnings in `.planning/phases/02-meilisearch-core-sync/02-REVIEW.md`: malformed Meilisearch task payload handling and undefined empty-batch sync/delete semantics.
-- Phase 3 established the common search contract, stable result envelope, and explicit hydration semantics around repo-backed batch loading.
+- Archived v1.0 review findings still leave two advisory concerns to close in v1.1: malformed Meilisearch task payload handling and undefined empty-batch sync/delete semantics.
+- The common search contract is stable, so v1.1 should avoid widening search breadth before the current public adoption path is hardened.
 
 ### Quick Tasks Completed
 
