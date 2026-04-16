@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Public Release Trust and Operator Visibility
-current_phase: 11
+current_phase: 12
 current_phase_name: internal-operations-seam
-current_plan: none
-status: ready_to_plan
-stopped_at: Phase 11 release automation hardened; ready for Phase 12 planning
-last_updated: "2026-04-16T21:05:15Z"
+current_plan: 2
+status: ready_to_execute
+stopped_at: Completed 12-01-PLAN.md
+last_updated: "2026-04-16T21:28:02.286Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
-  percent: 100
+  total_plans: 5
+  completed_plans: 3
+  percent: 60
 ---
 
 # Project State
@@ -24,20 +24,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Phase 12 roadmap follow-through for the internal operations seam
+**Current focus:** Phase 12 — internal-operations-seam
 
 ## Current Position
 
-Phase: 12 of 14 (Internal Operations Seam)
-Plan: None
+Phase: 12 (internal-operations-seam) — EXECUTING
+Plan: 2 of 3
 Current Phase: 12
 Current Phase Name: internal-operations-seam
-Current Plan: None
-Status: Ready to plan
+Current Plan: 2
+Status: Ready to execute
 Last activity: 2026-04-16
-Last Activity Description: Hardened Phase 11 release automation with workflow-owned post-publish verification, a recovery workflow, and an ongoing published-release monitor.
+Last Activity Description: Completed Phase 12 Plan 01 seam contract extraction and advanced to Plan 02.
 
-Progress: [██████████] 100%
+Progress: [██████░░░░] 60%
 
 ## Accumulated Context
 
@@ -57,6 +57,8 @@ Progress: [██████████] 100%
 - [Phase 11]: Phase 11 release docs stay on the existing Release Please plus GitHub Actions publish path and document recovery instead of adding a second release system.
 - [Phase 11]: The canonical publish workflow now verifies version/ref alignment, `mix verify.phase11`, a Hex dry-run, and the live published package before Phase 11 can be considered released.
 - [Phase 11]: Ongoing published-release verification belongs in a separate verification-only workflow that reads the latest Hex version and never attempts recovery or publish.
+- [Phase 12]: Keep the internal operations seam constructor-focused and internal-only until runtime rewiring in Plan 02. — Plan 12-01 establishes contract ownership without implying a new public operator surface or backend abstraction.
+- [Phase 12]: Use one Scrypath-owned task struct for backend tasks and queue jobs, separating source and kind from public sync projection. — This keeps lifecycle vocabulary Scrypath-owned while still preserving a path back to the existing sync result map.
 
 ### Blockers/Concerns
 
@@ -79,8 +81,8 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-04-16T20:27:49.364Z
-Stopped at: Completed 11-02-PLAN.md
+Last session: 2026-04-16T21:28:02.283Z
+Stopped at: Completed 12-01-PLAN.md
 Resume file: None
 
 ## Current Status
@@ -96,12 +98,13 @@ Resume file: None
 
 ## Next Command
 
-- `$gsd-plan-phase 12`
+- `$gsd-execute-phase 12`
 
 ## Performance Metrics
 
 | Phase | Plan | Duration | Tasks | Files | Date |
 |-------|------|----------|-------|-------|------|
+| 12 | 01 | 2 min | 1 | 4 | 2026-04-16 |
 | 11 | 02 | 10min | 3 | 4 | 2026-04-16 |
 | 11 | hardening | follow-up | release automation, recovery workflow, published-release monitor | 2026-04-16 |
 
