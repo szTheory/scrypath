@@ -5,12 +5,12 @@ milestone_name: Release Hardening and Public Launch Readiness
 current_phase: null
 current_phase_name: null
 current_plan: None
-status: defining_requirements
-stopped_at: Started milestone v1.1
-last_updated: "2026-04-16T17:30:00Z"
-last_activity: 2026-04-16 -- Milestone v1.1 started
+status: ready_for_execution
+stopped_at: Milestone v1.1 roadmap created
+last_updated: "2026-04-16T17:35:00Z"
+last_activity: 2026-04-16 -- Milestone v1.1 roadmap created
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,23 +21,23 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-15)
+See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Milestone v1.1 requirements and roadmap definition
+**Current focus:** Phase 8 planning and execution
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 8
 Plan: -
-Current Phase: None
-Current Phase Name: None
+Current Phase: 8
+Current Phase Name: Reliability and Contract Hardening
 Current Plan: None
-Status: Defining requirements
-Last activity: 2026-04-16 -- Milestone v1.1 started
-Last Activity Description: Started milestone v1.1 Release Hardening and Public Launch Readiness
+Status: Ready for planning
+Last activity: 2026-04-16 -- Milestone v1.1 roadmap created
+Last Activity Description: Defined the v1.1 requirements and roadmap; ready to start Phase 8 Reliability and Contract Hardening
 
-Progress: [██████████] 100%
+Progress: [----------] 0%
 
 ## Accumulated Context
 
@@ -80,8 +80,8 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-04-16T17:30:00Z
-Stopped at: Defining milestone v1.1 requirements
+Last session: 2026-04-16T17:35:00Z
+Stopped at: Created milestone v1.1 roadmap
 Resume file: None
 
 ## Current Status
@@ -89,6 +89,7 @@ Resume file: None
 - v1.0 archived with the full Meilisearch-first core, search, Oban, reindex, docs, and release baseline shipped.
 - Quick task 260416-if2 wired Hex publishing to run from the release workflow and corrected public GitHub metadata links.
 - Milestone v1.1 started to harden the public release surface before broader adoption.
+- Milestone v1.1 requirements and roadmap are defined across Phases 8 through 10.
 
 ## Next Command
 
@@ -96,4 +97,4 @@ Resume file: None
 - `$gsd-plan-phase 8`
 
 ---
-*Last updated: 2026-04-16 after starting milestone v1.1*
+*Last updated: 2026-04-16 after creating the v1.1 roadmap*
