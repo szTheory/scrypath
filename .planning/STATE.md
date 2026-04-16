@@ -5,16 +5,16 @@ milestone_name: Public Release Trust and Operator Visibility
 current_phase: 11
 current_phase_name: public-release-contract
 current_plan: 2
-status: ready_to_execute
-stopped_at: Completed 11-public-release-contract-01-PLAN.md
-last_updated: "2026-04-16T20:19:52.714Z"
+status: verifying
+stopped_at: Completed 11-02-PLAN.md
+last_updated: "2026-04-16T20:28:11.036Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
-  percent: 50
+  completed_plans: 2
+  percent: 100
 ---
 
 # Project State
@@ -28,16 +28,16 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 
 ## Current Position
 
-Phase: 11 (public-release-contract) — EXECUTING
+Phase: 11 (public-release-contract) — VERIFYING
 Plan: 2 of 2
 Current Phase: 11
 Current Phase Name: public-release-contract
 Current Plan: 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-16
-Last Activity Description: Completed Phase 11 Plan 01 release-alignment gate
+Last Activity Description: Completed Phase 11 Plan 02 clean-consumer smoke and release recovery contract
 
-Progress: [█████░░░░░] 50%
+Progress: [██████████] 100%
 
 ## Accumulated Context
 
@@ -53,6 +53,8 @@ Progress: [█████░░░░░] 50%
 - Phase 14 owns thin Mix task ergonomics and operational guides while keeping backend-native search power namespaced.
 - [Phase 11]: Release-facing package links stay pinned to @version and @source_ref instead of moving main/latest-doc targets.
 - [Phase 11]: Phase 11 verification extends the narrow verify.phase10 orchestration shape instead of introducing a new release script.
+- [Phase 11]: Local clean-consumer release proof uses the packaged artifact contents through a tagged temporary git repo so the smoke test stays auth-free without a path dependency.
+- [Phase 11]: Phase 11 release docs stay on the existing Release Please plus GitHub Actions publish path and document recovery instead of adding a second release system.
 
 ### Blockers/Concerns
 
@@ -75,8 +77,8 @@ Progress: [█████░░░░░] 50%
 
 ## Session Continuity
 
-Last session: 2026-04-16T20:19:41.785Z
-Stopped at: Completed 11-public-release-contract-01-PLAN.md
+Last session: 2026-04-16T20:27:49.364Z
+Stopped at: Completed 11-02-PLAN.md
 Resume file: None
 
 ## Current Status
@@ -85,11 +87,18 @@ Resume file: None
 - v1.1 remains archived with release hardening, docs-safety fixes, `mix verify.phase10`, and the launch-readiness evidence chain.
 - v1.2 is now structured into four phases: release contract, internal operations seam, operator primitives, and Mix-task-plus-guide ergonomics.
 - Phase 11 Plan 01 is complete with version-scoped package links, focused release metadata assertions, and the canonical `mix verify.phase11` gate recorded in `.planning/phases/11-public-release-contract/11-public-release-contract-01-SUMMARY.md`.
+- Phase 11 Plan 02 is complete with a packaged clean-consumer smoke harness, maintainer recovery runbooks, and the expanded Phase 11 docs contract recorded in `.planning/phases/11-public-release-contract/11-public-release-contract-02-SUMMARY.md`.
 - No second public backend is planned in this milestone, and backend-native power remains outside the common search contract.
 
 ## Next Command
 
-- `$gsd-plan-phase 11`
+- `$gsd-verify-work 11`
+
+## Performance Metrics
+
+| Phase | Plan | Duration | Tasks | Files | Date |
+|-------|------|----------|-------|-------|------|
+| 11 | 02 | 10min | 3 | 4 | 2026-04-16 |
 
 ---
 *Last updated: 2026-04-16 after creating the v1.2 roadmap*
