@@ -4,8 +4,12 @@ defmodule Scrypath.DocsContractTest do
   @readme File.read!("README.md")
   @architecture File.read!("ARCHITECTURE.md")
   @ci_workflow File.read!(".github/workflows/ci.yml")
+  @release_workflow File.read!(".github/workflows/release-please.yml")
+  @publish_recovery_workflow File.read!(".github/workflows/publish-hex.yml")
+  @release_monitor_workflow File.read!(".github/workflows/verify-published-release.yml")
   @release_docs File.read!("docs/releasing.md")
   @verify_phase11 File.read!("lib/mix/tasks/verify.phase11.ex")
+  @verify_release_publish File.read!("lib/mix/tasks/verify.release_publish.ex")
   @guide_paths [
     "guides/getting-started.md",
     "guides/phoenix-walkthrough.md",
@@ -115,15 +119,17 @@ defmodule Scrypath.DocsContractTest do
 
   test "release docs and CI keep the package gate auth-free" do
     assert_contains_all(@ci_workflow, [
-      "mix test test/release/package_metadata_test.exs",
-      "mix hex.build --unpack",
-      "Validate release workflow config"
+      "mix verify.phase11"
     ])
 
     refute @ci_workflow =~ "mix hex.publish --dry-run"
 
     assert_contains_all(@release_docs, [
       "mix verify.phase11",
+      "mix verify.release_publish X.Y.Z",
+      "./scripts/verify_phase11_docker.sh",
+      ".github/workflows/publish-hex.yml",
+      ".github/workflows/verify-published-release.yml",
       "HEX_API_KEY",
       "mix hex.publish --dry-run --yes",
       "HEX_API_KEY=... mix hex.publish --dry-run --yes",
@@ -149,11 +155,57 @@ defmodule Scrypath.DocsContractTest do
     assert_contains_all(@verify_phase11, [
       "test/release/package_metadata_test.exs",
       "test/release/consumer_smoke_test.exs",
-      "test/scrypath/docs_contract_test.exs"
+      "test/scrypath/docs_contract_test.exs",
+      "mix verify.release_publish"
     ])
 
     refute @verify_phase11 =~ "HEX_API_KEY"
-    refute @verify_phase11 =~ "hex.publish --dry-run"
+    refute @verify_phase11 =~ ~s|run_command!(["hex.publish"|
+  end
+
+  test "release workflow verifies the live published version after hex publish" do
+    assert_contains_all(@release_workflow, [
+      "ref: ${{ needs.release-please.outputs.tag_name }}",
+      "grep -n \"@version \\\"${{ needs.release-please.outputs.version }}\\\"\" mix.exs",
+      "run: mix verify.phase11",
+      "run: mix hex.publish --dry-run --yes",
+      "run: mix hex.publish --yes",
+      ~s|run: mix verify.release_publish "${{ needs.release-please.outputs.version }}"|
+    ])
+  end
+
+  test "publish recovery workflow reruns the release checks from an explicit ref" do
+    assert_contains_all(@publish_recovery_workflow, [
+      "name: Publish Hex Recovery",
+      "ref: ${{ inputs.tag }}",
+      "grep -n \"@version \\\"${{ inputs.release_version }}\\\"\" mix.exs",
+      "run: mix verify.phase11",
+      "run: mix hex.publish --dry-run --yes",
+      "run: mix hex.publish --yes",
+      ~s|run: mix verify.release_publish "${{ inputs.release_version }}"|
+    ])
+  end
+
+  test "published release monitor verifies the latest Hex release without publishing" do
+    assert_contains_all(@release_monitor_workflow, [
+      "name: Verify Published Release",
+      "schedule:",
+      "workflow_dispatch:",
+      "https://hex.pm/api/packages/scrypath",
+      ".latest_stable_version // .latest_version // empty",
+      "Scrypath is not published on Hex yet. Skipping ongoing published-release verification.",
+      ~s|run: mix verify.release_publish "${{ steps.resolve-version.outputs.version }}"|
+    ])
+
+    refute @release_monitor_workflow =~ "mix hex.publish --yes"
+  end
+
+  test "verify.release_publish checks the public package and docs contract" do
+    assert_contains_all(@verify_release_publish, [
+      ~s|System.cmd("mix", ["hex.info", "scrypath"]|,
+      ~S|{:scrypath, "~> #{version}"}|,
+      ~s|System.cmd("curl", ["-IfsS", url]|
+    ])
   end
 
   test "phoenix guides keep the context-first boundary explicit" do
@@ -182,7 +234,11 @@ defmodule Scrypath.DocsContractTest do
   end
 
   test "all Elixir code fences in docs stay syntactically valid" do
-    for snippet <- extract_elixir_fences(@readme) ++ extract_elixir_fences(@architecture) ++ guide_fences() do
+    for snippet <-
+          extract_elixir_fences(@readme) ++
+            extract_elixir_fences(@architecture) ++
+            extract_elixir_fences(@release_docs) ++
+            guide_fences() do
       assert {:ok, _quoted} = Code.string_to_quoted(snippet)
     end
   end

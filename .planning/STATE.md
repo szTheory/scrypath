@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Public Release Trust and Operator Visibility
 current_phase: 11
-current_phase_name: public-release-contract
-current_plan: 2
-status: verifying
-stopped_at: Completed 11-02-PLAN.md
-last_updated: "2026-04-16T20:28:11.036Z"
+current_phase_name: internal-operations-seam
+current_plan: none
+status: ready_to_plan
+stopped_at: Phase 11 release automation hardened; ready for Phase 12 planning
+last_updated: "2026-04-16T21:05:15Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 4
@@ -24,18 +24,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Phase 11 — public-release-contract
+**Current focus:** Phase 12 roadmap follow-through for the internal operations seam
 
 ## Current Position
 
-Phase: 11 (public-release-contract) — VERIFYING
-Plan: 2 of 2
-Current Phase: 11
-Current Phase Name: public-release-contract
-Current Plan: 2
-Status: Phase complete — ready for verification
+Phase: 12 of 14 (Internal Operations Seam)
+Plan: None
+Current Phase: 12
+Current Phase Name: internal-operations-seam
+Current Plan: None
+Status: Ready to plan
 Last activity: 2026-04-16
-Last Activity Description: Completed Phase 11 Plan 02 clean-consumer smoke and release recovery contract
+Last Activity Description: Hardened Phase 11 release automation with workflow-owned post-publish verification, a recovery workflow, and an ongoing published-release monitor.
 
 Progress: [██████████] 100%
 
@@ -55,6 +55,8 @@ Progress: [██████████] 100%
 - [Phase 11]: Phase 11 verification extends the narrow verify.phase10 orchestration shape instead of introducing a new release script.
 - [Phase 11]: Local clean-consumer release proof uses the packaged artifact contents through a tagged temporary git repo so the smoke test stays auth-free without a path dependency.
 - [Phase 11]: Phase 11 release docs stay on the existing Release Please plus GitHub Actions publish path and document recovery instead of adding a second release system.
+- [Phase 11]: The canonical publish workflow now verifies version/ref alignment, `mix verify.phase11`, a Hex dry-run, and the live published package before Phase 11 can be considered released.
+- [Phase 11]: Ongoing published-release verification belongs in a separate verification-only workflow that reads the latest Hex version and never attempts recovery or publish.
 
 ### Blockers/Concerns
 
@@ -88,17 +90,20 @@ Resume file: None
 - v1.2 is now structured into four phases: release contract, internal operations seam, operator primitives, and Mix-task-plus-guide ergonomics.
 - Phase 11 Plan 01 is complete with version-scoped package links, focused release metadata assertions, and the canonical `mix verify.phase11` gate recorded in `.planning/phases/11-public-release-contract/11-public-release-contract-01-SUMMARY.md`.
 - Phase 11 Plan 02 is complete with a packaged clean-consumer smoke harness, maintainer recovery runbooks, and the expanded Phase 11 docs contract recorded in `.planning/phases/11-public-release-contract/11-public-release-contract-02-SUMMARY.md`.
+- Phase 11 is now hardened with a live published-release verifier, a same-workflow pre-publish dry-run gate, a manual recovery workflow, and a scheduled published-release monitor.
+- The only remaining external validation for Phase 11 is the first real public release run; after that publish exists, the monitor keeps re-verifying the latest Hex release automatically.
 - No second public backend is planned in this milestone, and backend-native power remains outside the common search contract.
 
 ## Next Command
 
-- `$gsd-verify-work 11`
+- `$gsd-plan-phase 12`
 
 ## Performance Metrics
 
 | Phase | Plan | Duration | Tasks | Files | Date |
 |-------|------|----------|-------|-------|------|
 | 11 | 02 | 10min | 3 | 4 | 2026-04-16 |
+| 11 | hardening | follow-up | release automation, recovery workflow, published-release monitor | 2026-04-16 |
 
 ---
 *Last updated: 2026-04-16 after creating the v1.2 roadmap*

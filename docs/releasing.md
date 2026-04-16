@@ -20,6 +20,45 @@ HEX_API_KEY=... mix hex.publish --dry-run --yes
 
 That command must stay out of the always-on CI gate.
 
+After a real Hex publish, the release workflow now runs the live post-publish check automatically:
+
+```bash
+mix verify.release_publish X.Y.Z
+```
+
+That task polls Hex until the published version is visible, compiles the documented `use Scrypath` schema from a fresh throwaway app using `{:scrypath, "~> X.Y.Z"}`, and confirms `https://hexdocs.pm/scrypath/X.Y.Z` responds.
+
+## Minimum Secret Setup
+
+Create this GitHub Actions secret before the first automated release:
+
+1. `HEX_API_KEY` - Hex.pm API key that can publish `scrypath`
+
+The workflow uses GitHub's built-in `GITHUB_TOKEN` for Release Please. Keep `HEX_API_KEY` scoped to the publish workflows only. Do not expose it to the always-on CI job.
+
+## Local CI Reproduction
+
+For a deterministic local reproduction of the always-on release contract gate, run the Docker smoke wrapper:
+
+```bash
+./scripts/verify_phase11_docker.sh
+```
+
+That gives you the same `mix verify.phase11` path CI executes, without depending on your host Beam toolchain or a real Hex publish.
+
+If you prefer `act`, keep it as a secondary option and pin a runner image that has a working Beam/OpenSSL stack for your host architecture. The Docker wrapper is the default because it is less brittle.
+
+## Ongoing Published Release Verification
+
+The repository also includes `.github/workflows/verify-published-release.yml` for ongoing verification after the first public release.
+
+- It runs on a daily schedule and on manual `workflow_dispatch`.
+- It reads the latest published Scrypath version from `https://hex.pm/api/packages/scrypath`.
+- Before the first public release, it detects the Hex 404 and exits cleanly.
+- After Scrypath is published, it runs `mix verify.release_publish X.Y.Z` against the latest published version without attempting any publish or recovery action.
+
+Treat failures in this workflow as operational regressions in the published package, Hex availability, or HexDocs availability.
+
 ## Canonical Release Flow
 
 1. Confirm the repo state before merge:
@@ -33,62 +72,18 @@ That command must stay out of the always-on CI gate.
 
 2. Review the Release Please PR. The version in `mix.exs`, `.release-please-manifest.json`, and the top changelog entry should all describe the same `vX.Y.Z` release.
 3. Merge the Release Please PR to `main`. The existing `.github/workflows/release-please.yml` workflow is the only release path. When `release_created == true`, the `publish-hex` job checks out `tag_name` and runs `mix hex.publish --yes`.
+   Before the real publish, that job also verifies `mix.exs` matches the Release Please version, runs `mix verify.phase11`, and runs `mix hex.publish --dry-run --yes`.
 4. After the workflow finishes, confirm the release artifacts:
 
    ```bash
    git fetch --tags origin
    git tag --sort=version:refname | tail -n 5
-   mix hex.info scrypath
-   curl -Ifs https://hexdocs.pm/scrypath/X.Y.Z
+   gh run view --log
    ```
 
-   The last command should return the versioned HexDocs page for `X.Y.Z`, not the moving latest-doc redirect.
+   The publish job now runs `mix verify.release_publish X.Y.Z` for the newly released version, so Hex package visibility, clean-consumer compile, and versioned HexDocs reachability are checked inside the workflow instead of by hand.
 
-5. Run the public manual smoke path from a throwaway app:
-
-   ```bash
-   mix new scrypath_consumer --module ScrypathConsumer
-   ```
-
-   Update `scrypath_consumer/mix.exs` to include:
-
-   ```elixir
-   defp deps do
-     [
-       {:ecto, "~> 3.13"},
-       {:scrypath, "~> X.Y.Z"}
-     ]
-   end
-   ```
-
-   Add the documented quick-path schema:
-
-   ```elixir
-   defmodule ScrypathConsumer.Post do
-     use Ecto.Schema
-
-     use Scrypath,
-       fields: [:title, :body],
-       filterable: [:status],
-       sortable: [:inserted_at]
-
-     schema "posts" do
-       field :title, :string
-       field :body, :string
-       field :status, Ecto.Enum, values: [:draft, :published]
-       timestamps()
-     end
-   end
-   ```
-
-   Then prove the clean install and docs path:
-
-   ```bash
-   cd scrypath_consumer
-   mix deps.get
-   mix compile
-   curl -Ifs https://hexdocs.pm/scrypath/X.Y.Z
-   ```
+5. If the workflow passes, treat the release contract as satisfied. Manual spot-checks are optional, not required.
 
 ## Recovering Tag or Version Drift
 
@@ -128,13 +123,32 @@ Use the same tagged release ref that Release Please created. Do not invent a sec
    ```
 
 2. If the dry run fails, fix the packaging or docs issue on the release branch input, merge the correction, and let Release Please cut the next proper release PR.
-3. If the dry run passes and `mix hex.info scrypath` does not show `X.Y.Z`, rerun the existing publish step from the same tag:
+3. If the dry run passes and `mix hex.info scrypath` does not show `X.Y.Z`, rerun the existing checks from the same reviewed ref with the manual recovery workflow:
+
+   - open `.github/workflows/publish-hex.yml`
+   - set `tag` to the reviewed release tag or commit ref
+   - set `release_version` to `X.Y.Z`
+
+   That workflow reruns `mix verify.phase11`, `mix hex.publish --dry-run --yes`, `mix hex.publish --yes`, and `mix verify.release_publish X.Y.Z` from the explicit ref.
+
+4. After a successful publish, rerun:
 
    ```bash
-   HEX_API_KEY=... mix hex.publish --yes
+   mix verify.release_publish X.Y.Z
    ```
 
-4. After a successful publish, rerun the manual clean-consumer smoke path and confirm `https://hexdocs.pm/scrypath/X.Y.Z` is reachable.
+   The same task is what the release workflow runs after `mix hex.publish --yes`.
+
+## Manual Recovery Workflow
+
+Use `.github/workflows/publish-hex.yml` only for recovery or explicit republish from a reviewed tag/ref.
+
+Inputs:
+
+- `tag` - reviewed release tag or commit ref to publish from
+- `release_version` - expected `@version` at that ref
+
+The recovery workflow never depends on Release Please step outputs. It verifies the checked-out ref directly before publishing.
 
 ## Recovering Published Artifact Mismatch
 
@@ -162,4 +176,4 @@ Use `--replace` only when Hex still allows replacing the published version and t
    HEX_API_KEY=... mix hex.publish --revert X.Y.Z
    ```
 
-   After the revert, fix the repo state, let Release Please open the next versioned PR, merge it, and rerun the canonical release flow plus the manual clean-consumer smoke path.
+   After the revert, fix the repo state, let Release Please open the next versioned PR, merge it, and rerun the canonical release flow plus `mix verify.release_publish X.Y.Z` for the new release.

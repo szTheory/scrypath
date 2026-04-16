@@ -3,7 +3,7 @@ status: partial
 phase: 11-public-release-contract
 source: [11-VERIFICATION.md]
 started: 2026-04-16T21:06:00Z
-updated: 2026-04-16T21:06:00Z
+updated: 2026-04-16T21:05:15Z
 ---
 
 ## Current Test
@@ -12,25 +12,19 @@ updated: 2026-04-16T21:06:00Z
 
 ## Tests
 
-### 1. Run the canonical GitHub release flow for a real version
-expected: Release Please creates `vX.Y.Z`, `publish-hex` checks out `tag_name`, Hex shows the same version, and the tag, changelog, manifest, and package state all agree.
-result: [pending]
-
-### 2. Verify the published package from a throwaway consumer app
-expected: A fresh app using `{:scrypath, "~> X.Y.Z"}` runs `mix deps.get`, `mix compile`, and the minimal `use Scrypath` schema compiles successfully.
-result: [pending]
-
-### 3. Confirm the versioned HexDocs page is reachable after publish
-expected: `curl -Ifs https://hexdocs.pm/scrypath/X.Y.Z` returns success for the released version.
+### 1. Run the first real Release Please publish and confirm the workflow-owned live checks pass
+expected: `publish-hex` checks out `tag_name`, verifies `@version`, passes `mix verify.phase11`, passes `mix hex.publish --dry-run --yes`, publishes to Hex, and `mix verify.release_publish X.Y.Z` succeeds.
 result: [pending]
 
 ## Summary
 
-total: 3
+total: 1
 passed: 0
 issues: 0
-pending: 3
+pending: 1
 skipped: 0
 blocked: 0
 
 ## Gaps
+
+- After the first public release exists, `.github/workflows/verify-published-release.yml` should begin succeeding on the latest published Scrypath version automatically.
