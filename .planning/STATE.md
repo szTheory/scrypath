@@ -7,8 +7,8 @@ current_phase_name: null
 current_plan: None
 status: completed
 stopped_at: Archived v1.0 milestone
-last_updated: "2026-04-16T17:05:00Z"
-last_activity: 2026-04-16 -- v1.0 milestone archived
+last_updated: "2026-04-16T17:18:00Z"
+last_activity: 2026-04-16 -- Completed quick task 260416-if2: fix mix.exs GitHub URLs add a GitHub Actions publish job gated on release creation use HEX_API_KEY only in that publish job
 progress:
   total_phases: 7
   completed_phases: 7
@@ -34,8 +34,8 @@ Current Phase: None
 Current Phase Name: None
 Current Plan: None
 Status: Milestone archived
-Last activity: 2026-04-16 -- v1.0 milestone archived
-Last Activity Description: v1.0 milestone archived
+Last activity: 2026-04-16 -- Completed quick task 260416-if2: fix mix.exs GitHub URLs add a GitHub Actions publish job gated on release creation use HEX_API_KEY only in that publish job
+Last Activity Description: Completed quick task 260416-if2: fix mix.exs GitHub URLs add a GitHub Actions publish job gated on release creation use HEX_API_KEY only in that publish job
 
 Progress: [██████████] 100%
 
@@ -72,6 +72,12 @@ Progress: [██████████] 100%
 - Phase 2 review left two advisory warnings in `.planning/phases/02-meilisearch-core-sync/02-REVIEW.md`: malformed Meilisearch task payload handling and undefined empty-batch sync/delete semantics.
 - Phase 3 established the common search contract, stable result envelope, and explicit hydration semantics around repo-backed batch loading.
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260416-if2 | fix mix.exs GitHub URLs add a GitHub Actions publish job gated on release creation use HEX_API_KEY only in that publish job | 2026-04-16 | 40c6398 | [260416-if2-fix-mix-exs-github-urls-add-a-github-act](./quick/260416-if2-fix-mix-exs-github-urls-add-a-github-act/) |
+
 ## Session Continuity
 
 Last session: 2026-04-16T16:14:57.792Z
@@ -105,6 +111,7 @@ Resume file: None
 - Phase 7 repaired the missing Phase 3 verification artifact without reassigning ownership
 - Phase 7 repaired milestone bookkeeping and refreshed the v1.0 audit to close the blocking evidence gap
 - v1.0 milestone archived to `.planning/milestones/`
+- Quick task 260416-if2 wired Hex publishing to run from the release workflow and corrected public GitHub metadata links
 
 ## Next Command
 
@@ -112,4 +119,4 @@ Resume file: None
 - Review the archived v1.0 roadmap and requirements before defining the next milestone scope
 
 ---
-*Last updated: 2026-04-16 after v1.0 milestone archival*
+*Last updated: 2026-04-16 after quick task 260416-if2 completion*
