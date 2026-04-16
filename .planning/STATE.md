@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 07
-current_phase_name: verification-backfill-and-milestone-traceability-repair
-current_plan: Completed
+current_phase: null
+current_phase_name: null
+current_plan: None
 status: completed
-stopped_at: Completed 07-03-SUMMARY.md
-last_updated: "2026-04-16T16:56:30Z"
-last_activity: 2026-04-16 -- Phase 07 complete
+stopped_at: Archived v1.0 milestone
+last_updated: "2026-04-16T17:05:00Z"
+last_activity: 2026-04-16 -- v1.0 milestone archived
 progress:
   total_phases: 7
   completed_phases: 7
@@ -24,18 +24,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-15)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Milestone v1.0 archival readiness after Phase 07 repair work
+**Current focus:** No active milestone; ready to define the next milestone
 
 ## Current Position
 
-Phase: 07 (verification-backfill-and-milestone-traceability-repair) — COMPLETE
-Plan: 3 of 3
-Current Phase: 07
-Current Phase Name: verification-backfill-and-milestone-traceability-repair
-Current Plan: Completed
-Status: Phase complete
-Last activity: 2026-04-16 -- Phase 07 complete
-Last Activity Description: Phase 07 complete
+Phase: None
+Plan: None
+Current Phase: None
+Current Phase Name: None
+Current Plan: None
+Status: Milestone archived
+Last activity: 2026-04-16 -- v1.0 milestone archived
+Last Activity Description: v1.0 milestone archived
 
 Progress: [██████████] 100%
 
@@ -104,11 +104,12 @@ Resume file: None
 - Phase 7 repaired the missing Phase 1 verification artifact without reassigning ownership
 - Phase 7 repaired the missing Phase 3 verification artifact without reassigning ownership
 - Phase 7 repaired milestone bookkeeping and refreshed the v1.0 audit to close the blocking evidence gap
+- v1.0 milestone archived to `.planning/milestones/`
 
 ## Next Command
 
-- `$gsd-complete-milestone`
-- Review `.planning/phases/06-phoenix-ergonomics-and-public-facing-polish/06-VERIFICATION.md` and `.planning/phases/06-phoenix-ergonomics-and-public-facing-polish/06-REVIEW.md`
+- `$gsd-new-milestone`
+- Review the archived v1.0 roadmap and requirements before defining the next milestone scope
 
 ---
-*Last updated: 2026-04-16 after phase 7 completion*
+*Last updated: 2026-04-16 after v1.0 milestone archival*

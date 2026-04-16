@@ -12,14 +12,17 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ### Validated
 
-- [x] Schema metadata declarations and runtime inspection validated in Phase 1.
-- [x] Meilisearch-backed sync for insert, update, delete, inline, and manual workflows validated in Phase 2.
+- [x] Schema metadata declarations, projection, runtime reflection, and the internal backend seam validated in v1.0.
+- [x] Meilisearch-backed sync for insert, update, delete, inline, manual, and Oban-backed workflows validated in v1.0.
+- [x] Common search, validated filter/sort/page handling, raw-hit access, and explicit hydration validated in v1.0.
+- [x] Backfill, managed reindex, settings application, and recovery guidance validated in v1.0.
+- [x] Phoenix docs, examples, release automation, and package trust signals validated in v1.0.
 
 ### Active
 
-- [ ] Deliver the search query API, filtering, sorting, pagination, and hydration on top of the completed indexing core.
-- [ ] Add Oban-backed sync and first-class Telemetry instrumentation for production operation.
-- [ ] Deliver reindexing, operator workflows, and Phoenix-facing polish without weakening the Ecto-first core.
+- [ ] Decide the next milestone scope for backend expansion, richer search features, and deeper operator tooling.
+- [ ] Resolve the remaining advisory debt from Phase 2 and Phase 6 before broad public release confidence.
+- [ ] Fill missing or partial validation coverage for Phases 1, 2, 3, and 6.
 
 ### Out of Scope
 
@@ -60,7 +63,15 @@ When running future GSD discuss, plan, and execute flows, consult the relevant f
 
 ## Current State
 
-Phase 2 is complete. Scrypath now has a real Meilisearch backend, explicit `Scrypath.*` sync and delete verbs, stable delete identity resolution, inline task waiting, manual operator flows, and docs that state the write-path guarantees directly. The next major gap is the developer-facing search query API in Phase 3.
+Scrypath v1.0 is archived. The shipped milestone includes schema declaration and projection contracts, Meilisearch-backed sync flows, the common search and hydration path, Oban-backed async support, reindex/backfill workflows, Phoenix-facing docs, release automation, and repaired milestone verification history.
+
+The library is functionally complete for its v1 product boundary, but it still carries advisory debt around Meilisearch task-polling edge cases, a few public-doc rough edges, and missing or partial validation artifacts for earlier phases.
+
+## Next Milestone Goals
+
+- Evaluate whether the next milestone should prioritize advisory cleanup, broader backend support, or richer backend-native search features.
+- Raise release confidence by fixing the known `Scrypath.Meilisearch.TasksTest` timeout failure and closing the remaining validation gaps.
+- Preserve the Ecto-first, Phoenix-friendly product shape while deciding how much backend breadth belongs in the next public iteration.
 
 ## Evolution
 
@@ -80,4 +91,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-15 after phase 2 execution*
+*Last updated: 2026-04-16 after v1.0 milestone archival*
