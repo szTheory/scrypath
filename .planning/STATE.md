@@ -1,20 +1,20 @@
 ---
 gsd_state_version: 1.0
-milestone: none
-milestone_name: none
-current_phase: none
-current_phase_name: none
+milestone: v1.2
+milestone_name: public-release-trust-and-operator-visibility
+current_phase: not_started
+current_phase_name: requirements-definition
 current_plan: none
-status: ready_for_new_milestone
-stopped_at: Archived v1.1 milestone
-last_updated: "2026-04-16T19:37:50Z"
+status: defining_requirements
+stopped_at: Milestone v1.2 started
+last_updated: "2026-04-16T20:05:00Z"
 last_activity: 2026-04-16
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -24,20 +24,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** milestone close complete; ready to define the next milestone
+**Current focus:** milestone v1.2 requirements and roadmap definition
 
 ## Current Position
 
-Phase: None
+Phase: Not started (defining requirements)
 Plan: None
-Current Phase: None
-Current Phase Name: None
+Current Phase: Not started
+Current Phase Name: requirements-definition
 Current Plan: None
-Status: Ready for new milestone
+Status: Defining requirements
 Last activity: 2026-04-16
-Last Activity Description: Archived milestone v1.1 after closing Phases 08 through 10.
+Last Activity Description: Started milestone v1.2 Public Release Trust and Operator Visibility.
 
-Progress: [██████████] 100%
+Progress: [----------] 0%
 
 ## Accumulated Context
 
@@ -104,13 +104,14 @@ Resume file: None
 
 - v1.0 remains archived with the full Meilisearch-first core, search, Oban, reindex, docs, and release baseline shipped.
 - v1.1 is archived with reliability hardening, docs-safety fixes, `mix verify.phase10`, and the milestone-close evidence chain.
+- Milestone v1.2 is now open for release trust and operator visibility work.
 - Fast docs verification passes locally; live Phase 08 verification still depends on a reachable Meilisearch endpoint.
 - The release-confidence artifact records the failed manual Hex dry-run cleanly; a publisher-scoped key is still needed for a successful retry.
-- No active milestone is open.
+- The next roadmap should prioritize public release verification and operator primitives before backend breadth or richer backend-native search power.
 
 ## Next Command
 
-- `/gsd-new-milestone`
+- `$gsd-plan-phase 11`
 
 ---
-*Last updated: 2026-04-16 after archiving milestone v1.1*
+*Last updated: 2026-04-16 after starting milestone v1.2*

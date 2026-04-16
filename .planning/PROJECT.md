@@ -22,8 +22,8 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 ### Active
 
 - [ ] Validate the first real tagged/public package release with publisher-scoped Hex credentials and confirm the Release Please publish path end to end.
-- [ ] Decide the next milestone focus between backend breadth, deeper operator tooling, and richer backend-native search power based on early adoption pressure.
-- [ ] Turn the current hardening evidence chain into real public adoption feedback instead of planning against assumptions alone.
+- [ ] Give operators explicit status, failure inspection, retry, reconcile, and reindex visibility without turning Scrypath into a dashboard product.
+- [ ] Preserve the Meilisearch-first common path while extracting an internal operations seam that makes future backend work survivable.
 
 ### Out of Scope
 
@@ -73,13 +73,20 @@ The library is functionally complete for its current public boundary. The next u
 
 ## Current Milestone
 
-No active milestone. `v1.1` is archived and the project is ready for the next milestone-definition cycle.
+**v1.2 — Public Release Trust and Operator Visibility**
+
+**Goal:** Turn Scrypath's internal launch-readiness evidence into real public release confidence while adding a small, explicit operator surface for sync status, failure inspection, and recovery.
+
+**Target features:**
+- Validate one real public Hex release path end to end, including version/tag/workflow alignment and post-publish smoke verification.
+- Add `Scrypath.Operator.*`-style primitives plus thin Mix task ergonomics for status, failed work inspection, retry, reconcile, and reindex visibility.
+- Extract an internal operations seam so sync and reindex flows stop depending directly on Meilisearch-shaped orchestration details.
 
 ## Next Milestone Goals
 
 - Confirm one successful real release with the correct publisher-scoped Hex credentials and the existing GitHub Actions publish path.
-- Decide whether the next milestone should deepen the current operator surface or widen the backend/search surface.
-- Use real adoption signals to choose the next milestone instead of widening the API by default.
+- Make operational state legible enough that early adopters can trust async/manual indexing in production.
+- Use post-release adoption feedback to decide whether the following milestone should widen backend support or deepen Meilisearch-native search power.
 
 ## Evolution
 
@@ -99,4 +106,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-16 after archiving milestone v1.1*
+*Last updated: 2026-04-16 after starting milestone v1.2*
