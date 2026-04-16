@@ -1,6 +1,6 @@
 # Releasing Scrypath
 
-Release Please owns the version bump and changelog PR flow. CI already runs the non-publishing package gate on every mainline change.
+Release Please owns the version bump and changelog PR flow. CI already runs the non-publishing package gate on every mainline change, and GitHub Actions publishes to Hex when Release Please creates a tagged release.
 
 ## Automated Release Gate
 
@@ -27,6 +27,10 @@ HEX_API_KEY=... mix hex.publish --dry-run --yes
 ```
 
 That command checks publish credentials and must stay out of the always-on CI gate.
+
+## Automated Publish
+
+The release workflow publishes from GitHub Actions only when Release Please reports `release_created == true`. Keep `HEX_API_KEY` scoped to that publish job; normal CI does not receive publish credentials.
 
 ## Human-Only Review
 

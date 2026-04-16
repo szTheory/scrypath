@@ -6,8 +6,8 @@ defmodule Scrypath.Release.PackageMetadataTest do
   test "project metadata exposes public package trust signals" do
     project = MixProject.project()
 
-    assert project[:homepage_url] == "https://github.com/jon/scrypath"
-    assert project[:source_url] == "https://github.com/jon/scrypath"
+    assert project[:homepage_url] == "https://github.com/szTheory/scrypath"
+    assert project[:source_url] == "https://github.com/szTheory/scrypath"
     assert project[:source_ref] == "v#{project[:version]}"
   end
 
@@ -18,9 +18,9 @@ defmodule Scrypath.Release.PackageMetadataTest do
     assert "docs" in package[:files]
 
     assert package[:links] == %{
-             "GitHub" => "https://github.com/jon/scrypath",
+             "GitHub" => "https://github.com/szTheory/scrypath",
              "HexDocs" => "https://hexdocs.pm/scrypath",
-             "Changelog" => "https://github.com/jon/scrypath/blob/main/CHANGELOG.md",
+             "Changelog" => "https://github.com/szTheory/scrypath/blob/main/CHANGELOG.md",
              "Guides" => "https://hexdocs.pm/scrypath/readme.html"
            }
   end
