@@ -14,7 +14,7 @@
 
 ## Phases
 
-- [ ] **Phase 11: Public Release Contract** - Validate one real public release path, consumer smoke flow, and maintainer recovery contract.
+- [x] **Phase 11: Public Release Contract** - Validate one real public release path, consumer smoke flow, and maintainer recovery contract. (completed 2026-04-16)
 - [ ] **Phase 12: Internal Operations Seam** - Extract Scrypath-owned operations boundaries under the Meilisearch-first public surface.
 - [ ] **Phase 13: Operator Primitives** - Expose status, failure inspection, retry, and reconcile APIs through Scrypath-owned operator types.
 - [ ] **Phase 14: Mix Tasks and Guides** - Put thin CLI ergonomics and sync-mode guides on top of the operator surface without widening common search.
@@ -33,7 +33,7 @@
 
 Plans:
 - [x] 11-01-PLAN.md - Enforce version/tag/manifest/package alignment with a canonical `mix verify.phase11` gate.
-- [ ] 11-02-PLAN.md - Add clean-consumer smoke proof and maintainer recovery runbooks to the Phase 11 release contract.
+- [x] 11-02-PLAN.md - Add clean-consumer smoke proof and maintainer recovery runbooks to the Phase 11 release contract.
 
 ### Phase 12: Internal Operations Seam
 **Goal**: Scrypath's sync and reindex internals depend on a Scrypath-owned operations seam instead of direct Meilisearch task payloads, while keeping Meilisearch as the only public backend and preserving backend-native power boundaries.
@@ -71,7 +71,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 11. Public Release Contract | 1/2 | In Progress|  |
+| 11. Public Release Contract | 2/2 | Complete   | 2026-04-16 |
 | 12. Internal Operations Seam | 0/TBD | Not started | - |
 | 13. Operator Primitives | 0/TBD | Not started | - |
 | 14. Mix Tasks and Guides | 0/TBD | Not started | - |
