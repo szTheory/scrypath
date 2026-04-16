@@ -19,7 +19,10 @@ defmodule Scrypath.Query do
       text: text,
       filter: Keyword.get(opts, :filter, []),
       sort: Keyword.get(opts, :sort, []),
-      page: opts |> Keyword.get(:page, []) |> Enum.into(%{})
+      page: normalize_page(Keyword.get(opts, :page, %{}))
     }
   end
+
+  defp normalize_page(page) when is_map(page), do: page
+  defp normalize_page(page) when is_list(page), do: Enum.into(page, %{})
 end

@@ -6,8 +6,9 @@ defmodule Scrypath.Search do
 
   @spec search(module(), String.t(), keyword()) :: {:ok, term()} | {:error, term()}
   def search(schema_module, text, opts \\ []) when is_binary(text) and is_list(opts) do
+    search_opts = Scrypath.Options.validate_search_options!(schema_module, opts)
     config = Config.resolve!(runtime_opts(opts))
-    query = Query.new(text, opts)
+    query = Query.new(text, search_opts)
     backend = Config.fetch_backend!(config)
 
     backend.search(schema_module, query, config)
