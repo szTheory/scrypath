@@ -73,6 +73,70 @@ defmodule Scrypath.Meilisearch.TasksTest do
     assert raw["error"]["code"] == "index_not_found"
   end
 
+  test "malformed initial payload returns an explicit invalid-task error", %{
+    task_responses: agent
+  } do
+    assert {:error,
+            {:invalid_task_payload,
+             %{stage: :initial, task_uid: nil, problems: [uid: :missing_or_invalid], payload: payload}}} =
+             Tasks.wait_for_task(
+               %{"status" => "enqueued"},
+               meilisearch_client: SequencedClient,
+               task_responses: agent,
+               inline_poll_interval: 1,
+               inline_timeout: 50
+             )
+
+    assert payload == %{"status" => "enqueued"}
+    refute_received {:client_task, _, _}
+  end
+
+  test "unknown status in a polled payload returns an explicit invalid-task error", %{
+    task_responses: agent
+  } do
+    Agent.update(agent, fn _ ->
+      [
+        {:ok, %{"uid" => 301, "status" => "weird"}}
+      ]
+    end)
+
+    assert {:error,
+            {:invalid_task_payload,
+             %{stage: :poll, task_uid: 301, problems: [status: :unknown], payload: payload}}} =
+             Tasks.wait_for_task(
+               %{uid: 301, status: "enqueued"},
+               meilisearch_client: SequencedClient,
+               task_responses: agent,
+               inline_poll_interval: 1,
+               inline_timeout: 50
+             )
+
+    assert payload == %{"uid" => 301, "status" => "weird"}
+  end
+
+  test "missing uid on a polled terminal task stays invalid instead of surfacing terminal tuples", %{
+    task_responses: agent
+  } do
+    Agent.update(agent, fn _ ->
+      [
+        {:ok, %{"uid" => nil, "status" => "failed"}}
+      ]
+    end)
+
+    assert {:error,
+            {:invalid_task_payload,
+             %{stage: :poll, task_uid: nil, problems: [uid: :missing_or_invalid], payload: payload}}} =
+             Tasks.wait_for_task(
+               %{uid: 301, status: "enqueued"},
+               meilisearch_client: SequencedClient,
+               task_responses: agent,
+               inline_poll_interval: 1,
+               inline_timeout: 50
+             )
+
+    assert payload == %{"uid" => nil, "status" => "failed"}
+  end
+
   test "timeout while polling returns a distinct timeout error", %{task_responses: agent} do
     Agent.update(agent, fn _ ->
       List.duplicate({:ok, %{"uid" => 103, "status" => "processing"}}, 6)
@@ -114,5 +178,22 @@ defmodule Scrypath.Meilisearch.TasksTest do
              )
 
     assert raw["canceledBy"]["uid"] == 7
+  end
+
+  test "transport errors from polling propagate unchanged", %{task_responses: agent} do
+    Agent.update(agent, fn _ ->
+      [
+        {:error, :econnrefused}
+      ]
+    end)
+
+    assert {:error, :econnrefused} =
+             Tasks.wait_for_task(
+               %{uid: 105, status: "enqueued"},
+               meilisearch_client: SequencedClient,
+               task_responses: agent,
+               inline_poll_interval: 1,
+               inline_timeout: 50
+             )
   end
 end

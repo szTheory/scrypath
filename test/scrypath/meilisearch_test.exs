@@ -101,7 +101,8 @@ defmodule Scrypath.MeilisearchTest do
       %Document{id: 2, data: %{title: "Two"}, source: :custom}
     ]
 
-    assert {:ok, %{index: "tenant_searchable_post", document_ids: [1, 2], task: %{uid: 17}}} =
+    assert {:ok,
+            %{index: "tenant_searchable_post", document_ids: [1, 2], task: %{uid: 17, status: :enqueued}}} =
              Scrypath.Meilisearch.upsert_documents(SearchablePost, documents,
                index_prefix: "tenant",
                meilisearch_client: RecordingClient
@@ -112,7 +113,8 @@ defmodule Scrypath.MeilisearchTest do
   end
 
   test "delete_documents/3 delegates canonical ids through the client" do
-    assert {:ok, %{index: "tenant_searchable_post", document_ids: ["post:1"], task: %{uid: 18}}} =
+    assert {:ok,
+            %{index: "tenant_searchable_post", document_ids: ["post:1"], task: %{uid: 18, status: :enqueued}}} =
              Scrypath.Meilisearch.delete_documents(SearchablePost, ["post:1"],
                index_prefix: "tenant",
                meilisearch_client: RecordingClient
@@ -340,7 +342,8 @@ defmodule Scrypath.MeilisearchTest do
   test "apply_settings/3 resolves schema settings and applies them to the explicit target index" do
     override_settings = %{sortableAttributes: ["inserted_at"]}
 
-    assert {:ok, %{index: "posts_rebuild_v2", settings: settings, task: %{uid: 20}}} =
+    assert {:ok,
+            %{index: "posts_rebuild_v2", settings: settings, task: %{uid: 20, status: :enqueued}}} =
              Scrypath.Meilisearch.apply_settings(ConfiguredSearchablePost, "posts_rebuild_v2",
                settings: override_settings,
                meilisearch_client: RecordingClient
@@ -357,7 +360,8 @@ defmodule Scrypath.MeilisearchTest do
   end
 
   test "create_index/3 remains Meilisearch-native and honors target index overrides" do
-    assert {:ok, %{live_index: "tenant_searchable_post", target_index: "tenant_searchable_post_v2", task: %{uid: 19}}} =
+    assert {:ok,
+            %{live_index: "tenant_searchable_post", target_index: "tenant_searchable_post_v2", task: %{uid: 19, status: :enqueued}}} =
              Scrypath.Meilisearch.create_index(SearchablePost, "id",
                index_prefix: "tenant",
                target_index: "tenant_searchable_post_v2",
@@ -369,7 +373,8 @@ defmodule Scrypath.MeilisearchTest do
   end
 
   test "swap_indexes/2 keeps cutover under Scrypath.Meilisearch and uses the explicit target index" do
-    assert {:ok, %{live_index: "tenant_searchable_post", target_index: "tenant_searchable_post_v2", task: %{uid: 21}}} =
+    assert {:ok,
+            %{live_index: "tenant_searchable_post", target_index: "tenant_searchable_post_v2", task: %{uid: 21, status: :enqueued}}} =
              Scrypath.Meilisearch.swap_indexes(SearchablePost,
                index_prefix: "tenant",
                target_index: "tenant_searchable_post_v2",
@@ -383,7 +388,8 @@ defmodule Scrypath.MeilisearchTest do
   test "backend upsert preserves schema-configured document id fields" do
     documents = [%Document{id: "post-9", data: %{title: "Hello"}, source: :fields}]
 
-    assert {:ok, %{index: "tenant_custom_id_post", document_ids: ["post-9"], task: %{uid: 17}}} =
+    assert {:ok,
+            %{index: "tenant_custom_id_post", document_ids: ["post-9"], task: %{uid: 17, status: :enqueued}}} =
              Scrypath.Meilisearch.upsert_documents(CustomIdPost, documents,
                index_prefix: "tenant",
                meilisearch_client: RecordingClient
