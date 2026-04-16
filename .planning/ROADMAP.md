@@ -2,7 +2,7 @@
 
 **Created:** 2026-04-15
 **Project:** Scrypath
-**Total phases:** 6
+**Total phases:** 7
 **v1 requirements:** 24
 **Coverage:** 100%
 
@@ -142,6 +142,13 @@ Plans:
 **Requirements:** SCMA-01, SCMA-02, SCMA-03, BACK-02, SRCH-01, SRCH-02, SRCH-03, SRCH-04, SRCH-05, SRCH-06
 
 **Gap Closure:** Closes gaps from audit
+
+**Plans:** 3 plans
+
+Plans:
+- [ ] 07-01-PLAN.md - Backfill the missing Phase 1 verification report from current code and focused tests
+- [ ] 07-02-PLAN.md - Backfill the missing Phase 3 verification report from current code and focused tests
+- [ ] 07-03-PLAN.md - Repair requirements, roadmap, state, and milestone audit traceability after verification backfill
 
 **Success criteria:**
 1. Phase 1 has a verification artifact that proves the schema declaration, projection, reflection, and backend-seam requirements against the current codebase.
