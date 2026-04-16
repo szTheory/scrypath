@@ -73,6 +73,8 @@ defmodule Scrypath.SyncTest do
 
     @impl true
     def upsert_documents(schema_module, documents, config) do
+      task_state = if Keyword.get(config, :sync_mode, :inline) == :inline, do: :succeeded, else: :enqueued
+
       {:ok,
        Result.new(
          mode: Keyword.get(config, :sync_mode, :manual),
@@ -80,14 +82,14 @@ defmodule Scrypath.SyncTest do
          document_ids: Enum.map(documents, & &1.id),
          document_count: length(documents),
          task:
-           Task.new(
+          Task.new(
              source: :meilisearch,
              kind: :backend_task,
              id: 711,
-             state: Keyword.get(config, :task_state, :enqueued),
+             state: task_state,
              reference: %{task_uid: 711, index_uid: index_name(schema_module, config)},
              metadata: %{type: "documentAdditionOrUpdate"},
-             raw: %{"uid" => 711, "status" => Atom.to_string(Keyword.get(config, :task_state, :enqueued))}
+             raw: %{"uid" => 711, "status" => Atom.to_string(task_state)}
            ),
          metadata: %{index: index_name(schema_module, config)}
        )}
@@ -95,6 +97,8 @@ defmodule Scrypath.SyncTest do
 
     @impl true
     def delete_documents(schema_module, document_ids, config) do
+      task_state = if Keyword.get(config, :sync_mode, :inline) == :inline, do: :succeeded, else: :enqueued
+
       {:ok,
        Result.new(
          mode: Keyword.get(config, :sync_mode, :manual),
@@ -102,14 +106,14 @@ defmodule Scrypath.SyncTest do
          document_ids: document_ids,
          document_count: length(document_ids),
          task:
-           Task.new(
+          Task.new(
              source: :meilisearch,
              kind: :backend_task,
              id: 712,
-             state: Keyword.get(config, :task_state, :enqueued),
+             state: task_state,
              reference: %{task_uid: 712, index_uid: index_name(schema_module, config)},
              metadata: %{type: "documentDeletion"},
-             raw: %{"uid" => 712, "status" => Atom.to_string(Keyword.get(config, :task_state, :enqueued))}
+             raw: %{"uid" => 712, "status" => Atom.to_string(task_state)}
            ),
          metadata: %{index: index_name(schema_module, config)}
        )}
@@ -398,8 +402,7 @@ defmodule Scrypath.SyncTest do
             }} =
              Scrypath.sync_record(SearchablePost, record,
                backend: SeamBackend,
-               index_prefix: "tenant",
-               task_state: :succeeded
+               index_prefix: "tenant"
              )
   end
 

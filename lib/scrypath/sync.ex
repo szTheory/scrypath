@@ -3,8 +3,11 @@ defmodule Scrypath.Sync do
 
   alias Scrypath.Config
   alias Scrypath.Identity
+  alias Scrypath.Meilisearch.Operations, as: MeilisearchOperations
   alias Scrypath.Meilisearch.Tasks
   alias Scrypath.Oban.Enqueue
+  alias Scrypath.Operations.Result
+  alias Scrypath.Operations.Task, as: OperationTask
   alias Scrypath.Projection
   alias Scrypath.Telemetry
 
@@ -76,9 +79,7 @@ defmodule Scrypath.Sync do
         |> decorate_result(config)
 
       _other ->
-        backend = Config.fetch_backend!(config)
-
-        backend.upsert_documents(schema_module, documents, config)
+        backend_upsert_documents(schema_module, documents, config)
         |> maybe_wait_for_task(config)
         |> decorate_result(config)
     end
@@ -93,20 +94,18 @@ defmodule Scrypath.Sync do
         |> decorate_result(config)
 
       _other ->
-        backend = Config.fetch_backend!(config)
-
-        backend.delete_documents(schema_module, document_ids, config)
+        backend_delete_documents(schema_module, document_ids, config)
         |> maybe_wait_for_task(config)
         |> decorate_result(config)
     end
   end
 
-  defp maybe_wait_for_task({:ok, %{task: task} = result}, config) when is_map(task) do
+  defp maybe_wait_for_task({:ok, %Result{task: %OperationTask{} = task} = result}, config) do
     case Keyword.fetch!(config, :sync_mode) do
       :inline ->
         case Tasks.wait_for_task(task, config) do
           {:ok, waited_task} -> {:ok, %{result | task: waited_task}}
-          {:error, reason} -> {:error, reason}
+          {:error, reason} -> {:error, public_wait_error(reason)}
         end
 
       :manual ->
@@ -118,6 +117,31 @@ defmodule Scrypath.Sync do
   end
 
   defp maybe_wait_for_task(result, _config), do: result
+
+  defp backend_upsert_documents(schema_module, documents, config) do
+    case Config.fetch_backend!(config) do
+      Scrypath.Meilisearch -> MeilisearchOperations.upsert_documents(schema_module, documents, config)
+      backend -> backend.upsert_documents(schema_module, documents, config)
+    end
+  end
+
+  defp backend_delete_documents(schema_module, document_ids, config) do
+    case Config.fetch_backend!(config) do
+      Scrypath.Meilisearch -> MeilisearchOperations.delete_documents(schema_module, document_ids, config)
+      backend -> backend.delete_documents(schema_module, document_ids, config)
+    end
+  end
+
+  defp decorate_result({:ok, %Result{} = result}, config) do
+    result =
+      %Result{
+        result
+        | mode: Keyword.fetch!(config, :sync_mode),
+          status: result_status(config)
+      }
+
+    {:ok, public_result(result)}
+  end
 
   defp decorate_result({:ok, result}, config) when is_map(result) do
     {:ok,
@@ -145,4 +169,59 @@ defmodule Scrypath.Sync do
       :oban -> :accepted
     end
   end
+
+  defp public_result(%Result{} = result) do
+    %{
+      mode: result.mode,
+      status: result.status,
+      document_ids: result.document_ids,
+      document_count: result.document_count
+    }
+    |> maybe_put(:index, Map.get(result.metadata, :index))
+    |> maybe_put(:oban, Map.get(result.metadata, :oban))
+    |> maybe_put_operation_reference(result.task)
+  end
+
+  defp maybe_put_operation_reference(result, %OperationTask{kind: :backend_task} = task) do
+    Map.put(result, :task, public_backend_task(task))
+  end
+
+  defp maybe_put_operation_reference(result, %OperationTask{kind: :queue_job} = task) do
+    Map.put(result, :job, public_job(task))
+  end
+
+  defp maybe_put_operation_reference(result, _task), do: result
+
+  defp public_wait_error({reason, %OperationTask{} = task}) do
+    {reason, public_backend_task(task)}
+  end
+
+  defp public_wait_error(reason), do: reason
+
+  defp public_backend_task(%OperationTask{} = task) do
+    %{
+      uid: task.id,
+      status: task.state,
+      index_uid: Map.get(task.reference, :index_uid),
+      type: Map.get(task.metadata, :type),
+      raw: task.raw
+    }
+  end
+
+  defp public_job(%OperationTask{} = task) do
+    %{
+      id: task.id,
+      worker: Map.get(task.reference, :worker),
+      queue: Map.get(task.reference, :queue),
+      state: Map.get(task.metadata, :oban_state)
+    }
+    |> maybe_put(:attempt, job_raw_value(task, :attempt))
+    |> maybe_put(:max_attempts, job_raw_value(task, :max_attempts))
+  end
+
+  defp job_raw_value(%OperationTask{raw: raw}, key) when is_map(raw), do: Map.get(raw, key)
+  defp job_raw_value(_task, _key), do: nil
+
+  defp maybe_put(map, _key, nil), do: map
+  defp maybe_put(map, key, value), do: Map.put(map, key, value)
 end
