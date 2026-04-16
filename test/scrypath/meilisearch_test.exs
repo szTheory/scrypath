@@ -5,6 +5,41 @@ defmodule Scrypath.MeilisearchTest do
   alias Scrypath.SearchResult
 
   defmodule RecordingClient do
+    def create_index(index_name, primary_key, config) do
+      send(self(), {:client_create_index, index_name, primary_key, config})
+
+      {:ok,
+       %{
+         "taskUid" => 19,
+         "indexUid" => index_name,
+         "status" => "enqueued",
+         "type" => "indexCreation"
+       }}
+    end
+
+    def update_settings(index_name, settings, config) do
+      send(self(), {:client_update_settings, index_name, settings, config})
+
+      {:ok,
+       %{
+         "taskUid" => 20,
+         "indexUid" => index_name,
+         "status" => "enqueued",
+         "type" => "settingsUpdate"
+       }}
+    end
+
+    def swap_indexes(indexes, config) do
+      send(self(), {:client_swap_indexes, indexes, config})
+
+      {:ok,
+       %{
+         "taskUid" => 21,
+         "status" => "enqueued",
+         "type" => "indexSwap"
+       }}
+    end
+
     def upsert_documents(index_name, documents, config) do
       send(self(), {:client_upsert, index_name, documents, config})
 
@@ -251,5 +286,48 @@ defmodule Scrypath.MeilisearchTest do
 
     assert_received {:request, "POST", "/swap-indexes",
                      %{"indexes" => [%{"indexes" => ["live_posts", "rebuild_posts_v2"]}]}}
+  end
+
+  test "apply_settings/3 resolves schema settings and applies them to the explicit target index" do
+    override_settings = %{sortableAttributes: ["inserted_at"]}
+
+    assert {:ok, %{index: "posts_rebuild_v2", settings: settings, task: %{uid: 20}}} =
+             Scrypath.Meilisearch.apply_settings(ConfiguredSearchablePost, "posts_rebuild_v2",
+               settings: override_settings,
+               meilisearch_client: RecordingClient
+             )
+
+    assert settings == %{
+             searchableAttributes: ["title", "body"],
+             typoTolerance: "min",
+             sortableAttributes: ["inserted_at"]
+           }
+
+    assert_received {:client_update_settings, "posts_rebuild_v2", ^settings, config}
+    assert config[:settings] == override_settings
+  end
+
+  test "create_index/3 remains Meilisearch-native and honors target index overrides" do
+    assert {:ok, %{live_index: "tenant_searchable_post", target_index: "tenant_searchable_post_v2", task: %{uid: 19}}} =
+             Scrypath.Meilisearch.create_index(SearchablePost, "id",
+               index_prefix: "tenant",
+               target_index: "tenant_searchable_post_v2",
+               meilisearch_client: RecordingClient
+             )
+
+    assert_received {:client_create_index, "tenant_searchable_post_v2", "id", config}
+    assert config[:target_index] == "tenant_searchable_post_v2"
+  end
+
+  test "swap_indexes/2 keeps cutover under Scrypath.Meilisearch and uses the explicit target index" do
+    assert {:ok, %{live_index: "tenant_searchable_post", target_index: "tenant_searchable_post_v2", task: %{uid: 21}}} =
+             Scrypath.Meilisearch.swap_indexes(SearchablePost,
+               index_prefix: "tenant",
+               target_index: "tenant_searchable_post_v2",
+               meilisearch_client: RecordingClient
+             )
+
+    assert_received {:client_swap_indexes, {"tenant_searchable_post", "tenant_searchable_post_v2"}, config}
+    assert config[:target_index] == "tenant_searchable_post_v2"
   end
 end
