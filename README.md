@@ -194,6 +194,65 @@ them silently. Raw backend hits remain available on the same result struct.
 Use `Scrypath.Meilisearch.search/3` when you need native Meilisearch request payloads that do
 not belong on the common path.
 
+## Backfill And Reindex
+
+Phase 5 adds two explicit operator workflows:
+
+- `Scrypath.backfill/2` writes existing rows into one index in deterministic primary-key batches.
+- `Scrypath.reindex/2` runs the managed rebuild workflow: create target index, apply settings, backfill, then optionally cut over.
+
+Use backfill when the live index is still structurally correct and you need to load missing data into it, such as an initial import, a one-time repair after failed async work, or a recovery pass after a batch of stale deletes.
+
+Use managed reindex when the search contract changed and the safest fix is to rebuild into a fresh target index first. Common drift causes are projection changes, schema setting changes such as searchable or sortable attributes, stale or discarded async work, or document-count mismatches that tell you the live index is no longer trustworthy.
+
+```elixir
+{:ok, result} =
+  Scrypath.reindex(MyApp.Post,
+    backend: Scrypath.Meilisearch,
+    repo: Repo,
+    batch_size: 500,
+    cutover?: false
+  )
+
+result.live_index
+result.target_index
+result.settings_applied
+result.batches
+result.documents
+result.cutover
+```
+
+`Scrypath.reindex/2` is explicit about what happened. It does not delete the old index in the same step, and it does not hide whether cutover happened.
+
+### Drift Detection
+
+Detect drift before deciding whether a live-index backfill is enough or whether you need a full rebuild. Common signals are:
+
+- stale search hits whose hydrated records are now missing
+- document-count mismatches between the source table and the search index
+- failed, retrying, or discarded async sync work
+- stale deletes where search still returns records removed from the database
+- projection or setting changes that should have rewritten every document
+
+If the drift is localized and the live index contract still matches the schema, backfill into the live index. If the contract changed or the blast radius is unclear, rebuild into a target index and review it before cutover.
+
+### Cutover And Eventual Consistency
+
+`cutover?: false` exists so operators can build and inspect a target index without moving traffic yet. That is the review window for document counts, sampled queries, relevance checks, and missing-record audits.
+
+`cutover?: true` swaps the live and target indexes after settings application and backfill complete. That still does not mean every caller sees the new index immediately. Backend acceptance, durable enqueue, and even terminal backend success are not stronger guarantees than the backend can provide. Accepted work is not the same thing as search visibility, and durable enqueue is not the same thing as rebuild completion.
+
+### Recovery
+
+Recovery depends on the failure mode:
+
+- failed or discarded sync work: rerun targeted sync or backfill for the affected scope
+- stale deletes: issue explicit delete operations when you know the document ids, or backfill/rebuild if delete identity drift is broader
+- incomplete rebuild with `cutover?: false`: fix the cause, rerun the rebuild into a fresh target index, and leave the live index untouched until the new target is trustworthy
+- bad cutover to a known-good old index: use the backend-native swap again to move traffic back, then rebuild forward deliberately
+
+Scrypath is blunt about this: eventual consistency, stale deletes, drift, and rebuild retries are normal operator work. They are not rare exceptions.
+
 ## Roadmap
 
 Phase 1 establishes the declaration and projection contracts.
