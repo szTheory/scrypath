@@ -2,7 +2,7 @@ defmodule Scrypath.MixProject do
   use Mix.Project
 
   @version "0.1.0"
-  @source_url "https://github.com/jon/scrypath"
+  @source_url "https://github.com/szTheory/scrypath"
   @source_ref "v#{@version}"
 
   def project do
