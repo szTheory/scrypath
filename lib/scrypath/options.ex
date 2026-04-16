@@ -82,6 +82,24 @@ defmodule Scrypath.Options do
     ]
   ]
 
+  @search_options [
+    filter: [
+      type: {:custom, __MODULE__, :validate_search_filter, []},
+      default: [],
+      doc: "Structured common-path filters over declared filterable fields."
+    ],
+    sort: [
+      type: {:custom, __MODULE__, :validate_search_sort, []},
+      default: [],
+      doc: "Ecto-style sort order over declared sortable fields."
+    ],
+    page: [
+      type: {:custom, __MODULE__, :validate_search_page, []},
+      default: [],
+      doc: "Nested common-path pagination options."
+    ]
+  ]
+
   @spec validate_schema_options!(keyword()) :: map()
   def validate_schema_options!(opts) do
     opts
@@ -93,6 +111,18 @@ defmodule Scrypath.Options do
   @spec validate_runtime_options!(keyword()) :: keyword()
   def validate_runtime_options!(opts) do
     validate!(opts, @runtime_options)
+  end
+
+  @spec validate_search_options!(module(), keyword()) :: keyword()
+  def validate_search_options!(schema_module, opts) do
+    filterable = MapSet.new(schema_module.__scrypath__(:filterable))
+    sortable = MapSet.new(schema_module.__scrypath__(:sortable))
+
+    opts
+    |> Keyword.take([:filter, :sort, :page])
+    |> validate!(@search_options)
+    |> validate_filterable_fields!(filterable)
+    |> validate_sortable_fields!(sortable)
   end
 
   def validate_optional_string(value) when is_binary(value), do: {:ok, value}
@@ -114,6 +144,40 @@ defmodule Scrypath.Options do
   def validate_positive_integer(value) when is_integer(value) and value > 0, do: {:ok, value}
   def validate_positive_integer(_value), do: {:error, "expected a positive integer"}
 
+  def validate_search_filter(value) when is_list(value) do
+    if Keyword.keyword?(value) do
+      {:ok, value}
+    else
+      {:error, "expected filter to be a keyword list"}
+    end
+  end
+
+  def validate_search_filter(_value), do: {:error, "expected filter to be a keyword list"}
+
+  def validate_search_sort(value) when is_list(value) do
+    if Keyword.keyword?(value) do
+      {:ok, value}
+    else
+      {:error, "expected sort to be a keyword list"}
+    end
+  end
+
+  def validate_search_sort(_value), do: {:error, "expected sort to be a keyword list"}
+
+  def validate_search_page(value) when is_list(value) do
+    if Keyword.keyword?(value) do
+      value
+      |> validate!(page_options_schema())
+      |> validate_page_bounds!()
+      |> Enum.into(%{})
+      |> then(&{:ok, &1})
+    else
+      {:error, "expected page to be a keyword list"}
+    end
+  end
+
+  def validate_search_page(_value), do: {:error, "expected page to be a keyword list"}
+
   defp validate!(opts, schema) do
     case NimbleOptions.validate(opts, schema) do
       {:ok, validated} ->
@@ -132,5 +196,94 @@ defmodule Scrypath.Options do
       _fields ->
         Enum.into(opts, %{})
     end
+  end
+
+  defp validate_filterable_fields!(opts, filterable) do
+    filter =
+      opts
+      |> Keyword.get(:filter, [])
+      |> Enum.map(&validate_filter_entry!(&1, filterable))
+
+    Keyword.put(opts, :filter, filter)
+  end
+
+  defp validate_sortable_fields!(opts, sortable) do
+    sort =
+      opts
+      |> Keyword.get(:sort, [])
+      |> Enum.map(&validate_sort_entry!(&1, sortable))
+
+    Keyword.put(opts, :sort, sort)
+  end
+
+  defp validate_filter_entry!({operator, _value}, _filterable) when operator in [:or, :and, :not] do
+    raise ArgumentError, "boolean composition is not supported in common search filters"
+  end
+
+  defp validate_filter_entry!({field, value}, filterable) do
+    unless MapSet.member?(filterable, field) do
+      raise ArgumentError, "filter field #{inspect(field)} is not declared as filterable"
+    end
+
+    {field, validate_filter_value!(field, value)}
+  end
+
+  defp validate_filter_value!(_field, value) when is_list(value) do
+    unless Keyword.keyword?(value) do
+      raise ArgumentError, "range filter operators must be a keyword list"
+    end
+
+    allowed = [:eq, :gt, :gte, :lt, :lte]
+
+    Enum.each(value, fn {operator, _operand} ->
+      unless operator in allowed do
+        raise ArgumentError, "unsupported filter operator #{inspect(operator)}"
+      end
+    end)
+
+    value
+  end
+
+  defp validate_filter_value!(_field, value), do: value
+
+  defp validate_sort_entry!({direction, field}, sortable) when direction in [:asc, :desc] do
+    unless MapSet.member?(sortable, field) do
+      raise ArgumentError, "sort field #{inspect(field)} is not declared as sortable"
+    end
+
+    {direction, field}
+  end
+
+  defp validate_sort_entry!({direction, _field}, _sortable) do
+    raise ArgumentError, "sort direction must be :asc or :desc, got #{inspect(direction)}"
+  end
+
+  defp validate_page_bounds!(page) do
+    case Keyword.get(page, :number) do
+      nil -> :ok
+      number when number > 0 -> :ok
+      _ -> raise ArgumentError, "page number must be greater than 0"
+    end
+
+    case Keyword.get(page, :size) do
+      nil -> :ok
+      size when size > 0 -> :ok
+      _ -> raise ArgumentError, "page size must be greater than 0"
+    end
+
+    page
+  end
+
+  defp page_options_schema do
+    [
+      number: [
+        type: :integer,
+        required: false
+      ],
+      size: [
+        type: :integer,
+        required: false
+      ]
+    ]
   end
 end

@@ -2,6 +2,7 @@ defmodule Scrypath.TestSupport.FakeBackend do
   @behaviour Scrypath.Backend
 
   alias Scrypath.Document
+  alias Scrypath.Query
 
   @impl true
   def name, do: :fake
@@ -26,7 +27,7 @@ defmodule Scrypath.TestSupport.FakeBackend do
 
   @impl true
   def search(_schema_module, query, _config) do
-    {:ok, %{query: query, hits: []}}
+    {:ok, %{query: query, hits: [], normalized_query?: match?(%Query{}, query)}}
   end
 
   defp document_id(%Document{id: id}), do: id
