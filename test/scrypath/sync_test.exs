@@ -18,7 +18,8 @@ defmodule Scrypath.SyncTest do
       raise "delete identity should not require search_document/1"
     end
 
-    def search_document_id(%__MODULE__{legacy_id: legacy_id}) when is_binary(legacy_id), do: legacy_id
+    def search_document_id(%__MODULE__{legacy_id: legacy_id}) when is_binary(legacy_id),
+      do: legacy_id
   end
 
   defmodule RecordingBackend do
@@ -67,6 +68,7 @@ defmodule Scrypath.SyncTest do
       case {conn.method, conn.request_path} do
         {"POST", path} ->
           [_, index_name, _] = String.split(path, "/", trim: true)
+
           Req.Test.json(conn, %{
             "taskUid" => 301,
             "indexUid" => index_name,
@@ -79,8 +81,11 @@ defmodule Scrypath.SyncTest do
                  [next | rest] -> {next, rest}
                  [] -> {{:ok, %{"uid" => 301, "status" => "succeeded"}}, []}
                end) do
-            {:ok, body} -> Req.Test.json(conn, body)
-            {:error, {status, body}} -> conn |> Plug.Conn.put_status(status) |> Req.Test.json(body)
+            {:ok, body} ->
+              Req.Test.json(conn, body)
+
+            {:error, {status, body}} ->
+              conn |> Plug.Conn.put_status(status) |> Req.Test.json(body)
           end
       end
     end)
@@ -110,8 +115,7 @@ defmodule Scrypath.SyncTest do
       %SearchablePost{id: 2, title: "Two", body: "Second"}
     ]
 
-    assert {:ok,
-            %{document_ids: [1, 2], sync_mode: :manual, mode: :manual, status: :accepted}} =
+    assert {:ok, %{document_ids: [1, 2], sync_mode: :manual, mode: :manual, status: :accepted}} =
              Scrypath.sync_records(SearchablePost, records,
                backend: RecordingBackend,
                sync_mode: :manual
@@ -145,7 +149,12 @@ defmodule Scrypath.SyncTest do
     assert manual_config[:sync_mode] == :manual
 
     assert {:ok,
-            %{document_ids: ["post:12", "post:13"], sync_mode: :inline, mode: :inline, status: :completed}} =
+            %{
+              document_ids: ["post:12", "post:13"],
+              sync_mode: :inline,
+              mode: :inline,
+              status: :completed
+            }} =
              Scrypath.delete_documents(SearchablePost, ["post:12", "post:13"],
                backend: RecordingBackend
              )
@@ -179,7 +188,11 @@ defmodule Scrypath.SyncTest do
     record = %SearchablePost{id: 77, title: "Inline", body: "Success"}
 
     assert {:ok,
-            %{mode: :inline, status: :completed, task: %{uid: 301, status: :succeeded, index_uid: "tenant_searchable_post"}}} =
+            %{
+              mode: :inline,
+              status: :completed,
+              task: %{uid: 301, status: :succeeded, index_uid: "tenant_searchable_post"}
+            }} =
              Scrypath.sync_record(SearchablePost, record,
                backend: Scrypath.Meilisearch,
                index_prefix: "tenant",

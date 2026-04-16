@@ -2,6 +2,8 @@ defmodule Scrypath.SearchTest do
   use ExUnit.Case, async: true
 
   alias Scrypath.Query
+  alias Scrypath.SearchResult
+  alias Scrypath.TestSupport.FakeRepo
 
   defmodule ErrorBackend do
     @behaviour Scrypath.Backend
@@ -22,13 +24,51 @@ defmodule Scrypath.SearchTest do
     def search(_schema_module, _query, _config), do: {:error, :search_failed}
   end
 
+  defmodule HydrationBackend do
+    @behaviour Scrypath.Backend
+
+    @impl true
+    def name, do: :hydration
+
+    @impl true
+    def index_name(_schema_module, _config), do: "hydration_backend"
+
+    @impl true
+    def upsert_documents(_schema_module, _documents, _config), do: {:ok, []}
+
+    @impl true
+    def delete_documents(_schema_module, _document_ids, _config), do: {:ok, []}
+
+    @impl true
+    def search(_schema_module, query, _config) do
+      {:ok,
+       %{
+         "hits" => [
+           %{"id" => 2, "title" => "Second"},
+           %{"id" => 1, "title" => "First"},
+           %{"id" => 3, "title" => "Missing"}
+         ],
+         "query" => query,
+         "page" => 2,
+         "hitsPerPage" => 3,
+         "totalHits" => 3
+       }}
+    end
+  end
+
+  setup do
+    FakeRepo.reset()
+    :ok
+  end
+
   test "Scrypath.search/3 delegates through the common search path" do
-    assert {:ok, %{hits: [], query: %Query{text: "ecto", filter: [], sort: [], page: %{}}}} =
+    assert {:ok,
+            %SearchResult{hits: [], query: %Query{text: "ecto", filter: [], sort: [], page: %{}}}} =
              Scrypath.search(SearchablePost, "ecto", backend: Scrypath.TestSupport.FakeBackend)
   end
 
   test "Scrypath.search!/3 returns successful results and raises on backend errors" do
-    assert %{hits: [], query: %Query{text: "ecto"}} =
+    assert %SearchResult{hits: [], query: %Query{text: "ecto"}} =
              Scrypath.search!(SearchablePost, "ecto", backend: Scrypath.TestSupport.FakeBackend)
 
     assert_raise RuntimeError, "search failed: :search_failed", fn ->
@@ -38,7 +78,7 @@ defmodule Scrypath.SearchTest do
 
   test "the common path normalizes text and public options into one query struct" do
     assert {:ok,
-            %{
+            %SearchResult{
               query: %Query{
                 text: "phoenix",
                 filter: [status: "published"],
@@ -64,7 +104,7 @@ defmodule Scrypath.SearchTest do
   end
 
   test "structured sort accepts only declared sortable fields and preserves ecto-style input" do
-    assert {:ok, %{query: %Query{sort: [desc: :inserted_at]}}} =
+    assert {:ok, %SearchResult{query: %Query{sort: [desc: :inserted_at]}}} =
              Scrypath.search(SearchablePost, "ecto",
                backend: Scrypath.TestSupport.FakeBackend,
                sort: [desc: :inserted_at]
@@ -107,6 +147,56 @@ defmodule Scrypath.SearchTest do
       Scrypath.search(SearchablePost, "ecto",
         backend: Scrypath.TestSupport.FakeBackend,
         filter: [or: [[status: "draft"], [status: "published"]]]
+      )
+    end
+  end
+
+  test "common search returns one stable result struct with raw hits and pagination metadata" do
+    assert {:ok,
+            %SearchResult{
+              hits: [%{"id" => 2}, %{"id" => 1}, %{"id" => 3}],
+              raw: %{"query" => %Query{text: "ecto"}},
+              page: %{number: 2, size: 3, total_hits: 3}
+            }} =
+             Scrypath.search(QueryablePost, "ecto", backend: HydrationBackend)
+  end
+
+  test "hydration requires explicit repo input on the common path" do
+    assert {:ok, %SearchResult{records: [], missing_ids: []}} =
+             Scrypath.search(QueryablePost, "ecto", backend: HydrationBackend)
+
+    refute_received {:fake_repo_all, _query}
+  end
+
+  test "common search hydrates records in hit order and surfaces missing ids" do
+    FakeRepo.put_records([
+      %QueryablePost{id: 1, title: "First"},
+      %QueryablePost{id: 2, title: "Second"}
+    ])
+
+    assert {:ok,
+            %SearchResult{
+              records: [%QueryablePost{id: 2}, %QueryablePost{id: 1}],
+              missing_ids: [3]
+            }} =
+             Scrypath.search(QueryablePost, "ecto",
+               backend: HydrationBackend,
+               repo: FakeRepo
+             )
+  end
+
+  test "common path rejects backend-native filter strings and raw payloads" do
+    assert_raise ArgumentError, ~r/filter to be a keyword list/, fn ->
+      Scrypath.search(SearchablePost, "ecto",
+        backend: Scrypath.TestSupport.FakeBackend,
+        filter: "status = published"
+      )
+    end
+
+    assert_raise ArgumentError, ~r/sort to be a keyword list/, fn ->
+      Scrypath.search(SearchablePost, "ecto",
+        backend: Scrypath.TestSupport.FakeBackend,
+        sort: ["inserted_at:desc"]
       )
     end
   end

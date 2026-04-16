@@ -2,18 +2,43 @@
 
 ## Public Surface
 
-Phase 2 keeps one common runtime surface and one explicit backend-specific escape hatch:
+Phase 3 keeps one common runtime surface and one explicit backend-specific escape hatch:
 
-- `Scrypath` for runtime reflection helpers plus common sync verbs
+- `Scrypath` for runtime reflection helpers, common sync verbs, and the common search path
 - `Scrypath.Schema` for the metadata declaration contract
 - `Scrypath.Projection` for document projection rules
 - `Scrypath.Meilisearch` for backend-native operations that do not belong on the common path
 
 Schemas opt in through `use Scrypath`, then runtime code reads normalized metadata through `Scrypath.*` functions instead of generated per-schema APIs.
 
-The common path covers document projection, canonical delete identity, index resolution, and explicit sync verbs such as `Scrypath.sync_record/3` and `Scrypath.delete_document/3`.
+The common path covers document projection, canonical delete identity, index resolution,
+explicit sync verbs, and the stable search API through `Scrypath.search/3`.
 
 `Scrypath.Meilisearch.*` is the explicit escape hatch for Meilisearch-specific behavior such as task-native results and later index-level operations. That keeps backend-native power visible without forcing Meilisearch concepts into every common call.
+
+## Search Flow
+
+`Scrypath.search/3` normalizes caller input into `%Scrypath.Query{}` before any backend code runs.
+That query struct is the only common-path search payload backends receive.
+
+The common path supports:
+
+- text as the second function argument
+- structured `filter:` over declared `filterable` fields
+- Ecto-shaped `sort:` over declared `sortable` fields
+- nested `page:` options
+- optional explicit hydration through `repo:` and `preload:`
+
+Successful common-path searches return one `%Scrypath.SearchResult{}` with:
+
+- raw backend hits
+- hydrated records
+- pagination metadata
+- `missing_ids` for stale or missing source rows
+
+Hydration is explicit and repo-backed. Scrypath builds one batch query against the schema's
+primary key, applies explicit preloads only to that query, and restores search hit order in Elixir.
+It does not infer repos globally or silently hide drift between the index and the database.
 
 ## Projection Flow
 
@@ -30,7 +55,7 @@ Projection never performs implicit association loading. Any association-derived 
 
 `Scrypath.Backend` is an internal behavior. It exists to preserve a path for future backend support without promising a public backend-agnostic extension surface in v1.
 
-Phase 1 defines these callbacks:
+Phase 3 defines these callbacks:
 
 - `name/0`
 - `index_name/2`
@@ -38,7 +63,8 @@ Phase 1 defines these callbacks:
 - `delete_documents/3`
 - `search/3`
 
-Backend-specific power remains a later concern for explicit namespaces such as `Scrypath.Meilisearch.*`.
+`search/3` now takes the normalized `%Scrypath.Query{}` contract on the common path.
+Backend-specific search power remains visible under explicit namespaces such as `Scrypath.Meilisearch.*`.
 
 ## Runtime Configuration
 
@@ -60,7 +86,7 @@ Phase 1 intentionally does not implement:
 
 - Meilisearch sync execution
 - Oban integration
-- query execution
+- public multi-backend query parity
 - managed reindex orchestration
 
 Those workflows build on the contracts defined here instead of reshaping them later.

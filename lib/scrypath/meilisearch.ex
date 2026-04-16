@@ -2,19 +2,20 @@ defmodule Scrypath.Meilisearch do
   @moduledoc """
   Meilisearch-specific runtime entrypoints for Scrypath.
 
-  `Scrypath.*` remains the common path for syncing records and deleting documents.
+  `Scrypath.*` remains the common path for sync and the stable search happy path.
   This namespace is the explicit escape hatch for Meilisearch-native behavior that
   should stay visible instead of being tunneled through generic options.
 
-  In Phase 2, that means the common sync verbs may be configured with
-  `backend: Scrypath.Meilisearch`, while task-native details remain attached to
-  the returned result.
+  Use `Scrypath.search/3` for text plus validated `filter:`, `sort:`, `page:`,
+  and optional explicit hydration through `repo:`. Use `Scrypath.Meilisearch.search/3`
+  when you need native Meilisearch payloads that do not belong on the common path.
   """
 
   @behaviour Scrypath.Backend
 
   alias Scrypath.Document
   alias Scrypath.Meilisearch.Client
+  alias Scrypath.Query
 
   @impl true
   def name, do: :meilisearch
@@ -61,13 +62,15 @@ defmodule Scrypath.Meilisearch do
   end
 
   @impl true
+  @spec search(module(), Query.t() | map() | String.t(), keyword()) ::
+          {:ok, map()} | {:error, term()}
   def search(schema_module, query, config) do
     index = index_name(schema_module, config)
     client(config).search(index, query, config)
   end
 
   defp client(config) do
-    Keyword.get(config, :meilisearch_client, Client)
+    Keyword.get(config, :meilisearch_client) || Client
   end
 
   defp normalize_task(response) do

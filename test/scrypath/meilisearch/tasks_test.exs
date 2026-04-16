@@ -20,7 +20,9 @@ defmodule Scrypath.Meilisearch.TasksTest do
     %{task_responses: agent}
   end
 
-  test "accepted tasks poll to terminal success and preserve task metadata", %{task_responses: agent} do
+  test "accepted tasks poll to terminal success and preserve task metadata", %{
+    task_responses: agent
+  } do
     Agent.update(agent, fn _ ->
       [
         {:ok, %{"uid" => 101, "status" => "processing", "type" => "documentAdditionOrUpdate"}},

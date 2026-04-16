@@ -60,7 +60,7 @@ defmodule Scrypath.Meilisearch.Tasks do
   end
 
   defp client(config) do
-    Keyword.get(config, :meilisearch_client, Client)
+    Keyword.get(config, :meilisearch_client) || Client
   end
 
   defp normalize_task(task) do
@@ -70,7 +70,9 @@ defmodule Scrypath.Meilisearch.Tasks do
       |> normalize_status()
 
     %{
-      uid: Map.get(task, "taskUid") || Map.get(task, :taskUid) || Map.get(task, "uid") || Map.get(task, :uid),
+      uid:
+        Map.get(task, "taskUid") || Map.get(task, :taskUid) || Map.get(task, "uid") ||
+          Map.get(task, :uid),
       status: status,
       type: Map.get(task, "type") || Map.get(task, :type),
       index_uid: Map.get(task, "indexUid") || Map.get(task, :indexUid),
