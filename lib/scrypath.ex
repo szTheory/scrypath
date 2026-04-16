@@ -85,4 +85,9 @@ defmodule Scrypath do
   def search!(schema_module, text, opts \\ []) do
     Scrypath.Search.search!(schema_module, text, opts)
   end
+
+  @spec backfill(module(), keyword()) :: {:ok, map()} | {:error, term()}
+  def backfill(schema_module, opts \\ []) do
+    Scrypath.Backfill.run(schema_module, opts)
+  end
 end
