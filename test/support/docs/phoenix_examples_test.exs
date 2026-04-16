@@ -45,12 +45,32 @@ defmodule Scrypath.PhoenixExamplesTest do
     assert response.search.query == "ecto"
   end
 
-  test "json controller fixture normalizes page params before calling the context" do
+  test "json controller fixture normalizes page params safely before calling the context" do
     api_section = module_section("PostController", "Api")
 
     assert api_section =~ "page_number = params |> Map.get(\"page\", 1) |> normalize_page()"
     assert api_section =~ "page: [number: page_number, size: 20]"
-    assert api_section =~ "String.to_integer(page)"
+    assert api_section =~ "Integer.parse(page)"
+    assert api_section =~ "{number, \"\"} when number > 0 -> number"
+    refute api_section =~ "String.to_integer(page)"
+  end
+
+  test "json controller normalizes missing and invalid page params to page 1" do
+    cases = [
+      %{"q" => "ecto"},
+      %{"q" => "ecto", "page" => "abc"},
+      %{"q" => "ecto", "page" => "0"},
+      %{"q" => "ecto", "page" => "-3"},
+      %{"q" => "ecto", "page" => 0},
+      %{"q" => "ecto", "page" => -2}
+    ]
+
+    Enum.each(cases, fn params ->
+      response = ApiPostController.index(params)
+
+      assert response.page == %{number: 1, size: 20}
+      assert response.search.query == "ecto"
+    end)
   end
 
   test "liveview-facing module reuses the same context boundary" do

@@ -140,9 +140,13 @@ defmodule Scrypath.DocsContractTest do
       "Do not recommend direct `Repo` queries plus direct `Scrypath.search/3` calls inside the controller.",
       "page_number =",
       "normalize_page()",
-      "String.to_integer(page)",
+      "Integer.parse(page)",
+      "when number > 0 -> number",
+      "defp normalize_page(_page), do: 1",
       "page: [number: page_number, size: 20]"
     ])
+
+    refute @guides["guides/phoenix-controllers-and-json.md"] =~ "String.to_integer(page)"
 
     assert_contains_all(@guides["guides/phoenix-liveview.md"], [
       "LiveView owns UI state, and the context owns repo access plus Scrypath orchestration.",
