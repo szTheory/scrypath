@@ -228,17 +228,15 @@ Source: `test/scrypath/search_test.exs`. [VERIFIED: file read]
 |---|-------|---------|---------------|
 | A1 | ExUnit is treated as part of the default Elixir/Mix toolchain rather than a separately versioned dependency in this repo. [ASSUMED] | Standard Stack | Low; affects wording only, not the plan. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should `STATE.md` be repaired in this phase even though the success criteria only name `REQUIREMENTS.md` and `ROADMAP.md`?**
    - What we know: `STATE.md` still says `current_phase: 06` and `total_phases: 6`, which now contradicts the roadmap. [VERIFIED: `.planning/STATE.md` + `.planning/ROADMAP.md`]
-   - What's unclear: Whether milestone archival reads `STATE.md` directly or only uses it for operator continuity. [VERIFIED: current repo evidence is insufficient]
-   - Recommendation: Plan `STATE.md` repair as likely-in-scope follow-through unless a later workflow proves it is irrelevant. [INFERENCE from current drift]
+   - Resolution: **Yes.** `STATE.md` should be repaired in Phase 7 because it is milestone-facing workflow metadata and currently contradicts the roadmap after the Phase 7 insertion. Keeping it stale would preserve the same bookkeeping trust problem the phase is meant to repair. [RESOLVED: 2026-04-16 from current repo drift + Phase 7 goal]
 
 2. **Should Phase 6 review warnings be folded into this repair phase?**
    - What we know: The milestone audit marks them as tech debt, not as the blocker for audit closure. [VERIFIED: `.planning/v1.0-MILESTONE-AUDIT.md`]
-   - What's unclear: Whether the milestone owner wants archival with those warnings still open. [VERIFIED: current repo evidence is insufficient]
-   - Recommendation: Keep them out of the critical path for Phase 7 unless archival policy requires warning-free review state. [INFERENCE from milestone audit recommendation]
+   - Resolution: **No, not in the critical path.** Keep the Phase 6 warnings out of Phase 7 unless a later archival workflow explicitly requires warning-free review state, because they are advisory and distinct from the evidence and traceability repair needed to close the current milestone audit failure. [RESOLVED: 2026-04-16 from milestone audit recommendation]
 
 ## Environment Availability
 
