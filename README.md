@@ -14,7 +14,7 @@ def deps do
 end
 ```
 
-Scrypath v1 publicly targets Meilisearch first. The backend seam is internal, but v1 does not promise public multi-backend parity.
+Scrypath v1 publicly targets Meilisearch first. The backend seam is internal, and v1 does not promise public multi-backend parity or a public operator API in this phase.
 Scrypath owns its internal transport dependency. Configure backend and sync behavior in your app code instead of pinning `Req` directly in the base install path.
 If you want queued sync, add Oban as an optional production integration when you choose `sync_mode: :oban`.
 
@@ -124,6 +124,8 @@ Scrypath keeps one common runtime surface and one explicit backend-specific esca
 - `Scrypath.Schema` for the declaration contract
 - `Scrypath.Projection` for document projection rules
 - `Scrypath.Meilisearch` for backend-native operations that do not belong on the common path
+
+Backfill and managed reindex now use the same internal operations seam as sync, but that seam stays private. The public backend-native namespace remains `Scrypath.Meilisearch.*`.
 
 `use Scrypath` is metadata-only. It validates the declaration and exposes stable `__scrypath__/1` reflection keys without generating schema-specific runtime verbs.
 

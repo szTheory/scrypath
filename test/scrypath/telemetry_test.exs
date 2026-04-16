@@ -215,7 +215,7 @@ defmodule Scrypath.TelemetryTest do
 
     wait_events =
       capture_events([[:scrypath, :meilisearch, :task_wait]], fn ->
-        assert {:ok, %{uid: 101, status: :succeeded}} =
+        assert {:ok, %Scrypath.Operations.Task{id: 101, state: :succeeded}} =
                  Tasks.wait_for_task(
                    %{uid: 101, status: "enqueued", type: "documentAdditionOrUpdate"},
                    meilisearch_client: SequencedClient,
@@ -238,10 +238,18 @@ defmodule Scrypath.TelemetryTest do
     assert readme =~ "requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded"
     assert readme =~ "`sync_mode: :oban` means durable enqueue accepted, not search visibility completed."
     assert readme =~ "retries, discarded jobs, stale deletes, and drift are normal operational realities"
+    assert readme =~ "Scrypath v1 publicly targets Meilisearch first."
+    assert readme =~ "The public backend-native namespace remains `Scrypath.Meilisearch.*`."
+    assert readme =~ "does not promise public multi-backend parity or a public operator API in this phase"
 
     assert architecture =~ "| `:inline` | waits for terminal backend task success before returning |"
     assert architecture =~ "| `:manual` | returns accepted backend work immediately |"
     assert architecture =~ "| `:oban` | returns durable enqueue acceptance only |"
+    assert architecture =~ "Phase 12 keeps the operations seam internal"
+    assert architecture =~ "sync, backfill, and managed reindex"
+    assert architecture =~ "not to introduce a new public operator namespace before Phase 13"
+    assert architecture =~ "exchange Scrypath-owned operation results and followable references internally"
+    assert architecture =~ "backend-native task detail remains namespaced under `Scrypath.Meilisearch.*`"
   end
 
   defp capture_events(prefixes, fun) do

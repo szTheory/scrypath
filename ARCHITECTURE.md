@@ -17,6 +17,8 @@ explicit sync verbs, backfill and reindex orchestration, and the stable search A
 
 `Scrypath.Meilisearch.*` is the explicit escape hatch for Meilisearch-specific behavior such as task-native results and later index-level operations. That keeps backend-native power visible without forcing Meilisearch concepts into every common call.
 
+Phase 12 keeps the operations seam internal even as sync, backfill, and managed reindex start using it end to end. That seam is there to keep common orchestration Scrypath-owned, not to introduce a new public operator namespace before Phase 13.
+
 ## Search Flow
 
 `Scrypath.search/3` normalizes caller input into `%Scrypath.Query{}` before any backend code runs.
@@ -101,6 +103,8 @@ Bulk repair and rebuild flows stay explicit instead of being hidden behind callb
 
 - `Scrypath.backfill/2` reads the source dataset through an explicit repo, batches deterministically by primary key, projects every row through the same projection contract, and writes into one explicit index.
 - `Scrypath.reindex/2` creates a target index, applies settings to that target, backfills the target, and optionally performs cutover.
+
+Those workflows now exchange Scrypath-owned operation results and followable references internally instead of branching on backend identity or raw Meilisearch task payloads. The public return values stay narrow maps on `Scrypath.*`, while backend-native task detail remains namespaced under `Scrypath.Meilisearch.*`.
 
 The reindex workflow order is fixed on purpose:
 
