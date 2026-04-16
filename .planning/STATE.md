@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Release Hardening and Public Launch Readiness
-current_phase: null
-current_phase_name: null
+current_phase: 09
+current_phase_name: Public Docs and Example Safety
 current_plan: None
-status: ready_for_execution
-stopped_at: Milestone v1.1 roadmap created
-last_updated: "2026-04-16T17:35:00Z"
-last_activity: 2026-04-16 -- Milestone v1.1 roadmap created
+status: ready_for_planning
+stopped_at: Phase 08 execution complete
+last_updated: "2026-04-16T18:00:33Z"
+last_activity: 2026-04-16 -- Phase 08 execution complete
 progress:
   total_phases: 3
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  completed_phases: 1
+  total_plans: 3
+  completed_plans: 3
+  percent: 33
 ---
 
 # Project State
@@ -24,20 +24,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Phase 8 planning and execution
+**Current focus:** Phase 09 planning and execution
 
 ## Current Position
 
-Phase: 8
+Phase: 09
 Plan: -
-Current Phase: 8
-Current Phase Name: Reliability and Contract Hardening
+Current Phase: 09
+Current Phase Name: Public Docs and Example Safety
 Current Plan: None
 Status: Ready for planning
-Last activity: 2026-04-16 -- Milestone v1.1 roadmap created
-Last Activity Description: Defined the v1.1 requirements and roadmap; ready to start Phase 8 Reliability and Contract Hardening
+Last activity: 2026-04-16 -- Phase 08 execution complete
+Last Activity Description: Completed Phase 08 Reliability and Contract Hardening with 3/3 plans and fast verification passing; live Meilisearch verification remains pending a reachable service.
 
-Progress: [----------] 0%
+Progress: [###-------] 33%
 
 ## Accumulated Context
 
@@ -69,8 +69,8 @@ Progress: [----------] 0%
 
 ### Blockers/Concerns
 
-- Archived v1.0 review findings still leave two advisory concerns to close in v1.1: malformed Meilisearch task payload handling and undefined empty-batch sync/delete semantics.
-- The common search contract is stable, so v1.1 should avoid widening search breadth before the current public adoption path is hardened.
+- Phase 08's focused fast verification is green, but the live `mix verify.phase8` path still needs a reachable Meilisearch instance via `SCRYPATH_MEILISEARCH_URL`.
+- The common search contract is stable, so v1.1 should avoid widening search breadth before the public docs and example path is hardened.
 
 ### Quick Tasks Completed
 
@@ -86,15 +86,15 @@ Resume file: None
 
 ## Current Status
 
-- v1.0 archived with the full Meilisearch-first core, search, Oban, reindex, docs, and release baseline shipped.
-- Quick task 260416-if2 wired Hex publishing to run from the release workflow and corrected public GitHub metadata links.
-- Milestone v1.1 started to harden the public release surface before broader adoption.
-- Milestone v1.1 requirements and roadmap are defined across Phases 8 through 10.
+- v1.0 remains archived with the full Meilisearch-first core, search, Oban, reindex, docs, and release baseline shipped.
+- Phase 08 Reliability and Contract Hardening is complete with strict task normalization, explicit empty-batch no-op behavior, and `mix verify.phase8`.
+- Fast Phase 08 verification passes locally; live verification is ready once a Meilisearch endpoint is available.
+- Milestone v1.1 now advances to Phase 09 Public Docs and Example Safety.
 
 ## Next Command
 
-- `$gsd-discuss-phase 8`
-- `$gsd-plan-phase 8`
+- `$gsd-discuss-phase 9`
+- `$gsd-plan-phase 9`
 
 ---
-*Last updated: 2026-04-16 after creating the v1.1 roadmap*
+*Last updated: 2026-04-16 after completing Phase 08*
