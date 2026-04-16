@@ -2,6 +2,8 @@ defmodule Scrypath.Oban.EnqueueTest do
   use ExUnit.Case, async: true
 
   alias Scrypath.Document
+  alias Scrypath.Operations.Result
+  alias Scrypath.Operations.Task
 
   defmodule RecordingBackend do
     @behaviour Scrypath.Backend
@@ -43,7 +45,7 @@ defmodule Scrypath.Oban.EnqueueTest do
       %Document{id: 12, data: %{title: "Two"}, source: :fields}
     ]
 
-    assert {:ok, result} =
+    assert {:ok, %Result{} = result} =
              Scrypath.Oban.Enqueue.enqueue_upsert(SearchablePost, documents,
                backend: RecordingBackend,
                sync_mode: :oban,
@@ -53,9 +55,14 @@ defmodule Scrypath.Oban.EnqueueTest do
 
     assert result.document_ids == [11, 12]
     assert result.document_count == 2
-    assert result.job.id == 901
-    assert result.job.worker == "Scrypath.Oban.UpsertWorker"
-    assert result.job.queue == "search_sync"
+    assert result.mode == :oban
+    assert result.status == :accepted
+    assert %Task{} = task = result.task
+    assert task.id == 901
+    assert task.kind == :queue_job
+    assert task.state == :queued
+    assert task.reference == %{job_id: 901, worker: "Scrypath.Oban.UpsertWorker", queue: "search_sync"}
+    assert task.metadata.oban_state == "available"
 
     assert_received {:oban_insert, job}
     assert job.worker == "Scrypath.Oban.UpsertWorker"
@@ -65,7 +72,7 @@ defmodule Scrypath.Oban.EnqueueTest do
   end
 
   test "enqueue_delete/3 inserts one delete job with resolved ids only" do
-    assert {:ok, result} =
+    assert {:ok, %Result{} = result} =
              Scrypath.Oban.Enqueue.enqueue_delete(SearchablePost, ["post:7", "post:8"],
                backend: RecordingBackend,
                sync_mode: :oban,
@@ -76,9 +83,14 @@ defmodule Scrypath.Oban.EnqueueTest do
 
     assert result.document_ids == ["post:7", "post:8"]
     assert result.document_count == 2
-    assert result.job.id == 901
-    assert result.job.worker == "Scrypath.Oban.DeleteWorker"
-    assert result.job.queue == "search_sync"
+    assert result.mode == :oban
+    assert result.status == :accepted
+    assert %Task{} = task = result.task
+    assert task.id == 901
+    assert task.kind == :queue_job
+    assert task.state == :queued
+    assert task.reference == %{job_id: 901, worker: "Scrypath.Oban.DeleteWorker", queue: "search_sync"}
+    assert task.metadata.oban_state == "available"
 
     assert_received {:oban_insert, job}
     assert job.worker == "Scrypath.Oban.DeleteWorker"
