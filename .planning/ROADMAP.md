@@ -16,6 +16,7 @@
 | 4 | Oban and Observability | Add production-grade async synchronization through Oban and first-class Telemetry instrumentation | SYNC-05, OPER-04 | No |
 | 5 | Reindexing and Operational Workflows | Build bulk backfill, managed reindex flows, settings application, and operator documentation for drift and recovery | OPER-01, OPER-02, OPER-03, OPER-05 | No |
 | 6 | Phoenix Ergonomics and Public-Facing Polish | Make the library feel excellent in Phoenix apps through guides, examples, and final release-quality polish | PHNX-01, PHNX-02 | Yes |
+| 7 | Verification Backfill and Milestone Traceability Repair | Restore missing phase verification evidence and repair milestone bookkeeping so v1.0 archival reflects the shipped codebase accurately | SCMA-01, SCMA-02, SCMA-03, BACK-02, SRCH-01, SRCH-02, SRCH-03, SRCH-04, SRCH-05, SRCH-06 | No |
 
 ## Phase Details
 
@@ -134,6 +135,22 @@ Plans:
 
 **UI hint:** yes
 
+### Phase 7: Verification Backfill and Milestone Traceability Repair
+
+**Goal:** Close the v1.0 audit evidence gaps by recreating missing verification artifacts and reconciling milestone planning files with what the codebase actually ships.
+
+**Requirements:** SCMA-01, SCMA-02, SCMA-03, BACK-02, SRCH-01, SRCH-02, SRCH-03, SRCH-04, SRCH-05, SRCH-06
+
+**Gap Closure:** Closes gaps from audit
+
+**Success criteria:**
+1. Phase 1 has a verification artifact that proves the schema declaration, projection, reflection, and backend-seam requirements against the current codebase.
+2. Phase 3 has a verification artifact that proves the search, filtering, sorting, pagination, raw-hit, and hydration requirements against the current codebase.
+3. `REQUIREMENTS.md` and `ROADMAP.md` reflect the shipped v1.0 state closely enough that milestone archival no longer fails on stale bookkeeping.
+4. Milestone audit evidence distinguishes real runtime gaps from missing verification history.
+
+**UI hint:** no
+
 ## Dependency Notes
 
 - Phase 1 is foundational for every later phase.
@@ -142,6 +159,7 @@ Plans:
 - Phase 4 depends on Phase 2 and should align with Phase 3 API semantics.
 - Phase 5 depends on Phases 2 through 4.
 - Phase 6 depends on the product shape being mostly stable across Phases 1 through 5.
+- Phase 7 depends on completed milestone code being present in Phases 1 through 6 and exists only to repair milestone audit evidence and traceability.
 
 ---
 *Last updated: 2026-04-16 after phase 4 plan 04-03 execution*
