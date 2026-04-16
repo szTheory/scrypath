@@ -3,6 +3,18 @@ defmodule Scrypath.ObanTest do
 
   alias Ecto.Multi
 
+  defmodule NamedOban do
+    use Oban, otp_app: :scrypath
+
+    def insert(%Multi{} = multi, multi_name, changeset, opts \\ []) do
+      send(self(), {:named_oban_insert, multi_name, changeset, opts})
+
+      Ecto.Multi.run(multi, multi_name, fn _repo, _changes ->
+        {:ok, Ecto.Changeset.apply_changes(changeset)}
+      end)
+    end
+  end
+
   defmodule RecordingBackend do
     @behaviour Scrypath.Backend
 
@@ -28,7 +40,7 @@ defmodule Scrypath.ObanTest do
   end
 
   defmodule RecordingOban do
-    def insert(_name, %Multi{} = multi, multi_name, changeset) do
+    def insert(%Multi{} = multi, multi_name, changeset, _opts \\ []) do
       Ecto.Multi.run(multi, multi_name, fn _repo, _changes ->
         {:ok, Ecto.Changeset.apply_changes(changeset)}
       end)
@@ -36,6 +48,7 @@ defmodule Scrypath.ObanTest do
   end
 
   test "exposes only narrow Ecto.Multi enqueue helpers" do
+    assert Code.ensure_loaded?(Scrypath.Oban)
     assert function_exported?(Scrypath.Oban, :enqueue_upsert, 5)
     assert function_exported?(Scrypath.Oban, :enqueue_delete, 5)
 
@@ -75,5 +88,23 @@ defmodule Scrypath.ObanTest do
 
     assert %Multi{} = multi
     assert [:search_delete] == Enum.map(Ecto.Multi.to_list(multi), &elem(&1, 0))
+  end
+
+  test "enqueue_upsert/5 uses the named Oban module multi insert signature" do
+    multi =
+      Multi.new()
+      |> Scrypath.Oban.enqueue_upsert(
+        :search_sync,
+        SearchablePost,
+        [%SearchablePost{id: 7, title: "Queued", body: "Body"}],
+        backend: RecordingBackend,
+        sync_mode: :oban,
+        oban: NamedOban,
+        oban_queue: :search_sync
+      )
+
+    assert %Multi{} = multi
+    assert_received {:named_oban_insert, :search_sync, changeset, []}
+    assert changeset.changes.worker == "Scrypath.Oban.UpsertWorker"
   end
 end

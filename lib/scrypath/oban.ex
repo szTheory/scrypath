@@ -38,11 +38,14 @@ defmodule Scrypath.Oban do
 
   defp insert_multi_job(oban, multi, name, changeset) do
     cond do
-      function_exported?(oban, :insert, 4) ->
-        oban.insert(oban, multi, name, changeset)
+      oban == Oban ->
+        Oban.insert(oban, multi, name, changeset)
 
       function_exported?(oban, :insert, 3) ->
         oban.insert(multi, name, changeset)
+
+      function_exported?(oban, :insert, 4) ->
+        oban.insert(multi, name, changeset, [])
 
       true ->
         Oban.insert(oban, multi, name, changeset)
