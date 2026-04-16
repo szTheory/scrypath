@@ -5,6 +5,7 @@ defmodule Scrypath.DocsContractTest do
   @architecture File.read!("ARCHITECTURE.md")
   @ci_workflow File.read!(".github/workflows/ci.yml")
   @release_docs File.read!("docs/releasing.md")
+  @verify_phase11 File.read!("lib/mix/tasks/verify.phase11.ex")
   @guide_paths [
     "guides/getting-started.md",
     "guides/phoenix-walkthrough.md",
@@ -129,6 +130,30 @@ defmodule Scrypath.DocsContractTest do
       "always-on CI gate",
       "must stay out of the always-on CI gate"
     ])
+  end
+
+  test "phase 11 release docs keep the public recovery contract explicit" do
+    assert_contains_all(@release_docs, [
+      "## Recovering Tag or Version Drift",
+      "## Recovering a Failed Publish",
+      "## Recovering Published Artifact Mismatch",
+      ".release-please-manifest.json",
+      "git tag --sort=version:refname",
+      "mix hex.publish --replace --yes",
+      "mix hex.publish --revert X.Y.Z",
+      "HexDocs"
+    ])
+  end
+
+  test "verify.phase11 keeps the phase 11 gate auth-free and complete" do
+    assert_contains_all(@verify_phase11, [
+      "test/release/package_metadata_test.exs",
+      "test/release/consumer_smoke_test.exs",
+      "test/scrypath/docs_contract_test.exs"
+    ])
+
+    refute @verify_phase11 =~ "HEX_API_KEY"
+    refute @verify_phase11 =~ "hex.publish --dry-run"
   end
 
   test "phoenix guides keep the context-first boundary explicit" do
