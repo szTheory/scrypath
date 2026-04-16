@@ -17,7 +17,10 @@
 - [x] **Phase 11: Public Release Contract** - Validate one real public release path, consumer smoke flow, and maintainer recovery contract. (completed 2026-04-16)
 - [x] **Phase 12: Internal Operations Seam** - Extract Scrypath-owned operations boundaries under the Meilisearch-first public surface. (completed 2026-04-16)
 - [ ] **Phase 13: Operator Primitives** - Expose status, failure inspection, retry, and reconcile APIs through Scrypath-owned operator types.
-- [ ] **Phase 14: Mix Tasks and Guides** - Put thin CLI ergonomics and sync-mode guides on top of the operator surface without widening common search.
+- [x] **Phase 14: Mix Tasks and Guides** - Put thin CLI ergonomics and sync-mode guides on top of the operator surface without widening common search. (completed 2026-04-16)
+- [ ] **Phase 15: Verify Operator Primitives** - Create the missing Phase 13 verification artifact and repair requirement/roadmap bookkeeping for the shipped operator APIs.
+- [ ] **Phase 16: Verify Mix Tasks and Repair Milestone Bookkeeping** - Create the missing Phase 14 verification artifact and repair the remaining milestone tracking drift.
+- [ ] **Phase 17: Prove The First Public Release** - Run the first real public release and capture live Hex/HexDocs verification evidence for milestone closure.
 
 ## Phase Details
 
@@ -70,6 +73,43 @@ Plans:
   2. Developer can choose inline, Oban, or manual sync modes from first-class guides that explain consistency, failure handling, and recovery tradeoffs plainly.
   3. Backend-native Meilisearch power remains clearly namespaced outside the common `Scrypath.search/3` contract after the operator docs and CLI land.
   4. Maintainer-facing docs explain how the operator APIs, Mix tasks, and release contract fit together for early production support.
+**Plans**: 2 plans
+
+Plans:
+- [ ] 14-01-PLAN.md - Add thin `mix scrypath.*` wrappers and focused task tests on top of the Phase 13 root operator APIs.
+- [ ] 14-02-PLAN.md - Publish sync-mode and operator guides, add maintainer support docs, and lock the phase with `mix verify.phase14`.
+
+### Phase 15: Verify Operator Primitives
+**Goal**: Turn the shipped Phase 13 operator surface into milestone-consumable evidence by writing the missing verification artifact and restoring roadmap/requirements traceability.
+**Depends on**: Phase 14
+**Requirements**: OPS-01, OPS-02, OPS-03
+**Gap Closure:** Closes Phase 13 verification and bookkeeping gaps from `v1.2-MILESTONE-AUDIT.md`
+**Success Criteria** (what must be TRUE):
+  1. `13-VERIFICATION.md` exists and records current evidence for `OPS-01`, `OPS-02`, and `OPS-03`.
+  2. `ROADMAP.md` reflects that Phase 13 shipped all three plans.
+  3. `REQUIREMENTS.md` moves `OPS-01`, `OPS-02`, and `OPS-03` onto the new gap-closure phase with accurate pending/complete state.
+**Plans**: TBD
+
+### Phase 16: Verify Mix Tasks and Repair Milestone Bookkeeping
+**Goal**: Turn the shipped Phase 14 task/docs surface into milestone-consumable evidence and clear the remaining roadmap/requirements/state drift blocking milestone closure.
+**Depends on**: Phase 15
+**Requirements**: OPS-04, SEAM-03
+**Gap Closure:** Closes Phase 14 verification and milestone-bookkeeping gaps from `v1.2-MILESTONE-AUDIT.md`
+**Success Criteria** (what must be TRUE):
+  1. `14-VERIFICATION.md` exists and records current evidence for `OPS-04` and `SEAM-03`.
+  2. `ROADMAP.md`, `REQUIREMENTS.md`, and `STATE.md` no longer contradict the shipped Phase 14 summaries and passing verification gate.
+  3. Milestone archival readiness no longer fails because of stale planning artifacts.
+**Plans**: TBD
+
+### Phase 17: Prove The First Public Release
+**Goal**: Close the last human-owned release trust gaps by running the first real Release Please -> Hex publish flow and capturing live package/docs verification evidence.
+**Depends on**: Phase 16
+**Requirements**: REL-01, REL-02
+**Gap Closure:** Closes the external release-proof gap from `v1.2-MILESTONE-AUDIT.md`
+**Success Criteria** (what must be TRUE):
+  1. A real Release Please driven publish completes with aligned tag, manifest, package version, and workflow evidence.
+  2. The published package passes the clean-consumer and HexDocs verification path against the actual released version.
+  3. The milestone audit can mark `REL-01` and `REL-02` satisfied with live evidence instead of planned wiring alone.
 **Plans**: TBD
 
 ## Progress
@@ -79,7 +119,10 @@ Plans:
 | 11. Public Release Contract | 2/2 | Complete   | 2026-04-16 |
 | 12. Internal Operations Seam | 3/3 | Complete    | 2026-04-16 |
 | 13. Operator Primitives | 0/TBD | Not started | - |
-| 14. Mix Tasks and Guides | 0/TBD | Not started | - |
+| 14. Mix Tasks and Guides | 2/2 | Complete   | 2026-04-16 |
+| 15. Verify Operator Primitives | 0/TBD | Not started | - |
+| 16. Verify Mix Tasks and Repair Milestone Bookkeeping | 0/TBD | Not started | - |
+| 17. Prove The First Public Release | 0/TBD | Not started | - |
 
 ## Backlog
 
