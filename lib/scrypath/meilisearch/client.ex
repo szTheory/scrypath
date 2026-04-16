@@ -7,6 +7,40 @@ defmodule Scrypath.Meilisearch.Client do
   alias Scrypath.Query, as: CommonQuery
   alias Scrypath.Telemetry
 
+  @spec create_index(String.t(), String.t() | atom() | nil, keyword()) :: {:ok, map()} | {:error, term()}
+  def create_index(index_name, primary_key, config) do
+    payload =
+      %{"uid" => index_name}
+      |> maybe_put_primary_key(primary_key)
+
+    run_request(:post, "/indexes", [json: payload], config, index: index_name)
+  end
+
+  @spec update_settings(String.t(), map(), keyword()) :: {:ok, map()} | {:error, term()}
+  def update_settings(index_name, settings, config) when is_map(settings) do
+    run_request(
+      :patch,
+      "/indexes/#{index_name}/settings",
+      [json: settings],
+      config,
+      index: index_name
+    )
+  end
+
+  @spec swap_indexes({String.t(), String.t()}, keyword()) :: {:ok, map()} | {:error, term()}
+  def swap_indexes({source_index, target_index}, config) do
+    payload = %{"indexes" => [%{"indexes" => [source_index, target_index]}]}
+
+    run_request(
+      :post,
+      "/swap-indexes",
+      [json: payload],
+      config,
+      source_index: source_index,
+      target_index: target_index
+    )
+  end
+
   @spec upsert_documents(String.t(), [Document.t()], keyword()) :: {:ok, map()} | {:error, term()}
   def upsert_documents(index_name, documents, config) when is_list(documents) do
     run_request(
@@ -94,6 +128,9 @@ defmodule Scrypath.Meilisearch.Client do
   defp search_payload(%CommonQuery{} = query), do: MeilisearchQuery.to_payload(query)
   defp search_payload(query) when is_binary(query), do: %{q: query}
   defp search_payload(query) when is_map(query), do: query
+
+  defp maybe_put_primary_key(payload, nil), do: payload
+  defp maybe_put_primary_key(payload, primary_key), do: Map.put(payload, "primaryKey", to_string(primary_key))
 
   defp default_headers(config) do
     case Config.meilisearch_api_key(config) do
