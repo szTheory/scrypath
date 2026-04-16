@@ -26,6 +26,8 @@ defmodule Scrypath.TestSupport.Docs.PhoenixExampleCase do
     def publish_post(%Post{} = post, attrs) when is_map(attrs) do
       {:ok, %{post | title: Map.get(attrs, :title, post.title), status: :published}}
     end
+
+    def get_post!(id), do: %Post{id: id, title: "Draft", status: :draft}
   end
 
   defmodule PostController do
@@ -40,26 +42,28 @@ defmodule Scrypath.TestSupport.Docs.PhoenixExampleCase do
     end
   end
 
-  defmodule ApiPostController do
-    alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Content
+  defmodule Api do
+    defmodule PostController do
+      alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Content
 
-    def index(params) do
-      query = Map.get(params, "q", "")
-      page_number = params |> Map.get("page", 1) |> normalize_page()
+      def index(params) do
+        query = Map.get(params, "q", "")
+        page_number = params |> Map.get("page", 1) |> normalize_page()
 
-      with {:ok, result} <- Content.search_posts(query, page: [number: page_number, size: 20]) do
-        %{
-          data: Enum.map(result.records, &serialize_post/1),
-          page: %{number: page_number, size: 20},
-          search: result
-        }
+        with {:ok, result} <- Content.search_posts(query, page: [number: page_number, size: 20]) do
+          %{
+            data: Enum.map(result.records, &serialize_post/1),
+            page: %{number: page_number, size: 20},
+            search: result
+          }
+        end
       end
+
+      defp serialize_post(post), do: %{id: post.id, title: post.title, status: post.status}
+
+      defp normalize_page(page) when is_integer(page), do: page
+      defp normalize_page(page) when is_binary(page), do: String.to_integer(page)
     end
-
-    defp serialize_post(post), do: %{id: post.id, title: post.title, status: post.status}
-
-    defp normalize_page(page) when is_integer(page), do: page
-    defp normalize_page(page) when is_binary(page), do: String.to_integer(page)
   end
 
   defmodule PostLive do
@@ -73,6 +77,13 @@ defmodule Scrypath.TestSupport.Docs.PhoenixExampleCase do
       with {:ok, result} <- Content.search_posts(query, preload: [:author]) do
         Map.merge(socket, %{posts: result.records, search: result, query: query})
       end
+    end
+
+    def handle_event("publish", %{"id" => id, "post" => attrs}, socket) do
+      post = Content.get_post!(id)
+      {:ok, _post} = Content.publish_post(post, attrs)
+
+      socket
     end
   end
 end

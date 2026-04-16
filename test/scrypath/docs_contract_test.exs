@@ -24,6 +24,20 @@ defmodule Scrypath.DocsContractTest do
     ])
   end
 
+  test "README opens with installation, quick path, and phoenix wayfinding" do
+    assert String.contains?(@readme, "Scrypath, the Ecto-native search indexing library")
+    assert ordered?(@readme, "## Installation", "## When Scrypath Fits")
+    assert ordered?(@readme, "## Quick Path", "## When Scrypath Fits")
+
+    assert_contains_all(@readme, [
+      "MyApp.Content",
+      "search_posts(query, opts \\\\ [])",
+      "publish_post(post, attrs)",
+      "MyAppWeb.PostController",
+      "Phoenix Walkthrough"
+    ])
+  end
+
   test "ARCHITECTURE preserves the operational semantics contract" do
     assert_contains_all(@architecture, [
       "create target -> apply settings -> backfill -> optional cutover",
@@ -61,7 +75,10 @@ defmodule Scrypath.DocsContractTest do
     ])
 
     assert_contains_all(@guides["guides/phoenix-walkthrough.md"], [
-      "Put search orchestration in a Phoenix context",
+      "## 1. Declare The Searchable Schema",
+      "## 2. Put Search And Sync In The Context",
+      "## 3. Call That Boundary From Controllers",
+      "## 4. Reuse The Same Context From LiveView",
       "Controllers translate request params into a context call",
       "LiveView owns UI state. The context still owns repo access and Scrypath orchestration."
     ])
@@ -70,6 +87,18 @@ defmodule Scrypath.DocsContractTest do
       "search visibility is an operational concern",
       "the enqueue is durable",
       "Accepted work is not the same thing as search visibility."
+    ])
+  end
+
+  test "guide snippets stay aligned with the phoenix fixture contract" do
+    docs = [@readme | Map.values(@guides)] |> Enum.join("\n")
+
+    assert_contains_all(docs, [
+      "search_posts(query, opts \\\\ [])",
+      "publish_post(post, attrs)",
+      "defmodule MyAppWeb.PostController",
+      "defmodule MyAppWeb.PostLive",
+      "defmodule MyAppWeb.Api.PostController"
     ])
   end
 
@@ -113,5 +142,17 @@ defmodule Scrypath.DocsContractTest do
       assert String.contains?(content, snippet),
              "expected docs to include #{inspect(snippet)}"
     end)
+  end
+
+  defp ordered?(content, first, second) do
+    {first_index, second_index} =
+      Enum.reduce([first, second], %{}, fn needle, acc ->
+        Map.put(acc, needle, :binary.match(content, needle))
+      end)
+      |> then(fn indices ->
+        {elem(indices[first], 0), elem(indices[second], 0)}
+      end)
+
+    first_index < second_index
   end
 end
