@@ -90,4 +90,9 @@ defmodule Scrypath do
   def backfill(schema_module, opts \\ []) do
     Scrypath.Backfill.run(schema_module, opts)
   end
+
+  @spec reindex(module(), keyword()) :: {:ok, map()} | {:error, term()}
+  def reindex(schema_module, opts \\ []) do
+    Scrypath.Reindex.run(schema_module, opts)
+  end
 end
