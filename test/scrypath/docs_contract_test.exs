@@ -31,9 +31,12 @@ defmodule Scrypath.DocsContractTest do
     assert ordered?(@readme, "## Installation", "## When Scrypath Fits")
     assert ordered?(@readme, "## Quick Path", "## When Scrypath Fits")
     assert @readme =~ ~S|{:scrypath, "~> 0.1.0"}|
+    refute @readme =~ ~S|{:req, "~> 0.5"}|
     refute @readme =~ ~S|{:scrypath, path: "../scrypath"}|
 
     assert_contains_all(@readme, [
+      "Scrypath owns its internal transport dependency.",
+      "If you want queued sync, add Oban as an optional production integration",
       "MyApp.Content",
       "search_posts(query, opts \\\\ [])",
       "publish_post(post, attrs)",
@@ -74,7 +77,10 @@ defmodule Scrypath.DocsContractTest do
     Enum.each(@guide_paths, &assert(File.exists?(&1), "expected guide #{&1} to exist"))
 
     assert_contains_all(@guides["guides/getting-started.md"], [
+      "Oban only if you want queued sync",
       "Runtime orchestration still lives in your context modules",
+      "Scrypath also owns its internal transport dependency",
+      "optional production path",
       "Accepted work is not the same thing as search visibility"
     ])
 
