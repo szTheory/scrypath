@@ -61,8 +61,16 @@ defmodule Scrypath.TestSupport.Docs.PhoenixExampleCase do
 
       defp serialize_post(post), do: %{id: post.id, title: post.title, status: post.status}
 
-      defp normalize_page(page) when is_integer(page), do: page
-      defp normalize_page(page) when is_binary(page), do: String.to_integer(page)
+      defp normalize_page(page) when is_integer(page) and page > 0, do: page
+
+      defp normalize_page(page) when is_binary(page) do
+        case Integer.parse(page) do
+          {number, ""} when number > 0 -> number
+          _ -> 1
+        end
+      end
+
+      defp normalize_page(_page), do: 1
     end
   end
 
