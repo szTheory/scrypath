@@ -61,6 +61,23 @@ defmodule Scrypath.OperationsTest do
     assert task.metadata.oban_state == "available"
   end
 
+  test "normalizes retryable queue jobs into retrying operator state" do
+    payload = %{
+      job: %{
+        id: 902,
+        state: "retryable",
+        worker: "Scrypath.Oban.UpsertWorker",
+        queue: "search_sync"
+      },
+      document_ids: [13],
+      document_count: 1
+    }
+
+    assert %Result{task: %Task{} = task} = Operations.result_from_enqueue(payload, mode: :oban)
+    assert task.state == :retrying
+    assert task.metadata.oban_state == "retryable"
+  end
+
   test "result structs adapt back into the current public sync fields" do
     result =
       Result.new(

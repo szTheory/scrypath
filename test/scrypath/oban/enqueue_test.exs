@@ -39,6 +39,13 @@ defmodule Scrypath.Oban.EnqueueTest do
     end
   end
 
+  defmodule RetryableOban do
+    def insert(changeset) do
+      job = Ecto.Changeset.apply_changes(changeset)
+      {:ok, %{job | id: 902, state: "retryable"}}
+    end
+  end
+
   test "enqueue_upsert/3 inserts one job with the caller batch intact" do
     documents = [
       %Document{id: 11, data: %{title: "One"}, source: :fields},
@@ -97,5 +104,22 @@ defmodule Scrypath.Oban.EnqueueTest do
     assert job.args["document_count"] == 2
     assert job.args["document_ids"] == ["post:7", "post:8"]
     refute Map.has_key?(job.args, "documents")
+  end
+
+  test "enqueue helpers keep retryable queue state distinct from backend lifecycle" do
+    documents = [%Document{id: 21, data: %{title: "Three"}, source: :fields}]
+
+    assert {:ok, %Result{} = result} =
+             Scrypath.Oban.Enqueue.enqueue_upsert(SearchablePost, documents,
+               backend: RecordingBackend,
+               sync_mode: :oban,
+               oban: RetryableOban,
+               oban_queue: :search_sync
+             )
+
+    assert %Task{} = task = result.task
+    assert task.kind == :queue_job
+    assert task.state == :retrying
+    assert task.metadata.oban_state == "retryable"
   end
 end

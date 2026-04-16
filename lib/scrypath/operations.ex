@@ -75,8 +75,10 @@ defmodule Scrypath.Operations do
   defp normalize_queue_state(state) when state in ["available", "scheduled", "executing"],
     do: :queued
 
+  defp normalize_queue_state(state) when state in ["retryable"], do: :retrying
   defp normalize_queue_state(state) when state in ["completed"], do: :completed
   defp normalize_queue_state(state) when state in ["discarded", "cancelled"], do: :failed
+  defp normalize_queue_state(:retryable), do: :retrying
   defp normalize_queue_state(state) when is_atom(state), do: state
   defp normalize_queue_state(_state), do: :unknown
 end
