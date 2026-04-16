@@ -131,7 +131,11 @@ defmodule Scrypath.DocsContractTest do
 
     assert_contains_all(@guides["guides/phoenix-controllers-and-json.md"], [
       "Phoenix controllers should translate request params into a context call",
-      "Do not recommend direct `Repo` queries plus direct `Scrypath.search/3` calls inside the controller."
+      "Do not recommend direct `Repo` queries plus direct `Scrypath.search/3` calls inside the controller.",
+      "page_number =",
+      "normalize_page()",
+      "String.to_integer(page)",
+      "page: [number: page_number, size: 20]"
     ])
 
     assert_contains_all(@guides["guides/phoenix-liveview.md"], [
