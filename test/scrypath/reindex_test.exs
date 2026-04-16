@@ -2,6 +2,8 @@ defmodule Scrypath.ReindexTest do
   use ExUnit.Case, async: true
 
   defmodule RecordingMeilisearch do
+    alias Scrypath.Operations
+
     def index_name(schema_module, config) do
       prefix = Keyword.get(config, :index_prefix) || "scrypath"
       schema_name = schema_module |> Module.split() |> List.last() |> Macro.underscore()
@@ -16,7 +18,13 @@ defmodule Scrypath.ReindexTest do
        %{
          live_index: "scrypath_queryable_post",
          target_index: Keyword.get(config, :target_index, "scrypath_queryable_post__reindex"),
-         task: %{uid: 10}
+         task:
+           Operations.task_from_backend(%{
+             uid: 10,
+             status: "enqueued",
+             indexUid: Keyword.get(config, :target_index, "scrypath_queryable_post__reindex"),
+             type: "indexCreation"
+           })
        }}
     end
 
@@ -27,7 +35,13 @@ defmodule Scrypath.ReindexTest do
        %{
          index: index_name,
          settings: Keyword.get(config, :settings, %{}),
-         task: %{uid: 11}
+         task:
+           Operations.task_from_backend(%{
+             uid: 11,
+             status: "enqueued",
+             indexUid: index_name,
+             type: "settingsUpdate"
+           })
        }}
     end
 
@@ -38,12 +52,21 @@ defmodule Scrypath.ReindexTest do
        %{
          live_index: "scrypath_queryable_post",
          target_index: Keyword.get(config, :target_index, "scrypath_queryable_post__reindex"),
-         task: %{uid: 12}
+         task:
+           Operations.task_from_backend(%{
+             uid: 12,
+             status: "enqueued",
+             indexUid: Keyword.get(config, :target_index, "scrypath_queryable_post__reindex"),
+             type: "indexSwap"
+           })
        }}
     end
   end
 
   defmodule RecordingBackfill do
+    alias Scrypath.Operations
+    alias Scrypath.Operations.Result
+
     def run(schema_module, config) do
       send(self(), {:backfill, schema_module, config})
 
@@ -52,12 +75,54 @@ defmodule Scrypath.ReindexTest do
          index: Keyword.fetch!(config, :index_name),
          batches: 3,
          documents: 7,
-         batch_results: [
-           %{index: Keyword.fetch!(config, :index_name), documents: 3},
-           %{index: Keyword.fetch!(config, :index_name), documents: 2},
-           %{index: Keyword.fetch!(config, :index_name), documents: 2}
+          batch_results: [
+           Result.new(
+             mode: :manual,
+             status: :accepted,
+             document_count: 3,
+             metadata: %{index: Keyword.fetch!(config, :index_name)},
+             task:
+               Operations.task_from_backend(%{
+                 uid: 21,
+                 status: "enqueued",
+                 indexUid: Keyword.fetch!(config, :index_name),
+                 type: "documentAdditionOrUpdate"
+               })
+           ),
+           Result.new(
+             mode: :manual,
+             status: :accepted,
+             document_count: 2,
+             metadata: %{index: Keyword.fetch!(config, :index_name)},
+             task:
+               Operations.task_from_backend(%{
+                 uid: 22,
+                 status: "enqueued",
+                 indexUid: Keyword.fetch!(config, :index_name),
+                 type: "documentAdditionOrUpdate"
+               })
+           ),
+           Result.new(
+             mode: :manual,
+             status: :accepted,
+             document_count: 2,
+             metadata: %{index: Keyword.fetch!(config, :index_name)},
+             task:
+               Operations.task_from_backend(%{
+                 uid: 23,
+                 status: "enqueued",
+                 indexUid: Keyword.fetch!(config, :index_name),
+                 type: "documentAdditionOrUpdate"
+               })
+           )
          ]
        }}
+    end
+  end
+
+  defmodule PassiveBackend do
+    def index_name(schema_module, config) do
+      RecordingMeilisearch.index_name(schema_module, config)
     end
   end
 
@@ -137,5 +202,25 @@ defmodule Scrypath.ReindexTest do
     assert Map.has_key?(result, :batches)
     assert Map.has_key?(result, :documents)
     assert Map.has_key?(result, :cutover)
+  end
+
+  test "reindex waits through seam-owned task references instead of backend identity" do
+    assert {:ok, %{cutover: false, target_index: "passive_posts"}} =
+             Scrypath.reindex(QueryablePost,
+               backend: PassiveBackend,
+               repo: Scrypath.BackfillTest.BackfillRepo,
+               batch_size: 100,
+               target_index: "passive_posts",
+               cutover?: false,
+               meilisearch: RecordingMeilisearch,
+               backfill: RecordingBackfill
+             )
+
+    assert_receive {:create_index, QueryablePost, :id, create_config}
+    assert create_config[:target_index] == "passive_posts"
+
+    assert_receive {:apply_settings, QueryablePost, "passive_posts", _}
+    assert_receive {:backfill, QueryablePost, backfill_config}
+    assert backfill_config[:index_name] == "passive_posts"
   end
 end

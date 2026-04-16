@@ -8,6 +8,9 @@ defmodule Scrypath.BackfillTest do
   defmodule RecordingBackend do
     @behaviour Scrypath.Backend
 
+    alias Scrypath.Operations
+    alias Scrypath.Operations.Result
+
     @impl true
     def name, do: :recording
 
@@ -24,10 +27,22 @@ defmodule Scrypath.BackfillTest do
       send(self(), {:upsert_documents, schema_module, documents, config})
 
       {:ok,
-       %{
-         index: Keyword.get(config, :index_name) || index_name(schema_module, config),
-         document_ids: Enum.map(documents, & &1.id)
-       }}
+       Result.new(
+         mode: Keyword.get(config, :sync_mode, :manual),
+         status: :accepted,
+         document_ids: Enum.map(documents, & &1.id),
+         document_count: length(documents),
+         task:
+           Operations.task_from_backend(%{
+             uid: Enum.max_by(documents, & &1.id).id + 100,
+             status: "enqueued",
+             indexUid: Keyword.get(config, :index_name) || index_name(schema_module, config),
+             type: "documentAdditionOrUpdate"
+           }),
+         metadata: %{
+           index: Keyword.get(config, :index_name) || index_name(schema_module, config)
+         }
+       )}
     end
 
     @impl true
@@ -250,5 +265,31 @@ defmodule Scrypath.BackfillTest do
     assert Enum.map(second_batch, & &1.id) == [3]
     assert first_config[:index_name] == "posts_rebuild"
     assert second_config[:index_name] == "posts_rebuild"
+  end
+
+  test "backfill batch results are adapted from seam-owned operation results" do
+    BackfillRepo.put_records([
+      %QueryablePost{id: 1, title: "First", body: "Body 1"},
+      %QueryablePost{id: 2, title: "Second", body: "Body 2"},
+      %QueryablePost{id: 3, title: "Third", body: "Body 3"}
+    ])
+
+    assert {:ok,
+            %{
+              index: "posts_rebuild",
+              batches: 2,
+              documents: 3,
+              mode: :manual,
+              batch_results: [
+                %{index: "posts_rebuild", documents: 2, task: %{uid: 102, status: :enqueued}},
+                %{index: "posts_rebuild", documents: 1, task: %{uid: 103, status: :enqueued}}
+              ]
+            }} =
+             Scrypath.backfill(QueryablePost,
+               backend: RecordingBackend,
+               repo: BackfillRepo,
+               batch_size: 2,
+               index_name: "posts_rebuild"
+             )
   end
 end
