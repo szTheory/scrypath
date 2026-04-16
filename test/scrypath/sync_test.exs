@@ -264,7 +264,7 @@ defmodule Scrypath.SyncTest do
 
     assert raw["error"]["code"] == "index_not_found"
 
-    assert {:ok, %{mode: :manual, status: :accepted, task: %{uid: 301, status: "enqueued"}}} =
+    assert {:ok, %{mode: :manual, status: :accepted, task: %{uid: 301, status: :enqueued}}} =
              Scrypath.sync_record(SearchablePost, record,
                backend: Scrypath.Meilisearch,
                meilisearch_url: "http://localhost:7700",
@@ -290,7 +290,7 @@ defmodule Scrypath.SyncTest do
 
     record = %SearchablePost{id: 81, title: "Shared", body: "Verb"}
 
-    assert {:ok, %{mode: :manual, status: :accepted, task: %{status: "enqueued"}}} =
+    assert {:ok, %{mode: :manual, status: :accepted, task: %{status: :enqueued}}} =
              Scrypath.sync_record(SearchablePost, record,
                backend: Scrypath.Meilisearch,
                meilisearch_url: "http://localhost:7700",
