@@ -63,6 +63,114 @@ defmodule Scrypath.ReindexTest do
     end
   end
 
+  defmodule FutureTaskBackend do
+    alias Scrypath.Operations
+
+    def index_name(schema_module, config) do
+      RecordingMeilisearch.index_name(schema_module, config)
+    end
+
+    def create_index(schema_module, primary_key, config) do
+      send(self(), {:create_index, schema_module, primary_key, config})
+
+      {:ok,
+       %{
+         live_index: "scrypath_queryable_post",
+         target_index: Keyword.get(config, :target_index, "scrypath_queryable_post__reindex"),
+         task:
+           Operations.task_from_backend(
+             %{
+               uid: 110,
+               status: "enqueued",
+               indexUid: Keyword.get(config, :target_index, "scrypath_queryable_post__reindex"),
+               type: "indexCreation"
+             },
+             source: :future_backend
+           )
+       }}
+    end
+
+    def apply_settings(schema_module, index_name, config) do
+      send(self(), {:apply_settings, schema_module, index_name, config})
+
+      {:ok,
+       %{
+         index: index_name,
+         settings: Keyword.get(config, :settings, %{}),
+         task:
+           Operations.task_from_backend(
+             %{uid: 111, status: "enqueued", indexUid: index_name, type: "settingsUpdate"},
+             source: :future_backend
+           )
+       }}
+    end
+
+    def swap_indexes(schema_module, config) do
+      send(self(), {:swap_indexes, schema_module, config})
+
+      {:ok,
+       %{
+         live_index: "scrypath_queryable_post",
+         target_index: Keyword.get(config, :target_index, "scrypath_queryable_post__reindex"),
+         task:
+           Operations.task_from_backend(
+             %{
+               uid: 112,
+               status: "enqueued",
+               indexUid: Keyword.get(config, :target_index, "scrypath_queryable_post__reindex"),
+               type: "indexSwap"
+             },
+             source: :future_backend
+           )
+       }}
+    end
+  end
+
+  defmodule RawTaskBackend do
+    def create_index(schema_module, primary_key, config) do
+      send(self(), {:create_index, schema_module, primary_key, config})
+
+      {:ok,
+       %{
+         live_index: "scrypath_queryable_post",
+         target_index: Keyword.get(config, :target_index, "scrypath_queryable_post__reindex"),
+         task: %{
+           uid: 210,
+           status: "enqueued",
+           index_uid: Keyword.get(config, :target_index, "scrypath_queryable_post__reindex"),
+           type: "indexCreation"
+         }
+       }}
+    end
+
+    def apply_settings(schema_module, index_name, config) do
+      send(self(), {:apply_settings, schema_module, index_name, config})
+
+      {:ok,
+       %{
+         index: index_name,
+         settings: Keyword.get(config, :settings, %{}),
+         task: %{uid: 211, status: "enqueued", index_uid: index_name, type: "settingsUpdate"}
+       }}
+    end
+
+    def swap_indexes(schema_module, config) do
+      send(self(), {:swap_indexes, schema_module, config})
+
+      {:ok,
+       %{
+         live_index: "scrypath_queryable_post",
+         target_index: Keyword.get(config, :target_index, "scrypath_queryable_post__reindex"),
+         task: %{
+           uid: 212,
+           status: "enqueued",
+           index_uid: Keyword.get(config, :target_index, "scrypath_queryable_post__reindex"),
+           type: "indexSwap"
+         }
+       }}
+    end
+  end
+
   defmodule RecordingTaskClient do
     def task(task_uid, _config) do
       send(self(), {:task_wait, task_uid})
@@ -89,7 +197,7 @@ defmodule Scrypath.ReindexTest do
          index: Keyword.fetch!(config, :index_name),
          batches: 3,
          documents: 7,
-          batch_results: [
+         batch_results: [
            Result.new(
              mode: :manual,
              status: :accepted,
@@ -256,5 +364,58 @@ defmodule Scrypath.ReindexTest do
     assert_received {:task_wait, 21}
     assert_received {:task_wait, 22}
     assert_received {:task_wait, 23}
+  end
+
+  test "reindex skips meilisearch polling for non-meilisearch seam tasks" do
+    assert {:ok, %{cutover: false, target_index: "future_posts"}} =
+             Scrypath.reindex(QueryablePost,
+               backend: PassiveBackend,
+               repo: Scrypath.BackfillTest.BackfillRepo,
+               batch_size: 100,
+               target_index: "future_posts",
+               cutover?: false,
+               meilisearch_client: RecordingTaskClient,
+               meilisearch: FutureTaskBackend,
+               backfill: RecordingBackfill
+             )
+
+    assert_receive {:create_index, QueryablePost, :id, create_config}
+    assert create_config[:target_index] == "future_posts"
+    assert_receive {:apply_settings, QueryablePost, "future_posts", _}
+    assert_receive {:backfill, QueryablePost, backfill_config}
+    assert backfill_config[:index_name] == "future_posts"
+    refute_received {:task_wait, 110}
+    refute_received {:task_wait, 111}
+    refute_received {:task_wait, 112}
+    assert_received {:task_wait, 21}
+    assert_received {:task_wait, 22}
+    assert_received {:task_wait, 23}
+  end
+
+  test "reindex normalizes raw meilisearch task maps before waiting" do
+    assert {:ok, %{cutover: true, target_index: "raw_tasks_posts"}} =
+             Scrypath.reindex(QueryablePost,
+               backend: PassiveBackend,
+               repo: Scrypath.BackfillTest.BackfillRepo,
+               batch_size: 100,
+               target_index: "raw_tasks_posts",
+               meilisearch_client: RecordingTaskClient,
+               meilisearch: RawTaskBackend,
+               backfill: RecordingBackfill
+             )
+
+    assert_receive {:create_index, QueryablePost, :id, create_config}
+    assert create_config[:target_index] == "raw_tasks_posts"
+    assert_receive {:apply_settings, QueryablePost, "raw_tasks_posts", _}
+    assert_receive {:backfill, QueryablePost, backfill_config}
+    assert backfill_config[:index_name] == "raw_tasks_posts"
+    assert_receive {:swap_indexes, QueryablePost, swap_config}
+    assert swap_config[:target_index] == "raw_tasks_posts"
+    assert_received {:task_wait, 210}
+    assert_received {:task_wait, 211}
+    assert_received {:task_wait, 21}
+    assert_received {:task_wait, 22}
+    assert_received {:task_wait, 23}
+    assert_received {:task_wait, 212}
   end
 end

@@ -73,7 +73,8 @@ defmodule Scrypath.SyncTest do
 
     @impl true
     def upsert_documents(schema_module, documents, config) do
-      task_state = if Keyword.get(config, :sync_mode, :inline) == :inline, do: :succeeded, else: :enqueued
+      task_state =
+        if Keyword.get(config, :sync_mode, :inline) == :inline, do: :succeeded, else: :enqueued
 
       {:ok,
        Result.new(
@@ -82,7 +83,7 @@ defmodule Scrypath.SyncTest do
          document_ids: Enum.map(documents, & &1.id),
          document_count: length(documents),
          task:
-          Task.new(
+           Task.new(
              source: :meilisearch,
              kind: :backend_task,
              id: 711,
@@ -97,7 +98,8 @@ defmodule Scrypath.SyncTest do
 
     @impl true
     def delete_documents(schema_module, document_ids, config) do
-      task_state = if Keyword.get(config, :sync_mode, :inline) == :inline, do: :succeeded, else: :enqueued
+      task_state =
+        if Keyword.get(config, :sync_mode, :inline) == :inline, do: :succeeded, else: :enqueued
 
       {:ok,
        Result.new(
@@ -106,7 +108,7 @@ defmodule Scrypath.SyncTest do
          document_ids: document_ids,
          document_count: length(document_ids),
          task:
-          Task.new(
+           Task.new(
              source: :meilisearch,
              kind: :backend_task,
              id: 712,
@@ -114,6 +116,63 @@ defmodule Scrypath.SyncTest do
              reference: %{task_uid: 712, index_uid: index_name(schema_module, config)},
              metadata: %{type: "documentDeletion"},
              raw: %{"uid" => 712, "status" => Atom.to_string(task_state)}
+           ),
+         metadata: %{index: index_name(schema_module, config)}
+       )}
+    end
+
+    @impl true
+    def search(_schema_module, _query, _config), do: {:ok, %{hits: []}}
+  end
+
+  defmodule FutureBackend do
+    @behaviour Scrypath.Backend
+
+    @impl true
+    def name, do: :future_backend
+
+    @impl true
+    def index_name(schema_module, config) do
+      SeamBackend.index_name(schema_module, config)
+    end
+
+    @impl true
+    def upsert_documents(schema_module, documents, config) do
+      {:ok,
+       Result.new(
+         mode: Keyword.get(config, :sync_mode, :manual),
+         status: :accepted,
+         document_ids: Enum.map(documents, & &1.id),
+         document_count: length(documents),
+         task:
+           Task.new(
+             source: :future_backend,
+             kind: :backend_task,
+             id: 811,
+             state: :enqueued,
+             reference: %{task_uid: 811, index_uid: index_name(schema_module, config)},
+             metadata: %{type: "documentAdditionOrUpdate"}
+           ),
+         metadata: %{index: index_name(schema_module, config)}
+       )}
+    end
+
+    @impl true
+    def delete_documents(schema_module, document_ids, config) do
+      {:ok,
+       Result.new(
+         mode: Keyword.get(config, :sync_mode, :manual),
+         status: :accepted,
+         document_ids: document_ids,
+         document_count: length(document_ids),
+         task:
+           Task.new(
+             source: :future_backend,
+             kind: :backend_task,
+             id: 812,
+             state: :enqueued,
+             reference: %{task_uid: 812, index_uid: index_name(schema_module, config)},
+             metadata: %{type: "documentDeletion"}
            ),
          metadata: %{index: index_name(schema_module, config)}
        )}
@@ -404,6 +463,24 @@ defmodule Scrypath.SyncTest do
                backend: SeamBackend,
                index_prefix: "tenant"
              )
+  end
+
+  test "inline sync does not route non-meilisearch seam tasks into meilisearch waiting" do
+    record = %SearchablePost{id: 83, title: "Future", body: "Backend"}
+
+    assert {:ok,
+            %{
+              mode: :inline,
+              status: :completed,
+              index: "tenant_searchable_post",
+              task: %{uid: 811, status: :enqueued, index_uid: "tenant_searchable_post"}
+            }} =
+             Scrypath.sync_record(SearchablePost, record,
+               backend: FutureBackend,
+               index_prefix: "tenant"
+             )
+
+    refute_received {:meili_request, _, _, _}
   end
 
   test "sync_mode :oban stays on shared sync verbs and returns accepted metadata" do

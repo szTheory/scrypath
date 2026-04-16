@@ -22,9 +22,7 @@ defmodule Scrypath.Sync do
     documents = Enum.map(records, &Projection.document(schema_module, &1))
 
     metadata =
-      Telemetry.common_metadata(schema_module, config,
-        document_count: length(documents)
-      )
+      Telemetry.common_metadata(schema_module, config, document_count: length(documents))
 
     Telemetry.span([:scrypath, :sync, :upsert], metadata, fn ->
       result =
@@ -55,9 +53,7 @@ defmodule Scrypath.Sync do
     config = Config.resolve!(opts)
 
     metadata =
-      Telemetry.common_metadata(schema_module, config,
-        document_count: length(document_ids)
-      )
+      Telemetry.common_metadata(schema_module, config, document_count: length(document_ids))
 
     Telemetry.span([:scrypath, :sync, :delete], metadata, fn ->
       result =
@@ -102,11 +98,14 @@ defmodule Scrypath.Sync do
 
   defp maybe_wait_for_task({:ok, %Result{task: %OperationTask{} = task} = result}, config) do
     case Keyword.fetch!(config, :sync_mode) do
-      :inline ->
+      :inline when task.source == :meilisearch ->
         case Tasks.wait_for_task(task, config) do
           {:ok, waited_task} -> {:ok, %{result | task: waited_task}}
           {:error, reason} -> {:error, public_wait_error(reason)}
         end
+
+      :inline ->
+        {:ok, result}
 
       :manual ->
         {:ok, result}
@@ -120,15 +119,21 @@ defmodule Scrypath.Sync do
 
   defp backend_upsert_documents(schema_module, documents, config) do
     case Config.fetch_backend!(config) do
-      Scrypath.Meilisearch -> MeilisearchOperations.upsert_documents(schema_module, documents, config)
-      backend -> backend.upsert_documents(schema_module, documents, config)
+      Scrypath.Meilisearch ->
+        MeilisearchOperations.upsert_documents(schema_module, documents, config)
+
+      backend ->
+        backend.upsert_documents(schema_module, documents, config)
     end
   end
 
   defp backend_delete_documents(schema_module, document_ids, config) do
     case Config.fetch_backend!(config) do
-      Scrypath.Meilisearch -> MeilisearchOperations.delete_documents(schema_module, document_ids, config)
-      backend -> backend.delete_documents(schema_module, document_ids, config)
+      Scrypath.Meilisearch ->
+        MeilisearchOperations.delete_documents(schema_module, document_ids, config)
+
+      backend ->
+        backend.delete_documents(schema_module, document_ids, config)
     end
   end
 
