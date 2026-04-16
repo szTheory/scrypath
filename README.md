@@ -4,18 +4,19 @@ Scrypath, the Ecto-native search indexing library, helps Phoenix and Ecto teams 
 
 ## Installation
 
-Add Scrypath and the supported v1 backend to your dependencies:
+Add Scrypath to your dependencies:
 
 ```elixir
 def deps do
   [
-    {:scrypath, "~> 0.1.0"},
-    {:req, "~> 0.5"}
+    {:scrypath, "~> 0.1.0"}
   ]
 end
 ```
 
 Scrypath v1 publicly targets Meilisearch first. The backend seam is internal, but v1 does not promise public multi-backend parity.
+Scrypath owns its internal transport dependency. Configure backend and sync behavior in your app code instead of pinning `Req` directly in the base install path.
+If you want queued sync, add Oban as an optional production integration when you choose `sync_mode: :oban`.
 
 ## Quick Path
 

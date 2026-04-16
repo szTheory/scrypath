@@ -8,7 +8,7 @@ Start with three pieces:
 
 1. A schema that declares search metadata with `use Scrypath`
 2. A context that owns repo persistence plus `Scrypath.*` orchestration
-3. A backend configuration that keeps sync mode explicit
+3. A backend configuration that keeps sync mode explicit, plus Oban only if you want queued sync
 
 ## Declare A Searchable Schema
 
@@ -31,6 +31,7 @@ end
 ```
 
 `use Scrypath` stays metadata-only. Runtime orchestration still lives in your context modules.
+Scrypath also owns its internal transport dependency, so the base install path stays focused on adding `:scrypath`.
 
 ## Put Search And Sync In The Context
 
@@ -99,7 +100,7 @@ end
 
 - `:inline` waits for terminal backend success before returning
 - `:manual` returns accepted backend work immediately for imports and operator-driven flows
-- `:oban` returns durable enqueue acceptance only
+- `:oban` returns durable enqueue acceptance only and is an optional production path when you want queued sync
 
 Accepted work is not the same thing as search visibility. Pick the mode that matches your consistency and operational constraints.
 
