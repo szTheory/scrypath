@@ -34,9 +34,14 @@ defmodule MyAppWeb.Api.PostController do
   alias MyApp.Content
 
   def index(conn, params) do
+    page_number =
+      params
+      |> Map.get("page", 1)
+      |> normalize_page()
+
     {:ok, result} =
       Content.search_posts(Map.get(params, "q", ""),
-        page: [number: params["page"] || 1, size: 20]
+        page: [number: page_number, size: 20]
       )
 
     json(conn, %{
@@ -45,6 +50,9 @@ defmodule MyAppWeb.Api.PostController do
       missing_ids: result.missing_ids
     })
   end
+
+  defp normalize_page(page) when is_integer(page), do: page
+  defp normalize_page(page) when is_binary(page), do: String.to_integer(page)
 end
 ```
 

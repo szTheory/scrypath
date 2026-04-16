@@ -45,6 +45,14 @@ defmodule Scrypath.PhoenixExamplesTest do
     assert response.search.query == "ecto"
   end
 
+  test "json controller fixture normalizes page params before calling the context" do
+    api_section = module_section("PostController", "Api")
+
+    assert api_section =~ "page_number = params |> Map.get(\"page\", 1) |> normalize_page()"
+    assert api_section =~ "page: [number: page_number, size: 20]"
+    assert api_section =~ "String.to_integer(page)"
+  end
+
   test "liveview-facing module reuses the same context boundary" do
     socket = PostLive.mount()
     updated = PostLive.handle_params(%{"q" => "search"}, socket)
@@ -60,12 +68,16 @@ defmodule Scrypath.PhoenixExamplesTest do
     assert socket == PostLive.handle_event("publish", %{"id" => 1, "post" => %{title: "Published"}}, socket)
   end
 
-  defp module_section(name) do
-    Regex.run(
-      ~r/defmodule #{name} do\n(.*?)\n  end/ms,
-      @fixture_source,
-      capture: :all_but_first
-    )
-    |> List.first()
+  defp module_section(name, parent \\ nil) do
+    pattern =
+      case parent do
+        nil -> ~r/defmodule #{name} do\n(.*?)\n  end/ms
+        parent_name -> ~r/defmodule #{parent_name} do\n(.*?)defmodule #{name} do\n(.*?)\n    end\n  end/ms
+      end
+
+    case Regex.run(pattern, @fixture_source, capture: :all_but_first) do
+      [section] -> section
+      [_parent_section, section] -> section
+    end
   end
 end
