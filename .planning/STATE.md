@@ -4,17 +4,17 @@ milestone: v1.2
 milestone_name: Public Release Trust and Operator Visibility
 current_phase: 12
 current_phase_name: internal-operations-seam
-current_plan: 2
+current_plan: 3
 status: ready_to_execute
-stopped_at: Completed 12-01-PLAN.md
-last_updated: "2026-04-16T21:28:02.286Z"
+stopped_at: Completed 12-02-PLAN.md
+last_updated: "2026-04-16T21:36:34.492Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 5
-  completed_plans: 3
-  percent: 60
+  completed_plans: 4
+  percent: 80
 ---
 
 # Project State
@@ -29,15 +29,15 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 ## Current Position
 
 Phase: 12 (internal-operations-seam) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Current Phase: 12
 Current Phase Name: internal-operations-seam
-Current Plan: 2
+Current Plan: 3
 Status: Ready to execute
 Last activity: 2026-04-16
-Last Activity Description: Completed Phase 12 Plan 01 seam contract extraction and advanced to Plan 02.
+Last Activity Description: Completed Phase 12 Plan 02 seam runtime rewiring and advanced to Plan 03.
 
-Progress: [██████░░░░] 60%
+Progress: [████████░░] 80%
 
 ## Accumulated Context
 
@@ -59,6 +59,8 @@ Progress: [██████░░░░] 60%
 - [Phase 11]: Ongoing published-release verification belongs in a separate verification-only workflow that reads the latest Hex version and never attempts recovery or publish.
 - [Phase 12]: Keep the internal operations seam constructor-focused and internal-only until runtime rewiring in Plan 02. — Plan 12-01 establishes contract ownership without implying a new public operator surface or backend abstraction.
 - [Phase 12]: Use one Scrypath-owned task struct for backend tasks and queue jobs, separating source and kind from public sync projection. — This keeps lifecycle vocabulary Scrypath-owned while still preserving a path back to the existing sync result map.
+- [Phase 12]: Keep `Scrypath.Meilisearch` as the explicit public namespace and push seam normalization into `Scrypath.Meilisearch.Operations`. — This preserves the Meilisearch-first public contract while moving backend task normalization behind the internal seam.
+- [Phase 12]: Convert seam-owned `Scrypath.Operations.Result` and `Task` values back into the current public sync maps only at the `Scrypath.Sync` boundary. — Phase 13 can now build operator primitives on the seam without changing the caller-facing sync contract.
 
 ### Blockers/Concerns
 
@@ -81,8 +83,8 @@ Progress: [██████░░░░] 60%
 
 ## Session Continuity
 
-Last session: 2026-04-16T21:28:02.283Z
-Stopped at: Completed 12-01-PLAN.md
+Last session: 2026-04-16T21:36:27.292Z
+Stopped at: Completed 12-02-PLAN.md
 Resume file: None
 
 ## Current Status
@@ -104,9 +106,10 @@ Resume file: None
 
 | Phase | Plan | Duration | Tasks | Files | Date |
 |-------|------|----------|-------|-------|------|
+| 12 | 02 | 5 min | 2 | 8 | 2026-04-16 |
 | 12 | 01 | 2 min | 1 | 4 | 2026-04-16 |
 | 11 | 02 | 10min | 3 | 4 | 2026-04-16 |
 | 11 | hardening | follow-up | release automation, recovery workflow, published-release monitor | 2026-04-16 |
 
 ---
-*Last updated: 2026-04-16 after creating the v1.2 roadmap*
+*Last updated: 2026-04-16 after completing Phase 12 Plan 02*

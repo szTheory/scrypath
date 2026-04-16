@@ -47,7 +47,7 @@ Plans:
 
 Plans:
 - [x] 12-01-PLAN.md - Define the internal operations contracts in the pattern-map layout before runtime wiring begins. (completed 2026-04-16)
-- [ ] 12-02-PLAN.md - Move Meilisearch task waiting, Oban enqueue, and sync orchestration onto the seam with direct adapter tests.
+- [x] 12-02-PLAN.md - Move Meilisearch task waiting, Oban enqueue, and sync orchestration onto the seam with direct adapter tests. (completed 2026-04-16)
 - [ ] 12-03-PLAN.md - Move backfill and reindex onto the seam, then lock the Meilisearch-first boundary in docs and telemetry.
 
 ### Phase 13: Operator Primitives
@@ -77,7 +77,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 11. Public Release Contract | 2/2 | Complete   | 2026-04-16 |
-| 12. Internal Operations Seam | 1/3 | In Progress | 2026-04-16 |
+| 12. Internal Operations Seam | 2/3 | In Progress|  |
 | 13. Operator Primitives | 0/TBD | Not started | - |
 | 14. Mix Tasks and Guides | 0/TBD | Not started | - |
 
