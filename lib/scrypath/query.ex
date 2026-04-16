@@ -1,11 +1,16 @@
 defmodule Scrypath.Query do
-  @moduledoc false
+  @moduledoc """
+  Internal normalized search query struct used by the common search path and
+  backend adapters.
+  """
 
   @enforce_keys [:text]
   defstruct text: nil, filter: [], sort: [], page: %{}
 
+  @typedoc "Normalized pagination options."
   @type page_t :: %{optional(:number) => pos_integer(), optional(:size) => pos_integer()}
 
+  @typedoc "Internal normalized search query."
   @type t :: %__MODULE__{
           text: String.t(),
           filter: keyword(),

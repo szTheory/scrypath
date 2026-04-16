@@ -1,4 +1,6 @@
 defmodule Scrypath.TestSupport.FakeBackend do
+  @moduledoc false
+
   @behaviour Scrypath.Backend
 
   alias Scrypath.Document

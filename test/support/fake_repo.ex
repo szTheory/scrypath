@@ -1,4 +1,6 @@
 defmodule Scrypath.TestSupport.FakeRepo do
+  @moduledoc false
+
   def put_records(records) when is_list(records) do
     Process.put({__MODULE__, :records}, records)
     :ok

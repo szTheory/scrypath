@@ -1,8 +1,14 @@
 defmodule Scrypath.Config do
-  @moduledoc false
+  @moduledoc """
+  Internal runtime configuration helpers for Scrypath.
+
+  The functions here normalize and expose runtime settings for the common path
+  and the backend-specific orchestration code.
+  """
 
   alias Scrypath.Options
 
+  @doc "Resolve runtime options by merging explicit opts over application defaults."
   @spec resolve!(keyword()) :: keyword()
   def resolve!(opts) when is_list(opts) do
     Application.get_env(:scrypath, :defaults, [])
@@ -50,12 +56,12 @@ defmodule Scrypath.Config do
     Keyword.fetch!(config, :inline_timeout)
   end
 
-  @spec oban_module(keyword()) :: module()
+  @spec oban_module(keyword()) :: module() | nil
   def oban_module(config) do
     Keyword.fetch!(config, :oban)
   end
 
-  @spec oban_queue(keyword()) :: atom()
+  @spec oban_queue(keyword()) :: atom() | nil
   def oban_queue(config) do
     Keyword.fetch!(config, :oban_queue)
   end
@@ -74,12 +80,12 @@ defmodule Scrypath.Config do
 
   defp ensure_oban_config!(config) do
     case oban_queue(config) do
-      queue when is_atom(queue) -> :ok
+      queue when is_atom(queue) and not is_nil(queue) -> :ok
       _ -> raise ArgumentError, "oban_queue is required when sync_mode is :oban"
     end
 
     case oban_module(config) do
-      module when is_atom(module) ->
+      module when is_atom(module) and not is_nil(module) ->
         if Code.ensure_loaded?(module) do
           :ok
         else

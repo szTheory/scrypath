@@ -70,6 +70,10 @@ defmodule Scrypath.Meilisearch do
   end
 
   @impl true
+  @doc """
+  Run a native Meilisearch search request against either the live index or an
+  explicit target/index override.
+  """
   @spec search(module(), Query.t() | map() | String.t(), keyword()) ::
           {:ok, map()} | {:error, term()}
   def search(schema_module, query, config) do

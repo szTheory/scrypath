@@ -1,5 +1,10 @@
 defmodule Scrypath.Backend do
-  @moduledoc false
+  @moduledoc """
+  Internal backend behavior for Scrypath runtime adapters.
+
+  This behavior is documented so architecture references remain valid, but it is
+  still considered an internal seam for v1 rather than a stable extension API.
+  """
 
   alias Scrypath.Document
   alias Scrypath.Query
