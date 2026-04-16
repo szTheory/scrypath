@@ -86,6 +86,21 @@ jobs:
       - name: Audit Hex dependencies
         run: mix hex.audit
 
+      - name: Validate release workflow config
+        run: grep -nE "release-please|manifest-file|config-file|release-type" .github/workflows/release-please.yml release-please-config.json .release-please-manifest.json
+
+      - name: Dry-run Hex publish
+        run: mix hex.publish --dry-run
+
+      - name: Build and inspect Hex package
+        run: |
+          rm -f scrypath-*.tar CHECKSUM VERSION metadata.config contents.tar.gz
+          mix hex.build --unpack
+          test -f metadata.config
+          test -f contents.tar.gz
+          tar -tzf contents.tar.gz | grep -E '^(README.md|CHANGELOG.md|ARCHITECTURE.md|docs/releasing.md|guides/|lib/|mix.exs)'
+          rm -f scrypath-*.tar CHECKSUM VERSION metadata.config contents.tar.gz
+
   phase5-verification:
     runs-on: ubuntu-latest
 
