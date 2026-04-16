@@ -53,4 +53,61 @@ defmodule Scrypath.SearchTest do
                page: [number: 2, size: 20]
              )
   end
+
+  test "structured filters accept only declared filterable fields" do
+    assert_raise ArgumentError, ~r/filterable/, fn ->
+      Scrypath.search(SearchablePost, "ecto",
+        backend: Scrypath.TestSupport.FakeBackend,
+        filter: [title: "ecto"]
+      )
+    end
+  end
+
+  test "structured sort accepts only declared sortable fields and preserves ecto-style input" do
+    assert {:ok, %{query: %Query{sort: [desc: :inserted_at]}}} =
+             Scrypath.search(SearchablePost, "ecto",
+               backend: Scrypath.TestSupport.FakeBackend,
+               sort: [desc: :inserted_at]
+             )
+
+    assert_raise ArgumentError, ~r/sortable/, fn ->
+      Scrypath.search(SearchablePost, "ecto",
+        backend: Scrypath.TestSupport.FakeBackend,
+        sort: [asc: :title]
+      )
+    end
+  end
+
+  test "page validates nested number and size and rejects loose top-level pagination options" do
+    assert_raise ArgumentError, ~r/page number/, fn ->
+      Scrypath.search(SearchablePost, "ecto",
+        backend: Scrypath.TestSupport.FakeBackend,
+        page: [number: 0, size: 20]
+      )
+    end
+
+    assert_raise ArgumentError, ~r/page size/, fn ->
+      Scrypath.search(SearchablePost, "ecto",
+        backend: Scrypath.TestSupport.FakeBackend,
+        page: [number: 1, size: 0]
+      )
+    end
+
+    assert_raise ArgumentError, ~r/unknown options \[:number, :size\]/, fn ->
+      Scrypath.search(SearchablePost, "ecto",
+        backend: Scrypath.TestSupport.FakeBackend,
+        number: 2,
+        size: 20
+      )
+    end
+  end
+
+  test "unsupported boolean composition is rejected on the common path" do
+    assert_raise ArgumentError, ~r/boolean composition/, fn ->
+      Scrypath.search(SearchablePost, "ecto",
+        backend: Scrypath.TestSupport.FakeBackend,
+        filter: [or: [[status: "draft"], [status: "published"]]]
+      )
+    end
+  end
 end
