@@ -20,9 +20,9 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ### Active
 
-- [ ] Decide the next milestone scope for backend expansion, richer search features, and deeper operator tooling.
-- [ ] Resolve the remaining advisory debt from Phase 2 and Phase 6 before broad public release confidence.
-- [ ] Fill missing or partial validation coverage for Phases 1, 2, 3, and 6.
+- [ ] Deliver a launch-readiness milestone that hardens Scrypath's existing v1 surface before broad public adoption.
+- [ ] Resolve the remaining advisory debt from Phase 2 and Phase 6 so copied examples and Meilisearch task handling are trustworthy.
+- [ ] Close the remaining release-confidence gaps around validation coverage, public docs safety, and maintainer release flow integrity.
 
 ### Out of Scope
 
@@ -65,13 +65,22 @@ When running future GSD discuss, plan, and execute flows, consult the relevant f
 
 Scrypath v1.0 is archived. The shipped milestone includes schema declaration and projection contracts, Meilisearch-backed sync flows, the common search and hydration path, Oban-backed async support, reindex/backfill workflows, Phoenix-facing docs, release automation, and repaired milestone verification history.
 
-The library is functionally complete for its v1 product boundary, but it still carries advisory debt around Meilisearch task-polling edge cases, a few public-doc rough edges, and missing or partial validation artifacts for earlier phases.
+The library is functionally complete for its v1 product boundary. The next constraint is not missing product breadth; it is public trust. Remaining debt clusters around Meilisearch task-wait edge cases, a handful of copied-example hazards in the public docs, and the maintainer confidence needed to treat Hex/GitHub release automation as ready for real users.
+
+## Current Milestone: v1.1 Release Hardening and Public Launch Readiness
+
+**Goal:** Make Scrypath feel safe to adopt publicly by removing footguns, tightening edge-case behavior, and closing the remaining release-confidence gaps around docs, verification, and maintainer workflows.
+
+**Target features:**
+- Harden Meilisearch task waiting and shared sync/delete edge-case contracts so failures stay explicit and no-op flows are defined.
+- Fix public install and Phoenix example hazards so copied README, controller, and LiveView examples model safe behavior.
+- Close launch-readiness gaps in validation, release documentation, and maintainer publish confidence without widening the public product surface.
 
 ## Next Milestone Goals
 
-- Evaluate whether the next milestone should prioritize advisory cleanup, broader backend support, or richer backend-native search features.
-- Raise release confidence by fixing the known `Scrypath.Meilisearch.TasksTest` timeout failure and closing the remaining validation gaps.
-- Preserve the Ecto-first, Phoenix-friendly product shape while deciding how much backend breadth belongs in the next public iteration.
+- Treat `v1.1` as a launch-readiness milestone rather than a breadth milestone.
+- Resolve the advisory issues around Meilisearch task payloads, empty-batch semantics, README install guidance, JSON pagination robustness, and LiveView string-key fixtures.
+- Finish the remaining verification and release-confidence work needed before inviting broader public adoption.
 
 ## Evolution
 
@@ -91,4 +100,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-16 after v1.0 milestone archival*
+*Last updated: 2026-04-16 after starting milestone v1.1*

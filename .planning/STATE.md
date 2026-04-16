@@ -1,20 +1,20 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
+milestone: v1.1
+milestone_name: Release Hardening and Public Launch Readiness
 current_phase: null
 current_phase_name: null
 current_plan: None
-status: completed
-stopped_at: Archived v1.0 milestone
-last_updated: "2026-04-16T17:18:00Z"
-last_activity: 2026-04-16 -- Completed quick task 260416-if2: fix mix.exs GitHub URLs add a GitHub Actions publish job gated on release creation use HEX_API_KEY only in that publish job
+status: defining_requirements
+stopped_at: Started milestone v1.1
+last_updated: "2026-04-16T17:30:00Z"
+last_activity: 2026-04-16 -- Milestone v1.1 started
 progress:
-  total_phases: 7
-  completed_phases: 7
-  total_plans: 25
-  completed_plans: 25
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -24,18 +24,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-15)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** No active milestone; ready to define the next milestone
+**Current focus:** Milestone v1.1 requirements and roadmap definition
 
 ## Current Position
 
-Phase: None
-Plan: None
+Phase: Not started (defining requirements)
+Plan: -
 Current Phase: None
 Current Phase Name: None
 Current Plan: None
-Status: Milestone archived
-Last activity: 2026-04-16 -- Completed quick task 260416-if2: fix mix.exs GitHub URLs add a GitHub Actions publish job gated on release creation use HEX_API_KEY only in that publish job
-Last Activity Description: Completed quick task 260416-if2: fix mix.exs GitHub URLs add a GitHub Actions publish job gated on release creation use HEX_API_KEY only in that publish job
+Status: Defining requirements
+Last activity: 2026-04-16 -- Milestone v1.1 started
+Last Activity Description: Started milestone v1.1 Release Hardening and Public Launch Readiness
 
 Progress: [██████████] 100%
 
@@ -80,43 +80,20 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-04-16T16:14:57.792Z
-Stopped at: Completed 06-04-PLAN.md
+Last session: 2026-04-16T17:30:00Z
+Stopped at: Defining milestone v1.1 requirements
 Resume file: None
 
 ## Current Status
 
-- Project initialized
-- Research completed
-- Requirements defined
-- Roadmap created
-- Phase 1 executed successfully
-- Phase 2 executed successfully
-- Phase 2 verification passed: 17/17 must-haves verified
-- Phase 2 requirements closed: BACK-01, SYNC-01, SYNC-02, SYNC-03, SYNC-04, SYNC-06
-- Phase 3 executed successfully
-- Full test suite passed after Phase 3 implementation
-- Phase 4 research completed
-- Phase 4 validation strategy created
-- Phase 4 plans created and verified: 04-01, 04-02, 04-03
-- Phase 4 plan 04-01 executed successfully
-- Phase 4 plan 04-02 executed successfully
-- Phase 4 requirement closed: SYNC-05
-- Phase 4 plan 04-03 executed successfully
-- Phase 4 requirement closed: OPER-04
-- Phase 5 requirements closed in verification: OPER-01, OPER-02, OPER-03, OPER-05
-- Phase 6 executed successfully
-- Phase 6 verification passed: 4/4 must-haves verified
-- Phase 7 repaired the missing Phase 1 verification artifact without reassigning ownership
-- Phase 7 repaired the missing Phase 3 verification artifact without reassigning ownership
-- Phase 7 repaired milestone bookkeeping and refreshed the v1.0 audit to close the blocking evidence gap
-- v1.0 milestone archived to `.planning/milestones/`
-- Quick task 260416-if2 wired Hex publishing to run from the release workflow and corrected public GitHub metadata links
+- v1.0 archived with the full Meilisearch-first core, search, Oban, reindex, docs, and release baseline shipped.
+- Quick task 260416-if2 wired Hex publishing to run from the release workflow and corrected public GitHub metadata links.
+- Milestone v1.1 started to harden the public release surface before broader adoption.
 
 ## Next Command
 
-- `$gsd-new-milestone`
-- Review the archived v1.0 roadmap and requirements before defining the next milestone scope
+- `$gsd-discuss-phase 8`
+- `$gsd-plan-phase 8`
 
 ---
-*Last updated: 2026-04-16 after quick task 260416-if2 completion*
+*Last updated: 2026-04-16 after starting milestone v1.1*
