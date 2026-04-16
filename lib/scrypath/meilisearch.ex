@@ -45,12 +45,13 @@ defmodule Scrypath.Meilisearch do
              index,
              documents,
              Keyword.put(config, :document_id_field, document_id_field)
-           ) do
+           ),
+         {:ok, task} <- normalize_task(response) do
       {:ok,
        %{
          index: index,
          document_ids: Enum.map(documents, & &1.id),
-         task: normalize_task(response)
+         task: task
        }}
     end
   end
@@ -59,12 +60,13 @@ defmodule Scrypath.Meilisearch do
   def delete_documents(schema_module, document_ids, config) when is_list(document_ids) do
     index = Keyword.get(config, :index_name) || index_name(schema_module, config)
 
-    with {:ok, response} <- client(config).delete_documents(index, document_ids, config) do
+    with {:ok, response} <- client(config).delete_documents(index, document_ids, config),
+         {:ok, task} <- normalize_task(response) do
       {:ok,
        %{
          index: index,
          document_ids: document_ids,
-         task: normalize_task(response)
+         task: task
        }}
     end
   end
@@ -106,13 +108,71 @@ defmodule Scrypath.Meilisearch do
   end
 
   @doc false
-  def normalize_task(response) do
-    %{
-      uid: response["taskUid"] || response[:taskUid] || response["uid"] || response[:uid],
-      status: response["status"] || response[:status],
-      type: response["type"] || response[:type],
-      index_uid: response["indexUid"] || response[:indexUid],
-      raw: response
-    }
+  def normalize_task(response, stage \\ :initial)
+
+  def normalize_task(response, stage) when is_map(response) and stage in [:initial, :poll] do
+    task_uid = extract_task_uid(response)
+    {status, status_problem} = normalize_task_status(response["status"] || response[:status])
+
+    problems =
+      []
+      |> maybe_problem(:uid, uid_problem(task_uid))
+      |> maybe_problem(:status, status_problem)
+
+    if problems == [] do
+      {:ok,
+       %{
+         uid: task_uid,
+         status: status,
+         type: response["type"] || response[:type],
+         index_uid: response["indexUid"] || response[:indexUid],
+         raw: response
+       }}
+    else
+      {:error,
+       {:invalid_task_payload,
+        invalid_task_payload(stage, task_uid, problems, response)}}
+    end
   end
+
+  def normalize_task(response, stage) when stage in [:initial, :poll] do
+    {:error,
+     {:invalid_task_payload,
+      invalid_task_payload(stage, nil, [payload: :not_a_map], %{raw: response})}}
+  end
+
+  defp extract_task_uid(response) do
+    case response["taskUid"] || response[:taskUid] || response["uid"] || response[:uid] do
+      task_uid when is_integer(task_uid) -> task_uid
+      _other -> nil
+    end
+  end
+
+  defp uid_problem(nil), do: :missing_or_invalid
+  defp uid_problem(_task_uid), do: nil
+
+  defp normalize_task_status(status) when is_atom(status) do
+    normalize_task_status(Atom.to_string(status))
+  end
+
+  defp normalize_task_status("enqueued"), do: {:enqueued, nil}
+  defp normalize_task_status("processing"), do: {:processing, nil}
+  defp normalize_task_status("queued"), do: {:enqueued, nil}
+  defp normalize_task_status("succeeded"), do: {:succeeded, nil}
+  defp normalize_task_status("failed"), do: {:failed, nil}
+  defp normalize_task_status("canceled"), do: {:cancelled, nil}
+  defp normalize_task_status("cancelled"), do: {:cancelled, nil}
+  defp normalize_task_status(nil), do: {nil, :missing}
+  defp normalize_task_status(_status), do: {nil, :unknown}
+
+  defp invalid_task_payload(:initial, task_uid, problems, payload) do
+    %{stage: :initial, task_uid: task_uid, problems: problems, payload: payload}
+  end
+
+  defp invalid_task_payload(:poll, task_uid, problems, payload) do
+    %{stage: :poll, task_uid: task_uid, problems: problems, payload: payload}
+  end
+
+  defp maybe_problem(problems, _key, nil), do: problems
+  defp maybe_problem(problems, key, value), do: Keyword.put(problems, key, value)
 end
