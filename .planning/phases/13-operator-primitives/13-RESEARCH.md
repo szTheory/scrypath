@@ -16,7 +16,7 @@
 
 | ID | Description | Research Support |
 |----|-------------|------------------|
-| OPS-01 | Operator can inspect current Scrypath sync status for a schema, including pending work, failed work, and last successful activity where available. [VERIFIED: `.planning/REQUIREMENTS.md`] | Add a public `Scrypath.Operator.status/2` facade returning a Scrypath-owned status struct that aggregates Meilisearch task visibility for all modes and Oban queue visibility for `:oban` mode. [VERIFIED: `README.md` + `ARCHITECTURE.md` + `lib/scrypath/operations.ex` + `lib/scrypath/sync.ex`][CITED: https://www.meilisearch.com/docs/capabilities/indexing/tasks_and_batches/async_operations][CITED: https://www.meilisearch.com/docs/capabilities/indexing/tasks_and_batches/filter_tasks][CITED: https://hexdocs.pm/oban/job_lifecycle.html] |
+| OPS-01 | Operator can inspect current Scrypath sync status for a schema, including pending work, failed work, and last successful activity where available. [VERIFIED: `.planning/REQUIREMENTS.md`] | Add a public root-level verb such as `Scrypath.sync_status/2` returning a Scrypath-owned status struct that aggregates Meilisearch task visibility for all modes and Oban queue visibility for `:oban` mode; implement it with internal support modules rather than requiring a new public namespace. [VERIFIED: `README.md` + `ARCHITECTURE.md` + `lib/scrypath.ex` + `lib/scrypath/operations.ex` + `lib/scrypath/sync.ex`][CITED: https://www.meilisearch.com/docs/capabilities/indexing/tasks_and_batches/async_operations][CITED: https://www.meilisearch.com/docs/capabilities/indexing/tasks_and_batches/filter_tasks][CITED: https://hexdocs.pm/oban/job_lifecycle.html] |
 | OPS-02 | Operator can inspect and retry failed async or manual work through explicit Scrypath APIs and thin Mix tasks instead of backend-specific spelunking. [VERIFIED: `.planning/REQUIREMENTS.md`] | Model failed work as Scrypath-owned references with summarized reason, document ids, mode, and retryability; retry through existing Scrypath enqueue/write paths instead of exposing raw Oban or Meilisearch admin payloads. [VERIFIED: `lib/scrypath/oban/enqueue.ex` + `lib/scrypath/sync.ex` + `test/scrypath/oban/enqueue_test.exs` + `test/scrypath/oban/worker_test.exs`] |
 | OPS-03 | Operator can run an explicit reconcile or recovery workflow that makes drift and reindex state legible without pretending automatic healing. [VERIFIED: `.planning/REQUIREMENTS.md`] | Add a Scrypath-owned reconcile report and explicit recovery actions that point to `backfill` or `reindex`, plus reindex visibility derived from target index naming and task state rather than hidden automation. [VERIFIED: `README.md` + `ARCHITECTURE.md` + `lib/scrypath/backfill.ex` + `lib/scrypath/reindex.ex`][CITED: https://www.meilisearch.com/docs/capabilities/indexing/tasks_and_batches/async_operations] |
 
@@ -26,15 +26,15 @@ Phase 12 already did the hard prerequisite work: sync, enqueue, backfill, and re
 
 The repo’s operator contract is already opinionated in docs: `:inline` means terminal backend success before return, `:manual` means accepted backend work only, and `:oban` means durable enqueue only, while all three modes share one operator-facing lifecycle and all recovery language stays explicit about drift. [VERIFIED: `README.md` + `ARCHITECTURE.md`] The missing piece is a Scrypath-owned read model that can answer, for a schema and mode, “what is pending, what failed, what last succeeded, and what should I do next?” without returning raw backend or queue payloads. [VERIFIED: user prompt + `.planning/REQUIREMENTS.md` + `lib/scrypath/operations/task.ex`]
 
-The safest design is a small `Scrypath.Operator` namespace backed by Meilisearch task inspection plus optional Oban job inspection. [VERIFIED: `lib/scrypath/operations.ex` + `lib/scrypath/oban/enqueue.ex` + `README.md`] Meilisearch task filtering is the durable backend-side source of truth for inline and manual work, while Oban state adds queue-side visibility only when the app chose `sync_mode: :oban`. [VERIFIED: `README.md` + `ARCHITECTURE.md`][CITED: https://www.meilisearch.com/docs/capabilities/indexing/tasks_and_batches/filter_tasks][CITED: https://hexdocs.pm/oban/job_lifecycle.html]
+The repo constraints do not require a new public namespace; they require durable Scrypath-owned APIs that fit the existing `Scrypath.*` surface and stay explicit about eventual consistency and drift. [VERIFIED: user follow-up prompt + `README.md` + `.planning/ROADMAP.md` + `ARCHITECTURE.md` + `lib/scrypath.ex`] Meilisearch task filtering is the durable backend-side source of truth for inline and manual work, while Oban state adds queue-side visibility only when the app chose `sync_mode: :oban`. [VERIFIED: `README.md` + `ARCHITECTURE.md`][CITED: https://www.meilisearch.com/docs/capabilities/indexing/tasks_and_batches/filter_tasks][CITED: https://hexdocs.pm/oban/job_lifecycle.html]
 
-**Primary recommendation:** Add `Scrypath.Operator.Status`, `Scrypath.Operator.FailedWork`, and `Scrypath.Operator.Reconcile` as public read/action structs on top of a slightly widened internal operations seam that can list Meilisearch tasks, inspect Oban jobs when available, and route retries back through existing Scrypath sync/enqueue/backfill/reindex code paths. [VERIFIED: `lib/scrypath/operations.ex` + `lib/scrypath/sync.ex` + `lib/scrypath/oban/enqueue.ex` + `lib/scrypath/backfill.ex` + `lib/scrypath/reindex.ex`]
+**Primary recommendation:** Put the durable public verbs on root-level `Scrypath.*`, for example `Scrypath.sync_status/2`, `Scrypath.failed_sync_work/2`, `Scrypath.retry_sync_work/2`, and `Scrypath.reconcile_sync/2`. Back them with internal support modules such as `Scrypath.Operator.Status`, `Scrypath.Operator.FailedWork`, and `Scrypath.Operator.Reconcile`, or equivalent private modules, on top of a slightly widened internal operations seam that can list Meilisearch tasks, inspect Oban jobs when available, and route retries back through existing sync/enqueue/backfill/reindex code paths. [VERIFIED: `lib/scrypath.ex` + `lib/scrypath/operations.ex` + `lib/scrypath/sync.ex` + `lib/scrypath/oban/enqueue.ex` + `lib/scrypath/backfill.ex` + `lib/scrypath/reindex.ex`]
 
 ## Architectural Responsibility Map
 
 | Capability | Primary Tier | Secondary Tier | Rationale |
 |------------|-------------|----------------|-----------|
-| Schema sync status aggregation | API / Library core [VERIFIED: this is common Scrypath API work, not host-app UI work] | Backend admin adapter [VERIFIED: `lib/scrypath/operations.ex` + `README.md`] | The common operator API should own the stable struct, while Meilisearch-specific listing/filtering stays behind the internal seam. [VERIFIED: user prompt + `ARCHITECTURE.md`][CITED: https://www.meilisearch.com/docs/capabilities/indexing/tasks_and_batches/filter_tasks] |
+| Schema sync status aggregation | API / Library core [VERIFIED: this is common Scrypath API work, not host-app UI work] | Backend admin adapter [VERIFIED: `lib/scrypath/operations.ex` + `README.md`] | The public API should stay on `Scrypath.*` for consistency with the current surface, while Meilisearch-specific listing/filtering stays behind the internal seam. [VERIFIED: `lib/scrypath.ex` + user prompt + `ARCHITECTURE.md`][CITED: https://www.meilisearch.com/docs/capabilities/indexing/tasks_and_batches/filter_tasks] |
 | Queue-side failed work inspection | API / Library core [VERIFIED: `OPS-02` is a Scrypath API requirement] | Oban integration [VERIFIED: `lib/scrypath/oban/enqueue.ex`] | Queue state is only relevant in `:oban` mode, but the operator-facing failed-work shape should still be Scrypath-owned. [VERIFIED: `README.md` + `ARCHITECTURE.md`][CITED: https://hexdocs.pm/oban/job_lifecycle.html] |
 | Retry action routing | API / Library core [VERIFIED: retry should reuse `Scrypath.*` orchestration] | Oban integration + backend admin adapter [VERIFIED: `lib/scrypath/sync.ex` + `lib/scrypath/oban/enqueue.ex`] | Retrying should call existing enqueue/write paths instead of exposing raw Oban or Meilisearch retry commands directly. [VERIFIED: repo code and tests] |
 | Reconcile and drift reporting | API / Library core [VERIFIED: `OPS-03` + docs contract] | Backfill and reindex workflows [VERIFIED: `lib/scrypath/backfill.ex` + `lib/scrypath/reindex.ex`] | Drift handling is a decision/reporting concern first; the actual repair actions remain `backfill/2` and `reindex/2`. [VERIFIED: `README.md` + `ARCHITECTURE.md`] |
@@ -63,7 +63,7 @@ The safest design is a small `Scrypath.Operator` namespace backed by Meilisearch
 
 | Instead of | Could Use | Tradeoff |
 |------------|-----------|----------|
-| Public `Scrypath.Operator.*` structs [VERIFIED: recommended path] | Extend `Scrypath.sync_*`/`backfill`/`reindex` result maps directly [VERIFIED: current public maps exist in `lib/scrypath/sync.ex` + `lib/scrypath/backfill.ex` + `lib/scrypath/reindex.ex`] | Overloading existing write-path result maps would blur “write request accepted” with “operator inspection result” and make Phase 14 Mix tasks harder to keep thin. [VERIFIED: repo docs emphasize explicit semantics] |
+| Root-level `Scrypath.*` operator verbs backed by internal support modules [VERIFIED: recommended path] | Extend `Scrypath.sync_*`/`backfill`/`reindex` result maps directly [VERIFIED: current public maps exist in `lib/scrypath/sync.ex` + `lib/scrypath/backfill.ex` + `lib/scrypath/reindex.ex`] | Overloading existing write-path result maps would blur “write request accepted” with “operator inspection result.” Root-level verbs fit the current public surface better than a forced new namespace while still keeping Phase 14 Mix tasks thin. [VERIFIED: `lib/scrypath.ex` + repo docs] |
 | Retry through Scrypath-owned replay paths [VERIFIED: recommended path] | Expose raw Oban rescue/retry or raw Meilisearch task actions publicly [VERIFIED: this is the rejected public-leak direction implied by the requirement] | Raw backend/admin controls would violate the requirement to avoid backend-specific spelunking and would weaken the stable common operator contract. [VERIFIED: user prompt + `.planning/REQUIREMENTS.md`] |
 
 **Installation:** [VERIFIED: `mix.exs`]
@@ -86,9 +86,9 @@ mix hex.info req
 Host app / Mix task
     |
     v
-Scrypath.Operator.status/2 | failed_work/2 | retry/2 | reconcile/2
+Scrypath.sync_status/2 | failed_sync_work/2 | retry_sync_work/2 | reconcile_sync/2
     |
-    +--> Scrypath.Operator.Status/FailedWork/Reconcile structs
+    +--> internal status / failed-work / reconcile structs
     |
     +--> Scrypath.Operations admin seam
            |
@@ -114,7 +114,7 @@ The diagram matches the current repo boundary: public `Scrypath.*` orchestration
 ```text
 lib/
 ├── scrypath/
-│   ├── operator.ex                  # public facade and top-level API docs
+│   ├── operator.ex                  # internal support facade if helpful
 │   ├── operator/
 │   │   ├── status.ex                # %Status{} struct + normalization helpers
 │   │   ├── failed_work.ex           # %FailedWork{} struct + retryability rules
@@ -132,7 +132,7 @@ lib/
 │       └── inspect.ex               # optional queue-state query helpers
 test/
 ├── scrypath/
-│   ├── operator_test.exs            # public facade contract tests
+│   ├── operator_test.exs            # internal support contract tests if module exists
 │   ├── operator/
 │   │   ├── status_test.exs
 │   │   ├── failed_work_test.exs
@@ -145,22 +145,22 @@ test/
 
 ### Pattern 1: Public Operator Facade Over Seam-Owned Read Models
 
-**What:** Add a new public namespace for operator inspection instead of widening existing write-result maps. [VERIFIED: `lib/scrypath.ex` currently exposes sync/backfill/reindex only, and docs say no public operator API existed before this phase]
+**What:** Add new public root-level verbs for operator inspection instead of widening existing write-result maps. Use internal support modules for the heavy lifting if that keeps the implementation clearer. [VERIFIED: `lib/scrypath.ex` currently exposes sync/backfill/reindex only, and the user requested that namespace choice stay constrained by repo fit]
 
 **When to use:** Use for status inspection, failed-work listing, retry, and reconcile flows that are semantically different from ordinary sync writes. [VERIFIED: `.planning/ROADMAP.md` + `.planning/REQUIREMENTS.md`]
 
 **Example:**
 ```elixir
 # Source: repo-aligned recommendation derived from lib/scrypath.ex and Phase 13 requirements
-defmodule Scrypath.Operator do
-  @spec status(module(), keyword()) :: {:ok, Scrypath.Operator.Status.t()} | {:error, term()}
-  def status(schema_module, opts \\ []) do
+defmodule Scrypath do
+  @spec sync_status(module(), keyword()) :: {:ok, Scrypath.Operator.Status.t()} | {:error, term()}
+  def sync_status(schema_module, opts \\ []) do
     Scrypath.Operator.Status.fetch(schema_module, opts)
   end
 
-  @spec failed_work(module(), keyword()) ::
+  @spec failed_sync_work(module(), keyword()) ::
           {:ok, [Scrypath.Operator.FailedWork.t()]} | {:error, term()}
-  def failed_work(schema_module, opts \\ []) do
+  def failed_sync_work(schema_module, opts \\ []) do
     Scrypath.Operator.FailedWork.list(schema_module, opts)
   end
 end
@@ -170,7 +170,7 @@ end
 
 **What:** Status should expose separate queue-side and backend-side buckets instead of collapsing them into one raw status field. [VERIFIED: `ARCHITECTURE.md` distinguishes durable enqueue from backend completion, and `lib/scrypath/operations.ex` already models queue jobs separately from backend tasks]
 
-**When to use:** Use for `Scrypath.Operator.status/2` and `failed_work/2` so `:oban` can show queued or retryable work while inline/manual still show backend task state where available. [VERIFIED: `README.md` + `ARCHITECTURE.md`][CITED: https://hexdocs.pm/oban/job_lifecycle.html][CITED: https://www.meilisearch.com/docs/capabilities/indexing/tasks_and_batches/filter_tasks]
+**When to use:** Use for root-level verbs such as `Scrypath.sync_status/2` and `Scrypath.failed_sync_work/2` so `:oban` can show queued or retryable work while inline/manual still show backend task state where available. [VERIFIED: `README.md` + `ARCHITECTURE.md`][CITED: https://hexdocs.pm/oban/job_lifecycle.html][CITED: https://www.meilisearch.com/docs/capabilities/indexing/tasks_and_batches/filter_tasks]
 
 **Example:**
 ```elixir
@@ -226,23 +226,23 @@ end
 
 ## Plan Split Suggestion
 
-### Plan 13-01: Public operator structs and status aggregation
+### Plan 13-01: Root-level status API and status aggregation
 
-- **Scope:** Add `Scrypath.Operator`, `Scrypath.Operator.Status`, and internal inspection helpers that aggregate backend-side Meilisearch tasks plus optional queue-side Oban jobs into one Scrypath-owned status shape. [VERIFIED: recommended architecture above]
-- **Primary files:** `lib/scrypath.ex`, `lib/scrypath/operator.ex`, `lib/scrypath/operator/status.ex`, `lib/scrypath/operations.ex`, `lib/scrypath/meilisearch/tasks.ex`, optional `lib/scrypath/oban/inspect.ex`. [VERIFIED: recommended project structure]
-- **Tests:** `test/scrypath/operator_test.exs`, `test/scrypath/operator/status_test.exs`, extensions in `test/scrypath/meilisearch/tasks_test.exs` and `test/scrypath/oban/inspect_test.exs`. [VERIFIED: repo test style follows file-local coverage]
+- **Scope:** Add a root-level public status verb such as `Scrypath.sync_status/2`, plus internal inspection helpers that aggregate backend-side Meilisearch tasks and optional queue-side Oban jobs into one Scrypath-owned status shape. [VERIFIED: recommended architecture above]
+- **Primary files:** `lib/scrypath.ex`, optional `lib/scrypath/operator.ex`, `lib/scrypath/operator/status.ex`, `lib/scrypath/operations.ex`, `lib/scrypath/meilisearch/tasks.ex`, optional `lib/scrypath/oban/inspect.ex`. [VERIFIED: recommended project structure]
+- **Tests:** root-level API coverage in `test/scrypath_test.exs` or a dedicated public-API test file, plus `test/scrypath/operator/status_test.exs`, with extensions in `test/scrypath/meilisearch/tasks_test.exs` and `test/scrypath/oban/inspect_test.exs`. [VERIFIED: repo test style follows file-local coverage]
 - **Verification target:** `OPS-01`. [VERIFIED: `.planning/REQUIREMENTS.md`]
 
 ### Plan 13-02: Failed work inspection and retry primitives
 
-- **Scope:** Add `Scrypath.Operator.FailedWork` plus retry routing that replays work through `Scrypath.Oban.Enqueue` or existing backend write paths without exposing raw admin payloads. [VERIFIED: `OPS-02` + current enqueue/sync code]
+- **Scope:** Add a root-level failed-work listing/retry verb plus `Scrypath.Operator.FailedWork` support structs, replaying work through `Scrypath.Oban.Enqueue` or existing backend write paths without exposing raw admin payloads. [VERIFIED: `OPS-02` + current enqueue/sync code]
 - **Primary files:** `lib/scrypath/operator/failed_work.ex`, `lib/scrypath/operator/recovery_action.ex`, `lib/scrypath/oban/inspect.ex`, `lib/scrypath/operations.ex`. [VERIFIED: recommended structure]
-- **Tests:** `test/scrypath/operator/failed_work_test.exs`, extensions to `test/scrypath/oban/enqueue_test.exs` and `test/scrypath/oban/worker_test.exs`. [VERIFIED: repo patterns already assert payload integrity and retryable-vs-cancelled worker semantics]
+- **Tests:** root-level API coverage in `test/scrypath_test.exs` or equivalent, `test/scrypath/operator/failed_work_test.exs`, and extensions to `test/scrypath/oban/enqueue_test.exs` and `test/scrypath/oban/worker_test.exs`. [VERIFIED: repo patterns already assert payload integrity and retryable-vs-cancelled worker semantics]
 - **Verification target:** `OPS-02`. [VERIFIED: `.planning/REQUIREMENTS.md`]
 
 ### Plan 13-03: Reconcile report and reindex visibility
 
-- **Scope:** Add `Scrypath.Operator.Reconcile` that makes drift signals and active rebuild state legible, then routes explicit actions to `backfill/2` or `reindex/2` without automatic healing. [VERIFIED: `OPS-03` + docs contract]
+- **Scope:** Add a root-level reconcile verb plus `Scrypath.Operator.Reconcile` support structs that make drift signals and active rebuild state legible, then route explicit actions to `backfill/2` or `reindex/2` without automatic healing. [VERIFIED: `OPS-03` + docs contract]
 - **Primary files:** `lib/scrypath/operator/reconcile.ex`, `lib/scrypath/reindex.ex` only if extra public projection is needed, `README.md`/`ARCHITECTURE.md` only for narrow contract wording if required. [VERIFIED: recommended structure + docs contract tests]
 - **Tests:** `test/scrypath/operator/reconcile_test.exs`, possibly `test/scrypath/docs_contract_test.exs` if wording changes. [VERIFIED: existing docs contract coverage]
 - **Verification target:** `OPS-03`. [VERIFIED: `.planning/REQUIREMENTS.md`]
@@ -393,26 +393,26 @@ end
 |----------|-------|
 | Framework | ExUnit with Req.Test-based HTTP stubs and local fixture modules. [VERIFIED: `test/scrypath/sync_test.exs` + `test/scrypath/meilisearch/tasks_test.exs` + `test/scrypath/operations_test.exs`] |
 | Config file | none visible at repo root beyond standard Mix project layout. [VERIFIED: repo root listing + `rg` probe] |
-| Quick run command | `MIX_ENV=test mix test test/scrypath/operator_test.exs test/scrypath/operator/status_test.exs` after files exist. [ASSUMED] |
+| Quick run command | `MIX_ENV=test mix test test/scrypath_test.exs test/scrypath/operator/status_test.exs` after files exist. [ASSUMED] |
 | Full suite command | `mix test` [VERIFIED: Mix-based ExUnit repo + current test layout] |
 
 ### Phase Requirements → Test Map
 
 | Req ID | Behavior | Test Type | Automated Command | File Exists? |
 |--------|----------|-----------|-------------------|-------------|
-| OPS-01 | Status reports pending, failed, and last-success visibility across modes where available. [VERIFIED: requirement] | unit/integration [VERIFIED: matches repo style] | `MIX_ENV=test mix test test/scrypath/operator/status_test.exs` [ASSUMED] | ❌ Wave 0 |
-| OPS-02 | Failed work can be listed and retried through Scrypath-owned APIs. [VERIFIED: requirement] | unit/integration [VERIFIED: queue and backend adapters need direct tests] | `MIX_ENV=test mix test test/scrypath/operator/failed_work_test.exs test/scrypath/oban/enqueue_test.exs` [ASSUMED] | ❌ Wave 0 |
-| OPS-03 | Reconcile makes drift and reindex state legible and routes explicit recovery actions. [VERIFIED: requirement] | unit/integration/docs-contract [VERIFIED: repo tests docs wording when semantics matter] | `MIX_ENV=test mix test test/scrypath/operator/reconcile_test.exs test/scrypath/reindex_test.exs test/scrypath/docs_contract_test.exs` [ASSUMED] | ❌ Wave 0 |
+| OPS-01 | Status reports pending, failed, and last-success visibility across modes where available. [VERIFIED: requirement] | unit/integration [VERIFIED: matches repo style] | `MIX_ENV=test mix test test/scrypath_test.exs test/scrypath/operator/status_test.exs` [ASSUMED] | ❌ Wave 0 |
+| OPS-02 | Failed work can be listed and retried through Scrypath-owned APIs. [VERIFIED: requirement] | unit/integration [VERIFIED: queue and backend adapters need direct tests] | `MIX_ENV=test mix test test/scrypath_test.exs test/scrypath/operator/failed_work_test.exs test/scrypath/oban/enqueue_test.exs` [ASSUMED] | ❌ Wave 0 |
+| OPS-03 | Reconcile makes drift and reindex state legible and routes explicit recovery actions. [VERIFIED: requirement] | unit/integration/docs-contract [VERIFIED: repo tests docs wording when semantics matter] | `MIX_ENV=test mix test test/scrypath_test.exs test/scrypath/operator/reconcile_test.exs test/scrypath/reindex_test.exs test/scrypath/docs_contract_test.exs` [ASSUMED] | ❌ Wave 0 |
 
 ### Sampling Rate
 
-- **Per task commit:** `MIX_ENV=test mix test test/scrypath/operator_test.exs test/scrypath/operator/status_test.exs` once those files exist. [ASSUMED]
+- **Per task commit:** `MIX_ENV=test mix test test/scrypath_test.exs test/scrypath/operator/status_test.exs` once those files exist. [ASSUMED]
 - **Per wave merge:** `MIX_ENV=test mix test test/scrypath/operations_test.exs test/scrypath/meilisearch/tasks_test.exs test/scrypath/oban/enqueue_test.exs test/scrypath/oban/worker_test.exs test/scrypath/sync_test.exs test/scrypath/backfill_test.exs test/scrypath/reindex_test.exs test/scrypath/docs_contract_test.exs` [VERIFIED: these are the relevant existing files; command composition is recommended]
 - **Phase gate:** `mix test` plus targeted doc-contract coverage green before `/gsd-verify-work`. [VERIFIED: repo uses Mix + docs contract tests already exist]
 
 ### Wave 0 Gaps
 
-- [ ] `test/scrypath/operator_test.exs` — top-level public API contract for `Scrypath.Operator.*`. [VERIFIED: file absent in current repo]
+- [ ] `test/scrypath_test.exs` or equivalent public-API test file — root-level contract for new `Scrypath.*` operator verbs. [VERIFIED: targeted file does not yet exist in current repo]
 - [ ] `test/scrypath/operator/status_test.exs` — cross-mode status aggregation and last-success coverage. [VERIFIED: file absent]
 - [ ] `test/scrypath/operator/failed_work_test.exs` — failed-work normalization, retryability, and replay routing. [VERIFIED: file absent]
 - [ ] `test/scrypath/operator/reconcile_test.exs` — drift/reindex visibility and explicit recovery actions. [VERIFIED: file absent]
