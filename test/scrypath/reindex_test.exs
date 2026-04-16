@@ -2,6 +2,13 @@ defmodule Scrypath.ReindexTest do
   use ExUnit.Case, async: true
 
   defmodule RecordingMeilisearch do
+    def index_name(schema_module, config) do
+      prefix = Keyword.get(config, :index_prefix, "scrypath")
+      schema_name = schema_module |> Module.split() |> List.last() |> Macro.underscore()
+
+      "#{prefix}_#{schema_name}"
+    end
+
     def create_index(schema_module, primary_key, config) do
       send(self(), {:create_index, schema_module, primary_key, config})
 
@@ -74,16 +81,16 @@ defmodule Scrypath.ReindexTest do
                backfill: RecordingBackfill
              )
 
-    assert_received {:create_index, QueryablePost, :id, create_config}
+    assert_receive {:create_index, QueryablePost, :id, create_config}
     assert create_config[:target_index] == "posts_rebuild_v2"
 
-    assert_received {:apply_settings, QueryablePost, "posts_rebuild_v2", settings_config}
+    assert_receive {:apply_settings, QueryablePost, "posts_rebuild_v2", settings_config}
     assert settings_config[:target_index] == "posts_rebuild_v2"
 
-    assert_received {:backfill, QueryablePost, backfill_config}
+    assert_receive {:backfill, QueryablePost, backfill_config}
     assert backfill_config[:index_name] == "posts_rebuild_v2"
 
-    assert_received {:swap_indexes, QueryablePost, swap_config}
+    assert_receive {:swap_indexes, QueryablePost, swap_config}
     assert swap_config[:target_index] == "posts_rebuild_v2"
   end
 
@@ -107,9 +114,9 @@ defmodule Scrypath.ReindexTest do
              )
 
     refute_received {:swap_indexes, _, _}
-    assert_received {:create_index, QueryablePost, :id, _}
-    assert_received {:apply_settings, QueryablePost, "scrypath_queryable_post__reindex", _}
-    assert_received {:backfill, QueryablePost, backfill_config}
+    assert_receive {:create_index, QueryablePost, :id, _}
+    assert_receive {:apply_settings, QueryablePost, "scrypath_queryable_post__reindex", _}
+    assert_receive {:backfill, QueryablePost, backfill_config}
     assert backfill_config[:index_name] == "scrypath_queryable_post__reindex"
   end
 
