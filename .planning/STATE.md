@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 4 of 6
 current_phase_name: Oban and Observability
-current_plan: 04-02
+current_plan: 04-03
 status: ready_to_execute
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-04-16T01:51:02Z"
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-04-16T02:01:48.804Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 14
-  completed_plans: 12
-  percent: 86
+  completed_plans: 13
+  percent: 93
 ---
 
 # Project State
@@ -30,12 +30,12 @@ See: .planning/PROJECT.md (updated 2026-04-15)
 
 Current Phase: 4 of 6
 Current Phase Name: Oban and Observability
-Current Plan: 04-02
+Current Plan: 04-03
 Status: Ready to execute
 Last Activity: 2026-04-16
-Last Activity Description: Phase 4 plan 04-01 executed with the shared Oban sync contract and JSON-safe payload builders in place.
+Last Activity Description: Phase 4 plan 04-02 executed with durable Oban enqueueing, dedicated workers, and the transactional helper in place.
 
-Progress: [█████████░] 86%
+Progress: [█████████░] 93%
 
 ## Accumulated Context
 
@@ -48,6 +48,8 @@ Progress: [█████████░] 86%
 - Postgres-native search remains outside the v1 product boundary.
 - [Phase 04]: Kept Oban on the existing Scrypath sync/delete verbs and surfaced queue acceptance through the established mode/status envelope.
 - [Phase 04]: Defined worker args as pre-projected, string-keyed payload maps so future workers never need source-row reload logic.
+- [Phase 04]: Kept queue durability on the existing Scrypath sync verbs and used Scrypath.Oban only for Ecto.Multi composition.
+- [Phase 04]: Validated persisted worker args before schema/backend resolution and cancelled impossible jobs instead of retrying them forever.
 
 ### Blockers/Concerns
 
@@ -56,9 +58,9 @@ Progress: [█████████░] 86%
 
 ## Session Continuity
 
-Last session: 2026-04-16T01:51:02.976Z
-Stopped at: Completed 04-01-PLAN.md
-Resume file: .planning/phases/04-oban-and-observability/04-02-PLAN.md
+Last session: 2026-04-16T02:01:48.801Z
+Stopped at: Completed 04-02-PLAN.md
+Resume file: None
 
 ## Current Status
 
@@ -76,12 +78,13 @@ Resume file: .planning/phases/04-oban-and-observability/04-02-PLAN.md
 - Phase 4 validation strategy created
 - Phase 4 plans created and verified: 04-01, 04-02, 04-03
 - Phase 4 plan 04-01 executed successfully
+- Phase 4 plan 04-02 executed successfully
 - Phase 4 requirement closed: SYNC-05
 
 ## Next Command
 
 - `$gsd-execute-phase 04`
-- Resume with `.planning/phases/04-oban-and-observability/04-02-PLAN.md`
+- Resume with `.planning/phases/04-oban-and-observability/04-03-PLAN.md`
 
 ---
-*Last updated: 2026-04-16 after phase 4 plan 04-01 execution*
+*Last updated: 2026-04-16 after phase 4 plan 04-02 execution*
