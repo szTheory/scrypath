@@ -1,20 +1,20 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.2
-milestone_name: public-release-trust-and-operator-visibility
+milestone_name: Public Release Trust and Operator Visibility
 current_phase: 11
 current_phase_name: public-release-contract
-current_plan: none
-status: ready_to_plan
-stopped_at: Roadmap created for milestone v1.2
-last_updated: "2026-04-16T20:20:00Z"
+current_plan: 2
+status: ready_to_execute
+stopped_at: Completed 11-public-release-contract-01-PLAN.md
+last_updated: "2026-04-16T20:19:52.714Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 2
+  completed_plans: 1
+  percent: 50
 ---
 
 # Project State
@@ -24,20 +24,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Phase 11 roadmap follow-through for the public release contract
+**Current focus:** Phase 11 — public-release-contract
 
 ## Current Position
 
-Phase: 11 of 14 (Public Release Contract)
-Plan: None
+Phase: 11 (public-release-contract) — EXECUTING
+Plan: 2 of 2
 Current Phase: 11
 Current Phase Name: public-release-contract
-Current Plan: None
-Status: Ready to plan
+Current Plan: 2
+Status: Ready to execute
 Last activity: 2026-04-16
-Last Activity Description: Created the v1.2 roadmap and mapped all milestone requirements to Phases 11-14.
+Last Activity Description: Completed Phase 11 Plan 01 release-alignment gate
 
-Progress: [----------] 0%
+Progress: [█████░░░░░] 50%
 
 ## Accumulated Context
 
@@ -51,6 +51,8 @@ Progress: [----------] 0%
 - Phase 12 owns the internal operations seam so operator APIs do not depend on raw Meilisearch task shapes.
 - Phase 13 owns status, failure inspection, retry, and reconcile primitives through Scrypath-owned results.
 - Phase 14 owns thin Mix task ergonomics and operational guides while keeping backend-native search power namespaced.
+- [Phase 11]: Release-facing package links stay pinned to @version and @source_ref instead of moving main/latest-doc targets.
+- [Phase 11]: Phase 11 verification extends the narrow verify.phase10 orchestration shape instead of introducing a new release script.
 
 ### Blockers/Concerns
 
@@ -73,8 +75,8 @@ Progress: [----------] 0%
 
 ## Session Continuity
 
-Last session: 2026-04-16T20:20:00Z
-Stopped at: Created ROADMAP.md, STATE.md, and v1.2 traceability for milestone kickoff
+Last session: 2026-04-16T20:19:41.785Z
+Stopped at: Completed 11-public-release-contract-01-PLAN.md
 Resume file: None
 
 ## Current Status
@@ -82,6 +84,7 @@ Resume file: None
 - v1.0 remains archived with the full Meilisearch-first core, search, Oban, reindex, docs, and release baseline shipped.
 - v1.1 remains archived with release hardening, docs-safety fixes, `mix verify.phase10`, and the launch-readiness evidence chain.
 - v1.2 is now structured into four phases: release contract, internal operations seam, operator primitives, and Mix-task-plus-guide ergonomics.
+- Phase 11 Plan 01 is complete with version-scoped package links, focused release metadata assertions, and the canonical `mix verify.phase11` gate recorded in `.planning/phases/11-public-release-contract/11-public-release-contract-01-SUMMARY.md`.
 - No second public backend is planned in this milestone, and backend-native power remains outside the common search contract.
 
 ## Next Command

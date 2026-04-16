@@ -32,7 +32,7 @@
 **Plans**: 2 plans
 
 Plans:
-- [ ] 11-01-PLAN.md - Enforce version/tag/manifest/package alignment with a canonical `mix verify.phase11` gate.
+- [x] 11-01-PLAN.md - Enforce version/tag/manifest/package alignment with a canonical `mix verify.phase11` gate.
 - [ ] 11-02-PLAN.md - Add clean-consumer smoke proof and maintainer recovery runbooks to the Phase 11 release contract.
 
 ### Phase 12: Internal Operations Seam
@@ -71,7 +71,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 11. Public Release Contract | 0/2 | Not started | - |
+| 11. Public Release Contract | 1/2 | In Progress|  |
 | 12. Internal Operations Seam | 0/TBD | Not started | - |
 | 13. Operator Primitives | 0/TBD | Not started | - |
 | 14. Mix Tasks and Guides | 0/TBD | Not started | - |

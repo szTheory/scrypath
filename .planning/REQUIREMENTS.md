@@ -8,7 +8,7 @@
 
 ### Release Trust
 
-- [ ] **REL-01**: Maintainer can publish Scrypath from the canonical GitHub release flow with aligned tag, changelog, manifest, package version, and Hex artifact state.
+- [x] **REL-01**: Maintainer can publish Scrypath from the canonical GitHub release flow with aligned tag, changelog, manifest, package version, and Hex artifact state.
 - [ ] **REL-02**: Maintainer can verify the published package from a clean consumer flow that confirms install, docs availability, and basic runtime usability.
 - [ ] **REL-03**: Maintainer can recover from common release failures using documented runbooks for tag/version drift, failed publish, and published-artifact mismatch.
 
@@ -48,7 +48,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REL-01 | Phase 11 | Pending |
+| REL-01 | Phase 11 | Complete |
 | REL-02 | Phase 11 | Pending |
 | REL-03 | Phase 11 | Pending |
 | SEAM-01 | Phase 12 | Pending |
