@@ -173,4 +173,82 @@ defmodule Scrypath.BackfillTest do
     assert Map.has_key?(result, :documents)
     assert Map.has_key?(result, :mode)
   end
+
+  test "backfill fetches deterministic primary-key batches without skipping page edges" do
+    BackfillRepo.put_records([
+      %QueryablePost{id: 5, title: "Fifth", body: "Body 5"},
+      %QueryablePost{id: 1, title: "First", body: "Body 1"},
+      %QueryablePost{id: 3, title: "Third", body: "Body 3"},
+      %QueryablePost{id: 2, title: "Second", body: "Body 2"},
+      %QueryablePost{id: 4, title: "Fourth", body: "Body 4"}
+    ])
+
+    assert {:ok,
+            %{
+              index: "scrypath_queryable_post",
+              batches: 3,
+              documents: 5,
+              mode: :manual,
+              batch_results: [
+                %{documents: 2, last_primary_key: 2},
+                %{documents: 2, last_primary_key: 4},
+                %{documents: 1, last_primary_key: 5}
+              ]
+            }} =
+             Scrypath.backfill(QueryablePost,
+               backend: RecordingBackend,
+               repo: BackfillRepo,
+               batch_size: 2
+             )
+
+    assert_received {:upsert_documents, QueryablePost, batch_one, _config}
+    assert_received {:upsert_documents, QueryablePost, batch_two, _config}
+    assert_received {:upsert_documents, QueryablePost, batch_three, _config}
+
+    assert Enum.map(batch_one, & &1.id) == [1, 2]
+    assert Enum.map(batch_two, & &1.id) == [3, 4]
+    assert Enum.map(batch_three, & &1.id) == [5]
+
+    assert_received {:backfill_repo_all, first_query}
+    assert_received {:backfill_repo_all, second_query}
+    assert_received {:backfill_repo_all, third_query}
+
+    assert first_query.wheres == []
+    assert length(second_query.wheres) == 1
+    assert length(third_query.wheres) == 1
+  end
+
+  test "backfill writes every batch through the backend with the target index override" do
+    BackfillRepo.put_records([
+      %QueryablePost{id: 1, title: "First", body: "Body 1"},
+      %QueryablePost{id: 2, title: "Second", body: "Body 2"},
+      %QueryablePost{id: 3, title: "Third", body: "Body 3"}
+    ])
+
+    assert {:ok,
+            %{
+              index: "posts_rebuild",
+              batches: 2,
+              documents: 3,
+              mode: :manual,
+              batch_results: [
+                %{index: "posts_rebuild", documents: 2},
+                %{index: "posts_rebuild", documents: 1}
+              ]
+            }} =
+             Scrypath.backfill(QueryablePost,
+               backend: RecordingBackend,
+               repo: BackfillRepo,
+               batch_size: 2,
+               index_name: "posts_rebuild"
+             )
+
+    assert_received {:upsert_documents, QueryablePost, first_batch, first_config}
+    assert_received {:upsert_documents, QueryablePost, second_batch, second_config}
+
+    assert Enum.map(first_batch, & &1.id) == [1, 2]
+    assert Enum.map(second_batch, & &1.id) == [3]
+    assert first_config[:index_name] == "posts_rebuild"
+    assert second_config[:index_name] == "posts_rebuild"
+  end
 end
