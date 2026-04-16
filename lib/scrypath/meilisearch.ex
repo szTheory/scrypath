@@ -15,6 +15,8 @@ defmodule Scrypath.Meilisearch do
 
   alias Scrypath.Document
   alias Scrypath.Meilisearch.Client
+  alias Scrypath.Meilisearch.IndexManagement
+  alias Scrypath.Meilisearch.Settings
   alias Scrypath.Query
 
   @impl true
@@ -69,11 +71,28 @@ defmodule Scrypath.Meilisearch do
     client(config).search(index, query, config)
   end
 
+  @spec apply_settings(module(), String.t(), keyword()) :: {:ok, map()} | {:error, term()}
+  def apply_settings(schema_module, index_name, config \\ []) do
+    Settings.apply(schema_module, index_name, config)
+  end
+
+  @spec create_index(module(), String.t() | atom() | nil, keyword()) ::
+          {:ok, map()} | {:error, term()}
+  def create_index(schema_module, primary_key, config \\ []) do
+    IndexManagement.create_index(schema_module, primary_key, config)
+  end
+
+  @spec swap_indexes(module(), keyword()) :: {:ok, map()} | {:error, term()}
+  def swap_indexes(schema_module, config \\ []) do
+    IndexManagement.swap_indexes(schema_module, config)
+  end
+
   defp client(config) do
     Keyword.get(config, :meilisearch_client) || Client
   end
 
-  defp normalize_task(response) do
+  @doc false
+  def normalize_task(response) do
     %{
       uid: response["taskUid"] || response[:taskUid] || response["uid"] || response[:uid],
       status: response["status"] || response[:status],
