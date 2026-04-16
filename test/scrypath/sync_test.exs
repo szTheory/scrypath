@@ -1,6 +1,7 @@
 defmodule Scrypath.SyncTest do
   use ExUnit.Case, async: true
 
+  alias Scrypath.Config
   alias Scrypath.Document
 
   defmodule HookedIdentityPost do
@@ -292,6 +293,56 @@ defmodule Scrypath.SyncTest do
                inline_poll_interval: 1,
                inline_timeout: 50
              )
+  end
+
+  test "sync_mode :oban stays on shared sync verbs and returns accepted metadata" do
+    records = [
+      %SearchablePost{id: 1, title: "One", body: "First"},
+      %SearchablePost{id: 2, title: "Two", body: "Second"}
+    ]
+
+    assert {:ok, %{mode: :oban, status: :accepted, document_ids: [1, 2]}} =
+             Scrypath.sync_records(SearchablePost, records,
+               backend: RecordingBackend,
+               sync_mode: :oban,
+               oban_queue: :search_sync
+             )
+
+    refute_received {:upsert_documents, _, _, _}
+
+    assert {:ok, %{mode: :oban, status: :accepted, document_ids: ["post:2", "post:3"]}} =
+             Scrypath.delete_documents(SearchablePost, ["post:2", "post:3"],
+               backend: RecordingBackend,
+               sync_mode: :oban,
+               oban_queue: :search_sync
+             )
+
+    refute_received {:delete_documents, _, _, _}
+  end
+
+  test "sync_mode :oban fails clearly when the dependency is unavailable" do
+    record = %SearchablePost{id: 91, title: "Queued", body: "Missing"}
+
+    assert_raise ArgumentError,
+                 "Oban dependency is required for sync_mode :oban. Add {:oban, \"~> 2.21\", optional: true} to your deps.",
+                 fn ->
+                   Scrypath.sync_record(SearchablePost, record,
+                     backend: RecordingBackend,
+                     sync_mode: :oban,
+                     oban_queue: :search_sync
+                   )
+                 end
+  end
+
+  test "sync_mode :oban requires explicit queue configuration" do
+    assert_raise ArgumentError,
+                 "oban_queue is required when sync_mode is :oban",
+                 fn ->
+                   Config.resolve!(
+                     backend: RecordingBackend,
+                     sync_mode: :oban
+                   )
+                 end
   end
 
   test "inline cancellation returns a distinct cancellation tuple", %{task_responses: agent} do
