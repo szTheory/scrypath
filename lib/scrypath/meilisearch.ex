@@ -35,7 +35,7 @@ defmodule Scrypath.Meilisearch do
   @impl true
   @spec upsert_documents(module(), [Document.t()], keyword()) :: {:ok, map()} | {:error, term()}
   def upsert_documents(schema_module, documents, config) when is_list(documents) do
-    index = index_name(schema_module, config)
+    index = Keyword.get(config, :index_name) || index_name(schema_module, config)
 
     with {:ok, response} <- client(config).upsert_documents(index, documents, config) do
       {:ok,
@@ -49,7 +49,7 @@ defmodule Scrypath.Meilisearch do
 
   @impl true
   def delete_documents(schema_module, document_ids, config) when is_list(document_ids) do
-    index = index_name(schema_module, config)
+    index = Keyword.get(config, :index_name) || index_name(schema_module, config)
 
     with {:ok, response} <- client(config).delete_documents(index, document_ids, config) do
       {:ok,
