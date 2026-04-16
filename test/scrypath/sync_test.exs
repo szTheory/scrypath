@@ -55,6 +55,9 @@ defmodule Scrypath.SyncTest do
     end
   end
 
+  defmodule ReadyOban do
+  end
+
   setup do
     {:ok, agent} = Agent.start_link(fn -> [] end)
     %{task_responses: agent}
@@ -305,6 +308,7 @@ defmodule Scrypath.SyncTest do
              Scrypath.sync_records(SearchablePost, records,
                backend: RecordingBackend,
                sync_mode: :oban,
+               oban: ReadyOban,
                oban_queue: :search_sync
              )
 
@@ -314,6 +318,7 @@ defmodule Scrypath.SyncTest do
              Scrypath.delete_documents(SearchablePost, ["post:2", "post:3"],
                backend: RecordingBackend,
                sync_mode: :oban,
+               oban: ReadyOban,
                oban_queue: :search_sync
              )
 
@@ -324,11 +329,12 @@ defmodule Scrypath.SyncTest do
     record = %SearchablePost{id: 91, title: "Queued", body: "Missing"}
 
     assert_raise ArgumentError,
-                 "Oban dependency is required for sync_mode :oban. Add {:oban, \"~> 2.21\", optional: true} to your deps.",
+                 "configured Oban instance MissingOban is not available for sync_mode :oban",
                  fn ->
                    Scrypath.sync_record(SearchablePost, record,
                      backend: RecordingBackend,
                      sync_mode: :oban,
+                     oban: MissingOban,
                      oban_queue: :search_sync
                    )
                  end

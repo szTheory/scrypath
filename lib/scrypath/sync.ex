@@ -39,19 +39,37 @@ defmodule Scrypath.Sync do
   end
 
   defp dispatch_upsert(schema_module, documents, config) do
-    backend = Config.fetch_backend!(config)
+    case Keyword.fetch!(config, :sync_mode) do
+      :oban ->
+        config
+        |> Config.ensure_oban_ready!()
+        |> build_oban_upsert_result(documents)
+        |> decorate_result(config)
 
-    backend.upsert_documents(schema_module, documents, config)
-    |> maybe_wait_for_task(config)
-    |> decorate_result(config)
+      _other ->
+        backend = Config.fetch_backend!(config)
+
+        backend.upsert_documents(schema_module, documents, config)
+        |> maybe_wait_for_task(config)
+        |> decorate_result(config)
+    end
   end
 
   defp dispatch_delete(schema_module, document_ids, config) do
-    backend = Config.fetch_backend!(config)
+    case Keyword.fetch!(config, :sync_mode) do
+      :oban ->
+        config
+        |> Config.ensure_oban_ready!()
+        |> build_oban_delete_result(document_ids)
+        |> decorate_result(config)
 
-    backend.delete_documents(schema_module, document_ids, config)
-    |> maybe_wait_for_task(config)
-    |> decorate_result(config)
+      _other ->
+        backend = Config.fetch_backend!(config)
+
+        backend.delete_documents(schema_module, document_ids, config)
+        |> maybe_wait_for_task(config)
+        |> decorate_result(config)
+    end
   end
 
   defp maybe_wait_for_task({:ok, %{task: task} = result}, config) when is_map(task) do
@@ -87,5 +105,31 @@ defmodule Scrypath.Sync do
       :manual -> :accepted
       :oban -> :accepted
     end
+  end
+
+  defp build_oban_upsert_result(config, documents) do
+    {:ok,
+     %{
+       document_ids: Enum.map(documents, & &1.id),
+       document_count: length(documents),
+       oban: %{
+         queue: Config.oban_queue(config),
+         max_attempts: Config.oban_max_attempts(config),
+         name: Config.oban_module(config)
+       }
+     }}
+  end
+
+  defp build_oban_delete_result(config, document_ids) do
+    {:ok,
+     %{
+       document_ids: document_ids,
+       document_count: length(document_ids),
+       oban: %{
+         queue: Config.oban_queue(config),
+         max_attempts: Config.oban_max_attempts(config),
+         name: Config.oban_module(config)
+       }
+     }}
   end
 end

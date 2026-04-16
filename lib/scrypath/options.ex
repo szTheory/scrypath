@@ -55,6 +55,21 @@ defmodule Scrypath.Options do
       default: :inline,
       doc: "Synchronization mode to use for write operations."
     ],
+    oban: [
+      type: {:custom, __MODULE__, :validate_optional_module, []},
+      default: Oban,
+      doc: "Optional Oban instance module override used for durable sync enqueueing."
+    ],
+    oban_queue: [
+      type: {:custom, __MODULE__, :validate_optional_atom, []},
+      default: nil,
+      doc: "Explicit Oban queue used when sync_mode is :oban."
+    ],
+    oban_max_attempts: [
+      type: {:custom, __MODULE__, :validate_positive_integer_or_nil, []},
+      default: 8,
+      doc: "Maximum Oban retry attempts to use for sync jobs."
+    ],
     meilisearch_url: [
       type: {:custom, __MODULE__, :validate_optional_string, []},
       default: nil,
@@ -120,7 +135,9 @@ defmodule Scrypath.Options do
 
   @spec validate_runtime_options!(keyword()) :: keyword()
   def validate_runtime_options!(opts) do
-    validate!(opts, @runtime_options)
+    opts
+    |> validate!(@runtime_options)
+    |> validate_oban_runtime_options!()
   end
 
   @spec validate_search_options!(module(), keyword()) :: keyword()
@@ -145,6 +162,9 @@ defmodule Scrypath.Options do
   def validate_optional_module(value) when is_atom(value) or is_nil(value), do: {:ok, value}
   def validate_optional_module(_value), do: {:error, "expected a module or nil"}
 
+  def validate_optional_atom(value) when is_atom(value) or is_nil(value), do: {:ok, value}
+  def validate_optional_atom(_value), do: {:error, "expected an atom or nil"}
+
   def validate_keyword_list(value) when is_list(value) do
     if Keyword.keyword?(value), do: {:ok, value}, else: {:error, "expected a keyword list"}
   end
@@ -153,6 +173,12 @@ defmodule Scrypath.Options do
 
   def validate_positive_integer(value) when is_integer(value) and value > 0, do: {:ok, value}
   def validate_positive_integer(_value), do: {:error, "expected a positive integer"}
+
+  def validate_positive_integer_or_nil(nil), do: {:ok, nil}
+
+  def validate_positive_integer_or_nil(value) do
+    validate_positive_integer(value)
+  end
 
   def validate_preload(nil), do: {:ok, []}
   def validate_preload(value) when is_atom(value), do: {:ok, [value]}
@@ -201,6 +227,14 @@ defmodule Scrypath.Options do
       {:error, error} ->
         raise ArgumentError, Exception.message(error)
     end
+  end
+
+  defp validate_oban_runtime_options!(opts) do
+    if Keyword.get(opts, :sync_mode) == :oban and is_nil(Keyword.get(opts, :oban_queue)) do
+      raise ArgumentError, "oban_queue is required when sync_mode is :oban"
+    end
+
+    opts
   end
 
   defp ensure_non_empty_fields!(opts) do
