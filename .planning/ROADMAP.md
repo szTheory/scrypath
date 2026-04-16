@@ -42,15 +42,17 @@ Plans:
 
 **Goal:** Close the remaining launch-readiness gaps so maintainers can trust the release path and point to current evidence for the hardened surface.
 **Requirements:** `SHIP-01`, `SHIP-02`
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans executed
 Plans:
 - [x] `10-01-PLAN.md` — Add the thin auth-free `mix verify.phase10` gate and wire the release runbook to it.
-- [ ] `10-02-PLAN.md` — Run the Phase 10 gate, write `10-VERIFICATION.md`, and capture the manual Hex dry-run evidence.
-- [ ] `10-03-PLAN.md` — Create the v1.1 milestone audit and update active status files to the final evidence chain.
+- [x] `10-02-PLAN.md` — Run the Phase 10 gate, write `10-VERIFICATION.md`, and capture the manual Hex dry-run evidence.
+- [x] `10-03-PLAN.md` — Create the v1.1 milestone audit and update active status files to the final evidence chain.
 **Success criteria:**
 1. The maintainer release flow is verified end to end around CI checks, package metadata, and GitHub Actions Hex publishing.
 2. The milestone artifacts clearly capture what was hardened and how launch readiness was verified.
 3. Scrypath can enter broader public adoption without unresolved milestone bookkeeping gaps around the hardening work.
+
+Phase 10 execution complete. Evidence: `.planning/phases/10-launch-verification-and-release-confidence/10-VALIDATION.md`, `.planning/phases/10-launch-verification-and-release-confidence/10-VERIFICATION.md`, `.planning/v1.1-MILESTONE-AUDIT.md`.
 
 **Coverage:** 8 requirements mapped across 3 phases. All covered.
 
@@ -61,4 +63,4 @@ Plans:
 - Deeper operator tooling for drift inspection and recovery once real-world maintainer workflows surface the right abstractions.
 
 ---
-*Last updated: 2026-04-16 after completing Phase 10 Plan 01*
+*Last updated: 2026-04-16 after completing Phase 10 Plan 03*

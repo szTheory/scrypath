@@ -1,20 +1,20 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
+milestone: v1.1
+milestone_name: release-hardening-and-public-launch-readiness
 current_phase: 10
 current_phase_name: launch-verification-and-release-confidence
 current_plan: 3
-status: executing
-stopped_at: Completed 10-02-PLAN.md
-last_updated: "2026-04-16T19:25:14.917Z"
+status: completed
+stopped_at: Completed 10-03-PLAN.md
+last_updated: "2026-04-16T19:34:00.000Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 9
-  completed_plans: 8
-  percent: 89
+  completed_plans: 9
+  percent: 100
 ---
 
 # Project State
@@ -28,16 +28,16 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 
 ## Current Position
 
-Phase: 10 (launch-verification-and-release-confidence) — EXECUTING
+Phase: 10 (launch-verification-and-release-confidence) — COMPLETE
 Plan: 3 of 3
 Current Phase: 10
 Current Phase Name: launch-verification-and-release-confidence
 Current Plan: 3
-Status: Ready to execute
+Status: Phase 10 execution complete
 Last activity: 2026-04-16
-Last Activity Description: Phase 10 Plan 02 executed
+Last Activity Description: Phase 10 Plan 03 executed
 
-Progress: [█████████░] 89%
+Progress: [██████████] 100%
 
 ## Accumulated Context
 
@@ -77,7 +77,7 @@ Progress: [█████████░] 89%
 ### Blockers/Concerns
 
 - Phase 08's focused fast verification is green, but the live `mix verify.phase8` path still needs a reachable Meilisearch instance via `SCRYPATH_MEILISEARCH_URL`.
-- Phase 10 still needs maintainer-facing launch verification and milestone-close evidence before broader public promotion.
+- Phase 10 evidence is complete, but a publisher-scoped `HEX_API_KEY` is still needed for a successful Hex dry-run retry.
 
 ### Quick Tasks Completed
 
@@ -87,8 +87,8 @@ Progress: [█████████░] 89%
 
 ## Session Continuity
 
-Last session: 2026-04-16T19:25:14.914Z
-Stopped at: Completed 10-02-PLAN.md
+Last session: 2026-04-16T19:34:00.000Z
+Stopped at: Completed 10-03-PLAN.md
 Resume file: None
 
 ## Current Status
@@ -96,13 +96,13 @@ Resume file: None
 - v1.0 remains archived with the full Meilisearch-first core, search, Oban, reindex, docs, and release baseline shipped.
 - Phase 08 Reliability and Contract Hardening is complete with strict task normalization, explicit empty-batch no-op behavior, and `mix verify.phase8`.
 - Phase 09 Public Docs and Example Safety is complete with a narrowed install contract, safe JSON pagination docs, and realistic request-shape coverage.
-- Phase 10 Plan 01 is complete with `mix verify.phase10`, release-workflow config validation, and a runbook/docs contract anchored to the new gate.
+- Phase 10 execution complete: `10-VALIDATION.md`, `10-VERIFICATION.md`, and `.planning/v1.1-MILESTONE-AUDIT.md` now provide the final launch-readiness evidence chain.
 - Fast docs verification passes locally; live Phase 08 verification still depends on a reachable Meilisearch endpoint.
-- Milestone v1.1 remains in Phase 10 for the proof-artifact and milestone-close steps in Plans 02 and 03.
+- Milestone v1.1 closeout preserves Phase 08 and Phase 09 ownership while indexing their evidence from the Phase 10 milestone audit.
 
 ## Next Command
 
-- `/gsd-execute-phase 10`
+- `/gsd-complete-milestone`
 
 ---
-*Last updated: 2026-04-16 after completing Phase 10 Plan 01*
+*Last updated: 2026-04-16 after completing Phase 10 Plan 03*
