@@ -1,3 +1,7 @@
+unless System.get_env("SCRYPATH_INTEGRATION") in ["1", "true", "TRUE"] do
+  ExUnit.configure(exclude: [:integration])
+end
+
 ExUnit.start()
 
 "test/support/**/*.ex"

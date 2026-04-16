@@ -1,6 +1,7 @@
 defmodule Scrypath.Reindex do
   @moduledoc false
 
+  alias Scrypath.Meilisearch.Tasks
   alias Scrypath.Options
 
   @spec run(module(), keyword()) :: {:ok, map()} | {:error, term()}
@@ -12,13 +13,23 @@ defmodule Scrypath.Reindex do
     live_index = backend.index_name(schema_module, config)
     target_index = Keyword.get(config, :target_index) || "#{live_index}__reindex"
     workflow_config = Keyword.put(config, :target_index, target_index)
+    wait_for_tasks? = backend == Scrypath.Meilisearch
 
-    with {:ok, _create_result} <-
+    with {:ok, create_result} <-
            meilisearch.create_index(schema_module, primary_key(schema_module), workflow_config),
-         {:ok, _settings_result} <-
+         {:ok, _create_result} <- maybe_wait_for_result_task(create_result, workflow_config, wait_for_tasks?),
+         {:ok, settings_result} <-
            meilisearch.apply_settings(schema_module, target_index, workflow_config),
+         {:ok, _settings_result} <- maybe_wait_for_result_task(settings_result, workflow_config, wait_for_tasks?),
          {:ok, backfill_result} <-
-           backfill.run(schema_module, Keyword.put(workflow_config, :index_name, target_index)),
+           backfill.run(
+             schema_module,
+             workflow_config
+             |> backfill_config()
+             |> Keyword.put(:index_name, target_index)
+           ),
+         {:ok, _backfill_result} <-
+           maybe_wait_for_backfill_tasks(backfill_result, workflow_config, wait_for_tasks?),
          {:ok, cutover} <- maybe_cutover(schema_module, workflow_config, meilisearch) do
       {:ok,
        %{
@@ -35,12 +46,47 @@ defmodule Scrypath.Reindex do
   defp maybe_cutover(schema_module, config, meilisearch) do
     if Keyword.get(config, :cutover?) do
       case meilisearch.swap_indexes(schema_module, config) do
-        {:ok, _result} -> {:ok, true}
+        {:ok, result} ->
+          case maybe_wait_for_result_task(result, config, Keyword.fetch!(config, :backend) == Scrypath.Meilisearch) do
+            {:ok, _waited} -> {:ok, true}
+            {:error, reason} -> {:error, reason}
+          end
+
         {:error, reason} -> {:error, reason}
       end
     else
       {:ok, false}
     end
+  end
+
+  defp maybe_wait_for_result_task(%{task: task} = result, config, true) when is_map(task) do
+    case Tasks.wait_for_task(task, config) do
+      {:ok, waited_task} -> {:ok, %{result | task: waited_task}}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp maybe_wait_for_result_task(result, _config, _wait_for_tasks?), do: {:ok, result}
+
+  defp maybe_wait_for_backfill_tasks(%{batch_results: batch_results} = result, config, true)
+       when is_list(batch_results) do
+    batch_results
+    |> Enum.reduce_while({:ok, []}, fn batch_result, {:ok, acc} ->
+      case maybe_wait_for_result_task(batch_result, config, true) do
+        {:ok, waited_batch_result} -> {:cont, {:ok, [waited_batch_result | acc]}}
+        {:error, reason} -> {:halt, {:error, reason}}
+      end
+    end)
+    |> case do
+      {:ok, waited_batch_results} -> {:ok, %{result | batch_results: Enum.reverse(waited_batch_results)}}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp maybe_wait_for_backfill_tasks(result, _config, _wait_for_tasks?), do: {:ok, result}
+
+  defp backfill_config(config) do
+    Keyword.drop(config, [:target_index, :cutover?])
   end
 
   defp primary_key(schema_module) do

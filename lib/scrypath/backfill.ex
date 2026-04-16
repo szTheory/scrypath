@@ -53,7 +53,8 @@ defmodule Scrypath.Backfill do
           batch_result = %{
             index: Map.get(backend_result, :index, index),
             documents: length(documents),
-            last_primary_key: last_primary_key
+            last_primary_key: last_primary_key,
+            task: Map.get(backend_result, :task)
           }
 
           run_batches(

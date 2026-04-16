@@ -151,6 +151,11 @@ defmodule Scrypath.Options do
       default: nil,
       doc: "Optional explicit queryable override for the source dataset."
     ],
+    index_prefix: [
+      type: {:custom, __MODULE__, :validate_optional_string, []},
+      default: nil,
+      doc: "Optional runtime index prefix override for the bulk workflow."
+    ],
     index_name: [
       type: {:custom, __MODULE__, :validate_optional_string, []},
       default: nil,
@@ -160,6 +165,36 @@ defmodule Scrypath.Options do
       type: {:custom, __MODULE__, :validate_settings, []},
       default: %{},
       doc: "Optional explicit settings override applied by orchestration layers."
+    ],
+    meilisearch_url: [
+      type: {:custom, __MODULE__, :validate_optional_string, []},
+      default: nil,
+      doc: "Base URL for the configured Meilisearch server."
+    ],
+    meilisearch_api_key: [
+      type: {:custom, __MODULE__, :validate_optional_string, []},
+      default: nil,
+      doc: "Optional API key for Meilisearch requests."
+    ],
+    meilisearch_client: [
+      type: {:custom, __MODULE__, :validate_optional_module, []},
+      default: nil,
+      doc: "Optional Meilisearch client override for tests."
+    ],
+    req_options: [
+      type: {:custom, __MODULE__, :validate_keyword_list, []},
+      default: [],
+      doc: "Optional Req overrides passed through to Meilisearch transport calls."
+    ],
+    inline_poll_interval: [
+      type: {:custom, __MODULE__, :validate_positive_integer, []},
+      default: 100,
+      doc: "Polling interval in milliseconds while waiting for Meilisearch workflow tasks."
+    ],
+    inline_timeout: [
+      type: {:custom, __MODULE__, :validate_positive_integer, []},
+      default: 5_000,
+      doc: "Task wait timeout in milliseconds for Meilisearch workflow steps."
     ],
     sync_mode: [
       type: {:in, [:inline, :manual, :oban]},
@@ -184,6 +219,11 @@ defmodule Scrypath.Options do
       required: true,
       doc: "Positive batch size for rebuild reads and writes."
     ],
+    index_prefix: [
+      type: {:custom, __MODULE__, :validate_optional_string, []},
+      default: nil,
+      doc: "Optional runtime index prefix override for the rebuild."
+    ],
     target_index: [
       type: {:custom, __MODULE__, :validate_optional_string, []},
       default: nil,
@@ -198,6 +238,36 @@ defmodule Scrypath.Options do
       type: {:custom, __MODULE__, :validate_settings, []},
       default: %{},
       doc: "Optional explicit settings override applied during rebuild."
+    ],
+    meilisearch_url: [
+      type: {:custom, __MODULE__, :validate_optional_string, []},
+      default: nil,
+      doc: "Base URL for the configured Meilisearch server."
+    ],
+    meilisearch_api_key: [
+      type: {:custom, __MODULE__, :validate_optional_string, []},
+      default: nil,
+      doc: "Optional API key for Meilisearch requests."
+    ],
+    meilisearch_client: [
+      type: {:custom, __MODULE__, :validate_optional_module, []},
+      default: nil,
+      doc: "Optional Meilisearch client override for tests."
+    ],
+    req_options: [
+      type: {:custom, __MODULE__, :validate_keyword_list, []},
+      default: [],
+      doc: "Optional Req overrides passed through to Meilisearch transport calls."
+    ],
+    inline_poll_interval: [
+      type: {:custom, __MODULE__, :validate_positive_integer, []},
+      default: 100,
+      doc: "Polling interval in milliseconds while waiting for Meilisearch workflow tasks."
+    ],
+    inline_timeout: [
+      type: {:custom, __MODULE__, :validate_positive_integer, []},
+      default: 5_000,
+      doc: "Task wait timeout in milliseconds for Meilisearch workflow steps."
     ],
     sync_mode: [
       type: {:in, [:inline, :manual, :oban]},

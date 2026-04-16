@@ -91,8 +91,12 @@ defmodule Scrypath.OptionsTest do
         repo: Scrypath.TestRepo,
         batch_size: 500,
         query: query,
+        index_prefix: "tenant",
         index_name: "posts_v2",
         settings: %{filterableAttributes: ["status"]},
+        meilisearch_url: "http://localhost:7700",
+        inline_poll_interval: 250,
+        inline_timeout: 6_000,
         sync_mode: :manual
       )
 
@@ -100,8 +104,12 @@ defmodule Scrypath.OptionsTest do
     assert config[:repo] == Scrypath.TestRepo
     assert config[:batch_size] == 500
     assert config[:query] == query
+    assert config[:index_prefix] == "tenant"
     assert config[:index_name] == "posts_v2"
     assert config[:settings] == %{filterableAttributes: ["status"]}
+    assert config[:meilisearch_url] == "http://localhost:7700"
+    assert config[:inline_poll_interval] == 250
+    assert config[:inline_timeout] == 6_000
     assert config[:sync_mode] == :manual
   end
 
@@ -111,18 +119,26 @@ defmodule Scrypath.OptionsTest do
         backend: FakeBackend,
         repo: Scrypath.TestRepo,
         batch_size: 1_000,
+        index_prefix: "tenant",
         target_index: "posts_tmp",
         cutover?: false,
         settings: %{sortableAttributes: ["inserted_at"]},
+        meilisearch_url: "http://localhost:7700",
+        inline_poll_interval: 200,
+        inline_timeout: 8_000,
         sync_mode: :manual
       )
 
     assert config[:backend] == FakeBackend
     assert config[:repo] == Scrypath.TestRepo
     assert config[:batch_size] == 1_000
+    assert config[:index_prefix] == "tenant"
     assert config[:target_index] == "posts_tmp"
     assert config[:cutover?] == false
     assert config[:settings] == %{sortableAttributes: ["inserted_at"]}
+    assert config[:meilisearch_url] == "http://localhost:7700"
+    assert config[:inline_poll_interval] == 200
+    assert config[:inline_timeout] == 8_000
     assert config[:sync_mode] == :manual
   end
 
