@@ -4,27 +4,143 @@ defmodule Scrypath.Release.ConsumerSmokeTest do
   alias Scrypath.MixProject
 
   test "a clean consumer app compiles the documented use Scrypath path" do
-    _version = MixProject.project()[:version]
+    version = MixProject.project()[:version]
+    tag = "v#{version}"
+    repo_root = File.cwd!()
+    tmp_root = unique_tmp_dir!()
+    artifact_dir = Path.join(tmp_root, "scrypath-artifact")
+    app_dir = Path.join(tmp_root, "consumer_usage")
 
-    flunk("consumer smoke harness not implemented yet")
+    on_exit(fn -> File.rm_rf(tmp_root) end)
+
+    build_packaged_artifact!(repo_root, artifact_dir)
+
+    artifact_git_url =
+      artifact_dir
+      |> init_artifact_git_repo!(tag)
+      |> then(&"file://#{&1}")
+
+    run_mix!(["new", "consumer_usage", "--module", "ConsumerUsage"], cd: tmp_root)
+    File.write!(Path.join(app_dir, "mix.exs"), consumer_mix_exs(artifact_git_url, tag))
+    write_consumer_schema!(app_dir)
+
+    consumer_mix = File.read!(Path.join(app_dir, "mix.exs"))
+
+    assert consumer_mix =~ ~s|{:scrypath, git: "#{artifact_git_url}", tag: "#{tag}"}|
+    refute Regex.match?(~r/path\s*:/, consumer_mix)
+
+    run_mix!(["deps.get"], cd: app_dir)
+    run_mix!(["compile"], cd: app_dir)
+
+    assert File.exists?(
+             Path.join(app_dir, "_build/dev/lib/consumer_usage/ebin/Elixir.ConsumerUsage.Post.beam")
+           )
   end
 
   test "the smoke dependency stays release-like and never falls back to path deps" do
     version = MixProject.project()[:version]
     tag = "v#{version}"
 
-    deps = consumer_deps("file:///tmp/scrypath-artifact", tag)
+    mix_exs = consumer_mix_exs("file:///tmp/scrypath-artifact", tag)
+    schema = consumer_schema()
 
-    assert deps =~ ~s|{:scrypath, git: "file:///tmp/scrypath-artifact", tag: "#{tag}"}|
-    refute deps =~ "path:"
+    assert mix_exs =~ ~s|{:scrypath, git: "file:///tmp/scrypath-artifact", tag: "#{tag}"}|
+    refute Regex.match?(~r/path\s*:/, mix_exs)
+    assert schema =~ "use Scrypath"
   end
 
-  defp consumer_deps(artifact_git_url, tag) do
+  defp consumer_mix_exs(artifact_git_url, tag) do
     """
-    [
-      {:ecto, "~> 3.13"},
-      {:scrypath, git: "#{artifact_git_url}", tag: "#{tag}"}
-    ]
+    defmodule ConsumerUsage.MixProject do
+      use Mix.Project
+
+      def project do
+        [
+          app: :consumer_usage,
+          version: "0.1.0",
+          elixir: "~> 1.17",
+          start_permanent: Mix.env() == :prod,
+          deps: deps()
+        ]
+      end
+
+      def application do
+        [extra_applications: [:logger]]
+      end
+
+      defp deps do
+        [
+          {:ecto, "~> 3.13"},
+          {:scrypath, git: "#{artifact_git_url}", tag: "#{tag}"}
+        ]
+      end
+    end
     """
+  end
+
+  defp consumer_schema do
+    """
+    defmodule ConsumerUsage.Post do
+      use Ecto.Schema
+
+      use Scrypath,
+        fields: [:title, :body],
+        filterable: [:status],
+        sortable: [:inserted_at]
+
+      schema "posts" do
+        field :title, :string
+        field :body, :string
+        field :status, Ecto.Enum, values: [:draft, :published]
+        timestamps()
+      end
+    end
+    """
+  end
+
+  defp write_consumer_schema!(app_dir) do
+    schema_dir = Path.join(app_dir, "lib/consumer_usage")
+    File.mkdir_p!(schema_dir)
+    File.write!(Path.join(schema_dir, "post.ex"), consumer_schema())
+  end
+
+  defp build_packaged_artifact!(repo_root, artifact_dir) do
+    run_mix!(["hex.build", "--unpack", "--output", artifact_dir], cd: repo_root)
+  end
+
+  defp init_artifact_git_repo!(artifact_dir, tag) do
+    run_command!("git", ["init", "-q"], cd: artifact_dir)
+    run_command!("git", ["config", "user.email", "codex@example.com"], cd: artifact_dir)
+    run_command!("git", ["config", "user.name", "Codex"], cd: artifact_dir)
+    run_command!("git", ["add", "."], cd: artifact_dir)
+    run_command!("git", ["commit", "-qm", "artifact"], cd: artifact_dir)
+    run_command!("git", ["tag", tag], cd: artifact_dir)
+    artifact_dir
+  end
+
+  defp run_mix!(args, opts) do
+    run_command!("mix", args, opts)
+  end
+
+  defp run_command!(command, args, opts) do
+    {output, exit_status} =
+      System.cmd(command, args, Keyword.merge([stderr_to_stdout: true], opts))
+
+    assert exit_status == 0,
+           """
+           command failed: #{command} #{Enum.join(args, " ")}
+
+           #{output}
+           """
+
+    output
+  end
+
+  defp unique_tmp_dir! do
+    path =
+      Path.join(System.tmp_dir!(), "scrypath-consumer-smoke-#{System.unique_integer([:positive])}")
+
+    File.mkdir_p!(path)
+    path
   end
 end
