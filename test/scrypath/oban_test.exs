@@ -27,6 +27,14 @@ defmodule Scrypath.ObanTest do
     def search(_schema_module, _query, _config), do: {:ok, %{hits: []}}
   end
 
+  defmodule RecordingOban do
+    def insert(_name, %Multi{} = multi, multi_name, changeset) do
+      Ecto.Multi.run(multi, multi_name, fn _repo, _changes ->
+        {:ok, Ecto.Changeset.apply_changes(changeset)}
+      end)
+    end
+  end
+
   test "exposes only narrow Ecto.Multi enqueue helpers" do
     assert function_exported?(Scrypath.Oban, :enqueue_upsert, 5)
     assert function_exported?(Scrypath.Oban, :enqueue_delete, 5)
@@ -44,6 +52,7 @@ defmodule Scrypath.ObanTest do
         [%SearchablePost{id: 7, title: "Queued", body: "Body"}],
         backend: RecordingBackend,
         sync_mode: :oban,
+        oban: RecordingOban,
         oban_queue: :search_sync
       )
 
@@ -60,6 +69,7 @@ defmodule Scrypath.ObanTest do
         ["post:9", "post:10"],
         backend: RecordingBackend,
         sync_mode: :oban,
+        oban: RecordingOban,
         oban_queue: :search_sync
       )
 

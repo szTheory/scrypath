@@ -25,7 +25,9 @@ defmodule Scrypath.Oban.WorkerTest do
     @impl true
     def upsert_documents(schema_module, documents, config) do
       send(self(), {:upsert_documents, schema_module, documents, config})
-      {:ok, %{document_ids: Enum.map(documents, & &1.id), index: index_name(schema_module, config)}}
+
+      {:ok,
+       %{document_ids: Enum.map(documents, & &1.id), index: index_name(schema_module, config)}}
     end
 
     @impl true
@@ -74,10 +76,12 @@ defmodule Scrypath.Oban.WorkerTest do
     assert :ok = Scrypath.Oban.UpsertWorker.perform(%Oban.Job{args: args})
 
     assert_received {:upsert_documents, SearchablePost, documents, config}
+
     assert documents == [
              %Document{id: 1, data: %{"title" => "One"}, source: :fields},
              %Document{id: 2, data: %{"title" => "Two"}, source: :custom}
            ]
+
     assert config[:backend] == RecordingBackend
     assert config[:index_name] == "tenant_searchable_post"
     refute_received {:fake_repo_all, _}
@@ -127,6 +131,8 @@ defmodule Scrypath.Oban.WorkerTest do
     }
 
     assert {:error, :timeout} = Scrypath.Oban.UpsertWorker.perform(%Oban.Job{args: args})
-    assert {:error, :timeout} = Scrypath.Oban.DeleteWorker.perform(%Oban.Job{args: Map.delete(args, "documents")})
+
+    assert {:error, :timeout} =
+             Scrypath.Oban.DeleteWorker.perform(%Oban.Job{args: Map.delete(args, "documents")})
   end
 end
