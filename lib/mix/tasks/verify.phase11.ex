@@ -7,8 +7,8 @@ defmodule Mix.Tasks.Verify.Phase11 do
   Runs the automated release-alignment verification flow for Phase 11.
 
   This task keeps the existing auth-free release gate shape and extends it with
-  checks that the package version, Release Please manifest, and publish workflow
-  still describe the same tagged release path.
+  checks that the package version, packaged consumer path, Release Please
+  manifest, and publish workflow still describe the same tagged release path.
   """
 
   @release_contract_pattern "release_created|tag_name|mix hex.publish --yes|manifest-file|config-file|release-type"
@@ -24,7 +24,11 @@ defmodule Mix.Tasks.Verify.Phase11 do
     ensure_no_args!(args)
 
     run_test!(
-      ["test/release/package_metadata_test.exs", "test/scrypath/docs_contract_test.exs"],
+      [
+        "test/release/package_metadata_test.exs",
+        "test/release/consumer_smoke_test.exs",
+        "test/scrypath/docs_contract_test.exs"
+      ],
       "Phase 11 release contract tests"
     )
 
