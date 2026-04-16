@@ -94,11 +94,14 @@ jobs:
 
       - name: Build and inspect Hex package
         run: |
+          PACKAGE_VERSION=$(grep -m1 '@version "' mix.exs | cut -d'"' -f2)
+          PACKAGE_DIR="scrypath-$PACKAGE_VERSION"
+          rm -rf "$PACKAGE_DIR"
           rm -f scrypath-*.tar CHECKSUM VERSION metadata.config contents.tar.gz
           mix hex.build --unpack
-          test -f metadata.config
-          test -f contents.tar.gz
-          tar -tzf contents.tar.gz | grep -E '^(README.md|CHANGELOG.md|ARCHITECTURE.md|docs/releasing.md|guides/|lib/|mix.exs)'
+          test -f "$PACKAGE_DIR/hex_metadata.config"
+          find "$PACKAGE_DIR" -maxdepth 3 -type f | grep -E "^$PACKAGE_DIR/(README.md|CHANGELOG.md|ARCHITECTURE.md|docs/releasing.md|guides/|lib/|mix.exs)"
+          rm -rf "$PACKAGE_DIR"
           rm -f scrypath-*.tar CHECKSUM VERSION metadata.config contents.tar.gz
 
   phase5-verification:

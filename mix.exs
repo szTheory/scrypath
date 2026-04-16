@@ -3,6 +3,7 @@ defmodule Scrypath.MixProject do
 
   @version "0.1.0"
   @source_url "https://github.com/jon/scrypath"
+  @source_ref "v#{@version}"
 
   def project do
     [
@@ -13,6 +14,9 @@ defmodule Scrypath.MixProject do
       deps: deps(),
       docs: docs(),
       package: package(),
+      homepage_url: @source_url,
+      source_url: @source_url,
+      source_ref: @source_ref,
       description: "Ecto-native search indexing and orchestration for Elixir apps",
       dialyzer: [
         plt_add_apps: [:mix],
@@ -56,7 +60,7 @@ defmodule Scrypath.MixProject do
     [
       main: "readme",
       source_url: @source_url,
-      source_ref: "v#{@version}",
+      source_ref: @source_ref,
       extras: [
         "README.md",
         "ARCHITECTURE.md",
@@ -65,7 +69,8 @@ defmodule Scrypath.MixProject do
         "guides/phoenix-contexts.md",
         "guides/phoenix-controllers-and-json.md",
         "guides/phoenix-liveview.md",
-        "guides/sync-modes-and-visibility.md"
+        "guides/sync-modes-and-visibility.md",
+        "docs/releasing.md"
       ],
       groups_for_extras: [
         "Getting Started": ["README.md", "guides/getting-started.md"],
@@ -75,7 +80,8 @@ defmodule Scrypath.MixProject do
           "guides/phoenix-controllers-and-json.md",
           "guides/phoenix-liveview.md"
         ],
-        "Operations": ["ARCHITECTURE.md", "guides/sync-modes-and-visibility.md"]
+        "Operations": ["ARCHITECTURE.md", "guides/sync-modes-and-visibility.md"],
+        "Maintainers": ["docs/releasing.md"]
       ]
     ]
   end
@@ -83,9 +89,12 @@ defmodule Scrypath.MixProject do
   defp package do
     [
       licenses: ["Apache-2.0"],
+      files: ~w(lib .formatter.exs mix.exs README.md ARCHITECTURE.md CHANGELOG.md guides docs),
       links: %{
         "GitHub" => @source_url,
-        "HexDocs" => "https://hexdocs.pm/scrypath"
+        "HexDocs" => "https://hexdocs.pm/scrypath",
+        "Changelog" => "#{@source_url}/blob/main/CHANGELOG.md",
+        "Guides" => "https://hexdocs.pm/scrypath/readme.html"
       }
     ]
   end
