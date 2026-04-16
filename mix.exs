@@ -24,6 +24,7 @@ defmodule Scrypath.MixProject do
     [
       {:ecto, "~> 3.13"},
       {:nimble_options, "~> 1.1"},
+      {:oban, "~> 2.21", optional: true},
       {:req, "~> 0.5"},
       {:jason, "~> 1.4"},
       {:plug, "~> 1.18", only: :test}

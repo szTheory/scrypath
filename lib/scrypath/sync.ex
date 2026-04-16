@@ -4,6 +4,7 @@ defmodule Scrypath.Sync do
   alias Scrypath.Config
   alias Scrypath.Identity
   alias Scrypath.Meilisearch.Tasks
+  alias Scrypath.Oban.Enqueue
   alias Scrypath.Projection
 
   @spec sync_record(module(), struct() | map(), keyword()) :: {:ok, term()} | {:error, term()}
@@ -43,7 +44,7 @@ defmodule Scrypath.Sync do
       :oban ->
         config
         |> Config.ensure_oban_ready!()
-        |> build_oban_upsert_result(documents)
+        |> then(&Enqueue.enqueue_upsert(schema_module, documents, &1))
         |> decorate_result(config)
 
       _other ->
@@ -60,7 +61,7 @@ defmodule Scrypath.Sync do
       :oban ->
         config
         |> Config.ensure_oban_ready!()
-        |> build_oban_delete_result(document_ids)
+        |> then(&Enqueue.enqueue_delete(schema_module, document_ids, &1))
         |> decorate_result(config)
 
       _other ->
@@ -105,31 +106,5 @@ defmodule Scrypath.Sync do
       :manual -> :accepted
       :oban -> :accepted
     end
-  end
-
-  defp build_oban_upsert_result(config, documents) do
-    {:ok,
-     %{
-       document_ids: Enum.map(documents, & &1.id),
-       document_count: length(documents),
-       oban: %{
-         queue: Config.oban_queue(config),
-         max_attempts: Config.oban_max_attempts(config),
-         name: Config.oban_module(config)
-       }
-     }}
-  end
-
-  defp build_oban_delete_result(config, document_ids) do
-    {:ok,
-     %{
-       document_ids: document_ids,
-       document_count: length(document_ids),
-       oban: %{
-         queue: Config.oban_queue(config),
-         max_attempts: Config.oban_max_attempts(config),
-         name: Config.oban_module(config)
-       }
-     }}
   end
 end
