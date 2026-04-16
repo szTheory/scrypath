@@ -32,32 +32,68 @@ end
 
 `use Scrypath` stays metadata-only. Runtime orchestration still lives in your context modules.
 
-## Keep Search In The Context
+## Put Search And Sync In The Context
 
 ```elixir
 defmodule MyApp.Content do
   alias MyApp.Blog.Post
   alias MyApp.Repo
 
-  def create_post(attrs) do
-    %Post{}
-    |> Post.changeset(attrs)
-    |> Repo.insert()
-    |> case do
-      {:ok, post} ->
-        Scrypath.sync_record(Post, post,
-          backend: Scrypath.Meilisearch,
-          sync_mode: :inline
-        )
+  def search_posts(query, opts \\ []) do
+    Scrypath.search(Post, query,
+      Keyword.merge([backend: Scrypath.Meilisearch, repo: Repo], opts)
+    )
+  end
 
-      error ->
-        error
+  def publish_post(post, attrs) do
+    with {:ok, post} <- update_post(post, attrs),
+         {:ok, _sync} <-
+           Scrypath.sync_record(Post, post,
+             backend: Scrypath.Meilisearch,
+             sync_mode: :inline
+           ) do
+      {:ok, post}
     end
   end
 end
 ```
 
-That keeps database writes, sync decisions, and failure handling in one application boundary instead of spreading them across controllers or LiveView callbacks.
+That keeps reads, writes, sync decisions, and failure handling in one application boundary instead of spreading them across controllers or LiveView callbacks.
+
+## Keep Web Modules Thin
+
+Controllers and LiveView modules call the same context boundary:
+
+```elixir
+defmodule MyAppWeb.PostController do
+  use MyAppWeb, :controller
+
+  alias MyApp.Content
+
+  def index(conn, params) do
+    {:ok, result} =
+      Content.search_posts(Map.get(params, "q", ""),
+        filter: [status: "published"]
+      )
+
+    render(conn, :index, posts: result.records, search: result)
+  end
+end
+```
+
+```elixir
+defmodule MyAppWeb.PostLive do
+  use MyAppWeb, :live_view
+
+  alias MyApp.Content
+
+  def handle_params(%{"q" => query}, _uri, socket) do
+    {:ok, result} = Content.search_posts(query, preload: [:author])
+
+    {:noreply, assign(socket, posts: result.records, search: result, query: query)}
+  end
+end
+```
 
 ## Choose Sync Mode Deliberately
 

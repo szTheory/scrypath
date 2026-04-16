@@ -20,6 +20,8 @@ This wording matters in Phoenix because a controller response, JSON payload, or 
 - A LiveView update can reflect database state before async search work completes
 - An Oban-backed flow means the durable enqueue succeeded, not that the search backend finished
 
+The recommended boundary is still the same: let the context choose the mode, then let the controller or LiveView present the outcome honestly.
+
 ## Where To Put The Decision
 
 Choose sync mode in the context that owns the feature. That keeps consistency and recovery tradeoffs close to the repo write and close to the operator workflow that will respond when drift appears.

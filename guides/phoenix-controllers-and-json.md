@@ -4,7 +4,7 @@ Phoenix controllers should translate request params into a context call, then re
 
 ## HTML Controllers
 
-For HTML responses, treat Scrypath as part of the context contract:
+For HTML responses, treat `MyApp.Content.search_posts/2` as the search boundary and render the result:
 
 ```elixir
 defmodule MyAppWeb.PostController do
@@ -53,3 +53,5 @@ Keep JSON shaping in the controller or view layer. Keep repo access, search orch
 ## Avoid The Wrong Shortcut
 
 Do not recommend direct `Repo` queries plus direct `Scrypath.search/3` calls inside the controller. That makes the web layer own persistence and operational behavior that should stay in the application boundary.
+
+The same rule applies to writes. A controller that publishes or updates a record should call `MyApp.Content.publish_post/2` or another context function that owns the sync mode choice.

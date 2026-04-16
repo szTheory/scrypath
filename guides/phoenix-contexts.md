@@ -27,10 +27,7 @@ defmodule MyApp.Content do
 
   def search_posts(query, opts \\ []) do
     Scrypath.search(Post, query,
-      Keyword.merge(
-        [backend: Scrypath.Meilisearch, repo: Repo],
-        opts
-      )
+      Keyword.merge([backend: Scrypath.Meilisearch, repo: Repo], opts)
     )
   end
 
@@ -46,6 +43,8 @@ defmodule MyApp.Content do
   end
 end
 ```
+
+`MyApp.Content.search_posts/2` is the shared read path for controllers and LiveView. `MyApp.Content.publish_post/2` is the write path that owns the sync decision.
 
 ## Why This Boundary Holds Up
 
