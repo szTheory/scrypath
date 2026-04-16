@@ -22,7 +22,7 @@
 ### Internal Operations Boundary
 
 - [x] **SEAM-01**: Scrypath exposes operator primitives through Scrypath-owned structs and APIs rather than direct Meilisearch task payloads or Oban-only assumptions.
-- [ ] **SEAM-02**: Scrypath's internal sync and reindex flows depend on a backend/admin operations seam that preserves the existing Meilisearch-first public contract while making future backend work safer.
+- [x] **SEAM-02**: Scrypath's internal sync and reindex flows depend on a backend/admin operations seam that preserves the existing Meilisearch-first public contract while making future backend work safer.
 - [ ] **SEAM-03**: Backend-native search power remains clearly namespaced and does not widen the common `Scrypath.search/3` contract in this milestone.
 
 ## v1.3+ Requirements
@@ -52,7 +52,7 @@
 | REL-02 | Phase 11 | Complete |
 | REL-03 | Phase 11 | Complete |
 | SEAM-01 | Phase 12 | Complete |
-| SEAM-02 | Phase 12 | Pending |
+| SEAM-02 | Phase 12 | Complete |
 | OPS-01 | Phase 13 | Pending |
 | OPS-02 | Phase 13 | Pending |
 | OPS-03 | Phase 13 | Pending |

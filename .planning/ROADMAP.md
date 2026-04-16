@@ -15,7 +15,7 @@
 ## Phases
 
 - [x] **Phase 11: Public Release Contract** - Validate one real public release path, consumer smoke flow, and maintainer recovery contract. (completed 2026-04-16)
-- [ ] **Phase 12: Internal Operations Seam** - Extract Scrypath-owned operations boundaries under the Meilisearch-first public surface. (in progress)
+- [x] **Phase 12: Internal Operations Seam** - Extract Scrypath-owned operations boundaries under the Meilisearch-first public surface. (in progress) (completed 2026-04-16)
 - [ ] **Phase 13: Operator Primitives** - Expose status, failure inspection, retry, and reconcile APIs through Scrypath-owned operator types.
 - [ ] **Phase 14: Mix Tasks and Guides** - Put thin CLI ergonomics and sync-mode guides on top of the operator surface without widening common search.
 
@@ -77,7 +77,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 11. Public Release Contract | 2/2 | Complete   | 2026-04-16 |
-| 12. Internal Operations Seam | 2/3 | In Progress|  |
+| 12. Internal Operations Seam | 3/3 | Complete   | 2026-04-16 |
 | 13. Operator Primitives | 0/TBD | Not started | - |
 | 14. Mix Tasks and Guides | 0/TBD | Not started | - |
 
