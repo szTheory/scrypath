@@ -1,6 +1,8 @@
 defmodule Scrypath.PhoenixExamplesTest do
   use ExUnit.Case, async: true
 
+  @fixture_source File.read!("test/support/docs/phoenix_example_case.ex")
+
   alias Scrypath.TestSupport.Docs.PhoenixExampleCase.ApiPostController
   alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Content
   alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Post
@@ -12,6 +14,20 @@ defmodule Scrypath.PhoenixExamplesTest do
     assert function_exported?(Content, :publish_post, 2)
     refute function_exported?(PostController, :search_posts, 2)
     refute function_exported?(PostLive, :search_posts, 2)
+  end
+
+  test "fixture source keeps repo and scrypath orchestration out of web modules" do
+    controller_section = module_section("PostController")
+    liveview_section = module_section("PostLive")
+
+    refute controller_section =~ "Repo"
+    refute controller_section =~ "Scrypath.search"
+    refute controller_section =~ "Scrypath.sync"
+    refute liveview_section =~ "Repo"
+    refute liveview_section =~ "Scrypath.search"
+    refute liveview_section =~ "Scrypath.sync"
+    assert controller_section =~ "Content.search_posts"
+    assert liveview_section =~ "Content.search_posts"
   end
 
   test "controller delegates search work to the context boundary" do
@@ -36,5 +52,14 @@ defmodule Scrypath.PhoenixExamplesTest do
     assert updated.query == "search"
     assert [%Post{}] = updated.posts
     assert updated.search.query == "search"
+  end
+
+  defp module_section(name) do
+    Regex.run(
+      ~r/defmodule #{name} do\n(.*?)\n  end/ms,
+      @fixture_source,
+      capture: :all_but_first
+    )
+    |> List.first()
   end
 end
