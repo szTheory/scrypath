@@ -69,4 +69,14 @@ defmodule Scrypath do
   def delete_documents(schema_module, document_ids, opts \\ []) do
     Scrypath.Sync.delete_documents(schema_module, document_ids, opts)
   end
+
+  @spec search(module(), String.t(), keyword()) :: {:ok, term()} | {:error, term()}
+  def search(schema_module, text, opts \\ []) do
+    Scrypath.Search.search(schema_module, text, opts)
+  end
+
+  @spec search!(module(), String.t(), keyword()) :: term()
+  def search!(schema_module, text, opts \\ []) do
+    Scrypath.Search.search!(schema_module, text, opts)
+  end
 end
