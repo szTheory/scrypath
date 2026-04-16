@@ -3,6 +3,8 @@ defmodule Scrypath.SyncTest do
 
   alias Scrypath.Config
   alias Scrypath.Document
+  alias Scrypath.Operations.Result
+  alias Scrypath.Operations.Task
 
   defmodule HookedIdentityPost do
     use Ecto.Schema
@@ -53,6 +55,68 @@ defmodule Scrypath.SyncTest do
     def search(_schema_module, _query, _config) do
       {:ok, %{hits: []}}
     end
+  end
+
+  defmodule SeamBackend do
+    @behaviour Scrypath.Backend
+
+    @impl true
+    def name, do: :seam_backend
+
+    @impl true
+    def index_name(schema_module, config) do
+      prefix = Keyword.get(config, :index_prefix, "scrypath")
+      schema_name = schema_module |> Module.split() |> List.last() |> Macro.underscore()
+
+      "#{prefix}_#{schema_name}"
+    end
+
+    @impl true
+    def upsert_documents(schema_module, documents, config) do
+      {:ok,
+       Result.new(
+         mode: Keyword.get(config, :sync_mode, :manual),
+         status: :accepted,
+         document_ids: Enum.map(documents, & &1.id),
+         document_count: length(documents),
+         task:
+           Task.new(
+             source: :meilisearch,
+             kind: :backend_task,
+             id: 711,
+             state: Keyword.get(config, :task_state, :enqueued),
+             reference: %{task_uid: 711, index_uid: index_name(schema_module, config)},
+             metadata: %{type: "documentAdditionOrUpdate"},
+             raw: %{"uid" => 711, "status" => Atom.to_string(Keyword.get(config, :task_state, :enqueued))}
+           ),
+         metadata: %{index: index_name(schema_module, config)}
+       )}
+    end
+
+    @impl true
+    def delete_documents(schema_module, document_ids, config) do
+      {:ok,
+       Result.new(
+         mode: Keyword.get(config, :sync_mode, :manual),
+         status: :accepted,
+         document_ids: document_ids,
+         document_count: length(document_ids),
+         task:
+           Task.new(
+             source: :meilisearch,
+             kind: :backend_task,
+             id: 712,
+             state: Keyword.get(config, :task_state, :enqueued),
+             reference: %{task_uid: 712, index_uid: index_name(schema_module, config)},
+             metadata: %{type: "documentDeletion"},
+             raw: %{"uid" => 712, "status" => Atom.to_string(Keyword.get(config, :task_state, :enqueued))}
+           ),
+         metadata: %{index: index_name(schema_module, config)}
+       )}
+    end
+
+    @impl true
+    def search(_schema_module, _query, _config), do: {:ok, %{hits: []}}
   end
 
   defmodule ReadyOban do
@@ -305,6 +369,37 @@ defmodule Scrypath.SyncTest do
                req_options: [plug: {Req.Test, req_stub(agent)}],
                inline_poll_interval: 1,
                inline_timeout: 50
+             )
+  end
+
+  test "sync adapts seam-owned backend results back into the public task map contract" do
+    record = %SearchablePost{id: 82, title: "Seam", body: "Backend"}
+
+    assert {:ok,
+            %{
+              mode: :manual,
+              status: :accepted,
+              index: "tenant_searchable_post",
+              document_ids: [82],
+              document_count: 1,
+              task: %{uid: 711, status: :enqueued, index_uid: "tenant_searchable_post"}
+            }} =
+             Scrypath.sync_record(SearchablePost, record,
+               backend: SeamBackend,
+               index_prefix: "tenant",
+               sync_mode: :manual
+             )
+
+    assert {:ok,
+            %{
+              mode: :inline,
+              status: :completed,
+              task: %{uid: 711, status: :succeeded, index_uid: "tenant_searchable_post"}
+            }} =
+             Scrypath.sync_record(SearchablePost, record,
+               backend: SeamBackend,
+               index_prefix: "tenant",
+               task_state: :succeeded
              )
   end
 
