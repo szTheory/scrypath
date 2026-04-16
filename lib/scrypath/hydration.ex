@@ -3,6 +3,8 @@ defmodule Scrypath.Hydration do
 
   import Ecto.Query
 
+  alias Scrypath.Telemetry
+
   @spec hydrate(module(), [map()], keyword()) :: {[struct()], [term()]}
   def hydrate(_schema_module, [], _opts), do: {[], []}
 
@@ -12,26 +14,41 @@ defmodule Scrypath.Hydration do
     source_id_field = source_id_field(schema_module)
     source_ids = Enum.map(hits, &fetch_hit_id!(&1, source_id_field))
 
-    query =
-      schema_module
-      |> where([record], field(record, ^source_id_field) in ^source_ids)
-      |> maybe_preload(preload)
+    metadata = %{
+      schema: schema_module,
+      repo: repo,
+      hit_count: length(hits)
+    }
 
-    records = repo.all(query)
+    Telemetry.span([:scrypath, :hydration], metadata, fn ->
+      query =
+        schema_module
+        |> where([record], field(record, ^source_id_field) in ^source_ids)
+        |> maybe_preload(preload)
 
-    records_by_id =
-      Map.new(records, fn record ->
-        {Map.fetch!(record, source_id_field), record}
-      end)
+      records = repo.all(query)
 
-    Enum.reduce(source_ids, {[], []}, fn source_id, {ordered_records, missing_ids} ->
-      case Map.fetch(records_by_id, source_id) do
-        {:ok, record} -> {[record | ordered_records], missing_ids}
-        :error -> {ordered_records, [source_id | missing_ids]}
-      end
-    end)
-    |> then(fn {records, missing_ids} ->
-      {Enum.reverse(records), Enum.reverse(missing_ids)}
+      records_by_id =
+        Map.new(records, fn record ->
+          {Map.fetch!(record, source_id_field), record}
+        end)
+
+      {ordered_records, missing_ids} =
+        Enum.reduce(source_ids, {[], []}, fn source_id, {ordered_records, missing_ids} ->
+          case Map.fetch(records_by_id, source_id) do
+            {:ok, record} -> {[record | ordered_records], missing_ids}
+            :error -> {ordered_records, [source_id | missing_ids]}
+          end
+        end)
+        |> then(fn {records, missing_ids} ->
+          {Enum.reverse(records), Enum.reverse(missing_ids)}
+        end)
+
+      {{ordered_records, missing_ids},
+       %{
+         record_count: length(ordered_records),
+         missing_count: length(missing_ids)
+       }}
     end)
   end
 
