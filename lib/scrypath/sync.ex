@@ -24,7 +24,12 @@ defmodule Scrypath.Sync do
       )
 
     Telemetry.span([:scrypath, :sync, :upsert], metadata, fn ->
-      result = dispatch_upsert(schema_module, documents, config)
+      result =
+        case documents do
+          [] -> noop_result(config)
+          _documents -> dispatch_upsert(schema_module, documents, config)
+        end
+
       {result, Telemetry.stop_metadata(result)}
     end)
   end
@@ -52,7 +57,12 @@ defmodule Scrypath.Sync do
       )
 
     Telemetry.span([:scrypath, :sync, :delete], metadata, fn ->
-      result = dispatch_delete(schema_module, document_ids, config)
+      result =
+        case document_ids do
+          [] -> noop_result(config)
+          _document_ids -> dispatch_delete(schema_module, document_ids, config)
+        end
+
       {result, Telemetry.stop_metadata(result)}
     end)
   end
@@ -117,6 +127,16 @@ defmodule Scrypath.Sync do
   end
 
   defp decorate_result(result, _config), do: result
+
+  defp noop_result(config) do
+    {:ok,
+     %{
+       mode: Keyword.fetch!(config, :sync_mode),
+       status: :noop,
+       document_ids: [],
+       document_count: 0
+     }}
+  end
 
   defp result_status(config) do
     case Keyword.fetch!(config, :sync_mode) do
