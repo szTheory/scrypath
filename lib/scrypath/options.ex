@@ -17,6 +17,11 @@ defmodule Scrypath.Options do
       default: [],
       doc: "Fields that later search APIs may expose as sorts."
     ],
+    settings: [
+      type: {:custom, __MODULE__, :validate_settings, []},
+      default: %{},
+      doc: "Explicit Meilisearch index settings stored as schema metadata."
+    ],
     document_id: [
       type: :atom,
       default: :id,
@@ -155,6 +160,24 @@ defmodule Scrypath.Options do
   def validate_optional_string(value) when is_binary(value), do: {:ok, value}
   def validate_optional_string(nil), do: {:ok, nil}
   def validate_optional_string(_value), do: {:error, "expected a string or nil"}
+
+  def validate_settings(value) when is_map(value), do: {:ok, value}
+
+  def validate_settings(value) do
+    cond do
+      Macro.quoted_literal?(value) ->
+        {evaluated, _binding} = Code.eval_quoted(value)
+
+        if is_map(evaluated) do
+          {:ok, evaluated}
+        else
+          {:error, "expected settings to be a plain map"}
+        end
+
+      true ->
+        {:error, "expected settings to be a plain map"}
+    end
+  end
 
   def validate_backend(value) when is_atom(value) or is_nil(value), do: {:ok, value}
   def validate_backend(_value), do: {:error, "expected a module, atom, or nil"}

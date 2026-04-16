@@ -13,3 +13,19 @@ defmodule SearchablePost do
     field(:inserted_at, :utc_datetime)
   end
 end
+
+defmodule ConfiguredSearchablePost do
+  use Ecto.Schema
+
+  use Scrypath,
+    fields: [:title, :body],
+    settings: %{
+      searchableAttributes: ["title", "body"],
+      typoTolerance: "min"
+    }
+
+  embedded_schema do
+    field(:title, :string)
+    field(:body, :string)
+  end
+end
