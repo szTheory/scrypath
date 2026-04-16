@@ -9,7 +9,6 @@ Run these commands locally when you want the same package checks outside CI:
 ```bash
 mix docs --warnings-as-errors
 mix test test/release/package_metadata_test.exs
-mix hex.publish --dry-run
 mix hex.build --unpack
 ```
 
@@ -18,6 +17,16 @@ After `mix hex.build --unpack`, inspect the unpacked package contents:
 ```bash
 find scrypath-* -maxdepth 3 -type f | grep -E '^scrypath-[^/]+/(README.md|CHANGELOG.md|ARCHITECTURE.md|docs/releasing.md|guides/|lib/|mix.exs)'
 ```
+
+## Release-Only Publish Validation
+
+Use this only when you are preparing an actual release and have `HEX_API_KEY` configured for a publisher account:
+
+```bash
+HEX_API_KEY=... mix hex.publish --dry-run --yes
+```
+
+That command checks publish credentials and must stay out of the always-on CI gate.
 
 ## Human-Only Review
 

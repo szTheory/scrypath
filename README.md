@@ -9,7 +9,7 @@ Add Scrypath and the supported v1 backend to your dependencies:
 ```elixir
 def deps do
   [
-    {:scrypath, path: "../scrypath"},
+    {:scrypath, "~> 0.1.0"},
     {:req, "~> 0.5"}
   ]
 end
