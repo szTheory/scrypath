@@ -1,0 +1,189 @@
+# Requirements: Scrypath v1.3
+
+**Defined:** 2026-04-17
+**Milestone:** v1.3 "Search Power That Phoenix Teams Reach For"
+**Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
+
+## v1.3 Requirements
+
+Six categories, 40 requirements total. Grouped by the phases the roadmapper will derive from them. Every requirement is additive over shipped `scrypath 0.3.0`; no breaking changes to v1.2 public contracts.
+
+### Release Parity & CI Hygiene
+
+Landing a workspace-clean gate + CI Node 20 cleanup BEFORE feature work mechanizes the v1.2 divergence-prevention so feature phases cannot recur it.
+
+- [ ] **INFRA-01**: `mix verify.workspace_clean` fails if the working tree contains any untracked file matching `lib/**`, `test/**`, `guides/**`, or `docs/**` OR any tracked file with uncommitted modifications in those paths. Integrated into `publish-hex.yml` before `mix hex.publish`.
+- [ ] **INFRA-02**: `mix verify.release_parity X.Y.Z` compares the published Hex `X.Y.Z` tarball's `lib/` + `guides/` + `docs/` file list against the current git tag of the same version; exits non-zero on divergence. Integrated into `verify-published-release.yml`.
+- [ ] **INFRA-03**: `.github/workflows/ci.yml` uses `actions/checkout@v6` and `actions/cache@v5` (clears Node 20 deprecation before the 2026-09 removal). No other workflow edits required.
+- [ ] **INFRA-04**: CI runs `mix verify.workspace_clean` on every push AND `mix verify.release_parity` as a scheduled daily job against the latest published Hex version.
+
+### Relevance Tuning (prefix: TUNE)
+
+Per-schema declarative settings for synonyms, typo tolerance, ranking rules, distinct attribute, and stop words — applied safely through the existing managed reindex pipeline. See `.planning/research/deep/RELEVANCE.md`.
+
+- [ ] **TUNE-01**: Structured nested-subkey validation inside the existing `settings:` schema key. Recognized subkeys: `synonyms`, `typo_tolerance`, `ranking_rules`, `distinct_attribute`, `stop_words`. Unknown subkeys pass through unchanged to preserve forward compatibility.
+- [ ] **TUNE-02**: `synonyms` declaration accepts both Meilisearch-native map form (`%{"nyc" => ["new york"]}`) AND bidirectional list-of-groups sugar (`[["nyc", "new york"]]`). Optional `one_way: true` flag disables bidirectional expansion.
+- [ ] **TUNE-03**: All `settings:` values flow exclusively through `Scrypath.reindex/2`'s managed pipeline (create → apply → backfill → cutover). `Scrypath.Meilisearch.Settings.hot_apply/3` exists as a stub returning `{:error, :hot_apply_disabled}` — deferred to v1.4.
+- [ ] **TUNE-04**: Ranking rules safety rail — if user supplies `ranking_rules:`, must include all six Meilisearch defaults (`words`, `typo`, `proximity`, `attribute`, `sort`, `exactness`) unless `ranking_rules_strict?: false` is set on the schema. Compile-time check with actionable error message.
+- [ ] **TUNE-05**: Post-apply settings verification step in `Scrypath.Reindex.run/2` reads back target-index settings via `GET /indexes/:uid/settings`, compares to declared, BLOCKS cutover on drift unless `skip_settings_verification?: true`.
+- [ ] **TUNE-06**: Shallow-merge override semantics by default (runtime `settings:` opt replaces matching top-level subkey). Opt-in `settings_merge: :deep` for nested override.
+- [ ] **TUNE-07**: New mix task `mix scrypath.settings.diff [Schema]` prints declared-vs-applied three-column table, exits code 2 on drift.
+- [ ] **TUNE-08**: New mix task `mix scrypath.settings.read [Schema]` reads current applied settings for debuggability.
+
+### Faceted Search (prefix: FACET)
+
+Declarative `faceting:` schema key, validated facet filter grammar, distribution + stats on `%SearchResult{}`, Phoenix LiveView guide. See `.planning/research/deep/FACETING.md`.
+
+- [ ] **FACET-01**: Declarative `faceting: [attributes: [...], max_values_per_facet: N, sort_facet_values_by: %{...}]` schema key in `use Scrypath`. Reflected via `__scrypath__(:faceting)` and `Scrypath.schema_faceting/1`.
+- [ ] **FACET-02**: Compile-time enforcement: every atom in `faceting.attributes` MUST also appear in `filterable:`. Error message points at the offending attribute with actionable fix.
+- [ ] **FACET-03**: `facets:` runtime kwarg on `Scrypath.search/3` selects which declared facet attributes to compute distributions for on this call. Unknown or non-declared attributes raise `{:error, {:unknown_facet, attr}}`.
+- [ ] **FACET-04**: `facet_filter:` runtime kwarg accepts keyword-list form `[genre: ["fiction", "horror"], year: [2024]]` with disjunctive-within-field (OR), conjunctive-across-fields (AND) semantics. Does NOT widen the common `filter:` kwarg grammar.
+- [ ] **FACET-05**: New `%Scrypath.SearchResult.Facets{distribution:, stats:, declared_order:}` sub-struct. `distribution:` is map of atom → ordered list of `%Bucket{value, count}`. `stats:` map populated default-on for numeric facets. Added to `%SearchResult{}` outside `@enforce_keys`, defaults to `%Facets{}`.
+- [ ] **FACET-06**: Numeric facet stats default-on (Meilisearch returns them for free on numeric filterable attrs). No opt-in needed.
+- [ ] **FACET-07**: Managed reindex auto-derives Meilisearch `filterableAttributes` object form (with `features: ["facetSearch"]`) for any attribute in `faceting.attributes`. Zero user-facing configuration; handled in `Scrypath.Meilisearch.Settings`.
+- [ ] **FACET-08**: `guides/faceted-search-with-phoenix-liveview.md` ships with a movies-by-genre-year-rating-director worked example showing 4 canonical UI patterns (sidebar checklist, chip row, range, search-within-facet). Anti-pattern appendix with 7+ entries.
+- [ ] **FACET-09**: `filter:` and `facet_filter:` compose with AND semantics in the Meilisearch payload. Test coverage includes 5 combinations (filter only, facet_filter only, both, both-with-multiple-fields, both-with-disjunctive).
+- [ ] **FACET-10**: Explicit non-goals enforced by test: no wildcard `"*"` in `faceting.attributes`, no raw string DSL in `facet_filter:`, no hierarchical/nested facet declaration (e.g., `categories.lvl0`).
+
+### Multi-Index Search (prefix: MULTI)
+
+`Scrypath.search_many/2` federated queries across N schemas with per-schema validation preserved, unified hydration, explicit partial-failure envelope. See `.planning/research/deep/MULTI_INDEX.md`.
+
+- [ ] **MULTI-01**: `Scrypath.search_many/2` public API accepts a non-empty list of `{schema, text}` or `{schema, text, opts}` 3-tuples plus shared opts. Empty list or malformed entries raise explicit errors.
+- [ ] **MULTI-02**: Shared opts layer under per-entry opts with right-biased `Keyword.merge/2` on a per-key basis. Per-entry opts fully replace shared opts for that key (not merged).
+- [ ] **MULTI-03**: Shared-opts whitelist for federation-global keys (`federation_limit`, `federation_offset`, `hydration_timeout`, `max_schemas`). Using these at per-entry level raises `{:error, {:invalid_options, ...}}`.
+- [ ] **MULTI-04**: New public struct `%Scrypath.MultiSearchResult{ordered:, by_schema:, failures:, federation:}` with `@enforce_keys` on the first three (safe because brand-new struct, no 0.3.0 consumers).
+- [ ] **MULTI-05**: Invariant `by_schema == ordered \|> Enum.into(%{})` always holds. Property test over random schema lists + success/partial/failure scenarios.
+- [ ] **MULTI-06**: Canonical return shape: `{:ok, %MultiSearchResult{}}` when any sub-query succeeded; `{:error, {:all_failed, ...}}`, `{:error, {:validation_failed, ...}}`, `{:error, {:transport_failed, ...}}`, `{:error, {:invalid_options, ...}}`, `{:error, :empty_schema_list}`, `{:error, {:too_many_schemas, ...}}` per canonical failure table.
+- [ ] **MULTI-07**: `failures:` is `[%{schema: module(), reason: term()}]`. Never tagged tuples; schema key always present; reason is atom or structured map/struct.
+- [ ] **MULTI-08**: Per-schema facets flow via Meilisearch's `federation.facetsByIndex[indexUid]`; `mergeFacets` is NEVER set. `result.by_schema[S].facets` matches single-`search(S, ...)` output byte-for-byte for the same `facets:` opt.
+- [ ] **MULTI-09**: Hydration runs concurrently via `Task.async_stream/5` with `ordered: true`, `max_concurrency: length(entries)`, `timeout: hydration_timeout_ms` (default 5000), `on_timeout: :kill_task`. Timed-out schemas move to `failures:` with `reason: :hydration_timeout`.
+- [ ] **MULTI-10**: Cardinality rails — `max_schemas` (default 10), per-entry `page.size` max (default 50), `federation_limit` (default 200), `hydration_timeout` (default 5000 ms), `federation_timeout` (default 7500 ms). Over-limit returns explicit error; never silent truncation.
+- [ ] **MULTI-11**: `guides/multi-index-search.md` with worked 4-schema LiveView dashboard example (search + per-schema facets + partial-failure banner). Cross-links to faceted-search guide and sync-modes guide.
+- [ ] **MULTI-12**: `Scrypath.Backend.search_many/3` added as `@optional_callback`. Default N-sequential-calls fallback implemented in `Scrypath.Search.search_many/2`. `Scrypath.Meilisearch.search_many/3` uses native `/multi-search` endpoint.
+- [ ] **MULTI-13**: Telemetry `[:scrypath, :search_many, :start]`, `[:scrypath, :search_many, :stop]`, `[:scrypath, :search_many, :partial]`.
+
+### Operator Polish & Drift Recovery (prefix: OPS, continues from v1.2)
+
+Richer `FailedWork.t()` fields plus a concrete drift recovery markdown runbook. No new public API verbs — extends existing operator surface only. See `.planning/research/deep/OPERATOR_POLISH.md`.
+
+- [ ] **OPS-05**: `%Scrypath.Operator.FailedWork{}` gains four additive defaulted fields outside `@enforce_keys`: `attempt: nil`, `max_attempts: nil`, `reason_class: nil`, `last_attempt_at: nil`. Backward-compat preserved — all 0.3.0 constructors and pattern matches continue to work.
+- [ ] **OPS-06**: Deterministic `reason_class` classifier with 5-value enum `[:transport, :validation, :backend_rejected, :queue_exhausted, :unknown]`. Populated in `from_backend_task/3` and `from_queue_job/3`. Unknown inputs fall to `:unknown` — never silently misclassified.
+- [ ] **OPS-07**: Inline/manual failures set `attempt: nil, max_attempts: nil` (not `1/1`). `nil` is self-describing.
+- [ ] **OPS-08**: `last_attempt_at` is populated to the same value as `failed_at` (both are surfaced; `last_attempt_at` is the clearer name for new code). No deprecation of `failed_at` in v1.3.
+- [ ] **OPS-09**: `guides/drift-recovery.md` ships with 6 concrete SRE-runbook-style scenarios: (a) empty index, (b) stale results after sync success, (c) backfill/count divergence, (d) failed-work pileup, (e) settings drift, (f) stuck reindex mid-cutover. Each scenario follows symptom → diagnosis → action → verify using existing `mix scrypath.*` + `Scrypath.*` verbs only.
+- [ ] **OPS-10**: Telemetry event `[:scrypath, :operator, :failed_work, :observed]` emitted when `FailedWork.t()` is constructed. Metadata includes `reason_class`, `schema`, `mode`.
+
+### v1.2 Nyquist VALIDATION.md Closure (prefix: VALID)
+
+Close the three missing Nyquist validation artifacts from v1.2 (phases 13/14/15) — identified in `v1.2-MILESTONE-AUDIT.md` as tech debt.
+
+- [ ] **VALID-01**: `VALIDATION.md` for v1.2 phase 13 (operator primitives) exists in archived phase location OR in the v1.2 milestone archive, cites runnable tests (`test/scrypath/operator/*_test.exs`) and captured `mix verify.phase13 --skip-integration` output. No pencil-whipping.
+- [ ] **VALID-02**: `VALIDATION.md` for v1.2 phase 14 (mix tasks and guides) cites `test/scrypath/mix_tasks/operator_tasks_test.exs` runs + `mix verify.phase14` output.
+- [ ] **VALID-03**: `VALIDATION.md` for v1.2 phase 15 (verify operator primitives) cites the live integration path from `test/scrypath/live_operator_verification_test.exs`. Audit nyquist coverage moves from `partial` → `compliant` in `v1.2-MILESTONE-AUDIT.md`.
+
+## v1.4+ Requirements (Deferred)
+
+Tracked; not in v1.3. These came out of the deep research as "natural extensions" that cross locked non-goals or would add surface area before adoption pressure proves them.
+
+### Relevance tuning
+
+- **TUNE-V14-01**: Hot-apply escape hatch `Scrypath.Meilisearch.Settings.hot_apply/3` for synonyms/stop_words/typo_tolerance only (stub exists in v1.3 returning `:hot_apply_disabled`).
+- **TUNE-V14-02**: Per-query setting overrides (currently rejected by TUNE-03).
+
+### Faceting
+
+- **FACET-V14-01**: Hierarchical/nested facet declarations (`categories.lvl0`, `categories.lvl1`).
+- **FACET-V14-02**: Unrefined / disjunctive facet counts as a first-class opt (currently a guide recipe using `search_many/2`).
+- **FACET-V14-03**: `search_within_facet/4` for in-facet value search.
+
+### Multi-index
+
+- **MULTI-V14-01**: Cross-schema ranking normalization / federation-wide relevance score.
+- **MULTI-V14-02**: Custom weighting / boost parameters for cross-schema score fusion.
+- **MULTI-V14-03**: `:all`-schema wildcard via registry.
+
+### Operator
+
+- **OPS-V14-01**: Failure-class rollup counts on `failed_sync_work/2` (tagged optional OPS-10 in research but deferred — narrow-polish discipline).
+- **OPS-V14-02**: `reason_class`-driven recovery action branching inside `reconcile_sync/2` (violates v1.2 report-first discipline).
+
+## Out of Scope
+
+Explicitly excluded for v1.3. Documented to prevent scope creep.
+
+| Feature | Reason |
+|---------|--------|
+| Second public backend (Typesense, Elasticsearch, etc.) | Non-goal locked in v1.2; adoption pressure has not proven the common path deserves to widen. |
+| Vector / hybrid / semantic search | Non-goal locked in PROJECT.md; operational core should settle first. |
+| Postgres-native full-text search | Non-goal locked in PROJECT.md; muddies product boundary. |
+| Dashboard / web UI for operators | Non-goal locked in v1.2; operator surface stays library-first. |
+| New `Scrypath.recover/2` verb | Drift recovery is a markdown guide chaining existing verbs, not a new verb (PITFALLS tripwire). |
+| Breaking changes to `%SearchResult{}`, `%Query{}`, `%FailedWork{}` enforce_keys | All v1.3 additions are defaulted fields outside `@enforce_keys`. Hard break would require v2.0. |
+| `mergeFacets: true` cross-schema facet merging | Violates Scrypath's schemas-stay-decoupled philosophy. |
+| Boolean composition (`and`/`or`/`not`) on common `filter:` grammar | Common filter is deliberately Ecto-narrow; facets get a sibling kwarg instead. |
+| `mix scrypath.search_many` CLI task | No CLI product surface for search. Mix tasks stay sync/operator-surface only. |
+| Cross-schema hit union/interleaving in `search_many/2` | Consumer derives from `ordered:` in user code; library returns grouped. |
+| Meilisearch federation vector/embedder knobs | Violates vector-search non-goal. |
+| Raw Meilisearch JSON passthrough on public API layer | Backend-native shapes stay under `Scrypath.Meilisearch.*` namespace. |
+| Pencil-whipped VALIDATION.md closures | Each closure must cite runnable tests and captured verify output — no checkmark-only closures. |
+
+## Traceability
+
+Which phases cover which requirements. Filled by the roadmapper during phase creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| INFRA-01 | TBD | Pending |
+| INFRA-02 | TBD | Pending |
+| INFRA-03 | TBD | Pending |
+| INFRA-04 | TBD | Pending |
+| TUNE-01 | TBD | Pending |
+| TUNE-02 | TBD | Pending |
+| TUNE-03 | TBD | Pending |
+| TUNE-04 | TBD | Pending |
+| TUNE-05 | TBD | Pending |
+| TUNE-06 | TBD | Pending |
+| TUNE-07 | TBD | Pending |
+| TUNE-08 | TBD | Pending |
+| FACET-01 | TBD | Pending |
+| FACET-02 | TBD | Pending |
+| FACET-03 | TBD | Pending |
+| FACET-04 | TBD | Pending |
+| FACET-05 | TBD | Pending |
+| FACET-06 | TBD | Pending |
+| FACET-07 | TBD | Pending |
+| FACET-08 | TBD | Pending |
+| FACET-09 | TBD | Pending |
+| FACET-10 | TBD | Pending |
+| MULTI-01 | TBD | Pending |
+| MULTI-02 | TBD | Pending |
+| MULTI-03 | TBD | Pending |
+| MULTI-04 | TBD | Pending |
+| MULTI-05 | TBD | Pending |
+| MULTI-06 | TBD | Pending |
+| MULTI-07 | TBD | Pending |
+| MULTI-08 | TBD | Pending |
+| MULTI-09 | TBD | Pending |
+| MULTI-10 | TBD | Pending |
+| MULTI-11 | TBD | Pending |
+| MULTI-12 | TBD | Pending |
+| MULTI-13 | TBD | Pending |
+| OPS-05 | TBD | Pending |
+| OPS-06 | TBD | Pending |
+| OPS-07 | TBD | Pending |
+| OPS-08 | TBD | Pending |
+| OPS-09 | TBD | Pending |
+| OPS-10 | TBD | Pending |
+| VALID-01 | TBD | Pending |
+| VALID-02 | TBD | Pending |
+| VALID-03 | TBD | Pending |
+
+**Coverage:**
+- v1.3 requirements: 41 total across 6 categories
+- Mapped to phases: 0 (pending roadmap)
+- Unmapped: 41
+
+---
+*Requirements defined: 2026-04-17*
+*Deep research sources: `.planning/research/deep/{FACETING,RELEVANCE,MULTI_INDEX,OPERATOR_POLISH}.md` + `.planning/research/SUMMARY.md`*
