@@ -436,9 +436,6 @@ defmodule Scrypath.Options do
 
       {:error, {:invalid_facet_filter, reason}} ->
         raise ArgumentError, "facet_filter: #{inspect(reason)}"
-
-      {:error, other} ->
-        raise ArgumentError, "invalid search options: #{inspect(other)}"
     end
   end
 
