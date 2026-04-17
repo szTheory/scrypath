@@ -61,19 +61,25 @@ defmodule Scrypath.TelemetryTest do
   end
 
   test "common sync emits span-based upsert and delete events with stable low-cardinality metadata" do
-    events = capture_events([[:scrypath, :sync, :upsert], [:scrypath, :sync, :delete]], fn ->
-      assert {:ok, %{document_ids: [1, 2], mode: :manual, status: :accepted}} =
-               Scrypath.sync_records(SearchablePost, [
-                 %SearchablePost{id: 1, title: "One", body: "First"},
-                 %SearchablePost{id: 2, title: "Two", body: "Second"}
-               ], backend: RecordingBackend, sync_mode: :manual)
+    events =
+      capture_events([[:scrypath, :sync, :upsert], [:scrypath, :sync, :delete]], fn ->
+        assert {:ok, %{document_ids: [1, 2], mode: :manual, status: :accepted}} =
+                 Scrypath.sync_records(
+                   SearchablePost,
+                   [
+                     %SearchablePost{id: 1, title: "One", body: "First"},
+                     %SearchablePost{id: 2, title: "Two", body: "Second"}
+                   ],
+                   backend: RecordingBackend,
+                   sync_mode: :manual
+                 )
 
-      assert {:ok, %{document_ids: ["post:1", "post:2"], mode: :manual, status: :accepted}} =
-               Scrypath.delete_documents(SearchablePost, ["post:1", "post:2"],
-                 backend: RecordingBackend,
-                 sync_mode: :manual
-               )
-    end)
+        assert {:ok, %{document_ids: ["post:1", "post:2"], mode: :manual, status: :accepted}} =
+                 Scrypath.delete_documents(SearchablePost, ["post:1", "post:2"],
+                   backend: RecordingBackend,
+                   sync_mode: :manual
+                 )
+      end)
 
     assert_event(events, [:scrypath, :sync, :upsert, :start], %{schema: SearchablePost})
     assert_event(events, [:scrypath, :sync, :upsert, :stop], %{schema: SearchablePost})
@@ -100,17 +106,18 @@ defmodule Scrypath.TelemetryTest do
       %QueryablePost{id: 2, title: "Second"}
     ])
 
-    events = capture_events([[:scrypath, :search], [:scrypath, :hydration]], fn ->
-      assert {:ok,
-              %SearchResult{
-                records: [%QueryablePost{id: 2}, %QueryablePost{id: 1}],
-                missing_ids: [3]
-              }} =
-               Scrypath.search(QueryablePost, "ecto",
-                 backend: RecordingBackend,
-                 repo: FakeRepo
-               )
-    end)
+    events =
+      capture_events([[:scrypath, :search], [:scrypath, :hydration]], fn ->
+        assert {:ok,
+                %SearchResult{
+                  records: [%QueryablePost{id: 2}, %QueryablePost{id: 1}],
+                  missing_ids: [3]
+                }} =
+                 Scrypath.search(QueryablePost, "ecto",
+                   backend: RecordingBackend,
+                   repo: FakeRepo
+                 )
+      end)
 
     search_stop = find_event(events, [:scrypath, :search, :stop])
     hydration_stop = find_event(events, [:scrypath, :hydration, :stop])
@@ -131,13 +138,19 @@ defmodule Scrypath.TelemetryTest do
   end
 
   test "public telemetry stays batch-oriented rather than record-by-record" do
-    events = capture_events([[:scrypath, :sync, :upsert]], fn ->
-      assert {:ok, %{document_ids: [1, 2], mode: :manual}} =
-               Scrypath.sync_records(SearchablePost, [
-                 %SearchablePost{id: 1, title: "One", body: "First"},
-                 %SearchablePost{id: 2, title: "Two", body: "Second"}
-               ], backend: RecordingBackend, sync_mode: :manual)
-    end)
+    events =
+      capture_events([[:scrypath, :sync, :upsert]], fn ->
+        assert {:ok, %{document_ids: [1, 2], mode: :manual}} =
+                 Scrypath.sync_records(
+                   SearchablePost,
+                   [
+                     %SearchablePost{id: 1, title: "One", body: "First"},
+                     %SearchablePost{id: 2, title: "Two", body: "Second"}
+                   ],
+                   backend: RecordingBackend,
+                   sync_mode: :manual
+                 )
+      end)
 
     stop_events =
       Enum.filter(events, fn event ->
@@ -149,18 +162,22 @@ defmodule Scrypath.TelemetryTest do
   end
 
   test "no-op sync telemetry keeps explicit mode and zero-count metadata" do
-    events = capture_events([[:scrypath, :sync, :upsert], [:scrypath, :sync, :delete]], fn ->
-      assert {:ok, %{mode: :manual, status: :noop, document_ids: [], document_count: 0}} =
-               Scrypath.sync_records(SearchablePost, [], backend: RecordingBackend, sync_mode: :manual)
+    events =
+      capture_events([[:scrypath, :sync, :upsert], [:scrypath, :sync, :delete]], fn ->
+        assert {:ok, %{mode: :manual, status: :noop, document_ids: [], document_count: 0}} =
+                 Scrypath.sync_records(SearchablePost, [],
+                   backend: RecordingBackend,
+                   sync_mode: :manual
+                 )
 
-      assert {:ok, %{mode: :oban, status: :noop, document_ids: [], document_count: 0}} =
-               Scrypath.delete_documents(SearchablePost, [],
-                 backend: RecordingBackend,
-                 sync_mode: :oban,
-                 oban: Scrypath.SyncTest.EnqueueOban,
-                 oban_queue: :search_sync
-               )
-    end)
+        assert {:ok, %{mode: :oban, status: :noop, document_ids: [], document_count: 0}} =
+                 Scrypath.delete_documents(SearchablePost, [],
+                   backend: RecordingBackend,
+                   sync_mode: :oban,
+                   oban: Scrypath.SyncTest.EnqueueOban,
+                   oban_queue: :search_sync
+                 )
+      end)
 
     upsert_stop = find_event(events, [:scrypath, :sync, :upsert, :stop])
     delete_stop = find_event(events, [:scrypath, :sync, :delete, :stop])
@@ -235,21 +252,35 @@ defmodule Scrypath.TelemetryTest do
     readme = File.read!("README.md")
     architecture = File.read!("ARCHITECTURE.md")
 
-    assert readme =~ "requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded"
-    assert readme =~ "`sync_mode: :oban` means durable enqueue accepted, not search visibility completed."
-    assert readme =~ "retries, discarded jobs, stale deletes, and drift are normal operational realities"
+    assert readme =~
+             "requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded"
+
+    assert readme =~
+             "`sync_mode: :oban` means durable enqueue accepted, not search visibility completed."
+
+    assert readme =~
+             "retries, discarded jobs, stale deletes, and drift are normal operational realities"
+
     assert readme =~ "Scrypath v1 publicly targets Meilisearch first."
     assert readme =~ "The public backend-native namespace remains `Scrypath.Meilisearch.*`."
-    assert readme =~ "does not promise public multi-backend parity or a public operator API in this phase"
 
-    assert architecture =~ "| `:inline` | waits for terminal backend task success before returning |"
+    assert readme =~
+             "does not promise public multi-backend parity or a public operator API in this phase"
+
+    assert architecture =~
+             "| `:inline` | waits for terminal backend task success before returning |"
+
     assert architecture =~ "| `:manual` | returns accepted backend work immediately |"
     assert architecture =~ "| `:oban` | returns durable enqueue acceptance only |"
     assert architecture =~ "Phase 12 keeps the operations seam internal"
     assert architecture =~ "sync, backfill, and managed reindex"
     assert architecture =~ "not to introduce a new public operator namespace before Phase 13"
-    assert architecture =~ "exchange Scrypath-owned operation results and followable references internally"
-    assert architecture =~ "backend-native task detail remains namespaced under `Scrypath.Meilisearch.*`"
+
+    assert architecture =~
+             "exchange Scrypath-owned operation results and followable references internally"
+
+    assert architecture =~
+             "backend-native task detail remains namespaced under `Scrypath.Meilisearch.*`"
   end
 
   defp capture_events(prefixes, fun) do
@@ -263,7 +294,8 @@ defmodule Scrypath.TelemetryTest do
         prefix ++ [suffix]
       end
 
-    :ok = :telemetry.attach_many(handler_id, event_names, &__MODULE__.handle_event/4, {parent, ref})
+    :ok =
+      :telemetry.attach_many(handler_id, event_names, &__MODULE__.handle_event/4, {parent, ref})
 
     fun.()
 

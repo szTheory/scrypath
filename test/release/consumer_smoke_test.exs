@@ -33,7 +33,10 @@ defmodule Scrypath.Release.ConsumerSmokeTest do
     run_mix!(["compile"], cd: app_dir)
 
     assert File.exists?(
-             Path.join(app_dir, "_build/dev/lib/consumer_usage/ebin/Elixir.ConsumerUsage.Post.beam")
+             Path.join(
+               app_dir,
+               "_build/dev/lib/consumer_usage/ebin/Elixir.ConsumerUsage.Post.beam"
+             )
            )
   end
 
@@ -138,7 +141,10 @@ defmodule Scrypath.Release.ConsumerSmokeTest do
 
   defp unique_tmp_dir! do
     path =
-      Path.join(System.tmp_dir!(), "scrypath-consumer-smoke-#{System.unique_integer([:positive])}")
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath-consumer-smoke-#{System.unique_integer([:positive])}"
+      )
 
     File.mkdir_p!(path)
     path

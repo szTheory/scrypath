@@ -108,9 +108,7 @@ defmodule Scrypath.Meilisearch do
          raw: response
        }}
     else
-      {:error,
-       {:invalid_task_payload,
-        invalid_task_payload(stage, task_uid, problems, response)}}
+      {:error, {:invalid_task_payload, invalid_task_payload(stage, task_uid, problems, response)}}
     end
   end
 

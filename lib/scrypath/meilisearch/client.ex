@@ -7,7 +7,8 @@ defmodule Scrypath.Meilisearch.Client do
   alias Scrypath.Query, as: CommonQuery
   alias Scrypath.Telemetry
 
-  @spec create_index(String.t(), String.t() | atom() | nil, keyword()) :: {:ok, map()} | {:error, term()}
+  @spec create_index(String.t(), String.t() | atom() | nil, keyword()) ::
+          {:ok, map()} | {:error, term()}
   def create_index(index_name, primary_key, config) do
     payload =
       %{"uid" => index_name}
@@ -137,7 +138,9 @@ defmodule Scrypath.Meilisearch.Client do
   defp search_payload(query) when is_map(query), do: query
 
   defp maybe_put_primary_key(payload, nil), do: payload
-  defp maybe_put_primary_key(payload, primary_key), do: Map.put(payload, "primaryKey", to_string(primary_key))
+
+  defp maybe_put_primary_key(payload, primary_key),
+    do: Map.put(payload, "primaryKey", to_string(primary_key))
 
   defp encode_task_filters(filters) do
     Enum.reduce(filters, %{}, fn

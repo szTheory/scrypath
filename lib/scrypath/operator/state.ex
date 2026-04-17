@@ -68,9 +68,14 @@ defmodule Scrypath.Operator.State do
   defp normalize_backend_state(:completed), do: :completed
   defp normalize_backend_state(_state), do: :pending
 
-  defp normalize_queue_state(state) when state in ["available", "scheduled", "executing"], do: :queued
+  defp normalize_queue_state(state) when state in ["available", "scheduled", "executing"],
+    do: :queued
+
   defp normalize_queue_state(state) when state in ["retryable", :retryable], do: :retrying
-  defp normalize_queue_state(state) when state in ["discarded", "cancelled", :discarded, :cancelled], do: :failed
+
+  defp normalize_queue_state(state)
+       when state in ["discarded", "cancelled", :discarded, :cancelled], do: :failed
+
   defp normalize_queue_state(state) when state in ["completed", :completed], do: :completed
   defp normalize_queue_state(:queued), do: :queued
   defp normalize_queue_state(:retrying), do: :retrying
