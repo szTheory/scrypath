@@ -107,7 +107,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 18. Release-Parity Gate + Node 20 CI Cleanup | 7/7 | Complete   | 2026-04-17 |
+| 18. Release-Parity Gate + Node 20 CI Cleanup | 7/7 | Complete    | 2026-04-17 |
 | 19. Relevance Tuning | 0/? | Not started | - |
 | 20. Faceted Search + LiveView Guide | 0/? | Not started | - |
 | 21. Multi-Index Search | 0/? | Not started | - |
