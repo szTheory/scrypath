@@ -177,3 +177,45 @@ Use `--replace` only when Hex still allows replacing the published version and t
    ```
 
    After the revert, fix the repo state, let Release Please open the next versioned PR, merge it, and rerun the canonical release flow plus `mix verify.release_publish X.Y.Z` for the new release.
+
+## Release parity gate
+
+Scrypath publishes through two mechanized gates that prevent the v1.2-era
+divergence where a git tag and the published Hex tarball drifted.
+
+### `mix verify.workspace_clean`
+
+Runs before `mix hex.publish` on every publish path (`.github/workflows/ci.yml`
+quality job, `.github/workflows/release-please.yml` publish-hex job, and
+`.github/workflows/publish-hex.yml` manual recovery). Fails if the working
+tree has any uncommitted or untracked files under the paths that ship in
+the tarball (`lib/`, `test/`, `guides/`, `docs/`, `mix.exs`,
+`.formatter.exs`, top-level `.md` files). Catches tag-vs-source drift at
+publish time.
+
+There is deliberately no escape-hatch flag or environment variable — in a
+true emergency, comment out the workflow step in a PR. The friction is the
+feature.
+
+### `mix verify.release_parity X.Y.Z`
+
+Runs daily via `.github/workflows/verify-published-release.yml` (cron) and
+compares the published Hex tarball's `lib/ + guides/ + docs/` file list
+against the git tag of the same version. Catches tarball-vs-tag drift
+AFTER publish.
+
+Exit codes:
+
+- `0` — parity (no drift)
+- `2` — drift detected
+- `1` — runtime error (network, missing tag, etc.)
+
+On drift during a scheduled run, a deduplicated GitHub issue is auto-filed
+using `.github/ISSUE_TEMPLATE/release-parity-drift.md`.
+
+### Historical context
+
+These gates exist because v1.2 shipped with a tag/main divergence that went
+uncaught until the next release cycle. See
+`.planning/milestones/v1.2-MILESTONE-AUDIT.md` for the full incident
+narrative.
