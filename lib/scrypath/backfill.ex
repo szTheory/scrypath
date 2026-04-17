@@ -52,7 +52,13 @@ defmodule Scrypath.Backfill do
         last_primary_key = Map.fetch!(List.last(records), primary_key)
 
         with {:ok, backend_result} <-
-               upsert_documents(schema_module, documents, Keyword.fetch!(config, :backend), config, index) do
+               upsert_documents(
+                 schema_module,
+                 documents,
+                 Keyword.fetch!(config, :backend),
+                 config,
+                 index
+               ) do
           batch_result =
             batch_result(
               backend_result,
@@ -97,8 +103,11 @@ defmodule Scrypath.Backfill do
     config = Keyword.put(config, :index_name, index)
 
     case backend do
-      Scrypath.Meilisearch -> MeilisearchOperations.upsert_documents(schema_module, documents, config)
-      _other -> backend.upsert_documents(schema_module, documents, config)
+      Scrypath.Meilisearch ->
+        MeilisearchOperations.upsert_documents(schema_module, documents, config)
+
+      _other ->
+        backend.upsert_documents(schema_module, documents, config)
     end
   end
 

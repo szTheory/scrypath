@@ -68,7 +68,13 @@ defmodule Scrypath.Oban.EnqueueTest do
     assert task.id == 901
     assert task.kind == :queue_job
     assert task.state == :queued
-    assert task.reference == %{job_id: 901, worker: "Scrypath.Oban.UpsertWorker", queue: "search_sync"}
+
+    assert task.reference == %{
+             job_id: 901,
+             worker: "Scrypath.Oban.UpsertWorker",
+             queue: "search_sync"
+           }
+
     assert task.metadata.oban_state == "available"
 
     assert_received {:oban_insert, job}
@@ -96,7 +102,13 @@ defmodule Scrypath.Oban.EnqueueTest do
     assert task.id == 901
     assert task.kind == :queue_job
     assert task.state == :queued
-    assert task.reference == %{job_id: 901, worker: "Scrypath.Oban.DeleteWorker", queue: "search_sync"}
+
+    assert task.reference == %{
+             job_id: 901,
+             worker: "Scrypath.Oban.DeleteWorker",
+             queue: "search_sync"
+           }
+
     assert task.metadata.oban_state == "available"
 
     assert_received {:oban_insert, job}

@@ -98,7 +98,9 @@ defmodule Scrypath.TestSupport.MeilisearchIntegration do
 
     wait_until!(
       fn ->
-        case Scrypath.Meilisearch.search(schema_module, %{"q" => "", "limit" => 20},
+        case Scrypath.Meilisearch.search(
+               schema_module,
+               %{"q" => "", "limit" => 20},
                Keyword.put(config, :index_name, index_name)
              ) do
           {:ok, %{"hits" => hits}} -> length(hits) == expected_count

@@ -14,7 +14,8 @@ defmodule Scrypath.Meilisearch.IndexManagement do
     Keyword.get(config, :target_index) || "#{live_index_name(schema_module, config)}__reindex"
   end
 
-  @spec create_index(module(), String.t() | atom() | nil, keyword()) :: {:ok, map()} | {:error, term()}
+  @spec create_index(module(), String.t() | atom() | nil, keyword()) ::
+          {:ok, map()} | {:error, term()}
   def create_index(schema_module, primary_key, config) do
     live_index = live_index_name(schema_module, config)
     target_index = target_index_name(schema_module, config)
