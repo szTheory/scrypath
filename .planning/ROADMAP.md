@@ -18,7 +18,7 @@
 - [x] **Phase 12: Internal Operations Seam** - Extract Scrypath-owned operations boundaries under the Meilisearch-first public surface. (completed 2026-04-16)
 - [x] **Phase 13: Operator Primitives** - Expose status, failure inspection, retry, and reconcile APIs through Scrypath-owned operator types. (completed 2026-04-16)
 - [x] **Phase 14: Mix Tasks and Guides** - Put thin CLI ergonomics and sync-mode guides on top of the operator surface without widening common search. (completed 2026-04-16)
-- [ ] **Phase 15: Verify Operator Primitives** - Create the missing Phase 13 verification artifact and repair requirement/roadmap bookkeeping for the shipped operator APIs.
+- [x] **Phase 15: Verify Operator Primitives** - Create the missing Phase 13 verification artifact and repair requirement/roadmap bookkeeping for the shipped operator APIs. (completed 2026-04-17)
 - [ ] **Phase 16: Verify Mix Tasks and Repair Milestone Bookkeeping** - Create the missing Phase 14 verification artifact and repair the remaining milestone tracking drift.
 - [ ] **Phase 17: Prove The First Public Release** - Run the first real public release and capture live Hex/HexDocs verification evidence for milestone closure.
 
@@ -128,7 +128,7 @@ Plans:
 | 12. Internal Operations Seam | 3/3 | Complete    | 2026-04-16 |
 | 13. Operator Primitives | 3/3 | Complete | 2026-04-16 |
 | 14. Mix Tasks and Guides | 2/2 | Complete   | 2026-04-16 |
-| 15. Verify Operator Primitives | 0/1 | Not started | - |
+| 15. Verify Operator Primitives | 1/1 | Complete   | 2026-04-17 |
 | 16. Verify Mix Tasks and Repair Milestone Bookkeeping | 0/TBD | Not started | - |
 | 17. Prove The First Public Release | 0/TBD | Not started | - |
 
