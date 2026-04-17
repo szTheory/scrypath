@@ -12,10 +12,10 @@ Six categories, 44 requirements total. Grouped by the phases the roadmapper will
 
 Landing a workspace-clean gate + CI Node 20 cleanup BEFORE feature work mechanizes the v1.2 divergence-prevention so feature phases cannot recur it.
 
-- [ ] **INFRA-01**: `mix verify.workspace_clean` fails if the working tree contains any untracked file matching `lib/**`, `test/**`, `guides/**`, or `docs/**` OR any tracked file with uncommitted modifications in those paths. Integrated into `publish-hex.yml` before `mix hex.publish`.
-- [ ] **INFRA-02**: `mix verify.release_parity X.Y.Z` compares the published Hex `X.Y.Z` tarball's `lib/` + `guides/` + `docs/` file list against the current git tag of the same version; exits non-zero on divergence. Integrated into `verify-published-release.yml`.
-- [ ] **INFRA-03**: `.github/workflows/ci.yml` uses `actions/checkout@v6` and `actions/cache@v5` (clears Node 20 deprecation before the 2026-09 removal). No other workflow edits required.
-- [ ] **INFRA-04**: CI runs `mix verify.workspace_clean` on every push AND `mix verify.release_parity` as a scheduled daily job against the latest published Hex version.
+- [x] **INFRA-01**: `mix verify.workspace_clean` fails if the working tree contains any untracked file matching `lib/**`, `test/**`, `guides/**`, or `docs/**` OR any tracked file with uncommitted modifications in those paths. Integrated into `publish-hex.yml` before `mix hex.publish`.
+- [x] **INFRA-02**: `mix verify.release_parity X.Y.Z` compares the published Hex `X.Y.Z` tarball's `lib/` + `guides/` + `docs/` file list against the current git tag of the same version; exits non-zero on divergence. Integrated into `verify-published-release.yml`.
+- [x] **INFRA-03**: `.github/workflows/ci.yml` uses `actions/checkout@v6` and `actions/cache@v5` (clears Node 20 deprecation before the 2026-09 removal). No other workflow edits required.
+- [x] **INFRA-04**: CI runs `mix verify.workspace_clean` on every push AND `mix verify.release_parity` as a scheduled daily job against the latest published Hex version.
 
 ### Relevance Tuning (prefix: TUNE)
 
@@ -134,10 +134,10 @@ Which phases cover which requirements. Filled by the roadmapper during phase cre
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01 | Phase 18 | Pending |
-| INFRA-02 | Phase 18 | Pending |
-| INFRA-03 | Phase 18 | Pending |
-| INFRA-04 | Phase 18 | Pending |
+| INFRA-01 | Phase 18 | Complete |
+| INFRA-02 | Phase 18 | Complete |
+| INFRA-03 | Phase 18 | Complete |
+| INFRA-04 | Phase 18 | Complete |
 | TUNE-01 | Phase 19 | Pending |
 | TUNE-02 | Phase 19 | Pending |
 | TUNE-03 | Phase 19 | Pending |
