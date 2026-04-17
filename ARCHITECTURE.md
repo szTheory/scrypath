@@ -2,7 +2,7 @@
 
 ## Public Surface
 
-Phase 5 keeps one common runtime surface and one explicit backend-specific escape hatch:
+The library keeps one common runtime surface and one explicit backend-specific escape hatch:
 
 - `Scrypath` for runtime reflection helpers, common sync verbs, backfill, managed reindex, and the common search path
 - `Scrypath.Schema` for the metadata declaration contract
@@ -17,7 +17,7 @@ explicit sync verbs, backfill and reindex orchestration, and the stable search A
 
 `Scrypath.Meilisearch.*` is the explicit escape hatch for Meilisearch-specific behavior such as task-native results and later index-level operations. That keeps backend-native power visible without forcing Meilisearch concepts into every common call.
 
-Phase 12 keeps the operations seam internal even as sync, backfill, and managed reindex start using it end to end. That seam is there to keep common orchestration Scrypath-owned. Phase 13 adds operator verbs on `Scrypath.*` without turning the internal seam into a second public namespace. Phase 14 adds thin `mix scrypath.*` wrappers over those same root APIs without creating a second operator surface.
+An internal **operations seam** stays private even as sync, backfill, and managed reindex use it end to end, so common orchestration stays Scrypath-owned. **Operator verbs** on `Scrypath.*` expose visibility and recovery without turning that seam into a second public namespace. Thin **`mix scrypath.*` wrappers** delegate to those same root APIs without creating a second operator product surface.
 
 ## Search Flow
 
@@ -58,7 +58,7 @@ Projection never performs implicit association loading. Any association-derived 
 
 `Scrypath.Backend` is an internal behavior. It exists to preserve a path for future backend support without promising a public backend-agnostic extension surface in v1.
 
-Phase 3 defines these callbacks:
+Backends implement these callbacks:
 
 - `name/0`
 - `index_name/2`
@@ -99,7 +99,7 @@ That wording is intentional. Retry exhaustion, discarded jobs, stale deletes, an
 
 ## Operator Visibility And Recovery
 
-Phase 13 keeps operator read paths on `Scrypath.*`:
+Operator read paths stay on `Scrypath.*`:
 
 - `Scrypath.sync_status/2` reports backend and queue visibility through Scrypath-owned structs
 - `Scrypath.failed_sync_work/2` surfaces inspectable failed work and explicit retryability
@@ -163,7 +163,7 @@ Accepted work is not search-visible completion. Durable enqueue is not backend c
 
 ## Observability
 
-Phase 4 adds layered telemetry instead of flattening everything into one event family:
+Telemetry stays **layered** instead of flattening everything into one event family:
 
 - `[:scrypath, :sync, ...]`, `[:scrypath, :search, ...]`, and `[:scrypath, :hydration, ...]` are the stable common-path spans.
 - `[:scrypath, :meilisearch, :request, ...]` and `[:scrypath, :meilisearch, :task_wait, ...]` are explicit backend spans for request detail, task ids, poll counts, and wait outcomes.
@@ -171,7 +171,7 @@ Phase 4 adds layered telemetry instead of flattening everything into one event f
 
 ## Deferred Work
 
-Phase 5 intentionally still does not implement:
+The core library intentionally still does not implement:
 
 - public multi-backend query parity
 - automatic drift detection or auto-rebuild triggers

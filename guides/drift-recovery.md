@@ -4,9 +4,9 @@ This guide is for **operators** who already ship Scrypath with Meilisearch and n
 
 ## Guide map
 
-- [`guides/relevance-tuning.md`](relevance-tuning.md) — open when ranking, searchable attributes, or verify-applied settings are in question (Phase 19 semantics).
-- [`guides/faceted-search-with-phoenix-liveview.md`](faceted-search-with-phoenix-liveview.md) — open when filters, facet counts, or `filterableAttributes` explain the mismatch (Phase 20).
-- [`guides/multi-index-search.md`](multi-index-search.md) — open when the wrong index or federation-style `search_many/2` behavior is suspected (Phase 21).
+- [`guides/relevance-tuning.md`](relevance-tuning.md) — open when ranking, searchable attributes, or verify-applied settings are in question.
+- [`guides/faceted-search-with-phoenix-liveview.md`](faceted-search-with-phoenix-liveview.md) — open when filters, facet counts, or `filterableAttributes` explain the mismatch.
+- [`guides/multi-index-search.md`](multi-index-search.md) — open when the wrong index or federation-style `search_many/2` behavior is suspected.
 
 ## Empty index (documents exist in the DB but search returns nothing)
 

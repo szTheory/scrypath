@@ -218,7 +218,7 @@ defmodule Scrypath.DocsContractTest do
       "mix verify.phase20",
       "mix verify.phase22",
       "mix verify.phase26",
-      "Run Phase 13 verification",
+      "Operator integration verification (`mix verify.phase13`)",
       "mix verify.phase13"
     ])
 
@@ -251,7 +251,7 @@ defmodule Scrypath.DocsContractTest do
     ])
   end
 
-  test "verify.phase11 keeps the phase 11 gate auth-free and complete" do
+  test "verify.phase11 keeps the release gate auth-free and complete" do
     assert_contains_all(@verify_phase11, [
       "test/release/package_metadata_test.exs",
       "test/release/consumer_smoke_test.exs",
@@ -263,7 +263,7 @@ defmodule Scrypath.DocsContractTest do
     refute @verify_phase11 =~ ~s|run_command!(["hex.publish"|
   end
 
-  test "verify.phase14 keeps the phase 14 gate auth-free and docs focused" do
+  test "verify.phase14 keeps the operator Mix and docs gate auth-free and docs focused" do
     assert_contains_all(@verify_phase14, [
       "test/scrypath/mix_tasks/operator_tasks_test.exs",
       "test/scrypath/docs_contract_test.exs",
@@ -380,7 +380,7 @@ defmodule Scrypath.DocsContractTest do
     ])
 
     assert_contains_all(@architecture, [
-      "Phase 14 adds thin `mix scrypath.*` wrappers",
+      "Thin **`mix scrypath.*` wrappers** delegate to those same root APIs without creating a second operator product surface.",
       "mix scrypath.status",
       "mix scrypath.reconcile"
     ])

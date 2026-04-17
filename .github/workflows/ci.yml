@@ -96,22 +96,22 @@ jobs:
       - name: Audit Hex dependencies
         run: mix hex.audit
 
-      - name: Run Phase 11 release contract gate
+      - name: Release contract gate (`mix verify.phase11`)
         run: mix verify.phase11
 
-      - name: Run Phase 13 operator gate
+      - name: Operator checks (`mix verify.phase13 --skip-integration`)
         run: mix verify.phase13 --skip-integration
 
-      - name: Run Phase 14 operator docs gate
+      - name: Operator Mix + docs gate (`mix verify.phase14`)
         run: mix verify.phase14
 
-      - name: Run Phase 20 faceting + guide gate
+      - name: Faceting + guide gate (`mix verify.phase20`)
         run: mix verify.phase20
 
-      - name: Run Phase 22 operator polish + drift recovery gate
+      - name: Operator polish + drift recovery gate (`mix verify.phase22`)
         run: mix verify.phase22
 
-      - name: Run Phase 26 operator failure rollups gate
+      - name: Failure rollups gate (`mix verify.phase26`)
         run: mix verify.phase26
 
   phase5-verification:
@@ -160,7 +160,7 @@ jobs:
           echo "Meilisearch failed to start"
           exit 1
 
-      - name: Run Phase 5 verification
+      - name: Backfill + integration verification (`mix verify.phase5`)
         run: mix verify.phase5
 
   phase13-verification:
@@ -209,7 +209,7 @@ jobs:
           echo "Meilisearch failed to start"
           exit 1
 
-      - name: Run Phase 13 verification
+      - name: Operator integration verification (`mix verify.phase13`)
         run: mix verify.phase13
 
   meilisearch-smoke:

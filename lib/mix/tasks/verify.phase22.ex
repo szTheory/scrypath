@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Verify.Phase22 do
   @moduledoc false
   use Mix.Task
 
-  @shortdoc "Runs the automated Phase 22 operator polish + drift recovery verification flow"
+  @shortdoc "Runs FailedWork polish, drift-recovery docs contract, and package metadata checks"
 
   @focused_tests [
     "test/scrypath/operator/failed_work_test.exs",
@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Verify.Phase22 do
     Mix.Task.run("app.start")
     ensure_no_args!(args)
 
-    run_test!(@focused_tests, "Phase 22 FailedWork, drift guide, and package metadata tests")
+    run_test!(@focused_tests, "FailedWork, drift guide, and package metadata tests")
 
     Mix.shell().info("==> Building docs with warnings as errors")
     Mix.Task.reenable("docs")

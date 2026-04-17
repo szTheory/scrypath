@@ -7,9 +7,10 @@ defmodule Mix.Tasks.Verify.WorkspaceClean do
   manual-recovery workflow, and per-push CI) so a release cannot ship files
   that were not reviewed and merged.
 
-  This gate exists because v1.2 shipped a partial tarball when uncommitted
-  files did not travel to the release tag. See
-  `.planning/milestones/v1.2-MILESTONE-AUDIT.md` for the incident narrative.
+  This gate exists because an earlier release cycle shipped a partial tarball
+  when uncommitted files did not travel to the release tag. See
+  `docs/releasing.md` § Historical context for why parity and workspace gates
+  matter on publish paths.
 
   ## Usage
 
@@ -112,9 +113,9 @@ defmodule Mix.Tasks.Verify.WorkspaceClean do
       git stash -u             # shelve uncommitted changes + untracked
       git checkout -- <path>   # discard working-tree changes
 
-    This gate exists because v1.2 shipped a partial tarball when uncommitted
-    files did not travel to the release tag. See
-    .planning/milestones/v1.2-MILESTONE-AUDIT.md for background.
+    This gate exists because an earlier release cycle shipped a partial tarball
+    when uncommitted files did not travel to the release tag. See
+    docs/releasing.md § Historical context for background.
     """)
   end
 end

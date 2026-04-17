@@ -1,10 +1,10 @@
 defmodule Mix.Tasks.Verify.Phase10 do
   use Mix.Task
 
-  @shortdoc "Runs the automated Phase 10 release-confidence flow"
+  @shortdoc "Runs release-confidence checks (metadata, docs, workflows, hex build unpack)"
 
   @moduledoc """
-  Runs the automated release-confidence verification flow for Phase 10.
+  Runs the auth-free release-confidence verification flow.
 
   This task mirrors the current auth-free release gate:
 
@@ -30,7 +30,7 @@ defmodule Mix.Tasks.Verify.Phase10 do
 
     run_test!(
       ["test/release/package_metadata_test.exs", "test/scrypath/docs_contract_test.exs"],
-      "Phase 10 release-confidence tests"
+      "Release-confidence tests"
     )
 
     Mix.shell().info("==> Building docs with warnings as errors")

@@ -5,7 +5,7 @@ defmodule Scrypath.Schema do
   `Scrypath.Schema` validates declaration options, stores normalized metadata on the
   schema module, and exposes that metadata through `__scrypath__/1`.
 
-  Phase 1 supports these `__scrypath__/1` keys:
+  The initial declaration surface supports these `__scrypath__/1` keys:
 
   - `:config`
   - `:fields`

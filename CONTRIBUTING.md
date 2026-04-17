@@ -8,7 +8,7 @@ Use the normal fast suite during development:
 mix test --exclude integration
 ```
 
-Run the full Phase 5 verification flow when you change backfill, reindex, Meilisearch integration, or the operator docs:
+Run the full integration verification (`mix verify.phase5`) when you change backfill, reindex, Meilisearch integration, or the operator docs:
 
 ```sh
 SCRYPATH_INTEGRATION=1 \
@@ -18,7 +18,7 @@ mix verify.phase5
 
 That command runs:
 
-- focused Phase 5 contract tests
+- focused backfill/reindex/operator contract tests
 - documentation contract tests
 - `mix docs --warnings-as-errors`
 - live Meilisearch integration verification
@@ -35,4 +35,4 @@ GitHub Actions runs three lanes:
 
 - core test matrix: compile warnings-as-errors and `mix test --exclude integration`
 - quality: format, Credo, Dialyzer, docs, and Hex audit
-- Phase 5 verification: live Meilisearch service plus `mix verify.phase5`
+- Integration lane: live Meilisearch service plus `mix verify.phase5`

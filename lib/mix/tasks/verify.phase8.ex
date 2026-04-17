@@ -1,14 +1,14 @@
 defmodule Mix.Tasks.Verify.Phase8 do
   use Mix.Task
 
-  @shortdoc "Runs the automated Phase 8 verification flow"
+  @shortdoc "Runs reliability-focused tests with optional live Meilisearch"
 
   @moduledoc """
-  Runs the automated verification flow for Phase 8.
+  Runs the focused reliability verification flow.
 
   By default this includes:
 
-  - focused Phase 8 unit/contract tests
+  - focused unit/contract tests for reliability paths
   - live Meilisearch integration tests
 
   Pass `--skip-integration` to run only the focused fast suite.
@@ -29,7 +29,7 @@ defmodule Mix.Tasks.Verify.Phase8 do
         "test/scrypath/sync_test.exs",
         "test/scrypath/telemetry_test.exs"
       ],
-      "focused Phase 8 reliability tests"
+      "focused reliability tests"
     )
 
     unless opts[:skip_integration] do
@@ -51,7 +51,7 @@ defmodule Mix.Tasks.Verify.Phase8 do
   defp ensure_integration_env! do
     unless System.get_env("SCRYPATH_MEILISEARCH_URL") do
       Mix.raise("""
-      SCRYPATH_MEILISEARCH_URL is required for live Phase 8 verification.
+      SCRYPATH_MEILISEARCH_URL is required for live integration verification.
 
       Example:
         SCRYPATH_INTEGRATION=1 SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700 mix verify.phase8

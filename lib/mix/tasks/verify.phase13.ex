@@ -1,14 +1,14 @@
 defmodule Mix.Tasks.Verify.Phase13 do
   use Mix.Task
 
-  @shortdoc "Runs the automated Phase 13 operator verification flow"
+  @shortdoc "Runs operator API and integration checks (optional live Meilisearch)"
 
   @moduledoc """
-  Runs the automated verification flow for Phase 13.
+  Runs the focused operator verification flow.
 
   By default this includes:
 
-  - focused Phase 13 operator contract tests
+  - focused operator contract tests
   - docs contract tests covering explicit recovery wording
   - `mix docs --warnings-as-errors`
   - optional live Meilisearch operator smoke verification
@@ -37,7 +37,7 @@ defmodule Mix.Tasks.Verify.Phase13 do
         strict: [skip_integration: :boolean]
       )
 
-    run_test!(@focused_tests, "focused Phase 13 operator tests")
+    run_test!(@focused_tests, "focused operator tests")
 
     Mix.shell().info("==> Building docs with warnings as errors")
     Mix.Task.reenable("docs")
@@ -62,7 +62,7 @@ defmodule Mix.Tasks.Verify.Phase13 do
   defp ensure_integration_env! do
     unless System.get_env("SCRYPATH_MEILISEARCH_URL") do
       Mix.raise("""
-      SCRYPATH_MEILISEARCH_URL is required for live Phase 13 verification.
+      SCRYPATH_MEILISEARCH_URL is required for live operator integration verification.
 
       Example:
         SCRYPATH_INTEGRATION=1 SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700 mix verify.phase13

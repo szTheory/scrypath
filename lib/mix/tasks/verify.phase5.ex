@@ -1,14 +1,14 @@
 defmodule Mix.Tasks.Verify.Phase5 do
   use Mix.Task
 
-  @shortdoc "Runs the automated Phase 5 verification flow"
+  @shortdoc "Runs backfill, reindex, Meilisearch integration, and operator doc verification"
 
   @moduledoc """
-  Runs the automated verification flow for Phase 5.
+  Runs the focused verification flow for backfill, reindex, Meilisearch integration, and operator-facing docs.
 
   By default this includes:
 
-  - focused Phase 5 unit/contract tests
+  - focused unit/contract tests for those areas
   - docs contract tests
   - `mix docs --warnings-as-errors`
   - live Meilisearch integration tests
@@ -34,7 +34,7 @@ defmodule Mix.Tasks.Verify.Phase5 do
         "test/scrypath/reindex_test.exs",
         "test/scrypath/docs_contract_test.exs"
       ],
-      "focused Phase 5 tests"
+      "focused backfill/reindex/operator tests"
     )
 
     Mix.shell().info("==> Building docs with warnings as errors")
@@ -60,7 +60,7 @@ defmodule Mix.Tasks.Verify.Phase5 do
   defp ensure_integration_env! do
     unless System.get_env("SCRYPATH_MEILISEARCH_URL") do
       Mix.raise("""
-      SCRYPATH_MEILISEARCH_URL is required for live Phase 5 verification.
+      SCRYPATH_MEILISEARCH_URL is required for live integration verification.
 
       Example:
         SCRYPATH_INTEGRATION=1 SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700 mix verify.phase5

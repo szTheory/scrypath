@@ -2,7 +2,7 @@ defmodule Scrypath do
   @moduledoc """
   Runtime reflection helpers for searchable schemas declared with `use Scrypath`.
 
-  Phase 1 keeps the public runtime surface small:
+  The initial public reflection surface is intentionally small:
 
   - `schema_config/1`
   - `schema_fields/1`

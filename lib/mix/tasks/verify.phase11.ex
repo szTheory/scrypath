@@ -1,10 +1,10 @@
 defmodule Mix.Tasks.Verify.Phase11 do
   use Mix.Task
 
-  @shortdoc "Runs the automated Phase 11 release-alignment flow"
+  @shortdoc "Runs the release-alignment gate (package, consumer, docs, Release Please wiring)"
 
   @moduledoc """
-  Runs the automated release-alignment verification flow for Phase 11.
+  Runs the automated release-alignment verification flow.
 
   This task keeps the existing auth-free release gate shape and extends it with
   checks that the package version, packaged consumer path, Release Please
@@ -22,7 +22,7 @@ defmodule Mix.Tasks.Verify.Phase11 do
         "test/release/consumer_smoke_test.exs",
         "test/scrypath/docs_contract_test.exs"
       ],
-      "Phase 11 release contract tests"
+      "Release contract tests"
     )
 
     Mix.shell().info("==> Building docs with warnings as errors")
