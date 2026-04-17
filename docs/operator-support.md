@@ -8,8 +8,8 @@ The support contract stays simple:
 
 1. operator code calls the root APIs on `Scrypath.*`
 2. terminal operators can use the thin `mix scrypath.*` wrappers over those same APIs
-3. `mix verify.phase14` keeps the Mix task surface, docs contract, package metadata, and docs build aligned
-4. `mix verify.phase11` remains the release-contract gate
+3. **mix verify.phase14** keeps the Mix task surface, docs contract, package metadata, and docs build aligned
+4. **mix verify.phase11** remains the release-contract gate
 
 ## First Response Path
 
@@ -54,9 +54,9 @@ mix verify.phase11
 
 | Command | What it covers (auth-free) |
 |---------|----------------------------|
-| `mix verify.phase14` | Thin `mix scrypath.*` tasks, docs contract, package metadata, `mix docs --warnings-as-errors` |
-| `mix verify.phase20` | Faceting, Meilisearch settings, faceted-guide docs contract, then `mix docs --warnings-as-errors` |
-| `mix verify.phase26` | Failed-work rollups, reconcile output, operator Mix tasks, docs contract with `--warnings-as-errors`, then `mix docs --warnings-as-errors` |
-| `mix verify.phase11` | Release path: package metadata, clean-consumer smoke, release-doc contract, docs build, workflow checks, `mix hex.build --unpack` |
+| **mix verify.phase14** | Thin mix scrypath.* task wrappers, docs contract, package metadata, and **mix docs --warnings-as-errors** |
+| **mix verify.phase20** | Faceting, Meilisearch settings, faceted-guide docs contract, then **mix docs --warnings-as-errors** |
+| **mix verify.phase26** | Failed-work rollups, reconcile output, operator Mix tasks, docs contract with **--warnings-as-errors**, then **mix docs --warnings-as-errors** |
+| **mix verify.phase11** | Release path: package metadata, clean-consumer smoke, release-doc contract, docs build, workflow checks, **mix hex.build --unpack** |
 
-`mix verify.phase11` remains the gate you use before a real publish flow.
+**mix verify.phase11** remains the gate you use before a real publish flow.
