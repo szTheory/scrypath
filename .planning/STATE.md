@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: "v1.5"
 milestone_name: "Operator drift and schema-diff tooling"
-current_phase: ""
-current_phase_name: ""
+current_phase: "27"
+current_phase_name: "Schema–index drift report (read-only)"
 current_plan: ""
-status: milestone_v1_5_defining
-stopped_at: ""
-last_updated: "2026-04-17T23:45:00Z"
+status: milestone_v1_5_context_27
+stopped_at: "Phase 27 context gathered"
+last_updated: "2026-04-17T23:59:00Z"
 last_activity: 2026-04-17
 progress:
   total_phases: 2
@@ -31,7 +31,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-17)
 
 **Milestone v1.5:** Not started at phase execution level — requirements and roadmap are in **`.planning/REQUIREMENTS.md`** and **`.planning/ROADMAP.md`**.
 
-**Next step:** **`/gsd-discuss-phase 27`** (recommended) or **`/gsd-plan-phase 27`** to open **Phase 27: Schema–index drift report (read-only)**.
+**Next step:** **`/gsd-plan-phase 27`** — Phase 27 context is in **`.planning/phases/027-schema-index-drift-report/027-CONTEXT.md`**.
 
 ## Accumulated Context
 
@@ -51,10 +51,10 @@ Unchanged from **v1.4** close — see prior **`STATE.md`** snapshots under **`mi
 
 ## Next Command
 
-1. **`/gsd-discuss-phase 27`** — clarify API shape, Meilisearch read primitives, and non-goals for drift report.
-2. **`/gsd-plan-phase 27`** — if discussion is already satisfied.
+1. **`/gsd-plan-phase 27`** — plan from **027-CONTEXT.md**.
+2. **`/gsd-discuss-phase 27`** — only if revising context.
 
-**Resume files:** `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`
+**Resume files:** `.planning/phases/027-schema-index-drift-report/027-CONTEXT.md`, `.planning/REQUIREMENTS.md`
 
 ---
-*Last updated: 2026-04-17 — v1.5 milestone opened; phases 27–28 defined*
+*Last updated: 2026-04-17 — Phase 27 discuss complete; 027-CONTEXT.md*
