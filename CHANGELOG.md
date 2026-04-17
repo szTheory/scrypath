@@ -26,6 +26,38 @@ Release Please manages versioned entries after this baseline.
 
 - See `.planning/milestones/v1.2-MILESTONE-AUDIT.md` for the historical v1.2 tag-vs-main divergence that motivated this phase's release-parity gates.
 
+## [0.3.1](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.0...scrypath-v0.3.1) (2026-04-17)
+
+
+### Features
+
+* **13:** add operator primitives ([36d9f65](https://github.com/szTheory/scrypath/commit/36d9f6577f9283811625b9f554f9d57ea11ee0a5))
+* **14:** add operator mix tasks and guides ([079c2e2](https://github.com/szTheory/scrypath/commit/079c2e23479056f75b13c0c0e7f9264f52cd49bb))
+* **15:** add verify.phase13 mix task ([1df12aa](https://github.com/szTheory/scrypath/commit/1df12aacaacae28033bfcc7976902ce900db3a5e))
+* **16:** add verify.phase14 mix task ([09f8288](https://github.com/szTheory/scrypath/commit/09f82886c70702312d5559062995e05df62cdb03))
+* **18-01:** register verify.workspace_clean and verify.release_parity in mix.exs ([020548b](https://github.com/szTheory/scrypath/commit/020548b7805b1a1575338c830a91eee7b1585b83))
+* **18-02:** implement Mix.Tasks.Verify.WorkspaceClean (INFRA-01) ([0df164c](https://github.com/szTheory/scrypath/commit/0df164c3c5aa3ea50c5f6db361a47d4e6fe4e654))
+* **18-03:** implement Mix.Tasks.Verify.ReleaseParity (INFRA-02) ([8e3cb4c](https://github.com/szTheory/scrypath/commit/8e3cb4c41c6f016b4b1f9a1acb31e15e763d0caf))
+* **18-04:** swap 8 [@v4](https://github.com/v4) pins in ci.yml to Node-24-ready versions (INFRA-03) ([bf116d7](https://github.com/szTheory/scrypath/commit/bf116d7209fab0172f0e8a38470119c1ad0df803))
+* **18-05:** wire verify.workspace_clean into ci.yml quality job (D-15) ([049fa57](https://github.com/szTheory/scrypath/commit/049fa579597af8a435c55eda4cccdef3bd30888d))
+* **18-05:** wire verify.workspace_clean into publish-hex manual-recovery workflow (D-17) ([7b1332e](https://github.com/szTheory/scrypath/commit/7b1332e279d61be175c9185d534e01c0101e2be6))
+* **18-05:** wire verify.workspace_clean into release-please publish-hex job (D-16) ([301e851](https://github.com/szTheory/scrypath/commit/301e851a468fc670289b25389d365360ce110671))
+* **18-06:** add release-parity drift issue template ([0a26266](https://github.com/szTheory/scrypath/commit/0a26266abc6e2b59895af8a588dd1827e45dd1cb))
+* **18-06:** wire release_parity + drift-issue steps into published-release monitor ([68c15ee](https://github.com/szTheory/scrypath/commit/68c15eeb6cb71a2e6adc523b37deeb98ac02caff))
+* **18:** add release-parity gates + Node 20 CI cleanup ([80500de](https://github.com/szTheory/scrypath/commit/80500deec080041e982a5ed9a8e747be410066bb))
+* **19:** relevance tuning, settings tasks, and CI hygiene ([6733348](https://github.com/szTheory/scrypath/commit/6733348a8d07f8d1f233a4f75da954ba7239717c))
+* multi-index search, settings hot_apply, operator rollups, and verify gates ([c4efacc](https://github.com/szTheory/scrypath/commit/c4efacccc75c44979690bba3f8b5c9a49cef3203))
+* **release:** pre-1.0 Release Please policy, post-publish parity, docs ([11335a8](https://github.com/szTheory/scrypath/commit/11335a8c591ee4db846595a3e5464dbb030b6d24))
+* **search:** Phase 20 faceting, facet filters, and faceted LiveView guide ([#6](https://github.com/szTheory/scrypath/issues/6)) ([87a479b](https://github.com/szTheory/scrypath/commit/87a479b75c8c1a9ba21535d50547d8cabbe79730))
+
+
+### Bug Fixes
+
+* **18:** remove stale duplicate Unreleased block from CHANGELOG (closes T-18-07-03) ([91b8a57](https://github.com/szTheory/scrypath/commit/91b8a577c24dd3bd4da6f2402e9ba05cb1a9c9e7))
+* **credo:** split faceting validators to reduce complexity ([a318e52](https://github.com/szTheory/scrypath/commit/a318e52a177abebd792e46e569d6c723cdc539a0))
+* **dialyzer:** drop unreachable validate_search_options! error clause ([2c303eb](https://github.com/szTheory/scrypath/commit/2c303eb87e4ba30981bd2c129e20252954cdb7e0))
+* **release:** unblock 0.3.0 publish gate ([13f1789](https://github.com/szTheory/scrypath/commit/13f1789029ccf0e6d41e8e8309c6aa9250d7e4dc))
+
 ## [0.3.0](https://github.com/szTheory/scrypath/compare/scrypath-v0.2.0...scrypath-v0.3.0) (2026-04-17)
 
 
