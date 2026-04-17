@@ -49,38 +49,38 @@ Declarative `faceting:` schema key, validated facet filter grammar, distribution
 
 `Scrypath.search_many/2` federated queries across N schemas with per-schema validation preserved, unified hydration, explicit partial-failure envelope. See `.planning/research/deep/MULTI_INDEX.md`.
 
-- [ ] **MULTI-01**: `Scrypath.search_many/2` public API accepts a non-empty list of `{schema, text}` or `{schema, text, opts}` 3-tuples plus shared opts. Empty list or malformed entries raise explicit errors.
-- [ ] **MULTI-02**: Shared opts layer under per-entry opts with right-biased `Keyword.merge/2` on a per-key basis. Per-entry opts fully replace shared opts for that key (not merged).
-- [ ] **MULTI-03**: Shared-opts whitelist for federation-global keys (`federation_limit`, `federation_offset`, `hydration_timeout`, `max_schemas`). Using these at per-entry level raises `{:error, {:invalid_options, ...}}`.
-- [ ] **MULTI-04**: New public struct `%Scrypath.MultiSearchResult{ordered:, by_schema:, failures:, federation:}` with `@enforce_keys` on the first three (safe because brand-new struct, no 0.3.0 consumers).
-- [ ] **MULTI-05**: Invariant `by_schema == ordered \|> Enum.into(%{})` always holds. Property test over random schema lists + success/partial/failure scenarios.
-- [ ] **MULTI-06**: Canonical return shape: `{:ok, %MultiSearchResult{}}` when any sub-query succeeded; `{:error, {:all_failed, ...}}`, `{:error, {:validation_failed, ...}}`, `{:error, {:transport_failed, ...}}`, `{:error, {:invalid_options, ...}}`, `{:error, :empty_schema_list}`, `{:error, {:too_many_schemas, ...}}` per canonical failure table.
-- [ ] **MULTI-07**: `failures:` is `[%{schema: module(), reason: term()}]`. Never tagged tuples; schema key always present; reason is atom or structured map/struct.
-- [ ] **MULTI-08**: Per-schema facets flow via Meilisearch's `federation.facetsByIndex[indexUid]`; `mergeFacets` is NEVER set. `result.by_schema[S].facets` matches single-`search(S, ...)` output byte-for-byte for the same `facets:` opt.
-- [ ] **MULTI-09**: Hydration runs concurrently via `Task.async_stream/5` with `ordered: true`, `max_concurrency: length(entries)`, `timeout: hydration_timeout_ms` (default 5000), `on_timeout: :kill_task`. Timed-out schemas move to `failures:` with `reason: :hydration_timeout`.
-- [ ] **MULTI-10**: Cardinality rails — `max_schemas` (default 10), per-entry `page.size` max (default 50), `federation_limit` (default 200), `hydration_timeout` (default 5000 ms), `federation_timeout` (default 7500 ms). Over-limit returns explicit error; never silent truncation.
-- [ ] **MULTI-11**: `guides/multi-index-search.md` with worked 4-schema LiveView dashboard example (search + per-schema facets + partial-failure banner). Cross-links to faceted-search guide and sync-modes guide.
-- [ ] **MULTI-12**: `Scrypath.Backend.search_many/3` added as `@optional_callback`. Default N-sequential-calls fallback implemented in `Scrypath.Search.search_many/2`. `Scrypath.Meilisearch.search_many/3` uses native `/multi-search` endpoint.
-- [ ] **MULTI-13**: Telemetry `[:scrypath, :search_many, :start]`, `[:scrypath, :search_many, :stop]`, `[:scrypath, :search_many, :partial]`.
+- [x] **MULTI-01**: `Scrypath.search_many/2` public API accepts a non-empty list of `{schema, text}` or `{schema, text, opts}` 3-tuples plus shared opts. Empty list or malformed entries raise explicit errors.
+- [x] **MULTI-02**: Shared opts layer under per-entry opts with right-biased `Keyword.merge/2` on a per-key basis. Per-entry opts fully replace shared opts for that key (not merged).
+- [x] **MULTI-03**: Shared-opts whitelist for federation-global keys (`federation_limit`, `federation_offset`, `hydration_timeout`, `max_schemas`). Using these at per-entry level raises `{:error, {:invalid_options, ...}}`.
+- [x] **MULTI-04**: New public struct `%Scrypath.MultiSearchResult{ordered:, by_schema:, failures:, federation:}` with `@enforce_keys` on the first three (safe because brand-new struct, no 0.3.0 consumers).
+- [x] **MULTI-05**: Invariant `by_schema == ordered \|> Enum.into(%{})` always holds. Property test over random schema lists + success/partial/failure scenarios.
+- [x] **MULTI-06**: Canonical return shape: `{:ok, %MultiSearchResult{}}` when any sub-query succeeded; `{:error, {:all_failed, ...}}`, `{:error, {:validation_failed, ...}}`, `{:error, {:transport_failed, ...}}`, `{:error, {:invalid_options, ...}}`, `{:error, :empty_schema_list}`, `{:error, {:too_many_schemas, ...}}` per canonical failure table.
+- [x] **MULTI-07**: `failures:` is `[%{schema: module(), reason: term()}]`. Never tagged tuples; schema key always present; reason is atom or structured map/struct.
+- [x] **MULTI-08**: Per-schema facets flow via Meilisearch's `federation.facetsByIndex[indexUid]`; `mergeFacets` is NEVER set. `result.by_schema[S].facets` matches single-`search(S, ...)` output byte-for-byte for the same `facets:` opt.
+- [x] **MULTI-09**: Hydration runs concurrently via `Task.async_stream/5` with `ordered: true`, `max_concurrency: length(entries)`, `timeout: hydration_timeout_ms` (default 5000), `on_timeout: :kill_task`. Timed-out schemas move to `failures:` with `reason: :hydration_timeout`.
+- [x] **MULTI-10**: Cardinality rails — `max_schemas` (default 10), per-entry `page.size` max (default 50), `federation_limit` (default 200), `hydration_timeout` (default 5000 ms), `federation_timeout` (default 7500 ms). Over-limit returns explicit error; never silent truncation.
+- [x] **MULTI-11**: `guides/multi-index-search.md` with worked 4-schema LiveView dashboard example (search + per-schema facets + partial-failure banner). Cross-links to faceted-search guide and sync-modes guide.
+- [x] **MULTI-12**: `Scrypath.Backend.search_many/2` added as `@optional_callback`. Default N-sequential-calls fallback implemented in `Scrypath.Search.search_many/2`. `Scrypath.Meilisearch.search_many/2` uses native `/multi-search` endpoint.
+- [x] **MULTI-13**: Telemetry `[:scrypath, :search_many, :start]`, `[:scrypath, :search_many, :stop]`, `[:scrypath, :search_many, :partial]`.
 
 ### Operator Polish & Drift Recovery (prefix: OPS, continues from v1.2)
 
 Richer `FailedWork.t()` fields plus a concrete drift recovery markdown runbook. No new public API verbs — extends existing operator surface only. See `.planning/research/deep/OPERATOR_POLISH.md`.
 
-- [ ] **OPS-05**: `%Scrypath.Operator.FailedWork{}` gains four additive defaulted fields outside `@enforce_keys`: `attempt: nil`, `max_attempts: nil`, `reason_class: nil`, `last_attempt_at: nil`. Backward-compat preserved — all 0.3.0 constructors and pattern matches continue to work.
-- [ ] **OPS-06**: Deterministic `reason_class` classifier with 5-value enum `[:transport, :validation, :backend_rejected, :queue_exhausted, :unknown]`. Populated in `from_backend_task/3` and `from_queue_job/3`. Unknown inputs fall to `:unknown` — never silently misclassified.
-- [ ] **OPS-07**: Inline/manual failures set `attempt: nil, max_attempts: nil` (not `1/1`). `nil` is self-describing.
-- [ ] **OPS-08**: `last_attempt_at` is populated to the same value as `failed_at` (both are surfaced; `last_attempt_at` is the clearer name for new code). No deprecation of `failed_at` in v1.3.
-- [ ] **OPS-09**: `guides/drift-recovery.md` ships with 6 concrete SRE-runbook-style scenarios: (a) empty index, (b) stale results after sync success, (c) backfill/count divergence, (d) failed-work pileup, (e) settings drift, (f) stuck reindex mid-cutover. Each scenario follows symptom → diagnosis → action → verify using existing `mix scrypath.*` + `Scrypath.*` verbs only.
-- [ ] **OPS-10**: Telemetry event `[:scrypath, :operator, :failed_work, :observed]` emitted when `FailedWork.t()` is constructed. Metadata includes `reason_class`, `schema`, `mode`.
+- [x] **OPS-05**: `%Scrypath.Operator.FailedWork{}` gains four additive defaulted fields outside `@enforce_keys`: `attempt: nil`, `max_attempts: nil`, `reason_class: nil`, `last_attempt_at: nil`. Backward-compat preserved — all 0.3.0 constructors and pattern matches continue to work.
+- [x] **OPS-06**: Deterministic `reason_class` classifier with 5-value enum `[:transport, :validation, :backend_rejected, :queue_exhausted, :unknown]`. Populated in `from_backend_task/3` and `from_queue_job/3`. Unknown inputs fall to `:unknown` — never silently misclassified.
+- [x] **OPS-07**: Inline/manual failures set `attempt: nil, max_attempts: nil` (not `1/1`). `nil` is self-describing.
+- [x] **OPS-08**: `last_attempt_at` is populated to the same value as `failed_at` (both are surfaced; `last_attempt_at` is the clearer name for new code). No deprecation of `failed_at` in v1.3.
+- [x] **OPS-09**: `guides/drift-recovery.md` ships with 6 concrete SRE-runbook-style scenarios: (a) empty index, (b) stale results after sync success, (c) backfill/count divergence, (d) failed-work pileup, (e) settings drift, (f) stuck reindex mid-cutover. Each scenario follows symptom → diagnosis → action → verify using existing `mix scrypath.*` + `Scrypath.*` verbs only.
+- [x] **OPS-10**: Telemetry event `[:scrypath, :operator, :failed_work, :observed]` emitted when `FailedWork.t()` is constructed. Metadata includes `reason_class`, `schema`, `mode`.
 
 ### v1.2 Nyquist VALIDATION.md Closure (prefix: VALID)
 
 Close the three missing Nyquist validation artifacts from v1.2 (phases 13/14/15) — identified in `v1.2-MILESTONE-AUDIT.md` as tech debt.
 
-- [ ] **VALID-01**: `VALIDATION.md` for v1.2 phase 13 (operator primitives) exists in archived phase location OR in the v1.2 milestone archive, cites runnable tests (`test/scrypath/operator/*_test.exs`) and captured `mix verify.phase13 --skip-integration` output. No pencil-whipping.
-- [ ] **VALID-02**: `VALIDATION.md` for v1.2 phase 14 (mix tasks and guides) cites `test/scrypath/mix_tasks/operator_tasks_test.exs` runs + `mix verify.phase14` output.
-- [ ] **VALID-03**: `VALIDATION.md` for v1.2 phase 15 (verify operator primitives) cites the live integration path from `test/scrypath/live_operator_verification_test.exs`. Audit nyquist coverage moves from `partial` → `compliant` in `v1.2-MILESTONE-AUDIT.md`.
+- [x] **VALID-01**: `VALIDATION.md` for v1.2 phase 13 (operator primitives) exists in archived phase location OR in the v1.2 milestone archive, cites runnable tests (`test/scrypath/operator/*_test.exs`) and captured `mix verify.phase13 --skip-integration` output. No pencil-whipping.
+- [x] **VALID-02**: `VALIDATION.md` for v1.2 phase 14 (mix tasks and guides) cites `test/scrypath/mix_tasks/operator_tasks_test.exs` runs + `mix verify.phase14` output.
+- [x] **VALID-03**: `VALIDATION.md` for v1.2 phase 15 (verify operator primitives) cites the live integration path from `test/scrypath/live_operator_verification_test.exs`. Audit nyquist coverage moves from `partial` → `compliant` in `v1.2-MILESTONE-AUDIT.md`.
 
 ## v1.4+ Requirements (Deferred)
 
@@ -156,28 +156,28 @@ Which phases cover which requirements. Filled by the roadmapper during phase cre
 | FACET-08 | Phase 20 | Pending |
 | FACET-09 | Phase 20 | Pending |
 | FACET-10 | Phase 20 | Pending |
-| MULTI-01 | Phase 21 | Pending |
-| MULTI-02 | Phase 21 | Pending |
-| MULTI-03 | Phase 21 | Pending |
-| MULTI-04 | Phase 21 | Pending |
-| MULTI-05 | Phase 21 | Pending |
-| MULTI-06 | Phase 21 | Pending |
-| MULTI-07 | Phase 21 | Pending |
-| MULTI-08 | Phase 21 | Pending |
-| MULTI-09 | Phase 21 | Pending |
-| MULTI-10 | Phase 21 | Pending |
-| MULTI-11 | Phase 21 | Pending |
-| MULTI-12 | Phase 21 | Pending |
-| MULTI-13 | Phase 21 | Pending |
-| OPS-05 | Phase 22 | Pending |
-| OPS-06 | Phase 22 | Pending |
-| OPS-07 | Phase 22 | Pending |
-| OPS-08 | Phase 22 | Pending |
-| OPS-09 | Phase 22 | Pending |
-| OPS-10 | Phase 22 | Pending |
-| VALID-01 | Phase 23 | Pending |
-| VALID-02 | Phase 23 | Pending |
-| VALID-03 | Phase 23 | Pending |
+| MULTI-01 | Phase 21 | Complete |
+| MULTI-02 | Phase 21 | Complete |
+| MULTI-03 | Phase 21 | Complete |
+| MULTI-04 | Phase 21 | Complete |
+| MULTI-05 | Phase 21 | Complete |
+| MULTI-06 | Phase 21 | Complete |
+| MULTI-07 | Phase 21 | Complete |
+| MULTI-08 | Phase 21 | Complete |
+| MULTI-09 | Phase 21 | Complete |
+| MULTI-10 | Phase 21 | Complete |
+| MULTI-11 | Phase 21 | Complete |
+| MULTI-12 | Phase 21 | Complete |
+| MULTI-13 | Phase 21 | Complete |
+| OPS-05 | Phase 22 | Complete |
+| OPS-06 | Phase 22 | Complete |
+| OPS-07 | Phase 22 | Complete |
+| OPS-08 | Phase 22 | Complete |
+| OPS-09 | Phase 22 | Complete |
+| OPS-10 | Phase 22 | Complete |
+| VALID-01 | Phase 23 | Satisfied |
+| VALID-02 | Phase 23 | Satisfied |
+| VALID-03 | Phase 23 | Satisfied |
 
 **Coverage:**
 - v1.3 requirements: 44 total across 6 categories

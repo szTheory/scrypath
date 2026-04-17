@@ -212,7 +212,7 @@ Meilisearch responses carry backend-native fields like `facetDistribution`, `fac
 ### Pitfall 8: "Pencil-whipping" VALIDATION.md closures for v1.2 Phase 13, 14, 15
 
 **What goes wrong:**
-The v1.2 audit carries forward a Nyquist gap: Phase 15 has no VALIDATION.md at all, and Phases 13 and 14 are "partial". The temptation in v1.3 is to close those gaps by writing VALIDATION.md files that restate what the phase did (pencil-whipping) rather than proving the shipped behavior works under the Nyquist-level scrutiny Nyquist coverage requires (test evidence, integration runs, human UAT steps demonstrated). A pencil-whipped VALIDATION.md is worse than no VALIDATION.md — it signals compliance where none exists and pollutes the audit trail for future milestones.
+The v1.2 audit originally carried a Nyquist gap (phases 13–15 lacked runnable-test-cited `VALIDATION.md` evidence). **Closed 2026-04-17** via Phase 23 — `.planning/milestones/v1.2/*-VALIDATION.md` + `v1.2-MILESTONE-AUDIT.md` Nyquist `compliant`. The ongoing risk is the same pattern on *future* milestones: the temptation to close gaps by writing VALIDATION.md files that restate what the phase did (pencil-whipping) rather than proving the shipped behavior works under Nyquist-level scrutiny (test evidence, integration runs, human UAT steps demonstrated). A pencil-whipped VALIDATION.md is worse than no VALIDATION.md — it signals compliance where none exists and pollutes the audit trail for future milestones.
 
 **Why it happens:**
 - VALIDATION closure is low-status "bookkeeping" work that gets rushed.
