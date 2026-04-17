@@ -92,4 +92,4 @@ None - no external service configuration required.
 - Found `.planning/phases/13-operator-primitives/13-VERIFICATION.md`
 - Found task commit `79942d3`
 - Found task commit `9a3f695`
-- Found `.planning/phases/15-verify-operator-primitives/15-verify-operator-primitives-01-SUMMARY.md`
+- Found `.planning/phases/15-verify-operator-primitives/15-01-SUMMARY.md`

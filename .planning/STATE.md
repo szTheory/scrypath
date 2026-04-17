@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Public Release Trust and Operator Visibility
-current_phase: 15
-current_phase_name: verify-operator-primitives
-current_plan: 1
-status: verifying
+current_phase: 16
+current_phase_name: verify mix tasks and repair milestone bookkeeping
+current_plan: Not started
+status: phase_complete
 stopped_at: Completed 15-01-PLAN.md
-last_updated: "2026-04-17T00:17:14.651Z"
+last_updated: "2026-04-17T00:21:56.460Z"
 last_activity: 2026-04-17
 progress:
   total_phases: 7
@@ -24,18 +24,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Phase 15 — verify-operator-primitives
+**Current focus:** Phase 16 — verify mix tasks and repair milestone bookkeeping pending planning
 
 ## Current Position
 
-Phase: 15 (verify-operator-primitives) — EXECUTING
-Plan: 1 of 1
-Current Phase: 15
-Current Phase Name: verify-operator-primitives
-Current Plan: 1
-Status: Phase complete — ready for verification
+Phase: 16 (verify mix tasks and repair milestone bookkeeping) — NOT STARTED
+Plan: Not started
+Current Phase: 16
+Current Phase Name: verify mix tasks and repair milestone bookkeeping
+Current Plan: Not started
+Status: Phase 15 complete
 Last activity: 2026-04-17
-Last Activity Description: Phase 15 execution started
+Last Activity Description: Phase 15 complete, transitioned to Phase 16
 
 Progress: [██████████] 100%
 
@@ -85,7 +85,7 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-04-17T00:17:14.481Z
+Last session: 2026-04-17T00:18:48.248Z
 Stopped at: Completed 15-01-PLAN.md
 Resume file: None
 
@@ -103,7 +103,7 @@ Resume file: None
 
 ## Next Command
 
-- `$gsd-verify-work 13`
+- `$gsd-plan-phase 16`
 
 ## Performance Metrics
 
@@ -115,6 +115,7 @@ Resume file: None
 | 11 | 02 | 10min | 3 | 4 | 2026-04-16 |
 | 11 | hardening | follow-up | release automation, recovery workflow, published-release monitor | 2026-04-16 |
 
+| Phase 15 | 01 | 12 min | 2 | 4 | 2026-04-17 |
+
 ---
-*Last updated: 2026-04-16 after completing Phase 12 Plan 03*
-| Phase 15 P01 | 12 min | 2 tasks | 4 files |
+*Last updated: 2026-04-17 after completing Phase 15 Plan 01 and transitioning to Phase 16*
