@@ -69,7 +69,10 @@ defmodule Scrypath.TelemetryTest do
                    [
                      %SearchablePost{id: 1, title: "One", body: "First"},
                      %SearchablePost{id: 2, title: "Two", body: "Second"}
-                   ], backend: RecordingBackend, sync_mode: :manual)
+                   ],
+                   backend: RecordingBackend,
+                   sync_mode: :manual
+                 )
 
         assert {:ok, %{document_ids: ["post:1", "post:2"], mode: :manual, status: :accepted}} =
                  Scrypath.delete_documents(SearchablePost, ["post:1", "post:2"],
@@ -143,7 +146,10 @@ defmodule Scrypath.TelemetryTest do
                    [
                      %SearchablePost{id: 1, title: "One", body: "First"},
                      %SearchablePost{id: 2, title: "Two", body: "Second"}
-                   ], backend: RecordingBackend, sync_mode: :manual)
+                   ],
+                   backend: RecordingBackend,
+                   sync_mode: :manual
+                 )
       end)
 
     stop_events =
