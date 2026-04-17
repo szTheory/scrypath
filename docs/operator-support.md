@@ -8,7 +8,7 @@ The support contract stays simple:
 
 1. operator code calls the root APIs on `Scrypath.*`
 2. terminal operators can use the thin `mix scrypath.*` wrappers over those same APIs
-3. The Phase 14 verification task keeps the task surface, docs contract, package metadata, and docs build aligned
+3. `mix verify.phase14` keeps the Mix task surface, docs contract, package metadata, and docs build aligned
 4. `mix verify.phase11` remains the release-contract gate
 
 ## First Response Path
@@ -52,10 +52,11 @@ mix verify.phase26
 mix verify.phase11
 ```
 
-The Phase 14 verifier is auth-free. It exercises the focused Mix task tests, docs contract, package metadata assertions, and `mix docs --warnings-as-errors`.
+| Command | What it covers (auth-free) |
+|---------|----------------------------|
+| `mix verify.phase14` | Thin `mix scrypath.*` tasks, docs contract, package metadata, `mix docs --warnings-as-errors` |
+| `mix verify.phase20` | Faceting, Meilisearch settings, faceted-guide docs contract, then `mix docs --warnings-as-errors` |
+| `mix verify.phase26` | Failed-work rollups, reconcile output, operator Mix tasks, docs contract with `--warnings-as-errors`, then `mix docs --warnings-as-errors` |
+| `mix verify.phase11` | Release path: package metadata, clean-consumer smoke, release-doc contract, docs build, workflow checks, `mix hex.build --unpack` |
 
-The Phase 20 verifier (**mix verify.phase20**) is auth-free. It runs the faceting, Meilisearch settings, and faceted-guide docs contract tests, then **mix docs --warnings-as-errors**.
-
-The Phase 26 verifier (**mix verify.phase26**) is auth-free. It runs failed-work rollups, reconcile output, operator Mix tasks, and the docs contract tests with **`--warnings-as-errors`**, then **mix docs --warnings-as-errors**.
-
-`mix verify.phase11` keeps the release path aligned and remains the gate you use before a real publish flow.
+`mix verify.phase11` remains the gate you use before a real publish flow.

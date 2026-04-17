@@ -222,7 +222,8 @@ using `.github/ISSUE_TEMPLATE/release-parity-drift.md`.
 
 ### Historical context
 
-These gates exist because v1.2 shipped with a tag/main divergence that went
-uncaught until the next release cycle. See
-`.planning/milestones/v1.2-MILESTONE-AUDIT.md` for the full incident
-narrative.
+These gates exist because an earlier release cycle shipped with **tag and
+default-branch refs out of alignment** (package and docs consumers could see
+different trees than maintainers expected). The parity tasks catch that class of
+drift on publish and on a schedule so it does not wait for the next manual
+release to surface.

@@ -24,7 +24,7 @@ Release Please manages versioned entries after this baseline.
 
 ### Notes
 
-- See `.planning/milestones/v1.2-MILESTONE-AUDIT.md` for the historical v1.2 tag-vs-main divergence that motivated this phase's release-parity gates.
+- Release-parity gates were motivated by a historical **tag vs default-branch** divergence in an earlier cycle; see `docs/releasing.md` § Historical context.
 
 ## [0.3.1](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.0...scrypath-v0.3.1) (2026-04-17)
 
@@ -48,7 +48,7 @@ Release Please manages versioned entries after this baseline.
 * **19:** relevance tuning, settings tasks, and CI hygiene ([6733348](https://github.com/szTheory/scrypath/commit/6733348a8d07f8d1f233a4f75da954ba7239717c))
 * multi-index search, settings hot_apply, operator rollups, and verify gates ([c4efacc](https://github.com/szTheory/scrypath/commit/c4efacccc75c44979690bba3f8b5c9a49cef3203))
 * **release:** pre-1.0 Release Please policy, post-publish parity, docs ([11335a8](https://github.com/szTheory/scrypath/commit/11335a8c591ee4db846595a3e5464dbb030b6d24))
-* **search:** Phase 20 faceting, facet filters, and faceted LiveView guide ([#6](https://github.com/szTheory/scrypath/issues/6)) ([87a479b](https://github.com/szTheory/scrypath/commit/87a479b75c8c1a9ba21535d50547d8cabbe79730))
+* **search:** Faceting, facet filters, and faceted LiveView guide ([#6](https://github.com/szTheory/scrypath/issues/6)) ([87a479b](https://github.com/szTheory/scrypath/commit/87a479b75c8c1a9ba21535d50547d8cabbe79730))
 
 
 ### Bug Fixes

@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Verify.Phase14 do
   @moduledoc false
   use Mix.Task
 
-  @shortdoc "Runs the automated Phase 14 Mix-task and docs verification flow"
+  @shortdoc "Runs operator Mix tasks, docs contract, package metadata, and ExDoc strict build"
 
   @focused_tests [
     "test/scrypath/mix_tasks/operator_tasks_test.exs",
@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Verify.Phase14 do
     Mix.Task.run("app.start")
     ensure_no_args!(args)
 
-    run_test!(@focused_tests, "Phase 14 task and docs contract tests")
+    run_test!(@focused_tests, "Operator Mix task and docs contract tests")
 
     Mix.shell().info("==> Building docs with warnings as errors")
     Mix.Task.reenable("docs")

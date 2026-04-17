@@ -271,9 +271,9 @@ defmodule Scrypath.TelemetryTest do
 
     assert architecture =~ "| `:manual` | returns accepted backend work immediately |"
     assert architecture =~ "| `:oban` | returns durable enqueue acceptance only |"
-    assert architecture =~ "Phase 12 keeps the operations seam internal"
+    assert architecture =~ "**operations seam** stays private"
     assert architecture =~ "sync, backfill, and managed reindex"
-    assert architecture =~ "Phase 13 adds operator verbs"
+    assert architecture =~ "**Operator verbs** on `Scrypath.*`"
 
     assert architecture =~
              "exchange Scrypath-owned operation results and followable references internally"

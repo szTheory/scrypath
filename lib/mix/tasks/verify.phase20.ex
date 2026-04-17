@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Verify.Phase20 do
   @moduledoc false
   use Mix.Task
 
-  @shortdoc "Runs the automated Phase 20 faceting + guide verification flow"
+  @shortdoc "Runs faceting, Meilisearch settings, Phoenix guide examples, and ExDoc strict build"
 
   @focused_tests [
     "test/scrypath/options_test.exs",
@@ -20,7 +20,7 @@ defmodule Mix.Tasks.Verify.Phase20 do
     Mix.Task.run("app.start")
     ensure_no_args!(args)
 
-    run_test!(@focused_tests, "Phase 20 faceting, settings, and docs contract tests")
+    run_test!(@focused_tests, "Faceting, settings, and docs contract tests")
 
     Mix.shell().info("==> Building docs with warnings as errors")
     Mix.Task.reenable("docs")

@@ -155,7 +155,8 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert rel =~ "### `mix verify.workspace_clean`"
       assert rel =~ "### `mix verify.release_parity X.Y.Z`"
       assert rel =~ "### Historical context"
-      assert rel =~ "v1.2-MILESTONE-AUDIT.md"
+      assert rel =~ "tag and"
+      assert rel =~ "default-branch"
       assert rel =~ "release-please.yml"
       assert rel =~ "publish-hex.yml"
       assert rel =~ "mix verify.release_parity"
@@ -185,7 +186,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert changelog =~ "mix verify.release_parity"
       assert changelog =~ "actions/checkout@v6"
       assert changelog =~ "actions/cache@v5"
-      assert changelog =~ "v1.2-MILESTONE-AUDIT.md"
+      assert changelog =~ "docs/releasing.md"
     end
 
     test "UAT-08: drift-issue step is guarded to scheduled runs only (workflow_dispatch is silent)" do
@@ -208,14 +209,14 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert cfg =~ ~s("bump-patch-for-minor-pre-major": true)
       assert cfg =~ ~s("release-type": "elixir")
 
-      # (b) Manifest currently pins 0.3.0 — release-please reads this to decide
-      # the next version. Do not bump here; the release PR advances it.
+      # (b) Manifest pins the current shipped line — release-please reads this to decide
+      # the next version. Do not bump here casually; the release PR advances it.
       manifest = File.read!(".release-please-manifest.json")
-      assert manifest =~ ~s("0.3.0")
+      assert manifest =~ ~s("0.3.1")
 
-      # (c) mix.exs @version unchanged at 0.3.0 — release-please owns the bump,
+      # (c) mix.exs @version matches the manifest — release-please owns the bump,
       # any manual bump here breaks the release-PR flow (T-18-07-03 mitigation).
-      assert File.read!("mix.exs") =~ ~s(@version "0.3.0")
+      assert File.read!("mix.exs") =~ ~s(@version "0.3.1")
 
       # (d) Recent history carries the D-22 feat(18): subject line anchor.
       {log, 0} = System.cmd("git", ["log", "--format=%s", "-50"])
