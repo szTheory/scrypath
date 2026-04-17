@@ -107,7 +107,10 @@ Plans:
   1. `14-VERIFICATION.md` exists and records current evidence for `OPS-04` and `SEAM-03`.
   2. `ROADMAP.md`, `REQUIREMENTS.md`, and `STATE.md` no longer contradict the shipped Phase 14 summaries and passing verification gate.
   3. Milestone archival readiness no longer fails because of stale planning artifacts.
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 16-01-PLAN.md - Create the missing Phase 14 verification artifact, then reconcile milestone bookkeeping and Phase 14 summary discoverability.
 
 ### Phase 17: Prove The First Public Release
 **Goal**: Close the last human-owned release trust gaps by running the first real Release Please -> Hex publish flow and capturing live package/docs verification evidence.
@@ -129,7 +132,7 @@ Plans:
 | 13. Operator Primitives | 3/3 | Complete | 2026-04-16 |
 | 14. Mix Tasks and Guides | 2/2 | Complete   | 2026-04-16 |
 | 15. Verify Operator Primitives | 1/1 | Complete    | 2026-04-17 |
-| 16. Verify Mix Tasks and Repair Milestone Bookkeeping | 0/TBD | Not started | - |
+| 16. Verify Mix Tasks and Repair Milestone Bookkeeping | 0/1 | Not started | - |
 | 17. Prove The First Public Release | 0/TBD | Not started | - |
 
 ## Backlog
