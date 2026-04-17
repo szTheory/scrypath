@@ -89,6 +89,12 @@ jobs:
       - name: Run Phase 11 release contract gate
         run: mix verify.phase11
 
+      - name: Run Phase 13 operator gate
+        run: mix verify.phase13 --skip-integration
+
+      - name: Run Phase 14 operator docs gate
+        run: mix verify.phase14
+
   phase5-verification:
     runs-on: ubuntu-latest
 
@@ -135,3 +141,50 @@ jobs:
 
       - name: Run Phase 5 verification
         run: mix verify.phase5
+
+  phase13-verification:
+    runs-on: ubuntu-latest
+
+    services:
+      meilisearch:
+        image: getmeili/meilisearch:v1.15
+        ports:
+          - 7700:7700
+        env:
+          MEILI_NO_ANALYTICS: "true"
+
+    env:
+      SCRYPATH_INTEGRATION: "1"
+      SCRYPATH_MEILISEARCH_URL: http://127.0.0.1:7700
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.19.0"
+          otp-version: "28.0"
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-phase13-${{ hashFiles('mix.lock') }}
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Wait for Meilisearch
+        run: |
+          for _ in $(seq 1 30); do
+            if curl --silent --fail "$SCRYPATH_MEILISEARCH_URL/health" >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Meilisearch failed to start"
+          exit 1
+
+      - name: Run Phase 13 verification
+        run: mix verify.phase13
