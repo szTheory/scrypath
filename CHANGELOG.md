@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 Release Please manages versioned entries after this baseline.
 
+## Unreleased
+
+### Added
+
+- `mix verify.workspace_clean` — fails if the working tree has uncommitted or untracked files under packaged paths (`lib/`, `test/`, `guides/`, `docs/`, and other `mix.exs` `package.files` entries). Integrated into all three publish paths (`ci.yml` quality job, `release-please.yml` publish-hex job, `publish-hex.yml` manual recovery).
+- `mix verify.release_parity X.Y.Z` — compares the published Hex tarball's `lib/ + guides/ + docs/` file list against the git tag of the same version. Exit codes: `0` parity, `2` drift, `1` runtime error. Runs daily via `verify-published-release.yml` cron and auto-files a deduplicated GitHub issue on drift.
+
+### Changed
+
+- GitHub Actions CI runtime upgraded to Node 24 — `actions/checkout@v6` and `actions/cache@v5` across all jobs in `.github/workflows/ci.yml` (clears the Node 20 deprecation ahead of the 2026-09 removal).
+
+### Notes
+
+- See `.planning/milestones/v1.2-MILESTONE-AUDIT.md` for the historical v1.2 tag-vs-main divergence that motivated this phase's release-parity gates.
+
 ## [0.3.0](https://github.com/szTheory/scrypath/compare/scrypath-v0.2.0...scrypath-v0.3.0) (2026-04-17)
 
 
