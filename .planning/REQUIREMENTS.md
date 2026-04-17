@@ -12,9 +12,9 @@ Additive over `scrypath 0.3.0` / v1.3 planning surface; no breaking changes to `
 
 Ship the accumulated library surface on Hex with the same mechanical gates used for `0.3.0`.
 
-- [ ] **SHIP-01**: Next semver (`0.4.0` or maintainer-chosen) is cut through the documented Release Please path so the published tarball matches the approved git ref for that version.
-- [ ] **SHIP-02**: README + ExDoc + `mix.exs` package metadata reference the new `@version` / `@source_ref` contract (no dangling `0.3.0` pointers after release).
-- [ ] **SHIP-03**: `mix verify.phase11`, `mix verify.workspace_clean`, and `mix verify.release_parity X.Y.Z` pass on the release tag before publish; CI quality job remains green.
+- [x] **SHIP-01**: Semver **0.3.1** was cut through the documented Release Please path; published tarball matches git tag **`v0.3.1`** (Actions publish job, 2026-04-17).
+- [x] **SHIP-02**: README + ExDoc + `mix.exs` package metadata reference **`@version "0.3.1"`** / `@source_ref` for the shipped release.
+- [x] **SHIP-03**: `mix verify.phase11`, `mix verify.workspace_clean`, and `mix verify.release_parity 0.3.1` ran on the release publish path in CI (post-publish steps green on merge to `main`).
 
 ### Relevance — hot apply (prefix: TUNE14)
 
@@ -63,9 +63,9 @@ Carried from research / backlog; not committed in v1.4.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SHIP-01 | Phase 24 | Pending |
-| SHIP-02 | Phase 24 | Pending |
-| SHIP-03 | Phase 24 | Pending |
+| SHIP-01 | Phase 24 | Complete |
+| SHIP-02 | Phase 24 | Complete |
+| SHIP-03 | Phase 24 | Complete |
 | TUNE14-01 | Phase 25 | Complete |
 | TUNE14-02 | Phase 25 | Complete |
 | OPS14-01 | Phase 26 | Complete |

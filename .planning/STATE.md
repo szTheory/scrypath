@@ -5,16 +5,16 @@ milestone_name: Public package parity & operator depth
 current_phase: 24
 current_phase_name: Public Hex release & parity gates
 current_plan: "24-01, 24-02, 24-03"
-status: at_release_gate
-stopped_at: "Phase 26 closed (verified + automated UAT via mix verify.phase26). v1.4 engineering complete except SHIP: tick Phase 24 when published, then /gsd-complete-milestone."
-last_updated: "2026-04-17T23:45:00Z"
+status: shipped_hex_0_3_1
+stopped_at: "Hex scrypath 0.3.1 published 2026-04-17 (Release Please PR #5 merged). Planning checkboxes updated. Run /gsd-complete-milestone v1.4 when ready to archive."
+last_updated: "2026-04-17T23:50:00Z"
 last_activity: 2026-04-17
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 8
   completed_plans: 8
-  percent: 67
+  percent: 100
 ---
 
 # Project State
@@ -25,13 +25,12 @@ See: `.planning/PROJECT.md` (updated 2026-04-17)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Milestone **v1.4** — **Phase 24** is the only open roadmap checkbox (Hex publish + SHIP-01..03). Phases **25** and **26** are **complete** on the branch (`mix verify.meilisearch_smoke`, **`mix verify.phase26`**).
+**Current focus:** Milestone **v1.4** — **shipped to Hex as `0.3.1`** (2026-04-17). All phases **24–26** complete; **SHIP-01..03** satisfied. Optional: **`/gsd-complete-milestone v1.4`** to archive roadmap/requirements into `milestones/`.
 
 ## Current Position
 
-**Phase:** Maintainer focus **24** (release) — **Phase 26** ✅ 2026-04-17 — plans executed, **`26-VERIFICATION.md`** passed, **`26-UAT.md`** complete (automated gate).  
-**Prior:** Phase 25 complete — `hot_apply/3`, `mix scrypath.settings.hot_apply`, smoke CI.  
-**Phase 24:** Plans 24-01..03 executed + `24-VERIFICATION.md`; keep ROADMAP **`[ ]`** until you merge/publish and intentionally close the release row.
+**Phase 24 (release):** ✅ **Hex `0.3.1`** — Release Please merge + Actions publish + `release_publish` / `release_parity` steps green (Actions **run 24589910084**).  
+**Phases 25–26:** ✅ as before (`hot_apply/3`, **`mix verify.phase26`**).
 
 ## Accumulated Context
 
@@ -45,12 +44,12 @@ See: `.planning/PROJECT.md` (updated 2026-04-17)
 
 ### Blockers / Concerns
 
-- **SHIP:** Hex publish + Release Please merge still the active gate for closing v1.4 (see **`docs/releasing.md`**).
+- **None for Hex ship.** Optional follow-up: milestone archive via **`/gsd-complete-milestone v1.4`**.
 
 ### Deferred Items
 
 - **Quick-task stubs (audit-open):** two slugs reported **missing** on disk — same class as v1.3 close; safe to drop from audit index or recreate files if you still want those tasks tracked.
-- **v1.4 milestone close:** blocked on **SHIP** only — see **`.planning/v1.4-MILESTONE-AUDIT.md`**.
+- **v1.4 milestone archive:** optional GSD **`/gsd-complete-milestone v1.4`** (SHIP done).
 
 ## Pre-close evidence (automated)
 
@@ -61,15 +60,16 @@ See: `.planning/PROJECT.md` (updated 2026-04-17)
 | `mix verify.workspace_clean` | pass (after last commit) |
 | `mix format --check-formatted` | pass |
 
-**Milestone audit file:** `.planning/v1.4-MILESTONE-AUDIT.md` (`status: implementation_ready_pending_hex_ship`).
+**Milestone audit file:** `.planning/v1.4-MILESTONE-AUDIT.md` (updated after publish).
 
 ## Next Command
 
-**Start here:** open **`.planning/FOLLOW-SHIP-v1.4.md`** and check boxes top to bottom. It is the only path you need until the milestone is closed.
+1. **`/gsd-complete-milestone v1.4`** when you want roadmap + requirements archived under **`milestones/`** and `PROJECT.md` evolved per GSD.
+2. **`git pull`** on any other clone — **`main`** now includes **`0.3.1`** release merge (**`c52542b`** area).
 
-Background (optional): **`.planning/v1.4-MILESTONE-AUDIT.md`** — engineering vs **SHIP** boundary. Full narrative: **`docs/releasing.md`**.
+Ship checklist **`.planning/FOLLOW-SHIP-v1.4.md`** is satisfied for **`0.3.1`**; keep it as a template for the next release. **`docs/releasing.md`** remains the deep runbook.
 
 **Resume file:** `.planning/phases/24-public-hex-release-parity-gates/24-VERIFICATION.md`
 
 ---
-*Last updated: 2026-04-17 — v1.4 pre-close audit written; SHIP pending Hex*
+*Last updated: 2026-04-17 — Hex 0.3.1 published; SHIP + Phase 24 closed in planning*

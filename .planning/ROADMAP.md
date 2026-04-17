@@ -6,7 +6,7 @@
 - [x] `v1.1` shipped on 2026-04-16 — 3 phases, 9 plans — [archive](milestones/v1.1-ROADMAP.md)
 - [x] `v1.2` shipped on 2026-04-17 — 7 phases, 13 plans — [archive](milestones/v1.2-ROADMAP.md)
 - [x] `v1.3` shipped on 2026-04-17 — 6 phases (18–23), 18 plans — [archive](milestones/v1.3-ROADMAP.md) · [requirements](milestones/v1.3-REQUIREMENTS.md)
-- [ ] **`v1.4` active** — 3 phases (24–26): public Hex parity, narrow settings `hot_apply`, operator failure rollups
+- [x] **`v1.4` shipped on 2026-04-17** — 3 phases (24–26), 8 plans — [requirements](REQUIREMENTS.md)
 
 ## Active Milestone
 
@@ -18,7 +18,7 @@
 
 ## Phases
 
-- [ ] **Phase 24: Public Hex release & parity gates** — Version + Release Please + docs pins + `verify.*` green on the release ref (SHIP-01..03).
+- [x] **Phase 24: Public Hex release & parity gates** — 2026-04-17 — **Hex `scrypath 0.3.1`**; Release Please + publish workflow + `release_parity` green on release ref (SHIP-01..03).
 - [x] **Phase 25: Settings hot apply (narrow)** — 2026-04-17 — TUNE14-01 `hot_apply/3` + Mix task + integration; TUNE14-02 guides + CHANGELOG (verify `25-VERIFICATION.md`).
 - [x] **Phase 26: Operator failure rollups** — 2026-04-17 — OPS14-01: `mix verify.phase26` + `26-VERIFICATION.md` / `26-UAT.md` (automated); rollups on `failed_sync_work/2`, reconcile, Mix/CLI.
 
@@ -89,7 +89,7 @@ Details: `milestones/v1.3-ROADMAP.md`.
 
 | Phase | Milestone | Plans | Status | Completed |
 |-------|-----------|-------|--------|-----------|
-| 24. Public Hex release & parity gates | v1.4 | 3/3 | Executed (review & merge) | - |
+| 24. Public Hex release & parity gates | v1.4 | 3/3 | Complete | 2026-04-17 |
 | 25. Settings hot apply (narrow) | v1.4 | 3/3 | Complete (branch) | 2026-04-17 |
 | 26. Operator failure rollups | v1.4 | 2/2 | Complete | 2026-04-17 |
 
@@ -101,4 +101,4 @@ Details: `milestones/v1.3-ROADMAP.md`.
 - Per-query relevance overrides once pipeline semantics are designed.
 
 ---
-*Last updated: 2026-04-17 — Phase 26 complete; `mix verify.phase26` on PR quality job*
+*Last updated: 2026-04-17 — Hex **0.3.1** published; Phase 24 closed*
