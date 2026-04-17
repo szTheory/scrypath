@@ -1,0 +1,200 @@
+defmodule Scrypath.SearchManyTest do
+  use ExUnit.Case, async: false
+
+  alias Scrypath.MultiSearchResult
+  alias Scrypath.SearchResult
+
+  defmodule SlowRepo do
+    @moduledoc false
+    def all(%Ecto.Query{}) do
+      Process.sleep(200)
+      []
+    end
+  end
+
+  defmodule SequentialOnlyBackend do
+    @moduledoc false
+    @behaviour Scrypath.Backend
+
+    @impl true
+    def name, do: :sequential_only
+
+    @impl true
+    def index_name(schema_module, config) do
+      Scrypath.TestSupport.FakeBackend.index_name(schema_module, config)
+    end
+
+    @impl true
+    def upsert_documents(_, _, _), do: {:ok, []}
+
+    @impl true
+    def delete_documents(_, _, _), do: {:ok, []}
+
+    @impl true
+    def search(_schema, query, _config) do
+      {:ok, %{"hits" => [%{"id" => 1, "title" => query.text}], "page" => 1, "hitsPerPage" => 20}}
+    end
+  end
+
+  defmodule PartialFailBackend do
+    @moduledoc false
+    @behaviour Scrypath.Backend
+
+    @impl true
+    def name, do: :partial_fail
+
+    @impl true
+    def index_name(m, c), do: Scrypath.TestSupport.FakeBackend.index_name(m, c)
+
+    @impl true
+    def upsert_documents(_, _, _), do: {:ok, []}
+
+    @impl true
+    def delete_documents(_, _, _), do: {:ok, []}
+
+    @impl true
+    def search(FacetableMovie, _, _), do: {:error, :transport}
+
+    @impl true
+    def search(SearchablePost, %Scrypath.Query{} = q, _) do
+      {:ok, %{"hits" => [%{"id" => 1}], "page" => 1, "hitsPerPage" => 20, "query" => q}}
+    end
+  end
+
+  defmodule FailAllBackend do
+    @moduledoc false
+    @behaviour Scrypath.Backend
+
+    @impl true
+    def name, do: :fail_all
+
+    @impl true
+    def index_name(m, c), do: Scrypath.TestSupport.FakeBackend.index_name(m, c)
+
+    @impl true
+    def upsert_documents(_, _, _), do: {:ok, []}
+
+    @impl true
+    def delete_documents(_, _, _), do: {:ok, []}
+
+    @impl true
+    def search(_, _, _), do: {:error, :bad}
+  end
+
+  @base_opts [
+    backend: Scrypath.TestSupport.FakeBackend,
+    meilisearch_url: "http://localhost:7700"
+  ]
+
+  test "all success with native search_many path" do
+    assert {:ok, %MultiSearchResult{ordered: ordered, failures: [], by_schema: by}} =
+             Scrypath.search_many(
+               [{SearchablePost, "a"}, {FacetableMovie, "b"}],
+               @base_opts
+             )
+
+    assert length(ordered) == 2
+    assert map_size(by) == 2
+    assert Enum.all?(ordered, fn {_, %SearchResult{}} -> true end)
+    assert Map.new(ordered) == by
+  end
+
+  test "validation failure before dispatch" do
+    assert {:error, {:validation_failed, SearchablePost, {:unknown_facet, :nope}}} =
+             Scrypath.search_many(
+               [{SearchablePost, "a", facets: [:nope]}],
+               @base_opts
+             )
+  end
+
+  test "sequential fallback matches shape for two schemas" do
+    assert {:ok, %MultiSearchResult{ordered: ordered, failures: []}} =
+             Scrypath.search_many(
+               [{SearchablePost, "x"}, {FacetableMovie, "y"}],
+               Keyword.put(@base_opts, :backend, SequentialOnlyBackend)
+             )
+
+    assert length(ordered) == 2
+  end
+
+  test "sequential partial transport failure" do
+    assert {:ok, %MultiSearchResult{ordered: ordered, failures: failures}} =
+             Scrypath.search_many(
+               [{FacetableMovie, "a"}, {SearchablePost, "b"}],
+               Keyword.put(@base_opts, :backend, PartialFailBackend)
+             )
+
+    assert length(ordered) == 1
+    assert length(failures) == 1
+    assert hd(failures).schema == FacetableMovie
+  end
+
+  test "sequential all transport failures" do
+    assert {:error, {:all_failed, failures}} =
+             Scrypath.search_many(
+               [{SearchablePost, "a"}, {FacetableMovie, "b"}],
+               Keyword.put(@base_opts, :backend, FailAllBackend)
+             )
+
+    assert length(failures) == 2
+  end
+
+  test "hydration timeout surfaces as all_failed when sole entry times out" do
+    assert {:error, {:all_failed, [%{schema: QueryablePost, reason: :hydration_timeout}]}} =
+             Scrypath.search_many(
+               [{QueryablePost, "slow"}],
+               @base_opts
+               |> Keyword.merge(repo: SlowRepo, hydration_timeout: 50)
+             )
+  end
+
+  test "telemetry span emits start and stop" do
+    parent = self()
+
+    :telemetry.attach_many(
+      "search-many-test",
+      [[:scrypath, :search_many, :start], [:scrypath, :search_many, :stop]],
+      fn event, measurements, metadata, _ ->
+        send(parent, {:telemetry, event, measurements, metadata})
+      end,
+      nil
+    )
+
+    on_exit(fn -> :telemetry.detach("search-many-test") end)
+
+    assert {:ok, _} =
+             Scrypath.search_many([{SearchablePost, "t"}], @base_opts)
+
+    assert_receive {:telemetry, [:scrypath, :search_many, :start], _, _}
+    assert_receive {:telemetry, [:scrypath, :search_many, :stop], _, _}
+  end
+
+  test "search_many! raises on top-level error only" do
+    assert_raise RuntimeError, fn ->
+      Scrypath.search_many!([{SearchablePost, "a", facets: [:bad]}], @base_opts)
+    end
+
+    assert %MultiSearchResult{} = Scrypath.search_many!([{SearchablePost, "ok"}], @base_opts)
+  end
+
+  test "partial telemetry when failures present" do
+    parent = self()
+
+    :telemetry.attach_many(
+      "search-many-partial",
+      [[:scrypath, :search_many, :partial]],
+      fn _e, m, md, _ -> send(parent, {:partial, m, md}) end,
+      nil
+    )
+
+    on_exit(fn -> :telemetry.detach("search-many-partial") end)
+
+    assert {:ok, _} =
+             Scrypath.search_many(
+               [{FacetableMovie, "a"}, {SearchablePost, "b"}],
+               Keyword.put(@base_opts, :backend, PartialFailBackend)
+             )
+
+    assert_receive {:partial, %{count: 1}, %{failure_count: 1}}
+  end
+end

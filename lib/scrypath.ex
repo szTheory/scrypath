@@ -98,6 +98,22 @@ defmodule Scrypath do
     Scrypath.Search.search!(schema_module, text, opts)
   end
 
+  @doc """
+  Federated search across multiple schemas.
+
+  Returns an ok tuple whose success value is the library's federated multi-search
+  result struct, or an error tuple on validation, transport, or complete failure.
+  """
+  @spec search_many(list(), keyword()) :: {:ok, term()} | {:error, term()}
+  def search_many(entries, opts \\ []) do
+    Scrypath.Search.search_many(entries, opts)
+  end
+
+  @spec search_many!(list(), keyword()) :: term()
+  def search_many!(entries, opts \\ []) do
+    Scrypath.Search.search_many!(entries, opts)
+  end
+
   @spec backfill(module(), keyword()) :: {:ok, map()} | {:error, term()}
   def backfill(schema_module, opts \\ []) do
     Scrypath.Backfill.run(schema_module, opts)
@@ -114,8 +130,21 @@ defmodule Scrypath do
     Scrypath.Operator.sync_status(schema_module, opts)
   end
 
+  @doc """
+  Returns failed or retrying sync work rows for a schema.
+
+  ## Reason class rollups
+
+  Pass **`reason_class_counts: true`** in operator options (alongside runtime
+  config) to receive **`{:ok, %Scrypath.Operator.FailedSyncWorkInspection{}}`**
+  with **`entries`** (the row list) and **`counts`** — a
+  **`%Scrypath.Operator.ReasonClassCounts{}`** with dense per-class frequencies.
+  The default remains **`{:ok, [FailedWork.t()]}`** when this option is omitted.
+  """
   @spec failed_sync_work(module(), keyword()) ::
-          {:ok, [Scrypath.Operator.FailedWork.t()]} | {:error, term()}
+          {:ok, [Scrypath.Operator.FailedWork.t()]}
+          | {:ok, Scrypath.Operator.FailedSyncWorkInspection.t()}
+          | {:error, term()}
   def failed_sync_work(schema_module, opts \\ []) do
     Scrypath.Operator.failed_sync_work(schema_module, opts)
   end

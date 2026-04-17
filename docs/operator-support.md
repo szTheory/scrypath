@@ -48,11 +48,14 @@ Before merge or release handoff, run:
 ```bash
 mix verify.phase14
 mix verify.phase20
+mix verify.phase26
 mix verify.phase11
 ```
 
 The Phase 14 verifier is auth-free. It exercises the focused Mix task tests, docs contract, package metadata assertions, and `mix docs --warnings-as-errors`.
 
 The Phase 20 verifier (**mix verify.phase20**) is auth-free. It runs the faceting, Meilisearch settings, and faceted-guide docs contract tests, then **mix docs --warnings-as-errors**.
+
+The Phase 26 verifier (**mix verify.phase26**) is auth-free. It runs failed-work rollups, reconcile output, operator Mix tasks, and the docs contract tests with **`--warnings-as-errors`**, then **mix docs --warnings-as-errors**.
 
 `mix verify.phase11` keeps the release path aligned and remains the gate you use before a real publish flow.

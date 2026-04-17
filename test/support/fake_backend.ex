@@ -28,6 +28,41 @@ defmodule Scrypath.TestSupport.FakeBackend do
   end
 
   @impl true
+  def search_many(paired_queries, config) when is_list(paired_queries) do
+    hits =
+      Enum.map(paired_queries, fn {schema_module, %Query{} = query} ->
+        uid = index_name(schema_module, config)
+
+        %{
+          "id" => :erlang.phash2({uid, query.text}),
+          "_federation" => %{"indexUid" => uid},
+          "q" => query.text
+        }
+      end)
+
+    facets_by_index =
+      paired_queries
+      |> Enum.map(fn {schema_module, %Query{} = query} ->
+        uid = index_name(schema_module, config)
+
+        dist =
+          Map.new(query.facets, fn f ->
+            {Atom.to_string(f), %{"a" => 2, "b" => 1}}
+          end)
+
+        stats =
+          Map.new(query.facets, fn f ->
+            {Atom.to_string(f), %{"min" => 1, "max" => 10}}
+          end)
+
+        {uid, %{"facetDistribution" => dist, "facetStats" => stats}}
+      end)
+      |> Map.new()
+
+    {:ok, %{"hits" => hits, "facetsByIndex" => facets_by_index}}
+  end
+
+  @impl true
   def search(_schema_module, query, _config) do
     base = %{
       query: query,

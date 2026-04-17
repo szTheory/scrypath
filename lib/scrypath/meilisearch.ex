@@ -17,6 +17,7 @@ defmodule Scrypath.Meilisearch do
   alias Scrypath.Meilisearch.Client
   alias Scrypath.Meilisearch.IndexManagement
   alias Scrypath.Meilisearch.Operations
+  alias Scrypath.Meilisearch.Query, as: MeilisearchQuery
   alias Scrypath.Meilisearch.Settings
   alias Scrypath.Query
 
@@ -64,6 +65,28 @@ defmodule Scrypath.Meilisearch do
         index_name(schema_module, config)
 
     client(config).search(index, query, config)
+  end
+
+  @impl true
+  @spec search_many([{module(), Query.t()}], keyword()) :: {:ok, map()} | {:error, term()}
+  def search_many(paired_queries, config) when is_list(paired_queries) do
+    queries =
+      Enum.map(paired_queries, fn {schema_module, %Query{} = query} ->
+        index = index_name(schema_module, config)
+
+        query
+        |> MeilisearchQuery.to_payload()
+        |> Map.put("indexUid", index)
+      end)
+
+    federation = %{
+      "limit" => Keyword.fetch!(config, :federation_limit),
+      "offset" => Keyword.fetch!(config, :federation_offset)
+    }
+
+    payload = %{"queries" => queries, "federation" => federation}
+
+    client(config).multi_search(payload, config)
   end
 
   @spec apply_settings(module(), String.t(), keyword()) :: {:ok, map()} | {:error, term()}

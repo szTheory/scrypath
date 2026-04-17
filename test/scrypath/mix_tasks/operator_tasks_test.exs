@@ -121,11 +121,76 @@ defmodule Scrypath.MixTasks.OperatorTasksTest do
 
     assert failed_output =~ "Schema: SearchablePost"
     assert failed_output =~ "Failed work: 2"
+    assert failed_output =~ "Failed work by class:"
 
     assert failed_output =~
-             "id=403 source=meilisearch state=failed operation=upsert retryable=no reason=write failed"
+             "id=403 source=meilisearch state=failed operation=upsert retryable=no reason_class=unknown reason=write failed"
 
-    assert failed_output =~ "id=501 source=oban state=retrying operation=upsert retryable=yes"
+    assert failed_output =~
+             "id=501 source=oban state=retrying operation=upsert retryable=yes reason_class=unknown"
+  end
+
+  test "scrypath.failed --json emits one JSON document without Mix shell noise" do
+    Application.put_env(:scrypath, :operator_task_test_meilisearch_tasks, [
+      %{
+        "uid" => 403,
+        "status" => "failed",
+        "type" => "documentAdditionOrUpdate",
+        "indexUid" => "tenant_searchable_post",
+        "error" => %{"message" => "write failed"}
+      }
+    ])
+
+    Application.put_env(:scrypath, :operator_task_test_oban_jobs, [])
+
+    Application.put_env(:scrypath, :operator_task_test_opts,
+      meilisearch_tasks: Application.fetch_env!(:scrypath, :operator_task_test_meilisearch_tasks),
+      oban_inspector: TaskObanInspector,
+      oban_jobs: []
+    )
+
+    json =
+      capture_io(fn ->
+        Mix.Task.reenable("scrypath.failed")
+        Mix.Task.run("scrypath.failed", ["SearchablePost", "--json"])
+      end)
+
+    decoded = Jason.decode!(json)
+    assert decoded["schema"] == "SearchablePost"
+    assert [%{"id" => 403, "reason_class" => _} | _] = decoded["entries"]
+    assert %{"version" => 1, "total" => 1, "by_class" => by} = decoded["counts"]
+    assert Map.keys(by) |> MapSet.new() == MapSet.new(~w(
+      transport validation backend_rejected queue_exhausted unknown
+    ))
+  end
+
+  test "scrypath.failed --no-class-summary hides the rollup header" do
+    Application.put_env(:scrypath, :operator_task_test_meilisearch_tasks, [
+      %{
+        "uid" => 403,
+        "status" => "failed",
+        "type" => "documentAdditionOrUpdate",
+        "indexUid" => "tenant_searchable_post",
+        "error" => %{"message" => "write failed"}
+      }
+    ])
+
+    Application.put_env(:scrypath, :operator_task_test_oban_jobs, [])
+
+    Application.put_env(:scrypath, :operator_task_test_opts,
+      meilisearch_tasks: Application.fetch_env!(:scrypath, :operator_task_test_meilisearch_tasks),
+      oban_inspector: TaskObanInspector,
+      oban_jobs: []
+    )
+
+    out =
+      capture_io(fn ->
+        Mix.Task.reenable("scrypath.failed")
+        Mix.Task.run("scrypath.failed", ["SearchablePost", "--no-class-summary"])
+      end)
+
+    refute out =~ "Failed work by class:"
+    assert out =~ "reason_class="
   end
 
   test "scrypath.retry requires an explicit failed-work id and replays through Scrypath.retry_sync_work/2" do
@@ -244,6 +309,7 @@ defmodule Scrypath.MixTasks.OperatorTasksTest do
     assert report_output =~
              "Drift signals: pending_queue_work, failed_sync_work, reindex_visibility_available, reindex_in_progress"
 
+    assert report_output =~ "Failed work by class:"
     assert report_output =~ "Recommended actions: retry(ids=1001), reindex"
     refute_received {:oban_insert, _job}
 

@@ -19,8 +19,8 @@
 ## Phases
 
 - [ ] **Phase 24: Public Hex release & parity gates** — Version + Release Please + docs pins + `verify.*` green on the release ref (SHIP-01..03).
-- [ ] **Phase 25: Settings hot apply (narrow)** — Implement TUNE14-01..02: bounded `hot_apply/3`, operator docs, contracts/tests.
-- [ ] **Phase 26: Operator failure rollups** — OPS14-01: expose grouped counts for operator triage without new public verbs beyond the agreed surface.
+- [x] **Phase 25: Settings hot apply (narrow)** — 2026-04-17 — TUNE14-01 `hot_apply/3` + Mix task + integration; TUNE14-02 guides + CHANGELOG (verify `25-VERIFICATION.md`).
+- [x] **Phase 26: Operator failure rollups** — 2026-04-17 — OPS14-01: `mix verify.phase26` + `26-VERIFICATION.md` / `26-UAT.md` (automated); rollups on `failed_sync_work/2`, reconcile, Mix/CLI.
 
 <details>
 <summary>✅ v1.3 — Phases 18–23 — SHIPPED 2026-04-17</summary>
@@ -68,7 +68,7 @@ Details: `milestones/v1.3-ROADMAP.md`.
 2. Unsupported keys return `{:error, _}` without mutating remote settings.
 3. Guide + docs contract describe hot vs managed reindex tradeoffs.
 
-**Plans:** TBD (implementation, integration tests, guide, docs contract).
+**Plans:** `25-01` (core `hot_apply/3` + unit tests + telemetry), `25-02` (Mix task + integration), `25-03` (TUNE14-02 docs + CHANGELOG).
 
 ### Phase 26: Operator failure rollups
 
@@ -83,15 +83,15 @@ Details: `milestones/v1.3-ROADMAP.md`.
 1. Documented API or Mix output exposes per-`reason_class` counts consistent with underlying failed-work sources.
 2. Tests lock the shape and prevent silent omission of unknown classes into a misleading bucket.
 
-**Plans:** TBD.
+**Plans:** `26-01` (rollup structs + `reason_class_counts/1` + `failed_sync_work/2` opt-in + tests), `26-02` (`%Reconcile{}` field + Mix/CLI + guides + CHANGELOG + docs contract).
 
 ## Progress
 
 | Phase | Milestone | Plans | Status | Completed |
 |-------|-----------|-------|--------|-----------|
 | 24. Public Hex release & parity gates | v1.4 | 3/3 | Executed (review & merge) | - |
-| 25. Settings hot apply (narrow) | v1.4 | TBD | Not started | - |
-| 26. Operator failure rollups | v1.4 | TBD | Not started | - |
+| 25. Settings hot apply (narrow) | v1.4 | 3/3 | Complete (branch) | 2026-04-17 |
+| 26. Operator failure rollups | v1.4 | 2/2 | Complete | 2026-04-17 |
 
 ## Backlog (post–v1.4 candidates)
 
@@ -101,4 +101,4 @@ Details: `milestones/v1.3-ROADMAP.md`.
 - Per-query relevance overrides once pipeline semantics are designed.
 
 ---
-*Last updated: 2026-04-17 — v1.4 milestone initialized (`/gsd-new-milestone`)*
+*Last updated: 2026-04-17 — Phase 26 complete; `mix verify.phase26` on PR quality job*

@@ -233,6 +233,18 @@ Use `Scrypath.reconcile_sync/2` when you need a report-first operator view that 
 
 `Scrypath.reconcile_sync/2` does not heal anything by default. It returns drift signals plus explicit recovery actions so the caller can choose retry, backfill, or reindex deliberately.
 
+## Integration smoke (Meilisearch)
+
+CI runs live Meilisearch-backed tests in a dedicated workflow job. Locally you can use Docker Compose (from the repo root):
+
+```bash
+docker compose up -d
+SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700 mix verify.meilisearch_smoke
+docker compose down
+```
+
+`mix verify.meilisearch_smoke --skip-integration` exits without contacting Meilisearch (useful for quick task wiring checks only; it does not run the live suites).
+
 ## Architecture
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the full runtime boundary, sync guarantees, drift model, and managed reindex workflow order.

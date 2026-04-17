@@ -35,7 +35,15 @@ Use it when you need a quick read on backend pending work, backend failures, las
 mix scrypath.failed MyApp.Blog.Post --backend meilisearch --sync-mode oban --index-prefix tenant
 ```
 
-Use it when you want a stable list of failed or retrying work with a Scrypath-owned id, operation kind, retryability, and summarized reason.
+Use it when you want a stable list of failed or retrying work with a Scrypath-owned id, operation kind, retryability, summarized reason, and **`reason_class=`** on each row.
+
+When there is at least one row, human output includes a compact **`Failed work by class:`** rollup (same taxonomy as `FailedWork.reason_class_counts/1`) above the per-row lines.
+
+```bash
+mix scrypath.failed MyApp.Blog.Post --backend meilisearch --sync-mode oban --index-prefix tenant --json
+```
+
+**`--json`** prints a single JSON document to stdout (no `Mix` shell framing). Use **`--no-class-summary`** to hide only the rollup header when piping or grepping row lines.
 
 ## `mix scrypath.retry`
 
@@ -55,7 +63,7 @@ Retry stays explicit. You must pass a concrete failed-work id. The task does not
 mix scrypath.reconcile MyApp.Blog.Post --backend meilisearch --sync-mode oban --index-prefix tenant
 ```
 
-By default it is report-first. It prints drift signals, failed-work count, recommended actions, and target-index visibility when a rebuild is in progress.
+By default it is report-first. It prints drift signals, failed-work count, a **`Failed work by class:`** rollup aligned with the same rows, recommended actions, and target-index visibility when a rebuild is in progress.
 
 To mutate, request one explicit action from the report:
 
@@ -65,3 +73,13 @@ mix scrypath.reconcile MyApp.Blog.Post --action reindex --backend meilisearch --
 ```
 
 That keeps `Scrypath.reconcile_sync/2` honest: it reports first and only mutates when you ask for a concrete action.
+
+## `mix scrypath.settings.hot_apply`
+
+Applies a **live** Meilisearch settings PATCH for one schema. Only `synonyms`, `stop_words`, and `typo_tolerance` are sent; anything else is rejected before HTTP. You must pass **`--ack-live`** on every invocation (explicit acknowledgement of live mutation).
+
+```bash
+mix scrypath.settings.hot_apply MyApp.Blog.Post --settings-file operator/stopwords-patch.json --ack-live --meilisearch-url http://127.0.0.1:7700 --index-prefix tenant
+```
+
+Tradeoffs and non-goals: see `guides/relevance-tuning.md` (**Settings hot apply (v1.4)**).

@@ -633,18 +633,76 @@ defmodule Scrypath.Meilisearch.SettingsTest do
     end
   end
 
-  describe "hot_apply/3 (deferred stub, TUNE-03)" do
-    test "returns {:error, :hot_apply_disabled} for any args" do
-      assert Settings.hot_apply(__MODULE__, "any_index", []) ==
-               {:error, :hot_apply_disabled}
+  describe "hot_apply/3 (TUNE14-01)" do
+    defmodule HotApplySucceededClient do
+      def update_settings(index_name, settings, config) do
+        send(self(), {:client_update_settings, index_name, settings, config})
+
+        {:ok,
+         %{
+           "taskUid" => 77,
+           "indexUid" => index_name,
+           "status" => "succeeded",
+           "type" => "settingsUpdate"
+         }}
+      end
     end
 
-    test "returns {:error, :hot_apply_disabled} even with well-formed settings" do
-      assert Settings.hot_apply(
-               __MODULE__,
-               "posts_v2",
-               settings: %{synonyms: [["nyc", "new york"]]}
-             ) == {:error, :hot_apply_disabled}
+    defmodule HotApplyHttpErrorClient do
+      def update_settings(_index_name, _settings, _config) do
+        {:error, {:http_error, 400, %{"message" => "bad"}}}
+      end
+    end
+
+    test "no acknowledge_live_index skips HTTP" do
+      assert {:error, :live_ack_required} =
+               Settings.hot_apply(ApplyWireSchema, "idx",
+                 meilisearch_client: HotApplySucceededClient,
+                 settings: %{stop_words: ["a"]}
+               )
+
+      refute_received {:client_update_settings, _, _, _}
+    end
+
+    test "unsupported key returns sorted atoms and skips HTTP" do
+      assert {:error, {:unsupported_hot_apply_keys, [:ranking_rules]}} =
+               Settings.hot_apply(ApplyWireSchema, "idx",
+                 acknowledge_live_index: true,
+                 meilisearch_client: HotApplySucceededClient,
+                 settings: %{stop_words: ["a"], ranking_rules: [:words]}
+               )
+
+      refute_received {:client_update_settings, _, _, _}
+    end
+
+    test "happy path: succeeded task without polling" do
+      expected_wire = Settings.translate_settings(%{stop_words: ["the"]})
+
+      assert {:ok, %{index: "idx", task: %{uid: 77, status: :succeeded}}} =
+               Settings.hot_apply(ApplyWireSchema, "idx",
+                 acknowledge_live_index: true,
+                 meilisearch_client: HotApplySucceededClient,
+                 backend: Scrypath.Meilisearch,
+                 meilisearch_url: "http://localhost:7700",
+                 inline_poll_interval: 1,
+                 inline_timeout: 10_000,
+                 settings: %{stop_words: ["the"]}
+               )
+
+      assert_received {:client_update_settings, "idx", ^expected_wire, _}
+    end
+
+    test "update_settings HTTP error becomes hot_apply_failed" do
+      assert {:error, {:hot_apply_failed, details}} =
+               Settings.hot_apply(ApplyWireSchema, "idx",
+                 acknowledge_live_index: true,
+                 meilisearch_client: HotApplyHttpErrorClient,
+                 settings: %{stop_words: ["x"]}
+               )
+
+      assert details.type == :http
+      assert details.status == 400
+      assert inspect(details) =~ "400"
     end
   end
 end

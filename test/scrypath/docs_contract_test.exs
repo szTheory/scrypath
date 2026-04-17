@@ -13,6 +13,7 @@ defmodule Scrypath.DocsContractTest do
   @verify_phase11 File.read!("lib/mix/tasks/verify.phase11.ex")
   @verify_phase14 File.read!("lib/mix/tasks/verify.phase14.ex")
   @verify_phase20 File.read!("lib/mix/tasks/verify.phase20.ex")
+  @verify_phase26 File.read!("lib/mix/tasks/verify.phase26.ex")
   @verify_release_publish File.read!("lib/mix/tasks/verify.release_publish.ex")
   @guide_paths [
     "guides/drift-recovery.md",
@@ -44,7 +45,7 @@ defmodule Scrypath.DocsContractTest do
     assert String.contains?(@readme, "Scrypath, the Ecto-native search indexing library")
     assert ordered?(@readme, "## Installation", "## When Scrypath Fits")
     assert ordered?(@readme, "## Quick Path", "## When Scrypath Fits")
-      assert @readme =~ ~S|{:scrypath, "~> 0.3.0"}|
+    assert @readme =~ ~S|{:scrypath, "~> 0.3.0"}|
     refute @readme =~ ~S|{:req, "~> 0.5"}|
     refute @readme =~ ~S|{:scrypath, path: "../scrypath"}|
 
@@ -163,7 +164,11 @@ defmodule Scrypath.DocsContractTest do
       "mix scrypath.retry",
       "mix scrypath.reconcile",
       "thin terminal entrypoints",
-      "Scrypath.Meilisearch.*"
+      "Scrypath.Meilisearch.*",
+      "--json",
+      "--no-class-summary",
+      "Failed work by class:",
+      "reason_class="
     ])
 
     assert_contains_all(@guides["guides/drift-recovery.md"], [
@@ -173,6 +178,7 @@ defmodule Scrypath.DocsContractTest do
       "Verify",
       "Scrypath.failed_sync_work",
       "mix scrypath.failed",
+      "failed_work_counts",
       "relevance-tuning.md",
       "multi-index-search.md",
       "sync-modes-and-visibility.md"
@@ -210,6 +216,8 @@ defmodule Scrypath.DocsContractTest do
       "mix verify.phase13 --skip-integration",
       "mix verify.phase14",
       "mix verify.phase20",
+      "mix verify.phase22",
+      "mix verify.phase26",
       "Run Phase 13 verification",
       "mix verify.phase13"
     ])
@@ -277,6 +285,19 @@ defmodule Scrypath.DocsContractTest do
     ])
 
     refute @verify_phase20 =~ "HEX_API_KEY"
+  end
+
+  test "verify.phase26 keeps the operator rollup gate auth-free and test-focused" do
+    assert_contains_all(@verify_phase26, [
+      "test/scrypath/operator/failed_work_test.exs",
+      "test/scrypath/operator/reconcile_test.exs",
+      "test/scrypath/mix_tasks/operator_tasks_test.exs",
+      "test/scrypath/docs_contract_test.exs",
+      "--warnings-as-errors",
+      "Mix.Task.run(\"docs\", [\"--warnings-as-errors\"])"
+    ])
+
+    refute @verify_phase26 =~ "HEX_API_KEY"
   end
 
   test "release workflow verifies the live published version after hex publish" do
@@ -367,6 +388,7 @@ defmodule Scrypath.DocsContractTest do
     assert_contains_all(@operator_support_docs, [
       "mix verify.phase14",
       "mix verify.phase20",
+      "mix verify.phase26",
       "mix verify.phase11",
       "operator visibility and recovery live on `Scrypath.*`",
       "backend-native search power stays under `Scrypath.Meilisearch.*`"

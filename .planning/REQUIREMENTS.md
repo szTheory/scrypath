@@ -20,12 +20,12 @@ Ship the accumulated library surface on Hex with the same mechanical gates used 
 
 Narrow implementation of the deferred hot path (research id **TUNE-V14-01**).
 
-- [ ] **TUNE14-01**: `Scrypath.Meilisearch.Settings.hot_apply/3` applies **only** `synonyms`, `stop_words`, and `typo_tolerance` to the **live** index via Meilisearch-supported partial update APIs; returns structured errors on unsupported keys or backend failure; documented next to `{:error, :hot_apply_disabled}` stub behavior.
-- [ ] **TUNE14-02**: Guide + docs contract: when to prefer managed `reindex/2` vs `hot_apply/3`, and explicit non-goals (no ranking_rules hot apply in v1.4).
+- [x] **TUNE14-01**: `Scrypath.Meilisearch.Settings.hot_apply/3` applies **only** `synonyms`, `stop_words`, and `typo_tolerance` to the **live** index via Meilisearch-supported partial update APIs; returns structured errors on unsupported keys or backend failure; `mix scrypath.settings.hot_apply`; curated live coverage in `mix verify.meilisearch_smoke` (Phase 25).
+- [x] **TUNE14-02**: Guide + docs contract: when to prefer managed `reindex/2` vs `hot_apply/3`, and explicit non-goals (no ranking_rules hot apply in v1.4) — `guides/relevance-tuning.md`, `guides/operator-mix-tasks.md`, CHANGELOG (Phase 25).
 
 ### Operator observability (prefix: OPS14)
 
-- [ ] **OPS14-01**: `failed_sync_work/2` (or the documented operator entry point) exposes **rollup counts** grouped by `reason_class` so operators see pileup shape without ad-hoc scripting.
+- [x] **OPS14-01**: `failed_sync_work/2` (or the documented operator entry point) exposes **rollup counts** grouped by `reason_class` so operators see pileup shape without ad-hoc scripting (Phase 26; gate **`mix verify.phase26`**).
 
 ## v1.5+ Requirements (Deferred)
 
@@ -66,9 +66,9 @@ Carried from research / backlog; not committed in v1.4.
 | SHIP-01 | Phase 24 | Pending |
 | SHIP-02 | Phase 24 | Pending |
 | SHIP-03 | Phase 24 | Pending |
-| TUNE14-01 | Phase 25 | Pending |
-| TUNE14-02 | Phase 25 | Pending |
-| OPS14-01 | Phase 26 | Pending |
+| TUNE14-01 | Phase 25 | Complete |
+| TUNE14-02 | Phase 25 | Complete |
+| OPS14-01 | Phase 26 | Complete |
 
 **Coverage:** v1.4 requirements: **6** — mapped: **6** — unmapped: **0**
 

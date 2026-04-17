@@ -31,6 +31,7 @@ Stable event prefixes (each has `:start`, `:stop`, and on failure `:exception` w
 | `[:scrypath, :meilisearch, :task_wait]` | Waiting for Meilisearch task completion | `poll_count`, `final_status` — large `poll_count` or non-`:succeeded` trends |
 | `[:scrypath, :reindex, :settings_verified]` | Post-apply settings read-back | Stop metadata `result` tag (`:parity`, `:drift`, etc.) |
 | `[:scrypath, :reindex, :verify_skipped]` | Execute only — settings verify skipped by opt | Rare spikes may be intentional deploys; correlate with logs |
+| `[:scrypath, :operator, :failed_work, :observed]` | Each failed-work row materialized from backend tasks or Oban jobs | Useful for dashboards and structured logs; **high volume** on noisy data — do **not** page on every event; treat as diagnostic signal and aggregate |
 
 **Dashboard-first:** sync upsert volume, search QPS, hydration `missing_count` distribution, Meilisearch request latency.
 

@@ -4,17 +4,17 @@ milestone: v1.4
 milestone_name: Public package parity & operator depth
 current_phase: 24
 current_phase_name: Public Hex release & parity gates
-current_plan: "24-03"
-status: ready
-stopped_at: Phase 24 plans 24-01..03 executed locally — SUMMARY + VERIFICATION in phase dir; merge when satisfied
-last_updated: "2026-04-17T23:59:00.000Z"
+current_plan: "24-01, 24-02, 24-03"
+status: at_release_gate
+stopped_at: "Phase 26 closed (verified + automated UAT via mix verify.phase26). v1.4 engineering complete except SHIP: tick Phase 24 when published, then /gsd-complete-milestone."
+last_updated: "2026-04-17T22:30:00Z"
 last_activity: 2026-04-17
 progress:
   total_phases: 3
-  completed_phases: 0
-  total_plans: 3
-  completed_plans: 3
-  percent: 100
+  completed_phases: 2
+  total_plans: 8
+  completed_plans: 8
+  percent: 67
 ---
 
 # Project State
@@ -25,13 +25,13 @@ See: `.planning/PROJECT.md` (updated 2026-04-17)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Milestone **v1.4** — Phase **24** implementation merged pending your review; Hex `0.3.1` still ships via Release Please after merge.
+**Current focus:** Milestone **v1.4** — **Phase 24** is the only open roadmap checkbox (Hex publish + SHIP-01..03). Phases **25** and **26** are **complete** on the branch (`mix verify.meilisearch_smoke`, **`mix verify.phase26`**).
 
 ## Current Position
 
-**Phase:** 24 of 26 (v1.4) — **Implementation done** (3/3 plans; verify + merge)  
-**Plan:** 24-01 ✓, 24-02 ✓, 24-03 ✓  
-**Status:** Summaries and `24-VERIFICATION.md` in `.planning/phases/24-public-hex-release-parity-gates/`; roadmap phase checkbox still open until you mark v1.4 slice complete after release PR / publish.
+**Phase:** Maintainer focus **24** (release) — **Phase 26** ✅ 2026-04-17 — plans executed, **`26-VERIFICATION.md`** passed, **`26-UAT.md`** complete (automated gate).  
+**Prior:** Phase 25 complete — `hot_apply/3`, `mix scrypath.settings.hot_apply`, smoke CI.  
+**Phase 24:** Plans 24-01..03 executed + `24-VERIFICATION.md`; keep ROADMAP **`[ ]`** until you merge/publish and intentionally close the release row.
 
 ## Accumulated Context
 
@@ -41,17 +41,37 @@ See: `.planning/PROJECT.md` (updated 2026-04-17)
 
 **Phase 24 (release slice):** See `.planning/phases/24-public-hex-release-parity-gates/24-CONTEXT.md` — target `0.3.1`, Release Please alignment, narrow SHIP-02 sweep, post-publish `release_parity` on both publish workflows.
 
+**Phase 26 (operator rollups):** See `.planning/phases/26-operator-failure-rollups/26-CONTEXT.md` — opt-in `failed_sync_work/2`, dense `%ReasonClassCounts{}`-style struct, reconcile field, Mix defaults + `--json`. Canonical verify: **`mix verify.phase26`**.
+
 ### Blockers / Concerns
 
-- Uncommitted implementation may still exist outside `.planning/` — reconcile before SHIP work.
+- Large working tree (multi-phase work) — review `git diff`, then commit in slices before SHIP / branch protection.
 
 ### Deferred Items
 
-(Previous quick-task stubs remain deferred from v1.3 close — see git history of `STATE.md` if needed.)
+- **Quick-task stubs (audit-open):** two slugs reported **missing** on disk — same class as v1.3 close; safe to drop from audit index or recreate files if you still want those tasks tracked.
+- **v1.4 milestone close:** blocked on **SHIP** only — see **`.planning/v1.4-MILESTONE-AUDIT.md`**.
+
+## Pre-close evidence (automated)
+
+| Gate | Result (2026-04-17) |
+|------|---------------------|
+| `mix verify.phase11` | pass |
+| `mix verify.phase26` | pass |
+| `mix verify.workspace_clean` | **fail** — dirty working tree; re-run on clean ref / after staging commits |
+| `mix format --check-formatted` | pass |
+
+**Milestone audit file:** `.planning/v1.4-MILESTONE-AUDIT.md` (`status: implementation_ready_pending_hex_ship`).
 
 ## Next Command
 
-1. Review git diff, then commit. Mark Phase 24 complete in ROADMAP when the Hex release slice is merged/published as you define “done.”
+0. Read **`.planning/v1.4-MILESTONE-AUDIT.md`** — confirms engineering vs **SHIP** boundary.
+1. **Commit** the working tree in sensible slices until **`mix verify.workspace_clean`** is green locally (or rely on CI on a clean PR branch).
+2. **Publish** per **`docs/releasing.md`** (Release Please → merge release PR → Actions publish).
+3. **Tick** Phase **24** `[x]` in **`ROADMAP.md`** and **`SHIP-01..03`** in **`REQUIREMENTS.md`** when the published version and parity checks match maintainer intent.
+4. **`/gsd-complete-milestone v1.4`** — archive roadmap + requirements, evolve **PROJECT.md**, tag only when you intentionally name the shipped semver (may be **`0.3.1`**, **`0.4.0`**, or another Release Please outcome — align with **`mix.exs`** / manifest / tag).
+
+**Resume file:** `.planning/phases/24-public-hex-release-parity-gates/24-VERIFICATION.md`
 
 ---
-*Last updated: 2026-04-17 — Phase 24 execute: plans 01–03 + verification*
+*Last updated: 2026-04-17 — v1.4 pre-close audit written; SHIP pending Hex*

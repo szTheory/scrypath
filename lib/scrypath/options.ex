@@ -127,6 +127,31 @@ defmodule Scrypath.Options do
       default: :replace,
       doc:
         "Merge strategy for runtime settings overrides against schema-declared settings. :replace (default) mirrors v1.2 Map.merge/2 behavior; :deep enables recursive map merge."
+    ],
+    federation_limit: [
+      type: {:custom, __MODULE__, :validate_positive_integer, []},
+      default: 200,
+      doc: "Federated multi-search global hit limit passed to Meilisearch (shared opts only)."
+    ],
+    federation_offset: [
+      type: :non_neg_integer,
+      default: 0,
+      doc: "Federated multi-search global offset (shared opts only)."
+    ],
+    federation_timeout: [
+      type: {:custom, __MODULE__, :validate_positive_integer, []},
+      default: 7_500,
+      doc: "Reserved cumulative federation timeout budget in milliseconds (shared configuration)."
+    ],
+    hydration_timeout: [
+      type: {:custom, __MODULE__, :validate_positive_integer, []},
+      default: 5_000,
+      doc: "Per-schema hydration timeout for search_many/2 (Task.async_stream/5)."
+    ],
+    max_schemas: [
+      type: {:custom, __MODULE__, :validate_positive_integer, []},
+      default: 10,
+      doc: "Maximum number of schemas per search_many/2 call (cardinality rail)."
     ]
   ]
 

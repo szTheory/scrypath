@@ -3,6 +3,12 @@ defmodule Scrypath.Meilisearch.Settings do
 
   alias Scrypath.Meilisearch
   alias Scrypath.Meilisearch.Client
+  alias Scrypath.Meilisearch.Tasks
+  alias Scrypath.Options
+  alias Scrypath.Operations.Task, as: OpTask
+  alias Scrypath.Telemetry
+
+  @hot_apply_allowlist [:synonyms, :stop_words, :typo_tolerance]
 
   @canonical_to_camel %{
     synonyms: "synonyms",
@@ -272,15 +278,158 @@ defmodule Scrypath.Meilisearch.Settings do
   end
 
   @doc """
-  Deferred to v1.4. Always returns `{:error, :hot_apply_disabled}`.
+  Applies a bounded live PATCH of Meilisearch index settings for **only**
+  `synonyms`, `stop_words`, and `typo_tolerance`.
 
-  The managed-reindex pipeline via `Scrypath.reindex/2` is the ONLY supported
-  path for applying settings in v1.3 (TUNE-03). A real implementation is
-  deferred to v1.4 under a guarded contract (restricted subkey allowlist,
-  explicit `acknowledge_live_index: true` opt, telemetry event).
+  Requires `acknowledge_live_index: true` in `config` (library callers must opt in
+  explicitly). Settings must be passed under `settings:` as a map; other
+  top-level keys are rejected before any HTTP call.
+
+  On success returns `{:ok, %{index: ..., task: %{uid:, status:, raw: ...}}}`.
+  **`verify_applied/3` is not invoked** on success.
+
+  Telemetry: `[:scrypath, :settings, :hot_apply]` with metadata `:schema`, `:index`,
+  `:families` (allow-listed keys touched), and stop metadata from the outcome.
+
+  ## Errors
+
+    * `{:error, :live_ack_required}` — missing `acknowledge_live_index: true`
+    * `{:error, {:unsupported_hot_apply_keys, keys}}` — sorted unique atoms
+    * `{:error, :empty_hot_apply_payload}` — only nil / empty allow-listed values
+    * `{:error, {:hot_apply_failed, details}}` — HTTP, task wait, or invalid payload
   """
-  @spec hot_apply(module(), String.t(), keyword()) :: {:error, :hot_apply_disabled}
-  def hot_apply(_schema_module, _index_name, _config), do: {:error, :hot_apply_disabled}
+  @spec hot_apply(module(), String.t(), keyword()) ::
+          {:ok, %{index: String.t(), task: map()}}
+          | {:error, :live_ack_required}
+          | {:error, :empty_hot_apply_payload}
+          | {:error, {:unsupported_hot_apply_keys, [atom()]}}
+          | {:error, {:hot_apply_failed, map()}}
+  def hot_apply(schema_module, index_name, config)
+      when is_binary(index_name) and is_list(config) do
+    cond do
+      Keyword.get(config, :acknowledge_live_index) != true ->
+        {:error, :live_ack_required}
+
+      true ->
+        raw_settings = Keyword.get(config, :settings, %{})
+
+        if not is_map(raw_settings) do
+          {:error, {:hot_apply_failed, %{reason: :invalid_settings_payload}}}
+        else
+          normalized = Options.normalize_settings(raw_settings)
+
+          case hot_apply_subset(normalized) do
+            {:error, _} = err ->
+              err
+
+            {:ok, subset} ->
+              wire = translate_settings(subset)
+
+              metadata = %{
+                schema: schema_module,
+                index: index_name,
+                families: subset |> Map.keys() |> Enum.sort()
+              }
+
+              Telemetry.span([:scrypath, :settings, :hot_apply], metadata, fn ->
+                result =
+                  with {:ok, response} <- client(config).update_settings(index_name, wire, config),
+                       {:ok, task_map} <- Meilisearch.normalize_task(response),
+                       {:ok, waited} <- Tasks.wait_for_task(task_map, config) do
+                    {:ok, %{index: index_name, task: public_hot_apply_task(waited)}}
+                  else
+                    {:error, reason} ->
+                      {:error, {:hot_apply_failed, normalize_hot_apply_failure(reason)}}
+                  end
+
+                {result, Telemetry.stop_metadata(result)}
+              end)
+          end
+        end
+    end
+  end
+
+  defp hot_apply_subset(normalized) when is_map(normalized) do
+    {unrec, core} = Map.pop(normalized, :__unrecognized__, %{})
+
+    bad_core =
+      core
+      |> Map.keys()
+      |> Enum.reject(&(&1 in @hot_apply_allowlist))
+
+    bad_unrec =
+      if map_size(unrec) == 0 do
+        []
+      else
+        Enum.map(unrec, fn {k, _} -> hot_apply_unrecognized_key_atom(k) end)
+      end
+
+    bad = Enum.uniq(bad_core ++ bad_unrec)
+
+    if bad != [] do
+      {:error, {:unsupported_hot_apply_keys, Enum.sort(bad)}}
+    else
+      subset =
+        core
+        |> Map.take(@hot_apply_allowlist)
+        |> Enum.reject(fn {_, v} -> is_nil(v) end)
+        |> Map.new()
+
+      if subset == %{} do
+        {:error, :empty_hot_apply_payload}
+      else
+        {:ok, subset}
+      end
+    end
+  end
+
+  defp hot_apply_unrecognized_key_atom(k) when is_atom(k), do: k
+
+  defp hot_apply_unrecognized_key_atom(k) when is_binary(k) do
+    underscored = Macro.underscore(k)
+
+    try do
+      String.to_existing_atom(underscored)
+    rescue
+      ArgumentError -> String.to_atom(underscored)
+    end
+  end
+
+  defp public_hot_apply_task(%OpTask{} = task) do
+    task
+    |> OpTask.to_public_sync()
+    |> Map.put(:raw, task.raw)
+  end
+
+  defp normalize_hot_apply_failure({:http_error, status, body}) do
+    %{type: :http, status: status, body: body}
+  end
+
+  defp normalize_hot_apply_failure({:task_failed, %OpTask{} = task}) do
+    %{type: :task, task_uid: task.id, error: extract_task_error(task)}
+  end
+
+  defp normalize_hot_apply_failure({:timeout, %OpTask{} = task}) do
+    %{type: :task, task_uid: task.id, error: :timeout}
+  end
+
+  defp normalize_hot_apply_failure({:cancelled, %OpTask{} = task}) do
+    %{type: :task, task_uid: task.id, error: :cancelled}
+  end
+
+  defp normalize_hot_apply_failure({:invalid_task_payload, details}) do
+    %{type: :invalid_task_payload, details: details}
+  end
+
+  defp normalize_hot_apply_failure(other) do
+    %{type: :other, reason: inspect(other)}
+  end
+
+  defp extract_task_error(%OpTask{raw: raw}) when is_map(raw) do
+    Map.get(raw, "error") || Map.get(raw, :error) || Map.get(raw, "message") || :unknown
+  end
+
+  defp extract_task_error(_), do: :unknown
 
   @doc """
   Reads applied Meilisearch settings via `Client.get_settings/2`, compares key-by-key

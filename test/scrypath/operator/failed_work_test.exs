@@ -1,7 +1,9 @@
 defmodule Scrypath.Operator.FailedWorkTest do
   use ExUnit.Case, async: false
 
+  alias Scrypath.Operator.FailedSyncWorkInspection
   alias Scrypath.Operator.FailedWork
+  alias Scrypath.Operator.ReasonClassCounts
   alias Scrypath.Operator.RecoveryAction
 
   defmodule FailedWorkMeilisearchClient do
@@ -428,5 +430,109 @@ defmodule Scrypath.Operator.FailedWorkTest do
                oban: RecordingOban,
                oban_queue: :search_sync
              )
+  end
+
+  describe "reason_class_counts and failed_sync_work rollups (OPS14-01)" do
+    @classes [:transport, :validation, :backend_rejected, :queue_exhausted, :unknown]
+
+    defp fw_row(id, class) do
+      %FailedWork{
+        id: id,
+        schema: SearchablePost,
+        mode: :inline,
+        source: :meilisearch,
+        operation: :upsert,
+        state: :failed,
+        retryable?: false,
+        reason_class: class
+      }
+    end
+
+    test "reason_class_counts/1 is dense, totals rows, and matches filled frequencies" do
+      rows = [
+        fw_row(1, :transport),
+        fw_row(2, :validation),
+        fw_row(3, :validation),
+        fw_row(4, :unknown)
+      ]
+
+      counts = FailedWork.reason_class_counts(rows)
+
+      assert %ReasonClassCounts{} = counts
+      assert counts.version == 1
+      assert counts.total == length(rows)
+      assert Enum.sum(Map.values(counts.by_class)) == counts.total
+
+      assert MapSet.new(Map.keys(counts.by_class)) == MapSet.new(@classes)
+
+      filled =
+        rows
+        |> Enum.frequencies_by(& &1.reason_class)
+        |> then(fn freqs ->
+          Map.new(@classes, fn k -> {k, Map.get(freqs, k, 0)} end)
+        end)
+
+      assert counts.by_class == filled
+    end
+
+    test "reason_class_counts/1 maps nil reason_class to :unknown (D-18 — unknown bucket)" do
+      row = %{fw_row(9, :transport) | reason_class: nil}
+      counts = FailedWork.reason_class_counts([row])
+      assert counts.by_class.unknown == 1
+      assert counts.total == 1
+    end
+
+    test "failed_sync_work/2 default path still returns a bare row list" do
+      assert {:ok, list} =
+               Scrypath.failed_sync_work(SearchablePost,
+                 backend: Scrypath.Meilisearch,
+                 sync_mode: :inline,
+                 index_prefix: "tenant",
+                 meilisearch_url: "http://localhost:7700",
+                 meilisearch_client: FailedWorkMeilisearchClient,
+                 meilisearch_tasks: []
+               )
+
+      assert is_list(list)
+      refute is_struct(list, FailedSyncWorkInspection)
+    end
+
+    test "failed_sync_work/2 with reason_class_counts: true returns inspection tuple" do
+      assert {:ok, %FailedSyncWorkInspection{entries: es, counts: c}} =
+               Scrypath.failed_sync_work(SearchablePost,
+                 backend: Scrypath.Meilisearch,
+                 sync_mode: :oban,
+                 index_prefix: "tenant",
+                 meilisearch_url: "http://localhost:7700",
+                 meilisearch_client: FailedWorkMeilisearchClient,
+                 meilisearch_tasks: [],
+                 oban: RecordingOban,
+                 oban_queue: :search_sync,
+                 oban_inspector: FailedWorkObanInspector,
+                 oban_jobs: [
+                   %{
+                     id: 501,
+                     state: "retryable",
+                     worker: "Scrypath.Oban.UpsertWorker",
+                     queue: "search_sync",
+                     args: %{
+                       "operation" => "upsert",
+                       "schema" => "Elixir.SearchablePost",
+                       "backend" => "Elixir.Scrypath.Meilisearch",
+                       "index" => "tenant_searchable_post",
+                       "document_count" => 1,
+                       "document_ids" => [1],
+                       "documents" => [
+                         %{"id" => 1, "data" => %{"title" => "One"}, "source" => "fields"}
+                       ]
+                     }
+                   }
+                 ],
+                 reason_class_counts: true
+               )
+
+      assert length(es) == c.total
+      assert c.version == 1
+    end
   end
 end

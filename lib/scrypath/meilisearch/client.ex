@@ -99,6 +99,17 @@ defmodule Scrypath.Meilisearch.Client do
     )
   end
 
+  @spec multi_search(map(), keyword()) :: {:ok, map()} | {:error, term()}
+  def multi_search(payload, config) when is_map(payload) do
+    run_request(
+      :post,
+      "/multi-search",
+      [json: payload],
+      config,
+      operation: :multi_search
+    )
+  end
+
   defp run_request(method, path, req_opts, config, extra_metadata) do
     metadata =
       extra_metadata

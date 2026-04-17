@@ -3,12 +3,15 @@ defmodule Scrypath.Operator.Reconcile do
   Report-first reconciliation returned by `Scrypath.reconcile_sync/2`.
 
   A reconcile report combines sync visibility, failed work, drift signals, and
-  rebuild visibility before any recovery action is executed.
+  rebuild visibility before any recovery action is executed. Per-class failed-work
+  pileup counts (`failed_work_counts`) use the same taxonomy as `FailedWork` rows
+  for triage at a glance.
   """
 
   alias Scrypath.Config
   alias Scrypath.Meilisearch.Tasks
   alias Scrypath.Operator.FailedWork
+  alias Scrypath.Operator.ReasonClassCounts
   alias Scrypath.Operator.RecoveryAction
   alias Scrypath.Operator.Status
 
@@ -44,7 +47,17 @@ defmodule Scrypath.Operator.Reconcile do
     :actions,
     :reindex
   ]
-  defstruct [:schema, :mode, :index, :status, :failed_work, :drift_signals, :actions, :reindex]
+  defstruct [
+    :schema,
+    :mode,
+    :index,
+    :status,
+    :failed_work,
+    :drift_signals,
+    :actions,
+    :reindex,
+    :failed_work_counts
+  ]
 
   @type t :: %__MODULE__{
           schema: module(),
@@ -54,7 +67,8 @@ defmodule Scrypath.Operator.Reconcile do
           failed_work: [FailedWork.t()],
           drift_signals: [atom()],
           actions: [RecoveryAction.t()],
-          reindex: ReindexVisibility.t()
+          reindex: ReindexVisibility.t(),
+          failed_work_counts: ReasonClassCounts.t()
         }
 
   @spec run(module(), keyword(), keyword()) :: {:ok, t()} | {:error, term()}
@@ -67,6 +81,7 @@ defmodule Scrypath.Operator.Reconcile do
          {:ok, failed_work} <- FailedWork.list(schema_module, config, operator_opts),
          {:ok, reindex} <- reindex_visibility(config, operator_opts, index, target_index) do
       actions = recommended_actions(schema_module, config, failed_work, reindex)
+      failed_work_counts = FailedWork.reason_class_counts(failed_work)
 
       {:ok,
        %__MODULE__{
@@ -77,7 +92,8 @@ defmodule Scrypath.Operator.Reconcile do
          failed_work: failed_work,
          drift_signals: drift_signals(status, failed_work, reindex),
          actions: actions,
-         reindex: reindex
+         reindex: reindex,
+         failed_work_counts: failed_work_counts
        }}
     end
   end
