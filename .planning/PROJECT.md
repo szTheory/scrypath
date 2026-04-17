@@ -69,7 +69,7 @@ The library is now publicly released and functionally complete for its current b
 
 ## Current State
 
-Scrypath has shipped three milestones and one real public Hex release, `0.3.0`. Maintainers now have a verified release contract, live Hex and HexDocs proof, and explicit recovery runbooks. Operators have status, failed-work, retry, and reconcile visibility through Scrypath-owned APIs plus thin `mix scrypath.*` ergonomics. The internal operations seam is in place so future backend work can evolve without forcing a premature public abstraction. Milestone `v1.3` is now active, focused on closing the Meilisearch-native search feature gap that the first adopter tier reaches for immediately after install.
+Scrypath has shipped three milestones and one real public Hex release, `0.3.0`. Maintainers now have a verified release contract, live Hex and HexDocs proof, and explicit recovery runbooks. Phase 18 added release-parity mechanization: `mix verify.workspace_clean` (INFRA-01) gates all three publish paths, and daily `mix verify.release_parity` (INFRA-02) with dedup'd drift issues (INFRA-04) keeps Hex and main from ever diverging again. CI runs on Node 24 pins (INFRA-03), clearing the Node 20 deprecation ahead of 2026-09. Operators have status, failed-work, retry, and reconcile visibility through Scrypath-owned APIs plus thin `mix scrypath.*` ergonomics. The internal operations seam is in place so future backend work can evolve without forcing a premature public abstraction. Milestone `v1.3` is now active, focused on closing the Meilisearch-native search feature gap that the first adopter tier reaches for immediately after install.
 
 ## Current Milestone: v1.3 Search Power That Phoenix Teams Reach For
 
@@ -108,4 +108,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-16 — v1.3 milestone started*
+*Last updated: 2026-04-17 — Phase 18 (release-parity gates + Node 24 pins) complete*
