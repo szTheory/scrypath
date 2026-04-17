@@ -52,7 +52,7 @@ Details: `milestones/v1.3-ROADMAP.md`.
 2. Docs and README read correctly on HexDocs for that version (version macro, links, extras list).
 3. `mix verify.phase11`, `mix verify.workspace_clean`, and `mix verify.release_parity <new version>` succeed on the release pipeline inputs defined in `docs/releasing.md`.
 
-**Plans:** TBD (expect 2–4 plans: version/manifest, CHANGELOG + package files, CI smoke, post-publish verification doc touch).
+**Plans:** `24-01` (Release Please pre-1.0 bumps + UAT-09), `24-02` (post-publish `release_parity` on publish workflows), `24-03` (releasing.md + README + UAT-06 releasing contract).
 
 ### Phase 25: Settings hot apply (narrow)
 
@@ -89,7 +89,7 @@ Details: `milestones/v1.3-ROADMAP.md`.
 
 | Phase | Milestone | Plans | Status | Completed |
 |-------|-----------|-------|--------|-----------|
-| 24. Public Hex release & parity gates | v1.4 | TBD | Not started | - |
+| 24. Public Hex release & parity gates | v1.4 | 3/3 | Executed (review & merge) | - |
 | 25. Settings hot apply (narrow) | v1.4 | TBD | Not started | - |
 | 26. Operator failure rollups | v1.4 | TBD | Not started | - |
 

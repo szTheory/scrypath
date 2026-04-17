@@ -26,6 +26,30 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     end
   end
 
+  describe "SHIP-03: post-publish release_parity on publish workflows" do
+    test "release-please.yml runs release_publish before release_parity" do
+      yml = File.read!(@release_please_yml)
+      assert yml =~ "mix verify.release_parity"
+      assert yml =~ ~s(mix verify.release_publish "${{ needs.release-please.outputs.version }}")
+      assert yml =~ ~s(mix verify.release_parity "${{ needs.release-please.outputs.version }}")
+
+      {idx_pub, _} = :binary.match(yml, "mix verify.release_publish")
+      {idx_par, _} = :binary.match(yml, "mix verify.release_parity")
+      assert idx_pub < idx_par
+    end
+
+    test "publish-hex.yml runs release_publish before release_parity" do
+      yml = File.read!(@publish_hex_yml)
+      assert yml =~ "mix verify.release_parity"
+      assert yml =~ ~s(mix verify.release_publish "${{ inputs.release_version }}")
+      assert yml =~ ~s(mix verify.release_parity "${{ inputs.release_version }}")
+
+      {idx_pub, _} = :binary.match(yml, "mix verify.release_publish")
+      {idx_par, _} = :binary.match(yml, "mix verify.release_parity")
+      assert idx_pub < idx_par
+    end
+  end
+
   describe "INFRA-03 D-13: ci.yml action pins on Node 24 runtime" do
     test "ci.yml uses actions/checkout@v6 everywhere" do
       yml = File.read!(@ci_yml)
@@ -132,6 +156,9 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert rel =~ "### `mix verify.release_parity X.Y.Z`"
       assert rel =~ "### Historical context"
       assert rel =~ "v1.2-MILESTONE-AUDIT.md"
+      assert rel =~ "release-please.yml"
+      assert rel =~ "publish-hex.yml"
+      assert rel =~ "mix verify.release_parity"
 
       # Confirm mix.exs lists docs/releasing.md in docs extras so HexDocs picks it up
       mix = File.read!("mix.exs")
@@ -172,13 +199,17 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert vpr =~ "failure() && github.event_name == 'schedule'"
     end
 
-    test "UAT-09: release-please preconditions for cutting 0.4.0 hold on HEAD" do
-      # (a) Release type is elixir — ensures release-please knows how to bump mix.exs
+    test "UAT-09: release-please pre-1.0 bump policy + manifest pin hold on HEAD" do
+      # (a) Pre-1.0 policy: ordinary feat: on 0.3.x bumps patch toward 0.3.1 under
+      # bump-minor-pre-major + bump-patch-for-minor-pre-major; Release-As: remains
+      # the explicit override when maintainers intentionally want a different version.
       cfg = File.read!("release-please-config.json")
+      assert cfg =~ ~s("bump-minor-pre-major": true)
+      assert cfg =~ ~s("bump-patch-for-minor-pre-major": true)
       assert cfg =~ ~s("release-type": "elixir")
 
       # (b) Manifest currently pins 0.3.0 — release-please reads this to decide
-      # the next version. A feat: commit against 0.3.0 cuts 0.4.0 (pre-1.0 minor bump).
+      # the next version. Do not bump here; the release PR advances it.
       manifest = File.read!(".release-please-manifest.json")
       assert manifest =~ ~s("0.3.0")
 
@@ -186,10 +217,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       # any manual bump here breaks the release-PR flow (T-18-07-03 mitigation).
       assert File.read!("mix.exs") =~ ~s(@version "0.3.0")
 
-      # (d) Recent history carries the D-22 feat(18): subject line that
-      # release-please parses for the minor bump. Looks back 50 commits so
-      # subsequent phase/UAT commits after Phase 18 don't push the closing
-      # commit out of the search window.
+      # (d) Recent history carries the D-22 feat(18): subject line anchor.
       {log, 0} = System.cmd("git", ["log", "--format=%s", "-50"])
 
       assert log =~ ~r/^feat\(18\): add release-parity gates \+ Node 20 CI cleanup$/m,

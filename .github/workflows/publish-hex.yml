@@ -58,3 +58,9 @@ jobs:
           SCRYPATH_RELEASE_VERIFY_ATTEMPTS: "20"
           SCRYPATH_RELEASE_VERIFY_SLEEP_MS: "15000"
         run: mix verify.release_publish "${{ inputs.release_version }}"
+
+      - name: Verify release parity (tarball vs tag)
+        env:
+          SCRYPATH_RELEASE_VERIFY_ATTEMPTS: "20"
+          SCRYPATH_RELEASE_VERIFY_SLEEP_MS: "15000"
+        run: mix verify.release_parity "${{ inputs.release_version }}"

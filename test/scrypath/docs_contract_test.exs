@@ -15,12 +15,14 @@ defmodule Scrypath.DocsContractTest do
   @verify_phase20 File.read!("lib/mix/tasks/verify.phase20.ex")
   @verify_release_publish File.read!("lib/mix/tasks/verify.release_publish.ex")
   @guide_paths [
+    "guides/drift-recovery.md",
     "guides/getting-started.md",
     "guides/phoenix-walkthrough.md",
     "guides/phoenix-contexts.md",
     "guides/phoenix-controllers-and-json.md",
     "guides/phoenix-liveview.md",
     "guides/faceted-search-with-phoenix-liveview.md",
+    "guides/multi-index-search.md",
     "guides/sync-modes-and-visibility.md",
     "guides/operator-mix-tasks.md"
   ]
@@ -42,7 +44,7 @@ defmodule Scrypath.DocsContractTest do
     assert String.contains?(@readme, "Scrypath, the Ecto-native search indexing library")
     assert ordered?(@readme, "## Installation", "## When Scrypath Fits")
     assert ordered?(@readme, "## Quick Path", "## When Scrypath Fits")
-    assert @readme =~ ~S|{:scrypath, "~> 0.1.0"}|
+      assert @readme =~ ~S|{:scrypath, "~> 0.3.0"}|
     refute @readme =~ ~S|{:req, "~> 0.5"}|
     refute @readme =~ ~S|{:scrypath, path: "../scrypath"}|
 
@@ -128,6 +130,15 @@ defmodule Scrypath.DocsContractTest do
       "### UI"
     ])
 
+    assert_contains_all(@guides["guides/multi-index-search.md"], [
+      "Scrypath.search_many",
+      "%Scrypath.MultiSearchResult{}",
+      "failures",
+      "ordered",
+      "faceted-search-with-phoenix-liveview.md",
+      "sync-modes-and-visibility.md"
+    ])
+
     assert_contains_all(@guides["guides/phoenix-walkthrough.md"], [
       "## 1. Declare The Searchable Schema",
       "## 2. Put Search And Sync In The Context",
@@ -154,6 +165,18 @@ defmodule Scrypath.DocsContractTest do
       "thin terminal entrypoints",
       "Scrypath.Meilisearch.*"
     ])
+
+    assert_contains_all(@guides["guides/drift-recovery.md"], [
+      "Symptom",
+      "Diagnosis",
+      "Action",
+      "Verify",
+      "Scrypath.failed_sync_work",
+      "mix scrypath.failed",
+      "relevance-tuning.md",
+      "multi-index-search.md",
+      "sync-modes-and-visibility.md"
+    ])
   end
 
   test "guide snippets stay aligned with the phoenix fixture contract" do
@@ -172,6 +195,7 @@ defmodule Scrypath.DocsContractTest do
     assert_contains_all(@search_backend_sre_docs, [
       "[:scrypath, :search]",
       "[:scrypath, :meilisearch, :request]",
+      "[:scrypath, :operator, :failed_work, :observed]",
       "alert fatigue",
       "Disk free",
       "skip_settings_verification?",

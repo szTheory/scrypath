@@ -28,6 +28,8 @@ mix verify.release_publish X.Y.Z
 
 That task polls Hex until the published version is visible, compiles the documented `use Scrypath` schema from a fresh throwaway app using `{:scrypath, "~> X.Y.Z"}`, and confirms `https://hexdocs.pm/scrypath/X.Y.Z` responds.
 
+Immediately after that succeeds, the same publish jobs in `.github/workflows/release-please.yml` and `.github/workflows/publish-hex.yml` run `mix verify.release_parity X.Y.Z` with the same `SCRYPATH_RELEASE_VERIFY_ATTEMPTS` / `SCRYPATH_RELEASE_VERIFY_SLEEP_MS` retry knobs, so tarball–tag parity is checked on the post-publish path, not only by the scheduled monitor.
+
 ## Minimum Secret Setup
 
 Create this GitHub Actions secret before the first automated release:
@@ -81,7 +83,7 @@ Treat failures in this workflow as operational regressions in the published pack
    gh run view --log
    ```
 
-   The publish job now runs `mix verify.release_publish X.Y.Z` for the newly released version, so Hex package visibility, clean-consumer compile, and versioned HexDocs reachability are checked inside the workflow instead of by hand.
+   The publish job now runs `mix verify.release_publish X.Y.Z` for the newly released version, so Hex package visibility, clean-consumer compile, and versioned HexDocs reachability are checked inside the workflow instead of by hand. As a post-publish follow-on, it then runs `mix verify.release_parity X.Y.Z` with the same retry environment variables so tarball contents stay aligned with the git tag.
 
 5. If the workflow passes, treat the release contract as satisfied. Manual spot-checks are optional, not required.
 
@@ -129,7 +131,7 @@ Use the same tagged release ref that Release Please created. Do not invent a sec
    - set `tag` to the reviewed release tag or commit ref
    - set `release_version` to `X.Y.Z`
 
-   That workflow reruns `mix verify.phase11`, `mix hex.publish --dry-run --yes`, `mix hex.publish --yes`, and `mix verify.release_publish X.Y.Z` from the explicit ref.
+   That workflow reruns `mix verify.phase11`, `mix hex.publish --dry-run --yes`, `mix hex.publish --yes`, and `mix verify.release_publish X.Y.Z` from the explicit ref, then mirrors the canonical path with `mix verify.release_parity X.Y.Z` using the same retry environment variables.
 
 4. After a successful publish, rerun:
 
@@ -203,6 +205,11 @@ Runs daily via `.github/workflows/verify-published-release.yml` (cron) and
 compares the published Hex tarball's `lib/ + guides/ + docs/` file list
 against the git tag of the same version. Catches tarball-vs-tag drift
 AFTER publish.
+
+The scheduled workflow remains the long-horizon monitor, but `release-please.yml`
+and `publish-hex.yml` also invoke `mix verify.release_parity` immediately after
+a successful `mix verify.release_publish` on the post-publish path, so drift is
+caught in the same mechanical publish sequence as the Hex publish itself.
 
 Exit codes:
 
