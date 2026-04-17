@@ -16,7 +16,7 @@
 
 - [x] **Phase 11: Public Release Contract** - Validate one real public release path, consumer smoke flow, and maintainer recovery contract. (completed 2026-04-16)
 - [x] **Phase 12: Internal Operations Seam** - Extract Scrypath-owned operations boundaries under the Meilisearch-first public surface. (completed 2026-04-16)
-- [ ] **Phase 13: Operator Primitives** - Expose status, failure inspection, retry, and reconcile APIs through Scrypath-owned operator types.
+- [x] **Phase 13: Operator Primitives** - Expose status, failure inspection, retry, and reconcile APIs through Scrypath-owned operator types. (completed 2026-04-16)
 - [x] **Phase 14: Mix Tasks and Guides** - Put thin CLI ergonomics and sync-mode guides on top of the operator surface without widening common search. (completed 2026-04-16)
 - [ ] **Phase 15: Verify Operator Primitives** - Create the missing Phase 13 verification artifact and repair requirement/roadmap bookkeeping for the shipped operator APIs.
 - [ ] **Phase 16: Verify Mix Tasks and Repair Milestone Bookkeeping** - Create the missing Phase 14 verification artifact and repair the remaining milestone tracking drift.
@@ -62,7 +62,12 @@ Plans:
   2. Operator can inspect failed async or manual work and retry it through Scrypath APIs without reading backend-native task payloads directly.
   3. Operator can run a reconcile or recovery workflow that makes drift and reindex state legible instead of pretending automatic healing happened.
   4. Operator-facing results use Scrypath-owned structs or stable maps that are consistent across inline, Oban-backed, and manual workflows where the data exists.
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [x] 13-01-PLAN.md - Add root-level sync status reporting with Scrypath-owned backend and queue visibility.
+- [x] 13-02-PLAN.md - Add failed-work inspection and explicit retry paths on `Scrypath.*`.
+- [x] 13-03-PLAN.md - Add report-first reconcile with explicit recovery actions and reindex visibility.
 
 ### Phase 14: Mix Tasks and Guides
 **Goal**: Maintainers and operators get thin Mix task ergonomics and explicit operational guides that sit on top of the operator APIs while keeping backend-native search power namespaced.
@@ -88,7 +93,10 @@ Plans:
   1. `13-VERIFICATION.md` exists and records current evidence for `OPS-01`, `OPS-02`, and `OPS-03`.
   2. `ROADMAP.md` reflects that Phase 13 shipped all three plans.
   3. `REQUIREMENTS.md` moves `OPS-01`, `OPS-02`, and `OPS-03` onto the new gap-closure phase with accurate pending/complete state.
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 15-01-PLAN.md - Create the missing Phase 13 verification artifact and reconcile roadmap/requirements traceability to the shipped operator summaries.
 
 ### Phase 16: Verify Mix Tasks and Repair Milestone Bookkeeping
 **Goal**: Turn the shipped Phase 14 task/docs surface into milestone-consumable evidence and clear the remaining roadmap/requirements/state drift blocking milestone closure.
@@ -118,9 +126,9 @@ Plans:
 |-------|----------------|--------|-----------|
 | 11. Public Release Contract | 2/2 | Complete   | 2026-04-16 |
 | 12. Internal Operations Seam | 3/3 | Complete    | 2026-04-16 |
-| 13. Operator Primitives | 0/TBD | Not started | - |
+| 13. Operator Primitives | 3/3 | Complete | 2026-04-16 |
 | 14. Mix Tasks and Guides | 2/2 | Complete   | 2026-04-16 |
-| 15. Verify Operator Primitives | 0/TBD | Not started | - |
+| 15. Verify Operator Primitives | 0/1 | Not started | - |
 | 16. Verify Mix Tasks and Repair Milestone Bookkeeping | 0/TBD | Not started | - |
 | 17. Prove The First Public Release | 0/TBD | Not started | - |
 

@@ -14,9 +14,9 @@
 
 ### Operator Visibility
 
-- [ ] **OPS-01**: Operator can inspect current Scrypath sync status for a schema, including pending work, failed work, and last successful activity where available.
-- [ ] **OPS-02**: Operator can inspect and retry failed async or manual work through explicit Scrypath APIs and thin Mix tasks instead of backend-specific spelunking.
-- [ ] **OPS-03**: Operator can run an explicit reconcile or recovery workflow that makes drift and reindex state legible without pretending automatic healing.
+- [x] **OPS-01**: Operator can inspect current Scrypath sync status for a schema, including pending work, failed work, and last successful activity where available.
+- [x] **OPS-02**: Operator can inspect and retry failed async or manual work through explicit Scrypath APIs and thin Mix tasks instead of backend-specific spelunking.
+- [x] **OPS-03**: Operator can run an explicit reconcile or recovery workflow that makes drift and reindex state legible without pretending automatic healing.
 - [ ] **OPS-04**: Operator can understand sync-mode-specific operational behavior from first-class guides covering inline, Oban, and manual workflows.
 
 ### Internal Operations Boundary
@@ -53,9 +53,9 @@
 | REL-03 | Phase 11 | Complete |
 | SEAM-01 | Phase 12 | Complete |
 | SEAM-02 | Phase 12 | Complete |
-| OPS-01 | Phase 15 | Pending |
-| OPS-02 | Phase 15 | Pending |
-| OPS-03 | Phase 15 | Pending |
+| OPS-01 | Phase 15 | Complete |
+| OPS-02 | Phase 15 | Complete |
+| OPS-03 | Phase 15 | Complete |
 | OPS-04 | Phase 16 | Pending |
 | SEAM-03 | Phase 16 | Pending |
 
