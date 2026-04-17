@@ -7,10 +7,16 @@
 - [x] `v1.2` shipped on 2026-04-17 — 7 phases, 13 plans — [archive](milestones/v1.2-ROADMAP.md)
 - [x] `v1.3` shipped on 2026-04-17 — 6 phases (18–23), 18 plans — [archive](milestones/v1.3-ROADMAP.md) · [requirements](milestones/v1.3-REQUIREMENTS.md)
 - [x] **`v1.4` shipped on 2026-04-17** — 3 phases (24–26), 8 plans — [archive](milestones/v1.4-ROADMAP.md) · [requirements](milestones/v1.4-REQUIREMENTS.md)
+- [ ] **`v1.5` in progress** — 2 phases (27–28), requirements [.planning/REQUIREMENTS.md](REQUIREMENTS.md) — *Operator drift and schema-diff tooling*
 
 ## Next milestone
 
-Nothing active. Define the next planning milestone with **`/gsd-new-milestone`** (requirements → roadmap → phases).
+**v1.5 — Operator drift and schema-diff tooling** (see [REQUIREMENTS.md](REQUIREMENTS.md)).
+
+| Phase | Status | Goal |
+|-------|--------|------|
+| **27** — Schema–index drift report (read-only) | Not started | Declared schema ↔ live index contract; `Scrypath.*` entry; DRIFT15-01..02, OPS15-01 |
+| **28** — Operator CLI, docs, and verify gate | Not started | `mix scrypath.*`, drift-recovery + operator-support, **`mix verify.phase27`**; OPS15-02..04 |
 
 ## Phases (history)
 
@@ -41,14 +47,13 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-There is **no active phase**. Historical per-milestone tables live in **`milestones/v*-ROADMAP.md`**.
+**Active milestone:** **v1.5** — start with **`/gsd-discuss-phase 27`** or **`/gsd-plan-phase 27`**. Historical shipped tables live in **`milestones/v*-ROADMAP.md`**.
 
-## Backlog (post–v1.4 candidates)
+## Backlog (post–v1.5 candidates)
 
 - Hierarchical facets, first-class disjunctive facet counts, `search_within_facet/4`.
 - Multi-index federation scoring / weighting / `:all` wildcard.
-- Deeper drift/schema-diff operator tooling.
 - Per-query relevance overrides once pipeline semantics are designed.
 
 ---
-*Last updated: 2026-04-17 — v1.4 milestone archived; awaiting next milestone definition*
+*Last updated: 2026-04-17 — v1.5 milestone opened (drift / schema-diff operator tooling); phases 27–28*

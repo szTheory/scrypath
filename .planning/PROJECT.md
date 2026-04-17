@@ -26,7 +26,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ### Active
 
-- [ ] **Next milestone** — define with **`/gsd-new-milestone`** (see ROADMAP backlog for candidate themes).
+- [ ] **v1.5 (2026-04-17)** — Operator drift and schema-diff tooling: read-only declared-schema ↔ live index reports on `Scrypath.*`, thin Mix surfacing, drift-recovery / operator-support guidance, **`mix verify.phase27`**. See `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md`.
 
 ### Out of Scope
 
@@ -48,7 +48,7 @@ The repository has **five** archived planning milestones (`v1.0`–`v1.4`); see 
 - `v1.3` shipped planning-track delivery of relevance tuning, faceted search, multi-index search, operator polish + drift recovery guide, release-parity gates, and v1.2 Nyquist validation closure (archived 2026-04-17).
 - `v1.4` shipped **Hex `scrypath 0.3.1`**, the bounded live-index `hot_apply/3` path, and operator failure rollups — archived 2026-04-17 (`milestones/v1.4-ROADMAP.md`, `milestones/v1.4-REQUIREMENTS.md`).
 
-The current public line on Hex is **`scrypath 0.3.1`**. The next planning milestone is intentionally undefined until **`/gsd-new-milestone`** runs.
+The current public line on Hex is **`scrypath 0.3.3`**. Planning milestone **v1.5** is open for **drift / schema-diff operator tooling** (phases **27–28**).
 
 ## Constraints
 
@@ -74,15 +74,26 @@ The current public line on Hex is **`scrypath 0.3.1`**. The next planning milest
 | Narrow `hot_apply/3` to synonym / stop-word / typo-tolerance keys only | Prevents silent widening into ranking rules and other managed-pipeline settings | ✓ Good — TUNE14-01/02 |
 | Operator rollups as additive metadata on `failed_sync_work/2` | Report-first discipline; no new recovery verbs | ✓ Good — OPS14-01 / `mix verify.phase26` |
 
+## Current Milestone: v1.5 — Operator drift and schema-diff tooling
+
+**Goal:** Give operators a **read-only, structured** view of how a schema’s **declared** search contract compares to the **live** Meilisearch index, so drift triage stays explicit and composes with existing settings diff, reconcile, and reindex paths.
+
+**Target features:**
+
+- Structured **declared ↔ live** comparison (fields, filterable, sortable, faceting, selected settings families) without dumping opaque full-index payloads as the only output.
+- **`Scrypath.*`** entry point (report-first; **no new recovery verbs** for v1.5).
+- Thin **`mix scrypath.*`** surfacing with optional **`--json`** consistent with existing operator tasks.
+- Updates to **`guides/drift-recovery.md`** and **`docs/operator-support.md`**; auth-free **`mix verify.phase27`**.
+
 ## Current State
 
-Scrypath has **five archived planning milestones** (`v1.0`–`v1.4`). **Hex:** `scrypath` **`0.3.1`** (published 2026-04-17). The v1.3-era Meilisearch-native surface (relevance, facets, multi-index, operator polish) plus v1.4’s **hot_apply** subset and **failure rollups** are on the default install line. Release-parity gates (`mix verify.workspace_clean`, `mix verify.release_parity`) and `mix verify.phase11` remain the mechanical trust chain documented in **`docs/releasing.md`**.
+Scrypath has **five archived planning milestones** (`v1.0`–`v1.4`) plus **v1.5 in flight**. **Hex:** `scrypath` **`0.3.3`**. The v1.3-era Meilisearch-native surface (relevance, facets, multi-index, operator polish) plus v1.4’s **hot_apply** subset and **failure rollups** are on the default install line. Release-parity gates (`mix verify.workspace_clean`, `mix verify.release_parity`) and `mix verify.phase11` remain the mechanical trust chain documented in **`docs/releasing.md`**.
 
-There is **no active planning milestone** until you run **`/gsd-new-milestone`**. ROADMAP backlog lists post–v1.4 candidate themes.
+**Planning:** **v1.5** — requirements in **`.planning/REQUIREMENTS.md`**, phases **27–28** in **`.planning/ROADMAP.md`**. ROADMAP **Backlog** carries faceting, multi-index scoring, and per-query relevance follow-ups.
 
 ## Next milestone goals (parking lot)
 
-See **`.planning/ROADMAP.md` § Backlog** — hierarchical facets, multi-index scoring, drift tooling, per-query relevance overrides, etc. Promote items into the next milestone only after **`/gsd-new-milestone`** locks scope.
+See **`.planning/ROADMAP.md` § Backlog** for post–v1.5 candidates (faceting depth, multi-index scoring, per-query relevance once designed).
 
 ## Evolution
 
@@ -102,4 +113,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-17 — v1.4 milestone archived (`/gsd-complete-milestone v1.4`); Hex `0.3.1` current*
+*Last updated: 2026-04-17 — v1.5 milestone opened (drift / schema-diff); Hex `0.3.3` current*
