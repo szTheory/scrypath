@@ -17,7 +17,7 @@ explicit sync verbs, backfill and reindex orchestration, and the stable search A
 
 `Scrypath.Meilisearch.*` is the explicit escape hatch for Meilisearch-specific behavior such as task-native results and later index-level operations. That keeps backend-native power visible without forcing Meilisearch concepts into every common call.
 
-Phase 12 keeps the operations seam internal even as sync, backfill, and managed reindex start using it end to end. That seam is there to keep common orchestration Scrypath-owned, not to introduce a new public operator namespace before Phase 13.
+Phase 12 keeps the operations seam internal even as sync, backfill, and managed reindex start using it end to end. That seam is there to keep common orchestration Scrypath-owned. Phase 13 adds operator verbs on `Scrypath.*` without turning the internal seam into a second public namespace. Phase 14 adds thin `mix scrypath.*` wrappers over those same root APIs without creating a second operator surface.
 
 ## Search Flow
 
@@ -96,6 +96,28 @@ All three modes share one operator-facing lifecycle:
 `requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded`
 
 That wording is intentional. Retry exhaustion, discarded jobs, stale deletes, and search drift are normal operational cases that applications need to observe and recover from.
+
+## Operator Visibility And Recovery
+
+Phase 13 keeps operator read paths on `Scrypath.*`:
+
+- `Scrypath.sync_status/2` reports backend and queue visibility through Scrypath-owned structs
+- `Scrypath.failed_sync_work/2` surfaces inspectable failed work and explicit retryability
+- `Scrypath.retry_sync_work/2` replays retryable work through existing Scrypath write paths
+- `Scrypath.reconcile_sync/2` returns a report first, and only mutates when the caller passes an explicit action
+
+`Scrypath.reconcile_sync/2` is intentionally report-first. It combines status visibility, failed work, and reindex visibility so operators can decide whether the right response is retry, backfill, or reindex.
+
+Reconcile is not an auto-heal button. Recovery stays explicit because drift and queue failure are operational decisions, not background details to hide.
+
+The Mix task layer stays intentionally small:
+
+- `mix scrypath.status` delegates to `Scrypath.sync_status/2`
+- `mix scrypath.failed` delegates to `Scrypath.failed_sync_work/2`
+- `mix scrypath.retry` delegates to `Scrypath.retry_sync_work/2`
+- `mix scrypath.reconcile` delegates to `Scrypath.reconcile_sync/2`
+
+That keeps operator ergonomics in the terminal while preserving one real operator contract in the library.
 
 ## Backfill And Managed Reindex
 

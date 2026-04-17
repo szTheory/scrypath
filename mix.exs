@@ -76,7 +76,9 @@ defmodule Scrypath.MixProject do
         "guides/phoenix-controllers-and-json.md",
         "guides/phoenix-liveview.md",
         "guides/sync-modes-and-visibility.md",
-        "docs/releasing.md"
+        "guides/operator-mix-tasks.md",
+        "docs/releasing.md",
+        "docs/operator-support.md"
       ],
       groups_for_extras: [
         "Getting Started": ["README.md", "guides/getting-started.md"],
@@ -86,8 +88,12 @@ defmodule Scrypath.MixProject do
           "guides/phoenix-controllers-and-json.md",
           "guides/phoenix-liveview.md"
         ],
-        Operations: ["ARCHITECTURE.md", "guides/sync-modes-and-visibility.md"],
-        Maintainers: ["docs/releasing.md"]
+        Operations: [
+          "ARCHITECTURE.md",
+          "guides/sync-modes-and-visibility.md",
+          "guides/operator-mix-tasks.md"
+        ],
+        Maintainers: ["docs/releasing.md", "docs/operator-support.md"]
       ]
     ]
   end

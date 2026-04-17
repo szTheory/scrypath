@@ -8,6 +8,7 @@ defmodule Scrypath.DocsContractTest do
   @publish_recovery_workflow File.read!(".github/workflows/publish-hex.yml")
   @release_monitor_workflow File.read!(".github/workflows/verify-published-release.yml")
   @release_docs File.read!("docs/releasing.md")
+  @operator_support_docs File.read!("docs/operator-support.md")
   @verify_phase11 File.read!("lib/mix/tasks/verify.phase11.ex")
   @verify_release_publish File.read!("lib/mix/tasks/verify.release_publish.ex")
   @guide_paths [
@@ -16,7 +17,8 @@ defmodule Scrypath.DocsContractTest do
     "guides/phoenix-contexts.md",
     "guides/phoenix-controllers-and-json.md",
     "guides/phoenix-liveview.md",
-    "guides/sync-modes-and-visibility.md"
+    "guides/sync-modes-and-visibility.md",
+    "guides/operator-mix-tasks.md"
   ]
   @guides Enum.into(@guide_paths, %{}, fn path -> {path, File.read!(path)} end)
 
@@ -24,6 +26,7 @@ defmodule Scrypath.DocsContractTest do
     assert_contains_all(@readme, [
       "Scrypath.backfill/2",
       "Scrypath.reindex/2",
+      "Scrypath.reconcile_sync/2",
       "Use backfill when",
       "Use managed reindex when",
       "cutover?: false",
@@ -56,7 +59,28 @@ defmodule Scrypath.DocsContractTest do
       "Scrypath treats drift as an expected operational state",
       "Accepted work is not search-visible completion",
       "backfill into the live index",
-      "cutover?: false"
+      "cutover?: false",
+      "Reconcile is not an auto-heal button"
+    ])
+  end
+
+  test "docs keep the operator recovery contract report-first and explicit" do
+    assert_contains_all(@readme, [
+      "Scrypath.sync_status/2",
+      "Scrypath.failed_sync_work/2",
+      "Scrypath.retry_sync_work/2",
+      "Scrypath.reconcile_sync/2",
+      "does not heal anything by default",
+      "retry, backfill, or reindex deliberately"
+    ])
+
+    assert_contains_all(@architecture, [
+      "Scrypath.sync_status/2",
+      "Scrypath.failed_sync_work/2",
+      "Scrypath.retry_sync_work/2",
+      "Scrypath.reconcile_sync/2",
+      "report-first",
+      "only mutates when the caller passes an explicit action"
     ])
   end
 
@@ -101,7 +125,19 @@ defmodule Scrypath.DocsContractTest do
     assert_contains_all(@guides["guides/sync-modes-and-visibility.md"], [
       "search visibility is an operational concern",
       "the enqueue is durable",
-      "Accepted work is not the same thing as search visibility."
+      "Accepted work is not the same thing as search visibility.",
+      "## `:inline`",
+      "## `:oban`",
+      "## `:manual`"
+    ])
+
+    assert_contains_all(@guides["guides/operator-mix-tasks.md"], [
+      "mix scrypath.status",
+      "mix scrypath.failed",
+      "mix scrypath.retry",
+      "mix scrypath.reconcile",
+      "thin terminal entrypoints",
+      "Scrypath.Meilisearch.*"
     ])
   end
 
@@ -230,6 +266,29 @@ defmodule Scrypath.DocsContractTest do
     assert_contains_all(@guides["guides/phoenix-liveview.md"], [
       "LiveView owns UI state, and the context owns repo access plus Scrypath orchestration.",
       "the UI should not imply immediate search visibility unless the context chose `:inline`"
+    ])
+  end
+
+  test "operator docs keep tasks thin and Meilisearch-native power namespaced" do
+    assert_contains_all(@readme, [
+      "mix scrypath.status",
+      "mix scrypath.failed",
+      "mix scrypath.retry",
+      "mix scrypath.reconcile",
+      "They do not create a second operator product surface."
+    ])
+
+    assert_contains_all(@architecture, [
+      "Phase 14 adds thin `mix scrypath.*` wrappers",
+      "mix scrypath.status",
+      "mix scrypath.reconcile"
+    ])
+
+    assert_contains_all(@operator_support_docs, [
+      "mix verify.phase14",
+      "mix verify.phase11",
+      "operator visibility and recovery live on `Scrypath.*`",
+      "backend-native search power stays under `Scrypath.Meilisearch.*`"
     ])
   end
 
