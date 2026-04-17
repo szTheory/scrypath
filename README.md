@@ -14,7 +14,7 @@ def deps do
 end
 ```
 
-Scrypath v1 publicly targets Meilisearch first. The backend seam is internal, and v1 does not promise public multi-backend parity or a public operator API in this phase.
+Scrypath v1 publicly targets Meilisearch first. The backend seam is internal, and v1 does not promise public multi-backend parity.
 Scrypath owns its internal transport dependency. Configure backend and sync behavior in your app code instead of pinning `Req` directly in the base install path.
 If you want queued sync, add Oban as an optional production integration when you choose `sync_mode: :oban`.
 
@@ -113,6 +113,7 @@ If you are wiring Scrypath into a Phoenix app, read these next:
 - [Phoenix Controllers and JSON](guides/phoenix-controllers-and-json.md)
 - [Phoenix LiveView](guides/phoenix-liveview.md)
 - [Sync Modes and Visibility](guides/sync-modes-and-visibility.md)
+- [Operator Mix Tasks](guides/operator-mix-tasks.md)
 
 The walkthrough uses one context-owned search flow and carries that same boundary through controllers and LiveView.
 
@@ -120,12 +121,23 @@ The walkthrough uses one context-owned search flow and carries that same boundar
 
 Scrypath keeps one common runtime surface and one explicit backend-specific escape hatch:
 
-- `Scrypath` for runtime reflection, sync verbs, backfill, managed reindex, and the common search path
+- `Scrypath` for runtime reflection, sync verbs, operator visibility, backfill, managed reindex, and the common search path
 - `Scrypath.Schema` for the declaration contract
 - `Scrypath.Projection` for document projection rules
 - `Scrypath.Meilisearch` for backend-native operations that do not belong on the common path
 
 Backfill and managed reindex now use the same internal operations seam as sync, but that seam stays private. The public backend-native namespace remains `Scrypath.Meilisearch.*`.
+
+The operator surface also stays on `Scrypath.*`:
+
+- `Scrypath.sync_status/2`
+- `Scrypath.failed_sync_work/2`
+- `Scrypath.retry_sync_work/2`
+- `Scrypath.reconcile_sync/2`
+
+For terminal-first operations, the thin `mix scrypath.status`, `mix scrypath.failed`,
+`mix scrypath.retry`, and `mix scrypath.reconcile` tasks wrap those same root APIs.
+They do not create a second operator product surface.
 
 `use Scrypath` is metadata-only. It validates the declaration and exposes stable `__scrypath__/1` reflection keys without generating schema-specific runtime verbs.
 
@@ -214,6 +226,16 @@ Detect drift before deciding whether a live-index backfill is enough or whether 
 
 Accepted work is not the same thing as search visibility, and durable enqueue is not the same thing as rebuild completion.
 
+Use `Scrypath.sync_status/2` and `Scrypath.failed_sync_work/2` when you need to inspect pending, retrying, failed, or last-successful work without reading raw Meilisearch or Oban payloads.
+
+Use `Scrypath.reconcile_sync/2` when you need a report-first operator view that combines sync visibility, failed work, and rebuild visibility before you decide on recovery.
+
+`Scrypath.reconcile_sync/2` does not heal anything by default. It returns drift signals plus explicit recovery actions so the caller can choose retry, backfill, or reindex deliberately.
+
 ## Architecture
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the full runtime boundary, sync guarantees, drift model, and managed reindex workflow order.
+
+For operational guides, see [Sync Modes and Visibility](guides/sync-modes-and-visibility.md),
+[Operator Mix Tasks](guides/operator-mix-tasks.md), and
+[Operator Support](docs/operator-support.md).

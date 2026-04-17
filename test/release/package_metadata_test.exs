@@ -36,6 +36,18 @@ defmodule Scrypath.Release.PackageMetadataTest do
     assert docs[:source_url] == project[:source_url]
     assert docs[:source_ref] == project[:source_ref]
     assert "docs/releasing.md" in docs[:extras]
-    assert docs[:groups_for_extras][:Maintainers] == ["docs/releasing.md"]
+    assert "guides/operator-mix-tasks.md" in docs[:extras]
+    assert "docs/operator-support.md" in docs[:extras]
+
+    assert docs[:groups_for_extras][:Operations] == [
+             "ARCHITECTURE.md",
+             "guides/sync-modes-and-visibility.md",
+             "guides/operator-mix-tasks.md"
+           ]
+
+    assert docs[:groups_for_extras][:Maintainers] == [
+             "docs/releasing.md",
+             "docs/operator-support.md"
+           ]
   end
 end
