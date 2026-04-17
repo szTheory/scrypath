@@ -6,8 +6,8 @@ current_phase: 24
 current_phase_name: Public Hex release & parity gates
 current_plan: TBD
 status: ready
-stopped_at: v1.4 initialized — roadmap + REQUIREMENTS.md created
-last_updated: "2026-04-17T22:30:00.000Z"
+stopped_at: Phase 24 context gathered — ready for plan-phase
+last_updated: "2026-04-17T23:59:00.000Z"
 last_activity: 2026-04-17
 progress:
   total_phases: 3
@@ -29,15 +29,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-17)
 
 ## Current Position
 
-**Phase:** 24 of 26 (v1.4) — **Not started** (plans TBD)  
+**Phase:** 24 of 26 (v1.4) — **Context gathered** (plans TBD)  
 **Plan:** —  
-**Status:** Requirements + roadmap defined; ready for `/gsd-discuss-phase 24` or `/gsd-plan-phase 24`
+**Status:** `24-CONTEXT.md` + `24-DISCUSSION-LOG.md` in `.planning/phases/24-public-hex-release-parity-gates/`; ready for `/gsd-plan-phase 24`
 
 ## Accumulated Context
 
 ### Decisions
 
 (See `.planning/PROJECT.md` Key Decisions — unchanged at milestone boundary.)
+
+**Phase 24 (release slice):** See `.planning/phases/24-public-hex-release-parity-gates/24-CONTEXT.md` — target `0.3.1`, Release Please alignment, narrow SHIP-02 sweep, post-publish `release_parity` on both publish workflows.
 
 ### Blockers / Concerns
 
@@ -49,8 +51,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-17)
 
 ## Next Command
 
-1. `/gsd-discuss-phase 24` — optional context pass for the release slice.  
-2. `/gsd-plan-phase 24` — produce `24-*-PLAN.md` files and verification hooks.
+1. `/gsd-plan-phase 24` — produce `24-*-PLAN.md` files and verification hooks from `24-CONTEXT.md`.
 
 ---
-*Last updated: 2026-04-17 — `/gsd-new-milestone` v1.4*
+*Last updated: 2026-04-17 — Phase 24 discuss-phase → `24-CONTEXT.md`*
