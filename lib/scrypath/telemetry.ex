@@ -6,7 +6,7 @@ defmodule Scrypath.Telemetry do
   @type event_name :: [atom()]
   @type metadata :: map()
 
-  @spec span(event_name(), metadata(), (() -> {term(), metadata()})) :: term()
+  @spec span(event_name(), metadata(), (-> {term(), metadata()})) :: term()
   def span(event_name, metadata, fun) when is_list(event_name) and is_map(metadata) do
     :telemetry.span(event_name, metadata, fn ->
       {result, stop_metadata} = fun.()
@@ -31,7 +31,8 @@ defmodule Scrypath.Telemetry do
   @spec stop_metadata(term(), keyword()) :: metadata()
   def stop_metadata(result, extra \\ [])
 
-  def stop_metadata({:ok, %_{} = result}, extra), do: stop_metadata({:ok, Map.from_struct(result)}, extra)
+  def stop_metadata({:ok, %_{} = result}, extra),
+    do: stop_metadata({:ok, Map.from_struct(result)}, extra)
 
   def stop_metadata({:ok, %{status: :noop, document_count: 0} = result}, extra) do
     %{}
@@ -59,7 +60,10 @@ defmodule Scrypath.Telemetry do
     %{}
     |> maybe_put(:status, Map.get(result, :status))
     |> maybe_put(:mode, Map.get(result, :mode))
-    |> maybe_put(:document_count, Map.get(result, :document_count) || count(Map.get(result, :document_ids)))
+    |> maybe_put(
+      :document_count,
+      Map.get(result, :document_count) || count(Map.get(result, :document_ids))
+    )
     |> maybe_put(:record_count, count(Map.get(result, :records)))
     |> maybe_put(:hit_count, count(Map.get(result, :hits)))
     |> maybe_put(:missing_count, count(Map.get(result, :missing_ids)))

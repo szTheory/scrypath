@@ -124,7 +124,12 @@ defmodule Scrypath.Meilisearch.TasksTest do
   } do
     assert {:error,
             {:invalid_task_payload,
-             %{stage: :initial, task_uid: nil, problems: [uid: :missing_or_invalid], payload: payload}}} =
+             %{
+               stage: :initial,
+               task_uid: nil,
+               problems: [uid: :missing_or_invalid],
+               payload: payload
+             }}} =
              Tasks.wait_for_task(
                %{"status" => "enqueued"},
                meilisearch_client: SequencedClient,
@@ -160,9 +165,10 @@ defmodule Scrypath.Meilisearch.TasksTest do
     assert payload == %{"uid" => 301, "status" => "weird"}
   end
 
-  test "missing uid on a polled terminal task stays invalid instead of surfacing terminal tuples", %{
-    task_responses: agent
-  } do
+  test "missing uid on a polled terminal task stays invalid instead of surfacing terminal tuples",
+       %{
+         task_responses: agent
+       } do
     Agent.update(agent, fn _ ->
       [
         {:ok, %{"uid" => nil, "status" => "failed"}}
@@ -171,7 +177,12 @@ defmodule Scrypath.Meilisearch.TasksTest do
 
     assert {:error,
             {:invalid_task_payload,
-             %{stage: :poll, task_uid: nil, problems: [uid: :missing_or_invalid], payload: payload}}} =
+             %{
+               stage: :poll,
+               task_uid: nil,
+               problems: [uid: :missing_or_invalid],
+               payload: payload
+             }}} =
              Tasks.wait_for_task(
                %{uid: 301, status: "enqueued"},
                meilisearch_client: SequencedClient,
@@ -262,7 +273,11 @@ defmodule Scrypath.Meilisearch.TasksTest do
     documents = [%Scrypath.Document{id: 1, data: %{title: "One"}, source: :fields}]
 
     assert {:ok,
-            %{index: "tenant_searchable_post", document_ids: [1], task: %{uid: 17, status: :enqueued}}} =
+            %{
+              index: "tenant_searchable_post",
+              document_ids: [1],
+              task: %{uid: 17, status: :enqueued}
+            }} =
              Scrypath.Meilisearch.upsert_documents(SearchablePost, documents,
                index_prefix: "tenant",
                meilisearch_client: RecordingClient

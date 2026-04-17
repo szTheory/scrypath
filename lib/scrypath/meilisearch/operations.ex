@@ -8,7 +8,8 @@ defmodule Scrypath.Meilisearch.Operations do
   alias Scrypath.Operations.Result
   alias Scrypath.Operations.Task
 
-  @spec upsert_documents(module(), [Document.t()], keyword()) :: {:ok, Result.t()} | {:error, term()}
+  @spec upsert_documents(module(), [Document.t()], keyword()) ::
+          {:ok, Result.t()} | {:error, term()}
   def upsert_documents(schema_module, documents, config) when is_list(documents) do
     index = Keyword.get(config, :index_name) || Meilisearch.index_name(schema_module, config)
     document_id_field = Scrypath.document_id_field(schema_module)

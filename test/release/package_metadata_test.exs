@@ -23,7 +23,8 @@ defmodule Scrypath.Release.PackageMetadataTest do
     assert package[:links] == %{
              "GitHub" => "https://github.com/szTheory/scrypath",
              "HexDocs" => "https://hexdocs.pm/scrypath/#{version}",
-             "Changelog" => "https://github.com/szTheory/scrypath/blob/#{source_ref}/CHANGELOG.md",
+             "Changelog" =>
+               "https://github.com/szTheory/scrypath/blob/#{source_ref}/CHANGELOG.md",
              "Guides" => "https://hexdocs.pm/scrypath/#{version}/readme.html"
            }
   end
