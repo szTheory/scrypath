@@ -7,7 +7,7 @@ current_phase_name: Public Hex release & parity gates
 current_plan: "24-01, 24-02, 24-03"
 status: at_release_gate
 stopped_at: "Phase 26 closed (verified + automated UAT via mix verify.phase26). v1.4 engineering complete except SHIP: tick Phase 24 when published, then /gsd-complete-milestone."
-last_updated: "2026-04-17T22:30:00Z"
+last_updated: "2026-04-17T23:45:00Z"
 last_activity: 2026-04-17
 progress:
   total_phases: 3
@@ -65,11 +65,9 @@ See: `.planning/PROJECT.md` (updated 2026-04-17)
 
 ## Next Command
 
-0. Read **`.planning/v1.4-MILESTONE-AUDIT.md`** — confirms engineering vs **SHIP** boundary.
-1. **`git push`** when you are ready for CI / collaborators.
-2. **Publish** per **`docs/releasing.md`** (Release Please → merge release PR → Actions publish).
-3. **Tick** Phase **24** `[x]` in **`ROADMAP.md`** and **`SHIP-01..03`** in **`REQUIREMENTS.md`** when the published version and parity checks match maintainer intent.
-4. **`/gsd-complete-milestone v1.4`** — archive roadmap + requirements, evolve **PROJECT.md**, tag only when you intentionally name the shipped semver (may be **`0.3.1`**, **`0.4.0`**, or another Release Please outcome — align with **`mix.exs`** / manifest / tag).
+**Start here:** open **`.planning/FOLLOW-SHIP-v1.4.md`** and check boxes top to bottom. It is the only path you need until the milestone is closed.
+
+Background (optional): **`.planning/v1.4-MILESTONE-AUDIT.md`** — engineering vs **SHIP** boundary. Full narrative: **`docs/releasing.md`**.
 
 **Resume file:** `.planning/phases/24-public-hex-release-parity-gates/24-VERIFICATION.md`
 
