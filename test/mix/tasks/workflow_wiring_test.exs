@@ -211,12 +211,13 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
       # (b) Manifest pins the current shipped line — release-please reads this to decide
       # the next version. Do not bump here casually; the release PR advances it.
-      manifest = File.read!(".release-please-manifest.json")
-      assert manifest =~ ~s("0.3.1")
+      manifest_json = File.read!(".release-please-manifest.json")
+      assert {:ok, %{"." => version}} = Jason.decode(manifest_json)
+      assert Regex.match?(~r/^\d+\.\d+\.\d+$/, version)
 
       # (c) mix.exs @version matches the manifest — release-please owns the bump,
       # any manual bump here breaks the release-PR flow (T-18-07-03 mitigation).
-      assert File.read!("mix.exs") =~ ~s(@version "0.3.1")
+      assert File.read!("mix.exs") =~ ~s(@version "#{version}")
 
       # (d) Recent history carries the D-22 feat(18): subject line anchor.
       {log, 0} = System.cmd("git", ["log", "--format=%s", "-50"])
