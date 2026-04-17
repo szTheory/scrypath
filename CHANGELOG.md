@@ -76,7 +76,3 @@ Release Please manages versioned entries after this baseline.
 * **06:** restore readme operational wording contract ([cfb51ce](https://github.com/szTheory/scrypath/commit/cfb51cee0702f488750dd6347d5eb8a63f03554d))
 * **08-01:** harden meilisearch task normalization ([8db7129](https://github.com/szTheory/scrypath/commit/8db7129b4be33af4038ed87ed2cfe0c320ad7212))
 * **12:** harden seam wait normalization ([aa9f179](https://github.com/szTheory/scrypath/commit/aa9f17952a8697660673ddb548129e4279a032d0))
-
-## [Unreleased]
-
-- Establish release automation, package metadata checks, and a public release checklist.
