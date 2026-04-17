@@ -26,6 +26,13 @@ Release Please manages versioned entries after this baseline.
 
 - Release-parity gates were motivated by a historical **tag vs default-branch** divergence in an earlier cycle; see `docs/releasing.md` § Historical context.
 
+## [0.3.3](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.2...scrypath-v0.3.3) (2026-04-17)
+
+
+### Bug Fixes
+
+* **docs:** repair operator-support for ExDoc strict build ([352bbef](https://github.com/szTheory/scrypath/commit/352bbef399422317242caf5c2cada20c410f84ab))
+
 ## [0.3.2](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.1...scrypath-v0.3.2) (2026-04-17)
 
 
