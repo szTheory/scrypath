@@ -38,15 +38,13 @@ defmodule Scrypath.Operator.RecoveryAction do
   def retry(%FailedWork{}, _opts), do: {:error, :missing_recovery_action}
 
   def retry(%__MODULE__{kind: :backfill} = action, opts) do
-    opts
-    |> Keyword.put_new(:backend, action.backend)
-    |> Scrypath.backfill(action.schema)
+    opts = Keyword.put_new(opts, :backend, action.backend)
+    Scrypath.backfill(action.schema, opts)
   end
 
   def retry(%__MODULE__{kind: :reindex} = action, opts) do
-    opts
-    |> Keyword.put_new(:backend, action.backend)
-    |> Scrypath.reindex(action.schema)
+    opts = Keyword.put_new(opts, :backend, action.backend)
+    Scrypath.reindex(action.schema, opts)
   end
 
   def retry(%__MODULE__{mode: :oban} = action, opts) do
@@ -72,7 +70,7 @@ defmodule Scrypath.Operator.RecoveryAction do
       when mode in [:manual, :inline] do
     case Keyword.get(opts, :document_ids) do
       document_ids when is_list(document_ids) ->
-        config = base_retry_config(action, opts, mode)
+        config = base_retry_config(opts, action, mode)
         Sync.delete_documents(action.schema, document_ids, config)
 
       _other ->
@@ -84,7 +82,7 @@ defmodule Scrypath.Operator.RecoveryAction do
       when mode in [:manual, :inline] do
     case Keyword.get(opts, :records) do
       records when is_list(records) ->
-        config = base_retry_config(action, opts, mode)
+        config = base_retry_config(opts, action, mode)
         Sync.sync_records(action.schema, records, config)
 
       _other ->

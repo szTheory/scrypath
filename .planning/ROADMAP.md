@@ -18,7 +18,7 @@
 ## Phases
 
 - [x] **Phase 18: Release-Parity Gate + Node 20 CI Cleanup** — Maintainers ship a v1.3 release that mechanically cannot diverge from what they approved on disk. (completed 2026-04-17)
-- [ ] **Phase 19: Relevance Tuning** — Phoenix devs declare synonyms, typo tolerance, ranking rules, distinct attribute, and stop words on the schema and see them applied safely through the managed reindex pipeline.
+- [x] **Phase 19: Relevance Tuning** — Phoenix devs declare synonyms, typo tolerance, ranking rules, distinct attribute, and stop words on the schema and see them applied safely through the managed reindex pipeline. (implementation + docs landed 2026-04-17; optional `feat(19):` release-please commit still at maintainer discretion)
 - [ ] **Phase 20: Faceted Search + LiveView Guide** — Phoenix devs declare `faceting:` on a schema and power a complete faceted LiveView UI (checkbox sidebar, chip row, range, search-within-facet) from one `Scrypath.search/3` call.
 - [ ] **Phase 21: Multi-Index Search** — Phoenix devs run a single federated `Scrypath.search_many/2` across N schemas and get back one ordered, schema-grouped result with per-schema facets and an explicit partial-failure envelope.
 - [ ] **Phase 22: Operator Polish + Drift Recovery Guide** — Operators triage failed sync work by reason class and recover from every common drift scenario using only existing `Scrypath.*` + `mix scrypath.*` verbs.
@@ -54,7 +54,14 @@
   3. Phoenix dev who declares `synonyms` using bidirectional list-of-groups sugar (`[["nyc", "new york"]]`) OR Meilisearch-native map form (`%{"nyc" => ["new york"]}`) gets the same applied result, with `one_way: true` disabling bidirectional expansion when requested.
   4. Operator running `mix scrypath.settings.diff MyApp.Post` sees a three-column declared-vs-applied table and receives exit code 2 on drift; `mix scrypath.settings.read MyApp.Post` prints the current applied settings for debugging.
   5. Operator running `Scrypath.reindex/2` with drifted settings sees cutover blocked by the post-apply read-back verification step unless `skip_settings_verification?: true` is set.
-**Plans:** TBD
+**Plans:** 7/7 plans complete
+- [x] 19-01-PLAN.md — NimbleOptions nested schema + validate/normalize/canonicalize + :settings_merge opt + hot_apply stub (TUNE-01, TUNE-02, TUNE-03, TUNE-04, TUNE-06)
+- [x] 19-02-PLAN.md — expand_synonyms + translate_settings + resolve/2 normalize-both-sides + deep_merge (TUNE-01, TUNE-02, TUNE-06)
+- [x] 19-03-PLAN.md — Client.get_settings/2 + Settings.verify_applied/3 drift primitive (TUNE-05)
+- [x] 19-04-PLAN.md — Reindex verify step + ranking-rules reindex-time error + skip_settings_verification? + per-repo cascade (TUNE-03, TUNE-04, TUNE-05, TUNE-06)
+- [x] 19-05-PLAN.md — mix scrypath.settings.diff (exit 0/2/1, --json) (TUNE-07)
+- [x] 19-06-PLAN.md — mix scrypath.settings.read (pretty-print) (TUNE-08)
+- [x] 19-07-PLAN.md — guides/relevance-tuning.md + CHANGELOG + mix.exs extras/cli (closing `feat(19):` commit optional — not required for bookkeeping)
 
 ### Phase 20: Faceted Search + LiveView Guide
 **Goal:** Phoenix devs declare `faceting:` on a schema and power a complete faceted Phoenix LiveView UI (checkbox sidebar, chip row, numeric range, search-within-facet) from a single `Scrypath.search/3` call — without reopening the narrow filter grammar or leaking backend-native shapes onto the common surface.
@@ -108,7 +115,7 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 18. Release-Parity Gate + Node 20 CI Cleanup | 7/7 | Complete    | 2026-04-17 |
-| 19. Relevance Tuning | 0/? | Not started | - |
+| 19. Relevance Tuning | 2/7 | Executing   | - |
 | 20. Faceted Search + LiveView Guide | 0/? | Not started | - |
 | 21. Multi-Index Search | 0/? | Not started | - |
 | 22. Operator Polish + Drift Recovery Guide | 0/? | Not started | - |

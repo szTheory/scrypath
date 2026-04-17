@@ -42,7 +42,8 @@ defmodule Scrypath.Release.PackageMetadataTest do
     assert docs[:groups_for_extras][:Operations] == [
              "ARCHITECTURE.md",
              "guides/sync-modes-and-visibility.md",
-             "guides/operator-mix-tasks.md"
+             "guides/operator-mix-tasks.md",
+             "guides/relevance-tuning.md"
            ]
 
     assert docs[:groups_for_extras][:Maintainers] == [

@@ -50,6 +50,12 @@ defmodule Scrypath.Options do
       default: nil,
       doc: "Optional Ecto repo used by runtime operations."
     ],
+    otp_app: [
+      type: {:custom, __MODULE__, :validate_optional_atom, []},
+      default: nil,
+      doc:
+        "Optional OTP application used to resolve per-repo `:scrypath` config when `:repo` is set and `Application.get_application/1` is nil (common in tests)."
+    ],
     index_prefix: [
       type: {:custom, __MODULE__, :validate_optional_string, []},
       default: nil,
@@ -109,6 +115,12 @@ defmodule Scrypath.Options do
       type: {:custom, __MODULE__, :validate_preload, []},
       default: [],
       doc: "Optional preload list applied only to repo-side hydration."
+    ],
+    settings_merge: [
+      type: {:in, [:replace, :deep]},
+      default: :replace,
+      doc:
+        "Merge strategy for runtime settings overrides against schema-declared settings. :replace (default) mirrors v1.2 Map.merge/2 behavior; :deep enables recursive map merge."
     ]
   ]
 
@@ -160,11 +172,6 @@ defmodule Scrypath.Options do
       type: {:custom, __MODULE__, :validate_optional_string, []},
       default: nil,
       doc: "Optional explicit index target override."
-    ],
-    settings: [
-      type: {:custom, __MODULE__, :validate_settings, []},
-      default: %{},
-      doc: "Optional explicit settings override applied by orchestration layers."
     ],
     meilisearch_url: [
       type: {:custom, __MODULE__, :validate_optional_string, []},
@@ -273,7 +280,68 @@ defmodule Scrypath.Options do
       type: {:in, [:inline, :manual, :oban]},
       default: :manual,
       doc: "Execution mode for the reindex workflow."
+    ],
+    settings_merge: [
+      type: {:in, [:replace, :deep]},
+      default: :replace,
+      doc:
+        "Merge strategy for runtime settings overrides against schema-declared settings. :replace (default) mirrors v1.2 Map.merge/2 behavior; :deep enables recursive map merge."
+    ],
+    skip_settings_verification?: [
+      type: :boolean,
+      default: false,
+      doc:
+        "When true, skips the post-apply Meilisearch settings drift check during managed reindex. Emits a warning and telemetry."
     ]
+  ]
+
+  @recognized_subkeys [
+    :synonyms,
+    :typo_tolerance,
+    :ranking_rules,
+    :distinct_attribute,
+    :stop_words
+  ]
+
+  @legacy_camel_allowlist [
+    :searchableAttributes,
+    :sortableAttributes,
+    :filterableAttributes,
+    :displayedAttributes,
+    :typoTolerance
+  ]
+
+  @legacy_camel_strings Enum.map(@legacy_camel_allowlist, &Atom.to_string/1)
+
+  @attribute_keys [
+    :searchable_attributes,
+    :sortable_attributes,
+    :filterable_attributes,
+    :displayed_attributes
+  ]
+
+  @meilisearch_default_ranking_rules [:words, :typo, :proximity, :attribute, :sort, :exactness]
+
+  @nested_settings_schema [
+    synonyms: [type: {:or, [:map, {:list, :any}]}, required: false],
+    typo_tolerance: [
+      type: {:or, [:keyword_list, :map]},
+      keys: [
+        enabled: [type: :boolean, required: false],
+        min_word_size_for_typos: [type: :map, required: false],
+        disable_on_words: [type: {:list, :string}, required: false],
+        disable_on_attributes: [type: {:list, :string}, required: false]
+      ],
+      required: false
+    ],
+    ranking_rules: [type: {:list, {:or, [:atom, :string]}}, required: false],
+    ranking_rules_strict?: [type: :boolean, required: false],
+    distinct_attribute: [type: {:or, [:atom, :string, nil]}, required: false],
+    stop_words: [type: {:list, :string}, required: false],
+    searchable_attributes: [type: {:list, :any}, required: false],
+    sortable_attributes: [type: {:list, :any}, required: false],
+    filterable_attributes: [type: {:list, :any}, required: false],
+    displayed_attributes: [type: {:list, :any}, required: false]
   ]
 
   @spec validate_schema_options!(keyword()) :: map()
@@ -324,7 +392,18 @@ defmodule Scrypath.Options do
   def validate_module(value) when is_atom(value), do: {:ok, value}
   def validate_module(_value), do: {:error, "expected a module"}
 
-  def validate_settings(value) when is_map(value), do: {:ok, value}
+  def validate_settings(value) when is_map(value) do
+    canonical = normalize_settings(value)
+
+    case validate_recognized_subkeys(canonical) do
+      :ok ->
+        check_ranking_rules_completeness(canonical)
+        {:ok, canonical}
+
+      {:error, msg} ->
+        {:error, msg}
+    end
+  end
 
   def validate_settings(value) do
     cond do
@@ -332,13 +411,162 @@ defmodule Scrypath.Options do
         {evaluated, _binding} = Code.eval_quoted(value)
 
         if is_map(evaluated) do
-          {:ok, evaluated}
+          validate_settings(evaluated)
         else
           {:error, "expected settings to be a plain map"}
         end
 
       true ->
         {:error, "expected settings to be a plain map"}
+    end
+  end
+
+  @doc false
+  @spec normalize_settings(map()) :: map()
+  def normalize_settings(value) when is_map(value) do
+    entries =
+      Enum.map(value, fn {raw_key, val} ->
+        ckey = canonicalize_key(raw_key)
+        {raw_key, ckey, val}
+      end)
+
+    emit_camel_hint? =
+      Enum.any?(entries, fn {raw_key, _ckey, _val} -> camel_case_source_key?(raw_key) end)
+
+    if emit_camel_hint? do
+      IO.puts(
+        :stderr,
+        "[scrypath] a schema declared settings using camelCase keys. Canonical form is snake_case atom keys for recognized settings. Both forms work; No action required."
+      )
+    end
+
+    {recognized_pairs, unrecognized_pairs} =
+      Enum.split_with(entries, fn {_raw, ckey, _val} -> is_atom(ckey) end)
+
+    recognized_pairs =
+      Enum.map(recognized_pairs, fn {_raw, ckey, val} -> {ckey, val} end)
+
+    unrecognized_pairs =
+      Enum.map(unrecognized_pairs, fn {_raw, {:unrecognized, rk}, val} -> {rk, val} end)
+
+    recognized_map = Map.new(recognized_pairs)
+    unrecognized_map = Map.new(unrecognized_pairs)
+
+    Map.put(recognized_map, :__unrecognized__, unrecognized_map)
+  end
+
+  @doc false
+  def canonicalize_key(key) when is_atom(key) do
+    cond do
+      key in @recognized_subkeys ->
+        key
+
+      key in @attribute_keys ->
+        key
+
+      key in @legacy_camel_allowlist ->
+        key
+        |> Atom.to_string()
+        |> Macro.underscore()
+        |> string_to_existing_atom!()
+
+      true ->
+        {:unrecognized, key}
+    end
+  end
+
+  def canonicalize_key(key) when is_binary(key) do
+    cond do
+      key in @legacy_camel_strings ->
+        legacy = Enum.find(@legacy_camel_allowlist, &(Atom.to_string(&1) == key))
+        canonicalize_key(legacy)
+
+      true ->
+        snake = Macro.underscore(key)
+        snake_atom = safe_string_to_existing_atom(snake)
+
+        cond do
+          snake_atom != nil and snake_atom in @recognized_subkeys ->
+            snake_atom
+
+          snake_atom != nil and snake_atom in @attribute_keys ->
+            snake_atom
+
+          true ->
+            {:unrecognized, key}
+        end
+    end
+  end
+
+  def canonicalize_key(key), do: {:unrecognized, key}
+
+  @doc false
+  @spec validate_recognized_subkeys(map()) :: :ok | {:error, String.t()}
+  def validate_recognized_subkeys(canonical) when is_map(canonical) do
+    slice =
+      canonical
+      |> Map.delete(:__unrecognized__)
+      |> Map.to_list()
+
+    case NimbleOptions.validate(slice, @nested_settings_schema) do
+      {:ok, _} ->
+        :ok
+
+      {:error, %NimbleOptions.ValidationError{} = error} ->
+        {:error, Exception.message(error)}
+    end
+  end
+
+  @doc false
+  def check_ranking_rules_completeness(canonical) when is_map(canonical) do
+    rules = canonical[:ranking_rules]
+    strict? = Map.get(canonical, :ranking_rules_strict?)
+
+    if is_list(rules) and strict? != false do
+      normalized =
+        Enum.map(rules, fn rule ->
+          cond do
+            is_atom(rule) ->
+              rule
+
+            is_binary(rule) ->
+              safe_string_to_existing_atom(rule) || rule
+
+            true ->
+              rule
+          end
+        end)
+
+      missing = @meilisearch_default_ranking_rules -- normalized
+
+      if missing != [] do
+        IO.puts(
+          :stderr,
+          "[scrypath] ranking_rules is missing the following Meilisearch defaults: #{inspect(missing)}. Add them or set ranking_rules_strict?: false. This is a warning; reindex will hard-error (TUNE-04)."
+        )
+      end
+    end
+
+    canonical
+  end
+
+  defp camel_case_source_key?(key) when is_atom(key), do: key in @legacy_camel_allowlist
+
+  defp camel_case_source_key?(key) when is_binary(key) do
+    String.match?(key, ~r/[A-Z]/)
+  end
+
+  defp camel_case_source_key?(_), do: false
+
+  defp string_to_existing_atom!(str) do
+    String.to_existing_atom(str)
+  end
+
+  defp safe_string_to_existing_atom(str) when is_binary(str) do
+    try do
+      String.to_existing_atom(str)
+    rescue
+      ArgumentError -> nil
     end
   end
 

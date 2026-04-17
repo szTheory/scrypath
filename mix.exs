@@ -45,6 +45,8 @@ defmodule Scrypath.MixProject do
         "verify.release_publish": :test,
         "verify.workspace_clean": :test,
         "verify.release_parity": :test,
+        "scrypath.settings.diff": :test,
+        "scrypath.settings.read": :test,
         credo: :test,
         dialyzer: :test
       ]
@@ -81,6 +83,7 @@ defmodule Scrypath.MixProject do
         "guides/phoenix-liveview.md",
         "guides/sync-modes-and-visibility.md",
         "guides/operator-mix-tasks.md",
+        "guides/relevance-tuning.md",
         "docs/releasing.md",
         "docs/operator-support.md"
       ],
@@ -95,7 +98,8 @@ defmodule Scrypath.MixProject do
         Operations: [
           "ARCHITECTURE.md",
           "guides/sync-modes-and-visibility.md",
-          "guides/operator-mix-tasks.md"
+          "guides/operator-mix-tasks.md",
+          "guides/relevance-tuning.md"
         ],
         Maintainers: ["docs/releasing.md", "docs/operator-support.md"]
       ]

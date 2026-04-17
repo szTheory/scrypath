@@ -121,7 +121,10 @@ defmodule Scrypath.MixTasks.OperatorTasksTest do
 
     assert failed_output =~ "Schema: SearchablePost"
     assert failed_output =~ "Failed work: 2"
-    assert failed_output =~ "id=403 source=meilisearch state=failed operation=upsert retryable=no reason=write failed"
+
+    assert failed_output =~
+             "id=403 source=meilisearch state=failed operation=upsert retryable=no reason=write failed"
+
     assert failed_output =~ "id=501 source=oban state=retrying operation=upsert retryable=yes"
   end
 
@@ -176,6 +179,7 @@ defmodule Scrypath.MixTasks.OperatorTasksTest do
     ])
 
     Application.put_env(:scrypath, :operator_task_test_oban_jobs, [])
+
     Application.put_env(:scrypath, :operator_task_test_opts,
       meilisearch_tasks: Application.fetch_env!(:scrypath, :operator_task_test_meilisearch_tasks),
       oban_inspector: TaskObanInspector,
@@ -229,17 +233,24 @@ defmodule Scrypath.MixTasks.OperatorTasksTest do
     report_output =
       capture_io(fn ->
         Mix.Task.reenable("scrypath.reconcile")
-        Mix.Task.run("scrypath.reconcile", ["SearchablePost", "--target-index", "tenant_searchable_post__reindex"])
+
+        Mix.Task.run("scrypath.reconcile", [
+          "SearchablePost",
+          "--target-index",
+          "tenant_searchable_post__reindex"
+        ])
       end)
 
     assert report_output =~
              "Drift signals: pending_queue_work, failed_sync_work, reindex_visibility_available, reindex_in_progress"
+
     assert report_output =~ "Recommended actions: retry(ids=1001), reindex"
     refute_received {:oban_insert, _job}
 
     action_output =
       capture_io(fn ->
         Mix.Task.reenable("scrypath.reconcile")
+
         Mix.Task.run("scrypath.reconcile", [
           "SearchablePost",
           "--target-index",

@@ -33,10 +33,11 @@ defmodule Scrypath.LiveOperatorVerificationTest do
     }
   end
 
-  test "sync_status/2 reports live backend visibility while keeping queue state unobserved outside oban mode", %{
-    index_prefix: prefix,
-    live_index: live_index
-  } do
+  test "sync_status/2 reports live backend visibility while keeping queue state unobserved outside oban mode",
+       %{
+         index_prefix: prefix,
+         live_index: live_index
+       } do
     MeilisearchIntegration.insert_posts!([
       %{
         id: 1,
@@ -72,7 +73,9 @@ defmodule Scrypath.LiveOperatorVerificationTest do
         match?(
           {:ok,
            %Scrypath.Operator.Status{
-             backend: %{last_succeeded: %Scrypath.Operator.State{id: ^task_uid, state: :completed}},
+             backend: %{
+               last_succeeded: %Scrypath.Operator.State{id: ^task_uid, state: :completed}
+             },
              queue: %{observed?: false}
            }},
           Scrypath.sync_status(QueryablePost,
@@ -88,11 +91,12 @@ defmodule Scrypath.LiveOperatorVerificationTest do
     )
   end
 
-  test "reconcile_sync/2 reports target-index visibility without mutating the live index by default", %{
-    index_prefix: prefix,
-    live_index: live_index,
-    target_index: target_index
-  } do
+  test "reconcile_sync/2 reports target-index visibility without mutating the live index by default",
+       %{
+         index_prefix: prefix,
+         live_index: live_index,
+         target_index: target_index
+       } do
     MeilisearchIntegration.insert_posts!([
       %{
         id: 10,

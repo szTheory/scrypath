@@ -118,8 +118,7 @@ defmodule Scrypath do
   end
 
   @spec reconcile_sync(module(), keyword()) ::
-          {:ok, Scrypath.Operator.Reconcile.t()} | {:error, term()}
-          | {:ok, map()}
+          {:ok, Scrypath.Operator.Reconcile.t()} | {:error, term()} | {:ok, map()}
   def reconcile_sync(schema_module, opts \\ []) do
     Scrypath.Operator.reconcile_sync(schema_module, opts)
   end

@@ -7,6 +7,9 @@
 /.elixir_ls/
 .DS_Store
 
+# local agent / IDE worktrees (not part of the library)
+/.claude/
+
 # locally-rebuilt hex package artifacts
 /scrypath-*/
 *.tar

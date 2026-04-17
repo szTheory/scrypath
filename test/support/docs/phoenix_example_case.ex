@@ -2,14 +2,17 @@ defmodule Scrypath.TestSupport.Docs.PhoenixExampleCase do
   @moduledoc false
 
   defmodule Post do
+    @moduledoc false
     defstruct [:id, :title, :status]
   end
 
   defmodule SearchResult do
+    @moduledoc false
     defstruct records: [], query: nil, mode: :inline, status: :completed
   end
 
   defmodule Content do
+    @moduledoc false
     alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Post
     alias Scrypath.TestSupport.Docs.PhoenixExampleCase.SearchResult
 
@@ -31,6 +34,7 @@ defmodule Scrypath.TestSupport.Docs.PhoenixExampleCase do
   end
 
   defmodule PostController do
+    @moduledoc false
     alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Content
 
     def index(params) do
@@ -43,7 +47,10 @@ defmodule Scrypath.TestSupport.Docs.PhoenixExampleCase do
   end
 
   defmodule Api do
+    @moduledoc false
+
     defmodule PostController do
+      @moduledoc false
       alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Content
 
       def index(params) do
@@ -75,6 +82,7 @@ defmodule Scrypath.TestSupport.Docs.PhoenixExampleCase do
   end
 
   defmodule PostLive do
+    @moduledoc false
     alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Content
 
     def mount do

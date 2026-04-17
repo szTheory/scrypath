@@ -34,7 +34,16 @@ defmodule Scrypath.Operator.Reconcile do
           }
   end
 
-  @enforce_keys [:schema, :mode, :index, :status, :failed_work, :drift_signals, :actions, :reindex]
+  @enforce_keys [
+    :schema,
+    :mode,
+    :index,
+    :status,
+    :failed_work,
+    :drift_signals,
+    :actions,
+    :reindex
+  ]
   defstruct [:schema, :mode, :index, :status, :failed_work, :drift_signals, :actions, :reindex]
 
   @type t :: %__MODULE__{
@@ -81,7 +90,10 @@ defmodule Scrypath.Operator.Reconcile do
   defp reindex_visibility(config, operator_opts, live_index, target_index) do
     case Config.fetch_backend!(config) do
       Scrypath.Meilisearch ->
-        case Tasks.list_index_tasks(target_index, Keyword.merge(config, Keyword.take(operator_opts, [:meilisearch_tasks]))) do
+        case Tasks.list_index_tasks(
+               target_index,
+               Keyword.merge(config, Keyword.take(operator_opts, [:meilisearch_tasks]))
+             ) do
           {:ok, tasks} ->
             {:ok, summarize_reindex(tasks, live_index, target_index)}
 
@@ -108,32 +120,12 @@ defmodule Scrypath.Operator.Reconcile do
       |> Enum.sort_by(& &1.id, :desc)
       |> List.first()
 
-    task_state =
-      cond do
-        Enum.any?(tasks, &(&1.state in [:enqueued, :processing])) -> :pending
-        Enum.any?(tasks, &(&1.state == :failed)) -> :failed
-        tasks == [] -> :idle
-        true -> :completed
-      end
-
-    cutover =
-      cond do
-        Enum.any?(tasks, &(Map.get(&1.metadata, :type) == "indexSwap" and &1.state == :succeeded)) ->
-          :completed
-
-        Enum.any?(tasks, &(Map.get(&1.metadata, :type) == "indexSwap")) ->
-          :pending
-
-        true ->
-          :not_started
-      end
-
     %ReindexVisibility{
       live_index: live_index,
       target_index: target_index,
       observed?: tasks != [],
-      task_state: task_state,
-      cutover: cutover,
+      task_state: reindex_task_state(tasks),
+      cutover: reindex_cutover_state(tasks),
       last_task:
         if last_task do
           %{id: last_task.id, state: last_task.state, type: Map.get(last_task.metadata, :type)}
@@ -141,10 +133,35 @@ defmodule Scrypath.Operator.Reconcile do
     }
   end
 
+  defp reindex_task_state(tasks) do
+    cond do
+      Enum.any?(tasks, &(&1.state in [:enqueued, :processing])) -> :pending
+      Enum.any?(tasks, &(&1.state == :failed)) -> :failed
+      tasks == [] -> :idle
+      true -> :completed
+    end
+  end
+
+  defp reindex_cutover_state(tasks) do
+    cond do
+      Enum.any?(tasks, &(Map.get(&1.metadata, :type) == "indexSwap" and &1.state == :succeeded)) ->
+        :completed
+
+      Enum.any?(tasks, &(Map.get(&1.metadata, :type) == "indexSwap")) ->
+        :pending
+
+      true ->
+        :not_started
+    end
+  end
+
   defp drift_signals(status, failed_work, reindex) do
     []
     |> maybe_add_signal(status.backend.pending != [], :pending_backend_work)
-    |> maybe_add_signal(status.queue.pending != [] or status.queue.retrying != [], :pending_queue_work)
+    |> maybe_add_signal(
+      status.queue.pending != [] or status.queue.retrying != [],
+      :pending_queue_work
+    )
     |> maybe_add_signal(failed_work != [], :failed_sync_work)
     |> maybe_add_signal(reindex.observed?, :reindex_visibility_available)
     |> maybe_add_signal(reindex.task_state == :pending, :reindex_in_progress)

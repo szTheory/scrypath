@@ -8,11 +8,13 @@ Release Please manages versioned entries after this baseline.
 
 ### Added
 
+- Relevance tuning for Meilisearch-first settings: declarative translation for **TUNE-01** (synonyms / typo tolerance / ranking rules / distinct attribute / stop words), **TUNE-02** synonym list sugar, **TUNE-05** `verify_applied/3` + `Client.get_settings/2` drift primitive, **TUNE-03** managed-reindex verify step, **TUNE-04** reindex-time ranking-rules guard, **TUNE-07** `mix scrypath.settings.diff`, **TUNE-08** `mix scrypath.settings.read`, and **TUNE-06** per-repo `Application.get_env/3` cascade in `Scrypath.Config.resolve!/1` (with optional `otp_app` when `Application.get_application/1` is nil).
 - `mix verify.workspace_clean` — fails if the working tree has uncommitted or untracked files under packaged paths (`lib/`, `test/`, `guides/`, `docs/`, and other `mix.exs` `package.files` entries). Integrated into all three publish paths (`ci.yml` quality job, `release-please.yml` publish-hex job, `publish-hex.yml` manual recovery).
 - `mix verify.release_parity X.Y.Z` — compares the published Hex tarball's `lib/ + guides/ + docs/` file list against the git tag of the same version. Exit codes: `0` parity, `2` drift, `1` runtime error. Runs daily via `verify-published-release.yml` cron and auto-files a deduplicated GitHub issue on drift.
 
 ### Changed
 
+- Posture **D** normalization for schema `settings:` maps (camelCase in, canonical atom keys out) is documented in `guides/relevance-tuning.md` alongside the relevance workflow.
 - GitHub Actions CI runtime upgraded to Node 24 — `actions/checkout@v6` and `actions/cache@v5` across all jobs in `.github/workflows/ci.yml` (clears the Node 20 deprecation ahead of the 2026-09 removal).
 
 ### Notes

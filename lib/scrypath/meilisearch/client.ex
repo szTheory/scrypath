@@ -28,6 +28,17 @@ defmodule Scrypath.Meilisearch.Client do
     )
   end
 
+  @spec get_settings(String.t(), keyword()) :: {:ok, map()} | {:error, term()}
+  def get_settings(index_name, config) do
+    run_request(
+      :get,
+      "/indexes/#{index_name}/settings",
+      [],
+      config,
+      index: index_name
+    )
+  end
+
   @spec swap_indexes({String.t(), String.t()}, keyword()) :: {:ok, map()} | {:error, term()}
   def swap_indexes({source_index, target_index}, config) do
     payload = [%{"indexes" => [source_index, target_index]}]
@@ -148,7 +159,7 @@ defmodule Scrypath.Meilisearch.Client do
         acc
 
       {key, value}, acc when is_list(value) ->
-        Map.put(acc, camelize_filter(key), Enum.join(Enum.map(value, &to_string/1), ","))
+        Map.put(acc, camelize_filter(key), Enum.map_join(value, ",", &to_string/1))
 
       {key, value}, acc ->
         Map.put(acc, camelize_filter(key), to_string(value))
