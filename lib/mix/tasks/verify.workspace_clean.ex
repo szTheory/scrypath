@@ -38,17 +38,43 @@ defmodule Mix.Tasks.Verify.WorkspaceClean do
         stderr_to_stdout: true
       )
 
-    case {output, exit_status} do
-      {"", 0} ->
-        Mix.shell().info("Workspace clean across #{length(pathspecs)} pathspecs")
+    case classify(output, exit_status, length(pathspecs)) do
+      {:ok, message} ->
+        Mix.shell().info(message)
         :ok
 
-      {dirty_output, 0} ->
+      {:dirty, dirty_output} ->
         raise_dirty!(dirty_output)
 
-      {err, _nonzero} ->
+      {:git_error, err} ->
         Mix.raise("git status failed:\n\n#{err}")
     end
+  end
+
+  @doc """
+  Pure classifier for `git status --porcelain` output.
+
+  Split out of `run/1` so tests can exercise each branch without a real git
+  subprocess (mirrors the `Mix.Tasks.Verify.ReleaseParity.compute/2` seam).
+
+  Returns one of:
+
+  - `{:ok, message}` — clean tree (empty output, exit 0)
+  - `{:dirty, paths}` — uncommitted or untracked files present (non-empty output, exit 0)
+  - `{:git_error, err}` — `git status` itself failed (non-zero exit)
+  """
+  @spec classify(String.t(), integer(), non_neg_integer()) ::
+          {:ok, String.t()} | {:dirty, String.t()} | {:git_error, String.t()}
+  def classify("", 0, pathspec_count) do
+    {:ok, "Workspace clean across #{pathspec_count} pathspecs"}
+  end
+
+  def classify(dirty_output, 0, _pathspec_count) when dirty_output != "" do
+    {:dirty, dirty_output}
+  end
+
+  def classify(err, exit_status, _pathspec_count) when exit_status != 0 do
+    {:git_error, err}
   end
 
   @doc """

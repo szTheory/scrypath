@@ -102,4 +102,96 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert envs[:"verify.release_parity"] == :test
     end
   end
+
+  describe "UAT shift-left (closes /gsd-verify-work 18 manual tests)" do
+    # Each test maps 1:1 to a row in 18-UAT.md. Together they turn the UAT
+    # from 9 human-verification items into 0 — every claim that previously
+    # needed a maintainer to run by hand is now an assertion here.
+
+    test "UAT-05: ci.yml carries no legacy Node-20 pins for checkout or cache" do
+      ci = File.read!(@ci_yml)
+
+      refute ci =~ "actions/checkout@v4",
+             "legacy actions/checkout@v4 pin found — Node 20 deprecation risk"
+
+      refute ci =~ "actions/cache@v4",
+             "legacy actions/cache@v4 pin found — Node 20 deprecation risk"
+
+      # checkout went to @v6, cache went to @v5 — neither should sit at @v5/@v6 respectively
+      refute ci =~ "actions/checkout@v5",
+             "actions/checkout should be pinned to @v6, not @v5"
+    end
+
+    test "UAT-06: docs/releasing.md ships §Release parity gate section to HexDocs" do
+      rel = File.read!("docs/releasing.md")
+
+      assert rel =~ ~r/^## Release parity gate$/m
+      assert rel =~ "### `mix verify.workspace_clean`"
+      assert rel =~ "### `mix verify.release_parity X.Y.Z`"
+      assert rel =~ "### Historical context"
+      assert rel =~ "v1.2-MILESTONE-AUDIT.md"
+
+      # Confirm mix.exs lists docs/releasing.md in docs extras so HexDocs picks it up
+      mix = File.read!("mix.exs")
+      assert mix =~ ~s("docs/releasing.md")
+    end
+
+    test "UAT-07: CHANGELOG has exactly one Unreleased heading with Phase 18 bullets" do
+      changelog = File.read!("CHANGELOG.md")
+
+      # Exactly one ## Unreleased — any second stale block from prior phases
+      # would create release-please ambiguity (see Phase 18 SECURITY.md
+      # T-18-07-03 adjacent finding, resolved in commit 91b8a57).
+      unreleased_count =
+        Regex.scan(~r/^## \[?Unreleased\]?/m, changelog) |> length()
+
+      assert unreleased_count == 1,
+             "expected exactly one ## Unreleased heading, got #{unreleased_count}"
+
+      # Phase 18 deliverables under Unreleased
+      assert changelog =~ "### Added"
+      assert changelog =~ "### Changed"
+      assert changelog =~ "### Notes"
+      assert changelog =~ "mix verify.workspace_clean"
+      assert changelog =~ "mix verify.release_parity"
+      assert changelog =~ "actions/checkout@v6"
+      assert changelog =~ "actions/cache@v5"
+      assert changelog =~ "v1.2-MILESTONE-AUDIT.md"
+    end
+
+    test "UAT-08: drift-issue step is guarded to scheduled runs only (workflow_dispatch is silent)" do
+      vpr = File.read!(@verify_published_yml)
+
+      # This guard is the structural proof that a manual workflow_dispatch
+      # of verify-published-release.yml will never file an issue — which is
+      # what the original UAT-08 manual smoke test was verifying. Combined
+      # with the integration canary (UAT-03) exercising the mix task body,
+      # the manual workflow_dispatch run is now fully redundant.
+      assert vpr =~ "failure() && github.event_name == 'schedule'"
+    end
+
+    test "UAT-09: release-please preconditions for cutting 0.4.0 hold on HEAD" do
+      # (a) Release type is elixir — ensures release-please knows how to bump mix.exs
+      cfg = File.read!("release-please-config.json")
+      assert cfg =~ ~s("release-type": "elixir")
+
+      # (b) Manifest currently pins 0.3.0 — release-please reads this to decide
+      # the next version. A feat: commit against 0.3.0 cuts 0.4.0 (pre-1.0 minor bump).
+      manifest = File.read!(".release-please-manifest.json")
+      assert manifest =~ ~s("0.3.0")
+
+      # (c) mix.exs @version unchanged at 0.3.0 — release-please owns the bump,
+      # any manual bump here breaks the release-PR flow (T-18-07-03 mitigation).
+      assert File.read!("mix.exs") =~ ~s(@version "0.3.0")
+
+      # (d) Recent history carries the D-22 feat(18): subject line that
+      # release-please parses for the minor bump. Looks back 50 commits so
+      # subsequent phase/UAT commits after Phase 18 don't push the closing
+      # commit out of the search window.
+      {log, 0} = System.cmd("git", ["log", "--format=%s", "-50"])
+
+      assert log =~ ~r/^feat\(18\): add release-parity gates \+ Node 20 CI cleanup$/m,
+             "expected the D-22 closing commit subject in recent history"
+    end
+  end
 end

@@ -45,4 +45,27 @@ defmodule Mix.Tasks.Verify.WorkspaceCleanTest do
       assert output =~ ~r/(Checking workspace cleanliness|Workspace clean|verify\.workspace_clean)/
     end
   end
+
+  describe "classify/3 (pure testability seam)" do
+    # Shift-left coverage for UAT-02 (dirty tree raises with offending paths) —
+    # exercises each branch without a real git subprocess. Mirrors the
+    # Mix.Tasks.Verify.ReleaseParity.compute/2 Pitfall-11 split.
+
+    test "reports clean when output is empty and exit status is 0" do
+      assert {:ok, message} = Mix.Tasks.Verify.WorkspaceClean.classify("", 0, 9)
+      assert message == "Workspace clean across 9 pathspecs"
+    end
+
+    test "reports dirty and passes offending paths through verbatim when exit 0 + non-empty output" do
+      porcelain = "M lib/foo.ex\n?? bar\n"
+
+      assert Mix.Tasks.Verify.WorkspaceClean.classify(porcelain, 0, 9) ==
+               {:dirty, porcelain}
+    end
+
+    test "reports git_error when exit status is non-zero regardless of output" do
+      assert Mix.Tasks.Verify.WorkspaceClean.classify("fatal: not a git repo", 128, 9) ==
+               {:git_error, "fatal: not a git repo"}
+    end
+  end
 end
