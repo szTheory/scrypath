@@ -41,6 +41,7 @@ defmodule Scrypath.MixProject do
         "verify.phase10": :test,
         "verify.phase11": :test,
         "verify.phase13": :test,
+        "verify.phase14": :test,
         "verify.release_publish": :test,
         credo: :test,
         dialyzer: :test

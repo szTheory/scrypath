@@ -10,6 +10,7 @@ defmodule Scrypath.DocsContractTest do
   @release_docs File.read!("docs/releasing.md")
   @operator_support_docs File.read!("docs/operator-support.md")
   @verify_phase11 File.read!("lib/mix/tasks/verify.phase11.ex")
+  @verify_phase14 File.read!("lib/mix/tasks/verify.phase14.ex")
   @verify_release_publish File.read!("lib/mix/tasks/verify.release_publish.ex")
   @guide_paths [
     "guides/getting-started.md",
@@ -197,6 +198,17 @@ defmodule Scrypath.DocsContractTest do
 
     refute @verify_phase11 =~ "HEX_API_KEY"
     refute @verify_phase11 =~ ~s|run_command!(["hex.publish"|
+  end
+
+  test "verify.phase14 keeps the phase 14 gate auth-free and docs focused" do
+    assert_contains_all(@verify_phase14, [
+      "test/scrypath/mix_tasks/operator_tasks_test.exs",
+      "test/scrypath/docs_contract_test.exs",
+      "test/release/package_metadata_test.exs",
+      "Mix.Task.run(\"docs\", [\"--warnings-as-errors\"])"
+    ])
+
+    refute @verify_phase14 =~ "HEX_API_KEY"
   end
 
   test "release workflow verifies the live published version after hex publish" do
