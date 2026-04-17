@@ -18,28 +18,33 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] Backfill, managed reindex, settings application, and recovery guidance validated in v1.0.
 - [x] Phoenix docs, examples, release automation, and package trust signals validated in v1.0.
 - [x] Launch-readiness hardening for Meilisearch edge cases, copied Phoenix docs safety, and milestone-close release evidence validated in v1.1.
+- [x] The first real public release path, operator visibility surface, Mix task ergonomics, and the internal operations seam validated in v1.2.
 
 ### Active
 
-- [ ] Validate the first real tagged/public package release with publisher-scoped Hex credentials and confirm the Release Please publish path end to end.
-- [ ] Give operators explicit status, failure inspection, retry, reconcile, and reindex visibility without turning Scrypath into a dashboard product.
-- [ ] Preserve the Meilisearch-first common path while extracting an internal operations seam that makes future backend work survivable.
+- [ ] Deepen Meilisearch-native search power through Scrypath-owned APIs: faceted search, relevance tuning (typo/synonyms/ranking), and multi-index search — without breaking sync, backfill, or operator contracts.
+- [ ] Surface narrow operator-polish improvements (failed-work depth plus a drift recovery guide) without expanding the operator surface beyond what early adopter feedback justifies.
+- [ ] Retire remaining release/tooling debt: GitHub Actions Node 20 deprecation warnings and VALIDATION.md closure for v1.2 phases 13, 14, 15.
 
 ### Out of Scope
 
 - Postgres-native full-text search as a first-class v1 product surface - it muddies the product boundary and competes with a different problem space.
-- Public multi-backend support in the first release - it increases abstraction pressure before the core sync and DX story is proven.
-- Advanced relevance features such as vector search, hybrid retrieval, personalization, or analytics in v1 - they add surface area before the operational core is solid.
+- Public multi-backend support before real adoption pressure proves the common contract deserves to widen.
+- Advanced relevance features such as vector search, hybrid retrieval, personalization, or analytics before the operational core and public release story settle.
 
 ## Context
 
 The project exists to fill a gap in the Elixir ecosystem: there are low-level API clients and partial integrations for search engines, but no category-defining library that gives Ecto and Phoenix developers a Searchkick or Laravel Scout level experience. The strongest initial wedge is Meilisearch because the Elixir ecosystem gap is larger there than for Typesense, while the long-term architecture should still preserve an internal adapter seam so the public API is not painted into a corner.
 
-Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library should emphasize least surprise, operational honesty, and high-quality developer experience. Search synchronization should acknowledge eventual consistency where it exists, support Oban naturally, and document tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
+Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-This repository also includes local reference docs under `prompts/` covering search-library use cases, Elixir and Ecto best practices, OSS library ergonomics, and CI/CD conventions. Those documents informed the initial framing and should continue to serve as project context during planning.
+The repository now has three archived milestones:
 
-When running future GSD discuss, plan, and execute flows, consult the relevant files under `prompts/` as authoritative local reference material whenever phase decisions touch API design, Phoenix and Ecto ergonomics, OSS release practices, or project positioning.
+- `v1.0` shipped the Meilisearch-first Ecto-native indexing core, search/hydration path, Oban support, reindex workflows, public Phoenix docs, and release automation baseline.
+- `v1.1` shipped release hardening, docs-safety fixes, `mix verify.phase10`, and the launch-readiness evidence chain.
+- `v1.2` shipped the first live public release as `scrypath 0.3.0`, the internal operations seam, operator visibility APIs, thin Mix tasks, and milestone-close verification/bookkeeping repairs.
+
+The library is now publicly released and functionally complete for its current boundary. The next milestone should follow real maintainer and adopter pressure rather than speculative surface expansion.
 
 ## Constraints
 
@@ -48,45 +53,42 @@ When running future GSD discuss, plan, and execute flows, consult the relevant f
 - **Write-path support**: v1 should support inline, Oban-backed, and manual synchronization flows - different apps need different consistency and operational tradeoffs.
 - **Developer experience**: Minimal setup and great Phoenix ergonomics are the top priority, with correctness close behind - product decisions should optimize for low friction without hiding reality.
 - **Operational clarity**: Eventual consistency, delete semantics, backfills, and reindex workflows must be explicit - search sync failures are operational issues, not minor edge cases.
-- **Release quality**: The library should not be released publicly until it feels complete - roadmap and documentation should reflect a high quality bar rather than a rush to ship.
+- **Release quality**: Public release is now proven, but future milestone choices should still favor product coherence over breadth for its own sake.
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Use `Scrypath` as the project and package identity | The name is available on Hex and matches the intended brand posture | Retained through v1.1 hardening |
-| Position the product as the missing Searchkick or Scout for Ecto and Phoenix | The real gap is the integration and sync layer, not another thin HTTP client | Reinforced by v1.0 and v1.1 |
-| Start with Meilisearch as the public v1 backend | The market gap is stronger and it keeps v1 focused while preserving an internal adapter seam | Validated in v1.0 and retained in v1.1 |
+| Use `Scrypath` as the project and package identity | The name is available on Hex and matches the intended brand posture | Retained through v1.2 public release |
+| Position the product as the missing Searchkick or Scout for Ecto and Phoenix | The real gap is the integration and sync layer, not another thin HTTP client | Reinforced by shipped API, docs, and first public release |
+| Start with Meilisearch as the public v1 backend | The market gap is stronger and it keeps v1 focused while preserving an internal adapter seam | Validated across v1.0-v1.2 |
 | Keep the core Ecto-first and Phoenix-friendly | Ecto is the stable architectural center, while Phoenix ergonomics are critical for adoption | Validated in shipped API and docs |
-| Support inline, Oban, and manual sync modes in v1 | Teams need a simple local path, a production queue path, and an explicit escape hatch | Validated in v1.0 |
-| Exclude Postgres-native full-text search from the v1 product surface | It solves a different problem and would blur the product story too early | Still out of scope after v1.1 |
-| Defer public multi-backend support and advanced relevance features | Premature abstraction and feature breadth would increase API risk before the core is validated | Still deferred pending adoption feedback |
+| Support inline, Oban, and manual sync modes in v1 | Teams need a simple local path, a production queue path, and an explicit escape hatch | Validated in v1.0 and clarified in v1.2 operator guides |
+| Expose operator visibility through Scrypath-owned APIs and thin Mix tasks, not a dashboard product | Early adopters need explicit operational visibility without a second product surface | Shipped and validated in v1.2 |
+| Defer public multi-backend support and advanced relevance features until real adoption pressure appears | Premature abstraction and feature breadth would increase API risk before the core is proven | Still deferred after the first public release |
 
 ## Current State
 
-Scrypath has two archived milestones:
+Scrypath has shipped three milestones and one real public Hex release, `0.3.0`. Maintainers now have a verified release contract, live Hex and HexDocs proof, and explicit recovery runbooks. Operators have status, failed-work, retry, and reconcile visibility through Scrypath-owned APIs plus thin `mix scrypath.*` ergonomics. The internal operations seam is in place so future backend work can evolve without forcing a premature public abstraction. Milestone `v1.3` is now active, focused on closing the Meilisearch-native search feature gap that the first adopter tier reaches for immediately after install.
 
-- `v1.0` shipped the Meilisearch-first Ecto-native indexing core, search/hydration path, Oban support, reindex workflows, public Phoenix docs, and release automation baseline.
-- `v1.1` shipped the release-hardening pass that tightened Meilisearch task contracts, closed copied-doc hazards, added `mix verify.phase10`, and built the final launch-readiness evidence chain.
+## Current Milestone: v1.3 Search Power That Phoenix Teams Reach For
 
-The library is functionally complete for its current public boundary. The next unknown is not basic product breadth; it is how the package and release story behave under real public adoption and where real users push hardest on backend breadth, operator tooling, or backend-native search power.
-
-## Current Milestone
-
-**v1.2 — Public Release Trust and Operator Visibility**
-
-**Goal:** Turn Scrypath's internal launch-readiness evidence into real public release confidence while adding a small, explicit operator surface for sync status, failure inspection, and recovery.
+**Goal:** Land the three Meilisearch-native capabilities every growth-stage Phoenix SaaS immediately needs — faceted search, relevance tuning (typo tolerance, synonyms, ranking rules), and multi-index search — through Scrypath-owned APIs that preserve the shipped sync, backfill, and operator contracts. Retire remaining release and tooling debt in the same cycle so v1.4 starts clean.
 
 **Target features:**
-- Validate one real public Hex release path end to end, including version/tag/workflow alignment and post-publish smoke verification.
-- Add `Scrypath.Operator.*`-style primitives plus thin Mix task ergonomics for status, failed work inspection, retry, reconcile, and reindex visibility.
-- Extract an internal operations seam so sync and reindex flows stop depending directly on Meilisearch-shaped orchestration details.
+- Faceted search: declarative `faceting` schema field, validated facet filter expressions, facet distribution and stats on `SearchResult`, Phoenix LiveView guide
+- Relevance tuning: declarative per-schema settings for synonyms, typo tolerance, ranking rules, distinct attribute, and stop words applied safely through the existing reindex pipeline
+- Multi-index search: `Scrypath.search_many/2` federated queries across N schemas with per-schema validation preserved and a unified hydration path
+- Operator polish: richer `FailedWork.t()` (attempt count, error reason class, last attempt timestamp) plus an end-to-end drift recovery guide
+- Release and tooling debt retirement: GitHub Actions upgraded past Node 20 deprecation warnings and missing VALIDATION.md artifacts closed for v1.2 phases 13, 14, 15
+
+**Key context:** Direction chosen by extrapolation rather than a single explicit adopter request — the evidence from the codebase gap analysis, planning history, and ecosystem research converges on "deepen Meilisearch-first before widening backends". Persona 2 (growth-stage Phoenix SaaS) is the primary cohort for v1.3 impact. Reference libraries (Searchkick, Laravel Scout) shipped comprehensive first-backend features before adding a second adapter, and Scrypath is deliberately at that inflection point.
 
 ## Next Milestone Goals
 
-- Confirm one successful real release with the correct publisher-scoped Hex credentials and the existing GitHub Actions publish path.
-- Make operational state legible enough that early adopters can trust async/manual indexing in production.
-- Use post-release adoption feedback to decide whether the following milestone should widen backend support or deepen Meilisearch-native search power.
+- Collect real adopter feedback during the v1.3 cycle to validate whether deeper search power or backend breadth should drive v1.4.
+- Hold the line on non-goals: no second public backend, no vector/hybrid search, no dashboard product surface.
+- Reserve deeper drift/schema-diff operator tooling for v1.4 once v1.3 feature work produces real-world recovery scenarios.
 
 ## Evolution
 
@@ -106,4 +108,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-16 after starting milestone v1.2*
+*Last updated: 2026-04-16 — v1.3 milestone started*
