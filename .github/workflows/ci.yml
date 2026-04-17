@@ -23,7 +23,7 @@ jobs:
           - elixir: "1.17.3"
             otp: "26.2.5"
           - elixir: "1.19.0"
-            otp: "28.0"
+            otp: "28.1"
 
     steps:
       - uses: actions/checkout@v4
@@ -58,7 +58,7 @@ jobs:
       - uses: erlef/setup-beam@v1
         with:
           elixir-version: "1.19.0"
-          otp-version: "28.0"
+          otp-version: "28.1"
 
       - uses: actions/cache@v4
         with:
@@ -110,7 +110,7 @@ jobs:
       - uses: erlef/setup-beam@v1
         with:
           elixir-version: "1.19.0"
-          otp-version: "28.0"
+          otp-version: "28.1"
 
       - uses: actions/cache@v4
         with:
