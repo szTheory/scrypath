@@ -43,11 +43,15 @@ defmodule Scrypath.MixProject do
         "verify.phase13": :test,
         "verify.phase14": :test,
         "verify.phase20": :test,
+        "verify.phase22": :test,
+        "verify.phase26": :test,
+        "verify.meilisearch_smoke": :test,
         "verify.release_publish": :test,
         "verify.workspace_clean": :test,
         "verify.release_parity": :test,
         "scrypath.settings.diff": :test,
         "scrypath.settings.read": :test,
+        "scrypath.settings.hot_apply": :test,
         credo: :test,
         dialyzer: :test
       ]
@@ -77,12 +81,14 @@ defmodule Scrypath.MixProject do
       extras: [
         "README.md",
         "ARCHITECTURE.md",
+        "guides/drift-recovery.md",
         "guides/getting-started.md",
         "guides/phoenix-walkthrough.md",
         "guides/phoenix-contexts.md",
         "guides/phoenix-controllers-and-json.md",
         "guides/phoenix-liveview.md",
         "guides/faceted-search-with-phoenix-liveview.md",
+        "guides/multi-index-search.md",
         "guides/sync-modes-and-visibility.md",
         "guides/operator-mix-tasks.md",
         "guides/relevance-tuning.md",
@@ -97,13 +103,15 @@ defmodule Scrypath.MixProject do
           "guides/phoenix-contexts.md",
           "guides/phoenix-controllers-and-json.md",
           "guides/phoenix-liveview.md",
-          "guides/faceted-search-with-phoenix-liveview.md"
+          "guides/faceted-search-with-phoenix-liveview.md",
+          "guides/multi-index-search.md"
         ],
         Operations: [
           "ARCHITECTURE.md",
-          "guides/sync-modes-and-visibility.md",
+          "guides/drift-recovery.md",
           "guides/operator-mix-tasks.md",
-          "guides/relevance-tuning.md"
+          "guides/relevance-tuning.md",
+          "guides/sync-modes-and-visibility.md"
         ],
         Maintainers: [
           "docs/releasing.md",

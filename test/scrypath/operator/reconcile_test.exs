@@ -3,6 +3,7 @@ defmodule Scrypath.Operator.ReconcileTest do
 
   alias Scrypath.Operator.Reconcile
   alias Scrypath.Operator.RecoveryAction
+  alias Scrypath.Operator.ReasonClassCounts
 
   defmodule ReconcileMeilisearchClient do
     def tasks(filters, config) do
@@ -94,6 +95,20 @@ defmodule Scrypath.Operator.ReconcileTest do
     assert report.reindex.task_state == :pending
     assert Enum.any?(report.actions, &(&1.kind == :retry))
     assert Enum.any?(report.actions, &(&1.kind == :reindex))
+    assert %ReasonClassCounts{} = report.failed_work_counts
+    assert report.failed_work_counts.total == length(report.failed_work)
+
+    assert MapSet.equal?(
+             MapSet.new(Map.keys(report.failed_work_counts.by_class)),
+             MapSet.new([
+               :transport,
+               :validation,
+               :backend_rejected,
+               :queue_exhausted,
+               :unknown
+             ])
+           )
+
     refute_received {:oban_insert, _}
   end
 

@@ -33,13 +33,20 @@ defmodule Scrypath.TestSupport.MeilisearchIntegration do
   def cleanup_repo!(database) do
     case Process.whereis(IntegrationRepo) do
       pid when is_pid(pid) ->
-        if Process.alive?(pid), do: GenServer.stop(pid)
+        # ExUnit can run teardown while the repo is already down; GenServer.stop/3
+        # then exits the on_exit handler with :noproc unless caught.
+        try do
+          if Process.alive?(pid), do: GenServer.stop(pid, :normal, :infinity)
+        catch
+          :exit, _ -> :ok
+        end
 
       _ ->
         :ok
     end
 
-    File.rm(database)
+    _ = File.rm(database)
+    :ok
   end
 
   def insert_posts!(rows) do

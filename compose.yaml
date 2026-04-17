@@ -1,0 +1,13 @@
+# Local Meilisearch for integration smoke tests.
+# Same image tag as .github/workflows/ci.yml services.
+#
+#   docker compose up -d
+#   SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700 mix verify.meilisearch_smoke
+#   docker compose down
+services:
+  meilisearch:
+    image: getmeili/meilisearch:v1.15
+    ports:
+      - "7700:7700"
+    environment:
+      MEILI_NO_ANALYTICS: "true"

@@ -16,4 +16,14 @@ defmodule Scrypath.Backend do
   @callback delete_documents(module(), [term()], keyword()) ::
               {:ok, term()} | {:error, term()}
   @callback search(module(), Query.t(), keyword()) :: {:ok, map()} | {:error, term()}
+
+  @doc """
+  Optional federated multi-search over multiple schemas in one HTTP round-trip.
+
+  Implementations return **raw** Meilisearch JSON maps (string keys) before
+  the search layer decorates them into structs.
+  """
+  @callback search_many([{module(), Query.t()}], keyword()) :: {:ok, map()} | {:error, term()}
+
+  @optional_callbacks [search_many: 2]
 end

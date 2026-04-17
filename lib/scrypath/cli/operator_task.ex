@@ -2,6 +2,7 @@ defmodule Scrypath.CLI.OperatorTask do
   @moduledoc false
 
   alias Scrypath.Operator.FailedWork
+  alias Scrypath.Operator.ReasonClassCounts
   alias Scrypath.Operator.Reconcile
   alias Scrypath.Operator.RecoveryAction
   alias Scrypath.Operator.State
@@ -136,19 +137,78 @@ defmodule Scrypath.CLI.OperatorTask do
     |> Enum.join("\n")
   end
 
-  def render_failed_work(schema, failed_work) do
-    lines = [
+  def render_failed_work(schema, failed_work, opts \\ []) do
+    include_summary? = Keyword.get(opts, :include_class_summary, true)
+
+    header = [
       "Schema: #{inspect(schema)}",
       "Failed work: #{length(failed_work)}"
     ]
 
+    rollup =
+      if include_summary? and failed_work != [] do
+        format_reason_class_counts_lines(FailedWork.reason_class_counts(failed_work))
+      else
+        []
+      end
+
     details =
       Enum.map(failed_work, fn work ->
-        "- id=#{work.id} source=#{work.source} state=#{work.state} operation=#{work.operation} retryable=#{yes_no(work.retryable?)} reason=#{work.reason || "n/a"}"
+        "- id=#{work.id} source=#{work.source} state=#{work.state} operation=#{work.operation} retryable=#{yes_no(work.retryable?)} reason_class=#{format_reason_class(work.reason_class)} reason=#{work.reason || "n/a"}"
       end)
 
-    Enum.join(lines ++ details, "\n")
+    Enum.join(header ++ rollup ++ details, "\n")
   end
+
+  @doc false
+  def failed_work_cli_json(schema, failed_work) when is_list(failed_work) do
+    failed_work
+    |> failed_work_public_map(schema)
+    |> Jason.encode!()
+  end
+
+  defp failed_work_public_map(failed_work, schema) do
+    counts = FailedWork.reason_class_counts(failed_work)
+
+    %{
+      "schema" => inspect(schema),
+      "entries" => Enum.map(failed_work, &failed_work_entry_public/1),
+      "counts" => %{
+        "version" => counts.version,
+        "total" => counts.total,
+        "by_class" => reason_class_counts_to_string_map(counts)
+      }
+    }
+  end
+
+  defp failed_work_entry_public(work) do
+    %{
+      "id" => work.id,
+      "reason_class" => format_reason_class(work.reason_class),
+      "source" => work.source |> to_string(),
+      "state" => work.state |> to_string(),
+      "operation" => work.operation |> to_string(),
+      "retryable" => work.retryable?
+    }
+  end
+
+  defp reason_class_counts_to_string_map(%ReasonClassCounts{by_class: bc}) do
+    Map.new(
+      [:transport, :validation, :backend_rejected, :queue_exhausted, :unknown],
+      fn k -> {Atom.to_string(k), Map.fetch!(bc, k)} end
+    )
+  end
+
+  defp format_reason_class_counts_lines(%ReasonClassCounts{} = counts) do
+    line =
+      [:transport, :validation, :backend_rejected, :queue_exhausted, :unknown]
+      |> Enum.map_join(", ", fn k -> "#{k}=#{Map.fetch!(counts.by_class, k)}" end)
+
+    ["Failed work by class:", "  #{line}"]
+  end
+
+  defp format_reason_class(nil), do: "unknown"
+  defp format_reason_class(atom) when is_atom(atom), do: Atom.to_string(atom)
 
   def render_retry_result(id, result) do
     [
@@ -174,18 +234,23 @@ defmodule Scrypath.CLI.OperatorTask do
       ]
       |> Enum.reject(&is_nil/1)
 
-    [
-      "Schema: #{inspect(report.schema)}",
-      "Mode: #{report.mode}",
-      "Index: #{report.index}",
-      "Drift signals: #{format_list(report.drift_signals)}",
-      "Failed work count: #{length(report.failed_work)}",
-      "Recommended actions: #{format_list(actions)}",
-      "Reindex live index: #{report.reindex.live_index}",
-      "Reindex target index: #{report.reindex.target_index}",
-      "Reindex task state: #{report.reindex.task_state}",
-      "Reindex cutover: #{report.reindex.cutover}"
-    ]
+    rollup = format_reason_class_counts_lines(report.failed_work_counts)
+
+    ([
+       "Schema: #{inspect(report.schema)}",
+       "Mode: #{report.mode}",
+       "Index: #{report.index}",
+       "Drift signals: #{format_list(report.drift_signals)}",
+       "Failed work count: #{length(report.failed_work)}"
+     ] ++
+       rollup ++
+       [
+         "Recommended actions: #{format_list(actions)}",
+         "Reindex live index: #{report.reindex.live_index}",
+         "Reindex target index: #{report.reindex.target_index}",
+         "Reindex task state: #{report.reindex.task_state}",
+         "Reindex cutover: #{report.reindex.cutover}"
+       ])
     |> Enum.join("\n")
   end
 

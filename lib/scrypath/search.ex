@@ -3,6 +3,9 @@ defmodule Scrypath.Search do
 
   alias Scrypath.Config
   alias Scrypath.Hydration
+  alias Scrypath.Meilisearch.FederatedDecode
+  alias Scrypath.MultiSearch.Entries
+  alias Scrypath.MultiSearchResult
   alias Scrypath.Query
   alias Scrypath.SearchResult
   alias Scrypath.Telemetry
@@ -41,6 +44,186 @@ defmodule Scrypath.Search do
       {:error, reason} -> raise RuntimeError, "search failed: #{inspect(reason)}"
     end
   end
+
+  @doc """
+  Federated search across multiple schemas.
+
+  Returns `{:error, {:validation_failed, schema, reason}}` when any entry fails
+  `validate_search_options/2` before dispatch. Partial per-schema transport or
+  hydration failures are represented on `failures:` inside `{:ok, %MultiSearchResult{}}`.
+  """
+  @spec search_many(list(), keyword()) :: {:ok, MultiSearchResult.t()} | {:error, term()}
+  def search_many(entries, shared_opts \\ []) when is_list(entries) and is_list(shared_opts) do
+    metadata = %{schema_count: length(entries)}
+
+    Telemetry.span([:scrypath, :search_many], metadata, fn ->
+      result = run_search_many(entries, shared_opts)
+      maybe_emit_search_many_partial(result)
+      {result, Telemetry.stop_metadata(result)}
+    end)
+  end
+
+  @spec search_many!(list(), keyword()) :: MultiSearchResult.t()
+  def search_many!(entries, shared_opts \\ []) do
+    case search_many(entries, shared_opts) do
+      {:ok, result} ->
+        result
+
+      {:error, reason} ->
+        raise RuntimeError, "search_many failed: " <> inspect(reason)
+    end
+  end
+
+  defp run_search_many(entries, shared_opts) do
+    with {:ok, triples} <- Entries.normalize(entries, shared_opts),
+         {:ok, prepared} <- validate_search_triples(triples) do
+      config = Config.resolve!(runtime_opts(shared_opts))
+      backend = Config.fetch_backend!(config)
+
+      paired_queries =
+        Enum.map(prepared, fn {schema, text, _merged, search_opts} ->
+          {schema, Query.new(text, search_opts)}
+        end)
+
+      if function_exported?(backend, :search_many, 2) do
+        run_native_search_many(backend, paired_queries, config)
+      else
+        run_sequential_search_many(backend, paired_queries, config)
+      end
+    end
+  end
+
+  defp validate_search_triples(triples) do
+    Enum.reduce_while(triples, {:ok, []}, fn {schema, text, merged}, {:ok, acc} ->
+      case Scrypath.Options.validate_search_options(schema, merged) do
+        {:ok, search_opts} ->
+          {:cont, {:ok, acc ++ [{schema, text, merged, search_opts}]}}
+
+        {:error, reason} ->
+          {:halt, {:error, {:validation_failed, schema, reason}}}
+      end
+    end)
+  end
+
+  defp run_native_search_many(backend, paired_queries, config) do
+    case backend.search_many(paired_queries, config) do
+      {:ok, raw} ->
+        indexed =
+          Enum.map(paired_queries, fn {schema, _} ->
+            {schema, backend.index_name(schema, config)}
+          end)
+
+        with {:ok, raw_pairs} <- FederatedDecode.per_schema_maps(raw, indexed) do
+          triples_raw =
+            Enum.zip_with(paired_queries, raw_pairs, fn {s, q}, {s2, raw_map} ->
+              true = s == s2
+              {s, q, raw_map}
+            end)
+
+          build_multi_result(triples_raw, [], config, raw)
+        end
+
+      {:error, reason} ->
+        {:error, {:transport_failed, reason}}
+    end
+  end
+
+  defp run_sequential_search_many(backend, paired_queries, config) do
+    {oks, failures} =
+      Enum.reduce(paired_queries, {[], []}, fn {schema, query}, {succ, fail} ->
+        case backend.search(schema, query, config) do
+          {:ok, raw} ->
+            {succ ++ [{schema, query, raw}], fail}
+
+          {:error, reason} ->
+            {succ, fail ++ [%{schema: schema, reason: reason}]}
+        end
+      end)
+
+    cond do
+      oks == [] and failures != [] ->
+        {:error, {:all_failed, failures}}
+
+      true ->
+        build_multi_result(oks, failures, config, nil)
+    end
+  end
+
+  defp build_multi_result(triples_raw, transport_failures, config, raw_response)
+       when is_list(triples_raw) and is_list(transport_failures) do
+    {ordered, hydration_failures} = parallel_decorate(triples_raw, config)
+    failures = transport_failures ++ hydration_failures
+
+    cond do
+      ordered == [] and failures != [] ->
+        {:error, {:all_failed, failures}}
+
+      true ->
+        by_schema = Map.new(ordered)
+        federation = extract_federation_meta(raw_response)
+
+        result =
+          MultiSearchResult.new(
+            ordered: ordered,
+            by_schema: by_schema,
+            failures: failures,
+            federation: federation
+          )
+
+        {:ok, result}
+    end
+  end
+
+  defp extract_federation_meta(nil), do: nil
+
+  defp extract_federation_meta(raw) when is_map(raw) do
+    case Map.get(raw, "federation") || Map.get(raw, :federation) do
+      nil -> nil
+      fed when is_map(fed) -> Scrypath.MultiSearchResult.Federation.new(fed)
+    end
+  end
+
+  defp parallel_decorate(triples_raw, config) do
+    timeout = Keyword.fetch!(config, :hydration_timeout)
+    max_c = max(1, length(triples_raw))
+
+    stream_results =
+      Task.async_stream(
+        triples_raw,
+        fn {schema, query, raw} ->
+          decorate_result(schema, query, raw, config)
+        end,
+        ordered: true,
+        max_concurrency: max_c,
+        timeout: timeout,
+        on_timeout: :kill_task
+      )
+      |> Enum.to_list()
+
+    Enum.zip(triples_raw, stream_results)
+    |> Enum.reduce({[], []}, fn
+      {{schema, _query, _raw}, {:ok, result}}, {succ, fail} ->
+        {succ ++ [{schema, result}], fail}
+
+      {{schema, _query, _raw}, {:exit, :timeout}}, {succ, fail} ->
+        {succ, fail ++ [%{schema: schema, reason: :hydration_timeout}]}
+
+      {{schema, _query, _raw}, {:exit, reason}}, {succ, fail} ->
+        {succ, fail ++ [%{schema: schema, reason: {:hydration_exit, reason}}]}
+    end)
+  end
+
+  defp maybe_emit_search_many_partial({:ok, %MultiSearchResult{failures: []}}), do: :ok
+
+  defp maybe_emit_search_many_partial({:ok, %MultiSearchResult{failures: fs}}) when fs != [] do
+    :telemetry.execute(
+      [:scrypath, :search_many, :partial],
+      %{count: length(fs)},
+      %{failure_count: length(fs)}
+    )
+  end
+
+  defp maybe_emit_search_many_partial(_), do: :ok
 
   defp runtime_opts(opts) do
     Keyword.drop(opts, [:filter, :sort, :page, :facets, :facet_filter])

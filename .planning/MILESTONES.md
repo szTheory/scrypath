@@ -19,6 +19,16 @@
 
 ---
 
+## v1.4 Public package parity & operator depth (pre-close — not archived)
+
+**Status:** Engineering for phases **25–26** closed on branch; **SHIP-01..03** and ROADMAP Phase **24** checkbox remain **until Hex publish** on maintainer timeline.
+
+**Evidence:** `.planning/v1.4-MILESTONE-AUDIT.md` (automated gates: **`mix verify.phase11`**, **`mix verify.phase26`** pass; **`mix verify.workspace_clean`** expected after clean commit).
+
+**When shipped:** Run **`/gsd-complete-milestone v1.4`**, append a shipped row to the table below, and add archives `milestones/v1.4-ROADMAP.md` + `milestones/v1.4-REQUIREMENTS.md`.
+
+---
+
 ## v1.2 Public Release Trust and Operator Visibility (Shipped: 2026-04-17)
 
 **Phases completed:** 7 phases, 13 plans, 22 tasks
@@ -43,3 +53,4 @@
 | `v1.1` | 2026-04-16 | 3 | 9 | Archived | Release hardening, docs-safety fixes, and launch-readiness evidence chain archived in `.planning/milestones/v1.1-ROADMAP.md`. |
 | `v1.2` | 2026-04-17 | 7 | 13 | Archived | Public release trust, operator visibility, internal operations seam, and the first live public release proof archived in `.planning/milestones/v1.2-ROADMAP.md`. |
 | `v1.3` | 2026-04-17 | 6 | 18 | Archived | Search power (relevance, facets, multi-index), operator polish + drift recovery, release-parity gates, v1.2 validation closure — `v1.3-ROADMAP.md` + `v1.3-REQUIREMENTS.md`. |
+| `v1.4` | — | 3 | 8 | Pre-close | Hex **SHIP** pending; audit `v1.4-MILESTONE-AUDIT.md`. Archive after publish. |

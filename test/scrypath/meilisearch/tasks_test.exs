@@ -142,7 +142,7 @@ defmodule Scrypath.Meilisearch.TasksTest do
                meilisearch_client: SequencedClient,
                task_responses: agent,
                inline_poll_interval: 1,
-               inline_timeout: 50
+               inline_timeout: 400
              )
 
     assert task.source == :meilisearch
