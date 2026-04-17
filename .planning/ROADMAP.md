@@ -20,9 +20,9 @@
 - [x] **Phase 18: Release-Parity Gate + Node 20 CI Cleanup** — Maintainers ship a v1.3 release that mechanically cannot diverge from what they approved on disk. (completed 2026-04-17)
 - [x] **Phase 19: Relevance Tuning** — Phoenix devs declare synonyms, typo tolerance, ranking rules, distinct attribute, and stop words on the schema and see them applied safely through the managed reindex pipeline. (implementation + docs landed 2026-04-17; optional `feat(19):` release-please commit still at maintainer discretion)
 - [x] **Phase 20: Faceted Search + LiveView Guide** — Phoenix devs declare `faceting:` on a schema and power a complete faceted LiveView UI (checkbox sidebar, chip row, range, search-within-facet) from one `Scrypath.search/3` call. (implementation landed 2026-04-17)
-- [ ] **Phase 21: Multi-Index Search** — Phoenix devs run a single federated `Scrypath.search_many/2` across N schemas and get back one ordered, schema-grouped result with per-schema facets and an explicit partial-failure envelope.
-- [ ] **Phase 22: Operator Polish + Drift Recovery Guide** — Operators triage failed sync work by reason class and recover from every common drift scenario using only existing `Scrypath.*` + `mix scrypath.*` verbs.
-- [ ] **Phase 23: v1.2 VALIDATION.md Closure** — v1.2 Nyquist audit flips from `partial` to `compliant` with runnable-test-cited evidence for phases 13, 14, 15.
+- [x] **Phase 21: Multi-Index Search** — Phoenix devs run a single federated `Scrypath.search_many/2` across N schemas and get back one ordered, schema-grouped result with per-schema facets and an explicit partial-failure envelope. (completed 2026-04-17)
+- [x] **Phase 22: Operator Polish + Drift Recovery Guide** — Operators triage failed sync work by reason class and recover from every common drift scenario using only existing `Scrypath.*` + `mix scrypath.*` verbs. (completed 2026-04-17)
+- [x] **Phase 23: v1.2 VALIDATION.md Closure** — v1.2 Nyquist audit flips from `partial` to `compliant` with runnable-test-cited evidence for phases 13, 14, 15. (completed 2026-04-17)
 
 ## Phase Details
 
@@ -90,8 +90,13 @@
   3. Phoenix dev whose one sub-query fails (validation, transport, or hydration timeout) still receives `{:ok, %MultiSearchResult{}}` with the failed schema moved to `failures: [%{schema: ..., reason: ...}]` and all other schemas successful; complete failure surfaces as `{:error, {:all_failed, ...}}` or the canonical error tuples (`:empty_schema_list`, `:too_many_schemas`, `:invalid_options`).
   4. Phoenix dev exceeding cardinality rails (`max_schemas: 10`, per-entry `page.size: 50`, `federation_limit: 200`, `hydration_timeout: 5000`, `federation_timeout: 7500`) sees an explicit error — never silent truncation.
   5. Phoenix dev opening `guides/multi-index-search.md` finds a worked 4-schema LiveView dashboard example with per-schema facets, partial-failure banner, and cross-links to the faceted-search and sync-modes guides.
-**Plans:** TBD
+**Plans:** 4/4 complete (`21-01` structs + entries rails, `21-02` backend + `/multi-search`, `21-03` orchestration + telemetry + `!`, `21-04` guide + MULTI-08 integration)
 **UI hint**: yes
+
+- [x] 21-01-PLAN.md — `%MultiSearchResult{}`, federation meta, `MultiSearch.Entries` rails + tests (MULTI-01..04, MULTI-10)
+- [x] 21-02-PLAN.md — optional `Backend.search_many/2`, `/multi-search` client, federated decode, `FakeBackend` stub (MULTI-08, MULTI-12)
+- [x] 21-03-PLAN.md — `Scrypath.search_many/2`, sequential fallback, telemetry, concurrent hydration (MULTI-05..07, MULTI-09, MULTI-12, MULTI-13)
+- [x] 21-04-PLAN.md — `guides/multi-index-search.md`, ExDoc extras, docs contract, README, integration test (MULTI-08, MULTI-11)
 
 ### Phase 22: Operator Polish + Drift Recovery Guide
 **Goal:** Operators triage failed sync work with enough context to pick a next action without reading library internals, and recover from every common drift scenario using only already-shipped `Scrypath.*` and `mix scrypath.*` verbs.
@@ -102,7 +107,9 @@
   2. Operator inspecting an inline or manual failure sees `attempt: nil, max_attempts: nil` (never a misleading `1/1`) and recognizes `nil` as "the source system does not expose retry attempts."
   3. Operator opening `guides/drift-recovery.md` finds six concrete SRE-runbook-style scenarios (empty index, stale results after sync success, backfill/count divergence, failed-work pileup, settings drift, stuck reindex mid-cutover), each following symptom → diagnosis → action → verify and using only existing `mix scrypath.*` + `Scrypath.*` verbs.
   4. Operator wiring a telemetry handler on `[:scrypath, :operator, :failed_work, :observed]` receives one event per constructed `FailedWork.t()` with `reason_class`, `schema`, and `mode` in metadata.
-**Plans:** TBD
+**Plans:** 2/2 complete
+- [x] 22-01-PLAN.md — `FailedWork` fields, classifier, telemetry, tests (OPS-05..08, OPS-10)
+- [x] 22-02-PLAN.md — `guides/drift-recovery.md`, ExDoc, docs contract (OPS-09)
 
 ### Phase 23: v1.2 VALIDATION.md Closure
 **Goal:** v1.2 Nyquist audit flips from `partial` to `compliant` with runnable-test-cited evidence; no pencil-whitewashing, no prose-only closures.
@@ -112,7 +119,8 @@
   1. Maintainer opening the v1.2 milestone archive finds a `VALIDATION.md` for phase 13 (operator primitives) that cites runnable tests in `test/scrypath/operator/*_test.exs` and captured `mix verify.phase13 --skip-integration` output.
   2. Maintainer opening the v1.2 milestone archive finds a `VALIDATION.md` for phase 14 (mix tasks and guides) that cites runs of `test/scrypath/mix_tasks/operator_tasks_test.exs` plus captured `mix verify.phase14` output.
   3. Maintainer opening the v1.2 milestone archive finds a `VALIDATION.md` for phase 15 (verify operator primitives) that cites `test/scrypath/live_operator_verification_test.exs` live integration, and sees `v1.2-MILESTONE-AUDIT.md` nyquist coverage flipped from `partial` to `compliant`.
-**Plans:** TBD
+**Plans:** 1/1 complete (milestone-archive documentation + audit YAML/narrative alignment)
+- [x] 23-01 — `.planning/milestones/v1.2/{README,13-VALIDATION,14-VALIDATION,15-VALIDATION}.md` + `v1.2-MILESTONE-AUDIT.md` Nyquist `partial` → `compliant`
 
 ## Progress
 
@@ -121,9 +129,9 @@
 | 18. Release-Parity Gate + Node 20 CI Cleanup | 7/7 | Complete    | 2026-04-17 |
 | 19. Relevance Tuning | 2/7 | Executing   | - |
 | 20. Faceted Search + LiveView Guide | 4/4 | Complete    | 2026-04-17 |
-| 21. Multi-Index Search | 0/? | Not started | - |
-| 22. Operator Polish + Drift Recovery Guide | 0/? | Not started | - |
-| 23. v1.2 VALIDATION.md Closure | 0/? | Not started | - |
+| 21. Multi-Index Search | 4/4 | Complete    | 2026-04-17 |
+| 22. Operator Polish + Drift Recovery Guide | 2/2 | Complete    | 2026-04-17 |
+| 23. v1.2 VALIDATION.md Closure | 1/1 | Complete    | 2026-04-17 |
 
 ## Backlog
 
@@ -135,4 +143,4 @@
 - Deeper drift/schema-diff operator tooling — reserved for v1.4 once v1.3 feature work produces real-world recovery scenarios.
 
 ---
-*Last updated: 2026-04-17 — v1.3 roadmap created, 6 phases (18–23), 44 requirements mapped with 100% coverage*
+*Last updated: 2026-04-17 — Phase 23 complete; v1.2 Nyquist validation artifacts under `.planning/milestones/v1.2/`*

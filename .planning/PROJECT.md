@@ -24,7 +24,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 - [ ] Deepen Meilisearch-native search power through Scrypath-owned APIs: faceted search, relevance tuning (typo/synonyms/ranking), and multi-index search — without breaking sync, backfill, or operator contracts.
 - [ ] Surface narrow operator-polish improvements (failed-work depth plus a drift recovery guide) without expanding the operator surface beyond what early adopter feedback justifies.
-- [ ] Retire remaining release/tooling debt: GitHub Actions Node 20 deprecation warnings and VALIDATION.md closure for v1.2 phases 13, 14, 15.
+- [ ] Retire remaining release/tooling debt: GitHub Actions Node 20 deprecation warnings (VALIDATION.md closure for v1.2 phases 13–15 completed 2026-04-17).
 
 ### Out of Scope
 
@@ -80,7 +80,7 @@ Scrypath has shipped three milestones and one real public Hex release, `0.3.0`. 
 - Relevance tuning: declarative per-schema settings for synonyms, typo tolerance, ranking rules, distinct attribute, and stop words applied safely through the existing reindex pipeline
 - Multi-index search: `Scrypath.search_many/2` federated queries across N schemas with per-schema validation preserved and a unified hydration path
 - Operator polish: richer `FailedWork.t()` (attempt count, error reason class, last attempt timestamp) plus an end-to-end drift recovery guide
-- Release and tooling debt retirement: GitHub Actions upgraded past Node 20 deprecation warnings and missing VALIDATION.md artifacts closed for v1.2 phases 13, 14, 15
+- Release and tooling debt retirement: GitHub Actions upgraded past Node 20 deprecation warnings (v1.2 phases 13–15 VALIDATION.md closure completed 2026-04-17 under `.planning/milestones/v1.2/`)
 
 **Key context:** Direction chosen by extrapolation rather than a single explicit adopter request — the evidence from the codebase gap analysis, planning history, and ecosystem research converges on "deepen Meilisearch-first before widening backends". Persona 2 (growth-stage Phoenix SaaS) is the primary cohort for v1.3 impact. Reference libraries (Searchkick, Laravel Scout) shipped comprehensive first-backend features before adding a second adapter, and Scrypath is deliberately at that inflection point.
 

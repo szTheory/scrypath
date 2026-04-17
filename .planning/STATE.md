@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Search Power That Phoenix Teams Reach For
-current_phase: 21
-current_phase_name: multi-index search
-current_plan: Not started
-status: ready
-stopped_at: Phase 20 execution complete (faceting + guide shipped in repo)
-last_updated: "2026-04-17T23:59:00.000Z"
+current_phase: 23
+current_phase_name: v1.2 VALIDATION.md closure
+current_plan: 23-01 complete
+status: complete
+stopped_at: Phase 23 complete — v1.2 milestone VALIDATION.md + Nyquist audit closure
+last_updated: "2026-04-17T21:15:00.000Z"
 last_activity: 2026-04-17
 progress:
   total_phases: 6
-  completed_phases: 3
-  total_plans: 11
-  completed_plans: 11
-  percent: 50
+  completed_phases: 6
+  total_plans: 18
+  completed_plans: 18
+  percent: 100
 ---
 
 # Project State
@@ -24,21 +24,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Phase 21 — multi-index search (`search_many/2` path per roadmap)
+**Current focus:** v1.3 milestone phases 18–23 complete; follow-up is release / next-milestone planning at maintainer discretion.
 
 ## Current Position
 
-Phase: 21 (multi-index search) — NEXT
-Plan: TBD on roadmap
-Previous: Phase 20 (faceted search + LiveView guide) — complete in working tree (2026-04-17)
+Phase: 23 (v1.2 VALIDATION.md closure) — **complete** (2026-04-17)
+Plan: 23-01 — milestone archive `VALIDATION.md` + Nyquist audit alignment
+Previous: Phase 22 (operator polish + drift recovery guide) — complete (2026-04-17)
+Phase 21 (multi-index search) — complete (2026-04-17)
+Phase 20 (faceted search + LiveView guide) — complete
 Phase 19 (relevance tuning) — complete
 Phase 18: release-parity gate — complete (2026-04-17)
-Current Plan: Not started
-Status: Ready to plan Phase 21 (`/gsd-plan-phase 21`)
+Status: Phase 23 shipped — `.planning/milestones/v1.2/*-VALIDATION.md`, `v1.2-MILESTONE-AUDIT.md` Nyquist `compliant`
 Last activity: 2026-04-17
-Last Activity Description: Phase 20 executed inline — faceting schema/search/settings + `guides/faceted-search-with-phoenix-liveview.md`
+Last Activity Description: Phase 23 — v1.2 validation evidence + REQUIREMENTS VALID-* closure
 
-Progress: v1.3 phases 18–20 complete in repo; next milestone work is Phase 21 per roadmap order
+Progress: v1.3 phases 18–23 complete in repo
 
 ## Accumulated Context
 
@@ -94,23 +95,20 @@ Progress: v1.3 phases 18–20 complete in repo; next milestone work is Phase 21 
 
 ## Session Continuity
 
-Last session: 2026-04-17 (Phase 20 execution)
-Stopped at: Phase 20 implementation + guide landed in working tree; STATE advanced to Phase 21
-Resume: `.planning/ROADMAP.md` § Phase 21 — `/gsd-discuss-phase 21` or `/gsd-plan-phase 21` before execution
+Last session: 2026-04-17 (Phase 23 validation closure)
+Stopped at: All v1.3 roadmap phases 18–23 complete; VALID-01..03 satisfied
+Resume: Maintainer chooses next milestone (`/gsd-progress`, release cut, or backlog)
 
 ## Current Status
 
 - v1.0, v1.1, and v1.2 all archived; `scrypath 0.3.0` live on Hex with verified HexDocs and recovery runbooks.
-- Milestone `v1.3` "Search Power That Phoenix Teams Reach For" is active with 6 phases (18–23) mapped against 44 requirements at 100% coverage.
-- Phase 18 (release-parity gate) shipped; Phases 19–20 implementation is complete on branch — next milestone work is Phase 21 (multi-index search) per roadmap order.
+- Milestone `v1.3` "Search Power That Phoenix Teams Reach For" — all six phases (18–23) mapped; Phase 23 closed Nyquist validation debt for v1.2 phases 13–15 (see `.planning/milestones/v1.2/`).
 - v1.3 non-goals (locked): no second public backend, no vector/hybrid/semantic search, no breaking changes to v1.2 public contracts, no dashboard surface, no new `Scrypath.recover/*` verb.
 
 ## Next Command
 
-1. Review `git diff` for Phase 20 + planning updates; commit when satisfied (`mix test --exclude external_meilisearch`; clean tree for `mix verify.workspace_clean` in CI).
-2. `/gsd-progress` — sanity-check progress vs disk (or `--forensic` for integrity audit).
-3. `/gsd-discuss-phase 21` — recommended before planning multi-index search.
-4. Optional: conventional `feat(20): …` or combined release commit at maintainer discretion.
+1. Review `git diff`; commit when satisfied.
+2. `/gsd-progress` or `/gsd-new-milestone` — decide whether v1.3 is closed and what ships next.
 
 ## Performance Metrics
 
@@ -126,4 +124,4 @@ Resume: `.planning/ROADMAP.md` § Phase 21 — `/gsd-discuss-phase 21` or `/gsd-
 | Phase 17 | 01 | 24 min | 2 | 6 | 2026-04-17 |
 
 ---
-*Last updated: 2026-04-17 — Phase 20 executed; current focus Phase 21*
+*Last updated: 2026-04-17 — Phase 23 validation closure; v1.3 phases 18–23 complete*
