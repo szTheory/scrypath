@@ -45,7 +45,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-17)
 
 ### Blockers / Concerns
 
-- Large working tree (multi-phase work) — review `git diff`, then commit in slices before SHIP / branch protection.
+- **SHIP:** Hex publish + Release Please merge still the active gate for closing v1.4 (see **`docs/releasing.md`**).
 
 ### Deferred Items
 
@@ -58,7 +58,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-17)
 |------|---------------------|
 | `mix verify.phase11` | pass |
 | `mix verify.phase26` | pass |
-| `mix verify.workspace_clean` | **fail** — dirty working tree; re-run on clean ref / after staging commits |
+| `mix verify.workspace_clean` | pass (after last commit) |
 | `mix format --check-formatted` | pass |
 
 **Milestone audit file:** `.planning/v1.4-MILESTONE-AUDIT.md` (`status: implementation_ready_pending_hex_ship`).
@@ -66,7 +66,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-17)
 ## Next Command
 
 0. Read **`.planning/v1.4-MILESTONE-AUDIT.md`** — confirms engineering vs **SHIP** boundary.
-1. **Commit** the working tree in sensible slices until **`mix verify.workspace_clean`** is green locally (or rely on CI on a clean PR branch).
+1. **`git push`** when you are ready for CI / collaborators.
 2. **Publish** per **`docs/releasing.md`** (Release Please → merge release PR → Actions publish).
 3. **Tick** Phase **24** `[x]` in **`ROADMAP.md`** and **`SHIP-01..03`** in **`REQUIREMENTS.md`** when the published version and parity checks match maintainer intent.
 4. **`/gsd-complete-milestone v1.4`** — archive roadmap + requirements, evolve **PROJECT.md**, tag only when you intentionally name the shipped semver (may be **`0.3.1`**, **`0.4.0`**, or another Release Please outcome — align with **`mix.exs`** / manifest / tag).
