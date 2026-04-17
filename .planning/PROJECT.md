@@ -25,7 +25,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ### Active
 
-- [ ] Choose the next milestone focus from real adopter pressure (deeper operator tooling, Hex/main convergence for new surfaces, or other) — see `/gsd-new-milestone`.
+- [ ] Ship **v1.4**: Hex release parity for the v1.3 library surface, narrow `hot_apply/3` for synonym/stop-word/typo settings, and operator-facing failure rollups by `reason_class`.
 
 ### Out of Scope
 
@@ -46,7 +46,7 @@ The repository has **four** archived planning milestones (`v1.0`–`v1.3`); see 
 - `v1.2` shipped the first live public release as `scrypath 0.3.0`, the internal operations seam, operator visibility APIs, thin Mix tasks, and milestone-close verification/bookkeeping repairs.
 - `v1.3` shipped planning-track delivery of relevance tuning, faceted search, multi-index search, operator polish + drift recovery guide, release-parity gates, and v1.2 Nyquist validation closure (archived 2026-04-17).
 
-The library remains publicly released on Hex (`0.3.0` as of this writing); **the next Hex version bump** is a separate release action from closing a planning milestone. The next planning milestone should follow real maintainer and adopter pressure.
+The library remains publicly released on Hex (`0.3.0` until **v1.4 Phase 24** ships the next artifact). v1.4 planning explicitly targets **package parity** between `main` and Hex for the v1.3 feature surface, then two narrow follow-ons (`hot_apply`, rollups).
 
 ## Constraints
 
@@ -73,14 +73,19 @@ The library remains publicly released on Hex (`0.3.0` as of this writing); **the
 
 Scrypath has **four archived planning milestones** (`v1.0`–`v1.3`) and a **published** Hex release line (`scrypath 0.3.0` on Hex at the time of the v1.3 planning close). Maintainers have release-parity gates (`mix verify.workspace_clean`, `mix verify.release_parity`), operator visibility and drift-recovery guidance, Meilisearch-native search depth (relevance, facets, multi-index) in the development tree aligned with v1.3 requirements, and closed Nyquist evidence for v1.2 operator phases under `.planning/milestones/v1.2/`.
 
-## Next milestone
+## Current Milestone: v1.4 Public package parity & operator depth
 
-**Not selected** — run `/gsd-new-milestone` to capture goals, requirements, and roadmap for v1.4 (or another version) after you decide what ships next on Hex and in docs.
+**Goal:** Publish the Meilisearch-native depth built in v1.3 through a normal **Hex** release with existing verify gates, add a **bounded** live-index `hot_apply/3` for the small settings subset adopters tweak between reindexes, and improve **operator triage** with failure rollups — without new recovery verbs or backend abstraction promises.
 
-## Next Milestone Goals (placeholder)
+**Target features:**
 
-- Collect adopter feedback to choose between deeper operator tooling, broader backend support, or polish on the shipped Meilisearch-first path.
-- Hold non-goals until pressure proves the contract should widen.
+- Release engineering: semver bump, Release Please alignment, README/ExDoc pins, `mix verify.phase11` / workspace / parity green on the shipping ref.
+- Settings: `hot_apply/3` for synonyms, `stop_words`, `typo_tolerance` only; docs for hot vs managed reindex.
+- Operator: rollup counts by `reason_class` on the failed-sync inspection path.
+
+## Next Milestone Goals (v1.4+ / parking)
+
+- Hierarchical facets, advanced multi-index scoring, deeper drift tooling — only after v1.4 ships and adopters pull the new Hex artifact.
 
 ## Evolution
 
@@ -100,4 +105,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-17 after v1.3 planning milestone archive*
+*Last updated: 2026-04-17 — v1.4 milestone started (`/gsd-new-milestone`)*
