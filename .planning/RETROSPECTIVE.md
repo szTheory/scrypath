@@ -6,7 +6,31 @@ Living notes across planning milestones. Append new sections at the top.
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|
+| v1.4 | 24–26 | Hex package parity + narrow hot settings + operator rollups |
 | v1.3 | 18–23 | Meilisearch-native depth + release parity + operator honesty |
+
+---
+
+## Milestone: v1.4 — Public package parity & operator depth
+
+**Shipped (planning):** 2026-04-17  
+**Phases:** 3 | **Plans:** 8 | **Hex:** `scrypath 0.3.1`
+
+### What was built
+
+Release automation tightened for pre-1.0 semver; post-publish `release_parity` wired on both publish workflows; maintainer docs + README pins; bounded `hot_apply/3` for three live settings keys with Mix integration; failure rollups by `reason_class` with dedicated verify task.
+
+### What worked
+
+Reusing the existing Release Please + Actions path kept the ship mechanical; contract tests on workflow YAML prevented ordering regressions.
+
+### What was inefficient
+
+Milestone bookkeeping briefly lagged the branch (Phases 25–26 landed before Phase 24 SHIP); resolved by explicit SHIP gate + checklist before archive.
+
+### Key lessons
+
+Treat “planning milestone complete” and “Hex artifact live” as separate gates in STATE until both are true, then run **`/gsd-complete-milestone`** immediately after to avoid drift.
 
 ---
 

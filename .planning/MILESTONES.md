@@ -19,13 +19,17 @@
 
 ---
 
-## v1.4 Public package parity & operator depth (Shipped: 2026-04-17)
+## v1.4 Public package parity & operator depth (Shipped + archived: 2026-04-17)
 
 **Phases completed:** 3 phases (24–26), 8 plans
 
-**Hex:** **`scrypath 0.3.1`** on https://hex.pm/packages/scrypath/0.3.1 — Release Please PR **#5** merged to **`main`**, publish job green (verify **`release_publish`** + **`release_parity`** on Actions).
+**Hex:** **`scrypath 0.3.1`** — https://hex.pm/packages/scrypath/0.3.1 — Release Please PR **#5**, Actions publish run **24589910084** (`release_publish` + `release_parity` green).
 
-**Still optional:** Run **`/gsd-complete-milestone v1.4`** to append the formal shipped row + write **`milestones/v1.4-ROADMAP.md`** / **`milestones/v1.4-REQUIREMENTS.md`** archives per GSD.
+**Key accomplishments:** Release Please + post-publish parity on both publish workflows; README / `docs/releasing.md` / contract tests aligned; **`hot_apply/3`** + `mix scrypath.settings.hot_apply` + integration smoke; **`failed_sync_work/2`** rollups + `%Reconcile{}` + **`mix verify.phase26`**.
+
+**Known deferred items at close:** 3 `audit-open` rows acknowledged (2 missing quick_task stubs + Phase 18 UAT noise) — see **`STATE.md` §Deferred Items**.
+
+**Archives:** `milestones/v1.4-ROADMAP.md`, `milestones/v1.4-REQUIREMENTS.md`, `milestones/v1.4-MILESTONE-AUDIT.md` · **Git tag:** `v1.4` (planning milestone marker; package release tag is **`scrypath-v0.3.1`**).
 
 ---
 
@@ -53,4 +57,4 @@
 | `v1.1` | 2026-04-16 | 3 | 9 | Archived | Release hardening, docs-safety fixes, and launch-readiness evidence chain archived in `.planning/milestones/v1.1-ROADMAP.md`. |
 | `v1.2` | 2026-04-17 | 7 | 13 | Archived | Public release trust, operator visibility, internal operations seam, and the first live public release proof archived in `.planning/milestones/v1.2-ROADMAP.md`. |
 | `v1.3` | 2026-04-17 | 6 | 18 | Archived | Search power (relevance, facets, multi-index), operator polish + drift recovery, release-parity gates, v1.2 validation closure — `v1.3-ROADMAP.md` + `v1.3-REQUIREMENTS.md`. |
-| `v1.4` | — | 3 | 8 | Pre-close | Hex **SHIP** pending; audit `v1.4-MILESTONE-AUDIT.md`. Archive after publish. |
+| `v1.4` | 2026-04-17 | 3 | 8 | Archived | Hex **0.3.1**; `v1.4-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`; milestone tag **`v1.4`**. |

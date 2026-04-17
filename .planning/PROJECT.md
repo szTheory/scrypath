@@ -22,10 +22,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] Meilisearch-native search depth for growth-stage Phoenix teams — relevance tuning, faceted search, multi-index `search_many/2`, plus operator polish and drift recovery guidance — validated in planning milestone **v1.3** (2026-04-17).
 - [x] Release-parity gates (`verify.workspace_clean`, `verify.release_parity`) and CI runtime hygiene (Node pin uplift) validated in v1.3.
 - [x] v1.2 Nyquist validation debt (phases 13–15 evidence) closed in v1.3.
+- [x] **v1.4** (2026-04-17): Hex **`scrypath 0.3.1`** with Release Please + post-publish `release_publish` / `release_parity` gates; narrow `hot_apply/3` for synonyms / stop words / typo tolerance; operator failure rollups by `reason_class` (`mix verify.phase26`).
 
 ### Active
 
-- [ ] Ship **v1.4**: Hex release parity for the v1.3 library surface, narrow `hot_apply/3` for synonym/stop-word/typo settings, and operator-facing failure rollups by `reason_class`.
+- [ ] **Next milestone** — define with **`/gsd-new-milestone`** (see ROADMAP backlog for candidate themes).
 
 ### Out of Scope
 
@@ -39,14 +40,15 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has **four** archived planning milestones (`v1.0`–`v1.3`); see `.planning/milestones/v*-ROADMAP.md` and `MILESTONES.md`.
+The repository has **five** archived planning milestones (`v1.0`–`v1.4`); see `.planning/milestones/v*-ROADMAP.md` and `MILESTONES.md`.
 
 - `v1.0` shipped the Meilisearch-first Ecto-native indexing core, search/hydration path, Oban support, reindex workflows, public Phoenix docs, and release automation baseline.
 - `v1.1` shipped release hardening, docs-safety fixes, `mix verify.phase10`, and the launch-readiness evidence chain.
 - `v1.2` shipped the first live public release as `scrypath 0.3.0`, the internal operations seam, operator visibility APIs, thin Mix tasks, and milestone-close verification/bookkeeping repairs.
 - `v1.3` shipped planning-track delivery of relevance tuning, faceted search, multi-index search, operator polish + drift recovery guide, release-parity gates, and v1.2 Nyquist validation closure (archived 2026-04-17).
+- `v1.4` shipped **Hex `scrypath 0.3.1`**, the bounded live-index `hot_apply/3` path, and operator failure rollups — archived 2026-04-17 (`milestones/v1.4-ROADMAP.md`, `milestones/v1.4-REQUIREMENTS.md`).
 
-The library remains publicly released on Hex (`0.3.0` until **v1.4 Phase 24** ships the next artifact). v1.4 planning explicitly targets **package parity** between `main` and Hex for the v1.3 feature surface, then two narrow follow-ons (`hot_apply`, rollups).
+The current public line on Hex is **`scrypath 0.3.1`**. The next planning milestone is intentionally undefined until **`/gsd-new-milestone`** runs.
 
 ## Constraints
 
@@ -68,24 +70,19 @@ The library remains publicly released on Hex (`0.3.0` until **v1.4 Phase 24** sh
 | Support inline, Oban, and manual sync modes in v1 | Teams need a simple local path, a production queue path, and an explicit escape hatch | Validated in v1.0 and clarified in v1.2 operator guides |
 | Expose operator visibility through Scrypath-owned APIs and thin Mix tasks, not a dashboard product | Early adopters need explicit operational visibility without a second product surface | Shipped and validated in v1.2 |
 | Defer public multi-backend support and advanced relevance features until real adoption pressure appears | Premature abstraction and feature breadth would increase API risk before the core is proven | Still deferred after the first public release |
+| Ship v1.4 as additive Hex + ops depth (`0.3.1`) without widening backend or reconcile forks | Keeps the public story honest while closing the package parity gap | ✓ Good — shipped 2026-04-17 |
+| Narrow `hot_apply/3` to synonym / stop-word / typo-tolerance keys only | Prevents silent widening into ranking rules and other managed-pipeline settings | ✓ Good — TUNE14-01/02 |
+| Operator rollups as additive metadata on `failed_sync_work/2` | Report-first discipline; no new recovery verbs | ✓ Good — OPS14-01 / `mix verify.phase26` |
 
 ## Current State
 
-Scrypath has **four archived planning milestones** (`v1.0`–`v1.3`) and a **published** Hex release line (`scrypath 0.3.0` on Hex at the time of the v1.3 planning close). Maintainers have release-parity gates (`mix verify.workspace_clean`, `mix verify.release_parity`), operator visibility and drift-recovery guidance, Meilisearch-native search depth (relevance, facets, multi-index) in the development tree aligned with v1.3 requirements, and closed Nyquist evidence for v1.2 operator phases under `.planning/milestones/v1.2/`.
+Scrypath has **five archived planning milestones** (`v1.0`–`v1.4`). **Hex:** `scrypath` **`0.3.1`** (published 2026-04-17). The v1.3-era Meilisearch-native surface (relevance, facets, multi-index, operator polish) plus v1.4’s **hot_apply** subset and **failure rollups** are on the default install line. Release-parity gates (`mix verify.workspace_clean`, `mix verify.release_parity`) and `mix verify.phase11` remain the mechanical trust chain documented in **`docs/releasing.md`**.
 
-## Current Milestone: v1.4 Public package parity & operator depth
+There is **no active planning milestone** until you run **`/gsd-new-milestone`**. ROADMAP backlog lists post–v1.4 candidate themes.
 
-**Goal:** Publish the Meilisearch-native depth built in v1.3 through a normal **Hex** release with existing verify gates, add a **bounded** live-index `hot_apply/3` for the small settings subset adopters tweak between reindexes, and improve **operator triage** with failure rollups — without new recovery verbs or backend abstraction promises.
+## Next milestone goals (parking lot)
 
-**Target features:**
-
-- Release engineering: semver bump, Release Please alignment, README/ExDoc pins, `mix verify.phase11` / workspace / parity green on the shipping ref.
-- Settings: `hot_apply/3` for synonyms, `stop_words`, `typo_tolerance` only; docs for hot vs managed reindex.
-- Operator: rollup counts by `reason_class` on the failed-sync inspection path.
-
-## Next Milestone Goals (v1.4+ / parking)
-
-- Hierarchical facets, advanced multi-index scoring, deeper drift tooling — only after v1.4 ships and adopters pull the new Hex artifact.
+See **`.planning/ROADMAP.md` § Backlog** — hierarchical facets, multi-index scoring, drift tooling, per-query relevance overrides, etc. Promote items into the next milestone only after **`/gsd-new-milestone`** locks scope.
 
 ## Evolution
 
@@ -105,4 +102,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-17 — v1.4 milestone started (`/gsd-new-milestone`)*
+*Last updated: 2026-04-17 — v1.4 milestone archived (`/gsd-complete-milestone v1.4`); Hex `0.3.1` current*

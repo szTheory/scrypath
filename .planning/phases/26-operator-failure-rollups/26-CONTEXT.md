@@ -70,7 +70,7 @@ None — `gsd-sdk query todo.match-phase` was unavailable during discuss-phase.
 ### Roadmap and requirements
 
 - `.planning/ROADMAP.md` — § Phase 26: Operator failure rollups; goal; success criteria; non-goals
-- `.planning/REQUIREMENTS.md` — **OPS14-01**; traceability table
+- `.planning/milestones/v1.4-REQUIREMENTS.md` — **OPS14-01**; traceability table
 - `.planning/PROJECT.md` — v1.4 milestone; operator rollup bullet
 
 ### Prior phase and research
