@@ -26,6 +26,13 @@ Release Please manages versioned entries after this baseline.
 
 - Release-parity gates were motivated by a historical **tag vs default-branch** divergence in an earlier cycle; see `docs/releasing.md` § Historical context.
 
+## [0.3.2](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.1...scrypath-v0.3.2) (2026-04-17)
+
+
+### Miscellaneous Chores
+
+* **main:** release 0.3.2 ([3695a8c](https://github.com/szTheory/scrypath/commit/3695a8c45b0a5fc99ba1b3cc3a291308e29c626d))
+
 ## [0.3.1](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.0...scrypath-v0.3.1) (2026-04-17)
 
 
