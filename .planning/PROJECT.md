@@ -19,12 +19,13 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] Phoenix docs, examples, release automation, and package trust signals validated in v1.0.
 - [x] Launch-readiness hardening for Meilisearch edge cases, copied Phoenix docs safety, and milestone-close release evidence validated in v1.1.
 - [x] The first real public release path, operator visibility surface, Mix task ergonomics, and the internal operations seam validated in v1.2.
+- [x] Meilisearch-native search depth for growth-stage Phoenix teams — relevance tuning, faceted search, multi-index `search_many/2`, plus operator polish and drift recovery guidance — validated in planning milestone **v1.3** (2026-04-17).
+- [x] Release-parity gates (`verify.workspace_clean`, `verify.release_parity`) and CI runtime hygiene (Node pin uplift) validated in v1.3.
+- [x] v1.2 Nyquist validation debt (phases 13–15 evidence) closed in v1.3.
 
 ### Active
 
-- [ ] Deepen Meilisearch-native search power through Scrypath-owned APIs: faceted search, relevance tuning (typo/synonyms/ranking), and multi-index search — without breaking sync, backfill, or operator contracts.
-- [ ] Surface narrow operator-polish improvements (failed-work depth plus a drift recovery guide) without expanding the operator surface beyond what early adopter feedback justifies.
-- [ ] Retire remaining release/tooling debt: GitHub Actions Node 20 deprecation warnings (VALIDATION.md closure for v1.2 phases 13–15 completed 2026-04-17).
+- [ ] Choose the next milestone focus from real adopter pressure (deeper operator tooling, Hex/main convergence for new surfaces, or other) — see `/gsd-new-milestone`.
 
 ### Out of Scope
 
@@ -38,13 +39,14 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository now has three archived milestones:
+The repository has **four** archived planning milestones (`v1.0`–`v1.3`); see `.planning/milestones/v*-ROADMAP.md` and `MILESTONES.md`.
 
 - `v1.0` shipped the Meilisearch-first Ecto-native indexing core, search/hydration path, Oban support, reindex workflows, public Phoenix docs, and release automation baseline.
 - `v1.1` shipped release hardening, docs-safety fixes, `mix verify.phase10`, and the launch-readiness evidence chain.
 - `v1.2` shipped the first live public release as `scrypath 0.3.0`, the internal operations seam, operator visibility APIs, thin Mix tasks, and milestone-close verification/bookkeeping repairs.
+- `v1.3` shipped planning-track delivery of relevance tuning, faceted search, multi-index search, operator polish + drift recovery guide, release-parity gates, and v1.2 Nyquist validation closure (archived 2026-04-17).
 
-The library is now publicly released and functionally complete for its current boundary. The next milestone should follow real maintainer and adopter pressure rather than speculative surface expansion.
+The library remains publicly released on Hex (`0.3.0` as of this writing); **the next Hex version bump** is a separate release action from closing a planning milestone. The next planning milestone should follow real maintainer and adopter pressure.
 
 ## Constraints
 
@@ -69,26 +71,16 @@ The library is now publicly released and functionally complete for its current b
 
 ## Current State
 
-Scrypath has shipped three milestones and one real public Hex release, `0.3.0`. Maintainers now have a verified release contract, live Hex and HexDocs proof, and explicit recovery runbooks. Phase 18 added release-parity mechanization: `mix verify.workspace_clean` (INFRA-01) gates all three publish paths, and daily `mix verify.release_parity` (INFRA-02) with dedup'd drift issues (INFRA-04) keeps Hex and main from ever diverging again. CI runs on Node 24 pins (INFRA-03), clearing the Node 20 deprecation ahead of 2026-09. Operators have status, failed-work, retry, and reconcile visibility through Scrypath-owned APIs plus thin `mix scrypath.*` ergonomics. The internal operations seam is in place so future backend work can evolve without forcing a premature public abstraction. Milestone `v1.3` is now active, focused on closing the Meilisearch-native search feature gap that the first adopter tier reaches for immediately after install.
+Scrypath has **four archived planning milestones** (`v1.0`–`v1.3`) and a **published** Hex release line (`scrypath 0.3.0` on Hex at the time of the v1.3 planning close). Maintainers have release-parity gates (`mix verify.workspace_clean`, `mix verify.release_parity`), operator visibility and drift-recovery guidance, Meilisearch-native search depth (relevance, facets, multi-index) in the development tree aligned with v1.3 requirements, and closed Nyquist evidence for v1.2 operator phases under `.planning/milestones/v1.2/`.
 
-## Current Milestone: v1.3 Search Power That Phoenix Teams Reach For
+## Next milestone
 
-**Goal:** Land the three Meilisearch-native capabilities every growth-stage Phoenix SaaS immediately needs — faceted search, relevance tuning (typo tolerance, synonyms, ranking rules), and multi-index search — through Scrypath-owned APIs that preserve the shipped sync, backfill, and operator contracts. Retire remaining release and tooling debt in the same cycle so v1.4 starts clean.
+**Not selected** — run `/gsd-new-milestone` to capture goals, requirements, and roadmap for v1.4 (or another version) after you decide what ships next on Hex and in docs.
 
-**Target features:**
-- Faceted search: declarative `faceting` schema field, validated facet filter expressions, facet distribution and stats on `SearchResult`, Phoenix LiveView guide
-- Relevance tuning: declarative per-schema settings for synonyms, typo tolerance, ranking rules, distinct attribute, and stop words applied safely through the existing reindex pipeline
-- Multi-index search: `Scrypath.search_many/2` federated queries across N schemas with per-schema validation preserved and a unified hydration path
-- Operator polish: richer `FailedWork.t()` (attempt count, error reason class, last attempt timestamp) plus an end-to-end drift recovery guide
-- Release and tooling debt retirement: GitHub Actions upgraded past Node 20 deprecation warnings (v1.2 phases 13–15 VALIDATION.md closure completed 2026-04-17 under `.planning/milestones/v1.2/`)
+## Next Milestone Goals (placeholder)
 
-**Key context:** Direction chosen by extrapolation rather than a single explicit adopter request — the evidence from the codebase gap analysis, planning history, and ecosystem research converges on "deepen Meilisearch-first before widening backends". Persona 2 (growth-stage Phoenix SaaS) is the primary cohort for v1.3 impact. Reference libraries (Searchkick, Laravel Scout) shipped comprehensive first-backend features before adding a second adapter, and Scrypath is deliberately at that inflection point.
-
-## Next Milestone Goals
-
-- Collect real adopter feedback during the v1.3 cycle to validate whether deeper search power or backend breadth should drive v1.4.
-- Hold the line on non-goals: no second public backend, no vector/hybrid search, no dashboard product surface.
-- Reserve deeper drift/schema-diff operator tooling for v1.4 once v1.3 feature work produces real-world recovery scenarios.
+- Collect adopter feedback to choose between deeper operator tooling, broader backend support, or polish on the shipped Meilisearch-first path.
+- Hold non-goals until pressure proves the contract should widen.
 
 ## Evolution
 
@@ -108,4 +100,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-17 — Phase 18 (release-parity gates + Node 24 pins) complete*
+*Last updated: 2026-04-17 after v1.3 planning milestone archive*
