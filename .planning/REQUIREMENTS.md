@@ -6,7 +6,7 @@
 
 ## v1.3 Requirements
 
-Six categories, 40 requirements total. Grouped by the phases the roadmapper will derive from them. Every requirement is additive over shipped `scrypath 0.3.0`; no breaking changes to v1.2 public contracts.
+Six categories, 44 requirements total. Grouped by the phases the roadmapper will derive from them. Every requirement is additive over shipped `scrypath 0.3.0`; no breaking changes to v1.2 public contracts.
 
 ### Release Parity & CI Hygiene
 
@@ -134,56 +134,66 @@ Which phases cover which requirements. Filled by the roadmapper during phase cre
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01 | TBD | Pending |
-| INFRA-02 | TBD | Pending |
-| INFRA-03 | TBD | Pending |
-| INFRA-04 | TBD | Pending |
-| TUNE-01 | TBD | Pending |
-| TUNE-02 | TBD | Pending |
-| TUNE-03 | TBD | Pending |
-| TUNE-04 | TBD | Pending |
-| TUNE-05 | TBD | Pending |
-| TUNE-06 | TBD | Pending |
-| TUNE-07 | TBD | Pending |
-| TUNE-08 | TBD | Pending |
-| FACET-01 | TBD | Pending |
-| FACET-02 | TBD | Pending |
-| FACET-03 | TBD | Pending |
-| FACET-04 | TBD | Pending |
-| FACET-05 | TBD | Pending |
-| FACET-06 | TBD | Pending |
-| FACET-07 | TBD | Pending |
-| FACET-08 | TBD | Pending |
-| FACET-09 | TBD | Pending |
-| FACET-10 | TBD | Pending |
-| MULTI-01 | TBD | Pending |
-| MULTI-02 | TBD | Pending |
-| MULTI-03 | TBD | Pending |
-| MULTI-04 | TBD | Pending |
-| MULTI-05 | TBD | Pending |
-| MULTI-06 | TBD | Pending |
-| MULTI-07 | TBD | Pending |
-| MULTI-08 | TBD | Pending |
-| MULTI-09 | TBD | Pending |
-| MULTI-10 | TBD | Pending |
-| MULTI-11 | TBD | Pending |
-| MULTI-12 | TBD | Pending |
-| MULTI-13 | TBD | Pending |
-| OPS-05 | TBD | Pending |
-| OPS-06 | TBD | Pending |
-| OPS-07 | TBD | Pending |
-| OPS-08 | TBD | Pending |
-| OPS-09 | TBD | Pending |
-| OPS-10 | TBD | Pending |
-| VALID-01 | TBD | Pending |
-| VALID-02 | TBD | Pending |
-| VALID-03 | TBD | Pending |
+| INFRA-01 | Phase 18 | Pending |
+| INFRA-02 | Phase 18 | Pending |
+| INFRA-03 | Phase 18 | Pending |
+| INFRA-04 | Phase 18 | Pending |
+| TUNE-01 | Phase 19 | Pending |
+| TUNE-02 | Phase 19 | Pending |
+| TUNE-03 | Phase 19 | Pending |
+| TUNE-04 | Phase 19 | Pending |
+| TUNE-05 | Phase 19 | Pending |
+| TUNE-06 | Phase 19 | Pending |
+| TUNE-07 | Phase 19 | Pending |
+| TUNE-08 | Phase 19 | Pending |
+| FACET-01 | Phase 20 | Pending |
+| FACET-02 | Phase 20 | Pending |
+| FACET-03 | Phase 20 | Pending |
+| FACET-04 | Phase 20 | Pending |
+| FACET-05 | Phase 20 | Pending |
+| FACET-06 | Phase 20 | Pending |
+| FACET-07 | Phase 20 | Pending |
+| FACET-08 | Phase 20 | Pending |
+| FACET-09 | Phase 20 | Pending |
+| FACET-10 | Phase 20 | Pending |
+| MULTI-01 | Phase 21 | Pending |
+| MULTI-02 | Phase 21 | Pending |
+| MULTI-03 | Phase 21 | Pending |
+| MULTI-04 | Phase 21 | Pending |
+| MULTI-05 | Phase 21 | Pending |
+| MULTI-06 | Phase 21 | Pending |
+| MULTI-07 | Phase 21 | Pending |
+| MULTI-08 | Phase 21 | Pending |
+| MULTI-09 | Phase 21 | Pending |
+| MULTI-10 | Phase 21 | Pending |
+| MULTI-11 | Phase 21 | Pending |
+| MULTI-12 | Phase 21 | Pending |
+| MULTI-13 | Phase 21 | Pending |
+| OPS-05 | Phase 22 | Pending |
+| OPS-06 | Phase 22 | Pending |
+| OPS-07 | Phase 22 | Pending |
+| OPS-08 | Phase 22 | Pending |
+| OPS-09 | Phase 22 | Pending |
+| OPS-10 | Phase 22 | Pending |
+| VALID-01 | Phase 23 | Pending |
+| VALID-02 | Phase 23 | Pending |
+| VALID-03 | Phase 23 | Pending |
 
 **Coverage:**
-- v1.3 requirements: 41 total across 6 categories
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 41
+- v1.3 requirements: 44 total across 6 categories
+- Mapped to phases: 44 (100% coverage)
+- Unmapped: 0
+
+| Phase | Requirements | Count |
+|-------|--------------|-------|
+| Phase 18 — Release-Parity Gate + Node 20 CI Cleanup | INFRA-01, INFRA-02, INFRA-03, INFRA-04 | 4 |
+| Phase 19 — Relevance Tuning | TUNE-01..08 | 8 |
+| Phase 20 — Faceted Search + LiveView Guide | FACET-01..10 | 10 |
+| Phase 21 — Multi-Index Search | MULTI-01..13 | 13 |
+| Phase 22 — Operator Polish + Drift Recovery Guide | OPS-05..10 | 6 |
+| Phase 23 — v1.2 VALIDATION.md Closure | VALID-01..03 | 3 |
 
 ---
 *Requirements defined: 2026-04-17*
+*Traceability populated by roadmapper: 2026-04-17 — 100% coverage across Phases 18–23*
 *Deep research sources: `.planning/research/deep/{FACETING,RELEVANCE,MULTI_INDEX,OPERATOR_POLISH}.md` + `.planning/research/SUMMARY.md`*
