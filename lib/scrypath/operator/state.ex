@@ -1,6 +1,10 @@
 defmodule Scrypath.Operator.State do
   @moduledoc """
-  Public normalized work-item state used by `Scrypath.Operator.Status`.
+  Stable operator state projected from backend tasks and queue jobs.
+
+  This struct gives the public operator APIs a Scrypath-owned shape for
+  identifiers, lifecycle state, timestamps, and stable references without
+  exposing raw backend or queue payloads as the public contract.
   """
 
   alias Scrypath.Operations
