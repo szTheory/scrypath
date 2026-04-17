@@ -499,28 +499,7 @@ defmodule Scrypath.Options do
   def validate_schema_faceting([]), do: {:ok, []}
 
   def validate_schema_faceting(value) when is_list(value) do
-    kw =
-      cond do
-        Keyword.keyword?(value) ->
-          value
-
-        Macro.quoted_literal?(value) ->
-          case Code.eval_quoted(value) do
-            {evaluated, _} when evaluated == [] ->
-              []
-
-            {evaluated, _} when is_list(evaluated) ->
-              if Keyword.keyword?(evaluated), do: evaluated, else: :invalid
-
-            _ ->
-              :invalid
-          end
-
-        true ->
-          :invalid
-      end
-
-    case kw do
+    case coerce_schema_faceting_kw(value) do
       :invalid ->
         {:error, "faceting must be a keyword list or []"}
 
@@ -533,6 +512,32 @@ defmodule Scrypath.Options do
   end
 
   def validate_schema_faceting(_value), do: {:error, "faceting must be a keyword list or []"}
+
+  defp coerce_schema_faceting_kw(value) when is_list(value) do
+    cond do
+      Keyword.keyword?(value) ->
+        value
+
+      Macro.quoted_literal?(value) ->
+        coerce_schema_faceting_from_literal(value)
+
+      true ->
+        :invalid
+    end
+  end
+
+  defp coerce_schema_faceting_from_literal(value) do
+    case Code.eval_quoted(value) do
+      {evaluated, _} when evaluated == [] ->
+        []
+
+      {evaluated, _} when is_list(evaluated) ->
+        if Keyword.keyword?(evaluated), do: evaluated, else: :invalid
+
+      _ ->
+        :invalid
+    end
+  end
 
   def validate_optional_string(value) when is_binary(value), do: {:ok, value}
   def validate_optional_string(nil), do: {:ok, nil}
@@ -822,46 +827,43 @@ defmodule Scrypath.Options do
     allowed = [:attributes, :max_values_per_facet, :sort_facet_values_by]
 
     case Keyword.keys(kw) -- allowed do
-      [] -> :ok
+      [] -> validate_faceting_attributes_entry(kw)
       keys -> {:error, "unknown faceting options: #{inspect(keys)}"}
     end
-    |> case do
-      :ok -> :ok
-      {:error, _} = err -> err
+  end
+
+  defp validate_faceting_attributes_entry(kw) do
+    case Keyword.fetch(kw, :attributes) do
+      :error ->
+        {:error, "faceting requires :attributes when faceting options are given"}
+
+      {:ok, []} ->
+        {:error, "faceting :attributes must be a non-empty list of atoms"}
+
+      {:ok, attrs} when is_list(attrs) ->
+        validate_faceting_attributes_list(kw, attrs)
+
+      {:ok, _} ->
+        {:error, "faceting :attributes must be a non-empty list of atoms"}
     end
-    |> case do
-      {:error, _} = err ->
-        err
+  end
 
-      :ok ->
-        case Keyword.fetch(kw, :attributes) do
-          :error ->
-            {:error, "faceting requires :attributes when faceting options are given"}
+  defp validate_faceting_attributes_list(kw, attrs) do
+    if Enum.all?(attrs, &is_atom/1) do
+      max_values = Keyword.get(kw, :max_values_per_facet, 100)
+      sort_by = Keyword.get(kw, :sort_facet_values_by, %{})
 
-          {:ok, []} ->
-            {:error, "faceting :attributes must be a non-empty list of atoms"}
-
-          {:ok, attrs} when is_list(attrs) ->
-            if Enum.all?(attrs, &is_atom/1) do
-              max_values = Keyword.get(kw, :max_values_per_facet, 100)
-              sort_by = Keyword.get(kw, :sort_facet_values_by, %{})
-
-              with :ok <- validate_faceting_max_values(max_values),
-                   {:ok, sort_map} <- normalize_sort_facet_values_by(sort_by) do
-                {:ok,
-                 [
-                   attributes: attrs,
-                   max_values_per_facet: max_values,
-                   sort_facet_values_by: sort_map
-                 ]}
-              end
-            else
-              {:error, "faceting :attributes must be a non-empty list of atoms"}
-            end
-
-          {:ok, _} ->
-            {:error, "faceting :attributes must be a non-empty list of atoms"}
-        end
+      with :ok <- validate_faceting_max_values(max_values),
+           {:ok, sort_map} <- normalize_sort_facet_values_by(sort_by) do
+        {:ok,
+         [
+           attributes: attrs,
+           max_values_per_facet: max_values,
+           sort_facet_values_by: sort_map
+         ]}
+      end
+    else
+      {:error, "faceting :attributes must be a non-empty list of atoms"}
     end
   end
 
