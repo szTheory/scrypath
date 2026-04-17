@@ -24,7 +24,8 @@ defmodule Scrypath.Meilisearch.Tasks do
         |> Enum.reduce_while({:ok, []}, fn payload, {:ok, acc} ->
           case Meilisearch.normalize_task(payload, :poll) do
             {:ok, normalized_task} ->
-              {:cont, {:ok, [Operations.task_from_backend(normalized_task, source: :meilisearch) | acc]}}
+              {:cont,
+               {:ok, [Operations.task_from_backend(normalized_task, source: :meilisearch) | acc]}}
 
             {:error, reason} ->
               {:halt, {:error, reason}}
@@ -108,7 +109,9 @@ defmodule Scrypath.Meilisearch.Tasks do
             {:ok, normalized_task} ->
               normalized_task
               |> Operations.task_from_backend(source: :meilisearch)
-              |> then(&do_wait_for_task(&1, config, started_at, poll_interval, timeout, polls + 1))
+              |> then(
+                &do_wait_for_task(&1, config, started_at, poll_interval, timeout, polls + 1)
+              )
 
             {:error, reason} ->
               {{:error, reason}, polls + 1}

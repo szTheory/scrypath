@@ -55,7 +55,10 @@ defmodule Scrypath.Operator.StatusTest do
     assert status.index == "tenant_searchable_post"
     assert [%State{id: 101, state: :pending, source: :meilisearch}] = status.backend.pending
     assert [%State{id: 102, state: :failed, source: :meilisearch}] = status.backend.failed
-    assert %State{id: 103, state: :completed, source: :meilisearch} = status.backend.last_succeeded
+
+    assert %State{id: 103, state: :completed, source: :meilisearch} =
+             status.backend.last_succeeded
+
     assert status.queue.observed? == false
     assert status.queue.pending == []
     assert status.queue.retrying == []

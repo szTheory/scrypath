@@ -103,8 +103,11 @@ defmodule Scrypath.PhoenixExamplesTest do
   defp module_section(name, parent \\ nil) do
     pattern =
       case parent do
-        nil -> ~r/defmodule #{name} do\n(.*?)\n  end/ms
-        parent_name -> ~r/defmodule #{parent_name} do\n(.*?)defmodule #{name} do\n(.*?)\n    end\n  end/ms
+        nil ->
+          ~r/defmodule #{name} do\n(.*?)\n  end/ms
+
+        parent_name ->
+          ~r/defmodule #{parent_name} do\n(.*?)defmodule #{name} do\n(.*?)\n    end\n  end/ms
       end
 
     case Regex.run(pattern, @fixture_source, capture: :all_but_first) do

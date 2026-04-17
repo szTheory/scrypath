@@ -88,7 +88,13 @@ defmodule Scrypath.Oban.Enqueue do
           )
 
         {:ok,
-         %{result | metadata: %{index: job.args["index"], oban: %{queue: queue, max_attempts: max_attempts, name: oban}}}}
+         %{
+           result
+           | metadata: %{
+               index: job.args["index"],
+               oban: %{queue: queue, max_attempts: max_attempts, name: oban}
+             }
+         }}
 
       {:error, _reason} = error ->
         error
