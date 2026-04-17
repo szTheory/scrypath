@@ -27,6 +27,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - uses: erlef/setup-beam@v1
         with:
@@ -54,6 +56,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - uses: erlef/setup-beam@v1
         with:
@@ -98,6 +102,9 @@ jobs:
       - name: Run Phase 14 operator docs gate
         run: mix verify.phase14
 
+      - name: Run Phase 20 faceting + guide gate
+        run: mix verify.phase20
+
   phase5-verification:
     runs-on: ubuntu-latest
 
@@ -115,6 +122,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - uses: erlef/setup-beam@v1
         with:
@@ -162,6 +171,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - uses: erlef/setup-beam@v1
         with:

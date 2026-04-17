@@ -218,8 +218,27 @@ defmodule Scrypath.Reindex do
   defp put_followable_task(%Result{} = result, task), do: %{result | task: task}
   defp put_followable_task(result, task) when is_map(result), do: %{result | task: task}
 
+  # Reindex workflow config carries keys that only apply to managed reindex
+  # (settings, verify skips, internal schema pointer). Backfill validates a
+  # smaller option surface — pass only what `Options.validate_backfill_options!/1` allows.
+  @backfill_pass_through_keys [
+    :backend,
+    :repo,
+    :batch_size,
+    :query,
+    :index_prefix,
+    :index_name,
+    :meilisearch_url,
+    :meilisearch_api_key,
+    :meilisearch_client,
+    :req_options,
+    :inline_poll_interval,
+    :inline_timeout,
+    :sync_mode
+  ]
+
   defp backfill_config(config) do
-    Keyword.drop(config, [:target_index, :cutover?])
+    Keyword.take(config, @backfill_pass_through_keys)
   end
 
   defp primary_key(schema_module) do

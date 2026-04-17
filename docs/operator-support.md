@@ -2,6 +2,8 @@
 
 This guide is for maintainers supporting early Scrypath production usage.
 
+For **metrics, paging discipline, and Meilisearch cluster footguns** (SRE / platform view), see `docs/search-backend-sre.md`.
+
 The support contract stays simple:
 
 1. operator code calls the root APIs on `Scrypath.*`
@@ -45,9 +47,12 @@ Before merge or release handoff, run:
 
 ```bash
 mix verify.phase14
+mix verify.phase20
 mix verify.phase11
 ```
 
 The Phase 14 verifier is auth-free. It exercises the focused Mix task tests, docs contract, package metadata assertions, and `mix docs --warnings-as-errors`.
+
+The Phase 20 verifier (**mix verify.phase20**) is auth-free. It runs the faceting, Meilisearch settings, and faceted-guide docs contract tests, then **mix docs --warnings-as-errors**.
 
 `mix verify.phase11` keeps the release path aligned and remains the gate you use before a real publish flow.

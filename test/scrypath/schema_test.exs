@@ -6,6 +6,7 @@ defmodule Scrypath.SchemaTest do
       assert SearchablePost.__scrypath__(:config) == %{
                fields: [:title, :body],
                filterable: [:status],
+               faceting: [],
                sortable: [:inserted_at],
                settings: %{__unrecognized__: %{}},
                document_id: :id,
@@ -15,6 +16,7 @@ defmodule Scrypath.SchemaTest do
              }
 
       assert SearchablePost.__scrypath__(:fields) == [:title, :body]
+      assert SearchablePost.__scrypath__(:faceting) == []
       assert SearchablePost.__scrypath__(:document_id) == :id
       assert Scrypath.schema_config(SearchablePost) == SearchablePost.__scrypath__(:config)
       assert Scrypath.schema_fields(SearchablePost) == [:title, :body]

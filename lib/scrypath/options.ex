@@ -12,6 +12,12 @@ defmodule Scrypath.Options do
       default: [],
       doc: "Fields that later search APIs may expose as filters."
     ],
+    faceting: [
+      type: {:custom, __MODULE__, :validate_schema_faceting, []},
+      default: [],
+      doc:
+        "Optional facet metadata: non-empty :attributes (subset of :filterable), :max_values_per_facet, :sort_facet_values_by."
+    ],
     sortable: [
       type: {:list, :atom},
       default: [],
@@ -125,6 +131,18 @@ defmodule Scrypath.Options do
   ]
 
   @search_options [
+    facets: [
+      type: {:list, :atom},
+      default: [],
+      doc:
+        "Facet attribute names to request facet distribution for (must be declared on the schema's faceting.attributes)."
+    ],
+    facet_filter: [
+      type: {:custom, __MODULE__, :validate_search_filter, []},
+      default: [],
+      doc:
+        "Keyword of facet-field filters; keys must be declared faceting attributes. Same value shapes as :filter where applicable."
+    ],
     filter: [
       type: {:custom, __MODULE__, :validate_search_filter, []},
       default: [],
@@ -349,6 +367,7 @@ defmodule Scrypath.Options do
     opts
     |> validate!(@schema_options)
     |> ensure_non_empty_fields!()
+    |> validate_faceting_rules!()
     |> Map.put(:document_source, :fields)
   end
 
@@ -373,17 +392,147 @@ defmodule Scrypath.Options do
     |> validate_bulk_sync_mode!()
   end
 
-  @spec validate_search_options!(module(), keyword()) :: keyword()
-  def validate_search_options!(schema_module, opts) do
+  @doc """
+  Validates search options for `schema_module` without raising.
+
+  Returns `{:ok, keyword()}` with the same keys as `validate_search_options!/2`.
+
+  When the schema declares no `faceting:` attributes, any non-empty `:facets`
+  list fails with `{:error, {:unknown_facet, first_atom}}` using the first
+  requested facet (Meilisearch still requires declared facet settings).
+  """
+  @spec validate_search_options(module(), keyword()) :: {:ok, keyword()} | {:error, term()}
+  def validate_search_options(schema_module, opts) when is_list(opts) do
     filterable = MapSet.new(schema_module.__scrypath__(:filterable))
     sortable = MapSet.new(schema_module.__scrypath__(:sortable))
+    search_opts = Keyword.drop(opts, runtime_option_keys())
 
-    opts
-    |> Keyword.drop(runtime_option_keys())
-    |> validate!(@search_options)
-    |> validate_filterable_fields!(filterable)
-    |> validate_sortable_fields!(sortable)
+    with {:ok, validated} <- nimble_options_result(@search_options, search_opts),
+         :ok <- validate_search_facets(schema_module, Keyword.get(validated, :facets, [])),
+         :ok <-
+           validate_search_facet_filter(schema_module, Keyword.get(validated, :facet_filter, [])) do
+      try do
+        validated
+        |> validate_filterable_fields!(filterable)
+        |> validate_sortable_fields!(sortable)
+        |> then(&{:ok, &1})
+      rescue
+        e in ArgumentError -> {:error, {:validation, Exception.message(e)}}
+      end
+    end
   end
+
+  @spec validate_search_options!(module(), keyword()) :: keyword()
+  def validate_search_options!(schema_module, opts) do
+    case validate_search_options(schema_module, opts) do
+      {:ok, kw} ->
+        kw
+
+      {:error, {:validation, message}} when is_binary(message) ->
+        raise ArgumentError, message
+
+      {:error, {:unknown_facet, facet}} ->
+        raise ArgumentError, "unknown facet #{inspect(facet)}"
+
+      {:error, {:invalid_facet_filter, reason}} ->
+        raise ArgumentError, "facet_filter: #{inspect(reason)}"
+
+      {:error, other} ->
+        raise ArgumentError, "invalid search options: #{inspect(other)}"
+    end
+  end
+
+  defp nimble_options_result(schema, opts) do
+    case NimbleOptions.validate(opts, schema) do
+      {:ok, validated} ->
+        {:ok, validated}
+
+      {:error, error} ->
+        {:error, {:validation, Exception.message(error)}}
+    end
+  end
+
+  defp faceting_attributes_list(schema_module) do
+    case schema_module.__scrypath__(:faceting) do
+      [] -> []
+      kw -> Keyword.get(kw, :attributes, [])
+    end
+  end
+
+  defp validate_search_facets(schema_module, facets) do
+    declared = faceting_attributes_list(schema_module)
+
+    cond do
+      facets == [] ->
+        :ok
+
+      declared == [] ->
+        {:error, {:unknown_facet, hd(facets)}}
+
+      true ->
+        case Enum.find(facets, &(&1 not in declared)) do
+          nil -> :ok
+          bad -> {:error, {:unknown_facet, bad}}
+        end
+    end
+  end
+
+  defp validate_search_facet_filter(schema_module, facet_filter) do
+    declared = faceting_attributes_list(schema_module)
+
+    cond do
+      facet_filter == [] ->
+        :ok
+
+      declared == [] ->
+        {:error, {:invalid_facet_filter, :faceting_not_declared}}
+
+      true ->
+        case Enum.find(Keyword.keys(facet_filter), &(&1 not in declared)) do
+          nil -> :ok
+          bad -> {:error, {:invalid_facet_filter, {:unknown_facet_field, bad}}}
+        end
+    end
+  end
+
+  @doc false
+  def validate_schema_faceting([]), do: {:ok, []}
+
+  def validate_schema_faceting(value) when is_list(value) do
+    kw =
+      cond do
+        Keyword.keyword?(value) ->
+          value
+
+        Macro.quoted_literal?(value) ->
+          case Code.eval_quoted(value) do
+            {evaluated, _} when evaluated == [] ->
+              []
+
+            {evaluated, _} when is_list(evaluated) ->
+              if Keyword.keyword?(evaluated), do: evaluated, else: :invalid
+
+            _ ->
+              :invalid
+          end
+
+        true ->
+          :invalid
+      end
+
+    case kw do
+      :invalid ->
+        {:error, "faceting must be a keyword list or []"}
+
+      [] ->
+        {:ok, []}
+
+      kw when is_list(kw) ->
+        validate_faceting_declaration_shape(kw)
+    end
+  end
+
+  def validate_schema_faceting(_value), do: {:error, "faceting must be a keyword list or []"}
 
   def validate_optional_string(value) when is_binary(value), do: {:ok, value}
   def validate_optional_string(nil), do: {:ok, nil}
@@ -667,6 +816,110 @@ defmodule Scrypath.Options do
       _fields ->
         Enum.into(opts, %{})
     end
+  end
+
+  defp validate_faceting_declaration_shape(kw) do
+    allowed = [:attributes, :max_values_per_facet, :sort_facet_values_by]
+
+    case Keyword.keys(kw) -- allowed do
+      [] -> :ok
+      keys -> {:error, "unknown faceting options: #{inspect(keys)}"}
+    end
+    |> case do
+      :ok -> :ok
+      {:error, _} = err -> err
+    end
+    |> case do
+      {:error, _} = err ->
+        err
+
+      :ok ->
+        case Keyword.fetch(kw, :attributes) do
+          :error ->
+            {:error, "faceting requires :attributes when faceting options are given"}
+
+          {:ok, []} ->
+            {:error, "faceting :attributes must be a non-empty list of atoms"}
+
+          {:ok, attrs} when is_list(attrs) ->
+            if Enum.all?(attrs, &is_atom/1) do
+              max_values = Keyword.get(kw, :max_values_per_facet, 100)
+              sort_by = Keyword.get(kw, :sort_facet_values_by, %{})
+
+              with :ok <- validate_faceting_max_values(max_values),
+                   {:ok, sort_map} <- normalize_sort_facet_values_by(sort_by) do
+                {:ok,
+                 [
+                   attributes: attrs,
+                   max_values_per_facet: max_values,
+                   sort_facet_values_by: sort_map
+                 ]}
+              end
+            else
+              {:error, "faceting :attributes must be a non-empty list of atoms"}
+            end
+
+          {:ok, _} ->
+            {:error, "faceting :attributes must be a non-empty list of atoms"}
+        end
+    end
+  end
+
+  defp validate_faceting_max_values(n) when is_integer(n) and n > 0, do: :ok
+
+  defp validate_faceting_max_values(_),
+    do: {:error, "faceting :max_values_per_facet must be a positive integer"}
+
+  defp normalize_sort_facet_values_by(map) when is_map(map) do
+    Enum.reduce_while(map, {:ok, %{}}, fn {k, v}, {:ok, acc} ->
+      cond do
+        not is_atom(k) ->
+          {:halt, {:error, "faceting :sort_facet_values_by keys must be atoms"}}
+
+        v in [:alpha, :count] ->
+          {:cont, {:ok, Map.put(acc, k, v)}}
+
+        true ->
+          {:halt, {:error, "faceting :sort_facet_values_by values must be :alpha or :count"}}
+      end
+    end)
+  end
+
+  defp normalize_sort_facet_values_by(kw) when is_list(kw) do
+    if Keyword.keyword?(kw) do
+      normalize_sort_facet_values_by(Map.new(kw))
+    else
+      {:error, "faceting :sort_facet_values_by must be a map or keyword"}
+    end
+  end
+
+  defp normalize_sort_facet_values_by(_),
+    do: {:error, "faceting :sort_facet_values_by must be a map or keyword"}
+
+  defp validate_faceting_rules!(%{faceting: []} = m), do: m
+
+  defp validate_faceting_rules!(%{faceting: faceting} = m) when is_list(faceting) do
+    attrs = Keyword.fetch!(faceting, :attributes)
+    filterable = Map.fetch!(m, :filterable) |> MapSet.new()
+
+    if Enum.any?(attrs, &(&1 == :*)) do
+      raise ArgumentError, "faceting wildcard :* in attributes is not supported"
+    end
+
+    Enum.each(attrs, fn attr ->
+      if is_atom(attr) and String.contains?(Atom.to_string(attr), ".") do
+        raise ArgumentError, "hierarchical facet attribute #{inspect(attr)} is not supported"
+      end
+    end)
+
+    Enum.each(attrs, fn attr ->
+      unless MapSet.member?(filterable, attr) do
+        raise ArgumentError,
+              "facet attribute #{Atom.to_string(attr)} is not in filterable"
+      end
+    end)
+
+    m
   end
 
   defp validate_filterable_fields!(opts, filterable) do
