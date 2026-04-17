@@ -1,6 +1,8 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "bootstrap-sha": "2921c30e1f93773207dac3413625ee51f876749d",
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": true,
   "release-type": "elixir",
   "packages": {
     ".": {

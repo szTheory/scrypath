@@ -59,6 +59,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Validate release-please-config.json
+        run: jq empty release-please-config.json
+
       - uses: erlef/setup-beam@v1
         with:
           elixir-version: "1.19.0"
@@ -104,6 +107,9 @@ jobs:
 
       - name: Run Phase 20 faceting + guide gate
         run: mix verify.phase20
+
+      - name: Run Phase 22 operator polish + drift recovery gate
+        run: mix verify.phase22
 
   phase5-verification:
     runs-on: ubuntu-latest
