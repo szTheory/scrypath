@@ -6,3 +6,7 @@
 /erl_crash.dump
 /.elixir_ls/
 .DS_Store
+
+# locally-rebuilt hex package artifacts
+/scrypath-*/
+*.tar
