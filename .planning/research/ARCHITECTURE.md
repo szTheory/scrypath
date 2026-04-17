@@ -1,441 +1,411 @@
-# Architecture Patterns
+# ARCHITECTURE Research — Scrypath v1.3
 
-**Domain:** Ecto-native search indexing and orchestration library
-**Project:** Scrypath
-**Researched:** 2026-04-16
-**Overall confidence:** HIGH
+**Domain:** Elixir OSS search-indexing library (Meilisearch-first, Ecto-native) — subsequent milestone adding faceting, relevance tuning, multi-index search, and operator polish onto an already-shipped public contract.
+**Researched:** 2026-04-17
+**Confidence:** HIGH (driven by direct reading of existing modules — `/Users/jon/projects/scrypath/lib/scrypath/*`)
 
-## Executive Recommendation
+---
 
-Scrypath should treat the next milestone as a consolidation milestone before it becomes a breadth milestone. The current shape is already good: a narrow public `Scrypath` surface, an internal `Scrypath.Backend` seam, explicit `Scrypath.Meilisearch.*` escape hatches, and orchestration modules such as `Scrypath.Sync` and `Scrypath.Reindex`. The main architectural risk is not missing abstractions. It is letting release work, operator workflows, or backend-native power leak into the common path in ways that create public API regret.
+## 1. Existing Architecture — What Must Be Preserved
 
-For v1.2, the best move is to harden three layers without widening the top-level API much:
+Before prescribing integration, the five load-bearing contracts v1.3 work must not perturb:
 
-1. Extract a clearer internal operations seam for index lifecycle and task inspection so `Scrypath.Reindex` and future tooling stop depending directly on `Scrypath.Meilisearch.*` internals.
-2. Add a first-class operator surface in the library itself, backed by typed structs, telemetry, and thin Mix tasks.
-3. Keep backend-native search power under `Scrypath.Meilisearch.*`, with request/result structs or explicit functions, and only graduate features to `Scrypath.search/3` after they prove to be stable common-path concepts.
+| Contract | Lives in | Why it can't move |
+|---|---|---|
+| `use Scrypath` → `__scrypath__/1` reflection | `lib/scrypath/schema.ex`, `options.ex` (`@schema_options`) | Public DSL. Any new metadata keys must additionally be exposed via `__scrypath__/key` without breaking the existing allowed-key allowlist. |
+| Common search returns `%Scrypath.SearchResult{}` | `lib/scrypath/search.ex:42-46`, `lib/scrypath/search_result.ex` | `@enforce_keys [:query, :hits, :records, :raw, :missing_ids, :page]` — new fields are **additive only**, never breaking the shape. |
+| Backend behaviour (`Scrypath.Backend`) takes `%Scrypath.Query{}` | `lib/scrypath/backend.ex`, `query.ex` | `%Query{}` is the only common-path payload backends receive. Faceting/multi-index must route through this struct, not around it. |
+| Meilisearch-native surface is namespaced | `lib/scrypath/meilisearch/*` | ARCHITECTURE.md lines 10–18: `Scrypath.Meilisearch.*` is the **only** public escape hatch. New backend-native power (facet filter strings, ranking rules, federated `/multi-search`) must be *translated* from Scrypath-owned shapes here, not leaked as kwargs on `Scrypath.search/3`. |
+| Internal operations seam (`Scrypath.Operations.Task`, `Scrypath.Operations.Result`) | `lib/scrypath/operations/*`, `operator/failed_work.ex:107-125` | Sync/reindex/operator read paths project internal results to public maps at boundary. New operator fields must live on Scrypath-owned structs, not backend-native payloads. |
 
-Do not make public multi-backend support the next milestone by default. The current codebase still has Meilisearch-specific orchestration assumptions in `Scrypath.Sync` and `Scrypath.Reindex`, and broadening the public promise before those assumptions are isolated would create an engine facade that looks portable while still behaving like Meilisearch.
+---
 
-## Current Shape in This Codebase
+## 2. Per-Feature Integration Design
 
-The existing code already suggests the right center of gravity:
+### (a) Faceted Search
 
-- `lib/scrypath.ex` keeps the public runtime surface small and function-oriented.
-- `lib/scrypath/backend.ex` defines an internal behavior with only five callbacks: `name/0`, `index_name/2`, `upsert_documents/3`, `delete_documents/3`, and `search/3`.
-- `lib/scrypath/search.ex` normalizes common-path input into `%Scrypath.Query{}` and returns `%Scrypath.SearchResult{}`.
-- `lib/scrypath/meilisearch.ex` is already the explicit backend-native escape hatch.
-- `lib/scrypath/sync.ex` and `lib/scrypath/reindex.ex` are where Meilisearch-specific operational assumptions currently leak upward, especially task waiting and index lifecycle steps.
-- `lib/scrypath/telemetry.ex` already establishes stable common metadata and is the right place to keep building from.
+#### Where the `faceting` declaration lives
 
-That means Scrypath does not need a new architectural center. It needs cleaner boundaries around the one it already has.
+**Answer: extend `@schema_options` in `lib/scrypath/options.ex`, not a new config namespace.**
 
-## Recommended Architecture
+Rationale: `filterable:` and `sortable:` already live there as first-class declarative lists. A new `faceting:` key follows that precedent exactly — it stays co-located with the rest of the schema contract, validates at compile time through NimbleOptions, and lands on `__scrypath__/1` via the existing `@scrypath_config` attribute plumbing in `schema.ex`.
 
-```text
-Ecto schema + Scrypath metadata
-  -> Projection and identity
-  -> Common write/search API (`Scrypath.*`)
-  -> Internal operations layer
-       - sync dispatch
-       - index lifecycle
-       - task references / status reads
-       - reindex / backfill orchestration
-  -> Backend adapter layer
-       - common path behavior (`Scrypath.Backend`)
-       - backend-native namespace (`Scrypath.Meilisearch.*`)
-  -> Operator surface
-       - library APIs returning structs
-       - thin Mix tasks
-       - telemetry and docs
+**Shape recommendation:**
+```elixir
+faceting: [
+  type: {:custom, __MODULE__, :validate_faceting, []},
+  default: %{},
+  doc: "Declarative facet configuration: attributes, max_values_per_facet, sort_facet_values_by."
+]
 ```
 
-The key rule is simple:
+Keep the Scrypath-owned shape a **plain map** (`%{attributes: [atom()], max_values_per_facet: pos_integer(), sort_facet_values_by: %{...}}`). This matches how `settings:` is already stored (`validate_settings` accepts a map) — staying Ecto/Elixir-idiomatic and keeping the Meilisearch-native key names (`maxValuesPerFacet`, `sortFacetValuesBy`) confined to `Scrypath.Meilisearch.Settings`.
 
-- `Scrypath.*` stays small, boring, and Ecto-first.
-- `Scrypath.Meilisearch.*` remains the explicit native power lane.
-- internal operations modules absorb lifecycle complexity so future backend breadth does not force a facade rewrite.
+**Files touched:**
+- `lib/scrypath/options.ex` — add `faceting:` to `@schema_options`, add `validate_faceting/1`.
+- `lib/scrypath/schema.ex` — add `__scrypath__(:faceting)` clause.
+- `lib/scrypath.ex` — add `schema_faceting/1` reflection helper mirroring `schema_fields/1`.
 
-## Recommended Component Boundaries
+**Compile-time validation to add:** every atom in `faceting.attributes` MUST also appear in `filterable:`. This is both a Meilisearch hard requirement (facets require filterable attributes) and a Scrypath correctness rule — surface it at `use Scrypath` time, not at search time.
 
-| Component | Status | Responsibility | Communicates With |
-|-----------|--------|----------------|-------------------|
-| `Scrypath`, `Scrypath.Schema`, `Scrypath.Projection`, `Scrypath.Identity` | Keep mostly as-is | Public Ecto-first schema metadata, projection, canonical document identity | `Scrypath.Sync`, `Scrypath.Search`, `Scrypath.Backfill` |
-| `Scrypath.Backend` | Modify internally | Keep the common-path adapter contract small; add only the minimum admin/introspection hooks needed for orchestration | `Scrypath.Config`, operations layer, backend modules |
-| `Scrypath.Sync` | Modify | Stay as the public sync entrypoint, but delegate backend task handling to an internal operations/task module instead of `Scrypath.Meilisearch.Tasks` directly | `Scrypath.Config`, `Scrypath.Operator.Tasks`, `Scrypath.Oban.Enqueue` |
-| `Scrypath.Search` | Keep stable | Common-path text/filter/sort/page + explicit hydration only | `Scrypath.Backend`, `Scrypath.Hydration` |
-| `Scrypath.Meilisearch` | Keep public, narrow | Explicit backend-native read/write escape hatch | Meilisearch-specific client and native request structs |
-| `Scrypath.Backfill` | Modify lightly | Batch rebuild over explicit repo/query inputs, emit richer operator-facing results | operations layer, backend |
-| `Scrypath.Reindex` | Refactor | Orchestrate rebuilds through internal lifecycle APIs instead of reaching into Meilisearch directly | operations layer, backend |
-| `Scrypath.Operator.*` or `Scrypath.Operations.*` | New public namespace | Operator-facing APIs, typed status structs, task refs, index lifecycle reports, introspection | `Scrypath.Reindex`, `Scrypath.Backfill`, backend admin APIs, telemetry |
-| `Mix.Tasks.Scrypath.*` | New thin wrappers | CLI ergonomics for maintainers and operators, but no business logic | `Scrypath.Operator.*` |
-| `Scrypath.Telemetry` | Expand | Stable event naming, result metadata, operator correlation ids, docs contract for emitted fields | every orchestrator module |
+#### How facet filter validation composes with the existing Query filter parser
 
-## Specific Recommendations
+**Answer: do NOT widen the common `filter:` kwarg. Add a sibling `facet_filter:` kwarg that validates through a *separate* path, then merges into `%Scrypath.Query{}` as a new field.**
 
-### 1. Preserve the adapter seam without promising a public engine facade
+Why not overload `filter:`? The existing filter validator (`options.ex:462-491`) is explicitly narrow: it rejects boolean composition (`:and`, `:or`, `:not`) and only accepts `{field, value}` or `{field, [operator: operand]}` pairs. That narrowness is a **deliberate product decision** (ARCHITECTURE.md lines 30–32 lock the common filter shape). Facets fundamentally need disjunction (`genre = "fiction" OR genre = "mystery"`) — breaking that constraint retroactively would widen the common path and invalidate the "common filter is Ecto-shaped and narrow" contract.
 
-Keep `Scrypath.Backend` internal. Do not turn it into a plugin API yet.
+**Recommended shape:**
+```elixir
+# New option
+facet_filter: [
+  # Keyword-list-of-atoms-to-value-list per facet attribute
+  # Validates: each key appears in schema's faceting.attributes
+  #            values match filterable types
+  [genre: ["fiction", "mystery"], year: [2024, 2025]]
+]
+```
 
-The right v1.2 change is to give internal orchestration one more layer of indirection, not to expose backend polymorphism publicly. Today, `Scrypath.Reindex.run/2` calls Meilisearch-specific functions directly and `Scrypath.Sync` knows about `Scrypath.Meilisearch.Tasks.wait_for_task/2`. That is enough evidence that the current seam is not yet deep enough for public multi-backend claims.
+**Translation path (new module):**
 
-Recommended internal evolution:
+```
+Scrypath.search/3
+  → Options.validate_search_options!/2  [validates facet_filter against schema's faceting.attributes]
+  → Query.new/2                         [stores facet_filter on %Query{}]
+  → Backend.search/3 (Scrypath.Meilisearch)
+  → Scrypath.Meilisearch.Query.to_payload/1  [translates to Meilisearch array-of-arrays string syntax]
+  → Scrypath.Meilisearch.Client.search/3
+```
 
-- Keep the existing common-path callbacks for search and document writes.
-- Add one internal admin capability surface for operations that are not part of the normal application path.
-- Make capabilities explicit rather than inferred from module names.
+**Files touched:**
+- **New:** add `facet_filter` field to `%Scrypath.Query{}` struct in `lib/scrypath/query.ex` (`defstruct text: nil, filter: [], sort: [], page: %{}, facet_filter: [], facets: []`).
+- `lib/scrypath/options.ex` — add `@search_options` entry `facet_filter:` + `validate_facet_filter/1` that checks against `schema_module.__scrypath__(:faceting)`.
+- `lib/scrypath/meilisearch/query.ex` — extend `to_payload/1` with `translate_facet_filter/1` producing Meilisearch's array-of-arrays OR syntax (`[["genre = fiction", "genre = mystery"]]`) and `translate_facets/1` for the `facets:` array.
+- `lib/scrypath/meilisearch/client.ex:82-89` — no change needed; `search_payload/1` already delegates to `MeilisearchQuery.to_payload/1`.
 
-Recommended shape:
+#### Where facet distribution lives on `SearchResult`
+
+**Answer: extend `%Scrypath.SearchResult{}` additively with a single new key `:facets`.**
+
+The existing struct already keeps the backend-native `raw` map for opt-out power users (`search_result.ex:7`). Facet distribution is a first-class search-result concern in the same way `page` is — it deserves its own top-level field, not to be buried in `raw`.
+
+**Shape:**
+```elixir
+# lib/scrypath/search_result.ex
+@enforce_keys [:query, :hits, :records, :raw, :missing_ids, :page]
+defstruct [:query, :hits, :records, :raw, :missing_ids, :page, facets: %{}]
+
+@type t :: %__MODULE__{
+  ...
+  facets: %{atom() => %{facet_values: %{String.t() => non_neg_integer()}, stats: map()}}
+}
+```
+
+Note: `facets:` is NOT in `@enforce_keys` — that preserves backward compatibility. All previously-constructed `%SearchResult{}` instances keep working; `.facets` defaults to `%{}` when absent.
+
+**Files touched:**
+- `lib/scrypath/search_result.ex` — add `facets` field with default `%{}`, add private `facets(raw)` helper mirroring the existing `page(raw)` pattern (extract both `facetDistribution` and `facetStats` from raw Meilisearch response, keyed by atom for Elixir-idiomatic consumption).
+- `lib/scrypath/search.ex:42-46` — `decorate_result/4` passes through untouched; the `SearchResult.new/4` call already receives the full `raw_result`.
+
+---
+
+### (b) Relevance Tuning
+
+#### Where the declarations live: schema vs config
+
+**Answer: schema metadata, not runtime config. Extend the existing `settings:` key — don't add parallel top-level keys.**
+
+The `settings:` map already lives in `@schema_options` and already flows through the existing reindex pipeline via `Scrypath.Meilisearch.Settings.resolve/2` (`lib/scrypath/meilisearch/settings.ex:8-12`). Synonyms, typo tolerance, ranking rules, distinct attribute, and stop words are **already** Meilisearch settings — they naturally belong in the same map that flows through `apply_settings`.
+
+However, the current shape is unstructured (`%{}` default, loosely validated). v1.3 should add **structured subkeys with validation** rather than relying on raw Meilisearch JSON keys:
 
 ```elixir
-defmodule Scrypath.Backend.Admin do
-  @callback capabilities() :: %{
-              task_tracking?: boolean(),
-              managed_reindex?: boolean(),
-              settings_apply?: boolean(),
-              alias_swap?: boolean()
-            }
-
-  @callback create_target_index(module(), keyword()) :: {:ok, map()} | {:error, term()}
-  @callback apply_settings(module(), String.t(), keyword()) :: {:ok, map()} | {:error, term()}
-  @callback swap_live_index(module(), keyword()) :: {:ok, map()} | {:error, term()}
-  @callback fetch_task(term(), keyword()) :: {:ok, map()} | {:error, term()}
-end
+settings: %{
+  synonyms: %{"nyc" => ["new york"], "tv" => ["television"]},
+  typo_tolerance: %{enabled: true, min_word_size_for_typos: %{one_typo: 5, two_typos: 9}},
+  ranking_rules: [:words, :typo, :proximity, :attribute, :sort, :exactness, "released_at:desc"],
+  distinct_attribute: :product_line,
+  stop_words: ["the", "a", "an"]
+}
 ```
 
-This should stay internal and documented as such. The benefit is sequencing safety:
+Rationale for staying in `settings:` rather than creating `relevance:`:
+1. **Reindex pipeline already handles it.** `lib/scrypath/reindex.ex:23-25` calls `meilisearch.apply_settings/3` which calls `Settings.resolve/2` which reads `schema_module |> Scrypath.schema_settings() |> Map.merge(...)`. Zero pipeline restructure needed.
+2. **Avoids a second public concept.** `settings` is already the user-facing word. Splitting into `relevance` vs `settings` would create two near-synonymous config surfaces.
+3. **Meilisearch-native translation is one shape, not two.** The `PATCH /indexes/:uid/settings` endpoint takes one merged body — Scrypath's internal representation should mirror that.
 
-- backend breadth can arrive later without changing `Scrypath.search/3` or `Scrypath.sync_*`
-- operator tooling can depend on stable internal capabilities instead of hard-coded Meilisearch branches
-- Scrypath can say "Meilisearch-first library with an internal seam" and still be telling the truth
-
-What not to do yet:
-
-- no `Scrypath.Backends.register/2`
-- no user-authored adapter API
-- no generic `backend_options: %{...}` bag on common-path calls
-- no promise that every backend will support reindex/settings/task inspection equally
-
-### 2. Operator tooling should be library-first, Mix-second, not a separate package
-
-For an Ecto-native library, the operator surface should live in the main package first.
-
-Why:
-
-- operator workflows already share the same runtime contracts as sync, backfill, and reindex
-- a separate package now would force duplicate versioning, docs drift, and cross-package compatibility policy before there is proof it is needed
-- Elixir users expect library APIs they can call from Mix tasks, releases, tests, and app code
-
-Recommended operator surface:
-
-- public library APIs under `Scrypath.Operator.*` or `Scrypath.Operations.*`
-- thin Mix tasks for shell ergonomics
-- typed structs for machine-readable results
-- telemetry on every long-running or multi-step operator action
-- docs and ExDoc guides, not a separate service
-
-Recommended new public modules:
-
-| Module | Purpose |
-|--------|---------|
-| `Scrypath.Operator.Reindex` | start, inspect, and summarize managed rebuild workflows |
-| `Scrypath.Operator.Backfill` | explicit repair/backfill runs with dry-run and count reporting |
-| `Scrypath.Operator.Tasks` | normalize backend task refs and status inspection |
-| `Scrypath.Operator.Introspection` | resolve schema config, index names, settings, sync mode expectations, and backend capability visibility |
-
-Recommended result structs:
+**New work:** the translation layer in `Scrypath.Meilisearch.Settings` needs to convert Scrypath-owned Elixir shapes (snake_case atoms, Elixir types) to Meilisearch's camelCase JSON:
 
 ```elixir
-defmodule Scrypath.Operator.TaskRef do
-  defstruct [:backend, :uid, :index, :type, :status]
-end
+# Before (current): settings map passed raw to client
+Client.update_settings(index_name, settings, config)
 
-defmodule Scrypath.Operator.ReindexRun do
-  defstruct [
-    :schema,
-    :backend,
-    :live_index,
-    :target_index,
-    :cutover?,
-    :status,
-    :task_refs,
-    :documents,
-    :batches,
-    :started_at,
-    :finished_at
-  ]
-end
+# After: translate first
+Client.update_settings(index_name, translate_settings(settings), config)
 ```
 
-Recommended Mix tasks:
+Put `translate_settings/1` **in `lib/scrypath/meilisearch/settings.ex`** — not in `Scrypath.*`. That keeps snake_case→camelCase Meilisearch-native mapping confined to the namespaced adapter.
 
-- `mix scrypath.inspect SchemaModule`
-- `mix scrypath.backfill SchemaModule --dry-run`
-- `mix scrypath.reindex SchemaModule`
-- `mix scrypath.tasks --backend meilisearch --status failed`
+#### How reindex applies them safely without breaking concurrent sync
 
-Those tasks should do parsing, output formatting, and calls into `Scrypath.Operator.*`. They should not contain workflow logic.
+The existing fixed reindex order (`reindex.ex:20-44`) already solves this:
 
-What to defer:
+```
+create target_index → apply settings to target → backfill target → optional cutover
+```
 
-- a Phoenix LiveDashboard page
-- a hosted admin panel
-- a separate `scrypath_ops` package
+Settings always land on the **target** index, never the live one. Concurrent sync continues writing to the live index throughout. Cutover is a single atomic swap via `/swap-indexes`. This is already correct for relevance tuning — no pipeline change needed beyond translation.
 
-Add those only after there is evidence that the library APIs and telemetry are not enough.
+**One new safety check to add:** `Scrypath.Reindex.run/2` should **refuse to cutover** if the caller's declared `settings` in schema metadata differs from what was actually applied to the target. Today the result just returns `settings_applied: true` without verification. For relevance tuning — where misapplied ranking rules silently ruin search quality — add a post-apply verification step that reads back the target's settings and compares.
 
-### 3. Expose backend-native search power through explicit native modules, not common-path passthroughs
+**Files touched:**
+- `lib/scrypath/meilisearch/settings.ex` — add `translate_settings/1`, add typed validators per subkey.
+- `lib/scrypath/options.ex` — replace current `validate_settings/1` (accepts any map) with a NimbleOptions-based nested schema validating `synonyms`/`typo_tolerance`/`ranking_rules`/`distinct_attribute`/`stop_words`.
+- `lib/scrypath/reindex.ex` — add optional post-apply verification step (new private `verify_settings_applied/3`) before cutover.
+- **No change** to the orchestration order or concurrent-sync semantics.
 
-The current direction is correct: `Scrypath.search/3` is the stable common path, and `Scrypath.Meilisearch.*` is the escape hatch.
+---
 
-For v1.2, strengthen this split:
+### (c) Multi-Index Search (`Scrypath.search_many/2`)
 
-- keep `Scrypath.search/3` limited to concepts Scrypath owns: text, validated filters, validated sorts, paging, hydration
-- add explicit Meilisearch-native request/result types for advanced backend features
-- keep native outputs visibly native
+#### Preserving per-schema validation + hydration without a second-class result shape
 
-Recommended additions:
+**Answer: federated result is a *collection* of `%SearchResult{}`, not a new flat shape.**
+
+The core insight: each schema has its own filterable/sortable/faceting declarations, its own primary key, its own repo/preload. A "flattened" federated hit loses all of that. The only shape that preserves per-schema contracts is **a map of schema → `%SearchResult{}`**.
+
+**Recommended public API:**
 
 ```elixir
-defmodule Scrypath.Meilisearch.SearchRequest do
-  defstruct [
-    :query,
-    :filter,
-    :sort,
-    :facets,
-    :attributes_to_retrieve,
-    :attributes_to_highlight,
-    :ranking_score_threshold,
-    :hybrid,
-    :tenant_token
-  ]
+@spec search_many([{module(), keyword()}], keyword()) ::
+  {:ok, %{module() => Scrypath.SearchResult.t()}} | {:error, term()}
+def search_many(queries, opts \\ []) when is_list(queries) do
+  Scrypath.Search.search_many(queries, opts)
 end
 
-defmodule Scrypath.Meilisearch.SearchResult do
-  defstruct [:raw, :hits, :facet_distribution, :estimated_total_hits]
-end
+# Usage:
+Scrypath.search_many([
+  {MyApp.Post, text: "elixir", filter: [published: true]},
+  {MyApp.User, text: "elixir", filter: [active: true]}
+], repo: MyApp.Repo)
+# => {:ok, %{MyApp.Post => %SearchResult{...}, MyApp.User => %SearchResult{...}}}
 ```
 
-This gives Scrypath room to support richer backend-native power such as facets, tenant-token-driven queries, ranking controls, or later semantic/hybrid search without contaminating `Scrypath.Query`.
+Why this shape and not a flat `[Hit]`:
+- Every `%SearchResult{}` in the map was validated through the same `Options.validate_search_options!/2` path as `Scrypath.search/3` would produce — no duplicated validation code, no second-class "federated hit" that bypasses filterable/sortable checks.
+- Hydration stays per-schema: each entry runs `Hydration.hydrate/3` against that schema's repo/primary key.
+- No new public struct type. The SearchResult contract is intact.
 
-Graduation rule for the common path:
+**Internal orchestration** (where to put the Meilisearch-native federation):
 
-- only promote a capability into `Scrypath.search/3` if it is backend-agnostic in shape, easy to validate, and easy to explain in Ecto terms
+Meilisearch 1.3+ supports a native `/multi-search` endpoint that batches N index searches in one round-trip. That's the performance win — but it's backend-specific and therefore belongs under `Scrypath.Meilisearch.*`.
 
-Examples:
+```
+Scrypath.search_many/2 (public)
+  → Scrypath.Search.search_many/2 (new, private)
+    → per-entry: Options.validate_search_options!/2 + Query.new/2
+    → Backend.search_many/3 (new internal seam callback)
+      → Scrypath.Meilisearch.search_many/3 (batches into /multi-search)
+        → Scrypath.Meilisearch.Client.multi_search/2
+    → per-entry: decorate_result/4 produces %SearchResult{}
+  → {:ok, %{schema => %SearchResult{}}}
+```
 
-- `facets` should stay native for now
-- tenant-token or search-rule auth should stay native
-- hybrid/semantic knobs should stay native
-- common pagination, common filter, and common sort remain common
+**Adding to the `Scrypath.Backend` behaviour:**
 
-What not to do:
+ARCHITECTURE.md lines 62–70 define the current callbacks: `name/0`, `index_name/2`, `upsert_documents/3`, `delete_documents/3`, `search/3`. Adding `search_many/3` is behaviour-safe for a single-backend v1.3 (only `Scrypath.Meilisearch` must implement it). Give it a default implementation that falls back to N sequential `search/3` calls so the seam isn't structurally blocked by `/multi-search`-specific semantics:
 
-- no `native: %{...}` option on `Scrypath.search/3`
-- no opaque passthrough map on common calls
-- no fake portability layer that normalizes inherently different ranking or facet semantics
+```elixir
+@callback search_many([{module(), Query.t()}], config()) ::
+  {:ok, [{module(), map()}]} | {:error, term()}
 
-### 4. Release/publication confidence is part of architecture, not just process
+@optional_callbacks search_many: 2
+```
 
-Scrypath is a library, so release confidence is part of the product architecture.
+**Files touched:**
+- **New module** `lib/scrypath/search.ex` — add `search_many/2` alongside existing `search/2`.
+- `lib/scrypath.ex` — add public `search_many/2` delegate.
+- `lib/scrypath/backend.ex` — add optional callback.
+- `lib/scrypath/meilisearch.ex` — add `search_many/3` impl.
+- **New** `lib/scrypath/meilisearch/multi_search.ex` — Meilisearch-native `/multi-search` payload building and response unpacking (keeps the Meilisearch-specific JSON shape out of `Client`).
+- `lib/scrypath/meilisearch/client.ex` — add `multi_search/2` HTTP wrapper.
 
-The current repo already has the right building blocks:
+---
 
-- `mix.exs` pins `@version` and `@source_ref`
-- docs include `ARCHITECTURE.md` and maintainer docs
-- `.github/workflows/release-please.yml` publishes only when `release_created == true`
-- `docs/releasing.md` keeps manual publish validation separate from CI
+### (d) Extending `FailedWork.t()` — struct itself or companion?
 
-The next milestone should preserve that discipline:
+**Answer: extend the struct itself. Do not add a companion.**
 
-- release tags remain the single source of truth for published source refs
-- semver changes should be treated as public contract changes, not just release notes
-- docs must build against the tagged source ref that HexDocs points to
-- publish automation stays thin and obvious
+Evidence from current code:
+- `FailedWork.t()` already has `metadata: map()` as the escape valve for backend-specific detail (`lib/scrypath/operator/failed_work.ex:28`, line 119–124 and 142–146).
+- `@enforce_keys` is `[:id, :schema, :mode, :source, :operation, :state, :retryable?]` — everything else is already optional. Adding fields is additive.
+- `recovery: nil` and `metadata: %{}` defaults set the pattern: new optional fields default to a benign value.
 
-Architectural recommendation:
+Target additions for v1.3 per milestone goal (attempt count, error reason class, last attempt timestamp):
 
-1. Make the first real tagged/public release the gating event before backend breadth.
-2. Add one release contract test that verifies:
-   - `mix.exs` version matches the tag shape Scrypath expects
-   - docs source links point to the tagged ref
-   - release workflow still publishes from the created tag
-3. Keep Hex publishing in the existing workflow, not in bespoke scripts.
+```elixir
+defstruct [
+  :id, :schema, :mode, :source, :operation, :state, :retryable?,
+  :reason, :failed_at,
+  recovery: nil,
+  metadata: %{},
+  # NEW v1.3 fields:
+  attempt: nil,           # non_neg_integer() | nil  — attempt count
+  max_attempts: nil,      # non_neg_integer() | nil
+  reason_class: nil,      # :transport | :backend_rejected | :validation | :queue_discard | :unknown
+  last_attempt_at: nil    # DateTime.t() | nil
+]
+```
 
-Why sequencing matters:
+**Why not a companion struct?** Three reasons:
+1. **Consumers would have to look in two places.** Operators today call `Scrypath.failed_sync_work/2` and pattern-match `%FailedWork{}`. A companion forces `Scrypath.failed_work_details(work)` — extra API surface for no win.
+2. **Both existing sources (Meilisearch task + Oban job) already populate all the new fields.** Attempt count is already on Oban jobs (`attempt`, `max_attempts` fields); Meilisearch tasks carry `finishedAt` → maps to `last_attempt_at`. The struct just needs to read them. Nothing conceptually warrants a separate shape.
+3. **`metadata: map()` is already the open-ended escape hatch.** If something later turns out to be truly backend-specific, it belongs in `metadata`, not in a new struct.
 
-- until the library has one successful public release, widening the surface only increases support burden
-- real semver pressure reveals which APIs feel stable and which are still internal convenience wrappers
-- release ergonomics affect trust as much as runtime behavior for an OSS library
+**Build order inside (d):** add the fields with defaults first (backward compatible), then populate in `from_backend_task/3` and `from_queue_job/3`, then update typespec, then update operator verification evidence.
 
-### 5. Architecture sequencing for v1.2 and beyond
+**Files touched:**
+- `lib/scrypath/operator/failed_work.ex` — add fields to `defstruct` + `@type`; populate in both `from_backend_task/3` and `from_queue_job/3` (most data already flows in via Oban's and Meilisearch's native fields).
+- `test/scrypath/operator/failed_work_test.exs` — add assertions.
+- No change to `Scrypath.*` public API surface — the struct change is purely additive.
 
-Recommended build order:
+---
 
-1. **Real release proof and release-contract hardening**
-   - validate the first public tag/publish path
-   - confirm docs/source/version/tag alignment
-   - do not widen runtime API during the same slice
+### (e) Phase Ordering
 
-2. **Internal operations seam extraction**
-   - refactor `Scrypath.Sync` to depend on a task/status abstraction, not directly on `Scrypath.Meilisearch.Tasks`
-   - refactor `Scrypath.Reindex` to depend on backend admin/lifecycle hooks, not direct `Scrypath.Meilisearch` calls
+**Recommendation: Relevance tuning FIRST, then faceting, then multi-index, then operator polish + tooling debt.**
 
-3. **Operator API layer**
-   - introduce `Scrypath.Operator.*` modules and result structs
-   - expose introspection, task refs, and lifecycle summaries
-   - emit stable telemetry for all long-running workflows
+Reasoning walks the dependency graph:
 
-4. **Thin Mix tasks**
-   - wrap the operator API with small tasks for maintainers and operators
-   - keep tasks output-oriented, not logic-heavy
+1. **Relevance tuning (settings extension) is the narrowest change and unblocks everything downstream.** It only modifies the schema DSL, `Options.validate_settings`, and `Scrypath.Meilisearch.Settings` translation. It touches the reindex pipeline but the pipeline orchestration order doesn't change. No `%Query{}` or `%SearchResult{}` changes. Crucially, it establishes the **translation-layer pattern** (snake_case Scrypath atoms → camelCase Meilisearch JSON in `Scrypath.Meilisearch.*`) that faceting then reuses.
 
-5. **Meilisearch-native power lane**
-   - add explicit request/result modules under `Scrypath.Meilisearch.*`
-   - extend docs with "common path vs native path" guidance
+2. **Faceting goes second because it builds on that translation pattern and needs `%Query{}` + `%SearchResult{}` extensions.** Once relevance tuning has proven "Scrypath-owned shape in, backend-native shape out, translation confined to the namespaced adapter" works, faceting extends both structs additively without inventing a new pattern.
 
-6. **Only then decide on backend breadth**
-   - if adoption pressure is for Typesense or another engine, the seam is ready enough to evaluate honestly
-   - if adoption pressure is instead for stronger operations or Meilisearch-native features, keep going deeper instead of wider
+3. **Multi-index comes third because it depends on the per-schema search+validation flow being solid.** `search_many/2` fans out N calls through the already-extended `%Query{}`/`%SearchResult{}` path. Doing multi-index first would force rework: every facet/relevance addition would then have to be re-proven through the federated path.
 
-## Integration Points
+4. **Operator polish + tooling debt close the milestone.** The `FailedWork` extension is isolated — zero coupling to search features. It can slot anywhere, but running it last means operator docs get to reference the new relevance/facet/multi-search features in the drift recovery guide. Release/tooling debt (GitHub Actions Node 20, missing v1.2 VALIDATION.md artifacts) is pure plumbing and should be its own terminal phase so its verification gate is uncontaminated.
 
-### Modified integration points
+**Counterargument considered:** "Do faceting first because it's the highest-visibility persona-facing feature." Rejected because faceting needs the settings-translation pattern and validates the `%SearchResult{}` additive-extension approach — proving those on the *smaller* relevance change first de-risks the larger faceting change. If the smaller change breaks any public contract, the fix is narrower.
 
-| Current integration | Problem | Recommended change |
-|---------------------|---------|--------------------|
-| `Scrypath.Sync` -> `Scrypath.Meilisearch.Tasks.wait_for_task/2` | common sync orchestration knows backend task details | route through `Scrypath.Operator.Tasks` or an internal task adapter |
-| `Scrypath.Reindex` -> `Scrypath.Meilisearch.create_index/apply_settings/swap_indexes` | rebuild flow is Meilisearch-shaped at the top level | route through internal backend admin/lifecycle callbacks |
-| public docs -> Meilisearch-specific operator guidance mixed into core architecture | harder to preserve "common path vs native path" story | split docs into common operations, operator APIs, and Meilisearch-native extensions |
+**Suggested phase layout (what the roadmapper should adopt):**
 
-### New integration points
+| Phase | Scope | Depends on | Why here |
+|---|---|---|---|
+| 18. Relevance Tuning | Structured `settings:` subkeys (synonyms/typo/ranking/distinct/stop words), translation layer in `Meilisearch.Settings`, reindex verify-before-cutover | v1.2 (merged) | Narrowest change; establishes Scrypath-owned → Meilisearch-native translation pattern reused by phase 19 |
+| 19. Faceting | `faceting:` schema key, `facet_filter:`/`facets:` on `%Query{}`, `facets:` on `%SearchResult{}`, `Meilisearch.Query` translation, LiveView guide | 18 | Reuses translation pattern from 18; additive `%SearchResult{}` extension |
+| 20. Multi-index Search | `Scrypath.search_many/2`, optional `Backend.search_many/3` callback, `Meilisearch.MultiSearch`, `/multi-search` client | 19 | Fans out through stabilized `%Query{}`/`%SearchResult{}` path |
+| 21. Operator Polish + Drift Recovery Guide | `FailedWork.t()` additive fields (`attempt`, `reason_class`, `last_attempt_at`, `max_attempts`), end-to-end drift recovery guide referencing new search features | 20 | Orthogonal to search features; drift guide references them |
+| 22. Release & Tooling Debt | GitHub Actions beyond Node 20 deprecation; close v1.2 VALIDATION.md artifacts for phases 13/14/15 | independent | Pure plumbing; terminal phase for clean v1.3 milestone closure |
 
-| New point | Why |
-|-----------|-----|
-| `Scrypath.Operator.Introspection.schema_report/2` | lets tasks, docs examples, and future dashboards use one normalized schema/backend report |
-| `Scrypath.Operator.Tasks.fetch/2` | gives operator tooling one backend-neutral task inspection shape |
-| telemetry correlation ids for reindex/backfill runs | ties Mix tasks, logs, and task polls together without new runtime services |
-| ExDoc guide for "Choosing common path vs native path" | keeps DX crisp as features widen |
+---
 
-## Patterns to Follow
+## 3. Integration Points (File-Level Ownership)
 
-### Pattern 1: Keep the common path small and typed
+| Concern | Owning file (new or extend) | New vs. extended |
+|---|---|---|
+| `faceting:` schema DSL key | `lib/scrypath/options.ex` (`@schema_options`) | extend |
+| `faceting` reflection (`__scrypath__(:faceting)`) | `lib/scrypath/schema.ex` | extend |
+| `schema_faceting/1` helper | `lib/scrypath.ex` | extend |
+| `facet_filter:` / `facets:` search options | `lib/scrypath/options.ex` (`@search_options`) | extend |
+| `facet_filter` / `facets` on query struct | `lib/scrypath/query.ex` | extend (`defstruct`) |
+| Meilisearch facet filter/facets translation | `lib/scrypath/meilisearch/query.ex` | extend |
+| `facets` on SearchResult | `lib/scrypath/search_result.ex` | extend (`defstruct` default + helper) |
+| Structured relevance subkeys (synonyms/typo/ranking/distinct/stop_words) | `lib/scrypath/options.ex` (replace `validate_settings/1`) | extend |
+| snake_case → camelCase relevance translation | `lib/scrypath/meilisearch/settings.ex` | extend |
+| Reindex verify-before-cutover | `lib/scrypath/reindex.ex` (new private `verify_settings_applied/3`) | extend |
+| `Scrypath.search_many/2` public | `lib/scrypath.ex` + `lib/scrypath/search.ex` | extend |
+| `Backend.search_many/3` callback | `lib/scrypath/backend.ex` | extend (optional callback) |
+| Meilisearch multi-search adapter | **new:** `lib/scrypath/meilisearch/multi_search.ex` | new |
+| Meilisearch `/multi-search` HTTP | `lib/scrypath/meilisearch/client.ex` (new `multi_search/2`) | extend |
+| Meilisearch backend multi-search impl | `lib/scrypath/meilisearch.ex` (new `search_many/3`) | extend |
+| `FailedWork` attempt/reason_class/last_attempt_at fields | `lib/scrypath/operator/failed_work.ex` | extend |
 
-`Scrypath.search/3`, `sync_record/3`, `backfill/2`, and `reindex/2` should remain predictable and validated. The current `%Scrypath.Query{}` shape is a good example of the right restraint.
+**New modules: two.** (`Scrypath.Meilisearch.MultiSearch`, plus a likely new test helper under `test/support/`.)
+**Extended modules: twelve.** All extensions are **additive** — no breaking changes to public structs, no renamed functions.
 
-### Pattern 2: Put native power in explicit namespaces
+---
 
-Laravel Scout succeeds here: it has a common engine interface, but still allows engine-specific behavior rather than forcing all features through one universal builder. Scrypath should do the same, but with more restraint because backend breadth is not yet public.  
-Source: https://laravel.com/docs/12.x/scout
+## 4. Data Flow Changes (per feature)
 
-### Pattern 3: Prefer queue-backed or operator-visible indexing, not hidden "magic realtime"
+### Faceting flow
+```
+caller: Scrypath.search(Post, "elixir", facet_filter: [genre: ["fiction"]], facets: [:genre, :year])
+  → Options.validate_search_options!/2        [validates facet_filter keys against __scrypath__(:faceting).attributes]
+  → Query.new/2                                [%Query{facet_filter: ..., facets: [...]}]
+  → Meilisearch.search/3 (Backend impl)
+  → Client.search/3 → MeilisearchQuery.to_payload/1
+     translate_facet_filter: [["genre = fiction"]]
+     translate_facets:       ["genre", "year"]
+  → HTTP POST /indexes/.../search
+  → Client returns raw with facetDistribution + facetStats
+  → Search.decorate_result/4 → SearchResult.new/4 → facets(raw) helper extracts
+  → {:ok, %SearchResult{hits: [...], facets: %{genre: %{facet_values: %{"fiction" => 42}, stats: %{}}}}}
+```
 
-Search libraries repeatedly run into trouble when indexing is implicit and invisible. Haystack documents that in-process realtime indexing can make request users "sit & wait". Scrypath already chose explicit sync modes; keep leaning into that.  
-Source: https://django-haystack.readthedocs.io/en/master/signal_processors.html
+### Relevance tuning flow (reindex)
+```
+caller: Scrypath.reindex(Post, cutover?: true, ...)
+  → Reindex.run
+     → Meilisearch.create_index (target)
+     → wait task
+     → Meilisearch.apply_settings (target)
+        → Settings.resolve: schema settings ⊕ config override
+        → Settings.translate_settings: snake_case → camelCase
+        → Client.update_settings(target, translated, config)
+     → wait task
+     → NEW: Reindex.verify_settings_applied(target)   [read-back check]
+     → Backfill.run (target)
+     → wait batch tasks
+     → maybe_cutover (swap-indexes)
+```
 
-### Pattern 4: Treat reindex as staged lifecycle, not an implementation detail
+### Multi-index flow
+```
+caller: Scrypath.search_many([{Post, [text: "x"]}, {User, [text: "x"]}], repo: R)
+  → Scrypath.Search.search_many/2
+     → Enum.map: Options.validate_search_options!/2 per-schema (fails loud on any schema)
+     → Enum.map: Query.new/2 per-schema
+     → Backend.search_many/3 (one batched /multi-search call)
+     → Enum.map: decorate_result/4 → SearchResult.new/4 per-schema
+  → {:ok, %{Post => %SearchResult{}, User => %SearchResult{}}}
+```
 
-Searchkick and Meilisearch both reinforce the need for zero-downtime rebuild workflows and explicit swaps. Scrypath already has `cutover?: false` and target indexes in `Scrypath.ReindexTest`; that should become the foundation for richer operator tooling, not be hidden.  
-Sources: https://github.com/ankane/searchkick, https://www.meilisearch.com/blog/zero-downtime-index-deployment
+---
 
-### Pattern 5: Telemetry first, dashboards later
+## 5. Quality-Gate Checklist Verification
 
-Phoenix explicitly encourages library telemetry adoption. Scrypath already emits stable common metadata in `Scrypath.Telemetry.common_metadata/3`; v1.2 should deepen that instead of building a UI first.  
-Source: https://hexdocs.pm/phoenix/telemetry.html
+- [x] **Integration points named at file level** — section 3 lists every file path.
+- [x] **New vs. modified modules explicit** — two new files (`multi_search.ex` + support), twelve extensions.
+- [x] **Build order considers dependencies** — section 2(e) derives ordering from the pattern dependency graph (translation pattern → query/result struct extension → federation → orthogonal polish).
+- [x] **`Scrypath.Meilisearch.*` backend-native boundary preserved** — facet-filter string syntax, `/multi-search` JSON, camelCase settings keys all confined to `Scrypath.Meilisearch.*`; callers see only Scrypath-owned Elixir shapes.
+- [x] **Internal operations seam not bypassed by new public API** — `search_many` routes through `%Scrypath.Query{}` and `%SearchResult{}`; relevance reindex continues to use `Scrypath.Operations.Task`/`Result` via existing `maybe_wait_for_result_task`; `FailedWork` extensions stay inside the already-Scrypath-owned operator struct.
+- [x] **No breaking changes to existing public shapes** — `%SearchResult{}` extension is a new defaulted field outside `@enforce_keys`; `%Query{}` extension is two new defaulted fields; `%FailedWork{}` extensions are new defaulted fields; sync map and operator structs untouched; the `Backend` behaviour gets only an `@optional_callback`.
 
-## Anti-Patterns to Avoid
+---
 
-### Anti-Pattern 1: Public multi-backend claims while orchestration is still Meilisearch-shaped
+## 6. Open Questions Roadmapper Should Know About
 
-**What goes wrong:** users are told the library is backend-agnostic, but only Meilisearch supports the real operator story.  
-**Why bad:** creates semantic version pressure and support burden before the seam is honest.  
-**Instead:** keep the seam internal, extract lifecycle/task abstractions first, then evaluate breadth.
+1. **`NimbleOptions`-nested vs. plain-map settings validation.** Replacing `validate_settings/1` (currently accepts any map) with structured validation is a small semver risk: users with unusual in-map keys may start getting validation errors. Mitigation: validate **known** subkeys strictly, pass through unknown subkeys unchanged. Flag as "phase 18 plan-level decision."
 
-### Anti-Pattern 2: Generic passthrough options on the common search path
+2. **`Backend.search_many/3` as optional callback vs. required.** Recommending `@optional_callbacks` because (a) v1.3 is still Meilisearch-only, (b) a future backend without native multi-search can always be served by a default N-sequential-calls fallback in `Scrypath.Search`. Phase 20 plan should decide whether to actually ship the fallback or require backends to implement it.
 
-**What goes wrong:** `Scrypath.search/3` becomes a transport for backend payloads.  
-**Why bad:** validation weakens, docs get muddy, and portable code becomes accidental backend lock-in.  
-**Instead:** use `Scrypath.Meilisearch.SearchRequest` or explicit native functions.
+3. **Facet filter values for non-string filterables.** Meilisearch facet filter syntax quotes strings but not numerics. `Meilisearch.Query.format_value/1` already handles this via `Jason.encode!`. Re-verify at phase 19 plan time that all filterable types round-trip correctly through the facet filter path (booleans are the usual gotcha).
 
-### Anti-Pattern 3: CLI-only operator workflows
+---
 
-**What goes wrong:** Mix tasks become the real API and app code cannot reuse them safely.  
-**Why bad:** harder testing, weaker docs, and no typed result contracts.  
-**Instead:** library APIs first, Mix task wrappers second.
-
-### Anti-Pattern 4: Separate package too early
-
-**What goes wrong:** `scrypath_ops` or similar ships before the core operator contracts are stable.  
-**Why bad:** duplicated semver surface and docs drift.  
-**Instead:** keep operator APIs in the main package until there is a concrete need for optional runtime/UI tooling.
-
-### Anti-Pattern 5: Hidden callback-style sync magic
-
-**What goes wrong:** search writes become implicit side effects with unclear failure semantics.  
-**Why bad:** least surprise is lost and recovery paths get harder.  
-**Instead:** preserve explicit sync verbs and explicit sync modes.
-
-## Deferrals
-
-These should stay out of the next milestone unless adoption pressure is overwhelming:
-
-| Defer | Why |
-|------|-----|
-| public backend-agnostic adapter/plugin API | the internal seam is not yet operationally complete |
-| second backend in the same milestone as operator seam extraction | mixes two sources of change and hides where pain actually is |
-| common-path facets / semantic / hybrid search | these are backend-native today and would poison the common path |
-| separate operator package or Phoenix UI | library APIs and telemetry should prove out first |
-| automatic drift detection and self-healing rebuilds | good future direction, but too much policy for v1.2 |
-| old-index garbage collection as automatic reindex behavior | too easy to surprise operators; keep cleanup explicit |
-
-## Scalability Considerations
-
-| Concern | v1.2 / early adopters | Later after adoption signal |
-|---------|------------------------|-----------------------------|
-| backend breadth | preserve internal seam only | add second backend only if operator/lifecycle abstractions hold |
-| operator workflows | library APIs + Mix tasks + telemetry | optional UI or separate package if there is repeated demand |
-| native search power | explicit `Scrypath.Meilisearch.*` modules | graduate only proven cross-backend concepts |
-| release confidence | one successful public release plus contract tests | keep CI/publish path boring and documented |
-
-## Architectural Sequencing Recommendation
-
-The next milestone should be sequenced as:
-
-1. release/publication confidence in the real world
-2. internal lifecycle/task seam extraction
-3. public operator API layer
-4. thin Mix task ergonomics
-5. Meilisearch-native power lane improvements
-6. only then, decide whether backend breadth is actually the next problem
-
-That order best preserves least surprise, keeps the public API honest, and avoids a fake abstraction layer that would be expensive to undo.
-
-## Sources
-
-- Local codebase:
-  - `lib/scrypath.ex`
-  - `lib/scrypath/backend.ex`
-  - `lib/scrypath/sync.ex`
-  - `lib/scrypath/reindex.ex`
-  - `lib/scrypath/search.ex`
-  - `lib/scrypath/meilisearch.ex`
-  - `lib/scrypath/telemetry.ex`
-  - `test/scrypath/backend_test.exs`
-  - `test/scrypath/reindex_test.exs`
-  - `test/scrypath/meilisearch/tasks_test.exs`
-  - `.github/workflows/ci.yml`
-  - `.github/workflows/release-please.yml`
-  - `docs/releasing.md`
-- Official / primary references:
-  - Laravel Scout docs: https://laravel.com/docs/12.x/scout
-  - Searchkick repository/docs: https://github.com/ankane/searchkick
-  - Meilisearch tasks and async docs: https://www.meilisearch.com/docs/capabilities/indexing/tasks_and_batches/async_operations
-  - Meilisearch filtering/sorting/faceting docs: https://www.meilisearch.com/docs/capabilities/filtering_sorting_faceting/overview
-  - Meilisearch task API: https://www.meilisearch.com/docs/reference/api/async-task-management/list-tasks
-  - Meilisearch tenant token docs: https://www.meilisearch.com/docs/learn/security/tenant_token_reference
-  - Meilisearch zero-downtime index deployment article: https://www.meilisearch.com/blog/zero-downtime-index-deployment
-  - Meilisearch Rails repository/docs: https://github.com/meilisearch/meilisearch-rails
-  - Haystack signal processor docs: https://django-haystack.readthedocs.io/en/master/signal_processors.html
-  - Oban unique jobs docs: https://hexdocs.pm/oban/unique_jobs.html
-  - Hex publishing docs: https://hex.pm/docs/publish
-  - Phoenix telemetry docs: https://hexdocs.pm/phoenix/telemetry.html
+**Files read for this research:**
+- `/Users/jon/projects/scrypath/.planning/PROJECT.md`
+- `/Users/jon/projects/scrypath/.planning/milestones/v1.2-ROADMAP.md`
+- `/Users/jon/projects/scrypath/ARCHITECTURE.md`
+- `/Users/jon/projects/scrypath/lib/scrypath.ex`
+- `/Users/jon/projects/scrypath/lib/scrypath/schema.ex`
+- `/Users/jon/projects/scrypath/lib/scrypath/search.ex`
+- `/Users/jon/projects/scrypath/lib/scrypath/search_result.ex`
+- `/Users/jon/projects/scrypath/lib/scrypath/query.ex`
+- `/Users/jon/projects/scrypath/lib/scrypath/options.ex`
+- `/Users/jon/projects/scrypath/lib/scrypath/meilisearch.ex`
+- `/Users/jon/projects/scrypath/lib/scrypath/meilisearch/query.ex`
+- `/Users/jon/projects/scrypath/lib/scrypath/meilisearch/settings.ex`
+- `/Users/jon/projects/scrypath/lib/scrypath/meilisearch/client.ex`
+- `/Users/jon/projects/scrypath/lib/scrypath/reindex.ex`
+- `/Users/jon/projects/scrypath/lib/scrypath/operator/failed_work.ex`
+- `/Users/jon/projects/scrypath/lib/scrypath/operations/result.ex`

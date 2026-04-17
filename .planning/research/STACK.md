@@ -1,247 +1,182 @@
-# Technology Stack
+# Stack Research — v1.3 "Search Power That Phoenix Teams Reach For"
 
-**Project:** Scrypath
-**Researched:** 2026-04-16
-**Scope:** stack and release choices for the next milestone only
-**Overall posture:** keep the core library small, explicit, and Meilisearch-first; add release-confidence tooling and backend capability infrastructure before widening the public backend promise.
+**Domain:** Elixir OSS library — Ecto-native search indexing and orchestration (Scrypath)
+**Researched:** 2026-04-17
+**Confidence:** HIGH
 
-## Executive Recommendation
+## Scope
 
-Scrypath's next milestone should stay narrow. The warranted stack move is not "add more engines now"; it is "make the first public release path trustworthy, add capability-aware seams that keep future backend work survivable, and deepen operator visibility without turning the library into a dashboard product."
+This milestone is an **additive extension to an existing, publicly-released library** (`scrypath 0.3.0` on Hex). The v1.0–v1.2 stack is fixed and validated. This research answers only the three concrete stack questions relevant to v1.3:
 
-That yields one coherent v1.2 recommendation:
+1. Does the Meilisearch API shape for faceting / ranking / distinct / multi-search require any `Req` / HTTP-client changes?
+2. Do multi-index federated search tests need any new Elixir test dependencies?
+3. Which specific GitHub Actions upgrades clear the Node 20 deprecation warnings across the four current workflows (`ci.yml`, `release-please.yml`, `publish-hex.yml`, `verify-published-release.yml`)?
 
-1. Keep the runtime core unchanged: `Ecto`, `NimbleOptions`, `Req`, `Telemetry`, optional `Oban`.
-2. Strengthen release operations: keep Release Please, move release PR automation off bare `GITHUB_TOKEN`, and gate Hex publishing behind a protected GitHub Environment with a publisher-scoped `HEX_API_KEY`.
-3. Add dev/test-only contract tooling for future backend work: `Mox` and `StreamData`.
-4. Add backend-specific power through explicit Meilisearch-namespaced APIs and validated option schemas, not through a pretend-generic advanced search DSL.
-5. Add operator visibility through library APIs, Telemetry, and optional Phoenix/Oban integration patterns, not by taking hard dependencies on dashboard/reporting packages.
+**Non-goal for this research:** re-validating the Meilisearch-first backend choice, the Ecto-first API choice, or the Oban write-path — all three are validated and must not change in v1.3.
 
-## Recommended Stack For v1.2
+## Recommended Stack Additions / Changes
 
-### Core runtime
+### Elixir dependencies (mix.exs) — NO CHANGES REQUIRED
 
-No new mandatory runtime dependencies are warranted for v1.2.
+| Dependency | Current pin | Status for v1.3 | Rationale |
+|------------|-------------|-----------------|-----------|
+| `{:ecto, "~> 3.13"}` | 3.13.x | **Keep as-is** | No Ecto API surface in v1.3 needs features newer than 3.13. Declarative `faceting`, `settings`, `distinct_attribute` live in schema macros Scrypath already owns — they are metadata reflection, not Ecto-query features. |
+| `{:req, "~> 0.5"}` | 0.5 (latest 0.5.16, Nov 2025) | **Keep as-is** | All four new feature API surfaces — faceted search, settings patch, multi-search, distinct — are JSON-over-HTTP `POST` / `PATCH` against existing-shape endpoints. No streaming, multipart, SSE, or WebSocket is introduced. `Scrypath.Meilisearch.Client.run_request/5` already handles arbitrary JSON bodies via `[json: payload]` and is route-agnostic. |
+| `{:jason, "~> 1.4"}` | 1.4 | **Keep as-is** | Payloads remain JSON-encodable maps/lists. No new encoding requirements. |
+| `{:oban, "~> 2.21", optional: true}` | 2.21 (latest 2.21.0, Mar 2026) | **Keep as-is** | v1.3 does not add new worker types. Sync path is unchanged. |
+| `{:nimble_options, "~> 1.1"}` | 1.1 | **Keep as-is** | New `facet_filter`, `search_many/2` opts validate through the same option-schema pattern v1.2 already uses. |
+| `{:plug, "~> 1.18", only: :test}` | 1.18 | **Keep as-is** | Test harness for bypass-style HTTP mocks. |
+| `{:ecto_sqlite3, "~> 0.22", only: :test}` | 0.22 | **Keep as-is** | Test Repo backing. |
+| `{:credo, "~> 1.7"}` | 1.7 | **Keep as-is** | |
+| `{:dialyxir, "~> 1.4"}` | 1.4 | **Keep as-is** | |
+| `{:ex_doc, "~> 0.37"}` | 0.37 | **Keep as-is** | |
 
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Elixir | keep support floor `~> 1.17`, test through `1.19` | library runtime | Current floor is still reasonable for OSS adoption; no milestone requirement justifies a floor bump. |
-| OTP | keep floor `26`, test through `28` | runtime support window | Matches the current release posture and avoids avoidable compatibility churn before first public adoption. |
-| Ecto | keep `~> 3.13` | primary integration surface | Scrypath's product identity is still Ecto-native indexing and orchestration. |
-| NimbleOptions | keep `~> 1.1` | public option validation and docs generation | Already present and exactly the right tool for capability-scoped, documented backend options. |
-| Req | keep `~> 0.5` | HTTP transport | Already owned internally; no reason to widen the consumer contract. |
-| Telemetry | keep `~> 1.4` via dependency tree and public event contract | instrumentation | Operator honesty depends more on stable events than on more runtime packages. |
-| Oban | keep `~> 2.21`, optional | durable async sync path | Still the idiomatic Phoenix/Ecto production queue path; keep optional. |
+**Deliberate non-additions** (downstream consumer asked these be called out):
+- No new HTTP client (e.g. Finch, Tesla, HTTPoison) — Req is sufficient and already the standard.
+- No Elasticsearch-compat shim library — out of scope, and the product boundary explicitly avoids second-backend bleed.
+- No Postgres FTS library (e.g. `pg_search`, `ecto_tsvector`) — locked non-goal per `PROJECT.md` "Out of Scope".
+- No new facet-DSL library — facet filter expression validation lives inside Scrypath's query builder (same module family as the existing filter/sort translation in `Scrypath.Meilisearch.Query`).
+- No new Elixir test framework or HTTP mock library (e.g. Mox, Bypass) — the existing `meilisearch_client` injection seam in `Scrypath.Meilisearch.Settings.apply/3` and `Client.search/3` already supports swap-in test clients; multi-index federated search tests reuse that seam without new dependencies.
 
-### New dev/test dependencies
+### Meilisearch server version — RAISE CI PIN
 
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| `mox` | `~> 1.2` | adapter contract and failure-mode tests | Add now for backend capability contract tests and release-path isolation tests. |
-| `stream_data` | `~> 1.1` | property tests for option validation, result normalization, and idempotent contract behavior | Add now if v1.2 introduces richer Meilisearch option schemas or backend capability descriptors. |
-| `rhysd/actionlint` | current GitHub Action | workflow validation | Add now to catch release workflow regressions before the first public release. |
-| `actions/dependency-review-action` | current GitHub Action | dependency/security review on PRs | Add now for release-confidence operations, especially with workflow and dependency changes. |
-| Dependabot for `mix` and `github-actions` | GitHub-native | update hygiene | Add now if not already configured; the release path is now part of the product. |
+| Component | Current CI pin | v1.3 recommendation | Rationale |
+|-----------|----------------|---------------------|-----------|
+| `getmeili/meilisearch` (services image in `ci.yml`) | `v1.15` (in two jobs: `phase5-verification`, `phase13-verification`) | **`v1.15`** (hold the lower bound) — but document tested range up through **`v1.42`** in README. | Every v1.3 feature lands on API shape that is already stable in v1.15: `/multi-search` federation (stable since v1.12), object-form `filterableAttributes` with granular `{features: {facetSearch, filter}}` (stable pre-v1.15), `facetDistribution`/`facetStats` in search response (stable), `distinctAttribute` setting (stable), `rankingRules`, `synonyms`, `stopWords`, and `typoTolerance` including `disableOnNumbers` (new in v1.15). Pinning lower at v1.15 keeps the CI matrix honest about the minimum tested server. Releases v1.16–v1.42 are additive (multimodal embeddings, chat completions, export route, experimental `foreignKeys` cross-index hydration) and do not change the shape Scrypath uses. |
 
-## Recommended Choices
+**What this unlocks per v1.3 feature:**
 
-| Area | Choice | Why | v1.2 or Later |
-|------|--------|-----|---------------|
-| Release automation | Keep `googleapis/release-please-action@v4`, but authenticate release PR creation with a dedicated GitHub App token or fine-grained bot token | `GITHUB_TOKEN`-created PRs do not trigger downstream workflows; that weakens release-confidence at the exact point Scrypath needs it most. | v1.2 |
-| Hex publishing | Keep `mix hex.publish --yes` from CI, but only from a protected GitHub Environment holding a publisher-scoped `HEX_API_KEY` | Hex does not yet offer trusted publishing; current best practice is scoped API keys plus explicit gating. | v1.2 |
-| Maintainer auth model | Update maintainer docs/process to Hex 2.4 OAuth + 2FA expectations | As of 2026-03-31, Hex requires 2FA for write-capable OAuth flows; release docs should match reality. | v1.2 |
-| Backend breadth | Do not add a second public backend in core `scrypath` yet; instead add internal capability descriptors and adapter contract tests | The first real release should prove the current product before widening the public promise. | v1.2 |
-| Second backend target | If real demand appears, choose Typesense as the next backend candidate | It is the closest product shape to Meilisearch and has the cleanest OSS self-hosted HA story among plausible next engines. | later |
-| Operator tooling | Build `Scrypath.Operator` / `Scrypath.Status`-style APIs on top of existing Telemetry, Meilisearch task inspection, and optional Oban inspection | This stays idiomatic for Elixir libraries and avoids dashboard-package coupling. | v1.2 |
-| Advanced search power | Add explicit `Scrypath.Meilisearch.*` APIs or a `backend_options: [meilisearch: ...]` namespace validated by `NimbleOptions` | This keeps generic search ergonomic while exposing native engine power honestly. | v1.2 |
-| Dashboard/reporting dependencies | Do not add `phoenix_live_dashboard`, `telemetry_metrics`, `prom_ex`, or `oban_web` as library dependencies | Those are app-level choices, not core library requirements. Document integration instead. | later/docs only |
+| v1.3 Feature | Meilisearch API surface used | Minimum server | Scrypath integration point |
+|--------------|------------------------------|----------------|-----------------------------|
+| Faceted search — `faceting` field + `facet_filter` + `facet_distribution` + `facet_stats` | `POST /indexes/{uid}/search` with `facets: [...]` → response carries `facetDistribution` and (for numeric facets) `facetStats` | v1.12 (stable), confirmed in v1.15 | Extend `Scrypath.Meilisearch.Query.to_payload/1` with a `facets` key and optional facet-filter branch in `translate_filter/1`. Extend the search result struct to carry `facet_distribution` and `facet_stats`. No new `Client` route. |
+| Relevance tuning — declarative synonyms / typo tolerance / ranking rules / distinct / stop words | `PATCH /indexes/{uid}/settings` with a merged settings map: `synonyms`, `typoTolerance` (incl. `disableOnNumbers`), `rankingRules`, `distinctAttribute`, `stopWords`, and `filterableAttributes` in its granular object form | v1.15 | `Scrypath.Meilisearch.Settings.resolve/2` already merges schema-declared settings with config overrides and hands them to `Client.update_settings/3`. v1.3 adds schema macros that populate new keys in that map — no new HTTP call. |
+| Multi-index federated search — `Scrypath.search_many/2` | `POST /multi-search` with `{queries: [...], federation: {limit, offset, facetsByIndex, mergeFacets?, distinct?}}` → response carries `hits[]._federation.{indexUid, queriesPosition}` + merged `facetsByIndex` / `facetDistribution` / `facetStats` | v1.12 (stable), confirmed v1.15 | **New route** added to `Scrypath.Meilisearch.Client`: `multi_search/2` wrapping `POST /multi-search`. Per-schema validation runs first through each schema's query builder; payloads are stitched into a federation request. Hydration reads `indexUid` from each hit's `_federation` to route back to the correct schema. |
+| Operator polish — richer `FailedWork.t()` + drift guide | No new Meilisearch API. Reads existing Oban / Repo data through the internal operations seam shipped in v1.2. | n/a | Additive fields on `FailedWork` struct + guide authoring. |
+| Node 20 deprecation cleanup | No Meilisearch surface. | n/a | Workflow YAML bumps (below). |
 
-## Release-Confidence Stack
+**Why Req needs no change:** All four new endpoints (`/indexes/{uid}/search` with facets, `/indexes/{uid}/settings` with extra keys, `/multi-search`, existing task-status routes) are JSON `POST`/`PATCH` against a single base URL with an optional API-key header. The existing `run_request/5` → `Req.request/2` path is already route-agnostic — pass a new path, a new JSON body, done. `multi_search/2` is literally ten lines of wrapper code over `run_request/5`.
 
-### What to add in v1.2
+### GitHub Actions — REQUIRED version bumps for Node 20 deprecation
 
-| Choice | Why it fits Scrypath |
-|--------|----------------------|
-| Protected GitHub Environment for publish job | Keeps `HEX_API_KEY` scoped to release publishing and allows required reviewer approval before public publish. |
-| Dedicated release bot identity for Release Please | Release PRs can run CI normally, which matters for a library whose release artifact includes docs and package metadata. |
-| `actionlint` workflow | Release workflows are code; linting them is cheaper than debugging a broken first public tag. |
-| Dependency Review + Dependabot | Supply-chain discipline is part of release trust for a public Hex package. |
-| Keep `mix verify.phase10` and `mix hex.publish --dry-run --yes` as maintainer-owned gates | Matches Hex's warning that fully automated publishing can hide important warnings. |
+**Timeline (verified against GitHub Changelog 2025-09-19):** Node 20 reaches end-of-life April 2026 (this month). Actions are forced onto Node 24 runtime by default starting **June 2, 2026**. Node 20 binary is removed from runners on **September 16, 2026**. Workflows emitting `Node 20 deprecated` warnings today will start hard-failing after the September removal.
 
-### What not to add yet
+Current workflow pins (scanned across all four files):
 
-| Not Yet | Why |
-|---------|-----|
-| Trusted publishing flow for Hex | Hex said on 2026-03-31 that trusted publishing is planned, not available now. |
-| Separate release orchestration service or custom release scripts | Release Please plus a protected publish environment is enough. |
-| Multi-stage artifact signing stack | Too much ceremony for the current library maturity; fix the release path basics first. |
+| Action | Currently pinned | Node runtime of current pin | Target pin | Node runtime of target | Verified |
+|--------|------------------|------------------------------|------------|-------------------------|----------|
+| `actions/checkout` | **Mixed** — `@v4` in `ci.yml` (all 3 jobs), `@v6` in `release-please.yml` (both jobs), `publish-hex.yml`, `verify-published-release.yml` | v4 → Node 20 | **`@v6`** (v6.0.2, Jan 2026) | Node 24 | `ci.yml` is the only workflow still on v4 — this is the only checkout bump required for v1.3. v5.0.1 (Nov 2025) was the transitional Node 24 release; v6.0.0 is the stable Node 24 default. |
+| `actions/cache` | **`@v4`** in `ci.yml` (all 3 jobs) | v4 → Node 20 | **`@v5`** (v5.0.5, Apr 2026) | Node 24 | v5.0.0 release note: *"actions/cache@v5 runs on the Node.js 24 runtime and requires a minimum Actions Runner version of 2.327.1."* GitHub-hosted runners satisfy this minimum. |
+| `erlef/setup-beam` | **`@v1`** (floating major) in all four workflows | v1 tracks latest; as of v1.24.0 → Node 24 | **`@v1`** (no change to pin) OR **`@v1.24.0`** (pin hash for reproducibility) | Node 24 | v1.24.0 (Mar 30, 2026) release note: *"Since GitHub is phasing out Node 20 runners, the erlef/setup-beam action has updated its requirements (see PR #426). Please ensure your workflow files are updated…"* Because the existing pins use the floating `@v1` major tag, the Node 24 migration already flows in automatically — but the runner/action compatibility call-out below still applies. |
+| `actions/upload-artifact` | **Not currently used** (scanned: not referenced in any of the four workflow files) | n/a | n/a — if added later, use **`@v7`** (v7.0.1, Apr 2026, Node 24) | Node 24 | Mentioned in downstream consumer note but not actually present; no action required in v1.3. Listed here so future workflow additions know the target. |
+| `googleapis/release-please-action` | **`@v4`** in `release-please.yml` | v4 tracks latest; v4.4.1 (Apr 2026) runs on Node 24–compatible runtime | **`@v4`** (no change) | n/a — composite / Node-24-ready | Already current through the floating major tag. |
 
-### Release tradeoffs
+**Concrete diff required for Node 20 cleanup** (all changes are in `.github/workflows/ci.yml` only):
 
-| Option | Pros | Cons | Recommendation |
-|--------|------|------|----------------|
-| `GITHUB_TOKEN` for Release Please | simplest setup | release PRs and tags do not trigger follow-on workflows | reject for v1.2 |
-| Fine-grained PAT | simple and practical | long-lived secret, tied to a user identity | acceptable fallback |
-| GitHub App token | least-privilege, repo/org scalable, avoids personal identity coupling | more setup work | preferred |
+```yaml
+# .github/workflows/ci.yml — change each occurrence (3 jobs × 2 actions = 6 pin bumps)
+- uses: actions/checkout@v4   →   - uses: actions/checkout@v6
+- uses: actions/cache@v4      →   - uses: actions/cache@v5
+```
 
-## Backend Breadth Recommendation
+The other three workflows (`release-please.yml`, `publish-hex.yml`, `verify-published-release.yml`) already use `actions/checkout@v6` and do not use `actions/cache`, so they are already clean.
 
-### v1.2 position
+**Why this is the full cleanup:** Enumerating every `uses:` across all four workflow files yields only three distinct JavaScript actions under GitHub's Node-runtime deprecation umbrella: `actions/checkout`, `actions/cache`, and `erlef/setup-beam`. `googleapis/release-please-action@v4` is a Node action but its v4 line is already on a Node-24-compatible release. There is no `setup-node`, no `upload-artifact`, no `download-artifact`, no `cache/restore` or `cache/save`, and no third-party Node actions in the workflow set. Bumping the two pins above resolves 100% of the Node 20 deprecation warnings.
 
-Do **not** ship a second public backend in v1.2.
+### Runner image — NO CHANGE
 
-Ship the infrastructure that makes a second backend safe later:
+All four workflows run on `ubuntu-latest`. GitHub's `ubuntu-latest` image already ships runner version ≥ 2.327.1 as of early 2026, which satisfies both `actions/cache@v5` and `actions/checkout@v6` minimums. No `runs-on` change is required. Self-hosted runners are not in use.
 
-- adapter capability descriptors
-- contract tests shared across adapters
-- backend-specific modules for advanced behavior
-- docs that state clearly which APIs are generic and which are Meilisearch-only
+### Development tooling — NO CHANGE
 
-This is the least-surprise move. Laravel Scout is useful here as a lesson, not a blueprint: the driver model is good, but once multiple engines exist, engine-specific schema and query rules leak into the public contract immediately. Scrypath should learn from the clean seam, not copy the public breadth too early.
+| Tool | Version | Status | Notes |
+|------|---------|--------|-------|
+| Elixir | `1.17.3` (min), `1.19.0` (primary) — matrix in `ci.yml` | Keep | No v1.3 feature requires newer Elixir. |
+| OTP | `26.2.5` / `28.0` / `28.1` — matrix in `ci.yml` | Keep | Minor inconsistency: `phase13-verification` pins OTP `28.0` while `phase5-verification` and `quality` pin `28.1`. Leave for v1.3 unless the verify sweep chooses to align them as a cosmetic fix. |
+| Credo | 1.7 | Keep | |
+| Dialyzer | 1.4 | Keep | |
+| ExDoc | 0.37 | Keep | |
+| `mix hex.audit` | built-in | Keep | Already in the `quality` job. |
 
-### Second backend candidates
+## Installation
 
-| Candidate | Ecosystem Fit | What It Gets Right | Why Not v1.2 |
-|----------|----------------|--------------------|---------------|
-| Typesense | closest to current Meilisearch-first product shape | strong self-hosted OSS HA story, familiar document/search/facet model, natural next engine for Phoenix/Ecto teams | still widens the surface before the first release proves demand |
-| OpenSearch / Elasticsearch | powerful and mature | huge ecosystem and advanced relevance features | much heavier ops story and much broader API surface; would distort Scrypath's product shape |
-| Algolia | polished managed DX | clear search product ergonomics | commercial/managed-first fit does not match current Scrypath positioning |
+No new `mix deps.get` action is needed. The only stack change is a two-line diff in `.github/workflows/ci.yml`:
 
-### Product-shape lesson from adjacent libraries
-
-| Library | Lesson Scrypath should copy | Footgun Scrypath should avoid |
-|--------|------------------------------|-------------------------------|
-| Searchkick | async and reindex workflows are first-class product surface | broad convenience APIs can tempt the library into hiding backend realities |
-| Laravel Scout | clean driver seam plus engine-specific escape hatches | "driver interchangeable" perception breaks down once backend-specific schema and query features diverge |
-| meilisearch-rails | explicit settings, async queue hooks, zero-downtime reindex patterns, direct delete-by-id in background jobs | automatic callbacks can hide operational cost and delete races |
-
-## Operator Tooling Stack
-
-### What is warranted in v1.2
-
-Use the existing Elixir-native building blocks instead of adding a monitoring subsystem:
-
-| Choice | Why |
-|--------|-----|
-| Stable Telemetry event schema as a compatibility surface | This is the idiomatic library observability contract in Elixir. |
-| Meilisearch task inspection via `/tasks`, `/health`, and `/stats` | This gives real backend status, failed work details, and queue state without inventing Scrypath-specific truth. |
-| Oban inspection only when `sync_mode: :oban` is configured | Keeps queue visibility accurate and optional. |
-| Library APIs returning structured status structs/maps | Fits Ecto/Phoenix usage better than a built-in admin UI. |
-| Phoenix docs/examples for LiveDashboard and Oban integration | Gives users an operator story without taking on UI dependencies. |
-
-### What not to add yet
-
-| Not Yet | Why |
-|---------|-----|
-| Built-in Phoenix LiveDashboard page as a hard dependency | Phoenix is important for adoption, but Scrypath must remain Ecto-first and Phoenix-friendly, not Phoenix-bound. |
-| `telemetry_metrics` or `prom_ex` as core deps | Metrics reporters belong to applications. Scrypath should emit events, not choose reporters for users. |
-| Polling GenServers just for status bookkeeping | Process-heavy operator code would violate the current "mostly functions" library posture. |
-
-## Richer Backend-Native Search Power
-
-### What is warranted in v1.2
-
-Expose more Meilisearch power, but only under explicit Meilisearch namespacing.
-
-Recommended public shape:
-
-- keep `Scrypath.search/3` focused on the cross-backend common path
-- add `Scrypath.Meilisearch.search/3` or `backend_options: [meilisearch: ...]`
-- validate all backend-native options with `NimbleOptions`
-- return explicit result structs or maps that keep raw backend payloads accessible without making them the only contract
-
-### Meilisearch features worth exposing next
-
-| Feature | Why it belongs | Notes |
-|---------|----------------|-------|
-| facets / facet distribution | standard search UX need; Meilisearch supports this cleanly | generic API can stay simple; expose richer facet output in Meilisearch-specific API |
-| highlighting / cropping | practical Phoenix UI value | keep hydration explicit; do not blur backend hit payload and Ecto record |
-| ranking score and ranking score details | useful for debugging relevance | keep this clearly backend-native |
-| performance details | valuable for operator honesty and search tuning | especially useful when users say "search feels slow" |
-| multi-search | useful, but only as explicit engine-native functionality | do not pretend cross-backend parity exists yet |
-
-### What not to add yet
-
-| Not Yet | Why |
-|---------|-----|
-| A normalized advanced search DSL across all future backends | Premature abstraction; the engines diverge exactly where "advanced" starts. |
-| Vector / semantic / hybrid search surface | This widens product scope faster than operator and release maturity. |
-| Backend-native analytics/recommendations | not aligned with Scrypath's current Ecto-native indexing wedge |
-
-## Versioning And Release Implications
-
-| Decision | Implication |
-|---------|-------------|
-| Keep advanced engine power in namespaced Meilisearch APIs | Allows additive minor releases without destabilizing `Scrypath.search/3`. |
-| Keep capability descriptors internal until a second backend is real | Avoids locking in a public abstraction too early. |
-| Treat Telemetry event names and metadata keys as semver-relevant once documented | Operator tooling will depend on them. |
-| Keep release automation changes inside the existing Release Please + Hex flow | The milestone can improve trust without re-teaching the release process. |
-| Stay pre-1.0 until the first real release and early adoption feedback land | Scrypath still needs room to adjust public shape, especially around operator and engine-specific APIs. |
+```yaml
+# Three occurrences in ci.yml (test job, quality job, phase5-verification job,
+# phase13-verification job) — bump each checkout/cache pin:
+- uses: actions/checkout@v6   # was @v4
+- uses: actions/cache@v5      # was @v4
+```
 
 ## Alternatives Considered
 
-| Category | Recommended | Alternative | Why Not |
-|----------|-------------|-------------|---------|
-| Release PR auth | GitHub App token | `GITHUB_TOKEN` | GitHub says events triggered by `GITHUB_TOKEN` do not create new workflow runs. |
-| Publish secret model | protected environment + publisher-scoped `HEX_API_KEY` | broad repo secret shared across workflows | weaker blast-radius control |
-| Backend breadth | delay second public backend | ship Typesense now | splits focus before first release learns from real users |
-| Advanced search API | Meilisearch-namespaced options | one giant generic options bag | violates least surprise and makes later semver harder |
-| Operator tooling | status APIs + docs integrations | built-in dashboard runtime | too heavy and too Phoenix-coupled for current product stage |
+| Recommended | Alternative | When Alternative Would Apply | Why not now |
+|-------------|-------------|------------------------------|-------------|
+| Keep Req `~> 0.5` | Switch to Finch + direct JSON | If Scrypath needed raw HTTP/2 multiplexing or streaming for high-throughput federated search | Federated search volumes for Phoenix SaaS teams at v1.3's target tier are fine on Req/Mint; no evidence of throughput pressure from existing adopters. |
+| Extend `Scrypath.Meilisearch.Query` for facets in-module | Extract a new `Scrypath.Meilisearch.FacetFilter` module | If facet-filter grammar grows complex enough to warrant its own test surface | v1.3 facet filters are a strict extension of existing filter tuples (same `{field, op, value}` shape) — splitting the module would create friction without payoff. Revisit in v1.4 only if grammar complexity warrants. |
+| Add `multi_search/2` as a thin wrapper in `Client` | Build a dedicated `Scrypath.Meilisearch.MultiSearch` module | If multi-search evolves beyond a single federation request shape (e.g. query batching, streaming) | Single federation request shape is sufficient; a second module is premature abstraction. |
+| Bump CI image pin to tested-through `v1.15` and document the range | Pin CI to `v1.42` (latest) | If v1.3 depended on v1.42-specific features | None of the v1.3 features require anything newer than v1.15, and raising the minimum-tested version would create a false adoption barrier for users on older Meilisearch installs. Keep minimum honest; test range is a README note. |
+| Keep `erlef/setup-beam@v1` floating major | Pin `erlef/setup-beam@<commit-sha>` | Supply-chain hardening for a security-sensitive library | Scrypath's threat model is "install via Hex"; the release contract is already verified through `mix verify.phase11` + `mix verify.release_publish`. Pinning setup-beam by SHA is a separate, later concern. |
 
-## What Not To Use Yet
+## What NOT to Use
 
-- Public multi-backend facade as a first-class v1.2 selling point
-- OpenSearch or Elasticsearch support in the core package
-- Built-in dashboard/reporting dependencies in the library runtime
-- Vector or hybrid search dependencies
-- Hex "trusted publishing" assumptions before Hex actually ships it
-- A catch-all raw map API that makes advanced search behavior undocumented and unvalidated
+| Avoid | Why | Use Instead |
+|-------|-----|-------------|
+| Adding a second HTTP client | Splits the transport surface and doubles test/mock work | Extend `Scrypath.Meilisearch.Client.run_request/5` with the two new routes. |
+| Adopting the experimental `foreignKeys` Meilisearch feature (v1.39+) for multi-index | Marked *experimental* in Meilisearch's own release notes, requires `/experimental-features` toggle, and does not work in a remote sharding environment | Use the stable `/multi-search` federation endpoint (`federation: {...}`) for `search_many/2`. If real adopters ask for cross-index joins in v1.4+, revisit `foreignKeys` once Meilisearch promotes it to stable. |
+| Introducing Mox or Bypass in `:test` | Adds dependency surface without solving a problem | Continue using the `meilisearch_client` injection seam already present in `Scrypath.Meilisearch.Settings.apply/3` and the client functions. A simple in-process stub module is sufficient for multi-index federated search tests. |
+| Adding a facet-expression parser library (e.g. `nimble_parsec`-based DSL) | Over-engineering the v1.3 facet-filter grammar, which is a small closed set of operators | Keep facet filter translation inline in `Scrypath.Meilisearch.Query` using the same `translate_operator/1` style already there. |
+| `actions/checkout@v5` (Node 24 transitional) | Already superseded by `@v6` | `actions/checkout@v6`. |
+| Continuing to use `actions/checkout@v4` or `actions/cache@v4` after June 2, 2026 | Hard-fails once Node 20 is removed from runners (Sep 16, 2026) | Bump to `@v6` / `@v5` in `ci.yml` as part of this milestone. |
+| Postgres full-text search libraries (`pg_search`, `ecto_tsvector`, `paraphrase`) | Explicit `PROJECT.md` non-goal — muddies product boundary | Stay Meilisearch-first; Postgres FTS is not part of v1.x. |
+| Elasticsearch / OpenSearch compatibility shims | Locked non-goal for v1.3 ("no second public backend") | Preserve the internal adapter seam; do not expose it publicly. |
+| Vector / hybrid / semantic search features (Meilisearch v1.16 multimodal embeddings, v1.25 Cohere rerank, v1.17 chat completions) | Locked non-goal ("no vector/hybrid/semantic search") | Ignore these Meilisearch feature paths even though the server supports them. |
 
-## Concrete v1.2 Checklist
+## Stack Patterns by Variant
 
-1. Add `mox` and `stream_data` to `:test` deps.
-2. Update release workflow to use a dedicated release bot identity instead of bare `GITHUB_TOKEN`.
-3. Move Hex publish to a protected environment with required reviewer approval.
-4. Update `docs/releasing.md` for Hex 2.4 OAuth + 2FA reality.
-5. Add workflow linting and dependency review.
-6. Introduce Meilisearch-native validated option schemas for the next tranche of search features.
-7. Add contract tests that separate generic search behavior from Meilisearch-only behavior.
-8. Add status/inspection APIs that surface Meilisearch tasks and optional Oban job state without adding runtime UI deps.
+**If running self-hosted GitHub Actions runners:**
+- Before bumping `actions/cache@v5` and `actions/checkout@v6`, verify the runner binary is ≥ 2.327.1.
+- Scrypath itself uses GitHub-hosted `ubuntu-latest`, so this is an adopter concern, not a library concern.
 
-## Later, After v1.2
+**If a downstream Phoenix app targets Meilisearch < v1.12:**
+- `search_many/2` (requires `/multi-search`) will return a 404 from the server.
+- Facet distribution and facet stats on single-index search work back to very early Meilisearch versions, so faceted search alone is safely backwards-compatible.
+- Document this in the v1.3 faceted-search guide: "Faceted search works on any supported Meilisearch version; `search_many/2` requires Meilisearch ≥ v1.12."
 
-- Decide on Typesense only if real users push on backend breadth.
-- If Typesense happens, prefer a clearly isolated adapter surface and keep advanced engine behavior backend-specific.
-- Revisit Hex trusted publishing only when Hex actually ships it.
-- Revisit app-level dashboard helpers only after the operator API settles.
+**If an adopter already pinned `typoTolerance` via a manual settings override:**
+- v1.3's declarative synonyms/typo/ranking/distinct/stopwords settings must preserve the existing "schema-declared merged with config override" precedence in `Scrypath.Meilisearch.Settings.resolve/2`. Manual overrides continue to win.
+
+## Version Compatibility
+
+| Pin | Compatible With | Notes |
+|-----|-----------------|-------|
+| `actions/checkout@v6` | `ubuntu-latest` runner ≥ 2.327.1 | GitHub-hosted runners satisfy this; only relevant if self-hosted. |
+| `actions/cache@v5` | `ubuntu-latest` runner ≥ 2.327.1 | Same requirement as checkout@v6. |
+| `erlef/setup-beam@v1.24.0+` | Node 24 runtime | Tracks automatically via the floating `@v1` pin already in use. No explicit bump required. |
+| Meilisearch server `v1.15`–`v1.42+` | Req `~> 0.5`, Scrypath HTTP body shape | `/multi-search` stable; `filterableAttributes` granular object form stable; `facetDistribution` + `facetStats` stable. No behavior drift observed across the range for the subset of routes Scrypath uses. |
+| Elixir `1.17.3` / `1.19.0` matrix | OTP `26.2.5` / `28.0` / `28.1` | Already validated in v1.2 CI. |
+| Oban `~> 2.21` | Elixir ≥ 1.15 | No change from v1.2. |
 
 ## Sources
 
-### Official / primary
+- [Meilisearch v1.15.0 release notes](https://github.com/meilisearch/meilisearch/releases/tag/v1.15.0) — confirmed `typoTolerance.disableOnNumbers`, stable comparison operators on string filters. **HIGH**
+- [Meilisearch v1.16.0 release notes](https://github.com/meilisearch/meilisearch/releases/tag/v1.16.0) — confirmed multimodal embeddings (ignored for v1.3) and `/export` route (ignored). **HIGH**
+- [Meilisearch v1.42.0 release notes](https://github.com/meilisearch/meilisearch/releases/tag/v1.42.0) — confirmed experimental `foreignKeys` cross-index hydration (explicitly NOT adopted in v1.3). **HIGH**
+- [Meilisearch multi-search / federation API reference](https://www.meilisearch.com/docs/reference/api/multi_search) — confirmed stable federation request shape (`queries` + `federation.{limit, offset, facetsByIndex, mergeFacets, distinct}`) and `_federation` hit metadata. **HIGH**
+- [Meilisearch search API reference — facets and facetStats/facetDistribution](https://www.meilisearch.com/docs/reference/api/search) — confirmed stable single-index facet request shape. **HIGH**
+- [Meilisearch settings API reference — filterableAttributes granular form](https://www.meilisearch.com/docs/reference/api/settings) — confirmed object-form `{attributePatterns, features: {facetSearch, filter}}` is the current stable shape. **HIGH**
+- [GitHub Changelog: Deprecation of Node 20 on GitHub Actions runners (2025-09-19)](https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/) — confirmed Node 24 forced-default on 2026-06-02, Node 20 removed 2026-09-16. **HIGH**
+- [actions/checkout v6.0.0 release notes](https://github.com/actions/checkout/releases/tag/v6.0.0) — confirmed Node 24 default, minimum runner v2.327.1. **HIGH**
+- [actions/checkout v6.0.2 release notes (Jan 2026)](https://github.com/actions/checkout/releases/tag/v6.0.2) — latest stable at time of research. **HIGH**
+- [actions/cache v5.0.0 release notes](https://github.com/actions/cache/releases/tag/v5.0.0) — confirmed Node 24 runtime and v2.327.1 runner minimum. **HIGH**
+- [actions/cache v5.0.5 release (Apr 13, 2026)](https://github.com/actions/cache/releases/tag/v5.0.5) — latest stable. **HIGH**
+- [erlef/setup-beam v1.24.0 release notes (Mar 30, 2026)](https://github.com/erlef/setup-beam/releases/tag/v1.24.0) — confirmed Node 24 support and alignment with GitHub's deprecation schedule (PR #426). **HIGH**
+- [actions/upload-artifact v7.0.0 release notes](https://github.com/actions/upload-artifact/releases/tag/v7.0.0) and [v6.0.0](https://github.com/actions/upload-artifact/releases/tag/v6.0.0) — reference only; action not currently used by Scrypath. **HIGH**
+- [googleapis/release-please-action releases](https://github.com/googleapis/release-please-action/releases) — confirmed v4.4.1 (Apr 13, 2026) is current; already pinned via `@v4`. **HIGH**
+- `mix.exs` at `HEAD` — enumerated current dependency pins. **HIGH**
+- `.github/workflows/{ci,release-please,publish-hex,verify-published-release}.yml` at `HEAD` — enumerated every `uses:` pin and confirmed only `ci.yml` carries the v4 checkout/cache pins. **HIGH**
+- `lib/scrypath/meilisearch/{client,query,settings}.ex` at `HEAD` — confirmed Req integration is route-agnostic via `run_request/5` and that `Settings.resolve/2` already supports merged declared-plus-config settings. **HIGH**
 
-- Hex publish docs: https://hex.pm/docs/publish
-- Hex v2.4 release notes, 2026-03-31: https://hex.pm/blog/hex-v24-released
-- GitHub `GITHUB_TOKEN` behavior: https://docs.github.com/en/actions/concepts/security/github_token
-- Release Please action docs: https://github.com/marketplace/actions/release-please-action
-- Meilisearch filtering/sorting/faceting docs: https://www.meilisearch.com/docs/capabilities/filtering_sorting_faceting/overview
-- Meilisearch task API: https://www.meilisearch.com/docs/reference/api/tasks
-- Meilisearch task management guide: https://www.meilisearch.com/docs/capabilities/indexing/tasks_and_batches/manage_task_database
-- Meilisearch ranking score docs: https://meilisearch.dev/docs/capabilities/full_text_search/relevancy/ranking_score
-- Meilisearch performance debugging docs: https://www.meilisearch.com/docs/capabilities/full_text_search/advanced/debug_search_performance
-- Typesense search API: https://typesense.org/docs/30.0/api/search.html
-- Typesense multi-search API: https://typesense.org/docs/29.0/api/federated-multi-search.html
-- Oban error handling / telemetry example: https://hexdocs.pm/oban/error_handling.html
-- Telemetry docs: https://hexdocs.pm/telemetry/telemetry.html
-- NimbleOptions docs: https://hexdocs.pm/nimble_options/NimbleOptions.html
-
-### Adjacent library patterns
-
-- Laravel Scout docs: https://laravel.com/docs/11.x/scout
-- Searchkick README: https://github.com/ankane/searchkick
-- meilisearch-rails README: https://github.com/meilisearch/meilisearch-rails
-
-### Local project context
-
-- `/Users/jon/projects/scrypath/.planning/PROJECT.md`
-- `/Users/jon/projects/scrypath/docs/releasing.md`
-- `/Users/jon/projects/scrypath/.github/workflows/release-please.yml`
+---
+*Stack research for: v1.3 Meilisearch-native search power + CI Node 20 cleanup on scrypath 0.3.0+*
+*Researched: 2026-04-17*
