@@ -74,6 +74,9 @@ jobs:
       - name: Check formatting
         run: mix format --check-formatted
 
+      - name: Verify workspace is clean
+        run: mix verify.workspace_clean
+
       - name: Run Credo
         run: mix credo
 
