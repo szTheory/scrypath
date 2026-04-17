@@ -1,5 +1,7 @@
 # v1.4 ship — follow in order
 
+**Status 2026-04-17:** Completed for **`scrypath 0.3.1`** (Hex + GitHub Actions). Keep this file as a template for the next release.
+
 Do **step 1 → end** in order. Deep detail and failure recovery: **`docs/releasing.md`**.
 
 **Replace `X.Y.Z`** below with the **semver only** (no `v`) of the release Release Please just produced — the same string as `@version` in `mix.exs` on the release tag.

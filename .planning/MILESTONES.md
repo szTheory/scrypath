@@ -19,13 +19,13 @@
 
 ---
 
-## v1.4 Public package parity & operator depth (pre-close — not archived)
+## v1.4 Public package parity & operator depth (Shipped: 2026-04-17)
 
-**Status:** Engineering for phases **25–26** closed on branch; **SHIP-01..03** and ROADMAP Phase **24** checkbox remain **until Hex publish** on maintainer timeline.
+**Phases completed:** 3 phases (24–26), 8 plans
 
-**Evidence:** `.planning/v1.4-MILESTONE-AUDIT.md` (automated gates: **`mix verify.phase11`**, **`mix verify.phase26`** pass; **`mix verify.workspace_clean`** expected after clean commit).
+**Hex:** **`scrypath 0.3.1`** on https://hex.pm/packages/scrypath/0.3.1 — Release Please PR **#5** merged to **`main`**, publish job green (verify **`release_publish`** + **`release_parity`** on Actions).
 
-**When shipped:** Run **`/gsd-complete-milestone v1.4`**, append a shipped row to the table below, and add archives `milestones/v1.4-ROADMAP.md` + `milestones/v1.4-REQUIREMENTS.md`.
+**Still optional:** Run **`/gsd-complete-milestone v1.4`** to append the formal shipped row + write **`milestones/v1.4-ROADMAP.md`** / **`milestones/v1.4-REQUIREMENTS.md`** archives per GSD.
 
 ---
 
