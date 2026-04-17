@@ -40,7 +40,7 @@ defmodule Scrypath.Meilisearch.Query do
             acc ++ strings
 
           is_list(value) ->
-            acc ++ [Enum.map(value, &("#{field} = #{format_value(&1)}"))]
+            acc ++ [Enum.map(value, &"#{field} = #{format_value(&1)}")]
 
           true ->
             acc ++ ["#{field} = #{format_value(value)}"]

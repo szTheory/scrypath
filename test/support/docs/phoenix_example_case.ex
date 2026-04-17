@@ -132,7 +132,10 @@ defmodule Scrypath.TestSupport.Docs.PhoenixExampleCase do
         end
 
       with {:ok, result} <-
-             Content.search_movies(q, facets: [:genre, :year, :rating], facet_filter: facet_filter) do
+             Content.search_movies(q,
+               facets: [:genre, :year, :rating],
+               facet_filter: facet_filter
+             ) do
         Map.merge(socket, %{q: q, posts: result.records, facet_filter: facet_filter})
       end
     end

@@ -117,7 +117,8 @@ defmodule Scrypath.SearchTest do
   end
 
   test "structured sort accepts only declared sortable fields and preserves ecto-style input" do
-    assert {:ok, %SearchResult{query: %Query{sort: [desc: :inserted_at], facets: [], facet_filter: []}}} =
+    assert {:ok,
+            %SearchResult{query: %Query{sort: [desc: :inserted_at], facets: [], facet_filter: []}}} =
              Scrypath.search(SearchablePost, "ecto",
                backend: Scrypath.TestSupport.FakeBackend,
                sort: [desc: :inserted_at]

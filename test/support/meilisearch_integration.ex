@@ -113,15 +113,27 @@ defmodule Scrypath.TestSupport.MeilisearchIntegration do
   end
 
   def wait_until!(fun, deadline, failure_message) when is_function(fun, 0) do
-    if fun.() do
-      :ok
+    case fun.() do
+      false ->
+        wait_until_retry!(fun, deadline, failure_message)
+
+      nil ->
+        wait_until_retry!(fun, deadline, failure_message)
+
+      true ->
+        :ok
+
+      other ->
+        other
+    end
+  end
+
+  defp wait_until_retry!(fun, deadline, failure_message) do
+    if System.monotonic_time(:millisecond) >= deadline do
+      raise failure_message
     else
-      if System.monotonic_time(:millisecond) >= deadline do
-        raise failure_message
-      else
-        Process.sleep(100)
-        wait_until!(fun, deadline, failure_message)
-      end
+      Process.sleep(100)
+      wait_until!(fun, deadline, failure_message)
     end
   end
 

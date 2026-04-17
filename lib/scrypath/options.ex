@@ -134,7 +134,8 @@ defmodule Scrypath.Options do
     facets: [
       type: {:list, :atom},
       default: [],
-      doc: "Facet attribute names to request facet distribution for (must be declared on the schema's faceting.attributes)."
+      doc:
+        "Facet attribute names to request facet distribution for (must be declared on the schema's faceting.attributes)."
     ],
     facet_filter: [
       type: {:custom, __MODULE__, :validate_search_filter, []},
@@ -408,7 +409,8 @@ defmodule Scrypath.Options do
 
     with {:ok, validated} <- nimble_options_result(@search_options, search_opts),
          :ok <- validate_search_facets(schema_module, Keyword.get(validated, :facets, [])),
-         :ok <- validate_search_facet_filter(schema_module, Keyword.get(validated, :facet_filter, [])) do
+         :ok <-
+           validate_search_facet_filter(schema_module, Keyword.get(validated, :facet_filter, [])) do
       try do
         validated
         |> validate_filterable_fields!(filterable)
@@ -891,7 +893,8 @@ defmodule Scrypath.Options do
     end
   end
 
-  defp normalize_sort_facet_values_by(_), do: {:error, "faceting :sort_facet_values_by must be a map or keyword"}
+  defp normalize_sort_facet_values_by(_),
+    do: {:error, "faceting :sort_facet_values_by must be a map or keyword"}
 
   defp validate_faceting_rules!(%{faceting: []} = m), do: m
 
