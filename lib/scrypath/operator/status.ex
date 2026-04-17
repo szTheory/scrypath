@@ -1,5 +1,7 @@
 defmodule Scrypath.Operator.Status do
-  @moduledoc false
+  @moduledoc """
+  Public status snapshot returned by `Scrypath.sync_status/2`.
+  """
 
   alias Scrypath.Config
   alias Scrypath.Meilisearch.Tasks

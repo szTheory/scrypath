@@ -1,5 +1,7 @@
 defmodule Scrypath.Operator.State do
-  @moduledoc false
+  @moduledoc """
+  Public normalized work-item state used by `Scrypath.Operator.Status`.
+  """
 
   alias Scrypath.Operations
   alias Scrypath.Operations.Task
@@ -24,6 +26,7 @@ defmodule Scrypath.Operator.State do
     struct!(__MODULE__, attrs)
   end
 
+  @doc false
   @spec from_backend_task(map() | Task.t()) :: t()
   def from_backend_task(%Task{} = task) do
     new(
@@ -43,6 +46,7 @@ defmodule Scrypath.Operator.State do
     |> from_backend_task()
   end
 
+  @doc false
   @spec from_queue_job(map()) :: t()
   def from_queue_job(job) when is_map(job) do
     new(
