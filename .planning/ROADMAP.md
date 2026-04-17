@@ -17,7 +17,7 @@
 
 ## Phases
 
-- [ ] **Phase 18: Release-Parity Gate + Node 20 CI Cleanup** — Maintainers ship a v1.3 release that mechanically cannot diverge from what they approved on disk.
+- [x] **Phase 18: Release-Parity Gate + Node 20 CI Cleanup** — Maintainers ship a v1.3 release that mechanically cannot diverge from what they approved on disk. (completed 2026-04-17)
 - [ ] **Phase 19: Relevance Tuning** — Phoenix devs declare synonyms, typo tolerance, ranking rules, distinct attribute, and stop words on the schema and see them applied safely through the managed reindex pipeline.
 - [ ] **Phase 20: Faceted Search + LiveView Guide** — Phoenix devs declare `faceting:` on a schema and power a complete faceted LiveView UI (checkbox sidebar, chip row, range, search-within-facet) from one `Scrypath.search/3` call.
 - [ ] **Phase 21: Multi-Index Search** — Phoenix devs run a single federated `Scrypath.search_many/2` across N schemas and get back one ordered, schema-grouped result with per-schema facets and an explicit partial-failure envelope.
@@ -35,14 +35,14 @@
   2. Maintainer running `mix verify.release_parity X.Y.Z` sees a non-zero exit when the live Hex tarball's `lib/` + `guides/` + `docs/` file list diverges from the git tag of the same version, and a clean pass otherwise.
   3. Maintainer watching CI sees zero Node 20 deprecation warnings on `checkout` and `cache` actions; `actions/checkout@v6` and `actions/cache@v5` are live in `.github/workflows/ci.yml`.
   4. Maintainer observes a scheduled daily `verify-published-release.yml` run that re-checks release parity against the latest published Hex version without human intervention.
-**Plans:** 6/7 plans executed
+**Plans:** 7/7 plans complete
 - [x] 18-01-PLAN.md — Wave 0 test scaffolding + mix.exs cli.preferred_envs (covers INFRA-01..04 via Wave-0 anchors)
 - [x] 18-02-PLAN.md — verify.workspace_clean Mix task (INFRA-01)
 - [x] 18-03-PLAN.md — verify.release_parity Mix task (INFRA-02)
 - [x] 18-04-PLAN.md — ci.yml Node 20 pin swaps (INFRA-03, 8 @v4 → @v6/@v5)
 - [x] 18-05-PLAN.md — workspace_clean wired into ci.yml + release-please.yml + publish-hex.yml (INFRA-01 cross-workflow)
 - [x] 18-06-PLAN.md — verify-published-release.yml release_parity step + drift-issue wiring + issue template (INFRA-02 cron + INFRA-04)
-- [ ] 18-07-PLAN.md — docs/releasing.md + CHANGELOG.md + closing feat(18): commit ritual (D-22, D-23, D-24)
+- [x] 18-07-PLAN.md — docs/releasing.md + CHANGELOG.md + closing feat(18): commit ritual (D-22, D-23, D-24)
 
 ### Phase 19: Relevance Tuning
 **Goal:** Phoenix devs declare synonyms, typo tolerance, ranking rules, distinct attribute, and stop words on their schema and see them applied safely through the existing managed reindex pipeline — with drift detection, a ranking-rules safety rail, and no hot-apply escape hatch on live indexes.
@@ -107,7 +107,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 18. Release-Parity Gate + Node 20 CI Cleanup | 6/7 | In Progress|  |
+| 18. Release-Parity Gate + Node 20 CI Cleanup | 7/7 | Complete   | 2026-04-17 |
 | 19. Relevance Tuning | 0/? | Not started | - |
 | 20. Faceted Search + LiveView Guide | 0/? | Not started | - |
 | 21. Multi-Index Search | 0/? | Not started | - |
