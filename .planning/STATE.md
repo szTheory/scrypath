@@ -1,20 +1,20 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.2
-milestone_name: Public Release Trust and Operator Visibility
-current_phase: 16
-current_phase_name: verify-mix-tasks-and-repair-milestone-bookkeeping
-current_plan: 01
-status: phase_complete
-stopped_at: Completed 15-01-PLAN.md
-last_updated: "2026-04-17T00:44:39Z"
-last_activity: 2026-04-17 -- Phase 16 complete
+milestone: v1.3
+milestone_name: Search Power That Phoenix Teams Reach For
+current_phase: null
+current_phase_name: null
+current_plan: null
+status: defining_requirements
+stopped_at: v1.3 milestone started — defining requirements
+last_updated: "2026-04-16T00:00:00Z"
+last_activity: 2026-04-16 -- Milestone v1.3 started
 progress:
-  total_phases: 7
-  completed_phases: 6
-  total_plans: 12
-  completed_plans: 12
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -24,20 +24,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Phase 16 — verify-mix-tasks-and-repair-milestone-bookkeeping
+**Current focus:** Defining requirements for v1.3 (Meilisearch-native search power + tooling-debt retirement)
 
 ## Current Position
 
-Phase: 16 (verify-mix-tasks-and-repair-milestone-bookkeeping) — COMPLETE
-Plan: 1 of 1
-Current Phase: 16
-Current Phase Name: verify-mix-tasks-and-repair-milestone-bookkeeping
-Current Plan: 01
-Status: Phase 16 complete
-Last activity: 2026-04-17 -- Phase 16 complete
-Last Activity Description: Phase 16 verification, bookkeeping, and summary discoverability closure completed
+Phase: Not started (defining requirements)
+Plan: —
+Current Phase: None
+Current Phase Name: None
+Current Plan: None
+Status: Defining requirements
+Last activity: 2026-04-16 — Milestone v1.3 started
+Last Activity Description: v1.3 milestone opened: facets, relevance tuning, multi-index search, operator polish, and release/tooling debt closure
 
-Progress: [██████████] 100%
+Progress: [          ] 0%
 
 ## Accumulated Context
 
@@ -63,12 +63,14 @@ Progress: [██████████] 100%
 - [Phase 12]: Convert seam-owned `Scrypath.Operations.Result` and `Task` values back into the current public sync maps only at the `Scrypath.Sync` boundary. — Phase 13 can now build operator primitives on the seam without changing the caller-facing sync contract.
 - [Phase 12]: Route Meilisearch backfill writes through the internal operations adapter so batch summaries can be built from Scrypath-owned results.
 - [Phase 12]: Treat the presence of a followable operation task as the reindex waiting contract instead of branching on a concrete backend module.
+- [Phase 17]: Use `origin/main` as the canonical release source, then repair repo Actions workflow permissions instead of bypassing Release Please.
+- [Phase 17]: Fix the first publish gate on `main` with the minimal release commit `13f1789` and complete the public release through the documented recovery publish workflow.
 
 ### Blockers/Concerns
 
-- The working tree already contains unrelated user-side changes outside the Phase 16 bookkeeping files; completion bookkeeping leaves them untouched.
-- A publisher-scoped `HEX_API_KEY` is still needed to validate the real public Hex publish path once Phase 11 executes.
+- The working tree already contains unrelated user-side changes outside the Phase 17 bookkeeping files; they remain untouched.
 - Live Meilisearch verification still depends on a reachable `SCRYPATH_MEILISEARCH_URL` for any end-to-end publish smoke path that exercises a real backend.
+- GitHub Actions still emits Node.js 20 deprecation warnings for some upstream actions; this should be cleaned up before runner defaults change.
 
 ### Deferred Items
 
@@ -85,26 +87,21 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-04-17T00:18:48.248Z
-Stopped at: Completed 15-01-PLAN.md
+Last session: 2026-04-16T00:00:00Z
+Stopped at: v1.3 milestone started — defining requirements
 Resume file: None
 
 ## Current Status
 
-- v1.0 remains archived with the full Meilisearch-first core, search, Oban, reindex, docs, and release baseline shipped.
-- v1.1 remains archived with release hardening, docs-safety fixes, `mix verify.phase10`, and the launch-readiness evidence chain.
-- v1.2 now includes two verification-only closure phases after the shipped release-contract, seam, operator, and Mix-task work: Phase 15 for Phase 13 evidence and Phase 16 for Phase 14 evidence.
-- Phase 11 Plan 01 is complete with version-scoped package links, focused release metadata assertions, and the canonical `mix verify.phase11` gate recorded in `.planning/phases/11-public-release-contract/11-public-release-contract-01-SUMMARY.md`.
-- Phase 11 Plan 02 is complete with a packaged clean-consumer smoke harness, maintainer recovery runbooks, and the expanded Phase 11 docs contract recorded in `.planning/phases/11-public-release-contract/11-public-release-contract-02-SUMMARY.md`.
-- Phase 11 is now hardened with a live published-release verifier, a same-workflow pre-publish dry-run gate, a manual recovery workflow, and a scheduled published-release monitor.
-- The only remaining external validation for Phase 11 is the first real public release run; after that publish exists, the monitor keeps re-verifying the latest Hex release automatically.
-- Phase 12 is complete with sync, backfill, and reindex all exchanging Scrypath-owned operation references internally while preserving the Meilisearch-first public boundary in docs and telemetry.
-- No second public backend is planned in this milestone, and backend-native power remains outside the common search contract.
-- Phase 16 is complete with `14-VERIFICATION.md`, repaired Phase 14 bookkeeping, and canonical `14-01-SUMMARY.md` / `14-02-SUMMARY.md` aliases for milestone tooling.
+- v1.0, v1.1, and v1.2 all archived; `scrypath 0.3.0` live on Hex with verified HexDocs and recovery runbooks.
+- Milestone `v1.3` "Search Power That Phoenix Teams Reach For" is now active.
+- Direction chosen by evidence-based extrapolation (codebase gap analysis + planning history + ecosystem research) rather than a single adopter request — primary bet is deepening Meilisearch-native capabilities over widening to a second backend.
+- v1.3 scope: faceted search, relevance tuning (typo/synonyms/ranking), multi-index search, narrow operator polish, and release/tooling-debt retirement (GitHub Actions Node 20 cleanup + v1.2 VALIDATION.md closure).
+- v1.3 non-goals (locked): no second public backend, no vector/hybrid/semantic search, no breaking changes to v1.2 public contracts, no dashboard surface.
 
 ## Next Command
 
-- `$gsd-audit-milestone`
+- `$gsd-discuss-phase 18`
 
 ## Performance Metrics
 
@@ -115,9 +112,9 @@ Resume file: None
 | 12 | 01 | 2 min | 1 | 4 | 2026-04-16 |
 | 11 | 02 | 10min | 3 | 4 | 2026-04-16 |
 | 11 | hardening | follow-up | release automation, recovery workflow, published-release monitor | 2026-04-16 |
-
 | Phase 15 | 01 | 12 min | 2 | 4 | 2026-04-17 |
 | Phase 16 | 01 | 0 min | 2 | 7 | 2026-04-17 |
+| Phase 17 | 01 | 24 min | 2 | 6 | 2026-04-17 |
 
 ---
-*Last updated: 2026-04-17 after completing Phase 16 Plan 01*
+*Last updated: 2026-04-16 — v1.3 milestone started*

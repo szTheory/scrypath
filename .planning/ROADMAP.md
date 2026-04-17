@@ -4,136 +4,19 @@
 
 - [x] `v1.0` shipped on 2026-04-16 — 7 phases, 25 plans, and the full Meilisearch-first v1 surface archived in [.planning/milestones/v1.0-ROADMAP.md](/Users/jon/projects/scrypath/.planning/milestones/v1.0-ROADMAP.md)
 - [x] `v1.1` shipped on 2026-04-16 — 3 phases, 9 plans, release hardening and launch-readiness evidence archived in [.planning/milestones/v1.1-ROADMAP.md](/Users/jon/projects/scrypath/.planning/milestones/v1.1-ROADMAP.md)
-- [ ] `v1.2` in progress — Phases 11-14 for public release trust, operator visibility, and a narrower internal operations seam
+- [x] `v1.2` shipped on 2026-04-17 — 7 phases, 13 plans, public release trust, operator visibility, and the first live public release proof archived in [.planning/milestones/v1.2-ROADMAP.md](/Users/jon/projects/scrypath/.planning/milestones/v1.2-ROADMAP.md)
 
 ## Active Milestone
 
-### v1.2: Public Release Trust and Operator Visibility
-
-**Milestone Goal:** Turn Scrypath's launch-readiness evidence into a real public release contract and add a small operator surface for status, failure inspection, recovery, and sync-mode guidance without widening the common path or promising a second backend.
-
-## Phases
-
-- [x] **Phase 11: Public Release Contract** - Validate one real public release path, consumer smoke flow, and maintainer recovery contract. (completed 2026-04-16)
-- [x] **Phase 12: Internal Operations Seam** - Extract Scrypath-owned operations boundaries under the Meilisearch-first public surface. (completed 2026-04-16)
-- [x] **Phase 13: Operator Primitives** - Expose status, failure inspection, retry, and reconcile APIs through Scrypath-owned operator types. (completed 2026-04-16)
-- [x] **Phase 14: Mix Tasks and Guides** - Put thin CLI ergonomics and sync-mode guides on top of the operator surface without widening common search. (completed 2026-04-16)
-- [x] **Phase 15: Verify Operator Primitives** - Create the missing Phase 13 verification artifact and repair requirement/roadmap bookkeeping for the shipped operator APIs. (completed 2026-04-17)
-- [ ] **Phase 16: Verify Mix Tasks and Repair Milestone Bookkeeping** - Create the missing Phase 14 verification artifact and repair the remaining milestone tracking drift.
-- [ ] **Phase 17: Prove The First Public Release** - Run the first real public release and capture live Hex/HexDocs verification evidence for milestone closure.
-
-## Phase Details
-
-### Phase 11: Public Release Contract
-**Goal**: Maintainers can trust the canonical release path because tag, changelog, package version, Hex artifact state, and clean-consumer verification all line up under one repeatable contract.
-**Depends on**: Phase 10
-**Requirements**: REL-01, REL-02, REL-03
-**Success Criteria** (what must be TRUE):
-  1. Maintainer can cut a release from the canonical GitHub flow and confirm the tag, changelog, manifest, package version, and Hex artifact all agree.
-  2. Maintainer can install the published package in a clean consumer flow, reach HexDocs, and run a basic Scrypath usage path successfully.
-  3. Maintainer can follow one documented recovery path for tag or version drift, failed publish attempts, and published-artifact mismatch without ad hoc spelunking.
-**Plans**: 2 plans
-
-Plans:
-- [x] 11-01-PLAN.md - Enforce version/tag/manifest/package alignment with a canonical `mix verify.phase11` gate.
-- [x] 11-02-PLAN.md - Add clean-consumer smoke proof and maintainer recovery runbooks to the Phase 11 release contract.
-
-### Phase 12: Internal Operations Seam
-**Goal**: Scrypath's sync and reindex internals depend on a Scrypath-owned operations seam instead of direct Meilisearch task payloads, while keeping Meilisearch as the only public backend and preserving backend-native power boundaries.
-**Depends on**: Phase 11
-**Requirements**: SEAM-01, SEAM-02
-**Success Criteria** (what must be TRUE):
-  1. Internal sync and reindex flows exchange Scrypath-owned operation results and references instead of raw Meilisearch task payloads.
-  2. Operator-facing internals can inspect lifecycle state without assuming Oban-only execution or exposing backend-specific admin shapes.
-  3. Existing Meilisearch-first public behavior still works after the seam extraction, with no new second-backend promise implied by the API.
-**Plans**: 3 plans
-
-Plans:
-- [x] 12-01-PLAN.md - Define the internal operations contracts in the pattern-map layout before runtime wiring begins. (completed 2026-04-16)
-- [x] 12-02-PLAN.md - Move Meilisearch task waiting, Oban enqueue, and sync orchestration onto the seam with direct adapter tests. (completed 2026-04-16)
-- [x] 12-03-PLAN.md - Move backfill and reindex onto the seam, then lock the Meilisearch-first boundary in docs and telemetry. (completed 2026-04-16)
-
-### Phase 13: Operator Primitives
-**Goal**: Operators can inspect sync state, failed work, and recovery actions through durable Scrypath APIs that stay explicit about eventual consistency and drift.
-**Depends on**: Phase 12
-**Requirements**: OPS-01, OPS-02, OPS-03
-**Success Criteria** (what must be TRUE):
-  1. Operator can inspect a schema's current sync state and see pending work, failed work, and last successful activity where Scrypath can know it.
-  2. Operator can inspect failed async or manual work and retry it through Scrypath APIs without reading backend-native task payloads directly.
-  3. Operator can run a reconcile or recovery workflow that makes drift and reindex state legible instead of pretending automatic healing happened.
-  4. Operator-facing results use Scrypath-owned structs or stable maps that are consistent across inline, Oban-backed, and manual workflows where the data exists.
-**Plans**: 3 plans
-
-Plans:
-- [x] 13-01-PLAN.md - Add root-level sync status reporting with Scrypath-owned backend and queue visibility.
-- [x] 13-02-PLAN.md - Add failed-work inspection and explicit retry paths on `Scrypath.*`.
-- [x] 13-03-PLAN.md - Add report-first reconcile with explicit recovery actions and reindex visibility.
-
-### Phase 14: Mix Tasks and Guides
-**Goal**: Maintainers and operators get thin Mix task ergonomics and explicit operational guides that sit on top of the operator APIs while keeping backend-native search power namespaced.
-**Depends on**: Phase 13
-**Requirements**: OPS-04, SEAM-03
-**Success Criteria** (what must be TRUE):
-  1. Operator can run documented `mix scrypath.*` commands for status, failed work inspection, retry, reconcile, and reindex visibility without the CLI becoming its own product surface.
-  2. Developer can choose inline, Oban, or manual sync modes from first-class guides that explain consistency, failure handling, and recovery tradeoffs plainly.
-  3. Backend-native Meilisearch power remains clearly namespaced outside the common `Scrypath.search/3` contract after the operator docs and CLI land.
-  4. Maintainer-facing docs explain how the operator APIs, Mix tasks, and release contract fit together for early production support.
-**Plans**: 2 plans
-
-Plans:
-- [x] 14-01-PLAN.md
-- [x] 14-02-PLAN.md
-
-### Phase 15: Verify Operator Primitives
-**Goal**: Turn the shipped Phase 13 operator surface into milestone-consumable evidence by writing the missing verification artifact and restoring roadmap/requirements traceability.
-**Depends on**: Phase 14
-**Requirements**: OPS-01, OPS-02, OPS-03
-**Gap Closure:** Closes Phase 13 verification and bookkeeping gaps from `v1.2-MILESTONE-AUDIT.md`
-**Success Criteria** (what must be TRUE):
-  1. `13-VERIFICATION.md` exists and records current evidence for `OPS-01`, `OPS-02`, and `OPS-03`.
-  2. `ROADMAP.md` reflects that Phase 13 shipped all three plans.
-  3. `REQUIREMENTS.md` moves `OPS-01`, `OPS-02`, and `OPS-03` onto the new gap-closure phase with accurate pending/complete state.
-**Plans**: 1 plan
-
-Plans:
-- [x] 15-01-PLAN.md - Create the missing Phase 13 verification artifact and reconcile roadmap/requirements traceability to the shipped operator summaries.
-
-### Phase 16: Verify Mix Tasks and Repair Milestone Bookkeeping
-**Goal**: Turn the shipped Phase 14 task/docs surface into milestone-consumable evidence and clear the remaining roadmap/requirements/state drift blocking milestone closure.
-**Depends on**: Phase 15
-**Requirements**: OPS-04, SEAM-03
-**Gap Closure:** Closes Phase 14 verification and milestone-bookkeeping gaps from `v1.2-MILESTONE-AUDIT.md`
-**Success Criteria** (what must be TRUE):
-  1. `14-VERIFICATION.md` exists and records current evidence for `OPS-04` and `SEAM-03`.
-  2. `ROADMAP.md`, `REQUIREMENTS.md`, and `STATE.md` no longer contradict the shipped Phase 14 summaries and passing verification gate.
-  3. Milestone archival readiness no longer fails because of stale planning artifacts.
-**Plans**: 1 plan
-
-Plans:
-- [ ] 16-01-PLAN.md - Create the missing Phase 14 verification artifact, then reconcile milestone bookkeeping and Phase 14 summary discoverability.
-
-### Phase 17: Prove The First Public Release
-**Goal**: Close the last human-owned release trust gaps by running the first real Release Please -> Hex publish flow and capturing live package/docs verification evidence.
-**Depends on**: Phase 16
-**Requirements**: REL-01, REL-02
-**Gap Closure:** Closes the external release-proof gap from `v1.2-MILESTONE-AUDIT.md`
-**Success Criteria** (what must be TRUE):
-  1. A real Release Please driven publish completes with aligned tag, manifest, package version, and workflow evidence.
-  2. The published package passes the clean-consumer and HexDocs verification path against the actual released version.
-  3. The milestone audit can mark `REL-01` and `REL-02` satisfied with live evidence instead of planned wiring alone.
-**Plans**: TBD
+None. `v1.2` is archived and the repo is ready for `$gsd-new-milestone`.
 
 ## Progress
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 11. Public Release Contract | 2/2 | Complete   | 2026-04-16 |
-| 12. Internal Operations Seam | 3/3 | Complete    | 2026-04-16 |
-| 13. Operator Primitives | 3/3 | Complete | 2026-04-16 |
-| 14. Mix Tasks and Guides | 2/2 | Complete   | 2026-04-16 |
-| 15. Verify Operator Primitives | 1/1 | Complete    | 2026-04-17 |
-| 16. Verify Mix Tasks and Repair Milestone Bookkeeping | 0/1 | Not started | - |
-| 17. Prove The First Public Release | 0/TBD | Not started | - |
+| Milestone | Phases | Plans | Status | Shipped |
+|-----------|--------|-------|--------|---------|
+| v1.0 | 7 | 25 | Archived | 2026-04-16 |
+| v1.1 | 3 | 9 | Archived | 2026-04-16 |
+| v1.2 | 7 | 13 | Archived | 2026-04-17 |
 
 ## Backlog
 
@@ -142,4 +25,4 @@ Plans:
 - Deeper operator tooling for drift inspection and recovery once real-world maintainer workflows surface the right abstractions.
 
 ---
-*Last updated: 2026-04-17 after completing Phase 15*
+*Last updated: 2026-04-17 after archiving v1.2*
