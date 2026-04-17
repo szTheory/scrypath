@@ -75,8 +75,7 @@ Edit in this repo:
 | File | What to change |
 |------|----------------|
 | **`.planning/ROADMAP.md`** | Line with **Phase 24** — change `- [ ]` to `- [x]` and add completion date if you want (match style of Phase 25/26). |
-| **`.planning/REQUIREMENTS.md`** | **SHIP-01**, **SHIP-02**, **SHIP-03** bullets — change `- [ ]` to `- [x]`. |
-| **`.planning/REQUIREMENTS.md`** | Traceability table (`SHIP-01` / `SHIP-02` / `SHIP-03` rows) — change **Pending** to **Complete** (or your house style). |
+| **`.planning/milestones/v1.4-REQUIREMENTS.md`** (after milestone archive) | Historical SHIP + traceability snapshot — was **`.planning/REQUIREMENTS.md`** before **`/gsd-complete-milestone`**. |
 
 - [ ] All three edits saved and committed (example message: `docs: mark v1.4 SHIP complete after X.Y.Z publish`).
 

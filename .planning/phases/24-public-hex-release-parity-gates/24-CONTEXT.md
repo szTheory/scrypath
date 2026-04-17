@@ -6,7 +6,7 @@
 <domain>
 ## Phase Boundary
 
-Cut the next **Hex** release so adopters receive the v1.3-era library surface (facets, relevance tuning, multi-index search, operator polish) through the normal package manager, with the **same mechanical trust chain** as `0.3.0`: Release Please → tag → publish, **SHIP-01..03** satisfied, and parity/verify gates aligned with `.planning/REQUIREMENTS.md` and roadmap success criteria. No new public product features (those are Phases 25–26).
+Cut the next **Hex** release so adopters receive the v1.3-era library surface (facets, relevance tuning, multi-index search, operator polish) through the normal package manager, with the **same mechanical trust chain** as `0.3.0`: Release Please → tag → publish, **SHIP-01..03** satisfied, and parity/verify gates aligned with **`milestones/v1.4-REQUIREMENTS.md`** (archived) and roadmap success criteria. No new public product features (those are Phases 25–26).
 
 </domain>
 
@@ -57,7 +57,7 @@ None — `gsd-sdk query todo.match-phase` is unavailable in this environment; no
 ### Roadmap and requirements
 
 - `.planning/ROADMAP.md` — § Phase 24: Public Hex release & parity gates (goal, success criteria, SHIP-01..03)
-- `.planning/REQUIREMENTS.md` — § Release & Hex parity (SHIP-01..03), § Out of Scope (v1.4)
+- `.planning/milestones/v1.4-REQUIREMENTS.md` — § Release & Hex parity (SHIP-01..03), § Out of Scope (v1.4)
 - `.planning/PROJECT.md` — Current milestone, Hex parity goal, constraints
 
 ### Prior phase release machinery

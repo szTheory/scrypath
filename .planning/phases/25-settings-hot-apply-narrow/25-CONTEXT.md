@@ -62,7 +62,7 @@ None — automated `todo.match-phase` was unavailable during discuss-phase.
 ### Roadmap and requirements
 
 - `.planning/ROADMAP.md` — § Phase 25: Settings hot apply (narrow); goal, success criteria, **TUNE14-01..02**
-- `.planning/REQUIREMENTS.md` — § Relevance — hot apply (prefix: TUNE14); **TUNE14-01**, **TUNE14-02**; § Out of Scope (v1.4) (ranking_rules and broader hot apply explicitly out)
+- `.planning/milestones/v1.4-REQUIREMENTS.md` — § Relevance — hot apply (prefix: TUNE14); **TUNE14-01**, **TUNE14-02**; § Out of Scope (v1.4) (ranking_rules and broader hot apply explicitly out)
 - `.planning/PROJECT.md` — Core value, constraints, current milestone v1.4 narrative
 
 ### Prior phase decisions (carry-forward)
