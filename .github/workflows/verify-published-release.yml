@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 concurrency:
   group: verify-published-release-${{ github.workflow }}-${{ github.ref }}
@@ -78,3 +79,21 @@ jobs:
           SCRYPATH_RELEASE_VERIFY_ATTEMPTS: "10"
           SCRYPATH_RELEASE_VERIFY_SLEEP_MS: "15000"
         run: mix verify.release_publish "${{ steps.resolve-version.outputs.version }}"
+
+      - name: Verify release-parity against latest published version
+        if: ${{ steps.resolve-version.outputs.published == 'true' }}
+        env:
+          SCRYPATH_RELEASE_VERIFY_ATTEMPTS: "10"
+          SCRYPATH_RELEASE_VERIFY_SLEEP_MS: "15000"
+        run: mix verify.release_parity "${{ steps.resolve-version.outputs.version }}"
+
+      - name: Open drift issue (scheduled runs only)
+        if: ${{ failure() && github.event_name == 'schedule' && steps.resolve-version.outputs.published == 'true' }}
+        uses: JasonEtco/create-an-issue@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.resolve-version.outputs.version }}
+        with:
+          update_existing: true
+          search_existing: open
+          filename: .github/ISSUE_TEMPLATE/release-parity-drift.md
