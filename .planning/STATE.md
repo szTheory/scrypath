@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Search Power That Phoenix Teams Reach For
-current_phase: 20
-current_phase_name: faceted search + LiveView guide
+current_phase: 21
+current_phase_name: multi-index search
 current_plan: Not started
 status: ready
-stopped_at: Phase 19 bookkeeping — advance to Phase 20
-last_updated: "2026-04-17T20:00:00.000Z"
+stopped_at: Phase 20 execution complete (faceting + guide shipped in repo)
+last_updated: "2026-04-17T23:59:00.000Z"
 last_activity: 2026-04-17
 progress:
   total_phases: 6
-  completed_phases: 2
-  total_plans: 7
-  completed_plans: 7
-  percent: 33
+  completed_phases: 3
+  total_plans: 11
+  completed_plans: 11
+  percent: 50
 ---
 
 # Project State
@@ -24,20 +24,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Phase 20 — faceted search + Phoenix LiveView guide (depends on Phase 19 translation patterns)
+**Current focus:** Phase 21 — multi-index search (`search_many/2` path per roadmap)
 
 ## Current Position
 
-Phase: 20 (faceted search + LiveView guide) — NEXT
-Plan: not yet planned (TBD on roadmap)
-Previous: Phase 19 (relevance tuning) — complete (all 7 plans + summaries; optional `feat(19):` commit at maintainer discretion)
+Phase: 21 (multi-index search) — NEXT
+Plan: TBD on roadmap
+Previous: Phase 20 (faceted search + LiveView guide) — complete in working tree (2026-04-17)
+Phase 19 (relevance tuning) — complete
 Phase 18: release-parity gate — complete (2026-04-17)
 Current Plan: Not started
-Status: Ready to plan or execute Phase 20
+Status: Ready to plan Phase 21 (`/gsd-plan-phase 21`)
 Last activity: 2026-04-17
-Last Activity Description: GSD bookkeeping after Phase 19 implementation landed
+Last Activity Description: Phase 20 executed inline — faceting schema/search/settings + `guides/faceted-search-with-phoenix-liveview.md`
 
-Progress: v1.3 phases 18–19 of 6 done (~33% by phase count); Phase 20+ unstarted
+Progress: v1.3 phases 18–20 complete in repo; next milestone work is Phase 21 per roadmap order
 
 ## Accumulated Context
 
@@ -93,23 +94,23 @@ Progress: v1.3 phases 18–19 of 6 done (~33% by phase count); Phase 20+ unstart
 
 ## Session Continuity
 
-Last session: 2026-04-17 (bookkeeping)
-Stopped at: Phase 19 marked complete in ROADMAP; STATE advanced to Phase 20
-Resume: `.planning/ROADMAP.md` § Phase 20 (no `.planning/phases/20-*` directory until `/gsd-plan-phase 20` creates plans)
+Last session: 2026-04-17 (Phase 20 execution)
+Stopped at: Phase 20 implementation + guide landed in working tree; STATE advanced to Phase 21
+Resume: `.planning/ROADMAP.md` § Phase 21 — `/gsd-discuss-phase 21` or `/gsd-plan-phase 21` before execution
 
 ## Current Status
 
 - v1.0, v1.1, and v1.2 all archived; `scrypath 0.3.0` live on Hex with verified HexDocs and recovery runbooks.
 - Milestone `v1.3` "Search Power That Phoenix Teams Reach For" is active with 6 phases (18–23) mapped against 44 requirements at 100% coverage.
-- Phase 18 (release-parity gate) shipped; Phase 19 (relevance tuning) implementation is complete on branch — next milestone work is Phase 20 (faceting) per roadmap order.
+- Phase 18 (release-parity gate) shipped; Phases 19–20 implementation is complete on branch — next milestone work is Phase 21 (multi-index search) per roadmap order.
 - v1.3 non-goals (locked): no second public backend, no vector/hybrid/semantic search, no breaking changes to v1.2 public contracts, no dashboard surface, no new `Scrypath.recover/*` verb.
 
 ## Next Command
 
-1. Commit and push Phase 19 changes when satisfied (`mix test --exclude external_meilisearch`; clean tree for `mix verify.workspace_clean` in CI).
+1. Review `git diff` for Phase 20 + planning updates; commit when satisfied (`mix test --exclude external_meilisearch`; clean tree for `mix verify.workspace_clean` in CI).
 2. `/gsd-progress` — sanity-check progress vs disk (or `--forensic` for integrity audit).
-3. `/gsd-plan-phase 20` — Phase 20 plans are still **TBD** on the roadmap; planning is the recommended next GSD step before `/gsd-execute-phase 20`.
-4. Optional: conventional `feat(19): …` commit if you want Release Please to pick up a version bump from Phase 19 scope.
+3. `/gsd-discuss-phase 21` — recommended before planning multi-index search.
+4. Optional: conventional `feat(20): …` or combined release commit at maintainer discretion.
 
 ## Performance Metrics
 
@@ -125,4 +126,4 @@ Resume: `.planning/ROADMAP.md` § Phase 20 (no `.planning/phases/20-*` directory
 | Phase 17 | 01 | 24 min | 2 | 6 | 2026-04-17 |
 
 ---
-*Last updated: 2026-04-17 — Phase 19 bookkeeping; current focus Phase 20*
+*Last updated: 2026-04-17 — Phase 20 executed; current focus Phase 21*

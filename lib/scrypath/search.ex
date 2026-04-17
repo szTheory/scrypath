@@ -9,21 +9,29 @@ defmodule Scrypath.Search do
 
   @spec search(module(), String.t(), keyword()) :: {:ok, SearchResult.t()} | {:error, term()}
   def search(schema_module, text, opts \\ []) when is_binary(text) and is_list(opts) do
-    search_opts = Scrypath.Options.validate_search_options!(schema_module, opts)
-    config = Config.resolve!(runtime_opts(opts))
-    query = Query.new(text, search_opts)
-    metadata = Telemetry.common_metadata(schema_module, config)
+    case Scrypath.Options.validate_search_options(schema_module, opts) do
+      {:error, {:validation, message}} when is_binary(message) ->
+        raise ArgumentError, message
 
-    Telemetry.span([:scrypath, :search], metadata, fn ->
-      backend = Config.fetch_backend!(config)
+      {:error, _} = err ->
+        err
 
-      result =
-        with {:ok, raw_result} <- backend.search(schema_module, query, config) do
-          {:ok, decorate_result(schema_module, query, raw_result, config)}
-        end
+      {:ok, search_opts} ->
+        config = Config.resolve!(runtime_opts(opts))
+        query = Query.new(text, search_opts)
+        metadata = Telemetry.common_metadata(schema_module, config)
 
-      {result, Telemetry.stop_metadata(result)}
-    end)
+        Telemetry.span([:scrypath, :search], metadata, fn ->
+          backend = Config.fetch_backend!(config)
+
+          result =
+            with {:ok, raw_result} <- backend.search(schema_module, query, config) do
+              {:ok, decorate_result(schema_module, query, raw_result, config)}
+            end
+
+          {result, Telemetry.stop_metadata(result)}
+        end)
+    end
   end
 
   @spec search!(module(), String.t(), keyword()) :: SearchResult.t()
@@ -35,7 +43,7 @@ defmodule Scrypath.Search do
   end
 
   defp runtime_opts(opts) do
-    Keyword.drop(opts, [:filter, :sort, :page])
+    Keyword.drop(opts, [:filter, :sort, :page, :facets, :facet_filter])
   end
 
   defp decorate_result(schema_module, query, raw_result, config) when is_map(raw_result) do

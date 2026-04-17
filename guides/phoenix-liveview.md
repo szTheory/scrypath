@@ -61,3 +61,7 @@ Keep `attrs` string-keyed at this boundary. That matches the nested params LiveV
 If a LiveView event updates a record and then triggers sync work, the UI should not imply immediate search visibility unless the context chose `:inline` and waited for terminal backend success.
 
 Even then, backend acceptance and visibility semantics remain separate concerns. Keep that distinction explicit in operator-facing UI and docs.
+
+## See also
+
+For faceted catalogs (checkbox groups, chips, numeric ranges, and URL-synced `handle_params/3` with `Scrypath.search/3`), read `guides/faceted-search-with-phoenix-liveview.md`.

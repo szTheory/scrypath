@@ -434,6 +434,20 @@ defmodule Scrypath.Meilisearch.SettingsTest do
       end
     end
 
+    defmodule VerifyFacetWireSchema do
+      use Ecto.Schema
+
+      use Scrypath,
+        fields: [:title],
+        filterable: [:genre],
+        faceting: [attributes: [:genre]],
+        settings: %{}
+
+      embedded_schema do
+        field(:title, :string)
+      end
+    end
+
     @base_config [
       backend: Scrypath.Meilisearch,
       meilisearch_url: "http://localhost:7700",
@@ -452,6 +466,16 @@ defmodule Scrypath.Meilisearch.SettingsTest do
         )
 
       assert :ok = Settings.verify_applied(VerifyAppliedSchema, "posts_v2", config)
+    end
+
+    test "FACET verify_applied passes when applied includes facet-augmented filterableAttributes" do
+      declared =
+        VerifyFacetWireSchema
+        |> Settings.resolve(@base_config)
+        |> Settings.translate_settings()
+
+      config = Keyword.merge(@base_config, __stub_response__: {:ok, declared})
+      assert :ok = Settings.verify_applied(VerifyFacetWireSchema, "posts_v2", config)
     end
 
     test "drift when rankingRules diverge" do
@@ -572,6 +596,40 @@ defmodule Scrypath.Meilisearch.SettingsTest do
                  %{"synonyms" => %{}},
                  %{"synonyms" => %{}, "rankingRules" => ["words"]}
                )
+    end
+  end
+
+  describe "FACET-07 facet-derived filterableAttributes in resolve/2" do
+    test "FacetableMovie gets facetSearch objects for declared facet attrs" do
+      resolved = Settings.resolve(FacetableMovie, [])
+      wire = Settings.translate_settings(resolved)
+
+      assert length(wire["filterableAttributes"]) == 4
+
+      assert Enum.all?(wire["filterableAttributes"], fn entry ->
+               attr = entry["attribute"] || entry[:attribute]
+               fs = entry["features"] || entry[:features]
+               is_binary(attr) and is_list(fs) and "facetSearch" in fs
+             end)
+    end
+
+    defmodule FacetOverrideSchema do
+      use Ecto.Schema
+
+      use Scrypath,
+        fields: [:t],
+        filterable: [:genre],
+        faceting: [attributes: [:genre]],
+        settings: %{filterable_attributes: [%{attribute: "genre", features: ["filtering"]}]}
+
+      embedded_schema do
+        field(:t, :string)
+      end
+    end
+
+    test "explicit filterableAttributes entry wins over facet-derived replacement" do
+      resolved = Settings.resolve(FacetOverrideSchema, [])
+      assert [%{attribute: "genre", features: ["filtering"]}] == resolved[:filterable_attributes]
     end
   end
 

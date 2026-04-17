@@ -63,12 +63,23 @@ defmodule Scrypath.SearchTest do
 
   test "Scrypath.search/3 delegates through the common search path" do
     assert {:ok,
-            %SearchResult{hits: [], query: %Query{text: "ecto", filter: [], sort: [], page: %{}}}} =
+            %SearchResult{
+              hits: [],
+              query: %Query{
+                text: "ecto",
+                filter: [],
+                sort: [],
+                page: %{},
+                facets: [],
+                facet_filter: []
+              },
+              facets: %Scrypath.SearchResult.Facets{}
+            }} =
              Scrypath.search(SearchablePost, "ecto", backend: Scrypath.TestSupport.FakeBackend)
   end
 
   test "Scrypath.search!/3 returns successful results and raises on backend errors" do
-    assert %SearchResult{hits: [], query: %Query{text: "ecto"}} =
+    assert %SearchResult{hits: [], query: %Query{text: "ecto", facets: [], facet_filter: []}} =
              Scrypath.search!(SearchablePost, "ecto", backend: Scrypath.TestSupport.FakeBackend)
 
     assert_raise RuntimeError, "search failed: :search_failed", fn ->
@@ -83,7 +94,9 @@ defmodule Scrypath.SearchTest do
                 text: "phoenix",
                 filter: [status: "published"],
                 sort: [desc: :inserted_at],
-                page: %{number: 2, size: 20}
+                page: %{number: 2, size: 20},
+                facets: [],
+                facet_filter: []
               }
             }} =
              Scrypath.search(SearchablePost, "phoenix",
@@ -104,7 +117,8 @@ defmodule Scrypath.SearchTest do
   end
 
   test "structured sort accepts only declared sortable fields and preserves ecto-style input" do
-    assert {:ok, %SearchResult{query: %Query{sort: [desc: :inserted_at]}}} =
+    assert {:ok,
+            %SearchResult{query: %Query{sort: [desc: :inserted_at], facets: [], facet_filter: []}}} =
              Scrypath.search(SearchablePost, "ecto",
                backend: Scrypath.TestSupport.FakeBackend,
                sort: [desc: :inserted_at]
@@ -199,5 +213,26 @@ defmodule Scrypath.SearchTest do
         sort: ["inserted_at:desc"]
       )
     end
+  end
+
+  test "non-declared facet request returns unknown_facet error tuple" do
+    assert {:error, {:unknown_facet, :not_declared}} =
+             Scrypath.search(FacetableMovie, "x",
+               backend: Scrypath.TestSupport.FakeBackend,
+               facets: [:not_declared]
+             )
+  end
+
+  test "facetDistribution and facetStats decode into SearchResult.facets" do
+    assert {:ok, %SearchResult{facets: facets}} =
+             Scrypath.search(FacetableMovie, "x",
+               backend: Scrypath.TestSupport.FakeBackend,
+               facets: [:genre]
+             )
+
+    assert facets.declared_order == [:genre]
+    assert [%Scrypath.SearchResult.Facets.Bucket{} | _] = facets.distribution[:genre]
+    assert facets.stats[:genre][:min] == 1
+    assert facets.stats[:genre][:max] == 10
   end
 end

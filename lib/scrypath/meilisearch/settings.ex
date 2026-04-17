@@ -30,10 +30,94 @@ defmodule Scrypath.Meilisearch.Settings do
       |> Keyword.get(:settings, %{})
       |> maybe_normalize()
 
-    case Keyword.get(config, :settings_merge, :replace) do
-      :deep -> deep_merge(declared, override)
-      _ -> Map.merge(declared, override)
+    merged =
+      case Keyword.get(config, :settings_merge, :replace) do
+        :deep -> deep_merge(declared, override)
+        _ -> Map.merge(declared, override)
+      end
+
+    merge_faceting_filterable_attributes(schema_module, merged)
+  end
+
+  # Facet-derived `filterableAttributes` entries augment `resolve/2` after declared settings
+  # merge. Explicit `settings:` entries for the same attribute win: existing maps are kept
+  # unchanged; bare strings for facet attributes are upgraded to object form with facetSearch.
+  defp merge_faceting_filterable_attributes(schema_module, settings) do
+    faceting = Scrypath.schema_faceting(schema_module)
+    attrs = Keyword.get(faceting, :attributes, [])
+
+    if attrs == [] do
+      settings
+    else
+      facet_names = MapSet.new(attrs, &Atom.to_string/1)
+      list = filterable_attributes_list(Map.get(settings, :filterable_attributes))
+
+      {converted, covered} =
+        Enum.map_reduce(list, MapSet.new(), fn entry, covered ->
+          transform_filterable_for_faceting(entry, facet_names, covered)
+        end)
+
+      appended =
+        attrs
+        |> Enum.reject(&MapSet.member?(covered, &1))
+        |> Enum.map(&facet_filterable_object/1)
+
+      Map.put(settings, :filterable_attributes, converted ++ appended)
     end
+  end
+
+  defp filterable_attributes_list(nil), do: []
+
+  defp filterable_attributes_list(list) when is_list(list), do: list
+  defp filterable_attributes_list(_), do: []
+
+  defp transform_filterable_for_faceting(entry, facet_names, covered) when is_binary(entry) do
+    if MapSet.member?(facet_names, entry) do
+      {facet_filterable_object_string(entry), MapSet.put(covered, String.to_existing_atom(entry))}
+    else
+      {entry, covered}
+    end
+  end
+
+  defp transform_filterable_for_faceting(entry, facet_names, covered) when is_atom(entry) do
+    name = Atom.to_string(entry)
+
+    if MapSet.member?(facet_names, name) do
+      {facet_filterable_object_string(name), MapSet.put(covered, entry)}
+    else
+      {entry, covered}
+    end
+  end
+
+  defp transform_filterable_for_faceting(%{} = m, facet_names, covered) do
+    case attribute_string_from_filterable_entry(m) do
+      nil ->
+        {m, covered}
+
+      name when is_binary(name) ->
+        if MapSet.member?(facet_names, name) do
+          {m, MapSet.put(covered, String.to_existing_atom(name))}
+        else
+          {m, covered}
+        end
+    end
+  end
+
+  defp attribute_string_from_filterable_entry(m) do
+    case {Map.get(m, :attribute), Map.get(m, "attribute")} do
+      {a, _} when is_atom(a) -> Atom.to_string(a)
+      {b, _} when is_binary(b) -> b
+      {nil, b} when is_binary(b) -> b
+      _ -> nil
+    end
+  end
+
+  defp facet_filterable_object_string(name) when is_binary(name) do
+    %{attribute: name, features: ["facetSearch"]}
+  end
+
+  defp facet_filterable_object(attr) when is_atom(attr) do
+    %{attribute: Atom.to_string(attr), features: ["facetSearch"]}
   end
 
   @spec apply(module(), String.t(), keyword()) :: {:ok, map()} | {:error, term()}

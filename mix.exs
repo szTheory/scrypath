@@ -42,6 +42,7 @@ defmodule Scrypath.MixProject do
         "verify.phase11": :test,
         "verify.phase13": :test,
         "verify.phase14": :test,
+        "verify.phase20": :test,
         "verify.release_publish": :test,
         "verify.workspace_clean": :test,
         "verify.release_parity": :test,
@@ -81,11 +82,13 @@ defmodule Scrypath.MixProject do
         "guides/phoenix-contexts.md",
         "guides/phoenix-controllers-and-json.md",
         "guides/phoenix-liveview.md",
+        "guides/faceted-search-with-phoenix-liveview.md",
         "guides/sync-modes-and-visibility.md",
         "guides/operator-mix-tasks.md",
         "guides/relevance-tuning.md",
         "docs/releasing.md",
-        "docs/operator-support.md"
+        "docs/operator-support.md",
+        "docs/search-backend-sre.md"
       ],
       groups_for_extras: [
         "Getting Started": ["README.md", "guides/getting-started.md"],
@@ -93,7 +96,8 @@ defmodule Scrypath.MixProject do
           "guides/phoenix-walkthrough.md",
           "guides/phoenix-contexts.md",
           "guides/phoenix-controllers-and-json.md",
-          "guides/phoenix-liveview.md"
+          "guides/phoenix-liveview.md",
+          "guides/faceted-search-with-phoenix-liveview.md"
         ],
         Operations: [
           "ARCHITECTURE.md",
@@ -101,7 +105,11 @@ defmodule Scrypath.MixProject do
           "guides/operator-mix-tasks.md",
           "guides/relevance-tuning.md"
         ],
-        Maintainers: ["docs/releasing.md", "docs/operator-support.md"]
+        Maintainers: [
+          "docs/releasing.md",
+          "docs/operator-support.md",
+          "docs/search-backend-sre.md"
+        ]
       ]
     ]
   end

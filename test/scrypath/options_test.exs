@@ -379,4 +379,74 @@ defmodule Scrypath.OptionsTest do
       assert err == ""
     end
   end
+
+  describe "schema faceting" do
+    test "FacetableMovie compiles with aligned faceting and filterable" do
+      assert Keyword.get(FacetableMovie.__scrypath__(:faceting), :attributes) == [
+               :genre,
+               :year,
+               :rating,
+               :director
+             ]
+
+      assert Scrypath.schema_faceting(FacetableMovie) == FacetableMovie.__scrypath__(:faceting)
+    end
+
+    test "rejects facet attribute not in filterable (FACET-02)" do
+      assert_raise ArgumentError, ~r/not in filterable/, fn ->
+        Code.compile_string("""
+        defmodule InvalidFacetNotFilterable do
+          use Ecto.Schema
+
+          use Scrypath,
+            fields: [:title],
+            filterable: [:genre],
+            faceting: [attributes: [:orphan]]
+
+          embedded_schema do
+            field :title, :string
+          end
+        end
+        """)
+      end
+    end
+
+    test "rejects wildcard facet attribute (FACET-10)" do
+      assert_raise ArgumentError, ~r/wildcard/, fn ->
+        Code.compile_string("""
+        defmodule InvalidFacetWildcard do
+          use Ecto.Schema
+
+          use Scrypath,
+            fields: [:title],
+            filterable: [:genre],
+            faceting: [attributes: [:*]]
+
+          embedded_schema do
+            field :title, :string
+          end
+        end
+        """)
+      end
+    end
+
+    test "rejects hierarchical facet names (FACET-10)" do
+      assert_raise ArgumentError, ~r/hierarchical/, fn ->
+        Code.compile_string("""
+        defmodule InvalidFacetHierarchical do
+          use Ecto.Schema
+
+          use Scrypath,
+            fields: [:title],
+            filterable: [:genre, :"foo.bar"],
+            faceting: [attributes: [:"foo.bar"]]
+
+          embedded_schema do
+            field :title, :string
+          end
+        end
+        """)
+      end
+    end
+  end
 end

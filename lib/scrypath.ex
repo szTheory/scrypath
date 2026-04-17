@@ -7,6 +7,7 @@ defmodule Scrypath do
   - `schema_config/1`
   - `schema_fields/1`
   - `schema_settings/1`
+  - `schema_faceting/1`
   - `document_source/1`
   - `document_id_field/1`
 
@@ -39,6 +40,17 @@ defmodule Scrypath do
   @spec schema_settings(module()) :: map()
   def schema_settings(schema_module) do
     schema_module.__scrypath__(:settings)
+  end
+
+  @doc """
+  Returns normalized `faceting:` options for the schema, or `[]` when faceting is disabled.
+
+  Shape when enabled is a keyword list with `:attributes`, `:max_values_per_facet`, and
+  `:sort_facet_values_by`.
+  """
+  @spec schema_faceting(module()) :: keyword()
+  def schema_faceting(schema_module) do
+    schema_module.__scrypath__(:faceting)
   end
 
   @spec document_source(module()) :: atom()

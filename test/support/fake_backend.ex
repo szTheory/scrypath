@@ -29,15 +29,34 @@ defmodule Scrypath.TestSupport.FakeBackend do
 
   @impl true
   def search(_schema_module, query, _config) do
-    {:ok,
-     %{
-       query: query,
-       hits: [],
-       page: 1,
-       hitsPerPage: 20,
-       totalHits: 0,
-       normalized_query?: match?(%Query{}, query)
-     }}
+    base = %{
+      query: query,
+      hits: [],
+      page: 1,
+      hitsPerPage: 20,
+      totalHits: 0,
+      normalized_query?: match?(%Query{}, query)
+    }
+
+    {:ok, maybe_put_facet_wires(query, base)}
+  end
+
+  defp maybe_put_facet_wires(%Query{facets: []}, m), do: m
+
+  defp maybe_put_facet_wires(%Query{facets: fs}, m) when is_list(fs) do
+    dist =
+      Map.new(fs, fn f ->
+        {Atom.to_string(f), %{"a" => 2, "b" => 1}}
+      end)
+
+    stats =
+      Map.new(fs, fn f ->
+        {Atom.to_string(f), %{"min" => 1, "max" => 10}}
+      end)
+
+    m
+    |> Map.put("facetDistribution", dist)
+    |> Map.put("facetStats", stats)
   end
 
   defp document_id(%Document{id: id}), do: id

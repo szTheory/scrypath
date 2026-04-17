@@ -8,6 +8,7 @@ defmodule Scrypath.PhoenixExamplesTest do
   alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Post
   alias Scrypath.TestSupport.Docs.PhoenixExampleCase.PostController
   alias Scrypath.TestSupport.Docs.PhoenixExampleCase.PostLive
+  alias Scrypath.TestSupport.Docs.PhoenixExampleCase.FacetedBrowseLive
 
   test "the context owns the search boundary used by web layers" do
     assert function_exported?(Content, :search_posts, 2)
@@ -80,6 +81,17 @@ defmodule Scrypath.PhoenixExamplesTest do
     assert updated.query == "search"
     assert [%Post{}] = updated.posts
     assert updated.search.query == "search"
+  end
+
+  test "faceted browse liveview passes facets and facet_filter through the context" do
+    socket = FacetedBrowseLive.mount()
+
+    updated =
+      FacetedBrowseLive.handle_params(%{"q" => "space", "genre" => "Horror,Drama"}, socket)
+
+    assert updated.q == "space"
+    assert updated.facet_filter == [genre: ["Horror", "Drama"]]
+    assert [%Post{title: "Example Movie"}] = updated.posts
   end
 
   test "liveview write events still call the context boundary with string-keyed attrs" do

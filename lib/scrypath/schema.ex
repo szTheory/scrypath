@@ -10,6 +10,7 @@ defmodule Scrypath.Schema do
   - `:config`
   - `:fields`
   - `:filterable`
+  - `:faceting`
   - `:sortable`
   - `:settings`
   - `:document_id`
@@ -31,6 +32,7 @@ defmodule Scrypath.Schema do
       def __scrypath__(:config), do: @scrypath_config
       def __scrypath__(:fields), do: @scrypath_config.fields
       def __scrypath__(:filterable), do: @scrypath_config.filterable
+      def __scrypath__(:faceting), do: @scrypath_config.faceting
       def __scrypath__(:sortable), do: @scrypath_config.sortable
       def __scrypath__(:settings), do: @scrypath_config.settings
       def __scrypath__(:document_id), do: @scrypath_config.document_id

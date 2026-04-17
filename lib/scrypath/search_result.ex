@@ -2,9 +2,11 @@ defmodule Scrypath.SearchResult do
   @moduledoc false
 
   alias Scrypath.Query
+  alias Scrypath.SearchResult.Facets
+  alias Scrypath.SearchResult.Facets.Bucket
 
   @enforce_keys [:query, :hits, :records, :raw, :missing_ids, :page]
-  defstruct [:query, :hits, :records, :raw, :missing_ids, :page]
+  defstruct [:query, :hits, :records, :raw, :missing_ids, :page, :facets]
 
   @type t :: %__MODULE__{
           query: Query.t(),
@@ -12,7 +14,8 @@ defmodule Scrypath.SearchResult do
           records: [struct()],
           raw: map(),
           missing_ids: [term()],
-          page: map()
+          page: map(),
+          facets: Facets.t()
         }
 
   @spec new(Query.t(), map(), [struct()], [term()]) :: t()
@@ -23,9 +26,67 @@ defmodule Scrypath.SearchResult do
       records: records,
       raw: raw,
       missing_ids: missing_ids,
-      page: page(raw)
+      page: page(raw),
+      facets: decode_facets(query, raw)
     }
   end
+
+  defp decode_facets(%Query{facets: []}, _raw), do: %Facets{}
+
+  defp decode_facets(%Query{facets: order} = query, raw) when is_list(order) do
+    dist_raw = Map.get(raw, "facetDistribution") || Map.get(raw, :facetDistribution) || %{}
+    stats_raw = Map.get(raw, "facetStats") || Map.get(raw, :facetStats) || %{}
+
+    distribution =
+      Map.new(order, fn field ->
+        key = Atom.to_string(field)
+        inner = Map.get(dist_raw, key) || Map.get(dist_raw, field) || %{}
+        {field, decode_distribution_buckets(inner)}
+      end)
+
+    stats =
+      Map.new(order, fn field ->
+        key = Atom.to_string(field)
+        inner = Map.get(stats_raw, key) || Map.get(stats_raw, field) || %{}
+        {field, decode_stats_map(inner)}
+      end)
+
+    %Facets{distribution: distribution, stats: stats, declared_order: query.facets}
+  end
+
+  defp decode_distribution_buckets(map) when is_map(map) do
+    map
+    |> Enum.sort_by(fn {k, _} -> to_string(k) end)
+    |> Enum.map(fn {value, count} ->
+      %Bucket{value: value, count: decode_count(count)}
+    end)
+  end
+
+  defp decode_distribution_buckets(_), do: []
+
+  defp decode_stats_map(map) when is_map(map) do
+    map
+    |> Enum.map(fn
+      {"min", v} -> {:min, decode_number(v)}
+      {"max", v} -> {:max, decode_number(v)}
+      {:min, v} -> {:min, decode_number(v)}
+      {:max, v} -> {:max, decode_number(v)}
+      {k, v} -> {normalize_stat_key(k), v}
+    end)
+    |> Enum.into(%{})
+  end
+
+  defp decode_stats_map(_), do: %{}
+
+  defp normalize_stat_key(k) when is_atom(k), do: k
+  defp normalize_stat_key(k) when is_binary(k), do: String.to_atom(k)
+
+  defp decode_count(n) when is_integer(n), do: n
+  defp decode_count(n) when is_float(n), do: trunc(n)
+  defp decode_count(_), do: 0
+
+  defp decode_number(n) when is_number(n), do: n
+  defp decode_number(_), do: nil
 
   defp hits(raw) do
     Map.get(raw, "hits") || Map.get(raw, :hits) || []
