@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Search Power That Phoenix Teams Reach For
-current_phase: null
-current_phase_name: null
+current_phase: 18
+current_phase_name: release-parity-gate
 current_plan: null
-status: defining_requirements
-stopped_at: v1.3 milestone started — defining requirements
-last_updated: "2026-04-16T00:00:00Z"
-last_activity: 2026-04-16 -- Milestone v1.3 started
+status: ready_to_plan
+stopped_at: v1.3 roadmap created — ready to plan Phase 18
+last_updated: "2026-04-17T00:00:00Z"
+last_activity: 2026-04-17 -- v1.3 roadmap created, 6 phases (18-23) with 44 requirements mapped at 100% coverage
 progress:
-  total_phases: 0
+  total_phases: 6
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -24,18 +24,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Defining requirements for v1.3 (Meilisearch-native search power + tooling-debt retirement)
+**Current focus:** Planning Phase 18 — release-parity gate + Node 20 CI cleanup. Every v1.3 feature phase inherits divergence prevention from this phase.
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 18 — release-parity-gate
 Plan: —
-Current Phase: None
-Current Phase Name: None
+Current Phase: 18
+Current Phase Name: release-parity-gate
 Current Plan: None
-Status: Defining requirements
-Last activity: 2026-04-16 — Milestone v1.3 started
-Last Activity Description: v1.3 milestone opened: facets, relevance tuning, multi-index search, operator polish, and release/tooling debt closure
+Status: Ready to plan
+Last activity: 2026-04-17 — v1.3 roadmap written with 6 phases (18–23) and 44 requirements mapped
+Last Activity Description: v1.3 roadmap created; Phase 18 (release-parity gate) ready for `$gsd-plan-phase 18`
 
 Progress: [          ] 0%
 
@@ -65,19 +65,25 @@ Progress: [          ] 0%
 - [Phase 12]: Treat the presence of a followable operation task as the reindex waiting contract instead of branching on a concrete backend module.
 - [Phase 17]: Use `origin/main` as the canonical release source, then repair repo Actions workflow permissions instead of bypassing Release Please.
 - [Phase 17]: Fix the first publish gate on `main` with the minimal release commit `13f1789` and complete the public release through the documented recovery publish workflow.
+- [v1.3 Roadmap]: Six phases (18–23) continue the v1.2 numbering. Phase 18 is the release-parity gate + Node 20 CI cleanup — load-bearing foundation that every feature phase inherits. Phase 23 (VALIDATION.md closure) is separated from feature phases so evidence-gathering review is not diluted by code-bearing PRs.
+- [v1.3 Roadmap]: Phase ordering — 18 (gate) → 19 (relevance, narrowest translation pattern) → 20 (facets, reuses translation pattern) → 21 (multi-index, depends on facet parity) → 22 (operator polish, orthogonal to search features) → 23 (v1.2 validation closure, parallelizable with 22). Derived from deep research synthesis in `.planning/research/SUMMARY.md`.
+- [v1.3 Roadmap]: Every v1.3 addition is additive over shipped `scrypath 0.3.0`; new struct fields land outside `@enforce_keys` with benign defaults. Non-goals locked: no second public backend, no vector/hybrid search, no breaking changes, no dashboard, no new `Scrypath.recover/2` verb.
 
 ### Blockers/Concerns
 
 - The working tree already contains unrelated user-side changes outside the Phase 17 bookkeeping files; they remain untouched.
 - Live Meilisearch verification still depends on a reachable `SCRYPATH_MEILISEARCH_URL` for any end-to-end publish smoke path that exercises a real backend.
-- GitHub Actions still emits Node.js 20 deprecation warnings for some upstream actions; this should be cleaned up before runner defaults change.
+- Phase 18 is now the canonical cleanup path for the remaining GitHub Actions Node 20 deprecation warnings; they no longer appear on the open-concerns list once Phase 18 ships.
 
 ### Deferred Items
 
 | Category | Item | Status |
 |----------|------|--------|
 | backend | Additional public backend support | Deferred until post-release adoption pressure is real |
-| search | Richer backend-native search power | Deferred until the operator/release milestone settles |
+| search | Hot-apply escape hatch `Scrypath.Meilisearch.Settings.hot_apply/3` | Deferred to v1.4 (stub ships in Phase 19 returning `:hot_apply_disabled`) |
+| search | Hierarchical/nested facet declarations, disjunctive facet counts, search-within-facet | Deferred to v1.4 |
+| search | Cross-schema ranking normalization, custom weighting, `:all`-schema wildcard | Deferred to v1.4 |
+| operator | Failure-class rollup + `reason_class`-driven reconcile branching | Deferred to v1.4 (narrow-polish discipline holds for v1.3) |
 
 ### Quick Tasks Completed
 
@@ -87,21 +93,20 @@ Progress: [          ] 0%
 
 ## Session Continuity
 
-Last session: 2026-04-16T00:00:00Z
-Stopped at: v1.3 milestone started — defining requirements
+Last session: 2026-04-17T00:00:00Z
+Stopped at: v1.3 roadmap created — ready to plan Phase 18
 Resume file: None
 
 ## Current Status
 
 - v1.0, v1.1, and v1.2 all archived; `scrypath 0.3.0` live on Hex with verified HexDocs and recovery runbooks.
-- Milestone `v1.3` "Search Power That Phoenix Teams Reach For" is now active.
-- Direction chosen by evidence-based extrapolation (codebase gap analysis + planning history + ecosystem research) rather than a single adopter request — primary bet is deepening Meilisearch-native capabilities over widening to a second backend.
-- v1.3 scope: faceted search, relevance tuning (typo/synonyms/ranking), multi-index search, narrow operator polish, and release/tooling-debt retirement (GitHub Actions Node 20 cleanup + v1.2 VALIDATION.md closure).
-- v1.3 non-goals (locked): no second public backend, no vector/hybrid/semantic search, no breaking changes to v1.2 public contracts, no dashboard surface.
+- Milestone `v1.3` "Search Power That Phoenix Teams Reach For" is active with 6 phases (18–23) mapped against 44 requirements at 100% coverage.
+- Phase 18 (release-parity-gate) is the immediate next planning target; it must ship before any feature phase so every feature phase inherits divergence prevention.
+- v1.3 non-goals (locked): no second public backend, no vector/hybrid/semantic search, no breaking changes to v1.2 public contracts, no dashboard surface, no new `Scrypath.recover/*` verb.
 
 ## Next Command
 
-- `$gsd-discuss-phase 18`
+- `$gsd-plan-phase 18`
 
 ## Performance Metrics
 
@@ -117,4 +122,4 @@ Resume file: None
 | Phase 17 | 01 | 24 min | 2 | 6 | 2026-04-17 |
 
 ---
-*Last updated: 2026-04-16 — v1.3 milestone started*
+*Last updated: 2026-04-17 — v1.3 roadmap created, ready to plan Phase 18*
