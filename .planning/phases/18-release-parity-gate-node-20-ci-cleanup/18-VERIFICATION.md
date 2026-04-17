@@ -143,6 +143,8 @@ Phase 18 SUMMARY documents 1 pre-existing test failure in `Scrypath.TelemetryTes
 
 None. Phase 18 is closed with the `feat(18):` closing commit (`80500de`). The post-merge `release-please` 0.4.0 PR and its subsequent canonical publish path run is the release cycle's exit condition, not a Phase 18 verification step — that will be observable in the ROADMAP `v1.3` milestone state. All programmatic checks pass.
 
+**UAT shift-left (2026-04-17):** `/gsd-verify-work 18` produced `18-UAT.md` with 9 tests that initially required maintainer action. All 9 were shifted left into automated assertions — see `18-UAT.md` for the full automation map. Net change: +8 unit tests (`test/mix/tasks/verify_workspace_clean_test.exs` classify/3 block, `test/mix/tasks/workflow_wiring_test.exs` UAT shift-left block). Zero human verification remains for Phase 18. The behavior-preserving `classify/3` refactor in `lib/mix/tasks/verify.workspace_clean.ex` mirrors the Pitfall-11 split already shipped in `verify.release_parity.ex`.
+
 ### Gaps Summary
 
 No gaps. All 13 observable truths VERIFIED, all 11 artifacts pass Levels 1-4, all 13 key links WIRED, all 4 requirements SATISFIED, all 7 behavioral spot-checks PASS. Anti-pattern scan surfaces only informational findings from code review (no blockers).
