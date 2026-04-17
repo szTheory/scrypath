@@ -348,7 +348,7 @@ defmodule Scrypath.MeilisearchTest do
   end
 
   test "apply_settings/3 resolves schema settings and applies them to the explicit target index" do
-    override_settings = %{sortableAttributes: ["inserted_at"]}
+    override_settings = %{sortable_attributes: ["inserted_at"]}
 
     assert {:ok,
             %{index: "posts_rebuild_v2", settings: settings, task: %{uid: 20, status: :enqueued}}} =
@@ -358,12 +358,20 @@ defmodule Scrypath.MeilisearchTest do
              )
 
     assert settings == %{
-             searchableAttributes: ["title", "body"],
-             typoTolerance: "min",
-             sortableAttributes: ["inserted_at"]
+             searchable_attributes: ["title", "body"],
+             typo_tolerance: [enabled: true],
+             __unrecognized__: %{},
+             sortable_attributes: ["inserted_at"]
            }
 
-    assert_received {:client_update_settings, "posts_rebuild_v2", ^settings, config}
+    assert_received {:client_update_settings, "posts_rebuild_v2", wire, config}
+
+    assert wire == %{
+             "searchableAttributes" => ["title", "body"],
+             "sortableAttributes" => ["inserted_at"],
+             "typoTolerance" => [enabled: true]
+           }
+
     assert config[:settings] == override_settings
   end
 

@@ -264,8 +264,7 @@ defmodule Scrypath.TelemetryTest do
     assert readme =~ "Scrypath v1 publicly targets Meilisearch first."
     assert readme =~ "The public backend-native namespace remains `Scrypath.Meilisearch.*`."
 
-    assert readme =~
-             "does not promise public multi-backend parity or a public operator API in this phase"
+    assert readme =~ "does not promise public multi-backend parity"
 
     assert architecture =~
              "| `:inline` | waits for terminal backend task success before returning |"
@@ -274,7 +273,7 @@ defmodule Scrypath.TelemetryTest do
     assert architecture =~ "| `:oban` | returns durable enqueue acceptance only |"
     assert architecture =~ "Phase 12 keeps the operations seam internal"
     assert architecture =~ "sync, backfill, and managed reindex"
-    assert architecture =~ "not to introduce a new public operator namespace before Phase 13"
+    assert architecture =~ "Phase 13 adds operator verbs"
 
     assert architecture =~
              "exchange Scrypath-owned operation results and followable references internally"

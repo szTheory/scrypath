@@ -12,8 +12,30 @@ defmodule Scrypath.Config do
   @spec resolve!(keyword()) :: keyword()
   def resolve!(opts) when is_list(opts) do
     Application.get_env(:scrypath, :defaults, [])
+    |> Keyword.merge(per_repo_config(opts))
     |> Keyword.merge(opts)
     |> Options.validate_runtime_options!()
+  end
+
+  @spec per_repo_config(keyword()) :: keyword()
+  defp per_repo_config(opts) do
+    otp_app = Keyword.get(opts, :otp_app) || repo_otp_app(opts)
+
+    with repo when is_atom(repo) <- Keyword.get(opts, :repo),
+         otp_app when is_atom(otp_app) and not is_nil(otp_app) <- otp_app,
+         repo_env when is_list(repo_env) <- Application.get_env(otp_app, repo, []),
+         scrypath_config when is_list(scrypath_config) <- Keyword.get(repo_env, :scrypath, []) do
+      scrypath_config
+    else
+      _ -> []
+    end
+  end
+
+  defp repo_otp_app(opts) do
+    case Keyword.get(opts, :repo) do
+      repo when is_atom(repo) -> Application.get_application(repo)
+      _ -> nil
+    end
   end
 
   @spec ensure_oban_ready!(keyword()) :: keyword()
@@ -79,11 +101,19 @@ defmodule Scrypath.Config do
   end
 
   defp ensure_oban_config!(config) do
+    validate_oban_queue!(config)
+    validate_oban_module!(config)
+    validate_oban_max_attempts!(config)
+  end
+
+  defp validate_oban_queue!(config) do
     case oban_queue(config) do
       queue when is_atom(queue) and not is_nil(queue) -> :ok
       _ -> raise ArgumentError, "oban_queue is required when sync_mode is :oban"
     end
+  end
 
+  defp validate_oban_module!(config) do
     case oban_module(config) do
       module when is_atom(module) and not is_nil(module) ->
         if Code.ensure_loaded?(module) do
@@ -96,7 +126,9 @@ defmodule Scrypath.Config do
       _ ->
         raise ArgumentError, "oban must be a module when sync_mode is :oban"
     end
+  end
 
+  defp validate_oban_max_attempts!(config) do
     case oban_max_attempts(config) do
       attempts when is_integer(attempts) and attempts > 0 ->
         :ok

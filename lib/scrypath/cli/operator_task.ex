@@ -15,7 +15,9 @@ defmodule Scrypath.CLI.OperatorTask do
     :meilisearch_api_key,
     :oban,
     :oban_queue,
-    :oban_max_attempts
+    :oban_max_attempts,
+    :repo,
+    :otp_app
   ]
 
   @common_switches [
@@ -26,7 +28,9 @@ defmodule Scrypath.CLI.OperatorTask do
     meilisearch_api_key: :string,
     oban: :string,
     oban_queue: :string,
-    oban_max_attempts: :integer
+    oban_max_attempts: :integer,
+    repo: :string,
+    otp_app: :string
   ]
 
   def parse!(args, extra_switches \\ []) do
@@ -51,6 +55,8 @@ defmodule Scrypath.CLI.OperatorTask do
       {:backend, value} -> {:backend, normalize_backend!(value)}
       {:sync_mode, value} -> {:sync_mode, normalize_sync_mode!(value)}
       {:oban, value} -> {:oban, resolve_module!(value)}
+      {:repo, value} -> {:repo, resolve_module!(value)}
+      {:otp_app, value} -> {:otp_app, normalize_otp_app!(value)}
       {:oban_queue, value} -> {:oban_queue, normalize_existing_atom!(value, :oban_queue)}
       pair -> pair
     end)
@@ -105,7 +111,8 @@ defmodule Scrypath.CLI.OperatorTask do
     end
   end
 
-  def repair_action_from_report!(%Reconcile{} = report, kind) when kind in [:backfill, :reindex] do
+  def repair_action_from_report!(%Reconcile{} = report, kind)
+      when kind in [:backfill, :reindex] do
     case Enum.find(report.actions, &(&1.kind == kind)) do
       %RecoveryAction{} = action -> action
       nil -> Mix.raise("no #{kind} action is available for this report")
@@ -192,6 +199,7 @@ defmodule Scrypath.CLI.OperatorTask do
     |> Enum.join("\n")
   end
 
+  @spec error!(String.t(), term()) :: no_return()
   def error!(task_name, reason) do
     Mix.raise("#{task_name} failed: #{format_reason(reason)}")
   end
@@ -207,6 +215,14 @@ defmodule Scrypath.CLI.OperatorTask do
       module
     else
       Mix.raise("module #{name} is not available")
+    end
+  end
+
+  defp normalize_otp_app!(value) do
+    try do
+      String.to_existing_atom(value)
+    rescue
+      ArgumentError -> Mix.raise("otp_app must be an existing atom name, got #{inspect(value)}")
     end
   end
 
@@ -253,6 +269,8 @@ defmodule Scrypath.CLI.OperatorTask do
       index -> index
     end
   end
+
+  defp format_reason(:index_not_found), do: "index not found"
 
   defp format_reason(reason) when is_atom(reason), do: Atom.to_string(reason)
   defp format_reason(reason) when is_binary(reason), do: reason

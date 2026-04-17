@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Verify.Phase14 do
+  @moduledoc false
   use Mix.Task
 
   @shortdoc "Runs the automated Phase 14 Mix-task and docs verification flow"

@@ -245,6 +245,7 @@ defmodule Mix.Tasks.Verify.ReleaseParity do
     Mix.shell().info(output)
   end
 
+  @spec emit_drift_and_halt!(String.t(), [String.t()], [String.t()], keyword()) :: no_return()
   defp emit_drift_and_halt!(version, only_in_git, only_in_hex, opts) do
     output =
       if opts[:json] do
@@ -276,7 +277,7 @@ defmodule Mix.Tasks.Verify.ReleaseParity do
   defp format_paths([]), do: "  (none)"
 
   defp format_paths(paths) do
-    paths |> Enum.map(&"  #{&1}") |> Enum.join("\n")
+    Enum.map_join(paths, "\n", &"  #{&1}")
   end
 
   defp unique_tmp_dir! do

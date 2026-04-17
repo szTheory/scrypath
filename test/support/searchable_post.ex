@@ -21,7 +21,7 @@ defmodule ConfiguredSearchablePost do
     fields: [:title, :body],
     settings: %{
       searchableAttributes: ["title", "body"],
-      typoTolerance: "min"
+      typoTolerance: [enabled: true]
     }
 
   embedded_schema do

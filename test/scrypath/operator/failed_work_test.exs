@@ -57,7 +57,9 @@ defmodule Scrypath.Operator.FailedWorkTest do
                      "index" => "tenant_searchable_post",
                      "document_count" => 1,
                      "document_ids" => [1],
-                     "documents" => [%{"id" => 1, "data" => %{"title" => "One"}, "source" => "fields"}]
+                     "documents" => [
+                       %{"id" => 1, "data" => %{"title" => "One"}, "source" => "fields"}
+                     ]
                    }
                  },
                  %{
@@ -77,7 +79,11 @@ defmodule Scrypath.Operator.FailedWorkTest do
                ]
              )
 
-    assert [%FailedWork{} = backend_failure, %FailedWork{} = retryable_job, %FailedWork{} = discarded_job] =
+    assert [
+             %FailedWork{} = backend_failure,
+             %FailedWork{} = retryable_job,
+             %FailedWork{} = discarded_job
+           ] =
              failed_work
 
     assert backend_failure.source == :meilisearch
@@ -123,7 +129,9 @@ defmodule Scrypath.Operator.FailedWorkTest do
               "index" => "tenant_searchable_post",
               "document_count" => 1,
               "document_ids" => [9],
-              "documents" => [%{"id" => 9, "data" => %{"title" => "Replay"}, "source" => "fields"}]
+              "documents" => [
+                %{"id" => 9, "data" => %{"title" => "Replay"}, "source" => "fields"}
+              ]
             }
           }
         ]

@@ -80,12 +80,14 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
     test "verify-published-release.yml permissions include issues: write" do
       yml = File.read!(@verify_published_yml)
+
       assert yml =~ "issues: write",
              "create-an-issue@v2 needs issues:write permission in the workflow permissions: block"
     end
 
     test "verify-published-release.yml still runs on schedule cron" do
       yml = File.read!(@verify_published_yml)
+
       assert yml =~ ~r/schedule:\s*\n\s*- cron:/,
              "scheduled cron trigger required for INFRA-04 daily run"
     end

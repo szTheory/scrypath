@@ -34,9 +34,7 @@ defmodule Mix.Tasks.Verify.WorkspaceClean do
     Mix.shell().info("==> Checking workspace cleanliness for packaged paths")
 
     {output, exit_status} =
-      System.cmd("git", ["status", "--porcelain", "--" | pathspecs],
-        stderr_to_stdout: true
-      )
+      System.cmd("git", ["status", "--porcelain", "--" | pathspecs], stderr_to_stdout: true)
 
     case classify(output, exit_status, length(pathspecs)) do
       {:ok, message} ->
@@ -100,11 +98,10 @@ defmodule Mix.Tasks.Verify.WorkspaceClean do
   defp ensure_no_args!([]), do: :ok
 
   defp ensure_no_args!(args) do
-    Mix.raise(
-      "verify.workspace_clean does not accept arguments, got: #{Enum.join(args, " ")}"
-    )
+    Mix.raise("verify.workspace_clean does not accept arguments, got: #{Enum.join(args, " ")}")
   end
 
+  @spec raise_dirty!(String.t()) :: no_return()
   defp raise_dirty!(output) do
     Mix.raise("""
     Workspace is not clean. Uncommitted or untracked files exist in packaged paths:

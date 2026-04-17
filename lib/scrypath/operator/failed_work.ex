@@ -165,7 +165,8 @@ defmodule Scrypath.Operator.FailedWork do
 
   defp queue_failed?(job) do
     case Map.get(job, :state) || Map.get(job, "state") do
-      state when state in ["retryable", :retryable, "discarded", :discarded, "cancelled", :cancelled] ->
+      state
+      when state in ["retryable", :retryable, "discarded", :discarded, "cancelled", :cancelled] ->
         true
 
       _other ->

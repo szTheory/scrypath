@@ -41,8 +41,11 @@ defmodule Mix.Tasks.Scrypath.Reconcile do
     with {:ok, report} <- Scrypath.reconcile_sync(schema, runtime_opts ++ operator_opts),
          action <- select_action(report, opts),
          resolved_runtime_opts <-
-           Scrypath.Config.resolve!(Keyword.drop(runtime_opts, [:meilisearch_tasks, :oban_jobs, :oban_inspector])),
-         {:ok, result} <- Scrypath.reconcile_sync(schema, resolved_runtime_opts ++ [action: action]) do
+           Scrypath.Config.resolve!(
+             Keyword.drop(runtime_opts, [:meilisearch_tasks, :oban_jobs, :oban_inspector])
+           ),
+         {:ok, result} <-
+           Scrypath.reconcile_sync(schema, resolved_runtime_opts ++ [action: action]) do
       Mix.shell().info(OperatorTask.render_action_result(action.kind, result))
     else
       {:error, reason} -> OperatorTask.error!("scrypath.reconcile", reason)

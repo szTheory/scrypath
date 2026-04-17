@@ -1,21 +1,36 @@
 defmodule Scrypath.Reindex do
   @moduledoc false
 
+  require Logger
+
+  alias Scrypath.Meilisearch.Settings
   alias Scrypath.Meilisearch.Tasks
   alias Scrypath.Operations
   alias Scrypath.Options
   alias Scrypath.Operations.Result
   alias Scrypath.Operations.Task, as: OperationTask
 
+  @meilisearch_default_ranking_rules [:words, :typo, :proximity, :attribute, :sort, :exactness]
+
   @spec run(module(), keyword()) :: {:ok, map()} | {:error, term()}
   def run(schema_module, opts \\ []) do
+    :ok = enforce_ranking_rules_strict!(schema_module)
+
     meilisearch = Keyword.get(opts, :meilisearch, Scrypath.Meilisearch)
     backfill = Keyword.get(opts, :backfill, Scrypath.Backfill)
-    config = Options.validate_reindex_options!(Keyword.drop(opts, [:meilisearch, :backfill]))
+
+    {test_client_extras, rest} = Keyword.split(opts, [:__get_settings_response__])
+    dropped = Keyword.drop(rest, [:meilisearch, :backfill])
+    config = dropped |> Options.validate_reindex_options!() |> Keyword.merge(test_client_extras)
+
     backend = Keyword.fetch!(config, :backend)
     live_index = backend.index_name(schema_module, config)
     target_index = Keyword.get(config, :target_index) || "#{live_index}__reindex"
-    workflow_config = Keyword.put(config, :target_index, target_index)
+
+    workflow_config =
+      config
+      |> Keyword.put(:target_index, target_index)
+      |> Keyword.put(:_scrypath_schema, schema_module)
 
     with {:ok, create_result} <-
            meilisearch.create_index(schema_module, primary_key(schema_module), workflow_config),
@@ -23,6 +38,7 @@ defmodule Scrypath.Reindex do
          {:ok, settings_result} <-
            meilisearch.apply_settings(schema_module, target_index, workflow_config),
          {:ok, _settings_result} <- maybe_wait_for_result_task(settings_result, workflow_config),
+         :ok <- maybe_verify_settings(schema_module, target_index, workflow_config),
          {:ok, backfill_result} <-
            backfill.run(
              schema_module,
@@ -44,6 +60,95 @@ defmodule Scrypath.Reindex do
        }}
     end
   end
+
+  defp enforce_ranking_rules_strict!(schema_module) do
+    declared = Scrypath.schema_settings(schema_module)
+
+    case Map.get(declared, :ranking_rules) do
+      nil ->
+        :ok
+
+      rules when is_list(rules) ->
+        if ranking_rules_strict?(declared) do
+          assert_ranking_rules_cover_defaults!(rules)
+        end
+
+        :ok
+    end
+  end
+
+  defp ranking_rules_strict?(declared) do
+    unrec = Map.get(declared, :__unrecognized__, %{})
+
+    cond do
+      Map.get(declared, :ranking_rules_strict?) == false -> false
+      Map.get(unrec, :ranking_rules_strict?) == false -> false
+      Map.get(unrec, "ranking_rules_strict?") == false -> false
+      true -> true
+    end
+  end
+
+  defp assert_ranking_rules_cover_defaults!(rules) do
+    normalized = normalized_ranking_rule_tokens(rules)
+    missing = @meilisearch_default_ranking_rules -- normalized
+
+    if missing != [] do
+      raise ArgumentError,
+            "[scrypath] ranking_rules is missing Meilisearch defaults: " <>
+              "#{inspect(missing)}. " <>
+              "Declared: #{inspect(rules)}. " <>
+              "Add the missing defaults OR set settings: %{..., ranking_rules_strict?: false} on the schema to opt out."
+    end
+  end
+
+  defp normalized_ranking_rule_tokens(rules) do
+    Enum.flat_map(rules, fn
+      r when is_atom(r) ->
+        [r]
+
+      r when is_binary(r) ->
+        head = r |> String.split(":") |> List.first()
+
+        try do
+          [String.to_existing_atom(head)]
+        rescue
+          ArgumentError -> []
+        end
+
+      _ ->
+        []
+    end)
+  end
+
+  defp maybe_verify_settings(schema_module, target_index, config) do
+    if Keyword.get(config, :skip_settings_verification?, false) do
+      Logger.warning(
+        "[scrypath] skip_settings_verification? is true; skipping post-apply drift check for #{inspect(schema_module)} (target_index=#{target_index}). Drift may go undetected until next reindex without this opt."
+      )
+
+      :telemetry.execute(
+        [:scrypath, :reindex, :verify_skipped],
+        %{},
+        %{schema: schema_module, target_index: target_index, reason: :user_opt_out}
+      )
+
+      :ok
+    else
+      Scrypath.Telemetry.span(
+        [:scrypath, :reindex, :settings_verified],
+        %{schema: schema_module, target_index: target_index},
+        fn ->
+          result = Settings.verify_applied(schema_module, target_index, config)
+          {result, %{result: verify_result_tag(result)}}
+        end
+      )
+    end
+  end
+
+  defp verify_result_tag(:ok), do: :parity
+  defp verify_result_tag({:error, {:settings_drift, _}}), do: :drift
+  defp verify_result_tag({:error, :index_not_found}), do: :index_not_found
+  defp verify_result_tag({:error, _}), do: :other_error
 
   defp maybe_cutover(schema_module, config, meilisearch) do
     if Keyword.get(config, :cutover?) do

@@ -17,7 +17,11 @@ defmodule Scrypath.Meilisearch.Tasks do
 
   @spec list_index_tasks(String.t(), keyword()) :: {:ok, [Task.t()]} | {:error, term()}
   def list_index_tasks(index_uid, config) when is_binary(index_uid) do
-    list_tasks(index_uid, ["indexCreation", "settingsUpdate", "indexSwap", "documentAdditionOrUpdate"], config)
+    list_tasks(
+      index_uid,
+      ["indexCreation", "settingsUpdate", "indexSwap", "documentAdditionOrUpdate"],
+      config
+    )
   end
 
   defp list_tasks(index_uid, types, config) do

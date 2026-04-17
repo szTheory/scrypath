@@ -6,7 +6,7 @@ The support contract stays simple:
 
 1. operator code calls the root APIs on `Scrypath.*`
 2. terminal operators can use the thin `mix scrypath.*` wrappers over those same APIs
-3. `mix verify.phase14` keeps the task surface, docs contract, package metadata, and docs build aligned
+3. The Phase 14 verification task keeps the task surface, docs contract, package metadata, and docs build aligned
 4. `mix verify.phase11` remains the release-contract gate
 
 ## First Response Path
@@ -48,6 +48,6 @@ mix verify.phase14
 mix verify.phase11
 ```
 
-`mix verify.phase14` is auth-free. It exercises the focused Mix task tests, docs contract, package metadata assertions, and `mix docs --warnings-as-errors`.
+The Phase 14 verifier is auth-free. It exercises the focused Mix task tests, docs contract, package metadata assertions, and `mix docs --warnings-as-errors`.
 
 `mix verify.phase11` keeps the release path aligned and remains the gate you use before a real publish flow.

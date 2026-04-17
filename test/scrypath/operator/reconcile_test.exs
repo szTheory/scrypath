@@ -78,7 +78,9 @@ defmodule Scrypath.Operator.ReconcileTest do
                      "index" => "tenant_searchable_post",
                      "document_count" => 1,
                      "document_ids" => [1],
-                     "documents" => [%{"id" => 1, "data" => %{"title" => "One"}, "source" => "fields"}]
+                     "documents" => [
+                       %{"id" => 1, "data" => %{"title" => "One"}, "source" => "fields"}
+                     ]
                    }
                  }
                ]

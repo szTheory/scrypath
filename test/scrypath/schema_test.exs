@@ -7,7 +7,7 @@ defmodule Scrypath.SchemaTest do
                fields: [:title, :body],
                filterable: [:status],
                sortable: [:inserted_at],
-               settings: %{},
+               settings: %{__unrecognized__: %{}},
                document_id: :id,
                document_source: :fields,
                index_prefix: nil,
@@ -18,25 +18,28 @@ defmodule Scrypath.SchemaTest do
       assert SearchablePost.__scrypath__(:document_id) == :id
       assert Scrypath.schema_config(SearchablePost) == SearchablePost.__scrypath__(:config)
       assert Scrypath.schema_fields(SearchablePost) == [:title, :body]
-      assert Scrypath.schema_settings(SearchablePost) == %{}
+      assert Scrypath.schema_settings(SearchablePost) == %{__unrecognized__: %{}}
       assert Scrypath.document_source(SearchablePost) == :fields
       assert Scrypath.document_id_field(SearchablePost) == :id
     end
 
     test "stores and reflects declared settings metadata" do
       assert ConfiguredSearchablePost.__scrypath__(:settings) == %{
-               searchableAttributes: ["title", "body"],
-               typoTolerance: "min"
+               searchable_attributes: ["title", "body"],
+               typo_tolerance: [enabled: true],
+               __unrecognized__: %{}
              }
 
       assert ConfiguredSearchablePost.__scrypath__(:config).settings == %{
-               searchableAttributes: ["title", "body"],
-               typoTolerance: "min"
+               searchable_attributes: ["title", "body"],
+               typo_tolerance: [enabled: true],
+               __unrecognized__: %{}
              }
 
       assert Scrypath.schema_settings(ConfiguredSearchablePost) == %{
-               searchableAttributes: ["title", "body"],
-               typoTolerance: "min"
+               searchable_attributes: ["title", "body"],
+               typo_tolerance: [enabled: true],
+               __unrecognized__: %{}
              }
     end
 

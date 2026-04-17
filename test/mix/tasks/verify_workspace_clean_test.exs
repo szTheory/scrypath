@@ -42,7 +42,8 @@ defmodule Mix.Tasks.Verify.WorkspaceCleanTest do
         end)
 
       # Tolerant match: any of the progress-marker / success phrases emitted by run/1
-      assert output =~ ~r/(Checking workspace cleanliness|Workspace clean|verify\.workspace_clean)/
+      assert output =~
+               ~r/(Checking workspace cleanliness|Workspace clean|verify\.workspace_clean)/
     end
   end
 
