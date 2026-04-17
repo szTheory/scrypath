@@ -17,13 +17,13 @@
 - [x] **OPS-01**: Operator can inspect current Scrypath sync status for a schema, including pending work, failed work, and last successful activity where available.
 - [x] **OPS-02**: Operator can inspect and retry failed async or manual work through explicit Scrypath APIs and thin Mix tasks instead of backend-specific spelunking.
 - [x] **OPS-03**: Operator can run an explicit reconcile or recovery workflow that makes drift and reindex state legible without pretending automatic healing.
-- [ ] **OPS-04**: Operator can understand sync-mode-specific operational behavior from first-class guides covering inline, Oban, and manual workflows.
+- [x] **OPS-04**: Operator can understand sync-mode-specific operational behavior from first-class guides covering inline, Oban, and manual workflows.
 
 ### Internal Operations Boundary
 
 - [x] **SEAM-01**: Scrypath exposes operator primitives through Scrypath-owned structs and APIs rather than direct Meilisearch task payloads or Oban-only assumptions.
 - [x] **SEAM-02**: Scrypath's internal sync and reindex flows depend on a backend/admin operations seam that preserves the existing Meilisearch-first public contract while making future backend work safer.
-- [ ] **SEAM-03**: Backend-native search power remains clearly namespaced and does not widen the common `Scrypath.search/3` contract in this milestone.
+- [x] **SEAM-03**: Backend-native search power remains clearly namespaced and does not widen the common `Scrypath.search/3` contract in this milestone.
 
 ## v1.3+ Requirements
 
@@ -56,8 +56,8 @@
 | OPS-01 | Phase 15 | Complete |
 | OPS-02 | Phase 15 | Complete |
 | OPS-03 | Phase 15 | Complete |
-| OPS-04 | Phase 16 | Pending |
-| SEAM-03 | Phase 16 | Pending |
+| OPS-04 | Phase 16 | Complete |
+| SEAM-03 | Phase 16 | Complete |
 
 **Coverage:**
 - v1.2 requirements: 10 total
@@ -66,4 +66,4 @@
 
 ---
 *Requirements defined: 2026-04-16*
-*Last updated: 2026-04-16 after v1.2 roadmap creation*
+*Last updated: 2026-04-17 after completing Phase 16 bookkeeping closure*

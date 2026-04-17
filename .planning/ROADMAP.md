@@ -81,8 +81,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 14-01-PLAN.md - Add thin `mix scrypath.*` wrappers and focused task tests on top of the Phase 13 root operator APIs.
-- [ ] 14-02-PLAN.md - Publish sync-mode and operator guides, add maintainer support docs, and lock the phase with `mix verify.phase14`.
+- [x] 14-01-PLAN.md
+- [x] 14-02-PLAN.md
 
 ### Phase 15: Verify Operator Primitives
 **Goal**: Turn the shipped Phase 13 operator surface into milestone-consumable evidence by writing the missing verification artifact and restoring roadmap/requirements traceability.

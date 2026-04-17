@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Public Release Trust and Operator Visibility
 current_phase: 16
-current_phase_name: verify mix tasks and repair milestone bookkeeping
-current_plan: Not started
+current_phase_name: verify-mix-tasks-and-repair-milestone-bookkeeping
+current_plan: 01
 status: phase_complete
 stopped_at: Completed 15-01-PLAN.md
-last_updated: "2026-04-17T00:21:56.460Z"
-last_activity: 2026-04-17
+last_updated: "2026-04-17T00:44:39Z"
+last_activity: 2026-04-17 -- Phase 16 complete
 progress:
   total_phases: 7
-  completed_phases: 5
-  total_plans: 11
-  completed_plans: 11
+  completed_phases: 6
+  total_plans: 12
+  completed_plans: 12
   percent: 100
 ---
 
@@ -24,18 +24,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Phase 16 — verify mix tasks and repair milestone bookkeeping pending planning
+**Current focus:** Phase 16 — verify-mix-tasks-and-repair-milestone-bookkeeping
 
 ## Current Position
 
-Phase: 16 (verify mix tasks and repair milestone bookkeeping) — NOT STARTED
-Plan: Not started
+Phase: 16 (verify-mix-tasks-and-repair-milestone-bookkeeping) — COMPLETE
+Plan: 1 of 1
 Current Phase: 16
-Current Phase Name: verify mix tasks and repair milestone bookkeeping
-Current Plan: Not started
-Status: Phase 15 complete
-Last activity: 2026-04-17
-Last Activity Description: Phase 15 complete, transitioned to Phase 16
+Current Phase Name: verify-mix-tasks-and-repair-milestone-bookkeeping
+Current Plan: 01
+Status: Phase 16 complete
+Last activity: 2026-04-17 -- Phase 16 complete
+Last Activity Description: Phase 16 verification, bookkeeping, and summary discoverability closure completed
 
 Progress: [██████████] 100%
 
@@ -66,7 +66,7 @@ Progress: [██████████] 100%
 
 ### Blockers/Concerns
 
-- The working tree already contains user-side deletions under `.planning/phases/08-*`, `.planning/phases/09-*`, and `.planning/phases/10-*`; roadmap work must leave them untouched.
+- The working tree already contains unrelated user-side changes outside the Phase 16 bookkeeping files; completion bookkeeping leaves them untouched.
 - A publisher-scoped `HEX_API_KEY` is still needed to validate the real public Hex publish path once Phase 11 executes.
 - Live Meilisearch verification still depends on a reachable `SCRYPATH_MEILISEARCH_URL` for any end-to-end publish smoke path that exercises a real backend.
 
@@ -93,17 +93,18 @@ Resume file: None
 
 - v1.0 remains archived with the full Meilisearch-first core, search, Oban, reindex, docs, and release baseline shipped.
 - v1.1 remains archived with release hardening, docs-safety fixes, `mix verify.phase10`, and the launch-readiness evidence chain.
-- v1.2 is now structured into four phases: release contract, internal operations seam, operator primitives, and Mix-task-plus-guide ergonomics.
+- v1.2 now includes two verification-only closure phases after the shipped release-contract, seam, operator, and Mix-task work: Phase 15 for Phase 13 evidence and Phase 16 for Phase 14 evidence.
 - Phase 11 Plan 01 is complete with version-scoped package links, focused release metadata assertions, and the canonical `mix verify.phase11` gate recorded in `.planning/phases/11-public-release-contract/11-public-release-contract-01-SUMMARY.md`.
 - Phase 11 Plan 02 is complete with a packaged clean-consumer smoke harness, maintainer recovery runbooks, and the expanded Phase 11 docs contract recorded in `.planning/phases/11-public-release-contract/11-public-release-contract-02-SUMMARY.md`.
 - Phase 11 is now hardened with a live published-release verifier, a same-workflow pre-publish dry-run gate, a manual recovery workflow, and a scheduled published-release monitor.
 - The only remaining external validation for Phase 11 is the first real public release run; after that publish exists, the monitor keeps re-verifying the latest Hex release automatically.
 - Phase 12 is complete with sync, backfill, and reindex all exchanging Scrypath-owned operation references internally while preserving the Meilisearch-first public boundary in docs and telemetry.
 - No second public backend is planned in this milestone, and backend-native power remains outside the common search contract.
+- Phase 16 is complete with `14-VERIFICATION.md`, repaired Phase 14 bookkeeping, and canonical `14-01-SUMMARY.md` / `14-02-SUMMARY.md` aliases for milestone tooling.
 
 ## Next Command
 
-- `$gsd-plan-phase 16`
+- `$gsd-audit-milestone`
 
 ## Performance Metrics
 
@@ -116,6 +117,7 @@ Resume file: None
 | 11 | hardening | follow-up | release automation, recovery workflow, published-release monitor | 2026-04-16 |
 
 | Phase 15 | 01 | 12 min | 2 | 4 | 2026-04-17 |
+| Phase 16 | 01 | 0 min | 2 | 7 | 2026-04-17 |
 
 ---
-*Last updated: 2026-04-17 after completing Phase 15 Plan 01 and transitioning to Phase 16*
+*Last updated: 2026-04-17 after completing Phase 16 Plan 01*
