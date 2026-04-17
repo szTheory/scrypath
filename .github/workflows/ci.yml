@@ -98,6 +98,9 @@ jobs:
       - name: Run Phase 14 operator docs gate
         run: mix verify.phase14
 
+      - name: Run Phase 20 faceting + guide gate
+        run: mix verify.phase20
+
   phase5-verification:
     runs-on: ubuntu-latest
 

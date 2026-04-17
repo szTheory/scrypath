@@ -31,6 +31,17 @@ defmodule Scrypath.TestSupport.Docs.PhoenixExampleCase do
     end
 
     def get_post!(id), do: %Post{id: id, title: "Draft", status: :draft}
+
+    def search_movies(query, opts \\ []) do
+      _ = Keyword.get(opts, :facets, [])
+      _ = Keyword.get(opts, :facet_filter, [])
+
+      {:ok,
+       %SearchResult{
+         query: query,
+         records: [%Post{id: 1, title: "Example Movie", status: "published"}]
+       }}
+    end
   end
 
   defmodule PostController do
@@ -100,6 +111,36 @@ defmodule Scrypath.TestSupport.Docs.PhoenixExampleCase do
       {:ok, _post} = Content.publish_post(post, attrs)
 
       socket
+    end
+  end
+
+  defmodule FacetedBrowseLive do
+    @moduledoc false
+
+    alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Content
+
+    def mount, do: %{q: "", posts: [], facet_filter: []}
+
+    def handle_params(params, socket) do
+      q = Map.get(params, "q", "")
+      genres = parse_genres(params["genre"])
+
+      facet_filter =
+        case genres do
+          [] -> []
+          list -> [genre: list]
+        end
+
+      with {:ok, result} <-
+             Content.search_movies(q, facets: [:genre, :year, :rating], facet_filter: facet_filter) do
+        Map.merge(socket, %{q: q, posts: result.records, facet_filter: facet_filter})
+      end
+    end
+
+    defp parse_genres(nil), do: []
+
+    defp parse_genres(s) when is_binary(s) do
+      s |> String.split(",", trim: true) |> Enum.map(&String.trim/1)
     end
   end
 end

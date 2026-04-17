@@ -9,8 +9,10 @@ defmodule Scrypath.DocsContractTest do
   @release_monitor_workflow File.read!(".github/workflows/verify-published-release.yml")
   @release_docs File.read!("docs/releasing.md")
   @operator_support_docs File.read!("docs/operator-support.md")
+  @search_backend_sre_docs File.read!("docs/search-backend-sre.md")
   @verify_phase11 File.read!("lib/mix/tasks/verify.phase11.ex")
   @verify_phase14 File.read!("lib/mix/tasks/verify.phase14.ex")
+  @verify_phase20 File.read!("lib/mix/tasks/verify.phase20.ex")
   @verify_release_publish File.read!("lib/mix/tasks/verify.release_publish.ex")
   @guide_paths [
     "guides/getting-started.md",
@@ -18,6 +20,7 @@ defmodule Scrypath.DocsContractTest do
     "guides/phoenix-contexts.md",
     "guides/phoenix-controllers-and-json.md",
     "guides/phoenix-liveview.md",
+    "guides/faceted-search-with-phoenix-liveview.md",
     "guides/sync-modes-and-visibility.md",
     "guides/operator-mix-tasks.md"
   ]
@@ -114,6 +117,17 @@ defmodule Scrypath.DocsContractTest do
       "Accepted work is not the same thing as search visibility"
     ])
 
+    assert_contains_all(@guides["guides/faceted-search-with-phoenix-liveview.md"], [
+      "faceted-search-with-phoenix-liveview.md",
+      "Scrypath.search/3",
+      "facet_filter",
+      "Anti-pattern appendix",
+      "handle_params",
+      "### API",
+      "Meilisearch",
+      "### UI"
+    ])
+
     assert_contains_all(@guides["guides/phoenix-walkthrough.md"], [
       "## 1. Declare The Searchable Schema",
       "## 2. Put Search And Sync In The Context",
@@ -154,11 +168,24 @@ defmodule Scrypath.DocsContractTest do
     ])
   end
 
+  test "search backend SRE doc keeps telemetry table and anti-alert-fatigue posture" do
+    assert_contains_all(@search_backend_sre_docs, [
+      "[:scrypath, :search]",
+      "[:scrypath, :meilisearch, :request]",
+      "alert fatigue",
+      "Disk free",
+      "skip_settings_verification?",
+      "Scrypath v1",
+      "guides/sync-modes-and-visibility.md"
+    ])
+  end
+
   test "release docs and CI keep the package gate auth-free" do
     assert_contains_all(@ci_workflow, [
       "mix verify.phase11",
       "mix verify.phase13 --skip-integration",
       "mix verify.phase14",
+      "mix verify.phase20",
       "Run Phase 13 verification",
       "mix verify.phase13"
     ])
@@ -213,6 +240,19 @@ defmodule Scrypath.DocsContractTest do
     ])
 
     refute @verify_phase14 =~ "HEX_API_KEY"
+  end
+
+  test "verify.phase20 keeps the faceting + guide gate auth-free and docs focused" do
+    assert_contains_all(@verify_phase20, [
+      "test/scrypath/options_test.exs",
+      "test/scrypath/search_test.exs",
+      "test/scrypath/meilisearch/query_test.exs",
+      "test/scrypath/meilisearch/settings_test.exs",
+      "test/scrypath/docs_contract_test.exs",
+      "Mix.Task.run(\"docs\", [\"--warnings-as-errors\"])"
+    ])
+
+    refute @verify_phase20 =~ "HEX_API_KEY"
   end
 
   test "release workflow verifies the live published version after hex publish" do
@@ -302,6 +342,7 @@ defmodule Scrypath.DocsContractTest do
 
     assert_contains_all(@operator_support_docs, [
       "mix verify.phase14",
+      "mix verify.phase20",
       "mix verify.phase11",
       "operator visibility and recovery live on `Scrypath.*`",
       "backend-native search power stays under `Scrypath.Meilisearch.*`"

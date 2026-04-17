@@ -1,5 +1,10 @@
 defmodule Scrypath.Meilisearch.Query do
-  @moduledoc false
+  @moduledoc """
+  Builds Meilisearch `/indexes/:uid/search` JSON bodies from `Scrypath.Query`.
+
+  When both `filter` and `facetFilters` are present, Meilisearch combines them with **AND**
+  semantics (see Meilisearch search parameters — filter + facetFilters).
+  """
 
   alias Scrypath.Query
 
@@ -7,9 +12,45 @@ defmodule Scrypath.Meilisearch.Query do
   def to_payload(%Query{} = query) do
     %{q: query.text}
     |> maybe_put(:filter, translate_filter(query.filter))
+    |> maybe_put("facetFilters", translate_facet_filter(query.facet_filter))
+    |> maybe_put(:facets, facets_list(query.facets))
     |> maybe_put(:sort, translate_sort(query.sort))
     |> maybe_put(:page, query.page[:number])
     |> maybe_put(:hitsPerPage, query.page[:size])
+  end
+
+  defp facets_list([]), do: nil
+
+  defp facets_list(atoms) when is_list(atoms) do
+    Enum.map(atoms, &Atom.to_string/1)
+  end
+
+  defp translate_facet_filter([]), do: nil
+
+  defp translate_facet_filter(filters) when is_list(filters) do
+    parts =
+      Enum.reduce(filters, [], fn {field, value}, acc ->
+        cond do
+          is_list(value) and Keyword.keyword?(value) ->
+            strings =
+              Enum.map(value, fn {operator, operand} ->
+                "#{field} #{translate_operator(operator)} #{format_value(operand)}"
+              end)
+
+            acc ++ strings
+
+          is_list(value) ->
+            acc ++ [Enum.map(value, &("#{field} = #{format_value(&1)}"))]
+
+          true ->
+            acc ++ ["#{field} = #{format_value(value)}"]
+        end
+      end)
+
+    case parts do
+      [] -> nil
+      list -> list
+    end
   end
 
   defp translate_filter([]), do: nil

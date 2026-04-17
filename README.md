@@ -237,5 +237,6 @@ Use `Scrypath.reconcile_sync/2` when you need a report-first operator view that 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the full runtime boundary, sync guarantees, drift model, and managed reindex workflow order.
 
 For operational guides, see [Sync Modes and Visibility](guides/sync-modes-and-visibility.md),
-[Operator Mix Tasks](guides/operator-mix-tasks.md), and
-[Operator Support](docs/operator-support.md).
+[Operator Mix Tasks](guides/operator-mix-tasks.md),
+[Operator Support](docs/operator-support.md), and
+[Search backend operations — SRE view](docs/search-backend-sre.md).

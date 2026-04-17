@@ -19,7 +19,7 @@
 
 - [x] **Phase 18: Release-Parity Gate + Node 20 CI Cleanup** — Maintainers ship a v1.3 release that mechanically cannot diverge from what they approved on disk. (completed 2026-04-17)
 - [x] **Phase 19: Relevance Tuning** — Phoenix devs declare synonyms, typo tolerance, ranking rules, distinct attribute, and stop words on the schema and see them applied safely through the managed reindex pipeline. (implementation + docs landed 2026-04-17; optional `feat(19):` release-please commit still at maintainer discretion)
-- [ ] **Phase 20: Faceted Search + LiveView Guide** — Phoenix devs declare `faceting:` on a schema and power a complete faceted LiveView UI (checkbox sidebar, chip row, range, search-within-facet) from one `Scrypath.search/3` call.
+- [x] **Phase 20: Faceted Search + LiveView Guide** — Phoenix devs declare `faceting:` on a schema and power a complete faceted LiveView UI (checkbox sidebar, chip row, range, search-within-facet) from one `Scrypath.search/3` call. (implementation landed 2026-04-17)
 - [ ] **Phase 21: Multi-Index Search** — Phoenix devs run a single federated `Scrypath.search_many/2` across N schemas and get back one ordered, schema-grouped result with per-schema facets and an explicit partial-failure envelope.
 - [ ] **Phase 22: Operator Polish + Drift Recovery Guide** — Operators triage failed sync work by reason class and recover from every common drift scenario using only existing `Scrypath.*` + `mix scrypath.*` verbs.
 - [ ] **Phase 23: v1.2 VALIDATION.md Closure** — v1.2 Nyquist audit flips from `partial` to `compliant` with runnable-test-cited evidence for phases 13, 14, 15.
@@ -73,7 +73,11 @@
   3. Phoenix dev requesting an unknown or non-declared facet attribute sees `{:error, {:unknown_facet, attr}}` — never a silent empty distribution.
   4. Phoenix dev runs `Scrypath.reindex/2` on a schema with `faceting:` declared and sees Meilisearch's `filterableAttributes` auto-derived into the object form with `features: ["facetSearch"]`, with zero user-facing configuration.
   5. Phoenix dev opening `guides/faceted-search-with-phoenix-liveview.md` finds a movies-by-genre-year-rating-director worked example covering all four canonical UI patterns (sidebar checklist, chip row, range slider, search-within-facet) plus a 7+ entry anti-pattern appendix.
-**Plans:** TBD
+**Plans:** 4/4 plans complete
+- [x] 20-01-PLAN.md — `faceting:` schema option, `__scrypath__(:faceting)`, `Scrypath.schema_faceting/1`, FACET-02/FACET-10 compile enforcement + `FacetableMovie` fixture (FACET-01, FACET-02, FACET-10)
+- [x] 20-02-PLAN.md — `validate_search_options/2`, `%Query{}` facets, `Meilisearch.Query` payload + `%SearchResult.Facets{}` decode (FACET-03, FACET-04, FACET-05, FACET-06, FACET-09)
+- [x] 20-03-PLAN.md — `Settings.resolve/2` merges facet-derived `filterableAttributes` + `verify_applied/3` coverage (FACET-07)
+- [x] 20-04-PLAN.md — `guides/faceted-search-with-phoenix-liveview.md`, ExDoc wiring, docs contracts, CHANGELOG (FACET-08)
 **UI hint**: yes
 
 ### Phase 21: Multi-Index Search
@@ -116,7 +120,7 @@
 |-------|----------------|--------|-----------|
 | 18. Release-Parity Gate + Node 20 CI Cleanup | 7/7 | Complete    | 2026-04-17 |
 | 19. Relevance Tuning | 2/7 | Executing   | - |
-| 20. Faceted Search + LiveView Guide | 0/? | Not started | - |
+| 20. Faceted Search + LiveView Guide | 4/4 | Complete    | 2026-04-17 |
 | 21. Multi-Index Search | 0/? | Not started | - |
 | 22. Operator Polish + Drift Recovery Guide | 0/? | Not started | - |
 | 23. v1.2 VALIDATION.md Closure | 0/? | Not started | - |
