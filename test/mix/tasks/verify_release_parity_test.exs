@@ -53,7 +53,7 @@ defmodule Mix.Tasks.Verify.ReleaseParityTest do
 
       result =
         ReleaseParity.retry_until!("stub fetch", 3, 1, fn ->
-          n = Agent.get_and_update(counter, &{&1 + 1, &1 + 1})
+          n = Agent.get_and_update(counter, &{&1, &1 + 1})
           if n == 0, do: {:error, "transient"}, else: :ok
         end)
 
