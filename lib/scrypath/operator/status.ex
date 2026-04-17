@@ -1,6 +1,9 @@
 defmodule Scrypath.Operator.Status do
   @moduledoc """
-  Public status snapshot returned by `Scrypath.sync_status/2`.
+  Read-only sync visibility returned by `Scrypath.sync_status/2`.
+
+  Status keeps backend-side and queue-side observations distinct so queued or
+  retryable work never reads like completed backend visibility.
   """
 
   alias Scrypath.Config

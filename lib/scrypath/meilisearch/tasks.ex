@@ -12,10 +12,16 @@ defmodule Scrypath.Meilisearch.Tasks do
 
   @spec list_sync_tasks(String.t(), keyword()) :: {:ok, [Task.t()]} | {:error, term()}
   def list_sync_tasks(index_uid, config) when is_binary(index_uid) do
-    filters = [
-      index_uids: [index_uid],
-      types: ["documentAdditionOrUpdate", "documentDeletion"]
-    ]
+    list_tasks(index_uid, ["documentAdditionOrUpdate", "documentDeletion"], config)
+  end
+
+  @spec list_index_tasks(String.t(), keyword()) :: {:ok, [Task.t()]} | {:error, term()}
+  def list_index_tasks(index_uid, config) when is_binary(index_uid) do
+    list_tasks(index_uid, ["indexCreation", "settingsUpdate", "indexSwap", "documentAdditionOrUpdate"], config)
+  end
+
+  defp list_tasks(index_uid, types, config) do
+    filters = [index_uids: [index_uid], types: types]
 
     case client(config).tasks(filters, config) do
       {:ok, response} ->

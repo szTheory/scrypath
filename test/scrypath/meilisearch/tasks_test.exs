@@ -94,6 +94,36 @@ defmodule Scrypath.Meilisearch.TasksTest do
     assert filters[:types] == ["documentAdditionOrUpdate", "documentDeletion"]
   end
 
+  test "list_index_tasks/2 keeps reindex visibility on explicit Meilisearch task reads" do
+    task_history = [
+      %{
+        "uid" => 501,
+        "status" => "processing",
+        "type" => "indexCreation",
+        "indexUid" => "tenant_posts__reindex"
+      },
+      %{
+        "uid" => 502,
+        "status" => "succeeded",
+        "type" => "settingsUpdate",
+        "indexUid" => "tenant_posts__reindex"
+      }
+    ]
+
+    assert {:ok, [%OperationTask{} = first, %OperationTask{} = second]} =
+             Tasks.list_index_tasks("tenant_posts__reindex",
+               meilisearch_client: SequencedClient,
+               task_history: task_history
+             )
+
+    assert first.metadata.type == "indexCreation"
+    assert second.metadata.type == "settingsUpdate"
+
+    assert_received {:client_tasks, filters, _config}
+    assert filters[:index_uids] == ["tenant_posts__reindex"]
+    assert "indexSwap" in filters[:types]
+  end
+
   test "backend task failure returns a distinct failure shape", %{task_responses: agent} do
     Agent.update(agent, fn _ ->
       [
@@ -209,7 +239,7 @@ defmodule Scrypath.Meilisearch.TasksTest do
              )
 
     assert status in [:enqueued, :processing]
-    assert raw["status"] in ["enqueued", "processing"]
+    assert (raw["status"] || raw[:status]) in ["enqueued", "processing"]
   end
 
   test "cancelled backend tasks return a distinct cancellation error", %{task_responses: agent} do

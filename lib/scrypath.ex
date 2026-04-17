@@ -101,4 +101,26 @@ defmodule Scrypath do
   def sync_status(schema_module, opts \\ []) do
     Scrypath.Operator.sync_status(schema_module, opts)
   end
+
+  @spec failed_sync_work(module(), keyword()) ::
+          {:ok, [Scrypath.Operator.FailedWork.t()]} | {:error, term()}
+  def failed_sync_work(schema_module, opts \\ []) do
+    Scrypath.Operator.failed_sync_work(schema_module, opts)
+  end
+
+  @spec retry_sync_work(
+          Scrypath.Operator.FailedWork.t() | Scrypath.Operator.RecoveryAction.t(),
+          keyword()
+        ) ::
+          {:ok, map()} | {:error, term()}
+  def retry_sync_work(work_or_action, opts \\ []) do
+    Scrypath.Operator.retry_sync_work(work_or_action, opts)
+  end
+
+  @spec reconcile_sync(module(), keyword()) ::
+          {:ok, Scrypath.Operator.Reconcile.t()} | {:error, term()}
+          | {:ok, map()}
+  def reconcile_sync(schema_module, opts \\ []) do
+    Scrypath.Operator.reconcile_sync(schema_module, opts)
+  end
 end
