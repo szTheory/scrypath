@@ -23,12 +23,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] Release-parity gates (`verify.workspace_clean`, `verify.release_parity`) and CI runtime hygiene (Node pin uplift) validated in v1.3.
 - [x] v1.2 Nyquist validation debt (phases 13–15 evidence) closed in v1.3.
 - [x] **v1.4** (2026-04-17): Hex **`scrypath 0.3.1`** with Release Please + post-publish `release_publish` / `release_parity` gates; narrow `hot_apply/3` for synonyms / stop words / typo tolerance; operator failure rollups by `reason_class` (`mix verify.phase26`).
-- [x] **v1.5 — Phase 27** (2026-04-17): Read-only **index contract drift** report (`Scrypath.index_contract_drift/2`, `IndexContractDrift.Report`), optional **`include_index_contract_drift`** on `reconcile_sync/2` — satisfies **DRIFT15-01**, **DRIFT15-02**, **OPS15-01** (see `.planning/REQUIREMENTS.md`).
-- [x] **v1.5 — Phase 28** (2026-04-18): **`mix scrypath.index.contract_drift`**, operator doc refresh (**`guides/drift-recovery.md`**, **`docs/operator-support.md`**, **`guides/operator-mix-tasks.md`**), auth-free **`mix verify.phase28`** — satisfies **OPS15-02**, **OPS15-03**, **OPS15-04**.
+- [x] **v1.5** (2026-04-18): **Phases 27–28** — read-only **index contract drift** (`Scrypath.index_contract_drift/2`, `IndexContractDrift.Report`), optional **`include_index_contract_drift`** on `reconcile_sync/2`, **`mix scrypath.index.contract_drift`**, operator doc refresh, auth-free **`mix verify.phase28`** — satisfies **DRIFT15-01..02**, **OPS15-01..04** (see **`milestones/v1.5-REQUIREMENTS.md`**).
 
 ### Active
 
-- [ ] **Post–v1.5 planning** — v1.5 operator drift slice complete (phases **27–28**); next milestone selection lives in **`.planning/ROADMAP.md`** backlog.
+- [ ] **Post–v1.5 planning** — **v1.5 archived** (2026-04-18); **`REQUIREMENTS.md`** removed until **`/gsd-new-milestone`**; next slice candidates in **`.planning/ROADMAP.md` § Backlog**.
 
 ### Out of Scope
 
@@ -42,7 +41,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has **five** archived planning milestones (`v1.0`–`v1.4`); see `.planning/milestones/v*-ROADMAP.md` and `MILESTONES.md`.
+The repository has **six** archived planning milestones (`v1.0`–`v1.5`); see `.planning/milestones/v*-ROADMAP.md` and `MILESTONES.md`.
 
 - `v1.0` shipped the Meilisearch-first Ecto-native indexing core, search/hydration path, Oban support, reindex workflows, public Phoenix docs, and release automation baseline.
 - `v1.1` shipped release hardening, docs-safety fixes, `mix verify.phase10`, and the launch-readiness evidence chain.
@@ -76,26 +75,17 @@ The current public line on Hex is **`scrypath 0.3.3`**. Planning milestone **v1.
 | Narrow `hot_apply/3` to synonym / stop-word / typo-tolerance keys only | Prevents silent widening into ranking rules and other managed-pipeline settings | ✓ Good — TUNE14-01/02 |
 | Operator rollups as additive metadata on `failed_sync_work/2` | Report-first discipline; no new recovery verbs | ✓ Good — OPS14-01 / `mix verify.phase26` |
 
-## Current Milestone: v1.5 — Operator drift and schema-diff tooling
+## Post–v1.5 (planning)
 
-**Goal:** Give operators a **read-only, structured** view of how a schema’s **declared** search contract compares to the **live** Meilisearch index, so drift triage stays explicit and composes with existing settings diff, reconcile, and reindex paths.
+**v1.5** shipped in-repo and is **archived** (`milestones/v1.5-{ROADMAP,REQUIREMENTS}.md`, git tag **`v1.5`**). There is **no** root **`REQUIREMENTS.md`** until the next milestone is opened.
 
-**Target features:**
-
-- Structured **declared ↔ live** comparison (fields, filterable, sortable, faceting, selected settings families) without dumping opaque full-index payloads as the only output.
-- **`Scrypath.*`** entry point (report-first; **no new recovery verbs** for v1.5).
-- Thin **`mix scrypath.*`** surfacing with optional **`--json`** consistent with existing operator tasks.
-- Updates to **`guides/drift-recovery.md`** and **`docs/operator-support.md`**; auth-free **`mix verify.phase28`**.
+**Parking lot:** See **`.planning/ROADMAP.md` § Backlog** (faceting depth, multi-index scoring, per-query relevance once designed).
 
 ## Current State
 
-Scrypath has **five archived planning milestones** (`v1.0`–`v1.4`) plus **v1.5 delivered** (phases **27–28**). **Hex:** `scrypath` **`0.3.3`**. The v1.3-era Meilisearch-native surface (relevance, facets, multi-index, operator polish) plus v1.4’s **hot_apply** subset and **failure rollups** are on the default install line. **v1.5** adds **`mix scrypath.index.contract_drift`**, **`mix verify.phase28`**, and operator doc cross-links for contract vs settings drift. Release-parity gates (`mix verify.workspace_clean`, `mix verify.release_parity`) and `mix verify.phase11` remain the mechanical trust chain documented in **`docs/releasing.md`**.
+Scrypath has **six archived planning milestones** (`v1.0`–`v1.5`). **Hex:** `scrypath` **`0.3.3`**. The v1.3-era Meilisearch-native surface (relevance, facets, multi-index, operator polish) plus v1.4’s **hot_apply** subset and **failure rollups** are on the default install line. **v1.5** adds **`Scrypath.index_contract_drift/2`**, **`mix scrypath.index.contract_drift`**, **`mix verify.phase28`**, and operator doc cross-links for **contract** vs **settings** drift. Release-parity gates (`mix verify.workspace_clean`, `mix verify.release_parity`) and `mix verify.phase11` remain the mechanical trust chain documented in **`docs/releasing.md`**.
 
-**Planning:** **v1.5** — **Phases 27–28 complete** — requirements in **`.planning/REQUIREMENTS.md`**, roadmap in **`.planning/ROADMAP.md`**. ROADMAP **Backlog** carries faceting, multi-index scoring, and per-query relevance follow-ups.
-
-## Next milestone goals (parking lot)
-
-See **`.planning/ROADMAP.md` § Backlog** for post–v1.5 candidates (faceting depth, multi-index scoring, per-query relevance once designed).
+**Planning:** **Post–v1.5** — roadmap in **`.planning/ROADMAP.md`**; run **`/gsd-new-milestone`** when you want a fresh **`REQUIREMENTS.md`** and the next numbered slice.
 
 ## Evolution
 
@@ -115,4 +105,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-18 — Phase 28 complete (index contract drift CLI + verify.phase28); Hex `0.3.3` current*
+*Last updated: 2026-04-18 after **v1.5** milestone archive (phases 27–28); Hex `0.3.3` current*

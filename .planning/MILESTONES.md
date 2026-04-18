@@ -1,5 +1,24 @@
 # Milestones
 
+## v1.5 Operator drift and schema-diff tooling (Shipped + archived: 2026-04-18)
+
+**Phases completed:** 2 phases (27–28), 5 plans
+
+**Hex:** **`scrypath 0.3.3`** (line on Hex at archive; milestone delivered in-repo with planning artifacts)
+
+**Key accomplishments:**
+
+- Read-only **index contract drift** report (`Scrypath.index_contract_drift/2`, `IndexContractDrift.Report`) with bounded dimensions (Phase 27)
+- Optional **`include_index_contract_drift`** on reconcile for operator opt-in without new recovery verbs (Phase 27)
+- **`mix scrypath.index.contract_drift`** with **`--json`**, parity/drift exit semantics aligned with settings diff (Phase 28)
+- Operator docs refresh (**`guides/drift-recovery.md`**, **`docs/operator-support.md`**, **`guides/operator-mix-tasks.md`**) plus auth-free **`mix verify.phase28`** / CI (Phase 28)
+
+**Known deferred items at close:** 3 `audit-open` rows acknowledged (Phase 18 UAT listing noise + 2 missing quick_task stubs) — see **`STATE.md` § Deferred Items**.
+
+**Archives:** `milestones/v1.5-ROADMAP.md`, `milestones/v1.5-REQUIREMENTS.md` · **Git tag:** `v1.5` (planning milestone marker)
+
+---
+
 ## v1.3 Search Power That Phoenix Teams Reach For (Shipped: 2026-04-17)
 
 **Phases completed:** 6 phases (18–23), 18 plans
@@ -58,3 +77,4 @@
 | `v1.2` | 2026-04-17 | 7 | 13 | Archived | Public release trust, operator visibility, internal operations seam, and the first live public release proof archived in `.planning/milestones/v1.2-ROADMAP.md`. |
 | `v1.3` | 2026-04-17 | 6 | 18 | Archived | Search power (relevance, facets, multi-index), operator polish + drift recovery, release-parity gates, v1.2 validation closure — `v1.3-ROADMAP.md` + `v1.3-REQUIREMENTS.md`. |
 | `v1.4` | 2026-04-17 | 3 | 8 | Archived | Hex **0.3.1**; `v1.4-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`; milestone tag **`v1.4`**. |
+| `v1.5` | 2026-04-18 | 2 | 5 | Archived | Index contract drift + Mix + docs + **`mix verify.phase28`**; `v1.5-{ROADMAP,REQUIREMENTS}.md`; milestone tag **`v1.5`**. |
