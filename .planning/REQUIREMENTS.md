@@ -10,13 +10,13 @@ Additive over the current Hex line; **no breaking changes** to existing `@enforc
 
 ### Schema and index contract (prefix: DRIFT15)
 
-- [ ] **DRIFT15-01**: Operator can obtain a **read-only** structured report for a given searchable schema that compares **declared** Scrypath metadata (at minimum: `fields:`, `filterable:`, `sortable:`, `faceting:` where present, and Meilisearch `settings:` keys the library applies) to the **live** Meilisearch index posture relevant to search and sync correctness.
+- [x] **DRIFT15-01**: Operator can obtain a **read-only** structured report for a given searchable schema that compares **declared** Scrypath metadata (at minimum: `fields:`, `filterable:`, `sortable:`, `faceting:` where present, and Meilisearch `settings:` keys the library applies) to the **live** Meilisearch index posture relevant to search and sync correctness. *(Phase 27, 2026-04-17)*
 
-- [ ] **DRIFT15-02**: The report **names dimensions** that differ (e.g. filterable set, sortable set, facet-related configuration, selected settings families) with enough specificity for an operator to decide **managed `reindex/2`**, **`hot_apply/3`**, or deeper investigation — without requiring raw Meilisearch JSON dumps as the only output.
+- [x] **DRIFT15-02**: The report **names dimensions** that differ (e.g. filterable set, sortable set, facet-related configuration, selected settings families) with enough specificity for an operator to decide **managed `reindex/2`**, **`hot_apply/3`**, or deeper investigation — without requiring raw Meilisearch JSON dumps as the only output. *(Phase 27, 2026-04-17)*
 
 ### Operator surface and verification (prefix: OPS15)
 
-- [ ] **OPS15-01**: The capability is reachable from **`Scrypath.*`** (or a single documented operator entry point that delegates to it) and preserves the same **report-first** posture as `reconcile_sync/2` — **no new recovery verbs** in v1.5.
+- [x] **OPS15-01**: The capability is reachable from **`Scrypath.*`** (or a single documented operator entry point that delegates to it) and preserves the same **report-first** posture as `reconcile_sync/2` — **no new recovery verbs** in v1.5. *(Phase 27, 2026-04-17)*
 
 - [ ] **OPS15-02**: A thin **`mix scrypath.*`** task (or documented extension of an existing operator task) prints the same structured report for terminal use, with **`--json`** optional where it matches existing operator CLI conventions.
 
@@ -59,9 +59,9 @@ Tracked for later milestones; not in v1.5 roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DRIFT15-01 | Phase 27 | Pending |
-| DRIFT15-02 | Phase 27 | Pending |
-| OPS15-01 | Phase 27 | Pending |
+| DRIFT15-01 | Phase 27 | Complete (2026-04-17) |
+| DRIFT15-02 | Phase 27 | Complete (2026-04-17) |
+| OPS15-01 | Phase 27 | Complete (2026-04-17) |
 | OPS15-02 | Phase 28 | Pending |
 | OPS15-03 | Phase 28 | Pending |
 | OPS15-04 | Phase 28 | Pending |

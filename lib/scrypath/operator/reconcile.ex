@@ -6,11 +6,18 @@ defmodule Scrypath.Operator.Reconcile do
   rebuild visibility before any recovery action is executed. Per-class failed-work
   pileup counts (`failed_work_counts`) use the same taxonomy as `FailedWork` rows
   for triage at a glance.
+
+  When `include_index_contract_drift: true` is passed in operator options,
+  `index_contract_drift` is populated from the same builder as
+  `Scrypath.index_contract_drift/2`, adding one live `get_settings` read. If that
+  read fails, the entire reconcile returns `{:error, reason}` so operators are
+  not shown a false-green report.
   """
 
   alias Scrypath.Config
   alias Scrypath.Meilisearch.Tasks
   alias Scrypath.Operator.FailedWork
+  alias Scrypath.Operator.IndexContractDrift
   alias Scrypath.Operator.ReasonClassCounts
   alias Scrypath.Operator.RecoveryAction
   alias Scrypath.Operator.Status
@@ -56,7 +63,8 @@ defmodule Scrypath.Operator.Reconcile do
     :drift_signals,
     :actions,
     :reindex,
-    :failed_work_counts
+    :failed_work_counts,
+    index_contract_drift: nil
   ]
 
   @type t :: %__MODULE__{
@@ -68,7 +76,8 @@ defmodule Scrypath.Operator.Reconcile do
           drift_signals: [atom()],
           actions: [RecoveryAction.t()],
           reindex: ReindexVisibility.t(),
-          failed_work_counts: ReasonClassCounts.t()
+          failed_work_counts: ReasonClassCounts.t(),
+          index_contract_drift: IndexContractDrift.Report.t() | nil
         }
 
   @spec run(module(), keyword(), keyword()) :: {:ok, t()} | {:error, term()}
@@ -77,9 +86,12 @@ defmodule Scrypath.Operator.Reconcile do
     index = backend.index_name(schema_module, config)
     target_index = Keyword.get(operator_opts, :target_index) || "#{index}__reindex"
 
+    include_drift? = Keyword.get(operator_opts, :include_index_contract_drift, false)
+
     with {:ok, status} <- Status.fetch(schema_module, config, operator_opts),
          {:ok, failed_work} <- FailedWork.list(schema_module, config, operator_opts),
-         {:ok, reindex} <- reindex_visibility(config, operator_opts, index, target_index) do
+         {:ok, reindex} <- reindex_visibility(config, operator_opts, index, target_index),
+         {:ok, drift_report} <- maybe_index_contract_drift(schema_module, config, include_drift?) do
       actions = recommended_actions(schema_module, config, failed_work, reindex)
       failed_work_counts = FailedWork.reason_class_counts(failed_work)
 
@@ -93,9 +105,16 @@ defmodule Scrypath.Operator.Reconcile do
          drift_signals: drift_signals(status, failed_work, reindex),
          actions: actions,
          reindex: reindex,
-         failed_work_counts: failed_work_counts
+         failed_work_counts: failed_work_counts,
+         index_contract_drift: drift_report
        }}
     end
+  end
+
+  defp maybe_index_contract_drift(_schema_module, _config, false), do: {:ok, nil}
+
+  defp maybe_index_contract_drift(schema_module, config, true) do
+    IndexContractDrift.build(schema_module, config)
   end
 
   @spec apply_action(RecoveryAction.t(), keyword()) :: {:ok, map()} | {:error, term()}
