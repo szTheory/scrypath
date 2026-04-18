@@ -54,4 +54,4 @@
 
 **Focused tests:** `mix test test/scrypath/operator/index_contract_drift_test.exs` (path chosen in plan; adjust if module names differ)
 
-**Full gate (Phase 28 adds verify.phase27):** For this phase execution, run the new test file plus `mix test test/scrypath/operator/` subset as specified in PLAN verification blocks.
+**Full gate (Phase 28 adds verify.phase28):** For this phase execution, run the new test file plus `mix test test/scrypath/operator/` subset as specified in PLAN verification blocks.

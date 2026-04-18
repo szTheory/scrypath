@@ -6,7 +6,7 @@
 <domain>
 ## Phase Boundary
 
-Deliver a **read-only**, **structured** comparison of **declared** Scrypath metadata for a searchable schema vs the **live** Meilisearch index contract operators care about (fields, filterable, sortable, faceting where present, and **settings families the library applies**), with **named dimensions** of difference (DRIFT15-01, DRIFT15-02). Expose from **`Scrypath.*`** with **report-first** posture and **no new recovery verbs** (OPS15-01). **Mix tasks, `--json`, guide updates, and `mix verify.phase27`** stay in **Phase 28** (OPS15-02..04).
+Deliver a **read-only**, **structured** comparison of **declared** Scrypath metadata for a searchable schema vs the **live** Meilisearch index contract operators care about (fields, filterable, sortable, faceting where present, and **settings families the library applies**), with **named dimensions** of difference (DRIFT15-01, DRIFT15-02). Expose from **`Scrypath.*`** with **report-first** posture and **no new recovery verbs** (OPS15-01). **Mix tasks, `--json`, guide updates, and `mix verify.phase28`** stay in **Phase 28** (OPS15-02..04).
 
 **Non-goals (requirements):** No silent auto-repair; no full corpus diff; no public multi-backend facade.
 
@@ -125,7 +125,7 @@ User requested **all four** discuss areas with **parallel subagent research** (e
 <deferred>
 ## Deferred Ideas
 
-- **Phase 28:** `mix scrypath.*` task(s), **`--json`**, **`guides/drift-recovery.md`** / **`docs/operator-support.md`** cross-links (OPS15-03), **`mix verify.phase27`** (OPS15-04).
+- **Phase 28:** `mix scrypath.*` task(s), **`--json`**, **`guides/drift-recovery.md`** / **`docs/operator-support.md`** cross-links (OPS15-03), **`mix verify.phase28`** (OPS15-04).
 - **Follow-up:** Reduce **`mix scrypath.settings.diff`** double-`get_settings` on drift path using shared snapshot builder — only if small and does not widen Phase 27 scope inappropriately; otherwise note for backlog.
 
 ### Reviewed Todos (not folded)
