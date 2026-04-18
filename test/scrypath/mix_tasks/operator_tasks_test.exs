@@ -3,6 +3,8 @@ defmodule Scrypath.MixTasks.OperatorTasksTest do
 
   import ExUnit.CaptureIO
 
+  alias Scrypath.Meilisearch.Settings
+
   defmodule TaskMeilisearchClient do
     def tasks(filters, _config) do
       tasks =
@@ -20,6 +22,13 @@ defmodule Scrypath.MixTasks.OperatorTasksTest do
   defmodule TaskObanInspector do
     def list_jobs(_schema_module, _config) do
       {:ok, Application.get_env(:scrypath, :operator_task_test_oban_jobs, [])}
+    end
+  end
+
+  defmodule ContractDriftStub do
+    @moduledoc false
+    def get_settings(_index, _config) do
+      Application.fetch_env!(:scrypath, :contract_drift_stub_get_settings)
     end
   end
 
@@ -51,6 +60,7 @@ defmodule Scrypath.MixTasks.OperatorTasksTest do
       put_env_or_delete(:operator_task_test_opts, original_operator_opts)
       Application.delete_env(:scrypath, :operator_task_test_meilisearch_tasks)
       Application.delete_env(:scrypath, :operator_task_test_oban_jobs)
+      Application.delete_env(:scrypath, :contract_drift_stub_get_settings)
     end)
 
     :ok
@@ -334,6 +344,74 @@ defmodule Scrypath.MixTasks.OperatorTasksTest do
 
     assert_received {:oban_insert, job}
     assert job.worker == "Scrypath.Oban.UpsertWorker"
+  end
+
+  test "scrypath.index.contract_drift prints Index contract OK and supports --json parity" do
+    base = [
+      backend: Scrypath.Meilisearch,
+      sync_mode: :manual,
+      index_prefix: "tenant",
+      meilisearch_url: "http://localhost:7700",
+      meilisearch_client: ContractDriftStub
+    ]
+
+    Application.put_env(:scrypath, :defaults, base)
+
+    full = Scrypath.Config.resolve!(base)
+
+    declared_wire =
+      SearchablePost
+      |> Settings.resolve(full)
+      |> Settings.translate_settings()
+
+    applied =
+      Map.merge(declared_wire, %{
+        "searchableAttributes" =>
+          SearchablePost |> Scrypath.schema_fields() |> Enum.map(&Atom.to_string/1),
+        "filterableAttributes" =>
+          SearchablePost.__scrypath__(:filterable) |> Enum.map(&Atom.to_string/1),
+        "sortableAttributes" =>
+          SearchablePost.__scrypath__(:sortable) |> Enum.map(&Atom.to_string/1),
+        "faceting" => %{}
+      })
+
+    Application.put_env(:scrypath, :contract_drift_stub_get_settings, {:ok, applied})
+
+    Application.put_env(:scrypath, :operator_task_test_opts,
+      meilisearch_client: ContractDriftStub
+    )
+
+    human =
+      capture_io(fn ->
+        Mix.Task.reenable("scrypath.index.contract_drift")
+        Mix.Task.run("scrypath.index.contract_drift", ["SearchablePost"])
+      end)
+
+    assert human =~ "Index contract OK"
+
+    json =
+      capture_io(fn ->
+        Mix.Task.reenable("scrypath.index.contract_drift")
+        Mix.Task.run("scrypath.index.contract_drift", ["SearchablePost", "--json"])
+      end)
+
+    decoded = Jason.decode!(json)
+    assert Map.has_key?(decoded, "version")
+    assert Map.has_key?(decoded, "dimensions")
+  end
+
+  test "scrypath.index.contract_drift exits 2 on drift (subprocess; avoids System.halt/1 in ExUnit)" do
+    root = Path.expand("../../..", __DIR__)
+
+    {out, code} =
+      System.cmd("mix", ["run", "test/support/contract_drift_cli_drift.exs"],
+        cd: root,
+        env: [{"MIX_ENV", "test"}]
+      )
+
+    assert code == 2
+    assert out =~ "INDEX CONTRACT DRIFT"
+    assert out =~ "fields"
   end
 
   defp put_env_or_delete(key, nil), do: Application.delete_env(:scrypath, key)

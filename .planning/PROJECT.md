@@ -24,10 +24,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] v1.2 Nyquist validation debt (phases 13–15 evidence) closed in v1.3.
 - [x] **v1.4** (2026-04-17): Hex **`scrypath 0.3.1`** with Release Please + post-publish `release_publish` / `release_parity` gates; narrow `hot_apply/3` for synonyms / stop words / typo tolerance; operator failure rollups by `reason_class` (`mix verify.phase26`).
 - [x] **v1.5 — Phase 27** (2026-04-17): Read-only **index contract drift** report (`Scrypath.index_contract_drift/2`, `IndexContractDrift.Report`), optional **`include_index_contract_drift`** on `reconcile_sync/2` — satisfies **DRIFT15-01**, **DRIFT15-02**, **OPS15-01** (see `.planning/REQUIREMENTS.md`).
+- [x] **v1.5 — Phase 28** (2026-04-18): **`mix scrypath.index.contract_drift`**, operator doc refresh (**`guides/drift-recovery.md`**, **`docs/operator-support.md`**, **`guides/operator-mix-tasks.md`**), auth-free **`mix verify.phase28`** — satisfies **OPS15-02**, **OPS15-03**, **OPS15-04**.
 
 ### Active
 
-- [ ] **v1.5 (2026-04-17)** — Remaining **Phase 28**: thin **`mix scrypath.*`** surfacing, **`guides/drift-recovery.md`** / **`docs/operator-support.md`**, auth-free **`mix verify.phase28`** (OPS15-02..04). See `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md`.
+- [ ] **Post–v1.5 planning** — v1.5 operator drift slice complete (phases **27–28**); next milestone selection lives in **`.planning/ROADMAP.md`** backlog.
 
 ### Out of Scope
 
@@ -49,7 +50,7 @@ The repository has **five** archived planning milestones (`v1.0`–`v1.4`); see 
 - `v1.3` shipped planning-track delivery of relevance tuning, faceted search, multi-index search, operator polish + drift recovery guide, release-parity gates, and v1.2 Nyquist validation closure (archived 2026-04-17).
 - `v1.4` shipped **Hex `scrypath 0.3.1`**, the bounded live-index `hot_apply/3` path, and operator failure rollups — archived 2026-04-17 (`milestones/v1.4-ROADMAP.md`, `milestones/v1.4-REQUIREMENTS.md`).
 
-The current public line on Hex is **`scrypath 0.3.3`**. Planning milestone **v1.5** is open for **drift / schema-diff operator tooling** (phases **27–28**).
+The current public line on Hex is **`scrypath 0.3.3`**. Planning milestone **v1.5** (**drift / schema-diff operator tooling**, phases **27–28**) is complete in-repo.
 
 ## Constraints
 
@@ -88,9 +89,9 @@ The current public line on Hex is **`scrypath 0.3.3`**. Planning milestone **v1.
 
 ## Current State
 
-Scrypath has **five archived planning milestones** (`v1.0`–`v1.4`) plus **v1.5 in flight**. **Hex:** `scrypath` **`0.3.3`**. The v1.3-era Meilisearch-native surface (relevance, facets, multi-index, operator polish) plus v1.4’s **hot_apply** subset and **failure rollups** are on the default install line. Release-parity gates (`mix verify.workspace_clean`, `mix verify.release_parity`) and `mix verify.phase11` remain the mechanical trust chain documented in **`docs/releasing.md`**.
+Scrypath has **five archived planning milestones** (`v1.0`–`v1.4`) plus **v1.5 delivered** (phases **27–28**). **Hex:** `scrypath` **`0.3.3`**. The v1.3-era Meilisearch-native surface (relevance, facets, multi-index, operator polish) plus v1.4’s **hot_apply** subset and **failure rollups** are on the default install line. **v1.5** adds **`mix scrypath.index.contract_drift`**, **`mix verify.phase28`**, and operator doc cross-links for contract vs settings drift. Release-parity gates (`mix verify.workspace_clean`, `mix verify.release_parity`) and `mix verify.phase11` remain the mechanical trust chain documented in **`docs/releasing.md`**.
 
-**Planning:** **v1.5** — **Phase 27 complete**; **Phase 28** next — requirements in **`.planning/REQUIREMENTS.md`**, roadmap in **`.planning/ROADMAP.md`**. ROADMAP **Backlog** carries faceting, multi-index scoring, and per-query relevance follow-ups.
+**Planning:** **v1.5** — **Phases 27–28 complete** — requirements in **`.planning/REQUIREMENTS.md`**, roadmap in **`.planning/ROADMAP.md`**. ROADMAP **Backlog** carries faceting, multi-index scoring, and per-query relevance follow-ups.
 
 ## Next milestone goals (parking lot)
 
@@ -114,4 +115,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-17 — Phase 27 complete (index contract drift); Hex `0.3.3` current*
+*Last updated: 2026-04-18 — Phase 28 complete (index contract drift CLI + verify.phase28); Hex `0.3.3` current*

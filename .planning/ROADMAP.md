@@ -7,16 +7,16 @@
 - [x] `v1.2` shipped on 2026-04-17 — 7 phases, 13 plans — [archive](milestones/v1.2-ROADMAP.md)
 - [x] `v1.3` shipped on 2026-04-17 — 6 phases (18–23), 18 plans — [archive](milestones/v1.3-ROADMAP.md) · [requirements](milestones/v1.3-REQUIREMENTS.md)
 - [x] **`v1.4` shipped on 2026-04-17** — 3 phases (24–26), 8 plans — [archive](milestones/v1.4-ROADMAP.md) · [requirements](milestones/v1.4-REQUIREMENTS.md)
-- [ ] **`v1.5` in progress** — 2 phases (27–28), requirements [.planning/REQUIREMENTS.md](REQUIREMENTS.md) — *Operator drift and schema-diff tooling*
+- [x] **`v1.5` shipped in-repo** (2026-04-18) — 2 phases (27–28), requirements [.planning/REQUIREMENTS.md](REQUIREMENTS.md) — *Operator drift and schema-diff tooling*
 
 ## Next milestone
 
-**v1.5 — Operator drift and schema-diff tooling** (see [REQUIREMENTS.md](REQUIREMENTS.md)).
+**Post–v1.5** — backlog candidates in **§ Backlog** below; no active numbered phase after **28** in this file.
 
 | Phase | Status | Goal |
 |-------|--------|------|
 | **27** — Schema–index drift report (read-only) | Complete (2026-04-17) | Declared schema ↔ live index contract; `Scrypath.*` entry; DRIFT15-01..02, OPS15-01 |
-| **28** — Operator CLI, docs, and verify gate | Not started | `mix scrypath.*`, drift-recovery + operator-support, **`mix verify.phase28`**; OPS15-02..04 |
+| **28** — Operator CLI, docs, and verify gate | Complete (2026-04-18) | `mix scrypath.index.contract_drift`, drift-recovery + operator-support, **`mix verify.phase28`**; OPS15-02..04 |
 
 ## Phases (history)
 
@@ -47,7 +47,7 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**Active milestone:** **v1.5** — **Phase 27 complete**; next **`/gsd-plan-phase 28`** (Mix + docs + `mix verify.phase28`). Historical shipped tables live in **`milestones/v*-ROADMAP.md`**.
+**Active milestone:** **v1.5** — **Phases 27–28 complete** (operator drift slice). Historical shipped tables live in **`milestones/v*-ROADMAP.md`**.
 
 ## Backlog (post–v1.5 candidates)
 
@@ -56,4 +56,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - Per-query relevance overrides once pipeline semantics are designed.
 
 ---
-*Last updated: 2026-04-17 — Phase 27 executed (schema–index drift report); Phase 28 next*
+*Last updated: 2026-04-18 — Phase 28 executed (index contract drift CLI, docs, verify.phase28)*

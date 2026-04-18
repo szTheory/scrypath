@@ -32,20 +32,24 @@ defmodule Scrypath.Operator.IndexContractDrift.Report do
   operational sync and reindex posture rather than declared-vs-applied settings parity.
   """
 
-  alias Scrypath.Operator.IndexContractDrift.Report.Dimension
-
   @enforce_keys [:version, :schema, :index, :dimensions]
   defstruct [:version, :schema, :index, :dimensions]
 
   @typedoc """
   Per-axis contract comparison. Keys are fixed for JSON stability.
+
+  Each axis value is `%{match: boolean(), details: [term()]}` (the internal
+  `Dimension` struct shape) without referencing the hidden implementation module
+  in public types — keeps `mix docs --warnings-as-errors` clean.
   """
+  @type dimension :: %{match: boolean(), details: [term()]}
+
   @type dimensions :: %{
-          fields: Dimension.t(),
-          filterable_attributes: Dimension.t(),
-          sortable_attributes: Dimension.t(),
-          faceting: Dimension.t(),
-          settings: Dimension.t()
+          fields: dimension(),
+          filterable_attributes: dimension(),
+          sortable_attributes: dimension(),
+          faceting: dimension(),
+          settings: dimension()
         }
 
   @type t :: %__MODULE__{

@@ -58,6 +58,16 @@ This guide is for **operators** who already ship Scrypath with Meilisearch and n
 
 **Verify** — After reindex completes, run representative searches and, if you use it, your verify-applied step from the relevance guide. `mix scrypath.status` should show no stuck settings tasks.
 
+## Index contract drift (fields, filterable, sortable, faceting, settings families)
+
+**Symptom** — Search or the index “looks wrong” in ways that may be **contract** mismatches beyond ranking-only settings: missing filterable attributes, wrong sortables, facet shape drift, or structural field mismatches.
+
+**Diagnosis** — **`mix scrypath.settings.diff`** stays focused on **declared vs applied** Meilisearch `settings:` keys and rebuild-class posture for those keys. **Index contract drift** compares the broader **declared schema vs live index** contract (searchable fields, filterable attributes, sortable attributes, faceting shape, and the declared settings families) using one read-only `get_settings` pass.
+
+**Action** — Run **`mix scrypath.index.contract_drift YOUR_SCHEMA`** (add **`--json`** for machine output) or call **`Scrypath.index_contract_drift/2`** from application code to get the structured report from Phase 27. This path is **report-first** and does not mutate the index. When you only need settings-key parity, keep using **`mix scrypath.settings.diff`**. When you decide to repair, follow your existing **`Scrypath.reconcile_sync/2`** and **`Scrypath.reindex/2`** runbooks explicitly.
+
+**Verify** — Re-run after deploys that touch schema contracts. For maintainer ordering on when to reach for queue triage vs contract reads vs reconcile, see [`docs/operator-support.md`](operator-support.md).
+
 ## Stuck reindex mid-cutover
 
 **Symptom** — A long `Scrypath.reindex/2` run paused, dual-write confusion, or operators are unsure which index UID is live.
