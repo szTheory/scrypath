@@ -158,9 +158,39 @@ defmodule Scrypath do
     Scrypath.Operator.retry_sync_work(work_or_action, opts)
   end
 
+  @doc """
+  Report-first reconciliation for a schema (sync visibility, failed work, drift
+  signals, and suggested recovery actions).
+
+  ## Index contract drift
+
+  Pass **`include_index_contract_drift: true`** alongside runtime options to
+  attach a read-only `%Scrypath.Operator.IndexContractDrift.Report{}` on
+  **`index_contract_drift`**. This performs an extra Meilisearch **`get_settings`**
+  read using the same builder as `index_contract_drift/2`. Omit the flag (default)
+  to avoid that latency and live dependency.
+  """
   @spec reconcile_sync(module(), keyword()) ::
           {:ok, Scrypath.Operator.Reconcile.t()} | {:error, term()} | {:ok, map()}
   def reconcile_sync(schema_module, opts \\ []) do
     Scrypath.Operator.reconcile_sync(schema_module, opts)
+  end
+
+  @doc """
+  Read-only **index contract drift** report for a searchable schema.
+
+  Compares declared schema metadata and resolved settings against a single live
+  Meilisearch `GET /indexes/{uid}/settings` snapshot. This is a **report-first**
+  operator surface: it does not enqueue work, mutate indexes, or imply recovery
+  actions. It is **not** the same signal family as `reconcile_sync/2`'s
+  `drift_signals`, which reflects sync queue and reindex posture.
+
+  See `include_index_contract_drift: true` on `reconcile_sync/2` when you want the
+  same report attached to a reconcile tuple (adds one `get_settings` read).
+  """
+  @spec index_contract_drift(module(), keyword()) ::
+          {:ok, Scrypath.Operator.IndexContractDrift.Report.t()} | {:error, term()}
+  def index_contract_drift(schema_module, opts \\ []) do
+    Scrypath.Operator.index_contract_drift(schema_module, opts)
   end
 end

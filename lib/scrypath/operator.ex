@@ -4,6 +4,7 @@ defmodule Scrypath.Operator do
   alias Scrypath.Config
   alias Scrypath.Operator.FailedSyncWorkInspection
   alias Scrypath.Operator.FailedWork
+  alias Scrypath.Operator.IndexContractDrift
   alias Scrypath.Operator.Reconcile
   alias Scrypath.Operator.RecoveryAction
   alias Scrypath.Operator.Status
@@ -13,8 +14,16 @@ defmodule Scrypath.Operator do
     :oban_jobs,
     :oban_inspector,
     :target_index,
-    :reason_class_counts
+    :reason_class_counts,
+    :include_index_contract_drift
   ]
+
+  @spec index_contract_drift(module(), keyword()) ::
+          {:ok, IndexContractDrift.Report.t()} | {:error, term()}
+  def index_contract_drift(schema_module, opts \\ []) do
+    config = Config.resolve!(opts)
+    IndexContractDrift.build(schema_module, config)
+  end
 
   @spec sync_status(module(), keyword()) :: {:ok, Status.t()} | {:error, term()}
   def sync_status(schema_module, opts \\ []) do

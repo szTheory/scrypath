@@ -6,6 +6,13 @@ defmodule Scrypath.Operator.ReconcileTest do
   alias Scrypath.Operator.ReasonClassCounts
 
   defmodule ReconcileMeilisearchClient do
+    def get_settings(_index, _config) do
+      case Process.get(:reconcile_test_get_settings) do
+        nil -> {:ok, %{}}
+        resp -> resp
+      end
+    end
+
     def tasks(filters, config) do
       tasks =
         Keyword.get(config, :meilisearch_tasks, [])
@@ -109,6 +116,8 @@ defmodule Scrypath.Operator.ReconcileTest do
              ])
            )
 
+    assert report.index_contract_drift == nil
+
     refute_received {:oban_insert, _}
   end
 
@@ -144,5 +153,83 @@ defmodule Scrypath.Operator.ReconcileTest do
     assert result.mode == :oban
     assert_received {:oban_insert, job}
     assert job.worker == "Scrypath.Oban.DeleteWorker"
+  end
+
+  describe "index_contract_drift opt-in (Phase 27)" do
+    alias Scrypath.Meilisearch.Settings
+    alias Scrypath.Operator.IndexContractDrift.Report
+
+    setup do
+      on_exit(fn -> Process.delete(:reconcile_test_get_settings) end)
+      :ok
+    end
+
+    test "default path leaves index_contract_drift nil (027-CONTEXT D-05)" do
+      assert {:ok, %Reconcile{index_contract_drift: nil}} =
+               Scrypath.reconcile_sync(SearchablePost,
+                 backend: Scrypath.Meilisearch,
+                 sync_mode: :manual,
+                 index_prefix: "tenant",
+                 meilisearch_url: "http://localhost:7700",
+                 meilisearch_client: ReconcileMeilisearchClient,
+                 meilisearch_tasks: []
+               )
+    end
+
+    test "include_index_contract_drift: true attaches report from live settings stub" do
+      config =
+        Scrypath.Config.resolve!(
+          backend: Scrypath.Meilisearch,
+          sync_mode: :manual,
+          index_prefix: "tenant",
+          meilisearch_url: "http://localhost:7700",
+          meilisearch_client: ReconcileMeilisearchClient
+        )
+
+      declared_wire =
+        Settings.resolve(SearchablePost, config)
+        |> Settings.translate_settings()
+
+      applied =
+        Map.merge(declared_wire, %{
+          "searchableAttributes" =>
+            SearchablePost |> Scrypath.schema_fields() |> Enum.map(&Atom.to_string/1),
+          "filterableAttributes" =>
+            SearchablePost.__scrypath__(:filterable) |> Enum.map(&Atom.to_string/1),
+          "sortableAttributes" =>
+            SearchablePost.__scrypath__(:sortable) |> Enum.map(&Atom.to_string/1),
+          "faceting" => %{}
+        })
+
+      Process.put(:reconcile_test_get_settings, {:ok, applied})
+
+      assert {:ok, %Reconcile{index_contract_drift: %Report{version: 1} = drift}} =
+               Scrypath.reconcile_sync(SearchablePost,
+                 backend: Scrypath.Meilisearch,
+                 sync_mode: :manual,
+                 index_prefix: "tenant",
+                 meilisearch_url: "http://localhost:7700",
+                 meilisearch_client: ReconcileMeilisearchClient,
+                 meilisearch_tasks: [],
+                 include_index_contract_drift: true
+               )
+
+      assert drift.dimensions.settings.match
+    end
+
+    test "include_index_contract_drift: true propagates index read failures" do
+      Process.put(:reconcile_test_get_settings, {:error, {:http_error, 404, %{}}})
+
+      assert {:error, :index_not_found} =
+               Scrypath.reconcile_sync(SearchablePost,
+                 backend: Scrypath.Meilisearch,
+                 sync_mode: :manual,
+                 index_prefix: "tenant",
+                 meilisearch_url: "http://localhost:7700",
+                 meilisearch_client: ReconcileMeilisearchClient,
+                 meilisearch_tasks: [],
+                 include_index_contract_drift: true
+               )
+    end
   end
 end
