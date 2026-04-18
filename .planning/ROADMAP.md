@@ -16,7 +16,7 @@
 | Phase | Status | Goal |
 |-------|--------|------|
 | **27** — Schema–index drift report (read-only) | Complete (2026-04-17) | Declared schema ↔ live index contract; `Scrypath.*` entry; DRIFT15-01..02, OPS15-01 |
-| **28** — Operator CLI, docs, and verify gate | Not started | `mix scrypath.*`, drift-recovery + operator-support, **`mix verify.phase27`**; OPS15-02..04 |
+| **28** — Operator CLI, docs, and verify gate | Not started | `mix scrypath.*`, drift-recovery + operator-support, **`mix verify.phase28`**; OPS15-02..04 |
 
 ## Phases (history)
 
@@ -47,7 +47,7 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**Active milestone:** **v1.5** — **Phase 27 complete**; next **`/gsd-plan-phase 28`** (Mix + docs + `mix verify.phase27`). Historical shipped tables live in **`milestones/v*-ROADMAP.md`**.
+**Active milestone:** **v1.5** — **Phase 27 complete**; next **`/gsd-plan-phase 28`** (Mix + docs + `mix verify.phase28`). Historical shipped tables live in **`milestones/v*-ROADMAP.md`**.
 
 ## Backlog (post–v1.5 candidates)
 

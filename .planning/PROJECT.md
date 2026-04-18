@@ -27,7 +27,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ### Active
 
-- [ ] **v1.5 (2026-04-17)** — Remaining **Phase 28**: thin **`mix scrypath.*`** surfacing, **`guides/drift-recovery.md`** / **`docs/operator-support.md`**, auth-free **`mix verify.phase27`** (OPS15-02..04). See `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md`.
+- [ ] **v1.5 (2026-04-17)** — Remaining **Phase 28**: thin **`mix scrypath.*`** surfacing, **`guides/drift-recovery.md`** / **`docs/operator-support.md`**, auth-free **`mix verify.phase28`** (OPS15-02..04). See `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md`.
 
 ### Out of Scope
 
@@ -84,7 +84,7 @@ The current public line on Hex is **`scrypath 0.3.3`**. Planning milestone **v1.
 - Structured **declared ↔ live** comparison (fields, filterable, sortable, faceting, selected settings families) without dumping opaque full-index payloads as the only output.
 - **`Scrypath.*`** entry point (report-first; **no new recovery verbs** for v1.5).
 - Thin **`mix scrypath.*`** surfacing with optional **`--json`** consistent with existing operator tasks.
-- Updates to **`guides/drift-recovery.md`** and **`docs/operator-support.md`**; auth-free **`mix verify.phase27`**.
+- Updates to **`guides/drift-recovery.md`** and **`docs/operator-support.md`**; auth-free **`mix verify.phase28`**.
 
 ## Current State
 

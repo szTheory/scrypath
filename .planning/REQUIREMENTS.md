@@ -22,7 +22,7 @@ Additive over the current Hex line; **no breaking changes** to existing `@enforc
 
 - [ ] **OPS15-03**: **`guides/drift-recovery.md`** and **`docs/operator-support.md`** explain when to use **schema/index drift** reporting versus **`mix scrypath.settings.diff`**, **`Scrypath.reconcile_sync/2`**, and managed **`reindex/2`**.
 
-- [ ] **OPS15-04**: Auth-free **`mix verify.phase27`** (or the next free phase slot if renumbered) runs focused tests and **`mix docs --warnings-as-errors`**, locking the public contract for this milestone.
+- [ ] **OPS15-04**: Auth-free **`mix verify.phase28`** runs focused tests and **`mix docs --warnings-as-errors`**, locking the public contract for this milestone.
 
 ## v2+ Requirements (deferred)
 
@@ -71,7 +71,7 @@ Tracked for later milestones; not in v1.5 roadmap.
 | Phase | Goal | Requirements |
 |-------|------|----------------|
 | **Phase 27** — Schema–index drift report (read-only) | Structured declared-vs-live comparison on `Scrypath.*` | DRIFT15-01, DRIFT15-02, OPS15-01 |
-| **Phase 28** — Operator CLI, docs, and verify gate | Mix + guides + `mix verify.phase27` | OPS15-02, OPS15-03, OPS15-04 |
+| **Phase 28** — Operator CLI, docs, and verify gate | Mix + guides + `mix verify.phase28` | OPS15-02, OPS15-03, OPS15-04 |
 
 ---
 *Requirements defined: 2026-04-17 — v1.5 milestone kickoff (drift / schema-diff default pick)*

@@ -18,4 +18,4 @@ New operator read path: `IndexContractDrift`, `Scrypath.index_contract_drift/2`,
 
 ## Recommendation
 
-Ship as planned; Phase 28 owns Mix tasks, docs, and `mix verify.phase27`.
+Ship as planned; Phase 28 owns Mix tasks, docs, and `mix verify.phase28`.
