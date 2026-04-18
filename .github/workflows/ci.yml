@@ -114,6 +114,9 @@ jobs:
       - name: Failure rollups gate (`mix verify.phase26`)
         run: mix verify.phase26
 
+      - name: Index contract drift CLI gate (`mix verify.phase28`)
+        run: mix verify.phase28
+
   phase5-verification:
     runs-on: ubuntu-latest
 

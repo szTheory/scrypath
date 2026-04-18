@@ -83,3 +83,14 @@ mix scrypath.settings.hot_apply MyApp.Blog.Post --settings-file operator/stopwor
 ```
 
 Tradeoffs and non-goals: see `guides/relevance-tuning.md` (**Settings hot apply (v1.4)**).
+
+## `mix scrypath.index.contract_drift`
+
+Read-only **index contract drift** report for one schema. Delegates to **`Scrypath.index_contract_drift/2`**, which performs a single Meilisearch `get_settings` read and compares declared vs live contract dimensions (fields, filterables, sortables, faceting, and settings families).
+
+```bash
+mix scrypath.index.contract_drift MyApp.Blog.Post
+mix scrypath.index.contract_drift MyApp.Blog.Post --json
+```
+
+**`--json`** prints one JSON document (the `%Scrypath.Operator.IndexContractDrift.Report{}` encoding). Exit codes mirror **`mix scrypath.settings.diff`**: `0` when every dimension matches, `2` when the comparison completes with mismatches, `1` when the comparison cannot be completed. This task does not apply settings, enqueue work, or mutate documents.

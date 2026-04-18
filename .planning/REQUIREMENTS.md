@@ -18,11 +18,11 @@ Additive over the current Hex line; **no breaking changes** to existing `@enforc
 
 - [x] **OPS15-01**: The capability is reachable from **`Scrypath.*`** (or a single documented operator entry point that delegates to it) and preserves the same **report-first** posture as `reconcile_sync/2` — **no new recovery verbs** in v1.5. *(Phase 27, 2026-04-17)*
 
-- [ ] **OPS15-02**: A thin **`mix scrypath.*`** task (or documented extension of an existing operator task) prints the same structured report for terminal use, with **`--json`** optional where it matches existing operator CLI conventions.
+- [x] **OPS15-02**: A thin **`mix scrypath.*`** task (or documented extension of an existing operator task) prints the same structured report for terminal use, with **`--json`** optional where it matches existing operator CLI conventions. *(Phase 28, 2026-04-18)*
 
-- [ ] **OPS15-03**: **`guides/drift-recovery.md`** and **`docs/operator-support.md`** explain when to use **schema/index drift** reporting versus **`mix scrypath.settings.diff`**, **`Scrypath.reconcile_sync/2`**, and managed **`reindex/2`**.
+- [x] **OPS15-03**: **`guides/drift-recovery.md`** and **`docs/operator-support.md`** explain when to use **schema/index drift** reporting versus **`mix scrypath.settings.diff`**, **`Scrypath.reconcile_sync/2`**, and managed **`reindex/2`**. *(Phase 28, 2026-04-18)*
 
-- [ ] **OPS15-04**: Auth-free **`mix verify.phase28`** runs focused tests and **`mix docs --warnings-as-errors`**, locking the public contract for this milestone.
+- [x] **OPS15-04**: Auth-free **`mix verify.phase28`** runs focused tests and **`mix docs --warnings-as-errors`**, locking the public contract for this milestone. *(Phase 28, 2026-04-18)*
 
 ## v2+ Requirements (deferred)
 
@@ -62,9 +62,9 @@ Tracked for later milestones; not in v1.5 roadmap.
 | DRIFT15-01 | Phase 27 | Complete (2026-04-17) |
 | DRIFT15-02 | Phase 27 | Complete (2026-04-17) |
 | OPS15-01 | Phase 27 | Complete (2026-04-17) |
-| OPS15-02 | Phase 28 | Pending |
-| OPS15-03 | Phase 28 | Pending |
-| OPS15-04 | Phase 28 | Pending |
+| OPS15-02 | Phase 28 | Complete (2026-04-18) |
+| OPS15-03 | Phase 28 | Complete (2026-04-18) |
+| OPS15-04 | Phase 28 | Complete (2026-04-18) |
 
 **Coverage:** v1.5 requirements: **6** — mapped: **6** — unmapped: **0**
 
@@ -74,4 +74,4 @@ Tracked for later milestones; not in v1.5 roadmap.
 | **Phase 28** — Operator CLI, docs, and verify gate | Mix + guides + `mix verify.phase28` | OPS15-02, OPS15-03, OPS15-04 |
 
 ---
-*Requirements defined: 2026-04-17 — v1.5 milestone kickoff (drift / schema-diff default pick)*
+*Requirements defined: 2026-04-17 — v1.5 milestone kickoff (drift / schema-diff default pick); OPS15-02..04 satisfied in Phase 28 (2026-04-18)*

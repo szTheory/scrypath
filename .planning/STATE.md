@@ -2,42 +2,42 @@
 gsd_state_version: 1.0
 milestone: "v1.5"
 milestone_name: "Operator drift and schema-diff tooling"
-current_phase: "28"
-current_phase_name: "Operator CLI, docs, and verify gate"
+current_phase: ""
+current_phase_name: ""
 current_plan: ""
-status: milestone_v1_5_phase_28_context_ready
-stopped_at: "Phase 28 context gathered — ready for planning"
-last_updated: "2026-04-18T04:00:00Z"
-last_activity: 2026-04-17
+status: milestone_v1_5_complete
+stopped_at: "Phase 28 executed — v1.5 operator slice complete"
+last_updated: "2026-04-18T12:00:00Z"
+last_activity: 2026-04-18
 progress:
   total_phases: 2
-  completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
-  percent: 50
+  completed_phases: 2
+  total_plans: 5
+  completed_plans: 5
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-04-17)
+See: `.planning/PROJECT.md` (updated 2026-04-18)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.5** — Operator drift and schema-diff tooling; **Phase 27 shipped in-repo**, **Phase 28** (Mix + docs + `mix verify.phase28`) next. **Hex** line: **`0.3.3`**.
+**Current focus:** **v1.5 complete** (phases **27–28**): **`Scrypath.index_contract_drift/2`**, **`mix scrypath.index.contract_drift`**, operator docs refresh, **`mix verify.phase28`**. **Hex** line: **`0.3.3`**.
 
 ## Current Position
 
-**Milestone v1.5:** **Phase 27 complete** — `Scrypath.index_contract_drift/2`, optional `include_index_contract_drift` on `reconcile_sync/2`, verification **`.planning/phases/027-schema-index-drift-report/027-VERIFICATION.md`**.
+**Milestone v1.5:** **Shipped in-repo** — Phase 27 (`Scrypath.index_contract_drift/2`, optional reconcile attachment) and Phase 28 (Mix CLI, guides, **`mix verify.phase28`**, CI) — verification **`.planning/phases/028-operator-cli-docs-verify-gate/028-VERIFICATION.md`**.
 
-**Next step:** **`/gsd-plan-phase 28`** — operator CLI, guides, and **`mix verify.phase28`** per **`.planning/REQUIREMENTS.md`** (OPS15-02..04).
+**Next step:** Choose the next milestone from **`.planning/ROADMAP.md`** backlog or run **`/gsd-new-milestone`** when ready.
 
 ## Accumulated Context
 
 ### Decisions
 
-(See `.planning/PROJECT.md` Key Decisions — unchanged at milestone boundary unless v1.5 planning adds rows.)
+(See `.planning/PROJECT.md` Key Decisions — unchanged at milestone boundary unless post–v1.5 planning adds rows.)
 
 **v1.5 intent:** Extend operator trust without new silent heal paths — **report-first** drift visibility that composes with `mix scrypath.settings.diff`, `Scrypath.reconcile_sync/2`, and managed `reindex/2`.
 
@@ -51,10 +51,10 @@ Unchanged from **v1.4** close — see prior **`STATE.md`** snapshots under **`mi
 
 ## Next Command
 
-1. **`/gsd-plan-phase 28`** — Mix task(s), **`--json`**, guides, **`mix verify.phase28`**.
-2. **`/gsd-discuss-phase 28`** — context captured in **`.planning/phases/028-operator-cli-docs-verify-gate/028-CONTEXT.md`**.
+1. **`/gsd-progress`** — confirm roadmap and requirements tables after Phase 28.
+2. **`/gsd-new-milestone`** — when you are ready to plan beyond v1.5.
 
-**Resume files:** `.planning/REQUIREMENTS.md`, `.planning/ROADMAP.md`, `.planning/phases/028-operator-cli-docs-verify-gate/028-CONTEXT.md`, `.planning/phases/027-schema-index-drift-report/027-VERIFICATION.md`
+**Resume files:** `.planning/REQUIREMENTS.md`, `.planning/ROADMAP.md`, `.planning/phases/028-operator-cli-docs-verify-gate/028-VERIFICATION.md`
 
 ---
-*Last updated: 2026-04-17 — Phase 28 discuss complete (028-CONTEXT + planning doc alignment for verify.phase28)*
+*Last updated: 2026-04-18 — Phase 28 execution complete*

@@ -14,6 +14,7 @@ defmodule Scrypath.DocsContractTest do
   @verify_phase14 File.read!("lib/mix/tasks/verify.phase14.ex")
   @verify_phase20 File.read!("lib/mix/tasks/verify.phase20.ex")
   @verify_phase26 File.read!("lib/mix/tasks/verify.phase26.ex")
+  @verify_phase28 File.read!("lib/mix/tasks/verify.phase28.ex")
   @verify_release_publish File.read!("lib/mix/tasks/verify.release_publish.ex")
   @guide_paths [
     "guides/drift-recovery.md",
@@ -163,6 +164,7 @@ defmodule Scrypath.DocsContractTest do
       "mix scrypath.failed",
       "mix scrypath.retry",
       "mix scrypath.reconcile",
+      "scrypath.index.contract_drift",
       "thin terminal entrypoints",
       "Scrypath.Meilisearch.*",
       "--json",
@@ -179,6 +181,9 @@ defmodule Scrypath.DocsContractTest do
       "Scrypath.failed_sync_work",
       "mix scrypath.failed",
       "failed_work_counts",
+      "mix scrypath.index.contract_drift",
+      "Scrypath.index_contract_drift",
+      "mix scrypath.settings.diff",
       "relevance-tuning.md",
       "multi-index-search.md",
       "sync-modes-and-visibility.md"
@@ -218,6 +223,7 @@ defmodule Scrypath.DocsContractTest do
       "mix verify.phase20",
       "mix verify.phase22",
       "mix verify.phase26",
+      "mix verify.phase28",
       "Operator integration verification (`mix verify.phase13`)",
       "mix verify.phase13"
     ])
@@ -298,6 +304,18 @@ defmodule Scrypath.DocsContractTest do
     ])
 
     refute @verify_phase26 =~ "HEX_API_KEY"
+  end
+
+  test "verify.phase28 keeps the index contract operator gate auth-free and docs-focused" do
+    assert_contains_all(@verify_phase28, [
+      "test/scrypath/operator/index_contract_drift_test.exs",
+      "test/scrypath/mix_tasks/operator_tasks_test.exs",
+      "test/scrypath/docs_contract_test.exs",
+      "Mix.Task.run(\"docs\", [\"--warnings-as-errors\"])",
+      "--warnings-as-errors"
+    ])
+
+    refute @verify_phase28 =~ "HEX_API_KEY"
   end
 
   test "release workflow verifies the live published version after hex publish" do
@@ -389,7 +407,10 @@ defmodule Scrypath.DocsContractTest do
       "mix verify.phase14",
       "mix verify.phase20",
       "mix verify.phase26",
+      "mix verify.phase28",
       "mix verify.phase11",
+      "mix scrypath.index.contract_drift",
+      "Scrypath.index_contract_drift/2",
       "operator visibility and recovery live on `Scrypath.*`",
       "backend-native search power stays under `Scrypath.Meilisearch.*`"
     ])
