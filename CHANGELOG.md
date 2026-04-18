@@ -26,6 +26,14 @@ Release Please manages versioned entries after this baseline.
 
 - Release-parity gates were motivated by a historical **tag vs default-branch** divergence in an earlier cycle; see `docs/releasing.md` § Historical context.
 
+## [0.3.4](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.3...scrypath-v0.3.4) (2026-04-18)
+
+
+### Features
+
+* **phase-27:** index contract drift report and reconcile opt-in ([ebc4e21](https://github.com/szTheory/scrypath/commit/ebc4e21048494e76763d451664fdbf0bdff0f71d))
+* **phase-28:** index contract drift CLI, docs, and verify.phase28 ([3bbbe3f](https://github.com/szTheory/scrypath/commit/3bbbe3fcc1c564969dc190f97b5242c7451a0405))
+
 ## [0.3.3](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.2...scrypath-v0.3.3) (2026-04-17)
 
 
