@@ -1,20 +1,20 @@
 ---
 gsd_state_version: 1.0
-milestone: "v1.5"
-milestone_name: "Operator drift and schema-diff tooling"
+milestone: ""
+milestone_name: ""
 current_phase: ""
 current_phase_name: ""
 current_plan: ""
-status: milestone_v1_5_complete
-stopped_at: "Phase 28 executed — v1.5 operator slice complete"
-last_updated: "2026-04-18T12:00:00Z"
+status: post_milestone_v1_5
+stopped_at: "v1.5 planning milestone archived — choose next slice or /gsd-new-milestone"
+last_updated: "2026-04-18T15:00:00Z"
 last_activity: 2026-04-18
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -25,21 +25,21 @@ See: `.planning/PROJECT.md` (updated 2026-04-18)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.5 complete** (phases **27–28**): **`Scrypath.index_contract_drift/2`**, **`mix scrypath.index.contract_drift`**, operator docs refresh, **`mix verify.phase28`**. **Hex** line: **`0.3.3`**.
+**Current focus:** **Post–v1.5** — next milestone not opened; **`/gsd-next`** routes planning, or **`/gsd-new-milestone`** for fresh requirements. **Hex:** **`scrypath 0.3.3`**.
 
 ## Current Position
 
-**Milestone v1.5:** **Shipped in-repo** — Phase 27 (`Scrypath.index_contract_drift/2`, optional reconcile attachment) and Phase 28 (Mix CLI, guides, **`mix verify.phase28`**, CI) — verification **`.planning/phases/028-operator-cli-docs-verify-gate/028-VERIFICATION.md`**.
+**Milestone v1.5** is **archived** (`milestones/v1.5-{ROADMAP,REQUIREMENTS}.md`, git tag **`v1.5`**). Phases **27–28** remain under `.planning/phases/` (phase dirs not moved).
 
-**Next step:** Choose the next milestone from **`.planning/ROADMAP.md`** backlog or run **`/gsd-new-milestone`** when ready.
+**Next step:** **`/gsd-next`** — or **`/gsd-new-milestone`** when you want a new requirements file and numbered roadmap slice.
 
 ## Accumulated Context
 
 ### Decisions
 
-(See `.planning/PROJECT.md` Key Decisions — unchanged at milestone boundary unless post–v1.5 planning adds rows.)
+(See `.planning/PROJECT.md` Key Decisions.)
 
-**v1.5 intent:** Extend operator trust without new silent heal paths — **report-first** drift visibility that composes with `mix scrypath.settings.diff`, `Scrypath.reconcile_sync/2`, and managed `reindex/2`.
+**v1.5 intent (shipped):** Report-first **declared ↔ live** index contract drift on `Scrypath.*`, thin Mix task, docs cross-links, **`mix verify.phase28`** — no new silent heal verbs.
 
 ### Blockers / Concerns
 
@@ -47,14 +47,22 @@ See: `.planning/PROJECT.md` (updated 2026-04-18)
 
 ### Deferred Items
 
-Unchanged from **v1.4** close — see prior **`STATE.md`** snapshots under **`milestones/v1.4-MILESTONE-AUDIT.md`** if needed. No new deferrals at v1.5 open.
+**Prior (v1.4 and earlier):** Unchanged where still relevant — see **`milestones/v1.4-MILESTONE-AUDIT.md`** and prior **`MILESTONES.md`** notes.
+
+Items acknowledged and deferred at **v1.5** milestone close on **2026-04-18** (`audit-open`):
+
+| Category | Item | Status |
+|----------|------|--------|
+| uat_gap | Phase 18 — `18-UAT.md` listed under UAT gaps while status passed | acknowledged_at_close |
+| quick_task | `260416-eoj-automate-phase-5-verification-with-live-` | missing_stub_acknowledged |
+| quick_task | `260416-if2-fix-mix-exs-github-urls-add-a-github-act` | missing_stub_acknowledged |
 
 ## Next Command
 
-1. **`/gsd-progress`** — confirm roadmap and requirements tables after Phase 28.
-2. **`/gsd-new-milestone`** — when you are ready to plan beyond v1.5.
+1. **`/gsd-next`** — advance from post–v1.5 idle state.
+2. **`/gsd-new-milestone`** — open the next milestone (requirements → roadmap).
 
-**Resume files:** `.planning/REQUIREMENTS.md`, `.planning/ROADMAP.md`, `.planning/phases/028-operator-cli-docs-verify-gate/028-VERIFICATION.md`
+**Resume files:** `.planning/ROADMAP.md`, `.planning/PROJECT.md`, `.planning/phases/028-operator-cli-docs-verify-gate/028-VERIFICATION.md`
 
 ---
-*Last updated: 2026-04-18 — Phase 28 execution complete*
+*Last updated: 2026-04-18 — v1.5 milestone close (archive + tag)*
