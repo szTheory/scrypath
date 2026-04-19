@@ -1,10 +1,11 @@
 ---
 phase: 32
 slug: planning-and-state-hygiene
-status: draft
-nyquist_compliant: false
+status: complete
+nyquist_compliant: true
 wave_0_complete: true
 created: 2026-04-18
+validated: 2026-04-18
 ---
 
 # Phase 32 — Validation Strategy
@@ -38,11 +39,11 @@ created: 2026-04-18
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 32-01-01 | 01 | 1 | AUDT-01 | T-32-DOC-01 | No misleading “open gap” claims | grep + read | `rg 'pending_triage_v1_6' .planning/STATE.md` → expect 0 post-task | ✅ | ⬜ pending |
-| 32-01-02 | 01 | 1 | AUDT-01 | T-32-DOC-01 | STATE rows pointer-backed | read + test | `mix test test/scrypath/docs_contract_test.exs` | ✅ | ⬜ pending |
-| 32-01-03 | 01 | 1 | AUDT-01 | T-32-DOC-01 | REQ traceability honest | grep + test | `grep -F '[x] **AUDT-01**' .planning/REQUIREMENTS.md` | ✅ | ⬜ pending |
-| 32-01-04 | 01 | 1 | AUDT-01 | T-32-DOC-01 | Milestone narrative aligned | grep | `rg 'pending_triage_v1_6' .planning/MILESTONES.md` → 0 or explanatory | ✅ | ⬜ pending |
-| 32-01-05 | 01 | 1 | AUDT-01 | T-32-DOC-01 | Audit artifact not stale | read | Manual diff vs STATE | ✅ | ⬜ pending |
+| 32-01-01 | 01 | 1 | AUDT-01 | T-32-DOC-01 | No misleading “open gap” claims | ExUnit | `mix test test/scrypath/docs_contract_test.exs` (`phase 32 AUDT-01` case) | ✅ | ✅ green |
+| 32-01-02 | 01 | 1 | AUDT-01 | T-32-DOC-01 | STATE rows pointer-backed | ExUnit | same | ✅ | ✅ green |
+| 32-01-03 | 01 | 1 | AUDT-01 | T-32-DOC-01 | REQ traceability honest | ExUnit | same | ✅ | ✅ green |
+| 32-01-04 | 01 | 1 | AUDT-01 | T-32-DOC-01 | Milestone narrative aligned | ExUnit | same | ✅ | ✅ green |
+| 32-01-05 | 01 | 1 | AUDT-01 | T-32-DOC-01 | Audit artifact scores + empty req gaps | ExUnit | same | ✅ | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red*
 
@@ -64,8 +65,18 @@ created: 2026-04-18
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` or grep verify equivalents
-- [ ] No watch-mode flags introduced
-- [ ] `nyquist_compliant: true` set in frontmatter after phase VERIFICATION.md passes
+- [x] All tasks have automated coverage via **`docs_contract_test.exs`** (`phase 32 AUDT-01 planning hygiene contracts`)
+- [x] No watch-mode flags introduced
+- [x] `nyquist_compliant: true` set after **`032-VERIFICATION.md`** passed and tests locked literals
 
-**Approval:** pending
+**Approval:** complete
+
+---
+
+## Validation Audit 2026-04-18
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 5 (per-task rows were pending while verification had passed) |
+| Resolved | 5 (mapped to one ExUnit contract test + table refresh) |
+| Escalated | 0 |
