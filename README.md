@@ -24,7 +24,7 @@ If you want queued sync, add Oban as an optional production integration when you
 
 ## Quick Path
 
-Start with one searchable schema and one Phoenix context that owns both repo persistence and Scrypath orchestration.
+Start with one searchable schema and one Phoenix context that owns both repo persistence and Scrypath orchestration. Declare search metadata with **`use Scrypath`** on the Ecto schema, own **`Scrypath.sync_record/3`** after successful repo writes and **`Scrypath.search/3`** from context functions, and keep controllers or LiveView as thin callers into that boundary. For the full copy-paste path—including context module, controller, and IEx proof—follow [guides/golden-path.md](guides/golden-path.md).
 
 ```elixir
 defmodule MyApp.Blog.Post do
@@ -38,54 +38,11 @@ defmodule MyApp.Blog.Post do
   schema "posts" do
     field :title, :string
     field :body, :string
-    field :status, Ecto.Enum, values: [:draft, :published]
+    field :status, :string
     timestamps()
   end
 end
 ```
-
-```elixir
-defmodule MyApp.Content do
-  alias MyApp.Blog.Post
-  alias MyApp.Repo
-
-  def search_posts(query, opts \\ []) do
-    Scrypath.search(Post, query,
-      Keyword.merge([backend: Scrypath.Meilisearch, repo: Repo], opts)
-    )
-  end
-
-  def publish_post(post, attrs) do
-    with {:ok, post} <- update_post(post, attrs),
-         {:ok, _sync} <-
-           Scrypath.sync_record(Post, post,
-             backend: Scrypath.Meilisearch,
-             sync_mode: :inline
-           ) do
-      {:ok, post}
-    end
-  end
-end
-```
-
-```elixir
-defmodule MyAppWeb.PostController do
-  use MyAppWeb, :controller
-
-  alias MyApp.Content
-
-  def index(conn, params) do
-    {:ok, result} =
-      Content.search_posts(Map.get(params, "q", ""),
-        filter: [status: "published"]
-      )
-
-    render(conn, :index, posts: result.records, search: result)
-  end
-end
-```
-
-That is the recommended shape throughout the docs: schema metadata on the Ecto schema, search orchestration in the context, and thin Phoenix web modules calling the same context boundary.
 
 ## When Scrypath Fits
 
