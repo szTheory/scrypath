@@ -1,6 +1,6 @@
 # Faceted search with Phoenix LiveView
 
-This guide is the companion narrative for **FACET-08**: a movies-shaped example (genre, year, rating, director) that stays on the **common `Scrypath.search/3` path** with `facets:`, `facet_filter:`, and URL-friendly `handle_params/3`. It lives at `guides/faceted-search-with-phoenix-liveview.md` so `DocsContractTest` and ExDoc can anchor stable strings.
+This guide walks through a **movies-shaped** example (genre, year, rating, director) that stays on the **common `Scrypath.search/3` path** with `facets:`, `facet_filter:`, and URL-friendly `handle_params/3`. The patterns mirror the library’s own contract tests so prose and code stay aligned as APIs evolve.
 
 ## Overview
 
@@ -73,7 +73,7 @@ Render facet buckets from `result.facets.distribution` (not raw Meilisearch JSON
 example_facet_filter = [genre: ["Horror", "Sci-Fi"]]
 ```
 
-**Layer:** UI checklist rows use `gap-2` (8px) vertical rhythm between rows per UI-SPEC.
+**Layer:** UI checklist rows use `gap-2` (8px) vertical rhythm between rows for consistent spacing.
 
 ## Chip row (active filters)
 
@@ -116,7 +116,7 @@ You can prototype with `handle_event/3` alone for classroom demos. Add an explic
 
 ## Anti-pattern appendix
 
-Single index; bands are **API**, **Meilisearch**, then **UI** (D-04). Each entry lists **Layer → mistake → consequence → why → do instead**.
+Single index; bands are **API**, **Meilisearch**, then **UI**. Each entry lists **Layer → mistake → consequence → why → do instead**.
 
 ### API
 
@@ -125,7 +125,7 @@ Single index; bands are **API**, **Meilisearch**, then **UI** (D-04). Each entry
 **Layer:** API  
 **The mistake:** Declaring `:*` or hierarchical dotted atoms in `faceting.attributes`.  
 **User-visible consequence:** Compile error or confusing `ArgumentError` instead of a searchable index.  
-**Why:** FACET-10 locks wildcards and hierarchical names out of the schema layer to keep atoms and settings predictable.  
+**Why:** Wildcards and hierarchical dotted names are rejected at the schema layer so facet-related atoms and Meilisearch settings stay predictable.  
 **Do instead:** List explicit atoms that are already `filterable:`.  
 **See also:** Schema section above.
 
@@ -143,7 +143,7 @@ Single index; bands are **API**, **Meilisearch**, then **UI** (D-04). Each entry
 **Layer:** API  
 **The mistake:** Adding `:studio` to `:facets` without declaring it on the schema.  
 **User-visible consequence:** `{:error, {:unknown_facet, :studio}}` from `Scrypath.search/3`.  
-**Why:** FACET-03 requires an explicit declaration surface.  
+**Why:** Facets must be declared explicitly on the schema so Scrypath can validate requests against `faceting.attributes`.  
 **Do instead:** Extend `faceting: [attributes: ...]` and managed settings before requesting the facet.
 
 ### Meilisearch
@@ -187,14 +187,14 @@ Single index; bands are **API**, **Meilisearch**, then **UI** (D-04). Each entry
 **Layer:** UI  
 **The mistake:** Dropping `{:error, {:unknown_facet, _}}` on the floor.  
 **User-visible consequence:** Empty panes with no explanation.  
-**Why:** Developers need the explicit FACET-03 string to correct declarations.  
+**Why:** The `{:error, {:unknown_facet, _}}` tuple is the signal that a facet was requested without a matching `faceting:` declaration.  
 **Do instead:** Surface **That attribute is not declared on this schema's `faceting:` list.** beside the control that triggered the request.
 
 ---
 
 ## Fixture cross-reference
 
-The compile-checked fixture `Scrypath.TestSupport.Docs.PhoenixExampleCase.FacetedBrowseLive` mirrors the `handle_params` flow without importing your application code. Pair it with this guide when you extend `DocsContractTest`.
+The compile-checked fixture `Scrypath.TestSupport.Docs.PhoenixExampleCase.FacetedBrowseLive` mirrors the `handle_params` flow without importing your application code—useful when extending library tests that keep this guide and ExDoc snippets in sync.
 
 ## See also
 

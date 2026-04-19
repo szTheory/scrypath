@@ -186,9 +186,9 @@ defmodule Scrypath.Meilisearch.Settings do
 
   @doc """
   Translates a canonical atom-snake settings map to Meilisearch-native camelCase
-  string keys. Strips Scrypath meta keys (`*_strict?` suffix + explicit allowlist,
-  D-04). Spreads `:__unrecognized__` bucket entries through last (TUNE-01 forward-
-  compat passthrough).
+  string keys. Strips Scrypath meta keys (`*_strict?` suffix + explicit allowlist).
+  Spreads `:__unrecognized__` bucket entries through last for forward-compatible
+  passthrough of keys Scrypath does not model yet.
   """
   @spec translate_settings(map()) :: map()
   def translate_settings(canonical) when is_map(canonical) do

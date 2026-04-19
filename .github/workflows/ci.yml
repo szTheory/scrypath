@@ -263,3 +263,75 @@ jobs:
 
       - name: Run Meilisearch integration smoke
         run: mix verify.meilisearch_smoke
+
+  phoenix-example-integration:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5433:5432
+
+      meilisearch:
+        image: getmeili/meilisearch:v1.15
+        ports:
+          - 7700:7700
+        env:
+          MEILI_NO_ANALYTICS: "true"
+
+    env:
+      PGPORT: "5433"
+      SCRYPATH_MEILISEARCH_URL: http://127.0.0.1:7700
+      SCRYPATH_EXAMPLE_INTEGRATION: "1"
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.19.0"
+          otp-version: "28.1"
+
+      - uses: actions/cache@v5
+        with:
+          path: |
+            examples/phoenix_meilisearch/deps
+            examples/phoenix_meilisearch/_build
+          key: ${{ runner.os }}-phx-example-${{ hashFiles('examples/phoenix_meilisearch/mix.lock') }}-${{ hashFiles('mix.lock') }}
+
+      - name: Install postgres client (pg_isready)
+        run: sudo apt-get update -qq && sudo apt-get install -y postgresql-client
+
+      - name: Wait for Postgres
+        run: |
+          for _ in $(seq 1 60); do
+            if pg_isready -h 127.0.0.1 -p "$PGPORT" -U postgres; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Postgres failed to become ready"
+          exit 1
+
+      - name: Wait for Meilisearch
+        run: |
+          for _ in $(seq 1 30); do
+            if curl --silent --fail "$SCRYPATH_MEILISEARCH_URL/health" >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Meilisearch failed to start"
+          exit 1
+
+      - name: Phoenix example integration (`examples/phoenix_meilisearch`)
+        run: |
+          cd examples/phoenix_meilisearch
+          mix deps.get
+          mix test

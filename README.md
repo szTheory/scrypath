@@ -16,6 +16,8 @@ end
 
 **Start here:** for the canonical first-hour path from dependencies through a working `Scrypath.search/3` with inline sync, follow [guides/golden-path.md](guides/golden-path.md).
 
+**Integration smoke (optional):** the repo ships **`examples/phoenix_meilisearch`** with Docker Compose, **`./scripts/smoke.sh`**, and env vars documented there (including how it relates to CI—see [`CONTRIBUTING.md`](CONTRIBUTING.md) for GitHub job names ↔ `mix verify.*` tasks).
+
 Scrypath v1 publicly targets Meilisearch first. The backend seam is internal, and v1 does not promise public multi-backend parity.
 Scrypath owns its internal transport dependency. Configure backend and sync behavior in your app code instead of pinning `Req` directly in the base install path.
 If you want queued sync, add Oban as an optional production integration when you choose `sync_mode: :oban`.

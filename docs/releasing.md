@@ -1,6 +1,6 @@
 # Releasing Scrypath
 
-**For library adopters:** the [README](../README.md) summarizes versioning expectations and points at release notes. **This document** is the maintainer source of truth for Release Please, **`mix verify.phase11`**, publish checks, and parity workflows—read it before changing release automation.
+**For library adopters:** the [README](../README.md) summarizes versioning expectations and points at release notes. **This document** is the maintainer source of truth for Release Please, **`mix verify.phase11`**, publish checks, and parity workflows—read it before changing release automation. **Live Meilisearch job names** (`meilisearch-smoke`, `phase5-verification`, etc.) stay indexed in [`CONTRIBUTING.md`](../CONTRIBUTING.md) alongside `.github/workflows/ci.yml`—avoid duplicating that matrix here.
 
 Release Please owns the version bump, changelog PR, and Git tag for Scrypath. The only publish path is the existing GitHub Actions workflow: Release Please creates `vX.Y.Z`, Actions checks out that tag, and `mix hex.publish --yes` runs from that tagged ref.
 

@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Verify.ReleaseParity do
 
   ## Implementation notes
 
-  Path-set equality only (D-08). Content-digest comparison is deliberately
+  Path-set equality only. Content-digest comparison is deliberately
   deferred — `git archive` at a tag and `mix hex.build` from the same
   commit produce byte-equal contents because they read the same locked
   git tree, so content drift would require post-tag file mutation
@@ -99,7 +99,7 @@ defmodule Mix.Tasks.Verify.ReleaseParity do
   end
 
   @doc """
-  Renders the `--json` output shape documented in D-11.
+  Renders the `--json` output shape documented in `docs/releasing.md`.
 
   `:parity` status renders as `"ok"` in the JSON envelope.
   """
@@ -256,7 +256,7 @@ defmodule Mix.Tasks.Verify.ReleaseParity do
 
     Mix.shell().info(output)
 
-    # D-10: exit 2 distinguishes drift from runtime errors.
+    # Exit 2 distinguishes drift from runtime errors (see moduledoc exit codes).
     System.halt(2)
   end
 

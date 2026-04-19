@@ -16,7 +16,7 @@ defmodule Mix.Tasks.Verify.WorkspaceClean do
 
       mix verify.workspace_clean
 
-  The task takes no arguments. Per decision D-04, there is no escape-hatch
+  The task takes no arguments. There is deliberately no escape-hatch
   flag or environment variable — the friction is the feature. Real
   emergencies require commenting out the workflow step in a PR.
   """
@@ -78,7 +78,7 @@ defmodule Mix.Tasks.Verify.WorkspaceClean do
 
   @doc """
   Returns the pathspec list used by `run/1` — derived from
-  `mix.exs` `package.files` (D-01) plus `"test"` (D-05).
+  `mix.exs` `package.files` plus `"test"`.
 
   Exposed publicly for testability.
   """
@@ -91,7 +91,7 @@ defmodule Mix.Tasks.Verify.WorkspaceClean do
       |> Keyword.get(:package, [])
       |> Keyword.get(:files, [])
 
-    # D-05: test/** included even though not packaged — uncommitted tests
+    # test/** included even though not packaged — uncommitted tests
     # mean "the lib/ state being published was not tested as it will ship."
     package_files ++ ["test"]
   end

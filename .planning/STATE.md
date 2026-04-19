@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Adoption-grade integration and trust
-current_phase: "30"
-current_phase_name: "Consumer example and smoke depth"
+current_phase: "32"
+current_phase_name: "Planning and state hygiene"
 current_plan: ""
 status: planned
 stopped_at: ""
-last_updated: "2026-04-18T23:59:00Z"
+last_updated: "2026-04-18T22:00:00Z"
 last_activity: 2026-04-18
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 3
   total_plans: 2
   completed_plans: 2
-  percent: 25
+  percent: 75
 ---
 
 # Project State
@@ -25,17 +25,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-18)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **Milestone v1.6** — adoption documentation (**phase 29 shipped**), consumer integration proof, verification story for adopters, planning hygiene. **Hex:** **`scrypath 0.3.3`**.
+**Current focus:** **Milestone v1.6** — phases **29–31 shipped**; **phase 32** (AUDT-01 planning hygiene) next. **Hex:** **`scrypath 0.3.3`**.
 
 ## Current Position
 
-Phase: **30** — Consumer example and smoke depth (not started)
+Phase: **32** — Planning and state hygiene (not started)
 
-Plan: **—** (discuss or plan phase 30)
+Plan: **—** (discuss or plan phase 32)
 
-Status: **Phase 29 complete** — golden path guide, README adoption updates, releasing/CHANGELOG alignment (`029-VERIFICATION.md`).
+Status: **Phase 31 complete** — VRFY-01/02: CONTRIBUTING CI ↔ guarantees table, **`phoenix-example-integration`** CI job, **`docs_contract_test`** alignment checks. **Phase 30** remains the Oban example + smoke shift-left baseline.
 
-Last activity: 2026-04-18 — **`/gsd-execute-phase 29`** delivered **ADPT-01..03**.
+Last activity: 2026-04-18 — **Phase 31 verification story** (VRFY + CI example integration).
 
 ## Accumulated Context
 
@@ -61,9 +61,9 @@ Last activity: 2026-04-18 — **`/gsd-execute-phase 29`** delivered **ADPT-01..0
 
 ## Next Command
 
-1. **`/gsd-discuss-phase 30`** — shape consumer example / smoke depth, or **`/gsd-plan-phase 30`** to plan directly.
+1. **`/gsd-progress`** — confirm milestone position, then **`/gsd-discuss-phase 32`** or **`/gsd-plan-phase 32`** for **AUDT-01** (deferred `STATE.md` rows).
 
-**Resume files:** `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/PROJECT.md`
+**Resume files:** `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/PROJECT.md`, `.planning/phases/031-verification-story-for-adopters/031-VERIFICATION.md`
 
 ---
-*Last updated: 2026-04-18 — Phase 29 execution complete*
+*Last updated: 2026-04-18 — Phase 31 complete; phase 32 next*
