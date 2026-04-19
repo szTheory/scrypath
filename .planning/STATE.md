@@ -6,8 +6,8 @@ current_phase: "32"
 current_phase_name: "Planning and state hygiene"
 current_plan: ""
 status: planned
-stopped_at: ""
-last_updated: "2026-04-18T22:00:00Z"
+stopped_at: "Phase 32 context gathered"
+last_updated: "2026-04-18T23:30:00Z"
 last_activity: 2026-04-18
 progress:
   total_phases: 4
@@ -61,9 +61,9 @@ Last activity: 2026-04-18 — **Phase 31 verification story** (VRFY + CI example
 
 ## Next Command
 
-1. **`/gsd-progress`** — confirm milestone position, then **`/gsd-discuss-phase 32`** or **`/gsd-plan-phase 32`** for **AUDT-01** (deferred `STATE.md` rows).
+1. **`/gsd-plan-phase 32`** (or execute against **`032-CONTEXT.md`**) to implement **AUDT-01** triage per locked decisions.
 
-**Resume files:** `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/PROJECT.md`, `.planning/phases/031-verification-story-for-adopters/031-VERIFICATION.md`
+**Resume files:** `.planning/phases/032-planning-and-state-hygiene/032-CONTEXT.md`, `.planning/REQUIREMENTS.md`, `.planning/STATE.md`, `.planning/ROADMAP.md`
 
 ---
 *Last updated: 2026-04-18 — Phase 31 complete; phase 32 next*
