@@ -90,14 +90,19 @@ defmodule Scrypath.DocsContractTest do
     refute @readme =~ ~S|{:scrypath, path: "../scrypath"}|
 
     assert_contains_all(@readme, [
+      "## Quick Path",
       "Scrypath owns its internal transport dependency.",
       "If you want queued sync, add Oban as an optional production integration",
-      "MyApp.Content",
-      "search_posts(query, opts \\\\ [])",
-      "publish_post(post, attrs)",
-      "MyAppWeb.PostController",
-      "Phoenix Walkthrough"
+      "field :status, :string",
+      "guides/golden-path.md"
     ])
+  end
+
+  test "phase 34 readme and golden path agree on canonical status field" do
+    golden = @guides["guides/golden-path.md"]
+
+    assert String.contains?(@readme, "field :status, :string")
+    assert String.contains?(golden, "field :status, :string")
   end
 
   test "phase 29 golden path guide and adoption readme contract" do
