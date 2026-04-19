@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Adoption-grade integration and trust
-current_phase: "32"
-current_phase_name: "Planning and state hygiene"
+current_phase: "33"
+current_phase_name: "Example smoke paths and doc contracts"
 current_plan: ""
-status: verified
+status: planned
 stopped_at: ""
-last_updated: "2026-04-19T00:05:00Z"
+last_updated: "2026-04-18T12:00:00Z"
 last_activity: 2026-04-18
 progress:
-  total_phases: 4
+  total_phases: 7
   completed_phases: 4
-  total_plans: 1
-  completed_plans: 1
-  percent: 100
+  total_plans: 0
+  completed_plans: 0
+  percent: 57
 ---
 
 # Project State
@@ -25,17 +25,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-18)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **Milestone v1.6** — phases **29–32 verified** in-repo; **milestone audit / complete** next. **Hex:** **`scrypath 0.3.3`**.
+**Current focus:** **Milestone v1.6** — phases **29–32** verified; **gap closure 33–35** (from **`v1.6-MILESTONE-AUDIT.md`**) in flight. **Hex:** **`scrypath 0.3.3`**.
 
 ## Current Position
 
-Phase: **32** — Planning and state hygiene (**verified**)
+Phase: **33** — Example smoke paths and doc contracts (**planned** — directory created; run **`/gsd-plan-phase 33`**)
 
-Plan: **01** — complete (`032-01-SUMMARY.md`, `032-VERIFICATION.md`)
+Plan: **—** (not planned yet)
 
-Status: **Phase 31 complete** — VRFY-01/02: CONTRIBUTING CI ↔ guarantees table, **`phoenix-example-integration`** CI job, **`docs_contract_test`** alignment checks. **Phase 30** remains the Oban example + smoke shift-left baseline.
+Status: **Phase 32 verified** — AUDT-01 triage complete. **Next:** close audit integration/flow gaps in **33 → 34 → 35**, then re-audit v1.6.
 
-Last activity: 2026-04-18 — **Phase 31 verification story** (VRFY + CI example integration).
+Last activity: 2026-04-18 — **Gap-closure phases 33–35** added to **`ROADMAP.md`** / **`REQUIREMENTS.md`**.
 
 ## Accumulated Context
 
@@ -61,9 +61,10 @@ Last activity: 2026-04-18 — **Phase 31 verification story** (VRFY + CI example
 
 ## Next Command
 
-1. **`/gsd-audit-milestone v1.6`**, then **`/gsd-complete-milestone v1.6`** when satisfied.
+1. **`/gsd-plan-phase 33`** (smoke cwd + doc contracts), then **`/gsd-execute-phase 33`** when ready.
+2. Repeat for **34** and **35**, then **`/gsd-audit-milestone v1.6`** before **`/gsd-complete-milestone v1.6`**.
 
 **Resume files:** `.planning/v1.6-MILESTONE-AUDIT.md`, `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/STATE.md`
 
 ---
-*Last updated: 2026-04-18 — Phase 32 verified (AUDT-01)*
+*Last updated: 2026-04-18 — Gap-closure phases 33–35 opened; current phase **33***

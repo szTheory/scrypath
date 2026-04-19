@@ -39,7 +39,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ### Active
 
-- [ ] **v1.6 (phases 29–32)** — Adoption-grade integration and trust; scoped in **`.planning/REQUIREMENTS.md`** and **`.planning/ROADMAP.md`**. **AUDT-01** (phase 32 triage) is **closed** in requirements; finish **`032-VERIFICATION.md`** then milestone audit / complete. Feature backlog (facets depth, multi-index scoring, per-query relevance) stays deferred unless explicitly pulled into a later milestone.
+- [ ] **v1.6 (phases 29–35)** — Adoption-grade integration and trust; **29–32** verified in-repo (**AUDT-01** triage complete in **`STATE.md`** / phase **32**). **33–35** close **`v1.6-MILESTONE-AUDIT.md`** integration and flow gaps (smoke cwd, golden path ↔ CI, sync-guide parity); related **REQ** checkboxes are **pending** again until those phases verify. Then **re-audit** and milestone complete. Feature backlog (facets depth, multi-index scoring, per-query relevance) stays deferred unless explicitly pulled into a later milestone.
 
 ### Out of Scope
 
@@ -91,7 +91,7 @@ The current public line on Hex is **`scrypath 0.3.3`**. Planning milestone **v1.
 
 Scrypath has **six archived planning milestones** (`v1.0`–`v1.5`). **Hex:** `scrypath` **`0.3.3`**. The v1.3-era Meilisearch-native surface (relevance, facets, multi-index, operator polish) plus v1.4’s **hot_apply** subset and **failure rollups** are on the default install line. **v1.5** adds **`Scrypath.index_contract_drift/2`**, **`mix scrypath.index.contract_drift`**, **`mix verify.phase28`**, and operator doc cross-links for **contract** vs **settings** drift. Release-parity gates (`mix verify.workspace_clean`, `mix verify.release_parity`) and `mix verify.phase11` remain the mechanical trust chain documented in **`docs/releasing.md`**.
 
-**Planning:** **v1.6** is open — **`.planning/REQUIREMENTS.md`**, **`.planning/ROADMAP.md`**, phases **29–32**. **Phases 29–32** are verified in-repo (adoption docs; Phoenix example + CI integration; VRFY verify matrix; **AUDT-01** / **`032-VERIFICATION.md`**). **Milestone audit / complete** closes v1.6. Deferred feature ideas remain in **`.planning/ROADMAP.md` § Backlog**.
+**Planning:** **v1.6** is open — **`.planning/REQUIREMENTS.md`**, **`.planning/ROADMAP.md`**, phases **29–35**. **Phases 29–32** are verified in-repo; **33–35** are **gap closure** from the v1.6 milestone audit (docs + contract tests). **Re-audit** then **milestone complete** closes v1.6. Deferred feature ideas remain in **`.planning/ROADMAP.md` § Backlog**.
 
 ## Evolution
 
@@ -111,4 +111,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-18 — **AUDT-01** triaged (phase 32); Hex `0.3.3` current*
+*Last updated: 2026-04-18 — Gap-closure phases **33–35** opened; Hex `0.3.3` current*
