@@ -4,15 +4,15 @@ milestone: v1.6
 milestone_name: Adoption-grade integration and trust
 current_phase: "33"
 current_phase_name: "Example smoke paths and doc contracts"
-current_plan: ""
-status: planned
+current_plan: "01"
+status: ready_to_execute
 stopped_at: ""
 last_updated: "2026-04-18T12:00:00Z"
 last_activity: 2026-04-18
 progress:
   total_phases: 7
   completed_phases: 4
-  total_plans: 0
+  total_plans: 1
   completed_plans: 0
   percent: 57
 ---
@@ -29,9 +29,9 @@ See: `.planning/PROJECT.md` (updated 2026-04-18)
 
 ## Current Position
 
-Phase: **33** — Example smoke paths and doc contracts (**planned** — directory created; run **`/gsd-plan-phase 33`**)
+Phase: **33** — Example smoke paths and doc contracts (**ready to execute** — `033-RESEARCH.md`, `033-VALIDATION.md`, `033-PATTERNS.md`, **`033-01-PLAN.md`**)
 
-Plan: **—** (not planned yet)
+Plan: **`033-01-PLAN.md`** (1 plan, wave 1)
 
 Status: **Phase 32 verified** — AUDT-01 triage complete. **Next:** close audit integration/flow gaps in **33 → 34 → 35**, then re-audit v1.6.
 
@@ -61,7 +61,7 @@ Last activity: 2026-04-18 — **Gap-closure phases 33–35** added to **`ROADMAP
 
 ## Next Command
 
-1. **`/gsd-plan-phase 33`** (smoke cwd + doc contracts), then **`/gsd-execute-phase 33`** when ready.
+1. **`/gsd-execute-phase 33`** (smoke cwd + doc contracts — plans ready).
 2. Repeat for **34** and **35**, then **`/gsd-audit-milestone v1.6`** before **`/gsd-complete-milestone v1.6`**.
 
 **Resume files:** `.planning/v1.6-MILESTONE-AUDIT.md`, `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/STATE.md`
