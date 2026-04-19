@@ -32,6 +32,6 @@ Aligned root-facing **README**, **CONTRIBUTING**, and **guides/golden-path.md** 
 
 ## Deviations
 
-None.
+- **`workflow_wiring_test.exs` UAT-09:** Post-merge suite run showed `git log -50` no longer included the phase **18** closing commit subject (branch depth). Widened the log window to **120** entries and re-ran **`mix test --exclude integration`** successfully.
 
 ## Self-Check: PASSED
