@@ -3,33 +3,33 @@ gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: candidates)
 status: planning
-last_updated: "2026-04-19T15:07:14.353Z"
+last_updated: "2026-04-19T23:45:00.000Z"
 last_activity: 2026-04-19
 progress:
   total_phases: 18
-  completed_phases: 14
-  total_plans: 44
-  completed_plans: 44
-  percent: 100
+  completed_phases: 15
+  total_plans: 45
+  completed_plans: 45
+  percent: 83
 ---
 
 # Project State
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-04-18)
+See: `.planning/PROJECT.md` (updated 2026-04-19)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **Milestone v1.6** — phases **29–34** verified; **gap closure 35** (from **`v1.6-MILESTONE-AUDIT.md`**) next. **Hex:** **`scrypath 0.3.3`**.
+**Current focus:** **Milestone v1.6** — phases **29–35** verified in-repo (**35**: sync guide ↔ README operator lifecycle parity). Next: **`/gsd-audit-milestone v1.6`** then **`/gsd-complete-milestone v1.6`** when ready. **Hex:** **`scrypath 0.3.3`**.
 
 ## Current Position
 
 Phase: 035
 
-Plan: Not started
+Plan: 035-01 complete
 
-Status: Ready to plan
+Status: Verified (see `035-VERIFICATION.md`)
 
 Last activity: 2026-04-19
 
@@ -57,12 +57,12 @@ Last activity: 2026-04-19
 
 ## Next Command
 
-1. **`/gsd-plan-phase 35`** or **`/gsd-execute-phase 35`** — sync guide lifecycle parity (README authority ↔ **`guides/sync-modes-and-visibility.md`**).
-2. **`/gsd-audit-milestone v1.6`** after **35**, then **`/gsd-complete-milestone v1.6`** when ready.
+1. **`/gsd-audit-milestone v1.6`** — milestone audit after phase **35** closure.
+2. **`/gsd-complete-milestone v1.6`** — when audit passes and you are ready to archive v1.6.
 
 **Resume files:** `.planning/phases/035-sync-guide-lifecycle-parity/`, `.planning/v1.6-MILESTONE-AUDIT.md`, `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/STATE.md`
 
 ---
-*Last updated: 2026-04-19 — Phase **35** context captured (`035-CONTEXT.md`); ready for `/gsd-plan-phase 035`*
+*Last updated: 2026-04-19 — Phase **35** executed and verified (`035-VERIFICATION.md`)*
 
-**Planned Phase:** 035 (sync-guide-lifecycle-parity) — 1 plans — 2026-04-19T15:07:14.345Z
+**Completed Phase:** 035 (sync-guide-lifecycle-parity) — 1 plan — 2026-04-19

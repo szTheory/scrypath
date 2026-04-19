@@ -61,17 +61,17 @@ Unchanged product backlog; not in v1.6.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | ADPT-01 | Phase 29 delivered; **gap closure 33–34** | Pending |
-| ADPT-02 | Phase 29 delivered; **gap closure 34–35** | Pending |
-| ADPT-03 | Phase 29 delivered; **gap closure 34–35** | Pending |
+| ADPT-02 | Phase 29 delivered; **gap closure 34–35** (phase **35** verified 2026-04-19) | Pending checklist until milestone audit |
+| ADPT-03 | Phase 29 delivered; **gap closure 34–35** (phase **35** verified 2026-04-19) | Pending checklist until milestone audit |
 | EXAM-01 | Phase 30 | Complete |
 | EXAM-02 | Phase 30 delivered; **gap closure 33** | Pending |
 | VRFY-01 | Phase 31 delivered; **gap closure 34** | Pending |
 | VRFY-02 | Phase 31 delivered; **gap closure 33** | Pending |
 | AUDT-01 | Phase 32 delivered; **gap closure 33** (doc path contracts) | Pending |
 
-_Re-opened for **v1.6-MILESTONE-AUDIT.md** integration and flow gaps; **phases 33–34** verified in-repo (2026-04-18 / 2026-04-19); close again when phase **35** verifies._
+_Re-opened for **v1.6-MILESTONE-AUDIT.md** integration and flow gaps; **phases 33–35** verified in-repo (2026-04-18 / 2026-04-19); re-close requirement checkboxes at milestone audit / complete._
 
-**Coverage:** v1.6 requirements: **8** — mapped: **8** — unmapped: **0** — **gap closure in flight:** 7 (EXAM-01 unchanged)
+**Coverage:** v1.6 requirements: **8** — mapped: **8** — unmapped: **0** — **gap closure in flight:** 5 (EXAM-01 unchanged; ADPT-02/03 lifecycle slice closed in phase **35**)
 
 | Phase | Goal | Requirements |
 |-------|------|----------------|
@@ -120,4 +120,4 @@ _Re-opened for **v1.6-MILESTONE-AUDIT.md** integration and flow gaps; **phases 3
 1. Either **`guides/sync-modes-and-visibility.md`** carries the lifecycle vocabulary README points readers at, or README narrows the authority sentence so the guide is not overstated.
 
 ---
-*Requirements defined: 2026-04-18 — v1.6 milestone kickoff; gap-closure phases 33–35 added 2026-04-18 from milestone audit*
+*Requirements defined: 2026-04-18 — v1.6 milestone kickoff; gap-closure phases 33–35 added 2026-04-18 from milestone audit; phase **35** verified 2026-04-19*
