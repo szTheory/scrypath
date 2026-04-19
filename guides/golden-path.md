@@ -70,6 +70,8 @@ end
 
 `use Scrypath` is metadata-only; persistence and sync stay in your context.
 
+In production you may still enforce allowed values with **`validate_inclusion/3`** or **`Ecto.Enum`** on changesets; this guide keeps **`field :status, :string`** in the schema so Meilisearch filters stay string-shaped (for example **`status = "published"`**) and match the example app.
+
 ## Context: inline sync and search
 
 Own both repo writes and Scrypath calls from one context module:
@@ -124,7 +126,7 @@ For controllers, JSON APIs, and LiveView that call the same context boundary, co
 The golden path stays **inline** on purpose. To **run** the multi-container proof (inline + **`:oban`** integration tests, same Meilisearch image pin as CI), use the runnable example—do not duplicate env tables here:
 
 - **Runbook (from **`examples/phoenix_meilisearch/`** — commands, env vars, **`./scripts/smoke.sh`**):** [`examples/phoenix_meilisearch/README.md`](../examples/phoenix_meilisearch/README.md)
-- **Which CI jobs use live Meilisearch:** see root [`CONTRIBUTING.md`](../CONTRIBUTING.md) (e.g. **`meilisearch-smoke`** → `mix verify.meilisearch_smoke`; the example smoke is **local** / optional CI wiring, not a second matrix in this guide).
+- **CI:** On **pull requests** and pushes to **`main`**, **GitHub Actions** runs job **`phoenix-example-integration`**, which starts **Postgres 16** (`postgres:16-alpine`) and **Meilisearch** (`getmeili/meilisearch:v1.15`) as workflow services, sets **`SCRYPATH_EXAMPLE_INTEGRATION=1`**, **`PGPORT=5433`**, and **`SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700`**, then runs **`cd examples/phoenix_meilisearch && mix deps.get && mix test`**—the same consumer-shaped **`mix test`** path the example README documents for local Compose. For job names, env vars, and how they map to **`mix verify.*`** tasks, see root [`CONTRIBUTING.md`](../CONTRIBUTING.md).
 
 ## Ecto without Phoenix (API-only)
 

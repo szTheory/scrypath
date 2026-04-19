@@ -329,12 +329,17 @@ defmodule Scrypath.DocsContractTest do
     assert ordered?(@contributing, "cd examples/phoenix_meilisearch", "./scripts/smoke.sh")
   end
 
-  test "golden path scopes example smoke script to the phoenix_meilisearch example (Phase 33)" do
+  test "golden path scopes example smoke script to the phoenix_meilisearch example (Phase 33–34)" do
     golden = @guides["guides/golden-path.md"]
 
     assert_contains_all(golden, [
       "examples/phoenix_meilisearch/README.md",
-      "optional CI wiring"
+      "phoenix-example-integration",
+      "pull requests",
+      "GitHub Actions",
+      "SCRYPATH_EXAMPLE_INTEGRATION=1",
+      "postgres:16-alpine",
+      "getmeili/meilisearch:v1.15"
     ])
 
     assert ordered?(golden, "examples/phoenix_meilisearch", "./scripts/smoke.sh")
