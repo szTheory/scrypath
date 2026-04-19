@@ -30,7 +30,7 @@ Additive, documentation- and proof-first unless a phase plan explicitly calls fo
 
 ### Planning hygiene (prefix: AUDT)
 
-- [ ] **AUDT-01**: **Deferred rows** carried from the v1.5 milestone close in **`STATE.md`** (UAT listing noise, missing quick-task stubs) are **triaged**: fixed, re-filed as tracked issues, or marked **wont-fix / obsolete** with a one-line reason in `STATE.md` or `.planning/` as appropriate.
+- [x] **AUDT-01**: **Deferred rows** carried from the v1.5 milestone close in **`STATE.md`** (UAT listing noise, missing quick-task stubs) are **triaged**: fixed, re-filed as tracked issues, or marked **wont-fix / obsolete** with a one-line reason in `STATE.md` or `.planning/` as appropriate.
 
 ## v2+ Requirements (deferred)
 
@@ -67,7 +67,9 @@ Unchanged product backlog; not in v1.6.
 | EXAM-02 | Phase 30 | Complete |
 | VRFY-01 | Phase 31 | Complete |
 | VRFY-02 | Phase 31 | Complete |
-| AUDT-01 | Phase 32 | Pending |
+| AUDT-01 | Phase 32 | Complete |
+
+_AUDT-01: closed per `STATE.md` §Deferred Items._
 
 **Coverage:** v1.6 requirements: **8** — mapped: **8** — unmapped: **0**
 

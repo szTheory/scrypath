@@ -60,7 +60,7 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**Active milestone:** **v1.6** — **phases 29–31 complete** (2026-04-18). **Phase 32** next (AUDT-01 planning hygiene). Shipped **v1.5** tables: **`milestones/v1.5-ROADMAP.md`**.
+**Active milestone:** **v1.6** — **phases 29–32 complete** (2026-04-18) including **`032-VERIFICATION.md`**. Shipped **v1.5** tables: **`milestones/v1.5-ROADMAP.md`**. Next: **milestone audit / complete**.
 
 ## Backlog (post–v1.5 candidates)
 
