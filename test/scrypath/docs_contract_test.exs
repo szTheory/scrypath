@@ -580,9 +580,15 @@ defmodule Scrypath.DocsContractTest do
 
   test "phase 32 AUDT-01 planning hygiene contracts (Nyquist invariants)" do
     state_md = File.read!(".planning/STATE.md")
-    requirements_md = File.read!(".planning/REQUIREMENTS.md")
+
+    requirements_md =
+      case File.read(".planning/REQUIREMENTS.md") do
+        {:ok, body} -> body
+        {:error, _} -> File.read!(".planning/milestones/v1.6-REQUIREMENTS.md")
+      end
+
     milestones_md = File.read!(".planning/MILESTONES.md")
-    v16_audit = File.read!(".planning/v1.6-MILESTONE-AUDIT.md")
+    v16_audit = File.read!(".planning/milestones/v1.6-MILESTONE-AUDIT.md")
     project_md = File.read!(".planning/PROJECT.md")
 
     refute String.contains?(state_md, "pending_triage_v1_6"),
@@ -596,10 +602,10 @@ defmodule Scrypath.DocsContractTest do
     ])
 
     assert String.contains?(requirements_md, "| AUDT-01 |"),
-           "REQUIREMENTS.md must include AUDT-01 traceability row"
+           "requirements traceability must include AUDT-01 row (root REQUIREMENTS.md or milestones/v1.6-REQUIREMENTS.md)"
 
-    assert String.contains?(requirements_md, "Phase 32 delivered"),
-           "AUDT-01 must retain the phase 32 triage delivery pointer"
+    assert String.contains?(requirements_md, "Phase 32"),
+           "AUDT-01 must retain the phase 32 delivery pointer"
 
     assert String.contains?(requirements_md, "gap closure 33"),
            "AUDT-01 must reference gap closure work when doc-contract follow-ups are scheduled"

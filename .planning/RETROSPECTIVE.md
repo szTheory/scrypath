@@ -2,10 +2,34 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.6 — Adoption-grade integration and trust
+
+**Shipped (planning):** 2026-04-19  
+**Phases:** 7 (29–35) | **Plans:** 7 | **Hex:** `scrypath 0.3.3` (unchanged line; docs + proof + trust)
+
+### What was built
+
+Golden-path guide and README wayfinding; Oban-shaped example proof; CONTRIBUTING ↔ CI contract tests; **`STATE.md`** triage; three gap-closure phases (**33–35**) locking smoke cwd, README ↔ golden path ↔ **`phoenix-example-integration`**, and sync-guide lifecycle vocabulary.
+
+### What worked
+
+**`docs_contract_test.exs`** as a mechanical seam between maintainer docs and repo layout prevented regression on the exact integration-footgun paths the milestone audit called out.
+
+### What was inefficient
+
+`gsd-sdk query milestone.complete` failed in this environment again; archival and roadmap collapse were performed manually with the same checklist as **v1.5**.
+
+### Key lessons
+
+Ship **`audit-open` acknowledgments** into **`STATE.md`** at close when tooling counts disagree with verification truth, so the ledger stays honest without blocking archive.
+
+---
+
 ## Cross-Milestone Trends
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|
+| v1.6 | 29–35 | Adoption golden path + doc contracts + verify story for contributors |
 | v1.5 | 27–28 | Index contract drift reporting + operator Mix/docs/verify gate |
 | v1.4 | 24–26 | Hex package parity + narrow hot settings + operator rollups |
 | v1.3 | 18–23 | Meilisearch-native depth + release parity + operator honesty |
