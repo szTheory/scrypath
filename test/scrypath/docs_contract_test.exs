@@ -301,6 +301,40 @@ defmodule Scrypath.DocsContractTest do
     assert String.contains?(@contributing, "Services: Postgres")
   end
 
+  test "example smoke script exists only under phoenix_meilisearch (Phase 33)" do
+    assert File.regular?("examples/phoenix_meilisearch/scripts/smoke.sh")
+    refute File.regular?("scripts/smoke.sh")
+  end
+
+  test "README and CONTRIBUTING document example smoke cwd (Phase 33)" do
+    assert String.contains?(@readme, "cd examples/phoenix_meilisearch") or
+             String.contains?(@readme, "bash examples/phoenix_meilisearch/scripts/smoke.sh")
+
+    assert String.contains?(@contributing, "cd examples/phoenix_meilisearch") or
+             String.contains?(@contributing, "bash examples/phoenix_meilisearch/scripts/smoke.sh")
+
+    assert ordered?(@readme, "cd examples/phoenix_meilisearch", "./scripts/smoke.sh")
+
+    assert ordered?(
+             @contributing,
+             "phoenix-example-integration",
+             "cd examples/phoenix_meilisearch"
+           )
+
+    assert ordered?(@contributing, "cd examples/phoenix_meilisearch", "./scripts/smoke.sh")
+  end
+
+  test "golden path scopes example smoke script to the phoenix_meilisearch example (Phase 33)" do
+    golden = @guides["guides/golden-path.md"]
+
+    assert_contains_all(golden, [
+      "examples/phoenix_meilisearch/README.md",
+      "optional CI wiring"
+    ])
+
+    assert ordered?(golden, "examples/phoenix_meilisearch", "./scripts/smoke.sh")
+  end
+
   test "CI workflow includes Phoenix example integration job wired to example path" do
     assert_contains_all(@ci_workflow, [
       "phoenix-example-integration:",
