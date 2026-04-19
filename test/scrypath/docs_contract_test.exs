@@ -98,6 +98,14 @@ defmodule Scrypath.DocsContractTest do
     ])
   end
 
+  test "phase 35 readme and sync guide share operator lifecycle chain" do
+    chain =
+      "requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded"
+
+    assert String.contains?(@readme, chain)
+    assert String.contains?(@guides["guides/sync-modes-and-visibility.md"], chain)
+  end
+
   test "phase 34 readme and golden path agree on canonical status field" do
     golden = @guides["guides/golden-path.md"]
 
@@ -229,6 +237,8 @@ defmodule Scrypath.DocsContractTest do
       "search visibility is an operational concern",
       "the enqueue is durable",
       "Accepted work is not the same thing as search visibility.",
+      "## Operator lifecycle",
+      "requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded",
       "## `:inline`",
       "## `:oban`",
       "## `:manual`"
