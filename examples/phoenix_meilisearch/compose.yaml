@@ -1,0 +1,42 @@
+# Postgres + Meilisearch for a production-shaped local stack.
+# Run from this directory so paths resolve for the smoke script.
+#
+#   docker compose up -d
+#   ./scripts/smoke.sh
+#   docker compose down
+#
+# Services share an explicit network (useful if you add an app container later).
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      # Host 5433 avoids clashing with a local Postgres on 5432 (matches PGPORT default in config).
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    networks:
+      - scrypath_demo
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.15
+    ports:
+      - "7700:7700"
+    environment:
+      MEILI_NO_ANALYTICS: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:7700/health || exit 1"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    networks:
+      - scrypath_demo
+
+networks:
+  scrypath_demo:
+    name: scrypath_phx_meili_net

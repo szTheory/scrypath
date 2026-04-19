@@ -3,6 +3,7 @@ defmodule Scrypath.DocsContractTest do
 
   @readme File.read!("README.md")
   @architecture File.read!("ARCHITECTURE.md")
+  @contributing File.read!("CONTRIBUTING.md")
   @ci_workflow File.read!(".github/workflows/ci.yml")
   @release_workflow File.read!(".github/workflows/release-please.yml")
   @publish_recovery_workflow File.read!(".github/workflows/publish-hex.yml")
@@ -27,9 +28,46 @@ defmodule Scrypath.DocsContractTest do
     "guides/faceted-search-with-phoenix-liveview.md",
     "guides/multi-index-search.md",
     "guides/sync-modes-and-visibility.md",
-    "guides/operator-mix-tasks.md"
+    "guides/operator-mix-tasks.md",
+    "guides/relevance-tuning.md"
   ]
   @guides Enum.into(@guide_paths, %{}, fn path -> {path, File.read!(path)} end)
+
+  # Paths shipped as ExDoc extras (mix.exs :docs extras) plus top-level narrative docs.
+  @published_markdown_for_hygiene [
+    "README.md",
+    "ARCHITECTURE.md",
+    "docs/releasing.md",
+    "docs/operator-support.md",
+    "docs/search-backend-sre.md"
+    | @guide_paths
+  ]
+
+  test "published markdown avoids internal planning and task artifact strings" do
+    patterns = [
+      {~r/\bFACET-\d{2}\b/, "FACET-NN requirement-style IDs"},
+      {~r/\bTUNE-\d{2}\b/, "TUNE-NN requirement-style IDs"},
+      {~r/\bMULTI-\d{2}\b/, "MULTI-NN requirement-style IDs"},
+      {~r/\bADPT-\d{2}\b/, "ADPT-NN requirement-style IDs"},
+      {~r/\bEXAM-\d{2}\b/, "EXAM-NN requirement-style IDs"},
+      {~r/\bVRFY-\d{2}\b/, "VRFY-NN requirement-style IDs"},
+      {~r/\bAUDT-\d{2}\b/, "AUDT-NN requirement-style IDs"},
+      {~r/T-\d{2}-\d{2}-\d{2}/, "T-xx-xx-xx task-style IDs"},
+      {~r/\(D-\d{2}\)/, "(D-xx) decision-style IDs"},
+      {~r/Per decision D-/, "Per decision D- internal decision refs"},
+      {~r/DocsContractTest/, "DocsContractTest (maintainer suite name in user docs)"},
+      {~r/UI-SPEC/, "UI-SPEC internal label"}
+    ]
+
+    for path <- @published_markdown_for_hygiene do
+      body = File.read!(path)
+
+      for {re, label} <- patterns do
+        refute Regex.match?(re, body),
+               "remove #{label} from published doc #{path} (adopter-facing HexDocs hygiene)"
+      end
+    end
+  end
 
   test "README preserves the operator contract for backfill and reindex" do
     assert_contains_all(@readme, [
@@ -154,7 +192,7 @@ defmodule Scrypath.DocsContractTest do
     ])
 
     assert_contains_all(@guides["guides/faceted-search-with-phoenix-liveview.md"], [
-      "faceted-search-with-phoenix-liveview.md",
+      "movies-shaped",
       "Scrypath.search/3",
       "facet_filter",
       "Anti-pattern appendix",
@@ -244,6 +282,34 @@ defmodule Scrypath.DocsContractTest do
       "skip_settings_verification?",
       "Scrypath v1",
       "guides/sync-modes-and-visibility.md"
+    ])
+  end
+
+  test "CONTRIBUTING documents default test path and live integration jobs (VRFY)" do
+    assert_contains_all(@contributing, [
+      "mix test --exclude integration",
+      "**`test`**",
+      "**`quality`**",
+      "**`phase5-verification`**",
+      "**`phase13-verification`**",
+      "**`meilisearch-smoke`**",
+      "**`phoenix-example-integration`**",
+      "examples/phoenix_meilisearch"
+    ])
+
+    assert String.contains?(@contributing, "Service: Meilisearch")
+    assert String.contains?(@contributing, "Services: Postgres")
+  end
+
+  test "CI workflow includes Phoenix example integration job wired to example path" do
+    assert_contains_all(@ci_workflow, [
+      "phoenix-example-integration:",
+      "examples/phoenix_meilisearch",
+      "SCRYPATH_EXAMPLE_INTEGRATION",
+      "PGPORT",
+      "postgres:16-alpine",
+      "getmeili/meilisearch:v1.15",
+      "mix test"
     ])
   end
 

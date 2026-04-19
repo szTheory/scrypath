@@ -18,15 +18,15 @@ Additive, documentation- and proof-first unless a phase plan explicitly calls fo
 
 ### Consumer example and smoke (prefix: EXAM)
 
-- [ ] **EXAM-01**: The repository exercises **at least one additional consumer-shaped scenario** beyond the existing Phoenix example smoke (for example Oban-backed sync, a second bounded integration scenario, or an expanded smoke script — exact shape decided in phase planning) so integration proof matches how some production apps run.
+- [x] **EXAM-01**: The repository exercises **at least one additional consumer-shaped scenario** beyond the existing Phoenix example smoke (for example Oban-backed sync, a second bounded integration scenario, or an expanded smoke script — exact shape decided in phase planning) so integration proof matches how some production apps run.
 
-- [ ] **EXAM-02**: The **example app** (or primary smoke path) documents **how to run** integration smoke locally, including required env vars and how that aligns with CI jobs that use Meilisearch.
+- [x] **EXAM-02**: The **example app** (or primary smoke path) documents **how to run** integration smoke locally, including required env vars and how that aligns with CI jobs that use Meilisearch.
 
 ### Verification clarity (prefix: VRFY)
 
-- [ ] **VRFY-01**: **`CONTRIBUTING.md`** (or linked maintainer doc) **maps major verify / CI steps** to what consumer-visible guarantees they protect (not only task names).
+- [x] **VRFY-01**: **`CONTRIBUTING.md`** (or linked maintainer doc) **maps major verify / CI steps** to what consumer-visible guarantees they protect (not only task names).
 
-- [ ] **VRFY-02**: The **default CI matrix** remains documented as green for contributors who skip live Meilisearch, with **integration** jobs called out explicitly (what runs where, and how to approximate locally).
+- [x] **VRFY-02**: The **default CI matrix** remains documented as green for contributors who skip live Meilisearch, with **integration** jobs called out explicitly (what runs where, and how to approximate locally).
 
 ### Planning hygiene (prefix: AUDT)
 
@@ -63,10 +63,10 @@ Unchanged product backlog; not in v1.6.
 | ADPT-01 | Phase 29 | Complete |
 | ADPT-02 | Phase 29 | Complete |
 | ADPT-03 | Phase 29 | Complete |
-| EXAM-01 | Phase 30 | Pending |
-| EXAM-02 | Phase 30 | Pending |
-| VRFY-01 | Phase 31 | Pending |
-| VRFY-02 | Phase 31 | Pending |
+| EXAM-01 | Phase 30 | Complete |
+| EXAM-02 | Phase 30 | Complete |
+| VRFY-01 | Phase 31 | Complete |
+| VRFY-02 | Phase 31 | Complete |
 | AUDT-01 | Phase 32 | Pending |
 
 **Coverage:** v1.6 requirements: **8** — mapped: **8** — unmapped: **0**
@@ -88,13 +88,13 @@ Unchanged product backlog; not in v1.6.
 
 **Phase 30**
 
-1. At least **one** additional consumer-shaped scenario is **automated or scripted** in-repo and documented.
-2. Example or smoke README states **exact commands and env** to reproduce integration proof.
+1. At least **one** additional consumer-shaped scenario is **automated or scripted** in-repo and documented — **Oban `sync_mode: :oban`** integration test in **`examples/phoenix_meilisearch`** plus hardened **`scripts/smoke.sh`**.
+2. Example README states **exact commands and env** to reproduce integration proof and maps to **CI** via **`CONTRIBUTING.md`** / golden path links.
 
 **Phase 31**
 
-1. CONTRIBUTING (or linked doc) contains a **table or list** mapping verify tasks to guarantees.
-2. CI jobs for default vs integration are **named and described** for contributors.
+1. CONTRIBUTING **Job \| Purpose** table + **`docs_contract_test`** lock the verify ↔ guarantee story (including **`phoenix-example-integration`**).
+2. Default **`test`** job vs **integration** jobs (phase5, phase13, meilisearch-smoke, phoenix example) are **named in CONTRIBUTING** and **enforced against `ci.yml`** in tests.
 
 **Phase 32**
 

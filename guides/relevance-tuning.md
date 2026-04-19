@@ -14,7 +14,7 @@ Scrypath recognizes these snake_case settings keys on `use Scrypath` (each maps 
 
 Attribute projections (`searchable_attributes`, `sortable_attributes`, `filterable_attributes`, `displayed_attributes`) are also translated to Meilisearch camelCase keys.
 
-## Ranking rules safety rail (TUNE-04)
+## Ranking rules safety rail
 
 If a schema declares `ranking_rules:` as a list, Scrypath expects the list to include **all six** Meilisearch defaults unless the schema opts out:
 
@@ -22,7 +22,7 @@ If a schema declares `ranking_rules:` as a list, Scrypath expects the list to in
 
 At **compile time**, incomplete lists emit a stderr warning. At **managed reindex** (`Scrypath.reindex/2`), the same condition raises `ArgumentError` before any Meilisearch work begins, unless `ranking_rules_strict?: false` appears in the schema `settings` map (including under `__unrecognized__` when declared that way).
 
-## Verify and drift semantics (TUNE-05)
+## Verify and drift semantics
 
 After settings are applied and the Meilisearch task is waited on, managed reindex performs a **read-back drift check** using the internal settings verification helper (verify applied vs declared).
 
@@ -36,7 +36,7 @@ After settings are applied and the Meilisearch task is waited on, managed reinde
 
 `:skip_settings_verification?: true` on the reindex opts skips the drift check. This logs a warning and emits `[:scrypath, :reindex, :verify_skipped]` telemetry with `reason: :user_opt_out`. Successful verification is wrapped in a Telemetry span as `[:scrypath, :reindex, :settings_verified]`.
 
-## Per-repo configuration cascade (TUNE-06)
+## Per-repo configuration cascade
 
 `Scrypath.Config.resolve!/1` merges, in order:
 

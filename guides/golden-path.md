@@ -119,6 +119,13 @@ result.records
 
 For controllers, JSON APIs, and LiveView that call the same context boundary, continue with [Phoenix Walkthrough](phoenix-walkthrough.md).
 
+## Integration smoke (Postgres + Meilisearch + Oban)
+
+The golden path stays **inline** on purpose. To **run** the multi-container proof (inline + **`:oban`** integration tests, same Meilisearch image pin as CI), use the runnable example—do not duplicate env tables here:
+
+- **Runbook (commands, env vars, `./scripts/smoke.sh`):** [`examples/phoenix_meilisearch/README.md`](../examples/phoenix_meilisearch/README.md)
+- **Which CI jobs use live Meilisearch:** see root [`CONTRIBUTING.md`](../CONTRIBUTING.md) (e.g. **`meilisearch-smoke`** → `mix verify.meilisearch_smoke`; the example smoke is **local** / optional CI wiring, not a second matrix in this guide).
+
 ## Ecto without Phoenix (API-only)
 
 You do not need `MyAppWeb` modules. The same context-owned pattern applies in an API-only app: call **`Scrypath.sync_record/3`** after **`Repo.insert` / `Repo.update`** succeeds, and expose **`Scrypath.search/3`** through functions you call from plugs or bounded contexts. Use `examples/phoenix_meilisearch/README.md` as the entry to the minimal consumer-shaped reference (the example is Phoenix, but the search boundary is still “context owns Scrypath”).
