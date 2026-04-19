@@ -38,10 +38,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] **Phase 29** (2026-04-18): **`guides/golden-path.md`** (install → inline sync → `Scrypath.search/3`), ExDoc registration, README adoption wayfinding (sync heuristics + **`guides/sync-modes-and-visibility.md`** authority, **Versioning and upgrades**, `{:scrypath, "~> 0.3"}`), releasing + CHANGELOG cross-links — **ADPT-01, ADPT-02, ADPT-03**.
 - [x] **Phase 33** (2026-04-18): Root-facing **README** / **CONTRIBUTING** / **`guides/golden-path.md`** agree on **cwd** for Phoenix example **`scripts/smoke.sh`**; **`docs_contract_test.exs`** locks filesystem + ordering — **ADPT-01**, **EXAM-02**, **VRFY-02**, **AUDT-01** (gap-closure slice).
 - [x] **Phase 34** (2026-04-19): README **Quick Path** ↔ **`guides/golden-path.md`** canonical **`field :status, :string`**; golden path **Integration smoke** matches **`phoenix-example-integration`** on PRs + **`main`**; contract tests — **ADPT-01**, **ADPT-02**, **ADPT-03**, **VRFY-01** (audit gap-closure slice).
+- [x] **Phase 35** (2026-04-19): **`guides/sync-modes-and-visibility.md`** **Operator lifecycle** subsection + README authority precision + **`docs_contract_test.exs`** lifecycle locks — **ADPT-02**, **ADPT-03** (`INT-SYNC-GUIDE-AUTHORITY`).
 
 ### Active
 
-- [ ] **v1.6 (phases 29–35)** — Adoption-grade integration and trust; **29–34** verified in-repo. **35** closes remaining **`v1.6-MILESTONE-AUDIT.md`** sync-guide parity gap; related **REQ** checkboxes stay **pending** until phase **35** verifies and traceability is closed. Then **re-audit** and milestone complete. Feature backlog (facets depth, multi-index scoring, per-query relevance) stays deferred unless explicitly pulled into a later milestone.
+- [ ] **v1.6 (phases 29–35)** — Adoption-grade integration and trust; **29–35** verified in-repo. Next: **milestone re-audit** (`/gsd-audit-milestone v1.6`) and **milestone complete** when satisfied. Feature backlog (facets depth, multi-index scoring, per-query relevance) stays deferred unless explicitly pulled into a later milestone.
 
 ### Out of Scope
 
@@ -93,7 +94,7 @@ The current public line on Hex is **`scrypath 0.3.3`**. Planning milestone **v1.
 
 Scrypath has **six archived planning milestones** (`v1.0`–`v1.5`). **Hex:** `scrypath` **`0.3.3`**. The v1.3-era Meilisearch-native surface (relevance, facets, multi-index, operator polish) plus v1.4’s **hot_apply** subset and **failure rollups** are on the default install line. **v1.5** adds **`Scrypath.index_contract_drift/2`**, **`mix scrypath.index.contract_drift`**, **`mix verify.phase28`**, and operator doc cross-links for **contract** vs **settings** drift. Release-parity gates (`mix verify.workspace_clean`, `mix verify.release_parity`) and `mix verify.phase11` remain the mechanical trust chain documented in **`docs/releasing.md`**.
 
-**Planning:** **v1.6** is open — **`.planning/REQUIREMENTS.md`**, **`.planning/ROADMAP.md`**, phases **29–35**. **Phases 29–34** are verified in-repo; **35** is the remaining **gap closure** from the v1.6 milestone audit. **Re-audit** then **milestone complete** closes v1.6. Deferred feature ideas remain in **`.planning/ROADMAP.md` § Backlog**.
+**Planning:** **v1.6** is open — **`.planning/REQUIREMENTS.md`**, **`.planning/ROADMAP.md`**, phases **29–35**. **Phases 29–35** are verified in-repo (including **35** sync-guide lifecycle parity). **Re-audit** then **milestone complete** closes v1.6. Deferred feature ideas remain in **`.planning/ROADMAP.md` § Backlog**.
 
 ## Evolution
 
@@ -113,4 +114,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-19 — Phase **34** complete; Hex `0.3.3` current*
+*Last updated: 2026-04-19 — Phase **35** complete (sync-guide lifecycle parity); Hex `0.3.3` current*
