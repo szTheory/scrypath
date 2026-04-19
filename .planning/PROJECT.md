@@ -8,6 +8,17 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
+## Current Milestone: v1.6 Adoption-grade integration and trust
+
+**Goal:** Make Scrypath easier to adopt and justify in production by strengthening real-Meilisearch integration proof, consumer-shaped examples, and documentation for the sync paths teams actually run.
+
+**Target features:**
+
+- Golden-path documentation from install through first successful search, with explicit inline vs Oban vs manual sync tradeoffs.
+- Deeper consumer-shaped proof (example app and/or smoke) for at least one additional realistic scenario beyond the current Phoenix smoke.
+- Maintainer verify tasks and CI documented in adopter-relevant terms so regressions are obvious before Hex.
+- Triage of v1.5-close deferred planning items in `STATE.md` (resolve, re-file, or explicitly defer with reason).
+
 ## Requirements
 
 ### Validated
@@ -27,7 +38,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ### Active
 
-- [ ] **Post–v1.5 planning** — **v1.5 archived** (2026-04-18); **`REQUIREMENTS.md`** removed until **`/gsd-new-milestone`**; next slice candidates in **`.planning/ROADMAP.md` § Backlog**.
+- [ ] **v1.6 (phases 29–32)** — Adoption-grade integration and trust; scoped in **`.planning/REQUIREMENTS.md`** and **`.planning/ROADMAP.md`**. Feature backlog (facets depth, multi-index scoring, per-query relevance) stays deferred unless explicitly pulled into a later milestone.
 
 ### Out of Scope
 
@@ -41,7 +52,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has **six** archived planning milestones (`v1.0`–`v1.5`); see `.planning/milestones/v*-ROADMAP.md` and `MILESTONES.md`.
+The repository has **six** archived planning milestones (`v1.0`–`v1.5`) plus **v1.6** in progress; see `.planning/milestones/v*-ROADMAP.md`, `.planning/ROADMAP.md`, and `MILESTONES.md`.
 
 - `v1.0` shipped the Meilisearch-first Ecto-native indexing core, search/hydration path, Oban support, reindex workflows, public Phoenix docs, and release automation baseline.
 - `v1.1` shipped release hardening, docs-safety fixes, `mix verify.phase10`, and the launch-readiness evidence chain.
@@ -49,7 +60,7 @@ The repository has **six** archived planning milestones (`v1.0`–`v1.5`); see `
 - `v1.3` shipped planning-track delivery of relevance tuning, faceted search, multi-index search, operator polish + drift recovery guide, release-parity gates, and v1.2 Nyquist validation closure (archived 2026-04-17).
 - `v1.4` shipped **Hex `scrypath 0.3.1`**, the bounded live-index `hot_apply/3` path, and operator failure rollups — archived 2026-04-17 (`milestones/v1.4-ROADMAP.md`, `milestones/v1.4-REQUIREMENTS.md`).
 
-The current public line on Hex is **`scrypath 0.3.3`**. Planning milestone **v1.5** (**drift / schema-diff operator tooling**, phases **27–28**) is complete in-repo.
+The current public line on Hex is **`scrypath 0.3.3`**. Planning milestone **v1.5** (**drift / schema-diff operator tooling**, phases **27–28**) is complete in-repo. **v1.6** focuses on adoption, integration proof, and verification clarity—not net-new search algorithms.
 
 ## Constraints
 
@@ -75,17 +86,11 @@ The current public line on Hex is **`scrypath 0.3.3`**. Planning milestone **v1.
 | Narrow `hot_apply/3` to synonym / stop-word / typo-tolerance keys only | Prevents silent widening into ranking rules and other managed-pipeline settings | ✓ Good — TUNE14-01/02 |
 | Operator rollups as additive metadata on `failed_sync_work/2` | Report-first discipline; no new recovery verbs | ✓ Good — OPS14-01 / `mix verify.phase26` |
 
-## Post–v1.5 (planning)
-
-**v1.5** shipped in-repo and is **archived** (`milestones/v1.5-{ROADMAP,REQUIREMENTS}.md`, git tag **`v1.5`**). There is **no** root **`REQUIREMENTS.md`** until the next milestone is opened.
-
-**Parking lot:** See **`.planning/ROADMAP.md` § Backlog** (faceting depth, multi-index scoring, per-query relevance once designed).
-
 ## Current State
 
 Scrypath has **six archived planning milestones** (`v1.0`–`v1.5`). **Hex:** `scrypath` **`0.3.3`**. The v1.3-era Meilisearch-native surface (relevance, facets, multi-index, operator polish) plus v1.4’s **hot_apply** subset and **failure rollups** are on the default install line. **v1.5** adds **`Scrypath.index_contract_drift/2`**, **`mix scrypath.index.contract_drift`**, **`mix verify.phase28`**, and operator doc cross-links for **contract** vs **settings** drift. Release-parity gates (`mix verify.workspace_clean`, `mix verify.release_parity`) and `mix verify.phase11` remain the mechanical trust chain documented in **`docs/releasing.md`**.
 
-**Planning:** **Post–v1.5** — roadmap in **`.planning/ROADMAP.md`**; run **`/gsd-new-milestone`** when you want a fresh **`REQUIREMENTS.md`** and the next numbered slice.
+**Planning:** **v1.6** is open — **`.planning/REQUIREMENTS.md`**, **`.planning/ROADMAP.md`**, phases **29–32**. Deferred feature ideas remain in **`.planning/ROADMAP.md` § Backlog**.
 
 ## Evolution
 
@@ -105,4 +110,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-18 after **v1.5** milestone archive (phases 27–28); Hex `0.3.3` current*
+*Last updated: 2026-04-18 — **v1.6** milestone opened (adoption / integration / trust); Hex `0.3.3` current*
