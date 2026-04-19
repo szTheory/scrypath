@@ -121,6 +121,10 @@ Accepted work is not the same thing as search visibility.
 
 The full contract—lifecycle states, Phoenix implications, recovery language, and what “success” in a controller or LiveView really means—lives in **`guides/sync-modes-and-visibility.md`**. Treat that guide as the authority; keep README as the compact decision surface.
 
+If this README and the sync guide disagree, treat **`guides/sync-modes-and-visibility.md`** as the source of truth for semantics.
+
+The monospace lifecycle line below matches the **Operator lifecycle** section in that guide.
+
 All three modes share one operator-facing lifecycle:
 
 `requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded`
