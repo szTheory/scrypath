@@ -40,7 +40,7 @@ GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
 | **`phase5-verification`** | Service: Meilisearch v1.15. `SCRYPATH_INTEGRATION=1`, `mix verify.phase5` (live integration + docs slice for backfill/reindex) |
 | **`phase13-verification`** | Service: Meilisearch. `SCRYPATH_INTEGRATION=1`, `mix verify.phase13` (operator integration path) |
 | **`meilisearch-smoke`** | Service: Meilisearch. `mix verify.meilisearch_smoke` (curated live suites: `live_meilisearch_verification`, `live_operator_verification`, `search_many_integration`, `settings_hot_apply_integration`) |
-| **`phoenix-example-integration`** | Services: Postgres 16 + Meilisearch v1.15. `SCRYPATH_EXAMPLE_INTEGRATION=1`, `PGPORT=5433`, `SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700`; runs **`cd examples/phoenix_meilisearch && mix test`** — proves the Phoenix example **inline** + **Oban** integration tests against live services (consumer-shaped E2E). Approximate locally with Compose + the same env vars (see example README) or **`./scripts/smoke.sh`**. |
+| **`phoenix-example-integration`** | Services: Postgres 16 + Meilisearch v1.15. `SCRYPATH_EXAMPLE_INTEGRATION=1`, `PGPORT=5433`, `SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700`; runs **`cd examples/phoenix_meilisearch && mix test`** — proves the Phoenix example **inline** + **Oban** integration tests against live services (consumer-shaped E2E). Approximate locally with Compose + the same env vars (see example README) or **`cd examples/phoenix_meilisearch && ./scripts/smoke.sh`**. |
 
 The root [`compose.yaml`](compose.yaml) is only for **local** Meilisearch when running smoke tasks; CI uses the workflow **`services:`** block instead.
 
