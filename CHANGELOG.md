@@ -8,6 +8,7 @@ Release Please manages versioned entries after this baseline.
 
 ### Added
 
+- Example app **`examples/phoenix_meilisearch/`** — Postgres + Meilisearch Docker Compose (explicit network), path dependency on Scrypath, and **`scripts/smoke.sh`** for an integration smoke (Ecto insert → `Scrypath.sync_record` → hydrated `Scrypath.search`). Documented from the root README; **`CONTRIBUTING.md`** CI section updated to list all workflow jobs.
 - **OPS14-01:** Operator failure rollups — `FailedWork.reason_class_counts/1`, `%ReasonClassCounts{}`, opt-in `reason_class_counts: true` on `Scrypath.failed_sync_work/2` returning `%FailedSyncWorkInspection{}`, `failed_work_counts` on `%Reconcile{}`, human rollup + per-row `reason_class=` and **`--json`** / **`--no-class-summary`** on `mix scrypath.failed`.
 - `mix verify.meilisearch_smoke` — CI/local entrypoint for curated live Meilisearch integration tests; GitHub Actions job `meilisearch-smoke`; optional `compose.yaml` for local Meilisearch.
 - **TUNE14-01 / TUNE14-02:** `Scrypath.Meilisearch.Settings.hot_apply/3` for allow-listed live settings PATCHes (`synonyms`, `stop_words`, `typo_tolerance`) with `acknowledge_live_index: true`, task wait, and telemetry `[:scrypath, :settings, :hot_apply]`; operator entrypoint `mix scrypath.settings.hot_apply`; guides updated in `guides/relevance-tuning.md` and `guides/operator-mix-tasks.md`.
@@ -24,6 +25,7 @@ Release Please manages versioned entries after this baseline.
 
 ### Notes
 
+- Adopters should read the **Versioning and upgrades** section in `README.md` for semver posture and upgrade expectations; maintainers should follow `docs/releasing.md` for verify gates and Release Please (without duplicating the full `mix verify.phase11` task list here).
 - Release-parity gates were motivated by a historical **tag vs default-branch** divergence in an earlier cycle; see `docs/releasing.md` § Historical context.
 
 ## [0.3.3](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.2...scrypath-v0.3.3) (2026-04-17)
