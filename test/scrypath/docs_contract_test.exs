@@ -46,7 +46,7 @@ defmodule Scrypath.DocsContractTest do
     assert String.contains?(@readme, "Scrypath, the Ecto-native search indexing library")
     assert ordered?(@readme, "## Installation", "## When Scrypath Fits")
     assert ordered?(@readme, "## Quick Path", "## When Scrypath Fits")
-    assert @readme =~ ~S|{:scrypath, "~> 0.3.0"}|
+    assert @readme =~ ~S|{:scrypath, "~> 0.3"}|
     refute @readme =~ ~S|{:req, "~> 0.5"}|
     refute @readme =~ ~S|{:scrypath, path: "../scrypath"}|
 
