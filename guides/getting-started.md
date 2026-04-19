@@ -2,6 +2,8 @@
 
 Scrypath gives Phoenix and Ecto teams an explicit path for declaring searchable schemas, syncing search documents, and querying through one context-owned boundary.
 
+For a **hands-on linear onboarding** checklist from dependencies through your first `Scrypath.search/3` with inline sync, follow the [Golden path](golden-path.md).
+
 ## What You Set Up
 
 Start with three pieces:
