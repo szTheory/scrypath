@@ -85,6 +85,7 @@ defmodule Scrypath.MixProject do
         "ARCHITECTURE.md",
         "guides/drift-recovery.md",
         "guides/getting-started.md",
+        "guides/golden-path.md",
         "guides/phoenix-walkthrough.md",
         "guides/phoenix-contexts.md",
         "guides/phoenix-controllers-and-json.md",
@@ -99,7 +100,7 @@ defmodule Scrypath.MixProject do
         "docs/search-backend-sre.md"
       ],
       groups_for_extras: [
-        "Getting Started": ["README.md", "guides/getting-started.md"],
+        "Getting Started": ["README.md", "guides/getting-started.md", "guides/golden-path.md"],
         Phoenix: [
           "guides/phoenix-walkthrough.md",
           "guides/phoenix-contexts.md",
