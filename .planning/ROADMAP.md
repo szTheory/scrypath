@@ -8,25 +8,28 @@
 - [x] `v1.3` shipped on 2026-04-17 — 6 phases (18–23), 18 plans — [archive](milestones/v1.3-ROADMAP.md) · [requirements](milestones/v1.3-REQUIREMENTS.md)
 - [x] **`v1.4` shipped on 2026-04-17** — 3 phases (24–26), 8 plans — [archive](milestones/v1.4-ROADMAP.md) · [requirements](milestones/v1.4-REQUIREMENTS.md)
 - [x] **`v1.5` shipped in-repo** (2026-04-18) — 2 phases (27–28), 5 plans — [archive](milestones/v1.5-ROADMAP.md) · [requirements](milestones/v1.5-REQUIREMENTS.md) — *Operator drift and schema-diff tooling*
-- [ ] **`v1.6` in progress** — **7** phases (29–35): **29–35** complete in-repo (phase **35** sync-guide lifecycle parity 2026-04-19); **milestone audit** / close next — [requirements](REQUIREMENTS.md) — *Adoption-grade integration and trust*
+- [x] **`v1.6` shipped in-repo** (2026-04-19) — 7 phases (29–35), 7 plans — [archive](milestones/v1.6-ROADMAP.md) · [requirements](milestones/v1.6-REQUIREMENTS.md) · [audit](milestones/v1.6-MILESTONE-AUDIT.md) — *Adoption-grade integration and trust*
 
 ## Next milestone
 
-**v1.6 — Adoption-grade integration and trust** — phases **29–35** · [REQUIREMENTS.md](REQUIREMENTS.md)
-
-| # | Phase | Goal | Requirements | Success criteria |
-|---|-------|------|--------------|------------------|
-| 29 | Golden path and adoption documentation | One install→search golden path; sync-mode guidance; upgrade/versioning clarity | ADPT-01, ADPT-02, ADPT-03 | 3 (see REQUIREMENTS.md) |
-| 30 | Consumer example and smoke depth | Second consumer-shaped proof; example smoke runbook | EXAM-01, EXAM-02 | 2 |
-| 31 | Verification story for adopters | Verify tasks ↔ guarantees; default CI vs integration | VRFY-01, VRFY-02 | 2 |
-| 32 | Planning and state hygiene | Triage v1.5 deferred STATE rows | AUDT-01 | 1 |
-| 33 | Example smoke paths and doc contracts | Root-facing docs and tests agree on **cwd** for `scripts/smoke.sh` and example integration smoke; extend `docs_contract_test` for implied paths where appropriate | ADPT-01, EXAM-02, VRFY-02, AUDT-01 | 2 (see REQUIREMENTS.md) |
-| 34 | Golden path, README, and CI alignment | One canonical first-schema story (README ↔ golden path); golden-path narrative matches **`phoenix-example-integration`** on PRs | ADPT-01, ADPT-02, ADPT-03, VRFY-01 | 2 (see REQUIREMENTS.md) |
-| 35 | Sync guide lifecycle parity | README “authority” claims for sync lifecycle match depth in **`guides/sync-modes-and-visibility.md`** (or README narrows the claim) | ADPT-02, ADPT-03 | 1 (see REQUIREMENTS.md) |
-
-**Gap closure (33–35):** Addresses **`v1.6-MILESTONE-AUDIT.md`** `gaps.integration` / `gaps.flows`. Optional later: Nyquist **`VALIDATION.md`** for phases **30–31** and plan **`SUMMARY`** backfill — **deferred** until after these doc fixes unless policy hard-requires the three-source matrix.
+**Post–v1.6** — No active numbered phase after **35** in this file. Open the next planning cycle with **`/gsd-new-milestone`** (fresh `REQUIREMENTS.md`, roadmap slice, and version target). Backlog product ideas remain under **§ Backlog** below.
 
 ## Phases (history)
+
+<details>
+<summary>✅ v1.6 — Phases 29–35 — SHIPPED 2026-04-19 · in-repo · Hex <code>scrypath 0.3.3</code></summary>
+
+- [x] **Phase 29: Golden path and adoption documentation** — `guides/golden-path.md`, README adoption wayfinding, sync-mode authority, versioning cross-links; ADPT-01..03.
+- [x] **Phase 30: Consumer example and smoke depth** — Oban-shaped integration proof, example smoke runbook / env / CI mapping; EXAM-01..02.
+- [x] **Phase 31: Verification story for adopters** — CONTRIBUTING verify matrix ↔ guarantees, default vs integration CI story; VRFY-01..02.
+- [x] **Phase 32: Planning and state hygiene** — v1.5 deferred `STATE.md` rows triaged; AUDT-01.
+- [x] **Phase 33: Example smoke paths and doc contracts** — Root vs example `smoke.sh` cwd, `docs_contract_test.exs`; ADPT-01, EXAM-02, VRFY-02, AUDT-01.
+- [x] **Phase 34: Golden path, README, and CI alignment** — Canonical first-schema story, `phoenix-example-integration` parity; ADPT-01..03, VRFY-01.
+- [x] **Phase 35: Sync guide lifecycle parity** — README authority ↔ `guides/sync-modes-and-visibility.md` operator lifecycle; ADPT-02..03.
+
+Full detail: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md).
+
+</details>
 
 <details>
 <summary>✅ v1.5 — Phases 27–28 — SHIPPED 2026-04-18 · in-repo · Hex <code>scrypath 0.3.3</code></summary>
@@ -65,13 +68,13 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**Active milestone:** **v1.6** — **Phases 29–35** verified in-repo (phase **35**: README ↔ **`guides/sync-modes-and-visibility.md`** operator lifecycle parity, 2026-04-19). Next: **`/gsd-audit-milestone v1.6`**, then **`/gsd-complete-milestone v1.6`** when ready. Shipped **v1.5** tables: **`milestones/v1.5-ROADMAP.md`**.
+**v1.6** archived 2026-04-19 — phases **29–35** shipped in-repo (adoption golden path, consumer proof depth, verification story, planning hygiene, doc contracts **33–35**). **Next:** **`/gsd-new-milestone`** when you are ready to define **v1.7+** scope. Summary: **`MILESTONES.md`**, **`milestones/v1.6-ROADMAP.md`**.
 
-## Backlog (post–v1.5 candidates)
+## Backlog (post–v1.6 candidates)
 
 - Hierarchical facets, first-class disjunctive facet counts, `search_within_facet/4`.
 - Multi-index federation scoring / weighting / `:all` wildcard.
 - Per-query relevance overrides once pipeline semantics are designed.
 
 ---
-*Last updated: 2026-04-19 — **v1.6** phases **29–35** complete in-repo; milestone audit / close next*
+*Last updated: 2026-04-19 — **v1.6** milestone archived; post–v1.6 planning via `/gsd-new-milestone`*

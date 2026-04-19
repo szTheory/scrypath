@@ -8,16 +8,9 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Milestone: v1.6 Adoption-grade integration and trust
+## Current milestone
 
-**Goal:** Make Scrypath easier to adopt and justify in production by strengthening real-Meilisearch integration proof, consumer-shaped examples, and documentation for the sync paths teams actually run.
-
-**Target features:**
-
-- Golden-path documentation from install through first successful search, with explicit inline vs Oban vs manual sync tradeoffs.
-- Deeper consumer-shaped proof (example app and/or smoke) for at least one additional realistic scenario beyond the current Phoenix smoke.
-- Maintainer verify tasks and CI documented in adopter-relevant terms so regressions are obvious before Hex.
-- Triage of v1.5-close deferred planning items in `STATE.md` (resolve, re-file, or explicitly defer with reason).
+**Post–v1.6 (planning)** — **`v1.6`** shipped in-repo on **2026-04-19** (phases **29–35**). Define the next version slice with **`/gsd-new-milestone`**. Product backlog (facets depth, multi-index scoring, per-query relevance) remains in **`.planning/ROADMAP.md` § Backlog** until pulled into an active milestone.
 
 ## Requirements
 
@@ -39,10 +32,14 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] **Phase 33** (2026-04-18): Root-facing **README** / **CONTRIBUTING** / **`guides/golden-path.md`** agree on **cwd** for Phoenix example **`scripts/smoke.sh`**; **`docs_contract_test.exs`** locks filesystem + ordering — **ADPT-01**, **EXAM-02**, **VRFY-02**, **AUDT-01** (gap-closure slice).
 - [x] **Phase 34** (2026-04-19): README **Quick Path** ↔ **`guides/golden-path.md`** canonical **`field :status, :string`**; golden path **Integration smoke** matches **`phoenix-example-integration`** on PRs + **`main`**; contract tests — **ADPT-01**, **ADPT-02**, **ADPT-03**, **VRFY-01** (audit gap-closure slice).
 - [x] **Phase 35** (2026-04-19): **`guides/sync-modes-and-visibility.md`** **Operator lifecycle** subsection + README authority precision + **`docs_contract_test.exs`** lifecycle locks — **ADPT-02**, **ADPT-03** (`INT-SYNC-GUIDE-AUTHORITY`).
+- [x] **Phase 30** (2026-04-18): Consumer-shaped **Oban** sync proof + example smoke depth / runbook — **EXAM-01**, **EXAM-02**.
+- [x] **Phase 31** (2026-04-18): CONTRIBUTING verify ↔ guarantee matrix + default vs integration CI documentation — **VRFY-01**, **VRFY-02**.
+- [x] **Phase 32** (2026-04-18): **`STATE.md`** deferred-row triage (**AUDT-01**) with terminal statuses.
+- [x] **v1.6 milestone** (2026-04-19): Adoption-grade integration and trust — phases **29–35** archived; **`milestones/v1.6-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**; requirements **ADPT-***, **EXAM-***, **VRFY-***, **AUDT-01** satisfied per audit.
 
 ### Active
 
-- [ ] **v1.6 (phases 29–35)** — Adoption-grade integration and trust; **29–35** verified in-repo. Next: **milestone re-audit** (`/gsd-audit-milestone v1.6`) and **milestone complete** when satisfied. Feature backlog (facets depth, multi-index scoring, per-query relevance) stays deferred unless explicitly pulled into a later milestone.
+- [ ] **Next milestone (v1.7+)** — Not opened in `REQUIREMENTS.md` until **`/gsd-new-milestone`**. Choose scope from **`.planning/ROADMAP.md` § Backlog** or new adoption/ops goals.
 
 ### Out of Scope
 
@@ -56,7 +53,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has **six** archived planning milestones (`v1.0`–`v1.5`) plus **v1.6** in progress; see `.planning/milestones/v*-ROADMAP.md`, `.planning/ROADMAP.md`, and `MILESTONES.md`.
+The repository has **seven** archived planning milestones (`v1.0`–`v1.6`); see `.planning/milestones/v*-ROADMAP.md`, `.planning/ROADMAP.md`, and **`MILESTONES.md`**.
 
 - `v1.0` shipped the Meilisearch-first Ecto-native indexing core, search/hydration path, Oban support, reindex workflows, public Phoenix docs, and release automation baseline.
 - `v1.1` shipped release hardening, docs-safety fixes, `mix verify.phase10`, and the launch-readiness evidence chain.
@@ -94,7 +91,7 @@ The current public line on Hex is **`scrypath 0.3.3`**. Planning milestone **v1.
 
 Scrypath has **six archived planning milestones** (`v1.0`–`v1.5`). **Hex:** `scrypath` **`0.3.3`**. The v1.3-era Meilisearch-native surface (relevance, facets, multi-index, operator polish) plus v1.4’s **hot_apply** subset and **failure rollups** are on the default install line. **v1.5** adds **`Scrypath.index_contract_drift/2`**, **`mix scrypath.index.contract_drift`**, **`mix verify.phase28`**, and operator doc cross-links for **contract** vs **settings** drift. Release-parity gates (`mix verify.workspace_clean`, `mix verify.release_parity`) and `mix verify.phase11` remain the mechanical trust chain documented in **`docs/releasing.md`**.
 
-**Planning:** **v1.6** is open — **`.planning/REQUIREMENTS.md`**, **`.planning/ROADMAP.md`**, phases **29–35**. **Phases 29–35** are verified in-repo (including **35** sync-guide lifecycle parity). **Re-audit** then **milestone complete** closes v1.6. Deferred feature ideas remain in **`.planning/ROADMAP.md` § Backlog**.
+**Planning:** **`v1.6`** is **archived** (2026-04-19). There is **no** root **`.planning/REQUIREMENTS.md`** until the next **`/gsd-new-milestone`**. Deferred feature ideas remain in **`.planning/ROADMAP.md` § Backlog**.
 
 ## Evolution
 
@@ -114,4 +111,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-19 — Phase **35** complete (sync-guide lifecycle parity); Hex `0.3.3` current*
+*Last updated: 2026-04-19 after **`v1.6`** milestone archive; Hex **`scrypath 0.3.3`** current*

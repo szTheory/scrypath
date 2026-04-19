@@ -1,5 +1,27 @@
 # Milestones
 
+## v1.6 Adoption-grade integration and trust (Shipped + archived: 2026-04-19)
+
+**Phases completed:** 7 phases (29–35), 7 numbered plans (`*-PLAN.md`; phases **30–31** verification-led without separate plan directories)
+
+**Hex:** **`scrypath 0.3.3`** (no new package version in this planning milestone; docs, proof, and verification clarity)
+
+**Key accomplishments:**
+
+- **`guides/golden-path.md`** and README adoption wayfinding — single install → inline sync → **`Scrypath.search/3`** story (**Phase 29**)
+- Oban-shaped consumer proof and example smoke runbook / env / CI mapping (**Phase 30**)
+- CONTRIBUTING verify ↔ guarantee matrix + default vs integration CI documentation (**Phase 31**)
+- **`STATE.md`** deferred-row triage (**AUDT-01**) (**Phase 32**)
+- Doc contracts for **`scripts/smoke.sh`** cwd, **`docs_contract_test.exs`** depth (**Phase 33**)
+- README Quick Path ↔ golden path canonical schema + **`phoenix-example-integration`** CI alignment (**Phase 34**)
+- README sync authority ↔ **`guides/sync-modes-and-visibility.md`** operator lifecycle parity (**Phase 35**)
+
+**Known deferred items at close:** **`audit-open`** reported **3** rows (Phase 18 UAT listing + two missing quick-task stubs); **acknowledged** at close — see **`STATE.md`** §**Acknowledged at v1.6 milestone close**. Milestone audit status **`tech_debt`** (Nyquist hygiene + optional **`getting-started`** vs golden-path `status` note) — see **`milestones/v1.6-MILESTONE-AUDIT.md`**.
+
+**Archives:** `milestones/v1.6-ROADMAP.md`, `milestones/v1.6-REQUIREMENTS.md`, `milestones/v1.6-MILESTONE-AUDIT.md` · **Git tag:** `v1.6` (planning milestone marker)
+
+---
+
 ## v1.5 Operator drift and schema-diff tooling (Shipped + archived: 2026-04-18)
 
 **Phases completed:** 2 phases (27–28), 5 plans
@@ -78,3 +100,4 @@
 | `v1.3` | 2026-04-17 | 6 | 18 | Archived | Search power (relevance, facets, multi-index), operator polish + drift recovery, release-parity gates, v1.2 validation closure — `v1.3-ROADMAP.md` + `v1.3-REQUIREMENTS.md`. |
 | `v1.4` | 2026-04-17 | 3 | 8 | Archived | Hex **0.3.1**; `v1.4-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`; milestone tag **`v1.4`**. |
 | `v1.5` | 2026-04-18 | 2 | 5 | Archived | Index contract drift + Mix + docs + **`mix verify.phase28`**; `v1.5-{ROADMAP,REQUIREMENTS}.md`; milestone tag **`v1.5`**. |
+| `v1.6` | 2026-04-19 | 7 | 7 | Archived | Adoption golden path, consumer proof, verify story, **`STATE`** triage, doc contracts **33–35**; `v1.6-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`; tag **`v1.6`**. |

@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.5
-milestone_name: candidates)
-status: planning
-last_updated: "2026-04-19T23:45:00.000Z"
+milestone: v1.6
+milestone_name: Adoption-grade integration and trust
+status: complete
+last_updated: "2026-04-19T12:00:00.000Z"
 last_activity: 2026-04-19
 progress:
-  total_phases: 18
-  completed_phases: 15
-  total_plans: 45
-  completed_plans: 45
-  percent: 83
+  total_phases: 7
+  completed_phases: 7
+  total_plans: 7
+  completed_plans: 7
+  percent: 100
 ---
 
 # Project State
@@ -21,15 +21,11 @@ See: `.planning/PROJECT.md` (updated 2026-04-19)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **Milestone v1.6** — phases **29–35** verified in-repo (**35**: sync guide ↔ README operator lifecycle parity). Next: **`/gsd-audit-milestone v1.6`** then **`/gsd-complete-milestone v1.6`** when ready. **Hex:** **`scrypath 0.3.3`**.
+**Current focus:** **`v1.6` archived** — run **`/gsd-new-milestone`** to open the next version slice (fresh **`REQUIREMENTS.md`** + roadmap target). **Hex:** **`scrypath 0.3.3`**.
 
 ## Current Position
 
-Phase: 035
-
-Plan: 035-01 complete
-
-Status: Verified (see `035-VERIFICATION.md`)
+**Milestone:** **v1.6** — **complete** (archived 2026-04-19).
 
 Last activity: 2026-04-19
 
@@ -39,7 +35,7 @@ Last activity: 2026-04-19
 
 (See `.planning/PROJECT.md` Key Decisions.)
 
-**v1.6 intent:** Strengthen **real-app adoption** without shipping new search-power backlog items (facets depth, multi-index scoring, per-query relevance) unless explicitly replanned.
+**v1.6 shipped:** Adoption golden path, consumer-shaped proof depth, verification story for contributors, **`STATE.md`** triage (**AUDT-01**), and doc-contract gap closure **33–35** (smoke cwd, README ↔ golden path ↔ CI, sync-guide lifecycle parity).
 
 ### Blockers / Concerns
 
@@ -55,14 +51,23 @@ Last activity: 2026-04-19
 | quick_task | `260416-eoj-automate-phase-5-verification-with-live-` — obsolete (completed); see `.planning/quick/260416-eoj-automate-phase-5-verification-with-live-/260416-eoj-SUMMARY.md` | obsolete |
 | quick_task | `260416-if2-fix-mix-exs-github-urls-add-a-github-act` — obsolete (completed); see `.planning/quick/260416-if2-fix-mix-exs-github-urls-add-a-github-act/260416-if2-SUMMARY.md` | obsolete |
 
+### Acknowledged at v1.6 milestone close (`audit-open`, 2026-04-19)
+
+Structured **`audit-open`** still counted **3** items at close; each is **superseded** by shipped verification and the table above. Recorded so milestone close does not imply unmanaged debt.
+
+| Category | Item | Status |
+|----------|------|--------|
+| uat_gap | Phase 18 — `18-UAT.md` listing in audit tool | acknowledged — UAT **passed**; file retained by policy |
+| quick_task | `260416-eoj-automate-phase-5-verification-with-live-` | acknowledged — stub **missing** on disk; **obsolete** per §Deferred Items |
+| quick_task | `260416-if2-fix-mix-exs-github-urls-add-a-github-act` | acknowledged — stub **missing** on disk; **obsolete** per §Deferred Items |
+
 ## Next Command
 
-1. **`/gsd-audit-milestone v1.6`** — milestone audit after phase **35** closure.
-2. **`/gsd-complete-milestone v1.6`** — when audit passes and you are ready to archive v1.6.
+1. **`/gsd-new-milestone`** — open the next planning cycle (requirements → roadmap) when you are ready.
 
-**Resume files:** `.planning/phases/035-sync-guide-lifecycle-parity/`, `.planning/v1.6-MILESTONE-AUDIT.md`, `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/STATE.md`
+**Resume files:** `.planning/ROADMAP.md`, `.planning/PROJECT.md`, `.planning/MILESTONES.md`, `.planning/milestones/v1.6-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`, `.planning/STATE.md`
 
 ---
-*Last updated: 2026-04-19 — Phase **35** executed and verified (`035-VERIFICATION.md`)*
+*Last updated: 2026-04-19 — **`/gsd-complete-milestone v1.6`** executed; root **`REQUIREMENTS.md`** removed until next milestone*
 
-**Completed Phase:** 035 (sync-guide-lifecycle-parity) — 1 plan — 2026-04-19
+**Completed milestone:** **v1.6** (phases **29–35**) — archived 2026-04-19
