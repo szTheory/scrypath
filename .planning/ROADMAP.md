@@ -8,11 +8,11 @@
 - [x] `v1.3` shipped on 2026-04-17 — 6 phases (18–23), 18 plans — [archive](milestones/v1.3-ROADMAP.md) · [requirements](milestones/v1.3-REQUIREMENTS.md)
 - [x] **`v1.4` shipped on 2026-04-17** — 3 phases (24–26), 8 plans — [archive](milestones/v1.4-ROADMAP.md) · [requirements](milestones/v1.4-REQUIREMENTS.md)
 - [x] **`v1.5` shipped in-repo** (2026-04-18) — 2 phases (27–28), 5 plans — [archive](milestones/v1.5-ROADMAP.md) · [requirements](milestones/v1.5-REQUIREMENTS.md) — *Operator drift and schema-diff tooling*
-- [ ] **`v1.6` in progress** — 4 phases (29–32) — [requirements](REQUIREMENTS.md) — *Adoption-grade integration and trust*
+- [ ] **`v1.6` in progress** — **7** phases (29–35): **29–32** complete in-repo; **33–35** close [milestone audit](v1.6-MILESTONE-AUDIT.md) integration and flow gaps — [requirements](REQUIREMENTS.md) — *Adoption-grade integration and trust*
 
 ## Next milestone
 
-**v1.6 — Adoption-grade integration and trust** — phases **29–32** · [REQUIREMENTS.md](REQUIREMENTS.md)
+**v1.6 — Adoption-grade integration and trust** — phases **29–35** · [REQUIREMENTS.md](REQUIREMENTS.md)
 
 | # | Phase | Goal | Requirements | Success criteria |
 |---|-------|------|--------------|------------------|
@@ -20,6 +20,11 @@
 | 30 | Consumer example and smoke depth | Second consumer-shaped proof; example smoke runbook | EXAM-01, EXAM-02 | 2 |
 | 31 | Verification story for adopters | Verify tasks ↔ guarantees; default CI vs integration | VRFY-01, VRFY-02 | 2 |
 | 32 | Planning and state hygiene | Triage v1.5 deferred STATE rows | AUDT-01 | 1 |
+| 33 | Example smoke paths and doc contracts | Root-facing docs and tests agree on **cwd** for `scripts/smoke.sh` and example integration smoke; extend `docs_contract_test` for implied paths where appropriate | ADPT-01, EXAM-02, VRFY-02, AUDT-01 | 2 (see REQUIREMENTS.md) |
+| 34 | Golden path, README, and CI alignment | One canonical first-schema story (README ↔ golden path); golden-path narrative matches **`phoenix-example-integration`** on PRs | ADPT-01, ADPT-02, ADPT-03, VRFY-01 | 2 (see REQUIREMENTS.md) |
+| 35 | Sync guide lifecycle parity | README “authority” claims for sync lifecycle match depth in **`guides/sync-modes-and-visibility.md`** (or README narrows the claim) | ADPT-02, ADPT-03 | 1 (see REQUIREMENTS.md) |
+
+**Gap closure (33–35):** Addresses **`v1.6-MILESTONE-AUDIT.md`** `gaps.integration` / `gaps.flows`. Optional later: Nyquist **`VALIDATION.md`** for phases **30–31** and plan **`SUMMARY`** backfill — **deferred** until after these doc fixes unless policy hard-requires the three-source matrix.
 
 ## Phases (history)
 
@@ -60,7 +65,7 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**Active milestone:** **v1.6** — **phases 29–32 complete** (2026-04-18) including **`032-VERIFICATION.md`**. Shipped **v1.5** tables: **`milestones/v1.5-ROADMAP.md`**. Next: **milestone audit / complete**.
+**Active milestone:** **v1.6** — **Phases 29–32** verified in-repo (2026-04-18). **Phases 33–35** (gap closure from audit) are **next**; then **`/gsd-audit-milestone v1.6`** again before milestone complete. Shipped **v1.5** tables: **`milestones/v1.5-ROADMAP.md`**.
 
 ## Backlog (post–v1.5 candidates)
 
@@ -69,4 +74,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - Per-query relevance overrides once pipeline semantics are designed.
 
 ---
-*Last updated: 2026-04-18 — **v1.6** opened; `.planning/REQUIREMENTS.md` active*
+*Last updated: 2026-04-18 — **v1.6** gap-closure phases **33–35** added from milestone audit*

@@ -541,14 +541,14 @@ defmodule Scrypath.DocsContractTest do
       "260416-if2-SUMMARY.md"
     ])
 
-    assert String.contains?(requirements_md, "[x] **AUDT-01**"),
-           "REQUIREMENTS.md must show AUDT-01 checked"
+    assert String.contains?(requirements_md, "| AUDT-01 |"),
+           "REQUIREMENTS.md must include AUDT-01 traceability row"
 
-    assert String.contains?(requirements_md, "| AUDT-01 | Phase 32 | Complete |"),
-           "REQUIREMENTS.md traceability must mark AUDT-01 complete for phase 32"
+    assert String.contains?(requirements_md, "Phase 32 delivered"),
+           "AUDT-01 must retain the phase 32 triage delivery pointer"
 
-    refute String.contains?(requirements_md, "| AUDT-01 | Phase 32 | Pending |"),
-           "REQUIREMENTS must not list AUDT-01 as pending for phase 32"
+    assert String.contains?(requirements_md, "gap closure 33"),
+           "AUDT-01 must reference gap closure work when doc-contract follow-ups are scheduled"
 
     refute String.contains?(milestones_md, "pending_triage_v1_6"),
            "MILESTONES.md must not imply uncleared pending_triage_v1_6 ledger state"
