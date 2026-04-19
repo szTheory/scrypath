@@ -8,7 +8,7 @@
 - [x] `v1.3` shipped on 2026-04-17 — 6 phases (18–23), 18 plans — [archive](milestones/v1.3-ROADMAP.md) · [requirements](milestones/v1.3-REQUIREMENTS.md)
 - [x] **`v1.4` shipped on 2026-04-17** — 3 phases (24–26), 8 plans — [archive](milestones/v1.4-ROADMAP.md) · [requirements](milestones/v1.4-REQUIREMENTS.md)
 - [x] **`v1.5` shipped in-repo** (2026-04-18) — 2 phases (27–28), 5 plans — [archive](milestones/v1.5-ROADMAP.md) · [requirements](milestones/v1.5-REQUIREMENTS.md) — *Operator drift and schema-diff tooling*
-- [ ] **`v1.6` in progress** — **7** phases (29–35): **29–33** complete in-repo (phase **33** gap closure 2026-04-18); **34–35** close [milestone audit](v1.6-MILESTONE-AUDIT.md) integration and flow gaps — [requirements](REQUIREMENTS.md) — *Adoption-grade integration and trust*
+- [ ] **`v1.6` in progress** — **7** phases (29–35): **29–34** complete in-repo (phase **34** gap closure 2026-04-19); **35** closes remaining [milestone audit](v1.6-MILESTONE-AUDIT.md) flow gap — [requirements](REQUIREMENTS.md) — *Adoption-grade integration and trust*
 
 ## Next milestone
 
@@ -65,7 +65,7 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**Active milestone:** **v1.6** — **Phases 29–33** verified in-repo (2026-04-18, including phase **33** smoke cwd + doc contracts). **Phases 34–35** (gap closure from audit) are **next**; then **`/gsd-audit-milestone v1.6`** again before milestone complete. Shipped **v1.5** tables: **`milestones/v1.5-ROADMAP.md`**.
+**Active milestone:** **v1.6** — **Phases 29–34** verified in-repo (phase **34**: README ↔ golden-path schema + **`phoenix-example-integration`** narrative, 2026-04-19). **Phase 35** (sync guide parity) is **next**; then **`/gsd-audit-milestone v1.6`** before milestone complete. Shipped **v1.5** tables: **`milestones/v1.5-ROADMAP.md`**.
 
 ## Backlog (post–v1.5 candidates)
 
@@ -74,4 +74,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - Per-query relevance overrides once pipeline semantics are designed.
 
 ---
-*Last updated: 2026-04-18 — **v1.6** phase **33** complete; **34–35** remaining gap closure*
+*Last updated: 2026-04-19 — **v1.6** phase **34** complete; **35** remaining gap closure*

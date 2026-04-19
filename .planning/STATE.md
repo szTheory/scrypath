@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Adoption-grade integration and trust
-current_phase: "34"
-current_phase_name: "Golden path, README, and CI alignment"
+current_phase: "35"
+current_phase_name: "Sync guide lifecycle parity"
 current_plan: ""
-status: ready_to_plan_or_execute
-stopped_at: "Phase 34 context gathered"
-last_updated: "2026-04-19T12:00:00Z"
+status: ready_to_plan
+stopped_at: "Phase 34 complete"
+last_updated: "2026-04-19T17:45:00Z"
 last_activity: 2026-04-19
 progress:
   total_phases: 7
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 1
   completed_plans: 1
-  percent: 71
+  percent: 86
 ---
 
 # Project State
@@ -25,17 +25,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-18)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **Milestone v1.6** — phases **29–32** verified; **gap closure 33–35** (from **`v1.6-MILESTONE-AUDIT.md`**) in flight. **Hex:** **`scrypath 0.3.3`**.
+**Current focus:** **Milestone v1.6** — phases **29–34** verified; **gap closure 35** (from **`v1.6-MILESTONE-AUDIT.md`**) next. **Hex:** **`scrypath 0.3.3`**.
 
 ## Current Position
 
-Phase: **34** — Golden path, README, and CI alignment (**context gathered** — plan or execute when ready)
+Phase: 035
 
-Plan: —
+Plan: Not started
 
-Status: **`034-CONTEXT.md`** and **`034-DISCUSSION-LOG.md`** captured (2026-04-19). Implementation still **pending** (`/gsd-plan-phase 34` then execute). **Next:** **34 → 35**, then re-audit v1.6.
+Status: Ready to plan
 
-Last activity: 2026-04-19 — **Phase 34** discuss-phase context artifacts written.
+Last activity: 2026-04-19
 
 ## Accumulated Context
 
@@ -61,10 +61,10 @@ Last activity: 2026-04-19 — **Phase 34** discuss-phase context artifacts writt
 
 ## Next Command
 
-1. **`/gsd-plan-phase 34`** or **`/gsd-execute-phase 34`** when plans exist (golden path ↔ CI narrative).
-2. **`/gsd-execute-phase 35`** after **34**, then **`/gsd-audit-milestone v1.6`** before **`/gsd-complete-milestone v1.6`**.
+1. **`/gsd-plan-phase 35`** or **`/gsd-execute-phase 35`** — sync guide lifecycle parity (README authority ↔ **`guides/sync-modes-and-visibility.md`**).
+2. **`/gsd-audit-milestone v1.6`** after **35**, then **`/gsd-complete-milestone v1.6`** when ready.
 
-**Resume files:** `.planning/phases/034-golden-path-readme-and-ci-alignment/034-CONTEXT.md`, `.planning/v1.6-MILESTONE-AUDIT.md`, `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/STATE.md`
+**Resume files:** `.planning/phases/035-sync-guide-lifecycle-parity/`, `.planning/v1.6-MILESTONE-AUDIT.md`, `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/STATE.md`
 
 ---
-*Last updated: 2026-04-19 — Phase **34** context gathered; current phase **34***
+*Last updated: 2026-04-19 — Phase **34** complete; current phase **35***
