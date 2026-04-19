@@ -13,7 +13,7 @@
 - **`mix scrypath.index.contract_drift`** with **`--json`**, parity/drift exit semantics aligned with settings diff (Phase 28)
 - Operator docs refresh (**`guides/drift-recovery.md`**, **`docs/operator-support.md`**, **`guides/operator-mix-tasks.md`**) plus auth-free **`mix verify.phase28`** / CI (Phase 28)
 
-**Known deferred items at close:** 3 `audit-open` rows acknowledged (Phase 18 UAT listing noise + 2 missing quick_task stubs) — see **`STATE.md` § Deferred Items**.
+**Known deferred items at close:** At milestone archive, three `audit-open` rows were acknowledged (Phase 18 UAT listing noise + two quick_task stubs). **Triaged phase 32 (AUDT-01); see `STATE.md` §Deferred Items.**
 
 **Archives:** `milestones/v1.5-ROADMAP.md`, `milestones/v1.5-REQUIREMENTS.md` · **Git tag:** `v1.5` (planning milestone marker)
 
@@ -32,7 +32,7 @@
 - Operator polish on `%FailedWork{}` (`reason_class`, attempts, telemetry) plus `guides/drift-recovery.md` (Phase 22)
 - v1.2 Nyquist validation closure: evidence under `milestones/v1.2/` and `v1.2-MILESTONE-AUDIT.md` → `compliant` (Phase 23)
 
-**Known deferred items at close:** 2 quick-task stubs referenced by `audit-open` no longer exist on disk — recorded in `STATE.md` §Deferred Items.
+**Known deferred items at close:** At v1.3 close, two quick-task stubs were referenced by `audit-open` (since superseded on disk). **Triaged phase 32 (AUDT-01); see `STATE.md` §Deferred Items.**
 
 **Archives:** `milestones/v1.3-ROADMAP.md`, `milestones/v1.3-REQUIREMENTS.md`
 
@@ -46,7 +46,7 @@
 
 **Key accomplishments:** Release Please + post-publish parity on both publish workflows; README / `docs/releasing.md` / contract tests aligned; **`hot_apply/3`** + `mix scrypath.settings.hot_apply` + integration smoke; **`failed_sync_work/2`** rollups + `%Reconcile{}` + **`mix verify.phase26`**.
 
-**Known deferred items at close:** 3 `audit-open` rows acknowledged (2 missing quick_task stubs + Phase 18 UAT noise) — see **`STATE.md` §Deferred Items**.
+**Known deferred items at close:** At milestone archive, three `audit-open` rows were acknowledged (two quick_task stubs + Phase 18 UAT noise). **Triaged phase 32 (AUDT-01); see `STATE.md` §Deferred Items.**
 
 **Archives:** `milestones/v1.4-ROADMAP.md`, `milestones/v1.4-REQUIREMENTS.md`, `milestones/v1.4-MILESTONE-AUDIT.md` · **Git tag:** `v1.4` (planning milestone marker; package release tag is **`scrypath-v0.3.1`**).
 
