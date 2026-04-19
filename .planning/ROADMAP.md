@@ -8,10 +8,18 @@
 - [x] `v1.3` shipped on 2026-04-17 — 6 phases (18–23), 18 plans — [archive](milestones/v1.3-ROADMAP.md) · [requirements](milestones/v1.3-REQUIREMENTS.md)
 - [x] **`v1.4` shipped on 2026-04-17** — 3 phases (24–26), 8 plans — [archive](milestones/v1.4-ROADMAP.md) · [requirements](milestones/v1.4-REQUIREMENTS.md)
 - [x] **`v1.5` shipped in-repo** (2026-04-18) — 2 phases (27–28), 5 plans — [archive](milestones/v1.5-ROADMAP.md) · [requirements](milestones/v1.5-REQUIREMENTS.md) — *Operator drift and schema-diff tooling*
+- [ ] **`v1.6` in progress** — 4 phases (29–32) — [requirements](REQUIREMENTS.md) — *Adoption-grade integration and trust*
 
 ## Next milestone
 
-**Post–v1.5** — pick the next numbered slice from **§ Backlog** (faceting depth, multi-index scoring, per-query relevance). **Phase 29** is not defined yet; run **`/gsd-new-milestone`** when you want a fresh requirements file and roadmap slice.
+**v1.6 — Adoption-grade integration and trust** — phases **29–32** · [REQUIREMENTS.md](REQUIREMENTS.md)
+
+| # | Phase | Goal | Requirements | Success criteria |
+|---|-------|------|--------------|------------------|
+| 29 | Golden path and adoption documentation | One install→search golden path; sync-mode guidance; upgrade/versioning clarity | ADPT-01, ADPT-02, ADPT-03 | 3 (see REQUIREMENTS.md) |
+| 30 | Consumer example and smoke depth | Second consumer-shaped proof; example smoke runbook | EXAM-01, EXAM-02 | 2 |
+| 31 | Verification story for adopters | Verify tasks ↔ guarantees; default CI vs integration | VRFY-01, VRFY-02 | 2 |
+| 32 | Planning and state hygiene | Triage v1.5 deferred STATE rows | AUDT-01 | 1 |
 
 ## Phases (history)
 
@@ -52,7 +60,7 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**Active milestone:** none — **v1.5 archived** (2026-04-18). Shipped phase tables for v1.5 live in **`milestones/v1.5-ROADMAP.md`**.
+**Active milestone:** **v1.6** — phases **29–32** not started; discuss or plan **phase 29** first. Shipped **v1.5** tables: **`milestones/v1.5-ROADMAP.md`**.
 
 ## Backlog (post–v1.5 candidates)
 
@@ -61,4 +69,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - Per-query relevance overrides once pipeline semantics are designed.
 
 ---
-*Last updated: 2026-04-18 — v1.5 milestone archived; `REQUIREMENTS.md` removed for next milestone*
+*Last updated: 2026-04-18 — **v1.6** opened; `.planning/REQUIREMENTS.md` active*
