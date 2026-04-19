@@ -158,6 +158,10 @@ Accepted work is not the same thing as search visibility.
 
 `sync_mode: :oban` means durable enqueue accepted, not search visibility completed.
 
+**Choosing a mode:** **`:inline`** is enough for many local workflows and small apps when you want the caller to observe terminal backend success immediately. Move to **`:oban`** when durable enqueue and worker throughput matter more than immediate search visibility in the same process. Use **`:manual`** for migrations, bulk imports, or operator-controlled batched follow-up where you want an explicit next step instead of automatic queue progression.
+
+The full contract—lifecycle states, Phoenix implications, recovery language, and what “success” in a controller or LiveView really means—lives in **`guides/sync-modes-and-visibility.md`**. Treat that guide as the authority; keep README as the compact decision surface.
+
 All three modes share one operator-facing lifecycle:
 
 `requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded`
