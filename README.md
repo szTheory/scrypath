@@ -9,7 +9,7 @@ Add Scrypath to your dependencies:
 ```elixir
 def deps do
   [
-    {:scrypath, "~> 0.3.0"}
+    {:scrypath, "~> 0.3"}
   ]
 end
 ```
@@ -167,6 +167,12 @@ All three modes share one operator-facing lifecycle:
 `requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded`
 
 In practice, retries, discarded jobs, stale deletes, and drift are normal operational realities. They are not edge cases to hide with optimistic wording.
+
+## Versioning and upgrades
+
+Scrypath follows semantic versioning for the public API: **minor** releases can add backwards-compatible capability; **major** releases signal breaking changes worth a deliberate upgrade read. Patch releases stay focused on fixes and safe doc corrections—see **`CHANGELOG.md`** at the repository root for the human-facing release narrative.
+
+Quality for the packaged artifact is guarded by **`mix verify.phase11`**, the always-on gate referenced from [docs/releasing.md](docs/releasing.md). That document—not this README—owns the full verify matrix, Release Please flow, and publish checks for maintainers.
 
 ## Search
 
