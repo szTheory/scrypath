@@ -220,7 +220,9 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert File.read!("mix.exs") =~ ~s(@version "#{version}")
 
       # (d) Recent history carries the D-22 feat(18): subject line anchor.
-      {log, 0} = System.cmd("git", ["log", "--format=%s", "-50"])
+      # Keep a generous window so active development does not push this anchor
+      # out of range (branch was >50 commits ahead in v1.6 gap-closure work).
+      {log, 0} = System.cmd("git", ["log", "--format=%s", "-120"])
 
       assert log =~ ~r/^feat\(18\): add release-parity gates \+ Node 20 CI cleanup$/m,
              "expected the D-22 closing commit subject in recent history"
