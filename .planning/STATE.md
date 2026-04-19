@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Adoption-grade integration and trust
-current_phase: ""
-current_phase_name: ""
+current_phase: "30"
+current_phase_name: "Consumer example and smoke depth"
 current_plan: ""
-status: defining_requirements
+status: planned
 stopped_at: ""
-last_updated: "2026-04-18T20:00:00Z"
+last_updated: "2026-04-18T23:59:00Z"
 last_activity: 2026-04-18
 progress:
   total_phases: 4
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  completed_phases: 1
+  total_plans: 2
+  completed_plans: 2
+  percent: 25
 ---
 
 # Project State
@@ -25,17 +25,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-18)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **Milestone v1.6** — adoption documentation, consumer integration proof, verification story for adopters, planning hygiene. **Hex:** **`scrypath 0.3.3`**.
+**Current focus:** **Milestone v1.6** — adoption documentation (**phase 29 shipped**), consumer integration proof, verification story for adopters, planning hygiene. **Hex:** **`scrypath 0.3.3`**.
 
 ## Current Position
 
-Phase: Not started (discuss or plan phase 29)
+Phase: **30** — Consumer example and smoke depth (not started)
 
-Plan: —
+Plan: **—** (discuss or plan phase 30)
 
-Status: Defining requirements complete — roadmap ready for `/gsd-discuss-phase 29` or `/gsd-plan-phase 29`
+Status: **Phase 29 complete** — golden path guide, README adoption updates, releasing/CHANGELOG alignment (`029-VERIFICATION.md`).
 
-Last activity: 2026-04-18 — Milestone **v1.6** opened (`PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`)
+Last activity: 2026-04-18 — **`/gsd-execute-phase 29`** delivered **ADPT-01..03**.
 
 ## Accumulated Context
 
@@ -61,9 +61,9 @@ Last activity: 2026-04-18 — Milestone **v1.6** opened (`PROJECT.md`, `REQUIREM
 
 ## Next Command
 
-1. **`/gsd-discuss-phase 29`** — clarify golden-path documentation scope, or **`/gsd-plan-phase 29`** to plan directly.
+1. **`/gsd-discuss-phase 30`** — shape consumer example / smoke depth, or **`/gsd-plan-phase 30`** to plan directly.
 
 **Resume files:** `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/PROJECT.md`
 
 ---
-*Last updated: 2026-04-18 — v1.6 milestone initialized*
+*Last updated: 2026-04-18 — Phase 29 execution complete*
