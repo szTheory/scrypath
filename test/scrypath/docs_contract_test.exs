@@ -524,6 +524,45 @@ defmodule Scrypath.DocsContractTest do
     end
   end
 
+  test "phase 32 AUDT-01 planning hygiene contracts (Nyquist invariants)" do
+    state_md = File.read!(".planning/STATE.md")
+    requirements_md = File.read!(".planning/REQUIREMENTS.md")
+    milestones_md = File.read!(".planning/MILESTONES.md")
+    v16_audit = File.read!(".planning/v1.6-MILESTONE-AUDIT.md")
+    project_md = File.read!(".planning/PROJECT.md")
+
+    refute String.contains?(state_md, "pending_triage_v1_6"),
+           "STATE.md must not retain pending_triage_v1_6 after AUDT-01 triage"
+
+    assert_contains_all(state_md, [
+      "18-VERIFICATION.md",
+      "v1.4-MILESTONE-AUDIT.md",
+      "260416-eoj-SUMMARY.md",
+      "260416-if2-SUMMARY.md"
+    ])
+
+    assert String.contains?(requirements_md, "[x] **AUDT-01**"),
+           "REQUIREMENTS.md must show AUDT-01 checked"
+
+    assert String.contains?(requirements_md, "| AUDT-01 | Phase 32 | Complete |"),
+           "REQUIREMENTS.md traceability must mark AUDT-01 complete for phase 32"
+
+    refute String.contains?(requirements_md, "| AUDT-01 | Phase 32 | Pending |"),
+           "REQUIREMENTS must not list AUDT-01 as pending for phase 32"
+
+    refute String.contains?(milestones_md, "pending_triage_v1_6"),
+           "MILESTONES.md must not imply uncleared pending_triage_v1_6 ledger state"
+
+    assert String.contains?(v16_audit, "requirements: 8/8"),
+           "v1.6 milestone audit must record 8/8 requirements score"
+
+    assert String.contains?(v16_audit, "gaps:\n  requirements: []"),
+           "v1.6 audit gaps.requirements must stay empty (no re-opened requirement gaps)"
+
+    assert String.contains?(project_md, "AUDT-01"),
+           "PROJECT.md must still mention AUDT-01 for maintainer routing"
+  end
+
   defp guide_fences do
     @guides
     |> Map.values()
