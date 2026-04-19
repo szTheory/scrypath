@@ -62,6 +62,36 @@ defmodule Scrypath.DocsContractTest do
     ])
   end
 
+  test "phase 29 golden path guide and adoption readme contract" do
+    golden = @guides["guides/golden-path.md"]
+
+    assert_contains_all(golden, [
+      "Scrypath.search",
+      "sync_mode: :inline",
+      "guides/sync-modes-and-visibility.md",
+      "examples/phoenix_meilisearch/README.md",
+      "SCRYPATH_MEILISEARCH_URL",
+      "docker compose up -d",
+      "Ecto without Phoenix",
+      "Getting Started](getting-started.md)"
+    ])
+
+    assert ordered?(@readme, "## Installation", "## Quick Path")
+
+    assert_contains_all(@readme, [
+      "**Start here:**",
+      "guides/golden-path.md",
+      "## Versioning and upgrades",
+      "mix verify.phase11",
+      "docs/releasing.md",
+      "**Choosing a mode:**",
+      "guides/sync-modes-and-visibility.md"
+    ])
+
+    assert ordered?(@readme, "## Sync Modes", "## Search")
+    assert ordered?(@readme, "## Versioning and upgrades", "## Search")
+  end
+
   test "ARCHITECTURE preserves the operational semantics contract" do
     assert_contains_all(@architecture, [
       "create target -> apply settings -> backfill -> optional cutover",
@@ -119,7 +149,8 @@ defmodule Scrypath.DocsContractTest do
       "Runtime orchestration still lives in your context modules",
       "Scrypath also owns its internal transport dependency",
       "optional production path",
-      "Accepted work is not the same thing as search visibility"
+      "Accepted work is not the same thing as search visibility",
+      "Golden path](golden-path.md)"
     ])
 
     assert_contains_all(@guides["guides/faceted-search-with-phoenix-liveview.md"], [
