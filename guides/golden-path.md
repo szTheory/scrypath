@@ -123,7 +123,7 @@ For controllers, JSON APIs, and LiveView that call the same context boundary, co
 
 The golden path stays **inline** on purpose. To **run** the multi-container proof (inline + **`:oban`** integration tests, same Meilisearch image pin as CI), use the runnable example—do not duplicate env tables here:
 
-- **Runbook (commands, env vars, `./scripts/smoke.sh`):** [`examples/phoenix_meilisearch/README.md`](../examples/phoenix_meilisearch/README.md)
+- **Runbook (from **`examples/phoenix_meilisearch/`** — commands, env vars, **`./scripts/smoke.sh`**):** [`examples/phoenix_meilisearch/README.md`](../examples/phoenix_meilisearch/README.md)
 - **Which CI jobs use live Meilisearch:** see root [`CONTRIBUTING.md`](../CONTRIBUTING.md) (e.g. **`meilisearch-smoke`** → `mix verify.meilisearch_smoke`; the example smoke is **local** / optional CI wiring, not a second matrix in this guide).
 
 ## Ecto without Phoenix (API-only)
