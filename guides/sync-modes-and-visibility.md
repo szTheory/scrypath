@@ -12,6 +12,22 @@ Scrypath makes sync mode explicit because search visibility is an operational co
 
 Accepted work is not the same thing as search visibility.
 
+## Operator lifecycle
+
+`requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded`
+
+| State | Operator meaning | Not implied for search visibility |
+|-------|------------------|-----------------------------------|
+| `requested` | Work is queued for sync | Nothing is durable or visible in the index yet |
+| `enqueued` | The system accepted responsibility to run the work | For `:oban`, this can stop at durable enqueue; search may still be stale |
+| `processing` | A worker or inline path is actively driving backend work | Reads may still return older index state |
+| `backend_accepted` | The backend acknowledged the write attempt | The document may still be behind on visibility or eventual indexing |
+| `completed` | Terminal success for the tracked unit of work | Stale reads or drift can still exist across deployments |
+| `retrying` | Work is being retried after a transient failure | Retries do not guarantee immediate search freshness |
+| `discarded` | The operator path gave up on this unit of work | Deletes or tombstones may still need explicit recovery |
+
+`:inline`, `:oban`, and `:manual` all move records along this same chain; they differ in **where your app usually observes progress**—before the caller returns, after durable enqueue, or only after you take the next manual step—not in the underlying lifecycle vocabulary. See the per-mode sections below for the exact return semantics and recovery posture.
+
 ## `:inline`
 
 Use `:inline` when the write path should wait for terminal backend task success before it returns.
