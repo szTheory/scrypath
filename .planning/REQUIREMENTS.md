@@ -69,7 +69,7 @@ Unchanged product backlog; not in v1.6.
 | VRFY-02 | Phase 31 delivered; **gap closure 33** | Pending |
 | AUDT-01 | Phase 32 delivered; **gap closure 33** (doc path contracts) | Pending |
 
-_Re-opened for **v1.6-MILESTONE-AUDIT.md** integration and flow gaps; close again when phases **33–35** verify._
+_Re-opened for **v1.6-MILESTONE-AUDIT.md** integration and flow gaps; **phase 33** verified in-repo 2026-04-18; close again when phases **34–35** verify._
 
 **Coverage:** v1.6 requirements: **8** — mapped: **8** — unmapped: **0** — **gap closure in flight:** 7 (EXAM-01 unchanged)
 

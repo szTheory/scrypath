@@ -36,10 +36,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] **v1.4** (2026-04-17): Hex **`scrypath 0.3.1`** with Release Please + post-publish `release_publish` / `release_parity` gates; narrow `hot_apply/3` for synonyms / stop words / typo tolerance; operator failure rollups by `reason_class` (`mix verify.phase26`).
 - [x] **v1.5** (2026-04-18): **Phases 27–28** — read-only **index contract drift** (`Scrypath.index_contract_drift/2`, `IndexContractDrift.Report`), optional **`include_index_contract_drift`** on `reconcile_sync/2`, **`mix scrypath.index.contract_drift`**, operator doc refresh, auth-free **`mix verify.phase28`** — satisfies **DRIFT15-01..02**, **OPS15-01..04** (see **`milestones/v1.5-REQUIREMENTS.md`**).
 - [x] **Phase 29** (2026-04-18): **`guides/golden-path.md`** (install → inline sync → `Scrypath.search/3`), ExDoc registration, README adoption wayfinding (sync heuristics + **`guides/sync-modes-and-visibility.md`** authority, **Versioning and upgrades**, `{:scrypath, "~> 0.3"}`), releasing + CHANGELOG cross-links — **ADPT-01, ADPT-02, ADPT-03**.
+- [x] **Phase 33** (2026-04-18): Root-facing **README** / **CONTRIBUTING** / **`guides/golden-path.md`** agree on **cwd** for Phoenix example **`scripts/smoke.sh`**; **`docs_contract_test.exs`** locks filesystem + ordering — **ADPT-01**, **EXAM-02**, **VRFY-02**, **AUDT-01** (gap-closure slice).
 
 ### Active
 
-- [ ] **v1.6 (phases 29–35)** — Adoption-grade integration and trust; **29–32** verified in-repo (**AUDT-01** triage complete in **`STATE.md`** / phase **32**). **33–35** close **`v1.6-MILESTONE-AUDIT.md`** integration and flow gaps (smoke cwd, golden path ↔ CI, sync-guide parity); related **REQ** checkboxes are **pending** again until those phases verify. Then **re-audit** and milestone complete. Feature backlog (facets depth, multi-index scoring, per-query relevance) stays deferred unless explicitly pulled into a later milestone.
+- [ ] **v1.6 (phases 29–35)** — Adoption-grade integration and trust; **29–33** verified in-repo (phase **33**: smoke cwd + **`docs_contract_test`** alignment). **34–35** close **`v1.6-MILESTONE-AUDIT.md`** integration and flow gaps (golden path ↔ CI, sync-guide parity); related **REQ** checkboxes stay **pending** until those phases verify. Then **re-audit** and milestone complete. Feature backlog (facets depth, multi-index scoring, per-query relevance) stays deferred unless explicitly pulled into a later milestone.
 
 ### Out of Scope
 
@@ -91,7 +92,7 @@ The current public line on Hex is **`scrypath 0.3.3`**. Planning milestone **v1.
 
 Scrypath has **six archived planning milestones** (`v1.0`–`v1.5`). **Hex:** `scrypath` **`0.3.3`**. The v1.3-era Meilisearch-native surface (relevance, facets, multi-index, operator polish) plus v1.4’s **hot_apply** subset and **failure rollups** are on the default install line. **v1.5** adds **`Scrypath.index_contract_drift/2`**, **`mix scrypath.index.contract_drift`**, **`mix verify.phase28`**, and operator doc cross-links for **contract** vs **settings** drift. Release-parity gates (`mix verify.workspace_clean`, `mix verify.release_parity`) and `mix verify.phase11` remain the mechanical trust chain documented in **`docs/releasing.md`**.
 
-**Planning:** **v1.6** is open — **`.planning/REQUIREMENTS.md`**, **`.planning/ROADMAP.md`**, phases **29–35**. **Phases 29–32** are verified in-repo; **33–35** are **gap closure** from the v1.6 milestone audit (docs + contract tests). **Re-audit** then **milestone complete** closes v1.6. Deferred feature ideas remain in **`.planning/ROADMAP.md` § Backlog**.
+**Planning:** **v1.6** is open — **`.planning/REQUIREMENTS.md`**, **`.planning/ROADMAP.md`**, phases **29–35**. **Phases 29–33** are verified in-repo; **34–35** are **gap closure** from the v1.6 milestone audit (docs + contract tests). **Re-audit** then **milestone complete** closes v1.6. Deferred feature ideas remain in **`.planning/ROADMAP.md` § Backlog**.
 
 ## Evolution
 
@@ -111,4 +112,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-18 — Gap-closure phases **33–35** opened; Hex `0.3.3` current*
+*Last updated: 2026-04-18 — Phase **33** complete; Hex `0.3.3` current*
