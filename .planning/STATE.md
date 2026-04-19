@@ -1,16 +1,20 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.5
-milestone_name: candidates)
-status: planning
-last_updated: "2026-04-19T15:04:37.613Z"
+milestone: v1.6
+milestone_name: Adoption-grade integration and trust
+current_phase: "35"
+current_phase_name: "Sync guide lifecycle parity"
+current_plan: ""
+status: ready_to_plan
+stopped_at: "Phase 35 discuss context gathered"
+last_updated: "2026-04-19T20:00:00Z"
 last_activity: 2026-04-19
 progress:
-  total_phases: 18
-  completed_phases: 14
-  total_plans: 43
-  completed_plans: 44
-  percent: 100
+  total_phases: 7
+  completed_phases: 6
+  total_plans: 1
+  completed_plans: 1
+  percent: 86
 ---
 
 # Project State
@@ -63,4 +67,4 @@ Last activity: 2026-04-19
 **Resume files:** `.planning/phases/035-sync-guide-lifecycle-parity/`, `.planning/v1.6-MILESTONE-AUDIT.md`, `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/STATE.md`
 
 ---
-*Last updated: 2026-04-19 — Phase **34** complete; current phase **35***
+*Last updated: 2026-04-19 — Phase **35** context captured (`035-CONTEXT.md`); ready for `/gsd-plan-phase 035`*
