@@ -10,11 +10,11 @@ Additive, documentation- and proof-first unless a phase plan explicitly calls fo
 
 ### Adoption and golden path (prefix: ADPT)
 
-- [ ] **ADPT-01**: A new reader can follow a **single documented golden path** from dependency install through a **working** `Scrypath.search/3` (or equivalent documented entry) using **inline** sync, without hunting across disconnected fragments.
+- [x] **ADPT-01**: A new reader can follow a **single documented golden path** from dependency install through a **working** `Scrypath.search/3` (or equivalent documented entry) using **inline** sync, without hunting across disconnected fragments.
 
-- [ ] **ADPT-02**: Maintainer-facing documentation **compares inline, Oban-backed, and manual sync** clearly enough that a team can choose a mode for local vs production and find the right operator or code hooks for each.
+- [x] **ADPT-02**: Maintainer-facing documentation **compares inline, Oban-backed, and manual sync** clearly enough that a team can choose a mode for local vs production and find the right operator or code hooks for each.
 
-- [ ] **ADPT-03**: **Upgrade and versioning** expectations for adopters are stated consistently (README and/or `CHANGELOG.md` / releasing docs): semver posture, what verify tasks gate, and where breaking vs additive changes are announced.
+- [x] **ADPT-03**: **Upgrade and versioning** expectations for adopters are stated consistently (README and/or `CHANGELOG.md` / releasing docs): semver posture, what verify tasks gate, and where breaking vs additive changes are announced.
 
 ### Consumer example and smoke (prefix: EXAM)
 
@@ -60,9 +60,9 @@ Unchanged product backlog; not in v1.6.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ADPT-01 | Phase 29 | Pending |
-| ADPT-02 | Phase 29 | Pending |
-| ADPT-03 | Phase 29 | Pending |
+| ADPT-01 | Phase 29 | Complete |
+| ADPT-02 | Phase 29 | Complete |
+| ADPT-03 | Phase 29 | Complete |
 | EXAM-01 | Phase 30 | Pending |
 | EXAM-02 | Phase 30 | Pending |
 | VRFY-01 | Phase 31 | Pending |

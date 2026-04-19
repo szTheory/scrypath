@@ -19,6 +19,7 @@ defmodule Scrypath.DocsContractTest do
   @guide_paths [
     "guides/drift-recovery.md",
     "guides/getting-started.md",
+    "guides/golden-path.md",
     "guides/phoenix-walkthrough.md",
     "guides/phoenix-contexts.md",
     "guides/phoenix-controllers-and-json.md",
