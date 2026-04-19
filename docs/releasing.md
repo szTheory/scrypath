@@ -1,5 +1,7 @@
 # Releasing Scrypath
 
+**For library adopters:** the [README](../README.md) summarizes versioning expectations and points at release notes. **This document** is the maintainer source of truth for Release Please, **`mix verify.phase11`**, publish checks, and parity workflows—read it before changing release automation.
+
 Release Please owns the version bump, changelog PR, and Git tag for Scrypath. The only publish path is the existing GitHub Actions workflow: Release Please creates `vX.Y.Z`, Actions checks out that tag, and `mix hex.publish --yes` runs from that tagged ref.
 
 ## Automated Release Gate
