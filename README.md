@@ -14,6 +14,8 @@ def deps do
 end
 ```
 
+**Start here:** for the canonical first-hour path from dependencies through a working `Scrypath.search/3` with inline sync, follow [guides/golden-path.md](guides/golden-path.md).
+
 Scrypath v1 publicly targets Meilisearch first. The backend seam is internal, and v1 does not promise public multi-backend parity.
 Scrypath owns its internal transport dependency. Configure backend and sync behavior in your app code instead of pinning `Req` directly in the base install path.
 If you want queued sync, add Oban as an optional production integration when you choose `sync_mode: :oban`.
@@ -244,6 +246,10 @@ docker compose down
 ```
 
 `mix verify.meilisearch_smoke --skip-integration` exits without contacting Meilisearch (useful for quick task wiring checks only; it does not run the live suites).
+
+## Example: Phoenix + Postgres + Meilisearch
+
+For a minimal consumer-shaped setup (Docker Compose with Postgres and Meilisearch on an explicit network, path dependency on this repo, and a scripted smoke test), see [examples/phoenix_meilisearch/README.md](examples/phoenix_meilisearch/README.md).
 
 ## Architecture
 
