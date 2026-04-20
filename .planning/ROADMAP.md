@@ -11,10 +11,18 @@
 - [x] **`v1.6` shipped in-repo** (2026-04-19) — 7 phases (29–35), 7 plans — [archive](milestones/v1.6-ROADMAP.md) · [requirements](milestones/v1.6-REQUIREMENTS.md) · [audit](milestones/v1.6-MILESTONE-AUDIT.md) — *Adoption-grade integration and trust*
 - [x] **`v1.7` shipped in-repo** (2026-04-20) — 3 phases (36–38), 7 plans — [archive](milestones/v1.7-ROADMAP.md) · [requirements](milestones/v1.7-REQUIREMENTS.md) · [audit](milestones/v1.7-MILESTONE-AUDIT.md) — *Facet depth and catalog search UX*
 - [x] **`v1.8` shipped in-repo** (2026-04-20) — *Multi-index federation* — phases **39–41**, **6** plans — [archive](milestones/v1.8-ROADMAP.md) · [requirements](milestones/v1.8-REQUIREMENTS.md) · [audit](milestones/v1.8-MILESTONE-AUDIT.md)
+- [ ] **`v1.9` active** (2026-04-20) — *Per-query relevance & tuning pipeline* — phases **42–43** — [requirements](REQUIREMENTS.md)
 
 ## Next milestone
 
-No active milestone is opened in `.planning/` after **v1.8** (requirements file removed until **`/gsd-new-milestone`**). Natural follow-ups: **`OPSUI-01`** (operator LiveView) and **`TUNE-PIPE-01`** / **`TUNE-01`** (see backlog). Promote work via **`/gsd-new-milestone`** when you want a versioned planning line again.
+**v1.9 — Per-query relevance & tuning pipeline** is **open** (**phases 42–43**). See **`.planning/REQUIREMENTS.md`** for **`TUNE-PIPE-*`** and **`TUNE-PQ-*`** (the latter implements the v1.7 backlog label **`TUNE-01`**). **`OPSUI-01`** remains in **Backlog** below.
+
+## Phases (v1.9 — active)
+
+| # | Phase | Goal | Requirements | Success criteria (summary) |
+|---|-------|------|----------------|----------------------------|
+| **42** | **Per-query tuning pipeline spec** | Publish the authoritative **`TUNE-PIPE-*`** specification: precedence vs defaults, Meilisearch mapping, non-goals, errors/telemetry expectations, and an implementation gate checklist. | **TUNE-PIPE-01** … **TUNE-PIPE-04** | (1) Spec lives at an agreed in-repo path and is discoverable from README or guides. (2) Spec is internally consistent with shipped phase-19 settings work and current **`search` / `search_many`** surfaces. (3) Checklist explicitly authorizes **`TUNE-PQ-*`** work. |
+| **43** | **Per-query relevance runtime** | Ship **`TUNE-PQ-*`** per locked spec (**implements v1.7 backlog `TUNE-01`**). | **TUNE-PQ-01** … **TUNE-PQ-03** | (1) Public API and options match the spec; failures are explicit `{:error, _}` (or documented equivalents). (2) Tests + agreed **`mix verify.phaseNN`** slice are green in CI. (3) Docs and contract tests prevent silent drift. |
 
 ## Phases (history)
 
@@ -92,12 +100,11 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**Post–v1.8 (2026-04-20):** No active numbered phase until **`/gsd-new-milestone`** opens the next version line. **`FED-01`..`FED-03`** are archived under **`milestones/v1.8-REQUIREMENTS.md`**.
+**v1.9 (2026-04-20):** Milestone opened — **`TUNE-PIPE-01`..`TUNE-PIPE-04`** in **Phase 42**; **`TUNE-PQ-01`..`TUNE-PQ-03`** in **Phase 43**. Prior **`FED-01`..`FED-03`** work is archived under **`milestones/v1.8-REQUIREMENTS.md`**.
 
-## Backlog (beyond v1.8)
+## Backlog (beyond v1.9)
 
-- Per-query relevance overrides — **blocked** on design milestone **`TUNE-PIPE-01`** before **`TUNE-01`** implementation.
 - **OPSUI-01 — Operator dashboard (LiveView)** — optional product surface (example app or separate package) over existing `Scrypath.*` visibility, telemetry, and **federation-shaped** `search_many/2` results; **follow v1.8** so the UI can represent cross-index ordering and expansion honestly. See also [`docs/search-backend-sre.md`](../docs/search-backend-sre.md).
 
 ---
-*Last updated: 2026-04-20 — **v1.8** archived; next planning entry via **`/gsd-new-milestone`***
+*Last updated: 2026-04-20 — **v1.9** opened (phases **42–43**); **`TUNE-PIPE-*` / `TUNE-PQ-*`** in **`.planning/REQUIREMENTS.md`***
