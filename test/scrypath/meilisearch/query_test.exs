@@ -11,7 +11,8 @@ defmodule Scrypath.Meilisearch.QueryTest do
       sort: [],
       page: %{},
       facets: [],
-      facet_filter: []
+      facet_filter: [],
+      per_query: %{}
     }
 
     payload = MeilisearchQuery.to_payload(q)
@@ -27,7 +28,8 @@ defmodule Scrypath.Meilisearch.QueryTest do
       sort: [],
       page: %{},
       facets: [:genre],
-      facet_filter: [genre: "Action"]
+      facet_filter: [genre: "Action"],
+      per_query: %{}
     }
 
     payload = MeilisearchQuery.to_payload(q)
@@ -44,7 +46,8 @@ defmodule Scrypath.Meilisearch.QueryTest do
       sort: [],
       page: %{},
       facets: [:genre],
-      facet_filter: [genre: "Action"]
+      facet_filter: [genre: "Action"],
+      per_query: %{}
     }
 
     payload = MeilisearchQuery.to_payload(q)
@@ -59,7 +62,8 @@ defmodule Scrypath.Meilisearch.QueryTest do
       sort: [],
       page: %{},
       facets: [:genre, :year],
-      facet_filter: [genre: "Action", year: 1999]
+      facet_filter: [genre: "Action", year: 1999],
+      per_query: %{}
     }
 
     payload = MeilisearchQuery.to_payload(q)
@@ -75,7 +79,8 @@ defmodule Scrypath.Meilisearch.QueryTest do
       sort: [],
       page: %{},
       facets: [:genre, :rating],
-      facet_filter: [genre: ["Action", "Drama"], rating: 4]
+      facet_filter: [genre: ["Action", "Drama"], rating: 4],
+      per_query: %{}
     }
 
     payload = MeilisearchQuery.to_payload(q)
@@ -89,7 +94,8 @@ defmodule Scrypath.Meilisearch.QueryTest do
       sort: [],
       page: %{},
       facets: [:year],
-      facet_filter: [year: [gte: 2000, lte: 2010]]
+      facet_filter: [year: [gte: 2000, lte: 2010]],
+      per_query: %{}
     }
 
     payload = MeilisearchQuery.to_payload(q)

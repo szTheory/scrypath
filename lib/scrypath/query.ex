@@ -5,7 +5,7 @@ defmodule Scrypath.Query do
   """
 
   @enforce_keys [:text]
-  defstruct text: nil, filter: [], sort: [], page: %{}, facets: [], facet_filter: []
+  defstruct text: nil, filter: [], sort: [], page: %{}, facets: [], facet_filter: [], per_query: %{}
 
   @typedoc "Normalized pagination options."
   @type page_t :: %{optional(:number) => pos_integer(), optional(:size) => pos_integer()}
@@ -17,7 +17,8 @@ defmodule Scrypath.Query do
           sort: keyword(),
           page: page_t(),
           facets: [atom()],
-          facet_filter: keyword()
+          facet_filter: keyword(),
+          per_query: map()
         }
 
   @spec new(String.t(), keyword()) :: t()
@@ -28,7 +29,8 @@ defmodule Scrypath.Query do
       sort: Keyword.get(opts, :sort, []),
       page: normalize_page(Keyword.get(opts, :page, %{})),
       facets: Keyword.get(opts, :facets, []),
-      facet_filter: Keyword.get(opts, :facet_filter, [])
+      facet_filter: Keyword.get(opts, :facet_filter, []),
+      per_query: Keyword.get(opts, :per_query, %{})
     }
   end
 

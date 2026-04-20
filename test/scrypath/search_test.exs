@@ -71,7 +71,8 @@ defmodule Scrypath.SearchTest do
                 sort: [],
                 page: %{},
                 facets: [],
-                facet_filter: []
+                facet_filter: [],
+                per_query: %{}
               },
               facets: %Scrypath.SearchResult.Facets{}
             }} =
@@ -79,7 +80,10 @@ defmodule Scrypath.SearchTest do
   end
 
   test "Scrypath.search!/3 returns successful results and raises on backend errors" do
-    assert %SearchResult{hits: [], query: %Query{text: "ecto", facets: [], facet_filter: []}} =
+    assert %SearchResult{
+             hits: [],
+             query: %Query{text: "ecto", facets: [], facet_filter: [], per_query: %{}}
+           } =
              Scrypath.search!(SearchablePost, "ecto", backend: Scrypath.TestSupport.FakeBackend)
 
     assert_raise RuntimeError, "search failed: :search_failed", fn ->
@@ -96,7 +100,8 @@ defmodule Scrypath.SearchTest do
                 sort: [desc: :inserted_at],
                 page: %{number: 2, size: 20},
                 facets: [],
-                facet_filter: []
+                facet_filter: [],
+                per_query: %{}
               }
             }} =
              Scrypath.search(SearchablePost, "phoenix",
@@ -118,7 +123,14 @@ defmodule Scrypath.SearchTest do
 
   test "structured sort accepts only declared sortable fields and preserves ecto-style input" do
     assert {:ok,
-            %SearchResult{query: %Query{sort: [desc: :inserted_at], facets: [], facet_filter: []}}} =
+            %SearchResult{
+              query: %Query{
+                sort: [desc: :inserted_at],
+                facets: [],
+                facet_filter: [],
+                per_query: %{}
+              }
+            }} =
              Scrypath.search(SearchablePost, "ecto",
                backend: Scrypath.TestSupport.FakeBackend,
                sort: [desc: :inserted_at]
@@ -169,7 +181,7 @@ defmodule Scrypath.SearchTest do
     assert {:ok,
             %SearchResult{
               hits: [%{"id" => 2}, %{"id" => 1}, %{"id" => 3}],
-              raw: %{"query" => %Query{text: "ecto"}},
+              raw: %{"query" => %Query{text: "ecto", per_query: %{}}},
               page: %{number: 2, size: 3, total_hits: 3}
             }} =
              Scrypath.search(QueryablePost, "ecto", backend: HydrationBackend)

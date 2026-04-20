@@ -189,6 +189,12 @@ defmodule Scrypath.Options do
       type: {:custom, __MODULE__, :validate_search_page, []},
       default: [],
       doc: "Nested common-path pagination options."
+    ],
+    per_query: [
+      type: {:custom, __MODULE__, :validate_per_query_map, []},
+      default: %{},
+      doc:
+        "Allowlisted Plane B per-request Meilisearch ranking-score knobs (see guides/per-query-tuning-pipeline.md)."
     ]
   ]
 
@@ -814,6 +820,71 @@ defmodule Scrypath.Options do
   end
 
   def validate_search_sort(_value), do: {:error, "expected sort to be a keyword list"}
+
+  @per_query_allowlist ~w(
+    ranking_score_threshold
+    show_ranking_score
+    show_ranking_score_details
+  )a
+
+  @doc false
+  def validate_per_query_map(nil), do: {:ok, %{}}
+
+  def validate_per_query_map(value) when value == %{} or value == [] do
+    {:ok, %{}}
+  end
+
+  def validate_per_query_map(value) when is_list(value) do
+    if Keyword.keyword?(value) do
+      value |> Map.new() |> validate_per_query_map()
+    else
+      {:error, "expected per_query to be a keyword list, map, [], or %{}"}
+    end
+  end
+
+  def validate_per_query_map(value) when is_map(value) do
+    validate_per_query_entries(value)
+  end
+
+  def validate_per_query_map(_value),
+    do: {:error, "expected per_query to be a keyword list, map, [], or %{}"}
+
+  defp validate_per_query_entries(map) do
+    Enum.reduce_while(map, {:ok, %{}}, fn {key, val}, {:ok, acc} ->
+      cond do
+        not is_atom(key) ->
+          {:halt, {:error, "per_query keys must be atoms"}}
+
+        key not in @per_query_allowlist ->
+          {:halt, {:error, "unknown per_query key #{inspect(key)}"}}
+
+        true ->
+          case validate_per_query_value(key, val) do
+            {:ok, normalized} -> {:cont, {:ok, Map.put(acc, key, normalized)}}
+            {:error, _} = err -> {:halt, err}
+          end
+      end
+    end)
+  end
+
+  defp validate_per_query_value(:ranking_score_threshold, val)
+       when is_number(val) and val >= 0 do
+    {:ok, val}
+  end
+
+  defp validate_per_query_value(:ranking_score_threshold, val),
+    do: {:error, "per_query :ranking_score_threshold must be a non-negative number, got: #{inspect(val)}"}
+
+  defp validate_per_query_value(:show_ranking_score, val) when val in [true, false], do: {:ok, val}
+
+  defp validate_per_query_value(:show_ranking_score, val),
+    do: {:error, "per_query :show_ranking_score must be a boolean, got: #{inspect(val)}"}
+
+  defp validate_per_query_value(:show_ranking_score_details, val) when val in [true, false],
+    do: {:ok, val}
+
+  defp validate_per_query_value(:show_ranking_score_details, val),
+    do: {:error, "per_query :show_ranking_score_details must be a boolean, got: #{inspect(val)}"}
 
   def validate_search_page(value) when is_list(value) do
     if Keyword.keyword?(value) do

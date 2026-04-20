@@ -374,7 +374,15 @@ defmodule Scrypath.Search do
   defp maybe_emit_search_many_partial(_), do: :ok
 
   defp runtime_opts(opts) do
-    Keyword.drop(opts, [:filter, :sort, :page, :facets, :facet_filter, :global_schemas])
+    Keyword.drop(opts, [
+      :filter,
+      :sort,
+      :page,
+      :facets,
+      :facet_filter,
+      :global_schemas,
+      :per_query
+    ])
   end
 
   defp decorate_result(schema_module, query, raw_result, config) when is_map(raw_result) do
