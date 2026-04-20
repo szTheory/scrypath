@@ -39,6 +39,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
+| AUDT-01 | Phase 32 (gap closure 33 follow-ups) | Complete — planning hygiene & doc-contract Nyquist invariants |
 | TUNE-PIPE-01 | Phase 42 | Pending |
 | TUNE-PIPE-02 | Phase 42 | Pending |
 | TUNE-PIPE-03 | Phase 42 | Pending |
