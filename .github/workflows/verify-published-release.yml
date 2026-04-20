@@ -22,6 +22,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          # `mix verify.release_parity` resolves the Hex tarball against git tag
+          # `scrypath-v*`, which requires tags to exist in the checkout clone.
+          fetch-depth: 0
 
       - name: Resolve latest published Scrypath version
         id: resolve-version
