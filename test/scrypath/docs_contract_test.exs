@@ -20,6 +20,7 @@ defmodule Scrypath.DocsContractTest do
   @verify_phase37 File.read!("lib/mix/tasks/verify.phase37.ex")
   @verify_phase38 File.read!("lib/mix/tasks/verify.phase38.ex")
   @verify_phase41 File.read!("lib/mix/tasks/verify.phase41.ex")
+  @verify_phase43 File.read!("lib/mix/tasks/verify.phase43.ex")
   @verify_release_publish File.read!("lib/mix/tasks/verify.release_publish.ex")
   @guide_paths [
     "guides/drift-recovery.md",
@@ -397,6 +398,7 @@ defmodule Scrypath.DocsContractTest do
       "mix verify.phase26",
       "mix verify.phase28",
       "mix verify.phase41",
+      "mix verify.phase43",
       "Operator integration verification (`mix verify.phase13`)",
       "mix verify.phase13"
     ])
@@ -553,6 +555,18 @@ defmodule Scrypath.DocsContractTest do
     ])
 
     refute @verify_phase41 =~ "HEX_API_KEY"
+  end
+
+  test "verify.phase43 pins per-query verify task and focused paths" do
+    assert_contains_all(@verify_phase43, [
+      "Mix.Tasks.Verify.Phase43",
+      "docs_contract_test.exs",
+      "per_query_tuning_test.exs",
+      "search_test.exs",
+      "search_many_test.exs"
+    ])
+
+    refute @verify_phase43 =~ "HEX_API_KEY"
   end
 
   test "phase_41 federation anchors stay wired in multi-index guide and search_many docs" do
