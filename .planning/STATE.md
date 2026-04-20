@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.10
 milestone_name: Operator admin UI (OPSUI)
-status: defining_requirements
-last_updated: "2026-04-20T20:00:00.000Z"
+status: milestone_ready
+last_updated: "2026-04-20T21:10:00.000Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 4
