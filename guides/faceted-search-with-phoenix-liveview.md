@@ -44,6 +44,20 @@ end
 
 If you request a facet not listed in `faceting.attributes`, `Scrypath.search/3` returns `{:error, {:unknown_facet, attr}}`. The user-facing dev copy for that situation is: **That attribute is not declared on this schema's `faceting:` list.**
 
+## Hierarchical facets
+
+Meilisearch represents hierarchical menus as **multiple filterable facet attributes** rather than a nested JSON tree under one key. A common pattern uses **dotted paths** such as `"categories.lvl0"` and `"categories.lvl1"` that align with **flat** `facetDistribution` maps per attribute in search responses.
+
+**Opt-in:** set `nested_facet_paths: true` under `faceting:` before declaring dotted atoms such as `:"categories.lvl0"` in `faceting.attributes`. Schemas that omit this flag keep the same flat-only behavior as earlier releases.
+
+**Sugar:** optional `hierarchy: [base: :categories, depth: 2]` expands into `:"categories.lvl0"` and `:"categories.lvl1"` style names so you list the base field once; expanded names still must appear in `filterable:`.
+
+**Counts and filters:** drilling down typically applies filters **AND between facet attributes** (conjunctive across the per-level fields) while values within one attribute stay **disjunctive** when you pass a list to `facet_filter:` for that field.
+
+**Wire shape:** `facetDistribution` returns one map per declared attribute string key, not a nested hierarchy object. Keys in `result.facets.distribution` use the **same atoms** you pass to `facets:` and declare under `faceting.attributes`.
+
+**Wildcards remain mistakes:** declaring `:*` or dotted names outside the supported single-dot **`lvlN`** suffix pattern still fails fast at compile time.
+
 ## Primary path: `handle_params` + URL sync
 
 **Recommended:** normalize query + facet params in `handle_params/3`, then call your context with a keyword list that mirrors what you will pass to `Scrypath.search/3`.
@@ -123,10 +137,10 @@ Single index; bands are **API**, **Meilisearch**, then **UI**. Each entry lists 
 #### API — Wildcard facet attributes
 
 **Layer:** API  
-**The mistake:** Declaring `:*` or hierarchical dotted atoms in `faceting.attributes`.  
+**The mistake:** Declaring `:*` in `faceting.attributes`, or dotted atoms without `nested_facet_paths: true`, or dotted shapes that do not follow the single-dot **`lvlN`** suffix pattern.  
 **User-visible consequence:** Compile error or confusing `ArgumentError` instead of a searchable index.  
-**Why:** Wildcards and hierarchical dotted names are rejected at the schema layer so facet-related atoms and Meilisearch settings stay predictable.  
-**Do instead:** List explicit atoms that are already `filterable:`.  
+**Why:** Wildcards stay unsupported. Dotted Meilisearch-style hierarchical paths require the explicit opt-in and the documented `lvlN` suffix shape so facet atoms and index settings stay predictable.  
+**Do instead:** List explicit flat atoms, or follow **Hierarchical facets** above with `nested_facet_paths: true` and supported `lvlN` paths that are also `filterable:`.  
 **See also:** Schema section above.
 
 #### API — Facet filter as raw string

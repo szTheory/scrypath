@@ -235,4 +235,17 @@ defmodule Scrypath.SearchTest do
     assert facets.stats[:genre][:min] == 1
     assert facets.stats[:genre][:max] == 10
   end
+
+  test "facetDistribution decodes hierarchical dotted facet attribute keys" do
+    assert {:ok, %SearchResult{facets: facets}} =
+             Scrypath.search(FacetableHierarchy, "x",
+               backend: Scrypath.TestSupport.FakeBackend,
+               facets: [:"categories.lvl0", :"categories.lvl1"]
+             )
+
+    assert facets.declared_order == [:"categories.lvl0", :"categories.lvl1"]
+    assert [%Scrypath.SearchResult.Facets.Bucket{} | _] = facets.distribution[:"categories.lvl0"]
+    assert [%Scrypath.SearchResult.Facets.Bucket{} | _] = facets.distribution[:"categories.lvl1"]
+    assert facets.stats[:"categories.lvl0"][:min] == 1
+  end
 end

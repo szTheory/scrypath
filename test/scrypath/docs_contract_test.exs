@@ -16,6 +16,7 @@ defmodule Scrypath.DocsContractTest do
   @verify_phase20 File.read!("lib/mix/tasks/verify.phase20.ex")
   @verify_phase26 File.read!("lib/mix/tasks/verify.phase26.ex")
   @verify_phase28 File.read!("lib/mix/tasks/verify.phase28.ex")
+  @verify_phase36 File.read!("lib/mix/tasks/verify.phase36.ex")
   @verify_release_publish File.read!("lib/mix/tasks/verify.release_publish.ex")
   @guide_paths [
     "guides/drift-recovery.md",
@@ -468,6 +469,31 @@ defmodule Scrypath.DocsContractTest do
     ])
 
     refute @verify_phase28 =~ "HEX_API_KEY"
+  end
+
+  test "verify.phase36 lists hierarchical facet verification paths without Hex secrets" do
+    assert_contains_all(@verify_phase36, [
+      "test/scrypath/options_test.exs",
+      "test/scrypath/search_test.exs",
+      "test/scrypath/meilisearch/settings_test.exs",
+      "test/scrypath/operator/index_contract_drift_test.exs",
+      "test/scrypath/docs_contract_test.exs"
+    ])
+
+    refute @verify_phase36 =~ "HEX_API_KEY"
+  end
+
+  test "faceted LiveView guide documents hierarchical facets with stable headings" do
+    guide = @guides["guides/faceted-search-with-phoenix-liveview.md"]
+
+    assert_contains_all(guide, [
+      "## Hierarchical facets",
+      "nested_facet_paths: true",
+      "hierarchy: [base:",
+      "facetDistribution",
+      "AND between facet attributes",
+      "same atoms"
+    ])
   end
 
   test "release workflow verifies the live published version after hex publish" do
