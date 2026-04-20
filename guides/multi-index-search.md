@@ -2,6 +2,8 @@
 
 This guide shows how to call `Scrypath.search_many/2` from a Phoenix LiveView dashboard that searches several schemas at once, handles **per-schema** filters and facets, and surfaces **partial failures** without pretending hits are merged.
 
+How **per-entry** tuple keywords merge with **shared** options (and how future **per-query tuning** keys will participate in the same right-biased story) is specified in the [Per-query tuning pipeline](per-query-tuning-pipeline.md) — read that for the Plane B precedence stack; this file remains the canonical place for expansion, federation payloads, partial failures, and merge ordering details below.
+
 ## When to use `search_many/2`
 
 Use `search_many/2` when you explicitly list schemas (for example posts, users, tags, and events) and want one federated Meilisearch round-trip. Do **not** expect a single relevance ordering across schemas: scores stay per index. If you reuse the same `text` for every tuple, that is fine for a unified search bar, but treat ranking as **per-schema**, not comparable across rows.
