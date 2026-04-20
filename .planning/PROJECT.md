@@ -112,4 +112,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-19 — **`v1.7`** facet-depth milestone opened (`REQUIREMENTS.md`, ROADMAP phases **36–38**); Hex **`scrypath 0.3.3`** current*
+*Last updated: 2026-04-20 — Phase **36** complete (**FACET-01**); Hex **`scrypath 0.3.3`** current*
