@@ -36,6 +36,32 @@ defmodule Scrypath.SearchManyTest do
     end
   end
 
+  # Sequential path only; captures `%Scrypath.Query{}` for per_query merge assertions (D-11).
+  defmodule PerQuerySeqBackend do
+    @moduledoc false
+    @behaviour Scrypath.Backend
+
+    @impl true
+    def name, do: :per_query_seq
+
+    @impl true
+    def index_name(schema_module, config) do
+      Scrypath.TestSupport.FakeBackend.index_name(schema_module, config)
+    end
+
+    @impl true
+    def upsert_documents(_, _, _), do: {:ok, []}
+
+    @impl true
+    def delete_documents(_, _, _), do: {:ok, []}
+
+    @impl true
+    def search(_schema, query, _config) do
+      send(self(), {:per_query_search, query})
+      {:ok, %{"hits" => [%{"id" => 1, "title" => query.text}], "page" => 1, "hitsPerPage" => 20}}
+    end
+  end
+
   defmodule PartialFailBackend do
     @moduledoc false
     @behaviour Scrypath.Backend
@@ -167,6 +193,52 @@ defmodule Scrypath.SearchManyTest do
              )
 
     assert length(ordered) == 2
+  end
+
+  test "search_many per_query: shared-only merge (sequential path)" do
+    opts = Keyword.merge(@base_opts, backend: PerQuerySeqBackend, per_query: [show_ranking_score: true])
+
+    assert {:ok, _} = Scrypath.search_many([{SearchablePost, "x"}], opts)
+
+    assert_receive {:per_query_search, %Scrypath.Query{per_query: %{show_ranking_score: true}}}
+  end
+
+  test "search_many per_query: entry-only merge (sequential path)" do
+    opts = Keyword.put(@base_opts, :backend, PerQuerySeqBackend)
+
+    assert {:ok, _} =
+             Scrypath.search_many(
+               [{SearchablePost, "x", per_query: [ranking_score_threshold: 0.42]}],
+               opts
+             )
+
+    assert_receive {:per_query_search, %Scrypath.Query{per_query: %{ranking_score_threshold: 0.42}}}
+  end
+
+  test "search_many per_query: shared + entry shallow inner merge; entry wins overlaps (D-11)" do
+    opts =
+      Keyword.merge(@base_opts,
+        backend: PerQuerySeqBackend,
+        per_query: [show_ranking_score: true]
+      )
+
+    assert {:ok, _} =
+             Scrypath.search_many(
+               [
+                 {SearchablePost, "x",
+                  per_query: [ranking_score_threshold: 0.42, show_ranking_score: false]}
+               ],
+               opts
+             )
+
+    # Inner merge: shared show_ranking_score true + entry threshold; entry show_ranking_score false wins.
+    assert_receive {:per_query_search,
+                    %Scrypath.Query{
+                      per_query: %{
+                        show_ranking_score: false,
+                        ranking_score_threshold: 0.42
+                      }
+                    }}
   end
 
   test "federation_weight merge order and merge_projection follow descending weights" do
