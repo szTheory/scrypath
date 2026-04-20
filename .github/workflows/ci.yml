@@ -117,6 +117,9 @@ jobs:
       - name: Index contract drift CLI gate (`mix verify.phase28`)
         run: mix verify.phase28
 
+      - name: Federation docs gate (`mix verify.phase41`)
+        run: mix verify.phase41
+
   phase5-verification:
     runs-on: ubuntu-latest
 
