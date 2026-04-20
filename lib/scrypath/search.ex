@@ -135,29 +135,43 @@ defmodule Scrypath.Search do
   end
 
   defp run_search_many(entries, shared_opts) do
-    with {:ok, triples} <- Entries.normalize(entries, shared_opts),
-         {:ok, prepared} <- validate_search_triples(triples) do
+    with {:ok, quads} <- Entries.normalize(entries, shared_opts),
+         {:ok, prepared} <- validate_search_quads(quads) do
       config = Config.resolve!(runtime_opts(shared_opts))
       backend = Config.fetch_backend!(config)
 
       paired_queries =
-        Enum.map(prepared, fn {schema, text, _merged, search_opts} ->
-          {schema, Query.new(text, search_opts)}
+        Enum.map(prepared, fn {schema, query, fed_opts} ->
+          {schema, query, fed_opts}
         end)
 
-      if function_exported?(backend, :search_many, 2) do
-        run_native_search_many(backend, paired_queries, config)
-      else
-        run_sequential_search_many(backend, paired_queries, config)
+      needs_federated_merge? =
+        Enum.any?(paired_queries, fn {_, _, fed_opts} -> fed_opts != [] end)
+
+      cond do
+        needs_federated_merge? and not function_exported?(backend, :search_many, 2) ->
+          {:error,
+           {:invalid_options,
+            {:federation_merge_requires_native_search_many, %{backend: backend}}}}
+
+        function_exported?(backend, :search_many, 2) ->
+          run_native_search_many(backend, paired_queries, config)
+
+        true ->
+          sequential_pairs =
+            Enum.map(paired_queries, fn {schema, query, _} -> {schema, query} end)
+
+          run_sequential_search_many(backend, sequential_pairs, config)
       end
     end
   end
 
-  defp validate_search_triples(triples) do
-    Enum.reduce_while(triples, {:ok, []}, fn {schema, text, merged}, {:ok, acc} ->
+  defp validate_search_quads(quads) do
+    Enum.reduce_while(quads, {:ok, []}, fn {schema, text, merged, fed_opts}, {:ok, acc} ->
       case Scrypath.Options.validate_search_options(schema, merged) do
         {:ok, search_opts} ->
-          {:cont, {:ok, acc ++ [{schema, text, merged, search_opts}]}}
+          q = Query.new(text, search_opts)
+          {:cont, {:ok, acc ++ [{schema, q, fed_opts}]}}
 
         {:error, reason} ->
           {:halt, {:error, {:validation_failed, schema, reason}}}
@@ -169,13 +183,13 @@ defmodule Scrypath.Search do
     case backend.search_many(paired_queries, config) do
       {:ok, raw} ->
         indexed =
-          Enum.map(paired_queries, fn {schema, _} ->
+          Enum.map(paired_queries, fn {schema, _, _} ->
             {schema, backend.index_name(schema, config)}
           end)
 
         with {:ok, raw_pairs} <- FederatedDecode.per_schema_maps(raw, indexed) do
           triples_raw =
-            Enum.zip_with(paired_queries, raw_pairs, fn {s, q}, {s2, raw_map} ->
+            Enum.zip_with(paired_queries, raw_pairs, fn {s, q, _fed}, {s2, raw_map} ->
               true = s == s2
               {s, q, raw_map}
             end)

@@ -117,6 +117,30 @@ defmodule Scrypath.SearchManyTest do
     assert length(ordered) == 2
   end
 
+  test "federation_weight with sequential-only backend returns merge error" do
+    assert {:error,
+            {:invalid_options,
+             {:federation_merge_requires_native_search_many,
+              %{backend: SequentialOnlyBackend}}}} =
+             Scrypath.search_many(
+               [
+                 {SearchablePost, "a", federation_weight: 2},
+                 {FacetableMovie, "b"}
+               ],
+               Keyword.put(@base_opts, :backend, SequentialOnlyBackend)
+             )
+  end
+
+  test "no federation_weight with sequential-only backend still succeeds" do
+    assert {:ok, %MultiSearchResult{ordered: ordered, failures: []}} =
+             Scrypath.search_many(
+               [{SearchablePost, "a"}, {FacetableMovie, "b"}],
+               Keyword.put(@base_opts, :backend, SequentialOnlyBackend)
+             )
+
+    assert length(ordered) == 2
+  end
+
   test "sequential partial transport failure" do
     assert {:ok, %MultiSearchResult{ordered: ordered, failures: failures}} =
              Scrypath.search_many(
