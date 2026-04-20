@@ -2,14 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: candidates)
-status: Milestone v1.7 opened — roadmap and requirements defined
-last_updated: "2026-04-20T00:12:49.761Z"
-last_activity: 2026-04-19 — Milestone **v1.7** initialized (facet depth track)
+status: ready_to_plan
+last_updated: "2026-04-20T00:38:48.337Z"
+last_activity: 2026-04-20
 progress:
   total_phases: 3
-  completed_phases: 0
-  total_plans: 0
+  completed_phases: 1
+  total_plans: 3
   completed_plans: 0
+  percent: 33
 ---
 
 # Project State
@@ -20,17 +21,19 @@ See: `.planning/PROJECT.md` (updated 2026-04-19)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **`v1.7`** — facet depth (**`FACET-01`..`FACET-04`**, phases **36–38**). **Hex:** **`scrypath 0.3.3`**.
+**Current focus:** Phase 36 — hierarchical-facets
 
 ## Current Position
 
-**Phase:** Not started (awaiting `/gsd-discuss-phase` or `/gsd-plan-phase` for **Phase 36**)
+Phase: 36 (hierarchical-facets) — EXECUTING
+Plan: 1 of 3
+**Phase:** 37
 
-**Plan:** —
+**Plan:** Not started
 
-**Status:** Milestone v1.7 opened — roadmap and requirements defined
+**Status:** Ready to plan
 
-**Last activity:** 2026-04-19 — Milestone **v1.7** initialized (facet depth track)
+**Last activity:** 2026-04-20
 
 ## Accumulated Context
 
@@ -76,3 +79,5 @@ Structured **`audit-open`** still counted **3** items at close; each is **supers
 *Last updated: 2026-04-19 — milestone **v1.7** opened (facet depth); prior **v1.6** archived*
 
 **Prior milestone:** **v1.6** (phases **29–35**) — archived 2026-04-19
+
+**Planned Phase:** 36 (Hierarchical facets) — 3 plans — 2026-04-20T00:37:21.621Z
