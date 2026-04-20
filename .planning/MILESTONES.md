@@ -1,5 +1,24 @@
 # Milestones
 
+## v1.9 Per-query relevance & tuning pipeline (Shipped + archived: 2026-04-20)
+
+**Phases completed:** 2 phases (**42–43**), **5** plans
+
+**Hex:** **`scrypath 0.3.3`** (per-query pipeline spec + runtime shipped in-repo at archive; no mandated Hex bump in this planning milestone)
+
+**Key accomplishments:**
+
+- Authoritative **`guides/per-query-tuning-pipeline.md`** with **TUNE-PIPE** traceability, discoverability cross-links, **`docs_contract_test`** spine anchors, and public **`Scrypath.search/3`** / **`search_many/2`** `@doc` (**Phase 42**, **TUNE-PIPE-01..04**)
+- Allowlisted **`:per_query`** options carried on **`%Scrypath.Query{}`**, Meilisearch JSON projection for ranking-score knobs, telemetry when details are enabled, and regression tests (**Phase 43**, **TUNE-PQ-01**)
+- **`search_many/2`** inner-merge semantics for per-query payloads, federation-safe composition, and integration coverage (**Phase 43**, **TUNE-PQ-01**)
+- **`mix verify.phase43`** thin composer registered in **`mix.exs`**, **`docs_contract_test`** **`@verify_phase43`** pin, **CI `quality`** step, and **CONTRIBUTING** guidance (**Phase 43**, **TUNE-PQ-02..03**)
+
+**Known deferred items at close:** **`audit-open`** reported **3** rows (Phase 18 UAT listing + two missing quick-task stubs); **acknowledged** at close — see **`STATE.md`** § **Deferred Items**. Post-close ledger: **`milestones/v1.9-MILESTONE-AUDIT.md`** (status **`passed`**).
+
+**Archives:** `milestones/v1.9-ROADMAP.md`, `milestones/v1.9-REQUIREMENTS.md`, `milestones/v1.9-MILESTONE-AUDIT.md` · **Git tag:** `v1.9` (planning milestone marker)
+
+---
+
 ## v1.8 Multi-index federation (Shipped + archived: 2026-04-20)
 
 **Phases completed:** 3 phases (**39–41**), **6** plans

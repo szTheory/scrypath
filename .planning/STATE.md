@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.9
-milestone_name: — active)
-status: milestone_complete
-last_updated: "2026-04-20T18:03:30.507Z"
+milestone: pending
+milestone_name: Next milestone (unscheduled)
+status: between_milestones
+last_updated: "2026-04-20T18:35:00.000Z"
 last_activity: 2026-04-20
 progress:
-  total_phases: 26
-  completed_phases: 23
-  total_plans: 62
-  completed_plans: 63
-  percent: 88
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,17 +21,15 @@ See: `.planning/PROJECT.md` (updated 2026-04-20)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.9** — Phases **42–43** complete (**per-query pipeline spec + runtime**).
+**Current focus:** **Between milestones** — **`v1.9`** archived; run **`/gsd-new-milestone`** to open the next version line.
 
 ## Current Position
 
-Phase: **43** — **complete** (**Per-query relevance runtime**)
+**Milestone:** **v1.9** — **archived** (2026-04-20)
 
-**Plan:** 3 / 3 plans executed and summarized
+**Status:** Phases **42–43** complete; planning artifacts under **`milestones/v1.9-*.md`**. No active **`REQUIREMENTS.md`** until the next milestone bootstrap.
 
-**Status:** **v1.9** milestone phases **42–43** are complete in-repo; follow **`/gsd-progress`** for backlog / next milestone routing.
-
-**Last activity:** 2026-04-20 — Phase **43** execution + verification
+**Last activity:** 2026-04-20 — **`/gsd-complete-milestone`** (**v1.9**)
 
 ## Accumulated Context
 
@@ -39,15 +37,23 @@ Phase: **43** — **complete** (**Per-query relevance runtime**)
 
 (See `.planning/PROJECT.md` Key Decisions.)
 
-**v1.9 intent:** Lock **pipeline semantics in writing** before shipping **per-query** behavior; stay Meilisearch-first; **OPSUI-01** out of scope unless explicitly expanded.
-
 ### Blockers / Concerns
 
 - **None.**
 
 ### Deferred Items
 
-Unchanged from **v1.8** close — see **`.planning/PROJECT.md`** and prior **`STATE.md`** in git history for **`audit-open`** acknowledgements.
+#### Acknowledged at v1.9 milestone close (2026-04-20)
+
+Items from **`audit-open`** deferred without blocking ship (same three-row pattern as **v1.5–v1.8**):
+
+| Category | Item | Status |
+|----------|------|--------|
+| uat_gaps | Phase 18 — `18-UAT.md` | passed (0 open scenarios; tooling still lists row) |
+| quick_task | `260416-eoj-automate-phase-5-verification-with-live-` | missing |
+| quick_task | `260416-if2-fix-mix-exs-github-urls-add-a-github-act` | missing |
+
+Prior deferred context remains discoverable in git history for **v1.6–v1.8** milestone closes.
 
 ### Nyquist audit ledger (AUDT-01 — immutable pointers)
 
@@ -55,17 +61,12 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **`/gsd-progress`** — confirm roadmap / milestone table after **v1.9** phase close
-2. **`/gsd-complete-milestone`** — when ready to archive **v1.9** formally
-3. **`/gsd-new-milestone`** — if starting the next version line
+1. **`/gsd-new-milestone`** — bootstrap the next milestone (**requirements → roadmap**)
+2. **`/gsd-progress`** — optional health read after bootstrap
 
 **Resume file:** --resume-file
 
 ---
-*Last updated: 2026-04-20 — Phase **43** complete*
+*Last updated: 2026-04-20 — **v1.9** milestone archived*
 
-**Prior milestone:** **v1.8** (phases **39–41**) — archived 2026-04-20
-
-**Milestone:** **v1.9** — **phases 42–43 complete** (per-query spec + runtime)
-
-**Completed Phase:** 43 (per-query-relevance-runtime) — 3 plans — 2026-04-20
+**Prior milestone:** **v1.9** (phases **42–43**) — archived 2026-04-20
