@@ -99,6 +99,35 @@ defmodule Scrypath.SearchManyTest do
     assert Map.new(ordered) == by
   end
 
+  test ":all expansion with global_schemas hits both schemas" do
+    assert {:ok, %MultiSearchResult{ordered: ordered, failures: [], by_schema: by}} =
+             Scrypath.search_many(
+               [{:all, "needle"}],
+               Keyword.merge(@base_opts,
+                 global_schemas: [SearchablePost, FacetableMovie],
+                 max_schemas: 10
+               )
+             )
+
+    schemas = ordered |> Enum.map(&elem(&1, 0)) |> MapSet.new()
+
+    assert MapSet.equal?(schemas, MapSet.new([SearchablePost, FacetableMovie]))
+    assert length(ordered) == 2
+    assert map_size(by) == 2
+  end
+
+  test ":all_expansion respects max_schemas after splice" do
+    # :all_expansion — post-splice cardinality rail
+    assert {:error, {:too_many_schemas, 2, 1}} =
+             Scrypath.search_many(
+               [{:all, "needle"}],
+               Keyword.merge(@base_opts,
+                 global_schemas: [SearchablePost, FacetableMovie],
+                 max_schemas: 1
+               )
+             )
+  end
+
   test "validation failure before dispatch" do
     assert {:error, {:validation_failed, SearchablePost, {:unknown_facet, :nope}}} =
              Scrypath.search_many(

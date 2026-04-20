@@ -152,6 +152,13 @@ defmodule Scrypath.Options do
       type: {:custom, __MODULE__, :validate_positive_integer, []},
       default: 10,
       doc: "Maximum number of schemas per search_many/2 call (cardinality rail)."
+    ],
+    global_schemas: [
+      type: {:custom, __MODULE__, :validate_global_schemas, []},
+      required: false,
+      doc:
+        "When set, replaces Application.get_env(otp_app, :scrypath_global_search_schemas, []) as the " <>
+          "ordered allowlist for `{:all, …}` expansion in search_many/2 for this call."
     ]
   ]
 
@@ -567,6 +574,19 @@ defmodule Scrypath.Options do
 
   def validate_module(value) when is_atom(value), do: {:ok, value}
   def validate_module(_value), do: {:error, "expected a module"}
+
+  @doc false
+  def validate_global_schemas(value) when is_list(value) do
+    Enum.reduce_while(value, {:ok, value}, fn m, _acc ->
+      case validate_module(m) do
+        {:ok, _} -> {:cont, {:ok, value}}
+        {:error, msg} -> {:halt, {:error, "global_schemas must be a list of modules (#{msg})"}}
+      end
+    end)
+  end
+
+  def validate_global_schemas(_value),
+    do: {:error, "global_schemas must be a list of module atoms or be omitted"}
 
   def validate_settings(value) when is_map(value) do
     canonical = normalize_settings(value)
