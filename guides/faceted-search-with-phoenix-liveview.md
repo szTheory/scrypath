@@ -58,6 +58,21 @@ Meilisearch represents hierarchical menus as **multiple filterable facet attribu
 
 **Wildcards remain mistakes:** declaring `:*` or dotted names outside the supported single-dot **`lvlN`** suffix pattern still fails fast at compile time.
 
+## Disjunctive facet counts
+
+Facet UX often combines **OR within the same facet field** (for example two genres) with **AND across different facet fields** (for example genre OR plus a specific year). `Scrypath.Meilisearch.Query` already encodes that filter shape; this section is about **`facetDistribution`** counts.
+
+A **single search** response always intersects facet refinements with the hit set. Bucket counts therefore reflect what Meilisearch computed **after** every active facet filter — not “unrefined OR-group” counts from that response alone.
+
+Operators who want disjunctive bucket counts follow Meilisearch’s **multi-search** recipe: keep the tightened main query for hits, issue auxiliary searches that drop each disjunctive group’s refinements for that group’s distribution (often `limit: 0`), then merge raw `facetDistribution` maps with `Scrypath.Facets.Disjunctive.merge_distributions/2` before decoding into `%Scrypath.SearchResult.Facets{}`.
+
+Reference scenario **Genre OR + year AND on the movies catalog**: pass two genre values under one `facet_filter:` key (OR inside `genre`) and one year value under `year` (AND against the genre group). Hits and counts both narrow on the conjunctive document set until you add auxiliary queries for disjunctive count UX.
+
+| Query role | What `facetDistribution` answers |
+|------------|-----------------------------------|
+| Main search with all filters | Counts on the narrowed catalog (honest **single search** semantics). |
+| Auxiliary per-field queries | Counts as if that facet group were relaxed, for merging via **multi-search**. |
+
 ## Primary path: `handle_params` + URL sync
 
 **Recommended:** normalize query + facet params in `handle_params/3`, then call your context with a keyword list that mirrors what you will pass to `Scrypath.search/3`.
@@ -177,6 +192,14 @@ Single index; bands are **API**, **Meilisearch**, then **UI**. Each entry lists 
 **User-visible consequence:** UI shows counts but no “facet value documents”.  
 **Why:** Distribution is counts per bucket, not nested documents.  
 **Do instead:** Keep document hits in `result.hits` and counts in `result.facets`.
+
+#### Meilisearch — Counts ignore my OR group
+
+**Layer:** Meilisearch  
+**The mistake:** Expecting one response’s `facetDistribution` to show counts **as if** an OR-selected facet group were ignored for counting purposes.  
+**User-visible consequence:** Operators think Scrypath “lost” their OR semantics when bucket numbers shrink with refinements.  
+**Why:** Meilisearch intersects counts with the same filtered hit set the UI already narrowed.  
+**Do instead:** Reread **Disjunctive facet counts** above and implement the documented **multi-search** merge path when you need disjunctive count UX.
 
 ### UI
 
