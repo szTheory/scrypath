@@ -98,6 +98,12 @@ defmodule Scrypath do
   with metadata from `Scrypath.Telemetry.common_metadata/3`.
 
   Full pipeline: see [guides/per-query-tuning-pipeline.md](guides/per-query-tuning-pipeline.md).
+
+  Optional **`:per_query`** is an allowlisted keyword for Plane B Meilisearch search
+  parameters on the v1.9 slice (for example `ranking_score_threshold`,
+  `show_ranking_score`, and `show_ranking_score_details`); semantics and telemetry
+  expectations are defined in
+  [guides/per-query-tuning-pipeline.md](guides/per-query-tuning-pipeline.md).
   """
   @spec search(module(), String.t(), keyword()) :: {:ok, term()} | {:error, term()}
   def search(schema_module, text, opts \\ []) do
@@ -135,6 +141,10 @@ defmodule Scrypath do
 
   **`search_many/2`** merge rules for shared vs per-entry options, `:all` expansion,
   and federation payloads remain canonical in **`guides/multi-index-search.md`**.
+
+  **`:per_query`** may appear on **shared** keywords and on each per-entry tuple; when
+  both sides supply it, inner keys shallow-merge with entry bias — see
+  [guides/per-query-tuning-pipeline.md](guides/per-query-tuning-pipeline.md).
 
   Federated search across multiple schemas.
 
