@@ -41,6 +41,23 @@ defmodule Scrypath.Oban.Payload do
       "index" => backend.index_name(schema_module, config),
       "sync_mode" => Atom.to_string(Keyword.get(config, :sync_mode, :oban))
     }
+    |> Map.merge(runtime_job_fields(config))
+  end
+
+  # Persist connection hints so Oban workers can `Config.resolve!/1` without relying
+  # solely on Application env (e.g. Phoenix example tests pass `meilisearch_url` at sync time).
+  defp runtime_job_fields(config) do
+    %{}
+    |> put_optional_job_string(config, :meilisearch_url)
+    |> put_optional_job_string(config, :meilisearch_api_key)
+    |> put_optional_job_string(config, :index_prefix)
+  end
+
+  defp put_optional_job_string(map, config, key) do
+    case Keyword.get(config, key) do
+      v when is_binary(v) and v != "" -> Map.put(map, Atom.to_string(key), v)
+      _ -> map
+    end
   end
 
   defp serialize_map!(value) when is_map(value) do

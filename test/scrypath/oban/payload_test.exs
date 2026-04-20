@@ -76,6 +76,7 @@ defmodule Scrypath.Oban.PayloadTest do
              "schema" => "Elixir.SearchablePost",
              "backend" => "Elixir.Scrypath.Oban.PayloadTest.RecordingBackend",
              "index" => "tenant_searchable_post",
+             "index_prefix" => "tenant",
              "sync_mode" => "oban",
              "document_count" => 2,
              "document_ids" => [1, 2],
@@ -113,6 +114,7 @@ defmodule Scrypath.Oban.PayloadTest do
              "schema" => "Elixir.SearchablePost",
              "backend" => "Elixir.Scrypath.Oban.PayloadTest.RecordingBackend",
              "index" => "tenant_searchable_post",
+             "index_prefix" => "tenant",
              "sync_mode" => "oban",
              "document_count" => 3,
              "document_ids" => ["post:1", "post:2", "post:3"]
