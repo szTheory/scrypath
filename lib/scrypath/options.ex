@@ -846,7 +846,13 @@ defmodule Scrypath.Options do
   end
 
   defp validate_faceting_declaration_shape(kw) do
-    allowed = [:attributes, :max_values_per_facet, :sort_facet_values_by, :nested_facet_paths, :hierarchy]
+    allowed = [
+      :attributes,
+      :max_values_per_facet,
+      :sort_facet_values_by,
+      :nested_facet_paths,
+      :hierarchy
+    ]
 
     case Keyword.keys(kw) -- allowed do
       [] ->
@@ -915,21 +921,32 @@ defmodule Scrypath.Options do
 
   defp fetch_hierarchy_atom(kw, key) do
     case Keyword.fetch(kw, key) do
-      {:ok, a} when is_atom(a) -> {:ok, a}
-      {:ok, other} -> {:error, "faceting :hierarchy :#{key} must be an atom, got: #{inspect(other)}"}
-      :error -> {:error, "faceting :hierarchy requires :base field atom"}
+      {:ok, a} when is_atom(a) ->
+        {:ok, a}
+
+      {:ok, other} ->
+        {:error, "faceting :hierarchy :#{key} must be an atom, got: #{inspect(other)}"}
+
+      :error ->
+        {:error, "faceting :hierarchy requires :base field atom"}
     end
   end
 
   defp fetch_hierarchy_depth(kw) do
     case Keyword.fetch(kw, :depth) do
-      {:ok, d} when is_integer(d) and d > 0 -> {:ok, d}
-      {:ok, other} -> {:error, "faceting :hierarchy :depth must be a positive integer, got: #{inspect(other)}"}
-      :error -> {:error, "faceting :hierarchy requires :depth positive integer"}
+      {:ok, d} when is_integer(d) and d > 0 ->
+        {:ok, d}
+
+      {:ok, other} ->
+        {:error, "faceting :hierarchy :depth must be a positive integer, got: #{inspect(other)}"}
+
+      :error ->
+        {:error, "faceting :hierarchy requires :depth positive integer"}
     end
   end
 
-  defp hierarchy_facet_attribute_atoms(base, depth) when is_atom(base) and is_integer(depth) and depth > 0 do
+  defp hierarchy_facet_attribute_atoms(base, depth)
+       when is_atom(base) and is_integer(depth) and depth > 0 do
     prefix = Atom.to_string(base)
 
     for i <- 0..(depth - 1) do
