@@ -1,10 +1,20 @@
 # Milestones
 
-## v1.7 Facet depth and catalog search UX (Planning opened: 2026-04-19)
+## v1.7 Facet depth and catalog search UX (Shipped + archived: 2026-04-20)
 
-**Phases planned:** 3 phases (**36–38**) — see **`.planning/ROADMAP.md`** and **`.planning/REQUIREMENTS.md`** (`FACET-01`..`FACET-04`).
+**Phases completed:** 3 phases (**36–38**), **7** plans
 
-**Focus:** Hierarchical facets, disjunctive facet counts, `search_within_facet/4`, and doc/contract coverage — per post–v1.6 ROI plan. Multi-index federation and per-query relevance implementation remain **out of scope** until later milestones.
+**Hex:** **`scrypath 0.3.3`** (facet-depth APIs and verify slices in-repo; no mandated Hex bump in this planning milestone)
+
+**Key accomplishments:**
+
+- Hierarchical facet paths with settings alignment, dotted facet keys in results, **`mix verify.phase36`**, and guide coverage (**Phase 36**, **FACET-01**)
+- Disjunctive facet count merge helper, LiveView guide contract, **`mix verify.phase37`** with regression **`mix verify.phase36`** (**Phase 37**, **FACET-02**)
+- Public **`search_within_facet/4`**, telemetry metadata, scoped-search guide sections, **`mix verify.phase38`**, README / **`Scrypath`** doc pointers (**Phase 38**, **FACET-03**, **FACET-04**)
+
+**Known deferred items at close:** **`audit-open`** again reported **3** historical rows (Phase 18 UAT listing + two missing quick-task stubs); **acknowledged** at close — see **`STATE.md`** §**Acknowledged at v1.7 milestone close**. Milestone audit status **`tech_debt`** (Nyquist drafts, disjunctive wiring expectations, validation table drift) — see **`milestones/v1.7-MILESTONE-AUDIT.md`**.
+
+**Archives:** `milestones/v1.7-ROADMAP.md`, `milestones/v1.7-REQUIREMENTS.md`, `milestones/v1.7-MILESTONE-AUDIT.md` · **Git tag:** `v1.7` (planning milestone marker)
 
 ---
 
@@ -109,3 +119,4 @@
 | `v1.4` | 2026-04-17 | 3 | 8 | Archived | Hex **0.3.1**; `v1.4-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`; milestone tag **`v1.4`**. |
 | `v1.5` | 2026-04-18 | 2 | 5 | Archived | Index contract drift + Mix + docs + **`mix verify.phase28`**; `v1.5-{ROADMAP,REQUIREMENTS}.md`; milestone tag **`v1.5`**. |
 | `v1.6` | 2026-04-19 | 7 | 7 | Archived | Adoption golden path, consumer proof, verify story, **`STATE`** triage, doc contracts **33–35**; `v1.6-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`; tag **`v1.6`**. |
+| `v1.7` | 2026-04-20 | 3 | 7 | Archived | Facet depth (hierarchical, disjunctive counts, `search_within_facet/4`); `v1.7-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`; tag **`v1.7`**. |
