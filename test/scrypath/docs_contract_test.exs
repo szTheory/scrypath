@@ -384,6 +384,7 @@ defmodule Scrypath.DocsContractTest do
       "mix verify.phase22",
       "mix verify.phase26",
       "mix verify.phase28",
+      "mix verify.phase41",
       "Operator integration verification (`mix verify.phase13`)",
       "mix verify.phase13"
     ])
