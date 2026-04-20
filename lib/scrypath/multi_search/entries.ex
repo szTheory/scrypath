@@ -25,12 +25,19 @@ defmodule Scrypath.MultiSearch.Entries do
 
   @max_page_size 50
 
+  # Largest finite IEEE-754 binary64 (approx); used instead of :math.classify_float/1
+  # for portability across OTP releases.
+  @max_finite_double 1.7976931348623157e308
+
   @doc """
   Normalizes `entries` with `shared_opts`, returning `{:ok, list}` of
-  `{schema, text, merged_opts}` in declaration order.
+  `{schema, text, merged_opts, fed_opts}` in declaration order.
+
+  `fed_opts` is `[]` or `[federation_weight: float]` (per-entry merge weight for
+  federated multi-search). `:federation_weight` is never present on `merged_opts`.
   """
   @spec normalize(list(), keyword()) ::
-          {:ok, [{module(), String.t(), keyword()}]}
+          {:ok, [{module(), String.t(), keyword(), keyword()}]}
           | {:error, term()}
   def normalize(entries, shared_opts) when is_list(entries) and is_list(shared_opts) do
     cond do
@@ -60,7 +67,7 @@ defmodule Scrypath.MultiSearch.Entries do
   defp normalize_entries(entries, shared) do
     Enum.reduce_while(entries, {:ok, []}, fn entry, {:ok, acc} ->
       case normalize_one(entry, shared) do
-        {:ok, triple} -> {:cont, {:ok, acc ++ [triple]}}
+        {:ok, quad} -> {:cont, {:ok, acc ++ [quad]}}
         {:error, _} = err -> {:halt, err}
       end
     end)
@@ -72,15 +79,39 @@ defmodule Scrypath.MultiSearch.Entries do
 
   defp normalize_one({schema, text, entry_opts}, shared)
        when is_atom(schema) and is_binary(text) and is_list(entry_opts) do
-    with :ok <- reject_shared_only_in_entry(entry_opts),
-         merged <- Keyword.merge(shared, entry_opts, fn _k, _s, e -> e end),
+    {raw_weight, entry_core} = Keyword.pop(entry_opts, :federation_weight)
+
+    with {:ok, fed_opts} <- federation_weight_opts(raw_weight),
+         :ok <- reject_shared_only_in_entry(entry_core),
+         merged <- Keyword.merge(shared, entry_core, fn _k, _s, e -> e end),
          :ok <- validate_page_size(merged) do
-      {:ok, {schema, text, merged}}
+      {:ok, {schema, text, merged, fed_opts}}
     end
   end
 
   defp normalize_one(_, _shared) do
     {:error, {:invalid_options, :malformed_entry}}
+  end
+
+  defp federation_weight_opts(nil), do: {:ok, []}
+
+  defp federation_weight_opts(w) when is_integer(w) do
+    {:ok, [federation_weight: w * 1.0]}
+  end
+
+  defp federation_weight_opts(w) when is_float(w) do
+    if finite_float?(w) do
+      {:ok, [federation_weight: w]}
+    else
+      {:error, {:invalid_options, {:federation_weight, :non_finite}}}
+    end
+  end
+
+  defp federation_weight_opts(_),
+    do: {:error, {:invalid_options, {:federation_weight, :invalid_type}}}
+
+  defp finite_float?(w) when is_float(w) do
+    w == w and abs(w) <= @max_finite_double
   end
 
   defp reject_shared_only_in_entry(entry_opts) do

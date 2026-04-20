@@ -25,6 +25,7 @@ defmodule Scrypath.MultiSearch.EntriesTest do
 
     assert {:ok, list} = Entries.normalize(entries, max_schemas: 20)
     assert length(list) == 11
+    assert Enum.all?(list, &match?({_, _, _, []}, &1))
   end
 
   test "page size above ceiling is rejected" do
@@ -43,35 +44,52 @@ defmodule Scrypath.MultiSearch.EntriesTest do
   end
 
   test "merge precedence: entry page wins over shared" do
-    assert {:ok, triples} =
+    assert {:ok, quads} =
              Entries.normalize(
                [{Post, "q", page: [size: 5]}],
                page: [size: 10]
              )
 
-    assert [{schema, "q", merged}] = triples
+    assert [{schema, "q", merged, []}] = quads
     assert schema == Post
     assert Keyword.get(merged, :page) == [size: 5]
   end
 
   test "duplicate schema modules are allowed" do
-    assert {:ok, triples} =
+    assert {:ok, quads} =
              Entries.normalize(
                [{Post, "a", filter: [x: 1]}, {Post, "b", filter: [y: 2]}],
                []
              )
 
-    assert [{s1, "a", _}, {s2, "b", _}] = triples
+    assert [{s1, "a", _, []}, {s2, "b", _, []}] = quads
     assert s1 == Post and s2 == Post
   end
 
   test "two-tuple form" do
-    assert {:ok, [{Post, "hi", opts}]} = Entries.normalize([{Post, "hi"}], [])
+    assert {:ok, [{Post, "hi", opts, []}]} = Entries.normalize([{Post, "hi"}], [])
     assert opts[:repo] == nil
   end
 
   test "malformed entry" do
     assert {:error, {:invalid_options, :malformed_entry}} =
              Entries.normalize([{Post, "q", %{}}], [])
+  end
+
+  test "federation_weight float is isolated from merged opts" do
+    assert {:ok, [{Post, "q", merged, [federation_weight: 2.5]}]} =
+             Entries.normalize([{Post, "q", federation_weight: 2.5}], [])
+
+    refute Keyword.has_key?(merged, :federation_weight)
+  end
+
+  test "federation_weight integer coerces to float" do
+    assert {:ok, [{Post, "q", _merged, [federation_weight: 1.0]}]} =
+             Entries.normalize([{Post, "q", federation_weight: 1}], [])
+  end
+
+  test "non-numeric federation_weight is rejected" do
+    assert {:error, {:invalid_options, {:federation_weight, :invalid_type}}} =
+             Entries.normalize([{Post, "q", federation_weight: "heavy"}], [])
   end
 end

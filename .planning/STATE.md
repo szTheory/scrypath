@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: — active)
-status: **`39-CONTEXT.md`** and **`39-DISCUSSION-LOG.md`** committed; implementation decisions locked for **FED-01** (weights API, validation/errors, merge trace + projection helper, sequential-fallback guard).
-last_updated: "2026-04-20T14:52:49.985Z"
-last_activity: "2026-04-20 — `/gsd-discuss-phase 39` completed; **`docs(39): capture phase context`** committed."
+status: executing
+last_updated: "2026-04-20T15:01:29.983Z"
+last_activity: 2026-04-20
 progress:
   total_phases: 22
   completed_phases: 18
@@ -21,17 +21,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-20)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.8 — Multi-index federation** (`FED-01`..`FED-03`, phases **39–41**).
+**Current focus:** Phase 39 — federation-scoring-weights
 
 ## Current Position
 
-Phase: **39** — context gathered (ready for planning)
+Phase: 39 (federation-scoring-weights) — EXECUTING
 
-Plan: —
+Plan: 1 of 2
 
-**Status:** **`39-CONTEXT.md`** and **`39-DISCUSSION-LOG.md`** committed; implementation decisions locked for **FED-01** (weights API, validation/errors, merge trace + projection helper, sequential-fallback guard).
+**Status:** Executing Phase 39
 
-**Last activity:** 2026-04-20 — `/gsd-discuss-phase 39` completed; **`docs(39): capture phase context`** committed.
+**Last activity:** 2026-04-20
 
 ## Accumulated Context
 
