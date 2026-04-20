@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.6
-milestone_name: Adoption-grade integration and trust
-status: complete
-last_updated: "2026-04-19T12:00:00.000Z"
+milestone: v1.7
+milestone_name: Facet depth and catalog search UX
+status: defining_requirements
+last_updated: "2026-04-19T18:00:00.000Z"
 last_activity: 2026-04-19
 progress:
-  total_phases: 7
-  completed_phases: 7
-  total_plans: 7
-  completed_plans: 7
-  percent: 100
+  total_phases: 3
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,13 +21,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-19)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **`v1.6` archived** — run **`/gsd-new-milestone`** to open the next version slice (fresh **`REQUIREMENTS.md`** + roadmap target). **Hex:** **`scrypath 0.3.3`**.
+**Current focus:** **`v1.7`** — facet depth (**`FACET-01`..`FACET-04`**, phases **36–38**). **Hex:** **`scrypath 0.3.3`**.
 
 ## Current Position
 
-**Milestone:** **v1.6** — **complete** (archived 2026-04-19).
+**Phase:** Not started (awaiting `/gsd-discuss-phase` or `/gsd-plan-phase` for **Phase 36**)
 
-Last activity: 2026-04-19
+**Plan:** —
+
+**Status:** Milestone v1.7 opened — roadmap and requirements defined
+
+**Last activity:** 2026-04-19 — Milestone **v1.7** initialized (facet depth track)
 
 ## Accumulated Context
 
@@ -35,7 +39,9 @@ Last activity: 2026-04-19
 
 (See `.planning/PROJECT.md` Key Decisions.)
 
-**v1.6 shipped:** Adoption golden path, consumer-shaped proof depth, verification story for contributors, **`STATE.md`** triage (**AUDT-01**), and doc-contract gap closure **33–35** (smoke cwd, README ↔ golden path ↔ CI, sync-guide lifecycle parity).
+**v1.6 shipped:** Adoption golden path, consumer-shaped proof depth, verification story for contributors, **`STATE.md`** triage (**AUDT-01**), and doc-contract gap closure **33–35**.
+
+**v1.7 intent (ROI):** Prioritize **facet depth** on existing faceting; defer **multi-index federation scoring** and **per-query relevance implementation** until a dedicated design (**`TUNE-PIPE-01`**) / later milestone.
 
 ### Blockers / Concerns
 
@@ -63,11 +69,11 @@ Structured **`audit-open`** still counted **3** items at close; each is **supers
 
 ## Next Command
 
-1. **`/gsd-new-milestone`** — open the next planning cycle (requirements → roadmap) when you are ready.
+1. **`/gsd-discuss-phase 36`** — gather context for **Phase 36: Hierarchical facets** (or **`/gsd-plan-phase 36`** to plan directly).
 
-**Resume files:** `.planning/ROADMAP.md`, `.planning/PROJECT.md`, `.planning/MILESTONES.md`, `.planning/milestones/v1.6-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`, `.planning/STATE.md`
+**Resume files:** `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/PROJECT.md`, `.planning/STATE.md`
 
 ---
-*Last updated: 2026-04-19 — **`/gsd-complete-milestone v1.6`** executed; root **`REQUIREMENTS.md`** removed until next milestone*
+*Last updated: 2026-04-19 — milestone **v1.7** opened (facet depth); prior **v1.6** archived*
 
-**Completed milestone:** **v1.6** (phases **29–35**) — archived 2026-04-19
+**Prior milestone:** **v1.6** (phases **29–35**) — archived 2026-04-19
