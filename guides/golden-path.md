@@ -2,6 +2,8 @@
 
 If you prefer the conceptual overview first, read [Getting Started](getting-started.md). This guide is a **linear checklist** from dependency install through a working `Scrypath.search/3` using **`sync_mode: :inline`** only. Queueing and manual sync are intentionally deferred to [Sync Modes and Visibility](sync-modes-and-visibility.md) (`guides/sync-modes-and-visibility.md`).
 
+When you need **`Scrypath.search_many/2`**, federation weights, or **`:all`** expansion across several schemas, read next: [Multi-index search](multi-index-search.md).
+
 ## Goal
 
 By the end of this path you will have Meilisearch running locally, minimal application configuration pointing Scrypath at it, a searchable Ecto schema, and one context-owned function pair: **`Scrypath.sync_record/3`** after a successful repo write and **`Scrypath.search/3`** returning hydrated records. The first hour stays **inline** so success in your function means the backend finished the write—not that database and search are a single atomic transaction.
@@ -32,6 +34,8 @@ docker compose up -d
 Set **`SCRYPATH_MEILISEARCH_URL`** to your Meilisearch base URL if it is not the default (for example `export SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700`).
 
 For a full Phoenix + Postgres smoke (fixtures, scripted test), follow [examples/phoenix_meilisearch/README.md](../examples/phoenix_meilisearch/README.md) (repository path `examples/phoenix_meilisearch/README.md`).
+
+For where Meilisearch fits in production (networking, keys, backups vs rebuilding from Postgres), read [Meilisearch operations for Scrypath adopters](meilisearch-operations.md).
 
 ## Application config
 
