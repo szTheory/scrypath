@@ -6,6 +6,7 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
 
     alias Scrypath.Config
     alias Scrypath.Document
+    alias Scrypath.Oban.JobConfig
 
     @impl Oban.Worker
     def perform(%Oban.Job{args: args}) do
@@ -13,7 +14,7 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
            {:ok, backend} <- resolve_backend(args),
            {:ok, index_name} <- fetch_index(args),
            {:ok, _document_ids, documents} <- load_documents(args),
-           {:ok, config} <- build_config(backend, index_name) do
+           {:ok, config} <- build_config(backend, index_name, args) do
         case backend.upsert_documents(schema_module, documents, config) do
           {:ok, _result} -> :ok
           {:error, reason} -> {:error, reason}
@@ -110,12 +111,11 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
     defp normalize_source("custom"), do: {:ok, :custom}
     defp normalize_source(_source), do: {:error, :invalid_document_source}
 
-    defp build_config(backend, index_name) do
+    defp build_config(backend, index_name, args) do
       try do
-        config = [
-          backend: backend,
-          sync_mode: :manual
-        ]
+        config =
+          [backend: backend, sync_mode: :manual]
+          |> JobConfig.merge_job_runtime_opts(args)
 
         {:ok, Config.resolve!(config) |> Keyword.put(:index_name, index_name)}
       rescue

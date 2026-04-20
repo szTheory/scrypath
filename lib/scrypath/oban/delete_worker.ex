@@ -5,6 +5,7 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
     use Oban.Worker, queue: :scrypath, max_attempts: 8
 
     alias Scrypath.Config
+    alias Scrypath.Oban.JobConfig
 
     @impl Oban.Worker
     def perform(%Oban.Job{args: args}) do
@@ -13,7 +14,7 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
            {:ok, index_name} <- fetch_index(args),
            {:ok, document_ids} <- load_document_ids(args),
            :ok <- validate_document_count(args, document_ids),
-           {:ok, config} <- build_config(backend, index_name) do
+           {:ok, config} <- build_config(backend, index_name, args) do
         case backend.delete_documents(schema_module, document_ids, config) do
           {:ok, _result} -> :ok
           {:error, reason} -> {:error, reason}
@@ -55,12 +56,11 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
 
     defp validate_document_count(_args, _document_ids), do: {:error, :invalid_document_count}
 
-    defp build_config(backend, index_name) do
+    defp build_config(backend, index_name, args) do
       try do
-        config = [
-          backend: backend,
-          sync_mode: :manual
-        ]
+        config =
+          [backend: backend, sync_mode: :manual]
+          |> JobConfig.merge_job_runtime_opts(args)
 
         {:ok, Config.resolve!(config) |> Keyword.put(:index_name, index_name)}
       rescue
