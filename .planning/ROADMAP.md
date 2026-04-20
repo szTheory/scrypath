@@ -10,10 +10,19 @@
 - [x] **`v1.5` shipped in-repo** (2026-04-18) — 2 phases (27–28), 5 plans — [archive](milestones/v1.5-ROADMAP.md) · [requirements](milestones/v1.5-REQUIREMENTS.md) — *Operator drift and schema-diff tooling*
 - [x] **`v1.6` shipped in-repo** (2026-04-19) — 7 phases (29–35), 7 plans — [archive](milestones/v1.6-ROADMAP.md) · [requirements](milestones/v1.6-REQUIREMENTS.md) · [audit](milestones/v1.6-MILESTONE-AUDIT.md) — *Adoption-grade integration and trust*
 - [x] **`v1.7` shipped in-repo** (2026-04-20) — 3 phases (36–38), 7 plans — [archive](milestones/v1.7-ROADMAP.md) · [requirements](milestones/v1.7-REQUIREMENTS.md) · [audit](milestones/v1.7-MILESTONE-AUDIT.md) — *Facet depth and catalog search UX*
+- [ ] **`v1.8` in progress** — *Multi-index federation* — phases **39–41** — [requirements](REQUIREMENTS.md)
 
 ## Next milestone
 
-**No versioned milestone is open.** Run **`/gsd-new-milestone`** to define the next shipped scope (fresh **`REQUIREMENTS.md`**, roadmap rows, and phase numbering from **39** onward). Candidates below are backlog only until promoted.
+**Active: v1.8 — Multi-index federation** (phases **39–41**, **`FED-01`..`FED-03`** in **`REQUIREMENTS.md`**). **Operator LiveView dashboard (`OPSUI-01`)** is an explicit **follow-up** after federation primitives ship. Older backlog items below remain available if reprioritized.
+
+## Phases (v1.8 — active)
+
+| # | Phase | Goal | Requirements | Success criteria (summary) |
+|---|-------|------|--------------|----------------------------|
+| **39** | **Federation scoring & weights** | Expose and test **Meilisearch-aligned federation scoring/weighting** for `search_many/2` with predictable merged ordering. | **FED-01** | (1) Documented public opts/API for weights vs per-schema results. (2) Automated tests prove ordering semantics across at least two weighted indexes. (3) Federation metadata on `%MultiSearchResult{}` extended or documented as needed for UI/telemetry. |
+| **40** | **`:all` expansion** | **Explicit multi-index expansion** (`:all` or equivalent) with rails, timeouts, and validation errors. | **FED-02** | (1) Published resolution rule (config or app-owned registry—documented). (2) Cardinality + empty/ambiguous cases return explicit `{:error, _}` shapes. (3) Tests cover happy path and rejection paths. |
+| **41** | **Federation docs & contracts** | README / guides / **`docs_contract_test.exs`** reflect v1.8 federation behavior for adopters and future **OPSUI** work. | **FED-03** | (1) `guides/multi-index-search.md` (and pointers) describe scoring + `:all`. (2) Contract tests lock critical headings or strings. (3) **`mix verify.phase41`** (or agreed verify slice) green in CI. |
 
 ## Phases (history)
 
@@ -80,12 +89,12 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**v1.7** archived **2026-04-20** (phases **36–38**, facet depth and catalog search UX). **Next:** **`/gsd-new-milestone`** when ready to open **v1.8+** scope.
+**v1.8** opened **2026-04-20** — federation scoring (**39**), `:all` expansion (**40**), docs/contracts (**41**). **v1.7** remains archived below.
 
-## Backlog (post–v1.7 candidates)
+## Backlog (beyond v1.8)
 
-- Multi-index federation scoring / weighting / `:all` wildcard (**`MULTI-*`** — IDs and intent captured under *Future* in [v1.7 requirements archive](milestones/v1.7-REQUIREMENTS.md)).
 - Per-query relevance overrides — **blocked** on design milestone **`TUNE-PIPE-01`** before **`TUNE-01`** implementation.
+- **OPSUI-01 — Operator dashboard (LiveView)** — optional product surface (example app or separate package) over existing `Scrypath.*` visibility, telemetry, and **federation-shaped** `search_many/2` results; **follow v1.8** so the UI can represent cross-index ordering and expansion honestly. See also [`docs/search-backend-sre.md`](../docs/search-backend-sre.md).
 
 ---
-*Last updated: 2026-04-20 — **v1.7** milestone archived; no active versioned milestone*
+*Last updated: 2026-04-20 — **v1.8** Multi-index federation opened (phases **39–41**)*

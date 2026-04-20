@@ -10,7 +10,19 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Last shipped milestone
 
-**v1.7 — Facet depth and catalog search UX** (archived **2026-04-20**). Delivered **hierarchical facets**, **disjunctive facet count contracts** (`merge_distributions/2` + docs), **`search_within_facet/4`** with telemetry, focused **`mix verify.phase36`..`38`** gates, and README / guide / **`docs_contract_test.exs`** anchors (**`FACET-01`**..**`FACET-04`**). **Multi-index federation** and **per-query relevance** runtime work remain deferred per archived requirements. **Next versioned scope:** run **`/gsd-new-milestone`** (fresh **`REQUIREMENTS.md`** is created there).
+**v1.7 — Facet depth and catalog search UX** (archived **2026-04-20**). Delivered **hierarchical facets**, **disjunctive facet count contracts** (`merge_distributions/2` + docs), **`search_within_facet/4`** with telemetry, focused **`mix verify.phase36`..`38`** gates, and README / guide / **`docs_contract_test.exs`** anchors (**`FACET-01`**..**`FACET-04`**). **Per-query relevance** runtime work remains deferred on **`TUNE-PIPE-01`**.
+
+## Current Milestone: v1.8 — Multi-index federation
+
+**Goal:** Ship Meilisearch-aligned **federation scoring / weighting** and an explicit **`:all` (or equivalent)** multi-index expansion path so unified search and catalog UIs can rely on **predictable cross-index ordering** and documented rails—before any **operator LiveView** milestone.
+
+**Target features:**
+
+- Federation-level **score / weight** semantics with predictable merged ordering and tests (**FED-01**).
+- **`:all` (or equivalent)** expansion over the app’s intended global-search schemas with cardinality limits, timeouts, and explicit errors (**FED-02**).
+- **Docs + contract tests** so README / guides / ExDoc stay aligned with new federation behavior (**FED-03**).
+
+**Follow-up (not v1.8):** **OPSUI-01** — optional operator LiveView dashboard (example or separate package) once federation shapes are stable.
 
 ## Requirements
 
@@ -42,7 +54,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ### Active
 
-- [ ] **Next milestone** — Not opened. Promote backlog items via **`/gsd-new-milestone`** when the next shipped scope is defined (`MULTI-*`, **`TUNE-PIPE-01`**, or other ROI choice).
+- [ ] **v1.8 — Multi-index federation** — **`FED-01`..`FED-03`** in **`.planning/REQUIREMENTS.md`**; phases **39–41** in **`.planning/ROADMAP.md`**. Operator LiveView (**`OPSUI-01`**) deferred until federation primitives land.
 
 ### Out of Scope
 
@@ -56,7 +68,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has **eight** archived planning milestones (`v1.0`–`v1.7`). **`REQUIREMENTS.md`** is intentionally absent until the next milestone opens. See `.planning/milestones/v*-ROADMAP.md`, `.planning/ROADMAP.md`, and **`MILESTONES.md`**.
+The repository has **eight** archived planning milestones (`v1.0`–`v1.7`). **v1.8** is open; see **`.planning/REQUIREMENTS.md`**, **`.planning/ROADMAP.md`**, and **`MILESTONES.md`**. Archives remain under **`.planning/milestones/`**.
 
 - `v1.0` shipped the Meilisearch-first Ecto-native indexing core, search/hydration path, Oban support, reindex workflows, public Phoenix docs, and release automation baseline.
 - `v1.1` shipped release hardening, docs-safety fixes, `mix verify.phase10`, and the launch-readiness evidence chain.
@@ -95,7 +107,7 @@ The current public line on Hex is **`scrypath 0.3.3`**. Planning milestone **v1.
 
 **Hex:** `scrypath` **`0.3.3`**. Shipped surfaces include the v1.3-era Meilisearch-native path (relevance, facets, multi-index, operator polish), v1.4 **hot_apply** / failure rollups, v1.5 **index contract drift** tooling, v1.6 **adoption-grade** docs and verification clarity, and **v1.7** **facet-depth** APIs (`nested_facet_paths`, disjunctive merge helper, **`search_within_facet/4`**) with **`mix verify.phase36`..`38`**.
 
-**Planning:** **`v1.7`** is **archived** (2026-04-20) under **`milestones/v1.7-*`**. **No** active versioned milestone; **`/gsd-new-milestone`** defines the next **`REQUIREMENTS.md`** and roadmap slice. Product backlog candidates remain in **`.planning/ROADMAP.md` § Backlog** and the **Future** section of **`milestones/v1.7-REQUIREMENTS.md`** until promoted.
+**Planning:** **`v1.7`** is **archived** (2026-04-20). **v1.8 — Multi-index federation** is **active** (requirements **`FED-01`..`FED-03`**, phases **39–41**). Remaining backlog (e.g. **`TUNE-PIPE-01`**, **`OPSUI-01`**) stays in **`.planning/ROADMAP.md`** § Backlog until promoted.
 
 ## Evolution
 
@@ -115,4 +127,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-20 after **v1.7** milestone archive; Hex **`scrypath 0.3.3`** current; next **`REQUIREMENTS.md`** via **`/gsd-new-milestone`***
+*Last updated: 2026-04-20 after opening **v1.8 — Multi-index federation**; Hex **`scrypath 0.3.3`** current*

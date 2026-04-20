@@ -1,12 +1,12 @@
 ---
 gsd_state_version: 1.0
-milestone: none
-milestone_name: Between milestones
-status: between_milestones
-last_updated: "2026-04-20T12:00:00.000Z"
+milestone: v1.8
+milestone_name: Multi-index federation
+status: roadmap_defined
+last_updated: "2026-04-20T18:00:00.000Z"
 last_activity: 2026-04-20
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,17 +21,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-20)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Between milestones — run **`/gsd-new-milestone`** to open the next versioned scope.
+**Current focus:** **v1.8 — Multi-index federation** (`FED-01`..`FED-03`, phases **39–41**).
 
 ## Current Position
 
-Phase: —
+Phase: **39** — not started
 
 Plan: —
 
-**Status:** Milestone **v1.7** archived; no active milestone.
+**Status:** Milestone **v1.8** opened; roadmap defined.
 
-**Last activity:** 2026-04-20
+**Last activity:** 2026-04-20 — `/gsd-new-milestone` (federation scope; **OPSUI-01** deferred)
 
 ## Accumulated Context
 
@@ -39,7 +39,7 @@ Plan: —
 
 (See `.planning/PROJECT.md` Key Decisions.)
 
-**v1.7 shipped:** Hierarchical facets (**36**), disjunctive facet counts (**37**), **`search_within_facet/4`** + docs/contracts (**38**).
+**v1.8 intent:** Ship **FED-01** (federation scoring/weighting), **FED-02** (`:all` or equivalent expansion + rails), **FED-03** (docs/contracts). **OPSUI-01** (operator LiveView) is an explicit **follow-up** after federation primitives exist.
 
 ### Blockers / Concerns
 
@@ -47,41 +47,15 @@ Plan: —
 
 ### Deferred Items
 
-**Prior (v1.5 and earlier):** Rows from v1.5 milestone close — **triaged phase 32 (AUDT-01)**; canonical ledger below.
-
-| Category | Item | Status |
-|----------|------|--------|
-| uat_gap | Phase 18 — `18-UAT.md` retained as shift-left map; phase **passed** — see `.planning/phases/18-release-parity-gate-node-20-ci-cleanup/18-VERIFICATION.md`, `.planning/milestones/v1.4-MILESTONE-AUDIT.md`, and `.planning/phases/18-release-parity-gate-node-20-ci-cleanup/18-UAT.md` | resolved |
-| quick_task | `260416-eoj-automate-phase-5-verification-with-live-` — obsolete (completed); see `.planning/quick/260416-eoj-automate-phase-5-verification-with-live-/260416-eoj-SUMMARY.md` | obsolete |
-| quick_task | `260416-if2-fix-mix-exs-github-urls-add-a-github-act` — obsolete (completed); see `.planning/quick/260416-if2-fix-mix-exs-github-urls-add-a-github-act/260416-if2-SUMMARY.md` | obsolete |
-
-### Acknowledged at v1.6 milestone close (`audit-open`, 2026-04-19)
-
-Structured **`audit-open`** still counted **3** items at close; each is **superseded** by shipped verification and the table above. Recorded so milestone close does not imply unmanaged debt.
-
-| Category | Item | Status |
-|----------|------|--------|
-| uat_gap | Phase 18 — `18-UAT.md` listing in audit tool | acknowledged — UAT **passed**; file retained by policy |
-| quick_task | `260416-eoj-automate-phase-5-verification-with-live-` | acknowledged — stub **missing** on disk; **obsolete** per §Deferred Items |
-| quick_task | `260416-if2-fix-mix-exs-github-urls-add-a-github-act` | acknowledged — stub **missing** on disk; **obsolete** per §Deferred Items |
-
-### Acknowledged at v1.7 milestone close (`audit-open`, 2026-04-20)
-
-Same **3** tooling rows as at v1.6 close; still **non-blocking** for archive.
-
-| Category | Item | Status |
-|----------|------|--------|
-| uat_gap | Phase 18 — `18-UAT.md` | acknowledged — UAT **passed**; audit-open listing noise |
-| quick_task | `260416-eoj-automate-phase-5-verification-with-live-` | acknowledged — **missing** stub; **obsolete** per §Deferred Items |
-| quick_task | `260416-if2-fix-mix-exs-github-urls-add-a-github-act` | acknowledged — **missing** stub; **obsolete** per §Deferred Items |
+Canonical ledger references (AUDT-01 / milestone-close hygiene): **`18-VERIFICATION.md`**, **`v1.4-MILESTONE-AUDIT.md`**, **`260416-eoj-SUMMARY.md`**, **`260416-if2-SUMMARY.md`** — see **`.planning/PROJECT.md`** and archived **`STATE.md`** discussions; no new triage rows for v1.8 open.
 
 ## Next Command
 
-1. **`/gsd-new-milestone`** — open the next versioned milestone (requirements → roadmap → phases).
+1. **`/gsd-discuss-phase 39`** — clarify federation scoring/weighting approach vs Meilisearch capabilities, or **`/gsd-plan-phase 39`** to plan directly.
 
-**Resume files:** `.planning/ROADMAP.md`, `.planning/PROJECT.md`, `.planning/STATE.md`, `.planning/MILESTONES.md`
+**Resume files:** `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/PROJECT.md`, `.planning/STATE.md`
 
 ---
-*Last updated: 2026-04-20 — milestone **v1.7** archived; **`REQUIREMENTS.md`** removed pending next milestone*
+*Last updated: 2026-04-20 — milestone **v1.8** opened*
 
 **Prior milestone:** **v1.7** (phases **36–38**) — archived 2026-04-20

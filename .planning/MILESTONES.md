@@ -1,5 +1,15 @@
 # Milestones
 
+## v1.8 Multi-index federation (Opened: 2026-04-20)
+
+**Status:** In planning — requirements and roadmap in **`.planning/REQUIREMENTS.md`** and **`.planning/ROADMAP.md`**; not shipped.
+
+**Planned phases:** **39–41** (federation scoring/weights → `:all` expansion → docs/contracts).
+
+**Requirement IDs:** **FED-01**..**FED-03** (federation); **OPSUI-01** (operator LiveView) explicitly **deferred** until v1.8 primitives exist.
+
+---
+
 ## v1.7 Facet depth and catalog search UX (Shipped + archived: 2026-04-20)
 
 **Phases completed:** 3 phases (**36–38**), **7** plans
