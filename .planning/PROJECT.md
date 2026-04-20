@@ -92,7 +92,7 @@ The current public line on Hex is **`scrypath 0.3.3`**. Planning milestone **v1.
 
 **Hex:** `scrypath` **`0.3.3`**. Shipped surfaces include the v1.3-era Meilisearch-native path (relevance, facets, multi-index, operator polish), v1.4 **hot_apply** / failure rollups, v1.5 **index contract drift** tooling, and v1.6 **adoption-grade** docs, examples, and verification clarity.
 
-**Planning:** **`v1.6`** is **archived** (2026-04-19). **`v1.7`** is open for **facet depth** (phases **36–38**); root **`.planning/REQUIREMENTS.md`** and **`.planning/ROADMAP.md`** carry scope. Remaining product backlog (multi-index scoring, per-query relevance) is listed in **REQUIREMENTS** (Future) and **`.planning/ROADMAP.md` § Backlog** where not yet active.
+**Planning:** **`v1.6`** is **archived** (2026-04-19). **`v1.7`** is open for **facet depth**; **Phase 36** (**FACET-01**) is complete; **phases 37–38** remain. Root **`.planning/REQUIREMENTS.md`** and **`.planning/ROADMAP.md`** carry scope. Remaining product backlog (multi-index scoring, per-query relevance) is listed in **REQUIREMENTS** (Future) and **`.planning/ROADMAP.md` § Backlog** where not yet active.
 
 ## Evolution
 
