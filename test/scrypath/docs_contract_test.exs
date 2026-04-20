@@ -17,6 +17,7 @@ defmodule Scrypath.DocsContractTest do
   @verify_phase26 File.read!("lib/mix/tasks/verify.phase26.ex")
   @verify_phase28 File.read!("lib/mix/tasks/verify.phase28.ex")
   @verify_phase36 File.read!("lib/mix/tasks/verify.phase36.ex")
+  @verify_phase37 File.read!("lib/mix/tasks/verify.phase37.ex")
   @verify_release_publish File.read!("lib/mix/tasks/verify.release_publish.ex")
   @guide_paths [
     "guides/drift-recovery.md",
@@ -481,6 +482,28 @@ defmodule Scrypath.DocsContractTest do
     ])
 
     refute @verify_phase36 =~ "HEX_API_KEY"
+  end
+
+  test "phase 37 guide documents disjunctive facet counts with stable phrases" do
+    assert_contains_all(@guides["guides/faceted-search-with-phoenix-liveview.md"], [
+      "## Disjunctive facet counts",
+      "OR within the same facet field",
+      "AND across different facet fields",
+      "single search",
+      "multi-search",
+      "Scrypath.Facets.Disjunctive",
+      "Genre OR + year AND on the movies catalog"
+    ])
+  end
+
+  test "verify.phase37 lists disjunctive facet verification paths without Hex secrets" do
+    assert_contains_all(@verify_phase37, [
+      "test/scrypath/facets/disjunctive_test.exs",
+      "test/scrypath/meilisearch/query_test.exs",
+      "test/scrypath/docs_contract_test.exs"
+    ])
+
+    refute @verify_phase37 =~ "HEX_API_KEY"
   end
 
   test "faceted LiveView guide documents hierarchical facets with stable headings" do
