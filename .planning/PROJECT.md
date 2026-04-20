@@ -53,10 +53,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] **Phase 38** (2026-04-20): **`search_within_facet/4`** + telemetry metadata, guide sections (**`## Searching within a facet selection`**, **`## Composing facet filters with scoped search`**), **`mix verify.phase38`**, README / ExDoc pointers — **FACET-03**, **FACET-04**.
 - [x] **Phase 39** (2026-04-20): **`federation_weight:`** + quad entries, Meilisearch **`federationOptions.weight`**, **`merge_hit_order`** / **`Scrypath.MultiSearchResult.merge_projection/1`**, guide **`## Federation weights`** — **FED-01**.
 - [x] **Phase 40** (2026-04-20): **`{:all, …}`** expansion via **`Scrypath.MultiSearch.AllExpansion`**, **`global_schemas:`** / **`:scrypath_global_search_schemas`**, post-expansion **`max_schemas`**, explicit **`{:invalid_options, {:all_expansion, _}}`** errors — **FED-02**.
+- [x] **Phase 41** (2026-04-20): Federation docs + **`docs_contract_test.exs`** anchors, **`mix verify.phase41`**, README / golden-path / **`guides/multi-index-search.md`** (`:all`, merge semantics), **`search_many/2`** `@doc` score invariant — **FED-03**.
 
 ### Active
 
-- [ ] **v1.8 — Multi-index federation** — **`FED-03`** open; **`FED-01`**, **`FED-02`** complete (Phases **39–40**). Phase **41** in **`.planning/ROADMAP.md`**. Operator LiveView (**`OPSUI-01`**) deferred until federation primitives land.
+- [ ] **Follow-up:** **`OPSUI-01`** (operator LiveView) — optional dashboard once adopters settle on federation docs and APIs; not part of core Hex package scope.
 
 ### Out of Scope
 

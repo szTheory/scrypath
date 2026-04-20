@@ -12,13 +12,13 @@
 
 - [x] **FED-02**: Developer can use an explicit **`:all` (or equivalent documented token)** to expand a multi-search over **all schemas intended for global search** per a **documented resolution rule** (e.g. application config or compile-time registration — exact mechanism is an implementation choice) with **clear cardinality rails**, **timeouts**, and **error tuples** when resolution is empty, ambiguous, or over limits.
 
-- [ ] **FED-03**: **Guides, README, and `docs_contract_test.exs` anchors** describe federation scoring, weighting, and `:all` behavior so adopters and **future operator UI** work can rely on stable wording and discoverability paths.
+- [x] **FED-03**: **Guides, README, and `docs_contract_test.exs` anchors** describe federation scoring, weighting, and `:all` behavior so adopters and **future operator UI** work can rely on stable wording and discoverability paths.
 
 ## v2+ / deferred requirements
 
 ### Operator UI (prefix: OPSUI)
 
-- **OPSUI-01**: Optional **operator LiveView dashboard** (example app or separate package) over existing `Scrypath.*` visibility, telemetry, and **federation-shaped** multi-search results — **explicitly deferred** until v1.8 federation primitives (**FED-01..03**) ship, so the UI can represent real cross-index ordering and expansion behavior.
+- **OPSUI-01**: Optional **operator LiveView dashboard** (example app or separate package) over existing `Scrypath.*` visibility, telemetry, and **federation-shaped** multi-search results — **explicitly deferred** past v1.8 core delivery; v1.8 primitives (**FED-01..03**) are now complete in-repo, so UI work can proceed when prioritized.
 
 ## Out of scope (v1.8)
 
@@ -36,7 +36,7 @@
 | AUDT-01 | Phase 32; gap closure 33 | Complete |
 | FED-01 | Phase 39 | Complete |
 | FED-02 | Phase 40 | Complete |
-| FED-03 | Phase 41 | Pending |
+| FED-03 | Phase 41 | Complete |
 
 **Coverage:**
 

@@ -10,13 +10,13 @@
 - [x] **`v1.5` shipped in-repo** (2026-04-18) — 2 phases (27–28), 5 plans — [archive](milestones/v1.5-ROADMAP.md) · [requirements](milestones/v1.5-REQUIREMENTS.md) — *Operator drift and schema-diff tooling*
 - [x] **`v1.6` shipped in-repo** (2026-04-19) — 7 phases (29–35), 7 plans — [archive](milestones/v1.6-ROADMAP.md) · [requirements](milestones/v1.6-REQUIREMENTS.md) · [audit](milestones/v1.6-MILESTONE-AUDIT.md) — *Adoption-grade integration and trust*
 - [x] **`v1.7` shipped in-repo** (2026-04-20) — 3 phases (36–38), 7 plans — [archive](milestones/v1.7-ROADMAP.md) · [requirements](milestones/v1.7-REQUIREMENTS.md) · [audit](milestones/v1.7-MILESTONE-AUDIT.md) — *Facet depth and catalog search UX*
-- [ ] **`v1.8` in progress** — *Multi-index federation* — phases **39–41** — [requirements](REQUIREMENTS.md)
+- [x] **`v1.8` shipped in-repo** (2026-04-20) — *Multi-index federation* — phases **39–41** — [requirements](REQUIREMENTS.md)
 
 ## Next milestone
 
-**Active: v1.8 — Multi-index federation** (phases **39–41**, **`FED-01`..`FED-03`** in **`REQUIREMENTS.md`**). **Operator LiveView dashboard (`OPSUI-01`)** is an explicit **follow-up** after federation primitives ship. Older backlog items below remain available if reprioritized.
+**v1.8 — Multi-index federation** (phases **39–41**) is **complete in-repo** as of **2026-04-20**; see **`REQUIREMENTS.md`** (**`FED-01`..`FED-03`** complete). **Operator LiveView dashboard (`OPSUI-01`)** is the natural **follow-up** when you want a UI over federation-shaped results. Older backlog items below remain available if reprioritized.
 
-## Phases (v1.8 — active)
+## Phases (v1.8 — complete)
 
 | # | Phase | Goal | Requirements | Success criteria (summary) |
 |---|-------|------|--------------|----------------------------|
@@ -97,7 +97,7 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 - [x] **Phase 39 — Federation scoring & weights** — complete **2026-04-20** — **FED-01** (weights API, `merge_hit_order` / `merge_projection/1`, Meilisearch wire, tests, guide § Federation weights).
 - [x] **Phase 40 — `:all` expansion** — complete **2026-04-20** — **FED-02** (`AllExpansion.expand/2`, `global_schemas:` / env registry, explicit `{:error, _}` paths, post-expansion `max_schemas`, unit + `search_many` tests).
-- [x] **Phase 41 — Federation docs & contracts** — not started — **FED-03** (README / guides / `docs_contract_test.exs` + agreed verify slice). (completed 2026-04-20)
+- [x] **Phase 41 — Federation docs & contracts** — complete **2026-04-20** — **FED-03** (`guides/multi-index-search.md`, README / golden-path pointers, `docs_contract_test.exs`, `mix verify.phase41` in CI).
 
 ## Backlog (beyond v1.8)
 
@@ -105,4 +105,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - **OPSUI-01 — Operator dashboard (LiveView)** — optional product surface (example app or separate package) over existing `Scrypath.*` visibility, telemetry, and **federation-shaped** `search_many/2` results; **follow v1.8** so the UI can represent cross-index ordering and expansion honestly. See also [`docs/search-backend-sre.md`](../docs/search-backend-sre.md).
 
 ---
-*Last updated: 2026-04-20 — Phase **40** complete; **v1.8** continues (phase **41**)*
+*Last updated: 2026-04-20 — **v1.8** complete (phases **39–41**); next focus **OPSUI-01** or milestone archive per release plan*
