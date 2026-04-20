@@ -482,20 +482,33 @@ defmodule Scrypath.Operator.FailedWork do
   defp classify_queue_signal_text(nil), do: :unknown
 
   defp classify_queue_signal_text(text) when is_binary(text) do
-    lowered = String.downcase(text)
+    classify_queue_signal_lowered(String.downcase(text), text)
+  end
 
+  defp classify_queue_signal_lowered(lowered, original_text) do
     cond do
-      String.contains?(lowered, "ecto.casterror") -> :validation
-      String.contains?(lowered, "argumenterror") -> :validation
-      String.contains?(lowered, "req.transporterror") -> :transport
-      String.contains?(lowered, "mint.transporterror") -> :transport
-      String.contains?(lowered, "timeout") -> :transport
-      Regex.match?(~r/\b(401|403|408|429)\b/, text) -> :transport
-      Regex.match?(~r/\b50[0-9]\b/, text) -> :transport
-      String.contains?(lowered, "invalid_state") -> :backend_rejected
-      String.contains?(lowered, "database_size_limit") -> :backend_rejected
-      String.contains?(lowered, "no_space_left_on_device") -> :backend_rejected
+      validation_signal?(lowered) -> :validation
+      transport_signal?(lowered, original_text) -> :transport
+      backend_rejected_signal?(lowered) -> :backend_rejected
       true -> :unknown
     end
+  end
+
+  defp validation_signal?(lowered) do
+    String.contains?(lowered, "ecto.casterror") or String.contains?(lowered, "argumenterror")
+  end
+
+  defp transport_signal?(lowered, original_text) do
+    String.contains?(lowered, "req.transporterror") or
+      String.contains?(lowered, "mint.transporterror") or
+      String.contains?(lowered, "timeout") or
+      Regex.match?(~r/\b(401|403|408|429)\b/, original_text) or
+      Regex.match?(~r/\b50[0-9]\b/, original_text)
+  end
+
+  defp backend_rejected_signal?(lowered) do
+    String.contains?(lowered, "invalid_state") or
+      String.contains?(lowered, "database_size_limit") or
+      String.contains?(lowered, "no_space_left_on_device")
   end
 end

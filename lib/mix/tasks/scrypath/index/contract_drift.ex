@@ -129,9 +129,6 @@ defmodule Mix.Tasks.Scrypath.Index.ContractDrift do
   end
 
   defp summarize_details(details) when is_list(details) do
-    details
-    |> Enum.take(3)
-    |> Enum.map(&inspect/1)
-    |> Enum.join(", ")
+    details |> Enum.take(3) |> Enum.map_join(", ", &inspect/1)
   end
 end

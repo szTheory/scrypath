@@ -313,9 +313,7 @@ defmodule Scrypath.Meilisearch.Settings do
       true ->
         raw_settings = Keyword.get(config, :settings, %{})
 
-        if not is_map(raw_settings) do
-          {:error, {:hot_apply_failed, %{reason: :invalid_settings_payload}}}
-        else
+        if is_map(raw_settings) do
           normalized = Options.normalize_settings(raw_settings)
 
           case hot_apply_subset(normalized) do
@@ -345,6 +343,8 @@ defmodule Scrypath.Meilisearch.Settings do
                 {result, Telemetry.stop_metadata(result)}
               end)
           end
+        else
+          {:error, {:hot_apply_failed, %{reason: :invalid_settings_payload}}}
         end
     end
   end

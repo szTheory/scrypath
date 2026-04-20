@@ -40,9 +40,9 @@ defmodule Scrypath.MultiSearch.Entries do
       true ->
         shared = Keyword.merge(@default_rails, shared_opts)
 
-        with :ok <- check_schema_count(entries, shared),
-             {:ok, normalized} <- normalize_entries(entries, shared) do
-          {:ok, normalized}
+        case check_schema_count(entries, shared) do
+          :ok -> normalize_entries(entries, shared)
+          {:error, _} = err -> err
         end
     end
   end
