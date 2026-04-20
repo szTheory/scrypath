@@ -24,6 +24,10 @@
 | **40** | **`:all` expansion** | **Explicit multi-index expansion** (`:all` or equivalent) with rails, timeouts, and validation errors. | **FED-02** | (1) Published resolution rule (config or app-owned registry—documented). (2) Cardinality + empty/ambiguous cases return explicit `{:error, _}` shapes. (3) Tests cover happy path and rejection paths. |
 | **41** | **Federation docs & contracts** | README / guides / **`docs_contract_test.exs`** reflect v1.8 federation behavior for adopters and future **OPSUI** work. | **FED-03** | (1) `guides/multi-index-search.md` (and pointers) describe scoring + `:all`. (2) Contract tests lock critical headings or strings. (3) **`mix verify.phase41`** (or agreed verify slice) green in CI. |
 
+## Phase 41: Federation docs & contracts
+
+**Goal:** README / guides / **`docs_contract_test.exs`** reflect v1.8 federation behavior for adopters and future **OPSUI** work.
+
 ## Phases (history)
 
 <details>
