@@ -62,7 +62,10 @@ defmodule Scrypath.Search do
               is_list(telemetry_extra) do
     config = Config.resolve!(runtime_opts(caller_opts))
     query = Query.new(text, search_opts)
-    metadata = Telemetry.common_metadata(schema_module, config, telemetry_extra)
+    metadata =
+      schema_module
+      |> Telemetry.common_metadata(config, telemetry_extra)
+      |> maybe_put_ranking_score_details_meta(search_opts)
 
     Telemetry.span([:scrypath, :search], metadata, fn ->
       backend = Config.fetch_backend!(config)
@@ -96,6 +99,16 @@ defmodule Scrypath.Search do
   defp merge_facet_bucket_into_opts!(_opts, bucket) do
     raise ArgumentError,
           "search_within_facet: facet_bucket must be a two-element tuple {facet_attribute, value}, got: #{inspect(bucket)}"
+  end
+
+  defp maybe_put_ranking_score_details_meta(meta, search_opts) do
+    pq = Keyword.get(search_opts, :per_query, %{})
+
+    if is_map(pq) and Map.get(pq, :show_ranking_score_details) == true do
+      Map.put(meta, :ranking_score_details, true)
+    else
+      meta
+    end
   end
 
   @spec search!(module(), String.t(), keyword()) :: SearchResult.t()
