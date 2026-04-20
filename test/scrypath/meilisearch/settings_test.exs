@@ -613,6 +613,25 @@ defmodule Scrypath.Meilisearch.SettingsTest do
              end)
     end
 
+    test "dotted hierarchical facet attribute names get facetSearch filterable entries" do
+      resolved = Settings.resolve(FacetableHierarchy, [])
+      wire = Settings.translate_settings(resolved)
+
+      attrs =
+        Enum.map(wire["filterableAttributes"], fn entry ->
+          entry["attribute"] || entry[:attribute]
+        end)
+
+      assert "categories.lvl0" in attrs
+      assert "categories.lvl1" in attrs
+
+      assert Enum.all?(wire["filterableAttributes"], fn entry ->
+               attr = entry["attribute"] || entry[:attribute]
+               fs = entry["features"] || entry[:features]
+               is_binary(attr) and is_list(fs) and "facetSearch" in fs
+             end)
+    end
+
     defmodule FacetOverrideSchema do
       use Ecto.Schema
 

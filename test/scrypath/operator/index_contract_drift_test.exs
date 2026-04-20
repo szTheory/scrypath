@@ -87,6 +87,37 @@ defmodule Scrypath.Operator.IndexContractDriftTest do
                Scrypath.index_contract_drift(SearchablePost, base_opts())
     end
 
+    test "faceting dimension matches for hierarchical dotted facet attributes" do
+      config = Scrypath.Config.resolve!(base_opts())
+
+      declared_wire =
+        Settings.resolve(FacetableHierarchy, config)
+        |> Settings.translate_settings()
+
+      hierarchical_faceting = %{
+        "attributes" => ["categories.lvl0", "categories.lvl1"],
+        "maxValuesPerFacet" => 100,
+        "sortFacetValuesBy" => %{}
+      }
+
+      applied =
+        Map.merge(declared_wire, %{
+          "searchableAttributes" =>
+            FacetableHierarchy |> Scrypath.schema_fields() |> Enum.map(&Atom.to_string/1),
+          "filterableAttributes" =>
+            FacetableHierarchy.__scrypath__(:filterable) |> Enum.map(&Atom.to_string/1),
+          "sortableAttributes" => [],
+          "faceting" => hierarchical_faceting
+        })
+
+      put_stub({:ok, applied})
+
+      assert {:ok, %Report{dimensions: dims}} =
+               Scrypath.index_contract_drift(FacetableHierarchy, base_opts())
+
+      assert dims.faceting.match
+    end
+
     test "JSON round-trip preserves top-level keys" do
       config = Scrypath.Config.resolve!(base_opts())
 

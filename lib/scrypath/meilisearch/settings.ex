@@ -65,7 +65,7 @@ defmodule Scrypath.Meilisearch.Settings do
 
       appended =
         attrs
-        |> Enum.reject(&MapSet.member?(covered, &1))
+        |> Enum.reject(&MapSet.member?(covered, Atom.to_string(&1)))
         |> Enum.map(&facet_filterable_object/1)
 
       Map.put(settings, :filterable_attributes, converted ++ appended)
@@ -79,7 +79,7 @@ defmodule Scrypath.Meilisearch.Settings do
 
   defp transform_filterable_for_faceting(entry, facet_names, covered) when is_binary(entry) do
     if MapSet.member?(facet_names, entry) do
-      {facet_filterable_object_string(entry), MapSet.put(covered, String.to_existing_atom(entry))}
+      {facet_filterable_object_string(entry), MapSet.put(covered, entry)}
     else
       {entry, covered}
     end
@@ -89,7 +89,7 @@ defmodule Scrypath.Meilisearch.Settings do
     name = Atom.to_string(entry)
 
     if MapSet.member?(facet_names, name) do
-      {facet_filterable_object_string(name), MapSet.put(covered, entry)}
+      {facet_filterable_object_string(name), MapSet.put(covered, name)}
     else
       {entry, covered}
     end
@@ -102,7 +102,7 @@ defmodule Scrypath.Meilisearch.Settings do
 
       name when is_binary(name) ->
         if MapSet.member?(facet_names, name) do
-          {m, MapSet.put(covered, String.to_existing_atom(name))}
+          {m, MapSet.put(covered, name)}
         else
           {m, covered}
         end
