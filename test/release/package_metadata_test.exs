@@ -40,6 +40,7 @@ defmodule Scrypath.Release.PackageMetadataTest do
     assert "guides/operator-mix-tasks.md" in docs[:extras]
     assert "docs/operator-support.md" in docs[:extras]
     assert "docs/search-backend-sre.md" in docs[:extras]
+    assert "guides/overview.md" in docs[:extras]
     assert "guides/drift-recovery.md" in docs[:extras]
 
     assert docs[:groups_for_extras][:Operations] == [
