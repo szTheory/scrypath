@@ -108,6 +108,25 @@ defmodule Scrypath.Search do
   @doc """
   Federated search across multiple schemas.
 
+  ## Entries and `federation_weight:`
+
+  Each entry is `{schema, text}` or `{schema, text, keyword}` as for `search/3`.
+  Optional **`federation_weight:`** on an entry sets a **merge weight** for
+  Meilisearch federation (higher values surface earlier in the merged hit stream).
+  Weights must be finite numbers; invalid values fail with
+  `{:error, {:invalid_options, {:federation_weight, _}}}` before any backend call.
+
+  When any entry carries a weight, the configured backend **must** implement
+  `search_many/2` (native multi-search). Otherwise the call returns
+  `{:error, {:invalid_options, {:federation_merge_requires_native_search_many, %{backend: _}}}}`
+  instead of falling back to sequential per-schema searches.
+
+  ## Result metadata
+
+  On native federation responses, `%MultiSearchResult{}` may include
+  `merge_hit_order` (engine merge sequence) and `Scrypath.MultiSearchResult.merge_projection/1`
+  for `{schema, hit_map}` rows. On sequential fallback, `merge_hit_order` is `nil`.
+
   Returns `{:error, {:validation_failed, schema, reason}}` when any entry fails
   `validate_search_options/2` before dispatch. Partial per-schema transport or
   hydration failures are represented on `failures:` inside `{:ok, %MultiSearchResult{}}`.
@@ -194,7 +213,7 @@ defmodule Scrypath.Search do
               {s, q, raw_map}
             end)
 
-          build_multi_result(triples_raw, [], config, raw)
+          build_multi_result(triples_raw, [], config, raw, indexed)
         end
 
       {:error, reason} ->
@@ -219,11 +238,11 @@ defmodule Scrypath.Search do
         {:error, {:all_failed, failures}}
 
       true ->
-        build_multi_result(oks, failures, config, nil)
+        build_multi_result(oks, failures, config, nil, nil)
     end
   end
 
-  defp build_multi_result(triples_raw, transport_failures, config, raw_response)
+  defp build_multi_result(triples_raw, transport_failures, config, raw_response, indexed_schemas)
        when is_list(triples_raw) and is_list(transport_failures) do
     {ordered, hydration_failures} = parallel_decorate(triples_raw, config)
     failures = transport_failures ++ hydration_failures
@@ -235,18 +254,29 @@ defmodule Scrypath.Search do
       true ->
         by_schema = Map.new(ordered)
         federation = extract_federation_meta(raw_response)
+        merge_hit_order = maybe_merge_hit_order(raw_response, indexed_schemas)
 
         result =
           MultiSearchResult.new(
             ordered: ordered,
             by_schema: by_schema,
             failures: failures,
-            federation: federation
+            federation: federation,
+            merge_hit_order: merge_hit_order
           )
 
         {:ok, result}
     end
   end
+
+  defp maybe_merge_hit_order(%{} = raw, indexed) when is_list(indexed) do
+    case FederatedDecode.merge_hit_order(raw, indexed) do
+      {:ok, order} -> order
+      {:error, _} -> nil
+    end
+  end
+
+  defp maybe_merge_hit_order(_, _), do: nil
 
   defp extract_federation_meta(nil), do: nil
 

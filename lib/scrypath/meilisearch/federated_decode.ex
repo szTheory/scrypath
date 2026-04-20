@@ -9,6 +9,81 @@ defmodule Scrypath.Meilisearch.FederatedDecode do
   """
 
   @doc """
+  Returns global merge order for a **flat** federated `hits` stream.
+
+  Each element is `{schema_module, id}` where `id` is the primary key value from
+  the hit map (`"id"` first, else the schema's configured `document_id` as a string
+  key). Declaration order in `indexed_schemas` is only used to resolve index UIDs
+  to modules; **hit list order is preserved** from `response`.
+  """
+  @spec merge_hit_order(map(), [{module(), String.t()}]) ::
+          {:ok, [{module(), term()}]} | {:error, term()}
+  def merge_hit_order(response, indexed_schemas)
+      when is_map(response) and is_list(indexed_schemas) do
+    case Map.get(response, "results") || Map.get(response, :results) do
+      results when is_list(results) ->
+        {:error, {:federated_decode, :not_flat_federated}}
+
+      _ ->
+        hits = Map.get(response, "hits") || Map.get(response, :hits) || []
+        uid_to_schema = Map.new(indexed_schemas, fn {s, uid} -> {to_string(uid), s} end)
+        walk_merge_hits(hits, uid_to_schema, [])
+    end
+  end
+
+  defp walk_merge_hits([], _uid_to_schema, acc), do: {:ok, Enum.reverse(acc)}
+
+  defp walk_merge_hits([hit | rest], uid_to_schema, acc) when is_map(hit) do
+    case merge_hit_step(hit, uid_to_schema) do
+      {:ok, pair} -> walk_merge_hits(rest, uid_to_schema, [pair | acc])
+      {:error, _} = err -> err
+    end
+  end
+
+  defp walk_merge_hits([_ | rest], uid_to_schema, acc),
+    do: walk_merge_hits(rest, uid_to_schema, acc)
+
+  defp merge_hit_step(hit, uid_to_schema) do
+    with {:ok, uid} <- federation_uid(hit),
+         {:ok, schema} <- schema_for_uid(uid_to_schema, uid),
+         {:ok, id} <- primary_id_from_hit(hit, schema) do
+      {:ok, {schema, id}}
+    end
+  end
+
+  defp federation_uid(hit) do
+    fed = Map.get(hit, "_federation") || Map.get(hit, :_federation) || %{}
+    uid = Map.get(fed, "indexUid") || Map.get(fed, :indexUid)
+
+    if uid in [nil, ""],
+      do: {:error, {:federated_decode, :missing_federation_tag}},
+      else: {:ok, to_string(uid)}
+  end
+
+  defp schema_for_uid(uid_to_schema, uid) do
+    case Map.fetch(uid_to_schema, uid) do
+      {:ok, schema} -> {:ok, schema}
+      :error -> {:error, {:federated_decode, {:unknown_index_uid, uid}}}
+    end
+  end
+
+  defp primary_id_from_hit(hit, schema) do
+    case Map.fetch(hit, "id") do
+      {:ok, id} -> {:ok, id}
+      :error -> document_id_fallback(hit, schema)
+    end
+  end
+
+  defp document_id_fallback(hit, schema) do
+    key = schema.__scrypath__(:document_id) |> Atom.to_string()
+
+    case Map.fetch(hit, key) do
+      {:ok, id} -> {:ok, id}
+      :error -> {:error, {:federated_decode, {:missing_id, schema, key}}}
+    end
+  end
+
+  @doc """
   Returns `{:ok, [{schema, raw_map}]}` aligned to `indexed_schemas` declaration order.
 
   `indexed_schemas` is `[{schema_module, index_uid_string}, ...]`.
