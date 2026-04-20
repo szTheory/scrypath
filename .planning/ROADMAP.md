@@ -21,7 +21,7 @@
 
 | # | Phase | Goal | Requirements | Success criteria (summary) |
 |---|-------|------|----------------|----------------------------|
-| **42** | **Per-query tuning pipeline spec** | Publish the authoritative **`TUNE-PIPE-*`** specification: precedence vs defaults, Meilisearch mapping, non-goals, errors/telemetry expectations, and an implementation gate checklist. | **TUNE-PIPE-01** … **TUNE-PIPE-04** | (1) Spec lives at an agreed in-repo path and is discoverable from README or guides. (2) Spec is internally consistent with shipped phase-19 settings work and current **`search` / `search_many`** surfaces. (3) Checklist explicitly authorizes **`TUNE-PQ-*`** work. |
+| **42** ✅ | **Per-query tuning pipeline spec** | Publish the authoritative **`TUNE-PIPE-*`** specification: precedence vs defaults, Meilisearch mapping, non-goals, errors/telemetry expectations, and an implementation gate checklist. | **TUNE-PIPE-01** … **TUNE-PIPE-04** | **Shipped 2026-04-20** — **`guides/per-query-tuning-pipeline.md`**, ExDoc + README/guides cross-links, **`docs_contract_test`** anchors, **`Scrypath.search/3`** / **`search_many/2`** `@doc`. |
 | **43** | **Per-query relevance runtime** | Ship **`TUNE-PQ-*`** per locked spec (**implements v1.7 backlog `TUNE-01`**). | **TUNE-PQ-01** … **TUNE-PQ-03** | (1) Public API and options match the spec; failures are explicit `{:error, _}` (or documented equivalents). (2) Tests + agreed **`mix verify.phaseNN`** slice are green in CI. (3) Docs and contract tests prevent silent drift. |
 
 ## Phases (history)
@@ -100,7 +100,7 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**v1.9 (2026-04-20):** Milestone opened — **`TUNE-PIPE-01`..`TUNE-PIPE-04`** in **Phase 42**; **`TUNE-PQ-01`..`TUNE-PQ-03`** in **Phase 43**. Prior **`FED-01`..`FED-03`** work is archived under **`milestones/v1.8-REQUIREMENTS.md`**.
+**v1.9 (2026-04-20):** Milestone opened — **`TUNE-PIPE-01`..`TUNE-PIPE-04`** in **Phase 42** (**✅ complete 2026-04-20**); **`TUNE-PQ-01`..`TUNE-PQ-03`** in **Phase 43** (next). Prior **`FED-01`..`FED-03`** work is archived under **`milestones/v1.8-REQUIREMENTS.md`**.
 
 ## Backlog (beyond v1.9)
 
