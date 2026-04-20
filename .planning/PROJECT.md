@@ -8,15 +8,23 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
+## Current Milestone: v1.9 Per-query relevance & tuning pipeline
+
+**Goal:** Ship an authoritative **per-query relevance / settings override pipeline** design (**`TUNE-PIPE-01`**) and the bounded **runtime** implementation (**`TUNE-01`**, backlog sense per **`milestones/v1.7-REQUIREMENTS.md`**) without diluting the Meilisearch-first operational story.
+
+**Target features:**
+- **`TUNE-PIPE-01`**: Written spec for ordering, precedence vs schema-managed defaults, Meilisearch request mapping, explicit non-goals, and gates that define "ready to implement **`TUNE-01`**."
+- **`TUNE-01`**: Per-query relevance or settings overrides in application code, implemented only after the spec is locked.
+
+**ID note:** v1.3 shipped declarative index settings under historical **`TUNE-01`..`TUNE-08`**. This milestone's **`TUNE-01`** is only the **v1.7 Future** item (**per-query runtime**), not the v1.3 settings-validation requirement.
+
 ## Last shipped milestone
 
-**v1.8 — Multi-index federation** (archived **2026-04-20**). Delivered Meilisearch-aligned **`federation_weight:`** / **`federationOptions.weight`** with **`merge_hit_order`** and **`MultiSearchResult.merge_projection/1`**, explicit **`{:all, …}`** expansion via **`Scrypath.MultiSearch.AllExpansion`** (**`global_schemas:`** / env registry, cardinality rails, explicit **`{:invalid_options, {:all_expansion, _}}`** errors), and README / golden-path / **`guides/multi-index-search.md`** coverage with **`docs_contract_test.exs`** anchors and **`mix verify.phase41`** (**`FED-01`**..**`FED-03`**). **OPSUI-01** (operator LiveView) and **per-query relevance** (**`TUNE-PIPE-01`** / **`TUNE-01`**) remain follow-ups.
+**v1.8 — Multi-index federation** (archived **2026-04-20**). Delivered Meilisearch-aligned **`federation_weight:`** / **`federationOptions.weight`** with **`merge_hit_order`** and **`Scrypath.MultiSearchResult.merge_projection/1`**, explicit **`{:all, …}`** expansion via **`Scrypath.MultiSearch.AllExpansion`** (**`global_schemas:`** / env registry, cardinality rails, explicit **`{:invalid_options, {:all_expansion, _}}`** errors), and README / golden-path / **`guides/multi-index-search.md`** coverage with **`docs_contract_test.exs`** anchors and **`mix verify.phase41`** (**`FED-01`**..**`FED-03`**). **`OPSUI-01`** (operator LiveView) remains a follow-up **outside v1.9** unless scope is explicitly expanded.
 
-## Between milestones
+## Planning window
 
-**Status:** **`v1.8`** is **archived** under **`.planning/milestones/v1.8-{ROADMAP,REQUIREMENTS}.md`**. There is **no** live **`.planning/REQUIREMENTS.md`** until **`/gsd-new-milestone`** opens the next version line.
-
-**Likely next tracks (backlog, not committed requirements):** **`OPSUI-01`**, **`TUNE-PIPE-01`** / **`TUNE-01`** — see **`.planning/ROADMAP.md`** § Backlog.
+**v1.9** is **active** in **`.planning/REQUIREMENTS.md`** and **`.planning/ROADMAP.md`** (phases **42–43**). Backlog after v1.9 is summarized in **`.planning/ROADMAP.md`** § Backlog.
 
 ## Requirements
 
@@ -52,6 +60,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ### Active
 
+- [ ] **v1.9:** **`TUNE-PIPE-*`** (pipeline spec) and **`TUNE-PQ-*`** (per-query runtime; implements v1.7 backlog **`TUNE-01`**) — see **Current Milestone** and **`.planning/REQUIREMENTS.md`**.
 - [ ] **Follow-up:** **`OPSUI-01`** (operator LiveView) — optional dashboard over federation-shaped **`search_many/2`** results; not part of core Hex package scope until a future milestone promotes it.
 
 ### Out of Scope
@@ -66,7 +75,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has **nine** archived planning milestones (**`v1.0`**–**`v1.8`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS}.md`**; **`REQUIREMENTS.md`** is intentionally absent between milestones.
+The repository has **nine** archived planning milestones (**`v1.0`**–**`v1.8`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/REQUIREMENTS.md`** (**v1.9**), and **`milestones/v*-{ROADMAP,REQUIREMENTS}.md`**.
 
 - `v1.0` shipped the Meilisearch-first Ecto-native indexing core, search/hydration path, Oban support, reindex workflows, public Phoenix docs, and release automation baseline.
 - `v1.1` shipped release hardening, docs-safety fixes, `mix verify.phase10`, and the launch-readiness evidence chain.
@@ -106,7 +115,7 @@ The current public line on Hex is **`scrypath 0.3.3`**. **v1.8** closed the fede
 
 **Hex:** `scrypath` **`0.3.3`**. Shipped surfaces include the v1.3-era Meilisearch-native path (relevance, facets, multi-index, operator polish), v1.4 **hot_apply** / failure rollups, v1.5 **index contract drift** tooling, v1.6 **adoption-grade** docs and verification clarity, **v1.7** **facet-depth** APIs (`nested_facet_paths`, disjunctive merge helper, **`search_within_facet/4`**) with **`mix verify.phase36`..`38`**, and **v1.8** **federation weights**, **`:all` expansion**, and federation **docs/contract** gates (**`mix verify.phase41`**).
 
-**Planning:** **`v1.8`** is **archived** (2026-04-20). **Between milestones** until **`/gsd-new-milestone`**. Backlog (**`TUNE-PIPE-01`**, **`OPSUI-01`**, and others) stays in **`.planning/ROADMAP.md`** § Backlog until promoted.
+**Planning:** **`v1.9`** is **open** (per-query relevance pipeline). **`v1.8`** is **archived** (2026-04-20). Remaining product backlog after v1.9 is tracked in **`.planning/ROADMAP.md`** § Backlog.
 
 ## Evolution
 
@@ -126,4 +135,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-20 after **`v1.8`** milestone archive — Hex **`scrypath 0.3.3`** current*
+*Last updated: 2026-04-20 after opening **`v1.9`** — Hex **`scrypath 0.3.3`** current*

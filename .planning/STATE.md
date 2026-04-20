@@ -1,12 +1,12 @@
 ---
 gsd_state_version: 1.0
-milestone: null
-milestone_name: null
-status: between_milestones
-last_updated: "2026-04-20T17:00:00.000Z"
-last_activity: "2026-04-20 — v1.8 milestone archived; REQUIREMENTS.md removed pending next milestone."
+milestone: v1.9
+milestone_name: Per-query relevance & tuning pipeline
+status: ready_to_plan
+last_updated: "2026-04-20T20:00:00.000Z"
+last_activity: "2026-04-20 — Milestone v1.9 opened (TUNE-PIPE + per-query runtime)."
 progress:
-  total_phases: 0
+  total_phases: 2
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,15 +21,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-20)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **Between milestones** — **`v1.8`** archived (**`milestones/v1.8-{ROADMAP,REQUIREMENTS}.md`**). Open the next version line with **`/gsd-new-milestone`**. Optional product tracks: **`OPSUI-01`**, **`TUNE-PIPE-01`**.
+**Current focus:** **v1.9** — **`TUNE-PIPE-*`** pipeline specification, then **`TUNE-PQ-*`** per-query runtime (implements v1.7 backlog label **`TUNE-01`**).
 
 ## Current Position
 
-Phase: **none** (awaiting next milestone)
+Phase: **42** — Not started (`Per-query tuning pipeline spec`)
 
-**Status:** Milestone **`v1.8`** **archived** in `.planning/milestones/`; git tag **`v1.8`** (planning marker).
+**Plan:** —
 
-**Last activity:** 2026-04-20 — Milestone close: **`audit-open`** items **acknowledged** (see **Deferred Items**); roadmap collapsed; **`REQUIREMENTS.md`** removed for fresh next-milestone requirements.
+**Status:** Roadmap ready — use **`/gsd-discuss-phase 42`** or **`/gsd-plan-phase 42`**.
+
+**Last activity:** 2026-04-20 — Milestone **v1.9** initialized (**`TUNE-PIPE-*`**, **`TUNE-PQ-*`**); roadmap **phases 42–43**.
 
 ## Accumulated Context
 
@@ -37,7 +39,7 @@ Phase: **none** (awaiting next milestone)
 
 (See `.planning/PROJECT.md` Key Decisions.)
 
-**v1.8 shipped (planning):** **FED-01**..**FED-03** complete per archives. **OPSUI-01** remains a documented follow-up.
+**v1.9 intent:** Lock **pipeline semantics in writing** before shipping **per-query** behavior; stay Meilisearch-first; **OPSUI-01** out of scope unless explicitly expanded.
 
 ### Blockers / Concerns
 
@@ -45,28 +47,18 @@ Phase: **none** (awaiting next milestone)
 
 ### Deferred Items
 
-Canonical ledger references (AUDT-01 / historical hygiene): **`18-VERIFICATION.md`**, **`v1.4-MILESTONE-AUDIT.md`**, **`260416-eoj-SUMMARY.md`**, **`260416-if2-SUMMARY.md`** — see **`.planning/PROJECT.md`** and prior milestone **`STATE.md`** snapshots in git history.
-
-#### Acknowledged at v1.8 milestone close (audit-open)
-
-Items acknowledged and deferred at milestone close on **2026-04-20**:
-
-| Category | Item | Status |
-|----------|------|--------|
-| uat_gaps | Phase 18 — `18-UAT.md` | passed (0 open scenarios; tooling still listed phase) |
-| quick_task | `260416-eoj-automate-phase-5-verification-with-live-` | missing |
-| quick_task | `260416-if2-fix-mix-exs-github-urls-add-a-github-act` | missing |
+Unchanged from **v1.8** close — see **`.planning/PROJECT.md`** and prior **`STATE.md`** in git history for **`audit-open`** acknowledgements.
 
 ## Next Command
 
-1. **`/gsd-new-milestone`** — define requirements and roadmap for the next shipped planning line (re-creates **`REQUIREMENTS.md`**).
-2. **`/gsd-discuss-phase`** — optional deep dive before the next milestone when scope is fuzzy.
+1. **`/gsd-discuss-phase 42`** — clarify spec shape, file locations, and review gates for **`TUNE-PIPE-*`**.
+2. **`/gsd-plan-phase 42`** — skip discussion and plan **Phase 42** directly.
 
-**Resume files:** `.planning/ROADMAP.md`, `.planning/PROJECT.md`, `.planning/MILESTONES.md`
+**Resume files:** `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/PROJECT.md`
 
 ---
-*Last updated: 2026-04-20 — v1.8 milestone archived*
+*Last updated: 2026-04-20 — v1.9 milestone opened*
 
 **Prior milestone:** **v1.8** (phases **39–41**) — archived 2026-04-20
 
-**Milestone:** **v1.8** — **archived** — tag **`v1.8`**
+**Milestone:** **v1.9** — **active**
