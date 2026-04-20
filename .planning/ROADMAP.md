@@ -21,6 +21,43 @@
 | 37 | Disjunctive facet counts | OR-style facet selection and facet counts are defined, implemented, and test-locked | FACET-02 | 1. Contract tests encode disjunctive vs conjunctive count behavior. 2. Edge cases (empty selection, single bucket) documented. 3. Operator-visible behavior matches docs for at least one reference scenario. |
 | 38 | Search within facet + docs | `search_within_facet/4` (or approved name) ships with consistent filter composition; guides and `docs_contract_test` cover new APIs | FACET-03, FACET-04 | 1. Public API + typespecs merged with filter composition rules consistent with `search/3`. 2. Integration test covers scoped search within a facet bucket. 3. Guide or doc section + `docs_contract_test.exs` anchors updated. 4. README/ExDoc pointers updated where facet depth is discoverable. |
 
+### Phase 36: Hierarchical facets
+
+**Goal:** Nested facet paths are declarative, applied to Meilisearch settings where supported, and reflected in search results with stable key/count semantics.
+
+**Requirements:** FACET-01
+
+**Success Criteria:**
+
+1. Example schema + search demonstrates hierarchical facet keys end-to-end in integration tests.
+2. Public docs describe supported shapes and Meilisearch limits.
+3. No regression in existing non-hierarchical facet flows covered by CI.
+
+### Phase 37: Disjunctive facet counts
+
+**Goal:** OR-style facet selection and facet counts are defined, implemented, and test-locked.
+
+**Requirements:** FACET-02
+
+**Success Criteria:**
+
+1. Contract tests encode disjunctive vs conjunctive count behavior.
+2. Edge cases (empty selection, single bucket) documented.
+3. Operator-visible behavior matches docs for at least one reference scenario.
+
+### Phase 38: Search within facet + docs
+
+**Goal:** `search_within_facet/4` (or approved name) ships with consistent filter composition; guides and `docs_contract_test` cover new APIs.
+
+**Requirements:** FACET-03, FACET-04
+
+**Success Criteria:**
+
+1. Public API + typespecs merged with filter composition rules consistent with `search/3`.
+2. Integration test covers scoped search within a facet bucket.
+3. Guide or doc section + `docs_contract_test.exs` anchors updated.
+4. README/ExDoc pointers updated where facet depth is discoverable.
+
 ## Phases (history)
 
 <details>
