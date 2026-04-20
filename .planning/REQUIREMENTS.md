@@ -10,10 +10,10 @@
 
 ### Pipeline specification (prefix: TUNE-PIPE)
 
-- [ ] **TUNE-PIPE-01**: An authoritative written spec defines **precedence and ordering** — how per-query overrides interact with schema defaults, managed index settings, and existing **`Scrypath.search/3`** / **`search_many/2`** behavior.
-- [ ] **TUNE-PIPE-02**: The same spec defines **Meilisearch request mapping** — which APIs and payload fields apply for v1.9, and which surfaces remain intentionally unsupported or deferred.
-- [ ] **TUNE-PIPE-03**: The spec lists **explicit non-goals**, **expected error shapes**, and **telemetry or observability** expectations that **`TUNE-PQ-*`** implementation must honor.
-- [ ] **TUNE-PIPE-04**: The spec ends with a **checklist** that maintainers can use to declare the pipeline **ready for implementation** (**`TUNE-PQ-*`**).
+- [x] **TUNE-PIPE-01**: An authoritative written spec defines **precedence and ordering** — how per-query overrides interact with schema defaults, managed index settings, and existing **`Scrypath.search/3`** / **`search_many/2`** behavior.
+- [x] **TUNE-PIPE-02**: The same spec defines **Meilisearch request mapping** — which APIs and payload fields apply for v1.9, and which surfaces remain intentionally unsupported or deferred.
+- [x] **TUNE-PIPE-03**: The spec lists **explicit non-goals**, **expected error shapes**, and **telemetry or observability** expectations that **`TUNE-PQ-*`** implementation must honor.
+- [x] **TUNE-PIPE-04**: The spec ends with a **checklist** that maintainers can use to declare the pipeline **ready for implementation** (**`TUNE-PQ-*`**).
 
 ### Per-query runtime (prefix: TUNE-PQ) — implements backlog **TUNE-01**
 
@@ -40,10 +40,10 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | AUDT-01 | Phase 32 (gap closure 33 follow-ups) | Complete — planning hygiene & doc-contract Nyquist invariants |
-| TUNE-PIPE-01 | Phase 42 | Pending |
-| TUNE-PIPE-02 | Phase 42 | Pending |
-| TUNE-PIPE-03 | Phase 42 | Pending |
-| TUNE-PIPE-04 | Phase 42 | Pending |
+| TUNE-PIPE-01 | Phase 42 | Complete |
+| TUNE-PIPE-02 | Phase 42 | Complete |
+| TUNE-PIPE-03 | Phase 42 | Complete |
+| TUNE-PIPE-04 | Phase 42 | Complete |
 | TUNE-PQ-01 | Phase 43 | Pending |
 | TUNE-PQ-02 | Phase 43 | Pending |
 | TUNE-PQ-03 | Phase 43 | Pending |
@@ -56,4 +56,4 @@
 
 ---
 *Requirements defined: 2026-04-20*  
-*Last updated: 2026-04-20 after `/gsd-new-milestone` (v1.9)*
+*Last updated: 2026-04-20 — Phase 42 complete (pipeline spec requirements); per-query runtime requirements remain for Phase 43.*
