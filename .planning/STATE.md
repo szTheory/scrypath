@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.9
 milestone_name: — active)
-status: **`42-CONTEXT.md`** ready — use **`/gsd-plan-phase 42`** to produce plans for **`TUNE-PIPE-*`** writing/editing work.
-last_updated: "2026-04-20T17:21:17.501Z"
-last_activity: 2026-04-20 — **`/gsd-discuss-phase 42`** with parallel research; decisions locked in **`.planning/phases/42-per-query-tuning-pipeline-spec/42-CONTEXT.md`**.
+status: executing phase 42 — per-query tuning pipeline spec (plans 42-01, 42-02)
+last_updated: "2026-04-20T18:00:00.000Z"
+last_activity: 2026-04-20 — `/gsd-execute-phase 42` in progress
 progress:
   total_phases: 25
   completed_phases: 21
@@ -25,13 +25,13 @@ See: `.planning/PROJECT.md` (updated 2026-04-20)
 
 ## Current Position
 
-Phase: **42** — Context gathered (`Per-query tuning pipeline spec`)
+Phase: **42** — Executing (`Per-query tuning pipeline spec`)
 
-**Plan:** —
+**Plan:** 42-01 → 42-02
 
-**Status:** **`42-CONTEXT.md`** ready — use **`/gsd-plan-phase 42`** to produce plans for **`TUNE-PIPE-*`** writing/editing work.
+**Status:** Canonical pipeline guide + discoverability wiring per phase plans.
 
-**Last activity:** 2026-04-20 — **`/gsd-discuss-phase 42`** with parallel research; decisions locked in **`.planning/phases/42-per-query-tuning-pipeline-spec/42-CONTEXT.md`**.
+**Last activity:** 2026-04-20 — phase 42 execution
 
 ## Accumulated Context
 
@@ -49,9 +49,13 @@ Phase: **42** — Context gathered (`Per-query tuning pipeline spec`)
 
 Unchanged from **v1.8** close — see **`.planning/PROJECT.md`** and prior **`STATE.md`** in git history for **`audit-open`** acknowledgements.
 
+### Nyquist audit ledger (AUDT-01 — immutable pointers)
+
+Doc-contract tests require these maintainer artifact names to remain discoverable from **STATE.md**: **`18-VERIFICATION.md`**, **`v1.4-MILESTONE-AUDIT.md`**, **`260416-eoj-SUMMARY.md`**, **`260416-if2-SUMMARY.md`**.
+
 ## Next Command
 
-1. **`/gsd-plan-phase 42`** — plan authoring of **`guides/per-query-tuning-pipeline.md`**, cross-links, **`mix.exs`** extras, and contract-test anchors per **42-CONTEXT.md**.
+1. **`/gsd-execute-phase 42`** — resume if interrupted; completes plans **42-01** and **42-02**.
 
 **Resume file:** `.planning/phases/42-per-query-tuning-pipeline-spec/42-CONTEXT.md`
 
