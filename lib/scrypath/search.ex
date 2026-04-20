@@ -4,6 +4,7 @@ defmodule Scrypath.Search do
   alias Scrypath.Config
   alias Scrypath.Hydration
   alias Scrypath.Meilisearch.FederatedDecode
+  alias Scrypath.MultiSearch.AllExpansion
   alias Scrypath.MultiSearch.Entries
   alias Scrypath.MultiSearchResult
   alias Scrypath.Query
@@ -121,6 +122,18 @@ defmodule Scrypath.Search do
   `{:error, {:invalid_options, {:federation_merge_requires_native_search_many, %{backend: _}}}}`
   instead of falling back to sequential per-schema searches.
 
+  ## :all expansion
+
+  An entry may be **`{:all, text}`** or **`{:all, text, keyword}`** (same shapes as a
+  normal schema entry, but with the literal **`:all`** tag instead of a schema module).
+  Those entries expand **before** validation into one concrete **`{schema, text, keyword}`**
+  tuple per module in the configured allowlist, preserving declaration order.
+
+  Provide the allowlist either as shared-option **`global_schemas:`** (a list of schema
+  modules, in order — when set, it **replaces** the application-env list for that call)
+  or by setting **`otp_app:`** and listing modules under **`Application.get_env(otp_app,
+  :scrypath_global_search_schemas, [])`**.
+
   ## Result metadata
 
   On native federation responses, `%MultiSearchResult{}` may include
@@ -133,13 +146,23 @@ defmodule Scrypath.Search do
   """
   @spec search_many(list(), keyword()) :: {:ok, MultiSearchResult.t()} | {:error, term()}
   def search_many(entries, shared_opts \\ []) when is_list(entries) and is_list(shared_opts) do
-    metadata = %{schema_count: length(entries)}
+    raw = length(entries)
 
-    Telemetry.span([:scrypath, :search_many], metadata, fn ->
-      result = run_search_many(entries, shared_opts)
-      maybe_emit_search_many_partial(result)
-      {result, Telemetry.stop_metadata(result)}
-    end)
+    Telemetry.span(
+      [:scrypath, :search_many],
+      %{schema_count: raw, raw_entry_count: raw},
+      fn ->
+        {result, count_meta} = run_search_many_inner(entries, shared_opts)
+        maybe_emit_search_many_partial(result)
+
+        stop =
+          result
+          |> Telemetry.stop_metadata()
+          |> Map.merge(count_meta)
+
+        {result, stop}
+      end
+    )
   end
 
   @spec search_many!(list(), keyword()) :: MultiSearchResult.t()
@@ -153,35 +176,50 @@ defmodule Scrypath.Search do
     end
   end
 
-  defp run_search_many(entries, shared_opts) do
-    with {:ok, quads} <- Entries.normalize(entries, shared_opts),
-         {:ok, prepared} <- validate_search_quads(quads) do
-      config = Config.resolve!(runtime_opts(shared_opts))
-      backend = Config.fetch_backend!(config)
+  defp run_search_many_inner(entries, shared_opts) do
+    case AllExpansion.expand(entries, shared_opts) do
+      {:ok, expanded} ->
+        meta = %{schema_count: length(expanded), raw_entry_count: length(entries)}
 
-      paired_queries =
-        Enum.map(prepared, fn {schema, query, fed_opts} ->
-          {schema, query, fed_opts}
-        end)
+        result =
+          with {:ok, quads} <- Entries.normalize(expanded, shared_opts),
+               {:ok, prepared} <- validate_search_quads(quads) do
+            run_search_many_prepared(prepared, shared_opts)
+          end
 
-      needs_federated_merge? =
-        Enum.any?(paired_queries, fn {_, _, fed_opts} -> fed_opts != [] end)
+        {result, meta}
 
-      cond do
-        needs_federated_merge? and not function_exported?(backend, :search_many, 2) ->
-          {:error,
-           {:invalid_options,
-            {:federation_merge_requires_native_search_many, %{backend: backend}}}}
+      {:error, _} = err ->
+        {err, %{}}
+    end
+  end
 
-        function_exported?(backend, :search_many, 2) ->
-          run_native_search_many(backend, paired_queries, config)
+  defp run_search_many_prepared(prepared, shared_opts) do
+    config = Config.resolve!(runtime_opts(shared_opts))
+    backend = Config.fetch_backend!(config)
 
-        true ->
-          sequential_pairs =
-            Enum.map(paired_queries, fn {schema, query, _} -> {schema, query} end)
+    paired_queries =
+      Enum.map(prepared, fn {schema, query, fed_opts} ->
+        {schema, query, fed_opts}
+      end)
 
-          run_sequential_search_many(backend, sequential_pairs, config)
-      end
+    needs_federated_merge? =
+      Enum.any?(paired_queries, fn {_, _, fed_opts} -> fed_opts != [] end)
+
+    cond do
+      needs_federated_merge? and not function_exported?(backend, :search_many, 2) ->
+        {:error,
+         {:invalid_options,
+          {:federation_merge_requires_native_search_many, %{backend: backend}}}}
+
+      function_exported?(backend, :search_many, 2) ->
+        run_native_search_many(backend, paired_queries, config)
+
+      true ->
+        sequential_pairs =
+          Enum.map(paired_queries, fn {schema, query, _} -> {schema, query} end)
+
+        run_sequential_search_many(backend, sequential_pairs, config)
     end
   end
 
@@ -330,7 +368,7 @@ defmodule Scrypath.Search do
   defp maybe_emit_search_many_partial(_), do: :ok
 
   defp runtime_opts(opts) do
-    Keyword.drop(opts, [:filter, :sort, :page, :facets, :facet_filter])
+    Keyword.drop(opts, [:filter, :sort, :page, :facets, :facet_filter, :global_schemas])
   end
 
   defp decorate_result(schema_module, query, raw_result, config) when is_map(raw_result) do
