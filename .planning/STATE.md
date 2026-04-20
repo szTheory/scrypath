@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.9
 milestone_name: — active)
-status: Phase 42 complete — pipeline spec shipped; next Phase 43 (per-query runtime, TUNE-PQ prefix in REQUIREMENTS)
-last_updated: "2026-04-20T18:45:00.000Z"
-last_activity: 2026-04-20 — `/gsd-execute-phase 42` finished plans **42-01** and **42-02**
+status: completed
+last_updated: "2026-04-20T17:49:52.155Z"
+last_activity: 2026-04-20 — phase **42** execution + verification
 progress:
-  total_phases: 25
+  total_phases: 26
   completed_phases: 22
-  total_plans: 60
+  total_plans: 59
   completed_plans: 60
-  percent: 98
+  percent: 100
 ---
 
 # Project State
@@ -59,7 +59,7 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 2. **`/gsd-plan-phase 43`** — plan **TUNE-PQ-*** runtime work
 3. **`/gsd-execute-phase 43`** — implement per-query behavior against the locked spec
 
-**Resume file:** `.planning/phases/43-*/` (once phase 43 directory exists)
+**Resume file:** --resume-file
 
 ---
 *Last updated: 2026-04-20 — phase **42** complete*
