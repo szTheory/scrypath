@@ -36,7 +36,7 @@ GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
 | Job | Purpose |
 |-----|---------|
 | **`test`** | Matrix (Elixir 1.17.3 / OTP 26.2.5 and Elixir 1.19.0 / OTP 28.1): `mix compile --warnings-as-errors`, `mix test --exclude integration --include requires_clean_workspace` |
-| **`quality`** | Format, `mix verify.workspace_clean`, Credo, Dialyzer, `mix docs --warnings-as-errors`, `mix hex.audit`, `mix verify.phase11`, `mix verify.phase13 --skip-integration`, `mix verify.phase14`, `mix verify.phase20`, `mix verify.phase22`, `mix verify.phase26`, `mix verify.phase28` |
+| **`quality`** | Format, `mix verify.workspace_clean`, Credo, Dialyzer, `mix docs --warnings-as-errors`, `mix hex.audit`, plus focused verify gates (phases **11**, **13** with `--skip-integration`, **14**, **20**, **22**, **26**, **28** — see `lib/mix/tasks/verify.*`) |
 | **`phase5-verification`** | Service: Meilisearch v1.15. `SCRYPATH_INTEGRATION=1`, `mix verify.phase5` (live integration + docs slice for backfill/reindex) |
 | **`phase13-verification`** | Service: Meilisearch. `SCRYPATH_INTEGRATION=1`, `mix verify.phase13` (operator integration path) |
 | **`meilisearch-smoke`** | Service: Meilisearch. `mix verify.meilisearch_smoke` (curated live suites: `live_meilisearch_verification`, `live_operator_verification`, `search_many_integration`, `settings_hot_apply_integration`) |

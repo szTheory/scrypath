@@ -85,6 +85,7 @@ defmodule Scrypath.MixProject do
       source_ref: @source_ref,
       extras: [
         "README.md",
+        "CONTRIBUTING.md",
         "ARCHITECTURE.md",
         "guides/drift-recovery.md",
         "guides/getting-started.md",
@@ -120,6 +121,7 @@ defmodule Scrypath.MixProject do
           "guides/sync-modes-and-visibility.md"
         ],
         Maintainers: [
+          "CONTRIBUTING.md",
           "docs/releasing.md",
           "docs/operator-support.md",
           "docs/search-backend-sre.md"
@@ -131,7 +133,8 @@ defmodule Scrypath.MixProject do
   defp package do
     [
       licenses: ["Apache-2.0"],
-      files: ~w(lib .formatter.exs mix.exs README.md ARCHITECTURE.md CHANGELOG.md guides docs),
+      files:
+        ~w(lib .formatter.exs mix.exs README.md CONTRIBUTING.md ARCHITECTURE.md CHANGELOG.md guides docs),
       links: %{
         "GitHub" => @source_url,
         "HexDocs" => @release_docs_url,

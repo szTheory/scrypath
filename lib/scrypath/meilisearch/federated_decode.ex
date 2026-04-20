@@ -41,37 +41,45 @@ defmodule Scrypath.Meilisearch.FederatedDecode do
     facets_by_index =
       Map.get(response, "facetsByIndex") || Map.get(response, :facetsByIndex) || %{}
 
-    hits_by_uid =
-      Enum.group_by(hits, fn hit ->
-        fed = Map.get(hit, "_federation") || Map.get(hit, :_federation) || %{}
-        Map.get(fed, "indexUid") || Map.get(fed, :indexUid)
-      end)
+    hits_by_uid = group_hits_by_federation_uid(hits)
+    facets_norm = facets_by_uid_string(facets_by_index)
 
     Enum.reduce_while(indexed_schemas, {:ok, []}, fn {schema, uid}, {:ok, acc} ->
-      uid_s = to_string(uid)
-      uid_hits = Map.get(hits_by_uid, uid_s) || Map.get(hits_by_uid, uid) || []
-
-      facet_entry =
-        Map.get(facets_by_uid_string(facets_by_index), uid_s) ||
-          Map.get(facets_by_index, uid_s) ||
-          %{}
-
-      dist =
-        Map.get(facet_entry, "facetDistribution") ||
-          Map.get(facet_entry, :facetDistribution) ||
-          %{}
-
-      stats =
-        Map.get(facet_entry, "facetStats") || Map.get(facet_entry, :facetStats) || %{}
-
-      raw = %{
-        "hits" => Enum.map(uid_hits, &strip_federation/1),
-        "facetDistribution" => dist,
-        "facetStats" => stats
-      }
-
-      {:cont, {:ok, acc ++ [{schema, raw}]}}
+      {:cont,
+       {:ok,
+        acc ++ [federated_raw_for_schema(schema, uid, hits_by_uid, facets_norm, facets_by_index)]}}
     end)
+  end
+
+  defp group_hits_by_federation_uid(hits) do
+    Enum.group_by(hits, fn hit ->
+      fed = Map.get(hit, "_federation") || Map.get(hit, :_federation) || %{}
+      Map.get(fed, "indexUid") || Map.get(fed, :indexUid)
+    end)
+  end
+
+  defp federated_raw_for_schema(schema, uid, hits_by_uid, facets_norm, facets_by_index) do
+    uid_s = to_string(uid)
+    uid_hits = Map.get(hits_by_uid, uid_s) || Map.get(hits_by_uid, uid) || []
+
+    facet_entry =
+      Map.get(facets_norm, uid_s) || Map.get(facets_by_index, uid_s) || %{}
+
+    dist =
+      Map.get(facet_entry, "facetDistribution") ||
+        Map.get(facet_entry, :facetDistribution) ||
+        %{}
+
+    stats =
+      Map.get(facet_entry, "facetStats") || Map.get(facet_entry, :facetStats) || %{}
+
+    raw = %{
+      "hits" => Enum.map(uid_hits, &strip_federation/1),
+      "facetDistribution" => dist,
+      "facetStats" => stats
+    }
+
+    {schema, raw}
   end
 
   defp facets_by_uid_string(map) when is_map(map) do
