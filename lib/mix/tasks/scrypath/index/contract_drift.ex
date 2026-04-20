@@ -81,6 +81,8 @@ defmodule Mix.Tasks.Scrypath.Index.ContractDrift do
     end
   end
 
+  # `System.halt/1` does not return; Dialyzer reports `no_return` otherwise.
+  @dialyzer {:nowarn_function, emit_drift_and_halt!: 3}
   defp emit_drift_and_halt!(schema, %Report{index: index} = report, opts) do
     if opts[:json] do
       Mix.shell().info(Jason.encode!(report))
