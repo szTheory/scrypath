@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: — active)
-status: completed
-last_updated: "2026-04-20T15:50:13.648Z"
-last_activity: "2026-04-20 — Phase **40** executed; `:all` expansion shipped with tests."
+status: milestone_complete
+last_updated: "2026-04-20T15:54:24.997Z"
+last_activity: 2026-04-20
 progress:
   total_phases: 1
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
   completed_plans: 0
-  percent: 0
+  percent: 100
 ---
 
 # Project State
@@ -21,17 +21,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-20)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.8 — Multi-index federation** — next **Phase 41** (federation docs & contracts, **FED-03**).
+**Current focus:** Phase --phase — 41
 
 ## Current Position
 
-Phase: **41** — Federation docs & contracts (not started)
+Phase: 41
 
-Plan: —
+Plan: Not started
 
-**Status:** Phase **40** complete (**FED-02**).
+**Status:** Milestone complete
 
-**Last activity:** 2026-04-20 — Phase **40** executed; `:all` expansion shipped with tests.
+**Last activity:** 2026-04-20
 
 ## Accumulated Context
 
