@@ -84,6 +84,7 @@ defmodule Scrypath.MultiSearch.Entries do
     with {:ok, fed_opts} <- federation_weight_opts(raw_weight),
          :ok <- reject_shared_only_in_entry(entry_core),
          merged <- Keyword.merge(shared, entry_core, fn _k, _s, e -> e end),
+         merged <- merge_per_query_shallow(shared, entry_core, merged),
          :ok <- validate_page_size(merged) do
       {:ok, {schema, text, merged, fed_opts}}
     end
@@ -120,6 +121,36 @@ defmodule Scrypath.MultiSearch.Entries do
       {k, _} -> {:error, {:invalid_options, {:federation_key_in_entry, k}}}
     end
   end
+
+  # D-11 (Phase 43): top-level entry wins on duplicate keys, but when *both* sides
+  # supply `:per_query`, inner keys shallow-merge with entry bias on conflicts.
+  defp merge_per_query_shallow(shared, entry_core, merged) do
+    case {Keyword.get(shared, :per_query), Keyword.get(entry_core, :per_query)} do
+      {nil, nil} ->
+        merged
+
+      {s, nil} ->
+        Keyword.put(merged, :per_query, per_query_as_map(s))
+
+      {nil, e} ->
+        Keyword.put(merged, :per_query, per_query_as_map(e))
+
+      {s, e} ->
+        Keyword.put(
+          merged,
+          :per_query,
+          Map.merge(per_query_as_map(s), per_query_as_map(e))
+        )
+    end
+  end
+
+  defp per_query_as_map(v) when is_map(v), do: Map.new(v)
+
+  defp per_query_as_map(v) when is_list(v) do
+    if Keyword.keyword?(v), do: Map.new(v), else: %{}
+  end
+
+  defp per_query_as_map(_), do: %{}
 
   defp validate_page_size(merged_opts) do
     page = Keyword.get(merged_opts, :page, [])
