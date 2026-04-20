@@ -49,6 +49,7 @@ defmodule Scrypath.MixProject do
         "verify.phase36": :test,
         "verify.phase37": :test,
         "verify.phase38": :test,
+        "verify.phase41": :test,
         "verify.meilisearch_smoke": :test,
         "verify.release_publish": :test,
         "verify.workspace_clean": :test,
@@ -91,6 +92,7 @@ defmodule Scrypath.MixProject do
         "guides/drift-recovery.md",
         "guides/getting-started.md",
         "guides/golden-path.md",
+        "guides/meilisearch-operations.md",
         "guides/phoenix-walkthrough.md",
         "guides/phoenix-contexts.md",
         "guides/phoenix-controllers-and-json.md",
@@ -122,6 +124,7 @@ defmodule Scrypath.MixProject do
         Operations: [
           "ARCHITECTURE.md",
           "guides/drift-recovery.md",
+          "guides/meilisearch-operations.md",
           "guides/operator-mix-tasks.md",
           "guides/relevance-tuning.md",
           "guides/sync-modes-and-visibility.md"
