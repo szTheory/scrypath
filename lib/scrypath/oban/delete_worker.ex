@@ -5,6 +5,7 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
     use Oban.Worker, queue: :scrypath, max_attempts: 8
 
     alias Scrypath.Config
+    alias Scrypath.Oban.IndexingAck
     alias Scrypath.Oban.JobConfig
 
     @impl Oban.Worker
@@ -16,7 +17,7 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
            :ok <- validate_document_count(args, document_ids),
            {:ok, config} <- build_config(backend, index_name, args) do
         case backend.delete_documents(schema_module, document_ids, config) do
-          {:ok, _result} -> :ok
+          {:ok, _} = ok -> IndexingAck.await(backend, ok, config)
           {:error, reason} -> {:error, reason}
         end
       else
