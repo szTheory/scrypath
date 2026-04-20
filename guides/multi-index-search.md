@@ -6,6 +6,17 @@ This guide shows how to call `Scrypath.search_many/2` from a Phoenix LiveView da
 
 Use `search_many/2` when you explicitly list schemas (for example posts, users, tags, and events) and want one federated Meilisearch round-trip. Do **not** expect a single relevance ordering across schemas: scores stay per index. If you reuse the same `text` for every tuple, that is fine for a unified search bar, but treat ranking as **per-schema**, not comparable across rows.
 
+## :all expansion
+
+Some dashboards want one search bar over **every** schema registered for “global search” without listing modules in the LiveView. For that, `search_many/2` accepts a tagged entry **`{:all, text}`** or **`{:all, text, keyword}`** (same tuple shapes as a normal schema entry, but with the atom **`:all`** instead of a module).
+
+Expansion runs **before** per-entry validation: each `:all` entry becomes one **`{schema, text, keyword}`** tuple per module in the configured allowlist, preserving declaration order. Provide the allowlist in either place:
+
+- **`global_schemas:`** on the shared options — a list of schema modules in order. When set, it **replaces** the application-env list for that call only.
+- Otherwise pass **`otp_app:`** and list modules under **`Application.get_env(otp_app, :scrypath_global_search_schemas, [])`** (the **`:scrypath_global_search_schemas`** application env key).
+
+If the resolved list is empty, the call fails fast with **`{:invalid_options, {:all_expansion, :empty_registry}}`**. If **`otp_app:`** is missing while **`global_schemas:`** is absent, expect **`{:invalid_options, {:all_expansion, :missing_otp_app}}`**. After expansion, the same **`max_schemas`** and federation limits apply as for an explicit entry list—over-limit cases surface as **`{:error, {:too_many_schemas, count, max}}`** (see **`Scrypath.search_many/2`** docs for the exact error vocabulary).
+
 ## Primary example: four-schema LiveView dashboard
 
 Imagine a dashboard mount that assigns four independent searches sharing only `repo` and Meilisearch settings:
@@ -79,7 +90,11 @@ Define `user_message/2` in your LiveView or a small helper module so you map `:h
 
 ## Federation weights
 
-Per-entry **`federation_weight:`** steers how Meilisearch **merges** hits across indexes: it changes the federated stream order, not the per-schema relevance score inside each index. Treat cross-index positions as a **merge convenience** while keeping per-schema ranking and facets honest—your UI should still label which schema produced each row. When any entry sets a weight, Scrypath requires a backend that implements native `search_many/2`; sequential-only backends return `{:invalid_options, {:federation_merge_requires_native_search_many, _}}` instead of silently reordering.
+**Per-index relevance scores stay local to each index; `federation_weight:` adjusts merged ordering under federation settings—not a claim that raw scores are directly comparable across indexes.**
+
+Two layers matter: first, each schema is searched and ranked on its own index; second, federation settings (including weights) define **merged ordering** in the combined hit stream under engine policy. Treat cross-index positions as a merge convenience while keeping per-schema ranking and facets honest—your UI should still label which schema produced each row.
+
+Per-entry **`federation_weight:`** steers how Meilisearch **merges** hits across indexes: it changes the federated stream order, not the per-schema relevance score inside each index. When any entry sets a weight, Scrypath requires a backend that implements native `search_many/2`; sequential-only backends return `{:invalid_options, {:federation_merge_requires_native_search_many, _}}` instead of silently reordering.
 
 ## Duplicate schema in one call
 
