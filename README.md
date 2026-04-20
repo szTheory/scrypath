@@ -76,6 +76,7 @@ If you are wiring Scrypath into a Phoenix app, read these next:
 - [Phoenix LiveView](guides/phoenix-liveview.md)
 - **`Scrypath.search_within_facet/4`** — facet-scoped full-text search from LiveView-style catalogs ([Faceted search with Phoenix LiveView](guides/faceted-search-with-phoenix-liveview.md))
 - [Multi-index search](guides/multi-index-search.md) — for **`Scrypath.search_many/2`**, **`:all` expansion**, **`federation_weight:`**, and merged ordering semantics, treat that guide as canonical beyond this bullet list.
+- For **request-time** Meilisearch search parameters (filters, ranking score knobs, pagination, and related call options) versus **index-time** settings declared on the schema, read the canonical [Per-query tuning pipeline](guides/per-query-tuning-pipeline.md) spec next to the index-focused relevance guide.
 - [Sync Modes and Visibility](guides/sync-modes-and-visibility.md)
 - [Operator Mix Tasks](guides/operator-mix-tasks.md)
 
