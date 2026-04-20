@@ -51,10 +51,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] **Phase 36** (2026-04-19): **Hierarchical facets** — opt-in `nested_facet_paths`, optional `hierarchy:` expansion, Meilisearch settings + drift alignment, `SearchResult` dotted keys, guide **`## Hierarchical facets`**, **`mix verify.phase36`** — **FACET-01**.
 - [x] **Phase 37** (2026-04-20): **Disjunctive facet counts** — `Scrypath.Facets.Disjunctive.merge_distributions/2`, guide **`## Disjunctive facet counts`**, **`mix verify.phase37`**, docs contract anchors — **FACET-02**.
 - [x] **Phase 38** (2026-04-20): **`search_within_facet/4`** + telemetry metadata, guide sections (**`## Searching within a facet selection`**, **`## Composing facet filters with scoped search`**), **`mix verify.phase38`**, README / ExDoc pointers — **FACET-03**, **FACET-04**.
+- [x] **Phase 39** (2026-04-20): **`federation_weight:`** + quad entries, Meilisearch **`federationOptions.weight`**, **`merge_hit_order`** / **`Scrypath.MultiSearchResult.merge_projection/1`**, guide **`## Federation weights`** — **FED-01**.
 
 ### Active
 
-- [ ] **v1.8 — Multi-index federation** — **`FED-01`..`FED-03`** in **`.planning/REQUIREMENTS.md`**; phases **39–41** in **`.planning/ROADMAP.md`**. Operator LiveView (**`OPSUI-01`**) deferred until federation primitives land.
+- [ ] **v1.8 — Multi-index federation** — **`FED-02`**, **`FED-03`** open; **`FED-01`** complete (Phase **39**). Phases **40–41** in **`.planning/ROADMAP.md`**. Operator LiveView (**`OPSUI-01`**) deferred until federation primitives land.
 
 ### Out of Scope
 
@@ -127,4 +128,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-20 after opening **v1.8 — Multi-index federation**; Hex **`scrypath 0.3.3`** current*
+*Last updated: 2026-04-20 — Phase **39** complete (**FED-01**); Hex **`scrypath 0.3.3`** current*
