@@ -226,6 +226,10 @@ defmodule Scrypath.DocsContractTest do
       "%Scrypath.MultiSearchResult{}",
       "failures",
       "ordered",
+      "## :all expansion",
+      "global_schemas:",
+      ":scrypath_global_search_schemas",
+      "merged ordering",
       "## Federation weights",
       "federation_weight:",
       "faceted-search-with-phoenix-liveview.md",
@@ -541,6 +545,20 @@ defmodule Scrypath.DocsContractTest do
     ])
 
     refute @verify_phase41 =~ "HEX_API_KEY"
+  end
+
+  test "phase_41 federation anchors stay wired in multi-index guide and search_many docs" do
+    guide = @guides["guides/multi-index-search.md"]
+
+    assert guide =~ ~r/^## :all expansion/m
+    assert String.contains?(guide, "global_schemas:")
+    assert String.contains?(guide, ":scrypath_global_search_schemas")
+    assert String.contains?(guide, "merged ordering")
+    assert String.contains?(guide, "**Per-index relevance scores stay local")
+
+    search_src = File.read!("lib/scrypath/search.ex")
+    assert String.contains?(search_src, "## Scores vs merge ordering")
+    assert String.contains?(search_src, "within one index")
   end
 
   test "faceted LiveView guide documents hierarchical facets with stable headings" do
