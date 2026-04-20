@@ -29,8 +29,23 @@ defmodule Scrypath.TestSupport.FakeBackend do
 
   @impl true
   def search_many(paired_queries, config) when is_list(paired_queries) do
+    sorted =
+      paired_queries
+      |> Enum.with_index()
+      |> Enum.sort_by(fn {{_, _, fed}, idx} ->
+        w =
+          case Keyword.get(fed, :federation_weight) do
+            x when is_float(x) -> x
+            x when is_integer(x) -> x * 1.0
+            _ -> 1.0
+          end
+
+        {-w, idx}
+      end)
+      |> Enum.map(&elem(&1, 0))
+
     hits =
-      Enum.map(paired_queries, fn {schema_module, %Query{} = query, _fed_opts} ->
+      Enum.map(sorted, fn {schema_module, %Query{} = query, _fed_opts} ->
         uid = index_name(schema_module, config)
 
         %{
@@ -41,7 +56,7 @@ defmodule Scrypath.TestSupport.FakeBackend do
       end)
 
     facets_by_index =
-      paired_queries
+      sorted
       |> Enum.map(fn {schema_module, %Query{} = query, _fed_opts} ->
         uid = index_name(schema_module, config)
 
