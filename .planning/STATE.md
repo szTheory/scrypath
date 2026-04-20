@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.8
-milestone_name: Multi-index federation
-status: roadmap_defined
-last_updated: "2026-04-20T18:00:00.000Z"
-last_activity: 2026-04-20
+milestone_name: — active)
+status: Milestone **v1.8** opened; roadmap defined.
+last_updated: "2026-04-20T14:44:10.764Z"
+last_activity: 2026-04-20 — `/gsd-new-milestone` (federation scope; **OPSUI-01** deferred)
 progress:
-  total_phases: 3
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 22
+  completed_phases: 18
+  total_plans: 51
+  completed_plans: 52
+  percent: 100
 ---
 
 # Project State
