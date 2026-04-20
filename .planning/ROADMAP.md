@@ -9,10 +9,17 @@
 - [x] **`v1.4` shipped on 2026-04-17** — 3 phases (24–26), 8 plans — [archive](milestones/v1.4-ROADMAP.md) · [requirements](milestones/v1.4-REQUIREMENTS.md)
 - [x] **`v1.5` shipped in-repo** (2026-04-18) — 2 phases (27–28), 5 plans — [archive](milestones/v1.5-ROADMAP.md) · [requirements](milestones/v1.5-REQUIREMENTS.md) — *Operator drift and schema-diff tooling*
 - [x] **`v1.6` shipped in-repo** (2026-04-19) — 7 phases (29–35), 7 plans — [archive](milestones/v1.6-ROADMAP.md) · [requirements](milestones/v1.6-REQUIREMENTS.md) · [audit](milestones/v1.6-MILESTONE-AUDIT.md) — *Adoption-grade integration and trust*
+- [ ] **`v1.7` in progress** — 3 phases (36–38) — [requirements](REQUIREMENTS.md) — *Facet depth and catalog search UX*
 
 ## Next milestone
 
-**Post–v1.6** — No active numbered phase after **35** in this file. Open the next planning cycle with **`/gsd-new-milestone`** (fresh `REQUIREMENTS.md`, roadmap slice, and version target). Backlog product ideas remain under **§ Backlog** below.
+**v1.7 — Facet depth and catalog search UX** — phases **36–38** · [REQUIREMENTS.md](REQUIREMENTS.md)
+
+| # | Phase | Goal | Requirements | Success criteria |
+|---|-------|------|--------------|------------------|
+| 36 | Hierarchical facets | Nested facet paths are declarative, applied to Meilisearch settings where supported, and reflected in search results with stable key/count semantics | FACET-01 | 1. Example schema + search demonstrates hierarchical facet keys end-to-end in integration tests. 2. Public docs describe supported shapes and Meilisearch limits. 3. No regression in existing non-hierarchical facet flows covered by CI. |
+| 37 | Disjunctive facet counts | OR-style facet selection and facet counts are defined, implemented, and test-locked | FACET-02 | 1. Contract tests encode disjunctive vs conjunctive count behavior. 2. Edge cases (empty selection, single bucket) documented. 3. Operator-visible behavior matches docs for at least one reference scenario. |
+| 38 | Search within facet + docs | `search_within_facet/4` (or approved name) ships with consistent filter composition; guides and `docs_contract_test` cover new APIs | FACET-03, FACET-04 | 1. Public API + typespecs merged with filter composition rules consistent with `search/3`. 2. Integration test covers scoped search within a facet bucket. 3. Guide or doc section + `docs_contract_test.exs` anchors updated. 4. README/ExDoc pointers updated where facet depth is discoverable. |
 
 ## Phases (history)
 
@@ -68,13 +75,12 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**v1.6** archived 2026-04-19 — phases **29–35** shipped in-repo (adoption golden path, consumer proof depth, verification story, planning hygiene, doc contracts **33–35**). **Next:** **`/gsd-new-milestone`** when you are ready to define **v1.7+** scope. Summary: **`MILESTONES.md`**, **`milestones/v1.6-ROADMAP.md`**.
+**v1.7** opened 2026-04-19 — **facet depth** track: phases **36–38** defined (hierarchical facets → disjunctive counts → search-within-facet + docs/contracts). **v1.6** remains archived (phases **29–35**). **Next:** **`/gsd-discuss-phase 36`** (or **`/gsd-plan-phase 36`**).
 
-## Backlog (post–v1.6 candidates)
+## Backlog (post–v1.7 candidates)
 
-- Hierarchical facets, first-class disjunctive facet counts, `search_within_facet/4`.
-- Multi-index federation scoring / weighting / `:all` wildcard.
-- Per-query relevance overrides once pipeline semantics are designed.
+- Multi-index federation scoring / weighting / `:all` wildcard (`MULTI-*` in [REQUIREMENTS.md](REQUIREMENTS.md)).
+- Per-query relevance overrides — **blocked** on design milestone **`TUNE-PIPE-01`** (pipeline semantics spec) before implementation (`TUNE-01`).
 
 ---
-*Last updated: 2026-04-19 — **v1.6** milestone archived; post–v1.6 planning via `/gsd-new-milestone`*
+*Last updated: 2026-04-19 — **v1.7** milestone opened (phases **36–38**); backlog trimmed to post–facet items*
