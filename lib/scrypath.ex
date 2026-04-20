@@ -125,8 +125,19 @@ defmodule Scrypath do
   @doc """
   Federated search across multiple schemas.
 
-  Returns an ok tuple whose success value is the library's federated multi-search
-  result struct, or an error tuple on validation, transport, or complete failure.
+  Entries mirror `search/3` tuples; optional **`federation_weight:`** tunes
+  Meilisearch merge ordering for that row and requires a backend that implements
+  `search_many/2`. Invalid weights use `{:invalid_options, {:federation_weight, _}}`;
+  backends without native multi-search return
+  `{:invalid_options, {:federation_merge_requires_native_search_many, %{backend: _}}}`.
+
+  Successful responses are `{:ok, %Scrypath.MultiSearchResult{}}` with
+  per-schema `Scrypath.SearchResult` structs. When the backend returns a flat
+  federated `hits` list, `merge_hit_order` may be populated and
+  `Scrypath.MultiSearchResult.merge_projection/1` exposes `{schema, hit_map}` pairs
+  in merge order; otherwise `merge_hit_order` is `nil`.
+
+  See also **`guides/multi-index-search.md`** § **Federation weights**.
   """
   @spec search_many(list(), keyword()) :: {:ok, term()} | {:error, term()}
   def search_many(entries, opts \\ []) do

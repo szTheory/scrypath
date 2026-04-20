@@ -77,6 +77,10 @@ Use a calm, accessible banner with `aria-live="polite"` (not `role="alert"` unle
 
 Define `user_message/2` in your LiveView or a small helper module so you map `:hydration_timeout`, transport errors, and validation failures to human copy without echoing raw exception blobs.
 
+## Federation weights
+
+Per-entry **`federation_weight:`** steers how Meilisearch **merges** hits across indexes: it changes the federated stream order, not the per-schema relevance score inside each index. Treat cross-index positions as a **merge convenience** while keeping per-schema ranking and facets honest—your UI should still label which schema produced each row. When any entry sets a weight, Scrypath requires a backend that implements native `search_many/2`; sequential-only backends return `{:invalid_options, {:federation_merge_requires_native_search_many, _}}` instead of silently reordering.
+
 ## Duplicate schema in one call
 
 `results.by_schema` is a map and therefore **last-wins** if the same schema appears twice. Always iterate `results.ordered` when you need both result sets (for example A/B facet layouts):
@@ -100,4 +104,9 @@ end
 
 ## `%Scrypath.MultiSearchResult{}`
 
-Public fields include `ordered`, `by_schema`, `failures`, and optional `federation` metadata from Meilisearch. Failures are maps `%{schema: module(), reason: term()}`; successful schemas are absent from `failures` and present in `ordered`.
+Public fields include `ordered`, `by_schema`, `failures`, optional `federation`
+metadata from Meilisearch, and optional `merge_hit_order` when the response used
+flat federated `hits`. Use `Scrypath.MultiSearchResult.merge_projection/1` to walk
+merge order as `{schema, hit_map}` pairs. Failures are maps
+`%{schema: module(), reason: term()}`; successful schemas are absent from
+`failures` and present in `ordered`.

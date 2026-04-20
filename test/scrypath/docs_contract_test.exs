@@ -24,6 +24,7 @@ defmodule Scrypath.DocsContractTest do
     "guides/drift-recovery.md",
     "guides/getting-started.md",
     "guides/golden-path.md",
+    "guides/meilisearch-operations.md",
     "guides/phoenix-walkthrough.md",
     "guides/phoenix-contexts.md",
     "guides/phoenix-controllers-and-json.md",
@@ -123,6 +124,7 @@ defmodule Scrypath.DocsContractTest do
       "Scrypath.search",
       "sync_mode: :inline",
       "guides/sync-modes-and-visibility.md",
+      "meilisearch-operations.md",
       "examples/phoenix_meilisearch/README.md",
       "SCRYPATH_MEILISEARCH_URL",
       "docker compose up -d",
@@ -223,6 +225,8 @@ defmodule Scrypath.DocsContractTest do
       "%Scrypath.MultiSearchResult{}",
       "failures",
       "ordered",
+      "## Federation weights",
+      "federation_weight:",
       "faceted-search-with-phoenix-liveview.md",
       "sync-modes-and-visibility.md"
     ])
