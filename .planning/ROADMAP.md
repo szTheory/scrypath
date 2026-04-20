@@ -12,10 +12,18 @@
 - [x] **`v1.7` shipped in-repo** (2026-04-20) — 3 phases (36–38), 7 plans — [archive](milestones/v1.7-ROADMAP.md) · [requirements](milestones/v1.7-REQUIREMENTS.md) · [audit](milestones/v1.7-MILESTONE-AUDIT.md) — *Facet depth and catalog search UX*
 - [x] **`v1.8` shipped in-repo** (2026-04-20) — *Multi-index federation* — phases **39–41**, **6** plans — [archive](milestones/v1.8-ROADMAP.md) · [requirements](milestones/v1.8-REQUIREMENTS.md) · [audit](milestones/v1.8-MILESTONE-AUDIT.md)
 - [x] **`v1.9` shipped in-repo** (2026-04-20) — *Per-query relevance & tuning pipeline* — phases **42–43**, **5** plans — [archive](milestones/v1.9-ROADMAP.md) · [requirements](milestones/v1.9-REQUIREMENTS.md) · [audit](milestones/v1.9-MILESTONE-AUDIT.md)
+- [ ] **`v1.10` in progress** (opened 2026-04-20) — *Operator admin UI (OPSUI)* — phases **44–47** — [requirements](REQUIREMENTS.md) · [research summary](research/SUMMARY.md)
 
-## Next milestone
+## Current milestone: v1.10 — Operator admin UI (OPSUI)
 
-**Unscheduled** — run **`/gsd-new-milestone`** when you want the next version line, fresh **`.planning/REQUIREMENTS.md`**, and phased roadmap. Natural backlog candidate: **`OPSUI-01`** (operator LiveView) per **§ Backlog** below.
+**Goal:** Ship an optional **Phoenix LiveView** operator admin (**outside** the core Hex package) prioritized by **personas / jobs-to-be-done**, **conventional** Phoenix patterns, and **least surprise**—with **struct-faithful** views over **`Scrypath.*`** visibility, **telemetry discipline** ([`docs/search-backend-sre.md`](../docs/search-backend-sre.md)), and **federation-shaped `search_many/2`** results.
+
+| Phase | Name | Requirements | Success criteria (observable) |
+|-------|------|--------------|-------------------------------|
+| **44** | **OPSUI foundations** | **OPSUI-09**, **OPSUI-06**, **OPSUI-07**, **OPSUI-08** | OPSUI app/package boots from documented instructions; **persona/JTBD** doc exists and **primary nav** matches it; **LiveView layout** follows boring Phoenix conventions; **security model** documented in README or operator doc (dev vs prod). |
+| **45** | **Posture & failure triage** | **OPSUI-01**, **OPSUI-02**, **OPSUI-03** | **Landing** shows real per-schema/index posture from library APIs; **failed sync work** view matches **`failed_sync_work/2`** rollups; **sync/drift** screens are read-only and link to existing Mix/docs paths for actions. |
+| **46** | **Search & federation honesty** | **OPSUI-04**, **OPSUI-05** | **Bounded** search playground with explicit non-prod warnings; **multi-search** inspector shows **merge order**, **weights**, **partial failures**, and **`:all` expansion** consistent with shipped guides and structs—no misleading “single merged index” illusion. |
+| **47** | **Verification & hardening** | **OPSUI-10** | **CI** runs a maintainer verification slice for OPSUI (for example **`LiveViewTest`** or thin smoke); critical copy/structure pinned so federation and failure views cannot silently drift. |
 
 ## Phases (history)
 
@@ -103,11 +111,14 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**v1.9** archived **2026-04-20** — **`TUNE-PIPE-01`..`TUNE-PIPE-04`** (**Phase 42**) and **`TUNE-PQ-01`..`TUNE-PQ-03`** (**Phase 43**) shipped in-repo; see **`milestones/v1.9-REQUIREMENTS.md`**. The next planning cycle starts with **`/gsd-new-milestone`** (fresh requirements file).
+**`v1.10` active** — phases **44–47** mapped to **`OPSUI-01`..`OPSUI-10`** in **[REQUIREMENTS.md](REQUIREMENTS.md)**; **`.planning/phases/`** cleared for this milestone. Prior **`v1.9`** archived **2026-04-20** (see **`milestones/v1.9-REQUIREMENTS.md`**).
 
-## Backlog (next milestone candidates)
+**Next:** **`/gsd-discuss-phase 44`** (or **`/gsd-plan-phase 44`**) to start **OPSUI foundations**.
 
-- **OPSUI-01 — Operator dashboard (LiveView)** — optional product surface (example app or separate package) over existing `Scrypath.*` visibility, telemetry, and **federation-shaped** `search_many/2` results; **follow v1.8** so the UI can represent cross-index ordering and expansion honestly. See also [`docs/search-backend-sre.md`](../docs/search-backend-sre.md).
+## Backlog (post–v1.10 ideas)
+
+- **`OPSUI-FUT-*`** — saved operator playbooks, deeper Meilisearch vendor-style panels — see **[REQUIREMENTS.md](REQUIREMENTS.md)** § v2+ until promoted.
+- **Core library features** — continue to follow **`.planning/PROJECT.md`** *Out of Scope* until a future milestone explicitly widens the contract.
 
 ---
-*Last updated: 2026-04-20 — **v1.9** archived; next milestone **unscheduled** (see § Next milestone)*
+*Last updated: 2026-04-20 — **`v1.10` OPSUI** milestone opened (phases **44–47**)*
