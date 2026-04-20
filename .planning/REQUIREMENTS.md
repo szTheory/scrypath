@@ -10,7 +10,7 @@
 
 - [x] **FED-01**: Developer can run `search_many/2` with **documented federation scoring / weighting** (Meilisearch-native semantics where applicable) so **merged hit ordering** across indexes is **predictable, test-covered**, and reflected in the public result types (`%MultiSearchResult{}` and federation metadata) without breaking existing per-schema `%SearchResult{}` contracts for callers that only use `by_schema`.
 
-- [ ] **FED-02**: Developer can use an explicit **`:all` (or equivalent documented token)** to expand a multi-search over **all schemas intended for global search** per a **documented resolution rule** (e.g. application config or compile-time registration — exact mechanism is an implementation choice) with **clear cardinality rails**, **timeouts**, and **error tuples** when resolution is empty, ambiguous, or over limits.
+- [x] **FED-02**: Developer can use an explicit **`:all` (or equivalent documented token)** to expand a multi-search over **all schemas intended for global search** per a **documented resolution rule** (e.g. application config or compile-time registration — exact mechanism is an implementation choice) with **clear cardinality rails**, **timeouts**, and **error tuples** when resolution is empty, ambiguous, or over limits.
 
 - [ ] **FED-03**: **Guides, README, and `docs_contract_test.exs` anchors** describe federation scoring, weighting, and `:all` behavior so adopters and **future operator UI** work can rely on stable wording and discoverability paths.
 
@@ -35,7 +35,7 @@
 |-------------|-------|--------|
 | AUDT-01 | Phase 32; gap closure 33 | Complete |
 | FED-01 | Phase 39 | Complete |
-| FED-02 | Phase 40 | Pending |
+| FED-02 | Phase 40 | Complete |
 | FED-03 | Phase 41 | Pending |
 
 **Coverage:**
