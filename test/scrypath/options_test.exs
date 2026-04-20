@@ -382,14 +382,55 @@ defmodule Scrypath.OptionsTest do
 
   describe "schema faceting" do
     test "FacetableMovie compiles with aligned faceting and filterable" do
-      assert Keyword.get(FacetableMovie.__scrypath__(:faceting), :attributes) == [
+      faceting = FacetableMovie.__scrypath__(:faceting)
+
+      assert Keyword.get(faceting, :attributes) == [
                :genre,
                :year,
                :rating,
                :director
              ]
 
-      assert Scrypath.schema_faceting(FacetableMovie) == FacetableMovie.__scrypath__(:faceting)
+      assert Keyword.get(faceting, :nested_facet_paths) == false
+      assert Scrypath.schema_faceting(FacetableMovie) == faceting
+    end
+
+    test "FacetableHierarchy compiles with nested facet paths" do
+      faceting = FacetableHierarchy.__scrypath__(:faceting)
+
+      assert Keyword.get(faceting, :nested_facet_paths) == true
+
+      assert Keyword.get(faceting, :attributes) == [
+               :"categories.lvl0",
+               :"categories.lvl1"
+             ]
+    end
+
+    test "hierarchy sugar expands attributes and enables nested paths" do
+      [{mod, _}] =
+        Code.compile_string("""
+        defmodule HierarchySugarSchema do
+          use Ecto.Schema
+
+          use Scrypath,
+            fields: [:title],
+            filterable: [:"demo.lvl0", :"demo.lvl1"],
+            faceting: [
+              hierarchy: [base: :demo, depth: 2],
+              max_values_per_facet: 50
+            ]
+
+          embedded_schema do
+            field :title, :string
+          end
+        end
+        """)
+
+      faceting = mod.__scrypath__(:faceting)
+
+      assert Keyword.get(faceting, :attributes) == [:"demo.lvl0", :"demo.lvl1"]
+      assert Keyword.get(faceting, :nested_facet_paths) == true
+      refute Keyword.has_key?(faceting, :hierarchy)
     end
 
     test "rejects facet attribute not in filterable (FACET-02)" do
@@ -430,7 +471,7 @@ defmodule Scrypath.OptionsTest do
       end
     end
 
-    test "rejects hierarchical facet names (FACET-10)" do
+    test "rejects dotted facet attributes without nested_facet_paths (FACET-10 default)" do
       assert_raise ArgumentError, ~r/hierarchical/, fn ->
         Code.compile_string("""
         defmodule InvalidFacetHierarchical do
@@ -440,6 +481,29 @@ defmodule Scrypath.OptionsTest do
             fields: [:title],
             filterable: [:genre, :"foo.bar"],
             faceting: [attributes: [:"foo.bar"]]
+
+          embedded_schema do
+            field :title, :string
+          end
+        end
+        """)
+      end
+    end
+
+    test "rejects dotted facet names that do not match lvlN pattern when nested paths are on" do
+      assert_raise ArgumentError, ~r/lvlN/, fn ->
+        Code.compile_string("""
+        defmodule InvalidDottedFacetShape do
+          use Ecto.Schema
+
+          use Scrypath,
+            fields: [:title],
+            filterable: [:"foo.bar", :title],
+            faceting: [
+              nested_facet_paths: true,
+              attributes: [:"foo.bar"],
+              max_values_per_facet: 10
+            ]
 
           embedded_schema do
             field :title, :string
