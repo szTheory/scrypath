@@ -36,10 +36,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] **Phase 31** (2026-04-18): CONTRIBUTING verify ↔ guarantee matrix + default vs integration CI documentation — **VRFY-01**, **VRFY-02**.
 - [x] **Phase 32** (2026-04-18): **`STATE.md`** deferred-row triage (**AUDT-01**) with terminal statuses.
 - [x] **v1.6 milestone** (2026-04-19): Adoption-grade integration and trust — phases **29–35** archived; **`milestones/v1.6-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**; requirements **ADPT-***, **EXAM-***, **VRFY-***, **AUDT-01** satisfied per audit.
+- [x] **Phase 36** (2026-04-19): **Hierarchical facets** — opt-in `nested_facet_paths`, optional `hierarchy:` expansion, Meilisearch settings + drift alignment, `SearchResult` dotted keys, guide **`## Hierarchical facets`**, **`mix verify.phase36`** — **FACET-01**.
 
 ### Active
 
-- [ ] **v1.7 (facet depth)** — **`FACET-01`..`FACET-04`** in **`.planning/REQUIREMENTS.md`**; phases **36–38** in **`.planning/ROADMAP.md`**. Multi-index scoring and per-query relevance implementation remain deferred per REQUIREMENTS.
+- [ ] **v1.7 (facet depth)** — **`FACET-01`** satisfied (Phase 36); remaining **`FACET-02`..`FACET-04`** in **`.planning/REQUIREMENTS.md`**; phases **37–38** in **`.planning/ROADMAP.md`**. Multi-index scoring and per-query relevance implementation remain deferred per REQUIREMENTS.
 
 ### Out of Scope
 
