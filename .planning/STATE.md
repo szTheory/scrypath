@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.9
-milestone_name: Per-query relevance & tuning pipeline
-status: ready_to_plan
-last_updated: "2026-04-20T20:00:00.000Z"
-last_activity: "2026-04-20 — Milestone v1.9 opened (TUNE-PIPE + per-query runtime)."
+milestone_name: — active)
+status: Roadmap ready — use **`/gsd-discuss-phase 42`** or **`/gsd-plan-phase 42`**.
+last_updated: "2026-04-20T17:15:47.910Z"
+last_activity: 2026-04-20 — Milestone **v1.9** initialized (**`TUNE-PIPE-*`**, **`TUNE-PQ-*`**); roadmap **phases 42–43**.
 progress:
-  total_phases: 2
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 25
+  completed_phases: 21
+  total_plans: 57
+  completed_plans: 58
+  percent: 100
 ---
 
 # Project State
