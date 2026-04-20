@@ -22,7 +22,7 @@
 | # | Phase | Goal | Requirements | Success criteria (summary) |
 |---|-------|------|----------------|----------------------------|
 | **42** ✅ | **Per-query tuning pipeline spec** | Publish the authoritative **`TUNE-PIPE-*`** specification: precedence vs defaults, Meilisearch mapping, non-goals, errors/telemetry expectations, and an implementation gate checklist. | **TUNE-PIPE-01** … **TUNE-PIPE-04** | **Shipped 2026-04-20** — **`guides/per-query-tuning-pipeline.md`**, ExDoc + README/guides cross-links, **`docs_contract_test`** anchors, **`Scrypath.search/3`** / **`search_many/2`** `@doc`. |
-| **43** | **Per-query relevance runtime** | Ship **`TUNE-PQ-*`** per locked spec (**implements v1.7 backlog `TUNE-01`**). | **TUNE-PQ-01** … **TUNE-PQ-03** | (1) Public API and options match the spec; failures are explicit `{:error, _}` (or documented equivalents). (2) Tests + agreed **`mix verify.phaseNN`** slice are green in CI. (3) Docs and contract tests prevent silent drift. |
+| **43** ✅ | **Per-query relevance runtime** | Ship **`TUNE-PQ-*`** per locked spec (**implements v1.7 backlog `TUNE-01`**). | **TUNE-PQ-01** … **TUNE-PQ-03** | **Shipped 2026-04-20** — `:per_query` allowlist + `%Query{}` + Meilisearch projection + `search_many` inner merge + telemetry + **`mix verify.phase43`** + public `@doc`. |
 
 ## Phases (history)
 

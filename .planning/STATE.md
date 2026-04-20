@@ -9,7 +9,7 @@ progress:
   total_phases: 26
   completed_phases: 23
   total_plans: 62
-  completed_plans: 60
+  completed_plans: 63
   percent: 88
 ---
 
@@ -21,18 +21,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-20)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase 43 — per-query-relevance-runtime
+**Current focus:** **v1.9** — Phases **42–43** complete (**per-query pipeline spec + runtime**).
 
 ## Current Position
 
-Phase: 43
-Plan: 1 of 3
+Phase: **43** — **complete** (**Per-query relevance runtime**)
 
-**Plan:** Not started
+**Plan:** 3 / 3 plans executed and summarized
 
-**Status:** Milestone complete
+**Status:** **v1.9** milestone phases **42–43** are complete in-repo; follow **`/gsd-progress`** for backlog / next milestone routing.
 
-**Last activity:** 2026-04-20
+**Last activity:** 2026-04-20 — Phase **43** execution + verification
 
 ## Accumulated Context
 
@@ -56,17 +55,17 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **`/gsd-discuss-phase 43`** — optional refresh before implementation
-2. **`/gsd-plan-phase 43`** — plan **TUNE-PQ-*** runtime work
-3. **`/gsd-execute-phase 43`** — implement per-query behavior against the locked spec
+1. **`/gsd-progress`** — confirm roadmap / milestone table after **v1.9** phase close
+2. **`/gsd-complete-milestone`** — when ready to archive **v1.9** formally
+3. **`/gsd-new-milestone`** — if starting the next version line
 
 **Resume file:** --resume-file
 
 ---
-*Last updated: 2026-04-20 — phase **42** complete*
+*Last updated: 2026-04-20 — Phase **43** complete*
 
 **Prior milestone:** **v1.8** (phases **39–41**) — archived 2026-04-20
 
-**Milestone:** **v1.9** — **active** (Phase **42** ✅ · Phase **43** next)
+**Milestone:** **v1.9** — **phases 42–43 complete** (per-query spec + runtime)
 
-**Planned Phase:** 43 (per-query-relevance-runtime) — 3 plans — 2026-04-20T17:56:54.750Z
+**Completed Phase:** 43 (per-query-relevance-runtime) — 3 plans — 2026-04-20
