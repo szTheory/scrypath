@@ -91,6 +91,14 @@ defmodule Scrypath do
     Scrypath.Sync.delete_documents(schema_module, document_ids, opts)
   end
 
+  @doc """
+  Primary hydrated search entry: validates options, resolves runtime config, and
+  returns `{:ok, %Scrypath.SearchResult{}}` or tagged `{:error, _}` failures from
+  the configured backend. Work is wrapped in a Telemetry span **`[:scrypath, :search]`**
+  with metadata from `Scrypath.Telemetry.common_metadata/3`.
+
+  Full pipeline: see [guides/per-query-tuning-pipeline.md](guides/per-query-tuning-pipeline.md).
+  """
   @spec search(module(), String.t(), keyword()) :: {:ok, term()} | {:error, term()}
   def search(schema_module, text, opts \\ []) do
     Scrypath.Search.search(schema_module, text, opts)
@@ -123,6 +131,11 @@ defmodule Scrypath do
   end
 
   @doc """
+  Full pipeline: see [guides/per-query-tuning-pipeline.md](guides/per-query-tuning-pipeline.md).
+
+  **`search_many/2`** merge rules for shared vs per-entry options, `:all` expansion,
+  and federation payloads remain canonical in **`guides/multi-index-search.md`**.
+
   Federated search across multiple schemas.
 
   Entries mirror `search/3` tuples; optional **`federation_weight:`** tunes
