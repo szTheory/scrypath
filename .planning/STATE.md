@@ -1,16 +1,15 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.7
-milestone_name: Facet depth and catalog search UX
-status: defining_requirements
-last_updated: "2026-04-19T18:00:00.000Z"
-last_activity: 2026-04-19
+milestone_name: candidates)
+status: Milestone v1.7 opened — roadmap and requirements defined
+last_updated: "2026-04-20T00:12:49.761Z"
+last_activity: 2026-04-19 — Milestone **v1.7** initialized (facet depth track)
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
-  percent: 0
 ---
 
 # Project State
