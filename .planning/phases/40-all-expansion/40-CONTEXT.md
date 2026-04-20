@@ -43,7 +43,7 @@ Ship **FED-02**: an explicit **`:all` (or documented equivalent)** path for **`S
 
 - **D-11 (Registry empty after `:all` resolution):** Return **`{:error, {:invalid_options, {:all_expansion, :empty_registry}}}}`** — **not** **`:empty_schema_list`**, which remains reserved for **`entries == []`**.
 
-- **D-12 (Ambiguous resolution — reserved):** If the implementation introduces cases where resolution is not unique, use **`{:error, {:invalid_options, {:all_expansion, {:ambiguous, metadata}}}}}`** with **small, log-safe** `metadata` (e.g. capped candidate list or counts). If v1 has no ambiguous case, **reserve** the shape for forward compatibility.
+- **D-12 (Ambiguous resolution — reserved):** If the implementation introduces cases where resolution is not unique, use **`{:error, {:invalid_options, {:all_expansion, {:ambiguous, metadata}}}}`** with **small, log-safe** `metadata` (e.g. capped candidate list or counts). If v1 has no ambiguous case, **reserve** the shape for forward compatibility.
 
 - **D-13 (Semver):** New **`{:all_expansion, _}`** details under **`{:invalid_options, _}`** are **additive (minor)**; callers matching **`{:invalid_options, _}`** already accept a superset.
 
