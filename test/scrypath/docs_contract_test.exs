@@ -34,9 +34,11 @@ defmodule Scrypath.DocsContractTest do
     "guides/multi-index-search.md",
     "guides/sync-modes-and-visibility.md",
     "guides/operator-mix-tasks.md",
-    "guides/relevance-tuning.md"
+    "guides/relevance-tuning.md",
+    "guides/per-query-tuning-pipeline.md"
   ]
   @guides Enum.into(@guide_paths, %{}, fn path -> {path, File.read!(path)} end)
+  @per_query_tuning_pipeline File.read!("guides/per-query-tuning-pipeline.md")
 
   # Paths shipped as ExDoc extras (mix.exs :docs extras) plus top-level narrative docs.
   @published_markdown_for_hygiene [
@@ -47,6 +49,12 @@ defmodule Scrypath.DocsContractTest do
     "docs/search-backend-sre.md"
     | @guide_paths
   ]
+
+  test "per-query tuning pipeline guide spine anchors" do
+    assert String.contains?(@per_query_tuning_pipeline, "## Two-plane model and precedence")
+    assert String.contains?(@per_query_tuning_pipeline, "## Implementation readiness checklist")
+    assert String.contains?(@per_query_tuning_pipeline, "## Telemetry catalog")
+  end
 
   test "published markdown avoids internal planning and task artifact strings" do
     patterns = [
