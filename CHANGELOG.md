@@ -28,6 +28,30 @@ Release Please manages versioned entries after this baseline.
 - Adopters should read the **Versioning and upgrades** section in `README.md` for semver posture and upgrade expectations; maintainers should follow `docs/releasing.md` for verify gates and Release Please (without duplicating the full `mix verify.phase11` task list here).
 - Release-parity gates were motivated by a historical **tag vs default-branch** divergence in an earlier cycle; see `docs/releasing.md` § Historical context.
 
+## [0.3.4](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.3...scrypath-v0.3.4) (2026-04-20)
+
+
+### Features
+
+* **034-01:** slim README Quick Path with canonical string status ([217596a](https://github.com/szTheory/scrypath/commit/217596ab4a90dc8b05e9d53f94eb9c706f458ed8))
+* **36-01:** opt-in nested facet paths and hierarchy expansion ([9be8e8b](https://github.com/szTheory/scrypath/commit/9be8e8b1b33577e890a7ca56793e1055f11194a3))
+* **36-02:** dotted facet names in settings merge and drift tests ([00bc51e](https://github.com/szTheory/scrypath/commit/00bc51eb287e76130a744d6f06680d18fc0a2f31))
+* **36-03:** hierarchical facets guide, verify.phase36, and contracts ([cec43ea](https://github.com/szTheory/scrypath/commit/cec43ea80498de75b96b88d094b16196c87c93fd))
+* **37-01:** add Scrypath.Facets.Disjunctive.merge_distributions ([700021f](https://github.com/szTheory/scrypath/commit/700021fa8efc0ea003ef2e47185d6383fd9c0c7e))
+* **38:** add search_within_facet/4, guide contracts, and mix verify.phase38 ([d6a3d9e](https://github.com/szTheory/scrypath/commit/d6a3d9eefb25542d8fce8fdc9331d8f12b5fa198))
+* **phase-27:** index contract drift report and reconcile opt-in ([ebc4e21](https://github.com/szTheory/scrypath/commit/ebc4e21048494e76763d451664fdbf0bdff0f71d))
+* **phase-28:** index contract drift CLI, docs, and verify.phase28 ([3bbbe3f](https://github.com/szTheory/scrypath/commit/3bbbe3fcc1c564969dc190f97b5242c7451a0405))
+
+
+### Bug Fixes
+
+* **ci:** credo cleanups, ExDoc extras for CONTRIBUTING, federated decode split ([af9a6b2](https://github.com/szTheory/scrypath/commit/af9a6b25af73bc0f7a80adc89b5260e9d5ae510b))
+* **ci:** format options, widen feat(18) git window, isolate Hex in consumer smoke ([fb327fa](https://github.com/szTheory/scrypath/commit/fb327fa644a3485e5ac2025b245080e39145a5da))
+* **dialyzer:** silence no_return on contract_drift halt path ([b516210](https://github.com/szTheory/scrypath/commit/b5162100fd1976d2b27898058c02ed2eec95a4ba))
+* **oban:** carry Meilisearch URL and index_prefix in job payload ([49c3b75](https://github.com/szTheory/scrypath/commit/49c3b7530b0d59672fdfed1cc2c3a8f9884b21a1))
+* **oban:** wait for Meilisearch tasks after worker writes ([8e1f15e](https://github.com/szTheory/scrypath/commit/8e1f15ee8996285c46288965db68dd3b30ae4909))
+* **state:** restore v1.6 frontmatter; record phase 35 discuss ([2e096c5](https://github.com/szTheory/scrypath/commit/2e096c53445e8149683012744498a0881b9a8263))
+
 ## [0.3.3](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.2...scrypath-v0.3.3) (2026-04-17)
 
 
