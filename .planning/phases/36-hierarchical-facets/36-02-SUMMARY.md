@@ -32,6 +32,10 @@ completed: 2026-04-19
 
 **Meilisearch settings merge and index contract drift tests now cover dotted hierarchical facet attribute names.**
 
+## Task commits
+
+1. **Tasks 1–2: settings merge + drift** — `00bc51e` (feat)
+
 ## Self-Check: PASSED
 
 - `mix test test/scrypath/meilisearch/settings_test.exs test/scrypath/operator/index_contract_drift_test.exs`

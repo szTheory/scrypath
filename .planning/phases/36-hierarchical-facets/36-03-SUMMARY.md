@@ -37,6 +37,10 @@ completed: 2026-04-19
 
 **End-to-end facet decoding, adopter guide updates, doc contracts, and a dedicated verify task ship for hierarchical facets.**
 
+## Task commits
+
+1. **Tasks 1–3: search test, guide + contracts, verify task** — `cec43ea` (feat)
+
 ## Self-Check: PASSED
 
 - `mix verify.phase36`

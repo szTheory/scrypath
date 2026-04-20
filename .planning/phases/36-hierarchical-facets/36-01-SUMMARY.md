@@ -37,7 +37,9 @@ completed: 2026-04-19
 
 ## Task commits
 
-Commits recorded after `feat(36-01)` — see `git log --grep=36-01`.
+Plan delivered as one integration commit (tasks 1–3 of `36-01-PLAN.md`):
+
+1. **Tasks 1–3: nested paths, validation rules, hierarchy tests** — `9be8e8b` (feat)
 
 ## Self-Check: PASSED
 
