@@ -2,6 +2,29 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.9 — Per-query relevance & tuning pipeline
+
+**Shipped (planning):** 2026-04-20  
+**Phases:** 2 (42–43) | **Plans:** 5 | **Hex:** `scrypath 0.3.3` (unchanged line; per-query spec + runtime in-repo)
+
+### What was built
+
+Locked **`guides/per-query-tuning-pipeline.md`** plus **Plane B** **`:per_query`** overrides on **`%Query{}`**, Meilisearch projection for ranking-score knobs, **`search_many/2`** inner merge rules, telemetry metadata, focused tests, **`mix verify.phase43`**, and **`docs_contract_test.exs`** pins mirroring the federation gate pattern.
+
+### What worked
+
+Reusing the **spec-first gate** (**TUNE-PIPE-***) before runtime work kept precedence and error shapes legible; **`verify.phase43`** gave **`TUNE-PQ-02`** a named CI home without widening **`verify.phase41`**.
+
+### What was inefficient
+
+`gsd-sdk query milestone.complete` failed again (**`version required for phases archive`**), so **`milestones/v1.9-*`** and **`ROADMAP.md`** collapse were **manual** like **v1.5–v1.8**.
+
+### Key lessons
+
+Sync **`.planning/REQUIREMENTS.md`** checkboxes and the traceability table when phases close so close does not fight “pending” rows that verification already satisfied.
+
+---
+
 ## Milestone: v1.8 — Multi-index federation
 
 **Shipped (planning):** 2026-04-20  
@@ -75,6 +98,7 @@ Ship **`audit-open` acknowledgments** into **`STATE.md`** at close when tooling 
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|
+| v1.9 | 42–43 | Per-query tuning: locked pipeline spec, `:per_query` runtime, verify.phase43 |
 | v1.8 | 39–41 | Multi-index federation: weights, `:all` expansion, docs + verify.phase41 |
 | v1.7 | 36–38 | Meilisearch facet depth: hierarchy, disjunctive counts, scoped text search |
 | v1.6 | 29–35 | Adoption golden path + doc contracts + verify story for contributors |
