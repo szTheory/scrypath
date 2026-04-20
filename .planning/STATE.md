@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: — active)
-status: "Phase 40 context gathered — ready to plan"
-last_updated: "2026-04-20T20:00:00.000Z"
-last_activity: 2026-04-20 — `/gsd-discuss-phase 40` captured **40-CONTEXT.md** (tagged `{:all, …}` splice, config allowlist + `global_schemas:` override, error taxonomy, timeout/failure boundaries).
+status: completed
+last_updated: "2026-04-20T15:25:07.204Z"
+last_activity: 2026-04-20 — Phase **40** discuss complete; see **`.planning/phases/40-all-expansion/40-CONTEXT.md`**.
 progress:
   total_phases: 23
   completed_phases: 19
@@ -65,3 +65,5 @@ Canonical ledger references (AUDT-01 / milestone-close hygiene): **`18-VERIFICAT
 **Prior milestone:** **v1.7** (phases **36–38**) — archived 2026-04-20
 
 **Completed Phase:** 39 (Federation scoring & weights) — 2 plans — 2026-04-20
+
+**Planned Phase:** 40 (:all expansion) — 2 plans — 2026-04-20T15:25:07.191Z
