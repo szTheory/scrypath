@@ -12,7 +12,7 @@
 
 - [x] **FACET-01**: **Hierarchical facets** — Adopters can model **nested facet paths** (within what Meilisearch supports for the index) through declarative schema/settings, and `Scrypath.search/3` (or documented equivalent) returns **stable, documented** facet keys and counts for those paths.
 
-- [ ] **FACET-02**: **Disjunctive facet counts** — The library exposes a **clear contract** for **OR-style** facet selection vs conjunctive filters, including how facet **counts** behave under disjunctive filters; edge cases are documented and covered by tests.
+- [x] **FACET-02**: **Disjunctive facet counts** — The library exposes a **clear contract** for **OR-style** facet selection vs conjunctive filters, including how facet **counts** behave under disjunctive filters; edge cases are documented and covered by tests.
 
 - [ ] **FACET-03**: **`search_within_facet/4`** — A public entry (this name unless planning renames it) lets callers run a **text search scoped to a facet bucket**, composing filters consistently with existing `search/3` / facet filter behavior.
 
@@ -47,7 +47,7 @@
 |-------------|-------|--------|
 | AUDT-01 | Phase 32; gap closure 33 | **Complete** |
 | FACET-01 | Phase 36 | Complete |
-| FACET-02 | Phase 37 | Pending |
+| FACET-02 | Phase 37 | Complete |
 | FACET-03 | Phase 38 | Pending |
 | FACET-04 | Phase 38 | Pending |
 
