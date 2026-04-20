@@ -10,6 +10,13 @@ defmodule Scrypath.Release.ConsumerSmokeTest do
     tmp_root = unique_tmp_dir!()
     artifact_dir = Path.join(tmp_root, "scrypath-artifact")
     app_dir = Path.join(tmp_root, "consumer_usage")
+    # Anonymous Hex/Mix state so a stale developer HEX_TOKEN never blocks `mix deps.get`
+    # on stdin ("authenticate now?") — CI is unaffected; local runs stay deterministic.
+    hex_home = Path.join(tmp_root, "hex_home")
+    mix_home = Path.join(tmp_root, "mix_home")
+    File.mkdir_p!(hex_home)
+    File.mkdir_p!(mix_home)
+    isolated_env = [{"HEX_HOME", hex_home}, {"MIX_HOME", mix_home}]
 
     on_exit(fn -> File.rm_rf(tmp_root) end)
 
@@ -29,8 +36,8 @@ defmodule Scrypath.Release.ConsumerSmokeTest do
     assert consumer_mix =~ ~s|{:scrypath, git: "#{artifact_git_url}", tag: "#{tag}"}|
     refute Regex.match?(~r/path\s*:/, consumer_mix)
 
-    run_mix!(["deps.get"], cd: app_dir)
-    run_mix!(["compile"], cd: app_dir)
+    run_mix!(["deps.get"], cd: app_dir, env: isolated_env)
+    run_mix!(["compile"], cd: app_dir, env: isolated_env)
 
     assert File.exists?(
              Path.join(
@@ -126,8 +133,12 @@ defmodule Scrypath.Release.ConsumerSmokeTest do
   end
 
   defp run_command!(command, args, opts) do
-    {output, exit_status} =
-      System.cmd(command, args, Keyword.merge([stderr_to_stdout: true], opts))
+    cmd_opts =
+      opts
+      |> Keyword.take([:cd, :env])
+      |> Keyword.put(:stderr_to_stdout, true)
+
+    {output, exit_status} = System.cmd(command, args, cmd_opts)
 
     assert exit_status == 0,
            """
