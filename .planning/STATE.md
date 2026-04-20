@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.9
-milestone_name: Per-query relevance & tuning pipeline
-status: ready_to_plan
-last_updated: "2026-04-20T21:30:00.000Z"
-last_activity: "2026-04-20 — Phase 42 discuss-phase complete; 42-CONTEXT.md + research synthesis committed."
+milestone_name: — active)
+status: **`42-CONTEXT.md`** ready — use **`/gsd-plan-phase 42`** to produce plans for **`TUNE-PIPE-*`** writing/editing work.
+last_updated: "2026-04-20T17:21:17.501Z"
+last_activity: 2026-04-20 — **`/gsd-discuss-phase 42`** with parallel research; decisions locked in **`.planning/phases/42-per-query-tuning-pipeline-spec/42-CONTEXT.md`**.
 progress:
-  total_phases: 2
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 25
+  completed_phases: 21
+  total_plans: 59
+  completed_plans: 58
+  percent: 98
 ---
 
 # Project State
@@ -61,3 +61,5 @@ Unchanged from **v1.8** close — see **`.planning/PROJECT.md`** and prior **`ST
 **Prior milestone:** **v1.8** (phases **39–41**) — archived 2026-04-20
 
 **Milestone:** **v1.9** — **active**
+
+**Planned Phase:** 42 (Per-query tuning pipeline spec) — 2 plans — 2026-04-20T17:21:17.494Z
