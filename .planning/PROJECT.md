@@ -10,19 +10,13 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Last shipped milestone
 
-**v1.7 — Facet depth and catalog search UX** (archived **2026-04-20**). Delivered **hierarchical facets**, **disjunctive facet count contracts** (`merge_distributions/2` + docs), **`search_within_facet/4`** with telemetry, focused **`mix verify.phase36`..`38`** gates, and README / guide / **`docs_contract_test.exs`** anchors (**`FACET-01`**..**`FACET-04`**). **Per-query relevance** runtime work remains deferred on **`TUNE-PIPE-01`**.
+**v1.8 — Multi-index federation** (archived **2026-04-20**). Delivered Meilisearch-aligned **`federation_weight:`** / **`federationOptions.weight`** with **`merge_hit_order`** and **`MultiSearchResult.merge_projection/1`**, explicit **`{:all, …}`** expansion via **`Scrypath.MultiSearch.AllExpansion`** (**`global_schemas:`** / env registry, cardinality rails, explicit **`{:invalid_options, {:all_expansion, _}}`** errors), and README / golden-path / **`guides/multi-index-search.md`** coverage with **`docs_contract_test.exs`** anchors and **`mix verify.phase41`** (**`FED-01`**..**`FED-03`**). **OPSUI-01** (operator LiveView) and **per-query relevance** (**`TUNE-PIPE-01`** / **`TUNE-01`**) remain follow-ups.
 
-## Current Milestone: v1.8 — Multi-index federation
+## Between milestones
 
-**Goal:** Ship Meilisearch-aligned **federation scoring / weighting** and an explicit **`:all` (or equivalent)** multi-index expansion path so unified search and catalog UIs can rely on **predictable cross-index ordering** and documented rails—before any **operator LiveView** milestone.
+**Status:** **`v1.8`** is **archived** under **`.planning/milestones/v1.8-{ROADMAP,REQUIREMENTS}.md`**. There is **no** live **`.planning/REQUIREMENTS.md`** until **`/gsd-new-milestone`** opens the next version line.
 
-**Target features:**
-
-- Federation-level **score / weight** semantics with predictable merged ordering and tests (**FED-01**).
-- **`:all` (or equivalent)** expansion over the app’s intended global-search schemas with cardinality limits, timeouts, and explicit errors (**FED-02**).
-- **Docs + contract tests** so README / guides / ExDoc stay aligned with new federation behavior (**FED-03**).
-
-**Follow-up (not v1.8):** **OPSUI-01** — optional operator LiveView dashboard (example or separate package) once federation shapes are stable.
+**Likely next tracks (backlog, not committed requirements):** **`OPSUI-01`**, **`TUNE-PIPE-01`** / **`TUNE-01`** — see **`.planning/ROADMAP.md`** § Backlog.
 
 ## Requirements
 
@@ -54,10 +48,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] **Phase 39** (2026-04-20): **`federation_weight:`** + quad entries, Meilisearch **`federationOptions.weight`**, **`merge_hit_order`** / **`Scrypath.MultiSearchResult.merge_projection/1`**, guide **`## Federation weights`** — **FED-01**.
 - [x] **Phase 40** (2026-04-20): **`{:all, …}`** expansion via **`Scrypath.MultiSearch.AllExpansion`**, **`global_schemas:`** / **`:scrypath_global_search_schemas`**, post-expansion **`max_schemas`**, explicit **`{:invalid_options, {:all_expansion, _}}`** errors — **FED-02**.
 - [x] **Phase 41** (2026-04-20): Federation docs + **`docs_contract_test.exs`** anchors, **`mix verify.phase41`**, README / golden-path / **`guides/multi-index-search.md`** (`:all`, merge semantics), **`search_many/2`** `@doc` score invariant — **FED-03**.
+- [x] **v1.8 milestone** (2026-04-20): Multi-index federation — phases **39–41** archived; **`milestones/v1.8-{ROADMAP,REQUIREMENTS}.md`**; requirements **FED-01..03** satisfied per archives and verify slices.
 
 ### Active
 
-- [ ] **Follow-up:** **`OPSUI-01`** (operator LiveView) — optional dashboard once adopters settle on federation docs and APIs; not part of core Hex package scope.
+- [ ] **Follow-up:** **`OPSUI-01`** (operator LiveView) — optional dashboard over federation-shaped **`search_many/2`** results; not part of core Hex package scope until a future milestone promotes it.
 
 ### Out of Scope
 
@@ -71,7 +66,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has **eight** archived planning milestones (`v1.0`–`v1.7`). **v1.8** is open; see **`.planning/REQUIREMENTS.md`**, **`.planning/ROADMAP.md`**, and **`MILESTONES.md`**. Archives remain under **`.planning/milestones/`**.
+The repository has **nine** archived planning milestones (**`v1.0`**–**`v1.8`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS}.md`**; **`REQUIREMENTS.md`** is intentionally absent between milestones.
 
 - `v1.0` shipped the Meilisearch-first Ecto-native indexing core, search/hydration path, Oban support, reindex workflows, public Phoenix docs, and release automation baseline.
 - `v1.1` shipped release hardening, docs-safety fixes, `mix verify.phase10`, and the launch-readiness evidence chain.
@@ -79,7 +74,7 @@ The repository has **eight** archived planning milestones (`v1.0`–`v1.7`). **v
 - `v1.3` shipped planning-track delivery of relevance tuning, faceted search, multi-index search, operator polish + drift recovery guide, release-parity gates, and v1.2 Nyquist validation closure (archived 2026-04-17).
 - `v1.4` shipped **Hex `scrypath 0.3.1`**, the bounded live-index `hot_apply/3` path, and operator failure rollups — archived 2026-04-17 (`milestones/v1.4-ROADMAP.md`, `milestones/v1.4-REQUIREMENTS.md`).
 
-The current public line on Hex is **`scrypath 0.3.3`**. Planning milestone **v1.5** (**drift / schema-diff operator tooling**, phases **27–28**) is complete in-repo. **v1.6** focuses on adoption, integration proof, and verification clarity—not net-new search algorithms.
+The current public line on Hex is **`scrypath 0.3.3`**. **v1.8** closed the federation loop (**weights**, **`:all` expansion**, **docs/contracts**) on top of prior depth (**v1.3–v1.7**) and operator tooling (**v1.4–v1.5**).
 
 ## Constraints
 
@@ -105,12 +100,13 @@ The current public line on Hex is **`scrypath 0.3.3`**. Planning milestone **v1.
 | Narrow `hot_apply/3` to synonym / stop-word / typo-tolerance keys only | Prevents silent widening into ranking rules and other managed-pipeline settings | ✓ Good — TUNE14-01/02 |
 | Operator rollups as additive metadata on `failed_sync_work/2` | Report-first discipline; no new recovery verbs | ✓ Good — OPS14-01 / `mix verify.phase26` |
 | Ship facet depth as composable Meilisearch primitives + verify slices | Keeps OR-count story explicit (merge helper); avoids premature “catalog page” facade | ✓ Good — **v1.7** audit notes operator wiring burden as documented tradeoff |
+| Ship federation as explicit opts + expansion + doc contracts (not a dashboard) | Keeps cross-index ordering honest in library code before any **OPSUI** surface | ✓ Good — **v1.8** (**FED-01..03**) with **`mix verify.phase41`** |
 
 ## Current State
 
-**Hex:** `scrypath` **`0.3.3`**. Shipped surfaces include the v1.3-era Meilisearch-native path (relevance, facets, multi-index, operator polish), v1.4 **hot_apply** / failure rollups, v1.5 **index contract drift** tooling, v1.6 **adoption-grade** docs and verification clarity, and **v1.7** **facet-depth** APIs (`nested_facet_paths`, disjunctive merge helper, **`search_within_facet/4`**) with **`mix verify.phase36`..`38`**.
+**Hex:** `scrypath` **`0.3.3`**. Shipped surfaces include the v1.3-era Meilisearch-native path (relevance, facets, multi-index, operator polish), v1.4 **hot_apply** / failure rollups, v1.5 **index contract drift** tooling, v1.6 **adoption-grade** docs and verification clarity, **v1.7** **facet-depth** APIs (`nested_facet_paths`, disjunctive merge helper, **`search_within_facet/4`**) with **`mix verify.phase36`..`38`**, and **v1.8** **federation weights**, **`:all` expansion**, and federation **docs/contract** gates (**`mix verify.phase41`**).
 
-**Planning:** **`v1.7`** is **archived** (2026-04-20). **v1.8 — Multi-index federation** is **active** (requirements **`FED-01`..`FED-03`**, phases **39–41**). Remaining backlog (e.g. **`TUNE-PIPE-01`**, **`OPSUI-01`**) stays in **`.planning/ROADMAP.md`** § Backlog until promoted.
+**Planning:** **`v1.8`** is **archived** (2026-04-20). **Between milestones** until **`/gsd-new-milestone`**. Backlog (**`TUNE-PIPE-01`**, **`OPSUI-01`**, and others) stays in **`.planning/ROADMAP.md`** § Backlog until promoted.
 
 ## Evolution
 
@@ -130,4 +126,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-20 — Phase **40** complete (**FED-02** `:all` expansion); Hex **`scrypath 0.3.3`** current*
+*Last updated: 2026-04-20 after **`v1.8`** milestone archive — Hex **`scrypath 0.3.3`** current*

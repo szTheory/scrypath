@@ -2,6 +2,29 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.8 — Multi-index federation
+
+**Shipped (planning):** 2026-04-20  
+**Phases:** 3 (39–41) | **Plans:** 6 | **Hex:** `scrypath 0.3.3` (unchanged line; federation behavior + verify slice in-repo)
+
+### What was built
+
+Weighted **`search_many/2`** rows with Meilisearch **`federationOptions.weight`**, deterministic **`merge_hit_order`**, and **`MultiSearchResult.merge_projection/1`**; **`:all`** expansion with env/config allowlists and explicit **`{:invalid_options, {:all_expansion, _}}`** errors; **`guides/multi-index-search.md`**, **`mix verify.phase41`**, and **`docs_contract_test.exs`** anchors.
+
+### What worked
+
+Tight coupling between **public opts**, **wire JSON**, and **contract tests** kept federation semantics explainable without a UI milestone.
+
+### What was inefficient
+
+`gsd-sdk query milestone.complete` failed again (**`phasesArchive`** / version argument), so archival stayed **manual** like **v1.5–v1.7**.
+
+### Key lessons
+
+Keep **`audit-open`** hygiene items **acknowledged in `STATE.md`** when UAT is **passed** but tooling still counts the row, so close stays honest without inventing new work.
+
+---
+
 ## Milestone: v1.7 — Facet depth and catalog search UX
 
 **Shipped (planning):** 2026-04-20  
@@ -52,6 +75,7 @@ Ship **`audit-open` acknowledgments** into **`STATE.md`** at close when tooling 
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|
+| v1.8 | 39–41 | Multi-index federation: weights, `:all` expansion, docs + verify.phase41 |
 | v1.7 | 36–38 | Meilisearch facet depth: hierarchy, disjunctive counts, scoped text search |
 | v1.6 | 29–35 | Adoption golden path + doc contracts + verify story for contributors |
 | v1.5 | 27–28 | Index contract drift reporting + operator Mix/docs/verify gate |

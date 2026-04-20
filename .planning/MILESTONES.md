@@ -1,12 +1,20 @@
 # Milestones
 
-## v1.8 Multi-index federation (Opened: 2026-04-20)
+## v1.8 Multi-index federation (Shipped + archived: 2026-04-20)
 
-**Status:** In planning — requirements and roadmap in **`.planning/REQUIREMENTS.md`** and **`.planning/ROADMAP.md`**; not shipped.
+**Phases completed:** 3 phases (**39–41**), **6** plans
 
-**Planned phases:** **39–41** (federation scoring/weights → `:all` expansion → docs/contracts).
+**Hex:** **`scrypath 0.3.3`** (federation scoring, `:all` expansion, and doc/contract gates shipped in-repo; no mandated Hex bump in this planning milestone)
 
-**Requirement IDs:** **FED-01**..**FED-03** (federation); **OPSUI-01** (operator LiveView) explicitly **deferred** until v1.8 primitives exist.
+**Key accomplishments:**
+
+- Meilisearch-aligned **`federation_weight:`** / **`federationOptions.weight`**, **`merge_hit_order`**, **`MultiSearchResult.merge_projection/1`**, and guide **`## Federation weights`** with tests (**Phase 39**, **FED-01**)
+- **`Scrypath.MultiSearch.AllExpansion`** for **`{:all, …}`**, **`global_schemas:`** / env allowlist, cardinality rails, and explicit **`{:invalid_options, {:all_expansion, _}}`** errors (**Phase 40**, **FED-02**)
+- **`guides/multi-index-search.md`**, README / golden-path pointers, **`docs_contract_test.exs`** anchors, and **`mix verify.phase41`** in CI (**Phase 41**, **FED-03**)
+
+**Known deferred items at close:** **`audit-open`** reported **3** rows (Phase 18 UAT listing + two missing quick-task stubs); **acknowledged** at close — see **`STATE.md`** §**Deferred Items**. No **`v1.8-MILESTONE-AUDIT.md`** at close (optional **`/gsd-audit-milestone`** deferred).
+
+**Archives:** `milestones/v1.8-ROADMAP.md`, `milestones/v1.8-REQUIREMENTS.md` · **Git tag:** `v1.8` (planning milestone marker)
 
 ---
 
@@ -130,3 +138,4 @@
 | `v1.5` | 2026-04-18 | 2 | 5 | Archived | Index contract drift + Mix + docs + **`mix verify.phase28`**; `v1.5-{ROADMAP,REQUIREMENTS}.md`; milestone tag **`v1.5`**. |
 | `v1.6` | 2026-04-19 | 7 | 7 | Archived | Adoption golden path, consumer proof, verify story, **`STATE`** triage, doc contracts **33–35**; `v1.6-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`; tag **`v1.6`**. |
 | `v1.7` | 2026-04-20 | 3 | 7 | Archived | Facet depth (hierarchical, disjunctive counts, `search_within_facet/4`); `v1.7-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`; tag **`v1.7`**. |
+| `v1.8` | 2026-04-20 | 3 | 6 | Archived | Multi-index federation (weights, `:all` expansion, docs/contracts); `v1.8-{ROADMAP,REQUIREMENTS}.md`; tag **`v1.8`**. |

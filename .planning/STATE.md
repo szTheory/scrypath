@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.8
-milestone_name: Multi-index federation
-status: milestone_complete
-last_updated: "2026-04-20T16:05:00.000Z"
-last_activity: "2026-04-20 — Phase **41** executed; v1.8 federation docs and FED-03 complete."
+milestone: null
+milestone_name: null
+status: between_milestones
+last_updated: "2026-04-20T17:00:00.000Z"
+last_activity: "2026-04-20 — v1.8 milestone archived; REQUIREMENTS.md removed pending next milestone."
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 6
-  completed_plans: 6
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,17 +21,15 @@ See: `.planning/PROJECT.md` (updated 2026-04-20)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.8 — Multi-index federation** — **complete** (phases **39–41**). Next optional track: **OPSUI-01**.
+**Current focus:** **Between milestones** — **`v1.8`** archived (**`milestones/v1.8-{ROADMAP,REQUIREMENTS}.md`**). Open the next version line with **`/gsd-new-milestone`**. Optional product tracks: **`OPSUI-01`**, **`TUNE-PIPE-01`**.
 
 ## Current Position
 
-Phase: **41** — Federation docs & contracts (**complete**)
+Phase: **none** (awaiting next milestone)
 
-Plan: **41-02** (final) — summaries and verification recorded
+**Status:** Milestone **`v1.8`** **archived** in `.planning/milestones/`; git tag **`v1.8`** (planning marker).
 
-**Status:** Milestone **v1.8** complete in-repo (**FED-01**..**FED-03**).
-
-**Last activity:** 2026-04-20 — Phase **41** executed; `mix verify.phase41`, guides, and requirements traceability updated.
+**Last activity:** 2026-04-20 — Milestone close: **`audit-open`** items **acknowledged** (see **Deferred Items**); roadmap collapsed; **`REQUIREMENTS.md`** removed for fresh next-milestone requirements.
 
 ## Accumulated Context
 
@@ -39,11 +37,7 @@ Plan: **41-02** (final) — summaries and verification recorded
 
 (See `.planning/PROJECT.md` Key Decisions.)
 
-**v1.8 intent:** Ship **FED-01** (federation scoring/weighting), **FED-02** (`:all` or equivalent expansion + rails), **FED-03** (docs/contracts). **OPSUI-01** (operator LiveView) is an explicit **follow-up** after federation primitives exist.
-
-**Phase 39 (locked in CONTEXT):** Per-entry **`federation_weight:`**; omit weight on wire when unset; **`{:invalid_options, {:federation_weight, _}}`** / **`{:federation_merge_requires_native_search_many, _}}`**; optional merge-order trace **`{schema, id}`** + projection helper; no silent merge on sequential fallback when weights are set.
-
-**Phase 40 (locked in CONTEXT):** Tagged **`{:all, text, keyword?}`** entry in **`search_many`** list expands (splices) to allowlisted modules; default list from **application config**, **`global_schemas:`** replaces for one call; **`{:invalid_options, {:all_expansion, :empty_registry}}`** vs **`:empty_schema_list`**; **`{:too_many_schemas, count, max}`** after expansion; resolution errors before HTTP; validation stays **fail-fast** **`{:validation_failed, …}`** like today.
+**v1.8 shipped (planning):** **FED-01**..**FED-03** complete per archives. **OPSUI-01** remains a documented follow-up.
 
 ### Blockers / Concerns
 
@@ -51,20 +45,28 @@ Plan: **41-02** (final) — summaries and verification recorded
 
 ### Deferred Items
 
-Canonical ledger references (AUDT-01 / milestone-close hygiene): **`18-VERIFICATION.md`**, **`v1.4-MILESTONE-AUDIT.md`**, **`260416-eoj-SUMMARY.md`**, **`260416-if2-SUMMARY.md`** — see **`.planning/PROJECT.md`** and archived **`STATE.md`** discussions; no new triage rows for v1.8 open.
+Canonical ledger references (AUDT-01 / historical hygiene): **`18-VERIFICATION.md`**, **`v1.4-MILESTONE-AUDIT.md`**, **`260416-eoj-SUMMARY.md`**, **`260416-if2-SUMMARY.md`** — see **`.planning/PROJECT.md`** and prior milestone **`STATE.md`** snapshots in git history.
+
+#### Acknowledged at v1.8 milestone close (audit-open)
+
+Items acknowledged and deferred at milestone close on **2026-04-20**:
+
+| Category | Item | Status |
+|----------|------|--------|
+| uat_gaps | Phase 18 — `18-UAT.md` | passed (0 open scenarios; tooling still listed phase) |
+| quick_task | `260416-eoj-automate-phase-5-verification-with-live-` | missing |
+| quick_task | `260416-if2-fix-mix-exs-github-urls-add-a-github-act` | missing |
 
 ## Next Command
 
-1. **`/gsd-progress`** — confirm roadmap and requirements after v1.8 closeout.
-2. **`/gsd-new-milestone`** or **`/gsd-discuss-phase`** — when starting **OPSUI-01** or the next version line.
+1. **`/gsd-new-milestone`** — define requirements and roadmap for the next shipped planning line (re-creates **`REQUIREMENTS.md`**).
+2. **`/gsd-discuss-phase`** — optional deep dive before the next milestone when scope is fuzzy.
 
-**Resume files:** `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/PROJECT.md`
+**Resume files:** `.planning/ROADMAP.md`, `.planning/PROJECT.md`, `.planning/MILESTONES.md`
 
 ---
-*Last updated: 2026-04-20 — phase 41 execution complete*
+*Last updated: 2026-04-20 — v1.8 milestone archived*
 
-**Prior milestone:** **v1.7** (phases **36–38**) — archived 2026-04-20
+**Prior milestone:** **v1.8** (phases **39–41**) — archived 2026-04-20
 
-**Completed Phase:** 41 (Federation docs & contracts) — 2 plans — 2026-04-20
-
-**Milestone:** **v1.8** — phases **39–41** — complete in-repo 2026-04-20
+**Milestone:** **v1.8** — **archived** — tag **`v1.8`**
