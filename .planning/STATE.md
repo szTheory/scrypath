@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: — active)
-status: completed
+status: milestone_complete
 last_updated: "2026-04-20T15:25:07.204Z"
 last_activity: 2026-04-20 — Phase **40** discuss complete; see **`.planning/phases/40-all-expansion/40-CONTEXT.md`**.
 progress:
   total_phases: 23
-  completed_phases: 19
+  completed_phases: 20
   total_plans: 53
   completed_plans: 54
-  percent: 100
+  percent: 87
 ---
 
 # Project State
@@ -25,13 +25,13 @@ See: `.planning/PROJECT.md` (updated 2026-04-20)
 
 ## Current Position
 
-Phase: **40** — `:all` expansion (not started)
+Phase: 40
 
-Plan: —
+Plan: Not started
 
-**Status:** Phase **39** complete (**FED-01**): `federation_weight:` validation, native `search_many` fed_opts, Meilisearch `federationOptions.weight`, `merge_hit_order` / `merge_projection/1`, docs + tests.
+**Status:** Milestone complete
 
-**Last activity:** 2026-04-20 — Phase **40** discuss complete; see **`.planning/phases/40-all-expansion/40-CONTEXT.md`**.
+**Last activity:** 2026-04-20
 
 ## Accumulated Context
 
