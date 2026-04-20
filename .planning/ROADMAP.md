@@ -15,7 +15,7 @@
 
 ## Next milestone
 
-**v1.9 — Per-query relevance & tuning pipeline** is **open** (**phases 42–43**). See **`.planning/REQUIREMENTS.md`** for **`TUNE-PIPE-*`** and **`TUNE-PQ-*`** (the latter implements the v1.7 backlog label **`TUNE-01`**). **`OPSUI-01`** remains in **Backlog** below.
+**v1.9 — Per-query relevance & tuning pipeline** — **phases 42–43 complete in-repo** (spec + runtime). See **`.planning/REQUIREMENTS.md`** for **`TUNE-PIPE-*`** / **`TUNE-PQ-*`**. **`OPSUI-01`** remains in **Backlog** below until explicitly scheduled.
 
 ## Phases (v1.9 — active)
 
@@ -100,11 +100,11 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**v1.9 (2026-04-20):** Milestone opened — **`TUNE-PIPE-01`..`TUNE-PIPE-04`** in **Phase 42** (**✅ complete 2026-04-20**); **`TUNE-PQ-01`..`TUNE-PQ-03`** in **Phase 43** (next). Prior **`FED-01`..`FED-03`** work is archived under **`milestones/v1.8-REQUIREMENTS.md`**.
+**v1.9 (2026-04-20):** **`TUNE-PIPE-01`..`TUNE-PIPE-04`** (**Phase 42** ✅) and **`TUNE-PQ-01`..`TUNE-PQ-03`** (**Phase 43** ✅) shipped in-repo. Prior **`FED-01`..`FED-03`** work is archived under **`milestones/v1.8-REQUIREMENTS.md`**.
 
 ## Backlog (beyond v1.9)
 
 - **OPSUI-01 — Operator dashboard (LiveView)** — optional product surface (example app or separate package) over existing `Scrypath.*` visibility, telemetry, and **federation-shaped** `search_many/2` results; **follow v1.8** so the UI can represent cross-index ordering and expansion honestly. See also [`docs/search-backend-sre.md`](../docs/search-backend-sre.md).
 
 ---
-*Last updated: 2026-04-20 — **v1.9** opened (phases **42–43**); **`TUNE-PIPE-*` / `TUNE-PQ-*`** in **`.planning/REQUIREMENTS.md`***
+*Last updated: 2026-04-20 — **v1.9** phases **42–43** complete; **`TUNE-PIPE-*` / `TUNE-PQ-*`** in **`.planning/REQUIREMENTS.md`***
