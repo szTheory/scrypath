@@ -12,9 +12,9 @@
 - **`Scrypath.MultiSearch.AllExpansion`** for **`{:all, …}`**, **`global_schemas:`** / env allowlist, cardinality rails, and explicit **`{:invalid_options, {:all_expansion, _}}`** errors (**Phase 40**, **FED-02**)
 - **`guides/multi-index-search.md`**, README / golden-path pointers, **`docs_contract_test.exs`** anchors, and **`mix verify.phase41`** in CI (**Phase 41**, **FED-03**)
 
-**Known deferred items at close:** **`audit-open`** reported **3** rows (Phase 18 UAT listing + two missing quick-task stubs); **acknowledged** at close — see **`STATE.md`** §**Deferred Items**. No **`v1.8-MILESTONE-AUDIT.md`** at close (optional **`/gsd-audit-milestone`** deferred).
+**Known deferred items at close:** **`audit-open`** reported **3** rows (Phase 18 UAT listing + two missing quick-task stubs); **acknowledged** at close — see **`STATE.md`** §**Deferred Items**. Formal milestone audit added post-close: **`milestones/v1.8-MILESTONE-AUDIT.md`** (status **`tech_debt`**).
 
-**Archives:** `milestones/v1.8-ROADMAP.md`, `milestones/v1.8-REQUIREMENTS.md` · **Git tag:** `v1.8` (planning milestone marker)
+**Archives:** `milestones/v1.8-ROADMAP.md`, `milestones/v1.8-REQUIREMENTS.md`, `milestones/v1.8-MILESTONE-AUDIT.md` · **Git tag:** `v1.8` (planning milestone marker)
 
 ---
 
