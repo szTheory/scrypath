@@ -28,9 +28,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Pinned patch; upstream action.yml still uses `node20` until Google ships a
+      # node24 runner—watch releases: https://github.com/googleapis/release-please-action
       - name: Run Release Please
         id: release
-        uses: googleapis/release-please-action@v4
+        uses: googleapis/release-please-action@v4.4.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json

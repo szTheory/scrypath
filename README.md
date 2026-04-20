@@ -68,6 +68,7 @@ If you want hidden model hooks, implicit repo access, or a library that pretends
 
 If you are wiring Scrypath into a Phoenix app, read these next:
 
+- [Guides overview](guides/overview.md) (table of contents for all guides)
 - [Getting Started](guides/getting-started.md)
 - [Phoenix Walkthrough](guides/phoenix-walkthrough.md)
 - [Phoenix Contexts](guides/phoenix-contexts.md)
