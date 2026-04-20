@@ -20,21 +20,81 @@ defmodule Scrypath.Search do
         err
 
       {:ok, search_opts} ->
-        config = Config.resolve!(runtime_opts(opts))
-        query = Query.new(text, search_opts)
-        metadata = Telemetry.common_metadata(schema_module, config)
-
-        Telemetry.span([:scrypath, :search], metadata, fn ->
-          backend = Config.fetch_backend!(config)
-
-          result =
-            with {:ok, raw_result} <- backend.search(schema_module, query, config) do
-              {:ok, decorate_result(schema_module, query, raw_result, config)}
-            end
-
-          {result, Telemetry.stop_metadata(result)}
-        end)
+        do_search(schema_module, text, search_opts, opts, [])
     end
+  end
+
+  @spec search_within_facet(module(), String.t(), {atom(), term() | list()}, keyword()) ::
+          {:ok, SearchResult.t()} | {:error, term()}
+  def search_within_facet(schema_module, text, bucket, opts \\ [])
+      when is_binary(text) and is_list(opts) do
+    merged_opts = merge_facet_bucket_into_opts!(opts, bucket)
+
+    case Scrypath.Options.validate_search_options(schema_module, merged_opts) do
+      {:error, {:validation, message}} when is_binary(message) ->
+        raise ArgumentError, message
+
+      {:error, _} = err ->
+        err
+
+      {:ok, search_opts} ->
+        telemetry_extra = [
+          search_scope: :within_facet,
+          scoped_facet: elem(bucket, 0)
+        ]
+
+        do_search(schema_module, text, search_opts, merged_opts, telemetry_extra)
+    end
+  end
+
+  @spec search_within_facet!(module(), String.t(), {atom(), term() | list()}, keyword()) ::
+          SearchResult.t()
+  def search_within_facet!(schema_module, text, bucket, opts \\ []) do
+    case search_within_facet(schema_module, text, bucket, opts) do
+      {:ok, result} -> result
+      {:error, reason} -> raise RuntimeError, "search failed: #{inspect(reason)}"
+    end
+  end
+
+  defp do_search(schema_module, text, search_opts, caller_opts, telemetry_extra)
+       when is_binary(text) and is_list(search_opts) and is_list(caller_opts) and
+              is_list(telemetry_extra) do
+    config = Config.resolve!(runtime_opts(caller_opts))
+    query = Query.new(text, search_opts)
+    metadata = Telemetry.common_metadata(schema_module, config, telemetry_extra)
+
+    Telemetry.span([:scrypath, :search], metadata, fn ->
+      backend = Config.fetch_backend!(config)
+
+      result =
+        with {:ok, raw_result} <- backend.search(schema_module, query, config) do
+          {:ok, decorate_result(schema_module, query, raw_result, config)}
+        end
+
+      {result, Telemetry.stop_metadata(result)}
+    end)
+  end
+
+  defp merge_facet_bucket_into_opts!(opts, {attr, value}) when is_atom(attr) do
+    existing = Keyword.get(opts, :facet_filter, [])
+
+    if Keyword.has_key?(existing, attr) do
+      raise ArgumentError,
+            "search_within_facet: facet_filter already contains #{inspect(attr)}; " <>
+              "omit that key from facet_filter: or use Scrypath.search/3 instead of locking the same attribute twice"
+    else
+      Keyword.put(opts, :facet_filter, Keyword.put(existing, attr, value))
+    end
+  end
+
+  defp merge_facet_bucket_into_opts!(_opts, {bad, _value}) do
+    raise ArgumentError,
+          "search_within_facet: facet_bucket attribute must be an atom, got: #{inspect(bad)}"
+  end
+
+  defp merge_facet_bucket_into_opts!(_opts, bucket) do
+    raise ArgumentError,
+          "search_within_facet: facet_bucket must be a two-element tuple {facet_attribute, value}, got: #{inspect(bucket)}"
   end
 
   @spec search!(module(), String.t(), keyword()) :: SearchResult.t()

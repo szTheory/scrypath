@@ -18,6 +18,7 @@ defmodule Scrypath.DocsContractTest do
   @verify_phase28 File.read!("lib/mix/tasks/verify.phase28.ex")
   @verify_phase36 File.read!("lib/mix/tasks/verify.phase36.ex")
   @verify_phase37 File.read!("lib/mix/tasks/verify.phase37.ex")
+  @verify_phase38 File.read!("lib/mix/tasks/verify.phase38.ex")
   @verify_release_publish File.read!("lib/mix/tasks/verify.release_publish.ex")
   @guide_paths [
     "guides/drift-recovery.md",
@@ -504,6 +505,27 @@ defmodule Scrypath.DocsContractTest do
     ])
 
     refute @verify_phase37 =~ "HEX_API_KEY"
+  end
+
+  test "phase 38 scoped facet search guide headings and phrases" do
+    guide = @guides["guides/faceted-search-with-phoenix-liveview.md"]
+
+    assert_contains_all(guide, [
+      "## Searching within a facet selection",
+      "## Composing facet filters with scoped search",
+      "Scrypath.search_within_facet",
+      "duplicate the same attribute"
+    ])
+  end
+
+  test "verify.phase38 lists scoped facet search verification paths without Hex secrets" do
+    assert_contains_all(@verify_phase38, [
+      "test/scrypath/search_within_facet_test.exs",
+      "test/scrypath/meilisearch/query_test.exs",
+      "test/scrypath/docs_contract_test.exs"
+    ])
+
+    refute @verify_phase38 =~ "HEX_API_KEY"
   end
 
   test "faceted LiveView guide documents hierarchical facets with stable headings" do

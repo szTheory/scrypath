@@ -19,6 +19,9 @@ defmodule Scrypath do
       iex> config = Scrypath.schema_config(SearchablePost)
       iex> config.fields
       [:title, :body]
+
+  See also **`search_within_facet/4`** in **`guides/faceted-search-with-phoenix-liveview.md`**
+  for searching inside a facet bucket alongside `filter:` / `facet_filter:` composition.
   """
 
   defmacro __using__(opts) do
@@ -96,6 +99,27 @@ defmodule Scrypath do
   @spec search!(module(), String.t(), keyword()) :: term()
   def search!(schema_module, text, opts \\ []) do
     Scrypath.Search.search!(schema_module, text, opts)
+  end
+
+  @doc """
+  Full-text search scoped to a single facet bucket, **AND**-combined with any other
+  `filter:`, `facet_filter:`, sort, and pagination options.
+
+  `facet_bucket` is `{facet_attribute, value}` where `value` is either a scalar
+  (one bucket) or a list interpreted as **OR** within that attribute, matching
+  `facet_filter:` encoding. Passing the same attribute again under `facet_filter:`
+  is rejected with `ArgumentError` — use `search/3` or keep only one source of truth.
+  """
+  @spec search_within_facet(module(), String.t(), {atom(), term() | list()}, keyword()) ::
+          {:ok, term()} | {:error, term()}
+  def search_within_facet(schema_module, text, facet_bucket, opts \\ []) do
+    Scrypath.Search.search_within_facet(schema_module, text, facet_bucket, opts)
+  end
+
+  @spec search_within_facet!(module(), String.t(), {atom(), term() | list()}, keyword()) ::
+          term()
+  def search_within_facet!(schema_module, text, facet_bucket, opts \\ []) do
+    Scrypath.Search.search_within_facet!(schema_module, text, facet_bucket, opts)
   end
 
   @doc """

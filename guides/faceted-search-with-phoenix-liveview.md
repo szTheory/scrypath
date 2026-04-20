@@ -73,6 +73,24 @@ Reference scenario **Genre OR + year AND on the movies catalog**: pass two genre
 | Main search with all filters | Counts on the narrowed catalog (honest **single search** semantics). |
 | Auxiliary per-field queries | Counts as if that facet group were relaxed, for merging via **multi-search**. |
 
+## Searching within a facet selection
+
+Catalog UIs often show a facet bucket (for example **Genre → Action**) and need the next search to stay **inside that bucket** while still using the normal `Scrypath.search/3` options for sort, pagination, non-facet `filter:`, and additional `facet_filter:` keys on *other* attributes.
+
+Use **`Scrypath.search_within_facet/4`**, passing **`{facet_attribute, value}`** as the third argument. The library merges that bucket into the effective **`facet_filter:`** and runs **one** validated search on the same Meilisearch **`/search`** path as **`Scrypath.search/3`**, so operators still see the **`[:scrypath, :search]`** span with extra metadata that marks the call as scoped.
+
+For the general full-text path without a positional bucket, keep using **`Scrypath.search/3`**.
+
+## Composing facet filters with scoped search
+
+**AND** semantics apply across **`filter:`**, the locked bucket, and any other **`facet_filter:`** keys: a hit must satisfy every constraint Meilisearch composes from **`filter`** plus **`facetFilters`**.
+
+If **`facet_filter:`** already contains the same facet attribute as the bucket, the library raises **`ArgumentError`** — do **not** duplicate the same attribute from URL params **and** LiveView assigns (a common footgun). Prefer one source of truth: either pass the refinement only in **`facet_filter:`** with **`search/3`**, or lock the bucket with **`search_within_facet/4`** and drop that key from **`facet_filter:`**.
+
+Dotted hierarchical facet atoms follow the same **one-attribute** rule: the bucket attribute must not appear twice across **`facet_filter:`** and the positional tuple.
+
+`search_within_facet:` does **not** change disjunctive count mechanics — that remains the separate **multi-search** merge story documented under **Disjunctive facet counts** above.
+
 ## Primary path: `handle_params` + URL sync
 
 **Recommended:** normalize query + facet params in `handle_params/3`, then call your context with a keyword list that mirrors what you will pass to `Scrypath.search/3`.

@@ -14,9 +14,9 @@
 
 - [x] **FACET-02**: **Disjunctive facet counts** — The library exposes a **clear contract** for **OR-style** facet selection vs conjunctive filters, including how facet **counts** behave under disjunctive filters; edge cases are documented and covered by tests.
 
-- [ ] **FACET-03**: **`search_within_facet/4`** — A public entry (this name unless planning renames it) lets callers run a **text search scoped to a facet bucket**, composing filters consistently with existing `search/3` / facet filter behavior.
+- [x] **FACET-03**: **`search_within_facet/4`** — A public entry (this name unless planning renames it) lets callers run a **text search scoped to a facet bucket**, composing filters consistently with existing `search/3` / facet filter behavior.
 
-- [ ] **FACET-04**: **Facet depth documentation and contracts** — At least one **guide or major doc section** plus **`docs_contract_test.exs`** (or equivalent) anchors for new/changed public facet APIs so root README / ExDoc paths do not drift.
+- [x] **FACET-04**: **Facet depth documentation and contracts** — At least one **guide or major doc section** plus **`docs_contract_test.exs`** (or equivalent) anchors for new/changed public facet APIs so root README / ExDoc paths do not drift.
 
 ## Future requirements
 
@@ -48,7 +48,7 @@
 | AUDT-01 | Phase 32; gap closure 33 | **Complete** |
 | FACET-01 | Phase 36 | Complete |
 | FACET-02 | Phase 37 | Complete |
-| FACET-03 | Phase 38 | Pending |
-| FACET-04 | Phase 38 | Pending |
+| FACET-03 | Phase 38 | Complete |
+| FACET-04 | Phase 38 | Complete |
 
 **Coverage:** v1.7 requirements: **4** — mapped: **4** — unmapped: **0**. (Traceability table also retains **AUDT-01** from v1.6 for docs-contract continuity.)
