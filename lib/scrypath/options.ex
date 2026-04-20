@@ -16,7 +16,7 @@ defmodule Scrypath.Options do
       type: {:custom, __MODULE__, :validate_schema_faceting, []},
       default: [],
       doc:
-        "Optional facet metadata: non-empty :attributes (subset of :filterable), :max_values_per_facet, :sort_facet_values_by."
+        "Optional facet metadata: non-empty :attributes (subset of :filterable), :max_values_per_facet, :sort_facet_values_by, optional :nested_facet_paths, optional :hierarchy (compile-time expansion into lvlN attributes)."
     ],
     sortable: [
       type: {:list, :atom},
@@ -846,11 +846,123 @@ defmodule Scrypath.Options do
   end
 
   defp validate_faceting_declaration_shape(kw) do
-    allowed = [:attributes, :max_values_per_facet, :sort_facet_values_by]
+    allowed = [:attributes, :max_values_per_facet, :sort_facet_values_by, :nested_facet_paths, :hierarchy]
 
     case Keyword.keys(kw) -- allowed do
-      [] -> validate_faceting_attributes_entry(kw)
-      keys -> {:error, "unknown faceting options: #{inspect(keys)}"}
+      [] ->
+        case preprocess_faceting_declarations(kw) do
+          {:error, msg} -> {:error, msg}
+          {:ok, kw2} -> validate_faceting_attributes_entry(kw2)
+        end
+
+      keys ->
+        {:error, "unknown faceting options: #{inspect(keys)}"}
+    end
+  end
+
+  defp preprocess_faceting_declarations(kw) when is_list(kw) do
+    nested = Keyword.get(kw, :nested_facet_paths, false)
+
+    cond do
+      not is_boolean(nested) ->
+        {:error, "faceting :nested_facet_paths must be a boolean"}
+
+      true ->
+        case expand_faceting_hierarchy_if_present(kw) do
+          {:error, _} = err -> err
+          {:ok, kw2} -> {:ok, Keyword.delete(kw2, :hierarchy)}
+        end
+    end
+  end
+
+  defp expand_faceting_hierarchy_if_present(kw) do
+    case Keyword.fetch(kw, :hierarchy) do
+      :error ->
+        {:ok, kw}
+
+      {:ok, hi} ->
+        case parse_hierarchy_declaration(hi) do
+          {:ok, base, depth} ->
+            expanded = hierarchy_facet_attribute_atoms(base, depth)
+            attrs = Keyword.get(kw, :attributes, [])
+            merged = dedupe_preserve_order(expanded ++ attrs)
+
+            {:ok,
+             kw
+             |> Keyword.put(:attributes, merged)
+             |> Keyword.delete(:hierarchy)
+             |> Keyword.put(:nested_facet_paths, true)}
+
+          {:error, _} = err ->
+            err
+        end
+    end
+  end
+
+  defp parse_hierarchy_declaration(hi) when is_list(hi) and hi != [] do
+    if Keyword.keyword?(hi) do
+      with {:ok, base} <- fetch_hierarchy_atom(hi, :base),
+           {:ok, depth} <- fetch_hierarchy_depth(hi) do
+        {:ok, base, depth}
+      end
+    else
+      {:error, "faceting :hierarchy must be a keyword list"}
+    end
+  end
+
+  defp parse_hierarchy_declaration(_),
+    do: {:error, "faceting :hierarchy must be a keyword list"}
+
+  defp fetch_hierarchy_atom(kw, key) do
+    case Keyword.fetch(kw, key) do
+      {:ok, a} when is_atom(a) -> {:ok, a}
+      {:ok, other} -> {:error, "faceting :hierarchy :#{key} must be an atom, got: #{inspect(other)}"}
+      :error -> {:error, "faceting :hierarchy requires :base field atom"}
+    end
+  end
+
+  defp fetch_hierarchy_depth(kw) do
+    case Keyword.fetch(kw, :depth) do
+      {:ok, d} when is_integer(d) and d > 0 -> {:ok, d}
+      {:ok, other} -> {:error, "faceting :hierarchy :depth must be a positive integer, got: #{inspect(other)}"}
+      :error -> {:error, "faceting :hierarchy requires :depth positive integer"}
+    end
+  end
+
+  defp hierarchy_facet_attribute_atoms(base, depth) when is_atom(base) and is_integer(depth) and depth > 0 do
+    prefix = Atom.to_string(base)
+
+    for i <- 0..(depth - 1) do
+      String.to_atom("#{prefix}.lvl#{i}")
+    end
+  end
+
+  defp dedupe_preserve_order(attrs) when is_list(attrs) do
+    {uniq, _} =
+      Enum.reduce(attrs, {[], MapSet.new()}, fn a, {acc, seen} ->
+        if MapSet.member?(seen, a) do
+          {acc, seen}
+        else
+          {[a | acc], MapSet.put(seen, a)}
+        end
+      end)
+
+    Enum.reverse(uniq)
+  end
+
+  defp valid_nested_facet_path_atom?(attr) when is_atom(attr) do
+    s = Atom.to_string(attr)
+
+    cond do
+      not String.contains?(s, ".") ->
+        true
+
+      match?([_, _], String.split(s, ".")) ->
+        [_, suffix] = String.split(s, ".", parts: 2)
+        String.match?(suffix, ~r/^lvl[0-9]+$/)
+
+      true ->
+        false
     end
   end
 
@@ -875,13 +987,16 @@ defmodule Scrypath.Options do
       max_values = Keyword.get(kw, :max_values_per_facet, 100)
       sort_by = Keyword.get(kw, :sort_facet_values_by, %{})
 
+      nested_paths = Keyword.get(kw, :nested_facet_paths, false)
+
       with :ok <- validate_faceting_max_values(max_values),
            {:ok, sort_map} <- normalize_sort_facet_values_by(sort_by) do
         {:ok,
          [
            attributes: attrs,
            max_values_per_facet: max_values,
-           sort_facet_values_by: sort_map
+           sort_facet_values_by: sort_map,
+           nested_facet_paths: nested_paths
          ]}
       end
     else
@@ -925,6 +1040,7 @@ defmodule Scrypath.Options do
   defp validate_faceting_rules!(%{faceting: faceting} = m) when is_list(faceting) do
     attrs = Keyword.fetch!(faceting, :attributes)
     filterable = Map.fetch!(m, :filterable) |> MapSet.new()
+    nested? = Keyword.get(faceting, :nested_facet_paths, false)
 
     if Enum.any?(attrs, &(&1 == :*)) do
       raise ArgumentError, "faceting wildcard :* in attributes is not supported"
@@ -932,7 +1048,18 @@ defmodule Scrypath.Options do
 
     Enum.each(attrs, fn attr ->
       if is_atom(attr) and String.contains?(Atom.to_string(attr), ".") do
-        raise ArgumentError, "hierarchical facet attribute #{inspect(attr)} is not supported"
+        cond do
+          not nested? ->
+            raise ArgumentError,
+                  "hierarchical facet attribute #{inspect(attr)} is not supported (set faceting nested_facet_paths: true for Meilisearch-style dotted paths)"
+
+          not valid_nested_facet_path_atom?(attr) ->
+            raise ArgumentError,
+                  "hierarchical facet attribute #{inspect(attr)} is not supported (dotted names must use a single dot with an lvlN suffix such as :\"categories.lvl0\")"
+
+          true ->
+            :ok
+        end
       end
     end)
 
