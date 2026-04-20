@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.9
 milestone_name: — active)
-status: completed
-last_updated: "2026-04-20T17:49:52.155Z"
-last_activity: 2026-04-20 — phase **42** execution + verification
+status: milestone_complete
+last_updated: "2026-04-20T18:03:30.507Z"
+last_activity: 2026-04-20
 progress:
   total_phases: 26
-  completed_phases: 22
-  total_plans: 59
+  completed_phases: 23
+  total_plans: 62
   completed_plans: 60
-  percent: 100
+  percent: 88
 ---
 
 # Project State
@@ -21,17 +21,18 @@ See: `.planning/PROJECT.md` (updated 2026-04-20)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.9** — **`TUNE-PQ-*`** per-query runtime (**Phase 43**) after locked **`TUNE-PIPE-*`** spec (**Phase 42** complete).
+**Current focus:** Phase 43 — per-query-relevance-runtime
 
 ## Current Position
 
-Phase: **43** — Not started (**Per-query relevance runtime**)
+Phase: 43
+Plan: 1 of 3
 
-**Plan:** —
+**Plan:** Not started
 
-**Status:** Phase **42** complete (canonical **`guides/per-query-tuning-pipeline.md`**, cross-links, ExDoc, `@doc`, doc contracts).
+**Status:** Milestone complete
 
-**Last activity:** 2026-04-20 — phase **42** execution + verification
+**Last activity:** 2026-04-20
 
 ## Accumulated Context
 
@@ -68,4 +69,4 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 **Milestone:** **v1.9** — **active** (Phase **42** ✅ · Phase **43** next)
 
-**Planned Phase:** 43 (Per-query relevance runtime) — pending planning
+**Planned Phase:** 43 (per-query-relevance-runtime) — 3 plans — 2026-04-20T17:56:54.750Z
