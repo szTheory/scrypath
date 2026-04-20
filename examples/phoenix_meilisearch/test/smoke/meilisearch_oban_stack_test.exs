@@ -37,7 +37,12 @@ defmodule ScrypathDemo.Smoke.MeilisearchObanStackTest do
       |> Post.changeset(%{title: "Oban smoke title", body: "Queued body", status: "published"})
       |> Repo.insert()
 
-    assert {:ok, %{mode: :oban, status: :accepted, job: %{worker: "Scrypath.Oban.UpsertWorker"}}} =
+    assert {:ok,
+            %{
+              mode: :oban,
+              status: :accepted,
+              job: %{worker: "Scrypath.Oban.UpsertWorker", state: "completed"}
+            }} =
              Scrypath.sync_record(Post, post,
                backend: Scrypath.Meilisearch,
                sync_mode: :oban,

@@ -6,6 +6,7 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
 
     alias Scrypath.Config
     alias Scrypath.Document
+    alias Scrypath.Oban.IndexingAck
     alias Scrypath.Oban.JobConfig
 
     @impl Oban.Worker
@@ -16,7 +17,7 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
            {:ok, _document_ids, documents} <- load_documents(args),
            {:ok, config} <- build_config(backend, index_name, args) do
         case backend.upsert_documents(schema_module, documents, config) do
-          {:ok, _result} -> :ok
+          {:ok, _} = ok -> IndexingAck.await(backend, ok, config)
           {:error, reason} -> {:error, reason}
         end
       else
