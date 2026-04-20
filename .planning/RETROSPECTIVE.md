@@ -2,6 +2,29 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.7 — Facet depth and catalog search UX
+
+**Shipped (planning):** 2026-04-20  
+**Phases:** 3 (36–38) | **Plans:** 7 | **Hex:** `scrypath 0.3.3` (unchanged line; facet APIs + verify gates in-repo)
+
+### What was built
+
+Hierarchical facet declaration and decode path with **`mix verify.phase36`**; disjunctive distribution merge helper + guide + **`mix verify.phase37`**; public **`search_within_facet/4`** with integration tests, LiveView guide sections, **`mix verify.phase38`**, and README / module-doc discoverability.
+
+### What worked
+
+Focused per-phase verify tasks (**36**–**38**) kept CI slices small while encoding the regression coupling (**37** calling **`verify.phase36`**).
+
+### What was inefficient
+
+`gsd-sdk query milestone.complete` still fails (`phasesArchive` invoked without a version argument in the installed SDK), so roadmap/requirements archival remained a manual checklist — same class of issue as **v1.5**/**v1.6**.
+
+### Key lessons
+
+Treat **`audit-open`** totals that include **passed** UAT files and **missing** historical quick-task dirs as **ack-and-close** ledger entries so hygiene tooling does not block shipping real verification.
+
+---
+
 ## Milestone: v1.6 — Adoption-grade integration and trust
 
 **Shipped (planning):** 2026-04-19  
@@ -29,6 +52,7 @@ Ship **`audit-open` acknowledgments** into **`STATE.md`** at close when tooling 
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|
+| v1.7 | 36–38 | Meilisearch facet depth: hierarchy, disjunctive counts, scoped text search |
 | v1.6 | 29–35 | Adoption golden path + doc contracts + verify story for contributors |
 | v1.5 | 27–28 | Index contract drift reporting + operator Mix/docs/verify gate |
 | v1.4 | 24–26 | Hex package parity + narrow hot settings + operator rollups |

@@ -8,9 +8,9 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current milestone
+## Last shipped milestone
 
-**v1.7 — Facet depth and catalog search UX** (in-repo complete). **Goal:** Ship the next **Meilisearch-native facet** layer on top of existing faceting — **hierarchical facets**, **disjunctive facet counts**, and **`search_within_facet/4`**, with **docs + contract tests** so behavior stays explainable. **Source:** ROI prioritization after **v1.6** (adoption and trust). Scoped requirements: **`.planning/REQUIREMENTS.md`**. **Multi-index federation** and **per-query relevance overrides** stay **out of scope** for v1.7 (see REQUIREMENTS **Future** / **TUNE-PIPE-01**).
+**v1.7 — Facet depth and catalog search UX** (archived **2026-04-20**). Delivered **hierarchical facets**, **disjunctive facet count contracts** (`merge_distributions/2` + docs), **`search_within_facet/4`** with telemetry, focused **`mix verify.phase36`..`38`** gates, and README / guide / **`docs_contract_test.exs`** anchors (**`FACET-01`**..**`FACET-04`**). **Multi-index federation** and **per-query relevance** runtime work remain deferred per archived requirements. **Next versioned scope:** run **`/gsd-new-milestone`** (fresh **`REQUIREMENTS.md`** is created there).
 
 ## Requirements
 
@@ -42,7 +42,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ### Active
 
-- [ ] **v1.7 (facet depth)** — Phases **36–38** complete (**`FACET-01`**..**`FACET-04`** per **`.planning/REQUIREMENTS.md`**). Milestone **ship** (Hex bump / archive) remains a separate release decision. Multi-index scoring and per-query relevance implementation remain deferred per REQUIREMENTS.
+- [ ] **Next milestone** — Not opened. Promote backlog items via **`/gsd-new-milestone`** when the next shipped scope is defined (`MULTI-*`, **`TUNE-PIPE-01`**, or other ROI choice).
 
 ### Out of Scope
 
@@ -56,7 +56,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has **seven** archived planning milestones (`v1.0`–`v1.6`); **v1.7** is the active planning milestone. See `.planning/milestones/v*-ROADMAP.md`, `.planning/ROADMAP.md`, **`REQUIREMENTS.md`**, and **`MILESTONES.md`**.
+The repository has **eight** archived planning milestones (`v1.0`–`v1.7`). **`REQUIREMENTS.md`** is intentionally absent until the next milestone opens. See `.planning/milestones/v*-ROADMAP.md`, `.planning/ROADMAP.md`, and **`MILESTONES.md`**.
 
 - `v1.0` shipped the Meilisearch-first Ecto-native indexing core, search/hydration path, Oban support, reindex workflows, public Phoenix docs, and release automation baseline.
 - `v1.1` shipped release hardening, docs-safety fixes, `mix verify.phase10`, and the launch-readiness evidence chain.
@@ -89,12 +89,13 @@ The current public line on Hex is **`scrypath 0.3.3`**. Planning milestone **v1.
 | Ship v1.4 as additive Hex + ops depth (`0.3.1`) without widening backend or reconcile forks | Keeps the public story honest while closing the package parity gap | ✓ Good — shipped 2026-04-17 |
 | Narrow `hot_apply/3` to synonym / stop-word / typo-tolerance keys only | Prevents silent widening into ranking rules and other managed-pipeline settings | ✓ Good — TUNE14-01/02 |
 | Operator rollups as additive metadata on `failed_sync_work/2` | Report-first discipline; no new recovery verbs | ✓ Good — OPS14-01 / `mix verify.phase26` |
+| Ship facet depth as composable Meilisearch primitives + verify slices | Keeps OR-count story explicit (merge helper); avoids premature “catalog page” facade | ✓ Good — **v1.7** audit notes operator wiring burden as documented tradeoff |
 
 ## Current State
 
-**Hex:** `scrypath` **`0.3.3`**. Shipped surfaces include the v1.3-era Meilisearch-native path (relevance, facets, multi-index, operator polish), v1.4 **hot_apply** / failure rollups, v1.5 **index contract drift** tooling, and v1.6 **adoption-grade** docs, examples, and verification clarity.
+**Hex:** `scrypath` **`0.3.3`**. Shipped surfaces include the v1.3-era Meilisearch-native path (relevance, facets, multi-index, operator polish), v1.4 **hot_apply** / failure rollups, v1.5 **index contract drift** tooling, v1.6 **adoption-grade** docs and verification clarity, and **v1.7** **facet-depth** APIs (`nested_facet_paths`, disjunctive merge helper, **`search_within_facet/4`**) with **`mix verify.phase36`..`38`**.
 
-**Planning:** **`v1.6`** is **archived** (2026-04-19). **`v1.7`** is open for **facet depth**; **Phases 36–37** (**FACET-01**, **FACET-02**) are complete; **Phase 38** remains. Root **`.planning/REQUIREMENTS.md`** and **`.planning/ROADMAP.md`** carry scope. Remaining product backlog (multi-index scoring, per-query relevance) is listed in **REQUIREMENTS** (Future) and **`.planning/ROADMAP.md` § Backlog** where not yet active.
+**Planning:** **`v1.7`** is **archived** (2026-04-20) under **`milestones/v1.7-*`**. **No** active versioned milestone; **`/gsd-new-milestone`** defines the next **`REQUIREMENTS.md`** and roadmap slice. Product backlog candidates remain in **`.planning/ROADMAP.md` § Backlog** and the **Future** section of **`milestones/v1.7-REQUIREMENTS.md`** until promoted.
 
 ## Evolution
 
@@ -114,4 +115,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-20 — Phases **36–38** complete (**FACET-01**..**FACET-04**); Hex **`scrypath 0.3.3`** current*
+*Last updated: 2026-04-20 after **v1.7** milestone archive; Hex **`scrypath 0.3.3`** current; next **`REQUIREMENTS.md`** via **`/gsd-new-milestone`***

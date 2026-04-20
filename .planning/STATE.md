@@ -1,36 +1,35 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.7
-milestone_name: candidates)
-status: milestone_complete
-last_updated: "2026-04-20T01:28:22.130Z"
+milestone: none
+milestone_name: Facet depth and catalog search UX
+status: between_milestones
+last_updated: "2026-04-20T12:00:00.000Z"
 last_activity: 2026-04-20
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 7
-  completed_plans: 5
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-04-19)
+See: `.planning/PROJECT.md` (updated 2026-04-20)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase 38 — search-within-facet-docs
+**Current focus:** Between milestones — run **`/gsd-new-milestone`** to open the next versioned scope.
 
 ## Current Position
 
-Phase: 38
-Plan: 1 of 2
+Phase: —
 
-**Plan:** Not started
+Plan: —
 
-**Status:** Milestone complete
+**Status:** Milestone **v1.7** archived; no active milestone.
 
 **Last activity:** 2026-04-20
 
@@ -40,9 +39,7 @@ Plan: 1 of 2
 
 (See `.planning/PROJECT.md` Key Decisions.)
 
-**v1.6 shipped:** Adoption golden path, consumer-shaped proof depth, verification story for contributors, **`STATE.md`** triage (**AUDT-01**), and doc-contract gap closure **33–35**.
-
-**v1.7 intent (ROI):** Prioritize **facet depth** on existing faceting; defer **multi-index federation scoring** and **per-query relevance implementation** until a dedicated design (**`TUNE-PIPE-01`**) / later milestone.
+**v1.7 shipped:** Hierarchical facets (**36**), disjunctive facet counts (**37**), **`search_within_facet/4`** + docs/contracts (**38**).
 
 ### Blockers / Concerns
 
@@ -68,17 +65,23 @@ Structured **`audit-open`** still counted **3** items at close; each is **supers
 | quick_task | `260416-eoj-automate-phase-5-verification-with-live-` | acknowledged — stub **missing** on disk; **obsolete** per §Deferred Items |
 | quick_task | `260416-if2-fix-mix-exs-github-urls-add-a-github-act` | acknowledged — stub **missing** on disk; **obsolete** per §Deferred Items |
 
+### Acknowledged at v1.7 milestone close (`audit-open`, 2026-04-20)
+
+Same **3** tooling rows as at v1.6 close; still **non-blocking** for archive.
+
+| Category | Item | Status |
+|----------|------|--------|
+| uat_gap | Phase 18 — `18-UAT.md` | acknowledged — UAT **passed**; audit-open listing noise |
+| quick_task | `260416-eoj-automate-phase-5-verification-with-live-` | acknowledged — **missing** stub; **obsolete** per §Deferred Items |
+| quick_task | `260416-if2-fix-mix-exs-github-urls-add-a-github-act` | acknowledged — **missing** stub; **obsolete** per §Deferred Items |
+
 ## Next Command
 
-1. **`/gsd-discuss-phase 38`** — gather context for **Phase 38: Search within facet + docs** (or **`/gsd-plan-phase 38`** to plan directly).
+1. **`/gsd-new-milestone`** — open the next versioned milestone (requirements → roadmap → phases).
 
-**Resume files:** `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/PROJECT.md`, `.planning/STATE.md`
+**Resume files:** `.planning/ROADMAP.md`, `.planning/PROJECT.md`, `.planning/STATE.md`, `.planning/MILESTONES.md`
 
 ---
-*Last updated: 2026-04-19 — milestone **v1.7** opened (facet depth); prior **v1.6** archived*
+*Last updated: 2026-04-20 — milestone **v1.7** archived; **`REQUIREMENTS.md`** removed pending next milestone*
 
-**Prior milestone:** **v1.6** (phases **29–35**) — archived 2026-04-19
-
-**Completed Phase:** 37 (Disjunctive facet counts) — 2 plans — 2026-04-20
-
-**Planned Phase:** 38 (Search within facet + docs) — 2 plans — 2026-04-20T01:27:14.099Z
+**Prior milestone:** **v1.7** (phases **36–38**) — archived 2026-04-20
