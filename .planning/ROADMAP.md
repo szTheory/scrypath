@@ -91,10 +91,12 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 **v1.8** opened **2026-04-20** — federation scoring (**39**), `:all` expansion (**40**), docs/contracts (**41**). **v1.7** remains archived below.
 
+- [x] **Phase 39 — Federation scoring & weights** — complete **2026-04-20** — **FED-01** (weights API, `merge_hit_order` / `merge_projection/1`, Meilisearch wire, tests, guide § Federation weights).
+
 ## Backlog (beyond v1.8)
 
 - Per-query relevance overrides — **blocked** on design milestone **`TUNE-PIPE-01`** before **`TUNE-01`** implementation.
 - **OPSUI-01 — Operator dashboard (LiveView)** — optional product surface (example app or separate package) over existing `Scrypath.*` visibility, telemetry, and **federation-shaped** `search_many/2` results; **follow v1.8** so the UI can represent cross-index ordering and expansion honestly. See also [`docs/search-backend-sre.md`](../docs/search-backend-sre.md).
 
 ---
-*Last updated: 2026-04-20 — **v1.8** Multi-index federation opened (phases **39–41**)*
+*Last updated: 2026-04-20 — Phase **39** complete; **v1.8** continues (phases **40–41**)*

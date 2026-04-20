@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: — active)
-status: executing
-last_updated: "2026-04-20T15:01:29.983Z"
-last_activity: 2026-04-20
+status: "Phase 39 complete — v1.8 continues (phases 40–41)"
+last_updated: "2026-04-20T15:15:00.000Z"
+last_activity: "2026-04-20 — Phase 39 executed (plans 39-01, 39-02); FED-01 shipped in library."
 progress:
   total_phases: 22
-  completed_phases: 18
+  completed_phases: 19
   total_plans: 53
-  completed_plans: 52
-  percent: 98
+  completed_plans: 53
+  percent: 100
 ---
 
 # Project State
@@ -21,17 +21,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-20)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase 39 — federation-scoring-weights
+**Current focus:** **v1.8 — Multi-index federation** — next **Phase 40** (`:all` expansion, **FED-02**).
 
 ## Current Position
 
-Phase: 39 (federation-scoring-weights) — EXECUTING
+Phase: **40** — `:all` expansion (not started)
 
-Plan: 1 of 2
+Plan: —
 
-**Status:** Executing Phase 39
+**Status:** Phase **39** complete (**FED-01**): `federation_weight:` validation, native `search_many` fed_opts, Meilisearch `federationOptions.weight`, `merge_hit_order` / `merge_projection/1`, docs + tests.
 
-**Last activity:** 2026-04-20
+**Last activity:** 2026-04-20 — `/gsd-execute-phase 39` finished; planning files updated.
 
 ## Accumulated Context
 
@@ -53,13 +53,13 @@ Canonical ledger references (AUDT-01 / milestone-close hygiene): **`18-VERIFICAT
 
 ## Next Command
 
-1. **`/gsd-plan-phase 39`** — plan implementation from **`39-CONTEXT.md`** (optionally **`/gsd-plan-phase 39 --skip-research`** if research is deemed sufficient).
+1. **`/gsd-discuss-phase 40`** — align `:all` expansion resolution rule and cardinality rails (or **`/gsd-plan-phase 40`** if context is already sufficient).
 
-**Resume files:** `.planning/phases/39-federation-scoring-weights/39-CONTEXT.md`, `.planning/REQUIREMENTS.md`, `.planning/ROADMAP.md`, `.planning/PROJECT.md`
+**Resume files:** `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/PROJECT.md`, `.planning/phases/40-*/40-CONTEXT.md` (once created)
 
 ---
-*Last updated: 2026-04-20 — phase 39 discuss complete*
+*Last updated: 2026-04-20 — phase 39 execution complete*
 
 **Prior milestone:** **v1.7** (phases **36–38**) — archived 2026-04-20
 
-**Planned Phase:** 39 (Federation scoring & weights) — 2 plans — 2026-04-20T14:52:49.977Z
+**Completed Phase:** 39 (Federation scoring & weights) — 2 plans — 2026-04-20
