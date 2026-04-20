@@ -10,11 +10,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Current Milestone: v1.9 Per-query relevance & tuning pipeline
 
-**Goal:** Ship an authoritative **per-query relevance / settings override pipeline** design (**`TUNE-PIPE-01`**) and the bounded **runtime** implementation (**`TUNE-01`**, backlog sense per **`milestones/v1.7-REQUIREMENTS.md`**) without diluting the Meilisearch-first operational story.
+**Goal:** Ship the bounded **per-query runtime** (**`TUNE-PQ-*`**, backlog **`TUNE-01`** sense per **`milestones/v1.7-REQUIREMENTS.md`**) on top of the **now-locked** pipeline specification, without diluting the Meilisearch-first operational story.
 
 **Target features:**
-- **`TUNE-PIPE-01`**: Written spec for ordering, precedence vs schema-managed defaults, Meilisearch request mapping, explicit non-goals, and gates that define "ready to implement **`TUNE-01`**."
-- **`TUNE-01`**: Per-query relevance or settings overrides in application code, implemented only after the spec is locked.
+- **`TUNE-PIPE-*` (Phase 42 — ✅ 2026-04-20):** Written spec at **`guides/per-query-tuning-pipeline.md`** for ordering, precedence vs schema-managed defaults, Meilisearch request mapping, explicit non-goals, and gates that authorize **`TUNE-PQ-*`** work.
+- **`TUNE-PQ-*` / `TUNE-01` (Phase 43 — next):** Per-query relevance or settings overrides in application code, implemented only against the locked spec.
 
 **ID note:** v1.3 shipped declarative index settings under historical **`TUNE-01`..`TUNE-08`**. This milestone's **`TUNE-01`** is only the **v1.7 Future** item (**per-query runtime**), not the v1.3 settings-validation requirement.
 
@@ -57,10 +57,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] **Phase 40** (2026-04-20): **`{:all, …}`** expansion via **`Scrypath.MultiSearch.AllExpansion`**, **`global_schemas:`** / **`:scrypath_global_search_schemas`**, post-expansion **`max_schemas`**, explicit **`{:invalid_options, {:all_expansion, _}}`** errors — **FED-02**.
 - [x] **Phase 41** (2026-04-20): Federation docs + **`docs_contract_test.exs`** anchors, **`mix verify.phase41`**, README / golden-path / **`guides/multi-index-search.md`** (`:all`, merge semantics), **`search_many/2`** `@doc` score invariant — **FED-03**.
 - [x] **v1.8 milestone** (2026-04-20): Multi-index federation — phases **39–41** archived; **`milestones/v1.8-{ROADMAP,REQUIREMENTS}.md`**; requirements **FED-01..03** satisfied per archives and verify slices.
+- [x] **Phase 42** (2026-04-20): **`guides/per-query-tuning-pipeline.md`** + discoverability (README, guides map, golden path, relevance + multi-index pointers), ExDoc extras, **`docs_contract_test`** spine anchors, **`Scrypath.search/3`** / **`search_many/2`** `@doc` — **TUNE-PIPE-01**..**TUNE-PIPE-04**.
 
 ### Active
 
-- [ ] **v1.9:** **`TUNE-PIPE-*`** (pipeline spec) and **`TUNE-PQ-*`** (per-query runtime; implements v1.7 backlog **`TUNE-01`**) — see **Current Milestone** and **`.planning/REQUIREMENTS.md`**.
+- [ ] **v1.9 / Phase 43:** **`TUNE-PQ-*`** per-query runtime (implements v1.7 backlog **`TUNE-01`**) — see **Current Milestone** and **`.planning/REQUIREMENTS.md`**.
 - [ ] **Follow-up:** **`OPSUI-01`** (operator LiveView) — optional dashboard over federation-shaped **`search_many/2`** results; not part of core Hex package scope until a future milestone promotes it.
 
 ### Out of Scope
