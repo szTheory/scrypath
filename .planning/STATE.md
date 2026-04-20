@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: — active)
-status: milestone_complete
-last_updated: "2026-04-20T15:25:07.204Z"
-last_activity: 2026-04-20 — Phase **40** discuss complete; see **`.planning/phases/40-all-expansion/40-CONTEXT.md`**.
+status: completed
+last_updated: "2026-04-20T16:40:00.000Z"
+last_activity: 2026-04-20 — Phase **40** complete (**FED-02** `:all` expansion).
 progress:
   total_phases: 23
   completed_phases: 20
-  total_plans: 53
-  completed_plans: 54
-  percent: 87
+  total_plans: 55
+  completed_plans: 56
+  percent: 100
 ---
 
 # Project State
@@ -21,17 +21,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-20)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.8 — Multi-index federation** — next **Phase 40** (`:all` expansion, **FED-02**).
+**Current focus:** **v1.8 — Multi-index federation** — next **Phase 41** (federation docs & contracts, **FED-03**).
 
 ## Current Position
 
-Phase: 40
+Phase: **41** — Federation docs & contracts (not started)
 
-Plan: Not started
+Plan: —
 
-**Status:** Milestone complete
+**Status:** Phase **40** complete (**FED-02**).
 
-**Last activity:** 2026-04-20
+**Last activity:** 2026-04-20 — Phase **40** executed; `:all` expansion shipped with tests.
 
 ## Accumulated Context
 
@@ -55,15 +55,16 @@ Canonical ledger references (AUDT-01 / milestone-close hygiene): **`18-VERIFICAT
 
 ## Next Command
 
-1. **`/gsd-plan-phase 40`** — plans from **`.planning/phases/40-all-expansion/40-CONTEXT.md`**.
+1. **`/gsd-discuss-phase 41`** — align docs/contracts scope before planning (**FED-03**).
+2. **`/gsd-plan-phase 41`** — after discuss (or skip if CONTEXT already sufficient).
 
-**Resume files:** `.planning/phases/40-all-expansion/40-CONTEXT.md`, `.planning/REQUIREMENTS.md`, `.planning/ROADMAP.md`
+**Resume files:** `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/PROJECT.md`
 
 ---
-*Last updated: 2026-04-20 — phase 40 discuss complete*
+*Last updated: 2026-04-20 — phase 40 execution complete*
 
 **Prior milestone:** **v1.7** (phases **36–38**) — archived 2026-04-20
 
-**Completed Phase:** 39 (Federation scoring & weights) — 2 plans — 2026-04-20
+**Completed Phase:** 40 (`:all` expansion) — 2 plans — 2026-04-20
 
-**Planned Phase:** 40 (:all expansion) — 2 plans — 2026-04-20T15:25:07.191Z
+**Next phase:** 41 (Federation docs & contracts) — not started
