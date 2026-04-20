@@ -48,7 +48,7 @@ Ship **declarative nested facet paths** within what **Meilisearch** supports: se
 
 ### Cross-cutting product principles (locked)
 
-- **D-17:** **Least surprise:** same mental model as Phase 20—**declare once**, select subsets at query time with **`facets:`**, filter with **`facet_filter:``**, Meilisearch engine semantics stay **visible** in docs (counts refined by active filters, etc.)—no pretending hierarchy is a magic tree inside the engine.
+- **D-17:** **Least surprise:** same mental model as Phase 20—**declare once**, select subsets at query time with **`facets:`**, filter with **`facet_filter:`**, Meilisearch engine semantics stay **visible** in docs (counts refined by active filters, etc.)—no pretending hierarchy is a magic tree inside the engine.
 - **D-18:** **DX:** Prefer **explicit, Meilisearch-faithful** declarations + **optional sugar** over clever implicit defaults; prefer **compile-time** errors for misconfiguration over silent acceptance.
 - **D-19:** **Pattern B support (documentation-only for Phase 36 core):** If adopters use a **single** filterable attribute whose **values** encode paths (`"Electronics > Audio"`), that can remain a **supported indexing convention** with **no extra core struct fields**—document as a recipe; first-class ergonomics in code/docs emphasize **Pattern A** (multi-attribute `lvlN`) for **clearest** `facet_filter:` + URL state alignment.
 

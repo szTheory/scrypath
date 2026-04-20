@@ -37,10 +37,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] **Phase 32** (2026-04-18): **`STATE.md`** deferred-row triage (**AUDT-01**) with terminal statuses.
 - [x] **v1.6 milestone** (2026-04-19): Adoption-grade integration and trust — phases **29–35** archived; **`milestones/v1.6-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**; requirements **ADPT-***, **EXAM-***, **VRFY-***, **AUDT-01** satisfied per audit.
 - [x] **Phase 36** (2026-04-19): **Hierarchical facets** — opt-in `nested_facet_paths`, optional `hierarchy:` expansion, Meilisearch settings + drift alignment, `SearchResult` dotted keys, guide **`## Hierarchical facets`**, **`mix verify.phase36`** — **FACET-01**.
+- [x] **Phase 37** (2026-04-20): **Disjunctive facet counts** — `Scrypath.Facets.Disjunctive.merge_distributions/2`, guide **`## Disjunctive facet counts`**, **`mix verify.phase37`**, docs contract anchors — **FACET-02**.
 
 ### Active
 
-- [ ] **v1.7 (facet depth)** — **`FACET-01`** satisfied (Phase 36); remaining **`FACET-02`..`FACET-04`** in **`.planning/REQUIREMENTS.md`**; phases **37–38** in **`.planning/ROADMAP.md`**. Multi-index scoring and per-query relevance implementation remain deferred per REQUIREMENTS.
+- [ ] **v1.7 (facet depth)** — **`FACET-01`** and **`FACET-02`** satisfied (Phases 36–37); remaining **`FACET-03`..`FACET-04`** in **`.planning/REQUIREMENTS.md`**; **Phase 38** in **`.planning/ROADMAP.md`**. Multi-index scoring and per-query relevance implementation remain deferred per REQUIREMENTS.
 
 ### Out of Scope
 
@@ -92,7 +93,7 @@ The current public line on Hex is **`scrypath 0.3.3`**. Planning milestone **v1.
 
 **Hex:** `scrypath` **`0.3.3`**. Shipped surfaces include the v1.3-era Meilisearch-native path (relevance, facets, multi-index, operator polish), v1.4 **hot_apply** / failure rollups, v1.5 **index contract drift** tooling, and v1.6 **adoption-grade** docs, examples, and verification clarity.
 
-**Planning:** **`v1.6`** is **archived** (2026-04-19). **`v1.7`** is open for **facet depth**; **Phase 36** (**FACET-01**) is complete; **phases 37–38** remain. Root **`.planning/REQUIREMENTS.md`** and **`.planning/ROADMAP.md`** carry scope. Remaining product backlog (multi-index scoring, per-query relevance) is listed in **REQUIREMENTS** (Future) and **`.planning/ROADMAP.md` § Backlog** where not yet active.
+**Planning:** **`v1.6`** is **archived** (2026-04-19). **`v1.7`** is open for **facet depth**; **Phases 36–37** (**FACET-01**, **FACET-02**) are complete; **Phase 38** remains. Root **`.planning/REQUIREMENTS.md`** and **`.planning/ROADMAP.md`** carry scope. Remaining product backlog (multi-index scoring, per-query relevance) is listed in **REQUIREMENTS** (Future) and **`.planning/ROADMAP.md` § Backlog** where not yet active.
 
 ## Evolution
 
@@ -112,4 +113,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-20 — Phase **36** complete (**FACET-01**); Hex **`scrypath 0.3.3`** current*
+*Last updated: 2026-04-20 — Phases **36–37** complete (**FACET-01**, **FACET-02**); Hex **`scrypath 0.3.3`** current*
