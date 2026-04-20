@@ -1,5 +1,13 @@
 # Milestones
 
+## v1.7 Facet depth and catalog search UX (Planning opened: 2026-04-19)
+
+**Phases planned:** 3 phases (**36–38**) — see **`.planning/ROADMAP.md`** and **`.planning/REQUIREMENTS.md`** (`FACET-01`..`FACET-04`).
+
+**Focus:** Hierarchical facets, disjunctive facet counts, `search_within_facet/4`, and doc/contract coverage — per post–v1.6 ROI plan. Multi-index federation and per-query relevance implementation remain **out of scope** until later milestones.
+
+---
+
 ## v1.6 Adoption-grade integration and trust (Shipped + archived: 2026-04-19)
 
 **Phases completed:** 7 phases (29–35), 7 numbered plans (`*-PLAN.md`; phases **30–31** verification-led without separate plan directories)
