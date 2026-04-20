@@ -2,6 +2,8 @@
 
 This guide covers the declarative settings surface Scrypath exposes for Meilisearch relevance and index configuration in v1.3, how those declarations are translated to Meilisearch wire payloads, and how operators can verify that the live index matches what the schema declares.
 
+**Request-time vs index-time:** this guide is **index settings (Plane A)** — synonyms, ranking rules order, typo policy, and attribute projections you declare on the schema and apply through reindex workflows. Search **request parameters** (filters, pagination, ranking score display options, and related per-call knobs) live in the [Per-query tuning pipeline](per-query-tuning-pipeline.md) spec.
+
 ## The five declarative settings knobs
 
 Scrypath recognizes these snake_case settings keys on `use Scrypath` (each maps to a Meilisearch-native field when translated):
