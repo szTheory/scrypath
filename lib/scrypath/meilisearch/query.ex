@@ -4,6 +4,10 @@ defmodule Scrypath.Meilisearch.Query do
 
   When both `filter` and `facetFilters` are present, Meilisearch combines them with **AND**
   semantics (see Meilisearch search parameters — filter + facetFilters).
+
+  **Ranking score knobs** (`rankingScoreThreshold`, `showRankingScore`, `showRankingScoreDetails`)
+  are taken from `query.per_query` when present. Boolean flags are **omitted when false** to keep
+  payloads minimal.
   """
 
   alias Scrypath.Query
@@ -17,7 +21,23 @@ defmodule Scrypath.Meilisearch.Query do
     |> maybe_put(:sort, translate_sort(query.sort))
     |> maybe_put(:page, query.page[:number])
     |> maybe_put(:hitsPerPage, query.page[:size])
+    |> maybe_put_per_query(query.per_query)
   end
+
+  defp maybe_put_per_query(payload, per_query) when per_query == %{} do
+    payload
+  end
+
+  defp maybe_put_per_query(payload, per_query) when is_map(per_query) do
+    payload
+    |> maybe_put("rankingScoreThreshold", Map.get(per_query, :ranking_score_threshold))
+    |> maybe_put_true("showRankingScore", Map.get(per_query, :show_ranking_score))
+    |> maybe_put_true("showRankingScoreDetails", Map.get(per_query, :show_ranking_score_details))
+  end
+
+  defp maybe_put_true(payload, _key, false), do: payload
+  defp maybe_put_true(payload, _key, nil), do: payload
+  defp maybe_put_true(payload, key, true), do: Map.put(payload, key, true)
 
   defp facets_list([]), do: nil
 

@@ -53,7 +53,15 @@ defmodule Scrypath.BackendTest do
     assert FakeBackend.upsert_documents(SearchablePost, documents, []) == {:ok, [1, 2]}
     assert FakeBackend.delete_documents(SearchablePost, [1, 2], []) == {:ok, [1, 2]}
 
-    query = %Query{text: "hello", filter: [], sort: [], page: %{}, facets: [], facet_filter: []}
+    query = %Query{
+      text: "hello",
+      filter: [],
+      sort: [],
+      page: %{},
+      facets: [],
+      facet_filter: [],
+      per_query: %{}
+    }
 
     assert {:ok,
             %{
