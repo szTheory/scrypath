@@ -47,6 +47,7 @@ defmodule Scrypath.MixProject do
         "verify.phase26": :test,
         "verify.phase28": :test,
         "verify.phase36": :test,
+        "verify.phase37": :test,
         "verify.meilisearch_smoke": :test,
         "verify.release_publish": :test,
         "verify.workspace_clean": :test,
