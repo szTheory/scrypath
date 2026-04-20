@@ -1,7 +1,7 @@
 ---
 gsd_state_version: 1.0
 milestone: none
-milestone_name: Facet depth and catalog search UX
+milestone_name: Between milestones
 status: between_milestones
 last_updated: "2026-04-20T12:00:00.000Z"
 last_activity: 2026-04-20
