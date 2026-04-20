@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.9
-milestone_name: — active)
-status: Roadmap ready — use **`/gsd-discuss-phase 42`** or **`/gsd-plan-phase 42`**.
-last_updated: "2026-04-20T17:15:47.910Z"
-last_activity: 2026-04-20 — Milestone **v1.9** initialized (**`TUNE-PIPE-*`**, **`TUNE-PQ-*`**); roadmap **phases 42–43**.
+milestone_name: Per-query relevance & tuning pipeline
+status: ready_to_plan
+last_updated: "2026-04-20T21:30:00.000Z"
+last_activity: "2026-04-20 — Phase 42 discuss-phase complete; 42-CONTEXT.md + research synthesis committed."
 progress:
-  total_phases: 25
-  completed_phases: 21
-  total_plans: 57
-  completed_plans: 58
-  percent: 100
+  total_phases: 2
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -25,13 +25,13 @@ See: `.planning/PROJECT.md` (updated 2026-04-20)
 
 ## Current Position
 
-Phase: **42** — Not started (`Per-query tuning pipeline spec`)
+Phase: **42** — Context gathered (`Per-query tuning pipeline spec`)
 
 **Plan:** —
 
-**Status:** Roadmap ready — use **`/gsd-discuss-phase 42`** or **`/gsd-plan-phase 42`**.
+**Status:** **`42-CONTEXT.md`** ready — use **`/gsd-plan-phase 42`** to produce plans for **`TUNE-PIPE-*`** writing/editing work.
 
-**Last activity:** 2026-04-20 — Milestone **v1.9** initialized (**`TUNE-PIPE-*`**, **`TUNE-PQ-*`**); roadmap **phases 42–43**.
+**Last activity:** 2026-04-20 — **`/gsd-discuss-phase 42`** with parallel research; decisions locked in **`.planning/phases/42-per-query-tuning-pipeline-spec/42-CONTEXT.md`**.
 
 ## Accumulated Context
 
@@ -51,10 +51,9 @@ Unchanged from **v1.8** close — see **`.planning/PROJECT.md`** and prior **`ST
 
 ## Next Command
 
-1. **`/gsd-discuss-phase 42`** — clarify spec shape, file locations, and review gates for **`TUNE-PIPE-*`**.
-2. **`/gsd-plan-phase 42`** — skip discussion and plan **Phase 42** directly.
+1. **`/gsd-plan-phase 42`** — plan authoring of **`guides/per-query-tuning-pipeline.md`**, cross-links, **`mix.exs`** extras, and contract-test anchors per **42-CONTEXT.md**.
 
-**Resume files:** `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/PROJECT.md`
+**Resume file:** `.planning/phases/42-per-query-tuning-pipeline-spec/42-CONTEXT.md`
 
 ---
 *Last updated: 2026-04-20 — v1.9 milestone opened*
