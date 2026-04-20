@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: candidates)
-status: planning
-last_updated: "2026-04-20T01:20:09.332Z"
+status: milestone_complete
+last_updated: "2026-04-20T01:28:22.130Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 3
-  completed_phases: 2
-  total_plans: 5
+  completed_phases: 3
+  total_plans: 7
   completed_plans: 5
   percent: 100
 ---
@@ -21,15 +21,16 @@ See: `.planning/PROJECT.md` (updated 2026-04-19)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase 38 — search within facet + docs
+**Current focus:** Phase 38 — search-within-facet-docs
 
 ## Current Position
 
-Phase: 38 (search-within-facet-+-docs) — READY TO PLAN
+Phase: 38
+Plan: 1 of 2
 
 **Plan:** Not started
 
-**Status:** Ready to plan
+**Status:** Milestone complete
 
 **Last activity:** 2026-04-20
 
@@ -79,3 +80,5 @@ Structured **`audit-open`** still counted **3** items at close; each is **supers
 **Prior milestone:** **v1.6** (phases **29–35**) — archived 2026-04-19
 
 **Completed Phase:** 37 (Disjunctive facet counts) — 2 plans — 2026-04-20
+
+**Planned Phase:** 38 (Search within facet + docs) — 2 plans — 2026-04-20T01:27:14.099Z

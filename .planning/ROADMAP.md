@@ -19,7 +19,7 @@
 |---|-------|------|--------------|------------------|
 | 36 | Hierarchical facets | 3/3 | Complete    | 2026-04-20 |
 | 37 | Disjunctive facet counts | 2/2 | Complete    | 2026-04-20 |
-| 38 | Search within facet + docs | `search_within_facet/4` (or approved name) ships with consistent filter composition; guides and `docs_contract_test` cover new APIs | FACET-03, FACET-04 | 1. Public API + typespecs merged with filter composition rules consistent with `search/3`. 2. Integration test covers scoped search within a facet bucket. 3. Guide or doc section + `docs_contract_test.exs` anchors updated. 4. README/ExDoc pointers updated where facet depth is discoverable. |
+| 38 | Search within facet + docs | 2/2 | Complete    | 2026-04-20 |
 
 ### Phase 36: Hierarchical facets
 

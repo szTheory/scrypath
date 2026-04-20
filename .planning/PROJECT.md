@@ -10,7 +10,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Current milestone
 
-**v1.7 — Facet depth and catalog search UX** (planning). **Goal:** Ship the next **Meilisearch-native facet** layer on top of existing faceting — **hierarchical facets**, **disjunctive facet counts**, and **`search_within_facet/4`** (or equivalent public entry), with **docs + contract tests** so behavior stays explainable. **Source:** ROI prioritization after **v1.6** (adoption and trust). Scoped requirements: **`.planning/REQUIREMENTS.md`**. **Multi-index federation** and **per-query relevance overrides** stay **out of scope** for v1.7 (see REQUIREMENTS **Future** / **TUNE-PIPE-01**).
+**v1.7 — Facet depth and catalog search UX** (in-repo complete). **Goal:** Ship the next **Meilisearch-native facet** layer on top of existing faceting — **hierarchical facets**, **disjunctive facet counts**, and **`search_within_facet/4`**, with **docs + contract tests** so behavior stays explainable. **Source:** ROI prioritization after **v1.6** (adoption and trust). Scoped requirements: **`.planning/REQUIREMENTS.md`**. **Multi-index federation** and **per-query relevance overrides** stay **out of scope** for v1.7 (see REQUIREMENTS **Future** / **TUNE-PIPE-01**).
 
 ## Requirements
 
@@ -38,10 +38,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] **v1.6 milestone** (2026-04-19): Adoption-grade integration and trust — phases **29–35** archived; **`milestones/v1.6-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**; requirements **ADPT-***, **EXAM-***, **VRFY-***, **AUDT-01** satisfied per audit.
 - [x] **Phase 36** (2026-04-19): **Hierarchical facets** — opt-in `nested_facet_paths`, optional `hierarchy:` expansion, Meilisearch settings + drift alignment, `SearchResult` dotted keys, guide **`## Hierarchical facets`**, **`mix verify.phase36`** — **FACET-01**.
 - [x] **Phase 37** (2026-04-20): **Disjunctive facet counts** — `Scrypath.Facets.Disjunctive.merge_distributions/2`, guide **`## Disjunctive facet counts`**, **`mix verify.phase37`**, docs contract anchors — **FACET-02**.
+- [x] **Phase 38** (2026-04-20): **`search_within_facet/4`** + telemetry metadata, guide sections (**`## Searching within a facet selection`**, **`## Composing facet filters with scoped search`**), **`mix verify.phase38`**, README / ExDoc pointers — **FACET-03**, **FACET-04**.
 
 ### Active
 
-- [ ] **v1.7 (facet depth)** — **`FACET-01`** and **`FACET-02`** satisfied (Phases 36–37); remaining **`FACET-03`..`FACET-04`** in **`.planning/REQUIREMENTS.md`**; **Phase 38** in **`.planning/ROADMAP.md`**. Multi-index scoring and per-query relevance implementation remain deferred per REQUIREMENTS.
+- [ ] **v1.7 (facet depth)** — Phases **36–38** complete (**`FACET-01`**..**`FACET-04`** per **`.planning/REQUIREMENTS.md`**). Milestone **ship** (Hex bump / archive) remains a separate release decision. Multi-index scoring and per-query relevance implementation remain deferred per REQUIREMENTS.
 
 ### Out of Scope
 
@@ -113,4 +114,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-20 — Phases **36–37** complete (**FACET-01**, **FACET-02**); Hex **`scrypath 0.3.3`** current*
+*Last updated: 2026-04-20 — Phases **36–38** complete (**FACET-01**..**FACET-04**); Hex **`scrypath 0.3.3`** current*

@@ -73,6 +73,7 @@ If you are wiring Scrypath into a Phoenix app, read these next:
 - [Phoenix Contexts](guides/phoenix-contexts.md)
 - [Phoenix Controllers and JSON](guides/phoenix-controllers-and-json.md)
 - [Phoenix LiveView](guides/phoenix-liveview.md)
+- **`Scrypath.search_within_facet/4`** — facet-scoped full-text search from LiveView-style catalogs ([Faceted search with Phoenix LiveView](guides/faceted-search-with-phoenix-liveview.md))
 - [Multi-index search](guides/multi-index-search.md)
 - [Sync Modes and Visibility](guides/sync-modes-and-visibility.md)
 - [Operator Mix Tasks](guides/operator-mix-tasks.md)
