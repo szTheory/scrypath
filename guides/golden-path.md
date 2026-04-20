@@ -123,6 +123,8 @@ alias MyApp.Content
 result.records
 ```
 
+Index-time relevance tuning lives in [Relevance tuning](relevance-tuning.md); request-time search options are specified in the [Per-query tuning pipeline](per-query-tuning-pipeline.md) guide.
+
 For controllers, JSON APIs, and LiveView that call the same context boundary, continue with [Phoenix Walkthrough](phoenix-walkthrough.md).
 
 ## Integration smoke (Postgres + Meilisearch + Oban)
