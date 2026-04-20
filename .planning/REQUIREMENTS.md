@@ -45,9 +45,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
+| AUDT-01 | Phase 32; gap closure 33 | **Complete** |
 | FACET-01 | Phase 36 | Pending |
 | FACET-02 | Phase 37 | Pending |
 | FACET-03 | Phase 38 | Pending |
 | FACET-04 | Phase 38 | Pending |
 
-**Coverage:** v1.7 requirements: **4** — mapped: **4** — unmapped: **0**.
+**Coverage:** v1.7 requirements: **4** — mapped: **4** — unmapped: **0**. (Traceability table also retains **AUDT-01** from v1.6 for docs-contract continuity.)
