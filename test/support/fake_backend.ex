@@ -30,7 +30,7 @@ defmodule Scrypath.TestSupport.FakeBackend do
   @impl true
   def search_many(paired_queries, config) when is_list(paired_queries) do
     hits =
-      Enum.map(paired_queries, fn {schema_module, %Query{} = query} ->
+      Enum.map(paired_queries, fn {schema_module, %Query{} = query, _fed_opts} ->
         uid = index_name(schema_module, config)
 
         %{
@@ -42,7 +42,7 @@ defmodule Scrypath.TestSupport.FakeBackend do
 
     facets_by_index =
       paired_queries
-      |> Enum.map(fn {schema_module, %Query{} = query} ->
+      |> Enum.map(fn {schema_module, %Query{} = query, _fed_opts} ->
         uid = index_name(schema_module, config)
 
         dist =

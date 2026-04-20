@@ -68,10 +68,11 @@ defmodule Scrypath.Meilisearch do
   end
 
   @impl true
-  @spec search_many([{module(), Query.t()}], keyword()) :: {:ok, map()} | {:error, term()}
+  @spec search_many([{module(), Query.t(), keyword()}], keyword()) ::
+          {:ok, map()} | {:error, term()}
   def search_many(paired_queries, config) when is_list(paired_queries) do
     queries =
-      Enum.map(paired_queries, fn {schema_module, %Query{} = query} ->
+      Enum.map(paired_queries, fn {schema_module, %Query{} = query, _fed_opts} ->
         index = index_name(schema_module, config)
 
         query
