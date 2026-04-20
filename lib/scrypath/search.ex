@@ -134,6 +134,12 @@ defmodule Scrypath.Search do
   or by setting **`otp_app:`** and listing modules under **`Application.get_env(otp_app,
   :scrypath_global_search_schemas, [])`**.
 
+  ## Scores vs merge ordering
+
+  Federation returns a merged stream of hits, but **scores are comparable within one index
+  only**. Cross-index **`federation_weight:`** values tune **merge ordering** under engine
+  policy—they do not normalize per-index scores into a single global relevance number.
+
   ## Result metadata
 
   On native federation responses, `%MultiSearchResult{}` may include
