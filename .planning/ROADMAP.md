@@ -92,6 +92,8 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 **v1.8** opened **2026-04-20** — federation scoring (**39**), `:all` expansion (**40**), docs/contracts (**41**). **v1.7** remains archived below.
 
 - [x] **Phase 39 — Federation scoring & weights** — complete **2026-04-20** — **FED-01** (weights API, `merge_hit_order` / `merge_projection/1`, Meilisearch wire, tests, guide § Federation weights).
+- [ ] **Phase 40 — `:all` expansion** — not started — **FED-02** (explicit `:all` or equivalent token, documented resolution rule, cardinality rails, timeouts, explicit `{:error, _}` paths; tests for happy + rejection paths).
+- [ ] **Phase 41 — Federation docs & contracts** — not started — **FED-03** (README / guides / `docs_contract_test.exs` + agreed verify slice).
 
 ## Backlog (beyond v1.8)
 

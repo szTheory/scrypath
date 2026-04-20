@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: — active)
-status: completed
-last_updated: "2026-04-20T15:20:36.453Z"
-last_activity: 2026-04-20 — `/gsd-execute-phase 39` finished; planning files updated.
+status: "Phase 40 context gathered — ready to plan"
+last_updated: "2026-04-20T20:00:00.000Z"
+last_activity: 2026-04-20 — `/gsd-discuss-phase 40` captured **40-CONTEXT.md** (tagged `{:all, …}` splice, config allowlist + `global_schemas:` override, error taxonomy, timeout/failure boundaries).
 progress:
   total_phases: 23
   completed_phases: 19
@@ -31,7 +31,7 @@ Plan: —
 
 **Status:** Phase **39** complete (**FED-01**): `federation_weight:` validation, native `search_many` fed_opts, Meilisearch `federationOptions.weight`, `merge_hit_order` / `merge_projection/1`, docs + tests.
 
-**Last activity:** 2026-04-20 — `/gsd-execute-phase 39` finished; planning files updated.
+**Last activity:** 2026-04-20 — Phase **40** discuss complete; see **`.planning/phases/40-all-expansion/40-CONTEXT.md`**.
 
 ## Accumulated Context
 
@@ -43,6 +43,8 @@ Plan: —
 
 **Phase 39 (locked in CONTEXT):** Per-entry **`federation_weight:`**; omit weight on wire when unset; **`{:invalid_options, {:federation_weight, _}}`** / **`{:federation_merge_requires_native_search_many, _}}`**; optional merge-order trace **`{schema, id}`** + projection helper; no silent merge on sequential fallback when weights are set.
 
+**Phase 40 (locked in CONTEXT):** Tagged **`{:all, text, keyword?}`** entry in **`search_many`** list expands (splices) to allowlisted modules; default list from **application config**, **`global_schemas:`** replaces for one call; **`{:invalid_options, {:all_expansion, :empty_registry}}`** vs **`:empty_schema_list`**; **`{:too_many_schemas, count, max}`** after expansion; resolution errors before HTTP; validation stays **fail-fast** **`{:validation_failed, …}`** like today.
+
 ### Blockers / Concerns
 
 - **None.**
@@ -53,12 +55,12 @@ Canonical ledger references (AUDT-01 / milestone-close hygiene): **`18-VERIFICAT
 
 ## Next Command
 
-1. **`/gsd-discuss-phase 40`** — align `:all` expansion resolution rule and cardinality rails (or **`/gsd-plan-phase 40`** if context is already sufficient).
+1. **`/gsd-plan-phase 40`** — plans from **`.planning/phases/40-all-expansion/40-CONTEXT.md`**.
 
-**Resume files:** `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/PROJECT.md`, `.planning/phases/40-*/40-CONTEXT.md` (once created)
+**Resume files:** `.planning/phases/40-all-expansion/40-CONTEXT.md`, `.planning/REQUIREMENTS.md`, `.planning/ROADMAP.md`
 
 ---
-*Last updated: 2026-04-20 — phase 39 execution complete*
+*Last updated: 2026-04-20 — phase 40 discuss complete*
 
 **Prior milestone:** **v1.7** (phases **36–38**) — archived 2026-04-20
 
