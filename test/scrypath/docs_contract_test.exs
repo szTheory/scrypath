@@ -19,6 +19,7 @@ defmodule Scrypath.DocsContractTest do
   @verify_phase36 File.read!("lib/mix/tasks/verify.phase36.ex")
   @verify_phase37 File.read!("lib/mix/tasks/verify.phase37.ex")
   @verify_phase38 File.read!("lib/mix/tasks/verify.phase38.ex")
+  @verify_phase41 File.read!("lib/mix/tasks/verify.phase41.ex")
   @verify_release_publish File.read!("lib/mix/tasks/verify.release_publish.ex")
   @guide_paths [
     "guides/drift-recovery.md",
@@ -530,6 +531,15 @@ defmodule Scrypath.DocsContractTest do
     ])
 
     refute @verify_phase38 =~ "HEX_API_KEY"
+  end
+
+  test "verify.phase41 pins federation docs + doc contract slice without Hex secrets" do
+    assert_contains_all(@verify_phase41, [
+      "Mix.Tasks.Verify.Phase41",
+      "docs_contract_test.exs"
+    ])
+
+    refute @verify_phase41 =~ "HEX_API_KEY"
   end
 
   test "faceted LiveView guide documents hierarchical facets with stable headings" do
