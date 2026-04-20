@@ -120,6 +120,9 @@ jobs:
       - name: Federation docs gate (`mix verify.phase41`)
         run: mix verify.phase41
 
+      - name: Per-query runtime gate (`mix verify.phase43`)
+        run: mix verify.phase43
+
   phase5-verification:
     runs-on: ubuntu-latest
 
