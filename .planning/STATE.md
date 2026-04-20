@@ -1,12 +1,12 @@
 ---
 gsd_state_version: 1.0
-milestone: pending
-milestone_name: Next milestone (unscheduled)
-status: between_milestones
-last_updated: "2026-04-20T18:35:00.000Z"
+milestone: v1.10
+milestone_name: Operator admin UI (OPSUI)
+status: defining_requirements
+last_updated: "2026-04-20T20:00:00.000Z"
 last_activity: 2026-04-20
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,15 +21,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-20)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **Between milestones** — **`v1.9`** archived; run **`/gsd-new-milestone`** to open the next version line.
+**Current focus:** **Milestone `v1.10` — Operator admin UI (OPSUI)** — phases **44–47** on roadmap; first execution **`/gsd-discuss-phase 44`** or **`/gsd-plan-phase 44`**.
 
 ## Current Position
 
-**Milestone:** **v1.9** — **archived** (2026-04-20)
+**Phase:** Not started (roadmap ready)
 
-**Status:** Phases **42–43** complete; planning artifacts under **`milestones/v1.9-*.md`**. No active **`REQUIREMENTS.md`** until the next milestone bootstrap.
+**Plan:** —
 
-**Last activity:** 2026-04-20 — **`/gsd-complete-milestone`** (**v1.9**)
+**Status:** Ready to discuss or plan **Phase 44**
+
+**Last activity:** 2026-04-20 — **`/gsd-new-milestone`** — **`v1.10`** initialized (research + requirements + roadmap)
 
 ## Accumulated Context
 
@@ -61,12 +63,13 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **`/gsd-new-milestone`** — bootstrap the next milestone (**requirements → roadmap**)
-2. **`/gsd-progress`** — optional health read after bootstrap
+1. **`/gsd-discuss-phase 44`** — gather context for **OPSUI foundations**
+2. **`/gsd-plan-phase 44`** — plan directly if context is already clear
+3. **`/gsd-progress`** — optional health read
 
 **Resume file:** --resume-file
 
 ---
-*Last updated: 2026-04-20 — **v1.9** milestone archived*
+*Last updated: 2026-04-20 — **`v1.10`** milestone initialized*
 
 **Prior milestone:** **v1.9** (phases **42–43**) — archived 2026-04-20
