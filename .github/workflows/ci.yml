@@ -341,3 +341,87 @@ jobs:
           cd examples/phoenix_meilisearch
           mix deps.get
           mix test
+
+  # Path gate for OPSUI: always run on push to main; on pull_request only when
+  # library or scrypath_ops paths change (see phase 47 CONTEXT D-03).
+  scrypath-ops-path-check:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Decide whether OPSUI CI should run
+        id: check
+        shell: bash
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "push" && "${GITHUB_REF}" == "refs/heads/main" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            git fetch origin "${GITHUB_BASE_REF}" --depth=1
+            if git diff --name-only "origin/${GITHUB_BASE_REF}...HEAD" | grep -qE '^(scrypath_ops/|lib/|mix\.exs|mix\.lock|scrypath_ops/mix\.lock)'; then
+              echo "run=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "run=false" >> "$GITHUB_OUTPUT"
+            fi
+            exit 0
+          fi
+          echo "run=false" >> "$GITHUB_OUTPUT"
+
+  scrypath-ops:
+    needs: scrypath-ops-path-check
+    if: needs.scrypath-ops-path-check.outputs.run == 'true'
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5433:5432
+
+    env:
+      PGPORT: "5433"
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.19.0"
+          otp-version: "28.1"
+
+      - uses: actions/cache@v5
+        with:
+          path: |
+            scrypath_ops/deps
+            scrypath_ops/_build
+          key: ${{ runner.os }}-scrypath-ops-${{ hashFiles('mix.lock', 'scrypath_ops/mix.lock') }}
+
+      - name: Install postgres client (pg_isready)
+        run: sudo apt-get update -qq && sudo apt-get install -y postgresql-client
+
+      - name: Wait for Postgres
+        run: |
+          for _ in $(seq 1 60); do
+            if pg_isready -h 127.0.0.1 -p "$PGPORT" -U postgres; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Postgres failed to become ready"
+          exit 1
+
+      - name: ScrypathOps (`scrypath_ops`)
+        run: |
+          cd scrypath_ops
+          mix deps.get
+          mix test
