@@ -8,6 +8,8 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   use ScrypathOpsWeb, :live_view
 
+  @meilisearch_ops_guide "https://github.com/szTheory/scrypath/blob/main/guides/meilisearch-operations.md"
+
   @impl true
   def mount(_params, _session, socket) do
     allowlist = ScrypathOps.Schemas.allowlist()
@@ -22,6 +24,9 @@ defmodule ScrypathOpsWeb.PostureLive do
       |> assign(:posture_rows, [])
       |> assign(:aggregate_error_count, 0)
       |> assign(:last_refresh_at, nil)
+      |> assign(:posture_headline, "—")
+      |> assign(:posture_evidence, "")
+      |> assign(:next_checks, [])
 
     {:ok, load_posture(socket)}
   end
@@ -52,12 +57,14 @@ defmodule ScrypathOpsWeb.PostureLive do
         |> assign(:posture_rows, :empty_allowlist)
         |> assign(:aggregate_error_count, 0)
         |> assign(:last_refresh_at, DateTime.utc_now())
+        |> assign_jtbd_summary()
 
       not Keyword.has_key?(opts, :backend) ->
         socket
         |> assign(:posture_rows, :missing_backend)
         |> assign(:aggregate_error_count, 0)
         |> assign(:last_refresh_at, DateTime.utc_now())
+        |> assign_jtbd_summary()
 
       true ->
         rows =
@@ -82,6 +89,101 @@ defmodule ScrypathOpsWeb.PostureLive do
         |> assign(:posture_rows, {:ok, rows})
         |> assign(:aggregate_error_count, err_count)
         |> assign(:last_refresh_at, DateTime.utc_now())
+        |> assign_jtbd_summary()
+    end
+  end
+
+  defp assign_jtbd_summary(socket) do
+    rows = socket.assigns.posture_rows
+    err_count = socket.assigns.aggregate_error_count
+
+    {headline, evidence, checks} = jtbd_state(rows, err_count)
+
+    socket
+    |> assign(:posture_headline, headline)
+    |> assign(:posture_evidence, evidence)
+    |> assign(:next_checks, Enum.take(checks, 5))
+  end
+
+  defp jtbd_state(:empty_allowlist, _) do
+    checks = [
+      %{
+        text: "Add schemas to the OPSUI allowlist in :scrypath_ops config or SCRYPATH_OPS_SCHEMAS.",
+        href: "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/README.md"
+      }
+    ]
+
+    {"Not configured",
+     "No schemas are allowlisted for posture — configure schema_allowlist or SCRYPATH_OPS_SCHEMAS (see scrypath_ops README).",
+     checks}
+  end
+
+  defp jtbd_state(:missing_backend, _) do
+    checks = [
+      %{
+        text: "Wire :backend and related :scrypath_ops options so sync_status can run.",
+        href: "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/README.md"
+      }
+    ]
+
+    {"Broken", "Scrypath runtime is missing :backend under :scrypath_ops — posture cannot query sync status.", checks}
+  end
+
+  defp jtbd_state({:ok, _rows}, err_count) when err_count > 0 do
+    checks =
+      [
+        %{
+          text: "Open failed sync work to triage fetch and queue errors first.",
+          navigate: ~p"/ops/failed-sync"
+        },
+        %{
+          text: "Review read-only sync and drift signals before changing indexes.",
+          navigate: ~p"/ops/sync-drift"
+        },
+        %{
+          text: "Walk Meilisearch operations expectations for the search backend.",
+          href: @meilisearch_ops_guide
+        }
+      ]
+      |> maybe_append_mix_status()
+
+    {"Degraded",
+     "#{err_count} schema(s) report fetch or sync errors on this refresh — treat as incident triage, not green.",
+     checks}
+  end
+
+  defp jtbd_state({:ok, _rows}, 0) do
+    checks =
+      [
+        %{
+          text: "Scan failed sync work periodically even when posture is green.",
+          navigate: ~p"/ops/failed-sync"
+        },
+        %{
+          text: "Confirm drift and queue visibility when changing sync modes.",
+          navigate: ~p"/ops/sync-drift"
+        },
+        %{
+          text: "Use search playground only after triage surfaces are quiet.",
+          navigate: ~p"/ops/search"
+        }
+      ]
+      |> maybe_append_mix_status()
+
+    {"Healthy", "No fetch errors on this refresh — continue spot-checking failed work and drift.", checks}
+  end
+
+  defp operator_mix_guide_path do
+    Path.expand("../../../guides/operator-mix-tasks.md", __DIR__)
+  end
+
+  defp maybe_append_mix_status(checks) do
+    path = operator_mix_guide_path()
+
+    if File.exists?(path) and String.contains?(File.read!(path), "mix scrypath.status") do
+      checks ++ [%{text: "Snapshot a schema from the CLI when you need raw sync_status output.", mix: "mix scrypath.status"}]
+    else
+      checks
     end
   end
 
@@ -109,6 +211,30 @@ defmodule ScrypathOpsWeb.PostureLive do
           Refresh
         </button>
       </div>
+
+      <section
+        :if={@next_checks != []}
+        data-testid="posture-next-checks"
+        aria-label="Next checks"
+        class="mt-6 rounded-lg border border-base-300 bg-base-200/40 p-4"
+      >
+        <p class="text-lg font-semibold text-base-content">{@posture_headline}</p>
+        <p class="mt-1 text-sm text-base-content/80">{@posture_evidence}</p>
+        <ol class="mt-3 list-decimal list-inside space-y-2 text-sm text-base-content/90">
+          <li :for={check <- @next_checks} class="pl-1">
+            <span>{check.text}</span>
+            <span :if={check[:navigate]} class="ml-2">
+              <.link navigate={check.navigate} class="link link-primary">Open in OPSUI</.link>
+            </span>
+            <span :if={check[:href]} class="ml-2">
+              <a href={check.href} class="link link-primary">Open guide</a>
+            </span>
+            <span :if={check[:mix]} class="mt-1 block font-mono text-xs text-base-content/70">
+              {check.mix}
+            </span>
+          </li>
+        </ol>
+      </section>
 
       <p :if={@auto_refresh} class="mt-2 text-sm text-base-content/70">
         Auto-refresh is not enabled by default; only manual refresh runs in this build.
