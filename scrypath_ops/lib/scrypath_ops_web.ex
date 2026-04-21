@@ -86,6 +86,7 @@ defmodule ScrypathOpsWeb do
       import Phoenix.HTML
       # Core UI components
       import ScrypathOpsWeb.CoreComponents
+      import ScrypathOpsWeb.OpsUi
 
       # Common modules used in templates
       alias Phoenix.LiveView.JS
