@@ -1,27 +1,27 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.10
-milestone_name: — Operator admin UI
-status: milestone_complete
-last_updated: "2026-04-21T20:39:42.324Z"
+milestone: null
+milestone_name: null
+status: planning_next
+last_updated: "2026-04-21T21:00:00.000Z"
 last_activity: 2026-04-21
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 14
-  completed_plans: 14
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-04-20)
+See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.10** (Operator admin UI) — phases **44–47** complete.
+**Current focus:** **Next milestone** — **`v1.10` OPSUI** shipped + archived **2026-04-21**; define the next slice with **`/gsd-new-milestone`**.
 
 ## Current Position
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-20)
 
 **Plan:** —
 
-**Status:** Milestone **v1.10** execution complete (ship / archive / next milestone planning)
+**Status:** Milestone **v1.10** archived; **`REQUIREMENTS.md`** removed pending next milestone bootstrap.
 
 **Last activity:** 2026-04-21
 
@@ -44,6 +44,15 @@ See: `.planning/PROJECT.md` (updated 2026-04-20)
 - **None.**
 
 ### Deferred Items
+
+#### Acknowledged at v1.10 milestone close (2026-04-21)
+
+Items from **`audit-open --json`** deferred without blocking ship (**2** rows; historical quick-task stubs):
+
+| Category | Item | Status |
+|----------|------|--------|
+| quick_task | `260416-eoj-automate-phase-5-verification-with-live-` | missing |
+| quick_task | `260416-if2-fix-mix-exs-github-urls-add-a-github-act` | missing |
 
 #### Acknowledged at v1.9 milestone close (2026-04-20)
 
@@ -63,14 +72,14 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **`/gsd-progress`** — confirm roadmap and milestone table after phase **47**
-2. **`/gsd-new-milestone`** or release prep — when ready to close **v1.10** or start the next roadmap slice
+1. **`/gsd-new-milestone`** — author fresh **`.planning/REQUIREMENTS.md`** and the next roadmap slice
+2. **`/gsd-progress`** — optional sanity check after requirements land
 
 **Resume file:** None
 
 ---
-*Last updated: 2026-04-21 — **`v1.10`** milestone — phase **47** execution complete*
+*Last updated: 2026-04-21 — **`v1.10`** milestone archived (phases **44–47**)*
 
 **Prior milestone:** **v1.9** (phases **42–43**) — archived 2026-04-20
 
-**Completed:** Phase **47** (Verification & hardening) — 3 plans — 2026-04-21
+**Shipped + archived:** **v1.10** OPSUI — **2026-04-21**
