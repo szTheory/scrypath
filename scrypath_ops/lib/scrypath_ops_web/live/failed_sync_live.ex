@@ -127,10 +127,12 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} shell={@shell}>
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <h1 class="text-2xl font-semibold leading-8 tracking-tight text-balance">Failed sync work</h1>
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <.ops_page_header title={@page_title} />
         <div class="flex flex-wrap gap-2">
-          <button type="button" phx-click="refresh" class="btn btn-sm btn-primary">Refresh</button>
+          <button type="button" phx-click="refresh" class="btn btn-sm btn-primary">
+            Refresh failed sync jobs
+          </button>
           <button type="button" phx-click="toggle_compact" class="btn btn-sm">
             Toggle compact mode
           </button>
@@ -170,21 +172,21 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         {inspect(@load_error)}
       </p>
 
-      <div :if={@inspection} class="mt-4 space-y-4">
+      <.ops_panel :if={@inspection}>
         <div class={["rounded border border-base-300 p-3", @compact_mode && "hidden"]}>
           <h2 class="text-sm font-semibold uppercase tracking-wide text-base-content/70">Rollups</h2>
-          <p class="mt-2 font-mono text-sm">
+          <p class="mt-2 font-mono text-sm tabular-nums">
             total <span class="font-bold">{@inspection.counts.total}</span>
             · transport {@inspection.counts.by_class.transport} · validation {@inspection.counts.by_class.validation} · backend_rejected {@inspection.counts.by_class.backend_rejected} · queue_exhausted {@inspection.counts.by_class.queue_exhausted} · unknown {@inspection.counts.by_class.unknown}
           </p>
         </div>
 
-        <p class="text-xs text-base-content/60">
+        <p class="mt-4 text-xs text-base-content/60">
           For recovery actions use <code class="text-sm">mix scrypath.failed</code>
           and the repo guides <code class="text-sm">guides/drift-recovery.md</code>, <code class="text-sm">guides/operator-mix-tasks.md</code>.
         </p>
 
-        <div class="overflow-x-auto">
+        <div class="mt-4 overflow-x-auto min-w-0">
           <table class="table table-zebra table-sm">
             <thead>
               <tr>
@@ -197,7 +199,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                 <th>Detail</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody class="text-sm leading-snug tabular-nums">
               <%= for row <- sorted_entries(@inspection) do %>
                 <tr id={"failed-#{row.id}"}>
                   <td class="font-mono text-xs">{inspect(row.id)}</td>
@@ -222,7 +224,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             </tbody>
           </table>
         </div>
-      </div>
+      </.ops_panel>
     </Layouts.app>
     """
   end

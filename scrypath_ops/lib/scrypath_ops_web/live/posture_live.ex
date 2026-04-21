@@ -201,40 +201,41 @@ defmodule ScrypathOpsWeb.PostureLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} shell={@shell}>
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <h1 class="text-2xl font-semibold leading-8 tracking-tight text-balance">Posture / health</h1>
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <.ops_page_header title={@page_title} />
         <button
           type="button"
           phx-click="refresh"
           class="btn btn-sm btn-primary"
         >
-          Refresh
+          Refresh posture
         </button>
       </div>
 
-      <section
-        :if={@next_checks != []}
-        data-testid="posture-next-checks"
-        aria-label="Next checks"
-        class="mt-6 rounded-lg border border-base-300 bg-base-200/40 p-4"
-      >
-        <p class="text-lg font-semibold text-base-content">{@posture_headline}</p>
-        <p class="mt-1 text-sm text-base-content/80">{@posture_evidence}</p>
-        <ol class="mt-3 list-decimal list-inside space-y-2 text-sm text-base-content/90">
-          <li :for={check <- @next_checks} class="pl-1">
-            <span>{check.text}</span>
-            <span :if={check[:navigate]} class="ml-2">
-              <.link navigate={check.navigate} class="link link-primary">Open in OPSUI</.link>
-            </span>
-            <span :if={check[:href]} class="ml-2">
-              <a href={check.href} class="link link-primary">Open guide</a>
-            </span>
-            <span :if={check[:mix]} class="mt-1 block font-mono text-xs text-base-content/70">
-              {check.mix}
-            </span>
-          </li>
-        </ol>
-      </section>
+      <.ops_panel :if={@next_checks != []}>
+        <section
+          data-testid="posture-next-checks"
+          aria-label="Next checks"
+          class={posture_next_checks_class(@posture_headline)}
+        >
+          <p class="text-lg font-semibold text-base-content">{@posture_headline}</p>
+          <p class="mt-1 text-sm text-base-content/80">{@posture_evidence}</p>
+          <ol class="mt-3 list-decimal list-inside space-y-2 text-sm text-base-content/90">
+            <li :for={check <- @next_checks} class="pl-1">
+              <span>{check.text}</span>
+              <span :if={check[:navigate]} class="ml-2">
+                <.link navigate={check.navigate} class="link link-primary">Open in OPSUI</.link>
+              </span>
+              <span :if={check[:href]} class="ml-2">
+                <a href={check.href} class="link link-primary">Open guide</a>
+              </span>
+              <span :if={check[:mix]} class="mt-1 block font-mono text-xs text-base-content/70">
+                {check.mix}
+              </span>
+            </li>
+          </ol>
+        </section>
+      </.ops_panel>
 
       <p :if={@auto_refresh} class="mt-2 text-sm text-base-content/70">
         Auto-refresh is not enabled by default; only manual refresh runs in this build.
@@ -252,14 +253,14 @@ defmodule ScrypathOpsWeb.PostureLive do
         options under <code class="text-sm">:scrypath_ops</code>). See <code class="text-sm">scrypath_ops/README.md</code>.
       </p>
 
-      <div :if={match?({:ok, _}, @posture_rows)} class="mt-4 space-y-2">
+      <.ops_panel :if={match?({:ok, _}, @posture_rows)}>
         <p class="text-sm text-base-content/80">
           <span class="font-medium">{@aggregate_error_count}</span>
           schema(s) with fetch errors · refreshed
-          <span class="font-mono text-xs">{format_dt(@last_refresh_at)}</span>
+          <span class="font-mono text-xs tabular-nums">{format_dt(@last_refresh_at)}</span>
         </p>
 
-        <div class="overflow-x-auto">
+        <div class="mt-3 overflow-x-auto min-w-0">
           <table class="table table-zebra table-sm">
             <thead>
               <tr>
@@ -276,7 +277,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                 <th>Queue last OK</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody class="text-sm leading-snug tabular-nums">
               <%= for {mod, row} <- elem(@posture_rows, 1) do %>
                 <tr data-testid="posture-row" id={"posture-#{inspect(mod)}"}>
                   <%= case row do %>
@@ -309,10 +310,21 @@ defmodule ScrypathOpsWeb.PostureLive do
             </tbody>
           </table>
         </div>
-      </div>
+      </.ops_panel>
     </Layouts.app>
     """
   end
+
+  defp posture_next_checks_class("Degraded"), do: "rounded-lg border border-transparent alert alert-warning p-3"
+
+  defp posture_next_checks_class("Broken"),
+    do: "rounded-lg border border-transparent alert alert-error p-3"
+
+  defp posture_next_checks_class("Not configured"),
+    do: "rounded-lg border border-transparent alert alert-warning p-3"
+
+  defp posture_next_checks_class(_),
+    do: "rounded-lg border border-base-300 bg-base-200/40 p-3"
 
   defp format_dt(nil), do: "—"
 

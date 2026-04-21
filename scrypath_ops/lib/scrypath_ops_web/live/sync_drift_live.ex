@@ -138,7 +138,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} shell={@shell}>
-      <h1 class="text-2xl font-semibold leading-8 tracking-tight text-balance">Sync / drift</h1>
+      <.ops_page_header title={@page_title} />
 
       <form :if={@schema_allowlist != []} class="mt-4 flex flex-wrap items-center gap-2">
         <label for="sync-schema-select" class="text-sm">Schema</label>
@@ -164,62 +164,66 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         and <code class="text-xs">Scrypath.index_contract_drift/2</code>.
       </p>
 
-      <div class="mt-8 space-y-3">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <h2 class="text-lg font-semibold">Sync & queue posture</h2>
-          <button type="button" phx-click="refresh_reconcile" class="btn btn-sm btn-primary">
-            Refresh reconcile
-          </button>
-        </div>
+      <.ops_panel>
+        <div class="mt-2 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h2 class="text-lg font-semibold">Sync & queue posture</h2>
+            <button type="button" phx-click="refresh_reconcile" class="btn btn-sm btn-primary">
+              Refresh reconcile
+            </button>
+          </div>
 
-        <p :if={@reconcile_loaded_at} class="text-xs text-base-content/60">
-          Last loaded: <span class="font-mono">{format_dt(@reconcile_loaded_at)}</span>
-        </p>
-
-        <div :if={@reconcile_result} class="rounded border border-base-300 p-3 text-sm space-y-1">
-          <p>
-            <span class="font-medium">Index:</span>
-            <code class="text-xs">{@reconcile_result.index}</code>
+          <p :if={@reconcile_loaded_at} class="text-xs text-base-content/60">
+            Last loaded: <span class="font-mono tabular-nums">{format_dt(@reconcile_loaded_at)}</span>
           </p>
-          <p><span class="font-medium">Mode:</span> {@reconcile_result.mode}</p>
-          <p>
-            <span class="font-medium">Drift signals:</span>
-            {inspect(@reconcile_result.drift_signals)}
-          </p>
-        </div>
 
-        <p :if={@reconcile_result == nil && @selected_schema} class="text-sm text-base-content/70">
-          Reconcile not loaded yet — choose a schema or tap “Refresh reconcile”.
-        </p>
-      </div>
+          <div :if={@reconcile_result} class="rounded border border-base-300 p-3 text-sm space-y-1">
+            <p>
+              <span class="font-medium">Index:</span>
+              <code class="text-xs">{@reconcile_result.index}</code>
+            </p>
+            <p><span class="font-medium">Mode:</span> {@reconcile_result.mode}</p>
+            <p>
+              <span class="font-medium">Drift signals:</span>
+              {inspect(@reconcile_result.drift_signals)}
+            </p>
+          </div>
 
-      <div class="mt-10 space-y-3">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <h2 class="text-lg font-semibold">Index contract (declared vs live)</h2>
-          <button type="button" phx-click="load_drift" class="btn btn-sm">
-            Load / refresh contract drift
-          </button>
-        </div>
-
-        <p :if={@drift_loaded_at} class="text-xs text-base-content/60">
-          Last loaded: <span class="font-mono">{format_dt(@drift_loaded_at)}</span>
-        </p>
-
-        <p :if={@drift_error} class="text-sm text-error">
-          Drift error (reconcile above stays usable): {inspect(@drift_error)}
-        </p>
-
-        <div :if={@drift_result} class="rounded border border-base-300 p-3 text-sm">
-          <p class="font-medium">Index contract snapshot</p>
-          <p class="mt-2 font-mono text-xs">
-            version {@drift_result.version} · index {@drift_result.index}
+          <p :if={@reconcile_result == nil && @selected_schema} class="text-sm text-base-content/70">
+            Reconcile not loaded yet — choose a schema or tap “Refresh reconcile”.
           </p>
         </div>
+      </.ops_panel>
 
-        <p :if={@drift_result == nil && @drift_error == nil} class="text-sm text-base-content/70">
-          Contract drift has not been loaded yet — it runs only after the explicit control.
-        </p>
-      </div>
+      <.ops_panel>
+        <div class="mt-2 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h2 class="text-lg font-semibold">Index contract (declared vs live)</h2>
+            <button type="button" phx-click="load_drift" class="btn btn-sm">
+              Load / refresh contract drift
+            </button>
+          </div>
+
+          <p :if={@drift_loaded_at} class="text-xs text-base-content/60">
+            Last loaded: <span class="font-mono tabular-nums">{format_dt(@drift_loaded_at)}</span>
+          </p>
+
+          <p :if={@drift_error} class="text-sm text-error">
+            Drift error (reconcile above stays usable): {inspect(@drift_error)}
+          </p>
+
+          <div :if={@drift_result} class="rounded border border-base-300 p-3 text-sm">
+            <p class="font-medium">Index contract snapshot</p>
+            <p class="mt-2 font-mono text-xs tabular-nums">
+              version {@drift_result.version} · index {@drift_result.index}
+            </p>
+          </div>
+
+          <p :if={@drift_result == nil && @drift_error == nil} class="text-sm text-base-content/70">
+            Contract drift has not been loaded yet — it runs only after the explicit control.
+          </p>
+        </div>
+      </.ops_panel>
     </Layouts.app>
     """
   end
