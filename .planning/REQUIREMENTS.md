@@ -7,13 +7,13 @@
 
 ### Packaging & boundaries
 
-- [ ] **OPSUI-09**: Operator UI is delivered **outside** the core **`scrypath`** Hex package (dedicated Phoenix application under the repo or a sibling package) with **clone-and-run** (or path-dep) instructions for maintainers and early adopters.
+- [x] **OPSUI-09**: Operator UI is delivered **outside** the core **`scrypath`** Hex package (dedicated Phoenix application under the repo or a sibling package) with **clone-and-run** (or path-dep) instructions for maintainers and early adopters.
 
 ### Personas, jobs-to-be-done, and UX quality
 
-- [ ] **OPSUI-06**: Primary **operator personas** and their **jobs-to-be-done** are documented in-repo, and the **primary navigation order** reflects those priorities (highest-frequency triage paths first).
-- [ ] **OPSUI-07**: The UI follows **conventional Phoenix LiveView** patterns (routing, layouts, flash/errors, components) so an experienced Phoenix developer finds structure and naming **unsurprising** (principle of least surprise).
-- [ ] **OPSUI-08**: The **security model** for OPSUI is explicit and documented (for example: development-only default, required authentication plug contract for non-dev, or separate deploy posture)—operators must not discover auth by accident.
+- [x] **OPSUI-06**: Primary **operator personas** and their **jobs-to-be-done** are documented in-repo, and the **primary navigation order** reflects those priorities (highest-frequency triage paths first).
+- [x] **OPSUI-07**: The UI follows **conventional Phoenix LiveView** patterns (routing, layouts, flash/errors, components) so an experienced Phoenix developer finds structure and naming **unsurprising** (principle of least surprise).
+- [x] **OPSUI-08**: The **security model** for OPSUI is explicit and documented (for example: development-only default, required authentication plug contract for non-dev, or separate deploy posture)—operators must not discover auth by accident.
 
 ### Operator visibility surfaces
 
@@ -50,10 +50,11 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| OPSUI-09 | Phase 44 | Pending |
-| OPSUI-06 | Phase 44 | Pending |
-| OPSUI-07 | Phase 44 | Pending |
-| OPSUI-08 | Phase 44 | Pending |
+| AUDT-01 | Phase 32 (gap closure 33 follow-ups) | Complete — planning hygiene & doc-contract Nyquist invariants |
+| OPSUI-09 | Phase 44 | Complete |
+| OPSUI-06 | Phase 44 | Complete |
+| OPSUI-07 | Phase 44 | Complete |
+| OPSUI-08 | Phase 44 | Complete |
 | OPSUI-01 | Phase 45 | Pending |
 | OPSUI-02 | Phase 45 | Pending |
 | OPSUI-03 | Phase 45 | Pending |

@@ -145,6 +145,8 @@ defmodule Scrypath.MixProject do
   defp package do
     [
       licenses: ["Apache-2.0"],
+      # The optional Phoenix operator app under scrypath_ops/ must never be listed in
+      # files: above — it is not part of the Hex tarball (see docs/releasing.md).
       files:
         ~w(lib .formatter.exs mix.exs README.md CONTRIBUTING.md ARCHITECTURE.md CHANGELOG.md guides docs),
       links: %{
