@@ -28,6 +28,18 @@
 - [ ] **Phase 50: Accessibility and verification hardening** — Heading order, landmarks, control labels on triage and playground paths (**OPSUX-06**). Extend automated tests for any new contracts or critical LiveView flows (**OPSUX-07**).
   - **Success criteria:** (1) Spot keyboard + screen-reader pass on posture → failed-sync → sync/drift → search. (2) CI suite updated; **`mix test`** (or documented **`verify.opsui`** path) green with new cases.
 
+### Phase 48: IA and JTBD alignment
+
+Single source of truth for **`/ops`** primary nav (**`Nav.primary/0`**), router alignment, and **`operator_ia_contract_test`** coverage (**OPSUX-01**); posture landing JTBD clarity (**OPSUX-02**).
+
+### Phase 49: Visual hierarchy, theming, and Phoenix ergonomics
+
+**Depends on:** Phase 48. Shared page scaffold, width policy, daisyUI semantic density, theme toggle + `dark:` / system coherence, **`live_title`** polish, flash and navigation conventions on all **`/ops`** LiveViews (**OPSUX-03**–**OPSUX-05**).
+
+### Phase 50: Accessibility and verification hardening
+
+**Depends on:** Phase 49. Assistive-technology semantics and extended automated verification (**OPSUX-06**, **OPSUX-07**).
+
 ## Phases (history)
 
 <details>
