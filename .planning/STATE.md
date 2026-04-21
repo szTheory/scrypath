@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.11
-milestone_name: Operator shell polish and JTBD verification
-status: Phase **49** context gathered — ready for **`/gsd-plan-phase 49`**.
-last_updated: "2026-04-21T23:30:00.000Z"
-last_activity: 2026-04-21 — `/gsd-discuss-phase 49` (research-backed context)
+milestone_name: — executing)
+status: **`49-CONTEXT.md`** and **`49-DISCUSSION-LOG.md`** committed — visual hierarchy, theming, Phoenix ergonomics decisions locked for planners.
+last_updated: "2026-04-21T22:20:39.593Z"
+last_activity: 2026-04-21 — `/gsd-discuss-phase 49`
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 3
+  total_plans: 7
   completed_plans: 3
-  percent: 33
+  percent: 43
 ---
 
 # Project State
@@ -67,11 +67,11 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 1. **`/gsd-plan-phase 49`** — break **OPSUX-03**–**OPSUX-05** into plans using **`.planning/phases/49-visual-hierarchy-theming-and-phoenix-ergonomics/49-CONTEXT.md`**.
 2. **`/gsd-progress`** — optional status check.
 
-**Resume file:** `.planning/phases/49-visual-hierarchy-theming-and-phoenix-ergonomics/49-CONTEXT.md`
+**Resume file:** --resume-file
 
 ---
 *Last updated: 2026-04-21 — **Phase 49** context gathered; **v1.11** continues (**49** implementation, **50** a11y/CI)*
 
 **Prior milestone:** **v1.10** OPSUI — archived **2026-04-21**
 
-**Planned Phase:** 49 — Visual hierarchy, theming, and Phoenix ergonomics
+**Planned Phase:** 49 (Visual hierarchy, theming, and Phoenix ergonomics) — 4 plans — 2026-04-21T22:20:39.575Z
