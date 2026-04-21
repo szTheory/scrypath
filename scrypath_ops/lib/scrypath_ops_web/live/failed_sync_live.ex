@@ -173,57 +173,80 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       </p>
 
       <.ops_panel :if={@inspection}>
-        <div class={["rounded border border-base-300 p-3", @compact_mode && "hidden"]}>
-          <h2 class="text-sm font-semibold uppercase tracking-wide text-base-content/70">Rollups</h2>
-          <p class="mt-2 font-mono text-sm tabular-nums">
-            total <span class="font-bold">{@inspection.counts.total}</span>
-            · transport {@inspection.counts.by_class.transport} · validation {@inspection.counts.by_class.validation} · backend_rejected {@inspection.counts.by_class.backend_rejected} · queue_exhausted {@inspection.counts.by_class.queue_exhausted} · unknown {@inspection.counts.by_class.unknown}
+        <section aria-labelledby="failed-sync-rollups-heading">
+          <div class={["rounded border border-base-300 p-3", @compact_mode && "hidden"]}>
+            <h2
+              id="failed-sync-rollups-heading"
+              class="text-sm font-semibold uppercase tracking-wide text-base-content/70"
+            >
+              Rollups
+            </h2>
+            <p class="mt-2 font-mono text-sm tabular-nums">
+              total <span class="font-bold">{@inspection.counts.total}</span>
+              · transport {@inspection.counts.by_class.transport} · validation {@inspection.counts.by_class.validation} · backend_rejected {@inspection.counts.by_class.backend_rejected} · queue_exhausted {@inspection.counts.by_class.queue_exhausted} · unknown {@inspection.counts.by_class.unknown}
+            </p>
+          </div>
+
+          <p class="mt-4 text-xs text-base-content/60">
+            For recovery actions use <code class="text-sm">mix scrypath.failed</code>
+            and the repo guides <code class="text-sm">guides/drift-recovery.md</code>, <code class="text-sm">guides/operator-mix-tasks.md</code>.
           </p>
-        </div>
+        </section>
 
-        <p class="mt-4 text-xs text-base-content/60">
-          For recovery actions use <code class="text-sm">mix scrypath.failed</code>
-          and the repo guides <code class="text-sm">guides/drift-recovery.md</code>, <code class="text-sm">guides/operator-mix-tasks.md</code>.
-        </p>
-
-        <div class="mt-4 overflow-x-auto min-w-0">
-          <table class="table table-zebra table-sm">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>reason_class</th>
-                <th>Operation</th>
-                <th>State</th>
-                <th>Source</th>
-                <th>Last attempt</th>
-                <th>Detail</th>
-              </tr>
-            </thead>
-            <tbody class="text-sm leading-snug tabular-nums">
-              <%= for row <- sorted_entries(@inspection) do %>
-                <tr id={"failed-#{row.id}"}>
-                  <td class="font-mono text-xs">{inspect(row.id)}</td>
-                  <td>{reason_class_label(row.reason_class)}</td>
-                  <td>{row.operation}</td>
-                  <td>{row.state}</td>
-                  <td>{row.source}</td>
-                  <td class="font-mono text-xs">{format_dt(row.last_attempt_at || row.failed_at)}</td>
-                  <td>
-                    <details>
-                      <summary class="cursor-pointer text-sm">Row detail</summary>
-                      <pre class="mt-2 max-h-48 overflow-auto text-xs whitespace-pre-wrap"><%= row.reason %></pre>
-                      <pre :if={map_size(row.metadata) > 0} class="mt-2 text-xs"><%= inspect(row.metadata, pretty: true) %></pre>
-                      <p class="mt-2 text-xs">
-                        See guides: <code class="text-xs">guides/drift-recovery.md</code>,
-                        <code class="text-xs">guides/operator-mix-tasks.md</code>
-                      </p>
-                    </details>
-                  </td>
+        <section aria-labelledby="failed-sync-table-heading" class="mt-4">
+          <h2 id="failed-sync-table-heading" class="text-base font-semibold text-base-content">
+            Failed sync jobs
+          </h2>
+          <div class="mt-2 overflow-x-auto min-w-0">
+            <table class="table table-zebra table-sm">
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">reason_class</th>
+                  <th scope="col">Operation</th>
+                  <th scope="col">State</th>
+                  <th scope="col">Source</th>
+                  <th scope="col">Last attempt</th>
+                  <th scope="col">Detail</th>
                 </tr>
-              <% end %>
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody class="text-sm leading-snug tabular-nums">
+                <%= for row <- sorted_entries(@inspection) do %>
+                  <tr id={"failed-#{row.id}"}>
+                    <td class="font-mono text-xs">{inspect(row.id)}</td>
+                    <td>{reason_class_label(row.reason_class)}</td>
+                    <td>{row.operation}</td>
+                    <td>{row.state}</td>
+                    <td>{row.source}</td>
+                    <td class="font-mono text-xs">{format_dt(row.last_attempt_at || row.failed_at)}</td>
+                    <td>
+                      <details id={"failed-detail-#{row.id}"}>
+                        <summary
+                          class="cursor-pointer text-sm"
+                          aria-label={"Row detail for job #{inspect(row.id)}"}
+                        >
+                          Row detail
+                        </summary>
+                        <pre
+                          id={"failed-detail-body-#{row.id}"}
+                          class="mt-2 max-h-48 overflow-auto text-xs whitespace-pre-wrap"
+                        ><%= row.reason %></pre>
+                        <pre
+                          :if={map_size(row.metadata) > 0}
+                          class="mt-2 text-xs"
+                        ><%= inspect(row.metadata, pretty: true) %></pre>
+                        <p class="mt-2 text-xs">
+                          See guides: <code class="text-xs">guides/drift-recovery.md</code>,
+                          <code class="text-xs">guides/operator-mix-tasks.md</code>
+                        </p>
+                      </details>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </section>
       </.ops_panel>
     </Layouts.app>
     """
