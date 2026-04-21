@@ -28,7 +28,7 @@
 
 ### Verification
 
-- [ ] **OPSUI-10**: A **maintainer-facing automated check** (for example Phoenix **`LiveViewTest`** or fast integration smoke) covers critical OPSUI wiring so regressions fail in CI for the chosen packaging path.
+- [x] **OPSUI-10**: A **maintainer-facing automated check** (for example Phoenix **`LiveViewTest`** or fast integration smoke) covers critical OPSUI wiring so regressions fail in CI for the chosen packaging path.
 
 ## v2+ Requirements (deferred)
 
@@ -60,7 +60,7 @@
 | OPSUI-03 | Phase 45 | Complete |
 | OPSUI-04 | Phase 46 | Complete |
 | OPSUI-05 | Phase 46 | Complete |
-| OPSUI-10 | Phase 47 | Pending |
+| OPSUI-10 | Phase 47 | Complete |
 
 **Coverage:**
 
