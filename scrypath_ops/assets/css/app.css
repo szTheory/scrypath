@@ -96,10 +96,45 @@
 @custom-variant phx-submit-loading (.phx-submit-loading&, .phx-submit-loading &);
 @custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
 
-/* Use the data attribute for dark mode  */
+/*
+ * D-07 (Phase 49): Tailwind `dark:` vs system appearance
+ *
+ * This `@custom-variant dark` matches only when `data-theme="dark"` is set on `<html>`
+ * (explicit dark mode). When the operator chooses **system**, `data-theme` is absent and
+ * daisyUI applies light/dark **semantic tokens** (`base-*`, `alert-*`, etc.) from the OS
+ * `prefers-color-scheme` via the vendored theme plugins — not from Tailwind `dark:` utilities.
+ *
+ * Therefore `dark:` utilities are **explicit-dark only**; do not rely on them for `/ops`
+ * chrome that must track system dark. Prefer daisyUI semantic classes instead.
+ */
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 /* Make LiveView wrapper divs transparent for layout */
 [data-phx-session], [data-phx-teleported-src] { display: contents }
 
 /* This file is for your main application CSS */
+
+/* Theme toggle: pill position follows `html[data-theme-effective]` (root inline script). */
+#theme-toggle-pill {
+  transition: left 150ms ease;
+}
+
+html[data-theme-effective="light"] #theme-toggle-pill {
+  left: 33.333333%;
+}
+
+html[data-theme-effective="dark"] #theme-toggle-pill {
+  left: 66.666667%;
+}
+
+html[data-theme-preference="system"] #theme-toggle [data-phx-theme="system"] {
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+html[data-theme-preference="light"] #theme-toggle [data-phx-theme="light"] {
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
+  box-shadow: 0 0 0 2px var(--color-primary);
+}

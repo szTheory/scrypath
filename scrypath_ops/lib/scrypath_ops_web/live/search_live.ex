@@ -13,17 +13,17 @@ defmodule ScrypathOpsWeb.SearchLive do
 
   @guide_href "https://github.com/szTheory/scrypath/blob/main/guides/multi-index-search.md"
 
-  attr :result, :any, required: true
-  attr :guide_href, :string, required: true
+  attr(:result, :any, required: true)
+  attr(:guide_href, :string, required: true)
 
   def empty_or_hits_single(assigns) do
     ~H"""
     <%= if @result.hits == [] do %>
       <div class="rounded-lg bg-base-200 p-lg">
-        <h2 class="text-heading font-semibold">No sample results yet</h2>
+        <h2 class="text-heading font-semibold">No hits for this query.</h2>
         <p class="mt-2 text-sm text-base-content/80">
-          Submit a bounded query above to fetch read-only hits from the allowlisted schemas. Increase limits only when you understand Meilisearch cost and cardinality (see
-          <a class="link link-primary" href={@guide_href}>guides/multi-index-search.md</a>).
+          Widen filters or try another sample; see the honesty panel for merge ceilings and backend limits.
+          (<a class="link link-primary" href={@guide_href}>guides/multi-index-search.md</a>).
         </p>
       </div>
     <% else %>
@@ -203,8 +203,7 @@ defmodule ScrypathOpsWeb.SearchLive do
         duration_ms = System.monotonic_time(:millisecond) - start_ms
         emit_run(:multi, :error, duration_ms)
 
-        {:noreply,
-         assign(socket, :run_error, {:too_many_schemas, length(selected), max_s})}
+        {:noreply, assign(socket, :run_error, {:too_many_schemas, length(selected), max_s})}
 
       selected == [] ->
         duration_ms = System.monotonic_time(:millisecond) - start_ms
@@ -275,11 +274,9 @@ defmodule ScrypathOpsWeb.SearchLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} shell={@shell}>
-      <div class="space-y-2xl">
-        <h1 class="text-2xl font-semibold leading-8 tracking-tight text-balance">
-          Search & federation
-        </h1>
+    <Layouts.app flash={@flash} shell={@shell} ops_main_width={:wide}>
+      <div class="space-y-6">
+        <.ops_page_header title="Search & federation" />
 
         <div class="rounded-md border border-warning/40 bg-warning/10 px-sm py-sm text-sm text-base-content">
           <strong>Non-production search playground</strong>
@@ -289,6 +286,7 @@ defmodule ScrypathOpsWeb.SearchLive do
           and schema lists bounded.
         </div>
 
+        <div class="card bg-base-100 border border-base-300 rounded-lg p-4 md:p-6 space-y-6">
         <div class="flex flex-wrap gap-sm">
           <button
             type="button"
@@ -328,7 +326,8 @@ defmodule ScrypathOpsWeb.SearchLive do
           :if={@schema_allowlist != [] && !Keyword.has_key?(@scrypath_opts, :backend)}
           class="mt-4 text-base-content/80"
         >
-          Scrypath runtime is not configured (missing <code class="text-sm">:backend</code> and related
+          Scrypath runtime is not configured (missing <code class="text-sm">:backend</code>
+          and related
           options under <code class="text-sm">:scrypath_ops</code>). See <code class="text-sm">scrypath_ops/README.md</code>.
         </p>
 
@@ -357,7 +356,9 @@ defmodule ScrypathOpsWeb.SearchLive do
               />
             </div>
             <div class="w-full md:w-32">
-              <label class="label label-text text-sm font-semibold" for="search_page_size">Page size</label>
+              <label class="label label-text text-sm font-semibold" for="search_page_size">
+                Page size
+              </label>
               <input
                 id="search_page_size"
                 type="number"
@@ -383,13 +384,17 @@ defmodule ScrypathOpsWeb.SearchLive do
 
           <div :if={@mode == :multi} class="space-y-sm">
             <p class="text-sm text-base-content/80">
-              Select up to {SearchPlayground.max_schemas_allowed()} schema(s) for
-              <code class="text-xs">search_many/2</code>.
+              Select up to {SearchPlayground.max_schemas_allowed()} schema(s) for <code class="text-xs">search_many/2</code>.
             </p>
             <div class="flex flex-col gap-sm">
               <%= for mod <- @schema_allowlist do %>
                 <label class="flex cursor-pointer items-center gap-sm text-sm">
-                  <input type="checkbox" name="schemas" value={inspect(mod)} class="checkbox checkbox-sm" />
+                  <input
+                    type="checkbox"
+                    name="schemas"
+                    value={inspect(mod)}
+                    class="checkbox checkbox-sm"
+                  />
                   <span class="font-mono text-xs">{inspect(mod)}</span>
                 </label>
               <% end %>
@@ -406,7 +411,9 @@ defmodule ScrypathOpsWeb.SearchLive do
             <h2 class="font-semibold">Search could not run:</h2>
             <p class="mt-1">{format_run_error(@run_error)}</p>
             <p class="mt-2 text-xs">
-              Next: fix the query options or operator config, then use <strong>Run sample searches</strong> again.
+              Next: fix the query options or operator config, then use
+              <strong>Run sample searches</strong>
+              again.
               Merge and expansion semantics:
               <a class="link" href={@guide_href}>guides/multi-index-search.md</a>
             </p>
@@ -429,8 +436,7 @@ defmodule ScrypathOpsWeb.SearchLive do
             <div>
               <p class="font-semibold">Some indexes did not return results.</p>
               <p class="mt-1 text-xs">
-                Failures are per schema and do not cancel the whole response. Next: open failure details, adjust entries or backend, then re-run
-                <strong>Run sample searches</strong>.
+                Failures are per schema and do not cancel the whole response. Next: open failure details, adjust entries or backend, then re-run <strong>Run sample searches</strong>.
               </p>
               <p class="mt-2 text-xs text-base-content/70">
                 <code class="text-xs">:all</code>
@@ -462,7 +468,9 @@ defmodule ScrypathOpsWeb.SearchLive do
               — per-schema relevance scores stay local; positions in the merge list are not a single-index ranking.
             </p>
             <p class="mt-2 text-xs text-base-content/70">
-              Schemas in this response: {length(@result_multi.ordered)} · failures: {length(@result_multi.failures)}
+              Schemas in this response: {length(@result_multi.ordered)} · failures: {length(
+                @result_multi.failures
+              )}
             </p>
           </div>
 
@@ -511,11 +519,15 @@ defmodule ScrypathOpsWeb.SearchLive do
               <div class="rounded-lg border border-base-300 p-md">
                 <h3 class="font-mono text-sm font-semibold">{inspect(mod)}</h3>
                 <p class="text-xs text-base-content/70">
-                  Hits: {length(sres.hits)} · estimatedTotalHits: {Map.get(sres.raw, "estimatedTotalHits")}
+                  Hits: {length(sres.hits)} · estimatedTotalHits: {Map.get(
+                    sres.raw,
+                    "estimatedTotalHits"
+                  )}
                 </p>
               </div>
             <% end %>
           </div>
+        </div>
         </div>
       </div>
     </Layouts.app>
