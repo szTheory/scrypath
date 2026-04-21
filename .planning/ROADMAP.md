@@ -12,7 +12,7 @@
 - [x] **`v1.7` shipped in-repo** (2026-04-20) — 3 phases (36–38), 7 plans — [archive](milestones/v1.7-ROADMAP.md) · [requirements](milestones/v1.7-REQUIREMENTS.md) · [audit](milestones/v1.7-MILESTONE-AUDIT.md) — *Facet depth and catalog search UX*
 - [x] **`v1.8` shipped in-repo** (2026-04-20) — *Multi-index federation* — phases **39–41**, **6** plans — [archive](milestones/v1.8-ROADMAP.md) · [requirements](milestones/v1.8-REQUIREMENTS.md) · [audit](milestones/v1.8-MILESTONE-AUDIT.md)
 - [x] **`v1.9` shipped in-repo** (2026-04-20) — *Per-query relevance & tuning pipeline* — phases **42–43**, **5** plans — [archive](milestones/v1.9-ROADMAP.md) · [requirements](milestones/v1.9-REQUIREMENTS.md) · [audit](milestones/v1.9-MILESTONE-AUDIT.md)
-- [ ] **`v1.10` in progress** (opened 2026-04-20) — *Operator admin UI (OPSUI)* — phases **44–47** — [requirements](REQUIREMENTS.md) · [research summary](research/SUMMARY.md)
+- [x] **`v1.10` — Operator admin UI (OPSUI)** (execution complete **2026-04-21**) — phases **44–47** — [requirements](REQUIREMENTS.md) · [research summary](research/SUMMARY.md)
 
 ## Current milestone: v1.10 — Operator admin UI (OPSUI)
 
@@ -135,9 +135,9 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**`v1.10` active** — phases **44–47** mapped to **`OPSUI-01`..`OPSUI-10`** in **[REQUIREMENTS.md](REQUIREMENTS.md)**; **`.planning/phases/`** cleared for this milestone. Prior **`v1.9`** archived **2026-04-20** (see **`milestones/v1.9-REQUIREMENTS.md`**).
+**`v1.10` complete (in-repo)** — phases **44–47** delivered against **`OPSUI-01`..`OPSUI-10`** in **[REQUIREMENTS.md](REQUIREMENTS.md)**. Prior **`v1.9`** archived **2026-04-20** (see **`milestones/v1.9-REQUIREMENTS.md`**).
 
-**Next:** **`/gsd-discuss-phase 44`** (or **`/gsd-plan-phase 44`**) to start **OPSUI foundations**.
+**Next:** **`/gsd-progress`** — then **`/gsd-new-milestone`** (or release engineering) when you are ready for the next roadmap slice beyond OPSUI.
 
 ## Backlog (post–v1.10 ideas)
 
@@ -145,4 +145,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - **Core library features** — continue to follow **`.planning/PROJECT.md`** *Out of Scope* until a future milestone explicitly widens the contract.
 
 ---
-*Last updated: 2026-04-20 — **`v1.10` OPSUI** milestone opened (phases **44–47**)*
+*Last updated: 2026-04-21 — **`v1.10` OPSUI** milestone execution complete (phases **44–47**)*
