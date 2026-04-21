@@ -2,6 +2,29 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.10 — Operator admin UI (OPSUI)
+
+**Shipped (planning):** 2026-04-21  
+**Phases:** 4 (44–47) | **Plans:** 14 | **Hex:** `scrypath` **0.3.3** (OPSUI as in-repo **`scrypath_ops`**)
+
+### What was built
+
+Optional **`scrypath_ops`** Phoenix app with JTBD **`operator-ia.md`**, conventional LiveView structure, prod **`OPSUI_AUTH_MODE`** fail-closed boot, posture + **`failed_sync_work/2`** triage + read-only sync/drift, bounded search playground with stubbed backend for CI, federation-honest multi-search inspector, and contract tests pinning IA routes and security copy.
+
+### What worked
+
+Reusing **library-owned structs and guides** as the source of truth kept the UI from inventing merge semantics; **stub adapter** tests gave fast CI without Meilisearch.
+
+### What was inefficient
+
+`gsd-sdk query milestone.complete` still throws **`version required for phases archive`** ( **`milestoneComplete` → `phasesArchive([])`** bug), so **`milestones/v1.10-*`**, **`MILESTONES.md`**, **`ROADMAP`** collapse, and **`git rm` REQUIREMENTS** were **manual** again (**v1.5–v1.9** pattern).
+
+### Key lessons
+
+When **`audit-open`** repeats the same **missing quick-task** rows across milestone closes, **append an explicit v1.N acknowledgment** so **`STATE.md`** stays auditable without pretending the stubs were fixed.
+
+---
+
 ## Milestone: v1.9 — Per-query relevance & tuning pipeline
 
 **Shipped (planning):** 2026-04-20  

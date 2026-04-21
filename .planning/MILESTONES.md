@@ -1,5 +1,25 @@
 # Milestones
 
+## v1.10 Operator admin UI (OPSUI) (Shipped + archived: 2026-04-21)
+
+**Phases completed:** 4 phases (**44–47**), **14** plans
+
+**Hex:** **`scrypath 0.3.3`** (OPSUI ships as the in-repo **`scrypath_ops`** Phoenix app; no mandated Hex bump in this planning milestone)
+
+**Key accomplishments:**
+
+- **`scrypath_ops`** as optional operator surface with **`operator-ia.md`** personas/JTBD, nav order, and maintainer boot/run docs — **OPSUI-06**..**OPSUI-09**
+- Prod **`OPSUI_AUTH_MODE`** fail-closed boot guard, **`SECURITY.md`**, and config contract tests — **OPSUI-08**
+- LiveView posture landing, **`failed_sync_work/2`**-honest triage, read-only sync/drift with operator-doc and Mix links — **OPSUI-01**..**OPSUI-03**
+- Bounded search playground + **`SearchPlaygroundStubAdapter`**, federation-honest multi-search inspector (merge trace, weights, partial failures, **`:all`**) — **OPSUI-04**, **OPSUI-05**
+- **`LiveViewTest`** + **`operator_ia_contract_test`** / auth boot pins and CI wiring so OPSUI cannot drift silently — **OPSUI-10**
+
+**Known deferred items at close:** **`audit-open`** reported **2** missing quick-task stubs (same historical rows as **v1.9** close); **acknowledged** at close — see **`STATE.md`** § **Deferred Items** (**Acknowledged at v1.10 milestone close**). No formal **`milestones/v1.10-MILESTONE-AUDIT.md`**.
+
+**Archives:** `milestones/v1.10-ROADMAP.md`, `milestones/v1.10-REQUIREMENTS.md` · **Git tag:** `v1.10` (planning milestone marker)
+
+---
+
 ## v1.9 Per-query relevance & tuning pipeline (Shipped + archived: 2026-04-20)
 
 **Phases completed:** 2 phases (**42–43**), **5** plans
