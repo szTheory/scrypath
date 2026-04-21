@@ -276,9 +276,12 @@ defmodule ScrypathOpsWeb.SearchLive do
     ~H"""
     <Layouts.app flash={@flash} shell={@shell} ops_main_width={:wide}>
       <div class="space-y-6">
-        <.ops_page_header title="Search & federation" />
+        <.ops_page_header title={@page_title} />
 
-        <div class="rounded-md border border-warning/40 bg-warning/10 px-sm py-sm text-sm text-base-content">
+        <div
+          id="search-honesty-panel"
+          class="rounded-md border border-warning/40 bg-warning/10 px-sm py-sm text-sm text-base-content"
+        >
           <strong>Non-production search playground</strong>
           — exploratory queries may be logged by Meilisearch or proxies depending on deployment.
           <strong>Do not</strong>
@@ -287,35 +290,7 @@ defmodule ScrypathOpsWeb.SearchLive do
         </div>
 
         <div class="card bg-base-100 border border-base-300 rounded-lg p-4 md:p-6 space-y-6">
-        <div class="flex flex-wrap gap-sm">
-          <button
-            type="button"
-            phx-click="set_mode"
-            phx-value-mode="single"
-            class={["btn", "btn-sm"] ++ if(@mode == :single, do: ["btn-primary"], else: [])}
-          >
-            Single index
-          </button>
-          <button
-            type="button"
-            phx-click="set_mode"
-            phx-value-mode="multi"
-            data-testid="search-mode-multi"
-            class={["btn", "btn-sm"] ++ if(@mode == :multi, do: ["btn-primary"], else: [])}
-          >
-            Multi index
-          </button>
-        </div>
-
-        <p :if={@mode == :single} class="text-sm text-base-content/80">
-          Merge order is a federation view — per-schema scores stay local. Multi index mode shows merge, weights, partial failures, and
-          <code class="text-xs">:all</code>
-          semantics from
-          <a class="link link-hover text-primary" href={@guide_href}>multi-index-search</a>
-          (<code class="text-xs">guides/multi-index-search.md</code>).
-        </p>
-
-        <p :if={@schema_allowlist == []} class="mt-4 text-base-content/80">
+        <p :if={@schema_allowlist == []} class="text-base-content/80">
           No schemas configured for OPSUI. Set <code class="text-sm">schema_allowlist</code>
           under <code class="text-sm">:scrypath_ops</code>
           or use <code class="text-sm">SCRYPATH_OPS_SCHEMAS</code>
@@ -324,7 +299,7 @@ defmodule ScrypathOpsWeb.SearchLive do
 
         <p
           :if={@schema_allowlist != [] && !Keyword.has_key?(@scrypath_opts, :backend)}
-          class="mt-4 text-base-content/80"
+          class="text-base-content/80"
         >
           Scrypath runtime is not configured (missing <code class="text-sm">:backend</code>
           and related
@@ -343,9 +318,40 @@ defmodule ScrypathOpsWeb.SearchLive do
             )
           ]}
         >
-          <div class="flex flex-col gap-md md:flex-row md:items-end">
-            <div class="flex-1">
-              <label class="label label-text text-sm font-semibold" for="search_q">Query</label>
+          <fieldset class="space-y-sm border-0 p-0 m-0 min-w-0">
+            <legend class="text-sm font-semibold text-base-content mb-sm">Search mode</legend>
+            <div class="flex flex-wrap gap-sm">
+              <button
+                type="button"
+                phx-click="set_mode"
+                phx-value-mode="single"
+                class={["btn", "btn-sm"] ++ if(@mode == :single, do: ["btn-primary"], else: [])}
+              >
+                Single index
+              </button>
+              <button
+                type="button"
+                phx-click="set_mode"
+                phx-value-mode="multi"
+                data-testid="search-mode-multi"
+                class={["btn", "btn-sm"] ++ if(@mode == :multi, do: ["btn-primary"], else: [])}
+              >
+                Multi index
+              </button>
+            </div>
+            <p :if={@mode == :single} class="text-sm text-base-content/80">
+              Merge order is a federation view — per-schema scores stay local. Multi index mode shows merge, weights, partial failures, and
+              <code class="text-xs">:all</code>
+              semantics from
+              <a class="link link-hover text-primary" href={@guide_href}>multi-index-search</a>
+              (<code class="text-xs">guides/multi-index-search.md</code>).
+            </p>
+          </fieldset>
+
+          <fieldset class="space-y-sm border-0 p-0 m-0 min-w-0">
+            <legend class="text-sm font-semibold text-base-content mb-sm">Query</legend>
+            <div>
+              <label class="label label-text text-sm font-semibold" for="search_q">Search text</label>
               <input
                 id="search_q"
                 type="text"
@@ -353,9 +359,17 @@ defmodule ScrypathOpsWeb.SearchLive do
                 value={@q}
                 class="input input-bordered w-full min-h-10"
                 placeholder="Try a bounded read-only query"
+                aria-describedby="search-honesty-panel"
               />
             </div>
-            <div class="w-full md:w-32">
+          </fieldset>
+
+          <fieldset class="space-y-sm border-0 p-0 m-0 min-w-0">
+            <legend class="text-sm font-semibold text-base-content mb-sm">Limits / safety</legend>
+            <p id="search-limits-copy" class="text-xs text-base-content/70">
+              Page size is capped at {SearchPlayground.max_page_size_allowed()} hits per request; keep queries bounded for operator safety.
+            </p>
+            <div class="w-full max-w-xs">
               <label class="label label-text text-sm font-semibold" for="search_page_size">
                 Page size
               </label>
@@ -367,11 +381,13 @@ defmodule ScrypathOpsWeb.SearchLive do
                 min="1"
                 max={SearchPlayground.max_page_size_allowed()}
                 class="input input-bordered w-full"
+                aria-describedby="search-honesty-panel search-limits-copy"
               />
             </div>
-          </div>
+          </fieldset>
 
-          <div :if={@mode == :single} class="space-y-sm">
+          <fieldset :if={@mode == :single} class="space-y-sm border-0 p-0 m-0 min-w-0">
+            <legend class="text-sm font-semibold text-base-content mb-sm">Federation / merge</legend>
             <label class="label label-text text-sm font-semibold" for="search_schema">Schema</label>
             <select id="search_schema" name="schema" class="select select-bordered w-full max-w-xl">
               <%= for mod <- @schema_allowlist do %>
@@ -380,30 +396,39 @@ defmodule ScrypathOpsWeb.SearchLive do
                 </option>
               <% end %>
             </select>
-          </div>
+          </fieldset>
 
-          <div :if={@mode == :multi} class="space-y-sm">
-            <p class="text-sm text-base-content/80">
-              Select up to {SearchPlayground.max_schemas_allowed()} schema(s) for <code class="text-xs">search_many/2</code>.
-            </p>
-            <div class="flex flex-col gap-sm">
-              <%= for mod <- @schema_allowlist do %>
-                <label class="flex cursor-pointer items-center gap-sm text-sm">
-                  <input
-                    type="checkbox"
-                    name="schemas"
-                    value={inspect(mod)}
-                    class="checkbox checkbox-sm"
-                  />
-                  <span class="font-mono text-xs">{inspect(mod)}</span>
-                </label>
-              <% end %>
-            </div>
-          </div>
+          <fieldset :if={@mode == :multi} class="space-y-sm border-0 p-0 m-0 min-w-0">
+            <legend class="text-sm font-semibold text-base-content mb-sm">Federation / merge</legend>
+            <fieldset class="space-y-sm border border-base-300 rounded-md p-sm min-w-0">
+              <legend class="text-xs font-semibold text-base-content/80 px-1">
+                Schemas to include (search_many)
+              </legend>
+              <p class="text-sm text-base-content/80">
+                Select up to {SearchPlayground.max_schemas_allowed()} schema(s) for <code class="text-xs">search_many/2</code>.
+              </p>
+              <div class="flex flex-col gap-sm">
+                <%= for mod <- @schema_allowlist do %>
+                  <label class="flex cursor-pointer items-center gap-sm text-sm">
+                    <input
+                      type="checkbox"
+                      name="schemas"
+                      value={inspect(mod)}
+                      class="checkbox checkbox-sm"
+                    />
+                    <span class="font-mono text-xs">{inspect(mod)}</span>
+                  </label>
+                <% end %>
+              </div>
+            </fieldset>
+          </fieldset>
 
-          <button type="submit" class="btn btn-primary min-h-10">
-            Run sample searches
-          </button>
+          <fieldset class="space-y-sm border-0 p-0 m-0 min-w-0">
+            <legend class="text-sm font-semibold text-base-content mb-sm">Actions</legend>
+            <button type="submit" class="btn btn-primary min-h-10">
+              Run sample searches
+            </button>
+          </fieldset>
         </.form>
 
         <div :if={@run_error} class="alert alert-error text-sm">
@@ -426,14 +451,15 @@ defmodule ScrypathOpsWeb.SearchLive do
         </div>
 
         <div :if={@result_multi} class="space-y-md">
-          <div
-            :if={@result_multi.failures != []}
-            id="search-partial-live"
-            role="status"
-            aria-live="polite"
-            class="alert alert-warning text-sm"
-          >
-            <div>
+          <div id="search-federation-status" role="status" class="text-sm space-y-2">
+            <p :if={@result_multi.failures == []} class="text-base-content/70">
+              All selected indexes returned results on this run.
+            </p>
+            <div
+              :if={@result_multi.failures != []}
+              id="search-partial-live"
+              class="alert alert-warning"
+            >
               <p class="font-semibold">Some indexes did not return results.</p>
               <p class="mt-1 text-xs">
                 Failures are per schema and do not cancel the whole response. Next: open failure details, adjust entries or backend, then re-run <strong>Run sample searches</strong>.
