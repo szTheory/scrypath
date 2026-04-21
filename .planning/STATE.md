@@ -1,12 +1,12 @@
 ---
 gsd_state_version: 1.0
-milestone: null
-milestone_name: null
-status: planning_next
-last_updated: "2026-04-21T21:00:00.000Z"
+milestone: v1.11
+milestone_name: Operator shell polish and JTBD verification
+status: defining_requirements
+last_updated: "2026-04-21T12:00:00.000Z"
 last_activity: 2026-04-21
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,17 +21,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **Next milestone** — **`v1.10` OPSUI** shipped + archived **2026-04-21**; define the next slice with **`/gsd-new-milestone`**.
+**Current focus:** **v1.11** — polish **ScrypathOps** (`/ops`) for IA, JTBD alignment, scanability, theming, Phoenix conventions, accessibility, and CI guards — **`OPSUX-01`..`OPSUX-07`**.
 
 ## Current Position
 
-**Phase:** —
+**Phase:** Not started (roadmap defined; begin Phase 48)
 
 **Plan:** —
 
-**Status:** Milestone **v1.10** archived; **`REQUIREMENTS.md`** removed pending next milestone bootstrap.
+**Status:** Milestone **v1.11** opened — requirements and roadmap ready for **`/gsd-discuss-phase 48`** or **`/gsd-plan-phase 48`**.
 
-**Last activity:** 2026-04-21
+**Last activity:** 2026-04-21 — `/gsd-new-milestone` v1.11
 
 ## Accumulated Context
 
@@ -56,15 +56,7 @@ Items from **`audit-open --json`** deferred without blocking ship (**2** rows; h
 
 #### Acknowledged at v1.9 milestone close (2026-04-20)
 
-Items from **`audit-open`** deferred without blocking ship (same three-row pattern as **v1.5–v1.8**):
-
-| Category | Item | Status |
-|----------|------|--------|
-| uat_gaps | Phase 18 — `18-UAT.md` | passed (0 open scenarios; tooling still lists row) |
-| quick_task | `260416-eoj-automate-phase-5-verification-with-live-` | missing |
-| quick_task | `260416-if2-fix-mix-exs-github-urls-add-a-github-act` | missing |
-
-Prior deferred context remains discoverable in git history for **v1.6–v1.8** milestone closes.
+(See prior **`STATE.md`** history in git — same **audit-open** pattern.)
 
 ### Nyquist audit ledger (AUDT-01 — immutable pointers)
 
@@ -72,15 +64,12 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **Skim** **`.planning/milestone-candidates.md`** — prioritized post-**v1.10** themes (QoL/DX, OPSUI round 2, maintainer tooling).
-2. **`/gsd-new-milestone`** — author fresh **`.planning/REQUIREMENTS.md`** and the next roadmap slice
-3. **`/gsd-progress`** — optional sanity check after requirements land
+1. **`/gsd-discuss-phase 48`** — gather context for **Phase 48: IA and JTBD alignment** (or **`/gsd-plan-phase 48`** to plan directly).
+2. **`/gsd-progress`** — optional status check.
 
 **Resume file:** None
 
 ---
-*Last updated: 2026-04-21 — **`v1.10`** milestone archived (phases **44–47**)*
+*Last updated: 2026-04-21 — milestone **v1.11** initialized (phases **48–50**)*
 
-**Prior milestone:** **v1.9** (phases **42–43**) — archived 2026-04-20
-
-**Shipped + archived:** **v1.10** OPSUI — **2026-04-21**
+**Prior milestone:** **v1.10** OPSUI — archived **2026-04-21**
