@@ -83,4 +83,19 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert html =~ "fetch error: :boom"
     assert html =~ "queue not observed"
   end
+
+  test "posture shows next checks block with ordered items and failed-sync egress", %{conn: conn} do
+    {:ok, lv, _html} = live(conn, ~p"/ops/posture")
+
+    assert has_element?(lv, "[data-testid='posture-next-checks']")
+
+    html = render(lv)
+    assert html =~ "Degraded"
+    assert html =~ "/ops/failed-sync"
+
+    [_before, rest] = String.split(html, ~s(data-testid="posture-next-checks"), parts: 2)
+    [section | _] = String.split(rest, "</section>", parts: 2)
+    li_opens = Regex.scan(~r/<li[\s>]/, section)
+    assert length(li_opens) <= 5
+  end
 end
