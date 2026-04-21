@@ -215,10 +215,12 @@ defmodule ScrypathOpsWeb.PostureLive do
       <.ops_panel :if={@next_checks != []}>
         <section
           data-testid="posture-next-checks"
-          aria-label="Next checks"
+          aria-labelledby="posture-jtbd-heading"
           class={posture_next_checks_class(@posture_headline)}
         >
-          <p class="text-lg font-semibold text-base-content">{@posture_headline}</p>
+          <h2 id="posture-jtbd-heading" class="text-lg font-semibold text-base-content">
+            {@posture_headline}
+          </h2>
           <p class="mt-1 text-sm text-base-content/80">{@posture_evidence}</p>
           <ol class="mt-3 list-decimal list-inside space-y-2 text-sm text-base-content/90">
             <li :for={check <- @next_checks} class="pl-1">
@@ -254,29 +256,33 @@ defmodule ScrypathOpsWeb.PostureLive do
       </p>
 
       <.ops_panel :if={match?({:ok, _}, @posture_rows)}>
-        <p class="text-sm text-base-content/80">
-          <span class="font-medium">{@aggregate_error_count}</span>
-          schema(s) with fetch errors · refreshed
-          <span class="font-mono text-xs tabular-nums">{format_dt(@last_refresh_at)}</span>
-        </p>
+        <section aria-labelledby="posture-fleet-heading">
+          <h2 id="posture-fleet-heading" class="text-base font-semibold text-base-content">
+            Per-schema signals
+          </h2>
+          <p class="mt-2 text-sm text-base-content/80">
+            <span class="font-medium">{@aggregate_error_count}</span>
+            schema(s) with fetch errors · refreshed
+            <span class="font-mono text-xs tabular-nums">{format_dt(@last_refresh_at)}</span>
+          </p>
 
-        <div class="mt-3 overflow-x-auto min-w-0">
-          <table class="table table-zebra table-sm">
-            <thead>
-              <tr>
-                <th>Schema</th>
-                <th>Index</th>
-                <th>sync_mode</th>
-                <th>Backend pending</th>
-                <th>Backend failed</th>
-                <th>Backend last OK</th>
-                <th>Queue observed</th>
-                <th>Queue pending</th>
-                <th>Queue retrying</th>
-                <th>Queue failed</th>
-                <th>Queue last OK</th>
-              </tr>
-            </thead>
+          <div class="mt-3 overflow-x-auto min-w-0">
+            <table class="table table-zebra table-sm">
+              <thead>
+                <tr>
+                  <th scope="col">Schema</th>
+                  <th scope="col">Index</th>
+                  <th scope="col">sync_mode</th>
+                  <th scope="col">Backend pending</th>
+                  <th scope="col">Backend failed</th>
+                  <th scope="col">Backend last OK</th>
+                  <th scope="col">Queue observed</th>
+                  <th scope="col">Queue pending</th>
+                  <th scope="col">Queue retrying</th>
+                  <th scope="col">Queue failed</th>
+                  <th scope="col">Queue last OK</th>
+                </tr>
+              </thead>
             <tbody class="text-sm leading-snug tabular-nums">
               <%= for {mod, row} <- elem(@posture_rows, 1) do %>
                 <tr data-testid="posture-row" id={"posture-#{inspect(mod)}"}>
@@ -308,8 +314,9 @@ defmodule ScrypathOpsWeb.PostureLive do
                 </tr>
               <% end %>
             </tbody>
-          </table>
-        </div>
+            </table>
+          </div>
+        </section>
       </.ops_panel>
     </Layouts.app>
     """
