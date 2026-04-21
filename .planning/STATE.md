@@ -72,8 +72,9 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **`/gsd-new-milestone`** — author fresh **`.planning/REQUIREMENTS.md`** and the next roadmap slice
-2. **`/gsd-progress`** — optional sanity check after requirements land
+1. **Skim** **`.planning/milestone-candidates.md`** — prioritized post-**v1.10** themes (QoL/DX, OPSUI round 2, maintainer tooling).
+2. **`/gsd-new-milestone`** — author fresh **`.planning/REQUIREMENTS.md`** and the next roadmap slice
+3. **`/gsd-progress`** — optional sanity check after requirements land
 
 **Resume file:** None
 
