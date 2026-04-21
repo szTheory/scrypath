@@ -1,16 +1,15 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.11
-milestone_name: Operator shell polish and JTBD verification
-status: defining_requirements
-last_updated: "2026-04-21T12:00:00.000Z"
-last_activity: 2026-04-21
+milestone_name: — executing)
+status: Milestone **v1.11** opened — requirements and roadmap ready for **`/gsd-discuss-phase 48`** or **`/gsd-plan-phase 48`**.
+last_updated: "2026-04-21T21:35:55.583Z"
+last_activity: 2026-04-21 — `/gsd-new-milestone` v1.11
 progress:
-  total_phases: 3
+  total_phases: 1
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
-  percent: 0
 ---
 
 # Project State
@@ -67,7 +66,7 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 1. **`/gsd-discuss-phase 48`** — gather context for **Phase 48: IA and JTBD alignment** (or **`/gsd-plan-phase 48`** to plan directly).
 2. **`/gsd-progress`** — optional status check.
 
-**Resume file:** None
+**Resume file:** --resume-file
 
 ---
 *Last updated: 2026-04-21 — milestone **v1.11** initialized (phases **48–50**)*
