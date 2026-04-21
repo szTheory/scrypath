@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.10
 milestone_name: — Operator admin UI
-status: ready_to_plan
-last_updated: "2026-04-21T02:56:52.134Z"
+status: planning
+last_updated: "2026-04-21T12:45:06.517Z"
 last_activity: 2026-04-21
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 4
-  completed_plans: 0
-  percent: 25
+  completed_plans: 4
+  percent: 100
 ---
 
 # Project State
@@ -68,7 +68,7 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 1. **`/gsd-progress`** — optional health read while phase 44 runs
 2. **`/gsd-execute-phase 44`** — resume if interrupted (skips plans with SUMMARY)
 
-**Resume file:** (none)
+**Resume file:** --resume-file
 
 ---
 *Last updated: 2026-04-20 — **`v1.10`** milestone initialized*
