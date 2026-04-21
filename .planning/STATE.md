@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.11
-milestone_name: Operator shell polish and JTBD verification
-status: Phase **48** complete — **Phase 49** next (visual hierarchy, theming, Phoenix ergonomics).
-last_updated: "2026-04-21T22:15:00.000Z"
+milestone_name: — executing)
+status: "**Phase 48: IA and JTBD alignment** shipped — `Nav.primary/0`, doc↔code `check_nav_contract`, posture headline + next checks."
+last_updated: "2026-04-21T22:09:21.006Z"
 last_activity: 2026-04-21 — `/gsd-execute-phase 48`
 progress:
-  total_phases: 3
+  total_phases: 2
   completed_phases: 1
   total_plans: 3
   completed_plans: 3
-  percent: 33
+  percent: 100
 ---
 
 # Project State
@@ -67,7 +67,7 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 1. **`/gsd-discuss-phase 49`** — gather context for **Phase 49** (or **`/gsd-plan-phase 49`**).
 2. **`/gsd-progress`** — optional status check.
 
-**Resume file:** —
+**Resume file:** --resume-file
 
 ---
 *Last updated: 2026-04-21 — **Phase 48** complete; **v1.11** continues (**49–50** remaining)*
