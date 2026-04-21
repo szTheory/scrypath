@@ -1,4 +1,7 @@
 defmodule ScrypathOpsWeb.SearchLiveTest do
+  @moduledoc false
+  # Phase 47 D-10: SECURITY + prod guard tests. D-11: allowlist-only targeting.
+  # D-15/D-16: no auto-run on mount; page ceiling copy; partial vs hard errors.
   use ScrypathOpsWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
@@ -48,6 +51,17 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     assert html =~ "Non-production search playground"
     assert html =~ "Run sample searches"
+    refute html =~ "Per-schema panels"
+    refute html =~ ~s(<h2 class="text-heading font-semibold">Results</h2>)
+  end
+
+  test "empty schema_allowlist shows OPSUI guard copy and disables targeting", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :schema_allowlist, [])
+
+    {:ok, _lv, html} = live(conn, ~p"/ops/search")
+
+    assert html =~ "No schemas configured for OPSUI"
+    assert html =~ "pointer-events-none"
   end
 
   test "mode=multi renders multi toggle test id", %{conn: conn} do
@@ -104,5 +118,24 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
       })
 
     assert html =~ "Merge trace"
+  end
+
+  test "multi search_many total failure shows hard error alert, not partial banner", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :search_stub_variant, :hard_error)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/search?mode=multi")
+
+    html =
+      view
+      |> element("form")
+      |> render_submit(%{
+        "q" => "boom",
+        "page_size" => "10",
+        "schemas" => [inspect(OpsPostA), inspect(OpsPostB)]
+      })
+
+    assert html =~ "Search could not run"
+    assert html =~ "stub_hard_failure"
+    refute html =~ "Some indexes did not return results."
   end
 end

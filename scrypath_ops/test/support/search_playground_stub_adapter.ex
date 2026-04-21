@@ -22,6 +22,9 @@ defmodule ScrypathOps.Test.SearchPlaygroundStubAdapter do
       :merge ->
         merge_result(entries, opts)
 
+      :hard_error ->
+        {:error, :stub_hard_failure}
+
       _ ->
         ok_result(entries, opts)
     end
