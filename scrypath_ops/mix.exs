@@ -27,7 +27,7 @@ defmodule ScrypathOps.MixProject do
 
   def cli do
     [
-      preferred_envs: [precommit: :test]
+      preferred_envs: [precommit: :test, "opsui.test_a11y": :test]
     ]
   end
 
@@ -77,6 +77,7 @@ defmodule ScrypathOps.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["scrypath_ops.check_nav_contract", "ecto.create --quiet", "ecto.migrate --quiet", "test"],
+      "opsui.test_a11y": &opsui_test_a11y/1,
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.build": ["compile", "tailwind scrypath_ops", "esbuild scrypath_ops"],
       "assets.deploy": [
@@ -86,5 +87,12 @@ defmodule ScrypathOps.MixProject do
       ],
       precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]
     ]
+  end
+
+  defp opsui_test_a11y(_args) do
+    Mix.Task.run("scrypath_ops.check_nav_contract")
+    Mix.Task.run("ecto.create", ["--quiet"])
+    Mix.Task.run("ecto.migrate", ["--quiet"])
+    Mix.Task.run("test", ["--only", "opsui_a11y"])
   end
 end

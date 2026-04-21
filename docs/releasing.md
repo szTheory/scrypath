@@ -4,6 +4,10 @@
 
 Release Please owns the version bump, changelog PR, and Git tag for Scrypath. The only publish path is the existing GitHub Actions workflow: Release Please creates `vX.Y.Z`, Actions checks out that tag, and `mix hex.publish --yes` runs from that tagged ref.
 
+### Hex package files vs `scrypath_ops/`
+
+The optional operator Phoenix app lives in **`scrypath_ops/`** at the repository root. It is **not** part of the published Hex artifact. The root library **`mix.exs`** **`package.files`** whitelist **must never** list **`scrypath_ops/`** (or otherwise pull OPSUI into the tarball). Run **`mix hex.publish`** only from the **library** project directory (the same directory as the root `mix.exs` that defines `:scrypath`), never from `scrypath_ops/`.
+
 ## Automated Release Gate
 
 Run the auth-free package gate before you merge a release PR or when you need the same checks outside CI:
@@ -12,7 +16,25 @@ Run the auth-free package gate before you merge a release PR or when you need th
 mix verify.phase11
 ```
 
-That command is the always-on CI gate for the release contract. It runs the package metadata test, the clean-consumer smoke test, the release-doc contract, docs with warnings as errors, release workflow checks, and `mix hex.build --unpack`.
+That command is the always-on CI gate for the release contract.
+
+### Operator UI (`scrypath_ops`)
+
+The optional operator Phoenix app under **`scrypath_ops/`** is not published to Hex, but it still has a first-class verification gate. From the repository root, run:
+
+```bash
+mix verify.opsui
+```
+
+That task mirrors CI: it runs **`cd scrypath_ops && mix deps.get && mix test`** (full suite, including navigation contract setup).
+
+For a faster slice while iterating on OPSUI accessibility semantics (tests tagged **`opsui_a11y`**), run:
+
+```bash
+cd scrypath_ops && mix opsui.test_a11y
+```
+
+That alias applies the same **`scrypath_ops`** **`test`** prerequisite steps as the default **`mix test`** alias, then runs **`mix test --only opsui_a11y`**. It runs the package metadata test, the clean-consumer smoke test, the release-doc contract, docs with warnings as errors, release workflow checks, and `mix hex.build --unpack`.
 
 Use this release-only credential check only when you are preparing an actual publish with a publisher-scoped Hex key:
 
