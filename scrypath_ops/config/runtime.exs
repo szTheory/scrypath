@@ -12,6 +12,37 @@ case System.get_env("SCRYPATH_OPS_SCHEMAS") do
     config :scrypath_ops, :schema_allowlist, ScrypathOps.Schemas.modules_from_csv(raw)
 end
 
+# Optional: override search playground bounds (see README — "Search playground bounds").
+case System.get_env("SCRYPATH_OPS_SEARCH_DEFAULT_PAGE_SIZE") do
+  nil -> :ok
+  "" -> :ok
+  raw ->
+    case Integer.parse(String.trim(raw)) do
+      {n, _} -> config :scrypath_ops, :search_playground_default_page_size, n
+      :error -> :ok
+    end
+end
+
+case System.get_env("SCRYPATH_OPS_SEARCH_MAX_PAGE_SIZE") do
+  nil -> :ok
+  "" -> :ok
+  raw ->
+    case Integer.parse(String.trim(raw)) do
+      {n, _} -> config :scrypath_ops, :search_playground_max_page_size, n
+      :error -> :ok
+    end
+end
+
+case System.get_env("SCRYPATH_OPS_SEARCH_MAX_SCHEMAS") do
+  nil -> :ok
+  "" -> :ok
+  raw ->
+    case Integer.parse(String.trim(raw)) do
+      {n, _} -> config :scrypath_ops, :search_playground_max_schemas, n
+      :error -> :ok
+    end
+end
+
 # config/runtime.exs is executed for all environments, including
 # during releases. It is executed after compilation and before the
 # system starts, so it is typically used to load production configuration
