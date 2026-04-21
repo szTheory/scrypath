@@ -9,8 +9,8 @@ Polish the optional **`scrypath_ops`** shell so it is an excellent day-to-day op
 
 ### Information architecture and JTBD
 
-- [ ] **OPSUX-01**: **`operator-ia.md`** (personas, JTBD 1–7, nav table) matches **`router.ex`**, primary chrome labels, and route set under **`/ops`** — with a **maintainer-facing guard** (for example **`operator_ia_contract_test`** or equivalent) updated whenever nav or doc table changes.
-- [ ] **OPSUX-02**: **On-call happy path** is obvious on first open: posture / health surfaces **healthy / degraded / broken** (or equivalent) with **explicit next checks** (doc links, Mix pointers, or in-UI “what to run next”) consistent with **`operator-ia.md`** job 1, without inventing new recovery semantics.
+- [x] **OPSUX-01**: **`operator-ia.md`** (personas, JTBD 1–7, nav table) matches **`router.ex`**, primary chrome labels, and route set under **`/ops`** — with a **maintainer-facing guard** (for example **`operator_ia_contract_test`** or equivalent) updated whenever nav or doc table changes.
+- [x] **OPSUX-02**: **On-call happy path** is obvious on first open: posture / health surfaces **healthy / degraded / broken** (or equivalent) with **explicit next checks** (doc links, Mix pointers, or in-UI “what to run next”) consistent with **`operator-ia.md`** job 1, without inventing new recovery semantics.
 
 ### Visual hierarchy and scanability
 
@@ -45,8 +45,9 @@ Polish the optional **`scrypath_ops`** shell so it is an excellent day-to-day op
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| OPSUX-01 | Phase 48 | Pending |
-| OPSUX-02 | Phase 48 | Pending |
+| AUDT-01 | Phase 32 | Satisfied — **gap closure 33** doc-contract / planning hygiene (Nyquist ledger); retained for **`.planning/STATE.md`** immutable pointer tests |
+| OPSUX-01 | Phase 48 | Done |
+| OPSUX-02 | Phase 48 | Done |
 | OPSUX-03 | Phase 49 | Pending |
 | OPSUX-04 | Phase 49 | Pending |
 | OPSUX-05 | Phase 49 | Pending |
