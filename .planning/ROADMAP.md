@@ -25,6 +25,30 @@
 | **46** | **Search & federation honesty** | **OPSUI-04**, **OPSUI-05** | **Bounded** search playground with explicit non-prod warnings; **multi-search** inspector shows **merge order**, **weights**, **partial failures**, and **`:all` expansion** consistent with shipped guides and structs—no misleading “single merged index” illusion. |
 | **47** | **Verification & hardening** | **OPSUI-10** | **CI** runs a maintainer verification slice for OPSUI (for example **`LiveViewTest`** or thin smoke); critical copy/structure pinned so federation and failure views cannot silently drift. |
 
+### Phase 44: OPSUI foundations
+
+**Requirements:** OPSUI-09, OPSUI-06, OPSUI-07, OPSUI-08
+
+**Goal:** OPSUI app/package boots from documented instructions; persona/JTBD doc exists and primary nav matches it; LiveView layout follows boring Phoenix conventions; security model documented in README or operator doc (dev vs prod).
+
+### Phase 45: Posture & failure triage
+
+**Requirements:** OPSUI-01, OPSUI-02, OPSUI-03
+
+**Goal:** Landing shows real per-schema/index posture from library APIs; failed sync work view matches `failed_sync_work/2` rollups; sync/drift screens are read-only and link to existing Mix/docs paths for actions.
+
+### Phase 46: Search & federation honesty
+
+**Requirements:** OPSUI-04, OPSUI-05
+
+**Goal:** Bounded search playground with explicit non-prod warnings; multi-search inspector shows merge order, weights, partial failures, and `:all` expansion consistent with shipped guides and structs.
+
+### Phase 47: Verification & hardening
+
+**Requirements:** OPSUI-10
+
+**Goal:** CI runs a maintainer verification slice for OPSUI (for example `LiveViewTest` or thin smoke); critical copy/structure pinned so federation and failure views cannot silently drift.
+
 ## Phases (history)
 
 <details>

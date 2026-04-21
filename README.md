@@ -16,6 +16,8 @@ end
 
 **Start here:** for the canonical first-hour path from dependencies through a working `Scrypath.search/3` with inline sync, follow [guides/golden-path.md](guides/golden-path.md).
 
+**Operator UI (maintainers):** the optional Phoenix shell lives under [scrypath_ops/README.md](scrypath_ops/README.md); persona, JTBD, and nav mapping live in [scrypath_ops/docs/operator-ia.md](scrypath_ops/docs/operator-ia.md).
+
 **Integration smoke (optional):** the repo ships **`examples/phoenix_meilisearch`** with Docker Compose and env vars documented there (including how it relates to CI—see [`CONTRIBUTING.md`](CONTRIBUTING.md) for GitHub job names ↔ `mix verify.*` tasks). From the clone root, run **`cd examples/phoenix_meilisearch && ./scripts/smoke.sh`** (the example's **`./scripts/smoke.sh`** exists only under that directory, not at the repository root).
 
 Scrypath v1 publicly targets Meilisearch first. The backend seam is internal, and v1 does not promise public multi-backend parity.
