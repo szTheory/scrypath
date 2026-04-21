@@ -8,14 +8,19 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   @doc """
   Primary page title (`<h1>`) and optional subtitle for operator LiveViews.
+
+  The visible title exposes `id={title_id}` (default `"ops-page-title"`) so the `:ops`
+  shell can reference it from `main` via `aria-labelledby`. Each `/ops` route should
+  render a single page-level `h1` — do not duplicate this id elsewhere.
   """
   attr(:title, :string, required: true)
   attr(:subtitle, :string, default: nil)
+  attr(:title_id, :string, default: "ops-page-title")
 
   def ops_page_header(assigns) do
     ~H"""
     <div class="space-y-1">
-      <h1 class="text-2xl font-semibold leading-8 tracking-tight">{@title}</h1>
+      <h1 id={@title_id} class="text-2xl font-semibold leading-8 tracking-tight">{@title}</h1>
       <p :if={@subtitle} class="text-sm text-base-content/70">{@subtitle}</p>
     </div>
     """
@@ -39,12 +44,13 @@ defmodule ScrypathOpsWeb.OpsUi do
   """
   attr(:title, :string, required: true)
   attr(:subtitle, :string, default: nil)
+  attr(:title_id, :string, default: "ops-page-title")
   slot(:inner_block, required: true)
 
   def ops_scaffold(assigns) do
     ~H"""
     <div class="space-y-4">
-      <.ops_page_header title={@title} subtitle={@subtitle} />
+      <.ops_page_header title={@title} subtitle={@subtitle} title_id={@title_id} />
       <.ops_panel>
         {render_slot(@inner_block)}
       </.ops_panel>
