@@ -1,4 +1,7 @@
 defmodule ScrypathOpsWeb.FailedSyncLiveTest do
+  @moduledoc false
+  # Phase 47 D-10: see SECURITY + prod guard tests. D-13: `reason_class_counts: true`
+  # inspection + rollup counts (`FailedSyncLive` mount).
   use ScrypathOpsWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest

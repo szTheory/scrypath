@@ -1,4 +1,7 @@
 defmodule ScrypathOpsWeb.SyncDriftLiveTest do
+  @moduledoc false
+  # Phase 47 D-10: SECURITY + prod guard tests. D-14: reconcile on mount does not bundle
+  # `include_index_contract_drift`; drift loads only via explicit control.
   use ScrypathOpsWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
@@ -57,6 +60,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert html =~ "queue posture"
     assert html =~ "Index contract (declared vs live)"
     assert html =~ "sdv_ops_post_a"
+    refute html =~ ":settings"
 
     html2 =
       lv

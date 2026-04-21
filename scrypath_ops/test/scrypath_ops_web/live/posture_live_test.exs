@@ -1,4 +1,8 @@
 defmodule ScrypathOpsWeb.PostureLiveTest do
+  @moduledoc false
+  # Phase 47 D-10: prod fail-closed `/ops` boot is `OPSUI_AUTH_MODE` + `Application`
+  # (`scrypath_ops/docs/SECURITY.md`, `config_prod_guard_test.exs`). D-12: mixed
+  # `{:ok, _}` / `{:error, _}` rows surface per-row errors (no fleet-level “all healthy”).
   use ScrypathOpsWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
