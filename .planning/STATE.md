@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.11
-milestone_name: — executing)
-status: Milestone **v1.11** opened — requirements and roadmap ready for **`/gsd-discuss-phase 48`** or **`/gsd-plan-phase 48`**.
-last_updated: "2026-04-21T21:44:23.616Z"
-last_activity: 2026-04-21 — `/gsd-new-milestone` v1.11
+milestone_name: Operator shell polish and JTBD verification
+status: Phase **48** complete — **Phase 49** next (visual hierarchy, theming, Phoenix ergonomics).
+last_updated: "2026-04-21T22:15:00.000Z"
+last_activity: 2026-04-21 — `/gsd-execute-phase 48`
 progress:
-  total_phases: 1
-  completed_phases: 0
+  total_phases: 3
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 0
-  percent: 0
+  completed_plans: 3
+  percent: 33
 ---
 
 # Project State
@@ -21,17 +21,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.11** — polish **ScrypathOps** (`/ops`) for IA, JTBD alignment, scanability, theming, Phoenix conventions, accessibility, and CI guards — **`OPSUX-01`..`OPSUX-07`**.
+**Current focus:** **v1.11** — continue **ScrypathOps** polish after **Phase 48** (**OPSUX-01**, **OPSUX-02** delivered).
 
 ## Current Position
 
-**Phase:** Not started (roadmap defined; begin Phase 48)
+**Phase:** 48 complete — next **49** (Visual hierarchy, theming, and Phoenix ergonomics)
 
 **Plan:** —
 
-**Status:** Milestone **v1.11** opened — requirements and roadmap ready for **`/gsd-discuss-phase 48`** or **`/gsd-plan-phase 48`**.
+**Status:** **Phase 48: IA and JTBD alignment** shipped — `Nav.primary/0`, doc↔code `check_nav_contract`, posture headline + next checks.
 
-**Last activity:** 2026-04-21 — `/gsd-new-milestone` v1.11
+**Last activity:** 2026-04-21 — `/gsd-execute-phase 48`
 
 ## Accumulated Context
 
@@ -64,14 +64,14 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **`/gsd-discuss-phase 48`** — gather context for **Phase 48: IA and JTBD alignment** (or **`/gsd-plan-phase 48`** to plan directly).
+1. **`/gsd-discuss-phase 49`** — gather context for **Phase 49** (or **`/gsd-plan-phase 49`**).
 2. **`/gsd-progress`** — optional status check.
 
-**Resume file:** --resume-file
+**Resume file:** —
 
 ---
-*Last updated: 2026-04-21 — milestone **v1.11** initialized (phases **48–50**)*
+*Last updated: 2026-04-21 — **Phase 48** complete; **v1.11** continues (**49–50** remaining)*
 
 **Prior milestone:** **v1.10** OPSUI — archived **2026-04-21**
 
-**Planned Phase:** 48 (IA and JTBD alignment) — 3 plans — 2026-04-21T21:44:23.607Z
+**Planned Phase:** 49 — Visual hierarchy, theming, and Phoenix ergonomics

@@ -17,11 +17,11 @@
 
 ## Next milestone
 
-**v1.11** — operator shell polish and JTBD verification. Start with **Phase 48** (IA alignment), then **49** (visual + theme + conventions), then **50** (a11y + CI).
+**v1.11** — operator shell polish and JTBD verification. **Phase 48** (IA alignment) complete; next **49** (visual + theme + conventions), then **50** (a11y + CI).
 
 ## Phases (v1.11 — executing)
 
-- [ ] **Phase 48: IA and JTBD alignment** — **`scrypath_ops/docs/operator-ia.md`** ↔ **`router.ex`** ↔ **`operator_ia_contract_test`** (or equivalent) (**OPSUX-01**). On-call **job 1** path: posture landing shows state with **explicit next checks** / links (**OPSUX-02**).
+- [x] **Phase 48: IA and JTBD alignment** (2026-04-21) — **`scrypath_ops/docs/operator-ia.md`** ↔ **`router.ex`** ↔ **`operator_ia_contract_test`** (or equivalent) (**OPSUX-01**). On-call **job 1** path: posture landing shows state with **explicit next checks** / links (**OPSUX-02**).
   - **Success criteria:** (1) CI fails if nav labels, order, or **`/ops`** routes drift from **`operator-ia.md`** table without a doc update. (2) A new on-call operator can answer “what do I check next?” from the posture view alone plus linked docs/Mix paths.
 - [ ] **Phase 49: Visual hierarchy, theming, and Phoenix ergonomics** — Consistent page chrome and scan-friendly panels on all **`/ops`** LiveViews (**OPSUX-03**). **System / light / dark** coherent and readable, including first load and persistence (**OPSUX-04**). Fix LiveView/layout/component inconsistencies vs Phoenix norms (**OPSUX-05**).
   - **Success criteria:** (1) Checklist passes for all four operator surfaces in **light and dark**. (2) No critical contrast or “orphan” default-shell paths on **`/ops`**. (3) Flash, titles, and primary actions read clearly on laptop and narrow widths.
@@ -136,4 +136,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - **Core library features** — continue to follow **`.planning/PROJECT.md`** *Out of Scope* until a future milestone explicitly widens the contract.
 
 ---
-*Last updated: 2026-04-21 — opened **v1.11** (phases **48–50**); **v1.10** OPSUI archived*
+*Last updated: 2026-04-21 — **Phase 48** complete under **v1.11**; **v1.10** OPSUI archived*
