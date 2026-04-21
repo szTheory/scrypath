@@ -46,6 +46,13 @@ defmodule ScrypathOpsWeb.Layouts do
 
   def app(%{shell: :ops} = assigns) do
     ~H"""
+    <a
+      href="#ops-main"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-base-100 focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary"
+    >
+      Skip to operator content
+    </a>
+
     <header class="navbar px-4 sm:px-6 lg:px-8 border-b border-base-300">
       <div class="flex-1">
         <.link navigate={~p"/"} class="flex w-fit items-center gap-2 text-sm font-semibold">
@@ -65,7 +72,11 @@ defmodule ScrypathOpsWeb.Layouts do
       </div>
     </header>
 
-    <main class="px-4 py-10 sm:px-6 lg:px-8">
+    <main
+      id="ops-main"
+      aria-labelledby="ops-page-title"
+      class="px-4 py-10 sm:px-6 lg:px-8"
+    >
       <div class={main_width_classes(@ops_main_width)}>
         {render_slot(@inner_block)}
       </div>
