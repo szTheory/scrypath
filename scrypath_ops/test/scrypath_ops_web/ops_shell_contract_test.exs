@@ -107,6 +107,10 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert html =~ title_fragment
     assert html =~ ~s(id="flash-group")
     assert Regex.scan(~r/id=\"flash-group\"/, html) |> length() == 1
+    assert html =~ ~s(id="ops-main")
+    assert html =~ "Skip to operator content"
+    assert html =~ ~s(href="#ops-main")
+    assert html =~ ~s(id="ops-page-title")
   end
 
   describe "ops shell markers" do
