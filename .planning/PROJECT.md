@@ -66,10 +66,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] **Phase 43** (2026-04-20): **Per-query runtime** — allowlisted **`:per_query`**, **`%Query{}`**, Meilisearch projection, **`search_many/2`** merge, telemetry, **`mix verify.phase43`**, doc pins — **TUNE-PQ-01**..**TUNE-PQ-03** / **`TUNE-01`** (v1.7 sense).
 - [x] **v1.9 milestone** (2026-04-20): Per-query pipeline + runtime — phases **42–43** archived; **`milestones/v1.9-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 - [x] **v1.10 milestone** (2026-04-21): Operator admin UI (OPSUI) — phases **44–47** archived; **`scrypath_ops`** LiveView app; **`milestones/v1.10-{ROADMAP,REQUIREMENTS}.md`**; **`OPSUI-01`..`OPSUI-10`**.
+- [x] **Phase 48** (2026-04-21): **OPSUX-01** — `ScrypathOpsWeb.Nav`, doc nav fence, `mix scrypath_ops.check_nav_contract`; **OPSUX-02** — posture headline, evidence, bounded next checks (`posture-next-checks`).
 
 ### Active
 
-- [ ] **v1.11** — Operator shell polish and JTBD verification — **OPSUX-01**–**OPSUX-07** (see **`.planning/REQUIREMENTS.md`**).
+- [ ] **v1.11** — Operator shell polish and JTBD verification — **OPSUX-03**–**OPSUX-07** remaining after **Phase 48**; see **`.planning/REQUIREMENTS.md`**.
 
 ### Out of Scope
 
