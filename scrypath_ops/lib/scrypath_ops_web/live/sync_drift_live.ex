@@ -165,9 +165,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       </p>
 
       <.ops_panel>
-        <div class="mt-2 space-y-3">
+        <section aria-labelledby="sync-reconcile-heading" class="mt-2 space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <h2 class="text-lg font-semibold">Sync & queue posture</h2>
+            <h2 id="sync-reconcile-heading" class="text-lg font-semibold">Sync & queue posture</h2>
             <button type="button" phx-click="refresh_reconcile" class="btn btn-sm btn-primary">
               Refresh reconcile
             </button>
@@ -177,28 +177,41 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             Last loaded: <span class="font-mono tabular-nums">{format_dt(@reconcile_loaded_at)}</span>
           </p>
 
-          <div :if={@reconcile_result} class="rounded border border-base-300 p-3 text-sm space-y-1">
-            <p>
-              <span class="font-medium">Index:</span>
-              <code class="text-xs">{@reconcile_result.index}</code>
-            </p>
-            <p><span class="font-medium">Mode:</span> {@reconcile_result.mode}</p>
-            <p>
-              <span class="font-medium">Drift signals:</span>
-              {inspect(@reconcile_result.drift_signals)}
-            </p>
+          <div :if={@reconcile_result} class="rounded border border-base-300 p-3 text-sm overflow-x-auto min-w-0">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th scope="col">Signal</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row" class="font-medium align-top">Index</th>
+                  <td><code class="text-xs">{@reconcile_result.index}</code></td>
+                </tr>
+                <tr>
+                  <th scope="row" class="font-medium align-top">Mode</th>
+                  <td>{@reconcile_result.mode}</td>
+                </tr>
+                <tr>
+                  <th scope="row" class="font-medium align-top">Drift signals</th>
+                  <td class="font-mono text-xs">{inspect(@reconcile_result.drift_signals)}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
           <p :if={@reconcile_result == nil && @selected_schema} class="text-sm text-base-content/70">
             Reconcile not loaded yet — choose a schema or tap “Refresh reconcile”.
           </p>
-        </div>
+        </section>
       </.ops_panel>
 
       <.ops_panel>
-        <div class="mt-2 space-y-3">
+        <section aria-labelledby="sync-drift-heading" class="mt-2 space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <h2 class="text-lg font-semibold">Index contract (declared vs live)</h2>
+            <h2 id="sync-drift-heading" class="text-lg font-semibold">Index contract (declared vs live)</h2>
             <button type="button" phx-click="load_drift" class="btn btn-sm">
               Load / refresh contract drift
             </button>
@@ -212,17 +225,33 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             Drift error (reconcile above stays usable): {inspect(@drift_error)}
           </p>
 
-          <div :if={@drift_result} class="rounded border border-base-300 p-3 text-sm">
-            <p class="font-medium">Index contract snapshot</p>
-            <p class="mt-2 font-mono text-xs tabular-nums">
-              version {@drift_result.version} · index {@drift_result.index}
-            </p>
+          <div :if={@drift_result} class="rounded border border-base-300 p-3 text-sm overflow-x-auto min-w-0">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th scope="col">Field</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row" class="font-medium align-top">Summary</th>
+                  <td>Index contract snapshot</td>
+                </tr>
+                <tr>
+                  <th scope="row" class="font-medium align-top">Version · index</th>
+                  <td class="font-mono text-xs tabular-nums">
+                    version {@drift_result.version} · index {@drift_result.index}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
           <p :if={@drift_result == nil && @drift_error == nil} class="text-sm text-base-content/70">
             Contract drift has not been loaded yet — it runs only after the explicit control.
           </p>
-        </div>
+        </section>
       </.ops_panel>
     </Layouts.app>
     """
