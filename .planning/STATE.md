@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.11
-milestone_name: — executing)
-status: "**Phase 48: IA and JTBD alignment** shipped — `Nav.primary/0`, doc↔code `check_nav_contract`, posture headline + next checks."
-last_updated: "2026-04-21T22:09:21.006Z"
-last_activity: 2026-04-21 — `/gsd-execute-phase 48`
+milestone_name: Operator shell polish and JTBD verification
+status: Phase **49** context gathered — ready for **`/gsd-plan-phase 49`**.
+last_updated: "2026-04-21T23:30:00.000Z"
+last_activity: 2026-04-21 — `/gsd-discuss-phase 49` (research-backed context)
 progress:
-  total_phases: 2
+  total_phases: 3
   completed_phases: 1
   total_plans: 3
   completed_plans: 3
-  percent: 100
+  percent: 33
 ---
 
 # Project State
@@ -21,17 +21,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.11** — continue **ScrypathOps** polish after **Phase 48** (**OPSUX-01**, **OPSUX-02** delivered).
+**Current focus:** **v1.11** — **ScrypathOps** polish: **OPSUX-03**–**OPSUX-07** after **Phase 48** (**OPSUX-01**, **OPSUX-02** delivered).
 
 ## Current Position
 
-**Phase:** 48 complete — next **49** (Visual hierarchy, theming, and Phoenix ergonomics)
+**Phase:** **49** — context complete; planning next
 
 **Plan:** —
 
-**Status:** **Phase 48: IA and JTBD alignment** shipped — `Nav.primary/0`, doc↔code `check_nav_contract`, posture headline + next checks.
+**Status:** **`49-CONTEXT.md`** and **`49-DISCUSSION-LOG.md`** committed — visual hierarchy, theming, Phoenix ergonomics decisions locked for planners.
 
-**Last activity:** 2026-04-21 — `/gsd-execute-phase 48`
+**Last activity:** 2026-04-21 — `/gsd-discuss-phase 49`
 
 ## Accumulated Context
 
@@ -64,13 +64,13 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **`/gsd-discuss-phase 49`** — gather context for **Phase 49** (or **`/gsd-plan-phase 49`**).
+1. **`/gsd-plan-phase 49`** — break **OPSUX-03**–**OPSUX-05** into plans using **`.planning/phases/49-visual-hierarchy-theming-and-phoenix-ergonomics/49-CONTEXT.md`**.
 2. **`/gsd-progress`** — optional status check.
 
-**Resume file:** --resume-file
+**Resume file:** `.planning/phases/49-visual-hierarchy-theming-and-phoenix-ergonomics/49-CONTEXT.md`
 
 ---
-*Last updated: 2026-04-21 — **Phase 48** complete; **v1.11** continues (**49–50** remaining)*
+*Last updated: 2026-04-21 — **Phase 49** context gathered; **v1.11** continues (**49** implementation, **50** a11y/CI)*
 
 **Prior milestone:** **v1.10** OPSUI — archived **2026-04-21**
 
