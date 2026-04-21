@@ -37,6 +37,11 @@ defmodule ScrypathOpsWeb.Layouts do
     doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
   )
 
+  attr(:ops_main_width, :atom,
+    default: :default,
+    doc: "`:default` keeps `max-w-3xl` on `:ops` shell; `:wide` uses `max-w-7xl` for table-first routes (e.g. Search)."
+  )
+
   slot(:inner_block, required: true)
 
   def app(%{shell: :ops} = assigns) do
@@ -61,7 +66,7 @@ defmodule ScrypathOpsWeb.Layouts do
     </header>
 
     <main class="px-4 py-10 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-3xl space-y-4">
+      <div class={main_width_classes(@ops_main_width)}>
         {render_slot(@inner_block)}
       </div>
     </main>
@@ -108,6 +113,9 @@ defmodule ScrypathOpsWeb.Layouts do
     <.flash_group flash={@flash} id="flash-group" />
     """
   end
+
+  defp main_width_classes(:wide), do: ~w(mx-auto max-w-7xl w-full min-w-0 space-y-4)
+  defp main_width_classes(_), do: ~w(mx-auto max-w-3xl w-full min-w-0 space-y-4)
 
   @doc """
   Shows the flash group with standard titles and content.
