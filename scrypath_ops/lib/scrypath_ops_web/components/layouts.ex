@@ -9,7 +9,7 @@ defmodule ScrypathOpsWeb.Layouts do
   # The default root.html.heex file contains the HTML
   # skeleton of your application, namely HTML headers
   # and other static content.
-  embed_templates "layouts/*"
+  embed_templates("layouts/*")
 
   @doc """
   Renders your app layout.
@@ -25,17 +25,19 @@ defmodule ScrypathOpsWeb.Layouts do
       </Layouts.app>
 
   """
-  attr :flash, :map, required: true, doc: "the map of flash messages"
+  attr(:flash, :map, required: true, doc: "the map of flash messages")
 
-  attr :shell, :atom,
+  attr(:shell, :atom,
     default: :default,
     doc: "`:ops` enables maintainer navigation for `/ops` LiveViews"
+  )
 
-  attr :current_scope, :map,
+  attr(:current_scope, :map,
     default: nil,
     doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
+  )
 
-  slot :inner_block, required: true
+  slot(:inner_block, required: true)
 
   def app(%{shell: :ops} = assigns) do
     ~H"""
@@ -48,17 +50,8 @@ defmodule ScrypathOpsWeb.Layouts do
       </div>
       <nav class="flex-none" aria-label="Operator primary">
         <ul class="menu menu-horizontal px-1 text-sm">
-          <li>
-            <.link navigate={~p"/ops/posture"} class="link link-hover">Posture / health</.link>
-          </li>
-          <li>
-            <.link navigate={~p"/ops/failed-sync"} class="link link-hover">Failed sync work</.link>
-          </li>
-          <li>
-            <.link navigate={~p"/ops/sync-drift"} class="link link-hover">Sync / drift</.link>
-          </li>
-          <li>
-            <.link navigate={~p"/ops/search"} class="link link-hover">Search & federation</.link>
+          <li :for={item <- ScrypathOpsWeb.Nav.primary()}>
+            <.link navigate={item.path} class="link link-hover">{item.label}</.link>
           </li>
         </ul>
       </nav>
@@ -123,8 +116,8 @@ defmodule ScrypathOpsWeb.Layouts do
 
       <.flash_group flash={@flash} />
   """
-  attr :flash, :map, required: true, doc: "the map of flash messages"
-  attr :id, :string, default: "flash-group", doc: "the optional id of flash container"
+  attr(:flash, :map, required: true, doc: "the map of flash messages")
+  attr(:id, :string, default: "flash-group", doc: "the optional id of flash container")
 
   def flash_group(assigns) do
     ~H"""
