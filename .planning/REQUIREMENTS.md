@@ -17,9 +17,9 @@
 
 ### Operator visibility surfaces
 
-- [ ] **OPSUI-01**: An operator can open a **dashboard landing** that summarizes **per-schema (or per-index) posture** for sync and search health using **`Scrypath.*`** visibility APIs (read-mostly; no new recovery semantics).
-- [ ] **OPSUI-02**: An operator can **triage failed sync work** with lists and rollups that match **`Scrypath.failed_sync_work/2`** semantics (including **`reason_class`** and related metadata the library already exposes).
-- [ ] **OPSUI-03**: An operator can inspect **sync status** and **read-only reconcile/drift context** where the library already exposes it (for example drift attachments or contract drift tooling), with clear linkage to operator docs and Mix tasks for actions.
+- [x] **OPSUI-01**: An operator can open a **dashboard landing** that summarizes **per-schema (or per-index) posture** for sync and search health using **`Scrypath.*`** visibility APIs (read-mostly; no new recovery semantics).
+- [x] **OPSUI-02**: An operator can **triage failed sync work** with lists and rollups that match **`Scrypath.failed_sync_work/2`** semantics (including **`reason_class`** and related metadata the library already exposes).
+- [x] **OPSUI-03**: An operator can inspect **sync status** and **read-only reconcile/drift context** where the library already exposes it (for example drift attachments or contract drift tooling), with clear linkage to operator docs and Mix tasks for actions.
 
 ### Search and federation honesty
 
@@ -55,9 +55,9 @@
 | OPSUI-06 | Phase 44 | Complete |
 | OPSUI-07 | Phase 44 | Complete |
 | OPSUI-08 | Phase 44 | Complete |
-| OPSUI-01 | Phase 45 | Pending |
-| OPSUI-02 | Phase 45 | Pending |
-| OPSUI-03 | Phase 45 | Pending |
+| OPSUI-01 | Phase 45 | Complete |
+| OPSUI-02 | Phase 45 | Complete |
+| OPSUI-03 | Phase 45 | Complete |
 | OPSUI-04 | Phase 46 | Pending |
 | OPSUI-05 | Phase 46 | Pending |
 | OPSUI-10 | Phase 47 | Pending |

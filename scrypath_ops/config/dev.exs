@@ -92,3 +92,7 @@ config :phoenix_live_view,
 config :swoosh, :api_client, false
 
 config :scrypath_ops, :validate_opsui_auth_on_start, false
+
+# OPSUI schema allowlist: set `SCRYPATH_OPS_SCHEMAS=MyApp.Blog.Post` at runtime,
+# or assign `config :scrypath_ops, :schema_allowlist, [MyApp.Blog.Post]` here.
+# Do not use reflection to populate the list.

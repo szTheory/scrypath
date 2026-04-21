@@ -20,6 +20,21 @@ mix phx.server
 
 Then open [http://localhost:4000](http://localhost:4000).
 
+## OPSUI schema allowlist
+
+The `/ops` LiveViews only load schema modules listed in **`schema_allowlist`** under
+**`:scrypath_ops`** (set in `config/*.exs` or at runtime). There is **no** reflection-based
+discovery in `scrypath_ops/lib`.
+
+- **Config key:** `config :scrypath_ops, :schema_allowlist, [MyApp.Blog.Post]`
+- **Environment variable (optional):** `SCRYPATH_OPS_SCHEMAS` — comma-separated dotted
+  module names (for example `MyApp.Blog.Post,MyApp.Catalog.Item`). When set, it replaces
+  the compile-time allowlist when `config/runtime.exs` runs.
+
+Additional **`Scrypath.*`** runtime options (`:backend`, `:meilisearch_url`, `:index_prefix`,
+`:sync_mode`, `:oban`, `:oban_queue`, etc.) belong under `:scrypath_ops` as well so
+`ScrypathOps.Schemas.scrypath_opts/0` can build the keyword passed into operator APIs.
+
 Publishing the **`scrypath`** Hex package is done **only** from the **parent** library directory (`../` relative to this app), using the root `mix.exs` — not from this app.
 
 ## Production

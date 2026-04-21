@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.10
 milestone_name: — Operator admin UI
-status: planning
-last_updated: "2026-04-21T12:45:06.517Z"
+status: ready_to_plan
+last_updated: "2026-04-21T12:55:07.057Z"
 last_activity: 2026-04-21
 progress:
   total_phases: 4
-  completed_phases: 1
-  total_plans: 4
+  completed_phases: 2
+  total_plans: 8
   completed_plans: 4
-  percent: 100
+  percent: 50
 ---
 
 # Project State
@@ -21,13 +21,13 @@ See: `.planning/PROJECT.md` (updated 2026-04-20)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase --phase — 44
+**Current focus:** Phase --phase — 45
 
 ## Current Position
 
-Phase: --phase (44) — EXECUTING
+Phase: --phase (45) — EXECUTING
 Plan: 1 of --name
-**Phase:** 45
+**Phase:** 46
 
 **Plan:** Not started
 
@@ -75,4 +75,4 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 **Prior milestone:** **v1.9** (phases **42–43**) — archived 2026-04-20
 
-**Planned Phase:** 44 (OPSUI foundations) — 4 plans — 2026-04-20T19:23:27.216Z
+**Planned Phase:** 45 (Posture & failure triage) — 4 plans — 2026-04-21T12:51:02.648Z

@@ -7,9 +7,22 @@
 # General application configuration
 import Config
 
+# OPSUI: explicit schema module allowlist (no runtime discovery). See README.
 config :scrypath_ops,
   ecto_repos: [ScrypathOps.Repo],
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  schema_allowlist: [],
+  backend: nil,
+  meilisearch_url: nil,
+  index_prefix: nil,
+  sync_mode: nil,
+  oban: nil,
+  oban_queue: nil,
+  meilisearch_client: nil,
+  meilisearch_api_key: nil,
+  oban_inspector: nil,
+  meilisearch_tasks: nil,
+  oban_jobs: nil
 
 # Configure the endpoint
 config :scrypath_ops, ScrypathOpsWeb.Endpoint,

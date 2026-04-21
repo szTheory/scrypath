@@ -1,5 +1,17 @@
 import Config
 
+# Optional comma-separated schema modules for OPSUI (overrides compile-time allowlist).
+case System.get_env("SCRYPATH_OPS_SCHEMAS") do
+  nil ->
+    :ok
+
+  "" ->
+    :ok
+
+  raw ->
+    config :scrypath_ops, :schema_allowlist, ScrypathOps.Schemas.modules_from_csv(raw)
+end
+
 # config/runtime.exs is executed for all environments, including
 # during releases. It is executed after compilation and before the
 # system starts, so it is typically used to load production configuration
