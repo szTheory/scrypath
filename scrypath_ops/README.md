@@ -37,6 +37,25 @@ Additional **`Scrypath.*`** runtime options (`:backend`, `:meilisearch_url`, `:i
 
 Publishing the **`scrypath`** Hex package is done **only** from the **parent** library directory (`../` relative to this app), using the root `mix.exs` — not from this app.
 
+## Search playground bounds
+
+The `/ops/search` playground validates **`page.size`** and schema breadth **before** calling `Scrypath`, using the same ceilings as `Scrypath.MultiSearch.Entries` (page **≤ 50**, default **≤ 10** schemas per multi-search).
+
+| Config key (`config :scrypath_ops, …`) | Meaning |
+| --- | --- |
+| `:search_playground_default_page_size` | Default page size (**15** if unset or invalid). Clamped to **`1..max_page_size`**. |
+| `:search_playground_max_page_size` | Upper bound for **`page.size`** in the UI (**50** max, aligned with the library). Hosts may set a lower ceiling in **`[1, 50]`**. |
+| `:search_playground_max_schemas` | Maximum schemas selectable in multi mode (**1..10**; invalid values fall back to **10**). |
+| `:search_playground_adapter` | Behaviour implementing `ScrypathOps.SearchPlayground.Adapter` — defaults to `ScrypathOps.SearchPlayground.Adapter.Scrypath`. **Intended for tests and local stubs only**; production should keep the default. |
+
+Optional environment variables (read in `config/runtime.exs`, same spirit as `SCRYPATH_OPS_SCHEMAS`):
+
+| Variable | Maps to |
+| --- | --- |
+| `SCRYPATH_OPS_SEARCH_DEFAULT_PAGE_SIZE` | `:search_playground_default_page_size` |
+| `SCRYPATH_OPS_SEARCH_MAX_PAGE_SIZE` | `:search_playground_max_page_size` |
+| `SCRYPATH_OPS_SEARCH_MAX_SCHEMAS` | `:search_playground_max_schemas` |
+
 ## Production
 
 When you run a **release** in **`MIX_ENV=prod`**, **`OPSUI_AUTH_MODE`** is **mandatory** and must be one of the values enforced at boot (see **`scrypath_ops/docs/SECURITY.md`**). Read that file before exposing `/ops` on a network.

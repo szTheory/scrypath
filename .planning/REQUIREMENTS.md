@@ -23,8 +23,8 @@
 
 ### Search and federation honesty
 
-- [ ] **OPSUI-04**: An operator can run **bounded exploratory search** from the UI (single-index and, where configured, multi-index) with warnings appropriate to **non-production** or **privileged** use—no unbounded production query logging by default.
-- [ ] **OPSUI-05**: An operator can inspect **`search_many/2` / federation-shaped** results with **explicit** representation of **merge order**, **federation weights**, **partial failures**, and **`:all` expansion** behavior consistent with shipped library semantics and guides.
+- [x] **OPSUI-04**: An operator can run **bounded exploratory search** from the UI (single-index and, where configured, multi-index) with warnings appropriate to **non-production** or **privileged** use—no unbounded production query logging by default.
+- [x] **OPSUI-05**: An operator can inspect **`search_many/2` / federation-shaped** results with **explicit** representation of **merge order**, **federation weights**, **partial failures**, and **`:all` expansion** behavior consistent with shipped library semantics and guides.
 
 ### Verification
 
@@ -58,8 +58,8 @@
 | OPSUI-01 | Phase 45 | Complete |
 | OPSUI-02 | Phase 45 | Complete |
 | OPSUI-03 | Phase 45 | Complete |
-| OPSUI-04 | Phase 46 | Pending |
-| OPSUI-05 | Phase 46 | Pending |
+| OPSUI-04 | Phase 46 | Complete |
+| OPSUI-05 | Phase 46 | Complete |
 | OPSUI-10 | Phase 47 | Pending |
 
 **Coverage:**

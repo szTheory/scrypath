@@ -22,7 +22,10 @@ config :scrypath_ops,
   meilisearch_api_key: nil,
   oban_inspector: nil,
   meilisearch_tasks: nil,
-  oban_jobs: nil
+  oban_jobs: nil,
+  search_playground_default_page_size: 15,
+  search_playground_max_page_size: 50,
+  search_playground_max_schemas: 10
 
 # Configure the endpoint
 config :scrypath_ops, ScrypathOpsWeb.Endpoint,
