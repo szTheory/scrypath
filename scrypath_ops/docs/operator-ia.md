@@ -12,7 +12,7 @@ Canonical contract for the optional **ScrypathOps** Phoenix shell: who uses it, 
 
 1. **When** an alert fires that search or sync looks unhealthy, **I need** a single place to see posture and health signals, **so that** I can decide whether to page deeper or recover — **done when** I can tell “healthy / degraded / broken” with explicit next checks (ships fully in phase 45).
 2. **When** sync jobs fail or retry, **I need** a bounded list of failed work with reasons, **so that** I can retry or quarantine safely — **done when** I can open failed-work detail from the same nav priority as posture (ships fully in phase 45).
-3. **When** someone asks “is the index in sync?”, **I need** read-only drift and visibility plus links to existing Mix tasks and guides, **so that** I never bypass the library’s public APIs — **done when** I can jump to `mix scrypath.*` docs and drift guides without duplicate prose here.
+3. **When** someone asks “is the index in sync?”, **I need** read-only drift and visibility plus links to existing Mix tasks and guides, **so that** I never bypass the library’s public APIs — **done when** I can jump to `mix scrypath.*` docs and drift guides without duplicate prose here (shipped phase 45 — see `/ops/sync-drift` and **`phase 45`** in the nav table below).
 4. **When** we expose multi-index or federated search, **I need** the UI to state merge and honesty rules up front, **so that** operators do not assume a single merged index — **done when** the shell links to federation docs and phase-46 inspectors (ships fully in phase 46).
 5. **When** I need a quick CLI snapshot during an incident, **I need** the same priorities reflected in nav as in terminal workflows, **so that** muscle memory matches between OPSUI and Mix — **done when** primary nav order matches jobs 1–4 above.
 6. **When** onboarding a teammate to operator workflows, **I need** a short mapping from job to route and docs, **so that** they self-serve without reading the whole repo — **done when** this table is kept in sync with `router.ex` on every nav change.
@@ -26,7 +26,7 @@ Primary chrome under `/ops` follows **roadmap triage order**: posture first, fai
 | --- | --- | --- | --- | --- |
 | 1 | On-call engineer | Posture / health | /ops/posture | Phase 45 — posture dashboards; until then see [guides/meilisearch-operations.md](../../guides/meilisearch-operations.md) |
 | 2 | On-call engineer | Failed sync work | /ops/failed-sync | Phase 45 — failed work UI; today use `mix scrypath.failed` from [guides/operator-mix-tasks.md](../../guides/operator-mix-tasks.md) |
-| 3 | Search owner | Sync / drift | /ops/sync-drift | `mix scrypath.status`, drift guides: [guides/drift-recovery.md](../../guides/drift-recovery.md), [guides/sync-modes-and-visibility.md](../../guides/sync-modes-and-visibility.md) |
+| 3 | Search owner | Sync / drift | /ops/sync-drift | Shipped **phase 45** — read-only reconcile + lazy index contract drift in OPSUI; still use `mix scrypath.status`, [guides/drift-recovery.md](../../guides/drift-recovery.md), [guides/sync-modes-and-visibility.md](../../guides/sync-modes-and-visibility.md) |
 | 4 | Search owner | Search & federation | /ops/search | Phase 46 — honest multi-index UI; semantics in [guides/multi-index-search.md](../../guides/multi-index-search.md) |
 | 5 | Library maintainer | Sync / drift | /ops/sync-drift | Mix tasks index: [guides/operator-mix-tasks.md](../../guides/operator-mix-tasks.md) |
 | 6 | Library maintainer | Posture / health | /ops/posture | Library verification: [CONTRIBUTING.md](../../CONTRIBUTING.md) |
