@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.11
-milestone_name: — executing)
-status: planning
-last_updated: "2026-04-21T22:51:51.080Z"
-last_activity: 2026-04-21 — `/gsd-execute-phase 49`
+milestone_name: Operator shell polish (v1.11)
+status: milestone_complete
+last_updated: "2026-04-21T23:41:34.217Z"
+last_activity: 2026-04-21
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 11
-  completed_plans: 7
-  percent: 64
+  completed_plans: 11
+  percent: 100
 ---
 
 # Project State
@@ -21,17 +21,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.11** — **Phase 50** next (**OPSUX-06**, **OPSUX-07**); **Phase 49** complete (**OPSUX-03**–**OPSUX-05**).
+**Current focus:** **v1.11** milestone complete (phases **48–50**). Plan the next milestone when ready.
 
 ## Current Position
 
-**Phase:** **50** — accessibility and verification hardening (next)
+**Phase:** **50** — accessibility and verification hardening — **complete** (2026-04-21).
 
-**Plan:** —
+**Plan:** All four plans executed; see **`50-01-SUMMARY.md`** … **`50-04-SUMMARY.md`**.
 
-**Status:** Phase **49** complete — see **`.planning/phases/49-visual-hierarchy-theming-and-phoenix-ergonomics/49-VERIFICATION.md`**.
+**Status:** **v1.11** operator shell polish and JTBD verification — **milestone complete**.
 
-**Last activity:** 2026-04-21 — `/gsd-execute-phase 49`
+**Last activity:** 2026-04-21 — `/gsd-execute-phase 50`
 
 ## Accumulated Context
 
@@ -64,14 +64,14 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **`/gsd-discuss-phase 50`** or **`/gsd-plan-phase 50`** — **OPSUX-06** / **OPSUX-07** (a11y + CI).
-2. **`/gsd-progress`** — optional status check.
+1. **`/gsd-complete-milestone`** (or **`/gsd-new-milestone`**) — archive **v1.11** and open the next version when you are ready to ship or continue roadmap work.
+2. **`/gsd-progress`** — status snapshot.
 
-**Resume file:** --resume-file
+**Resume file:** —
 
 ---
-*Last updated: 2026-04-21 — **Phase 49** complete; **v1.11** continues with **Phase 50** (a11y + CI).*
+*Last updated: 2026-04-21 — **Phase 50** complete; **v1.11** (phases **48–50**) milestone complete.*
 
 **Prior milestone:** **v1.10** OPSUI — archived **2026-04-21**
 
-**Planned Phase:** 50 (Accessibility and verification hardening) — 4 plans — 2026-04-21T22:51:51.071Z
+**Completed:** Phase 50 (Accessibility and verification hardening) — 4 plans — 2026-04-21

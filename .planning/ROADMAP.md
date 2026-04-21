@@ -13,19 +13,19 @@
 - [x] **`v1.8` shipped in-repo** (2026-04-20) — *Multi-index federation* — phases **39–41**, **6** plans — [archive](milestones/v1.8-ROADMAP.md) · [requirements](milestones/v1.8-REQUIREMENTS.md) · [audit](milestones/v1.8-MILESTONE-AUDIT.md)
 - [x] **`v1.9` shipped in-repo** (2026-04-20) — *Per-query relevance & tuning pipeline* — phases **42–43**, **5** plans — [archive](milestones/v1.9-ROADMAP.md) · [requirements](milestones/v1.9-REQUIREMENTS.md) · [audit](milestones/v1.9-MILESTONE-AUDIT.md)
 - [x] **`v1.10` shipped in-repo** (2026-04-21) — *Operator admin UI (OPSUI)* — phases **44–47**, **14** plans — [archive](milestones/v1.10-ROADMAP.md) · [requirements](milestones/v1.10-REQUIREMENTS.md) · [research summary](research/SUMMARY.md)
-- [ ] **`v1.11` in progress** (2026-04-21) — *Operator shell polish and JTBD verification* — phases **48–50** — [requirements](REQUIREMENTS.md)
+- [x] **`v1.11` shipped in-repo** (2026-04-21) — *Operator shell polish and JTBD verification* — phases **48–50**, **11** plans — [requirements](REQUIREMENTS.md)
 
 ## Next milestone
 
-**v1.11** — operator shell polish and JTBD verification. **Phase 49** (visual + theme + conventions) complete; next **50** (a11y + CI).
+Define **v1.12** (or the next numbered milestone) when you are ready to continue past operator shell polish.
 
-## Phases (v1.11 — executing)
+## Phases (v1.11 — complete)
 
 - [x] **Phase 48: IA and JTBD alignment** (2026-04-21) — **`scrypath_ops/docs/operator-ia.md`** ↔ **`router.ex`** ↔ **`operator_ia_contract_test`** (or equivalent) (**OPSUX-01**). On-call **job 1** path: posture landing shows state with **explicit next checks** / links (**OPSUX-02**).
   - **Success criteria:** (1) CI fails if nav labels, order, or **`/ops`** routes drift from **`operator-ia.md`** table without a doc update. (2) A new on-call operator can answer “what do I check next?” from the posture view alone plus linked docs/Mix paths.
 - [x] **Phase 49: Visual hierarchy, theming, and Phoenix ergonomics** (2026-04-21) — Consistent page chrome and scan-friendly panels on all **`/ops`** LiveViews (**OPSUX-03**). **System / light / dark** coherent and readable, including first load and persistence (**OPSUX-04**). Fix LiveView/layout/component inconsistencies vs Phoenix norms (**OPSUX-05**).
   - **Success criteria:** (1) Checklist passes for all four operator surfaces in **light and dark**. (2) No critical contrast or “orphan” default-shell paths on **`/ops`**. (3) Flash, titles, and primary actions read clearly on laptop and narrow widths.
-- [ ] **Phase 50: Accessibility and verification hardening** — Heading order, landmarks, control labels on triage and playground paths (**OPSUX-06**). Extend automated tests for any new contracts or critical LiveView flows (**OPSUX-07**).
+- [x] **Phase 50: Accessibility and verification hardening** (2026-04-21) — Heading order, landmarks, control labels on triage and playground paths (**OPSUX-06**). Extend automated tests for any new contracts or critical LiveView flows (**OPSUX-07**).
   - **Success criteria:** (1) Spot keyboard + screen-reader pass on posture → failed-sync → sync/drift → search. (2) CI suite updated; **`mix test`** (or documented **`verify.opsui`** path) green with new cases.
 
 ### Phase 48: IA and JTBD alignment
@@ -138,7 +138,7 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**`v1.11` active** — **2026-04-21** — **3** phases (**48–50**), **7** requirements (**OPSUX-01**–**OPSUX-07**); see **[REQUIREMENTS.md](REQUIREMENTS.md)** traceability.
+**`v1.11` complete (in-repo)** — **2026-04-21** — **3** phases (**48–50**), **7** requirements (**OPSUX-01**–**OPSUX-07**); see **[REQUIREMENTS.md](REQUIREMENTS.md)** traceability.
 
 **`v1.10` archived (in-repo)** — **2026-04-21** — phases **44–47** delivered against **OPSUI-01**–**OPSUI-10** (see **`milestones/v1.10-REQUIREMENTS.md`**).
 
@@ -148,4 +148,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - **Core library features** — continue to follow **`.planning/PROJECT.md`** *Out of Scope* until a future milestone explicitly widens the contract.
 
 ---
-*Last updated: 2026-04-21 — **Phase 48** complete under **v1.11**; **v1.10** OPSUI archived*
+*Last updated: 2026-04-21 — **v1.11** complete (phases **48–50**); **v1.10** OPSUI archived*
