@@ -16,41 +16,26 @@
 - [x] **`v1.11` shipped in-repo** (2026-04-21) — *Operator shell polish and JTBD verification* — phases **48–50**, **11** plans — [archive](milestones/v1.11-ROADMAP.md) · [requirements](milestones/v1.11-REQUIREMENTS.md)
 - [x] **`v1.12` shipped in-repo** (2026-04-22) — *Developer onboarding & first-hour QoL* — phases **51–53**, **9** plans — [archive](milestones/v1.12-ROADMAP.md) · [requirements](milestones/v1.12-REQUIREMENTS.md)
 - [x] **`v1.13` shipped + archived in-repo** (2026-04-22 shipped · 2026-04-21 archived) — *Public polish & narrative coherence* — phases **54–56**, **5** requirements — [archive](milestones/v1.13-ROADMAP.md) · [requirements](milestones/v1.13-REQUIREMENTS.md)
-- [ ] **`v1.14` in progress** (opened **2026-04-21**) — *Library QoL and operator playbooks* — phases **57–61**, **10** requirements — [requirements](REQUIREMENTS.md)
+- [x] **`v1.14` shipped + archived in-repo** (**2026-04-22**) — *Library QoL and operator playbooks* — phases **57–61**, **10** requirements — [archive](milestones/v1.14-ROADMAP.md) · [requirements](milestones/v1.14-REQUIREMENTS.md) · [audit](milestones/v1.14-MILESTONE-AUDIT.md)
 
 ## Phases (next milestone)
 
-**v1.14 — Library QoL and operator playbooks** — global phases **57–61** (continued from v1.13). Requirements: **`.planning/REQUIREMENTS.md`**.
-
-### Phase 57: Evidence triage and B1 scope lock
-
-The **EVID-01** B1 evidence rows and **LIB-01..03** triage are recorded in **`.planning/EVID-01-b1-v1.14.md`** (append-only after freeze).
-
-- [x] **Phase 57: Evidence triage and B1 scope lock** (2026-04-22) — Freeze the **EVID-01** list (issues, quotes, dogfood notes); triage which **LIB-*** items ship in v1.14; no core merges without list membership. **EVID-01**.
-  - **Success criteria:** (1) Evidence list committed under **`.planning/`** (or linked canonical doc) with **≥2** concrete rows. (2) **LIB-01..03** each map to **≥1** evidence row or are cut. (3) Team agrees B1 is “frozen” for the milestone in **STATE** or milestone notes.
-
-### Phase 58: Core library and doc QoL (B1)
-
-- [x] **Phase 58: Core library and doc QoL (B1)** (2026-04-22) — Execute **LIB-01** (actionable errors + doc hop), **LIB-02** (non-macro clarity improvement with before/after note), **LIB-03** (doc-contract / verify matrix anchors for new surfaces). **LIB-01**, **LIB-02**, **LIB-03**.
-  - **Success criteria:** (1) Each **LIB-*** PR references **EVID-01** row IDs. (2) Default **`mix test`** (or scoped verify invoked in CI) green. (3) **`docs_contract_test`** (or equivalent) extended where **LIB-03** promises anchors.
-
-### Phase 59: Playbook schema and persistence MVP
-
-- [x] **Phase 59: Playbook schema and persistence MVP** (2026-04-22) — Deliver **OPS-PB-01** (`playbook_format` / caps / federation-safe payload) and **OPS-PB-03** (choose **export/import** *or* durable **`scrypath_ops`** storage; document limits). **OPS-PB-01**, **OPS-PB-03**.
-  - **Success criteria:** (1) Payload schema **`v1`** documented in **`scrypath_ops`** or shared guide. (2) Persistence choice recorded in **REQUIREMENTS** or ops doc with security notes (no secrets in exports). (3) Unit tests for normalize/validate path without Meilisearch.
-
-### Phase 60: Playbook LiveView and IA
-
-- [x] **Phase 60: Playbook LiveView and IA** (2026-04-22) — **OPS-PB-02** (save / list / load / run), **OPS-PB-04** (**`operator-ia.md`** + router + **`mix scrypath_ops.check_nav_contract`**). **OPS-PB-02**, **OPS-PB-04**.
-  - **Success criteria:** (1) Operator can complete save → reload → run on stub adapter. (2) Nav contract green. (3) UI preserves bounded-playground warnings and non-production posture.
-
-### Phase 61: Verification and milestone bookkeeping
-
-- [x] **Phase 61: Verification and milestone bookkeeping** (2026-04-22) — **OPS-PB-05** (stub tests + **`mix verify.opsui`** story), **SHIP-01** (**MILESTONES** / **PROJECT** / roadmap list + traceability **Complete**). **OPS-PB-05**, **SHIP-01**.
-  - **Success criteria:** (1) **`mix verify.opsui`** documents any new steps in **README** / **CONTRIBUTING**. (2) CI green for default verify path. (3) **REQUIREMENTS** traceability table statuses updated; **v1.14** ready for `/gsd-complete-milestone` when implementation merges.
-  - **Executor rule:** Flip this bullet to **`[x]`** only after **61-01** (stub LiveView tests + **`mix verify.opsui`**) and **61-02** (planning alignment + **`docs_contract_test`**) both complete — avoids marking verification done before evidence exists.
+**No active milestone.** Define the next arc with **`/gsd-new-milestone`** (creates a fresh **`.planning/REQUIREMENTS.md`** and roadmap section).
 
 ## Phases (history)
+
+<details>
+<summary>✅ v1.14 — Phases 57–61 — SHIPPED + archived 2026-04-22 · Hex <code>scrypath 0.3.4</code> · <em>Library QoL and operator playbooks</em></summary>
+
+- [x] **Phase 57: Evidence triage and B1 scope lock** — **EVID-01** frozen ledger **`.planning/EVID-01-b1-v1.14.md`**, contributor gates (**PR template**, **CODEOWNERS**), planning mirrors — **EVID-01**.
+- [x] **Phase 58: Core library and doc QoL (B1)** — **`Scrypath.Errors`**, search/sync doc hops, **`Query`** boundary clarity, **`docs_contract_test`** anchors — **LIB-01**–**LIB-03**.
+- [x] **Phase 59: Playbook schema and persistence MVP** — **`ScrypathOps.Playbook.V1`**, **`playbook-schema-v1.md`**, portable JSON export/import — **OPS-PB-01**, **OPS-PB-03**.
+- [x] **Phase 60: Playbook LiveView and IA** — **`/ops/playbooks`**, **`Playbook.Store`** / **`Playbook.Runner`**, **`SCRYPATH_OPS_PLAYBOOK_DIR`**, **`operator-ia.md`** — **OPS-PB-02**, **OPS-PB-04**.
+- [x] **Phase 61: Verification and milestone bookkeeping** — **`PlaybookLive`** stub tests, **`mix verify.opsui`**, **SHIP-01** planning alignment — **OPS-PB-05**, **SHIP-01**.
+
+Full detail: [milestones/v1.14-ROADMAP.md](milestones/v1.14-ROADMAP.md).
+
+</details>
 
 <details>
 <summary>✅ v1.13 — Phases 54–56 — SHIPPED 2026-04-22 · archived 2026-04-21 · Hex <code>scrypath 0.3.4</code> · <em>Public polish & narrative coherence</em></summary>
@@ -190,7 +175,9 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**`v1.14` active (planning)** — opened **2026-04-21** — **5** phases (**57–61**), **10** requirements; see **`.planning/REQUIREMENTS.md`**.
+**Next milestone:** none open — use **`/gsd-new-milestone`** after **`/clear`**.
+
+**`v1.14` archived (in-repo)** — **2026-04-22** shipped + archived — **5** phases (**57–61**), **10** requirements; see **`milestones/v1.14-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **`v1.13` archived (in-repo)** — **2026-04-22** shipped — **2026-04-21** archived — **3** phases (**54–56**), **5** requirements (**POLISH-01**–**POLISH-05**); see **`milestones/v1.13-REQUIREMENTS.md`**.
 
@@ -207,4 +194,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - **Tier D** — maintainer-only planning hygiene — same file; do not headline consumer milestones.
 
 ---
-*Last updated: 2026-04-22 — **v1.14** roadmap active; Phase **61** complete; **`v1.14`** row remains **`[ ]` in progress** until milestone archive*
+*Last updated: 2026-04-22 — **`v1.14`** milestone archived; next arc via **`/gsd-new-milestone`***

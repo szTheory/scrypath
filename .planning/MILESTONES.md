@@ -1,5 +1,27 @@
 # Milestones
 
+## v1.14 Library QoL and operator playbooks (Shipped + archived: 2026-04-22)
+
+**Phases completed:** **5** (**57–61**), **10** requirements (**EVID-01**, **LIB-01**–**LIB-03**, **OPS-PB-01**–**OPS-PB-05**, **SHIP-01**)
+
+**Hex:** **`scrypath 0.3.4`** (B1 QoL + **`scrypath_ops`** playbooks in-repo; no mandated Hex bump for this planning milestone)
+
+**Key accomplishments:**
+
+- **EVID-01** frozen B1 evidence ledger + contributor gates (**PR template**, **CODEOWNERS**) — **Phase 57**
+- **`Scrypath.Errors`** + doc hops + **`Query`** boundary clarity + **`docs_contract_test`** anchors — **LIB-01**–**LIB-03** / **Phase 58**
+- **`ScrypathOps.Playbook.V1`** + **`playbook-schema-v1.md`** + portable JSON export/import — **OPS-PB-01**, **OPS-PB-03** / **Phase 59**
+- **`/ops/playbooks`** LiveView + **`Playbook.Store`** / **`Runner`** + **`SCRYPATH_OPS_PLAYBOOK_DIR`** + IA contract — **OPS-PB-02**, **OPS-PB-04** / **Phase 60**
+- Stub-backed **`PlaybookLive`** save/list/load/run tests + **`mix verify.opsui`** + **SHIP-01** alignment — **OPS-PB-05**, **SHIP-01** / **Phase 61**
+
+**Pre-close audit:** **`audit-open`** cleared at milestone close. Formal milestone audit: **`milestones/v1.14-MILESTONE-AUDIT.md`** (**`tech_debt`** — traceability / copy / Nyquist hygiene; see audit YAML for residual items).
+
+**Automation note:** **`gsd-sdk query milestone.complete`** failed again (**`version required for phases archive`**), so **`milestones/v1.14-*`**, **`ROADMAP`** collapse, and **`git rm` REQUIREMENTS** were **manual** (same pattern as **v1.10–v1.13**).
+
+**Archives:** `milestones/v1.14-ROADMAP.md`, `milestones/v1.14-REQUIREMENTS.md`, `milestones/v1.14-MILESTONE-AUDIT.md` · **Git tag:** `v1.14` (planning milestone marker)
+
+---
+
 ## v1.13 Public polish & narrative coherence (Shipped + archived: 2026-04-22)
 
 **Phases completed:** **3** (**54–56**), **5** requirements (**POLISH-01**–**POLISH-05**)

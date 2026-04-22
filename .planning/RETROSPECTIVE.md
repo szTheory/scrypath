@@ -2,6 +2,30 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.14 — Library QoL and operator playbooks
+
+**Shipped (planning):** 2026-04-22  
+**Archived:** 2026-04-22  
+**Phases:** 5 (57–61) | **Requirements:** 10 (**EVID-01**, **LIB-01**–**LIB-03**, **OPS-PB-01**–**OPS-PB-05**, **SHIP-01**) | **Hex:** `scrypath` **0.3.4** (in-repo playbook surface; no mandated publish)
+
+### What was built
+
+**B1** evidence discipline (**`.planning/EVID-01-b1-v1.14.md`**), **`Scrypath.Errors`**-shaped actionable failures, **`ScrypathOps.Playbook.V1`** JSON codec with **`SearchPlayground`** ceilings, portable playbook files, **`/ops/playbooks`** operator UX, and stub-backed LiveView proof of **save → list → load → run** plus **`search_many`** runs.
+
+### What worked
+
+Keeping **OPSUI-FUT-01** bounded to **export/import** + explicit env (**`SCRYPATH_OPS_PLAYBOOK_DIR`**) avoided a premature **Ecto** catalog while still shipping replay value.
+
+### What was inefficient
+
+**`gsd-sdk query milestone.complete`** still fails (**`version required for phases archive`**), so milestone close remained **manual** again.
+
+### Key lessons
+
+When the audit verdict is **`tech_debt`**, ship the milestone but keep the audit file attached to **`milestones/`** so hygiene gaps (copy, optional **`docs_contract_test`** anchors, SUMMARY frontmatter) stay discoverable without blocking the archive.
+
+---
+
 ## Milestone: v1.13 — Public polish & narrative coherence
 
 **Shipped (planning):** 2026-04-22  

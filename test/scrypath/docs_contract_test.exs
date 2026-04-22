@@ -798,9 +798,13 @@ defmodule Scrypath.DocsContractTest do
           body
 
         {:error, _} ->
-          case File.read(".planning/milestones/v1.13-REQUIREMENTS.md") do
+          case File.read(".planning/milestones/v1.14-REQUIREMENTS.md") do
             {:ok, body} -> body
-            {:error, _} -> File.read!(".planning/milestones/v1.6-REQUIREMENTS.md")
+            {:error, _} ->
+              case File.read(".planning/milestones/v1.13-REQUIREMENTS.md") do
+                {:ok, body} -> body
+                {:error, _} -> File.read!(".planning/milestones/v1.6-REQUIREMENTS.md")
+              end
           end
       end
 
@@ -819,7 +823,7 @@ defmodule Scrypath.DocsContractTest do
     ])
 
     assert String.contains?(requirements_md, "| AUDT-01 |"),
-           "requirements traceability must include AUDT-01 row (root REQUIREMENTS.md or latest milestone requirements archive)"
+           "requirements traceability must include AUDT-01 row (root REQUIREMENTS.md or v1.14+ milestone requirements archive)"
 
     assert String.contains?(requirements_md, "Phase 32"),
            "AUDT-01 must retain the phase 32 delivery pointer"
