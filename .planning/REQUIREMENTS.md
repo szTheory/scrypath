@@ -9,7 +9,7 @@
 
 ### Evidence triage and scope discipline (B1 gate)
 
-- [ ] **EVID-01**: Maintainer publishes a **frozen evidence list** for **B1** (issue URLs, quoted support text, or dated dogfood notes) in-repo before **LIB-*** work merges; items not on the list are out of scope for v1.14 core changes.  
+- [ ] **EVID-01**: Maintainer publishes a **frozen evidence list** for **B1** (issue URLs, quoted support text, or dated dogfood notes) in-repo before **LIB-*** work merges; items not on the list are out of scope for v1.14 core changes. Canonical ledger: **`.planning/EVID-01-b1-v1.14.md`**.  
   **Evidence:** `.planning/research/SUMMARY.md` (“B1 delivery confidence depends on locking an evidence list”); `.planning/milestone-candidates.md` **B1** (“only when tied to **concrete** adopter or maintainer pain”).
 
 ### Library and docs — evidence-led QoL (B1)
@@ -68,7 +68,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| EVID-01 | Phase 57 | Pending |
+| EVID-01 (ledger `.planning/EVID-01-b1-v1.14.md`) | Phase 57 | Pending |
 | LIB-01 | Phase 58 | Pending |
 | LIB-02 | Phase 58 | Pending |
 | LIB-03 | Phase 58 | Pending |
