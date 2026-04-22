@@ -27,7 +27,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Planning window
 
-**Active milestone: v1.14.** Requirements and roadmap live in **`.planning/REQUIREMENTS.md`** and **`.planning/ROADMAP.md`** (phases continue from **57**). **v1.13** ship-of-record: **`milestones/v1.13-{ROADMAP,REQUIREMENTS}.md`**. Research for this arc is under **`.planning/research/`** (refreshed for B1+B2).
+**Active milestone: v1.14.** Requirements and roadmap live in **`.planning/REQUIREMENTS.md`** and **`.planning/ROADMAP.md`** (next execution: **Phase 58**). **v1.13** ship-of-record: **`milestones/v1.13-{ROADMAP,REQUIREMENTS}.md`**. Research for this arc is under **`.planning/research/`** (refreshed for B1+B2).
 
 ## Requirements
 
@@ -69,6 +69,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] **Phase 52** (2026-04-22): Actionable **`{:error, _}`** surfaces + **`Scrypath.Search.Error`** bang helpers, **`guides/common-mistakes.md`**, lobby **`@moduledoc`** and operator **`mix scrypath.*`** Read-next links, doc contracts (**ONBD-04**..**ONBD-06**).
 - [x] **Phase 53** (2026-04-22): Contributor **`mix verify.opsui`** spine — Mix **`@moduledoc`**, README wayfinding, **`docs_contract_test`** locks for **`scrypath-ops`** vs **CONTRIBUTING** / **`ci.yml`** (**VRFY-03**, **VRFY-04**).
 - [x] **v1.13** (2026-04-22): Public polish & narrative coherence — phases **54–56** — **POLISH-01**–**POLISH-05** (guide voice, Hex **0.3.4** narrative, **`AGENTS.md`**, **`milestone-candidates.md`**, pitfalls ledger gate).
+- [x] **Phase 57** (2026-04-22): **EVID-01** B1 evidence ledger (`.planning/EVID-01-b1-v1.14.md`), **LIB-01..03** triage, contributor gates (**CONTRIBUTING**, PR template, **CODEOWNERS**), planning mirrors — **EVID-01**.
 
 ### Active
 
@@ -151,4 +152,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-21 — **v1.14** milestone started (B1+B2); Hex **`scrypath 0.3.4`** current public line*
+*Last updated: 2026-04-22 — **Phase 57** **EVID-01** freeze shipped; Hex **`scrypath 0.3.4`** current public line*
