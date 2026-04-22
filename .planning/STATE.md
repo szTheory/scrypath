@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.15
 milestone_name: OPSUI second slice
-status: defining_requirements
+status: planned
 last_updated: "2026-04-22T12:00:00.000Z"
 last_activity: 2026-04-22
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -25,13 +25,13 @@ See: `.planning/PROJECT.md` (updated 2026-04-22)
 
 ## Current Position
 
-**Phase:** Not started (defining requirements → roadmap)
+**Phase:** 62 — not started (roadmap ready)
 
 **Plan:** —
 
-**Status:** Milestone **v1.15** initialized; execute **`/gsd-discuss-phase 62`** or **`/gsd-plan-phase 62`** when ready.
+**Status:** Milestone **v1.15** roadmap defined (**3** phases). Next: **`/gsd-discuss-phase 62`** or **`/gsd-plan-phase 62`**.
 
-**Last activity:** 2026-04-22 — Milestone **v1.15** started (`/gsd-new-milestone`)
+**Last activity:** 2026-04-22 — Milestone **v1.15** roadmap created (`/gsd-new-milestone`)
 
 ## Accumulated Context
 
