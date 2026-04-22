@@ -20,7 +20,7 @@ For symptom-style “why is search wrong?” debugging grounded in shipped tests
 
 **Sync authority:** sync semantics, sync modes (`:inline`, `:oban`, `:manual`), eventual consistency, and operator lifecycle recovery language are defined in [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md)—that file is the **single authority** for those topics; this README does not restate the guide body.
 
-**Operator UI (maintainers):** the optional Phoenix shell lives under [scrypath_ops/README.md](scrypath_ops/README.md); persona, JTBD, and nav mapping live in [scrypath_ops/docs/operator-ia.md](scrypath_ops/docs/operator-ia.md).
+**Operator UI (maintainers):** the optional Phoenix shell lives under [scrypath_ops/README.md](scrypath_ops/README.md); persona, JTBD, and nav mapping live in [scrypath_ops/docs/operator-ia.md](scrypath_ops/docs/operator-ia.md). From the repository root, **`mix verify.opsui`** runs the same checks against **`scrypath_ops/`** that the **`scrypath-ops`** CI job exercises; see [`CONTRIBUTING.md`](CONTRIBUTING.md) for the CI ↔ **`mix verify.*`** matrix and job names.
 
 **Integration smoke (optional):** the repo ships **`examples/phoenix_meilisearch`** with Docker Compose and env vars documented there (including how it relates to CI—see [`CONTRIBUTING.md`](CONTRIBUTING.md) for GitHub job names ↔ `mix verify.*` tasks). From the clone root, run **`cd examples/phoenix_meilisearch && ./scripts/smoke.sh`** (the example's **`./scripts/smoke.sh`** exists only under that directory, not at the repository root).
 
