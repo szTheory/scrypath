@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.16
 milestone_name: — in progress)
-status: executing
-last_updated: "2026-04-22T22:45:49.744Z"
+status: verifying
+last_updated: "2026-04-22T22:54:40.189Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 6
-  completed_plans: 5
-  percent: 83
+  completed_plans: 6
+  percent: 100
 ---
 
 # Project State
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-22)
 
 **Plan:** 2 of 2
 
-**Status:** Ready to execute
+**Status:** Phase complete — ready for verification
 
 **Last activity:** 2026-04-22
 
@@ -44,6 +44,8 @@ See: `.planning/PROJECT.md` (updated 2026-04-22)
 - **Phase 65 discuss:** Hybrid catalog **Run now** + shared draft pipeline; **`start_async`/`handle_async`** lifecycle with **`run_id`**, timeout, **`cancel_async`**; **`scrypath_ops`** error registry + **`DocResolver`**; **no** Oban/DB default run path in this phase (deferred).
 - Kept Runner.run_validated/3 as the canonical raw tuple seam and documented reason identity as the compatibility key.
 - Kept playbook-schema-v1.md authoritative for JSON wire format only and linked execution semantics to the Runner moduledoc.
+- Phase 66 plan 02: runner parity tests compare direct Scrypath calls to Runner.run_validated/3 on the same fixtures.
+- Phase 66 plan 02: playbook dispatch preserves absent page opts and coerces JSON facet names so runner semantics match core search contracts.
 
 ### Blockers / Concerns
 

@@ -36,13 +36,19 @@
 
 ### Phase 66: Runner–library contract
 
-- [ ] **Phase 66: Runner–library contract** — **OPS3-03** — **`Playbook.Runner`** (and adjacent code) uses **documented** result and **`{:error, _}`** shapes consistent with **`Scrypath`** / Mix operator paths; **automated tests** lock representative success and failure parity.
+- [x] **Phase 66: Runner–library contract** — **OPS3-03** — **`Playbook.Runner`** (and adjacent code) uses **documented** result and **`{:error, _}`** shapes consistent with **`Scrypath`** / Mix operator paths; **automated tests** lock representative success and failure parity.
 
 **Success criteria (observable):**
 
 1. A maintainer can point to a **single doc section** (guide, operator doc, or **`@moduledoc`**) that states the **contract** exercised by playbook runs.
 2. Tests fail if OPSUI runner code maps or wraps errors **differently** from the library reference path for the same fixture input.
 3. No new **silent** rescue paths that swallow **`{:error, term}`** without telemetry or user-visible attribution.
+
+**Plans:** 2 plans
+
+Plans:
+- [x] `66-01-PLAN.md` — Freeze the canonical runner contract in `Runner` and keep schema docs linked, not duplicated.
+- [x] `66-02-PLAN.md` — Add the representative parity matrix and downstream raw-reason regression coverage.
 
 ### Phase 67: Verification, JTBD examples, milestone bookkeeping
 
