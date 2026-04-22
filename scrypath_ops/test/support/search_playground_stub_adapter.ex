@@ -8,6 +8,7 @@ defmodule ScrypathOps.Test.SearchPlaygroundStubAdapter do
 
   @impl true
   def search(_schema, text, opts) do
+    maybe_sleep()
     q = Query.new(text, opts)
     raw = %{"hits" => [], "estimatedTotalHits" => 0}
     {:ok, SearchResult.new(q, raw, [], [])}
@@ -16,6 +17,10 @@ defmodule ScrypathOps.Test.SearchPlaygroundStubAdapter do
   @impl true
   def search_many(entries, opts) when is_list(entries) do
     case Application.get_env(:scrypath_ops, :search_stub_variant, :ok) do
+      :slow_ok ->
+        maybe_sleep()
+        ok_result(entries, opts)
+
       :partial ->
         partial_result(entries, opts)
 
@@ -27,6 +32,13 @@ defmodule ScrypathOps.Test.SearchPlaygroundStubAdapter do
 
       _ ->
         ok_result(entries, opts)
+    end
+  end
+
+  defp maybe_sleep do
+    case Application.get_env(:scrypath_ops, :search_stub_variant, :ok) do
+      :slow_ok -> Process.sleep(75)
+      _ -> :ok
     end
   end
 
