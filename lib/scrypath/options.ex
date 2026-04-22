@@ -438,6 +438,12 @@ defmodule Scrypath.Options do
   When the schema declares no `faceting:` attributes, any non-empty `:facets`
   list fails with `{:error, {:unknown_facet, first_atom}}` using the first
   requested facet (Meilisearch still requires declared facet settings).
+
+  For `{:error, {:invalid_options, _}}` and related federation / `:all` expansion
+  failures surfaced through `Scrypath.search_many/2`, see
+  [guides/multi-index-search.md](guides/multi-index-search.md) for the canonical
+  rules—this function only validates per-schema search options, not the full
+  multi-search composition.
   """
   @spec validate_search_options(module(), keyword()) :: {:ok, keyword()} | {:error, term()}
   def validate_search_options(schema_module, opts) when is_list(opts) do
@@ -873,9 +879,12 @@ defmodule Scrypath.Options do
   end
 
   defp validate_per_query_value(:ranking_score_threshold, val),
-    do: {:error, "per_query :ranking_score_threshold must be a non-negative number, got: #{inspect(val)}"}
+    do:
+      {:error,
+       "per_query :ranking_score_threshold must be a non-negative number, got: #{inspect(val)}"}
 
-  defp validate_per_query_value(:show_ranking_score, val) when val in [true, false], do: {:ok, val}
+  defp validate_per_query_value(:show_ranking_score, val) when val in [true, false],
+    do: {:ok, val}
 
   defp validate_per_query_value(:show_ranking_score, val),
     do: {:error, "per_query :show_ranking_score must be a boolean, got: #{inspect(val)}"}
