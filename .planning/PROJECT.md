@@ -154,4 +154,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-22 — **Phase 59** playbook codec + portable JSON persistence story shipped; next **Phase 60** (LiveView + IA)*
+*Last updated: 2026-04-22 — **Phase 61** verification + **SHIP-01** planning alignment; **`v1.14`** milestone archive next via **`/gsd-complete-milestone`** when ready*
