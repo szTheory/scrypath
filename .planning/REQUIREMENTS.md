@@ -9,9 +9,9 @@ Improve **first-hour** and **day-two** experience for Phoenix/Ecto developers us
 
 ### Adoption path truth and discoverability
 
-- [ ] **ONBD-01**: A new developer following the README **Quick Path** (or primary install story) reaches **`guides/golden-path.md`** without contradictory dependency pins, schema field types, or sync-mode claims; **`docs_contract_test.exs`** (or equivalent) locks any newly tightened anchors.
-- [ ] **ONBD-02**: **`CONTRIBUTING.md`** and the README name the **single first-hour narrative** and link **sync lifecycle authority** (**`guides/sync-modes-and-visibility.md`**, operator lifecycle) without orphan or conflicting “start here” paths.
-- [ ] **ONBD-03**: **`phoenix-example-integration`** (or the documented CI analogue) expectations match contributor-facing docs for **cwd**, env, and smoke commands; doc contracts are updated when behavior or paths change.
+- [x] **ONBD-01**: A new developer following the README **Quick Path** (or primary install story) reaches **`guides/golden-path.md`** without contradictory dependency pins, schema field types, or sync-mode claims; **`docs_contract_test.exs`** (or equivalent) locks any newly tightened anchors.
+- [x] **ONBD-02**: **`CONTRIBUTING.md`** and the README name the **single first-hour narrative** and link **sync lifecycle authority** (**`guides/sync-modes-and-visibility.md`**, operator lifecycle) without orphan or conflicting “start here” paths.
+- [x] **ONBD-03**: **`phoenix-example-integration`** (or the documented CI analogue) expectations match contributor-facing docs for **cwd**, env, and smoke commands; doc contracts are updated when behavior or paths change.
 
 ### Actionable errors and pitfalls
 
@@ -21,8 +21,8 @@ Improve **first-hour** and **day-two** experience for Phoenix/Ecto developers us
 
 ### Contributor OPSUI verify spine
 
-- [ ] **VRFY-03**: From **repository root**, one documented **`mix …`** command runs the **OPSUI** verification surface contributors rely on (for example **`mix verify.opsui`**), including stated prerequisites, without undocumented **`cd`** into **`scrypath_ops`** unless technically unavoidable (then the doc explains why).
-- [ ] **VRFY-04**: Default contributor docs (**README** / **CONTRIBUTING**) surface that command alongside—not buried under—other verify tasks; **`mix help`** or verify-matrix text stays accurate after any alias or task registration work.
+- [x] **VRFY-03**: From **repository root**, one documented **`mix …`** command runs the **OPSUI** verification surface contributors rely on (for example **`mix verify.opsui`**), including stated prerequisites, without undocumented **`cd`** into **`scrypath_ops`** unless technically unavoidable (then the doc explains why).
+- [x] **VRFY-04**: Default contributor docs (**README** / **CONTRIBUTING**) surface that command alongside—not buried under—other verify tasks; **`mix help`** or verify-matrix text stays accurate after any alias or task registration work.
 
 ## Future requirements (deferred)
 
@@ -56,8 +56,8 @@ Improve **first-hour** and **day-two** experience for Phoenix/Ecto developers us
 | ONBD-04 | Phase 52 | Complete |
 | ONBD-05 | Phase 52 | Complete |
 | ONBD-06 | Phase 52 | Complete |
-| VRFY-03 | Phase 53 | Pending |
-| VRFY-04 | Phase 53 | Pending |
+| VRFY-03 | Phase 53 | Complete |
+| VRFY-04 | Phase 53 | Complete |
 | AUDT-01 | Phase 32 (gap closure 33 follow-ups recorded) | Complete |
 
 **Coverage:** v1.12 requirements: **8** total · Mapped: **8** · Unmapped: **0** ✓

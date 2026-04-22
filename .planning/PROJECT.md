@@ -10,7 +10,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Current milestone
 
-**v1.12 — Developer onboarding & first-hour QoL** (opened **2026-04-21**).
+**v1.12 — Developer onboarding & first-hour QoL** (opened **2026-04-21**, completed in-repo **2026-04-22**).
 
 **Goal:** Make Scrypath’s first integration hour and day-two debugging obviously better for Phoenix/Ecto developers—through doc truth, discoverability, actionable errors, and a single contributor verify path—without speculative breadth.
 
@@ -19,7 +19,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - **Tier A1 — Consumer onboarding + day-to-day QoL:** README ↔ **`guides/golden-path.md`** ↔ examples stay contract-true; clearer “where to look next”; more actionable error surfaces where the library can stay honest; a bounded **common mistakes / pitfalls** slice (evidence-led).
 - **Tier A2 — Contributor verify spine:** One documented, root-level way to run the **`scrypath_ops`** verification story (for example **`mix verify.opsui`**) so contributors are not hunting multiple verify entry points.
 
-**Execution:** Living **`.planning/REQUIREMENTS.md`**, **`.planning/ROADMAP.md`** (phases **51–53** continuing from **v1.11**). Tier **B+** (saved playbooks, Meilisearch-in-OPSUI CI, Playwright, GSD/archive hygiene, audit stub cleanup) stays **out of this milestone** unless explicitly promoted.
+**Execution:** **`.planning/REQUIREMENTS.md`** and **`.planning/ROADMAP.md`** — **v1.12** phases **51–53** are complete in-repo. Tier **B+** (saved playbooks, Meilisearch-in-OPSUI CI, Playwright, GSD/archive hygiene, audit stub cleanup) stays **out of this milestone** unless explicitly promoted.
 
 ## Last shipped milestone
 
@@ -69,10 +69,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] **v1.11 milestone** (2026-04-21): Operator shell polish — phases **48–50** archived; **`milestones/v1.11-{ROADMAP,REQUIREMENTS}.md`**; **`OPSUX-01`..`OPSUX-07`** (IA + router contract, posture JTBD, **`/ops`** scaffold and themes, Phoenix shell tests, a11y + CI slice).
 - [x] **Phase 51** (2026-04-21): Adoption path truth and discoverability — README / **`guides/golden-path.md`** / **CONTRIBUTING** / example README + **`docs_contract_test`** for sync authority and **`phoenix-example-integration`** Mix ordering (**ONBD-01**..**ONBD-03**).
 - [x] **Phase 52** (2026-04-22): Actionable **`{:error, _}`** surfaces + **`Scrypath.Search.Error`** bang helpers, **`guides/common-mistakes.md`**, lobby **`@moduledoc`** and operator **`mix scrypath.*`** Read-next links, doc contracts (**ONBD-04**..**ONBD-06**).
+- [x] **Phase 53** (2026-04-22): Contributor **`mix verify.opsui`** spine — Mix **`@moduledoc`**, README wayfinding, **`docs_contract_test`** locks for **`scrypath-ops`** vs **CONTRIBUTING** / **`ci.yml`** (**VRFY-03**, **VRFY-04**).
 
 ### Active
 
-- [ ] **v1.12** — Developer onboarding & first-hour QoL — **VRFY-03**..**VRFY-04** (see **`.planning/REQUIREMENTS.md`**; phase **53**).
+- (none — **v1.12** requirements satisfied; open the next milestone when ready)
 
 ### Out of Scope
 
@@ -124,13 +125,13 @@ The current public line on Hex is **`scrypath 0.3.3`**. **v1.8** closed the fede
 | Spec-first per-query tuning (**`TUNE-PIPE-*`**) then bounded **Plane B** runtime (**`TUNE-PQ-*`**) | Prevents silent ranking drift; keeps Meilisearch wire and merge semantics explicit | ✓ Good — **v1.9** with **`guides/per-query-tuning-pipeline.md`** + **`mix verify.phase43`** |
 | **v1.10** — OPSUI outside core Hex; JTBD-first admin LiveView | Preserves library boundary while giving operators a conventional, honest UI over shipped APIs | ✓ Good — **`scrypath_ops`** shipped **2026-04-21**; see **`milestones/v1.10-REQUIREMENTS.md`** |
 | **v1.11** — Operator shell polish before widening OPSUI feature set | JTBD-first shell must *feel* finished: IA truth, scanability, themes, a11y basics, CI locks | ✓ Good — shipped **2026-04-21**; see **`milestones/v1.11-REQUIREMENTS.md`** |
-| **v1.12** — Onboarding and QoL before OPSUI “second slice” | Adopters and contributors should not pay a tax of doc drift, vague errors, or scattered verify commands | In progress — Phase **51** done; see **`.planning/REQUIREMENTS.md`** |
+| **v1.12** — Onboarding and QoL before OPSUI “second slice” | Adopters and contributors should not pay a tax of doc drift, vague errors, or scattered verify commands | ✓ Good — shipped in-repo **2026-04-22** (phases **51–53**); see **`.planning/REQUIREMENTS.md`** |
 
 ## Current State
 
-**Hex:** `scrypath` **`0.3.3`**. Shipped surfaces include the v1.3-era Meilisearch-native path (relevance, facets, multi-index, operator polish), v1.4 **hot_apply** / failure rollups, v1.5 **index contract drift** tooling, v1.6 **adoption-grade** docs and verification clarity, **v1.7** facet-depth APIs with **`mix verify.phase36`..`38`**, **v1.8** federation weights / **`:all`** expansion / **`mix verify.phase41`**, **v1.9** per-query pipeline spec + **`:per_query`** runtime with **`mix verify.phase43`**, **v1.10** optional **`scrypath_ops`** operator LiveView UI, and **v1.11** operator-shell polish (**IA contract**, **theming**, **Phoenix shell tests**, **`opsui.test_a11y`**).
+**Hex:** `scrypath` **`0.3.3`**. Shipped surfaces include the v1.3-era Meilisearch-native path (relevance, facets, multi-index, operator polish), v1.4 **hot_apply** / failure rollups, v1.5 **index contract drift** tooling, v1.6 **adoption-grade** docs and verification clarity, **v1.7** facet-depth APIs with **`mix verify.phase36`..`38`**, **v1.8** federation weights / **`:all`** expansion / **`mix verify.phase41`**, **v1.9** per-query pipeline spec + **`:per_query`** runtime with **`mix verify.phase43`**, **v1.10** optional **`scrypath_ops`** operator LiveView UI, **v1.11** operator-shell polish (**IA contract**, **theming**, **Phoenix shell tests**, **`opsui.test_a11y`**), and **v1.12** first-hour onboarding (**adoption path contracts**, **actionable errors + pitfalls**, **contributor `mix verify.opsui` spine**).
 
-**Planning:** **v1.12** — Phases **51–52** complete (**2026-04-22**); phase **53** remains (contributor **`verify.opsui`** spine). See **`.planning/ROADMAP.md`**.
+**Planning:** **v1.12** complete in-repo (**2026-04-22**). Next window TBD — see **`.planning/ROADMAP.md`** and **`/gsd-new-milestone`** when you want a new arc.
 
 ## Evolution
 
@@ -150,4 +151,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-22 after Phase **52** execution — **v1.12** in progress; Hex **`scrypath 0.3.3`** current*
+*Last updated: 2026-04-22 after Phase **53** execution — **v1.12** complete in-repo; Hex **`scrypath 0.3.3`** current*

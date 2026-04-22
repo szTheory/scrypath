@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: — current)
-status: planning
-last_updated: "2026-04-22T02:08:31.674Z"
+status: milestone_complete
+last_updated: "2026-04-22T06:15:00.000Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 9
-  completed_plans: 6
-  percent: 67
+  completed_plans: 9
+  percent: 100
 ---
 
 # Project State
@@ -21,15 +21,15 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.12** — Phase **53** (*Contributor OPSUI verify spine*); Phase **52** complete.
+**Current focus:** **v1.12** milestone complete — all phases **51–53** shipped in-repo (**2026-04-22**).
 
 ## Current Position
 
-**Phase:** 53
+**Phase:** 53 (complete)
 
-**Plan:** Not started
+**Plan:** 53-03 (complete)
 
-**Status:** Ready to plan
+**Status:** Milestone complete
 
 **Last activity:** 2026-04-22
 
@@ -73,20 +73,15 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **`/gsd-plan-phase 53`** — plan Phase **53** from **`53-CONTEXT.md`**.
-2. **`/gsd-progress`** — status snapshot.
-3. **`/gsd-discuss-phase 53`** — only if revising context after edits.
+1. **`/gsd-progress`** — status snapshot after **v1.12** close.
+2. **`/gsd-new-milestone`** — when you are ready to open the next planning window.
 
 ---
 
-*Last updated: 2026-04-22 — Phase **53** context gathered (**`53-CONTEXT.md`**); **v1.12** on **`.planning/ROADMAP.md`***
+*Last updated: 2026-04-22 — **v1.12** complete (phases **51–53**); contributor **`mix verify.opsui`** spine shipped.*
 
 **Prior milestone:** **v1.11** operator shell polish — archived **2026-04-21**
 
-**Completed:** **v1.11** milestone close — **2026-04-21**
+**Completed:** **v1.12** in-repo (**2026-04-22**) — phases **51–53** (adoption truth, actionable errors + pitfalls, OPSUI verify spine).
 
-**Completed phases:** **51**, **52** (Adoption path + actionable errors / pitfalls)
-
-**Context gathered:** Phase **53** (Contributor OPSUI verify spine) — **2026-04-22**
-
-**Planned Phase:** 53 (Contributor OPSUI verify spine) — 3 plans — 2026-04-22T02:08:31.661Z
+**Completed phases:** **51**, **52**, **53**
