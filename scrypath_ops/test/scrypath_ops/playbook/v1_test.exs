@@ -106,4 +106,57 @@ defmodule ScrypathOps.Playbook.V1Test do
     assert {:ok, m} = V1.decode(json)
     assert {:ok, _} = V1.validate(m)
   end
+
+  test "search playbook accepts optional title, description, and tags" do
+    map = %{
+      "playbook_format" => 1,
+      "mode" => "search",
+      "schema" => "MyApp.Post",
+      "q" => "hello",
+      "opts" => %{},
+      "title" => "My title",
+      "description" => "A short description.",
+      "tags" => ["alpha", "beta"]
+    }
+
+    assert {:ok, ^map} = V1.validate(map)
+  end
+
+  test "oversized title is rejected" do
+    title = String.duplicate("x", 201)
+
+    map = %{
+      "playbook_format" => 1,
+      "mode" => "search",
+      "schema" => "MyApp.Post",
+      "q" => "q",
+      "opts" => %{},
+      "title" => title
+    }
+
+    assert {:error, {:invalid_playbook, {:invalid_metadata, {:title_too_large, 201}}}} =
+             V1.validate(map)
+  end
+
+  test "tags list longer than 20 is rejected" do
+    tags = for i <- 1..21, do: "t#{i}"
+
+    map = %{
+      "playbook_format" => 1,
+      "mode" => "search",
+      "schema" => "MyApp.Post",
+      "q" => "q",
+      "opts" => %{},
+      "tags" => tags
+    }
+
+    assert {:error, {:invalid_playbook, {:invalid_metadata, {:too_many_tags, 21, 20}}}} =
+             V1.validate(map)
+  end
+
+  test "minimal search playbook unchanged after metadata support" do
+    assert {:ok, map} = V1.decode(@minimal_search)
+    assert {:ok, validated} = V1.validate(map)
+    assert map == validated
+  end
 end

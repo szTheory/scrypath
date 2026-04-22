@@ -58,8 +58,8 @@ defmodule ScrypathOps.Playbook.V1 do
     show_ranking_score_details
   ))
 
-  @search_top ~w(playbook_format mode schema q opts)
-  @search_many_top ~w(playbook_format mode entries opts)
+  @search_top ~w(playbook_format mode schema q opts title description tags)
+  @search_many_top ~w(playbook_format mode entries opts title description tags)
 
   @doc """
   Decodes UTF-8 JSON into a **string-keyed** map.
@@ -111,6 +111,7 @@ defmodule ScrypathOps.Playbook.V1 do
          :ok <- validate_playbook_format(data),
          :ok <- validate_mode_field(data),
          :ok <- validate_top_level_keys(data),
+         :ok <- validate_operator_metadata(data),
          {:ok, _} <- validate_by_mode(data) do
       {:ok, data}
     end
@@ -159,6 +160,68 @@ defmodule ScrypathOps.Playbook.V1 do
 
   defp top_keys_for_mode("search"), do: @search_top
   defp top_keys_for_mode("search_many"), do: @search_many_top
+
+  defp validate_operator_metadata(data) do
+    with :ok <- maybe_validate_title(Map.get(data, "title")),
+         :ok <- maybe_validate_description(Map.get(data, "description")),
+         :ok <- maybe_validate_tags(Map.get(data, "tags")) do
+      :ok
+    end
+  end
+
+  defp maybe_validate_title(nil), do: :ok
+
+  defp maybe_validate_title(title) when is_binary(title) do
+    if byte_size(title) <= 200,
+      do: :ok,
+      else: {:error, {:invalid_playbook, {:invalid_metadata, {:title_too_large, byte_size(title)}}}}
+  end
+
+  defp maybe_validate_title(other),
+    do: {:error, {:invalid_playbook, {:invalid_metadata, {:invalid_title, other}}}}
+
+  defp maybe_validate_description(nil), do: :ok
+
+  defp maybe_validate_description(desc) when is_binary(desc) do
+    if byte_size(desc) <= 2000,
+      do: :ok,
+      else:
+        {:error, {:invalid_playbook, {:invalid_metadata, {:description_too_large, byte_size(desc)}}}}
+  end
+
+  defp maybe_validate_description(other),
+    do: {:error, {:invalid_playbook, {:invalid_metadata, {:invalid_description, other}}}}
+
+  defp maybe_validate_tags(nil), do: :ok
+
+  defp maybe_validate_tags(tags) when is_list(tags) do
+    cond do
+      length(tags) > 20 ->
+        {:error, {:invalid_playbook, {:invalid_metadata, {:too_many_tags, length(tags), 20}}}}
+
+      true ->
+        Enum.reduce_while(Enum.with_index(tags), :ok, fn {tag, idx}, :ok ->
+          cond do
+            not is_binary(tag) ->
+              {:halt, {:error, {:invalid_playbook, {:invalid_metadata, {:invalid_tag, idx, tag}}}}}
+
+            tag == "" ->
+              {:halt, {:error, {:invalid_playbook, {:invalid_metadata, {:empty_tag, idx}}}}}
+
+            byte_size(tag) > 64 ->
+              {:halt,
+               {:error,
+                {:invalid_playbook, {:invalid_metadata, {:tag_too_large, idx, byte_size(tag)}}}}}
+
+            true ->
+              {:cont, :ok}
+          end
+        end)
+    end
+  end
+
+  defp maybe_validate_tags(other),
+    do: {:error, {:invalid_playbook, {:invalid_metadata, {:invalid_tags, other}}}}
 
   defp validate_by_mode(%{"mode" => "search"} = data) do
     with {:ok, schema} <- require_string(data, "schema"),
