@@ -14,10 +14,16 @@
 - [x] **`v1.9` shipped in-repo** (2026-04-20) — *Per-query relevance & tuning pipeline* — phases **42–43**, **5** plans — [archive](milestones/v1.9-ROADMAP.md) · [requirements](milestones/v1.9-REQUIREMENTS.md) · [audit](milestones/v1.9-MILESTONE-AUDIT.md)
 - [x] **`v1.10` shipped in-repo** (2026-04-21) — *Operator admin UI (OPSUI)* — phases **44–47**, **14** plans — [archive](milestones/v1.10-ROADMAP.md) · [requirements](milestones/v1.10-REQUIREMENTS.md) · [research summary](research/SUMMARY.md)
 - [x] **`v1.11` shipped in-repo** (2026-04-21) — *Operator shell polish and JTBD verification* — phases **48–50**, **11** plans — [archive](milestones/v1.11-ROADMAP.md) · [requirements](milestones/v1.11-REQUIREMENTS.md)
+- [ ] **`v1.12` in progress** (opened **2026-04-21**) — *Developer onboarding & first-hour QoL* — phases **51–53** — [requirements](REQUIREMENTS.md)
 
-## Next milestone
+## Phases (v1.12 — current)
 
-Define **v1.12** (or the next numbered milestone) when you are ready to continue past operator shell polish.
+- [ ] **Phase 51: Adoption path truth and discoverability** — README ↔ **`guides/golden-path.md`** ↔ integration-example story stay **contract-true**; **`CONTRIBUTING`** first-hour pointers and sync authority links (**ONBD-01**..**ONBD-03**).
+  - **Success criteria:** (1) A reader can install and reach a working **`Scrypath.search/3`** path using only README + golden path without hitting a known doc lie. (2) Doc-contract tests (or equivalent) fail when canonical snippets, cwd, or CI-integration expectations drift. (3) **`CONTRIBUTING`** names the happy path and where sync modes / operator lifecycle live.
+- [ ] **Phase 52: Actionable errors and onboarding pitfalls** — Bounded **`{:error, _}`** / raise messages for high-friction paths; pitfalls / common-mistakes slice; **`Scrypath`** **`@moduledoc`** “start here” pointers (**ONBD-04**..**ONBD-06**).
+  - **Success criteria:** (1) Each targeted error path names the failure and the **next doc** to read. (2) Pitfalls doc lists **≥ 3** grounded mistakes with fixes. (3) Module doc (and task help if touched) links to golden path + sync authority within two hops.
+- [ ] **Phase 53: Contributor OPSUI verify spine** — Root-level **`mix verify.opsui`** (or equivalent) registered, documented in **README** / **CONTRIBUTING**, and aligned with verify matrix text (**VRFY-03**, **VRFY-04**).
+  - **Success criteria:** (1) One command from repo root runs OPSUI checks with documented prereqs. (2) Contributor docs surface the command without burying it. (3) CI / default verify story references the command where appropriate.
 
 ## Phases (history)
 
@@ -131,14 +137,17 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
+**`v1.12` active** — opened **2026-04-21** — **3** phases (**51–53**), **8** requirements (**ONBD-01**..**ONBD-06**, **VRFY-03**..**VRFY-04**); see **`.planning/REQUIREMENTS.md`**.
+
 **`v1.11` archived (in-repo)** — **2026-04-21** — **3** phases (**48–50**), **7** requirements (**OPSUX-01**–**OPSUX-07**); see **`milestones/v1.11-REQUIREMENTS.md`**.
 
 **`v1.10` archived (in-repo)** — **2026-04-21** — phases **44–47** delivered against **OPSUI-01**–**OPSUI-10** (see **`milestones/v1.10-REQUIREMENTS.md`**).
 
-## Backlog (post–v1.10 ideas)
+## Backlog (post–v1.12 ideas)
 
 - **`OPSUI-FUT-*`** — saved operator playbooks, deeper Meilisearch vendor-style panels — see **[milestones/v1.10-REQUIREMENTS.md](milestones/v1.10-REQUIREMENTS.md)** § v2+ until promoted.
+- **Tier B+ / C / D themes** — see **`.planning/milestone-candidates.md`** (library QoL from evidence, heavy CI/E2E, maintainer hygiene).
 - **Core library features** — continue to follow **`.planning/PROJECT.md`** *Out of Scope* until a future milestone explicitly widens the contract.
 
 ---
-*Last updated: 2026-04-21 — **v1.11** archived (phases **48–50**); next milestone **v1.12** TBD*
+*Last updated: 2026-04-21 — **v1.12** opened (phases **51–53**); `.planning/phases/` cleared for fresh phase work*
