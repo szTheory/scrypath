@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: ideas)
 status: planning
-last_updated: "2026-04-22T14:47:27.530Z"
+last_updated: "2026-04-22T15:00:00.000Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 5
-  completed_phases: 1
-  total_plans: 5
-  completed_plans: 9
+  completed_phases: 5
+  total_plans: 7
+  completed_plans: 11
   percent: 100
 ---
 
@@ -21,15 +21,15 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.14** — Phase **61** verification and milestone bookkeeping (**OPS-PB-05**, **SHIP-01**).
+**Current focus:** **v1.14** — all roadmap phases **57–61** executed in-repo; **`.planning/ROADMAP.md`** **`v1.14`** row remains **in progress** until **`/gsd-complete-milestone`**.
 
 ## Current Position
 
 **Phase:** 61
 
-**Plan:** Not started
+**Plan:** Complete (**61-01**, **61-02**)
 
-**Status:** Ready to plan (phase 60 implementation merged in-repo)
+**Status:** Phase 61 verification and milestone bookkeeping done (**OPS-PB-05**, **SHIP-01**). See **`.planning/phases/61-verification-and-milestone-bookkeeping/61-VERIFICATION.md`**.
 
 **Last activity:** 2026-04-22
 
@@ -46,6 +46,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 - **Phase 58 executed (2026-04-22):** **LIB-01..03** delivered in-repo — summaries under **`.planning/phases/58-core-library-and-doc-qol-b1/`**.
 - **Phase 59 — Playbook schema + persistence MVP:** **OPS-PB-01** / **OPS-PB-03** decisions (JSON **`playbook_format: 1`**, strict validation, export/import persistence, ops doc + `@moduledoc`) — **`.planning/phases/59-playbook-schema-and-persistence-mvp/59-CONTEXT.md`**.
 - **Phase 59 executed (2026-04-22):** **`ScrypathOps.Playbook.V1`**, **`scrypath_ops/docs/playbook-schema-v1.md`**, IA link, **REQUIREMENTS** persistence note — summaries and **`.planning/phases/59-playbook-schema-and-persistence-mvp/59-VERIFICATION.md`**.
+- **Phase 61 — Verification and milestone bookkeeping (OPS-PB-05, SHIP-01):** LiveView tests for **save → list → load → run** (and **`search_many`**) on **`SearchPlaygroundStubAdapter`**; **REQUIREMENTS** / **PROJECT** / **MILESTONES** / **ROADMAP** aligned — **`.planning/phases/61-verification-and-milestone-bookkeeping/61-*-SUMMARY.md`**, **`61-VERIFICATION.md`**.
 
 ### Blockers / Concerns
 
@@ -61,16 +62,15 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **`/gsd-plan-phase 61`** or **`/gsd-execute-phase 61`** — verification matrix + milestone bookkeeping (**OPS-PB-05**, **SHIP-01**).
+1. **`/gsd-complete-milestone`** for **v1.14** — archive milestone when ready (**ROADMAP** **`v1.14`** row still open until then).
+2. **`/gsd-progress`** — confirm roadmap + requirements after phase close.
 
 ---
 
-*Last updated: 2026-04-22 — Phase 60 executed; focus on phase 61*
+*Last updated: 2026-04-22 — Phase **61** executed (**OPS-PB-05**, **SHIP-01**)*
 
 **Prior milestone:** **v1.13** — public polish & narrative coherence — **2026-04-22**
 
-**Completed:** **v1.13** in-repo (**2026-04-22**) — phases **54–56**. **v1.14** Phase **57** (B1 evidence freeze) — **2026-04-22**. **v1.14** Phase **58** (core library + doc QoL **LIB-01..03**) — **2026-04-22**. **v1.14** Phase **59** (playbook schema MVP) — **2026-04-22**. **v1.14** Phase **60** (playbook LiveView + IA) — **2026-04-22**.
+**Completed:** **v1.13** in-repo (**2026-04-22**) — phases **54–56**. **v1.14** Phase **57** (B1 evidence freeze) — **2026-04-22**. **v1.14** Phase **58** (core library + doc QoL **LIB-01..03**) — **2026-04-22**. **v1.14** Phase **59** (playbook schema MVP) — **2026-04-22**. **v1.14** Phase **60** (playbook LiveView + IA) — **2026-04-22**. **v1.14** Phase **61** (verification + milestone bookkeeping) — **2026-04-22**.
 
-**Next phases:** **61** for **v1.14** — see **`.planning/ROADMAP.md`**
-
-**Planned Phase:** 61 (Verification and milestone bookkeeping) — 2 plans — 2026-04-22T14:47:27.519Z
+**Next:** Milestone archive for **v1.14** when maintainers choose — see **`.planning/ROADMAP.md`** (**`v1.14`** checklist).
