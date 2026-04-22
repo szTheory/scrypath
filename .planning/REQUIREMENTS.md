@@ -9,14 +9,14 @@
 
 ### Playground capture and playbook ergonomics
 
-- [ ] **OPS2-01**: An operator can **capture** the current **bounded Search playground** state (including **`search_many`**, federation-relevant options where already exposed in the UI, and the same ceilings/warnings as the playground) into a **`playbook_format: 1`** document and **preview → save** it into the configured playbook workspace **without** hand-writing JSON from scratch.  
-  **Evidence:** **OPSUI-FUT-01** (`milestones/v1.10-REQUIREMENTS.md`); **OPS-PB-02** shipped “save/list/load/run” from hand-authored JSON (`milestones/v1.14-REQUIREMENTS.md`).
+- [x] **OPS2-01**: An operator can **capture** the current **bounded Search playground** state (including **`search_many`**, federation-relevant options where already exposed in the UI, and the same ceilings/warnings as the playground) into a **`playbook_format: 1`** document and **preview → save** it into the configured playbook workspace **without** hand-writing JSON from scratch.  
+  **Evidence:** **OPSUI-FUT-01** (`milestones/v1.10-REQUIREMENTS.md`); **OPS-PB-02** shipped “save/list/load/run” from hand-authored JSON (`milestones/v1.14-REQUIREMENTS.md`). **Shipped:** **`SearchLive`** capture + preview + save (**Phase 62**, 2026-04-22).
 
-- [ ] **OPS2-02**: Operators can **rename** and **duplicate** workspace playbooks with **safe basename rules** (collision handling, confirmation for destructive actions where already established in **PlaybookLive** patterns).  
-  **Evidence:** **v1.14** file-catalog UX stops at import/delete; second slice needs operator-scale catalog hygiene.
+- [x] **OPS2-02**: Operators can **rename** and **duplicate** workspace playbooks with **safe basename rules** (collision handling, confirmation for destructive actions where already established in **PlaybookLive** patterns).  
+  **Evidence:** **v1.14** file-catalog UX stops at import/delete; second slice needs operator-scale catalog hygiene. **Shipped:** **`Store`** rename/duplicate + **`PlaybookLive`** modals (**Phase 62**, 2026-04-22).
 
-- [ ] **OPS2-03**: Playbooks carry **operator-facing metadata** (at minimum **title** and **description**, optionally **tags**) stored **inside** the JSON payload or via a **documented `playbook_format` minor bump**—so listings are readable without opening raw JSON. **Backward compatibility** for existing workspace files must be explicit (defaults, migration note, or one-time “untitled” display).  
-  **Evidence:** `.planning/research/FEATURES.md` (metadata table stakes).
+- [x] **OPS2-03**: Playbooks carry **operator-facing metadata** (at minimum **title** and **description**, optionally **tags**) stored **inside** the JSON payload or via a **documented `playbook_format` minor bump**—so listings are readable without opening raw JSON. **Backward compatibility** for existing workspace files must be explicit (defaults, migration note, or one-time “untitled” display).  
+  **Evidence:** `.planning/research/FEATURES.md` (metadata table stakes). **Shipped:** **`V1`** optional metadata + catalog **Untitled playbook** default (**Phase 62**, 2026-04-22).
 
 ### Team-oriented persistence (bounded)
 
@@ -62,9 +62,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| OPS2-01 | Phase 62 | Pending |
-| OPS2-02 | Phase 62 | Pending |
-| OPS2-03 | Phase 62 | Pending |
+| OPS2-01 | Phase 62 | Complete |
+| OPS2-02 | Phase 62 | Complete |
+| OPS2-03 | Phase 62 | Complete |
 | OPS2-04 | Phase 63 | Pending |
 | OPS2-07 | Phase 63 | Pending |
 | OPS2-05 | Phase 64 | Pending |
@@ -79,4 +79,4 @@
 
 ---
 *Requirements defined: 2026-04-22*  
-*Last updated: 2026-04-22 after roadmap — phases **62–64** (`/gsd-new-milestone`)*
+*Last updated: 2026-04-22 — **OPS2-01..03** marked **Complete** after Phase 62 execution*
