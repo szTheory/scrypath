@@ -21,7 +21,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-22)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.15 shipped** — next milestone **TBD** (`/gsd-new-milestone`).
+**Current focus:** **v1.15 shipped** — rolling **`.planning/REQUIREMENTS.md`** removed at milestone close; next milestone **TBD** (`/gsd-new-milestone`).
 
 ## Current Position
 
