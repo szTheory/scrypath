@@ -1,0 +1,65 @@
+# Requirements: Scrypath — Milestone v1.12
+
+**Defined:** 2026-04-21  
+**Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
+
+## v1.12 Requirements (Developer onboarding & first-hour QoL)
+
+Improve **first-hour** and **day-two** experience for Phoenix/Ecto developers using Scrypath: honest docs, discoverability, actionable errors where the library can help, and one obvious contributor path for optional **`scrypath_ops`** verification.
+
+### Adoption path truth and discoverability
+
+- [ ] **ONBD-01**: A new developer following the README **Quick Path** (or primary install story) reaches **`guides/golden-path.md`** without contradictory dependency pins, schema field types, or sync-mode claims; **`docs_contract_test.exs`** (or equivalent) locks any newly tightened anchors.
+- [ ] **ONBD-02**: **`CONTRIBUTING.md`** and the README name the **single first-hour narrative** and link **sync lifecycle authority** (**`guides/sync-modes-and-visibility.md`**, operator lifecycle) without orphan or conflicting “start here” paths.
+- [ ] **ONBD-03**: **`phoenix-example-integration`** (or the documented CI analogue) expectations match contributor-facing docs for **cwd**, env, and smoke commands; doc contracts are updated when behavior or paths change.
+
+### Actionable errors and pitfalls
+
+- [ ] **ONBD-04**: For a **bounded** set of high-friction error paths (for example missing Meilisearch config, unknown index/schema, invalid **`search_many/2`** / federation options), **`{:error, _}`** tuples (or documented raises) carry **actionable** messages: what failed and which guide or section to read next—without inventing unsupported recovery verbs.
+- [ ] **ONBD-05**: A maintainer-authored **pitfalls / common mistakes** slice (new or extended guide section, README subsection, or short FAQ) covers at least **three** real integration mistakes grounded in shipped docs or known support themes—not speculative anecdotes.
+- [ ] **ONBD-06**: **`Scrypath`** module **`@moduledoc`** (and, if applicable, primary **`mix scrypath.*`** task help) points new users to **golden path + sync authority** within **two hops** of reading.
+
+### Contributor OPSUI verify spine
+
+- [ ] **VRFY-03**: From **repository root**, one documented **`mix …`** command runs the **OPSUI** verification surface contributors rely on (for example **`mix verify.opsui`**), including stated prerequisites, without undocumented **`cd`** into **`scrypath_ops`** unless technically unavoidable (then the doc explains why).
+- [ ] **VRFY-04**: Default contributor docs (**README** / **CONTRIBUTING**) surface that command alongside—not buried under—other verify tasks; **`mix help`** or verify-matrix text stays accurate after any alias or task registration work.
+
+## Future requirements (deferred)
+
+### Operator UI depth (unchanged)
+
+- **OPSUI-FUT-01**: Editable saved queries / playbooks.
+- **OPSUI-FUT-02**: Deep Meilisearch cluster observability (vendor-dashboard parity).
+
+### Tier B+ library and process themes (explicitly not v1.12)
+
+- **B1** — Evidence-led API affordances beyond the bounded error set above.
+- **C*** — Meilisearch inside **`scrypath_ops` CI**, Playwright/E2E matrices — only after proven gaps in current contracts.
+- **D*** — GSD milestone archival automation, **`quick_task`** stub retirement — maintainer hygiene tracks, not headline v1.12 product.
+
+## Out of scope
+
+| Item | Reason |
+|------|--------|
+| New write-side recovery verbs or UI actions not backed by existing **`Scrypath`** / Mix contracts | Same honesty boundary as **OPSUI** milestones. |
+| Generators or large scaffolds without concrete adopter pain evidence | Avoid speculative churn; **ONBD-** scope stays doc-, contract-, and message-first. |
+| **OPSUI-FUT-***, heavy browser CI, Meilisearch-in-OPSUI CI | Deferred per **`milestone-candidates.md`** Tier **C** until a failure mode is proven. |
+| Public multi-backend, hybrid/vector retrieval, personalization | Remains **`.planning/PROJECT.md`** *Out of Scope* until adoption pressure. |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| ONBD-01 | Phase 51 | Pending |
+| ONBD-02 | Phase 51 | Pending |
+| ONBD-03 | Phase 51 | Pending |
+| ONBD-04 | Phase 52 | Pending |
+| ONBD-05 | Phase 52 | Pending |
+| ONBD-06 | Phase 52 | Pending |
+| VRFY-03 | Phase 53 | Pending |
+| VRFY-04 | Phase 53 | Pending |
+
+**Coverage:** v1.12 requirements: **8** total · Mapped: **8** · Unmapped: **0** ✓
+
+---
+*Requirements defined: 2026-04-21 after `/gsd-new-milestone` v1.12 (research pass skipped — brownfield adoption/DX; existing `.planning/research/` may still inform implementation).*
