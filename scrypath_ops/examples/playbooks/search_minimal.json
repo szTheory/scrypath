@@ -1,0 +1,7 @@
+{
+  "playbook_format": 1,
+  "mode": "search",
+  "schema": "MyApp.Post",
+  "q": "hello",
+  "opts": {}
+}

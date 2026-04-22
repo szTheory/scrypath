@@ -1,0 +1,9 @@
+{
+  "playbook_format": 1,
+  "mode": "search_many",
+  "entries": [
+    ["MyApp.Post", "hello", {}],
+    ["MyApp.Comment", "world", {}]
+  ],
+  "opts": {}
+}
