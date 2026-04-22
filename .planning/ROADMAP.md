@@ -26,7 +26,7 @@
 
 The **EVID-01** B1 evidence rows and **LIB-01..03** triage are recorded in **`.planning/EVID-01-b1-v1.14.md`** (append-only after freeze).
 
-- [ ] **Phase 57: Evidence triage and B1 scope lock** — Freeze the **EVID-01** list (issues, quotes, dogfood notes); triage which **LIB-*** items ship in v1.14; no core merges without list membership. **EVID-01**.
+- [x] **Phase 57: Evidence triage and B1 scope lock** (2026-04-22) — Freeze the **EVID-01** list (issues, quotes, dogfood notes); triage which **LIB-*** items ship in v1.14; no core merges without list membership. **EVID-01**.
   - **Success criteria:** (1) Evidence list committed under **`.planning/`** (or linked canonical doc) with **≥2** concrete rows. (2) **LIB-01..03** each map to **≥1** evidence row or are cut. (3) Team agrees B1 is “frozen” for the milestone in **STATE** or milestone notes.
 
 ### Phase 58: Core library and doc QoL (B1)

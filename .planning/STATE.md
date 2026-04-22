@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: Library QoL and operator playbooks
-status: ready_to_verify
+status: ready_to_plan
 last_updated: "2026-04-22T12:00:00.000Z"
 last_activity: 2026-04-22 — Phase 57 plan **57-PLAN-01** executed (EVID-01 ledger, governance files)
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 1
   completed_plans: 1
-  percent: 0
+  percent: 20
 ---
 
 # Project State
@@ -25,13 +25,13 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 ## Current Position
 
-**Phase:** 57 — Evidence triage and B1 scope lock
+**Phase:** 58
 
-**Plan:** **57-PLAN-01** complete (EVID-01 + contributor gates)
+**Plan:** Not started
 
-**Status:** Governance deliverables committed — run verification / `/gsd-progress` before Phase 58.
+**Status:** Ready to plan
 
-**Last activity:** 2026-04-22 — **`57-PLAN-01`** executed (**EVID-01** ledger, **CONTRIBUTING**, PR template, **CODEOWNERS**, **REQUIREMENTS** / **ROADMAP** / **STATE** mirrors).
+**Last activity:** 2026-04-22
 
 ## Accumulated Context
 
@@ -65,6 +65,6 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 **Prior milestone:** **v1.13** — public polish & narrative coherence — **2026-04-22**
 
-**Completed:** **v1.13** in-repo (**2026-04-22**) — phases **54–56**.
+**Completed:** **v1.13** in-repo (**2026-04-22**) — phases **54–56**. **v1.14** Phase **57** (B1 evidence freeze) — **2026-04-22**.
 
-**Next phases:** **57–61** — see **`.planning/ROADMAP.md`**
+**Next phases:** **58–61** for **v1.14** — see **`.planning/ROADMAP.md`**
