@@ -23,6 +23,20 @@ Canonical contract for the optional **ScrypathOps** Phoenix shell: who uses it, 
 
 Version **1** interchange for saved searches is **JSON** and **ops-local** (validated beside the OPSUI code, not as a separate Hex-published schema package). Normative fields, caps, and banned secret keys are documented in [playbook-schema-v1.md](playbook-schema-v1.md).
 
+## Securing `/ops`
+
+Authentication and authorization for **`/ops`** are **host-owned** concerns: **`scrypath_ops`**
+ships a Phoenix + LiveView shell and documents boot-time guards (for example
+**`OPSUI_AUTH_MODE`** in **`docs/SECURITY.md`**), but it does **not** replace your
+organization’s identity layer.
+
+Wire the operator routes the same way you would any internal admin UI: wrap them in a
+**`live_session`** with **`on_mount`** hooks that enforce your session or token rules, or
+terminate TLS and authenticate at the edge before traffic reaches Phoenix. See Phoenix
+**[`live_session/3`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.Router.html#live_session/3)**
+and **`on_mount`** callbacks in
+**[`Phoenix.LiveView`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#module-on_mount)**.
+
 ## Navigation
 
 Primary chrome under `/ops` follows **roadmap triage order**: posture first, failed sync second, read-only sync/drift (with doc and Mix links) third, bounded search and federation honesty last (search **not** co-equal with triage).

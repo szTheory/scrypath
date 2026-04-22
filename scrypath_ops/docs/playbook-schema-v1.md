@@ -86,9 +86,20 @@ Also reject other **`Scrypath.Options`** runtime keys not explicitly allowlisted
 
 ## Persistence
 
-- **v1.14 Phase 59:** persistence is **portable JSON files** on disk (UTF-8). There is **no** new durable **Ecto** / Postgres / SQLite catalog inside **`scrypath_ops`** for this milestone.
-- Team visibility is the usual **git + tickets + docs** bus with attached `.json` files — **not** a live multi-tenant playbook catalog.
-- **Security:** treat exports as **non-secret** operator artifacts — **no API keys, bearer tokens, or `req` bags** in files you attach or commit.
+**v1.15** defines **one** authoritative persistence path for operator playbooks: **UTF-8 JSON
+files** under a **single configured workspace directory** (see **`SCRYPATH_OPS_PLAYBOOK_DIR`**
+in **`config/runtime.exs`** and **`docs/team-playbook-persistence.md`**). **`ScrypathOps`**
+mutates that directory only via **`Playbook.Store`** basename APIs — there is **no**
+second live writer (no union of “files + DB”, no read-through cache of another catalog).
+
+- **Team workflow:** git + PR review for flat **`*.json`** files; mount or copy that directory
+  in prod as documented in **`team-playbook-persistence.md`**.
+- **Ecto / app DB catalog:** **explicitly out of scope for Phase 63** (and not part of the
+  v1.15 slice this document tracks). If it is introduced later, it must be an **exclusive**
+  mode with explicit import/export semantics — not an ambiguous dual authority.
+- **Security:** treat playbooks as **non-secret** operator artifacts — **no API keys,
+  bearer tokens, or `req` bags** in committed JSON (see *Banned / secret keys* above and
+  git hygiene in **`team-playbook-persistence.md`**).
 
 ## Minimal examples
 
