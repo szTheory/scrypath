@@ -49,6 +49,18 @@ Also allowed on the **outer** `opts` for **`search_many`** (not inside each entr
 
 - `federation_weight` — JSON number (integer or finite float), when federation merge weights are required.
 
+## Operator metadata (optional)
+
+Optional top-level fields (both **`search`** and **`search_many`**) for catalog display and handoff. Omitted keys are valid; listings treat a missing **`title`** as **Untitled playbook** (UI default, not encoded into JSON).
+
+| Field | Type | Rules |
+| ----- | ---- | ----- |
+| `title` | string | When present: UTF-8 **byte** length **≤ 200**. |
+| `description` | string | When present: UTF-8 **byte** length **≤ 2000**. |
+| `tags` | array of strings | When present: **≤ 20** entries; each tag is a non-empty binary with **≤ 64** bytes. |
+
+Unknown top-level keys remain **rejected** — only the keys listed for each mode (including these three) are allowed.
+
 ## Caps
 
 Sources of truth in code (defaults align with **`Scrypath.MultiSearch.Entries`**):
