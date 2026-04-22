@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.15
-milestone_name: OPSUI second slice
-status: "Phase **63** complete (**63-VERIFICATION.md**). Next: **phase 64** (IA, verification, milestone bookkeeping)."
-last_updated: "2026-04-22T22:45:00.000Z"
+milestone: v1.14
+milestone_name: ideas)
+status: planning
+last_updated: "2026-04-22T17:18:32.629Z"
 last_activity: 2026-04-22 — `/gsd-execute-phase 63`
 progress:
   total_phases: 3
   completed_phases: 2
-  total_plans: 8
+  total_plans: 7
   completed_plans: 7
-  percent: 67
+  percent: 100
 ---
 
 # Project State
