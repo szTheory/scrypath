@@ -41,7 +41,7 @@ The **EVID-01** B1 evidence rows and **LIB-01..03** triage are recorded in **`.p
 
 ### Phase 60: Playbook LiveView and IA
 
-- [ ] **Phase 60: Playbook LiveView and IA** — **OPS-PB-02** (save / list / load / run), **OPS-PB-04** (**`operator-ia.md`** + router + **`mix scrypath_ops.check_nav_contract`**). **OPS-PB-02**, **OPS-PB-04**.
+- [x] **Phase 60: Playbook LiveView and IA** (2026-04-22) — **OPS-PB-02** (save / list / load / run), **OPS-PB-04** (**`operator-ia.md`** + router + **`mix scrypath_ops.check_nav_contract`**). **OPS-PB-02**, **OPS-PB-04**.
   - **Success criteria:** (1) Operator can complete save → reload → run on stub adapter. (2) Nav contract green. (3) UI preserves bounded-playground warnings and non-production posture.
 
 ### Phase 61: Verification and milestone bookkeeping

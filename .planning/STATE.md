@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: ideas)
-status: planning
-last_updated: "2026-04-22T13:58:50.358Z"
+status: executing
+last_updated: "2026-04-22T14:25:00.000Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 4
   total_plans: 3
-  completed_plans: 6
-  percent: 100
+  completed_plans: 3
+  percent: 80
 ---
 
 # Project State
@@ -21,15 +21,15 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.14** — Phase **60** playbook LiveView (**OPS-PB-02**, **OPS-PB-04**).
+**Current focus:** **v1.14** — Phase **61** verification and milestone bookkeeping (**OPS-PB-05**, **SHIP-01**).
 
 ## Current Position
 
-**Phase:** 60
+**Phase:** 61
 
 **Plan:** Not started
 
-**Status:** Context gathered — ready to plan
+**Status:** Ready to plan (phase 60 implementation merged in-repo)
 
 **Last activity:** 2026-04-22
 
@@ -39,7 +39,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 (See `.planning/PROJECT.md` Key Decisions.)
 
-- **Phase 60 — Playbook LiveView + IA (OPS-PB-02, OPS-PB-04):** Dedicated **`/ops/playbooks`**, upload-primary + paste import (single validate pipeline), env **`SCRYPATH_OPS_PLAYBOOK_DIR`** + read-only **`priv`** examples when unset, read-only JSON preview (no inline save-to-disk), nav **Saved playbooks** after **`/ops/search`** — **`.planning/phases/60-playbook-liveview-and-ia/60-CONTEXT.md`** (discussion log: **`60-DISCUSSION-LOG.md`**).
+- **Phase 60 — Playbook LiveView + IA (OPS-PB-02, OPS-PB-04):** Dedicated **`/ops/playbooks`**, upload-primary + paste import (single validate pipeline), env **`SCRYPATH_OPS_PLAYBOOK_DIR`** + read-only **`priv/playbooks`** examples when unset, read-only JSON preview (no inline editor), nav **Saved playbooks** after **`/ops/search`** — **`.planning/phases/60-playbook-liveview-and-ia/60-CONTEXT.md`**. **Executed (2026-04-22):** **`Playbook.Store`**, **`Playbook.Runner`**, **`PlaybookLive`**, nav + **`operator-ia.md`** — see phase **`60-*-SUMMARY.md`** and **`60-VERIFICATION.md`**.
 - **Phase 57 — B1 evidence gate:** Implementation choices for **EVID-01** ledger shape, **LIB-01..03** triage, **core** merge path, and where **B1 frozen** is recorded — **`.planning/phases/57-evidence-triage-and-b1-scope-lock/57-CONTEXT.md`**.
 - **B1 scope frozen** for **v1.14** — see **EVID-01** at **`.planning/EVID-01-b1-v1.14.md`** (append-only ledger; cite **`EVID-57-*`** on core **B1** PRs per **CONTRIBUTING** / PR template).
 - **Phase 58 — B1 implementation decisions (LIB-01..03):** Success-path visibility first, tagged errors + shared formatter, doc-contract spine + extras alignment, three separate PRs — **`.planning/phases/58-core-library-and-doc-qol-b1/58-CONTEXT.md`**.
@@ -61,16 +61,14 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **`/gsd-plan-phase 60`** — implement from **`60-CONTEXT.md`** + **`60-UI-SPEC.md`** (**OPS-PB-02**, **OPS-PB-04**).
+1. **`/gsd-plan-phase 61`** or **`/gsd-execute-phase 61`** — verification matrix + milestone bookkeeping (**OPS-PB-05**, **SHIP-01**).
 
 ---
 
-*Last updated: 2026-04-22 — Phase 60 discuss complete; context captured*
+*Last updated: 2026-04-22 — Phase 60 executed; focus on phase 61*
 
 **Prior milestone:** **v1.13** — public polish & narrative coherence — **2026-04-22**
 
-**Completed:** **v1.13** in-repo (**2026-04-22**) — phases **54–56**. **v1.14** Phase **57** (B1 evidence freeze) — **2026-04-22**. **v1.14** Phase **58** (core library + doc QoL **LIB-01..03**) — **2026-04-22**.
+**Completed:** **v1.13** in-repo (**2026-04-22**) — phases **54–56**. **v1.14** Phase **57** (B1 evidence freeze) — **2026-04-22**. **v1.14** Phase **58** (core library + doc QoL **LIB-01..03**) — **2026-04-22**. **v1.14** Phase **59** (playbook schema MVP) — **2026-04-22**. **v1.14** Phase **60** (playbook LiveView + IA) — **2026-04-22**.
 
-**Next phases:** **60–61** for **v1.14** — see **`.planning/ROADMAP.md`**
-
-**Planned Phase:** 60 (Playbook LiveView and IA) — 3 plans — 2026-04-22T13:58:50.351Z
+**Next phases:** **61** for **v1.14** — see **`.planning/ROADMAP.md`**
