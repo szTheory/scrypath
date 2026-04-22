@@ -11,6 +11,8 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
   use ScrypathOpsWeb, :live_view
 
+  alias ScrypathOps.Playbook.DocResolver
+  alias ScrypathOps.Playbook.RunFailure
   alias ScrypathOps.Playbook.Runner
   alias ScrypathOps.Playbook.Store
   alias ScrypathOps.Playbook.V1
@@ -19,7 +21,6 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   alias Scrypath.SearchResult
 
   @max_import_bytes 256_000
-  @guide_href "https://github.com/szTheory/scrypath/blob/main/guides/multi-index-search.md"
   @playbook_run_async_key :playbook_run
   # Named async key keeps run cancellation and result routing explicit.
   @playbook_run_timeout_ms 60_000
@@ -31,6 +32,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
     workspace_writable? = workspace_root != nil
     {files, examples_mode?} = list_workspace_files(workspace_root, examples_dir)
     catalog = build_catalog_entries(workspace_root, examples_dir, files, examples_mode?)
+    playbook_schema_doc = DocResolver.resolve(:playbook_schema)
 
     socket =
       socket
@@ -51,10 +53,11 @@ defmodule ScrypathOpsWeb.PlaybookLive do
       |> assign(:selected_basename, nil)
       |> assign(:run_result, nil)
       |> assign(:run_error, nil)
+      |> assign(:run_failure_enriched, nil)
       |> assign(:run_ui, %{phase: :idle, run_id: 0, started_monotonic: nil})
       |> assign(:delete_pending, nil)
       |> assign(:save_basename, "")
-      |> assign(:guide_href, @guide_href)
+      |> assign(:playbook_schema_doc, playbook_schema_doc)
       |> assign(:max_import_bytes, @max_import_bytes)
       |> allow_upload(:playbook_file,
         accept: ~w(.json),
@@ -175,7 +178,11 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
       {:error, {:invalid_playbook, reason}} ->
         {:noreply,
-         put_flash(socket, :error, "Playbook failed validation: #{format_validation_reason(reason)}")}
+         put_flash(
+           socket,
+           :error,
+           "Playbook failed validation: #{format_validation_reason(reason)}"
+         )}
     end
   end
 
@@ -185,6 +192,26 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
   def handle_event("cancel_run", _params, socket) do
     {:noreply, cancel_async(socket, @playbook_run_async_key, {:shutdown, :cancel})}
+  end
+
+  def handle_event(
+        "copy_run_diagnostics",
+        _params,
+        %{assigns: %{run_failure_enriched: nil}} = socket
+      ) do
+    {:noreply, socket}
+  end
+
+  def handle_event("copy_run_diagnostics", _params, socket) do
+    payload =
+      socket.assigns.run_failure_enriched
+      |> diagnostics_payload()
+      |> Jason.encode!()
+
+    {:noreply,
+     socket
+     |> push_event("copy_run_diagnostics", %{text: payload})
+     |> put_flash(:info, "Copied diagnostics.")}
   end
 
   def handle_event("save", %{"basename" => basename}, socket) do
@@ -350,10 +377,13 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   @impl true
   def handle_async(@playbook_run_async_key, {:ok, {run_id, {:ok, result}}}, socket) do
     if active_run?(socket, run_id) do
+      emit_run_stop(socket.assigns.run_ui, run_id, :ok)
+
       {:noreply,
        socket
        |> assign(:run_result, result)
        |> assign(:run_error, nil)
+       |> assign(:run_failure_enriched, nil)
        |> assign(:run_ui, %{phase: :ok, run_id: run_id, started_monotonic: nil})
        |> put_flash(:info, "Playbook run completed.")}
     else
@@ -363,10 +393,14 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
   def handle_async(@playbook_run_async_key, {:ok, {run_id, {:error, reason}}}, socket) do
     if active_run?(socket, run_id) do
+      emit_run_stop(socket.assigns.run_ui, run_id, :error)
+      enriched = enrich_run_failure(reason, socket)
+
       {:noreply,
        socket
        |> assign(:run_result, nil)
        |> assign(:run_error, reason)
+       |> assign(:run_failure_enriched, enriched)
        |> assign(:run_ui, %{phase: :error, run_id: run_id, started_monotonic: nil})
        |> put_flash(:error, format_run_flash(reason))}
     else
@@ -378,11 +412,14 @@ defmodule ScrypathOpsWeb.PlaybookLive do
     case socket.assigns.run_ui do
       %{phase: :running, run_id: run_id} ->
         normalized = normalize_async_exit(reason)
+        emit_run_stop(socket.assigns.run_ui, run_id, telemetry_result(normalized))
+        enriched = enrich_run_failure(normalized, socket)
 
         {:noreply,
          socket
          |> assign(:run_result, nil)
          |> assign(:run_error, normalized)
+         |> assign(:run_failure_enriched, enriched)
          |> assign(:run_ui, %{phase: :error, run_id: run_id, started_monotonic: nil})
          |> maybe_put_run_exit_flash(normalized)}
 
@@ -395,11 +432,14 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   def handle_info({:playbook_run_timeout, run_id}, socket) do
     if active_run?(socket, run_id) do
       socket = cancel_async(socket, @playbook_run_async_key, {:shutdown, :timeout})
+      emit_run_stop(socket.assigns.run_ui, run_id, :timeout)
+      enriched = enrich_run_failure(:timed_out, socket)
 
       {:noreply,
        socket
        |> assign(:run_result, nil)
        |> assign(:run_error, :timed_out)
+       |> assign(:run_failure_enriched, enriched)
        |> assign(:run_ui, %{phase: :error, run_id: run_id, started_monotonic: nil})
        |> put_flash(:error, format_run_flash(:timed_out))}
     else
@@ -416,6 +456,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
         |> assign(:draft_playbook, validated)
         |> assign(:preview_json, preview)
         |> assign(:preview_marker, true)
+        |> assign(:run_failure_enriched, nil)
         |> put_flash(:info, flash_for_import(source))
 
       {:error, {:invalid_playbook, reason}} ->
@@ -423,13 +464,16 @@ defmodule ScrypathOpsWeb.PlaybookLive do
         |> assign(:draft_playbook, nil)
         |> assign(:preview_json, nil)
         |> assign(:preview_marker, false)
+        |> assign(:run_failure_enriched, nil)
         |> put_flash(
           :error,
           "Playbook failed validation: #{format_validation_reason(reason)}"
         )
 
       {:error, :invalid_json} ->
-        put_flash(socket, :error, "This file is not valid playbook JSON.")
+        socket
+        |> assign(:run_failure_enriched, nil)
+        |> put_flash(:error, "This file is not valid playbook JSON.")
     end
   end
 
@@ -703,7 +747,9 @@ defmodule ScrypathOpsWeb.PlaybookLive do
         socket
         |> assign(:run_result, nil)
         |> assign(:run_error, nil)
+        |> assign(:run_failure_enriched, nil)
         |> assign(:run_ui, %{phase: :running, run_id: run_id, started_monotonic: now_ms()})
+        |> tap(fn _ -> emit_run_start(run_id) end)
         |> start_async(@playbook_run_async_key, fn ->
           {run_id, Runner.run_validated(draft, allowlist, scrypath_opts)}
         end)
@@ -712,11 +758,13 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
   defp maybe_supersede_running_run(%{assigns: %{run_ui: %{phase: :running}}} = socket) do
     next_id = next_run_id(socket.assigns.run_ui)
+    emit_run_stop(socket.assigns.run_ui, socket.assigns.run_ui.run_id, :cancelled)
 
     socket
     |> cancel_async(@playbook_run_async_key, {:shutdown, :superseded})
     |> assign(:run_result, nil)
     |> assign(:run_error, nil)
+    |> assign(:run_failure_enriched, nil)
     |> assign(:run_ui, %{phase: :idle, run_id: next_id, started_monotonic: nil})
   end
 
@@ -736,6 +784,10 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   defp normalize_async_exit(:timeout), do: :timed_out
   defp normalize_async_exit(_), do: :cancelled
 
+  defp telemetry_result(:timed_out), do: :timeout
+  defp telemetry_result(:cancelled), do: :cancelled
+  defp telemetry_result(_), do: :error
+
   defp maybe_put_run_exit_flash(socket, :cancelled),
     do: put_flash(socket, :info, format_run_flash(:cancelled))
 
@@ -750,6 +802,53 @@ defmodule ScrypathOpsWeb.PlaybookLive do
     do: "Run finished — #{length(r.ordered)} schema(s)."
 
   defp run_result_summary(_), do: "Run finished."
+
+  defp diagnostics_payload(enriched) when is_map(enriched) do
+    Map.take(enriched, [:failure_class, :reason, :message, :copy, :doc])
+  end
+
+  defp enrich_run_failure(reason, socket) do
+    enriched = RunFailure.enrich(reason, run_failure_copy_context(socket))
+    doc = DocResolver.resolve(RunFailure.doc_ref(reason))
+    %{enriched | doc: doc}
+  end
+
+  defp run_failure_copy_context(socket) do
+    playbook = socket.assigns.draft_playbook || %{}
+    opts = Map.get(playbook, "opts") || %{}
+    page = Map.get(opts, "page") || %{}
+
+    []
+    |> maybe_put_context(:basename, socket.assigns.selected_basename)
+    |> maybe_put_context(:mode, Map.get(playbook, "mode"))
+    |> maybe_put_context(:schema, Map.get(playbook, "schema"))
+    |> maybe_put_context(:page_size, page["size"])
+    |> maybe_put_context(:max_page_size, ScrypathOps.SearchPlayground.max_page_size_allowed())
+  end
+
+  defp maybe_put_context(context, _key, nil), do: context
+  defp maybe_put_context(context, key, value), do: Keyword.put(context, key, value)
+
+  defp emit_run_start(run_id) do
+    :telemetry.execute(
+      [:scrypath_ops, :playbook_run, :start],
+      %{system_time: System.system_time()},
+      %{run_id: run_id}
+    )
+  end
+
+  defp emit_run_stop(%{started_monotonic: started_monotonic}, run_id, result)
+       when is_integer(started_monotonic) do
+    duration = max(now_ms() - started_monotonic, 0)
+
+    :telemetry.execute(
+      [:scrypath_ops, :playbook_run, :stop],
+      %{duration: duration},
+      %{run_id: run_id, result: result}
+    )
+  end
+
+  defp emit_run_stop(_, _run_id, _result), do: :ok
 
   @impl true
   def render(assigns) do
@@ -790,7 +889,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             — export a playbook from Search or import JSON to add a <code class="text-xs">.json</code>
             file. Schema reference: <a
               class="link link-hover"
-              href="https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/playbook-schema-v1.md"
+              href={@playbook_schema_doc.primary}
             >
               playbook-schema-v1.md
             </a>.
@@ -935,20 +1034,51 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
             <p :if={@run_ui.phase == :running} class="alert text-sm">
               <strong>Running playbook…</strong>
-              applying results for run <code class="text-xs">{@run_ui.run_id}</code> only.
+              applying results for run <code class="text-xs">{@run_ui.run_id}</code>
+              only.
             </p>
 
-            <p :if={@run_error} class="alert alert-error text-sm">
-              <strong>Playbook run failed:</strong>
-              {format_run_flash(@run_error)} Next: adjust the playbook or operator config, then
-              <strong>Run saved playbook</strong>
-              again.
-              <a :if={@draft_playbook["mode"] == "search_many"} class="link" href={@guide_href}>
-                Multi-index guide
-              </a>
-            </p>
+            <div
+              :if={@run_ui.phase == :error && @run_failure_enriched}
+              class="alert alert-error items-start text-sm"
+              role="alert"
+            >
+              <div class="space-y-3">
+                <p>
+                  <strong>{@run_failure_enriched.failure_class}</strong>
+                  {": "}
+                  {@run_failure_enriched.message}
+                </p>
+                <div class="flex flex-wrap gap-2">
+                  <a
+                    class="link link-hover"
+                    href={@run_failure_enriched.doc.primary}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Read troubleshooting
+                  </a>
+                  <a
+                    :for={related <- @run_failure_enriched.doc.related}
+                    class="link link-hover"
+                    href={related}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Related doc
+                  </a>
+                  <button
+                    type="button"
+                    phx-click="copy_run_diagnostics"
+                    class="btn btn-xs btn-ghost"
+                  >
+                    Copy diagnostics
+                  </button>
+                </div>
+              </div>
+            </div>
 
-            <p :if={@run_result} class="alert alert-success text-sm">
+            <p :if={@run_ui.phase == :ok && @run_result} class="alert alert-success text-sm">
               {run_result_summary(@run_result)}
             </p>
 

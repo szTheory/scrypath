@@ -145,6 +145,75 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert html =~ "schema(s)"
   end
 
+  test "failed run shows enriched diagnostics and emits telemetry", %{conn: conn} do
+    prev_variant = Application.get_env(:scrypath_ops, :search_stub_variant)
+    Application.put_env(:scrypath_ops, :search_stub_variant, :hard_error)
+
+    on_exit(fn ->
+      if prev_variant == nil,
+        do: Application.delete_env(:scrypath_ops, :search_stub_variant),
+        else: Application.put_env(:scrypath_ops, :search_stub_variant, prev_variant)
+    end)
+
+    handler_id = "playbook-live-telemetry-#{System.unique_integer([:positive])}"
+    parent = self()
+
+    :telemetry.attach_many(
+      handler_id,
+      [
+        [:scrypath_ops, :playbook_run, :start],
+        [:scrypath_ops, :playbook_run, :stop]
+      ],
+      fn event, measurements, metadata, _config ->
+        send(parent, {:playbook_run_telemetry, event, measurements, metadata})
+      end,
+      nil
+    )
+
+    on_exit(fn -> :telemetry.detach(handler_id) end)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    json =
+      Jason.encode!(%{
+        "playbook_format" => 1,
+        "mode" => "search_many",
+        "entries" => [
+          ["ScrypathOps.Test.OpsPostA", "a", %{}],
+          ["ScrypathOps.Test.OpsPostB", "b", %{}]
+        ],
+        "opts" => %{}
+      })
+
+    view
+    |> form("form[phx-submit='import_paste']", %{json: json})
+    |> render_submit()
+
+    render_click(view, "run", %{})
+    html = render_async(view)
+
+    assert html =~ "backend"
+    assert html =~ "Search adapter returned a forced hard failure."
+    assert html =~ "Copy diagnostics"
+    assert html =~ "https://"
+    assert html =~ "guides/multi-index-search.md"
+
+    copied = render_click(view, "copy_run_diagnostics", %{})
+    assert copied =~ "Copied diagnostics."
+
+    assert_receive {:playbook_run_telemetry, [:scrypath_ops, :playbook_run, :start],
+                    %{system_time: system_time}, %{run_id: run_id}}
+
+    assert is_integer(system_time)
+    assert is_integer(run_id)
+
+    assert_receive {:playbook_run_telemetry, [:scrypath_ops, :playbook_run, :stop],
+                    %{duration: duration}, %{run_id: ^run_id, result: :error}}
+
+    assert is_integer(duration)
+    assert duration >= 0
+  end
+
   test "catalog run_now uses the shared async run flow", %{conn: conn} do
     dir =
       Path.join(
