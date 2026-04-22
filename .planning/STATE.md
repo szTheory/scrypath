@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: — current)
-status: Phase **51** planned (**3** plans) — ready for **`/gsd-execute-phase 51`**.
-last_updated: "2026-04-22T00:48:09.495Z"
-last_activity: 2026-04-21 — `/gsd-new-milestone` (**v1.12**)
+status: Phase **52** next — **1** of **3** v1.12 phases complete (**51** done).
+last_updated: "2026-04-22T01:00:00.000Z"
+last_activity: 2026-04-21 — `/gsd-execute-phase 51` (Phase **51** executed)
 progress:
   total_phases: 3
-  completed_phases: 0
-  total_plans: 3
-  completed_plans: 0
-  percent: 0
+  completed_phases: 1
+  total_plans: 9
+  completed_plans: 3
+  percent: 33
 ---
 
 # Project State
@@ -21,17 +21,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.12** — adoption path truth, actionable errors / pitfalls doc, root **`verify.opsui`** contributor spine.
+**Current focus:** **v1.12** — Phase **52** (*Actionable errors and onboarding pitfalls*); Phase **51** adoption-path docs and contracts are complete.
 
 ## Current Position
 
-**Phase:** **51** — *Adoption path truth and discoverability* (planned)
+**Phase:** **52** — *Actionable errors and onboarding pitfalls* (not started)
 
-**Plan:** **3** executable plans in `.planning/phases/051-adoption-path-truth-and-discoverability/`
+**Plan:** Use **`/gsd-discuss-phase 52`** or **`/gsd-plan-phase 52`** before execution.
 
-**Status:** Ready to execute Phase **51** (`/gsd-execute-phase 51`).
+**Status:** Phase **51** complete — **3** plans with **SUMMARY** + **VERIFICATION** in `.planning/phases/051-adoption-path-truth-and-discoverability/`.
 
-**Last activity:** 2026-04-21 — `/gsd-new-milestone` (**v1.12**)
+**Last activity:** 2026-04-21 — Phase **51** execution (README, golden path, CONTRIBUTING, doc contracts, example README).
 
 ## Accumulated Context
 
@@ -73,17 +73,16 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **`/gsd-execute-phase 51`** — run all Phase **51** plans (waves **1** then **2**).
-2. **`/gsd-progress`** — status snapshot.
-3. **`/gsd-plan-phase 51 --research`** — re-research before replanning if scope shifts.
-
-**Resume file:** --resume-file
+1. **`/gsd-discuss-phase 52`** — recommended before planning Phase **52**.
+2. **`/gsd-plan-phase 52`** — plan Phase **52** when scope is clear.
+3. **`/gsd-progress`** — status snapshot.
 
 ---
-*Last updated: 2026-04-21 — **v1.12** opened; phases **51–53** on **`.planning/ROADMAP.md`***
+
+*Last updated: 2026-04-21 — Phase **51** complete; **v1.12** continues on **`.planning/ROADMAP.md`***
 
 **Prior milestone:** **v1.11** operator shell polish — archived **2026-04-21**
 
 **Completed:** **v1.11** milestone close — **2026-04-21**
 
-**Planned Phase:** 51 (Adoption path truth and discoverability) — 3 plans — 2026-04-22T00:48:09.490Z
+**Completed Phase:** **51** (Adoption path truth and discoverability) — **2026-04-21**

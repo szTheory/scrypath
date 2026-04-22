@@ -50,9 +50,9 @@ Improve **first-hour** and **day-two** experience for Phoenix/Ecto developers us
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ONBD-01 | Phase 51 | Pending |
-| ONBD-02 | Phase 51 | Pending |
-| ONBD-03 | Phase 51 | Pending |
+| ONBD-01 | Phase 51 | Complete |
+| ONBD-02 | Phase 51 | Complete |
+| ONBD-03 | Phase 51 | Complete |
 | ONBD-04 | Phase 52 | Pending |
 | ONBD-05 | Phase 52 | Pending |
 | ONBD-06 | Phase 52 | Pending |
