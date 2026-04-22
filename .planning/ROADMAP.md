@@ -27,7 +27,7 @@
 
 ### Phase 63: Bounded team persistence and security posture
 
-- [ ] **Phase 63: Bounded team persistence and security posture** — **Goal:** Ship **one** explicit persistence story for teams (**gitops/file** *or* **optional Ecto catalog**) with documented authority and limitations. **Requirements:** **OPS2-04**, **OPS2-07**. **Success criteria:** (1) Operators can follow docs to deploy the chosen shared pattern **or** enable optional DB catalog without ambiguous dual-write. (2) Security copy and scrub behavior for shared/catalog flows is documented and covered by tests where feasible on stub/default CI paths.
+- [x] **Phase 63: Bounded team persistence and security posture** — **Goal:** Ship **one** explicit persistence story for teams (**gitops/file** *or* **optional Ecto catalog**) with documented authority and limitations. **Requirements:** **OPS2-04**, **OPS2-07**. **Success criteria:** (1) Operators can follow docs to deploy the chosen shared pattern **or** enable optional DB catalog without ambiguous dual-write. (2) Security copy and scrub behavior for shared/catalog flows is documented and covered by tests where feasible on stub/default CI paths. (completed 2026-04-22)
 
 ### Phase 64: IA, verification, and milestone bookkeeping
 

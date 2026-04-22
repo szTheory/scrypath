@@ -78,10 +78,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] **Phase 61** (2026-04-22): **`PlaybookLive`** stub tests, **`mix verify.opsui`**, **SHIP-01** planning alignment — **OPS-PB-05**, **SHIP-01** — **`.planning/phases/61-verification-and-milestone-bookkeeping/`**.
 - [x] **v1.14 milestone** (2026-04-22): Evidence-led **B1** QoL + **`scrypath_ops`** operator playbooks — phases **57–61**; **`milestones/v1.14-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 - [x] **Phase 62** (2026-04-22): Playground capture + playbook catalog — **`V1`** metadata, **`Store`** rename/duplicate, **`SearchLive`** save-as-playbook, **`PlaybookLive`** catalog UX — **OPS2-01**–**OPS2-03** — **`.planning/phases/62-playground-capture-and-playbook-catalog/`**.
+- [x] **Phase 63** (2026-04-22): Bounded team persistence + security posture — **`team-playbook-persistence.md`**, **`mix scrypath_ops.playbooks.validate`**, **`examples/playbooks/`**, schema threat-model copy, **`V1`** / **`PlaybookLive`** hardening tests — **OPS2-04**, **OPS2-07** — **`.planning/phases/63-bounded-team-persistence-and-security-posture/`**.
 
 ### Active
 
-- [ ] **v1.15 — OPSUI second slice** — playground → playbook capture, catalog/metadata depth, bounded team-sharing persistence story, IA + **`mix verify.opsui`** extensions (**OPS2-01**–**OPS2-08** in **`.planning/REQUIREMENTS.md`**). **Progress:** Phase **62** complete (**2026-04-22**); phases **63–64** remaining.
+- [ ] **v1.15 — OPSUI second slice** — playground → playbook capture, catalog/metadata depth, bounded team-sharing persistence story, IA + **`mix verify.opsui`** extensions (**OPS2-01**–**OPS2-08** in **`.planning/REQUIREMENTS.md`**). **Progress:** Phases **62–63** complete (**2026-04-22**); phase **64** remaining.
 
 ### Out of Scope
 
@@ -162,4 +163,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-22 — Phase **62** complete; **v1.15** in progress (**63–64** remaining)*
+*Last updated: 2026-04-22 — Phase **63** complete; **v1.15** in progress (**64** remaining)*
