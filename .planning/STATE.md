@@ -1,16 +1,15 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.14
-milestone_name: Library QoL and operator playbooks
-status: ready_to_execute
-last_updated: "2026-04-22T12:00:00.000Z"
-last_activity: 2026-04-22 — `/gsd-plan-phase 57` produced RESEARCH, VALIDATION, PATTERNS, and **57-PLAN-01.md**
+milestone_name: ideas)
+status: executing
+last_updated: "2026-04-22T03:32:08.045Z"
+last_activity: 2026-04-22
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 1
+  total_plans: 0
   completed_plans: 0
-  percent: 0
 ---
 
 # Project State
@@ -21,17 +20,19 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.14** — evidence-led library QoL (**B1**) + **`scrypath_ops`** saved queries / playbooks (**B2**, **OPSUI-FUT-01**).
+**Current focus:** Phase --phase — 57
 
 ## Current Position
 
+Phase: --phase (57) — EXECUTING
+Plan: 1 of --name
 **Phase:** 57 — Evidence triage and B1 scope lock
 
 **Plan:** 1 plan ready (**57-PLAN-01.md**)
 
-**Status:** Ready to execute — planning artifacts committed
+**Status:** Executing Phase --phase
 
-**Last activity:** 2026-04-22 — **`/gsd-plan-phase 57`** — **RESEARCH**, **VALIDATION**, **PATTERNS**, **57-PLAN-01.md**
+**Last activity:** 2026-04-22
 
 ## Accumulated Context
 
@@ -40,6 +41,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 (See `.planning/PROJECT.md` Key Decisions.)
 
 - **Phase 57 — B1 evidence gate:** Implementation choices for **EVID-01** ledger shape, **LIB-01..03** triage, **core** merge path, and where **B1 frozen** is recorded — **`.planning/phases/57-evidence-triage-and-b1-scope-lock/57-CONTEXT.md`**.
+- **B1 scope frozen** for **v1.14** — see **EVID-01** at **`.planning/EVID-01-b1-v1.14.md`** (append-only ledger; cite **`EVID-57-*`** on core **B1** PRs per **CONTRIBUTING** / PR template).
 
 ### Blockers / Concerns
 
