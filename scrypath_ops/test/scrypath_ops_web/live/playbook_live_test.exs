@@ -84,7 +84,8 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     |> form("form[phx-submit='import_paste']", %{json: json})
     |> render_submit()
 
-    html = render_click(view, "run", %{})
+    render_click(view, "run", %{})
+    html = render_async(view)
     assert html =~ "Run finished"
   end
 
@@ -116,7 +117,8 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert listed =~ ~s(phx-value-name="#{basename}")
 
     render_click(view, "load", %{"name" => basename})
-    ran = render_click(view, "run", %{})
+    render_click(view, "run", %{})
+    ran = render_async(view)
     assert ran =~ "Run finished" || ran =~ "Playbook run completed"
   end
 
@@ -138,8 +140,106 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     |> form("form[phx-submit='import_paste']", %{json: json})
     |> render_submit()
 
-    html = render_click(view, "run", %{})
+    render_click(view, "run", %{})
+    html = render_async(view)
     assert html =~ "schema(s)"
+  end
+
+  test "catalog run_now uses the shared async run flow", %{conn: conn} do
+    dir =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath_ops_pb_run_now_#{:erlang.unique_integer([:positive])}"
+      )
+
+    :ok = File.mkdir_p!(dir)
+    prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
+
+    on_exit(fn ->
+      File.rm_rf(dir)
+
+      if prev_ws == nil,
+        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
+        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
+    end)
+
+    json =
+      Jason.encode!(%{
+        "playbook_format" => 1,
+        "mode" => "search",
+        "schema" => "ScrypathOps.Test.OpsPostA",
+        "q" => "x",
+        "opts" => %{}
+      })
+
+    File.write!(Path.join(dir, "catalog-run.json"), json)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    render_click(view, "run_now", %{"name" => "catalog-run.json"})
+    html = render_async(view)
+
+    assert html =~ "Run finished"
+    assert html =~ "catalog-run.json"
+  end
+
+  test "loading a new playbook while running cancels and resets the active run", %{conn: conn} do
+    dir =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath_ops_pb_supersede_#{:erlang.unique_integer([:positive])}"
+      )
+
+    :ok = File.mkdir_p!(dir)
+    prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+    prev_variant = Application.get_env(:scrypath_ops, :search_stub_variant)
+    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
+    Application.put_env(:scrypath_ops, :search_stub_variant, :slow_ok)
+
+    on_exit(fn ->
+      File.rm_rf(dir)
+
+      if prev_ws == nil,
+        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
+        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
+
+      if prev_variant == nil,
+        do: Application.delete_env(:scrypath_ops, :search_stub_variant),
+        else: Application.put_env(:scrypath_ops, :search_stub_variant, prev_variant)
+    end)
+
+    one_json =
+      Jason.encode!(%{
+        "playbook_format" => 1,
+        "mode" => "search",
+        "schema" => "ScrypathOps.Test.OpsPostA",
+        "q" => "one",
+        "opts" => %{}
+      })
+
+    two_json =
+      Jason.encode!(%{
+        "playbook_format" => 1,
+        "mode" => "search",
+        "schema" => "ScrypathOps.Test.OpsPostA",
+        "q" => "two",
+        "opts" => %{}
+      })
+
+    File.write!(Path.join(dir, "one.json"), one_json)
+    File.write!(Path.join(dir, "two.json"), two_json)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    render_click(view, "load", %{"name" => "one.json"})
+    running_html = render_click(view, "run", %{})
+    assert running_html =~ "Running playbook"
+
+    load_html = render_click(view, "load", %{"name" => "two.json"})
+    assert load_html =~ "Loaded playbook from disk."
+    refute load_html =~ "Playbook run cancelled before a result was applied."
+    refute render_async(view) =~ "Playbook run cancelled before a result was applied."
   end
 
   test "legacy workspace JSON without title shows Untitled playbook", %{conn: conn} do

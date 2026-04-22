@@ -20,6 +20,9 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
   @max_import_bytes 256_000
   @guide_href "https://github.com/szTheory/scrypath/blob/main/guides/multi-index-search.md"
+  @playbook_run_async_key :playbook_run
+  # Named async key keeps run cancellation and result routing explicit.
+  @playbook_run_timeout_ms 60_000
 
   @impl true
   def mount(_params, _session, socket) do
@@ -48,6 +51,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
       |> assign(:selected_basename, nil)
       |> assign(:run_result, nil)
       |> assign(:run_error, nil)
+      |> assign(:run_ui, %{phase: :idle, run_id: 0, started_monotonic: nil})
       |> assign(:delete_pending, nil)
       |> assign(:save_basename, "")
       |> assign(:guide_href, @guide_href)
@@ -64,6 +68,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
   @impl true
   def handle_event("import_paste", %{"json" => raw}, socket) do
+    socket = maybe_supersede_running_run(socket)
     bin = raw |> to_string()
 
     if byte_size(bin) > @max_import_bytes do
@@ -74,6 +79,8 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   def handle_event("import_upload", _params, socket) do
+    socket = maybe_supersede_running_run(socket)
+
     consume_uploaded_entries(socket, :playbook_file, fn %{path: path}, _entry ->
       case File.read(path) do
         {:ok, bin} -> {:ok, bin}
@@ -96,6 +103,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   def handle_event("load", %{"name" => name}, socket) do
+    socket = maybe_supersede_running_run(socket)
     name = to_string(name)
 
     cond do
@@ -137,32 +145,46 @@ defmodule ScrypathOpsWeb.PlaybookLive do
     end
   end
 
-  def handle_event("run", _params, socket) do
-    case socket.assigns.draft_playbook do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Import or load a playbook before running.")}
+  def handle_event("run_now", %{"name" => name}, socket) do
+    socket = maybe_supersede_running_run(socket)
+    name = to_string(name)
 
-      map ->
-        case Runner.run_validated(
-               map,
-               socket.assigns.schema_allowlist,
-               socket.assigns.scrypath_opts
-             ) do
-          {:ok, res} ->
-            {:noreply,
-             socket
-             |> assign(:run_result, res)
-             |> assign(:run_error, nil)
-             |> put_flash(:info, "Playbook run completed.")}
+    with :ok <- validate_catalog_name(name),
+         {:ok, bin} <- read_catalog_playbook(socket, name),
+         {:ok, validated} <- decode_and_validate_playbook(bin),
+         preview <- Jason.encode!(validated, pretty: true) do
+      socket =
+        socket
+        |> assign(:selected_basename, name)
+        |> assign(:draft_playbook, validated)
+        |> assign(:preview_json, preview)
+        |> assign(:preview_marker, true)
+        |> put_flash(:info, flash_for_import(:load))
+        |> schedule_playbook_run()
 
-          {:error, reason} ->
-            {:noreply,
-             socket
-             |> assign(:run_result, nil)
-             |> assign(:run_error, reason)
-             |> put_flash(:error, format_run_flash(reason))}
-        end
+      {:noreply, socket}
+    else
+      {:error, :invalid_name} ->
+        {:noreply, put_flash(socket, :error, "Invalid playbook file name.")}
+
+      {:error, :read_failed} ->
+        {:noreply, put_flash(socket, :error, "Could not read that playbook file.")}
+
+      {:error, :invalid_json} ->
+        {:noreply, put_flash(socket, :error, "This file is not valid playbook JSON.")}
+
+      {:error, {:invalid_playbook, reason}} ->
+        {:noreply,
+         put_flash(socket, :error, "Playbook failed validation: #{format_validation_reason(reason)}")}
     end
+  end
+
+  def handle_event("run", _params, socket) do
+    {:noreply, schedule_playbook_run(socket)}
+  end
+
+  def handle_event("cancel_run", _params, socket) do
+    {:noreply, cancel_async(socket, @playbook_run_async_key, {:shutdown, :cancel})}
   end
 
   def handle_event("save", %{"basename" => basename}, socket) do
@@ -325,34 +347,88 @@ defmodule ScrypathOpsWeb.PlaybookLive do
     end
   end
 
+  @impl true
+  def handle_async(@playbook_run_async_key, {:ok, {run_id, {:ok, result}}}, socket) do
+    if active_run?(socket, run_id) do
+      {:noreply,
+       socket
+       |> assign(:run_result, result)
+       |> assign(:run_error, nil)
+       |> assign(:run_ui, %{phase: :ok, run_id: run_id, started_monotonic: nil})
+       |> put_flash(:info, "Playbook run completed.")}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_async(@playbook_run_async_key, {:ok, {run_id, {:error, reason}}}, socket) do
+    if active_run?(socket, run_id) do
+      {:noreply,
+       socket
+       |> assign(:run_result, nil)
+       |> assign(:run_error, reason)
+       |> assign(:run_ui, %{phase: :error, run_id: run_id, started_monotonic: nil})
+       |> put_flash(:error, format_run_flash(reason))}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_async(@playbook_run_async_key, {:exit, reason}, socket) do
+    case socket.assigns.run_ui do
+      %{phase: :running, run_id: run_id} ->
+        normalized = normalize_async_exit(reason)
+
+        {:noreply,
+         socket
+         |> assign(:run_result, nil)
+         |> assign(:run_error, normalized)
+         |> assign(:run_ui, %{phase: :error, run_id: run_id, started_monotonic: nil})
+         |> maybe_put_run_exit_flash(normalized)}
+
+      _ ->
+        {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_info({:playbook_run_timeout, run_id}, socket) do
+    if active_run?(socket, run_id) do
+      socket = cancel_async(socket, @playbook_run_async_key, {:shutdown, :timeout})
+
+      {:noreply,
+       socket
+       |> assign(:run_result, nil)
+       |> assign(:run_error, :timed_out)
+       |> assign(:run_ui, %{phase: :error, run_id: run_id, started_monotonic: nil})
+       |> put_flash(:error, format_run_flash(:timed_out))}
+    else
+      {:noreply, socket}
+    end
+  end
+
   defp apply_decoded(socket, bin, source) do
-    case Jason.decode(bin) do
-      {:ok, %{} = map} ->
-        case V1.validate(map) do
-          {:ok, validated} ->
-            preview = Jason.encode!(validated, pretty: true)
+    case decode_and_validate_playbook(bin) do
+      {:ok, validated} ->
+        preview = Jason.encode!(validated, pretty: true)
 
-            socket
-            |> assign(:draft_playbook, validated)
-            |> assign(:preview_json, preview)
-            |> assign(:preview_marker, true)
-            |> put_flash(:info, flash_for_import(source))
+        socket
+        |> assign(:draft_playbook, validated)
+        |> assign(:preview_json, preview)
+        |> assign(:preview_marker, true)
+        |> put_flash(:info, flash_for_import(source))
 
-          {:error, {:invalid_playbook, reason}} ->
-            socket
-            |> assign(:draft_playbook, nil)
-            |> assign(:preview_json, nil)
-            |> assign(:preview_marker, false)
-            |> put_flash(
-              :error,
-              "Playbook failed validation: #{format_validation_reason(reason)}"
-            )
-        end
+      {:error, {:invalid_playbook, reason}} ->
+        socket
+        |> assign(:draft_playbook, nil)
+        |> assign(:preview_json, nil)
+        |> assign(:preview_marker, false)
+        |> put_flash(
+          :error,
+          "Playbook failed validation: #{format_validation_reason(reason)}"
+        )
 
-      {:ok, _} ->
-        put_flash(socket, :error, "This file is not valid playbook JSON.")
-
-      {:error, _} ->
+      {:error, :invalid_json} ->
         put_flash(socket, :error, "This file is not valid playbook JSON.")
     end
   end
@@ -462,6 +538,12 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   defp format_run_flash({:config, :invalid_entry_shape}),
     do: "Playbook run failed: an entry has an invalid shape."
 
+  defp format_run_flash(:cancelled),
+    do: "Playbook run cancelled before a result was applied."
+
+  defp format_run_flash(:timed_out),
+    do: "Playbook run timed out before a result was applied."
+
   defp format_run_flash(other),
     do:
       "Playbook run failed: #{inspect(other)} — adjust entries or operator config, then run again."
@@ -564,6 +646,104 @@ defmodule ScrypathOpsWeb.PlaybookLive do
     Application.app_dir(:scrypath_ops, "priv/playbooks")
   end
 
+  defp validate_catalog_name(name) do
+    if Store.safe_basename?(name), do: :ok, else: {:error, :invalid_name}
+  end
+
+  defp read_catalog_playbook(socket, name) do
+    cond do
+      socket.assigns.workspace_root ->
+        case Store.read_workspace_file(socket.assigns.workspace_root, name) do
+          {:ok, bin} -> {:ok, bin}
+          {:error, _} -> {:error, :read_failed}
+        end
+
+      socket.assigns.examples_dir ->
+        path = Path.join(socket.assigns.examples_dir, name)
+
+        if Store.safe_basename?(name) and File.exists?(path) do
+          File.read(path)
+        else
+          {:error, :read_failed}
+        end
+
+      true ->
+        {:error, :read_failed}
+    end
+    |> normalize_catalog_read()
+  end
+
+  defp normalize_catalog_read({:ok, bin}) when is_binary(bin), do: {:ok, bin}
+  defp normalize_catalog_read(_), do: {:error, :read_failed}
+
+  defp decode_and_validate_playbook(bin) do
+    case Jason.decode(bin) do
+      {:ok, %{} = map} -> V1.validate(map)
+      {:ok, _} -> {:error, :invalid_json}
+      {:error, _} -> {:error, :invalid_json}
+    end
+  end
+
+  defp schedule_playbook_run(socket) do
+    case socket.assigns do
+      %{draft_playbook: nil} ->
+        put_flash(socket, :error, "Import or load a playbook before running.")
+
+      %{run_ui: %{phase: :running}} ->
+        socket
+
+      assigns ->
+        run_id = next_run_id(assigns.run_ui)
+        draft = assigns.draft_playbook
+        allowlist = assigns.schema_allowlist
+        scrypath_opts = assigns.scrypath_opts
+
+        Process.send_after(self(), {:playbook_run_timeout, run_id}, @playbook_run_timeout_ms)
+
+        socket
+        |> assign(:run_result, nil)
+        |> assign(:run_error, nil)
+        |> assign(:run_ui, %{phase: :running, run_id: run_id, started_monotonic: now_ms()})
+        |> start_async(@playbook_run_async_key, fn ->
+          {run_id, Runner.run_validated(draft, allowlist, scrypath_opts)}
+        end)
+    end
+  end
+
+  defp maybe_supersede_running_run(%{assigns: %{run_ui: %{phase: :running}}} = socket) do
+    next_id = next_run_id(socket.assigns.run_ui)
+
+    socket
+    |> cancel_async(@playbook_run_async_key, {:shutdown, :superseded})
+    |> assign(:run_result, nil)
+    |> assign(:run_error, nil)
+    |> assign(:run_ui, %{phase: :idle, run_id: next_id, started_monotonic: nil})
+  end
+
+  defp maybe_supersede_running_run(socket), do: socket
+
+  defp active_run?(socket, run_id) do
+    socket.assigns.run_ui.run_id == run_id and socket.assigns.run_ui.phase == :running
+  end
+
+  defp next_run_id(%{run_id: run_id}) when is_integer(run_id), do: run_id + 1
+  defp next_run_id(_), do: 1
+
+  defp now_ms, do: System.monotonic_time(:millisecond)
+
+  defp normalize_async_exit({:shutdown, :cancel}), do: :cancelled
+  defp normalize_async_exit({:shutdown, :timeout}), do: :timed_out
+  defp normalize_async_exit(:timeout), do: :timed_out
+  defp normalize_async_exit(_), do: :cancelled
+
+  defp maybe_put_run_exit_flash(socket, :cancelled),
+    do: put_flash(socket, :info, format_run_flash(:cancelled))
+
+  defp maybe_put_run_exit_flash(socket, :timed_out),
+    do: put_flash(socket, :error, format_run_flash(:timed_out))
+
+  defp maybe_put_run_exit_flash(socket, _), do: socket
+
   defp run_result_summary(%SearchResult{} = r), do: "Run finished — hits: #{length(r.hits)}"
 
   defp run_result_summary(%MultiSearchResult{} = r),
@@ -639,6 +819,15 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   class="btn btn-xs btn-ghost"
                 >
                   Load
+                </button>
+                <button
+                  :if={@schema_allowlist != [] && Keyword.has_key?(@scrypath_opts, :backend)}
+                  type="button"
+                  phx-click="run_now"
+                  phx-value-name={row.name}
+                  class="btn btn-xs btn-primary"
+                >
+                  Run now
                 </button>
                 <button
                   :if={@workspace_writable?}
@@ -724,8 +913,17 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                 type="button"
                 phx-click="run"
                 class="btn btn-primary min-h-10"
+                disabled={@run_ui.phase == :running}
               >
                 Run saved playbook
+              </button>
+              <button
+                :if={@run_ui.phase == :running}
+                type="button"
+                phx-click="cancel_run"
+                class="btn btn-ghost min-h-10"
+              >
+                Cancel run
               </button>
               <p
                 :if={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
@@ -734,6 +932,11 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                 Configure schema allowlist and Scrypath backend to enable runs (see README).
               </p>
             </div>
+
+            <p :if={@run_ui.phase == :running} class="alert text-sm">
+              <strong>Running playbook…</strong>
+              applying results for run <code class="text-xs">{@run_ui.run_id}</code> only.
+            </p>
 
             <p :if={@run_error} class="alert alert-error text-sm">
               <strong>Playbook run failed:</strong>
