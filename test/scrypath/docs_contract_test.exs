@@ -121,6 +121,20 @@ defmodule Scrypath.DocsContractTest do
     assert String.contains?(@guides["guides/sync-modes-and-visibility.md"], chain)
   end
 
+  test "lobby moduledoc two_hop keeps golden_path_first before sync modes" do
+    src = File.read!("lib/scrypath.ex")
+
+    doc =
+      case Regex.run(~r/@moduledoc\s+"""\n([\s\S]*?)"""/, src) do
+        [_, body] -> body
+        _ -> flunk("missing Scrypath @moduledoc block")
+      end
+
+    {golden_pos, _} = :binary.match(doc, "guides/golden-path.md")
+    {sync_pos, _} = :binary.match(doc, "guides/sync-modes-and-visibility.md")
+    assert golden_pos < sync_pos
+  end
+
   test "phase 34 readme and golden path agree on canonical status field" do
     golden = @guides["guides/golden-path.md"]
 
