@@ -5,6 +5,31 @@ defmodule ScrypathOps.Playbook.Runner do
   Callers must pass maps already accepted by `ScrypathOps.Playbook.V1.validate/1` (`{:ok, map}`).
   Invalid shapes or configuration issues return tagged `{:error, reason}` tuples without logging
   raw playbook bodies.
+
+  ## Runner-library contract
+
+  `run_validated/3` is the canonical execution contract for playbook runs. Call this function
+  only after `ScrypathOps.Playbook.V1.validate/1` has accepted the JSON payload and produced
+  the validated string-keyed map, or pass the equivalent `{:ok, map}` wrapper from validation.
+
+  The contract stays on the same raw tuple seam as the root `Scrypath` search APIs:
+
+  - `search` mode returns `{:ok, %Scrypath.SearchResult{}}` on success.
+  - `search_many` mode returns `{:ok, %Scrypath.MultiSearchResult{}}` on success.
+  - Failures stay `{:error, reason}`. The stable compatibility key is the `reason` term itself,
+    not any later UI or CLI wording.
+
+  This mirrors the root-library "Errors vs raises" split: the non-bang path returns raw
+  `{:error, reason}` tuples for callers that want to branch, while bang helpers raise later with
+  that same reason. `ScrypathOps.Playbook.RunFailure`, `ScrypathOpsWeb.PlaybookLive`,
+  `Scrypath.Errors`, and Mix or operator tasks own presentation formatting after the raw reason
+  already exists; they do not redefine this runner contract.
+
+  Boundary normalization here stays intentionally narrow. `module_in_allowlist/2` rescues only the
+  existing module-resolution `ArgumentError` raised by `String.to_existing_atom/1` so invalid
+  schema strings normalize to `nil` and then to the explicit config failure. The runner does not
+  add generic `try`/`rescue` handling that would swallow a divergent `{:error, reason}` outcome
+  from the underlying search path.
   """
 
   alias ScrypathOps.SearchPlayground
