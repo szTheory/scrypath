@@ -13,7 +13,7 @@
 
 ### Runner–library contract
 
-- [ ] **OPS3-03**: Playbook execution uses **documented, stable** result and error shapes aligned with the same **`Scrypath`** / Mix-facing contracts used outside OPSUI where applicable; **automated tests** fail if OPSUI and core diverge on representative success and failure fixtures.
+- [x] **OPS3-03**: Playbook execution uses **documented, stable** result and error shapes aligned with the same **`Scrypath`** / Mix-facing contracts used outside OPSUI where applicable; **automated tests** fail if OPSUI and core diverge on representative success and failure fixtures.
 
 ### Verification, examples, and close
 
