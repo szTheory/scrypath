@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.16
 milestone_name: — in progress)
-status: Ready for **`/gsd-plan-phase 65`**.
-last_updated: "2026-04-22T18:05:01.860Z"
-last_activity: "2026-04-22 — **`/gsd-discuss-phase 65`** with research synthesis; **`docs(65): capture phase context`** committed."
+status: Ready for **`/gsd-plan-phase 66`**.
+last_updated: "2026-04-22T20:07:31Z"
+last_activity: "2026-04-22 — Phase 65 executed, verification upgraded from `human_needed` to `passed`, and tracking advanced to Phase 66."
 progress:
   total_phases: 3
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 0
-  percent: 0
+  completed_plans: 4
+  percent: 33
 ---
 
 # Project State
@@ -25,13 +25,13 @@ See: `.planning/PROJECT.md` (updated 2026-04-22)
 
 ## Current Position
 
-**Phase:** **65** — *Playbook run lifecycle (OPSUI)* — **context gathered** (`.planning/phases/65-playbook-run-lifecycle-opsui/65-CONTEXT.md`).
+**Phase:** **66** — *Runner–library contract* — ready to plan from **`.planning/ROADMAP.md`**.
 
 **Plan:** —
 
-**Status:** Ready for **`/gsd-plan-phase 65`**.
+**Status:** Ready for **`/gsd-plan-phase 66`**.
 
-**Last activity:** 2026-04-22 — **`/gsd-discuss-phase 65`** with research synthesis; **`docs(65): capture phase context`** committed.
+**Last activity:** 2026-04-22 — Phase 65 completed; async run lifecycle, structured failure docs, and OPSUI verification automation landed.
 
 ## Accumulated Context
 
@@ -57,18 +57,18 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-1. **`/gsd-plan-phase 65`** — produce **`65-PLAN.md`** from **`65-CONTEXT.md`** (+ roadmap requirements).
-2. **`/gsd-progress`** — snapshot after plan exists.
+1. **`/gsd-plan-phase 66`** — produce the Runner–library contract plan from the current roadmap requirements.
+2. **`/gsd-progress`** — snapshot the updated state and next-phase context.
 3. **`/clear`** then continue the planning/execute chain as needed.
 
 ---
 
-*Last updated: 2026-04-22 — **Phase 65** discuss complete*
+*Last updated: 2026-04-22 — **Phase 65** complete, **Phase 66** next*
 
 **Prior milestone:** **v1.15** — OPSUI second slice — **2026-04-22**
 
 **Completed:** **v1.15** shipped + archived in-repo (**2026-04-22**) — phases **62–64** — **`milestones/v1.15-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next:** **Phase 65** — *Playbook run lifecycle (OPSUI)* — **`.planning/ROADMAP.md`**.
+**Next:** **Phase 66** — *Runner–library contract* — **`.planning/ROADMAP.md`**.
 
-**Planned Phase:** 65 (Playbook run lifecycle (OPSUI)) — 4 plans — 2026-04-22T18:05:01.847Z
+**Completed Phase:** 65 (Playbook run lifecycle (OPSUI)) — 4/4 plans — 2026-04-22

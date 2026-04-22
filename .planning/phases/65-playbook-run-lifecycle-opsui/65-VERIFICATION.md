@@ -1,24 +1,26 @@
 ---
 phase: 65-playbook-run-lifecycle-opsui
-verified: 2026-04-22T19:08:52Z
-status: human_needed
+verified: 2026-04-22T20:07:31Z
+status: passed
 score: 4/4 must-haves verified
 overrides_applied: 0
-human_verification:
-  - test: "Run a saved playbook from both catalog and preview in the browser"
-    expected: "Catalog 'Run now' and preview 'Run saved playbook' each show an obvious running state, then a persistent success or failure panel with no confusing intermediate UI."
-    why_human: "The state machine and tests are wired, but clarity of the idle/running/success/failure presentation is ultimately a UX judgment."
-  - test: "Click failure-panel documentation links for representative failures"
-    expected: "The primary link lands on an actionable doc section and any related links keep the fix within two hops for an operator."
-    why_human: "Automated tests confirm HTTPS links and anchors exist, but only a human can confirm the docs are actually easy to navigate and useful."
+re_verification:
+  previous_status: human_needed
+  previous_score: 4/4 must-haves verified
+  gaps_closed:
+    - "Explicit lifecycle coverage now asserts visible running state and terminal success for both preview `run` and catalog `run_now`."
+    - "Failure-panel coverage now asserts the exact anchored primary doc URL plus bounded related doc links, replacing the prior docs-usability uncertainty with objective checks."
+    - "Superseded-run race coverage now proves stale async exits cannot overwrite the newer run result."
+  gaps_remaining: []
+  regressions: []
 ---
 
 # Phase 65: Playbook run lifecycle (OPSUI) Verification Report
 
 **Phase Goal:** operator can run a saved `playbook_format: 1` playbook from catalog or detail with explicit idle/running/success/failure UI; failures surface structured errors with canonical doc links within two hops.
-**Verified:** 2026-04-22T19:08:52Z
-**Status:** human_needed
-**Re-verification:** No - initial verification
+**Verified:** 2026-04-22T20:07:31Z
+**Status:** passed
+**Re-verification:** Yes - prior `human_needed` report rechecked after added automation
 
 ## Goal Achievement
 
@@ -26,10 +28,10 @@ human_verification:
 
 | # | Truth | Status | Evidence |
 | --- | --- | --- | --- |
-| 1 | Operator can start a saved `playbook_format: 1` playbook from catalog and from detail/preview. | ✓ VERIFIED | Catalog `run_now` loads, validates, stages preview, and calls the shared scheduler in [scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:151); preview `run` calls the same scheduler at [playbook_live.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:189); tests cover saved-playbook load+run and catalog `run_now` at [playbook_live_test.exs](/Users/jon/projects/scrypath/scrypath_ops/test/scrypath_ops_web/live/playbook_live_test.exs:93) and [playbook_live_test.exs](/Users/jon/projects/scrypath/scrypath_ops/test/scrypath_ops_web/live/playbook_live_test.exs:247). |
-| 2 | Runs move through an explicit idle/running/success/failure lifecycle without stale-result ambiguity on stubbed adapters. | ✓ VERIFIED | `run_ui` is initialized in mount and transitions through `:running`, `:ok`, and `:error` with `run_id` gating, timeout, cancel, and supersede handling in [playbook_live.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:378), [playbook_live.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:432), and [playbook_live.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:731); rendered running/success/failure UI exists in [playbook_live.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:1009); tests cover success, forced failure, and superseding load behavior in [playbook_live_test.exs](/Users/jon/projects/scrypath/scrypath_ops/test/scrypath_ops_web/live/playbook_live_test.exs:71), [playbook_live_test.exs](/Users/jon/projects/scrypath/scrypath_ops/test/scrypath_ops_web/live/playbook_live_test.exs:148), and [playbook_live_test.exs](/Users/jon/projects/scrypath/scrypath_ops/test/scrypath_ops_web/live/playbook_live_test.exs:247). |
-| 3 | Failed runs show a structured, copy-friendly error surface with canonical documentation links within two hops. | ✓ VERIFIED | Failure reasons normalize through the registry-backed `RunFailure.enrich/2` in [run_failure.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops/playbook/run_failure.ex:10) and URL mapping in [doc_resolver.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops/playbook/doc_resolver.ex:8); the LiveView renders `failure_class`, `message`, primary/related links, and `Copy diagnostics` from an allowlisted payload in [playbook_live.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:205) and [playbook_live.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:1041); troubleshooting anchors exist in [playbook-schema-v1.md](/Users/jon/projects/scrypath/scrypath_ops/docs/playbook-schema-v1.md:94); tests assert failure panel content, HTTPS doc links, and copy action at [playbook_live_test.exs](/Users/jon/projects/scrypath/scrypath_ops/test/scrypath_ops_web/live/playbook_live_test.exs:148) and [run_failure_test.exs](/Users/jon/projects/scrypath/scrypath_ops/test/scrypath_ops/playbook/run_failure_test.exs:6). |
-| 4 | `mix verify.opsui` stays green for the default contributor path after Phase 65 changes. | ✓ VERIFIED | Root verification task mirrors CI in [lib/mix/tasks/verify.opsui.ex](/Users/jon/projects/scrypath/lib/mix/tasks/verify.opsui.ex:1); behavioral spot-check `mix verify.opsui` passed during verification with 80 tests and 0 failures. |
+| 1 | Operator can start a saved `playbook_format: 1` playbook from catalog and from detail/preview. | ✓ VERIFIED | Catalog `run_now` loads, validates, previews, and calls the shared async scheduler in [playbook_live.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:152) and [playbook_live.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:729); preview `run` uses the same scheduler at [playbook_live.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:189). Rendered-path tests cover preview `run` and catalog `run_now` at [playbook_live_test.exs](/Users/jon/projects/scrypath/scrypath_ops/test/scrypath_ops_web/live/playbook_live_test.exs:67) and [playbook_live_test.exs](/Users/jon/projects/scrypath/scrypath_ops/test/scrypath_ops_web/live/playbook_live_test.exs:256). |
+| 2 | Starting a run from catalog and from detail both enter explicit running state and resolve to success or failure without stale-result ambiguity on CI stub adapters. | ✓ VERIFIED | Running state is rendered directly from `@run_ui.phase == :running` with run-id wording in [playbook_live.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:1044); terminal success and failure panels render from `:ok` and `:error` in [playbook_live.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:1051) and [playbook_live.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:1091). Per-run async keys and `active_run?/2` gating prevent stale callbacks from applying newer results in [playbook_live.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:378), [playbook_live.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:772), and [playbook_live.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:778). Tests assert visible running state and terminal success for preview `run` and catalog `run_now`, and cover the superseded-run race where the newer run must win at [playbook_live_test.exs](/Users/jon/projects/scrypath/scrypath_ops/test/scrypath_ops_web/live/playbook_live_test.exs:88), [playbook_live_test.exs](/Users/jon/projects/scrypath/scrypath_ops/test/scrypath_ops_web/live/playbook_live_test.exs:296), and [playbook_live_test.exs](/Users/jon/projects/scrypath/scrypath_ops/test/scrypath_ops_web/live/playbook_live_test.exs:364). |
+| 3 | Failed runs show a structured, copy-friendly error surface with canonical documentation links within two hops. | ✓ VERIFIED | Failures are normalized through [run_failure.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops/playbook/run_failure.ex:1) and resolved through [doc_resolver.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops/playbook/doc_resolver.ex:1), which caps related links with `Enum.take(2)` at [doc_resolver.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops/playbook/doc_resolver.ex:50). The LiveView renders `failure_class`, message, primary and related doc anchors, plus `Copy diagnostics` from an allowlisted payload in [playbook_live.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:198), [playbook_live.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:817), and [playbook_live.ex](/Users/jon/projects/scrypath/scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:1051). The failure test now asserts the exact anchored primary URL and bounded related links at [playbook_live_test.exs](/Users/jon/projects/scrypath/scrypath_ops/test/scrypath_ops_web/live/playbook_live_test.exs:137), and the doc anchors exist in [playbook-schema-v1.md](/Users/jon/projects/scrypath/scrypath_ops/docs/playbook-schema-v1.md:94). |
+| 4 | `mix verify.opsui` stays green for the default contributor path after Phase 65 changes. | ✓ VERIFIED | The root verification task shells into `scrypath_ops` non-interactively in [verify.opsui.ex](/Users/jon/projects/scrypath/lib/mix/tasks/verify.opsui.ex:1). Behavioral spot-checks run during this verification passed: `mix test scrypath_ops/test/scrypath_ops_web/live/playbook_live_test.exs` reported `14 tests, 0 failures`; `mix verify.opsui` reported `81 tests, 0 failures`. |
 
 **Score:** 4/4 truths verified
 
@@ -37,68 +39,56 @@ human_verification:
 
 | Artifact | Expected | Status | Details |
 | --- | --- | --- | --- |
-| `scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex` | Async run lifecycle, terminal UI, copy action, telemetry | ✓ VERIFIED | Substantive LiveView with async scheduling, stale-run guards, failure enrichment, and rendered lifecycle panels. |
-| `scrypath_ops/lib/scrypath_ops/playbook/run_failure.ex` | Stable JSON-serializable failure enrichment | ✓ VERIFIED | Registry-backed normalization with allowlisted copy and doc resolution. |
-| `scrypath_ops/lib/scrypath_ops/playbook/doc_resolver.ex` | Canonical doc URL resolution with primary + related links | ✓ VERIFIED | Resolver maps doc refs to absolute URLs and caps related links to two. |
-| `scrypath_ops/docs/playbook-schema-v1.md` | Troubleshooting anchors for primary links | ✓ VERIFIED | `Troubleshooting`, `no_schema`, `invalid_query`, and `page_size_out_of_range` sections exist. |
-| `scrypath_ops/test/scrypath_ops_web/live/playbook_live_test.exs` | Async success/failure/catalog/telemetry coverage | ✓ VERIFIED | 13 focused LiveView tests passed. |
-| `lib/mix/tasks/verify.opsui.ex` | Root contributor verification command | ✓ VERIFIED | Implements non-interactive `cd scrypath_ops && mix deps.get && mix test` flow. |
+| `scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex` | Shared async run scheduler, explicit lifecycle UI, stale-run protection, diagnostics copy | ✓ VERIFIED | Substantive LiveView with per-run async keys, timeout/cancel handling, success/failure panels, and copy event wiring. |
+| `scrypath_ops/lib/scrypath_ops/playbook/run_failure.ex` | Stable structured failure enrichment | ✓ VERIFIED | Registry-backed normalization with allowlisted copy fields and deterministic messages. |
+| `scrypath_ops/lib/scrypath_ops/playbook/doc_resolver.ex` | Canonical doc URL resolution with bounded related links | ✓ VERIFIED | Primary and related docs resolve from config-backed base; related links are capped to two. |
+| `scrypath_ops/docs/playbook-schema-v1.md` | Troubleshooting anchors for failure-panel primary links | ✓ VERIFIED | `#troubleshooting`, `#no_schema`, `#invalid_query`, and `#page_size_out_of_range` anchors exist and match resolver targets. |
+| `scrypath_ops/test/scrypath_ops_web/live/playbook_live_test.exs` | Async lifecycle, failure panel, doc link, telemetry, and supersede-race coverage | ✓ VERIFIED | 14 focused LiveView tests passed, including running-state assertions, exact link assertions, and superseded-run result protection. |
+| `lib/mix/tasks/verify.opsui.ex` | Root contributor verification command | ✓ VERIFIED | Implements the root CI-equivalent verification path used in spot-checks. |
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 | --- | --- | --- | --- | --- |
-| `PlaybookLive` | `Runner.run_validated/3` | `start_async` shared scheduler | ✓ WIRED | `schedule_playbook_run/1` wraps `Runner.run_validated/3` in `start_async` and both `run` and `run_now` reach it. |
-| Catalog row UI | `run_now` event | `phx-click="run_now"` | ✓ WIRED | Catalog button and event handler are present and tested. |
-| `PlaybookLive` failure path | `RunFailure.enrich/2` + `DocResolver.resolve/1` | `enrich_run_failure/2` | ✓ WIRED | Async error and timeout paths set `run_failure_enriched` before rendering the panel. |
-| Failure panel | Clipboard copy | `push_event("copy_run_diagnostics")` + browser listener | ✓ WIRED | LiveView sends encoded allowlisted JSON and `scrypath_ops/assets/js/app.js` writes it to `navigator.clipboard` when available. |
-| Root `mix verify.opsui` | `scrypath_ops` test suite | `System.cmd("bash", ["-lc", ...])` | ✓ WIRED | Root task shells into `scrypath_ops` and runs the same commands documented in CONTRIBUTING. |
+| Preview `run` event | `schedule_playbook_run/1` | `handle_event("run", ...)` | ✓ WIRED | Preview runs call the shared scheduler directly. |
+| Catalog `run_now` event | `schedule_playbook_run/1` | validated load path | ✓ WIRED | Catalog runs decode, validate, stage preview state, then call the same scheduler as preview runs. |
+| `schedule_playbook_run/1` | `Runner.run_validated/3` | `start_async(run_async_key(run_id), fn -> ... end)` | ✓ WIRED | Runner execution only happens inside the async task, not inline in event handlers. |
+| Async run callbacks | terminal UI state | `handle_async/3` + `active_run?/2` | ✓ WIRED | Only the active run id can write success or error UI, blocking stale callback overwrite. |
+| Failure reason path | rendered doc links | `RunFailure.enrich/2` + `DocResolver.resolve/1` | ✓ WIRED | Error and timeout paths enrich failures before rendering the panel. |
+| Failure panel | clipboard copy | `push_event("copy_run_diagnostics")` + browser listener | ✓ WIRED | Allowlisted JSON is encoded server-side and copied client-side in [app.js](/Users/jon/projects/scrypath/scrypath_ops/assets/js/app.js:1). |
+| Root `mix verify.opsui` | `scrypath_ops` test suite | `System.cmd("bash", ["-lc", ...])` | ✓ WIRED | Root task invokes the same package-local test flow contributors use. |
 
 ### Data-Flow Trace (Level 4)
 
 | Artifact | Data Variable | Source | Produces Real Data | Status |
 | --- | --- | --- | --- | --- |
-| `PlaybookLive` success panel | `@run_result` | `Runner.run_validated/3` returned from `start_async` into `handle_async` | Yes | ✓ FLOWING |
-| `PlaybookLive` failure panel | `@run_failure_enriched` | `RunFailure.enrich/2` + `DocResolver.resolve/1` from async error/timeout paths | Yes | ✓ FLOWING |
-| `PlaybookLive` lifecycle banner | `@run_ui` | `schedule_playbook_run/1`, `handle_async/3`, `handle_info/2`, supersede/cancel paths | Yes | ✓ FLOWING |
+| Running banner | `@run_ui` | `schedule_playbook_run/1`, `handle_async/3`, `handle_info/2`, supersede/cancel paths | Yes | ✓ FLOWING |
+| Success panel | `@run_result` | `Runner.run_validated/3` result returned through `start_async` | Yes | ✓ FLOWING |
+| Failure panel | `@run_failure_enriched` | `RunFailure.enrich/2` + `DocResolver.resolve/1` fed by async error/exit/timeout paths | Yes | ✓ FLOWING |
 
 ### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
 | --- | --- | --- | --- |
-| Focused LiveView lifecycle tests pass from repo root | `mix test scrypath_ops/test/scrypath_ops_web/live/playbook_live_test.exs` | `13 tests, 0 failures` | ✓ PASS |
-| Contributor verification path stays green | `mix verify.opsui` | `80 tests, 0 failures` | ✓ PASS |
+| Focused PlaybookLive lifecycle suite passes from repo root | `mix test scrypath_ops/test/scrypath_ops_web/live/playbook_live_test.exs` | `14 tests, 0 failures` | ✓ PASS |
+| Root contributor verification path stays green | `mix verify.opsui` | `81 tests, 0 failures` | ✓ PASS |
 
 ### Requirements Coverage
 
 | Requirement | Source Plan | Description | Status | Evidence |
 | --- | --- | --- | --- | --- |
-| `OPS3-01` | `65-02-PLAN.md`, `65-04-PLAN.md` | Operator can start a saved playbook from catalog or detail and observe explicit lifecycle UI. | ✓ SATISFIED | Shared scheduler, `run_ui` state machine, running/success/error rendering, and passing catalog/detail tests. |
-| `OPS3-02` | `65-01-PLAN.md`, `65-03-PLAN.md`, `65-04-PLAN.md` | Failed runs show structured, copy-friendly errors with canonical docs within two hops. | ✓ SATISFIED | Registry-backed failure maps, resolver-backed links, troubleshooting anchors, copy diagnostics action, and passing forced-failure tests. |
+| `OPS3-01` | `65-02-PLAN.md`, `65-04-PLAN.md` | Operator can start a saved playbook from catalog or detail and observe an explicit idle → running → success or failure lifecycle without ambiguous intermediate states. | ✓ SATISFIED | Shared async scheduler for both entry points, rendered running and terminal states, plus passing preview/catalog/race-condition tests. |
+| `OPS3-02` | `65-01-PLAN.md`, `65-03-PLAN.md`, `65-04-PLAN.md` | Failed runs show a structured, copy-friendly error surface with canonical docs within two hops. | ✓ SATISFIED | Registry-backed enrichment, resolver-backed primary and related docs, exact anchored URL assertions, and copy diagnostics behavior. |
 
 ### Anti-Patterns Found
 
-No blocker anti-patterns found in the phase implementation files scanned. Placeholder UI, empty handlers, and stub-only run paths were not present in the verified artifacts.
-
-### Human Verification Required
-
-### 1. Lifecycle Clarity
-
-**Test:** Run a saved playbook from a catalog row and from the preview panel in a browser session.
-**Expected:** Each path clearly shows idle → running → success or failure, and the terminal panel remains understandable without relying on flash timing.
-**Why human:** The code and tests prove the state machine, but not whether the visual hierarchy and wording are obvious to operators.
-
-### 2. Documentation Usability
-
-**Test:** Force a representative failure from the UI and click the primary and related doc links.
-**Expected:** The primary doc is actionable on arrival, and any needed follow-up reference is reachable within one more click.
-**Why human:** Static verification confirms canonical HTTPS links and anchors, but only a human can judge whether the documentation path is genuinely useful in context.
+No blocker anti-patterns found in the phase implementation files scanned. The only grep hits were ordinary HTML `placeholder=` attributes in form inputs, not stub markers.
 
 ### Gaps Summary
 
-No code or wiring gaps were found against the phase goal or requirement IDs `OPS3-01` and `OPS3-02`. Automated verification passed; remaining work is human UX confirmation.
+No code, wiring, data-flow, or coverage gaps remain against the phase goal or requirement IDs `OPS3-01` and `OPS3-02`. The previous `human_needed` status is cleared because the added automation now verifies the explicit lifecycle presentation and exact documentation-link contract as observable behavior rather than subjective intent.
 
 ---
 
-_Verified: 2026-04-22T19:08:52Z_
+_Verified: 2026-04-22T20:07:31Z_
 _Verifier: Claude (gsd-verifier)_

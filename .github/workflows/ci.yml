@@ -420,8 +420,5 @@ jobs:
           echo "Postgres failed to become ready"
           exit 1
 
-      - name: ScrypathOps (`scrypath_ops`)
-        run: |
-          cd scrypath_ops
-          mix deps.get
-          mix test
+      - name: ScrypathOps (`mix verify.opsui`)
+        run: mix verify.opsui

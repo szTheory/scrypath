@@ -99,15 +99,6 @@ defmodule ScrypathOps.Playbook.RunFailure do
     do: take_copy(context, [:schema, :mode, :page_size, :max_page_size])
 
   defp take_copy(context, keys) do
-    context
-    |> Map.take(keys)
-    |> maybe_put_basename()
-  end
-
-  defp maybe_put_basename(copy) do
-    case Map.get(copy, :basename) do
-      nil -> copy
-      _basename -> copy
-    end
+    Map.take(context, [:basename | keys])
   end
 end
