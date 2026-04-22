@@ -119,4 +119,26 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     ran = render_click(view, "run", %{})
     assert ran =~ "Run finished" || ran =~ "Playbook run completed"
   end
+
+  test "search_many paste then run shows multi-schema summary on stub", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    json =
+      Jason.encode!(%{
+        "playbook_format" => 1,
+        "mode" => "search_many",
+        "entries" => [
+          ["ScrypathOps.Test.OpsPostA", "a", %{}],
+          ["ScrypathOps.Test.OpsPostB", "b", %{}]
+        ],
+        "opts" => %{}
+      })
+
+    view
+    |> form("form[phx-submit='import_paste']", %{json: json})
+    |> render_submit()
+
+    html = render_click(view, "run", %{})
+    assert html =~ "schema(s)"
+  end
 end
