@@ -195,6 +195,42 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert copied =~ "Copied diagnostics."
   end
 
+  test "forced failure keeps raw run_error before enrichment formatting", %{conn: conn} do
+    prev_variant = Application.get_env(:scrypath_ops, :search_stub_variant)
+    Application.put_env(:scrypath_ops, :search_stub_variant, :hard_error)
+
+    on_exit(fn ->
+      if prev_variant == nil,
+        do: Application.delete_env(:scrypath_ops, :search_stub_variant),
+        else: Application.put_env(:scrypath_ops, :search_stub_variant, prev_variant)
+    end)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    json =
+      Jason.encode!(%{
+        "playbook_format" => 1,
+        "mode" => "search_many",
+        "entries" => [
+          ["ScrypathOps.Test.OpsPostA", "a", %{}],
+          ["ScrypathOps.Test.OpsPostB", "b", %{}]
+        ],
+        "opts" => %{}
+      })
+
+    view
+    |> form("form[phx-submit='import_paste']", %{json: json})
+    |> render_submit()
+
+    render_click(view, "run", %{})
+    _html = render_async(view)
+    assigns = :sys.get_state(view.pid).socket.assigns
+
+    assert assigns.run_error == :stub_hard_failure
+    assert %{reason: "stub_hard_failure", failure_class: "backend"} = assigns.run_failure_enriched
+    assert assigns.run_failure_enriched.message =~ "forced hard failure"
+  end
+
   test "playbook run emits telemetry start and stop for a completed run", %{conn: conn} do
     unique = System.unique_integer([:positive])
     start_handler_id = "playbook-live-start-#{unique}"
