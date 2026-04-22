@@ -8,9 +8,16 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current milestone
+## Current Milestone: v1.14 Library QoL and operator playbooks
 
-**None opened.** Last planning delivery: **v1.13** — public polish & narrative coherence (in-repo **2026-04-22**). Run **`/gsd-new-milestone`** when you are ready for the next arc.
+**Goal:** Round out adoption surfaces with **evidence-led** core-library quality improvements (**Tier B1**) and a bounded **OPSUI** second slice for **saved queries / operator playbooks** (**Tier B2**, **OPSUI-FUT-01**), without speculative API churn or vendor-dashboard scope.
+
+**Target features:**
+
+- **B1 — Evidence-led library QoL:** Small fixes to errors, docs, or APIs only where concrete confusion exists (issues, dogfood, maintainer notes); each change traceable to named evidence.
+- **B2 — Operator playbooks:** Editable saved search / multi-search configurations in **`scrypath_ops`** for replay and learning (especially federation and per-query shapes), staying outside the core Hex package and honoring existing security and bounded-search discipline.
+
+**Explicitly out of this milestone:** **OPSUI-FUT-02** (cluster vendor-dashboard parity), **Tier C** heavy CI (Playwright everywhere, Meilisearch inside OPSUI CI) unless research forces a narrow exception.
 
 ## Last shipped milestone
 
@@ -20,7 +27,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Planning window
 
-**Between milestones.** **v1.13** is archived to **`milestones/v1.13-{ROADMAP,REQUIREMENTS}.md`**; there is **no** active **`.planning/REQUIREMENTS.md`** until **`/gsd-new-milestone`**. Ship-of-record for **v1.12**: **`milestones/v1.12-{ROADMAP,REQUIREMENTS}.md`**. Existing research notes may remain under **`.planning/research/`**.
+**Active milestone: v1.14.** Requirements and roadmap live in **`.planning/REQUIREMENTS.md`** and **`.planning/ROADMAP.md`** (phases continue from **57**). **v1.13** ship-of-record: **`milestones/v1.13-{ROADMAP,REQUIREMENTS}.md`**. Research for this arc is under **`.planning/research/`** (refreshed for B1+B2).
 
 ## Requirements
 
@@ -65,7 +72,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ### Active
 
-- (none — open the next milestone when ready)
+- [ ] **v1.14** — Evidence-led library QoL (**B1**) + operator saved queries / playbooks in **`scrypath_ops`** (**B2** / **OPSUI-FUT-01**); see **`.planning/REQUIREMENTS.md`**.
 
 ### Out of Scope
 
@@ -79,7 +86,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has **fourteen** planning milestones through **`v1.13`** (**`v1.0`**–**`v1.13`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS}.md`** for shipped arcs (plus a fresh **`.planning/REQUIREMENTS.md`** when a milestone is open).
+The repository has **fifteen** planning milestones through **`v1.14`** (in progress; **`v1.0`**–**`v1.13`** shipped). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, **`.planning/REQUIREMENTS.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS}.md`** for shipped arcs.
 
 - `v1.0` shipped the Meilisearch-first Ecto-native indexing core, search/hydration path, Oban support, reindex workflows, public Phoenix docs, and release automation baseline.
 - `v1.1` shipped release hardening, docs-safety fixes, `mix verify.phase10`, and the launch-readiness evidence chain.
@@ -124,7 +131,7 @@ The current public line on Hex is **`scrypath 0.3.4`**. **v1.8** closed the fede
 
 **Hex:** `scrypath` **`0.3.4`** on Hex; default-branch **`mix.exs`** matches unless a release PR is mid-flight. Shipped surfaces include the v1.3-era Meilisearch-native path (relevance, facets, multi-index, operator polish), v1.4 **hot_apply** / failure rollups, v1.5 **index contract drift** tooling, v1.6 **adoption-grade** docs and verification clarity, **v1.7** facet-depth APIs with **`mix verify.phase36`..`38`**, **v1.8** federation weights / **`:all`** expansion / **`mix verify.phase41`**, **v1.9** per-query pipeline spec + **`:per_query`** runtime with **`mix verify.phase43`**, **v1.10** optional **`scrypath_ops`** operator LiveView UI, **v1.11** operator-shell polish (**IA contract**, **theming**, **Phoenix shell tests**, **`opsui.test_a11y`**), and **v1.12** first-hour onboarding (**adoption path contracts**, **actionable errors + pitfalls**, **contributor `mix verify.opsui` spine**).
 
-**Planning:** **v1.13** archived (**2026-04-21**) after in-repo delivery (**2026-04-22**) — **POLISH-01**–**POLISH-05**; see **`milestones/v1.13-REQUIREMENTS.md`**. Next arc: **`/gsd-new-milestone`**. **v1.12** archived (**2026-04-21**); shipped in-repo **2026-04-22**.
+**Planning:** **v1.14** opened (**2026-04-21**) — **B1** + **B2** (**OPSUI-FUT-01**). Prior: **v1.13** archived — **POLISH-01**–**POLISH-05**; see **`milestones/v1.13-REQUIREMENTS.md`**. **v1.12** archived (**2026-04-21**); shipped in-repo **2026-04-22**.
 
 ## Evolution
 
@@ -144,4 +151,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-21 — **v1.13** milestone archived; Hex **`scrypath 0.3.4`** current public line*
+*Last updated: 2026-04-21 — **v1.14** milestone started (B1+B2); Hex **`scrypath 0.3.4`** current public line*

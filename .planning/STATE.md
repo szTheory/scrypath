@@ -1,9 +1,9 @@
 ---
 gsd_state_version: 1.0
-milestone: TBD
-milestone_name: (next — use /gsd-new-milestone)
-status: awaiting_next_milestone
-last_updated: "2026-04-21T18:00:00.000Z"
+milestone: v1.14
+milestone_name: Library QoL and operator playbooks
+status: defining_requirements
+last_updated: "2026-04-21T23:30:00.000Z"
 last_activity: 2026-04-21
 progress:
   total_phases: 0
@@ -21,17 +21,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.13** archived; open the next milestone with **`/gsd-new-milestone`**.
+**Current focus:** **v1.14** — evidence-led library QoL (**B1**) + **`scrypath_ops`** saved queries / playbooks (**B2**, **OPSUI-FUT-01**).
 
 ## Current Position
 
-**Phase:** —
+**Phase:** Not started (defining requirements)
 
 **Plan:** —
 
-**Status:** Awaiting next milestone
+**Status:** Defining requirements
 
-**Last activity:** 2026-04-21 — **v1.13** milestone close (**POLISH-01**–**POLISH-05** archived)
+**Last activity:** 2026-04-21 — Milestone **v1.14** started (research → requirements → roadmap)
 
 ## Accumulated Context
 
@@ -53,15 +53,15 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **`/gsd-new-milestone`** — define the next planning window.
+1. **`/gsd-discuss-phase 57`** — gather context for first v1.14 phase (after roadmap lands), or **`/gsd-plan-phase 57`** to plan directly.
 2. **`/gsd-progress`** — optional status snapshot.
 
 ---
 
-*Last updated: 2026-04-21 — **v1.13** archived; between milestones*
+*Last updated: 2026-04-21 — **v1.14** opened*
 
 **Prior milestone:** **v1.13** — public polish & narrative coherence — **2026-04-22**
 
 **Completed:** **v1.13** in-repo (**2026-04-22**) — phases **54–56**.
 
-**Completed phases:** **54**, **55**, **56**
+**Next phases:** **57+** (see **`.planning/ROADMAP.md`** after roadmap commit)
