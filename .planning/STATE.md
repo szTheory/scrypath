@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.16
-milestone_name: — in progress)
-status: Defining requirements → roadmap ready; begin **`/gsd-discuss-phase 65`** or **`/gsd-plan-phase 65`**.
-last_updated: "2026-04-22T17:59:58.679Z"
-last_activity: 2026-04-22 — **`/gsd-new-milestone`** opened **v1.16**; **`gsd-sdk query phases.clear`**; rolling **`.planning/REQUIREMENTS.md`** + **`.planning/ROADMAP.md`** updated.
+milestone_name: Playbook execution & operator honesty
+status: planning_ready
+last_updated: "2026-04-22T18:05:00.000Z"
+last_activity: 2026-04-22 — `/gsd-discuss-phase 65` — context + discussion log committed
 progress:
   total_phases: 3
   completed_phases: 0
@@ -24,13 +24,13 @@ See: `.planning/PROJECT.md` (updated 2026-04-22)
 
 ## Current Position
 
-**Phase:** Not started — next **Phase 65** (*Playbook run lifecycle (OPSUI)*).
+**Phase:** **65** — *Playbook run lifecycle (OPSUI)* — **context gathered** (`.planning/phases/65-playbook-run-lifecycle-opsui/65-CONTEXT.md`).
 
 **Plan:** —
 
-**Status:** Defining requirements → roadmap ready; begin **`/gsd-discuss-phase 65`** or **`/gsd-plan-phase 65`**.
+**Status:** Ready for **`/gsd-plan-phase 65`**.
 
-**Last activity:** 2026-04-22 — **`/gsd-new-milestone`** opened **v1.16**; **`gsd-sdk query phases.clear`**; rolling **`.planning/REQUIREMENTS.md`** + **`.planning/ROADMAP.md`** updated.
+**Last activity:** 2026-04-22 — **`/gsd-discuss-phase 65`** with research synthesis; **`docs(65): capture phase context`** committed.
 
 ## Accumulated Context
 
@@ -40,6 +40,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-22)
 
 - **v1.15 close:** Second slice shipped **OPS2-01**–**OPS2-08** across phases **62–64**; persistence authority **(A)** file + GitOps; **OPSUI-FUT-02** / **Tier C** unchanged — **`milestones/v1.15-REQUIREMENTS.md`**.
 - **v1.16 open:** Prioritize **execution honesty** over new indexing features; **stub-first OPSUI CI** unchanged; parallel **`.planning/research/`** refresh **skipped** at open (existing research retained).
+- **Phase 65 discuss:** Hybrid catalog **Run now** + shared draft pipeline; **`start_async`/`handle_async`** lifecycle with **`run_id`**, timeout, **`cancel_async`**; **`scrypath_ops`** error registry + **`DocResolver`**; **no** Oban/DB default run path in this phase (deferred).
 
 ### Blockers / Concerns
 
@@ -55,13 +56,13 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-1. **`/gsd-discuss-phase 65`** — gather context for playbook run lifecycle.
-2. **`/gsd-plan-phase 65`** — plan directly if context is already sufficient.
-3. **`/gsd-progress`** — snapshot after first phase kickoff.
+1. **`/gsd-plan-phase 65`** — produce **`65-PLAN.md`** from **`65-CONTEXT.md`** (+ roadmap requirements).
+2. **`/gsd-progress`** — snapshot after plan exists.
+3. **`/clear`** then continue the planning/execute chain as needed.
 
 ---
 
-*Last updated: 2026-04-22 — **v1.16** milestone initialized*
+*Last updated: 2026-04-22 — **Phase 65** discuss complete*
 
 **Prior milestone:** **v1.15** — OPSUI second slice — **2026-04-22**
 
