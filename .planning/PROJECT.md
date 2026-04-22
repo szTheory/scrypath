@@ -10,26 +10,17 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Current milestone
 
-**v1.15 — OPSUI second slice** (opened **2026-04-22**).
-
-**Goal:** Extend optional **`scrypath_ops`** so operators get **durable, reusable workflows** beyond the v1.14 playbook MVP—especially **playground → playbook** capture, **catalog ergonomics**, and a **bounded optional path** toward team-oriented sharing—without chasing vendor-style cluster observability.
-
-**Target features:**
-
-- **Save-as-playbook** — Capture bounded **`search_many`/playground** state into **`playbook_format: 1`** JSON and the existing workspace flow (preview → save) with clear limits.
-- **Catalog depth** — Rename, duplicate, and **operator-facing metadata** (titles, descriptions, light taxonomy) so growing playbook sets stay manageable without raw JSON as the only interface.
-- **Shared-operator story (bounded)** — Either a **documented** file/git + env pattern for teams **or** an **optional** Ecto-backed catalog slice—chosen explicitly in planning so **OPSUI-FUT-01** (“shared across team members”) moves forward without implying multi-tenant SaaS.
-- **Honest boundaries** — **OPSUI-FUT-02** (cluster observability / vendor dashboard parity) stays **out of scope**; **Mix/docs** own mutations; **stub-first** **`mix verify.opsui`** discipline continues.
+**Next milestone not opened** — use **`/gsd-new-milestone`** when the maintainer team is ready to name the next arc.
 
 ## Last shipped milestone
 
-**v1.14 — Library QoL and operator playbooks** (shipped + archived in-repo **2026-04-22**). **B1** evidence ledger (**EVID-01**), **`Scrypath.Errors`** + doc hops (**LIB-01..03**), **`ScrypathOps.Playbook.V1`** + portable JSON persistence (**OPS-PB-01**, **OPS-PB-03**), **`/ops/playbooks`** LiveView + IA alignment (**OPS-PB-02**, **OPS-PB-04**), stub-backed verification + **`mix verify.opsui`** story (**OPS-PB-05**, **SHIP-01**) — see **`milestones/v1.14-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**v1.15 — OPSUI second slice** (shipped + archived in-repo **2026-04-22**). Playground → playbook capture + catalog depth (**OPS2-01**–**OPS2-03** / **Phase 62**), bounded team file/GitOps persistence + validation + security posture (**OPS2-04**, **OPS2-07** / **Phase 63**), IA + **`mix verify.opsui`** / doc contracts + milestone freeze (**OPS2-05**, **OPS2-06**, **OPS2-08** / **Phase 64**) — see **`milestones/v1.15-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Prior:** **v1.13 — Public polish & narrative coherence** (shipped in-repo **2026-04-22**, archived **2026-04-21**) — **`milestones/v1.13-{ROADMAP,REQUIREMENTS}.md`** (**POLISH-01**–**POLISH-05**). **v1.12** — **`milestones/v1.12-{ROADMAP,REQUIREMENTS}.md`**. **OPSUI** arc: **`milestones/v1.10-{ROADMAP,REQUIREMENTS}.md`**.
+**Prior:** **v1.14 — Library QoL and operator playbooks** (shipped + archived in-repo **2026-04-22**) — **`milestones/v1.14-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**. **v1.13** — **`milestones/v1.13-{ROADMAP,REQUIREMENTS}.md`**. **OPSUI** arc: **`milestones/v1.10-{ROADMAP,REQUIREMENTS}.md`**.
 
 ## Planning window
 
-**Milestone v1.15 active.** Canonical shipped truth for **v1.14** remains under **`.planning/milestones/v1.14-*`**. Active planning: **`.planning/REQUIREMENTS.md`**, **`.planning/ROADMAP.md`** (phases **62+**), **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, **`.planning/RETROSPECTIVE.md`**, and **`.planning/research/`** (refreshed for this milestone).
+**Milestone v1.15 shipped.** Canonical shipped truth for **v1.15** lives under **`.planning/milestones/v1.15-*`** alongside prior milestones. Rolling planning (**`.planning/REQUIREMENTS.md`**, **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**) reflects **v1.15** **Complete** until the next milestone opens.
 
 ## Requirements
 
@@ -79,10 +70,16 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] **v1.14 milestone** (2026-04-22): Evidence-led **B1** QoL + **`scrypath_ops`** operator playbooks — phases **57–61**; **`milestones/v1.14-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 - [x] **Phase 62** (2026-04-22): Playground capture + playbook catalog — **`V1`** metadata, **`Store`** rename/duplicate, **`SearchLive`** save-as-playbook, **`PlaybookLive`** catalog UX — **OPS2-01**–**OPS2-03** — **`.planning/phases/62-playground-capture-and-playbook-catalog/`**.
 - [x] **Phase 63** (2026-04-22): Bounded team persistence + security posture — **`team-playbook-persistence.md`**, **`mix scrypath_ops.playbooks.validate`**, **`examples/playbooks/`**, schema threat-model copy, **`V1`** / **`PlaybookLive`** hardening tests — **OPS2-04**, **OPS2-07** — **`.planning/phases/63-bounded-team-persistence-and-security-posture/`**.
+- [x] **Phase 64** (2026-04-22): IA + verification + milestone bookkeeping — **`operator-ia.md`** team persistence pointers, **`mix verify.opsui`** / **`docs_contract_test`** / **`guides/meilisearch-operations.md`**, frozen **`v1.15-*`** — **OPS2-05**, **OPS2-06**, **OPS2-08** — **`.planning/phases/64-ia-verification-and-milestone-bookkeeping/`**.
+- [x] **v1.15 milestone** (2026-04-22): OPSUI second slice — phases **62–64**; **`milestones/v1.15-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 ### Active
 
-- [ ] **v1.15 — OPSUI second slice** — playground → playbook capture, catalog/metadata depth, bounded team-sharing persistence story, IA + **`mix verify.opsui`** extensions (**OPS2-01**–**OPS2-08** in **`.planning/REQUIREMENTS.md`**). **Progress:** Phases **62–63** complete (**2026-04-22**); phase **64** remaining.
+- [ ] **Next milestone** — not defined; open with **`/gsd-new-milestone`** when scope is ready.
+
+### Recently completed
+
+- [x] **v1.15 — OPSUI second slice** (2026-04-22) — phases **62–64**; **OPS2-01**–**OPS2-08** — **`milestones/v1.15-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 ### Out of Scope
 
@@ -96,7 +93,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has **sixteen** shipped planning milestones through **`v1.14`** (**`v1.0`**–**`v1.14`**) plus **v1.15** in flight. Current planning truth lives in **`.planning/REQUIREMENTS.md`**, **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS}.md`** for shipped arcs.
+The repository has **seventeen** shipped planning milestones through **`v1.15`** (**`v1.0`**–**`v1.15`**). Current planning truth lives in **`.planning/REQUIREMENTS.md`**, **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS}.md`** for shipped arcs.
 
 - `v1.0` shipped the Meilisearch-first Ecto-native indexing core, search/hydration path, Oban support, reindex workflows, public Phoenix docs, and release automation baseline.
 - `v1.1` shipped release hardening, docs-safety fixes, `mix verify.phase10`, and the launch-readiness evidence chain.

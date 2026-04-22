@@ -25,19 +25,19 @@
 
 ### Operator trust: IA, verification, security
 
-- [ ] **OPS2-05**: **`scrypath_ops/docs/operator-ia.md`**, router, and **`mix scrypath_ops.check_nav_contract`** / **`operator_ia_contract_test`** stay aligned for any **new routes or primary actions** introduced by this milestone.  
-  **Evidence:** **OPS-PB-04** / **OPSUX-01** patterns.
+- [x] **OPS2-05**: **`scrypath_ops/docs/operator-ia.md`**, router, and **`mix scrypath_ops.check_nav_contract`** / **`operator_ia_contract_test`** stay aligned for any **new routes or primary actions** introduced by this milestone.  
+  **Evidence:** **OPS-PB-04** / **OPSUX-01** patterns. **Shipped:** saved-playbooks navigation + JTBD pointers to **`team-playbook-persistence.md`**; nav contract + **`operator_ia_contract_test`** green (**Phase 64**, 2026-04-22) — **`.planning/phases/64-ia-verification-and-milestone-bookkeeping/64-01-ia-nav-alignment-SUMMARY.md`**.
 
-- [ ] **OPS2-06**: **`mix verify.opsui`** (default contributor path) covers **new** LiveView or context paths using the **stub adapter** pattern—**no** mandatory live Meilisearch in default CI unless an existing gated job already covers the flow.  
-  **Evidence:** **OPS-PB-05**, **VRFY-03..04**.
+- [x] **OPS2-06**: **`mix verify.opsui`** (default contributor path) covers **new** LiveView or context paths using the **stub adapter** pattern—**no** mandatory live Meilisearch in default CI unless an existing gated job already covers the flow.  
+  **Evidence:** **OPS-PB-05**, **VRFY-03..04**. **Shipped:** **`mix scrypath_ops.playbooks.validate`** documented in **CONTRIBUTING** / **`guides/operator-mix-tasks.md`** with **`docs_contract_test`** anchors; **`guides/meilisearch-operations.md`** restored; **`mix verify.opsui`** green (**Phase 64**, 2026-04-22) — **`64-02-verify-opsui-and-doc-contracts-SUMMARY.md`**.
 
 - [x] **OPS2-07**: **Security posture** for shared playbooks: reaffirm **no secrets** in JSON (banned fields / scrub), document **auth implications** if a server catalog is introduced, and ensure destructive actions remain **explicitly confirmed** per **PlaybookLive** destructive-copy patterns.  
   **Evidence:** **`playbook-schema-v1.md`** security notes; `.planning/research/PITFALLS.md`. **Shipped:** threat-model subsection + **`V1`** / **`PlaybookLive`** tests (**Phase 63**, 2026-04-22).
 
 ### Milestone close
 
-- [ ] **OPS2-08**: **`.planning/MILESTONES.md`**, **`.planning/PROJECT.md`** *Current State*, and **`.planning/ROADMAP.md`** agree on **v1.15** outcomes and Hex line where applicable; **traceability** below shows **Complete** for shipped rows at milestone close.  
-  **Evidence:** **SHIP-01** pattern (`milestones/v1.14-REQUIREMENTS.md`).
+- [x] **OPS2-08**: **`.planning/MILESTONES.md`**, **`.planning/PROJECT.md`** *Current State*, and **`.planning/ROADMAP.md`** agree on **v1.15** outcomes and Hex line where applicable; **traceability** below shows **Complete** for shipped rows at milestone close.  
+  **Evidence:** **SHIP-01** pattern (`milestones/v1.14-REQUIREMENTS.md`). **Shipped:** frozen **`milestones/v1.15-*`** trio + rolling docs (**Phase 64**, 2026-04-22) — **`64-03-milestone-v1-15-close-SUMMARY.md`**.
 
 ## v2+ Requirements (not in v1.15)
 
@@ -67,9 +67,9 @@
 | OPS2-03 | Phase 62 | Complete |
 | OPS2-04 | Phase 63 | Complete |
 | OPS2-07 | Phase 63 | Complete |
-| OPS2-05 | Phase 64 | Pending |
-| OPS2-06 | Phase 64 | Pending |
-| OPS2-08 | Phase 64 | Pending |
+| OPS2-05 | Phase 64 | Complete |
+| OPS2-06 | Phase 64 | Complete |
+| OPS2-08 | Phase 64 | Complete |
 | AUDT-01 | Phase 32; gap closure 33 | Complete |
 
 **Coverage:**
@@ -80,4 +80,4 @@
 
 ---
 *Requirements defined: 2026-04-22*  
-*Last updated: 2026-04-22 — **OPS2-04** and **OPS2-07** marked **Complete** after Phase 63 execution*
+*Last updated: 2026-04-22 — **v1.15** closed in-repo; **OPS2-05**, **OPS2-06**, **OPS2-08** **Complete** after Phase **64**; frozen snapshot **`milestones/v1.15-REQUIREMENTS.md`***
