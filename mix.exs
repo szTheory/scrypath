@@ -96,9 +96,14 @@ defmodule Scrypath.MixProject do
   end
 
   defp maybe_delegate_opsui_test(args) when is_list(args) do
-    if args != [] and Enum.all?(args, &String.starts_with?(&1, "scrypath_ops/test/")) do
+    paths = Enum.filter(args, &test_path_arg?/1)
+    passthrough_args = Enum.reject(args, &test_path_arg?/1)
+
+    if paths != [] and Enum.all?(paths, &String.starts_with?(&1, "scrypath_ops/test/")) do
       ops_dir = Path.expand("scrypath_ops", File.cwd!())
-      ops_args = Enum.map(args, &String.replace_prefix(&1, "scrypath_ops/", ""))
+
+      ops_args =
+        Enum.map(paths, &String.replace_prefix(&1, "scrypath_ops/", "")) ++ passthrough_args
 
       Mix.shell().info("==> test: delegating scrypath_ops paths into #{ops_dir}")
 
@@ -116,6 +121,9 @@ defmodule Scrypath.MixProject do
       :passthrough
     end
   end
+
+  defp test_path_arg?(<<"-", _::binary>>), do: false
+  defp test_path_arg?(arg), do: String.ends_with?(arg, ".exs")
 
   defp docs do
     [

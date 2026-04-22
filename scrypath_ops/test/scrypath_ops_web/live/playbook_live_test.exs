@@ -68,7 +68,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert html =~ "data-testid=\"playbook-preview-marker\""
   end
 
-  test "run with stub adapter shows success", %{conn: conn} do
+  test "run with stub adapter shows explicit lifecycle transition to success", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
 
     json =
@@ -84,9 +84,13 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     |> form("form[phx-submit='import_paste']", %{json: json})
     |> render_submit()
 
-    render_click(view, "run", %{})
+    running_html = render_click(view, "run", %{})
+    assert running_html =~ "Running playbook"
+    assert running_html =~ "Cancel run"
+
     html = render_async(view)
     assert html =~ "Run finished"
+    refute html =~ "data-testid=\"run-failure-panel\""
   end
 
   # OPS-PB-05: end-to-end proof on SearchPlaygroundStubAdapter (no Meilisearch).
@@ -145,7 +149,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert html =~ "schema(s)"
   end
 
-  test "forced failure shows failure_class and primary doc link", %{conn: conn} do
+  test "forced failure shows anchored doc links and copyable diagnostics", %{conn: conn} do
     prev_variant = Application.get_env(:scrypath_ops, :search_stub_variant)
     Application.put_env(:scrypath_ops, :search_stub_variant, :hard_error)
 
@@ -174,13 +178,18 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
 
     render_click(view, "run", %{})
     html = render_async(view)
+    doc_links = playbook_doc_links(html)
 
     assert html =~ "data-testid=\"run-failure-panel\""
     assert html =~ "backend"
     assert html =~ "Search adapter returned a forced hard failure."
     assert html =~ "Copy diagnostics"
-    assert html =~ "https://"
-    assert html =~ "guides/multi-index-search.md"
+
+    assert doc_links == [
+             "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/playbook-schema-v1.md#troubleshooting",
+             "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/team-playbook-persistence.md",
+             "https://github.com/szTheory/scrypath/blob/main/guides/multi-index-search.md"
+           ]
 
     copied = render_click(view, "copy_run_diagnostics", %{})
     assert copied =~ "Copied diagnostics."
@@ -244,7 +253,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert duration >= 0
   end
 
-  test "catalog run_now runs playbook async", %{conn: conn} do
+  test "catalog run_now shows explicit lifecycle and success state", %{conn: conn} do
     dir =
       Path.join(
         System.tmp_dir!(),
@@ -284,11 +293,14 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     |> form("form[phx-submit='save']", %{basename: basename})
     |> render_submit()
 
-    render_click(view, "run_now", %{"name" => basename})
+    running_html = render_click(view, "run_now", %{"name" => basename})
+    assert running_html =~ "Running playbook"
+
     html = render_async(view)
 
     assert html =~ "Run finished"
     assert html =~ basename
+    refute html =~ "data-testid=\"run-failure-panel\""
   end
 
   test "loading a new playbook while running cancels and resets the active run", %{conn: conn} do
@@ -347,6 +359,68 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert load_html =~ "Loaded playbook from disk."
     refute load_html =~ "Playbook run cancelled before a result was applied."
     refute render_async(view) =~ "Playbook run cancelled before a result was applied."
+  end
+
+  test "superseded run exit does not override the newer run result", %{conn: conn} do
+    dir =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath_ops_pb_supersede_result_#{:erlang.unique_integer([:positive])}"
+      )
+
+    :ok = File.mkdir_p!(dir)
+    prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+    prev_variant = Application.get_env(:scrypath_ops, :search_stub_variant)
+    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
+    Application.put_env(:scrypath_ops, :search_stub_variant, :slow_ok)
+
+    on_exit(fn ->
+      File.rm_rf(dir)
+
+      if prev_ws == nil,
+        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
+        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
+
+      if prev_variant == nil,
+        do: Application.delete_env(:scrypath_ops, :search_stub_variant),
+        else: Application.put_env(:scrypath_ops, :search_stub_variant, prev_variant)
+    end)
+
+    one_json =
+      Jason.encode!(%{
+        "playbook_format" => 1,
+        "mode" => "search",
+        "schema" => "ScrypathOps.Test.OpsPostA",
+        "q" => "one",
+        "opts" => %{}
+      })
+
+    two_json =
+      Jason.encode!(%{
+        "playbook_format" => 1,
+        "mode" => "search",
+        "schema" => "ScrypathOps.Test.OpsPostA",
+        "q" => "two",
+        "opts" => %{}
+      })
+
+    File.write!(Path.join(dir, "one.json"), one_json)
+    File.write!(Path.join(dir, "two.json"), two_json)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    render_click(view, "load", %{"name" => "one.json"})
+    assert render_click(view, "run", %{}) =~ "Running playbook"
+
+    load_html = render_click(view, "load", %{"name" => "two.json"})
+    assert load_html =~ "Loaded playbook from disk."
+
+    assert render_click(view, "run", %{}) =~ "Running playbook"
+
+    html = render_async(view)
+    assert html =~ "Run finished"
+    refute html =~ "Playbook run cancelled before a result was applied."
+    refute html =~ "data-testid=\"run-failure-panel\""
   end
 
   test "legacy workspace JSON without title shows Untitled playbook", %{conn: conn} do
@@ -510,5 +584,11 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
       |> render_submit()
 
     assert html =~ "That playbook name is already in use"
+  end
+
+  defp playbook_doc_links(html) do
+    Regex.scan(~r/href="(https:\/\/github\.com\/szTheory\/scrypath\/blob\/main\/[^"]+)"/, html)
+    |> Enum.map(fn [_, href] -> href end)
+    |> Enum.uniq()
   end
 end

@@ -26,7 +26,7 @@
 
 ### Phase 65: Playbook run lifecycle (OPSUI)
 
-- [ ] **Phase 65: Playbook run lifecycle (OPSUI)** — **OPS3-01**, **OPS3-02** — operator can **run** a saved **`playbook_format: 1`** playbook from catalog or detail with explicit **idle / running / success / failure** UI; failures surface **structured** errors with **canonical doc links** within two hops.
+- [x] **Phase 65: Playbook run lifecycle (OPSUI)** — **OPS3-01**, **OPS3-02** — operator can **run** a saved **`playbook_format: 1`** playbook from catalog or detail with explicit **idle / running / success / failure** UI; failures surface **structured** errors with **canonical doc links** within two hops. Completed 2026-04-22.
 
 **Success criteria (observable):**
 
