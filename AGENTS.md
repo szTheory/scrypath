@@ -85,16 +85,13 @@ No project skills found. Add skills to any of: `.claude/skills/`, `.agents/skill
 <!-- GSD:skills-end -->
 
 <!-- GSD:workflow-start source:GSD defaults -->
-## GSD Workflow Enforcement
+## Repository workflow
 
-Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.
+**Contributors:** follow **[CONTRIBUTING.md](CONTRIBUTING.md)** for verify tasks, CI, and release gates. When **`.planning/`** is present, it holds milestone context for maintainers.
 
-Use these entry points:
-- `/gsd-quick` for small fixes, doc updates, and ad-hoc tasks
-- `/gsd-debug` for investigation and bug fixing
-- `/gsd-execute-phase` for planned phase work
+**Automated coding agents:** honor the constraints in this file; keep edits focused, run the checks **CONTRIBUTING** names for your change, and update **`.planning/PROJECT.md`** when you intentionally change product scope or shipped claims.
 
-Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.
+Maintainers who use the separate GSD toolkit should follow that tool’s docs so planning artifacts stay consistent; this file does not duplicate those slash-commands for OSS readers.
 <!-- GSD:workflow-end -->
 
 

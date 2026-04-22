@@ -144,6 +144,8 @@ In practice, retries, discarded jobs, stale deletes, and drift are normal operat
 
 Scrypath follows semantic versioning for the public API: **minor** releases can add backwards-compatible capability; **major** releases signal breaking changes worth a deliberate upgrade read. Patch releases stay focused on fixes and safe doc corrections—see **`CHANGELOG.md`** at the repository root for the human-facing release narrative.
 
+The version in root **`mix.exs`** (`@version`) is the source of truth for **this** checkout; the latest published package is listed on [hex.pm/packages/scrypath](https://hex.pm/packages/scrypath).
+
 Quality for the packaged artifact is guarded by **`mix verify.phase11`**, the always-on gate referenced from [docs/releasing.md](docs/releasing.md). That document—not this README—owns the full verify matrix, Release Please flow, and publish checks for maintainers.
 
 ## Search

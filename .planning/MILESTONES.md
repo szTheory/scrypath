@@ -1,5 +1,21 @@
 # Milestones
 
+## v1.13 Public polish & narrative coherence (Shipped in-repo: 2026-04-22)
+
+**Phases completed:** **3** (**54–56**)
+
+**Hex:** **`scrypath 0.3.4`** on Hex at close; root **`mix.exs`** **`@version`** matches. **No** new Hex publish required for this planning milestone.
+
+**Key accomplishments:**
+
+- **`guides/per-query-tuning-pipeline.md`** — product/API language; no internal “Phase N” identifiers in **`guides/`** prose — **POLISH-01**, **POLISH-05**
+- Planning + **README** version narrative aligned to **0.3.4** / **hex.pm** — **POLISH-02**
+- **`AGENTS.md`** contributor-first workflow; **`milestone-candidates.md`** refreshed (**Tier A** marked shipped, **B1** next) — **POLISH-03**, **POLISH-04**
+
+**Archives:** execution record in **`.planning/REQUIREMENTS.md`**, **`.planning/ROADMAP.md`** (phases **54–56**); formal **`milestones/v1.13-*`** archive optional when you run milestone close.
+
+---
+
 ## v1.12 Developer onboarding & first-hour QoL (Shipped + archived: 2026-04-21)
 
 **Phases completed:** 3 phases (**51–53**), **9** plans
