@@ -141,4 +141,123 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     html = render_click(view, "run", %{})
     assert html =~ "schema(s)"
   end
+
+  test "legacy workspace JSON without title shows Untitled playbook", %{conn: conn} do
+    dir =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath_ops_pb_untitled_#{:erlang.unique_integer([:positive])}"
+      )
+
+    :ok = File.mkdir_p!(dir)
+    prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
+
+    on_exit(fn ->
+      File.rm_rf(dir)
+
+      if prev_ws == nil,
+        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
+        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
+    end)
+
+    json =
+      Jason.encode!(%{
+        "playbook_format" => 1,
+        "mode" => "search",
+        "schema" => "ScrypathOps.Test.OpsPostA",
+        "q" => "x",
+        "opts" => %{}
+      })
+
+    File.write!(Path.join(dir, "legacy.json"), json)
+
+    {:ok, _view, html} = live(conn, ~p"/ops/playbooks")
+    assert html =~ "Untitled playbook"
+    assert html =~ "legacy.json"
+  end
+
+  test "duplicate flow writes suggested copy basename", %{conn: conn} do
+    dir =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath_ops_pb_dup_#{:erlang.unique_integer([:positive])}"
+      )
+
+    :ok = File.mkdir_p!(dir)
+    prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
+
+    on_exit(fn ->
+      File.rm_rf(dir)
+
+      if prev_ws == nil,
+        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
+        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
+    end)
+
+    json =
+      Jason.encode!(%{
+        "playbook_format" => 1,
+        "mode" => "search",
+        "schema" => "ScrypathOps.Test.OpsPostA",
+        "q" => "x",
+        "opts" => %{}
+      })
+
+    File.write!(Path.join(dir, "one.json"), json)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    render_click(view, "dup_open", %{"name" => "one.json"})
+
+    view
+    |> form("form[phx-submit='dup_submit']", %{"to_name" => "one-1.json"})
+    |> render_submit()
+
+    assert File.exists?(Path.join(dir, "one-1.json"))
+  end
+
+  test "rename collision shows in-use flash", %{conn: conn} do
+    dir =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath_ops_pb_ren_#{:erlang.unique_integer([:positive])}"
+      )
+
+    :ok = File.mkdir_p!(dir)
+    prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
+
+    on_exit(fn ->
+      File.rm_rf(dir)
+
+      if prev_ws == nil,
+        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
+        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
+    end)
+
+    json =
+      Jason.encode!(%{
+        "playbook_format" => 1,
+        "mode" => "search",
+        "schema" => "ScrypathOps.Test.OpsPostA",
+        "q" => "x",
+        "opts" => %{}
+      })
+
+    File.write!(Path.join(dir, "a.json"), json)
+    File.write!(Path.join(dir, "b.json"), json)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    render_click(view, "rename_open", %{"name" => "a.json"})
+
+    html =
+      view
+      |> form("form[phx-submit='rename_submit']", %{"new_name" => "b.json"})
+      |> render_submit()
+
+    assert html =~ "That playbook name is already in use"
+  end
 end

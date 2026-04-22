@@ -27,6 +27,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
     examples_dir = examples_playbooks_dir()
     workspace_writable? = workspace_root != nil
     {files, examples_mode?} = list_workspace_files(workspace_root, examples_dir)
+    catalog = build_catalog_entries(workspace_root, examples_dir, files, examples_mode?)
 
     socket =
       socket
@@ -36,6 +37,9 @@ defmodule ScrypathOpsWeb.PlaybookLive do
       |> assign(:workspace_writable?, workspace_writable?)
       |> assign(:examples_mode?, examples_mode?)
       |> assign(:workspace_files, files)
+      |> assign(:catalog_entries, catalog)
+      |> assign(:rename_modal, nil)
+      |> assign(:duplicate_modal, nil)
       |> assign(:schema_allowlist, Schemas.allowlist())
       |> assign(:scrypath_opts, Schemas.scrypath_opts())
       |> assign(:draft_playbook, nil)
@@ -182,11 +186,9 @@ defmodule ScrypathOpsWeb.PlaybookLive do
           {:ok, json} ->
             case Store.save_workspace_file(root, basename, json <> "\n") do
               :ok ->
-                {:ok, files} = Store.list_workspace_json(root)
-
                 {:noreply,
                  socket
-                 |> assign(:workspace_files, files)
+                 |> reload_workspace_catalog()
                  |> assign(:save_basename, "")
                  |> put_flash(:info, "Saved #{basename}")}
 
@@ -233,11 +235,9 @@ defmodule ScrypathOpsWeb.PlaybookLive do
       true ->
         case Store.delete_workspace_file(root, pending) do
           :ok ->
-            {:ok, files} = Store.list_workspace_json(root)
-
             socket =
               socket
-              |> assign(:workspace_files, files)
+              |> reload_workspace_catalog()
               |> assign(:delete_pending, nil)
 
             socket =
@@ -262,8 +262,67 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   def handle_event("refresh_list", _params, socket) do
-    {files, _} = list_workspace_files(socket.assigns.workspace_root, socket.assigns.examples_dir)
-    {:noreply, assign(socket, :workspace_files, files)}
+    {:noreply, reload_workspace_catalog(socket)}
+  end
+
+  def handle_event("rename_open", %{"name" => name}, socket) do
+    name = to_string(name)
+
+    if Store.safe_basename?(name) do
+      {:noreply, assign(socket, :rename_modal, %{from: name})}
+    else
+      {:noreply, put_flash(socket, :error, "Invalid playbook file name.")}
+    end
+  end
+
+  def handle_event("rename_cancel", _, socket) do
+    {:noreply, assign(socket, :rename_modal, nil)}
+  end
+
+  def handle_event("rename_submit", %{"new_name" => new_name}, socket) do
+    case socket.assigns.rename_modal do
+      nil ->
+        {:noreply, socket}
+
+      %{from: from} ->
+        rename_submit_impl(socket, from, new_name)
+    end
+  end
+
+  def handle_event("dup_open", %{"name" => name}, socket) do
+    name = to_string(name)
+    root = socket.assigns.workspace_root
+
+    cond do
+      not Store.safe_basename?(name) ->
+        {:noreply, put_flash(socket, :error, "Invalid playbook file name.")}
+
+      not socket.assigns.workspace_writable? or root == nil ->
+        {:noreply, put_flash(socket, :error, "Duplicate requires a writable workspace.")}
+
+      true ->
+        case Store.suggest_duplicate_basename(root, name) do
+          {:ok, suggested} ->
+            {:noreply, assign(socket, :duplicate_modal, %{from: name, to: suggested})}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Could not suggest a duplicate filename.")}
+        end
+    end
+  end
+
+  def handle_event("dup_cancel", _, socket) do
+    {:noreply, assign(socket, :duplicate_modal, nil)}
+  end
+
+  def handle_event("dup_submit", %{"to_name" => to_name}, socket) do
+    case socket.assigns.duplicate_modal do
+      nil ->
+        {:noreply, socket}
+
+      %{from: from} ->
+        dup_submit_impl(socket, from, to_name)
+    end
   end
 
   defp apply_decoded(socket, bin, source) do
@@ -301,6 +360,82 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   defp flash_for_import(:paste), do: "Imported playbook from paste."
   defp flash_for_import(:upload), do: "Imported playbook from file."
   defp flash_for_import(:load), do: "Loaded playbook from disk."
+
+  defp rename_submit_impl(socket, from, new_name) do
+    new_name = new_name |> to_string() |> String.trim()
+    root = socket.assigns.workspace_root
+
+    cond do
+      not socket.assigns.workspace_writable? or root == nil ->
+        {:noreply, put_flash(socket, :error, "Rename requires a writable workspace.")}
+
+      not Store.safe_basename?(new_name) ->
+        {:noreply, put_flash(socket, :error, "Filename must match *.json basename rules.")}
+
+      true ->
+        case Store.rename_workspace_file(root, from, new_name) do
+          :ok ->
+            socket =
+              socket
+              |> assign(:rename_modal, nil)
+              |> reload_workspace_catalog()
+
+            socket =
+              if socket.assigns.selected_basename == from do
+                assign(socket, :selected_basename, new_name)
+              else
+                socket
+              end
+
+            {:noreply, put_flash(socket, :info, "Renamed to #{new_name}")}
+
+          {:error, :target_exists} ->
+            {:noreply,
+             put_flash(
+               socket,
+               :error,
+               "That playbook name is already in use — pick another basename."
+             )}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Rename failed — check permissions.")}
+        end
+    end
+  end
+
+  defp dup_submit_impl(socket, from, to_name) do
+    to_name = to_name |> to_string() |> String.trim()
+    root = socket.assigns.workspace_root
+
+    cond do
+      not socket.assigns.workspace_writable? or root == nil ->
+        {:noreply, put_flash(socket, :error, "Duplicate requires a writable workspace.")}
+
+      not Store.safe_basename?(to_name) ->
+        {:noreply, put_flash(socket, :error, "Filename must match *.json basename rules.")}
+
+      true ->
+        case Store.duplicate_workspace_file(root, from, to_name) do
+          :ok ->
+            {:noreply,
+             socket
+             |> assign(:duplicate_modal, nil)
+             |> reload_workspace_catalog()
+             |> put_flash(:info, "Duplicated to #{to_name}")}
+
+          {:error, :target_exists} ->
+            {:noreply,
+             put_flash(
+               socket,
+               :error,
+               "That playbook name is already in use — pick another basename."
+             )}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Duplicate failed — check permissions.")}
+        end
+    end
+  end
 
   defp format_validation_reason(reason) do
     reason |> inspect() |> String.slice(0, 240)
@@ -349,6 +484,79 @@ defmodule ScrypathOpsWeb.PlaybookLive do
     case Store.list_workspace_json(root) do
       {:ok, files} -> {files, false}
       {:error, _} -> {[], false}
+    end
+  end
+
+  defp reload_workspace_catalog(socket) do
+    a = socket.assigns
+    {files, examples_mode?} = list_workspace_files(a.workspace_root, a.examples_dir)
+
+    socket
+    |> assign(:workspace_files, files)
+    |> assign(:examples_mode?, examples_mode?)
+    |> assign(
+      :catalog_entries,
+      build_catalog_entries(a.workspace_root, a.examples_dir, files, examples_mode?)
+    )
+  end
+
+  defp build_catalog_entries(nil, examples_dir, files, true) when is_binary(examples_dir) do
+    Enum.map(files, &catalog_row_for_examples_file(examples_dir, &1))
+  end
+
+  defp build_catalog_entries(root, _examples_dir, files, _ex?) when is_binary(root) do
+    Enum.map(files, &catalog_row_for_workspace_file(root, &1))
+  end
+
+  defp build_catalog_entries(_, _, files, _) do
+    Enum.map(files, &default_catalog_row/1)
+  end
+
+  defp default_catalog_row(name) do
+    %{name: name, display_title: "Untitled playbook", description: "", readable?: false}
+  end
+
+  defp catalog_row_for_workspace_file(root, name) do
+    case Store.read_workspace_file(root, name) do
+      {:ok, bin} -> playbook_row_from_json(bin, name)
+      _ -> default_catalog_row(name)
+    end
+  end
+
+  defp catalog_row_for_examples_file(dir, name) do
+    path = Path.join(dir, name)
+
+    case File.read(path) do
+      {:ok, bin} -> playbook_row_from_json(bin, name)
+      _ -> default_catalog_row(name)
+    end
+  end
+
+  defp playbook_row_from_json(bin, name) do
+    with {:ok, map} <- Jason.decode(bin),
+         {:ok, validated} <- V1.validate(map) do
+      title = Map.get(validated, "title")
+
+      display_title =
+        case title do
+          t when is_binary(t) ->
+            trimmed = String.trim(t)
+            if trimmed != "", do: trimmed, else: "Untitled playbook"
+
+          _ ->
+            "Untitled playbook"
+        end
+
+      desc =
+        case Map.get(validated, "description") do
+          d when is_binary(d) -> d
+          _ -> ""
+        end
+
+      %{name: name, display_title: display_title, description: desc, readable?: true}
+    else
+      _ ->
+        %{name: name, display_title: "Untitled playbook", description: "", readable?: false}
     end
   end
 
@@ -408,17 +616,26 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             </a>.
           </p>
 
-          <ul :if={@workspace_files != []} class="menu menu-sm bg-base-200 rounded-md max-w-xl">
+          <ul :if={@catalog_entries != []} class="menu menu-sm bg-base-200 rounded-md max-w-xl">
             <li
-              :for={name <- @workspace_files}
+              :for={row <- @catalog_entries}
               class="flex flex-wrap items-center gap-2 justify-between"
             >
-              <span class="font-mono text-xs">{name}</span>
-              <span class="flex gap-1">
+              <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span class="text-sm font-semibold">{row.display_title}</span>
+                <span
+                  :if={row.description != ""}
+                  class="line-clamp-2 text-xs text-base-content/70"
+                >
+                  {row.description}
+                </span>
+                <span class="font-mono text-xs">{row.name}</span>
+              </div>
+              <span class="flex flex-wrap gap-1">
                 <button
                   type="button"
                   phx-click="load"
-                  phx-value-name={name}
+                  phx-value-name={row.name}
                   class="btn btn-xs btn-ghost"
                 >
                   Load
@@ -426,8 +643,26 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                 <button
                   :if={@workspace_writable?}
                   type="button"
+                  phx-click="dup_open"
+                  phx-value-name={row.name}
+                  class="btn btn-xs btn-ghost"
+                >
+                  Duplicate
+                </button>
+                <button
+                  :if={@workspace_writable?}
+                  type="button"
+                  phx-click="rename_open"
+                  phx-value-name={row.name}
+                  class="btn btn-xs btn-ghost"
+                >
+                  Rename
+                </button>
+                <button
+                  :if={@workspace_writable?}
+                  type="button"
                   phx-click="request_delete"
-                  phx-value-name={name}
+                  phx-value-name={row.name}
                   class="btn btn-xs btn-error btn-outline"
                 >
                   Delete
@@ -515,7 +750,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             </p>
 
             <div :if={@workspace_writable?} class="space-y-sm max-w-md">
-              <h3 class="text-sm font-semibold">Save playbook to disk</h3>
+              <h3 class="text-sm font-semibold">Save playbook to workspace</h3>
               <.form for={%{}} phx-submit="save" class="flex flex-wrap gap-2 items-end">
                 <div>
                   <label class="label label-text text-xs" for="save_basename">Basename (.json)</label>
@@ -529,7 +764,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   />
                 </div>
                 <button type="submit" class="btn btn-primary btn-sm min-h-10">
-                  Save playbook to disk
+                  Save playbook to workspace
                 </button>
               </.form>
             </div>
@@ -555,6 +790,54 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                 <div class="modal-action">
                   <button type="button" class="btn" phx-click="cancel_delete">Cancel</button>
                   <button type="submit" class="btn btn-error">Confirm delete</button>
+                </div>
+              </.form>
+            </div>
+          </div>
+
+          <div :if={@rename_modal} class="modal modal-open">
+            <div class="modal-box">
+              <h3 class="font-bold text-lg">Rename playbook</h3>
+              <p class="py-2 text-sm">
+                Renaming <code class="font-mono text-xs">{@rename_modal.from}</code>
+              </p>
+              <.form for={%{}} phx-submit="rename_submit" class="space-y-sm">
+                <label class="label">
+                  <span class="label-text">New basename (.json)</span>
+                </label>
+                <input
+                  type="text"
+                  name="new_name"
+                  class="input input-bordered w-full font-mono text-sm"
+                  placeholder="new-name.json"
+                />
+                <div class="modal-action">
+                  <button type="button" class="btn" phx-click="rename_cancel">Cancel</button>
+                  <button type="submit" class="btn btn-primary">Rename</button>
+                </div>
+              </.form>
+            </div>
+          </div>
+
+          <div :if={@duplicate_modal} class="modal modal-open">
+            <div class="modal-box">
+              <h3 class="font-bold text-lg">Duplicate playbook</h3>
+              <p class="py-2 text-sm">
+                Copying <code class="font-mono text-xs">{@duplicate_modal.from}</code>
+              </p>
+              <.form for={%{}} phx-submit="dup_submit" class="space-y-sm">
+                <label class="label">
+                  <span class="label-text">New basename (.json)</span>
+                </label>
+                <input
+                  type="text"
+                  name="to_name"
+                  value={@duplicate_modal.to}
+                  class="input input-bordered w-full font-mono text-sm"
+                />
+                <div class="modal-action">
+                  <button type="button" class="btn" phx-click="dup_cancel">Cancel</button>
+                  <button type="submit" class="btn btn-primary">Duplicate</button>
                 </div>
               </.form>
             </div>
