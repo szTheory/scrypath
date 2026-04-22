@@ -218,6 +218,50 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert File.exists?(Path.join(dir, "one-1.json"))
   end
 
+  test "delete confirmation mismatch shows flash and keeps file", %{conn: conn} do
+    dir =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath_ops_pb_delcfm_#{:erlang.unique_integer([:positive])}"
+      )
+
+    :ok = File.mkdir_p!(dir)
+    prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
+
+    on_exit(fn ->
+      File.rm_rf(dir)
+
+      if prev_ws == nil,
+        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
+        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
+    end)
+
+    json =
+      Jason.encode!(%{
+        "playbook_format" => 1,
+        "mode" => "search",
+        "schema" => "ScrypathOps.Test.OpsPostA",
+        "q" => "x",
+        "opts" => %{}
+      })
+
+    path = Path.join(dir, "todelete.json")
+    File.write!(path, json)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    render_click(view, "request_delete", %{"name" => "todelete.json"})
+
+    html =
+      view
+      |> form("form[phx-submit='confirm_delete']", %{"confirm" => "wrong-name.json"})
+      |> render_submit()
+
+    assert html =~ "Confirmation must match the filename exactly."
+    assert File.exists?(path)
+  end
+
   test "rename collision shows in-use flash", %{conn: conn} do
     dir =
       Path.join(
