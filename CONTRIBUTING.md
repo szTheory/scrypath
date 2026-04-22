@@ -1,5 +1,9 @@
 # Contributing
 
+## Maintainer: B1 evidence
+
+- **B1** library work is **frozen** against the in-repo ledger **`.planning/EVID-01-b1-v1.14.md`**: cite **`EVID-57-*`** row IDs on PRs that touch **`lib/scrypath/`** or implement **LIB-01** / **LIB-02** / **LIB-03** for **v1.14** (see the PR template). The ledger is **append-only after freeze**—do not rewrite shipped rows.
+
 ## First hour and canonical docs
 
 - New contributors: follow the README **Quick Path** into [`guides/golden-path.md`](guides/golden-path.md) for the linear **`:inline`** first-hour story.
