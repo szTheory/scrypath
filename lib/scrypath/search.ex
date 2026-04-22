@@ -11,6 +11,19 @@ defmodule Scrypath.Search do
   alias Scrypath.SearchResult
   alias Scrypath.Telemetry
 
+  @doc """
+  Hydrated search pipeline used by `Scrypath.search/3`.
+
+  ## Errors vs raises
+
+  * **`ArgumentError`** — reserved for caller misuse that mirrors invalid option shapes
+    (for example duplicate facet bucket keys) where validation intentionally raises.
+  * **`{:error, reason}`** — operational and validation outcomes you should branch on,
+    including backend failures and tagged tuples such as `{:transport_failed, _}`.
+
+  Bang helpers (`search!/3`, `search_many!/2`, `search_within_facet!/4`) raise
+  `Scrypath.Search.Error` with the same `reason` instead of returning `{:error, _}`.
+  """
   @spec search(module(), String.t(), keyword()) :: {:ok, SearchResult.t()} | {:error, term()}
   def search(schema_module, text, opts \\ []) when is_binary(text) and is_list(opts) do
     case Scrypath.Options.validate_search_options(schema_module, opts) do
@@ -25,6 +38,18 @@ defmodule Scrypath.Search do
     end
   end
 
+  @doc """
+  Facet-scoped search used by `Scrypath.search_within_facet/4`.
+
+  ## Errors vs raises
+
+  * **`ArgumentError`** — structural misuse (bad bucket shape, duplicate facet locks, etc.).
+  * **`{:error, reason}`** — same operational `{:error, _}` family as `search/3`, including
+    transport failures from the configured backend.
+
+  `search_within_facet!/4` raises `Scrypath.Search.Error` with the underlying `reason`
+  when the non-bang call would return `{:error, _}`.
+  """
   @spec search_within_facet(module(), String.t(), {atom(), term() | list()}, keyword()) ::
           {:ok, SearchResult.t()} | {:error, term()}
   def search_within_facet(schema_module, text, bucket, opts \\ [])
@@ -53,7 +78,7 @@ defmodule Scrypath.Search do
   def search_within_facet!(schema_module, text, bucket, opts \\ []) do
     case search_within_facet(schema_module, text, bucket, opts) do
       {:ok, result} -> result
-      {:error, reason} -> raise RuntimeError, "search failed: #{inspect(reason)}"
+      {:error, reason} -> raise Scrypath.Search.Error, reason: reason
     end
   end
 
@@ -62,6 +87,7 @@ defmodule Scrypath.Search do
               is_list(telemetry_extra) do
     config = Config.resolve!(runtime_opts(caller_opts))
     query = Query.new(text, search_opts)
+
     metadata =
       schema_module
       |> Telemetry.common_metadata(config, telemetry_extra)
@@ -115,7 +141,7 @@ defmodule Scrypath.Search do
   def search!(schema_module, text, opts \\ []) do
     case search(schema_module, text, opts) do
       {:ok, result} -> result
-      {:error, reason} -> raise RuntimeError, "search failed: #{inspect(reason)}"
+      {:error, reason} -> raise Scrypath.Search.Error, reason: reason
     end
   end
 
@@ -162,6 +188,14 @@ defmodule Scrypath.Search do
   Returns `{:error, {:validation_failed, schema, reason}}` when any entry fails
   `validate_search_options/2` before dispatch. Partial per-schema transport or
   hydration failures are represented on `failures:` inside `{:ok, %MultiSearchResult{}}`.
+
+  ## Errors vs raises
+
+  * **`{:error, reason}`** — structural preflight failures (`{:invalid_options, _}`,
+    `{:validation_failed, _, _}`, `{:all_failed, _}`, `{:transport_failed, _}` on native
+    multi-search) and other tagged errors you should branch on.
+  * **`search_many!/2`** raises `Scrypath.Search.Error` with the same `reason` instead of
+    returning `{:error, _}`.
   """
   @spec search_many(list(), keyword()) :: {:ok, MultiSearchResult.t()} | {:error, term()}
   def search_many(entries, shared_opts \\ []) when is_list(entries) and is_list(shared_opts) do
@@ -191,7 +225,7 @@ defmodule Scrypath.Search do
         result
 
       {:error, reason} ->
-        raise RuntimeError, "search_many failed: " <> inspect(reason)
+        raise Scrypath.Search.Error, reason: reason
     end
   end
 
@@ -228,8 +262,7 @@ defmodule Scrypath.Search do
     cond do
       needs_federated_merge? and not function_exported?(backend, :search_many, 2) ->
         {:error,
-         {:invalid_options,
-          {:federation_merge_requires_native_search_many, %{backend: backend}}}}
+         {:invalid_options, {:federation_merge_requires_native_search_many, %{backend: backend}}}}
 
       function_exported?(backend, :search_many, 2) ->
         run_native_search_many(backend, paired_queries, config)

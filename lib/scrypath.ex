@@ -104,12 +104,26 @@ defmodule Scrypath do
   `show_ranking_score`, and `show_ranking_score_details`); semantics and telemetry
   expectations are defined in
   [guides/per-query-tuning-pipeline.md](guides/per-query-tuning-pipeline.md).
+
+  ## Errors vs raises
+
+  * **`ArgumentError`** — some invalid shapes are rejected synchronously (mirrors
+    `Scrypath.Search.search/3`).
+  * **`{:error, reason}`** — operational failures, including backend errors and
+    tuples such as `{:transport_failed, _}`, for callers that want to branch.
+
+  `search!/3` raises `Scrypath.Search.Error` with the same `reason` instead of returning
+  `{:error, _}`.
   """
   @spec search(module(), String.t(), keyword()) :: {:ok, term()} | {:error, term()}
   def search(schema_module, text, opts \\ []) do
     Scrypath.Search.search(schema_module, text, opts)
   end
 
+  @doc """
+  Like `search/3`, but returns a `%Scrypath.SearchResult{}` or raises `Scrypath.Search.Error`
+  when the non-bang API would return `{:error, _}`.
+  """
   @spec search!(module(), String.t(), keyword()) :: term()
   def search!(schema_module, text, opts \\ []) do
     Scrypath.Search.search!(schema_module, text, opts)
@@ -123,6 +137,14 @@ defmodule Scrypath do
   (one bucket) or a list interpreted as **OR** within that attribute, matching
   `facet_filter:` encoding. Passing the same attribute again under `facet_filter:`
   is rejected with `ArgumentError` — use `search/3` or keep only one source of truth.
+
+  ## Errors vs raises
+
+  * **`ArgumentError`** — structural misuse of the facet bucket or duplicate facet locks.
+  * **`{:error, reason}`** — same operational `{:error, _}` family as `search/3`.
+
+  `search_within_facet!/4` raises `Scrypath.Search.Error` when the non-bang call would
+  return `{:error, _}`.
   """
   @spec search_within_facet(module(), String.t(), {atom(), term() | list()}, keyword()) ::
           {:ok, term()} | {:error, term()}
@@ -161,12 +183,23 @@ defmodule Scrypath do
   in merge order; otherwise `merge_hit_order` is `nil`.
 
   See also **`guides/multi-index-search.md`** § **Federation weights**.
+
+  ## Errors vs raises
+
+  * **`{:error, reason}`** — preflight and transport failures you should branch on
+    (`{:invalid_options, _}`, `{:validation_failed, _, _}`, `{:transport_failed, _}`, …).
+  * **`search_many!/2`** raises `Scrypath.Search.Error` with the same `reason` instead of
+    returning `{:error, _}`.
   """
   @spec search_many(list(), keyword()) :: {:ok, term()} | {:error, term()}
   def search_many(entries, opts \\ []) do
     Scrypath.Search.search_many(entries, opts)
   end
 
+  @doc """
+  Like `search_many/2`, but returns `%Scrypath.MultiSearchResult{}` or raises
+  `Scrypath.Search.Error` when the non-bang API would return `{:error, _}`.
+  """
   @spec search_many!(list(), keyword()) :: term()
   def search_many!(entries, opts \\ []) do
     Scrypath.Search.search_many!(entries, opts)
