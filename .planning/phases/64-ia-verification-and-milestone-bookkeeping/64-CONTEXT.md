@@ -20,7 +20,7 @@ No new product capabilities—only truth alignment, tests, contracts, and planni
 These decisions intentionally reinforce each other:
 
 - **Structural IA truth in code + machine-checked doc** — `Nav.primary/0` is authoritative for primary nav order, labels, and routes; `operator-ia.md` nav table + `scrypath:nav-contract-*` JSON stay mechanically aligned via **`mix scrypath_ops.check_nav_contract`** (and **`--write`** when code leads).
-- **Normative procedures live in guides** — recovery, drift, GitOps, and playbook wire semantics stay in **`guides/*.md`**, **`playbook-schema-v1.md`**, **`docs/team-playbook-persistence.md`**, etc. IA links *out*; it does not duplicate runbooks (operational honesty, least surprise).
+- **Normative procedures live in guides** — recovery, drift, GitOps, and playbook wire semantics stay in **`guides/*.md`**, **`playbook-schema-v1.md`**, **`scrypath_ops/docs/team-playbook-persistence.md`**, etc. IA links *out*; it does not duplicate runbooks (operational honesty, least surprise).
 - **Contributor gate = default `mix verify.opsui`** — full **`scrypath_ops` `mix test`** (already includes Postgres/Ecto); extend with **stub-backed** LiveView coverage for **primary operator actions** shipped in **62–63**; never require live Meilisearch on this path (use existing root **`mix verify.meilisearch_smoke`** or tagged jobs for that tier).
 - **Ship boundary vs release artifact** — Milestone bookkeeping (**OPS2-08**) synchronizes **`.planning/`** truth and frozen **`milestones/v1.15-*`** evidence; **Hex version + changelog** stay on the **release PR / Release Please** spine unless the milestone is explicitly declared “tagged drop in same merge.”
 - **Doc contracts = stable anchors only** — Extend **`docs_contract_test.exs`** when phases introduce **adoption-critical** strings (new **`mix scrypath_*`** tasks, verify-matrix wording, README/CONTRIBUTING/CI step ordering); avoid README-wide golden snapshots or prose-level locks.
@@ -99,7 +99,7 @@ These decisions intentionally reinforce each other:
 ### Normative operator docs (linked from IA, not duplicated)
 
 - `scrypath_ops/docs/playbook-schema-v1.md`
-- `scrypath_ops/docs/team-playbook-persistence.md` (or path shipped in **63**)
+- `scrypath_ops/docs/team-playbook-persistence.md`
 - `guides/operator-mix-tasks.md`, `guides/drift-recovery.md`, `guides/sync-modes-and-visibility.md` — as linked from IA table.
 
 </canonical_refs>
