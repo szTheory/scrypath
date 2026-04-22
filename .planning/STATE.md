@@ -1,16 +1,15 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.14
-milestone_name: Library QoL and operator playbooks
-status: ready_to_build
-last_updated: "2026-04-21T23:45:00.000Z"
-last_activity: 2026-04-21
+milestone_name: ideas)
+status: Ready to build — roadmap defined
+last_updated: "2026-04-22T03:23:10.925Z"
+last_activity: 2026-04-21 — **v1.14** roadmap committed (phases **57–61**)
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
-  percent: 0
 ---
 
 # Project State
