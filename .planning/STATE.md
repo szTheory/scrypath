@@ -4,7 +4,7 @@ milestone: v1.14
 milestone_name: Library QoL and operator playbooks
 status: ready_to_plan
 last_updated: "2026-04-22T12:00:00.000Z"
-last_activity: 2026-04-22 — Phase 57 plan **57-PLAN-01** executed (EVID-01 ledger, governance files)
+last_activity: 2026-04-22 — Phase 58 discuss complete (context gathered)
 progress:
   total_phases: 5
   completed_phases: 1
@@ -41,6 +41,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 - **Phase 57 — B1 evidence gate:** Implementation choices for **EVID-01** ledger shape, **LIB-01..03** triage, **core** merge path, and where **B1 frozen** is recorded — **`.planning/phases/57-evidence-triage-and-b1-scope-lock/57-CONTEXT.md`**.
 - **B1 scope frozen** for **v1.14** — see **EVID-01** at **`.planning/EVID-01-b1-v1.14.md`** (append-only ledger; cite **`EVID-57-*`** on core **B1** PRs per **CONTRIBUTING** / PR template).
+- **Phase 58 — B1 implementation decisions (LIB-01..03):** Success-path visibility first, tagged errors + shared formatter, doc-contract spine + extras alignment, three separate PRs — **`.planning/phases/58-core-library-and-doc-qol-b1/58-CONTEXT.md`**.
 
 ### Blockers / Concerns
 
@@ -56,12 +57,11 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **`/gsd-progress`** — confirm roadmap / requirements alignment after Phase 57.
-2. **`/gsd-discuss-phase 58`** or **`/gsd-plan-phase 58`** — start **LIB-01..03** execution against the frozen ledger.
+1. **`/gsd-plan-phase 58`** — plan **LIB-01..03** from **`58-CONTEXT.md`** and the frozen ledger.
 
 ---
 
-*Last updated: 2026-04-22 — Phase 57 executed*
+*Last updated: 2026-04-22 — Phase 58 context gathered*
 
 **Prior milestone:** **v1.13** — public polish & narrative coherence — **2026-04-22**
 
