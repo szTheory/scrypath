@@ -36,6 +36,32 @@ defmodule Scrypath.SearchManyTest do
     end
   end
 
+  defmodule NativeTransportFailBackend do
+    @moduledoc false
+    @behaviour Scrypath.Backend
+
+    @impl true
+    def name, do: :native_transport_fail
+
+    @impl true
+    def index_name(schema_module, config),
+      do: Scrypath.TestSupport.FakeBackend.index_name(schema_module, config)
+
+    @impl true
+    def upsert_documents(a, b, c),
+      do: Scrypath.TestSupport.FakeBackend.upsert_documents(a, b, c)
+
+    @impl true
+    def delete_documents(a, b, c),
+      do: Scrypath.TestSupport.FakeBackend.delete_documents(a, b, c)
+
+    @impl true
+    def search(a, b, c), do: Scrypath.TestSupport.FakeBackend.search(a, b, c)
+
+    @impl true
+    def search_many(_paired, _config), do: {:error, :reset_by_peer}
+  end
+
   # Sequential path only; captures `%Scrypath.Query{}` for per_query merge assertions (D-11).
   defmodule PerQuerySeqBackend do
     @moduledoc false
@@ -185,6 +211,42 @@ defmodule Scrypath.SearchManyTest do
              )
   end
 
+  test "search_many!/2 raises Search.Error whose message points at multi-index guide" do
+    err =
+      assert_raise Scrypath.Search.Error, fn ->
+        Scrypath.search_many!(
+          [
+            {SearchablePost, "a", federation_weight: 2},
+            {FacetableMovie, "b"}
+          ],
+          Keyword.put(@base_opts, :backend, SequentialOnlyBackend)
+        )
+      end
+
+    assert match?(
+             {:invalid_options, {:federation_merge_requires_native_search_many, _}},
+             err.reason
+           )
+
+    assert Exception.message(err) =~ "guides/multi-index-search.md"
+  end
+
+  test "search_many!/2 surfaces transport failures with Meilisearch operations pointer" do
+    err =
+      assert_raise Scrypath.Search.Error, fn ->
+        Scrypath.search_many!(
+          [
+            {SearchablePost, "a", federation_weight: 1.0},
+            {FacetableMovie, "b"}
+          ],
+          Keyword.put(@base_opts, :backend, NativeTransportFailBackend)
+        )
+      end
+
+    assert match?({:transport_failed, _}, err.reason)
+    assert Exception.message(err) =~ "guides/meilisearch-operations.md"
+  end
+
   test "no federation_weight with sequential-only backend still succeeds" do
     assert {:ok, %MultiSearchResult{ordered: ordered, failures: []}} =
              Scrypath.search_many(
@@ -196,7 +258,11 @@ defmodule Scrypath.SearchManyTest do
   end
 
   test "search_many per_query: shared-only merge (sequential path)" do
-    opts = Keyword.merge(@base_opts, backend: PerQuerySeqBackend, per_query: [show_ranking_score: true])
+    opts =
+      Keyword.merge(@base_opts,
+        backend: PerQuerySeqBackend,
+        per_query: [show_ranking_score: true]
+      )
 
     assert {:ok, _} = Scrypath.search_many([{SearchablePost, "x"}], opts)
 
@@ -212,7 +278,8 @@ defmodule Scrypath.SearchManyTest do
                opts
              )
 
-    assert_receive {:per_query_search, %Scrypath.Query{per_query: %{ranking_score_threshold: 0.42}}}
+    assert_receive {:per_query_search,
+                    %Scrypath.Query{per_query: %{ranking_score_threshold: 0.42}}}
   end
 
   test "search_many per_query: shared + entry shallow inner merge; entry wins overlaps (D-11)" do
@@ -311,7 +378,7 @@ defmodule Scrypath.SearchManyTest do
   end
 
   test "search_many! raises on top-level error only" do
-    assert_raise RuntimeError, fn ->
+    assert_raise Scrypath.Search.Error, fn ->
       Scrypath.search_many!([{SearchablePost, "a", facets: [:bad]}], @base_opts)
     end
 

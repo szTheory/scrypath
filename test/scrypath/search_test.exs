@@ -86,9 +86,12 @@ defmodule Scrypath.SearchTest do
            } =
              Scrypath.search!(SearchablePost, "ecto", backend: Scrypath.TestSupport.FakeBackend)
 
-    assert_raise RuntimeError, "search failed: :search_failed", fn ->
-      Scrypath.search!(SearchablePost, "ecto", backend: ErrorBackend)
-    end
+    err =
+      assert_raise Scrypath.Search.Error, fn ->
+        Scrypath.search!(SearchablePost, "ecto", backend: ErrorBackend)
+      end
+
+    assert err.reason == :search_failed
   end
 
   test "the common path normalizes text and public options into one query struct" do
