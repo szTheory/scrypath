@@ -62,4 +62,5 @@ When you run a **release** in **`MIX_ENV=prod`**, **`OPSUI_AUTH_MODE`** is **man
 
 ## Learn more
 
+* [Team playbook persistence](docs/team-playbook-persistence.md) — workspace directory, **`SCRYPATH_OPS_PLAYBOOK_DIR`**, GitOps, and **`mix scrypath_ops.playbooks.validate`**
 * [Phoenix guides](https://hexdocs.pm/phoenix/overview.html)
