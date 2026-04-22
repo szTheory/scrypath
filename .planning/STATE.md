@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: — current)
-status: planning
-last_updated: "2026-04-22T01:19:58.131Z"
-last_activity: 2026-04-21 — Phase **51** execution (README, golden path, CONTRIBUTING, doc contracts, example README).
+status: Phase **52** — context gathered; ready to plan (**1** of **3** v1.12 phases complete).
+last_updated: "2026-04-22T01:25:00.000Z"
+last_activity: 2026-04-21 — `/gsd-discuss-phase 52` (Phase **52** context captured).
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 3
+  total_plans: 9
   completed_plans: 3
-  percent: 100
+  percent: 33
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 **Phase:** **52** — *Actionable errors and onboarding pitfalls* (not started)
 
-**Plan:** Use **`/gsd-discuss-phase 52`** or **`/gsd-plan-phase 52`** before execution.
+**Plan:** **`/gsd-plan-phase 52`** — Phase **52** **`52-CONTEXT.md`** is ready in **`.planning/phases/52-actionable-errors-and-onboarding-pitfalls/`**.
 
 **Status:** Phase **51** complete — **3** plans with **SUMMARY** + **VERIFICATION** in `.planning/phases/051-adoption-path-truth-and-discoverability/`.
 
@@ -73,9 +73,9 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **`/gsd-discuss-phase 52`** — recommended before planning Phase **52**.
-2. **`/gsd-plan-phase 52`** — plan Phase **52** when scope is clear.
-3. **`/gsd-progress`** — status snapshot.
+1. **`/gsd-plan-phase 52`** — plan Phase **52** from **`52-CONTEXT.md`**.
+2. **`/gsd-progress`** — status snapshot.
+3. **`/gsd-discuss-phase 52`** — only if revising context after edits.
 
 ---
 
