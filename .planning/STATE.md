@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.15
-milestone_name: OPSUI second slice
-status: milestone_complete
-last_updated: "2026-04-22T20:00:00.000Z"
-last_activity: 2026-04-22 — `/gsd-execute-phase 64`
+milestone: v1.16
+milestone_name: Playbook execution & operator honesty
+status: defining_requirements
+last_updated: "2026-04-22T12:00:00.000Z"
+last_activity: 2026-04-22 — `/gsd-new-milestone` — v1.16 opened
 progress:
   total_phases: 3
-  completed_phases: 3
-  total_plans: 10
-  completed_plans: 10
-  percent: 100
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,17 +21,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-22)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.15 shipped** — rolling **`.planning/REQUIREMENTS.md`** removed at milestone close; next milestone **TBD** (`/gsd-new-milestone`).
+**Current focus:** **v1.16** — playbook **run lifecycle**, **actionable errors**, **runner–library contract**, **verify + doc contracts**, **JTBD examples**, milestone bookkeeping (**OPS3-01**–**OPS3-06**).
 
 ## Current Position
 
-**Phase:** **64** — **complete** (milestone **v1.15** closed).
+**Phase:** Not started — next **Phase 65** (*Playbook run lifecycle (OPSUI)*).
 
-**Plan:** **64-01** / **64-02** / **64-03** delivered (**SUMMARY** + **`64-VERIFICATION.md`**).
+**Plan:** —
 
-**Status:** **`milestone_complete`** — **`v1.15`** shipped in-repo **2026-04-22**.
+**Status:** Defining requirements → roadmap ready; begin **`/gsd-discuss-phase 65`** or **`/gsd-plan-phase 65`**.
 
-**Last activity:** 2026-04-22 — **`/gsd-execute-phase 64`** + **`phase.complete`**
+**Last activity:** 2026-04-22 — **`/gsd-new-milestone`** opened **v1.16**; **`gsd-sdk query phases.clear`**; rolling **`.planning/REQUIREMENTS.md`** + **`.planning/ROADMAP.md`** updated.
 
 ## Accumulated Context
 
@@ -39,11 +39,8 @@ See: `.planning/PROJECT.md` (updated 2026-04-22)
 
 (See `.planning/PROJECT.md` Key Decisions.)
 
-- **v1.14 close:** Playbook persistence MVP chose **portable JSON + workspace dir** (not Ecto); **OPSUI-FUT-02** deferred — **`milestones/v1.14-REQUIREMENTS.md`**.
 - **v1.15 close:** Second slice shipped **OPS2-01**–**OPS2-08** across phases **62–64**; persistence authority **(A)** file + GitOps; **OPSUI-FUT-02** / **Tier C** unchanged — **`milestones/v1.15-REQUIREMENTS.md`**.
-- **Phase 62 discuss:** Wire metadata as optional flat **`title`** / **`description`** / **`tags`** on **`playbook_format: 1`**; tag **UI** deferred; capture = last success in assigns, clear on **mode switch** + **mount**; rename collision = **error** (no replace); duplicate = **`stem-n.json`** — **`.planning/phases/62-playground-capture-and-playbook-catalog/62-CONTEXT.md`**.
-- **Phase 63 discuss:** Ship **OPS2-04** as **(A) file + GitOps/docs** only (no Ecto catalog this phase); single workspace authority; **reject-first** `V1` security; golden team-playbook doc + examples + optional **`mix`** directory validation; **`playbook-schema-v1.md`** persistence section refresh — **`.planning/phases/63-bounded-team-persistence-and-security-posture/63-CONTEXT.md`**.
-- **Phase 64 discuss:** **OPS2-05** — mechanical IA (`Nav` + nav fence + tests) always; JTBD/follow-ups only when jobs change, link to guides not duplicate runbooks. **OPS2-06** — pyramid tests; one stub **`LiveViewTest` vertical** per primary shipped action; no Meilisearch in default **`verify.opsui`**. **OPS2-08** — freeze **`milestones/v1.15-*`** trio at close + rolling canon; Hex/changelog on release PR spine. **Doc contracts** — targeted stable anchors only — **`.planning/phases/64-ia-verification-and-milestone-bookkeeping/64-CONTEXT.md`**.
+- **v1.16 open:** Prioritize **execution honesty** over new indexing features; **stub-first OPSUI CI** unchanged; parallel **`.planning/research/`** refresh **skipped** at open (existing research retained).
 
 ### Blockers / Concerns
 
@@ -59,16 +56,16 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-1. **`/gsd-new-milestone`** — open the next planning arc when scope is ready.
-2. **`/gsd-progress`** — snapshot after milestone transition.
-3. **`/gsd-verify-work 64`** — optional conversational UAT on phase **64** artifacts.
+1. **`/gsd-discuss-phase 65`** — gather context for playbook run lifecycle.
+2. **`/gsd-plan-phase 65`** — plan directly if context is already sufficient.
+3. **`/gsd-progress`** — snapshot after first phase kickoff.
 
 ---
 
-*Last updated: 2026-04-22 — **v1.15** milestone execution complete*
+*Last updated: 2026-04-22 — **v1.16** milestone initialized*
 
-**Prior milestone:** **v1.14** — library QoL and operator playbooks — **2026-04-22**
+**Prior milestone:** **v1.15** — OPSUI second slice — **2026-04-22**
 
-**Completed:** **`v1.15`** shipped + archived in-repo (**2026-04-22**) — phases **62–64** — **`milestones/v1.15-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**Completed:** **v1.15** shipped + archived in-repo (**2026-04-22**) — phases **62–64** — **`milestones/v1.15-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next:** **TBD** — see **`.planning/ROADMAP.md`** § *Phases (next milestone after v1.15)*.
+**Next:** **Phase 65** — *Playbook run lifecycle (OPSUI)* — **`.planning/ROADMAP.md`**.
