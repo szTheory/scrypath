@@ -82,7 +82,7 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 |------|------------|-----------|
 | 1 | **A1** | **Shipped v1.12** |
 | 2 | **A2** | **Shipped v1.12** |
-| 3 | **v1.13** (**POLISH-***) | Voice + Hex narrative + contributor entry (**`.planning/REQUIREMENTS.md`**) |
+| 3 | **v1.13** (**POLISH-***) | Voice + Hex narrative + contributor entry (**`milestones/v1.13-REQUIREMENTS.md`**) |
 | 4 | **B1** | Stops speculative churn; tie work to named pain |
 | 5 | **B2**, then **C*** | OPSUI depth, then heavy CI/E2E **only with proof** |
 | Parallel | **D*** | When annoyance cost exceeds fix cost — do not headline a consumer milestone here |

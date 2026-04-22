@@ -1,8 +1,8 @@
 # Milestones
 
-## v1.13 Public polish & narrative coherence (Shipped in-repo: 2026-04-22)
+## v1.13 Public polish & narrative coherence (Shipped + archived: 2026-04-22)
 
-**Phases completed:** **3** (**54–56**)
+**Phases completed:** **3** (**54–56**), **5** requirements (**POLISH-01**–**POLISH-05**)
 
 **Hex:** **`scrypath 0.3.4`** on Hex at close; root **`mix.exs`** **`@version`** matches. **No** new Hex publish required for this planning milestone.
 
@@ -12,7 +12,11 @@
 - Planning + **README** version narrative aligned to **0.3.4** / **hex.pm** — **POLISH-02**
 - **`AGENTS.md`** contributor-first workflow; **`milestone-candidates.md`** refreshed (**Tier A** marked shipped, **B1** next) — **POLISH-03**, **POLISH-04**
 
-**Archives:** execution record in **`.planning/REQUIREMENTS.md`**, **`.planning/ROADMAP.md`** (phases **54–56**); formal **`milestones/v1.13-*`** archive optional when you run milestone close.
+**Pre-close audit:** **`audit-open`** cleared at milestone close. No formal **`milestones/v1.13-MILESTONE-AUDIT.md`**.
+
+**Archives:** `milestones/v1.13-ROADMAP.md`, `milestones/v1.13-REQUIREMENTS.md` · **Git tag:** `v1.13` (planning milestone marker)
+
+**Automation note:** **`gsd-sdk query milestone.complete`** failed again (**`version required for phases archive`**), so **`milestones/v1.13-*`**, **`ROADMAP`** collapse, and **`git rm` REQUIREMENTS** were **manual** (same pattern as **v1.10–v1.12**).
 
 ---
 

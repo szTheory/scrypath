@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: TBD
 milestone_name: (next — use /gsd-new-milestone)
 status: awaiting_next_milestone
-last_updated: "2026-04-22T12:00:00.000Z"
-last_activity: 2026-04-22
+last_updated: "2026-04-21T18:00:00.000Z"
+last_activity: 2026-04-21
 progress:
   total_phases: 0
   completed_phases: 0
@@ -17,11 +17,11 @@ progress:
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-04-22)
+See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.13** delivered in-repo; open the next milestone with **`/gsd-new-milestone`**.
+**Current focus:** **v1.13** archived; open the next milestone with **`/gsd-new-milestone`**.
 
 ## Current Position
 
@@ -31,7 +31,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-22)
 
 **Status:** Awaiting next milestone
 
-**Last activity:** 2026-04-22 — **v1.13** polish arc closed in planning (**POLISH-01**–**POLISH-05**)
+**Last activity:** 2026-04-21 — **v1.13** milestone close (**POLISH-01**–**POLISH-05** archived)
 
 ## Accumulated Context
 
@@ -58,7 +58,7 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ---
 
-*Last updated: 2026-04-22 — **v1.13** delivered; between milestones*
+*Last updated: 2026-04-21 — **v1.13** archived; between milestones*
 
 **Prior milestone:** **v1.13** — public polish & narrative coherence — **2026-04-22**
 
