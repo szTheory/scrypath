@@ -133,22 +133,12 @@ defmodule ScrypathOps.Playbook.Runner do
         _ -> []
       end
 
-    size =
-      case Keyword.get(page_kw, :size) do
-        n when is_integer(n) -> n
-        _ -> SearchPlayground.default_page_size()
-      end
-
-    number = Keyword.get(page_kw, :number)
-
-    with :ok <- SearchPlayground.validate_page_size(size),
+    with :ok <- validate_page_kw(page_kw),
          true <- Keyword.has_key?(scrypath_opts, :backend) do
-      page_merged = [size: size] ++ if(is_integer(number), do: [number: number], else: [])
-
       merged =
         scrypath_opts
         |> Keyword.merge(Keyword.delete(playbook_kw, :page))
-        |> Keyword.put(:page, page_merged)
+        |> maybe_put_page(page_kw)
 
       {:ok, merged}
     else
@@ -203,6 +193,10 @@ defmodule ScrypathOps.Playbook.Runner do
     |> Enum.reverse()
   end
 
+  defp coerce_opt("facets", list) when is_list(list) do
+    Enum.map(list, &coerce_existing_atom/1)
+  end
+
   defp coerce_opt("per_query", %{} = m) do
     Enum.reduce(m, [], fn
       {"ranking_score_threshold", n}, acc when is_integer(n) ->
@@ -233,6 +227,28 @@ defmodule ScrypathOps.Playbook.Runner do
   defp coerce_opt("otp_app", s) when is_binary(s), do: s
 
   defp coerce_opt(_, v), do: v
+
+  defp validate_page_kw([]), do: :ok
+
+  defp validate_page_kw(page_kw) do
+    case Keyword.get(page_kw, :size) do
+      n when is_integer(n) -> SearchPlayground.validate_page_size(n)
+      _ -> :ok
+    end
+  end
+
+  defp maybe_put_page(opts, []), do: opts
+  defp maybe_put_page(opts, page_kw), do: Keyword.put(opts, :page, page_kw)
+
+  defp coerce_existing_atom(value) when is_binary(value) do
+    try do
+      String.to_existing_atom(value)
+    rescue
+      ArgumentError -> value
+    end
+  end
+
+  defp coerce_existing_atom(value), do: value
 
   defp module_in_allowlist(bin, allowlist) when is_binary(bin) do
     mod =
