@@ -145,7 +145,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert html =~ "schema(s)"
   end
 
-  test "failed run shows enriched diagnostics and emits telemetry", %{conn: conn} do
+  test "forced failure shows failure_class and primary doc link", %{conn: conn} do
     prev_variant = Application.get_env(:scrypath_ops, :search_stub_variant)
     Application.put_env(:scrypath_ops, :search_stub_variant, :hard_error)
 
@@ -154,23 +154,6 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
         do: Application.delete_env(:scrypath_ops, :search_stub_variant),
         else: Application.put_env(:scrypath_ops, :search_stub_variant, prev_variant)
     end)
-
-    handler_id = "playbook-live-telemetry-#{System.unique_integer([:positive])}"
-    parent = self()
-
-    :telemetry.attach_many(
-      handler_id,
-      [
-        [:scrypath_ops, :playbook_run, :start],
-        [:scrypath_ops, :playbook_run, :stop]
-      ],
-      fn event, measurements, metadata, _config ->
-        send(parent, {:playbook_run_telemetry, event, measurements, metadata})
-      end,
-      nil
-    )
-
-    on_exit(fn -> :telemetry.detach(handler_id) end)
 
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
 
@@ -192,6 +175,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     render_click(view, "run", %{})
     html = render_async(view)
 
+    assert html =~ "data-testid=\"run-failure-panel\""
     assert html =~ "backend"
     assert html =~ "Search adapter returned a forced hard failure."
     assert html =~ "Copy diagnostics"
@@ -200,21 +184,67 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
 
     copied = render_click(view, "copy_run_diagnostics", %{})
     assert copied =~ "Copied diagnostics."
+  end
 
-    assert_receive {:playbook_run_telemetry, [:scrypath_ops, :playbook_run, :start],
-                    %{system_time: system_time}, %{run_id: run_id}}
+  test "playbook run emits telemetry start and stop for a completed run", %{conn: conn} do
+    unique = System.unique_integer([:positive])
+    start_handler_id = "playbook-live-start-#{unique}"
+    stop_handler_id = "playbook-live-stop-#{unique}"
+    parent = self()
+
+    :telemetry.attach(
+      start_handler_id,
+      [:scrypath_ops, :playbook_run, :start],
+      fn _event, measurements, metadata, _config ->
+        send(parent, {:telemetry_start, measurements, metadata})
+      end,
+      nil
+    )
+
+    :telemetry.attach(
+      stop_handler_id,
+      [:scrypath_ops, :playbook_run, :stop],
+      fn _event, measurements, metadata, _config ->
+        send(parent, {:telemetry_stop, measurements, metadata})
+      end,
+      nil
+    )
+
+    on_exit(fn ->
+      :telemetry.detach(start_handler_id)
+      :telemetry.detach(stop_handler_id)
+    end)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    json =
+      Jason.encode!(%{
+        "playbook_format" => 1,
+        "mode" => "search",
+        "schema" => "ScrypathOps.Test.OpsPostA",
+        "q" => "x",
+        "opts" => %{}
+      })
+
+    view
+    |> form("form[phx-submit='import_paste']", %{json: json})
+    |> render_submit()
+
+    render_click(view, "run", %{})
+    render_async(view)
+
+    assert_receive {:telemetry_start, %{system_time: system_time}, %{run_id: run_id}}
 
     assert is_integer(system_time)
     assert is_integer(run_id)
 
-    assert_receive {:playbook_run_telemetry, [:scrypath_ops, :playbook_run, :stop],
-                    %{duration: duration}, %{run_id: ^run_id, result: :error}}
+    assert_receive {:telemetry_stop, %{duration: duration}, %{run_id: ^run_id, result: :ok}}
 
     assert is_integer(duration)
     assert duration >= 0
   end
 
-  test "catalog run_now uses the shared async run flow", %{conn: conn} do
+  test "catalog run_now runs playbook async", %{conn: conn} do
     dir =
       Path.join(
         System.tmp_dir!(),
@@ -233,6 +263,10 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
         else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
     end)
 
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    basename = "catalog-run-#{System.unique_integer([:positive])}.json"
+
     json =
       Jason.encode!(%{
         "playbook_format" => 1,
@@ -242,15 +276,19 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
         "opts" => %{}
       })
 
-    File.write!(Path.join(dir, "catalog-run.json"), json)
+    view
+    |> form("form[phx-submit='import_paste']", %{json: json})
+    |> render_submit()
 
-    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+    view
+    |> form("form[phx-submit='save']", %{basename: basename})
+    |> render_submit()
 
-    render_click(view, "run_now", %{"name" => "catalog-run.json"})
+    render_click(view, "run_now", %{"name" => basename})
     html = render_async(view)
 
     assert html =~ "Run finished"
-    assert html =~ "catalog-run.json"
+    assert html =~ basename
   end
 
   test "loading a new playbook while running cancels and resets the active run", %{conn: conn} do

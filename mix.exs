@@ -20,6 +20,7 @@ defmodule Scrypath.MixProject do
       source_url: @source_url,
       source_ref: @source_ref,
       description: "Ecto-native search indexing and orchestration for Elixir apps",
+      aliases: aliases(),
       dialyzer: [
         plt_add_apps: [:mix],
         plt_file: {:no_warn, "priv/plts/scrypath.plt"}
@@ -79,6 +80,41 @@ defmodule Scrypath.MixProject do
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.37", only: [:dev, :test], runtime: false}
     ]
+  end
+
+  defp aliases do
+    [
+      test: &test_alias/1
+    ]
+  end
+
+  defp test_alias(args) do
+    case maybe_delegate_opsui_test(args) do
+      :handled -> :ok
+      :passthrough -> Mix.Tasks.Test.run(args)
+    end
+  end
+
+  defp maybe_delegate_opsui_test(args) when is_list(args) do
+    if args != [] and Enum.all?(args, &String.starts_with?(&1, "scrypath_ops/test/")) do
+      ops_dir = Path.expand("scrypath_ops", File.cwd!())
+      ops_args = Enum.map(args, &String.replace_prefix(&1, "scrypath_ops/", ""))
+
+      Mix.shell().info("==> test: delegating scrypath_ops paths into #{ops_dir}")
+
+      {out, status} =
+        System.cmd("mix", ["test" | ops_args], cd: ops_dir, stderr_to_stdout: true)
+
+      Mix.shell().info(out)
+
+      if status != 0 do
+        Mix.raise("test delegation for scrypath_ops failed with status #{status}")
+      end
+
+      :handled
+    else
+      :passthrough
+    end
   end
 
   defp docs do
