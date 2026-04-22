@@ -45,8 +45,8 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| OPS3-01 | Phase 65 | Pending |
-| OPS3-02 | Phase 65 | Pending |
+| OPS3-01 | Phase 65 | Complete |
+| OPS3-02 | Phase 65 | Complete |
 | OPS3-03 | Phase 66 | Pending |
 | OPS3-04 | Phase 67 | Pending |
 | OPS3-05 | Phase 67 | Pending |

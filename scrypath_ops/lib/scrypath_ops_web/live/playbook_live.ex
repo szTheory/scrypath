@@ -191,7 +191,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   def handle_event("cancel_run", _params, socket) do
-    {:noreply, cancel_async(socket, @playbook_run_async_key, {:shutdown, :cancel})}
+    {:noreply, cancel_active_run(socket, {:shutdown, :cancel})}
   end
 
   def handle_event(
@@ -375,7 +375,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   @impl true
-  def handle_async(@playbook_run_async_key, {:ok, {run_id, {:ok, result}}}, socket) do
+  def handle_async({@playbook_run_async_key, run_id}, {:ok, {:ok, result}}, socket) do
     if active_run?(socket, run_id) do
       emit_run_stop(socket.assigns.run_ui, run_id, :ok)
 
@@ -391,7 +391,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
     end
   end
 
-  def handle_async(@playbook_run_async_key, {:ok, {run_id, {:error, reason}}}, socket) do
+  def handle_async({@playbook_run_async_key, run_id}, {:ok, {:error, reason}}, socket) do
     if active_run?(socket, run_id) do
       emit_run_stop(socket.assigns.run_ui, run_id, :error)
       enriched = enrich_run_failure(reason, socket)
@@ -408,30 +408,28 @@ defmodule ScrypathOpsWeb.PlaybookLive do
     end
   end
 
-  def handle_async(@playbook_run_async_key, {:exit, reason}, socket) do
-    case socket.assigns.run_ui do
-      %{phase: :running, run_id: run_id} ->
-        normalized = normalize_async_exit(reason)
-        emit_run_stop(socket.assigns.run_ui, run_id, telemetry_result(normalized))
-        enriched = enrich_run_failure(normalized, socket)
+  def handle_async({@playbook_run_async_key, run_id}, {:exit, reason}, socket) do
+    if active_run?(socket, run_id) do
+      normalized = normalize_async_exit(reason)
+      emit_run_stop(socket.assigns.run_ui, run_id, telemetry_result(normalized))
+      enriched = enrich_run_failure(normalized, socket)
 
-        {:noreply,
-         socket
-         |> assign(:run_result, nil)
-         |> assign(:run_error, normalized)
-         |> assign(:run_failure_enriched, enriched)
-         |> assign(:run_ui, %{phase: :error, run_id: run_id, started_monotonic: nil})
-         |> maybe_put_run_exit_flash(normalized)}
-
-      _ ->
-        {:noreply, socket}
+      {:noreply,
+       socket
+       |> assign(:run_result, nil)
+       |> assign(:run_error, normalized)
+       |> assign(:run_failure_enriched, enriched)
+       |> assign(:run_ui, %{phase: :error, run_id: run_id, started_monotonic: nil})
+       |> maybe_put_run_exit_flash(normalized)}
+    else
+      {:noreply, socket}
     end
   end
 
   @impl true
   def handle_info({:playbook_run_timeout, run_id}, socket) do
     if active_run?(socket, run_id) do
-      socket = cancel_async(socket, @playbook_run_async_key, {:shutdown, :timeout})
+      socket = cancel_active_run(socket, {:shutdown, :timeout})
       emit_run_stop(socket.assigns.run_ui, run_id, :timeout)
       enriched = enrich_run_failure(:timed_out, socket)
 
@@ -750,8 +748,8 @@ defmodule ScrypathOpsWeb.PlaybookLive do
         |> assign(:run_failure_enriched, nil)
         |> assign(:run_ui, %{phase: :running, run_id: run_id, started_monotonic: now_ms()})
         |> tap(fn _ -> emit_run_start(run_id) end)
-        |> start_async(@playbook_run_async_key, fn ->
-          {run_id, Runner.run_validated(draft, allowlist, scrypath_opts)}
+        |> start_async(run_async_key(run_id), fn ->
+          Runner.run_validated(draft, allowlist, scrypath_opts)
         end)
     end
   end
@@ -761,7 +759,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
     emit_run_stop(socket.assigns.run_ui, socket.assigns.run_ui.run_id, :cancelled)
 
     socket
-    |> cancel_async(@playbook_run_async_key, {:shutdown, :superseded})
+    |> cancel_active_run({:shutdown, :superseded})
     |> assign(:run_result, nil)
     |> assign(:run_error, nil)
     |> assign(:run_failure_enriched, nil)
@@ -776,6 +774,17 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
   defp next_run_id(%{run_id: run_id}) when is_integer(run_id), do: run_id + 1
   defp next_run_id(_), do: 1
+
+  defp run_async_key(run_id), do: {@playbook_run_async_key, run_id}
+
+  defp cancel_active_run(
+         %{assigns: %{run_ui: %{phase: :running, run_id: run_id}}} = socket,
+         reason
+       ) do
+    cancel_async(socket, run_async_key(run_id), reason)
+  end
+
+  defp cancel_active_run(socket, _reason), do: socket
 
   defp now_ms, do: System.monotonic_time(:millisecond)
 
