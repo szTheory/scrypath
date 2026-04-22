@@ -1,5 +1,19 @@
 import Config
 
+# Optional: absolute workspace directory for operator playbook JSON (save/list/load).
+# When unset, `:playbook_workspace_dir` is not set — releases must not silently write under `priv/`.
+case System.get_env("SCRYPATH_OPS_PLAYBOOK_DIR") do
+  nil ->
+    :ok
+
+  "" ->
+    :ok
+
+  raw ->
+    path = raw |> String.trim() |> Path.expand()
+    Application.put_env(:scrypath_ops, :playbook_workspace_dir, path)
+end
+
 # Optional comma-separated schema modules for OPSUI (overrides compile-time allowlist).
 case System.get_env("SCRYPATH_OPS_SCHEMAS") do
   nil ->
@@ -14,8 +28,12 @@ end
 
 # Optional: override search playground bounds (see README — "Search playground bounds").
 case System.get_env("SCRYPATH_OPS_SEARCH_DEFAULT_PAGE_SIZE") do
-  nil -> :ok
-  "" -> :ok
+  nil ->
+    :ok
+
+  "" ->
+    :ok
+
   raw ->
     case Integer.parse(String.trim(raw)) do
       {n, _} -> config :scrypath_ops, :search_playground_default_page_size, n
@@ -24,8 +42,12 @@ case System.get_env("SCRYPATH_OPS_SEARCH_DEFAULT_PAGE_SIZE") do
 end
 
 case System.get_env("SCRYPATH_OPS_SEARCH_MAX_PAGE_SIZE") do
-  nil -> :ok
-  "" -> :ok
+  nil ->
+    :ok
+
+  "" ->
+    :ok
+
   raw ->
     case Integer.parse(String.trim(raw)) do
       {n, _} -> config :scrypath_ops, :search_playground_max_page_size, n
@@ -34,8 +56,12 @@ case System.get_env("SCRYPATH_OPS_SEARCH_MAX_PAGE_SIZE") do
 end
 
 case System.get_env("SCRYPATH_OPS_SEARCH_MAX_SCHEMAS") do
-  nil -> :ok
-  "" -> :ok
+  nil ->
+    :ok
+
+  "" ->
+    :ok
+
   raw ->
     case Integer.parse(String.trim(raw)) do
       {n, _} -> config :scrypath_ops, :search_playground_max_schemas, n
