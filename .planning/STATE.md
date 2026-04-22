@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.16
 milestone_name: — in progress)
-status: verifying
+status: ready_to_plan
 last_updated: "2026-04-22T22:54:40.189Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 6
   completed_plans: 6
   percent: 100
@@ -21,15 +21,15 @@ See: `.planning/PROJECT.md` (updated 2026-04-22)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **Phase 66** — *Runner–library contract* — executing the canonical contract and parity-test plans for **OPS3-03**.
+**Current focus:** **Phase 67** — *Verification, JTBD examples, milestone bookkeeping* — next planning target after Phase 66 completed **OPS3-03**.
 
 ## Current Position
 
-**Phase:** **66** — *Runner–library contract* — executing from **`.planning/ROADMAP.md`**.
+**Phase:** 67
 
-**Plan:** 2 of 2
+**Plan:** Not started
 
-**Status:** Phase complete — ready for verification
+**Status:** Ready to plan
 
 **Last activity:** 2026-04-22
 
@@ -61,18 +61,18 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-1. **`/gsd-plan-phase 66`** — produce the Runner–library contract plan from the current roadmap requirements.
-2. **`/gsd-progress`** — snapshot the updated state and next-phase context.
-3. **`/clear`** then continue the planning/execute chain as needed.
+1. **`/gsd-discuss-phase 67`** — capture bounded verification/doc-contract/JTBD decisions before planning.
+2. **`/gsd-plan-phase 67`** — plan the Phase 67 verification and milestone-close slice.
+3. **`/gsd-progress`** — snapshot the updated state and next-phase context.
 
 ---
 
-*Last updated: 2026-04-22 — **Phase 65** complete, **Phase 66** next*
+*Last updated: 2026-04-22 — **Phase 66** complete, **Phase 67** next*
 
 **Prior milestone:** **v1.15** — OPSUI second slice — **2026-04-22**
 
 **Completed:** **v1.15** shipped + archived in-repo (**2026-04-22**) — phases **62–64** — **`milestones/v1.15-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next:** **Phase 66** — *Runner–library contract* — **`.planning/ROADMAP.md`**.
+**Next:** **Phase 67** — *Verification, JTBD examples, milestone bookkeeping* — **`.planning/ROADMAP.md`**.
 
-**Completed Phase:** 65 (Playbook run lifecycle (OPSUI)) — 4/4 plans — 2026-04-22
+**Completed Phase:** 66 (Runner–library contract) — 2/2 plans — 2026-04-22
