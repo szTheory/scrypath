@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.14
-milestone_name: ideas)
-status: planning
-last_updated: "2026-04-22T17:18:32.629Z"
-last_activity: 2026-04-22 — `/gsd-execute-phase 63`
+milestone: v1.15
+milestone_name: OPSUI second slice
+status: "Phase **64** context gathered (**64-CONTEXT.md**). Next: **plan** then **execute** phase 64."
+last_updated: "2026-04-22T23:30:00.000Z"
+last_activity: 2026-04-22 — `/gsd-discuss-phase 64`
 progress:
   total_phases: 3
   completed_phases: 2
-  total_plans: 7
+  total_plans: 8
   completed_plans: 7
-  percent: 100
+  percent: 67
 ---
 
 # Project State
@@ -25,13 +25,13 @@ See: `.planning/PROJECT.md` (updated 2026-04-22)
 
 ## Current Position
 
-**Phase:** 64 — not started (ready to discuss / plan)
+**Phase:** 64 — context gathered (ready to plan / execute)
 
 **Plan:** —
 
-**Status:** Phase **63** execution and verification complete — **`.planning/phases/63-bounded-team-persistence-and-security-posture/63-VERIFICATION.md`**. Phases **62–63** shipped in-repo **2026-04-22**.
+**Status:** Phase **63** execution and verification complete — **`.planning/phases/63-bounded-team-persistence-and-security-posture/63-VERIFICATION.md`**. Phases **62–63** shipped in-repo **2026-04-22**. **`64-CONTEXT.md`** captures IA, **`verify.opsui`**, milestone SHIP, and doc-contract decisions.
 
-**Last activity:** 2026-04-22 — `/gsd-execute-phase 63`
+**Last activity:** 2026-04-22 — `/gsd-discuss-phase 64`
 
 ## Accumulated Context
 
@@ -43,6 +43,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-22)
 - **v1.15 open:** Second slice advances **OPSUI-FUT-01** toward **team-usable** workflows without vendor-dashboard scope — **`.planning/REQUIREMENTS.md`**.
 - **Phase 62 discuss:** Wire metadata as optional flat **`title`** / **`description`** / **`tags`** on **`playbook_format: 1`**; tag **UI** deferred; capture = last success in assigns, clear on **mode switch** + **mount**; rename collision = **error** (no replace); duplicate = **`stem-n.json`** — **`.planning/phases/62-playground-capture-and-playbook-catalog/62-CONTEXT.md`**.
 - **Phase 63 discuss:** Ship **OPS2-04** as **(A) file + GitOps/docs** only (no Ecto catalog this phase); single workspace authority; **reject-first** `V1` security; golden team-playbook doc + examples + optional **`mix`** directory validation; **`playbook-schema-v1.md`** persistence section refresh — **`.planning/phases/63-bounded-team-persistence-and-security-posture/63-CONTEXT.md`**.
+- **Phase 64 discuss:** **OPS2-05** — mechanical IA (`Nav` + nav fence + tests) always; JTBD/follow-ups only when jobs change, link to guides not duplicate runbooks. **OPS2-06** — pyramid tests; one stub **`LiveViewTest` vertical** per primary shipped action; no Meilisearch in default **`verify.opsui`**. **OPS2-08** — freeze **`milestones/v1.15-*`** trio at close + rolling canon; Hex/changelog on release PR spine. **Doc contracts** — targeted stable anchors only — **`.planning/phases/64-ia-verification-and-milestone-bookkeeping/64-CONTEXT.md`**.
 
 ### Blockers / Concerns
 
@@ -58,13 +59,13 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-1. **`/gsd-discuss-phase 64`** — recommended before planning.
-2. **`/gsd-plan-phase 64`** — if **64-CONTEXT.md** already satisfies open questions.
+1. **`/gsd-plan-phase 64`** — planning with **64-CONTEXT.md** locked.
+2. **`/gsd-execute-phase 64`** — after plans exist.
 3. **`/gsd-progress`** — milestone snapshot.
 
 ---
 
-*Last updated: 2026-04-22 — Phase 63 execution complete*
+*Last updated: 2026-04-22 — Phase 64 discuss complete*
 
 **Prior milestone:** **v1.14** — library QoL and operator playbooks — **2026-04-22**
 
