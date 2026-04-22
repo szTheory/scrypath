@@ -1,16 +1,15 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.15
-milestone_name: OPSUI second slice
-status: planned
-last_updated: "2026-04-22T12:00:00.000Z"
-last_activity: 2026-04-22
+milestone: v1.14
+milestone_name: ideas)
+status: "Milestone **v1.15** roadmap defined (**3** phases). Next: **`/gsd-discuss-phase 62`** or **`/gsd-plan-phase 62`**."
+last_updated: "2026-04-22T16:06:27.554Z"
+last_activity: 2026-04-22 — Milestone **v1.15** roadmap created (`/gsd-new-milestone`)
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
-  percent: 0
 ---
 
 # Project State
