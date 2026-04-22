@@ -17,6 +17,7 @@ Canonical contract for the optional **ScrypathOps** Phoenix shell: who uses it, 
 5. **When** I need a quick CLI snapshot during an incident, **I need** the same priorities reflected in nav as in terminal workflows, **so that** muscle memory matches between OPSUI and Mix — **done when** primary nav order matches jobs 1–4 above.
 6. **When** onboarding a teammate to operator workflows, **I need** a short mapping from job to route and docs, **so that** they self-serve without reading the whole repo — **done when** this table is kept in sync with `router.ex` on every nav change.
 7. **When** planning roadmap work, **I need** triage (posture + failed sync) ranked above exploratory search, **so that** the product does not imply search debugging is co-equal with outage response — **done when** nav order stays posture → failed sync → sync/drift → search.
+8. **When** I want to replay a bounded search or multi-index run from disk, **I need** an ops-local JSON playbook library with the same honesty and dispatch rails as the playground, **so that** I can iterate without pasting large payloads into chat — **done when** I can import, preview, and run validated playbooks under an explicit workspace directory (see `/ops/playbooks`).
 
 ### Playbook (saved playbooks)
 
@@ -32,8 +33,9 @@ Primary chrome under `/ops` follows **roadmap triage order**: posture first, fai
 | 2 | On-call engineer | Failed sync work | /ops/failed-sync | Phase 45 — failed work UI; today use `mix scrypath.failed` from [guides/operator-mix-tasks.md](../../guides/operator-mix-tasks.md) |
 | 3 | Search owner | Sync / drift | /ops/sync-drift | Shipped **phase 45** — read-only reconcile + lazy index contract drift in OPSUI; still use `mix scrypath.status`, [guides/drift-recovery.md](../../guides/drift-recovery.md), [guides/sync-modes-and-visibility.md](../../guides/sync-modes-and-visibility.md) |
 | 4 | Search owner | Search & federation | /ops/search | Shipped in phase 46 — bounded single/multi playground with federation-honest inspector; semantics in [guides/multi-index-search.md](../../guides/multi-index-search.md) |
+| 4b | Search owner | Saved playbooks | /ops/playbooks | JSON format and caps in [playbook-schema-v1.md](playbook-schema-v1.md); runs use the same `SearchPlayground` dispatch path as `/ops/search` |
 <!-- scrypath:nav-contract-begin -->
-[{"route":"/ops/posture","label":"Posture / health"},{"route":"/ops/failed-sync","label":"Failed sync work"},{"route":"/ops/sync-drift","label":"Sync / drift"},{"route":"/ops/search","label":"Search & federation"}]
+[{"route":"/ops/posture","label":"Posture / health"},{"route":"/ops/failed-sync","label":"Failed sync work"},{"route":"/ops/sync-drift","label":"Sync / drift"},{"route":"/ops/search","label":"Search & federation"},{"route":"/ops/playbooks","label":"Saved playbooks"}]
 <!-- scrypath:nav-contract-end -->
 | 5 | Library maintainer | Sync / drift | /ops/sync-drift | Mix tasks index: [guides/operator-mix-tasks.md](../../guides/operator-mix-tasks.md) |
 | 6 | Library maintainer | Posture / health | /ops/posture | Library verification: [CONTRIBUTING.md](../../CONTRIBUTING.md) |
