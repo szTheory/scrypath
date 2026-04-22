@@ -1,53 +1,114 @@
 # Architecture Research
 
-**Domain:** OPSUI as consumer of Scrypath
-**Researched:** 2026-04-20
-**Confidence:** HIGH
+**Domain:** Scrypath core (`lib/scrypath`) + **`scrypath_ops`** operator shell — **v1.14** extensions for B1 + B2.
 
-## Integration Picture
+**Researched:** 2026-04-21
+
+**Confidence:** HIGH for as-built; MEDIUM for target playbook architecture (depends on persistence MVP).
+
+## Standard Architecture
+
+### System Overview
 
 ```
-┌─────────────────────┐     path / Hex      ┌──────────────────┐
-│  OPSUI Phoenix app  │ ───────────────────▶ │  scrypath (lib)  │
-│  (LiveView routes)  │   Scrypath.* calls   │  Meilisearch     │
-└─────────────────────┘                      └──────────────────┘
-         │                                            │
-         │  Telemetry subscribe (optional)           │
-         ▼                                            ▼
-   Low-cardinality aggregates                  Engine / tasks
+┌─────────────────────────────────────────────────────────────┐
+│                     Consumer Phoenix app                     │
+│  Ecto schemas ──> Scrypath sync ──> Meilisearch indices      │
+└───────────────────────────┬─────────────────────────────────┘
+                            │ read APIs + Mix tasks
+┌───────────────────────────▼─────────────────────────────────┐
+│              scrypath_ops (optional, repo-local)             │
+│  LiveView (posture, triage, sync/drift, search playground)   │
+│       │                                                      │
+│       ├── SearchPlayground ──> Adapter.Scrypath / Stub       │
+│       └── [v1.14] Playbook store (TBD: session / file / DB)   │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## Major Components
+### Component Responsibilities
 
-1. **Router + live_session** — Namespaced `/ops` (or similar); authentication boundary (OPSUI-08).
-2. **Context modules** — Thin adapters that call `Scrypath` functions and normalize structs for templates (no business logic fork).
-3. **LiveViews by JTBD** — Dashboard (posture), Failed work, Sync status, Federation / multi-search lab, Settings/drift read-only views as needed.
-4. **Presentation layer** — Components for hit lists, merge metadata, partial-failure banners; shared empty/error states.
+| Component | Responsibility | v1.14 touch |
+|-----------|----------------|-------------|
+| **`Scrypath`** | Search, sync, federation, visibility APIs | **B1** only: targeted improvements |
+| **`ScrypathOps.SearchPlayground`** | Caps, validation, dispatch | **B2**: accept playbook-shaped params; maybe `dispatch_*` overloads or normalizer module |
+| **`SearchLive`** | Form state, events, telemetry | **B2**: save/load UI, warnings |
+| **`operator-ia.md` + router** | Nav contract | **B2**: new nav entry only if JTBD clear; run **`mix scrypath_ops.check_nav_contract`** |
 
-## Data Flow
+## Recommended Project Structure (incremental)
 
-- **Read-mostly:** UI polls or refreshes on user action; avoid inventing background reconcilers.
-- **Federation:** Use the same structs and ordering helpers the library documents (`MultiSearchResult`, merge projection) so UI cannot claim a sort the library does not guarantee.
+```
+scrypath_ops/lib/scrypath_ops/
+  search_playground.ex          # limits + dispatch (extend carefully)
+  search_playground/
+    adapter.ex
+scrypath_ops/lib/scrypath_ops_web/live/
+  search_live.ex                # playground UI
+  [new] playbook_live.ex        # OR fold into search_live — pick one surface
+```
 
-## Build Order (for phases)
+**Rationale:** Keep playbook logic discoverable next to playground; avoid scattering persistence in `Endpoint`.
 
-1. App shell + security + IA (enables safe iteration).
-2. Posture + failed work + sync visibility (highest daily value).
-3. Search / federation lab (depends on shell + trust in read paths).
-4. Verification hardening + CI wiring.
+## Architectural Patterns
 
-## New vs Modified
+### Pattern 1: Adapter seam for testability
 
-| Area | New | Modified |
-|------|-----|----------|
-| Hex package | OPSUI app tree | No change to `mix.exs` publish surface unless explicitly adding an umbrella app |
-| Scrypath core | — | Only if a **small** read API gap is proven; default is zero library feature work |
+**What:** `SearchPlayground` already selects adapter via config.
+
+**When to use:** Playbook “run” should hit the same adapter path as manual runs.
+
+**Trade-offs:** Stub stays deterministic in CI.
+
+### Pattern 2: Value objects for saved payload
+
+**What:** Typed struct or schema for `{mode: :search | :search_many, entries: ..., opts: ...}` with explicit version field (`playbook_format: 1`).
+
+**When to use:** Before any persistence.
+
+**Trade-offs:** Migration story if Meilisearch wire options evolve — version field enables upgrade path.
+
+### Pattern 3: No new library recovery verbs
+
+**What:** UI and playbooks stay read-only / bounded query; actions remain Mix/docs.
+
+**When to use:** Always (per **v1.10** Out of Scope table).
+
+## Data Flow — Playbook Run
+
+```
+User selects playbook
+    → Load normalized payload (validate version + caps)
+    → SearchLive assigns form
+    → User clicks Run (or auto-run guarded)
+    → SearchPlayground.dispatch_* → Scrypath / Stub
+    → Render results + merge trace (existing OPSUI-05 paths)
+```
+
+## Anti-Patterns
+
+### Anti-Pattern: Playbook executes hidden Mix
+
+**Wrong:** One-click reindex from saved YAML.
+
+**Right:** Playbook stores **query reproduction** data; operator follows linked Mix for mutations.
+
+### Anti-Pattern: Storing secrets in playbooks
+
+**Wrong:** Full connection strings in JSON.
+
+**Right:** Reference schema keys / index names only; host config stays env.
+
+## Integration Points
+
+| Boundary | Communication | Notes |
+|----------|---------------|-------|
+| Playbook JSON ↔ LiveView | Params + assigns | Sanitize display; length limits |
+| OPSUI ↔ Meilisearch | Via `Scrypath` only | No parallel HTTP client in playbooks |
 
 ## Sources
 
-- Library federation phases (39–41) and per-query phase (43) planning artifacts in `milestones/`
-- `docs/search-backend-sre.md`
+- **`scrypath_ops/lib/scrypath_ops_web/live/search_live.ex`**
+- **`scrypath_ops/lib/scrypath_ops/search_playground.ex`**
+- **`milestones/v1.10-REQUIREMENTS.md`** packaging + security rows
 
 ---
-*Architecture research for: Scrypath v1.10 OPSUI*
-*Researched: 2026-04-20*
+*Architecture research for: Scrypath v1.14*

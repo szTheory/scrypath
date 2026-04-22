@@ -1,30 +1,106 @@
 # Pitfalls Research
 
-**Domain:** Adding operator LiveView UI to an existing search library ecosystem
-**Researched:** 2026-04-20
+**Domain:** Adding evidence-led library QoL + operator saved playbooks to an existing search library and LiveView ops shell.
+
+**Researched:** 2026-04-21
+
 **Confidence:** HIGH
 
-## Pitfalls When Adding OPSUI
+## Critical Pitfalls
 
-| Pitfall | Symptom | Prevention | Phase to address |
-|---------|-----------|------------|------------------|
-| UI implies stronger guarantees than APIs | Users trust wrong ordering or “live” sync | Label data sources; link to docs; show timestamps/versions | 46, 47 |
-| High-cardinality telemetry in widgets | Performance + privacy incidents | Follow `docs/search-backend-sre.md`; aggregate in context | 45, 47 |
-| Federation shown as flat search | Misread merge / weight semantics | Dedicated federation view using library structs | 46 |
-| OPSUI in core Hex package | Dependency bloat for API-only users | OPSUI-09 enforcement in reviews | 44 |
-| Weak auth in production | Open admin on internet | OPSUI-08: default dev-only or explicit plug contract | 44 |
-| Drift between UI and Mix tasks | Two sources of truth | Reuse same functions where possible; document gaps | 45–47 |
+### Pitfall 1: Speculative B1 API churn
 
-## Integration Pitfalls
+**What goes wrong:** New options or macros “for ergonomics” without a linked failure report — breaks semver trust and increases doc surface.
 
-- **Partial multi-search failures:** UI must surface envelope semantics (not hide failed legs).
-- **Per-query options:** If shown, must stay allowlisted and match `%Scrypath.Query{}` docs—no “raw JSON” escape hatch unless explicitly scoped and warned.
+**Why it happens:** Momentum after research; easy to confuse “elegant” with “needed”.
 
-## Prevention Strategy
+**How to avoid:** Each **B1** REQ cites evidence (issue URL, doc quote, repro snippet). Default to docs/errors first.
 
-- Contract tests or LiveView tests that pin critical copy/structure (OPSUI-10).
-- PR checklist: “Does this screen lie about federation or sync timing?”
+**Warning signs:** PRs that only say “cleanup” or “DX” with no user story.
+
+**Phase to address:** Early v1.14 phase — evidence triage gate.
 
 ---
-*Pitfalls research for: Scrypath v1.10 OPSUI*
-*Researched: 2026-04-20*
+
+### Pitfall 2: Playbooks as covert production logging
+
+**What goes wrong:** Saved payloads include PII-rich query strings; operators replay against prod from laptops.
+
+**Why it happens:** FUT-01 “shared playbooks” interpreted as production truth capture.
+
+**How to avoid:** Warnings in UI (already “Non-production search playground” tone in **`search_live.ex`**); scrub export; document in operator guide.
+
+**Warning signs:** Requests for “run on schedule against prod index”.
+
+**Phase to address:** Playbook design / UX phase.
+
+---
+
+### Pitfall 3: Credential leakage in exports
+
+**What goes wrong:** JSON download embeds API keys or Meilisearch master key copied from env.
+
+**Why it happens:** Naive “serialize whole assigns”.
+
+**How to avoid:** Explicit allowlist of serializable fields; redact unknown keys.
+
+**Warning signs:** Export contains `host` with embedded basic auth.
+
+**Phase to address:** Persistence / export implementation.
+
+---
+
+### Pitfall 4: Drift from `operator-ia.md` without contract update
+
+**What goes wrong:** New playbook nav breaks **OPSUX-01** / nav contract CI.
+
+**Why it happens:** Feature added without IA doc pass.
+
+**How to avoid:** Update **`scrypath_ops/docs/operator-ia.md`** in same PR as router change; run **`mix scrypath_ops.check_nav_contract`**.
+
+**Phase to address:** OPSUI playbook UI phase.
+
+---
+
+### Pitfall 5: Scope creep into recovery verbs
+
+**What goes wrong:** “Run playbook” triggers reindex or settings apply.
+
+**Why it happens:** Incident fatigue.
+
+**How to avoid:** Re-read **v1.10** Out of Scope table in planning archives; keep actions in Mix.
+
+**Phase to address:** Architecture review before implementation merge.
+
+---
+
+## Technical Debt Patterns
+
+| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
+|----------|-------------------|----------------|------------------|
+| `localStorage` only playbooks | No migrations | No team sharing | Solo dev OPSUI only; document limitation |
+| Postgres without authz | Faster MVP | Data leak risk | Never in multi-user deploy without OPSUI-08 model |
+
+## Security Mistakes
+
+| Mistake | Risk | Prevention |
+|---------|------|------------|
+| World-readable playbook index | Competitor intel | Auth plug + default deny |
+| CSRF ignored on save | Forged playbooks | Standard Phoenix CSRF on LiveView |
+
+## Pitfall-to-Phase Mapping (preview)
+
+| Pitfall | Prevention Phase | Verification |
+|---------|------------------|--------------|
+| Speculative B1 | Evidence triage | Checklist in PR template |
+| Production logging | Playbook UX | Copy review + doc |
+| IA drift | Nav / IA phase | `check_nav_contract` |
+
+## Sources
+
+- **`milestones/v1.10-REQUIREMENTS.md`** — Out of Scope rows.
+- **`docs/search-backend-sre.md`** — operator discipline.
+- Community: Searchkick import errors, Scout filter foot-guns (symptoms of unclear query contracts).
+
+---
+*Pitfalls research for: Scrypath v1.14*
