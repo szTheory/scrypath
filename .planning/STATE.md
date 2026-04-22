@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.16
 milestone_name: — in progress)
-status: Ready for **`/gsd-plan-phase 66`**.
-last_updated: "2026-04-22T20:07:31Z"
-last_activity: "2026-04-22 — Phase 65 executed, verification upgraded from `human_needed` to `passed`, and tracking advanced to Phase 66."
+status: executing
+last_updated: "2026-04-22T22:45:49.744Z"
+last_activity: 2026-04-22
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
-  percent: 33
+  total_plans: 6
+  completed_plans: 5
+  percent: 83
 ---
 
 # Project State
@@ -21,17 +21,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-22)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.16** — playbook **run lifecycle**, **actionable errors**, **runner–library contract**, **verify + doc contracts**, **JTBD examples**, milestone bookkeeping (**OPS3-01**–**OPS3-06**).
+**Current focus:** **Phase 66** — *Runner–library contract* — executing the canonical contract and parity-test plans for **OPS3-03**.
 
 ## Current Position
 
-**Phase:** **66** — *Runner–library contract* — ready to plan from **`.planning/ROADMAP.md`**.
+**Phase:** **66** — *Runner–library contract* — executing from **`.planning/ROADMAP.md`**.
 
-**Plan:** —
+**Plan:** 2 of 2
 
-**Status:** Ready for **`/gsd-plan-phase 66`**.
+**Status:** Ready to execute
 
-**Last activity:** 2026-04-22 — Phase 65 completed; async run lifecycle, structured failure docs, and OPSUI verification automation landed.
+**Last activity:** 2026-04-22
 
 ## Accumulated Context
 
@@ -42,6 +42,8 @@ See: `.planning/PROJECT.md` (updated 2026-04-22)
 - **v1.15 close:** Second slice shipped **OPS2-01**–**OPS2-08** across phases **62–64**; persistence authority **(A)** file + GitOps; **OPSUI-FUT-02** / **Tier C** unchanged — **`milestones/v1.15-REQUIREMENTS.md`**.
 - **v1.16 open:** Prioritize **execution honesty** over new indexing features; **stub-first OPSUI CI** unchanged; parallel **`.planning/research/`** refresh **skipped** at open (existing research retained).
 - **Phase 65 discuss:** Hybrid catalog **Run now** + shared draft pipeline; **`start_async`/`handle_async`** lifecycle with **`run_id`**, timeout, **`cancel_async`**; **`scrypath_ops`** error registry + **`DocResolver`**; **no** Oban/DB default run path in this phase (deferred).
+- Kept Runner.run_validated/3 as the canonical raw tuple seam and documented reason identity as the compatibility key.
+- Kept playbook-schema-v1.md authoritative for JSON wire format only and linked execution semantics to the Runner moduledoc.
 
 ### Blockers / Concerns
 
