@@ -75,6 +75,95 @@ defmodule ScrypathOps.Playbook.Store do
 
   def delete_workspace_file(_, _), do: {:error, :invalid_args}
 
+  @doc """
+  Renames a workspace JSON file by basename (`from_name` → `to_name`).
+
+  Returns `{:error, :target_exists}` if the destination path already exists (no overwrite).
+  """
+  @spec rename_workspace_file(Path.t(), String.t(), String.t()) :: :ok | {:error, term()}
+  def rename_workspace_file(root, from_name, to_name)
+      when is_binary(root) and is_binary(from_name) and is_binary(to_name) do
+    if safe_basename?(from_name) and safe_basename?(to_name) do
+      with {:ok, from_path} <- resolved_path(root, from_name),
+           {:ok, to_path} <- resolved_path(root, to_name) do
+        cond do
+          not File.exists?(from_path) ->
+            {:error, :rename_failed}
+
+          File.exists?(to_path) ->
+            {:error, :target_exists}
+
+          true ->
+            case File.rename(from_path, to_path) do
+              :ok -> :ok
+              {:error, _} -> {:error, :rename_failed}
+            end
+        end
+      end
+    else
+      {:error, :outside_workspace}
+    end
+  end
+
+  def rename_workspace_file(_, _, _), do: {:error, :invalid_args}
+
+  @doc """
+  Duplicates a workspace JSON file by reading `from_name` and writing `to_name`.
+
+  Returns `{:error, :target_exists}` if `to_name` already exists.
+  """
+  @spec duplicate_workspace_file(Path.t(), String.t(), String.t()) :: :ok | {:error, term()}
+  def duplicate_workspace_file(root, from_name, to_name)
+      when is_binary(root) and is_binary(from_name) and is_binary(to_name) do
+    if safe_basename?(from_name) and safe_basename?(to_name) do
+      with {:ok, to_path} <- resolved_path(root, to_name) do
+        if File.exists?(to_path) do
+          {:error, :target_exists}
+        else
+          with {:ok, body} <- read_workspace_file(root, from_name) do
+            save_workspace_file(root, to_name, body)
+          end
+        end
+      end
+    else
+      {:error, :outside_workspace}
+    end
+  end
+
+  def duplicate_workspace_file(_, _, _), do: {:error, :invalid_args}
+
+  @doc """
+  Suggests a free duplicate basename `"{stem}-n.json"` for `n >= 1` under `root`.
+
+  `from_name` must be a safe `*.json` basename; `stem` is `Path.rootname/1` of that name.
+  """
+  @spec suggest_duplicate_basename(Path.t(), String.t()) :: {:ok, String.t()} | {:error, term()}
+  def suggest_duplicate_basename(root, from_name)
+      when is_binary(root) and is_binary(from_name) do
+    if safe_basename?(from_name) do
+      stem = Path.rootname(from_name)
+
+      with {:ok, names} <- list_workspace_json(root) do
+        taken = MapSet.new(names)
+
+        suggested =
+          Enum.find_value(1..512, fn n ->
+            candidate = "#{stem}-#{n}.json"
+            if MapSet.member?(taken, candidate), do: nil, else: candidate
+          end)
+
+        case suggested do
+          nil -> {:error, :no_duplicate_name}
+          name -> {:ok, name}
+        end
+      end
+    else
+      {:error, :outside_workspace}
+    end
+  end
+
+  def suggest_duplicate_basename(_, _), do: {:error, :invalid_args}
+
   defp absolute_root(root) do
     root_abs = Path.expand(Path.join(root, "."))
 
