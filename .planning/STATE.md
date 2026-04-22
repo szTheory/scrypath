@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.14
-milestone_name: ideas)
-status: "Milestone **v1.15** roadmap defined (**3** phases). Next: **`/gsd-discuss-phase 62`** or **`/gsd-plan-phase 62`**."
-last_updated: "2026-04-22T16:06:27.554Z"
-last_activity: 2026-04-22 — Milestone **v1.15** roadmap created (`/gsd-new-milestone`)
+milestone: v1.15
+milestone_name: OPSUI second slice
+status: "Phase **62** context locked — next **`/gsd-plan-phase 62`**."
+last_updated: "2026-04-22T16:07:05.026Z"
+last_activity: "2026-04-22 — `/gsd-discuss-phase 62` (CONTEXT + research)"
 progress:
   total_phases: 3
   completed_phases: 0
@@ -24,13 +24,13 @@ See: `.planning/PROJECT.md` (updated 2026-04-22)
 
 ## Current Position
 
-**Phase:** 62 — not started (roadmap ready)
+**Phase:** 62 — context gathered (ready for planning)
 
 **Plan:** —
 
-**Status:** Milestone **v1.15** roadmap defined (**3** phases). Next: **`/gsd-discuss-phase 62`** or **`/gsd-plan-phase 62`**.
+**Status:** Phase **62** context locked (**62-CONTEXT.md**). Next: **`/gsd-plan-phase 62`**.
 
-**Last activity:** 2026-04-22 — Milestone **v1.15** roadmap created (`/gsd-new-milestone`)
+**Last activity:** 2026-04-22 — `/gsd-discuss-phase 62` (research-backed decisions + CONTEXT)
 
 ## Accumulated Context
 
@@ -40,6 +40,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-22)
 
 - **v1.14 close:** Playbook persistence MVP chose **portable JSON + workspace dir** (not Ecto); **OPSUI-FUT-02** deferred — **`milestones/v1.14-REQUIREMENTS.md`**.
 - **v1.15 open:** Second slice advances **OPSUI-FUT-01** toward **team-usable** workflows without vendor-dashboard scope — **`.planning/REQUIREMENTS.md`**.
+- **Phase 62 discuss:** Wire metadata as optional flat **`title`** / **`description`** / **`tags`** on **`playbook_format: 1`**; tag **UI** deferred; capture = last success in assigns, clear on **mode switch** + **mount**; rename collision = **error** (no replace); duplicate = **`stem-n.json`** — **`.planning/phases/62-playground-capture-and-playbook-catalog/62-CONTEXT.md`**.
 
 ### Blockers / Concerns
 
@@ -55,12 +56,12 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **`/gsd-discuss-phase 62`** — clarify approach for **Phase 62** (playground capture + catalog depth), or **`/gsd-plan-phase 62`** to plan directly.
+1. **`/gsd-plan-phase 62`** — plan implementation from **`.planning/phases/62-playground-capture-and-playbook-catalog/62-CONTEXT.md`** (and **62-UI-SPEC.md**).
 2. **`/gsd-progress`** — sanity-check planning directory.
 
 ---
 
-*Last updated: 2026-04-22 — milestone **v1.15** opened*
+*Last updated: 2026-04-22 — Phase 62 discuss complete*
 
 **Prior milestone:** **v1.14** — library QoL and operator playbooks — **2026-04-22**
 
