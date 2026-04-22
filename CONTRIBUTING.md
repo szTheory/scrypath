@@ -1,5 +1,11 @@
 # Contributing
 
+## First hour and canonical docs
+
+- New contributors: follow the README **Quick Path** into [`guides/golden-path.md`](guides/golden-path.md) for the linear **`:inline`** first-hour story.
+- **Sync modes, visibility, and operator lifecycle** live in [`guides/sync-modes-and-visibility.md`](guides/sync-modes-and-visibility.md)—update that guide instead of duplicating semantics in README or here.
+- Changing operator-facing copy, sync behavior, or published onboarding docs should stay honest with **`mix test test/scrypath/docs_contract_test.exs`** (doc contracts).
+
 ## Verification
 
 Use the normal fast suite during development:
