@@ -8,6 +8,8 @@ defmodule ScrypathOpsWeb.SearchLive do
   use ScrypathOpsWeb, :live_view
 
   alias Scrypath.MultiSearchResult
+  alias ScrypathOps.Playbook.Store
+  alias ScrypathOps.Playbook.V1
   alias ScrypathOps.Schemas
   alias ScrypathOps.SearchPlayground
 
@@ -55,12 +57,15 @@ defmodule ScrypathOpsWeb.SearchLive do
       |> assign(:result_multi, nil)
       |> assign(:run_error, nil)
       |> assign(:show_all_footnote, false)
+      |> assign_capture_defaults()
 
     {:ok, socket}
   end
 
   @impl true
   def handle_params(params, _uri, socket) do
+    prev_mode = socket.assigns.mode
+
     mode =
       case params["mode"] do
         "multi" -> :multi
@@ -78,6 +83,13 @@ defmodule ScrypathOpsWeb.SearchLive do
           assign(socket, :mode, m)
       end
 
+    socket =
+      if prev_mode != socket.assigns.mode do
+        assign_capture_defaults(socket)
+      else
+        socket
+      end
+
     {:noreply, socket}
   end
 
@@ -88,6 +100,95 @@ defmodule ScrypathOpsWeb.SearchLive do
 
   def handle_event("set_mode", _, socket) do
     {:noreply, push_patch(socket, to: ~p"/ops/search?mode=single")}
+  end
+
+  def handle_event("capture_change", %{"capture" => fields}, socket) do
+    title = fields |> Map.get("title", "") |> to_string()
+    description = fields |> Map.get("description", "") |> to_string()
+    basename = fields |> Map.get("basename", "") |> to_string()
+
+    socket =
+      socket
+      |> assign(:capture_title, title)
+      |> assign(:capture_description, description)
+      |> assign(:capture_basename, basename)
+      |> recompute_capture_preview()
+
+    {:noreply, socket}
+  end
+
+  def handle_event("capture_change", _, socket), do: {:noreply, socket}
+
+  def handle_event("save_search_capture", %{"capture" => cap}, socket) do
+    root = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+    basename = cap |> Map.get("basename", "") |> to_string() |> String.trim()
+    title = cap |> Map.get("title", "") |> to_string()
+    description = cap |> Map.get("description", "") |> to_string()
+
+    cond do
+      root in [nil, ""] ->
+        {:noreply,
+         put_flash(
+           socket,
+           :error,
+           "Playbook workspace is not configured — set SCRYPATH_OPS_PLAYBOOK_DIR, reload, then save again."
+         )}
+
+      socket.assigns.capture_base == nil ->
+        {:noreply, put_flash(socket, :error, "Run a search first — nothing to save yet.")}
+
+      not Store.safe_basename?(basename) ->
+        {:noreply,
+         put_flash(socket, :error, "Filename must match *.json basename rules (letters, digits, ., -, _).")}
+
+      true ->
+        draft =
+          socket.assigns.capture_base
+          |> merge_capture_metadata(title, description)
+
+        case V1.validate(draft) do
+          {:ok, validated} ->
+            case V1.encode(validated) do
+              {:ok, json} ->
+                if workspace_playbook_exists?(root, basename) do
+                  {:noreply,
+                   put_flash(
+                     socket,
+                     :error,
+                     "That playbook name is already in use — pick another basename."
+                   )}
+                else
+                  case Store.save_workspace_file(root, basename, json <> "\n") do
+                    :ok ->
+                      {:noreply,
+                       socket
+                       |> assign(:capture_basename, "")
+                       |> put_flash(:info, "Saved playbook #{basename}.")}
+
+                    {:error, _} ->
+                      {:noreply,
+                       put_flash(socket, :error, "Save failed — check directory permissions.")}
+                  end
+                end
+
+              {:error, _} ->
+                {:noreply,
+                 put_flash(socket, :error, "Could not encode playbook for saving.")}
+            end
+
+          {:error, _} ->
+            {:noreply,
+             put_flash(
+               socket,
+               :error,
+               "Playbook preview is not valid — adjust fields and try again."
+             )}
+        end
+    end
+  end
+
+  def handle_event("save_search_capture", _, socket) do
+    {:noreply, put_flash(socket, :error, "Missing save fields.")}
   end
 
   def handle_event("search", params, socket) do
@@ -108,6 +209,7 @@ defmodule ScrypathOpsWeb.SearchLive do
       |> assign(:result_multi, nil)
       |> assign(:run_error, nil)
       |> assign(:show_all_footnote, false)
+      |> assign_capture_defaults()
 
     with :ok <- SearchPlayground.validate_page_size(page_size),
          {:ok, opts} <- build_opts(scrypath_opts, page_size) do
@@ -167,7 +269,13 @@ defmodule ScrypathOpsWeb.SearchLive do
           {:ok, res} ->
             duration_ms = System.monotonic_time(:millisecond) - start_ms
             emit_run(:single, :ok, duration_ms)
-            {:noreply, assign(socket, :result_single, res)}
+
+            socket =
+              socket
+              |> assign(:result_single, res)
+              |> assign_search_capture_single(mod, q, opts)
+
+            {:noreply, socket}
 
           {:error, reason} ->
             duration_ms = System.monotonic_time(:millisecond) - start_ms
@@ -222,10 +330,13 @@ defmodule ScrypathOpsWeb.SearchLive do
             footnote? =
               Enum.any?(failures, fn %{reason: r} -> match?({:all_expansion, _}, r) end)
 
-            {:noreply,
-             socket
-             |> assign(:result_multi, res)
-             |> assign(:show_all_footnote, footnote?)}
+            socket =
+              socket
+              |> assign(:result_multi, res)
+              |> assign(:show_all_footnote, footnote?)
+              |> assign_search_capture_multi(selected, q, opts)
+
+            {:noreply, socket}
 
           {:error, reason} ->
             duration_ms = System.monotonic_time(:millisecond) - start_ms
@@ -271,6 +382,174 @@ defmodule ScrypathOpsWeb.SearchLive do
     )
   end
 
+  defp assign_capture_defaults(socket) do
+    socket
+    |> assign(:capture_base, nil)
+    |> assign(:capture_title, "")
+    |> assign(:capture_description, "")
+    |> assign(:capture_basename, "")
+    |> assign(:capture_preview_json, nil)
+    |> assign(:capture_preview_ok?, false)
+  end
+
+  defp assign_search_capture_single(socket, mod, q, opts_kw) do
+    base = %{
+      "playbook_format" => 1,
+      "mode" => "search",
+      "schema" => inspect(mod),
+      "q" => q,
+      "opts" => keyword_to_playbook_opts_map(opts_kw, :search)
+    }
+
+    socket
+    |> assign(:capture_base, base)
+    |> recompute_capture_preview()
+  end
+
+  defp assign_search_capture_multi(socket, selected_mods, q, opts_kw) do
+    entries = Enum.map(selected_mods, fn mod -> [inspect(mod), q, %{}] end)
+
+    base = %{
+      "playbook_format" => 1,
+      "mode" => "search_many",
+      "entries" => entries,
+      "opts" => keyword_to_playbook_opts_map(opts_kw, :search_many_shared)
+    }
+
+    socket
+    |> assign(:capture_base, base)
+    |> recompute_capture_preview()
+  end
+
+  defp merge_capture_metadata(base, title, description) do
+    base
+    |> maybe_put_trimmed_string("title", title)
+    |> maybe_put_trimmed_string("description", description)
+  end
+
+  defp maybe_put_trimmed_string(map, key, raw) do
+    v = raw |> to_string() |> String.trim()
+    if v == "", do: map, else: Map.put(map, key, v)
+  end
+
+  defp recompute_capture_preview(socket) do
+    case socket.assigns.capture_base do
+      nil ->
+        assign(socket, capture_preview_json: nil, capture_preview_ok?: false)
+
+      base ->
+        draft = merge_capture_metadata(base, socket.assigns.capture_title, socket.assigns.capture_description)
+
+        case V1.validate(draft) do
+          {:ok, validated} ->
+            preview = Jason.encode!(validated, pretty: true)
+
+            assign(socket,
+              capture_preview_json: preview,
+              capture_preview_ok?: true
+            )
+
+          {:error, _} ->
+            assign(socket, capture_preview_json: nil, capture_preview_ok?: false)
+        end
+    end
+  end
+
+  defp workspace_playbook_exists?(root, name) do
+    case Store.list_workspace_json(root) do
+      {:ok, names} -> name in names
+      {:error, _} -> false
+    end
+  end
+
+  defp keyword_to_playbook_opts_map(kw, ctx) do
+    strings =
+      case ctx do
+        :search ->
+          ~w(facets facet_filter filter sort page per_query)
+
+        :search_many_shared ->
+          ~w(facets facet_filter filter sort page per_query federation_limit federation_offset federation_timeout hydration_timeout max_schemas global_schemas otp_app)
+      end
+
+    Enum.reduce(strings, %{}, fn str, acc ->
+      case opt_field_atom(str) do
+        nil ->
+          acc
+
+        atom ->
+          case Keyword.get(kw, atom) do
+            nil ->
+              acc
+
+            v ->
+              case dispatch_opt_to_json(str, v) do
+                :drop -> acc
+                encoded -> Map.put(acc, str, encoded)
+              end
+          end
+      end
+    end)
+  end
+
+  defp opt_field_atom("facets"), do: :facets
+  defp opt_field_atom("facet_filter"), do: :facet_filter
+  defp opt_field_atom("filter"), do: :filter
+  defp opt_field_atom("sort"), do: :sort
+  defp opt_field_atom("page"), do: :page
+  defp opt_field_atom("per_query"), do: :per_query
+  defp opt_field_atom("federation_limit"), do: :federation_limit
+  defp opt_field_atom("federation_offset"), do: :federation_offset
+  defp opt_field_atom("federation_timeout"), do: :federation_timeout
+  defp opt_field_atom("hydration_timeout"), do: :hydration_timeout
+  defp opt_field_atom("max_schemas"), do: :max_schemas
+  defp opt_field_atom("global_schemas"), do: :global_schemas
+  defp opt_field_atom("otp_app"), do: :otp_app
+  defp opt_field_atom(_), do: nil
+
+  defp dispatch_opt_to_json("page", v) when is_list(v) do
+    m =
+      %{}
+      |> maybe_put_json_int("size", Keyword.get(v, :size))
+      |> maybe_put_json_int("number", Keyword.get(v, :number))
+
+    if m == %{}, do: :drop, else: m
+  end
+
+  defp dispatch_opt_to_json("page", _), do: :drop
+
+  defp dispatch_opt_to_json("per_query", v) when is_list(v) do
+    m =
+      %{}
+      |> maybe_put_json_int("ranking_score_threshold", Keyword.get(v, :ranking_score_threshold))
+      |> maybe_put_json_bool("show_ranking_score", Keyword.get(v, :show_ranking_score))
+      |> maybe_put_json_bool("show_ranking_score_details", Keyword.get(v, :show_ranking_score_details))
+
+    if m == %{}, do: :drop, else: m
+  end
+
+  defp dispatch_opt_to_json("per_query", _), do: :drop
+
+  defp dispatch_opt_to_json("global_schemas", list) when is_list(list), do: list
+  defp dispatch_opt_to_json("global_schemas", _), do: :drop
+
+  defp dispatch_opt_to_json(j, n)
+       when j in ~w(federation_limit federation_offset federation_timeout hydration_timeout max_schemas) and
+              is_integer(n),
+       do: n
+
+  defp dispatch_opt_to_json("otp_app", s) when is_binary(s) and s != "", do: s
+
+  defp dispatch_opt_to_json(_, v), do: v
+
+  defp maybe_put_json_int(m, _k, nil), do: m
+  defp maybe_put_json_int(m, k, n) when is_integer(n), do: Map.put(m, k, n)
+  defp maybe_put_json_int(m, _, _), do: m
+
+  defp maybe_put_json_bool(m, _k, nil), do: m
+  defp maybe_put_json_bool(m, k, b) when is_boolean(b), do: Map.put(m, k, b)
+  defp maybe_put_json_bool(m, _, _), do: m
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -291,6 +570,85 @@ defmodule ScrypathOpsWeb.SearchLive do
           <strong>Do not</strong>
           paste production secrets or PII; keep <code class="text-xs">page.size</code>
           and schema lists bounded.
+        </div>
+
+        <div
+          class="card bg-base-100 border border-base-300 rounded-lg p-4 md:p-6 space-y-md"
+          aria-describedby="search-honesty-panel"
+        >
+          <h2 class="text-lg font-semibold">Save search as playbook</h2>
+          <p :if={@capture_base == nil} class="text-sm text-base-content/80">
+            <strong>Run a search first</strong>
+            — this panel captures the <strong>last successful</strong>
+            single- or multi-search inputs (including honesty caps on page size and schema count). After a successful run, set an optional title and description, review the JSON preview, then save under a <code class="text-xs">*.json</code>
+            basename. Safety copy: see the honesty panel above.
+          </p>
+
+          <.form
+            :if={@capture_base != nil}
+            for={%{}}
+            as={:capture}
+            phx-change="capture_change"
+            phx-submit="save_search_capture"
+            class="space-y-md max-w-2xl"
+            id="search-capture-form"
+          >
+            <div class="grid gap-sm md:grid-cols-2">
+              <div>
+                <label class="label label-text text-sm font-semibold" for="capture_title">Title</label>
+                <input
+                  id="capture_title"
+                  type="text"
+                  name="capture[title]"
+                  value={@capture_title}
+                  class="input input-bordered w-full"
+                  placeholder="Optional"
+                />
+              </div>
+              <div>
+                <label class="label label-text text-sm font-semibold" for="capture_basename">
+                  Basename (.json)
+                </label>
+                <input
+                  id="capture_basename"
+                  type="text"
+                  name="capture[basename]"
+                  value={@capture_basename}
+                  class="input input-bordered w-full font-mono text-sm"
+                  placeholder="my-search.json"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label class="label label-text text-sm font-semibold" for="capture_description">
+                Description
+              </label>
+              <textarea
+                id="capture_description"
+                name="capture[description]"
+                class="textarea textarea-bordered w-full text-sm min-h-24"
+                placeholder="Optional"
+              ><%= @capture_description %></textarea>
+            </div>
+
+            <p
+              :if={@capture_preview_ok?}
+              class="text-xs text-base-content/70"
+              data-testid="playbook-preview-marker"
+            >
+              Validated playbook preview
+            </p>
+            <pre
+              :if={@capture_preview_json}
+              class="max-h-96 overflow-auto rounded-md bg-base-200 p-sm text-xs font-mono whitespace-pre-wrap break-words"
+              data-testid="search-capture-preview-pre"
+            ><%= @capture_preview_json %></pre>
+
+            <button type="submit" class="btn btn-primary btn-sm min-h-10">
+              Save search as playbook
+            </button>
+          </.form>
         </div>
 
         <div class="card bg-base-100 border border-base-300 rounded-lg p-4 md:p-6 space-y-6">
@@ -314,6 +672,7 @@ defmodule ScrypathOpsWeb.SearchLive do
             for={%{}}
             as={:search}
             phx-submit="search"
+            id="ops-search-playground-form"
             class={[
               "space-y-md",
               if(@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend),

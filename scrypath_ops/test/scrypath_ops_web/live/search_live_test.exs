@@ -78,7 +78,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     html =
       view
-      |> element("form")
+      |> element("#ops-search-playground-form")
       |> render_submit(%{
         "q" => "hello",
         "page_size" => "10",
@@ -93,7 +93,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     html =
       view
-      |> element("form")
+      |> element("#ops-search-playground-form")
       |> render_submit(%{
         "q" => "x",
         "page_size" => "99",
@@ -110,7 +110,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     html =
       view
-      |> element("form")
+      |> element("#ops-search-playground-form")
       |> render_submit(%{
         "q" => "merge",
         "page_size" => "10",
@@ -120,6 +120,42 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert html =~ "Merge trace"
   end
 
+  test "successful single search shows validated capture preview", %{conn: conn} do
+    dir =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath_ops_search_capture_#{:erlang.unique_integer([:positive])}"
+      )
+
+    :ok = File.mkdir_p!(dir)
+    prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
+
+    on_exit(fn ->
+      File.rm_rf(dir)
+
+      if prev_ws == nil,
+        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
+        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
+    end)
+
+    {:ok, view, html} = live(conn, ~p"/ops/search")
+    assert html =~ "Run a search first"
+
+    html =
+      view
+      |> element("#ops-search-playground-form")
+      |> render_submit(%{
+        "q" => "hello",
+        "page_size" => "10",
+        "schema" => inspect(OpsPostA)
+      })
+
+    assert html =~ "Validated playbook preview"
+    assert html =~ ~s(data-testid="playbook-preview-marker")
+    assert html =~ ~s(data-testid="search-capture-preview-pre")
+  end
+
   test "multi search_many total failure shows hard error alert, not partial banner", %{conn: conn} do
     Application.put_env(:scrypath_ops, :search_stub_variant, :hard_error)
 
@@ -127,7 +163,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     html =
       view
-      |> element("form")
+      |> element("#ops-search-playground-form")
       |> render_submit(%{
         "q" => "boom",
         "page_size" => "10",
