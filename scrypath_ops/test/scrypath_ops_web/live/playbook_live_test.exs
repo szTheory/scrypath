@@ -87,4 +87,36 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     html = render_click(view, "run", %{})
     assert html =~ "Run finished"
   end
+
+  # OPS-PB-05: end-to-end proof on SearchPlaygroundStubAdapter (no Meilisearch).
+  test "OPS-PB-05 stub path: paste → save → listed → load → run", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    json =
+      Jason.encode!(%{
+        "playbook_format" => 1,
+        "mode" => "search",
+        "schema" => "ScrypathOps.Test.OpsPostA",
+        "q" => "x",
+        "opts" => %{}
+      })
+
+    view
+    |> form("form[phx-submit='import_paste']", %{json: json})
+    |> render_submit()
+
+    basename = "ops-pb-05-#{:erlang.unique_integer([:positive])}.json"
+
+    view
+    |> form("form[phx-submit='save']", %{basename: basename})
+    |> render_submit()
+
+    listed = render(view)
+    assert listed =~ basename
+    assert listed =~ ~s(phx-value-name="#{basename}")
+
+    render_click(view, "load", %{"name" => basename})
+    ran = render_click(view, "run", %{})
+    assert ran =~ "Run finished" || ran =~ "Playbook run completed"
+  end
 end
