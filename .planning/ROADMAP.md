@@ -15,22 +15,27 @@
 - [x] **`v1.10` shipped in-repo** (2026-04-21) — *Operator admin UI (OPSUI)* — phases **44–47**, **14** plans — [archive](milestones/v1.10-ROADMAP.md) · [requirements](milestones/v1.10-REQUIREMENTS.md) · [research summary](research/SUMMARY.md)
 - [x] **`v1.11` shipped in-repo** (2026-04-21) — *Operator shell polish and JTBD verification* — phases **48–50**, **11** plans — [archive](milestones/v1.11-ROADMAP.md) · [requirements](milestones/v1.11-REQUIREMENTS.md)
 - [x] **`v1.12` shipped in-repo** (2026-04-22) — *Developer onboarding & first-hour QoL* — phases **51–53**, **9** plans — [archive](milestones/v1.12-ROADMAP.md) · [requirements](milestones/v1.12-REQUIREMENTS.md)
-- [x] **`v1.13` delivered in-repo** (2026-04-22) — *Public polish & narrative coherence* — phases **54–56** — [requirements](.planning/REQUIREMENTS.md)
+- [x] **`v1.13` shipped + archived in-repo** (2026-04-22 shipped · 2026-04-21 archived) — *Public polish & narrative coherence* — phases **54–56**, **5** requirements — [archive](milestones/v1.13-ROADMAP.md) · [requirements](milestones/v1.13-REQUIREMENTS.md)
 
 ## Phases (next milestone)
 
-Open **`/gsd-new-milestone`** when you are ready; phase numbering continues from **56** unless you pass **`--reset-phase-numbers`**.
+Open **`/gsd-new-milestone`** when you are ready; phase numbering continues from **57** unless you pass **`--reset-phase-numbers`**.
 
-## Phases (v1.13 — shipped in-repo 2026-04-22)
+## Phases (history)
+
+<details>
+<summary>✅ v1.13 — Phases 54–56 — SHIPPED 2026-04-22 · archived 2026-04-21 · Hex <code>scrypath 0.3.4</code> · <em>Public polish & narrative coherence</em></summary>
 
 - [x] **Phase 54: Guide voice and pitfalls ledger** — Remove internal planning phase vocabulary from adopter **`guides/`** (canonical: **`guides/per-query-tuning-pipeline.md`**); keep **`guides/common-mistakes.md`** grounded (**≥3** pitfalls, evidence-only growth) — **POLISH-01**, **POLISH-05**.
   - **Success criteria:** (1) No “Phase N” / internal milestone-process strings remain in **`guides/`** consumer prose. (2) Per-query pipeline reads in product/API terms and still links Plane A authority. (3) Pitfalls doc still lists **≥3** items with authority + evidence pattern.
 - [x] **Phase 55: Version and planning truth** — **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **ROADMAP** Hex callouts where “current line” is stated match **Hex `0.3.4`** and **`mix.exs`**; **README** “Versioning” explains checkout vs published — **POLISH-02**.
   - **Success criteria:** (1) Any “current Hex” claim in active planning files matches **hex.pm** latest (**0.3.4** at milestone open). (2) **README** points to Hex for latest published. (3) **PROJECT** *Current State* matches **`mix.exs`**.
-- [x] **Phase 56: Contributor entry and backlog refresh** — **`AGENTS.md`** contributor-first workflow without GSD slash-command noise; **`milestone-candidates.md`** reflects **v1.13** and next-tier pulls — **POLISH-03**, **POLISH-04**.
+- [x] **Phase 56: Contributor entry and backlog refresh** — **`AGENTS.md`** contributor-first workflow without GSD slash-command noise; **`milestone-candidates.md`** reflects **v1.12** closure (**Tier A** done), **v1.13** theme, and next-tier pulls — **POLISH-03**, **POLISH-04**.
   - **Success criteria:** (1) **`AGENTS.md`** readable by OSS contributors without internal tool commands as required reading. (2) **`milestone-candidates.md`** “where things stand” matches shipped **v1.12** and ranks **B1** next. (3) **REQUIREMENTS** traceability table matches phases.
 
-## Phases (history)
+Full detail: [milestones/v1.13-ROADMAP.md](milestones/v1.13-ROADMAP.md).
+
+</details>
 
 <details>
 <summary>✅ v1.12 — Phases 51–53 — SHIPPED 2026-04-22 · in-repo · Hex line <code>0.3.3</code> at archive (no mandated bump; latest Hex may be newer) · <em>Developer onboarding and first-hour QoL</em></summary>
@@ -156,7 +161,7 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**`v1.13` delivered (in-repo)** — **2026-04-22** — **3** phases (**54–56**), **5** requirements (**POLISH-01**–**POLISH-05**); see **`.planning/REQUIREMENTS.md`**.
+**`v1.13` archived (in-repo)** — **2026-04-22** shipped — **2026-04-21** archived — **3** phases (**54–56**), **5** requirements (**POLISH-01**–**POLISH-05**); see **`milestones/v1.13-REQUIREMENTS.md`**.
 
 **`v1.12` archived (in-repo)** — **2026-04-22** shipped — **2026-04-21** archived — **3** phases (**51–53**), **9** plans, **8** requirements (**ONBD-01**..**ONBD-06**, **VRFY-03**..**VRFY-04**); see **`milestones/v1.12-REQUIREMENTS.md`**.
 
@@ -171,4 +176,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - **Core library features** — continue to follow **`.planning/PROJECT.md`** *Out of Scope* until a future milestone explicitly widens the contract.
 
 ---
-*Last updated: 2026-04-22 — **v1.13** phases **54–56** active; **`.planning/REQUIREMENTS.md`** in use*
+*Last updated: 2026-04-21 — between milestones; **`milestones/v1.13-*`** archived; no active **`.planning/REQUIREMENTS.md`** until **`/gsd-new-milestone`***

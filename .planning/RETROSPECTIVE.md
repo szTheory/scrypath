@@ -2,6 +2,30 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.13 — Public polish & narrative coherence
+
+**Shipped (planning):** 2026-04-22  
+**Archived:** 2026-04-21  
+**Phases:** 3 (54–56) | **Requirements:** 5 (**POLISH-01**–**POLISH-05**) | **Hex:** `scrypath` **0.3.4** (narrative + doc polish; no mandated publish)
+
+### What was built
+
+Adopter-facing **`guides/`** voice cleanup (**`guides/per-query-tuning-pipeline.md`**, pitfalls ledger discipline), **Hex `0.3.4`** alignment across **README** and planning files, contributor-first **`AGENTS.md`**, and **`milestone-candidates.md`** refresh toward **Tier B1**.
+
+### What worked
+
+**`audit-open`** stayed green without inventing new stub directories; requirements stayed small and fully traceable to phases **54–56**.
+
+### What was inefficient
+
+**`gsd-sdk query milestone.complete`** still fails (**`version required for phases archive`**), so **`milestones/v1.13-*`**, **`ROADMAP`** collapse, and **`git rm` REQUIREMENTS** were **manual** again (**v1.10–v1.12** pattern).
+
+### Key lessons
+
+When the SDK milestone automation is broken, keep the **manual archive + `docs_contract_test` fallback chain** honest so **AUDT-01** rows remain discoverable without a live root **`.planning/REQUIREMENTS.md`**.
+
+---
+
 ## Milestone: v1.12 — Developer onboarding & first-hour QoL
 
 **Shipped (planning):** 2026-04-22  
