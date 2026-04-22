@@ -27,7 +27,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Planning window
 
-**Active milestone: v1.14.** Requirements and roadmap live in **`.planning/REQUIREMENTS.md`** and **`.planning/ROADMAP.md`** (next execution: **Phase 60**). **v1.13** ship-of-record: **`milestones/v1.13-{ROADMAP,REQUIREMENTS}.md`**. Research for this arc is under **`.planning/research/`** (refreshed for B1+B2).
+**Active milestone: v1.14.** Requirements and roadmap live in **`.planning/REQUIREMENTS.md`** and **`.planning/ROADMAP.md`**. Current focus: **Phase 61** — verification and milestone bookkeeping (**OPS-PB-05**, **SHIP-01**); see **`.planning/STATE.md`**. **v1.13** ship-of-record: **`milestones/v1.13-{ROADMAP,REQUIREMENTS}.md`**. Research for this arc is under **`.planning/research/`** (refreshed for B1+B2).
 
 ## Requirements
 

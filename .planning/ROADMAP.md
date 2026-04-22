@@ -46,8 +46,9 @@ The **EVID-01** B1 evidence rows and **LIB-01..03** triage are recorded in **`.p
 
 ### Phase 61: Verification and milestone bookkeeping
 
-- [ ] **Phase 61: Verification and milestone bookkeeping** — **OPS-PB-05** (stub tests + **`mix verify.opsui`** story), **SHIP-01** (**MILESTONES** / **PROJECT** / roadmap list + traceability **Complete**). **OPS-PB-05**, **SHIP-01**.
+- [x] **Phase 61: Verification and milestone bookkeeping** (2026-04-22) — **OPS-PB-05** (stub tests + **`mix verify.opsui`** story), **SHIP-01** (**MILESTONES** / **PROJECT** / roadmap list + traceability **Complete**). **OPS-PB-05**, **SHIP-01**.
   - **Success criteria:** (1) **`mix verify.opsui`** documents any new steps in **README** / **CONTRIBUTING**. (2) CI green for default verify path. (3) **REQUIREMENTS** traceability table statuses updated; **v1.14** ready for `/gsd-complete-milestone` when implementation merges.
+  - **Executor rule:** Flip this bullet to **`[x]`** only after **61-01** (stub LiveView tests + **`mix verify.opsui`**) and **61-02** (planning alignment + **`docs_contract_test`**) both complete — avoids marking verification done before evidence exists.
 
 ## Phases (history)
 
@@ -206,4 +207,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - **Tier D** — maintainer-only planning hygiene — same file; do not headline consumer milestones.
 
 ---
-*Last updated: 2026-04-21 — **v1.14** roadmap active; phases **57–61**; requirements in **`.planning/REQUIREMENTS.md`***
+*Last updated: 2026-04-22 — **v1.14** roadmap active; Phase **61** complete; **`v1.14`** row remains **`[ ]` in progress** until milestone archive*
