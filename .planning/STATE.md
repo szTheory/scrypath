@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: Library QoL and operator playbooks
-status: defining_requirements
-last_updated: "2026-04-21T23:30:00.000Z"
+status: ready_to_build
+last_updated: "2026-04-21T23:45:00.000Z"
 last_activity: 2026-04-21
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -25,13 +25,13 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 ## Current Position
 
-**Phase:** Not started (defining requirements)
+**Phase:** 57 — Evidence triage and B1 scope lock (not started)
 
 **Plan:** —
 
-**Status:** Defining requirements
+**Status:** Ready to build — roadmap defined
 
-**Last activity:** 2026-04-21 — Milestone **v1.14** started (research → requirements → roadmap)
+**Last activity:** 2026-04-21 — **v1.14** roadmap committed (phases **57–61**)
 
 ## Accumulated Context
 
@@ -64,4 +64,4 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 **Completed:** **v1.13** in-repo (**2026-04-22**) — phases **54–56**.
 
-**Next phases:** **57+** (see **`.planning/ROADMAP.md`** after roadmap commit)
+**Next phases:** **57–61** — see **`.planning/ROADMAP.md`**
