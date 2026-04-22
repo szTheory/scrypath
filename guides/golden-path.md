@@ -140,5 +140,5 @@ You do not need `MyAppWeb` modules. The same context-owned pattern applies in an
 
 ## What is next
 
-- **Sync modes:** When you outgrow inline sync for throughput or durability, read [Sync Modes and Visibility](sync-modes-and-visibility.md) (`guides/sync-modes-and-visibility.md`) for **`:oban`** and **`:manual`**, lifecycle states, and recovery language. Production often uses **`:oban`**; the first hour above stays **inline** on purpose.
+- **Sync modes:** When you outgrow inline sync for throughput or durability, read [Sync Modes and Visibility](sync-modes-and-visibility.md) (`guides/sync-modes-and-visibility.md`) for **`:oban`** and **`:manual`**, operator lifecycle states, and recovery language. Production often uses **`:oban`**; the first hour above stays **inline** on purpose.
 - **Oban:** If you choose **`:oban`**, add Oban as a dependency and follow its installation guides; Scrypath stays explicit about enqueue vs visibility—see the sync guide for the contract.
