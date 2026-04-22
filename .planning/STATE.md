@@ -28,7 +28,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 **Plan:** Not started
 
-**Status:** Ready to plan
+**Status:** Context gathered — ready to plan
 
 **Last activity:** 2026-04-22
 
@@ -38,6 +38,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 (See `.planning/PROJECT.md` Key Decisions.)
 
+- **Phase 60 — Playbook LiveView + IA (OPS-PB-02, OPS-PB-04):** Dedicated **`/ops/playbooks`**, upload-primary + paste import (single validate pipeline), env **`SCRYPATH_OPS_PLAYBOOK_DIR`** + read-only **`priv`** examples when unset, read-only JSON preview (no inline save-to-disk), nav **Saved playbooks** after **`/ops/search`** — **`.planning/phases/60-playbook-liveview-and-ia/60-CONTEXT.md`** (discussion log: **`60-DISCUSSION-LOG.md`**).
 - **Phase 57 — B1 evidence gate:** Implementation choices for **EVID-01** ledger shape, **LIB-01..03** triage, **core** merge path, and where **B1 frozen** is recorded — **`.planning/phases/57-evidence-triage-and-b1-scope-lock/57-CONTEXT.md`**.
 - **B1 scope frozen** for **v1.14** — see **EVID-01** at **`.planning/EVID-01-b1-v1.14.md`** (append-only ledger; cite **`EVID-57-*`** on core **B1** PRs per **CONTRIBUTING** / PR template).
 - **Phase 58 — B1 implementation decisions (LIB-01..03):** Success-path visibility first, tagged errors + shared formatter, doc-contract spine + extras alignment, three separate PRs — **`.planning/phases/58-core-library-and-doc-qol-b1/58-CONTEXT.md`**.
@@ -59,11 +60,11 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **`/gsd-discuss-phase 60`** — playbook LiveView + IA (**OPS-PB-02**, **OPS-PB-04**), or **`/gsd-plan-phase 60`** if context is already sufficient.
+1. **`/gsd-plan-phase 60`** — implement from **`60-CONTEXT.md`** + **`60-UI-SPEC.md`** (**OPS-PB-02**, **OPS-PB-04**).
 
 ---
 
-*Last updated: 2026-04-22 — Phase 59 complete; focus on phase 60*
+*Last updated: 2026-04-22 — Phase 60 discuss complete; context captured*
 
 **Prior milestone:** **v1.13** — public polish & narrative coherence — **2026-04-22**
 
