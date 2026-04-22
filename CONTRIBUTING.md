@@ -59,4 +59,4 @@ The root [`compose.yaml`](compose.yaml) is only for **local** Meilisearch when r
 
 ## Example app (Postgres + Meilisearch)
 
-For a **multi-container-shaped** local stack (Postgres + Meilisearch + Phoenix + **Oban**) and a scripted E2E smoke (**inline** and **`:oban`** paths), see [`examples/phoenix_meilisearch/README.md`](examples/phoenix_meilisearch/README.md)—that file is the **canonical env + command** reference for the example. **CI** runs the same **`mix test`** path under **`phoenix-example-integration`** (see table above).
+For a **multi-container-shaped** local stack (Postgres + Meilisearch + Phoenix + **Oban**) and a scripted E2E smoke (**inline** and **`:oban`** paths), see [`examples/phoenix_meilisearch/README.md`](examples/phoenix_meilisearch/README.md)—that file is the **canonical env + command** reference for the example. **CI** under **`phoenix-example-integration`** runs **`mix deps.get`** then **`mix test`** in the example directory (see **CI** table); **`./scripts/smoke.sh`** remains a **local** orchestration path, not the GitHub Actions entrypoint.
