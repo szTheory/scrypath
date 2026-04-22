@@ -79,4 +79,4 @@
 
 ---
 *Requirements defined: 2026-04-22*  
-*Last updated: 2026-04-22 after `/gsd-new-milestone` roadmap*
+*Last updated: 2026-04-22 after roadmap — phases **62–64** (`/gsd-new-milestone`)*
