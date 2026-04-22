@@ -68,10 +68,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] **v1.10 milestone** (2026-04-21): Operator admin UI (OPSUI) — phases **44–47** archived; **`scrypath_ops`** LiveView app; **`milestones/v1.10-{ROADMAP,REQUIREMENTS}.md`**; **`OPSUI-01`..`OPSUI-10`**.
 - [x] **v1.11 milestone** (2026-04-21): Operator shell polish — phases **48–50** archived; **`milestones/v1.11-{ROADMAP,REQUIREMENTS}.md`**; **`OPSUX-01`..`OPSUX-07`** (IA + router contract, posture JTBD, **`/ops`** scaffold and themes, Phoenix shell tests, a11y + CI slice).
 - [x] **Phase 51** (2026-04-21): Adoption path truth and discoverability — README / **`guides/golden-path.md`** / **CONTRIBUTING** / example README + **`docs_contract_test`** for sync authority and **`phoenix-example-integration`** Mix ordering (**ONBD-01**..**ONBD-03**).
+- [x] **Phase 52** (2026-04-22): Actionable **`{:error, _}`** surfaces + **`Scrypath.Search.Error`** bang helpers, **`guides/common-mistakes.md`**, lobby **`@moduledoc`** and operator **`mix scrypath.*`** Read-next links, doc contracts (**ONBD-04**..**ONBD-06**).
 
 ### Active
 
-- [ ] **v1.12** — Developer onboarding & first-hour QoL — **ONBD-***, **VRFY-03**..**VRFY-04** (see **`.planning/REQUIREMENTS.md`**; phases **51–53**).
+- [ ] **v1.12** — Developer onboarding & first-hour QoL — **VRFY-03**..**VRFY-04** (see **`.planning/REQUIREMENTS.md`**; phase **53**).
 
 ### Out of Scope
 
@@ -129,7 +130,7 @@ The current public line on Hex is **`scrypath 0.3.3`**. **v1.8** closed the fede
 
 **Hex:** `scrypath` **`0.3.3`**. Shipped surfaces include the v1.3-era Meilisearch-native path (relevance, facets, multi-index, operator polish), v1.4 **hot_apply** / failure rollups, v1.5 **index contract drift** tooling, v1.6 **adoption-grade** docs and verification clarity, **v1.7** facet-depth APIs with **`mix verify.phase36`..`38`**, **v1.8** federation weights / **`:all`** expansion / **`mix verify.phase41`**, **v1.9** per-query pipeline spec + **`:per_query`** runtime with **`mix verify.phase43`**, **v1.10** optional **`scrypath_ops`** operator LiveView UI, and **v1.11** operator-shell polish (**IA contract**, **theming**, **Phoenix shell tests**, **`opsui.test_a11y`**).
 
-**Planning:** **v1.12** — Phase **51** complete (**2026-04-21**); phases **52–53** remain (actionable errors / pitfalls; contributor **`verify.opsui`** spine). See **`.planning/ROADMAP.md`**.
+**Planning:** **v1.12** — Phases **51–52** complete (**2026-04-22**); phase **53** remains (contributor **`verify.opsui`** spine). See **`.planning/ROADMAP.md`**.
 
 ## Evolution
 
@@ -149,4 +150,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-21 after Phase **51** execution — **v1.12** in progress; Hex **`scrypath 0.3.3`** current*
+*Last updated: 2026-04-22 after Phase **52** execution — **v1.12** in progress; Hex **`scrypath 0.3.3`** current*
