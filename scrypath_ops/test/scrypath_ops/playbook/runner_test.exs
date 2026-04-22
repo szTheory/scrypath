@@ -3,10 +3,56 @@ defmodule ScrypathOps.Playbook.RunnerTest do
 
   alias ScrypathOps.Playbook.Runner
   alias ScrypathOps.Playbook.V1
-  alias ScrypathOps.Schemas
   alias ScrypathOps.Test.OpsPostA
   alias ScrypathOps.Test.OpsPostB
+  alias ScrypathOps.SearchPlayground.Adapter.Scrypath, as: ScrypathAdapter
   alias ScrypathOps.Test.SearchPlaygroundStubAdapter
+
+  defmodule ErrorBackend do
+    @moduledoc false
+    @behaviour Scrypath.Backend
+
+    @impl true
+    def name, do: :runner_error
+
+    @impl true
+    def index_name(_schema_module, _config), do: "runner_error"
+
+    @impl true
+    def upsert_documents(_schema_module, _documents, _config), do: {:ok, []}
+
+    @impl true
+    def delete_documents(_schema_module, _document_ids, _config), do: {:ok, []}
+
+    @impl true
+    def search(_schema_module, _query, _config), do: {:error, :search_failed}
+  end
+
+  defmodule NativeTransportFailBackend do
+    @moduledoc false
+    @behaviour Scrypath.Backend
+
+    @impl true
+    def name, do: :runner_native_transport_fail
+
+    @impl true
+    def index_name(schema_module, config),
+      do: Scrypath.TestSupport.FakeBackend.index_name(schema_module, config)
+
+    @impl true
+    def upsert_documents(a, b, c),
+      do: Scrypath.TestSupport.FakeBackend.upsert_documents(a, b, c)
+
+    @impl true
+    def delete_documents(a, b, c),
+      do: Scrypath.TestSupport.FakeBackend.delete_documents(a, b, c)
+
+    @impl true
+    def search(a, b, c), do: Scrypath.TestSupport.FakeBackend.search(a, b, c)
+
+    @impl true
+    def search_many(_paired, _config), do: {:error, :reset_by_peer}
+  end
 
   setup do
     prev_allow = Application.get_env(:scrypath_ops, :schema_allowlist)
@@ -18,7 +64,7 @@ defmodule ScrypathOps.Playbook.RunnerTest do
     prev_stub_variant = Application.get_env(:scrypath_ops, :search_stub_variant)
 
     Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA, OpsPostB])
-    Application.put_env(:scrypath_ops, :backend, Scrypath.Meilisearch)
+    Application.put_env(:scrypath_ops, :backend, Scrypath.TestSupport.FakeBackend)
     Application.put_env(:scrypath_ops, :sync_mode, :manual)
     Application.put_env(:scrypath_ops, :index_prefix, "runner_test")
     Application.put_env(:scrypath_ops, :meilisearch_url, "http://localhost:7700")
@@ -56,7 +102,7 @@ defmodule ScrypathOps.Playbook.RunnerTest do
     assert {:ok, map} = V1.validate(raw)
 
     assert {:ok, res} =
-             Runner.run_validated(map, Schemas.allowlist(), Schemas.scrypath_opts())
+             Runner.run_validated(map, [OpsPostA, OpsPostB], base_opts())
 
     assert res.hits == []
   end
@@ -75,7 +121,7 @@ defmodule ScrypathOps.Playbook.RunnerTest do
     assert {:ok, map} = V1.validate(raw)
 
     assert {:ok, %Scrypath.MultiSearchResult{} = ms} =
-             Runner.run_validated(map, Schemas.allowlist(), Schemas.scrypath_opts())
+             Runner.run_validated(map, [OpsPostA, OpsPostB], base_opts())
 
     assert length(ms.ordered) == 2
   end
@@ -83,5 +129,149 @@ defmodule ScrypathOps.Playbook.RunnerTest do
   test "rejects {:error, _} tuple" do
     assert {:error, :playbook_not_validated} =
              Runner.run_validated({:error, :x}, [OpsPostA], backend: Scrypath.Meilisearch)
+  end
+
+  describe "runner-library parity matrix" do
+    setup do
+      Application.put_env(:scrypath_ops, :search_playground_adapter, ScrypathAdapter)
+      :ok
+    end
+
+    test "search happy path matches direct Scrypath.search/3" do
+      raw = %{
+        "playbook_format" => 1,
+        "mode" => "search",
+        "schema" => "Elixir.SearchablePost",
+        "q" => "needle",
+        "opts" => %{"page" => %{"number" => 2, "size" => 5}}
+      }
+
+      assert {:ok, validated} = V1.validate(raw)
+
+      assert {:ok, %Scrypath.SearchResult{} = direct} =
+               Scrypath.search(SearchablePost, "needle", base_opts(page: [number: 2, size: 5]))
+
+      assert {:ok, %Scrypath.SearchResult{} = via_runner} =
+               Runner.run_validated(validated, [SearchablePost, FacetableMovie], base_opts())
+
+      assert via_runner == direct
+    end
+
+    test "search_many happy path matches direct Scrypath.search_many/2" do
+      raw = %{
+        "playbook_format" => 1,
+        "mode" => "search_many",
+        "entries" => [
+          ["Elixir.SearchablePost", "a", %{}],
+          ["Elixir.FacetableMovie", "b", %{}]
+        ],
+        "opts" => %{}
+      }
+
+      assert {:ok, validated} = V1.validate(raw)
+
+      assert {:ok, %Scrypath.MultiSearchResult{} = direct} =
+               Scrypath.search_many(
+                 [{SearchablePost, "a"}, {FacetableMovie, "b"}],
+                 base_opts()
+               )
+
+      assert {:ok, %Scrypath.MultiSearchResult{} = via_runner} =
+               Runner.run_validated(validated, [SearchablePost, FacetableMovie], base_opts())
+
+      assert via_runner == direct
+    end
+
+    test "pre-dispatch config failure stays at the runner boundary" do
+      raw = %{
+        "playbook_format" => 1,
+        "mode" => "search",
+        "schema" => "Elixir.SearchablePost",
+        "q" => "needle",
+        "opts" => %{}
+      }
+
+      assert {:ok, validated} = V1.validate(raw)
+
+      assert {:error, {:config, :missing_backend}} =
+               Runner.run_validated(validated, [SearchablePost], Keyword.delete(base_opts(), :backend))
+    end
+
+    test "backend/runtime failure matches direct Scrypath.search/3" do
+      raw = %{
+        "playbook_format" => 1,
+        "mode" => "search",
+        "schema" => "Elixir.SearchablePost",
+        "q" => "needle",
+        "opts" => %{}
+      }
+
+      assert {:ok, validated} = V1.validate(raw)
+      opts = base_opts(backend: ErrorBackend)
+
+      assert {:error, :search_failed} = Scrypath.search(SearchablePost, "needle", opts)
+
+      assert {:error, :search_failed} =
+               Runner.run_validated(validated, [SearchablePost], opts)
+    end
+
+    test "multi-search validation_failed edge matches direct Scrypath.search_many/2" do
+      raw = %{
+        "playbook_format" => 1,
+        "mode" => "search_many",
+        "entries" => [
+          ["Elixir.SearchablePost", "a", %{"facets" => ["nope"]}]
+        ],
+        "opts" => %{}
+      }
+
+      assert {:ok, validated} = V1.validate(raw)
+
+      assert {:error, {:validation_failed, SearchablePost, {:unknown_facet, :nope}}} =
+               Scrypath.search_many(
+                 [{SearchablePost, "a", facets: [:nope]}],
+                 base_opts()
+               )
+
+      assert {:error, {:validation_failed, SearchablePost, {:unknown_facet, :nope}}} =
+               Runner.run_validated(validated, [SearchablePost], base_opts())
+    end
+
+    test "multi-search backend/runtime failure matches direct Scrypath.search_many/2" do
+      raw = %{
+        "playbook_format" => 1,
+        "mode" => "search_many",
+        "entries" => [
+          ["Elixir.SearchablePost", "a", %{"federation_weight" => 1.0}],
+          ["Elixir.FacetableMovie", "b", %{}]
+        ],
+        "opts" => %{}
+      }
+
+      assert {:ok, validated} = V1.validate(raw)
+      opts = base_opts(backend: NativeTransportFailBackend)
+
+      assert {:error, {:transport_failed, :reset_by_peer}} =
+               Scrypath.search_many(
+                 [
+                   {SearchablePost, "a", federation_weight: 1.0},
+                   {FacetableMovie, "b"}
+                 ],
+                 opts
+               )
+
+      assert {:error, {:transport_failed, :reset_by_peer}} =
+               Runner.run_validated(validated, [SearchablePost, FacetableMovie], opts)
+    end
+  end
+
+  defp base_opts(overrides \\ []) do
+    [
+      backend: Scrypath.TestSupport.FakeBackend,
+      meilisearch_url: "http://localhost:7700",
+      index_prefix: "runner_test",
+      sync_mode: :manual
+    ]
+    |> Keyword.merge(overrides)
   end
 end
