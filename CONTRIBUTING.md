@@ -6,6 +6,10 @@
 - **Sync modes, visibility, and operator lifecycle** live in [`guides/sync-modes-and-visibility.md`](guides/sync-modes-and-visibility.md)—update that guide instead of duplicating semantics in README or here.
 - Changing operator-facing copy, sync behavior, or published onboarding docs should stay honest with **`mix test test/scrypath/docs_contract_test.exs`** (doc contracts).
 
+## Integrators: pitfalls before you file an issue
+
+Skim [`guides/common-mistakes.md`](guides/common-mistakes.md) when search or sync “feels wrong” but the database write succeeded—most first-hour confusion is a mismatch between sync mode expectations and search visibility, not silent data loss.
+
 ## Verification
 
 Use the normal fast suite during development:

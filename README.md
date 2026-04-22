@@ -16,6 +16,8 @@ end
 
 **Start here:** for the canonical first-hour path from dependencies through a working `Scrypath.search/3` with inline sync, follow [guides/golden-path.md](guides/golden-path.md).
 
+For symptom-style “why is search wrong?” debugging grounded in shipped tests, see [guides/common-mistakes.md](guides/common-mistakes.md).
+
 **Sync authority:** sync semantics, sync modes (`:inline`, `:oban`, `:manual`), eventual consistency, and operator lifecycle recovery language are defined in [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md)—that file is the **single authority** for those topics; this README does not restate the guide body.
 
 **Operator UI (maintainers):** the optional Phoenix shell lives under [scrypath_ops/README.md](scrypath_ops/README.md); persona, JTBD, and nav mapping live in [scrypath_ops/docs/operator-ia.md](scrypath_ops/docs/operator-ia.md).
