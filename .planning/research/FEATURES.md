@@ -1,78 +1,81 @@
 # Feature Research
 
-**Domain:** Operator admin UI for Ecto/Phoenix search (Scrypath-shaped)
-**Researched:** 2026-04-20
-**Confidence:** HIGH
+**Domain:** Search integration libraries (Rails Searchkick, Laravel Scout, Meilisearch docs) vs Scrypath **v1.14** themes (**B1** evidence-led QoL, **B2** operator playbooks).
+
+**Researched:** 2026-04-21
+
+**Confidence:** MEDIUM–HIGH (ecosystem patterns from public docs + Stack Overflow themes; B1 item list must still be grounded in **this** repo’s evidence).
 
 ## Feature Landscape
 
-### Table Stakes (Operators Expect These)
+### Table Stakes (Users Expect These)
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Posture landing (“what’s on fire?”) | First screen after login | MEDIUM | Maps to sync status, error rates, failed work presence |
-| Failed work triage | Day-2 ops is debugging stuck sync | MEDIUM | Align UI rows with `failed_sync_work/2` semantics |
-| Read-only drill-down | Ops must not “fix” via mystery buttons | LOW | Link out to Mix tasks / runbooks where action lives |
-| Honest multi-index display | Federation changed expectations in v1.8–v1.9 | MEDIUM | Show merge order, weights, partial failures explicitly |
-| Conventional Phoenix layout | Least surprise for library adopters | LOW | Router scopes, live_session, flash, errors |
+| Repeatable reindex / sync paths | Operators rerun the same recovery; Searchkick exposes `Model.reindex` and async promotion flows | LOW in library; MEDIUM in UI | Scrypath already has Mix tasks + guides; **B1** tightens error surfaces and doc hops |
+| Explicit query / filter construction | Scout users hit filter-operator foot-guns; docs show callback escape hatches | LOW | **`guides/common-mistakes.md`** and playground warnings already exist — extend for federation edge cases if evidence |
+| Test doubles for search in CI | Scout ecosystem uses array / fake drivers for assertions | LOW | **`SearchPlaygroundStubAdapter`** — playbooks must remain testable without live Meilisearch |
 
-### Differentiators (Valuable for Scrypath)
+### Differentiators (Competitive Advantage)
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| JTBD-ordered navigation | Personas (SRE vs app dev) land on the right work faster | LOW–MEDIUM | Document personas once; nav reflects priority |
-| Per-query / pipeline hints in UI | v1.9 invested in semantics; UI can surface “active knobs” read-only | MEDIUM | Optional panel when viewing query/debug paths |
-| Telemetry-aware copy | Teaches low-cardinality discipline | LOW | Inline help from SRE doc themes |
+| **Honest federation + merge trace** | Few libs document multi-search merge ordering; Scrypath does in code + OPSUI | HIGH already shipped | **B2** playbooks should capture **multi-index** entries + weights + `:all` expansion intent for replay |
+| **Per-query tuning pipeline as product language** | v1.9 guide distinguishes Plane A vs B | MEDIUM | Playbook metadata can reference pipeline step labels (not internal phase IDs) |
+| **Ecto-native projection** | Searchkick-style “model knows index shape” | Shipped | **B1** avoids new macro magic; prefer messages and small API clarifications |
 
-### Anti-Features (Commonly Requested, Problematic)
+### Anti-Features (Commonly Requested, Often Problematic)
 
 | Feature | Why Requested | Why Problematic | Alternative |
 |---------|---------------|-----------------|-------------|
-| Full Meilisearch admin clone | “One pane of glass” | Duplicates vendor UI; security + scope explosion | Deep links or iframe policy explicit out-of-scope |
-| Arbitrary query log in UI | Debugging | High cardinality PII / secrets risk | Bounded playground (OPSUI-04) with warnings |
-| Silent auto-remediation | Convenience | Hides operational reality; conflicts with library contracts | Keep actions in existing Mix/API paths; UI explains |
+| Silent “fix my index” buttons in OPSUI | Faster incident response | Violates **v1.10** out-of-scope: new recovery verbs via UI | Deep links to Mix + docs; playbooks **record** intent, not auto-mutate |
+| Production query logging | Replay customer searches | Privacy + cardinality (`docs/search-backend-sre.md` discipline) | Bounded playground only; export scrubbed fixtures |
+| Full vendor dashboard | Parity with Meilisearch Cloud | **OPSUI-FUT-02** deferred | Keep read-only posture + playground |
 
 ## Feature Dependencies
 
 ```
-[OPSUI packaging / app shell]
-    └──requires──> [Security model doc]
-                       └──requires──> [IA / personas]
+Evidence triage (B1)
+    └── informs──> Small lib/doc fixes
 
-[Posture landing]
-    └──requires──> [Scrypath sync/search visibility APIs]
+Playbook persistence choice (research)
+    └──requires──> Clear MVP (export/import vs DB)
+                       └──requires──> Auth story (OPSUI-08)
 
-[Federation inspector]
-    └──requires──> [search_many/2 + MultiSearchResult truth]
+Playbook UI (B2)
+    └──requires──> SearchLive + SearchPlayground extensions
 ```
 
-## MVP Definition (this milestone)
+## MVP Definition (v1.14 planning sense)
 
-### Launch With (v1.10)
+### Launch With (milestone)
 
-- [ ] Packaged OPSUI outside core Hex (OPSUI-09)
-- [ ] Persona/JTBD IA in nav (OPSUI-06)
-- [ ] Posture + failed work + sync read paths (OPSUI-01..03)
-- [ ] Federation-honest + bounded search exploration (OPSUI-04..05)
-- [ ] Conventional LiveView UX + explicit security story (OPSUI-07..08)
-- [ ] CI-safe verification slice (OPSUI-10)
+- [ ] **Named evidence list for B1** — issues or maintainer log; no drive-by API.
+- [ ] **Playbook MVP** — save + list + load + run (single-user or export-first acceptable if research chooses); federation-honest payload shape.
+- [ ] **Verification** — `mix test` / `mix verify.opsui` extended; no Tier-C Playwright mandate.
 
-## Feature Prioritization Matrix
+### Add After Validation (v1.14.x or later)
 
-| Feature | User Value | Implementation Cost | Priority |
-|---------|------------|---------------------|----------|
-| Failed work triage | HIGH | MEDIUM | P1 |
-| Posture landing | HIGH | MEDIUM | P1 |
-| Federation honesty | HIGH | MEDIUM | P1 |
-| Conventional shell + security | HIGH | LOW | P1 |
-| Bounded query playground | MEDIUM | MEDIUM | P2 |
+- [ ] Multi-user playbook ACLs — trigger: real multi-tenant OPSUI deploys.
+- [ ] Shared team library — trigger: evidence from adopters.
+
+### Future (v2+)
+
+- [ ] **OPSUI-FUT-02** cluster observability.
+
+## Competitor Feature Analysis
+
+| Feature | Searchkick (Rails) | Laravel Scout + Meilisearch | Our Approach (v1.14) |
+|---------|-------------------|----------------------------|---------------------|
+| Console reindex | First-class `reindex`, async index promotion | Driver-level testing patterns | Mix tasks + OPSUI links; playbooks for **repeatable** query/repro |
+| Query debugging | Rails console + `search` | Callback to pass raw Meilisearch options | **`search_live.ex`** + adapter; save **structured** opts Scrypath already accepts |
+| Saved searches / admin | Often app-specific (not core gem) | App-level | **OPSUI-FUT-01** in **`scrypath_ops`** only |
 
 ## Sources
 
-- `.planning/ROADMAP.md` backlog OPSUI-01
-- `docs/search-backend-sre.md`
-- Shipped Scrypath operator APIs (codebase)
+- Searchkick GitHub + Stack Overflow reindex / `Searchkick::ImportError` themes.
+- Meilisearch Laravel Scout guide; Stack Overflow Scout filter callbacks.
+- **`milestones/v1.10-REQUIREMENTS.md`** (OPSUI scope + FUT items).
 
 ---
-*Feature research for: Scrypath v1.10 OPSUI*
-*Researched: 2026-04-20*
+*Feature research for: Scrypath v1.14*
