@@ -28,7 +28,7 @@ Execution results are documented in **`ScrypathOps.Playbook.Runner`** under **`#
 | ----- | ---- | ----- |
 | `playbook_format` | integer | Must be **`1`**. |
 | `mode` | string | **`"search_many"`**. |
-| `entries` | array | Each element is a **3**-element JSON array: **`[schema_string, q_string, opts_object]`**. Schema may be **`":all"`** when supported by **`Scrypath.search_many/2`** (see [multi-index-search.md](../../guides/multi-index-search.md)). |
+| `entries` | array | Each element is a **3**-element JSON array: **`[schema_string, q_string, opts_object]`** where `schema_string` is a concrete allowlisted module name such as **`"MyApp.Post"`**. `Runner.run_validated/3` does not accept **`":all"`** entries in playbook JSON today, even though direct **`Scrypath.search_many/2`** supports `:all` expansion in library code. |
 | `opts` | object | **Shared** runtime + search options merged per library rules before each entry’s third-element `opts` is applied (right-biased per key). |
 
 Unknown keys at any fixed level (top-level, inside `opts`, inside `page`, etc.) are **rejected** by the validator — there is **no** silent clamping of `page.size` or entry counts.
