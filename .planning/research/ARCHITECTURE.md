@@ -1,114 +1,36 @@
-# Architecture Research
+# Architecture Research — OPSUI second slice (v1.15)
 
-**Domain:** Scrypath core (`lib/scrypath`) + **`scrypath_ops`** operator shell — **v1.14** extensions for B1 + B2.
+**Researched:** 2026-04-22  
+**Confidence:** HIGH
 
-**Researched:** 2026-04-21
+## Current architecture (v1.14)
 
-**Confidence:** HIGH for as-built; MEDIUM for target playbook architecture (depends on persistence MVP).
+- **`PlaybookLive`** — mount lists workspace + examples; import paste/upload; validate via **`V1`**; run via **`Runner`**; persist via **`Store`** to configured dir.
+- **`SearchPlaygroundLive`** (and related) — bounded `search_many`; stub adapter in CI.
+- **Boundary:** `scrypath_ops` remains optional; core **`Scrypath`** unchanged unless playbook schema needs shared structs (prefer ops-local).
 
-## Standard Architecture
+## Integration for second slice
 
-### System Overview
+1. **Playground → playbook**  
+   - Add a **pure function** (or context module) that maps playground assigns / form params → **`V1`** map — **LiveView stays thin**.  
+   - Reuse **`V1`** validation; surface same error taxonomy as import path.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Consumer Phoenix app                     │
-│  Ecto schemas ──> Scrypath sync ──> Meilisearch indices      │
-└───────────────────────────┬─────────────────────────────────┘
-                            │ read APIs + Mix tasks
-┌───────────────────────────▼─────────────────────────────────┐
-│              scrypath_ops (optional, repo-local)             │
-│  LiveView (posture, triage, sync/drift, search playground)   │
-│       │                                                      │
-│       ├── SearchPlayground ──> Adapter.Scrypath / Stub       │
-│       └── [v1.14] Playbook store (TBD: session / file / DB)   │
-└─────────────────────────────────────────────────────────────┘
-```
+2. **Metadata**  
+   - Prefer **fields inside JSON** (`title`, `description`, `tags`) with **`V1` strict allowlist** over sidecar files (fewer sync bugs). If schema bump → **`playbook_format`** minor doc + migration note.
 
-### Component Responsibilities
+3. **Optional Ecto catalog** (if selected)  
+   - **Table:** `playbook_entries` (id, inserted_at, title, basename_ref or `bytea` blob) — simplest shape decided in plan phase.  
+   - **Sync:** optional watcher from DB rows → workspace export for gitops teams **out of scope** unless trivial.
 
-| Component | Responsibility | v1.14 touch |
-|-----------|----------------|-------------|
-| **`Scrypath`** | Search, sync, federation, visibility APIs | **B1** only: targeted improvements |
-| **`ScrypathOps.SearchPlayground`** | Caps, validation, dispatch | **B2**: accept playbook-shaped params; maybe `dispatch_*` overloads or normalizer module |
-| **`SearchLive`** | Form state, events, telemetry | **B2**: save/load UI, warnings |
-| **`operator-ia.md` + router** | Nav contract | **B2**: new nav entry only if JTBD clear; run **`mix scrypath_ops.check_nav_contract`** |
+4. **Telemetry**  
+   - Mirror playground: attach **`:playbook_id`** / basename to events for operators.
 
-## Recommended Project Structure (incremental)
+## Suggested build order
 
-```
-scrypath_ops/lib/scrypath_ops/
-  search_playground.ex          # limits + dispatch (extend carefully)
-  search_playground/
-    adapter.ex
-scrypath_ops/lib/scrypath_ops_web/live/
-  search_live.ex                # playground UI
-  [new] playbook_live.ex        # OR fold into search_live — pick one surface
-```
-
-**Rationale:** Keep playbook logic discoverable next to playground; avoid scattering persistence in `Endpoint`.
-
-## Architectural Patterns
-
-### Pattern 1: Adapter seam for testability
-
-**What:** `SearchPlayground` already selects adapter via config.
-
-**When to use:** Playbook “run” should hit the same adapter path as manual runs.
-
-**Trade-offs:** Stub stays deterministic in CI.
-
-### Pattern 2: Value objects for saved payload
-
-**What:** Typed struct or schema for `{mode: :search | :search_many, entries: ..., opts: ...}` with explicit version field (`playbook_format: 1`).
-
-**When to use:** Before any persistence.
-
-**Trade-offs:** Migration story if Meilisearch wire options evolve — version field enables upgrade path.
-
-### Pattern 3: No new library recovery verbs
-
-**What:** UI and playbooks stay read-only / bounded query; actions remain Mix/docs.
-
-**When to use:** Always (per **v1.10** Out of Scope table).
-
-## Data Flow — Playbook Run
-
-```
-User selects playbook
-    → Load normalized payload (validate version + caps)
-    → SearchLive assigns form
-    → User clicks Run (or auto-run guarded)
-    → SearchPlayground.dispatch_* → Scrypath / Stub
-    → Render results + merge trace (existing OPSUI-05 paths)
-```
-
-## Anti-Patterns
-
-### Anti-Pattern: Playbook executes hidden Mix
-
-**Wrong:** One-click reindex from saved YAML.
-
-**Right:** Playbook stores **query reproduction** data; operator follows linked Mix for mutations.
-
-### Anti-Pattern: Storing secrets in playbooks
-
-**Wrong:** Full connection strings in JSON.
-
-**Right:** Reference schema keys / index names only; host config stays env.
-
-## Integration Points
-
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| Playbook JSON ↔ LiveView | Params + assigns | Sanitize display; length limits |
-| OPSUI ↔ Meilisearch | Via `Scrypath` only | No parallel HTTP client in playbooks |
-
-## Sources
-
-- **`scrypath_ops/lib/scrypath_ops_web/live/search_live.ex`**
-- **`scrypath_ops/lib/scrypath_ops/search_playground.ex`**
-- **`milestones/v1.10-REQUIREMENTS.md`** packaging + security rows
+1. Domain mapping + validation (**capture**).  
+2. **Store** / LiveView for catalog ops.  
+3. Persistence fork (docs vs Ecto) **after** capture ships.  
+4. IA + **`verify.opsui`** last so strings stabilize.
 
 ---
-*Architecture research for: Scrypath v1.14*
+*Architecture research for **v1.15***
