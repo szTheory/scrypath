@@ -16,7 +16,12 @@ defmodule ScrypathOps.Playbook.RunFailureTest do
     assert failure.failure_class != ""
     assert failure.message != ""
     assert is_map(failure.copy)
-    assert failure.copy == %{schema: "Elixir.MyApp.Customer", mode: "search"}
+
+    assert failure.copy == %{
+             basename: "customer-search.json",
+             schema: "Elixir.MyApp.Customer",
+             mode: "search"
+           }
 
     assert String.starts_with?(failure.doc.primary, "https://")
     assert String.contains?(failure.doc.primary, "playbook-schema")
@@ -37,12 +42,14 @@ defmodule ScrypathOps.Playbook.RunFailureTest do
       )
 
     assert failure.copy == %{
+             basename: "catalog.json",
              schema: "Elixir.MyApp.Product",
              mode: "search_many",
              page_size: 75,
              max_page_size: 50
            }
 
-    assert Map.keys(failure.copy) |> Enum.sort() == [:max_page_size, :mode, :page_size, :schema]
+    assert Map.keys(failure.copy) |> Enum.sort() ==
+             [:basename, :max_page_size, :mode, :page_size, :schema]
   end
 end
