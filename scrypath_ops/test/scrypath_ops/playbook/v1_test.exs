@@ -90,6 +90,27 @@ defmodule ScrypathOps.Playbook.V1Test do
              V1.validate(map)
   end
 
+  test "nested meilisearch_api_key under opts.per_query map is rejected with banned_key tuple" do
+    map = %{
+      "playbook_format" => 1,
+      "mode" => "search",
+      "schema" => "MyApp.Post",
+      "q" => "x",
+      "opts" => %{
+        "per_query" => %{
+          "show_ranking_score" => true,
+          "provenance" => %{"meilisearch_api_key" => "secret"}
+        }
+      }
+    }
+
+    assert {:error, {:invalid_playbook, {:banned_key, "meilisearch_api_key", path}}} =
+             V1.validate(map)
+
+    assert is_list(path)
+    assert "provenance" in path
+  end
+
   test "encode after validate round-trips through Jason and decode" do
     {:ok, map} = V1.decode(@minimal_search)
     {:ok, validated} = V1.validate(map)

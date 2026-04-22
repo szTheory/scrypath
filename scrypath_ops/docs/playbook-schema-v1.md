@@ -84,6 +84,13 @@ Do **not** place transport secrets or raw HTTP client bags in playbook JSON. The
 
 Also reject other **`Scrypath.Options`** runtime keys not explicitly allowlisted above (e.g. `backend`, `repo`, `sync_mode`, `oban*`, …). Playbooks should reference **schema module strings** and **Scrypath-accepted search options** only.
 
+## Security posture (threat model)
+
+- **Unstructured secrets:** **`q`**, **`title`**, **`description`**, and **`tags`** are plain strings; reviewers should treat pasted tokens like any other committed prose. **`validate/1`** does **not** silently redact or rewrite them.
+- **Git history:** JSON in repos is durable; never rely on “remove the key later” for secrets.
+- **`/ops` exposure:** Putting the operator UI on a network is a **host** concern (TLS, auth, network policy); see **`operator-ia.md`** (*Securing `/ops`*).
+- **Validation vs sanitize:** **`V1.validate/1`** is **fail-closed** (reject). A hypothetical sanitize/import path must be a **separate** API that returns explicit warnings — it must **not** change **`validate/1`** semantics silently.
+
 ## Persistence
 
 **v1.15** defines **one** authoritative persistence path for operator playbooks: **UTF-8 JSON
