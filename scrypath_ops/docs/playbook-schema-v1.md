@@ -2,6 +2,8 @@
 
 Normative reference for **version 1** saved-search playbooks consumed by **ScrypathOps** (bounded `/ops/search` and future tooling). Executable validation lives in **`ScrypathOps.Playbook.V1`**.
 
+Execution results are documented in **`ScrypathOps.Playbook.Runner`** under **`## Runner-library contract`**. This guide stays authoritative for JSON wire format, allowed keys, caps, and troubleshooting anchors only.
+
 ## Versioning
 
 - Each document is a single JSON **object** with **string keys** (UTF-8 on the wire).
