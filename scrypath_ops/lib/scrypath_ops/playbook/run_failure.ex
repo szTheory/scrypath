@@ -43,6 +43,7 @@ defmodule ScrypathOps.Playbook.RunFailure do
   end
 
   def from_reason(reason, context \\ []), do: enrich(reason, context)
+  def doc_ref(reason), do: reason |> lookup() |> elem(2)
 
   defp lookup({:page_size_out_of_range, _size, _max} = reason) do
     {"validation", page_size_message(reason), :playbook_schema_page_size, :page_size}
@@ -80,18 +81,22 @@ defmodule ScrypathOps.Playbook.RunFailure do
 
   defp sanitize_context(_), do: %{}
 
-  defp normalize_context_value(key, value) when key in [:basename, :schema, :mode] and is_binary(value),
-    do: value
+  defp normalize_context_value(key, value)
+       when key in [:basename, :schema, :mode] and is_binary(value),
+       do: value
 
-  defp normalize_context_value(key, value) when key in [:page_size, :max_page_size] and is_integer(value),
-    do: value
+  defp normalize_context_value(key, value)
+       when key in [:page_size, :max_page_size] and is_integer(value),
+       do: value
 
   defp normalize_context_value(_, _), do: nil
 
   defp build_copy(:none, _context), do: %{}
   defp build_copy(:mode, context), do: take_copy(context, [:mode])
   defp build_copy(:schema_mode, context), do: take_copy(context, [:schema, :mode])
-  defp build_copy(:page_size, context), do: take_copy(context, [:schema, :mode, :page_size, :max_page_size])
+
+  defp build_copy(:page_size, context),
+    do: take_copy(context, [:schema, :mode, :page_size, :max_page_size])
 
   defp take_copy(context, keys) do
     context

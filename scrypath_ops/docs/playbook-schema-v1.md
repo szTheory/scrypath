@@ -91,6 +91,28 @@ Also reject other **`Scrypath.Options`** runtime keys not explicitly allowlisted
 - **`/ops` exposure:** Putting the operator UI on a network is a **host** concern (TLS, auth, network policy); see **`operator-ia.md`** (*Securing `/ops`*).
 - **Validation vs sanitize:** **`V1.validate/1`** is **fail-closed** (reject). A hypothetical sanitize/import path must be a **separate** API that returns explicit warnings — it must **not** change **`validate/1`** semantics silently.
 
+## Troubleshooting
+
+Use these anchors from OPSUI failure panels. Each section is symptom first, then likely cause, then the fastest fix.
+
+### no_schema
+
+- **Symptom:** Playbook run fails with "schema is not on the configured allowlist."
+- **Cause:** The `schema` string does not resolve to a module in the current `:schema_allowlist`.
+- **Fix:** Confirm the module name matches the app exactly and add it to the operator allowlist before re-running.
+
+### invalid_query
+
+- **Symptom:** Playbook run fails with "query field is invalid."
+- **Cause:** The playbook `q` value is missing or is not a string for the selected mode.
+- **Fix:** Update the JSON so every search entry carries a string query, then re-import or reload the playbook.
+
+### page_size_out_of_range
+
+- **Symptom:** Playbook run fails with `page.size` outside the allowed range.
+- **Cause:** The JSON requested a page size above `ScrypathOps.SearchPlayground.max_page_size_allowed/0` or below `1`.
+- **Fix:** Lower `opts.page.size` to the configured cap for this OPSUI instance and run again.
+
 ## Persistence
 
 **v1.15** defines **one** authoritative persistence path for operator playbooks: **UTF-8 JSON
