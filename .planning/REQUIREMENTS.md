@@ -20,8 +20,8 @@
 
 ### Team-oriented persistence (bounded)
 
-- [ ] **OPS2-04**: Milestone delivers **one** explicit **team persistence** outcome, chosen without ambiguity: **(A)** strengthened **file + env + gitops** documentation and examples for shared workspace layouts, **or** **(B)** an **optional Ecto-backed** playbook catalog in **`scrypath_ops`** behind configuration, with limitations documented (single app DB, not multi-tenant SaaS). **No** silent mix of authoritative stores—precedence must be documented.  
-  **Evidence:** **OPS-PB-03** chose file-only for **v1.14**; **OPSUI-FUT-01** “shared across team members” deferred past MVP (`milestones/v1.14-REQUIREMENTS.md` implementation note).
+- [x] **OPS2-04**: Milestone delivers **one** explicit **team persistence** outcome, chosen without ambiguity: **(A)** strengthened **file + env + gitops** documentation and examples for shared workspace layouts, **or** **(B)** an **optional Ecto-backed** playbook catalog in **`scrypath_ops`** behind configuration, with limitations documented (single app DB, not multi-tenant SaaS). **No** silent mix of authoritative stores—precedence must be documented.  
+  **Evidence:** **OPS-PB-03** chose file-only for **v1.14**; **OPSUI-FUT-01** “shared across team members” deferred past MVP (`milestones/v1.14-REQUIREMENTS.md` implementation note). **Shipped (A):** **`docs/team-playbook-persistence.md`**, schema persistence alignment, **`mix scrypath_ops.playbooks.validate`**, **`examples/playbooks/`** (**Phase 63**, 2026-04-22).
 
 ### Operator trust: IA, verification, security
 
@@ -31,8 +31,8 @@
 - [ ] **OPS2-06**: **`mix verify.opsui`** (default contributor path) covers **new** LiveView or context paths using the **stub adapter** pattern—**no** mandatory live Meilisearch in default CI unless an existing gated job already covers the flow.  
   **Evidence:** **OPS-PB-05**, **VRFY-03..04**.
 
-- [ ] **OPS2-07**: **Security posture** for shared playbooks: reaffirm **no secrets** in JSON (banned fields / scrub), document **auth implications** if a server catalog is introduced, and ensure destructive actions remain **explicitly confirmed** per **PlaybookLive** destructive-copy patterns.  
-  **Evidence:** **`playbook-schema-v1.md`** security notes; `.planning/research/PITFALLS.md`.
+- [x] **OPS2-07**: **Security posture** for shared playbooks: reaffirm **no secrets** in JSON (banned fields / scrub), document **auth implications** if a server catalog is introduced, and ensure destructive actions remain **explicitly confirmed** per **PlaybookLive** destructive-copy patterns.  
+  **Evidence:** **`playbook-schema-v1.md`** security notes; `.planning/research/PITFALLS.md`. **Shipped:** threat-model subsection + **`V1`** / **`PlaybookLive`** tests (**Phase 63**, 2026-04-22).
 
 ### Milestone close
 
@@ -65,8 +65,8 @@
 | OPS2-01 | Phase 62 | Complete |
 | OPS2-02 | Phase 62 | Complete |
 | OPS2-03 | Phase 62 | Complete |
-| OPS2-04 | Phase 63 | Pending |
-| OPS2-07 | Phase 63 | Pending |
+| OPS2-04 | Phase 63 | Complete |
+| OPS2-07 | Phase 63 | Complete |
 | OPS2-05 | Phase 64 | Pending |
 | OPS2-06 | Phase 64 | Pending |
 | OPS2-08 | Phase 64 | Pending |
@@ -79,4 +79,4 @@
 
 ---
 *Requirements defined: 2026-04-22*  
-*Last updated: 2026-04-22 — **OPS2-01..03** marked **Complete** after Phase 62 execution*
+*Last updated: 2026-04-22 — **OPS2-04** and **OPS2-07** marked **Complete** after Phase 63 execution*
