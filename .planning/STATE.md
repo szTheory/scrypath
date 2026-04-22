@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.15
-milestone_name: OPSUI second slice
-status: "Phase **64** context gathered (**64-CONTEXT.md**). Next: **plan** then **execute** phase 64."
-last_updated: "2026-04-22T23:30:00.000Z"
+milestone: v1.14
+milestone_name: ideas)
+status: planning
+last_updated: "2026-04-22T17:24:51.836Z"
 last_activity: 2026-04-22 — `/gsd-discuss-phase 64`
 progress:
   total_phases: 3
   completed_phases: 2
-  total_plans: 8
+  total_plans: 10
   completed_plans: 7
-  percent: 67
+  percent: 70
 ---
 
 # Project State
@@ -72,3 +72,5 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 **Completed:** **`v1.14`** shipped + archived in-repo (**2026-04-22**) — phases **57–61**. **Phase 62** (playground capture + playbook catalog) and **phase 63** (bounded team persistence + security posture) shipped in-repo **2026-04-22**.
 
 **Next:** **Phase 64** — see **`.planning/ROADMAP.md`**.
+
+**Planned Phase:** 64 (IA, verification, and milestone bookkeeping) — 3 plans — 2026-04-22T17:24:51.823Z
