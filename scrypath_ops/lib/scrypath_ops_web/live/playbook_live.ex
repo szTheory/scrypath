@@ -1042,6 +1042,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               :if={@run_ui.phase == :error && @run_failure_enriched}
               class="alert alert-error items-start text-sm"
               role="alert"
+              data-testid="run-failure-panel"
             >
               <div class="space-y-3">
                 <p>
