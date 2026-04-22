@@ -1,6 +1,20 @@
 defmodule Scrypath do
   @moduledoc """
-  Runtime reflection helpers for searchable schemas declared with `use Scrypath`.
+  Scrypath is the runtime surface for **schema → sync → search**: you declare how records
+  map into a Meilisearch index, enqueue or inline sync work, then query through the same
+  Ecto-native boundaries your Phoenix or contexts already own.
+
+  ## Read next
+
+  - [guides/golden-path.md](guides/golden-path.md) — linear first hour from dependencies through a working `Scrypath.search/3`.
+  - [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md) — canonical sync modes (`:inline`, `:oban`, `:manual`), eventual consistency, and operator lifecycle language.
+  - [guides/overview.md](guides/overview.md) — table of contents for every published guide.
+  - [guides/common-mistakes.md](guides/common-mistakes.md) — evidence-led pitfalls when search and sync feel inconsistent.
+
+  Use `use Scrypath` on your Ecto schema; declaration grammar and settings live on
+  `Scrypath.Schema` — read that module instead of duplicating option tables here.
+
+  ## Reflection helpers
 
   The initial public reflection surface is intentionally small:
 
