@@ -15,9 +15,9 @@ Improve **first-hour** and **day-two** experience for Phoenix/Ecto developers us
 
 ### Actionable errors and pitfalls
 
-- [ ] **ONBD-04**: For a **bounded** set of high-friction error paths (for example missing Meilisearch config, unknown index/schema, invalid **`search_many/2`** / federation options), **`{:error, _}`** tuples (or documented raises) carry **actionable** messages: what failed and which guide or section to read next—without inventing unsupported recovery verbs.
-- [ ] **ONBD-05**: A maintainer-authored **pitfalls / common mistakes** slice (new or extended guide section, README subsection, or short FAQ) covers at least **three** real integration mistakes grounded in shipped docs or known support themes—not speculative anecdotes.
-- [ ] **ONBD-06**: **`Scrypath`** module **`@moduledoc`** (and, if applicable, primary **`mix scrypath.*`** task help) points new users to **golden path + sync authority** within **two hops** of reading.
+- [x] **ONBD-04**: For a **bounded** set of high-friction error paths (for example missing Meilisearch config, unknown index/schema, invalid **`search_many/2`** / federation options), **`{:error, _}`** tuples (or documented raises) carry **actionable** messages: what failed and which guide or section to read next—without inventing unsupported recovery verbs.
+- [x] **ONBD-05**: A maintainer-authored **pitfalls / common mistakes** slice (new or extended guide section, README subsection, or short FAQ) covers at least **three** real integration mistakes grounded in shipped docs or known support themes—not speculative anecdotes.
+- [x] **ONBD-06**: **`Scrypath`** module **`@moduledoc`** (and, if applicable, primary **`mix scrypath.*`** task help) points new users to **golden path + sync authority** within **two hops** of reading.
 
 ### Contributor OPSUI verify spine
 
@@ -53,9 +53,9 @@ Improve **first-hour** and **day-two** experience for Phoenix/Ecto developers us
 | ONBD-01 | Phase 51 | Complete |
 | ONBD-02 | Phase 51 | Complete |
 | ONBD-03 | Phase 51 | Complete |
-| ONBD-04 | Phase 52 | Pending |
-| ONBD-05 | Phase 52 | Pending |
-| ONBD-06 | Phase 52 | Pending |
+| ONBD-04 | Phase 52 | Complete |
+| ONBD-05 | Phase 52 | Complete |
+| ONBD-06 | Phase 52 | Complete |
 | VRFY-03 | Phase 53 | Pending |
 | VRFY-04 | Phase 53 | Pending |
 | AUDT-01 | Phase 32 (gap closure 33 follow-ups recorded) | Complete |
