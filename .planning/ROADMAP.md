@@ -23,7 +23,7 @@
 
 ### Phase 62: Playground capture and playbook catalog
 
-- [ ] **Phase 62: Playground capture and playbook catalog** — **Goal:** Remove JSON-first authoring for common flows and make workspace catalogs operator-legible. **Requirements:** **OPS2-01**, **OPS2-02**, **OPS2-03**. **Success criteria:** (1) From the Search playground, “Save as playbook” (or equivalent) produces **valid** `playbook_format: 1` JSON that passes **`V1`** validation and can be saved to the workspace. (2) Rename and duplicate work on representative filenames including collision and error paths. (3) List and detail views show **title/description** (or documented defaults for legacy files) without breaking existing imports.
+- [x] **Phase 62: Playground capture and playbook catalog** (2026-04-22) — **Goal:** Remove JSON-first authoring for common flows and make workspace catalogs operator-legible. **Requirements:** **OPS2-01**, **OPS2-02**, **OPS2-03**. **Success criteria:** (1) From the Search playground, “Save as playbook” (or equivalent) produces **valid** `playbook_format: 1` JSON that passes **`V1`** validation and can be saved to the workspace. (2) Rename and duplicate work on representative filenames including collision and error paths. (3) List and detail views show **title/description** (or documented defaults for legacy files) without breaking existing imports.
 
 ### Phase 63: Bounded team persistence and security posture
 
