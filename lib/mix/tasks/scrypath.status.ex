@@ -7,6 +7,11 @@ defmodule Mix.Tasks.Scrypath.Status do
 
   @moduledoc """
   Shows pending, failed, and last-successful sync visibility for one searchable schema.
+
+  ## Read next
+
+  - [guides/golden-path.md](guides/golden-path.md) — first-hour checklist from dependencies through search.
+  - [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md) — authority on sync modes, eventual consistency, and operator lifecycle language.
   """
 
   @impl true

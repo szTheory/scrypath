@@ -7,6 +7,11 @@ defmodule Mix.Tasks.Scrypath.Retry do
 
   @moduledoc """
   Retries one explicit failed-work entry by id using the existing Scrypath operator APIs.
+
+  ## Read next
+
+  - [guides/golden-path.md](guides/golden-path.md) — first-hour checklist from dependencies through search.
+  - [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md) — authority on sync modes, eventual consistency, and operator lifecycle language.
   """
 
   @switches [id: :string]

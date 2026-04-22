@@ -9,6 +9,11 @@ defmodule Mix.Tasks.Scrypath.Failed do
   @moduledoc """
   Lists Scrypath-owned failed-work entries for one searchable schema.
 
+  ## Read next
+
+  - [guides/golden-path.md](guides/golden-path.md) — first-hour checklist from dependencies through search.
+  - [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md) — authority on sync modes, eventual consistency, and operator lifecycle language.
+
   ## Flags
 
   - **`--json`** — print a single JSON document to stdout (no `Mix` shell lines).
