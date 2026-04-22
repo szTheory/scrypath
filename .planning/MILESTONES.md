@@ -1,5 +1,25 @@
 # Milestones
 
+## v1.15 OPSUI second slice (Shipped + archived: 2026-04-22)
+
+**Phases completed:** **3** (**62–64**), **8** requirements (**OPS2-01**–**OPS2-08**)
+
+**Hex:** **`scrypath 0.3.4`** (matches root **`mix.exs`** **`@version`** at close); **in-repo milestone; Hex publish tracked separately** — no dedicated Hex bump claimed for this planning milestone.
+
+**Key accomplishments:**
+
+- Playground → playbook capture, catalog rename/duplicate/metadata (**OPS2-01**–**OPS2-03**) — **Phase 62**
+- Team workspace authority, **`mix scrypath_ops.playbooks.validate`**, examples + security posture (**OPS2-04**, **OPS2-07**) — **Phase 63**
+- **`operator-ia.md`** persistence pointers, **`mix verify.opsui`** + doc contracts including **`mix scrypath_ops.playbooks.validate`**, **`guides/meilisearch-operations.md`** restoration, frozen **`v1.15-*`** trio (**OPS2-05**, **OPS2-06**, **OPS2-08**) — **Phase 64**
+
+**Pre-close audit:** **`milestones/v1.15-MILESTONE-AUDIT.md`** (**`passed`**).
+
+**Automation note:** **`gsd-sdk query milestone.complete`** failed again (**`version required for phases archive`**), so **`milestones/v1.15-*`**, **`ROADMAP`** collapse, and rolling **`REQUIREMENTS.md`** updates were **manual** (same pattern as **v1.10–v1.14**).
+
+**Archives:** `milestones/v1.15-ROADMAP.md`, `milestones/v1.15-REQUIREMENTS.md`, `milestones/v1.15-MILESTONE-AUDIT.md`
+
+---
+
 ## v1.14 Library QoL and operator playbooks (Shipped + archived: 2026-04-22)
 
 **Phases completed:** **5** (**57–61**), **10** requirements (**EVID-01**, **LIB-01**–**LIB-03**, **OPS-PB-01**–**OPS-PB-05**, **SHIP-01**)
