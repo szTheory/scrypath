@@ -1,35 +1,35 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.14
-milestone_name: ideas)
-status: planning
-last_updated: "2026-04-22T15:00:00.000Z"
+milestone: none
+milestone_name: (between milestones)
+status: idle
+last_updated: "2026-04-22T20:00:00.000Z"
 last_activity: 2026-04-22
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 7
-  completed_plans: 11
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-04-21)
+See: `.planning/PROJECT.md` (updated 2026-04-22)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.14** — all roadmap phases **57–61** executed in-repo; **`.planning/ROADMAP.md`** **`v1.14`** row remains **in progress** until **`/gsd-complete-milestone`**.
+**Current focus:** **Between milestones** — **`v1.14`** archived **2026-04-22**; start **`/gsd-new-milestone`** for the next arc.
 
 ## Current Position
 
-**Phase:** 61
+**Phase:** —
 
-**Plan:** Complete (**61-01**, **61-02**)
+**Plan:** —
 
-**Status:** Phase 61 verification and milestone bookkeeping done (**OPS-PB-05**, **SHIP-01**). See **`.planning/phases/61-verification-and-milestone-bookkeeping/61-VERIFICATION.md`**.
+**Status:** **`v1.14`** milestone closed; archives at **`milestones/v1.14-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **Last activity:** 2026-04-22
 
@@ -62,15 +62,15 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **`/gsd-complete-milestone`** for **v1.14** — archive milestone when ready (**ROADMAP** **`v1.14`** row still open until then).
-2. **`/gsd-progress`** — confirm roadmap + requirements after phase close.
+1. **`/clear`** then **`/gsd-new-milestone`** — open the next milestone (fresh **`.planning/REQUIREMENTS.md`** + roadmap section).
+2. **`/gsd-progress`** — sanity-check planning directory after the reset.
 
 ---
 
-*Last updated: 2026-04-22 — Phase **61** executed (**OPS-PB-05**, **SHIP-01**)*
+*Last updated: 2026-04-22 — **`v1.14`** milestone archived*
 
-**Prior milestone:** **v1.13** — public polish & narrative coherence — **2026-04-22**
+**Prior milestone:** **v1.14** — library QoL and operator playbooks — **2026-04-22**
 
-**Completed:** **v1.13** in-repo (**2026-04-22**) — phases **54–56**. **v1.14** Phase **57** (B1 evidence freeze) — **2026-04-22**. **v1.14** Phase **58** (core library + doc QoL **LIB-01..03**) — **2026-04-22**. **v1.14** Phase **59** (playbook schema MVP) — **2026-04-22**. **v1.14** Phase **60** (playbook LiveView + IA) — **2026-04-22**. **v1.14** Phase **61** (verification + milestone bookkeeping) — **2026-04-22**.
+**Completed:** **`v1.14`** shipped + archived in-repo (**2026-04-22**) — phases **57–61** — **`milestones/v1.14-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next:** Milestone archive for **v1.14** when maintainers choose — see **`.planning/ROADMAP.md`** (**`v1.14`** checklist).
+**Next:** **`/gsd-new-milestone`** when ready for **v1.15+** (or chosen version).
