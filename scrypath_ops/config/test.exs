@@ -52,3 +52,4 @@ playbook_test_root =
 File.mkdir_p!(playbook_test_root)
 
 config :scrypath_ops, :playbook_workspace_dir, playbook_test_root
+config :scrypath_ops, :playbook_doc_base, "https://github.com/szTheory/scrypath/blob/main/"
