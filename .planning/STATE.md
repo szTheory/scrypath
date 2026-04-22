@@ -1,16 +1,15 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.16
-milestone_name: Playbook execution & operator honesty
-status: defining_requirements
-last_updated: "2026-04-22T12:00:00.000Z"
-last_activity: 2026-04-22 — `/gsd-new-milestone` — v1.16 opened
+milestone_name: — in progress)
+status: Defining requirements → roadmap ready; begin **`/gsd-discuss-phase 65`** or **`/gsd-plan-phase 65`**.
+last_updated: "2026-04-22T17:59:58.679Z"
+last_activity: 2026-04-22 — **`/gsd-new-milestone`** opened **v1.16**; **`gsd-sdk query phases.clear`**; rolling **`.planning/REQUIREMENTS.md`** + **`.planning/ROADMAP.md`** updated.
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
-  percent: 0
 ---
 
 # Project State
