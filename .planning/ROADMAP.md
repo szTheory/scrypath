@@ -25,6 +25,18 @@
 - [ ] **Phase 53: Contributor OPSUI verify spine** — Root-level **`mix verify.opsui`** (or equivalent) registered, documented in **README** / **CONTRIBUTING**, and aligned with verify matrix text (**VRFY-03**, **VRFY-04**).
   - **Success criteria:** (1) One command from repo root runs OPSUI checks with documented prereqs. (2) Contributor docs surface the command without burying it. (3) CI / default verify story references the command where appropriate.
 
+### Phase 51: Adoption path truth and discoverability
+
+**Requirements:** **ONBD-01**..**ONBD-03**. README, **`guides/golden-path.md`**, **`examples/phoenix_meilisearch`**, and **CONTRIBUTING** stay mutually contract-true; ExUnit **`docs_contract_test`** (or split modules) locks tightened anchors; **`phoenix-example-integration`** job steps and env match contributor-facing docs (**D-08**–**D-10** in phase CONTEXT).
+
+### Phase 52: Actionable errors and onboarding pitfalls
+
+**Depends on:** Phase 51. **Requirements:** **ONBD-04**..**ONBD-06**. Bounded **`{:error, _}`** / raise messages, pitfalls slice, **`Scrypath`** **`@moduledoc`** and task help pointers.
+
+### Phase 53: Contributor OPSUI verify spine
+
+**Depends on:** Phase 51. **Requirements:** **VRFY-03**, **VRFY-04**. Root **`mix verify.opsui`** (or equivalent), README / CONTRIBUTING surfacing.
+
 ## Phases (history)
 
 <details>

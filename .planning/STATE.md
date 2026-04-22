@@ -2,14 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: — current)
-status: Roadmap and requirements defined for **v1.12**; ready for **`/gsd-discuss-phase 51`** or **`/gsd-plan-phase 51`**.
-last_updated: "2026-04-22T00:37:24.161Z"
+status: Phase **51** planned (**3** plans) — ready for **`/gsd-execute-phase 51`**.
+last_updated: "2026-04-22T00:48:09.495Z"
 last_activity: 2026-04-21 — `/gsd-new-milestone` (**v1.12**)
 progress:
-  total_phases: 1
+  total_phases: 3
   completed_phases: 0
-  total_plans: 0
+  total_plans: 3
   completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -24,11 +25,11 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 ## Current Position
 
-**Phase:** Not started — first up **51** (*Adoption path truth and discoverability*)
+**Phase:** **51** — *Adoption path truth and discoverability* (planned)
 
-**Plan:** —
+**Plan:** **3** executable plans in `.planning/phases/051-adoption-path-truth-and-discoverability/`
 
-**Status:** Roadmap and requirements defined for **v1.12**; ready for **`/gsd-discuss-phase 51`** or **`/gsd-plan-phase 51`**.
+**Status:** Ready to execute Phase **51** (`/gsd-execute-phase 51`).
 
 **Last activity:** 2026-04-21 — `/gsd-new-milestone` (**v1.12**)
 
@@ -72,9 +73,9 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **`/gsd-discuss-phase 51`** — gather context for adoption path / discoverability phase.
-2. **`/gsd-plan-phase 51`** — plan directly (skip discussion).
-3. **`/gsd-progress`** — status snapshot.
+1. **`/gsd-execute-phase 51`** — run all Phase **51** plans (waves **1** then **2**).
+2. **`/gsd-progress`** — status snapshot.
+3. **`/gsd-plan-phase 51 --research`** — re-research before replanning if scope shifts.
 
 **Resume file:** --resume-file
 
@@ -84,3 +85,5 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 **Prior milestone:** **v1.11** operator shell polish — archived **2026-04-21**
 
 **Completed:** **v1.11** milestone close — **2026-04-21**
+
+**Planned Phase:** 51 (Adoption path truth and discoverability) — 3 plans — 2026-04-22T00:48:09.490Z
