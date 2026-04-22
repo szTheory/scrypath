@@ -235,3 +235,9 @@
 | `v1.6` | 2026-04-19 | 7 | 7 | Archived | Adoption golden path, consumer proof, verify story, **`STATE`** triage, doc contracts **33–35**; `v1.6-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`; tag **`v1.6`**. |
 | `v1.7` | 2026-04-20 | 3 | 7 | Archived | Facet depth (hierarchical, disjunctive counts, `search_within_facet/4`); `v1.7-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`; tag **`v1.7`**. |
 | `v1.8` | 2026-04-20 | 3 | 6 | Archived | Multi-index federation (weights, `:all` expansion, docs/contracts); `v1.8-{ROADMAP,REQUIREMENTS}.md`; tag **`v1.8`**. |
+| `v1.9` | 2026-04-20 | 2 | 5 | Archived | Per-query relevance & tuning pipeline — phases **42–43**; `v1.9-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`; tag **`v1.9`**. |
+| `v1.10` | 2026-04-21 | 4 | 14 | Archived | Operator admin UI (OPSUI) — phases **44–47**; Hex **0.3.3** at archive; `v1.10-*` archives. |
+| `v1.11` | 2026-04-21 | 3 | 11 | Archived | Operator shell polish — phases **48–50**; `v1.11-*` archives. |
+| `v1.12` | 2026-04-22 | 3 | 9 | Archived | Developer onboarding & first-hour QoL — phases **51–53**; `v1.12-*` archives. |
+| `v1.13` | 2026-04-22 | 3 | 5 req | Archived | Public polish & narrative coherence — phases **54–56**; Hex **`scrypath 0.3.4`**; `v1.13-*` archives. |
+| `v1.14` | 2026-04-22 | 5 | 10 req | In progress | B1 evidence + **LIB-*** QoL + operator playbooks (**57–61**); current published line **Hex `scrypath 0.3.4`** per **`mix.exs`**; milestone archive still via **`/gsd-complete-milestone`**. |

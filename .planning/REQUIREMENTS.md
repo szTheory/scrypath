@@ -14,13 +14,13 @@
 
 ### Library and docs — evidence-led QoL (B1)
 
-- [ ] **LIB-01**: For **at least one** high-friction path already called out for adopters, improve **actionable** `{:error, _}` or exception message text (and, if needed, **one** adjacent doc link) so the failure names the problem and the **next doc** is obvious.  
+- [x] **LIB-01**: For **at least one** high-friction path already called out for adopters, improve **actionable** `{:error, _}` or exception message text (and, if needed, **one** adjacent doc link) so the failure names the problem and the **next doc** is obvious.  
   **Evidence:** v1.12 milestone shipped **ONBD-04..06** pattern (`milestones/v1.12-REQUIREMENTS.md`); `guides/common-mistakes.md` exists as the pitfalls surface.
 
-- [ ] **LIB-02**: For **at least one** library or verify path discovered during v1.14 dogfood, reduce confusion **without** new public macros — prefer clearer typespecs, `@doc`, or a **small** pure helper — and record the before/after confusion in the evidence list (**EVID-01**).  
+- [x] **LIB-02**: For **at least one** library or verify path discovered during v1.14 dogfood, reduce confusion **without** new public macros — prefer clearer typespecs, `@doc`, or a **small** pure helper — and record the before/after confusion in the evidence list (**EVID-01**).  
   **Evidence:** `.planning/milestone-candidates.md` **B1**; `.planning/research/PITFALLS.md` (speculative API churn pitfall).
 
-- [ ] **LIB-03**: Extend **doc-contract** or contributor-verify anchors so new v1.14 surfaces (playbook paths, warnings, or env flags) cannot silently drift from **README** / **CONTRIBUTING** / **`mix verify.opsui`** expectations.  
+- [x] **LIB-03**: Extend **doc-contract** or contributor-verify anchors so new v1.14 surfaces (playbook paths, warnings, or env flags) cannot silently drift from **README** / **CONTRIBUTING** / **`mix verify.opsui`** expectations.  
   **Evidence:** v1.12 **VRFY-03..04** and `docs_contract_test` pattern (`milestones/v1.12-REQUIREMENTS.md`).
 
 ### Operator playbooks — OPSUI-FUT-01 shaped (B2)
@@ -28,7 +28,7 @@
 - [x] **OPS-PB-01**: Define a **versioned** playbook payload (`playbook_format` / schema **v1**) that can represent **both** single-index and **`search_many/2`**-shaped runs using only options **`Scrypath`** already accepts (including federation-relevant fields where applicable), with explicit size caps consistent with **`ScrypathOps.SearchPlayground`**.  
   **Evidence:** `.planning/milestones/v1.10-REQUIREMENTS.md` **OPSUI-FUT-01**; `scrypath_ops/lib/scrypath_ops/search_playground.ex` ceilings.
 
-- [ ] **OPS-PB-02**: Operators can **save**, **list**, **load**, and **run** a playbook from **`scrypath_ops`** search UI (or a dedicated LiveView under **`/ops`**), with the same **bounded** behaviour and warnings as the existing playground (**non-production** posture preserved).  
+- [x] **OPS-PB-02**: Operators can **save**, **list**, **load**, and **run** a playbook from **`scrypath_ops`** search UI (or a dedicated LiveView under **`/ops`**), with the same **bounded** behaviour and warnings as the existing playground (**non-production** posture preserved).  
   **Evidence:** **OPSUI-04** / **OPSUI-05** shipped semantics (`milestones/v1.10-REQUIREMENTS.md`).
 
 - [x] **OPS-PB-03**: Ship **one** persistence story chosen during planning — **either** portable **export/import** of playbooks **or** durable storage inside **`scrypath_ops`** (e.g. Ecto + Postgres) — with limitations documented (single-user vs team-shared).  
@@ -36,15 +36,15 @@
 
   > **Phase 59 implementation note:** Chose **portable JSON file** export/import as the sole persistence story for this milestone — **no** new **Ecto** persistence in **`scrypath_ops`**. **Limitations:** single-operator / **git + attachments** team bus, not a live shared catalog. **Security:** do not store **secrets** in exported JSON; banned fields and path hygiene are documented in **`scrypath_ops/docs/playbook-schema-v1.md`**.
 
-- [ ] **OPS-PB-04**: Navigation and **JTBD** docs stay aligned: update **`scrypath_ops/docs/operator-ia.md`** (and router, if needed) so **`mix scrypath_ops.check_nav_contract`** and any **`operator_ia_contract_test`** expectations remain green.  
+- [x] **OPS-PB-04**: Navigation and **JTBD** docs stay aligned: update **`scrypath_ops/docs/operator-ia.md`** (and router, if needed) so **`mix scrypath_ops.check_nav_contract`** and any **`operator_ia_contract_test`** expectations remain green.  
   **Evidence:** v1.11 **OPSUX-01** (`milestones/v1.11-REQUIREMENTS.md`).
 
-- [ ] **OPS-PB-05**: Automated tests cover playbook **save/load/run** on the **stub adapter** path (no live Meilisearch required in default CI), and **`mix verify.opsui`** remains the documented contributor entry.  
+- [x] **OPS-PB-05**: Automated tests cover playbook **save/load/run** on the **stub adapter** path (no live Meilisearch required in default CI), and **`mix verify.opsui`** remains the documented contributor entry.  
   **Evidence:** **OPSUI-10**; `scrypath_ops/test/support/search_playground_stub_adapter.ex`.
 
 ### Milestone close
 
-- [ ] **SHIP-01**: **`.planning/MILESTONES.md`**, **`.planning/PROJECT.md`** *Current State*, and **`.planning/ROADMAP.md`** milestone list agree on **v1.14** outcomes and Hex line (`scrypath` version) where applicable; requirements traceability shows **Complete** for shipped rows.  
+- [x] **SHIP-01**: **`.planning/MILESTONES.md`**, **`.planning/PROJECT.md`** *Current State*, and **`.planning/ROADMAP.md`** milestone list agree on **v1.14** outcomes and Hex line (`scrypath` version) where applicable; requirements traceability shows **Complete** for shipped rows.  
   **Evidence:** v1.13 close pattern (`milestones/v1.13-REQUIREMENTS.md`, **RETROSPECTIVE**).
 
 ## v2+ Requirements (not in v1.14)
@@ -71,15 +71,15 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | EVID-01 (ledger `.planning/EVID-01-b1-v1.14.md`) | Phase 57 | Complete |
-| LIB-01 | Phase 58 | Pending |
-| LIB-02 | Phase 58 | Pending |
-| LIB-03 | Phase 58 | Pending |
+| LIB-01 | Phase 58 | Complete |
+| LIB-02 | Phase 58 | Complete |
+| LIB-03 | Phase 58 | Complete |
 | OPS-PB-01 | Phase 59 | Complete |
-| OPS-PB-02 | Phase 60 | Pending |
+| OPS-PB-02 | Phase 60 | Complete |
 | OPS-PB-03 | Phase 59 | Complete |
-| OPS-PB-04 | Phase 60 | Pending |
-| OPS-PB-05 | Phase 61 | Pending |
-| SHIP-01 | Phase 61 | Pending |
+| OPS-PB-04 | Phase 60 | Complete |
+| OPS-PB-05 | Phase 61 | Complete |
+| SHIP-01 | Phase 61 | Complete |
 
 **Coverage:**
 
@@ -97,4 +97,4 @@ Doc-contract tests require these rows to remain present (carry-forward from **Ph
 
 ---
 *Requirements defined: 2026-04-21*  
-*Last updated: 2026-04-22 — Phase **57** **EVID-01** ledger + **AUDT-01** registry row retained*
+*Last updated: 2026-04-22 — **v1.14** traceability closed through Phase **61** (**LIB-*** / **OPS-PB-*** / **SHIP-01**); **AUDT-01** historical row retained*
