@@ -41,3 +41,14 @@ config :phoenix,
   sort_verified_routes_query_params: true
 
 config :scrypath_ops, :validate_opsui_auth_on_start, false
+
+# Default playbook workspace for tests (partitioned for MIX_TEST_PARTITION).
+playbook_test_root =
+  Path.expand(
+    "tmp/playbooks_test#{System.get_env("MIX_TEST_PARTITION", "")}",
+    Path.join(__DIR__, "..")
+  )
+
+File.mkdir_p!(playbook_test_root)
+
+config :scrypath_ops, :playbook_workspace_dir, playbook_test_root
