@@ -18,10 +18,41 @@
 - [x] **`v1.13` shipped + archived in-repo** (2026-04-22 shipped · 2026-04-21 archived) — *Public polish & narrative coherence* — phases **54–56**, **5** requirements — [archive](milestones/v1.13-ROADMAP.md) · [requirements](milestones/v1.13-REQUIREMENTS.md)
 - [x] **`v1.14` shipped + archived in-repo** (**2026-04-22**) — *Library QoL and operator playbooks* — phases **57–61**, **10** requirements — [archive](milestones/v1.14-ROADMAP.md) · [requirements](milestones/v1.14-REQUIREMENTS.md) · [audit](milestones/v1.14-MILESTONE-AUDIT.md)
 - [x] **`v1.15` shipped + archived in-repo** (**2026-04-22**) — *OPSUI second slice* — phases **62–64**, **8** requirements — [archive](milestones/v1.15-ROADMAP.md) · [requirements](milestones/v1.15-REQUIREMENTS.md) · [audit](milestones/v1.15-MILESTONE-AUDIT.md)
+- [ ] **`v1.16` in progress** (opened **2026-04-22**) — *Playbook execution & operator honesty* — phases **65–67** (planned), **6** requirements — [requirements](REQUIREMENTS.md)
 
-## Phases (next milestone after v1.15)
+## Phases (milestone v1.16 — in progress)
 
-**TBD** — open with **`/gsd-new-milestone`** after **`/gsd-complete-milestone`** for **v1.15** (now shipped).
+**Opened:** 2026-04-22 — **OPS3-01**–**OPS3-06** — canonical list: [`.planning/REQUIREMENTS.md`](REQUIREMENTS.md)
+
+### Phase 65: Playbook run lifecycle (OPSUI)
+
+- [ ] **Phase 65: Playbook run lifecycle (OPSUI)** — **OPS3-01**, **OPS3-02** — operator can **run** a saved **`playbook_format: 1`** playbook from catalog or detail with explicit **idle / running / success / failure** UI; failures surface **structured** errors with **canonical doc links** within two hops.
+
+**Success criteria (observable):**
+
+1. Starting a run from **catalog** and from **detail** both enter **running**, then resolve to **success** or **failure** without ambiguous stuck states on stubbed adapters used in CI.
+2. A **forced failure** fixture shows a **non-empty** error class/message and **at least one** working outbound link to maintainer or adopter documentation.
+3. **`mix verify.opsui`** stays green for the default contributor path after Phase 65 changes land.
+
+### Phase 66: Runner–library contract
+
+- [ ] **Phase 66: Runner–library contract** — **OPS3-03** — **`Playbook.Runner`** (and adjacent code) uses **documented** result and **`{:error, _}`** shapes consistent with **`Scrypath`** / Mix operator paths; **automated tests** lock representative success and failure parity.
+
+**Success criteria (observable):**
+
+1. A maintainer can point to a **single doc section** (guide, operator doc, or **`@moduledoc`**) that states the **contract** exercised by playbook runs.
+2. Tests fail if OPSUI runner code maps or wraps errors **differently** from the library reference path for the same fixture input.
+3. No new **silent** rescue paths that swallow **`{:error, term}`** without telemetry or user-visible attribution.
+
+### Phase 67: Verification, JTBD examples, milestone bookkeeping
+
+- [ ] **Phase 67: Verification, JTBD examples, milestone bookkeeping** — **OPS3-04**, **OPS3-05**, **OPS3-06** — extend **`mix verify.opsui`** / **`docs_contract_test`** for execution surfaces; ship **≥ two** JTBD **`examples/playbooks/`** fixtures aligned with docs; prepare **`milestones/v1.16-*`** freeze + rolling traceability (and **Hex** / **`mix.exs`** narrative **only** if a release is in scope for close).
+
+**Success criteria (observable):**
+
+1. **`mix verify.opsui`** fails if execution UI strings, doc anchors, or contributor instructions drift from implementation (within the bounded anchors chosen in planning).
+2. **`examples/playbooks/`** contains **≥ two** named fixtures referenced from operator or contributor documentation with matching **on-disk** JSON.
+3. **`REQUIREMENTS.md`** traceability shows **Complete** for **OPS3-01**–**OPS3-06** at milestone close; **`milestones/v1.16-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`** exists (audit may follow **`/gsd-complete-milestone`** discipline).
 
 ## Phases (history)
 
