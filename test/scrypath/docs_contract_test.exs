@@ -384,8 +384,39 @@ defmodule Scrypath.DocsContractTest do
       "PGPORT",
       "postgres:16-alpine",
       "getmeili/meilisearch:v1.15",
+      "mix deps.get",
       "mix test"
     ])
+
+    [_head, job_tail] = String.split(@ci_workflow, "phoenix-example-integration:", parts: 2)
+    job_head = String.slice(job_tail, 0, 4000)
+    assert ordered?(job_head, "cd examples/phoenix_meilisearch", "mix deps.get")
+    assert ordered?(job_head, "mix deps.get", "mix test")
+  end
+
+  test "README sync authority ties sync-modes guide link to authority wording (Phase 51)" do
+    assert @readme =~ ~S|](guides/sync-modes-and-visibility.md)|
+
+    assert Regex.match?(
+             ~r/sync-modes-and-visibility.{0,200}(authority|single source|single authority)/i,
+             @readme
+           ) or
+             Regex.match?(
+               ~r/(authority|single source|single authority).{0,200}sync-modes-and-visibility/i,
+               @readme
+             )
+  end
+
+  test "CONTRIBUTING phoenix-example-integration matches ci.yml mix ordering (Phase 51)" do
+    assert String.contains?(@contributing, "phoenix-example-integration")
+
+    [_head, row_tail] = String.split(@contributing, "phoenix-example-integration", parts: 2)
+    assert ordered?(row_tail, "mix deps.get", "mix test")
+
+    [_head, job_tail] = String.split(@ci_workflow, "phoenix-example-integration:", parts: 2)
+    job_head = String.slice(job_tail, 0, 4000)
+    assert ordered?(job_head, "cd examples/phoenix_meilisearch", "mix deps.get")
+    assert ordered?(job_head, "mix deps.get", "mix test")
   end
 
   test "release docs and CI keep the package gate auth-free" do
