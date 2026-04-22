@@ -31,7 +31,7 @@ The **EVID-01** B1 evidence rows and **LIB-01..03** triage are recorded in **`.p
 
 ### Phase 58: Core library and doc QoL (B1)
 
-- [ ] **Phase 58: Core library and doc QoL (B1)** — Execute **LIB-01** (actionable errors + doc hop), **LIB-02** (non-macro clarity improvement with before/after note), **LIB-03** (doc-contract / verify matrix anchors for new surfaces). **LIB-01**, **LIB-02**, **LIB-03**.
+- [x] **Phase 58: Core library and doc QoL (B1)** (2026-04-22) — Execute **LIB-01** (actionable errors + doc hop), **LIB-02** (non-macro clarity improvement with before/after note), **LIB-03** (doc-contract / verify matrix anchors for new surfaces). **LIB-01**, **LIB-02**, **LIB-03**.
   - **Success criteria:** (1) Each **LIB-*** PR references **EVID-01** row IDs. (2) Default **`mix test`** (or scoped verify invoked in CI) green. (3) **`docs_contract_test`** (or equivalent) extended where **LIB-03** promises anchors.
 
 ### Phase 59: Playbook schema and persistence MVP
