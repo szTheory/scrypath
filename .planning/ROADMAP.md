@@ -23,7 +23,7 @@ Open the next planning window with **`/gsd-new-milestone`** (it recreates **`.pl
 ## Phases (history)
 
 <details>
-<summary>✅ v1.12 — Phases 51–53 — SHIPPED 2026-04-22 · in-repo · Hex <code>scrypath 0.3.3</code> · <em>Developer onboarding &amp; first-hour QoL</em></summary>
+<summary>✅ v1.12 — Phases 51–53 — SHIPPED 2026-04-22 · in-repo · Hex <code>scrypath 0.3.3</code> · <em>Developer onboarding and first-hour QoL</em></summary>
 
 - [x] **Phase 51: Adoption path truth and discoverability** (2026-04-21) — README ↔ **`guides/golden-path.md`** ↔ integration-example story stay **contract-true**; **`CONTRIBUTING`** first-hour pointers and sync authority links (**ONBD-01**..**ONBD-03**).
   - **Success criteria:** (1) A reader can install and reach a working **`Scrypath.search/3`** path using only README + golden path without hitting a known doc lie. (2) Doc-contract tests (or equivalent) fail when canonical snippets, cwd, or CI-integration expectations drift. (3) **`CONTRIBUTING`** names the happy path and where sync modes / operator lifecycle live.
