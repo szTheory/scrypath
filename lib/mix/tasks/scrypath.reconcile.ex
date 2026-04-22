@@ -8,6 +8,11 @@ defmodule Mix.Tasks.Scrypath.Reconcile do
   @moduledoc """
   Shows a report-first reconcile view for one schema. Pass `--action` to apply one
   explicit recovery action from that report.
+
+  ## Read next
+
+  - [guides/golden-path.md](guides/golden-path.md) — first-hour checklist from dependencies through search.
+  - [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md) — authority on sync modes, eventual consistency, and operator lifecycle language.
   """
 
   @switches [action: :string, id: :string, target_index: :string]
