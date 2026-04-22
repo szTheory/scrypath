@@ -49,6 +49,8 @@ mix verify.phase5 --skip-integration
 
 Run **`mix verify.opsui`** from the repository root when you change the optional **`scrypath_ops`** operator Phoenix app or its path dependency on the core library. It runs **`cd scrypath_ops && mix deps.get && mix test`**, matching the dedicated **`scrypath-ops`** CI job (Postgres-backed Ecto setup, no Meilisearch service).
 
+When you change **`scrypath_ops/docs/*.json`** playbook fixtures, golden workspace playbooks, or other flat `*.json` catalogs that ship beside **`scrypath_ops`**, also run **`cd scrypath_ops && mix scrypath_ops.playbooks.validate PATH`** from the repository root, where **`PATH`** is the directory containing those JSON files (non-recursive; same invocation shape as the Mix task **`Mix.Tasks.ScrypathOps.Playbooks.Validate`**).
+
 ## CI
 
 GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs these jobs:

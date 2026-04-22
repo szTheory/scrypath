@@ -288,6 +288,7 @@ defmodule Scrypath.DocsContractTest do
       "mix scrypath.retry",
       "mix scrypath.reconcile",
       "scrypath.index.contract_drift",
+      "mix scrypath_ops.playbooks.validate",
       "thin terminal entrypoints",
       "Scrypath.Meilisearch.*",
       "--json",
@@ -446,6 +447,10 @@ defmodule Scrypath.DocsContractTest do
 
   test "README surfaces mix verify.opsui for optional scrypath_ops (Phase 53)" do
     assert String.contains?(@readme, "mix verify.opsui")
+  end
+
+  test "CONTRIBUTING documents scrypath_ops playbooks validate for fixture directories (Phase 64)" do
+    assert String.contains?(@contributing, "mix scrypath_ops.playbooks.validate")
   end
 
   test "CONTRIBUTING scrypath-ops row matches ci.yml mix ordering (Phase 53)" do
