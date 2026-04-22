@@ -21,9 +21,15 @@
 
 ## Phases (milestone v1.15)
 
+### Phase 62: Playground capture and playbook catalog
+
 - [ ] **Phase 62: Playground capture and playbook catalog** — **Goal:** Remove JSON-first authoring for common flows and make workspace catalogs operator-legible. **Requirements:** **OPS2-01**, **OPS2-02**, **OPS2-03**. **Success criteria:** (1) From the Search playground, “Save as playbook” (or equivalent) produces **valid** `playbook_format: 1` JSON that passes **`V1`** validation and can be saved to the workspace. (2) Rename and duplicate work on representative filenames including collision and error paths. (3) List and detail views show **title/description** (or documented defaults for legacy files) without breaking existing imports.
 
+### Phase 63: Bounded team persistence and security posture
+
 - [ ] **Phase 63: Bounded team persistence and security posture** — **Goal:** Ship **one** explicit persistence story for teams (**gitops/file** *or* **optional Ecto catalog**) with documented authority and limitations. **Requirements:** **OPS2-04**, **OPS2-07**. **Success criteria:** (1) Operators can follow docs to deploy the chosen shared pattern **or** enable optional DB catalog without ambiguous dual-write. (2) Security copy and scrub behavior for shared/catalog flows is documented and covered by tests where feasible on stub/default CI paths.
+
+### Phase 64: IA, verification, and milestone bookkeeping
 
 - [ ] **Phase 64: IA, verification, and milestone bookkeeping** — **Goal:** Keep contributor and operator truth aligned as surfaces grow. **Requirements:** **OPS2-05**, **OPS2-06**, **OPS2-08**. **Success criteria:** (1) **`operator-ia.md`** ↔ router ↔ contract tests green. (2) **`mix verify.opsui`** exercises new flows on stub paths. (3) Planning files and traceability reflect shipped **v1.15** at milestone close.
 
