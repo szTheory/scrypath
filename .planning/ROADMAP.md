@@ -17,10 +17,19 @@
 - [x] **`v1.12` shipped in-repo** (2026-04-22) — *Developer onboarding & first-hour QoL* — phases **51–53**, **9** plans — [archive](milestones/v1.12-ROADMAP.md) · [requirements](milestones/v1.12-REQUIREMENTS.md)
 - [x] **`v1.13` shipped + archived in-repo** (2026-04-22 shipped · 2026-04-21 archived) — *Public polish & narrative coherence* — phases **54–56**, **5** requirements — [archive](milestones/v1.13-ROADMAP.md) · [requirements](milestones/v1.13-REQUIREMENTS.md)
 - [x] **`v1.14` shipped + archived in-repo** (**2026-04-22**) — *Library QoL and operator playbooks* — phases **57–61**, **10** requirements — [archive](milestones/v1.14-ROADMAP.md) · [requirements](milestones/v1.14-REQUIREMENTS.md) · [audit](milestones/v1.14-MILESTONE-AUDIT.md)
+- [ ] **`v1.15` in progress** (**2026-04-22**) — *OPSUI second slice* — phases **62–64**, **8** requirements — live: **`.planning/REQUIREMENTS.md`**
 
-## Phases (next milestone)
+## Phases (milestone v1.15)
 
-**No active milestone.** Define the next arc with **`/gsd-new-milestone`** (creates a fresh **`.planning/REQUIREMENTS.md`** and roadmap section).
+- [ ] **Phase 62: Playground capture and playbook catalog** — **Goal:** Remove JSON-first authoring for common flows and make workspace catalogs operator-legible. **Requirements:** **OPS2-01**, **OPS2-02**, **OPS2-03**. **Success criteria:** (1) From the Search playground, “Save as playbook” (or equivalent) produces **valid** `playbook_format: 1` JSON that passes **`V1`** validation and can be saved to the workspace. (2) Rename and duplicate work on representative filenames including collision and error paths. (3) List and detail views show **title/description** (or documented defaults for legacy files) without breaking existing imports.
+
+- [ ] **Phase 63: Bounded team persistence and security posture** — **Goal:** Ship **one** explicit persistence story for teams (**gitops/file** *or* **optional Ecto catalog**) with documented authority and limitations. **Requirements:** **OPS2-04**, **OPS2-07**. **Success criteria:** (1) Operators can follow docs to deploy the chosen shared pattern **or** enable optional DB catalog without ambiguous dual-write. (2) Security copy and scrub behavior for shared/catalog flows is documented and covered by tests where feasible on stub/default CI paths.
+
+- [ ] **Phase 64: IA, verification, and milestone bookkeeping** — **Goal:** Keep contributor and operator truth aligned as surfaces grow. **Requirements:** **OPS2-05**, **OPS2-06**, **OPS2-08**. **Success criteria:** (1) **`operator-ia.md`** ↔ router ↔ contract tests green. (2) **`mix verify.opsui`** exercises new flows on stub paths. (3) Planning files and traceability reflect shipped **v1.15** at milestone close.
+
+## Phases (next milestone after v1.15)
+
+**TBD** — open with **`/gsd-new-milestone`** after **`/gsd-complete-milestone`** for **v1.15**.
 
 ## Phases (history)
 
@@ -175,7 +184,7 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**Next milestone:** none open — use **`/gsd-new-milestone`** after **`/clear`**.
+**Current milestone:** **v1.15** — **OPSUI second slice** — **3** phases (**62–64**), **8** requirements — **`.planning/REQUIREMENTS.md`**.
 
 **`v1.14` archived (in-repo)** — **2026-04-22** shipped + archived — **5** phases (**57–61**), **10** requirements; see **`milestones/v1.14-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
@@ -194,4 +203,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - **Tier D** — maintainer-only planning hygiene — same file; do not headline consumer milestones.
 
 ---
-*Last updated: 2026-04-22 — **`v1.14`** milestone archived; next arc via **`/gsd-new-milestone`***
+*Last updated: 2026-04-22 — **`v1.15`** milestone opened (`/gsd-new-milestone`); phases **62–64** active*
