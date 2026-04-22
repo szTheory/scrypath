@@ -122,6 +122,8 @@ Call sync after successful repo persistence. Scrypath is explicit about what eac
 | `:manual` | returns accepted backend work immediately | the document may not be searchable yet |
 | `:oban` | returns durable enqueue acceptance only | the backend write has not happened yet, and the document may not be searchable |
 
+Successful `Scrypath.sync_record/3` (and related) calls return a map that includes **`:status` `:accepted`** when work was queued or accepted but may not be searchable yet, and **`:status` `:completed`** when the `:inline` Meilisearch wait path finished—see **`guides/sync-modes-and-visibility.md`** for the full contract.
+
 Accepted work is not the same thing as search visibility.
 
 `sync_mode: :oban` means durable enqueue accepted, not search visibility completed.

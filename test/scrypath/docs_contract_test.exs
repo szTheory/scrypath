@@ -35,6 +35,7 @@ defmodule Scrypath.DocsContractTest do
     "guides/phoenix-liveview.md",
     "guides/faceted-search-with-phoenix-liveview.md",
     "guides/multi-index-search.md",
+    "guides/overview.md",
     "guides/sync-modes-and-visibility.md",
     "guides/operator-mix-tasks.md",
     "guides/relevance-tuning.md",
@@ -421,6 +422,14 @@ defmodule Scrypath.DocsContractTest do
                ~r/(authority|single source|single authority).{0,200}sync-modes-and-visibility/i,
                @readme
              )
+  end
+
+  test "readme sync spine keeps :status :accepted wording tied to visibility guide (LIB-03)" do
+    assert_contains_all(@readme, [
+      "guides/sync-modes-and-visibility.md",
+      "`:status` `:accepted`",
+      "Accepted work is not the same thing as search visibility"
+    ])
   end
 
   test "CONTRIBUTING phoenix-example-integration matches ci.yml mix ordering (Phase 51)" do

@@ -20,6 +20,9 @@ Release Please manages versioned entries after this baseline.
 
 ### Changed
 
+- **LIB-01:** Clearer sync outcomes—tagged `{:invalid_options, field, message}` from NimbleOptions on search option validation, shared `Scrypath.Errors.format_reason/1` for exception copy, and `@doc` on public sync/delete entrypoints describing `:accepted` vs `:completed`.
+- **LIB-02:** Documentation and typespec clarity for `Scrypath.Query`, richer runtime option `doc:` strings for sync timing knobs, and an **Entry points** map in `Scrypath` module docs (no new macros).
+- **LIB-03:** `guides/overview.md` added to the published-guide contract list; README and `docs_contract_test` assert sync visibility spine strings stay wired.
 - Posture **D** normalization for schema `settings:` maps (camelCase in, canonical atom keys out) is documented in `guides/relevance-tuning.md` alongside the relevance workflow.
 - GitHub Actions CI runtime upgraded to Node 24 — `actions/checkout@v6` and `actions/cache@v5` across all jobs in `.github/workflows/ci.yml` (clears the Node 20 deprecation ahead of the 2026-09 removal).
 

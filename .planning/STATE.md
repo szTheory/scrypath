@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: ideas)
-status: planning
-last_updated: "2026-04-22T04:00:15.327Z"
+status: ready_to_plan
+last_updated: "2026-04-22T04:13:53.035Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 0
   completed_plans: 1
 ---
@@ -20,11 +20,13 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.14** — evidence-led library QoL (**B1**) + **`scrypath_ops`** saved queries / playbooks (**B2**, **OPSUI-FUT-01**).
+**Current focus:** Phase --phase — 58
 
 ## Current Position
 
-**Phase:** 58
+Phase: --phase (58) — EXECUTING
+Plan: 1 of --name
+**Phase:** 59
 
 **Plan:** Not started
 
