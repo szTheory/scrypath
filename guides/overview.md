@@ -4,6 +4,7 @@ Short map of published guides. Start with the [Golden path](golden-path.md) for 
 
 | Guide | Purpose |
 | ----- | ------- |
+| [Common mistakes](common-mistakes.md) | Evidence-led pitfalls (symptom → wrong model → fix) with links back to canonical guides. |
 | [Getting started](getting-started.md) | Mental model: what you configure, where sync and search live in the app. |
 | [Golden path](golden-path.md) | Checklist from `mix.exs` through first `Scrypath.search/3` with **inline** sync. |
 | [Meilisearch operations](meilisearch-operations.md) | Where Meilisearch runs, provisioning sketches, recovery paths, and footguns—through a Scrypath lens. |

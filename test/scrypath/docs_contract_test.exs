@@ -23,6 +23,7 @@ defmodule Scrypath.DocsContractTest do
   @verify_phase43 File.read!("lib/mix/tasks/verify.phase43.ex")
   @verify_release_publish File.read!("lib/mix/tasks/verify.release_publish.ex")
   @guide_paths [
+    "guides/common-mistakes.md",
     "guides/drift-recovery.md",
     "guides/getting-started.md",
     "guides/golden-path.md",

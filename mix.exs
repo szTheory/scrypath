@@ -91,6 +91,7 @@ defmodule Scrypath.MixProject do
         "CONTRIBUTING.md",
         "ARCHITECTURE.md",
         "guides/overview.md",
+        "guides/common-mistakes.md",
         "guides/drift-recovery.md",
         "guides/getting-started.md",
         "guides/golden-path.md",
@@ -114,7 +115,8 @@ defmodule Scrypath.MixProject do
           "README.md",
           "guides/overview.md",
           "guides/getting-started.md",
-          "guides/golden-path.md"
+          "guides/golden-path.md",
+          "guides/common-mistakes.md"
         ],
         Phoenix: [
           "guides/phoenix-walkthrough.md",
