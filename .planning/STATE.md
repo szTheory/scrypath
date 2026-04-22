@@ -1,16 +1,15 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.12
-milestone_name: Developer onboarding & first-hour QoL
-status: roadmap_ready
-last_updated: "2026-04-21T12:00:00.000Z"
-last_activity: 2026-04-21
+milestone_name: — current)
+status: Roadmap and requirements defined for **v1.12**; ready for **`/gsd-discuss-phase 51`** or **`/gsd-plan-phase 51`**.
+last_updated: "2026-04-22T00:37:24.161Z"
+last_activity: 2026-04-21 — `/gsd-new-milestone` (**v1.12**)
 progress:
-  total_phases: 3
+  total_phases: 1
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
-  percent: 0
 ---
 
 # Project State
@@ -77,7 +76,7 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 2. **`/gsd-plan-phase 51`** — plan directly (skip discussion).
 3. **`/gsd-progress`** — status snapshot.
 
-**Resume file:** —
+**Resume file:** --resume-file
 
 ---
 *Last updated: 2026-04-21 — **v1.12** opened; phases **51–53** on **`.planning/ROADMAP.md`***
