@@ -1,15 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.14
-milestone_name: ideas)
-status: executing
-last_updated: "2026-04-22T03:32:08.045Z"
-last_activity: 2026-04-22
+milestone_name: Library QoL and operator playbooks
+status: ready_to_verify
+last_updated: "2026-04-22T12:00:00.000Z"
+last_activity: 2026-04-22 — Phase 57 plan **57-PLAN-01** executed (EVID-01 ledger, governance files)
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 1
+  completed_plans: 1
+  percent: 0
 ---
 
 # Project State
@@ -20,19 +21,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-21)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase --phase — 57
+**Current focus:** **v1.14** — evidence-led library QoL (**B1**) + **`scrypath_ops`** saved queries / playbooks (**B2**, **OPSUI-FUT-01**).
 
 ## Current Position
 
-Phase: --phase (57) — EXECUTING
-Plan: 1 of --name
 **Phase:** 57 — Evidence triage and B1 scope lock
 
-**Plan:** 1 plan ready (**57-PLAN-01.md**)
+**Plan:** **57-PLAN-01** complete (EVID-01 + contributor gates)
 
-**Status:** Executing Phase --phase
+**Status:** Governance deliverables committed — run verification / `/gsd-progress` before Phase 58.
 
-**Last activity:** 2026-04-22
+**Last activity:** 2026-04-22 — **`57-PLAN-01`** executed (**EVID-01** ledger, **CONTRIBUTING**, PR template, **CODEOWNERS**, **REQUIREMENTS** / **ROADMAP** / **STATE** mirrors).
 
 ## Accumulated Context
 
@@ -57,12 +56,12 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 
 ## Next Command
 
-1. **`/gsd-execute-phase 57`** — run **57-PLAN-01.md** (creates **EVID-01** ledger, **CONTRIBUTING** / **PR template** / **CODEOWNERS**, updates **REQUIREMENTS** / **ROADMAP** / **STATE** B1 freeze line).
-2. **`/gsd-progress`** — optional status snapshot.
+1. **`/gsd-progress`** — confirm roadmap / requirements alignment after Phase 57.
+2. **`/gsd-discuss-phase 58`** or **`/gsd-plan-phase 58`** — start **LIB-01..03** execution against the frozen ledger.
 
 ---
 
-*Last updated: 2026-04-22 — Phase 57 planned*
+*Last updated: 2026-04-22 — Phase 57 executed*
 
 **Prior milestone:** **v1.13** — public polish & narrative coherence — **2026-04-22**
 
