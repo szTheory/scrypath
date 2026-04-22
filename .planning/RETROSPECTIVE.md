@@ -216,6 +216,7 @@ Ship **`audit-open` acknowledgments** into **`STATE.md`** at close when tooling 
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|
+| v1.14 | 57–61 | B1 evidence gate + operator playbooks: **`Playbook.V1`**, **`/ops/playbooks`**, portable JSON |
 | v1.9 | 42–43 | Per-query tuning: locked pipeline spec, `:per_query` runtime, verify.phase43 |
 | v1.8 | 39–41 | Multi-index federation: weights, `:all` expansion, docs + verify.phase41 |
 | v1.7 | 36–38 | Meilisearch facet depth: hierarchy, disjunctive counts, scoped text search |
