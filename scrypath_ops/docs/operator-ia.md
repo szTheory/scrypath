@@ -18,6 +18,10 @@ Canonical contract for the optional **ScrypathOps** Phoenix shell: who uses it, 
 6. **When** onboarding a teammate to operator workflows, **I need** a short mapping from job to route and docs, **so that** they self-serve without reading the whole repo — **done when** this table is kept in sync with `router.ex` on every nav change.
 7. **When** planning roadmap work, **I need** triage (posture + failed sync) ranked above exploratory search, **so that** the product does not imply search debugging is co-equal with outage response — **done when** nav order stays posture → failed sync → sync/drift → search.
 
+### Playbook (saved playbooks)
+
+Version **1** interchange for saved searches is **JSON** and **ops-local** (validated beside the OPSUI code, not as a separate Hex-published schema package). Normative fields, caps, and banned secret keys are documented in [playbook-schema-v1.md](playbook-schema-v1.md).
+
 ## Navigation
 
 Primary chrome under `/ops` follows **roadmap triage order**: posture first, failed sync second, read-only sync/drift (with doc and Mix links) third, bounded search and federation honesty last (search **not** co-equal with triage).

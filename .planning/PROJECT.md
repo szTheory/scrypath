@@ -27,7 +27,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Planning window
 
-**Active milestone: v1.14.** Requirements and roadmap live in **`.planning/REQUIREMENTS.md`** and **`.planning/ROADMAP.md`** (next execution: **Phase 58**). **v1.13** ship-of-record: **`milestones/v1.13-{ROADMAP,REQUIREMENTS}.md`**. Research for this arc is under **`.planning/research/`** (refreshed for B1+B2).
+**Active milestone: v1.14.** Requirements and roadmap live in **`.planning/REQUIREMENTS.md`** and **`.planning/ROADMAP.md`** (next execution: **Phase 60**). **v1.13** ship-of-record: **`milestones/v1.13-{ROADMAP,REQUIREMENTS}.md`**. Research for this arc is under **`.planning/research/`** (refreshed for B1+B2).
 
 ## Requirements
 
@@ -70,6 +70,8 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] **Phase 53** (2026-04-22): Contributor **`mix verify.opsui`** spine — Mix **`@moduledoc`**, README wayfinding, **`docs_contract_test`** locks for **`scrypath-ops`** vs **CONTRIBUTING** / **`ci.yml`** (**VRFY-03**, **VRFY-04**).
 - [x] **v1.13** (2026-04-22): Public polish & narrative coherence — phases **54–56** — **POLISH-01**–**POLISH-05** (guide voice, Hex **0.3.4** narrative, **`AGENTS.md`**, **`milestone-candidates.md`**, pitfalls ledger gate).
 - [x] **Phase 57** (2026-04-22): **EVID-01** B1 evidence ledger (`.planning/EVID-01-b1-v1.14.md`), **LIB-01..03** triage, contributor gates (**CONTRIBUTING**, PR template, **CODEOWNERS**), planning mirrors — **EVID-01**.
+- [x] **Phase 58** (2026-04-22): Core library + doc QoL **LIB-01..03** — **`Scrypath.Errors`**, **`Query`** boundary, **`docs_contract_test`** anchors — **`.planning/phases/58-core-library-and-doc-qol-b1/`**.
+- [x] **Phase 59** (2026-04-22): Operator playbook **`playbook_format` 1** — **`ScrypathOps.Playbook.V1`**, **`scrypath_ops/docs/playbook-schema-v1.md`**, IA link, **REQUIREMENTS** persistence note — **OPS-PB-01**, **OPS-PB-03** — **`.planning/phases/59-playbook-schema-and-persistence-mvp/`**.
 
 ### Active
 
@@ -152,4 +154,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-22 — **Phase 57** **EVID-01** freeze shipped; Hex **`scrypath 0.3.4`** current public line*
+*Last updated: 2026-04-22 — **Phase 59** playbook codec + portable JSON persistence story shipped; next **Phase 60** (LiveView + IA)*

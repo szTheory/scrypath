@@ -36,7 +36,7 @@ The **EVID-01** B1 evidence rows and **LIB-01..03** triage are recorded in **`.p
 
 ### Phase 59: Playbook schema and persistence MVP
 
-- [ ] **Phase 59: Playbook schema and persistence MVP** — Deliver **OPS-PB-01** (`playbook_format` / caps / federation-safe payload) and **OPS-PB-03** (choose **export/import** *or* durable **`scrypath_ops`** storage; document limits). **OPS-PB-01**, **OPS-PB-03**.
+- [x] **Phase 59: Playbook schema and persistence MVP** (2026-04-22) — Deliver **OPS-PB-01** (`playbook_format` / caps / federation-safe payload) and **OPS-PB-03** (choose **export/import** *or* durable **`scrypath_ops`** storage; document limits). **OPS-PB-01**, **OPS-PB-03**.
   - **Success criteria:** (1) Payload schema **`v1`** documented in **`scrypath_ops`** or shared guide. (2) Persistence choice recorded in **REQUIREMENTS** or ops doc with security notes (no secrets in exports). (3) Unit tests for normalize/validate path without Meilisearch.
 
 ### Phase 60: Playbook LiveView and IA
