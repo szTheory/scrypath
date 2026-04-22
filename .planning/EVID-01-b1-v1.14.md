@@ -15,3 +15,5 @@
 - LIB-01: Maps to EVID-57-01
 - LIB-02: Maps to EVID-57-02
 - LIB-03: Maps to EVID-57-01
+
+Errata (LIB-02): **before:** `Scrypath.Query` read as an opaque “query object” without an explicit stability boundary, and the top-level `Scrypath` module lacked a compact map of sync vs search entry points. **after:** `Query` `@moduledoc` states the struct is internal normalized state (not a pattern-match target), nested `@typedoc` entries spell out filter/sort/facet slices, runtime option `doc:` strings call out visibility semantics for `sync_mode` / inline polling, and `Scrypath` `@moduledoc` adds an **Entry points** section linking golden-path and sync guides.

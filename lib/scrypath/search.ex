@@ -30,6 +30,9 @@ defmodule Scrypath.Search do
       {:error, {:validation, message}} when is_binary(message) ->
         raise ArgumentError, message
 
+      {:error, {:invalid_options, _field, message}} when is_binary(message) ->
+        raise ArgumentError, message
+
       {:error, _} = err ->
         err
 
@@ -58,6 +61,9 @@ defmodule Scrypath.Search do
 
     case Scrypath.Options.validate_search_options(schema_module, merged_opts) do
       {:error, {:validation, message}} when is_binary(message) ->
+        raise ArgumentError, message
+
+      {:error, {:invalid_options, _field, message}} when is_binary(message) ->
         raise ArgumentError, message
 
       {:error, _} = err ->

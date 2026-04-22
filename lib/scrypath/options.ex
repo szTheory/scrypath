@@ -70,7 +70,9 @@ defmodule Scrypath.Options do
     sync_mode: [
       type: {:in, [:inline, :manual, :oban]},
       default: :inline,
-      doc: "Synchronization mode to use for write operations."
+      doc:
+        "Synchronization mode for writes (`:inline`, `:manual`, `:oban`). This controls visibility " <>
+          "latency vs durability—see guides/sync-modes-and-visibility.md; do not confuse enqueue acceptance with search visibility."
     ],
     oban: [
       type: {:custom, __MODULE__, :validate_optional_module, []},
@@ -110,12 +112,14 @@ defmodule Scrypath.Options do
     inline_poll_interval: [
       type: {:custom, __MODULE__, :validate_positive_integer, []},
       default: 100,
-      doc: "Polling interval in milliseconds while waiting for inline task completion."
+      doc:
+        "Poll interval in milliseconds between Meilisearch task status checks during inline waits—lower values mean more frequent polls."
     ],
     inline_timeout: [
       type: {:custom, __MODULE__, :validate_positive_integer, []},
       default: 5_000,
-      doc: "Inline task wait timeout in milliseconds."
+      doc:
+        "Maximum time in milliseconds to wait for a Meilisearch task to reach a terminal state when `sync_mode: :inline`."
     ],
     preload: [
       type: {:custom, __MODULE__, :validate_preload, []},
@@ -475,6 +479,9 @@ defmodule Scrypath.Options do
       {:error, {:validation, message}} when is_binary(message) ->
         raise ArgumentError, message
 
+      {:error, {:invalid_options, _field, message}} when is_binary(message) ->
+        raise ArgumentError, message
+
       {:error, {:unknown_facet, facet}} ->
         raise ArgumentError, "unknown facet #{inspect(facet)}"
 
@@ -488,9 +495,23 @@ defmodule Scrypath.Options do
       {:ok, validated} ->
         {:ok, validated}
 
+      {:error, %NimbleOptions.ValidationError{} = error} ->
+        {:error, nimble_validation_to_invalid_options(error)}
+
       {:error, error} ->
         {:error, {:validation, Exception.message(error)}}
     end
+  end
+
+  defp nimble_validation_to_invalid_options(%NimbleOptions.ValidationError{} = error) do
+    field =
+      case error do
+        %{key: key} when is_atom(key) -> key
+        %{keys_path: [k | _]} when is_atom(k) -> k
+        _ -> :options
+      end
+
+    {:invalid_options, field, Exception.message(error)}
   end
 
   defp faceting_attributes_list(schema_module) do

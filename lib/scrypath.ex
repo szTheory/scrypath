@@ -11,6 +11,15 @@ defmodule Scrypath do
   - [guides/overview.md](guides/overview.md) — table of contents for every published guide.
   - [guides/common-mistakes.md](guides/common-mistakes.md) — evidence-led pitfalls when search and sync feel inconsistent.
 
+  ## Entry points
+
+  - **`sync_record/3`** (and batch variants) — write path and mode semantics; start from
+    [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md).
+  - **`search/3`** — hydrated search on one schema; follow
+    [guides/golden-path.md](guides/golden-path.md) for the first working call.
+  - **`search_many/2`** — federated multi-schema search; composition rules live in
+    [guides/golden-path.md](guides/golden-path.md) and [guides/multi-index-search.md](guides/multi-index-search.md).
+
   Use `use Scrypath` on your Ecto schema; declaration grammar and settings live on
   `Scrypath.Schema` — read that module instead of duplicating option tables here.
 
@@ -80,26 +89,49 @@ defmodule Scrypath do
     schema_module.__scrypath__(:document_id)
   end
 
+  @sync_public_ops_doc """
+  Upserts or deletes search documents through the configured backend.
+
+  On success, `{:ok, map}` includes at least **`:mode`** (for example `:inline`, `:oban`, or `:manual`)
+  and **`:status`**:
+
+  * **`:status` `:accepted`** — work was queued or accepted by the backend or queue layer; documents may
+    not be queryable yet. This is normal for `:manual`, `:oban`, and sometimes `:inline` when no
+    Meilisearch task wait applies. See [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md).
+  * **`:status` `:completed`** — the `:inline` path finished, including waiting for a terminal Meilisearch
+    task when `sync_mode: :inline` and the backend returned a task handle.
+
+  Pitfalls when the database write “succeeded” but search lags: [guides/common-mistakes.md](guides/common-mistakes.md).
+
+  Tagged `{:error, reason}` tuples may include `{:timeout, _}`, `{:task_failed, _}`, `{:invalid_options, _, _}`,
+  and other heads documented on `Scrypath.Sync` — use `Scrypath.Errors.format_reason/1` for stable, single-line text.
+  """
+
+  @doc @sync_public_ops_doc
   @spec sync_record(module(), struct() | map(), keyword()) :: {:ok, term()} | {:error, term()}
   def sync_record(schema_module, record, opts \\ []) do
     Scrypath.Sync.sync_record(schema_module, record, opts)
   end
 
+  @doc @sync_public_ops_doc
   @spec sync_records(module(), [struct() | map()], keyword()) :: {:ok, term()} | {:error, term()}
   def sync_records(schema_module, records, opts \\ []) do
     Scrypath.Sync.sync_records(schema_module, records, opts)
   end
 
+  @doc @sync_public_ops_doc
   @spec delete_record(module(), struct() | map(), keyword()) :: {:ok, term()} | {:error, term()}
   def delete_record(schema_module, record, opts \\ []) do
     Scrypath.Sync.delete_record(schema_module, record, opts)
   end
 
+  @doc @sync_public_ops_doc
   @spec delete_document(module(), term(), keyword()) :: {:ok, term()} | {:error, term()}
   def delete_document(schema_module, document_id, opts \\ []) do
     Scrypath.Sync.delete_document(schema_module, document_id, opts)
   end
 
+  @doc @sync_public_ops_doc
   @spec delete_documents(module(), [term()], keyword()) :: {:ok, term()} | {:error, term()}
   def delete_documents(schema_module, document_ids, opts \\ []) do
     Scrypath.Sync.delete_documents(schema_module, document_ids, opts)
