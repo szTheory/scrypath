@@ -1,7 +1,7 @@
-# Milestone candidates — stock take after v1.10
+# Milestone candidates — developer-first roadmap stack
 
-**Purpose:** Roughly prioritized themes to pull from when running **`/gsd-new-milestone`**.  
-**Last reviewed:** 2026-04-21 (post-**v1.10** OPSUI archive).
+**Purpose:** Prioritized themes for **`/gsd-new-milestone`** — **onboarding + QoL** for people using and contributing to Scrypath; **avoid busywork** and maintainer-only work masquerading as product.  
+**Last reviewed:** 2026-04-22 — **Tier A** (**A1**, **A2**) closed with **v1.12**; **v1.13** in flight for public polish & narrative coherence (**POLISH-***); next default pull is **B1** (evidence-led library QoL).
 
 ---
 
@@ -9,62 +9,92 @@
 
 ### Admin / operator UI
 
-**You did ship an operator admin UI:** optional in-repo **`scrypath_ops`** (LiveView), outside the core Hex package, aligned with **OPSUI-01..10** (posture, failed-sync triage, sync/drift read-only context, bounded search playground, federation-honest inspector, security model, CI contract tests). Archive: **`milestones/v1.10-{REQUIREMENTS,ROADMAP}.md`**.
+**Shipped:** optional in-repo **`scrypath_ops`** (LiveView), outside the core Hex package — **v1.10** (**OPSUI-01..10**), **v1.11** operator shell polish (**OPSUI-01..07** sense in **`milestones/v1.11-{REQUIREMENTS,ROADMAP}.md`**). **v1.10** archive: **`milestones/v1.10-{REQUIREMENTS,ROADMAP}.md`**.
 
-**Intentionally not in v1.10 (already written down):**
+**Intentionally not in v1.10 / still future:**
 
 - **OPSUI-FUT-01** — editable saved queries / team playbooks (`milestones/v1.10-REQUIREMENTS.md` § v2+).
 - **OPSUI-FUT-02** — Meilisearch “vendor dashboard” parity (same section).
 - **Phase 47 deferred ideas** — full browser E2E everywhere, visual regression as default CI gate, real Meilisearch inside **`scrypath_ops`** CI, exhaustive table matrices (`phases/47-verification-hardening/47-CONTEXT.md` `<deferred>`).
 
-So: **“admin UI” in the sense of honest operator visibility over library APIs — done for v1.** Deeper productized admin (saved playbooks, cluster observability, heavy E2E) remains **future**.
+So: **honest operator visibility over library APIs — done for v1.** Deeper productized admin (saved playbooks, cluster observability, heavy E2E) remains **future**.
 
 ### QoL / DX vs “Searchkick-level” expectations
 
 The library has strong **Ecto-native indexing + Meilisearch sync modes**, **search / facets / federation**, **per-query tuning pipeline + runtime**, **operator Mix tasks + drift tooling**, **adoption guides + doc contracts**, and **OPSUI** for triage and inspection.
 
-**Gaps people still reasonably expect** (none of these are implied “done” by v1.10):
+**Gaps people still reasonably expect** (none implied “done” by **v1.11**):
 
 | Theme | Why it still matters | Where it shows up in notes |
 |--------|----------------------|----------------------------|
-| **Planning / maintainer tooling friction** | `gsd-sdk query milestone.complete` → **`phasesArchive` / version** failures forced **manual** milestone archival across **v1.5–v1.10** | **`.planning/RETROSPECTIVE.md`** (v1.5–v1.10 sections) |
-| **Audit-open hygiene** | Same **quick_task** stub rows + UAT listing noise acknowledged at multiple closes | **`.planning/STATE.md`** § Deferred Items; **`.planning/MILESTONES.md`** “Known deferred” |
+| **Consumer “first hour” + ongoing DX** | Golden path exists; gaps are **discoverability**, **example parity**, **clearer errors**, optional **scaffold** only when evidence-backed | **v1.6** arc + **`.planning/PROJECT.md`** adoption narrative |
+| **One contributor verify spine for OPSUI** | Contributors should not hunt five docs for the right **`mix verify.*`** subset | **47-CONTEXT** D-04 sense |
 | **OPSUI + real backend in CI** | Deferred on purpose; library integration jobs carry Meilisearch truth | **47-CONTEXT** `<deferred>` |
-| **Consumer-facing “it just works” polish** | Golden path exists; ongoing work is **discoverability**, example parity, and “first hour” ergonomics | **v1.6** arc + **`.planning/PROJECT.md`** adoption narrative |
+| **Planning / maintainer tooling friction** | Milestone archival pain — **helps maintainers**, not Hex consumers | **`.planning/RETROSPECTIVE.md`** |
+| **Audit-open hygiene** | Stub **`quick_task`** rows + UAT noise — **morale / noise**, low product leverage unless it misleads | **`.planning/STATE.md`** § Deferred Items; **`.planning/MILESTONES.md`** “Known deferred” |
 | **Product boundaries still explicit** | Multi-backend, vectors/hybrid/personalization stay **out of scope** until pressure | **`.planning/PROJECT.md`** Out of Scope |
 
 ---
 
-## Rough priority for *next* milestones (edit as you learn)
+## Ranked backlog (developer PoV — pick off in order)
 
-**P0 — Process / trust (small milestone or first phase of next)**
+Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent tiers only when one milestone naturally covers both.
 
-1. **Close or fix the recurring milestone-complete / phases-archive path** so archival is not manual every time (RETROSPECTIVE theme).
-2. **Resolve or retire the two historical `quick_task` stub rows** (or replace with real quick dirs) so **`audit-open`** stops recycling the same noise — optional but improves maintainer morale.
+### Tier A — Highest leverage (“library great” for devs) — shipped **v1.12**
 
-**P1 — OPSUI “second slice” (if you want more admin UX)**
+| # | Theme | Notes |
+|---|--------|--------|
+| **A1** | **Consumer onboarding + day-to-day QoL** | **Done (v1.12)** — golden path ↔ README contracts, pitfalls, actionable errors |
+| **A2** | **Single contributor entry for optional OPSUI** | **Done (v1.12)** — root **`mix verify.opsui`** + docs/CI locks |
 
-3. **Saved queries / operator playbooks** (**OPSUI-FUT-01**) — medium; needs auth + storage story; keep write/recovery verbs honest.
-4. **Root `mix verify.opsui`** (or equivalent) if not already landed everywhere contributors look — contributor DX (**47-CONTEXT** D-04).
+### Tier B — After Tier A (**default queue post–v1.13**)
 
-**P2 — Depth vs breadth**
+| # | Theme | Notes |
+|---|--------|--------|
+| **B1** | **Library QoL from real confusion** | Small API affordances / messages only when tied to **concrete** adopter or maintainer pain (issues, dogfood) — **next** after **v1.13** unless evidence forces a hotfix |
+| **B2** | **OPSUI “second slice”** | **OPSUI-FUT-01** saved queries / playbooks — **operator-first**; bump priority only if framed as **dev learning / replay** for search + federation debugging |
 
-5. **Selective Playwright (or similar) smoke** on 1–2 critical OPSUI flows — only if LiveView tests stop catching real breakage (**47** deferred).
-6. **Meilisearch in `scrypath_ops` CI** — only if stub/LiveView coverage proves insufficient vs regressions in wire format.
-7. **Library-side QoL** from adoption feedback: better error messages, generator/scaffold, “common mistakes” doc — gather from issues/adopters before locking.
+### Tier C — Defer until a failure mode is proven
 
-**P3 — Product expansion (explicit strategy)**
+| # | Theme | Notes |
+|---|--------|--------|
+| **C1** | **Meilisearch inside `scrypath_ops` CI** | Only if stub + LiveView + contracts **miss** wire/regression you actually hit |
+| **C2** | **Playwright (or similar) on 1–2 flows** | Only if the above still misses **user-visible** breakage |
 
-8. Anything in **`.planning/PROJECT.md`** Out of Scope (multi-backend, hybrid retrieval, etc.) — only revisit with explicit adoption evidence.
+### Tier D — Maintainer / planning hygiene (not “product”)
+
+| # | Theme | Notes |
+|---|--------|--------|
+| **D1** | **GSD milestone archive / phases path reliability** | Reduces **your** planning friction; **near-zero** Hex consumer onboarding impact — separate track or tiny slice when it blocks weekly |
+| **D2** | **Retire `quick_task` stub rows / quiet `audit-open`** | **Busywork** unless CI or new contributors are misled |
+
+### Still explicit strategy (unchanged)
+
+| # | Theme | Notes |
+|---|--------|--------|
+| **—** | **`.planning/PROJECT.md` Out of Scope** | Multi-backend, hybrid/personalization, etc. — only with **adoption evidence** |
+
+---
+
+## Suggested sequencing (one coherent thread)
+
+| Step | Pull from | Rationale |
+|------|------------|-----------|
+| 1 | **A1** | **Shipped v1.12** |
+| 2 | **A2** | **Shipped v1.12** |
+| 3 | **v1.13** (**POLISH-***) | Voice + Hex narrative + contributor entry (**`.planning/REQUIREMENTS.md`**) |
+| 4 | **B1** | Stops speculative churn; tie work to named pain |
+| 5 | **B2**, then **C*** | OPSUI depth, then heavy CI/E2E **only with proof** |
+| Parallel | **D*** | When annoyance cost exceeds fix cost — do not headline a consumer milestone here |
 
 ---
 
 ## How to use this file
 
-1. Before **`/gsd-new-milestone`**, skim this list and pick **one dominant theme** for the milestone (or merge P0 + one P1).
+1. Before **`/gsd-new-milestone`**, pick **one dominant tier anchor** (after **v1.12**, usually **B1** or a polish theme like **v1.13** **POLISH-***) for the milestone name and scope.
 2. Optionally split strong themes into **`.planning/seeds/SEED-*.md`** so **`/gsd-new-milestone`** auto-offers matching seeds (see **`gsd-plant-seed`**).
-3. After you ship the next milestone, **update the priority table** (what landed, what moved, what new feedback arrived).
+3. After each shipped milestone, **update this file** — what landed, what moved, new evidence from issues or dogfood.
 
 ---
 
-*Stock take written from: **PROJECT.md**, **STATE.md**, **MILESTONES.md**, **RETROSPECTIVE.md**, **v1.10-REQUIREMENTS.md**, **ROADMAP.md**, **phases/47-verification-hardening/47-CONTEXT.md**.*
+*Sources: **PROJECT.md**, **STATE.md**, **MILESTONES.md**, **RETROSPECTIVE.md**, **v1.10-** / **v1.11-REQUIREMENTS.md**, **ROADMAP.md**, **`milestones/v1.10-ROADMAP.md`** (Phase 47 deferrals, archived).*

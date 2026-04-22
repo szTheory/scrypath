@@ -1,6 +1,6 @@
 # Per-query tuning pipeline
 
-This document is the **canonical** request-time tuning pipeline specification for Scrypath v1.9. It describes how search-time options flow from configuration through validation to Meilisearch, how that relates to index-time settings, and what operators and implementers should rely on for stable contracts versus illustrative prose.
+This document is the **canonical** request-time tuning pipeline specification for Scrypath’s Meilisearch-first search path. It describes how search-time options flow from configuration through validation to Meilisearch, how that relates to index-time settings, and what operators and implementers should rely on for stable contracts versus illustrative prose.
 
 ## Scope and non-goals
 
@@ -10,7 +10,7 @@ This document is the **canonical** request-time tuning pipeline specification fo
 
 - **Replacing index-time documentation.** Synonym sets, default ranking rule order, typo policies, and other **Plane A** concerns remain in **`guides/relevance-tuning.md`** and the managed reindex lifecycle. This guide links there instead of duplicating index settings narrative.
 - **Teaching Meilisearch ranking theory.** Prefer links to vendor reference and release notes over copying vendor prose blocks.
-- **Promising a public multi-backend abstraction.** Scrypath is Meilisearch-first in v1.9 prose; an internal adapter seam exists but is not a semver-stable portability layer for adopters.
+- **Promising a public multi-backend abstraction.** Scrypath is Meilisearch-first here; an internal adapter seam exists but is not a semver-stable portability layer for adopters.
 - **Embedding secrets in examples.** Transport configuration and API keys belong in operator docs and application configuration, not copy-pasted into search-option examples.
 - **Normative stability for human strings.** `Exception.message/1`, raw HTTP bodies, log lines, and NimbleOptions copy may change in patch releases unless explicitly documented otherwise.
 
@@ -26,13 +26,13 @@ This document is the **canonical** request-time tuning pipeline specification fo
 2. **Live index settings on the server** (operational truth for attributes, embedders, etc.).
 3. **Scrypath allowlisted per-request options** after validation and projection (what the library forwards this release).
 4. **Per-entry tuple keywords** in `search_many/2` winning over **shared** keywords for duplicate top-level keys (see **`Scrypath.MultiSearch.Entries`** — entry side wins in `Keyword.merge/3` with a conflict function favoring the entry).
-5. **Future per-query tuning map** (Phase 43 runtime) — same right-bias story once exposed; nested map merge defaults align with Plane A **`:settings_merge`** semantics unless a task explicitly documents an exception.
+5. **Optional `:per_query` tuning map** (search-time, carried on **`%Scrypath.Query{}`** when used) — same right-bias story as other tuning maps; nested map merge defaults align with Plane A **`:settings_merge`** semantics unless this guide or **`guides/relevance-tuning.md`** explicitly documents an exception.
 
 **Configuration cascade for runtime (repo, URL, backend) — `Scrypath.Config.resolve!/1`:**
 
 `Application.get_env(:scrypath, :defaults, [])` is merged with per-repo `Application.get_env(otp_app, repo)[:scrypath]` (when `:repo` / `:otp_app` resolution succeeds), then merged again with explicit per-call keywords; explicit call-time keys win. That stack addresses **transport and library runtime**, not the full Plane A `settings:` map.
 
-**Nested maps:** Default **shallow replace** for duplicate keys at each level; **`:deep`** (where the pipeline exposes it) is **opt-in** only, matching the Phase 19 footgun avoidance story for settings merges (avoid accidental deep-merge clobber of large maps).
+**Nested maps:** Default **shallow replace** for duplicate keys at each level; **`:deep`** (where the pipeline exposes it) is **opt-in** only, matching the index-time settings-merge posture in **`guides/relevance-tuning.md`** (avoid accidental deep-merge clobber of large maps).
 
 ## Pipeline stages
 
@@ -55,7 +55,7 @@ Ordered stages describe responsibility boundaries; exact function names may evol
 | **Index prerequisites** | Plane A constraints (filterable, sortable, displayed, embedder availability) required before a Plane B knob becomes meaningful. Document as a **short matrix** with links to vendor reference rather than copying vendor tables. |
 | **Explicitly index-bound** | Synonym sets, ranking rule **order**, default typo policy, and similar — remain Plane A; per-query docs explain **why** and point to **`guides/relevance-tuning.md`**. |
 
-**v1.9 exemplars (first runtime slice — specified here, implemented in Phase 43):**
+**Shipped search-time ranking exemplars** (Plane B; normative here, implemented in **`Scrypath.search/3`**, **`search_many/2`**, and **`%Scrypath.Query{}` / `:per_query`):**
 
 - **`rankingScoreThreshold`** — May change which hits appear, and can interact with **hit counts**, **estimated totals**, **facet distributions**, and **pagination** semantics. Operators should read vendor guidance on threshold behavior and performance.
 - **`showRankingScore`** — Surfaces ranking-related score fields in the response when the engine supports it.
@@ -65,7 +65,7 @@ Also anchor **existing** first-class options Scrypath already models (`filter`, 
 
 **Deferred (documented rationale):**
 
-- **Vector / hybrid / personalization / enterprise-only knobs** unless the milestone explicitly expands — keep behind any documented escape hatch with clear semver expectations.
+- **Vector / hybrid / personalization / enterprise-only knobs** unless a future documented public release expands scope — keep behind any documented escape hatch with clear semver expectations.
 - **Per-query mutation of synonyms or full `rankingRules` replacement** — deferred to index lifecycle (Plane A) to avoid split-brain between declared schema and live search.
 - **Full federated product tutorial** — deferred to **`guides/multi-index-search.md`** except for compatibility notes in this guide.
 
@@ -108,7 +108,7 @@ Federated payloads differ from independent multi-search (weights, merge ordering
 
 ## Implementation readiness checklist
 
-Use this checklist before starting **TUNE-PQ** per-query runtime work. Every item should be satisfied in writing and in code review:
+Use this checklist before extending **Plane B** per-query search-time options or changing merge/projection behavior. Every item should be satisfied in writing and in code review:
 
 - [ ] **Plane A vs Plane B** is documented for the team; no plan relies on “schema-as-runtime-truth on every search.”
 - [ ] **Right-biased merge** is implemented for all new tuning maps, including `search_many/2` entry vs shared behavior.
@@ -120,4 +120,4 @@ Use this checklist before starting **TUNE-PQ** per-query runtime work. Every ite
 - [ ] **Multi-search** compatibility is covered without duplicating **`guides/multi-index-search.md`** — links and merge rules stay single-sourced.
 - [ ] **Operator honesty** — drift, threshold effects on counts/facets, and partial federation are visible in UX copy or operator runbooks, not only internal comments.
 
-When all boxes are checked, **TUNE-PQ** implementation may proceed for the v1.9 per-query runtime slice.
+When all boxes are checked, changes to the per-query runtime may proceed with changelog and contract-test coverage as usual.

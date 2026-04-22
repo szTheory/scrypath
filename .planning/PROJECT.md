@@ -10,17 +10,17 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Current milestone
 
-**None opened.** Run **`/gsd-new-milestone`** when you are ready to define the next arc (**`.planning/REQUIREMENTS.md`** is removed after **v1.12** close until then).
+**None opened.** Last planning delivery: **v1.13** — public polish & narrative coherence (in-repo **2026-04-22**). Run **`/gsd-new-milestone`** when you are ready for the next arc.
 
 ## Last shipped milestone
 
-**v1.12 — Developer onboarding & first-hour QoL** (shipped in-repo **2026-04-22**, archived **2026-04-21**). Doc-contract truth across README, **`guides/golden-path.md`**, **CONTRIBUTING**, and example CI; actionable **`{:error, _}`** surfaces and **`guides/common-mistakes.md`**; **`Scrypath`** lobby **`@moduledoc`** and **`mix scrypath.*`** read-next links; root **`mix verify.opsui`** contributor path — **`ONBD-01`..`ONBD-06`**, **`VRFY-03`**, **`VRFY-04`** (see **`milestones/v1.12-REQUIREMENTS.md`**).
+**v1.13 — Public polish & narrative coherence** (delivered in-repo **2026-04-22**). Guide voice (**`guides/per-query-tuning-pipeline.md`**), **Hex `0.3.4`** narrative alignment across planning + **README**, **`AGENTS.md`** contributor entry, **`milestone-candidates.md`** refresh — **POLISH-01**–**POLISH-05** (see **`.planning/REQUIREMENTS.md`**).
 
-**Prior:** **v1.11 — Operator shell polish and JTBD verification** (archived **2026-04-21**) — **`milestones/v1.11-{ROADMAP,REQUIREMENTS}.md`**. **OPSUI** arc: **`milestones/v1.10-{ROADMAP,REQUIREMENTS}.md`**.
+**Prior:** **v1.12 — Developer onboarding & first-hour QoL** (shipped in-repo **2026-04-22**, archived **2026-04-21**) — **`milestones/v1.12-{ROADMAP,REQUIREMENTS}.md`** (**`ONBD-*`**, **`VRFY-03`**, **`VRFY-04`**). **v1.11** — **`milestones/v1.11-{ROADMAP,REQUIREMENTS}.md`**. **OPSUI** arc: **`milestones/v1.10-{ROADMAP,REQUIREMENTS}.md`**.
 
 ## Planning window
 
-**Between milestones.** Ship-of-record for **v1.12**: **`milestones/v1.12-{ROADMAP,REQUIREMENTS}.md`**. Planning navigation: **`.planning/ROADMAP.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**. Existing research notes may remain under **`.planning/research/`**.
+**Between milestones.** **v1.13** delivery recorded in **`.planning/REQUIREMENTS.md`** / **`.planning/ROADMAP.md`**; optional formal **`milestones/v1.13-*`** archive when you run milestone close. Ship-of-record for **v1.12**: **`milestones/v1.12-{ROADMAP,REQUIREMENTS}.md`**. Existing research notes may remain under **`.planning/research/`**.
 
 ## Requirements
 
@@ -61,10 +61,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] **Phase 51** (2026-04-21): Adoption path truth and discoverability — README / **`guides/golden-path.md`** / **CONTRIBUTING** / example README + **`docs_contract_test`** for sync authority and **`phoenix-example-integration`** Mix ordering (**ONBD-01**..**ONBD-03**).
 - [x] **Phase 52** (2026-04-22): Actionable **`{:error, _}`** surfaces + **`Scrypath.Search.Error`** bang helpers, **`guides/common-mistakes.md`**, lobby **`@moduledoc`** and operator **`mix scrypath.*`** Read-next links, doc contracts (**ONBD-04**..**ONBD-06**).
 - [x] **Phase 53** (2026-04-22): Contributor **`mix verify.opsui`** spine — Mix **`@moduledoc`**, README wayfinding, **`docs_contract_test`** locks for **`scrypath-ops`** vs **CONTRIBUTING** / **`ci.yml`** (**VRFY-03**, **VRFY-04**).
+- [x] **v1.13** (2026-04-22): Public polish & narrative coherence — phases **54–56** — **POLISH-01**–**POLISH-05** (guide voice, Hex **0.3.4** narrative, **`AGENTS.md`**, **`milestone-candidates.md`**, pitfalls ledger gate).
 
 ### Active
 
-- (none — **v1.12** requirements satisfied; open the next milestone when ready)
+- (none — open the next milestone when ready)
 
 ### Out of Scope
 
@@ -78,7 +79,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has **thirteen** archived planning milestones (**`v1.0`**–**`v1.12`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS}.md`** for shipped arcs (**`.planning/REQUIREMENTS.md`** is absent until the next **`/gsd-new-milestone`**).
+The repository has **fourteen** planning milestones through **`v1.13`** (**`v1.0`**–**`v1.13`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, **`.planning/REQUIREMENTS.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS}.md`** for shipped arcs.
 
 - `v1.0` shipped the Meilisearch-first Ecto-native indexing core, search/hydration path, Oban support, reindex workflows, public Phoenix docs, and release automation baseline.
 - `v1.1` shipped release hardening, docs-safety fixes, `mix verify.phase10`, and the launch-readiness evidence chain.
@@ -86,7 +87,7 @@ The repository has **thirteen** archived planning milestones (**`v1.0`**–**`v1
 - `v1.3` shipped planning-track delivery of relevance tuning, faceted search, multi-index search, operator polish + drift recovery guide, release-parity gates, and v1.2 Nyquist validation closure (archived 2026-04-17).
 - `v1.4` shipped **Hex `scrypath 0.3.1`**, the bounded live-index `hot_apply/3` path, and operator failure rollups — archived 2026-04-17 (`milestones/v1.4-ROADMAP.md`, `milestones/v1.4-REQUIREMENTS.md`).
 
-The current public line on Hex is **`scrypath 0.3.3`**. **v1.8** closed the federation loop (**weights**, **`:all` expansion**, **docs/contracts**) on top of prior depth (**v1.3–v1.7**) and operator tooling (**v1.4–v1.5**).
+The current public line on Hex is **`scrypath 0.3.4`**. **v1.8** closed the federation loop (**weights**, **`:all` expansion**, **docs/contracts**) on top of prior depth (**v1.3–v1.7**) and operator tooling (**v1.4–v1.5**).
 
 ## Constraints
 
@@ -117,12 +118,13 @@ The current public line on Hex is **`scrypath 0.3.3`**. **v1.8** closed the fede
 | **v1.10** — OPSUI outside core Hex; JTBD-first admin LiveView | Preserves library boundary while giving operators a conventional, honest UI over shipped APIs | ✓ Good — **`scrypath_ops`** shipped **2026-04-21**; see **`milestones/v1.10-REQUIREMENTS.md`** |
 | **v1.11** — Operator shell polish before widening OPSUI feature set | JTBD-first shell must *feel* finished: IA truth, scanability, themes, a11y basics, CI locks | ✓ Good — shipped **2026-04-21**; see **`milestones/v1.11-REQUIREMENTS.md`** |
 | **v1.12** — Onboarding and QoL before OPSUI “second slice” | Adopters and contributors should not pay a tax of doc drift, vague errors, or scattered verify commands | ✓ Good — shipped in-repo **2026-04-22** (phases **51–53**); see **`milestones/v1.12-REQUIREMENTS.md`** |
+| **v1.13** — Public polish & narrative coherence | Adopter docs stay product-shaped; Hex line + README + planning agree; contributor entry stays approachable | ✓ Good — delivered in-repo **2026-04-22** (phases **54–56**); see **`.planning/REQUIREMENTS.md`** |
 
 ## Current State
 
-**Hex:** `scrypath` **`0.3.3`**. Shipped surfaces include the v1.3-era Meilisearch-native path (relevance, facets, multi-index, operator polish), v1.4 **hot_apply** / failure rollups, v1.5 **index contract drift** tooling, v1.6 **adoption-grade** docs and verification clarity, **v1.7** facet-depth APIs with **`mix verify.phase36`..`38`**, **v1.8** federation weights / **`:all`** expansion / **`mix verify.phase41`**, **v1.9** per-query pipeline spec + **`:per_query`** runtime with **`mix verify.phase43`**, **v1.10** optional **`scrypath_ops`** operator LiveView UI, **v1.11** operator-shell polish (**IA contract**, **theming**, **Phoenix shell tests**, **`opsui.test_a11y`**), and **v1.12** first-hour onboarding (**adoption path contracts**, **actionable errors + pitfalls**, **contributor `mix verify.opsui` spine**).
+**Hex:** `scrypath` **`0.3.4`** on Hex; default-branch **`mix.exs`** matches unless a release PR is mid-flight. Shipped surfaces include the v1.3-era Meilisearch-native path (relevance, facets, multi-index, operator polish), v1.4 **hot_apply** / failure rollups, v1.5 **index contract drift** tooling, v1.6 **adoption-grade** docs and verification clarity, **v1.7** facet-depth APIs with **`mix verify.phase36`..`38`**, **v1.8** federation weights / **`:all`** expansion / **`mix verify.phase41`**, **v1.9** per-query pipeline spec + **`:per_query`** runtime with **`mix verify.phase43`**, **v1.10** optional **`scrypath_ops`** operator LiveView UI, **v1.11** operator-shell polish (**IA contract**, **theming**, **Phoenix shell tests**, **`opsui.test_a11y`**), and **v1.12** first-hour onboarding (**adoption path contracts**, **actionable errors + pitfalls**, **contributor `mix verify.opsui` spine**).
 
-**Planning:** **v1.12** archived (**2026-04-21**); shipped in-repo **2026-04-22**. Next window TBD — **`/gsd-new-milestone`**.
+**Planning:** **v1.13** delivered in-repo (**2026-04-22**) — **POLISH-01**–**POLISH-05**; see **`.planning/REQUIREMENTS.md`**. Next arc: **`/gsd-new-milestone`**. **v1.12** archived (**2026-04-21**); shipped in-repo **2026-04-22**.
 
 ## Evolution
 
@@ -142,4 +144,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-21 after **v1.12** milestone archive — Hex **`scrypath 0.3.3`** current; **`.planning/REQUIREMENTS.md`** removed pending next milestone*
+*Last updated: 2026-04-22 — **v1.13** polish milestone delivered in-repo; Hex **`scrypath 0.3.4`** current public line*
