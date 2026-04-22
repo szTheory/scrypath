@@ -2,7 +2,7 @@
 gsd_state_version: 1.0
 milestone: v1.15
 milestone_name: OPSUI second slice
-status: complete
+status: milestone_complete
 last_updated: "2026-04-22T20:00:00.000Z"
 last_activity: 2026-04-22 — `/gsd-execute-phase 64`
 progress:
@@ -25,13 +25,13 @@ See: `.planning/PROJECT.md` (updated 2026-04-22)
 
 ## Current Position
 
-**Phase:** **64** — **complete** (IA, verification, milestone bookkeeping).
+**Phase:** **64** — **complete** (milestone **v1.15** closed).
 
-**Plan:** All **64-01**, **64-02**, **64-03** plans executed with **SUMMARY** artifacts.
+**Plan:** **64-01** / **64-02** / **64-03** delivered (**SUMMARY** + **`64-VERIFICATION.md`**).
 
-**Status:** **v1.15** closed in-repo **2026-04-22** — frozen **`milestones/v1.15-*`** trio + rolling **`REQUIREMENTS.md`** / **`ROADMAP.md`** / **`PROJECT.md`** / **`MILESTONES.md`** aligned.
+**Status:** **`milestone_complete`** — **`v1.15`** shipped in-repo **2026-04-22**.
 
-**Last activity:** 2026-04-22 — **`/gsd-execute-phase 64`**
+**Last activity:** 2026-04-22 — **`/gsd-execute-phase 64`** + **`phase.complete`**
 
 ## Accumulated Context
 
