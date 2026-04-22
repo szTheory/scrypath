@@ -21,7 +21,8 @@ defmodule ScrypathOpsWeb.Nav do
       %{path: ~p"/ops/posture", label: "Posture / health"},
       %{path: ~p"/ops/failed-sync", label: "Failed sync work"},
       %{path: ~p"/ops/sync-drift", label: "Sync / drift"},
-      %{path: ~p"/ops/search", label: "Search & federation"}
+      %{path: ~p"/ops/search", label: "Search & federation"},
+      %{path: ~p"/ops/playbooks", label: "Saved playbooks"}
     ]
   end
 end

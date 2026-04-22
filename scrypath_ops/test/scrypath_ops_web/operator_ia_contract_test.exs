@@ -48,29 +48,32 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
     assert @router =~ ~s(live("/failed-sync")
     assert @router =~ ~s(live("/sync-drift")
     assert @router =~ ~s(live("/search")
+    assert @router =~ ~s(live("/playbooks")
 
-    for path <- ~w(/ops/posture /ops/failed-sync /ops/sync-drift /ops/search) do
+    for path <- ~w(/ops/posture /ops/failed-sync /ops/sync-drift /ops/search /ops/playbooks) do
       assert String.contains?(@operator_ia, path),
              "expected operator-ia.md to mention #{path} for router parity (phase 47 D-07 / D-17)"
     end
   end
 
-  test "Nav.primary/0 exposes four ordered ops routes with canonical labels" do
+  test "Nav.primary/0 exposes five ordered ops routes with canonical labels" do
     items = Nav.primary()
-    assert length(items) == 4
+    assert length(items) == 5
 
     expected_path_strings = [
       "/ops/posture",
       "/ops/failed-sync",
       "/ops/sync-drift",
-      "/ops/search"
+      "/ops/search",
+      "/ops/playbooks"
     ]
 
     expected_labels = [
       "Posture / health",
       "Failed sync work",
       "Sync / drift",
-      "Search & federation"
+      "Search & federation",
+      "Saved playbooks"
     ]
 
     assert Enum.map(items, &(&1.path |> to_string())) == expected_path_strings
