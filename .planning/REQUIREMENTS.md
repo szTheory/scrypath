@@ -58,8 +58,11 @@ Improve **first-hour** and **day-two** experience for Phoenix/Ecto developers us
 | ONBD-06 | Phase 52 | Pending |
 | VRFY-03 | Phase 53 | Pending |
 | VRFY-04 | Phase 53 | Pending |
+| AUDT-01 | Phase 32 (gap closure 33 follow-ups recorded) | Complete |
 
 **Coverage:** v1.12 requirements: **8** total · Mapped: **8** · Unmapped: **0** ✓
+
+**Nyquist / audit registry:** **AUDT-01** remains traceable here for doc-contract tests (`STATE.md` artifact pointers, Phase 32 triage, gap closure 33).
 
 ---
 *Requirements defined: 2026-04-21 after `/gsd-new-milestone` v1.12 (research pass skipped — brownfield adoption/DX; existing `.planning/research/` may still inform implementation).*
