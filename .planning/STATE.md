@@ -3,13 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: ideas)
 status: planning
-last_updated: "2026-04-22T12:50:03.952Z"
+last_updated: "2026-04-22T13:58:50.358Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
+  total_plans: 3
   completed_plans: 6
+  percent: 100
 ---
 
 # Project State
@@ -71,3 +72,5 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 **Completed:** **v1.13** in-repo (**2026-04-22**) — phases **54–56**. **v1.14** Phase **57** (B1 evidence freeze) — **2026-04-22**. **v1.14** Phase **58** (core library + doc QoL **LIB-01..03**) — **2026-04-22**.
 
 **Next phases:** **60–61** for **v1.14** — see **`.planning/ROADMAP.md`**
+
+**Planned Phase:** 60 (Playbook LiveView and IA) — 3 plans — 2026-04-22T13:58:50.351Z
