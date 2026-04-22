@@ -2,6 +2,29 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.11 — Operator shell polish and JTBD verification
+
+**Shipped (planning):** 2026-04-21  
+**Phases:** 3 (48–50) | **Plans:** 11 | **Hex:** `scrypath` **0.3.3** (OPSUX polish in-repo **`scrypath_ops`**)
+
+### What was built
+
+**`operator-ia.md`** ↔ **`router.ex`** maintainer contracts, posture **JTBD** next-check list, shared **`/ops`** page scaffold with **system/light/dark** coherence, Phoenix **`ops_shell_contract_test`**, and **`ops_a11y_contract_test`** + **`mix scrypath_ops.opsui.test_a11y`** slice.
+
+### What worked
+
+Reconciling **`.planning/REQUIREMENTS.md`** checkboxes and the traceability table **before** close avoided “pending” rows that phase summaries already satisfied.
+
+### What was inefficient
+
+`gsd-sdk query milestone.complete` failed again (**`version required for phases archive`**), so **`milestones/v1.11-*`**, **`ROADMAP`** collapse, and **`git rm` REQUIREMENTS** were **manual** like **v1.5–v1.10**.
+
+### Key lessons
+
+Treat **REQUIREMENTS.md** as a living contract with **SUMMARY.md** metadata: when **`requirements-completed`** appears in YAML, update the traceability table in the same session.
+
+---
+
 ## Milestone: v1.10 — Operator admin UI (OPSUI)
 
 **Shipped (planning):** 2026-04-21  

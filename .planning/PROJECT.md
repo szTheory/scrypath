@@ -10,26 +10,17 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Current milestone
 
-**v1.11 — Operator shell polish and JTBD verification** (opened **2026-04-21**).
-
-**Goal:** Make **ScrypathOps** an excellent day-to-day operator tool: clear hierarchy and scan-friendly layouts for posture, failed sync, sync/drift, and search/federation; strong **light / dark / system** theming; Phoenix-idiomatic UI with least surprise; and proof that shipped chrome matches **`scrypath_ops/docs/operator-ia.md`** personas and JTBD (especially the **on-call** happy path).
-
-**Target features:**
-
-- IA and JTBD alignment (**`operator-ia.md`** ↔ routes ↔ maintainer contract tests; obvious on-call path).
-- Visual hierarchy and scanability across all **`/ops`** surfaces.
-- Theming polish and Phoenix ergonomics fixes from audit.
-- Basic accessibility plus extended CI regression for new contracts.
+**Next — v1.12+** (not opened). Run **`/gsd-new-milestone`** when you want a fresh requirements pass and numbered roadmap slice.
 
 ## Last shipped milestone
 
-**v1.10 — Operator admin UI (OPSUI)** (archived **2026-04-21**). Delivered the optional **`scrypath_ops`** Phoenix LiveView operator app **outside** the core **`scrypath`** Hex package: **personas / JTBD**-ordered **`operator-ia.md`**, conventional routing/layout, explicit **`SECURITY.md`** + prod **`OPSUI_AUTH_MODE`** boot guard, read-mostly posture and **`failed_sync_work/2`** triage, sync/drift read-only context with doc and Mix links, bounded search playground + federation-honest **`search_many/2`** inspector, and maintainer **`LiveViewTest`** + contract-test CI wiring — **`OPSUI-01`..`OPSUI-10`** (see **`milestones/v1.10-REQUIREMENTS.md`**).
+**v1.11 — Operator shell polish and JTBD verification** (archived **2026-04-21**). Tightened **`scrypath_ops`** so **`operator-ia.md`**, **`router.ex`**, and maintainer tests agree; clarified posture **JTBD** and **next checks**; unified **`/ops`** page scaffold with **system/light/dark** readability; added Phoenix shell contract coverage plus accessibility and **`opsui.test_a11y`** verification — **`OPSUX-01`..`OPSUX-07`** (see **`milestones/v1.11-REQUIREMENTS.md`**).
 
-**Prior:** **v1.9 — Per-query relevance & tuning pipeline** — **`milestones/v1.9-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**Prior:** **v1.10 — Operator admin UI (OPSUI)** — **`milestones/v1.10-{ROADMAP,REQUIREMENTS}.md`**.
 
 ## Planning window
 
-**Active milestone v1.11** — **`.planning/REQUIREMENTS.md`** defines **OPSUX-01**–**OPSUX-07**. Roadmap: **`.planning/ROADMAP.md`** (phases **48–50**). **`v1.10`** snapshot: **`milestones/v1.10-{ROADMAP,REQUIREMENTS}.md`**. Research notes may remain under **`.planning/research/`**; this milestone does not assume new parallel domain research unless you add it.
+**Between milestones.** **`v1.11`** snapshot: **`milestones/v1.11-{ROADMAP,REQUIREMENTS}.md`**. **`v1.10`**: **`milestones/v1.10-{ROADMAP,REQUIREMENTS}.md`**. A fresh **`.planning/REQUIREMENTS.md`** is created by **`/gsd-new-milestone`**. Research notes may remain under **`.planning/research/`**.
 
 ## Requirements
 
@@ -66,11 +57,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - [x] **Phase 43** (2026-04-20): **Per-query runtime** — allowlisted **`:per_query`**, **`%Query{}`**, Meilisearch projection, **`search_many/2`** merge, telemetry, **`mix verify.phase43`**, doc pins — **TUNE-PQ-01**..**TUNE-PQ-03** / **`TUNE-01`** (v1.7 sense).
 - [x] **v1.9 milestone** (2026-04-20): Per-query pipeline + runtime — phases **42–43** archived; **`milestones/v1.9-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 - [x] **v1.10 milestone** (2026-04-21): Operator admin UI (OPSUI) — phases **44–47** archived; **`scrypath_ops`** LiveView app; **`milestones/v1.10-{ROADMAP,REQUIREMENTS}.md`**; **`OPSUI-01`..`OPSUI-10`**.
-- [x] **Phase 48** (2026-04-21): **OPSUX-01** — `ScrypathOpsWeb.Nav`, doc nav fence, `mix scrypath_ops.check_nav_contract`; **OPSUX-02** — posture headline, evidence, bounded next checks (`posture-next-checks`).
+- [x] **v1.11 milestone** (2026-04-21): Operator shell polish — phases **48–50** archived; **`milestones/v1.11-{ROADMAP,REQUIREMENTS}.md`**; **`OPSUX-01`..`OPSUX-07`** (IA + router contract, posture JTBD, **`/ops`** scaffold and themes, Phoenix shell tests, a11y + CI slice).
 
 ### Active
 
-- [ ] **v1.11** — Operator shell polish and JTBD verification — **OPSUX-03**–**OPSUX-07** remaining after **Phase 48**; see **`.planning/REQUIREMENTS.md`**.
+- [ ] **v1.12+** — Open with **`/gsd-new-milestone`** when scope is chosen (fresh **`.planning/REQUIREMENTS.md`**).
 
 ### Out of Scope
 
@@ -84,7 +75,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has **eleven** archived planning milestones (**`v1.0`**–**`v1.10`**) plus **active v1.11**. Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, **`.planning/REQUIREMENTS.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS}.md`** for shipped arcs.
+The repository has **twelve** archived planning milestones (**`v1.0`**–**`v1.11`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS}.md`** for shipped arcs. A living **`.planning/REQUIREMENTS.md`** returns when **`/gsd-new-milestone`** opens the next version.
 
 - `v1.0` shipped the Meilisearch-first Ecto-native indexing core, search/hydration path, Oban support, reindex workflows, public Phoenix docs, and release automation baseline.
 - `v1.1` shipped release hardening, docs-safety fixes, `mix verify.phase10`, and the launch-readiness evidence chain.
@@ -121,13 +112,13 @@ The current public line on Hex is **`scrypath 0.3.3`**. **v1.8** closed the fede
 | Ship federation as explicit opts + expansion + doc contracts (not a dashboard) | Keeps cross-index ordering honest in library code before any **OPSUI** surface | ✓ Good — **v1.8** (**FED-01..03**) with **`mix verify.phase41`** |
 | Spec-first per-query tuning (**`TUNE-PIPE-*`**) then bounded **Plane B** runtime (**`TUNE-PQ-*`**) | Prevents silent ranking drift; keeps Meilisearch wire and merge semantics explicit | ✓ Good — **v1.9** with **`guides/per-query-tuning-pipeline.md`** + **`mix verify.phase43`** |
 | **v1.10** — OPSUI outside core Hex; JTBD-first admin LiveView | Preserves library boundary while giving operators a conventional, honest UI over shipped APIs | ✓ Good — **`scrypath_ops`** shipped **2026-04-21**; see **`milestones/v1.10-REQUIREMENTS.md`** |
-| **v1.11** — Operator shell polish before widening OPSUI feature set | JTBD-first shell must *feel* finished: IA truth, scanability, themes, a11y basics, CI locks | — Pending |
+| **v1.11** — Operator shell polish before widening OPSUI feature set | JTBD-first shell must *feel* finished: IA truth, scanability, themes, a11y basics, CI locks | ✓ Good — shipped **2026-04-21**; see **`milestones/v1.11-REQUIREMENTS.md`** |
 
 ## Current State
 
-**Hex:** `scrypath` **`0.3.3`**. Shipped surfaces include the v1.3-era Meilisearch-native path (relevance, facets, multi-index, operator polish), v1.4 **hot_apply** / failure rollups, v1.5 **index contract drift** tooling, v1.6 **adoption-grade** docs and verification clarity, **v1.7** facet-depth APIs with **`mix verify.phase36`..`38`**, **v1.8** federation weights / **`:all`** expansion / **`mix verify.phase41`**, **v1.9** per-query pipeline spec + **`:per_query`** runtime with **`mix verify.phase43`**, and **v1.10** optional **`scrypath_ops`** operator LiveView UI (**posture**, **failed sync**, **sync/drift**, **search playground**, federation inspector, CI contract tests).
+**Hex:** `scrypath` **`0.3.3`**. Shipped surfaces include the v1.3-era Meilisearch-native path (relevance, facets, multi-index, operator polish), v1.4 **hot_apply** / failure rollups, v1.5 **index contract drift** tooling, v1.6 **adoption-grade** docs and verification clarity, **v1.7** facet-depth APIs with **`mix verify.phase36`..`38`**, **v1.8** federation weights / **`:all`** expansion / **`mix verify.phase41`**, **v1.9** per-query pipeline spec + **`:per_query`** runtime with **`mix verify.phase43`**, **v1.10** optional **`scrypath_ops`** operator LiveView UI, and **v1.11** operator-shell polish (**IA contract**, **theming**, **Phoenix shell tests**, **`opsui.test_a11y`**).
 
-**Planning:** **v1.11** in progress — operator shell polish and JTBD verification (**2026-04-21**).
+**Planning:** **v1.11** archived **2026-04-21**; next milestone not opened.
 
 ## Evolution
 
@@ -147,4 +138,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-21 after **`/gsd-new-milestone`** — opened **v1.11** Operator shell polish and JTBD verification; Hex **`scrypath 0.3.3`** current**
+*Last updated: 2026-04-21 after **`/gsd-complete-milestone`** — archived **v1.11** Operator shell polish and JTBD verification; Hex **`scrypath 0.3.3`** current**

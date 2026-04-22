@@ -1,5 +1,24 @@
 # Milestones
 
+## v1.11 Operator shell polish and JTBD verification (Shipped + archived: 2026-04-21)
+
+**Phases completed:** 3 phases (**48–50**), **11** plans
+
+**Hex:** **`scrypath 0.3.3`** (polish in-repo **`scrypath_ops`**; no mandated Hex bump in this planning milestone)
+
+**Key accomplishments:**
+
+- **`operator-ia.md`** ↔ **`router.ex`** nav contract (**`mix scrypath_ops.check_nav_contract`**, **`operator_ia_contract_test`**) — **OPSUX-01**
+- Posture **JTBD** clarity with bounded **next checks** list — **OPSUX-02**
+- Shared **`/ops`** page scaffold, **system/light/dark** coherence, Phoenix **`ops_shell_contract_test`** — **OPSUX-03**–**OPSUX-05**
+- Accessibility DOM contracts + **`mix scrypath_ops.opsui.test_a11y`** focused slice — **OPSUX-06**, **OPSUX-07**
+
+**Known deferred items at close:** **`audit-open`** reported **2** missing quick-task stubs — **acknowledged** at close — see **`STATE.md`** § **Deferred Items** (**Acknowledged at v1.11 milestone close**). No formal **`milestones/v1.11-MILESTONE-AUDIT.md`**.
+
+**Archives:** `milestones/v1.11-ROADMAP.md`, `milestones/v1.11-REQUIREMENTS.md` · **Git tag:** `v1.11` (planning milestone marker)
+
+---
+
 ## v1.10 Operator admin UI (OPSUI) (Shipped + archived: 2026-04-21)
 
 **Phases completed:** 4 phases (**44–47**), **14** plans
