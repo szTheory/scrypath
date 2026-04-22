@@ -16,7 +16,7 @@
 
 **Automation note:** **`gsd-sdk query milestone.complete`** failed again (**`version required for phases archive`**), so **`milestones/v1.15-*`**, **`ROADMAP`** collapse, and rolling **`REQUIREMENTS.md`** updates were **manual** (same pattern as **v1.10–v1.14**).
 
-**Archives:** `milestones/v1.15-ROADMAP.md`, `milestones/v1.15-REQUIREMENTS.md`, `milestones/v1.15-MILESTONE-AUDIT.md`
+**Archives:** `milestones/v1.15-ROADMAP.md`, `milestones/v1.15-REQUIREMENTS.md`, `milestones/v1.15-MILESTONE-AUDIT.md` · **Git tag:** `v1.15` (planning milestone marker)
 
 ---
 

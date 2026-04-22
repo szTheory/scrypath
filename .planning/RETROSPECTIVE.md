@@ -2,6 +2,30 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.15 — OPSUI second slice
+
+**Shipped (planning):** 2026-04-22  
+**Archived:** 2026-04-22  
+**Phases:** 3 (62–64) | **Requirements:** 8 (**OPS2-01**–**OPS2-08**) | **Hex:** `scrypath` **0.3.4** (in-repo OPSUI depth; no mandated publish for this planning milestone)
+
+### What was built
+
+Playground **capture → preview → save** into **`playbook_format: 1`**, catalog **rename/duplicate/metadata**, optional **`V1`** title/description/tags, **(A)** team persistence (**`team-playbook-persistence.md`**, **`examples/playbooks/`**, **`mix scrypath_ops.playbooks.validate`**), **`V1` / `PlaybookLive`** security tests, **`operator-ia.md`** alignment for saved playbooks, **`mix verify.opsui`** + doc-contract anchors (**including** playbook validate in contributor docs), and frozen **`milestones/v1.15-*`** close bookkeeping.
+
+### What worked
+
+Choosing **explicit (A) file + GitOps** for **OPS2-04** kept shared playbooks shippable without an **Ecto** catalog fork while still tightening validation and threat-model copy.
+
+### What was inefficient
+
+**`gsd-sdk query milestone.complete`** still errors (**`version required for phases archive`**), so archive + **`git rm` REQUIREMENTS** + tag bookkeeping remained **manual** again (**v1.10–v1.15** pattern).
+
+### Key lessons
+
+After **`audit-open`** is green and **`milestones/v*-MILESTONE-AUDIT.md`** is **`passed`**, finish close with **`git tag v{N}`** in the same pass so planning markers do not lag **`MILESTONES.md`**.
+
+---
+
 ## Milestone: v1.14 — Library QoL and operator playbooks
 
 **Shipped (planning):** 2026-04-22  
@@ -216,6 +240,7 @@ Ship **`audit-open` acknowledgments** into **`STATE.md`** at close when tooling 
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|
+| v1.15 | 62–64 | OPSUI second slice: playground capture, playbook catalog/metadata, bounded team persistence + validate Mix |
 | v1.14 | 57–61 | B1 evidence gate + operator playbooks: **`Playbook.V1`**, **`/ops/playbooks`**, portable JSON |
 | v1.9 | 42–43 | Per-query tuning: locked pipeline spec, `:per_query` runtime, verify.phase43 |
 | v1.8 | 39–41 | Multi-index federation: weights, `:all` expansion, docs + verify.phase41 |
