@@ -2,32 +2,33 @@ defmodule ScrypathOpsWeb.Router do
   use ScrypathOpsWeb, :router
 
   pipeline :browser do
-    plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_live_flash
-    plug :put_root_layout, html: {ScrypathOpsWeb.Layouts, :root}
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
+    plug(:accepts, ["html"])
+    plug(:fetch_session)
+    plug(:fetch_live_flash)
+    plug(:put_root_layout, html: {ScrypathOpsWeb.Layouts, :root})
+    plug(:protect_from_forgery)
+    plug(:put_secure_browser_headers)
   end
 
   pipeline :api do
-    plug :accepts, ["json"]
+    plug(:accepts, ["json"])
   end
 
   scope "/", ScrypathOpsWeb do
-    pipe_through :browser
+    pipe_through(:browser)
 
-    get "/", PageController, :home
+    get("/", PageController, :home)
   end
 
   scope "/ops", ScrypathOpsWeb do
-    pipe_through :browser
+    pipe_through(:browser)
 
     live_session :ops, on_mount: [{ScrypathOpsWeb.Live.OnMount, :default}] do
-      live "/posture", PostureLive
-      live "/failed-sync", FailedSyncLive
-      live "/sync-drift", SyncDriftLive
-      live "/search", SearchLive
+      live("/posture", PostureLive)
+      live("/failed-sync", FailedSyncLive)
+      live("/sync-drift", SyncDriftLive)
+      live("/search", SearchLive)
+      live("/playbooks", PlaybookLive)
     end
   end
 
@@ -46,10 +47,10 @@ defmodule ScrypathOpsWeb.Router do
     import Phoenix.LiveDashboard.Router
 
     scope "/dev" do
-      pipe_through :browser
+      pipe_through(:browser)
 
-      live_dashboard "/dashboard", metrics: ScrypathOpsWeb.Telemetry
-      forward "/mailbox", Plug.Swoosh.MailboxPreview
+      live_dashboard("/dashboard", metrics: ScrypathOpsWeb.Telemetry)
+      forward("/mailbox", Plug.Swoosh.MailboxPreview)
     end
   end
 end
