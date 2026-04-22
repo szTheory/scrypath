@@ -2,6 +2,30 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.12 — Developer onboarding & first-hour QoL
+
+**Shipped (planning):** 2026-04-22  
+**Archived:** 2026-04-21  
+**Phases:** 3 (51–53) | **Plans:** 9 | **Hex:** `scrypath` **0.3.3** (doc truth, actionable errors, contributor OPSUI verify path in-repo)
+
+### What was built
+
+Contract-true adoption path across README, **`guides/golden-path.md`**, **CONTRIBUTING**, and Phoenix example CI; bounded actionable **`{:error, _}`** messages and **`guides/common-mistakes.md`**; root **`mix verify.opsui`** documented and pinned in **`docs_contract_test`**.
+
+### What worked
+
+Resolving **`audit-open`** with **[R]** surfaced a pure naming mismatch: **`audit.cjs`** only reads **`SUMMARY.md`**, while historical quick tasks only had **`260416-*-SUMMARY.md`**. Adding **`SUMMARY.md`** cleared the gate without re-litigating completed work.
+
+### What was inefficient
+
+`gsd-sdk query milestone.complete` still fails (**`version required for phases archive`** — **`milestoneComplete` → `phasesArchive([])`**), so **`milestones/v1.12-*`**, **`ROADMAP`** collapse, and **`git rm` REQUIREMENTS** were **manual** again.
+
+### Key lessons
+
+When **`audit-open`** and on-disk artifacts disagree, verify the scanner’s expected filenames before treating rows as missing work.
+
+---
+
 ## Milestone: v1.11 — Operator shell polish and JTBD verification
 
 **Shipped (planning):** 2026-04-21  

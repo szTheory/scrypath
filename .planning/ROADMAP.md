@@ -14,9 +14,16 @@
 - [x] **`v1.9` shipped in-repo** (2026-04-20) — *Per-query relevance & tuning pipeline* — phases **42–43**, **5** plans — [archive](milestones/v1.9-ROADMAP.md) · [requirements](milestones/v1.9-REQUIREMENTS.md) · [audit](milestones/v1.9-MILESTONE-AUDIT.md)
 - [x] **`v1.10` shipped in-repo** (2026-04-21) — *Operator admin UI (OPSUI)* — phases **44–47**, **14** plans — [archive](milestones/v1.10-ROADMAP.md) · [requirements](milestones/v1.10-REQUIREMENTS.md) · [research summary](research/SUMMARY.md)
 - [x] **`v1.11` shipped in-repo** (2026-04-21) — *Operator shell polish and JTBD verification* — phases **48–50**, **11** plans — [archive](milestones/v1.11-ROADMAP.md) · [requirements](milestones/v1.11-REQUIREMENTS.md)
-- [x] **`v1.12` shipped in-repo** (2026-04-22) — *Developer onboarding & first-hour QoL* — phases **51–53** — [requirements](REQUIREMENTS.md)
+- [x] **`v1.12` shipped in-repo** (2026-04-22) — *Developer onboarding & first-hour QoL* — phases **51–53**, **9** plans — [archive](milestones/v1.12-ROADMAP.md) · [requirements](milestones/v1.12-REQUIREMENTS.md)
 
-## Phases (v1.12 — current)
+## Phases (next milestone)
+
+Open the next planning window with **`/gsd-new-milestone`** (it recreates **`.planning/REQUIREMENTS.md`**).
+
+## Phases (history)
+
+<details>
+<summary>✅ v1.12 — Phases 51–53 — SHIPPED 2026-04-22 · in-repo · Hex <code>scrypath 0.3.3</code> · <em>Developer onboarding &amp; first-hour QoL</em></summary>
 
 - [x] **Phase 51: Adoption path truth and discoverability** (2026-04-21) — README ↔ **`guides/golden-path.md`** ↔ integration-example story stay **contract-true**; **`CONTRIBUTING`** first-hour pointers and sync authority links (**ONBD-01**..**ONBD-03**).
   - **Success criteria:** (1) A reader can install and reach a working **`Scrypath.search/3`** path using only README + golden path without hitting a known doc lie. (2) Doc-contract tests (or equivalent) fail when canonical snippets, cwd, or CI-integration expectations drift. (3) **`CONTRIBUTING`** names the happy path and where sync modes / operator lifecycle live.
@@ -25,19 +32,9 @@
 - [x] **Phase 53: Contributor OPSUI verify spine** (2026-04-22) — Root-level **`mix verify.opsui`** registered, documented in **README** / **CONTRIBUTING**, and aligned with verify matrix text via **`docs_contract_test`** (**VRFY-03**, **VRFY-04**).
   - **Success criteria:** (1) One command from repo root runs OPSUI checks with documented prereqs. (2) Contributor docs surface the command without burying it. (3) CI / default verify story references the command where appropriate.
 
-### Phase 51: Adoption path truth and discoverability
+Full detail: [milestones/v1.12-ROADMAP.md](milestones/v1.12-ROADMAP.md).
 
-**Requirements:** **ONBD-01**..**ONBD-03**. README, **`guides/golden-path.md`**, **`examples/phoenix_meilisearch`**, and **CONTRIBUTING** stay mutually contract-true; ExUnit **`docs_contract_test`** (or split modules) locks tightened anchors; **`phoenix-example-integration`** job steps and env match contributor-facing docs (**D-08**–**D-10** in phase CONTEXT).
-
-### Phase 52: Actionable errors and onboarding pitfalls
-
-**Depends on:** Phase 51. **Requirements:** **ONBD-04**..**ONBD-06**. Bounded **`{:error, _}`** / raise messages, pitfalls slice, **`Scrypath`** **`@moduledoc`** and task help pointers.
-
-### Phase 53: Contributor OPSUI verify spine
-
-**Depends on:** Phase 51. **Requirements:** **VRFY-03**, **VRFY-04**. Root **`mix verify.opsui`** (or equivalent), README / CONTRIBUTING surfacing.
-
-## Phases (history)
+</details>
 
 <details>
 <summary>✅ v1.11 — Phases 48–50 — SHIPPED 2026-04-21 · in-repo · Hex <code>scrypath 0.3.3</code> · <em>Operator shell polish and JTBD verification</em></summary>
@@ -149,7 +146,7 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**`v1.12` shipped in-repo** — **2026-04-22** — **3** phases (**51–53**), **8** requirements (**ONBD-01**..**ONBD-06**, **VRFY-03**..**VRFY-04**); see **`.planning/REQUIREMENTS.md`**.
+**`v1.12` archived (in-repo)** — **2026-04-22** shipped — **2026-04-21** archived — **3** phases (**51–53**), **9** plans, **8** requirements (**ONBD-01**..**ONBD-06**, **VRFY-03**..**VRFY-04**); see **`milestones/v1.12-REQUIREMENTS.md`**.
 
 **`v1.11` archived (in-repo)** — **2026-04-21** — **3** phases (**48–50**), **7** requirements (**OPSUX-01**–**OPSUX-07**); see **`milestones/v1.11-REQUIREMENTS.md`**.
 
@@ -162,4 +159,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - **Core library features** — continue to follow **`.planning/PROJECT.md`** *Out of Scope* until a future milestone explicitly widens the contract.
 
 ---
-*Last updated: 2026-04-22 — **v1.12** complete (phases **51–53**); contributor **`mix verify.opsui`** spine shipped*
+*Last updated: 2026-04-21 — **v1.12** milestone archived; **`.planning/REQUIREMENTS.md`** removed pending **`/gsd-new-milestone`***

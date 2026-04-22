@@ -1,5 +1,23 @@
 # Milestones
 
+## v1.12 Developer onboarding & first-hour QoL (Shipped + archived: 2026-04-21)
+
+**Phases completed:** 3 phases (**51–53**), **9** plans
+
+**Hex:** **`scrypath 0.3.3`** (onboarding + contributor **`mix verify.opsui`** spine in-repo; no mandated Hex bump in this planning milestone)
+
+**Key accomplishments:**
+
+- README / **`guides/golden-path.md`** / **CONTRIBUTING** / example + CI wiring locked with **`docs_contract_test`** — **ONBD-01**..**ONBD-03**
+- Actionable **`{:error, _}`** surfaces, **`guides/common-mistakes.md`**, **`Scrypath`** lobby **`@moduledoc`** and **`mix scrypath.*`** read-next links — **ONBD-04**..**ONBD-06**
+- Root **`mix verify.opsui`** with README / **CONTRIBUTING** / CI contract coverage — **VRFY-03**, **VRFY-04**
+
+**Pre-close audit:** **`audit-open`** cleared after adding canonical **`SUMMARY.md`** under each legacy **`.planning/quick/`** task directory (scanner expected **`SUMMARY.md`**; completed work lived in **`260416-*-SUMMARY.md`**). No formal **`milestones/v1.12-MILESTONE-AUDIT.md`**.
+
+**Archives:** `milestones/v1.12-ROADMAP.md`, `milestones/v1.12-REQUIREMENTS.md` · **Git tag:** `v1.12` (planning milestone marker)
+
+---
+
 ## v1.11 Operator shell polish and JTBD verification (Shipped + archived: 2026-04-21)
 
 **Phases completed:** 3 phases (**48–50**), **11** plans
