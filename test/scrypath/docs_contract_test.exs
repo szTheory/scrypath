@@ -21,6 +21,7 @@ defmodule Scrypath.DocsContractTest do
   @verify_phase38 File.read!("lib/mix/tasks/verify.phase38.ex")
   @verify_phase41 File.read!("lib/mix/tasks/verify.phase41.ex")
   @verify_phase43 File.read!("lib/mix/tasks/verify.phase43.ex")
+  @verify_opsui File.read!("lib/mix/tasks/verify.opsui.ex")
   @verify_release_publish File.read!("lib/mix/tasks/verify.release_publish.ex")
   @guide_paths [
     "guides/common-mistakes.md",
@@ -432,6 +433,35 @@ defmodule Scrypath.DocsContractTest do
     job_head = String.slice(job_tail, 0, 4000)
     assert ordered?(job_head, "cd examples/phoenix_meilisearch", "mix deps.get")
     assert ordered?(job_head, "mix deps.get", "mix test")
+  end
+
+  test "README surfaces mix verify.opsui for optional scrypath_ops (Phase 53)" do
+    assert String.contains?(@readme, "mix verify.opsui")
+  end
+
+  test "CONTRIBUTING scrypath-ops row matches ci.yml mix ordering (Phase 53)" do
+    assert String.contains?(@contributing, "scrypath-ops")
+
+    [_head, row_tail] =
+      String.split(
+        @contributing,
+        "`scrypath-ops-path-check` / `scrypath-ops`",
+        parts: 2
+      )
+
+    assert ordered?(row_tail, "cd scrypath_ops", "mix deps.get")
+    assert ordered?(row_tail, "mix deps.get", "mix test")
+
+    [_head, from_job] = String.split(@ci_workflow, "\n  scrypath-ops:\n", parts: 2)
+    job_window = String.slice(from_job, 0, 4000)
+    assert ordered?(job_window, "cd scrypath_ops", "mix deps.get")
+    assert ordered?(job_window, "mix deps.get", "mix test")
+  end
+
+  test "verify.opsui Mix task keeps orchestration markers (Phase 53)" do
+    assert String.contains?(@verify_opsui, "cd: ops_dir")
+    assert String.contains?(@verify_opsui, "mix test")
+    assert String.contains?(@verify_opsui, "ensure_no_args!")
   end
 
   test "release docs and CI keep the package gate auth-free" do
