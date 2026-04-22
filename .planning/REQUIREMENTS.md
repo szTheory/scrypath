@@ -70,6 +70,7 @@
 | OPS2-05 | Phase 64 | Pending |
 | OPS2-06 | Phase 64 | Pending |
 | OPS2-08 | Phase 64 | Pending |
+| AUDT-01 | Phase 32; gap closure 33 | Complete |
 
 **Coverage:**
 
