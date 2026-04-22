@@ -25,14 +25,16 @@
 
 ### Operator playbooks — OPSUI-FUT-01 shaped (B2)
 
-- [ ] **OPS-PB-01**: Define a **versioned** playbook payload (`playbook_format` / schema **v1**) that can represent **both** single-index and **`search_many/2`**-shaped runs using only options **`Scrypath`** already accepts (including federation-relevant fields where applicable), with explicit size caps consistent with **`ScrypathOps.SearchPlayground`**.  
+- [x] **OPS-PB-01**: Define a **versioned** playbook payload (`playbook_format` / schema **v1**) that can represent **both** single-index and **`search_many/2`**-shaped runs using only options **`Scrypath`** already accepts (including federation-relevant fields where applicable), with explicit size caps consistent with **`ScrypathOps.SearchPlayground`**.  
   **Evidence:** `.planning/milestones/v1.10-REQUIREMENTS.md` **OPSUI-FUT-01**; `scrypath_ops/lib/scrypath_ops/search_playground.ex` ceilings.
 
 - [ ] **OPS-PB-02**: Operators can **save**, **list**, **load**, and **run** a playbook from **`scrypath_ops`** search UI (or a dedicated LiveView under **`/ops`**), with the same **bounded** behaviour and warnings as the existing playground (**non-production** posture preserved).  
   **Evidence:** **OPSUI-04** / **OPSUI-05** shipped semantics (`milestones/v1.10-REQUIREMENTS.md`).
 
-- [ ] **OPS-PB-03**: Ship **one** persistence story chosen during planning — **either** portable **export/import** of playbooks **or** durable storage inside **`scrypath_ops`** (e.g. Ecto + Postgres) — with limitations documented (single-user vs team-shared).  
+- [x] **OPS-PB-03**: Ship **one** persistence story chosen during planning — **either** portable **export/import** of playbooks **or** durable storage inside **`scrypath_ops`** (e.g. Ecto + Postgres) — with limitations documented (single-user vs team-shared).  
   **Evidence:** `.planning/research/ARCHITECTURE.md` persistence fork; **OPSUI-FUT-01** “shared across team members” vs MVP tradeoff in **SUMMARY.md**.
+
+  > **Phase 59 implementation note:** Chose **portable JSON file** export/import as the sole persistence story for this milestone — **no** new **Ecto** persistence in **`scrypath_ops`**. **Limitations:** single-operator / **git + attachments** team bus, not a live shared catalog. **Security:** do not store **secrets** in exported JSON; banned fields and path hygiene are documented in **`scrypath_ops/docs/playbook-schema-v1.md`**.
 
 - [ ] **OPS-PB-04**: Navigation and **JTBD** docs stay aligned: update **`scrypath_ops/docs/operator-ia.md`** (and router, if needed) so **`mix scrypath_ops.check_nav_contract`** and any **`operator_ia_contract_test`** expectations remain green.  
   **Evidence:** v1.11 **OPSUX-01** (`milestones/v1.11-REQUIREMENTS.md`).
@@ -72,9 +74,9 @@
 | LIB-01 | Phase 58 | Pending |
 | LIB-02 | Phase 58 | Pending |
 | LIB-03 | Phase 58 | Pending |
-| OPS-PB-01 | Phase 59 | Pending |
+| OPS-PB-01 | Phase 59 | Complete |
 | OPS-PB-02 | Phase 60 | Pending |
-| OPS-PB-03 | Phase 59 | Pending |
+| OPS-PB-03 | Phase 59 | Complete |
 | OPS-PB-04 | Phase 60 | Pending |
 | OPS-PB-05 | Phase 61 | Pending |
 | SHIP-01 | Phase 61 | Pending |
