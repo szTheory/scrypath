@@ -1,16 +1,15 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.14
-milestone_name: Library QoL and operator playbooks
-status: ready_to_plan
-last_updated: "2026-04-22T12:00:00.000Z"
-last_activity: 2026-04-22 — Phase 58 discuss complete (context gathered)
+milestone_name: ideas)
+status: planning
+last_updated: "2026-04-22T04:00:15.327Z"
+last_activity: 2026-04-22
 progress:
   total_phases: 5
-  completed_phases: 1
-  total_plans: 1
+  completed_phases: 0
+  total_plans: 0
   completed_plans: 1
-  percent: 20
 ---
 
 # Project State
@@ -68,3 +67,5 @@ Doc-contract tests require these maintainer artifact names to remain discoverabl
 **Completed:** **v1.13** in-repo (**2026-04-22**) — phases **54–56**. **v1.14** Phase **57** (B1 evidence freeze) — **2026-04-22**.
 
 **Next phases:** **58–61** for **v1.14** — see **`.planning/ROADMAP.md`**
+
+**Planned Phase:** 58 (core-library-and-doc-qol-b1) — 3 plans — 2026-04-22T04:00:15.316Z
