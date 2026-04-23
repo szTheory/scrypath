@@ -139,7 +139,11 @@ defmodule ScrypathOpsWeb.SearchLive do
 
       not Store.safe_basename?(basename) ->
         {:noreply,
-         put_flash(socket, :error, "Filename must match *.json basename rules (letters, digits, ., -, _).")}
+         put_flash(
+           socket,
+           :error,
+           "Filename must match *.json basename rules (letters, digits, ., -, _)."
+         )}
 
       true ->
         draft =
@@ -172,8 +176,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                 end
 
               {:error, _} ->
-                {:noreply,
-                 put_flash(socket, :error, "Could not encode playbook for saving.")}
+                {:noreply, put_flash(socket, :error, "Could not encode playbook for saving.")}
             end
 
           {:error, _} ->
@@ -438,7 +441,12 @@ defmodule ScrypathOpsWeb.SearchLive do
         assign(socket, capture_preview_json: nil, capture_preview_ok?: false)
 
       base ->
-        draft = merge_capture_metadata(base, socket.assigns.capture_title, socket.assigns.capture_description)
+        draft =
+          merge_capture_metadata(
+            base,
+            socket.assigns.capture_title,
+            socket.assigns.capture_description
+          )
 
         case V1.validate(draft) do
           {:ok, validated} ->
@@ -523,7 +531,10 @@ defmodule ScrypathOpsWeb.SearchLive do
       %{}
       |> maybe_put_json_int("ranking_score_threshold", Keyword.get(v, :ranking_score_threshold))
       |> maybe_put_json_bool("show_ranking_score", Keyword.get(v, :show_ranking_score))
-      |> maybe_put_json_bool("show_ranking_score_details", Keyword.get(v, :show_ranking_score_details))
+      |> maybe_put_json_bool(
+        "show_ranking_score_details",
+        Keyword.get(v, :show_ranking_score_details)
+      )
 
     if m == %{}, do: :drop, else: m
   end
@@ -580,7 +591,8 @@ defmodule ScrypathOpsWeb.SearchLive do
           <p :if={@capture_base == nil} class="text-sm text-base-content/80">
             <strong>Run a search first</strong>
             — this panel captures the <strong>last successful</strong>
-            single- or multi-search inputs (including honesty caps on page size and schema count). After a successful run, set an optional title and description, review the JSON preview, then save under a <code class="text-xs">*.json</code>
+            single- or multi-search inputs (including honesty caps on page size and schema count). After a successful run, set an optional title and description, review the JSON preview, then save under a
+            <code class="text-xs">*.json</code>
             basename. Safety copy: see the honesty panel above.
           </p>
 
@@ -595,7 +607,9 @@ defmodule ScrypathOpsWeb.SearchLive do
           >
             <div class="grid gap-sm md:grid-cols-2">
               <div>
-                <label class="label label-text text-sm font-semibold" for="capture_title">Title</label>
+                <label class="label label-text text-sm font-semibold" for="capture_title">
+                  Title
+                </label>
                 <input
                   id="capture_title"
                   type="text"

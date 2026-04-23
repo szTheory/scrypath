@@ -218,7 +218,9 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                     <td>{row.operation}</td>
                     <td>{row.state}</td>
                     <td>{row.source}</td>
-                    <td class="font-mono text-xs">{format_dt(row.last_attempt_at || row.failed_at)}</td>
+                    <td class="font-mono text-xs">
+                      {format_dt(row.last_attempt_at || row.failed_at)}
+                    </td>
                     <td>
                       <details id={"failed-detail-#{row.id}"}>
                         <summary

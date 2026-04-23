@@ -33,7 +33,9 @@ defmodule ScrypathOps.SearchPlayground do
   """
   @spec max_page_size_allowed() :: pos_integer()
   def max_page_size_allowed do
-    raw = Application.get_env(:scrypath_ops, :search_playground_max_page_size) || @library_max_page
+    raw =
+      Application.get_env(:scrypath_ops, :search_playground_max_page_size) || @library_max_page
+
     raw = if is_integer(raw), do: raw, else: @library_max_page
     raw |> min(@library_max_page) |> max(1)
   end
@@ -54,7 +56,8 @@ defmodule ScrypathOps.SearchPlayground do
   @doc """
   Validates a requested page size without calling `Scrypath`.
   """
-  @spec validate_page_size(term()) :: :ok | {:error, {:page_size_out_of_range, integer(), pos_integer()}}
+  @spec validate_page_size(term()) ::
+          :ok | {:error, {:page_size_out_of_range, integer(), pos_integer()}}
   def validate_page_size(n) when is_integer(n) do
     max = max_page_size_allowed()
 
