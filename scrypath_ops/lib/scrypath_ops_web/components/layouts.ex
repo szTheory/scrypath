@@ -39,7 +39,8 @@ defmodule ScrypathOpsWeb.Layouts do
 
   attr(:ops_main_width, :atom,
     default: :default,
-    doc: "`:default` keeps `max-w-3xl` on `:ops` shell; `:wide` uses `max-w-7xl` for table-first routes (e.g. Search)."
+    doc:
+      "`:default` keeps `max-w-3xl` on `:ops` shell; `:wide` uses `max-w-7xl` for table-first routes (e.g. Search)."
   )
 
   slot(:inner_block, required: true)

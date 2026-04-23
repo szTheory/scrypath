@@ -497,21 +497,11 @@ defmodule Scrypath.Options do
 
       {:error, %NimbleOptions.ValidationError{} = error} ->
         {:error, nimble_validation_to_invalid_options(error)}
-
-      {:error, error} ->
-        {:error, {:validation, Exception.message(error)}}
     end
   end
 
   defp nimble_validation_to_invalid_options(%NimbleOptions.ValidationError{} = error) do
-    field =
-      case error do
-        %{key: key} when is_atom(key) -> key
-        %{keys_path: [k | _]} when is_atom(k) -> k
-        _ -> :options
-      end
-
-    {:invalid_options, field, Exception.message(error)}
+    {:invalid_options, error.key, Exception.message(error)}
   end
 
   defp faceting_attributes_list(schema_module) do

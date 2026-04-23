@@ -2,7 +2,7 @@
 
 Use the Mix tasks in this guide when you want thin terminal entrypoints over the existing operator APIs on `Scrypath.*`.
 
-For how those jobs map to OPSUI navigation priorities (without duplicating JTBD prose here), see [scrypath_ops/docs/operator-ia.md](../scrypath_ops/docs/operator-ia.md).
+For how those jobs map to OPSUI navigation priorities (without duplicating JTBD prose here), see `scrypath_ops/docs/operator-ia.md` in the repository checkout.
 
 The tasks do not bypass the library surface. Each one starts the app, parses task-owned argv, and delegates to the same root API you can call from code.
 

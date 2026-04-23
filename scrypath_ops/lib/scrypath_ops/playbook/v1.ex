@@ -174,7 +174,8 @@ defmodule ScrypathOps.Playbook.V1 do
   defp maybe_validate_title(title) when is_binary(title) do
     if byte_size(title) <= 200,
       do: :ok,
-      else: {:error, {:invalid_playbook, {:invalid_metadata, {:title_too_large, byte_size(title)}}}}
+      else:
+        {:error, {:invalid_playbook, {:invalid_metadata, {:title_too_large, byte_size(title)}}}}
   end
 
   defp maybe_validate_title(other),
@@ -186,7 +187,8 @@ defmodule ScrypathOps.Playbook.V1 do
     if byte_size(desc) <= 2000,
       do: :ok,
       else:
-        {:error, {:invalid_playbook, {:invalid_metadata, {:description_too_large, byte_size(desc)}}}}
+        {:error,
+         {:invalid_playbook, {:invalid_metadata, {:description_too_large, byte_size(desc)}}}}
   end
 
   defp maybe_validate_description(other),
@@ -203,7 +205,8 @@ defmodule ScrypathOps.Playbook.V1 do
         Enum.reduce_while(Enum.with_index(tags), :ok, fn {tag, idx}, :ok ->
           cond do
             not is_binary(tag) ->
-              {:halt, {:error, {:invalid_playbook, {:invalid_metadata, {:invalid_tag, idx, tag}}}}}
+              {:halt,
+               {:error, {:invalid_playbook, {:invalid_metadata, {:invalid_tag, idx, tag}}}}}
 
             tag == "" ->
               {:halt, {:error, {:invalid_playbook, {:invalid_metadata, {:empty_tag, idx}}}}}

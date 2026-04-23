@@ -177,7 +177,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             Last loaded: <span class="font-mono tabular-nums">{format_dt(@reconcile_loaded_at)}</span>
           </p>
 
-          <div :if={@reconcile_result} class="rounded border border-base-300 p-3 text-sm overflow-x-auto min-w-0">
+          <div
+            :if={@reconcile_result}
+            class="rounded border border-base-300 p-3 text-sm overflow-x-auto min-w-0"
+          >
             <table class="table table-sm">
               <thead>
                 <tr>
@@ -211,7 +214,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       <.ops_panel>
         <section aria-labelledby="sync-drift-heading" class="mt-2 space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <h2 id="sync-drift-heading" class="text-lg font-semibold">Index contract (declared vs live)</h2>
+            <h2 id="sync-drift-heading" class="text-lg font-semibold">
+              Index contract (declared vs live)
+            </h2>
             <button type="button" phx-click="load_drift" class="btn btn-sm">
               Load / refresh contract drift
             </button>
@@ -225,7 +230,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             Drift error (reconcile above stays usable): {inspect(@drift_error)}
           </p>
 
-          <div :if={@drift_result} class="rounded border border-base-300 p-3 text-sm overflow-x-auto min-w-0">
+          <div
+            :if={@drift_result}
+            class="rounded border border-base-300 p-3 text-sm overflow-x-auto min-w-0"
+          >
             <table class="table table-sm">
               <thead>
                 <tr>

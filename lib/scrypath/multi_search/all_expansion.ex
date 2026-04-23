@@ -79,39 +79,39 @@ defmodule Scrypath.MultiSearch.AllExpansion do
 
   defp walk([], _mods, acc), do: {:ok, Enum.reverse(acc)}
 
-  defp walk([entry | rest], mods, acc) do
-    case entry do
-      {:all, text} when is_binary(text) ->
-        acc2 = Enum.reduce(mods, acc, fn m, a -> [{m, text, []} | a] end)
-        walk(rest, mods, acc2)
+  defp walk([{:all, text} | rest], mods, acc) when is_binary(text),
+    do: walk(rest, mods, expand_all(mods, text, [], acc))
 
-      {:all, text, opts} when is_binary(text) and is_list(opts) ->
-        if Keyword.keyword?(opts) do
-          acc2 = Enum.reduce(mods, acc, fn m, a -> [{m, text, opts} | a] end)
-          walk(rest, mods, acc2)
-        else
-          {:error, {:invalid_options, :malformed_entry}}
-        end
+  defp walk([{:all, text, opts} | rest], mods, acc) when is_binary(text) and is_list(opts),
+    do: walk_all_with_opts(rest, mods, acc, text, opts)
 
-      {:all, _, _} ->
-        {:error, {:invalid_options, :malformed_entry}}
+  defp walk([{schema, text} | rest], mods, acc)
+       when is_atom(schema) and schema != :all and is_binary(text),
+       do: walk(rest, mods, [{schema, text, []} | acc])
 
-      {:all, _} ->
-        {:error, {:invalid_options, :malformed_entry}}
+  defp walk([{schema, text, opts} | rest], mods, acc)
+       when is_atom(schema) and schema != :all and is_binary(text) and is_list(opts),
+       do: walk_schema_with_opts(rest, mods, acc, schema, text, opts)
 
-      {schema, text} when is_atom(schema) and schema != :all and is_binary(text) ->
-        walk(rest, mods, [{schema, text, []} | acc])
+  defp walk([_entry | _rest], _mods, _acc), do: {:error, {:invalid_options, :malformed_entry}}
 
-      {schema, text, opts}
-      when is_atom(schema) and schema != :all and is_binary(text) and is_list(opts) ->
-        if Keyword.keyword?(opts) do
-          walk(rest, mods, [{schema, text, opts} | acc])
-        else
-          {:error, {:invalid_options, :malformed_entry}}
-        end
-
-      _ ->
-        {:error, {:invalid_options, :malformed_entry}}
+  defp walk_all_with_opts(rest, mods, acc, text, opts) do
+    if Keyword.keyword?(opts) do
+      walk(rest, mods, expand_all(mods, text, opts, acc))
+    else
+      {:error, {:invalid_options, :malformed_entry}}
     end
+  end
+
+  defp walk_schema_with_opts(rest, mods, acc, schema, text, opts) do
+    if Keyword.keyword?(opts) do
+      walk(rest, mods, [{schema, text, opts} | acc])
+    else
+      {:error, {:invalid_options, :malformed_entry}}
+    end
+  end
+
+  defp expand_all(mods, text, opts, acc) do
+    Enum.reduce(mods, acc, fn m, a -> [{m, text, opts} | a] end)
   end
 end

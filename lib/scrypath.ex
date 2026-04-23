@@ -103,8 +103,9 @@ defmodule Scrypath do
 
   Pitfalls when the database write “succeeded” but search lags: [guides/common-mistakes.md](guides/common-mistakes.md).
 
-  Tagged `{:error, reason}` tuples may include `{:timeout, _}`, `{:task_failed, _}`, `{:invalid_options, _, _}`,
-  and other heads documented on `Scrypath.Sync` — use `Scrypath.Errors.format_reason/1` for stable, single-line text.
+  Tagged `{:error, reason}` tuples may include `{:timeout, _}`, `{:task_failed, _}`,
+  `{:invalid_options, _, _}`, and other operational heads. For user-facing copy,
+  normalize them through your own application boundary instead of depending on internal helpers.
   """
 
   @doc @sync_public_ops_doc
@@ -139,9 +140,9 @@ defmodule Scrypath do
 
   @doc """
   Primary hydrated search entry: validates options, resolves runtime config, and
-  returns `{:ok, %Scrypath.SearchResult{}}` or tagged `{:error, _}` failures from
-  the configured backend. Work is wrapped in a Telemetry span **`[:scrypath, :search]`**
-  with metadata from `Scrypath.Telemetry.common_metadata/3`.
+  returns `{:ok, search_result}` or tagged `{:error, _}` failures from the
+  configured backend. Work is wrapped in the public search telemetry span
+  **`[:scrypath, :search]`** with stable, low-cardinality metadata.
 
   Full pipeline: see [guides/per-query-tuning-pipeline.md](guides/per-query-tuning-pipeline.md).
 
@@ -153,8 +154,8 @@ defmodule Scrypath do
 
   ## Errors vs raises
 
-  * **`ArgumentError`** — some invalid shapes are rejected synchronously (mirrors
-    `Scrypath.Search.search/3`).
+  * **`ArgumentError`** — some invalid shapes are rejected synchronously before
+    backend dispatch.
   * **`{:error, reason}`** — operational failures, including backend errors and
     tuples such as `{:transport_failed, _}`, for callers that want to branch.
 
@@ -167,8 +168,8 @@ defmodule Scrypath do
   end
 
   @doc """
-  Like `search/3`, but returns a `%Scrypath.SearchResult{}` or raises `Scrypath.Search.Error`
-  when the non-bang API would return `{:error, _}`.
+  Like `search/3`, but returns the same hydrated search result payload or raises
+  `Scrypath.Search.Error` when the non-bang API would return `{:error, _}`.
   """
   @spec search!(module(), String.t(), keyword()) :: term()
   def search!(schema_module, text, opts \\ []) do
@@ -222,11 +223,10 @@ defmodule Scrypath do
   backends without native multi-search return
   `{:invalid_options, {:federation_merge_requires_native_search_many, %{backend: _}}}`.
 
-  Successful responses are `{:ok, %Scrypath.MultiSearchResult{}}` with
-  per-schema `Scrypath.SearchResult` structs. When the backend returns a flat
-  federated `hits` list, `merge_hit_order` may be populated and
-  `Scrypath.MultiSearchResult.merge_projection/1` exposes `{schema, hit_map}` pairs
-  in merge order; otherwise `merge_hit_order` is `nil`.
+  Successful responses are `{:ok, multi_search_result}` with per-schema search
+  results. When the backend returns a flat federated `hits` list,
+  `merge_hit_order` may be populated so callers can inspect merged ordering;
+  otherwise `merge_hit_order` is `nil`.
 
   See also **`guides/multi-index-search.md`** § **Federation weights**.
 

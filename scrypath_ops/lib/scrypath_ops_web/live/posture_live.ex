@@ -108,7 +108,8 @@ defmodule ScrypathOpsWeb.PostureLive do
   defp jtbd_state(:empty_allowlist, _) do
     checks = [
       %{
-        text: "Add schemas to the OPSUI allowlist in :scrypath_ops config or SCRYPATH_OPS_SCHEMAS.",
+        text:
+          "Add schemas to the OPSUI allowlist in :scrypath_ops config or SCRYPATH_OPS_SCHEMAS.",
         href: "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/README.md"
       }
     ]
@@ -126,7 +127,9 @@ defmodule ScrypathOpsWeb.PostureLive do
       }
     ]
 
-    {"Broken", "Scrypath runtime is missing :backend under :scrypath_ops — posture cannot query sync status.", checks}
+    {"Broken",
+     "Scrypath runtime is missing :backend under :scrypath_ops — posture cannot query sync status.",
+     checks}
   end
 
   defp jtbd_state({:ok, _rows}, err_count) when err_count > 0 do
@@ -170,7 +173,8 @@ defmodule ScrypathOpsWeb.PostureLive do
       ]
       |> maybe_append_mix_status()
 
-    {"Healthy", "No fetch errors on this refresh — continue spot-checking failed work and drift.", checks}
+    {"Healthy", "No fetch errors on this refresh — continue spot-checking failed work and drift.",
+     checks}
   end
 
   defp operator_mix_guide_path do
@@ -181,7 +185,13 @@ defmodule ScrypathOpsWeb.PostureLive do
     path = operator_mix_guide_path()
 
     if File.exists?(path) and String.contains?(File.read!(path), "mix scrypath.status") do
-      checks ++ [%{text: "Snapshot a schema from the CLI when you need raw sync_status output.", mix: "mix scrypath.status"}]
+      checks ++
+        [
+          %{
+            text: "Snapshot a schema from the CLI when you need raw sync_status output.",
+            mix: "mix scrypath.status"
+          }
+        ]
     else
       checks
     end
@@ -283,37 +293,37 @@ defmodule ScrypathOpsWeb.PostureLive do
                   <th scope="col">Queue last OK</th>
                 </tr>
               </thead>
-            <tbody class="text-sm leading-snug tabular-nums">
-              <%= for {mod, row} <- elem(@posture_rows, 1) do %>
-                <tr data-testid="posture-row" id={"posture-#{inspect(mod)}"}>
-                  <%= case row do %>
-                    <% {:ok, status} -> %>
-                      <td class="font-mono text-xs">{inspect(mod)}</td>
-                      <td class="font-mono text-xs">{status.index}</td>
-                      <td>{status.mode}</td>
-                      <td>{length(status.backend.pending)}</td>
-                      <td>{length(status.backend.failed)}</td>
-                      <td>{format_state_ts(status.backend.last_succeeded)}</td>
-                      <td>
-                        <%= if status.queue.observed? do %>
-                          true
-                        <% else %>
-                          <span class="text-warning">queue not observed</span>
-                        <% end %>
-                      </td>
-                      <td>{length(status.queue.pending)}</td>
-                      <td>{length(status.queue.retrying)}</td>
-                      <td>{length(status.queue.failed)}</td>
-                      <td>{format_state_ts(status.queue.last_succeeded)}</td>
-                    <% {:error, reason} -> %>
-                      <td class="font-mono text-xs">{inspect(mod)}</td>
-                      <td colspan="10" class="text-error">
-                        fetch error: {inspect(reason)}
-                      </td>
-                  <% end %>
-                </tr>
-              <% end %>
-            </tbody>
+              <tbody class="text-sm leading-snug tabular-nums">
+                <%= for {mod, row} <- elem(@posture_rows, 1) do %>
+                  <tr data-testid="posture-row" id={"posture-#{inspect(mod)}"}>
+                    <%= case row do %>
+                      <% {:ok, status} -> %>
+                        <td class="font-mono text-xs">{inspect(mod)}</td>
+                        <td class="font-mono text-xs">{status.index}</td>
+                        <td>{status.mode}</td>
+                        <td>{length(status.backend.pending)}</td>
+                        <td>{length(status.backend.failed)}</td>
+                        <td>{format_state_ts(status.backend.last_succeeded)}</td>
+                        <td>
+                          <%= if status.queue.observed? do %>
+                            true
+                          <% else %>
+                            <span class="text-warning">queue not observed</span>
+                          <% end %>
+                        </td>
+                        <td>{length(status.queue.pending)}</td>
+                        <td>{length(status.queue.retrying)}</td>
+                        <td>{length(status.queue.failed)}</td>
+                        <td>{format_state_ts(status.queue.last_succeeded)}</td>
+                      <% {:error, reason} -> %>
+                        <td class="font-mono text-xs">{inspect(mod)}</td>
+                        <td colspan="10" class="text-error">
+                          fetch error: {inspect(reason)}
+                        </td>
+                    <% end %>
+                  </tr>
+                <% end %>
+              </tbody>
             </table>
           </div>
         </section>
@@ -322,7 +332,8 @@ defmodule ScrypathOpsWeb.PostureLive do
     """
   end
 
-  defp posture_next_checks_class("Degraded"), do: "rounded-lg border border-transparent alert alert-warning p-3"
+  defp posture_next_checks_class("Degraded"),
+    do: "rounded-lg border border-transparent alert alert-warning p-3"
 
   defp posture_next_checks_class("Broken"),
     do: "rounded-lg border border-transparent alert alert-error p-3"

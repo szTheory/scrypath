@@ -123,7 +123,7 @@ end
 
 Public fields include `ordered`, `by_schema`, `failures`, optional `federation`
 metadata from Meilisearch, and optional `merge_hit_order` when the response used
-flat federated `hits`. Use `Scrypath.MultiSearchResult.merge_projection/1` to walk
-merge order as `{schema, hit_map}` pairs. Failures are maps
+flat federated `hits`. Use the merged projection helper on the multi-search
+result to walk merge order as `{schema, hit_map}` pairs. Failures are maps
 `%{schema: module(), reason: term()}`; successful schemas are absent from
 `failures` and present in `ordered`.
