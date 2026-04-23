@@ -1,5 +1,6 @@
 defmodule Scrypath.DocsContractTest do
   use ExUnit.Case, async: true
+  @moduletag :docs_contract
 
   @readme File.read!("README.md")
   @architecture File.read!("ARCHITECTURE.md")

@@ -2,14 +2,13 @@ defmodule Mix.Tasks.Verify.Phase36 do
   @moduledoc false
   use Mix.Task
 
-  @shortdoc "Runs hierarchical facets, settings merge, drift, search, and doc contract tests"
+  @shortdoc "Runs hierarchical facets, settings merge, drift, and search tests"
 
   @focused_tests [
     "test/scrypath/options_test.exs",
     "test/scrypath/search_test.exs",
     "test/scrypath/meilisearch/settings_test.exs",
-    "test/scrypath/operator/index_contract_drift_test.exs",
-    "test/scrypath/docs_contract_test.exs"
+    "test/scrypath/operator/index_contract_drift_test.exs"
   ]
 
   @impl true

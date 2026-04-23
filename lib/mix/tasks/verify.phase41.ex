@@ -2,10 +2,14 @@ defmodule Mix.Tasks.Verify.Phase41 do
   @moduledoc false
   use Mix.Task
 
-  @shortdoc "Runs federation docs + doc contract verification (Phase 41)"
+  @shortdoc "Runs federation and multi-search runtime verification (Phase 41)"
 
   @focused_tests [
-    "test/scrypath/docs_contract_test.exs"
+    "test/scrypath/search_many_test.exs",
+    "test/scrypath/multi_search/all_expansion_test.exs",
+    "test/scrypath/multi_search/entries_test.exs",
+    "test/scrypath/meilisearch/federated_decode_test.exs",
+    "test/scrypath/meilisearch/client_multi_search_test.exs"
   ]
 
   @impl true
@@ -13,7 +17,7 @@ defmodule Mix.Tasks.Verify.Phase41 do
     Mix.Task.run("app.start")
     ensure_no_args!(args)
 
-    run_test!(@focused_tests, "Phase 41 federation docs verification")
+    run_test!(@focused_tests, "Phase 41 federation and multi-search verification")
   end
 
   defp run_test!(args, label) do

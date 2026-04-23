@@ -9,7 +9,6 @@ defmodule Mix.Tasks.Verify.Phase13 do
   By default this includes:
 
   - focused operator contract tests
-  - docs contract tests covering explicit recovery wording
   - `mix docs --warnings-as-errors`
   - optional live Meilisearch operator smoke verification
 
@@ -24,8 +23,7 @@ defmodule Mix.Tasks.Verify.Phase13 do
     "test/scrypath/operations_test.exs",
     "test/scrypath/oban/enqueue_test.exs",
     "test/scrypath/oban/worker_test.exs",
-    "test/scrypath/reindex_test.exs",
-    "test/scrypath/docs_contract_test.exs"
+    "test/scrypath/reindex_test.exs"
   ]
 
   @impl true

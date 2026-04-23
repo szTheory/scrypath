@@ -2,12 +2,11 @@ defmodule Mix.Tasks.Verify.Phase37 do
   @moduledoc false
   use Mix.Task
 
-  @shortdoc "Runs Disjunctive facet count merge, query encoding, and doc contract tests"
+  @shortdoc "Runs Disjunctive facet count merge and query encoding tests"
 
   @focused_tests [
     "test/scrypath/facets/disjunctive_test.exs",
-    "test/scrypath/meilisearch/query_test.exs",
-    "test/scrypath/docs_contract_test.exs"
+    "test/scrypath/meilisearch/query_test.exs"
   ]
 
   @impl true

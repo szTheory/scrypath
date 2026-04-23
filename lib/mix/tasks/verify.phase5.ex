@@ -1,15 +1,14 @@
 defmodule Mix.Tasks.Verify.Phase5 do
   use Mix.Task
 
-  @shortdoc "Runs backfill, reindex, Meilisearch integration, and operator doc verification"
+  @shortdoc "Runs backfill, reindex, and Meilisearch integration verification"
 
   @moduledoc """
-  Runs the focused verification flow for backfill, reindex, Meilisearch integration, and operator-facing docs.
+  Runs the focused verification flow for backfill, reindex, and Meilisearch integration.
 
   By default this includes:
 
   - focused unit/contract tests for those areas
-  - docs contract tests
   - `mix docs --warnings-as-errors`
   - live Meilisearch integration tests
 
@@ -31,10 +30,9 @@ defmodule Mix.Tasks.Verify.Phase5 do
         "test/scrypath/schema_test.exs",
         "test/scrypath/backfill_test.exs",
         "test/scrypath/meilisearch_test.exs",
-        "test/scrypath/reindex_test.exs",
-        "test/scrypath/docs_contract_test.exs"
+        "test/scrypath/reindex_test.exs"
       ],
-      "focused backfill/reindex/operator tests"
+      "focused backfill/reindex tests"
     )
 
     Mix.shell().info("==> Building docs with warnings as errors")

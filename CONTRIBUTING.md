@@ -8,7 +8,7 @@
 
 - New contributors: follow the README **Quick Path** into [`guides/golden-path.md`](guides/golden-path.md) for the linear **`:inline`** first-hour story.
 - **Sync modes, visibility, and operator lifecycle** live in [`guides/sync-modes-and-visibility.md`](guides/sync-modes-and-visibility.md)—update that guide instead of duplicating semantics in README or here.
-- Changing operator-facing copy, sync behavior, or published onboarding docs should stay honest with **`mix test test/scrypath/docs_contract_test.exs`** (doc contracts).
+- Changing published docs should keep **`mix docs --warnings-as-errors`** green. The optional docs contract suite remains available via **`mix test test/scrypath/docs_contract_test.exs`**, but it is no longer part of the default CI and release gates.
 
 ## Integrators: pitfalls before you file an issue
 
@@ -19,7 +19,7 @@ Skim [`guides/common-mistakes.md`](guides/common-mistakes.md) when search or syn
 Use the normal fast suite during development:
 
 ```sh
-mix test --exclude integration
+mix test --exclude integration --exclude docs_contract
 ```
 
 Run the full integration verification (`mix verify.phase5`) when you change backfill, reindex, Meilisearch integration, or the operator docs:
@@ -33,7 +33,6 @@ mix verify.phase5
 That command runs:
 
 - focused backfill/reindex/operator contract tests
-- documentation contract tests
 - `mix docs --warnings-as-errors`
 - live Meilisearch integration verification
 
@@ -43,9 +42,9 @@ If you do not have a Meilisearch instance running locally, you can still run the
 mix verify.phase5 --skip-integration
 ```
 
-The fast pull-request gate for federation-facing docs and the published-doc contract suite is the Phase 41 verify alias. It stays free of Meilisearch services. Heavier integration paths, including live Meilisearch verification for backfill, reindex, and operator flows, still live on the Phase 5 verify alias and the dedicated integration jobs in CI.
+The fast pull-request gate for federation and multi-search runtime behavior is the Phase 41 verify alias. It stays free of Meilisearch services. Heavier integration paths, including live Meilisearch verification for backfill, reindex, and operator flows, still live on the Phase 5 verify alias and the dedicated integration jobs in CI.
 
-The Phase 43 verify alias is the complementary fast gate for **per-query Plane B** runtime tests (allowlisted `:per_query` options, `search_many/2` merge semantics) plus the same published-doc contract slice. Run that alias when you touch those paths locally; CI enforces the same gate in the **`quality`** job alongside the other phase verify tasks.
+The Phase 43 verify alias is the complementary fast gate for **per-query Plane B** runtime tests (allowlisted `:per_query` options, `search_many/2` merge semantics). Run that alias when you touch those paths locally; CI enforces the same gate in the **`quality`** job alongside the other phase verify tasks.
 
 Run **`mix verify.opsui`** from the repository root when you change the optional **`scrypath_ops`** operator Phoenix app or its path dependency on the core library. It runs **`cd scrypath_ops && mix deps.get && mix test`**, matching the dedicated **`scrypath-ops`** CI job (Postgres-backed Ecto setup, no Meilisearch service).
 

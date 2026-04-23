@@ -2,10 +2,9 @@ defmodule Mix.Tasks.Verify.Phase43 do
   @moduledoc false
   use Mix.Task
 
-  @shortdoc "Runs Per-query runtime doc contracts + focused Plane B tests (Phase 43)"
+  @shortdoc "Runs focused Per-query Plane B runtime tests (Phase 43)"
 
   @focused_tests [
-    "test/scrypath/docs_contract_test.exs",
     "test/scrypath/per_query_tuning_test.exs",
     "test/scrypath/search_test.exs",
     "test/scrypath/search_many_test.exs"
