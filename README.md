@@ -1,5 +1,7 @@
 # Scrypath
 
+[![CI](https://github.com/szTheory/scrypath/actions/workflows/ci.yml/badge.svg)](https://github.com/szTheory/scrypath/actions/workflows/ci.yml) [![Hex.pm](https://img.shields.io/hexpm/v/scrypath.svg)](https://hex.pm/packages/scrypath) [![HexDocs](https://img.shields.io/badge/hex-docs-blue.svg)](https://hexdocs.pm/scrypath) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://hex.pm/packages/scrypath)
+
 > Search indexing that feels native to Ecto.
 
 Scrypath, the Ecto-native search indexing library, helps Phoenix and Ecto teams add Meilisearch-backed search without hiding the operational work that keeps search in sync.
