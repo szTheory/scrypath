@@ -108,7 +108,7 @@ defmodule Scrypath.Meilisearch.Tasks do
 
   defp do_wait_for_task(task, config, started_at, poll_interval, timeout, polls)
        when task.state in @queued_statuses do
-    if timed_out?(started_at, timeout) do
+    if polls > 0 and timed_out?(started_at, timeout) do
       {{:error, {:timeout, task}}, polls}
     else
       Process.sleep(poll_interval)

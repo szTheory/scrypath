@@ -76,7 +76,12 @@ defmodule ScrypathOps.MixProject do
       setup: ["deps.get", "ecto.setup", "assets.setup", "assets.build"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["scrypath_ops.check_nav_contract", "ecto.create --quiet", "ecto.migrate --quiet", "test"],
+      test: [
+        "scrypath_ops.check_nav_contract",
+        "ecto.create --quiet",
+        "ecto.migrate --quiet",
+        "test"
+      ],
       "opsui.test_a11y": &opsui_test_a11y/1,
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.build": ["compile", "tailwind scrypath_ops", "esbuild scrypath_ops"],

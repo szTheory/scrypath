@@ -75,7 +75,9 @@ defmodule ScrypathOps.Playbook.StoreTest do
 
   test "rename and duplicate reject unsafe basenames", %{dir: dir} do
     assert {:error, :outside_workspace} = Store.rename_workspace_file(dir, "../x.json", "y.json")
-    assert {:error, :outside_workspace} = Store.duplicate_workspace_file(dir, "a.json", "../y.json")
+
+    assert {:error, :outside_workspace} =
+             Store.duplicate_workspace_file(dir, "a.json", "../y.json")
   end
 
   test "suggest_duplicate_basename/2 returns first free stem-n name", %{dir: dir} do

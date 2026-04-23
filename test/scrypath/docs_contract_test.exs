@@ -804,7 +804,9 @@ defmodule Scrypath.DocsContractTest do
 
         {:error, _} ->
           case File.read(".planning/milestones/v1.14-REQUIREMENTS.md") do
-            {:ok, body} -> body
+            {:ok, body} ->
+              body
+
             {:error, _} ->
               case File.read(".planning/milestones/v1.13-REQUIREMENTS.md") do
                 {:ok, body} -> body
