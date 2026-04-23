@@ -27,7 +27,7 @@ defmodule Scrypath.MultiSearch.Entries do
 
   # Largest finite IEEE-754 binary64 (approx); used instead of :math.classify_float/1
   # for portability across OTP releases.
-  @max_finite_double 1.7976931348623157e308
+  @max_finite_double 1.797_693_134_862_315_7e308
 
   @doc """
   Normalizes `entries` with `shared_opts`, returning `{:ok, list}` of
@@ -112,7 +112,12 @@ defmodule Scrypath.MultiSearch.Entries do
     do: {:error, {:invalid_options, {:federation_weight, :invalid_type}}}
 
   defp finite_float?(w) when is_float(w) do
-    w == w and abs(w) <= @max_finite_double
+    case :erlang.float_to_binary(w, [:short]) do
+      "nan" -> false
+      "inf" -> false
+      "-inf" -> false
+      _ -> abs(w) <= @max_finite_double
+    end
   end
 
   defp reject_shared_only_in_entry(entry_opts) do
