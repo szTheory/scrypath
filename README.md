@@ -59,10 +59,10 @@ end
 
 Then read these in order:
 
-- [Golden path](guides/golden-path.md) for the first working setup
-- [Getting Started](guides/getting-started.md) for the mental model
-- [Sync Modes and Visibility](guides/sync-modes-and-visibility.md) before choosing `:inline`, `:manual`, or `:oban`
-- [Guides overview](guides/overview.md) for the rest of the published docs
+- [Golden path](https://hexdocs.pm/scrypath/golden-path.html) for the first working setup
+- [Getting Started](https://hexdocs.pm/scrypath/getting-started.html) for the mental model
+- [Sync Modes and Visibility](https://hexdocs.pm/scrypath/sync-modes-and-visibility.html) before choosing `:inline`, `:manual`, or `:oban`
+- [Guides overview](https://hexdocs.pm/scrypath/overview.html) for the rest of the published docs
 
 For a runnable Phoenix consumer example, use `examples/phoenix_meilisearch/` in the repository checkout.
 
