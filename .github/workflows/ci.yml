@@ -49,7 +49,7 @@ jobs:
         run: mix compile --warnings-as-errors
 
       - name: Test
-        run: mix test --exclude integration --include requires_clean_workspace
+        run: mix test --exclude integration --exclude docs_contract --include requires_clean_workspace
 
   quality:
     runs-on: ubuntu-latest

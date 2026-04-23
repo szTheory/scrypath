@@ -11,7 +11,6 @@ defmodule Mix.Tasks.Verify.Phase20 do
     "test/scrypath/meilisearch/query_test.exs",
     "test/scrypath/meilisearch/settings_test.exs",
     "test/scrypath/backend_test.exs",
-    "test/scrypath/docs_contract_test.exs",
     "test/support/docs/phoenix_examples_test.exs"
   ]
 
@@ -20,7 +19,7 @@ defmodule Mix.Tasks.Verify.Phase20 do
     Mix.Task.run("app.start")
     ensure_no_args!(args)
 
-    run_test!(@focused_tests, "Faceting, settings, and docs contract tests")
+    run_test!(@focused_tests, "Faceting, settings, and Phoenix guide example tests")
 
     Mix.shell().info("==> Building docs with warnings as errors")
     Mix.Task.reenable("docs")

@@ -250,21 +250,24 @@ defmodule Scrypath.TelemetryTest do
 
   test "docs explain the sync mode matrix and async lifecycle contract" do
     readme = File.read!("README.md")
+    sync_guide = File.read!("guides/sync-modes-and-visibility.md")
     architecture = File.read!("ARCHITECTURE.md")
 
-    assert readme =~
+    assert sync_guide =~
              "requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded"
 
-    assert readme =~
-             "`sync_mode: :oban` means durable enqueue accepted, not search visibility completed."
+    assert sync_guide =~
+             "| `:oban` | the enqueue is durable | the backend write has not happened yet |"
 
-    assert readme =~
-             "retries, discarded jobs, stale deletes, and drift are normal operational realities"
+    assert sync_guide =~ "Accepted work is not the same thing as search visibility."
 
-    assert readme =~ "Scrypath v1 publicly targets Meilisearch first."
-    assert readme =~ "The public backend-native namespace remains `Scrypath.Meilisearch.*`."
+    assert sync_guide =~
+             "retry exhaustion, discarded jobs, and stale deletes are operational cases, not surprises"
 
-    assert readme =~ "does not promise public multi-backend parity"
+    assert readme =~ "Meilisearch-first in v1"
+    assert architecture =~ "`Scrypath.Meilisearch.*` is the explicit escape hatch"
+
+    assert readme =~ "not a promised public abstraction"
 
     assert architecture =~
              "| `:inline` | waits for terminal backend task success before returning |"

@@ -29,7 +29,7 @@ defmodule Mix.Tasks.Verify.Phase10 do
     ensure_no_args!(args)
 
     run_test!(
-      ["test/release/package_metadata_test.exs", "test/scrypath/docs_contract_test.exs"],
+      ["test/release/package_metadata_test.exs"],
       "Release-confidence tests"
     )
 

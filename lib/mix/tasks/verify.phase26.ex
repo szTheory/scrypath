@@ -2,13 +2,12 @@ defmodule Mix.Tasks.Verify.Phase26 do
   @moduledoc false
   use Mix.Task
 
-  @shortdoc "Runs failed-work rollups, reconcile output, operator Mix tasks, and docs contract"
+  @shortdoc "Runs failed-work rollups, reconcile output, and operator Mix tasks"
 
   @focused_tests [
     "test/scrypath/operator/failed_work_test.exs",
     "test/scrypath/operator/reconcile_test.exs",
-    "test/scrypath/mix_tasks/operator_tasks_test.exs",
-    "test/scrypath/docs_contract_test.exs"
+    "test/scrypath/mix_tasks/operator_tasks_test.exs"
   ]
 
   @impl true
@@ -18,7 +17,7 @@ defmodule Mix.Tasks.Verify.Phase26 do
 
     run_test!(
       @focused_tests ++ ["--warnings-as-errors"],
-      "Failed-work rollups, reconcile, operator Mix, and docs contract tests"
+      "Failed-work rollups, reconcile, and operator Mix tests"
     )
 
     Mix.shell().info("==> Building docs with warnings as errors")

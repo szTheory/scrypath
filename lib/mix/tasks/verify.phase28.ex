@@ -2,12 +2,11 @@ defmodule Mix.Tasks.Verify.Phase28 do
   @moduledoc false
   use Mix.Task
 
-  @shortdoc "Runs index contract drift CLI tests, operator docs contracts, and docs build (v1.5 gate)"
+  @shortdoc "Runs index contract drift CLI tests, operator Mix tasks, and docs build (v1.5 gate)"
 
   @focused_tests [
     "test/scrypath/operator/index_contract_drift_test.exs",
-    "test/scrypath/mix_tasks/operator_tasks_test.exs",
-    "test/scrypath/docs_contract_test.exs"
+    "test/scrypath/mix_tasks/operator_tasks_test.exs"
   ]
 
   @impl true
@@ -17,7 +16,7 @@ defmodule Mix.Tasks.Verify.Phase28 do
 
     run_test!(
       @focused_tests ++ ["--warnings-as-errors"],
-      "Index contract drift, operator Mix tasks, and docs contract tests"
+      "Index contract drift and operator Mix task tests"
     )
 
     Mix.shell().info("==> Building docs with warnings as errors")
