@@ -31,6 +31,64 @@ Release Please manages versioned entries after this baseline.
 - Adopters should read the **Versioning and upgrades** section in `README.md` for semver posture and upgrade expectations; maintainers should follow `docs/releasing.md` for verify gates and Release Please (without duplicating the full `mix verify.phase11` task list here).
 - Release-parity gates were motivated by a historical **tag vs default-branch** divergence in an earlier cycle; see `docs/releasing.md` § Historical context.
 
+## [0.3.5](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.4...scrypath-v0.3.5) (2026-04-23)
+
+
+### Features
+
+* **39-01:** quads and federation_weight validation in Entries.normalize ([118368e](https://github.com/szTheory/scrypath/commit/118368e2f704dbd2efe554ce841bcc2a95a2bdbc))
+* **39-01:** search_many quad pipeline and fed_opts on search_many rows ([4cde8fc](https://github.com/szTheory/scrypath/commit/4cde8fcbe0b2effcf300015544850cee4ac706c8))
+* **39-02:** Meilisearch federationOptions.weight per query ([d11add2](https://github.com/szTheory/scrypath/commit/d11add28c1d4595af32f982ac4769be31ea1df62))
+* **39-02:** merge_hit_order decode and MultiSearchResult.merge_projection ([39e62fb](https://github.com/szTheory/scrypath/commit/39e62fb4bb8f1292dcb6d881a22f041ec8a562b6))
+* **39-02:** weighted FakeBackend, tests, and federation docs ([a9e794d](https://github.com/szTheory/scrypath/commit/a9e794dee6f14433a396b2874555a4d769a0254e))
+* **41-01:** add Mix.Tasks.Verify.Phase41 doc-contract verify slice ([881c536](https://github.com/szTheory/scrypath/commit/881c53608441454d304e5381a0d8b704c543ff48))
+* **41-01:** register verify.phase41 in Mix.Project cli preferred_envs ([328b827](https://github.com/szTheory/scrypath/commit/328b827862b2debb96436984daf557198a618d9d))
+* **43-01-01:** validate per_query and project Meilisearch ranking fields ([bfb4682](https://github.com/szTheory/scrypath/commit/bfb4682938709047abfdef11e5bda2f1c5db2ad7))
+* **43-01-02:** surface ranking score details in search telemetry ([2a4182c](https://github.com/szTheory/scrypath/commit/2a4182cb8615d19e8cdb201cd70f4c27b383da2d))
+* **43-02-01:** shallow Map.merge for per_query in search_many normalize ([cf0bf48](https://github.com/szTheory/scrypath/commit/cf0bf48c48487a9a54a13923aa581c779675382c))
+* **43-03-01:** add mix verify.phase43 thin composer ([4467849](https://github.com/szTheory/scrypath/commit/4467849e3c86b1748c5dce0cc35ad5bc1475c58d))
+* **44:** add ScrypathOps Phoenix shell and prod auth gate ([9d0a90e](https://github.com/szTheory/scrypath/commit/9d0a90ec373b54110dc9707ed157efb859381cb3))
+* **48-01:** add ScrypathOpsWeb.Nav.primary for ops nav ([70b847e](https://github.com/szTheory/scrypath/commit/70b847e94bf230a04c1f271bc0cdb01111e57ed8))
+* **48-01:** render ops shell nav from Nav.primary/0 ([63f76a9](https://github.com/szTheory/scrypath/commit/63f76a98312159f428e507664b5fd68c11d8786b))
+* **48-02:** add mix scrypath_ops.check_nav_contract ([b29fa28](https://github.com/szTheory/scrypath/commit/b29fa28a30765570ebbe74f2e9ce613eef664bd0))
+* **48-03:** add posture headline, evidence, and next checks for JTBD 1 ([91b2257](https://github.com/szTheory/scrypath/commit/91b2257dc53928e88226aa7eece47a913cd3b7b3))
+* **49-01:** add ops_main_width variant to ops shell layout ([bd191f2](https://github.com/szTheory/scrypath/commit/bd191f20b98311afc99a39fe1948e8aff9263cf5))
+* **49-01:** add OpsUi page header and panel components ([dfc7f62](https://github.com/szTheory/scrypath/commit/dfc7f6272d604ebed6cd0c052838b597e08294cb))
+* **49-01:** import OpsUi in html_helpers for LiveViews ([6ed65c9](https://github.com/szTheory/scrypath/commit/6ed65c93e1525eb1c38e06998b39e07247bc3bfa))
+* **50-01:** add skip link and ops-main landmark to :ops layout ([e2dd725](https://github.com/szTheory/scrypath/commit/e2dd72550c32df92b69d55adf798b3f2a1d22bc3))
+* **50-01:** add stable ops-page-title id on ops_page_header h1 ([ec70de1](https://github.com/szTheory/scrypath/commit/ec70de191340febb27647102b119a1a07b206ae2))
+* **50-02:** add landmark sections and table column scope on PostureLive ([426dd65](https://github.com/szTheory/scrypath/commit/426dd65b19a23c7760fa786dd87737508a0f31f0))
+* **50-02:** semantic sections and table headers on FailedSyncLive ([8684b02](https://github.com/szTheory/scrypath/commit/8684b028a05955e2d7024de1c2828b05b875fe4a))
+* **50-02:** tables and sections for reconcile and drift on SyncDriftLive ([0e15487](https://github.com/szTheory/scrypath/commit/0e1548796582949be3e25ad26729341f742bc2fe))
+* **50-03:** fieldset chapters and federation status region on SearchLive ([0bb5115](https://github.com/szTheory/scrypath/commit/0bb5115241cc8ebd5719fc811ddc5882ab3344d8))
+* **52-02:** add Scrypath.Search.Error for bang search failures ([123b506](https://github.com/szTheory/scrypath/commit/123b506afd647ad4bc527fefc9a516eef4c4799f))
+* **52-02:** raise Scrypath.Search.Error from bang search helpers ([377beff](https://github.com/szTheory/scrypath/commit/377beff148b8202f47e723c46285f75b7e7c07e1))
+* **60-01:** add Playbook.Runner dispatch bridge for validated playbooks ([d6adf68](https://github.com/szTheory/scrypath/commit/d6adf683b3ab380c24bb2baed7f07862bec3f1f7))
+* **60-01:** add Playbook.Store with basename-only path containment ([2dfd1f6](https://github.com/szTheory/scrypath/commit/2dfd1f68f26615d68b65fd7bd96e241bc5e18848))
+* **60-01:** wire SCRYPATH_OPS_PLAYBOOK_DIR and dev/test workspace dirs ([51efe12](https://github.com/szTheory/scrypath/commit/51efe12f71d55a858e7fbb1a8fe7b93b1c1c79b4))
+* **60-02,60-03:** PlaybookLive UI and ops nav for saved playbooks ([731fc7c](https://github.com/szTheory/scrypath/commit/731fc7c2a82bb078aa3713a566c3690ea6dac267))
+* **60-02:** register PlaybookLive at /ops/playbooks ([46acc02](https://github.com/szTheory/scrypath/commit/46acc022ac0f5c5c178bccd1ada52adedcb92b78))
+* **62-01:** optional playbook title, description, and tags in V1 ([c00a02b](https://github.com/szTheory/scrypath/commit/c00a02b4b3799a2da0a160ff6b52c41d3f919db8))
+* **62-02:** playbook store rename, duplicate, and basename suggest ([507f6f1](https://github.com/szTheory/scrypath/commit/507f6f1fd8565fbe2773337b666e6b96214b159a))
+* **62-03:** SearchLive save search as playbook with V1 preview ([baa9a51](https://github.com/szTheory/scrypath/commit/baa9a514a5d6f66a2f646441e947593ba518cdbd))
+* **62-04:** PlaybookLive catalog metadata, rename, and duplicate ([1b8f1f3](https://github.com/szTheory/scrypath/commit/1b8f1f3477f957c1236bb0021115b3b7b63e404a))
+* **ci:** add scrypath-ops CI job for OPSUI (47-01) ([9857450](https://github.com/szTheory/scrypath/commit/9857450923af62cc574a9fdfdb1211d70d34452b))
+* **FED-02:** expand {:all, …} in search_many before normalize ([d66edb8](https://github.com/szTheory/scrypath/commit/d66edb8cb53475b984739efa68e94a7646677005))
+* **ops:** phase 59 playbook v1 codec, docs, and planning closure ([868d04e](https://github.com/szTheory/scrypath/commit/868d04e10ea7885666b6c3a398cee40796e562ae))
+* **opsui:** add mix verify.opsui and formatter inputs (47-02) ([3e88a6f](https://github.com/szTheory/scrypath/commit/3e88a6feee2b5893f74ced0564020bf5a8ef4c87))
+* **opsui:** complete phase 46 search playground and federation honesty ([7de764b](https://github.com/szTheory/scrypath/commit/7de764bc796846d8b637763de11aa1e737c29473))
+* **opsui:** ship phase 45 posture, failed sync, and drift LiveViews ([2e11eda](https://github.com/szTheory/scrypath/commit/2e11eda838f3d687098fd1ec221b4cc4251f2f95))
+* **phase-58:** B1 library QoL (LIB-01..03) ([7c91f87](https://github.com/szTheory/scrypath/commit/7c91f87146631c699cbaf443f32cb659b8b373d9))
+* **scrypath_ops:** add playbooks validate mix task and examples (63-02) ([bfb174f](https://github.com/szTheory/scrypath/commit/bfb174f593d5a92e6f78312a1083f043d34d9c1d))
+* **scrypath_ops:** complete phase 49 ops UI scaffold, theming, and shell tests ([be5b197](https://github.com/szTheory/scrypath/commit/be5b1977016211280ac0cb9dd39efbb70bccc6e4))
+
+
+### Bug Fixes
+
+* **57-01:** restore STATE frontmatter; link EVID-01 ledger in ROADMAP (57-01-06/07) ([04e5c92](https://github.com/szTheory/scrypath/commit/04e5c9228ef7b60c57695a5996aa8c9bcd87f8a9))
+* restore main CI stability ([#13](https://github.com/szTheory/scrypath/issues/13)) ([126340d](https://github.com/szTheory/scrypath/commit/126340dc758d5957990f09f71bda70d5d98e6221))
+* **state:** repair frontmatter after phase 57 session ([4eda255](https://github.com/szTheory/scrypath/commit/4eda255d404412d0af7e32c2a236ee945245c4b1))
+
 ## [0.3.4](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.3...scrypath-v0.3.4) (2026-04-20)
 
 
