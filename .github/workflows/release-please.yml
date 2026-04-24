@@ -32,7 +32,7 @@ jobs:
       # node24 runner—watch releases: https://github.com/googleapis/release-please-action
       - name: Run Release Please
         id: release
-        uses: googleapis/release-please-action@v4.4.1
+        uses: googleapis/release-please-action@v5.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
