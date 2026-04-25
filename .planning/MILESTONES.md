@@ -1,5 +1,73 @@
 # Milestones
 
+## v1.18 Sigra integration (Opened: 2026-04-25)
+
+**Phases planned:** **3** (**71–73**), **10** requirements (**SIGRA-01**–**SIGRA-10**)
+
+**Hex:** **`scrypath 0.3.4`** on Hex; **in-repo only** — `scrypath_ops` is path-loaded and not Hex-published. **No Hex bump claimed for this planning milestone.**
+
+**Goal:** Ship a named, optional Sigra integration in **`scrypath_ops`** that gives Sigra-using Phoenix hosts a credible answer to *"who can run sensitive Scrypath operator actions, and how is it audited?"* — without changing **`scrypath`** core or making Sigra aware of Scrypath.
+
+**Planned phases:**
+
+- **Phase 71: Sigra integration foundation** — **SIGRA-01**, **SIGRA-02**, **SIGRA-03**, **SIGRA-04**, **SIGRA-05**, **SIGRA-07**, **SIGRA-08** — optional Sigra dep + `OPSUI_AUTH_MODE=sigra` allowlist, `OperatorContext` / `OnMount` / `Gating` modules with module-level compile guards, `scrypath.ops.*` audit prefix taxonomy, two-grep CI namespace fence.
+- **Phase 72: Sensitive-action wiring in OPSUI LiveViews** — **SIGRA-06** — wire **four** existing or new LiveView handlers (`playbook confirm_delete`, `failed_sync retry`, `posture swap_live`, `sync_drift swap_live`) through `Gating.gate_sensitive_action/3`. Playbook `run` / `run_now` are explicitly **not** gated in v1.18.
+- **Phase 73: Adopter proof — guide and worked example** — **SIGRA-09**, **SIGRA-10** — `guides/integrations/sigra.md`, `examples/phoenix_sigra_ops/` (SQLite-backed Phoenix app, no Meilisearch noise), and a path-gated CI smoke job.
+
+**Hard boundaries (locked at open):**
+
+- **`scrypath` core stays auth-agnostic** — zero Sigra references in `lib/scrypath/`; no `:operator` keyword option on public `Scrypath.search/3` / `reindex` / `sync` APIs in v1.18.
+- **Sigra remains unaware of Scrypath** — no Scrypath references inside the Sigra source tree.
+- **Optional dep + module-level compile guards** — `{:sigra, "~> 0.2", optional: true}` plus `if Code.ensure_loaded?(Sigra.Session) do ... end` wrapping each `defmodule`. CI verifies `scrypath_ops` compiles with `:sigra` absent.
+- **No new hex package** — `ScrypathOps.Integrations.Sigra.*` lives in-repo; `scrypath_sigra` extraction deferred to **SIGRA-FUT-02**.
+- **Host-owned wiring** — no automatic router / plug installation; no in-place sudo modal (uses `push_navigate` to host-owned route).
+
+**Pre-open audit:** Approved architectural plan **`~/.claude/plans/so-i-m-considering-rippling-ladybug.md`** + `.planning/research/{STACK,ARCHITECTURE,PITFALLS,FEATURES,SUMMARY}.md` for v1.18.
+
+**Archives:** *(pending — created at milestone close via `/gsd-complete-milestone`)*
+
+---
+
+## v1.17 Integration confidence & adopter proof (Shipped + archived: 2026-04-23)
+
+**Phases completed:** **3** (**68–70**), **6** requirements (**INTG-01**–**INTG-06**)
+
+**Hex:** **`scrypath 0.3.4`** on Hex; **in-repo readiness checkpoint; Hex publish tracked separately** — no dedicated Hex bump claimed for this planning milestone.
+
+**Key accomplishments:**
+
+- Canonical Phoenix adopter proof: **`examples/phoenix_meilisearch/`** covers **`:inline`**, **`:manual`**, and **`:oban`** plus the support / compatibility contract, with bounded docs-contract coverage so README / CONTRIBUTING / guides / example wayfinding cannot drift (**INTG-01**, **INTG-03**, **INTG-04**) — **Phase 68**
+- Maintainer-facing **`mix verify.adopter`** spine with documented fast-vs-live modes, README / CONTRIBUTING / example README / docs contracts / CI all aligned to it (**INTG-02**) — **Phase 69**
+- Exactly three bounded adopter-friction papercuts closed with regression / contract / example assertions, plus rolling planning truth and frozen **`v1.17-*`** archive trio with an explicit *outside-integration-feedback-next* verdict (**INTG-05**, **INTG-06**) — **Phase 70**
+
+**Pre-close audit:** **`milestones/v1.17-MILESTONE-AUDIT.md`** (**`passed`** — `requirements: 6/6`, `phases: 3/3`, `integration: 4/4`, `flows: 4/4`, `nyquist: compliant`, `outside_feedback_next: true`).
+
+**Automation note:** **`gsd-sdk query milestone.complete`** remained unavailable for this repo, so **`milestones/v1.17-*`** and rolling-file updates were completed manually.
+
+**Archives:** `milestones/v1.17-ROADMAP.md`, `milestones/v1.17-REQUIREMENTS.md`, `milestones/v1.17-MILESTONE-AUDIT.md` · **Git tag:** `v1.17` (planning milestone marker)
+
+---
+
+## v1.16 Playbook execution & operator honesty (Shipped + archived: 2026-04-22)
+
+**Phases completed:** **3** (**65–67**), **6** requirements (**OPS3-01**–**OPS3-06**)
+
+**Hex:** **`scrypath 0.3.4`** on Hex; **in-repo milestone; Hex publish tracked separately** — no dedicated Hex bump claimed for this planning milestone.
+
+**Key accomplishments:**
+
+- Explicit saved-playbook run lifecycle plus structured failure surfaces with canonical doc links (**OPS3-01**, **OPS3-02**) — **Phase 65**
+- Runner/library contract parity, raw-reason preservation, and representative regression coverage (**OPS3-03**) — **Phase 66**
+- Bounded execution/doc contracts, canonical JTBD fixtures, and truthful `v1.16-*` milestone bookkeeping (**OPS3-04**–**OPS3-06**) — **Phase 67**
+
+**Pre-close audit:** **`milestones/v1.16-MILESTONE-AUDIT.md`** (**`passed`**).
+
+**Automation note:** **`gsd-sdk query milestone.complete`** remains unavailable for this repo, so **`milestones/v1.16-*`** and rolling-file updates were completed manually.
+
+**Archives:** `milestones/v1.16-ROADMAP.md`, `milestones/v1.16-REQUIREMENTS.md`, `milestones/v1.16-MILESTONE-AUDIT.md` · **Git tag:** `v1.16` (planning milestone marker)
+
+---
+
 ## v1.15 OPSUI second slice (Shipped + archived: 2026-04-22)
 
 **Phases completed:** **3** (**62–64**), **8** requirements (**OPS2-01**–**OPS2-08**)

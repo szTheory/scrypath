@@ -6,9 +6,9 @@ status: defining_requirements
 last_updated: "2026-04-25T00:00:00Z"
 last_activity: 2026-04-25
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
-  total_plans: 0
+  total_plans: 7
   completed_plans: 0
   percent: 0
 ---
@@ -21,17 +21,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-25)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** **v1.18 — Sigra integration** opened 2026-04-25; defining requirements before roadmapping. Approved architectural plan: `~/.claude/plans/so-i-m-considering-rippling-ladybug.md`.
+**Current focus:** **v1.18 — Sigra integration** opened 2026-04-25; **REQUIREMENTS.md** (SIGRA-01..10) and **ROADMAP.md** (Phases 71–73) locked. Approved architectural plan: `~/.claude/plans/so-i-m-considering-rippling-ladybug.md`.
 
 ## Current Position
 
-**Phase:** Not started (defining requirements)
+**Phase:** **71** — Sigra integration foundation (planned, not yet started)
 
-**Plan:** —
+**Plan:** — (Phase 71 has 3 planned plans: `71-01-PLAN.md`, `71-02-PLAN.md`, `71-03-PLAN.md`)
 
-**Status:** Defining requirements
+**Status:** Roadmapped — ready for `/gsd-discuss-phase 71` then `/gsd-plan-phase 71`
 
-**Last activity:** 2026-04-25 — Milestone v1.18 Sigra integration started
+**Last activity:** 2026-04-25 — Milestone v1.18 Sigra integration opened; SIGRA-01..10 requirements and Phases 71–73 roadmap committed
 
 ## Accumulated Context
 
@@ -67,13 +67,13 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-1. **`/gsd-plan-phase 71`** — once REQUIREMENTS.md and ROADMAP.md are written and approved.
-2. **`/gsd-discuss-phase 71`** — gather context and clarify approach before planning Phase 71.
+1. **`/gsd-discuss-phase 71`** — gather context and clarify the foundation-phase approach (compile-guard shape, OperatorContext field hydration sources, gating funnel ergonomics, audit-prefix taxonomy) before planning. **Recommended next step.**
+2. **`/gsd-plan-phase 71`** — produce **`71-{01,02,03}-PLAN.md`** once discussion locks the gray areas.
 3. **`/gsd-progress`** — snapshot the v1.18 opening state.
 
 ---
 
-*Last updated: 2026-04-25 — **v1.18 — Sigra integration** opened; defining requirements*
+*Last updated: 2026-04-25 — **v1.18 — Sigra integration** opened; SIGRA-01..10 requirements and phases 71–73 roadmap committed*
 
 **Prior milestone:** **v1.17** — Integration confidence & adopter proof — **2026-04-23** (readiness checkpoint).
 
@@ -81,8 +81,8 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 **Completed:** **v1.17** shipped + archived in-repo (**2026-04-23**) — phases **68–70** — **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next:** define **SIGRA-*** requirements, then roadmap v1.18 phases (continuing from Phase 71).
+**Next:** **`/gsd-discuss-phase 71`** to clarify foundation-phase gray areas before plan generation.
 
 **Completed Phase:** 70 (Papercuts and readiness checkpoint) — 2/2 plans — 2026-04-23
 
-**Planned Phase:** TBD (Phase 71+ in v1.18 roadmap)
+**Planned Phases:** 71 (foundation, 3 plans), 72 (LiveView wiring, 2 plans), 73 (guide + worked example, 2 plans) — see **`.planning/ROADMAP.md`** § *Phases (milestone v1.18 — in progress)*.

@@ -1,7 +1,7 @@
 # Milestone candidates — developer-first roadmap stack
 
 **Purpose:** Prioritized themes for **`/gsd-new-milestone`** — **onboarding + QoL** for people using and contributing to Scrypath; **avoid busywork** and maintainer-only work masquerading as product.  
-**Last reviewed:** 2026-04-22 — **Tier A** (**A1**, **A2**) closed with **v1.12**; **v1.13** in flight for public polish & narrative coherence (**POLISH-***); next default pull is **B1** (evidence-led library QoL).
+**Last reviewed:** 2026-04-23 — **v1.17** closed as a readiness checkpoint; outside integration feedback is the next default pull before any more in-repo breadth.
 
 ---
 
@@ -27,7 +27,7 @@ The library has strong **Ecto-native indexing + Meilisearch sync modes**, **sear
 
 | Theme | Why it still matters | Where it shows up in notes |
 |--------|----------------------|----------------------------|
-| **Consumer “first hour” + ongoing DX** | Golden path exists; gaps are **discoverability**, **example parity**, **clearer errors**, optional **scaffold** only when evidence-backed | **v1.6** arc + **`.planning/PROJECT.md`** adoption narrative |
+| **Consumer “first hour” + ongoing DX** | Golden path exists; remaining leverage is **example parity**, **support-contract clarity**, **verify discoverability**, and a few evidence-backed papercuts | **v1.6** arc + **`.planning/PROJECT.md`** adoption narrative |
 | **One contributor verify spine for OPSUI** | Contributors should not hunt five docs for the right **`mix verify.*`** subset | **47-CONTEXT** D-04 sense |
 | **OPSUI + real backend in CI** | Deferred on purpose; library integration jobs carry Meilisearch truth | **47-CONTEXT** `<deferred>` |
 | **Planning / maintainer tooling friction** | Milestone archival pain — **helps maintainers**, not Hex consumers | **`.planning/RETROSPECTIVE.md`** |
@@ -47,12 +47,13 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 | **A1** | **Consumer onboarding + day-to-day QoL** | **Done (v1.12)** — golden path ↔ README contracts, pitfalls, actionable errors |
 | **A2** | **Single contributor entry for optional OPSUI** | **Done (v1.12)** — root **`mix verify.opsui`** + docs/CI locks |
 
-### Tier B — After Tier A (**default queue post–v1.13**)
+### Tier B — Integration-confidence follow-up queue
 
 | # | Theme | Notes |
 |---|--------|--------|
-| **B1** | **Library QoL from real confusion** | Small API affordances / messages only when tied to **concrete** adopter or maintainer pain (issues, dogfood) — **next** after **v1.13** unless evidence forces a hotfix |
-| **B2** | **OPSUI “second slice”** | **OPSUI-FUT-01** saved queries / playbooks — **operator-first**; bump priority only if framed as **dev learning / replay** for search + federation debugging |
+| **B1** | **Integration confidence & adopter proof** | **Shipped as v1.17 readiness checkpoint:** canonical Phoenix proof, support contract, adopter verify spine, and exactly three bounded papercuts |
+| **B2** | **Library QoL from real confusion** | Only reopen after outside integration feedback identifies concrete confusion that survives the readiness pass |
+| **B3** | **OPSUI depth only after proof** | Saved-query or deeper operator workflows move back up only if external adopter evidence says they block real usage |
 
 ### Tier C — Defer until a failure mode is proven
 
@@ -83,18 +84,19 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 | 1 | **A1** | **Shipped v1.12** |
 | 2 | **A2** | **Shipped v1.12** |
 | 3 | **v1.13** (**POLISH-***) | Voice + Hex narrative + contributor entry (**`milestones/v1.13-REQUIREMENTS.md`**) |
-| 4 | **B1** | Stops speculative churn; tie work to named pain |
-| 5 | **B2**, then **C*** | OPSUI depth, then heavy CI/E2E **only with proof** |
+| 4 | **B1** | **Shipped in v1.17** as the readiness checkpoint |
+| 5 | **Outside integration feedback** | Default next pull before any new in-repo polish or library QoL follow-up |
+| 6 | **B3**, then **C*** | OPSUI depth, then heavy CI/E2E **only with proof** |
 | Parallel | **D*** | When annoyance cost exceeds fix cost — do not headline a consumer milestone here |
 
 ---
 
 ## How to use this file
 
-1. Before **`/gsd-new-milestone`**, pick **one dominant tier anchor** (after **v1.12**, usually **B1** or a polish theme like **v1.13** **POLISH-***) for the milestone name and scope.
+1. Before **`/gsd-new-milestone`**, pick **one dominant tier anchor**. The current default is **B1**: **integration confidence and adopter proof**.
 2. Optionally split strong themes into **`.planning/seeds/SEED-*.md`** so **`/gsd-new-milestone`** auto-offers matching seeds (see **`gsd-plant-seed`**).
 3. After each shipped milestone, **update this file** — what landed, what moved, new evidence from issues or dogfood.
 
 ---
 
-*Sources: **PROJECT.md**, **STATE.md**, **MILESTONES.md**, **RETROSPECTIVE.md**, **v1.10-** / **v1.11-REQUIREMENTS.md**, **ROADMAP.md**, **`milestones/v1.10-ROADMAP.md`** (Phase 47 deferrals, archived).*
+*Sources: **PROJECT.md**, **STATE.md**, **MILESTONES.md**, **RETROSPECTIVE.md**, **ROADMAP.md**, **CONTRIBUTING.md**, **README.md**, **examples/phoenix_meilisearch/README.md**.*

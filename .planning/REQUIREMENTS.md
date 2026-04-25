@@ -1,64 +1,96 @@
-# Requirements: Scrypath — Milestone v1.16
+# Requirements: Scrypath — Milestone v1.18
 
-**Defined:** 2026-04-22  
+**Defined:** 2026-04-25
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## v1.16 Requirements
+## v1.18 Requirements
 
-### Playbook execution (OPSUI)
+### Optional integration foundation
 
-- [ ] **OPS3-01**: Operator can start a saved **`playbook_format: 1`** playbook from the catalog or detail view and observe an explicit **idle → running → success** (or **failure**) lifecycle in the UI without ambiguous intermediate states.
+- [ ] **SIGRA-01**: `scrypath_ops` recognizes `OPSUI_AUTH_MODE=sigra` as a supported auth mode and adds `{:sigra, "~> 0.2", optional: true}` to `scrypath_ops/mix.exs`. Hosts that do not opt in (any other `OPSUI_AUTH_MODE` value or absent `:sigra` dep) compile and run unchanged; the published `scrypath` hex package contains zero Sigra references.
 
-- [ ] **OPS3-02**: When a playbook run fails, the operator sees a **structured, copy-friendly** error surface that names the failure class and links to **canonical** maintainer or adopter docs (guides, operator docs, or **`@moduledoc`** targets) within **two hops** — no orphan stack traces as the only signal.
+- [ ] **SIGRA-02**: Every Sigra reference in `scrypath_ops/lib/` and `scrypath_ops/test/` is wrapped at the `defmodule` level by `if Code.ensure_loaded?(Sigra.Session) do ... end`. `mix compile` in `scrypath_ops` succeeds with `:sigra` absent from the dep tree, verified by an explicit CI step that compiles `scrypath_ops` after removing `:sigra`.
 
-### Runner–library contract
+### Operator context contract
 
-- [x] **OPS3-03**: Playbook execution uses **documented, stable** result and error shapes aligned with the same **`Scrypath`** / Mix-facing contracts used outside OPSUI where applicable; **automated tests** fail if OPSUI and core diverge on representative success and failure fixtures.
+- [ ] **SIGRA-03**: Provide `%ScrypathOps.Integrations.Sigra.OperatorContext{}` as an IDs-only struct with exactly four fields: `:user_id`, `:active_org_id`, `:impersonator_user_id`, `:sudo_at`. The builder reads `:user_id` and `:active_org_id` from `socket.assigns.current_scope` (and `current_scope.active_organization.id`), reads `:impersonator_user_id` from the same scope, and reads `:sudo_at` from the Plug session via the `%Sigra.Session{}` struct. Unit tests assert no PII keys (`:ip`, `:user_agent`, `:geo_city`, `:geo_country_code`, `:email`, `:name`) are present in the built struct.
 
-### Verification, examples, and close
+### LiveView mount integration
 
-- [ ] **OPS3-04**: **`mix verify.opsui`** and **`docs_contract_test`** (or equivalent doc-contract anchors) cover **new execution surfaces** so LiveView, runner wiring, and contributor docs cannot drift silently.
+- [ ] **SIGRA-04**: Provide `ScrypathOps.Integrations.Sigra.OnMount` as a sibling hook to the existing `ScrypathOpsWeb.Live.OnMount`. Hosts wire it manually as a second entry in the router's `live_session :ops, on_mount: [...]` list. The hook assigns `:operator_context` to the socket from `current_scope` + Plug session when both are present; assigns `nil` (or no-ops cleanly) when scope is absent or Sigra is not loaded. The integration **does not** modify the existing `ScrypathOpsWeb.Live.OnMount` and **does not** auto-install router wiring. The integration guide ships a copy-pasteable host-side plug snippet that copies `sudo_at` from `%Sigra.Session{}` into the Plug session before LiveView mount.
 
-- [ ] **OPS3-05**: **`examples/playbooks/`** ships **at least two** JTBD-shaped fixtures (for example **sync triage** and **federation / multi-search inspection**) that **agree** with guide copy and are referenced from operator or contributor docs.
+### Sensitive-action funnel
 
-- [ ] **OPS3-06**: Rolling planning artifacts (**`MILESTONES.md`**, **`PROJECT.md`**, **`ROADMAP.md`**, this file’s traceability) reflect **v1.16** close discipline: frozen **`milestones/v1.16-*`** trio prepared at milestone end; **Hex** / **`mix.exs`** narrative only when a release is in scope for the close phase.
+- [ ] **SIGRA-05**: Provide `ScrypathOps.Integrations.Sigra.Gating.gate_sensitive_action(socket, action_atom, fun)` that, in order: (1) reads `:operator_context` from socket assigns and executes `fun` directly when nil (no-op mode); (2) blocks with a flash error and `{:noreply, socket}` when `impersonator_user_id` is set; (3) navigates to a host-configured sudo confirm path with a `return_to` parameter when `sudo_at` is older than the configured `:sudo_window` (default 300s, matching Sigra); (4) executes `fun`; (5) emits `Sigra.Audit.log_safe("scrypath.ops.<action>", nil, audit_opts)`. Boot validation raises a clear error when `OPSUI_AUTH_MODE=sigra` is set without `:sudo_confirm_path` configured.
 
-## v2+ Requirements (not in v1.16)
+- [ ] **SIGRA-06**: Existing OPSUI sensitive mutating handlers route through `gate_sensitive_action/3` when `OPSUI_AUTH_MODE=sigra`. v1.18 wires exactly **four** LiveView handlers: `playbook_live.ex` `confirm_delete`, `failed_sync_live.ex` `retry` (new handler), `posture_live.ex` `swap_live` (new handler), and `sync_drift_live.ex` `swap_live` (new handler). Playbook `run` / `run_now` (which use `start_async/3`) are explicitly **not** gated in v1.18; the integration guide documents this limitation. Each wired handler has a LiveView test that asserts the gate fires under `OPSUI_AUTH_MODE=sigra`.
 
-### Operator UI depth (still deferred)
+### Audit taxonomy
 
-- **OPSUI-FUT-02** — Meilisearch cluster “vendor dashboard” parity — see **`milestones/v1.10-REQUIREMENTS.md`**.
+- [ ] **SIGRA-07**: `Gating` declares a private `@action_config` map at compile time that defines stable `scrypath.ops.*` audit prefixes for all sensitive actions. v1.18 wires four (`scrypath.ops.playbook_delete`, `scrypath.ops.failed_work_retry`, `scrypath.ops.swap_live` from posture, and `scrypath.ops.swap_live` from sync drift sharing the same prefix), and reserves prefixes for three future actions (`scrypath.ops.reindex`, `scrypath.ops.delete_documents`, `scrypath.ops.hot_apply`). The audit metadata map carries operation context only — never `OperatorContext` PII fields or `%Sigra.Session{}` PII fields. A contract test asserts `scrypath.ops.*` does not collide with Sigra's default reserved prefixes.
+
+### Boundary discipline
+
+- [ ] **SIGRA-08**: CI fails the `quality` job in `.github/workflows/ci.yml` when (a) any `Sigra.` reference appears under `lib/scrypath/`, or (b) any `Sigra.` reference appears under `scrypath_ops/lib/` or `scrypath_ops/test/` outside `scrypath_ops/lib/scrypath_ops/integrations/sigra/` and `scrypath_ops/test/scrypath_ops/integrations/sigra/`. The fence runs unconditionally on every push and PR. A planted-violation test (CI dry run with a deliberate offending line) confirms the fence triggers.
+
+### Adopter proof
+
+- [ ] **SIGRA-09**: Publish `guides/integrations/sigra.md` covering: optional-integration framing ("this guide is for hosts already using Sigra"), router pipeline wiring (`Sigra.Plug.FetchSession`, the host-side sudo-into-session snippet, stacked `on_mount` list), `Gating.gate_sensitive_action/3` usage for custom handlers, the host-owned sudo confirm route contract with `return_to`, the copy-pasteable telemetry handler snippet, the `scrypath.ops.*` audit taxonomy, and explicit caveats covering process-dict attribution limits across `Task` / `start_async` / Oban, sudo-window mismatch behavior, impersonation read visibility, and PII metadata responsibility.
+
+- [ ] **SIGRA-10**: Ship `examples/phoenix_sigra_ops/` as a standalone Phoenix app (`mix phx.new --no-mailer` baseline) using `ecto_sqlite3` for Sigra's session/audit schemas, no Meilisearch dependency, and a stub Scrypath backend. The example demonstrates: login → navigate to `/ops` → attempt a Tier-1 action without sudo → redirect to sudo confirm with `return_to` → confirm → action executes → audit row written with `operator_id` and `active_org_id`; plus an impersonation scenario where a Tier-1 action is blocked. A dedicated CI smoke job runs `mix deps.get && mix compile --warnings-as-errors && mix test` inside the example, gated by path filter to `scrypath_ops/` and `examples/phoenix_sigra_ops/`. Sigra version constraint in the example's `mix.exs` matches `scrypath_ops/mix.exs` exactly.
+
+## Future requirements (deferred)
+
+### Core surface expansion (deferred to v2+)
+
+- **SIGRA-FUT-01** — Org scoping inside `scrypath` core search/sync APIs (needs schema/index design — separate conversation, possibly v2).
+- **SIGRA-FUT-02** — Public `scrypath_sigra` hex package extraction (defer until 3+ public modules in the integration namespace or a second ops-side integration appears).
+- **SIGRA-FUT-03** — `:operator` keyword option on core `Scrypath.search/3`, `reindex`, and `sync` APIs (telemetry-handler approach is sufficient for v1; revisit when adopters request tighter coupling).
+
+### UX depth (deferred)
+
+- **SIGRA-FUT-04** — In-place sudo confirmation modal (couples to host UI/component choices; v1 uses `push_navigate` to host route).
+- **SIGRA-FUT-05** — Plug re-export wrappers around `Sigra.Plug.RequireSudo` / `Sigra.Plug.ForbidDuringImpersonation` (pure surface-area tax; host wires Sigra plugs directly per the guide).
+- **SIGRA-FUT-06** — Async-safe attribution for playbook `run` / `run_now` (closure-based propagation across `start_async`).
 
 ### Heavy CI / Tier C
 
-- Playwright-on-all-flows, Meilisearch-in-OPSUI CI — **`milestone-candidates.md`**.
+- Browser E2E for the worked example, visual regression, or Postgres-backed example smoke remain Tier C unless v1.18 surfaces a real coverage gap.
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| **OPSUI-FUT-02** vendor-style cluster observability | Explicitly deferred; not part of honest playbook execution loop. |
-| **Net-new search ranking / indexing features** | v1.16 is operator-trust and contract depth, not search algorithm breadth. |
-| **Mandatory Meilisearch in default OPSUI CI** | Remains **Tier C** until a proven regression gap; stub-first discipline continues. |
+| Any change under `lib/scrypath/` | Core stays auth-agnostic; published hex package must contain zero Sigra references. |
+| Any change inside the Sigra source tree | Sigra remains unaware of Scrypath. Boundary maintained by convention + Sigra-side CI. |
+| Automatic router or plug installation | Host wires explicitly so the security boundary stays visible. |
+| New `scrypath_sigra` hex package | Premature for one integration namespace; revisit at SIGRA-FUT-02 trigger. |
+| In-place sudo confirmation modal | Couples to host component library; v1 uses `push_navigate`. |
+| Gating playbook `run` / `run_now` | Async attribution unsolved in v1; documented limitation. |
+| Org scoping in core search/sync/reindex APIs | Separate product surface; out of scope for an ops-attribution milestone. |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| OPS3-01 | Phase 65 | Complete |
-| OPS3-02 | Phase 65 | Complete |
-| OPS3-03 | Phase 66 | Complete |
-| OPS3-04 | Phase 67 | Pending |
-| OPS3-05 | Phase 67 | Pending |
-| OPS3-06 | Phase 67 | Pending |
+| SIGRA-01 | Phase 71 | Pending |
+| SIGRA-02 | Phase 71 | Pending |
+| SIGRA-03 | Phase 71 | Pending |
+| SIGRA-04 | Phase 71 | Pending |
+| SIGRA-05 | Phase 71 | Pending |
+| SIGRA-06 | Phase 72 | Pending |
+| SIGRA-07 | Phase 71 | Pending |
+| SIGRA-08 | Phase 71 | Pending |
+| SIGRA-09 | Phase 73 | Pending |
+| SIGRA-10 | Phase 73 | Pending |
 
 **Coverage:**
 
-- v1.16 requirements: **6** total  
-- Mapped to phases: **6**  
+- v1.18 requirements: **10** total
+- Mapped to phases: **10**
 - Unmapped: **0** ✓
 
 ---
 
-*Requirements defined: 2026-04-22*  
-*Last updated: 2026-04-22 after `/gsd-new-milestone` — v1.16 opened*
+*Requirements defined: 2026-04-25*
+*Last updated: 2026-04-25 after `/gsd-new-milestone` resume — v1.18 opened*
