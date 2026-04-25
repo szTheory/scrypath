@@ -18,49 +18,133 @@
 - [x] **`v1.13` shipped + archived in-repo** (2026-04-22 shipped · 2026-04-21 archived) — *Public polish & narrative coherence* — phases **54–56**, **5** requirements — [archive](milestones/v1.13-ROADMAP.md) · [requirements](milestones/v1.13-REQUIREMENTS.md)
 - [x] **`v1.14` shipped + archived in-repo** (**2026-04-22**) — *Library QoL and operator playbooks* — phases **57–61**, **10** requirements — [archive](milestones/v1.14-ROADMAP.md) · [requirements](milestones/v1.14-REQUIREMENTS.md) · [audit](milestones/v1.14-MILESTONE-AUDIT.md)
 - [x] **`v1.15` shipped + archived in-repo** (**2026-04-22**) — *OPSUI second slice* — phases **62–64**, **8** requirements — [archive](milestones/v1.15-ROADMAP.md) · [requirements](milestones/v1.15-REQUIREMENTS.md) · [audit](milestones/v1.15-MILESTONE-AUDIT.md)
-- [ ] **`v1.16` in progress** (opened **2026-04-22**) — *Playbook execution & operator honesty* — phases **65–67** (planned), **6** requirements — [requirements](REQUIREMENTS.md)
+- [x] **`v1.16` shipped + archived in-repo** (**2026-04-22**) — *Playbook execution & operator honesty* — phases **65–67**, **6** requirements — [archive](milestones/v1.16-ROADMAP.md) · [requirements](milestones/v1.16-REQUIREMENTS.md) · [audit](milestones/v1.16-MILESTONE-AUDIT.md)
+- [x] **`v1.17` shipped + archived in-repo** (**2026-04-23**) — *Integration confidence & adopter proof* — phases **68–70**, **6** requirements — [archive](milestones/v1.17-ROADMAP.md) · [requirements](milestones/v1.17-REQUIREMENTS.md) · [audit](milestones/v1.17-MILESTONE-AUDIT.md)
+- [ ] **`v1.18` in progress** (opened **2026-04-25**) — *Sigra integration* — phases **71–73** (planned), **10** requirements — [requirements](REQUIREMENTS.md)
 
-## Phases (milestone v1.16 — in progress)
+## Phases (milestone v1.18 — in progress)
 
-**Opened:** 2026-04-22 — **OPS3-01**–**OPS3-06** — canonical list: [`.planning/REQUIREMENTS.md`](REQUIREMENTS.md)
+**Opened:** 2026-04-25 — **SIGRA-01**–**SIGRA-10** — canonical list: [`.planning/REQUIREMENTS.md`](REQUIREMENTS.md)
 
-### Phase 65: Playbook run lifecycle (OPSUI)
+### Phase 71: Sigra integration foundation
 
-- [x] **Phase 65: Playbook run lifecycle (OPSUI)** — **OPS3-01**, **OPS3-02** — operator can **run** a saved **`playbook_format: 1`** playbook from catalog or detail with explicit **idle / running / success / failure** UI; failures surface **structured** errors with **canonical doc links** within two hops. Completed 2026-04-22.
+- [ ] **Phase 71: Sigra integration foundation** — **SIGRA-01**, **SIGRA-02**, **SIGRA-03**, **SIGRA-04**, **SIGRA-05**, **SIGRA-07**, **SIGRA-08** — add the optional Sigra dep + `OPSUI_AUTH_MODE=sigra` allowlist entry, ship the three integration modules (`OperatorContext`, `OnMount`, `Gating`) under `ScrypathOps.Integrations.Sigra.*` with module-level compile guards, declare the `scrypath.ops.*` audit prefix taxonomy, and stand up the two-grep CI namespace fence in the `quality` job.
+
+**Plans:** 3 plans
+
+Plans:
+- [ ] `71-01-PLAN.md` — Add the optional Sigra dep, `OPSUI_AUTH_MODE=sigra` allowlist, and compile-without-Sigra CI verification (SIGRA-01, SIGRA-02).
+- [ ] `71-02-PLAN.md` — Implement `OperatorContext` + `OnMount` + `Gating` with module-level compile guards and PII-safety unit tests (SIGRA-03, SIGRA-04, SIGRA-05).
+- [ ] `71-03-PLAN.md` — Lock the `scrypath.ops.*` action taxonomy + audit-prefix contract test, and ship the two-grep namespace fence in `.github/workflows/ci.yml` (SIGRA-07, SIGRA-08).
 
 **Success criteria (observable):**
 
-1. Starting a run from **catalog** and from **detail** both enter **running**, then resolve to **success** or **failure** without ambiguous stuck states on stubbed adapters used in CI.
-2. A **forced failure** fixture shows a **non-empty** error class/message and **at least one** working outbound link to maintainer or adopter documentation.
-3. **`mix verify.opsui`** stays green for the default contributor path after Phase 65 changes land.
+1. `mix compile` in `scrypath_ops` succeeds in two CI scenarios — with `:sigra` present and with `:sigra` removed from the dep tree.
+2. Unit tests prove `%OperatorContext{}` has exactly four fields and contains zero PII keys; `Gating.gate_sensitive_action/3` exhibits the documented impersonation / sudo-stale / fresh-sudo branches.
+3. The two-grep namespace fence in CI fails on a planted `Sigra.` reference in `lib/scrypath/` and on a planted `Sigra.` reference in `scrypath_ops/lib/` outside the integrations namespace.
 
-### Phase 66: Runner–library contract
+### Phase 72: Sensitive-action wiring in OPSUI LiveViews
 
-- [x] **Phase 66: Runner–library contract** — **OPS3-03** — **`Playbook.Runner`** (and adjacent code) uses **documented** result and **`{:error, _}`** shapes consistent with **`Scrypath`** / Mix operator paths; **automated tests** lock representative success and failure parity.
-
-**Success criteria (observable):**
-
-1. A maintainer can point to a **single doc section** (guide, operator doc, or **`@moduledoc`**) that states the **contract** exercised by playbook runs.
-2. Tests fail if OPSUI runner code maps or wraps errors **differently** from the library reference path for the same fixture input.
-3. No new **silent** rescue paths that swallow **`{:error, term}`** without telemetry or user-visible attribution.
+- [ ] **Phase 72: Sensitive-action wiring in OPSUI LiveViews** — **SIGRA-06** — wire exactly four existing or new LiveView handlers (`playbook_live.ex` `confirm_delete`, `failed_sync_live.ex` `retry`, `posture_live.ex` `swap_live`, `sync_drift_live.ex` `swap_live`) through `Gating.gate_sensitive_action/3` under `OPSUI_AUTH_MODE=sigra`, with LiveView tests proving the gate fires. Playbook `run` / `run_now` are explicitly NOT gated in this phase.
 
 **Plans:** 2 plans
 
 Plans:
-- [x] `66-01-PLAN.md` — Freeze the canonical runner contract in `Runner` and keep schema docs linked, not duplicated.
-- [x] `66-02-PLAN.md` — Add the representative parity matrix and downstream raw-reason regression coverage.
-
-### Phase 67: Verification, JTBD examples, milestone bookkeeping
-
-- [ ] **Phase 67: Verification, JTBD examples, milestone bookkeeping** — **OPS3-04**, **OPS3-05**, **OPS3-06** — extend **`mix verify.opsui`** / **`docs_contract_test`** for execution surfaces; ship **≥ two** JTBD **`examples/playbooks/`** fixtures aligned with docs; prepare **`milestones/v1.16-*`** freeze + rolling traceability (and **Hex** / **`mix.exs`** narrative **only** if a release is in scope for close).
+- [ ] `72-01-PLAN.md` — Wire `playbook_live` `confirm_delete` and `failed_sync_live` `retry` through the gate, including new `retry` handler and LiveView tests.
+- [ ] `72-02-PLAN.md` — Wire `posture_live` and `sync_drift_live` `swap_live` (new handlers) through the gate, including LiveView tests for impersonation and stale-sudo branches.
 
 **Success criteria (observable):**
 
-1. **`mix verify.opsui`** fails if execution UI strings, doc anchors, or contributor instructions drift from implementation (within the bounded anchors chosen in planning).
-2. **`examples/playbooks/`** contains **≥ two** named fixtures referenced from operator or contributor documentation with matching **on-disk** JSON.
-3. **`REQUIREMENTS.md`** traceability shows **Complete** for **OPS3-01**–**OPS3-06** at milestone close; **`milestones/v1.16-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`** exists (audit may follow **`/gsd-complete-milestone`** discipline).
+1. The four named LiveView handlers produce a `scrypath.ops.*` audit row when invoked under `OPSUI_AUTH_MODE=sigra` with a fresh sudo session.
+2. The same four handlers block (impersonation) or push_navigate to the configured sudo confirm path with `return_to` (stale sudo) under the corresponding test fixtures.
+3. Playbook `run` / `run_now` continue to function unchanged; no new gate is applied to those handlers.
+
+### Phase 73: Adopter proof — guide and worked example
+
+- [ ] **Phase 73: Adopter proof — guide and worked example** — **SIGRA-09**, **SIGRA-10** — publish `guides/integrations/sigra.md` with the canonical wiring snippets and pitfalls, ship `examples/phoenix_sigra_ops/` as a SQLite-backed Phoenix app exercising the full sudo + audit path, and add a path-gated CI smoke job for the example.
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] `73-01-PLAN.md` — Author `guides/integrations/sigra.md` (router wiring, sudo-into-session snippet, telemetry handler, audit taxonomy, async/PII/impersonation/sudo-window caveats).
+- [ ] `73-02-PLAN.md` — Scaffold `examples/phoenix_sigra_ops/` with `ecto_sqlite3`, stub Scrypath backend, sudo + impersonation scenario tests, and a dedicated path-gated CI smoke job pinned to the same Sigra constraint as `scrypath_ops/mix.exs`.
+
+**Success criteria (observable):**
+
+1. `guides/integrations/sigra.md` exists and a docs-contract anchor (added in this phase) verifies the canonical sections (`## Router wiring`, `## Sudo confirm route`, `## Telemetry`, `## Audit taxonomy`, `## Caveats`).
+2. `examples/phoenix_sigra_ops/` boots in CI under the new smoke job; the impersonation scenario test asserts a Tier-1 action is blocked, and the fresh-sudo scenario test asserts an audit row is written with `operator_id` and `active_org_id`.
+3. The example's `mix.exs` Sigra constraint matches `scrypath_ops/mix.exs` exactly (assertion via repo-root or example-level test).
 
 ## Phases (history)
+
+<details>
+<summary>✅ v1.17 — Phases 68–70 — OPENED 2026-04-22 · SHIPPED + archived 2026-04-23 · <em>Integration confidence & adopter proof</em></summary>
+
+**Opened:** 2026-04-22 — **INTG-01**–**INTG-06** — canonical list: [`.planning/REQUIREMENTS.md`](REQUIREMENTS.md)  
+**Closed:** 2026-04-23 — readiness checkpoint passed; outside integration feedback is the next default pull.
+
+### Phase 68: Example proof and support contract
+
+- [x] **Phase 68: Example proof and support contract** (2026-04-23) — **INTG-01**, **INTG-03**, **INTG-04** — turned **`examples/phoenix_meilisearch`** into the canonical adopter proof, published one support/compatibility contract, and locked README / guides / CONTRIBUTING / example wayfinding to those sources.
+
+**Plans:** 2 plans
+
+Plans:
+- [x] `68-01-PLAN.md` — Publish the support-and-compatibility guide and rewire short-doc wayfinding to it.
+- [x] `68-02-PLAN.md` — Prove `:manual` in the Phoenix example and lock the canonical docs/example contract surface.
+
+**Success criteria (observable):**
+
+1. The Phoenix example README and tests show one clear path for **`:inline`**, **`:manual`**, and **`:oban`** adoption against the real example app, without forcing readers to assemble the story from scattered guides.
+2. A maintainer can point to a **single** support / compatibility document for Elixir, OTP, Phoenix/Ecto-shaped adoption, and the pinned Meilisearch minor used in CI and the example.
+3. **`docs_contract_test.exs`** (or equivalent bounded contracts) fails if README, CONTRIBUTING, guides, and the example README drift on startup order, env names, or canonical “start here” links.
+
+### Phase 69: Adopter verify spine
+
+- [x] **Phase 69: Adopter verify spine** (2026-04-23) — **INTG-02** — added one root maintainer-facing verify path for integration confidence that proves the example, support contract, and adopter docs still agree, while keeping the live Meilisearch path explicit rather than hidden.
+
+**Plans:** 2 plans
+
+Plans:
+- [x] `69-01-PLAN.md` — Build the `mix verify.adopter` semantic task, CLI registration, and task-level failure coverage.
+- [x] `69-02-PLAN.md` — Lock README, CONTRIBUTING, example README, docs contracts, and CI to the adopter verify command family.
+
+**Success criteria (observable):**
+
+1. From the repo root, one command gives maintainers a coherent adoption-confidence signal without requiring them to already know which phase-specific verify tasks matter for adopter truth.
+2. The verify path supports a documented **fast** mode and a documented **live** mode, and the distinction between them is explicit in task help and contributor docs.
+3. CI wiring uses the same command shape or directly linked constituent commands so the maintainer story does not drift from automation.
+
+### Phase 70: Papercuts and readiness checkpoint
+
+- [x] **Phase 70: Papercuts and readiness checkpoint** (2026-04-23) — **INTG-05**, **INTG-06** — closed exactly three bounded adopter-friction papercuts, froze the milestone as a readiness checkpoint, and recorded that outside integration feedback should displace more in-repo polish unless new evidence says otherwise.
+
+**Plans:** 2 plans
+
+Plans:
+- [x] `70-01-PLAN.md` — Close the three bounded docs/support/verify-order papercuts and pin them with docs-contract assertions.
+- [x] `70-02-PLAN.md` — Update rolling planning truth and freeze the `v1.17-*` milestone archive trio with an explicit outside-feedback-next verdict.
+
+**Success criteria (observable):**
+
+1. The milestone closes **no more than three** papercuts, and each one has a bounded regression test, contract test, or example assertion that would fail on recurrence.
+2. No phase widens the public search/indexing surface beyond what the repo already ships; all changes are adoption-proof, support-contract, or friction-reduction work.
+3. Milestone-close artifacts clearly answer whether Scrypath is ready to seek more outside integration feedback before opening another in-repo polish milestone.
+
+Full detail: [milestones/v1.17-ROADMAP.md](milestones/v1.17-ROADMAP.md).
+
+</details>
+
+<details>
+<summary>🟡 v1.16 — Phases 65–67 — OPENED 2026-04-22 · SHIPPED + archived 2026-04-22 · <em>Playbook execution & operator honesty</em></summary>
+
+- [x] **Phase 65: Playbook run lifecycle (OPSUI)** — **OPS3-01**, **OPS3-02** — saved playbook runs from catalog/detail with explicit lifecycle and actionable doc-linked failures.
+- [x] **Phase 66: Runner–library contract** — **OPS3-03** — canonical result/error contract, schema-doc alignment, representative parity matrix, and raw-reason regression coverage.
+- [x] **Phase 67: Verification, JTBD examples, milestone bookkeeping** — **OPS3-04**–**OPS3-06** — execution-surface contracts, canonical playbook fixtures, and truthful `v1.16-*` archive artifacts.
+
+Full detail: [milestones/v1.16-ROADMAP.md](milestones/v1.16-ROADMAP.md).
+
+</details>
 
 <details>
 <summary>✅ v1.15 — Phases 62–64 — SHIPPED + archived 2026-04-22 · Hex <code>scrypath 0.3.4</code> (in-repo line) · <em>OPSUI second slice</em></summary>
@@ -224,7 +308,13 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**Current milestone:** **TBD** — next arc not opened — see **`/gsd-new-milestone`**.
+**Current milestone:** **v1.18 Sigra integration** — opened **2026-04-25**, **3** phases (**71–73**) planned, **10** requirements (**SIGRA-01**..**SIGRA-10**).
+
+**Next default pull:** complete Phase 71 (foundation) before sensitive-action wiring or worked-example work.
+
+**`v1.17` archived (in-repo)** — **2026-04-23** shipped + archived — **3** phases (**68–70**), **6** requirements (**INTG-01**–**INTG-06**); see **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+
+**`v1.16` archived (in-repo)** — **2026-04-22** shipped + archived — **3** phases (**65–67**), **6** requirements (**OPS3-01**–**OPS3-06**); see **`milestones/v1.16-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **`v1.15` archived (in-repo)** — **2026-04-22** shipped + archived — **3** phases (**62–64**), **8** requirements (**OPS2-01**–**OPS2-08**); see **`milestones/v1.15-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
@@ -245,4 +335,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - **Tier D** — maintainer-only planning hygiene — same file; do not headline consumer milestones.
 
 ---
-*Last updated: 2026-04-22 — **`v1.15`** milestone shipped + archived; next milestone **TBD***
+*Last updated: 2026-04-25 — **`v1.18 Sigra integration`** opened; phases **71–73** planned*
