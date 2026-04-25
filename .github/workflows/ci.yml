@@ -78,6 +78,12 @@ jobs:
       - name: Install dependencies
         run: mix deps.get
 
+      - name: Compile scrypath_ops without optional deps (SIGRA-02)
+        working-directory: scrypath_ops
+        env:
+          MIX_ENV: test
+        run: mix compile --no-optional-deps --warnings-as-errors
+
       - name: Check formatting
         run: mix format --check-formatted
 
@@ -122,6 +128,32 @@ jobs:
 
       - name: Per-query runtime gate (`mix verify.phase43`)
         run: mix verify.phase43
+
+  adopter-verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.19.0"
+          otp-version: "28.1"
+
+      - uses: actions/cache@v5
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-adopter-verify-${{ hashFiles('mix.lock') }}
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Adopter verify (`mix verify.adopter`)
+        run: mix verify.adopter
 
   phase5-verification:
     runs-on: ubuntu-latest
@@ -307,9 +339,14 @@ jobs:
       - uses: actions/cache@v5
         with:
           path: |
+            deps
+            _build
             examples/phoenix_meilisearch/deps
             examples/phoenix_meilisearch/_build
           key: ${{ runner.os }}-phx-example-${{ hashFiles('examples/phoenix_meilisearch/mix.lock') }}-${{ hashFiles('mix.lock') }}
+
+      - name: Install root dependencies
+        run: mix deps.get
 
       - name: Install postgres client (pg_isready)
         run: sudo apt-get update -qq && sudo apt-get install -y postgresql-client
@@ -336,11 +373,8 @@ jobs:
           echo "Meilisearch failed to start"
           exit 1
 
-      - name: Phoenix example integration (`examples/phoenix_meilisearch`)
-        run: |
-          cd examples/phoenix_meilisearch
-          mix deps.get
-          mix test
+      - name: Phoenix example integration (`mix verify.adopter --live`)
+        run: mix verify.adopter --live
 
   # Path gate for OPSUI: always run on push to main; on pull_request only when
   # library or scrypath_ops paths change (see phase 47 CONTEXT D-03).
@@ -420,5 +454,8 @@ jobs:
           echo "Postgres failed to become ready"
           exit 1
 
-      - name: ScrypathOps (`mix verify.opsui`)
-        run: mix verify.opsui
+      - name: ScrypathOps tests
+        run: |
+          cd scrypath_ops
+          mix deps.get
+          mix test

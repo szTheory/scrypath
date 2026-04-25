@@ -8,15 +8,8 @@ defmodule ScrypathOps.Application do
   @impl true
   def start(_type, _args) do
     if Application.get_env(:scrypath_ops, :validate_opsui_auth_on_start) do
-      mode = System.get_env("OPSUI_AUTH_MODE")
-
-      if mode in ScrypathOps.Security.allowed_opsui_auth_modes() do
-        start_supervisor()
-      else
-        {:error,
-         {:invalid_opsui_auth_mode,
-          "OPSUI_AUTH_MODE must be set for production to a documented value (allowed: basic, proxy_headers)."}}
-      end
+      :ok = ScrypathOps.Security.validate!()
+      start_supervisor()
     else
       start_supervisor()
     end
