@@ -310,17 +310,15 @@ assert html =~ "Run finished"
 
 All claims in this research were verified from repository files, lockfiles, local environment probes, or targeted test runs in this session. [VERIFIED: codebase grep][VERIFIED: local env][VERIFIED: targeted test run]
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should Phase 66 add local `@typedoc` aliases inside `Runner`?**
-   - What we know: discuss-phase leaves that as discretion, and the public contract must remain the tuple seam either way. [VERIFIED: 66-CONTEXT.md]
-   - What's unclear: whether typedoc aliases improve maintainability enough to justify extra surface in the module docs. [VERIFIED: 66-CONTEXT.md]
-   - Recommendation: treat typedocs as optional polish only if they make the `@moduledoc` clearer without introducing a new public abstraction vocabulary. [VERIFIED: 66-CONTEXT.md]
+   - Resolution: treat local `@typedoc` aliases as optional polish, not a requirement of the phase. The plan should not depend on them, and any typedoc added must remain subordinate to the raw tuple seam rather than introducing new public abstraction vocabulary. [VERIFIED: 66-CONTEXT.md]
+   - Planning consequence: Plan 01 centers the canonical `@moduledoc` contract text; typedocs are permitted only if they make that section clearer without changing the public contract. [VERIFIED: 66-CONTEXT.md][VERIFIED: .planning/phases/66-runner-library-contract/66-01-PLAN.md]
 
 2. **Which multi-search edge case should occupy the single operator-relevant parity slot?**
-   - What we know: the context allows one multi-search-specific failure or edge case, and the repo already has tested candidates like `{:validation_failed, schema, reason}`, `{:invalid_options, {:federation_merge_requires_native_search_many, ...}}`, and partial failures inside `%MultiSearchResult{failures: ...}`. [VERIFIED: 66-CONTEXT.md][VERIFIED: test/scrypath/search_many_test.exs][VERIFIED: scrypath_ops/test/support/search_playground_stub_adapter.ex]
-   - What's unclear: whether planning should prioritize a hard tuple error or an operator-visible partial-success result. [VERIFIED: test/scrypath/search_many_test.exs][VERIFIED: scrypath_ops/test/support/search_playground_stub_adapter.ex]
-   - Recommendation: prefer `{:invalid_options, {:federation_merge_requires_native_search_many, %{backend: _}}}` for the parity slot because it is a true cross-boundary tuple error and already has strong core coverage. [VERIFIED: test/scrypath/search_many_test.exs][VERIFIED: scrypath_ops/docs/playbook-schema-v1.md]
+   - Resolution: use `{:invalid_options, {:federation_merge_requires_native_search_many, %{backend: _}}}` as the operator-relevant multi-search parity case. It is a true cross-boundary tuple error, already has strong core coverage, and keeps Phase 66 focused on semantic parity rather than partial-result presentation. [VERIFIED: test/scrypath/search_many_test.exs][VERIFIED: scrypath_ops/docs/playbook-schema-v1.md]
+   - Planning consequence: Plan 02 should prefer that tuple error for the multi-search-specific slot unless an equivalent existing fixture proves clearer while preserving the same contract shape. [VERIFIED: .planning/phases/66-runner-library-contract/66-02-PLAN.md]
 
 ## Environment Availability
 

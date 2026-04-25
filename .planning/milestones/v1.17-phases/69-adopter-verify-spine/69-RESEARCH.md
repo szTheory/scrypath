@@ -353,17 +353,15 @@ Scrypath already uses this pattern to run a subordinate app from the repository 
 | A1 | Extending `docs_contract_test.exs` plus one small task-focused test is likely lower-friction than creating a wholly separate fast-mode suite. [ASSUMED] | Common Pitfalls / Open Questions | Low; planner may choose a separate suite if help/arg assertions become awkward. |
 | A2 | Warnings are sufficient for “warning signs” examples even though exact failure mode will depend on the final task implementation. [ASSUMED] | Common Pitfalls | Low; affects wording, not architecture. |
 
-## Open Questions
+## Resolved Decisions
 
-1. **Should `--fast` exist explicitly in addition to the default fast path?**
-   - What we know: The phase context allows `--fast` as optional discretion, but no-flag must remain fast by default. [VERIFIED: .planning/phases/69-adopter-verify-spine/69-CONTEXT.md]
-   - What's unclear: Whether explicit `--fast` improves CI/help clarity enough to justify a second public flag. [ASSUMED]
-   - Recommendation: Prefer supporting `--fast` only if it materially simplifies docs and CI wording; otherwise keep the public surface to no-flag fast plus `--live`. [ASSUMED]
+1. **`--fast` will not be a public flag in Phase 69.**
+   - Decision: keep the public surface to no-flag fast mode plus explicit `--live`.
+   - Why: the phase context requires no-flag fast mode, and adding `--fast` does not add defended capability for maintainers or CI. Keeping only `mix verify.adopter` and `mix verify.adopter --live` matches the intended command family with less public surface area. [VERIFIED: .planning/phases/69-adopter-verify-spine/69-CONTEXT.md]
 
-2. **Should fast-mode assertions live entirely in `docs_contract_test.exs` or be split?**
-   - What we know: The repo already centralizes many maintainer-facing truth contracts in `docs_contract_test.exs`, including example/CI ordering and `verify.opsui` parity checks. [VERIFIED: test/scrypath/docs_contract_test.exs]
-   - What's unclear: Whether adopter task help and argument-failure behavior fit cleanly into that file or deserve a focused task test. [ASSUMED]
-   - Recommendation: Keep truth-contract assertions in `docs_contract_test.exs`; add one focused task test file only for behavior that is awkward to assert through file-content contracts alone. [ASSUMED]
+2. **Fast-mode truth contracts stay in `docs_contract_test.exs`, with one focused Mix-task test file for runtime behavior.**
+   - Decision: keep docs/help/CI/example/support-guide parity in `test/scrypath/docs_contract_test.exs`, and add `test/mix/tasks/verify_adopter_test.exs` only for behavior that is awkward to prove via file-content assertions alone.
+   - Why: the repo already centralizes maintainer-facing truth contracts in `docs_contract_test.exs`, while Mix-task runtime behavior such as arg rejection and loud missing-env failures fits the existing `test/mix/tasks/*` style better. [VERIFIED: test/scrypath/docs_contract_test.exs] [VERIFIED: test/mix/tasks/verify_workspace_clean_test.exs]
 
 ## Environment Availability
 
