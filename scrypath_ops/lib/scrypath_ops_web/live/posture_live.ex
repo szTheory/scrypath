@@ -8,6 +8,8 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   use ScrypathOpsWeb, :live_view
 
+  alias ScrypathOps.Integrations.Sigra.Gating
+
   @meilisearch_ops_guide "https://github.com/szTheory/scrypath/blob/main/guides/meilisearch-operations.md"
 
   @impl true
@@ -45,6 +47,12 @@ defmodule ScrypathOpsWeb.PostureLive do
     )
 
     {:noreply, socket}
+  end
+
+  def handle_event("swap_live", %{"schema" => mod_str}, socket) do
+    mod = mod_from_flat!(mod_str)
+
+    {:noreply, swap_live(socket, mod)}
   end
 
   defp load_posture(socket) do
@@ -103,6 +111,15 @@ defmodule ScrypathOpsWeb.PostureLive do
     |> assign(:posture_headline, headline)
     |> assign(:posture_evidence, evidence)
     |> assign(:next_checks, Enum.take(checks, 5))
+  end
+
+  defp swap_live(socket, mod) do
+    Gating.gate_sensitive_action(socket, :swap_live, fn ->
+      case Scrypath.Meilisearch.swap_indexes(mod, socket.assigns.scrypath_opts) do
+        {:ok, _result} -> load_posture(socket)
+        {:error, reason} -> put_flash(socket, :error, "Swap live failed: #{inspect(reason)}")
+      end
+    end)
   end
 
   defp jtbd_state(:empty_allowlist, _) do
@@ -195,6 +212,18 @@ defmodule ScrypathOpsWeb.PostureLive do
     else
       checks
     end
+  end
+
+  defp module_flat_name(mod) when is_atom(mod) do
+    mod |> Atom.to_string() |> String.replace_prefix("Elixir.", "")
+  end
+
+  defp mod_from_flat!(str) when is_binary(str) do
+    str
+    |> String.trim()
+    |> String.split(".")
+    |> Enum.map(&String.to_atom/1)
+    |> Module.concat()
   end
 
   defp sort_rows(rows) do
@@ -291,6 +320,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                   <th scope="col">Queue retrying</th>
                   <th scope="col">Queue failed</th>
                   <th scope="col">Queue last OK</th>
+                  <th scope="col">Actions</th>
                 </tr>
               </thead>
               <tbody class="text-sm leading-snug tabular-nums">
@@ -315,9 +345,20 @@ defmodule ScrypathOpsWeb.PostureLive do
                         <td>{length(status.queue.retrying)}</td>
                         <td>{length(status.queue.failed)}</td>
                         <td>{format_state_ts(status.queue.last_succeeded)}</td>
+                        <td>
+                          <button
+                            type="button"
+                            phx-click="swap_live"
+                            phx-value-schema={module_flat_name(mod)}
+                            class="btn btn-xs btn-outline"
+                            phx-disable-with="Swapping..."
+                          >
+                            Swap live index
+                          </button>
+                        </td>
                       <% {:error, reason} -> %>
                         <td class="font-mono text-xs">{inspect(mod)}</td>
-                        <td colspan="10" class="text-error">
+                        <td colspan="11" class="text-error">
                           fetch error: {inspect(reason)}
                         </td>
                     <% end %>
