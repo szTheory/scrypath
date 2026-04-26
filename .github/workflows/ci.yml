@@ -84,6 +84,9 @@ jobs:
           MIX_ENV: test
         run: mix compile --no-optional-deps --warnings-as-errors
 
+      - name: Run namespace fence (`mix scrypath.namespace_fence`)
+        run: mix scrypath.namespace_fence
+
       - name: Check formatting
         run: mix format --check-formatted
 
