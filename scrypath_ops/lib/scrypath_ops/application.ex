@@ -7,8 +7,9 @@ defmodule ScrypathOps.Application do
 
   @impl true
   def start(_type, _args) do
+    :ok = ScrypathOps.Security.validate!()
+
     if Application.get_env(:scrypath_ops, :validate_opsui_auth_on_start) do
-      :ok = ScrypathOps.Security.validate!()
       start_supervisor()
     else
       start_supervisor()
