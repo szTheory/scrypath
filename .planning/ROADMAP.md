@@ -33,9 +33,9 @@
 **Plans:** 3 plans
 
 Plans:
-- [ ] `71-01-PLAN.md` — Add the optional Sigra dep, `OPSUI_AUTH_MODE=sigra` allowlist, and compile-without-Sigra CI verification (SIGRA-01, SIGRA-02).
+- [x] `71-01-PLAN.md` — Add the optional Sigra dep, `OPSUI_AUTH_MODE=sigra` allowlist, and compile-without-Sigra CI verification (SIGRA-01, SIGRA-02).
 - [ ] `71-02-PLAN.md` — Implement `OperatorContext` + `OnMount` + `Gating` with module-level compile guards and PII-safety unit tests (SIGRA-03, SIGRA-04, SIGRA-05).
-- [ ] `71-03-PLAN.md` — Lock the `scrypath.ops.*` action taxonomy + audit-prefix contract test, and ship the two-grep namespace fence in `.github/workflows/ci.yml` (SIGRA-07, SIGRA-08).
+- [x] `71-03-PLAN.md` — Lock the `scrypath.ops.*` action taxonomy + audit-prefix contract test, and ship the two-grep namespace fence in `.github/workflows/ci.yml` (SIGRA-07, SIGRA-08).
 
 **Success criteria (observable):**
 
