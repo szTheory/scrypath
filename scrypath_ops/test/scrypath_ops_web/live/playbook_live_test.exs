@@ -15,6 +15,8 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     prev_url = Application.get_env(:scrypath_ops, :meilisearch_url)
     prev_adapter = Application.get_env(:scrypath_ops, :search_playground_adapter)
     prev_stub_variant = Application.get_env(:scrypath_ops, :search_stub_variant)
+    prev_sigra = Application.get_env(:scrypath_ops, :sigra)
+    prev_opsui_auth_mode = System.get_env("OPSUI_AUTH_MODE")
 
     Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA, OpsPostB])
     Application.put_env(:scrypath_ops, :backend, Scrypath.Meilisearch)
@@ -23,6 +25,13 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     Application.put_env(:scrypath_ops, :meilisearch_url, "http://localhost:7700")
     Application.put_env(:scrypath_ops, :search_playground_adapter, SearchPlaygroundStubAdapter)
     Application.put_env(:scrypath_ops, :search_stub_variant, :ok)
+
+    Application.put_env(:scrypath_ops, :sigra,
+      sudo_confirm_path: "/sudo/confirm",
+      sudo_window: 300
+    )
+
+    System.put_env("OPSUI_AUTH_MODE", "sigra")
 
     on_exit(fn ->
       restore = fn k, v ->
@@ -38,6 +47,11 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
       restore.(:meilisearch_url, prev_url)
       restore.(:search_playground_adapter, prev_adapter)
       restore.(:search_stub_variant, prev_stub_variant)
+      restore.(:sigra, prev_sigra)
+
+      if prev_opsui_auth_mode == nil,
+        do: System.delete_env("OPSUI_AUTH_MODE"),
+        else: System.put_env("OPSUI_AUTH_MODE", prev_opsui_auth_mode)
     end)
 
     :ok
@@ -69,6 +83,31 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
   end
 
   test "run with stub adapter shows explicit lifecycle transition to success", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    json =
+      Jason.encode!(%{
+        "playbook_format" => 1,
+        "mode" => "search",
+        "schema" => "ScrypathOps.Test.OpsPostA",
+        "q" => "x",
+        "opts" => %{}
+      })
+
+    view
+    |> form("form[phx-submit='import_paste']", %{json: json})
+    |> render_submit()
+
+    running_html = render_click(view, "run", %{})
+    assert running_html =~ "Running playbook"
+    assert running_html =~ "Cancel run"
+
+    html = render_async(view)
+    assert html =~ "Run finished"
+    refute html =~ "data-testid=\"run-failure-panel\""
+  end
+
+  test "bounded execution contract keeps the stable lifecycle affordances", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
 
     json =
@@ -579,6 +618,132 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert File.exists?(path)
   end
 
+  test "sigra confirm delete redirects stale sudo and keeps the workspace file", %{} do
+    dir =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath_ops_pb_sigra_del_#{:erlang.unique_integer([:positive])}"
+      )
+
+    :ok = File.mkdir_p!(dir)
+    prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
+
+    on_exit(fn ->
+      File.rm_rf(dir)
+
+      if prev_ws == nil,
+        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
+        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
+    end)
+
+    json =
+      Jason.encode!(%{
+        "playbook_format" => 1,
+        "mode" => "search",
+        "schema" => "ScrypathOps.Test.OpsPostA",
+        "q" => "x",
+        "opts" => %{}
+      })
+
+    path = Path.join(dir, "sigra-delete.json")
+    File.write!(path, json)
+
+    socket = %Phoenix.LiveView.Socket{
+      assigns: %{
+        __changed__: %{},
+        flash: %{},
+        delete_pending: "sigra-delete.json",
+        workspace_root: dir,
+        workspace_writable?: true,
+        selected_basename: "sigra-delete.json",
+        operator_context: %ScrypathOps.Integrations.Sigra.OperatorContext{
+          user_id: "user_123",
+          active_org_id: "org_456",
+          impersonator_user_id: nil,
+          sudo_at: DateTime.add(DateTime.utc_now(), -600, :second)
+        }
+      },
+      host_uri: URI.parse("https://scrypath.example/ops/playbooks")
+    }
+
+    {:noreply, result_socket} =
+      ScrypathOpsWeb.PlaybookLive.handle_event(
+        "confirm_delete",
+        %{"confirm" => "sigra-delete.json"},
+        socket
+      )
+
+    socket = result_socket
+    assert inspect(socket.redirected) =~ "/sudo/confirm"
+    assert inspect(socket.redirected) =~ "return_to=%2Fops%2Fplaybooks"
+    assert File.exists?(path)
+  end
+
+  test "sigra confirm delete clears only the selected playbook state", %{conn: conn} do
+    dir =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath_ops_pb_sigra_delete_ok_#{:erlang.unique_integer([:positive])}"
+      )
+
+    :ok = File.mkdir_p!(dir)
+    prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
+
+    on_exit(fn ->
+      File.rm_rf(dir)
+
+      if prev_ws == nil,
+        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
+        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
+    end)
+
+    json =
+      Jason.encode!(%{
+        "playbook_format" => 1,
+        "mode" => "search",
+        "schema" => "ScrypathOps.Test.OpsPostA",
+        "q" => "x",
+        "opts" => %{}
+      })
+
+    path = Path.join(dir, "sigra-delete-ok.json")
+    File.write!(path, json)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    render_click(view, "load", %{"name" => "sigra-delete-ok.json"})
+    render_click(view, "request_delete", %{"name" => "sigra-delete-ok.json"})
+
+    put_live_assigns(view,
+      current_scope: %{user: %{id: "user_123"}, active_organization: %{id: "org_456"}},
+      operator_context: %ScrypathOps.Integrations.Sigra.OperatorContext{
+        user_id: "user_123",
+        active_org_id: "org_456",
+        impersonator_user_id: nil,
+        sudo_at: DateTime.add(DateTime.utc_now(), -60, :second)
+      }
+    )
+
+    html =
+      view
+      |> form("form[phx-submit='confirm_delete']", %{"confirm" => "sigra-delete-ok.json"})
+      |> render_submit()
+
+    assert html =~ "Deleted sigra-delete-ok.json"
+    refute File.exists?(path)
+
+    assigns = :sys.get_state(view.pid).socket.assigns
+    assert assigns.delete_pending == nil
+    assert assigns.selected_basename == nil
+    assert assigns.draft_playbook == nil
+    assert assigns.preview_json == nil
+    assert assigns.preview_marker == false
+    assert assigns.run_result == nil
+    assert assigns.run_error == nil
+  end
+
   test "rename collision shows in-use flash", %{conn: conn} do
     dir =
       Path.join(
@@ -626,5 +791,16 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     Regex.scan(~r/href="(https:\/\/github\.com\/szTheory\/scrypath\/blob\/main\/[^"]+)"/, html)
     |> Enum.map(fn [_, href] -> href end)
     |> Enum.uniq()
+  end
+
+  defp put_live_assigns(view, assigns) do
+    :sys.replace_state(view.pid, fn state ->
+      socket =
+        Enum.reduce(assigns, state.socket, fn {key, value}, socket ->
+          Phoenix.Component.assign(socket, key, value)
+        end)
+
+      %{state | socket: socket}
+    end)
   end
 end
