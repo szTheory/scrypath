@@ -20,7 +20,7 @@
 - [x] **`v1.15` shipped + archived in-repo** (**2026-04-22**) — *OPSUI second slice* — phases **62–64**, **8** requirements — [archive](milestones/v1.15-ROADMAP.md) · [requirements](milestones/v1.15-REQUIREMENTS.md) · [audit](milestones/v1.15-MILESTONE-AUDIT.md)
 - [x] **`v1.16` shipped + archived in-repo** (**2026-04-22**) — *Playbook execution & operator honesty* — phases **65–67**, **6** requirements — [archive](milestones/v1.16-ROADMAP.md) · [requirements](milestones/v1.16-REQUIREMENTS.md) · [audit](milestones/v1.16-MILESTONE-AUDIT.md)
 - [x] **`v1.17` shipped + archived in-repo** (**2026-04-23**) — *Integration confidence & adopter proof* — phases **68–70**, **6** requirements — [archive](milestones/v1.17-ROADMAP.md) · [requirements](milestones/v1.17-REQUIREMENTS.md) · [audit](milestones/v1.17-MILESTONE-AUDIT.md)
-- [ ] **`v1.18` in progress** (opened **2026-04-25**) — *Sigra integration* — phases **71–73** (planned), **10** requirements — [requirements](REQUIREMENTS.md)
+- [ ] **`v1.18` in progress** (opened **2026-04-25**) — *Sigra integration* — phases **71–73** (in progress), **10** requirements — [requirements](REQUIREMENTS.md)
 
 ## Phases (milestone v1.18 — in progress)
 
@@ -28,13 +28,13 @@
 
 ### Phase 71: Sigra integration foundation
 
-- [ ] **Phase 71: Sigra integration foundation** — **SIGRA-01**, **SIGRA-02**, **SIGRA-03**, **SIGRA-04**, **SIGRA-05**, **SIGRA-07**, **SIGRA-08** — add the optional Sigra dep + `OPSUI_AUTH_MODE=sigra` allowlist entry, ship the three integration modules (`OperatorContext`, `OnMount`, `Gating`) under `ScrypathOps.Integrations.Sigra.*` with module-level compile guards, declare the `scrypath.ops.*` audit prefix taxonomy, and stand up the two-grep CI namespace fence in the `quality` job.
+- [x] **Phase 71: Sigra integration foundation** (2026-04-26) — **SIGRA-01**, **SIGRA-02**, **SIGRA-03**, **SIGRA-04**, **SIGRA-05**, **SIGRA-07**, **SIGRA-08** — add the optional Sigra dep + `OPSUI_AUTH_MODE=sigra` allowlist entry, ship the three integration modules (`OperatorContext`, `OnMount`, `Gating`) under `ScrypathOps.Integrations.Sigra.*` with module-level compile guards, declare the `scrypath.ops.*` audit prefix taxonomy, and stand up the two-grep CI namespace fence in the `quality` job.
 
 **Plans:** 3 plans
 
 Plans:
 - [x] `71-01-PLAN.md` — Add the optional Sigra dep, `OPSUI_AUTH_MODE=sigra` allowlist, and compile-without-Sigra CI verification (SIGRA-01, SIGRA-02).
-- [ ] `71-02-PLAN.md` — Implement `OperatorContext` + `OnMount` + `Gating` with module-level compile guards and PII-safety unit tests (SIGRA-03, SIGRA-04, SIGRA-05).
+- [x] `71-02-PLAN.md` — Implement `OperatorContext` + `OnMount` + `Gating` with module-level compile guards and PII-safety unit tests (SIGRA-03, SIGRA-04, SIGRA-05).
 - [x] `71-03-PLAN.md` — Lock the `scrypath.ops.*` action taxonomy + audit-prefix contract test, and ship the two-grep namespace fence in `.github/workflows/ci.yml` (SIGRA-07, SIGRA-08).
 
 **Success criteria (observable):**

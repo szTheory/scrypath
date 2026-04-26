@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.18
 milestone_name: — in progress)
-status: executing
+status: ready_to_plan
 last_updated: "2026-04-26T06:12:53Z"
 last_activity: 2026-04-26
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
   completed_plans: 2
-  percent: 67
+  percent: 17
 ---
 
 # Project State
@@ -21,17 +21,14 @@ See: `.planning/PROJECT.md` (updated 2026-04-25)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase 71 — sigra-integration-foundation
+**Current focus:** Phase 72 — sensitive-action-wiring-in-opsui-liveviews
 
 ## Current Position
 
-Phase: 71 (sigra-integration-foundation) — EXECUTING
-Plan: 2 of 3
-**Phase:** **71** — Sigra integration foundation (planned, not yet started)
+Phase: 72 (sensitive-action-wiring-in-opsui-liveviews) — READY TO PLAN
+Plan: Not started
 
-**Plan:** — (Phase 71 has 3 planned plans: `71-01-PLAN.md`, `71-02-PLAN.md`, `71-03-PLAN.md`)
-
-**Status:** Executing Phase 71
+**Status:** Ready to plan
 
 **Last activity:** 2026-04-26
 
