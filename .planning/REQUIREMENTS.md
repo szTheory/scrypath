@@ -27,11 +27,11 @@
 
 ### Audit taxonomy
 
-- [ ] **SIGRA-07**: `Gating` declares a private `@action_config` map at compile time that defines stable `scrypath.ops.*` audit prefixes for all sensitive actions. v1.18 wires four (`scrypath.ops.playbook_delete`, `scrypath.ops.failed_work_retry`, `scrypath.ops.swap_live` from posture, and `scrypath.ops.swap_live` from sync drift sharing the same prefix), and reserves prefixes for three future actions (`scrypath.ops.reindex`, `scrypath.ops.delete_documents`, `scrypath.ops.hot_apply`). The audit metadata map carries operation context only — never `OperatorContext` PII fields or `%Sigra.Session{}` PII fields. A contract test asserts `scrypath.ops.*` does not collide with Sigra's default reserved prefixes.
+- [x] **SIGRA-07**: `Gating` declares a private `@action_config` map at compile time that defines stable `scrypath.ops.*` audit prefixes for all sensitive actions. v1.18 wires four (`scrypath.ops.playbook_delete`, `scrypath.ops.failed_work_retry`, `scrypath.ops.swap_live` from posture, and `scrypath.ops.swap_live` from sync drift sharing the same prefix), and reserves prefixes for three future actions (`scrypath.ops.reindex`, `scrypath.ops.delete_documents`, `scrypath.ops.hot_apply`). The audit metadata map carries operation context only — never `OperatorContext` PII fields or `%Sigra.Session{}` PII fields. A contract test asserts `scrypath.ops.*` does not collide with Sigra's default reserved prefixes.
 
 ### Boundary discipline
 
-- [ ] **SIGRA-08**: CI fails the `quality` job in `.github/workflows/ci.yml` when (a) any `Sigra.` reference appears under `lib/scrypath/`, or (b) any `Sigra.` reference appears under `scrypath_ops/lib/` or `scrypath_ops/test/` outside `scrypath_ops/lib/scrypath_ops/integrations/sigra/` and `scrypath_ops/test/scrypath_ops/integrations/sigra/`. The fence runs unconditionally on every push and PR. A planted-violation test (CI dry run with a deliberate offending line) confirms the fence triggers.
+- [x] **SIGRA-08**: CI fails the `quality` job in `.github/workflows/ci.yml` when (a) any `Sigra.` reference appears under `lib/scrypath/`, or (b) any `Sigra.` reference appears under `scrypath_ops/lib/` or `scrypath_ops/test/` outside `scrypath_ops/lib/scrypath_ops/integrations/sigra/` and `scrypath_ops/test/scrypath_ops/integrations/sigra/`. The fence runs unconditionally on every push and PR. A planted-violation test (CI dry run with a deliberate offending line) confirms the fence triggers.
 
 ### Adopter proof
 
