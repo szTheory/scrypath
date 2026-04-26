@@ -6,7 +6,9 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
 
   use ScrypathOpsWeb, :live_view
 
+  alias Scrypath.Operator.FailedWork
   alias Scrypath.Operator.FailedSyncWorkInspection
+  alias ScrypathOps.Integrations.Sigra.Gating
 
   @impl true
   def mount(_params, _session, socket) do
@@ -35,6 +37,15 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
 
   @impl true
   def handle_event("refresh", _params, socket), do: {:noreply, refresh_inspection(socket)}
+
+  def handle_event("retry", %{"id" => id}, socket) do
+    socket =
+      Gating.gate_sensitive_action(socket, :failed_work_retry, fn ->
+        retry_failed_work(socket, id)
+      end)
+
+    {:noreply, normalize_live_reply(socket)}
+  end
 
   def handle_event("select_schema", %{"schema" => mod_str}, socket) do
     mod = mod_from_flat!(mod_str)
@@ -93,6 +104,41 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     end
   end
 
+  defp retry_failed_work(socket, id) do
+    case failed_work_row(socket, id) do
+      nil ->
+        put_flash(socket, :error, "Could not find that failed job.")
+
+      row ->
+        case FailedWork.recovery_action(row) do
+          nil ->
+            put_flash(socket, :error, "That job does not expose a retry action.")
+
+          recovery ->
+            case Scrypath.retry_sync_work(
+                   recovery,
+                   ScrypathOps.Schemas.runtime_opts(socket.assigns.scrypath_opts)
+                 ) do
+              {:ok, _result} ->
+                socket
+                |> refresh_inspection()
+                |> put_flash(:info, "Retried #{id}")
+
+              {:error, reason} ->
+                put_flash(socket, :error, "Retry failed: #{inspect(reason)}")
+            end
+        end
+    end
+  end
+
+  defp failed_work_row(socket, id) do
+    inspection = socket.assigns.inspection
+
+    if inspection do
+      Enum.find(inspection.entries, &(to_string(&1.id) == to_string(id)))
+    end
+  end
+
   defp empty_counts(rows) do
     Scrypath.Operator.FailedWork.reason_class_counts(rows)
   end
@@ -122,6 +168,10 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp reason_class_label(nil), do: "unknown"
   defp reason_class_label(:unknown), do: "unknown"
   defp reason_class_label(other), do: to_string(other)
+
+  defp normalize_live_reply({:noreply, %Phoenix.LiveView.Socket{} = socket}), do: socket
+  defp normalize_live_reply(%Phoenix.LiveView.Socket{} = socket), do: socket
+  defp normalize_live_reply(other), do: other
 
   @impl true
   def render(assigns) do
@@ -218,7 +268,9 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                     <td>{row.operation}</td>
                     <td>{row.state}</td>
                     <td>{row.source}</td>
-                    <td class="font-mono text-xs">{format_dt(row.last_attempt_at || row.failed_at)}</td>
+                    <td class="font-mono text-xs">
+                      {format_dt(row.last_attempt_at || row.failed_at)}
+                    </td>
                     <td>
                       <details id={"failed-detail-#{row.id}"}>
                         <summary
@@ -239,6 +291,16 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                           See guides: <code class="text-xs">guides/drift-recovery.md</code>,
                           <code class="text-xs">guides/operator-mix-tasks.md</code>
                         </p>
+                        <div :if={row.recovery} class="mt-3">
+                          <button
+                            type="button"
+                            phx-click="retry"
+                            phx-value-id={row.id}
+                            class="btn btn-xs btn-primary"
+                          >
+                            Retry job
+                          </button>
+                        </div>
                       </details>
                     </td>
                   </tr>
