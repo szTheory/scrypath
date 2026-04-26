@@ -37,7 +37,7 @@ Canonical REQ IDs: **`.planning/REQUIREMENTS.md`** (**SIGRA-***). Approved plan:
 
 ## Planning window
 
-**v1.18 — Sigra integration** opened **2026-04-25** as the first concrete adopter-integration milestone after the v1.17 readiness checkpoint. Rolling truth lives in **`.planning/ROADMAP.md`** / **`.planning/REQUIREMENTS.md`**; per-phase artifacts will appear under **`.planning/phases/71-*`** onward (continuing numbering from v1.17's Phase 70).
+**v1.18 — Sigra integration** opened **2026-04-25** as the first concrete adopter-integration milestone after the v1.17 readiness checkpoint. Phase 71 is complete and Phase 72 is next; rolling truth lives in **`.planning/ROADMAP.md`** / **`.planning/REQUIREMENTS.md`**.
 
 ## Requirements
 
