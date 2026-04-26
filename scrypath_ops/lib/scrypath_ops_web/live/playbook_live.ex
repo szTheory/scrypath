@@ -16,6 +16,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   alias ScrypathOps.Playbook.Runner
   alias ScrypathOps.Playbook.Store
   alias ScrypathOps.Playbook.V1
+  alias ScrypathOps.Integrations.Sigra.Gating
   alias ScrypathOps.Schemas
   alias Scrypath.MultiSearchResult
   alias Scrypath.SearchResult
@@ -267,47 +268,12 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   def handle_event("confirm_delete", %{"confirm" => typed}, socket) do
-    pending = socket.assigns.delete_pending
-    typed = typed |> to_string() |> String.trim()
-    root = socket.assigns.workspace_root
+    socket =
+      Gating.gate_sensitive_action(socket, :playbook_delete, fn ->
+        confirm_delete(socket, typed)
+      end)
 
-    cond do
-      pending == nil ->
-        {:noreply, socket}
-
-      not socket.assigns.workspace_writable? ->
-        {:noreply, put_flash(socket, :error, "Delete is disabled for read-only examples.")}
-
-      typed != pending ->
-        {:noreply, put_flash(socket, :error, "Confirmation must match the filename exactly.")}
-
-      true ->
-        case Store.delete_workspace_file(root, pending) do
-          :ok ->
-            socket =
-              socket
-              |> reload_workspace_catalog()
-              |> assign(:delete_pending, nil)
-
-            socket =
-              if socket.assigns.selected_basename == pending do
-                socket
-                |> assign(:selected_basename, nil)
-                |> assign(:draft_playbook, nil)
-                |> assign(:preview_json, nil)
-                |> assign(:preview_marker, false)
-                |> assign(:run_result, nil)
-                |> assign(:run_error, nil)
-              else
-                socket
-              end
-
-            {:noreply, put_flash(socket, :info, "Deleted #{pending}")}
-
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Delete failed — check permissions.")}
-        end
-    end
+    {:noreply, normalize_live_reply(socket)}
   end
 
   def handle_event("refresh_list", _params, socket) do
@@ -1190,4 +1156,52 @@ defmodule ScrypathOpsWeb.PlaybookLive do
     </Layouts.app>
     """
   end
+
+  defp confirm_delete(socket, typed) do
+    pending = socket.assigns.delete_pending
+    typed = typed |> to_string() |> String.trim()
+    root = socket.assigns.workspace_root
+
+    cond do
+      pending == nil ->
+        socket
+
+      not socket.assigns.workspace_writable? ->
+        put_flash(socket, :error, "Delete is disabled for read-only examples.")
+
+      typed != pending ->
+        put_flash(socket, :error, "Confirmation must match the filename exactly.")
+
+      true ->
+        case Store.delete_workspace_file(root, pending) do
+          :ok ->
+            socket =
+              socket
+              |> reload_workspace_catalog()
+              |> assign(:delete_pending, nil)
+
+            socket =
+              if socket.assigns.selected_basename == pending do
+                socket
+                |> assign(:selected_basename, nil)
+                |> assign(:draft_playbook, nil)
+                |> assign(:preview_json, nil)
+                |> assign(:preview_marker, false)
+                |> assign(:run_result, nil)
+                |> assign(:run_error, nil)
+              else
+                socket
+              end
+
+            put_flash(socket, :info, "Deleted #{pending}")
+
+          {:error, _} ->
+            put_flash(socket, :error, "Delete failed — check permissions.")
+        end
+    end
+  end
+
+  defp normalize_live_reply({:noreply, %Phoenix.LiveView.Socket{} = socket}), do: socket
+  defp normalize_live_reply(%Phoenix.LiveView.Socket{} = socket), do: socket
+  defp normalize_live_reply(other), do: other
 end
