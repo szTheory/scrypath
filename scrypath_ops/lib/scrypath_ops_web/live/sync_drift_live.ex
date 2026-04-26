@@ -9,6 +9,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   use ScrypathOpsWeb, :live_view
 
+  alias ScrypathOps.Integrations.Sigra.Gating
+
   @impl true
   def mount(_params, _session, socket) do
     allowlist = ScrypathOps.Schemas.allowlist()
@@ -61,49 +63,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   @impl true
   def handle_event("refresh_reconcile", _params, socket) do
-    mod = socket.assigns.selected_schema
-    opts = socket.assigns.scrypath_opts
-
-    socket =
-      if mod && Keyword.has_key?(opts, :backend) do
-        case Scrypath.reconcile_sync(mod, opts) do
-          {:ok, rep} ->
-            socket
-            |> assign(:reconcile_result, rep)
-            |> assign(:reconcile_loaded_at, DateTime.utc_now())
-
-          {:error, reason} ->
-            put_flash(socket, :error, "Reconcile failed: #{inspect(reason)}")
-        end
-      else
-        put_flash(socket, :error, "Select a schema and configure Scrypath runtime.")
-      end
-
-    {:noreply, socket}
+    {:noreply, refresh_reconcile(socket)}
   end
 
   def handle_event("load_drift", _params, socket) do
-    mod = socket.assigns.selected_schema
-    opts = socket.assigns.scrypath_opts
-
-    socket =
-      if mod && Keyword.has_key?(opts, :backend) do
-        case Scrypath.index_contract_drift(mod, ScrypathOps.Schemas.runtime_opts(opts)) do
-          {:ok, rep} ->
-            socket
-            |> assign(:drift_result, rep)
-            |> assign(:drift_loaded_at, DateTime.utc_now())
-            |> assign(:drift_error, nil)
-
-          {:error, reason} ->
-            socket
-            |> assign(:drift_error, reason)
-        end
-      else
-        assign(socket, :drift_error, :missing_backend)
-      end
-
-    {:noreply, socket}
+    {:noreply, refresh_drift(socket)}
   end
 
   def handle_event("select_schema", %{"schema" => mod_str}, socket) do
@@ -122,6 +86,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     {:noreply, socket}
   end
 
+  def handle_event("swap_live", _params, socket) do
+    {:noreply, swap_live(socket)}
+  end
+
   defp module_flat_name(mod) when is_atom(mod) do
     mod |> Atom.to_string() |> String.replace_prefix("Elixir.", "")
   end
@@ -132,6 +100,75 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> String.split(".")
     |> Enum.map(&String.to_atom/1)
     |> Module.concat()
+  end
+
+  defp refresh_reconcile(socket) do
+    mod = socket.assigns.selected_schema
+    opts = socket.assigns.scrypath_opts
+
+    if mod && Keyword.has_key?(opts, :backend) do
+      case Scrypath.reconcile_sync(mod, opts) do
+        {:ok, rep} ->
+          socket
+          |> assign(:reconcile_result, rep)
+          |> assign(:reconcile_loaded_at, DateTime.utc_now())
+
+        {:error, reason} ->
+          put_flash(socket, :error, "Reconcile failed: #{inspect(reason)}")
+      end
+    else
+      put_flash(socket, :error, "Select a schema and configure Scrypath runtime.")
+    end
+  end
+
+  defp refresh_drift(socket) do
+    mod = socket.assigns.selected_schema
+    opts = socket.assigns.scrypath_opts
+
+    if mod && Keyword.has_key?(opts, :backend) do
+      case Scrypath.index_contract_drift(mod, ScrypathOps.Schemas.runtime_opts(opts)) do
+        {:ok, rep} ->
+          socket
+          |> assign(:drift_result, rep)
+          |> assign(:drift_loaded_at, DateTime.utc_now())
+          |> assign(:drift_error, nil)
+
+        {:error, reason} ->
+          socket
+          |> assign(:drift_error, reason)
+      end
+    else
+      assign(socket, :drift_error, :missing_backend)
+    end
+  end
+
+  defp swap_live(socket) do
+    Gating.gate_sensitive_action(socket, :swap_live, fn ->
+      mod = socket.assigns.selected_schema
+      opts = socket.assigns.scrypath_opts
+
+      if mod && Keyword.has_key?(opts, :backend) do
+        case Scrypath.Meilisearch.swap_indexes(mod, opts) do
+          {:ok, _result} ->
+            socket
+            |> refresh_reconcile()
+            |> maybe_refresh_drift()
+
+          {:error, reason} ->
+            put_flash(socket, :error, "Swap live failed: #{inspect(reason)}")
+        end
+      else
+        put_flash(socket, :error, "Select a schema and configure Scrypath runtime.")
+      end
+    end)
+  end
+
+  defp maybe_refresh_drift(socket) do
+    if socket.assigns.drift_loaded_at || socket.assigns.drift_result || socket.assigns.drift_error do
+      refresh_drift(socket)
+    else
+      socket
+    end
   end
 
   @impl true
@@ -217,9 +254,20 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             <h2 id="sync-drift-heading" class="text-lg font-semibold">
               Index contract (declared vs live)
             </h2>
-            <button type="button" phx-click="load_drift" class="btn btn-sm">
-              Load / refresh contract drift
-            </button>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" phx-click="load_drift" class="btn btn-sm">
+                Load / refresh contract drift
+              </button>
+              <button
+                :if={@selected_schema}
+                type="button"
+                phx-click="swap_live"
+                class="btn btn-sm btn-outline"
+                phx-disable-with="Swapping..."
+              >
+                Swap live index
+              </button>
+            </div>
           </div>
 
           <p :if={@drift_loaded_at} class="text-xs text-base-content/60">
