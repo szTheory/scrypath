@@ -1,34 +1,34 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.18
-milestone_name: — in progress)
-status: ready_to_plan
-last_updated: "2026-04-26T06:12:53Z"
+milestone_name: Sigra integration
+status: shipped
+last_updated: "2026-04-27T00:35:25Z"
 last_activity: 2026-04-26
 progress:
-  total_phases: 6
-  completed_phases: 1
-  total_plans: 3
-  completed_plans: 2
-  percent: 17
+  total_phases: 3
+  completed_phases: 3
+  total_plans: 7
+  completed_plans: 7
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-04-25)
+See: `.planning/PROJECT.md` (updated 2026-04-27)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase 72 — sensitive-action-wiring-in-opsui-liveviews
+**Current focus:** Milestone close complete; next milestone not yet opened.
 
 ## Current Position
 
-Phase: 72 (sensitive-action-wiring-in-opsui-liveviews) — READY TO PLAN
+Phase: 74
 Plan: Not started
 
-**Status:** Ready to plan
+**Status:** Ready for next milestone definition
 
 **Last activity:** 2026-04-26
 
@@ -46,6 +46,7 @@ Plan: Not started
 - **Phase 69 complete:** Added the durable `mix verify.adopter` maintainer command, aligned README / CONTRIBUTING / support guide / example README / CI to the fast-vs-live adopter verify spine, and verified both the fast root path and live Phoenix example path locally.
 - **Phase 70 complete:** Closed exactly three bounded adopter-friction papercuts in docs/contracts, then updated rolling planning truth and froze the `v1.17-*` archive trio with an explicit outside-integration-feedback-next verdict.
 - **v1.17 close:** Treat the milestone as a readiness checkpoint, not another breadth step; outside integration feedback now displaces more in-repo polish unless new evidence says otherwise.
+- **v1.18 close:** Optional Sigra integration shipped in-repo with compile guards, bounded LiveView gating, a canonical guide, a worked example, and a passed milestone audit.
 - **Phase 65 discuss:** Hybrid catalog **Run now** + shared draft pipeline; **`start_async`/`handle_async`** lifecycle with **`run_id`**, timeout, **`cancel_async`**; **`scrypath_ops`** error registry + **`DocResolver`**; **no** Oban/DB default run path in this phase (deferred).
 - Kept Runner.run_validated/3 as the canonical raw tuple seam and documented reason identity as the compatibility key.
 - Kept playbook-schema-v1.md authoritative for JSON wire format only and linked execution semantics to the Runner moduledoc.
@@ -68,13 +69,13 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-1. **`/gsd-discuss-phase 71`** — gather context and clarify the foundation-phase approach (compile-guard shape, OperatorContext field hydration sources, gating funnel ergonomics, audit-prefix taxonomy) before planning. **Recommended next step.**
-2. **`/gsd-plan-phase 71`** — produce **`71-{01,02,03}-PLAN.md`** once discussion locks the gray areas.
-3. **`/gsd-progress`** — snapshot the v1.18 opening state.
+1. **`/gsd-new-milestone`** — open the next milestone and define fresh requirements.
+2. **`/gsd-progress`** — snapshot the post-close state.
+3. **`/gsd-discuss-phase 74`** — gather context for the next phase once the milestone is opened.
 
 ---
 
-*Last updated: 2026-04-25 — **v1.18 — Sigra integration** opened; SIGRA-01..10 requirements and phases 71–73 roadmap committed*
+*Last updated: 2026-04-27 — **v1.18 — Sigra integration** shipped + archived; SIGRA-01..10 requirements satisfied and phases 71–73 complete*
 
 **Prior milestone:** **v1.17** — Integration confidence & adopter proof — **2026-04-23** (readiness checkpoint).
 
@@ -82,8 +83,8 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 **Completed:** **v1.17** shipped + archived in-repo (**2026-04-23**) — phases **68–70** — **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next:** **`/gsd-discuss-phase 71`** to clarify foundation-phase gray areas before plan generation.
+**Next:** **`/gsd-new-milestone`** to define the next milestone after Sigra integration.
 
-**Completed Phase:** 70 (Papercuts and readiness checkpoint) — 2/2 plans — 2026-04-23
+**Completed Phase:** 73 (Adopter proof - guide and worked example) — 2/2 plans — 2026-04-26
 
-**Planned Phases:** 71 (foundation, 3 plans), 72 (LiveView wiring, 2 plans), 73 (guide + worked example, 2 plans) — see **`.planning/ROADMAP.md`** § *Phases (milestone v1.18 — in progress)*.
+**Planned Phases:** none open yet — next milestone will continue from Phase 74.
