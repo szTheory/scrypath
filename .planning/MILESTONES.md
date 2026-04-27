@@ -1,30 +1,22 @@
 # Milestones
 
-## v1.18 Sigra integration (Opened: 2026-04-25)
+## v1.18 Sigra integration (Shipped + archived: 2026-04-27)
 
-**Phases planned:** **3** (**71–73**), **10** requirements (**SIGRA-01**–**SIGRA-10**)
+**Phases completed:** **3** (**71–73**), **10** requirements (**SIGRA-01**–**SIGRA-10**)
 
 **Hex:** **`scrypath 0.3.4`** on Hex; **in-repo only** — `scrypath_ops` is path-loaded and not Hex-published. **No Hex bump claimed for this planning milestone.**
 
-**Goal:** Ship a named, optional Sigra integration in **`scrypath_ops`** that gives Sigra-using Phoenix hosts a credible answer to *"who can run sensitive Scrypath operator actions, and how is it audited?"* — without changing **`scrypath`** core or making Sigra aware of Scrypath.
+**Key accomplishments:**
 
-**Planned phases:**
+- Optional Sigra dependency boundary, auth allowlist, compile guards, operator context contract, mount hook, and sensitive-action gate in Phase 71 (**SIGRA-01**–**SIGRA-05**, **SIGRA-07**, **SIGRA-08**).
+- Four sensitive OPSUI LiveView handlers wired through `gate_sensitive_action/3` while preserving the ungated async playbook paths in Phase 72 (**SIGRA-06**).
+- Canonical Sigra guide, working Phoenix example, and CI smoke proof in Phase 73 (**SIGRA-09**, **SIGRA-10**).
 
-- **Phase 71: Sigra integration foundation** — **SIGRA-01**, **SIGRA-02**, **SIGRA-03**, **SIGRA-04**, **SIGRA-05**, **SIGRA-07**, **SIGRA-08** — optional Sigra dep + `OPSUI_AUTH_MODE=sigra` allowlist, `OperatorContext` / `OnMount` / `Gating` modules with module-level compile guards, `scrypath.ops.*` audit prefix taxonomy, two-grep CI namespace fence.
-- **Phase 72: Sensitive-action wiring in OPSUI LiveViews** — **SIGRA-06** — wire **four** existing or new LiveView handlers (`playbook confirm_delete`, `failed_sync retry`, `posture swap_live`, `sync_drift swap_live`) through `Gating.gate_sensitive_action/3`. Playbook `run` / `run_now` are explicitly **not** gated in v1.18.
-- **Phase 73: Adopter proof — guide and worked example** — **SIGRA-09**, **SIGRA-10** — `guides/integrations/sigra.md`, `examples/phoenix_sigra_ops/` (SQLite-backed Phoenix app, no Meilisearch noise), and a path-gated CI smoke job.
+**Pre-close audit:** **`milestones/v1.18-MILESTONE-AUDIT.md`** (**`passed`** — `requirements: 10/10`, `phases: 3/3`, `integration: 3/3`, `flows: 4/4`).
 
-**Hard boundaries (locked at open):**
+**Automation note:** `gsd-sdk query milestone.complete` remained unavailable for this close path, so the `v1.18-*` archive trio and rolling planning updates were completed manually.
 
-- **`scrypath` core stays auth-agnostic** — zero Sigra references in `lib/scrypath/`; no `:operator` keyword option on public `Scrypath.search/3` / `reindex` / `sync` APIs in v1.18.
-- **Sigra remains unaware of Scrypath** — no Scrypath references inside the Sigra source tree.
-- **Optional dep + module-level compile guards** — `{:sigra, "~> 0.2", optional: true}` plus `if Code.ensure_loaded?(Sigra.Session) do ... end` wrapping each `defmodule`. CI verifies `scrypath_ops` compiles with `:sigra` absent.
-- **No new hex package** — `ScrypathOps.Integrations.Sigra.*` lives in-repo; `scrypath_sigra` extraction deferred to **SIGRA-FUT-02**.
-- **Host-owned wiring** — no automatic router / plug installation; no in-place sudo modal (uses `push_navigate` to host-owned route).
-
-**Pre-open audit:** Approved architectural plan **`~/.claude/plans/so-i-m-considering-rippling-ladybug.md`** + `.planning/research/{STACK,ARCHITECTURE,PITFALLS,FEATURES,SUMMARY}.md` for v1.18.
-
-**Archives:** *(pending — created at milestone close via `/gsd-complete-milestone`)*
+**Archives:** `milestones/v1.18-ROADMAP.md`, `milestones/v1.18-REQUIREMENTS.md`, `milestones/v1.18-MILESTONE-AUDIT.md` · **Git tag:** `v1.18` (planning milestone marker)
 
 ---
 

@@ -20,60 +20,7 @@
 - [x] **`v1.15` shipped + archived in-repo** (**2026-04-22**) — *OPSUI second slice* — phases **62–64**, **8** requirements — [archive](milestones/v1.15-ROADMAP.md) · [requirements](milestones/v1.15-REQUIREMENTS.md) · [audit](milestones/v1.15-MILESTONE-AUDIT.md)
 - [x] **`v1.16` shipped + archived in-repo** (**2026-04-22**) — *Playbook execution & operator honesty* — phases **65–67**, **6** requirements — [archive](milestones/v1.16-ROADMAP.md) · [requirements](milestones/v1.16-REQUIREMENTS.md) · [audit](milestones/v1.16-MILESTONE-AUDIT.md)
 - [x] **`v1.17` shipped + archived in-repo** (**2026-04-23**) — *Integration confidence & adopter proof* — phases **68–70**, **6** requirements — [archive](milestones/v1.17-ROADMAP.md) · [requirements](milestones/v1.17-REQUIREMENTS.md) · [audit](milestones/v1.17-MILESTONE-AUDIT.md)
-- [ ] **`v1.18` in progress** (opened **2026-04-25**) — *Sigra integration* — phases **71–73** (in progress), **10** requirements — [requirements](REQUIREMENTS.md)
-
-## Phases (milestone v1.18 — in progress)
-
-**Opened:** 2026-04-25 — **SIGRA-01**–**SIGRA-10** — canonical list: [`.planning/REQUIREMENTS.md`](REQUIREMENTS.md)
-
-### Phase 71: Sigra integration foundation
-
-- [x] **Phase 71: Sigra integration foundation** (2026-04-26) — **SIGRA-01**, **SIGRA-02**, **SIGRA-03**, **SIGRA-04**, **SIGRA-05**, **SIGRA-07**, **SIGRA-08** — add the optional Sigra dep + `OPSUI_AUTH_MODE=sigra` allowlist entry, ship the three integration modules (`OperatorContext`, `OnMount`, `Gating`) under `ScrypathOps.Integrations.Sigra.*` with module-level compile guards, declare the `scrypath.ops.*` audit prefix taxonomy, and stand up the two-grep CI namespace fence in the `quality` job.
-
-**Plans:** 3 plans
-
-Plans:
-- [x] `71-01-PLAN.md` — Add the optional Sigra dep, `OPSUI_AUTH_MODE=sigra` allowlist, and compile-without-Sigra CI verification (SIGRA-01, SIGRA-02).
-- [x] `71-02-PLAN.md` — Implement `OperatorContext` + `OnMount` + `Gating` with module-level compile guards and PII-safety unit tests (SIGRA-03, SIGRA-04, SIGRA-05).
-- [x] `71-03-PLAN.md` — Lock the `scrypath.ops.*` action taxonomy + audit-prefix contract test, and ship the two-grep namespace fence in `.github/workflows/ci.yml` (SIGRA-07, SIGRA-08).
-
-**Success criteria (observable):**
-
-1. `mix compile` in `scrypath_ops` succeeds in two CI scenarios — with `:sigra` present and with `:sigra` removed from the dep tree.
-2. Unit tests prove `%OperatorContext{}` has exactly four fields and contains zero PII keys; `Gating.gate_sensitive_action/3` exhibits the documented impersonation / sudo-stale / fresh-sudo branches.
-3. The two-grep namespace fence in CI fails on a planted `Sigra.` reference in `lib/scrypath/` and on a planted `Sigra.` reference in `scrypath_ops/lib/` outside the integrations namespace.
-
-### Phase 72: Sensitive-action wiring in OPSUI LiveViews
-
-- [ ] **Phase 72: Sensitive-action wiring in OPSUI LiveViews** — **SIGRA-06** — wire exactly four existing or new LiveView handlers (`playbook_live.ex` `confirm_delete`, `failed_sync_live.ex` `retry`, `posture_live.ex` `swap_live`, `sync_drift_live.ex` `swap_live`) through `Gating.gate_sensitive_action/3` under `OPSUI_AUTH_MODE=sigra`, with LiveView tests proving the gate fires. Playbook `run` / `run_now` are explicitly NOT gated in this phase.
-
-**Plans:** 2 plans
-
-Plans:
-- [ ] `72-01-PLAN.md` — Wire `playbook_live` `confirm_delete` and `failed_sync_live` `retry` through the gate, including new `retry` handler and LiveView tests.
-- [ ] `72-02-PLAN.md` — Wire `posture_live` and `sync_drift_live` `swap_live` (new handlers) through the gate, including LiveView tests for impersonation and stale-sudo branches.
-
-**Success criteria (observable):**
-
-1. The four named LiveView handlers produce a `scrypath.ops.*` audit row when invoked under `OPSUI_AUTH_MODE=sigra` with a fresh sudo session.
-2. The same four handlers block (impersonation) or push_navigate to the configured sudo confirm path with `return_to` (stale sudo) under the corresponding test fixtures.
-3. Playbook `run` / `run_now` continue to function unchanged; no new gate is applied to those handlers.
-
-### Phase 73: Adopter proof — guide and worked example
-
-- [ ] **Phase 73: Adopter proof — guide and worked example** — **SIGRA-09**, **SIGRA-10** — publish `guides/integrations/sigra.md` with the canonical wiring snippets and pitfalls, ship `examples/phoenix_sigra_ops/` as a SQLite-backed Phoenix app exercising the full sudo + audit path, and add a path-gated CI smoke job for the example.
-
-**Plans:** 2 plans
-
-Plans:
-- [ ] `73-01-PLAN.md` — Author `guides/integrations/sigra.md` (router wiring, sudo-into-session snippet, telemetry handler, audit taxonomy, async/PII/impersonation/sudo-window caveats).
-- [ ] `73-02-PLAN.md` — Scaffold `examples/phoenix_sigra_ops/` with `ecto_sqlite3`, stub Scrypath backend, sudo + impersonation scenario tests, and a dedicated path-gated CI smoke job pinned to the same Sigra constraint as `scrypath_ops/mix.exs`.
-
-**Success criteria (observable):**
-
-1. `guides/integrations/sigra.md` exists and a docs-contract anchor (added in this phase) verifies the canonical sections (`## Router wiring`, `## Sudo confirm route`, `## Telemetry`, `## Audit taxonomy`, `## Caveats`).
-2. `examples/phoenix_sigra_ops/` boots in CI under the new smoke job; the impersonation scenario test asserts a Tier-1 action is blocked, and the fresh-sudo scenario test asserts an audit row is written with `operator_id` and `active_org_id`.
-3. The example's `mix.exs` Sigra constraint matches `scrypath_ops/mix.exs` exactly (assertion via repo-root or example-level test).
+- [x] **`v1.18` shipped + archived in-repo** (**2026-04-26**) — *Sigra integration* — phases **71–73**, **10** requirements — [archive](milestones/v1.18-ROADMAP.md) · [requirements](milestones/v1.18-REQUIREMENTS.md) · [audit](milestones/v1.18-MILESTONE-AUDIT.md)
 
 ## Phases (history)
 
@@ -308,9 +255,9 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**Current milestone:** **v1.18 Sigra integration** — opened **2026-04-25**, **3** phases (**71–73**) planned, **10** requirements (**SIGRA-01**..**SIGRA-10**).
+**Current milestone:** **v1.18 Sigra integration** — shipped + archived **2026-04-26**, **3** phases (**71–73**) complete, **10** requirements (**SIGRA-01**..**SIGRA-10**) satisfied. See **`milestones/v1.18-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next default pull:** complete Phase 71 (foundation) before sensitive-action wiring or worked-example work.
+**Next default pull:** start the next milestone with fresh requirements and scope definition.
 
 **`v1.17` archived (in-repo)** — **2026-04-23** shipped + archived — **3** phases (**68–70**), **6** requirements (**INTG-01**–**INTG-06**); see **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
@@ -335,4 +282,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - **Tier D** — maintainer-only planning hygiene — same file; do not headline consumer milestones.
 
 ---
-*Last updated: 2026-04-25 — **`v1.18 Sigra integration`** opened; phases **71–73** planned*
+*Last updated: 2026-04-27 — **`v1.18 Sigra integration`** shipped + archived; phases **71–73** complete*
