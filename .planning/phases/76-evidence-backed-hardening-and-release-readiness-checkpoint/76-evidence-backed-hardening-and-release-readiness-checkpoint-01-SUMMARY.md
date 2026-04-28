@@ -24,7 +24,7 @@ key-files:
 key-decisions:
   - "Accepted exactly one papercut from the live proof window: fail fast when env is set but example services are unreachable."
   - "Kept the fix on the existing verify.adopter seam instead of widening docs, examples, or the verify family."
-  - "Preserved the environment-level live-proof failure as an explicit blocker for Plan 02 rather than treating it as a second papercut."
+- "Treated the initial missing-services condition as an execution-environment truth rather than a second papercut, then reran the documented live proof once services were available."
 patterns-established:
   - "Phase 76 evidence rows must distinguish product papercuts from environment blockers."
   - "Live adopter proof should stop before deps/example boot when required services are unreachable."
@@ -35,7 +35,7 @@ completed: 2026-04-28
 
 # Phase 76 Plan 01 Summary
 
-**Bounded live-proof hardening via a fail-fast service preflight, with the admissible evidence ledger frozen at one accepted papercut and one runtime blocker**
+**Bounded live-proof hardening via a fail-fast service preflight, with the admissible evidence ledger frozen at one accepted papercut and a completed live-proof rerun**
 
 ## Performance
 
@@ -49,7 +49,7 @@ completed: 2026-04-28
 
 - Opened and froze `.planning/phases/76-evidence-backed-hardening-and-release-readiness-checkpoint/76-VALIDATION.md` as the append-only evidence ledger for the bounded Phase 76 window.
 - Accepted one papercut from admissible live-proof evidence and fixed it on the existing `mix verify.adopter` seam: the live path now fails fast with an explicit prerequisite message when Postgres or Meilisearch are unreachable.
-- Added one bounded recurrence guard in `test/mix/tasks/verify_adopter_test.exs` and kept the unresolved missing-services condition explicit as a blocker instead of widening scope.
+- Added one bounded recurrence guard in `test/mix/tasks/verify_adopter_test.exs`, then reran the full live adopter proof under the documented example service contract.
 
 ## Task Commits
 
@@ -67,7 +67,7 @@ completed: 2026-04-28
 ## Decisions Made
 
 - Accepted only the root live-proof error-surface papercut because it was the single adopter-facing issue directly reproduced by admissible evidence.
-- Left the missing-services condition as a blocker because it is an execution-environment truth, not a second code papercut.
+- Treated the initial missing-services condition as an execution-environment truth, not a second code papercut, and cleared it by starting the documented example services before the final live rerun.
 - Used the existing `verify.adopter` task/test seam as both implementation surface and recurrence guard to avoid widening docs or proof families.
 
 ## Deviations from Plan
@@ -89,7 +89,7 @@ completed: 2026-04-28
 
 ## Issues Encountered
 
-- `mix verify.adopter --live` could not complete in this workspace because the expected example Postgres and Meilisearch services were not running. The fix improved the failure mode, but it did not fabricate a passing live run.
+- `mix verify.adopter --live` initially stopped because the expected example Postgres and Meilisearch services were not running. This was resolved by starting the documented example services and rerunning the command successfully.
 
 ## User Setup Required
 
@@ -97,8 +97,8 @@ None - no new external configuration was introduced. Live verification still req
 
 ## Next Phase Readiness
 
-- Plan 02 can reuse the frozen ledger directly: accepted `1`, deferred `2`, blocker `1`.
-- The blocker that affects Plan 02 is unchanged: no honest readiness-close claim can say the live proof re-passed in this workspace unless `examples/phoenix_meilisearch` services are actually running under `SCRYPATH_EXAMPLE_INTEGRATION=1`, `PGPORT=5433`, and `SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700`.
+- Plan 02 can reuse the frozen ledger directly: accepted `1`, deferred `3`, blocker `0`.
+- The live proof re-passed in this workspace under `SCRYPATH_EXAMPLE_INTEGRATION=1`, `PGPORT=5433`, and `SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700` after the documented example services were started.
 
 ## Known Stubs
 
