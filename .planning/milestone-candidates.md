@@ -1,7 +1,7 @@
 # Milestone candidates — developer-first roadmap stack
 
 **Purpose:** Prioritized themes for **`/gsd-new-milestone`** — **onboarding + QoL** for people using and contributing to Scrypath; **avoid busywork** and maintainer-only work masquerading as product.  
-**Last reviewed:** 2026-04-23 — **v1.17** closed as a readiness checkpoint; outside integration feedback is the next default pull before any more in-repo breadth.
+**Last reviewed:** 2026-04-28 — **v1.19** closed as a readiness checkpoint; Scrypath is ready to seek broader outside production adoption on the defended surface, with external validation still pending. The canonical verdict lives in **`milestones/v1.19-MILESTONE-AUDIT.md`**.
 
 ---
 
@@ -52,8 +52,8 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 | # | Theme | Notes |
 |---|--------|--------|
 | **B1** | **Integration confidence & adopter proof** | **Shipped as v1.17 readiness checkpoint:** canonical Phoenix proof, support contract, adopter verify spine, and exactly three bounded papercuts |
-| **B2** | **Library QoL from real confusion** | Only reopen after outside integration feedback identifies concrete confusion that survives the readiness pass |
-| **B3** | **OPSUI depth only after proof** | Saved-query or deeper operator workflows move back up only if external adopter evidence says they block real usage |
+| **B2** | **Library QoL from real confusion** | Only reopen after real outside adopter evidence identifies concrete confusion that survives the v1.19 readiness checkpoint |
+| **B3** | **OPSUI depth only after proof** | Saved-query or deeper operator workflows move back up only if external adopter evidence says they block real usage on the defended surface |
 
 ### Tier C — Defer until a failure mode is proven
 
@@ -85,7 +85,7 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 | 2 | **A2** | **Shipped v1.12** |
 | 3 | **v1.13** (**POLISH-***) | Voice + Hex narrative + contributor entry (**`milestones/v1.13-REQUIREMENTS.md`**) |
 | 4 | **B1** | **Shipped in v1.17** as the readiness checkpoint |
-| 5 | **Outside integration feedback** | Default next pull before any new in-repo polish or library QoL follow-up |
+| 5 | **Outside integration feedback** | Default next pull after the v1.19 close; see **`milestones/v1.19-MILESTONE-AUDIT.md`** for the canonical residual wording |
 | 6 | **B3**, then **C*** | OPSUI depth, then heavy CI/E2E **only with proof** |
 | Parallel | **D*** | When annoyance cost exceeds fix cost — do not headline a consumer milestone here |
 

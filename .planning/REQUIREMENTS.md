@@ -7,20 +7,20 @@
 
 ### Production readiness contract
 
-- [ ] **PRDY-01**: Maintainers can point adopters to one canonical production-readiness document that states what Scrypath v1 actively proves today, which runtime/backend/example assumptions that proof depends on, and which operational responsibilities remain on the host application.
-- [ ] **PRDY-02**: Maintainers can run one root-level production proof command family that makes the fast-vs-live distinction explicit and proves the defended support story without hunting across unrelated `mix verify.*` tasks.
+- [x] **PRDY-01**: Maintainers can point adopters to one canonical production-readiness document that states what Scrypath v1 actively proves today, which runtime/backend/example assumptions that proof depends on, and which operational responsibilities remain on the host application.
+- [x] **PRDY-02**: Maintainers can run one root-level production proof command family that makes the fast-vs-live distinction explicit and proves the defended support story without hunting across unrelated `mix verify.*` tasks.
 
 ### Example and integration proof
 
-- [ ] **PRDY-03**: The canonical Phoenix + Meilisearch adoption proof covers at least one production-shaped path beyond first-hour setup, including bootstrap or backfill expectations, a real sync flow, and operator-facing recovery or verification guidance.
-- [ ] **PRDY-04**: The optional Sigra-flavored OPSUI proof is folded into the same readiness story with explicit boundaries about when teams need it, what it proves, and what it does not widen in `scrypath` core.
-- [ ] **PRDY-05**: README, CONTRIBUTING, support docs, operations guides, and example READMEs all point to the same canonical readiness and proof sources, with bounded contract coverage that fails on drift.
+- [x] **PRDY-03**: The canonical Phoenix + Meilisearch adoption proof covers at least one production-shaped path beyond first-hour setup, including bootstrap or backfill expectations, a real sync flow, and operator-facing recovery or verification guidance.
+- [x] **PRDY-04**: The optional Sigra-flavored OPSUI proof is folded into the same readiness story with explicit boundaries about when teams need it, what it proves, and what it does not widen in `scrypath` core.
+- [x] **PRDY-05**: README, CONTRIBUTING, support docs, operations guides, and example READMEs all point to the same canonical readiness and proof sources, with bounded contract coverage that fails on drift.
 
 ### Adopter evidence and hardening
 
-- [ ] **PRDY-06**: The repo ships a bounded adopter-feedback intake path that asks for runtime versions, sync mode, proof command used, observed failure, and supporting artifacts so real integration reports are actionable instead of anecdotal.
+- [x] **PRDY-06**: The repo ships a bounded adopter-feedback intake path that asks for runtime versions, sync mode, proof command used, observed failure, and supporting artifacts so real integration reports are actionable instead of anecdotal.
 - [x] **PRDY-07**: The milestone closes only evidence-backed production-adoption papercuts discovered through the proof runs or feedback intake, and every fix lands with a regression test, contract test, or example assertion.
-- [ ] **PRDY-08**: Milestone-close artifacts end with a clear readiness checkpoint on whether Scrypath should seek broader outside production adoption before opening another feature or integration-expansion milestone.
+- [x] **PRDY-08**: Milestone-close artifacts end with a clear readiness checkpoint on whether Scrypath should seek broader outside production adoption before opening another feature or integration-expansion milestone.
 
 ## v2 Requirements
 
@@ -42,14 +42,14 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PRDY-01 | Phase 74 | Pending |
-| PRDY-02 | Phase 74 | Pending |
-| PRDY-03 | Phase 75 | Pending |
-| PRDY-04 | Phase 75 | Pending |
-| PRDY-05 | Phase 74 | Pending |
-| PRDY-06 | Phase 75 | Pending |
-| PRDY-07 | Phase 76 | Complete (Plan 01) |
-| PRDY-08 | Phase 76 | Pending |
+| PRDY-01 | Phase 74 | Complete |
+| PRDY-02 | Phase 74 | Complete |
+| PRDY-03 | Phase 75 | Complete |
+| PRDY-04 | Phase 75 | Complete |
+| PRDY-05 | Phase 74 | Complete |
+| PRDY-06 | Phase 75 | Complete |
+| PRDY-07 | Phase 76 | Complete |
+| PRDY-08 | Phase 76 | Complete |
 
 **Coverage:**
 - v1.19 requirements: 8 total
@@ -58,4 +58,4 @@
 
 ---
 *Requirements defined: 2026-04-28*
-*Last updated: 2026-04-28 after opening v1.19 Production adoption proof and hardening*
+*Last updated: 2026-04-28 after closing v1.19 Production adoption proof and hardening as a readiness checkpoint*
