@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.19
 milestone_name: Production adoption proof and hardening
 status: completed
-last_updated: "2026-04-28T13:05:00Z"
+last_updated: "2026-04-28T12:27:30Z"
 last_activity: 2026-04-28
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 8
-  completed_plans: 13
+  completed_plans: 14
   percent: 100
 ---
 
@@ -57,6 +57,8 @@ Plan: 2 of 2
 - Implemented the fence as a standard Mix task with a pure `check/1` seam so the rule set is testable without shelling out.
 - Phase 76 plan 01 accepted exactly one live-proof papercut and fixed it on the verify.adopter seam with a single task-test recurrence guard.
 - **v1.19 close:** The defended Phoenix + Meilisearch proof surfaces are green, the optional Sigra branch remains honestly scoped, and the canonical audit verdict is **ready to seek broader outside production adoption on the defended surface, with external validation still pending**.
+- Keep .planning/milestones/v1.19-MILESTONE-AUDIT.md as the only canonical broader-adoption verdict source.
+- Use the weaker v1.19 close wording because no reviewed real outside adopter signal exists yet.
 
 ### Blockers / Concerns
 
