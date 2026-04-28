@@ -1,9 +1,9 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.14
-milestone_name: ideas)
-status: executing
-last_updated: "2026-04-28T12:15:37.246Z"
+milestone: v1.19
+milestone_name: Production adoption proof and hardening
+status: completed
+last_updated: "2026-04-28T13:05:00Z"
 last_activity: 2026-04-28
 progress:
   total_phases: 3
@@ -21,14 +21,14 @@ See: `.planning/PROJECT.md` (updated 2026-04-28)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase 76 — Plan 02 remaining
+**Current focus:** v1.19 closed; use `.planning/milestones/v1.19-MILESTONE-AUDIT.md` as the canonical next-step verdict
 
 ## Current Position
 
-Phase: 76 — EXECUTING
+Phase: 76 — COMPLETE
 Plan: 2 of 2
 
-**Status:** Plan 01 complete; Plan 02 pending
+**Status:** Phase 76 complete; v1.19 closed as a readiness checkpoint with external validation still pending
 
 **Last activity:** 2026-04-28
 
@@ -56,10 +56,11 @@ Plan: 2 of 2
 - Pinned the audit-prefix contract to the Sigra 0.2.5 reserved-prefix set surfaced by `Sigra.Audit.log_multi/3`, because the dependency does not expose a public `reserved_prefixes/0` accessor.
 - Implemented the fence as a standard Mix task with a pure `check/1` seam so the rule set is testable without shelling out.
 - Phase 76 plan 01 accepted exactly one live-proof papercut and fixed it on the verify.adopter seam with a single task-test recurrence guard.
+- **v1.19 close:** The defended Phoenix + Meilisearch proof surfaces are green, the optional Sigra branch remains honestly scoped, and the canonical audit verdict is **ready to seek broader outside production adoption on the defended surface, with external validation still pending**.
 
 ### Blockers / Concerns
 
-- **Phase 76 live-proof blocker:** `mix verify.adopter --live` did not re-pass in this workspace because `examples/phoenix_meilisearch` Postgres and Meilisearch services were not running under the documented env contract. Plan 01 fixed the failure mode, but Plan 02 still needs a real running example stack before it can claim a full live-proof pass.
+- **Outside adopter evidence remains pending:** Plan 01 reran the live proof successfully after starting the documented example services, but the milestone still has no reviewed real outside adopter signal. The canonical wording and residuals live in **`.planning/milestones/v1.19-MILESTONE-AUDIT.md`**.
 - Existing `71`–`73` phase directories remain in `.planning/phases/` in the working tree; phase numbering continues at `74`, so no collision exists for this milestone open.
 
 ### Deferred Items
@@ -72,22 +73,24 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-1. **Execute `76-02-PLAN.md`** — close the milestone with the frozen Phase 76 ledger and a canonical v1.19 readiness verdict.
-2. Start the Phoenix example services before re-running `mix verify.adopter --live` if Plan 02 needs a passing live proof in this workspace.
-3. **`/gsd-progress`** — snapshot the post-Plan-01 state before the milestone close slice.
+1. Review **`.planning/milestones/v1.19-MILESTONE-AUDIT.md`** before choosing the next milestone so the broader-adoption verdict remains canonical.
+2. Seek real outside adopter evidence through the bounded intake path before reopening in-repo breadth.
+3. **`/gsd-progress`** — snapshot the post-close state if you want a fresh planning baseline.
 
 ---
 
-*Last updated: 2026-04-28 — opened **v1.19 — Production adoption proof and hardening** with phases 74–76 planned*
+*Last updated: 2026-04-28 — closed **v1.19 — Production adoption proof and hardening** as a readiness checkpoint*
 
 **Prior milestone:** **v1.18** — Sigra integration — **2026-04-26** (shipped + archived in-repo).
+
+**Completed:** **v1.19** shipped + archived in-repo (**2026-04-28**) — phases **74–76** — **`milestones/v1.19-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **Completed:** **v1.18** shipped + archived in-repo (**2026-04-26**) — phases **71–73** — **`milestones/v1.18-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **Completed:** **v1.17** shipped + archived in-repo (**2026-04-23**) — phases **68–70** — **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next:** execute **`76-02-PLAN.md`** to close the v1.19 readiness checkpoint.
+**Next:** use **`milestones/v1.19-MILESTONE-AUDIT.md`** as the canonical checkpoint verdict before opening another milestone.
 
-**Completed Phase:** 73 (Adopter proof - guide and worked example) — 2/2 plans — 2026-04-26
+**Completed Phase:** 76 (Evidence-backed hardening and release-readiness checkpoint) — 2/2 plans — 2026-04-28
 
-**Planned Phases:** 74 (Production contract and readiness spine), 75 (Production-shaped example proof and adopter intake), 76 (Evidence-backed hardening and release-readiness checkpoint).
+**Planned Phases:** none currently open.

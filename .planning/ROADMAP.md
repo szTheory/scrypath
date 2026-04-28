@@ -21,6 +21,55 @@
 - [x] **`v1.16` shipped + archived in-repo** (**2026-04-22**) — *Playbook execution & operator honesty* — phases **65–67**, **6** requirements — [archive](milestones/v1.16-ROADMAP.md) · [requirements](milestones/v1.16-REQUIREMENTS.md) · [audit](milestones/v1.16-MILESTONE-AUDIT.md)
 - [x] **`v1.17` shipped + archived in-repo** (**2026-04-23**) — *Integration confidence & adopter proof* — phases **68–70**, **6** requirements — [archive](milestones/v1.17-ROADMAP.md) · [requirements](milestones/v1.17-REQUIREMENTS.md) · [audit](milestones/v1.17-MILESTONE-AUDIT.md)
 - [x] **`v1.18` shipped + archived in-repo** (**2026-04-26**) — *Sigra integration* — phases **71–73**, **10** requirements — [archive](milestones/v1.18-ROADMAP.md) · [requirements](milestones/v1.18-REQUIREMENTS.md) · [audit](milestones/v1.18-MILESTONE-AUDIT.md)
+- [x] **`v1.19` shipped + archived in-repo** (**2026-04-28**) — *Production adoption proof and hardening* — phases **74–76**, **8** requirements — [archive](milestones/v1.19-ROADMAP.md) · [requirements](milestones/v1.19-REQUIREMENTS.md) · [audit](milestones/v1.19-MILESTONE-AUDIT.md)
+
+## Current Milestone
+
+No active milestone is currently open. **v1.19 — Production adoption proof and hardening** closed on **2026-04-28** as a readiness checkpoint; the canonical broader-adoption verdict lives in **`milestones/v1.19-MILESTONE-AUDIT.md`**.
+
+### Phase 74: Production contract and readiness spine
+
+- [x] **Phase 74: Production contract and readiness spine** (2026-04-28) — **PRDY-01**, **PRDY-02**, **PRDY-05** — published the canonical production-readiness contract, established one root proof command family, and locked README / CONTRIBUTING / guides / examples to the same defended readiness path.
+
+**Plans:** 3 plans
+
+Plans:
+- [x] `74-01-PLAN.md` — Reused the support guide as the canonical production-readiness contract and rewired the primary docs to it.
+- [x] `74-02-PLAN.md` — Aligned downstream operations/support/example surfaces to the same readiness contract and extended the bounded readiness drift suite.
+- [x] `74-03-PLAN.md` — Repointed `mix verify.adopter` to the new readiness seam and locked CI/task alignment to the root proof family.
+
+**Success criteria (observable):**
+
+1. A maintainer can answer "what does Scrypath v1 actively prove today?" by linking one canonical readiness source rather than stitching together multiple guides and examples.
+2. One root proof command family makes fast vs live expectations explicit and covers the defended readiness story without requiring maintainers to know the repo's internal verify topology.
+3. Contract tests or equivalent bounded assertions fail if README, CONTRIBUTING, support docs, or example READMEs drift from the canonical readiness path.
+
+### Phase 75: Production-shaped example proof and adopter intake
+
+- [x] **Phase 75: Production-shaped example proof and adopter intake** (2026-04-28) — **PRDY-03**, **PRDY-04**, **PRDY-06** — deepened the production-shaped proof paths for the Phoenix + Meilisearch example and the optional Sigra OPSUI example, and added a bounded adopter-intake path that collects actionable integration evidence.
+
+**Plans:** 3 plans
+
+Plans:
+- [x] `75-01-PLAN.md` — Turned the Phoenix + Meilisearch example into one canonical production-shaped lifecycle proof with bounded contract coverage.
+- [x] `75-02-PLAN.md` — Framed Sigra as an optional host-wiring branch within the same readiness story and pinned that boundary with readiness assertions.
+- [x] `75-03-PLAN.md` — Tightened adopter intake evidence requirements and protected the proof-family wording from drift.
+
+**Success criteria (observable):**
+
+1. The core example demonstrates at least one production-shaped path beyond initial setup, including operational expectations around bootstrap, sync, or recovery.
+2. The Sigra example is clearly framed as optional proof for hosts that need the auth/audit story, without implying new auth coupling inside `scrypath` core.
+3. Adopter reports arrive with concrete environment, proof-command, and failure evidence so maintainers can triage real friction without back-and-forth guesswork.
+
+### Phase 76: Evidence-backed hardening and release-readiness checkpoint
+
+- [x] **Phase 76: Evidence-backed hardening and release-readiness checkpoint** (2026-04-28) — **PRDY-07**, **PRDY-08** — closed one proof-discovered papercut with a bounded regression anchor, reran the documented live proof successfully, and ended the milestone with a canonical readiness-checkpoint verdict in **`milestones/v1.19-MILESTONE-AUDIT.md`**.
+
+**Success criteria (observable):**
+
+1. Every in-scope fix is traceable to a proof run or adopter-intake signal rather than speculative polish.
+2. Each papercut fix has a bounded regression anchor in tests, contracts, or example assertions.
+3. Milestone-close artifacts clearly say whether the repo is ready to pursue broader production adoption on the current feature surface.
 
 ## Phases (history)
 
@@ -255,9 +304,11 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**Current milestone:** **v1.18 Sigra integration** — shipped + archived **2026-04-26**, **3** phases (**71–73**) complete, **10** requirements (**SIGRA-01**..**SIGRA-10**) satisfied. See **`milestones/v1.18-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**Current milestone:** none open. The most recent close is **v1.19 Production adoption proof and hardening** — archived **2026-04-28** as a readiness checkpoint. See **`.planning/milestones/v1.19-MILESTONE-AUDIT.md`** for the canonical broader-adoption verdict and **`.planning/milestones/v1.19-REQUIREMENTS.md`** for the frozen traceability snapshot.
 
-**Next default pull:** start the next milestone with fresh requirements and scope definition.
+**Last shipped milestone:** **v1.19 Production adoption proof and hardening** — shipped + archived **2026-04-28**, **3** phases (**74–76**) complete, **8** requirements (**PRDY-01**..**PRDY-08**) satisfied. See **`milestones/v1.19-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+
+**Next default pull:** seek real outside adopter evidence through the bounded intake path, using **`.planning/milestones/v1.19-MILESTONE-AUDIT.md`** as the canonical checkpoint verdict.
 
 **`v1.17` archived (in-repo)** — **2026-04-23** shipped + archived — **3** phases (**68–70**), **6** requirements (**INTG-01**–**INTG-06**); see **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
@@ -282,4 +333,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - **Tier D** — maintainer-only planning hygiene — same file; do not headline consumer milestones.
 
 ---
-*Last updated: 2026-04-27 — **`v1.18 Sigra integration`** shipped + archived; phases **71–73** complete*
+*Last updated: 2026-04-28 — closed **`v1.19 Production adoption proof and hardening`** and archived the readiness-checkpoint verdict*

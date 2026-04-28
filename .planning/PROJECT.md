@@ -10,42 +10,40 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Current State
 
-**v1.18 — Sigra integration** shipped in-repo on **2026-04-26** and is archived under **`milestones/v1.18-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**v1.19 — Production adoption proof and hardening** closed on **2026-04-28** as a readiness checkpoint and continues phase numbering at **74**.
 
-**Goal:** Ship a named, optional Sigra integration in **`scrypath_ops`** that gives Sigra-using Phoenix hosts a credible answer to *"who can run sensitive Scrypath operator actions, and how is it audited?"* — without changing **`scrypath`** core or making Sigra aware of Scrypath.
+**Checkpoint result:** Scrypath is **ready to seek broader outside production adoption on the defended surface, with external validation still pending**. The canonical verdict and evidence pointers live in **`milestones/v1.19-MILESTONE-AUDIT.md`**.
 
 **Target features:**
 
-- **`OperatorContext`** — typed, IDs-only struct translating **`%Sigra.Session{}`** into a stable internal contract.
-- **`OnMount`** hook — drop-in LiveView mount that builds and assigns **`OperatorContext`** to the socket.
-- **`Gating.gate_sensitive_action/3`** — single funnel doing forbid-during-impersonation → sudo freshness → action → **`Sigra.Audit.log_safe/3`** with **`scrypath.ops.*`** prefix; **`push_navigate`** to host-owned sudo confirm route on stale sudo.
-- **Sensitive-action wiring** in **`playbook_live.ex`**, **`failed_sync_live.ex`**, plus swap-live actions in **`posture_live.ex`** / **`sync_drift_live.ex`**.
-- **`OPSUI_AUTH_MODE=sigra`** added to **`Security.allowed_opsui_auth_modes/0`** allowlist.
-- **Compile-guard + namespace-fence CI check** — **`Code.ensure_loaded?(Sigra.Session)`** guards everywhere; CI grep fails if **`Sigra.`** appears outside the integration namespace or in **`lib/scrypath/`**.
-- **`guides/integrations/sigra.md`** — canonical wiring guide.
-- **`examples/phoenix_sigra_ops/`** — focused worked example (no Meilisearch noise) wiring the full stack; CI smoke target.
+- **Canonical production-readiness contract** — one defended maintainer/adopter source for what Scrypath v1 proves today, how teams should validate it locally, and which operational responsibilities remain explicitly on the host app.
+- **Expanded proof spine** — root-level verify and example flows that cover the core Phoenix + Meilisearch adoption path and the optional Sigra-flavored OPSUI path without guessing which commands matter.
+- **Production-shaped example coverage** — explicit proof paths for bootstrap, sync, operational visibility, and integration caveats that go beyond first-hour setup and survive docs / CI drift.
+- **Adopter feedback intake** — a bounded issue template or equivalent intake path that asks for the concrete evidence maintainers need in order to turn real adoption friction into small, defensible fixes.
+- **Evidence-backed papercut closure** — only the friction exposed by the proof paths or intake loop lands in scope, and each fix gets a regression or contract anchor.
 
-**Boundary discipline:** in-repo **`ScrypathOps.Integrations.Sigra.*`** with **`{:sigra, "~> 0.2", optional: true}`** in **`scrypath_ops/mix.exs`**. **No new hex package.** **`scrypath`** core stays auth-agnostic — zero changes to **`lib/scrypath/`**. Sigra remains unaware of Scrypath.
+**Boundary discipline:** this milestone is about proof, contracts, and hardening — not widening the search feature surface. `scrypath` core stays Meilisearch-first, Ecto-first, and auth-agnostic. Optional integrations remain optional, and any new docs or verify work must sharpen existing guarantees rather than imply support breadth the repo does not actually defend.
 
-**Out of scope for v1.18:** core org scoping in search/sync, a separate **`scrypath_sigra`** hex package, in-place sudo modal, plug re-export modules, automatic router wiring.
+**Out of scope for v1.19:** new search capabilities, a public multi-backend expansion, deeper OPSUI feature breadth for its own sake, core auth coupling, or maintainer-only planning-tooling cleanup as the headline deliverable.
 
-Canonical REQ IDs: **`milestones/v1.18-REQUIREMENTS.md`** (**SIGRA-***). Approved plan: **`~/.claude/plans/so-i-m-considering-rippling-ladybug.md`**.
+Canonical REQ IDs: **`.planning/REQUIREMENTS.md`** (**PRDY-***).
 
-## Next Milestone Goals
+## Current Milestone Outcome
 
-- Gather adopter feedback on the Sigra integration before widening the auth boundary.
-- Keep `scrypath` core auth-agnostic; any org-scoping or deeper auth coupling stays out of scope until evidence demands it.
-- Use the shipped guide, example, and audit to decide whether the next milestone should focus on integration hardening, docs polish, or adjacent operator workflows.
+- Phase 74 established the canonical readiness contract and one fast/live proof family.
+- Phase 75 deepened the Phoenix + Meilisearch proof path, framed the optional Sigra branch honestly, and shipped the bounded adopter-intake path.
+- Phase 76 closed one evidence-backed live-proof papercut, reran the documented live proof successfully, and froze the milestone as a readiness checkpoint.
+- Rolling planning truth is summary-only; the single canonical broader-adoption verdict remains **`milestones/v1.19-MILESTONE-AUDIT.md`**.
 
 ## Last shipped milestone
 
-**v1.18 — Sigra integration** (shipped + archived in-repo **2026-04-26**). Optional Sigra integration in `scrypath_ops` with compile guards, `OperatorContext` / `OnMount` / `Gating`, four gated LiveView handlers, a canonical adopter guide, a worked Phoenix example, and a passed milestone audit — see **`milestones/v1.18-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**v1.19 — Production adoption proof and hardening** (shipped + archived in-repo **2026-04-28** as a readiness checkpoint). Canonical readiness truth, one defended fast/live proof family, production-shaped core and optional example coverage, a bounded adopter-intake path, and one evidence-backed hardening fix — see **`milestones/v1.19-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Prior:** **v1.17 — Integration confidence & adopter proof** (shipped + archived in-repo **2026-04-23** as a readiness checkpoint) — **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**. **v1.16 — Playbook execution & operator honesty** (shipped + archived in-repo **2026-04-22**) — **`milestones/v1.16-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**. **v1.15 — OPSUI second slice** — **`milestones/v1.15-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**. **OPSUI** arc: **`milestones/v1.10-{ROADMAP,REQUIREMENTS}.md`**.
+**Prior:** **v1.18 — Sigra integration** (shipped + archived in-repo **2026-04-26**) — **`milestones/v1.18-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**. **v1.17 — Integration confidence & adopter proof** (shipped + archived in-repo **2026-04-23** as a readiness checkpoint) — **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**. **v1.16 — Playbook execution & operator honesty** (shipped + archived in-repo **2026-04-22**) — **`milestones/v1.16-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**. **OPSUI** arc: **`milestones/v1.10-{ROADMAP,REQUIREMENTS}.md`**.
 
 ## Planning window
 
-**v1.18 — Sigra integration** shipped + archived in-repo **2026-04-26** after the v1.17 readiness checkpoint. Phases **71–73** are complete; rolling truth now lives in **`milestones/v1.18-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**v1.19 — Production adoption proof and hardening** opened and closed on **2026-04-28**. Phases **74–76** are complete; the frozen milestone truth now lives in **`milestones/v1.19-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 ## Requirements
 
@@ -100,10 +98,11 @@ Canonical REQ IDs: **`milestones/v1.18-REQUIREMENTS.md`** (**SIGRA-***). Approve
 
 ### Active
 
-- No active milestone is open after the v1.18 close; the next milestone has not been defined yet.
+- None. The last completed milestone is **v1.19**, and the next milestone choice should start from the canonical verdict in **`milestones/v1.19-MILESTONE-AUDIT.md`**.
 
 ### Recently completed
 
+- [x] **v1.19** (2026-04-28): **PRDY-01**–**PRDY-08** — canonical readiness contract, defended fast/live proof family, production-shaped Phoenix + Sigra example coverage, bounded adopter-intake path, one evidence-backed papercut fix, and a readiness-checkpoint close archived in **`milestones/v1.19-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 - [x] **v1.17 — Integration confidence & adopter proof** (2026-04-23) — phases **68–70**; **INTG-01**–**INTG-06** — **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 - [x] **v1.16 — Playbook execution & operator honesty** (2026-04-22) — phases **65–67**; **OPS3-01**–**OPS3-06** — **`milestones/v1.16-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
@@ -119,7 +118,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has **twenty** shipped planning milestones through **`v1.18`** (**`v1.0`**–**`v1.18`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`** for shipped arcs.
+The repository has **twenty-one** shipped planning milestones through **`v1.19`** (**`v1.0`**–**`v1.19`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`** for shipped arcs.
 
 - `v1.0` shipped the Meilisearch-first Ecto-native indexing core, search/hydration path, Oban support, reindex workflows, public Phoenix docs, and release automation baseline.
 - `v1.1` shipped release hardening, docs-safety fixes, `mix verify.phase10`, and the launch-readiness evidence chain.
@@ -164,12 +163,13 @@ The current public line on Hex is **`scrypath 0.3.4`**. **v1.8** closed the fede
 | **v1.16** — Playbook execution & operator honesty | Close the operator loop after capture/catalog/persist: **run lifecycle**, **actionable errors**, **runner–library alignment**, **verify/contracts**, **JTBD examples** | ✓ Shipped + archived in-repo |
 | **v1.17** — Integration confidence & adopter proof | Freeze breadth; prove the shipped surface lands cleanly in real Phoenix/Ecto apps through one example, one support contract, one adoption verify path, and a short list of evidence-backed papercuts | ✓ Shipped + archived in-repo as a readiness checkpoint |
 | **v1.18** — Sigra integration (in-repo, optional) | Optional in-repo Sigra integration for `scrypath_ops`; keeps `scrypath` core auth-agnostic and Sigra unaware while giving hosts a canonical operator-attribution + sudo + audit story for sensitive ops actions | ✓ Shipped + archived in-repo |
+| **v1.19** — Production adoption proof and hardening | After the readiness checkpoint and Sigra add-on, prioritize defended production proof, support-contract clarity, and evidence-backed papercut closure before widening product scope again | ✓ Shipped + archived in-repo as a readiness checkpoint; canonical verdict: ready to seek broader outside production adoption on the defended surface, with external validation still pending |
 
 ## Historical Context
 
 **Hex:** `scrypath` **`0.3.4`** on Hex; default-branch **`mix.exs`** matches unless a release PR is mid-flight. Shipped surfaces include the v1.3-era Meilisearch-native path (relevance, facets, multi-index, operator polish), v1.4 **hot_apply** / failure rollups, v1.5 **index contract drift** tooling, v1.6 **adoption-grade** docs and verification clarity, **v1.7** facet-depth APIs with **`mix verify.phase36`..`38`**, **v1.8** federation weights / **`:all`** expansion / **`mix verify.phase41`**, **v1.9** per-query pipeline spec + **`:per_query`** runtime with **`mix verify.phase43`**, **v1.10** optional **`scrypath_ops`** operator LiveView UI, **v1.11** operator-shell polish (**IA contract**, **theming**, **Phoenix shell tests**, **`opsui.test_a11y`**), **v1.12** first-hour onboarding (**adoption path contracts**, **actionable errors + pitfalls**, **contributor `mix verify.opsui` spine**), **v1.13** public polish (**guide voice**, **Hex narrative**, **`AGENTS.md`**), **v1.14** (**`Scrypath.Errors`**, **`ScrypathOps.Playbook.V1`**, **`/ops/playbooks`**, **`SCRYPATH_OPS_PLAYBOOK_DIR`**, stub-backed **`PlaybookLive`** tests), **v1.15** (**playground → playbook capture**, **team playbook persistence docs + `mix scrypath_ops.playbooks.validate`**, **nav + verify contracts** for the second OPSUI slice), and **v1.16**, which completed the saved-playbook execution loop with bounded lifecycle/error contracts, canonical JTBD fixtures, and truthful milestone-close bookkeeping.
 
-**Planning:** **v1.18 — Sigra integration** shipped + archived in-repo (**2026-04-26**) after the v1.17 readiness checkpoint. Canonical close truth lives under **`milestones/v1.18-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**. Phase numbering for the next milestone continues from **Phase 74**.
+**Planning:** **v1.19 — Production adoption proof and hardening** is now closed and archived as a readiness checkpoint. Future milestone selection should treat **`milestones/v1.19-MILESTONE-AUDIT.md`** as the canonical source for whether to seek outside adopter evidence next and should not infer stronger production validation than that audit claims.
 
 ## Evolution
 
@@ -189,4 +189,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-27 — **v1.18 Sigra integration** archived in-repo after a passed milestone audit*
+*Last updated: 2026-04-28 — closed **v1.19 Production adoption proof and hardening** as a readiness checkpoint and archived the canonical verdict in **`milestones/v1.19-MILESTONE-AUDIT.md`***
