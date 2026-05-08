@@ -6,7 +6,8 @@ defmodule Mix.Tasks.Verify.Phase38 do
 
   @focused_tests [
     "test/scrypath/search_within_facet_test.exs",
-    "test/scrypath/meilisearch/query_test.exs"
+    "test/scrypath/meilisearch/query_test.exs",
+    "test/scrypath/docs_contract_test.exs"
   ]
 
   @impl true

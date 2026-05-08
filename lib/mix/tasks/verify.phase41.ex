@@ -9,7 +9,8 @@ defmodule Mix.Tasks.Verify.Phase41 do
     "test/scrypath/multi_search/all_expansion_test.exs",
     "test/scrypath/multi_search/entries_test.exs",
     "test/scrypath/meilisearch/federated_decode_test.exs",
-    "test/scrypath/meilisearch/client_multi_search_test.exs"
+    "test/scrypath/meilisearch/client_multi_search_test.exs",
+    "test/scrypath/docs_contract_test.exs"
   ]
 
   @impl true

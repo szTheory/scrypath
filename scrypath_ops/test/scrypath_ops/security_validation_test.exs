@@ -27,7 +27,9 @@ defmodule ScrypathOps.SecurityValidationTest do
   test "validate/1 accepts the supported auth modes" do
     assert :ok == Security.validate(%{auth_mode: "basic", sigra: []})
     assert :ok == Security.validate(%{auth_mode: "proxy_headers", sigra: []})
-    assert :ok == Security.validate(%{auth_mode: "sigra", sigra: [sudo_confirm_path: "/sudo/confirm"]})
+
+    assert :ok ==
+             Security.validate(%{auth_mode: "sigra", sigra: [sudo_confirm_path: "/sudo/confirm"]})
   end
 
   test "validate!/0 accepts sigra only when sudo_confirm_path is configured" do

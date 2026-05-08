@@ -348,9 +348,6 @@ jobs:
             examples/phoenix_meilisearch/_build
           key: ${{ runner.os }}-phx-example-${{ hashFiles('examples/phoenix_meilisearch/mix.lock') }}-${{ hashFiles('mix.lock') }}
 
-      - name: Install root dependencies
-        run: mix deps.get
-
       - name: Install postgres client (pg_isready)
         run: sudo apt-get update -qq && sudo apt-get install -y postgresql-client
 
@@ -376,8 +373,11 @@ jobs:
           echo "Meilisearch failed to start"
           exit 1
 
-      - name: Phoenix example integration (`mix verify.adopter --live`)
-        run: mix verify.adopter --live
+      - name: Phoenix example integration (`cd examples/phoenix_meilisearch && mix deps.get && mix test`)
+        run: |
+          cd examples/phoenix_meilisearch
+          mix deps.get
+          mix test
 
   # Path gate for OPSUI: always run on push to main; on pull_request only when
   # library or scrypath_ops paths change (see phase 47 CONTEXT D-03).

@@ -19,7 +19,8 @@ defmodule Mix.Tasks.Verify.Phase11 do
     run_test!(
       [
         "test/release/package_metadata_test.exs",
-        "test/release/consumer_smoke_test.exs"
+        "test/release/consumer_smoke_test.exs",
+        "test/scrypath/docs_contract_test.exs"
       ],
       "Release contract tests"
     )

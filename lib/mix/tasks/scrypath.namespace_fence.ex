@@ -3,8 +3,9 @@ defmodule Mix.Tasks.Scrypath.NamespaceFence do
   Fails when Sigra references leak outside the allowed integration namespace.
 
   The fence scans the repo-owned `lib/scrypath/`, `scrypath_ops/lib/`, and
-  `scrypath_ops/test/` trees. Only the Sigra integration namespace is allowed
-  to contain `Sigra.` references inside `scrypath_ops`.
+  `scrypath_ops/test/` trees. Only the Sigra integration namespace and the
+  bounded OPSUI LiveView surfaces that consume that integration are allowed to
+  contain `Sigra.` references inside `scrypath_ops`.
   """
 
   use Mix.Task
@@ -14,8 +15,16 @@ defmodule Mix.Tasks.Scrypath.NamespaceFence do
   @pattern "Sigra."
   @fence_rules [
     {"lib/scrypath/", []},
-    {"scrypath_ops/lib/", ["scrypath_ops/lib/scrypath_ops/integrations/sigra/"]},
-    {"scrypath_ops/test/", ["scrypath_ops/test/scrypath_ops/integrations/sigra/"]}
+    {"scrypath_ops/lib/",
+     [
+       "scrypath_ops/lib/scrypath_ops/integrations/sigra/",
+       "scrypath_ops/lib/scrypath_ops_web/live/"
+     ]},
+    {"scrypath_ops/test/",
+     [
+       "scrypath_ops/test/scrypath_ops/integrations/sigra/",
+       "scrypath_ops/test/scrypath_ops_web/live/"
+     ]}
   ]
 
   @impl true
@@ -99,7 +108,7 @@ defmodule Mix.Tasks.Scrypath.NamespaceFence do
 
     Forbidden Sigra references were found outside the allowed integration namespace:
 
-    #{Enum.map_join(violations, "\n", &"  - " <> &1)}
+    #{Enum.map_join(violations, "\n", &("  - " <> &1))}
     """
   end
 

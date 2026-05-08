@@ -6,7 +6,8 @@ defmodule Mix.Tasks.Verify.Phase14 do
 
   @focused_tests [
     "test/scrypath/mix_tasks/operator_tasks_test.exs",
-    "test/release/package_metadata_test.exs"
+    "test/release/package_metadata_test.exs",
+    "test/scrypath/docs_contract_test.exs"
   ]
 
   @impl true

@@ -7,7 +7,8 @@ defmodule Mix.Tasks.Verify.Phase43 do
   @focused_tests [
     "test/scrypath/per_query_tuning_test.exs",
     "test/scrypath/search_test.exs",
-    "test/scrypath/search_many_test.exs"
+    "test/scrypath/search_many_test.exs",
+    "test/scrypath/docs_contract_test.exs"
   ]
 
   @impl true

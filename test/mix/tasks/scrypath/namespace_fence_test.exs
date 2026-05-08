@@ -7,8 +7,17 @@ defmodule Mix.Tasks.Scrypath.NamespaceFenceTest do
     test "flags planted Sigra references under lib/scrypath/" do
       root = tmp_root()
 
-      write!(root, "lib/scrypath/forbidden.ex", "defmodule Sample do\n  # Sigra. should be fenced\nend\n")
-      write!(root, "scrypath_ops/lib/scrypath_ops/integrations/sigra/allowed.ex", "defmodule Allowed do\n  # Sigra. is allowed here\nend\n")
+      write!(
+        root,
+        "lib/scrypath/forbidden.ex",
+        "defmodule Sample do\n  # Sigra. should be fenced\nend\n"
+      )
+
+      write!(
+        root,
+        "scrypath_ops/lib/scrypath_ops/integrations/sigra/allowed.ex",
+        "defmodule Allowed do\n  # Sigra. is allowed here\nend\n"
+      )
 
       assert {:error, violations} = NamespaceFence.check(root)
       assert Enum.any?(violations, &String.contains?(&1, "lib/scrypath/forbidden.ex:2"))
@@ -18,8 +27,17 @@ defmodule Mix.Tasks.Scrypath.NamespaceFenceTest do
     test "allows the Sigra integration namespace" do
       root = tmp_root()
 
-      write!(root, "scrypath_ops/lib/scrypath_ops/integrations/sigra/allowed.ex", "defmodule Allowed do\n  # Sigra. is allowed here\nend\n")
-      write!(root, "scrypath_ops/test/scrypath_ops/integrations/sigra/allowed_test.exs", "defmodule AllowedTest do\n  # Sigra. is allowed here too\nend\n")
+      write!(
+        root,
+        "scrypath_ops/lib/scrypath_ops/integrations/sigra/allowed.ex",
+        "defmodule Allowed do\n  # Sigra. is allowed here\nend\n"
+      )
+
+      write!(
+        root,
+        "scrypath_ops/test/scrypath_ops/integrations/sigra/allowed_test.exs",
+        "defmodule AllowedTest do\n  # Sigra. is allowed here too\nend\n"
+      )
 
       assert {:ok, summary} = NamespaceFence.check(root)
       assert summary.scanned_dirs == ["lib/scrypath/", "scrypath_ops/lib/", "scrypath_ops/test/"]
@@ -31,7 +49,12 @@ defmodule Mix.Tasks.Scrypath.NamespaceFenceTest do
   end
 
   defp tmp_root do
-    path = Path.join(System.tmp_dir!(), "scrypath-namespace-fence-#{System.unique_integer([:positive])}")
+    path =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath-namespace-fence-#{System.unique_integer([:positive])}"
+      )
+
     File.rm_rf!(path)
     File.mkdir_p!(path)
     path

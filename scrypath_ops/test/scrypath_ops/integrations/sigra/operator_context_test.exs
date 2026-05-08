@@ -27,7 +27,10 @@ defmodule ScrypathOps.Integrations.Sigra.OperatorContextTest do
 
     assert struct_keys == MapSet.new([:user_id, :active_org_id, :impersonator_user_id, :sudo_at])
 
-    refute Enum.any?([:ip, :user_agent, :parsed_ua, :geo_city, :geo_country_code, :email, :name], &MapSet.member?(struct_keys, &1))
+    refute Enum.any?(
+             [:ip, :user_agent, :parsed_ua, :geo_city, :geo_country_code, :email, :name],
+             &MapSet.member?(struct_keys, &1)
+           )
   end
 
   test "build/2 returns nil when scope is absent" do

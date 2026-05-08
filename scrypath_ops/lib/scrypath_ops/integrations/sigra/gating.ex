@@ -16,7 +16,8 @@ if Code.ensure_loaded?(Sigra.Audit) do
     @spec __action_config__() :: %{required(atom()) => String.t()}
     def __action_config__, do: @action_config
 
-    def gate_sensitive_action(socket, action, fun) when action in @actions and is_function(fun, 0) do
+    def gate_sensitive_action(socket, action, fun)
+        when action in @actions and is_function(fun, 0) do
       case Map.get(socket.assigns, :operator_context) do
         nil ->
           fun.()
@@ -24,7 +25,10 @@ if Code.ensure_loaded?(Sigra.Audit) do
         %{impersonator_user_id: impersonator_user_id} = _operator_context
         when not is_nil(impersonator_user_id) ->
           socket
-          |> Phoenix.LiveView.put_flash(:error, "Impersonation must be cleared before this action.")
+          |> Phoenix.LiveView.put_flash(
+            :error,
+            "Impersonation must be cleared before this action."
+          )
 
         %{sudo_at: sudo_at} = operator_context ->
           if stale_sudo?(sudo_at) do
@@ -32,7 +36,9 @@ if Code.ensure_loaded?(Sigra.Audit) do
             return_to = return_to(socket)
 
             socket
-            |> Phoenix.LiveView.push_navigate(to: confirm_path <> "?" <> URI.encode_query(return_to: return_to))
+            |> Phoenix.LiveView.push_navigate(
+              to: confirm_path <> "?" <> URI.encode_query(return_to: return_to)
+            )
           else
             audit_action(action, operator_context, socket)
             fun.()
