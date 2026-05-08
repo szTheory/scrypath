@@ -31,6 +31,41 @@ Release Please manages versioned entries after this baseline.
 - Adopters should read the **Versioning and upgrades** section in `README.md` for semver posture and upgrade expectations; maintainers should follow `docs/releasing.md` for verify gates and Release Please (without duplicating the full `mix verify.phase11` task list here).
 - Release-parity gates were motivated by a historical **tag vs default-branch** divergence in an earlier cycle; see `docs/releasing.md` § Historical context.
 
+## [0.3.6](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.5...scrypath-v0.3.6) (2026-05-08)
+
+
+### Features
+
+* **65-01:** add playbook run failure enrichment ([c92852f](https://github.com/szTheory/scrypath/commit/c92852f3c2208b05bb14ecad44027a7c2ab0417e))
+* **65-02:** async playbook run lifecycle ([73b687e](https://github.com/szTheory/scrypath/commit/73b687eb01459b64d88674b4f33d6f3029912f2a))
+* **65-03:** add structured playbook run failure UI ([89b3409](https://github.com/szTheory/scrypath/commit/89b3409ba4b55eba836f30563e14c8fba1d949ae))
+* **65-04:** harden playbook run lifecycle tests ([63bb8f3](https://github.com/szTheory/scrypath/commit/63bb8f33a1c7bbaf37c3b77d59bc9f5a960005cf))
+* **65:** automate playbook run lifecycle verification ([193fe36](https://github.com/szTheory/scrypath/commit/193fe364b519bf9bd27ad63b060e95794c394b96))
+* **66-02:** align runner parity with scrypath contract ([f1e289e](https://github.com/szTheory/scrypath/commit/f1e289ef80b3df282fc23784fcdee19d59b58318))
+* **71-01:** make Sigra optional in ops UI boot path ([9aee601](https://github.com/szTheory/scrypath/commit/9aee6017d7b79bd3792ee30c6cd9a91a890252fe))
+* **71-02:** add Sigra runtime integration ([85db7ee](https://github.com/szTheory/scrypath/commit/85db7ee794579159869d55c5a45b4aedd42405cb))
+* **71-03:** add namespace fence task ([f72bbf3](https://github.com/szTheory/scrypath/commit/f72bbf36f0875eb9b15be75e752aea1c8795bd97))
+* **71-03:** lock audit prefixes in CI ([ffcec6d](https://github.com/szTheory/scrypath/commit/ffcec6dbe5e03fbfc3281a6826c178eeb54713ea))
+* **72-02:** gate posture swap_live action ([1aaa556](https://github.com/szTheory/scrypath/commit/1aaa556a70984c8baff99643613500ec8296b19a))
+* **72-02:** gate sync-drift swap_live action ([c31f0e6](https://github.com/szTheory/scrypath/commit/c31f0e65190a9bfdad45288245e05fce739c018b))
+
+
+### Bug Fixes
+
+* **66:** align playbook schema docs with runner contract ([61b9bff](https://github.com/szTheory/scrypath/commit/61b9bff9f08a4bc3884bb0a46ae3e422f818bcca))
+* **72-01:** gate failed-sync retry and preserve local state ([b1ab863](https://github.com/szTheory/scrypath/commit/b1ab8633af32e5e955fffcae91975ed223634bc4))
+* **72-01:** gate playbook delete and keep run paths ungated ([3068a9a](https://github.com/szTheory/scrypath/commit/3068a9a8508347b33e6731bcd4982522a18fb11e))
+* **76-01:** fail fast when live adopter services are down ([96d9f76](https://github.com/szTheory/scrypath/commit/96d9f76bb510ce489e3128dbea777a2886aafb53))
+* align opsui auth mode contract test ([58c9487](https://github.com/szTheory/scrypath/commit/58c948707d1a13e9362c9feb3b7fa4589e371fff))
+* align readme wording with telemetry contract ([6906e8e](https://github.com/szTheory/scrypath/commit/6906e8e10bc859e4a866a3a71f38346b24ffd433))
+* keep sigra optional compile warning-free ([6d78087](https://github.com/szTheory/scrypath/commit/6d780874151a64ae20dd025defb1159363b3b9d3))
+* prepare scrypath_ops deps in quality CI ([3b27e57](https://github.com/szTheory/scrypath/commit/3b27e57477955942c5c71d2ad580e0578830c6f6))
+* restore CI contract after main reconciliation ([bb51053](https://github.com/szTheory/scrypath/commit/bb5105352050181a206f7256edc2d5424dcb6e59))
+* restore readme product-shape contract ([acff4ef](https://github.com/szTheory/scrypath/commit/acff4ef33141d44eb82b358da931d538095583b4))
+* run verify.adopter in test env ([693b62e](https://github.com/szTheory/scrypath/commit/693b62e2e31cd33bccda8795ae728a79703e4fca))
+* satisfy dialyzer in namespace fence ([156d355](https://github.com/szTheory/scrypath/commit/156d3559cc832865bd59403b870d4081cef31549))
+* silence exdoc readme path warning ([8d9036e](https://github.com/szTheory/scrypath/commit/8d9036ea5f70b3b4d8c10b5b68031ddfe6c66e7d))
+
 ## [0.3.5](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.4...scrypath-v0.3.5) (2026-04-23)
 
 
