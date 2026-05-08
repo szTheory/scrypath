@@ -96,8 +96,6 @@ else
       hot_apply: "scrypath.ops.hot_apply"
     }
 
-    @actions Map.keys(@action_config)
-
     @spec __action_config__() :: %{required(atom()) => String.t()}
     def __action_config__, do: @action_config
 
