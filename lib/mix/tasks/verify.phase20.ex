@@ -11,7 +11,8 @@ defmodule Mix.Tasks.Verify.Phase20 do
     "test/scrypath/meilisearch/query_test.exs",
     "test/scrypath/meilisearch/settings_test.exs",
     "test/scrypath/backend_test.exs",
-    "test/support/docs/phoenix_examples_test.exs"
+    "test/support/docs/phoenix_examples_test.exs",
+    "test/scrypath/docs_contract_test.exs"
   ]
 
   @impl true

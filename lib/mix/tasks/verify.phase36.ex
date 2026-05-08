@@ -8,7 +8,8 @@ defmodule Mix.Tasks.Verify.Phase36 do
     "test/scrypath/options_test.exs",
     "test/scrypath/search_test.exs",
     "test/scrypath/meilisearch/settings_test.exs",
-    "test/scrypath/operator/index_contract_drift_test.exs"
+    "test/scrypath/operator/index_contract_drift_test.exs",
+    "test/scrypath/docs_contract_test.exs"
   ]
 
   @impl true

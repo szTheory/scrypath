@@ -35,7 +35,10 @@ defmodule ScrypathOps.Integrations.Sigra.GatingTest do
     context = operator_context(impersonator: "impersonator_789")
     socket = socket(%{operator_context: context})
 
-    result = Gating.gate_sensitive_action(socket, :playbook_delete, fn -> flunk("action should not run") end)
+    result =
+      Gating.gate_sensitive_action(socket, :playbook_delete, fn ->
+        flunk("action should not run")
+      end)
 
     assert get_flash(result, "error") =~ "Impersonation must be cleared"
   end
@@ -44,7 +47,10 @@ defmodule ScrypathOps.Integrations.Sigra.GatingTest do
     context = operator_context(sudo_at: DateTime.add(DateTime.utc_now(), -600, :second))
     socket = socket(%{operator_context: context, return_to: "/ops/playbooks/42"})
 
-    result = Gating.gate_sensitive_action(socket, :playbook_delete, fn -> flunk("action should not run") end)
+    result =
+      Gating.gate_sensitive_action(socket, :playbook_delete, fn ->
+        flunk("action should not run")
+      end)
 
     assert inspect(result.redirected) =~ "/sudo/confirm"
     assert inspect(result.redirected) =~ "return_to=%2Fops%2Fplaybooks%2F42"
@@ -61,7 +67,11 @@ defmodule ScrypathOps.Integrations.Sigra.GatingTest do
     scope = %{
       user: %{id: "user_123"},
       active_organization: %{id: "org_456"},
-      impersonating_from: if(Keyword.get(opts, :impersonator), do: %{id: Keyword.fetch!(opts, :impersonator)}, else: nil)
+      impersonating_from:
+        if(Keyword.get(opts, :impersonator),
+          do: %{id: Keyword.fetch!(opts, :impersonator)},
+          else: nil
+        )
     }
 
     session = %Sigra.Session{
@@ -74,7 +84,15 @@ defmodule ScrypathOps.Integrations.Sigra.GatingTest do
 
   defp socket(assigns) do
     %Phoenix.LiveView.Socket{
-      assigns: Map.merge(%{__changed__: %{}, current_scope: %{user: %{id: "user_123"}, active_organization: %{id: "org_456"}}, flash: %{}}, assigns),
+      assigns:
+        Map.merge(
+          %{
+            __changed__: %{},
+            current_scope: %{user: %{id: "user_123"}, active_organization: %{id: "org_456"}},
+            flash: %{}
+          },
+          assigns
+        ),
       host_uri: URI.parse("https://scrypath.example/ops/playbooks/42")
     }
   end

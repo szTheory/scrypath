@@ -7,7 +7,8 @@ defmodule Mix.Tasks.Verify.Phase26 do
   @focused_tests [
     "test/scrypath/operator/failed_work_test.exs",
     "test/scrypath/operator/reconcile_test.exs",
-    "test/scrypath/mix_tasks/operator_tasks_test.exs"
+    "test/scrypath/mix_tasks/operator_tasks_test.exs",
+    "test/scrypath/docs_contract_test.exs"
   ]
 
   @impl true

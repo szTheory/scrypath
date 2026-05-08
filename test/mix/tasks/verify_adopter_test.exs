@@ -29,7 +29,8 @@ defmodule Mix.Tasks.Verify.AdopterTest do
   describe "run/1 live prerequisites" do
     setup do
       original =
-        for key <- ["SCRYPATH_EXAMPLE_INTEGRATION", "PGPORT", "SCRYPATH_MEILISEARCH_URL"], into: %{} do
+        for key <- ["SCRYPATH_EXAMPLE_INTEGRATION", "PGPORT", "SCRYPATH_MEILISEARCH_URL"],
+            into: %{} do
           {key, System.get_env(key)}
         end
 
