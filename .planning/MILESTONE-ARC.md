@@ -2,7 +2,7 @@
 
 ## Active arc: Batteries-Included Search Modules
 
-**Status:** active  
+**Status:** active - `v1.20` shipped on 2026-05-08; `v1.21` is the next candidate  
 **Started:** 2026-05-07
 
 ## Why this arc exists
@@ -31,7 +31,7 @@ The target is not hidden callback magic. The target is a thin, explicit layer th
 
 ### v1.20 — Search Module Foundation
 
-- **Status:** active as of 2026-05-07
+- **Status:** shipped on 2026-05-08
 - Context-owned `Scrypath.SearchModule`
 - Stable param normalization for text, filter, sort, page, and facet request/filter inputs
 - Structured param errors
@@ -39,6 +39,7 @@ The target is not hidden callback magic. The target is a thin, explicit layer th
 
 ### v1.21 — Query Toolkit And Phoenix Edge Helpers
 
+- **Status:** next candidate
 - Public normalization/casting helpers behind the search-module layer
 - Optional Phoenix-facing helpers for URL/form/LiveView round-tripping
 - No Phoenix coupling in the core runtime

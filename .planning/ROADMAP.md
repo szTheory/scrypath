@@ -22,66 +22,22 @@
 - [x] **`v1.17` shipped + archived in-repo** (**2026-04-23**) — *Integration confidence & adopter proof* — phases **68–70**, **6** requirements — [archive](milestones/v1.17-ROADMAP.md) · [requirements](milestones/v1.17-REQUIREMENTS.md) · [audit](milestones/v1.17-MILESTONE-AUDIT.md)
 - [x] **`v1.18` shipped + archived in-repo** (**2026-04-26**) — *Sigra integration* — phases **71–73**, **10** requirements — [archive](milestones/v1.18-ROADMAP.md) · [requirements](milestones/v1.18-REQUIREMENTS.md) · [audit](milestones/v1.18-MILESTONE-AUDIT.md)
 - [x] **`v1.19` shipped + archived in-repo** (**2026-04-28**) — *Production adoption proof and hardening* — phases **74–76**, **8** requirements — [archive](milestones/v1.19-ROADMAP.md) · [requirements](milestones/v1.19-REQUIREMENTS.md) · [audit](milestones/v1.19-MILESTONE-AUDIT.md)
-- [ ] **`v1.20` opened** (**2026-05-07**) — *Search Module Foundation* — phases **77–79** planned, **8** requirements (**SMOD-01**..**SMOD-08**)
+- [x] **`v1.20` shipped + archived in-repo** (**2026-05-08**) — *Search Module Foundation* — phases **77–79**, **8** requirements — [archive](milestones/v1.20-ROADMAP.md) · [requirements](milestones/v1.20-REQUIREMENTS.md) · [audit](milestones/v1.20-MILESTONE-AUDIT.md)
 
 ## Current Milestone
 
-**v1.20 — Search Module Foundation** opened on **2026-05-07**. This milestone adds a thin, context-owned search-module layer over the existing runtime without weakening the canonical **`v1.19`** readiness verdict or widening Scrypath into callback magic.
+No active milestone is currently open.
 
-### Phase 77: Search module declaration and runtime seam
+**Last shipped milestone:** **v1.20 — Search Module Foundation** closed on **2026-05-08** and added a thin, context-owned `Scrypath.SearchModule` layer over the existing runtime without weakening the canonical **`v1.19`** readiness verdict or widening Scrypath into callback magic. Full detail: [milestones/v1.20-ROADMAP.md](milestones/v1.20-ROADMAP.md).
 
-- [ ] **Phase 77: Search module declaration and runtime seam** — **SMOD-01**, **SMOD-02**, **SMOD-03** — define the public `Scrypath.SearchModule` contract, keep schemas metadata-only, and prove that module-level defaults plus per-call overrides route cleanly into the existing `Scrypath.search/3` path.
-
-**Plans:** 2 plans
-
-Plans:
-- [ ] `77-01-PLAN.md` — Finalize the declaration DSL and generated module functions for context-owned search modules.
-- [ ] `77-02-PLAN.md` — Lock runtime-default merging and thin delegation onto `Scrypath.search/3` with bounded tests.
-
-**Success criteria (observable):**
-
-1. A library consumer can declare one context-owned module with schema/runtime defaults and call `search/2`, `search!/2`, or `search_args/2` without adding runtime verbs to the schema.
-2. Per-call overrides merge predictably with module defaults for repo, backend, preload, and explicit search options.
-3. The implementation demonstrably reuses the current `Scrypath.search/3` engine rather than introducing a second search runtime.
-
-### Phase 78: Param normalization and structured errors
-
-- [ ] **Phase 78: Param normalization and structured errors** — **SMOD-04**, **SMOD-05**, **SMOD-06** — accept browser-shaped params for text, filters, sorts, pages, and facets; normalize them into stable Scrypath-facing options; and fail invalid input with explicit field-scoped errors.
-
-**Plans:** 2 plans
-
-Plans:
-- [ ] `78-01-PLAN.md` — Implement browser-param normalization for text, filter, sort, page, facets, and facet-filter request shapes.
-- [ ] `78-02-PLAN.md` — Harden invalid-param reporting, pagination limits, and declared-option enforcement with structured `ParamError` coverage.
-
-**Success criteria (observable):**
-
-1. Browser-shaped request maps normalize into one stable Scrypath-facing shape for text, filters, sorts, paging, facets, and facet filters.
-2. Undeclared or malformed request input returns `Scrypath.SearchModule.ParamError` with enough detail to pinpoint the failing field.
-3. Pagination defaults and limits remain explicit and testable so host apps do not need duplicate request-casting logic.
-
-### Phase 79: Docs, examples, and contract coverage
-
-- [ ] **Phase 79: Docs, examples, and contract coverage** — **SMOD-07**, **SMOD-08** — publish the context-boundary guidance for search modules, make non-goals explicit, and protect the new contract with tests or doc assertions that fail on drift.
-
-**Plans:** 2 plans
-
-Plans:
-- [ ] `79-01-PLAN.md` — Publish the primary search-module guide and Phoenix/Ecto context-boundary examples.
-- [ ] `79-02-PLAN.md` — Add regression and doc-contract coverage that pins thin-layer semantics and guide discoverability.
-
-**Success criteria (observable):**
-
-1. A Phoenix or LiveView adopter can see where search-module responsibilities stop and the existing Scrypath runtime begins.
-2. The docs explicitly say what search modules do not abstract away: sync modes, visibility, retries, reindexing, and backend semantics remain explicit.
-3. Tests or doc contracts fail if the thin-delegation behavior, param-error semantics, or guide wayfinding drift.
+**Next candidate:** **v1.21 — Query Toolkit And Phoenix Edge Helpers** from [MILESTONE-ARC.md](MILESTONE-ARC.md), if reopening internal feature work remains justified.
 
 ## Phases (history)
 
 <details>
 <summary>✅ v1.17 — Phases 68–70 — OPENED 2026-04-22 · SHIPPED + archived 2026-04-23 · <em>Integration confidence & adopter proof</em></summary>
 
-**Opened:** 2026-04-22 — **INTG-01**–**INTG-06** — canonical list: [`.planning/REQUIREMENTS.md`](REQUIREMENTS.md)  
+**Opened:** 2026-04-22 — **INTG-01**–**INTG-06** — canonical list: [milestones/v1.17-REQUIREMENTS.md](milestones/v1.17-REQUIREMENTS.md)  
 **Closed:** 2026-04-23 — readiness checkpoint passed; outside integration feedback is the next default pull.
 
 ### Phase 68: Example proof and support contract
@@ -309,11 +265,11 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**Current milestone:** none open. The most recent close is **v1.19 Production adoption proof and hardening** — archived **2026-04-28** as a readiness checkpoint. See **`.planning/milestones/v1.19-MILESTONE-AUDIT.md`** for the canonical broader-adoption verdict and **`.planning/milestones/v1.19-REQUIREMENTS.md`** for the frozen traceability snapshot.
+**Current milestone:** none open. The most recent close is **v1.20 Search Module Foundation** — archived **2026-05-08**. See **`.planning/milestones/v1.20-MILESTONE-AUDIT.md`** for the passed close audit and **`.planning/milestones/v1.20-REQUIREMENTS.md`** for the frozen traceability snapshot.
 
-**Last shipped milestone:** **v1.19 Production adoption proof and hardening** — shipped + archived **2026-04-28**, **3** phases (**74–76**) complete, **8** requirements (**PRDY-01**..**PRDY-08**) satisfied. See **`milestones/v1.19-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**Last shipped milestone:** **v1.20 Search Module Foundation** — shipped + archived **2026-05-08**, **3** phases (**77–79**) complete, **8** requirements (**SMOD-01**..**SMOD-08**) satisfied. See **`milestones/v1.20-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next default pull:** seek real outside adopter evidence through the bounded intake path, using **`.planning/milestones/v1.19-MILESTONE-AUDIT.md`** as the canonical checkpoint verdict.
+**Next default pull:** seek real outside adopter evidence through the bounded intake path, while treating **`v1.21 — Query Toolkit And Phoenix Edge Helpers`** as the next candidate only if reopening internal feature work remains justified.
 
 **`v1.17` archived (in-repo)** — **2026-04-23** shipped + archived — **3** phases (**68–70**), **6** requirements (**INTG-01**–**INTG-06**); see **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
@@ -338,4 +294,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - **Tier D** — maintainer-only planning hygiene — same file; do not headline consumer milestones.
 
 ---
-*Last updated: 2026-04-28 — closed **`v1.19 Production adoption proof and hardening`** and archived the readiness-checkpoint verdict*
+*Last updated: 2026-05-08 — closed **`v1.20 Search Module Foundation`** and archived the milestone*

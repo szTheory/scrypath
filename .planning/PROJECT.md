@@ -10,7 +10,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Current State
 
-**v1.20 — Search Module Foundation** opened on **2026-05-07** and continues phase numbering at **77**.
+**v1.20 — Search Module Foundation** shipped and archived in-repo on **2026-05-08** across phases **77–79**.
 
 **Why this milestone now:** the active **Batteries-Included Search Modules** arc is a narrow, leverage-positive follow-up to the defended core. It builds a thin, explicit Phoenix/Ecto ergonomics layer that is already in motion in the worktree, while keeping the **`v1.19`** broader-adoption verdict intact and avoiding a return to broad speculative feature expansion.
 
@@ -25,24 +25,24 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 **Out of scope for v1.20:** public Phoenix helpers, reusable composition presets beyond the foundation, schema-generated runtime search APIs, public multi-backend expansion, deeper OPSUI breadth, or any change that hides operational search semantics behind framework magic.
 
-Canonical REQ IDs: **`.planning/REQUIREMENTS.md`** (**SMOD-***).
+Canonical archive: **`milestones/v1.20-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 ## Current Milestone Outcome
 
-- Milestone opened from the active **Batteries-Included Search Modules** arc on **2026-05-07**.
-- Scope is intentionally narrow: normalize browser-shaped params once, keep contexts as the application boundary, and reuse the existing **`Scrypath.search/3`** engine.
+- Milestone shipped from the active **Batteries-Included Search Modules** arc on **2026-05-08**.
+- Scrypath now has a thin, context-owned search-module layer that declares schema/runtime defaults, normalizes browser-shaped params once, and delegates through the existing **`Scrypath.search/3`** engine.
+- The docs now make the boundary explicit: search modules improve Phoenix/Ecto ergonomics without hiding sync, visibility, retries, reindexing, or backend semantics.
 - The broader-adoption checkpoint from **`milestones/v1.19-MILESTONE-AUDIT.md`** remains canonical and should not be restated as outside validation.
-- The first planned slice starts at **Phase 77**.
 
 ## Last shipped milestone
 
-**v1.19 — Production adoption proof and hardening** (shipped + archived in-repo **2026-04-28** as a readiness checkpoint). Canonical readiness truth, one defended fast/live proof family, production-shaped core and optional example coverage, a bounded adopter-intake path, and one evidence-backed hardening fix — see **`milestones/v1.19-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**v1.20 — Search Module Foundation** (shipped + archived in-repo **2026-05-08**). Thin context-owned `Scrypath.SearchModule` wrappers, stable request-param normalization, structured `ParamError` semantics, and canonical docs-contract coverage — see **`milestones/v1.20-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Prior:** **v1.18 — Sigra integration** (shipped + archived in-repo **2026-04-26**) — **`milestones/v1.18-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**. **v1.17 — Integration confidence & adopter proof** (shipped + archived in-repo **2026-04-23** as a readiness checkpoint) — **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**. **v1.16 — Playbook execution & operator honesty** (shipped + archived in-repo **2026-04-22**) — **`milestones/v1.16-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**. **OPSUI** arc: **`milestones/v1.10-{ROADMAP,REQUIREMENTS}.md`**.
+**Prior:** **v1.19 — Production adoption proof and hardening** (shipped + archived in-repo **2026-04-28** as a readiness checkpoint) — **`milestones/v1.19-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**. **v1.18 — Sigra integration** (shipped + archived in-repo **2026-04-26**) — **`milestones/v1.18-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**. **v1.17 — Integration confidence & adopter proof** (shipped + archived in-repo **2026-04-23** as a readiness checkpoint) — **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 ## Planning window
 
-**v1.20 — Search Module Foundation** opened on **2026-05-07**. Phases **77–79** are planned; rolling milestone truth now lives in **`.planning/{PROJECT,REQUIREMENTS,ROADMAP,STATE}.md`** until the archive trio exists.
+No active milestone is currently open. The next candidate from the active arc is **v1.21 — Query Toolkit And Phoenix Edge Helpers**, but reopening internal feature work should still be justified against the post-**v1.19** outside-adopter guardrail.
 
 ## Requirements
 
@@ -95,12 +95,9 @@ Canonical REQ IDs: **`.planning/REQUIREMENTS.md`** (**SMOD-***).
 - [x] **Phase 64** (2026-04-22): IA + verification + milestone bookkeeping — **`operator-ia.md`** team persistence pointers, **`mix verify.opsui`** / **`docs_contract_test`** / **`guides/meilisearch-operations.md`**, frozen **`v1.15-*`** — **OPS2-05**, **OPS2-06**, **OPS2-08** — **`.planning/phases/64-ia-verification-and-milestone-bookkeeping/`**.
 - [x] **v1.15 milestone** (2026-04-22): OPSUI second slice — phases **62–64**; **`milestones/v1.15-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-### Active
-
-- [ ] **SMOD-01**–**SMOD-08** — open **v1.20 Search Module Foundation**: context-owned search-module declarations, stable request-param normalization, structured param errors, thin delegation over **`Scrypath.search/3`**, and Phoenix/Ecto-facing docs plus regression coverage.
-
 ### Recently completed
 
+- [x] **v1.20** (2026-05-08): **SMOD-01**–**SMOD-08** — context-owned search-module declarations, stable request-param normalization, structured param errors, thin delegation over **`Scrypath.search/3`**, and Phoenix/Ecto-facing docs plus regression coverage, archived in **`milestones/v1.20-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 - [x] **v1.19** (2026-04-28): **PRDY-01**–**PRDY-08** — canonical readiness contract, defended fast/live proof family, production-shaped Phoenix + Sigra example coverage, bounded adopter-intake path, one evidence-backed papercut fix, and a readiness-checkpoint close archived in **`milestones/v1.19-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 - [x] **v1.17 — Integration confidence & adopter proof** (2026-04-23) — phases **68–70**; **INTG-01**–**INTG-06** — **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 - [x] **v1.16 — Playbook execution & operator honesty** (2026-04-22) — phases **65–67**; **OPS3-01**–**OPS3-06** — **`milestones/v1.16-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
@@ -164,7 +161,7 @@ The current public line on Hex is **`scrypath 0.3.4`**. **v1.8** closed the fede
 | **v1.18** — Sigra integration (in-repo, optional) | Optional in-repo Sigra integration for `scrypath_ops`; keeps `scrypath` core auth-agnostic and Sigra unaware while giving hosts a canonical operator-attribution + sudo + audit story for sensitive ops actions | ✓ Shipped + archived in-repo |
 | **v1.19** — Production adoption proof and hardening | After the readiness checkpoint and Sigra add-on, prioritize defended production proof, support-contract clarity, and evidence-backed papercut closure before widening product scope again | ✓ Shipped + archived in-repo as a readiness checkpoint; canonical verdict: ready to seek broader outside production adoption on the defended surface, with external validation still pending |
 | Post-v1.19 pause on internal feature work | Do not open another build-more milestone unless real outside adopter evidence identifies concrete friction or a release/distribution need justifies the work | — Pending external validation |
-| **v1.20** — Search Module Foundation | A narrow, already-started ergonomics layer that removes repeated Phoenix/Ecto request-param boilerplate without changing the core runtime or hiding operational search semantics | — Active |
+| **v1.20** — Search Module Foundation | A narrow, already-started ergonomics layer that removes repeated Phoenix/Ecto request-param boilerplate without changing the core runtime or hiding operational search semantics | ✓ Shipped + archived in-repo |
 
 ## Historical Context
 
