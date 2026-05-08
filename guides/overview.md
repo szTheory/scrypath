@@ -2,6 +2,17 @@
 
 Short map of published guides. Start with the [Golden path](golden-path.md) for a linear first-hour setup, or [Getting Started](getting-started.md) for concepts first.
 
+## Crash Course
+
+Scrypath is easiest to think about as four layers:
+
+- declaration: `use Scrypath` marks a schema with search metadata, but stays metadata-only
+- sync orchestration: `Scrypath.sync_record/3`, `Scrypath.backfill/2`, and `Scrypath.reindex/2` keep writes and recovery explicit
+- search runtime: `Scrypath.search/3`, `Scrypath.search_many/2`, and `Scrypath.search_within_facet/4` stay on one common query path
+- operator recovery: `Scrypath.sync_status/2`, `Scrypath.failed_sync_work/2`, `Scrypath.retry_sync_work/2`, and `Scrypath.reconcile_sync/2` keep drift visible
+
+The intended app boundary is a Phoenix context that owns the search flow, with controllers and LiveView as thin callers.
+
 | Guide | Purpose |
 | ----- | ------- |
 | [Common mistakes](common-mistakes.md) | Evidence-led pitfalls (symptom → wrong model → fix) with links back to canonical guides. |

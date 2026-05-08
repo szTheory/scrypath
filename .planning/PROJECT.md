@@ -12,6 +12,8 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 **v1.20 — Search Module Foundation** shipped and archived in-repo on **2026-05-08** across phases **77–79**.
 
+**Reconciliation note:** the archive says the thin `Scrypath.SearchModule` layer shipped, but the working tree should still be checked against `lib/scrypath` and the published guides before anyone treats that claim as fully settled product truth.
+
 **Why this milestone now:** the active **Batteries-Included Search Modules** arc is a narrow, leverage-positive follow-up to the defended core. It builds a thin, explicit Phoenix/Ecto ergonomics layer that is already in motion in the worktree, while keeping the **`v1.19`** broader-adoption verdict intact and avoiding a return to broad speculative feature expansion.
 
 **Target features:**

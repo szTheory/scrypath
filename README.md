@@ -18,6 +18,8 @@ end
 
 **Start here:** for the canonical first-hour path from dependencies through a working `Scrypath.search/3` with inline sync, follow [guides/golden-path.md](guides/golden-path.md).
 
+If you want the architecture and JTBD crash course before reading the full guides, start with [guides/overview.md](guides/overview.md).
+
 For symptom-style "why is search wrong?" debugging grounded in shipped tests, see [guides/common-mistakes.md](guides/common-mistakes.md).
 
 **Sync authority:** sync semantics, sync modes (`:inline`, `:oban`, `:manual`), eventual consistency, and operator lifecycle recovery language are defined in [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md) - that file is the **single authority** for those topics; this README does not restate the guide body.
