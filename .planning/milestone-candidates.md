@@ -1,7 +1,7 @@
 # Milestone candidates — developer-first roadmap stack
 
 **Purpose:** Prioritized themes for **`/gsd-new-milestone`** — **onboarding + QoL** for people using and contributing to Scrypath; **avoid busywork** and maintainer-only work masquerading as product.  
-**Last reviewed:** 2026-04-28 — **v1.19** closed as a readiness checkpoint; Scrypath is ready to seek broader outside production adoption on the defended surface, with external validation still pending. The canonical verdict lives in **`milestones/v1.19-MILESTONE-AUDIT.md`**.
+**Last reviewed:** 2026-05-08 — **v1.20** shipped as a narrow search-module milestone, but the canonical portfolio posture is still the **v1.19** readiness verdict: seek broader outside production adoption on the defended surface, with external validation still pending. The canonical verdict lives in **`milestones/v1.19-MILESTONE-AUDIT.md`**.
 
 ---
 
@@ -22,6 +22,8 @@ So: **honest operator visibility over library APIs — done for v1.** Deeper pro
 ### QoL / DX vs “Searchkick-level” expectations
 
 The library has strong **Ecto-native indexing + Meilisearch sync modes**, **search / facets / federation**, **per-query tuning pipeline + runtime**, **operator Mix tasks + drift tooling**, **adoption guides + doc contracts**, and **OPSUI** for triage and inspection.
+
+The preserved branch **`salvage/20260508-151407-main-reconcile`** is intentionally not part of this roadmap. It is a quarantine snapshot from the `main` reconciliation, not an implied upcoming milestone.
 
 **Gaps people still reasonably expect** (none implied “done” by **v1.11**):
 
