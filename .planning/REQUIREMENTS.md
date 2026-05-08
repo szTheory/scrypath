@@ -1,61 +1,61 @@
 # Requirements: Scrypath
 
-**Defined:** 2026-04-28
+**Defined:** 2026-05-07
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## v1.19 Requirements
+## v1.20 Requirements
 
-### Production readiness contract
+### Search module declaration and runtime boundary
 
-- [x] **PRDY-01**: Maintainers can point adopters to one canonical production-readiness document that states what Scrypath v1 actively proves today, which runtime/backend/example assumptions that proof depends on, and which operational responsibilities remain on the host application.
-- [x] **PRDY-02**: Maintainers can run one root-level production proof command family that makes the fast-vs-live distinction explicit and proves the defended support story without hunting across unrelated `mix verify.*` tasks.
+- [ ] **SMOD-01**: Library consumers can define a context-owned `Scrypath.SearchModule` that declares schema, backend, repo, preload, and request-param rules without adding runtime search verbs to the schema itself.
+- [ ] **SMOD-02**: A declared search module exposes `search/2`, `search!/2`, and `search_args/2` that delegate into the existing `Scrypath.search/3` path instead of introducing a second search runtime.
+- [ ] **SMOD-03**: Search-module runtime defaults and per-call overrides merge predictably so contexts can keep ownership of backend, repo, preload, and explicit search options.
 
-### Example and integration proof
+### Param normalization and errors
 
-- [x] **PRDY-03**: The canonical Phoenix + Meilisearch adoption proof covers at least one production-shaped path beyond first-hour setup, including bootstrap or backfill expectations, a real sync flow, and operator-facing recovery or verification guidance.
-- [x] **PRDY-04**: The optional Sigra-flavored OPSUI proof is folded into the same readiness story with explicit boundaries about when teams need it, what it proves, and what it does not widen in `scrypath` core.
-- [x] **PRDY-05**: README, CONTRIBUTING, support docs, operations guides, and example READMEs all point to the same canonical readiness and proof sources, with bounded contract coverage that fails on drift.
+- [ ] **SMOD-04**: Search modules accept browser-shaped text, filter, sort, page, facets, and facet-filter params and normalize them into one stable Scrypath-facing shape.
+- [ ] **SMOD-05**: Declared filters, sorts, facets, and pagination rules reject undeclared or invalid request input with structured `Scrypath.SearchModule.ParamError` details that identify the failing field.
+- [ ] **SMOD-06**: Pagination defaults, limits, and declared facet/filter behavior stay explicit and testable so host apps do not need to duplicate param-casting logic in controllers or LiveViews.
 
-### Adopter evidence and hardening
+### Docs and verification
 
-- [x] **PRDY-06**: The repo ships a bounded adopter-feedback intake path that asks for runtime versions, sync mode, proof command used, observed failure, and supporting artifacts so real integration reports are actionable instead of anecdotal.
-- [x] **PRDY-07**: The milestone closes only evidence-backed production-adoption papercuts discovered through the proof runs or feedback intake, and every fix lands with a regression test, contract test, or example assertion.
-- [x] **PRDY-08**: Milestone-close artifacts end with a clear readiness checkpoint on whether Scrypath should seek broader outside production adoption before opening another feature or integration-expansion milestone.
+- [ ] **SMOD-07**: Guides and examples show the intended Phoenix/Ecto context boundary for search modules, including what the layer does and what it intentionally does not abstract away.
+- [ ] **SMOD-08**: Regression tests and doc-contract coverage fail if thin-delegation behavior, param-error semantics, or the primary search-module guide drift from the defended v1.20 contract.
 
 ## v2 Requirements
 
-### Broader expansion
+### Search-module depth beyond the foundation
 
-- **EXP-01**: Public multi-backend support beyond the current Meilisearch-first contract.
-- **EXP-02**: New search capabilities such as vectors, hybrid retrieval, or personalization.
-- **EXP-03**: Deeper OPSUI workflows or dashboard breadth that are not directly required by production adoption proof.
+- **SMODX-01**: Public Phoenix-facing helpers for URL, form, and LiveView round-tripping on top of the search-module layer.
+- **SMODX-02**: Reusable composition helpers such as presets, scopes, or `search_many/2`-aligned helpers beyond the foundation contract.
+- **SMODX-03**: Stronger metadata exposure for declared filters, sorts, facets, and paging intended for UI generation.
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| New search feature breadth in v1.19 | The current leverage is proving and hardening the shipped product, not widening the API surface again. |
-| Core auth or org-scoping changes in `scrypath` | Optional integrations may be documented and proven, but the core library remains auth-agnostic until evidence demands otherwise. |
-| Maintainer-only planning-tooling fixes as the milestone headline | Useful when blocking, but they do not materially improve adopter production readiness on their own. |
+| Schema-generated runtime search APIs | The schema stays metadata-only; application contexts remain the runtime boundary. |
+| Public Phoenix dependency in the core layer | The milestone should improve Phoenix ergonomics without coupling core Scrypath abstractions to Phoenix itself. |
+| Public multi-backend expansion or unrelated search-depth bets | v1.20 is a thin ergonomics layer over the existing Meilisearch-first runtime, not a scope-widening milestone. |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PRDY-01 | Phase 74 | Complete |
-| PRDY-02 | Phase 74 | Complete |
-| PRDY-03 | Phase 75 | Complete |
-| PRDY-04 | Phase 75 | Complete |
-| PRDY-05 | Phase 74 | Complete |
-| PRDY-06 | Phase 75 | Complete |
-| PRDY-07 | Phase 76 | Complete |
-| PRDY-08 | Phase 76 | Complete |
+| SMOD-01 | Phase 77 | Pending |
+| SMOD-02 | Phase 77 | Pending |
+| SMOD-03 | Phase 77 | Pending |
+| SMOD-04 | Phase 78 | Pending |
+| SMOD-05 | Phase 78 | Pending |
+| SMOD-06 | Phase 78 | Pending |
+| SMOD-07 | Phase 79 | Pending |
+| SMOD-08 | Phase 79 | Pending |
 
 **Coverage:**
-- v1.19 requirements: 8 total
+- v1.20 requirements: 8 total
 - Mapped to phases: 8
 - Unmapped: 0 ✓
 
 ---
-*Requirements defined: 2026-04-28*
-*Last updated: 2026-04-28 after closing v1.19 Production adoption proof and hardening as a readiness checkpoint*
+*Requirements defined: 2026-05-07*
+*Last updated: 2026-05-07 after opening v1.20 Search Module Foundation*

@@ -22,54 +22,59 @@
 - [x] **`v1.17` shipped + archived in-repo** (**2026-04-23**) — *Integration confidence & adopter proof* — phases **68–70**, **6** requirements — [archive](milestones/v1.17-ROADMAP.md) · [requirements](milestones/v1.17-REQUIREMENTS.md) · [audit](milestones/v1.17-MILESTONE-AUDIT.md)
 - [x] **`v1.18` shipped + archived in-repo** (**2026-04-26**) — *Sigra integration* — phases **71–73**, **10** requirements — [archive](milestones/v1.18-ROADMAP.md) · [requirements](milestones/v1.18-REQUIREMENTS.md) · [audit](milestones/v1.18-MILESTONE-AUDIT.md)
 - [x] **`v1.19` shipped + archived in-repo** (**2026-04-28**) — *Production adoption proof and hardening* — phases **74–76**, **8** requirements — [archive](milestones/v1.19-ROADMAP.md) · [requirements](milestones/v1.19-REQUIREMENTS.md) · [audit](milestones/v1.19-MILESTONE-AUDIT.md)
+- [ ] **`v1.20` opened** (**2026-05-07**) — *Search Module Foundation* — phases **77–79** planned, **8** requirements (**SMOD-01**..**SMOD-08**)
 
 ## Current Milestone
 
-No active milestone is currently open. **v1.19 — Production adoption proof and hardening** closed on **2026-04-28** as a readiness checkpoint; the canonical broader-adoption verdict lives in **`milestones/v1.19-MILESTONE-AUDIT.md`**.
+**v1.20 — Search Module Foundation** opened on **2026-05-07**. This milestone adds a thin, context-owned search-module layer over the existing runtime without weakening the canonical **`v1.19`** readiness verdict or widening Scrypath into callback magic.
 
-### Phase 74: Production contract and readiness spine
+### Phase 77: Search module declaration and runtime seam
 
-- [x] **Phase 74: Production contract and readiness spine** (2026-04-28) — **PRDY-01**, **PRDY-02**, **PRDY-05** — published the canonical production-readiness contract, established one root proof command family, and locked README / CONTRIBUTING / guides / examples to the same defended readiness path.
+- [ ] **Phase 77: Search module declaration and runtime seam** — **SMOD-01**, **SMOD-02**, **SMOD-03** — define the public `Scrypath.SearchModule` contract, keep schemas metadata-only, and prove that module-level defaults plus per-call overrides route cleanly into the existing `Scrypath.search/3` path.
 
-**Plans:** 3 plans
-
-Plans:
-- [x] `74-01-PLAN.md` — Reused the support guide as the canonical production-readiness contract and rewired the primary docs to it.
-- [x] `74-02-PLAN.md` — Aligned downstream operations/support/example surfaces to the same readiness contract and extended the bounded readiness drift suite.
-- [x] `74-03-PLAN.md` — Repointed `mix verify.adopter` to the new readiness seam and locked CI/task alignment to the root proof family.
-
-**Success criteria (observable):**
-
-1. A maintainer can answer "what does Scrypath v1 actively prove today?" by linking one canonical readiness source rather than stitching together multiple guides and examples.
-2. One root proof command family makes fast vs live expectations explicit and covers the defended readiness story without requiring maintainers to know the repo's internal verify topology.
-3. Contract tests or equivalent bounded assertions fail if README, CONTRIBUTING, support docs, or example READMEs drift from the canonical readiness path.
-
-### Phase 75: Production-shaped example proof and adopter intake
-
-- [x] **Phase 75: Production-shaped example proof and adopter intake** (2026-04-28) — **PRDY-03**, **PRDY-04**, **PRDY-06** — deepened the production-shaped proof paths for the Phoenix + Meilisearch example and the optional Sigra OPSUI example, and added a bounded adopter-intake path that collects actionable integration evidence.
-
-**Plans:** 3 plans
+**Plans:** 2 plans
 
 Plans:
-- [x] `75-01-PLAN.md` — Turned the Phoenix + Meilisearch example into one canonical production-shaped lifecycle proof with bounded contract coverage.
-- [x] `75-02-PLAN.md` — Framed Sigra as an optional host-wiring branch within the same readiness story and pinned that boundary with readiness assertions.
-- [x] `75-03-PLAN.md` — Tightened adopter intake evidence requirements and protected the proof-family wording from drift.
+- [ ] `77-01-PLAN.md` — Finalize the declaration DSL and generated module functions for context-owned search modules.
+- [ ] `77-02-PLAN.md` — Lock runtime-default merging and thin delegation onto `Scrypath.search/3` with bounded tests.
 
 **Success criteria (observable):**
 
-1. The core example demonstrates at least one production-shaped path beyond initial setup, including operational expectations around bootstrap, sync, or recovery.
-2. The Sigra example is clearly framed as optional proof for hosts that need the auth/audit story, without implying new auth coupling inside `scrypath` core.
-3. Adopter reports arrive with concrete environment, proof-command, and failure evidence so maintainers can triage real friction without back-and-forth guesswork.
+1. A library consumer can declare one context-owned module with schema/runtime defaults and call `search/2`, `search!/2`, or `search_args/2` without adding runtime verbs to the schema.
+2. Per-call overrides merge predictably with module defaults for repo, backend, preload, and explicit search options.
+3. The implementation demonstrably reuses the current `Scrypath.search/3` engine rather than introducing a second search runtime.
 
-### Phase 76: Evidence-backed hardening and release-readiness checkpoint
+### Phase 78: Param normalization and structured errors
 
-- [x] **Phase 76: Evidence-backed hardening and release-readiness checkpoint** (2026-04-28) — **PRDY-07**, **PRDY-08** — closed one proof-discovered papercut with a bounded regression anchor, reran the documented live proof successfully, and ended the milestone with a canonical readiness-checkpoint verdict in **`milestones/v1.19-MILESTONE-AUDIT.md`**.
+- [ ] **Phase 78: Param normalization and structured errors** — **SMOD-04**, **SMOD-05**, **SMOD-06** — accept browser-shaped params for text, filters, sorts, pages, and facets; normalize them into stable Scrypath-facing options; and fail invalid input with explicit field-scoped errors.
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] `78-01-PLAN.md` — Implement browser-param normalization for text, filter, sort, page, facets, and facet-filter request shapes.
+- [ ] `78-02-PLAN.md` — Harden invalid-param reporting, pagination limits, and declared-option enforcement with structured `ParamError` coverage.
 
 **Success criteria (observable):**
 
-1. Every in-scope fix is traceable to a proof run or adopter-intake signal rather than speculative polish.
-2. Each papercut fix has a bounded regression anchor in tests, contracts, or example assertions.
-3. Milestone-close artifacts clearly say whether the repo is ready to pursue broader production adoption on the current feature surface.
+1. Browser-shaped request maps normalize into one stable Scrypath-facing shape for text, filters, sorts, paging, facets, and facet filters.
+2. Undeclared or malformed request input returns `Scrypath.SearchModule.ParamError` with enough detail to pinpoint the failing field.
+3. Pagination defaults and limits remain explicit and testable so host apps do not need duplicate request-casting logic.
+
+### Phase 79: Docs, examples, and contract coverage
+
+- [ ] **Phase 79: Docs, examples, and contract coverage** — **SMOD-07**, **SMOD-08** — publish the context-boundary guidance for search modules, make non-goals explicit, and protect the new contract with tests or doc assertions that fail on drift.
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] `79-01-PLAN.md` — Publish the primary search-module guide and Phoenix/Ecto context-boundary examples.
+- [ ] `79-02-PLAN.md` — Add regression and doc-contract coverage that pins thin-layer semantics and guide discoverability.
+
+**Success criteria (observable):**
+
+1. A Phoenix or LiveView adopter can see where search-module responsibilities stop and the existing Scrypath runtime begins.
+2. The docs explicitly say what search modules do not abstract away: sync modes, visibility, retries, reindexing, and backend semantics remain explicit.
+3. Tests or doc contracts fail if the thin-delegation behavior, param-error semantics, or guide wayfinding drift.
 
 ## Phases (history)
 
