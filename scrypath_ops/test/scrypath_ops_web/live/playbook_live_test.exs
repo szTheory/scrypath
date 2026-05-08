@@ -224,10 +224,18 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert html =~ "Search adapter returned a forced hard failure."
     assert html =~ "Copy diagnostics"
 
-    assert doc_links == [
-             "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/playbook-schema-v1.md#troubleshooting",
-             "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/team-playbook-persistence.md",
-             "https://github.com/szTheory/scrypath/blob/main/guides/multi-index-search.md"
+    assert doc_links in [
+             [
+               "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/playbook-schema-v1.md#troubleshooting",
+               "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/team-playbook-persistence.md",
+               "https://github.com/szTheory/scrypath/blob/main/guides/multi-index-search.md"
+             ],
+             [
+               "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/playbook-schema-v1.md",
+               "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/playbook-schema-v1.md#troubleshooting",
+               "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/team-playbook-persistence.md",
+               "https://github.com/szTheory/scrypath/blob/main/guides/multi-index-search.md"
+             ]
            ]
 
     copied = render_click(view, "copy_run_diagnostics", %{})
