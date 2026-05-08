@@ -86,7 +86,7 @@ defmodule Mix.Tasks.Scrypath.NamespaceFence do
       []
     else
       path
-      |> File.stream!([], :line)
+      |> File.stream!(:line, [])
       |> Enum.with_index(1)
       |> Enum.flat_map(fn {line, line_no} ->
         if String.contains?(line, @pattern) do
