@@ -26,7 +26,7 @@ For symptom-style "why is search wrong?" debugging grounded in shipped tests, se
 
 **Integration smoke (optional):** the repo ships **`examples/phoenix_meilisearch`** with Docker Compose and env vars documented there (including how it relates to CI - see [`CONTRIBUTING.md`](CONTRIBUTING.md) for GitHub job names ↔ `mix verify.*` tasks). From the clone root, run **`cd examples/phoenix_meilisearch && ./scripts/smoke.sh`** (the example's **`./scripts/smoke.sh`** exists only under that directory, not at the repository root).
 
-Scrypath is Meilisearch-first in v1. The backend seam is internal, and v1 does not promise public multi-backend parity.
+Scrypath is Meilisearch-first in v1. The backend seam is internal, not a promised public abstraction, and v1 does not promise public multi-backend parity.
 Scrypath owns its internal transport dependency. Configure backend and sync behavior in your app code instead of pinning `Req` directly in the base install path.
 If you want queued sync, add Oban as an optional production integration when you choose `sync_mode: :oban`.
 
