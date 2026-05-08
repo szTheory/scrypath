@@ -82,7 +82,9 @@ jobs:
         working-directory: scrypath_ops
         env:
           MIX_ENV: test
-        run: mix compile --no-optional-deps --warnings-as-errors
+        run: |
+          mix deps.get
+          mix compile --no-optional-deps --warnings-as-errors
 
       - name: Run namespace fence (`mix scrypath.namespace_fence`)
         run: mix scrypath.namespace_fence
