@@ -21,7 +21,7 @@ See: `.planning/PROJECT.md` (updated 2026-05-08)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Post-v1.20 milestone transition — keep the search-module arc narrow and decide whether `v1.21` is worth opening
+**Current focus:** Post-v1.20 milestone transition — keep the search-module arc narrow, reconcile the v1.20 archive/code drift, and decide whether `v1.21` is worth opening
 
 ## Current Position
 
@@ -65,12 +65,14 @@ Plan: —
 - **Phase 78 complete:** Locked browser-shaped param normalization and structured request-edge `ParamError` behavior over the existing `Scrypath.search/3` runtime.
 - **Phase 79 complete:** Locked one canonical `SearchModule` guide, thin Phoenix/README routing, bounded docs-contract coverage, and one direct wrapper-parity regression.
 - **v1.20 close:** Search Module Foundation shipped and archived with a passed audit; the repo now has a thin, context-owned search-module layer without changing the canonical `v1.19` broader-adoption verdict.
+- **v1.20 archive/code drift:** the archive currently claims `Scrypath.SearchModule` and its guide shipped, but the checked-out code does not expose that layer yet; reconcile the archive with code before treating the layer as fully grounded.
 
 ### Blockers / Concerns
 
 - **Outside adopter evidence remains pending:** Plan 01 reran the live proof successfully after starting the documented example services, but the milestone still has no reviewed real outside adopter signal. The canonical wording and residuals live in **`.planning/milestones/v1.19-MILESTONE-AUDIT.md`**.
 - **Diminishing-returns guardrail:** In the absence of real adopter evidence, additional internal proof/polish work is presumed low leverage and should not become the next milestone by default.
 - **Scope discipline for the search-module arc:** Search modules must remain a thin context-owned layer over the existing runtime, not a slide into schema-generated APIs, Phoenix coupling, or hidden operational behavior.
+- **Search-module archive drift:** `v1.20` planning claims a `Scrypath.SearchModule` layer, but the current checkout does not contain that module or its guide. Treat that as a reconciliation task, not as settled product truth.
 - Existing `71`–`73` phase directories remain in `.planning/phases/` in the working tree; phase numbering continues at `74`, so no collision exists for this milestone open.
 
 ### Deferred Items

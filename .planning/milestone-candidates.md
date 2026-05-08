@@ -3,6 +3,8 @@
 **Purpose:** Prioritized themes for **`/gsd-new-milestone`** — **onboarding + QoL** for people using and contributing to Scrypath; **avoid busywork** and maintainer-only work masquerading as product.  
 **Last reviewed:** 2026-05-08 — **v1.20** shipped as a narrow search-module milestone, but the canonical portfolio posture is still the **v1.19** readiness verdict: seek broader outside production adoption on the defended surface, with external validation still pending. The canonical verdict lives in **`milestones/v1.19-MILESTONE-AUDIT.md`**.
 
+**Reconciliation note:** the `v1.20` archive says `Scrypath.SearchModule` shipped, but the current checkout does not expose that layer or its guide. Treat that as a live gap to reconcile before assuming archive and code are perfectly aligned.
+
 ---
 
 ## Where things stand
