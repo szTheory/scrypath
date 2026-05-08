@@ -2,35 +2,35 @@
 gsd_state_version: 1.0
 milestone: v1.20
 milestone_name: Search Module Foundation
-status: active
-last_updated: "2026-05-07T22:20:00Z"
-last_activity: 2026-05-07
+status: shipped
+last_updated: "2026-05-08T21:15:00Z"
+last_activity: 2026-05-08
 progress:
   total_phases: 3
-  completed_phases: 0
+  completed_phases: 3
   total_plans: 6
-  completed_plans: 0
-  percent: 0
+  completed_plans: 6
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-05-07)
+See: `.planning/PROJECT.md` (updated 2026-05-08)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** v1.20 Search Module Foundation — Phase 77 next
+**Current focus:** Post-v1.20 milestone transition — keep the search-module arc narrow and decide whether `v1.21` is worth opening
 
 ## Current Position
 
-Phase: 77 — Not started
+Phase: 79 — Complete
 Plan: —
 
-**Status:** Milestone initialized; requirements and roadmap defined for v1.20 Search Module Foundation
+**Status:** `v1.20` shipped and archived; no active milestone is currently open
 
-**Last activity:** 2026-05-07 — Opened v1.20 and mapped phases 77–79
+**Last activity:** 2026-05-08 — Archived `v1.20` and advanced rolling planning truth to post-close posture
 
 ## Accumulated Context
 
@@ -61,12 +61,16 @@ Plan: —
 - Use the weaker v1.19 close wording because no reviewed real outside adopter signal exists yet.
 - **2026-04-28 reassessment:** Further internal Scrypath development is likely below the value threshold until real outside adopters exercise the defended surface. Default posture: pause new feature/depth milestones and reopen only for concrete adopter evidence or a clearly leverage-positive release/distribution need.
 - **v1.20 open:** Despite the post-v1.19 pause posture, a narrow search-module milestone was activated because the work is already in motion in the repo and stays leverage-positive without widening backend scope or weakening the canonical broader-adoption verdict.
+- **Phase 77 complete:** Locked the `Scrypath.SearchModule` declaration/runtime seam around context-owned modules, explicit merge ambiguity, and wrapper-first docs/tests without freezing helper internals as public contract.
+- **Phase 78 complete:** Locked browser-shaped param normalization and structured request-edge `ParamError` behavior over the existing `Scrypath.search/3` runtime.
+- **Phase 79 complete:** Locked one canonical `SearchModule` guide, thin Phoenix/README routing, bounded docs-contract coverage, and one direct wrapper-parity regression.
+- **v1.20 close:** Search Module Foundation shipped and archived with a passed audit; the repo now has a thin, context-owned search-module layer without changing the canonical `v1.19` broader-adoption verdict.
 
 ### Blockers / Concerns
 
 - **Outside adopter evidence remains pending:** Plan 01 reran the live proof successfully after starting the documented example services, but the milestone still has no reviewed real outside adopter signal. The canonical wording and residuals live in **`.planning/milestones/v1.19-MILESTONE-AUDIT.md`**.
 - **Diminishing-returns guardrail:** In the absence of real adopter evidence, additional internal proof/polish work is presumed low leverage and should not become the next milestone by default.
-- **Scope discipline for v1.20:** Search modules must remain a thin context-owned layer over the existing runtime, not a slide into schema-generated APIs, Phoenix coupling, or hidden operational behavior.
+- **Scope discipline for the search-module arc:** Search modules must remain a thin context-owned layer over the existing runtime, not a slide into schema-generated APIs, Phoenix coupling, or hidden operational behavior.
 - Existing `71`–`73` phase directories remain in `.planning/phases/` in the working tree; phase numbering continues at `74`, so no collision exists for this milestone open.
 
 ### Deferred Items
@@ -79,16 +83,15 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-1. Treat Scrypath as paused for internal feature development until real outside adopter evidence arrives.
-2. This exception is already open: keep **v1.20** narrow and confined to the search-module foundation contract.
-3. Start with **`$gsd-discuss-phase 77`** to tighten the declaration/runtime seam before implementation planning.
-4. Or skip straight to **`$gsd-plan-phase 77`** if the search-module phase scope is already clear.
+1. Treat Scrypath as paused for internal feature development unless real outside adopter evidence or a clearly leverage-positive release need justifies reopening.
+2. If reopening the active arc, evaluate **v1.21 — Query Toolkit And Phoenix Edge Helpers** against that bar first.
+3. Start the next milestone with **`$gsd-new-milestone`** so fresh requirements and roadmap scope are defined explicitly.
 
 ---
 
-*Last updated: 2026-05-07 — opened **v1.20 — Search Module Foundation** and created the milestone roadmap*
+*Last updated: 2026-05-08 — archived **v1.20 Search Module Foundation***
 
-**Prior milestone:** **v1.18** — Sigra integration — **2026-04-26** (shipped + archived in-repo).
+**Prior milestone:** **v1.19** — Production adoption proof and hardening — **2026-04-28** (shipped + archived in-repo).
 
 **Completed:** **v1.19** shipped + archived in-repo (**2026-04-28**) — phases **74–76** — **`milestones/v1.19-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
@@ -96,8 +99,8 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 **Completed:** **v1.17** shipped + archived in-repo (**2026-04-23**) — phases **68–70** — **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next:** Phase 77 — Search module declaration and runtime seam.
+**Next:** Open a fresh milestone only if `v1.21` still clears the post-`v1.19` leverage bar.
 
-**Completed Phase:** 76 (Evidence-backed hardening and release-readiness checkpoint) — 2/2 plans — 2026-04-28
+**Completed Phase:** 79 (Docs, examples, and contract coverage) — 2/2 plans — 2026-05-08
 
-**Planned Phases:** 77, 78, 79.
+**Planned Phases:** none until a new milestone opens.
