@@ -173,7 +173,7 @@ defmodule Scrypath.QueryParams.Caster do
       {:ok, normalized} ->
         normalized =
           case field do
-            :page when is_map(normalized) -> Enum.into(normalized, [])
+            :page when is_map(normalized) -> canonical_page_keyword(normalized)
             _ -> normalized
           end
 
@@ -215,7 +215,7 @@ defmodule Scrypath.QueryParams.Caster do
       end)
 
     if errors == [] do
-      {:ok, Enum.reverse(pairs)}
+      {:ok, sort_keyword_pairs(pairs)}
     else
       {:error, errors}
     end
@@ -326,7 +326,7 @@ defmodule Scrypath.QueryParams.Caster do
         end
       end)
 
-    page = Enum.reverse(pairs)
+    page = canonical_page_keyword(pairs)
     errors = errors ++ value_errors
 
     if errors == [] do
@@ -506,6 +506,30 @@ defmodule Scrypath.QueryParams.Caster do
   end
 
   defp key_segment(key), do: key
+
+  defp canonical_page_keyword(page) when is_map(page) do
+    @page_keys
+    |> Enum.reduce([], fn key, pairs ->
+      case Map.fetch(page, key) do
+        {:ok, value} -> pairs ++ [{key, value}]
+        :error -> pairs
+      end
+    end)
+  end
+
+  defp canonical_page_keyword(page) when is_list(page) do
+    @page_keys
+    |> Enum.reduce([], fn key, pairs ->
+      case Keyword.fetch(page, key) do
+        {:ok, value} -> pairs ++ [{key, value}]
+        :error -> pairs
+      end
+    end)
+  end
+
+  defp sort_keyword_pairs(pairs) do
+    Enum.sort_by(pairs, fn {key, _value} -> Atom.to_string(key) end)
+  end
 
   defp validate_runtime_compatible_nested_values!(query_params) do
     query_params
