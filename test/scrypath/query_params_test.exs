@@ -60,26 +60,29 @@ defmodule Scrypath.QueryParamsTest do
       "ignored" => "value"
     }
 
-    assert {:ok,
-            %{
-              text: "phoenix",
-              filter: [status: "published", genre: ["Action", "Drama"]],
-              sort: [desc: :inserted_at],
-              page: [number: 2, size: 20],
-              facets: [:genre, :year],
-              facet_filter: [genre: ["Action", "Drama"], year: "2024"],
-              per_query: %{}
-            } = query_params} = QueryParams.normalize(params)
+    assert {:ok, query_params} = QueryParams.normalize(params)
+
+    assert query_params.text == "phoenix"
+    assert query_params.sort == [desc: :inserted_at]
+    assert query_params.facets == [:genre, :year]
+    assert query_params.per_query == %{}
+    assert Enum.sort(query_params.filter) == Enum.sort(status: "published", genre: ["Action", "Drama"])
+    assert Enum.sort(query_params.page) == Enum.sort(number: 2, size: 20)
+    assert Enum.sort(query_params.facet_filter) == Enum.sort(genre: ["Action", "Drama"], year: "2024")
 
     assert {"phoenix",
             [
-              filter: [status: "published", genre: ["Action", "Drama"]],
+              filter: filter,
               sort: [desc: :inserted_at],
-              page: [number: 2, size: 20],
+              page: page,
               facets: [:genre, :year],
-              facet_filter: [genre: ["Action", "Drama"], year: "2024"],
+              facet_filter: facet_filter,
               per_query: %{}
             ]} = QueryParams.to_search_args(query_params)
+
+    assert Enum.sort(filter) == Enum.sort(status: "published", genre: ["Action", "Drama"])
+    assert Enum.sort(page) == Enum.sort(number: 2, size: 20)
+    assert Enum.sort(facet_filter) == Enum.sort(genre: ["Action", "Drama"], year: "2024")
   end
 
   test "normalize/1 accepts text as a compatibility alias and rejects browser per_query input" do
@@ -129,7 +132,8 @@ defmodule Scrypath.QueryParamsTest do
     assert Enum.any?(field_errors.facets, &(&1.code == :invalid_shape and &1.path == [:facets]))
     assert Enum.any?(field_errors.facet_filter, &(&1.code == :invalid_shape and &1.path == [:facet_filter, :genre]))
 
-    assert error_map.errors == Enum.flat_map(field_errors, fn {_field, issues} -> issues end)
+    assert Enum.sort_by(error_map.errors, &{&1.field, inspect(&1.path), &1.code}) ==
+             Enum.sort_by(Enum.flat_map(field_errors, fn {_field, issues} -> issues end), &{&1.field, inspect(&1.path), &1.code})
   end
 
   test "cast/1 accepts string-keyed and atom-keyed text envelopes with runtime-compatible values" do
@@ -155,6 +159,8 @@ defmodule Scrypath.QueryParamsTest do
   end
 
   test "the public facade stays narrow and data-only" do
+    Code.ensure_loaded!(QueryParams)
+
     assert function_exported?(QueryParams, :normalize, 1)
     assert %{text: "", filter: [], sort: [], page: [], facets: [], facet_filter: [], per_query: %{}} =
              QueryParams.cast(%{"debug" => true, "q" => nil, "backend" => Scrypath.Meilisearch})

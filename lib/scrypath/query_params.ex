@@ -8,13 +8,16 @@ defmodule Scrypath.QueryParams do
   framework-light contract that can be cast from request params and then converted into
   `{text, keyword_opts}` for a context-owned `Scrypath.search/3` call.
 
-  Phase 80 only normalizes the top-level request envelope (`q` / `text` and the runtime
-  option names). Nested values must already be runtime-compatible Elixir shapes such as
-  keyword lists, atom lists, and atom-keyed maps. This module is data-only: it does not
-  validate schema-specific search semantics and it does not execute searches.
+  Use `normalize/1` at the request edge when handling Plug-decoded browser params.
+  It returns either `{:ok, query_params}` or `{:error, error_map}` for owned Scrypath
+  namespaces. `cast/1` remains available for already-runtime-compatible nested values.
+
+  This module is data-only: it does not validate schema-specific search semantics and it
+  does not execute searches.
   """
 
   alias Scrypath.QueryParams.Caster
+  alias Scrypath.QueryParams.Error
 
   @typedoc "Stable public plain-data contract for `Scrypath.search/3` args."
   @type t :: %{
@@ -27,7 +30,24 @@ defmodule Scrypath.QueryParams do
           per_query: map()
         }
 
+  @type normalize_error_map :: %{
+          form_errors: [Error.t()],
+          field_errors: %{optional(atom()) => [Error.t()]},
+          errors: [Error.t()]
+        }
+
   @search_option_keys [:filter, :sort, :page, :facets, :facet_filter, :per_query]
+
+  @doc """
+  Normalizes Plug-decoded request params into the public Scrypath query-param contract.
+
+  Unknown top-level params are ignored, while malformed values inside owned namespaces
+  return aggregate structured issues.
+  """
+  @spec normalize(map()) :: {:ok, t()} | {:error, normalize_error_map()}
+  def normalize(params) when is_map(params) do
+    Caster.normalize(params)
+  end
 
   @doc """
   Casts string-keyed or atom-keyed top-level request input into the public Scrypath
