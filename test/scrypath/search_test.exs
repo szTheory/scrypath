@@ -116,15 +116,14 @@ defmodule Scrypath.SearchTest do
              )
   end
 
-  test "query params output feeds Scrypath.search/3 through the same common query path" do
-    query_params =
-      QueryParams.cast(%{
-        "q" => "phoenix",
-        "filter" => [status: "published"],
-        "sort" => [desc: :inserted_at],
-        "page" => [number: 2, size: 20],
-        "per_query" => %{show_ranking_score: true}
-      })
+  test "normalized request params feed Scrypath.search/3 through the same common query path" do
+    assert {:ok, query_params} =
+             QueryParams.normalize(%{
+               "q" => "phoenix",
+               "filter" => %{"status" => "published"},
+               "sort" => %{"field" => "inserted_at", "dir" => "desc"},
+               "page" => %{"number" => "2", "size" => "20"}
+             })
 
     {text, search_opts} = QueryParams.to_search_args(query_params)
 
@@ -138,8 +137,7 @@ defmodule Scrypath.SearchTest do
                backend: Scrypath.TestSupport.FakeBackend,
                filter: [status: "published"],
                sort: [desc: :inserted_at],
-                page: [number: 2, size: 20],
-                per_query: %{show_ranking_score: true}
+               page: [number: 2, size: 20]
               )
 
     assert toolkit_query == direct_query
@@ -151,7 +149,7 @@ defmodule Scrypath.SearchTest do
              page: %{number: 2, size: 20},
              facets: [],
              facet_filter: [],
-             per_query: %{show_ranking_score: true}
+             per_query: %{}
            } = toolkit_query
   end
 
