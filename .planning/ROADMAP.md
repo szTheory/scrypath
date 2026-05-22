@@ -26,11 +26,56 @@
 
 ## Current Milestone
 
-No active milestone is currently open.
+**v1.21 — Query Toolkit And Phoenix Edge Helpers** is now active.
+
+**Opened:** **2026-05-22**
+
+**Goal:** ship a narrow-balanced public query-param toolkit plus thin optional Phoenix edge helpers over the existing **`Scrypath.search/3`** runtime, while keeping contexts canonical and avoiding public exposure of internal query structs.
+
+**Guardrails:**
+
+- `Scrypath.search/3` stays the canonical runtime.
+- Contexts or context-owned search modules stay the application boundary.
+- No public `%Scrypath.Query{}` contract or schema-generated runtime verbs.
+- No hard Phoenix dependency in runtime core.
+- No reusable UI widget/component layer in this milestone.
 
 **Last shipped milestone:** **v1.20 — Search Module Foundation** closed on **2026-05-08** and added a thin, context-owned `Scrypath.SearchModule` layer over the existing runtime without weakening the canonical **`v1.19`** readiness verdict or widening Scrypath into callback magic. Full detail: [milestones/v1.20-ROADMAP.md](milestones/v1.20-ROADMAP.md).
 
-**Next candidate:** **v1.21 — Query Toolkit And Phoenix Edge Helpers** from [MILESTONE-ARC.md](MILESTONE-ARC.md), if reopening internal feature work remains justified.
+## Active Phases
+
+### Phase 80: Public query toolkit contract
+
+- [ ] **Phase 80: Public query toolkit contract** — **QTK-01**, **QTK-04** — carve out the small public param toolkit as a plain-data edge contract over the existing runtime without promoting internal query structs or inventing a second runtime.
+
+**Success criteria:**
+
+1. A context can turn request-shaped search input into stable toolkit output and pass it to `Scrypath.search/3` without touching internal query structs.
+2. The public toolkit contract is data-first and explicit enough that apps can use it outside Phoenix.
+3. Search orchestration still lives in app contexts or search modules, not in toolkit helpers.
+4. No schema-generated runtime verbs or new canonical runtime entrypoint appear.
+
+### Phase 81: Edge normalization errors and Phoenix wrappers
+
+- [ ] **Phase 81: Edge normalization errors and Phoenix wrappers** — **QTK-02**, **QTK-03**, **PHX-01**, **PHX-02** — add one-time edge normalization semantics plus optional thin Phoenix helpers for controller, form, URL, and LiveView flows.
+
+**Success criteria:**
+
+1. Request params normalize once at the edge for text, filters, sort, page, facets, and facet-filter inputs.
+2. Invalid input yields structured field-scoped errors that a controller or LiveView can render directly.
+3. Phoenix URL/form helpers round-trip normalized state without performing search themselves.
+4. LiveView flows can drive shareable search state from params and reuse the same toolkit/error semantics as non-LiveView edges.
+
+### Phase 82: Docs, examples, and drift protection
+
+- [ ] **Phase 82: Docs, examples, and drift protection** — **DOC-01**, **VRFY-01** — lock the public story so adopters understand what shipped, what did not, and how to use it without crossing the boundary.
+
+**Success criteria:**
+
+1. Canonical guides show contexts calling `Scrypath.search/3` or the existing search-module layer, with helpers used only at the request edge.
+2. Docs explicitly state that `%Scrypath.Query{}` is not public API and Phoenix is optional.
+3. Examples cover controller- and LiveView-shaped edge usage without implying a reusable widget/component layer.
+4. Regression coverage fails if helper APIs drift into a second runtime, broaden the boundary, or contradict the milestone non-goals.
 
 ## Phases (history)
 

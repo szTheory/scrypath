@@ -1,36 +1,37 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.20
-milestone_name: Search Module Foundation
-status: shipped
-last_updated: "2026-05-08T21:15:00Z"
-last_activity: 2026-05-08
+milestone: v1.21
+milestone_name: Query Toolkit And Phoenix Edge Helpers
+status: ready_to_plan
+last_updated: 2026-05-22T12:17:43.005Z
+last_activity: 2026-05-22
 progress:
   total_phases: 3
-  completed_phases: 3
-  total_plans: 6
-  completed_plans: 6
-  percent: 100
+  completed_phases: 0
+  total_plans: 2
+  completed_plans: 8
+  percent: 0
+stopped_at: Phase 80 complete (2/2) — ready to discuss Phase 81
 ---
 
 # Project State
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-05-08)
+See: `.planning/PROJECT.md` (updated 2026-05-22)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Post-v1.20 milestone transition — keep the search-module arc narrow, reconcile the v1.20 archive/code drift, and decide whether `v1.21` is worth opening
+**Current focus:** Phase 81 — edge normalization errors and phoenix wrappers
 
 ## Current Position
 
-Phase: 79 — Complete
-Plan: —
+Phase: 81
+Plan: Not started
 
-**Status:** `v1.20` shipped and archived; no active milestone is currently open
+**Status:** Ready to plan
 
-**Last activity:** 2026-05-08 — Archived `v1.20` and advanced rolling planning truth to post-close posture
+**Last activity:** 2026-05-22
 
 ## Accumulated Context
 
@@ -66,6 +67,8 @@ Plan: —
 - **Phase 79 complete:** Locked one canonical `SearchModule` guide, thin Phoenix/README routing, bounded docs-contract coverage, and one direct wrapper-parity regression.
 - **v1.20 close:** Search Module Foundation shipped and archived with a passed audit; the repo now has a thin, context-owned search-module layer without changing the canonical `v1.19` broader-adoption verdict.
 - **v1.20 archive/code drift:** the archive currently claims `Scrypath.SearchModule` and its guide shipped, but the checked-out code does not expose that layer yet; reconcile the archive with code before treating the layer as fully grounded.
+- **v1.21 open:** Reopen internal feature work only for a narrow-balanced slice: a framework-light public query-param toolkit plus thin optional Phoenix URL/form/LiveView helpers over the existing `Scrypath.search/3` path.
+- **v1.21 guardrails:** contexts remain the application boundary, Phoenix stays optional, no public `%Scrypath.Query{}` contract ships, and this milestone does not widen into UI widgets, controller macros, or schema-generated runtime verbs.
 
 ### Blockers / Concerns
 
@@ -73,6 +76,7 @@ Plan: —
 - **Diminishing-returns guardrail:** In the absence of real adopter evidence, additional internal proof/polish work is presumed low leverage and should not become the next milestone by default.
 - **Scope discipline for the search-module arc:** Search modules must remain a thin context-owned layer over the existing runtime, not a slide into schema-generated APIs, Phoenix coupling, or hidden operational behavior.
 - **Search-module archive drift:** `v1.20` planning claims a `Scrypath.SearchModule` layer, but the current checkout does not contain that module or its guide. Treat that as a reconciliation task, not as settled product truth.
+- **Public param grammar risk:** `v1.21` will freeze browser-shaped param semantics if the toolkit surface is too broad. Keep the grammar narrow and explicit.
 - Existing `71`–`73` phase directories remain in `.planning/phases/` in the working tree; phase numbering continues at `74`, so no collision exists for this milestone open.
 
 ### Deferred Items
@@ -87,13 +91,13 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-1. Treat Scrypath as paused for internal feature development unless real outside adopter evidence or a clearly leverage-positive release need justifies reopening.
-2. If reopening the active arc, evaluate **v1.21 — Query Toolkit And Phoenix Edge Helpers** against that bar first.
-3. Start the next milestone with **`$gsd-new-milestone`** so fresh requirements and roadmap scope are defined explicitly.
+1. Start `v1.21` with Phase 80: define the public plain-data query toolkit contract over the existing runtime.
+2. Follow with Phase 81: edge normalization semantics and thin optional Phoenix wrappers over the Phase 80 contract.
+3. Close with Phase 82: canonical docs, examples, and drift protection that keep the milestone narrow.
 
 ---
 
-*Last updated: 2026-05-08 — archived **v1.20 Search Module Foundation***
+*Last updated: 2026-05-22 — opened **v1.21 Query Toolkit And Phoenix Edge Helpers***
 
 **Prior milestone:** **v1.19** — Production adoption proof and hardening — **2026-04-28** (shipped + archived in-repo).
 
@@ -103,8 +107,8 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 **Completed:** **v1.17** shipped + archived in-repo (**2026-04-23**) — phases **68–70** — **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next:** Open a fresh milestone only if `v1.21` still clears the post-`v1.19` leverage bar.
+**Next:** Plan and execute phases **80–82** if the milestone remains narrow and boundary-honest.
 
 **Completed Phase:** 79 (Docs, examples, and contract coverage) — 2/2 plans — 2026-05-08
 
-**Planned Phases:** none until a new milestone opens.
+**Planned Phases:** 80–82 for `v1.21`.
