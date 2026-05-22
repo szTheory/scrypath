@@ -15,10 +15,16 @@ defmodule Scrypath do
 
   - **`sync_record/3`** (and batch variants) — write path and mode semantics; start from
     [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md).
+  - **`Scrypath.QueryParams`** — request-edge plain-data preparation for browser or form params
+    before your context calls `search/3`.
   - **`search/3`** — hydrated search on one schema; follow
     [guides/golden-path.md](guides/golden-path.md) for the first working call.
   - **`search_many/2`** — federated multi-schema search; composition rules live in
     [guides/golden-path.md](guides/golden-path.md) and [guides/multi-index-search.md](guides/multi-index-search.md).
+
+  Keep request-edge casting in controllers, LiveViews, or other app-owned boundaries with
+  `Scrypath.QueryParams`. Keep orchestration in your contexts, where `Scrypath.search/3`
+  remains the canonical runtime entrypoint.
 
   Use `use Scrypath` on your Ecto schema; declaration grammar and settings live on
   `Scrypath.Schema` — read that module instead of duplicating option tables here.
