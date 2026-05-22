@@ -3,6 +3,7 @@ defmodule Scrypath.Meilisearch.QueryTest do
 
   alias Scrypath.Meilisearch.Query, as: MeilisearchQuery
   alias Scrypath.Query
+  alias Scrypath.QueryParams
 
   test "filter only — facetFilters absent, filter present" do
     q = %Query{
@@ -101,5 +102,50 @@ defmodule Scrypath.Meilisearch.QueryTest do
     payload = MeilisearchQuery.to_payload(q)
     assert "year >= 2000" in payload["facetFilters"]
     assert "year <= 2010" in payload["facetFilters"]
+  end
+
+  test "query params output preserves the existing meilisearch payload grammar" do
+    query_params =
+      QueryParams.cast(%{
+        "q" => "phoenix",
+        "filter" => [status: "published"],
+        "sort" => [desc: :inserted_at],
+        "page" => [number: 2, size: 20],
+        "facets" => [:status],
+        "facet_filter" => [status: ["published", "scheduled"]],
+        "per_query" => %{show_ranking_score: true}
+      })
+
+    {text, search_opts} = QueryParams.to_search_args(query_params)
+
+    toolkit_payload =
+      text
+      |> Query.new(search_opts)
+      |> MeilisearchQuery.to_payload()
+
+    direct_payload =
+      "phoenix"
+      |> Query.new(
+        filter: [status: "published"],
+        sort: [desc: :inserted_at],
+        page: [number: 2, size: 20],
+        facets: [:status],
+        facet_filter: [status: ["published", "scheduled"]],
+        per_query: %{show_ranking_score: true}
+      )
+      |> MeilisearchQuery.to_payload()
+
+    assert toolkit_payload == direct_payload
+
+    assert %{
+             :q => "phoenix",
+             :filter => ["status = \"published\""],
+             :sort => ["inserted_at:desc"],
+             :facets => ["status"],
+             :page => 2,
+             :hitsPerPage => 20,
+             "facetFilters" => [["status = \"published\"", "status = \"scheduled\""]],
+             "showRankingScore" => true
+           } = toolkit_payload
   end
 end
