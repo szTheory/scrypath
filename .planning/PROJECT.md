@@ -10,31 +10,29 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Current State
 
-**v1.20 — Search Module Foundation** shipped and archived in-repo on **2026-05-08** across phases **77–79**.
+**v1.21 — Query Toolkit And Phoenix Edge Helpers** opened on **2026-05-22** as the active milestone across planned phases **80–82**.
 
-**Reconciliation note:** the archive says the thin `Scrypath.SearchModule` layer shipped, but the working tree should still be checked against `lib/scrypath` and the published guides before anyone treats that claim as fully settled product truth.
-
-**Why this milestone now:** the active **Batteries-Included Search Modules** arc is a narrow, leverage-positive follow-up to the defended core. It builds a thin, explicit Phoenix/Ecto ergonomics layer that is already in motion in the worktree, while keeping the **`v1.19`** broader-adoption verdict intact and avoiding a return to broad speculative feature expansion.
+**Why this milestone now:** the active **Batteries-Included Search Modules** arc still clears the post-**`v1.19`** leverage bar, but only if it stays narrow. The repo already proved a thin request-edge normalization seam is valuable; the next highest-value move is to make that seam public and reusable without drifting into Phoenix magic, schema-generated APIs, or a second search runtime.
 
 **Target features:**
 
-- **Context-owned search modules** — app-level modules declare schema, backend, repo, preload, and browser-param rules without generating runtime verbs on schemas.
-- **Stable param normalization** — one thin boundary for text, filter, sort, page, facets, and facet-filter request shapes before delegating into **`Scrypath.search/3`**.
-- **Structured param errors** — invalid request input fails with explicit, field-scoped error details instead of ad hoc controller or LiveView branching.
-- **Phoenix/Ecto ergonomics docs** — guides and examples show the context boundary, request-param story, and non-goals clearly enough that teams can adopt the layer without guessing at hidden runtime semantics.
+- **Public query-param toolkit** — apps can cast browser-shaped `q`, filter, sort, page, facets, and facet-filter params into a stable plain-data Scrypath search-args shape without exposing internal query structs.
+- **Structured edge errors** — invalid request input fails with explicit, field-scoped error details that controllers and LiveViews can render directly.
+- **Thin Phoenix edge helpers** — optional URL/form/LiveView round-tripping helpers sit on top of the toolkit without introducing a hard Phoenix dependency in runtime core.
+- **Boundary-honest docs and examples** — guides show contexts or context-owned search modules staying canonical while helpers remain wrappers at the request edge.
 
-**Boundary discipline:** this milestone is about a thin app-facing ergonomics layer over the existing runtime, not callback magic or public backend expansion. `scrypath` core stays Meilisearch-first, Ecto-first, and auth-agnostic. `use Scrypath` remains metadata-only on schemas, Phoenix stays optional, and sync / reindex / visibility semantics remain explicit rather than hidden.
+**Boundary discipline:** this milestone is about a narrow public edge contract over the existing runtime, not a broader UI abstraction or framework façade. `scrypath` core stays Meilisearch-first, Ecto-first, and auth-agnostic. `Scrypath.search/3` remains canonical, `use Scrypath` stays metadata-only on schemas, Phoenix stays optional, and sync / reindex / visibility semantics remain explicit rather than hidden.
 
-**Out of scope for v1.20:** public Phoenix helpers, reusable composition presets beyond the foundation, schema-generated runtime search APIs, public multi-backend expansion, deeper OPSUI breadth, or any change that hides operational search semantics behind framework magic.
+**Out of scope for v1.21:** public `%Scrypath.Query{}` or other internal structs as semver-stable API, schema-generated runtime search APIs, Phoenix-dependent runtime core, reusable UI widgets or form-builder layers, broader composition/presets, public multi-backend expansion, or any change that hides operational search semantics behind framework magic.
 
-Canonical archive: **`milestones/v1.20-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+Current milestone planning files: **`.planning/{REQUIREMENTS,ROADMAP,STATE}.md`**.
 
 ## Current Milestone Outcome
 
-- Milestone shipped from the active **Batteries-Included Search Modules** arc on **2026-05-08**.
-- Scrypath now has a thin, context-owned search-module layer that declares schema/runtime defaults, normalizes browser-shaped params once, and delegates through the existing **`Scrypath.search/3`** engine.
-- The docs now make the boundary explicit: search modules improve Phoenix/Ecto ergonomics without hiding sync, visibility, retries, reindexing, or backend semantics.
+- Milestone is open, not shipped.
+- The target outcome is one stable public edge contract for request-shaped search params plus thin optional Phoenix wrappers over that contract.
 - The broader-adoption checkpoint from **`milestones/v1.19-MILESTONE-AUDIT.md`** remains canonical and should not be restated as outside validation.
+- The `v1.20` archive/code drift remains a known concern; `v1.21` should not widen the surface in ways that depend on unreconciled internal claims.
 
 ## Last shipped milestone
 
@@ -44,7 +42,7 @@ Canonical archive: **`milestones/v1.20-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md
 
 ## Planning window
 
-No active milestone is currently open. The next candidate from the active arc is **v1.21 — Query Toolkit And Phoenix Edge Helpers**, but reopening internal feature work should still be justified against the post-**v1.19** outside-adopter guardrail.
+The active milestone is **v1.21 — Query Toolkit And Phoenix Edge Helpers**. It was opened deliberately as a narrow-balanced follow-up in the active arc, with the post-**v1.19** outside-adopter guardrail still in force: this milestone exists to reduce repeated Phoenix/Ecto request-edge glue, not to reopen broad speculative feature work.
 
 ## Requirements
 
@@ -97,6 +95,17 @@ No active milestone is currently open. The next candidate from the active arc is
 - [x] **Phase 64** (2026-04-22): IA + verification + milestone bookkeeping — **`operator-ia.md`** team persistence pointers, **`mix verify.opsui`** / **`docs_contract_test`** / **`guides/meilisearch-operations.md`**, frozen **`v1.15-*`** — **OPS2-05**, **OPS2-06**, **OPS2-08** — **`.planning/phases/64-ia-verification-and-milestone-bookkeeping/`**.
 - [x] **v1.15 milestone** (2026-04-22): OPSUI second slice — phases **62–64**; **`milestones/v1.15-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
+### Active
+
+- [ ] **QTK-01**: Apps can cast browser-shaped request params into a stable plain-data search-args shape without exposing `%Scrypath.Query{}` or other current internal query structs as public API.
+- [ ] **QTK-02**: The public toolkit normalizes text, filters, sort, pagination, facets, and facet-filter input once at the edge while preserving explicit defaults and limits.
+- [ ] **QTK-03**: Invalid edge input returns structured, field-scoped errors that host apps can render directly instead of relying on ad hoc controller or LiveView branching.
+- [ ] **QTK-04**: Toolkit output feeds the existing **`Scrypath.search/3`** path cleanly and does not create a second runtime or move orchestration out of contexts or context-owned search modules.
+- [ ] **PHX-01**: Optional Phoenix helpers support URL and form round-tripping over the toolkit without introducing a hard Phoenix dependency in runtime core.
+- [ ] **PHX-02**: Optional LiveView helpers support param-driven search flows and error display while keeping URL params as the shareable UI state.
+- [ ] **DOC-01**: Guides and examples make the boundary explicit: contexts stay canonical, helpers are wrappers, and no schema-generated runtime verbs or UI layer ship in this milestone.
+- [ ] **VRFY-01**: Tests and contract coverage fail on drift around plain-data toolkit output, field-scoped errors, helper optionality, and canonical runtime delegation.
+
 ### Recently completed
 
 - [x] **v1.20** (2026-05-08): **SMOD-01**–**SMOD-08** — context-owned search-module declarations, stable request-param normalization, structured param errors, thin delegation over **`Scrypath.search/3`**, and Phoenix/Ecto-facing docs plus regression coverage, archived in **`milestones/v1.20-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
@@ -109,6 +118,9 @@ No active milestone is currently open. The next candidate from the active arc is
 - Postgres-native full-text search as a first-class v1 product surface - it muddies the product boundary and competes with a different problem space.
 - Public multi-backend support before real adoption pressure proves the common contract deserves to widen.
 - Advanced relevance features such as vector search, hybrid retrieval, personalization, or analytics before the operational core and public release story settle.
+- Public `%Scrypath.Query{}` or other internal normalization structs as semver-stable contract - that would freeze implementation detail too early and raise API-regret risk.
+- Schema-generated runtime search verbs, controller/LiveView macros, or any helper that turns Scrypath into a framework façade - contexts must remain the application boundary.
+- Reusable UI widgets, search-page scaffolds, or broader composition/preset systems in this milestone - those belong to future `v1.22`-shaped pressure, not this narrow slice.
 
 ## Context
 
@@ -164,6 +176,7 @@ The current public line on Hex is **`scrypath 0.3.4`**. **v1.8** closed the fede
 | **v1.19** — Production adoption proof and hardening | After the readiness checkpoint and Sigra add-on, prioritize defended production proof, support-contract clarity, and evidence-backed papercut closure before widening product scope again | ✓ Shipped + archived in-repo as a readiness checkpoint; canonical verdict: ready to seek broader outside production adoption on the defended surface, with external validation still pending |
 | Post-v1.19 pause on internal feature work | Do not open another build-more milestone unless real outside adopter evidence identifies concrete friction or a release/distribution need justifies the work | — Pending external validation |
 | **v1.20** — Search Module Foundation | A narrow, already-started ergonomics layer that removes repeated Phoenix/Ecto request-param boilerplate without changing the core runtime or hiding operational search semantics | ✓ Shipped + archived in-repo |
+| **v1.21** — Query Toolkit And Phoenix Edge Helpers | Reopen the active arc only for a narrow, framework-light public param toolkit plus thin optional Phoenix wrappers; keep contexts canonical and prevent public exposure of current internal query structs | — Active on 2026-05-22 |
 
 ## Historical Context
 
@@ -189,4 +202,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-28 — closed **v1.19 Production adoption proof and hardening** as a readiness checkpoint and archived the canonical verdict in **`milestones/v1.19-MILESTONE-AUDIT.md`***
+*Last updated: 2026-05-22 — opened **v1.21 Query Toolkit And Phoenix Edge Helpers** as a narrow-balanced milestone under the active search-modules arc*
