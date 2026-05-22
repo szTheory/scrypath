@@ -136,6 +136,21 @@ defmodule Scrypath.QueryParamsTest do
              Enum.sort_by(Enum.flat_map(field_errors, fn {_field, issues} -> issues end), &{&1.field, inspect(&1.path), &1.code})
   end
 
+  test "normalize/1 emits deterministic keyword ordering for stable plain-data output" do
+    params = %{
+      "q" => "phoenix",
+      "filter" => %{"status" => "published", "genre" => ["Action", "Drama"]},
+      "page" => %{"size" => "20", "number" => "2"},
+      "facet_filter" => %{"year" => "2024", "genre" => ["Action", "Drama"]}
+    }
+
+    assert {:ok, query_params} = QueryParams.normalize(params)
+
+    assert query_params.filter == [genre: ["Action", "Drama"], status: "published"]
+    assert query_params.page == [number: 2, size: 20]
+    assert query_params.facet_filter == [genre: ["Action", "Drama"], year: "2024"]
+  end
+
   test "cast/1 accepts string-keyed and atom-keyed text envelopes with runtime-compatible values" do
     assert %{text: "ecto", filter: [status: "draft"], sort: [], page: [], facets: [], facet_filter: [], per_query: %{}} =
              QueryParams.cast(%{"text" => "ecto", "filter" => [status: "draft"]})
