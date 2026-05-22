@@ -1,6 +1,9 @@
 defmodule Scrypath.TestSupport.Docs.PhoenixExampleCase do
   @moduledoc false
 
+  alias Scrypath.Phoenix, as: SearchPhoenix
+  alias Scrypath.QueryParams
+
   defmodule Post do
     @moduledoc false
     defstruct [:id, :title, :status]
@@ -62,47 +65,68 @@ defmodule Scrypath.TestSupport.Docs.PhoenixExampleCase do
 
     defmodule PostController do
       @moduledoc false
+      alias Scrypath.Phoenix, as: SearchPhoenix
+      alias Scrypath.QueryParams
       alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Content
 
       def index(params) do
-        query = Map.get(params, "q", "")
-        page_number = params |> Map.get("page", 1) |> normalize_page()
+        case SearchPhoenix.from_params(params) do
+          {:ok, query_params} ->
+            {query, search_opts} = QueryParams.to_search_args(query_params)
+            page_opts = page_with_default_size(Keyword.get(search_opts, :page, []))
 
-        with {:ok, result} <- Content.search_posts(query, page: [number: page_number, size: 20]) do
-          %{
-            data: Enum.map(result.records, &serialize_post/1),
-            page: %{number: page_number, size: 20},
-            search: result
-          }
+            with {:ok, result} <- Content.search_posts(query, page: page_opts) do
+              %{
+                data: Enum.map(result.records, &serialize_post/1),
+                page: Enum.into(page_opts, %{}),
+                search: result,
+                form: SearchPhoenix.to_form_data(query_params)
+              }
+            end
+
+          {:error, error_map} ->
+            %{
+              data: [],
+              page: %{number: 1, size: 20},
+              search: nil,
+              form: SearchPhoenix.to_form_data(params, error_map)
+            }
         end
       end
 
       defp serialize_post(post), do: %{id: post.id, title: post.title, status: post.status}
 
-      defp normalize_page(page) when is_integer(page) and page > 0, do: page
-
-      defp normalize_page(page) when is_binary(page) do
-        case Integer.parse(page) do
-          {number, ""} when number > 0 -> number
-          _ -> 1
-        end
+      defp page_with_default_size(page_opts) do
+        page_opts
+        |> Keyword.put_new(:number, 1)
+        |> Keyword.put_new(:size, 20)
       end
-
-      defp normalize_page(_page), do: 1
     end
   end
 
   defmodule PostLive do
     @moduledoc false
+    alias Scrypath.Phoenix, as: SearchPhoenix
+    alias Scrypath.QueryParams
     alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Content
 
     def mount do
-      %{posts: [], search: nil, query: ""}
+      %{posts: [], search: nil, query: "", form: SearchPhoenix.to_form_data(QueryParams.cast(%{}))}
     end
 
-    def handle_params(%{"q" => query}, socket) do
-      with {:ok, result} <- Content.search_posts(query, preload: [:author]) do
-        Map.merge(socket, %{posts: result.records, search: result, query: query})
+    def handle_params(params, socket) do
+      case SearchPhoenix.from_params(params) do
+        {:ok, query_params} ->
+          form = SearchPhoenix.to_form_data(query_params)
+          {query, search_opts} = QueryParams.to_search_args(query_params)
+
+          with {:ok, result} <- Content.search_posts(query, Keyword.put(search_opts, :preload, [:author])) do
+            Map.merge(socket, %{posts: result.records, search: result, query: query, form: form})
+          end
+
+        {:error, error_map} ->
+          form = SearchPhoenix.to_form_data(params, error_map)
+          Map.merge(socket, %{posts: [], search: nil, query: form.values["q"], form: form})
       end
     end
 
@@ -117,33 +141,36 @@ defmodule Scrypath.TestSupport.Docs.PhoenixExampleCase do
   defmodule FacetedBrowseLive do
     @moduledoc false
 
+    alias Scrypath.Phoenix, as: SearchPhoenix
+    alias Scrypath.QueryParams
     alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Content
 
-    def mount, do: %{q: "", posts: [], facet_filter: []}
+    def mount, do: %{q: "", posts: [], facet_filter: [], form: SearchPhoenix.to_form_data(QueryParams.cast(%{}))}
 
     def handle_params(params, socket) do
-      q = Map.get(params, "q", "")
-      genres = parse_genres(params["genre"])
+      case SearchPhoenix.from_params(params) do
+        {:ok, query_params} ->
+          form = SearchPhoenix.to_form_data(query_params)
+          {query, search_opts} = QueryParams.to_search_args(query_params)
+          facets = if search_opts[:facets] == [], do: [:genre, :year, :rating], else: search_opts[:facets]
 
-      facet_filter =
-        case genres do
-          [] -> []
-          list -> [genre: list]
-        end
+          with {:ok, result} <-
+                 Content.search_movies(query,
+                   facets: facets,
+                   facet_filter: search_opts[:facet_filter]
+                 ) do
+            Map.merge(socket, %{
+              q: query,
+              posts: result.records,
+              facet_filter: search_opts[:facet_filter],
+              form: form
+            })
+          end
 
-      with {:ok, result} <-
-             Content.search_movies(q,
-               facets: [:genre, :year, :rating],
-               facet_filter: facet_filter
-             ) do
-        Map.merge(socket, %{q: q, posts: result.records, facet_filter: facet_filter})
+        {:error, error_map} ->
+          form = SearchPhoenix.to_form_data(params, error_map)
+          Map.merge(socket, %{q: form.values["q"], posts: [], facet_filter: [], form: form})
       end
-    end
-
-    defp parse_genres(nil), do: []
-
-    defp parse_genres(s) when is_binary(s) do
-      s |> String.split(",", trim: true) |> Enum.map(&String.trim/1)
     end
   end
 end
