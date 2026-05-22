@@ -2,6 +2,7 @@ defmodule Scrypath.SearchTest do
   use ExUnit.Case, async: true
 
   alias Scrypath.Query
+  alias Scrypath.QueryParams
   alias Scrypath.SearchResult
   alias Scrypath.TestSupport.FakeRepo
 
@@ -113,6 +114,45 @@ defmodule Scrypath.SearchTest do
                sort: [desc: :inserted_at],
                page: [number: 2, size: 20]
              )
+  end
+
+  test "query params output feeds Scrypath.search/3 through the same common query path" do
+    query_params =
+      QueryParams.cast(%{
+        "q" => "phoenix",
+        "filter" => [status: "published"],
+        "sort" => [desc: :inserted_at],
+        "page" => [number: 2, size: 20],
+        "per_query" => %{show_ranking_score: true}
+      })
+
+    {text, search_opts} = QueryParams.to_search_args(query_params)
+
+    assert {:ok, %SearchResult{query: toolkit_query}} =
+             Scrypath.search(SearchablePost, text,
+               Keyword.put(search_opts, :backend, Scrypath.TestSupport.FakeBackend)
+             )
+
+    assert {:ok, %SearchResult{query: direct_query}} =
+             Scrypath.search(SearchablePost, "phoenix",
+               backend: Scrypath.TestSupport.FakeBackend,
+               filter: [status: "published"],
+               sort: [desc: :inserted_at],
+                page: [number: 2, size: 20],
+                per_query: %{show_ranking_score: true}
+              )
+
+    assert toolkit_query == direct_query
+
+    assert %Query{
+             text: "phoenix",
+             filter: [status: "published"],
+             sort: [desc: :inserted_at],
+             page: %{number: 2, size: 20},
+             facets: [],
+             facet_filter: [],
+             per_query: %{show_ranking_score: true}
+           } = toolkit_query
   end
 
   test "structured filters accept only declared filterable fields" do
