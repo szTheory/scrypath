@@ -2,7 +2,7 @@
 
 ## Active arc: Batteries-Included Search Modules
 
-**Status:** active - `v1.20` shipped on 2026-05-08; `v1.21` is the next candidate  
+**Status:** active - `v1.21` opened on 2026-05-22 after `v1.20` shipped on 2026-05-08  
 **Started:** 2026-05-07
 
 ## Why this arc exists
@@ -39,13 +39,15 @@ The target is not hidden callback magic. The target is a thin, explicit layer th
 
 ### v1.21 — Query Toolkit And Phoenix Edge Helpers
 
-- **Status:** next candidate
+- **Status:** active
 - Public normalization/casting helpers behind the search-module layer
 - Optional Phoenix-facing helpers for URL/form/LiveView round-tripping
 - No Phoenix coupling in the core runtime
+- Locked as a narrow-balanced slice: framework-light toolkit first, thin Phoenix wrappers second, contexts still canonical
 
 ### v1.22 — Composition And Real-App Depth
 
+- **Status:** next candidate
 - Reusable presets/scopes where they help real app flows
 - Composition support aligned with `search_many/2`
 - Stronger UI metadata exposure for declared filters, sorts, facets, and paging

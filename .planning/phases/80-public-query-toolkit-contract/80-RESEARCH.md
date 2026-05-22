@@ -244,17 +244,17 @@ end
 **Deprecated/outdated:**
 - Treating `Scrypath.SearchModule` archive claims as implementation baseline is outdated for this branch tip. [VERIFIED: .planning/STATE.md] [VERIFIED: docs/jtbd-gap-map.md]
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should the public module be named `Scrypath.QueryParams`?**
-   - What we know: the new contract must be public, plain-data, and clearly distinct from internal `%Scrypath.Query{}`. [VERIFIED: lib/scrypath/query.ex] [VERIFIED: .planning/REQUIREMENTS.md]
-   - What's unclear: the exact public module name is a design choice, not a verified current API. [ASSUMED]
-   - Recommendation: use a root public name that says "request params" rather than "query struct"; `Scrypath.QueryParams` is the clearest fit. [ASSUMED]
+1. **Public module name**
+   - Decision: use `Scrypath.QueryParams` as the public Phase 80 module name. [RESOLVED: 2026-05-22]
+   - Why this is the right fit: the checked-out runtime already reserves `%Scrypath.Query{}` for internal normalized state, and the phase requirement is specifically a public request-edge contract for browser-shaped params rather than a second query struct. `Scrypath.QueryParams` is explicit about that boundary while staying Phoenix-agnostic. [VERIFIED: lib/scrypath/query.ex] [VERIFIED: .planning/REQUIREMENTS.md]
+   - Planning consequence: plan artifacts for this phase should name `lib/scrypath/query_params.ex` as the public facade and should not hedge on alternate root names. [RESOLVED: 2026-05-22]
 
-2. **Should phase 80 include execution helpers?**
-   - What we know: `QTK-04` forbids a second runtime, and current docs keep contexts as the boundary. [VERIFIED: .planning/REQUIREMENTS.md] [VERIFIED: guides/phoenix-contexts.md]
-   - What's unclear: whether a convenience helper like `to_search_args/1` is helpful enough without becoming a hidden executor. [ASSUMED]
-   - Recommendation: if a helper is added in phase 80, keep it data-only and name it so it cannot be confused with `search/…`. [ASSUMED]
+2. **Data-only helper scope**
+   - Decision: Phase 80 should include a data-only `to_search_args/1` helper on `Scrypath.QueryParams`, and it must return `{text, keyword_opts}`-equivalent data without performing search execution. [RESOLVED: 2026-05-22]
+   - Why this is the right fit: `QTK-04` forbids a second runtime, but host apps still need one explicit bridge from public plain data into the existing `Scrypath.search/3` call shape. A narrowly named conversion helper gives that bridge while keeping contexts canonical and avoiding any `search/…` API on the toolkit surface. [VERIFIED: .planning/REQUIREMENTS.md] [VERIFIED: guides/phoenix-contexts.md] [VERIFIED: lib/scrypath.ex]
+   - Planning consequence: phase plans may depend on `Scrypath.QueryParams.to_search_args/1`, but they must continue to reject any toolkit executor helper or public runtime wrapper. [RESOLVED: 2026-05-22]
 
 ## Environment Availability
 
@@ -355,4 +355,3 @@ end
 | A1 | The public module should be named `Scrypath.QueryParams`. | Summary / Recommended Project Structure / Open Questions | Low-to-medium; planner may produce tasks against a name the maintainer wants to change before implementation. |
 | A2 | Phase 80 may add a data-only helper name such as `to_search_args/1` without violating scope, as long as it never executes search. | Open Questions | Medium; if the maintainer rejects helper methods entirely, planner tasks should focus only on types/docs/contract docs. |
 | A3 | New tests should live in `test/scrypath/query_params_test.exs` and be used as the quick-run spine for this phase. | Validation Architecture | Low; filename and exact command can change without affecting the core design. |
-
