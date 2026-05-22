@@ -3,6 +3,7 @@ defmodule Scrypath.PhoenixExamplesTest do
 
   @fixture_source File.read!("test/support/docs/phoenix_example_case.ex")
 
+  alias Scrypath.Phoenix
   alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Api.PostController, as: ApiPostController
   alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Content
   alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Post
@@ -19,7 +20,9 @@ defmodule Scrypath.PhoenixExamplesTest do
 
   test "fixture source keeps repo and scrypath orchestration out of web modules" do
     controller_section = module_section("PostController")
+    api_section = module_section("PostController", "Api")
     liveview_section = module_section("PostLive")
+    faceted_section = module_section("FacetedBrowseLive")
 
     refute controller_section =~ "Repo"
     refute controller_section =~ "Scrypath.search"
@@ -27,6 +30,9 @@ defmodule Scrypath.PhoenixExamplesTest do
     refute liveview_section =~ "Repo"
     refute liveview_section =~ "Scrypath.search"
     refute liveview_section =~ "Scrypath.sync"
+    assert api_section =~ "SearchPhoenix.from_params"
+    assert liveview_section =~ "SearchPhoenix.from_params"
+    assert faceted_section =~ "SearchPhoenix.from_params"
     assert controller_section =~ "Content.search_posts"
     assert liveview_section =~ "Content.search_posts"
   end
@@ -39,39 +45,31 @@ defmodule Scrypath.PhoenixExamplesTest do
   end
 
   test "json controller keeps serialization in the web layer" do
-    response = ApiPostController.index(%{"q" => "ecto", "page" => "2"})
+    response = ApiPostController.index(%{"q" => "ecto", "page" => %{"number" => "2"}})
 
     assert [%{id: 1, title: "Phoenix search", status: "published"}] = response.data
     assert response.page == %{number: 2, size: 20}
     assert response.search.query == "ecto"
+    assert response.form.values["page"] == %{"number" => "2"}
   end
 
-  test "json controller fixture normalizes page params safely before calling the context" do
+  test "json controller fixture delegates request-edge parsing to Scrypath.Phoenix" do
     api_section = module_section("PostController", "Api")
 
-    assert api_section =~ "page_number = params |> Map.get(\"page\", 1) |> normalize_page()"
-    assert api_section =~ "page: [number: page_number, size: 20]"
-    assert api_section =~ "Integer.parse(page)"
-    assert api_section =~ "{number, \"\"} when number > 0 -> number"
-    refute api_section =~ "String.to_integer(page)"
+    assert api_section =~ "SearchPhoenix.from_params(params)"
+    assert api_section =~ "QueryParams.to_search_args(query_params)"
+    assert api_section =~ "page_with_default_size"
+    refute api_section =~ "normalize_page"
   end
 
-  test "json controller normalizes missing and invalid page params to page 1" do
-    cases = [
-      %{"q" => "ecto"},
-      %{"q" => "ecto", "page" => "abc"},
-      %{"q" => "ecto", "page" => "0"},
-      %{"q" => "ecto", "page" => "-3"},
-      %{"q" => "ecto", "page" => 0},
-      %{"q" => "ecto", "page" => -2}
-    ]
+  test "json controller renders attempted state and skips search on invalid params" do
+    response = ApiPostController.index(%{"q" => "ecto", "page" => %{"number" => "0"}})
 
-    Enum.each(cases, fn params ->
-      response = ApiPostController.index(params)
-
-      assert response.page == %{number: 1, size: 20}
-      assert response.search.query == "ecto"
-    end)
+    assert response.data == []
+    assert response.search == nil
+    assert response.page == %{number: 1, size: 20}
+    assert response.form.values["page"] == %{"number" => "0"}
+    assert [%{code: :invalid_value, path: ["page", "number"]}] = response.form.field_errors["page"]
   end
 
   test "liveview-facing module reuses the same context boundary" do
@@ -81,17 +79,22 @@ defmodule Scrypath.PhoenixExamplesTest do
     assert updated.query == "search"
     assert [%Post{}] = updated.posts
     assert updated.search.query == "search"
+    assert updated.form.values["q"] == "search"
   end
 
   test "faceted browse liveview passes facets and facet_filter through the context" do
     socket = FacetedBrowseLive.mount()
 
     updated =
-      FacetedBrowseLive.handle_params(%{"q" => "space", "genre" => "Horror,Drama"}, socket)
+      FacetedBrowseLive.handle_params(
+        %{"q" => "space", "facet_filter" => %{"genre" => ["Horror", "Drama"]}},
+        socket
+      )
 
     assert updated.q == "space"
     assert updated.facet_filter == [genre: ["Horror", "Drama"]]
     assert [%Post{title: "Example Movie"}] = updated.posts
+    assert updated.form.values["facet_filter"] == %{"genre" => ["Horror", "Drama"]}
   end
 
   test "liveview write events still call the context boundary with string-keyed attrs" do
@@ -110,6 +113,17 @@ defmodule Scrypath.PhoenixExamplesTest do
 
     assert {:ok, %Post{title: "Published", status: :published}} =
              Content.publish_post(post, %{"title" => "Published"})
+  end
+
+  test "fixture wrapper usage stays pure and does not execute search in Scrypath.Phoenix" do
+    source = File.read!("lib/scrypath/phoenix.ex")
+
+    assert Phoenix.from_params(%{"q" => "ecto"}) == Scrypath.QueryParams.normalize(%{"q" => "ecto"})
+    refute source =~ "Repo"
+    refute source =~ "Scrypath.search"
+    refute source =~ "defmacro"
+    refute source =~ "handle_params"
+    refute source =~ "handle_event"
   end
 
   defp module_section(name, parent \\ nil) do
