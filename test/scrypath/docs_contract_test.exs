@@ -9,6 +9,7 @@ defmodule Scrypath.DocsContractTest do
   @release_workflow File.read!(".github/workflows/release-please.yml")
   @publish_recovery_workflow File.read!(".github/workflows/publish-hex.yml")
   @release_monitor_workflow File.read!(".github/workflows/verify-published-release.yml")
+  @jtbd_gap_map File.read!("docs/jtbd-gap-map.md")
   @release_docs File.read!("docs/releasing.md")
   @operator_support_docs File.read!("docs/operator-support.md")
   @search_backend_sre_docs File.read!("docs/search-backend-sre.md")
@@ -29,6 +30,7 @@ defmodule Scrypath.DocsContractTest do
     "guides/drift-recovery.md",
     "guides/getting-started.md",
     "guides/golden-path.md",
+    "guides/jtbd-and-user-flows.md",
     "guides/meilisearch-operations.md",
     "guides/phoenix-walkthrough.md",
     "guides/phoenix-contexts.md",
@@ -49,6 +51,7 @@ defmodule Scrypath.DocsContractTest do
   @published_markdown_for_hygiene [
     "README.md",
     "ARCHITECTURE.md",
+    "docs/jtbd-gap-map.md",
     "docs/releasing.md",
     "docs/operator-support.md",
     "docs/search-backend-sre.md"
@@ -96,6 +99,44 @@ defmodule Scrypath.DocsContractTest do
       "Use managed reindex when",
       "cutover?: false",
       "Accepted work is not the same thing as search visibility"
+    ])
+  end
+
+  test "README and overview expose the jtbd guide as a first-class entry point" do
+    assert_contains_all(@readme, [
+      "guides/jtbd-and-user-flows.md",
+      "jobs-to-be-done map"
+    ])
+
+    overview = @guides["guides/overview.md"]
+
+    assert_contains_all(overview, [
+      "[JTBD and user flows](jtbd-and-user-flows.md)",
+      "Canonical mental model"
+    ])
+
+    assert ordered?(
+             overview,
+             "[JTBD and user flows](jtbd-and-user-flows.md)",
+             "[Common mistakes](common-mistakes.md)"
+           )
+  end
+
+  test "jtbd docs stay grounded in the checked-out surface" do
+    public_jtbd = @guides["guides/jtbd-and-user-flows.md"]
+
+    assert_contains_all(public_jtbd, [
+      "Keep a search-shaped read model in sync with Ecto data",
+      "accepted work is not the same thing as visible search results",
+      "Backfill repairs a trustworthy index. Reindex replaces an untrustworthy one."
+    ])
+
+    refute String.contains?(public_jtbd, "Scrypath.SearchModule")
+
+    assert_contains_all(@jtbd_gap_map, [
+      "**Last reviewed:** 2026-05-22",
+      "planning artifacts claim a `Scrypath.SearchModule` layer shipped in `v1.20`",
+      "the checked-out code does not currently expose that layer"
     ])
   end
 
@@ -735,24 +776,26 @@ defmodule Scrypath.DocsContractTest do
   test "phoenix guides keep the context-first boundary explicit" do
     assert_contains_all(@guides["guides/phoenix-contexts.md"], [
       "Scrypath fits Phoenix best when your context is the application-facing boundary",
-      "Do not teach controllers or LiveView modules to compose raw `Repo` and `Scrypath.*` calls as the main pattern."
+      "Do not teach controllers or LiveView modules to compose raw `Repo` and `Scrypath.*` calls as the main pattern.",
+      "`Scrypath.Phoenix`"
     ])
 
     assert_contains_all(@guides["guides/phoenix-controllers-and-json.md"], [
       "Phoenix controllers should translate request params into a context call",
       "Do not recommend direct `Repo` queries plus direct `Scrypath.search/3` calls inside the controller.",
-      "page_number =",
-      "normalize_page()",
-      "Integer.parse(page)",
-      "when number > 0 -> number",
-      "defp normalize_page(_page), do: 1",
-      "page: [number: page_number, size: 20]"
+      "SearchPhoenix.from_params(params)",
+      "QueryParams.to_search_args(query_params)",
+      "page_with_default_size",
+      "It does not execute search."
     ])
 
     refute @guides["guides/phoenix-controllers-and-json.md"] =~ "String.to_integer(page)"
+    refute @guides["guides/phoenix-controllers-and-json.md"] =~ "normalize_page"
 
     assert_contains_all(@guides["guides/phoenix-liveview.md"], [
       "LiveView owns UI state, and the context owns repo access plus Scrypath orchestration.",
+      "SearchPhoenix.from_params(params)",
+      "`handle_params/3` remains the one place that normalizes params",
       "the UI should not imply immediate search visibility unless the context chose `:inline`"
     ])
   end
@@ -799,22 +842,20 @@ defmodule Scrypath.DocsContractTest do
     state_md = File.read!(".planning/STATE.md")
 
     requirements_md =
-      case File.read(".planning/REQUIREMENTS.md") do
-        {:ok, body} ->
-          body
+      [
+        ".planning/REQUIREMENTS.md",
+        ".planning/milestones/v1.14-REQUIREMENTS.md",
+        ".planning/milestones/v1.13-REQUIREMENTS.md",
+        ".planning/milestones/v1.6-REQUIREMENTS.md"
+      ]
+      |> Enum.find_value(fn path ->
+        case File.read(path) do
+          {:ok, body} ->
+            if String.contains?(body, "| AUDT-01 |"), do: body
 
-        {:error, _} ->
-          case File.read(".planning/milestones/v1.14-REQUIREMENTS.md") do
-            {:ok, body} ->
-              body
-
-            {:error, _} ->
-              case File.read(".planning/milestones/v1.13-REQUIREMENTS.md") do
-                {:ok, body} -> body
-                {:error, _} -> File.read!(".planning/milestones/v1.6-REQUIREMENTS.md")
-              end
-          end
-      end
+          _ -> nil
+        end
+      end) || flunk("expected one canonical requirements file to retain the AUDT-01 registry row")
 
     milestones_md = File.read!(".planning/MILESTONES.md")
     v16_audit = File.read!(".planning/milestones/v1.6-MILESTONE-AUDIT.md")

@@ -1,6 +1,6 @@
 # Phoenix LiveView
 
-LiveView is a strong fit for search interfaces, but the recommended Scrypath boundary stays the same: LiveView owns UI state, and the context owns repo access plus Scrypath orchestration.
+LiveView is a strong fit for search interfaces, but the recommended Scrypath boundary stays the same: LiveView owns UI state, and the context owns repo access plus Scrypath orchestration. Use `Scrypath.Phoenix` only as request-edge glue around params, form projection, and URL round-tripping.
 
 ## Handle Params Through The Context
 
@@ -9,20 +9,39 @@ defmodule MyAppWeb.PostLive do
   use MyAppWeb, :live_view
 
   alias MyApp.Content
+  alias Scrypath.Phoenix, as: SearchPhoenix
+  alias Scrypath.QueryParams
 
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, posts: [], search: nil, query: "")}
+    {:ok, assign(socket, posts: [], search: nil, query: "", form: nil)}
   end
 
-  def handle_params(%{"q" => query}, _uri, socket) do
-    {:ok, result} = Content.search_posts(query, preload: [:author])
+  def handle_params(params, _uri, socket) do
+    case SearchPhoenix.from_params(params) do
+      {:ok, query_params} ->
+        form = SearchPhoenix.to_form_data(query_params)
+        {query, search_opts} = QueryParams.to_search_args(query_params)
+        {:ok, result} = Content.search_posts(query, Keyword.put(search_opts, :preload, [:author]))
 
-    {:noreply,
-     assign(socket,
-       posts: result.records,
-       search: result,
-       query: query
-     )}
+        {:noreply,
+         assign(socket,
+           posts: result.records,
+           search: result,
+           query: query,
+           form: form
+         )}
+
+      {:error, error_map} ->
+        form = SearchPhoenix.to_form_data(params, error_map)
+
+        {:noreply,
+         assign(socket,
+           posts: [],
+           search: nil,
+           query: form.values["q"],
+           form: form
+         )}
+    end
   end
 end
 ```
@@ -42,6 +61,8 @@ The context should own:
 - backend selection
 - `Scrypath.search/3` options
 - write-path sync and delete orchestration
+
+`handle_event/3` should collect intent and push the next URL state. `handle_params/3` remains the one place that normalizes params, assigns attempted values plus errors, and calls the context when normalization succeeds.
 
 The same context boundary can back a publish event:
 

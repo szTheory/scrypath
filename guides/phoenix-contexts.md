@@ -2,6 +2,8 @@
 
 Scrypath fits Phoenix best when your context is the application-facing boundary for search orchestration.
 
+If you want shared controller and LiveView glue for browser-shaped params, keep that glue in `Scrypath.Phoenix`. It delegates to `Scrypath.QueryParams` and stops at plain data, URL params, and renderable edge errors.
+
 ## What Belongs In The Context
 
 Keep these responsibilities in the context:
