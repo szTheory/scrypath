@@ -3,7 +3,7 @@ defmodule Scrypath.QueryParamsTest do
 
   alias Scrypath.QueryParams
 
-  test "cast/1 returns one stable plain-data toolkit shape for request params" do
+  test "cast/1 returns one stable plain-data toolkit shape for top-level request params" do
     params = %{
       "q" => "phoenix",
       "filter" => [status: "published"],
@@ -54,6 +54,20 @@ defmodule Scrypath.QueryParamsTest do
 
     assert %{text: "search", filter: [], sort: [asc: :id], page: [number: 1], facets: [], facet_filter: [], per_query: %{show_ranking_score: true}} =
              QueryParams.cast(%{q: "search", sort: [asc: :id], page: [number: 1], per_query: %{show_ranking_score: true}})
+  end
+
+  test "cast/1 rejects nested request-style values that are not runtime-compatible yet" do
+    assert_raise ArgumentError, ~r/runtime-compatible nested values for :filter/, fn ->
+      QueryParams.cast(%{"q" => "phoenix", "filter" => %{"status" => "published"}})
+    end
+
+    assert_raise ArgumentError, ~r/runtime-compatible nested values for :page/, fn ->
+      QueryParams.cast(%{"q" => "phoenix", "page" => %{"number" => "2", "size" => "20"}})
+    end
+
+    assert_raise ArgumentError, ~r/runtime-compatible nested values for :per_query/, fn ->
+      QueryParams.cast(%{"q" => "phoenix", "per_query" => %{"show_ranking_score" => true}})
+    end
   end
 
   test "the public facade stays narrow and data-only" do
