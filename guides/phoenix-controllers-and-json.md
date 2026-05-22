@@ -1,6 +1,6 @@
 # Phoenix Controllers And JSON
 
-Phoenix controllers should translate request params into a context call, then render HTML or JSON from the result.
+Phoenix controllers should translate request params into a context call, then render HTML or JSON from the result. If you want shared request-edge glue, use `Scrypath.Phoenix` as a thin wrapper over `Scrypath.QueryParams` rather than hand-rolling page, facet, and sort parsing in each controller.
 
 ## HTML Controllers
 
@@ -32,39 +32,40 @@ defmodule MyAppWeb.Api.PostController do
   use MyAppWeb, :controller
 
   alias MyApp.Content
+  alias Scrypath.Phoenix, as: SearchPhoenix
+  alias Scrypath.QueryParams
 
   def index(conn, params) do
-    page_number =
-      params
-      |> Map.get("page", 1)
-      |> normalize_page()
+    case SearchPhoenix.from_params(params) do
+      {:ok, query_params} ->
+        {query, search_opts} = QueryParams.to_search_args(query_params)
+        page_opts = page_with_default_size(Keyword.get(search_opts, :page, []))
 
-    {:ok, result} =
-      Content.search_posts(Map.get(params, "q", ""),
-        page: [number: page_number, size: 20]
-      )
+        {:ok, result} = Content.search_posts(query, page: page_opts)
 
-    json(conn, %{
-      data: Enum.map(result.records, &serialize_post/1),
-      page: result.page,
-      missing_ids: result.missing_ids
-    })
-  end
+        json(conn, %{
+          data: Enum.map(result.records, &serialize_post/1),
+          page: Enum.into(page_opts, %{}),
+          missing_ids: result.missing_ids
+        })
 
-  defp normalize_page(page) when is_integer(page) and page > 0, do: page
-
-  defp normalize_page(page) when is_binary(page) do
-    case Integer.parse(page) do
-      {number, ""} when number > 0 -> number
-      _ -> 1
+      {:error, error_map} ->
+        json(conn, %{
+          data: [],
+          errors: SearchPhoenix.to_form_data(params, error_map).errors
+        })
     end
   end
 
-  defp normalize_page(_page), do: 1
+  defp page_with_default_size(page_opts) do
+    page_opts
+    |> Keyword.put_new(:number, 1)
+    |> Keyword.put_new(:size, 20)
+  end
 end
 ```
 
-Keep JSON shaping in the controller or view layer. Keep repo access, search orchestration, and sync visibility choices in the context.
+Keep JSON shaping in the controller or view layer. Keep repo access, search orchestration, and sync visibility choices in the context. `Scrypath.Phoenix` stops at param normalization, URL round-tripping, and renderable attempted values plus errors. It does not execute search.
 
 ## Avoid The Wrong Shortcut
 

@@ -93,20 +93,24 @@ Dotted hierarchical facet atoms follow the same **one-attribute** rule: the buck
 
 ## Primary path: `handle_params` + URL sync
 
-**Recommended:** normalize query + facet params in `handle_params/3`, then call your context with a keyword list that mirrors what you will pass to `Scrypath.search/3`.
+**Recommended:** normalize query + facet params in `handle_params/3`, then call your context with a keyword list that mirrors what you will pass to `Scrypath.search/3`. `Scrypath.Phoenix` is the thin shared adapter for this request-edge work.
 
 ```elixir
+alias Scrypath.Phoenix, as: SearchPhoenix
+alias Scrypath.QueryParams
+
 def handle_params(params, _uri, socket) do
-  q = Map.get(params, "q", "")
-  genres = parse_genres(params["genre"])
-  years = parse_int_list(params["year"])
+  case SearchPhoenix.from_params(params) do
+    {:ok, query_params} ->
+      {query, search_opts} = QueryParams.to_search_args(query_params)
+      facets = if search_opts[:facets] == [], do: [:genre, :year, :rating], else: search_opts[:facets]
 
-  facet_filter =
-    []
-    |> maybe_put(:genre, genres)
-    |> maybe_put(:year, years)
+      {:noreply, run_search(socket, query, facets, search_opts[:facet_filter], SearchPhoenix.to_form_data(query_params))}
 
-  {:noreply, run_search(socket, q, facet_filter)}
+    {:error, error_map} ->
+      form = SearchPhoenix.to_form_data(params, error_map)
+      {:noreply, assign(socket, q: form.values["q"], posts: [], facet_filter: [], form: form)}
+  end
 end
 ```
 
