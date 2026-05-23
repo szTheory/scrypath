@@ -2,7 +2,7 @@
 
 ## Active arc: Batteries-Included Search Modules
 
-**Status:** active - `v1.21` shipped on 2026-05-23 after opening on 2026-05-22; `v1.22` remains the next candidate  
+**Status:** active - `v1.21` shipped on 2026-05-23 after opening on 2026-05-22; `v1.22` activated on 2026-05-23 as the current milestone  
 **Started:** 2026-05-07
 
 ## Why this arc exists
@@ -47,10 +47,11 @@ The target is not hidden callback magic. The target is a thin, explicit layer th
 
 ### v1.22 — Composition And Real-App Depth
 
-- **Status:** next candidate
+- **Status:** active on 2026-05-23
 - Reusable presets/scopes where they help real app flows
 - Composition support aligned with `search_many/2`
 - Stronger UI metadata exposure for declared filters, sorts, facets, and paging
+- Real-app proof that the new layer reduces repeated app glue without turning Scrypath into a framework facade
 
 ## Planning posture for future milestone opens
 

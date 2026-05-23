@@ -19,7 +19,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - **Thin Phoenix edge helpers** — optional URL/form/LiveView round-tripping helpers now sit on top of the toolkit without introducing a hard Phoenix dependency in runtime core.
 - **Boundary-honest docs and examples** — one canonical request-edge guide plus focused Phoenix docs and a dedicated `mix verify.phase82` drift gate now protect the public story.
 
-**Current posture:** no new milestone is open yet. `v1.22 — Composition And Real-App Depth` remains only the next candidate, and the post-`v1.19` outside-adopter guardrail is still in force.
+**Current posture:** **`v1.22 — Composition And Real-App Depth`** is now open as a deliberately bounded continuation of the search-module arc. The post-`v1.19` outside-adopter guardrail remains in force, so this milestone must stay leverage-positive, evidence-aware, and narrower than a broad new search-product expansion.
 
 **Boundary discipline retained:** `Scrypath.search/3` remains canonical, contexts stay the application boundary, Phoenix remains optional, and `%Scrypath.Query{}` stays internal rather than becoming public API.
 
@@ -27,12 +27,17 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under **`.planning/milestones/`**.
 
-## Current Milestone Outcome
+## Current Milestone: v1.22 Composition And Real-App Depth
 
-- Milestone is shipped and archived.
-- The shipped outcome is one stable public edge contract for request-shaped search params plus thin optional Phoenix wrappers over that contract.
-- The broader-adoption checkpoint from **`milestones/v1.19-MILESTONE-AUDIT.md`** remains canonical and should not be restated as outside validation.
-- The `v1.20` archive/code drift remains a known concern; `v1.21` did not widen the surface in ways that depend on unreconciled internal claims.
+**Goal:** Turn the shipped request-edge toolkit into a more reusable real-app layer through bounded composition primitives, reusable presets/scopes, and stronger UI metadata without turning Scrypath into a framework facade.
+
+**Target features:**
+- Reusable composition presets and scopes where repeated app-side query glue is now obvious enough to freeze.
+- Composition support that stays aligned with `search_many/2` and the existing plain-data query-toolkit contract.
+- Stronger metadata exposure for declared filters, sorts, facets, and paging so Phoenix and Ecto apps can build honest UIs with less custom wiring.
+- Real-app guidance and examples that prove the new composition layer reduces duplication without hiding operational search semantics.
+
+**Why now:** `v1.21` established one stable request-edge contract. The next leverage-positive step is not more raw param casting; it is proving which repeated app-side composition patterns deserve a public seam while retaining context ownership and the existing runtime boundary.
 
 ## Last shipped milestone
 
@@ -42,7 +47,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Planning window
 
-No milestone is currently active. The next default candidate is **v1.22 — Composition And Real-App Depth**, but it should only open through a fresh milestone-definition pass and should continue to respect the post-**v1.19** outside-adopter guardrail.
+**Active milestone:** **v1.22 — Composition And Real-App Depth**. This milestone should stay inside the Batteries-Included Search Modules arc, inherit the post-**v1.19** outside-adopter guardrail, and avoid widening into unrelated backend, UI-scaffold, or framework-magic promises.
 
 ## Requirements
 
@@ -97,8 +102,10 @@ No milestone is currently active. The next default candidate is **v1.22 — Comp
 
 ### Active
 
-- [ ] **CMP-01**: Reusable composition presets and scopes over the query-toolkit layer once real app pressure proves the common patterns are worth freezing.
-- [ ] **CMP-02**: Stronger UI metadata exposure for declared filters, sorts, facets, and paging once the public query-param contract has settled in real apps.
+- [ ] **CMP-01**: Reusable composition presets and scopes over the query-toolkit layer where repeated real-app patterns are clear enough to freeze without hiding context ownership.
+- [ ] **CMP-02**: Composition support stays aligned with `search_many/2` and the existing plain-data search-args contract rather than creating a second query runtime.
+- [ ] **CMP-03**: Stronger UI metadata exposure for declared filters, sorts, facets, and paging reduces repeated Phoenix and Ecto view-layer wiring while preserving explicit boundaries.
+- [ ] **CMP-04**: Real-app guides and examples show how to adopt the new composition layer without implying schema-generated runtime verbs or framework-owned search flows.
 
 ### Recently completed
 
@@ -171,7 +178,8 @@ The current public line on Hex is **`scrypath 0.3.4`**. **v1.8** closed the fede
 | **v1.19** — Production adoption proof and hardening | After the readiness checkpoint and Sigra add-on, prioritize defended production proof, support-contract clarity, and evidence-backed papercut closure before widening product scope again | ✓ Shipped + archived in-repo as a readiness checkpoint; canonical verdict: ready to seek broader outside production adoption on the defended surface, with external validation still pending |
 | Post-v1.19 pause on internal feature work | Do not open another build-more milestone unless real outside adopter evidence identifies concrete friction or a release/distribution need justifies the work | — Pending external validation |
 | **v1.20** — Search Module Foundation | A narrow, already-started ergonomics layer that removes repeated Phoenix/Ecto request-param boilerplate without changing the core runtime or hiding operational search semantics | ✓ Shipped + archived in-repo |
-| **v1.21** — Query Toolkit And Phoenix Edge Helpers | Reopen the active arc only for a narrow, framework-light public param toolkit plus thin optional Phoenix wrappers; keep contexts canonical and prevent public exposure of current internal query structs | — Active on 2026-05-22 |
+| **v1.21** — Query Toolkit And Phoenix Edge Helpers | Reopen the active arc only for a narrow, framework-light public param toolkit plus thin optional Phoenix wrappers; keep contexts canonical and prevent public exposure of current internal query structs | ✓ Shipped + archived in-repo on 2026-05-23 |
+| **v1.22** — Composition And Real-App Depth | Build a bounded composition layer over the shipped request-edge toolkit so repeated presets, scopes, and UI metadata become reusable without weakening the runtime boundary or the post-v1.19 guardrail | — Active on 2026-05-23 |
 
 ## Historical Context
 
@@ -197,4 +205,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-23 — shipped + archived **v1.21 Query Toolkit And Phoenix Edge Helpers** and returned the roadmap to no active milestone*
+*Last updated: 2026-05-23 — opened **v1.22 Composition And Real-App Depth** after the archived **v1.21** request-edge toolkit milestone*

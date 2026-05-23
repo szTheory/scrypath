@@ -27,13 +27,13 @@
 
 ## Current Milestone
 
-No active milestone is open.
+**v1.22 — Composition And Real-App Depth** is now active as the current milestone.
 
 **Last shipped milestone:** **v1.21 — Query Toolkit And Phoenix Edge Helpers** closed on **2026-05-23** and shipped a narrow public request-edge toolkit plus thin optional Phoenix wrappers over the existing **`Scrypath.search/3`** runtime without widening the core boundary. Full detail: [milestones/v1.21-ROADMAP.md](milestones/v1.21-ROADMAP.md).
 
-**Next candidate:** **v1.22 — Composition And Real-App Depth** remains the next candidate in [MILESTONE-ARC.md](MILESTONE-ARC.md). Open it deliberately with fresh requirements instead of treating it as already active.
+**Active focus:** define the bounded composition layer over the shipped request-edge toolkit: reusable presets/scopes, `search_many/2`-aligned composition, and stronger UI metadata exposure, all without creating a second runtime or drifting into framework magic.
 
-Use `$gsd-new-milestone` to create the next milestone requirements and activate new phases.
+Use the active milestone workflow artifacts below to define requirements and activate new phases.
 
 ## Phases (history)
 
@@ -268,11 +268,11 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**Current milestone:** **v1.21 — Query Toolkit And Phoenix Edge Helpers** is complete in-repo on **2026-05-23**. **3 of 3** phases are complete.
+**Current milestone:** **v1.22 — Composition And Real-App Depth** is open on **2026-05-23**. Requirements and roadmap are being defined.
 
 **Last shipped milestone:** **v1.21 Query Toolkit And Phoenix Edge Helpers** — shipped + archived **2026-05-23**, **3** phases (**80–82**) complete, **8** requirements (**QTK-01**..**VRFY-01**) satisfied. See **`milestones/v1.21-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next default pull:** no active milestone. Reassess whether `v1.22` or an outside-adopter feedback milestone is the leverage-positive next move.
+**Next default pull:** stay within `v1.22` unless the post-`v1.19` outside-adopter guardrail forces a scope reset.
 
 **`v1.17` archived (in-repo)** — **2026-04-23** shipped + archived — **3** phases (**68–70**), **6** requirements (**INTG-01**–**INTG-06**); see **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
@@ -297,4 +297,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - **Tier D** — maintainer-only planning hygiene — same file; do not headline consumer milestones.
 
 ---
-*Last updated: 2026-05-23 — phases **80**–**82** completed; `v1.21` is complete in-repo*
+*Last updated: 2026-05-23 — opened `v1.22` and moved roadmap state back to active milestone definition*
