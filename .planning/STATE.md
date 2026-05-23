@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.22
 milestone_name: Composition And Real-App Depth
-status: defining_requirements
-last_updated: 2026-05-23T14:40:00Z
+status: roadmap_created
+last_updated: 2026-05-23T12:49:07Z
 last_activity: 2026-05-23
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
   percent: 0
-stopped_at: Milestone open; requirements and roadmap in progress
+stopped_at: Roadmap created; Phase 83 is ready for discuss/planning
 ---
 
 # Project State
@@ -26,10 +26,10 @@ See: `.planning/PROJECT.md` (updated 2026-05-23)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
+Phase: 83 — Composition Presets And Scope Contract
+Plan: Not started
 
-**Status:** Defining requirements
+**Status:** Roadmap created
 
 **Last activity:** 2026-05-23
 
@@ -71,6 +71,8 @@ Plan: —
 - **v1.21 guardrails:** contexts remain the application boundary, Phoenix stays optional, no public `%Scrypath.Query{}` contract ships, and this milestone does not widen into UI widgets, controller macros, or schema-generated runtime verbs.
 - **v1.21 close:** The public request-edge toolkit, structured edge-error contract, optional pure Phoenix wrappers, canonical request-edge guide, and `mix verify.phase82` drift gate are now shipped and archived without widening the canonical runtime boundary.
 - **v1.22 open:** Composition And Real-App Depth was activated as the next milestone because `v1.21` settled the request-edge contract and the remaining leverage-positive step inside the arc is reducing repeated real-app composition glue without turning Scrypath into a framework facade.
+- **v1.22 roadmap:** The milestone is deliberately compressed into **three** phases starting at **Phase 83**: (**83**) preset/scope contract, (**84**) metadata reflection plus `search_many/2` parity, and (**85**) real-app proof plus drift gates.
+- **v1.22 requirement coverage:** All **12** active requirements map exactly once across phases **83–85**; no tenant/auth, related-data, schema-generated runtime, or Phoenix-dependent core scope was admitted.
 
 ### Blockers / Concerns
 
@@ -95,13 +97,13 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-1. Review the `v1.22` requirements and roadmap artifacts after they are written.
-2. Run `$gsd-discuss-phase 83` once the first `v1.22` phase is approved.
+1. Review `.planning/ROADMAP.md` and `.planning/REQUIREMENTS.md` for the Phase **83–85** mapping.
+2. Run `$gsd-discuss-phase 83`.
 3. Keep the post-`v1.19` outside-adopter guardrail explicit while shaping composition scope.
 
 ---
 
-*Last updated: 2026-05-23 — opened **v1.22 Composition And Real-App Depth***
+*Last updated: 2026-05-23 — roadmap created for **v1.22 Composition And Real-App Depth***
 
 **Prior milestone:** **v1.19** — Production adoption proof and hardening — **2026-04-28** (shipped + archived in-repo).
 
@@ -113,4 +115,4 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 **Completed:** **v1.21** shipped + archived in-repo (**2026-05-23**) — phases **80–82** — **`milestones/v1.21-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next:** Define requirements and roadmap for **v1.22 — Composition And Real-App Depth**.
+**Next:** Discuss and plan **Phase 83 — Composition Presets And Scope Contract**.
