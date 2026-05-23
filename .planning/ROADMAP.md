@@ -33,7 +33,56 @@
 
 **Active focus:** define the bounded composition layer over the shipped request-edge toolkit: reusable presets/scopes, `search_many/2`-aligned composition, and stronger UI metadata exposure, all without creating a second runtime or drifting into framework magic.
 
-Use the active milestone workflow artifacts below to define requirements and activate new phases.
+Use the active milestone workflow artifacts below to drive the active milestone.
+
+## Phases
+
+- [ ] **Phase 83: Composition Presets And Scope Contract** - Freeze the bounded plain-data composition seam over `Scrypath.search/3` with explicit precedence, debug visibility, and context-owned definitions.
+- [ ] **Phase 84: Metadata Reflection And Multi-Search Parity** - Expose honest framework-agnostic capability metadata and prove the same composition model survives `search_many/2`.
+- [ ] **Phase 85: Real-App Proof And Drift Gates** - Show the seam in real app flows, document the non-goals clearly, and lock the milestone story behind focused verification.
+
+## Phase Details
+
+### Phase 83: Composition Presets And Scope Contract
+**Goal**: Apps can compose reusable single-search flows into the existing `Scrypath.search/3` input shape without creating a second query runtime.
+**Depends on**: Nothing
+**Requirements**: CMP-01, CMP-02, CMP-03, CMP-04
+**Success Criteria** (what must be TRUE):
+1. A host app can define named presets that expand into the same plain-data text and options shape already accepted by `Scrypath.search/3`.
+2. A host app can layer additive scopes with deterministic precedence between caller-overridable defaults and fixed constraints, and the outcome is stable across repeated calls.
+3. Composition results expose the applied and defaulted search criteria plainly enough for host tests and logs to show what will reach the canonical runtime.
+4. The public seam keeps composition definitions feature-level and context-owned, without moving runtime search behavior onto Ecto schemas or Phoenix-only helpers.
+**Plans**: TBD
+
+### Phase 84: Metadata Reflection And Multi-Search Parity
+**Goal**: Apps can reflect honest search capability metadata and use the same public composition model for `search_many/2` without widening runtime semantics.
+**Depends on**: Phase 83
+**Requirements**: META-01, META-02, META-03, MSCH-01, MSCH-02
+**Success Criteria** (what must be TRUE):
+1. A host app can reflect declared filters, sorts, facets, and paging as framework-agnostic metadata derived from the same declarations and validators that drive runtime behavior.
+2. Reflected metadata makes defaults and capability constraints explicit enough for Phoenix, LiveView, JSON, or other host UIs to render honest controls without generated widgets.
+3. A host app can assemble `search_many/2` flows through the existing tuple and shared-option contract rather than a separate multi-search DSL or runtime entrypoint.
+4. Multi-search composition preserves current per-entry behavior, shared-vs-entry precedence, and explicit failure boundaries while leaving tenant policy, authorization, and related-data concerns with the host app.
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 85: Real-App Proof And Drift Gates
+**Goal**: Real-app docs, examples, and verification prove the new composition seam reduces glue without implying framework magic or unsupported operational guarantees.
+**Depends on**: Phase 84
+**Requirements**: DOC-01, DOC-02, VRFY-01
+**Success Criteria** (what must be TRUE):
+1. Guides and examples show at least two distinct real-app adoption flows that reduce repeated query glue through the composition seam while keeping contexts canonical and Phoenix optional.
+2. The docs state the milestone non-goals plainly: no public `%Scrypath.Query{}`, no schema-generated runtime verbs, no generated UI widgets, and no claims that presets or scopes solve tenant-safe access or related-data fan-out.
+3. Verification fails if composition precedence, metadata derivation, `search_many/2` parity, or guide/example contract text drifts from the shipped behavior.
+**Plans**: TBD
+
+## Progress Table
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 83. Composition Presets And Scope Contract | 0/0 | Not started | - |
+| 84. Metadata Reflection And Multi-Search Parity | 0/0 | Not started | - |
+| 85. Real-App Proof And Drift Gates | 0/0 | Not started | - |
 
 ## Phases (history)
 
@@ -268,11 +317,11 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**Current milestone:** **v1.22 — Composition And Real-App Depth** is open on **2026-05-23**. Requirements and roadmap are being defined.
+**Current milestone:** **v1.22 — Composition And Real-App Depth** is open on **2026-05-23** with **3** planned phases (**83–85**) and **12/12** active requirements mapped.
 
 **Last shipped milestone:** **v1.21 Query Toolkit And Phoenix Edge Helpers** — shipped + archived **2026-05-23**, **3** phases (**80–82**) complete, **8** requirements (**QTK-01**..**VRFY-01**) satisfied. See **`milestones/v1.21-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next default pull:** stay within `v1.22` unless the post-`v1.19` outside-adopter guardrail forces a scope reset.
+**Next default pull:** discuss and plan **Phase 83** unless the post-`v1.19` outside-adopter guardrail forces a scope reset.
 
 **`v1.17` archived (in-repo)** — **2026-04-23** shipped + archived — **3** phases (**68–70**), **6** requirements (**INTG-01**–**INTG-06**); see **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
@@ -297,4 +346,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - **Tier D** — maintainer-only planning hygiene — same file; do not headline consumer milestones.
 
 ---
-*Last updated: 2026-05-23 — opened `v1.22` and moved roadmap state back to active milestone definition*
+*Last updated: 2026-05-23 — mapped `v1.22` into phases 83–85 with full requirement coverage*
