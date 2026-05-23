@@ -37,7 +37,7 @@ Use the active milestone workflow artifacts below to drive the active milestone.
 
 ## Phases
 
-- [ ] **Phase 83: Composition Presets And Scope Contract** - Freeze the bounded plain-data composition seam over `Scrypath.search/3` with explicit precedence, debug visibility, and context-owned definitions.
+- [x] **Phase 83: Composition Presets And Scope Contract** - Freeze the bounded plain-data composition seam over `Scrypath.search/3` with explicit precedence, debug visibility, and context-owned definitions.
 - [ ] **Phase 84: Metadata Reflection And Multi-Search Parity** - Expose honest framework-agnostic capability metadata and prove the same composition model survives `search_many/2`.
 - [ ] **Phase 85: Real-App Proof And Drift Gates** - Show the seam in real app flows, document the non-goals clearly, and lock the milestone story behind focused verification.
 
@@ -55,9 +55,9 @@ Use the active milestone workflow artifacts below to drive the active milestone.
 **Plans**: 3 plans
 
 Plans:
-- [ ] `83-01-PLAN.md` — Freeze the public plain-data composition contract and root boundary docs.
-- [ ] `83-02-PLAN.md` — Add the focused verification harness for precedence, visibility, and boundary drift.
-- [ ] `83-03-PLAN.md` — Implement normalization, merge/conflict logic, and make the focused phase gate pass.
+- [x] `83-01-PLAN.md` — Freeze the public plain-data composition contract and root boundary docs.
+- [x] `83-02-PLAN.md` — Add the focused verification harness for precedence, visibility, and boundary drift.
+- [x] `83-03-PLAN.md` — Implement normalization, merge/conflict logic, and make the focused phase gate pass.
 
 ### Phase 84: Metadata Reflection And Multi-Search Parity
 **Goal**: Apps can reflect honest search capability metadata and use the same public composition model for `search_many/2` without widening runtime semantics.
@@ -85,7 +85,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 83. Composition Presets And Scope Contract | 0/0 | Not started | - |
+| 83. Composition Presets And Scope Contract | 3/3 | Complete   | 2026-05-23 |
 | 84. Metadata Reflection And Multi-Search Parity | 0/0 | Not started | - |
 | 85. Real-App Proof And Drift Gates | 0/0 | Not started | - |
 
@@ -326,7 +326,7 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 **Last shipped milestone:** **v1.21 Query Toolkit And Phoenix Edge Helpers** — shipped + archived **2026-05-23**, **3** phases (**80–82**) complete, **8** requirements (**QTK-01**..**VRFY-01**) satisfied. See **`milestones/v1.21-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next default pull:** discuss and plan **Phase 83** unless the post-`v1.19` outside-adopter guardrail forces a scope reset.
+**Next default pull:** discuss and plan **Phase 84** unless the post-`v1.19` outside-adopter guardrail forces a scope reset.
 
 **`v1.17` archived (in-repo)** — **2026-04-23** shipped + archived — **3** phases (**68–70**), **6** requirements (**INTG-01**–**INTG-06**); see **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 

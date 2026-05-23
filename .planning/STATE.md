@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.22
 milestone_name: Composition And Real-App Depth
-status: roadmap_created
-last_updated: 2026-05-23T12:49:07Z
+status: ready_to_plan
+last_updated: 2026-05-23T14:15:09.682Z
 last_activity: 2026-05-23
 progress:
   total_phases: 3
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 3
+  completed_plans: 16
   percent: 0
-stopped_at: Roadmap created; Phase 83 is ready for discuss/planning
+stopped_at: Phase 83 complete (3/3) — ready to discuss Phase 84
 ---
 
 # Project State
@@ -22,14 +22,14 @@ See: `.planning/PROJECT.md` (updated 2026-05-23)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** v1.22 — Composition And Real-App Depth
+**Current focus:** Phase 84 — metadata reflection and multi search parity
 
 ## Current Position
 
-Phase: 83 — Composition Presets And Scope Contract
+Phase: 84
 Plan: Not started
 
-**Status:** Roadmap created
+**Status:** Ready to plan
 
 **Last activity:** 2026-05-23
 
@@ -115,4 +115,4 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 **Completed:** **v1.21** shipped + archived in-repo (**2026-05-23**) — phases **80–82** — **`milestones/v1.21-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next:** Discuss and plan **Phase 83 — Composition Presets And Scope Contract**.
+**Next:** Discuss and plan **Phase 84 — Metadata Reflection And Multi-Search Parity**.
