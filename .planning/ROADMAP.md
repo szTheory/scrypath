@@ -46,7 +46,7 @@
 
 ### Phase 80: Public query toolkit contract
 
-- [ ] **Phase 80: Public query toolkit contract** — **QTK-01**, **QTK-04** — carve out the small public param toolkit as a plain-data edge contract over the existing runtime without promoting internal query structs or inventing a second runtime.
+- [x] **Phase 80: Public query toolkit contract** (2026-05-23) — **QTK-01**, **QTK-04** — carve out the small public param toolkit as a plain-data edge contract over the existing runtime without promoting internal query structs or inventing a second runtime.
 
 **Success criteria:**
 
@@ -57,7 +57,13 @@
 
 ### Phase 81: Edge normalization errors and Phoenix wrappers
 
-- [ ] **Phase 81: Edge normalization errors and Phoenix wrappers** — **QTK-02**, **QTK-03**, **PHX-01**, **PHX-02** — add one-time edge normalization semantics plus optional thin Phoenix helpers for controller, form, URL, and LiveView flows.
+- [x] **Phase 81: Edge normalization errors and Phoenix wrappers** (2026-05-23) — **QTK-02**, **QTK-03**, **PHX-01**, **PHX-02** — add one-time edge normalization semantics plus optional thin Phoenix helpers for controller, form, URL, and LiveView flows.
+
+**Plans:** 2 plans
+
+Plans:
+- [x] `81-01-PLAN.md` — Add browser-param normalization and structured edge-error contracts to `Scrypath.QueryParams` while keeping `Scrypath.search/3` canonical.
+- [x] `81-02-PLAN.md` — Add optional `Scrypath.Phoenix` wrappers, adopt them in fixtures, and lock the Phoenix boundary in guides and docs contracts.
 
 **Success criteria:**
 
@@ -310,11 +316,11 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**Current milestone:** none open. The most recent close is **v1.20 Search Module Foundation** — archived **2026-05-08**. See **`.planning/milestones/v1.20-MILESTONE-AUDIT.md`** for the passed close audit and **`.planning/milestones/v1.20-REQUIREMENTS.md`** for the frozen traceability snapshot.
+**Current milestone:** **v1.21 — Query Toolkit And Phoenix Edge Helpers** is open. **2 of 3** phases are complete on **2026-05-23**; **Phase 82** is the next planning step.
 
 **Last shipped milestone:** **v1.20 Search Module Foundation** — shipped + archived **2026-05-08**, **3** phases (**77–79**) complete, **8** requirements (**SMOD-01**..**SMOD-08**) satisfied. See **`milestones/v1.20-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next default pull:** seek real outside adopter evidence through the bounded intake path, while treating **`v1.21 — Query Toolkit And Phoenix Edge Helpers`** as the next candidate only if reopening internal feature work remains justified.
+**Next default pull:** **Phase 82 — Docs, examples, and drift protection** to lock the public story, examples, and drift protection around the new query toolkit and Phoenix helper surfaces.
 
 **`v1.17` archived (in-repo)** — **2026-04-23** shipped + archived — **3** phases (**68–70**), **6** requirements (**INTG-01**–**INTG-06**); see **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
@@ -339,4 +345,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - **Tier D** — maintainer-only planning hygiene — same file; do not headline consumer milestones.
 
 ---
-*Last updated: 2026-05-08 — closed **`v1.20 Search Module Foundation`** and archived the milestone*
+*Last updated: 2026-05-23 — phases **80** and **81** completed; **Phase 82** is next*
