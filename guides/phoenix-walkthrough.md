@@ -2,6 +2,8 @@
 
 This walkthrough shows the recommended adoption path for Scrypath in a Phoenix app: searchable schema, context-owned search boundary, controller call, LiveView call, and explicit sync visibility choices.
 
+For the shared request-edge contract around browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix`, and context-owned `Scrypath.search/3`, read [Request-edge search](request-edge-search.md) first or keep it open alongside this walkthrough.
+
 ## 1. Declare The Searchable Schema
 
 Start with a normal Ecto schema and keep the Scrypath declaration on the schema itself.
@@ -79,7 +81,7 @@ defmodule MyAppWeb.PostController do
 end
 ```
 
-Use the same shape for JSON endpoints. The controller owns request parsing and rendering, while `MyApp.Content.search_posts/2` owns repo access and Scrypath options.
+Use the same shape for JSON endpoints. If you want shared request-edge glue, keep it in `Scrypath.QueryParams` and optional `Scrypath.Phoenix`, then hand the result to your context. The controller owns request parsing and rendering, while `MyApp.Content.search_posts/2` owns repo access and Scrypath options.
 
 ## 4. Reuse The Same Context From LiveView
 
@@ -103,7 +105,7 @@ defmodule MyAppWeb.PostLive do
 end
 ```
 
-That keeps URL state, loading state, and selected filters in the LiveView while keeping the data boundary in the context.
+That keeps URL state, loading state, and selected filters in the LiveView while keeping the data boundary in the context. In fuller param-driven flows, `handle_params/3` stays the authority and the same request-edge helper contract still feeds the context.
 
 ## 5. Keep Visibility Language Honest
 

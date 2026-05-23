@@ -2,6 +2,8 @@
 
 This guide walks through a **movies-shaped** example (genre, year, rating, director) that stays on the **common `Scrypath.search/3` path** with `facets:`, `facet_filter:`, and URL-friendly `handle_params/3`. The patterns mirror the library’s own contract tests so prose and code stay aligned as APIs evolve.
 
+For the shared request-edge contract around browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix`, and context-owned runtime calls, read [Request-edge search](request-edge-search.md). This guide stays focused on catalog-specific facet flows.
+
 ## Overview
 
 Faceted search combines full-text search with **facet distributions** (counts per attribute value) and optional **facet filters** that narrow results. Scrypath keeps the contract explicit:
@@ -94,6 +96,8 @@ Dotted hierarchical facet atoms follow the same **one-attribute** rule: the buck
 ## Primary path: `handle_params` + URL sync
 
 **Recommended:** normalize query + facet params in `handle_params/3`, then call your context with a keyword list that mirrors what you will pass to `Scrypath.search/3`. `Scrypath.Phoenix` is the thin shared adapter for this request-edge work.
+
+Helpers normalize params/forms/URLs only, contexts remain canonical, and Phoenix is optional.
 
 ```elixir
 alias Scrypath.Phoenix, as: SearchPhoenix

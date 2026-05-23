@@ -52,6 +52,7 @@ defmodule Scrypath.MixProject do
         "verify.phase38": :test,
         "verify.phase41": :test,
         "verify.phase43": :test,
+        "verify.phase82": :test,
         "verify.adopter": :test,
         "verify.opsui": :test,
         "verify.meilisearch_smoke": :test,
@@ -140,6 +141,8 @@ defmodule Scrypath.MixProject do
         "guides/drift-recovery.md",
         "guides/getting-started.md",
         "guides/golden-path.md",
+        "guides/request-edge-search.md",
+        "guides/jtbd-and-user-flows.md",
         "guides/meilisearch-operations.md",
         "guides/phoenix-walkthrough.md",
         "guides/phoenix-contexts.md",
@@ -152,6 +155,7 @@ defmodule Scrypath.MixProject do
         "guides/relevance-tuning.md",
         "guides/per-query-tuning-pipeline.md",
         "docs/releasing.md",
+        "docs/jtbd-gap-map.md",
         "docs/operator-support.md",
         "docs/search-backend-sre.md"
       ],
@@ -159,8 +163,10 @@ defmodule Scrypath.MixProject do
         "Getting Started": [
           "README.md",
           "guides/overview.md",
+          "guides/jtbd-and-user-flows.md",
           "guides/getting-started.md",
           "guides/golden-path.md",
+          "guides/request-edge-search.md",
           "guides/common-mistakes.md"
         ],
         Phoenix: [
@@ -182,6 +188,7 @@ defmodule Scrypath.MixProject do
         ],
         Maintainers: [
           "CONTRIBUTING.md",
+          "docs/jtbd-gap-map.md",
           "docs/releasing.md",
           "docs/operator-support.md",
           "docs/search-backend-sre.md"

@@ -134,6 +134,9 @@ jobs:
       - name: Per-query runtime gate (`mix verify.phase43`)
         run: mix verify.phase43
 
+      - name: Request-edge docs/examples gate (`mix verify.phase82`)
+        run: mix verify.phase82
+
   adopter-verify:
     runs-on: ubuntu-latest
 

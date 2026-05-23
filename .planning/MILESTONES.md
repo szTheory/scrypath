@@ -1,5 +1,25 @@
 # Milestones
 
+## v1.21 Query Toolkit And Phoenix Edge Helpers (Shipped + archived: 2026-05-23)
+
+**Phases completed:** **3** (**80–82**), **8** requirements (**QTK-01**–**QTK-04**, **PHX-01**–**PHX-02**, **DOC-01**, **VRFY-01**)
+
+**Hex:** **`scrypath 0.3.4`** on Hex; **in-repo milestone close only** — no dedicated Hex bump claimed for this planning milestone.
+
+**Key accomplishments:**
+
+- Public `Scrypath.QueryParams` plain-data contract plus runtime and Meilisearch payload parity over the canonical `Scrypath.search/3` path, without exposing internal query structs or creating a second runtime — **Phase 80**
+- One-time request-edge normalization, structured field-scoped errors, and optional pure `Scrypath.Phoenix` wrappers for controller, URL, form, and LiveView flows while keeping contexts canonical — **Phase 81**
+- One canonical request-edge guide, Phoenix-guide rewrites, example/runbook alignment, and a focused `mix verify.phase82` drift gate wired into CI and contributor guidance — **Phase 82**
+
+**Pre-close audit:** **`milestones/v1.21-MILESTONE-AUDIT.md`** (**`passed`** — `requirements: 8/8`, `phases: 3/3`, `integration: 8/8`, `flows: 3/3`, `nyquist: compliant`).
+
+**Automation note:** `gsd-sdk query milestone.complete` remained unavailable for this repo, so the `v1.21-*` archive trio and rolling planning updates were completed manually.
+
+**Archives:** `milestones/v1.21-ROADMAP.md`, `milestones/v1.21-REQUIREMENTS.md`, `milestones/v1.21-MILESTONE-AUDIT.md` · **Git tag:** `v1.21` (planning milestone marker)
+
+---
+
 ## v1.20 Search Module Foundation (Shipped + archived: 2026-05-08)
 
 **Phases completed:** **3** (**77–79**), **8** requirements (**SMOD-01**–**SMOD-08**)

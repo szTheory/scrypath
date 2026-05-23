@@ -23,6 +23,7 @@ defmodule Scrypath.DocsContractTest do
   @verify_phase38 File.read!("lib/mix/tasks/verify.phase38.ex")
   @verify_phase41 File.read!("lib/mix/tasks/verify.phase41.ex")
   @verify_phase43 File.read!("lib/mix/tasks/verify.phase43.ex")
+  @verify_phase82 File.read!("lib/mix/tasks/verify.phase82.ex")
   @verify_opsui File.read!("lib/mix/tasks/verify.opsui.ex")
   @verify_release_publish File.read!("lib/mix/tasks/verify.release_publish.ex")
   @guide_paths [
@@ -30,6 +31,7 @@ defmodule Scrypath.DocsContractTest do
     "guides/drift-recovery.md",
     "guides/getting-started.md",
     "guides/golden-path.md",
+    "guides/request-edge-search.md",
     "guides/jtbd-and-user-flows.md",
     "guides/meilisearch-operations.md",
     "guides/phoenix-walkthrough.md",
@@ -46,6 +48,7 @@ defmodule Scrypath.DocsContractTest do
   ]
   @guides Enum.into(@guide_paths, %{}, fn path -> {path, File.read!(path)} end)
   @per_query_tuning_pipeline File.read!("guides/per-query-tuning-pipeline.md")
+  @request_edge_guide File.read!("guides/request-edge-search.md")
 
   # Paths shipped as ExDoc extras (mix.exs :docs extras) plus top-level narrative docs.
   @published_markdown_for_hygiene [
@@ -120,6 +123,30 @@ defmodule Scrypath.DocsContractTest do
              "[JTBD and user flows](jtbd-and-user-flows.md)",
              "[Common mistakes](common-mistakes.md)"
            )
+  end
+
+  test "request-edge guide is the canonical v1.21 contract and root docs point to it" do
+    assert_contains_all(@request_edge_guide, [
+      "Scrypath.QueryParams",
+      "Scrypath.Phoenix",
+      "QueryParams.to_search_args/1",
+      "Scrypath.search/3",
+      "%Scrypath.Query{}",
+      "not public API"
+    ])
+
+    assert_contains_all(@readme, [
+      "guides/request-edge-search.md",
+      "Request-edge contract"
+    ])
+
+    assert_contains_all(File.read!("lib/scrypath.ex"), [
+      "guides/request-edge-search.md",
+      "Scrypath.Phoenix` is optional glue"
+    ])
+
+    overview = @guides["guides/overview.md"]
+    assert String.contains?(overview, "[Request-edge search](request-edge-search.md)")
   end
 
   test "jtbd docs stay grounded in the checked-out surface" do
@@ -797,6 +824,38 @@ defmodule Scrypath.DocsContractTest do
       "SearchPhoenix.from_params(params)",
       "`handle_params/3` remains the one place that normalizes params",
       "the UI should not imply immediate search visibility unless the context chose `:inline`"
+    ])
+
+    assert_contains_all(@guides["guides/phoenix-walkthrough.md"], [
+      "request-edge-search.md",
+      "shared request-edge contract"
+    ])
+
+    assert_contains_all(@guides["guides/faceted-search-with-phoenix-liveview.md"], [
+      "request-edge-search.md",
+      "Helpers normalize params/forms/URLs only, contexts remain canonical, and Phoenix is optional."
+    ])
+  end
+
+  test "phase 82 verify gate stays focused and contributor-facing docs wire it consistently" do
+    assert_contains_all(@verify_phase82, [
+      "defmodule Mix.Tasks.Verify.Phase82",
+      "test/scrypath/query_params_test.exs",
+      "test/scrypath/phoenix_test.exs",
+      "test/support/docs/phoenix_examples_test.exs",
+      "test/support/docs/phoenix_request_shape_smoke_test.exs",
+      "test/scrypath/docs_contract_test.exs",
+      ~s|Mix.Task.run("docs", ["--warnings-as-errors"])|
+    ])
+
+    assert_contains_all(@contributing, [
+      "mix verify.phase82",
+      "request-edge docs/examples contract"
+    ])
+
+    assert_contains_all(@ci_workflow, [
+      "Request-edge docs/examples gate (`mix verify.phase82`)",
+      "run: mix verify.phase82"
     ])
   end
 

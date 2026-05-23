@@ -2,7 +2,7 @@
 
 ## Active arc: Batteries-Included Search Modules
 
-**Status:** active - `v1.21` opened on 2026-05-22 after `v1.20` shipped on 2026-05-08  
+**Status:** active - `v1.21` shipped on 2026-05-23 after opening on 2026-05-22; `v1.22` remains the next candidate  
 **Started:** 2026-05-07
 
 ## Why this arc exists
@@ -39,7 +39,7 @@ The target is not hidden callback magic. The target is a thin, explicit layer th
 
 ### v1.21 — Query Toolkit And Phoenix Edge Helpers
 
-- **Status:** active
+- **Status:** shipped on 2026-05-23
 - Public normalization/casting helpers behind the search-module layer
 - Optional Phoenix-facing helpers for URL/form/LiveView round-tripping
 - No Phoenix coupling in the core runtime

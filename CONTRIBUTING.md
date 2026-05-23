@@ -7,8 +7,13 @@
 ## First hour and canonical docs
 
 - New contributors: follow the README **Quick Path** into [`guides/golden-path.md`](guides/golden-path.md) for the linear **`:inline`** first-hour story.
+- The canonical adopter mental-model guide is [`guides/jtbd-and-user-flows.md`](guides/jtbd-and-user-flows.md). Update it when the library adds, removes, or materially changes a user-facing flow.
 - **Sync modes, visibility, and operator lifecycle** live in [`guides/sync-modes-and-visibility.md`](guides/sync-modes-and-visibility.md)—update that guide instead of duplicating semantics in README or here.
 - Changing published docs should keep **`mix docs --warnings-as-errors`** green. The optional docs contract suite remains available via **`mix test test/scrypath/docs_contract_test.exs`**, but it is no longer part of the default CI and release gates.
+
+## Maintainers: JTBD gap map
+
+- The planning-facing gap and prioritization companion lives in [`docs/jtbd-gap-map.md`](docs/jtbd-gap-map.md). Refresh it when roadmap work changes the shipped flow map, closes a major gap, or new outside adopter evidence changes the ranking.
 
 ## Integrators: pitfalls before you file an issue
 
@@ -45,6 +50,8 @@ mix verify.phase5 --skip-integration
 The fast pull-request gate for federation and multi-search runtime behavior is the Phase 41 verify alias. It stays free of Meilisearch services. Heavier integration paths, including live Meilisearch verification for backfill, reindex, and operator flows, still live on the Phase 5 verify alias and the dedicated integration jobs in CI.
 
 The Phase 43 verify alias is the complementary fast gate for **per-query Plane B** runtime tests (allowlisted `:per_query` options, `search_many/2` merge semantics). Run that alias when you touch those paths locally; CI enforces the same gate in the **`quality`** job alongside the other phase verify tasks.
+
+The Phase 82 verify alias is the focused gate for the v1.21 request-edge docs/examples contract. Run the shell command **mix verify.phase82** when you change the canonical request-edge guide, Phoenix guides, `Scrypath.QueryParams` / `Scrypath.Phoenix` public docs story, the example README, or the docs-contract / fixture seams that protect those surfaces. It stays narrower than the default fast suite and mirrors the same check CI runs in the **`quality`** job.
 
 Run **`mix verify.opsui`** from the repository root when you change the optional **`scrypath_ops`** operator Phoenix app or its path dependency on the core library. It runs **`cd scrypath_ops && mix deps.get && mix test`**, and the dedicated **`scrypath-ops`** CI job now invokes this same root task (Postgres-backed Ecto setup, no Meilisearch service).
 

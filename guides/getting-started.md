@@ -4,6 +4,8 @@ Scrypath gives Phoenix and Ecto teams an explicit path for declaring searchable 
 
 For a **hands-on linear onboarding** checklist from dependencies through your first `Scrypath.search/3` with inline sync, follow the [Golden path](golden-path.md).
 
+For the shared request-edge story around browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix`, and how those feed a context-owned `Scrypath.search/3`, read [Request-edge search](request-edge-search.md).
+
 ## What You Set Up
 
 Start with three pieces:
@@ -97,6 +99,8 @@ defmodule MyAppWeb.PostLive do
   end
 end
 ```
+
+When you want shared request-edge glue for controller or LiveView params, keep that glue in `Scrypath.QueryParams` and optional `Scrypath.Phoenix`, then continue into your context. The full shared contract lives in [Request-edge search](request-edge-search.md).
 
 ## Choose Sync Mode Deliberately
 
