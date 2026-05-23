@@ -366,17 +366,17 @@ end
 | A2 | Partial deep-merge mistakes on `page` and metadata derivation drift are the most likely implementation errors. | Common Pitfalls | Low-Medium; a different bug mix would change test emphasis, not architecture. |
 | A3 | Boundary drift pressure will primarily show up as “convenience” runtime helpers in docs or API proposals. | Common Pitfalls | Low; the guardrail remains the same even if the exact drift vector differs. |
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+All previously open research questions for Phase 83 are resolved in this section; there are no remaining planning blockers here.
 
 1. **Should the public result wrapper be a map or a struct?**
-   What we know: the user locked the seam to plain data and wants inspectable output. [VERIFIED: .planning/phases/83-composition-presets-and-scope-contract/83-CONTEXT.md]
-   What's unclear: whether a small struct with plain fields would still count as “plain-data enough” for this milestone. [ASSUMED]
-   Recommendation: Prefer a plain map for Phase 83 unless planning finds a compelling typed-doc reason to wrap it later. [ASSUMED]
+   Resolution: Use a plain map for Phase 83. The locked phase boundary calls for plain data, inspectability, and no second runtime surface, so a map is the least surprising fit for both the fragment envelope and the composed output. [VERIFIED: .planning/phases/83-composition-presets-and-scope-contract/83-CONTEXT.md]
+   Planning consequence: The public seam should document result keys directly and keep any internal helper structs private or unnecessary. [VERIFIED: .planning/phases/83-composition-presets-and-scope-contract/83-01-PLAN.md]
 
 2. **Should Phase 83 ship `compose/2` only or both `compose/2` and `compose!/2`?**
-   What we know: Scrypath public APIs commonly offer non-bang and bang variants for expected-vs-raising flows. [VERIFIED: codebase grep]
-   What's unclear: whether composition conflicts should be represented only as tuples or also with a raising helper for symmetry. [ASSUMED]
-   Recommendation: Plan the tuple API first and treat bang symmetry as optional if it does not widen docs or semver cost. [ASSUMED]
+   Resolution: Ship both `compose/2` and `compose!/2`. The repo already uses paired bang/non-bang public APIs where caller misuse or conflict handling may need either tuple branching or raising symmetry, and the plan keeps `compose!/2` as a thin wrapper rather than a second behavior surface. [VERIFIED: codebase grep]
+   Planning consequence: The tuple API remains canonical, while the bang helper exists only for symmetry with existing Scrypath ergonomics and must preserve the same boundary/non-goal posture. [VERIFIED: .planning/phases/83-composition-presets-and-scope-contract/83-01-PLAN.md]
 
 ## Validation Architecture
 

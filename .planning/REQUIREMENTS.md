@@ -55,10 +55,10 @@ Turn the shipped request-edge toolkit into a reusable real-app composition layer
 
 ### Composition contract
 
-- [ ] **CMP-01**: Apps can define named presets as plain-data composition fragments that expand into the existing `Scrypath.search/3` input shape without exposing `%Scrypath.Query{}` or creating a second public query runtime.
-- [ ] **CMP-02**: Apps can apply additive scopes with deterministic precedence rules that distinguish caller-overridable defaults from fixed constraints.
-- [ ] **CMP-03**: Composition results expose debug-friendly applied/defaulted search criteria so host apps and tests can see what actually reached the canonical runtime.
-- [ ] **CMP-04**: Composition definitions stay feature-level and context-owned rather than moving product UX declarations onto Ecto schemas or Phoenix helpers.
+- [x] **CMP-01**: Apps can define named presets as plain-data composition fragments that expand into the existing `Scrypath.search/3` input shape without exposing `%Scrypath.Query{}` or creating a second public query runtime.
+- [x] **CMP-02**: Apps can apply additive scopes with deterministic precedence rules that distinguish caller-overridable defaults from fixed constraints.
+- [x] **CMP-03**: Composition results expose debug-friendly applied/defaulted search criteria so host apps and tests can see what actually reached the canonical runtime.
+- [x] **CMP-04**: Composition definitions stay feature-level and context-owned rather than moving product UX declarations onto Ecto schemas or Phoenix helpers.
 
 ### Metadata reflection
 
@@ -99,10 +99,10 @@ Turn the shipped request-edge toolkit into a reusable real-app composition layer
 
 | Requirement | Planned phase | Status |
 |-------------|---------------|--------|
-| CMP-01 | Phase 83 | Pending |
-| CMP-02 | Phase 83 | Pending |
-| CMP-03 | Phase 83 | Pending |
-| CMP-04 | Phase 83 | Pending |
+| CMP-01 | Phase 83 | Complete |
+| CMP-02 | Phase 83 | Complete |
+| CMP-03 | Phase 83 | Complete |
+| CMP-04 | Phase 83 | Complete |
 | META-01 | Phase 84 | Pending |
 | META-02 | Phase 84 | Pending |
 | META-03 | Phase 84 | Pending |

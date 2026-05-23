@@ -39,11 +39,13 @@ Append-only validation ledger for Phase 83. This file locks the proof seams the 
 
 | Task ID | Plan | Wave | Requirement | Automated command | File Exists | Status |
 |---------|------|------|-------------|-------------------|-------------|--------|
-| 83-01-01 | 01 | 1 | CMP-01, CMP-02 | `mix test test/scrypath/composition_test.exs` | ❌ Wave 0 | planned |
-| 83-01-02 | 01 | 1 | CMP-02, CMP-03 | `mix test test/scrypath/composition_property_test.exs` | ❌ Wave 0 | planned |
-| 83-01-03 | 01 | 1 | CMP-04 | `mix test test/scrypath/docs_contract_test.exs` | ✅ | planned |
-| 83-02-01 | 02 | 2 | CMP-01, CMP-02, CMP-03 | `mix verify.phase83` | ❌ Wave 0 | planned |
-| 83-02-02 | 02 | 2 | CMP-04, docs hygiene | `mix docs --warnings-as-errors` | ✅ | planned |
+| 83-01-01 | 01 | 1 | CMP-01, CMP-03 | `rg -n "@spec compose\\(.*\\) :: \\{:ok,.*\\} \\| \\{:error, term\\(\\)\\}" lib/scrypath/composition.ex && rg -n "@spec compose!\\(" lib/scrypath/composition.ex && rg -n "@spec to_search_args\\(" lib/scrypath/composition.ex && rg -n "defaults|fixed|applied|defaulted|sources|warnings" lib/scrypath/composition.ex lib/scrypath/composition/result.ex && ! rg -n "%Scrypath.Query\\{\\}" lib/scrypath/composition.ex lib/scrypath/composition/result.ex` | ❌ Wave 0 | planned |
+| 83-01-02 | 01 | 1 | CMP-04, docs hygiene | `rg -n "Scrypath\\.Composition" lib/scrypath.ex && rg -n "contexts|search/3 remains the canonical runtime entrypoint" lib/scrypath.ex && rg -n "optional glue" lib/scrypath.ex && rg -n "schema-specific runtime verbs|generated UI|tenant" lib/scrypath.ex && mix docs --warnings-as-errors` | ✅ | planned |
+| 83-02-01 | 02 | 1 | CMP-01, CMP-02, CMP-03 | `mix test test/scrypath/composition_test.exs` | ❌ Wave 0 | planned |
+| 83-02-02 | 02 | 1 | CMP-02, CMP-04 | `mix deps.get && mix test test/scrypath/composition_property_test.exs test/scrypath/docs_contract_test.exs` | ❌ / ✅ | planned |
+| 83-03-01 | 03 | 2 | CMP-01, CMP-02 | `mix test test/scrypath/composition_test.exs --seed 0` | ❌ Wave 0 | planned |
+| 83-03-02 | 03 | 2 | CMP-02, CMP-03 | `mix test test/scrypath/composition_test.exs test/scrypath/composition_property_test.exs` | ❌ Wave 0 | planned |
+| 83-03-03 | 03 | 2 | CMP-01, CMP-02, CMP-03, CMP-04 | `mix verify.phase83` | ❌ Wave 0 | planned |
 
 ## Baseline Notes
 
@@ -51,6 +53,7 @@ Append-only validation ledger for Phase 83. This file locks the proof seams the 
 - `%Scrypath.Query{}` is explicitly internal and must stay out of the public composition contract.
 - The new risk surface is merge honesty: duplicate keyword keys, whole-value override fields, and fixed-constraint conflicts must be tested directly rather than implied through generic merge helpers.
 - Recent phases already use phase-scoped verify tasks and bounded docs contracts; Phase 83 should extend that pattern instead of introducing a new verification style.
+- The current execution layout is three plans in two waves: `83-01` and `83-02` in wave 1, then `83-03` in wave 2 after the contract and verification harness exist.
 
 ## Manual-Only / Deferred
 
