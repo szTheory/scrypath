@@ -52,7 +52,12 @@ Use the active milestone workflow artifacts below to drive the active milestone.
 2. A host app can layer additive scopes with deterministic precedence between caller-overridable defaults and fixed constraints, and the outcome is stable across repeated calls.
 3. Composition results expose the applied and defaulted search criteria plainly enough for host tests and logs to show what will reach the canonical runtime.
 4. The public seam keeps composition definitions feature-level and context-owned, without moving runtime search behavior onto Ecto schemas or Phoenix-only helpers.
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] `83-01-PLAN.md` — Freeze the public plain-data composition contract and root boundary docs.
+- [ ] `83-02-PLAN.md` — Add the focused verification harness for precedence, visibility, and boundary drift.
+- [ ] `83-03-PLAN.md` — Implement normalization, merge/conflict logic, and make the focused phase gate pass.
 
 ### Phase 84: Metadata Reflection And Multi-Search Parity
 **Goal**: Apps can reflect honest search capability metadata and use the same public composition model for `search_many/2` without widening runtime semantics.
