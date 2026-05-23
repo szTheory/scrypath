@@ -15,9 +15,11 @@ The intended app boundary is a Phoenix context that owns the search flow, with c
 
 | Guide | Purpose |
 | ----- | ------- |
+| [JTBD and user flows](jtbd-and-user-flows.md) | Canonical mental model: what jobs Scrypath serves, the main user flows, and what "success" honestly means in each one. |
 | [Common mistakes](common-mistakes.md) | Evidence-led pitfalls (symptom → wrong model → fix) with links back to canonical guides. |
 | [Getting started](getting-started.md) | Mental model: what you configure, where sync and search live in the app. |
 | [Golden path](golden-path.md) | Checklist from `mix.exs` through first `Scrypath.search/3` with **inline** sync. |
+| [Request-edge search](request-edge-search.md) | Canonical v1.21 request-edge contract: browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix`, and context-owned `Scrypath.search/3`. |
 | [Meilisearch operations](meilisearch-operations.md) | Where Meilisearch runs, provisioning sketches, recovery paths, and footguns—through a Scrypath lens. |
 | [Phoenix walkthrough](phoenix-walkthrough.md) | End-to-end Phoenix adoption: schema → context → controller → LiveView. |
 | [Phoenix contexts](phoenix-contexts.md) | Context-owned search and sync boundaries. |

@@ -7,6 +7,7 @@ defmodule Scrypath do
   ## Read next
 
   - [guides/golden-path.md](guides/golden-path.md) — linear first hour from dependencies through a working `Scrypath.search/3`.
+  - [guides/request-edge-search.md](guides/request-edge-search.md) — canonical request-edge contract for browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix`, and context-owned `search/3`.
   - [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md) — canonical sync modes (`:inline`, `:oban`, `:manual`), eventual consistency, and operator lifecycle language.
   - [guides/overview.md](guides/overview.md) — table of contents for every published guide.
   - [guides/common-mistakes.md](guides/common-mistakes.md) — evidence-led pitfalls when search and sync feel inconsistent.
@@ -15,17 +16,18 @@ defmodule Scrypath do
 
   - **`sync_record/3`** (and batch variants) — write path and mode semantics; start from
     [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md).
-  - **`Scrypath.QueryParams`** — request-edge plain-data preparation for top-level request params
-    before your context calls `search/3`.
+  - **`Scrypath.QueryParams`** — framework-light request-edge normalization before your
+    context calls `search/3`; the full story lives in
+    [guides/request-edge-search.md](guides/request-edge-search.md).
   - **`search/3`** — hydrated search on one schema; follow
     [guides/golden-path.md](guides/golden-path.md) for the first working call.
   - **`search_many/2`** — federated multi-schema search; composition rules live in
     [guides/golden-path.md](guides/golden-path.md) and [guides/multi-index-search.md](guides/multi-index-search.md).
 
   Keep request-edge casting in controllers, LiveViews, or other app-owned boundaries with
-  `Scrypath.QueryParams`. In phase 80 it normalizes only the top-level request envelope, so
-  nested values must already match the runtime shapes. Keep orchestration in your contexts,
-  where `Scrypath.search/3` remains the canonical runtime entrypoint.
+  `Scrypath.QueryParams`. If you are in Phoenix, `Scrypath.Phoenix` is optional glue for
+  params, forms, and URL round-tripping only. Keep orchestration in your contexts, where
+  `Scrypath.search/3` remains the canonical runtime entrypoint.
 
   Use `use Scrypath` on your Ecto schema; declaration grammar and settings live on
   `Scrypath.Schema` — read that module instead of duplicating option tables here.

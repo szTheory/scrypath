@@ -2,6 +2,8 @@
 
 Minimal API-only Phoenix app that depends on Scrypath via **`path: "../.."`** from the monorepo root. It shows the same patterns as the main README (searchable schema, `Scrypath.sync_record/3`, `Scrypath.search/3` with `repo:`) against **real Postgres** and **real Meilisearch**, plus **Oban** wired for a second integration path (`sync_mode: :oban`) so the example matches queue-backed production apps.
 
+This README is the proof/runbook surface for the real-service path. The HexDocs guides teach the public request-edge boundary and API shape; this example proves the operational path, CI parity, env vars, and local smoke commands.
+
 ## Prerequisites
 
 - Elixir **1.17+** and Erlang/OTP as in the parent project

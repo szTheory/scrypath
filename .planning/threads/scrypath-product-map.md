@@ -1,9 +1,9 @@
 ---
 slug: scrypath-product-map
 title: Scrypath product map and JTBD crash course
-status: open
+status: resolved
 created: 2026-05-08
-updated: 2026-05-08
+updated: 2026-05-23
 ---
 
 # Thread: Scrypath product map and JTBD crash course
@@ -50,9 +50,9 @@ The recurring jobs are:
 
 ## Current Gaps / Next Work
 
-- reconcile the `v1.20` search-module archive with the checked-out code
-- continue the `v1.21` query-toolkit / Phoenix edge-helper direction if the gap is resolved or intentionally respecified
-- keep future milestones focused on app-facing ergonomics, not hidden callback magic
+- keep the `v1.20` archive/code-drift concern isolated as explicit planning debt rather than product truth
+- treat the shipped `v1.21` request-edge toolkit and optional Phoenix helper surface as the current ergonomics boundary
+- keep future milestones focused on app-facing ergonomics, not hidden callback magic or a second runtime
 
 ## References
 
@@ -66,7 +66,8 @@ The recurring jobs are:
 - `.planning/milestone-candidates.md`
 - `scrypath_ops/docs/operator-ia.md`
 
-## Next Steps
+## Resolution
 
-- Use this thread as the reusable product briefing for future milestone planning.
-- Update it whenever the architecture map or JTBD set changes materially.
+- This thread now serves as the stable reusable product briefing for future milestone planning.
+- The `v1.21` request-edge toolkit and Phoenix-helper work landed without changing the core product boundary: contexts still own search orchestration and `Scrypath.search/3` remains canonical.
+- Remaining archive/code-drift follow-up is tracked separately in `.planning/todos/search-module-archive-code-drift.md`.

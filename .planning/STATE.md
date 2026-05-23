@@ -2,34 +2,34 @@
 gsd_state_version: 1.0
 milestone: v1.21
 milestone_name: Query Toolkit And Phoenix Edge Helpers
-status: ready_to_plan
-last_updated: 2026-05-23T09:18:19Z
+status: milestone_complete
+last_updated: 2026-05-23T14:10:00Z
 last_activity: 2026-05-23
 progress:
   total_phases: 3
-  completed_phases: 2
-  total_plans: 4
-  completed_plans: 4
-  percent: 67
-stopped_at: Phase 81 complete (2/2) — ready to discuss Phase 82
+  completed_phases: 3
+  total_plans: 7
+  completed_plans: 7
+  percent: 100
+stopped_at: Milestone complete (Phase 82 was final phase)
 ---
 
 # Project State
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-05-22)
+See: `.planning/PROJECT.md` (updated 2026-05-23)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase 82 — docs, examples, and drift protection
+**Current focus:** Milestone complete
 
 ## Current Position
 
-Phase: 82
-Plan: Not started
+Phase: None
+Plan: None
 
-**Status:** Ready to plan
+**Status:** Milestone complete
 
 **Last activity:** 2026-05-23
 
@@ -69,6 +69,7 @@ Plan: Not started
 - **v1.20 archive/code drift:** the archive currently claims `Scrypath.SearchModule` and its guide shipped, but the checked-out code does not expose that layer yet; reconcile the archive with code before treating the layer as fully grounded.
 - **v1.21 open:** Reopen internal feature work only for a narrow-balanced slice: a framework-light public query-param toolkit plus thin optional Phoenix URL/form/LiveView helpers over the existing `Scrypath.search/3` path.
 - **v1.21 guardrails:** contexts remain the application boundary, Phoenix stays optional, no public `%Scrypath.Query{}` contract ships, and this milestone does not widen into UI widgets, controller macros, or schema-generated runtime verbs.
+- **v1.21 close:** The public request-edge toolkit, structured edge-error contract, optional pure Phoenix wrappers, canonical request-edge guide, and `mix verify.phase82` drift gate are now shipped and archived without widening the canonical runtime boundary.
 
 ### Blockers / Concerns
 
@@ -76,13 +77,14 @@ Plan: Not started
 - **Diminishing-returns guardrail:** In the absence of real adopter evidence, additional internal proof/polish work is presumed low leverage and should not become the next milestone by default.
 - **Scope discipline for the search-module arc:** Search modules must remain a thin context-owned layer over the existing runtime, not a slide into schema-generated APIs, Phoenix coupling, or hidden operational behavior.
 - **Search-module archive drift:** `v1.20` planning claims a `Scrypath.SearchModule` layer, but the current checkout does not contain that module or its guide. Treat that as a reconciliation task, not as settled product truth.
-- **Public param grammar risk:** `v1.21` will freeze browser-shaped param semantics if the toolkit surface is too broad. Keep the grammar narrow and explicit.
+- **Public param grammar risk:** `v1.21` froze browser-shaped param semantics on purpose; future composition work should extend that contract only with real adopter pressure.
 - Existing `71`–`73` phase directories remain in `.planning/phases/` in the working tree; phase numbering continues at `74`, so no collision exists for this milestone open.
 
 ### Deferred Items
 
 (See **`.planning/PROJECT.md`** and **`.planning/MILESTONES.md`** for historical **audit-open** / quick-task ledger.)
 
+- **v1.1 release-follow-through:** keep the closed-audit carry-forward visible but out of product milestone scope: (1) rerun the Phase 08 live verification seam only when a reachable `SCRYPATH_MEILISEARCH_URL` is available, and (2) rerun the Hex dry-run only when a publisher-scoped `HEX_API_KEY` is available. Source of truth: **`.planning/v1.1-MILESTONE-AUDIT.md`** and **`docs/releasing.md`**.
 - **Salvage quarantine:** `salvage/20260508-151407-main-reconcile` preserves the pre-reconcile dirty worktree for forensic recovery only. Treat it as a mixed snapshot, not as a queued branch to re-land wholesale on `main`.
 
 ### Nyquist audit ledger (AUDT-01 — immutable pointers)
@@ -91,13 +93,13 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-1. Start `v1.21` with Phase 80: define the public plain-data query toolkit contract over the existing runtime.
-2. Follow with Phase 81: edge normalization semantics and thin optional Phoenix wrappers over the Phase 80 contract.
-3. Close with Phase 82: canonical docs, examples, and drift protection that keep the milestone narrow.
+1. Review the archived `v1.21` artifacts if you want to sanity-check the shipped milestone record.
+2. Run `$gsd-new-milestone` when you want to open `v1.22` or another deliberate next milestone with fresh requirements.
+3. Keep the post-`v1.19` outside-adopter guardrail explicit when deciding whether `v1.22` is actually leverage-positive now.
 
 ---
 
-*Last updated: 2026-05-22 — opened **v1.21 Query Toolkit And Phoenix Edge Helpers***
+*Last updated: 2026-05-23 — shipped + archived **v1.21 Query Toolkit And Phoenix Edge Helpers***
 
 **Prior milestone:** **v1.19** — Production adoption proof and hardening — **2026-04-28** (shipped + archived in-repo).
 
@@ -107,8 +109,6 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 **Completed:** **v1.17** shipped + archived in-repo (**2026-04-23**) — phases **68–70** — **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next:** Plan and execute phases **80–82** if the milestone remains narrow and boundary-honest.
+**Completed:** **v1.21** shipped + archived in-repo (**2026-05-23**) — phases **80–82** — **`milestones/v1.21-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Completed Phase:** 79 (Docs, examples, and contract coverage) — 2/2 plans — 2026-05-08
-
-**Planned Phases:** 80–82 for `v1.21`.
+**Next:** No active milestone. Open the next one deliberately with fresh requirements.

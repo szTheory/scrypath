@@ -2,6 +2,8 @@
 
 If you prefer the conceptual overview first, read [Getting Started](getting-started.md). This guide is a **linear checklist** from dependency install through a working `Scrypath.search/3` using **`sync_mode: :inline`** only. Queueing and manual sync are intentionally deferred to [Sync Modes and Visibility](sync-modes-and-visibility.md) (`guides/sync-modes-and-visibility.md`).
 
+If you want the shared request-edge story for browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix`, and context-owned runtime calls, read [Request-edge search](request-edge-search.md). This guide stays focused on the first indexed document and first search.
+
 When you need **`Scrypath.search_many/2`**, federation weights, or **`:all`** expansion across several schemas, read next: [Multi-index search](multi-index-search.md).
 
 ## Goal

@@ -2,7 +2,7 @@
 
 Scrypath fits Phoenix best when your context is the application-facing boundary for search orchestration.
 
-If you want shared controller and LiveView glue for browser-shaped params, keep that glue in `Scrypath.Phoenix`. It delegates to `Scrypath.QueryParams` and stops at plain data, URL params, and renderable edge errors.
+If you want shared controller and LiveView glue for browser-shaped params, keep that glue in `Scrypath.Phoenix`. It delegates to `Scrypath.QueryParams` and stops at plain data, URL params, and renderable edge errors. For the shared contract details, read [Request-edge search](request-edge-search.md).
 
 ## What Belongs In The Context
 
@@ -17,6 +17,8 @@ Keep these responsibilities in the context:
 ## What Stays Out Of Controllers And LiveView
 
 Do not teach controllers or LiveView modules to compose raw `Repo` and `Scrypath.*` calls as the main pattern.
+
+Helpers normalize params/forms/URLs only, contexts remain canonical, and Phoenix is optional.
 
 That boundary matters because Phoenix web modules should stay focused on HTTP or UI concerns, while the context owns feature logic and operational decisions.
 

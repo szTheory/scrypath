@@ -1,6 +1,6 @@
 # Phoenix LiveView
 
-LiveView is a strong fit for search interfaces, but the recommended Scrypath boundary stays the same: LiveView owns UI state, and the context owns repo access plus Scrypath orchestration. Use `Scrypath.Phoenix` only as request-edge glue around params, form projection, and URL round-tripping.
+LiveView is a strong fit for search interfaces, but the recommended Scrypath boundary stays the same: LiveView owns UI state, and the context owns repo access plus Scrypath orchestration. Use `Scrypath.Phoenix` only as request-edge glue around params, form projection, and URL round-tripping. For the shared contract, read [Request-edge search](request-edge-search.md).
 
 ## Handle Params Through The Context
 
@@ -63,6 +63,8 @@ The context should own:
 - write-path sync and delete orchestration
 
 `handle_event/3` should collect intent and push the next URL state. `handle_params/3` remains the one place that normalizes params, assigns attempted values plus errors, and calls the context when normalization succeeds.
+
+Helpers normalize params/forms/URLs only, contexts remain canonical, and Phoenix is optional.
 
 The same context boundary can back a publish event:
 

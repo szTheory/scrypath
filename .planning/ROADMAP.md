@@ -23,65 +23,17 @@
 - [x] **`v1.18` shipped + archived in-repo** (**2026-04-26**) — *Sigra integration* — phases **71–73**, **10** requirements — [archive](milestones/v1.18-ROADMAP.md) · [requirements](milestones/v1.18-REQUIREMENTS.md) · [audit](milestones/v1.18-MILESTONE-AUDIT.md)
 - [x] **`v1.19` shipped + archived in-repo** (**2026-04-28**) — *Production adoption proof and hardening* — phases **74–76**, **8** requirements — [archive](milestones/v1.19-ROADMAP.md) · [requirements](milestones/v1.19-REQUIREMENTS.md) · [audit](milestones/v1.19-MILESTONE-AUDIT.md)
 - [x] **`v1.20` shipped + archived in-repo** (**2026-05-08**) — *Search Module Foundation* — phases **77–79**, **8** requirements — [archive](milestones/v1.20-ROADMAP.md) · [requirements](milestones/v1.20-REQUIREMENTS.md) · [audit](milestones/v1.20-MILESTONE-AUDIT.md)
+- [x] **`v1.21` shipped + archived in-repo** (**2026-05-23**) — *Query Toolkit And Phoenix Edge Helpers* — phases **80–82**, **8** requirements — [archive](milestones/v1.21-ROADMAP.md) · [requirements](milestones/v1.21-REQUIREMENTS.md) · [audit](milestones/v1.21-MILESTONE-AUDIT.md)
 
 ## Current Milestone
 
-**v1.21 — Query Toolkit And Phoenix Edge Helpers** is now active.
+No active milestone is open.
 
-**Opened:** **2026-05-22**
+**Last shipped milestone:** **v1.21 — Query Toolkit And Phoenix Edge Helpers** closed on **2026-05-23** and shipped a narrow public request-edge toolkit plus thin optional Phoenix wrappers over the existing **`Scrypath.search/3`** runtime without widening the core boundary. Full detail: [milestones/v1.21-ROADMAP.md](milestones/v1.21-ROADMAP.md).
 
-**Goal:** ship a narrow-balanced public query-param toolkit plus thin optional Phoenix edge helpers over the existing **`Scrypath.search/3`** runtime, while keeping contexts canonical and avoiding public exposure of internal query structs.
+**Next candidate:** **v1.22 — Composition And Real-App Depth** remains the next candidate in [MILESTONE-ARC.md](MILESTONE-ARC.md). Open it deliberately with fresh requirements instead of treating it as already active.
 
-**Guardrails:**
-
-- `Scrypath.search/3` stays the canonical runtime.
-- Contexts or context-owned search modules stay the application boundary.
-- No public `%Scrypath.Query{}` contract or schema-generated runtime verbs.
-- No hard Phoenix dependency in runtime core.
-- No reusable UI widget/component layer in this milestone.
-
-**Last shipped milestone:** **v1.20 — Search Module Foundation** closed on **2026-05-08** and added a thin, context-owned `Scrypath.SearchModule` layer over the existing runtime without weakening the canonical **`v1.19`** readiness verdict or widening Scrypath into callback magic. Full detail: [milestones/v1.20-ROADMAP.md](milestones/v1.20-ROADMAP.md).
-
-## Active Phases
-
-### Phase 80: Public query toolkit contract
-
-- [x] **Phase 80: Public query toolkit contract** (2026-05-23) — **QTK-01**, **QTK-04** — carve out the small public param toolkit as a plain-data edge contract over the existing runtime without promoting internal query structs or inventing a second runtime.
-
-**Success criteria:**
-
-1. A context can turn request-shaped search input into stable toolkit output and pass it to `Scrypath.search/3` without touching internal query structs.
-2. The public toolkit contract is data-first and explicit enough that apps can use it outside Phoenix.
-3. Search orchestration still lives in app contexts or search modules, not in toolkit helpers.
-4. No schema-generated runtime verbs or new canonical runtime entrypoint appear.
-
-### Phase 81: Edge normalization errors and Phoenix wrappers
-
-- [x] **Phase 81: Edge normalization errors and Phoenix wrappers** (2026-05-23) — **QTK-02**, **QTK-03**, **PHX-01**, **PHX-02** — add one-time edge normalization semantics plus optional thin Phoenix helpers for controller, form, URL, and LiveView flows.
-
-**Plans:** 2 plans
-
-Plans:
-- [x] `81-01-PLAN.md` — Add browser-param normalization and structured edge-error contracts to `Scrypath.QueryParams` while keeping `Scrypath.search/3` canonical.
-- [x] `81-02-PLAN.md` — Add optional `Scrypath.Phoenix` wrappers, adopt them in fixtures, and lock the Phoenix boundary in guides and docs contracts.
-
-**Success criteria:**
-
-1. Request params normalize once at the edge for text, filters, sort, page, facets, and facet-filter inputs.
-2. Invalid input yields structured field-scoped errors that a controller or LiveView can render directly.
-3. Phoenix URL/form helpers round-trip normalized state without performing search themselves.
-4. LiveView flows can drive shareable search state from params and reuse the same toolkit/error semantics as non-LiveView edges.
-
-### Phase 82: Docs, examples, and drift protection
-
-- [ ] **Phase 82: Docs, examples, and drift protection** — **DOC-01**, **VRFY-01** — lock the public story so adopters understand what shipped, what did not, and how to use it without crossing the boundary.
-
-**Success criteria:**
-
-1. Canonical guides show contexts calling `Scrypath.search/3` or the existing search-module layer, with helpers used only at the request edge.
-2. Docs explicitly state that `%Scrypath.Query{}` is not public API and Phoenix is optional.
-3. Examples cover controller- and LiveView-shaped edge usage without implying a reusable widget/component layer.
-4. Regression coverage fails if helper APIs drift into a second runtime, broaden the boundary, or contradict the milestone non-goals.
+Use `$gsd-new-milestone` to create the next milestone requirements and activate new phases.
 
 ## Phases (history)
 
@@ -316,11 +268,11 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 
 ## Progress
 
-**Current milestone:** **v1.21 — Query Toolkit And Phoenix Edge Helpers** is open. **2 of 3** phases are complete on **2026-05-23**; **Phase 82** is the next planning step.
+**Current milestone:** **v1.21 — Query Toolkit And Phoenix Edge Helpers** is complete in-repo on **2026-05-23**. **3 of 3** phases are complete.
 
-**Last shipped milestone:** **v1.20 Search Module Foundation** — shipped + archived **2026-05-08**, **3** phases (**77–79**) complete, **8** requirements (**SMOD-01**..**SMOD-08**) satisfied. See **`milestones/v1.20-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**Last shipped milestone:** **v1.21 Query Toolkit And Phoenix Edge Helpers** — shipped + archived **2026-05-23**, **3** phases (**80–82**) complete, **8** requirements (**QTK-01**..**VRFY-01**) satisfied. See **`milestones/v1.21-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next default pull:** **Phase 82 — Docs, examples, and drift protection** to lock the public story, examples, and drift protection around the new query toolkit and Phoenix helper surfaces.
+**Next default pull:** no active milestone. Reassess whether `v1.22` or an outside-adopter feedback milestone is the leverage-positive next move.
 
 **`v1.17` archived (in-repo)** — **2026-04-23** shipped + archived — **3** phases (**68–70**), **6** requirements (**INTG-01**–**INTG-06**); see **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
@@ -345,4 +297,4 @@ Details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
 - **Tier D** — maintainer-only planning hygiene — same file; do not headline consumer milestones.
 
 ---
-*Last updated: 2026-05-23 — phases **80** and **81** completed; **Phase 82** is next*
+*Last updated: 2026-05-23 — phases **80**–**82** completed; `v1.21` is complete in-repo*

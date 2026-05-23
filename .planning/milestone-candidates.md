@@ -1,7 +1,7 @@
 # Milestone candidates — developer-first roadmap stack
 
 **Purpose:** Prioritized themes for **`/gsd-new-milestone`** — **onboarding + QoL** for people using and contributing to Scrypath; **avoid busywork** and maintainer-only work masquerading as product.  
-**Last reviewed:** 2026-05-08 — **v1.20** shipped as a narrow search-module milestone, but the canonical portfolio posture is still the **v1.19** readiness verdict: seek broader outside production adoption on the defended surface, with external validation still pending. The canonical verdict lives in **`milestones/v1.19-MILESTONE-AUDIT.md`**.
+**Last reviewed:** 2026-05-23 — **v1.21** shipped as a narrow request-edge toolkit milestone, but the canonical portfolio posture is still the **v1.19** readiness verdict: seek broader outside production adoption on the defended surface, with external validation still pending. The canonical verdict lives in **`milestones/v1.19-MILESTONE-AUDIT.md`**.
 
 **Reconciliation note:** the `v1.20` archive says `Scrypath.SearchModule` shipped, but the current checkout does not expose that layer or its guide. Treat that as a live gap to reconcile before assuming archive and code are perfectly aligned.
 
@@ -72,6 +72,7 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 |---|--------|--------|
 | **D1** | **GSD milestone archive / phases path reliability** | Reduces **your** planning friction; **near-zero** Hex consumer onboarding impact — separate track or tiny slice when it blocks weekly |
 | **D2** | **Retire `quick_task` stub rows / quiet `audit-open`** | **Busywork** unless CI or new contributors are misled |
+| **D3** | **Release-only credential / live-proof follow-through** | Keep the **v1.1** carry-forward visible as maintainer ops work: rerun live verification when `SCRYPATH_MEILISEARCH_URL` is reachable and rerun Hex dry-run when a publisher-scoped `HEX_API_KEY` exists; do not promote this into a consumer milestone by default |
 
 ### Still explicit strategy (unchanged)
 

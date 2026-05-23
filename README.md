@@ -18,6 +18,10 @@ end
 
 **Start here:** for the canonical first-hour path from dependencies through a working `Scrypath.search/3` with inline sync, follow [guides/golden-path.md](guides/golden-path.md).
 
+**Request-edge contract:** for the v1.21 public story around browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix` glue, and context-owned `Scrypath.search/3`, read [guides/request-edge-search.md](guides/request-edge-search.md).
+
+If you want the user-flow and jobs-to-be-done map before wiring code, read [guides/jtbd-and-user-flows.md](guides/jtbd-and-user-flows.md).
+
 If you want the architecture and JTBD crash course before reading the full guides, start with [guides/overview.md](guides/overview.md).
 
 For symptom-style "why is search wrong?" debugging grounded in shipped tests, see [guides/common-mistakes.md](guides/common-mistakes.md).
@@ -79,6 +83,8 @@ If you want hidden model hooks, implicit repo access, or a library that pretends
 If you are wiring Scrypath into a Phoenix app, read these next:
 
 - [Guides overview](guides/overview.md) (table of contents for all guides)
+- [JTBD and user flows](guides/jtbd-and-user-flows.md) (mental model and flow map before the implementation guides)
+- [Request-edge search](guides/request-edge-search.md) (canonical shared story for `QueryParams`, optional `Scrypath.Phoenix`, and context-owned runtime calls)
 - [Getting Started](guides/getting-started.md)
 - [Phoenix Walkthrough](guides/phoenix-walkthrough.md)
 - [Phoenix Contexts](guides/phoenix-contexts.md)

@@ -1,6 +1,6 @@
 # Phoenix Controllers And JSON
 
-Phoenix controllers should translate request params into a context call, then render HTML or JSON from the result. If you want shared request-edge glue, use `Scrypath.Phoenix` as a thin wrapper over `Scrypath.QueryParams` rather than hand-rolling page, facet, and sort parsing in each controller.
+Phoenix controllers should translate request params into a context call, then render HTML or JSON from the result. If you want shared request-edge glue, use `Scrypath.Phoenix` as a thin wrapper over `Scrypath.QueryParams` rather than hand-rolling page, facet, and sort parsing in each controller. For the shared contract, read [Request-edge search](request-edge-search.md).
 
 ## HTML Controllers
 
@@ -66,6 +66,8 @@ end
 ```
 
 Keep JSON shaping in the controller or view layer. Keep repo access, search orchestration, and sync visibility choices in the context. `Scrypath.Phoenix` stops at param normalization, URL round-tripping, and renderable attempted values plus errors. It does not execute search.
+
+Helpers normalize params/forms/URLs only, contexts remain canonical, and Phoenix is optional.
 
 ## Avoid The Wrong Shortcut
 
