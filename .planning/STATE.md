@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.21
 milestone_name: Query Toolkit And Phoenix Edge Helpers
 status: ready_to_plan
-last_updated: 2026-05-22T12:17:43.005Z
-last_activity: 2026-05-22
+last_updated: 2026-05-23T09:18:19Z
+last_activity: 2026-05-23
 progress:
   total_phases: 3
-  completed_phases: 0
-  total_plans: 2
-  completed_plans: 8
-  percent: 0
-stopped_at: Phase 80 complete (2/2) — ready to discuss Phase 81
+  completed_phases: 2
+  total_plans: 4
+  completed_plans: 4
+  percent: 67
+stopped_at: Phase 81 complete (2/2) — ready to discuss Phase 82
 ---
 
 # Project State
@@ -22,16 +22,16 @@ See: `.planning/PROJECT.md` (updated 2026-05-22)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase 81 — edge normalization errors and phoenix wrappers
+**Current focus:** Phase 82 — docs, examples, and drift protection
 
 ## Current Position
 
-Phase: 81
+Phase: 82
 Plan: Not started
 
 **Status:** Ready to plan
 
-**Last activity:** 2026-05-22
+**Last activity:** 2026-05-23
 
 ## Accumulated Context
 
