@@ -1,106 +1,138 @@
-# Feature Research — v1.18 Sigra integration
+# Feature Landscape
 
-**Domain:** Optional Sigra integration for `scrypath_ops` operator attribution, sudo gating, and audit logging
-**Researched:** 2026-04-25
-**Confidence:** HIGH — based on the approved v1.18 plan plus existing STACK / ARCHITECTURE / PITFALLS research.
+**Domain:** Reusable composition, presets, scopes, and UI metadata for an Ecto-native search library
+**Researched:** 2026-05-23
+**Overall confidence:** HIGH for boundary and composition shape; MEDIUM for exact DX niceties because those are ecosystem-synthesized rather than standardized.
 
 ## Feature goal
 
-v1.18 should let a Phoenix host that already uses Sigra enable `OPSUI_AUTH_MODE=sigra`, wire one LiveView hook manually, and get a credible answer to: **who ran sensitive Scrypath operator actions, under which org/session context, and was the action sudo-confirmed?**
+`v1.22` should help real Phoenix and Ecto apps share repeated search flows without inventing a second runtime above `Scrypath.search/3`.
 
-This is an optional `scrypath_ops` integration, not a new auth layer for `scrypath` core.
+The composition layer should behave like this:
+
+- normalize browser-shaped input once, then compose plain search args explicitly
+- let apps freeze repeated defaults and allowed variants as reusable presets/scopes
+- expose enough declared metadata for controllers and LiveViews to build honest UIs
+- preserve context ownership, per-app tenant policy, related-data fan-out ownership, and recovery honesty
+
+This matches the repo boundary and current ecosystem patterns:
+
+- Ecto queries are intentionally composable data, not hidden runtime magic ([Ecto dynamic queries](https://hexdocs.pm/ecto/dynamic-queries.html))
+- LiveView treats `handle_params/3` as the URL-state boundary, not a replacement for context orchestration ([Phoenix LiveView](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html))
+- Scout and Searchkick both succeed by making repeated search flows reusable, but they also show where over-magic becomes misleading, especially for async visibility and association updates ([Laravel Scout](https://laravel.com/docs/12.x/scout), [Searchkick](https://github.com/ankane/searchkick))
+
+## Adopter jobs
+
+Use these tags in notes:
+
+- `JOB-1` First searchable schema
+- `JOB-2` Request-edge Phoenix flow
+- `JOB-3` Related-data propagation
+- `JOB-4` Tenant-safe access
+- `JOB-5` Recovery and rebuild honesty
 
 ## Table stakes
 
-| Feature | Why expected | Complexity | Requirement candidates | Notes |
+Features real apps will expect once the request-edge toolkit already exists.
+
+| Feature | Why Expected | Complexity | Dependencies | Notes |
 |---|---|---:|---|---|
-| Optional Sigra mode | Sigra hosts need an explicit supported auth mode; non-Sigra hosts must be unaffected | Med | `SIGRA-01`, `SIGRA-02` | `{:sigra, "~> 0.2", optional: true}`, `OPSUI_AUTH_MODE=sigra`, compile guards |
-| IDs-only `OperatorContext` | Stable contract between Sigra session/scope and ops UI; avoids PII leakage | Med | `SIGRA-03` | Fields only: `user_id`, `active_org_id`, `impersonator_user_id`, `sudo_at` |
-| Sigra `OnMount` hook | Host needs one documented way to assign operator context into ops sockets | Med | `SIGRA-04` | Host stacks it manually with existing `ScrypathOpsWeb.Live.OnMount` |
-| Sensitive-action gate | Mutating ops actions need one sudo + impersonation + audit funnel | High | `SIGRA-05` | `gate_sensitive_action/3`; stale sudo navigates to host-owned confirm route |
-| Built-in sensitive-action wiring | Existing OPSUI actions must actually use the gate, not just expose helpers | High | `SIGRA-06` | Playbook delete, failed retry, swap-live actions; no direct `Sigra.*` in LiveViews |
-| Audit taxonomy | Operators need predictable audit queries and incident trails | Med | `SIGRA-07` | Prefix: `scrypath.ops.*`; include operation metadata, not session PII |
-| Boundary enforcement | Optional integration must not leak into core or become mandatory | Med | `SIGRA-08` | CI grep fence; compile-without-Sigra verification |
-| Integration guide + worked example | Adopters need copy-paste wiring and a maintained proof app | High | `SIGRA-09`, `SIGRA-10` | `guides/integrations/sigra.md`; `examples/phoenix_sigra_ops/` CI smoke |
+| Named plain-data presets over the existing `QueryParams -> to_search_args -> context -> Scrypath.search/3` path | Real apps quickly repeat “same filters, sorts, facets, page defaults” across index, CSV/export, HTML, and LiveView flows | Med | existing query-toolkit contract | Presets should compile to the same plain args shape already accepted by contexts. No new runtime object model. `JOB-1`, `JOB-2`, `JOB-5` |
+| Scope composition that is additive and explicit | Apps need to layer “base catalog”, “published only”, “tenant window”, “admin override”, “facet defaults” without hand-merging keywords in every controller | Med-High | preset contract; deterministic merge rules | Use right-biased merge rules per dimension, mirroring existing `search_many/2` merge discipline. Avoid hidden callback chains. `JOB-2`, `JOB-4` |
+| Per-flow defaults plus caller overrides | Shared flows are only reusable if a page can start opinionated but still let the caller override page size, sort, query, or facet filters | Med | preset/scope merge semantics | This is the composition equivalent of Ecto’s composable query builders. Defaults must remain inspectable. `JOB-1`, `JOB-2` |
+| Search-many-aligned entry composition | Global-search and dashboard flows need reusable per-schema presets, not just single-schema helpers | High | existing `search_many/2` semantics; per-entry validation | Composition must preserve per-schema options and failure boundaries. Do not imply cross-schema merged ranking or merged facets. `JOB-2`, `JOB-5` |
+| Metadata reflection for declared filters, sorts, facets, and paging | Phoenix apps need one truth source to build forms, chips, selects, badges, and “reset filters” UIs without duplicating declarations | Med | existing schema reflection; request-edge contract | Return capability metadata, not generated UI. Include declared field names, option shape, and safe defaults. `JOB-1`, `JOB-2` |
+| Visibility of active/defaulted criteria | Reusable composition becomes hard to debug if apps cannot see which defaults or scopes actually applied | Med | preset/scope runtime expansion | Expose normalized “applied search args” or equivalent debug-friendly metadata for logs/tests/docs. `JOB-2`, `JOB-5` |
+| Explicit support for context-owned tenant scoping | SaaS apps need reusable search flows, but the host app must own who can see what | High | composition seam; docs | Composition can reserve a seam for tenant-safe scope injection, but must not claim authz by index prefix. Meilisearch and Typesense docs both treat scoped filtering/credentials as explicit configuration, not magic inference. `JOB-4` |
+| Related-data-safe composition docs | Once presets exist, adopters will assume they solve associated-record fan-out too unless docs say otherwise | Low-Med | docs/examples | The feature is not fan-out automation. Docs must repeat that associated updates still require explicit app-owned sync/rebuild paths. Searchkick and Hibernate Search both show this line matters. `JOB-3`, `JOB-5` |
+| Metadata for paging limits and facet/search capabilities | Honest UIs need to know max page behavior, facet-search support, and when a control should not render | Med | backend/schema metadata reflection | Meilisearch makes `filterableAttributes`, facet search, and `pagination.maxTotalHits` real behavioral constraints, so metadata should surface them. `JOB-2`, `JOB-5` |
+| Worked real-app patterns, not just API docs | Composition only lands if the repo proves “one search box”, “catalog filter page”, and “global search dashboard” shapes end to end | High | example app; guide refresh | Required to prove reduced glue without widening scope. `JOB-1`, `JOB-2`, `JOB-3`, `JOB-4`, `JOB-5` |
 
 ## Differentiators
 
-| Feature | Value proposition | Complexity | Notes |
+Features that would make `v1.22` notably stronger than a thin param-casting helper, while still staying inside the milestone guardrail.
+
+| Feature | Value Proposition | Complexity | Notes |
 |---|---|---:|---|
-| Core stays auth-agnostic while ops gains real attribution | Strong library boundary: Scrypath stays search-focused, `scrypath_ops` becomes host-auth friendly | Med | Key trust signal for OSS adopters |
-| Host-owned sudo route instead of hidden modal | Fits real Phoenix apps without coupling to a component system | Med | Preserve `return_to` so triage state survives re-auth |
-| Telemetry/audit attribution without core API churn | Uses existing telemetry metadata path; no `:operator` option in core v1.18 | Med | Document process-boundary limits |
-| Compile-without-Sigra proof | Makes optional dependency promise falsifiable | Low-Med | Prevents `optional: true` from becoming cosmetic |
-| Tiny Sigra example with no Meilisearch noise | Makes the auth/audit wiring legible and CI-maintained | High | Stub backend is preferable for this milestone |
+| Canonical “composition is data” API instead of opaque structs | Keeps Scrypath aligned with Ecto and current public boundary. Easier to diff, log, test, and feed into both `search/3` and `search_many/2` | Med | Strongest product fit for this repo. Prefer maps/keywords/plain structs only if they remain boring data containers, not behavioral query objects. |
+| Introspectable preset registry per search flow | Lets apps ask “what filters/sorts/facets does this page support?” from the same declaration they execute | Med-High | Higher leverage than shipping form components. Useful for LiveView forms, JSON APIs, and admin UIs alike. |
+| Per-entry composition helpers for `search_many/2` | Reusable global-search flows are a real app need and many libraries stay too single-index here | High | Should preserve declaration order, schema-local failure messages, and per-schema metadata. |
+| Explicit “applied runtime contract” export for docs/tests | Gives maintainers a way to verify that presets/scopes do not silently drift from what a page claims to support | Med | Good candidate for doc contracts and example assertions. |
+| Boundary-honest tenant hooks | Provide a first-class place for apps to inject tenant/account scope without Scrypath pretending to own authorization | Med-High | Valuable because B2B adopters need this today, but the library must stop short of issuing credentials or enforcing auth policy. |
+| Recovery-aware composition guidance | Shows when a change is just a preset/default tweak versus when declared metadata or index settings changed enough to need backfill/reindex | Med | This is unusual and fits Scrypath’s product voice well. |
 
 ## Anti-features
 
-| Anti-feature | Why avoid | What to do instead |
+Features to explicitly not build in `v1.22`.
+
+| Anti-Feature | Why Avoid | What to Do Instead |
 |---|---|---|
-| New `scrypath_sigra` hex package | Premature packaging surface for one integration namespace | Keep in `scrypath_ops` under `ScrypathOps.Integrations.Sigra.*` |
-| Any `Sigra.*` reference in `lib/scrypath/` | Violates auth-agnostic core boundary | Keep all Sigra-aware code in guarded `scrypath_ops` modules |
-| Any Scrypath reference inside Sigra | Makes Sigra aware of Scrypath | Sigra remains unchanged; host app composes both |
-| Automatic router / plug installation | Hides the security boundary and surprises host apps | Guide explicit host-owned router wiring |
-| In-place sudo modal | Couples to host UI/component choices | `push_navigate` to host-owned sudo confirm route |
-| Plug re-export wrappers | Adds surface area without value | Document direct use of Sigra plugs |
-| Core org scoping / authz in search or sync APIs | Separate product/API design problem, likely v2 | Keep v1.18 to ops attribution and mutation gating |
-| Mandatory Sigra dependency for all ops users | Breaks optional integration promise | Optional dep + compile guards + absent-Sigra verification |
+| Public `%Scrypath.Query{}` or new behavioral query DSL as the composition surface | Violates the current boundary and locks internal runtime structure into semver | Keep composition over the existing plain-data contract |
+| Schema-generated runtime search functions from declarations | Crosses from reusable composition into framework magic and weakens context ownership | Keep contexts as the execution boundary |
+| Phoenix-specific preset/controller/LiveView macros | Would collapse framework boundaries and duplicate the existing optional-helper stance | Keep Phoenix support at params/forms/URL metadata and worked examples |
+| Generated UI components, form builders, or facet widgets | Too much scope for this milestone; the real leverage is metadata, not UI scaffolding | Expose metadata and provide docs/examples only |
+| Automatic related-data propagation from preset declarations | Composition cannot truthfully infer all association fan-out or rebuild rules | Keep related-data propagation explicit in app code and recovery docs |
+| Tenant isolation claims based on index prefixes or preset naming | Dangerous over-promise for SaaS adopters; prefixes are partitioning, not authorization | Support explicit tenant scope injection and document backend-native access controls separately |
+| Cross-schema “merged relevance” facade for `search_many/2` presets | Existing runtime already warns that ranking stays per schema/index | Preserve per-entry results and merged-order honesty only |
+| Hidden persistence of saved searches/playbooks in core `scrypath` | Reopens old OPSUI/product-surface sprawl | Leave persistence to host apps or future optional surfaces |
+| Adapter-wide abstraction for non-Meilisearch UI capability parity | v1.22 is not the moment to promise backend-agnostic metadata semantics | Reflect what the current backend and declarations can honestly support |
 
 ## Feature dependencies
 
 ```text
-SIGRA-01 Optional dep + auth mode allowlist
-  ├─> SIGRA-02 Compile guards + namespace fence
-  ├─> SIGRA-03 OperatorContext
-  │     └─> SIGRA-04 OnMount assigns :operator_context
-  │           └─> SIGRA-05 Gating funnel
-  │                 ├─> SIGRA-06 Built-in sensitive-action wiring
-  │                 └─> SIGRA-07 Audit taxonomy / telemetry attribution
-  └─> SIGRA-08 Boundary verification
+Composition contract
+  -> Named presets
+  -> Additive scopes
+  -> Deterministic merge rules
+  -> Applied-runtime introspection
 
-SIGRA-06 + SIGRA-07
-  └─> SIGRA-09 Sigra integration guide
-        └─> SIGRA-10 phoenix_sigra_ops worked example + CI smoke
+Metadata reflection
+  -> Filters/sorts/facets/paging capability export
+  -> Phoenix/JSON-friendly shapes
+  -> Honest docs/examples
+
+search_many/2 alignment
+  -> Per-entry preset composition
+  -> Per-schema metadata exposure
+  -> Failure-boundary preservation
+
+Tenant-safe and recovery-honest adoption
+  -> Explicit tenant-scope injection seam
+  -> Related-data boundary docs
+  -> Rebuild/reindex guidance when declarations/settings drift
 ```
-
-## SIGRA-* requirement candidates
-
-| ID | Candidate requirement | Acceptance sketch |
-|---|---|---|
-| `SIGRA-01` | `scrypath_ops` recognizes optional Sigra mode | Add optional Sigra dep; `OPSUI_AUTH_MODE=sigra` passes boot validation; non-Sigra modes unchanged |
-| `SIGRA-02` | Sigra references compile only when Sigra is present | Every `Sigra.*` reference is guarded at module boundary; `scrypath_ops` compiles with Sigra absent |
-| `SIGRA-03` | Provide IDs-only `OperatorContext` | Builder extracts only allowed fields; tests prove no PII keys are present |
-| `SIGRA-04` | Provide host-wired `OnMount` hook | Assigns `:operator_context` when Sigra scope/session exists; assigns `nil` / no-ops otherwise |
-| `SIGRA-05` | Provide `Gating.gate_sensitive_action/3` | Fresh sudo executes and audits; impersonation blocks; stale sudo navigates to configured confirm path with `return_to` |
-| `SIGRA-06` | Wire OPSUI sensitive mutations through the gate | Playbook delete, failed retry, and swap-live actions use the funnel under Sigra mode |
-| `SIGRA-07` | Define stable audit event taxonomy | `scrypath.ops.*` action map is documented and tested; metadata excludes session PII |
-| `SIGRA-08` | Enforce boundary discipline in CI | CI fails on `Sigra.` in `lib/scrypath/` or outside the integration namespace |
-| `SIGRA-09` | Publish canonical Sigra integration guide | Documents router plugs, stacked `on_mount`, sudo route, telemetry snippet, impersonation/read caveats, optional nature |
-| `SIGRA-10` | Ship maintained worked example | `examples/phoenix_sigra_ops/` demonstrates login → sudo → gated action → audit path and runs in CI |
 
 ## MVP recommendation
 
-Prioritize this milestone as three product slices:
+Prioritize:
 
-1. **Foundation:** optional dependency, auth-mode allowlist, compile guards, namespace fence, `OperatorContext`, `OnMount`, and `Gating`.
-2. **User-facing enforcement:** wire current OPSUI sensitive actions through `gate_sensitive_action/3` with clear sudo/impersonation behavior.
-3. **Adopter proof:** guide + tiny Sigra example + CI smoke so the integration remains usable.
+1. Plain-data presets plus additive scopes for single-schema flows.
+2. Metadata reflection for declared filters, sorts, facets, and paging, including applied defaults.
+3. `search_many/2` composition parity with per-entry presets and honest per-schema metadata.
 
-Defer public package extraction, core auth/org scoping, in-place sudo UX, automatic router installation, and core `:operator` API options.
+Defer:
 
-## Notable risks
+- UI components and Phoenix macros: wrong layer
+- persisted saved searches: separate product
+- automatic related-data fan-out: correctness trap
+- tenant auth features beyond explicit scope injection seam: too broad for `v1.22`
 
-- `sudo_at` / active org propagation depends on host Sigra scope/session wiring; the guide must be explicit.
-- Process-dictionary attribution does not cross async/task boundaries; gate synchronous decision points only.
-- Silent attribution drift is the long-term risk; the audit funnel, action taxonomy, tests, and grep fence are the mitigation.
+## Recommended feature slices
+
+| Slice | What ships | Why first |
+|---|---|---|
+| Slice 1 | Named presets, additive scopes, deterministic merge rules, applied-args introspection | Freezes the reusable core without changing runtime ownership |
+| Slice 2 | Metadata reflection for filters/sorts/facets/paging and docs contract tests | Makes the composition layer useful to Phoenix and JSON consumers |
+| Slice 3 | `search_many/2` composition parity and worked global-search/dashboard examples | Proves the layer scales past one schema without hiding canonical semantics |
+| Slice 4 | Tenant/recovery/related-data guidance refresh | Prevents false confidence in real SaaS apps |
 
 ## Sources
 
-- `~/.claude/plans/so-i-m-considering-rippling-ladybug.md` — approved v1.18 architecture and scope
-- `.planning/PROJECT.md` / `.planning/STATE.md` — active milestone goal and boundary constraints
-- `.planning/research/STACK.md` — optional dependency, version, compile-guard, and CI decisions
-- `.planning/research/ARCHITECTURE.md` — module boundaries, data flow, phase decomposition
-- `.planning/research/PITFALLS.md` — attribution, PII, sudo, async, and example-rot risks
-
----
-*Feature research for **v1.18 Sigra integration***
+- Official Ecto docs: [Dynamic queries](https://hexdocs.pm/ecto/dynamic-queries.html) and [Ecto.Query](https://hexdocs.pm/ecto/Ecto.Query.html)
+- Official Phoenix docs: [Phoenix LiveView `handle_params/3`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html)
+- Official Laravel docs: [Laravel Scout 12.x](https://laravel.com/docs/12.x/scout)
+- Searchkick README: [ankane/searchkick](https://github.com/ankane/searchkick)
+- Meilisearch Rails README: [meilisearch/meilisearch-rails](https://github.com/meilisearch/meilisearch-rails)
+- Meilisearch docs/specs: [Settings](https://meilisearch.dev/docs/reference/api/settings), [Facet search](https://meilisearch.dev/docs/reference/api/facet_search), [Pagination](https://meilisearch.dev/docs/guides/front_end/pagination)
+- Hibernate Search docs: [Stable reference guide](https://docs.hibernate.org/stable/search/reference/en-US/html_single/)
+- Local context: `.planning/PROJECT.md`, `.planning/MILESTONE-ARC.md`, `.planning/milestone-candidates.md`, `.planning/seeds/SEED-002-composition-real-app-depth.md`, `guides/request-edge-search.md`, `guides/related-data-and-reindexing.md`, `guides/multi-index-search.md`, `guides/jtbd-and-user-flows.md`

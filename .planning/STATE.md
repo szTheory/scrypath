@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.21
-milestone_name: Query Toolkit And Phoenix Edge Helpers
-status: milestone_complete
-last_updated: 2026-05-23T14:10:00Z
+milestone: v1.22
+milestone_name: Composition And Real-App Depth
+status: defining_requirements
+last_updated: 2026-05-23T14:40:00Z
 last_activity: 2026-05-23
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
-  percent: 100
-stopped_at: Milestone complete (Phase 82 was final phase)
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
+stopped_at: Milestone open; requirements and roadmap in progress
 ---
 
 # Project State
@@ -22,14 +22,14 @@ See: `.planning/PROJECT.md` (updated 2026-05-23)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Milestone complete
+**Current focus:** v1.22 — Composition And Real-App Depth
 
 ## Current Position
 
-Phase: None
-Plan: None
+Phase: Not started (defining requirements)
+Plan: —
 
-**Status:** Milestone complete
+**Status:** Defining requirements
 
 **Last activity:** 2026-05-23
 
@@ -70,6 +70,7 @@ Plan: None
 - **v1.21 open:** Reopen internal feature work only for a narrow-balanced slice: a framework-light public query-param toolkit plus thin optional Phoenix URL/form/LiveView helpers over the existing `Scrypath.search/3` path.
 - **v1.21 guardrails:** contexts remain the application boundary, Phoenix stays optional, no public `%Scrypath.Query{}` contract ships, and this milestone does not widen into UI widgets, controller macros, or schema-generated runtime verbs.
 - **v1.21 close:** The public request-edge toolkit, structured edge-error contract, optional pure Phoenix wrappers, canonical request-edge guide, and `mix verify.phase82` drift gate are now shipped and archived without widening the canonical runtime boundary.
+- **v1.22 open:** Composition And Real-App Depth was activated as the next milestone because `v1.21` settled the request-edge contract and the remaining leverage-positive step inside the arc is reducing repeated real-app composition glue without turning Scrypath into a framework facade.
 
 ### Blockers / Concerns
 
@@ -78,6 +79,7 @@ Plan: None
 - **Scope discipline for the search-module arc:** Search modules must remain a thin context-owned layer over the existing runtime, not a slide into schema-generated APIs, Phoenix coupling, or hidden operational behavior.
 - **Search-module archive drift:** `v1.20` planning claims a `Scrypath.SearchModule` layer, but the current checkout does not contain that module or its guide. Treat that as a reconciliation task, not as settled product truth.
 - **Public param grammar risk:** `v1.21` froze browser-shaped param semantics on purpose; future composition work should extend that contract only with real adopter pressure.
+- **v1.22 scope guard:** Composition work must stay bounded to reusable presets/scopes, `search_many/2`-aligned composition, and UI metadata exposure; no schema-generated runtime verbs, UI widgets, or Phoenix-coupled runtime core should slip in under this milestone.
 - Existing `71`–`73` phase directories remain in `.planning/phases/` in the working tree; phase numbering continues at `74`, so no collision exists for this milestone open.
 
 ### Deferred Items
@@ -93,13 +95,13 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-1. Review the archived `v1.21` artifacts if you want to sanity-check the shipped milestone record.
-2. Run `$gsd-new-milestone` when you want to open `v1.22` or another deliberate next milestone with fresh requirements.
-3. Keep the post-`v1.19` outside-adopter guardrail explicit when deciding whether `v1.22` is actually leverage-positive now.
+1. Review the `v1.22` requirements and roadmap artifacts after they are written.
+2. Run `$gsd-discuss-phase 83` once the first `v1.22` phase is approved.
+3. Keep the post-`v1.19` outside-adopter guardrail explicit while shaping composition scope.
 
 ---
 
-*Last updated: 2026-05-23 — shipped + archived **v1.21 Query Toolkit And Phoenix Edge Helpers***
+*Last updated: 2026-05-23 — opened **v1.22 Composition And Real-App Depth***
 
 **Prior milestone:** **v1.19** — Production adoption proof and hardening — **2026-04-28** (shipped + archived in-repo).
 
@@ -111,4 +113,4 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 **Completed:** **v1.21** shipped + archived in-repo (**2026-05-23**) — phases **80–82** — **`milestones/v1.21-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next:** No active milestone. Open the next one deliberately with fresh requirements.
+**Next:** Define requirements and roadmap for **v1.22 — Composition And Real-App Depth**.

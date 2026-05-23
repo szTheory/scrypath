@@ -1,348 +1,415 @@
-# Architecture Research — v1.18 Sigra Integration
+# Architecture Research — v1.22 Composition And Real-App Depth
 
-**Domain:** Optional auth integration for in-repo Phoenix LiveView operator app
-**Researched:** 2026-04-25
-**Confidence:** HIGH (all files read from source; Sigra struct fields verified from live code)
+**Domain:** Composition, presets, scopes, UI metadata, and real-app integration for Scrypath search flows  
+**Researched:** 2026-05-23  
+**Confidence:** HIGH
 
----
+## Executive Verdict
 
-## 1. Module Placement — Namespace Shape
+Scrypath should add **one new feature-level composition seam** above the existing request-edge toolkit and below application contexts:
 
-**Verdict: three independent modules, no umbrella parent in v1.**
+- `Scrypath.search/3` and `Scrypath.search_many/2` stay the only runtime entrypoints.
+- `%Scrypath.Query{}` stays internal.
+- **Schema declarations stay index-contract metadata only.**
+- **Composition, presets, scopes, and UI metadata belong on context-owned search definition modules** or equivalent context-local modules, not on Ecto schemas and not in Phoenix helpers.
 
-The plan proposes `ScrypathOps.Integrations.Sigra.{OperatorContext, OnMount, Gating}`. This is the right shape. Reasons against an umbrella `ScrypathOps.Integrations.Sigra` parent that delegates or re-exports:
+The architecture should be:
 
-- The three modules have zero peer-dependencies on each other at compile time (`OperatorContext` is a struct, `OnMount` builds it, `Gating` reads it from socket assigns — no circular references).
-- A parent module would only add surface area with no ergonomic gain — all three are consumed directly by distinct call sites (router `on_mount:`, `handle_event` bodies, and test files).
-- The CI namespace fence (grep) is the appropriate boundary enforcement tool, not a Boundary rule or parent module.
-
-**File placement:**
-
-```
-scrypath_ops/lib/scrypath_ops/integrations/sigra/
-  operator_context.ex   # NEW
-  on_mount.ex           # NEW
-  gating.ex             # NEW
-
-scrypath_ops/test/scrypath_ops/integrations/sigra/
-  operator_context_test.exs   # NEW
-  on_mount_test.exs           # NEW
-  gating_test.exs             # NEW
+```text
+Browser params / internal inputs
+  -> Scrypath.QueryParams / app data
+  -> Scrypath.Composition (preset + scope + metadata assembly)
+  -> context function
+  -> Scrypath.search/3 or Scrypath.search_many/2
+  -> SearchResult / MultiSearchResult
 ```
 
-Tests co-located under `scrypath_ops/test/` mirror the lib structure, consistent with the existing pattern at `scrypath_ops/test/scrypath_ops/playbook/` etc.
+This gives apps reusable composition without creating a second query/runtime abstraction.
 
-**Compile guard shape (every Sigra-referencing file):**
+## Recommended Architecture
+
+### Core rule: composition is args assembly, not query execution
+
+Composition should only do four things:
+
+1. collect feature declarations
+2. merge preset and scope fragments
+3. produce existing plain-data search args
+4. expose UI metadata derived from those declarations
+
+It should **not**:
+
+- execute search
+- own Repo access
+- replace contexts
+- expose a public query struct
+- invent a second API separate from `search/3` and `search_many/2`
+
+### Recommended public seam
+
+Add a new core surface centered on a **feature search definition**, not on schemas:
+
+| Module | Responsibility | Public? | Notes |
+|--------|----------------|---------|-------|
+| `Scrypath.Composition` | Build composed search args and metadata from declared presets/scopes | Yes | Main entrypoint |
+| `Scrypath.Composition.Definition` | Behaviour and validation for feature-level declarations | Yes | Prefer behaviour + plain functions over heavy macro magic |
+| `Scrypath.Composition.Metadata` | Read normalized UI metadata from a definition | Yes | For Phoenix or JSON clients |
+| `Scrypath.Composition.Builder` | Internal merge/order logic | No | Keeps merge semantics isolated |
+
+I would avoid a broad `use Scrypath.SearchModule`-style runtime wrapper here. The current checkout already shows the stable surfaces as `Scrypath.QueryParams`, `Scrypath.search/3`, `Scrypath.search_many/2`, and `Scrypath.Phoenix`. Composition should sit on those directly.
+
+## Boundary Split: Schema vs Feature Definition
+
+### Keep on `use Scrypath` schema metadata
+
+These remain schema-owned because they describe the backend index contract:
+
+- `fields`
+- `filterable`
+- `sortable`
+- `faceting`
+- `settings`
+- `document_id`
+- `document_source`
+
+These are already reflected via `__scrypath__/1` and `Scrypath.schema_*` helpers. That boundary is good and should stay narrow.
+
+### Move to feature-level search definitions
+
+These should **not** live on schemas because they are app- and context-specific:
+
+- named presets like `:published`, `:admin_queue`, `:catalog_default`
+- actor- or tenant-aware scopes
+- default paging/sort choices
+- which declared facets are shown in one UI
+- labels/help text/options for filters and sorts
+- multi-search entry composition
+
+Reason: one schema can legitimately back several different search experiences. Putting those choices on the schema would blur index contract with product UX.
+
+## Definition Shape
+
+### Recommended declaration model
+
+Use a **behaviour with plain functions**. That keeps the API explicit and easy to evolve.
+
+Recommended callback surface:
 
 ```elixir
-if Code.ensure_loaded?(Sigra.Session) do
-  defmodule ScrypathOps.Integrations.Sigra.OperatorContext do
-    # ...
+@callback schema() :: module() | nil
+@callback presets() :: %{optional(atom()) => preset()}
+@callback scopes() :: %{optional(atom()) => scope_callback()}
+@callback metadata() :: metadata()
+@callback search_many_entries() :: [entry_definition()] | nil
+```
+
+Where the important idea is not the exact types, but the output:
+
+- presets and scopes return **plain data fragments**
+- metadata returns **plain UI metadata**
+- the final build step returns either:
+  - `{text, keyword_opts}` for `Scrypath.search/3`
+  - `{entries, shared_opts}` for `Scrypath.search_many/2`
+
+### Fragment model
+
+Presets and scopes should compile down to a small plain-data fragment with two lanes:
+
+- `defaults`
+- `fixed`
+
+Meaning:
+
+- `defaults` are user-overridable
+- `fixed` always apply
+
+Example shape:
+
+```elixir
+%{
+  defaults: [
+    sort: [inserted_at: :desc],
+    page: [size: 20],
+    facets: [:status, :author]
+  ],
+  fixed: [
+    filter: [status: "published"]
+  ]
+}
+```
+
+This is the smallest abstraction that solves the real problem. It avoids forcing every app to invent merge rules, while still staying grounded in the existing public option grammar.
+
+## Merge Semantics
+
+### Single-search composition
+
+For `search/3`, the final order should be:
+
+1. base defaults from the definition
+2. selected preset defaults
+3. selected scope defaults
+4. request/app-provided search args
+5. preset fixed constraints
+6. scope fixed constraints
+
+That ordering keeps user input powerful where it should be, but lets the app enforce non-negotiable boundaries like tenancy, publication status, or product area.
+
+### `search_many/2` alignment
+
+Do not create a separate composition model for multi-search.
+
+Use the same fragment model and map it to the existing `search_many/2` shape:
+
+- shared fragments become `shared_opts`
+- per-entry fragments become each entry’s third tuple element
+- entry-level precedence should match current `Scrypath.MultiSearch.Entries`
+- `:per_query` should keep the existing shallow-merge semantics
+
+Recommended rule:
+
+- composition should build **the same tuple forms `search_many/2` already accepts**
+- it may provide helpers to avoid repeated tuple assembly
+- it should not introduce a new federated-query object
+
+## Candidate Definition Placement In Real Apps
+
+### Preferred placement
+
+Put reusable definitions next to the owning context:
+
+```text
+lib/my_app/content/
+  post_search.ex
+  catalog_search.ex
+  global_search.ex
+```
+
+Then contexts call them:
+
+```elixir
+def search_posts(actor, params) do
+  with {:ok, query_params} <- Scrypath.QueryParams.normalize(params),
+       {:ok, plan} <- Scrypath.Composition.build(MyApp.Content.PostSearch, actor: actor, params: query_params) do
+    {text, opts} = Scrypath.Composition.to_search_args(plan)
+    Scrypath.search(Post, text, Keyword.put(opts, :repo, Repo))
   end
 end
 ```
 
-`optional: true` in `mix.exs` controls dep-tree resolution. The compile guard controls whether the module body is evaluated. Both are required — they solve different problems.
+This preserves the Phoenix/Ecto context boundary Phoenix documents recommend: contexts centralize data access and feature orchestration rather than scattering it across controllers or LiveViews.
 
----
+### Acceptable secondary placement
 
-## 2. OnMount Composition — Stacked Hooks Pattern
+If an app already has a search-module wrapper layer, let that module host the declarations. But Scrypath core should not require one for v1.22.
 
-**Verdict: sibling module wired in router alongside the existing default hook.**
+## Metadata Architecture
 
-The existing hook is at `scrypath_ops/lib/scrypath_ops_web/live/on_mount.ex:10`:
+### What metadata should cover
 
-```elixir
-def on_mount(:default, _params, _session, socket) do
-  {:cont, assign(socket, :shell, :ops)}
-end
+The new metadata surface should describe the **declared, feature-level UI contract**:
+
+| Metadata area | Belongs where | Why |
+|---------------|---------------|-----|
+| Filter field labels, operators, option lists | Feature definition | UI and workflow specific |
+| Sort choices and default selection | Feature definition | Different pages need different defaults |
+| Facet visibility/order/help text | Feature definition | One schema can expose different facet subsets |
+| Paging defaults and max size for the feature | Feature definition | UI-level policy |
+| Which preset/scope is active | Composition result | Needed for UI state |
+
+### What metadata should not cover
+
+Do not turn metadata into a form-builder or widget layer.
+
+Out of scope for core:
+
+- HTML generation
+- HEEx components
+- LiveView event wiring
+- automatic tenant option loading from the database
+
+Core should only expose normalized metadata that apps can render honestly.
+
+## New vs Modified Components
+
+### Core library code
+
+| Action | Component | Why |
+|--------|-----------|-----|
+| New | `Scrypath.Composition` | Public composition seam |
+| New | `Scrypath.Composition.Definition` | Declarative feature contract |
+| New | `Scrypath.Composition.Metadata` | Stable UI metadata reader |
+| New | internal merge/validation modules | Keep logic isolated from runtime search |
+| Modify | `Scrypath.QueryParams` docs/examples | Show composition as the next step after normalization |
+| Modify | `Scrypath` reflection docs | Clarify schema metadata vs feature metadata split |
+
+### Optional Phoenix helpers
+
+| Action | Component | Why |
+|--------|-----------|-----|
+| Small additive change | `Scrypath.Phoenix` helper for metadata-to-form-state projection | Useful, but keep pure and data-only |
+| No change to runtime boundary | `Scrypath.Phoenix` must not call contexts or searches | Preserve current architecture |
+
+### Docs and examples only
+
+| Action | Component | Why |
+|--------|-----------|-----|
+| New guide | “real-app composition patterns” | Main adoption proof for v1.22 |
+| Update example app | one single-search and one multi-search example | Prove reduced app glue |
+| New snippets | context-owned `build -> search` flow | This is the canonical story |
+
+### Defer
+
+| Item | Why defer |
+|------|-----------|
+| Public `%Scrypath.ComposedQuery{}` or similar struct | Would become a second query abstraction |
+| Schema-generated `search/2` or `search_many/1` verbs | Weakens context boundary |
+| Phoenix components/widgets | Too framework-heavy for core milestone |
+| Cross-context registry of all search definitions | Premature; apps can own registry locally |
+
+## Data Flow
+
+### Single-search flow
+
+```text
+params
+  -> Scrypath.QueryParams.normalize/1
+  -> context chooses preset(s)/scope(s)
+  -> Scrypath.Composition.build/2
+  -> {text, opts}
+  -> Scrypath.search/3
 ```
 
-The router `on_mount:` list at `scrypath_ops/lib/scrypath_ops_web/router.ex:26`:
+### Multi-search flow
 
-```elixir
-live_session :ops, on_mount: [{ScrypathOpsWeb.Live.OnMount, :default}] do
+```text
+params + context intent
+  -> Scrypath.QueryParams.normalize/1
+  -> context chooses shared preset/scope + per-entry preset/scope
+  -> Scrypath.Composition.build_many/2
+  -> {entries, shared_opts}
+  -> Scrypath.search_many/2
 ```
 
-Phoenix LiveView executes `on_mount` hooks in declaration order, each seeing the socket returned by the previous. The host adds the Sigra hook as a second entry in their router:
+The important part is that the context still decides:
 
-```elixir
-# Host's router.ex (NOT in scrypath_ops/router.ex — host-owned wiring)
-live_session :ops,
-  on_mount: [
-    {ScrypathOpsWeb.Live.OnMount, :default},
-    {ScrypathOps.Integrations.Sigra.OnMount, :default}
-  ] do
-```
+- which definition to use
+- which actor/tenant scope applies
+- whether to call single-search or multi-search
+- which Repo/runtime opts to add
 
-**Do not** modify the existing `ScrypathOpsWeb.Live.OnMount` to call Sigra code — that would break the compile-guard isolation. The Sigra `OnMount` module is a sibling, not a replacement or wrapper. The `:default` argument on both uses the same atom but each module pattern-matches its own `on_mount/4` independently.
+## Patterns To Follow
 
-**Session field propagation**: `Sigra.Plug.FetchSession` (verified at `/Users/jon/projects/sigra/lib/sigra/plug/fetch_session.ex:86`) assigns `conn.assigns[:current_scope]` and stores `%Sigra.Session{}` in `conn.private[:sigra_session]`. Phoenix 1.7+ propagates `conn.assigns` automatically into `socket.assigns` at connect time, so `socket.assigns[:current_scope]` is available in `on_mount/4`. However, `conn.private` is NOT propagated. The `%Sigra.Session{}` fields needed for `OperatorContext` (`sudo_at`, `active_organization_id`, `impersonator_user_id`) live on the session struct.
+### Pattern 1: Context-owned search definitions
 
-Pattern followed by Sigra's own `Sigra.LiveView.AdminScope` (at `/Users/jon/projects/sigra/lib/sigra/live_view/admin_scope.ex:16`): reads `socket.assigns[:current_scope]`. The scope struct carries `active_organization` and `impersonating_from`. `sudo_at` requires the host to serialise it into the Plug session via a custom plug before LiveView mounts. The guide must document this requirement explicitly.
+**What:** reusable modules near the context that declare presets, scopes, and metadata.  
+**When:** whenever more than one controller/LiveView/API path shares the same search behavior.
 
-**Modified files (existing):**
-- `scrypath_ops/lib/scrypath_ops/security.ex:4` — add `"sigra"` to `@allowed_opsui_auth_modes`
+### Pattern 2: Plain-data output only
 
----
+**What:** build functions return existing public search arg shapes.  
+**When:** always. This is the key guardrail against a second abstraction layer.
 
-## 3. Gating Helper — Action Atom Mapping
+### Pattern 3: Metadata split by truth source
 
-**Verdict: private `@action_config` module attribute compiled at build time. Not a registry process.**
+**What:** index contract on schemas, UI/search workflow metadata on feature definitions.  
+**When:** always. It keeps backend truth separate from product choices.
 
-The `gate_sensitive_action(socket, :swap_live, fn -> ... end)` signature maps action atoms to audit prefixes via a private map in `gating.ex`:
+### Pattern 4: Shared semantics across `search/3` and `search_many/2`
 
-| Action atom | Audit event string | Tier |
-|---|---|---|
-| `:swap_live` | `"scrypath.ops.swap_live"` | 1 |
-| `:delete_documents` | `"scrypath.ops.delete_documents"` | 1 |
-| `:reindex` | `"scrypath.ops.reindex"` | 1 |
-| `:failed_work_retry` | `"scrypath.ops.failed_work_retry"` | 2 |
-| `:playbook_delete` | `"scrypath.ops.playbook_delete"` | 2 |
-| `:hot_apply` | `"scrypath.ops.hot_apply"` | 2 |
+**What:** one composition model, two output adapters.  
+**When:** always. Multi-search should feel like “same rules, more entries,” not a second product.
 
-No GenServer, no ETS, no runtime registration. Adding a new action requires editing `gating.ex` — the CI namespace fence will catch callers that bypass the funnel by calling `Sigra.Audit` directly from LiveView handlers.
+## Anti-Patterns To Avoid
 
-**Funnel execution order:**
+### Anti-pattern 1: Put presets and labels on Ecto schemas
 
-```
-gate_sensitive_action(socket, action, fun)
-  1. ctx = socket.assigns[:operator_context]
-     if nil -> fun.() directly (Sigra not wired; no-op mode)
-  2. if ctx.impersonator_user_id != nil
-     -> {:noreply, put_flash(socket, :error, "Cannot perform this action while impersonating.")}
-  3. sudo_age = DateTime.diff(utc_now, ctx.sudo_at, :second)
-     if sudo_age > sudo_window (default 300, matching Sigra's RequireSudo default)
-     -> {:noreply, push_navigate(socket, to: sudo_confirm_path, replace: false)}
-  4. Process.put(:scrypath_ops_operator_context, ctx)
-  5. result = fun.()
-  6. Process.delete(:scrypath_ops_operator_context)
-  7. Sigra.Audit.log_safe("scrypath.ops.#{action}", nil, audit_opts)
-     # log_safe/3 verified at /Users/jon/projects/sigra/lib/sigra/audit.ex:143
-     # no-ops when audit_schema absent — safe for hosts without audit configured
-  8. result
-```
+**Why bad:** one schema often serves several search experiences. This creates config collisions and bloats the schema macro surface.
 
-The sudo confirm path is configured in `:scrypath_ops` application env (e.g., `config :scrypath_ops, :sigra_sudo_confirm_path, "/sudo/confirm"`) or passed explicitly as an option. The host owns the sudo re-auth UI — the integration owns the redirect contract.
+### Anti-pattern 2: Public query struct for composed searches
 
----
+**Why bad:** it would compete with both `QueryParams` and internal `%Scrypath.Query{}` and become semver baggage fast.
 
-## 4. Telemetry Attribution — Async Risk Assessment
+### Anti-pattern 3: Phoenix-owned composition
 
-**Finding: process-dict attribution is SAFE for all current sensitive actions. No async propagation risk today.**
+**Why bad:** it would pull search behavior into controllers/LiveViews and break the current “contexts remain canonical” guidance.
 
-Investigation of every handle_event and async pattern in the four gated LiveViews:
+### Anti-pattern 4: Separate multi-search DSL
 
-**`posture_live.ex`**: The `"refresh"` event at line 35 calls `load_posture/1` which uses `Task.async_stream/3` at line 72 — but this is READ-ONLY (`Scrypath.sync_status/2`). The swap-live action does not yet exist. When added as a new `handle_event`, it will be a synchronous call. Process-dict attribution is safe.
+**Why bad:** `search_many/2` already has stable tuple semantics. Composition should target them, not replace them.
 
-**`sync_drift_live.ex`**: `handle_event("refresh_reconcile")` at line 63 and `handle_event("load_drift")` at line 85 both call synchronous Scrypath functions. No async spawning. Safe.
+## Suggested Build Order
 
-**`failed_sync_live.ex`**: `handle_event("refresh")` at line 37 calls `refresh_inspection/1` synchronously. No retry action exists yet (it is a new handler to add). When added, it must be synchronous. Safe.
+### Step 1: Core composition contract
 
-**`playbook_live.ex`**: `handle_event("confirm_delete")` at line 269 calls `Store.delete_workspace_file/2` synchronously — the only Tier 2 gated action. The `"run"` and `"run_now"` events at lines 189 and 151 use `start_async/3` at line 751, but playbook runs are NOT in the Tier 1/2 sensitive action list — they are not gated.
+- add `Scrypath.Composition`
+- add definition behaviour and validation
+- implement single-search fragment merge
+- return `{text, opts}` only
 
-**Summary table:**
+### Step 2: Metadata exposure
 
-| LiveView | Event | Sync? | Gate target? | Attribution safe? |
-|---|---|---|---|---|
-| posture_live | "refresh" (Task.async_stream) | Async | No — read-only | N/A |
-| posture_live | NEW "swap_live" | Will be sync | Yes | Safe |
-| sync_drift_live | "refresh_reconcile" | Sync | No — read-only | N/A |
-| sync_drift_live | "load_drift" | Sync | No — read-only | N/A |
-| failed_sync_live | NEW "retry" | Will be sync | Yes | Safe |
-| playbook_live | "confirm_delete" (line 269) | Sync | Yes | Safe |
-| playbook_live | "run" / "run_now" (start_async) | Async | No — not Tier 1/2 | N/A |
+- add normalized metadata reader
+- make metadata derive from feature definitions plus schema reflection
+- keep output pure data
 
-**No async attribution risk for v1.18.** The guide must warn that process-dict attribution does not propagate across `Task`, `start_async`, or Oban jobs — relevant for hosts adding custom handlers.
+### Step 3: `search_many/2` composition adapter
 
----
+- add shared/per-entry builders
+- reuse current precedence rules from `Scrypath.MultiSearch.Entries`
+- verify `:per_query` behavior matches current runtime
 
-## 5. Build Order — Phase Decomposition
+### Step 4: Thin Phoenix additions
 
-**Verdict: 3 phases confirmed. The approved plan's decomposition is correct.**
+- only add projection helpers if needed
+- keep them data-only and optional
 
-Phases continue numbering from Phase 70 (last v1.17 phase), so v1.18 starts at Phase 71.
+### Step 5: Real-app proof
 
-### Phase 71 — Integration modules + dep + allowlist + CI fence
+- update guides
+- add one single-search and one federated example
+- show context-owned definitions, not web-layer execution
 
-**New files:**
-- `scrypath_ops/lib/scrypath_ops/integrations/sigra/operator_context.ex`
-- `scrypath_ops/lib/scrypath_ops/integrations/sigra/on_mount.ex`
-- `scrypath_ops/lib/scrypath_ops/integrations/sigra/gating.ex`
-- `scrypath_ops/test/scrypath_ops/integrations/sigra/operator_context_test.exs`
-- `scrypath_ops/test/scrypath_ops/integrations/sigra/on_mount_test.exs`
-- `scrypath_ops/test/scrypath_ops/integrations/sigra/gating_test.exs`
+## Most Important Architectural Call
 
-**Modified files:**
-- `scrypath_ops/mix.exs` — add `{:sigra, "~> 0.2", optional: true}`
-- `scrypath_ops/lib/scrypath_ops/security.ex:4` — add `"sigra"` to `@allowed_opsui_auth_modes`
-- `.github/workflows/ci.yml` — add namespace-fence grep step in `quality` job
+The key decision is this:
 
-CI fence ships in Phase 71 because it only requires the namespace to exist (not the LiveView wiring). The fence protects the core boundary from day one.
+**Scrypath v1.22 should standardize reusable search behavior as feature-level plain-data composition, not as a new runtime layer.**
 
-### Phase 72 — Sensitive-action wiring in existing LiveViews
+That is the narrowest seam that meaningfully reduces app glue while keeping:
 
-**Modified files:**
-- `scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex` — wrap `"confirm_delete"` at line 269 in `Gating.gate_sensitive_action/3` under `OPSUI_AUTH_MODE=sigra` guard
-- `scrypath_ops/lib/scrypath_ops_web/live/failed_sync_live.ex` — add new `"retry"` handler gated via `Gating`
-- `scrypath_ops/lib/scrypath_ops_web/live/posture_live.ex` — add new `"swap_live"` handler gated via `Gating`
-- `scrypath_ops/lib/scrypath_ops_web/live/sync_drift_live.ex` — add new `"swap_live"` handler gated via `Gating`
-- LiveView test files — verify gate behaviour when `OPSUI_AUTH_MODE=sigra`
-
-Dependency: Phase 71 must be complete (integration modules compile).
-
-### Phase 73 — Worked example + guide + CI smoke
-
-**New files:**
-- `examples/phoenix_sigra_ops/` — complete minimal Phoenix app (see §6)
-- `guides/integrations/sigra.md`
-
-**Modified files:**
-- `.github/workflows/ci.yml` — add `phoenix-sigra-ops-smoke` job
-
-Dependency: Phase 72 must be complete (LiveView wiring exists for the example to demonstrate).
-
----
-
-## 6. Worked Example Architecture
-
-**Verdict: `mix phx.new --no-ecto --no-mailer` is wrong. Use SQLite + no-mailer.**
-
-Sigra requires a repo (session schema, optionally audit schema). The example uses SQLite3 to avoid a Postgres service dependency in CI.
-
-Generator: `mix phx.new phoenix_sigra_ops --no-mailer` in `examples/`, then substitute `ecto_sqlite3` for `postgrex`.
-
-**mix.exs deps:**
-- `{:scrypath_ops, path: "../.."}` — same relative path pattern as `examples/phoenix_meilisearch/`
-- `{:sigra, "~> 0.2"}` — required (not optional) in the example
-- `{:ecto_sqlite3, "~> 0.22"}` — SQLite for CI; no Postgres service needed
-
-**Stub Scrypath backend**: The example's `config/config.exs` configures a `StubBackend` module implementing the internal Scrypath backend behaviour with canned `{:ok, _}` return tuples. This lets the example demonstrate the full Sigra auth + audit path without a real Meilisearch instance.
-
-**Minimum surface to exercise end-to-end:**
-- One schema module with `use Scrypath.Schema` pointing at the stub backend
-- Host router wiring: `Sigra.Plug.FetchSession` in the `:browser` pipeline, both `on_mount` hooks in the live_session
-- A stub sudo confirmation LiveView at `/ops/sudo-confirm` (owned by example host, not by `scrypath_ops`)
-- One "sensitive action" button exercising the full `gate_sensitive_action/3` → audit path
-- Impersonation test scenario using `Sigra.Testing` helpers
-- `OPSUI_AUTH_MODE=sigra` set in `config/runtime.exs`
-
-**CI job** (`phoenix-sigra-ops-smoke` in `ci.yml`):
-- No Meilisearch service
-- No Postgres service (SQLite)
-- Runs `mix deps.get && mix test` in `examples/phoenix_sigra_ops/`
-- Triggered by same path check as `scrypath-ops` job (changes to `scrypath_ops/` or `examples/`)
-
----
-
-## 7. CI Integration — Namespace Fence
-
-**Verdict: grep step in existing `quality` job; runs on every push/PR; no separate job.**
-
-The `quality` job at `ci.yml:54` runs unconditionally on every push and PR. A grep step there is lowest friction:
-
-```yaml
-- name: Namespace fence - Sigra must not appear outside integration namespace
-  run: |
-    if grep -rn 'Sigra\.' lib/scrypath/ 2>/dev/null | grep -v '^\s*#'; then
-      echo "FAIL: Sigra. found in lib/scrypath/ (core must stay auth-agnostic)"
-      exit 1
-    fi
-    if grep -rn 'Sigra\.' scrypath_ops/lib/ scrypath_ops/test/ 2>/dev/null \
-      | grep -v 'scrypath_ops/lib/scrypath_ops/integrations/sigra/' \
-      | grep -v 'scrypath_ops/test/scrypath_ops/integrations/sigra/' \
-      | grep -v '^\s*#'; then
-      echo "FAIL: Sigra. reference outside integrations/sigra/ namespace"
-      exit 1
-    fi
-    echo "Namespace fence OK"
-```
-
-Fire on **every push** — not path-gated. The fence protects the core boundary invariant; it must run unconditionally regardless of which files changed. Cost is negligible. Ships in Phase 71.
-
----
-
-## Component Boundaries
-
-| Component | File | Responsibility | Communicates With |
-|---|---|---|---|
-| `OperatorContext` | `integrations/sigra/operator_context.ex` | IDs-only struct; single translation point from scope/session | Built by `OnMount`; read by `Gating` |
-| `OnMount` | `integrations/sigra/on_mount.ex` | Reads scope from socket assigns; builds `operator_context` assign | Phoenix LV lifecycle; `OperatorContext` |
-| `Gating` | `integrations/sigra/gating.ex` | Impersonation check → sudo check → action → audit | `OperatorContext` (socket assign); `Sigra.Audit.log_safe/3`; host sudo path |
-| `Security` | `scrypath_ops/security.ex:4` | `OPSUI_AUTH_MODE` allowlist | Boot validation |
-| LiveViews (4) | playbook:269, failed_sync (new), posture (new), sync_drift (new) | Call `Gating.gate_sensitive_action/3` for sensitive handlers | `Gating` |
-| Telemetry handler | Host-owned snippet in guide | Reads `OperatorContext` from process dict; enriches downstream events | `Process.get(:scrypath_ops_operator_context)`; `Scrypath.Telemetry.common_metadata/3:18` |
-| Worked example | `examples/phoenix_sigra_ops/` | CI smoke target; end-to-end demonstration | All integration modules; stub backend |
-
----
-
-## Data Flow — Sensitive Action
-
-```
-Browser event
-  → handle_event/3 in LiveView
-  → Gating.gate_sensitive_action(socket, :action, fn -> ... end)
-      1. Read socket.assigns[:operator_context]  (nil if Sigra not active)
-      2. If nil: execute fn.() directly
-      3. Check impersonator_user_id != nil -> flash error, halt
-      4. Check sudo_at freshness -> push_navigate to sudo confirm path
-      5. Process.put(:scrypath_ops_operator_context, ctx)
-      6. result = fn.()
-      7. Process.delete(:scrypath_ops_operator_context)
-      8. Sigra.Audit.log_safe("scrypath.ops.action", nil, audit_opts)
-      9. result
-  → {:noreply, socket}
-
-[Host telemetry handler - attached at startup]
-  :telemetry.attach on [:scrypath, :sync, :stop] etc.
-    ctx = Process.get(:scrypath_ops_operator_context)
-    emit enriched event with operator_id, org_id when ctx present
-```
-
----
-
-## Anti-Patterns
-
-**Anti-Pattern 1: Calling Sigra modules directly from LiveView handlers**
-What: Referencing `Sigra.Audit` or `Sigra.Session` in `playbook_live.ex` directly.
-Why: Bypasses the single-funnel audit discipline; CI fence will flag it; compile guard doesn't apply.
-Instead: All Sigra calls flow through `ScrypathOps.Integrations.Sigra.{Gating, OnMount, OperatorContext}`.
-
-**Anti-Pattern 2: Wrapping `start_async` in `gate_sensitive_action`**
-What: Putting an async playbook runner inside the gating funnel's `fn`.
-Why: Process-dict `OperatorContext` is invisible in the spawned task. Attribution silently drops.
-Instead: Gate the synchronous decision point (before `start_async`). Log audit at the decision, not in the async work. Document explicitly.
-
-**Anti-Pattern 3: Replacing the existing `ScrypathOpsWeb.Live.OnMount`**
-What: Modifying `scrypath_ops/lib/scrypath_ops_web/live/on_mount.ex` to conditionally call Sigra code.
-Why: Breaks compile-guard isolation — `scrypath_ops` would fail to compile in hosts without Sigra.
-Instead: Add `ScrypathOps.Integrations.Sigra.OnMount` as a second entry in the host's `live_session` `on_mount:` list.
-
-**Anti-Pattern 4: Relying on `optional: true` alone**
-What: Adding `{:sigra, "~> 0.2", optional: true}` without compile guards.
-Why: `optional: true` only affects dep-tree resolution; references to `Sigra.Session` still fail to compile if the dep is absent.
-Instead: Wrap every Sigra-referencing module body in `if Code.ensure_loaded?(Sigra.Session) do ... end`.
-
----
+- contexts as the boundary
+- `Scrypath.search/3` canonical
+- `search_many/2` canonical
+- `%Scrypath.Query{}` internal
+- Phoenix optional
 
 ## Sources
 
-- `scrypath_ops/lib/scrypath_ops_web/live/on_mount.ex:10` — existing hook
-- `scrypath_ops/lib/scrypath_ops_web/router.ex:26` — live_session on_mount declaration
-- `scrypath_ops/lib/scrypath_ops/security.ex:4` — `@allowed_opsui_auth_modes`
-- `scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex:269,751` — confirm_delete and start_async
-- `scrypath_ops/lib/scrypath_ops_web/live/posture_live.ex:35,72` — refresh + Task.async_stream
-- `scrypath_ops/lib/scrypath_ops_web/live/sync_drift_live.ex:63,85` — event handlers
-- `scrypath_ops/lib/scrypath_ops_web/live/failed_sync_live.ex:37` — refresh handler
-- `lib/scrypath/telemetry.ex:18` — common_metadata/3 extra keyword
-- `/Users/jon/projects/sigra/lib/sigra/session.ex` — %Sigra.Session{} fields: sudo_at, active_organization_id, impersonator_user_id
-- `/Users/jon/projects/sigra/lib/sigra/plug/fetch_session.ex:86` — assigns current_scope and sigra_session
-- `/Users/jon/projects/sigra/lib/sigra/plug/require_sudo.ex:44` — @default_sudo_window 300
-- `/Users/jon/projects/sigra/lib/sigra/audit.ex:117,143` — log_safe/3; no-ops when audit_schema absent
-- `/Users/jon/projects/sigra/lib/sigra/live_view/admin_scope.ex:16` — Sigra's own on_mount pattern
-- `~/.claude/plans/so-i-m-considering-rippling-ladybug.md` — approved architectural plan
-- `.planning/PROJECT.md` — v1.18 target features and boundary constraints
-
----
-*Architecture research for: v1.18 Sigra integration in scrypath_ops*
-*Researched: 2026-04-25*
+- Project context and milestone scope:
+  - `.planning/PROJECT.md`
+  - `.planning/MILESTONE-ARC.md`
+  - `.planning/milestone-candidates.md`
+  - `.planning/seeds/SEED-002-composition-real-app-depth.md`
+- Local research prompts:
+  - `prompts/elixir-search-lib-deep-research.md`
+  - `prompts/search-lib-use-cases-deep-research.md`
+  - `prompts/ecto-best-practices-deep-research.md`
+  - `prompts/elixir-opensource-libs-best-practices-deep-research.md`
+- Current Scrypath surfaces:
+  - `lib/scrypath.ex`
+  - `lib/scrypath/search.ex`
+  - `lib/scrypath/query.ex`
+  - `lib/scrypath/query_params.ex`
+  - `lib/scrypath/query_params/caster.ex`
+  - `lib/scrypath/phoenix.ex`
+  - `lib/scrypath/schema.ex`
+  - `lib/scrypath/multi_search/entries.ex`
+  - `guides/phoenix-contexts.md`
+  - `guides/phoenix-liveview.md`
+  - `guides/phoenix-controllers-and-json.md`
+  - `guides/multi-index-search.md`
+- Official docs:
+  - Phoenix contexts: https://hexdocs.pm/phoenix/contexts.html
+  - Ecto query composition: https://hexdocs.pm/ecto/Ecto.Query.html
+  - Elixir library guidelines: https://hexdocs.pm/elixir/library-guidelines.html

@@ -51,13 +51,15 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 | **A1** | **Consumer onboarding + day-to-day QoL** | **Done (v1.12)** — golden path ↔ README contracts, pitfalls, actionable errors |
 | **A2** | **Single contributor entry for optional OPSUI** | **Done (v1.12)** — root **`mix verify.opsui`** + docs/CI locks |
 
-### Tier B — Integration-confidence follow-up queue
+### Tier B — Highest-leverage product gaps if feature work reopens
 
 | # | Theme | Notes |
 |---|--------|--------|
-| **B1** | **Integration confidence & adopter proof** | **Shipped as v1.17 readiness checkpoint:** canonical Phoenix proof, support contract, adopter verify spine, and exactly three bounded papercuts |
-| **B2** | **Library QoL from real confusion** | Only reopen after real outside adopter evidence identifies concrete confusion that survives the v1.19 readiness checkpoint |
-| **B3** | **OPSUI depth only after proof** | Saved-query or deeper operator workflows move back up only if external adopter evidence says they block real usage on the defended surface |
+| **B1** | **Related-data and dependency propagation** | Biggest correctness gap for real SaaS apps once documents include tags, ownership, counts, or joined fields |
+| **B2** | **Tenant-safe search access story** | Biggest credibility gap for B2B Phoenix adopters; prefixes are not the same thing as authorization |
+| **B3** | **Composition and real-app depth over the query toolkit** | Natural next step after `v1.21`; build reusable presets/scopes/metadata patterns instead of another raw param layer |
+| **B4** | **High-cardinality facet value search** | Useful for larger catalogs, but behind the three gaps above |
+| **B5** | **Autocomplete / suggestion flows** | Valuable later, but should not outrun correctness and SaaS-boundary work |
 
 ### Tier C — Defer until a failure mode is proven
 
@@ -89,16 +91,23 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 | 1 | **A1** | **Shipped v1.12** |
 | 2 | **A2** | **Shipped v1.12** |
 | 3 | **v1.13** (**POLISH-***) | Voice + Hex narrative + contributor entry (**`milestones/v1.13-REQUIREMENTS.md`**) |
-| 4 | **B1** | **Shipped in v1.17** as the readiness checkpoint |
-| 5 | **Outside integration feedback** | Default next pull after the v1.19 close; see **`milestones/v1.19-MILESTONE-AUDIT.md`** for the canonical residual wording |
-| 6 | **B3**, then **C*** | OPSUI depth, then heavy CI/E2E **only with proof** |
+| 4 | **Outside integration feedback** | Still the default pull after the v1.19 close; do not reopen feature work casually |
+| 5 | **B1** | Highest-leverage correctness work if real product work reopens |
+| 6 | **B2**, then **B3** | SaaS boundary clarity, then composition depth over the shipped toolkit |
+| 7 | **B4**, then **B5** | Catalog depth and delight features only after the bigger gaps close |
 | Parallel | **D*** | When annoyance cost exceeds fix cost — do not headline a consumer milestone here |
 
 ---
 
 ## How to use this file
 
-1. Before **`/gsd-new-milestone`**, pick **one dominant tier anchor**. The current default is **B1**: **integration confidence and adopter proof**.
+1. Before **`/gsd-new-milestone`**, ask six questions before picking a theme:
+   - Which adopter flow gets better?
+   - What truth can the app honestly say after a write returns?
+   - What is the tenant boundary?
+   - How do related-data changes trigger reindex or fan-out?
+   - What operator recovery path proves this flow is honest?
+   - Is this still above the post-`v1.19` diminishing-returns line?
 2. Optionally split strong themes into **`.planning/seeds/SEED-*.md`** so **`/gsd-new-milestone`** auto-offers matching seeds (see **`gsd-plant-seed`**).
 3. After each shipped milestone, **update this file** — what landed, what moved, new evidence from issues or dogfood.
 
