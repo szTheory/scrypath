@@ -2,7 +2,7 @@
 
 **Audience:** maintainers and repeat adopters updating Scrypath docs or planning future milestones.
 
-**Last reviewed:** 2026-05-22
+**Last reviewed:** 2026-05-23
 
 This document answers four questions:
 
@@ -43,27 +43,7 @@ The goal is to keep future doc updates and milestone planning anchored in the cu
 
 These are the highest-leverage gaps relative to what mature search ecosystems teach people to expect.
 
-### 1. Search-edge ergonomics for Phoenix apps
-
-Scrypath's runtime is strong, but the app-edge story still asks adopters to hand-roll a lot of request-param normalization and repeated context glue.
-
-Why it matters:
-
-- this is where search feels "easy" or "fiddly"
-- it affects every day-two Phoenix integration
-- Searchkick and Laravel Scout both earn mindshare by compressing the app-facing ceremony
-
-Repo status:
-
-- planning artifacts claim a `Scrypath.SearchModule` layer shipped in `v1.20`
-- the checked-out code does not currently expose that layer
-- treat this as an unresolved repo/planning mismatch, not current product truth
-
-Priority:
-
-- **highest**, if internal feature work reopens
-
-### 2. Association and dependency propagation semantics
+### 1. Association and dependency propagation semantics
 
 Scrypath is honest about projection and sync, but it does not yet present a strong public story for "this parent record should be reindexed when related data changes."
 
@@ -82,7 +62,7 @@ Priority:
 
 - **very high**, especially if outside adopters start projecting joins, counts, tags, or ownership metadata
 
-### 3. Tenant-safe search access story
+### 2. Tenant-safe search access story
 
 Scrypath has index-prefix language and operator examples, but not yet a strong end-to-end job story for shared-index multi-tenant access.
 
@@ -100,6 +80,26 @@ Current state:
 Priority:
 
 - **high** for B2B SaaS credibility
+
+### 3. Composition and real-app depth over the query toolkit
+
+The request-edge toolkit is now shipped, which changes the next leverage move. The open question is no longer "can Scrypath normalize browser params once?" It is "what reusable search patterns should apps stop rebuilding on top of that toolkit?"
+
+Why it matters:
+
+- common Phoenix apps repeat the same presets, scopes, filter bundles, and UI metadata decisions
+- the project already tracks this pressure in active requirements (`CMP-01`, `CMP-02`)
+- this is the natural next step after `Scrypath.QueryParams` and `Scrypath.Phoenix`
+
+Current state:
+
+- `v1.21` shipped the public request-edge toolkit and optional Phoenix helpers
+- current docs already teach the narrow edge contract well
+- broader composition patterns remain intentionally uncommitted
+
+Priority:
+
+- **high**, but still below correctness and SaaS-boundary gaps
 
 ### 4. High-cardinality facet value search
 
@@ -132,10 +132,12 @@ Why it matters:
 Priority:
 
 - **medium**
-- likely only worth doing after edge ergonomics and dependency semantics are stronger
+- likely only worth doing after composition depth, tenant-safe access, and dependency semantics are stronger
 
 ## Gaps that are real but lower leverage
 
+- **Request-edge ergonomics**
+  This was the old top gap, but `v1.21` materially closed it with `Scrypath.QueryParams`, structured edge errors, and optional `Scrypath.Phoenix` helpers. Future work here should be composition depth, not another raw parsing layer.
 - **OPSUI deeper productization**
   Useful, but the repo already treats core library and honest operator visibility as the v1 line. More admin-surface work is not the highest leverage for adopters.
 - **Heavier browser E2E for OPSUI**
@@ -155,18 +157,18 @@ These should stay out of the default roadmap pull until real adoption pressure s
 
 The repo's current discipline here is correct. Mature ecosystems show that widening too early creates confusing abstractions and weakens the core indexing/sync story.
 
-## Recommended priority order if product work reopens
+## Updated priority order if product work reopens
 
-1. **Search-edge ergonomics**
-   A thin, explicit app-facing layer for common Phoenix search flows is the cleanest next leverage move.
-2. **Association and dependency propagation**
-   This is the biggest correctness gap once adopters move beyond flat documents.
-3. **Tenant-safe search access story**
-   Important for SaaS credibility and easy to misunderstand if left implicit.
+1. **Association and dependency propagation**
+   Biggest correctness gap for real apps once documents include related data.
+2. **Tenant-safe search access story**
+   Biggest credibility gap for Phoenix SaaS adopters.
+3. **Composition and real-app depth**
+   Build on `Scrypath.QueryParams` and `Scrypath.Phoenix` instead of reopening raw request parsing.
 4. **Facet-value search for large filter lists**
-   Strong category fit for Meilisearch-backed catalog apps.
+   Useful for larger catalogs, but narrower.
 5. **Autocomplete and suggestion flows**
-   Valuable, but should not outrun the operational and integration core.
+   Worth doing later, not before the correctness and SaaS-boundary work lands.
 
 ## Diminishing-returns line
 
@@ -187,7 +189,7 @@ That means the likely diminishing-returns boundary is:
 - **before** deep OPSUI productization
 - **before** search-adjacent delight features become the main story
 
-In practical terms, once Scrypath closes the app-edge ergonomics and related-data propagation gaps, most remaining JTBD work becomes situational rather than category-defining.
+In practical terms, once Scrypath closes the related-data propagation gap, the tenant-safe SaaS search gap, and a modest composition layer over the shipped query toolkit, most remaining JTBD work becomes situational rather than category-defining.
 
 ## External reference points
 

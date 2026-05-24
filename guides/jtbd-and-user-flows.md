@@ -1,10 +1,8 @@
 # JTBD and user flows
 
-This guide is for the Phoenix or Ecto engineer who wants to use Scrypath in a real app and wants the library to make sense before wiring more code.
+This guide is for the Phoenix or Ecto engineer who wants to use Scrypath in a real SaaS app and wants the library to make sense before wiring more code.
 
-The short version: Scrypath is for teams who already trust Postgres and Ecto as the source of truth, but want search to feel native instead of bolted on. It does not promise magic. It gives you an explicit way to project records into search documents, keep them in sync, query them back through one common path, and recover when reality gets messy.
-
-If you want the copy-paste first hour, start with the [Golden path](golden-path.md). This guide is the mental model and flow map.
+If you want the copy-paste first hour, start with the [Golden path](golden-path.md). If you want the shared request-edge contract first, read [Request-edge search](request-edge-search.md). If you want the canonical real-app composition and metadata lane, read [Composing real-app search](composing-real-app-search.md). This guide is the mental model and flow map that ties the rest together.
 
 ## The core job
 
@@ -14,12 +12,13 @@ The real job is:
 
 **Keep a search-shaped read model in sync with Ecto data without lying about consistency, rebuilds, or recovery.**
 
-That one sentence explains most of the library shape:
+That one sentence explains almost everything Scrypath is opinionated about:
 
 - schemas declare what a search document looks like
-- contexts decide when sync happens
-- search returns both hits and hydrated records
-- operators get explicit tools for drift, failed work, backfill, and reindex
+- contexts own orchestration
+- request-edge helpers stay thin and optional
+- search returns both raw hits and hydrated records
+- operator recovery is a first-class user flow, not an appendix
 
 If you want hidden callbacks that whisper "trust me, it's indexed," Scrypath is the wrong tool.
 
@@ -32,9 +31,22 @@ Think in six steps:
 3. Scrypath builds a **search document** from the source record.
 4. The backend stores that document in the current search index.
 5. `Scrypath.search/3` queries that index and returns raw hits plus hydrated records.
-6. If the index drifts from the database, you use **status, failed-work, backfill, or reindex** to recover deliberately.
+6. If the index drifts from the database, you use **status, failed work, contract drift, backfill, or reindex** to recover deliberately.
 
 The database is still the source of truth. The search index is a derived system you keep honest.
+
+## The six flows that matter
+
+Most teams grow through Scrypath in roughly this order:
+
+1. Get one schema searchable without inventing an indexing subsystem.
+2. Choose what is honestly true after a write returns.
+3. Normalize browser params once and keep Phoenix screens thin.
+4. Build a catalog or global-search experience on the same runtime path.
+5. Search across several schemas without pretending they are one index.
+6. Recover when the database and the index disagree.
+
+You do not need every flow on day one. You do need the right mental model on day one.
 
 ## Flow 1: "Get search working on one schema without inventing an indexing subsystem"
 
@@ -128,9 +140,9 @@ Truth you still cannot say:
 
 The canonical semantics live in [Sync modes and visibility](sync-modes-and-visibility.md). The mental shortcut is simple: **accepted work is not the same thing as visible search results.**
 
-## Flow 3: "Add search to a normal Phoenix screen without contaminating controllers or LiveView"
+## Flow 3: "Normalize browser params once and keep Phoenix screens thin"
 
-This is the everyday application flow.
+This is the day-two Phoenix job.
 
 You have a controller action or LiveView page for something like:
 
@@ -141,18 +153,59 @@ You have a controller action or LiveView page for something like:
 
 The clean Scrypath shape is:
 
-- params enter at the web edge
+- browser params enter at the web edge
+- `Scrypath.QueryParams` normalizes them into plain data
+- optional `Scrypath.Phoenix` helpers round-trip URL and form state
 - the context turns those params into one `Scrypath.search/3` call
-- Scrypath returns hits, records, paging, and any missing ids
 - the web layer renders the result honestly
 
 What this buys you:
 
 - search stays a context concern, not a controller trick
+- URL-driven LiveView state stays shareable and debuggable
+- field-scoped request errors stay renderable without freezing Phoenix into core runtime
 - hydration is explicit, so stale search hits do not silently vanish
-- search options stay close to app rules like preloads, allowed filters, and sort defaults
 
-The relevant follow-on guides are [Phoenix walkthrough](phoenix-walkthrough.md), [Phoenix contexts](phoenix-contexts.md), [Phoenix controllers and JSON](phoenix-controllers-and-json.md), and [Phoenix LiveView](phoenix-liveview.md).
+The important boundary is the whole point:
+
+- `Scrypath.QueryParams` is data-only
+- `Scrypath.Phoenix` is optional glue only
+- your context still owns repo access, backend choice, preload policy, and search execution
+
+Relevant follow-on guides:
+
+- [Request-edge search](request-edge-search.md)
+- [Phoenix walkthrough](phoenix-walkthrough.md)
+- [Phoenix controllers and JSON](phoenix-controllers-and-json.md)
+- [Phoenix LiveView](phoenix-liveview.md)
+
+## Flow 3.5: "Compose reusable presets and scopes without inventing a second runtime"
+
+This is the feature-level search policy job.
+
+Once a team has more than one screen or caller building the same search defaults, the
+question changes from "how do I parse params?" to "where do these shared defaults and
+locks live without turning Scrypath into the app boundary?"
+
+The clean shape is:
+
+- host contexts or feature modules define a plain-data preset or scope
+- `Scrypath.Composition` resolves those fragments into canonical single-search args
+- contexts still call `Scrypath.search/3`
+- Phoenix remains optional because composition stops at data, not execution
+
+That boundary matters:
+
+- presets can default text, filters, sort, page, facets, facet filters, or per-query knobs
+- fixed constraints can lock only filter-bearing fields and fail explicitly on conflicts
+- the result stays inspectable for tests and logs without exposing `%Scrypath.Query{}`
+
+This gives you one reusable composition seam without creating schema-generated runtime
+verbs, moving policy onto `Scrypath.Phoenix`, or pretending composition solves tenant
+authz or related-data propagation.
+
+Read [Composing real-app search](composing-real-app-search.md) when you want the
+canonical `defaults`, `fixed`, metadata, and `compose_many/2` story in one place.
 
 ## Flow 4: "Build a catalog search experience, not just a search box"
 
@@ -228,6 +281,7 @@ The decision tree is blunt:
 
 - use `Scrypath.sync_status/2` when you need posture
 - use `Scrypath.failed_sync_work/2` when you need concrete failed units
+- use index-contract drift when the question is declared contract versus live index shape
 - retry one explicit failed item when the contract is still sound
 - backfill when the live index is still trustworthy and just needs repair
 - reindex when the contract changed or the live index no longer deserves trust
@@ -236,7 +290,38 @@ The important mindset shift is this:
 
 **Backfill repairs a trustworthy index. Reindex replaces an untrustworthy one.**
 
-Read [Drift recovery](drift-recovery.md) and [Operator Mix tasks](operator-mix-tasks.md) when you are in this phase of adoption.
+Read [Drift recovery](drift-recovery.md), [Operator Mix tasks](operator-mix-tasks.md), and [Related data and reindexing](related-data-and-reindexing.md) when you are in this phase of adoption.
+
+## What Scrypath is opinionated about
+
+Scrypath keeps making the same bets:
+
+- **Ecto-first** beats controller-first or callback-first integration.
+- **Contexts own orchestration** beats scattering search logic through the web layer.
+- **One common runtime path** beats a pile of generated per-schema verbs.
+- **Operational honesty** beats pretending eventual consistency does not exist.
+- **Optional Phoenix glue** beats turning the core library into a Phoenix facade.
+- **Explicit recovery** beats treating drift as a support embarrassment.
+
+## What is still intentionally not magic
+
+Scrypath is not promising these things for you:
+
+- no hidden database-plus-search atomicity
+- no generated search subsystem from one macro
+- no automatic cross-record reindex story for every association shape
+- no fake cross-index score comparability
+- no public multi-backend abstraction in v1
+
+Those constraints are part of the product, not missing polish.
+
+## What to read next
+
+- First hour: [Golden path](golden-path.md)
+- Phoenix request edge: [Request-edge search](request-edge-search.md)
+- Sync truth: [Sync modes and visibility](sync-modes-and-visibility.md)
+- Related-data correctness: [Related data and reindexing](related-data-and-reindexing.md)
+- Recovery: [Drift recovery](drift-recovery.md)
 
 ## How the flows usually mature
 

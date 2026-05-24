@@ -2,7 +2,7 @@
 
 This guide is the canonical v1.21 request-edge story: browser params enter at the web edge, `Scrypath.QueryParams` normalizes them into plain data, optional `Scrypath.Phoenix` helpers round-trip params and attempted values, your context calls `Scrypath.search/3`, and the runtime stops there.
 
-If you want the broader onboarding path first, read [Getting Started](getting-started.md) or the [Golden path](golden-path.md). If you want controller- or LiveView-specific examples after the shared contract, continue with the Phoenix guides.
+If you want the broader onboarding path first, read [Getting Started](getting-started.md) or the [Golden path](golden-path.md). If you want reusable search defaults, metadata-backed host rendering, or multi-search composition after this shared contract, continue with [Composing real-app search](composing-real-app-search.md).
 
 ## The Boundary
 
@@ -110,6 +110,7 @@ Use the guide to understand the boundary. Use the example when you want to prove
 
 ## Continue
 
+- [Composing real-app search](composing-real-app-search.md)
 - [Phoenix Walkthrough](phoenix-walkthrough.md)
 - [Phoenix Contexts](phoenix-contexts.md)
 - [Phoenix Controllers and JSON](phoenix-controllers-and-json.md)

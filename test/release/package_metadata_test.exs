@@ -56,6 +56,7 @@ defmodule Scrypath.Release.PackageMetadataTest do
 
     assert docs[:groups_for_extras][:Maintainers] == [
              "CONTRIBUTING.md",
+             "docs/jtbd-gap-map.md",
              "docs/releasing.md",
              "docs/operator-support.md",
              "docs/search-backend-sre.md"

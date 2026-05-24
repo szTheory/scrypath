@@ -8,6 +8,7 @@ defmodule Scrypath do
 
   - [guides/golden-path.md](guides/golden-path.md) — linear first hour from dependencies through a working `Scrypath.search/3`.
   - [guides/request-edge-search.md](guides/request-edge-search.md) — canonical request-edge contract for browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix`, and context-owned `search/3`.
+  - [guides/composing-real-app-search.md](guides/composing-real-app-search.md) — canonical real-app guide for reusable composition, metadata reflection, and `search_many/2` lowering.
   - [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md) — canonical sync modes (`:inline`, `:oban`, `:manual`), eventual consistency, and operator lifecycle language.
   - [guides/overview.md](guides/overview.md) — table of contents for every published guide.
   - [guides/common-mistakes.md](guides/common-mistakes.md) — evidence-led pitfalls when search and sync feel inconsistent.
@@ -16,18 +17,34 @@ defmodule Scrypath do
 
   - **`sync_record/3`** (and batch variants) — write path and mode semantics; start from
     [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md).
+  - **`Scrypath.Composition`** — plain-data preset and scope composition before a
+    context-owned `search/3` call; it resolves to canonical `{text, keyword_opts}`
+    without creating a second runtime. Read
+    [guides/composing-real-app-search.md](guides/composing-real-app-search.md).
+  - **`Scrypath.Metadata`** — declaration-backed capability metadata plus resolved
+    search state for honest controls; hosts render the UI, Scrypath only returns
+    plain data. Read [guides/composing-real-app-search.md](guides/composing-real-app-search.md).
   - **`Scrypath.QueryParams`** — framework-light request-edge normalization before your
     context calls `search/3`; the full story lives in
     [guides/request-edge-search.md](guides/request-edge-search.md).
   - **`search/3`** — hydrated search on one schema; follow
     [guides/golden-path.md](guides/golden-path.md) for the first working call.
   - **`search_many/2`** — federated multi-schema search; composition rules live in
-    [guides/golden-path.md](guides/golden-path.md) and [guides/multi-index-search.md](guides/multi-index-search.md).
+    [guides/composing-real-app-search.md](guides/composing-real-app-search.md) and [guides/multi-index-search.md](guides/multi-index-search.md).
 
   Keep request-edge casting in controllers, LiveViews, or other app-owned boundaries with
   `Scrypath.QueryParams`. If you are in Phoenix, `Scrypath.Phoenix` is optional glue for
   params, forms, and URL round-tripping only. Keep orchestration in your contexts, where
   `Scrypath.search/3` remains the canonical runtime entrypoint.
+
+  Composition stays on that same side of the boundary: it prepares plain data for host
+  contexts, but it does not move policy onto schemas, create schema-specific runtime verbs
+  or generated UI, or solve tenant authz and related-data propagation for you.
+
+  Metadata follows the same rule. Hosts may inspect declaration-backed capabilities plus
+  resolved `applied`, `defaulted`, `fixed`, and `unsupported` state to render honest
+  controls, but Scrypath does not generate those controls and still treats tenant policy,
+  authorization, and related-data behavior as host-owned concerns.
 
   Use `use Scrypath` on your Ecto schema; declaration grammar and settings live on
   `Scrypath.Schema` — read that module instead of duplicating option tables here.
@@ -37,11 +54,14 @@ defmodule Scrypath do
   The initial public reflection surface is intentionally small:
 
   - `schema_config/1`
+  - `schema_capabilities/1`
   - `schema_fields/1`
   - `schema_settings/1`
   - `schema_faceting/1`
   - `document_source/1`
   - `document_id_field/1`
+  - `reflect_search/2`
+  - `reflect_search_many/2`
 
   These functions keep reflection under `Scrypath.*` modules instead of generating
   schema-specific runtime verbs.
@@ -65,6 +85,14 @@ defmodule Scrypath do
   @spec schema_config(module()) :: map()
   def schema_config(schema_module) do
     schema_module.__scrypath__(:config)
+  end
+
+  @doc """
+  Returns declaration-backed search capability metadata for one schema.
+  """
+  @spec schema_capabilities(module()) :: map()
+  def schema_capabilities(schema_module) do
+    Scrypath.Metadata.schema_capabilities(schema_module)
   end
 
   @spec schema_fields(module()) :: [atom()]
@@ -96,6 +124,32 @@ defmodule Scrypath do
   @spec document_id_field(module()) :: atom()
   def document_id_field(schema_module) do
     schema_module.__scrypath__(:document_id)
+  end
+
+  @doc """
+  Reflects one search-shaped criteria map or `Scrypath.Composition` result into
+  declaration-backed `capabilities`, resolved call-state metadata, and explicit
+  `host_owned` advisory fields.
+  """
+  @spec reflect_search(module(), map()) :: map()
+  def reflect_search(schema_module, criteria_or_composition) when is_map(criteria_or_composition) do
+    Scrypath.Metadata.reflect_search(schema_module, criteria_or_composition)
+  end
+
+  @doc """
+  Reflects multi-search input or `Scrypath.Composition.compose_many/2` output into
+  entry-scoped metadata without publishing a merged global capability surface.
+  """
+  @spec reflect_search_many(list() | map(), keyword()) :: map()
+  def reflect_search_many(entries_or_composition, shared_opts \\ [])
+
+  def reflect_search_many(entries_or_composition, shared_opts)
+      when is_list(entries_or_composition) and is_list(shared_opts) do
+    Scrypath.Metadata.reflect_search_many(entries_or_composition, shared_opts)
+  end
+
+  def reflect_search_many(%{} = composition, shared_opts) when is_list(shared_opts) do
+    Scrypath.Metadata.reflect_search_many(composition, shared_opts)
   end
 
   @sync_public_ops_doc """

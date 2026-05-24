@@ -24,6 +24,9 @@ defmodule Scrypath.DocsContractTest do
   @verify_phase41 File.read!("lib/mix/tasks/verify.phase41.ex")
   @verify_phase43 File.read!("lib/mix/tasks/verify.phase43.ex")
   @verify_phase82 File.read!("lib/mix/tasks/verify.phase82.ex")
+  @verify_phase83 File.read!("lib/mix/tasks/verify.phase83.ex")
+  @verify_phase84 File.read!("lib/mix/tasks/verify.phase84.ex")
+  @verify_phase85 File.read!("lib/mix/tasks/verify.phase85.ex")
   @verify_opsui File.read!("lib/mix/tasks/verify.opsui.ex")
   @verify_release_publish File.read!("lib/mix/tasks/verify.release_publish.ex")
   @guide_paths [
@@ -32,6 +35,7 @@ defmodule Scrypath.DocsContractTest do
     "guides/getting-started.md",
     "guides/golden-path.md",
     "guides/request-edge-search.md",
+    "guides/composing-real-app-search.md",
     "guides/jtbd-and-user-flows.md",
     "guides/meilisearch-operations.md",
     "guides/phoenix-walkthrough.md",
@@ -149,22 +153,154 @@ defmodule Scrypath.DocsContractTest do
     assert String.contains?(overview, "[Request-edge search](request-edge-search.md)")
   end
 
+  test "phase 85 canonical guide owns composition and metadata wayfinding" do
+    canonical = @guides["guides/composing-real-app-search.md"]
+    overview = @guides["guides/overview.md"]
+    scrypath_doc = File.read!("lib/scrypath.ex")
+
+    assert_contains_all(canonical, [
+      "defaults",
+      "fixed",
+      "schema_capabilities/1",
+      "reflect_search/2",
+      "compose_many/2",
+      "host-owned",
+      "## Non-goals",
+      "%Scrypath.Query{}",
+      "schema-generated runtime verbs",
+      "generated UI widgets",
+      "tenant/authz guarantees",
+      "related-data propagation or rebuild correctness claims"
+    ])
+
+    assert_contains_all(@readme, [
+      "guides/composing-real-app-search.md",
+      "Real-app composition and metadata"
+    ])
+
+    assert_contains_all(scrypath_doc, [
+      "guides/composing-real-app-search.md",
+      "Scrypath.Composition",
+      "Scrypath.Metadata"
+    ])
+
+    assert ordered?(
+             overview,
+             "[Request-edge search](request-edge-search.md)",
+             "[Composing real-app search](composing-real-app-search.md)"
+           )
+  end
+
+  test "composition seam stays context-owned and search/3 remains canonical" do
+    scrypath_doc = File.read!("lib/scrypath.ex")
+    composition_doc = File.read!("lib/scrypath/composition.ex")
+    public_jtbd = @guides["guides/jtbd-and-user-flows.md"]
+
+    assert_contains_all(scrypath_doc, [
+      "Scrypath.Composition",
+      "search/3` remains the canonical runtime entrypoint",
+      "optional glue",
+      "tenant authz"
+    ])
+
+    assert_contains_all(composition_doc, [
+      "Scrypath.search/3",
+      "it never exposes `%Scrypath.Query{}`",
+      "it does not move composition ownership onto schemas or `Scrypath.Phoenix`"
+    ])
+
+    assert_contains_all(public_jtbd, [
+      "Scrypath.Composition",
+      "preset or scope",
+      "contexts still call `Scrypath.search/3`"
+    ])
+
+    refute String.contains?(composition_doc, "def search(")
+    refute String.contains?(composition_doc, "schema-generated")
+  end
+
   test "jtbd docs stay grounded in the checked-out surface" do
     public_jtbd = @guides["guides/jtbd-and-user-flows.md"]
 
     assert_contains_all(public_jtbd, [
       "Keep a search-shaped read model in sync with Ecto data",
       "accepted work is not the same thing as visible search results",
-      "Backfill repairs a trustworthy index. Reindex replaces an untrustworthy one."
+      "Backfill repairs a trustworthy index. Reindex replaces an untrustworthy one.",
+      "Scrypath.Composition"
     ])
 
     refute String.contains?(public_jtbd, "Scrypath.SearchModule")
 
     assert_contains_all(@jtbd_gap_map, [
-      "**Last reviewed:** 2026-05-22",
-      "planning artifacts claim a `Scrypath.SearchModule` layer shipped in `v1.20`",
-      "the checked-out code does not currently expose that layer"
+      "**Last reviewed:** 2026-05-23",
+      "The planning archive currently claims a thin `Scrypath.SearchModule` layer shipped in `v1.20`",
+      "the checked-out code does not expose that layer"
     ])
+  end
+
+  test "verify.phase83 stays wired into the focused maintainer flow" do
+    assert String.contains?(@verify_phase83, "test/scrypath/composition_test.exs")
+    assert String.contains?(@verify_phase83, "test/scrypath/composition_property_test.exs")
+    assert String.contains?(@verify_phase83, "test/scrypath/docs_contract_test.exs")
+    assert String.contains?(@verify_phase83, "Mix.Task.run(\"docs\", [\"--warnings-as-errors\"])")
+    assert String.contains?(File.read!("mix.exs"), "\"verify.phase83\": :test")
+  end
+
+  test "metadata reflection and compose_many stay bounded to plain-data helpers" do
+    scrypath_doc = File.read!("lib/scrypath.ex")
+    metadata_doc = File.read!("lib/scrypath/metadata.ex")
+    multi_index_guide = @guides["guides/multi-index-search.md"]
+    faceted_guide = @guides["guides/faceted-search-with-phoenix-liveview.md"]
+
+    assert_contains_all(scrypath_doc, [
+      "schema_capabilities/1",
+      "reflect_search/2",
+      "reflect_search_many/2",
+      "generated UI",
+      "tenant policy"
+    ])
+
+    assert_contains_all(metadata_doc, [
+      "capabilities",
+      "applied",
+      "defaulted",
+      "fixed",
+      "unsupported",
+      "host_owned"
+    ])
+
+    assert_contains_all(multi_index_guide, [
+      "compose_many/2",
+      "tuple/shared-option contract",
+      "shared `fixed` is intentionally unsupported",
+      "host-owned",
+      "Composing real-app search"
+    ])
+
+    assert_contains_all(faceted_guide, [
+      "schema_capabilities/1",
+      "reflect_search/2",
+      "host-owned",
+      "Composing real-app search"
+    ])
+  end
+
+  test "verify.phase84 stays wired into the focused maintainer flow" do
+    assert String.contains?(@verify_phase84, "test/scrypath/metadata_test.exs")
+    assert String.contains?(@verify_phase84, "test/scrypath/composition_many_test.exs")
+    assert String.contains?(@verify_phase84, "test/scrypath/search_many_test.exs")
+    assert String.contains?(@verify_phase84, "test/scrypath/docs_contract_test.exs")
+    assert String.contains?(@verify_phase84, "Mix.Task.run(\"docs\", [\"--warnings-as-errors\"])")
+    assert String.contains?(File.read!("mix.exs"), "\"verify.phase84\": :test")
+  end
+
+  test "verify.phase85 stays wired into the focused maintainer flow" do
+    assert String.contains?(@verify_phase85, "test/scrypath/composition_test.exs")
+    assert String.contains?(@verify_phase85, "test/scrypath/metadata_test.exs")
+    assert String.contains?(@verify_phase85, "test/scrypath/composition_many_test.exs")
+    assert String.contains?(@verify_phase85, "test/scrypath/docs_contract_test.exs")
+    assert String.contains?(@verify_phase85, "Mix.Task.run(\"docs\", [\"--warnings-as-errors\"])")
+    assert String.contains?(File.read!("mix.exs"), "\"verify.phase85\": :test")
   end
 
   test "README opens with installation, quick path, and phoenix wayfinding" do
@@ -912,7 +1048,8 @@ defmodule Scrypath.DocsContractTest do
           {:ok, body} ->
             if String.contains?(body, "| AUDT-01 |"), do: body
 
-          _ -> nil
+          _ ->
+            nil
         end
       end) || flunk("expected one canonical requirements file to retain the AUDT-01 registry row")
 

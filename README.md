@@ -20,7 +20,11 @@ end
 
 **Request-edge contract:** for the v1.21 public story around browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix` glue, and context-owned `Scrypath.search/3`, read [guides/request-edge-search.md](guides/request-edge-search.md).
 
+**Real-app composition and metadata:** for reusable `defaults` / `fixed` search policy, host-owned metadata rendering, and `compose_many/2` lowering into the existing runtime, read [guides/composing-real-app-search.md](guides/composing-real-app-search.md).
+
 If you want the user-flow and jobs-to-be-done map before wiring code, read [guides/jtbd-and-user-flows.md](guides/jtbd-and-user-flows.md).
+
+If you need the real-app story for related rows, fan-out, and when to choose direct sync versus backfill or reindex, read [guides/related-data-and-reindexing.md](guides/related-data-and-reindexing.md).
 
 If you want the architecture and JTBD crash course before reading the full guides, start with [guides/overview.md](guides/overview.md).
 
@@ -85,6 +89,8 @@ If you are wiring Scrypath into a Phoenix app, read these next:
 - [Guides overview](guides/overview.md) (table of contents for all guides)
 - [JTBD and user flows](guides/jtbd-and-user-flows.md) (mental model and flow map before the implementation guides)
 - [Request-edge search](guides/request-edge-search.md) (canonical shared story for `QueryParams`, optional `Scrypath.Phoenix`, and context-owned runtime calls)
+- [Composing real-app search](guides/composing-real-app-search.md) (canonical guide for `Scrypath.Composition`, `Scrypath.Metadata`, and the two flagship proof flows)
+- [Related data and reindexing](guides/related-data-and-reindexing.md) (what to do when associated data changes many documents)
 - [Getting Started](guides/getting-started.md)
 - [Phoenix Walkthrough](guides/phoenix-walkthrough.md)
 - [Phoenix Contexts](guides/phoenix-contexts.md)

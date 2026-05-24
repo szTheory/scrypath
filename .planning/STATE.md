@@ -2,36 +2,36 @@
 gsd_state_version: 1.0
 milestone: v1.22
 milestone_name: Composition And Real-App Depth
-status: ready_to_plan
-last_updated: 2026-05-23T14:15:09.682Z
-last_activity: 2026-05-23
+status: between_milestones
+last_updated: 2026-05-24T00:00:00Z
+last_activity: 2026-05-24
 progress:
   total_phases: 3
-  completed_phases: 0
-  total_plans: 3
-  completed_plans: 16
-  percent: 0
-stopped_at: Phase 83 complete (3/3) — ready to discuss Phase 84
+  completed_phases: 3
+  total_plans: 9
+  completed_plans: 9
+  percent: 100
+stopped_at: Milestone archived and tagged
 ---
 
 # Project State
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-05-23)
+See: `.planning/PROJECT.md` (updated 2026-05-24)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase 84 — metadata reflection and multi search parity
+**Current focus:** Between milestones
 
 ## Current Position
 
-Phase: 84
-Plan: Not started
+Phase: none
+Plan: none
 
-**Status:** Ready to plan
+**Status:** Between milestones
 
-**Last activity:** 2026-05-23
+**Last activity:** 2026-05-24
 
 ## Accumulated Context
 
@@ -73,6 +73,7 @@ Plan: Not started
 - **v1.22 open:** Composition And Real-App Depth was activated as the next milestone because `v1.21` settled the request-edge contract and the remaining leverage-positive step inside the arc is reducing repeated real-app composition glue without turning Scrypath into a framework facade.
 - **v1.22 roadmap:** The milestone is deliberately compressed into **three** phases starting at **Phase 83**: (**83**) preset/scope contract, (**84**) metadata reflection plus `search_many/2` parity, and (**85**) real-app proof plus drift gates.
 - **v1.22 requirement coverage:** All **12** active requirements map exactly once across phases **83–85**; no tenant/auth, related-data, schema-generated runtime, or Phoenix-dependent core scope was admitted.
+- **v1.22 close:** Composition And Real-App Depth shipped + archived in-repo on **2026-05-24** with a passed milestone audit, completed verification artifacts for phases **83–85**, and no active milestone reopened by default.
 
 ### Blockers / Concerns
 
@@ -97,22 +98,20 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-1. Review `.planning/ROADMAP.md` and `.planning/REQUIREMENTS.md` for the Phase **83–85** mapping.
-2. Run `$gsd-discuss-phase 83`.
-3. Keep the post-`v1.19` outside-adopter guardrail explicit while shaping composition scope.
+1. Decide whether to stay paused under the post-`v1.19` outside-adopter guardrail or open a new milestone for a leverage-positive need.
+2. If a new milestone is justified, run `$gsd-new-milestone`.
+3. Keep the outside-adopter evidence gap explicit in any next-step planning.
 
 ---
 
-*Last updated: 2026-05-23 — roadmap created for **v1.22 Composition And Real-App Depth***
+*Last updated: 2026-05-24 — archived **v1.22 Composition And Real-App Depth***
 
-**Prior milestone:** **v1.19** — Production adoption proof and hardening — **2026-04-28** (shipped + archived in-repo).
-
-**Completed:** **v1.19** shipped + archived in-repo (**2026-04-28**) — phases **74–76** — **`milestones/v1.19-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
-
-**Completed:** **v1.18** shipped + archived in-repo (**2026-04-26**) — phases **71–73** — **`milestones/v1.18-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
-
-**Completed:** **v1.17** shipped + archived in-repo (**2026-04-23**) — phases **68–70** — **`milestones/v1.17-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**Prior milestone:** **v1.22** — Composition And Real-App Depth — **2026-05-24** (shipped + archived in-repo).
 
 **Completed:** **v1.21** shipped + archived in-repo (**2026-05-23**) — phases **80–82** — **`milestones/v1.21-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next:** Discuss and plan **Phase 84 — Metadata Reflection And Multi-Search Parity**.
+**Completed:** **v1.20** shipped + archived in-repo (**2026-05-08**) — phases **77–79** — **`milestones/v1.20-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+
+**Completed:** **v1.19** shipped + archived in-repo (**2026-04-28**) — phases **74–76** — **`milestones/v1.19-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+
+**Next:** Between milestones — either pause under the outside-adopter guardrail or open a new milestone with `$gsd-new-milestone`.

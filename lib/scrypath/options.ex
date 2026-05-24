@@ -845,6 +845,9 @@ defmodule Scrypath.Options do
   )a
 
   @doc false
+  def per_query_allowlist, do: @per_query_allowlist
+
+  @doc false
   def validate_per_query_map(nil), do: {:ok, %{}}
 
   def validate_per_query_map(value) when value == %{} or value == [] do
