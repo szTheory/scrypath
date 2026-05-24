@@ -34,6 +34,8 @@ defmodule Scrypath.DocsContractTest do
     "guides/drift-recovery.md",
     "guides/getting-started.md",
     "guides/golden-path.md",
+    "guides/support-and-compatibility.md",
+    "guides/outside-adopter-intake.md",
     "guides/request-edge-search.md",
     "guides/composing-real-app-search.md",
     "guides/jtbd-and-user-flows.md",
@@ -53,6 +55,8 @@ defmodule Scrypath.DocsContractTest do
   @guides Enum.into(@guide_paths, %{}, fn path -> {path, File.read!(path)} end)
   @per_query_tuning_pipeline File.read!("guides/per-query-tuning-pipeline.md")
   @request_edge_guide File.read!("guides/request-edge-search.md")
+  @support_guide File.read!("guides/support-and-compatibility.md")
+  @verify_adopter File.read!("lib/mix/tasks/verify.adopter.ex")
 
   # Paths shipped as ExDoc extras (mix.exs :docs extras) plus top-level narrative docs.
   @published_markdown_for_hygiene [
@@ -232,9 +236,40 @@ defmodule Scrypath.DocsContractTest do
     refute String.contains?(public_jtbd, "Scrypath.SearchModule")
 
     assert_contains_all(@jtbd_gap_map, [
-      "**Last reviewed:** 2026-05-23",
+      "**Last reviewed:** 2026-05-24",
       "The planning archive currently claims a thin `Scrypath.SearchModule` layer shipped in `v1.20`",
       "the checked-out code does not expose that layer"
+    ])
+  end
+
+  test "support/readiness authority stays discoverable and verify.adopter parity stays explicit" do
+    assert_contains_all(@readme, [
+      "guides/support-and-compatibility.md",
+      "mix verify.adopter"
+    ])
+
+    assert_contains_all(@contributing, [
+      "guides/support-and-compatibility.md",
+      "mix verify.adopter",
+      "mix verify.adopter --live",
+      "phoenix-example-integration"
+    ])
+
+    assert_contains_all(@support_guide, [
+      "Phoenix + Meilisearch",
+      "`:inline`",
+      "`:manual`",
+      "`:oban`",
+      "outside-adopter evidence"
+    ])
+
+    assert_contains_all(@verify_adopter, [
+      "test/scrypath/readiness_contract_test.exs",
+      "test/mix/tasks/verify_adopter_test.exs",
+      "SCRYPATH_EXAMPLE_INTEGRATION",
+      "PGPORT",
+      "SCRYPATH_MEILISEARCH_URL",
+      "mix verify.adopter --live"
     ])
   end
 
