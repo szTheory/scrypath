@@ -25,10 +25,10 @@ See: `.planning/PROJECT.md` (updated 2026-05-24)
 
 ## Current Position
 
-Phase: 87 executing (outside-adopter-intake-and-evidence-review)
-Plan: 02 complete
+Phase: 87 complete (outside-adopter-intake-and-evidence-review)
+Plan: 03 complete
 
-**Status:** Ready to execute Plan 03
+**Status:** Phase 87 complete
 
 **Last activity:** 2026-05-24
 
@@ -102,9 +102,9 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-1. Start **Phase 87**: refresh the outside-adopter intake/runbook so it names the defended proof-command family, runtime assumptions, and required artifacts.
-2. Review real outside-adopter attempts before reopening feature work.
-3. Keep the next-pull ranking explicit: related-data first, tenant-safe access second, facet-value search later.
+1. Phase 87 is complete.
+2. Active next-pull verdict: related-data propagation
+3. Prepare for Phase 88.
 
 ---
 
@@ -118,4 +118,4 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 **Completed:** **v1.19** shipped + archived in-repo (**2026-04-28**) — phases **74–76** — **`milestones/v1.19-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next:** Active milestone **v1.23** — Phase **86** support-truth reconciliation is complete; continue with outside-adopter evidence review in Phase **87**.
+**Next:** Active milestone **v1.23** — Phase **87** outside-adopter intake and evidence review is complete. Active next-pull verdict: related-data propagation.

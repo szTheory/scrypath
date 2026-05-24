@@ -60,7 +60,7 @@ Plans:
 Plans:
 - [x] 87-01: Refresh the current outside-adopter intake/runbook so it names the defended proof command family, runtime assumptions, and required artifacts.
 - [x] 87-02: Review at least two real outside-adopter attempts against current repo truth and classify every finding as docs/onboarding gap, support-truth drift, product gap, or env/setup papercut.
-- [ ] 87-03: Update rolling planning truth with the reviewed evidence, including whether the repo is actually near “stop soon” territory or still missing one major wedge.
+- [x] 87-03: Update rolling planning truth with the reviewed evidence, including whether the repo is actually near “stop soon” territory or still missing one major wedge.
 
 ### Phase 88: Evidence-Backed Papercuts And Next-Pull Verdict
 
