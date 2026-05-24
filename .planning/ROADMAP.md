@@ -25,16 +25,60 @@
 - [x] **`v1.20` shipped + archived in-repo** (**2026-05-08**) — *Search Module Foundation* — phases **77–79**, **8** requirements — [archive](milestones/v1.20-ROADMAP.md) · [requirements](milestones/v1.20-REQUIREMENTS.md) · [audit](milestones/v1.20-MILESTONE-AUDIT.md)
 - [x] **`v1.21` shipped + archived in-repo** (**2026-05-23**) — *Query Toolkit And Phoenix Edge Helpers* — phases **80–82**, **8** requirements — [archive](milestones/v1.21-ROADMAP.md) · [requirements](milestones/v1.21-REQUIREMENTS.md) · [audit](milestones/v1.21-MILESTONE-AUDIT.md)
 - [x] **`v1.22` shipped + archived in-repo** (**2026-05-24**) — *Composition And Real-App Depth* — phases **83–85**, **12** requirements — [archive](milestones/v1.22-ROADMAP.md) · [requirements](milestones/v1.22-REQUIREMENTS.md) · [audit](milestones/v1.22-MILESTONE-AUDIT.md)
+- [ ] **`v1.23` active** (**opened 2026-05-24**) — *Outside-Adopter Evidence And Support-Truth Reconciliation* — phases **86–88**, **8** requirements — [requirements](REQUIREMENTS.md)
 
 ## Current Milestone
 
-No active milestone is open.
+### 🚧 v1.23 — Outside-Adopter Evidence And Support-Truth Reconciliation
 
-**Last shipped milestone:** **v1.22 — Composition And Real-App Depth** closed on **2026-05-24** and shipped a bounded composition layer over the request-edge toolkit: reusable presets/scopes, declaration-backed metadata reflection, `search_many/2`-aligned lowering, and one canonical public guide without widening the runtime boundary. Full detail: [milestones/v1.22-ROADMAP.md](milestones/v1.22-ROADMAP.md).
+**Opened:** 2026-05-24  
+**Phases:** 86–88  
+**Status:** active  
+**Requirements:** [`.planning/REQUIREMENTS.md`](REQUIREMENTS.md)
 
-**Next default pull:** stay paused between milestones unless real outside-adopter evidence or a leverage-positive release/distribution need justifies opening the next milestone under the post-`v1.19` guardrail.
+**Milestone goal:** reconcile support/readiness/proof claims with the checked-out tree, review real outside-adopter evidence on the defended Phoenix + Meilisearch path, and let that evidence determine whether Scrypath should stop soon or open one final high-leverage product wedge.
 
-Archive detail: [milestones/v1.22-ROADMAP.md](milestones/v1.22-ROADMAP.md)
+**Branch-tip truth note:** `guides/support-and-compatibility.md` and the `mix verify.adopter` fast contract are present again on the current checkout, but the `v1.20` archive still describes a `Scrypath.SearchModule` layer that the checked-out branch tip does not currently expose.
+
+### Phase 86: Support Truth And Proof Surface Reconciliation
+
+**Goal:** Current maintainer/adopter proof surfaces match the tree that actually exists, with no reliance on removed guides, missing test targets, or archive-era assumptions.
+**Depends on:** none
+**Plans:** 3 plans
+
+Plans:
+- [x] 86-01: Audit README, CONTRIBUTING, maintainer tasks, and planning surfaces against the checked-out support/proof files.
+- [x] 86-02: Reconcile current support-truth drift, including the missing support guide references, stale `verify.adopter` fast target, and `v1.20` `SearchModule` archive/code mismatch in planning claims.
+- [x] 86-03: Add bounded docs/task/planning regression guards so current proof surfaces cannot drift back silently.
+
+### Phase 87: Outside-Adopter Intake And Evidence Review
+
+**Goal:** Real outside-adopter attempts run through one current defended path and produce evidence that is actionable for product decisions rather than anecdotal.
+**Depends on:** Phase 86
+**Plans:** 3 plans
+
+Plans:
+- [ ] 87-01: Refresh the current outside-adopter intake/runbook so it names the defended proof command family, runtime assumptions, and required artifacts.
+- [ ] 87-02: Review at least two real outside-adopter attempts against current repo truth and classify every finding as docs/onboarding gap, support-truth drift, product gap, or env/setup papercut.
+- [ ] 87-03: Update rolling planning truth with the reviewed evidence, including whether the repo is actually near “stop soon” territory or still missing one major wedge.
+
+### Phase 88: Evidence-Backed Papercuts And Next-Pull Verdict
+
+**Goal:** Close only accepted evidence-backed papercuts and end the milestone with one explicit next-step verdict.
+**Depends on:** Phase 87
+**Plans:** 3 plans
+
+Plans:
+- [ ] 88-01: Fix only the evidence-backed docs/support/proof papercuts accepted from Phase 87.
+- [ ] 88-02: Add bounded regression protection for every accepted papercut so the next adopter run catches recurrence immediately.
+- [ ] 88-03: Freeze the milestone with one explicit next-pull verdict: stop soon, open related-data propagation, or open tenant-safe access.
+
+**Working assumptions locked at milestone open:**
+
+- Scrypath is already strong enough that more generic ergonomics breadth is near diminishing returns without outside-adopter evidence.
+- The first future product wedge, if evidence justifies one, is **related-data propagation**.
+- The second future product wedge is **tenant-safe search access**.
+- **High-cardinality facet-value search** is useful but narrower, and should not preempt the two wedges above.
 
 ## Phases (history)
 

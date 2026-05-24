@@ -19,19 +19,20 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - **`search_many/2` parity helpers** — `compose_many/2` and `to_search_many_args/1` lower into the existing tuple/shared-option contract rather than creating a multi-search DSL.
 - **Canonical real-app docs and focused gates** — one canonical composition guide plus `mix verify.phase83`, `mix verify.phase84`, and `mix verify.phase85` now protect the shipped story.
 
-**Current posture:** No milestone is currently open. The post-`v1.19` outside-adopter guardrail remains in force, so the next milestone should open only when real outside-adopter evidence or a leverage-positive release/distribution need justifies it.
+**Current posture:** **v1.23 — Outside-Adopter Evidence And Support-Truth Reconciliation** is now open on **2026-05-24**. The post-`v1.19` outside-adopter guardrail remains in force, so this milestone is intentionally about support truth, reviewed adopter evidence, and bounded papercuts rather than more generic breadth work.
 
 **Boundary discipline retained:** `Scrypath.search/3` remains canonical, contexts stay the application boundary, Phoenix remains optional, and `%Scrypath.Query{}` stays internal rather than becoming public API.
 
 **Out of scope remains:** public `%Scrypath.Query{}` or other internal structs as semver-stable API, schema-generated runtime search APIs, Phoenix-dependent runtime core, reusable UI widgets or form-builder layers, broader composition/presets, public multi-backend expansion, or any change that hides operational search semantics behind framework magic.
 
-Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under **`.planning/milestones/`**.
+Current planning files: **`.planning/{REQUIREMENTS,ROADMAP,STATE}.md`** plus archives under **`.planning/milestones/`**.
 
 ## Next Milestone Goals
 
-- No milestone is currently active.
-- Default posture: pause on new internal breadth work unless real outside-adopter evidence or a leverage-positive release/distribution need changes the priority.
-- If the search-module arc continues, preserve the same boundary discipline: contexts stay canonical, Phoenix stays optional, and no schema-generated runtime verbs or generated UI surfaces move into core.
+- **Active milestone:** **v1.23 — Outside-Adopter Evidence And Support-Truth Reconciliation**.
+- Reconcile support/readiness/proof surfaces with the current checkout so maintainers and adopters are not relying on removed guides, missing test targets, or archive-era assumptions.
+- Gather and review real outside-adopter evidence on the defended Phoenix + Meilisearch path before reopening feature work.
+- If feature work reopens after `v1.23`, the ranking is: **related-data propagation**, then **tenant-safe search access**, then **high-cardinality facet value search**.
 
 ## Last shipped milestone
 
@@ -41,7 +42,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Planning window
 
-**Active milestone:** none. The next milestone should start from the Batteries-Included Search Modules arc, inherit the post-**v1.19** outside-adopter guardrail, and avoid widening into unrelated backend, UI-scaffold, or framework-magic promises.
+**Active milestone:** **v1.23 — Outside-Adopter Evidence And Support-Truth Reconciliation**. This milestone intentionally shifts from the completed Batteries-Included Search Modules arc into an adopter-proof and trust-closure arc: reconcile current support truth, classify real outside-adopter friction, and avoid widening into unrelated backend, UI-scaffold, or framework-magic promises unless the evidence justifies it.
 
 ## Requirements
 
@@ -175,6 +176,7 @@ The current public line on Hex is **`scrypath 0.3.4`**. **v1.8** closed the fede
 | **v1.20** — Search Module Foundation | A narrow, already-started ergonomics layer that removes repeated Phoenix/Ecto request-param boilerplate without changing the core runtime or hiding operational search semantics | ✓ Shipped + archived in-repo |
 | **v1.21** — Query Toolkit And Phoenix Edge Helpers | Reopen the active arc only for a narrow, framework-light public param toolkit plus thin optional Phoenix wrappers; keep contexts canonical and prevent public exposure of current internal query structs | ✓ Shipped + archived in-repo on 2026-05-23 |
 | **v1.22** — Composition And Real-App Depth | Build a bounded composition layer over the shipped request-edge toolkit so repeated presets, scopes, and UI metadata become reusable without weakening the runtime boundary or the post-v1.19 guardrail | ✓ Shipped + archived in-repo on 2026-05-24 |
+| **v1.23** — Outside-Adopter Evidence And Support-Truth Reconciliation | Before reopening feature breadth, reconcile current proof/support truth with the tree and let reviewed outside-adopter evidence decide whether Scrypath should stop soon or open one final major wedge | — Active on 2026-05-24 |
 
 ## Historical Context
 
@@ -200,4 +202,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-24 — archived **v1.22 Composition And Real-App Depth** and returned to a between-milestones posture*
+*Last updated: 2026-05-24 — opened **v1.23 Outside-Adopter Evidence And Support-Truth Reconciliation** after the repo-grounded done-ness assessment*

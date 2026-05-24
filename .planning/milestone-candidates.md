@@ -1,7 +1,7 @@
 # Milestone candidates — developer-first roadmap stack
 
 **Purpose:** Prioritized themes for **`/gsd-new-milestone`** — **onboarding + QoL** for people using and contributing to Scrypath; **avoid busywork** and maintainer-only work masquerading as product.  
-**Last reviewed:** 2026-05-23 — **v1.21** shipped as a narrow request-edge toolkit milestone, but the canonical portfolio posture is still the **v1.19** readiness verdict: seek broader outside production adoption on the defended surface, with external validation still pending. The canonical verdict lives in **`milestones/v1.19-MILESTONE-AUDIT.md`**.
+**Last reviewed:** 2026-05-24 — **v1.22** shipped and the repo-grounded done-ness assessment puts Scrypath at roughly **86% done** for its stated scope. The canonical portfolio posture is still the **v1.19** readiness verdict: seek broader outside production adoption on the defended surface, with external validation still pending. The canonical verdict lives in **`milestones/v1.19-MILESTONE-AUDIT.md`**.
 
 **Reconciliation note:** the `v1.20` archive says `Scrypath.SearchModule` shipped, but the current checkout does not expose that layer or its guide. Treat that as a live gap to reconcile before assuming archive and code are perfectly aligned.
 
@@ -57,7 +57,7 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 |---|--------|--------|
 | **B1** | **Related-data and dependency propagation** | Biggest correctness gap for real SaaS apps once documents include tags, ownership, counts, or joined fields |
 | **B2** | **Tenant-safe search access story** | Biggest credibility gap for B2B Phoenix adopters; prefixes are not the same thing as authorization |
-| **B3** | **Composition and real-app depth over the query toolkit** | Natural next step after `v1.21`; build reusable presets/scopes/metadata patterns instead of another raw param layer |
+| **B3** | **Composition and real-app depth over the query toolkit** | **Done in v1.22** — keep here only as historical context so future planning does not reopen the same wedge accidentally |
 | **B4** | **High-cardinality facet value search** | Useful for larger catalogs, but behind the three gaps above |
 | **B5** | **Autocomplete / suggestion flows** | Valuable later, but should not outrun correctness and SaaS-boundary work |
 
@@ -76,6 +76,12 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 | **D2** | **Retire `quick_task` stub rows / quiet `audit-open`** | **Busywork** unless CI or new contributors are misled |
 | **D3** | **Release-only credential / live-proof follow-through** | Keep the **v1.1** carry-forward visible as maintainer ops work: rerun live verification when `SCRYPATH_MEILISEARCH_URL` is reachable and rerun Hex dry-run when a publisher-scoped `HEX_API_KEY` exists; do not promote this into a consumer milestone by default |
 
+### Tier E — Current default pull before any new feature milestone
+
+| # | Theme | Notes |
+|---|--------|--------|
+| **E1** | **Outside-adopter evidence and support-truth reconciliation** | **Active as v1.23** — reconcile current proof/support truth with the tree, review real adopter attempts, and use that evidence to decide whether Scrypath should stop soon or open one final wedge |
+
 ### Still explicit strategy (unchanged)
 
 | # | Theme | Notes |
@@ -91,9 +97,9 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 | 1 | **A1** | **Shipped v1.12** |
 | 2 | **A2** | **Shipped v1.12** |
 | 3 | **v1.13** (**POLISH-***) | Voice + Hex narrative + contributor entry (**`milestones/v1.13-REQUIREMENTS.md`**) |
-| 4 | **Outside integration feedback** | Still the default pull after the v1.19 close; do not reopen feature work casually |
+| 4 | **E1** | Current active pull after `v1.22`; do not reopen feature work casually |
 | 5 | **B1** | Highest-leverage correctness work if real product work reopens |
-| 6 | **B2**, then **B3** | SaaS boundary clarity, then composition depth over the shipped toolkit |
+| 6 | **B2** | SaaS boundary clarity after related-data pressure is understood |
 | 7 | **B4**, then **B5** | Catalog depth and delight features only after the bigger gaps close |
 | Parallel | **D*** | When annoyance cost exceeds fix cost — do not headline a consumer milestone here |
 
@@ -109,7 +115,7 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
    - What operator recovery path proves this flow is honest?
    - Is this still above the post-`v1.19` diminishing-returns line?
 2. Optionally split strong themes into **`.planning/seeds/SEED-*.md`** so **`/gsd-new-milestone`** auto-offers matching seeds (see **`gsd-plant-seed`**).
-3. After each shipped milestone, **update this file** — what landed, what moved, new evidence from issues or dogfood.
+3. After each shipped milestone, **update this file** — what landed, what moved, and whether the repo is now actually near “stop soon” territory.
 
 ---
 

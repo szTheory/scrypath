@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.22
-milestone_name: Composition And Real-App Depth
-status: between_milestones
-last_updated: 2026-05-24T00:00:00Z
+milestone: v1.23
+milestone_name: Outside-Adopter Evidence And Support-Truth Reconciliation
+status: executing
+last_updated: "2026-05-24T15:40:07.977Z"
 last_activity: 2026-05-24
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
-  percent: 100
-stopped_at: Milestone archived and tagged
+  total_phases: 6
+  completed_phases: 1
+  total_plans: 7
+  completed_plans: 4
+  percent: 18
 ---
 
 # Project State
@@ -22,14 +21,14 @@ See: `.planning/PROJECT.md` (updated 2026-05-24)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Between milestones
+**Current focus:** Phase 87 — outside-adopter-intake-and-evidence-review
 
 ## Current Position
 
-Phase: none
-Plan: none
+Phase: 87 executing (outside-adopter-intake-and-evidence-review)
+Plan: 01 complete
 
-**Status:** Between milestones
+**Status:** Ready to execute Plan 02
 
 **Last activity:** 2026-05-24
 
@@ -74,16 +73,20 @@ Plan: none
 - **v1.22 roadmap:** The milestone is deliberately compressed into **three** phases starting at **Phase 83**: (**83**) preset/scope contract, (**84**) metadata reflection plus `search_many/2` parity, and (**85**) real-app proof plus drift gates.
 - **v1.22 requirement coverage:** All **12** active requirements map exactly once across phases **83–85**; no tenant/auth, related-data, schema-generated runtime, or Phoenix-dependent core scope was admitted.
 - **v1.22 close:** Composition And Real-App Depth shipped + archived in-repo on **2026-05-24** with a passed milestone audit, completed verification artifacts for phases **83–85**, and no active milestone reopened by default.
+- **2026-05-24 repo-grounded assessment:** Scrypath looks roughly **86% done** for its stated scope: first schema, sync honesty, Phoenix integration, operator recovery, request-edge tooling, and bounded composition are all real, while outside-adopter proof, related-data propagation, and tenant-safe access remain the highest-leverage remaining gaps.
+- **v1.23 open:** Reopen planning only for adopter-proof and trust-closure work. The next milestone is intentionally not another generic breadth slice; it exists to reconcile support/proof truth with the current tree, review real outside-adopter attempts, and decide whether Scrypath should stop soon or open one final product wedge.
+- **v1.23 ranking locked at open:** if feature work reopens after outside-adopter review, the order is related-data propagation first, tenant-safe access second, and high-cardinality facet-value search third.
+- **Support-truth drift found at open:** current planning opened with removed support/readiness surfaces and a stale `mix verify.adopter` fast target. Phase 86 is reconciling those seams back to branch-tip truth.
 
 ### Blockers / Concerns
 
 - **Outside adopter evidence remains pending:** Plan 01 reran the live proof successfully after starting the documented example services, but the milestone still has no reviewed real outside adopter signal. The canonical wording and residuals live in **`.planning/milestones/v1.19-MILESTONE-AUDIT.md`**.
 - **Diminishing-returns guardrail:** In the absence of real adopter evidence, additional internal proof/polish work is presumed low leverage and should not become the next milestone by default.
+- **Support-truth drift resolved at branch tip:** `guides/support-and-compatibility.md` is restored as the single current support/readiness authority, and README / CONTRIBUTING / guides / ExDoc now route to it again.
+- **Adopter-verify drift resolved at branch tip:** `mix verify.adopter` now runs a real `test/scrypath/readiness_contract_test.exs` fast seam, and task help / maintainer docs / example runbook agree on the fast/live contract again.
 - **Scope discipline for the search-module arc:** Search modules must remain a thin context-owned layer over the existing runtime, not a slide into schema-generated APIs, Phoenix coupling, or hidden operational behavior.
-- **Search-module archive drift:** `v1.20` planning claims a `Scrypath.SearchModule` layer, but the current checkout does not contain that module or its guide. Treat that as a reconciliation task, not as settled product truth.
-- **Public param grammar risk:** `v1.21` froze browser-shaped param semantics on purpose; future composition work should extend that contract only with real adopter pressure.
-- **v1.22 scope guard:** Composition work must stay bounded to reusable presets/scopes, `search_many/2`-aligned composition, and UI metadata exposure; no schema-generated runtime verbs, UI widgets, or Phoenix-coupled runtime core should slip in under this milestone.
-- Existing `71`–`73` phase directories remain in `.planning/phases/` in the working tree; phase numbering continues at `74`, so no collision exists for this milestone open.
+- **Search-module archive drift:** `v1.20` archive files still claim a `Scrypath.SearchModule` layer, but the current checkout does not contain that module, its guide, or its tests. Treat the archive as historical/salvage-backed evidence, not as current shipped truth.
+- **Future product ranking should stay evidence-bound:** do not let generic ergonomics or OPSUI breadth displace related-data propagation or tenant-safe access unless the outside-adopter evidence actually points there.
 
 ### Deferred Items
 
@@ -98,13 +101,13 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-1. Decide whether to stay paused under the post-`v1.19` outside-adopter guardrail or open a new milestone for a leverage-positive need.
-2. If a new milestone is justified, run `$gsd-new-milestone`.
-3. Keep the outside-adopter evidence gap explicit in any next-step planning.
+1. Start **Phase 87**: refresh the outside-adopter intake/runbook so it names the defended proof-command family, runtime assumptions, and required artifacts.
+2. Review real outside-adopter attempts before reopening feature work.
+3. Keep the next-pull ranking explicit: related-data first, tenant-safe access second, facet-value search later.
 
 ---
 
-*Last updated: 2026-05-24 — archived **v1.22 Composition And Real-App Depth***
+*Last updated: 2026-05-24 — opened **v1.23 Outside-Adopter Evidence And Support-Truth Reconciliation***
 
 **Prior milestone:** **v1.22** — Composition And Real-App Depth — **2026-05-24** (shipped + archived in-repo).
 
@@ -114,4 +117,4 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 **Completed:** **v1.19** shipped + archived in-repo (**2026-04-28**) — phases **74–76** — **`milestones/v1.19-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Next:** Between milestones — either pause under the outside-adopter guardrail or open a new milestone with `$gsd-new-milestone`.
+**Next:** Active milestone **v1.23** — Phase **86** support-truth reconciliation is complete; continue with outside-adopter evidence review in Phase **87**.
