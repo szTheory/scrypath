@@ -15,8 +15,8 @@
 ### Outside-adopter evidence
 
 - [ ] **ADOPT-01**: The repo ships one current outside-adopter intake and evidence-review path that tells adopters which proof command, runtime versions, sync mode, example path, and artifacts to supply.
-- [ ] **ADOPT-02**: Maintainers review at least two real outside-adopter attempts against current checkout truth and classify each issue as docs/onboarding gap, support-truth drift, product gap, or env/setup papercut.
-- [ ] **ADOPT-03**: The Phoenix + Meilisearch proof story stays defended and current, including explicit repo-clone boundaries, example assumptions, and current support scope for the core library path.
+- [x] **ADOPT-02**: Maintainers review at least two real outside-adopter attempts against current checkout truth and classify each issue as docs/onboarding gap, support-truth drift, product gap, or env/setup papercut.
+- [x] **ADOPT-03**: The Phoenix + Meilisearch proof story stays defended and current, including explicit repo-clone boundaries, example assumptions, and current support scope for the core library path.
 
 ### Evidence-backed closure
 
@@ -46,8 +46,8 @@
 | TRUTH-02 | Phase 86 | Complete |
 | TRUTH-03 | Phase 86 | Complete |
 | ADOPT-01 | Phase 87 | Pending |
-| ADOPT-02 | Phase 87 | Pending |
-| ADOPT-03 | Phase 87 | Pending |
+| ADOPT-02 | Phase 87 | Complete |
+| ADOPT-03 | Phase 87 | Complete |
 | FIX-01 | Phase 88 | Pending |
 | FIX-02 | Phase 88 | Pending |
 
