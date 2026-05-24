@@ -38,6 +38,11 @@ defmodule Scrypath.Options do
       default: nil,
       doc: "Optional per-schema index prefix."
     ],
+    fan_outs: [
+      type: {:custom, __MODULE__, :validate_fan_outs, []},
+      default: [],
+      doc: "Explicit related-data fan-out metadata for propagation."
+    ],
     backend: [
       type: {:custom, __MODULE__, :validate_backend, []},
       default: nil,
@@ -791,6 +796,60 @@ defmodule Scrypath.Options do
 
   def validate_backend(value) when is_atom(value) or is_nil(value), do: {:ok, value}
   def validate_backend(_value), do: {:error, "expected a module, atom, or nil"}
+
+  @doc false
+  def validate_fan_outs([]), do: {:ok, []}
+
+  def validate_fan_outs(value) when is_list(value) do
+    if Keyword.keyword?(value) do
+      Enum.reduce_while(value, {:ok, []}, fn {key, config}, {:ok, acc} ->
+        case validate_fan_out_config(config) do
+          {:ok, validated} -> {:cont, {:ok, [{key, validated} | acc]}}
+          {:error, msg} -> {:halt, {:error, msg}}
+        end
+      end)
+      |> case do
+        {:ok, list} -> {:ok, Enum.reverse(list)}
+        error -> error
+      end
+    else
+      {:error, "fan_outs must be a keyword list"}
+    end
+  end
+
+  def validate_fan_outs(_value), do: {:error, "fan_outs must be a keyword list"}
+
+  defp validate_fan_out_config(config) when is_list(config) do
+    if Keyword.keyword?(config) do
+      with {:ok, target} <- fetch_and_validate_module(config, :target),
+           {:ok, resolver} <- fetch_and_validate_mfa(config, :resolver) do
+        {:ok, [target: target, resolver: resolver]}
+      end
+    else
+      {:error, "fan_out configuration must be a keyword list"}
+    end
+  end
+
+  defp validate_fan_out_config(_), do: {:error, "fan_out configuration must be a keyword list"}
+
+  defp fetch_and_validate_module(config, key) do
+    case Keyword.fetch(config, key) do
+      {:ok, module} when is_atom(module) -> {:ok, module}
+      {:ok, _} -> {:error, "fan_out :#{key} must be a module"}
+      :error -> {:error, "fan_out is missing required :#{key}"}
+    end
+  end
+
+  defp fetch_and_validate_mfa(config, key) do
+    case Keyword.fetch(config, key) do
+      {:ok, {mod, fun, args}} when is_atom(mod) and is_atom(fun) and is_list(args) ->
+        {:ok, {mod, fun, args}}
+      {:ok, _} ->
+        {:error, "fan_out :#{key} must be a valid MFA tuple {Module, :func, [args]}"}
+      :error ->
+        {:error, "fan_out is missing required :#{key}"}
+    end
+  end
 
   def validate_optional_module(value) when is_atom(value) or is_nil(value), do: {:ok, value}
   def validate_optional_module(_value), do: {:error, "expected a module or nil"}

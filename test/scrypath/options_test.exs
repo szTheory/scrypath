@@ -513,4 +513,33 @@ defmodule Scrypath.OptionsTest do
       end
     end
   end
+
+  describe "fan_outs metadata (DATA-01)" do
+    test "validate_fan_outs/1 accepts a list of keyword configurations with target and MFA resolver" do
+      input = [
+        posts: [target: Post, resolver: {Scrypath.DocResolver, :resolve, [:posts]}],
+        comments: [target: Comment, resolver: {Scrypath.DocResolver, :resolve, [:comments]}]
+      ]
+      assert {:ok, result} = Options.validate_fan_outs(input)
+      assert length(result) == 2
+      assert Keyword.get(result, :posts) == [target: Post, resolver: {Scrypath.DocResolver, :resolve, [:posts]}]
+      assert Keyword.get(result, :comments) == [target: Comment, resolver: {Scrypath.DocResolver, :resolve, [:comments]}]
+    end
+
+    test "validate_fan_outs/1 rejects if resolver is not a valid MFA" do
+      input = [
+        posts: [target: Post, resolver: {Scrypath.DocResolver, :resolve}]
+      ]
+      assert {:error, msg} = Options.validate_fan_outs(input)
+      assert msg =~ "fan_out :resolver must be a valid MFA tuple"
+    end
+
+    test "validate_fan_outs/1 rejects if target is not a module" do
+      input = [
+        posts: [target: "Post", resolver: {Scrypath.DocResolver, :resolve, []}]
+      ]
+      assert {:error, msg} = Options.validate_fan_outs(input)
+      assert msg =~ "fan_out :target must be a module"
+    end
+  end
 end
