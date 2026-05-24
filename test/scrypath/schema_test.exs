@@ -8,13 +8,13 @@ defmodule Scrypath.SchemaTest do
                filterable: [:status],
                faceting: [],
                sortable: [:inserted_at],
+               fan_outs: [],
                settings: %{__unrecognized__: %{}},
                document_id: :id,
                document_source: :fields,
                index_prefix: nil,
                backend: nil
              }
-
       assert SearchablePost.__scrypath__(:fields) == [:title, :body]
       assert SearchablePost.__scrypath__(:faceting) == []
       assert SearchablePost.__scrypath__(:document_id) == :id

@@ -51,6 +51,11 @@ defmodule Scrypath.Options do
   ]
 
   @runtime_options [
+    fan_out: [
+      type: {:custom, __MODULE__, :validate_optional_atom, []},
+      default: nil,
+      doc: "Optional fan_out key used by sync_related to resolve related records."
+    ],
     backend: [
       type: {:custom, __MODULE__, :validate_backend, []},
       required: true,
