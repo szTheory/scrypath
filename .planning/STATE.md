@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.23
 milestone_name: Outside-Adopter Evidence And Support-Truth Reconciliation
-status: executing
+status: completed
 last_updated: "2026-05-24T16:36:55.478Z"
 last_activity: 2026-05-24
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 6
-  completed_plans: 5
-  percent: 17
+  completed_plans: 6
+  percent: 100
 ---
 
 # Project State
@@ -21,14 +21,14 @@ See: `.planning/PROJECT.md` (updated 2026-05-24)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase 88 — evidence-backed-papercuts-and-next-pull-verdict
+**Current focus:** Phase 88 complete — milestone v1.23 frozen
 
 ## Current Position
 
-Phase: 88 discuss (evidence-backed-papercuts-and-next-pull-verdict)
-Plan: pending
+Phase: 88 (evidence-backed-papercuts-and-next-pull-verdict)
+Plan: 88-01-PLAN.md
 
-**Status:** Phase 88 discuss phase complete. Ready for `/gsd-plan-phase 88`
+**Status:** Phase 88 complete. Next-pull verdict is related-data propagation.
 
 **Last activity:** 2026-05-24
 
@@ -37,6 +37,8 @@ Plan: pending
 ### Decisions
 
 (See `.planning/PROJECT.md` Key Decisions.)
+
+- **Phase 88 complete:** Papercuts fixed and milestone frozen. Next-pull verdict is related-data propagation.
 
 - **Phase 87 plan 02 complete:** Both submissions successfully passed the human verification checkpoint as genuine outside-adopter attempts and were classified as Class A (Defended-path). The findings were recorded in the evidence ledger, establishing a PASS state for the defended-path gate.
 - **v1.15 close:** Second slice shipped **OPS2-01**–**OPS2-08** across phases **62–64**; persistence authority **(A)** file + GitOps; **OPSUI-FUT-02** / **Tier C** unchanged — **`milestones/v1.15-REQUIREMENTS.md`**.
@@ -102,9 +104,9 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-1. Phase 87 is complete.
-2. Active next-pull verdict: related-data propagation
-3. Prepare for Phase 88.
+1. Phase 88 is complete.
+2. Milestone v1.23 is completely closed and frozen.
+3. Next-pull verdict is established: related-data propagation.
 
 ---
 
