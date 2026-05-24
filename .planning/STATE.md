@@ -21,14 +21,14 @@ See: `.planning/PROJECT.md` (updated 2026-05-24)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase 87 — outside-adopter-intake-and-evidence-review
+**Current focus:** Phase 88 — evidence-backed-papercuts-and-next-pull-verdict
 
 ## Current Position
 
-Phase: 87 complete (outside-adopter-intake-and-evidence-review)
-Plan: 03 complete
+Phase: 88 discuss (evidence-backed-papercuts-and-next-pull-verdict)
+Plan: pending
 
-**Status:** Phase 87 complete
+**Status:** Phase 88 discuss phase complete. Ready for `/gsd-plan-phase 88`
 
 **Last activity:** 2026-05-24
 
