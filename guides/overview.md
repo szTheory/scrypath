@@ -2,6 +2,8 @@
 
 Short map of published guides. Start with the [Golden path](golden-path.md) for a linear first-hour setup, or [JTBD and user flows](jtbd-and-user-flows.md) if you want the mental model first.
 
+For the current support/readiness contract, defended runtime posture, and maintainer proof-command split, use [Support and compatibility](support-and-compatibility.md).
+
 ## Crash Course
 
 Scrypath is easiest to think about as four layers:
@@ -19,6 +21,8 @@ The intended app boundary is a Phoenix context that owns the search flow, with c
 | [Common mistakes](common-mistakes.md) | Evidence-led pitfalls (symptom → wrong model → fix) with links back to canonical guides. |
 | [Getting started](getting-started.md) | Mental model: what you configure, where sync and search live in the app. |
 | [Golden path](golden-path.md) | Checklist from `mix.exs` through first `Scrypath.search/3` with **inline** sync. |
+| [Support and compatibility](support-and-compatibility.md) | Single current support/readiness authority: runtime posture, defended Phoenix + Meilisearch path, proof commands, and clone-vs-Hex boundary. |
+| [Outside-Adopter Intake](outside-adopter-intake.md) | Single canonical outside-adopter intake authority for gathering evidence on failed runs or outside integrations. |
 | [Request-edge search](request-edge-search.md) | Canonical v1.21 request-edge contract: browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix`, and context-owned `Scrypath.search/3`. |
 | [Composing real-app search](composing-real-app-search.md) | Canonical v1.22 composition and metadata guide: `defaults`, `fixed`, host-owned rendering, and `compose_many/2` lowering. |
 | [Related data and reindexing](related-data-and-reindexing.md) | Canonical guidance for associated-data fan-out, when direct sync is enough, and when to escalate to backfill or reindex. |
