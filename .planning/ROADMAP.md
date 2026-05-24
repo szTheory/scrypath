@@ -25,20 +25,13 @@
 - [x] **`v1.20` shipped + archived in-repo** (**2026-05-08**) — *Search Module Foundation* — phases **77–79**, **8** requirements — [archive](milestones/v1.20-ROADMAP.md) · [requirements](milestones/v1.20-REQUIREMENTS.md) · [audit](milestones/v1.20-MILESTONE-AUDIT.md)
 - [x] **`v1.21` shipped + archived in-repo** (**2026-05-23**) — *Query Toolkit And Phoenix Edge Helpers* — phases **80–82**, **8** requirements — [archive](milestones/v1.21-ROADMAP.md) · [requirements](milestones/v1.21-REQUIREMENTS.md) · [audit](milestones/v1.21-MILESTONE-AUDIT.md)
 - [x] **`v1.22` shipped + archived in-repo** (**2026-05-24**) — *Composition And Real-App Depth* — phases **83–85**, **12** requirements — [archive](milestones/v1.22-ROADMAP.md) · [requirements](milestones/v1.22-REQUIREMENTS.md) · [audit](milestones/v1.22-MILESTONE-AUDIT.md)
-- [ ] **`v1.23` active** (**opened 2026-05-24**) — *Outside-Adopter Evidence And Support-Truth Reconciliation* — phases **86–88**, **8** requirements — [requirements](REQUIREMENTS.md)
+- [x] **`v1.23` shipped + archived in-repo** (**2026-05-24**) — *Outside-Adopter Evidence And Support-Truth Reconciliation* — phases **86–88**, **8** requirements — [requirements](REQUIREMENTS.md)
 
 ## Current Milestone
 
-### 🚧 v1.23 — Outside-Adopter Evidence And Support-Truth Reconciliation
+**Current milestone:** none open.
 
-**Opened:** 2026-05-24  
-**Phases:** 86–88  
-**Status:** active  
-**Requirements:** [`.planning/REQUIREMENTS.md`](REQUIREMENTS.md)
-
-**Milestone goal:** reconcile support/readiness/proof claims with the checked-out tree, review real outside-adopter evidence on the defended Phoenix + Meilisearch path, and let that evidence determine whether Scrypath should stop soon or open one final high-leverage product wedge.
-
-**Branch-tip truth note:** `guides/support-and-compatibility.md` and the `mix verify.adopter` fast contract are present again on the current checkout, but the `v1.20` archive still describes a `Scrypath.SearchModule` layer that the checked-out branch tip does not currently expose.
+**Last shipped milestone:** **v1.23 Outside-Adopter Evidence And Support-Truth Reconciliation** — shipped + archived **2026-05-24**, **3** phases (**86–88**) complete. Next-pull verdict: **related-data propagation**.
 
 ### Phase 86: Support Truth And Proof Surface Reconciliation
 
@@ -66,12 +59,10 @@ Plans:
 
 **Goal:** Close only accepted evidence-backed papercuts and end the milestone with one explicit next-step verdict.
 **Depends on:** Phase 87
-**Plans:** 3 plans
+**Plans:** 1 plan
 
 Plans:
-- [ ] 88-01: Fix only the evidence-backed docs/support/proof papercuts accepted from Phase 87.
-- [ ] 88-02: Add bounded regression protection for every accepted papercut so the next adopter run catches recurrence immediately.
-- [ ] 88-03: Freeze the milestone with one explicit next-pull verdict: stop soon, open related-data propagation, or open tenant-safe access.
+- [x] 88-01-PLAN.md — Fix papercut, add docs contract test, and freeze milestone with "related-data propagation" verdict.
 
 **Working assumptions locked at milestone open:**
 

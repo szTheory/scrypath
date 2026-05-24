@@ -20,8 +20,8 @@
 
 ### Evidence-backed closure
 
-- [ ] **FIX-01**: The milestone closes only evidence-backed docs/support/proof papercuts discovered through **ADOPT-02**, and each accepted fix lands with a bounded regression guard.
-- [ ] **FIX-02**: Milestone-close artifacts end with one explicit next-pull verdict: stop soon, open related-data propagation, or open tenant-safe access.
+- [x] **FIX-01**: The milestone closes only evidence-backed docs/support/proof papercuts discovered through **ADOPT-02**, and each accepted fix lands with a bounded regression guard.
+- [x] **FIX-02**: Milestone-close artifacts end with one explicit next-pull verdict: stop soon, open related-data propagation, or open tenant-safe access.
 
 ## Future requirements carried forward
 
@@ -48,8 +48,8 @@
 | ADOPT-01 | Phase 87 | Complete |
 | ADOPT-02 | Phase 87 | Complete |
 | ADOPT-03 | Phase 87 | Complete |
-| FIX-01 | Phase 88 | Pending |
-| FIX-02 | Phase 88 | Pending |
+| FIX-01 | Phase 88 | Complete |
+| FIX-02 | Phase 88 | Complete |
 
 **Coverage:**
 - v1.23 requirements: 8 total
