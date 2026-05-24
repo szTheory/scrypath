@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.23
-milestone_name: Outside-Adopter Evidence And Support-Truth Reconciliation
-status: completed
-last_updated: "2026-05-24T17:10:23.147Z"
+milestone: v1.24
+milestone_name: Related-Data and Dependency Propagation
+status: Phase 89 complete. Implemented related-data fan-out API and explicit orchestration.
+last_updated: "2026-05-24T20:54:00.000Z"
 last_activity: 2026-05-24
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
-  percent: 100
+  total_phases: 14
+  completed_phases: 10
+  total_plans: 26
+  completed_plans: 33
+  percent: 71
 ---
 
 # Project State
@@ -21,14 +21,14 @@ See: `.planning/PROJECT.md` (updated 2026-05-24)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase 88 complete — milestone v1.23 frozen
+**Current focus:** Phase 89 (Related-Data Propagation Contract and API) — milestone v1.24 active
 
 ## Current Position
 
-Phase: 88 (evidence-backed-papercuts-and-next-pull-verdict)
-Plan: 88-01-PLAN.md
+Phase: 89 (related-data-propagation-contract-and-api)
+Plan: COMPLETE
 
-**Status:** Phase 88 complete. Next-pull verdict is related-data propagation.
+**Status:** Phase 89 complete. Established explicit API and metadata structures for related-data fan-out.
 
 **Last activity:** 2026-05-24
 
@@ -37,6 +37,8 @@ Plan: 88-01-PLAN.md
 ### Decisions
 
 (See `.planning/PROJECT.md` Key Decisions.)
+
+- **Phase 89 complete:** Implemented explicit metadata validation (`fan_outs`), created `Scrypath.sync_related/3` for executing resolvers inline or enqueuing via `RelatedWorker`, successfully integrating both execution modes securely.
 
 - **Phase 88 complete:** Papercuts fixed and milestone frozen. Next-pull verdict is related-data propagation.
 
@@ -80,9 +82,12 @@ Plan: 88-01-PLAN.md
 - **v1.23 open:** Reopen planning only for adopter-proof and trust-closure work. The next milestone is intentionally not another generic breadth slice; it exists to reconcile support/proof truth with the current tree, review real outside-adopter attempts, and decide whether Scrypath should stop soon or open one final product wedge.
 - **v1.23 ranking locked at open:** if feature work reopens after outside-adopter review, the order is related-data propagation first, tenant-safe access second, and high-cardinality facet-value search third.
 - **Support-truth drift found at open:** current planning opened with removed support/readiness surfaces and a stale `mix verify.adopter` fast target. Phase 86 is reconciling those seams back to branch-tip truth.
+- **v1.23 close:** Outside-Adopter Evidence And Support-Truth Reconciliation shipped + archived in-repo on **2026-05-24**. Next-pull verdict is established: related-data propagation.
+- **v1.24 open:** Related-Data and Dependency Propagation is now the active milestone to address the biggest correctness gap for real SaaS apps.
 
 ### Blockers / Concerns
 
+- **Scope discipline for related-data:** Related-data propagation must be explicit. Do not introduce implicit Ecto callbacks, hidden association walking, or deep preloading behind the scenes.
 - **Outside adopter evidence reviewed:** We now have a phase-local evidence ledger recording genuine product gaps (`related-data propagation` and `tenant-safe access`). The canonical milestone verdict must incorporate these findings.
 - **Diminishing-returns guardrail:** In the absence of real adopter evidence, additional internal proof/polish work is presumed low leverage and should not become the next milestone by default.
 - **Support-truth drift resolved at branch tip:** `guides/support-and-compatibility.md` is restored as the single current support/readiness authority, and README / CONTRIBUTING / guides / ExDoc now route to it again.
