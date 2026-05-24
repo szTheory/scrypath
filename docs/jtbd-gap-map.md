@@ -2,7 +2,7 @@
 
 **Audience:** maintainers and repeat adopters updating Scrypath docs or planning future milestones.
 
-**Last reviewed:** 2026-05-23
+**Last reviewed:** 2026-05-24
 
 This document answers four questions:
 
@@ -37,7 +37,21 @@ The goal is to keep future doc updates and milestone planning anchored in the cu
 - **Optional OPSUI inspection**
   Strong enough for v1. The shell reflects triage priorities honestly and stays secondary to core library adoption.
 - **Adopter proof and support contract**
-  Strong. The example app, verify surface, and readiness artifacts support the claim that the current surface is ready for outside adoption attempts.
+  Strong but not perfectly clean. The example app, verify surface, and readiness artifacts support the claim that the current surface is ready for outside adoption attempts, but the current tree still has support-truth drift that should be reconciled before maintainers overstate how tidy the proof surface is.
+
+## Default next pull
+
+The Phase 87 evidence review concluded that outside-adopter attempts on defended paths face significant friction regarding related data and tenant isolation. 
+
+The current highest-leverage work is:
+
+1. **Association and dependency propagation** (Active next-pull verdict)
+2. **Tenant-safe search access story**
+
+Why this now outranks more feature work:
+
+- reviewed outside-adopter evidence confirmed these as primary blockers and painful workarounds
+- the repo is already close to diminishing returns on generic ergonomics breadth
 
 ## Biggest remaining gaps
 
@@ -81,27 +95,7 @@ Priority:
 
 - **high** for B2B SaaS credibility
 
-### 3. Composition and real-app depth over the query toolkit
-
-The request-edge toolkit is now shipped, which changes the next leverage move. The open question is no longer "can Scrypath normalize browser params once?" It is "what reusable search patterns should apps stop rebuilding on top of that toolkit?"
-
-Why it matters:
-
-- common Phoenix apps repeat the same presets, scopes, filter bundles, and UI metadata decisions
-- the project already tracks this pressure in active requirements (`CMP-01`, `CMP-02`)
-- this is the natural next step after `Scrypath.QueryParams` and `Scrypath.Phoenix`
-
-Current state:
-
-- `v1.21` shipped the public request-edge toolkit and optional Phoenix helpers
-- current docs already teach the narrow edge contract well
-- broader composition patterns remain intentionally uncommitted
-
-Priority:
-
-- **high**, but still below correctness and SaaS-boundary gaps
-
-### 4. High-cardinality facet value search
+### 3. High-cardinality facet value search
 
 Scrypath has strong facet filtering and counts, but the user flow for "search within thousands of facet values" is still incomplete.
 
@@ -115,7 +109,7 @@ Priority:
 
 - **high** for catalog-heavy apps, lower for admin search
 
-### 5. Autocomplete and suggestion-class flows
+### 4. Autocomplete and suggestion-class flows
 
 Scrypath has solid core search, but not yet a first-class user flow for:
 
@@ -137,7 +131,9 @@ Priority:
 ## Gaps that are real but lower leverage
 
 - **Request-edge ergonomics**
-  This was the old top gap, but `v1.21` materially closed it with `Scrypath.QueryParams`, structured edge errors, and optional `Scrypath.Phoenix` helpers. Future work here should be composition depth, not another raw parsing layer.
+  This was the old top gap, but `v1.21` materially closed it with `Scrypath.QueryParams`, structured edge errors, and optional `Scrypath.Phoenix` helpers.
+- **Composition depth**
+  This was the next leverage move after `v1.21`, and `v1.22` materially closed it with `Scrypath.Composition`, metadata reflection, and `compose_many/2` lowering. Future work should not reopen generic composition breadth without outside-adopter evidence.
 - **OPSUI deeper productization**
   Useful, but the repo already treats core library and honest operator visibility as the v1 line. More admin-surface work is not the highest leverage for adopters.
 - **Heavier browser E2E for OPSUI**
@@ -157,17 +153,15 @@ These should stay out of the default roadmap pull until real adoption pressure s
 
 The repo's current discipline here is correct. Mature ecosystems show that widening too early creates confusing abstractions and weakens the core indexing/sync story.
 
-## Updated priority order if product work reopens
+## Updated priority order
 
 1. **Association and dependency propagation**
-   Biggest correctness gap for real apps once documents include related data.
+   Biggest correctness gap for real apps once documents include related data. This is the active next-pull verdict.
 2. **Tenant-safe search access story**
    Biggest credibility gap for Phoenix SaaS adopters.
-3. **Composition and real-app depth**
-   Build on `Scrypath.QueryParams` and `Scrypath.Phoenix` instead of reopening raw request parsing.
-4. **Facet-value search for large filter lists**
+3. **Facet-value search for large filter lists**
    Useful for larger catalogs, but narrower.
-5. **Autocomplete and suggestion flows**
+4. **Autocomplete and suggestion flows**
    Worth doing later, not before the correctness and SaaS-boundary work lands.
 
 ## Diminishing-returns line
@@ -189,7 +183,12 @@ That means the likely diminishing-returns boundary is:
 - **before** deep OPSUI productization
 - **before** search-adjacent delight features become the main story
 
-In practical terms, once Scrypath closes the related-data propagation gap, the tenant-safe SaaS search gap, and a modest composition layer over the shipped query toolkit, most remaining JTBD work becomes situational rather than category-defining.
+In practical terms, Scrypath now looks roughly **mid-to-high 80s done** for its stated v1 scope. That means:
+
+- another generic ergonomics milestone is likely low leverage without outside-adopter evidence
+- related-data propagation is the first major remaining correctness wedge
+- tenant-safe search access is the first major remaining SaaS-credibility wedge
+- most other work is becoming situational rather than category-defining
 
 ## External reference points
 
@@ -219,3 +218,5 @@ When revisiting this document:
 ## Current repo caveat
 
 The planning archive currently claims a thin `Scrypath.SearchModule` layer shipped in `v1.20`, while the checked-out code does not expose that layer. Keep future JTBD docs and milestone decisions grounded in the code surface until that mismatch is reconciled.
+
+Phase 86 restored the current support/readiness authority at `guides/support-and-compatibility.md` and repaired `mix verify.adopter` so its fast path now runs a real `test/scrypath/readiness_contract_test.exs` seam. The remaining credibility issue is the archive-vs-branch-tip `SearchModule` mismatch, not the support/proof surface.
