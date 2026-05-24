@@ -37,7 +37,7 @@ Integrating the Hex-package into a Phoenix LiveView application.
 I expected Scrypath to have a first-class primitive for generating and managing tenant scopes/tokens out of the box, and a clean way to apply them to searches. Instead, I had to manually interact with the Meilisearch API to generate the token. Furthermore, when querying high-cardinality facets with the tenant token, the response metadata was not easily mapped back to my Ecto structs or hydrated properly in the LiveView. 
 
 ## First Failure/Confusion Point
-The confusion point is the lack of a defined `tenant_scope` abstraction in the library. While the research documentation mentions tenant tokens and scoped search credentials, there is no actual `Scrypath.Tenant` or explicit multi-tenant query builder. I am left manually building JWTs for Meilisearch and bypassing Scrypath's query API entirely for the request-edge LiveView search.
+The first failure/confusion point is the lack of a defined `tenant_scope` abstraction in the library. While the research documentation mentions tenant tokens and scoped search credentials, there is no actual `Scrypath.Tenant` or explicit multi-tenant query builder. I am left manually building JWTs for Meilisearch and bypassing Scrypath's query API entirely for the request-edge LiveView search.
 
 ## Supporting Logs
 ```text
@@ -50,6 +50,8 @@ token = Meilisearch.TenantToken.generate(api_key, %{filter: "tenant_id = 42"})
 
 ## Maintainer Review Block
 *For maintainer use only.*
-- **Classification:** (Class A, Class B, Class C, Class D)
+- **Classification:** Class A
 - **Findings:**
-- **Action:**
+  - `product gap`: Lack of a first-class `tenant_scope` abstraction or explicit multi-tenant query builder, forcing adopters to manually generate Meilisearch tokens.
+  - `product gap`: Hydration (`Scrypath.Query.hydrate/2`) fails with `FunctionClauseError` when dealing with custom response metadata for high-cardinality facets under tenant-scoped searches.
+- **Action:** Add to evidence ledger as a Class A finding mapping to tenant-safe access.

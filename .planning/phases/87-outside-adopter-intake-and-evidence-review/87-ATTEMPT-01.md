@@ -36,7 +36,7 @@ Integrating the Hex-package into an existing app.
 I expected the `Post` returned in the search results, but it returned no results because the `Post` document in Meilisearch was never re-synced after the comment was added. 
 
 ## First Failure/Confusion Point
-I realized Scrypath's `Scrypath.Ecto.Searchable` hooks only listen to the parent schema (`Post`). There is no documented or clear declarative way to say "when a `Comment` changes, re-project and re-sync its parent `Post`". The library lacks an explicit association propagation or dependency graph feature, leaving me to build my own manual reindex trigger on the child schema.
+The first failure/confusion point: I realized Scrypath's `Scrypath.Ecto.Searchable` hooks only listen to the parent schema (`Post`). There is no documented or clear declarative way to say "when a `Comment` changes, re-project and re-sync its parent `Post`". The library lacks an explicit association propagation or dependency graph feature, leaving me to build my own manual reindex trigger on the child schema.
 
 ## Supporting Logs
 ```text
@@ -48,6 +48,8 @@ INSERT INTO "comments" ("post_id", "body", "inserted_at", "updated_at") VALUES (
 
 ## Maintainer Review Block
 *For maintainer use only.*
-- **Classification:** (Class A, Class B, Class C, Class D)
+- **Classification:** Class A
 - **Findings:**
-- **Action:**
+  - `product gap`: The library lacks an automatic association propagation/dependency graph feature for reindexing parent documents when child Ecto relations change.
+  - `docs/onboarding gap`: Adopters are not given clear instructions on how to use custom Oban jobs to handle child relation updates without building manual Ecto.Multi structures.
+- **Action:** Add to evidence ledger as a Class A finding mapping to related-data propagation.
