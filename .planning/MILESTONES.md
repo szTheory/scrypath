@@ -42,15 +42,17 @@
 
 ## v1.20 Search Module Foundation (Shipped + archived: 2026-05-08)
 
+Historical note: the `v1.20` archive records milestone-close `Scrypath.SearchModule` claims, but the current checked-out branch tip does not expose that layer, its guide, or its tests. Treat the bullets below as archive history, not present-day shipped surface.
+
 **Phases completed:** **3** (**77–79**), **8** requirements (**SMOD-01**–**SMOD-08**)
 
 **Hex:** **`scrypath 0.3.4`** on Hex; **in-repo milestone close only** — no dedicated Hex bump claimed for this planning milestone.
 
 **Key accomplishments:**
 
-- Added a context-owned `Scrypath.SearchModule` declaration layer with `search/2`, `search!/2`, and `search_args/2` over the existing `Scrypath.search/3` runtime, while keeping schemas metadata-only and merge precedence explicit (**SMOD-01**–**SMOD-03**) — **Phase 77**
-- Normalized browser-shaped params for text, filters, sort, page, facets, and facet filters into one stable seam, and surfaced invalid input through structured `Scrypath.SearchModule.ParamError` entries (**SMOD-04**–**SMOD-06**) — **Phase 78**
-- Published one canonical search-module guide, rewired README / overview / moduledoc / Phoenix guide routing to it, and added bounded doc-contract plus thin-parity regression coverage (**SMOD-07**, **SMOD-08**) — **Phase 79**
+- The archive records a context-owned `Scrypath.SearchModule` declaration layer with `search/2`, `search!/2`, and `search_args/2` over the existing `Scrypath.search/3` runtime, while keeping schemas metadata-only and merge precedence explicit (**SMOD-01**–**SMOD-03**) — **Phase 77**
+- The archive records browser-shaped param normalization for text, filters, sort, page, facets, and facet filters, with structured `Scrypath.SearchModule.ParamError` entries (**SMOD-04**–**SMOD-06**) — **Phase 78**
+- The archive records one canonical search-module guide, README / overview / moduledoc / Phoenix guide routing, and bounded doc-contract plus thin-parity regression coverage (**SMOD-07**, **SMOD-08**) — **Phase 79**
 
 **Pre-close audit:** **`milestones/v1.20-MILESTONE-AUDIT.md`** (**`passed`** — `requirements: 8/8`, `phases: 3/3`, `integration: 8/8`, `flows: 4/4`, `nyquist: compliant`).
 
