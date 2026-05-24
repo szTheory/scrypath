@@ -1,5 +1,15 @@
 I made a clean, citation-free brief you can drop into LLM coding sessions here: elixir_search_lib_research_brief.md￼
 
+Before using this brief for milestone shaping or architecture recommendations, force the research to answer these five adopter jobs explicitly:
+
+1. **First searchable schema** — how fast can a Phoenix or Ecto team reach one working search flow?
+2. **Request-edge Phoenix flow** — how do browser params, URL state, forms, and context-owned runtime calls fit together?
+3. **Related-data propagation** — what happens when associated data changes many documents?
+4. **Tenant-safe access** — what is the real shared-index SaaS story, and what is library scope versus host-app scope?
+5. **Recovery and rebuild** — what operator path proves the system is honest when drift, failed work, or contract changes appear?
+
+If the research cannot answer one of those jobs clearly, it is not yet good enough to shape Scrypath defaults or milestone plans.
+
 My sourced take after digging through the ecosystem:
 
 1) The real gap
@@ -65,6 +75,16 @@ Marketplace/catalog engineer: “I need user-facing search for products, listing
 Multi-tenant platform engineer: “I need shared infrastructure, but tenant-safe search access.” This persona wants tenant scoping, scoped credentials, and a clean mental model for authorization. Official docs from both Meilisearch and Typesense show that this is a first-class use case, so your lib should acknowledge it directly instead of leaving it as “you can prefix index names.”  ￼
 
 Platform/infra engineer: “I need rebuilds, retries, observability, and no 2am surprises.” This persona cares less about query sugar and more about idempotency, job payload design, bulk import, cutover, and progress tracking. Hibernate Search is the best external reference for this operator persona.  ￼
+
+The future-facing priority order for Scrypath should also stay explicit during research:
+
+1. related-data / dependency propagation semantics
+2. tenant-safe search access
+3. composition depth over the shipped request-edge toolkit
+4. high-cardinality facet value search
+5. autocomplete / suggestion flows
+
+Do not recommend broader abstraction, deeper admin surfaces, or delight features ahead of those gaps unless outside adopter evidence clearly says otherwise.
 
 7) Domain language I’d standardize on
 

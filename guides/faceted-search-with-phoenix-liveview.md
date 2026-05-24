@@ -2,7 +2,7 @@
 
 This guide walks through a **movies-shaped** example (genre, year, rating, director) that stays on the **common `Scrypath.search/3` path** with `facets:`, `facet_filter:`, and URL-friendly `handle_params/3`. The patterns mirror the library’s own contract tests so prose and code stay aligned as APIs evolve.
 
-For the shared request-edge contract around browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix`, and context-owned runtime calls, read [Request-edge search](request-edge-search.md). This guide stays focused on catalog-specific facet flows.
+For the shared request-edge contract around browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix`, and context-owned runtime calls, read [Request-edge search](request-edge-search.md). For the canonical composition and metadata story that feeds this catalog flow, read [Composing real-app search](composing-real-app-search.md). This guide stays focused on the single-schema proof.
 
 ## Overview
 
@@ -13,6 +13,12 @@ Faceted search combines full-text search with **facet distributions** (counts pe
 - Meilisearch wire keys (`facetDistribution`, `facetStats`) decode into `%Scrypath.SearchResult.Facets{}`.
 
 LiveView owns **assigns, loading, and URL state**. Your **context** still owns repo access, hydration options, and the call to `Scrypath.search/3`.
+
+If you want to render honest controls before dispatch, inspect
+`Scrypath.schema_capabilities/1` for declaration-backed support and
+`Scrypath.reflect_search/2` for resolved `applied`, `defaulted`, `fixed`, and
+`unsupported` state. Those helpers stay plain-data and keep tenant policy,
+authorization, and related-data behavior explicitly **host-owned**.
 
 ## Prerequisites
 
@@ -82,6 +88,28 @@ Catalog UIs often show a facet bucket (for example **Genre → Action**) and nee
 Use **`Scrypath.search_within_facet/4`**, passing **`{facet_attribute, value}`** as the third argument. The library merges that bucket into the effective **`facet_filter:`** and runs **one** validated search on the same Meilisearch **`/search`** path as **`Scrypath.search/3`**, so operators still see the **`[:scrypath, :search]`** span with extra metadata that marks the call as scoped.
 
 For the general full-text path without a positional bucket, keep using **`Scrypath.search/3`**.
+
+## Honest controls from metadata
+
+Hosts can inspect metadata to decide which controls to render without claiming generated
+UI:
+
+```elixir
+capabilities = Scrypath.schema_capabilities(MyApp.Movies.Movie)
+
+reflection =
+  Scrypath.reflect_search(MyApp.Movies.Movie, %{
+    text: "space",
+    facets: [:genre, :director],
+    facet_filter: [genre: ["Sci-Fi"], studio: ["Imaginary"]]
+  })
+```
+
+`capabilities` tells the LiveView what the schema declares. `reflection.resolved`
+shows which inputs were `applied`, which values were `defaulted` or `fixed`, and which
+attempted controls were `unsupported`. The host still chooses copy, layout, and any
+authorization or related-data behavior around those controls. Scrypath does not generate
+those controls for you.
 
 ## Composing facet filters with scoped search
 

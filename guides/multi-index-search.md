@@ -2,6 +2,15 @@
 
 This guide shows how to call `Scrypath.search_many/2` from a Phoenix LiveView dashboard that searches several schemas at once, handles **per-schema** filters and facets, and surfaces **partial failures** without pretending hits are merged.
 
+For the canonical composition and metadata story behind this flow, read
+[Composing real-app search](composing-real-app-search.md). If you want composition
+before the runtime call, `Scrypath.Composition.compose_many/2` lowers into the same
+tuple/shared-option contract instead of introducing a new DSL.
+Per-entry composition is canonical, shared composition lowers **defaults** only, and
+shared `fixed` is intentionally unsupported. The helper stays honest about `:all`
+entries and does not flatten entry-scoped capability differences into one fake global
+search form.
+
 How **per-entry** tuple keywords merge with **shared** options (and how future **per-query tuning** keys will participate in the same right-biased story) is specified in the [Per-query tuning pipeline](per-query-tuning-pipeline.md) — read that for the Plane B precedence stack; this file remains the canonical place for expansion, federation payloads, partial failures, and merge ordering details below.
 
 ## When to use `search_many/2`
@@ -50,6 +59,39 @@ end
 
 Render each schema section from `results.ordered` so declaration order matches your UI cards. Read per-schema facets from `elem(result, 1).facets` — never assume facets are merged across schemas. Scrypath intentionally does **not** set Meilisearch `mergeFacets`.
 
+## Composition without a second runtime
+
+Use `Scrypath.Composition.compose_many/2` when you want shared defaults plus per-entry
+composition, but still want the runtime call to remain `Scrypath.search_many/2`.
+
+```elixir
+{:ok, many} =
+  Scrypath.Composition.compose_many(
+    [
+      %{
+        schema: MyApp.Post,
+        text: "release",
+        fragments: [%{defaults: %{filter: [published: true]}}],
+        criteria: %{facets: [:status]}
+      },
+      %{
+        schema: MyApp.User,
+        text: "release",
+        criteria: %{filter: [active: true]}
+      }
+    ],
+    shared: %{defaults: %{page: [size: 8], per_query: %{show_ranking_score: true}}}
+  )
+
+{entries, shared_opts} = Scrypath.Composition.to_search_many_args(many)
+
+Scrypath.search_many(entries, Keyword.merge(shared_opts, repo: MyApp.Repo, backend: Scrypath.Meilisearch))
+```
+
+`many` stays plain data. Hosts can inspect `applied`, `defaulted`, `fixed`, and
+entry-scoped differences before the runtime call, while tenant policy, authorization,
+and related-data behavior remain **host-owned**.
+
 ## Secondary recipe: same `q` everywhere with a warning
 
 ```elixir
@@ -66,7 +108,7 @@ Scrypath.search_many(
 )
 ```
 
-This is convenient for a global search bar, but relevance scores and hit ranks are **not** comparable across `{MyApp.Post, _}` and `{MyApp.Comment, _}`. Keep ranking UI per schema block.
+This is convenient for a global search bar, but relevance scores and hit ranks are **not** comparable across `{MyApp.Post, _}` and `{MyApp.Comment, _}`. Keep ranking UI per schema block and keep entry-scoped capabilities visible instead of implying one merged control surface.
 
 ## Partial failures in HEEx
 
@@ -118,6 +160,7 @@ end
 - **Merged hits illusion** — do not interleave `results.ordered` hits as if they were one index; federation preserves per-schema boundaries.
 - **`mergeFacets`** — Scrypath never sends this flag; cross-schema facet blobs hide which schema failed validation.
 - **Silent truncation** — cardinality limits (`max_schemas`, `page.size`, federation limits) return `{:error, _}` instead of clamping quietly.
+- **Generated widget story** — metadata and composition help hosts render honest controls, but Scrypath does not generate those widgets or claim a merged global capability surface.
 
 ## `%Scrypath.MultiSearchResult{}`
 

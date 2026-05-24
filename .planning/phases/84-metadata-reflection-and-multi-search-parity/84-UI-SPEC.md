@@ -1,10 +1,11 @@
 ---
 phase: 84
 slug: metadata-reflection-and-multi-search-parity
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-05-23
+reviewed_at: 2026-05-23T16:24:14+0200
 ---
 
 # Phase 84 — UI Design Contract
@@ -85,6 +86,7 @@ Source: CTA and states derived from `META-01`..`META-03`, `MSCH-01`..`MSCH-02`, 
 
 ## Interaction Contract
 
+- Primary focal point is the resolved criteria summary at the top of the screen. It should draw the eye first, with capability metadata second and per-entry `search_many/2` differences visually subordinate until the user drills deeper — source: checker recommendation aligned with `META-02` and `MSCH-02`.
 - Capability metadata must render as plain data groups, not generated widgets: `filters`, `sorts`, `facets`, `paging`, `defaults`, and `constraints` each get their own labeled section — source: `META-01`, `META-02`.
 - Applied state must always be visually distinct from available state: use filled accent badges for `applied`, muted secondary badges for `available`, and neutral text rows for `unsupported` or absent capabilities — source: Phase 83 visibility carry-forward + Phase 84 parity goal.
 - Defaulted values and fixed constraints must never look identical: defaults use accent-outline badges labeled `Default`; fixed constraints use destructive-outline or high-contrast lock styling labeled `Fixed` — source: Phase 83 conflict and inspectability decisions.
@@ -107,11 +109,11 @@ Source: CTA and states derived from `META-01`..`META-03`, `MSCH-01`..`MSCH-02`, 
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-05-23

@@ -1,6 +1,6 @@
 # Guides
 
-Short map of published guides. Start with the [Golden path](golden-path.md) for a linear first-hour setup, or [Getting Started](getting-started.md) for concepts first.
+Short map of published guides. Start with the [Golden path](golden-path.md) for a linear first-hour setup, or [JTBD and user flows](jtbd-and-user-flows.md) if you want the mental model first.
 
 ## Crash Course
 
@@ -20,6 +20,8 @@ The intended app boundary is a Phoenix context that owns the search flow, with c
 | [Getting started](getting-started.md) | Mental model: what you configure, where sync and search live in the app. |
 | [Golden path](golden-path.md) | Checklist from `mix.exs` through first `Scrypath.search/3` with **inline** sync. |
 | [Request-edge search](request-edge-search.md) | Canonical v1.21 request-edge contract: browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix`, and context-owned `Scrypath.search/3`. |
+| [Composing real-app search](composing-real-app-search.md) | Canonical v1.22 composition and metadata guide: `defaults`, `fixed`, host-owned rendering, and `compose_many/2` lowering. |
+| [Related data and reindexing](related-data-and-reindexing.md) | Canonical guidance for associated-data fan-out, when direct sync is enough, and when to escalate to backfill or reindex. |
 | [Meilisearch operations](meilisearch-operations.md) | Where Meilisearch runs, provisioning sketches, recovery paths, and footguns—through a Scrypath lens. |
 | [Phoenix walkthrough](phoenix-walkthrough.md) | End-to-end Phoenix adoption: schema → context → controller → LiveView. |
 | [Phoenix contexts](phoenix-contexts.md) | Context-owned search and sync boundaries. |
@@ -34,3 +36,14 @@ The intended app boundary is a Phoenix context that owns the search flow, with c
 | [Per-query tuning pipeline](per-query-tuning-pipeline.md) | Request-time Meilisearch search parameters vs index-time settings — canonical merge and mapping spec. |
 
 The runnable Phoenix example (Postgres + Meilisearch + Oban) lives under [`examples/phoenix_meilisearch/`](../examples/phoenix_meilisearch/README.md).
+
+## Recommended reading order
+
+1. [Golden path](golden-path.md)
+2. [JTBD and user flows](jtbd-and-user-flows.md)
+3. [Request-edge search](request-edge-search.md)
+4. [Composing real-app search](composing-real-app-search.md)
+5. [Phoenix walkthrough](phoenix-walkthrough.md)
+6. [Sync modes and visibility](sync-modes-and-visibility.md)
+7. [Related data and reindexing](related-data-and-reindexing.md)
+8. [Drift recovery](drift-recovery.md)

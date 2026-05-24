@@ -1,5 +1,25 @@
 # Milestones
 
+## v1.22 Composition And Real-App Depth (Shipped + archived: 2026-05-24)
+
+**Phases completed:** **3** (**83–85**), **12** requirements (**CMP-01**–**CMP-04**, **META-01**–**META-03**, **MSCH-01**–**MSCH-02**, **DOC-01**, **DOC-02**, **VRFY-01**)
+
+**Hex:** **`scrypath 0.3.4`** on Hex; **in-repo milestone close only** — no dedicated Hex bump claimed for this planning milestone.
+
+**Key accomplishments:**
+
+- Public `Scrypath.Composition` plain-data seam with deterministic preset/scope merging, explicit fixed conflicts, stable visibility buckets, and a focused `mix verify.phase83` contract gate — **Phase 83**
+- Declaration-backed `Scrypath.Metadata` capability/reflection surface plus `compose_many/2` lowering over the existing `search_many/2` tuple/shared-option contract — **Phase 84**
+- One canonical real-app composition guide, aligned single-schema and multi-schema proof guides, and a focused `mix verify.phase85` drift gate for the public story — **Phase 85**
+
+**Pre-close audit:** **`milestones/v1.22-MILESTONE-AUDIT.md`** (**`passed`** — `requirements: 12/12`, `phases: 3/3`, `integration: 4/4`, `flows: 3/3`, `nyquist: compliant`).
+
+**Automation note:** `gsd-sdk query milestone.complete` remained unavailable for this repo, so the `v1.22-*` archive trio and rolling planning updates were completed manually.
+
+**Archives:** `milestones/v1.22-ROADMAP.md`, `milestones/v1.22-REQUIREMENTS.md`, `milestones/v1.22-MILESTONE-AUDIT.md` · **Git tag:** `v1.22` (planning milestone marker)
+
+---
+
 ## v1.21 Query Toolkit And Phoenix Edge Helpers (Shipped + archived: 2026-05-23)
 
 **Phases completed:** **3** (**80–82**), **8** requirements (**QTK-01**–**QTK-04**, **PHX-01**–**PHX-02**, **DOC-01**, **VRFY-01**)
