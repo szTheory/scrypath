@@ -32,7 +32,7 @@ Current planning files: **`.planning/{REQUIREMENTS,ROADMAP,STATE}.md`** plus arc
 - **Active milestone:** **v1.23 — Outside-Adopter Evidence And Support-Truth Reconciliation**.
 - Reconcile support/readiness/proof surfaces with the current checkout so maintainers and adopters are not relying on removed guides, missing test targets, or archive-era assumptions.
 - Gather and review real outside-adopter evidence on the defended Phoenix + Meilisearch path before reopening feature work.
-- If feature work reopens after `v1.23`, the ranking is: **related-data propagation**, then **tenant-safe search access**, then **high-cardinality facet value search**.
+- Phase 87 is complete. Active next-pull verdict: related-data propagation.
 
 ## Last shipped milestone
 
