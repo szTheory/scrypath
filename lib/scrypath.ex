@@ -183,6 +183,17 @@ defmodule Scrypath do
     Scrypath.Sync.sync_records(schema_module, records, opts)
   end
 
+  @doc """
+  Propagates sync updates for associated parent records when a child record changes.
+  Uses the explicit `fan_outs:` metadata declared on the child schema.
+
+  Returns `{:ok, Scrypath.Operations.Result.t()}` describing the applied synchronization work.
+  """
+  @spec sync_related(module(), struct() | [struct()], keyword()) :: {:ok, term()} | {:error, term()}
+  def sync_related(schema_module, records, opts \\ []) do
+    Scrypath.Sync.sync_related(schema_module, records, opts)
+  end
+
   @doc @sync_public_ops_doc
   @spec delete_record(module(), struct() | map(), keyword()) :: {:ok, term()} | {:error, term()}
   def delete_record(schema_module, record, opts \\ []) do
