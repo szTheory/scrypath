@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.23
 milestone_name: Outside-Adopter Evidence And Support-Truth Reconciliation
 status: executing
-last_updated: "2026-05-24T15:40:07.977Z"
+last_updated: "2026-05-24T16:36:55.478Z"
 last_activity: 2026-05-24
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 7
-  completed_plans: 4
-  percent: 18
+  total_plans: 6
+  completed_plans: 5
+  percent: 17
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: `.planning/PROJECT.md` (updated 2026-05-24)
 ## Current Position
 
 Phase: 87 executing (outside-adopter-intake-and-evidence-review)
-Plan: 01 complete
+Plan: 02 complete
 
-**Status:** Ready to execute Plan 02
+**Status:** Ready to execute Plan 03
 
 **Last activity:** 2026-05-24
 
@@ -38,6 +38,7 @@ Plan: 01 complete
 
 (See `.planning/PROJECT.md` Key Decisions.)
 
+- **Phase 87 plan 02 complete:** Both submissions successfully passed the human verification checkpoint as genuine outside-adopter attempts and were classified as Class A (Defended-path). The findings were recorded in the evidence ledger, establishing a PASS state for the defended-path gate.
 - **v1.15 close:** Second slice shipped **OPS2-01**–**OPS2-08** across phases **62–64**; persistence authority **(A)** file + GitOps; **OPSUI-FUT-02** / **Tier C** unchanged — **`milestones/v1.15-REQUIREMENTS.md`**.
 - **v1.16 open:** Prioritize **execution honesty** over new indexing features; **stub-first OPSUI CI** unchanged; parallel **`.planning/research/`** refresh **skipped** at open (existing research retained).
 - **v1.16 close:** Phase 67 added bounded execution-surface contracts, canonical JTBD playbook examples, truthful `v1.16-*` archive artifacts, and rolling traceability updates without claiming a new Hex release.
@@ -80,7 +81,7 @@ Plan: 01 complete
 
 ### Blockers / Concerns
 
-- **Outside adopter evidence remains pending:** Plan 01 reran the live proof successfully after starting the documented example services, but the milestone still has no reviewed real outside adopter signal. The canonical wording and residuals live in **`.planning/milestones/v1.19-MILESTONE-AUDIT.md`**.
+- **Outside adopter evidence reviewed:** We now have a phase-local evidence ledger recording genuine product gaps (`related-data propagation` and `tenant-safe access`). The canonical milestone verdict must incorporate these findings.
 - **Diminishing-returns guardrail:** In the absence of real adopter evidence, additional internal proof/polish work is presumed low leverage and should not become the next milestone by default.
 - **Support-truth drift resolved at branch tip:** `guides/support-and-compatibility.md` is restored as the single current support/readiness authority, and README / CONTRIBUTING / guides / ExDoc now route to it again.
 - **Adopter-verify drift resolved at branch tip:** `mix verify.adopter` now runs a real `test/scrypath/readiness_contract_test.exs` fast seam, and task help / maintainer docs / example runbook agree on the fast/live contract again.
