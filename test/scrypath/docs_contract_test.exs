@@ -50,7 +50,8 @@ defmodule Scrypath.DocsContractTest do
     "guides/sync-modes-and-visibility.md",
     "guides/operator-mix-tasks.md",
     "guides/relevance-tuning.md",
-    "guides/per-query-tuning-pipeline.md"
+    "guides/per-query-tuning-pipeline.md",
+    "guides/related-data-and-reindexing.md"
   ]
   @guides Enum.into(@guide_paths, %{}, fn path -> {path, File.read!(path)} end)
   @per_query_tuning_pipeline File.read!("guides/per-query-tuning-pipeline.md")
@@ -1122,6 +1123,16 @@ defmodule Scrypath.DocsContractTest do
 
     assert String.contains?(project_md, "AUDT-01"),
            "PROJECT.md must still mention AUDT-01 for maintainer routing"
+  end
+
+  test "related-data guide explicitly mentions temporary Oban workaround" do
+    guide = @guides["guides/related-data-and-reindexing.md"]
+
+    assert_contains_all(guide, [
+      "temporary workaround",
+      "first-class feature",
+      "Oban"
+    ])
   end
 
   defp guide_fences do

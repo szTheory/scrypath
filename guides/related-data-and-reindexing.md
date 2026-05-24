@@ -79,6 +79,61 @@ The important thing is what you do **not** promise:
 - no automatic preload magic
 - no assumption that a related-row change is cheap
 
+### Temporary Workaround: Custom Oban Jobs
+
+Until related-data propagation becomes a first-class feature in Scrypath, the recommended approach is to use a custom Oban worker to manually fan out the updates.
+
+This is a temporary workaround that keeps your web processes fast while durably processing the larger blast radius in the background.
+
+```elixir
+defmodule MyApp.Blog.SyncAuthorPostsWorker do
+  use Oban.Worker, queue: :search_sync
+
+  alias MyApp.Blog
+  alias MyApp.Blog.Post
+
+  @impl Oban.Worker
+  def perform(%Oban.Job{args: %{"author_id" => author_id}}) do
+    # 1. Query the affected child records explicitly
+    posts = Blog.list_posts_by_author(author_id)
+
+    # 2. Sync them in a deliberate follow-up step
+    Enum.each(posts, fn post ->
+      Scrypath.sync_record(Post, post,
+        backend: Scrypath.Meilisearch,
+        sync_mode: :inline
+      )
+    end)
+
+    :ok
+  end
+end
+```
+
+Then, in your context when the related data changes:
+
+```elixir
+defmodule MyApp.Accounts do
+  alias MyApp.Accounts.Author
+  alias MyApp.Blog.SyncAuthorPostsWorker
+  alias MyApp.Repo
+
+  def update_author(%Author{} = author, attrs) do
+    Repo.transaction(fn ->
+      author
+      |> Author.changeset(attrs)
+      |> Repo.update!()
+      |> tap(fn updated_author ->
+        # Enqueue the fan-out job to update affected Post documents
+        %{"author_id" => updated_author.id}
+        |> SyncAuthorPostsWorker.new()
+        |> Oban.insert!()
+      end)
+    end)
+  end
+end
+```
+
 ## 3. The document contract changed
 
 Sometimes the question is not "which records changed?"
