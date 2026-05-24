@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.23
 milestone_name: Outside-Adopter Evidence And Support-Truth Reconciliation
 status: completed
-last_updated: "2026-05-24T16:36:55.478Z"
+last_updated: "2026-05-24T17:10:23.147Z"
 last_activity: 2026-05-24
 progress:
-  total_phases: 6
-  completed_phases: 1
-  total_plans: 6
-  completed_plans: 6
+  total_phases: 3
+  completed_phases: 3
+  total_plans: 7
+  completed_plans: 7
   percent: 100
 ---
 
