@@ -36,8 +36,65 @@ defmodule Scrypath.Sync do
   end
 
   @spec sync_related(module(), struct() | [struct()], keyword()) :: {:ok, term()} | {:error, term()}
-  def sync_related(_schema_module, _records, _opts \\ []) do
-    {:ok, Result.new(mode: :inline, status: :noop)}
+  def sync_related(schema_module, records, opts \\ []) do
+    fan_out_key =
+      Keyword.get(opts, :fan_out) ||
+        raise ArgumentError, "opts[:fan_out] is required"
+
+    fan_outs = schema_module.__scrypath__(:fan_outs) || []
+
+    fan_out_config =
+      Keyword.get(fan_outs, fan_out_key) ||
+        raise ArgumentError,
+              "fan_out #{inspect(fan_out_key)} is not configured on #{inspect(schema_module)}"
+
+    config = Config.resolve!(opts)
+
+    case Keyword.fetch!(config, :sync_mode) do
+      :oban ->
+        config
+        |> Config.ensure_oban_ready!()
+        |> then(&Scrypath.Sync.RelatedWorker.enqueue(schema_module, records, fan_out_key, &1))
+        |> decorate_result(config)
+
+      _other ->
+        inline_resolve_and_sync(
+          schema_module,
+          records,
+          fan_out_key,
+          fan_out_config,
+          config,
+          opts
+        )
+    end
+  end
+
+  defp inline_resolve_and_sync(
+         schema_module,
+         records,
+         fan_out_key,
+         fan_out_config,
+         config,
+         opts
+       ) do
+    records_list = List.wrap(records)
+
+    metadata =
+      Telemetry.common_metadata(schema_module, config,
+        fan_out: fan_out_key,
+        document_count: length(records_list)
+      )
+
+    Telemetry.span([:scrypath, :sync, :related, :resolve], metadata, fn ->
+      target_module = Keyword.fetch!(fan_out_config, :target)
+      {mod, fun, mfa_args} = Keyword.fetch!(fan_out_config, :resolver)
+
+      resolved_records = apply(mod, fun, [records_list] ++ mfa_args)
+
+      result = sync_records(target_module, resolved_records, opts)
+
+      {result, Telemetry.stop_metadata(result)}
+    end)
   end
 
   @spec delete_record(module(), struct() | map(), keyword()) :: {:ok, term()} | {:error, term()}

@@ -270,6 +270,60 @@ defmodule Scrypath.SyncTest do
     refute_received {:upsert_documents, _, [_], _}
   end
 
+  defmodule TargetSchema do
+    use Ecto.Schema
+    schema "dummy" do
+      field :title, :string
+    end
+    def __scrypath__(:document_id), do: :id
+    def __scrypath__(:fields), do: [:title]
+    def __scrypath__(:custom_document), do: false
+  end
+
+  defmodule SourceSchema do
+    defstruct [:id]
+    
+    def __scrypath__(:fan_outs) do
+      [
+        comments: [
+          target: TargetSchema,
+          resolver: {__MODULE__, :resolve_comments, [:extra_arg]}
+        ]
+      ]
+    end
+
+    def resolve_comments(records, :extra_arg) do
+      Enum.map(records, &%TargetSchema{id: &1.id, title: "Resolved #{&1.id}"})
+    end
+  end
+
+  test "sync_related/3 forwards to sync_records using inline resolution" do
+    records = [%SourceSchema{id: 1}, %SourceSchema{id: 2}]
+
+    assert {:ok, result} =
+             Scrypath.Sync.sync_related(SourceSchema, records,
+               fan_out: :comments,
+               backend: RecordingBackend
+             )
+
+    assert_received {:upsert_documents, TargetSchema, documents, _config}
+    assert Enum.map(documents, & &1.id) == [1, 2]
+    assert Enum.map(documents, & &1.data[:title]) == ["Resolved 1", "Resolved 2"]
+    
+    assert result.status == :completed
+    assert result.mode == :inline
+  end
+
+  test "sync_related/3 raises ArgumentError if fan_out is missing or invalid" do
+    assert_raise ArgumentError, ~r/opts\[:fan_out\] is required/, fn ->
+      Scrypath.Sync.sync_related(SourceSchema, [])
+    end
+
+    assert_raise ArgumentError, ~r/is not configured on/, fn ->
+      Scrypath.Sync.sync_related(SourceSchema, [], fan_out: :invalid)
+    end
+  end
+
   test "delete APIs share the same delete orchestration" do
     record = %SearchablePost{id: 10, title: "Ten", body: "Body"}
 
