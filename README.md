@@ -18,6 +18,10 @@ end
 
 **Start here:** for the canonical first-hour path from dependencies through a working `Scrypath.search/3` with inline sync, follow [guides/golden-path.md](guides/golden-path.md).
 
+**Support and readiness:** for the defended runtime posture, Phoenix + Meilisearch proof boundary, sync-mode support posture, `mix verify.adopter` command family, and repo-clone versus Hex-package distinction, use [guides/support-and-compatibility.md](guides/support-and-compatibility.md).
+
+**Outside integrations and evidence:** if you are trying the defended path or want to submit outside-adopter evidence, read [guides/outside-adopter-intake.md](guides/outside-adopter-intake.md).
+
 **Request-edge contract:** for the v1.21 public story around browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix` glue, and context-owned `Scrypath.search/3`, read [guides/request-edge-search.md](guides/request-edge-search.md).
 
 **Real-app composition and metadata:** for reusable `defaults` / `fixed` search policy, host-owned metadata rendering, and `compose_many/2` lowering into the existing runtime, read [guides/composing-real-app-search.md](guides/composing-real-app-search.md).
@@ -30,7 +34,7 @@ If you want the architecture and JTBD crash course before reading the full guide
 
 For symptom-style "why is search wrong?" debugging grounded in shipped tests, see [guides/common-mistakes.md](guides/common-mistakes.md).
 
-**Sync authority:** sync semantics, sync modes (`:inline`, `:oban`, `:manual`), eventual consistency, and operator lifecycle recovery language are defined in [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md) - that file is the **single authority** for those topics; this README does not restate the guide body.
+**Sync authority:** sync semantics, sync modes (`:inline`, `:oban`, `:manual`), eventual consistency, and operator lifecycle recovery language are defined in [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md). Support/readiness posture and proof-command routing live in [guides/support-and-compatibility.md](guides/support-and-compatibility.md); this README does not restate either guide body.
 
 **Operator UI (maintainers):** the optional Phoenix shell lives under [scrypath_ops/README.md](scrypath_ops/README.md); persona, JTBD, and nav mapping live in `scrypath_ops/docs/operator-ia.md` in the repository checkout. From the repository root, **`mix verify.opsui`** runs the same checks against **`scrypath_ops/`** that the **`scrypath-ops`** CI job exercises; see [`CONTRIBUTING.md`](CONTRIBUTING.md) for the CI ↔ **`mix verify.*`** matrix and job names.
 
