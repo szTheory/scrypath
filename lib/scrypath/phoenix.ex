@@ -119,7 +119,8 @@ defmodule Scrypath.Phoenix do
   end
 
   defp sort_to_params(sort) when is_list(sort) do
-    raise ArgumentError, "sort must contain at most one entry for Phoenix query params: #{inspect(sort)}"
+    raise ArgumentError,
+          "sort must contain at most one entry for Phoenix query params: #{inspect(sort)}"
   end
 
   defp canonicalize_values(params) when is_map(params) do

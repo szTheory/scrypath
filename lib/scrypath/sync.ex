@@ -35,7 +35,8 @@ defmodule Scrypath.Sync do
     end)
   end
 
-  @spec sync_related(module(), struct() | [struct()], keyword()) :: {:ok, term()} | {:error, term()}
+  @spec sync_related(module(), struct() | [struct()], keyword()) ::
+          {:ok, term()} | {:error, term()}
   def sync_related(schema_module, records, opts \\ []) do
     fan_out_key =
       Keyword.get(opts, :fan_out) ||

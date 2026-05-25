@@ -17,7 +17,8 @@ defmodule Scrypath.Composition.Multi do
           required(:entries) => [map()]
         }
 
-  @spec compose_many([entry_spec() | tuple()], keyword()) :: {:ok, many_result()} | {:error, term()}
+  @spec compose_many([entry_spec() | tuple()], keyword()) ::
+          {:ok, many_result()} | {:error, term()}
   def compose_many(entries, opts \\ []) when is_list(entries) and is_list(opts) do
     with {:ok, shared} <- normalize_shared(Keyword.get(opts, :shared, %{})),
          {:ok, shared_result} <- Composition.compose(shared, %{}),
@@ -39,8 +40,11 @@ defmodule Scrypath.Composition.Multi do
   @spec compose_many!([entry_spec() | tuple()], keyword()) :: many_result()
   def compose_many!(entries, opts \\ []) do
     case compose_many(entries, opts) do
-      {:ok, result} -> result
-      {:error, reason} -> raise ArgumentError, "multi-search composition failed: #{inspect(reason)}"
+      {:ok, result} ->
+        result
+
+      {:error, reason} ->
+        raise ArgumentError, "multi-search composition failed: #{inspect(reason)}"
     end
   end
 
@@ -139,13 +143,20 @@ defmodule Scrypath.Composition.Multi do
      }}
   end
 
-  defp normalize_entry({schema, text}) when (is_atom(schema) or schema == :all) and is_binary(text) do
+  defp normalize_entry({schema, text})
+       when (is_atom(schema) or schema == :all) and is_binary(text) do
     {:ok, %{schema: schema, text: text, fragments: [], criteria: %{}}}
   end
 
   defp normalize_entry({schema, text, opts})
        when (is_atom(schema) or schema == :all) and is_binary(text) and is_list(opts) do
-    {:ok, %{schema: schema, text: text, fragments: [], criteria: shared_criteria_from_runtime_opts(opts)}}
+    {:ok,
+     %{
+       schema: schema,
+       text: text,
+       fragments: [],
+       criteria: shared_criteria_from_runtime_opts(opts)
+     }}
   end
 
   defp normalize_entry(_), do: {:error, {:invalid_many_entry, :expected_entry_spec}}
@@ -154,7 +165,10 @@ defmodule Scrypath.Composition.Multi do
     shared_fragment = List.wrap(shared)
     entry_fragments = List.wrap(entry.fragments)
 
-    case Composition.compose(shared_fragment ++ entry_fragments, Map.put(entry.criteria, :text, entry.text)) do
+    case Composition.compose(
+           shared_fragment ++ entry_fragments,
+           Map.put(entry.criteria, :text, entry.text)
+         ) do
       {:ok, composition} ->
         {:ok, Map.merge(%{schema: entry.schema}, composition)}
 

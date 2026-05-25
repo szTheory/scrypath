@@ -128,7 +128,9 @@ defmodule Scrypath.SearchTest do
     {text, search_opts} = QueryParams.to_search_args(query_params)
 
     assert {:ok, %SearchResult{query: toolkit_query}} =
-             Scrypath.search(SearchablePost, text,
+             Scrypath.search(
+               SearchablePost,
+               text,
                Keyword.put(search_opts, :backend, Scrypath.TestSupport.FakeBackend)
              )
 
@@ -138,7 +140,7 @@ defmodule Scrypath.SearchTest do
                filter: [status: "published"],
                sort: [desc: :inserted_at],
                page: [number: 2, size: 20]
-              )
+             )
 
     assert toolkit_query == direct_query
 

@@ -54,20 +54,26 @@ defmodule Scrypath.PhoenixTest do
              form_errors: [],
              field_errors: %{
                "page" => [%{code: :invalid_value, path: ["page", "number"]}],
-                "sort" => [
-                  %{code: :invalid_value, path: ["sort", "dir"]},
-                  %{code: :missing_key, path: ["sort", "field"]},
-                  %{code: :unknown_field, path: ["sort", "field"]}
-                ]
-              },
-              errors: errors
+               "sort" => [
+                 %{code: :invalid_value, path: ["sort", "dir"]},
+                 %{code: :missing_key, path: ["sort", "field"]},
+                 %{code: :unknown_field, path: ["sort", "field"]}
+               ]
+             },
+             errors: errors
            } = Phoenix.to_form_data(params, error_map)
 
-    assert Enum.map(errors, & &1.code) == [:invalid_value, :invalid_value, :missing_key, :unknown_field]
+    assert Enum.map(errors, & &1.code) == [
+             :invalid_value,
+             :invalid_value,
+             :missing_key,
+             :unknown_field
+           ]
   end
 
   test "to_form_data/1 projects normalized values without Phoenix runtime coupling" do
-    assert {:ok, query_params} = QueryParams.normalize(%{"q" => "phoenix", "page" => %{"number" => "2"}})
+    assert {:ok, query_params} =
+             QueryParams.normalize(%{"q" => "phoenix", "page" => %{"number" => "2"}})
 
     assert %{
              values: %{"q" => "phoenix", "page" => %{"number" => "2"}},

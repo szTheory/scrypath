@@ -23,7 +23,8 @@ defmodule Scrypath.Metadata.Capabilities do
         supported: facet_attributes != [],
         fields: facet_attributes,
         max_values_per_facet: Keyword.get(faceting, :max_values_per_facet),
-        sort_facet_values_by: normalize_sort_facet_values_by(Keyword.get(faceting, :sort_facet_values_by, []))
+        sort_facet_values_by:
+          normalize_sort_facet_values_by(Keyword.get(faceting, :sort_facet_values_by, []))
       },
       paging: %{
         supported: true,

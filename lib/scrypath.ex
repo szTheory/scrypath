@@ -132,7 +132,8 @@ defmodule Scrypath do
   `host_owned` advisory fields.
   """
   @spec reflect_search(module(), map()) :: map()
-  def reflect_search(schema_module, criteria_or_composition) when is_map(criteria_or_composition) do
+  def reflect_search(schema_module, criteria_or_composition)
+      when is_map(criteria_or_composition) do
     Scrypath.Metadata.reflect_search(schema_module, criteria_or_composition)
   end
 
@@ -189,7 +190,8 @@ defmodule Scrypath do
 
   Returns `{:ok, Scrypath.Operations.Result.t()}` describing the applied synchronization work.
   """
-  @spec sync_related(module(), struct() | [struct()], keyword()) :: {:ok, term()} | {:error, term()}
+  @spec sync_related(module(), struct() | [struct()], keyword()) ::
+          {:ok, term()} | {:error, term()}
   def sync_related(schema_module, records, opts \\ []) do
     Scrypath.Sync.sync_related(schema_module, records, opts)
   end

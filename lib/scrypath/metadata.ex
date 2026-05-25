@@ -69,7 +69,8 @@ defmodule Scrypath.Metadata do
       entry: %{schema: :all, text: entry.text},
       capabilities: %{status: :deferred, reason: :all_expands_at_runtime},
       resolved: %{
-        applied: Multi.criteria_from_entry(entry) |> Scrypath.Metadata.ResultLike.compact_visibility(),
+        applied:
+          Multi.criteria_from_entry(entry) |> Scrypath.Metadata.ResultLike.compact_visibility(),
         defaulted: Map.get(entry, :defaulted, %{}),
         fixed: Map.get(entry, :fixed, %{}),
         unsupported: %{}

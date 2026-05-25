@@ -21,7 +21,12 @@ defmodule Scrypath.MetadataTest do
            }
 
     assert capabilities.paging == %{supported: true, fields: [:number, :size]}
-    assert capabilities.limits.per_query_keys == [:ranking_score_threshold, :show_ranking_score, :show_ranking_score_details]
+
+    assert capabilities.limits.per_query_keys == [
+             :ranking_score_threshold,
+             :show_ranking_score,
+             :show_ranking_score_details
+           ]
   end
 
   test "reflect_search/2 keeps defaulted and fixed distinct for composition output" do
@@ -101,9 +106,25 @@ defmodule Scrypath.MetadataTest do
     reflection = Scrypath.reflect_search_many(many)
 
     assert [
-             %{entry: %{schema: SearchablePost}, resolved: %{defaulted: %{filter: [status: "published"]}}},
-             %{entry: %{schema: FacetableMovie}, resolved: %{applied: %{facets: [:genre], facet_filter: [genre: ["Sci-Fi"]], per_query: %{show_ranking_score: true}, text: "ecto"}}},
-             %{entry: %{schema: :all}, capabilities: %{status: :deferred, reason: :all_expands_at_runtime}}
+             %{
+               entry: %{schema: SearchablePost},
+               resolved: %{defaulted: %{filter: [status: "published"]}}
+             },
+             %{
+               entry: %{schema: FacetableMovie},
+               resolved: %{
+                 applied: %{
+                   facets: [:genre],
+                   facet_filter: [genre: ["Sci-Fi"]],
+                   per_query: %{show_ranking_score: true},
+                   text: "ecto"
+                 }
+               }
+             },
+             %{
+               entry: %{schema: :all},
+               capabilities: %{status: :deferred, reason: :all_expands_at_runtime}
+             }
            ] = reflection.entries
 
     assert reflection.host_owned == %{
