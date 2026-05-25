@@ -103,7 +103,14 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
 
       opts =
         config
-        |> Keyword.take([:index_prefix, :backend, :otp_app, :repo])
+        |> Keyword.take([
+          :index_prefix,
+          :meilisearch_url,
+          :meilisearch_api_key,
+          :backend,
+          :otp_app,
+          :repo
+        ])
         |> Enum.map(fn
           {k, v} when k in [:backend, :otp_app, :repo] and is_atom(v) and not is_nil(v) ->
             {k, to_string(v)}
