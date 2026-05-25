@@ -40,6 +40,7 @@
 **Plans:** 3 plans
 
 Plans:
+
 - [ ] 89-01: Design the `Scrypath.sync_related/3` entrypoint and underlying capability struct for associating parent-child schemas.
 - [ ] 89-02: Update core execution runtime to explicitly accept and validate related-data fan-out intents.
 - [ ] 89-03: Establish baseline hermetic tests ensuring explicit orchestration overrides auto-magic execution.
@@ -52,6 +53,7 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
+
 - [x] 90-01-PLAN.md — Update RelatedWorker for explicit error propagation and cancellation.
 - [x] 90-02-PLAN.md — Add integration tests for RelatedWorker error propagation behavior.
 
@@ -63,9 +65,14 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 91-01-PLAN.md — Rewrite `guides/related-data-and-reindexing.md` so `Scrypath.sync_related/3` + the built-in Oban path are canonical; remove temporary-workaround framing; map inline-vs-oban to blast radius + latency (wave 1, EXEC-02).
-- [ ] 91-02-PLAN.md — Add `mix verify.phase91` (mirror verify.phase85) + invert the docs-contract assertion + register the task (`@verify_phase91`, mix.exs preferred_envs) (wave 2, depends_on 91-01, TEST-01/TEST-02).
 - [ ] 91-03-PLAN.md — Polish `examples/phoenix_meilisearch`: `Author` schema + migration + `ScrypathDemo.Blog` context + arity-safe resolver, exercising inline + oban fan-out smokes; update README (wave 1, EXEC-02).
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 91-02-PLAN.md — Add `mix verify.phase91` (mirror verify.phase85) + invert the docs-contract assertion + register the task (`@verify_phase91`, mix.exs preferred_envs) (wave 2, depends_on 91-01, TEST-01/TEST-02).
 
 **Working assumptions locked at milestone open:**
 

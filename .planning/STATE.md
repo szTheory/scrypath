@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.24
 milestone_name: Related-Data and Dependency Propagation
-status: Phase 91 context gathered — ready for planning (guide rewrite, mix verify.phase91, example fan-out).
-last_updated: "2026-05-25T05:30:34.535Z"
+status: Phase 91 planned (3 plans, 2 waves) — ready to execute
+last_updated: "2026-05-25T05:58:41.090Z"
 last_activity: 2026-05-25
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 8
   completed_plans: 5
-  percent: 67
+  percent: 63
 ---
 
 # Project State
@@ -21,14 +21,14 @@ See: `.planning/PROJECT.md` (updated 2026-05-24)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase 90 (Async Execution and Error Propagation) complete — milestone v1.24 active, Phase 91 next
+**Current focus:** Phase 91 (Integration, Guides, and Verification) planned — 3 plans in 2 waves, ready to execute
 
 ## Current Position
 
-Phase: 90 (async-execution)
-Plan: COMPLETE
+Phase: 91 (integration-guides-and-verification)
+Plan: PLANNED (3 plans, 2 waves)
 
-**Status:** Phase 90 complete. `RelatedWorker` now maps fan-out failures onto Oban outcomes — 4xx cancels, 5xx/generic retries, invalid args cancel — instead of silent partial drops.
+**Status:** Phase 91 planned — guide rewrite (91-01), `mix verify.phase91` + docs-contract (91-02), example fan-out polish (91-03). Ready to execute.
 
 **Last activity:** 2026-05-25
 
