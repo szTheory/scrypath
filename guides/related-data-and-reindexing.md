@@ -79,60 +79,135 @@ The important thing is what you do **not** promise:
 - no automatic preload magic
 - no assumption that a related-row change is cheap
 
-### Temporary Workaround: Custom Oban Jobs
+### Fan-out with `Scrypath.sync_related/3`
 
-Until related-data propagation becomes a first-class feature in Scrypath, the recommended approach is to use a custom Oban worker to manually fan out the updates.
+When one changed row fans out to many search documents, Scrypath ships an explicit
+entrypoint for it: `Scrypath.sync_related/3`. The context invokes it deliberately; it
+is not a hidden callback. You declare the fan-out as metadata on the **owning** schema,
+write one resolver that finds the affected target records, and the context calls
+`sync_related/3` choosing inline or durable (Oban) execution.
 
-This is a temporary workaround that keeps your web processes fast while durably processing the larger blast radius in the background.
+There is no public worker macro to write. The `:oban` path is dispatched by the internal
+`Scrypath.Sync.RelatedWorker`; adopters never name or `use` a worker module. You select
+durable execution with `sync_mode: :oban` and point Scrypath at your Oban instance.
+
+#### (a) Declare the fan-out on the owning schema
+
+The fan-out lives on the schema whose change drives the update — here `Author`, because an
+author rename should re-sync every post that stores `author_name`. `fan_outs:` names a key
+(`:posts`), a `target:` schema (the schema that owns the search document), and a `resolver:`
+MFA tuple that maps the changed owner(s) to the target records to re-sync:
 
 ```elixir
-defmodule MyApp.Blog.SyncAuthorPostsWorker do
-  use Oban.Worker, queue: :search_sync
+defmodule MyApp.Accounts.Author do
+  use Ecto.Schema
 
-  alias MyApp.Blog
-  alias MyApp.Blog.Post
+  use Scrypath,
+    fields: [:name],
+    fan_outs: [
+      posts: [
+        target: MyApp.Blog.Post,
+        resolver: {MyApp.Accounts, :resolve_posts_for_authors, []}
+      ]
+    ]
 
-  @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"author_id" => author_id}}) do
-    # 1. Query the affected child records explicitly
-    posts = Blog.list_posts_by_author(author_id)
+  schema "authors" do
+    field(:name, :string)
+    has_many(:posts, MyApp.Blog.Post)
+    timestamps()
+  end
 
-    # 2. Sync them in a deliberate follow-up step
-    Enum.each(posts, fn post ->
-      Scrypath.sync_record(Post, post,
-        backend: Scrypath.Meilisearch,
-        sync_mode: :inline
-      )
-    end)
-
-    :ok
+  def changeset(author, attrs) do
+    author
+    |> Ecto.Changeset.cast(attrs, [:name])
+    |> Ecto.Changeset.validate_required([:name])
   end
 end
 ```
 
-Then, in your context when the related data changes:
+The resolver MFA is invoked as `apply(mod, fun, [first_arg | extra_args])`. The `[]` above
+means no extra args; `first_arg` is supplied by Scrypath and differs by mode (see (c)).
+
+#### (b) Call `sync_related/3` from the context — inline or oban
+
+The owning context persists the change, keeps any denormalized projection in sync, and then
+invokes the fan-out explicitly. `opts[:fan_out]` is **required** — it names a key in the
+schema's `fan_outs:` declaration, and `sync_related/3` raises `ArgumentError` if it is absent.
+
+Inline execution resolves and syncs the affected records **now**, in the calling process:
+
+```elixir
+# inline (context-side) — resolves + syncs in this process, returns when done
+{:ok, %{mode: :inline, status: :completed}} =
+  Scrypath.sync_related(Author, updated_author,
+    fan_out: :posts, sync_mode: :inline, backend: Scrypath.Meilisearch)
+```
+
+Oban execution enqueues the internal `RelatedWorker` and returns immediately — the work is
+**durably queued**, not done:
+
+```elixir
+# oban (context-side) — "durably queued", NOT "searchable now"
+{:ok, %{mode: :oban, status: :accepted}} =
+  Scrypath.sync_related(Author, updated_author,
+    fan_out: :posts, sync_mode: :oban, oban: MyApp.Oban,
+    oban_queue: :scrypath, backend: Scrypath.Meilisearch)
+```
+
+Note the status difference: `:inline` returns `status: :completed` (the documents are
+synced); `:oban` returns `status: :accepted` (the job is queued and will run later).
+
+#### (c) Write an arity-safe resolver (the #1 footgun)
+
+The resolver receives a **different first argument depending on the mode**, and this is the
+single most common mistake when adopting `sync_related/3`:
+
+- The **inline** path hands the resolver a list of owning-schema **records** (`[%Author{}]`).
+- The **oban** path hands the resolver a list of owning-schema **document IDs** (`[author_id]`),
+  because the Author struct is discarded at enqueue time — only the IDs round-trip through the
+  Oban job. The resolver can never trust `.name` to be loaded on the oban path.
+
+So the resolver must pattern-match **both shapes** and funnel both to a single reload-by-id
+query against the target schema. Reloading by id makes the two arities converge:
 
 ```elixir
 defmodule MyApp.Accounts do
+  import Ecto.Query
   alias MyApp.Accounts.Author
-  alias MyApp.Blog.SyncAuthorPostsWorker
+  alias MyApp.Blog.Post
   alias MyApp.Repo
 
-  def update_author(%Author{} = author, attrs) do
-    Repo.transaction(fn ->
-      author
-      |> Author.changeset(attrs)
-      |> Repo.update!()
-      |> tap(fn updated_author ->
-        # Enqueue the fan-out job to update affected Post documents
-        %{"author_id" => updated_author.id}
-        |> SyncAuthorPostsWorker.new()
-        |> Oban.insert!()
-      end)
-    end)
+  def update_author(%Author{} = author, attrs, sync_opts) do
+    {:ok, updated} =
+      author |> Author.changeset(attrs) |> Repo.update()
+
+    # Keep the denormalized projection in sync — app-owned, explicit, before fan-out.
+    {_count, _} =
+      from(p in Post, where: p.author_id == ^updated.id)
+      |> Repo.update_all(set: [author_name: updated.name])
+
+    # Explicit fan-out the context invokes — not a callback.
+    {:ok, _result} =
+      Scrypath.sync_related(Author, updated, Keyword.put(sync_opts, :fan_out, :posts))
+
+    {:ok, updated}
   end
+
+  # Arity-safe resolver: inline passes Author RECORDS, oban passes Author DOCUMENT IDs.
+  # Both funnel to a reload-by-author_id query so the reload is uniform.
+  def resolve_posts_for_authors([%Author{} | _] = authors),
+    do: authors |> Enum.map(& &1.id) |> reload_posts()
+
+  def resolve_posts_for_authors([_id | _] = author_ids), do: reload_posts(author_ids)
+  def resolve_posts_for_authors([]), do: []
+
+  defp reload_posts(author_ids),
+    do: Repo.all(from(p in Post, where: p.author_id in ^author_ids))
 end
 ```
+
+A resolver that handles only records (or only ids) will crash the `:oban` path on a value it
+did not expect. Always handle both arities and reload from the database by id.
 
 ## 3. The document contract changed
 
