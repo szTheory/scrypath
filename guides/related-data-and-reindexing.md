@@ -87,8 +87,8 @@ is not a hidden callback. You declare the fan-out as metadata on the **owning** 
 write one resolver that finds the affected target records, and the context calls
 `sync_related/3` choosing inline or durable (Oban) execution.
 
-There is no public worker macro to write. The `:oban` path is dispatched by the internal
-`Scrypath.Sync.RelatedWorker`; adopters never name or `use` a worker module. You select
+There is no public worker macro to write. The `:oban` path is dispatched by an internal
+Scrypath worker; adopters never name or `use` a worker module. You select
 durable execution with `sync_mode: :oban` and point Scrypath at your Oban instance.
 
 #### (a) Declare the fan-out on the owning schema
