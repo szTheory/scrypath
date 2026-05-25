@@ -152,6 +152,7 @@ defmodule Scrypath.MixProject do
         "guides/composing-real-app-search.md",
         "guides/jtbd-and-user-flows.md",
         "guides/related-data-and-reindexing.md",
+        "guides/multitenancy.md",
         "guides/meilisearch-operations.md",
         "guides/phoenix-walkthrough.md",
         "guides/phoenix-contexts.md",
@@ -180,6 +181,7 @@ defmodule Scrypath.MixProject do
           "guides/request-edge-search.md",
           "guides/composing-real-app-search.md",
           "guides/related-data-and-reindexing.md",
+          "guides/multitenancy.md",
           "guides/common-mistakes.md"
         ],
         Phoenix: [
