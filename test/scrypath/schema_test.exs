@@ -13,7 +13,8 @@ defmodule Scrypath.SchemaTest do
                document_id: :id,
                document_source: :fields,
                index_prefix: nil,
-               backend: nil
+               backend: nil,
+               tenant_field: nil
              }
 
       assert SearchablePost.__scrypath__(:fields) == [:title, :body]
@@ -24,6 +25,19 @@ defmodule Scrypath.SchemaTest do
       assert Scrypath.schema_settings(SearchablePost) == %{__unrecognized__: %{}}
       assert Scrypath.document_source(SearchablePost) == :fields
       assert Scrypath.document_id_field(SearchablePost) == :id
+    end
+
+    test "reflects tenant_field if declared" do
+      [{mod, _}] = Code.compile_string("""
+      defmodule TenantFieldSchemaTest do
+        use Scrypath, fields: [:title], tenant_field: :account_id
+      end
+      """)
+      assert mod.__scrypath__(:tenant_field) == :account_id
+    end
+
+    test "returns nil for tenant_field if omitted" do
+      assert SearchablePost.__scrypath__(:tenant_field) == nil
     end
 
     test "stores and reflects declared settings metadata" do
