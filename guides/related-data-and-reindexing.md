@@ -102,20 +102,25 @@ MFA tuple that maps the changed owner(s) to the target records to re-sync:
 defmodule MyApp.Accounts.Author do
   use Ecto.Schema
 
-  use Scrypath,
-    fields: [:name],
-    fan_outs: [
-      posts: [
-        target: MyApp.Blog.Post,
-        resolver: {MyApp.Accounts, :resolve_posts_for_authors, []}
-      ]
-    ]
-
   schema "authors" do
     field(:name, :string)
     has_many(:posts, MyApp.Blog.Post)
     timestamps()
   end
+
+  # Owning-side fan_outs: declaration consumed by Scrypath.sync_related/3.
+  # The resolver MFA must handle BOTH arities (inline -> Author records, oban -> author IDs).
+  def __scrypath__(:fan_outs) do
+    [
+      posts: [
+        target: MyApp.Blog.Post,
+        resolver: {MyApp.Accounts, :resolve_posts_for_authors, []}
+      ]
+    ]
+  end
+
+  # Used by the :oban fan-out enqueue path (Scrypath.Identity.document_ids/2).
+  def __scrypath__(:document_id), do: :id
 
   def changeset(author, attrs) do
     author
@@ -124,6 +129,13 @@ defmodule MyApp.Accounts.Author do
   end
 end
 ```
+
+> **Note:** `use Scrypath` does not generate a `__scrypath__(:fan_outs)` accessor.
+> The macro generates reflection keys for fields, settings, and document identity
+> (see `lib/scrypath/schema.ex`) but not for fan-out declarations. Until macro-expansion
+> support for `fan_outs:` is added, declare `__scrypath__(:fan_outs)` and
+> `__scrypath__(:document_id)` by hand, as shown above. This is the same pattern
+> used by the library's own hermetic fan-out tests.
 
 The resolver MFA is invoked as `apply(mod, fun, [first_arg | extra_args])`. The `[]` above
 means no extra args; `first_arg` is supplied by Scrypath and differs by mode (see (c)).
@@ -187,10 +199,10 @@ defmodule MyApp.Accounts do
       |> Repo.update_all(set: [author_name: updated.name])
 
     # Explicit fan-out the context invokes — not a callback.
-    {:ok, _result} =
+    {:ok, result} =
       Scrypath.sync_related(Author, updated, Keyword.put(sync_opts, :fan_out, :posts))
 
-    {:ok, updated}
+    {:ok, result, updated}
   end
 
   # Arity-safe resolver: inline passes Author RECORDS, oban passes Author DOCUMENT IDs.
