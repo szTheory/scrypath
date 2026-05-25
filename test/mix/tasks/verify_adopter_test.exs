@@ -72,6 +72,30 @@ defmodule Mix.Tasks.Verify.AdopterTest do
   end
 
   describe "run/1 fast path" do
+    test "advertises the current focused fast-test files" do
+      source = File.read!("lib/mix/tasks/verify.adopter.ex")
+
+      assert source =~ ~S|"test/scrypath/readiness_contract_test.exs"|
+      assert source =~ ~S|"test/mix/tasks/verify_adopter_test.exs"|
+    end
+
+    test "help text names the current fast/live contract" do
+      output =
+        capture_io(fn ->
+          Mix.Task.reenable("help")
+          Mix.Task.run("help", ["verify.adopter"])
+        end)
+
+      assert output =~ "mix test test/scrypath/readiness_contract_test.exs"
+      assert output =~ "mix test test/mix/tasks/verify_adopter_test.exs"
+      assert output =~ "SCRYPATH_EXAMPLE_INTEGRATION"
+      assert output =~ "PGPORT"
+      assert output =~ "SCRYPATH_MEILISEARCH_URL"
+      assert output =~ "cd examples/phoenix_meilisearch"
+      assert output =~ "mix deps.get"
+      assert output =~ "mix test"
+    end
+
     test "emits a progress marker" do
       output =
         capture_io(fn ->
