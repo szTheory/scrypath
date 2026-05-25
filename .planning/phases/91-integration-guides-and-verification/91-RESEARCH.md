@@ -480,14 +480,14 @@ end
 | A4 | The boundary phrasing strings to assert in D-11 (e.g. "library-owned execution") are discretionary but must be present verbatim in the guide. | Pattern 2 | LOW — CONTEXT explicitly grants string discretion; the only risk is 91-01/91-02 drift (Pitfall 2), mitigated by coordinating the two plans. |
 | A5 | `mix.exs` `extras`/`groups_for_extras` need no change (the guide is already a registered extra at `mix.exs:153,181`). | Runtime State | LOW — verified by grep; the guide path already appears twice in mix.exs docs config. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **D-15 projection mechanism: denormalized column vs resolve-time projection.**
+1. **D-15 projection mechanism: denormalized column vs resolve-time projection.** — RESOLVED: denormalized `author_name` column (Pattern 3), locked in 91-03 (Tasks 1–2).
    - What we know: Both are app-owned/explicit and satisfy D-05. The oban path receives only IDs, forcing a reload regardless.
    - What's unclear: Whether the example maintainers prefer a real `author_name` column (more "production-shaped", one extra migration column + an `update_all` in `update_author`) or a thinner schema where the resolver joins Author at reload time and the `Post` projection computes `author_name` from a preloaded assoc (no extra column, but the projection must preload — still app-owned).
    - Recommendation: Ship the **denormalized column** (Pattern 3). It is the least surprising, uniform across both sync arities, and matches the guide's longstanding "posts store `author_name`" framing. Flag for the planner/discuss-phase as the one substantive design choice; either path is acceptable if it stays explicit.
 
-2. **Should the two example fan-out smoke tests be one file or two?**
+2. **Should the two example fan-out smoke tests be one file or two?** — RESOLVED: two files, mirroring the existing inline/oban split, locked in 91-03 (Task 3).
    - What we know: The existing pattern uses two files (`meilisearch_stack_test.exs` inline, `meilisearch_oban_stack_test.exs` oban). D-14 requires both paths; it does not mandate file count.
    - Recommendation: Two files mirroring the existing split for symmetry and clear CI failure attribution. Discretionary.
 
