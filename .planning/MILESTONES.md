@@ -4,7 +4,7 @@
 
 **Phases completed:** **3** (**89–91**), **9** plans, **7** requirements (**DATA-01**–**DATA-03**, **EXEC-01**–**EXEC-02**, **TEST-01**–**TEST-02**)
 
-**Hex:** **`scrypath 0.3.4`** on Hex; **in-repo milestone close only** — no dedicated Hex bump claimed for this planning milestone.
+**Hex:** **`scrypath 0.3.6`** on Hex at close; **in-repo milestone close only** — no dedicated Hex bump claimed for this planning milestone.
 
 **Key accomplishments:**
 
@@ -22,7 +22,7 @@
 
 **Phases completed:** **3** (**86–88**), **8** requirements (**TRUTH-01**–**TRUTH-03**, **ADOPT-01**–**ADOPT-03**, **FIX-01**–**FIX-02**)
 
-**Hex:** **`scrypath 0.3.4`** on Hex; **in-repo milestone close only** — no dedicated Hex bump claimed for this planning milestone.
+**Hex:** **`scrypath 0.3.6`** on Hex at close; **in-repo milestone close only** — no dedicated Hex bump claimed for this planning milestone.
 
 **Key accomplishments:**
 
@@ -42,7 +42,7 @@
 
 **Phases completed:** **3** (**83–85**), **12** requirements (**CMP-01**–**CMP-04**, **META-01**–**META-03**, **MSCH-01**–**MSCH-02**, **DOC-01**, **DOC-02**, **VRFY-01**)
 
-**Hex:** **`scrypath 0.3.4`** on Hex; **in-repo milestone close only** — no dedicated Hex bump claimed for this planning milestone.
+**Hex:** **`scrypath 0.3.6`** on Hex at close; **in-repo milestone close only** — no dedicated Hex bump claimed for this planning milestone.
 
 **Key accomplishments:**
 
@@ -62,7 +62,7 @@
 
 **Phases completed:** **3** (**80–82**), **8** requirements (**QTK-01**–**QTK-04**, **PHX-01**–**PHX-02**, **DOC-01**, **VRFY-01**)
 
-**Hex:** **`scrypath 0.3.4`** on Hex; **in-repo milestone close only** — no dedicated Hex bump claimed for this planning milestone.
+**Hex:** **`scrypath 0.3.6`** on Hex at close; **in-repo milestone close only** — no dedicated Hex bump claimed for this planning milestone.
 
 **Key accomplishments:**
 
@@ -84,7 +84,7 @@ Historical note: the `v1.20` archive records milestone-close `Scrypath.SearchMod
 
 **Phases completed:** **3** (**77–79**), **8** requirements (**SMOD-01**–**SMOD-08**)
 
-**Hex:** **`scrypath 0.3.4`** on Hex; **in-repo milestone close only** — no dedicated Hex bump claimed for this planning milestone.
+**Hex:** **`scrypath 0.3.6`** on Hex at close; **in-repo milestone close only** — no dedicated Hex bump claimed for this planning milestone.
 
 **Key accomplishments:**
 
