@@ -1150,7 +1150,9 @@ defmodule Scrypath.DocsContractTest do
       "sync_mode: :oban",
       "callback magic",
       "contexts own orchestration",
-      "library owns execution"
+      "library owns execution",
+      "def __scrypath__(:fan_outs)",
+      "does not generate a `__scrypath__(:fan_outs)` accessor"
     ])
   end
 
