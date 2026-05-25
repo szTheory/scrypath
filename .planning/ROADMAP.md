@@ -30,9 +30,55 @@
 
 ## Current Milestone
 
-**Current milestone:** none open.
+**v1.25 — Tenant-Safe Search** — *active* — opened 2026-05-25
 
-**Last shipped milestone:** **v1.24 Related-Data and Dependency Propagation** — shipped + archived **2026-05-25**, **3** phases (**89–91**) complete. Next default pull: **tenant-safe search access** (`AUTH-01`).
+## Phases
+
+- [ ] **Phase 92: Guide and Schema Declaration** - Canonical multitenancy guide + `tenant_field:` schema option; co-shipped to ensure the declaration and its documentation land together
+- [ ] **Phase 93: Reflection and Runtime Enforcement** - `schema_capabilities/1` `:tenant` reflection + `tenant_scope:` hard-injected filter; both depend on the `tenant_field:` groundwork from Phase 92
+- [ ] **Phase 94: Verification Gate** - `mix verify.phase94` hermetic gate covering all tenant-safety surfaces; CI registration and contributor guidance
+
+## Phase Details
+
+### Phase 92: Guide and Schema Declaration
+**Goal**: Adopters can declare a tenant field in their schema once and follow a canonical guide to implement tenant-safe search correctly in a Phoenix SaaS app
+**Depends on**: Nothing (first phase of v1.25)
+**Requirements**: TNNT-01, TNNT-02
+**Success Criteria** (what must be TRUE):
+  1. A developer can follow `guides/multitenancy.md` to understand and implement the shared-index + filter-injection model without reading source code
+  2. A developer can add `tenant_field: :tenant_id` to a Scrypath schema and the field is automatically present in both `filterable:` and the synced document projection without additional declarations
+  3. `guides/multitenancy.md` contains working wrong/correct code examples for the filter merge order footgun so developers can recognize and avoid the silent data-leak
+  4. The guide explains when Meilisearch tenant tokens apply (browser-direct only) and explicitly why per-tenant indexes are not the default model
+**Plans**: TBD
+
+### Phase 93: Reflection and Runtime Enforcement
+**Goal**: Adopters can introspect schema tenant declarations programmatically and use `tenant_scope:` to have the library hard-inject the tenant filter at the call site — preventing filter merge order bugs entirely
+**Depends on**: Phase 92
+**Requirements**: TNNT-03, TNNT-04
+**Success Criteria** (what must be TRUE):
+  1. A developer can call `Scrypath.Metadata.schema_capabilities/1` on a schema with `tenant_field:` declared and get back a map containing a `:tenant` key naming the declared field
+  2. A developer can call `Scrypath.Metadata.schema_capabilities/1` on a schema without `tenant_field:` declared and get back `nil` for the `:tenant` key
+  3. A developer can pass `tenant_scope: tenant_id` to `Scrypath.search/3` and the library AND-combines that tenant filter with caller-supplied `filter:` opts — caller filters cannot shadow or overwrite the tenant guard
+  4. Passing `tenant_scope:` without a `tenant_field:` declaration on the schema does not silently fail; the behavior is deterministic and documented
+**Plans**: TBD
+
+### Phase 94: Verification Gate
+**Goal**: All tenant-safety surfaces are regression-guarded by a single hermetic task that contributors and CI can run to confirm nothing has drifted
+**Depends on**: Phase 93
+**Requirements**: TNNT-05
+**Success Criteria** (what must be TRUE):
+  1. `mix verify.phase94` runs without errors and exercises guide anchor assertions, `tenant_field:` auto-merge behavior, `schema_capabilities/1` `:tenant` reflection, and `tenant_scope:` injection in a single hermetic pass
+  2. `mix verify.phase94` is registered in the CI `quality` job so a pull request that breaks any tenant-safety contract fails CI
+  3. CONTRIBUTING guidance references `mix verify.phase94` so contributors know the gate exists and how to run it
+**Plans**: TBD
+
+## Progress Table
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 92. Guide and Schema Declaration | 0/? | Not started | - |
+| 93. Reflection and Runtime Enforcement | 0/? | Not started | - |
+| 94. Verification Gate | 0/? | Not started | - |
 
 <details>
 <summary>✅ v1.24 — Phases 89–91 — SHIPPED + archived 2026-05-25 · <em>Related-Data and Dependency Propagation</em></summary>
