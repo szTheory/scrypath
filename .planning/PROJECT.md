@@ -36,13 +36,13 @@ Current planning files: **`.planning/{REQUIREMENTS,ROADMAP,STATE}.md`** plus arc
 
 ## Last shipped milestone
 
-**v1.22 — Composition And Real-App Depth** (shipped + archived in-repo **2026-05-24**). Public plain-data composition, declaration-backed metadata reflection, `search_many/2` lowering parity, canonical real-app guidance, and focused drift gates — see **`milestones/v1.22-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**v1.23 — Outside-Adopter Evidence And Support-Truth Reconciliation** (shipped + archived in-repo **2026-05-24**). Reconciled support truth and proof surfaces, reviewed outside-adopter intake path, and established related-data propagation as the next wedge. — see **`milestones/v1.23-{ROADMAP,REQUIREMENTS}.md`**.
 
-**Prior:** **v1.21 — Query Toolkit And Phoenix Edge Helpers** (shipped + archived in-repo **2026-05-23**) — **`milestones/v1.21-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**. **v1.20 — Search Module Foundation** (shipped + archived in-repo **2026-05-08**) — **`milestones/v1.20-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**Prior:** **v1.22 — Composition And Real-App Depth** (shipped + archived in-repo **2026-05-24**) — **`milestones/v1.22-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**. **v1.21 — Query Toolkit And Phoenix Edge Helpers** (shipped + archived in-repo **2026-05-23**) — **`milestones/v1.21-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 ## Planning window
 
-**Active milestone:** **v1.23 — Outside-Adopter Evidence And Support-Truth Reconciliation**. This milestone intentionally shifts from the completed Batteries-Included Search Modules arc into an adopter-proof and trust-closure arc: reconcile current support truth, classify real outside-adopter friction, and avoid widening into unrelated backend, UI-scaffold, or framework-magic promises unless the evidence justifies it.
+**Active milestone:** **v1.24 — Related-Data and Dependency Propagation**. This milestone focuses on the product correctness gap revealed by outside-adopter feedback: handling search index updates when related Ecto data changes across an association, without violating the explicit orchestration boundary.
 
 ## Requirements
 
@@ -203,3 +203,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 *Last updated: 2026-05-24 — opened **v1.23 Outside-Adopter Evidence And Support-Truth Reconciliation** after the repo-grounded done-ness assessment*
+e repo-grounded done-ness assessment*
