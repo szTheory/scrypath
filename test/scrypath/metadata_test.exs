@@ -3,8 +3,23 @@ defmodule Scrypath.MetadataTest do
 
   alias Scrypath.Composition
 
+  defmodule TenantSchema do
+    def __scrypath__(:tenant_field), do: :account_id
+    def __scrypath__(:faceting), do: []
+    def __scrypath__(:filterable), do: []
+    def __scrypath__(:sortable), do: []
+  end
+
+  test "schema_capabilities/1 reflects tenant_field when declared" do
+    capabilities = Scrypath.schema_capabilities(TenantSchema)
+
+    assert capabilities.tenant == :account_id
+  end
+
   test "schema_capabilities/1 reflects declaration-backed filter sort facet and paging support" do
     capabilities = Scrypath.schema_capabilities(FacetableMovie)
+
+    assert capabilities.tenant == nil
 
     assert capabilities.filters == %{
              supported: true,
