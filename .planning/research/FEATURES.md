@@ -1,138 +1,153 @@
 # Feature Landscape
 
-**Domain:** Reusable composition, presets, scopes, and UI metadata for an Ecto-native search library
-**Researched:** 2026-05-23
-**Overall confidence:** HIGH for boundary and composition shape; MEDIUM for exact DX niceties because those are ecosystem-synthesized rather than standardized.
+**Domain:** Tenant-safe search for a multi-tenant Elixir/Phoenix SaaS search library (Scrypath v1.25 AUTH-01)
+**Researched:** 2026-05-25
+**Confidence:** HIGH (Meilisearch mechanism and shared-index pattern), HIGH (Elixir context-layer pattern), MEDIUM (stretch `tenant_scope:` surface — no adopter evidence yet)
 
-## Feature goal
+> **Scope note:** This file covers only what is needed for AUTH-01. The existing
+> `.planning/research/auth-01-tenant-research.md` is the deep reference; this file
+> organises those findings into table-stakes / differentiators / anti-features for
+> roadmap phase planning.
 
-`v1.22` should help real Phoenix and Ecto apps share repeated search flows without inventing a second runtime above `Scrypath.search/3`.
+## Feature Landscape
 
-The composition layer should behave like this:
+### Table Stakes (Users Expect These)
 
-- normalize browser-shaped input once, then compose plain search args explicitly
-- let apps freeze repeated defaults and allowed variants as reusable presets/scopes
-- expose enough declared metadata for controllers and LiveViews to build honest UIs
-- preserve context ownership, per-app tenant policy, related-data fan-out ownership, and recovery honesty
-
-This matches the repo boundary and current ecosystem patterns:
-
-- Ecto queries are intentionally composable data, not hidden runtime magic ([Ecto dynamic queries](https://hexdocs.pm/ecto/dynamic-queries.html))
-- LiveView treats `handle_params/3` as the URL-state boundary, not a replacement for context orchestration ([Phoenix LiveView](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html))
-- Scout and Searchkick both succeed by making repeated search flows reusable, but they also show where over-magic becomes misleading, especially for async visibility and association updates ([Laravel Scout](https://laravel.com/docs/12.x/scout), [Searchkick](https://github.com/ankane/searchkick))
-
-## Adopter jobs
-
-Use these tags in notes:
-
-- `JOB-1` First searchable schema
-- `JOB-2` Request-edge Phoenix flow
-- `JOB-3` Related-data propagation
-- `JOB-4` Tenant-safe access
-- `JOB-5` Recovery and rebuild honesty
-
-## Table stakes
-
-Features real apps will expect once the request-edge toolkit already exists.
+Features multi-tenant Scrypath adopters assume will be addressed. Missing these = library has a credibility gap for SaaS Phoenix teams.
 
 | Feature | Why Expected | Complexity | Dependencies | Notes |
-|---|---|---:|---|---|
-| Named plain-data presets over the existing `QueryParams -> to_search_args -> context -> Scrypath.search/3` path | Real apps quickly repeat “same filters, sorts, facets, page defaults” across index, CSV/export, HTML, and LiveView flows | Med | existing query-toolkit contract | Presets should compile to the same plain args shape already accepted by contexts. No new runtime object model. `JOB-1`, `JOB-2`, `JOB-5` |
-| Scope composition that is additive and explicit | Apps need to layer “base catalog”, “published only”, “tenant window”, “admin override”, “facet defaults” without hand-merging keywords in every controller | Med-High | preset contract; deterministic merge rules | Use right-biased merge rules per dimension, mirroring existing `search_many/2` merge discipline. Avoid hidden callback chains. `JOB-2`, `JOB-4` |
-| Per-flow defaults plus caller overrides | Shared flows are only reusable if a page can start opinionated but still let the caller override page size, sort, query, or facet filters | Med | preset/scope merge semantics | This is the composition equivalent of Ecto’s composable query builders. Defaults must remain inspectable. `JOB-1`, `JOB-2` |
-| Search-many-aligned entry composition | Global-search and dashboard flows need reusable per-schema presets, not just single-schema helpers | High | existing `search_many/2` semantics; per-entry validation | Composition must preserve per-schema options and failure boundaries. Do not imply cross-schema merged ranking or merged facets. `JOB-2`, `JOB-5` |
-| Metadata reflection for declared filters, sorts, facets, and paging | Phoenix apps need one truth source to build forms, chips, selects, badges, and “reset filters” UIs without duplicating declarations | Med | existing schema reflection; request-edge contract | Return capability metadata, not generated UI. Include declared field names, option shape, and safe defaults. `JOB-1`, `JOB-2` |
-| Visibility of active/defaulted criteria | Reusable composition becomes hard to debug if apps cannot see which defaults or scopes actually applied | Med | preset/scope runtime expansion | Expose normalized “applied search args” or equivalent debug-friendly metadata for logs/tests/docs. `JOB-2`, `JOB-5` |
-| Explicit support for context-owned tenant scoping | SaaS apps need reusable search flows, but the host app must own who can see what | High | composition seam; docs | Composition can reserve a seam for tenant-safe scope injection, but must not claim authz by index prefix. Meilisearch and Typesense docs both treat scoped filtering/credentials as explicit configuration, not magic inference. `JOB-4` |
-| Related-data-safe composition docs | Once presets exist, adopters will assume they solve associated-record fan-out too unless docs say otherwise | Low-Med | docs/examples | The feature is not fan-out automation. Docs must repeat that associated updates still require explicit app-owned sync/rebuild paths. Searchkick and Hibernate Search both show this line matters. `JOB-3`, `JOB-5` |
-| Metadata for paging limits and facet/search capabilities | Honest UIs need to know max page behavior, facet-search support, and when a control should not render | Med | backend/schema metadata reflection | Meilisearch makes `filterableAttributes`, facet search, and `pagination.maxTotalHits` real behavioral constraints, so metadata should surface them. `JOB-2`, `JOB-5` |
-| Worked real-app patterns, not just API docs | Composition only lands if the repo proves “one search box”, “catalog filter page”, and “global search dashboard” shapes end to end | High | example app; guide refresh | Required to prove reduced glue without widening scope. `JOB-1`, `JOB-2`, `JOB-3`, `JOB-4`, `JOB-5` |
+|---------|--------------|------------|--------------|-------|
+| Canonical `guides/multitenancy.md` | Every SaaS adopter will ask "how do I isolate tenants?" — no answer = silent data-leak risk | LOW | None (pure docs) | Must cover: shared-index model, why per-tenant indexes are not the default (Meilisearch sequential task throughput), the correct context-layer filter injection pattern, filter-merge order footgun, and when Meilisearch tenant tokens apply (browser-direct search only). Cite `JOB-4`. |
+| `tenant_field:` schema declaration option | Adopters forget to declare the tenant field both in `fields:` (projection) and `filterable:` (index settings). Two separate omissions, both silent. The library should make this one declaration. | LOW–MEDIUM | Existing `filterable:` and document-projection machinery | Auto-adds the named field to `filterable:` and document projection. No runtime enforcement at search time — declaration only. Must compose cleanly with existing `filterable: [...]` lists. `JOB-4`. |
+| `schema_capabilities/1` surfaces `tenant_field` | Contexts programmatically checking whether a schema has declared a tenant field need reflection support — otherwise they hard-code field names | LOW | `schema_capabilities/1` already exists; additive change | Extend the existing reflect surface. Return `%{tenant_field: :tenant_id}` or `nil` if not declared. Keeps the reflection API consistent with existing `filterable`, `sortable`, `fields` keys. |
+| Guide section: correct context-layer filter injection pattern | Adopters must know where filter assembly lives (context function, not controller/LiveView) and why the context owns the tenant scope | LOW | Guide only | Must include the `Keyword.merge` footgun (last-key-wins drops tenant guard) and the correct explicit merge pattern. Must explain that `Scrypath.search/3` cannot know which filters are privileged without `tenant_scope:`. |
+| Guide section: async-boundary safety | Adopters using `Task.async`, `assign_async`, or Oban workers need to know process-dictionary tenant context is lost across those boundaries | LOW | Guide only | The correct model (explicit tenant parameter through the context function) is already immune. The guide must name the anti-pattern explicitly and explain why Scrypath's explicit parameter model survives async boundaries. |
 
-## Differentiators
+### Differentiators (Competitive Advantage)
 
-Features that would make `v1.22` notably stronger than a thin param-casting helper, while still staying inside the milestone guardrail.
+Features that close the gap between Scrypath and the "nothing exists yet" state of Elixir/Phoenix SaaS search.
 
-| Feature | Value Proposition | Complexity | Notes |
-|---|---|---:|---|
-| Canonical “composition is data” API instead of opaque structs | Keeps Scrypath aligned with Ecto and current public boundary. Easier to diff, log, test, and feed into both `search/3` and `search_many/2` | Med | Strongest product fit for this repo. Prefer maps/keywords/plain structs only if they remain boring data containers, not behavioral query objects. |
-| Introspectable preset registry per search flow | Lets apps ask “what filters/sorts/facets does this page support?” from the same declaration they execute | Med-High | Higher leverage than shipping form components. Useful for LiveView forms, JSON APIs, and admin UIs alike. |
-| Per-entry composition helpers for `search_many/2` | Reusable global-search flows are a real app need and many libraries stay too single-index here | High | Should preserve declaration order, schema-local failure messages, and per-schema metadata. |
-| Explicit “applied runtime contract” export for docs/tests | Gives maintainers a way to verify that presets/scopes do not silently drift from what a page claims to support | Med | Good candidate for doc contracts and example assertions. |
-| Boundary-honest tenant hooks | Provide a first-class place for apps to inject tenant/account scope without Scrypath pretending to own authorization | Med-High | Valuable because B2B adopters need this today, but the library must stop short of issuing credentials or enforcing auth policy. |
-| Recovery-aware composition guidance | Shows when a change is just a preset/default tweak versus when declared metadata or index settings changed enough to need backfill/reindex | Med | This is unusual and fits Scrypath’s product voice well. |
+| Feature | Value Proposition | Complexity | Dependencies | Notes |
+|---------|-------------------|------------|--------------|-------|
+| `tenant_field:` as a single declaration vs. two manual steps | No Elixir search library (meilisearch-elixir, wayfarer, etc.) offers this. meilisearch-rails has an open issue from 2022, unresolved. Searchkick explicitly defers to the host app. Scrypath would be the first to make this one line. | LOW | Existing schema option parsing; `filterable:` registration path | The differentiator is not enforcement — it is reducing two error-prone manual steps (projection + filterable) to one declaration. |
+| `schema_capabilities/1` reflection for `tenant_field` | Allows a context to discover programmatically which schemas declare a tenant field, enabling shared search utilities that don't hard-code field names | LOW | Existing `schema_capabilities/1` reflection | Small additive surface. Valuable for apps with many schemas. |
+| `tenant_scope:` search option (stretch) | Hard-injects the tenant filter at the library level, AND-combined with `filter:`, not overridable. Closes the filter-merge-order footgun at the call site rather than relying on context discipline. | MEDIUM | `Scrypath.search/3` option parsing; filter composition in `%Scrypath.Query{}` build path | Only worth shipping if adopter evidence confirms the merge bug is occurring in real code. Without evidence: premature enforcement. Estimated 1–2 additional phases. |
+| Named "why not per-tenant indexes" guidance | Meilisearch's sequential task processor makes per-tenant indexes a documented anti-pattern, but this is buried in Meilisearch's blog. Surfacing it in Scrypath's guide prevents a common adopter mistake that degrades throughput for all tenants. | LOW | Guide only | The guidance is a differentiator because it shows Scrypath understands production constraints, not just API mechanics. |
+| Tenant token recipe for browser-direct search | Not a library feature — but a documented recipe (Joken, HS256, searchRules payload) for the subset of adopters who want the browser to hit Meilisearch directly. No Scrypath code involved, pure docs. | LOW | Guide only; host app adds Joken dep | Keeps Scrypath out of the JWT dependency business while still answering the question. Mark assumption A1 (Joken API shape) for validation before implementation. |
 
-## Anti-features
+### Anti-Features (Commonly Requested, Often Problematic)
 
-Features to explicitly not build in `v1.22`.
+| Feature | Why Requested | Why Problematic | Alternative |
+|---------|---------------|-----------------|-------------|
+| Automatic tenant context from process dictionary / plug assigns | Seems convenient — "just store current_tenant in a plug and Scrypath reads it automatically" | Process dictionary does not survive `Task.async`, `assign_async`, or Oban workers. Silent cross-tenant data leak in async contexts. Libraries like Triplex use this pattern and require explicit propagation workarounds. | Explicit tenant parameter threaded through the context function. Document this as the correct pattern in the guide. |
+| Per-tenant index routing (`index_prefix:` dynamic at query time) | Seems like hard isolation — wrong index = zero results | Meilisearch processes tasks sequentially per index. At 100+ tenants, all indexing throughput degrades. Operational complexity multiplies by tenant count. `Scrypath.index_prefix:` is environment-level, not per-tenant dynamic. | Shared index + `filterable: [:tenant_id]` + filter injection. Per-tenant indexes only for compliance/regulatory isolation requirements. |
+| Library-level tenant ID extraction from `conn` / socket assigns | Seems ergonomic — "pass the conn and Scrypath figures out the tenant" | Couples the search library to Phoenix internals. Context functions are the correct ownership boundary. Breaks the library's Ecto-first, Phoenix-optional stance. | Context function takes tenant as an explicit argument. Phoenix controllers/LiveViews pass it from assigns. |
+| Token generation helpers (Joken wrapper in Scrypath) | Adopters want one library to handle everything | Adds a JWT dependency to Scrypath core that most adopters doing server-side search never need. Token generation is three lines of Joken — not a library abstraction problem. | Document the recipe in the guide. Host app adds `{:joken, "~> 2.6"}` if needed. |
+| `tenant_scope:` enforcement without adopter evidence | Seems like it closes a real footgun | Without adopter evidence that the filter-merge bug is occurring in real code, this is premature enforcement that widens the public API surface for no validated reason. | Ship the guide + `tenant_field:` declaration first. Let adopter evidence determine whether `tenant_scope:` is justified for a follow-on phase. |
+| Automatic association walking to pull `tenant_id` from parent records | Seems helpful — Post has no `tenant_id`, but its Organization does | Deeply couples the library to Ecto association traversal. Breaks the "no automatic Ecto association walking" boundary established in v1.24. Creates hidden N+1 sync paths. | Document the explicit projection approach: include `tenant_id` via a custom document-build function or add a virtual field to the schema. |
+| Per-tenant Meilisearch API key management | Seems like the "real" multi-tenancy solution | Per-tenant keys require per-tenant indexes (Option 4 in the research). Same throughput problem plus credential management overhead. Not the production model. | Shared index + server-side filter injection. Tenant tokens for browser-direct search only, and only for search (not admin ops). |
 
-| Anti-Feature | Why Avoid | What to Do Instead |
-|---|---|---|
-| Public `%Scrypath.Query{}` or new behavioral query DSL as the composition surface | Violates the current boundary and locks internal runtime structure into semver | Keep composition over the existing plain-data contract |
-| Schema-generated runtime search functions from declarations | Crosses from reusable composition into framework magic and weakens context ownership | Keep contexts as the execution boundary |
-| Phoenix-specific preset/controller/LiveView macros | Would collapse framework boundaries and duplicate the existing optional-helper stance | Keep Phoenix support at params/forms/URL metadata and worked examples |
-| Generated UI components, form builders, or facet widgets | Too much scope for this milestone; the real leverage is metadata, not UI scaffolding | Expose metadata and provide docs/examples only |
-| Automatic related-data propagation from preset declarations | Composition cannot truthfully infer all association fan-out or rebuild rules | Keep related-data propagation explicit in app code and recovery docs |
-| Tenant isolation claims based on index prefixes or preset naming | Dangerous over-promise for SaaS adopters; prefixes are partitioning, not authorization | Support explicit tenant scope injection and document backend-native access controls separately |
-| Cross-schema “merged relevance” facade for `search_many/2` presets | Existing runtime already warns that ranking stays per schema/index | Preserve per-entry results and merged-order honesty only |
-| Hidden persistence of saved searches/playbooks in core `scrypath` | Reopens old OPSUI/product-surface sprawl | Leave persistence to host apps or future optional surfaces |
-| Adapter-wide abstraction for non-Meilisearch UI capability parity | v1.22 is not the moment to promise backend-agnostic metadata semantics | Reflect what the current backend and declarations can honestly support |
+## Feature Dependencies
 
-## Feature dependencies
+```
+tenant_field: schema option
+    └──requires──> existing filterable: registration machinery
+    └──requires──> existing document projection machinery
+    └──enables──> schema_capabilities/1 reflection for tenant_field
 
-```text
-Composition contract
-  -> Named presets
-  -> Additive scopes
-  -> Deterministic merge rules
-  -> Applied-runtime introspection
+schema_capabilities/1 tenant_field reflection
+    └──requires──> tenant_field: schema option (must exist before reflecting it)
+    └──enhances──> context-layer code that discovers tenant fields programmatically
 
-Metadata reflection
-  -> Filters/sorts/facets/paging capability export
-  -> Phoenix/JSON-friendly shapes
-  -> Honest docs/examples
+guides/multitenancy.md
+    └──requires──> tenant_field: option (must exist to document it accurately)
+    └──requires──> schema_capabilities/1 update (must exist to document it)
+    └──standalone──> correct context-layer pattern, async safety, token recipe
 
-search_many/2 alignment
-  -> Per-entry preset composition
-  -> Per-schema metadata exposure
-  -> Failure-boundary preservation
-
-Tenant-safe and recovery-honest adoption
-  -> Explicit tenant-scope injection seam
-  -> Related-data boundary docs
-  -> Rebuild/reindex guidance when declarations/settings drift
+tenant_scope: search option (stretch)
+    └──requires──> tenant_field: schema option (natural pairing — schema declares, search enforces)
+    └──requires──> filter composition in %Scrypath.Query{} build path (must AND-combine, not replace)
+    └──conflicts with──> process-dictionary tenant context (explicit ID required, not auto-extracted)
+    └──enhances──> guide section on filter-merge footgun (library now closes the gap)
 ```
 
-## MVP recommendation
+### Dependency Notes
 
-Prioritize:
+- **`tenant_field:` requires existing `filterable:` machinery:** The option is additive — it calls the same registration path that `filterable: [:field]` already calls. No new runtime path required.
+- **`schema_capabilities/1` requires `tenant_field:`:** Reflection of a field that was never declared would be meaningless. The two ship together or the reflection returns `nil`.
+- **`guides/multitenancy.md` must not precede `tenant_field:` in the phase plan:** The guide documents the feature; the feature must be at least designed before the guide can be accurate.
+- **`tenant_scope:` conflicts with auto-extraction patterns:** If `tenant_scope:` is ever shipped, it must take an explicit value (not read from process state). Otherwise it introduces the same async-boundary footgun it is meant to prevent.
 
-1. Plain-data presets plus additive scopes for single-schema flows.
-2. Metadata reflection for declared filters, sorts, facets, and paging, including applied defaults.
-3. `search_many/2` composition parity with per-entry presets and honest per-schema metadata.
+## MVP Definition
 
-Defer:
+### Launch With (v1.25)
 
-- UI components and Phoenix macros: wrong layer
-- persisted saved searches: separate product
-- automatic related-data fan-out: correctness trap
-- tenant auth features beyond explicit scope injection seam: too broad for `v1.22`
+Minimum viable slice that closes the SaaS credibility gap.
 
-## Recommended feature slices
+- [ ] `guides/multitenancy.md` — shared-index model, context-layer pattern, filter-merge footgun, async safety, tenant token recipe for browser-direct search, explicit note against per-tenant indexes
+- [ ] `tenant_field:` schema declaration option — auto-adds named field to `filterable:` + document projection in one declaration
+- [ ] `schema_capabilities/1` update — surfaces `tenant_field` if declared
 
-| Slice | What ships | Why first |
-|---|---|---|
-| Slice 1 | Named presets, additive scopes, deterministic merge rules, applied-args introspection | Freezes the reusable core without changing runtime ownership |
-| Slice 2 | Metadata reflection for filters/sorts/facets/paging and docs contract tests | Makes the composition layer useful to Phoenix and JSON consumers |
-| Slice 3 | `search_many/2` composition parity and worked global-search/dashboard examples | Proves the layer scales past one schema without hiding canonical semantics |
-| Slice 4 | Tenant/recovery/related-data guidance refresh | Prevents false confidence in real SaaS apps |
+### Add After Validation (v1.25 stretch or v1.26)
+
+Features to add if adopter evidence supports them.
+
+- [ ] `tenant_scope:` search option on `Scrypath.search/3` — hard-injected tenant filter, AND-combined with `filter:`, not overridable by caller opts. Trigger: adopter report of the filter-merge bug occurring in production code.
+
+### Future Consideration (Out of scope for v1.25+)
+
+Features to permanently defer or reject.
+
+- [ ] Automatic tenant context from process dictionary — wrong model; document the anti-pattern instead
+- [ ] Per-tenant index routing at query time — throughput anti-pattern; document against it
+- [ ] Token generation helpers in Scrypath core — recipe belongs in the guide, not the library
+- [ ] Automatic association walking for `tenant_id` — breaks the no-auto-association-walking boundary
+
+## Feature Prioritization Matrix
+
+| Feature | User Value | Implementation Cost | Priority |
+|---------|------------|---------------------|----------|
+| `guides/multitenancy.md` | HIGH — closes the #1 SaaS credibility gap | LOW — pure docs | P1 |
+| `tenant_field:` schema option | HIGH — removes two silent failure modes in one declaration | LOW–MEDIUM — additive to existing option parsing | P1 |
+| `schema_capabilities/1` `tenant_field` reflection | MEDIUM — useful for programmatic discovery; less critical than the declaration itself | LOW — additive to existing reflection | P1 (same phase as `tenant_field:`) |
+| `tenant_scope:` search option | MEDIUM — closes filter-merge footgun at library level | MEDIUM — new option, filter composition change | P2 — defer until adopter evidence |
+| Tenant token recipe (docs-only) | LOW–MEDIUM — applies only to browser-direct search adopters | LOW — documentation only | P2 — include in guide if space allows |
+
+**Priority key:**
+- P1: Must ship in v1.25
+- P2: Ship when evidence justifies or time allows
+- P3: Future consideration / reject
+
+## Competitor Feature Analysis
+
+| Feature | Searchkick (Ruby) | meilisearch-rails (Ruby) | Laravel Scout (PHP) | Hibernate Search (Java) | Scrypath approach |
+|---------|-------------------|--------------------------|---------------------|------------------------|-------------------|
+| Built-in tenant field declaration | None — host-app scope (issue #268 closed, won't fix) | None — open issue #152 since June 2022, unresolved | None — global model scope pattern, host-owned | First-class tenant ID parameter on `MassIndexer` and `SearchSession` | `tenant_field:` declaration option — first Elixir library to offer this |
+| Schema-level filterable registration | Auto-registers searchkick fields | Manual `filterable_attributes` list | Manual `toSearchableArray` + Scout index configuration | Managed by mapping annotations | Auto-registration via `tenant_field:` — extends existing `filterable:` path |
+| Tenant filter injection | Host app monkey-patches `search` class method | Host app owns filter injection | Host app adds `where()` clauses or global scopes | `SearchSession.search(...).filter().matching(tenantId)` | Host context owns injection; guide provides the correct pattern |
+| Async boundary safety | Not documented | Not documented | N/A (sync framework) | Explicit session scoping | Explicit parameter model is immune by construction; guide names the process-dict anti-pattern |
+| Tenant token / credential generation | None | None (issue #152 open) | None | API key scoping per tenant | Documented recipe (Joken) in guide; no library dep |
+| Per-tenant index support | Via `index_name` override | Via `index_uid` override | Via `searchableAs()` override | Via tenant parameter on mass indexer | Documented anti-pattern in guide; `index_prefix:` is environment-level, not per-tenant |
 
 ## Sources
 
-- Official Ecto docs: [Dynamic queries](https://hexdocs.pm/ecto/dynamic-queries.html) and [Ecto.Query](https://hexdocs.pm/ecto/Ecto.Query.html)
-- Official Phoenix docs: [Phoenix LiveView `handle_params/3`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html)
-- Official Laravel docs: [Laravel Scout 12.x](https://laravel.com/docs/12.x/scout)
-- Searchkick README: [ankane/searchkick](https://github.com/ankane/searchkick)
-- Meilisearch Rails README: [meilisearch/meilisearch-rails](https://github.com/meilisearch/meilisearch-rails)
-- Meilisearch docs/specs: [Settings](https://meilisearch.dev/docs/reference/api/settings), [Facet search](https://meilisearch.dev/docs/reference/api/facet_search), [Pagination](https://meilisearch.dev/docs/guides/front_end/pagination)
-- Hibernate Search docs: [Stable reference guide](https://docs.hibernate.org/stable/search/reference/en-US/html_single/)
-- Local context: `.planning/PROJECT.md`, `.planning/MILESTONE-ARC.md`, `.planning/milestone-candidates.md`, `.planning/seeds/SEED-002-composition-real-app-depth.md`, `guides/request-edge-search.md`, `guides/related-data-and-reindexing.md`, `guides/multi-index-search.md`, `guides/jtbd-and-user-flows.md`
+### Primary (HIGH confidence — verified in auth-01-tenant-research.md)
+
+- Meilisearch multi-tenancy guide: https://meilisearch.com/blog/multi-tenancy-guide — shared-index recommendation, sequential task throughput constraint
+- Meilisearch tenant token spec: https://specs.meilisearch.dev/specifications/text/0089-tenant-tokens.html — JWT payload, signing, searchRules, revocation model
+- Meilisearch filterableAttributes spec: https://specs.meilisearch.dev/specifications/text/0123-filterable-attributes-setting-api.html — filter must be declared or silently ignored
+- Joken hexdocs: https://hexdocs.pm/joken/Joken.Signer.html — HS256 signer API
+- Curiosum Elixir multitenancy blog: https://curiosum.com/blog/multitenancy-in-elixir — process dictionary async boundary footgun
+- meilisearch-rails issue #152: https://github.com/meilisearch/meilisearch-rails/issues/152 — no tenant support shipped as of research date
+- searchkick issue #268: https://github.com/ankane/searchkick/issues/268 — explicitly host-app scope
+
+### Codebase (Direct inspection)
+
+- `lib/scrypath/options.ex` — `filter:` option exists; no `tenant_scope:` today
+- `lib/scrypath/metadata/resolve.ex` — `tenant_policy: :host_owned` already declared
+- `lib/scrypath.ex` — `@moduledoc` states tenant authz is host-owned
+- `guides/composing-real-app-search.md` — "no tenant/authz guarantees" in non-goals
+
+---
+*Feature landscape for: Scrypath v1.25 AUTH-01 tenant-safe search*
+*Researched: 2026-05-25*

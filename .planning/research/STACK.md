@@ -1,238 +1,199 @@
-# Technology Stack
+# Stack Research
 
-**Project:** Scrypath v1.22 - Composition And Real-App Depth  
-**Researched:** 2026-05-23  
-**Scope:** Stack additions and implementation support for bounded composition presets/scopes, `search_many/2`-aligned composition, and stronger UI metadata exposure.  
+**Domain:** Tenant-safe search additions to Scrypath (Elixir OSS library)
+**Researched:** 2026-05-25
 **Confidence:** HIGH
 
-## Executive Recommendation
+## Verdict on New Dependencies
 
-For v1.22, **do not add a new runtime subsystem**. Presets, scopes, composition, and UI metadata are a **pure library-layer concern** over the already-shipped plain-data query contract. The right stack move is:
+**Zero new Hex dependencies required for the core milestone.**
 
-1. **Keep core runtime dependencies flat**.
-2. **Make `:telemetry` a direct dependency** because Scrypath already calls it directly and v1.22 increases reliance on metadata as public observability surface.
-3. **Reuse `NimbleOptions` more aggressively** for bounded preset/scope/metadata definition validation and generated docs.
-4. **Add `StreamData` as a test-only dependency** for merge, round-trip, and metadata invariant testing.
-5. **Do not add Phoenix, LiveView, Plug-runtime, Flop, Ash/Spark, typed-struct DSLs, or a general composition framework** to core.
+`tenant_field:` schema option + `schema_capabilities/1` reflection + `guides/multitenancy.md` are implemented entirely within existing Scrypath modules. The existing stack (Ecto, NimbleOptions, Req, Jason, Oban-optional) already provides everything needed.
 
-This milestone should feel like a stronger `Scrypath.QueryParams` / search-args composition layer, not like a second runtime, a UI kit, or a Phoenix mini-framework.
+Joken is relevant ONLY as a host-app recipe in the guide for browser-direct tenant token generation. It must NOT be added to Scrypath's `mix.exs`.
 
-## Recommended Stack
+---
 
-### Core Runtime
+## Existing Stack (Unchanged)
 
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Elixir | `~> 1.17` | Core runtime floor | No new language/runtime pressure from composition work |
-| Ecto | `~> 3.13` | Existing schema/context integration surface | Composition still belongs above contexts and search args, not in a new DSL engine |
-| NimbleOptions | `~> 1.1` | Validate bounded preset/scope/metadata option shapes | Supports nested key schemas and documentation-oriented option contracts |
-| Telemetry | `~> 1.4` | Direct public observability dependency | Scrypath already calls `:telemetry` directly; composition metadata makes this more central |
-| Req | `~> 0.5` | Existing backend transport | No transport change is required for presets/scopes/metadata |
-| Oban | `~> 2.21` optional | Existing async sync path | Unchanged; composition must not create queue/runtime coupling |
+| Technology | Version | Role | Notes |
+|------------|---------|------|-------|
+| Elixir | `~> 1.17` | Runtime | No change needed |
+| Ecto | `~> 3.13` | Schema metadata backbone | `__scrypath__/1` callbacks rely on Ecto-style field atoms |
+| NimbleOptions | `~> 1.1` | Option validation | Powers `@schema_options` in `Scrypath.Options` — `tenant_field:` entry adds here |
+| Req | `~> 0.5` | HTTP transport to Meilisearch | No change — `filterableAttributes` sync goes through existing Meilisearch client path |
+| Jason | `~> 1.4` | JSON encode/decode | No change |
+| Oban | `~> 2.21` (optional) | Async sync workers | No change |
 
-### Test Support
+---
 
-| Library | Version | Purpose | When to Use |
+## New Dependencies
+
+**None.**
+
+Do not add Joken, JOSE, or any JWT library to `mix.exs`. Rationale:
+
+- The core milestone (`tenant_field:` + reflection + guide) involves zero JWT work.
+- The guide's tenant token section is a recipe for host-app code, not library code.
+- Adding Joken would widen the Scrypath transitive dependency graph without any shipped library surface that uses it — a maintenance burden with no adoption benefit.
+- Scrypath's `lib/scrypath.ex` `@moduledoc` already states "tenant authz ... stay host_owned". A Joken dep would contradict that boundary.
+
+---
+
+## Module Integration Points
+
+These are the existing Scrypath modules that need modification for AUTH-01. No new files are required for the minimum credible slice (guide + `tenant_field:` + reflection).
+
+### 1. `lib/scrypath/options.ex` — Schema options extension
+
+**What changes:** Add `tenant_field:` to `@schema_options`.
+
+```elixir
+tenant_field: [
+  type: {:custom, __MODULE__, :validate_optional_atom, []},
+  default: nil,
+  doc: "Optional field atom used as the tenant isolation key. Auto-added to filterable: and document projection."
+]
+```
+
+**Downstream effects in `validate_schema_options!/1`:**
+- After NimbleOptions validation, the `ensure_non_empty_fields!` / map coercion path must auto-merge `tenant_field` into `:filterable` if not already present.
+- This prevents the silent "forgot to declare filterable" footgun without changing any search-time code path.
+
+**Search option extension (stretch — `tenant_scope:`):**
+
+If the stretch option is included, add `tenant_scope:` to `@search_options`:
+
+```elixir
+tenant_scope: [
+  type: {:custom, __MODULE__, :validate_tenant_scope, []},
+  default: nil,
+  doc: "Privileged tenant guard injected as a mandatory AND filter before caller filter: opts. Not overridable."
+]
+```
+
+`validate_tenant_scope/1` accepts integer, binary, or atom (any value the host supplies as a tenant identity). The filter injection happens in `Scrypath.Search` before the query is assembled, not in `validate_search_options/2`.
+
+### 2. `lib/scrypath/schema.ex` — `__scrypath__/1` callback
+
+**What changes:** Add a `__scrypath__(:tenant_field)` clause so the declaration is accessible at runtime and for reflection.
+
+```elixir
+def __scrypath__(:tenant_field), do: @scrypath_config.tenant_field
+```
+
+This also enables the `Scrypath.Metadata.Capabilities` module to surface `tenant_field` without additional data fetching.
+
+### 3. `lib/scrypath/metadata/capabilities.ex` — `schema_capabilities/1` output
+
+**What changes:** Add a `tenant` key to the capabilities map returned by `schema_capabilities/1`.
+
+```elixir
+tenant: %{
+  field: schema_module.__scrypath__(:tenant_field),
+  declared: schema_module.__scrypath__(:tenant_field) != nil
+}
+```
+
+This is the reflection surface adopters use to programmatically discover whether a schema has a tenant field declared. The `host_owned` attribution in `Scrypath.Metadata.Resolve` (`tenant_policy: :host_owned`) is already correct and stays unchanged.
+
+### 4. `lib/scrypath/projection.ex` — Document projection
+
+**What changes:** `build_field_document/2` currently projects only `fields:`. If `tenant_field:` names a field not already in `fields:`, it must be included in the synced document. The projection must union `fields + [tenant_field]` (deduped) when `tenant_field` is non-nil.
+
+This closes the "tenant_id missing from document" footgun without the adopter needing to remember to add it to `fields:` manually.
+
+### 5. `guides/multitenancy.md` (new file)
+
+The canonical guide. No module changes — pure documentation. Content scope per auth-01-tenant-research.md:
+- Shared-index model
+- Why per-tenant indexes are not the default (sequential task processing throughput)
+- Correct context-layer pattern with explicit tenant parameter
+- Filter merge order footgun with working and broken examples
+- `tenant_field:` declaration and what it buys
+- Tenant token recipe (Joken, HS256, payload structure) for browser-direct search — clearly marked as host-app code, not Scrypath library code
+- What NOT to do: process dictionary for tenant context, per-tenant index proliferation, server-side tenant tokens
+
+### 6. `lib/scrypath/search.ex` — Stretch only (`tenant_scope:`)
+
+**What changes (stretch only):** In `do_search/5`, before `Query.new(text, search_opts)`, extract `tenant_scope:` from search opts and inject it as a prepended filter:
+
+```elixir
+search_opts_with_tenant =
+  case Keyword.pop(search_opts, :tenant_scope) do
+    {nil, opts} -> opts
+    {tenant_id, opts} ->
+      tenant_field = schema_module.__scrypath__(:tenant_field)
+      inject_tenant_filter(opts, tenant_field, tenant_id)
+  end
+```
+
+`inject_tenant_filter/3` prepends `{tenant_field, tenant_id}` to the front of the `:filter` keyword list, ensuring it cannot be shadowed by caller-supplied filter entries. This is the library-level enforcement guarantee.
+
+---
+
+## Supporting Library for Guide (Host-App Only, Not a Scrypath Dep)
+
+| Library | Version | Purpose | Integration |
 |---------|---------|---------|-------------|
-| StreamData | `~> 1.3`, `only: [:dev, :test]` | Property tests for composition invariants | Use for right-biased merge rules, idempotent normalization, metadata projection, and `search_many/2` shared-vs-entry precedence |
-| Req.Test | bundled with `req` | Backend stub/mocked transport testing | Keep using it for Meilisearch request-shape and failure-path tests; no extra HTTP mock library needed |
-| Mox | none for v1.22 | Not recommended now | Add only if a real behaviour seam is introduced later; do not invent one for presets/scopes |
+| Joken | `~> 2.6` | Meilisearch tenant token generation (HS256 JWT) | Host-app `mix.exs` only. Recipe in guide. |
 
-### Documentation / Verification Support
-
-| Tool | Version | Purpose | Why |
-|------|---------|---------|-----|
-| ExDoc | existing `~> 0.37` | Guides and API docs | Enough for a new composition guide, metadata reference, and real-app examples |
-| Docs contract tests | existing repo pattern | Prevent story drift | Use existing doc-lock pattern instead of adding another docs toolchain |
-| Phoenix example app/docs fixtures | existing repo assets | Real-app proof | Reuse the existing example/test surfaces rather than pulling Phoenix into runtime core |
-
-## Required Stack Changes
-
-These are the only stack changes justified by the milestone.
-
-### 1. Add direct `:telemetry` dependency
-
-**Add:**
+**Joken v2.6.2 API** (verified against hexdocs.pm/joken, HIGH confidence):
 
 ```elixir
-{:telemetry, "~> 1.4"}
+signer = Joken.Signer.create("HS256", api_key_value)
+{:ok, token, _claims} = Joken.encode_and_sign(claims_map, signer)
 ```
 
-**Why this is required:**
+`Joken.encode_and_sign/2` accepts a `%{}` with binary keys and a `Joken.Signer`. Returns `{:ok, bearer_token, claims}`. The Meilisearch tenant token payload uses binary keys (`"apiKeyUid"`, `"searchRules"`, `"exp"`), which matches Joken's raw claims API exactly.
 
-- Scrypath already calls `:telemetry.span/3` and `:telemetry.execute/3` directly in core modules.
-- Today `:telemetry` is present only transitively through deps such as Ecto, Finch, Plug, and Oban.
-- v1.22 makes metadata a more explicit public surface through composition and UI metadata exposure, so relying on a transitive dependency is the wrong contract.
-
-**This is a real stack correction**, not a design flourish.
-
-### 2. Add `StreamData` as a test-only dependency
-
-**Add:**
-
-```elixir
-{:stream_data, "~> 1.3", only: [:dev, :test], runtime: false}
-```
-
-**Why this is justified:**
-
-- Composition introduces merge and projection laws that are easy to under-test with only hand-written cases.
-- `ExUnitProperties` is designed for property-based testing and shrinking counterexamples, which fits:
-  - preset merge associativity / precedence checks
-  - scope composition idempotence
-  - browser-param round-trip invariants
-  - `search_many/2` shared-option vs per-entry-option precedence
-  - metadata declaration ordering and canonicalization
-
-**This is a test-only quality addition**, not a runtime expansion.
-
-## Zero-Library Choices That Are Correct For v1.22
-
-These are deliberate non-additions.
-
-### 1. No new composition framework
-
-Use **plain maps/keywords/functions** and `NimbleOptions` validation. Do not add a rule engine, macro-heavy DSL, or generic policy/composition library.
-
-Reason:
-- The bounded problem is “merge and expose known search args safely,” not “host arbitrary workflows.”
-- A new framework would widen the public abstraction faster than the milestone justifies.
-
-### 2. No Phoenix or LiveView runtime dependency in `scrypath`
-
-Keep Phoenix support where it already belongs: optional wrappers, examples, and guides.
-
-Reason:
-- UI metadata exposure is still plain data.
-- Hosts should be able to consume metadata from controllers, LiveViews, JSON APIs, or non-Phoenix Elixir apps.
-
-### 3. No Flop, Ash/Spark, or admin/search-form libraries
-
-Do not add `flop`, `ash`, `spark`, `ecto_filter`, or similar higher-level frameworks.
-
-Reason:
-- They would pull Scrypath toward app-framework territory instead of staying an Ecto-native search library.
-- The milestone is about exposing declared metadata, not owning the host app's listing/filtering stack.
-
-### 4. No typed-struct / embedded-schema DSL layer for metadata
-
-Do not add `typed_struct`, `typed_ecto_schema`, or an `embedded_schema`-driven public metadata contract just to model presets or UI metadata.
-
-Reason:
-- The data is already naturally expressible as maps/keywords/atoms.
-- Extra struct DSLs add compile-time surface and API freeze pressure without solving a runtime problem.
-
-### 5. No Mox unless a real behaviour seam appears
-
-Do not introduce a behaviour purely so tests can use Mox.
-
-Reason:
-- Presets/scopes should stay data-first and function-first.
-- Existing HTTP/back-end testing is already well-covered by `Req.Test`.
-- Introducing a behaviour here would encourage a fake extensibility promise.
-
-## How To Use Existing Dependencies For v1.22
-
-### NimbleOptions should carry the bounded public contract
-
-Use `NimbleOptions` schemas for:
-
-- preset definitions
-- allowed scope keys
-- metadata exposure options
-- composition entry schemas for `search_many/2`-aligned helpers
-
-Recommended posture:
-
-- validate nested keys strictly
-- reject unknown top-level preset/scope definition keys
-- keep extension points narrow and explicit
-- use generated option docs in module docs so the contract stays readable
-
-This is the right use of the dependency already present in the repo.
-
-### Req / Req.Test already cover the backend side
-
-No new network test dependency is needed.
-
-Use the existing `Req.Test` path for:
-
-- backend payload assertions after composition
-- transport errors during composed queries
-- verifying that presets/scopes do not mutate Meilisearch wire semantics unexpectedly
-
-### ExDoc + current docs-contract pattern are enough
-
-Do not add a new docs site or playground dependency.
-
-Instead, add:
-
-- one canonical composition guide
-- one metadata/UI-contract guide
-- one real-app adoption guide showing repeated flows collapsing into presets/scopes
-- contract tests that lock guide authority and terminology
+---
 
 ## Alternatives Considered
 
-| Category | Recommended | Alternative | Why Not |
-|----------|-------------|-------------|---------|
-| Runtime validation | `NimbleOptions` reuse | Custom structs / macro DSL | More compile-time surface and weaker docs story for little gain |
-| Observability | Direct `:telemetry` dep | Keep transitive-only | Fragile for a public metadata-heavy surface |
-| Property testing | `StreamData` | Hand-written cases only | Too weak for precedence and round-trip invariants |
-| HTTP test support | `Req.Test` | `Bypass` / other stub servers | Extra dependency with no clear advantage for this milestone |
-| Extensibility seam | No new behaviour | Introduce behaviour + Mox | Risks implying a broader public adapter/composition promise |
-| UI integration | Plain metadata maps | Phoenix/LiveView runtime helpers in core | Accidental framework coupling |
+| Recommended | Alternative | Why Not |
+|-------------|-------------|---------|
+| No new dep (filterable auto-merge in schema declaration) | Runtime filter guard without schema enforcement | Doesn't fix the "forgot to declare filterable" footgun — the field must be in `filterableAttributes` or Meilisearch silently ignores the filter |
+| `tenant_field:` as schema option | Separate `Scrypath.Tenancy` module | Unnecessary module for what is a single option key — keeps the surface inside the existing Options/Schema/Capabilities triad |
+| Guide-only JWT recipe (host Joken dep) | Scrypath.TenantToken helper module | No library value-add — Joken is 3 lines of host code; adding a wrapper would grow the public API for zero benefit and introduce a JWT dep permanently |
+| `tenant_scope:` injected before `Query.new` in `Search` | Filter merge in `Composition` layer | `Search` is the correct enforcement layer — Composition is data-only and bypassing it there would not protect raw `Scrypath.search/3` calls |
 
-## Installation
+---
 
-```elixir
-# mix.exs
-{:telemetry, "~> 1.4"}
-{:stream_data, "~> 1.3", only: [:dev, :test], runtime: false}
-```
+## What NOT to Add
 
-No other dependency additions are recommended for v1.22.
+| Avoid | Why |
+|-------|-----|
+| `{:joken, "~> 2.6"}` in Scrypath `mix.exs` | Tenant token generation is host-app concern; adds transitive dep weight (JOSE, etc.) with no shipped library surface using it |
+| `{:jose, ...}` or any JWT library | Same reason as Joken — also, Meilisearch's HS256 token needs are trivially met by Joken in host app |
+| A new `Scrypath.Tenancy` or `Scrypath.TenantToken` module | Violates boundary discipline — `lib/scrypath.ex` `@moduledoc` already declares tenant authz host_owned |
+| Process dictionary tenant context reading | Breaks across `Task.async`, `assign_async`, Oban workers — explicitly anti-pattern per curiosum.com/blog/multitenancy-in-elixir |
+| Automatic per-tenant `index_prefix:` routing | Same throughput problem as per-tenant index strategy; Meilisearch sequential task processing degrades at scale |
 
-## Explicitly Do NOT Add
+---
 
-- `phoenix` or `phoenix_live_view` to root `scrypath` runtime deps
-- `plug` as a broader runtime dependency; keep it test-only unless an existing shipped contract truly changes
-- `mox` for invented seams
-- `bypass`
-- `flop`
-- `ash`, `spark`, or other declarative app frameworks
-- `typed_struct`, `typed_ecto_schema`, or similar struct DSL packages
-- any public multi-backend composition layer beyond the current internal backend seam
-- any second runtime process, registry, or supervisor for presets/scopes
+## mix.exs: No Changes Required
 
-## Milestone Boundary Check
+Current `mix.exs` is at version `0.3.6`. The AUTH-01 milestone requires no dependency additions, removals, or version bumps. The milestone delivers:
 
-If a proposed addition does any of the following, reject it from v1.22:
+1. A new `tenant_field:` key in `@schema_options` (NimbleOptions already handles custom validators)
+2. Extensions to `__scrypath__/1` in `schema.ex`
+3. A `tenant` key in the `schema_capabilities/1` output
+4. Auto-include of `tenant_field` in document projection
+5. `guides/multitenancy.md` new file
+6. Optionally: `tenant_scope:` in `@search_options` + injection in `Scrypath.Search.do_search`
 
-- introduces a Phoenix runtime dependency into `scrypath` core
-- implies “Scrypath owns your search UI” rather than exposing data for the host UI
-- creates a new long-lived runtime process for composition
-- turns bounded presets/scopes into a generic public adapter/plugin framework
-- widens Meilisearch-first product scope into broader backend promises
+All of these use existing dependencies.
+
+---
 
 ## Sources
 
-- Project context and milestone scope:
-  - `.planning/PROJECT.md`
-  - `.planning/MILESTONE-ARC.md`
-  - `.planning/milestone-candidates.md`
-  - `.planning/seeds/SEED-002-composition-real-app-depth.md`
-- Current repo dependency shape:
-  - `mix.exs`
-  - `mix.lock`
-  - `lib/scrypath/query_params.ex`
-  - `lib/scrypath/query_params/caster.ex`
-  - `lib/scrypath/phoenix.ex`
-  - `lib/scrypath/telemetry.ex`
-- Official/current package and docs sources:
-  - NimbleOptions docs: https://hexdocs.pm/nimble_options/1.1.1/NimbleOptions.html
-  - Req.Test docs: https://hexdocs.pm/req/Req.Test.html
-  - StreamData docs: https://hexdocs.pm/stream_data/ExUnitProperties.html
-  - Req package: https://hex.pm/packages/req
-  - StreamData package: https://hex.pm/packages/stream_data
-  - Mox package/docs: https://hex.pm/packages/mox , https://hexdocs.pm/mox/Mox.html
+- Direct codebase inspection: `lib/scrypath/options.ex`, `lib/scrypath/schema.ex`, `lib/scrypath/metadata/capabilities.ex`, `lib/scrypath/metadata/resolve.ex`, `lib/scrypath/projection.ex`, `lib/scrypath/search.ex`, `mix.exs` — HIGH confidence
+- hexdocs.pm/joken/Joken.html — `encode_and_sign/2` signature and return shape — HIGH confidence
+- hexdocs.pm/joken/signers.html — `Joken.Signer.create("HS256", key)` API — HIGH confidence
+- .planning/research/auth-01-tenant-research.md — prior domain research with PRIMARY citations to Meilisearch specs and official docs — HIGH confidence
+
+---
+*Stack research for: Scrypath v1.25 Tenant-Safe Search (AUTH-01)*
+*Researched: 2026-05-25*
