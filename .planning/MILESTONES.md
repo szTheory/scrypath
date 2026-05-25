@@ -1,18 +1,20 @@
 # Milestones
 
-## v1.24 Related-Data and Dependency Propagation (Active)
+## v1.24 Related-Data and Dependency Propagation (Shipped + archived: 2026-05-25)
 
-**Phases planned:** **3** (**89–91**), **7** requirements (**DATA-01**–**DATA-03**, **EXEC-01**–**EXEC-02**, **TEST-01**–**TEST-02**)
+**Phases completed:** **3** (**89–91**), **9** plans, **7** requirements (**DATA-01**–**DATA-03**, **EXEC-01**–**EXEC-02**, **TEST-01**–**TEST-02**)
 
-**Hex:** Pending.
+**Hex:** **`scrypath 0.3.4`** on Hex; **in-repo milestone close only** — no dedicated Hex bump claimed for this planning milestone.
 
-**Key focus:**
-- Public `Scrypath.sync_related/3` explicit API and metadata structures for related-data fan-out.
-- Out-of-the-box Oban worker pattern for large blast radii with durable asynchronous processing.
-- Clear error handling for partial backend failures during multi-record fan-out updates.
-- Refactored developer guides establishing explicit fan-out over Ecto callback magic.
+**Key accomplishments:**
 
-**Planning:** `milestones/v1.24-ROADMAP.md`, `milestones/v1.24-REQUIREMENTS.md`
+- `Scrypath.sync_related/3` public API with `fan_outs:` metadata validation, inline execution mode, and `RelatedWorker.enqueue/4` for Oban fan-out — eliminating the prior "temporary workaround" pattern — **Phase 89**
+- `RelatedWorker.perform/1` actionable error decision matrix: HTTP 4xx → `{:cancel, _}` (permanent), 5xx/generic → `{:error, _}` (transient retry), invalid args → `{:cancel, {:invalid_job, reason}}`; full test coverage for every branch — **Phase 90**
+- `guides/related-data-and-reindexing.md` rewritten with `sync_related/3` as canonical; inline vs Oban mapped to blast radius + latency; `mix verify.phase91` hermetic gate (73 tests, 0 failures); Phoenix example with Author/Post fan-out smoke tests (inline + Oban) — **Phase 91**
+
+**Milestone audit:** ✅ Passed — 7/7 requirements, 3/3 phases, 12/12 cross-phase connections, 3/3 E2E flows — see `milestones/v1.24-MILESTONE-AUDIT.md`
+
+**Archives:** `milestones/v1.24-ROADMAP.md`, `milestones/v1.24-REQUIREMENTS.md`, `milestones/v1.24-MILESTONE-AUDIT.md` · **Git tag:** `v1.24` (planning milestone marker)
 
 ---
 

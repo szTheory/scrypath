@@ -1,9 +1,9 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.24
-milestone_name: milestone
-status: completed
-last_updated: "2026-05-25T13:06:25.959Z"
+milestone_name: Related-Data and Dependency Propagation
+status: archived
+last_updated: "2026-05-25T00:00:00.000Z"
 last_activity: 2026-05-25
 progress:
   total_phases: 3
@@ -17,18 +17,18 @@ progress:
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-05-24)
+See: `.planning/PROJECT.md` (updated 2026-05-25)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase 91 — integration-guides-and-verification
+**Current focus:** v1.24 closed — no active milestone open
 
 ## Current Position
 
-Phase: 91
-Plan: Not started
+Phase: 91 (complete)
+Plan: All plans complete (9/9)
 
-**Status:** Milestone complete
+**Status:** v1.24 archived — between milestones
 
 **Last activity:** 2026-05-25
 
@@ -114,23 +114,21 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-1. Phase 88 is complete.
-2. Milestone v1.23 is completely closed and frozen.
-3. Next-pull verdict is established: related-data propagation.
+1. v1.24 is completely closed, archived, and tagged.
+2. No active milestone is open.
+3. Next default pull: tenant-safe search access (`AUTH-01`) — only if adopter evidence confirms the gap is felt.
 
 ---
 
-*Last updated: 2026-05-24 — opened **v1.23 Outside-Adopter Evidence And Support-Truth Reconciliation***
+*Last updated: 2026-05-25 — archived **v1.24 Related-Data and Dependency Propagation***
 
-**Prior milestone:** **v1.22** — Composition And Real-App Depth — **2026-05-24** (shipped + archived in-repo).
+**Prior milestone:** **v1.23** — Outside-Adopter Evidence And Support-Truth Reconciliation — **2026-05-24** (shipped + archived in-repo).
+
+**Completed:** **v1.22** shipped + archived in-repo (**2026-05-24**) — phases **83–85** — **`milestones/v1.22-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **Completed:** **v1.21** shipped + archived in-repo (**2026-05-23**) — phases **80–82** — **`milestones/v1.21-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **Completed:** **v1.20** shipped + archived in-repo (**2026-05-08**) — phases **77–79** — **`milestones/v1.20-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
-
-**Completed:** **v1.19** shipped + archived in-repo (**2026-04-28**) — phases **74–76** — **`milestones/v1.19-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
-
-**Next:** Active milestone **v1.23** — Phase **87** outside-adopter intake and evidence review is complete. Active next-pull verdict: related-data propagation.
 
 ## Performance Metrics
 

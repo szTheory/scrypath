@@ -26,11 +26,16 @@
 - [x] `v1.21` shipped + archived in-repo (2026-05-23) — 3 phases (80–82), 8 plans — [archive](milestones/v1.21-ROADMAP.md)
 - [x] `v1.22` shipped + archived in-repo (2026-05-24) — 3 phases (83–85), 12 plans — [archive](milestones/v1.22-ROADMAP.md)
 - [x] `v1.23` shipped + archived in-repo (2026-05-24) — 3 phases (86–88), 8 plans — [archive](milestones/v1.23-ROADMAP.md)
-- [ ] **`v1.24` OPEN** — *Related-Data and Dependency Propagation* — phases **89–91**, **7** requirements — [requirements](v1.24-REQUIREMENTS.md)
+- [x] **`v1.24` shipped + archived in-repo** (**2026-05-25**) — *Related-Data and Dependency Propagation* — phases **89–91**, **9** plans — [archive](milestones/v1.24-ROADMAP.md) · [requirements](milestones/v1.24-REQUIREMENTS.md) · [audit](milestones/v1.24-MILESTONE-AUDIT.md)
 
 ## Current Milestone
 
-**Current milestone:** v1.24 Related-Data and Dependency Propagation
+**Current milestone:** none open.
+
+**Last shipped milestone:** **v1.24 Related-Data and Dependency Propagation** — shipped + archived **2026-05-25**, **3** phases (**89–91**) complete. Next default pull: **tenant-safe search access** (`AUTH-01`).
+
+<details>
+<summary>✅ v1.24 — Phases 89–91 — SHIPPED + archived 2026-05-25 · <em>Related-Data and Dependency Propagation</em></summary>
 
 ### Phase 89: Related-Data Propagation Contract and API
 
@@ -39,11 +44,9 @@
 **Requirements:** DATA-01, DATA-02
 **Plans:** 3 plans
 
-Plans:
-
-- [ ] 89-01: Design the `Scrypath.sync_related/3` entrypoint and underlying capability struct for associating parent-child schemas.
-- [ ] 89-02: Update core execution runtime to explicitly accept and validate related-data fan-out intents.
-- [ ] 89-03: Establish baseline hermetic tests ensuring explicit orchestration overrides auto-magic execution.
+- [x] 89-01: Design the `Scrypath.sync_related/3` entrypoint and underlying capability struct for associating parent-child schemas.
+- [x] 89-02: Update core execution runtime to explicitly accept and validate related-data fan-out intents.
+- [x] 89-03: Establish baseline hermetic tests ensuring explicit orchestration overrides auto-magic execution.
 
 ### Phase 90: Async Execution and Error Propagation
 
@@ -51,8 +54,6 @@ Plans:
 **Depends on:** Phase 89
 **Requirements:** DATA-03, EXEC-01
 **Plans:** 2 plans
-
-Plans:
 
 - [x] 90-01-PLAN.md — Update RelatedWorker for explicit error propagation and cancellation.
 - [x] 90-02-PLAN.md — Add integration tests for RelatedWorker error propagation behavior.
@@ -62,20 +63,13 @@ Plans:
 **Goal:** Update `guides/related-data-and-reindexing.md` to remove "temporary workaround" language, clearly document the new API, and lock those assertions in the docs-contract pipeline.
 **Depends on:** Phase 90
 **Requirements:** EXEC-02, TEST-01, TEST-02
-**Plans:** 4/4 plans complete
+**Plans:** 4 plans
 
-Plans:
-**Wave 1**
+- [x] 91-01-PLAN.md — Rewrite `guides/related-data-and-reindexing.md` so `sync_related/3` + the built-in Oban path are canonical; remove temporary-workaround framing; map inline-vs-oban to blast radius + latency (EXEC-02).
+- [x] 91-02-PLAN.md — Add `mix verify.phase91` + invert the docs-contract assertion + register the task (TEST-01/TEST-02).
+- [x] 91-03-PLAN.md — Polish `examples/phoenix_meilisearch`: `Author` schema + migration + `ScrypathDemo.Blog` context + arity-safe resolver, inline + oban fan-out smokes (EXEC-02).
+- [x] 91-04-PLAN.md — Fix guide: hand-written `__scrypath__/1` accessor pattern replaces broken `use Scrypath, fan_outs:` snippet; docs-contract regression gate (gap-closure).
 
-- [x] 91-01-PLAN.md — Rewrite `guides/related-data-and-reindexing.md` so `Scrypath.sync_related/3` + the built-in Oban path are canonical; remove temporary-workaround framing; map inline-vs-oban to blast radius + latency (wave 1, EXEC-02).
-- [x] 91-03-PLAN.md — Polish `examples/phoenix_meilisearch`: `Author` schema + migration + `ScrypathDemo.Blog` context + arity-safe resolver, exercising inline + oban fan-out smokes; update README (wave 1, EXEC-02).
+Full detail: [milestones/v1.24-ROADMAP.md](milestones/v1.24-ROADMAP.md).
 
-**Wave 2** *(blocked on Wave 1 completion)*
-
-- [x] 91-02-PLAN.md — Add `mix verify.phase91` (mirror verify.phase85) + invert the docs-contract assertion + register the task (`@verify_phase91`, mix.exs preferred_envs) (wave 2, depends_on 91-01, TEST-01/TEST-02).
-
-**Working assumptions locked at milestone open:**
-
-- Scrypath continues to value explicit developer orchestration. We do not provide "magic" Ecto listeners or deep preloading behind the scenes.
-- The new Oban worker support must be strictly opt-in and configurable; users not using Oban can still use `sync_related/3` synchronously.
-- Tenant-safe access remains the highest priority for the subsequent milestone.
+</details>

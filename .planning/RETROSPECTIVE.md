@@ -2,6 +2,41 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.24 — Related-Data and Dependency Propagation
+
+**Shipped (planning):** 2026-05-25
+**Archived:** 2026-05-25
+**Phases:** 3 (89–91) | **Plans:** 9 | **Requirements:** 7 (**DATA-01**–**DATA-03**, **EXEC-01**–**EXEC-02**, **TEST-01**–**TEST-02**) | **Hex:** `scrypath 0.3.4` (in-repo milestone close; no dedicated Hex bump)
+
+### What was built
+
+`Scrypath.sync_related/3` public API with `fan_outs:` metadata validation, inline execution, and `RelatedWorker.enqueue/4` for Oban fan-out. `RelatedWorker.perform/1` with a clear HTTP 4xx/5xx/invalid-args decision matrix. `guides/related-data-and-reindexing.md` rewritten from "temporary workaround" to canonical fan-out story. `mix verify.phase91` hermetic gate (73 tests). Phoenix example app with `Author` schema, arity-safe `Blog.update_author/3`, and inline + Oban smoke tests. One gap-closure plan (91-04) fixed the `use Scrypath, fan_outs:` macro limitation with hand-written accessors and docs-contract regression locks.
+
+### What worked
+
+**Shift-left audit gate** — adding `mix verify.phase91` to the CI `quality` job during the audit pass (rather than as a separate cleanup) meant the milestone closed with zero remaining human UAT items. The audit genuinely found the gap and closed it in the same pass.
+
+**Option A deviation documented quickly** — when the `use Scrypath, fan_outs:` macro limitation surfaced in 91-03, the team moved immediately to hand-written accessors (Option A) rather than debating fixes. Locking it with a docs-contract test and a prose note in the guide means future adopters don't hit the `ArgumentError` silently.
+
+**Arity-safe resolver pattern** — the "records + ids + empty clauses" resolver shape from 91-03 is a reusable pattern worth lifting into guides for future related-data depth.
+
+### What was inefficient
+
+**`gsd-sdk query milestone.complete` still unavailable** — archive + git rm REQUIREMENTS + tag bookkeeping remained manual again (v1.10–v1.24 pattern). The close is reliable but takes deliberate manual steps.
+
+**Phase 89 and 90 VERIFICATION.md produced retroactively** — the audit found both phases had been executed but never formally verified. Producing them from code + CI evidence during the audit works, but the pattern of skipping verification artifacts then reconstructing them costs extra audit time. Prefer creating VERIFICATION.md at plan completion, not at milestone close.
+
+### Patterns established
+
+- **Explicit fan-out contract**: `sync_related/3` is the canonical entry point; contexts invoke it, library executes it. This "contexts own orchestration / library owns execution" line should be maintained in all future related-data depth.
+- **Oban error taxonomy**: 4xx → permanent cancel, 5xx/generic → transient retry. Apply this pattern to any future Oban workers in the library.
+
+### Key lessons
+
+When a guide contains "temporary workaround" language, treat it as a milestone-scope signal: that language should ship with a plan to replace it, not carry forward indefinitely. The v1.24 explicit decision to make the workaround a supported default rather than patching around it was the right call.
+
+---
+
 ## Milestone: v1.15 — OPSUI second slice
 
 **Shipped (planning):** 2026-04-22  

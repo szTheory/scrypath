@@ -10,39 +10,39 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Current State
 
-**v1.22 — Composition And Real-App Depth** shipped + archived in-repo on **2026-05-24** across phases **83–85**.
+**v1.24 — Related-Data and Dependency Propagation** shipped + archived in-repo on **2026-05-25** across phases **89–91**.
 
 **What shipped:**
 
-- **Public composition seam** — apps can define reusable presets and scopes as plain data through `Scrypath.Composition` and lower them into the canonical `Scrypath.search/3` shape without a second runtime.
-- **Declaration-backed metadata reflection** — `Scrypath.Metadata` now exposes capability and resolved-state data for honest host-rendered controls while keeping tenant policy, authorization, and related-data behavior explicitly host-owned.
-- **`search_many/2` parity helpers** — `compose_many/2` and `to_search_many_args/1` lower into the existing tuple/shared-option contract rather than creating a multi-search DSL.
-- **Canonical real-app docs and focused gates** — one canonical composition guide plus `mix verify.phase83`, `mix verify.phase84`, and `mix verify.phase85` now protect the shipped story.
+- **`Scrypath.sync_related/3` public API** — explicit fan-out entrypoint with `fan_outs:` metadata validation, inline execution mode, and `RelatedWorker.enqueue/4` for Oban fan-out, eliminating the prior "temporary workaround" pattern entirely.
+- **`RelatedWorker` actionable error handling** — HTTP 4xx → `{:cancel, _}` (permanent), 5xx/generic → `{:error, _}` (transient retry), invalid args → `{:cancel, {:invalid_job, reason}}`; every Oban outcome branch is covered by hermetic tests.
+- **Canonical related-data guide** — `guides/related-data-and-reindexing.md` rewritten with `sync_related/3` as the default story; inline vs Oban choice mapped explicitly to blast radius + latency tradeoffs.
+- **`mix verify.phase91` hermetic gate** — 73 tests, 0 failures; docs-contract assertion inverted to lock the canonical fan-out story; registered in CI `quality` job.
+- **Phoenix example fan-out** — `ScrypathDemo.Blog` context with arity-safe resolver, `Author` schema + migration, and inline + Oban smoke tests demonstrating the complete fan-out story.
 
-**Current posture:** **v1.23 — Outside-Adopter Evidence And Support-Truth Reconciliation** is now open on **2026-05-24**. The post-`v1.19` outside-adopter guardrail remains in force, so this milestone is intentionally about support truth, reviewed adopter evidence, and bounded papercuts rather than more generic breadth work. **Phase 91 (integration-guides-and-verification) complete 2026-05-25** — `sync_related/3` fan-out guide corrected (working hand-written accessor pattern, `use Scrypath` limitation documented), Phoenix example app exercises shipped fan-out APIs, hermetic verify task passes (73 tests), docs-contract regression gates in place.
+**Current posture:** **v1.24** is closed and archived. No active milestone is open. The post-`v1.19` outside-adopter guardrail remains in force — do not open another internal milestone by default without concrete adopter evidence or a leverage-positive reason.
 
-**Boundary discipline retained:** `Scrypath.search/3` remains canonical, contexts stay the application boundary, Phoenix remains optional, and `%Scrypath.Query{}` stays internal rather than becoming public API.
+**Boundary discipline retained:** `Scrypath.search/3` remains canonical, contexts stay the application boundary, fan-out is explicit (no hidden callbacks or Ecto lifecycle magic), and `%Scrypath.Query{}` stays internal rather than becoming public API.
 
-**Out of scope remains:** public `%Scrypath.Query{}` or other internal structs as semver-stable API, schema-generated runtime search APIs, Phoenix-dependent runtime core, reusable UI widgets or form-builder layers, broader composition/presets, public multi-backend expansion, or any change that hides operational search semantics behind framework magic.
+**Out of scope remains:** public `%Scrypath.Query{}` or other internal structs as semver-stable API, schema-generated runtime search APIs, Phoenix-dependent runtime core, reusable UI widgets or form-builder layers, automatic Ecto association walking, or any change that hides operational search semantics behind framework magic.
 
-Current planning files: **`.planning/{REQUIREMENTS,ROADMAP,STATE}.md`** plus archives under **`.planning/milestones/`**.
+Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under **`.planning/milestones/`**.
 
 ## Next Milestone Goals
 
-- **Active milestone:** **v1.23 — Outside-Adopter Evidence And Support-Truth Reconciliation**.
-- Reconcile support/readiness/proof surfaces with the current checkout so maintainers and adopters are not relying on removed guides, missing test targets, or archive-era assumptions.
-- Gather and review real outside-adopter evidence on the defended Phoenix + Meilisearch path before reopening feature work.
-- Phase 87 is complete. Active next-pull verdict: related-data propagation.
+- **No active milestone open.** v1.24 shipped explicit related-data propagation.
+- Next highest-priority wedge: **tenant-safe search access** (`AUTH-01`) — the top SaaS credibility gap identified by outside-adopter evidence.
+- Do not open a new milestone without concrete adopter evidence showing that gap is actually felt, or a leverage-positive release/distribution need.
 
 ## Last shipped milestone
 
-**v1.23 — Outside-Adopter Evidence And Support-Truth Reconciliation** (shipped + archived in-repo **2026-05-24**). Reconciled support truth and proof surfaces, reviewed outside-adopter intake path, and established related-data propagation as the next wedge. — see **`milestones/v1.23-{ROADMAP,REQUIREMENTS}.md`**.
+**v1.24 — Related-Data and Dependency Propagation** (shipped + archived in-repo **2026-05-25**). Delivered `Scrypath.sync_related/3` with inline + Oban fan-out, `RelatedWorker` actionable error mapping, canonical guide rewrite, `mix verify.phase91` hermetic gate, and a working Phoenix example. — see **`milestones/v1.24-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Prior:** **v1.22 — Composition And Real-App Depth** (shipped + archived in-repo **2026-05-24**) — **`milestones/v1.22-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**. **v1.21 — Query Toolkit And Phoenix Edge Helpers** (shipped + archived in-repo **2026-05-23**) — **`milestones/v1.21-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**Prior:** **v1.23 — Outside-Adopter Evidence And Support-Truth Reconciliation** (shipped + archived in-repo **2026-05-24**) — **`milestones/v1.23-{ROADMAP,REQUIREMENTS}.md`**. **v1.22 — Composition And Real-App Depth** (shipped + archived in-repo **2026-05-24**) — **`milestones/v1.22-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 ## Planning window
 
-**Active milestone:** **v1.24 — Related-Data and Dependency Propagation**. This milestone focuses on the product correctness gap revealed by outside-adopter feedback: handling search index updates when related Ecto data changes across an association, without violating the explicit orchestration boundary.
+**No active milestone.** v1.24 closed on **2026-05-25**. The next default pull (per the post-v1.19 guardrail) is tenant-safe search access (`AUTH-01`) only if adopter evidence confirms that gap is felt. Do not open another internal milestone by default.
 
 ## Requirements
 
@@ -97,13 +97,13 @@ Current planning files: **`.planning/{REQUIREMENTS,ROADMAP,STATE}.md`** plus arc
 
 ### Active
 
-- [ ] **CMP-01**: Reusable composition presets and scopes over the query-toolkit layer where repeated real-app patterns are clear enough to freeze without hiding context ownership.
-- [ ] **CMP-02**: Composition support stays aligned with `search_many/2` and the existing plain-data search-args contract rather than creating a second query runtime.
-- [ ] **CMP-03**: Stronger UI metadata exposure for declared filters, sorts, facets, and paging reduces repeated Phoenix and Ecto view-layer wiring while preserving explicit boundaries.
-- [ ] **CMP-04**: Real-app guides and examples show how to adopt the new composition layer without implying schema-generated runtime verbs or framework-owned search flows.
+- [ ] **AUTH-01**: Tenant-safe search access — the highest-priority remaining SaaS credibility gap. Do not open a milestone for this without concrete adopter evidence.
+- [ ] **FACET-UX-01**: High-cardinality facet-value search — narrower catalog-depth follow-on after `AUTH-01` is understood.
 
 ### Recently completed
 
+- [x] **v1.24** (2026-05-25): **DATA-01**–**DATA-03**, **EXEC-01**–**EXEC-02**, **TEST-01**–**TEST-02** — `Scrypath.sync_related/3` public API, `RelatedWorker` actionable error returns, canonical related-data guide rewrite, `mix verify.phase91` hermetic gate, and Phoenix fan-out example, archived in **`milestones/v1.24-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+- [x] **v1.23** (2026-05-24): **TRUTH-01**–**TRUTH-03**, **ADOPT-01**–**ADOPT-03**, **FIX-01**–**FIX-02** — support truth and proof surfaces reconciled, outside-adopter intake reviewed, evidence-backed papercuts closed with regression guards, archived in **`milestones/v1.23-{ROADMAP,REQUIREMENTS}.md`**.
 - [x] **v1.22** (2026-05-24): **CMP-01**–**CMP-04**, **META-01**–**META-03**, **MSCH-01**–**MSCH-02**, **DOC-01**, **DOC-02**, **VRFY-01** — public plain-data composition, declaration-backed metadata reflection, `search_many/2` lowering parity, canonical real-app guidance, and focused drift-gate verification, archived in **`milestones/v1.22-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 - [x] **v1.21** (2026-05-23): **QTK-01**–**QTK-04**, **PHX-01**–**PHX-02**, **DOC-01**, **VRFY-01** — public plain-data query toolkit, structured edge errors, optional Phoenix wrappers, canonical request-edge docs, and focused drift-gate verification, archived in **`milestones/v1.21-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 - [x] **v1.20** (2026-05-08): **SMOD-01**–**SMOD-08** — context-owned search-module declarations, stable request-param normalization, structured param errors, thin delegation over **`Scrypath.search/3`**, and Phoenix/Ecto-facing docs plus regression coverage, archived in **`milestones/v1.20-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
@@ -176,7 +176,8 @@ The current public line on Hex is **`scrypath 0.3.4`**. **v1.8** closed the fede
 | **v1.20** — Search Module Foundation | A narrow, already-started ergonomics layer that removes repeated Phoenix/Ecto request-param boilerplate without changing the core runtime or hiding operational search semantics | ✓ Shipped + archived in-repo |
 | **v1.21** — Query Toolkit And Phoenix Edge Helpers | Reopen the active arc only for a narrow, framework-light public param toolkit plus thin optional Phoenix wrappers; keep contexts canonical and prevent public exposure of current internal query structs | ✓ Shipped + archived in-repo on 2026-05-23 |
 | **v1.22** — Composition And Real-App Depth | Build a bounded composition layer over the shipped request-edge toolkit so repeated presets, scopes, and UI metadata become reusable without weakening the runtime boundary or the post-v1.19 guardrail | ✓ Shipped + archived in-repo on 2026-05-24 |
-| **v1.23** — Outside-Adopter Evidence And Support-Truth Reconciliation | Before reopening feature breadth, reconcile current proof/support truth with the tree and let reviewed outside-adopter evidence decide whether Scrypath should stop soon or open one final major wedge | — Active on 2026-05-24 |
+| **v1.23** — Outside-Adopter Evidence And Support-Truth Reconciliation | Before reopening feature breadth, reconcile current proof/support truth with the tree and let reviewed outside-adopter evidence decide whether Scrypath should stop soon or open one final major wedge | ✓ Shipped + archived in-repo on 2026-05-24 |
+| **v1.24** — Related-Data and Dependency Propagation | Address the biggest correctness gap for real SaaS apps: explicit `sync_related/3` fan-out with Oban support, actionable error returns, and canonical docs — without hidden Ecto callbacks or deep association walking | ✓ Shipped + archived in-repo on 2026-05-25 |
 
 ## Historical Context
 
@@ -202,5 +203,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-25 — Phase 91 (integration-guides-and-verification) complete; fan-out guide fixed and regression-gated*
-e repo-grounded done-ness assessment*
+*Last updated: 2026-05-25 after v1.24 milestone close — Related-Data and Dependency Propagation shipped + archived*
