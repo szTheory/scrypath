@@ -604,4 +604,43 @@ defmodule Scrypath.OptionsTest do
       assert config.tenant_field == nil
     end
   end
+
+  describe "tenant_scope: search option" do
+    defmodule MockTenantSchema do
+      def __scrypath__(:tenant_field), do: :tenant_id
+      def __scrypath__(:filterable), do: [:tenant_id, :status]
+      def __scrypath__(:sortable), do: []
+      def __scrypath__(:faceting), do: []
+    end
+
+    defmodule MockNoTenantSchema do
+      def __scrypath__(:tenant_field), do: nil
+      def __scrypath__(:filterable), do: [:status]
+      def __scrypath__(:sortable), do: []
+      def __scrypath__(:faceting), do: []
+    end
+
+    test "injects tenant field into empty filter" do
+      opts = Options.validate_search_options!(MockTenantSchema, tenant_scope: 123)
+      assert opts[:filter] == [tenant_id: 123]
+      refute Keyword.has_key?(opts, :tenant_scope)
+    end
+
+    test "injects tenant field into existing filter" do
+      opts = Options.validate_search_options!(MockTenantSchema, tenant_scope: 123, filter: [status: "active"])
+      assert opts[:filter] == [tenant_id: 123, status: "active"]
+    end
+
+    test "raises when filter already contains tenant field" do
+      assert_raise ArgumentError, ~r/already contains the tenant_field/, fn ->
+        Options.validate_search_options!(MockTenantSchema, tenant_scope: 123, filter: [tenant_id: 456])
+      end
+    end
+
+    test "raises when schema lacks tenant_field:" do
+      assert_raise ArgumentError, ~r/does not declare a tenant_field:/, fn ->
+        Options.validate_search_options!(MockNoTenantSchema, tenant_scope: 123)
+      end
+    end
+  end
 end
