@@ -137,6 +137,9 @@ jobs:
       - name: Request-edge docs/examples gate (`mix verify.phase82`)
         run: mix verify.phase82
 
+      - name: Related-data + docs-contract gate (`mix verify.phase91`)
+        run: mix verify.phase91
+
   adopter-verify:
     runs-on: ubuntu-latest
 

@@ -1,3 +1,12 @@
+---
+phase: 90
+slug: async-execution-and-error-propagation
+status: complete
+nyquist_compliant: true
+wave_0_complete: true
+created: 2026-05-25
+---
+
 # Phase 90: Async Execution and Error Propagation - Validation Architecture
 
 ## Test Framework
