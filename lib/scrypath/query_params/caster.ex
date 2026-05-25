@@ -64,8 +64,11 @@ defmodule Scrypath.QueryParams.Caster do
 
   defp normalize_filter({query_params, errors}, params) do
     case fetch_value(params, :filter, "filter", :missing) do
-      :missing -> {query_params, errors}
-      value -> put_normalized_field({query_params, errors}, :filter, value, &normalize_field_map/2)
+      :missing ->
+        {query_params, errors}
+
+      value ->
+        put_normalized_field({query_params, errors}, :filter, value, &normalize_field_map/2)
     end
   end
 
@@ -147,7 +150,15 @@ defmodule Scrypath.QueryParams.Caster do
         {query_params, errors}
 
       _value ->
-        error = issue(:per_query, :unsupported_param, [:per_query], "per_query is not part of the browser param grammar", %{namespace: :per_query})
+        error =
+          issue(
+            :per_query,
+            :unsupported_param,
+            [:per_query],
+            "per_query is not part of the browser param grammar",
+            %{namespace: :per_query}
+          )
+
         {query_params, errors ++ [error]}
     end
   end
@@ -193,7 +204,12 @@ defmodule Scrypath.QueryParams.Caster do
         {:ok, keyword}
 
       :error ->
-        {:error, [issue(field, :invalid_shape, [field], "#{field} must be a keyword list or map", %{expected: "keyword list or map"})]}
+        {:error,
+         [
+           issue(field, :invalid_shape, [field], "#{field} must be a keyword list or map", %{
+             expected: "keyword list or map"
+           })
+         ]}
     end
   end
 
@@ -204,7 +220,17 @@ defmodule Scrypath.QueryParams.Caster do
 
         case safe_existing_atom(raw_key) do
           nil ->
-            {pairs, errors ++ [issue(field, :unknown_field, path, "field is not recognized as an existing atom", %{field: raw_key})]}
+            {pairs,
+             errors ++
+               [
+                 issue(
+                   field,
+                   :unknown_field,
+                   path,
+                   "field is not recognized as an existing atom",
+                   %{field: raw_key}
+                 )
+               ]}
 
           key ->
             case normalize_scalar_or_list(field, key, raw_value) do
@@ -222,18 +248,29 @@ defmodule Scrypath.QueryParams.Caster do
   end
 
   defp normalize_field_map(field, _value) do
-    {:error, [issue(field, :invalid_shape, [field], "#{field} must be a keyword list or map", %{expected: "keyword list or map"})]}
+    {:error,
+     [
+       issue(field, :invalid_shape, [field], "#{field} must be a keyword list or map", %{
+         expected: "keyword list or map"
+       })
+     ]}
   end
 
   defp normalize_scalar_or_list(field, key, value) when is_map(value) do
-    {:error, issue(field, :invalid_shape, [field, key], "expected a scalar or list value", %{expected: "scalar or list"})}
+    {:error,
+     issue(field, :invalid_shape, [field, key], "expected a scalar or list value", %{
+       expected: "scalar or list"
+     })}
   end
 
   defp normalize_scalar_or_list(field, key, value) when is_list(value) do
     if Enum.all?(value, &scalar?/1) do
       {:ok, value}
     else
-      {:error, issue(field, :invalid_shape, [field, key], "expected a scalar or list value", %{expected: "scalar or list"})}
+      {:error,
+       issue(field, :invalid_shape, [field, key], "expected a scalar or list value", %{
+         expected: "scalar or list"
+       })}
     end
   end
 
@@ -241,7 +278,10 @@ defmodule Scrypath.QueryParams.Caster do
     if scalar?(value) do
       {:ok, value}
     else
-      {:error, issue(field, :invalid_shape, [field, key], "expected a scalar or list value", %{expected: "scalar or list"})}
+      {:error,
+       issue(field, :invalid_shape, [field, key], "expected a scalar or list value", %{
+         expected: "scalar or list"
+       })}
     end
   end
 
@@ -253,7 +293,12 @@ defmodule Scrypath.QueryParams.Caster do
         {:ok, keyword}
 
       :error ->
-        {:error, [issue(:sort, :invalid_shape, [:sort], "sort must be a keyword list or map", %{expected: "keyword list or map"})]}
+        {:error,
+         [
+           issue(:sort, :invalid_shape, [:sort], "sort must be a keyword list or map", %{
+             expected: "keyword list or map"
+           })
+         ]}
     end
   end
 
@@ -290,7 +335,12 @@ defmodule Scrypath.QueryParams.Caster do
   end
 
   defp normalize_sort_value(_value) do
-    {:error, [issue(:sort, :invalid_shape, [:sort], "sort must be a keyword list or map", %{expected: "keyword list or map"})]}
+    {:error,
+     [
+       issue(:sort, :invalid_shape, [:sort], "sort must be a keyword list or map", %{
+         expected: "keyword list or map"
+       })
+     ]}
   end
 
   defp normalize_page_value(value) when value == %{} or value == [], do: {:ok, []}
@@ -301,7 +351,12 @@ defmodule Scrypath.QueryParams.Caster do
         {:ok, keyword}
 
       :error ->
-        {:error, [issue(:page, :invalid_shape, [:page], "page must be a keyword list or map", %{expected: "keyword list or map"})]}
+        {:error,
+         [
+           issue(:page, :invalid_shape, [:page], "page must be a keyword list or map", %{
+             expected: "keyword list or map"
+           })
+         ]}
     end
   end
 
@@ -320,7 +375,15 @@ defmodule Scrypath.QueryParams.Caster do
                 {[{key, parsed} | pairs], value_errors}
 
               :error ->
-                error = issue(:page, :invalid_value, [:page, key], "#{key} must be a positive integer", %{expected: "positive integer"})
+                error =
+                  issue(
+                    :page,
+                    :invalid_value,
+                    [:page, key],
+                    "#{key} must be a positive integer",
+                    %{expected: "positive integer"}
+                  )
+
                 {pairs, value_errors ++ [error]}
             end
         end
@@ -337,7 +400,12 @@ defmodule Scrypath.QueryParams.Caster do
   end
 
   defp normalize_page_value(_value) do
-    {:error, [issue(:page, :invalid_shape, [:page], "page must be a keyword list or map", %{expected: "keyword list or map"})]}
+    {:error,
+     [
+       issue(:page, :invalid_shape, [:page], "page must be a keyword list or map", %{
+         expected: "keyword list or map"
+       })
+     ]}
   end
 
   defp normalize_facets_value(value) when value == [] or value == nil, do: {:ok, []}
@@ -347,7 +415,11 @@ defmodule Scrypath.QueryParams.Caster do
       Enum.reduce(value, {[], []}, fn raw_facet, {facets, errors} ->
         case safe_existing_atom(raw_facet) do
           nil ->
-            error = issue(:facets, :unknown_field, [:facets], "facet must be an existing atom name", %{facet: raw_facet})
+            error =
+              issue(:facets, :unknown_field, [:facets], "facet must be an existing atom name", %{
+                facet: raw_facet
+              })
+
             {facets, errors ++ [error]}
 
           facet ->
@@ -363,7 +435,8 @@ defmodule Scrypath.QueryParams.Caster do
   end
 
   defp normalize_facets_value(_value) do
-    {:error, [issue(:facets, :invalid_shape, [:facets], "facets must be a list", %{expected: "list"})]}
+    {:error,
+     [issue(:facets, :invalid_shape, [:facets], "facets must be a list", %{expected: "list"})]}
   end
 
   defp ensure_keyword(value) do
@@ -376,7 +449,9 @@ defmodule Scrypath.QueryParams.Caster do
     keys
     |> Enum.reject(fn key -> key_allowed?(key, allowed) end)
     |> Enum.map(fn key ->
-      issue(field, :unknown_key, [field, key_segment(key)], "unknown key", %{allowed: allowed_keys})
+      issue(field, :unknown_key, [field, key_segment(key)], "unknown key", %{
+        allowed: allowed_keys
+      })
     end)
   end
 
@@ -389,7 +464,14 @@ defmodule Scrypath.QueryParams.Caster do
   defp normalize_sort_field(value) when is_binary(value) or is_atom(value) do
     case safe_existing_atom(value) do
       nil ->
-        {:error, issue(:sort, :unknown_field, [:sort, :field], "sort field must be an existing atom name", %{field: value})}
+        {:error,
+         issue(
+           :sort,
+           :unknown_field,
+           [:sort, :field],
+           "sort field must be an existing atom name",
+           %{field: value}
+         )}
 
       field ->
         {:ok, field}
@@ -397,10 +479,14 @@ defmodule Scrypath.QueryParams.Caster do
   end
 
   defp normalize_sort_field(_value) do
-    {:error, issue(:sort, :invalid_value, [:sort, :field], "sort field must be a string or atom", %{expected: "string or atom"})}
+    {:error,
+     issue(:sort, :invalid_value, [:sort, :field], "sort field must be a string or atom", %{
+       expected: "string or atom"
+     })}
   end
 
-  defp normalize_sort_dir(value) when is_atom(value), do: normalize_sort_dir(Atom.to_string(value))
+  defp normalize_sort_dir(value) when is_atom(value),
+    do: normalize_sort_dir(Atom.to_string(value))
 
   defp normalize_sort_dir(value) when is_binary(value) do
     case Map.fetch(@sort_dirs, String.downcase(value)) do
@@ -408,12 +494,18 @@ defmodule Scrypath.QueryParams.Caster do
         {:ok, dir}
 
       :error ->
-        {:error, issue(:sort, :invalid_value, [:sort, :dir], "sort dir must be asc or desc", %{allowed: Map.keys(@sort_dirs)})}
+        {:error,
+         issue(:sort, :invalid_value, [:sort, :dir], "sort dir must be asc or desc", %{
+           allowed: Map.keys(@sort_dirs)
+         })}
     end
   end
 
   defp normalize_sort_dir(_value) do
-    {:error, issue(:sort, :invalid_value, [:sort, :dir], "sort dir must be asc or desc", %{allowed: Map.keys(@sort_dirs)})}
+    {:error,
+     issue(:sort, :invalid_value, [:sort, :dir], "sort dir must be asc or desc", %{
+       allowed: Map.keys(@sort_dirs)
+     })}
   end
 
   defp group_errors(errors) do
@@ -447,15 +539,26 @@ defmodule Scrypath.QueryParams.Caster do
     %Error{field: field, code: code, message: message, path: path, meta: meta}
   end
 
-  defp scalar?(value), do: is_binary(value) or is_number(value) or is_boolean(value) or is_nil(value)
+  defp scalar?(value),
+    do: is_binary(value) or is_number(value) or is_boolean(value) or is_nil(value)
 
   defp fetch_text(params) do
     cond do
-      is_binary(Map.get(params, :q)) -> Map.get(params, :q)
-      is_binary(Map.get(params, "q")) -> Map.get(params, "q")
-      is_binary(Map.get(params, :text)) -> Map.get(params, :text)
-      is_binary(Map.get(params, "text")) -> Map.get(params, "text")
-      true -> Map.get(params, :q) || Map.get(params, "q") || Map.get(params, :text) || Map.get(params, "text")
+      is_binary(Map.get(params, :q)) ->
+        Map.get(params, :q)
+
+      is_binary(Map.get(params, "q")) ->
+        Map.get(params, "q")
+
+      is_binary(Map.get(params, :text)) ->
+        Map.get(params, :text)
+
+      is_binary(Map.get(params, "text")) ->
+        Map.get(params, "text")
+
+      true ->
+        Map.get(params, :q) || Map.get(params, "q") || Map.get(params, :text) ||
+          Map.get(params, "text")
     end
   end
 
@@ -470,7 +573,8 @@ defmodule Scrypath.QueryParams.Caster do
     end
   end
 
-  defp fetch_map_value(map, key) when is_map(map), do: Map.get(map, key) || Map.get(map, safe_existing_atom(key))
+  defp fetch_map_value(map, key) when is_map(map),
+    do: Map.get(map, key) || Map.get(map, safe_existing_atom(key))
 
   defp safe_existing_atom(value) when is_atom(value), do: value
 
@@ -495,7 +599,9 @@ defmodule Scrypath.QueryParams.Caster do
 
   defp parse_positive_integer(_value), do: :error
 
-  defp key_allowed?(key, allowed) when is_atom(key), do: MapSet.member?(allowed, Atom.to_string(key))
+  defp key_allowed?(key, allowed) when is_atom(key),
+    do: MapSet.member?(allowed, Atom.to_string(key))
+
   defp key_allowed?(key, allowed) when is_binary(key), do: MapSet.member?(allowed, key)
   defp key_allowed?(_key, _allowed), do: false
 

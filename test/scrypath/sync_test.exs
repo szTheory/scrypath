@@ -272,9 +272,11 @@ defmodule Scrypath.SyncTest do
 
   defmodule TargetSchema do
     use Ecto.Schema
+
     schema "dummy" do
-      field :title, :string
+      field(:title, :string)
     end
+
     def __scrypath__(:document_id), do: :id
     def __scrypath__(:fields), do: [:title]
     def __scrypath__(:custom_document), do: false
@@ -282,7 +284,7 @@ defmodule Scrypath.SyncTest do
 
   defmodule SourceSchema do
     defstruct [:id]
-    
+
     def __scrypath__(:fan_outs) do
       [
         comments: [
@@ -309,7 +311,7 @@ defmodule Scrypath.SyncTest do
     assert_received {:upsert_documents, TargetSchema, documents, _config}
     assert Enum.map(documents, & &1.id) == [1, 2]
     assert Enum.map(documents, & &1.data[:title]) == ["Resolved 1", "Resolved 2"]
-    
+
     assert result.status == :completed
     assert result.mode == :inline
   end

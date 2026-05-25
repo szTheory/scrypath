@@ -6,12 +6,13 @@ defmodule Scrypath.Sync.RelatedTest do
 
     @primary_key {:id, :id, autogenerate: true}
     schema "dummy_targets" do
-      field :title, :string
+      field(:title, :string)
     end
 
     def __scrypath__(:document_id), do: :id
     def __scrypath__(:fields), do: [:title]
     def __scrypath__(:custom_document), do: false
+
     def __scrypath__(:config) do
       %{
         fields: [:title],
@@ -33,7 +34,7 @@ defmodule Scrypath.Sync.RelatedTest do
 
     @primary_key {:id, :id, autogenerate: true}
     schema "dummy_sources" do
-      field :name, :string
+      field(:name, :string)
     end
 
     def __scrypath__(:fan_outs) do
@@ -90,7 +91,11 @@ defmodule Scrypath.Sync.RelatedTest do
     assert_received {:upsert_documents, DummyTarget, documents, _config}
     assert length(documents) == 2
     assert Enum.map(documents, & &1.id) == [10, 20]
-    assert Enum.map(documents, & &1.data[:title]) == ["Resolved for Source 1", "Resolved for Source 2"]
+
+    assert Enum.map(documents, & &1.data[:title]) == [
+             "Resolved for Source 1",
+             "Resolved for Source 2"
+           ]
   end
 
   test "sync_mode: :oban enqueues a job" do
@@ -120,11 +125,13 @@ defmodule Scrypath.Sync.RelatedTest do
   end
 
   test "invalid fan_out key raises ArgumentError" do
-    assert_raise ArgumentError, "fan_out :unknown is not configured on Scrypath.Sync.RelatedTest.DummySource", fn ->
-      Scrypath.sync_related(DummySource, [%DummySource{id: 1}],
-        fan_out: :unknown,
-        backend: RecordingBackend
-      )
-    end
+    assert_raise ArgumentError,
+                 "fan_out :unknown is not configured on Scrypath.Sync.RelatedTest.DummySource",
+                 fn ->
+                   Scrypath.sync_related(DummySource, [%DummySource{id: 1}],
+                     fan_out: :unknown,
+                     backend: RecordingBackend
+                   )
+                 end
   end
 end

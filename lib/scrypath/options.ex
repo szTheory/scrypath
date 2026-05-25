@@ -849,8 +849,10 @@ defmodule Scrypath.Options do
     case Keyword.fetch(config, key) do
       {:ok, {mod, fun, args}} when is_atom(mod) and is_atom(fun) and is_list(args) ->
         {:ok, {mod, fun, args}}
+
       {:ok, _} ->
         {:error, "fan_out :#{key} must be a valid MFA tuple {Module, :func, [args]}"}
+
       :error ->
         {:error, "fan_out is missing required :#{key}"}
     end

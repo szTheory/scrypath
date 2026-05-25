@@ -66,9 +66,14 @@ defmodule Scrypath.QueryParamsTest do
     assert query_params.sort == [desc: :inserted_at]
     assert query_params.facets == [:genre, :year]
     assert query_params.per_query == %{}
-    assert Enum.sort(query_params.filter) == Enum.sort(status: "published", genre: ["Action", "Drama"])
+
+    assert Enum.sort(query_params.filter) ==
+             Enum.sort(status: "published", genre: ["Action", "Drama"])
+
     assert Enum.sort(query_params.page) == Enum.sort(number: 2, size: 20)
-    assert Enum.sort(query_params.facet_filter) == Enum.sort(genre: ["Action", "Drama"], year: "2024")
+
+    assert Enum.sort(query_params.facet_filter) ==
+             Enum.sort(genre: ["Action", "Drama"], year: "2024")
 
     assert {"phoenix",
             [
@@ -86,11 +91,23 @@ defmodule Scrypath.QueryParamsTest do
   end
 
   test "normalize/1 accepts text as a compatibility alias and rejects browser per_query input" do
-    assert {:ok, %{text: "ecto", filter: [], sort: [], page: [], facets: [], facet_filter: [], per_query: %{}}} =
+    assert {:ok,
+            %{
+              text: "ecto",
+              filter: [],
+              sort: [],
+              page: [],
+              facets: [],
+              facet_filter: [],
+              per_query: %{}
+            }} =
              QueryParams.normalize(%{"text" => "ecto", "debug" => true})
 
     assert {:error, %{field_errors: %{per_query: [issue]}, form_errors: [], errors: [issue]}} =
-             QueryParams.normalize(%{"q" => "ecto", "per_query" => %{"show_ranking_score" => true}})
+             QueryParams.normalize(%{
+               "q" => "ecto",
+               "per_query" => %{"show_ranking_score" => true}
+             })
 
     assert %Error{
              code: :unsupported_param,
@@ -121,19 +138,45 @@ defmodule Scrypath.QueryParamsTest do
              match?(%Error{code: _, message: _, path: _, meta: _}, issue)
            end)
 
-    assert [%Error{code: :invalid_shape, path: [:filter, :status], meta: %{expected: "scalar or list"}} | _] =
+    assert [
+             %Error{
+               code: :invalid_shape,
+               path: [:filter, :status],
+               meta: %{expected: "scalar or list"}
+             }
+             | _
+           ] =
              field_errors.filter
 
-    assert Enum.any?(field_errors.page, &(&1.code == :unknown_key and &1.path == [:page, :cursor]))
-    assert Enum.any?(field_errors.page, &(&1.code == :invalid_value and &1.path == [:page, :number]))
-    assert Enum.any?(field_errors.page, &(&1.code == :invalid_value and &1.path == [:page, :size]))
+    assert Enum.any?(
+             field_errors.page,
+             &(&1.code == :unknown_key and &1.path == [:page, :cursor])
+           )
+
+    assert Enum.any?(
+             field_errors.page,
+             &(&1.code == :invalid_value and &1.path == [:page, :number])
+           )
+
+    assert Enum.any?(
+             field_errors.page,
+             &(&1.code == :invalid_value and &1.path == [:page, :size])
+           )
+
     assert Enum.any?(field_errors.sort, &(&1.code == :invalid_value and &1.path == [:sort, :dir]))
     assert Enum.any?(field_errors.sort, &(&1.code == :unknown_key and &1.path == [:sort, :extra]))
     assert Enum.any?(field_errors.facets, &(&1.code == :invalid_shape and &1.path == [:facets]))
-    assert Enum.any?(field_errors.facet_filter, &(&1.code == :invalid_shape and &1.path == [:facet_filter, :genre]))
+
+    assert Enum.any?(
+             field_errors.facet_filter,
+             &(&1.code == :invalid_shape and &1.path == [:facet_filter, :genre])
+           )
 
     assert Enum.sort_by(error_map.errors, &{&1.field, inspect(&1.path), &1.code}) ==
-             Enum.sort_by(Enum.flat_map(field_errors, fn {_field, issues} -> issues end), &{&1.field, inspect(&1.path), &1.code})
+             Enum.sort_by(
+               Enum.flat_map(field_errors, fn {_field, issues} -> issues end),
+               &{&1.field, inspect(&1.path), &1.code}
+             )
   end
 
   test "normalize/1 emits deterministic keyword ordering for stable plain-data output" do
@@ -152,11 +195,32 @@ defmodule Scrypath.QueryParamsTest do
   end
 
   test "cast/1 accepts string-keyed and atom-keyed text envelopes with runtime-compatible values" do
-    assert %{text: "ecto", filter: [status: "draft"], sort: [], page: [], facets: [], facet_filter: [], per_query: %{}} =
+    assert %{
+             text: "ecto",
+             filter: [status: "draft"],
+             sort: [],
+             page: [],
+             facets: [],
+             facet_filter: [],
+             per_query: %{}
+           } =
              QueryParams.cast(%{"text" => "ecto", "filter" => [status: "draft"]})
 
-    assert %{text: "search", filter: [], sort: [asc: :id], page: [number: 1], facets: [], facet_filter: [], per_query: %{show_ranking_score: true}} =
-             QueryParams.cast(%{q: "search", sort: [asc: :id], page: [number: 1], per_query: %{show_ranking_score: true}})
+    assert %{
+             text: "search",
+             filter: [],
+             sort: [asc: :id],
+             page: [number: 1],
+             facets: [],
+             facet_filter: [],
+             per_query: %{show_ranking_score: true}
+           } =
+             QueryParams.cast(%{
+               q: "search",
+               sort: [asc: :id],
+               page: [number: 1],
+               per_query: %{show_ranking_score: true}
+             })
   end
 
   test "cast/1 rejects nested request-style values that are not runtime-compatible yet" do
@@ -177,7 +241,16 @@ defmodule Scrypath.QueryParamsTest do
     Code.ensure_loaded!(QueryParams)
 
     assert function_exported?(QueryParams, :normalize, 1)
-    assert %{text: "", filter: [], sort: [], page: [], facets: [], facet_filter: [], per_query: %{}} =
+
+    assert %{
+             text: "",
+             filter: [],
+             sort: [],
+             page: [],
+             facets: [],
+             facet_filter: [],
+             per_query: %{}
+           } =
              QueryParams.cast(%{"debug" => true, "q" => nil, "backend" => Scrypath.Meilisearch})
 
     assert function_exported?(QueryParams, :cast, 1)

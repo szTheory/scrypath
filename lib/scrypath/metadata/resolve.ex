@@ -106,7 +106,10 @@ defmodule Scrypath.Metadata.Resolve do
   end
 
   defp subtract_unsupported(:filter, value, unsupported), do: subtract_keyword(value, unsupported)
-  defp subtract_unsupported(:facet_filter, value, unsupported), do: subtract_keyword(value, unsupported)
+
+  defp subtract_unsupported(:facet_filter, value, unsupported),
+    do: subtract_keyword(value, unsupported)
+
   defp subtract_unsupported(:sort, value, unsupported), do: subtract_sort(value, unsupported)
   defp subtract_unsupported(:facets, value, unsupported), do: subtract_list(value, unsupported)
   defp subtract_unsupported(_field, value, _unsupported), do: value

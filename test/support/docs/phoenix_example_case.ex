@@ -111,7 +111,12 @@ defmodule Scrypath.TestSupport.Docs.PhoenixExampleCase do
     alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Content
 
     def mount do
-      %{posts: [], search: nil, query: "", form: SearchPhoenix.to_form_data(QueryParams.cast(%{}))}
+      %{
+        posts: [],
+        search: nil,
+        query: "",
+        form: SearchPhoenix.to_form_data(QueryParams.cast(%{}))
+      }
     end
 
     def handle_params(params, socket) do
@@ -120,7 +125,8 @@ defmodule Scrypath.TestSupport.Docs.PhoenixExampleCase do
           form = SearchPhoenix.to_form_data(query_params)
           {query, search_opts} = QueryParams.to_search_args(query_params)
 
-          with {:ok, result} <- Content.search_posts(query, Keyword.put(search_opts, :preload, [:author])) do
+          with {:ok, result} <-
+                 Content.search_posts(query, Keyword.put(search_opts, :preload, [:author])) do
             Map.merge(socket, %{posts: result.records, search: result, query: query, form: form})
           end
 
@@ -145,14 +151,24 @@ defmodule Scrypath.TestSupport.Docs.PhoenixExampleCase do
     alias Scrypath.QueryParams
     alias Scrypath.TestSupport.Docs.PhoenixExampleCase.Content
 
-    def mount, do: %{q: "", posts: [], facet_filter: [], form: SearchPhoenix.to_form_data(QueryParams.cast(%{}))}
+    def mount,
+      do: %{
+        q: "",
+        posts: [],
+        facet_filter: [],
+        form: SearchPhoenix.to_form_data(QueryParams.cast(%{}))
+      }
 
     def handle_params(params, socket) do
       case SearchPhoenix.from_params(params) do
         {:ok, query_params} ->
           form = SearchPhoenix.to_form_data(query_params)
           {query, search_opts} = QueryParams.to_search_args(query_params)
-          facets = if search_opts[:facets] == [], do: [:genre, :year, :rating], else: search_opts[:facets]
+
+          facets =
+            if search_opts[:facets] == [],
+              do: [:genre, :year, :rating],
+              else: search_opts[:facets]
 
           with {:ok, result} <-
                  Content.search_movies(query,

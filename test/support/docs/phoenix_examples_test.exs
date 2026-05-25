@@ -69,7 +69,9 @@ defmodule Scrypath.PhoenixExamplesTest do
     assert response.search == nil
     assert response.page == %{number: 1, size: 20}
     assert response.form.values["page"] == %{"number" => "0"}
-    assert [%{code: :invalid_value, path: ["page", "number"]}] = response.form.field_errors["page"]
+
+    assert [%{code: :invalid_value, path: ["page", "number"]}] =
+             response.form.field_errors["page"]
   end
 
   test "liveview-facing module reuses the same context boundary" do
@@ -118,7 +120,9 @@ defmodule Scrypath.PhoenixExamplesTest do
   test "fixture wrapper usage stays pure and does not execute search in Scrypath.Phoenix" do
     source = File.read!("lib/scrypath/phoenix.ex")
 
-    assert Phoenix.from_params(%{"q" => "ecto"}) == Scrypath.QueryParams.normalize(%{"q" => "ecto"})
+    assert Phoenix.from_params(%{"q" => "ecto"}) ==
+             Scrypath.QueryParams.normalize(%{"q" => "ecto"})
+
     refute source =~ "Repo"
     refute source =~ "Scrypath.search"
     refute source =~ "defmacro"
