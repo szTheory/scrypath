@@ -19,7 +19,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - **`search_many/2` parity helpers** — `compose_many/2` and `to_search_many_args/1` lower into the existing tuple/shared-option contract rather than creating a multi-search DSL.
 - **Canonical real-app docs and focused gates** — one canonical composition guide plus `mix verify.phase83`, `mix verify.phase84`, and `mix verify.phase85` now protect the shipped story.
 
-**Current posture:** **v1.23 — Outside-Adopter Evidence And Support-Truth Reconciliation** is now open on **2026-05-24**. The post-`v1.19` outside-adopter guardrail remains in force, so this milestone is intentionally about support truth, reviewed adopter evidence, and bounded papercuts rather than more generic breadth work.
+**Current posture:** **v1.23 — Outside-Adopter Evidence And Support-Truth Reconciliation** is now open on **2026-05-24**. The post-`v1.19` outside-adopter guardrail remains in force, so this milestone is intentionally about support truth, reviewed adopter evidence, and bounded papercuts rather than more generic breadth work. **Phase 91 (integration-guides-and-verification) complete 2026-05-25** — `sync_related/3` fan-out guide corrected (working hand-written accessor pattern, `use Scrypath` limitation documented), Phoenix example app exercises shipped fan-out APIs, hermetic verify task passes (73 tests), docs-contract regression gates in place.
 
 **Boundary discipline retained:** `Scrypath.search/3` remains canonical, contexts stay the application boundary, Phoenix remains optional, and `%Scrypath.Query{}` stays internal rather than becoming public API.
 
@@ -202,5 +202,5 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-24 — opened **v1.23 Outside-Adopter Evidence And Support-Truth Reconciliation** after the repo-grounded done-ness assessment*
+*Last updated: 2026-05-25 — Phase 91 (integration-guides-and-verification) complete; fan-out guide fixed and regression-gated*
 e repo-grounded done-ness assessment*
