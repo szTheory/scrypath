@@ -1,5 +1,41 @@
 # Milestones
 
+## v1.24 Related-Data and Dependency Propagation (Active)
+
+**Phases planned:** **3** (**89–91**), **7** requirements (**DATA-01**–**DATA-03**, **EXEC-01**–**EXEC-02**, **TEST-01**–**TEST-02**)
+
+**Hex:** Pending.
+
+**Key focus:**
+- Public `Scrypath.sync_related/3` explicit API and metadata structures for related-data fan-out.
+- Out-of-the-box Oban worker pattern for large blast radii with durable asynchronous processing.
+- Clear error handling for partial backend failures during multi-record fan-out updates.
+- Refactored developer guides establishing explicit fan-out over Ecto callback magic.
+
+**Planning:** `milestones/v1.24-ROADMAP.md`, `milestones/v1.24-REQUIREMENTS.md`
+
+---
+
+## v1.23 Outside-Adopter Evidence And Support-Truth Reconciliation (Shipped + archived: 2026-05-24)
+
+**Phases completed:** **3** (**86–88**), **8** requirements (**TRUTH-01**–**TRUTH-03**, **ADOPT-01**–**ADOPT-03**, **FIX-01**–**FIX-02**)
+
+**Hex:** **`scrypath 0.3.4`** on Hex; **in-repo milestone close only** — no dedicated Hex bump claimed for this planning milestone.
+
+**Key accomplishments:**
+
+- Support truth and proof surfaces reconciled to ensure README, CONTRIBUTING, guides, and proof paths match the current tree truth without relying on removed docs or stale claims — **Phase 86**
+- Real outside-adopter intake path refreshed and reviewed against evidence; repo clone boundaries, example assumptions, and support scope for the core library explicitly established — **Phase 87**
+- Evidence-backed papercuts fixed with regression guards; rolled the active milestone out with a locked verdict (related-data propagation is the next major product wedge) — **Phase 88**
+
+**Pre-close audit:** Passed via `verify-before-complete` principles (no formal `v1.23-MILESTONE-AUDIT.md` produced since it was an evidence/reconciliation sprint).
+
+**Automation note:** `gsd-sdk query milestone.complete` remained unavailable for this repo, so the `v1.23-*` archive files and rolling planning updates were completed manually.
+
+**Archives:** `milestones/v1.23-ROADMAP.md`, `milestones/v1.23-REQUIREMENTS.md` · **Git tag:** `v1.23` (planning milestone marker)
+
+---
+
 ## v1.22 Composition And Real-App Depth (Shipped + archived: 2026-05-24)
 
 **Phases completed:** **3** (**83–85**), **12** requirements (**CMP-01**–**CMP-04**, **META-01**–**META-03**, **MSCH-01**–**MSCH-02**, **DOC-01**, **DOC-02**, **VRFY-01**)
@@ -404,4 +440,13 @@ Historical note: the `v1.20` archive records milestone-close `Scrypath.SearchMod
 | `v1.11` | 2026-04-21 | 3 | 11 | Archived | Operator shell polish — phases **48–50**; `v1.11-*` archives. |
 | `v1.12` | 2026-04-22 | 3 | 9 | Archived | Developer onboarding & first-hour QoL — phases **51–53**; `v1.12-*` archives. |
 | `v1.13` | 2026-04-22 | 3 | 5 req | Archived | Public polish & narrative coherence — phases **54–56**; Hex **`scrypath 0.3.4`**; `v1.13-*` archives. |
-| `v1.14` | 2026-04-22 | 5 | 10 req | In progress | B1 evidence + **LIB-*** QoL + operator playbooks (**57–61**); current published line **Hex `scrypath 0.3.4`** per **`mix.exs`**; milestone archive still via **`/gsd-complete-milestone`**. |
+| `v1.14` | 2026-04-22 | 5 | 10 req | Archived | B1 evidence + **LIB-*** QoL + operator playbooks (**57–61**); Hex **`scrypath 0.3.4`**; `v1.14-*` archives. |
+| `v1.15` | 2026-04-22 | 3 | 8 req | Archived | OPSUI second slice — phases **62–64**; `v1.15-*` archives. |
+| `v1.16` | 2026-04-22 | 3 | 6 req | Archived | Playbook execution & operator honesty — phases **65–67**; `v1.16-*` archives. |
+| `v1.17` | 2026-04-23 | 3 | 6 req | Archived | Integration confidence & adopter proof — phases **68–70**; `v1.17-*` archives. |
+| `v1.18` | 2026-04-27 | 3 | 10 req | Archived | Sigra integration — phases **71–73**; `v1.18-*` archives. |
+| `v1.19` | 2026-04-28 | 3 | 8 req | Archived | Production adoption proof and hardening — phases **74–76**; `v1.19-*` archives. |
+| `v1.20` | 2026-05-08 | 3 | 8 req | Archived | Search Module Foundation — phases **77–79**; `v1.20-*` archives. |
+| `v1.21` | 2026-05-23 | 3 | 8 req | Archived | Query Toolkit And Phoenix Edge Helpers — phases **80–82**; `v1.21-*` archives. |
+| `v1.22` | 2026-05-24 | 3 | 12 req | Archived | Composition And Real-App Depth — phases **83–85**; `v1.22-*` archives. |
+| `v1.23` | 2026-05-24 | 3 | 8 req | Archived | Outside-Adopter Evidence And Support-Truth Reconciliation — phases **86–88**; `v1.23-*` archives. |
