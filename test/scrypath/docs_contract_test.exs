@@ -52,10 +52,12 @@ defmodule Scrypath.DocsContractTest do
     "guides/operator-mix-tasks.md",
     "guides/relevance-tuning.md",
     "guides/per-query-tuning-pipeline.md",
-    "guides/related-data-and-reindexing.md"
+    "guides/related-data-and-reindexing.md",
+    "guides/multitenancy.md"
   ]
   @guides Enum.into(@guide_paths, %{}, fn path -> {path, File.read!(path)} end)
   @per_query_tuning_pipeline File.read!("guides/per-query-tuning-pipeline.md")
+  @multitenancy_guide File.read!("guides/multitenancy.md")
   @request_edge_guide File.read!("guides/request-edge-search.md")
   @support_guide File.read!("guides/support-and-compatibility.md")
   @verify_adopter File.read!("lib/mix/tasks/verify.adopter.ex")
@@ -1154,6 +1156,19 @@ defmodule Scrypath.DocsContractTest do
       "def __scrypath__(:fan_outs)",
       "does not generate a `__scrypath__(:fan_outs)` accessor"
     ])
+  end
+
+  test "multitenancy guide contains required section anchors (TNNT-01)" do
+    assert String.contains?(@multitenancy_guide, "shared-index")
+    assert String.contains?(@multitenancy_guide, "Keyword.merge")
+    assert String.contains?(@multitenancy_guide, "tenant token")
+    assert String.contains?(@multitenancy_guide, "search_document")
+    assert String.contains?(@multitenancy_guide, "tenant_field")
+  end
+
+  test "multitenancy guide is registered in ExDoc extras and Getting Started group (TNNT-01)" do
+    mix_exs = File.read!("mix.exs")
+    assert String.contains?(mix_exs, ~s("guides/multitenancy.md"))
   end
 
   defp guide_fences do
