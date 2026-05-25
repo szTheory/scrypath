@@ -52,6 +52,7 @@
 | FIX-02 | Phase 88 | Complete |
 
 **Coverage:**
+
 - v1.23 requirements: 8 total
 - Mapped to phases: 8
 - Unmapped: 0
