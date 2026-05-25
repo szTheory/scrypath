@@ -141,9 +141,10 @@ end
 |---|-------|---------|---------------|
 | A1 | Meilisearch HTTP 40x responses are surfaced via `{:error, {:http_error, status, body}}` through `sync_records`. | Code Examples | [Low] The code pattern matching would fail to catch 40x errors, resulting in transient retry behavior rather than cancellation, but still preventing silent drops. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Oban Dependency**
+   - RESOLVED: The fallback macro in `lib/scrypath/sync/related_worker.ex` already gracefully raises an ArgumentError if the Oban dependency is missing, satisfying this requirement.
    - What we know: Oban is configured as an optional dependency (`~> 2.21`).
    - What's unclear: If `sync_related/3` gracefully handles missing Oban dependencies at runtime.
    - Recommendation: Ensure `Scrypath.Sync.RelatedWorker`'s fallback macro gracefully handles the `:oban` configuration before enqueuing.
