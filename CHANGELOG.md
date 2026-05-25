@@ -31,6 +31,35 @@ Release Please manages versioned entries after this baseline.
 - Adopters should read the **Versioning and upgrades** section in `README.md` for semver posture and upgrade expectations; maintainers should follow `docs/releasing.md` for verify gates and Release Please (without duplicating the full `mix verify.phase11` task list here).
 - Release-parity gates were motivated by a historical **tag vs default-branch** divergence in an earlier cycle; see `docs/releasing.md` § Historical context.
 
+## [0.3.7](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.6...scrypath-v0.3.7) (2026-05-25)
+
+
+### Features
+
+* **80-01:** implement query params toolkit contract ([931c0f9](https://github.com/szTheory/scrypath/commit/931c0f9e1b860d2b797bec987bdbc5bf9c5188a9))
+* **81-01:** add query param normalization contract ([7d64ee8](https://github.com/szTheory/scrypath/commit/7d64ee8e5e91cea7f5e8e90ff6814f88aa896ebd))
+* **81-02:** add Phoenix query param helpers ([f9f2dc3](https://github.com/szTheory/scrypath/commit/f9f2dc36386eff11f76ea681b121788b8c466841))
+* **89-01:** define sync_related/3 entrypoint ([864bdb8](https://github.com/szTheory/scrypath/commit/864bdb8a61024bdba8fbefbebc96d909b982f945))
+* **89-01:** implement fan_outs validation ([7d10cbe](https://github.com/szTheory/scrypath/commit/7d10cbe35def5d71a65594c74d822416a7675401))
+* **89-02:** implement sync_related/3 execution flow and RelatedWorker ([c6a7037](https://github.com/szTheory/scrypath/commit/c6a703793428c0da5f4c4b9c4ceb6b65ad0491d3))
+* **90-01:** propagate RelatedWorker errors for retry/cancel ([f5ca37e](https://github.com/szTheory/scrypath/commit/f5ca37e847db28bfca7520ff2ae98a70f3a56ad3))
+* **91-02:** create Mix.Tasks.Verify.Phase91 + register in mix.exs preferred_envs ([177d661](https://github.com/szTheory/scrypath/commit/177d66144521487e07ef65a04c8131993856c2d1))
+* **91-02:** invert related-data docs-contract assertion + [@verify](https://github.com/verify)_phase91 + stays-wired test ([b1906f8](https://github.com/szTheory/scrypath/commit/b1906f88c5c8ecb34da764e9d75c7ceda34e2bce))
+* **91-03:** add Author schema, migration, Post extension with fan_outs (Task 1) ([a899d68](https://github.com/szTheory/scrypath/commit/a899d683ee0fcb3f1d54fdbac19e48cbc16313d8))
+* **91-03:** add inline + oban fan-out smoke tests and update README (Task 3) ([9ea6b13](https://github.com/szTheory/scrypath/commit/9ea6b13d1084519c0d451c7be5a39ea43329ecd4))
+* **91-03:** add ScrypathDemo.Blog context with update_author/3 + arity-safe resolver (Task 2) ([db5d284](https://github.com/szTheory/scrypath/commit/db5d28482b7482cbf42e5b9420e3f59b6bc50073))
+* **v1.22:** ship composition and real-app depth ([9249c52](https://github.com/szTheory/scrypath/commit/9249c521934c4a86490b99c1aa8410642d5cfb05))
+
+
+### Bug Fixes
+
+* **81-01:** stabilize normalized param ordering ([7e383e9](https://github.com/szTheory/scrypath/commit/7e383e93fa469808eb4317eb4e3c9bd115f99cca))
+* **91-02:** remove hidden-module backtick reference to unblock docs warnings-as-errors ([f4d9334](https://github.com/szTheory/scrypath/commit/f4d9334c9587315599def3cf2e5033cdabd0354d))
+* **91-04:** replace broken use Scrypath fan_outs snippet with hand-written accessor pattern ([a45b64e](https://github.com/szTheory/scrypath/commit/a45b64e75450b015f6e9f1903c9cb4cf41014cd7))
+* **phase80:** narrow query params request-edge contract ([defb012](https://github.com/szTheory/scrypath/commit/defb012e25b48f99661042f728880a93c15fbfd0))
+* **related_worker:** serialize meilisearch_url and meilisearch_api_key into Oban job args ([ec0fce1](https://github.com/szTheory/scrypath/commit/ec0fce185d2310c24267ab2d02de07fb77df0b0a))
+* **state:** restore milestone name/status after record-session clobber ([cfe4154](https://github.com/szTheory/scrypath/commit/cfe4154b0f9b59ec7af392d302188b192334a59c))
+
 ## [0.3.6](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.5...scrypath-v0.3.6) (2026-05-08)
 
 
