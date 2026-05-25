@@ -3,7 +3,7 @@ defmodule ScrypathDemo.Blog.Post do
   use Ecto.Schema
 
   use Scrypath,
-    fields: [:title, :body],
+    fields: [:title, :body, :author_name],
     filterable: [:status],
     sortable: [:inserted_at]
 
@@ -11,12 +11,14 @@ defmodule ScrypathDemo.Blog.Post do
     field(:title, :string)
     field(:body, :string)
     field(:status, :string)
+    field(:author_name, :string)
+    belongs_to(:author, ScrypathDemo.Blog.Author)
     timestamps()
   end
 
   def changeset(post, attrs) do
     post
-    |> Ecto.Changeset.cast(attrs, [:title, :body, :status])
+    |> Ecto.Changeset.cast(attrs, [:title, :body, :status, :author_id, :author_name])
     |> Ecto.Changeset.validate_required([:title, :body, :status])
   end
 end
