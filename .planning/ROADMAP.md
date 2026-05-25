@@ -63,9 +63,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 91-01: Rewrite the related-data guide to adopt `Scrypath.sync_related/3` and the official Oban pattern as canonical.
-- [ ] 91-02: Build `mix verify.phase91` to enforce explicit-only boundaries and assert new non-goals (e.g., no callback magic).
-- [ ] 91-03: Final polish of the Phoenix example app to use the new related-data sync feature across an association.
+- [ ] 91-01-PLAN.md — Rewrite `guides/related-data-and-reindexing.md` so `Scrypath.sync_related/3` + the built-in Oban path are canonical; remove temporary-workaround framing; map inline-vs-oban to blast radius + latency (wave 1, EXEC-02).
+- [ ] 91-02-PLAN.md — Add `mix verify.phase91` (mirror verify.phase85) + invert the docs-contract assertion + register the task (`@verify_phase91`, mix.exs preferred_envs) (wave 2, depends_on 91-01, TEST-01/TEST-02).
+- [ ] 91-03-PLAN.md — Polish `examples/phoenix_meilisearch`: `Author` schema + migration + `ScrypathDemo.Blog` context + arity-safe resolver, exercising inline + oban fan-out smokes; update README (wave 1, EXEC-02).
 
 **Working assumptions locked at milestone open:**
 
