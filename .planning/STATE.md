@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.25
 milestone_name: milestone
-status: Not started
-last_updated: "2026-05-25T16:27:39.573Z"
-last_activity: 2026-05-25 — Roadmap created for v1.25
+status: executing
+last_updated: "2026-05-25T18:53:51.068Z"
+last_activity: 2026-05-25 -- Phase 92 planning complete
 progress:
   total_phases: 3
   completed_phases: 0
-  total_plans: 0
+  total_plans: 3
   completed_plans: 0
   percent: 0
 ---
@@ -27,8 +27,8 @@ See: `.planning/PROJECT.md` (updated 2026-05-25)
 
 Phase: 92 — Guide and Schema Declaration
 Plan: —
-Status: Not started
-Last activity: 2026-05-25 — Roadmap created for v1.25
+Status: Ready to execute
+Last activity: 2026-05-25 -- Phase 92 planning complete
 
 ```
 Progress: [----------] 0% (0/3 phases)
