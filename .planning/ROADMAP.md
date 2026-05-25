@@ -52,8 +52,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 90-01-PLAN.md — Update RelatedWorker for explicit error propagation and cancellation.
-- [ ] 90-02-PLAN.md — Add integration tests for RelatedWorker error propagation behavior.
+- [x] 90-01-PLAN.md — Update RelatedWorker for explicit error propagation and cancellation.
+- [x] 90-02-PLAN.md — Add integration tests for RelatedWorker error propagation behavior.
 
 ### Phase 91: Integration, Guides, and Verification
 

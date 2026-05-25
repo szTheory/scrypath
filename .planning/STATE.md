@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.24
 milestone_name: Related-Data and Dependency Propagation
-status: Phase 89 complete. Implemented related-data fan-out API and explicit orchestration.
-last_updated: "2026-05-24T20:54:00.000Z"
-last_activity: 2026-05-24
+status: Phase 90 complete. RelatedWorker propagates fan-out failures as actionable Oban retry/cancel outcomes.
+last_updated: "2026-05-25T07:00:00.000Z"
+last_activity: 2026-05-25
 progress:
   total_phases: 14
-  completed_phases: 10
+  completed_phases: 11
   total_plans: 26
-  completed_plans: 33
-  percent: 71
+  completed_plans: 35
+  percent: 79
 ---
 
 # Project State
@@ -21,22 +21,24 @@ See: `.planning/PROJECT.md` (updated 2026-05-24)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase 89 (Related-Data Propagation Contract and API) — milestone v1.24 active
+**Current focus:** Phase 90 (Async Execution and Error Propagation) complete — milestone v1.24 active, Phase 91 next
 
 ## Current Position
 
-Phase: 89 (related-data-propagation-contract-and-api)
+Phase: 90 (async-execution)
 Plan: COMPLETE
 
-**Status:** Phase 89 complete. Established explicit API and metadata structures for related-data fan-out.
+**Status:** Phase 90 complete. `RelatedWorker` now maps fan-out failures onto Oban outcomes — 4xx cancels, 5xx/generic retries, invalid args cancel — instead of silent partial drops.
 
-**Last activity:** 2026-05-24
+**Last activity:** 2026-05-25
 
 ## Accumulated Context
 
 ### Decisions
 
 (See `.planning/PROJECT.md` Key Decisions.)
+
+- **Phase 90 complete:** `Scrypath.Sync.RelatedWorker.perform/1` resolves job arguments gracefully and maps fan-out results onto the Oban worker contract — HTTP 4xx → `{:cancel, _}` (permanent), HTTP 5xx/generic → `{:error, _}` (transient retry), invalid schema/fan_out → `{:cancel, {:invalid_job, reason}}`. Recovery note: a single bug (mis-destructuring `Telemetry.span/3`, which returns the result directly) was the sole blocker and is fixed; full suite green (493 tests).
 
 - **Phase 89 complete:** Implemented explicit metadata validation (`fan_outs`), created `Scrypath.sync_related/3` for executing resolvers inline or enqueuing via `RelatedWorker`, successfully integrating both execution modes securely.
 
