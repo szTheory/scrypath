@@ -108,9 +108,8 @@ defmodule Scrypath.Composition.Normalize do
   defp normalize_field(:sort, value) when value == [] or value == nil, do: {:ok, []}
 
   defp normalize_field(:sort, value) do
-    with {:ok, sort} <- Options.validate_search_sort(value) do
-      {:ok, unique_keyword(sort)}
-    else
+    case Options.validate_search_sort(value) do
+      {:ok, sort} -> {:ok, unique_keyword(sort)}
       {:error, _reason} -> {:error, {:invalid_fragment, {:sort, value}}}
     end
   end
@@ -119,9 +118,8 @@ defmodule Scrypath.Composition.Normalize do
 
   defp normalize_field(:page, value) do
     try do
-      with {:ok, page} <- Options.validate_search_page(value) do
-        {:ok, canonical_page(page)}
-      else
+      case Options.validate_search_page(value) do
+        {:ok, page} -> {:ok, canonical_page(page)}
         {:error, _reason} -> {:error, {:invalid_fragment, {:page, value}}}
       end
     rescue
@@ -142,9 +140,8 @@ defmodule Scrypath.Composition.Normalize do
   defp normalize_field(:facets, value), do: {:error, {:invalid_fragment, {:facets, value}}}
 
   defp normalize_field(:per_query, value) do
-    with {:ok, per_query} <- Options.validate_per_query_map(value) do
-      {:ok, Map.new(per_query)}
-    else
+    case Options.validate_per_query_map(value) do
+      {:ok, per_query} -> {:ok, Map.new(per_query)}
       {:error, _reason} -> {:error, {:invalid_fragment, {:per_query, value}}}
     end
   end
@@ -152,9 +149,8 @@ defmodule Scrypath.Composition.Normalize do
   defp normalize_keyword_field(_field, value) when value == [] or value == nil, do: {:ok, []}
 
   defp normalize_keyword_field(field, value) do
-    with {:ok, keyword} <- Options.validate_search_filter(value) do
-      {:ok, canonical_keyword(keyword)}
-    else
+    case Options.validate_search_filter(value) do
+      {:ok, keyword} -> {:ok, canonical_keyword(keyword)}
       {:error, _reason} -> {:error, {:invalid_fragment, {field, value}}}
     end
   end
