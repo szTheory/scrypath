@@ -62,7 +62,7 @@ Plans:
 **Goal:** Update `guides/related-data-and-reindexing.md` to remove "temporary workaround" language, clearly document the new API, and lock those assertions in the docs-contract pipeline.
 **Depends on:** Phase 90
 **Requirements:** EXEC-02, TEST-01, TEST-02
-**Plans:** 3/3 plans complete
+**Plans:** 4/4 plans complete
 
 Plans:
 **Wave 1**
