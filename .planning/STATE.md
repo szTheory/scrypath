@@ -1,15 +1,15 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.24
-milestone_name: Related-Data and Dependency Propagation
+milestone_name: milestone
 status: executing
-last_updated: "2026-05-25T06:11:02.030Z"
+last_updated: "2026-05-25T06:33:23.348Z"
 last_activity: 2026-05-25
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 8
-  completed_plans: 6
+  completed_plans: 7
   percent: 67
 ---
 
@@ -26,7 +26,7 @@ See: `.planning/PROJECT.md` (updated 2026-05-24)
 ## Current Position
 
 Phase: 91 (integration-guides-and-verification) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 
 **Status:** Ready to execute
 
@@ -87,6 +87,7 @@ Plan: 2 of 3
 - **v1.23 close:** Outside-Adopter Evidence And Support-Truth Reconciliation shipped + archived in-repo on **2026-05-24**. Next-pull verdict is established: related-data propagation.
 - **v1.24 open:** Related-Data and Dependency Propagation is now the active milestone to address the biggest correctness gap for real SaaS apps.
 - [Phase ?]: Phase 91 plan 01 complete: rewrote guides/related-data-and-reindexing.md so Scrypath.sync_related/3 + internal RelatedWorker (sync_mode: :oban) are the canonical fan-out story; canonical strings locked as the shared contract for 91-02.
+- [Phase ?]: Phase 91 plan 02 complete: verify.phase91 hermetic gate green (73 tests, 0 failures); docs-contract test inverted to lock sync_related/3 as canonical fan-out story; ExDoc hidden-module backtick fixed in guide (Rule 1 auto-fix).
 
 ### Blockers / Concerns
 
@@ -135,3 +136,4 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 | Phase | Plan | Duration | Notes |
 |-------|------|----------|-------|
 | Phase 91 P01 | ~2m | 2 tasks | 1 files |
+| Phase 91 P02 | 10m | 2 tasks | 4 files |

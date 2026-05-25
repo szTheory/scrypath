@@ -62,7 +62,7 @@ Plans:
 **Goal:** Update `guides/related-data-and-reindexing.md` to remove "temporary workaround" language, clearly document the new API, and lock those assertions in the docs-contract pipeline.
 **Depends on:** Phase 90
 **Requirements:** EXEC-02, TEST-01, TEST-02
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 **Wave 1**
@@ -72,7 +72,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 91-02-PLAN.md — Add `mix verify.phase91` (mirror verify.phase85) + invert the docs-contract assertion + register the task (`@verify_phase91`, mix.exs preferred_envs) (wave 2, depends_on 91-01, TEST-01/TEST-02).
+- [x] 91-02-PLAN.md — Add `mix verify.phase91` (mirror verify.phase85) + invert the docs-contract assertion + register the task (`@verify_phase91`, mix.exs preferred_envs) (wave 2, depends_on 91-01, TEST-01/TEST-02).
 
 **Working assumptions locked at milestone open:**
 
