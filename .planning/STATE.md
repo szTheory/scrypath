@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.24
 milestone_name: Related-Data and Dependency Propagation
-status: Phase 91 planned (3 plans, 2 waves) — ready to execute
-last_updated: "2026-05-25T05:58:41.090Z"
+status: executing
+last_updated: "2026-05-25T06:04:37.786Z"
 last_activity: 2026-05-25
 progress:
   total_phases: 3
@@ -21,14 +21,14 @@ See: `.planning/PROJECT.md` (updated 2026-05-24)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase 91 (Integration, Guides, and Verification) planned — 3 plans in 2 waves, ready to execute
+**Current focus:** Phase 91 — integration-guides-and-verification
 
 ## Current Position
 
-Phase: 91 (integration-guides-and-verification)
-Plan: PLANNED (3 plans, 2 waves)
+Phase: 91 (integration-guides-and-verification) — EXECUTING
+Plan: 1 of 3
 
-**Status:** Phase 91 planned — guide rewrite (91-01), `mix verify.phase91` + docs-contract (91-02), example fan-out polish (91-03). Ready to execute.
+**Status:** Executing Phase 91
 
 **Last activity:** 2026-05-25
 
