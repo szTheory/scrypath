@@ -182,6 +182,10 @@ defmodule Scrypath.Options do
   ]
 
   @search_options [
+    tenant_scope: [
+      type: :any,
+      doc: "Hard-injected filter for the declared tenant_field."
+    ],
     facets: [
       type: {:list, :atom},
       default: [],
@@ -477,6 +481,7 @@ defmodule Scrypath.Options do
            validate_search_facet_filter(schema_module, Keyword.get(validated, :facet_filter, [])) do
       try do
         validated
+        |> inject_tenant_scope!(schema_module)
         |> validate_filterable_fields!(filterable)
         |> validate_sortable_fields!(sortable)
         |> then(&{:ok, &1})
@@ -1296,6 +1301,34 @@ defmodule Scrypath.Options do
     end)
 
     m
+  end
+
+  defp inject_tenant_scope!(opts, schema_module) do
+    case Keyword.fetch(opts, :tenant_scope) do
+      :error ->
+        opts
+
+      {:ok, tenant_scope} ->
+        tenant_field = schema_module.__scrypath__(:tenant_field)
+
+        if is_nil(tenant_field) do
+          raise ArgumentError,
+                "tenant_scope: provided but schema #{inspect(schema_module)} does not declare a tenant_field:"
+        end
+
+        existing = Keyword.get(opts, :filter, [])
+
+        if Keyword.has_key?(existing, tenant_field) do
+          raise ArgumentError,
+                "tenant_scope: cannot be used because filter: already contains the tenant_field #{inspect(tenant_field)}. Remove it from filter: to allow tenant enforcement."
+        end
+
+        new_filter = Keyword.put(existing, tenant_field, tenant_scope)
+
+        opts
+        |> Keyword.delete(:tenant_scope)
+        |> Keyword.put(:filter, new_filter)
+    end
   end
 
   defp validate_filterable_fields!(opts, filterable) do
