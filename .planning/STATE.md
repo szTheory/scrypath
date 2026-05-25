@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.24
-milestone_name: Related-Data and Dependency Propagation
-status: archived
-last_updated: "2026-05-25T00:00:00.000Z"
+milestone: v1.25
+milestone_name: Tenant-Safe Search
+status: planning
+last_updated: "2026-05-25T15:52:26.143Z"
 last_activity: 2026-05-25
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,16 +21,14 @@ See: `.planning/PROJECT.md` (updated 2026-05-25)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** v1.24 closed — no active milestone open
+**Current focus:** v1.25 Tenant-Safe Search — defining requirements
 
 ## Current Position
 
-Phase: 91 (complete)
-Plan: All plans complete (9/9)
-
-**Status:** v1.24 archived — between milestones
-
-**Last activity:** 2026-05-25
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-05-25 — Milestone v1.25 started
 
 ## Accumulated Context
 
@@ -116,7 +114,11 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 1. v1.24 is completely closed, archived, and tagged.
 2. No active milestone is open.
-3. Next default pull: tenant-safe search access (`AUTH-01`) — only if adopter evidence confirms the gap is felt.
+3. **Assessment completed 2026-05-25:** Scrypath is ~91–93% done. Two narrow wedges remain before the lib can call itself complete for its stated scope:
+   - **v1.25 AUTH-01** — `guides/multitenancy.md` + `tenant_field:` schema option + `schema_capabilities/1` reflection (2–3 phases). The filter merge order bug is a real silent data-leak footgun for multi-tenant adopters; this closes it.
+   - **v1.26 Facet Value Search** — `search_facet_values/4` wrapping Meilisearch `/facet-search` endpoint + `FacetSearchResult` / `FacetHit` structs + guide update (1 tight milestone).
+4. After v1.26: seriously evaluate stopping. Autocomplete only with adopter signal.
+5. AUTH-01 is now justified without waiting for adopter evidence — the footgun risk is concrete enough.
 
 ---
 

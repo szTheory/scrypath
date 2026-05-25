@@ -8,6 +8,16 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
+## Current Milestone: v1.25 Tenant-Safe Search
+
+**Goal:** Close the SaaS credibility gap for multi-tenant Phoenix apps by shipping a canonical multitenancy guide, a `tenant_field:` schema declaration option, and metadata reflection — making the correct isolation pattern easy and the silent failure modes visible.
+
+**Target features:**
+- Canonical `guides/multitenancy.md` with shared-index model, correct context pattern, filter merge warning, and tenant token placement advice
+- `tenant_field:` schema option — auto-adds the named field to `filterable:` and document projection
+- `schema_capabilities/1` reflection surfaces `tenant_field` if declared
+- (Stretch) `tenant_scope:` search option on `Scrypath.search/3` — hard-injects tenant filter at the library level, not overridable by caller `filter:` opts
+
 ## Current State
 
 **v1.24 — Related-Data and Dependency Propagation** shipped + archived in-repo on **2026-05-25** across phases **89–91**.
@@ -20,9 +30,9 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - **`mix verify.phase91` hermetic gate** — 73 tests, 0 failures; docs-contract assertion inverted to lock the canonical fan-out story; registered in CI `quality` job.
 - **Phoenix example fan-out** — `ScrypathDemo.Blog` context with arity-safe resolver, `Author` schema + migration, and inline + Oban smoke tests demonstrating the complete fan-out story.
 
-**Current posture:** **v1.24** is closed and archived. No active milestone is open. The post-`v1.19` outside-adopter guardrail remains in force — do not open another internal milestone by default without concrete adopter evidence or a leverage-positive reason.
+**v1.25 is now the active milestone.** AUTH-01 is justified without waiting for further adopter evidence — the filter merge order bug is a concrete silent data-leak footgun in multi-tenant apps.
 
-**Boundary discipline retained:** `Scrypath.search/3` remains canonical, contexts stay the application boundary, fan-out is explicit (no hidden callbacks or Ecto lifecycle magic), and `%Scrypath.Query{}` stays internal rather than becoming public API.
+**Boundary discipline retained:** `Scrypath.search/3` remains canonical, contexts stay the application boundary, fan-out is explicit (no hidden callbacks or Ecto lifecycle magic), and `%Scrypath.Query{}` stays internal rather than becoming public API. No automatic tenant context extraction from process dictionary / plug assigns.
 
 **Out of scope remains:** public `%Scrypath.Query{}` or other internal structs as semver-stable API, schema-generated runtime search APIs, Phoenix-dependent runtime core, reusable UI widgets or form-builder layers, automatic Ecto association walking, or any change that hides operational search semantics behind framework magic.
 
@@ -30,9 +40,9 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Next Milestone Goals
 
-- **No active milestone open.** v1.24 shipped explicit related-data propagation.
-- Next highest-priority wedge: **tenant-safe search access** (`AUTH-01`) — the top SaaS credibility gap identified by outside-adopter evidence.
-- Do not open a new milestone without concrete adopter evidence showing that gap is actually felt, or a leverage-positive release/distribution need.
+- **v1.25 is now active.** Tenant-Safe Search (`AUTH-01`) — canonical multitenancy guide, `tenant_field:` schema declaration, and `schema_capabilities/1` reflection.
+- **After v1.25:** FACET-UX-01 — high-cardinality facet-value search (`search_facet_values/4` wrapping Meilisearch `/facet-search`).
+- **After v1.26:** Seriously evaluate stopping. The library scope will be complete for its stated mission.
 
 ## Last shipped milestone
 
@@ -42,7 +52,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Planning window
 
-**No active milestone.** v1.24 closed on **2026-05-25**. The next default pull (per the post-v1.19 guardrail) is tenant-safe search access (`AUTH-01`) only if adopter evidence confirms that gap is felt. Do not open another internal milestone by default.
+**v1.25 active.** Opened 2026-05-25. AUTH-01 justified without waiting for further adopter evidence — the filter-merge-order footgun is a concrete silent data-leak risk for multi-tenant apps. Target: 2–3 phases (guide + `tenant_field:` declaration + reflection).
 
 ## Requirements
 
@@ -97,8 +107,8 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ### Active
 
-- [ ] **AUTH-01**: Tenant-safe search access — the highest-priority remaining SaaS credibility gap. Do not open a milestone for this without concrete adopter evidence.
-- [ ] **FACET-UX-01**: High-cardinality facet-value search — narrower catalog-depth follow-on after `AUTH-01` is understood.
+- [ ] **AUTH-01**: Tenant-safe search access — the highest-priority remaining SaaS credibility gap. **v1.25 milestone now open for this.**
+- [ ] **FACET-UX-01**: High-cardinality facet-value search — narrower catalog-depth follow-on after `AUTH-01` ships (v1.26 candidate).
 
 ### Recently completed
 
@@ -203,4 +213,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-25 after v1.24 milestone close — Related-Data and Dependency Propagation shipped + archived*
+*Last updated: 2026-05-25 — v1.25 Tenant-Safe Search milestone opened; v1.24 Related-Data and Dependency Propagation closed + archived*
