@@ -11,6 +11,7 @@ defmodule Scrypath.Metadata.Capabilities do
     facet_attributes = Keyword.get(faceting, :attributes, [])
 
     %{
+      tenant: schema_module.__scrypath__(:tenant_field),
       filters: %{
         supported: schema_module.__scrypath__(:filterable) != [],
         fields: schema_module.__scrypath__(:filterable)
