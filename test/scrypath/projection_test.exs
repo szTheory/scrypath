@@ -34,6 +34,40 @@ defmodule Scrypath.ProjectionTest do
     end
   end
 
+  defmodule TenantFieldCustomPost do
+    use Ecto.Schema
+
+    use Scrypath,
+      fields: [:title, :tenant_id],
+      tenant_field: :tenant_id
+
+    embedded_schema do
+      field(:title, :string)
+      field(:tenant_id, :integer)
+    end
+
+    def search_document(post) do
+      %{title: String.upcase(post.title)}
+    end
+  end
+
+  defmodule TenantFieldCustomPostAlreadyIncludes do
+    use Ecto.Schema
+
+    use Scrypath,
+      fields: [:title, :tenant_id],
+      tenant_field: :tenant_id
+
+    embedded_schema do
+      field(:title, :string)
+      field(:tenant_id, :integer)
+    end
+
+    def search_document(post) do
+      %{title: String.upcase(post.title), tenant_id: post.tenant_id}
+    end
+  end
+
   test "projects declared fields by default" do
     document =
       Scrypath.Projection.document(SearchablePost, %SearchablePost{
@@ -76,5 +110,40 @@ defmodule Scrypath.ProjectionTest do
         title: "Hello"
       })
     end
+  end
+
+  test "injects tenant_field into document when search_document/1 omits it" do
+    document =
+      Scrypath.Projection.document(TenantFieldCustomPost, %TenantFieldCustomPost{
+        id: 1,
+        title: "Hello",
+        tenant_id: 42
+      })
+
+    assert document.data.tenant_id == 42
+    assert document.source == :custom
+  end
+
+  test "does not overwrite tenant_field when search_document/1 already includes it" do
+    document =
+      Scrypath.Projection.document(TenantFieldCustomPostAlreadyIncludes, %TenantFieldCustomPostAlreadyIncludes{
+        id: 1,
+        title: "Hello",
+        tenant_id: 42
+      })
+
+    assert document.data.tenant_id == 42
+    assert document.source == :custom
+  end
+
+  test "no-op when tenant_field not declared" do
+    document =
+      Scrypath.Projection.document(CustomSearchablePost, %CustomSearchablePost{
+        title: "Hello",
+        status: "published"
+      })
+
+    assert document.source == :custom
+    refute Map.has_key?(document.data, :tenant_field)
   end
 end
