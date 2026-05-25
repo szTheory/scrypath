@@ -250,28 +250,41 @@ The exact module split can vary. The important invariant is that web modules sti
 
 ## Picking the right follow-up path
 
-### Small, user-visible fan-out
+The choice between inline and durable (Oban) execution comes down to two
+questions: how large is the **blast radius** (how many rows the change affects),
+and how much **request latency** can the calling request tolerate.
+
+### Small blast radius, latency-tolerant caller
 
 Good fit:
 
-- a bounded number of affected rows
+- a small, bounded number of affected rows
 - the caller benefits from knowing the update finished now
+- the request can absorb the extra latency of resolving and syncing in-process
 
 Default:
 
-- inline follow-up, if latency is acceptable
+- inline follow-up with `sync_mode: :inline`
 
-### Larger fan-out with ordinary production traffic
+This returns `{:ok, %{mode: :inline, status: :completed}}` only after the affected
+documents are synced, so when the function returns you can truthfully say the work
+is done.
+
+### Larger blast radius, latency-sensitive request
 
 Good fit:
 
 - many affected rows
-- request latency matters
+- request latency matters and the caller should not block on the fan-out
 - your app already treats Oban as normal production infrastructure
 
 Default:
 
-- durable enqueue with `:oban`
+- durable enqueue with `sync_mode: :oban`
+
+This enqueues the internal `RelatedWorker` and returns
+`{:ok, %{mode: :oban, status: :accepted}}` immediately — before any document is
+synced. That changes what you are allowed to claim:
 
 Truth you can say:
 
@@ -281,18 +294,38 @@ Truth you cannot say:
 
 - "all affected documents are searchable now"
 
-### Bulk repair, imports, or uncertain blast radius
+#### What failures look like under `:oban`
+
+When you choose `sync_mode: :oban`, the internal `RelatedWorker` — not your app code —
+maps each sync outcome onto Oban's retry/cancel contract. Knowing this mapping tells you
+which failures are permanent and which Oban will retry for you:
+
+| Outcome of the underlying sync | RelatedWorker result | What happens |
+| --- | --- | --- |
+| Success (`:ok` / `{:ok, _}`) | `:ok` | Job completes. |
+| Backend HTTP 4xx (e.g. bad request) | `{:cancel, ...}` | **Permanent** — Oban cancels the job, no retry. A 4xx is a client-side problem retrying will not fix. |
+| Backend HTTP 5xx or generic error | `{:error, reason}` | **Transient** — Oban retries with backoff up to `max_attempts: 8` (the worker default). |
+| Invalid schema / unknown fan-out | `{:cancel, {:invalid_job, reason}}` | **Permanent** — the job can never succeed, so it is cancelled rather than retried. |
+
+You do not write or configure this mapping; the library owns it. Your resolver and context
+stay focused on finding and syncing the right records.
+
+### Unbounded or uncertain blast radius
 
 Good fit:
 
 - imports
 - large migrations
 - staged operator work
+- situations where you cannot confidently bound the affected rows up front
 - situations where you want to inspect before cutover
 
 Default:
 
 - manual flow, backfill, or managed reindex
+
+When you cannot answer "how many rows will this touch?", neither `sync_mode: :inline`
+nor `sync_mode: :oban` is the right reach — move to a deliberate operator path instead.
 
 ## Deletes are their own category
 
@@ -372,10 +405,17 @@ That yields the usual outcomes:
 These are the least-surprise defaults:
 
 - contexts own orchestration
+- the library owns execution
 - related-data propagation is explicit
 - request-edge helpers do not own fan-out logic
 - `use Scrypath` stays metadata-only
 - recovery is public and documented
+
+That split is the heart of `sync_related/3`: **contexts own orchestration** — your code
+decides *when* to fan out, *which* records are affected, and *which* mode to run — while the
+**library owns execution** — Scrypath runs the resolver, dispatches the internal
+`RelatedWorker` under `:oban`, and maps failures onto the retry/cancel contract. Neither side
+reaches into the other.
 
 The tempting alternative is callback magic. That shape feels easy until the first production drift incident. Then it becomes hard to reason about, hard to test, and hard to repair.
 
