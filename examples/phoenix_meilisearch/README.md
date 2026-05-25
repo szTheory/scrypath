@@ -1,6 +1,6 @@
 # Phoenix + Postgres + Meilisearch (Scrypath example)
 
-Minimal API-only Phoenix app that depends on Scrypath via **`path: "../.."`** from the monorepo root. It shows the same patterns as the main README (searchable schema, `Scrypath.sync_record/3`, `Scrypath.search/3` with `repo:`) against **real Postgres** and **real Meilisearch**, plus **Oban** wired for a second integration path (`sync_mode: :oban`) so the example matches queue-backed production apps.
+Minimal API-only Phoenix app that depends on Scrypath via **`path: "../.."`** from the monorepo root. It shows the same patterns as the main README (searchable schema, `Scrypath.sync_record/3`, `Scrypath.search/3` with `repo:`) against **real Postgres** and **real Meilisearch**, plus **Oban** wired for a second integration path (`sync_mode: :oban`) so the example matches queue-backed production apps. It also demonstrates the **related-data fan-out path** via `Scrypath.sync_related/3`, showing how an Author rename propagates to that author's Post search documents through both inline and Oban-backed fan-out modes.
 
 This README is the proof/runbook surface for the real-service path. The HexDocs guides teach the public request-edge boundary and API shape; this example proves the operational path, CI parity, env vars, and local smoke commands.
 
@@ -30,7 +30,7 @@ docker compose up -d
 |----------|---------|---------|
 | **`PGPORT`** | Postgres TCP port on `localhost` | **5433** (`config/dev.exs`, `config/test.exs`) |
 | **`SCRYPATH_MEILISEARCH_URL`** | Meilisearch base URL | **`http://127.0.0.1:7700`** |
-| **`SCRYPATH_EXAMPLE_INTEGRATION`** | When `1` / `true`, ExUnit runs **`@moduletag :integration`** smoke tests (inline + Oban paths) | unset (those tests **excluded**) |
+| **`SCRYPATH_EXAMPLE_INTEGRATION`** | When `1` / `true`, ExUnit runs **`@moduletag :integration`** smoke tests (inline + Oban paths, including fan-out smokes) | unset (those tests **excluded**) |
 
 CI uses the same **Meilisearch v1.15** image tag as this `compose.yaml` (see root **`CONTRIBUTING.md`** for which GitHub Actions jobs run live Meilisearch). This README is the **single detailed** runbook for the example; the golden path links here instead of duplicating the table.
 
@@ -68,6 +68,8 @@ Integration coverage:
 
 - **Inline** — insert row, **`Scrypath.sync_record`** with **`sync_mode: :inline`**, then **`Scrypath.search`** with hydration via **`ScrypathDemo.Repo`**.
 - **Oban** — same shape with **`sync_mode: :oban`** and **`ScrypathDemo.Oban`**; tests use **`config :scrypath_demo, Oban, testing: :inline`** so jobs run in-process deterministically while still exercising enqueue metadata and **`Scrypath.Oban.UpsertWorker`** against live Meilisearch.
+- **Fan-out Inline** — insert Author + Post, rename the Author via **`ScrypathDemo.Blog.update_author/3`** with **`sync_mode: :inline`** (exercises `Scrypath.sync_related/3`), then assert the Post search document reflects the new `author_name`. Verifies the inline resolver-arity path (resolver receives Author structs).
+- **Fan-out Oban** — same Author rename via **`update_author/3`** with **`sync_mode: :oban`**, asserting **`{:ok, %{mode: :oban, status: :accepted}}`**. Under `testing: :inline`, the **`Scrypath.Sync.RelatedWorker`** runs in-process and `await_search` confirms the renamed `author_name` reaches the Post document. Verifies the oban resolver-arity path (resolver receives Author document IDs).
 
 ## Tests without integration
 

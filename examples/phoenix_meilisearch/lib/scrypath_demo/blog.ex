@@ -30,7 +30,9 @@ defmodule ScrypathDemo.Blog do
   `fan_out: :posts`. Use `sync_mode: :inline` or `sync_mode: :oban` to select the
   execution path.
 
-  Returns `{:ok, updated_author}` on success, or propagates errors from Repo/Scrypath.
+  Returns `{:ok, sync_result, updated_author}` on success so callers can assert
+  both the fan-out outcome shape (`%{mode:, status:}`) and the updated author.
+  Propagates errors from Repo or Scrypath on failure.
   """
   def update_author(%Author{} = author, attrs, sync_opts) do
     {:ok, updated} = author |> Author.changeset(attrs) |> Repo.update()
@@ -40,10 +42,10 @@ defmodule ScrypathDemo.Blog do
     |> Repo.update_all(set: [author_name: updated.name])
 
     # explicit fan-out the context invokes (D-05) — not a callback.
-    {:ok, _result} =
+    {:ok, result} =
       Scrypath.sync_related(Author, updated, Keyword.put(sync_opts, :fan_out, :posts))
 
-    {:ok, updated}
+    {:ok, result, updated}
   end
 
   @doc """
