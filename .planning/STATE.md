@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.25
-milestone_name: Tenant-Safe Search
-status: in_progress
-last_updated: "2026-05-25T00:00:00.000Z"
-last_activity: 2026-05-25
+milestone_name: milestone
+status: Not started
+last_updated: "2026-05-25T16:27:39.573Z"
+last_activity: 2026-05-25 — Roadmap created for v1.25
 progress:
   total_phases: 3
   completed_phases: 0
