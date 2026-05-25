@@ -556,22 +556,25 @@ end
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Does `capture_io(:stderr, ...)` capture `IO.warn/2` output?**
    - What we know: `IO.puts(:stderr, ...)` is captured by `capture_io(:stderr, ...)` in existing tests. `IO.warn/2` writes to `:stderr`. The two mechanisms may or may not be identical in ExUnit's capture.
    - What's unclear: Whether ExUnit's `CaptureIO` intercepts `IO.warn/2` at the `io:format` level or if warnings are routed differently.
    - Recommendation: Write the `IO.warn` advisory test first (Wave 0), run it, confirm capture behavior. If `capture_io(:stderr, ...)` does not capture it, use `ExUnit.CaptureLog` or assert on compiler diagnostics via `Code.compile_string` inside a `capture_io` block.
+   - **RESOLVED:** Capture-with-fallback. Write the advisory test using `capture_io(:stderr, fn -> Code.compile_string(...) end)` first; if it returns an empty string, fall back to wrapping the compile in `ExUnit.CaptureLog.capture_log/1`. Both target `:stderr`; the fallback covers the version-dependent routing difference. Plan 92-01 Task 1 encodes this fallback explicitly in the test action.
 
 2. **`dedupe_preserve_order` visibility — private defp or accessible from tests?**
    - What we know: It is currently `defp dedupe_preserve_order/1` in `options.ex` — private.
    - What's unclear: Whether `normalize_tenant_field!` should be a `defp` or whether tests should drive it indirectly via `validate_schema_options!`.
    - Recommendation: Keep `normalize_tenant_field!` private; test exclusively through `validate_schema_options!`. This matches how `validate_faceting_rules!` is tested — indirectly through `Code.compile_string` or via `validate_schema_options!` directly in unit tests.
+   - **RESOLVED:** Private `normalize_tenant_field!/1`, tested indirectly. Keep both `dedupe_preserve_order/1` and `normalize_tenant_field!/1` as `defp`; drive all `tenant_field:` behavior through `validate_schema_options!/1` (or `Code.compile_string` for advisory tests), matching the existing `validate_faceting_rules!` test convention. Plan 92-01 Task 1 specifies `normalize_tenant_field!/1` as a private function.
 
 3. **Fan_outs: option in @schema_options vs tenant_field: type spec**
    - What we know: `fan_outs:` uses `{:custom, __MODULE__, :validate_fan_outs, []}`. `tenant_field:` is simpler — just an optional atom.
    - What's unclear: Whether to use `{:custom, ...}` or the built-in `:atom` type with `{:or, [:atom, nil]}` shape.
    - Recommendation: Use `{:custom, __MODULE__, :validate_tenant_field, []}` for consistency and to allow future validation logic (e.g., warning if the atom is not a valid Ecto field name). Simpler NimbleOptions built-in types may not handle `nil` default cleanly.
+   - **RESOLVED:** Custom validator `{:custom, __MODULE__, :validate_tenant_field, []}` with `default: nil`, following the `fan_outs:` precedent. This handles the `nil` default cleanly and leaves room for future field-name validation. Plan 92-01 Task 1 adds the `validate_tenant_field/1` validator (atom-or-nil) wired through this custom type.
 
 ---
 
@@ -622,7 +625,7 @@ nyquist_validation is enabled in config.json (key present and true).
 All test additions are in existing files — no new test files needed:
 
 - [ ] `test/scrypath/options_test.exs` — add `tenant_field:` option tests (auto-inject fields/filterable, idempotent, IO.warn/2 capture)
-- [ ] `test/scrypath/schema_test.exs` — add `__scrypath__(:tenant_field)` accessor tests (declared returns atom, undeclared returns nil)
+- [ ] `test/scrypath/schema_test.exs` — add `__scrypath__(:tenant_field)` accessor tests (declared returns atom, undeclared returns nil); update the existing `__scrypath__(:config)` exact-match assertion to include `tenant_field: nil`
 - [ ] `test/scrypath/projection_test.exs` — add post-hook merge tests (inject when missing, no-op when present, no-op when tenant_field nil)
 - [ ] `test/scrypath/docs_contract_test.exs` — add guide anchor assertions for `guides/multitenancy.md` required sections + ExDoc registration check
 
