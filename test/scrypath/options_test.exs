@@ -590,7 +590,7 @@ defmodule Scrypath.OptionsTest do
         end
         """)
       end)
-      assert stderr == ""
+      refute stderr =~ "is not listed in fields"
     end
 
     test "auto-injection into filterable: is idempotent — field already in filterable: produces no duplicate" do

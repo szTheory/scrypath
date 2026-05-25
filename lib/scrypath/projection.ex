@@ -50,7 +50,23 @@ defmodule Scrypath.Projection do
           {projected_id, projected_without_id}
       end
 
+    data = maybe_inject_tenant_field(schema_module, source_record, data)
+
     %Document{id: id, data: data, source: :custom}
+  end
+
+  defp maybe_inject_tenant_field(schema_module, source_record, data) do
+    case schema_module.__scrypath__(:tenant_field) do
+      nil ->
+        data
+
+      field ->
+        if Map.has_key?(data, field) or Map.has_key?(data, Atom.to_string(field)) do
+          data
+        else
+          Map.put(data, field, fetch_field!(source_record, field))
+        end
+    end
   end
 
   defp build_field_document(schema_module, source_record) do
