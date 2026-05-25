@@ -31,11 +31,11 @@ defmodule Scrypath.Sync.RelatedWorkerTest do
 
     defmodule DummyTarget do
       use Ecto.Schema
-      
+
       schema "dummy_targets" do
-        field :title, :string
+        field(:title, :string)
       end
-      
+
       def __scrypath__(:document_id), do: :id
       def __scrypath__(:fields), do: [:title]
       def __scrypath__(:custom_document), do: false
@@ -79,6 +79,149 @@ defmodule Scrypath.Sync.RelatedWorkerTest do
       assert length(documents) == 2
       assert Enum.map(documents, & &1.id) == [1, 2]
       assert config[:backend] == RecordingBackend
+    end
+
+    test "perform/1 cancels job on invalid schema" do
+      args = %{
+        "schema" => "Elixir.NonExistentSchema",
+        "document_ids" => [1, 2],
+        "fan_out" => "comments",
+        "opts" => %{}
+      }
+
+      assert {:cancel, {:invalid_job, :invalid_schema}} =
+               RelatedWorker.perform(%Oban.Job{args: args})
+    end
+
+    test "perform/1 cancels job on invalid fan_out" do
+      args = %{
+        "schema" => to_string(DummySchema),
+        "document_ids" => [1, 2],
+        "fan_out" => "non_existent_fan_out",
+        "opts" => %{}
+      }
+
+      assert {:cancel, {:invalid_job, :invalid_fan_out}} =
+               RelatedWorker.perform(%Oban.Job{args: args})
+    end
+
+    defmodule ErrorTarget do
+      use Ecto.Schema
+
+      schema "error_targets" do
+        field(:title, :string)
+      end
+
+      def __scrypath__(:document_id), do: :id
+      def __scrypath__(:fields), do: [:title]
+      def __scrypath__(:custom_document), do: false
+    end
+
+    defmodule ErrorBackend do
+      @behaviour Scrypath.Backend
+
+      @impl true
+      def name, do: :error_backend
+
+      @impl true
+      def index_name(_schema, _config), do: "error_index"
+
+      @impl true
+      def upsert_documents(
+            _schema_module,
+            [%Scrypath.Document{data: %{title: "400 Error"}} | _],
+            _config
+          ) do
+        {:error, {:http_error, 400, "Bad Request"}}
+      end
+
+      @impl true
+      def upsert_documents(
+            _schema_module,
+            [%Scrypath.Document{data: %{title: "500 Error"}} | _],
+            _config
+          ) do
+        {:error, {:http_error, 500, "Internal Server Error"}}
+      end
+
+      @impl true
+      def upsert_documents(
+            _schema_module,
+            [%Scrypath.Document{data: %{title: "Generic Error"}} | _],
+            _config
+          ) do
+        {:error, :some_generic_error}
+      end
+
+      @impl true
+      def delete_documents(_schema, _ids, _config), do: {:ok, %{}}
+
+      @impl true
+      def search(_schema, _query, _config), do: {:ok, %{hits: []}}
+    end
+
+    defmodule ErrorSchema do
+      defstruct [:id]
+
+      def __scrypath__(:fan_outs) do
+        [
+          error_fan_out: [
+            target: ErrorTarget,
+            resolver: {__MODULE__, :resolve_errors, []}
+          ]
+        ]
+      end
+
+      def __scrypath__(:document_id) do
+        :id
+      end
+
+      def resolve_errors([type | _] = ids) do
+        Enum.map(ids, fn _ -> %ErrorTarget{id: 1, title: type} end)
+      end
+    end
+
+    test "perform/1 cancels job on 4xx http error" do
+      args = %{
+        "schema" => to_string(ErrorSchema),
+        "document_ids" => ["400 Error"],
+        "fan_out" => "error_fan_out",
+        "opts" => %{
+          "backend" => to_string(ErrorBackend),
+          "index_prefix" => "test"
+        }
+      }
+
+      assert {:cancel, "HTTP 400: \"Bad Request\""} = RelatedWorker.perform(%Oban.Job{args: args})
+    end
+
+    test "perform/1 returns error on 5xx http error" do
+      args = %{
+        "schema" => to_string(ErrorSchema),
+        "document_ids" => ["500 Error"],
+        "fan_out" => "error_fan_out",
+        "opts" => %{
+          "backend" => to_string(ErrorBackend),
+          "index_prefix" => "test"
+        }
+      }
+
+      assert {:error, {:http_error, 500, "Internal Server Error"}} =
+               RelatedWorker.perform(%Oban.Job{args: args})
+    end
+
+    test "perform/1 returns error on generic error" do
+      args = %{
+        "schema" => to_string(ErrorSchema),
+        "document_ids" => ["Generic Error"],
+        "fan_out" => "error_fan_out",
+        "opts" => %{
+          "backend" => to_string(ErrorBackend),
+          "index_prefix" => "test"
+        }
+      }
+
+      assert {:error, :some_generic_error} = RelatedWorker.perform(%Oban.Job{args: args})
     end
   end
 end
