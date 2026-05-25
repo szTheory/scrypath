@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.24
-milestone_name: milestone
-status: completed
+milestone_name: Related-Data and Dependency Propagation
+status: Phase 91 context gathered — ready for planning (guide rewrite, mix verify.phase91, example fan-out).
 last_updated: "2026-05-25T05:30:34.535Z"
 last_activity: 2026-05-25
 progress:
   total_phases: 3
   completed_phases: 2
-  total_plans: 5
+  total_plans: 8
   completed_plans: 5
   percent: 67
 ---
