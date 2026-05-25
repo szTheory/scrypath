@@ -49,7 +49,12 @@
   2. A developer can add `tenant_field: :tenant_id` to a Scrypath schema and the field is automatically present in both `filterable:` and the synced document projection without additional declarations
   3. `guides/multitenancy.md` contains working wrong/correct code examples for the filter merge order footgun so developers can recognize and avoid the silent data-leak
   4. The guide explains when Meilisearch tenant tokens apply (browser-direct only) and explicitly why per-tenant indexes are not the default model
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 92-01-PLAN.md — `tenant_field:` NimbleOptions option + normalization pass in options.ex; `__scrypath__(:tenant_field)` accessor in schema.ex; tests (TNNT-02)
+- [ ] 92-02-PLAN.md — Post-hook tenant field merge in projection.ex for `search_document/1` schemas; tests (TNNT-02)
+- [ ] 92-03-PLAN.md — `guides/multitenancy.md` canonical guide with all 6 D-12 sections; ExDoc registration in mix.exs; docs-contract test (TNNT-01)
 
 ### Phase 93: Reflection and Runtime Enforcement
 **Goal**: Adopters can introspect schema tenant declarations programmatically and use `tenant_scope:` to have the library hard-inject the tenant filter at the call site — preventing filter merge order bugs entirely
@@ -76,7 +81,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 92. Guide and Schema Declaration | 0/? | Not started | - |
+| 92. Guide and Schema Declaration | 0/3 | Not started | - |
 | 93. Reflection and Runtime Enforcement | 0/? | Not started | - |
 | 94. Verification Gate | 0/? | Not started | - |
 
