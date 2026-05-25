@@ -1,9 +1,9 @@
 # Milestone candidates — developer-first roadmap stack
 
 **Purpose:** Prioritized themes for **`/gsd-new-milestone`** — **onboarding + QoL** for people using and contributing to Scrypath; **avoid busywork** and maintainer-only work masquerading as product.  
-**Last reviewed:** 2026-05-24 — **v1.22** shipped and the repo-grounded done-ness assessment puts Scrypath at roughly **86% done** for its stated scope. The canonical portfolio posture is still the **v1.19** readiness verdict: seek broader outside production adoption on the defended surface, with external validation still pending. The canonical verdict lives in **`milestones/v1.19-MILESTONE-AUDIT.md`**.
+**Last reviewed:** 2026-05-25 — **v1.24** shipped (related-data propagation). Repo-grounded done-ness assessment (2026-05-25) puts Scrypath at **~91–93% done**. Two narrow wedges remain: AUTH-01 (tenant guide + `tenant_field:`) and facet value search (`search_facet_values/4`). After those, evaluate stopping. The canonical portfolio posture is still the **v1.19** readiness verdict: seek broader outside production adoption on the defended surface.
 
-**Reconciliation note:** the `v1.20` archive says `Scrypath.SearchModule` shipped, but the current checkout does not expose that layer or its guide. Treat that as a live gap to reconcile before assuming archive and code are perfectly aligned.
+**Reconciliation note:** the `v1.20` archive says `Scrypath.SearchModule` shipped, but the current checkout does not expose that layer or its guide. Documented in `/docs/jtbd-gap-map.md`. Planning debt only; not a product gap for users today.
 
 ---
 
@@ -55,10 +55,10 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 
 | # | Theme | Notes |
 |---|--------|--------|
-| **B1** | **Related-data and dependency propagation** | Biggest correctness gap for real SaaS apps once documents include tags, ownership, counts, or joined fields |
-| **B2** | **Tenant-safe search access story** | Biggest credibility gap for B2B Phoenix adopters; prefixes are not the same thing as authorization |
+| **B1** | **Related-data and dependency propagation** | **Done in v1.24** — `Scrypath.sync_related/3`, `RelatedWorker`, canonical guide rewrite, Phoenix example fan-out. Keep here as historical context. |
+| **B2** | **Tenant-safe search access story** | **Next default pull (v1.25).** Biggest remaining credibility gap for B2B Phoenix adopters. Scope: `guides/multitenancy.md` + `tenant_field:` schema option + `schema_capabilities/1` reflection (2–3 phases). The filter merge order bug is a real silent data-leak footgun — justified even without explicit adopter demand. |
 | **B3** | **Composition and real-app depth over the query toolkit** | **Done in v1.22** — keep here only as historical context so future planning does not reopen the same wedge accidentally |
-| **B4** | **High-cardinality facet value search** | Useful for larger catalogs, but behind the three gaps above |
+| **B4** | **Facet value vocabulary search (`search_facet_values/4`)** | Wraps Meilisearch's native `/facet-search` endpoint (stable v1.3+). Index settings already emit correct config. Guide says "deferred." Real pain at 200+ distinct values. Small scope (1 tight milestone). **After B2.** |
 | **B5** | **Autocomplete / suggestion flows** | Valuable later, but should not outrun correctness and SaaS-boundary work |
 
 ### Tier C — Defer until a failure mode is proven
@@ -96,11 +96,12 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 |------|------------|-----------|
 | 1 | **A1** | **Shipped v1.12** |
 | 2 | **A2** | **Shipped v1.12** |
-| 3 | **v1.13** (**POLISH-***) | Voice + Hex narrative + contributor entry (**`milestones/v1.13-REQUIREMENTS.md`**) |
-| 4 | **E1** | Current active pull after `v1.22`; do not reopen feature work casually |
-| 5 | **B1** | Highest-leverage correctness work if real product work reopens |
-| 6 | **B2** | SaaS boundary clarity after related-data pressure is understood |
-| 7 | **B4**, then **B5** | Catalog depth and delight features only after the bigger gaps close |
+| 3 | **v1.13** (**POLISH-***) | **Shipped v1.13** |
+| 4 | **E1** | **Shipped v1.23** — adopter evidence + support-truth reconciliation |
+| 5 | **B1** | **Shipped v1.24** — `sync_related/3`, fan-out, canonical guide |
+| 6 | **B2** | **Next: v1.25** — tenant guide + `tenant_field:` declaration. Footgun risk justifies opening without explicit adopter demand. |
+| 7 | **B4** | **After B2: v1.26** — `search_facet_values/4` wrapping `/facet-search`. Small, tight milestone. |
+| 8 | **B5** | Only with adopter evidence. Otherwise stop after v1.26. |
 | Parallel | **D*** | When annoyance cost exceeds fix cost — do not headline a consumer milestone here |
 
 ---

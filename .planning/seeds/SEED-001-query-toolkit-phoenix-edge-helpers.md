@@ -1,7 +1,7 @@
 ---
 slug: query-toolkit-phoenix-edge-helpers
 title: v1.21 Query Toolkit And Phoenix Edge Helpers
-status: open
+status: shipped
 created: 2026-05-08
 updated: 2026-05-08
 ---
