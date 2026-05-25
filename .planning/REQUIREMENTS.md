@@ -13,7 +13,7 @@ Requirements for the Tenant-Safe Search milestone (AUTH-01). Each maps to roadma
 
 ### Schema Declaration
 
-- [ ] **TNNT-02**: User can declare `tenant_field: :field_name` in a Scrypath schema and have the named field automatically included in both `filterable:` and the synced document projection without requiring separate `filterable:` and `fields:` declarations
+- [x] **TNNT-02**: User can declare `tenant_field: :field_name` in a Scrypath schema and have the named field automatically included in both `filterable:` and the synced document projection without requiring separate `filterable:` and `fields:` declarations
 
 ### Metadata Reflection
 
@@ -49,7 +49,7 @@ Requirements for the Tenant-Safe Search milestone (AUTH-01). Each maps to roadma
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | TNNT-01 | Phase 92 | Pending |
-| TNNT-02 | Phase 92 | Pending |
+| TNNT-02 | Phase 92 | Complete |
 | TNNT-03 | Phase 93 | Pending |
 | TNNT-04 | Phase 93 | Pending |
 | TNNT-05 | Phase 94 | Pending |

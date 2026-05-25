@@ -57,7 +57,7 @@
 Plans:
 **Wave 1**
 
-- [ ] 92-01-PLAN.md — `tenant_field:` NimbleOptions option + normalization pass in options.ex; `__scrypath__(:tenant_field)` accessor in schema.ex; tests (TNNT-02)
+- [x] 92-01-PLAN.md — `tenant_field:` NimbleOptions option + normalization pass in options.ex; `__scrypath__(:tenant_field)` accessor in schema.ex; tests (TNNT-02)
 - [ ] 92-03-PLAN.md — `guides/multitenancy.md` canonical guide with all 6 D-12 sections; ExDoc registration in mix.exs; docs-contract test (TNNT-01)
 
 **Wave 2** *(blocked on Wave 1 completion)*
@@ -95,7 +95,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 92. Guide and Schema Declaration | 0/3 | Not started | - |
+| 92. Guide and Schema Declaration | 1/3 | In Progress|  |
 | 93. Reflection and Runtime Enforcement | 0/? | Not started | - |
 | 94. Verification Gate | 0/? | Not started | - |
 

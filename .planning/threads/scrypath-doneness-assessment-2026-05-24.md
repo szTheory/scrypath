@@ -8,11 +8,11 @@ Use this thread when future milestone conversations start drifting toward more
 internal breadth without revisiting whether Scrypath is already close to done
 for its stated scope.
 
-## Current call
+## Current call (updated 2026-05-25 — post-v1.24)
 
-- **Rough done-%:** ~86%
-- **Territory:** finish the last important wedges, not keep pushing broad feature work
-- **Default next pull:** outside-adopter evidence and support-truth reconciliation
+- **Rough done-%:** ~91–93% (was 86% before v1.23 and v1.24 shipped)
+- **Territory:** finish the last 2 narrow wedges, then seriously evaluate stopping
+- **Default next pull:** AUTH-01 — tenant-safe search guide + `tenant_field:` schema option
 
 ## Why the library already looks strong
 
@@ -21,32 +21,41 @@ for its stated scope.
 - Phoenix integration through contexts is real and well-defended.
 - Facets, multi-index search, request-edge normalization, and bounded composition are all real public surfaces.
 - Operator recovery is a real product surface, not an appendix.
+- Related-data propagation (`sync_related/3`) shipped v1.24 — the biggest correctness gap is closed.
+- **Ahead of all comparable libs (Searchkick, Scout, meilisearch-rails) on:** operator recovery, admin UI, facets, federation, per-query tuning, and related-data. None of the comparables have solved tenant-safe search either.
 
-## Highest-leverage remaining gaps
+## Highest-leverage remaining gaps (reranked post-v1.24)
 
-1. **Outside-adopter evidence and support-truth reconciliation**
-2. **Related-data propagation and dependency semantics**
-3. **Tenant-safe search access**
-4. **High-cardinality facet value search**
+1. **Tenant-safe search guidance + `tenant_field:` declaration** — AUTH-01
+   - The filter merge order bug (`Keyword.merge` silently drops tenant guard) is a real data leak waiting to happen to first adopters.
+   - Scope: `guides/multitenancy.md` + `tenant_field:` schema option + `schema_capabilities/1` reflection — 2–3 phases.
+   - NOT: process-dict magic, automatic filter injection, or tenant token generation (host-owned by design).
+2. **Facet value vocabulary search (`search_facet_values/4`)** — B4
+   - Wraps Meilisearch's native `/facet-search` endpoint (stable since v1.3). The settings layer already emits the right config.
+   - Guide explicitly says "deferred" — needs to be filled.
+   - Scope: small (4–6 impl tasks, 2–3 test tasks). `FacetSearchResult` + `FacetHit` structs, telemetry span, guide update.
+   - Real pain at 200+ distinct values per facet; client-side filtering breaks down there.
+3. **Autocomplete / suggestions** — moderate gap; only after B1+B4 and only with adopter evidence.
 
 ## Work that is likely near diminishing returns
 
 - More generic ergonomics breadth
-- More Phoenix helper sugar
-- Deeper OPSUI productization
+- More Phoenix helper sugar (QueryParams + Composition + Phoenix helpers already cover this)
+- Deeper OPSUI productization (no adopter evidence it's blocking)
 - Multi-backend expansion
-- Suggestion/autocomplete work before correctness and SaaS-boundary gaps close
+- Soft-delete awareness / conditional indexing hooks (minor, Scout has these, but not a blocking gap)
+- Highlighting wrappers (Searchkick has it, but not expected from this lib)
 
-## Concrete drift found during the assessment
+## Concrete drift status (updated)
 
-- `v1.20` archive claims `Scrypath.SearchModule`, but the checked-out tree does not expose it.
-- Planning history still references `guides/support-and-compatibility.md`, but that guide is absent from the current tree.
-- `mix verify.adopter` still cites `test/scrypath/readiness_contract_test.exs`, which is absent from the current tree.
+- `v1.20` archive claims `Scrypath.SearchModule` — confirmed NOT in tree as of 2026-05-25. Documented in `/docs/jtbd-gap-map.md`. Planning debt only; not a product gap for users today.
+- `guides/support-and-compatibility.md` — **RESTORED** at v1.23. Guide exists, 5.2 KB.
+- `test/scrypath/readiness_contract_test.exs` — **RESTORED** at v1.23. `mix verify.adopter` points to a real test again.
+- SEED-001 (query toolkit) and SEED-002 (composition depth) — **both shipped** (v1.21 and v1.22). Seeds are stale.
 
-## Decision rule for future milestone selection
+## Decision rule for future milestone selection (updated)
 
-- If `v1.23` outside-adopter evidence is mostly green, bias toward **stopping soon**.
-- If feature work reopens, rank it:
-  1. related-data propagation
-  2. tenant-safe access
-  3. high-cardinality facet-value search
+- AUTH-01 is the right next pull — scope is thin and the footgun (filter merge order / silent data leak) is concrete enough to justify opening without additional adopter evidence.
+- After AUTH-01: `search_facet_values/4` in a tight 1-milestone slot.
+- After that: evaluate stopping. Autocomplete only with adopter evidence.
+- Do not open OPSUI breadth, multi-backend, or generic ergonomics milestones.

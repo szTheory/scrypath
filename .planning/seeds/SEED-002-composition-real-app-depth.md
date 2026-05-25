@@ -1,7 +1,7 @@
 ---
 slug: composition-real-app-depth
 title: v1.22 Composition And Real-App Depth
-status: open
+status: shipped
 created: 2026-05-08
 updated: 2026-05-08
 ---
