@@ -553,4 +553,55 @@ defmodule Scrypath.OptionsTest do
       assert msg =~ "fan_out :target must be a module"
     end
   end
+
+  describe "tenant_field: option" do
+    test "validate_schema_options!/1 returns a map where :tenant_id is present in both :fields and :filterable" do
+      config = Options.validate_schema_options!(fields: [:title], tenant_field: :tenant_id)
+      assert :tenant_id in config.fields
+      assert :tenant_id in config.filterable
+    end
+
+    test "auto-injection into fields: is idempotent — validate_schema_options!/1 does not duplicate :tenant_id in :fields" do
+      config = Options.validate_schema_options!(fields: [:title, :tenant_id], tenant_field: :tenant_id)
+      assert config.fields == [:title, :tenant_id]
+    end
+
+    test "IO.warn/2 advisory emitted to :stderr when tenant_field: field is NOT in fields:" do
+      stderr = capture_io(:stderr, fn ->
+        Code.compile_string("""
+        defmodule TenantFieldAutoInjectWarns do
+          use Scrypath.Schema,
+            fields: [:title],
+            tenant_field: :tenant_id
+        end
+        """)
+      end)
+      assert stderr =~ "tenant_field :tenant_id is not listed in fields:"
+      assert stderr =~ "auto-added"
+    end
+
+    test "no :stderr output when tenant_field: field IS already in fields:" do
+      stderr = capture_io(:stderr, fn ->
+        Code.compile_string("""
+        defmodule TenantFieldIdempotentNoWarn do
+          use Scrypath.Schema,
+            fields: [:title, :tenant_id],
+            tenant_field: :tenant_id
+        end
+        """)
+      end)
+      assert stderr == ""
+    end
+
+    test "auto-injection into filterable: is idempotent — field already in filterable: produces no duplicate" do
+      config = Options.validate_schema_options!(fields: [:title], filterable: [:tenant_id], tenant_field: :tenant_id)
+      assert Enum.count(config.filterable, &(&1 == :tenant_id)) == 1
+    end
+
+    test "validate_schema_options!/1 is valid when tenant_field: nil (no injection, no warn)" do
+      config = Options.validate_schema_options!(fields: [:title], tenant_field: nil)
+      refute :tenant_field in config.fields
+      assert config.tenant_field == nil
+    end
+  end
 end

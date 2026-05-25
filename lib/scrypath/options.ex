@@ -47,6 +47,11 @@ defmodule Scrypath.Options do
       type: {:custom, __MODULE__, :validate_backend, []},
       default: nil,
       doc: "Optional backend override."
+    ],
+    tenant_field: [
+      type: {:custom, __MODULE__, :validate_tenant_field, []},
+      default: nil,
+      doc: "Optional tenant field name auto-injected into both `filterable:` and `fields:` for shared-index multitenancy."
     ]
   ]
 
@@ -420,6 +425,7 @@ defmodule Scrypath.Options do
     |> validate!(@schema_options)
     |> ensure_non_empty_fields!()
     |> validate_faceting_rules!()
+    |> normalize_tenant_field!()
     |> Map.put(:document_source, :fields)
   end
 
@@ -803,6 +809,11 @@ defmodule Scrypath.Options do
   def validate_backend(_value), do: {:error, "expected a module, atom, or nil"}
 
   @doc false
+  def validate_tenant_field(nil), do: {:ok, nil}
+  def validate_tenant_field(value) when is_atom(value), do: {:ok, value}
+  def validate_tenant_field(_value), do: {:error, "tenant_field must be an atom or nil"}
+
+  @doc false
   def validate_fan_outs([]), do: {:ok, []}
 
   def validate_fan_outs(value) when is_list(value) do
@@ -1013,6 +1024,23 @@ defmodule Scrypath.Options do
     end
 
     opts
+  end
+
+  defp normalize_tenant_field!(%{tenant_field: nil} = m), do: m
+
+  defp normalize_tenant_field!(%{tenant_field: field} = m) when is_atom(field) do
+    existing_fields = Map.fetch!(m, :fields)
+    new_fields = dedupe_preserve_order(existing_fields ++ [field])
+
+    if field not in existing_fields do
+      IO.warn(
+        "[scrypath] tenant_field #{inspect(field)} is not listed in fields:. It has been auto-added so search documents include the tenant value. To silence this warning, add #{inspect(field)} to fields: explicitly.",
+        []
+      )
+    end
+
+    new_filterable = dedupe_preserve_order(Map.fetch!(m, :filterable) ++ [field])
+    %{m | fields: new_fields, filterable: new_filterable}
   end
 
   defp ensure_non_empty_fields!(opts) do
