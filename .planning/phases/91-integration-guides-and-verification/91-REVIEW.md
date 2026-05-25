@@ -17,9 +17,9 @@ files_reviewed_list:
   - test/scrypath/docs_contract_test.exs
 findings:
   critical: 2
-  warning: 3
+  warning: 4
   info: 2
-  total: 7
+  total: 8
 status: issues_found
 ---
 
@@ -32,9 +32,28 @@ status: issues_found
 
 ## Summary
 
-Reviewed the Phase 91 integration guides, example app, smoke tests, verify task, and docs-contract test. The implementation introduces `Scrypath.sync_related/3` fan-out patterns and the `related-data-and-reindexing.md` guide.
+Phase 91 delivers the related-data fan-out integration example (Author to Post),
+the companion guide (`guides/related-data-and-reindexing.md`), two smoke tests,
+and the `verify.phase91` Mix task. The two-arity resolver pattern is
+well-structured, the docs-contract test adds meaningful guide assertions, and the
+overall conceptual shape is sound.
 
-Two blockers were found. The most serious is that the public guide (`guides/related-data-and-reindexing.md`) teaches `use Scrypath, fan_outs: [...]` as the working declaration path, while the canonical example's own source code (`blog/author.ex`) explicitly documents this does NOT work — the macro does not support `fan_outs:` yet. An adopter following the guide will write non-functional code. The second blocker is a crash-producing bug in `DocsContractTest.ordered?/3`: `:binary.match/2` returns `:nomatch` (an atom, not a tuple) when either needle is absent from content, and the immediately following `elem(:nomatch, 0)` raises `ArgumentError` instead of producing a useful test failure message. This silently turns a content-contract violation into an uninformative runtime crash.
+Two blockers require fixing before this ships:
+
+1. The public guide (`guides/related-data-and-reindexing.md`) teaches
+   `use Scrypath, fan_outs: [...]` as the canonical fan-out declaration, while the
+   companion example source explicitly documents that this does **not** work — the
+   macro does not generate `__scrypath__(:fan_outs)`. An adopter following only
+   the guide will write silently broken code that crashes at runtime.
+2. `ordered?/3` in `docs_contract_test.exs` raises an opaque `ArgumentError`
+   (from `elem(:nomatch, 0)`) instead of a clear test failure when either needle
+   is absent, turning any future content regression into a confusing crash.
+
+Four warnings also need attention: the `Post` schema timestamp type diverges from
+its migration, `blog.ex` promises error propagation but its bare matches crash
+instead, the guide and implementation return different tuple arities from
+`update_author/3`, and `await_search` in the Oban smoke test silently passes
+search errors back to the assertion instead of calling `flunk`.
 
 ---
 
@@ -42,31 +61,31 @@ Two blockers were found. The most serious is that the public guide (`guides/rela
 
 ### CR-01: Guide teaches `use Scrypath, fan_outs:` which the library does not support
 
-**File:** `guides/related-data-and-reindexing.md:102-125`
-**Issue:** Section (a) of the fan-out walkthrough shows this as the canonical declaration:
+**File:** `guides/related-data-and-reindexing.md:101-131`
 
-```elixir
-use Scrypath,
-  fields: [:name],
-  fan_outs: [
-    posts: [
-      target: MyApp.Blog.Post,
-      resolver: {MyApp.Accounts, :resolve_posts_for_authors, []}
-    ]
-  ]
-```
+**Issue:** Section (a) of the fan-out walkthrough (lines 101–131) shows
+`use Scrypath` with a `fan_outs:` key as the canonical declaration path. The
+companion example schema (`blog/author.ex`, lines 17–21) explicitly documents
+the opposite: *"The shipped `use Scrypath` declaration macro does not yet resolve
+module aliases in `fan_outs:` at macro-expansion time, and it does not generate a
+`__scrypath__(:fan_outs)` accessor, so the hand-written reflection is the correct,
+library-respecting (read-only) declaration path."* The guide never mentions this
+limitation, never shows the hand-written `def __scrypath__(:fan_outs)` and
+`def __scrypath__(:document_id)` definitions, and the `DocsContractTest`
+"all Elixir code fences" test validates only parse-level syntax
+(`Code.string_to_quoted`), so the broken snippet passes CI. An adopter following
+the guide will produce an `Author` schema with no `__scrypath__/1` accessor, and
+`Scrypath.sync_related/3` will raise `UndefinedFunctionError` or
+`FunctionClauseError` at runtime.
 
-The Author schema in the companion example (`blog/author.ex`, lines 17–21) explicitly states: _"The shipped `use Scrypath` declaration macro does not yet resolve module aliases in `fan_outs:` at macro-expansion time, and it does not generate a `__scrypath__(:fan_outs)` accessor, so the hand-written reflection is the correct, library-respecting (read-only) declaration path."_
-
-The guide never mentions this limitation, never shows the working `def __scrypath__(:fan_outs)` / `def __scrypath__(:document_id)` hand-written definitions, and the `DocsContractTest` "all Elixir code fences" test only validates parse-level syntax (`Code.string_to_quoted`), so the broken snippet passes CI. An adopter following the guide will write schema code that silently omits the `__scrypath__/1` accessor, causing `sync_related/3` to raise `FunctionClauseError` at runtime when it calls `schema_module.__scrypath__(:fan_outs)`.
-
-**Fix:** Replace the `use Scrypath, fan_outs:` snippet in section (a) of the guide with the working hand-written reflection pattern and add a note explaining the macro limitation:
+**Fix:** Replace the `use Scrypath, fan_outs:` snippet with the working
+hand-written pattern and add an explanatory note:
 
 ```elixir
 defmodule MyApp.Accounts.Author do
   use Ecto.Schema
 
-  # NOTE: `use Scrypath` does not yet support `fan_outs:` at macro-expansion time.
+  # NOTE: `use Scrypath` does not yet support fan_outs: at macro-expansion time.
   # Declare the fan-out accessors by hand until the macro is updated.
   def __scrypath__(:fan_outs) do
     [
@@ -93,23 +112,23 @@ defmodule MyApp.Accounts.Author do
 end
 ```
 
-Also add a corresponding contract assertion to `DocsContractTest` that the guide contains `def __scrypath__(:fan_outs)` so this does not regress silently.
+Also add a `DocsContractTest` assertion that the guide contains
+`def __scrypath__(:fan_outs)` so this cannot regress silently.
 
 ---
 
-### CR-02: `ordered?/3` in `DocsContractTest` crashes with `ArgumentError` instead of failing with a useful message when a needle is absent
+### CR-02: `ordered?/3` crashes with opaque `ArgumentError` when a needle is absent
 
-**File:** `test/scrypath/docs_contract_test.exs:1176-1186`
-**Issue:** The helper calls `:binary.match(content, needle)` and immediately pattern-matches with `elem(result, 0)`. When either needle is not present in `content`, `:binary.match/2` returns the atom `:nomatch`, not a tuple. `elem(:nomatch, 0)` then raises:
+**File:** `test/scrypath/docs_contract_test.exs:1178-1188`
 
-```
-** (ArgumentError) errors were found at the given arguments:
-  * 2nd argument: not a tuple
-```
-
-This produces a confusing crash instead of a failing assertion. Twenty-one call sites in the test file (every `assert ordered?(...)` call) are affected. A regressed doc — one where a required phrase was accidentally removed — will produce an opaque ArgumentError rather than clearly naming which phrase is missing or which ordering invariant broke.
-
-The same crash applies to the two direct `:binary.match` calls at lines 385–386 (the `lobby moduledoc two_hop` test), which destructure the return value with `{pos, _} = :binary.match(...)` directly.
+**Issue:** `ordered?/3` calls `:binary.match(content, needle)` and then
+`elem(result, 0)`. When either needle is absent, `:binary.match/2` returns the
+atom `:nomatch` (not a `{position, length}` tuple). `elem(:nomatch, 0)` raises
+`ArgumentError: not a tuple`. The resulting crash message names no file, no
+needle, and no assertion — it is indistinguishable from a bug in the test
+infrastructure. All 21 call sites of `ordered?` in the test file are affected,
+as are the two direct `:binary.match` destructures at lines 385–386 (the
+`lobby moduledoc two_hop` test).
 
 **Fix:**
 
@@ -128,54 +147,109 @@ defp ordered?(content, first, second) do
 end
 ```
 
-For the direct `:binary.match` calls at lines 385–386:
+For lines 385–386, replace the bare destructure with a guarded form:
+
 ```elixir
-case :binary.match(doc, "guides/golden-path.md") do
-  :nomatch -> flunk("missing guides/golden-path.md in Scrypath @moduledoc")
-  {golden_pos, _} -> golden_pos
-end
+golden_pos =
+  case :binary.match(doc, "guides/golden-path.md") do
+    :nomatch -> flunk("missing 'guides/golden-path.md' in Scrypath @moduledoc")
+    {pos, _} -> pos
+  end
+
+sync_pos =
+  case :binary.match(doc, "guides/sync-modes-and-visibility.md") do
+    :nomatch -> flunk("missing 'guides/sync-modes-and-visibility.md' in Scrypath @moduledoc")
+    {pos, _} -> pos
+  end
 ```
 
 ---
 
 ## Warnings
 
-### WR-01: `update_author/3` doc claims error propagation but implementation crashes on error
+### WR-01: `Post` schema `timestamps()` type conflicts with migration `utc_datetime`
 
-**File:** `examples/phoenix_meilisearch/lib/scrypath_demo/blog.ex:37-48`
-**Issue:** The `@doc` states: _"Propagates errors from Repo or Scrypath on failure."_ The implementation uses bare pattern matches:
+**File:** `examples/phoenix_meilisearch/lib/scrypath_demo/blog/post.ex:16`
+
+**Issue:** `Post` uses bare `timestamps()` which defaults to `:naive_datetime`
+in Ecto. The creating migration (`20250418120000_create_posts.exs:10`) declares
+`timestamps(type: :utc_datetime)`, matching the `Author` schema. The `Post`
+schema also declares `sortable: [:inserted_at]` via `use Scrypath`, so
+Meilisearch receives `:inserted_at` from this schema. At runtime Ecto reads the
+column back as `NaiveDateTime` while the DB was written treating the column as a
+UTC timestamp. This mismatch causes incorrect Elixir struct types on reads and
+potentially wrong sort semantics for date-range queries. The project-level
+`generators: [timestamp_type: :utc_datetime]` config only affects `mix phx.gen.*`
+generators; it does not affect the runtime schema `timestamps()` default.
+
+**Fix:**
 
 ```elixir
-{:ok, updated} = author |> Author.changeset(attrs) |> Repo.update()
-...
-{:ok, result} = Scrypath.sync_related(Author, updated, ...)
+# examples/phoenix_meilisearch/lib/scrypath_demo/blog/post.ex
+schema "posts" do
+  field(:title, :string)
+  field(:body, :string)
+  field(:status, :string)
+  field(:author_name, :string)
+  belongs_to(:author, ScrypathDemo.Blog.Author)
+  timestamps(type: :utc_datetime)   # was: timestamps()
+end
 ```
 
-If either returns `{:error, reason}`, Elixir raises a `MatchError` — the error is not propagated, it is thrown as an exception. An adopter reading the @doc will expect an `{:error, reason}` return, not a process crash.
+---
 
-**Fix:** Either update the `@doc` to accurately state the function raises on failure (and remove the "Propagates errors" clause), or implement actual error propagation:
+### WR-02: `update_author/3` doc claims error propagation but bare matches crash instead
+
+**File:** `examples/phoenix_meilisearch/lib/scrypath_demo/blog.ex:35-48`
+
+**Issue:** The `@doc` states: *"Propagates errors from Repo or Scrypath on
+failure."* Lines 38 and 45 use bare `{:ok, _} = ...` matches. If
+`Repo.update/1` returns `{:error, %Ecto.Changeset{}}` or
+`Scrypath.sync_related/3` returns `{:error, reason}`, the function raises a
+`MatchError` rather than returning `{:error, _}`. The smoke tests never exercise
+this failure path, so the defect is invisible in CI. Adopters reading the `@doc`
+and the guide's companion snippet (which has the same pattern) will believe the
+function returns structured errors.
+
+**Fix:**
 
 ```elixir
 def update_author(%Author{} = author, attrs, sync_opts) do
   with {:ok, updated} <- author |> Author.changeset(attrs) |> Repo.update(),
        _ <- (from(p in Post, where: p.author_id == ^updated.id)
              |> Repo.update_all(set: [author_name: updated.name])),
-       {:ok, result} <- Scrypath.sync_related(Author, updated, Keyword.put(sync_opts, :fan_out, :posts)) do
+       {:ok, result} <-
+         Scrypath.sync_related(Author, updated, Keyword.put(sync_opts, :fan_out, :posts)) do
     {:ok, result, updated}
   end
 end
 ```
 
+Or, if the intent is to let the function raise on failure (acceptable for an
+example), remove the misleading "Propagates errors" sentence from the `@doc`.
+
 ---
 
-### WR-02: Guide `update_author` example returns `{:ok, updated}` but canonical implementation returns `{:ok, result, updated}`
+### WR-03: Guide `update_author` example returns 2-tuple; canonical implementation returns 3-tuple
 
-**File:** `guides/related-data-and-reindexing.md:193` / `examples/phoenix_meilisearch/lib/scrypath_demo/blog.ex:48`
-**Issue:** The guide's section (c) code block shows `update_author/3` returning `{:ok, updated}` (2-tuple). The actual example implementation in `blog.ex` returns `{:ok, result, updated}` (3-tuple), and the smoke tests assert the 3-tuple shape (e.g., `assert {:ok, %{mode: :inline, status: :completed}, _updated_author} = Blog.update_author(...)`).
+**File:** `guides/related-data-and-reindexing.md:202-218`
 
-An adopter copying the guide's context module will have a function that returns a 2-tuple, which their callers will pattern-match incorrectly if they use the test assertions as a model. The guide and canonical example diverge on a publicly visible API shape.
+**Issue:** The guide's section (c) code block (around line 202) shows
+`update_author/3` ending with `{:ok, updated}` (a 2-tuple). The actual example
+implementation at `blog.ex:48` returns `{:ok, result, updated}` (a 3-tuple), and
+both smoke tests assert the 3-tuple shape:
 
-**Fix:** Update the guide's `update_author` example return value to match the canonical example:
+```elixir
+assert {:ok, %{mode: :inline, status: :completed}, _updated_author} =
+         Blog.update_author(author, %{name: "Renamed Author"}, sync_opts)
+```
+
+An adopter who copies the guide's context module will write a function returning
+`{:ok, updated}`. If they also copy the test pattern, the assertion will fail with
+a match error. The guide and the reference implementation teach inconsistent
+return shapes.
+
+**Fix:** Update the guide's `update_author` example to return the 3-tuple:
 
 ```elixir
     {:ok, result} =
@@ -186,36 +260,63 @@ An adopter copying the guide's context module will have a function that returns 
 
 ---
 
-### WR-03: `Repo.update_all` return value silently discarded in `blog.ex` — contradicts the guide's own example
+### WR-04: `await_search` passes search errors back to the caller instead of failing immediately
 
-**File:** `examples/phoenix_meilisearch/lib/scrypath_demo/blog.ex:41-43`
-**Issue:** The call to `Repo.update_all/2` discards its return value entirely:
+**File:** `examples/phoenix_meilisearch/test/smoke/meilisearch_related_oban_stack_test.exs:105-106`
+
+**Issue:** The `other ->` branch in `await_search/5` returns the value to the
+caller rather than calling `flunk/1`. If `Scrypath.search/3` returns
+`{:error, reason}` (network failure, index not found, misconfigured URL), the
+function returns `{:error, reason}` and the subsequent
+`assert {:ok, result} = await_search(...)` at line 82 fails with a pattern-match
+error. The error message will say something like "no match of right hand side
+value: {:error, :econnrefused}" rather than "search returned error: ..." —
+making live CI failures harder to diagnose.
+
+**Fix:**
 
 ```elixir
-from(p in Post, where: p.author_id == ^updated.id)
-|> Repo.update_all(set: [author_name: updated.name])
-```
-
-`Repo.update_all` returns `{count, results}` on success and raises on a connection or transaction error. Silently dropping the return value means the update count is never available for logging or assertion, and is inconsistent with the guide's own canonical code (lines 185–187 of the guide show `{_count, _} =` binding). Beyond the inconsistency, silently discarding the result makes it easy to miss if the function is later refactored to a version that could return `{:error, reason}`.
-
-**Fix:** Bind the return value to match the guide's own example:
-
-```elixir
-{_count, _} =
-  from(p in Post, where: p.author_id == ^updated.id)
-  |> Repo.update_all(set: [author_name: updated.name])
+other ->
+  flunk("await_search: unexpected result from Scrypath.search/3: #{inspect(other)}")
 ```
 
 ---
 
 ## Info
 
-### IN-01: `run_test!/2` parameter named `args` actually receives a list of test file paths
+### IN-01: Internal planning decision IDs (`(D-NN)`) in example module comments
+
+**File:** `examples/phoenix_meilisearch/lib/scrypath_demo/blog.ex:5,8,10,40,44`
+**File:** `examples/phoenix_meilisearch/lib/scrypath_demo/blog/author.ex:30`
+
+**Issue:** `@moduledoc` and inline comments reference internal planning
+annotations: `(D-05)`, `(D-15)` (blog.ex), and `(D-02)` (author.ex). The
+`examples/` directory is not in the Hex package `files:` list, so these
+annotations will not reach adopters via Hex. However, they are visible in the
+public GitHub repository and will confuse outside contributors who cannot resolve
+these IDs without access to the internal planning archive. The published guide
+correctly omits such references.
+
+**Fix:** Replace inline decision references with plain-English rationale that
+mirrors the language used in the guide. For example:
+
+```elixir
+# Keep denormalized projection in sync — app-owned, explicit, ordered BEFORE fan-out.
+```
+
+---
+
+### IN-02: `run_test!/2` parameter named `args` is misleading given local `args` naming convention
 
 **File:** `lib/mix/tasks/verify.phase91.ex:25-29`
-**Issue:** The private function `run_test!(args, label)` receives `@focused_tests` (a list of `.exs` file paths) as its first argument, but the parameter is named `args`. This is misleading because `args` in the surrounding context means command-line arguments to the Mix task. The naming choice implies the function is flexible enough to forward user-supplied arguments, but it only ever receives the static `@focused_tests` list.
 
-**Fix:** Rename the parameter to make the intent clear:
+**Issue:** The private function `run_test!(args, label)` receives
+`@focused_tests` (a static list of `.exs` file paths) as its first argument, but
+the parameter is named `args`. In the surrounding Mix task context, `args` refers
+to command-line arguments. This naming implies the helper is general-purpose or
+forwards user arguments, when it only ever receives a static test-path list.
+
+**Fix:**
 
 ```elixir
 defp run_test!(test_paths, label) do
@@ -223,19 +324,6 @@ defp run_test!(test_paths, label) do
   Mix.Task.reenable("test")
   Mix.Task.run("test", test_paths)
 end
-```
-
----
-
-### IN-02: Migration adds `author_id` foreign key without an `on_delete:` action
-
-**File:** `examples/phoenix_meilisearch/priv/repo/migrations/20250420000000_add_authors_and_post_author_fields.exs:12`
-**Issue:** `add(:author_id, references(:authors))` creates a foreign key with no `on_delete:` strategy. When an `Author` is deleted, the database will raise a foreign key constraint error because posts still reference it. This is likely intentional (example app doesn't implement author deletion), but it leaves adopters who copy this migration pattern without guidance on how to handle the case.
-
-**Fix:** For the example app, explicitly document the intent. For production guidance, recommend declaring `on_delete: :nilify_all` or `:restrict` explicitly:
-
-```elixir
-add(:author_id, references(:authors, on_delete: :nilify_all))
 ```
 
 ---
