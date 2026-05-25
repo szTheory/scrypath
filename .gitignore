@@ -10,6 +10,8 @@
 # local agent / IDE worktrees (not part of the library)
 /.claude/
 /.cursor/
+/.gsd/
+/.bg-shell/
 
 # locally-rebuilt hex package artifacts
 /scrypath-*/
