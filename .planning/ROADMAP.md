@@ -62,13 +62,13 @@ Plans:
 **Goal:** Update `guides/related-data-and-reindexing.md` to remove "temporary workaround" language, clearly document the new API, and lock those assertions in the docs-contract pipeline.
 **Depends on:** Phase 90
 **Requirements:** EXEC-02, TEST-01, TEST-02
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 **Wave 1**
 
 - [x] 91-01-PLAN.md — Rewrite `guides/related-data-and-reindexing.md` so `Scrypath.sync_related/3` + the built-in Oban path are canonical; remove temporary-workaround framing; map inline-vs-oban to blast radius + latency (wave 1, EXEC-02).
-- [ ] 91-03-PLAN.md — Polish `examples/phoenix_meilisearch`: `Author` schema + migration + `ScrypathDemo.Blog` context + arity-safe resolver, exercising inline + oban fan-out smokes; update README (wave 1, EXEC-02).
+- [x] 91-03-PLAN.md — Polish `examples/phoenix_meilisearch`: `Author` schema + migration + `ScrypathDemo.Blog` context + arity-safe resolver, exercising inline + oban fan-out smokes; update README (wave 1, EXEC-02).
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
