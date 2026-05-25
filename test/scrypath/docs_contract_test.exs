@@ -27,6 +27,7 @@ defmodule Scrypath.DocsContractTest do
   @verify_phase83 File.read!("lib/mix/tasks/verify.phase83.ex")
   @verify_phase84 File.read!("lib/mix/tasks/verify.phase84.ex")
   @verify_phase85 File.read!("lib/mix/tasks/verify.phase85.ex")
+  @verify_phase91 File.read!("lib/mix/tasks/verify.phase91.ex")
   @verify_opsui File.read!("lib/mix/tasks/verify.opsui.ex")
   @verify_release_publish File.read!("lib/mix/tasks/verify.release_publish.ex")
   @guide_paths [
@@ -337,6 +338,14 @@ defmodule Scrypath.DocsContractTest do
     assert String.contains?(@verify_phase85, "test/scrypath/docs_contract_test.exs")
     assert String.contains?(@verify_phase85, "Mix.Task.run(\"docs\", [\"--warnings-as-errors\"])")
     assert String.contains?(File.read!("mix.exs"), "\"verify.phase85\": :test")
+  end
+
+  test "verify.phase91 stays wired into the focused maintainer flow" do
+    assert String.contains?(@verify_phase91, "test/scrypath/sync/related_test.exs")
+    assert String.contains?(@verify_phase91, "test/scrypath/sync/related_worker_test.exs")
+    assert String.contains?(@verify_phase91, "test/scrypath/docs_contract_test.exs")
+    assert String.contains?(@verify_phase91, "Mix.Task.run(\"docs\", [\"--warnings-as-errors\"])")
+    assert String.contains?(File.read!("mix.exs"), "\"verify.phase91\": :test")
   end
 
   test "README opens with installation, quick path, and phoenix wayfinding" do
@@ -1125,13 +1134,23 @@ defmodule Scrypath.DocsContractTest do
            "PROJECT.md must still mention AUDT-01 for maintainer routing"
   end
 
-  test "related-data guide explicitly mentions temporary Oban workaround" do
+  test "related-data guide adopts sync_related/3 as the canonical fan-out story" do
     guide = @guides["guides/related-data-and-reindexing.md"]
 
+    refute String.contains?(guide, "temporary workaround"),
+           "guide must not frame the fan-out path as a temporary workaround (D-09)"
+
+    refute String.contains?(guide, "first-class feature"),
+           "guide must not promise a future first-class feature; it already shipped (D-09)"
+
     assert_contains_all(guide, [
-      "temporary workaround",
-      "first-class feature",
-      "Oban"
+      "Scrypath.sync_related/3",
+      "fan_outs:",
+      "sync_mode: :inline",
+      "sync_mode: :oban",
+      "callback magic",
+      "contexts own orchestration",
+      "library owns execution"
     ])
   end
 
