@@ -46,21 +46,19 @@ Requirements for the Tenant-Safe Search milestone (AUTH-01). Each maps to roadma
 
 ## Traceability
 
-Populated by roadmapper. Each requirement maps to exactly one phase.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TNNT-01 | — | Pending |
-| TNNT-02 | — | Pending |
-| TNNT-03 | — | Pending |
-| TNNT-04 | — | Pending |
-| TNNT-05 | — | Pending |
+| TNNT-01 | Phase 92 | Pending |
+| TNNT-02 | Phase 92 | Pending |
+| TNNT-03 | Phase 93 | Pending |
+| TNNT-04 | Phase 93 | Pending |
+| TNNT-05 | Phase 94 | Pending |
 
 **Coverage:**
 - v1.25 requirements: 5 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 5 ⚠️
+- Mapped to phases: 5
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-05-25*
-*Last updated: 2026-05-25 — initial definition for v1.25 Tenant-Safe Search*
+*Last updated: 2026-05-25 — traceability populated by roadmapper; all 5 TNNT-* requirements mapped across phases 92–94*

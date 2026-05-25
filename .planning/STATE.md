@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.25
 milestone_name: Tenant-Safe Search
-status: planning
-last_updated: "2026-05-25T15:52:26.143Z"
+status: in_progress
+last_updated: "2026-05-25T00:00:00.000Z"
 last_activity: 2026-05-25
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,14 +21,18 @@ See: `.planning/PROJECT.md` (updated 2026-05-25)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** v1.25 Tenant-Safe Search — defining requirements
+**Current focus:** v1.25 Tenant-Safe Search — Phase 92: Guide and Schema Declaration
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 92 — Guide and Schema Declaration
 Plan: —
-Status: Defining requirements
-Last activity: 2026-05-25 — Milestone v1.25 started
+Status: Not started
+Last activity: 2026-05-25 — Roadmap created for v1.25
+
+```
+Progress: [----------] 0% (0/3 phases)
+```
 
 ## Accumulated Context
 
@@ -87,17 +91,17 @@ Last activity: 2026-05-25 — Milestone v1.25 started
 - [Phase ?]: Phase 91 plan 01 complete: rewrote guides/related-data-and-reindexing.md so Scrypath.sync_related/3 + internal RelatedWorker (sync_mode: :oban) are the canonical fan-out story; canonical strings locked as the shared contract for 91-02.
 - [Phase ?]: Phase 91 plan 02 complete: verify.phase91 hermetic gate green (73 tests, 0 failures); docs-contract test inverted to lock sync_related/3 as canonical fan-out story; ExDoc hidden-module backtick fixed in guide (Rule 1 auto-fix).
 - [Phase 91 plan 03 complete]: Phoenix example fan-out integration delivered — Author schema (Option A hand-written __scrypath__/1 accessors), Blog context with arity-safe resolver (records + ids + empty clauses), migration, extended Post schema, inline + oban fan-out smoke tests, and updated README. EXEC-02 demonstrable: Author rename re-syncs Post search docs on both inline and oban paths.
+- **v1.24 close:** Related-Data and Dependency Propagation shipped + archived in-repo on **2026-05-25**. Next-pull verdict is tenant-safe search (AUTH-01).
+- **v1.25 open:** Tenant-Safe Search is now the active milestone. AUTH-01 justified without waiting for further adopter evidence — the filter merge order bug is a concrete silent data-leak footgun for multi-tenant apps. Roadmap created 2026-05-25 with phases 92–94.
+- **v1.25 roadmap rationale:** Phase 92 co-ships the canonical guide (TNNT-01) and `tenant_field:` declaration (TNNT-02) because the declaration and its documentation are co-dependent — shipping the option without the guide leaves adopters without a correct pattern. Phase 93 adds `schema_capabilities/1` reflection (TNNT-03) and `tenant_scope:` runtime enforcement (TNNT-04) — both depend on the `tenant_field:` groundwork from Phase 92. Phase 94 is a dedicated verification slice (TNNT-05) closing the hermetic gate and CI registration.
 
 ### Blockers / Concerns
 
-- **Scope discipline for related-data:** Related-data propagation must be explicit. Do not introduce implicit Ecto callbacks, hidden association walking, or deep preloading behind the scenes.
-- **Outside adopter evidence reviewed:** We now have a phase-local evidence ledger recording genuine product gaps (`related-data propagation` and `tenant-safe access`). The canonical milestone verdict must incorporate these findings.
-- **Diminishing-returns guardrail:** In the absence of real adopter evidence, additional internal proof/polish work is presumed low leverage and should not become the next milestone by default.
-- **Support-truth drift resolved at branch tip:** `guides/support-and-compatibility.md` is restored as the single current support/readiness authority, and README / CONTRIBUTING / guides / ExDoc now route to it again.
-- **Adopter-verify drift resolved at branch tip:** `mix verify.adopter` now runs a real `test/scrypath/readiness_contract_test.exs` fast seam, and task help / maintainer docs / example runbook agree on the fast/live contract again.
+- **Scope discipline for tenant-safe search:** Tenant ID must pass as an explicit argument through the context layer. Do not introduce automatic extraction from conn, plug assigns, or process dictionary — those break across Task.async, assign_async, and Oban workers.
+- **Filter merge order is a silent footgun:** The filter merge order bug (Keyword.merge last-key-wins silently drops the tenant guard) is the highest-risk failure mode. The guide must contain working wrong/correct examples and `tenant_scope:` must hard-inject the filter at the library layer.
 - **Scope discipline for the search-module arc:** Search modules must remain a thin context-owned layer over the existing runtime, not a slide into schema-generated APIs, Phoenix coupling, or hidden operational behavior.
 - **Search-module archive drift:** `v1.20` archive files still claim a `Scrypath.SearchModule` layer, but the current checkout does not contain that module, its guide, or its tests. Treat the archive as historical/salvage-backed evidence, not as current shipped truth.
-- **Future product ranking should stay evidence-bound:** do not let generic ergonomics or OPSUI breadth displace related-data propagation or tenant-safe access unless the outside-adopter evidence actually points there.
+- **Future product ranking should stay evidence-bound:** do not let generic ergonomics or OPSUI breadth displace tenant-safe access or high-cardinality facet-value search unless the outside-adopter evidence actually points there.
 
 ### Deferred Items
 
@@ -105,6 +109,8 @@ Last activity: 2026-05-25 — Milestone v1.25 started
 
 - **v1.1 release-follow-through:** keep the closed-audit carry-forward visible but out of product milestone scope: (1) rerun the Phase 08 live verification seam only when a reachable `SCRYPATH_MEILISEARCH_URL` is available, and (2) rerun the Hex dry-run only when a publisher-scoped `HEX_API_KEY` is available. Source of truth: **`.planning/v1.1-MILESTONE-AUDIT.md`** and **`docs/releasing.md`**.
 - **Salvage quarantine:** `salvage/20260508-151407-main-reconcile` preserves the pre-reconcile dirty worktree for forensic recovery only. Treat it as a mixed snapshot, not as a queued branch to re-land wholesale on `main`.
+- **TNNT-FUT-01 deferred:** Per-tenant Meilisearch index routing — compliance/regulated use case only; not the default model due to Meilisearch sequential task processing at scale.
+- **TNNT-FUT-02 deferred:** Tenant token generation helpers — host-app concern; Joken recipe belongs in the guide only, not as a library dependency.
 
 ### Nyquist audit ledger (AUDT-01 — immutable pointers)
 
@@ -112,19 +118,15 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-1. v1.24 is completely closed, archived, and tagged.
-2. No active milestone is open.
-3. **Assessment completed 2026-05-25:** Scrypath is ~91–93% done. Two narrow wedges remain before the lib can call itself complete for its stated scope:
-   - **v1.25 AUTH-01** — `guides/multitenancy.md` + `tenant_field:` schema option + `schema_capabilities/1` reflection (2–3 phases). The filter merge order bug is a real silent data-leak footgun for multi-tenant adopters; this closes it.
-   - **v1.26 Facet Value Search** — `search_facet_values/4` wrapping Meilisearch `/facet-search` endpoint + `FacetSearchResult` / `FacetHit` structs + guide update (1 tight milestone).
-4. After v1.26: seriously evaluate stopping. Autocomplete only with adopter signal.
-5. AUTH-01 is now justified without waiting for adopter evidence — the footgun risk is concrete enough.
+Run `/gsd:plan-phase 92` to plan Phase 92: Guide and Schema Declaration.
 
 ---
 
-*Last updated: 2026-05-25 — archived **v1.24 Related-Data and Dependency Propagation***
+*Last updated: 2026-05-25 — v1.25 Tenant-Safe Search roadmap created; phases 92–94 defined*
 
-**Prior milestone:** **v1.23** — Outside-Adopter Evidence And Support-Truth Reconciliation — **2026-05-24** (shipped + archived in-repo).
+**Prior milestone:** **v1.24** — Related-Data and Dependency Propagation — **2026-05-25** (shipped + archived in-repo).
+
+**Completed:** **v1.23** shipped + archived in-repo (**2026-05-24**) — phases **86–88** — **`milestones/v1.23-{ROADMAP,REQUIREMENTS}.md`**.
 
 **Completed:** **v1.22** shipped + archived in-repo (**2026-05-24**) — phases **83–85** — **`milestones/v1.22-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
