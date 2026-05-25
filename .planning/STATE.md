@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.25
 milestone_name: — Tenant-Safe Search
 status: executing
-last_updated: "2026-05-25T19:13:06.778Z"
+last_updated: "2026-05-25T19:20:29.998Z"
 last_activity: 2026-05-25 -- Phase 92 planning complete
 progress:
   total_phases: 3
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
-  percent: 0
+  completed_plans: 3
+  percent: 33
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: `.planning/PROJECT.md` (updated 2026-05-25)
 ## Current Position
 
 Phase: 92 — Guide and Schema Declaration
-Plan: —
-Status: Ready to execute
-Last activity: 2026-05-25 -- Phase 92 planning complete
+Plan: 03
+Status: Complete
+Last activity: 2026-05-25 -- Completed 92-03-PLAN.md
 
 ```
 Progress: [███████░░░] 67%
@@ -40,6 +40,7 @@ Progress: [███████░░░] 67%
 
 (See `.planning/PROJECT.md` Key Decisions.)
 
+- **Phase 92 plan 03 complete:** Added canonical multitenancy guide covering shared-index model, explicit tenant parameter pattern, filter merge order footgun, tenant tokens, search_document/1 edge case, and schema declaration reference. Registered guides/multitenancy.md in ExDoc extras and groups_for_extras. Added docs_contract_test.exs assertions for multitenancy guide anchors.
 - **Phase 90 complete:** `Scrypath.Sync.RelatedWorker.perform/1` resolves job arguments gracefully and maps fan-out results onto the Oban worker contract — HTTP 4xx → `{:cancel, _}` (permanent), HTTP 5xx/generic → `{:error, _}` (transient retry), invalid schema/fan_out → `{:cancel, {:invalid_job, reason}}`. Recovery note: a single bug (mis-destructuring `Telemetry.span/3`, which returns the result directly) was the sole blocker and is fixed; full suite green (493 tests).
 
 - **Phase 89 complete:** Implemented explicit metadata validation (`fan_outs`), created `Scrypath.sync_related/3` for executing resolvers inline or enqueuing via `RelatedWorker`, successfully integrating both execution modes securely.
@@ -141,3 +142,4 @@ Run `/gsd:plan-phase 92` to plan Phase 92: Guide and Schema Declaration.
 | Phase 91 P01 | ~2m | 2 tasks | 1 files |
 | Phase 91 P02 | 10m | 2 tasks | 4 files |
 | Phase 91 P03 | 20m | 3 tasks | 7 files |
+| Phase 92 P03 | 15m | 2 tasks | 3 files |

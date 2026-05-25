@@ -9,7 +9,7 @@ Requirements for the Tenant-Safe Search milestone (AUTH-01). Each maps to roadma
 
 ### Multi-Tenancy Guide
 
-- [ ] **TNNT-01**: User can follow `guides/multitenancy.md` to implement tenant-safe search in a Phoenix SaaS app — guide covers the shared-index + filter-injection model, the correct context-layer pattern with explicit tenant parameter, the filter merge order footgun (wrong/correct code examples), the per-tenant index anti-pattern with the Meilisearch throughput reason, Meilisearch tenant token placement advice (browser-direct only, not for server-side Scrypath search), and the `search_document/1` custom hook edge case
+- [x] **TNNT-01**: User can follow `guides/multitenancy.md` to implement tenant-safe search in a Phoenix SaaS app — guide covers the shared-index + filter-injection model, the correct context-layer pattern with explicit tenant parameter, the filter merge order footgun (wrong/correct code examples), the per-tenant index anti-pattern with the Meilisearch throughput reason, Meilisearch tenant token placement advice (browser-direct only, not for server-side Scrypath search), and the `search_document/1` custom hook edge case
 
 ### Schema Declaration
 
@@ -48,7 +48,7 @@ Requirements for the Tenant-Safe Search milestone (AUTH-01). Each maps to roadma
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TNNT-01 | Phase 92 | Pending |
+| TNNT-01 | Phase 92 | Complete |
 | TNNT-02 | Phase 92 | Complete |
 | TNNT-03 | Phase 93 | Pending |
 | TNNT-04 | Phase 93 | Pending |
