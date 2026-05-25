@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.24
-milestone_name: Related-Data and Dependency Propagation
-status: Phase 90 complete. RelatedWorker propagates fan-out failures as actionable Oban retry/cancel outcomes.
-last_updated: "2026-05-25T07:00:00.000Z"
+milestone_name: milestone
+status: completed
+last_updated: "2026-05-25T05:30:34.535Z"
 last_activity: 2026-05-25
 progress:
-  total_phases: 14
-  completed_phases: 11
-  total_plans: 26
-  completed_plans: 35
-  percent: 79
+  total_phases: 3
+  completed_phases: 2
+  total_plans: 5
+  completed_plans: 5
+  percent: 67
 ---
 
 # Project State
