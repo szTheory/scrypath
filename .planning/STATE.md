@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.24
 milestone_name: Related-Data and Dependency Propagation
 status: executing
-last_updated: "2026-05-25T06:04:37.786Z"
+last_updated: "2026-05-25T06:11:02.030Z"
 last_activity: 2026-05-25
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 8
-  completed_plans: 5
-  percent: 63
+  completed_plans: 6
+  percent: 67
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: `.planning/PROJECT.md` (updated 2026-05-24)
 ## Current Position
 
 Phase: 91 (integration-guides-and-verification) — EXECUTING
-Plan: 1 of 3
+Plan: 2 of 3
 
-**Status:** Executing Phase 91
+**Status:** Ready to execute
 
 **Last activity:** 2026-05-25
 
@@ -86,6 +86,7 @@ Plan: 1 of 3
 - **Support-truth drift found at open:** current planning opened with removed support/readiness surfaces and a stale `mix verify.adopter` fast target. Phase 86 is reconciling those seams back to branch-tip truth.
 - **v1.23 close:** Outside-Adopter Evidence And Support-Truth Reconciliation shipped + archived in-repo on **2026-05-24**. Next-pull verdict is established: related-data propagation.
 - **v1.24 open:** Related-Data and Dependency Propagation is now the active milestone to address the biggest correctness gap for real SaaS apps.
+- [Phase ?]: Phase 91 plan 01 complete: rewrote guides/related-data-and-reindexing.md so Scrypath.sync_related/3 + internal RelatedWorker (sync_mode: :oban) are the canonical fan-out story; canonical strings locked as the shared contract for 91-02.
 
 ### Blockers / Concerns
 
@@ -128,3 +129,9 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 **Completed:** **v1.19** shipped + archived in-repo (**2026-04-28**) — phases **74–76** — **`milestones/v1.19-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **Next:** Active milestone **v1.23** — Phase **87** outside-adopter intake and evidence review is complete. Active next-pull verdict: related-data propagation.
+
+## Performance Metrics
+
+| Phase | Plan | Duration | Notes |
+|-------|------|----------|-------|
+| Phase 91 P01 | ~2m | 2 tasks | 1 files |
