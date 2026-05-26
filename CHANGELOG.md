@@ -4,9 +4,25 @@ All notable changes to this project will be documented in this file.
 
 Release Please manages versioned entries after this baseline.
 
-## Unreleased
+## [Unreleased]
 
 ### Added
+
+- **v1.26: High-Cardinality Facet Search** — Shipped `Scrypath.search_facet_values/4` first-class function and `Scrypath.FacetSearchResult` struct for idiomatic high-cardinality facet search wrapping Meilisearch's `/facet-search` endpoint. Includes concrete LiveView type-ahead examples in ExDoc.
+- **v1.25: Tenant-Safe Search Access** — Shipped `tenant_field:` schema declaration and `tenant_scope:` hard-injection on `Scrypath.search/3` to prevent silent multi-tenant data leaks. Includes a canonical Multitenancy Guide (`guides/multitenancy.md`).
+- **v1.24: Related-Data and Dependency Propagation** — Shipped `Scrypath.sync_related/3` public API and `RelatedWorker` (Oban) for explicit fan-out search indexing of associated records without hidden Ecto callbacks. Includes a dedicated guide (`guides/related-data-and-reindexing.md`).
+- **v1.22: Composition and Real-App Depth** — Shipped a bounded composition layer for reusable presets, scopes, and UI metadata without weakening the runtime boundary. Includes a guide on composing real-app search (`guides/composing-real-app-search.md`).
+- **v1.21: Query Toolkit and Phoenix Edge Helpers** — Shipped a public framework-light query-param toolkit and optional Phoenix URL/form/LiveView helpers for param normalization. Includes a guide on request-edge search (`guides/request-edge-search.md`).
+- **v1.20: Search Module Foundation** — Shipped a thin context-owned ergonomics layer for declarative search modules.
+- **Maturity Gate** — Established `mix verify` and `mix verify.all` as canonical repository hygiene and maturity gates, consolidated into CI.
+
+### Changed
+
+- Refactored internal code to use implicit `try` blocks for better readability as suggested by Credo.
+- Made `Scrypath.FacetSearchResult` a public documented module.
+- Consolidated CI `quality` job to use the new `mix verify` Maturity Gate.
+
+### Added (Previous)
 
 - Example app **`examples/phoenix_meilisearch/`** — Postgres + Meilisearch Docker Compose (explicit network), path dependency on Scrypath, and **`scripts/smoke.sh`** for an integration smoke (Ecto insert → `Scrypath.sync_record` → hydrated `Scrypath.search`). Documented from the root README; **`CONTRIBUTING.md`** CI section updated to list all workflow jobs.
 - **OPS14-01:** Operator failure rollups — `FailedWork.reason_class_counts/1`, `%ReasonClassCounts{}`, opt-in `reason_class_counts: true` on `Scrypath.failed_sync_work/2` returning `%FailedSyncWorkInspection{}`, `failed_work_counts` on `%Reconcile{}`, human rollup + per-row `reason_class=` and **`--json`** / **`--no-class-summary`** on `mix scrypath.failed`.
