@@ -7,8 +7,12 @@ defmodule ScrypathOps.SearchPlayground.Adapter do
   @typedoc "Return type of `Scrypath.search_many/2`."
   @type search_many_result :: {:ok, Scrypath.MultiSearchResult.t()} | {:error, term()}
 
+  @typedoc "Return type of `Scrypath.search_facet_values/4`."
+  @type search_facet_values_result :: {:ok, Scrypath.FacetSearchResult.t()} | {:error, term()}
+
   @callback search(module(), String.t(), keyword()) :: search_result()
   @callback search_many(list(), keyword()) :: search_many_result()
+  @callback search_facet_values(module(), String.t(), String.t(), keyword()) :: search_facet_values_result()
 end
 
 defmodule ScrypathOps.SearchPlayground.Adapter.Scrypath do
@@ -26,4 +30,7 @@ defmodule ScrypathOps.SearchPlayground.Adapter.Scrypath do
 
   @impl true
   def search_many(entries, opts), do: Scrypath.search_many(entries, opts)
+
+  @impl true
+  def search_facet_values(schema, facet_name, facet_query, opts), do: Scrypath.search_facet_values(schema, facet_name, facet_query, opts)
 end

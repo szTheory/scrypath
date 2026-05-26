@@ -16,6 +16,8 @@ defmodule Scrypath.Backend do
   @callback delete_documents(module(), [term()], keyword()) ::
               {:ok, term()} | {:error, term()}
   @callback search(module(), Query.t(), keyword()) :: {:ok, map()} | {:error, term()}
+  @callback search_facet_values(module(), String.t(), String.t(), keyword(), keyword()) ::
+              {:ok, map()} | {:error, term()}
 
   @doc """
   Optional federated multi-search over multiple schemas in one HTTP round-trip.
