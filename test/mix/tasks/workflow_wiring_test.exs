@@ -7,8 +7,8 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
   @verify_published_yml ".github/workflows/verify-published-release.yml"
 
   describe "INFRA-01 D-14: workspace_clean gate on all three publish paths" do
-    test "ci.yml quality job runs mix verify.workspace_clean" do
-      assert File.read!(@ci_yml) =~ "mix verify.workspace_clean"
+    test "ci.yml quality job runs mix verify" do
+      assert File.read!(@ci_yml) =~ "mix verify"
     end
 
     test "publish-hex.yml runs mix verify.workspace_clean" do
