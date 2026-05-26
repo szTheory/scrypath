@@ -1,37 +1,37 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.25
-milestone_name: — Tenant-Safe Search
-status: completed
-last_updated: "2026-05-25T20:04:04.128Z"
-last_activity: 2026-05-25 -- Completed 92-03-PLAN.md
+milestone: v1.26
+milestone_name: — Facet Value Vocabulary Search
+status: planning
+last_updated: "2026-05-26T13:18:29.098Z"
+last_activity: 2026-05-26 -- Generated REQUIREMENTS and ROADMAP for v1.26
 progress:
-  total_phases: 3
-  completed_phases: 1
-  total_plans: 5
-  completed_plans: 4
-  percent: 33
+  total_phases: 2
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-05-25)
+See: `.planning/PROJECT.md` (updated 2026-05-26)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** v1.25 Tenant-Safe Search — Phase 92: Guide and Schema Declaration
+**Current focus:** v1.26 — Facet Value Vocabulary Search (Tier B4)
 
 ## Current Position
 
-Phase: 94 — Verification Gate
-Plan: 01
-Status: Not Started
-Last activity: 2026-05-25 -- Completed 93-02-PLAN.md
+Phase: 95
+Plan: None
+Status: Planning
+Last activity: 2026-05-26 -- Generated REQUIREMENTS and ROADMAP for v1.26
 
 ```
-Progress: [██████████] 100%
+Progress: [░░░░░░░░░░] 0%
 ```
 
 ## Accumulated Context
@@ -40,6 +40,7 @@ Progress: [██████████] 100%
 
 (See `.planning/PROJECT.md` Key Decisions.)
 
+- **Phase 95 complete:** Created distinct `Scrypath.FacetSearchResult` struct to separate vocabulary hits from standard search document hits. The interface acts dynamically on `facet_query` parameters and routes through the existing Scrypath option validation pipeline.
 - **Phase 93 plan 02 complete:** Added the `tenant_scope:` option and implemented `inject_tenant_scope!/2` to automatically and safely inject the tenant filter, catching conflicts with existing filters.
 - **Phase 92 plan 03 complete:** Added canonical multitenancy guide covering shared-index model, explicit tenant parameter pattern, filter merge order footgun, tenant tokens, search_document/1 edge case, and schema declaration reference. Registered guides/multitenancy.md in ExDoc extras and groups_for_extras. Added docs_contract_test.exs assertions for multitenancy guide anchors.
 - **Phase 93 plan 01 complete:** Included `:tenant` key in `schema_capabilities/1` root map to enable introspection of tenant isolation settings.
@@ -98,6 +99,9 @@ Progress: [██████████] 100%
 - **v1.25 open:** Tenant-Safe Search is now the active milestone. AUTH-01 justified without waiting for further adopter evidence — the filter merge order bug is a concrete silent data-leak footgun for multi-tenant apps. Roadmap created 2026-05-25 with phases 92–94.
 - **v1.25 roadmap rationale:** Phase 92 co-ships the canonical guide (TNNT-01) and `tenant_field:` declaration (TNNT-02) because the declaration and its documentation are co-dependent — shipping the option without the guide leaves adopters without a correct pattern. Phase 93 adds `schema_capabilities/1` reflection (TNNT-03) and `tenant_scope:` runtime enforcement (TNNT-04) — both depend on the `tenant_field:` groundwork from Phase 92. Phase 94 is a dedicated verification slice (TNNT-05) closing the hermetic gate and CI registration.
 
+- **Phase 94 complete:** Created the `mix verify.phase94` gate, ran it (128 tests passing), and generated the milestone audit.
+- **v1.25 close:** Tenant-Safe Search shipped + archived in-repo on **2026-05-26**. The `tenant_field:` option, `tenant_scope:` injection, and canonical multitenancy guide are all verified and complete. Next-pull verdict is TBD (awaiting adopter evidence or prioritization).
+
 ### Blockers / Concerns
 
 - **Scope discipline for tenant-safe search:** Tenant ID must pass as an explicit argument through the context layer. Do not introduce automatic extraction from conn, plug assigns, or process dictionary — those break across Task.async, assign_async, and Oban workers.
@@ -121,15 +125,15 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-Run `/gsd:plan-phase 92` to plan Phase 92: Guide and Schema Declaration.
+Run `/gsd:new-milestone` to propose and plan the next milestone.
 
 ---
 
-*Last updated: 2026-05-25 — v1.25 Tenant-Safe Search roadmap created; phases 92–94 defined*
+*Last updated: 2026-05-26 — v1.25 Tenant-Safe Search completed and archived*
 
-**Prior milestone:** **v1.24** — Related-Data and Dependency Propagation — **2026-05-25** (shipped + archived in-repo).
+**Prior milestone:** **v1.25** — Tenant-Safe Search — **2026-05-26** (shipped + archived in-repo).
 
-**Completed:** **v1.23** shipped + archived in-repo (**2026-05-24**) — phases **86–88** — **`milestones/v1.23-{ROADMAP,REQUIREMENTS}.md`**.
+**Completed:** **v1.24** shipped + archived in-repo (**2026-05-25**) — phases **89–91** — **`milestones/v1.24-{ROADMAP,REQUIREMENTS}.md`**.
 
 **Completed:** **v1.22** shipped + archived in-repo (**2026-05-24**) — phases **83–85** — **`milestones/v1.22-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
