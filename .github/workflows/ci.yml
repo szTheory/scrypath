@@ -14,16 +14,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  main-ci:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - elixir: "1.17.3"
-            otp: "26.2.5"
-          - elixir: "1.19.0"
-            otp: "28.1"
 
     steps:
       - uses: actions/checkout@v6
@@ -32,15 +24,15 @@ jobs:
 
       - uses: erlef/setup-beam@v1
         with:
-          elixir-version: ${{ matrix.elixir }}
-          otp-version: ${{ matrix.otp }}
+          elixir-version: "1.19.0"
+          otp-version: "28.1"
 
       - uses: actions/cache@v5
         with:
           path: |
             deps
             _build
-          key: ${{ runner.os }}-mix-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles('mix.lock') }}
+          key: ${{ runner.os }}-main-ci-${{ hashFiles('mix.lock') }}
 
       - name: Install dependencies
         run: mix deps.get
@@ -51,7 +43,7 @@ jobs:
       - name: Test
         run: mix test --exclude integration --exclude docs_contract --include requires_clean_workspace
 
-  quality:
+  repo-hygiene:
     runs-on: ubuntu-latest
 
     steps:
@@ -78,6 +70,59 @@ jobs:
       - name: Install dependencies
         run: mix deps.get
 
+      - name: Run repository hygiene gate (`mix verify --exclude integration`)
+        run: mix verify --exclude integration
+
+  release-truth:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.19.0"
+          otp-version: "28.1"
+
+      - uses: actions/cache@v5
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-release-truth-${{ hashFiles('mix.lock') }}
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Run release-truth gate (`mix verify.phase11`)
+        run: mix verify.phase11
+
+  deep-quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.19.0"
+          otp-version: "28.1"
+
+      - uses: actions/cache@v5
+        with:
+          path: |
+            deps
+            _build
+            priv/plts
+          key: ${{ runner.os }}-deep-quality-${{ hashFiles('mix.lock') }}
+
+      - name: Install dependencies
+        run: mix deps.get
+
       - name: Compile scrypath_ops without optional deps (SIGRA-02)
         working-directory: scrypath_ops
         env:
@@ -88,9 +133,6 @@ jobs:
 
       - name: Run namespace fence (`mix scrypath.namespace_fence`)
         run: mix scrypath.namespace_fence
-
-      - name: Run Maturity Gate (`mix verify`)
-        run: mix verify
 
       - name: Audit Hex dependencies
         run: mix hex.audit

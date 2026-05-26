@@ -4,6 +4,16 @@
 
 Release Please owns the version bump, changelog PR, and Git tag for Scrypath. The only publish path is the existing GitHub Actions workflow: Release Please creates `vX.Y.Z`, Actions checks out that tag, and `mix hex.publish --yes` runs from that tagged ref.
 
+## Release train posture
+
+Scrypath now runs a **green-main release train**:
+
+- `main` stays green on the lean required gates only: **main CI**, **repo hygiene**, and **release truth**.
+- The default shipping posture is **patch-first while the library remains pre-1.0**. The existing Release Please configuration already uses the pre-1.0 bump knobs, so ordinary merged work rolls forward on patch cadence.
+- Serious milestone or feature-depth work should land through **PRs**, not direct `main` development.
+- **Squash merge only** is the intended feed into Release Please. The PR title should be treated as the release-facing summary because it becomes the squash commit title.
+- If `main` is green and there is no coherent release PR to review, the default maintainer answer is **nothing to do**.
+
 ### Hex package files vs `scrypath_ops/`
 
 The optional operator Phoenix app lives in **`scrypath_ops/`** at the repository root. It is **not** part of the published Hex artifact. The root library **`mix.exs`** **`package.files`** whitelist **must never** list **`scrypath_ops/`** (or otherwise pull OPSUI into the tarball). Run **`mix hex.publish`** only from the **library** project directory (the same directory as the root `mix.exs` that defines `:scrypath`), never from `scrypath_ops/`.
@@ -97,6 +107,7 @@ Treat failures in this workflow as operational regressions in the published pack
    ```
 
 2. Review the Release Please PR. The version in `mix.exs`, `.release-please-manifest.json`, and the top changelog entry should all describe the same `vX.Y.Z` release.
+   On the train, the release PR should be the only version-changing PR in flight.
 3. Merge the Release Please PR to `main`. The existing `.github/workflows/release-please.yml` workflow is the only release path. When `release_created == true`, the `publish-hex` job checks out `tag_name` and runs `mix hex.publish --yes`.
    Before the real publish, that job also verifies `mix.exs` matches the Release Please version, runs `mix verify.phase11`, and runs `mix hex.publish --dry-run --yes`.
 4. After the workflow finishes, confirm the release artifacts:
@@ -110,6 +121,15 @@ Treat failures in this workflow as operational regressions in the published pack
    The publish job now runs `mix verify.release_publish X.Y.Z` for the newly released version, so Hex package visibility, clean-consumer compile, and versioned HexDocs reachability are checked inside the workflow instead of by hand. As a post-publish follow-on, it then runs `mix verify.release_parity X.Y.Z` with the same retry environment variables so tarball contents stay aligned with the git tag.
 
 5. If the workflow passes, treat the release contract as satisfied. Manual spot-checks are optional, not required.
+
+## PR semantics on the train
+
+Because Scrypath uses squash merges and Release Please reads the merged commit history, maintainers should treat the PR title as the release-driving commit message.
+
+- Use **`fix:`** for ordinary patch-train work.
+- Use **`feat:`** only when you intentionally want feature-language in the release notes.
+- Use **breaking-change semantics** (`!` or `BREAKING CHANGE`) only for explicit major-version planning.
+- Avoid vague PR titles that would create noisy or misleading release notes.
 
 ## Recovering Tag or Version Drift
 

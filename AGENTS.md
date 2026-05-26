@@ -91,6 +91,13 @@ No project skills found. Add skills to any of: `.claude/skills/`, `.agents/skill
 
 **Automated coding agents:** honor the constraints in this file; keep edits focused, run the checks **CONTRIBUTING** names for your change, and update **`.planning/PROJECT.md`** when you intentionally change product scope or shipped claims.
 
+Agents should default to the repo's **green-main release train** posture:
+
+- keep `main` green on the lean required gates
+- prefer **PR-first** execution for serious milestone or feature-depth work
+- avoid speculative milestone reopening when no active milestone, release follow-up, or concrete bug/adopter evidence exists
+- when the release train is idle and there is no approved work item, say so plainly instead of inventing work
+
 Maintainers who use the separate GSD toolkit should follow that tool’s docs so planning artifacts stay consistent; this file does not duplicate those slash-commands for OSS readers.
 <!-- GSD:workflow-end -->
 
