@@ -23,6 +23,9 @@ defmodule Scrypath.SearchTest do
 
     @impl true
     def search(_schema_module, _query, _config), do: {:error, :search_failed}
+
+    @impl true
+    def search_facet_values(_schema_module, _facet_name, _search_string, _opts, _config), do: {:error, :search_failed}
   end
 
   defmodule HydrationBackend do
@@ -54,6 +57,11 @@ defmodule Scrypath.SearchTest do
          "hitsPerPage" => 3,
          "totalHits" => 3
        }}
+    end
+
+    @impl true
+    def search_facet_values(_schema_module, _facet_name, search_string, _opts, _config) do
+      {:ok, %{"facetQuery" => search_string, "facetHits" => [%{"value" => "foo", "count" => 1}]}}
     end
   end
 
@@ -93,6 +101,40 @@ defmodule Scrypath.SearchTest do
       end
 
     assert err.reason == :search_failed
+  end
+
+  describe "search_facet_values/4 and search_facet_values!/4" do
+    test "search_facet_values/4 successfully returns a FacetSearchResult" do
+      assert {:ok,
+              %Scrypath.FacetSearchResult{
+                hits: [%Scrypath.SearchResult.Facets.Bucket{value: "foo", count: 1}],
+                facet_query: "fo"
+              }} =
+               Scrypath.search_facet_values(SearchablePost, "category", "fo", backend: HydrationBackend)
+    end
+
+    test "search_facet_values!/4 unwraps successful results" do
+      assert %Scrypath.FacetSearchResult{
+               hits: [%Scrypath.SearchResult.Facets.Bucket{value: "foo", count: 1}],
+               facet_query: "fo"
+             } =
+               Scrypath.search_facet_values!(SearchablePost, "category", "fo", backend: HydrationBackend)
+    end
+
+    test "search_facet_values!/4 raises on backend errors" do
+      err =
+        assert_raise Scrypath.Search.Error, fn ->
+          Scrypath.search_facet_values!(SearchablePost, "category", "fo", backend: ErrorBackend)
+        end
+
+      assert err.reason == :search_failed
+    end
+
+    test "search_facet_values/4 validates options" do
+      assert_raise ArgumentError, ~r/invalid value for :page option/, fn ->
+        Scrypath.search_facet_values(SearchablePost, "category", "fo", page: :invalid)
+      end
+    end
   end
 
   test "the common path normalizes text and public options into one query struct" do

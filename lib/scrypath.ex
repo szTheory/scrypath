@@ -253,6 +253,36 @@ defmodule Scrypath do
   end
 
   @doc """
+  Search facet values (type-ahead) for high-cardinality facets.
+  
+  Sends a request to the backend specifically optimized for searching within
+  a single facet's values, rather than returning matching documents.
+
+  ## Errors vs raises
+
+  * **`ArgumentError`** — some invalid shapes are rejected synchronously.
+  * **`{:error, reason}`** — operational failures, including backend errors.
+  
+  `search_facet_values!/4` raises `Scrypath.Search.Error` instead of returning
+  `{:error, _}`.
+  """
+  @spec search_facet_values(module(), String.t(), String.t(), keyword()) ::
+          {:ok, Scrypath.FacetSearchResult.t()} | {:error, term()}
+  def search_facet_values(schema_module, facet_name, search_string, opts \\ []) do
+    Scrypath.Search.search_facet_values(schema_module, facet_name, search_string, opts)
+  end
+
+  @doc """
+  Like `search_facet_values/4`, but returns the struct payload or raises
+  `Scrypath.Search.Error` when the non-bang API would return `{:error, _}`.
+  """
+  @spec search_facet_values!(module(), String.t(), String.t(), keyword()) ::
+          Scrypath.FacetSearchResult.t()
+  def search_facet_values!(schema_module, facet_name, search_string, opts \\ []) do
+    Scrypath.Search.search_facet_values!(schema_module, facet_name, search_string, opts)
+  end
+
+  @doc """
   Full-text search scoped to a single facet bucket, **AND**-combined with any other
   `filter:`, `facet_filter:`, sort, and pagination options.
 
