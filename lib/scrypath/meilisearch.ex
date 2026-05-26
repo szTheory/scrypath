@@ -68,6 +68,18 @@ defmodule Scrypath.Meilisearch do
   end
 
   @impl true
+  @spec search_facet_values(module(), String.t(), String.t(), keyword(), keyword()) ::
+          {:ok, map()} | {:error, term()}
+  def search_facet_values(schema_module, facet_name, facet_query, opts, config) do
+    index =
+      Keyword.get(config, :index_name) ||
+        Keyword.get(config, :target_index) ||
+        index_name(schema_module, config)
+
+    client(config).facet_search(index, facet_name, facet_query, opts, config)
+  end
+
+  @impl true
   @spec search_many([{module(), Query.t(), keyword()}], keyword()) ::
           {:ok, map()} | {:error, term()}
   def search_many(paired_queries, config) when is_list(paired_queries) do

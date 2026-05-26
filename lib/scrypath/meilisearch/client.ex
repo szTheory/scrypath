@@ -99,6 +99,30 @@ defmodule Scrypath.Meilisearch.Client do
     )
   end
 
+  @spec facet_search(String.t(), String.t(), String.t(), keyword(), keyword()) ::
+          {:ok, map()} | {:error, term()}
+  def facet_search(index_name, facet_name, facet_query, opts, config) do
+    base_payload = %{
+      "facetName" => facet_name,
+      "facetQuery" => facet_query
+    }
+    
+    payload = 
+      opts
+      |> Enum.into(%{})
+      |> Enum.map(fn {k, v} -> {camelize_filter(k), v} end)
+      |> Map.new()
+      |> Map.merge(base_payload)
+
+    run_request(
+      :post,
+      "/indexes/#{index_name}/facet-search",
+      [json: payload],
+      config,
+      index: index_name
+    )
+  end
+
   @spec multi_search(map(), keyword()) :: {:ok, map()} | {:error, term()}
   def multi_search(payload, config) when is_map(payload) do
     run_request(

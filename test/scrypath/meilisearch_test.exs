@@ -84,6 +84,11 @@ defmodule Scrypath.MeilisearchTest do
       send(self(), {:client_search, index_name, query, config})
       {:ok, %{"hits" => [%{"id" => 99}], "query" => query}}
     end
+
+    def facet_search(index_name, facet_name, facet_query, opts, config) do
+      send(self(), {:client_facet_search, index_name, facet_name, facet_query, opts, config})
+      {:ok, %{"facetHits" => [%{"value" => "comedy", "count" => 42}], "facetQuery" => facet_query}}
+    end
   end
 
   test "Scrypath.Meilisearch satisfies backend name and index naming" do
@@ -150,6 +155,16 @@ defmodule Scrypath.MeilisearchTest do
              )
 
     assert_received {:client_search, "tenant_searchable_post__reindex", "hello", _config}
+  end
+
+  test "search_facet_values/5 delegates to client's facet_search honoring index configuration" do
+    assert {:ok, %{"facetHits" => [%{"value" => "comedy", "count" => 42}], "facetQuery" => "co"}} =
+             Scrypath.Meilisearch.search_facet_values(SearchablePost, "genre", "co", [],
+               index_prefix: "tenant",
+               meilisearch_client: RecordingClient
+             )
+
+    assert_received {:client_facet_search, "tenant_searchable_post", "genre", "co", [], _config}
   end
 
   test "common search translates normalized query fields into Meilisearch payloads" do
