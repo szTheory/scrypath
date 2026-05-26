@@ -35,7 +35,7 @@
 ## Phases
 
 - [ ] **Phase 92: Guide and Schema Declaration** - Canonical multitenancy guide + `tenant_field:` schema option; co-shipped to ensure the declaration and its documentation land together
-- [ ] **Phase 93: Reflection and Runtime Enforcement** - `schema_capabilities/1` `:tenant` reflection + `tenant_scope:` hard-injected filter; both depend on the `tenant_field:` groundwork from Phase 92
+- [x] **Phase 93: Reflection and Runtime Enforcement** - `schema_capabilities/1` `:tenant` reflection + `tenant_scope:` hard-injected filter; both depend on the `tenant_field:` groundwork from Phase 92
 - [ ] **Phase 94: Verification Gate** - `mix verify.phase94` hermetic gate covering all tenant-safety surfaces; CI registration and contributor guidance
 
 ## Phase Details
@@ -96,7 +96,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 92. Guide and Schema Declaration | 3/3 | Complete   | 2026-05-25 |
-| 93. Reflection and Runtime Enforcement | 0/? | Not started | - |
+| 93. Reflection and Runtime Enforcement | 2/2 | Complete   | 2026-05-25 |
 | 94. Verification Gate | 0/? | Not started | - |
 
 <details>

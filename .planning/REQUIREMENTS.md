@@ -17,11 +17,11 @@ Requirements for the Tenant-Safe Search milestone (AUTH-01). Each maps to roadma
 
 ### Metadata Reflection
 
-- [ ] **TNNT-03**: User can call `Scrypath.Metadata.schema_capabilities/1` on a schema and inspect the `:tenant` key to discover whether a `tenant_field` is declared and which field it names (returns `nil` if not declared)
+- [x] **TNNT-03**: User can call `Scrypath.Metadata.schema_capabilities/1` on a schema and inspect the `:tenant` key to discover whether a `tenant_field` is declared and which field it names (returns `nil` if not declared)
 
 ### Runtime Enforcement
 
-- [ ] **TNNT-04**: User can pass `tenant_scope: tenant_id` to `Scrypath.search/3` and have the library automatically AND-combine the tenant filter with any caller-supplied `filter:` opts — tenant filter is injected at the library layer and cannot be overridden or shadowed by caller filters
+- [x] **TNNT-04**: User can pass `tenant_scope: tenant_id` to `Scrypath.search/3` and have the library automatically AND-combine the tenant filter with any caller-supplied `filter:` opts — tenant filter is injected at the library layer and cannot be overridden or shadowed by caller filters
 
 ### Verification
 
@@ -50,8 +50,8 @@ Requirements for the Tenant-Safe Search milestone (AUTH-01). Each maps to roadma
 |-------------|-------|--------|
 | TNNT-01 | Phase 92 | Complete |
 | TNNT-02 | Phase 92 | Complete |
-| TNNT-03 | Phase 93 | Pending |
-| TNNT-04 | Phase 93 | Pending |
+| TNNT-03 | Phase 93 | Complete |
+| TNNT-04 | Phase 93 | Complete |
 | TNNT-05 | Phase 94 | Pending |
 
 **Coverage:**
