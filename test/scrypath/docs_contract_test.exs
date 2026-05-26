@@ -28,6 +28,7 @@ defmodule Scrypath.DocsContractTest do
   @verify_phase84 File.read!("lib/mix/tasks/verify.phase84.ex")
   @verify_phase85 File.read!("lib/mix/tasks/verify.phase85.ex")
   @verify_phase91 File.read!("lib/mix/tasks/verify.phase91.ex")
+  @verify_phase96 File.read!("lib/mix/tasks/verify.phase96.ex")
   @verify_opsui File.read!("lib/mix/tasks/verify.opsui.ex")
   @verify_release_publish File.read!("lib/mix/tasks/verify.release_publish.ex")
   @guide_paths [
@@ -1169,6 +1170,23 @@ defmodule Scrypath.DocsContractTest do
   test "multitenancy guide is registered in ExDoc extras and Getting Started group (TNNT-01)" do
     mix_exs = File.read!("mix.exs")
     assert String.contains?(mix_exs, ~s("guides/multitenancy.md"))
+  end
+
+  test "verify.phase96 stays wired into the focused maintainer flow" do
+    assert String.contains?(@verify_phase96, "test/scrypath/search_test.exs")
+    assert String.contains?(@verify_phase96, "test/scrypath/meilisearch_test.exs")
+    assert String.contains?(@verify_phase96, "test/scrypath/docs_contract_test.exs")
+    assert String.contains?(@verify_phase96, "Mix.Task.run(\"docs\", [\"--warnings-as-errors\"])")
+  end
+
+  test "facet value search documentation contains type-ahead examples" do
+    scrypath_doc = File.read!("lib/scrypath.ex")
+
+    assert_contains_all(scrypath_doc, [
+      "search_facet_values(Product, \"brand\", \"ni\")",
+      "handle_event(\"search-brands\"",
+      "socket, :brand_suggestions, result.hits"
+    ])
   end
 
   defp guide_fences do

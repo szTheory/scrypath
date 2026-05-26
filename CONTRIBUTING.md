@@ -65,6 +65,10 @@ The Phase 43 verify alias is the complementary fast gate for **per-query Plane B
 
 The Phase 82 verify alias is the focused gate for the v1.21 request-edge docs/examples contract. Run the shell command **mix verify.phase82** when you change the canonical request-edge guide, Phoenix guides, `Scrypath.QueryParams` / `Scrypath.Phoenix` public docs story, the example README, or the docs-contract / fixture seams that protect those surfaces. It stays narrower than the default fast suite and mirrors the same check CI runs in the **`quality`** job.
 
+The Phase 94 verify alias is the focused gate for the tenant-safety and multitenancy contracts. Run the shell command **mix verify.phase94** when you change `tenant_field:` auto-merge behavior, `schema_capabilities/1` `:tenant` reflection, `tenant_scope:` injection, or the canonical `guides/multitenancy.md` guide anchors. It stays narrower than the default fast suite and mirrors the same check CI runs in the **`quality`** job.
+
+The Phase 96 verify alias is the focused gate for the facet value search verification. Run the shell command **mix verify.phase96** when you change `search_facet_values/4` request/response structures, contract tests, or the associated documentation examples. It stays narrower than the default fast suite and mirrors the same check CI runs in the **`quality`** job.
+
 Run **`mix verify.opsui`** from the repository root when you change the optional **`scrypath_ops`** operator Phoenix app or its path dependency on the core library. It runs **`cd scrypath_ops && mix deps.get && mix test`**, and the dedicated **`scrypath-ops`** CI job now invokes this same root task (Postgres-backed Ecto setup, no Meilisearch service).
 
 When you change **`scrypath_ops/docs/*.json`** playbook fixtures, golden workspace playbooks, or other flat `*.json` catalogs that ship beside **`scrypath_ops`**, also run **`cd scrypath_ops && mix scrypath_ops.playbooks.validate PATH`** from the repository root, where **`PATH`** is the directory containing those JSON files (non-recursive; same invocation shape as the Mix task **`Mix.Tasks.ScrypathOps.Playbooks.Validate`**).

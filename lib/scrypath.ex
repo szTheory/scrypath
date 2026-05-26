@@ -258,6 +258,20 @@ defmodule Scrypath do
   Sends a request to the backend specifically optimized for searching within
   a single facet's values, rather than returning matching documents.
 
+  ## Examples
+
+      # Simple type-ahead for a "brand" facet
+      {:ok, result} = Scrypath.search_facet_values(Product, "brand", "ni")
+
+      # [{ "value": "Nike", "count": 120 }, { "value": "Nikon", "count": 42 }]
+      result.hits
+
+      # Use within a LiveView handle_event for dynamic suggestions
+      def handle_event("search-brands", %{"value" => query}, socket) do
+        {:ok, result} = Scrypath.search_facet_values(Product, "brand", query)
+        {:noreply, assign(socket, :brand_suggestions, result.hits)}
+      end
+
   ## Errors vs raises
 
   * **`ArgumentError`** — some invalid shapes are rejected synchronously.

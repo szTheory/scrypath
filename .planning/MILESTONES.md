@@ -1,5 +1,43 @@
 # Milestones
 
+## v1.26 Facet Value Vocabulary Search (Shipped + archived: 2026-05-26)
+
+**Phases completed:** **2** (**95–96**), **3** plans, **7** requirements (**FACET-UX-01**–**FACET-UX-03**, **DOC-01**–**DOC-02**, **TEST-01**–**TEST-02**)
+
+**Hex:** **`scrypath 0.3.6`** on Hex at close; **in-repo milestone close only** — no dedicated Hex bump claimed for this planning milestone.
+
+**Key accomplishments:**
+
+- `Scrypath.search_facet_values/4` first-class function and `Scrypath.FacetSearchResult` struct for idiomatic high-cardinality facet search — **Phase 95**
+- Automatic index aliasing and Meilisearch v1.3+ payload structuring for `/facet-search` endpoint — **Phase 95**
+- Enhanced ExDoc documentation with concrete LiveView type-ahead examples — **Phase 96**
+- `mix verify.phase96` hermetic gate covering all new facet-UX surfaces — **Phase 96**
+
+**Milestone audit:** ✅ Passed — 7/7 requirements, 2/2 phases, 4/4 integration points, 2/2 E2E flows — see `milestones/v1.26-MILESTONE-AUDIT.md`
+
+**Archives:** `milestones/v1.26-ROADMAP.md`, `milestones/v1.26-REQUIREMENTS.md`, `milestones/v1.26-MILESTONE-AUDIT.md` · **Git tag:** `v1.26` (planning milestone marker)
+
+---
+
+## v1.25 Tenant-Safe Search Access (Shipped + archived: 2026-05-26)
+
+**Phases completed:** **3** (**92–94**), **5** requirements (**TNNT-01**–**TNNT-05**)
+
+**Hex:** **`scrypath 0.3.6`** on Hex at close; **in-repo milestone close only** — no dedicated Hex bump claimed for this planning milestone.
+
+**Key accomplishments:**
+
+- Canonical Multitenancy Guide (`guides/multitenancy.md`) covering shared-index model and filter merge order warnings — **Phase 92**
+- `tenant_field:` schema declaration and `schema_capabilities/1` reflection — **Phase 92 & 93**
+- `tenant_scope:` hard filter injection on `Scrypath.search/3` to prevent silent data-leak footguns — **Phase 93**
+- `mix verify.phase94` hermetic gate covering all tenant-safety surfaces — **Phase 94**
+
+**Milestone audit:** ✅ Passed — 5/5 requirements, 3/3 phases, 5/5 integration points, 2/2 E2E flows — see `milestones/v1.25-MILESTONE-AUDIT.md`
+
+**Archives:** `milestones/v1.25-ROADMAP.md`, `milestones/v1.25-REQUIREMENTS.md`, `milestones/v1.25-MILESTONE-AUDIT.md` · **Git tag:** `v1.25` (planning milestone marker)
+
+---
+
 ## v1.24 Related-Data and Dependency Propagation (Shipped + archived: 2026-05-25)
 
 **Phases completed:** **3** (**89–91**), **9** plans, **7** requirements (**DATA-01**–**DATA-03**, **EXEC-01**–**EXEC-02**, **TEST-01**–**TEST-02**)

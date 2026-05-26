@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.26
-milestone_name: — Facet Value Vocabulary Search
-status: planning
-last_updated: "2026-05-26T13:18:29.098Z"
-last_activity: 2026-05-26 -- Generated REQUIREMENTS and ROADMAP for v1.26
+milestone: none
+milestone_name: none
+status: archived
+last_updated: "2026-05-26T15:00:00.000Z"
+last_activity: 2026-05-26 -- v1.26 Facet Value Vocabulary Search archived
 progress:
-  total_phases: 2
+  total_phases: 0
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
-  percent: 0
+  percent: 100
 ---
 
 # Project State
@@ -21,14 +21,14 @@ See: `.planning/PROJECT.md` (updated 2026-05-26)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** v1.26 — Facet Value Vocabulary Search (Tier B4)
+**Current focus:** Post-v1.26 Evaluation / Maintenance
 
 ## Current Position
 
-Phase: 95
-Plan: None
-Status: Planning
-Last activity: 2026-05-26 -- Generated REQUIREMENTS and ROADMAP for v1.26
+Phase: none
+Plan: none
+Status: archived
+Last activity: 2026-05-26 -- v1.26 Facet Value Vocabulary Search archived
 
 ```
 Progress: [░░░░░░░░░░] 0%
@@ -40,6 +40,9 @@ Progress: [░░░░░░░░░░] 0%
 
 (See `.planning/PROJECT.md` Key Decisions.)
 
+- **v1.26 archived:** Shipped `Scrypath.search_facet_values/4` for high-cardinality facet search, updated docs with LiveView examples, and locked the `mix verify.phase96` gate.
+- **v1.25 archived:** Shipped `tenant_field:` declaration, `tenant_scope:` injection, and canonical multitenancy guide.
+- **Phase 96 complete:** Created the `mix verify.phase96` gate, enhanced `search_facet_values/4` documentation with LiveView examples, and verified all facet-UX surfaces are regression-guarded in CI.
 - **Phase 95 complete:** Created distinct `Scrypath.FacetSearchResult` struct to separate vocabulary hits from standard search document hits. The interface acts dynamically on `facet_query` parameters and routes through the existing Scrypath option validation pipeline.
 - **Phase 93 plan 02 complete:** Added the `tenant_scope:` option and implemented `inject_tenant_scope!/2` to automatically and safely inject the tenant filter, catching conflicts with existing filters.
 - **Phase 92 plan 03 complete:** Added canonical multitenancy guide covering shared-index model, explicit tenant parameter pattern, filter merge order footgun, tenant tokens, search_document/1 edge case, and schema declaration reference. Registered guides/multitenancy.md in ExDoc extras and groups_for_extras. Added docs_contract_test.exs assertions for multitenancy guide anchors.
@@ -129,9 +132,11 @@ Run `/gsd:new-milestone` to propose and plan the next milestone.
 
 ---
 
-*Last updated: 2026-05-26 — v1.25 Tenant-Safe Search completed and archived*
+*Last updated: 2026-05-26 — v1.26 Facet Value Vocabulary Search archived*
 
-**Prior milestone:** **v1.25** — Tenant-Safe Search — **2026-05-26** (shipped + archived in-repo).
+**Prior milestone:** **v1.26** — Facet Value Vocabulary Search — **2026-05-26** (shipped + archived in-repo).
+
+**Completed:** **v1.25** shipped + archived in-repo (**2026-05-26**) — phases **92–94** — **`milestones/v1.25-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **Completed:** **v1.24** shipped + archived in-repo (**2026-05-25**) — phases **89–91** — **`milestones/v1.24-{ROADMAP,REQUIREMENTS}.md`**.
 
