@@ -140,6 +140,12 @@ jobs:
       - name: Related-data + docs-contract gate (`mix verify.phase91`)
         run: mix verify.phase91
 
+      - name: Tenant-safety + docs-contract gate (`mix verify.phase94`)
+        run: mix verify.phase94
+
+      - name: Facet value search verification gate (`mix verify.phase96`)
+        run: mix verify.phase96
+
   adopter-verify:
     runs-on: ubuntu-latest
 
