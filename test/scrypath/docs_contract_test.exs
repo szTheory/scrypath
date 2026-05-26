@@ -733,15 +733,8 @@ defmodule Scrypath.DocsContractTest do
 
   test "release docs and CI keep the package gate auth-free" do
     assert_contains_all(@ci_workflow, [
-      "mix verify.phase11",
-      "mix verify.phase13 --skip-integration",
-      "mix verify.phase14",
-      "mix verify.phase20",
-      "mix verify.phase22",
-      "mix verify.phase26",
-      "mix verify.phase28",
-      "mix verify.phase41",
-      "mix verify.phase43",
+      "mix verify",
+      "mix verify.phase5",
       "Operator integration verification (`mix verify.phase13`)",
       "mix verify.phase13"
     ])
@@ -1038,8 +1031,8 @@ defmodule Scrypath.DocsContractTest do
     ])
 
     assert_contains_all(@ci_workflow, [
-      "Request-edge docs/examples gate (`mix verify.phase82`)",
-      "run: mix verify.phase82"
+      "Run Maturity Gate (`mix verify`)",
+      "run: mix verify"
     ])
   end
 
