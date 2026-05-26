@@ -71,29 +71,25 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
     end
 
     defp resolve_schema(%{"schema" => name}) when is_binary(name) do
-      try do
-        {:ok, String.to_existing_atom(name)}
-      rescue
-        ArgumentError -> {:error, :invalid_schema}
-      end
+      {:ok, String.to_existing_atom(name)}
+    rescue
+      ArgumentError -> {:error, :invalid_schema}
     end
 
     defp resolve_schema(_args), do: {:error, :invalid_schema}
 
     defp resolve_fan_out(schema_module, %{"fan_out" => fan_out_string})
          when is_binary(fan_out_string) do
-      try do
-        fan_out_key = String.to_existing_atom(fan_out_string)
-        fan_outs = schema_module.__scrypath__(:fan_outs) || []
+      fan_out_key = String.to_existing_atom(fan_out_string)
+      fan_outs = schema_module.__scrypath__(:fan_outs) || []
 
-        if Keyword.has_key?(fan_outs, fan_out_key) do
-          {:ok, fan_out_key}
-        else
-          {:error, :invalid_fan_out}
-        end
-      rescue
-        ArgumentError -> {:error, :invalid_fan_out}
+      if Keyword.has_key?(fan_outs, fan_out_key) do
+        {:ok, fan_out_key}
+      else
+        {:error, :invalid_fan_out}
       end
+    rescue
+      ArgumentError -> {:error, :invalid_fan_out}
     end
 
     defp resolve_fan_out(_schema_module, _args), do: {:error, :invalid_fan_out}

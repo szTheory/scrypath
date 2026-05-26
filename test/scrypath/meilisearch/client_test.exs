@@ -50,7 +50,7 @@ defmodule Scrypath.Meilisearch.ClientTest do
         assert params["facetName"] == "genre"
         assert params["facetQuery"] == "co"
         assert params["filter"] == ["status = 'published'"]
-        
+
         Req.Test.json(conn, %{
           "facetHits" => [%{"value" => "comedy", "count" => 42}],
           "facetQuery" => "co"

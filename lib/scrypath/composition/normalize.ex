@@ -117,14 +117,12 @@ defmodule Scrypath.Composition.Normalize do
   defp normalize_field(:page, value) when value == [] or value == nil, do: {:ok, []}
 
   defp normalize_field(:page, value) do
-    try do
-      case Options.validate_search_page(value) do
-        {:ok, page} -> {:ok, canonical_page(page)}
-        {:error, _reason} -> {:error, {:invalid_fragment, {:page, value}}}
-      end
-    rescue
-      ArgumentError -> {:error, {:invalid_fragment, {:page, value}}}
+    case Options.validate_search_page(value) do
+      {:ok, page} -> {:ok, canonical_page(page)}
+      {:error, _reason} -> {:error, {:invalid_fragment, {:page, value}}}
     end
+  rescue
+    ArgumentError -> {:error, {:invalid_fragment, {:page, value}}}
   end
 
   defp normalize_field(:facets, value) when value == [] or value == nil, do: {:ok, []}

@@ -34,6 +34,10 @@ defmodule Scrypath.SearchManyTest do
     def search(_schema, query, _config) do
       {:ok, %{"hits" => [%{"id" => 1, "title" => query.text}], "page" => 1, "hitsPerPage" => 20}}
     end
+
+    @impl true
+    def search_facet_values(_schema, _facet, _query, _opts, _config),
+      do: {:error, :not_implemented}
   end
 
   defmodule NativeTransportFailBackend do
@@ -57,6 +61,10 @@ defmodule Scrypath.SearchManyTest do
 
     @impl true
     def search(a, b, c), do: Scrypath.TestSupport.FakeBackend.search(a, b, c)
+
+    @impl true
+    def search_facet_values(_schema, _facet, _query, _opts, _config),
+      do: {:error, :not_implemented}
 
     @impl true
     def search_many(_paired, _config), do: {:error, :reset_by_peer}
@@ -86,6 +94,10 @@ defmodule Scrypath.SearchManyTest do
       send(self(), {:per_query_search, query})
       {:ok, %{"hits" => [%{"id" => 1, "title" => query.text}], "page" => 1, "hitsPerPage" => 20}}
     end
+
+    @impl true
+    def search_facet_values(_schema, _facet, _query, _opts, _config),
+      do: {:error, :not_implemented}
   end
 
   defmodule PartialFailBackend do
@@ -111,6 +123,10 @@ defmodule Scrypath.SearchManyTest do
     def search(SearchablePost, %Scrypath.Query{} = q, _) do
       {:ok, %{"hits" => [%{"id" => 1}], "page" => 1, "hitsPerPage" => 20, "query" => q}}
     end
+
+    @impl true
+    def search_facet_values(_schema, _facet, _query, _opts, _config),
+      do: {:error, :not_implemented}
   end
 
   defmodule FailAllBackend do
@@ -131,6 +147,10 @@ defmodule Scrypath.SearchManyTest do
 
     @impl true
     def search(_, _, _), do: {:error, :bad}
+
+    @impl true
+    def search_facet_values(_schema, _facet, _query, _opts, _config),
+      do: {:error, :not_implemented}
   end
 
   @base_opts [

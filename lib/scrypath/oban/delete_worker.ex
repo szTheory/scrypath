@@ -58,15 +58,13 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
     defp validate_document_count(_args, _document_ids), do: {:error, :invalid_document_count}
 
     defp build_config(backend, index_name, args) do
-      try do
-        config =
-          [backend: backend, sync_mode: :manual]
-          |> JobConfig.merge_job_runtime_opts(args)
+      config =
+        [backend: backend, sync_mode: :manual]
+        |> JobConfig.merge_job_runtime_opts(args)
 
-        {:ok, Config.resolve!(config) |> Keyword.put(:index_name, index_name)}
-      rescue
-        error in ArgumentError -> {:error, {:invalid_config, Exception.message(error)}}
-      end
+      {:ok, Config.resolve!(config) |> Keyword.put(:index_name, index_name)}
+    rescue
+      error in ArgumentError -> {:error, {:invalid_config, Exception.message(error)}}
     end
 
     defp resolve_existing_module(name, validator) do
@@ -80,12 +78,10 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
     end
 
     defp safe_module(name) do
-      try do
-        parts = name |> String.split(".") |> Enum.map(&String.to_existing_atom/1)
-        {:ok, Module.safe_concat(parts)}
-      rescue
-        ArgumentError -> {:error, {:unknown_module, name}}
-      end
+      parts = name |> String.split(".") |> Enum.map(&String.to_existing_atom/1)
+      {:ok, Module.safe_concat(parts)}
+    rescue
+      ArgumentError -> {:error, {:unknown_module, name}}
     end
   end
 end

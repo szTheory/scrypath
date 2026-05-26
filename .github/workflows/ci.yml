@@ -89,62 +89,14 @@ jobs:
       - name: Run namespace fence (`mix scrypath.namespace_fence`)
         run: mix scrypath.namespace_fence
 
-      - name: Check formatting
-        run: mix format --check-formatted
-
-      - name: Verify workspace is clean
-        run: mix verify.workspace_clean
-
-      - name: Run Credo
-        run: mix credo
-
-      - name: Run Dialyzer
-        run: mix dialyzer
-
-      - name: Build docs
-        run: mix docs --warnings-as-errors
+      - name: Run Maturity Gate (`mix verify`)
+        run: mix verify
 
       - name: Audit Hex dependencies
         run: mix hex.audit
 
-      - name: Release contract gate (`mix verify.phase11`)
-        run: mix verify.phase11
-
-      - name: Operator checks (`mix verify.phase13 --skip-integration`)
-        run: mix verify.phase13 --skip-integration
-
-      - name: Operator Mix + docs gate (`mix verify.phase14`)
-        run: mix verify.phase14
-
-      - name: Faceting + guide gate (`mix verify.phase20`)
-        run: mix verify.phase20
-
-      - name: Operator polish + drift recovery gate (`mix verify.phase22`)
-        run: mix verify.phase22
-
-      - name: Failure rollups gate (`mix verify.phase26`)
-        run: mix verify.phase26
-
-      - name: Index contract drift CLI gate (`mix verify.phase28`)
-        run: mix verify.phase28
-
-      - name: Federation docs gate (`mix verify.phase41`)
-        run: mix verify.phase41
-
-      - name: Per-query runtime gate (`mix verify.phase43`)
-        run: mix verify.phase43
-
-      - name: Request-edge docs/examples gate (`mix verify.phase82`)
-        run: mix verify.phase82
-
-      - name: Related-data + docs-contract gate (`mix verify.phase91`)
-        run: mix verify.phase91
-
-      - name: Tenant-safety + docs-contract gate (`mix verify.phase94`)
-        run: mix verify.phase94
-
-      - name: Facet value search verification gate (`mix verify.phase96`)
-        run: mix verify.phase96
+      - name: Run Dialyzer
+        run: mix dialyzer
 
   adopter-verify:
     runs-on: ubuntu-latest

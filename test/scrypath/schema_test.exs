@@ -28,11 +28,13 @@ defmodule Scrypath.SchemaTest do
     end
 
     test "reflects tenant_field if declared" do
-      [{mod, _}] = Code.compile_string("""
-      defmodule TenantFieldSchemaTest do
-        use Scrypath, fields: [:title], tenant_field: :account_id
-      end
-      """)
+      [{mod, _}] =
+        Code.compile_string("""
+        defmodule TenantFieldSchemaTest do
+          use Scrypath, fields: [:title], tenant_field: :account_id
+        end
+        """)
+
       assert mod.__scrypath__(:tenant_field) == :account_id
     end
 
