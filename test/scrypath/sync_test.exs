@@ -55,6 +55,10 @@ defmodule Scrypath.SyncTest do
     def search(_schema_module, _query, _config) do
       {:ok, %{hits: []}}
     end
+
+    @impl true
+    def search_facet_values(_schema, _facet, _query, _opts, _config),
+      do: {:error, :not_implemented}
   end
 
   defmodule SeamBackend do
@@ -123,6 +127,10 @@ defmodule Scrypath.SyncTest do
 
     @impl true
     def search(_schema_module, _query, _config), do: {:ok, %{hits: []}}
+
+    @impl true
+    def search_facet_values(_schema, _facet, _query, _opts, _config),
+      do: {:error, :not_implemented}
   end
 
   defmodule FutureBackend do
@@ -180,6 +188,10 @@ defmodule Scrypath.SyncTest do
 
     @impl true
     def search(_schema_module, _query, _config), do: {:ok, %{hits: []}}
+
+    @impl true
+    def search_facet_values(_schema, _facet, _query, _opts, _config),
+      do: {:error, :not_implemented}
   end
 
   defmodule ReadyOban do

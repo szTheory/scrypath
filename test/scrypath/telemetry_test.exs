@@ -41,6 +41,10 @@ defmodule Scrypath.TelemetryTest do
          "totalHits" => 3
        }}
     end
+
+    @impl true
+    def search_facet_values(_schema, _facet, _query, _opts, _config),
+      do: {:error, :not_implemented}
   end
 
   defmodule SequencedClient do

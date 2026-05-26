@@ -25,7 +25,8 @@ defmodule Scrypath.SearchTest do
     def search(_schema_module, _query, _config), do: {:error, :search_failed}
 
     @impl true
-    def search_facet_values(_schema_module, _facet_name, _search_string, _opts, _config), do: {:error, :search_failed}
+    def search_facet_values(_schema_module, _facet_name, _search_string, _opts, _config),
+      do: {:error, :search_failed}
   end
 
   defmodule HydrationBackend do
@@ -110,7 +111,9 @@ defmodule Scrypath.SearchTest do
                 hits: [%Scrypath.SearchResult.Facets.Bucket{value: "foo", count: 1}],
                 facet_query: "fo"
               }} =
-               Scrypath.search_facet_values(SearchablePost, "category", "fo", backend: HydrationBackend)
+               Scrypath.search_facet_values(SearchablePost, "category", "fo",
+                 backend: HydrationBackend
+               )
     end
 
     test "search_facet_values!/4 unwraps successful results" do
@@ -118,7 +121,9 @@ defmodule Scrypath.SearchTest do
                hits: [%Scrypath.SearchResult.Facets.Bucket{value: "foo", count: 1}],
                facet_query: "fo"
              } =
-               Scrypath.search_facet_values!(SearchablePost, "category", "fo", backend: HydrationBackend)
+               Scrypath.search_facet_values!(SearchablePost, "category", "fo",
+                 backend: HydrationBackend
+               )
     end
 
     test "search_facet_values!/4 raises on backend errors" do

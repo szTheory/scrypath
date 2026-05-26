@@ -284,11 +284,9 @@ defmodule Scrypath.CLI.OperatorTask do
   end
 
   defp normalize_otp_app!(value) do
-    try do
-      String.to_existing_atom(value)
-    rescue
-      ArgumentError -> Mix.raise("otp_app must be an existing atom name, got #{inspect(value)}")
-    end
+    String.to_existing_atom(value)
+  rescue
+    ArgumentError -> Mix.raise("otp_app must be an existing atom name, got #{inspect(value)}")
   end
 
   defp normalize_backend!("meilisearch"), do: Scrypath.Meilisearch
@@ -300,12 +298,10 @@ defmodule Scrypath.CLI.OperatorTask do
   defp normalize_sync_mode!(value), do: Mix.raise("unsupported sync mode #{inspect(value)}")
 
   defp normalize_existing_atom!(value, key) do
-    try do
-      String.to_existing_atom(value)
-    rescue
-      ArgumentError ->
-        Mix.raise("#{key} must reference an existing atom, got #{inspect(value)}")
-    end
+    String.to_existing_atom(value)
+  rescue
+    ArgumentError ->
+      Mix.raise("#{key} must reference an existing atom, got #{inspect(value)}")
   end
 
   defp format_invalid_opt({name, value}), do: "#{name}=#{value}"

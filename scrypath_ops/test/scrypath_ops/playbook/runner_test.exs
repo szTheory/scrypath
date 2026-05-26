@@ -62,6 +62,10 @@ defmodule ScrypathOps.Playbook.RunnerTest do
     end
 
     @impl true
+    def search_facet_values(_schema, _facet, _query, _opts, _config),
+      do: {:error, :not_implemented}
+
+    @impl true
     def search_many(paired_queries, _config) when is_list(paired_queries) do
       ordered =
         Enum.map(paired_queries, fn {schema_module, %Query{} = query, _fed_opts} ->
@@ -99,6 +103,10 @@ defmodule ScrypathOps.Playbook.RunnerTest do
 
     @impl true
     def search(_schema_module, _query, _config), do: {:error, :search_failed}
+
+    @impl true
+    def search_facet_values(_schema, _facet, _query, _opts, _config),
+      do: {:error, :not_implemented}
   end
 
   defmodule NativeTransportFailBackend do
@@ -119,6 +127,10 @@ defmodule ScrypathOps.Playbook.RunnerTest do
 
     @impl true
     def search(a, b, c), do: ParityBackend.search(a, b, c)
+
+    @impl true
+    def search_facet_values(_schema, _facet, _query, _opts, _config),
+      do: {:error, :not_implemented}
 
     @impl true
     def search_many(_paired, _config), do: {:error, :reset_by_peer}

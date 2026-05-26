@@ -84,6 +84,9 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 - [x] **Phase 42** (2026-04-20): **`guides/per-query-tuning-pipeline.md`** + discoverability.
 - [x] **Phase 43** (2026-04-20): **Per-query runtime**.
 - [x] **v1.9 milestone** (2026-04-20): Per-query pipeline + runtime — phases **42–43**.
+- [x] **v1.6 milestone** (2026-04-19): Adoption-grade integration and trust — phases **29–35** archived; **`milestones/v1.6-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**; requirements **ADPT-***, **EXAM-***, **VRFY-***, **AUDT-01** satisfied per audit.
+- [x] **Phase 32** (2026-04-18): **`STATE.md`** deferred-row triage (**AUDT-01**) with terminal statuses.
+- [x] **Phase 33** (2026-04-18): Root-facing **README** / **CONTRIBUTING** / **`guides/golden-path.md`** agree on **cwd** for Phoenix example **`scripts/smoke.sh`**; **`docs_contract_test.exs`** locks filesystem + ordering — **ADPT-01**, **EXAM-02**, **VRFY-02**, **AUDT-01**.
 - [x] **Phase 36** (2026-04-19): **Hierarchical facets**.
 - [x] **Phase 37** (2026-04-20): **Disjunctive facet counts**.
 - [x] **Phase 38** (2026-04-20): **`search_within_facet/4`** + telemetry metadata.

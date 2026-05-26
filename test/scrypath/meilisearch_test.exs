@@ -87,7 +87,9 @@ defmodule Scrypath.MeilisearchTest do
 
     def facet_search(index_name, facet_name, facet_query, opts, config) do
       send(self(), {:client_facet_search, index_name, facet_name, facet_query, opts, config})
-      {:ok, %{"facetHits" => [%{"value" => "comedy", "count" => 42}], "facetQuery" => facet_query}}
+
+      {:ok,
+       %{"facetHits" => [%{"value" => "comedy", "count" => 42}], "facetQuery" => facet_query}}
     end
   end
 

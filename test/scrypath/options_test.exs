@@ -562,39 +562,51 @@ defmodule Scrypath.OptionsTest do
     end
 
     test "auto-injection into fields: is idempotent — validate_schema_options!/1 does not duplicate :tenant_id in :fields" do
-      config = Options.validate_schema_options!(fields: [:title, :tenant_id], tenant_field: :tenant_id)
+      config =
+        Options.validate_schema_options!(fields: [:title, :tenant_id], tenant_field: :tenant_id)
+
       assert config.fields == [:title, :tenant_id]
     end
 
     test "IO.warn/2 advisory emitted to :stderr when tenant_field: field is NOT in fields:" do
-      stderr = capture_io(:stderr, fn ->
-        Code.compile_string("""
-        defmodule TenantFieldAutoInjectWarns do
-          use Scrypath.Schema,
-            fields: [:title],
-            tenant_field: :tenant_id
-        end
-        """)
-      end)
+      stderr =
+        capture_io(:stderr, fn ->
+          Code.compile_string("""
+          defmodule TenantFieldAutoInjectWarns do
+            use Scrypath.Schema,
+              fields: [:title],
+              tenant_field: :tenant_id
+          end
+          """)
+        end)
+
       assert stderr =~ "tenant_field :tenant_id is not listed in fields:"
       assert stderr =~ "auto-added"
     end
 
     test "no :stderr output when tenant_field: field IS already in fields:" do
-      stderr = capture_io(:stderr, fn ->
-        Code.compile_string("""
-        defmodule TenantFieldIdempotentNoWarn do
-          use Scrypath.Schema,
-            fields: [:title, :tenant_id],
-            tenant_field: :tenant_id
-        end
-        """)
-      end)
+      stderr =
+        capture_io(:stderr, fn ->
+          Code.compile_string("""
+          defmodule TenantFieldIdempotentNoWarn do
+            use Scrypath.Schema,
+              fields: [:title, :tenant_id],
+              tenant_field: :tenant_id
+          end
+          """)
+        end)
+
       refute stderr =~ "is not listed in fields"
     end
 
     test "auto-injection into filterable: is idempotent — field already in filterable: produces no duplicate" do
-      config = Options.validate_schema_options!(fields: [:title], filterable: [:tenant_id], tenant_field: :tenant_id)
+      config =
+        Options.validate_schema_options!(
+          fields: [:title],
+          filterable: [:tenant_id],
+          tenant_field: :tenant_id
+        )
+
       assert Enum.count(config.filterable, &(&1 == :tenant_id)) == 1
     end
 
@@ -627,13 +639,21 @@ defmodule Scrypath.OptionsTest do
     end
 
     test "injects tenant field into existing filter" do
-      opts = Options.validate_search_options!(MockTenantSchema, tenant_scope: 123, filter: [status: "active"])
+      opts =
+        Options.validate_search_options!(MockTenantSchema,
+          tenant_scope: 123,
+          filter: [status: "active"]
+        )
+
       assert opts[:filter] == [tenant_id: 123, status: "active"]
     end
 
     test "raises when filter already contains tenant field" do
       assert_raise ArgumentError, ~r/already contains the tenant_field/, fn ->
-        Options.validate_search_options!(MockTenantSchema, tenant_scope: 123, filter: [tenant_id: 456])
+        Options.validate_search_options!(MockTenantSchema,
+          tenant_scope: 123,
+          filter: [tenant_id: 456]
+        )
       end
     end
 

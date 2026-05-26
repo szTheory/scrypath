@@ -1,5 +1,9 @@
 defmodule Scrypath.FacetSearchResult do
-  @moduledoc false
+  @moduledoc """
+  The result struct for high-cardinality facet value search.
+
+  Returned by `Scrypath.search_facet_values/4`.
+  """
 
   alias Scrypath.SearchResult.Facets.Bucket
 
@@ -27,7 +31,7 @@ defmodule Scrypath.FacetSearchResult do
 
   defp hits(raw) do
     hits_list = Map.get(raw, "facetHits") || Map.get(raw, :facetHits) || []
-    
+
     Enum.map(hits_list, fn hit ->
       %Bucket{
         value: Map.get(hit, "value") || Map.get(hit, :value),

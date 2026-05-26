@@ -106,8 +106,8 @@ defmodule Scrypath.Meilisearch.Client do
       "facetName" => facet_name,
       "facetQuery" => facet_query
     }
-    
-    payload = 
+
+    payload =
       opts
       |> Enum.into(%{})
       |> Enum.map(fn {k, v} -> {camelize_filter(k), v} end)

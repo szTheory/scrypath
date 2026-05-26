@@ -254,7 +254,7 @@ defmodule Scrypath do
 
   @doc """
   Search facet values (type-ahead) for high-cardinality facets.
-  
+
   Sends a request to the backend specifically optimized for searching within
   a single facet's values, rather than returning matching documents.
 
@@ -276,7 +276,7 @@ defmodule Scrypath do
 
   * **`ArgumentError`** — some invalid shapes are rejected synchronously.
   * **`{:error, reason}`** — operational failures, including backend errors.
-  
+
   `search_facet_values!/4` raises `Scrypath.Search.Error` instead of returning
   `{:error, _}`.
   """

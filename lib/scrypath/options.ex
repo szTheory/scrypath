@@ -51,7 +51,8 @@ defmodule Scrypath.Options do
     tenant_field: [
       type: {:custom, __MODULE__, :validate_tenant_field, []},
       default: nil,
-      doc: "Optional tenant field name auto-injected into both `filterable:` and `fields:` for shared-index multitenancy."
+      doc:
+        "Optional tenant field name auto-injected into both `filterable:` and `fields:` for shared-index multitenancy."
     ]
   ]
 
@@ -803,11 +804,9 @@ defmodule Scrypath.Options do
   end
 
   defp safe_string_to_existing_atom(str) when is_binary(str) do
-    try do
-      String.to_existing_atom(str)
-    rescue
-      ArgumentError -> nil
-    end
+    String.to_existing_atom(str)
+  rescue
+    ArgumentError -> nil
   end
 
   def validate_backend(value) when is_atom(value) or is_nil(value), do: {:ok, value}

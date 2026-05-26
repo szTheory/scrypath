@@ -62,6 +62,8 @@ defmodule Scrypath.MixProject do
         "verify.adopter": :test,
         "verify.opsui": :test,
         "verify.meilisearch_smoke": :test,
+        "verify.all": :test,
+        verify: :test,
         "verify.release_publish": :test,
         "verify.workspace_clean": :test,
         "verify.release_parity": :test,

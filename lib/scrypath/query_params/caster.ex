@@ -579,11 +579,9 @@ defmodule Scrypath.QueryParams.Caster do
   defp safe_existing_atom(value) when is_atom(value), do: value
 
   defp safe_existing_atom(value) when is_binary(value) do
-    try do
-      String.to_existing_atom(value)
-    rescue
-      ArgumentError -> nil
-    end
+    String.to_existing_atom(value)
+  rescue
+    ArgumentError -> nil
   end
 
   defp safe_existing_atom(_value), do: nil

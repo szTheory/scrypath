@@ -20,7 +20,7 @@ defmodule Scrypath.FacetSearchResultTest do
       assert %FacetSearchResult{} = result
       assert result.facet_query == "co"
       assert result.raw == raw
-      
+
       assert result.hits == [
                %Bucket{value: "comedy", count: 42},
                %Bucket{value: "drama", count: 15}

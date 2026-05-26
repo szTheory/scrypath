@@ -126,11 +126,14 @@ defmodule Scrypath.ProjectionTest do
 
   test "does not overwrite tenant_field when search_document/1 already includes it" do
     document =
-      Scrypath.Projection.document(TenantFieldCustomPostAlreadyIncludes, %TenantFieldCustomPostAlreadyIncludes{
-        id: 1,
-        title: "Hello",
-        tenant_id: 42
-      })
+      Scrypath.Projection.document(
+        TenantFieldCustomPostAlreadyIncludes,
+        %TenantFieldCustomPostAlreadyIncludes{
+          id: 1,
+          title: "Hello",
+          tenant_id: 42
+        }
+      )
 
     assert document.data.tenant_id == 42
     assert document.source == :custom
