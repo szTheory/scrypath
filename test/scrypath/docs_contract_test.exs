@@ -595,8 +595,9 @@ defmodule Scrypath.DocsContractTest do
   test "CONTRIBUTING documents default test path and live integration jobs (VRFY)" do
     assert_contains_all(@contributing, [
       "mix test --exclude integration",
-      "**`test`**",
-      "**`quality`**",
+      "**`main-ci`**",
+      "**`repo-hygiene`**",
+      "**`release-truth`**",
       "**`phase5-verification`**",
       "**`phase13-verification`**",
       "**`meilisearch-smoke`**",
@@ -1031,8 +1032,8 @@ defmodule Scrypath.DocsContractTest do
     ])
 
     assert_contains_all(@ci_workflow, [
-      "Run Maturity Gate (`mix verify`)",
-      "run: mix verify"
+      "Run repository hygiene gate (`mix verify --exclude integration`)",
+      "run: mix verify --exclude integration"
     ])
   end
 

@@ -23,6 +23,14 @@ Skim [`guides/common-mistakes.md`](guides/common-mistakes.md) when search or syn
 
 ## Verification
 
+## Release train and merge policy
+
+- Scrypath runs a **release train on `main`**: keep `main` green, let Release Please maintain the release PR, and merge that PR when the next patch is ready to ship.
+- **Default release posture is patch-first while Scrypath remains pre-1.0.** The repo already uses Release Please's pre-1.0 knobs, so merged work rolls into patch cadence unless maintainers intentionally open a larger semver conversation.
+- **Serious milestone work is PR-first.** Do not land new feature-depth work directly on `main`; shape it as a branch + PR slice that respects the release train.
+- **Squash merge only.** The PR title should be treated as the release-facing summary because it becomes the squash commit title that Release Please reads.
+- If `main` is green, the release PR is coherent, and there is no approved milestone or bugfix to work, the default maintainer posture is **nothing to do**.
+
 Use the normal fast suite during development:
 
 ```sh
@@ -79,13 +87,17 @@ GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
 
 | Job | Purpose |
 |-----|---------|
-| **`test`** | Matrix (Elixir 1.17.3 / OTP 26.2.5 and Elixir 1.19.0 / OTP 28.1): `mix compile --warnings-as-errors`, `mix test --exclude integration --include requires_clean_workspace` |
-| **`quality`** | Format, `mix verify.workspace_clean`, Credo, Dialyzer, `mix docs --warnings-as-errors`, `mix hex.audit`, plus focused verify gates for release, operator, faceting, drift, federation, and per-query runtime paths. |
+| **`main-ci`** | Required merge gate: `mix compile --warnings-as-errors`, then `mix test --exclude integration --exclude docs_contract --include requires_clean_workspace` on Elixir 1.19 / OTP 28. |
+| **`repo-hygiene`** | Required merge gate: `mix verify --exclude integration` for format, workspace cleanliness, Credo, fast tests, and docs build. |
+| **`release-truth`** | Required merge gate: `mix verify.phase11` to keep package metadata, docs, Release Please wiring, and Hex packaging truth aligned. |
+| **`deep-quality`** | Advisory quality sweep: optional-deps compile for `scrypath_ops`, namespace fence, `mix hex.audit`, and Dialyzer. |
 | **`phase5-verification`** | Service: Meilisearch v1.15. `SCRYPATH_INTEGRATION=1`, `mix verify.phase5` (live integration + docs slice for backfill/reindex) |
 | **`phase13-verification`** | Service: Meilisearch. `SCRYPATH_INTEGRATION=1`, `mix verify.phase13` (operator integration path) |
 | **`meilisearch-smoke`** | Service: Meilisearch. `mix verify.meilisearch_smoke` (curated live suites: `live_meilisearch_verification`, `live_operator_verification`, `search_many_integration`, `settings_hot_apply_integration`) |
 | **`phoenix-example-integration`** | Services: Postgres 16 + Meilisearch v1.15. `SCRYPATH_EXAMPLE_INTEGRATION=1`, `PGPORT=5433`, `SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700`. **CI** runs **`cd examples/phoenix_meilisearch`**, then **`mix deps.get`**, then **`mix test`** (same sequence as `.github/workflows/ci.yml`) - **not** `./scripts/smoke.sh`. **`./scripts/smoke.sh`** is a **local DX harness** under `examples/phoenix_meilisearch/` (Compose + env defaults aligned to CI); use it for interactive runs, not as the Actions test driver. See the example README for env tables. |
 | **`scrypath-ops-path-check` / `scrypath-ops`** | Service: Postgres 16 only (no Meilisearch). Path gate: runs on **`push` to `main`** unconditionally, and on **`pull_request`** when **`scrypath_ops/**`**, **`lib/**`**, **`mix.exs`**, **`mix.lock`**, or **`scrypath_ops/mix.lock`** change. Local contributors should use **`mix verify.opsui`** from the repo root; the dedicated CI job mirrors the same sequence by running **`cd scrypath_ops`**, then **`mix deps.get`**, then **`mix test`**. |
+
+Treat **`main-ci`**, **`repo-hygiene`**, and **`release-truth`** as the only routine merge blockers for the release train. The heavier live and advisory jobs still matter, but they should not create noise on the wire when ordinary patch-train work is otherwise ready.
 
 The root [`compose.yaml`](compose.yaml) is only for **local** Meilisearch when running smoke tasks; CI uses the workflow **`services:`** block instead.
 

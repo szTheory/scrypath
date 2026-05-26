@@ -10,7 +10,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Current Milestone: None
 
-**Goal:** Evaluation and maintenance. v1.26 successfully delivered the final planned major feature wedge.
+**Goal:** Evaluation, maintenance, and release-train discipline. v1.26 successfully delivered the final planned major feature wedge.
 
 ## Current State
 
@@ -30,7 +30,9 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - **Runtime Safety & Query Execution** — Immutable filter merging logic enforcing `tenant_id = X AND (user_filters)` and `tenant_scope:` hard-injection on `Scrypath.search/3`.
 - **Verification Gate** — `mix verify.phase94` covering all tenant-safety surfaces.
 
-**The library scope is now complete for its stated mission.** Future work will focus on maintenance, bug fixes, and evaluating stopping based on outside-adopter evidence.
+**The library scope is now complete for its stated mission.** Future work will focus on maintenance, bug fixes, release-train stability, and evaluating stopping based on outside-adopter evidence.
+
+**Release-train posture:** keep `main` green on lean merge gates, ship patch-first while pre-1.0, and land serious milestone work through PRs rather than direct `main` development.
 
 **Boundary discipline retained:** Scrypath remains framework-agnostic at the view layer.
 
@@ -40,7 +42,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Next Milestone Goals
 
-- **None active.** Seriously evaluate stopping.
+- **None active.** Default to no-op when the release train is green and there is no approved bugfix, release follow-up, or PR-scoped milestone.
 
 ## Last shipped milestone
 
@@ -52,7 +54,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Planning window
 
-**Evaluation mode.** No active milestone.
+**Evaluation mode.** No active milestone. Default posture is silence on the wire unless there is a concrete release, bugfix, adopter signal, or explicitly opened PR-scoped milestone.
 
 ## Requirements
 

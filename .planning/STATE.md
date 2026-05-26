@@ -21,7 +21,7 @@ See: `.planning/PROJECT.md` (updated 2026-05-26)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Post-v1.26 Evaluation / Maintenance
+**Current focus:** Post-v1.26 Evaluation / Maintenance / Release train
 
 ## Current Position
 
@@ -41,6 +41,7 @@ Progress: [░░░░░░░░░░] 0%
 (See `.planning/PROJECT.md` Key Decisions.)
 
 - **v1.26 archived:** Shipped `Scrypath.search_facet_values/4` for high-cardinality facet search, updated docs with LiveView examples, and locked the `mix verify.phase96` gate.
+- **2026-05-26 release-train policy:** `main` now defaults to lean required gates plus Release Please patch-train cadence. Serious milestone work should reopen through PR-scoped planning, not opportunistic direct-`main` execution, and the default answer when the train is green is "nothing to do."
 - **v1.25 archived:** Shipped `tenant_field:` declaration, `tenant_scope:` injection, and canonical multitenancy guide.
 - **Phase 96 complete:** Created the `mix verify.phase96` gate, enhanced `search_facet_values/4` documentation with LiveView examples, and verified all facet-UX surfaces are regression-guarded in CI.
 - **Phase 95 complete:** Created distinct `Scrypath.FacetSearchResult` struct to separate vocabulary hits from standard search document hits. The interface acts dynamically on `facet_query` parameters and routes through the existing Scrypath option validation pipeline.
@@ -128,7 +129,7 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-Run `/gsd:new-milestone` to propose and plan the next milestone.
+If `main` is green and no release PR needs action, there is nothing to do. Reopen planning with `/gsd:new-milestone` only for approved PR-scoped milestone work.
 
 ---
 
