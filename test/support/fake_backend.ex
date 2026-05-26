@@ -91,6 +91,11 @@ defmodule Scrypath.TestSupport.FakeBackend do
     {:ok, maybe_put_facet_wires(query, base)}
   end
 
+  @impl true
+  def search_facet_values(_schema_module, _facet_name, facet_query, _opts, _config) do
+    {:ok, %{"facetHits" => [], "facetQuery" => facet_query}}
+  end
+
   defp maybe_put_facet_wires(%Query{facets: []}, m), do: m
 
   defp maybe_put_facet_wires(%Query{facets: fs}, m) when is_list(fs) do
