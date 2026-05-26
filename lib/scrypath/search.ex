@@ -143,6 +143,62 @@ defmodule Scrypath.Search do
     end
   end
 
+  @spec search_facet_values(module(), String.t(), String.t(), keyword()) ::
+          {:ok, Scrypath.FacetSearchResult.t()} | {:error, term()}
+  def search_facet_values(schema_module, facet_name, search_string, opts \\ [])
+      when is_binary(facet_name) and is_binary(search_string) and is_list(opts) do
+    case Scrypath.Options.validate_search_options(schema_module, opts) do
+      {:error, {:validation, message}} when is_binary(message) ->
+        raise ArgumentError, message
+
+      {:error, {:invalid_options, _field, message}} when is_binary(message) ->
+        raise ArgumentError, message
+
+      {:error, _} = err ->
+        err
+
+      {:ok, search_opts} ->
+        do_search_facet_values(schema_module, facet_name, search_string, search_opts, opts)
+    end
+  end
+
+  @spec search_facet_values!(module(), String.t(), String.t(), keyword()) ::
+          Scrypath.FacetSearchResult.t()
+  def search_facet_values!(schema_module, facet_name, search_string, opts \\ []) do
+    case search_facet_values(schema_module, facet_name, search_string, opts) do
+      {:ok, result} -> result
+      {:error, reason} -> raise Scrypath.Search.Error, reason: reason
+    end
+  end
+
+  defp do_search_facet_values(schema_module, facet_name, search_string, search_opts, caller_opts) do
+    config = Config.resolve!(runtime_opts(caller_opts))
+
+    # We do not use Query.new here because it is a different endpoint with a specific payload,
+    # and the options validate handles parsing out per_query/attributes/etc, but the backend is
+    # responsible for taking the search_opts and formatting it for facet search.
+
+    metadata = Telemetry.common_metadata(schema_module, config, [])
+
+    Telemetry.span([:scrypath, :search_facet_values], metadata, fn ->
+      backend = Config.fetch_backend!(config)
+
+      result =
+        with {:ok, raw_result} <-
+               backend.search_facet_values(
+                 schema_module,
+                 facet_name,
+                 search_string,
+                 search_opts,
+                 config
+               ) do
+          {:ok, Scrypath.FacetSearchResult.new(raw_result)}
+        end
+
+      {result, Telemetry.stop_metadata(result)}
+    end)
+  end
+
   @spec search!(module(), String.t(), keyword()) :: SearchResult.t()
   def search!(schema_module, text, opts \\ []) do
     case search(schema_module, text, opts) do
