@@ -141,6 +141,16 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert envs[:"verify.phase99"] == :test
     end
 
+    test "verify.phase100 stays intentionally unregistered in preferred_envs" do
+      envs = Scrypath.MixProject.cli()[:preferred_envs]
+      refute Keyword.has_key?(envs, :"verify.phase100")
+
+      mix_exs = File.read!("mix.exs")
+
+      refute mix_exs =~ "\"verify.phase100\": :test",
+             "verify.phase100 must remain unregistered; phase100 trust checks run in verify.phase99"
+    end
+
     test "verify.workspace_clean is registered as :test" do
       envs = Scrypath.MixProject.cli()[:preferred_envs]
       assert envs[:"verify.workspace_clean"] == :test
@@ -167,6 +177,17 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert contributing =~ "**`repo-hygiene`**"
       assert contributing =~ "**`release-truth`**"
       assert contributing =~ "**`phase99-trust`**"
+    end
+
+    test "no docs or workflow guidance introduces verify.phase100 drift" do
+      contributing = File.read!("CONTRIBUTING.md")
+      ci = File.read!(@ci_yml)
+
+      refute contributing =~ "mix verify.phase100",
+             "verify.phase100 guidance must not be added; phase100 enforcement stays under verify.phase99"
+
+      refute ci =~ "mix verify.phase100",
+             "CI trust lane must remain on mix verify.phase99 without verify.phase100 proliferation"
     end
   end
 
