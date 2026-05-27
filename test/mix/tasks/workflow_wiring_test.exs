@@ -123,6 +123,11 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert envs[:"verify.phase97"] == :test
     end
 
+    test "verify.phase98 is registered as :test" do
+      envs = Scrypath.MixProject.cli()[:preferred_envs]
+      assert envs[:"verify.phase98"] == :test
+    end
+
     test "verify.workspace_clean is registered as :test" do
       envs = Scrypath.MixProject.cli()[:preferred_envs]
       assert envs[:"verify.workspace_clean"] == :test
