@@ -49,15 +49,18 @@ When maintainers review an evidence bundle, they sort the outcome into one of fo
 
 To submit evidence of a failure or confusion, you must use our canonical evidence bundle template.
 
-You can find the template at `docs/templates/outside-adopter-evidence.md`. 
+You can find the template at `docs/templates/outside-adopter-evidence.md`.
 
-Please fill out:
-1. Adopter context and Environment matrix
+Required evidence must include all of the following checklist items:
+1. Environment matrix
 2. Scrypath Ref or Hex version
-3. Chosen proof path and Sync mode
-4. Ordered commands run
-5. Expected versus actual outcome
-6. Exact first failure point
-7. Supporting logs
+3. Chosen proof path
+4. Sync mode
+5. Ordered commands
+6. Expected versus actual outcome
+7. First failure point
+8. Supporting logs
+
+Incomplete evidence bundles (missing context, missing ordered commands, or missing logs) are classified as Class D and returned for clarification.
 
 Include the completed template in an issue on GitHub.
