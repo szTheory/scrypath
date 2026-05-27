@@ -21,11 +21,11 @@ Scrypath now sits in a near-done band for its stated Meilisearch-first Phoenix/E
 - **Maintenance lane (default):** keep `main` green, finish release follow-through, maintain support/docs truth, and process outside-adopter evidence.
 - **Feature lane (only when reopened):** use PR-scoped milestones with explicit wedge boundaries; merge only after green PR CI.
 
-## Open planning-truth concern
+## Planning-truth note
 
-The `v1.20` archive still records a shipped `Scrypath.SearchModule` layer, while branch tip does not expose that module/guide/tests. Treat this as planning debt until reconciled.
+`v1.20` SearchModule archive claims were reconciled on 2026-05-27 via archive-correction: branch tip does not ship `Scrypath.SearchModule`, and planning now treats those claims as historical milestone narrative only.
 
-Tracked in: `.planning/todos/search-module-archive-code-drift.md`
+Decision record: `.planning/todos/search-module-archive-code-drift.md` (resolved)
 
 ## Completed milestone sequence (latest)
 
