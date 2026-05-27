@@ -1,7 +1,7 @@
 # Milestone candidates — developer-first roadmap stack
 
 **Purpose:** Prioritized themes for **`/gsd-new-milestone`** — **onboarding + QoL** for people using and contributing to Scrypath; **avoid busywork** and maintainer-only work masquerading as product.  
-**Last reviewed:** 2026-05-27 — **v1.26** shipped (facet value vocabulary search). Repo-grounded done-ness assessment (2026-05-27) puts Scrypath at **~93–95% done**. The last planned product wedges — related-data propagation, tenant-safe search, and facet value search — are now shipped. Default posture is **release, gather outside-adopter evidence, reconcile planning truth, and otherwise stop**. The canonical portfolio posture is still the **v1.19** readiness verdict: seek broader outside production adoption on the defended surface.
+**Last reviewed:** 2026-05-27 — **v1.26** shipped (facet value vocabulary search). Repo-grounded reassessments (2026-05-27) keep Scrypath at **~93–95% done**. The last planned product wedges — related-data propagation, tenant-safe search, and facet value search — are shipped. Default posture is **release, gather outside-adopter evidence, reconcile planning truth, and otherwise stop**. If feature work reopens, the highest-leverage bounded wedge is now **Adopter Contract Hardening** before broader feature depth.
 
 **Reconciliation note:** the `v1.20` archive says `Scrypath.SearchModule` shipped, but the current checkout does not expose that layer or its guide. Documented in `/docs/jtbd-gap-map.md`. Planning debt only; not a product gap for users today.
 
@@ -81,6 +81,7 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 | # | Theme | Notes |
 |---|--------|--------|
 | **E1** | **Outside-adopter evidence and support-truth reconciliation** | **Done in v1.23; continue as maintenance evidence loop** — no new feature milestone should open unless outside-adopter evidence shows a concrete gap. |
+| **E2** | **Adopter Contract Hardening (docs/support/install/proof coherence)** | **Current top bounded wedge if work reopens** — align install/version contract across README + guides + intake, clarify Hex vs repo-clone proof boundary, and lock with docs contracts. |
 
 ### Tier F — Current maintenance pull
 
@@ -115,8 +116,9 @@ Use these lanes to avoid reopening feature breadth by habit:
 | 5 | **B1** | **Shipped v1.24** — `sync_related/3`, fan-out, canonical guide |
 | 6 | **B2** | **Shipped v1.25** — tenant guide, declaration, reflection, and runtime enforcement. |
 | 7 | **B4** | **Shipped v1.26** — `search_facet_values/4` wrapping `/facet-search`. |
-| 8 | **F1** | Current maintenance pull: release, outside-adopter evidence, and planning-truth reconciliation. |
-| 9 | **B5** | Only with adopter evidence. Otherwise stop after v1.26 / v0.3.8. |
+| 8 | **E2** | If another bounded wedge is opened now, Adopter Contract Hardening is the highest-leverage trust move before new runtime breadth. |
+| 9 | **F1** | Current maintenance pull: release, outside-adopter evidence, and planning-truth reconciliation. |
+| 10 | **B5** | Only with adopter evidence. Otherwise stop after v1.26 / v0.3.8. |
 | Parallel | **D*** | When annoyance cost exceeds fix cost — do not headline a consumer milestone here |
 
 ---

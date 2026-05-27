@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: none
 milestone_name: none
 status: archived
-last_updated: "2026-05-27T06:20:00.000Z"
-last_activity: 2026-05-27 -- post-v1.26 done-ness assessment and release-train maintenance plan recorded
+last_updated: "2026-05-27T07:58:00.000Z"
+last_activity: 2026-05-27 -- milestone next-step reassessment recorded; next wedge ranked as Adopter Contract Hardening
 progress:
   total_phases: 0
   completed_phases: 0
@@ -28,7 +28,7 @@ See: `.planning/PROJECT.md` (updated 2026-05-26)
 Phase: none
 Plan: none
 Status: archived
-Last activity: 2026-05-27 -- post-v1.26 done-ness assessment and release-train maintenance plan recorded
+Last activity: 2026-05-27 -- milestone next-step reassessment recorded; next wedge ranked as Adopter Contract Hardening
 
 ```
 Progress: [░░░░░░░░░░] 0%
@@ -45,6 +45,7 @@ Progress: [░░░░░░░░░░] 0%
 - **2026-05-27 shift-left config pass:** low-risk GSD defaults already match this repo's standing preferences (`research`, parallel exploration, verifier/nyquist, discuss-first). No config changes were required; high-impact gate/profile changes still require explicit approval.
 - **2026-05-27 SearchModule reconciliation decision:** archive-correction path selected. No recoverable `Scrypath.SearchModule` implementation exists in this checkout/salvage context, so v1.20 SearchModule claims are now treated as historical archive narrative only, not present-day shipped surface.
 - **2026-05-27 done-ness assessment:** Scrypath is now roughly **93-95% done** for its stated Meilisearch-first Phoenix/Ecto scope. The last planned product wedges from prior evidence — related-data fan-out, tenant-safe search, and facet-value search — are shipped. Default next work is release follow-through, outside-adopter evidence, and planning-truth reconciliation, not another feature milestone.
+- **2026-05-27 milestone next-step reassessment:** Done-band remains **93-95%**. If feature work reopens, the single highest-leverage wedge is **Adopter Contract Hardening** (support/install/proof coherence and docs drift guards), with feature-depth work still gated behind reviewed outside-adopter signal or concrete bug evidence.
 - **2026-05-26 release-train policy:** `main` now defaults to lean required gates plus Release Please patch-train cadence. Serious milestone work should reopen through PR-scoped planning, not opportunistic direct-`main` execution, and the default answer when the train is green is "nothing to do."
 - **v1.25 archived:** Shipped `tenant_field:` declaration, `tenant_scope:` injection, and canonical multitenancy guide.
 - **Phase 96 complete:** Created the `mix verify.phase96` gate, enhanced `search_facet_values/4` documentation with LiveView examples, and verified all facet-UX surfaces are regression-guarded in CI.
@@ -119,6 +120,7 @@ Progress: [░░░░░░░░░░] 0%
 - **Future product ranking should stay evidence-bound:** do not let generic ergonomics or OPSUI breadth displace tenant-safe access or high-cardinality facet-value search unless the outside-adopter evidence actually points there.
 - **Post-v1.26 feature threshold:** do not open autocomplete/suggestions, OPSUI breadth, multi-backend, vector/hybrid, or generic ergonomics milestones without reviewed outside-adopter evidence or a concrete bug.
 - **Feature-lane merge discipline:** serious feature milestones must land through PRs with green PR CI; avoid direct-`main` depth work even when local checks pass.
+- **Support/install contract drift risk:** install-version language currently differs across user-facing docs (`~> 0.3` in core docs versus `~> 1.0` in outside-adopter intake). Treat this as trust-surface debt to fix before opening deeper feature wedges.
 
 ### Deferred Items
 
@@ -135,11 +137,11 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-If the Release Please PR needs action, finish the release train. Otherwise, if `main` is green and no outside-adopter evidence or concrete bug exists, there is nothing to do. Reopen planning with `/gsd:new-milestone` only for approved PR-scoped milestone work, then execute through a PR branch and merge only after green PR CI.
+If the Release Please PR needs action, finish the release train. Otherwise, if `main` is green and no outside-adopter evidence or concrete bug exists, there is nothing to do. If a milestone is reopened now, prefer one bounded PR-scoped Adopter Contract Hardening wedge first; merge only after green PR CI.
 
 ---
 
-*Last updated: 2026-05-27 — post-v1.26 done-ness assessment and release-train maintenance plan recorded*
+*Last updated: 2026-05-27 — milestone next-step reassessment recorded; Adopter Contract Hardening ranked as next wedge*
 
 **Prior milestone:** **v1.26** — Facet Value Vocabulary Search — **2026-05-26** (shipped + archived in-repo).
 
