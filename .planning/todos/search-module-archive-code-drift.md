@@ -1,7 +1,7 @@
 ---
 slug: search-module-archive-code-drift
 title: Reconcile v1.20 search-module archive with current code
-status: open
+status: resolved
 priority: high
 created: 2026-05-08
 updated: 2026-05-27
@@ -23,7 +23,8 @@ The post-v1.26 done-ness assessment keeps this as the main planning-truth cleanu
 
 ## Progress
 
-- 2026-05-27: Rolling planning docs (`PROJECT.md`, `MILESTONES.md`, `MILESTONE-ARC.md`) now consistently mark `v1.20` SearchModule statements as archive history rather than branch-tip shipped surface. Remaining work is the final code-or-archive reconciliation decision.
+- 2026-05-27: Rolling planning docs (`PROJECT.md`, `MILESTONES.md`, `MILESTONE-ARC.md`) now consistently mark `v1.20` SearchModule statements as archive history rather than branch-tip shipped surface.
+- 2026-05-27: Reconciliation decision completed with **archive-correction** path. No salvage directory exists in the checkout, no `Scrypath.SearchModule` implementation exists in branch-tip source, and git-history searches in this repo found planning references only (not module code artifacts). The repo now treats v1.20 SearchModule claims as historical archive narrative only.
 
 ## References
 
@@ -35,7 +36,18 @@ The post-v1.26 done-ness assessment keeps this as the main planning-truth cleanu
 - `guides/overview.md`
 - `README.md`
 
-## Done when
+## Decision
 
-- Archive, roadmap, and code all agree on whether `Scrypath.SearchModule` exists.
-- Future milestone planning can treat the search-module layer as either grounded or explicitly deferred.
+**Archive-correction selected (2026-05-27).**
+
+Why:
+
+- No recoverable SearchModule code artifacts are present in this checkout.
+- No salvage branch/directory is available in this repo snapshot.
+- Current public adopter story is already coherent on `Scrypath.QueryParams`, `Scrypath.Phoenix`, `Scrypath.Composition`, and context-owned `Scrypath.search/3`.
+
+Outcome:
+
+- SearchModule remains **not** part of present-day shipped branch-tip surface.
+- Archive files remain historical records and are explicitly labeled as such.
+- Future milestone planning must not assume SearchModule exists unless reintroduced in code by a new, explicit milestone.
