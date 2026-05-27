@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Verify.Phase99 do
   @moduledoc false
   use Mix.Task
 
-  @shortdoc "Runs drift-gate and CI-enforcement trust checks (Phase 99)"
+  @shortdoc "Runs phase99 trust checks, including phase100 install/release contract truth"
 
   @focused_tests [
     "test/scrypath/phase99_contract_test.exs",
@@ -15,7 +15,9 @@ defmodule Mix.Tasks.Verify.Phase99 do
     Mix.Task.run("app.start")
     ensure_no_args!(args)
 
-    Mix.shell().info("==> verify.phase99: drift gates and ci enforcement trust-hardening checks")
+    Mix.shell().info(
+      "==> verify.phase99: drift-gate trust lane with phase100 install/release contract checks"
+    )
     run_test!(@focused_tests, "Phase 99 trust-hardening verification")
 
     Mix.shell().info("==> Building docs with warnings as errors")
