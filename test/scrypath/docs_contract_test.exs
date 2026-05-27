@@ -291,6 +291,19 @@ defmodule Scrypath.DocsContractTest do
     ])
   end
 
+  test "phase 100 TRUTH-01/TRUTH-02 evergreen guard keeps install and release tokens stable" do
+    intake = @guides["guides/outside-adopter-intake.md"]
+
+    assert_contains_all(@readme, [~S|{:scrypath, "~> 0.3"}|])
+    assert_contains_all(intake, [~S|{:scrypath, "~> 0.3"}|])
+    refute String.contains?(intake, ~S|{:scrypath, "~> 1.0"}|)
+
+    assert_contains_all(String.downcase(@support_guide), [
+      "release-backed guidance",
+      "main may contain unreleased changes"
+    ])
+  end
+
   test "example runbook and CI preserve the same ordered proof command chain" do
     assert String.contains?(@example_readme, "phoenix-example-integration")
     assert ordered?(@example_readme, "cd examples/phoenix_meilisearch", "mix deps.get")
