@@ -152,6 +152,24 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     end
   end
 
+  describe "phase99 required-check wiring parity" do
+    test "ci defines phase99-trust job and routes it to mix verify.phase99" do
+      ci = File.read!(@ci_yml)
+      assert ci =~ "\n  phase99-trust:\n"
+      assert ci =~ "Run phase99 trust gate (`mix verify.phase99`)"
+      assert ci =~ "run: mix verify.phase99"
+    end
+
+    test "contributing required-check contract includes phase99-trust" do
+      contributing = File.read!("CONTRIBUTING.md")
+
+      assert contributing =~ "**`main-ci`**"
+      assert contributing =~ "**`repo-hygiene`**"
+      assert contributing =~ "**`release-truth`**"
+      assert contributing =~ "**`phase99-trust`**"
+    end
+  end
+
   describe "UAT shift-left (closes /gsd-verify-work 18 manual tests)" do
     # Each test maps 1:1 to a row in 18-UAT.md. Together they turn the UAT
     # from 9 human-verification items into 0 — every claim that previously

@@ -9,6 +9,7 @@ defmodule Scrypath.Phase99ContractTest do
   @example_readme File.read!("examples/phoenix_meilisearch/README.md")
   @verify_adopter_source File.read!("lib/mix/tasks/verify.adopter.ex")
   @mix_exs File.read!("mix.exs")
+  @ci_workflow File.read!(".github/workflows/ci.yml")
 
   describe "TEST-01 docs contract anchors" do
     test "high-risk surfaces keep canonical install/support/proof wayfinding tokens" do
@@ -87,6 +88,27 @@ defmodule Scrypath.Phase99ContractTest do
         "mix verify.phase98",
         "mix verify.phase99"
       ])
+    end
+
+    test "required-check names and phase99 gate wiring stay aligned across workflow and docs" do
+      assert_contains_all(@ci_workflow, [
+        "phase99-trust",
+        "mix verify.phase99",
+        "main-ci",
+        "repo-hygiene",
+        "release-truth"
+      ])
+
+      assert_contains_all(@contributing, [
+        "**`main-ci`**",
+        "**`repo-hygiene`**",
+        "**`release-truth`**",
+        "**`phase99-trust`**"
+      ])
+
+      assert ordered?(@contributing, "**`main-ci`**", "**`repo-hygiene`**")
+      assert ordered?(@contributing, "**`repo-hygiene`**", "**`release-truth`**")
+      assert ordered?(@contributing, "**`release-truth`**", "**`phase99-trust`**")
     end
   end
 
