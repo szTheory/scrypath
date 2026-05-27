@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: "1.27"
 milestone_name: milestone
-status: executing
+status: ready
 last_updated: "2026-05-27T13:28:54.485Z"
-last_activity: 2026-05-27
+last_activity: 2026-05-27 -- Phase 101 execution complete
 progress:
   total_phases: 9
   completed_phases: 9
@@ -21,19 +21,19 @@ See: `.planning/PROJECT.md` (updated 2026-05-27)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase 101 — ci-compatibility-truth-and-drift-guard-completion
+**Current focus:** v1.27 trust-hardening milestone complete (phase 101 closed)
 
 ## Current Position
 
 Phase: 101
-Plan: Not started
-Status: Executing Phase 101
-Last activity: 2026-05-27
+Plan: Complete
+Status: Phase 101 complete
+Last activity: 2026-05-27 -- Phase 101 execution complete
 
 Scope guard: `.planning/phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md` is active for this milestone. v1.27 is contract hardening only. Scope can reopen only with reviewed outside-adopter signal or a reproducible production bug, plus explicit updates to `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md` before execution.
 
 ```
-Progress: [█████████░] 89%
+Progress: [██████████] 100%
 ```
 
 ## Accumulated Context
