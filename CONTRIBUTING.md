@@ -81,7 +81,7 @@ The Phase 97 verify alias is the focused gate for canonical contract freeze and 
 
 The Phase 98 verify alias is the focused gate for proof-boundary and outside-adopter intake contract reconciliation. Run the shell command **mix verify.phase98** when you change support/readiness proof routing, example live-proof runbook parity, intake classification/routing guidance, or phase-98 contract tests. This gate protects trust-hardening scope only and does not expand runtime feature coverage.
 
-The Phase 99 verify alias is the focused gate for docs/proof drift contracts and trust-lane wiring parity. Run the shell command **mix verify.phase99** when you change `test/scrypath/phase99_contract_test.exs`, `test/mix/tasks/verify.phase99_test.exs`, `test/mix/tasks/workflow_wiring_test.exs`, or docs/alias tokens tied to the phase-99 trust-hardening lane. This gate remains trust-hardening scope only and does not expand runtime feature coverage.
+The Phase 99 verify alias is the focused gate for docs/proof drift contracts and trust-lane wiring parity. Run the shell command <code>mix verify.phase99</code> when you change `test/scrypath/phase99_contract_test.exs`, `test/mix/tasks/verify.phase99_test.exs`, `test/mix/tasks/workflow_wiring_test.exs`, or docs/alias tokens tied to the phase-99 trust-hardening lane. This gate remains trust-hardening scope only and does not expand runtime feature coverage.
 
 Run **`mix verify.opsui`** from the repository root when you change the optional **`scrypath_ops`** operator Phoenix app or its path dependency on the core library. It runs **`cd scrypath_ops && mix deps.get && mix test`**, and the dedicated **`scrypath-ops`** CI job now invokes this same root task (Postgres-backed Ecto setup, no Meilisearch service).
 
@@ -96,6 +96,7 @@ GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
 | **`main-ci`** | Required merge gate: `mix compile --warnings-as-errors`, then `mix test --exclude integration --exclude docs_contract --include requires_clean_workspace` on Elixir 1.19 / OTP 28. |
 | **`repo-hygiene`** | Required merge gate: `mix verify --exclude integration` for format, workspace cleanliness, Credo, fast tests, and docs build. |
 | **`release-truth`** | Required merge gate: `mix verify.phase11` to keep package metadata, docs, Release Please wiring, and Hex packaging truth aligned. |
+| **`phase99-trust`** | Required merge gate: <code>mix verify.phase99</code> for deterministic phase 99 trust-hardening contract and wiring checks. |
 | **`deep-quality`** | Advisory quality sweep: optional-deps compile for `scrypath_ops`, namespace fence, `mix hex.audit`, and Dialyzer. |
 | **`phase5-verification`** | Service: Meilisearch v1.15. `SCRYPATH_INTEGRATION=1`, `mix verify.phase5` (live integration + docs slice for backfill/reindex) |
 | **`phase13-verification`** | Service: Meilisearch. `SCRYPATH_INTEGRATION=1`, `mix verify.phase13` (operator integration path) |
@@ -103,7 +104,7 @@ GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
 | **`phoenix-example-integration`** | Services: Postgres 16 + Meilisearch v1.15. `SCRYPATH_EXAMPLE_INTEGRATION=1`, `PGPORT=5433`, `SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700`. **CI** runs **`cd examples/phoenix_meilisearch`**, then **`mix deps.get`**, then **`mix test`** (same sequence as `.github/workflows/ci.yml`) - **not** `./scripts/smoke.sh`. **`./scripts/smoke.sh`** is a **local DX harness** under `examples/phoenix_meilisearch/` (Compose + env defaults aligned to CI); use it for interactive runs, not as the Actions test driver. See the example README for env tables. |
 | **`scrypath-ops-path-check` / `scrypath-ops`** | Service: Postgres 16 only (no Meilisearch). Path gate: runs on **`push` to `main`** unconditionally, and on **`pull_request`** when **`scrypath_ops/**`**, **`lib/**`**, **`mix.exs`**, **`mix.lock`**, or **`scrypath_ops/mix.lock`** change. Local contributors should use **`mix verify.opsui`** from the repo root; the dedicated CI job mirrors the same sequence by running **`cd scrypath_ops`**, then **`mix deps.get`**, then **`mix test`**. |
 
-Treat **`main-ci`**, **`repo-hygiene`**, and **`release-truth`** as the only routine merge blockers for the release train. The heavier live and advisory jobs still matter, but they should not create noise on the wire when ordinary patch-train work is otherwise ready.
+Treat **`main-ci`**, **`repo-hygiene`**, **`release-truth`**, and **`phase99-trust`** as the routine required merge blockers for this trust-hardening lane. Heavy/live jobs still matter, but they remain advisory by default unless maintainers explicitly promote them.
 
 The root [`compose.yaml`](compose.yaml) is only for **local** Meilisearch when running smoke tasks; CI uses the workflow **`services:`** block instead.
 
