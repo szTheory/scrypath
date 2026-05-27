@@ -8,9 +8,35 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Milestone: None
+## Current Milestone: v1.27 Adopter Contract Hardening
 
-**Goal:** Evaluation, maintenance, and release-train discipline through a two-lane model: maintenance-by-default plus PR-first feature milestones when evidence justifies reopening.
+**Goal:** Harden the adopter contract by making install, support, and proof semantics coherent across primary surfaces and protected by drift gates before any new runtime breadth.
+
+## v1.27 Canonical Adopter Contract
+
+**Install and version policy:**
+- One canonical install/version statement across root docs and adopter-facing intake surfaces.
+- `main` may include unreleased changes; stable adopter instructions must point to release-backed truth.
+
+**Support and proof policy:**
+- `mix verify.adopter` is the canonical adopter proof spine.
+- Fast proof is required for routine PR confidence; live proof remains explicit and prerequisite-bound.
+- Adopter issue intake must request reproducible evidence and flow classification.
+
+**Non-goals for v1.27:**
+- No expansion into autocomplete/suggestions, vector/hybrid, multi-backend broadening, or new public runtime surfaces.
+- No Phoenix UI feature expansion beyond contract-surface clarity.
+- No relaxing of framework-agnostic runtime boundaries.
+
+## v1.27 Scope Guard Authority
+
+Source of truth: `.planning/phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md`
+
+Phase 97 through 99 banned capability classes:
+- autocomplete/suggestions
+- vector or hybrid retrieval
+- public backend broadening
+- new public runtime API categories
 
 ## Current State
 
@@ -46,10 +72,10 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Next Milestone Goals
 
-- **None active.** Default to no-op when the release train is green and there is no approved bugfix, release follow-up, or PR-scoped milestone.
-- **Maintenance lane first:** keep patch train, support truth, and adoption-evidence loop healthy without inventing new breadth.
-- **Feature lane entry criteria:** only open via approved PR-scoped milestone with concrete bug evidence or reviewed outside-adopter signal; no direct-`main` milestone depth work.
-- **If reopened now:** the highest-leverage bounded wedge is Adopter Contract Hardening (support/install/proof coherence) before any deeper runtime feature breadth.
+- **Milestone active:** execute a bounded PR-scoped trust bundle over phases 97-99.
+- **Contract-first sequence:** freeze canonical wording, reconcile primary surfaces, then enforce with drift gates.
+- **Evidence discipline:** keep adopter-proof semantics explicit and avoid widening runtime/product scope.
+- **Merge discipline:** maintain feature-lane PR CI requirements while preserving release-train stability.
 
 ## Last shipped milestone
 
@@ -61,7 +87,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Planning window
 
-**Evaluation mode.** No active milestone. Default posture is silence on the wire unless there is a concrete release, bugfix, adopter signal, or explicitly opened PR-scoped milestone.
+**Active milestone mode.** v1.27 is open as a bounded feature-lane trust-hardening wedge. Runtime feature breadth remains closed unless new adopter evidence arrives.
 
 ## Requirements
 
@@ -125,7 +151,9 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ### Active
 
-- [ ] Evaluate stopping vs maintenance.
+- [ ] Finalize canonical install/support/proof contract language and non-goals for v1.27.
+- [ ] Reconcile adopter-facing surfaces to canonical wording and flow boundaries.
+- [ ] Lock docs-contract drift checks and phase verify/CI expectations for phases 97-99.
 
 ### Out of Scope
 
@@ -155,4 +183,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-27 — milestone next-step reassessment recorded; maintenance-by-default posture retained*
+*Last updated: 2026-05-27 — v1.27 Adopter Contract Hardening initialized with canonical contract and bounded scope*
