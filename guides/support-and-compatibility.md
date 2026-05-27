@@ -59,8 +59,10 @@ This guide names the supported modes, but it does not restate their operational 
 
 The maintainer-facing adopter proof spine is intentionally split into two depths:
 
-- `mix verify.adopter` is the fast path. It stays auth-free and service-free, and checks the support/readiness contract surfaces that should agree at branch tip.
-- `mix verify.adopter --live` is the canonical live proof. It requires `SCRYPATH_EXAMPLE_INTEGRATION`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL`, then runs `cd examples/phoenix_meilisearch && mix deps.get && mix test`.
+- `mix verify.adopter` is the fast, service-free contract check for support/readiness truth at branch tip.
+- `mix verify.adopter --live` is prerequisite-bound live proof that requires `SCRYPATH_EXAMPLE_INTEGRATION`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL`.
+
+The live command executes `cd examples/phoenix_meilisearch && mix deps.get && mix test`.
 
 That split preserves operational honesty: fast mode protects support/readiness truth, while live mode is the defended in-repo proof for the Phoenix + Meilisearch example path.
 
