@@ -45,6 +45,21 @@ When maintainers review an evidence bundle, they sort the outcome into one of fo
 3. **App-Side Error:** The integration steps in the host app were incorrect.
 4. **Environment Failure:** The failure was caused by local OS, Docker, or port issues.
 
+## Maintainer triage routing
+
+Use the finding bucket to drive the next maintainer action:
+
+- **Bug in Scrypath** -> open or route a bugfix issue with reproducible references from the evidence bundle.
+- **Doc or Contract Gap** -> open a docs correction issue linked to the offending contract surface.
+- **App-Side Error** -> respond with correction guidance and close as a user-integration issue.
+- **Environment Failure** -> request environment fixes and ask the adopter to rerun the same evidence path.
+
+Needs information response for Class D flow:
+
+- "Needs information: please provide missing ordered commands and supporting logs so we can classify this bundle."
+
+Security carve-out: do not post vulnerability details in public issue threads. Route security reports through [`SECURITY.md`](../SECURITY.md).
+
 ## Submitting an Evidence Bundle
 
 To submit evidence of a failure or confusion, you must use our canonical evidence bundle template.
