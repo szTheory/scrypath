@@ -1,46 +1,77 @@
-# Requirements: Scrypath v1.26 — Facet Value Vocabulary Search
+# Requirements: Scrypath v1.27 — Adopter Contract Hardening
 
-**Defined:** 2026-05-26
-**Core Value:** Provide an idiomatic, native Elixir interface for high-cardinality facet value search (wrapping Meilisearch's `/facet-search` endpoint), allowing developers to build type-ahead facet filters without dealing with raw JSON engine responses.
+**Defined:** 2026-05-27
+**Core Value:** Keep Scrypath trustworthy by making install, support, and proof semantics coherent across adopter-facing surfaces, then lock that truth with drift gates.
 
-## v1.26 Requirements
+## v1.27 Requirements
 
-### Core API and Execution
-- [x] **FACET-UX-01**: Provide `Scrypath.search_facet_values(schema, facet_name, search_string, opts \\ [])` as a first-class function to wrap Meilisearch's native `/facet-search` endpoint.
-- [x] **FACET-UX-02**: The function automatically resolves the correct index alias for the schema and correctly structures the HTTP request payload according to Meilisearch v1.3+ specifications.
-- [x] **FACET-UX-03**: The response payload is cleanly parsed into an idiomatic Elixir struct or map structure (e.g., extracting the `facetHits` array) so developers do not need to parse raw JSON.
+### Contract Truth
 
-### Ergonomics and Documentation
-- [x] **DOC-01**: Document the new `search_facet_values/4` function comprehensively in ExDoc, including examples of building a "type-ahead" UI component for high-cardinality facets.
-- [x] **DOC-02**: Ensure the golden path or facet guides cross-reference this new capability for discoverability.
+- [ ] **TRUTH-01**: A new adopter sees one consistent install/version contract across `README.md`, support guide, contributor guide, and adopter-intake surfaces.
+- [ ] **TRUTH-02**: All primary surfaces clearly distinguish release-backed guidance from unreleased `main` branch behavior.
+- [ ] **TRUTH-03**: Support-lifecycle wording and compatibility boundaries are discoverable in one canonical support surface and referenced consistently from other entry points.
 
-### Verification
-- [x] **TEST-01**: Ensure there are hermetic docs-contract tests and unit tests verifying the request structure and the parsed response.
-- [x] **TEST-02**: Add a `mix verify.phase96` (originally 95) hermetic gate to prevent regressions.
+### Proof Boundary and Flow Clarity
+
+- [ ] **PROOF-01**: A maintainer can identify the canonical proof command (`mix verify.adopter`) in one hop from README and CONTRIBUTING surfaces.
+- [ ] **PROOF-02**: Fast proof and live proof paths are explicitly separated, including live prerequisites and failure expectations.
+- [ ] **PROOF-03**: Example-app proof instructions remain aligned with the canonical proof boundary and do not contradict root-level guidance.
+
+### Support and Intake Contract
+
+- [ ] **SUP-01**: Outside-adopter intake documentation defines required evidence fields and flow classification in actionable terms.
+- [ ] **SUP-02**: Support-escalation routing is explicit so maintainers can classify contract drift vs runtime bug vs environment issue.
+
+### Drift Protection and Verification
+
+- [ ] **TEST-01**: Docs-contract tests lock canonical install/support/proof anchors across all high-risk surfaces listed in the v1.27 contract-surface map.
+- [ ] **TEST-02**: Verification coverage asserts proof-boundary consistency between root docs and example-app docs.
+- [ ] **TEST-03**: Verification coverage asserts CI/verify alias references stay aligned with documented required checks.
+- [ ] **GATE-01**: Milestone-specific verify gate aliases for phases 97-99 are defined and documented as the trust-hardening verification spine.
+- [ ] **GATE-02**: Required PR CI checks for this milestone are explicitly documented and map to the milestone gate strategy.
+
+### Scope Discipline
+
+- [ ] **SCOPE-01**: Milestone docs explicitly state and enforce no runtime feature expansion (no autocomplete/suggestions, vector/hybrid, backend broadening, or new public runtime APIs).
+
+## Future Requirements (deferred)
+
+### Feature-depth follow-ons
+
+- **FUT-01**: Any post-v1.27 runtime feature wedge must be evidence-gated by reviewed outside-adopter signal or concrete production bug.
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| UI Widget implementation | Scrypath remains framework-agnostic at the view layer. This milestone provides the data, but developers build their own LiveView or JS widgets. |
-| Automatic client-side debouncing | Debouncing the type-ahead search is the responsibility of the frontend or LiveView layer. |
+| Autocomplete/suggestions runtime work | v1.27 is trust-surface hardening only; no new search breadth. |
+| New public runtime APIs or backend abstractions | Milestone is contract coherence, not runtime expansion. |
+| `scrypath_ops` feature expansion | Out of scope unless required to maintain adopter contract truth. |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FACET-UX-01 | Phase 95 | **satisfied** |
-| FACET-UX-02 | Phase 95 | **satisfied** |
-| FACET-UX-03 | Phase 95 | **satisfied** |
-| DOC-01      | Phase 95 | **satisfied** |
-| DOC-02      | Phase 95 | **satisfied** |
-| TEST-01     | Phase 96 | **satisfied** |
-| TEST-02     | Phase 96 | **satisfied** |
+| TRUTH-01 | Phase 97 | Pending |
+| TRUTH-02 | Phase 97 | Pending |
+| TRUTH-03 | Phase 97 | Pending |
+| PROOF-01 | Phase 98 | Pending |
+| PROOF-02 | Phase 98 | Pending |
+| PROOF-03 | Phase 98 | Pending |
+| SUP-01 | Phase 98 | Pending |
+| SUP-02 | Phase 98 | Pending |
+| TEST-01 | Phase 99 | Pending |
+| TEST-02 | Phase 99 | Pending |
+| TEST-03 | Phase 99 | Pending |
+| GATE-01 | Phase 99 | Pending |
+| GATE-02 | Phase 99 | Pending |
+| SCOPE-01 | Phase 97 | Pending |
 
 **Coverage:**
-- v1.26 requirements: 7 total
-- Mapped to phases: 7
+
+- v1.27 requirements: 14 total
+- Mapped to phases: 14
 - Unmapped: 0
 
 ---
-*Requirements defined: 2026-05-26 after /gsd-new-milestone based on Tier B4 priority*
+*Requirements defined: 2026-05-27 after v1.27 scope approval*

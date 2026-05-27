@@ -24,12 +24,14 @@
 [PHASE97-SCOPE-GUARD] Phase 97/98/99 reject runtime breadth expansion unless reopen policy conditions are met.
 
 **Requirements:**
+
 - TRUTH-01
 - TRUTH-02
 - TRUTH-03
 - SCOPE-01
 
 **Success criteria:**
+
 1. Canonical install/version/support/proof contract statements are written and approved in planning artifacts.
 2. Non-goals are explicit and block runtime feature-breadth drift.
 3. Requirement-to-phase mapping is stable and reviewable before surface edits begin.
@@ -39,6 +41,7 @@
 **Goal:** align all high-risk adopter-facing surfaces to canonical contract wording and proof boundaries.
 
 **Requirements:**
+
 - PROOF-01
 - PROOF-02
 - PROOF-03
@@ -46,6 +49,7 @@
 - SUP-02
 
 **Success criteria:**
+
 1. Primary contract surfaces reconcile to one consistent install/support/proof story.
 2. Fast vs live proof boundaries are explicit and non-contradictory.
 3. Intake and escalation wording is evidence-oriented and actionable for maintainers.
@@ -55,6 +59,7 @@
 **Goal:** convert the reconciled contract into durable verification gates and required PR CI expectations.
 
 **Requirements:**
+
 - TEST-01
 - TEST-02
 - TEST-03
@@ -62,6 +67,7 @@
 - GATE-02
 
 **Success criteria:**
+
 1. Docs-contract and proof-boundary checks enforce canonical anchors.
 2. Milestone verify gates are defined and mapped to expected CI behavior.
 3. Required PR checks for trust-hardening are documented and bounded to avoid release-train noise.
@@ -96,6 +102,6 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 97 | 0/3 | Pending | No |
+| 97 | 3/3 | Complete    | 2026-05-27 |
 | 98 | 0/0 | Pending | No |
 | 99 | 0/0 | Pending | No |
