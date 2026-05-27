@@ -7,8 +7,8 @@
 
 ### Contract Truth
 
-- [ ] **TRUTH-01**: A new adopter sees one consistent install/version contract across `README.md`, support guide, contributor guide, and adopter-intake surfaces. *(Reopened by v1.27 audit; reassigned to Phase 100)*
-- [ ] **TRUTH-02**: All primary surfaces clearly distinguish release-backed guidance from unreleased `main` branch behavior. *(Reopened by v1.27 audit; reassigned to Phase 100)*
+- [x] **TRUTH-01**: A new adopter sees one consistent install/version contract across `README.md`, support guide, contributor guide, and adopter-intake surfaces. *(Reopened by v1.27 audit; reassigned to Phase 100)*
+- [x] **TRUTH-02**: All primary surfaces clearly distinguish release-backed guidance from unreleased `main` branch behavior. *(Reopened by v1.27 audit; reassigned to Phase 100)*
 - [ ] **TRUTH-03**: Support-lifecycle wording and compatibility boundaries are discoverable in one canonical support surface and referenced consistently from other entry points. *(Reopened by v1.27 audit; reassigned to Phase 101)*
 
 ### Proof Boundary and Flow Clarity
@@ -52,8 +52,8 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TRUTH-01 | Phase 100 | Pending |
-| TRUTH-02 | Phase 100 | Pending |
+| TRUTH-01 | Phase 100 | Complete |
+| TRUTH-02 | Phase 100 | Complete |
 | TRUTH-03 | Phase 101 | Pending |
 | PROOF-01 | Phase 98 | Complete |
 | PROOF-02 | Phase 98 | Complete |
