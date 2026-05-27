@@ -7,9 +7,9 @@
 
 ### Contract Truth
 
-- [ ] **TRUTH-01**: A new adopter sees one consistent install/version contract across `README.md`, support guide, contributor guide, and adopter-intake surfaces.
-- [ ] **TRUTH-02**: All primary surfaces clearly distinguish release-backed guidance from unreleased `main` branch behavior.
-- [ ] **TRUTH-03**: Support-lifecycle wording and compatibility boundaries are discoverable in one canonical support surface and referenced consistently from other entry points.
+- [x] **TRUTH-01**: A new adopter sees one consistent install/version contract across `README.md`, support guide, contributor guide, and adopter-intake surfaces. *(Completed in Phase 97)*
+- [x] **TRUTH-02**: All primary surfaces clearly distinguish release-backed guidance from unreleased `main` branch behavior. *(Completed in Phase 97)*
+- [x] **TRUTH-03**: Support-lifecycle wording and compatibility boundaries are discoverable in one canonical support surface and referenced consistently from other entry points. *(Completed in Phase 97)*
 
 ### Proof Boundary and Flow Clarity
 
@@ -32,7 +32,7 @@
 
 ### Scope Discipline
 
-- [ ] **SCOPE-01**: Milestone docs explicitly state and enforce no runtime feature expansion (no autocomplete/suggestions, vector/hybrid, backend broadening, or new public runtime APIs).
+- [x] **SCOPE-01**: Milestone docs explicitly state and enforce no runtime feature expansion (no autocomplete/suggestions, vector/hybrid, backend broadening, or new public runtime APIs). *(Completed in Phase 97)*
 
 ## Future Requirements (deferred)
 
@@ -52,9 +52,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TRUTH-01 | Phase 97 | Pending |
-| TRUTH-02 | Phase 97 | Pending |
-| TRUTH-03 | Phase 97 | Pending |
+| TRUTH-01 | Phase 97 | Complete |
+| TRUTH-02 | Phase 97 | Complete |
+| TRUTH-03 | Phase 97 | Complete |
 | PROOF-01 | Phase 98 | Pending |
 | PROOF-02 | Phase 98 | Pending |
 | PROOF-03 | Phase 98 | Pending |
@@ -65,7 +65,8 @@
 | TEST-03 | Phase 99 | Pending |
 | GATE-01 | Phase 99 | Pending |
 | GATE-02 | Phase 99 | Pending |
-| SCOPE-01 | Phase 97 | Pending |
+| SCOPE-01 | Phase 97 | Complete |
+| FUT-01 | Post-v1.27 | Deferred |
 
 **Coverage:**
 
