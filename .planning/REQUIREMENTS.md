@@ -15,7 +15,7 @@
 
 - [x] **PROOF-01**: A maintainer can identify the canonical proof command (`mix verify.adopter`) in one hop from README and CONTRIBUTING surfaces.
 - [x] **PROOF-02**: Fast proof and live proof paths are explicitly separated, including live prerequisites and failure expectations.
-- [ ] **PROOF-03**: Example-app proof instructions remain aligned with the canonical proof boundary and do not contradict root-level guidance.
+- [x] **PROOF-03**: Example-app proof instructions remain aligned with the canonical proof boundary and do not contradict root-level guidance.
 
 ### Support and Intake Contract
 
@@ -57,7 +57,7 @@
 | TRUTH-03 | Phase 97 | Complete |
 | PROOF-01 | Phase 98 | Complete |
 | PROOF-02 | Phase 98 | Complete |
-| PROOF-03 | Phase 98 | Pending |
+| PROOF-03 | Phase 98 | Complete |
 | SUP-01 | Phase 98 | Complete |
 | SUP-02 | Phase 98 | Complete |
 | TEST-01 | Phase 99 | Pending |
