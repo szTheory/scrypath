@@ -20,6 +20,7 @@ end
 
 **Support and readiness:** for the defended runtime posture and proof-boundary split (`mix verify.adopter` fast contract check vs `mix verify.adopter --live` prerequisite-bound live proof), use [guides/support-and-compatibility.md](guides/support-and-compatibility.md).
 That guide is the release-backed guidance authority; main may contain unreleased changes.
+This README stays route-first and does not duplicate compatibility tuple values.
 
 **Outside integrations and evidence:** if you are trying the defended path or want to submit outside-adopter evidence, read [guides/outside-adopter-intake.md](guides/outside-adopter-intake.md).
 
