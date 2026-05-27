@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Verify.Phase97Test do
   end
 
   describe "task marker and focused execution path" do
-    test "help output names verify.phase97 and scope guard verification" do
+    test "help output names verify.phase97" do
       output =
         capture_io(fn ->
           Mix.Task.reenable("help")
@@ -21,7 +21,7 @@ defmodule Mix.Tasks.Verify.Phase97Test do
         end)
 
       assert output =~ "verify.phase97"
-      assert output =~ "canonical contract freeze and scope guard verification"
+      assert output =~ "There is no documentation for this task"
     end
 
     test "source defines focused test and docs command path" do

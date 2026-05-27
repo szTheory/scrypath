@@ -62,6 +62,15 @@ defmodule Scrypath.DocsContractTest do
   @request_edge_guide File.read!("guides/request-edge-search.md")
   @support_guide File.read!("guides/support-and-compatibility.md")
   @verify_adopter File.read!("lib/mix/tasks/verify.adopter.ex")
+  @phase97_contract_statements File.read!(
+                                ".planning/phases/97-canonical-contract-freeze-and-scope-guard/97-CONTRACT-STATEMENTS.md"
+                              )
+  @phase97_contract_traceability File.read!(
+                                   ".planning/phases/97-canonical-contract-freeze-and-scope-guard/97-CONTRACT-TRACEABILITY.md"
+                                 )
+  @phase97_scope_guard File.read!(
+                         ".planning/phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md"
+                       )
 
   # Paths shipped as ExDoc extras (mix.exs :docs extras) plus top-level narrative docs.
   @published_markdown_for_hygiene [
@@ -1174,6 +1183,30 @@ defmodule Scrypath.DocsContractTest do
     assert String.contains?(@verify_phase96, "test/scrypath/meilisearch_test.exs")
     assert String.contains?(@verify_phase96, "test/scrypath/docs_contract_test.exs")
     assert String.contains?(@verify_phase96, "Mix.Task.run(\"docs\", [\"--warnings-as-errors\"])")
+  end
+
+  test "phase 97 canonical statement, traceability, and scope anchors stay frozen" do
+    assert_contains_all(@phase97_contract_statements, [
+      "CST-TRUTH-01-INSTALL",
+      "CST-TRUTH-02-RELEASE-MAIN",
+      "CST-TRUTH-03-SUPPORT-AUTHORITY"
+    ])
+
+    assert_contains_all(@phase97_contract_traceability, [
+      "| TRUTH-01 |",
+      "| TRUTH-02 |",
+      "| TRUTH-03 |"
+    ])
+
+    assert_contains_all(@phase97_scope_guard, [
+      "SCOPE-01",
+      "Reopen policy",
+      "outside-adopter signal",
+      "reproducible production bug"
+    ])
+
+    assert String.contains?(File.read!(".planning/PROJECT.md"), "97-SCOPE-GUARD.md")
+    assert String.contains?(File.read!(".planning/ROADMAP.md"), "[PHASE97-SCOPE-GUARD]")
   end
 
   test "facet value search documentation contains type-ahead examples" do
