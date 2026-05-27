@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: none
 milestone_name: none
 status: archived
-last_updated: "2026-05-26T15:00:00.000Z"
-last_activity: 2026-05-26 -- v1.26 Facet Value Vocabulary Search archived
+last_updated: "2026-05-27T06:20:00.000Z"
+last_activity: 2026-05-27 -- post-v1.26 done-ness assessment and release-train maintenance plan recorded
 progress:
   total_phases: 0
   completed_phases: 0
@@ -28,7 +28,7 @@ See: `.planning/PROJECT.md` (updated 2026-05-26)
 Phase: none
 Plan: none
 Status: archived
-Last activity: 2026-05-26 -- v1.26 Facet Value Vocabulary Search archived
+Last activity: 2026-05-27 -- post-v1.26 done-ness assessment and release-train maintenance plan recorded
 
 ```
 Progress: [░░░░░░░░░░] 0%
@@ -41,6 +41,7 @@ Progress: [░░░░░░░░░░] 0%
 (See `.planning/PROJECT.md` Key Decisions.)
 
 - **v1.26 archived:** Shipped `Scrypath.search_facet_values/4` for high-cardinality facet search, updated docs with LiveView examples, and locked the `mix verify.phase96` gate.
+- **2026-05-27 done-ness assessment:** Scrypath is now roughly **93-95% done** for its stated Meilisearch-first Phoenix/Ecto scope. The last planned product wedges from prior evidence — related-data fan-out, tenant-safe search, and facet-value search — are shipped. Default next work is release follow-through, outside-adopter evidence, and planning-truth reconciliation, not another feature milestone.
 - **2026-05-26 release-train policy:** `main` now defaults to lean required gates plus Release Please patch-train cadence. Serious milestone work should reopen through PR-scoped planning, not opportunistic direct-`main` execution, and the default answer when the train is green is "nothing to do."
 - **v1.25 archived:** Shipped `tenant_field:` declaration, `tenant_scope:` injection, and canonical multitenancy guide.
 - **Phase 96 complete:** Created the `mix verify.phase96` gate, enhanced `search_facet_values/4` documentation with LiveView examples, and verified all facet-UX surfaces are regression-guarded in CI.
@@ -113,6 +114,7 @@ Progress: [░░░░░░░░░░] 0%
 - **Scope discipline for the search-module arc:** Search modules must remain a thin context-owned layer over the existing runtime, not a slide into schema-generated APIs, Phoenix coupling, or hidden operational behavior.
 - **Search-module archive drift:** `v1.20` archive files still claim a `Scrypath.SearchModule` layer, but the current checkout does not contain that module, its guide, or its tests. Treat the archive as historical/salvage-backed evidence, not as current shipped truth.
 - **Future product ranking should stay evidence-bound:** do not let generic ergonomics or OPSUI breadth displace tenant-safe access or high-cardinality facet-value search unless the outside-adopter evidence actually points there.
+- **Post-v1.26 feature threshold:** do not open autocomplete/suggestions, OPSUI breadth, multi-backend, vector/hybrid, or generic ergonomics milestones without reviewed outside-adopter evidence or a concrete bug.
 
 ### Deferred Items
 
@@ -129,11 +131,11 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-If `main` is green and no release PR needs action, there is nothing to do. Reopen planning with `/gsd:new-milestone` only for approved PR-scoped milestone work.
+If the Release Please PR needs action, finish the release train. Otherwise, if `main` is green and no outside-adopter evidence or concrete bug exists, there is nothing to do. Reopen planning with `/gsd:new-milestone` only for approved PR-scoped milestone work.
 
 ---
 
-*Last updated: 2026-05-26 — v1.26 Facet Value Vocabulary Search archived*
+*Last updated: 2026-05-27 — post-v1.26 done-ness assessment and release-train maintenance plan recorded*
 
 **Prior milestone:** **v1.26** — Facet Value Vocabulary Search — **2026-05-26** (shipped + archived in-repo).
 

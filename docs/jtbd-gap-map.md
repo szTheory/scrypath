@@ -2,7 +2,7 @@
 
 **Audience:** maintainers and repeat adopters updating Scrypath docs or planning future milestones.
 
-**Last reviewed:** 2026-05-24
+**Last reviewed:** 2026-05-27
 
 This document answers four questions:
 
@@ -24,7 +24,7 @@ The goal is to keep future doc updates and milestone planning anchored in the cu
 - **Phoenix integration through contexts**
   Strong. The library consistently teaches context-owned orchestration with thin controllers and LiveView.
 - **Catalog-style faceted search**
-  Strong. Facets, hierarchical facets, disjunctive counts, and scoped search are present and documented.
+  Strong. Facets, hierarchical facets, disjunctive counts, scoped search, and high-cardinality facet value search are present and documented.
 - **Multi-index or federated search**
   Strong. `search_many/2`, `:all` expansion, federation weights, and partial-failure honesty are present.
 - **Operator triage and recovery**
@@ -37,96 +37,84 @@ The goal is to keep future doc updates and milestone planning anchored in the cu
 - **Optional OPSUI inspection**
   Strong enough for v1. The shell reflects triage priorities honestly and stays secondary to core library adoption.
 - **Adopter proof and support contract**
-  Strong but not perfectly clean. The example app, verify surface, and readiness artifacts support the claim that the current surface is ready for outside adoption attempts, but the current tree still has support-truth drift that should be reconciled before maintainers overstate how tidy the proof surface is.
+  Strong but not complete. The example app, verify surface, and readiness artifacts support the claim that the current surface is ready for outside adoption attempts. The remaining evidence gap is reviewed outside-adopter usage, not another in-repo feature wedge.
 
 ## Default next pull
 
-The Phase 87 evidence review concluded that outside-adopter attempts on defended paths face significant friction regarding related data and tenant isolation. 
+The Phase 87 evidence review concluded that outside-adopter attempts on defended paths faced significant friction around related data and tenant isolation. v1.24 through v1.26 closed the planned product wedges that followed from that evidence.
 
-The current highest-leverage work is:
+The current highest-leverage work is maintenance, not feature breadth:
 
-1. **Association and dependency propagation** (Active next-pull verdict)
-2. **Tenant-safe search access story**
+1. Ship the coherent Release Please patch train for v1.25/v1.26 work.
+2. Gather reviewed outside-adopter evidence on the defended path.
+3. Reconcile the v1.20 `Scrypath.SearchModule` archive/code drift so planning truth stops overstating shipped surface.
 
 Why this now outranks more feature work:
 
-- reviewed outside-adopter evidence confirmed these as primary blockers and painful workarounds
-- the repo is already close to diminishing returns on generic ergonomics breadth
+- the highest-risk product gaps identified by prior evidence are now shipped
+- the repo is now close enough to done that generic ergonomics breadth is likely overbuilding
+- the remaining confidence gap is outside use, release truth, and planning truth
 
 ## Biggest remaining gaps
 
-These are the highest-leverage gaps relative to what mature search ecosystems teach people to expect.
+These are the highest-leverage remaining gaps relative to what mature search ecosystems teach people to expect.
 
-### 1. Association and dependency propagation semantics
+### 1. Outside-adopter evidence
 
-Scrypath is honest about projection and sync, but it does not yet present a strong public story for "this parent record should be reindexed when related data changes."
+Scrypath has defended in-repo proof, but not enough reviewed external use to justify new breadth confidently.
 
 Why it matters:
 
-- real apps project associated data into documents
-- mature libraries repeatedly run into "related update did not resync the document"
-- Hibernate Search shows how valuable explicit reindex dependency rules can be
+- real app integration is where docs, defaults, and operational assumptions fail
+- evidence should decide whether the next work is a bugfix, docs patch, or no-op
+- more in-repo feature work without evidence now risks overbuilding
 
 Current state:
 
-- projection is explicit and does not auto-load associations
-- this avoids magic, but leaves a common real-world job underexplained
+- `guides/outside-adopter-intake.md` defines the evidence path
+- `mix verify.adopter` and the Phoenix example defend the in-repo route
 
 Priority:
 
-- **very high**, especially if outside adopters start projecting joins, counts, tags, or ownership metadata
+- **very high** as a decision input, but it should produce patch-sized work unless evidence proves otherwise
 
-### 2. Tenant-safe search access story
+### 2. Planning truth drift
 
-Scrypath has index-prefix language and operator examples, but not yet a strong end-to-end job story for shared-index multi-tenant access.
+The v1.20 archive claims a `Scrypath.SearchModule` layer, while the current checkout does not expose it.
 
 Why it matters:
 
-- SaaS adopters often need search isolation, not just environment partitioning
-- Meilisearch's current tenant-token model is a real, first-class solution area
-- "just prefix the index" is not the same as authorization
+- future milestone selection depends on knowing what is actually shipped
+- archive/code disagreement lowers confidence and wastes planning tokens
 
 Current state:
 
-- repo docs mention prefixes and operator flags
-- the public mental model does not yet teach a clear tenant-scope story
+- the mismatch is documented in this file and `.planning/todos/search-module-archive-code-drift.md`
+- current public docs do not route adopters through `Scrypath.SearchModule`
 
 Priority:
 
-- **high** for B2B SaaS credibility
+- **high** as maintenance truth cleanup, not as a user-facing feature unless salvage proves the layer should return
 
-### 3. High-cardinality facet value search
+### 3. Autocomplete and suggestion-class flows
 
-Scrypath has strong facet filtering and counts, but the user flow for "search within thousands of facet values" is still incomplete.
-
-Why it matters:
-
-- large catalogs quickly outgrow static checklists
-- Meilisearch now has a dedicated facet-search endpoint with concrete limits and tradeoffs
-- the current facet guide explicitly defers backend facet-value search in favor of client-side filtering
-
-Priority:
-
-- **high** for catalog-heavy apps, lower for admin search
-
-### 4. Autocomplete and suggestion-class flows
-
-Scrypath has solid core search, but not yet a first-class user flow for:
-
-- typeahead
-- autocomplete
-- "did you mean"
-- suggestion-oriented UI patterns
+Scrypath has solid core search and facet value typeahead, but not a general first-class suggestion/autocomplete API.
 
 Why it matters:
 
 - many teams mentally benchmark search libraries against Searchkick-style delight
-- these flows are not the core sync problem, but they are highly visible product features
+- these flows are visible product features, even if not core sync infrastructure
 
 Priority:
 
 - **medium**
-- likely only worth doing after composition depth, tenant-safe access, and dependency semantics are stronger
+- only worth doing with outside-adopter evidence
+
+### Closed former top gaps
+
+- **Association and dependency propagation** — closed by v1.24 with `Scrypath.sync_related/3`, `RelatedWorker`, the related-data guide, and Phoenix example fan-out proof.
+- **Tenant-safe search access** — closed by v1.25 with `tenant_field:`, `schema_capabilities/1` reflection, `tenant_scope:`, and the multitenancy guide.
+- **High-cardinality facet value search** — closed by v1.26 with `Scrypath.search_facet_values/4`, `FacetSearchResult`, Meilisearch `/facet-search` routing, and LiveView examples.
 
 ## Gaps that are real but lower leverage
 
@@ -155,14 +143,14 @@ The repo's current discipline here is correct. Mature ecosystems show that widen
 
 ## Updated priority order
 
-1. **Association and dependency propagation**
-   Biggest correctness gap for real apps once documents include related data. This is the active next-pull verdict.
-2. **Tenant-safe search access story**
-   Biggest credibility gap for Phoenix SaaS adopters.
-3. **Facet-value search for large filter lists**
-   Useful for larger catalogs, but narrower.
+1. **Release follow-through**
+   Ship the coherent patch train for v1.25/v1.26 work before opening new feature work.
+2. **Outside-adopter evidence**
+   Use real integration attempts to decide whether future work is a bugfix, docs patch, or no-op.
+3. **Planning truth drift**
+   Reconcile the v1.20 `Scrypath.SearchModule` archive/code mismatch.
 4. **Autocomplete and suggestion flows**
-   Worth doing later, not before the correctness and SaaS-boundary work lands.
+   Open only with outside-adopter evidence; otherwise treat as adjacent product polish.
 
 ## Diminishing-returns line
 
@@ -174,7 +162,7 @@ Scrypath starts to feel "feature-complete enough" for its category once five con
 4. They can explain and recover from drift, failed work, backfill, and reindex without reading internal source.
 5. They have a credible app-edge ergonomics story and a credible related-data reindex story.
 
-The repo already satisfies the first four well on the defended Meilisearch-first surface.
+The repo now satisfies those conditions well on the defended Meilisearch-first surface, with the remaining caveat that outside-adopter evidence is still thin.
 
 That means the likely diminishing-returns boundary is:
 
@@ -183,12 +171,11 @@ That means the likely diminishing-returns boundary is:
 - **before** deep OPSUI productization
 - **before** search-adjacent delight features become the main story
 
-In practical terms, Scrypath now looks roughly **mid-to-high 80s done** for its stated v1 scope. That means:
+In practical terms, Scrypath now looks roughly **93-95% done** for its stated v1 scope. That means:
 
 - another generic ergonomics milestone is likely low leverage without outside-adopter evidence
-- related-data propagation is the first major remaining correctness wedge
-- tenant-safe search access is the first major remaining SaaS-credibility wedge
-- most other work is becoming situational rather than category-defining
+- release and adoption evidence matter more than feature breadth
+- most other work is situational rather than category-defining
 
 ## External reference points
 

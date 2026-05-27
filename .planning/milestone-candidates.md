@@ -1,7 +1,7 @@
 # Milestone candidates — developer-first roadmap stack
 
 **Purpose:** Prioritized themes for **`/gsd-new-milestone`** — **onboarding + QoL** for people using and contributing to Scrypath; **avoid busywork** and maintainer-only work masquerading as product.  
-**Last reviewed:** 2026-05-25 — **v1.24** shipped (related-data propagation). Repo-grounded done-ness assessment (2026-05-25) puts Scrypath at **~91–93% done**. Two narrow wedges remain: AUTH-01 (tenant guide + `tenant_field:`) and facet value search (`search_facet_values/4`). After those, evaluate stopping. The canonical portfolio posture is still the **v1.19** readiness verdict: seek broader outside production adoption on the defended surface.
+**Last reviewed:** 2026-05-27 — **v1.26** shipped (facet value vocabulary search). Repo-grounded done-ness assessment (2026-05-27) puts Scrypath at **~93–95% done**. The last planned product wedges — related-data propagation, tenant-safe search, and facet value search — are now shipped. Default posture is **release, gather outside-adopter evidence, reconcile planning truth, and otherwise stop**. The canonical portfolio posture is still the **v1.19** readiness verdict: seek broader outside production adoption on the defended surface.
 
 **Reconciliation note:** the `v1.20` archive says `Scrypath.SearchModule` shipped, but the current checkout does not expose that layer or its guide. Documented in `/docs/jtbd-gap-map.md`. Planning debt only; not a product gap for users today.
 
@@ -56,10 +56,10 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 | # | Theme | Notes |
 |---|--------|--------|
 | **B1** | **Related-data and dependency propagation** | **Done in v1.24** — `Scrypath.sync_related/3`, `RelatedWorker`, canonical guide rewrite, Phoenix example fan-out. Keep here as historical context. |
-| **B2** | **Tenant-safe search access story** | **Next default pull (v1.25).** Biggest remaining credibility gap for B2B Phoenix adopters. Scope: `guides/multitenancy.md` + `tenant_field:` schema option + `schema_capabilities/1` reflection (2–3 phases). The filter merge order bug is a real silent data-leak footgun — justified even without explicit adopter demand. |
+| **B2** | **Tenant-safe search access story** | **Done in v1.25** — `guides/multitenancy.md`, `tenant_field:`, `schema_capabilities/1` reflection, and `tenant_scope:` hard-injection. Keep here as historical context. |
 | **B3** | **Composition and real-app depth over the query toolkit** | **Done in v1.22** — keep here only as historical context so future planning does not reopen the same wedge accidentally |
-| **B4** | **Facet value vocabulary search (`search_facet_values/4`)** | Wraps Meilisearch's native `/facet-search` endpoint (stable v1.3+). Index settings already emit correct config. Guide says "deferred." Real pain at 200+ distinct values. Small scope (1 tight milestone). **After B2.** |
-| **B5** | **Autocomplete / suggestion flows** | Valuable later, but should not outrun correctness and SaaS-boundary work |
+| **B4** | **Facet value vocabulary search (`search_facet_values/4`)** | **Done in v1.26** — first-class facade API, `FacetSearchResult`, Meilisearch `/facet-search` routing, LiveView examples, and `mix verify.phase96`. Keep here as historical context. |
+| **B5** | **Autocomplete / suggestion flows** | Only with outside-adopter evidence. Otherwise stop after the v1.26/v0.3.8 release train lands. |
 
 ### Tier C — Defer until a failure mode is proven
 
@@ -80,7 +80,13 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 
 | # | Theme | Notes |
 |---|--------|--------|
-| **E1** | **Outside-adopter evidence and support-truth reconciliation** | **Active as v1.23** — reconcile current proof/support truth with the tree, review real adopter attempts, and use that evidence to decide whether Scrypath should stop soon or open one final wedge |
+| **E1** | **Outside-adopter evidence and support-truth reconciliation** | **Done in v1.23; continue as maintenance evidence loop** — no new feature milestone should open unless outside-adopter evidence shows a concrete gap. |
+
+### Tier F — Current maintenance pull
+
+| # | Theme | Notes |
+|---|--------|--------|
+| **F1** | **Release + adoption evidence + planning truth** | Current default. Ship the Release Please PR, keep main green, reconcile the v1.20 `SearchModule` archive/code drift, and capture outside-adopter evidence before opening new product work. |
 
 ### Still explicit strategy (unchanged)
 
@@ -99,9 +105,10 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 | 3 | **v1.13** (**POLISH-***) | **Shipped v1.13** |
 | 4 | **E1** | **Shipped v1.23** — adopter evidence + support-truth reconciliation |
 | 5 | **B1** | **Shipped v1.24** — `sync_related/3`, fan-out, canonical guide |
-| 6 | **B2** | **Next: v1.25** — tenant guide + `tenant_field:` declaration. Footgun risk justifies opening without explicit adopter demand. |
-| 7 | **B4** | **After B2: v1.26** — `search_facet_values/4` wrapping `/facet-search`. Small, tight milestone. |
-| 8 | **B5** | Only with adopter evidence. Otherwise stop after v1.26. |
+| 6 | **B2** | **Shipped v1.25** — tenant guide, declaration, reflection, and runtime enforcement. |
+| 7 | **B4** | **Shipped v1.26** — `search_facet_values/4` wrapping `/facet-search`. |
+| 8 | **F1** | Current maintenance pull: release, outside-adopter evidence, and planning-truth reconciliation. |
+| 9 | **B5** | Only with adopter evidence. Otherwise stop after v1.26 / v0.3.8. |
 | Parallel | **D*** | When annoyance cost exceeds fix cost — do not headline a consumer milestone here |
 
 ---
@@ -117,6 +124,7 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
    - Is this still above the post-`v1.19` diminishing-returns line?
 2. Optionally split strong themes into **`.planning/seeds/SEED-*.md`** so **`/gsd-new-milestone`** auto-offers matching seeds (see **`gsd-plant-seed`**).
 3. After each shipped milestone, **update this file** — what landed, what moved, and whether the repo is now actually near “stop soon” territory.
+4. After v1.26, the default answer to generic “what next?” prompts is **no feature milestone** unless there is release follow-through, outside-adopter evidence, or a concrete bug.
 
 ---
 
