@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: "1.27"
 milestone_name: milestone
-status: verifying
-last_updated: "2026-05-27T09:42:09.752Z"
+status: executing
+last_updated: "2026-05-27T10:15:55.539Z"
 last_activity: 2026-05-27
 progress:
-  total_phases: 6
+  total_phases: 7
   completed_phases: 6
-  total_plans: 15
-  completed_plans: 15
-  percent: 100
+  total_plans: 18
+  completed_plans: 16
+  percent: 86
 ---
 
 # Project State
@@ -21,13 +21,13 @@ See: `.planning/PROJECT.md` (updated 2026-05-27)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Phase 98 — surface-reconciliation-and-adopter-flow-clarity
+**Current focus:** Phase 99 — drift-gates-and-ci-enforcement
 
 ## Current Position
 
-Phase: 98
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 99 (drift-gates-and-ci-enforcement) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
 Last activity: 2026-05-27
 
 Scope guard: `.planning/phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md` is active for this milestone. v1.27 is contract hardening only. Scope can reopen only with reviewed outside-adopter signal or a reproducible production bug, plus explicit updates to `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md` before execution.
@@ -173,3 +173,4 @@ If the Release Please PR needs action, finish the release train. Otherwise, if `
 | Phase 98 P03 | 15min | 3 tasks | 2 files |
 | Phase 98 P02 | 18min | 3 tasks | 4 files |
 | Phase 98 P04 | 20min | 3 tasks | 8 files |
+| Phase 99 P01 | 18 min | 3 tasks | 2 files |

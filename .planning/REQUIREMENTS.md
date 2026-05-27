@@ -24,8 +24,8 @@
 
 ### Drift Protection and Verification
 
-- [ ] **TEST-01**: Docs-contract tests lock canonical install/support/proof anchors across all high-risk surfaces listed in the v1.27 contract-surface map.
-- [ ] **TEST-02**: Verification coverage asserts proof-boundary consistency between root docs and example-app docs.
+- [x] **TEST-01**: Docs-contract tests lock canonical install/support/proof anchors across all high-risk surfaces listed in the v1.27 contract-surface map.
+- [x] **TEST-02**: Verification coverage asserts proof-boundary consistency between root docs and example-app docs.
 - [ ] **TEST-03**: Verification coverage asserts CI/verify alias references stay aligned with documented required checks.
 - [ ] **GATE-01**: Milestone-specific verify gate aliases for phases 97-99 are defined and documented as the trust-hardening verification spine.
 - [ ] **GATE-02**: Required PR CI checks for this milestone are explicitly documented and map to the milestone gate strategy.
@@ -60,8 +60,8 @@
 | PROOF-03 | Phase 98 | Complete |
 | SUP-01 | Phase 98 | Complete |
 | SUP-02 | Phase 98 | Complete |
-| TEST-01 | Phase 99 | Pending |
-| TEST-02 | Phase 99 | Pending |
+| TEST-01 | Phase 99 | Complete |
+| TEST-02 | Phase 99 | Complete |
 | TEST-03 | Phase 99 | Pending |
 | GATE-01 | Phase 99 | Pending |
 | GATE-02 | Phase 99 | Pending |
