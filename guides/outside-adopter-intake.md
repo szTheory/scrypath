@@ -58,7 +58,7 @@ Needs information response for Class D flow:
 
 - "Needs information: please provide missing ordered commands and supporting logs so we can classify this bundle."
 
-Security carve-out: do not post vulnerability details in public issue threads. Route security reports through [`SECURITY.md`](../SECURITY.md).
+Security carve-out: do not post vulnerability details in public issue threads. Route security reports through `SECURITY.md`.
 
 ## Submitting an Evidence Bundle
 

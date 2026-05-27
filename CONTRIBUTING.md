@@ -79,6 +79,8 @@ The Phase 96 verify alias is the focused gate for the facet value search verific
 
 The Phase 97 verify alias is the focused gate for canonical contract freeze and scope guard coverage. Run the shell command **mix verify.phase97** when you change phase 97 contract artifacts, docs-contract trust anchors, or phase-97 workflow wiring tests. This gate protects milestone trust-hardening coverage only; it does not introduce a new runtime feature gate category.
 
+The Phase 98 verify alias is the focused gate for proof-boundary and outside-adopter intake contract reconciliation. Run the shell command **mix verify.phase98** when you change support/readiness proof routing, example live-proof runbook parity, intake classification/routing guidance, or phase-98 contract tests. This gate protects trust-hardening scope only and does not expand runtime feature coverage.
+
 Run **`mix verify.opsui`** from the repository root when you change the optional **`scrypath_ops`** operator Phoenix app or its path dependency on the core library. It runs **`cd scrypath_ops && mix deps.get && mix test`**, and the dedicated **`scrypath-ops`** CI job now invokes this same root task (Postgres-backed Ecto setup, no Meilisearch service).
 
 When you change **`scrypath_ops/docs/*.json`** playbook fixtures, golden workspace playbooks, or other flat `*.json` catalogs that ship beside **`scrypath_ops`**, also run **`cd scrypath_ops && mix scrypath_ops.playbooks.validate PATH`** from the repository root, where **`PATH`** is the directory containing those JSON files (non-recursive; same invocation shape as the Mix task **`Mix.Tasks.ScrypathOps.Playbooks.Validate`**).
