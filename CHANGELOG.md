@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 Release Please manages versioned entries after this baseline.
 
+## [0.3.8](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.7...scrypath-v0.3.8) (2026-05-27)
+
+
+### Features
+
+* **92-01:** add __scrypath__(:tenant_field) accessor ([d39cdab](https://github.com/szTheory/scrypath/commit/d39cdab3e8337154fb07dea487939e6c74fdedff))
+* **92-01:** add tenant_field NimbleOptions and normalization pass ([b128ab0](https://github.com/szTheory/scrypath/commit/b128ab0e8183bd894a8a1b2ca2f4a55d3f2cc150))
+* **92-02:** ensure projection and options changes are committed ([a6787f1](https://github.com/szTheory/scrypath/commit/a6787f1d95e98a8d75d4ae88c7cd35dd226ebcf3))
+* **92-02:** implement tenant field post-hook merge for search_document/1 lib/scrypath/projection.ex test/scrypath/projection_test.exs test/scrypath/options_test.exs ([30eb51a](https://github.com/szTheory/scrypath/commit/30eb51a099be562f9be8ac5ff158e7f7e3bee8dd))
+* **93-01:** expose tenant_field in schema_capabilities/1 ([3550a06](https://github.com/szTheory/scrypath/commit/3550a0604463092f69b3f61bbb67726fb8cbc32d))
+* **93-02:** add tenant_scope: option and injection logic ([8d4f3a3](https://github.com/szTheory/scrypath/commit/8d4f3a378e0a19b926a5754514a2c33dea6ab4db))
+* **95-01:** interface contracts and test fakes for facet search ([df057ff](https://github.com/szTheory/scrypath/commit/df057ff7e6a6ba87cbd45931e1cbaf68258b7152))
+* **95-01:** meilisearch provider implementation for facet search ([ea95b41](https://github.com/szTheory/scrypath/commit/ea95b41d65761b10b24a494cec4c27d642219bda))
+* **95-02:** facade API and routing for facet search ([7e4e5ec](https://github.com/szTheory/scrypath/commit/7e4e5ecfd5af1e0e631d5b01e2ea33c4272f8ef5))
+
+
+### Bug Fixes
+
+* format ScrypathOps search playground adapter ([9da0fda](https://github.com/szTheory/scrypath/commit/9da0fda37e948284a93bec36686e0637579180ef))
+
 ## [Unreleased]
 
 ### Added
