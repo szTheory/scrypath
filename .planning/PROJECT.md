@@ -40,7 +40,7 @@ Phase 97 through 99 banned capability classes:
 
 ## Current State
 
-**Phase 99 complete (2026-05-27):** v1.27 trust-hardening now has deterministic docs/proof contract checks, an executable `mix verify.phase99` gate, and a stable `phase99-trust` required-check token wired across workflow/docs/tests. Phase 97 scope guard remains active for any future reopen discussion.
+**Phase 101 complete (2026-05-27):** v1.27 trust-hardening is now closed end-to-end with compatibility-truth authority alignment, deterministic CI tuple parity checks, and maintained required-gate stability (`main-ci`, `repo-hygiene`, `release-truth`, `phase99-trust`).
 
 **v1.26 — Facet Value Vocabulary Search** shipped + archived in-repo on **2026-05-26** across phases **95–96**.
 
@@ -95,9 +95,10 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ### Validated
 
-- [x] **v1.27 phase 99** (2026-05-27): **TEST-01**, **TEST-02**, **TEST-03**, **GATE-01**, **GATE-02** — deterministic docs/proof/required-check drift coverage via `test/scrypath/phase99_contract_test.exs`, executable `mix verify.phase99`, and stable `phase99-trust` CI required-check parity.
+- [x] **v1.27 phase 101** (2026-05-27): **TRUTH-03**, **TEST-01** — canonical compatibility authority + CI tuple parity closure, semantic drift-guard assertions, and advisory `compatibility-truth` evidence lane without required-gate churn.
+- [x] **v1.27 phase 99** (2026-05-27): **TEST-02**, **TEST-03**, **GATE-01**, **GATE-02** — deterministic docs/proof/required-check drift coverage via `test/scrypath/phase99_contract_test.exs`, executable `mix verify.phase99`, and stable `phase99-trust` CI required-check parity.
 - [x] **v1.27 phase 98** (2026-05-27): **PROOF-01**, **PROOF-02**, **PROOF-03**, **SUP-01**, **SUP-02** — one-hop proof discoverability, explicit fast/live boundary, live runbook parity, deterministic intake evidence requirements, and findings-to-action routing hardened with `mix verify.phase98`.
-- [x] **v1.27 phase 97** (2026-05-27): **TRUTH-01**, **TRUTH-02**, **TRUTH-03**, **SCOPE-01** — canonical statement freeze, scope guard, and `mix verify.phase97` trust-hardening gate.
+- [x] **v1.27 phase 97** (2026-05-27): **TRUTH-01**, **TRUTH-02**, **SCOPE-01** — canonical statement freeze, scope guard, and `mix verify.phase97` trust-hardening gate.
 - [x] **v1.26** (2026-05-26): **FACET-UX-01**–**FACET-UX-03**, **DOC-01**–**DOC-02**, **TEST-01**–**TEST-02** — `search_facet_values/4`, response parsing, LiveView examples, and `mix verify.phase96` gate.
 - [x] **v1.25** (2026-05-26): **TNNT-01**–**TNNT-05** — Multitenancy guide, `tenant_field:` declaration, `tenant_scope:` runtime safety, and `mix verify.phase94` gate.
 - [x] **v1.24** (2026-05-25): **DATA-01**–**DATA-03**, **EXEC-01**–**EXEC-02**, **TEST-01**–**TEST-02** — `Scrypath.sync_related/3` public API, `RelatedWorker` actionable error returns, canonical related-data guide rewrite, `mix verify.phase91` hermetic gate, and Phoenix fan-out example.
@@ -159,6 +160,8 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 - [x] Finalize canonical install/support/proof contract language and non-goals for v1.27. *(Validated in Phase 97: canonical-contract-freeze-and-scope-guard)*
 - [x] Reconcile adopter-facing surfaces to canonical wording and flow boundaries. *(Validated in Phase 98: surface-reconciliation-and-adopter-flow-clarity)*
 - [x] Lock docs-contract drift checks and phase verify/CI expectations for phases 97-99. *(Validated in Phase 99: drift-gates-and-ci-enforcement)*
+- [x] Reconcile install/release contract surfaces and trust-lane parity without adding new required checks. *(Validated in Phase 100: install-release-contract-reconciliation)*
+- [x] Align compatibility authority claims, CI tuple evidence, and semantic drift guards (`TRUTH-03`, `TEST-01`). *(Validated in Phase 101: ci-compatibility-truth-and-drift-guard-completion)*
 
 ### Out of Scope
 
@@ -188,4 +191,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-27 — Phase 99 completed; trust-gate and required-check parity now enforced by `mix verify.phase99` + `phase99-trust`*
+*Last updated: 2026-05-27 — Phase 101 completed; compatibility-truth authority, CI tuple evidence, and semantic parity checks now close through `mix verify.phase99` + advisory `compatibility-truth` lane*
