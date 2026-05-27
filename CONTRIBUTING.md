@@ -8,6 +8,7 @@
 
 - New contributors: follow the README **Quick Path** into [`guides/golden-path.md`](guides/golden-path.md) for the linear **`:inline`** first-hour story.
 - Current support/readiness truth lives in [`guides/support-and-compatibility.md`](guides/support-and-compatibility.md). When README, maintainer commands, CI wording, or the example runbook change, keep that guide as the single authority instead of turning this file into a second matrix.
+- Use release-backed guidance from [`guides/support-and-compatibility.md`](guides/support-and-compatibility.md) for adopter-facing policy; main may contain unreleased changes.
 - For the outside-adopter review workflow, evidence admissibility classes (Class A through D), and the maintainer proof-command family, refer to [`guides/outside-adopter-intake.md`](guides/outside-adopter-intake.md). Do not duplicate the intake checklist or live runbook here.
 - The canonical adopter mental-model guide is [`guides/jtbd-and-user-flows.md`](guides/jtbd-and-user-flows.md). Update it when the library adds, removes, or materially changes a user-facing flow.
 - **Sync modes, visibility, and operator lifecycle** live in [`guides/sync-modes-and-visibility.md`](guides/sync-modes-and-visibility.md)—update that guide instead of duplicating semantics in README or here.
