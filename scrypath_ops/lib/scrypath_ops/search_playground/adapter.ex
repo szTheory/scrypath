@@ -12,7 +12,8 @@ defmodule ScrypathOps.SearchPlayground.Adapter do
 
   @callback search(module(), String.t(), keyword()) :: search_result()
   @callback search_many(list(), keyword()) :: search_many_result()
-  @callback search_facet_values(module(), String.t(), String.t(), keyword()) :: search_facet_values_result()
+  @callback search_facet_values(module(), String.t(), String.t(), keyword()) ::
+              search_facet_values_result()
 end
 
 defmodule ScrypathOps.SearchPlayground.Adapter.Scrypath do
@@ -32,5 +33,6 @@ defmodule ScrypathOps.SearchPlayground.Adapter.Scrypath do
   def search_many(entries, opts), do: Scrypath.search_many(entries, opts)
 
   @impl true
-  def search_facet_values(schema, facet_name, facet_query, opts), do: Scrypath.search_facet_values(schema, facet_name, facet_query, opts)
+  def search_facet_values(schema, facet_name, facet_query, opts),
+    do: Scrypath.search_facet_values(schema, facet_name, facet_query, opts)
 end
