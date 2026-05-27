@@ -12,6 +12,8 @@ Canonical routing before you submit evidence:
 - Use [`guides/support-and-compatibility.md`](support-and-compatibility.md) for the defended support and proof-boundary policy.
 - Use this intake guide for admissibility classes and evidence submission requirements.
 
+Use release-backed guidance as the default adopter path; main may contain unreleased changes.
+
 ### Repo-clone versus Hex-package Boundary
 
 - **Hex-package:** When you add `{:scrypath, "~> 0.3"}` to your `mix.exs`, you are consuming the library artifact. If you encounter issues here, we need to know your exact environment and integration steps.
