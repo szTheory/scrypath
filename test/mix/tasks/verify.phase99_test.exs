@@ -31,8 +31,10 @@ defmodule Mix.Tasks.Verify.Phase99Test do
       assert source =~ ~S|"test/mix/tasks/verify.phase99_test.exs"|
       assert source =~ ~S|"test/mix/tasks/workflow_wiring_test.exs"|
       assert source =~ ~S|Mix.Task.run("docs", ["--warnings-as-errors"])|
-      assert source =~ "verify.phase99: drift-gate trust lane with phase100 install/release contract checks"
+      assert source =~
+               "verify.phase99: drift-gate trust lane with phase100 install/release and phase101 compatibility-truth closure checks"
       assert source =~ "install/release"
+      assert source =~ "phase101 compatibility-truth closure"
     end
   end
 end
