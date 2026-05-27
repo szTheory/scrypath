@@ -70,6 +70,8 @@ Phase 97 through 99 banned capability classes:
 
 **Out of scope remains:** public `%Scrypath.Query{}` or other internal structs as semver-stable API, schema-generated runtime search APIs, Phoenix-dependent runtime core, reusable UI widgets or form-builder layers, automatic Ecto association walking, or any change that hides operational search semantics behind framework magic.
 
+The public website launch surface now exists under `website/` and is deployed to GitHub Pages as a companion front door, not a HexDocs replacement.
+
 Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under **`.planning/milestones/`**.
 
 ## Next Milestone Goals
@@ -191,4 +193,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-27 — Phase 101 completed; compatibility-truth authority, CI tuple evidence, and semantic parity checks now close through `mix verify.phase99` + advisory `compatibility-truth` lane*
+*Last updated: 2026-05-27 — Phase 101 completed; compatibility-truth authority, CI tuple evidence, semantic parity checks, and the public website launch surface are now in the repo*

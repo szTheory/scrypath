@@ -38,6 +38,8 @@ The goal is to keep future doc updates and milestone planning anchored in the cu
   Strong enough for v1. The shell reflects triage priorities honestly and stays secondary to core library adoption.
 - **Adopter proof and support contract**
   Strong but not complete. The example app, verify surface, and readiness artifacts support the claim that the current surface is ready for outside adoption attempts. The remaining evidence gap is reviewed outside-adopter usage, not another in-repo feature wedge.
+- **Public website launch surface**
+  Strong. The GitHub Pages homepage routes evaluators, adopters, and operators into the existing docs and example app without duplicating HexDocs.
 
 ## Default next pull
 

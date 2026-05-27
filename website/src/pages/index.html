@@ -1,0 +1,170 @@
+<section class="hero">
+  <div class="hero-copy">
+    <p class="eyebrow">public homepage · launch surface</p>
+    <h1>Search indexing that feels native to Ecto.</h1>
+    <p class="lede">
+      Scrypath keeps the search-shaped read model honest for Phoenix and Ecto teams:
+      declare searchable schemas, choose sync mode explicitly, and recover drift without
+      pretending the operational work disappears.
+    </p>
+
+    <div class="cta-row">
+      <a class="button button-primary" href="{{BASE_PATH}}docs/index.html">Read the docs</a>
+      <a class="button button-secondary" href="{{BASE_PATH}}operators/index.html">See operator support</a>
+      <a class="button button-ghost" href="https://github.com/szTheory/scrypath">View on GitHub</a>
+    </div>
+
+    <dl class="status-strip">
+      <div>
+        <dt>Release-backed install</dt>
+        <dd><code>{{CANONICAL_INSTALL}}</code></dd>
+      </div>
+      <div>
+        <dt>Supported baseline</dt>
+        <dd><code>Elixir 1.17+, OTP 26-28</code></dd>
+      </div>
+      <div>
+        <dt>Proof spine</dt>
+        <dd><code>mix verify.adopter</code></dd>
+      </div>
+    </dl>
+  </div>
+
+  <div class="hero-visual panel">
+    <div class="panel-kicker">
+      <span>Flow diagram</span>
+      <span class="accent">release-truth aware</span>
+    </div>
+
+    <img class="diagram" src="{{BASE_PATH}}assets/diagram.svg" alt="" aria-hidden="true" />
+
+    <pre class="code-block"><code>use Scrypath,
+  fields: [:title, :body],
+  filterable: [:status],
+  sortable: [:inserted_at]
+
+{:ok, _} =
+  Scrypath.sync_record(Post, post,
+    repo: Repo,
+    sync_mode: :inline
+  )</code></pre>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <p class="eyebrow">What ships today</p>
+    <h2>One library, four clear jobs.</h2>
+    <p>
+      The site is the decision surface. HexDocs stays the API reference; this page orients
+      the person trying to decide whether Scrypath is the right search layer for their app.
+    </p>
+  </div>
+
+  <div class="grid four">
+    <article class="tile">
+      <h3>Schema declaration</h3>
+      <p>
+        `use Scrypath` is metadata-only. Schemas declare searchable fields, faceting, sort
+        fields, and tenant boundaries without becoming a framework facade.
+      </p>
+      <a href="{{BASE_PATH}}docs/index.html#first-hour">First-hour path</a>
+    </article>
+    <article class="tile">
+      <h3>Sync honesty</h3>
+      <p>
+        Choose `:inline`, `:manual`, or `:oban` with eyes open. Accepted work is not the same
+        thing as search visibility.
+      </p>
+      <a href="{{BASE_PATH}}operators/index.html#sync-truth">Sync modes</a>
+    </article>
+    <article class="tile">
+      <h3>Recovery and drift</h3>
+      <p>
+        Backfill, reindex, failed-work triage, and report-first recovery are part of the product
+        surface, not an appendix.
+      </p>
+      <a href="{{BASE_PATH}}operators/index.html#recovery">Recovery guide</a>
+    </article>
+    <article class="tile">
+      <h3>Tenant-safe access</h3>
+      <p>
+        Shared-index safety ships with a canonical guide, `tenant_field:`, reflection, and
+        `tenant_scope:` hard-injection.
+      </p>
+      <a href="{{BASE_PATH}}docs/index.html#tenant-safety">Multitenancy docs</a>
+    </article>
+  </div>
+</section>
+
+<section class="section band">
+  <div class="section-head">
+    <p class="eyebrow">Who this is for</p>
+    <h2>Three personas, one boundary.</h2>
+  </div>
+
+  <div class="grid three">
+    <article class="persona">
+      <p class="persona-label">App developer</p>
+      <h3>Get one schema searchable without inventing a subsystem.</h3>
+      <p>
+        Declare metadata, call `sync_record/3` after a successful write, and keep search inside
+        the context boundary.
+      </p>
+    </article>
+    <article class="persona">
+      <p class="persona-label">Operator / SRE</p>
+      <h3>See when the index is stale, wedged, or drifting.</h3>
+      <p>
+        Use `mix verify.adopter`, the example app, and the operator docs to tell the difference
+        between queue lag, search drift, and app-side mistakes.
+      </p>
+    </article>
+    <article class="persona">
+      <p class="persona-label">Evaluator</p>
+      <h3>Decide quickly whether Scrypath is the right search layer.</h3>
+      <p>
+        The website answers the product question; the docs answer the implementation question.
+        That split keeps the onboarding path short.
+      </p>
+    </article>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <p class="eyebrow">Where to go next</p>
+    <h2>Route people, don’t repeat the whole docs set.</h2>
+  </div>
+
+  <div class="route-list">
+    <a class="route-item" href="{{BASE_PATH}}docs/index.html">
+      <strong>Docs map</strong>
+      <span>Curated route into the existing guides and HexDocs, without a second reference site.</span>
+    </a>
+    <a class="route-item" href="{{BASE_PATH}}operators/index.html">
+      <strong>Operator support</strong>
+      <span>Recovery posture, proof commands, and what to run when a team reports drift.</span>
+    </a>
+    <a class="route-item" href="{{BASE_PATH}}evaluate/index.html">
+      <strong>Evaluate fit</strong>
+      <span>What Scrypath is, what it isn’t, and when to choose it over a raw client.</span>
+    </a>
+    <a class="route-item" href="{{BASE_PATH}}docs/index.html#example">
+      <strong>Example app</strong>
+      <span>The defended Phoenix + Meilisearch path, including live proof and release-backed support truth.</span>
+    </a>
+  </div>
+</section>
+
+<section class="section callout">
+  <div>
+    <p class="eyebrow">Release truth</p>
+    <h2>This site follows the package, not a marketing calendar.</h2>
+  </div>
+  <p>
+    The package version is stamped from <code>mix.exs</code> during the website build.
+    The homepage should always make the current release-backed contract obvious before
+    anyone needs to open HexDocs.
+  </p>
+</section>

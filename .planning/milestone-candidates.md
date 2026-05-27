@@ -1,7 +1,7 @@
 # Milestone candidates — developer-first roadmap stack
 
 **Purpose:** Prioritized themes for **`/gsd-new-milestone`** — **onboarding + QoL** for people using and contributing to Scrypath; **avoid busywork** and maintainer-only work masquerading as product.  
-**Last reviewed:** 2026-05-27 — **v1.26** shipped (facet value vocabulary search). Repo-grounded reassessments (2026-05-27) keep Scrypath at **~93–95% done**. The last planned product wedges — related-data propagation, tenant-safe search, and facet value search — are shipped. Default posture is **release, gather outside-adopter evidence, reconcile planning truth, and otherwise stop**. If feature work reopens, the highest-leverage bounded wedge is now **Adopter Contract Hardening** before broader feature depth.
+**Last reviewed:** 2026-05-27 — **v1.26** shipped (facet value vocabulary search). Repo-grounded reassessments (2026-05-27) keep Scrypath at **~93–95% done**. The last planned product wedges — related-data propagation, tenant-safe search, facet value search, and the public website launch surface — are shipped. Default posture is **release, gather outside-adopter evidence, reconcile planning truth, and otherwise stop**. If feature work reopens, the highest-leverage bounded wedge is now **Adopter Contract Hardening** before broader feature depth.
 
 **Reconciliation note:** the `v1.20` archive says `Scrypath.SearchModule` shipped, but the current checkout does not expose that layer or its guide. Documented in `/docs/jtbd-gap-map.md`. Planning debt only; not a product gap for users today.
 
@@ -88,6 +88,12 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 | # | Theme | Notes |
 |---|--------|--------|
 | **F1** | **Release + adoption evidence + planning truth** | Current default. Ship the Release Please PR, keep main green, reconcile the v1.20 `SearchModule` archive/code drift, and capture outside-adopter evidence before opening new product work. |
+
+### Tier G — Companion surface
+
+| # | Theme | Notes |
+|---|--------|--------|
+| **G1** | **Public website launch surface** | Shipped as a GitHub Pages companion to HexDocs. Keep release truth, screenshots, and persona routes in sync with the package; do not expand it into a second docs site. |
 
 ## Unified operating lanes (post-v1.26)
 

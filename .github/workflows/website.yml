@@ -1,0 +1,105 @@
+name: Website
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    paths:
+      - 'website/**'
+      - 'README.md'
+      - 'guides/**'
+      - 'docs/**'
+      - 'mix.exs'
+      - '.github/workflows/website.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-check:
+    runs-on: ubuntu-latest
+    env:
+      SCRYPATH_SITE_URL: https://sztheory.github.io/scrypath/
+      SCRYPATH_REPO_URL: https://github.com/szTheory/scrypath
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install dependencies
+        working-directory: website
+        run: npm ci
+
+      - name: Build website
+        working-directory: website
+        run: npm run build
+
+      - name: Install Playwright browsers
+        working-directory: website
+        run: npx playwright install --with-deps chromium
+
+      - name: Run screenshot checks
+        working-directory: website
+        run: npm run check
+
+      - name: Upload screenshots
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: scrypath-website-screenshots
+          path: website/artifacts
+          if-no-files-found: warn
+
+  deploy:
+    if: github.event_name == 'push'
+    needs: build-and-check
+    runs-on: ubuntu-latest
+    env:
+      SCRYPATH_SITE_URL: https://sztheory.github.io/scrypath/
+      SCRYPATH_REPO_URL: https://github.com/szTheory/scrypath
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install dependencies
+        working-directory: website
+        run: npm ci
+
+      - name: Build website
+        working-directory: website
+        run: npm run build
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: website/dist
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
