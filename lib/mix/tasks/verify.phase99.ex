@@ -1,0 +1,37 @@
+defmodule Mix.Tasks.Verify.Phase99 do
+  @moduledoc false
+  use Mix.Task
+
+  @shortdoc "Runs drift-gate and CI-enforcement trust checks (Phase 99)"
+
+  @focused_tests [
+    "test/scrypath/phase99_contract_test.exs",
+    "test/mix/tasks/verify.phase99_test.exs",
+    "test/mix/tasks/workflow_wiring_test.exs"
+  ]
+
+  @impl true
+  def run(args) do
+    Mix.Task.run("app.start")
+    ensure_no_args!(args)
+
+    Mix.shell().info("==> verify.phase99: drift gates and ci enforcement trust-hardening checks")
+    run_test!(@focused_tests, "Phase 99 trust-hardening verification")
+
+    Mix.shell().info("==> Building docs with warnings as errors")
+    Mix.Task.reenable("docs")
+    Mix.Task.run("docs", ["--warnings-as-errors"])
+  end
+
+  defp run_test!(args, label) do
+    Mix.shell().info("==> Running #{label}")
+    Mix.Task.reenable("test")
+    Mix.Task.run("test", args)
+  end
+
+  defp ensure_no_args!([]), do: :ok
+
+  defp ensure_no_args!(args) do
+    Mix.raise("verify.phase99 does not accept arguments, got: #{Enum.join(args, " ")}")
+  end
+end
