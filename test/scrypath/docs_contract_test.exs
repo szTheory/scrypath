@@ -3,6 +3,7 @@ defmodule Scrypath.DocsContractTest do
   @moduletag :docs_contract
 
   @readme File.read!("README.md")
+  @example_readme File.read!("examples/phoenix_meilisearch/README.md")
   @architecture File.read!("ARCHITECTURE.md")
   @contributing File.read!("CONTRIBUTING.md")
   @ci_workflow File.read!(".github/workflows/ci.yml")
@@ -288,6 +289,17 @@ defmodule Scrypath.DocsContractTest do
       "SCRYPATH_MEILISEARCH_URL",
       "mix verify.adopter --live"
     ])
+  end
+
+  test "example runbook and CI preserve the same ordered proof command chain" do
+    assert String.contains?(@example_readme, "phoenix-example-integration")
+    assert ordered?(@example_readme, "cd examples/phoenix_meilisearch", "mix deps.get")
+    assert ordered?(@example_readme, "mix deps.get", "mix test")
+
+    [_head, job_tail] = String.split(@ci_workflow, "phoenix-example-integration:", parts: 2)
+    job_head = String.slice(job_tail, 0, 4000)
+    assert ordered?(job_head, "cd examples/phoenix_meilisearch", "mix deps.get")
+    assert ordered?(job_head, "mix deps.get", "mix test")
   end
 
   test "verify.phase83 stays wired into the focused maintainer flow" do
