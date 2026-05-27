@@ -128,6 +128,19 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert envs[:"verify.phase98"] == :test
     end
 
+    test "verify.phase99 is registered as :test" do
+      envs = Scrypath.MixProject.cli()[:preferred_envs]
+      assert envs[:"verify.phase99"] == :test
+    end
+
+    test "phase trust-spine aliases remain in parity for phases 97-99" do
+      envs = Scrypath.MixProject.cli()[:preferred_envs]
+
+      assert envs[:"verify.phase97"] == :test
+      assert envs[:"verify.phase98"] == :test
+      assert envs[:"verify.phase99"] == :test
+    end
+
     test "verify.workspace_clean is registered as :test" do
       envs = Scrypath.MixProject.cli()[:preferred_envs]
       assert envs[:"verify.workspace_clean"] == :test
