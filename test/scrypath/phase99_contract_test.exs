@@ -8,6 +8,7 @@ defmodule Scrypath.Phase99ContractTest do
   @intake_guide File.read!("guides/outside-adopter-intake.md")
   @example_readme File.read!("examples/phoenix_meilisearch/README.md")
   @verify_adopter_source File.read!("lib/mix/tasks/verify.adopter.ex")
+  @mix_exs File.read!("mix.exs")
 
   describe "TEST-01 docs contract anchors" do
     test "high-risk surfaces keep canonical install/support/proof wayfinding tokens" do
@@ -70,6 +71,22 @@ defmodule Scrypath.Phase99ContractTest do
                @verify_adopter_source,
                "cd examples/phoenix_meilisearch && mix deps.get && mix test"
              )
+    end
+  end
+
+  describe "TEST-03 verify alias parity" do
+    test "phase trust-lane aliases stay aligned across mix wiring and contributor docs" do
+      assert_contains_all(@mix_exs, [
+        "\"verify.phase97\": :test",
+        "\"verify.phase98\": :test",
+        "\"verify.phase99\": :test"
+      ])
+
+      assert_contains_all(@contributing, [
+        "mix verify.phase97",
+        "mix verify.phase98",
+        "mix verify.phase99"
+      ])
     end
   end
 
