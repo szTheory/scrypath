@@ -2,6 +2,7 @@
 defmodule ScrypathOps.Test.SearchPlaygroundStubAdapter do
   @behaviour ScrypathOps.SearchPlayground.Adapter
 
+  alias Scrypath.FacetSearchResult
   alias Scrypath.MultiSearchResult
   alias Scrypath.Query
   alias Scrypath.SearchResult
@@ -33,6 +34,12 @@ defmodule ScrypathOps.Test.SearchPlaygroundStubAdapter do
       _ ->
         ok_result(entries, opts)
     end
+  end
+
+  @impl true
+  def search_facet_values(_schema, _facet_name, facet_query, _opts) do
+    raw = %{"facetQuery" => facet_query, "facetHits" => []}
+    {:ok, FacetSearchResult.new(raw)}
   end
 
   defp maybe_sleep do
