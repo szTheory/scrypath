@@ -43,7 +43,7 @@ For the maintainer-facing adopter proof surface specifically:
 mix verify.adopter
 ```
 
-That fast path stays service-free and guards the current support/readiness contract. Use `mix verify.adopter --live` for the canonical Phoenix + Meilisearch proof path after starting the example services and exporting the required env vars; the detailed runbook lives in [`examples/phoenix_meilisearch/README.md`](examples/phoenix_meilisearch/README.md).
+That fast path stays service-free and guards the current support/readiness contract. `mix verify.adopter --live` is the canonical Phoenix + Meilisearch proof path and requires `SCRYPATH_EXAMPLE_INTEGRATION`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL` after starting the example services; the detailed runbook lives in [`examples/phoenix_meilisearch/README.md`](examples/phoenix_meilisearch/README.md).
 
 The live branch maps directly to the GitHub Actions **`phoenix-example-integration`** job contract: from `examples/phoenix_meilisearch`, the proof path is `mix deps.get` then `mix test` with `SCRYPATH_EXAMPLE_INTEGRATION`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL` set.
 
