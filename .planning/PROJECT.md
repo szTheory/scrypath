@@ -40,7 +40,7 @@ Phase 97 through 99 banned capability classes:
 
 ## Current State
 
-**Phase 98 complete (2026-05-27):** adopter proof-boundary and intake/support surfaces are reconciled and enforced by the new `mix verify.phase98` trust-hardening gate. Phase 97 canonical contract freeze and scope guard remain active milestone inputs.
+**Phase 99 complete (2026-05-27):** v1.27 trust-hardening now has deterministic docs/proof contract checks, an executable `mix verify.phase99` gate, and a stable `phase99-trust` required-check token wired across workflow/docs/tests. Phase 97 scope guard remains active for any future reopen discussion.
 
 **v1.26 — Facet Value Vocabulary Search** shipped + archived in-repo on **2026-05-26** across phases **95–96**.
 
@@ -95,6 +95,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ### Validated
 
+- [x] **v1.27 phase 99** (2026-05-27): **TEST-01**, **TEST-02**, **TEST-03**, **GATE-01**, **GATE-02** — deterministic docs/proof/required-check drift coverage via `test/scrypath/phase99_contract_test.exs`, executable `mix verify.phase99`, and stable `phase99-trust` CI required-check parity.
 - [x] **v1.27 phase 98** (2026-05-27): **PROOF-01**, **PROOF-02**, **PROOF-03**, **SUP-01**, **SUP-02** — one-hop proof discoverability, explicit fast/live boundary, live runbook parity, deterministic intake evidence requirements, and findings-to-action routing hardened with `mix verify.phase98`.
 - [x] **v1.27 phase 97** (2026-05-27): **TRUTH-01**, **TRUTH-02**, **TRUTH-03**, **SCOPE-01** — canonical statement freeze, scope guard, and `mix verify.phase97` trust-hardening gate.
 - [x] **v1.26** (2026-05-26): **FACET-UX-01**–**FACET-UX-03**, **DOC-01**–**DOC-02**, **TEST-01**–**TEST-02** — `search_facet_values/4`, response parsing, LiveView examples, and `mix verify.phase96` gate.
@@ -157,7 +158,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 - [x] Finalize canonical install/support/proof contract language and non-goals for v1.27. *(Validated in Phase 97: canonical-contract-freeze-and-scope-guard)*
 - [x] Reconcile adopter-facing surfaces to canonical wording and flow boundaries. *(Validated in Phase 98: surface-reconciliation-and-adopter-flow-clarity)*
-- [ ] Lock docs-contract drift checks and phase verify/CI expectations for phases 97-99.
+- [x] Lock docs-contract drift checks and phase verify/CI expectations for phases 97-99. *(Validated in Phase 99: drift-gates-and-ci-enforcement)*
 
 ### Out of Scope
 
@@ -187,4 +188,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-27 — Phase 98 completed; proof/support/intake surface reconciliation now enforced by `mix verify.phase98`*
+*Last updated: 2026-05-27 — Phase 99 completed; trust-gate and required-check parity now enforced by `mix verify.phase99` + `phase99-trust`*
