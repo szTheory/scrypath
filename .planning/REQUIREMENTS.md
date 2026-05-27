@@ -28,7 +28,7 @@
 - [x] **TEST-02**: Verification coverage asserts proof-boundary consistency between root docs and example-app docs.
 - [x] **TEST-03**: Verification coverage asserts CI/verify alias references stay aligned with documented required checks.
 - [x] **GATE-01**: Milestone-specific verify gate aliases for phases 97-99 are defined and documented as the trust-hardening verification spine.
-- [ ] **GATE-02**: Required PR CI checks for this milestone are explicitly documented and map to the milestone gate strategy.
+- [x] **GATE-02**: Required PR CI checks for this milestone are explicitly documented and map to the milestone gate strategy.
 
 ### Scope Discipline
 
@@ -64,7 +64,7 @@
 | TEST-02 | Phase 99 | Complete |
 | TEST-03 | Phase 99 | Complete |
 | GATE-01 | Phase 99 | Complete |
-| GATE-02 | Phase 99 | Pending |
+| GATE-02 | Phase 99 | Complete |
 | SCOPE-01 | Phase 97 | Complete |
 | FUT-01 | Post-v1.27 | Deferred |
 
