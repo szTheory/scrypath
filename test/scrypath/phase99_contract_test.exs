@@ -6,6 +6,7 @@ defmodule Scrypath.Phase99ContractTest do
   @contributing File.read!("CONTRIBUTING.md")
   @support_guide File.read!("guides/support-and-compatibility.md")
   @intake_guide File.read!("guides/outside-adopter-intake.md")
+  @evidence_template File.read!("docs/templates/outside-adopter-evidence.md")
   @example_readme File.read!("examples/phoenix_meilisearch/README.md")
   @verify_adopter_source File.read!("lib/mix/tasks/verify.adopter.ex")
   @mix_exs File.read!("mix.exs")
@@ -112,10 +113,59 @@ defmodule Scrypath.Phase99ContractTest do
     end
   end
 
+  describe "TRUTH-01 install token and evidence boundary parity" do
+    test "canonical and intake surfaces keep the ~> 0.3 token and reject stale major token snippets" do
+      assert_contains_all(@support_guide, [~S|{:scrypath, "~> 0.3"}|])
+      assert_contains_all(@readme, [~S|{:scrypath, "~> 0.3"}|])
+      assert_contains_all(@intake_guide, [~S|{:scrypath, "~> 0.3"}|])
+
+      assert_absent_all(@readme, [~S|{:scrypath, "~> 1.0"}|])
+      assert_absent_all(@support_guide, [~S|{:scrypath, "~> 1.0"}|])
+      assert_absent_all(@intake_guide, [~S|{:scrypath, "~> 1.0"}|])
+      assert_absent_all(@evidence_template, [~S|{:scrypath, "~> 1.0"}|])
+    end
+
+    test "intake and evidence template preserve exact package-vs-ref evidence requirements" do
+      assert_contains_all(@intake_guide, [
+        "exact Hex package version",
+        "exact git ref/commit"
+      ])
+
+      assert_contains_all(@evidence_template, [
+        "exact Hex package version",
+        "exact git ref/commit"
+      ])
+    end
+  end
+
+  describe "TRUTH-02 release truth token parity" do
+    test "canonical, entry, and intake surfaces keep release-backed and unreleased-main tokens" do
+      Enum.each([@support_guide, @readme, @contributing, @intake_guide], fn surface ->
+        assert_contains_all(String.downcase(surface), [
+          "release-backed guidance",
+          "main may contain unreleased changes"
+        ])
+      end)
+    end
+
+    test "entry and intake surfaces route normative policy to support authority" do
+      Enum.each([@readme, @contributing, @intake_guide], fn surface ->
+        assert_contains_all(surface, ["guides/support-and-compatibility.md"])
+      end)
+    end
+  end
+
   defp assert_contains_all(content, snippets) do
     Enum.each(snippets, fn snippet ->
       assert String.contains?(content, snippet),
              "expected phase-99 contract token #{inspect(snippet)}"
+    end)
+  end
+
+  defp assert_absent_all(content, snippets) do
+    Enum.each(snippets, fn snippet ->
+      refute String.contains?(content, snippet),
+             "did not expect phase-99 contract token #{inspect(snippet)}"
     end)
   end
 
