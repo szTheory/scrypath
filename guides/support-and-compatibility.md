@@ -9,6 +9,19 @@ This guide is the single current support and readiness authority for Scrypath. U
 - Search backend target for v1: Meilisearch
 - Supported write paths in v1: `:inline`, `:manual`, `:oban`
 
+## Install and release contract
+
+Use this release-backed Hex dependency snippet for adopter installs:
+
+```elixir
+{:scrypath, "~> 0.3"}
+```
+
+Release-backed guidance is the default adopter path.
+main may contain unreleased changes.
+
+This guide is the normative owner for install and release policy. Other surfaces should route here rather than restating a full policy matrix.
+
 Those claims are intentionally narrow. They are defended by this repository's `mix.exs`, GitHub Actions workflow, published guides, and the runnable Phoenix example under `examples/phoenix_meilisearch/`.
 
 ## What the repo actively proves
