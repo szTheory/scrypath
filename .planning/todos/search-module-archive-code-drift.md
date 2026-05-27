@@ -21,6 +21,10 @@ The post-v1.26 done-ness assessment keeps this as the main planning-truth cleanu
 - If it exists and still fits the current boundary, recover it cleanly and re-verify the public docs/contracts.
 - If it does not exist, or if the current QueryParams/Composition surface supersedes it, correct the archive and milestone language so future planning does not assume the layer is already present.
 
+## Progress
+
+- 2026-05-27: Rolling planning docs (`PROJECT.md`, `MILESTONES.md`, `MILESTONE-ARC.md`) now consistently mark `v1.20` SearchModule statements as archive history rather than branch-tip shipped surface. Remaining work is the final code-or-archive reconciliation decision.
+
 ## References
 
 - `.planning/milestones/v1.20-ROADMAP.md`

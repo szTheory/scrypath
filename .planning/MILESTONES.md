@@ -120,6 +120,8 @@
 
 Historical note: the `v1.20` archive records milestone-close `Scrypath.SearchModule` claims, but the current checked-out branch tip does not expose that layer, its guide, or its tests. Treat the bullets below as archive history, not present-day shipped surface.
 
+Reconciliation tracker: `.planning/todos/search-module-archive-code-drift.md`.
+
 **Phases completed:** **3** (**77–79**), **8** requirements (**SMOD-01**–**SMOD-08**)
 
 **Hex:** **`scrypath 0.3.6`** on Hex at close; **in-repo milestone close only** — no dedicated Hex bump claimed for this planning milestone.
@@ -486,7 +488,7 @@ Historical note: the `v1.20` archive records milestone-close `Scrypath.SearchMod
 | `v1.17` | 2026-04-23 | 3 | 6 req | Archived | Integration confidence & adopter proof — phases **68–70**; `v1.17-*` archives. |
 | `v1.18` | 2026-04-27 | 3 | 10 req | Archived | Sigra integration — phases **71–73**; `v1.18-*` archives. |
 | `v1.19` | 2026-04-28 | 3 | 8 req | Archived | Production adoption proof and hardening — phases **74–76**; `v1.19-*` archives. |
-| `v1.20` | 2026-05-08 | 3 | 8 req | Archived | Search Module Foundation — phases **77–79**; `v1.20-*` archives. |
+| `v1.20` | 2026-05-08 | 3 | 8 req | Archived | Search Module Foundation archive history — phases **77–79**; branch-tip `SearchModule` drift tracked in `.planning/todos/search-module-archive-code-drift.md`. |
 | `v1.21` | 2026-05-23 | 3 | 8 req | Archived | Query Toolkit And Phoenix Edge Helpers — phases **80–82**; `v1.21-*` archives. |
 | `v1.22` | 2026-05-24 | 3 | 12 req | Archived | Composition And Real-App Depth — phases **83–85**; `v1.22-*` archives. |
 | `v1.23` | 2026-05-24 | 3 | 8 req | Archived | Outside-Adopter Evidence And Support-Truth Reconciliation — phases **86–88**; `v1.23-*` archives. |
