@@ -1,15 +1,16 @@
 ---
 phase: 99
 slug: drift-gates-and-ci-enforcement
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: complete
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-05-27
+updated: 2026-05-27
 ---
 
 # Phase 99 — Validation Strategy
 
-> Per-phase validation contract for feedback sampling during execution.
+> Per-phase Nyquist validation contract and audit evidence.
 
 ---
 
@@ -19,15 +20,15 @@ created: 2026-05-27
 |----------|-------|
 | **Framework** | ExUnit (Elixir test) |
 | **Config file** | `mix.exs` |
-| **Quick run command** | `mix test test/scrypath/phase99_contract_test.exs test/mix/tasks/verify.phase99_test.exs` |
+| **Quick run command** | `mix test test/scrypath/phase99_contract_test.exs test/mix/tasks/verify.phase99_test.exs test/mix/tasks/workflow_wiring_test.exs` |
 | **Full suite command** | `mix verify.phase99` |
-| **Estimated runtime** | ~40 seconds |
+| **Estimated runtime** | ~2 seconds local |
 
 ---
 
 ## Sampling Rate
 
-- **After every task commit:** Run `mix test test/scrypath/phase99_contract_test.exs test/mix/tasks/verify.phase99_test.exs`
+- **After every task commit:** Run `mix test test/scrypath/phase99_contract_test.exs test/mix/tasks/verify.phase99_test.exs test/mix/tasks/workflow_wiring_test.exs`
 - **After every plan wave:** Run `mix verify.phase99`
 - **Before `/gsd-verify-work`:** Full suite must be green
 - **Max feedback latency:** 60 seconds
@@ -36,23 +37,35 @@ created: 2026-05-27
 
 ## Per-Task Verification Map
 
-| Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
-|---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 99-01-01 | 01 | 1 | TEST-01 | T-99-01 | Canonical docs anchors remain present on high-risk surfaces | unit | `mix test test/scrypath/phase99_contract_test.exs` | ❌ W0 | ⬜ pending |
-| 99-01-02 | 01 | 1 | TEST-02 | T-99-02 | Fast/live proof boundary tokens stay aligned across root and example docs | unit | `mix test test/scrypath/phase99_contract_test.exs` | ❌ W0 | ⬜ pending |
-| 99-01-03 | 01 | 1 | TEST-03 | T-99-03 | Required-check and verify alias references stay in sync across docs/workflow | integration | `mix test test/scrypath/phase99_contract_test.exs test/mix/tasks/workflow_wiring_test.exs` | ❌ W0 | ⬜ pending |
-| 99-02-01 | 02 | 2 | GATE-01 | T-99-04 | `mix verify.phase99` exists and alias wiring for phase 97-99 is explicit | integration | `mix test test/mix/tasks/verify.phase99_test.exs test/mix/tasks/workflow_wiring_test.exs` | ❌ W0 | ⬜ pending |
-| 99-02-02 | 02 | 2 | GATE-02 | T-99-05 | Required PR checks are explicitly documented and map to workflow job tokens | integration | `mix test test/mix/tasks/workflow_wiring_test.exs` | ✅ | ⬜ pending |
+| Task ID | Plan | Wave | Requirement IDs | Test Files | Automated Command | Status |
+|---------|------|------|-----------------|------------|-------------------|--------|
+| 99-01-01 | 01 | 1 | TEST-01 | `test/scrypath/phase99_contract_test.exs` | `mix test test/scrypath/phase99_contract_test.exs` | ✅ COVERED |
+| 99-01-02 | 01 | 1 | TEST-02 | `test/scrypath/phase99_contract_test.exs` | `mix test test/scrypath/phase99_contract_test.exs` | ✅ COVERED |
+| 99-01-03 | 01 | 1 | TEST-01, TEST-02 | `test/scrypath/phase99_contract_test.exs` | `mix test test/scrypath/phase99_contract_test.exs` | ✅ COVERED |
+| 99-02-01 | 02 | 2 | GATE-01 | `lib/mix/tasks/verify.phase99.ex`, `test/mix/tasks/verify.phase99_test.exs` | `mix test test/mix/tasks/verify.phase99_test.exs` | ✅ COVERED |
+| 99-02-02 | 02 | 2 | GATE-01 | `test/mix/tasks/verify.phase99_test.exs` | `mix test test/mix/tasks/verify.phase99_test.exs` | ✅ COVERED |
+| 99-02-03 | 02 | 2 | TEST-03, GATE-01 | `mix.exs`, `test/mix/tasks/workflow_wiring_test.exs`, `test/scrypath/phase99_contract_test.exs` | `mix test test/mix/tasks/workflow_wiring_test.exs test/scrypath/phase99_contract_test.exs` | ✅ COVERED |
+| 99-03-01 | 03 | 3 | GATE-02 | `.github/workflows/ci.yml`, `test/mix/tasks/workflow_wiring_test.exs` | `mix test test/mix/tasks/workflow_wiring_test.exs` | ✅ COVERED |
+| 99-03-02 | 03 | 3 | GATE-02 | `CONTRIBUTING.md`, `test/scrypath/phase99_contract_test.exs` | `mix test test/scrypath/phase99_contract_test.exs` | ✅ COVERED |
+| 99-03-03 | 03 | 3 | TEST-03, GATE-02 | `test/mix/tasks/workflow_wiring_test.exs`, `test/scrypath/phase99_contract_test.exs` | `mix test test/mix/tasks/workflow_wiring_test.exs test/scrypath/phase99_contract_test.exs` | ✅ COVERED |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+## Requirement Coverage Map
+
+| Requirement | Coverage Evidence | Status |
+|-------------|-------------------|--------|
+| TEST-01 | `phase99_contract_test.exs` TEST-01 describe block; high-risk docs token assertions | ✅ COVERED |
+| TEST-02 | `phase99_contract_test.exs` TEST-02 describe block; env token and command-order checks | ✅ COVERED |
+| TEST-03 | `phase99_contract_test.exs` TEST-03 parity checks + `workflow_wiring_test.exs` phase99 required-check wiring tests | ✅ COVERED |
+| GATE-01 | `verify.phase99` task implementation + `verify.phase99_test.exs` contract tests + `mix.exs` preferred env wiring assertions | ✅ COVERED |
+| GATE-02 | CI `phase99-trust` job + contributor required-check contract tokens + workflow/parity tests | ✅ COVERED |
 
 ---
 
 ## Wave 0 Requirements
 
-- [ ] `test/scrypath/phase99_contract_test.exs` — focused trust assertions for TEST-01/02/03
-- [ ] `test/mix/tasks/verify.phase99_test.exs` — verify task contract and focused test markers
-- [ ] `lib/mix/tasks/verify.phase99.ex` — dedicated deterministic phase gate
+- [x] `test/scrypath/phase99_contract_test.exs` — focused trust assertions for TEST-01/02/03
+- [x] `test/mix/tasks/verify.phase99_test.exs` — verify task contract and focused test markers
+- [x] `lib/mix/tasks/verify.phase99.ex` — dedicated deterministic phase gate
 
 ---
 
@@ -66,11 +79,23 @@ created: 2026-05-27
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 60s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 60s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** Nyquist audit complete
+
+## Validation Audit 2026-05-27
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+
+Automated evidence:
+- `mix test test/scrypath/phase99_contract_test.exs test/mix/tasks/verify.phase99_test.exs test/mix/tasks/workflow_wiring_test.exs` → 36 tests, 0 failures
+- `mix verify.phase99` → pass, docs build succeeds with warnings as errors

@@ -72,6 +72,40 @@
 2. Milestone verify gates are defined and mapped to expected CI behavior.
 3. Required PR checks for trust-hardening are documented and bounded to avoid release-train noise.
 
+### Phase 100 — Install/Release Contract Reconciliation
+
+**Goal:** restore install-version and release-truth coherence across canonical and intake surfaces, then lock parity with targeted contract assertions.
+
+**Requirements:**
+
+- TRUTH-01
+- TRUTH-02
+
+**Gap Closure:** closes milestone-audit requirement, integration, and adopter-truth flow gaps tied to install/release contract divergence.
+
+**Success criteria:**
+
+1. Install/version guidance is consistent across mapped high-risk adopter surfaces.
+2. Release-backed versus `main` branch truth wording is coherent across canonical and intake entry points.
+3. Drift checks assert install/version parity for these contract tokens.
+
+### Phase 101 — CI Compatibility Truth and Drift Guard Completion
+
+**Goal:** align support compatibility claims with actual CI lanes and complete CI-version parity assertions in drift guards.
+
+**Requirements:**
+
+- TRUTH-03
+- TEST-01
+
+**Gap Closure:** closes milestone-audit requirement, integration, and support-proof flow gaps tied to CI/runtime claim drift.
+
+**Success criteria:**
+
+1. Support authority compatibility claims match the CI matrix (or the matrix is updated to match policy).
+2. Contract tests assert CI-version parity across mapped trust surfaces.
+3. Verification evidence proves support/proof surfaces reference the same canonical CI truth.
+
 ## Gate Strategy (v1.27)
 
 - **Gate aliases:** `mix verify.phase97`, `mix verify.phase98`, `mix verify.phase99`
@@ -83,16 +117,16 @@
 
 | Requirement | Phase | Notes |
 |-------------|-------|-------|
-| TRUTH-01 | 97 | Canonical install/version contract |
-| TRUTH-02 | 97 | Release-backed vs `main` truth |
-| TRUTH-03 | 97 | Support/compatibility authority |
+| TRUTH-01 | 100 | Canonical install/version contract reconciliation |
+| TRUTH-02 | 100 | Release-backed vs `main` truth reconciliation |
+| TRUTH-03 | 101 | Support/compatibility authority parity with CI lanes |
 | SCOPE-01 | 97 | No runtime breadth expansion |
 | PROOF-01 | 98 | Canonical proof command discoverability |
 | PROOF-02 | 98 | Fast/live proof boundary clarity |
 | PROOF-03 | 98 | Example-app proof alignment |
 | SUP-01 | 98 | Intake evidence contract |
 | SUP-02 | 98 | Escalation contract |
-| TEST-01 | 99 | Docs-contract drift anchors |
+| TEST-01 | 101 | Docs-contract drift anchors including CI/version parity |
 | TEST-02 | 99 | Proof-boundary contract assertions |
 | TEST-03 | 99 | CI/verify alias consistency assertions |
 | GATE-01 | 99 | Phase verify gate strategy |
@@ -105,3 +139,5 @@
 | 97 | 3/3 | Complete    | 2026-05-27 |
 | 98 | 4/4 | Complete    | 2026-05-27 |
 | 99 | 3/3 | Complete    | 2026-05-27 |
+| 100 | 0/0 | Not Started | - |
+| 101 | 0/0 | Not Started | - |
