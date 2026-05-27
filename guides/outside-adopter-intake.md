@@ -13,6 +13,7 @@ Canonical routing before you submit evidence:
 - Use this intake guide for admissibility classes and evidence submission requirements.
 
 Use release-backed guidance as the default adopter path; main may contain unreleased changes.
+This intake guide stays route-first and is not a compatibility tuple authority.
 
 ### Repo-clone versus Hex-package Boundary
 
