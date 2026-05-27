@@ -117,6 +117,30 @@ defmodule Scrypath.Phase99ContractTest do
     end
   end
 
+  describe "TEST-01 CI-version parity anchors" do
+    test "mix.exs keeps the Elixir floor policy token" do
+      assert_contains_all(@mix_exs, [~s(elixir: "~> 1.17")])
+    end
+
+    test "compatibility tuples include floor/head and OTP edge evidence" do
+      tuples = extract_workflow_ci_tuples(@ci_workflow)
+      elixir_versions = Enum.map(tuples, &elem(&1, 0))
+      otp_versions = Enum.map(tuples, &elem(&1, 1))
+
+      assert @compatibility_floor_elixir in elixir_versions,
+             "expected compatibility-truth tuples to include floor Elixir #{@compatibility_floor_elixir}, got #{inspect(elixir_versions)}"
+
+      assert @compatibility_head_elixir in elixir_versions,
+             "expected compatibility-truth tuples to include head Elixir #{@compatibility_head_elixir}, got #{inspect(elixir_versions)}"
+
+      assert @compatibility_floor_otp in otp_versions,
+             "expected compatibility-truth tuples to include floor OTP #{@compatibility_floor_otp}, got #{inspect(otp_versions)}"
+
+      assert @compatibility_head_otp in otp_versions,
+             "expected compatibility-truth tuples to include head OTP #{@compatibility_head_otp}, got #{inspect(otp_versions)}"
+    end
+  end
+
   describe "TRUTH-01 install token and evidence boundary parity" do
     test "canonical and intake surfaces keep the ~> 0.3 token and reject stale major token snippets" do
       assert_contains_all(@support_guide, [~S|{:scrypath, "~> 0.3"}|])
