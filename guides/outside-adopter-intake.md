@@ -14,8 +14,10 @@ Canonical routing before you submit evidence:
 
 ### Repo-clone versus Hex-package Boundary
 
-- **Hex-package:** When you add `{:scrypath, "~> 1.0"}` to your `mix.exs`, you are consuming the library artifact. If you encounter issues here, we need to know your exact environment and integration steps.
+- **Hex-package:** When you add `{:scrypath, "~> 0.3"}` to your `mix.exs`, you are consuming the library artifact. If you encounter issues here, we need to know your exact environment and integration steps.
 - **Repo-clone:** The defended proof path is a repo-clone workflow. It tests Scrypath as a local `path:` dependency within a complete Phoenix application.
+
+When you submit evidence, include either the exact Hex package version or the exact git ref/commit so maintainers can classify package versus branch-tip behavior without ambiguity.
 
 ### Maintainer Proof Command Family
 

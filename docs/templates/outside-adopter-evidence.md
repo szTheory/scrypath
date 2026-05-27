@@ -15,7 +15,7 @@ If required sections are missing, maintainers may return the bundle as "needs in
 - **Database (if applicable):**
 
 ## Scrypath Ref or Hex version
-*State the exact commit hash if using a repo-clone, or the Hex package version.*
+*State either the exact Hex package version (Hex-package path) or the exact git ref/commit (repo-clone path).*
 
 ## Chosen Proof Path
 *Are you running the repo-clone path, or integrating the Hex-package?*
