@@ -18,6 +18,8 @@ defmodule Mix.Tasks.Verify.Adopter do
   - `mix deps.get`
   - `mix test`
 
+  Equivalent shell chain: `cd examples/phoenix_meilisearch && mix deps.get && mix test`.
+
   Live mode requires these environment variables before it will run:
 
   - `SCRYPATH_EXAMPLE_INTEGRATION`
@@ -29,7 +31,7 @@ defmodule Mix.Tasks.Verify.Adopter do
   orchestration-only.
 
   This task stays orchestration-only. It does not start Docker, provision services,
-  or silently downgrade from live mode back to fast mode. For the full maintainer
+  or silently downgrade from `--live` back to fast mode. For the full maintainer
   matrix and CI job names, see [CONTRIBUTING.md](CONTRIBUTING.md).
   """
 
