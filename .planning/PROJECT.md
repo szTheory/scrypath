@@ -49,6 +49,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 - **None active.** Default to no-op when the release train is green and there is no approved bugfix, release follow-up, or PR-scoped milestone.
 - **Maintenance lane first:** keep patch train, support truth, and adoption-evidence loop healthy without inventing new breadth.
 - **Feature lane entry criteria:** only open via approved PR-scoped milestone with concrete bug evidence or reviewed outside-adopter signal; no direct-`main` milestone depth work.
+- **If reopened now:** the highest-leverage bounded wedge is Adopter Contract Hardening (support/install/proof coherence) before any deeper runtime feature breadth.
 
 ## Last shipped milestone
 
@@ -154,4 +155,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-26 — v1.26 Facet Value Vocabulary Search archived; v1.25 Tenant-Safe Search archived*
+*Last updated: 2026-05-27 — milestone next-step reassessment recorded; maintenance-by-default posture retained*
