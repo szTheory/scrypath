@@ -11,6 +11,10 @@ defmodule Scrypath.Phase99ContractTest do
   @verify_adopter_source File.read!("lib/mix/tasks/verify.adopter.ex")
   @mix_exs File.read!("mix.exs")
   @ci_workflow File.read!(".github/workflows/ci.yml")
+  @compatibility_floor_elixir "1.17.3"
+  @compatibility_floor_otp "26.2.5"
+  @compatibility_head_elixir "1.19.0"
+  @compatibility_head_otp "28.1"
 
   describe "TEST-01 docs contract anchors" do
     test "high-risk surfaces keep canonical install/support/proof wayfinding tokens" do
@@ -154,6 +158,71 @@ defmodule Scrypath.Phase99ContractTest do
       end)
     end
   end
+
+  defp extract_support_ci_tuples(content) do
+    content
+    |> lines_after("GitHub Actions CI evidence currently exercises these explicit tuples:")
+    |> Enum.map(fn line ->
+      Regex.run(~r/-\s*Elixir\s*`([^`]+)`\s*with OTP\s*`([^`]+)`/, line, capture: :all_but_first)
+    end)
+    |> Enum.reject(&is_nil/1)
+    |> Enum.map(fn [elixir_version, otp_version] -> {elixir_version, otp_version} end)
+    |> normalize_tuple_set()
+  end
+
+  defp extract_workflow_ci_tuples(content) do
+    case Regex.run(
+           ~r/\n  compatibility-truth:\n(?<lane>.*?)(?:\n  [a-z0-9][a-z0-9-]*:\n|\z)/ms,
+           content,
+           capture: :all_names
+         ) do
+      [lane] ->
+        lane
+        |> Regex.scan(
+          ~r/-\s*elixir-version:\s*"([^"]+)"\n\s+otp-version:\s*"([^"]+)"/,
+          capture: :all_but_first
+        )
+        |> Enum.map(fn [elixir_version, otp_version] -> {elixir_version, otp_version} end)
+        |> normalize_tuple_set()
+
+      _ ->
+        []
+    end
+  end
+
+  defp normalize_tuple_set(tuples) do
+    tuples
+    |> Enum.map(&normalize_tuple_pair/1)
+    |> Enum.uniq()
+    |> Enum.sort()
+  end
+
+  defp assert_tuple_set_parity(expected_tuples, actual_tuples, context) do
+    normalized_expected = normalize_tuple_set(expected_tuples)
+    normalized_actual = normalize_tuple_set(actual_tuples)
+
+    assert normalized_expected == normalized_actual,
+           "#{context} tuple mismatch\n" <>
+             "expected: #{inspect(normalized_expected)}\n" <>
+             "actual: #{inspect(normalized_actual)}"
+  end
+
+  defp lines_after(content, marker) do
+    case String.split(content, marker, parts: 2) do
+      [_, remaining] -> String.split(remaining, "\n")
+      _ -> []
+    end
+  end
+
+  defp normalize_tuple_pair({left, right}) when is_binary(left) and is_binary(right) do
+    if String.starts_with?(right, "1.") and not String.starts_with?(left, "1.") do
+      {right, left}
+    else
+      {left, right}
+    end
+  end
+
+  defp normalize_tuple_pair([left, right]), do: normalize_tuple_pair({left, right})
 
   defp assert_contains_all(content, snippets) do
     Enum.each(snippets, fn snippet ->
