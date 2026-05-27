@@ -6,6 +6,12 @@ This guide is the single authority for outside-adopter attempts. If you are inte
 
 Scrypath currently defends a specific Phoenix + Meilisearch proof path. This path lives in this repository as a runnable example.
 
+Canonical routing before you submit evidence:
+
+- Start from [`README.md`](../README.md) for the release-backed install and first-hop guide map.
+- Use [`guides/support-and-compatibility.md`](support-and-compatibility.md) for the defended support and proof-boundary policy.
+- Use this intake guide for admissibility classes and evidence submission requirements.
+
 ### Repo-clone versus Hex-package Boundary
 
 - **Hex-package:** When you add `{:scrypath, "~> 1.0"}` to your `mix.exs`, you are consuming the library artifact. If you encounter issues here, we need to know your exact environment and integration steps.
