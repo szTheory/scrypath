@@ -21,7 +21,7 @@ See: `.planning/PROJECT.md` (updated 2026-05-26)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** Post-v1.26 Evaluation / Maintenance / Release train
+**Current focus:** Post-v1.26 two-lane operations (maintenance default, PR-first feature milestones only when evidence reopens scope)
 
 ## Current Position
 
@@ -41,6 +41,8 @@ Progress: [░░░░░░░░░░] 0%
 (See `.planning/PROJECT.md` Key Decisions.)
 
 - **v1.26 archived:** Shipped `Scrypath.search_facet_values/4` for high-cardinality facet search, updated docs with LiveView examples, and locked the `mix verify.phase96` gate.
+- **2026-05-27 unified operating model:** Scrypath now runs two explicit lanes. Maintenance lane is default (release follow-through, support truth, outside-adopter evidence, planning-truth cleanup). Feature lane is PR-first and evidence-gated: serious scope work must run on a PR-scoped milestone and merge only after green PR CI.
+- **2026-05-27 shift-left config pass:** low-risk GSD defaults already match this repo's standing preferences (`research`, parallel exploration, verifier/nyquist, discuss-first). No config changes were required; high-impact gate/profile changes still require explicit approval.
 - **2026-05-27 done-ness assessment:** Scrypath is now roughly **93-95% done** for its stated Meilisearch-first Phoenix/Ecto scope. The last planned product wedges from prior evidence — related-data fan-out, tenant-safe search, and facet-value search — are shipped. Default next work is release follow-through, outside-adopter evidence, and planning-truth reconciliation, not another feature milestone.
 - **2026-05-26 release-train policy:** `main` now defaults to lean required gates plus Release Please patch-train cadence. Serious milestone work should reopen through PR-scoped planning, not opportunistic direct-`main` execution, and the default answer when the train is green is "nothing to do."
 - **v1.25 archived:** Shipped `tenant_field:` declaration, `tenant_scope:` injection, and canonical multitenancy guide.
@@ -115,6 +117,7 @@ Progress: [░░░░░░░░░░] 0%
 - **Search-module archive drift:** `v1.20` archive files still claim a `Scrypath.SearchModule` layer, but the current checkout does not contain that module, its guide, or its tests. Treat the archive as historical/salvage-backed evidence, not as current shipped truth.
 - **Future product ranking should stay evidence-bound:** do not let generic ergonomics or OPSUI breadth displace tenant-safe access or high-cardinality facet-value search unless the outside-adopter evidence actually points there.
 - **Post-v1.26 feature threshold:** do not open autocomplete/suggestions, OPSUI breadth, multi-backend, vector/hybrid, or generic ergonomics milestones without reviewed outside-adopter evidence or a concrete bug.
+- **Feature-lane merge discipline:** serious feature milestones must land through PRs with green PR CI; avoid direct-`main` depth work even when local checks pass.
 
 ### Deferred Items
 
@@ -131,7 +134,7 @@ Doc-contract tests require these maintainer artifact names remain discoverable f
 
 ## Next Command
 
-If the Release Please PR needs action, finish the release train. Otherwise, if `main` is green and no outside-adopter evidence or concrete bug exists, there is nothing to do. Reopen planning with `/gsd:new-milestone` only for approved PR-scoped milestone work.
+If the Release Please PR needs action, finish the release train. Otherwise, if `main` is green and no outside-adopter evidence or concrete bug exists, there is nothing to do. Reopen planning with `/gsd:new-milestone` only for approved PR-scoped milestone work, then execute through a PR branch and merge only after green PR CI.
 
 ---
 

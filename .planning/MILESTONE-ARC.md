@@ -1,74 +1,47 @@
 # Milestone Arc
 
-## Active arc: Outside-Adopter Validation And Trust Closure
+## Current arc: Maintenance and adoption evidence
 
-**Status:** active - `v1.23` opened on 2026-05-24 after `v1.22` shipped on 2026-05-24  
-**Started:** 2026-05-24
+**Status:** no active milestone (post-v1.26 maintenance mode)  
+**Current default pull:** release train + outside-adopter evidence + planning-truth reconciliation
 
-## Why this arc exists
+## Why this is the active posture
 
-Scrypath already proved a credible Meilisearch-first, Ecto-native indexing and sync story, and the request-edge plus composition work pushed the library close to diminishing returns on internal breadth.
+`v1.23` through `v1.26` closed the last planned high-leverage wedges from prior evidence:
 
-The next leverage move is not another surface-area milestone by default. It is to reconcile support truth with the checked-out tree, collect real outside-adopter evidence on the defended Phoenix + Meilisearch path, and let that evidence determine whether the library should stop soon or open one final high-leverage wedge.
+- support-truth reconciliation and outside-adopter intake (`v1.23`)
+- related-data propagation (`v1.24`)
+- tenant-safe access (`v1.25`)
+- facet-value vocabulary search (`v1.26`)
 
-## Arc goals
+Scrypath now sits in a near-done band for its stated Meilisearch-first Phoenix/Ecto scope, so default planning should optimize for trust and maintenance rather than additional breadth.
 
-- Reconcile public support/readiness/proof claims with the actual checked-out repo.
-- Force milestone selection to depend on reviewed outside-adopter evidence rather than internal momentum.
-- Close only evidence-backed docs/support/proof papercuts in this arc.
-- End the arc with a clear next-pull verdict: stop soon, related-data propagation, or tenant-safe access.
+## Operating lanes
 
-## Arc non-goals
+- **Maintenance lane (default):** keep `main` green, finish release follow-through, maintain support/docs truth, and process outside-adopter evidence.
+- **Feature lane (only when reopened):** use PR-scoped milestones with explicit wedge boundaries; merge only after green PR CI.
 
-- No new generic ergonomics breadth in core search/runtime APIs by default.
-- No public multi-backend expansion, vectors, hybrid retrieval, or delight-first search UX.
-- No deeper OPSUI productization unless outside-adopter evidence shows the current proof posture is missing real failures.
-- No hiding the `v1.20` archive/code drift or the removed support-guide references behind vague milestone language.
+## Open planning-truth concern
 
-## Prior completed arc: Batteries-Included Search Modules
+The `v1.20` archive still records a shipped `Scrypath.SearchModule` layer, while branch tip does not expose that module/guide/tests. Treat this as planning debt until reconciled.
 
-**Status:** completed in-repo with `v1.22` on 2026-05-24  
-**Started:** 2026-05-07
+Tracked in: `.planning/todos/search-module-archive-code-drift.md`
 
-### v1.20 — Search Module Foundation
+## Completed milestone sequence (latest)
 
-- **Status:** shipped on 2026-05-08
-- Archive claims a context-owned `Scrypath.SearchModule`
-- The current tree does **not** expose that module, so this remains a reconciliation concern rather than trusted current product truth
+- **v1.26** — Facet Value Vocabulary Search (shipped + archived: 2026-05-26)
+- **v1.25** — Tenant-Safe Search Access (shipped + archived: 2026-05-26)
+- **v1.24** — Related-Data and Dependency Propagation (shipped + archived: 2026-05-25)
+- **v1.23** — Outside-Adopter Evidence and Support-Truth Reconciliation (shipped + archived: 2026-05-24)
 
-### v1.21 — Query Toolkit And Phoenix Edge Helpers
+For earlier sequence detail, see `.planning/MILESTONES.md` and `.planning/milestones/`.
 
-- **Status:** shipped on 2026-05-23
-- Public normalization/casting helpers for request-edge search
-- Optional Phoenix URL/form/LiveView round-tripping
-- No Phoenix coupling in the core runtime
+## Reopen criteria for a future feature milestone
 
-### v1.22 — Composition And Real-App Depth
+Open a new feature milestone only when at least one of the following is true:
 
-- **Status:** shipped on 2026-05-24
-- Reusable presets/scopes where they help real app flows
-- Composition support aligned with `search_many/2`
-- Stronger UI metadata exposure for declared filters, sorts, facets, and paging
-- Real-app proof that the new layer reduces repeated app glue without turning Scrypath into a framework facade
+1. reviewed outside-adopter evidence shows a concrete unmet flow,
+2. a concrete production bug demands non-patch milestone work,
+3. release compatibility change requires bounded feature-depth adaptation.
 
-## Active milestone sequence
-
-### v1.23 — Outside-Adopter Evidence And Support-Truth Reconciliation
-
-- **Status:** active on 2026-05-24
-- Reconcile current support/readiness/proof surfaces with actual repo truth
-- Review real outside-adopter attempts against the defended Phoenix + Meilisearch path
-- Close only evidence-backed papercuts
-- Decide whether Scrypath should stop soon or open one final high-leverage product wedge
-
-## Next candidate posture
-
-- Default next pull after `v1.23` is **not** more generic breadth work.
-- If outside-adopter evidence is mostly green, bias toward stopping soon.
-- If feature work reopens, the ranking is: related-data propagation first, tenant-safe access second, high-cardinality facet-value search third.
-
-## Planning posture for future milestone opens
-
-- Ground the next decision in repo truth plus reviewed adopter evidence, not archive momentum.
-- Treat current support-truth drift as a credibility issue, not as a reason to invent new features.
-- Ask for product reshaping input only when outside evidence and repo-local proof no longer point clearly enough.
+Without one of those signals, default posture is no new feature milestone.

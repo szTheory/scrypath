@@ -88,6 +88,14 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 |---|--------|--------|
 | **F1** | **Release + adoption evidence + planning truth** | Current default. Ship the Release Please PR, keep main green, reconcile the v1.20 `SearchModule` archive/code drift, and capture outside-adopter evidence before opening new product work. |
 
+## Unified operating lanes (post-v1.26)
+
+Use these lanes to avoid reopening feature breadth by habit:
+
+- **Maintenance lane (default):** patch train, docs/support truth, outside-adopter evidence loop, and planning-truth reconciliation while `main` stays green.
+- **Feature lane (evidence-gated):** open only via approved PR-scoped milestone when a concrete bug or reviewed outside-adopter evidence justifies it.
+- **Merge contract for feature lane:** serious milestone work merges only after PR CI is green; avoid direct-`main` depth work.
+
 ### Still explicit strategy (unchanged)
 
 | # | Theme | Notes |
@@ -125,6 +133,7 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 2. Optionally split strong themes into **`.planning/seeds/SEED-*.md`** so **`/gsd-new-milestone`** auto-offers matching seeds (see **`gsd-plant-seed`**).
 3. After each shipped milestone, **update this file** — what landed, what moved, and whether the repo is now actually near “stop soon” territory.
 4. After v1.26, the default answer to generic “what next?” prompts is **no feature milestone** unless there is release follow-through, outside-adopter evidence, or a concrete bug.
+5. If feature work reopens, treat this file as PR-lane input: define the wedge first, run it on a PR branch, and do not merge until PR CI is green.
 
 ---
 

@@ -10,7 +10,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Current Milestone: None
 
-**Goal:** Evaluation, maintenance, and release-train discipline. v1.26 successfully delivered the final planned major feature wedge.
+**Goal:** Evaluation, maintenance, and release-train discipline through a two-lane model: maintenance-by-default plus PR-first feature milestones when evidence justifies reopening.
 
 ## Current State
 
@@ -26,13 +26,17 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 **What shipped:**
 - **Canonical Multitenancy Guide** — `guides/multitenancy.md` with shared-index model, explicit tenant parameter pattern, and filter merge order warnings.
-- **Schema Declaration & Reflection** — `tenant_field:` option in `Scrypath.Searchable` and `schema_capabilities/1` surfacing `%{tenant_field: :field_name}`.
+- **Schema Declaration & Reflection** — `tenant_field:` option in `use Scrypath` and `schema_capabilities/1` surfacing `%{tenant: :field_name}`.
 - **Runtime Safety & Query Execution** — Immutable filter merging logic enforcing `tenant_id = X AND (user_filters)` and `tenant_scope:` hard-injection on `Scrypath.search/3`.
 - **Verification Gate** — `mix verify.phase94` covering all tenant-safety surfaces.
 
 **The library scope is now complete for its stated mission.** Future work will focus on maintenance, bug fixes, release-train stability, and evaluating stopping based on outside-adopter evidence.
 
 **Release-train posture:** keep `main` green on lean merge gates, ship patch-first while pre-1.0, and land serious milestone work through PRs rather than direct `main` development.
+
+**Unified operating lanes:**
+- **Maintenance lane (default):** release follow-through, support/docs truth, outside-adopter evidence loop, and planning-truth reconciliation while `main` stays green.
+- **Feature lane (evidence-gated):** reopen only as PR-scoped milestone work; merge only after PR CI is green and scope remains bounded to the approved wedge.
 
 **Boundary discipline retained:** Scrypath remains framework-agnostic at the view layer.
 
@@ -43,6 +47,8 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 ## Next Milestone Goals
 
 - **None active.** Default to no-op when the release train is green and there is no approved bugfix, release follow-up, or PR-scoped milestone.
+- **Maintenance lane first:** keep patch train, support truth, and adoption-evidence loop healthy without inventing new breadth.
+- **Feature lane entry criteria:** only open via approved PR-scoped milestone with concrete bug evidence or reviewed outside-adopter signal; no direct-`main` milestone depth work.
 
 ## Last shipped milestone
 
@@ -66,7 +72,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 - [x] **v1.23** (2026-05-24): **TRUTH-01**–**TRUTH-03**, **ADOPT-01**–**ADOPT-03**, **FIX-01**–**FIX-02** — support truth and proof surfaces reconciled, outside-adopter intake reviewed, evidence-backed papercuts closed with regression guards.
 - [x] **v1.22** (2026-05-24): **CMP-01**–**CMP-04**, **META-01**–**META-03**, **MSCH-01**–**MSCH-02**, **DOC-01**, **DOC-02**, **VRFY-01** — public plain-data composition, declaration-backed metadata reflection, `search_many/2` lowering parity, canonical real-app guidance, and focused drift-gate verification.
 - [x] **v1.21** (2026-05-23): **QTK-01**–**QTK-04**, **PHX-01**–**PHX-02**, **DOC-01**, **VRFY-01** — public plain-data query toolkit, structured edge errors, optional Phoenix wrappers, canonical request-edge docs, and focused drift-gate verification.
-- [x] **v1.20** (2026-05-08): **SMOD-01**–**SMOD-08** — context-owned search-module declarations, stable request-param normalization, structured param errors, thin delegation over **`Scrypath.search/3`**, and Phoenix/Ecto-facing docs plus regression coverage.
+- [x] **v1.20** (2026-05-08): **SMOD-01**–**SMOD-08** — historical archive record of Search Module Foundation. Current branch tip still has known `Scrypath.SearchModule` archive/code drift; treat this row as archive history until reconciliation is complete.
 - [x] **v1.19** (2026-04-28): **PRDY-01**–**PRDY-08** — canonical readiness contract, defended fast/live proof family, production-shaped Phoenix + Sigra example coverage, bounded adopter-intake path, one evidence-backed papercut fix, and a readiness-checkpoint close.
 - [x] **v1.17 — Integration confidence & adopter proof** (2026-04-23) — phases **68–70**; **INTG-01**–**INTG-06**.
 - [x] **v1.16 — Playbook execution & operator honesty** (2026-04-22) — phases **65–67**; **OPS3-01**–**OPS3-06**.
