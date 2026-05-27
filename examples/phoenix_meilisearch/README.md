@@ -4,7 +4,7 @@ Minimal API-only Phoenix app that depends on Scrypath via **`path: "../.."`** fr
 
 This README is the proof/runbook surface for the real-service path. The HexDocs guides teach the public request-edge boundary and API shape; this example proves the operational path, CI parity, env vars, and local smoke commands.
 
-From the repository root, the canonical maintainer entrypoint for this live path is `mix verify.adopter --live`. That root task checks for `SCRYPATH_EXAMPLE_INTEGRATION`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL`, verifies Postgres and Meilisearch are reachable, then shells into this example with the same `mix deps.get` then `mix test` sequence that CI uses.
+From the repository root, the canonical maintainer entrypoint for this live path is `mix verify.adopter --live`. That root task checks for `SCRYPATH_EXAMPLE_INTEGRATION`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL`, verifies Postgres and Meilisearch are reachable, then shells into this example with `cd examples/phoenix_meilisearch && mix deps.get && mix test` (the same sequence CI uses).
 
 ## Prerequisites
 
