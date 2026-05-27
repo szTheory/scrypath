@@ -7,9 +7,9 @@
 
 ### Contract Truth
 
-- [x] **TRUTH-01**: A new adopter sees one consistent install/version contract across `README.md`, support guide, contributor guide, and adopter-intake surfaces. *(Completed in Phase 97)*
-- [x] **TRUTH-02**: All primary surfaces clearly distinguish release-backed guidance from unreleased `main` branch behavior. *(Completed in Phase 97)*
-- [x] **TRUTH-03**: Support-lifecycle wording and compatibility boundaries are discoverable in one canonical support surface and referenced consistently from other entry points. *(Completed in Phase 97)*
+- [ ] **TRUTH-01**: A new adopter sees one consistent install/version contract across `README.md`, support guide, contributor guide, and adopter-intake surfaces. *(Reopened by v1.27 audit; reassigned to Phase 100)*
+- [ ] **TRUTH-02**: All primary surfaces clearly distinguish release-backed guidance from unreleased `main` branch behavior. *(Reopened by v1.27 audit; reassigned to Phase 100)*
+- [ ] **TRUTH-03**: Support-lifecycle wording and compatibility boundaries are discoverable in one canonical support surface and referenced consistently from other entry points. *(Reopened by v1.27 audit; reassigned to Phase 101)*
 
 ### Proof Boundary and Flow Clarity
 
@@ -24,7 +24,7 @@
 
 ### Drift Protection and Verification
 
-- [x] **TEST-01**: Docs-contract tests lock canonical install/support/proof anchors across all high-risk surfaces listed in the v1.27 contract-surface map.
+- [ ] **TEST-01**: Docs-contract tests lock canonical install/support/proof anchors across all high-risk surfaces listed in the v1.27 contract-surface map. *(Reopened by v1.27 audit; reassigned to Phase 101)*
 - [x] **TEST-02**: Verification coverage asserts proof-boundary consistency between root docs and example-app docs.
 - [x] **TEST-03**: Verification coverage asserts CI/verify alias references stay aligned with documented required checks.
 - [x] **GATE-01**: Milestone-specific verify gate aliases for phases 97-99 are defined and documented as the trust-hardening verification spine.
@@ -52,15 +52,15 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TRUTH-01 | Phase 97 | Complete |
-| TRUTH-02 | Phase 97 | Complete |
-| TRUTH-03 | Phase 97 | Complete |
+| TRUTH-01 | Phase 100 | Pending |
+| TRUTH-02 | Phase 100 | Pending |
+| TRUTH-03 | Phase 101 | Pending |
 | PROOF-01 | Phase 98 | Complete |
 | PROOF-02 | Phase 98 | Complete |
 | PROOF-03 | Phase 98 | Complete |
 | SUP-01 | Phase 98 | Complete |
 | SUP-02 | Phase 98 | Complete |
-| TEST-01 | Phase 99 | Complete |
+| TEST-01 | Phase 101 | Pending |
 | TEST-02 | Phase 99 | Complete |
 | TEST-03 | Phase 99 | Complete |
 | GATE-01 | Phase 99 | Complete |
@@ -73,6 +73,8 @@
 - v1.27 requirements: 14 total
 - Mapped to phases: 14
 - Unmapped: 0
+- Complete: 10
+- Pending: 4
 
 ---
 *Requirements defined: 2026-05-27 after v1.27 scope approval*
