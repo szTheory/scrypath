@@ -1,45 +1,48 @@
-<svg width="1200" height="520" viewBox="0 0 1200 520" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Scrypath flow diagram">
-  <rect width="1200" height="520" rx="12" fill="#090D13"/>
-  <rect x="1" y="1" width="1198" height="518" rx="11" stroke="rgba(193, 206, 229, 0.12)"/>
-  <text x="36" y="56" fill="#F5F1E8" font-family="Inter, system-ui, sans-serif" font-size="26" font-weight="700">Scrypath flow</text>
-  <text x="36" y="84" fill="#AEB8C8" font-family="Inter, system-ui, sans-serif" font-size="14">Declare schema metadata, sync through the context, and keep recovery honest.</text>
-  <rect x="940" y="30" width="220" height="42" rx="10" fill="rgba(159, 140, 255, 0.12)" stroke="rgba(159, 140, 255, 0.32)"/>
-  <text x="964" y="56" fill="#EEDFFF" font-family="Inter, system-ui, sans-serif" font-size="15" font-weight="600">Release-backed truth</text>
+<svg width="1200" height="620" viewBox="0 0 1200 620" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Scrypath flow diagram">
+  <rect width="1200" height="620" rx="16" fill="#090D13"/>
+  <rect x="1" y="1" width="1198" height="618" rx="15" stroke="rgba(193, 206, 229, 0.12)"/>
+  <text x="36" y="60" fill="#F5F1E8" font-family="ui-sans-serif, system-ui, sans-serif" font-size="34" font-weight="700">Scrypath flow</text>
+  <text x="36" y="98" fill="#AEB8C8" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20">Declare schema metadata, sync through the context, and keep recovery honest.</text>
+  <rect x="898" y="26" width="266" height="52" rx="12" fill="rgba(159, 140, 255, 0.12)" stroke="rgba(159, 140, 255, 0.32)"/>
+  <text x="924" y="59" fill="#EEDFFF" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="600">Release-backed truth</text>
 
-  <g>
-    <path d="M88 268C166 210 250 210 328 268C406 326 490 326 568 268C646 210 730 210 808 268C886 326 970 326 1048 268" stroke="rgba(159, 140, 255, 0.78)" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 10"/>
-    <circle cx="88" cy="268" r="8" fill="#E0A06D"/>
-    <circle cx="328" cy="268" r="8" fill="#9F8CFF"/>
-    <circle cx="568" cy="268" r="8" fill="#83D6EE"/>
-    <circle cx="808" cy="268" r="8" fill="#E0A06D"/>
-    <circle cx="1048" cy="268" r="8" fill="#8AD9B6"/>
+  <path d="M88 290C176 228 262 228 350 290C438 352 524 352 612 290C700 228 786 228 874 290C962 352 1048 352 1136 290" stroke="rgba(159, 140, 255, 0.78)" stroke-width="5" stroke-linecap="round" stroke-dasharray="9 12"/>
+  <circle cx="88" cy="290" r="9" fill="#E0A06D"/>
+  <circle cx="350" cy="290" r="9" fill="#9F8CFF"/>
+  <circle cx="612" cy="290" r="9" fill="#83D6EE"/>
+  <circle cx="874" cy="290" r="9" fill="#E0A06D"/>
+  <circle cx="1136" cy="290" r="9" fill="#8AD9B6"/>
+
+  <g font-family="ui-sans-serif, system-ui, sans-serif">
+    <rect x="24" y="330" width="168" height="108" rx="14" fill="#131B27" stroke="rgba(193, 206, 229, 0.16)"/>
+    <text x="53" y="366" fill="#F5F1E8" font-size="24" font-weight="700">Schema</text>
+    <text x="51" y="392" fill="#AEB8C8" font-size="16">use Scrypath</text>
+    <text x="51" y="414" fill="#7D889A" font-size="14">metadata only</text>
+
+    <rect x="286" y="330" width="168" height="108" rx="14" fill="#131B27" stroke="rgba(193, 206, 229, 0.16)"/>
+    <text x="317" y="366" fill="#F5F1E8" font-size="24" font-weight="700">Context</text>
+    <text x="313" y="392" fill="#AEB8C8" font-size="16">explicit orchestration</text>
+    <text x="311" y="414" fill="#7D889A" font-size="14">search + sync boundary</text>
+
+    <rect x="548" y="330" width="168" height="108" rx="14" fill="#131B27" stroke="rgba(193, 206, 229, 0.16)"/>
+    <text x="575" y="366" fill="#F5F1E8" font-size="24" font-weight="700">Scrypath</text>
+    <text x="577" y="392" fill="#AEB8C8" font-size="16">sync + recovery</text>
+    <text x="574" y="414" fill="#7D889A" font-size="14">accepted work</text>
+
+    <rect x="810" y="330" width="186" height="108" rx="14" fill="#131B27" stroke="rgba(193, 206, 229, 0.16)"/>
+    <text x="840" y="366" fill="#F5F1E8" font-size="24" font-weight="700">Meilisearch</text>
+    <text x="839" y="392" fill="#AEB8C8" font-size="16">index / tasks / stats</text>
+    <text x="842" y="414" fill="#7D889A" font-size="14">backend truth</text>
+
+    <rect x="1050" y="330" width="126" height="108" rx="14" fill="#131B27" stroke="rgba(193, 206, 229, 0.16)"/>
+    <text x="1062" y="366" fill="#F5F1E8" font-size="22" font-weight="700">Result</text>
+    <text x="1066" y="392" fill="#AEB8C8" font-size="16">records</text>
+    <text x="1066" y="414" fill="#7D889A" font-size="14">plus hits</text>
   </g>
 
-  <g font-family="Inter, system-ui, sans-serif">
-    <rect x="44" y="312" width="108" height="74" rx="10" fill="#131B27" stroke="rgba(193, 206, 229, 0.16)"/>
-    <text x="78" y="340" fill="#F5F1E8" font-size="16" font-weight="700">Schema</text>
-    <text x="68" y="362" fill="#AEB8C8" font-size="12">`use Scrypath`</text>
-
-    <rect x="284" y="312" width="108" height="74" rx="10" fill="#131B27" stroke="rgba(193, 206, 229, 0.16)"/>
-    <text x="316" y="340" fill="#F5F1E8" font-size="16" font-weight="700">Context</text>
-    <text x="302" y="362" fill="#AEB8C8" font-size="12">explicit orchestration</text>
-
-    <rect x="524" y="312" width="108" height="74" rx="10" fill="#131B27" stroke="rgba(193, 206, 229, 0.16)"/>
-    <text x="550" y="340" fill="#F5F1E8" font-size="16" font-weight="700">Scrypath</text>
-    <text x="538" y="362" fill="#AEB8C8" font-size="12">sync + recovery</text>
-
-    <rect x="764" y="312" width="128" height="74" rx="10" fill="#131B27" stroke="rgba(193, 206, 229, 0.16)"/>
-    <text x="796" y="340" fill="#F5F1E8" font-size="16" font-weight="700">Meilisearch</text>
-    <text x="786" y="362" fill="#AEB8C8" font-size="12">index / tasks / stats</text>
-
-    <rect x="1004" y="312" width="142" height="74" rx="10" fill="#131B27" stroke="rgba(193, 206, 229, 0.16)"/>
-    <text x="1030" y="340" fill="#F5F1E8" font-size="16" font-weight="700">Hydrated result</text>
-    <text x="1034" y="362" fill="#AEB8C8" font-size="12">records + hits</text>
-  </g>
-
-  <g font-family="IBM Plex Mono, monospace">
-    <rect x="44" y="412" width="1112" height="74" rx="10" fill="#0B1018" stroke="rgba(193, 206, 229, 0.14)"/>
-    <text x="68" y="442" fill="#EEDFD0" font-size="15">mix verify.adopter</text>
-    <text x="68" y="466" fill="#AEB8C8" font-size="13">Accepted work is not the same thing as search visibility.</text>
+  <g font-family="ui-monospace, SFMono-Regular, monospace">
+    <rect x="38" y="478" width="1124" height="96" rx="14" fill="#0B1018" stroke="rgba(193, 206, 229, 0.14)"/>
+    <text x="62" y="513" fill="#EEDFD0" font-size="20" font-weight="600">mix verify.adopter</text>
+    <text x="62" y="540" fill="#AEB8C8" font-size="18">Accepted work is not the same thing as search visibility.</text>
   </g>
 </svg>
