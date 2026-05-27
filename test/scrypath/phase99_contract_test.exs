@@ -159,6 +159,31 @@ defmodule Scrypath.Phase99ContractTest do
     end
   end
 
+  describe "TRUTH-03 compatibility truth parity" do
+    test "canonical support tuples and compatibility-truth workflow tuples remain equal" do
+      assert_tuple_set_parity(
+        extract_support_ci_tuples(@support_guide),
+        extract_workflow_ci_tuples(@ci_workflow),
+        "TRUTH-03 compatibility-truth"
+      )
+    end
+
+    test "non-owner route surfaces keep support authority token without duplicating tuple values" do
+      Enum.each([@readme, @contributing, @intake_guide], fn surface ->
+        assert_contains_all(surface, ["guides/support-and-compatibility.md"])
+      end)
+
+      Enum.each([@readme, @contributing, @intake_guide], fn surface ->
+        assert_absent_all(surface, [
+          @compatibility_floor_elixir,
+          @compatibility_floor_otp,
+          @compatibility_head_elixir,
+          @compatibility_head_otp
+        ])
+      end)
+    end
+  end
+
   defp extract_support_ci_tuples(content) do
     content
     |> lines_after("GitHub Actions CI evidence currently exercises these explicit tuples:")
@@ -177,9 +202,9 @@ defmodule Scrypath.Phase99ContractTest do
            capture: :all_names
          ) do
       [lane] ->
-        lane
-        |> Regex.scan(
+        Regex.scan(
           ~r/-\s*elixir-version:\s*"([^"]+)"\n\s+otp-version:\s*"([^"]+)"/,
+          lane,
           capture: :all_but_first
         )
         |> Enum.map(fn [elixir_version, otp_version] -> {elixir_version, otp_version} end)
