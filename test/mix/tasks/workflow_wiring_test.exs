@@ -170,6 +170,15 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert ci =~ "run: mix verify.phase99"
     end
 
+    test "ci defines compatibility-truth matrix lane with floor/head tuple evidence" do
+      ci = File.read!(@ci_yml)
+      assert ci =~ "\n  compatibility-truth:\n"
+      assert ci =~ ~s(elixir-version: "1.17.3")
+      assert ci =~ ~s(otp-version: "26.2.5")
+      assert ci =~ ~s(elixir-version: "1.19.0")
+      assert ci =~ ~s(otp-version: "28.1")
+    end
+
     test "contributing required-check contract includes phase99-trust" do
       contributing = File.read!("CONTRIBUTING.md")
 
@@ -179,7 +188,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert contributing =~ "**`phase99-trust`**"
     end
 
-    test "no docs or workflow guidance introduces verify.phase100 drift" do
+    test "no docs or workflow guidance introduces verify.phase100/phase101 drift" do
       contributing = File.read!("CONTRIBUTING.md")
       ci = File.read!(@ci_yml)
 
@@ -188,6 +197,12 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
       refute ci =~ "mix verify.phase100",
              "CI trust lane must remain on mix verify.phase99 without verify.phase100 proliferation"
+
+      refute contributing =~ "mix verify.phase101",
+             "verify.phase101 guidance must not be added; phase101 compatibility checks stay under verify.phase99"
+
+      refute ci =~ "mix verify.phase101",
+             "CI trust lane must remain on mix verify.phase99 without verify.phase101 proliferation"
     end
   end
 
