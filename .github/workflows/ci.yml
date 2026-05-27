@@ -125,6 +125,44 @@ jobs:
       - name: Run phase99 trust gate (`mix verify.phase99`)
         run: mix verify.phase99
 
+  compatibility-truth:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - elixir-version: "1.17.3"
+            otp-version: "26.2.5"
+          - elixir-version: "1.19.0"
+            otp-version: "28.1"
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir-version }}
+          otp-version: ${{ matrix.otp-version }}
+
+      - uses: actions/cache@v5
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-compatibility-truth-${{ matrix.elixir-version }}-${{ matrix.otp-version }}-${{ hashFiles('mix.lock') }}
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Compile
+        run: mix compile --warnings-as-errors
+
+      - name: Test
+        run: mix test --exclude integration --exclude docs_contract --include requires_clean_workspace
+
   deep-quality:
     runs-on: ubuntu-latest
 
