@@ -19,8 +19,8 @@
 
 ### Support and Intake Contract
 
-- [ ] **SUP-01**: Outside-adopter intake documentation defines required evidence fields and flow classification in actionable terms.
-- [ ] **SUP-02**: Support-escalation routing is explicit so maintainers can classify contract drift vs runtime bug vs environment issue.
+- [x] **SUP-01**: Outside-adopter intake documentation defines required evidence fields and flow classification in actionable terms.
+- [x] **SUP-02**: Support-escalation routing is explicit so maintainers can classify contract drift vs runtime bug vs environment issue.
 
 ### Drift Protection and Verification
 
@@ -58,8 +58,8 @@
 | PROOF-01 | Phase 98 | Complete |
 | PROOF-02 | Phase 98 | Complete |
 | PROOF-03 | Phase 98 | Pending |
-| SUP-01 | Phase 98 | Pending |
-| SUP-02 | Phase 98 | Pending |
+| SUP-01 | Phase 98 | Complete |
+| SUP-02 | Phase 98 | Complete |
 | TEST-01 | Phase 99 | Pending |
 | TEST-02 | Phase 99 | Pending |
 | TEST-03 | Phase 99 | Pending |
