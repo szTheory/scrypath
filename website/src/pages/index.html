@@ -65,7 +65,7 @@
     <article class="tile">
       <h3>Schema declaration</h3>
       <p>
-        `use Scrypath` is metadata-only. Schemas declare searchable fields, faceting, sort
+        <code>use Scrypath</code> is metadata-only. Schemas declare searchable fields, faceting, sort
         fields, and tenant boundaries without becoming a framework facade.
       </p>
       <a href="{{BASE_PATH}}docs/index.html#first-hour">First-hour path</a>
@@ -73,7 +73,7 @@
     <article class="tile">
       <h3>Sync honesty</h3>
       <p>
-        Choose `:inline`, `:manual`, or `:oban` with eyes open. Accepted work is not the same
+        Choose <code>:inline</code>, <code>:manual</code>, or <code>:oban</code> with eyes open. Accepted work is not the same
         thing as search visibility.
       </p>
       <a href="{{BASE_PATH}}operators/index.html#sync-truth">Sync modes</a>
@@ -89,8 +89,8 @@
     <article class="tile">
       <h3>Tenant-safe access</h3>
       <p>
-        Shared-index safety ships with a canonical guide, `tenant_field:`, reflection, and
-        `tenant_scope:` hard-injection.
+        Shared-index safety ships with a canonical guide, <code>tenant_field:</code>, reflection, and
+        <code>tenant_scope:</code> hard-injection.
       </p>
       <a href="{{BASE_PATH}}docs/index.html#tenant-safety">Multitenancy docs</a>
     </article>
@@ -108,7 +108,7 @@
       <p class="persona-label">App developer</p>
       <h3>Get one schema searchable without inventing a subsystem.</h3>
       <p>
-        Declare metadata, call `sync_record/3` after a successful write, and keep search inside
+        Declare metadata, call <code>sync_record/3</code> after a successful write, and keep search inside
         the context boundary.
       </p>
     </article>
@@ -116,7 +116,7 @@
       <p class="persona-label">Operator / SRE</p>
       <h3>See when the index is stale, wedged, or drifting.</h3>
       <p>
-        Use `mix verify.adopter`, the example app, and the operator docs to tell the difference
+        Use <code>mix verify.adopter</code>, the example app, and the operator docs to tell the difference
         between queue lag, search drift, and app-side mistakes.
       </p>
     </article>
