@@ -1,0 +1,13 @@
+{
+  "name": "scrypath-website",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "serve": "node scripts/serve.mjs",
+    "check": "node scripts/check.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.53.1"
+  }
+}

@@ -1,0 +1,110 @@
+<section class="page-hero">
+  <p class="eyebrow">Docs map</p>
+  <h1>HexDocs is the reference. This page is the route map.</h1>
+  <p class="lede">
+    Scrypath already has a deep docs set. This page keeps the public website focused on
+    orienting readers and sending them to the right existing guide at the right time.
+  </p>
+</section>
+
+<section class="section" id="first-hour">
+  <div class="section-head">
+    <p class="eyebrow">First hour</p>
+    <h2>Start with one schema and one context.</h2>
+  </div>
+  <div class="grid two">
+    <article class="tile">
+      <h3>Quick path</h3>
+      <p>The canonical first-hour path from dependency declaration through a working search call.</p>
+      <a href="{{REPO_URL}}/blob/main/guides/golden-path.md">Golden path</a>
+    </article>
+    <article class="tile">
+      <h3>Mental model</h3>
+      <p>A concise map of the jobs Scrypath serves, how context boundaries work, and what “done” means.</p>
+      <a href="{{REPO_URL}}/blob/main/guides/jtbd-and-user-flows.md">JTBD and user flows</a>
+    </article>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <p class="eyebrow">High-signal guides</p>
+    <h2>Open the page that answers the actual question.</h2>
+  </div>
+
+  <div class="route-list">
+    <a class="route-item" href="{{REPO_URL}}/blob/main/guides/support-and-compatibility.md">
+      <strong>Support and compatibility</strong>
+      <span>Release-backed install truth, supported baseline, and the proof-command split.</span>
+    </a>
+    <a class="route-item" href="{{REPO_URL}}/blob/main/guides/outside-adopter-intake.md">
+      <strong>Outside-adopter intake</strong>
+      <span>How to submit evidence when a real integration fails or needs clarification.</span>
+    </a>
+    <a class="route-item" href="{{REPO_URL}}/blob/main/guides/request-edge-search.md">
+      <strong>Request-edge search</strong>
+      <span>Browser params, `Scrypath.QueryParams`, and optional Phoenix glue.</span>
+    </a>
+    <a class="route-item" href="{{REPO_URL}}/blob/main/guides/composing-real-app-search.md">
+      <strong>Composing real-app search</strong>
+      <span>Reusable defaults/fixed scopes, metadata reflection, and `compose_many/2`.</span>
+    </a>
+    <a class="route-item" href="{{REPO_URL}}/blob/main/guides/related-data-and-reindexing.md">
+      <strong>Related data and reindexing</strong>
+      <span>Associated-data fan-out, reindex, and when to choose direct sync versus repair.</span>
+    </a>
+    <a class="route-item" href="{{REPO_URL}}/blob/main/guides/multitenancy.md">
+      <strong>Multitenancy</strong>
+      <span>Shared-index safety, `tenant_field:`, reflection, and `tenant_scope:` enforcement.</span>
+    </a>
+  </div>
+</section>
+
+<section class="section" id="tenant-safety">
+  <div class="section-head">
+    <p class="eyebrow">Tenant safety</p>
+    <h2>Shared-index safety has its own canonical guide.</h2>
+  </div>
+  <div class="grid two">
+    <article class="tile">
+      <h3>Multitenancy</h3>
+      <p>
+        `tenant_field:`, `schema_capabilities/1`, and `tenant_scope:` are the current public
+        contract for shared-index safety.
+      </p>
+      <a href="{{REPO_URL}}/blob/main/guides/multitenancy.md">Open the guide</a>
+    </article>
+    <article class="tile">
+      <h3>Why it matters</h3>
+      <p>
+        The homepage points here because tenant safety is one of the cases where the adopter
+        needs the canonical guide, not a summary.
+      </p>
+    </article>
+  </div>
+</section>
+
+<section class="section" id="example">
+  <div class="section-head">
+    <p class="eyebrow">Defended example</p>
+    <h2>The real app proof stays in the repo.</h2>
+  </div>
+  <div class="grid two">
+    <article class="tile">
+      <h3>Phoenix + Meilisearch example</h3>
+      <p>
+        The live proof path exercises inline sync, Oban-backed sync, related-data fan-out, and
+        the release-backed support contract against real services.
+      </p>
+      <a href="{{REPO_URL}}/blob/main/examples/phoenix_meilisearch/README.md">Open the runbook</a>
+    </article>
+    <article class="tile">
+      <h3>Support posture</h3>
+      <p>
+        `mix verify.adopter` is the fast proof path; `mix verify.adopter --live` is the
+        prerequisite-bound live branch. The website should never restate the whole matrix.
+      </p>
+      <a href="{{REPO_URL}}/blob/main/guides/support-and-compatibility.md">See support truth</a>
+    </article>
+  </div>
+</section>

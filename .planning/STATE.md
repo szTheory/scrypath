@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: "1.27"
 milestone_name: milestone
 status: ready
-last_updated: "2026-05-27T13:28:54.485Z"
-last_activity: 2026-05-27 -- Phase 101 execution complete
+last_updated: "2026-05-27T22:20:06Z"
+last_activity: 2026-05-27 -- public website launch surface implemented and verified
 progress:
   total_phases: 9
   completed_phases: 9
@@ -21,14 +21,14 @@ See: `.planning/PROJECT.md` (updated 2026-05-27)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** v1.27 trust-hardening milestone complete (phase 101 closed)
+**Current focus:** v1.27 trust-hardening milestone complete (phase 101 closed); public website launch surface implemented as a companion surface
 
 ## Current Position
 
 Phase: 101
 Plan: Complete
 Status: Phase 101 complete
-Last activity: 2026-05-27 -- Phase 101 execution complete
+Last activity: 2026-05-27 -- public website launch surface implemented and verified
 
 Scope guard: `.planning/phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md` is active for this milestone. v1.27 is contract hardening only. Scope can reopen only with reviewed outside-adopter signal or a reproducible production bug, plus explicit updates to `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md` before execution.
 
@@ -49,6 +49,7 @@ Progress: [██████████] 100%
 - **2026-05-27 SearchModule reconciliation decision:** archive-correction path selected. No recoverable `Scrypath.SearchModule` implementation exists in this checkout/salvage context, so v1.20 SearchModule claims are now treated as historical archive narrative only, not present-day shipped surface.
 - **2026-05-27 done-ness assessment:** Scrypath is now roughly **93-95% done** for its stated Meilisearch-first Phoenix/Ecto scope. The last planned product wedges from prior evidence — related-data fan-out, tenant-safe search, and facet-value search — are shipped. Default next work is release follow-through, outside-adopter evidence, and planning-truth reconciliation, not another feature milestone.
 - **2026-05-27 milestone next-step reassessment:** Done-band remains **93-95%**. If feature work reopens, the single highest-leverage wedge is **Adopter Contract Hardening** (support/install/proof coherence and docs drift guards), with feature-depth work still gated behind reviewed outside-adopter signal or concrete bug evidence.
+- **2026-05-27 public website launch surface:** static GitHub Pages site added under `website/` as a companion front door. It routes evaluators, adopters, and operators into the existing docs instead of duplicating HexDocs, stamps release truth from `mix.exs`, and is verified with screenshot checks.
 - **2026-05-27 Phase 97 scope guard active:** `.planning/phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md` is the active SCOPE-01 authority; v1.27 remains contract hardening only and any runtime breadth reopen requires reviewed outside-adopter signal or reproducible production bug evidence plus explicit REQUIREMENTS/ROADMAP updates first.
 - **2026-05-26 release-train policy:** `main` now defaults to lean required gates plus Release Please patch-train cadence. Serious milestone work should reopen through PR-scoped planning, not opportunistic direct-`main` execution, and the default answer when the train is green is "nothing to do."
 - **v1.25 archived:** Shipped `tenant_field:` declaration, `tenant_scope:` injection, and canonical multitenancy guide.

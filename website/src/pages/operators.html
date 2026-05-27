@@ -1,0 +1,97 @@
+<section class="page-hero">
+  <p class="eyebrow">Operators</p>
+  <h1>Recovery, proof, and drift should be boring.</h1>
+  <p class="lede">
+    This page is for the maintainer or SRE who needs the first response path, not for someone
+    learning the API from scratch.
+  </p>
+</section>
+
+<section class="section" id="sync-truth">
+  <div class="section-head">
+    <p class="eyebrow">Sync truth</p>
+    <h2>Accepted work is not the same thing as visible search.</h2>
+  </div>
+
+  <div class="grid three">
+    <article class="tile">
+      <h3>`:inline`</h3>
+      <p>The caller waits for terminal backend success. Good for local workflows and simple apps.</p>
+    </article>
+    <article class="tile">
+      <h3>`:oban`</h3>
+      <p>Durable enqueue only. Good for production throughput, not for pretending the document is visible already.</p>
+    </article>
+    <article class="tile">
+      <h3>`:manual`</h3>
+      <p>Accepted work for operator-controlled follow-up. Good for migrations, imports, and explicit recovery.</p>
+    </article>
+  </div>
+</section>
+
+<section class="section" id="recovery">
+  <div class="section-head">
+    <p class="eyebrow">First response path</p>
+    <h2>What to run when someone says “search is wrong.”</h2>
+  </div>
+
+  <div class="grid two">
+    <article class="tile">
+      <h3>Start here</h3>
+      <ol class="steps">
+        <li>Identify the schema and the relevant environment.</li>
+        <li>Run <code>mix verify.adopter</code> for the fast proof surface.</li>
+        <li>Use <code>mix scrypath.status</code> and <code>mix scrypath.failed</code>.</li>
+        <li>Use <code>mix scrypath.reconcile</code> before changing state.</li>
+      </ol>
+    </article>
+    <article class="tile">
+      <h3>When you need more</h3>
+      <p>
+        The support contract, example app, and operator docs are already wired to the defended
+        Phoenix + Meilisearch path. If the failure is outside that path, classify it honestly
+        before opening a broader bug.
+      </p>
+      <a href="{{REPO_URL}}/blob/main/guides/outside-adopter-intake.md">Evidence intake</a>
+    </article>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <p class="eyebrow">SRE view</p>
+    <h2>The library speaks in telemetry and recovery commands.</h2>
+  </div>
+
+  <div class="grid three">
+    <article class="tile">
+      <h3>Observe</h3>
+      <p>
+        Track search latency, hydration misses, sync error rate, and queued work before paging on raw queue depth.
+      </p>
+    </article>
+    <article class="tile">
+      <h3>Recover</h3>
+      <p>
+        Backfill when the contract is still correct. Reindex when the contract changed or drift is untrusted.
+      </p>
+    </article>
+    <article class="tile">
+      <h3>Escalate</h3>
+      <p>
+        Treat support truth, outside-adopter evidence, and branch-tip code as the source of truth before widening scope.
+      </p>
+    </article>
+  </div>
+</section>
+
+<section class="section callout">
+  <div>
+    <p class="eyebrow">Canonical references</p>
+    <h2>Keep the docs split the way the product is split.</h2>
+  </div>
+  <p>
+    Use <code>guides/support-and-compatibility.md</code> for release-backed truth and proof routing,
+    <code>docs/search-backend-sre.md</code> for platform signals, and the example app for the live path.
+  </p>
+</section>

@@ -1,0 +1,103 @@
+<section class="page-hero">
+  <p class="eyebrow">Evaluate fit</p>
+  <h1>Should I use Scrypath?</h1>
+  <p class="lede">
+    The honest answer is: use it if you want search indexing to feel native to Ecto and you
+    care about operational truth. Do not use it if you want a hosted search platform or a
+    framework facade that hides the work.
+  </p>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <p class="eyebrow">Good fit</p>
+    <h2>Choose it when the app owns search truth.</h2>
+  </div>
+
+  <div class="grid two">
+    <article class="tile">
+      <h3>Why it fits</h3>
+      <ul class="bullet-list">
+        <li>Your app is already Phoenix + Ecto centered.</li>
+        <li>You want search sync to be explicit and observable.</li>
+        <li>You want a library, not a platform.</li>
+        <li>You want the operator story to be honest.</li>
+      </ul>
+    </article>
+    <article class="tile">
+      <h3>What it gives you</h3>
+      <ul class="bullet-list">
+        <li>Metadata-first searchable schemas.</li>
+        <li>Inline, Oban-backed, and manual sync modes.</li>
+        <li>Related-data fan-out and tenant-safe access.</li>
+        <li>Operator recovery and a defended proof path.</li>
+      </ul>
+    </article>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <p class="eyebrow">Not a fit</p>
+    <h2>Choose something else when the product boundary is different.</h2>
+  </div>
+
+  <div class="grid three">
+    <article class="tile">
+      <h3>Hosted search platform</h3>
+      <p>
+        Scrypath is not a SaaS search product. It is the orchestration layer around your own
+        search backend.
+      </p>
+    </article>
+    <article class="tile">
+      <h3>Magic callback runtime</h3>
+      <p>
+        If you want hidden hooks that imply search is always current, the library is deliberately
+        the wrong shape.
+      </p>
+    </article>
+    <article class="tile">
+      <h3>Public multi-backend facade</h3>
+      <p>
+        v1 targets Meilisearch first and keeps the adapter seam internal. That is a product
+        choice, not a missing feature.
+      </p>
+    </article>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <p class="eyebrow">Tradeoffs</p>
+    <h2>The benefit is clarity, not breadth.</h2>
+  </div>
+
+  <div class="grid two">
+    <article class="tile">
+      <h3>What it avoids</h3>
+      <p>
+        You do not need to infer state from a giant callback maze, and you do not need to treat
+        the web layer as the boundary. The contexts stay in charge.
+      </p>
+    </article>
+    <article class="tile">
+      <h3>What you still own</h3>
+      <p>
+        Your app owns deployment, recovery decisions, and the truth of what is visible when.
+        Scrypath makes that explicit instead of pretending otherwise.
+      </p>
+    </article>
+  </div>
+</section>
+
+<section class="section callout">
+  <div>
+    <p class="eyebrow">Decision rule</p>
+    <h2>If you want the app to own search, Scrypath is the right layer.</h2>
+  </div>
+  <p>
+    If you want a homepage, keep this one. If you want the API, open HexDocs. If you want the
+    live proof, use the example app. Each surface has one job.
+  </p>
+</section>

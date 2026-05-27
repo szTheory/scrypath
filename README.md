@@ -4,6 +4,8 @@
 
 Scrypath, the Ecto-native search indexing library, helps Phoenix and Ecto teams add search to existing schemas without hiding the operational work that keeps search in sync.
 
+Public website: [sztheory.github.io/scrypath](https://sztheory.github.io/scrypath/)
+
 ## Installation
 
 Add Scrypath to your dependencies:

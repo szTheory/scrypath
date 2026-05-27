@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b0f15" />
+    <title>{{PAGE_TITLE}}</title>
+    <meta name="description" content="{{DESCRIPTION}}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="{{PAGE_TITLE}}" />
+    <meta property="og:description" content="{{DESCRIPTION}}" />
+    <meta property="og:url" content="{{SITE_URL}}{{PAGE_PATH}}" />
+    <meta property="og:image" content="{{BASE_PATH}}assets/og-image.svg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{{PAGE_TITLE}}" />
+    <meta name="twitter:description" content="{{DESCRIPTION}}" />
+    <link rel="canonical" href="{{SITE_URL}}{{PAGE_PATH}}" />
+    <link rel="icon" href="{{BASE_PATH}}assets/brand-mark.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="{{BASE_PATH}}assets/styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+    <div class="page-shell">
+      <header class="site-header">
+        <a class="brand" href="{{BASE_PATH}}index.html" aria-label="Scrypath home">
+          <img src="{{BASE_PATH}}assets/brand-mark.svg" alt="" aria-hidden="true" width="34" height="34" />
+          <span>
+            <strong>Scrypath</strong>
+            <small>Ecto-native search indexing</small>
+          </span>
+        </a>
+
+        <nav class="site-nav" aria-label="Primary">
+          <a href="{{BASE_PATH}}index.html">Home</a>
+          <a href="{{BASE_PATH}}docs/index.html">Docs map</a>
+          <a href="{{BASE_PATH}}operators/index.html">Operators</a>
+          <a href="{{BASE_PATH}}evaluate/index.html">Evaluate</a>
+          <a href="{{REPO_URL}}">GitHub</a>
+        </nav>
+
+        <a class="version-pill" href="https://hex.pm/packages/scrypath" rel="noreferrer">v{{VERSION}}</a>
+      </header>
+
+      <main id="content">
+        {{CONTENT}}
+      </main>
+
+      <footer class="site-footer">
+        <p>
+          Public website for a library that still sends you to the docs when the answer needs more than one page.
+        </p>
+        <p>
+          Built from branch tip on <strong>{{BUILD_DATE}}</strong>. Release-backed install:
+          <code>{{CANONICAL_INSTALL}}</code>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>
