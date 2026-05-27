@@ -1,6 +1,8 @@
 # Outside-Adopter Evidence Bundle
 
-Please use this template to submit evidence of a failed or confusing outside-adopter integration attempt. Provide exact commands run and the first failure point. 
+Please use this template to submit evidence of a failed or confusing outside-adopter integration attempt. Provide exact commands run and the first failure point.
+
+If required sections are missing, maintainers may return the bundle as "needs information" before classification.
 
 ## Adopter Context
 *Briefly describe what you are trying to accomplish (e.g. "Trying to run the repo-clone live proof" or "Adding Scrypath to an existing app").*
