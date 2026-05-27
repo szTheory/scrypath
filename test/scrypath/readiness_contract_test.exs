@@ -61,9 +61,14 @@ defmodule Scrypath.ReadinessContractTest do
   end
 
   test "maintainer docs and example runbook agree on the live proof path" do
+    assert String.contains?(@readme, "mix verify.adopter")
+    assert String.contains?(@readme, "mix verify.adopter --live")
     assert String.contains?(@contributing, "mix verify.adopter")
     assert String.contains?(@contributing, "mix verify.adopter --live")
     assert String.contains?(@contributing, "phoenix-example-integration")
+    assert String.contains?(@contributing, "SCRYPATH_EXAMPLE_INTEGRATION")
+    assert String.contains?(@contributing, "PGPORT")
+    assert String.contains?(@contributing, "SCRYPATH_MEILISEARCH_URL")
     assert String.contains?(@example_readme, "mix verify.adopter --live")
     assert String.contains?(@example_readme, "SCRYPATH_EXAMPLE_INTEGRATION")
     assert String.contains?(@example_readme, "PGPORT")
