@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: "1.27"
 milestone_name: milestone
 status: ready
-last_updated: "2026-05-27T22:20:06Z"
-last_activity: 2026-05-27 -- public website launch surface implemented and verified
+last_updated: "2026-05-28T02:47:26Z"
+last_activity: 2026-05-28 -- quick docs cleanup completed and verified
 progress:
   total_phases: 9
   completed_phases: 9
@@ -21,14 +21,14 @@ See: `.planning/PROJECT.md` (updated 2026-05-27)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** v1.27 trust-hardening milestone complete (phase 101 closed); public website launch surface implemented as a companion surface
+**Current focus:** v1.27 trust-hardening milestone complete (phase 101 closed); public docs and website launch surface are in release-follow-through cleanup
 
 ## Current Position
 
 Phase: 101
 Plan: Complete
 Status: Phase 101 complete
-Last activity: 2026-05-27 -- public website launch surface implemented and verified
+Last activity: 2026-05-28 -- quick docs cleanup completed and verified
 
 Scope guard: `.planning/phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md` is active for this milestone. v1.27 is contract hardening only. Scope can reopen only with reviewed outside-adopter signal or a reproducible production bug, plus explicit updates to `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md` before execution.
 
@@ -50,6 +50,7 @@ Progress: [██████████] 100%
 - **2026-05-27 done-ness assessment:** Scrypath is now roughly **93-95% done** for its stated Meilisearch-first Phoenix/Ecto scope. The last planned product wedges from prior evidence — related-data fan-out, tenant-safe search, and facet-value search — are shipped. Default next work is release follow-through, outside-adopter evidence, and planning-truth reconciliation, not another feature milestone.
 - **2026-05-27 milestone next-step reassessment:** Done-band remains **93-95%**. If feature work reopens, the single highest-leverage wedge is **Adopter Contract Hardening** (support/install/proof coherence and docs drift guards), with feature-depth work still gated behind reviewed outside-adopter signal or concrete bug evidence.
 - **2026-05-27 public website launch surface:** static GitHub Pages site added under `website/` as a companion front door. It routes evaluators, adopters, and operators into the existing docs instead of duplicating HexDocs, stamps release truth from `mix.exs`, and is verified with screenshot checks.
+- **2026-05-28 quick docs cleanup:** reader-facing docs were cleaned for public adoption flow. `docs/jtbd-gap-map.md` was removed from HexDocs/package exposure, package docs were made explicit, top-level `LICENSE` and `SECURITY.md` were added, outside-adopter evidence moved to a GitHub issue template, broken guide links were fixed, website nav/link metadata was tightened, and GitHub repo description now matches the package positioning.
 - **2026-05-27 Phase 97 scope guard active:** `.planning/phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md` is the active SCOPE-01 authority; v1.27 remains contract hardening only and any runtime breadth reopen requires reviewed outside-adopter signal or reproducible production bug evidence plus explicit REQUIREMENTS/ROADMAP updates first.
 - **2026-05-26 release-train policy:** `main` now defaults to lean required gates plus Release Please patch-train cadence. Serious milestone work should reopen through PR-scoped planning, not opportunistic direct-`main` execution, and the default answer when the train is green is "nothing to do."
 - **v1.25 archived:** Shipped `tenant_field:` declaration, `tenant_scope:` injection, and canonical multitenancy guide.
@@ -125,7 +126,7 @@ Progress: [██████████] 100%
 - **Future product ranking should stay evidence-bound:** do not let generic ergonomics or OPSUI breadth displace tenant-safe access or high-cardinality facet-value search unless the outside-adopter evidence actually points there.
 - **Post-v1.26 feature threshold:** do not open autocomplete/suggestions, OPSUI breadth, multi-backend, vector/hybrid, or generic ergonomics milestones without reviewed outside-adopter evidence or a concrete bug.
 - **Feature-lane merge discipline:** serious feature milestones must land through PRs with green PR CI; avoid direct-`main` depth work even when local checks pass.
-- **Support/install contract drift risk:** install-version language currently differs across user-facing docs (`~> 0.3` in core docs versus `~> 1.0` in outside-adopter intake). Treat this as trust-surface debt to fix before opening deeper feature wedges.
+- **Historical changelog noise:** older generated `CHANGELOG.md` entries still contain task/phase-like commit scopes. Leave them alone unless Release Please/release-note policy is revisited; current reader wayfinding should prefer README, HexDocs guides, and the public website.
 
 ### Deferred Items
 
@@ -146,7 +147,7 @@ If the Release Please PR needs action, finish the release train. Otherwise, if `
 
 ---
 
-*Last updated: 2026-05-27 — milestone next-step reassessment recorded; Adopter Contract Hardening ranked as next wedge*
+*Last updated: 2026-05-28 — quick docs cleanup completed; release-follow-through remains the default posture*
 
 **Prior milestone:** **v1.26** — Facet Value Vocabulary Search — **2026-05-26** (shipped + archived in-repo).
 
@@ -159,6 +160,12 @@ If the Release Please PR needs action, finish the release train. Otherwise, if `
 **Completed:** **v1.21** shipped + archived in-repo (**2026-05-23**) — phases **80–82** — **`milestones/v1.21-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **Completed:** **v1.20** shipped + archived in-repo (**2026-05-08**) — phases **77–79** — **`milestones/v1.20-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+
+## Quick Tasks Completed
+
+| Quick ID | Date | Outcome | Verification |
+|----------|------|---------|--------------|
+| 260527-utq | 2026-05-28 | Reader-facing docs cleanup shipped in `9011ed8`; HexDocs/package exposure tightened, support/license/security paths added, website nav/metadata copy cleaned, GitHub description updated. | `mix verify --exclude integration`; `npm run build && npm run check`; `mix hex.build --unpack` |
 
 ## Performance Metrics
 
