@@ -18,6 +18,7 @@ defmodule Mix.Tasks.Verify.Phase99 do
     Mix.shell().info(
       "==> verify.phase99: drift-gate trust lane with phase100 install/release and phase101 compatibility-truth closure checks"
     )
+
     run_test!(@focused_tests, "Phase 99 trust-hardening verification")
 
     Mix.shell().info("==> Building docs with warnings as errors")

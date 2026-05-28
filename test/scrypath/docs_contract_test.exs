@@ -64,8 +64,8 @@ defmodule Scrypath.DocsContractTest do
   @support_guide File.read!("guides/support-and-compatibility.md")
   @verify_adopter File.read!("lib/mix/tasks/verify.adopter.ex")
   @phase97_contract_statements File.read!(
-                                ".planning/phases/97-canonical-contract-freeze-and-scope-guard/97-CONTRACT-STATEMENTS.md"
-                              )
+                                 ".planning/phases/97-canonical-contract-freeze-and-scope-guard/97-CONTRACT-STATEMENTS.md"
+                               )
   @phase97_contract_traceability File.read!(
                                    ".planning/phases/97-canonical-contract-freeze-and-scope-guard/97-CONTRACT-TRACEABILITY.md"
                                  )
