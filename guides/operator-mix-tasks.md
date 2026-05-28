@@ -2,8 +2,6 @@
 
 Use the Mix tasks in this guide when you want thin terminal entrypoints over the existing operator APIs on `Scrypath.*`.
 
-For how those jobs map to OPSUI navigation priorities (without duplicating JTBD prose here), see `scrypath_ops/docs/operator-ia.md` in the repository checkout.
-
 The tasks do not bypass the library surface. Each one starts the app, parses task-owned argv, and delegates to the same root API you can call from code.
 
 ## Shared Runtime Options
@@ -84,7 +82,7 @@ Applies a **live** Meilisearch settings PATCH for one schema. Only `synonyms`, `
 mix scrypath.settings.hot_apply MyApp.Blog.Post --settings-file operator/stopwords-patch.json --ack-live --meilisearch-url http://127.0.0.1:7700 --index-prefix tenant
 ```
 
-Tradeoffs and non-goals: see `guides/relevance-tuning.md` (**Settings hot apply (v1.4)**).
+Tradeoffs and non-goals: see [Relevance tuning](relevance-tuning.md), especially the settings hot-apply section.
 
 ## `mix scrypath.index.contract_drift`
 

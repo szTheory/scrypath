@@ -7,16 +7,19 @@ defmodule Mix.Tasks.Verify.WorkspaceCleanTest do
     test "derives pathspecs from mix.exs package.files + test" do
       pathspecs = Mix.Tasks.Verify.WorkspaceClean.build_pathspecs()
 
-      # From mix.exs package.files: lib, .formatter.exs, mix.exs, README.md,
-      # ARCHITECTURE.md, CHANGELOG.md, guides, docs (D-01)
+      # From mix.exs package.files plus test/**.
       assert "lib" in pathspecs
       assert ".formatter.exs" in pathspecs
       assert "mix.exs" in pathspecs
       assert "README.md" in pathspecs
       assert "ARCHITECTURE.md" in pathspecs
       assert "CHANGELOG.md" in pathspecs
+      assert "LICENSE" in pathspecs
+      assert "SECURITY.md" in pathspecs
       assert "guides" in pathspecs
-      assert "docs" in pathspecs
+      assert "docs/releasing.md" in pathspecs
+      assert "docs/operator-support.md" in pathspecs
+      assert "docs/search-backend-sre.md" in pathspecs
 
       # D-05: test/** included even though not in package.files
       assert "test" in pathspecs

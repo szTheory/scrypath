@@ -66,7 +66,7 @@ This guide is for **operators** who already ship Scrypath with Meilisearch and n
 
 **Action** — Run **`mix scrypath.index.contract_drift YOUR_SCHEMA`** (add **`--json`** for machine output) or call **`Scrypath.index_contract_drift/2`** from application code to get the structured **index contract drift** report. This path is **report-first** and does not mutate the index. When you only need settings-key parity, keep using **`mix scrypath.settings.diff`**. When you decide to repair, follow your existing **`Scrypath.reconcile_sync/2`** and **`Scrypath.reindex/2`** runbooks explicitly.
 
-**Verify** — Re-run after deploys that touch schema contracts. For maintainer ordering on when to reach for queue triage vs contract reads vs reconcile, see [`docs/operator-support.md`](operator-support.md).
+**Verify** — Re-run after deploys that touch schema contracts. For maintainer ordering on when to reach for queue triage vs contract reads vs reconcile, see [`docs/operator-support.md`](../docs/operator-support.md).
 
 ## Stuck reindex mid-cutover
 

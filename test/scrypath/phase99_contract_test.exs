@@ -6,7 +6,7 @@ defmodule Scrypath.Phase99ContractTest do
   @contributing File.read!("CONTRIBUTING.md")
   @support_guide File.read!("guides/support-and-compatibility.md")
   @intake_guide File.read!("guides/outside-adopter-intake.md")
-  @evidence_template File.read!("docs/templates/outside-adopter-evidence.md")
+  @evidence_template File.read!(".github/ISSUE_TEMPLATE/outside-adopter-evidence.md")
   @example_readme File.read!("examples/phoenix_meilisearch/README.md")
   @verify_adopter_source File.read!("lib/mix/tasks/verify.adopter.ex")
   @mix_exs File.read!("mix.exs")

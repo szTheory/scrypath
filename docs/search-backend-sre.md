@@ -1,6 +1,6 @@
 # Search backend operations (SRE view)
 
-This guide is for **platform and SRE** maintainers who run the search process alongside a Phoenix app using Scrypath. It complements [Sync Modes and Visibility](guides/sync-modes-and-visibility.md) (application semantics) and [Operator Support](operator-support.md) (library maintainer first response).
+This guide is for **platform and SRE** maintainers who run the search process alongside a Phoenix app using Scrypath. It complements [Sync Modes and Visibility](../guides/sync-modes-and-visibility.md) (application semantics) and [Operator Support](operator-support.md) (library maintainer first response).
 
 ## Scope
 
@@ -64,7 +64,7 @@ From the repo root (maintainer checks):
 
 ## Related docs
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — drift, reindex order, and sync guarantees
-- [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md) — `:inline` / `:oban` / `:manual`
-- [guides/operator-mix-tasks.md](guides/operator-mix-tasks.md) — thin Mix wrappers over `Scrypath.*`
-- [guides/relevance-tuning.md](guides/relevance-tuning.md) — settings and verify-applied semantics
+- [ARCHITECTURE.md](../ARCHITECTURE.md) — drift, reindex order, and sync guarantees
+- [guides/sync-modes-and-visibility.md](../guides/sync-modes-and-visibility.md) — `:inline` / `:oban` / `:manual`
+- [guides/operator-mix-tasks.md](../guides/operator-mix-tasks.md) — thin Mix wrappers over `Scrypath.*`
+- [guides/relevance-tuning.md](../guides/relevance-tuning.md) — settings and verify-applied semantics

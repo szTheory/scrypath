@@ -1,33 +1,33 @@
 # Outside-Adopter Intake
 
-This guide is the single authority for outside-adopter attempts. If you are integrating Scrypath outside of the provided example app and encounter issues, or if you are running our defended proof path and it fails for you, follow these instructions to capture admissible evidence.
+Use this guide when you try Scrypath in a real app and something fails, behaves differently than the docs imply, or needs maintainer review. The goal is to capture enough evidence for maintainers to reproduce the issue without a long back-and-forth.
 
-## The Defended Proof Path
+## The Supported Example Path
 
-Scrypath currently defends a specific Phoenix + Meilisearch proof path. This path lives in this repository as a runnable example.
+Scrypath ships a Phoenix + Meilisearch example in this repository. It is the best known-good path to compare against when an outside integration behaves differently.
 
 Canonical routing before you submit evidence:
 
 - Start from [`README.md`](../README.md) for the release-backed install and first-hop guide map.
-- Use [`guides/support-and-compatibility.md`](support-and-compatibility.md) for the defended support and proof-boundary policy.
-- Use this intake guide for admissibility classes and evidence submission requirements.
+- Use [`guides/support-and-compatibility.md`](support-and-compatibility.md) for supported versions, install guidance, and verification commands.
+- Use this intake guide for evidence classes and submission requirements.
 
 Use release-backed guidance as the default adopter path; main may contain unreleased changes.
 This intake guide stays route-first and is not a compatibility tuple authority.
 
-### Repo-clone versus Hex-package Boundary
+### Repo-clone versus Hex-package boundary
 
 - **Hex-package:** When you add `{:scrypath, "~> 0.3"}` to your `mix.exs`, you are consuming the library artifact. If you encounter issues here, we need to know your exact environment and integration steps.
-- **Repo-clone:** The defended proof path is a repo-clone workflow. It tests Scrypath as a local `path:` dependency within a complete Phoenix application.
+- **Repo-clone:** The example path is a repo-clone workflow. It tests Scrypath as a local `path:` dependency within a complete Phoenix application.
 
-When you submit evidence, include either the exact Hex package version or the exact git ref/commit so maintainers can classify package versus branch-tip behavior without ambiguity.
+When you submit evidence, include either the exact Hex package version or the exact git ref/commit so maintainers can classify package versus checkout behavior without ambiguity.
 
-### Maintainer Proof Command Family
+### Verification command family
 
 We use two commands to verify our contracts and runtime posture:
 
 - `mix verify.adopter`: The fast, auth-free, service-free path. It verifies support and readiness contracts.
-- `mix verify.adopter --live`: The canonical live proof. It boots the `examples/phoenix_meilisearch` application and runs its tests against a real Meilisearch instance.
+- `mix verify.adopter --live`: The live path. It boots the `examples/phoenix_meilisearch` application and runs its tests against a real Meilisearch instance.
 
 For live operational steps, environment variables, and repo-clone runbook detail, do not guess: follow the exact runbook in [`examples/phoenix_meilisearch/README.md`](../examples/phoenix_meilisearch/README.md).
 
@@ -38,11 +38,11 @@ When we review outside-adopter evidence, we look at these assumptions:
 - Are you targeting the supported Meilisearch version?
 - Are you using a supported sync mode?
 
-## Admissibility Classes (A through D)
+## Evidence classes
 
 Evidence bundles are classified into one of four classes to determine how we respond:
 
-- **Class A:** Exact failure on the defended repo-clone live proof. Highest priority.
+- **Class A:** Exact failure on the repo-clone live example path. Highest priority.
 - **Class B:** Hex-package integration failure within the explicitly supported runtime matrix.
 - **Class C:** Integration attempt outside the supported runtime matrix (e.g. older OTP or different search backend). Will likely be closed as unsupported, but logged for future roadmap consideration.
 - **Class D:** Incomplete evidence, missing context, or missing ordered commands. Returned for clarification.
@@ -69,18 +69,18 @@ Needs information response for Class D flow:
 
 - "Needs information: please provide missing ordered commands and supporting logs so we can classify this bundle."
 
-Security carve-out: do not post vulnerability details in public issue threads. Route security reports through `SECURITY.md`.
+Security carve-out: do not post vulnerability details in public issue threads. Route security reports through [SECURITY.md](https://github.com/szTheory/scrypath/blob/main/SECURITY.md).
 
 ## Submitting an Evidence Bundle
 
-To submit evidence of a failure or confusion, you must use our canonical evidence bundle template.
+To submit evidence of a failure or confusion, use the outside-adopter evidence issue template.
 
-You can find the template at `docs/templates/outside-adopter-evidence.md`.
+Open it from GitHub's new issue flow or use this direct template link: [outside-adopter evidence](https://github.com/szTheory/scrypath/issues/new?template=outside-adopter-evidence.md).
 
 Required evidence must include all of the following checklist items:
 1. Environment matrix
 2. Scrypath Ref or Hex version
-3. Chosen proof path
+3. Chosen path
 4. Sync mode
 5. Ordered commands
 6. Expected versus actual outcome

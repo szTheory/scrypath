@@ -1,6 +1,6 @@
 # Request-edge search with QueryParams and Phoenix
 
-This guide is the canonical v1.21 request-edge story: browser params enter at the web edge, `Scrypath.QueryParams` normalizes them into plain data, optional `Scrypath.Phoenix` helpers round-trip params and attempted values, your context calls `Scrypath.search/3`, and the runtime stops there.
+This guide shows the request-edge path: browser params enter at the web edge, `Scrypath.QueryParams` normalizes them into plain data, optional `Scrypath.Phoenix` helpers round-trip params and attempted values, your context calls `Scrypath.search/3`, and the runtime stops there.
 
 If you want the broader onboarding path first, read [Getting Started](getting-started.md) or the [Golden path](golden-path.md). If you want reusable search defaults, metadata-backed host rendering, or multi-search composition after this shared contract, continue with [Composing real-app search](composing-real-app-search.md).
 
@@ -101,10 +101,10 @@ See:
 
 ## Example app vs guides
 
-HexDocs is the teaching surface for this public contract. The runnable example app is the proof/runbook surface for the real Postgres + Meilisearch + Oban path, CI parity, and local smoke commands:
+Use this guide when you want to understand the boundary. Use the runnable example when you want to exercise the same shape against Postgres, Meilisearch, and Oban:
 
-- teaching surface: this guide plus the rest of `guides/`
-- proof/runbook surface: [`examples/phoenix_meilisearch/README.md`](../examples/phoenix_meilisearch/README.md)
+- guide path: this guide plus the rest of `guides/`
+- runnable path: [`examples/phoenix_meilisearch/README.md`](../examples/phoenix_meilisearch/README.md)
 
 Use the guide to understand the boundary. Use the example when you want to prove the operational path against real services.
 

@@ -23,7 +23,7 @@ defmodule Scrypath.ReadinessContractTest do
 
   test "intake guide states the evidence and proof boundaries" do
     intake = File.read!("guides/outside-adopter-intake.md")
-    assert String.contains?(intake, "docs/templates/outside-adopter-evidence.md")
+    assert String.contains?(intake, "outside-adopter-evidence.md")
     assert String.contains?(intake, "Class A")
     assert String.contains?(intake, "Class D")
     assert String.contains?(intake, "phoenix_meilisearch/README.md")

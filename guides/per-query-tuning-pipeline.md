@@ -92,7 +92,7 @@ Telemetry is a **public observability contract** for event names and documented 
 | `[:scrypath, :search_many]` | Span | `schema_count`, `raw_entry_count`, stop metadata from results | Around multi-search orchestration |
 | `[:scrypath, :search_many, :partial]` | Execute | Per-schema failure summaries where applicable | When some indexes fail but the API returns partial success |
 
-Refer to **`lib/scrypath/search.ex`** for the authoritative emit points as the code evolves.
+Refer to the public search API docs for the emit points as the code evolves.
 
 ## Federation and search_many
 

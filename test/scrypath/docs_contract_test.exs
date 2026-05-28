@@ -77,7 +77,6 @@ defmodule Scrypath.DocsContractTest do
   @published_markdown_for_hygiene [
     "README.md",
     "ARCHITECTURE.md",
-    "docs/jtbd-gap-map.md",
     "docs/releasing.md",
     "docs/operator-support.md",
     "docs/search-backend-sre.md"
