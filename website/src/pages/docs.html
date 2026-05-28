@@ -1,9 +1,9 @@
 <section class="page-hero">
   <p class="eyebrow">Docs map</p>
-  <h1>Pick the guide that matches the job you need to do.</h1>
+  <h1>Find the guide for your next step.</h1>
   <p class="lede">
-    Start here when you know the question but not the page. Each route below points to the
-    canonical guide, runbook, or example for the job you actually need to do.
+    Use this map when you know the work in front of you: add the first searchable schema,
+    wire Phoenix params, protect tenant filters, recover drift, or run the example app.
   </p>
 </section>
 
@@ -15,12 +15,12 @@
   <div class="grid two">
     <article class="tile">
       <h3>Quick path</h3>
-      <p>The canonical first-hour path from dependency declaration through a working search call.</p>
+      <p>Install the package, declare one schema, sync one record, and make a search call you can inspect.</p>
       <a href="{{REPO_URL}}/blob/main/guides/golden-path.md">Golden path</a>
     </article>
     <article class="tile">
       <h3>Mental model</h3>
-      <p>A concise map of the jobs Scrypath serves, how context boundaries work, and what “done” means.</p>
+      <p>Understand where Scrypath fits in a Phoenix app before you thread it through write paths.</p>
       <a href="{{REPO_URL}}/blob/main/guides/jtbd-and-user-flows.md">JTBD and user flows</a>
     </article>
   </div>
@@ -29,33 +29,33 @@
 <section class="section">
   <div class="section-head">
     <p class="eyebrow">High-signal guides</p>
-    <h2>Open the page that answers the actual question.</h2>
+    <h2>Choose by job, not by file name.</h2>
   </div>
 
   <div class="route-list">
     <a class="route-item" href="{{REPO_URL}}/blob/main/guides/support-and-compatibility.md">
       <strong>Support and compatibility</strong>
-      <span>Release-backed install truth, supported baseline, and the proof-command split.</span>
+      <span>Check supported Elixir and OTP versions, install guidance, and which verification command to run before filing an issue.</span>
     </a>
     <a class="route-item" href="{{REPO_URL}}/blob/main/guides/outside-adopter-intake.md">
       <strong>Outside-adopter intake</strong>
-      <span>How to submit evidence when a real integration fails or needs clarification.</span>
+      <span>Use this when a real app integration fails and you need to report enough evidence for maintainers to reproduce it.</span>
     </a>
     <a class="route-item" href="{{REPO_URL}}/blob/main/guides/request-edge-search.md">
       <strong>Request-edge search</strong>
-      <span>Browser params, <code>Scrypath.QueryParams</code>, and optional Phoenix glue.</span>
+      <span>Normalize controller or LiveView params once, then pass plain search options into your context.</span>
     </a>
     <a class="route-item" href="{{REPO_URL}}/blob/main/guides/composing-real-app-search.md">
       <strong>Composing real-app search</strong>
-      <span>Reusable defaults/fixed scopes, metadata reflection, and <code>compose_many/2</code>.</span>
+      <span>Reuse defaults and fixed scopes across search pages without hiding the context boundary.</span>
     </a>
     <a class="route-item" href="{{REPO_URL}}/blob/main/guides/related-data-and-reindexing.md">
       <strong>Related data and reindexing</strong>
-      <span>Associated-data fan-out, reindex, and when to choose direct sync versus repair.</span>
+      <span>Keep documents current when associated records change, and decide when to backfill or rebuild.</span>
     </a>
     <a class="route-item" href="{{REPO_URL}}/blob/main/guides/multitenancy.md">
       <strong>Multitenancy</strong>
-      <span>Shared-index safety, <code>tenant_field:</code>, reflection, and <code>tenant_scope:</code> enforcement.</span>
+      <span>Inject tenant filters safely for shared indexes so user filters cannot drop the tenant guard.</span>
     </a>
   </div>
 </section>
@@ -63,22 +63,22 @@
 <section class="section" id="tenant-safety">
   <div class="section-head">
     <p class="eyebrow">Tenant safety</p>
-    <h2>Shared-index safety has its own canonical guide.</h2>
+    <h2>Keep tenant filters impossible to forget.</h2>
   </div>
   <div class="grid two">
     <article class="tile">
       <h3>Multitenancy</h3>
       <p>
-        <code>tenant_field:</code>, <code>schema_capabilities/1</code>, and <code>tenant_scope:</code> are the current public
-        contract for shared-index safety.
+        Declare the tenant boundary with <code>tenant_field:</code>, inspect it with
+        <code>schema_capabilities/1</code>, and apply it at search time with <code>tenant_scope:</code>.
       </p>
       <a href="{{REPO_URL}}/blob/main/guides/multitenancy.md">Open the guide</a>
     </article>
     <article class="tile">
       <h3>Why it matters</h3>
       <p>
-        The homepage points here because tenant safety is one of the cases where the adopter
-        needs the canonical guide, not a summary.
+        If tenant filters behave like ordinary user filters, a later option can silently replace
+        them. Scrypath gives that guard a first-class path.
       </p>
     </article>
   </div>
@@ -86,25 +86,26 @@
 
 <section class="section" id="example">
   <div class="section-head">
-    <p class="eyebrow">Defended example</p>
-    <h2>The real app proof stays in the repo.</h2>
+    <p class="eyebrow">Example app</p>
+    <h2>Run the Phoenix + Meilisearch path before you depend on it.</h2>
   </div>
   <div class="grid two">
     <article class="tile">
       <h3>Phoenix + Meilisearch example</h3>
       <p>
-        The live proof path exercises inline sync, Oban-backed sync, related-data fan-out, and
-        the release-backed support contract against real services.
+        Exercise inline sync, Oban-backed sync, related-data fan-out, and live Meilisearch
+        behavior against a real Phoenix app.
       </p>
       <a href="{{REPO_URL}}/blob/main/examples/phoenix_meilisearch/README.md">Open the runbook</a>
     </article>
     <article class="tile">
       <h3>Support posture</h3>
       <p>
-        <code>mix verify.adopter</code> is the fast proof path; <code>mix verify.adopter --live</code> is the
-        prerequisite-bound live branch. The website should never restate the whole matrix.
+        Use <code>mix verify.adopter</code> for a fast local confidence check. Use
+        <code>mix verify.adopter --live</code> when Meilisearch and the example app prerequisites
+        are available.
       </p>
-      <a href="{{REPO_URL}}/blob/main/guides/support-and-compatibility.md">See support truth</a>
+      <a href="{{REPO_URL}}/blob/main/guides/support-and-compatibility.md">See support guide</a>
     </article>
   </div>
 </section>

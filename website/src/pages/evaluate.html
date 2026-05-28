@@ -3,15 +3,15 @@
   <h1>Should I use Scrypath?</h1>
   <p class="lede">
     The honest answer is: use it if you want search indexing to feel native to Ecto and you
-    care about operational truth. Do not use it if you want a hosted search platform or a
-    framework facade that hides the work.
+    care about knowing when search is current, queued, or stale. Do not use it if you want
+    a hosted search platform or a framework facade that hides the work.
   </p>
 </section>
 
 <section class="section">
   <div class="section-head">
     <p class="eyebrow">Good fit</p>
-    <h2>Choose it when the app owns search truth.</h2>
+    <h2>Choose it when the app owns search state.</h2>
   </div>
 
   <div class="grid two">
@@ -30,7 +30,7 @@
         <li>Metadata-first searchable schemas.</li>
         <li>Inline, Oban-backed, and manual sync modes.</li>
         <li>Related-data fan-out and tenant-safe access.</li>
-        <li>Operator recovery and a defended proof path.</li>
+        <li>Operator recovery and a runnable example app.</li>
       </ul>
     </article>
   </div>
@@ -84,8 +84,8 @@
     <article class="tile">
       <h3>What you still own</h3>
       <p>
-        Your app owns deployment, recovery decisions, and the truth of what is visible when.
-        Scrypath makes that explicit instead of pretending otherwise.
+        Your app owns deployment, recovery decisions, and what is visible when. Scrypath
+        makes that explicit instead of pretending otherwise.
       </p>
     </article>
   </div>
@@ -97,7 +97,7 @@
     <h2>If you want the app to own search, Scrypath is the right layer.</h2>
   </div>
   <p>
-    If you want a homepage, keep this one. If you want the API, open HexDocs. If you want the
-    live proof, use the example app. Each surface has one job.
+    It fits when records live in Ecto and your team wants explicit sync, observable drift,
+    and recovery tools without building that layer from scratch.
   </p>
 </section>
