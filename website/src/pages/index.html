@@ -43,9 +43,16 @@
   filterable: [:status],
   sortable: [:inserted_at]
 
-{:ok, _} =
+def search_posts(query) do
+  Scrypath.search(Post, query,
+    backend: Scrypath.Meilisearch,
+    repo: Repo
+  )
+end
+
+{:ok, _sync} =
   Scrypath.sync_record(Post, post,
-    repo: Repo,
+    backend: Scrypath.Meilisearch,
     sync_mode: :inline
   )</code></pre>
   </div>
