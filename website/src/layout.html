@@ -35,10 +35,17 @@
           <a href="{{BASE_PATH}}docs/index.html">Docs map</a>
           <a href="{{BASE_PATH}}operators/index.html">Operators</a>
           <a href="{{BASE_PATH}}evaluate/index.html">Evaluate</a>
-          <a href="{{REPO_URL}}">GitHub</a>
         </nav>
 
-        <a class="version-pill" href="https://hex.pm/packages/scrypath" rel="noreferrer">v{{VERSION}}</a>
+        <div class="header-actions">
+          <a class="github-star" href="{{REPO_URL}}" aria-label="Star Scrypath on GitHub">
+            <svg class="github-star-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m12 2.8 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3-5.8 3 1.1-6.5-4.7-4.6 6.5-.9L12 2.8Z" />
+            </svg>
+            <span>Star</span>
+          </a>
+          <a class="version-pill" href="https://hex.pm/packages/scrypath" rel="noreferrer">v{{VERSION}}</a>
+        </div>
       </header>
 
       <main id="content">
