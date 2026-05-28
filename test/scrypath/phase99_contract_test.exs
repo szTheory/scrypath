@@ -73,6 +73,7 @@ defmodule Scrypath.Phase99ContractTest do
     test "CI-shaped command chain stays ordered on example and maintainer runbook surfaces" do
       assert ordered?(@example_readme, "cd examples/phoenix_meilisearch", "mix deps.get")
       assert ordered?(@example_readme, "mix deps.get", "mix test")
+
       assert String.contains?(
                @verify_adopter_source,
                "cd examples/phoenix_meilisearch && mix deps.get && mix test"
