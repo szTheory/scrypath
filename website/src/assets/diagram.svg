@@ -1,10 +1,10 @@
-<svg width="1200" height="620" viewBox="0 0 1200 620" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Scrypath flow diagram">
+<svg width="1200" height="620" viewBox="0 0 1200 620" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Scrypath data flow">
   <rect width="1200" height="620" rx="16" fill="#090D13"/>
   <rect x="1" y="1" width="1198" height="618" rx="15" stroke="rgba(193, 206, 229, 0.12)"/>
-  <text x="36" y="60" fill="#F5F1E8" font-family="ui-sans-serif, system-ui, sans-serif" font-size="34" font-weight="700">Scrypath flow</text>
-  <text x="36" y="98" fill="#AEB8C8" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20">Declare schema metadata, sync through the context, and keep recovery honest.</text>
+  <text x="36" y="60" fill="#F5F1E8" font-family="ui-sans-serif, system-ui, sans-serif" font-size="34" font-weight="700">Record to index</text>
+  <text x="36" y="98" fill="#AEB8C8" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20">Declare schema metadata, sync through your context, and recover drift when it appears.</text>
   <rect x="898" y="26" width="266" height="52" rx="12" fill="rgba(159, 140, 255, 0.12)" stroke="rgba(159, 140, 255, 0.32)"/>
-  <text x="924" y="59" fill="#EEDFFF" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="600">Release-backed truth</text>
+  <text x="944" y="59" fill="#EEDFFF" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="600">Verified locally</text>
 
   <path d="M88 290C176 228 262 228 350 290C438 352 524 352 612 290C700 228 786 228 874 290C962 352 1048 352 1136 290" stroke="rgba(159, 140, 255, 0.78)" stroke-width="5" stroke-linecap="round" stroke-dasharray="9 12"/>
   <circle cx="88" cy="290" r="9" fill="#E0A06D"/>
@@ -32,7 +32,7 @@
     <rect x="810" y="330" width="186" height="108" rx="14" fill="#131B27" stroke="rgba(193, 206, 229, 0.16)"/>
     <text x="840" y="366" fill="#F5F1E8" font-size="24" font-weight="700">Meilisearch</text>
     <text x="839" y="392" fill="#AEB8C8" font-size="16">index / tasks / stats</text>
-    <text x="842" y="414" fill="#7D889A" font-size="14">backend truth</text>
+    <text x="842" y="414" fill="#7D889A" font-size="14">backend state</text>
 
     <rect x="1050" y="330" width="126" height="108" rx="14" fill="#131B27" stroke="rgba(193, 206, 229, 0.16)"/>
     <text x="1062" y="366" fill="#F5F1E8" font-size="22" font-weight="700">Result</text>

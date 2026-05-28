@@ -8,8 +8,8 @@
 
   <rect x="68" y="372" width="322" height="124" rx="16" fill="#131B27" stroke="rgba(193, 206, 229, 0.16)"/>
   <text x="94" y="412" fill="#F5F1E8" font-family="IBM Plex Mono, monospace" font-size="22">{:scrypath, "~> 0.3"}</text>
-  <text x="94" y="452" fill="#AEB8C8" font-family="Inter, system-ui, sans-serif" font-size="18">Release-backed install</text>
-  <text x="94" y="482" fill="#AEB8C8" font-family="Inter, system-ui, sans-serif" font-size="18">Support and proof truth live in the docs.</text>
+  <text x="94" y="452" fill="#AEB8C8" font-family="Inter, system-ui, sans-serif" font-size="18">Install from Hex</text>
+  <text x="94" y="482" fill="#AEB8C8" font-family="Inter, system-ui, sans-serif" font-size="18">Verify locally before opening an issue.</text>
 
   <path d="M660 172C740 116 836 116 916 172C996 228 1092 228 1172 172" stroke="rgba(159, 140, 255, 0.85)" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 10"/>
   <circle cx="660" cy="172" r="9" fill="#E0A06D"/>
@@ -19,7 +19,7 @@
 
   <rect x="664" y="242" width="132" height="74" rx="12" fill="#131B27" stroke="rgba(193, 206, 229, 0.16)"/>
   <text x="694" y="274" fill="#F5F1E8" font-family="Inter, system-ui, sans-serif" font-size="18" font-weight="700">Schema</text>
-  <text x="687" y="298" fill="#AEB8C8" font-family="Inter, system-ui, sans-serif" font-size="13">`use Scrypath`</text>
+  <text x="687" y="298" fill="#AEB8C8" font-family="Inter, system-ui, sans-serif" font-size="13">use Scrypath</text>
 
   <rect x="836" y="242" width="132" height="74" rx="12" fill="#131B27" stroke="rgba(193, 206, 229, 0.16)"/>
   <text x="860" y="274" fill="#F5F1E8" font-family="Inter, system-ui, sans-serif" font-size="18" font-weight="700">Context</text>
@@ -31,6 +31,6 @@
 
   <rect x="662" y="368" width="478" height="118" rx="14" fill="#0B1018" stroke="rgba(193, 206, 229, 0.14)"/>
   <text x="688" y="408" fill="#EEDFD0" font-family="IBM Plex Mono, monospace" font-size="20">mix verify.adopter</text>
-  <text x="688" y="438" fill="#AEB8C8" font-family="Inter, system-ui, sans-serif" font-size="17">Fast proof for support truth. Live proof when the example app is running.</text>
+  <text x="688" y="438" fill="#AEB8C8" font-family="Inter, system-ui, sans-serif" font-size="17">Fast local check. Live path when the example app is running.</text>
   <text x="688" y="466" fill="#AEB8C8" font-family="Inter, system-ui, sans-serif" font-size="17">Accepted work is not the same thing as search visibility.</text>
 </svg>

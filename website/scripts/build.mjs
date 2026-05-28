@@ -32,17 +32,17 @@ const pages = [
   {
     input: 'docs.html',
     output: path.join('docs', 'index.html'),
-    title: 'Scrypath docs map - the route into HexDocs and guides',
+    title: 'Scrypath docs map - guides for Phoenix and Ecto search',
     description:
-      'A compact map to the Scrypath guides, example app, and support truth without duplicating the HexDocs reference.',
+      'A compact map to the Scrypath guides, example app, Phoenix request-edge docs, multitenancy, and recovery material.',
     routePath: 'docs/'
   },
   {
     input: 'operators.html',
     output: path.join('operators', 'index.html'),
-    title: 'Scrypath operator support - recovery, proof, and drift',
+    title: 'Scrypath operator support - recovery, verification, and drift',
     description:
-      'The operator path for support truth, proof commands, drift recovery, and observability around Scrypath.',
+      'The operator path for verification commands, drift recovery, and observability around Scrypath.',
     routePath: 'operators/'
   },
   {

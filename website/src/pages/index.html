@@ -1,11 +1,11 @@
 <section class="hero">
   <div class="hero-copy">
-    <p class="eyebrow">public homepage · launch surface</p>
+    <p class="eyebrow">Ecto-native search for Phoenix apps</p>
     <h1>Search indexing that feels native to Ecto.</h1>
     <p class="lede">
-      Scrypath keeps the search-shaped read model honest for Phoenix and Ecto teams:
-      declare searchable schemas, choose sync mode explicitly, and recover drift without
-      pretending the operational work disappears.
+      Scrypath lets Phoenix and Ecto teams declare searchable schemas, sync records after
+      writes, and recover drift when the index falls behind. It gives search a clear path
+      through your app instead of hiding it behind callbacks.
     </p>
 
     <div class="cta-row">
@@ -16,7 +16,7 @@
 
     <dl class="status-strip">
       <div>
-        <dt>Release-backed install</dt>
+        <dt>Install from Hex</dt>
         <dd><code>{{CANONICAL_INSTALL}}</code></dd>
       </div>
       <div>
@@ -24,7 +24,7 @@
         <dd><code>Elixir 1.17+, OTP 26-28</code></dd>
       </div>
       <div>
-        <dt>Proof spine</dt>
+        <dt>Verify locally</dt>
         <dd><code>mix verify.adopter</code></dd>
       </div>
     </dl>
@@ -32,8 +32,8 @@
 
   <div class="hero-visual panel">
     <div class="panel-kicker">
-      <span>Flow diagram</span>
-      <span class="accent">release-truth aware</span>
+      <span>How it fits</span>
+      <span class="accent">schema -> sync -> search</span>
     </div>
 
     <img class="diagram" src="{{BASE_PATH}}assets/diagram.svg" alt="" aria-hidden="true" />
@@ -56,8 +56,8 @@
     <p class="eyebrow">What ships today</p>
     <h2>One library, four clear jobs.</h2>
     <p>
-      The site is the decision surface. HexDocs stays the API reference; this page orients
-      the person trying to decide whether Scrypath is the right search layer for their app.
+      Start with schema metadata, choose how writes reach Meilisearch, and keep the repair
+      path visible when production data changes faster than the index.
     </p>
   </div>
 
@@ -71,26 +71,26 @@
       <a href="{{BASE_PATH}}docs/index.html#first-hour">First-hour path</a>
     </article>
     <article class="tile">
-      <h3>Sync honesty</h3>
+      <h3>Sync modes</h3>
       <p>
         Choose <code>:inline</code>, <code>:manual</code>, or <code>:oban</code> with eyes open. Accepted work is not the same
         thing as search visibility.
       </p>
-      <a href="{{BASE_PATH}}operators/index.html#sync-truth">Sync modes</a>
+      <a href="{{BASE_PATH}}operators/index.html#sync-modes">Sync modes</a>
     </article>
     <article class="tile">
       <h3>Recovery and drift</h3>
       <p>
-        Backfill, reindex, failed-work triage, and report-first recovery are part of the product
-        surface, not an appendix.
+        Backfill, reindex, failed-work triage, and reconciliation commands are built into
+        the adoption path instead of left as application folklore.
       </p>
       <a href="{{BASE_PATH}}operators/index.html#recovery">Recovery guide</a>
     </article>
     <article class="tile">
       <h3>Tenant-safe access</h3>
       <p>
-        Shared-index safety ships with a canonical guide, <code>tenant_field:</code>, reflection, and
-        <code>tenant_scope:</code> hard-injection.
+        Shared-index safety has first-class declarations and runtime scopes so tenant guards
+        are harder to forget and harder for user filters to replace.
       </p>
       <a href="{{BASE_PATH}}docs/index.html#tenant-safety">Multitenancy docs</a>
     </article>
@@ -124,8 +124,8 @@
       <p class="persona-label">Evaluator</p>
       <h3>Decide quickly whether Scrypath is the right search layer.</h3>
       <p>
-        The website answers the product question; the docs answer the implementation question.
-        That split keeps the onboarding path short.
+        Check the fit, inspect the supported path, then open the guide that matches the next
+        job you need to do.
       </p>
     </article>
   </div>
@@ -134,37 +134,37 @@
 <section class="section">
   <div class="section-head">
     <p class="eyebrow">Where to go next</p>
-    <h2>Route people, don’t repeat the whole docs set.</h2>
+    <h2>Choose the path that matches your question.</h2>
   </div>
 
   <div class="route-list">
     <a class="route-item" href="{{BASE_PATH}}docs/index.html">
       <strong>Docs map</strong>
-      <span>Curated route into the existing guides and HexDocs, without a second reference site.</span>
+      <span>Find the first-hour guide, Phoenix request-edge docs, multitenancy, related data, and recovery material.</span>
     </a>
     <a class="route-item" href="{{BASE_PATH}}operators/index.html">
       <strong>Operator support</strong>
-      <span>Recovery posture, proof commands, and what to run when a team reports drift.</span>
+      <span>Inspect failed work, reconcile drift, and decide when to backfill or reindex.</span>
     </a>
     <a class="route-item" href="{{BASE_PATH}}evaluate/index.html">
       <strong>Evaluate fit</strong>
-      <span>What Scrypath is, what it isn’t, and when to choose it over a raw client.</span>
+      <span>Check whether Scrypath belongs in your app before wiring it into a write path.</span>
     </a>
     <a class="route-item" href="{{BASE_PATH}}docs/index.html#example">
       <strong>Example app</strong>
-      <span>The defended Phoenix + Meilisearch path, including live proof and release-backed support truth.</span>
+      <span>Run Phoenix + Meilisearch locally and see inline, Oban-backed, and manual sync in motion.</span>
     </a>
   </div>
 </section>
 
 <section class="section callout">
   <div>
-    <p class="eyebrow">Release truth</p>
-    <h2>This site follows the package, not a marketing calendar.</h2>
+    <p class="eyebrow">Install and verify</p>
+    <h2>Install, then verify locally.</h2>
   </div>
   <p>
-    The package version is stamped from <code>mix.exs</code> during the website build.
-    The homepage should always make the current release-backed contract obvious before
-    anyone needs to open HexDocs.
+    Install the package, wire one schema, and run <code>mix verify.adopter</code> when you
+    want a quick confidence check. Use the Phoenix example when you want to see Meilisearch
+    and Oban involved before adopting the production path.
   </p>
 </section>

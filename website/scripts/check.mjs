@@ -53,10 +53,22 @@ await capture(browser, baseUrl, {
   viewport: { width: 390, height: 1900 }
 });
 
+await capture(browser, `${baseUrl}/docs/`, {
+  path: path.join(artifactsDir, 'docs-desktop.png'),
+  heading: 'Find the guide for your next step.',
+  viewport: { width: 1440, height: 1500 }
+});
+
 await capture(browser, `${baseUrl}/operators/`, {
   path: path.join(artifactsDir, 'operators-desktop.png'),
-  heading: 'Recovery, proof, and drift should be boring.',
+  heading: 'Recovery, verification, and drift should be boring.',
   viewport: { width: 1440, height: 1600 }
+});
+
+await capture(browser, `${baseUrl}/evaluate/`, {
+  path: path.join(artifactsDir, 'evaluate-desktop.png'),
+  heading: 'Should I use Scrypath?',
+  viewport: { width: 1440, height: 1500 }
 });
 } finally {
   await browser.close();

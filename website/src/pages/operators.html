@@ -1,15 +1,15 @@
 <section class="page-hero">
   <p class="eyebrow">Operators</p>
-  <h1>Recovery, proof, and drift should be boring.</h1>
+  <h1>Recovery, verification, and drift should be boring.</h1>
   <p class="lede">
-    This page is for the maintainer or SRE who needs the first response path, not for someone
-    learning the API from scratch.
+    Use this path when search is stale, failing, or unclear. Start with status and failed
+    work, then decide whether to retry, reconcile, backfill, or reindex.
   </p>
 </section>
 
-<section class="section" id="sync-truth">
+<section class="section" id="sync-modes">
   <div class="section-head">
-    <p class="eyebrow">Sync truth</p>
+    <p class="eyebrow">Sync modes</p>
     <h2>Accepted work is not the same thing as visible search.</h2>
   </div>
 
@@ -40,7 +40,7 @@
       <h3>Start here</h3>
       <ol class="steps">
         <li>Identify the schema and the relevant environment.</li>
-        <li>Run <code>mix verify.adopter</code> for the fast proof surface.</li>
+        <li>Run <code>mix verify.adopter</code> for a quick verification check.</li>
         <li>Use <code>mix scrypath.status</code> and <code>mix scrypath.failed</code>.</li>
         <li>Use <code>mix scrypath.reconcile</code> before changing state.</li>
       </ol>
@@ -48,9 +48,9 @@
     <article class="tile">
       <h3>When you need more</h3>
       <p>
-        The support contract, example app, and operator docs are already wired to the defended
-        Phoenix + Meilisearch path. If the failure is outside that path, classify it honestly
-        before opening a broader bug.
+        If the fast checks pass but the app still behaves differently, use the Phoenix +
+        Meilisearch example and intake guide to pin down whether the issue is app wiring,
+        queue state, or backend behavior.
       </p>
       <a href="{{REPO_URL}}/blob/main/guides/outside-adopter-intake.md">Evidence intake</a>
     </article>
@@ -79,7 +79,8 @@
     <article class="tile">
       <h3>Escalate</h3>
       <p>
-        Treat support truth, outside-adopter evidence, and branch-tip code as the source of truth before widening scope.
+        Bring version, command output, schema metadata, and backend evidence before widening
+        the issue beyond the supported path.
       </p>
     </article>
   </div>
@@ -87,11 +88,12 @@
 
 <section class="section callout">
   <div>
-    <p class="eyebrow">Canonical references</p>
-    <h2>Keep the docs split the way the product is split.</h2>
+    <p class="eyebrow">First response</p>
+    <h2>Start with status, then choose the repair.</h2>
   </div>
   <p>
-    Use <code>guides/support-and-compatibility.md</code> for release-backed truth and proof routing,
-    <code>docs/search-backend-sre.md</code> for platform signals, and the example app for the live path.
+    Use the support guide for supported versions and verification commands. Use the SRE
+    notes for platform signals such as latency, task backlog, and Meilisearch health.
+    Use the example app when you need a known-good Phoenix path to compare against.
   </p>
 </section>
