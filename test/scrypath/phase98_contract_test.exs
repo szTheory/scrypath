@@ -5,7 +5,7 @@ defmodule Scrypath.Phase98ContractTest do
   @support_guide File.read!("guides/support-and-compatibility.md")
   @contributing File.read!("CONTRIBUTING.md")
   @intake_guide File.read!("guides/outside-adopter-intake.md")
-  @evidence_template File.read!("docs/templates/outside-adopter-evidence.md")
+  @evidence_template File.read!(".github/ISSUE_TEMPLATE/outside-adopter-evidence.md")
 
   test "proof boundary discoverability and live prerequisites stay explicit" do
     assert_contains_all(@readme, [
@@ -43,14 +43,14 @@ defmodule Scrypath.Phase98ContractTest do
     ])
 
     assert_contains_all(@evidence_template, [
-      "## Environment Matrix",
-      "## Scrypath Ref or Hex version",
-      "## Chosen Proof Path",
-      "## Sync Mode",
-      "## Ordered Commands",
-      "## Expected versus Actual Outcome",
-      "## First Failure/Confusion Point",
-      "## Supporting Logs",
+      "## Environment matrix",
+      "## Scrypath ref or Hex version",
+      "## Chosen path",
+      "## Sync mode",
+      "## Ordered commands",
+      "## Expected versus actual outcome",
+      "## First failure or confusion point",
+      "## Supporting logs",
       "Classification"
     ])
   end

@@ -1,6 +1,6 @@
 # Composing real-app search
 
-This guide is the canonical v1.22 story for reusable search defaults, metadata-driven host rendering, and multi-search composition. The contract stays narrow: request-edge helpers normalize plain data, `Scrypath.Composition` lowers that data into `Scrypath.search/3` or `Scrypath.search_many/2`, and your context remains the application boundary.
+This guide shows how to reuse search defaults, expose honest metadata for host-rendered controls, and compose multi-search calls. The contract stays narrow: request-edge helpers normalize plain data, `Scrypath.Composition` lowers that data into `Scrypath.search/3` or `Scrypath.search_many/2`, and your context remains the application boundary.
 
 If you have not normalized browser params yet, start with [Request-edge search](request-edge-search.md). If you want the first-hour setup instead, start with the [Golden path](golden-path.md).
 
@@ -74,21 +74,21 @@ reflection =
 
 Those helpers return plain data for host rendering. They do not generate UI, claim tenant-safe authz, or promise related-data propagation or rebuild correctness. Those remain host-owned concerns.
 
-## One runtime, two proof flows
+## One runtime, two worked flows
 
-Phase 85 freezes two flagship real-app proofs on top of the same runtime boundary:
+Two real-app flows sit on top of the same runtime boundary:
 
 ### Single-schema catalog flow
 
 Use one schema, one context-owned `Scrypath.search/3` call, and metadata-driven controls for a searchable Phoenix catalog page. Composition reduces repeated query glue, while `schema_capabilities/1` and `reflect_search/2` keep the control state inspectable and honest.
 
-Read [Faceted search with Phoenix LiveView](faceted-search-with-phoenix-liveview.md) for the concrete single-schema proof.
+Read [Faceted search with Phoenix LiveView](faceted-search-with-phoenix-liveview.md) for the concrete single-schema example.
 
 ### Multi-schema global-search flow
 
 Use `Scrypath.Composition.compose_many/2` when several schemas share some defaults but still need entry-scoped criteria, capabilities, and failure handling. The helper lowers into the existing tuple/shared-option contract for `Scrypath.search_many/2`; it does not create a merged capability graph or a fake universal ranking scale.
 
-Read [Multi-index search](multi-index-search.md) for the concrete multi-schema proof.
+Read [Multi-index search](multi-index-search.md) for the concrete multi-schema example.
 
 ## `compose_many/2` lowers into `search_many/2`
 
@@ -128,7 +128,7 @@ The output stays inspectable plain data all the way to the runtime call.
 
 ## Non-goals
 
-This guide is also the canonical boundary page for what v1.22 does not promise:
+This guide is also the boundary page for what the composition layer does not promise:
 
 - no public `%Scrypath.Query{}`
 - no schema-generated runtime verbs

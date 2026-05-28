@@ -1,8 +1,8 @@
 # Faceted search with Phoenix LiveView
 
-This guide walks through a **movies-shaped** example (genre, year, rating, director) that stays on the **common `Scrypath.search/3` path** with `facets:`, `facet_filter:`, and URL-friendly `handle_params/3`. The patterns mirror the library’s own contract tests so prose and code stay aligned as APIs evolve.
+This guide walks through a **movies-shaped** example (genre, year, rating, director) that stays on the **common `Scrypath.search/3` path** with `facets:`, `facet_filter:`, and URL-friendly `handle_params/3`.
 
-For the shared request-edge contract around browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix`, and context-owned runtime calls, read [Request-edge search](request-edge-search.md). For the canonical composition and metadata story that feeds this catalog flow, read [Composing real-app search](composing-real-app-search.md). This guide stays focused on the single-schema proof.
+For the shared request-edge contract around browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix`, and context-owned runtime calls, read [Request-edge search](request-edge-search.md). For the composition and metadata story that feeds this catalog flow, read [Composing real-app search](composing-real-app-search.md). This guide stays focused on the single-schema example.
 
 ## Overview
 
@@ -178,7 +178,7 @@ Scrypath.search(MyApp.Movies.Movie, "space",
 
 ## Search-within-facet (director list)
 
-For long director lists, add a **text input that filters rows client-side** (LiveView assign only). This does **not** call the Meilisearch facet-search API (deferred on the roadmap); it is **assign-filter only** for v1.3.
+For long director lists, use **`Scrypath.search_facet_values/4`** when you want backend-backed facet value search, such as type-ahead over a high-cardinality director list. Use a simple LiveView assign filter only when you intentionally want client-side filtering of already-loaded buckets.
 
 ## Loading and errors
 

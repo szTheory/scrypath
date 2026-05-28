@@ -1,6 +1,6 @@
 # Common integration mistakes
 
-These pitfalls are grounded in shipped tests and published guides: each item ties a symptom to the mental model that usually causes it, a fix pattern, and an authority link (never a copy of the full guide).
+These pitfalls tie common symptoms to the mental model that usually causes them, a fix pattern, and the guide that owns the full rule.
 
 ## How to use this page
 
@@ -16,8 +16,6 @@ Skim the headings for a match to your symptom, read the **Wrong model** line to 
 
 **Authority:** See [Sync modes and visibility](sync-modes-and-visibility.md) for the authoritative semantics.
 
-**Evidence:** Contract coverage in `test/scrypath/docs_contract_test.exs` locks README language that “Accepted work is not the same thing as search visibility” alongside the sync guide.
-
 ## Federating `search_many/2` without reading the multi-index rules
 
 **Symptom:** `{:error, {:invalid_options, _}}` (or related option errors) when combining `global_schemas`, federation weights, or `:all` expansion—often after copying options from a single-index example.
@@ -28,8 +26,6 @@ Skim the headings for a match to your symptom, read the **Wrong model** line to 
 
 **Authority:** [Multi-index search](multi-index-search.md).
 
-**Evidence:** `Scrypath.SearchManyTest` exercises structural and federation preflight failures for `search_many/2`.
-
 ## Expecting `search/3` to guess a schema you never declared with `use Scrypath`
 
 **Symptom:** `{:error, _}` paths that mention an unknown or unregistered schema module, or confusion about why a module is “not searchable,” even though Ecto can load the struct.
@@ -39,5 +35,3 @@ Skim the headings for a match to your symptom, read the **Wrong model** line to 
 **Fix pattern:** Ensure the schema uses `use Scrypath` with the intended fields and that your app registers the index name you pass to `search/3`.
 
 **Authority:** [Getting started](getting-started.md) for the configuration mental model, then [Sync modes and visibility](sync-modes-and-visibility.md) for how sync attaches to writes.
-
-**Evidence:** Search integration tests under `test/scrypath/search_test.exs` document `{:error, _}` surfaces for search entrypoints when prerequisites are missing or inconsistent.

@@ -1,6 +1,6 @@
 # Scrypath
 
-[![CI](https://github.com/szTheory/scrypath/actions/workflows/ci.yml/badge.svg)](https://github.com/szTheory/scrypath/actions/workflows/ci.yml) [![Hex.pm](https://img.shields.io/hexpm/v/scrypath.svg)](https://hex.pm/packages/scrypath) [![HexDocs](https://img.shields.io/badge/hex-docs-blue.svg)](https://hexdocs.pm/scrypath) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://hex.pm/packages/scrypath)
+[![CI](https://github.com/szTheory/scrypath/actions/workflows/ci.yml/badge.svg)](https://github.com/szTheory/scrypath/actions/workflows/ci.yml) [![Hex.pm](https://img.shields.io/hexpm/v/scrypath.svg)](https://hex.pm/packages/scrypath) [![HexDocs](https://img.shields.io/badge/hex-docs-blue.svg)](https://hexdocs.pm/scrypath) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/szTheory/scrypath/blob/main/LICENSE)
 
 Scrypath, the Ecto-native search indexing library, helps Phoenix and Ecto teams add search to existing schemas without hiding the operational work that keeps search in sync.
 
@@ -20,13 +20,14 @@ end
 
 **Start here:** for the canonical first-hour path from dependencies through a working `Scrypath.search/3` with inline sync, follow [guides/golden-path.md](guides/golden-path.md).
 
-**Support and readiness:** for the defended runtime posture and proof-boundary split (`mix verify.adopter` fast contract check vs `mix verify.adopter --live` prerequisite-bound live proof), use [guides/support-and-compatibility.md](guides/support-and-compatibility.md).
+**Support and readiness:** for supported Elixir, OTP, Meilisearch, sync modes, and the verification commands behind those claims, use [guides/support-and-compatibility.md](guides/support-and-compatibility.md).
+The fast local support check is <code>mix verify.adopter</code>; the live Phoenix + Meilisearch check is <code>mix verify.adopter --live</code>.
 That guide is the release-backed guidance authority; main may contain unreleased changes.
 This README stays route-first and does not duplicate compatibility tuple values.
 
-**Outside integrations and evidence:** if you are trying the defended path or want to submit outside-adopter evidence, read [guides/outside-adopter-intake.md](guides/outside-adopter-intake.md).
+**Outside integrations and evidence:** if you are trying Scrypath in a real app and something fails or feels unclear, read [guides/outside-adopter-intake.md](guides/outside-adopter-intake.md).
 
-**Request-edge contract:** for the v1.21 public story around browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix` glue, and context-owned `Scrypath.search/3`, read [guides/request-edge-search.md](guides/request-edge-search.md).
+**Request-edge contract:** for browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix` glue, and context-owned `Scrypath.search/3`, read [guides/request-edge-search.md](guides/request-edge-search.md).
 
 **Real-app composition and metadata:** for reusable `defaults` / `fixed` search policy, host-owned metadata rendering, and `compose_many/2` lowering into the existing runtime, read [guides/composing-real-app-search.md](guides/composing-real-app-search.md).
 
@@ -36,11 +37,11 @@ If you need the real-app story for related rows, fan-out, and when to choose dir
 
 If you want the architecture and JTBD crash course before reading the full guides, start with [guides/overview.md](guides/overview.md).
 
-For symptom-style "why is search wrong?" debugging grounded in shipped tests, see [guides/common-mistakes.md](guides/common-mistakes.md).
+For symptom-style "why is search wrong?" debugging, see [guides/common-mistakes.md](guides/common-mistakes.md).
 
-**Sync authority:** sync semantics, sync modes (`:inline`, `:oban`, `:manual`), eventual consistency, and operator lifecycle recovery language are defined in [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md). Support/readiness posture and proof-command routing live in [guides/support-and-compatibility.md](guides/support-and-compatibility.md); this README does not restate either guide body.
+**Sync authority:** sync semantics, sync modes (`:inline`, `:oban`, `:manual`), eventual consistency, and operator lifecycle recovery language are defined in [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md). Support/readiness posture and verification commands live in [guides/support-and-compatibility.md](guides/support-and-compatibility.md); this README does not restate either guide body.
 
-**Operator UI (maintainers):** the optional Phoenix shell lives under [scrypath_ops/README.md](scrypath_ops/README.md); persona, JTBD, and nav mapping live in `scrypath_ops/docs/operator-ia.md` in the repository checkout. From the repository root, **`mix verify.opsui`** runs the same checks against **`scrypath_ops/`** that the **`scrypath-ops`** CI job exercises; see [`CONTRIBUTING.md`](CONTRIBUTING.md) for the CI ↔ **`mix verify.*`** matrix and job names.
+**Operator UI (maintainers):** the optional Phoenix shell lives under [scrypath_ops/README.md](scrypath_ops/README.md) in the repository checkout and is not part of the Hex package. From the repository root, **`mix verify.opsui`** runs the same checks against **`scrypath_ops/`** that the **`scrypath-ops`** CI job exercises; see [`CONTRIBUTING.md`](CONTRIBUTING.md) for the CI ↔ **`mix verify.*`** matrix and job names.
 
 **Integration smoke (optional):** the repo ships **`examples/phoenix_meilisearch`** with Docker Compose and env vars documented there (including how it relates to CI - see [`CONTRIBUTING.md`](CONTRIBUTING.md) for GitHub job names ↔ `mix verify.*` tasks). From the clone root, run **`cd examples/phoenix_meilisearch && ./scripts/smoke.sh`** (the example's **`./scripts/smoke.sh`** exists only under that directory, not at the repository root).
 
@@ -50,7 +51,7 @@ If you want queued sync, add Oban as an optional production integration when you
 
 ## Quick Path
 
-Start with one searchable schema and one Phoenix context that owns both repo persistence and Scrypath orchestration. Declare search metadata with **`use Scrypath`** on the Ecto schema, own **`Scrypath.sync_record/3`** after successful repo writes and **`Scrypath.search/3`** from context functions, and keep controllers or LiveView as thin callers into that boundary. For the full copy-paste path - including context module, controller, and IEx proof - follow [guides/golden-path.md](guides/golden-path.md).
+Start with one searchable schema and one Phoenix context that owns both repo persistence and Scrypath orchestration. Declare search metadata with **`use Scrypath`** on the Ecto schema, own **`Scrypath.sync_record/3`** after successful repo writes and **`Scrypath.search/3`** from context functions, and keep controllers or LiveView as thin callers into that boundary. For the full copy-paste path - including context module, controller, and IEx check - follow [guides/golden-path.md](guides/golden-path.md).
 
 ```elixir
 defmodule MyApp.Blog.Post do
@@ -97,7 +98,7 @@ If you are wiring Scrypath into a Phoenix app, read these next:
 - [Guides overview](guides/overview.md) (table of contents for all guides)
 - [JTBD and user flows](guides/jtbd-and-user-flows.md) (mental model and flow map before the implementation guides)
 - [Request-edge search](guides/request-edge-search.md) (canonical shared story for `QueryParams`, optional `Scrypath.Phoenix`, and context-owned runtime calls)
-- [Composing real-app search](guides/composing-real-app-search.md) (canonical guide for `Scrypath.Composition`, `Scrypath.Metadata`, and the two flagship proof flows)
+- [Composing real-app search](guides/composing-real-app-search.md) (canonical guide for `Scrypath.Composition`, `Scrypath.Metadata`, and the worked catalog/global-search flows)
 - [Related data and reindexing](guides/related-data-and-reindexing.md) (what to do when associated data changes many documents)
 - [Getting Started](guides/getting-started.md)
 - [Phoenix Walkthrough](guides/phoenix-walkthrough.md)
@@ -154,7 +155,7 @@ Accepted work is not the same thing as search visibility.
 
 **Choosing a mode:** **`:inline`** is enough for many local workflows and small apps when you want the caller to observe terminal backend success immediately. Move to **`:oban`** when durable enqueue and worker throughput matter more than immediate search visibility in the same process. Use **`:manual`** for migrations, bulk imports, or operator-controlled batched follow-up where you want an explicit next step instead of automatic queue progression.
 
-The full contract - lifecycle states, Phoenix implications, recovery language, and what "success" in a controller or LiveView really means - lives in **`guides/sync-modes-and-visibility.md`**. Treat that guide as the authority; keep README as the compact decision surface.
+The full contract - lifecycle states, Phoenix implications, recovery language, and what "success" in a controller or LiveView really means - lives in **`guides/sync-modes-and-visibility.md`**. Treat that guide as the authority; keep README as the compact route map.
 
 If this README and the sync guide disagree, treat **`guides/sync-modes-and-visibility.md`** as the source of truth for semantics.
 

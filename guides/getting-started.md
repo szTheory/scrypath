@@ -112,6 +112,6 @@ Accepted work is not the same thing as search visibility. Pick the mode that mat
 
 ## Continue
 
-- Read [Phoenix Walkthrough](phoenix-walkthrough.html) for the first end-to-end path
-- Read [Phoenix Contexts](phoenix-contexts.html) for the recommended boundary shape
-- Read [Sync Modes And Visibility](sync-modes-and-visibility.html) before choosing `:manual` or `:oban`
+- Read [Phoenix Walkthrough](phoenix-walkthrough.md) for the first end-to-end path
+- Read [Phoenix Contexts](phoenix-contexts.md) for the recommended boundary shape
+- Read [Sync Modes And Visibility](sync-modes-and-visibility.md) before choosing `:manual` or `:oban`

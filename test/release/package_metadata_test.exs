@@ -18,7 +18,10 @@ defmodule Scrypath.Release.PackageMetadataTest do
     source_ref = project[:source_ref]
 
     assert package[:licenses] == ["Apache-2.0"]
-    assert "docs" in package[:files]
+    assert "LICENSE" in package[:files]
+    assert "SECURITY.md" in package[:files]
+    assert "docs/releasing.md" in package[:files]
+    refute "docs" in package[:files]
 
     assert package[:links] == %{
              "GitHub" => "https://github.com/szTheory/scrypath",
@@ -56,7 +59,6 @@ defmodule Scrypath.Release.PackageMetadataTest do
 
     assert docs[:groups_for_extras][:Maintainers] == [
              "CONTRIBUTING.md",
-             "docs/jtbd-gap-map.md",
              "docs/releasing.md",
              "docs/operator-support.md",
              "docs/search-backend-sre.md"

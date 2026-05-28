@@ -2,14 +2,14 @@
 
 This guide is for maintainers supporting early Scrypath production usage.
 
-For **metrics, paging discipline, and Meilisearch cluster footguns** (SRE / platform view), see `docs/search-backend-sre.md`.
+For **metrics, paging discipline, and Meilisearch cluster footguns** (SRE / platform view), see [Search backend operations](search-backend-sre.md).
 
 The support contract stays simple:
 
 1. operator code calls the root APIs on `Scrypath.*`
 2. terminal operators can use the thin `mix scrypath.*` wrappers over those same APIs
 3. **mix verify.phase14** keeps the core Mix task surface, docs contract, package metadata, and docs build aligned
-4. **mix verify.phase28** is the v1.5 **index contract drift** CLI plus operator-doc slice gate (runs focused tests then **`mix docs --warnings-as-errors`**)
+4. **mix verify.phase28** covers the **index contract drift** CLI and operator docs checks (focused tests plus **`mix docs --warnings-as-errors`**)
 5. **mix verify.phase11** remains the release-contract gate
 
 ## First Response Path
@@ -32,7 +32,7 @@ Keep the sync mode in view during support:
 - `:oban` means the enqueue is durable, not that search visibility is complete
 - `:manual` means accepted work was handed back for operator-controlled follow-up
 
-The detailed operator wording lives in `guides/sync-modes-and-visibility.md`.
+The detailed operator wording lives in [Sync modes and visibility](../guides/sync-modes-and-visibility.md).
 
 ## Boundary Checks
 
@@ -60,7 +60,7 @@ mix verify.phase11
 | **mix verify.phase14** | Thin mix scrypath.* task wrappers, docs contract, package metadata, and **mix docs --warnings-as-errors** |
 | **mix verify.phase20** | Faceting, Meilisearch settings, faceted-guide docs contract, then **mix docs --warnings-as-errors** |
 | **mix verify.phase26** | Failed-work rollups, reconcile output, operator Mix tasks, docs contract with **--warnings-as-errors**, then **mix docs --warnings-as-errors** |
-| **mix verify.phase28** | Index contract drift CLI (`mix scrypath.index.contract_drift`), operator docs contracts for the v1.5 slice, focused tests with **--warnings-as-errors**, then **mix docs --warnings-as-errors** |
+| **mix verify.phase28** | Index contract drift CLI (`mix scrypath.index.contract_drift`), operator docs contracts, focused tests with **--warnings-as-errors**, then **mix docs --warnings-as-errors** |
 | **mix verify.phase11** | Release path: package metadata, clean-consumer smoke, release-doc contract, docs build, workflow checks, **mix hex.build --unpack** |
 
 **mix verify.phase11** remains the gate you use before a real publish flow.

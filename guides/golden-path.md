@@ -26,7 +26,7 @@ Run `mix deps.get`. The minor-flexible range matches published **0.3.x** release
 
 ## Bring up Meilisearch
 
-Scrypath’s v1 story assumes Meilisearch. For a stack aligned with this repository’s CI and example app, use Docker Compose from **`examples/phoenix_meilisearch/`** (image **`getmeili/meilisearch:v1.15`**, default URL **`http://127.0.0.1:7700`**):
+Scrypath publicly targets Meilisearch first. For a stack aligned with this repository’s CI and example app, use Docker Compose from **`examples/phoenix_meilisearch/`** (image **`getmeili/meilisearch:v1.15`**, default URL **`http://127.0.0.1:7700`**):
 
 ```bash
 cd path/to/examples/phoenix_meilisearch
@@ -131,7 +131,7 @@ For controllers, JSON APIs, and LiveView that call the same context boundary, co
 
 ## Integration smoke (Postgres + Meilisearch + Oban)
 
-The golden path stays **inline** on purpose. To **run** the multi-container proof (inline + **`:oban`** integration tests, same Meilisearch image pin as CI), use the runnable example—do not duplicate env tables here:
+The golden path stays **inline** on purpose. To **run** the multi-container example (inline + **`:oban`** integration tests, same Meilisearch image pin as CI), use the runnable example—do not duplicate env tables here:
 
 - **Runbook (from **`examples/phoenix_meilisearch/`** — commands, env vars, **`./scripts/smoke.sh`**):** [`examples/phoenix_meilisearch/README.md`](../examples/phoenix_meilisearch/README.md)
 - **CI:** On **pull requests** and pushes to **`main`**, **GitHub Actions** runs job **`phoenix-example-integration`**, which starts **Postgres 16** (`postgres:16-alpine`) and **Meilisearch** (`getmeili/meilisearch:v1.15`) as workflow services, sets **`SCRYPATH_EXAMPLE_INTEGRATION=1`**, **`PGPORT=5433`**, and **`SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700`**, then runs **`cd examples/phoenix_meilisearch && mix deps.get && mix test`**—the same consumer-shaped **`mix test`** path the example README documents for local Compose. For job names, env vars, and how they map to **`mix verify.*`** tasks, see root [`CONTRIBUTING.md`](../CONTRIBUTING.md).

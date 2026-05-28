@@ -119,7 +119,7 @@ Accepted work is not the same thing as search visibility, and none of those mode
 
 ## Next Guides
 
-- [Phoenix Contexts](phoenix-contexts.html)
-- [Phoenix Controllers And JSON](phoenix-controllers-and-json.html)
-- [Phoenix LiveView](phoenix-liveview.html)
-- [Sync Modes And Visibility](sync-modes-and-visibility.html)
+- [Phoenix Contexts](phoenix-contexts.md)
+- [Phoenix Controllers And JSON](phoenix-controllers-and-json.md)
+- [Phoenix LiveView](phoenix-liveview.md)
+- [Sync Modes And Visibility](sync-modes-and-visibility.md)
