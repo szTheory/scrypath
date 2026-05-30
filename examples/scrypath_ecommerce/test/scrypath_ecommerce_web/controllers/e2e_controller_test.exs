@@ -143,9 +143,12 @@ defmodule ScrypathEcommerceWeb.E2EControllerTest do
   end
 
   describe "GET /dev/e2e/operator-state" do
-    test "returns stable failed-work summary without leaking raw payloads", %{conn: conn} do
+    test "returns stable failed-work and swap outcome summary without leaking raw payloads", %{conn: conn} do
       seed_conn = post(conn, ~p"/dev/e2e/seed", scenario: "e2e_search_catalog")
-      assert %{"tenant_id" => tenant_id} = json_response(seed_conn, 200)
+      assert %{
+               "tenant_id" => tenant_id,
+               "products" => %{"Quantum CyberPhone X" => _product_id}
+             } = json_response(seed_conn, 200)
 
       _inject_conn =
         post(conn, ~p"/dev/e2e/inject-failed-sync", %{
@@ -160,15 +163,25 @@ defmodule ScrypathEcommerceWeb.E2EControllerTest do
                "failed_count" => failed_count,
                "retryable" => retryable,
                "first_failed_work_id" => first_failed_work_id,
-               "reason_class_counts" => reason_class_counts
+               "reason_class_counts" => reason_class_counts,
+               "swap_terminal_success" => swap_terminal_success,
+               "swap_terminal_state" => swap_terminal_state,
+               "active_index" => active_index,
+               "active_index_visible" => active_index_visible
              } = body
 
       assert is_integer(failed_count)
       assert is_boolean(retryable)
       assert is_map(reason_class_counts)
+      assert is_boolean(swap_terminal_success)
+      assert swap_terminal_state in ["completed", "pending", "not_started", "unknown"]
+      assert is_binary(active_index)
+      assert is_boolean(active_index_visible)
       assert first_failed_work_id == nil or is_integer(first_failed_work_id)
       refute Map.has_key?(body, "args")
       refute Map.has_key?(body, "documents")
+      refute Map.has_key?(body, "taskUid")
+      refute Map.has_key?(body, "raw")
     end
   end
 end
