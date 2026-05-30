@@ -183,7 +183,9 @@ defmodule ScrypathEcommerceWeb.E2EController do
   end
 
   def operator_state(conn, %{"tenant_id" => tenant_id}) do
-    _tenant = parse_integer!(tenant_id)
+    tenant = parse_integer!(tenant_id)
+    {swap_terminal_success, swap_terminal_state, active_index, swap_error} = swap_probe(Product)
+    active_index_visible = active_index_visible?(tenant)
 
     with {:ok, failed_work} <-
            Scrypath.failed_sync_work(Product,
@@ -198,7 +200,12 @@ defmodule ScrypathEcommerceWeb.E2EController do
         failed_count: length(failed_work),
         first_failed_work_id: if(first, do: first.id, else: nil),
         reason_class_counts: reason_class_counts.by_class,
-        retryable: Enum.any?(failed_work, & &1.retryable?)
+        retryable: Enum.any?(failed_work, & &1.retryable?),
+        swap_terminal_success: swap_terminal_success,
+        swap_terminal_state: swap_terminal_state,
+        active_index: active_index,
+        active_index_visible: active_index_visible,
+        swap_error_class: swap_error
       })
     else
       {:error, reason} ->
@@ -216,6 +223,47 @@ defmodule ScrypathEcommerceWeb.E2EController do
 
   defp parse_integer!(value) when is_integer(value), do: value
   defp parse_integer!(value) when is_binary(value), do: String.to_integer(value)
+
+  defp swap_probe(schema_module) do
+    case Scrypath.reconcile_sync(schema_module, sync_mode: :manual) do
+      {:ok, reconcile} ->
+        terminal_state =
+          case reconcile.reindex.cutover do
+            :completed -> "completed"
+            :pending -> "pending"
+            :not_started -> "not_started"
+          end
+
+        {reconcile.reindex.cutover == :completed, terminal_state, reconcile.index, nil}
+
+      {:error, reason} ->
+        {false, "unknown", fallback_index(schema_module), classify_swap_error(reason)}
+    end
+  end
+
+  defp fallback_index(schema_module) do
+    Scrypath.Config.resolve!(sync_mode: :manual)
+    |> Scrypath.Config.fetch_backend!()
+    |> then(& &1.index_name(schema_module, sync_mode: :manual))
+  end
+
+  defp classify_swap_error({:transport_failed, _}), do: "transport"
+  defp classify_swap_error({:http_error, _}), do: "backend"
+  defp classify_swap_error({:unsupported_operator_backend, _}), do: "unsupported_backend"
+  defp classify_swap_error(_), do: "unknown"
+
+  defp active_index_visible?(_tenant_id) do
+    case Scrypath.search(Product, "CyberPhone") do
+      {:ok, result} ->
+        Enum.any?(result.hits, fn hit ->
+          value = Map.get(hit, "name") || Map.get(hit, :name)
+          is_binary(value) and String.contains?(value, "CyberPhone")
+        end)
+
+      {:error, _reason} ->
+        false
+    end
+  end
 
   defp find_category_id(tenant_id) do
     Category

@@ -16,6 +16,11 @@ type OperatorState = {
   first_failed_work_id: number | null;
   reason_class_counts: Record<string, number>;
   retryable: boolean;
+  swap_terminal_success: boolean;
+  swap_terminal_state: "completed" | "pending" | "not_started" | "unknown";
+  active_index: string;
+  active_index_visible: boolean;
+  swap_error_class: string | null;
 };
 
 async function requestJson<T>(
@@ -156,6 +161,34 @@ export async function operatorState(
       )
       .toBeGreaterThanOrEqual(args.minFailedSyncCount);
   }
+
+  return await requestJson<OperatorState>(request, "/dev/e2e/operator-state", {
+    params: { tenant_id: String(args.tenantId) }
+  });
+}
+
+export async function waitForSwapOutcome(
+  request: APIRequestContext,
+  args: { tenantId: number; timeoutMs?: number }
+): Promise<OperatorState> {
+  const timeoutMs = args.timeoutMs ?? 20_000;
+
+  await expect
+    .poll(
+      async () => {
+        return await requestJson<OperatorState>(request, "/dev/e2e/operator-state", {
+          params: { tenant_id: String(args.tenantId) }
+        });
+      },
+      {
+        timeout: timeoutMs,
+        message: "Timed out waiting for operator swap outcome to become terminal and visible"
+      }
+    )
+    .toMatchObject({
+      swap_terminal_success: true,
+      active_index_visible: true
+    });
 
   return await requestJson<OperatorState>(request, "/dev/e2e/operator-state", {
     params: { tenant_id: String(args.tenantId) }
