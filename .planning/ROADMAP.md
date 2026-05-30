@@ -19,7 +19,7 @@
   3. The `scrypath_ops` dashboard functions rely on the host application for web and database dependencies
 **Plans**: 3 plans
 - [x] 102-01-PLAN.md — Prepare application tree and asset plug
-- [ ] 102-02-PLAN.md — Build router macro and dynamic configuration injection
+- [x] 102-02-PLAN.md — Build router macro and dynamic configuration injection
 - [ ] 102-03-PLAN.md — Remove static verified routes and fix internal navigation
 
 ### Phase 103: E-Commerce Host App Foundation
@@ -59,7 +59,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 102. Admin UI Router Engine Refactor | 1/3 | In Progress|  |
+| 102. Admin UI Router Engine Refactor | 2/3 | In Progress|  |
 | 103. E-Commerce Host App Foundation | 0/0 | Not started | - |
 | 104. Search Integration & Operations Proof | 0/0 | Not started | - |
 | 105. Hermetic E2E Pipeline | 0/0 | Not started | - |
