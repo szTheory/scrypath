@@ -1,14 +1,49 @@
+defmodule ScrypathEcommerceWeb.E2EObanInspector do
+  import Ecto.Query
+
+  alias Oban.Job
+  alias ScrypathEcommerce.Repo
+
+  def list_jobs(schema_module, config) do
+    schema = Atom.to_string(schema_module)
+    queue = config[:oban_queue] |> to_string()
+
+    jobs =
+      Job
+      |> where([j], j.queue == ^queue)
+      |> where([j], fragment("?->>'schema' = ?", j.args, ^schema))
+      |> order_by([j], desc: j.id)
+      |> limit(100)
+      |> Repo.all(skip_tenant_id: true)
+      |> Enum.map(fn job ->
+        %{
+          id: job.id,
+          state: job.state,
+          worker: job.worker,
+          queue: job.queue,
+          args: job.args,
+          errors: job.errors,
+          attempt: job.attempt,
+          max_attempts: job.max_attempts,
+          attempted_at: job.attempted_at
+        }
+      end)
+
+    {:ok, jobs}
+  end
+end
+
 defmodule ScrypathEcommerceWeb.E2EController do
   use ScrypathEcommerceWeb, :controller
   import Ecto.Query
 
-  alias Scrypath.Operator.Status
   alias ScrypathEcommerce.Catalog
   alias ScrypathEcommerce.CatalogFixtures
   alias ScrypathEcommerce.Catalog.Category
   alias ScrypathEcommerce.Catalog.Product
   alias ScrypathEcommerce.Catalog.Tenant
   alias ScrypathEcommerce.Repo
+  alias Oban.Job
 
   def seed(conn, %{"scenario" => scenario}) do
     case scenario do
@@ -68,62 +103,102 @@ defmodule ScrypathEcommerceWeb.E2EController do
     end
   end
 
-  def inject_failed_sync(conn, %{"tenant_id" => tenant_id}) do
+  def inject_failed_sync(conn, %{"tenant_id" => tenant_id} = params) do
     tenant = parse_integer!(tenant_id)
     category_id = find_category_id(tenant)
+    scenario_key = Map.get(params, "scenario_key", "default")
 
-    job =
-      Scrypath.Oban.UpsertWorker.new(
-        %{
-          "operation" => "upsert",
-          "schema" => "Elixir.ScrypathEcommerce.Catalog.Product",
-          "backend" => "Elixir.NotARealBackend",
-          "index" => "scrypath_ecommerce_products_#{tenant}",
-          "document_count" => 1,
-          "document_ids" => [-1],
-          "documents" => [
-            %{
-              "id" => -1,
-              "source" => "fields",
-              "data" => %{
-                "name" => "Injected Broken Sync",
-                "description" => "Intentional failure injection",
-                "category_id" => category_id,
-                "tenant_id" => tenant
-              }
-            }
-          ]
-        },
-        queue: :scrypath_sync,
-        max_attempts: 1
-      )
+    existing_job =
+      Job
+      |> where([j], j.queue == "scrypath_sync")
+      |> where([j], fragment("?->>'schema' = ?", j.args, "Elixir.ScrypathEcommerce.Catalog.Product"))
+      |> where([j], fragment("?->>'scenario_key' = ?", j.args, ^scenario_key))
+      |> order_by([j], desc: j.id)
+      |> limit(1)
+      |> Repo.one(skip_tenant_id: true)
 
-    case Oban.insert(job) do
-      {:ok, inserted_job} -> json(conn, %{job_id: inserted_job.id, queue: inserted_job.queue})
-      {:error, reason} -> conn |> put_status(:bad_request) |> json(%{error: inspect(reason)})
+    job_id =
+      case existing_job do
+        %Job{id: id} ->
+          id
+
+        nil ->
+          job =
+            Scrypath.Oban.UpsertWorker.new(
+              %{
+                "operation" => "upsert",
+                "schema" => "Elixir.ScrypathEcommerce.Catalog.Product",
+                "backend" => "Elixir.NotARealBackend",
+                "index" => "scrypath_ecommerce_products_#{tenant}",
+                "scenario_key" => scenario_key,
+                "document_count" => 1,
+                "document_ids" => [-1],
+                "documents" => [
+                  %{
+                    "id" => -1,
+                    "source" => "fields",
+                    "data" => %{
+                      "name" => "Injected Broken Sync",
+                      "description" => "Intentional failure injection",
+                      "category_id" => category_id,
+                      "tenant_id" => tenant
+                    }
+                  }
+                ]
+              },
+              queue: :scrypath_sync,
+              max_attempts: 1
+            )
+
+          case Oban.insert(job) do
+            {:ok, inserted_job} -> inserted_job.id
+            {:error, reason} -> raise ArgumentError, "inject_failed_sync failed: #{inspect(reason)}"
+          end
+      end
+
+    _ = Oban.drain_queue(queue: :scrypath_sync)
+
+    with {:ok, failed_work} <-
+           Scrypath.failed_sync_work(Product,
+             sync_mode: :oban,
+             oban_queue: :scrypath_sync,
+             oban_inspector: ScrypathEcommerceWeb.E2EObanInspector
+           ) do
+      row =
+        Enum.find(failed_work, fn fw -> to_string(fw.id) == to_string(job_id) end) ||
+          Enum.find(failed_work, fn fw ->
+            to_string(fw.schema) == "Elixir.ScrypathEcommerce.Catalog.Product"
+          end)
+
+      json(conn, %{
+        failed_work_id: if(row, do: row.id, else: job_id),
+        schema: if(row, do: Atom.to_string(row.schema), else: "Elixir.ScrypathEcommerce.Catalog.Product"),
+        state: if(row, do: Atom.to_string(row.state), else: "failed"),
+        reason_class: if(row, do: Atom.to_string(row.reason_class || :unknown), else: "unknown")
+      })
+    else
+      {:error, reason} ->
+        conn |> put_status(:bad_request) |> json(%{error: inspect(reason)})
     end
   end
 
   def operator_state(conn, %{"tenant_id" => tenant_id}) do
-    tenant = parse_integer!(tenant_id)
+    _tenant = parse_integer!(tenant_id)
 
-    status_result =
-      Scrypath.sync_status(Product,
-        sync_mode: :oban,
-        tenant_scope: [tenant_id: tenant],
-        oban_queue: :scrypath_sync
-      )
+    with {:ok, failed_work} <-
+           Scrypath.failed_sync_work(Product,
+             sync_mode: :oban,
+             oban_queue: :scrypath_sync,
+             oban_inspector: ScrypathEcommerceWeb.E2EObanInspector
+           ) do
+      first = List.first(failed_work)
+      reason_class_counts = Scrypath.Operator.FailedWork.reason_class_counts(failed_work)
 
-    failed_work_result =
-      Scrypath.failed_sync_work(Product, sync_mode: :oban, oban_queue: :scrypath_sync)
-
-    with {:ok, %Status{} = status} <- status_result,
-         {:ok, failed_work} <- failed_work_result do
       json(conn, %{
-        pending: length(status.backend.pending),
-        failed: length(status.backend.failed),
-        queue_failed: length(status.queue.failed),
-        failed_sync_count: length(failed_work)
+        failed_count: length(failed_work),
+        first_failed_work_id: if(first, do: first.id, else: nil),
+        reason_class_counts: reason_class_counts.by_class,
+        retryable: Enum.any?(failed_work, & &1.retryable?)
       })
     else
       {:error, reason} ->
