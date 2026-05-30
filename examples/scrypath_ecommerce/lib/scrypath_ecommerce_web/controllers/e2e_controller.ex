@@ -61,7 +61,9 @@ defmodule ScrypathEcommerceWeb.E2EController do
     category = Catalog.get_category!(tenant.id, parse_integer!(category_id))
 
     case Catalog.update_category(tenant.id, category, %{name: name}) do
-      {:ok, category} -> json(conn, %{category_id: category.id, name: category.name})
+      {:ok, category} ->
+        json(conn, %{category_id: category.id, name: category.name, queued_related_sync: true})
+
       {:error, reason} -> conn |> put_status(:bad_request) |> json(%{error: inspect(reason)})
     end
   end

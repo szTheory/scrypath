@@ -98,8 +98,8 @@ export async function waitForSearchVisible(
 export async function renameCategory(
   request: APIRequestContext,
   args: { tenantId: number; categoryId: number; name: string }
-): Promise<{ category_id: number; name: string }> {
-  return await requestJson<{ category_id: number; name: string }>(request, "/dev/e2e/category-name", {
+): Promise<{ category_id: number; name: string; queued_related_sync: boolean }> {
+  const response = await request.fetch("/dev/e2e/category-name", {
     method: "POST",
     data: {
       tenant_id: args.tenantId,
@@ -107,6 +107,15 @@ export async function renameCategory(
       name: args.name
     }
   });
+
+  if (!response.ok()) {
+    const body = await response.text();
+    throw new Error(
+      `[e2e] category rename failed tenant_id=${args.tenantId} category_id=${args.categoryId} name=${args.name}: HTTP ${response.status()} body=${body}`
+    );
+  }
+
+  return (await response.json()) as { category_id: number; name: string; queued_related_sync: boolean };
 }
 
 export async function injectFailedSync(
