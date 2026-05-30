@@ -13,7 +13,7 @@ defmodule ScrypathOpsWeb.RouterTest do
       end
     end
     
-    assert [{:module, _, _, _}] = Code.compile_quoted(ast)
+    assert [{_, _} | _] = Code.compile_quoted(ast)
   end
   
   test "macro raises NimbleOptions.ValidationError for invalid config" do

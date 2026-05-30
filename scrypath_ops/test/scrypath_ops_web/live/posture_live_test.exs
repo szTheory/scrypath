@@ -232,6 +232,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
       posture_evidence: "",
       next_checks: [],
       current_scope: scope,
+      mount_path: "/ops",
       operator_context: operator_context,
       local_ui_state: nil
     }

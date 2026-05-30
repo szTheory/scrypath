@@ -77,7 +77,7 @@ defmodule ScrypathOpsWeb.SearchLive do
     socket =
       case mode do
         :invalid ->
-          push_patch(socket, to: ~p"/ops/search?mode=single")
+          push_patch(socket, to: "#{socket.assigns.mount_path}/search?mode=single")
 
         m ->
           assign(socket, :mode, m)
@@ -95,11 +95,11 @@ defmodule ScrypathOpsWeb.SearchLive do
 
   @impl true
   def handle_event("set_mode", %{"mode" => "multi"}, socket) do
-    {:noreply, push_patch(socket, to: ~p"/ops/search?mode=multi")}
+    {:noreply, push_patch(socket, to: "#{socket.assigns.mount_path}/search?mode=multi")}
   end
 
   def handle_event("set_mode", _, socket) do
-    {:noreply, push_patch(socket, to: ~p"/ops/search?mode=single")}
+    {:noreply, push_patch(socket, to: "#{socket.assigns.mount_path}/search?mode=single")}
   end
 
   def handle_event("capture_change", %{"capture" => fields}, socket) do
@@ -564,12 +564,12 @@ defmodule ScrypathOpsWeb.SearchLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} shell={@shell} ops_main_width={:wide}>
+    <Layouts.app mount_path={@mount_path} flash={@flash} shell={@shell} ops_main_width={:wide}>
       <div class="space-y-6">
         <.ops_page_header title={@page_title} />
 
         <div class="text-sm text-base-content/80 -mt-2">
-          <.link navigate={~p"/ops/playbooks"} class="link link-hover">Saved playbooks</.link>
+          <.link navigate={"#{@mount_path}/playbooks"} class="link link-hover">Saved playbooks</.link>
         </div>
 
         <div

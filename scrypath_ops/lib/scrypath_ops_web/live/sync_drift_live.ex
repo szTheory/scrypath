@@ -174,7 +174,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} shell={@shell}>
+    <Layouts.app mount_path={@mount_path} flash={@flash} shell={@shell}>
       <.ops_page_header title={@page_title} />
 
       <form :if={@schema_allowlist != []} class="mt-4 flex flex-wrap items-center gap-2">

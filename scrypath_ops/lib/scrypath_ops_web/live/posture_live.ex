@@ -105,7 +105,7 @@ defmodule ScrypathOpsWeb.PostureLive do
     rows = socket.assigns.posture_rows
     err_count = socket.assigns.aggregate_error_count
 
-    {headline, evidence, checks} = jtbd_state(rows, err_count)
+    {headline, evidence, checks} = jtbd_state(rows, err_count, socket.assigns.mount_path)
 
     socket
     |> assign(:posture_headline, headline)
@@ -122,7 +122,7 @@ defmodule ScrypathOpsWeb.PostureLive do
     end)
   end
 
-  defp jtbd_state(:empty_allowlist, _) do
+  defp jtbd_state(:empty_allowlist, _, _mount_path) do
     checks = [
       %{
         text:
@@ -136,7 +136,7 @@ defmodule ScrypathOpsWeb.PostureLive do
      checks}
   end
 
-  defp jtbd_state(:missing_backend, _) do
+  defp jtbd_state(:missing_backend, _, _mount_path) do
     checks = [
       %{
         text: "Wire :backend and related :scrypath_ops options so sync_status can run.",
@@ -149,16 +149,16 @@ defmodule ScrypathOpsWeb.PostureLive do
      checks}
   end
 
-  defp jtbd_state({:ok, _rows}, err_count) when err_count > 0 do
+  defp jtbd_state({:ok, _rows}, err_count, mount_path) when err_count > 0 do
     checks =
       [
         %{
           text: "Open failed sync work to triage fetch and queue errors first.",
-          navigate: ~p"/ops/failed-sync"
+          navigate: "#{mount_path}/failed-sync"
         },
         %{
           text: "Review read-only sync and drift signals before changing indexes.",
-          navigate: ~p"/ops/sync-drift"
+          navigate: "#{mount_path}/sync-drift"
         },
         %{
           text: "Walk Meilisearch operations expectations for the search backend.",
@@ -172,20 +172,20 @@ defmodule ScrypathOpsWeb.PostureLive do
      checks}
   end
 
-  defp jtbd_state({:ok, _rows}, 0) do
+  defp jtbd_state({:ok, _rows}, 0, mount_path) do
     checks =
       [
         %{
           text: "Scan failed sync work periodically even when posture is green.",
-          navigate: ~p"/ops/failed-sync"
+          navigate: "#{mount_path}/failed-sync"
         },
         %{
           text: "Confirm drift and queue visibility when changing sync modes.",
-          navigate: ~p"/ops/sync-drift"
+          navigate: "#{mount_path}/sync-drift"
         },
         %{
           text: "Use search playground only after triage surfaces are quiet.",
-          navigate: ~p"/ops/search"
+          navigate: "#{mount_path}/search"
         }
       ]
       |> maybe_append_mix_status()
@@ -239,7 +239,7 @@ defmodule ScrypathOpsWeb.PostureLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} shell={@shell}>
+    <Layouts.app mount_path={@mount_path} flash={@flash} shell={@shell}>
       <div class="flex flex-wrap items-end justify-between gap-4">
         <.ops_page_header title={@page_title} />
         <button

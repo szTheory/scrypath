@@ -43,8 +43,6 @@ defmodule ScrypathOpsWeb do
       use Gettext, backend: ScrypathOpsWeb.Gettext
 
       import Plug.Conn
-
-      unquote(verified_routes())
     end
   end
 
@@ -91,9 +89,6 @@ defmodule ScrypathOpsWeb do
       # Common modules used in templates
       alias Phoenix.LiveView.JS
       alias ScrypathOpsWeb.Layouts
-
-      # Routes generation with the ~p sigil
-      unquote(verified_routes())
     end
   end
 

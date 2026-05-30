@@ -176,7 +176,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} shell={@shell}>
+    <Layouts.app mount_path={@mount_path} flash={@flash} shell={@shell}>
       <div class="flex flex-wrap items-end justify-between gap-4">
         <.ops_page_header title={@page_title} />
         <div class="flex flex-wrap gap-2">

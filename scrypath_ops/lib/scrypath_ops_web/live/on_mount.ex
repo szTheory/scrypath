@@ -16,7 +16,7 @@ defmodule ScrypathOpsWeb.Live.OnMount do
       socket
       |> assign(:shell, :ops)
       |> assign(:scrypath_repo, repo)
-      |> assign(:scrypath_mount_path, mount_path)
+      |> assign(:mount_path, mount_path)
 
     {:cont, socket}
   end

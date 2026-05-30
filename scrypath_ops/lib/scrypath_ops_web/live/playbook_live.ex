@@ -828,7 +828,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} shell={@shell} ops_main_width={:wide}>
+    <Layouts.app mount_path={@mount_path} flash={@flash} shell={@shell} ops_main_width={:wide}>
       <div class="space-y-6">
         <.ops_page_header title={@page_title} />
 
@@ -854,7 +854,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
           <p :if={@examples_mode?} class="text-sm text-base-content/80">
             Examples (read-only) — set <code class="text-sm">SCRYPATH_OPS_PLAYBOOK_DIR</code>
             to enable saving and deleting under a dedicated directory. See
-            <.link class="link link-hover" navigate={~p"/ops/search"}>Search &amp; federation</.link>
+            <.link class="link link-hover" navigate={"#{@mount_path}/search"}>Search & federation</.link>
             to export a playbook JSON, then use <strong>Import playbook JSON</strong>
             below.
           </p>

@@ -20,11 +20,12 @@ defmodule ScrypathOpsWeb.Layouts do
 
   ## Examples
 
-      <Layouts.app flash={@flash}>
+      <Layouts.app mount_path={@mount_path} flash={@flash}>
         <h1>Content</h1>
       </Layouts.app>
 
   """
+  attr(:mount_path, :string, required: true, doc: "The dynamic engine mount path")
   attr(:flash, :map, required: true, doc: "the map of flash messages")
 
   attr(:shell, :atom,
@@ -56,14 +57,14 @@ defmodule ScrypathOpsWeb.Layouts do
 
     <header class="navbar px-4 sm:px-6 lg:px-8 border-b border-base-300">
       <div class="flex-1">
-        <.link navigate={~p"/"} class="flex w-fit items-center gap-2 text-sm font-semibold">
-          <img src={~p"/images/logo.svg"} width="36" alt="" />
+        <.link navigate={"#{@mount_path}"} class="flex w-fit items-center gap-2 text-sm font-semibold">
+          <img src={"#{@mount_path}/images/logo.svg"} width="36" alt="" />
           <span>ScrypathOps</span>
         </.link>
       </div>
       <nav class="flex-none" aria-label="Operator primary">
         <ul class="menu menu-horizontal px-1 text-sm">
-          <li :for={item <- ScrypathOpsWeb.Nav.primary()}>
+          <li :for={item <- ScrypathOpsWeb.Nav.primary(@mount_path)}>
             <.link navigate={item.path} class="link link-hover">{item.label}</.link>
           </li>
         </ul>
@@ -91,8 +92,8 @@ defmodule ScrypathOpsWeb.Layouts do
     ~H"""
     <header class="navbar px-4 sm:px-6 lg:px-8">
       <div class="flex-1">
-        <a href="/" class="flex-1 flex w-fit items-center gap-2">
-          <img src={~p"/images/logo.svg"} width="36" />
+        <a href={"#{@mount_path}"} class="flex-1 flex w-fit items-center gap-2">
+          <img src={"#{@mount_path}/images/logo.svg"} width="36" />
           <span class="text-sm font-semibold">v{Application.spec(:phoenix, :vsn)}</span>
         </a>
       </div>
