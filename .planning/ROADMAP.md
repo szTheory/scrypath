@@ -44,7 +44,10 @@
   2. Changing a category name automatically triggers related product search index updates
   3. Operators can access the embedded `scrypath_ops` admin dashboard to observe indexing activity
   4. Search queries strictly isolate data by the active tenant
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 104-01-PLAN.md — Admin dashboard mount and product indexing setup
+- [ ] 104-02-PLAN.md — Related-data propagation via outbox worker
+- [ ] 104-03-PLAN.md — LiveView storefront search UI
 **UI hint**: yes
 
 ### Phase 105: Hermetic E2E Pipeline
