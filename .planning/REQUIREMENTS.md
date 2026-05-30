@@ -17,12 +17,12 @@
 ### Integration
 - [ ] **INT-01**: Mount `scrypath_ops` inside the `scrypath_ecommerce` router.
 - [ ] **INT-02**: Implement Scrypath indexing for the `Product` schema using `tenant_field` and Oban sync.
-- [ ] **INT-03**: Implement related-data propagation (Category name changes update associated Products).
+- [x] **INT-03**: Implement related-data propagation (Category name changes update associated Products).
 - [x] **INT-04**: Build a LiveView storefront with facet-driven search and tenant-safe access.
 
 ### E2E Testing
-- [ ] **E2E-01**: Add a Playwright E2E test suite to the `scrypath_ecommerce` app.
-- [ ] **E2E-02**: Configure a GitHub Actions workflow with a real Meilisearch container and health checks.
+- [x] **E2E-01**: Add a Playwright E2E test suite to the `scrypath_ecommerce` app.
+- [x] **E2E-02**: Configure a GitHub Actions workflow with a real Meilisearch container and health checks.
 - [ ] **E2E-03**: Write an E2E test for the consumer happy path (typing in search bar, faceting).
 - [ ] **E2E-04**: Write an E2E test proving related-data sync (changing Category name updates search).
 - [ ] **E2E-05**: Write an E2E test for Operator Triage (intentionally fail sync, verify error in `scrypath_ops`).
@@ -45,12 +45,12 @@
 | APP-01 | Phase 103 | Complete |
 | APP-02 | Phase 103 | Complete |
 | APP-03 | Phase 103 | Complete |
-| INT-01 | Phase 104 | Pending |
-| INT-02 | Phase 104 | Pending |
-| INT-03 | Phase 104 | Pending |
+| INT-01 | Phase 104 | Complete |
+| INT-02 | Phase 104 | Complete |
+| INT-03 | Phase 104 | Complete |
 | INT-04 | Phase 104 | Complete |
-| E2E-01 | Phase 105 | Pending |
-| E2E-02 | Phase 105 | Pending |
+| E2E-01 | Phase 105 | Complete |
+| E2E-02 | Phase 105 | Complete |
 | E2E-03 | Phase 105 | Pending |
 | E2E-04 | Phase 105 | Pending |
 | E2E-05 | Phase 105 | Pending |

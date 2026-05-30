@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.28
 milestone_name: milestone
 status: executing
-last_updated: "2026-05-30T22:20:16.748Z"
+last_updated: "2026-05-30T23:16:00.000Z"
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 15
-  completed_plans: 11
-  percent: 73
+  completed_plans: 12
+  percent: 75
 ---
 
 # Project State
@@ -17,17 +17,17 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 105 — hermetic-e2e-pipeline planned
+**Current Focus:** Phase 105 — hermetic-e2e-pipeline
 
 ## Current Position
 
-Phase: 105 — PLANNED
-Plan: 0 of 4
+Phase: 105 (hermetic-e2e-pipeline) — EXECUTING
+Plan: 2 of 4
 **Phase:** 105
-**Plan:** 01
-**Status:** Ready to execute
+**Plan:** 02
+**Status:** Executing Phase 105
 **Progress:**
-[░░░░░░░░░░] 0%
+[████████░░] 80%
 
 ## Performance Metrics
 
@@ -35,10 +35,11 @@ Plan: 0 of 4
 |-------|------|----------|-------|-------|
 | 103 | 00 | 5m | 2 | 2 |
 | 104 | 04 | 5m | 2 | 3 |
+| 105 | 01 | 38m | 4 | 9 |
 
 - **Completed Phases:** 3
-- **Completed Plans:** 11
-- **Requirements Met:** 9/15
+- **Completed Plans:** 12
+- **Requirements Met:** 11/15
 
 | Phase 103 P03 | 5m | 2 tasks | 6 files |
 
@@ -57,11 +58,11 @@ Plan: 0 of 4
 
 ### Todos
 
-- Execute Phase 105.
+- Execute remaining Phase 105 plans.
 
 ## Session Continuity
 
-- **Last Session:** 2026-05-30T22:11:54.301Z
+- **Last Session:** 2026-05-30T22:39:53.177Z
 
 - [x] Initialized v1.28 roadmap with Phases 102-105.
 
@@ -74,3 +75,5 @@ Plan: 0 of 4
 - [Phase 104]: Related category-to-product propagation uses Scrypath's built-in related-sync worker rather than an app-specific worker.
 - [Phase 104]: Recovered the minimal Phoenix scaffold for examples/scrypath_ecommerce so Phase 104 execution can compile and test inside the host app.
 - [Phase 104]: Storefront search uses URL-driven LiveView state and explicit tenant_id filtering for Scrypath.search/3 tenant isolation.
+- [Phase 105]: Playwright remains browser-only with Mix/CI owning Phoenix/service lifecycle orchestration.
+- [Phase 105]: Standardized deterministic dev/test `/dev/e2e` contracts for seed, drain, readiness polling, and operator probes.

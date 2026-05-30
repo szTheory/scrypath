@@ -61,7 +61,7 @@
   3. E2E tests assert that related-data changes eventually become visible in the search UI
   4. The testing pipeline relies on a real Meilisearch instance without flakiness or timeouts
 **Plans**: 4 plans
-- [ ] 105-01-PLAN.md — E2E harness and Playwright scaffold
+- [x] 105-01-PLAN.md — E2E harness and Playwright scaffold
 - [ ] 105-02-PLAN.md — Storefront search and related-data E2E proof
 - [ ] 105-03-PLAN.md — Operator failed-sync triage E2E proof
 - [ ] 105-04-PLAN.md — Zero-downtime swap proof and advisory CI lane
@@ -73,4 +73,4 @@
 | 102. Admin UI Router Engine Refactor | 3/3 | Complete    | 2026-05-30 |
 | 103. E-Commerce Host App Foundation | 4/4 | Complete    | 2026-05-30 |
 | 104. Search Integration & Operations Proof | 4/4 | Complete    | 2026-05-30 |
-| 105. Hermetic E2E Pipeline | 0/4 | Planned | - |
+| 105. Hermetic E2E Pipeline | 1/4 | In Progress|  |
