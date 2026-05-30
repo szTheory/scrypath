@@ -148,11 +148,10 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   end
 
   defp mod_from_flat!(str) when is_binary(str) do
-    str
-    |> String.trim()
-    |> String.split(".")
-    |> Enum.map(&String.to_atom/1)
-    |> Module.concat()
+    name = String.trim(str)
+
+    Enum.find(ScrypathOps.Schemas.allowlist(), &(module_flat_name(&1) == name)) ||
+      raise ArgumentError, "unsupported schema"
   end
 
   defp sorted_entries(%FailedSyncWorkInspection{entries: entries}) do

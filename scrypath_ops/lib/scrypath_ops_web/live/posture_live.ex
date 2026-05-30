@@ -121,7 +121,8 @@ defmodule ScrypathOpsWeb.PostureLive do
           |> load_posture()
           |> put_flash(:info, "Swap live index completed")
 
-        {:error, reason} -> put_flash(socket, :error, "Swap live failed: #{inspect(reason)}")
+        {:error, reason} ->
+          put_flash(socket, :error, "Swap live failed: #{inspect(reason)}")
       end
     end)
   end
@@ -223,11 +224,10 @@ defmodule ScrypathOpsWeb.PostureLive do
   end
 
   defp mod_from_flat!(str) when is_binary(str) do
-    str
-    |> String.trim()
-    |> String.split(".")
-    |> Enum.map(&String.to_atom/1)
-    |> Module.concat()
+    name = String.trim(str)
+
+    Enum.find(ScrypathOps.Schemas.allowlist(), &(module_flat_name(&1) == name)) ||
+      raise ArgumentError, "unsupported schema"
   end
 
   defp sort_rows(rows) do

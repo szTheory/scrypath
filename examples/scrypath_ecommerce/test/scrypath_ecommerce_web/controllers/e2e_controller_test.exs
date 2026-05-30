@@ -28,7 +28,8 @@ defmodule ScrypathEcommerceWeb.E2EControllerTest do
       assert is_integer(product_pro_id)
       assert is_integer(nebula_id)
 
-      assert %ScrypathEcommerce.Catalog.Tenant{} = ScrypathEcommerce.Catalog.get_tenant!(tenant_id)
+      assert %ScrypathEcommerce.Catalog.Tenant{} =
+               ScrypathEcommerce.Catalog.get_tenant!(tenant_id)
     end
 
     test "returns 400 for unknown scenario", %{conn: conn} do
@@ -79,10 +80,23 @@ defmodule ScrypathEcommerceWeb.E2EControllerTest do
         }
       )
     end
+
+    test "returns deterministic 400 for invalid numeric params", %{conn: conn} do
+      conn =
+        post(conn, ~p"/dev/e2e/category-name", %{
+          tenant_id: "not-an-int",
+          category_id: "also-bad",
+          name: "Pocket Superphones"
+        })
+
+      assert %{"error" => "invalid integer parameter"} = json_response(conn, 400)
+    end
   end
 
   describe "POST /dev/e2e/inject-failed-sync" do
-    test "injects one deterministic failed work item and is one-shot per scenario key", %{conn: conn} do
+    test "injects one deterministic failed work item and is one-shot per scenario key", %{
+      conn: conn
+    } do
       seed_conn = post(conn, ~p"/dev/e2e/seed", scenario: "e2e_search_catalog")
       assert %{"tenant_id" => tenant_id} = json_response(seed_conn, 200)
 
@@ -100,9 +114,21 @@ defmodule ScrypathEcommerceWeb.E2EControllerTest do
              } = json_response(conn, 200)
 
       assert is_integer(failed_work_id)
-      assert schema in ["Elixir.ScrypathEcommerce.Catalog.Product", "ScrypathEcommerce.Catalog.Product"]
+
+      assert schema in [
+               "Elixir.ScrypathEcommerce.Catalog.Product",
+               "ScrypathEcommerce.Catalog.Product"
+             ]
+
       assert state in ["failed", "retrying"]
-      assert reason_class in ["transport", "validation", "backend_rejected", "queue_exhausted", "unknown"]
+
+      assert reason_class in [
+               "transport",
+               "validation",
+               "backend_rejected",
+               "queue_exhausted",
+               "unknown"
+             ]
 
       assert {:ok, failed_work} =
                Scrypath.failed_sync_work(Product,
@@ -129,7 +155,14 @@ defmodule ScrypathEcommerceWeb.E2EControllerTest do
              } = json_response(second_conn, 200)
 
       assert second_state in ["failed", "retrying"]
-      assert second_reason_class in ["transport", "validation", "backend_rejected", "queue_exhausted", "unknown"]
+
+      assert second_reason_class in [
+               "transport",
+               "validation",
+               "backend_rejected",
+               "queue_exhausted",
+               "unknown"
+             ]
 
       third_conn =
         post(conn, ~p"/dev/e2e/inject-failed-sync", %{
@@ -143,8 +176,17 @@ defmodule ScrypathEcommerceWeb.E2EControllerTest do
   end
 
   describe "GET /dev/e2e/operator-state" do
-    test "returns stable failed-work and swap outcome summary without leaking raw payloads", %{conn: conn} do
+    test "returns deterministic 400 for invalid tenant id", %{conn: conn} do
+      conn = get(conn, ~p"/dev/e2e/operator-state", %{tenant_id: "not-an-int"})
+
+      assert %{"error" => "invalid integer parameter"} = json_response(conn, 400)
+    end
+
+    test "returns stable failed-work and swap outcome summary without leaking raw payloads", %{
+      conn: conn
+    } do
       seed_conn = post(conn, ~p"/dev/e2e/seed", scenario: "e2e_search_catalog")
+
       assert %{
                "tenant_id" => tenant_id,
                "products" => %{"Quantum CyberPhone X" => _product_id}
