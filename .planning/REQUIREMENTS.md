@@ -10,9 +10,9 @@
 - [x] **OPS-02**: Deprecate the standalone `Endpoint` and `Repo` within `scrypath_ops`.
 
 ### Demo App Foundation
-- [ ] **APP-01**: Create an isolated Phoenix app at `examples/scrypath_ecommerce` with its own `mix.exs`.
-- [ ] **APP-02**: Implement a B2B E-commerce marketplace data model (Tenant, Category, Product, Variant).
-- [ ] **APP-03**: Configure Ecto Sandbox for shared mode to support external Playwright browser processes.
+- [x] **APP-01**: Create an isolated Phoenix app at `examples/scrypath_ecommerce` with its own `mix.exs`.
+- [x] **APP-02**: Implement a B2B E-commerce marketplace data model (Tenant, Category, Product, Variant).
+- [x] **APP-03**: Configure Ecto Sandbox for shared mode to support external Playwright browser processes.
 
 ### Integration
 - [ ] **INT-01**: Mount `scrypath_ops` inside the `scrypath_ecommerce` router.
@@ -42,9 +42,9 @@
 |-------------|-------|--------|
 | OPS-01 | Phase 102 | Complete |
 | OPS-02 | Phase 102 | Complete |
-| APP-01 | Phase 103 | Pending |
-| APP-02 | Phase 103 | Pending |
-| APP-03 | Phase 103 | Pending |
+| APP-01 | Phase 103 | Complete |
+| APP-02 | Phase 103 | Complete |
+| APP-03 | Phase 103 | Complete |
 | INT-01 | Phase 104 | Pending |
 | INT-02 | Phase 104 | Pending |
 | INT-03 | Phase 104 | Pending |
