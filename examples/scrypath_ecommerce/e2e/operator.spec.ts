@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { injectFailedSync, operatorState, seedScenario } from "./helpers/e2e";
+import { injectFailedSync, operatorState, seedScenario, waitForSwapOutcome } from "./helpers/e2e";
 
 test("operator can triage intentionally failed sync work", async ({ page, request }) => {
   const seed = await seedScenario(request, "e2e_search_catalog");
@@ -40,4 +40,27 @@ test("operator can triage intentionally failed sync work", async ({ page, reques
   } else {
     await expect(row).toBeVisible();
   }
+});
+
+test("operator can initiate zero-downtime swap from posture UI", async ({ page, request }) => {
+  const seed = await seedScenario(request, "e2e_search_catalog");
+
+  await page.goto("/admin/search/posture");
+  await expect(page.getByRole("button", { name: "Refresh posture" })).toBeVisible();
+  await page.getByRole("button", { name: "Refresh posture" }).click();
+
+  const postureRow = page.getByTestId("posture-row").first();
+  await expect(postureRow).toBeVisible();
+
+  await postureRow.getByRole("button", { name: "Swap live index" }).click();
+  await expect(page.getByText("Swap live index completed")).toBeVisible();
+
+  const outcome = await waitForSwapOutcome(request, {
+    tenantId: seed.tenant_id,
+    timeoutMs: 30_000
+  });
+
+  expect(outcome.swap_terminal_success).toBeTruthy();
+  expect(outcome.active_index_visible).toBeTruthy();
+  await expect(page.getByTestId("posture-next-checks")).toContainText(/Healthy|Degraded/);
 });
