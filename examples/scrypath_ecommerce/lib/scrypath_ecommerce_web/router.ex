@@ -31,6 +31,11 @@ defmodule ScrypathEcommerceWeb.Router do
     scope "/dev/e2e", ScrypathEcommerceWeb do
       pipe_through :api
       post "/seed", E2EController, :seed
+      post "/drain", E2EController, :drain
+      get "/search-visible", E2EController, :search_visible
+      post "/category-name", E2EController, :category_name
+      post "/inject-failed-sync", E2EController, :inject_failed_sync
+      get "/operator-state", E2EController, :operator_state
     end
   end
 
