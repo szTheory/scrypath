@@ -40,6 +40,8 @@ Phase 97 through 99 banned capability classes:
 
 ## Current State
 
+**Phase 103** complete — e-commerce-host-app-foundation.
+
 **v1.27 — Adopter Contract Hardening** shipped + archived in-repo on **2026-05-30** across phases **97–101**.
 
 **What shipped:**
@@ -108,6 +110,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ### Validated
 
+- [x] **Phase 103** (2026-05-30): **APP-01**–**APP-03** — Demo App Foundation (e-commerce, multi-tenant)
 - [x] **v1.27** (2026-05-30): Adopter Contract Hardening — requirements TRUTH-01–TRUTH-03, PROOF-01–PROOF-03, SUP-01–SUP-02, TEST-01–TEST-03, GATE-01–GATE-02, SCOPE-01.
 - [x] **v1.26** (2026-05-26): **FACET-UX-01**–**FACET-UX-03**, **DOC-01**–**DOC-02**, **TEST-01**–**TEST-02** — `search_facet_values/4`, response parsing, LiveView examples, and `mix verify.phase96` gate.
 - [x] **v1.25** (2026-05-26): **TNNT-01**–**TNNT-05** — Multitenancy guide, `tenant_field:` declaration, `tenant_scope:` runtime safety, and `mix verify.phase94` gate.
@@ -170,7 +173,6 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 <!-- Current scope. Building toward these. -->
 
 - [x] **Phase 102** (2026-05-30): **OPS-01**–**OPS-02** — Admin UI Refactor (mountable router engine)
-- [ ] [APP-01, APP-02, APP-03] Demo App Foundation (e-commerce, multi-tenant)
 - [ ] [INT-01, INT-02, INT-03, INT-04] Search Integration & Operations Proof
 - [ ] [E2E-01, E2E-02, E2E-03, E2E-04, E2E-05, E2E-06] Hermetic E2E Pipeline
 
@@ -200,15 +202,6 @@ This document evolves at milestone boundaries.
 2. Core Value check - still the right priority?
 3. Audit Out of Scope - reasons still valid?
 4. Update Context with current state
-
----
-*Last updated: 2026-05-30 — v1.27 shipped + archived in-repo*
-current state
-
----
-*Last updated: 2026-05-30 — v1.27 shipped + archived in-repo*
-ed in-repo*
-current state
 
 ---
 *Last updated: 2026-05-30 — v1.27 shipped + archived in-repo*
