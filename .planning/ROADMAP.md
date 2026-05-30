@@ -74,3 +74,7 @@
 | 103. E-Commerce Host App Foundation | 4/4 | Complete    | 2026-05-30 |
 | 104. Search Integration & Operations Proof | 4/4 | Complete    | 2026-05-30 |
 | 105. Hermetic E2E Pipeline | 1/4 | In Progress|  |
+
+## Historical Contract Anchors
+
+- [PHASE97-SCOPE-GUARD] Phase 97/98/99 reject runtime breadth expansion unless reopen policy conditions are met. See `.planning/phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md`.

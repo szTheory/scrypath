@@ -60,6 +60,10 @@ Plan: 2 of 4
 
 - Execute remaining Phase 105 plans.
 
+### Historical Contract Pointers
+
+- Phase 32 AUDT-01 retained immutable planning pointers: `18-VERIFICATION.md`, `v1.4-MILESTONE-AUDIT.md`, `260416-eoj-SUMMARY.md`, `260416-if2-SUMMARY.md`.
+
 ## Session Continuity
 
 - **Last Session:** 2026-05-30T22:39:53.177Z
