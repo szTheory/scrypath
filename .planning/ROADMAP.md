@@ -3,7 +3,7 @@
 ## Phases
 
 - [x] **Phase 102: Admin UI Router Engine Refactor** - Convert scrypath_ops into a mountable router engine (completed 2026-05-30)
-- [ ] **Phase 103: E-Commerce Host App Foundation** - Scaffold the e-commerce testbed with multi-tenant Ecto schemas
+- [x] **Phase 103: E-Commerce Host App Foundation** - Scaffold the e-commerce testbed with multi-tenant Ecto schemas (completed 2026-05-30)
 - [ ] **Phase 104: Search Integration & Operations Proof** - Embed the admin UI and implement LiveView storefront search
 - [ ] **Phase 105: Hermetic E2E Pipeline** - Validate integration with real Meilisearch and Playwright browser tests
 
@@ -31,9 +31,9 @@
   2. The app stores and retrieves Tenant, Category, Product, and Variant data using Ecto
   3. Browser testing tools can safely run parallel tests utilizing Ecto's SQL sandbox in shared mode
 **Plans**: 3 plans
-- [ ] 103-01-PLAN.md — Catalog Domain Model and Tenancy Foundation
-- [ ] 103-02-PLAN.md — Seeding Infrastructure
-- [ ] 103-03-PLAN.md — E2E Test Endpoints and Sandbox
+- [x] 103-01-PLAN.md — Catalog Domain Model and Tenancy Foundation
+- [x] 103-02-PLAN.md — Seeding Infrastructure
+- [x] 103-03-PLAN.md — E2E Test Endpoints and Sandbox
 
 ### Phase 104: Search Integration & Operations Proof
 **Goal**: The demo app integrates native search with multitenancy, related-data propagation, and an embedded admin UI
@@ -63,6 +63,6 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 102. Admin UI Router Engine Refactor | 3/3 | Complete    | 2026-05-30 |
-| 103. E-Commerce Host App Foundation | 1/4 | In Progress|  |
+| 103. E-Commerce Host App Foundation | 4/4 | Complete   | 2026-05-30 |
 | 104. Search Integration & Operations Proof | 0/0 | Not started | - |
 | 105. Hermetic E2E Pipeline | 0/0 | Not started | - |
