@@ -164,6 +164,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert updated_socket.assigns.local_ui_state == %{expanded: [:details]}
     assert match?({:ok, _}, updated_socket.assigns.posture_rows)
     assert updated_socket.assigns.last_refresh_at != nil
+    assert flash_value(updated_socket, "info") =~ "Swap live index completed"
   end
 
   test "swap live blocks impersonation before refresh" do

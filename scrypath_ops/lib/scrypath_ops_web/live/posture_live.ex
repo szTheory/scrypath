@@ -116,7 +116,11 @@ defmodule ScrypathOpsWeb.PostureLive do
   defp swap_live(socket, mod) do
     Gating.gate_sensitive_action(socket, :swap_live, fn ->
       case Scrypath.Meilisearch.swap_indexes(mod, socket.assigns.scrypath_opts) do
-        {:ok, _result} -> load_posture(socket)
+        {:ok, _result} ->
+          socket
+          |> load_posture()
+          |> put_flash(:info, "Swap live index completed")
+
         {:error, reason} -> put_flash(socket, :error, "Swap live failed: #{inspect(reason)}")
       end
     end)
