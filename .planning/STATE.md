@@ -1,36 +1,34 @@
 ---
 gsd_state_version: 1.0
-milestone: "1.27"
-milestone_name: milestone
-status: ready
-last_updated: "2026-05-28T02:47:26Z"
-last_activity: 2026-05-28 -- quick docs cleanup completed and verified
+milestone: "none"
+milestone_name: ""
+status: active
+last_updated: "2026-05-30T00:00:00Z"
+last_activity: 2026-05-30 -- v1.27 shipped and archived in-repo
 progress:
-  total_phases: 9
-  completed_phases: 9
-  total_plans: 24
-  completed_plans: 24
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-05-27)
+See: `.planning/PROJECT.md` (updated 2026-05-30)
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-**Current focus:** v1.27 trust-hardening milestone complete (phase 101 closed); public docs and website launch surface are in release-follow-through cleanup
+**Current focus:** none. Standing by for outside-adopter evidence or bug reports. Feature lane is currently closed.
 
 ## Current Position
 
-Phase: 101
+Phase: none
 Plan: Complete
-Status: Phase 101 complete
-Last activity: 2026-05-28 -- quick docs cleanup completed and verified
-
-Scope guard: `.planning/phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md` is active for this milestone. v1.27 is contract hardening only. Scope can reopen only with reviewed outside-adopter signal or a reproducible production bug, plus explicit updates to `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md` before execution.
+Status: Milestone complete
+Last activity: 2026-05-30 -- v1.27 shipped and archived in-repo
 
 ```
 Progress: [██████████] 100%
