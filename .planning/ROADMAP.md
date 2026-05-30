@@ -45,7 +45,7 @@
   3. Operators can access the embedded `scrypath_ops` admin dashboard to observe indexing activity
   4. Search queries strictly isolate data by the active tenant
 **Plans**: 3 plans
-- [ ] 104-01-PLAN.md — Admin dashboard mount and product indexing setup
+- [x] 104-01-PLAN.md — Admin dashboard mount and product indexing setup
 - [ ] 104-02-PLAN.md — Related-data propagation via outbox worker
 - [ ] 104-03-PLAN.md — LiveView storefront search UI
 **UI hint**: yes
@@ -67,5 +67,5 @@
 |-------|----------------|--------|-----------|
 | 102. Admin UI Router Engine Refactor | 3/3 | Complete    | 2026-05-30 |
 | 103. E-Commerce Host App Foundation | 4/4 | Complete    | 2026-05-30 |
-| 104. Search Integration & Operations Proof | 0/0 | Not started | - |
+| 104. Search Integration & Operations Proof | 2/4 | In Progress|  |
 | 105. Hermetic E2E Pipeline | 0/0 | Not started | - |

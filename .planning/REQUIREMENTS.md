@@ -18,7 +18,7 @@
 - [ ] **INT-01**: Mount `scrypath_ops` inside the `scrypath_ecommerce` router.
 - [ ] **INT-02**: Implement Scrypath indexing for the `Product` schema using `tenant_field` and Oban sync.
 - [ ] **INT-03**: Implement related-data propagation (Category name changes update associated Products).
-- [ ] **INT-04**: Build a LiveView storefront with facet-driven search and tenant-safe access.
+- [x] **INT-04**: Build a LiveView storefront with facet-driven search and tenant-safe access.
 
 ### E2E Testing
 - [ ] **E2E-01**: Add a Playwright E2E test suite to the `scrypath_ecommerce` app.
@@ -48,7 +48,7 @@
 | INT-01 | Phase 104 | Pending |
 | INT-02 | Phase 104 | Pending |
 | INT-03 | Phase 104 | Pending |
-| INT-04 | Phase 104 | Pending |
+| INT-04 | Phase 104 | Complete |
 | E2E-01 | Phase 105 | Pending |
 | E2E-02 | Phase 105 | Pending |
 | E2E-03 | Phase 105 | Pending |
