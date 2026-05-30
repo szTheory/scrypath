@@ -89,6 +89,7 @@ GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
 | **`phase13-verification`** | Service: Meilisearch. `SCRYPATH_INTEGRATION=1`, `mix verify.phase13` (operator integration path) |
 | **`meilisearch-smoke`** | Service: Meilisearch. `mix verify.meilisearch_smoke` (curated live suites: `live_meilisearch_verification`, `live_operator_verification`, `search_many_integration`, `settings_hot_apply_integration`) |
 | **`phoenix-example-integration`** | Services: Postgres 16 + Meilisearch v1.15. `SCRYPATH_EXAMPLE_INTEGRATION=1`, `PGPORT=5433`, `SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700`. **CI** runs **`cd examples/phoenix_meilisearch`**, then **`mix deps.get`**, then **`mix test`** (same sequence as `.github/workflows/ci.yml`) - **not** `./scripts/smoke.sh`. **`./scripts/smoke.sh`** is a **local DX harness** under `examples/phoenix_meilisearch/` (Compose + env defaults aligned to CI); use it for interactive runs, not as the Actions test driver. See the example README for env tables. |
+| **`phase105-e2e`** | Advisory browser lane with Postgres 16 + Meilisearch v1.15 for `examples/scrypath_ecommerce`; uses explicit `pg_isready` and `/health` checks and uploads failure artifacts (`playwright-report`, `test-results`, Phoenix log). |
 | **`scrypath-ops-path-check` / `scrypath-ops`** | Service: Postgres 16 only (no Meilisearch). Path gate: runs on **`push` to `main`** unconditionally, and on **`pull_request`** when **`scrypath_ops/**`**, **`lib/**`**, **`mix.exs`**, **`mix.lock`**, or **`scrypath_ops/mix.lock`** change. Local contributors should use **`mix verify.opsui`** from the repo root; the dedicated CI job mirrors the same sequence by running **`cd scrypath_ops`**, then **`mix deps.get`**, then **`mix test`**. |
 
 Treat **`main-ci`**, **`repo-hygiene`**, **`release-truth`**, and **`phase99-trust`** as the routine required merge gate blockers for this trust-hardening lane. **`compatibility-truth`** remains advisory evidence coverage, while phase-101 compatibility assertions close through <code>mix verify.phase99</code> rather than introducing a new required trust lane.
@@ -98,3 +99,31 @@ The root [`compose.yaml`](compose.yaml) is only for **local** Meilisearch when r
 ## Example app (Postgres + Meilisearch)
 
 For a **multi-container-shaped** local stack (Postgres + Meilisearch + Phoenix + **Oban**) and a scripted E2E smoke (**inline** and **`:oban`** paths), see [`examples/phoenix_meilisearch/README.md`](examples/phoenix_meilisearch/README.md) - that file is the **canonical env + command** reference for the example. **CI** under **`phoenix-example-integration`** runs **`cd examples/phoenix_meilisearch`**, then **`mix deps.get`**, then **`mix test`** (see **CI** table); **`./scripts/smoke.sh`** remains a **local** orchestration path, not the GitHub Actions entrypoint.
+
+## `phase105-e2e` local runbook
+
+`phase105-e2e` is advisory today (not a required merge gate). It exists to continuously exercise the full browser/operator proof while we track flake and runtime behavior.
+
+Run locally:
+
+```sh
+mix deps.get
+cd examples/scrypath_ecommerce
+mix deps.get
+mix e2e.prepare
+npm ci
+npx playwright install --with-deps chromium
+MIX_ENV=test PHX_SERVER=true mix phx.server
+# second shell
+cd examples/scrypath_ecommerce
+npm run test:e2e
+```
+
+### Promotion criteria
+
+- Stable job name remains `phase105-e2e`.
+- Sustained low flake rate across PR and scheduled runs.
+- Runtime stays bounded enough for PR feedback.
+- Failure artifacts remain actionable (`playwright-report`, `test-results`, Phoenix log).
+- Lane owners respond to failures before required-check escalation.
+- Trigger rules stay explicit so PR checks do not sit in ambiguous skipped/pending states.
