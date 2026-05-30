@@ -41,7 +41,7 @@ defmodule ScrypathOps.MixProject do
   defp deps do
     [
       {:scrypath, path: ".."},
-      {:sigra, "~> 0.2", optional: true},
+      {:sigra, "~> 1.20", optional: true},
       {:phoenix, "~> 1.8.5"},
       {:phoenix_ecto, "~> 4.5"},
       {:ecto_sql, "~> 3.13"},
