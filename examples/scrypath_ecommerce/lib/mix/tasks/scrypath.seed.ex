@@ -6,7 +6,7 @@ defmodule Mix.Tasks.Scrypath.Seed do
   This task can be run via:
       mix scrypath.seed
 
-  It ensures the application is started, then invokes `CatalogFixtures.scenario_standard_catalog/1`.
+  It ensures the application is started, then invokes `CatalogFixtures.scenario_e2e_search_catalog/1`.
   """
   use Mix.Task
 
@@ -14,12 +14,12 @@ defmodule Mix.Tasks.Scrypath.Seed do
   def run(_args) do
     Mix.Task.run("app.start")
 
-    IO.puts("Seeding standard catalog data...")
+    IO.puts("Seeding E2E search catalog data...")
 
-    graph = ScrypathEcommerce.CatalogFixtures.scenario_standard_catalog(%{name: "Seed Tenant"})
+    graph = ScrypathEcommerce.CatalogFixtures.scenario_e2e_search_catalog(%{name: "Seed Tenant"})
 
     IO.puts("""
-    Seed successful!
+    Seed successful! E2E search scenario seeded.
     Created:
       - 1 Tenant (#{graph.tenant.name})
       - #{length(graph.categories)} Categories
