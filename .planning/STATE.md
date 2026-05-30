@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.28
 milestone_name: milestone
-status: completed
-last_updated: "2026-05-30T22:02:40.210Z"
+status: executing
+last_updated: "2026-05-30T22:20:16.748Z"
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 11
+  total_plans: 15
   completed_plans: 11
-  percent: 75
+  percent: 73
 ---
 
 # Project State
@@ -17,17 +17,17 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 104 — search-integration-operations-proof complete
+**Current Focus:** Phase 105 — hermetic-e2e-pipeline planned
 
 ## Current Position
 
-Phase: 104 — COMPLETE
-Plan: 4 of 4
-**Phase:** 104
-**Plan:** 04
-**Status:** Phase 104 complete
+Phase: 105 — PLANNED
+Plan: 0 of 4
+**Phase:** 105
+**Plan:** 01
+**Status:** Ready to execute
 **Progress:**
-[██████████] 100%
+[░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
@@ -57,11 +57,11 @@ Plan: 4 of 4
 
 ### Todos
 
-- Plan Phase 102.
+- Execute Phase 105.
 
 ## Session Continuity
 
-- **Last Session:** 2026-05-30T22:02:40.207Z
+- **Last Session:** 2026-05-30T22:11:54.301Z
 
 - [x] Initialized v1.28 roadmap with Phases 102-105.
 

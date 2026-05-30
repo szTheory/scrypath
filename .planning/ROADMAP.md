@@ -4,7 +4,7 @@
 
 - [x] **Phase 102: Admin UI Router Engine Refactor** - Convert scrypath_ops into a mountable router engine (completed 2026-05-30)
 - [x] **Phase 103: E-Commerce Host App Foundation** - Scaffold the e-commerce testbed with multi-tenant Ecto schemas (completed 2026-05-30)
-- [ ] **Phase 104: Search Integration & Operations Proof** - Embed the admin UI and implement LiveView storefront search
+- [x] **Phase 104: Search Integration & Operations Proof** - Embed the admin UI and implement LiveView storefront search (completed 2026-05-30)
 - [ ] **Phase 105: Hermetic E2E Pipeline** - Validate integration with real Meilisearch and Playwright browser tests
 
 ## Phase Details
@@ -44,10 +44,11 @@
   2. Changing a category name automatically triggers related product search index updates
   3. Operators can access the embedded `scrypath_ops` admin dashboard to observe indexing activity
   4. Search queries strictly isolate data by the active tenant
-**Plans**: 3 plans
+**Plans**: 4 plans
 - [x] 104-01-PLAN.md — Admin dashboard mount and product indexing setup
-- [ ] 104-02-PLAN.md — Related-data propagation via outbox worker
-- [ ] 104-03-PLAN.md — LiveView storefront search UI
+- [x] 104-02-PLAN.md — Related-data propagation via outbox worker
+- [x] 104-03-PLAN.md — LiveView storefront search UI
+- [x] 104-04-PLAN.md — Deterministic E2E scenario fixture
 **UI hint**: yes
 
 ### Phase 105: Hermetic E2E Pipeline
@@ -59,7 +60,11 @@
   2. CI automatically validates operator workflows (triage and zero-downtime swaps) via the admin UI
   3. E2E tests assert that related-data changes eventually become visible in the search UI
   4. The testing pipeline relies on a real Meilisearch instance without flakiness or timeouts
-**Plans**: TBD
+**Plans**: 4 plans
+- [ ] 105-01-PLAN.md — E2E harness and Playwright scaffold
+- [ ] 105-02-PLAN.md — Storefront search and related-data E2E proof
+- [ ] 105-03-PLAN.md — Operator failed-sync triage E2E proof
+- [ ] 105-04-PLAN.md — Zero-downtime swap proof and advisory CI lane
 
 ## Progress
 
@@ -67,5 +72,5 @@
 |-------|----------------|--------|-----------|
 | 102. Admin UI Router Engine Refactor | 3/3 | Complete    | 2026-05-30 |
 | 103. E-Commerce Host App Foundation | 4/4 | Complete    | 2026-05-30 |
-| 104. Search Integration & Operations Proof | 2/4 | In Progress|  |
-| 105. Hermetic E2E Pipeline | 0/0 | Not started | - |
+| 104. Search Integration & Operations Proof | 4/4 | Complete    | 2026-05-30 |
+| 105. Hermetic E2E Pipeline | 0/4 | Planned | - |
