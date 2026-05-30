@@ -2,6 +2,11 @@
    https://tailwindcss.com/docs/configuration */
 
 @import "tailwindcss" source(none);
+
+@theme {
+  --prefix: sop-;
+}
+
 @source "../css";
 @source "../js";
 @source "../../lib/scrypath_ops_web";
