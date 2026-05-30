@@ -1,0 +1,53 @@
+<main class="storefront-search">
+  <header class="storefront-search__header">
+    <p class="storefront-search__eyebrow">Scrypath Ecommerce</p>
+    <h1>Catalog Search</h1>
+  </header>
+
+  <.form for={@form} phx-change="search" class="storefront-search__layout">
+    <aside class="storefront-search__filters" aria-label="Search filters">
+      <label class="storefront-search__search-field">
+        <span>Search products</span>
+        <input
+          type="search"
+          name={@form[:q].name}
+          value={@form[:q].value}
+          placeholder="Search the catalog"
+          phx-debounce="300"
+        />
+      </label>
+
+      <section class="storefront-search__facet-group" aria-labelledby="category-facet-heading">
+        <h2 id="category-facet-heading">Categories</h2>
+        <label
+          :for={bucket <- Map.get(@results.facets.distribution, :category_id, [])}
+          class="storefront-search__facet"
+        >
+          <input
+            type="checkbox"
+            name={@form[:category_id].name}
+            value={bucket.value}
+            checked={to_string(bucket.value) == to_string(@category_id)}
+          />
+          <span>Category {bucket.value}</span>
+          <small>{bucket.count} products</small>
+        </label>
+      </section>
+    </aside>
+
+    <section class="storefront-search__results" aria-label="Search results" data-testid="storefront-results">
+      <article :for={hit <- @results.hits} class="storefront-search__result" data-testid="storefront-result">
+        <h2>{hit["name"] || hit[:name]}</h2>
+        <p>{hit["description"] || hit[:description]}</p>
+        <p :if={(hit["category_name"] || hit[:category_name])} class="storefront-search__meta">
+          Category: {hit["category_name"] || hit[:category_name]}
+        </p>
+      </article>
+
+      <div :if={@results.hits == []} class="storefront-search__empty">
+        <h2>No matching results yet</h2>
+        <p>Adjust query or filters, then run search again to confirm index visibility.</p>
+      </div>
+    </section>
+  </.form>
+</main>
