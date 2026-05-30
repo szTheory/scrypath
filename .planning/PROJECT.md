@@ -167,7 +167,12 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ### Active
 
-- None active.
+<!-- Current scope. Building toward these. -->
+
+- [x] **Phase 102** (2026-05-30): **OPS-01**–**OPS-02** — Admin UI Refactor (mountable router engine)
+- [ ] [APP-01, APP-02, APP-03] Demo App Foundation (e-commerce, multi-tenant)
+- [ ] [INT-01, INT-02, INT-03, INT-04] Search Integration & Operations Proof
+- [ ] [E2E-01, E2E-02, E2E-03, E2E-04, E2E-05, E2E-06] Hermetic E2E Pipeline
 
 ### Out of Scope
 
@@ -195,6 +200,15 @@ This document evolves at milestone boundaries.
 2. Core Value check - still the right priority?
 3. Audit Out of Scope - reasons still valid?
 4. Update Context with current state
+
+---
+*Last updated: 2026-05-30 — v1.27 shipped + archived in-repo*
+current state
+
+---
+*Last updated: 2026-05-30 — v1.27 shipped + archived in-repo*
+ed in-repo*
+current state
 
 ---
 *Last updated: 2026-05-30 — v1.27 shipped + archived in-repo*
