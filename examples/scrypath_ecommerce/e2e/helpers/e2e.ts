@@ -12,10 +12,10 @@ type DrainResult = {
 };
 
 type OperatorState = {
-  pending: number;
-  failed: number;
-  queue_failed: number;
-  failed_sync_count: number;
+  failed_count: number;
+  first_failed_work_id: number | null;
+  reason_class_counts: Record<string, number>;
+  retryable: boolean;
 };
 
 async function requestJson<T>(
@@ -120,14 +120,19 @@ export async function renameCategory(
 
 export async function injectFailedSync(
   request: APIRequestContext,
-  args: { tenantId: number }
-): Promise<{ job_id: number; queue: string }> {
-  return await requestJson<{ job_id: number; queue: string }>(request, "/dev/e2e/inject-failed-sync", {
-    method: "POST",
-    data: {
-      tenant_id: args.tenantId
+  args: { tenantId: number; scenarioKey?: string }
+): Promise<{ failed_work_id: number; schema: string; state: string; reason_class: string }> {
+  return await requestJson<{ failed_work_id: number; schema: string; state: string; reason_class: string }>(
+    request,
+    "/dev/e2e/inject-failed-sync",
+    {
+      method: "POST",
+      data: {
+        tenant_id: args.tenantId,
+        ...(args.scenarioKey ? { scenario_key: args.scenarioKey } : {})
+      }
     }
-  });
+  );
 }
 
 export async function operatorState(
@@ -142,11 +147,11 @@ export async function operatorState(
             params: { tenant_id: String(args.tenantId) }
           });
 
-          return result.failed_sync_count;
+          return result.failed_count;
         },
         {
           timeout: args.timeoutMs ?? 15_000,
-          message: `Timed out waiting for /dev/e2e/operator-state failed_sync_count >= ${args.minFailedSyncCount}`
+          message: `Timed out waiting for /dev/e2e/operator-state failed_count >= ${args.minFailedSyncCount}`
         }
       )
       .toBeGreaterThanOrEqual(args.minFailedSyncCount);
