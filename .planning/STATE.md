@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.28
 milestone_name: milestone
 status: executing
-last_updated: "2026-05-30T22:45:55.820Z"
+last_updated: "2026-05-31T00:35:00.000Z"
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 15
-  completed_plans: 13
-  percent: 75
+  completed_plans: 14
+  percent: 93
 ---
 
 # Project State
@@ -22,12 +22,12 @@ progress:
 ## Current Position
 
 Phase: 105 (hermetic-e2e-pipeline) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 **Phase:** 105
-**Plan:** 02
+**Plan:** 03
 **Status:** Executing Phase 105
 **Progress:**
-[█████████░] 87%
+[█████████░] 93%
 
 ## Performance Metrics
 
@@ -36,13 +36,15 @@ Plan: 2 of 4
 | 103 | 00 | 5m | 2 | 2 |
 | 104 | 04 | 5m | 2 | 3 |
 | 105 | 01 | 38m | 4 | 9 |
+| 105 | 03 | 46m | 4 | 6 |
 
 - **Completed Phases:** 3
-- **Completed Plans:** 12
+- **Completed Plans:** 14
 - **Requirements Met:** 11/15
 
 | Phase 103 P03 | 5m | 2 tasks | 6 files |
 | Phase 105 P02 | 29m | 4 tasks | 6 files |
+| Phase 105 P03 | 46m | 4 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -67,7 +69,7 @@ Plan: 2 of 4
 
 ## Session Continuity
 
-- **Last Session:** 2026-05-30T22:45:55.817Z
+- **Last Session:** 2026-05-30T22:51:49.067Z
 
 - [x] Initialized v1.28 roadmap with Phases 102-105.
 
@@ -84,3 +86,5 @@ Plan: 2 of 4
 - [Phase 105]: Standardized deterministic dev/test `/dev/e2e` contracts for seed, drain, readiness polling, and operator probes.
 - [Phase 105]: Added storefront result test ids and category rendering to support robust browser-visible E2E assertions. — Playwright needs stable repeated-result scoping and visible related-data text.
 - [Phase 105]: Enforced deterministic readiness chain (seed -> drain -> waitForSearchVisible) before storefront assertions. — Avoids flaky timing-based assertions and matches threat mitigation requirements.
+- [Phase 105]: Failed-sync harness injection is scenario-keyed one-shot and remains example-local/dev-test only to avoid public Scrypath failure-injection surface.
+- [Phase 105]: Operator-state probe response is restricted to counts/ids/reason-class/retryable summary and excludes raw args/documents payloads.

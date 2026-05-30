@@ -63,7 +63,7 @@
 **Plans**: 4 plans
 - [x] 105-01-PLAN.md — E2E harness and Playwright scaffold
 - [x] 105-02-PLAN.md — Storefront search and related-data E2E proof
-- [ ] 105-03-PLAN.md — Operator failed-sync triage E2E proof
+- [x] 105-03-PLAN.md — Operator failed-sync triage E2E proof
 - [ ] 105-04-PLAN.md — Zero-downtime swap proof and advisory CI lane
 
 ## Progress
@@ -73,7 +73,7 @@
 | 102. Admin UI Router Engine Refactor | 3/3 | Complete    | 2026-05-30 |
 | 103. E-Commerce Host App Foundation | 4/4 | Complete    | 2026-05-30 |
 | 104. Search Integration & Operations Proof | 4/4 | Complete    | 2026-05-30 |
-| 105. Hermetic E2E Pipeline | 2/4 | In Progress|  |
+| 105. Hermetic E2E Pipeline | 3/4 | In Progress|  |
 
 ## Historical Contract Anchors
 
