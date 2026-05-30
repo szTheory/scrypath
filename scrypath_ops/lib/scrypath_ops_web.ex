@@ -101,7 +101,7 @@ defmodule ScrypathOpsWeb do
     quote do
       use Phoenix.VerifiedRoutes,
         endpoint: ScrypathOpsWeb.Endpoint,
-        router: ScrypathOpsWeb.Router,
+        router: ScrypathOpsWeb.DevRouter,
         statics: ScrypathOpsWeb.static_paths()
     end
   end
