@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.28
 milestone_name: milestone
-status: executing
-last_updated: "2026-05-31T00:35:00.000Z"
+status: ready
+last_updated: "2026-05-30T22:58:20.787Z"
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 15
-  completed_plans: 14
-  percent: 93
+  completed_plans: 15
+  percent: 100
 ---
 
 # Project State
@@ -21,13 +21,13 @@ progress:
 
 ## Current Position
 
-Phase: 105 (hermetic-e2e-pipeline) — EXECUTING
-Plan: 3 of 4
+Phase: 105 (hermetic-e2e-pipeline) — COMPLETE
+Plan: 4 of 4
 **Phase:** 105
-**Plan:** 03
-**Status:** Executing Phase 105
+**Plan:** 04
+**Status:** Phase 105 complete
 **Progress:**
-[█████████░] 93%
+[██████████] 100%
 
 ## Performance Metrics
 
@@ -38,13 +38,14 @@ Plan: 3 of 4
 | 105 | 01 | 38m | 4 | 9 |
 | 105 | 03 | 46m | 4 | 6 |
 
-- **Completed Phases:** 3
-- **Completed Plans:** 14
-- **Requirements Met:** 11/15
+- **Completed Phases:** 4
+- **Completed Plans:** 15
+- **Requirements Met:** 12/15
 
 | Phase 103 P03 | 5m | 2 tasks | 6 files |
 | Phase 105 P02 | 29m | 4 tasks | 6 files |
 | Phase 105 P03 | 46m | 4 tasks | 6 files |
+| Phase 105 P04 | 52m | 4 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -61,7 +62,7 @@ Plan: 3 of 4
 
 ### Todos
 
-- Execute remaining Phase 105 plans.
+- None.
 
 ### Historical Contract Pointers
 
@@ -69,7 +70,7 @@ Plan: 3 of 4
 
 ## Session Continuity
 
-- **Last Session:** 2026-05-30T22:51:49.067Z
+- **Last Session:** 2026-05-30T22:57:51.834Z
 
 - [x] Initialized v1.28 roadmap with Phases 102-105.
 
@@ -88,3 +89,5 @@ Plan: 3 of 4
 - [Phase 105]: Enforced deterministic readiness chain (seed -> drain -> waitForSearchVisible) before storefront assertions. — Avoids flaky timing-based assertions and matches threat mitigation requirements.
 - [Phase 105]: Failed-sync harness injection is scenario-keyed one-shot and remains example-local/dev-test only to avoid public Scrypath failure-injection surface.
 - [Phase 105]: Operator-state probe response is restricted to counts/ids/reason-class/retryable summary and excludes raw args/documents payloads.
+- [Phase 105]: Added stable operator swap-outcome probe fields for browser assertions without exposing raw task payloads.
+- [Phase 105]: Added advisory phase105-e2e CI lane with Postgres+Meilisearch health checks and failure artifacts.

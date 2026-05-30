@@ -26,7 +26,7 @@
 - [x] **E2E-03**: Write an E2E test for the consumer happy path (typing in search bar, faceting).
 - [x] **E2E-04**: Write an E2E test proving related-data sync (changing Category name updates search).
 - [x] **E2E-05**: Write an E2E test for Operator Triage (intentionally fail sync, verify error in `scrypath_ops`).
-- [ ] **E2E-06**: Write an E2E test for a zero-downtime swap initiated via `scrypath_ops`.
+- [x] **E2E-06**: Write an E2E test for a zero-downtime swap initiated via `scrypath_ops`.
 
 ## Out of Scope
 
@@ -54,7 +54,7 @@
 | E2E-03 | Phase 105 | Complete |
 | E2E-04 | Phase 105 | Complete |
 | E2E-05 | Phase 105 | Complete |
-| E2E-06 | Phase 105 | Pending |
+| E2E-06 | Phase 105 | Complete |
 
 **Coverage:**
 - v1 requirements: 15 total

@@ -5,7 +5,7 @@
 - [x] **Phase 102: Admin UI Router Engine Refactor** - Convert scrypath_ops into a mountable router engine (completed 2026-05-30)
 - [x] **Phase 103: E-Commerce Host App Foundation** - Scaffold the e-commerce testbed with multi-tenant Ecto schemas (completed 2026-05-30)
 - [x] **Phase 104: Search Integration & Operations Proof** - Embed the admin UI and implement LiveView storefront search (completed 2026-05-30)
-- [ ] **Phase 105: Hermetic E2E Pipeline** - Validate integration with real Meilisearch and Playwright browser tests
+- [x] **Phase 105: Hermetic E2E Pipeline** - Validate integration with real Meilisearch and Playwright browser tests (completed 2026-05-30)
 
 ## Phase Details
 
@@ -64,7 +64,7 @@
 - [x] 105-01-PLAN.md — E2E harness and Playwright scaffold
 - [x] 105-02-PLAN.md — Storefront search and related-data E2E proof
 - [x] 105-03-PLAN.md — Operator failed-sync triage E2E proof
-- [ ] 105-04-PLAN.md — Zero-downtime swap proof and advisory CI lane
+- [x] 105-04-PLAN.md — Zero-downtime swap proof and advisory CI lane
 
 ## Progress
 
@@ -73,7 +73,7 @@
 | 102. Admin UI Router Engine Refactor | 3/3 | Complete    | 2026-05-30 |
 | 103. E-Commerce Host App Foundation | 4/4 | Complete    | 2026-05-30 |
 | 104. Search Integration & Operations Proof | 4/4 | Complete    | 2026-05-30 |
-| 105. Hermetic E2E Pipeline | 3/4 | In Progress|  |
+| 105. Hermetic E2E Pipeline | 4/4 | Complete   | 2026-05-30 |
 
 ## Historical Contract Anchors
 
