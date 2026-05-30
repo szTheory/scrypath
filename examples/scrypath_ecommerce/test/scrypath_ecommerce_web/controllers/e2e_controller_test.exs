@@ -1,5 +1,6 @@
 defmodule ScrypathEcommerceWeb.E2EControllerTest do
   use ScrypathEcommerceWeb.ConnCase
+  use Oban.Testing, repo: ScrypathEcommerce.Repo
 
   describe "POST /dev/e2e/seed" do
     test "seeds e2e_search_catalog and returns deterministic ids", %{conn: conn} do
@@ -42,6 +43,39 @@ defmodule ScrypathEcommerceWeb.E2EControllerTest do
       assert %{"success" => success, "failure" => failure} = json_response(conn, 200)
       assert is_integer(success)
       assert is_integer(failure)
+    end
+  end
+
+  describe "POST /dev/e2e/category-name" do
+    test "renames seeded category and reports queued related sync", %{conn: conn} do
+      seed_conn = post(conn, ~p"/dev/e2e/seed", scenario: "e2e_search_catalog")
+
+      assert %{
+               "tenant_id" => tenant_id,
+               "categories" => %{"Smartphones" => category_id}
+             } = json_response(seed_conn, 200)
+
+      conn =
+        post(conn, ~p"/dev/e2e/category-name", %{
+          tenant_id: tenant_id,
+          category_id: category_id,
+          name: "Pocket Superphones"
+        })
+
+      assert %{
+               "category_id" => ^category_id,
+               "name" => "Pocket Superphones",
+               "queued_related_sync" => true
+             } = json_response(conn, 200)
+
+      assert_enqueued(
+        worker: Scrypath.Sync.RelatedWorker,
+        args: %{
+          "schema" => "Elixir.ScrypathEcommerce.Catalog.Category",
+          "document_ids" => [category_id],
+          "fan_out" => "products"
+        }
+      )
     end
   end
 end
