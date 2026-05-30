@@ -1,10 +1,11 @@
 ---
 phase: 105
 slug: hermetic-e2e-pipeline
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-05-30
+reviewed_at: 2026-05-30T00:00:00-04:00
 ---
 
 # Phase 105 — UI Design Contract
