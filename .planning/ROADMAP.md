@@ -30,7 +30,10 @@
   1. Developers can start the `scrypath_ecommerce` app and navigate its domain model
   2. The app stores and retrieves Tenant, Category, Product, and Variant data using Ecto
   3. Browser testing tools can safely run parallel tests utilizing Ecto's SQL sandbox in shared mode
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 103-01-PLAN.md — Catalog Domain Model and Tenancy Foundation
+- [ ] 103-02-PLAN.md — Seeding Infrastructure
+- [ ] 103-03-PLAN.md — E2E Test Endpoints and Sandbox
 
 ### Phase 104: Search Integration & Operations Proof
 **Goal**: The demo app integrates native search with multitenancy, related-data propagation, and an embedded admin UI
