@@ -16,8 +16,23 @@ defmodule ScrypathEcommerce.Catalog.Variant do
   @doc false
   def changeset(variant, attrs) do
     variant
-    |> cast(attrs, [:sku, :price_cents, :currency, :inventory_count, :options, :tenant_id, :product_id])
-    |> validate_required([:sku, :price_cents, :currency, :inventory_count, :tenant_id, :product_id])
+    |> cast(attrs, [
+      :sku,
+      :price_cents,
+      :currency,
+      :inventory_count,
+      :options,
+      :tenant_id,
+      :product_id
+    ])
+    |> validate_required([
+      :sku,
+      :price_cents,
+      :currency,
+      :inventory_count,
+      :tenant_id,
+      :product_id
+    ])
     |> unique_constraint(:sku, name: :variants_tenant_id_sku_index)
   end
 end

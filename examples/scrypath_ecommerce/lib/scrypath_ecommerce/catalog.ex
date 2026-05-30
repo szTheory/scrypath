@@ -10,7 +10,17 @@ defmodule ScrypathEcommerce.Catalog do
 
   defp tenant_opts(%Tenant{id: id}), do: [tenant_id: id]
   defp tenant_opts(tenant_id) when is_integer(tenant_id), do: [tenant_id: tenant_id]
-  defp tenant_opts(tenant_id) when is_binary(tenant_id), do: [tenant_id: String.to_integer(tenant_id)]
+
+  defp tenant_opts(tenant_id) when is_binary(tenant_id),
+    do: [tenant_id: String.to_integer(tenant_id)]
+
+  defp put_tenant_id(attrs, tenant_id) do
+    cond do
+      is_map(attrs) and Enum.any?(Map.keys(attrs), &is_atom/1) -> Map.put(attrs, :tenant_id, tenant_id)
+      is_map(attrs) -> Map.put(attrs, "tenant_id", tenant_id)
+      true -> Keyword.put(attrs, :tenant_id, tenant_id)
+    end
+  end
 
   # --- Tenant ---
 
@@ -38,9 +48,9 @@ defmodule ScrypathEcommerce.Catalog do
 
   def create_category(tenant, attrs) do
     opts = tenant_opts(tenant)
-    
+
     %Category{}
-    |> Category.changeset(Map.put(attrs, "tenant_id", opts[:tenant_id]))
+    |> Category.changeset(put_tenant_id(attrs, opts[:tenant_id]))
     |> Repo.insert(opts)
   end
 
@@ -70,9 +80,9 @@ defmodule ScrypathEcommerce.Catalog do
 
   def create_product(tenant, attrs) do
     opts = tenant_opts(tenant)
-    
+
     %Product{}
-    |> Product.changeset(Map.put(attrs, "tenant_id", opts[:tenant_id]))
+    |> Product.changeset(put_tenant_id(attrs, opts[:tenant_id]))
     |> Repo.insert(opts)
   end
 
@@ -102,9 +112,9 @@ defmodule ScrypathEcommerce.Catalog do
 
   def create_variant(tenant, attrs) do
     opts = tenant_opts(tenant)
-    
+
     %Variant{}
-    |> Variant.changeset(Map.put(attrs, "tenant_id", opts[:tenant_id]))
+    |> Variant.changeset(put_tenant_id(attrs, opts[:tenant_id]))
     |> Repo.insert(opts)
   end
 

@@ -12,6 +12,7 @@ defmodule ScrypathEcommerce.Repo.Migrations.CreateCatalog do
       add :name, :string, null: false
       timestamps(type: :utc_datetime)
     end
+
     create index(:categories, [:tenant_id])
 
     create table(:products) do
@@ -21,6 +22,7 @@ defmodule ScrypathEcommerce.Repo.Migrations.CreateCatalog do
       add :category_id, references(:categories, on_delete: :delete_all), null: false
       timestamps(type: :utc_datetime)
     end
+
     create index(:products, [:tenant_id])
     create index(:products, [:category_id])
 
@@ -34,6 +36,7 @@ defmodule ScrypathEcommerce.Repo.Migrations.CreateCatalog do
       add :options, :map, default: %{}
       timestamps(type: :utc_datetime)
     end
+
     create index(:variants, [:tenant_id])
     create index(:variants, [:product_id])
     create unique_index(:variants, [:tenant_id, :sku])

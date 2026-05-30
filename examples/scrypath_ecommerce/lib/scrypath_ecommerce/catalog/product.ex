@@ -1,5 +1,10 @@
 defmodule ScrypathEcommerce.Catalog.Product do
   use Ecto.Schema
+  use Scrypath.Schema,
+    fields: [
+      :name,
+      :description
+    ]
   import Ecto.Changeset
 
   schema "products" do
