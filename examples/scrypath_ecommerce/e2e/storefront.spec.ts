@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { drainSearchQueue, seedScenario, waitForSearchVisible } from "./helpers/e2e";
+import { drainSearchQueue, renameCategory, seedScenario, waitForSearchVisible } from "./helpers/e2e";
 
 test("consumer can search and facet deterministic catalog results", async ({ page, request }) => {
   const seed = await seedScenario(request, "e2e_search_catalog");
@@ -37,4 +37,33 @@ test("consumer can search and facet deterministic catalog results", async ({ pag
   await expect(results.getByText("Quantum CyberPhone X")).toBeVisible();
   await expect(results.getByText("Quantum CyberPhone Pro")).toBeVisible();
   await expect(results.getByText("Nebula Ultrabook")).not.toBeVisible();
+});
+
+test("related category changes become visible in storefront search", async ({ page, request }) => {
+  const seed = await seedScenario(request, "e2e_search_catalog");
+  const smartphoneCategoryId = seed.categories["Smartphones"];
+
+  await drainSearchQueue(request);
+
+  await renameCategory(request, {
+    tenantId: seed.tenant_id,
+    categoryId: smartphoneCategoryId,
+    name: "Pocket Superphones"
+  });
+
+  await drainSearchQueue(request);
+
+  await waitForSearchVisible(request, {
+    tenantId: seed.tenant_id,
+    query: "quantum",
+    expectedName: "Quantum CyberPhone X"
+  });
+
+  await page.goto("/?q=quantum");
+
+  const results = page.getByTestId("storefront-results");
+
+  await expect(results.getByText("Quantum CyberPhone X")).toBeVisible();
+  await expect(results.getByText("Quantum CyberPhone Pro")).toBeVisible();
+  await expect(results.getByText("Category: Pocket Superphones")).toBeVisible();
 });
