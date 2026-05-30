@@ -84,16 +84,40 @@ defmodule ScrypathEcommerce.Catalog do
     %Product{}
     |> Product.changeset(put_tenant_id(attrs, opts[:tenant_id]))
     |> Repo.insert(opts)
+    |> case do
+      {:ok, product} ->
+        Scrypath.sync_record(Product, product)
+        {:ok, product}
+
+      error ->
+        error
+    end
   end
 
   def update_product(tenant, %Product{} = product, attrs) do
     product
     |> Product.changeset(attrs)
     |> Repo.update(tenant_opts(tenant))
+    |> case do
+      {:ok, product} ->
+        Scrypath.sync_record(Product, product)
+        {:ok, product}
+
+      error ->
+        error
+    end
   end
 
   def delete_product(tenant, %Product{} = product) do
     Repo.delete(product, tenant_opts(tenant))
+    |> case do
+      {:ok, product} ->
+        Scrypath.delete_record(Product, product)
+        {:ok, product}
+
+      error ->
+        error
+    end
   end
 
   def change_product(%Product{} = product, attrs \\ %{}) do

@@ -1,10 +1,10 @@
 defmodule ScrypathEcommerce.Catalog.Product do
   use Ecto.Schema
-  use Scrypath.Schema,
-    fields: [
-      :name,
-      :description
-    ]
+  use Scrypath,
+    fields: [:name, :description, :tenant_id, :category_id],
+    filterable: [:category_id, :tenant_id],
+    tenant_field: :tenant_id,
+    faceting: [attributes: [:category_id]]
   import Ecto.Changeset
 
   schema "products" do

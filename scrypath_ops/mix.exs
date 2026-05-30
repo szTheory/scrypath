@@ -41,7 +41,6 @@ defmodule ScrypathOps.MixProject do
   defp deps do
     [
       {:scrypath, path: ".."},
-      {:scrypath_ecommerce, path: "../examples/scrypath_ecommerce", runtime: false},
       {:sigra, "~> 1.20", optional: true},
       {:phoenix, "~> 1.8.5"},
       {:phoenix_ecto, "~> 4.5"},

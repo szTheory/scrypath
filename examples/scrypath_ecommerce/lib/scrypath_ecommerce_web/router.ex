@@ -20,6 +20,13 @@ defmodule ScrypathEcommerceWeb.Router do
     live "/", SearchLive, :index
   end
 
+  import ScrypathOpsWeb.Router
+
+  scope "/admin", ScrypathEcommerceWeb do
+    pipe_through :browser
+    scrypath_ops_routes("/search", repo: ScrypathEcommerce.Repo)
+  end
+
   if Mix.env() in [:dev, :test] do
     scope "/dev/e2e", ScrypathEcommerceWeb do
       pipe_through :api
