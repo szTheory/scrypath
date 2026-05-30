@@ -262,7 +262,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
               </thead>
               <tbody class="text-sm leading-snug tabular-nums">
                 <%= for row <- sorted_entries(@inspection) do %>
-                  <tr id={"failed-#{row.id}"}>
+                  <tr id={"failed-#{row.id}"} data-testid="failed-sync-row">
                     <td class="font-mono text-xs">{inspect(row.id)}</td>
                     <td>{reason_class_label(row.reason_class)}</td>
                     <td>{row.operation}</td>
@@ -296,6 +296,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                             type="button"
                             phx-click="retry"
                             phx-value-id={row.id}
+                            data-testid="failed-sync-retry"
                             class="btn btn-xs btn-primary"
                           >
                             Retry job

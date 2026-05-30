@@ -132,6 +132,11 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     {:ok, _lv, html} = live(conn, ~p"/ops/failed-sync")
 
     assert html =~ ~r/total[^\d]*2/s
+    assert html =~ "data-testid=\"failed-sync-row\""
+    assert html =~ "data-testid=\"failed-sync-retry\""
+    assert html =~ "Failed sync jobs"
+    assert html =~ "Refresh failed sync jobs"
+    assert html =~ "Retry job"
 
     assert Enum.any?(
              ~w(transport validation backend_rejected queue_exhausted unknown),
