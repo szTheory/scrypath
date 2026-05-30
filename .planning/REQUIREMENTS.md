@@ -6,7 +6,7 @@
 ## v1 Requirements
 
 ### Admin UI Refactor
-- [ ] **OPS-01**: Refactor `scrypath_ops` into a pure mountable router engine.
+- [x] **OPS-01**: Refactor `scrypath_ops` into a pure mountable router engine.
 - [x] **OPS-02**: Deprecate the standalone `Endpoint` and `Repo` within `scrypath_ops`.
 
 ### Demo App Foundation
@@ -40,7 +40,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| OPS-01 | Phase 102 | Pending |
+| OPS-01 | Phase 102 | Complete |
 | OPS-02 | Phase 102 | Complete |
 | APP-01 | Phase 103 | Pending |
 | APP-02 | Phase 103 | Pending |
