@@ -44,4 +44,28 @@ defmodule ScrypathEcommerce.CatalogFixturesTest do
       assert Enum.count(variants, fn v -> v.product_id == prod3.id end) == 2
     end
   end
+
+  describe "scenario_e2e_search_catalog/1" do
+    test "creates an e2e catalog graph" do
+      graph = CatalogFixtures.scenario_e2e_search_catalog(%{name: "E2E Tech Global"})
+
+      assert %{
+               tenant: %Tenant{} = tenant,
+               categories: [%Category{} = cat1, %Category{} = cat2],
+               products: [%Product{} = prod1, %Product{} = prod2, %Product{} = prod3],
+               variants: [%Variant{}, %Variant{}, %Variant{}, %Variant{}] = variants
+             } = graph
+
+      assert tenant.name == "E2E Tech Global"
+
+      assert cat1.name == "Smartphones"
+      assert cat2.name == "Laptops"
+
+      assert prod1.name == "Quantum CyberPhone X"
+      assert prod2.name == "Quantum CyberPhone Pro"
+      assert prod3.name == "Nebula Ultrabook"
+
+      assert length(variants) == 4
+    end
+  end
 end

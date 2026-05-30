@@ -102,4 +102,37 @@ defmodule ScrypathEcommerce.CatalogFixtures do
       variants: [v1_1, v1_2, v2_1, v2_2, v3_1, v3_2]
     }
   end
+
+  @doc """
+  Generates a specific product hierarchy for deterministic E2E search assertions.
+  - 1 Tenant
+  - 2 Categories ("Smartphones", "Laptops")
+  - 3 Products (with specific names like "Quantum CyberPhone X")
+  - 4 Variants
+  """
+  def scenario_e2e_search_catalog(attrs \\ %{}) do
+    tenant = tenant_fixture(attrs |> Map.put_new(:name, "E2E Tech Global"))
+
+    cat1 = category_fixture(tenant, %{name: "Smartphones"})
+    cat2 = category_fixture(tenant, %{name: "Laptops"})
+
+    # Highly specific product names and descriptions for search assertions
+    prod1 = product_fixture(tenant, %{name: "Quantum CyberPhone X", description: "The ultimate quantum computing powered smartphone with cybernetic features.", category_id: cat1.id})
+    prod2 = product_fixture(tenant, %{name: "Quantum CyberPhone Pro", description: "Pro version of the cyberphone.", category_id: cat1.id})
+    prod3 = product_fixture(tenant, %{name: "Nebula Ultrabook", description: "A lightweight laptop for stargazers.", category_id: cat2.id})
+
+    v1_1 = variant_fixture(tenant, %{product_id: prod1.id, sku: "QCP-X-256-#{System.unique_integer([:positive])}", price_cents: 99900})
+    v1_2 = variant_fixture(tenant, %{product_id: prod1.id, sku: "QCP-X-512-#{System.unique_integer([:positive])}", price_cents: 109900})
+
+    v2_1 = variant_fixture(tenant, %{product_id: prod2.id, sku: "QCP-PRO-1TB-#{System.unique_integer([:positive])}", price_cents: 129900})
+
+    v3_1 = variant_fixture(tenant, %{product_id: prod3.id, sku: "NEB-ULTRA-#{System.unique_integer([:positive])}", price_cents: 149900})
+
+    %{
+      tenant: tenant,
+      categories: [cat1, cat2],
+      products: [prod1, prod2, prod3],
+      variants: [v1_1, v1_2, v2_1, v3_1]
+    }
+  end
 end
