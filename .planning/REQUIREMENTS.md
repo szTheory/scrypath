@@ -23,8 +23,8 @@
 ### E2E Testing
 - [x] **E2E-01**: Add a Playwright E2E test suite to the `scrypath_ecommerce` app.
 - [x] **E2E-02**: Configure a GitHub Actions workflow with a real Meilisearch container and health checks.
-- [ ] **E2E-03**: Write an E2E test for the consumer happy path (typing in search bar, faceting).
-- [ ] **E2E-04**: Write an E2E test proving related-data sync (changing Category name updates search).
+- [x] **E2E-03**: Write an E2E test for the consumer happy path (typing in search bar, faceting).
+- [x] **E2E-04**: Write an E2E test proving related-data sync (changing Category name updates search).
 - [ ] **E2E-05**: Write an E2E test for Operator Triage (intentionally fail sync, verify error in `scrypath_ops`).
 - [ ] **E2E-06**: Write an E2E test for a zero-downtime swap initiated via `scrypath_ops`.
 
@@ -51,8 +51,8 @@
 | INT-04 | Phase 104 | Complete |
 | E2E-01 | Phase 105 | Complete |
 | E2E-02 | Phase 105 | Complete |
-| E2E-03 | Phase 105 | Pending |
-| E2E-04 | Phase 105 | Pending |
+| E2E-03 | Phase 105 | Complete |
+| E2E-04 | Phase 105 | Complete |
 | E2E-05 | Phase 105 | Pending |
 | E2E-06 | Phase 105 | Pending |
 
