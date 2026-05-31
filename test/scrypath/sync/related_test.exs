@@ -53,6 +53,28 @@ defmodule Scrypath.Sync.RelatedTest do
     end
   end
 
+  defmodule OrdinarySource do
+    use Ecto.Schema
+
+    use Scrypath,
+      fields: [:name],
+      fan_outs: [
+        comments: [
+          target: DummyTarget,
+          resolver: {__MODULE__, :resolve_comments, [:extra_arg]}
+        ]
+      ]
+
+    @primary_key {:id, :id, autogenerate: true}
+    schema "ordinary_sources" do
+      field(:name, :string)
+    end
+
+    def resolve_comments([_ | _] = records, :extra_arg) do
+      Enum.map(records, &%DummyTarget{id: &1.id * 100, title: "Ordinary for #{&1.name}"})
+    end
+  end
+
   defmodule RecordingBackend do
     def name, do: RecordingBackend
 
@@ -116,6 +138,45 @@ defmodule Scrypath.Sync.RelatedTest do
     assert result.document_ids == [3]
 
     assert %{queue: :test_queue} = result.oban
+  end
+
+  test "generated use Scrypath fan_out metadata is consumed for inline sync_related/3" do
+    records = [
+      %OrdinarySource{id: 7, name: "Source 7"},
+      %OrdinarySource{id: 8, name: "Source 8"}
+    ]
+
+    assert {:ok, result} =
+             Scrypath.sync_related(OrdinarySource, records,
+               fan_out: :comments,
+               sync_mode: :inline,
+               backend: RecordingBackend
+             )
+
+    assert result.status == :completed
+    assert result.mode == :inline
+
+    assert_received {:upsert_documents, DummyTarget, documents, _config}
+    assert Enum.map(documents, & &1.id) == [700, 800]
+    assert Enum.map(documents, & &1.data[:title]) == ["Ordinary for Source 7", "Ordinary for Source 8"]
+  end
+
+  test "generated use Scrypath fan_out metadata is consumed for oban enqueue" do
+    records = [%OrdinarySource{id: 9, name: "Source 9"}]
+
+    assert {:ok, result} =
+             Scrypath.sync_related(OrdinarySource, records,
+               fan_out: :comments,
+               sync_mode: :oban,
+               oban: EnqueueOban,
+               oban_queue: :test_queue,
+               backend: RecordingBackend
+             )
+
+    assert result.status == :accepted
+    assert result.mode == :oban
+    assert result.document_ids == [9]
+    assert result.document_count == 1
   end
 
   test "missing fan_out raises ArgumentError" do
