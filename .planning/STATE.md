@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.29
 milestone_name: Contract Repair and Proof Hardening
-status: planning
-last_updated: "2026-05-31T16:43:19.155Z"
-last_activity: 2026-05-31
+status: complete
+last_updated: "2026-05-31T17:21:00Z"
+last_activity: 2026-05-31 -- Phase 108 completed
 progress:
   total_phases: 3
-  completed_phases: 2
-  total_plans: 2
-  completed_plans: 2
-  percent: 67
+  completed_phases: 3
+  total_plans: 3
+  completed_plans: 3
+  percent: 100
 ---
 
 # Project State
@@ -18,14 +18,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 108 — truth alignment and closeout proof
+**Current Focus:** v1.29 complete — maintenance-and-evidence mode
 
 ## Current Position
 
-Phase: 108
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-05-31
+Phase: 108 (truth-alignment-and-closeout-proof) — COMPLETE
+Plan: 1 of 1 complete
+Status: v1.29 complete; maintenance-and-evidence mode is the default lane
+Last activity: 2026-05-31 -- Phase 108 completed
 
 ## Performance Metrics
 
@@ -64,7 +64,7 @@ Last activity: 2026-05-31
 
 - Verify fan-out reflection contract repair with focused schema tests.
 - Verify ecommerce readiness filter regression with focused example controller tests.
-- Refresh post-v1.28 roadmap/JTBD truth after contract repair lands.
+- Maintain release/support truth, proof stability, and outside-adopter evidence after v1.29 closeout.
 
 ### Historical Contract Pointers
 
@@ -99,7 +99,8 @@ Last activity: 2026-05-31
 - [v1.29]: Defer `Scrypath.FanOuts`, public fan-out reflection helpers, duplicate/nil fan-out validation tightening, deeper cross-tenant Playwright fixtures, and `phase105-e2e` promotion.
 - [Phase 106]: Locked ordinary fan-out declaration contract on generated __scrypath__(:fan_outs). — Preserves existing runtime seam and avoids new public API surface.
 - [Phase 106]: Added verify.phase106 focused gate and self-test. — Provides deterministic service-free proof for FAN-01/FAN-02 without CI topology changes.
+- [Phase 108]: Closed v1.29 truth surfaces with mix verify.phase108. — Keeps related-data, roadmap/JTBD, requirements, and contributor posture aligned without promoting phase105-e2e.
 
 ## Operator Next Steps
 
-- Execute Phase 106 with the bounded fan-out reflection repair plan.
+- Default to maintenance-and-evidence mode: keep main green, preserve release/support truth, and gather outside-adopter evidence before opening new feature breadth.

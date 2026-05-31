@@ -23,7 +23,7 @@
   1. Schemas using `use Scrypath, fan_outs:` expose fan-out metadata through `__scrypath__(:fan_outs)`.
   2. Existing schemas with hand-written fan-out reflection remain compatible.
   3. The repair does not introduce deferred public fan-out helper APIs or broader validation tightening.
-Plans: 1/1 plans complete
+**Plans:** 1/1 plans complete
 - [x] 106-01-PLAN.md — Fan-out reflection contract repair
 
 ### Phase 107: Ecommerce Readiness Regression Guard
@@ -46,7 +46,7 @@ Plans: 1/1 plans complete
   1. Related-data docs describe the repaired fan-out reflection contract accurately.
   2. Planning and JTBD truth keep deferred breadth out of v1.29.
   3. Verification posture remains explicit and does not promote `phase105-e2e` to required CI.
-**Plans:** 1/1 plans complete
+Plans: 1/1 plans complete
 - [x] 108-01-PLAN.md — Truth alignment and closeout proof
 
 ## Progress
