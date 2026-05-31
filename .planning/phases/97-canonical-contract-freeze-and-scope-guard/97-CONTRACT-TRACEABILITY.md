@@ -1,5 +1,7 @@
 # Phase 97 Contract Traceability Ledger
 
+> Reconstructed at the historical Phase 97 path during Phase 109 release-truth recovery (2026-05-31).
+
 | Requirement | Canonical Statement | Owner Surfaces | Verify/Test Anchor | Consumer Phase |
 |-------------|---------------------|----------------|--------------------|----------------|
 | TRUTH-01 | CST-TRUTH-01-INSTALL | `guides/support-and-compatibility.md` | `mix verify.phase97` + `test/scrypath/docs_contract_test.exs` | 98 |
