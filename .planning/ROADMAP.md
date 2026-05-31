@@ -14,13 +14,13 @@
 
 **Requirements:** REL-01, REL-02, REL-03
 
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 **Wave 1**
 
 - [x] 109-01-PLAN.md — Deterministic release agreement gate and artifact package proof
-- [ ] 109-02-PLAN.md — Restore frozen Phase 97 truth anchors for the release docs contract
+- [x] 109-02-PLAN.md — Restore frozen Phase 97 truth anchors for the release docs contract
 
 **Wave 2** *(blocked on Wave 1 completion)*
 

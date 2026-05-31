@@ -9,7 +9,7 @@
 
 - [x] **REL-01**: Maintainer can confirm Release Please, `mix.exs`, `.release-please-manifest.json`, `CHANGELOG.md`, tags, and publish workflows agree on the canonical release path.
 - [x] **REL-02**: Maintainer can verify the Hex package contains only the intended root library artifact and excludes `scrypath_ops/`, examples, website build output, planning files, `node_modules`, and Playwright artifacts.
-- [ ] **REL-03**: Maintainer can verify the publish path mechanically proves `mix verify.phase11`, dry-run publish, Hex visibility, HexDocs reachability, clean-consumer compile, and release parity.
+- [x] **REL-03**: Maintainer can verify the publish path mechanically proves `mix verify.phase11`, dry-run publish, Hex visibility, HexDocs reachability, clean-consumer compile, and release parity.
 
 ### Support Intake
 
@@ -59,7 +59,7 @@ Deferred unless backed by concrete production bugs, reviewed outside-adopter evi
 |-------------|-------|--------|
 | REL-01 | Phase 109 | Complete |
 | REL-02 | Phase 109 | Complete |
-| REL-03 | Phase 109 | Pending |
+| REL-03 | Phase 109 | Complete |
 | SUP-01 | Phase 110 | Pending |
 | SUP-02 | Phase 110 | Pending |
 | STAB-01 | Phase 111 | Pending |
