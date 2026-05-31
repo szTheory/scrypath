@@ -66,6 +66,13 @@ Phase 97 through 99 banned capability classes:
 - Existing hand-written owner-only fan-out reflection remains compatible.
 - Inline and Oban related-sync paths have service-free regression proof through `mix verify.phase106`.
 
+**v1.29 Phase 107 — Ecommerce Readiness Regression Guard** completed on **2026-05-31**.
+
+**What shipped:**
+- `/dev/e2e/search-visible` preserves `tenant_id` while applying category readiness filtering.
+- A backend-stubbed Phoenix controller regression proves the resulting `%Scrypath.Query.filter` contains both `tenant_id` and `category_id`.
+- `mix verify.phase107` provides a focused, service-free contributor gate without promoting `phase105-e2e` or changing CI topology.
+
 **v1.27 — Adopter Contract Hardening** shipped + archived in-repo on **2026-05-30** across phases **97–101**.
 
 **What shipped:**
@@ -139,6 +146,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 ### Validated
 
 - [x] **Phase 106** (2026-05-31): **FAN-01**–**FAN-02** — generated fan-out reflection for ordinary `use Scrypath, fan_outs:` schemas and compatibility for hand-written owner reflection, verified by `mix verify.phase106`.
+- [x] **Phase 107** (2026-05-31): **E2E-01** — ecommerce readiness probes preserve tenant scope when category filtering is present, verified by `mix verify.phase107`.
 - [x] **Phase 103** (2026-05-30): **APP-01**–**APP-03** — Demo App Foundation (e-commerce, multi-tenant)
 - [x] **v1.28** (2026-05-31): **OPS-01**–**OPS-02**, **APP-01**–**APP-03**, **INT-01**–**INT-04**, **E2E-01**–**E2E-06** — mountable admin UI engine, multi-tenant e-commerce example, storefront/operator E2E proof, and advisory real-services CI lane.
 - [x] **v1.27** (2026-05-30): Adopter Contract Hardening — requirements TRUTH-01–TRUTH-03, PROOF-01–PROOF-03, SUP-01–SUP-02, TEST-01–TEST-03, GATE-01–GATE-02, SCOPE-01.
@@ -202,7 +210,6 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 <!-- Current scope. Building toward these. -->
 
-- [ ] **E2E-01**: Ecommerce readiness probes preserve tenant scope when category filtering is present.
 - [ ] **TRUTH-01**: Related-data docs and planning/JTBD truth describe the repaired contract and keep deferred breadth out of v1.29.
 
 ### Out of Scope
@@ -233,4 +240,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-31 — Phase 106 fan-out reflection repair completed*
+*Last updated: 2026-05-31 — Phase 107 ecommerce readiness regression guard completed*

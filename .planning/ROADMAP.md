@@ -8,8 +8,8 @@
 ## Phases
 
 - ✅ **v1.28 Realistic Demo App & Admin UI Proof** — Phases 102-105 shipped on 2026-05-31; full roadmap archived at `milestones/v1.28-ROADMAP.md`
-- ○ **Phase 106: Fan-Out Reflection Contract Repair** — Generate and verify `__scrypath__(:fan_outs)` for `use Scrypath, fan_outs:` while preserving hand-written reflection compatibility. Requirements: FAN-01, FAN-02.
-- ○ **Phase 107: Ecommerce Readiness Regression Guard** — Prove `/dev/e2e/search-visible` keeps tenant scope when category readiness filtering is present. Requirement: E2E-01.
+- ✅ **Phase 106: Fan-Out Reflection Contract Repair** — Generate and verify `__scrypath__(:fan_outs)` for `use Scrypath, fan_outs:` while preserving hand-written reflection compatibility. Requirements: FAN-01, FAN-02.
+- ✅ **Phase 107: Ecommerce Readiness Regression Guard** — Prove `/dev/e2e/search-visible` keeps tenant scope when category readiness filtering is present. Requirement: E2E-01.
 - ○ **Phase 108: Truth Alignment and Closeout Proof** — Reconcile related-data docs, roadmap/JTBD truth, and verification posture without promoting `phase105-e2e` or adding new breadth. Requirement: TRUTH-01.
 
 ## Phase Details
@@ -54,7 +54,7 @@
 | Milestone | Phases | Plans Complete | Status | Shipped |
 |-----------|--------|----------------|--------|---------|
 | v1.28 Realistic Demo App & Admin UI Proof | 102-105 | 15/15 | Complete | 2026-05-31 |
-| v1.29 Contract Repair and Proof Hardening | 106-108 | 1/3 | Active | — |
+| v1.29 Contract Repair and Proof Hardening | 106-108 | 2/3 | Active | — |
 
 ## Historical Contract Anchors
 
