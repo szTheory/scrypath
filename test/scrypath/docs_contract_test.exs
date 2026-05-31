@@ -250,12 +250,12 @@ defmodule Scrypath.DocsContractTest do
     refute String.contains?(public_jtbd, "Scrypath.SearchModule")
 
     assert_contains_all(@jtbd_gap_map, [
-      "**Last reviewed:** 2026-05-27",
-      "Scrypath now looks roughly **93-95% done**",
-      "Release follow-through",
+      "**Last reviewed:** 2026-05-31",
+      "Scrypath now looks roughly **92-94% done**",
+      "contract-repair and proof-hardening closeout",
       "Outside-adopter evidence",
-      "The planning archive currently claims a thin `Scrypath.SearchModule` layer shipped in `v1.20`",
-      "the checked-out code does not expose that layer"
+      "The `v1.20` `Scrypath.SearchModule` mismatch is resolved as archive-correction",
+      "future milestone planning must not assume it exists"
     ])
   end
 
@@ -1184,8 +1184,8 @@ defmodule Scrypath.DocsContractTest do
       "callback magic",
       "contexts own orchestration",
       "library owns execution",
-      "def __scrypath__(:fan_outs)",
-      "does not generate a `__scrypath__(:fan_outs)` accessor"
+      "__scrypath__(:fan_outs)",
+      "For ordinary schemas, declare fan-out with `use Scrypath, fan_outs:`"
     ])
   end
 

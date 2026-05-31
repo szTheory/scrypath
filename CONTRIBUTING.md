@@ -17,6 +17,7 @@ Skim [`guides/common-mistakes.md`](guides/common-mistakes.md) when search or syn
 ## Release train and merge policy
 
 - Scrypath runs a **release train on `main`**: keep `main` green, let Release Please maintain the release PR, and merge that PR when the next patch is ready to ship.
+- Keep release mechanics centralized in [`docs/releasing.md`](docs/releasing.md): `mix verify.phase11` is the always-on auth-free gate, while `mix verify.release_publish` and `mix verify.release_parity` stay on post-publish and scheduled monitor paths.
 - **Default release posture is patch-first while Scrypath remains pre-1.0.** The repo already uses Release Please's pre-1.0 knobs, so merged work rolls into patch cadence unless maintainers intentionally open a larger semver conversation.
 - **Serious feature-depth work is PR-first.** Do not land it directly on `main`; shape it as a branch + PR slice that respects the release train.
 - **Squash merge only.** The PR title should be treated as the release-facing summary because it becomes the squash commit title that Release Please reads.
@@ -106,6 +107,10 @@ For a **multi-container-shaped** local stack (Postgres + Meilisearch + Phoenix +
 ## `phase105-e2e` local runbook
 
 `phase105-e2e` is advisory today (not a required merge gate). It exists to continuously exercise the full browser/operator proof while we track flake and runtime behavior. Treat this lane as the Phase 105 UAT surface: once the job is running on PR, push, schedule, or manual workflow dispatch, do not add a separate human UAT gate unless CI itself cannot execute.
+
+For the human-facing tour of what this lane protects, including the storefront,
+operator routes, demo tenants, and Compose launch path, see
+[`examples/scrypath_ecommerce/README.md`](examples/scrypath_ecommerce/README.md).
 
 Run locally:
 
