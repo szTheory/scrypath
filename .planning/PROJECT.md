@@ -8,9 +8,14 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Milestone: None active
+## Current Milestone: v1.29 Contract Repair and Proof Hardening
 
-**Goal:** None active. See below for next goals or start a new milestone with `/gsd:new-milestone`.
+**Goal:** Close post-v1.28 shipped-contract rough edges without opening new product breadth.
+
+**Target features:**
+- Generated `__scrypath__(:fan_outs)` reflection for ordinary `use Scrypath, fan_outs:` schemas.
+- Tenant-preserving ecommerce readiness filter regression proof.
+- Post-v1.28 roadmap, JTBD, and support/proof truth aligned with the repaired contract.
 
 ## Canonical Adopter Contract
 
@@ -48,6 +53,18 @@ Phase 97 through 99 banned capability classes:
 - Storefront search proving tenant filtering, category faceting, and related-data propagation.
 - Operator E2E proof for failed-sync triage and zero-downtime swap posture.
 - Advisory `phase105-e2e` CI lane with real Postgres, Meilisearch, Playwright, health checks, and failure artifacts.
+
+**Post-v1.28 next-step assessment (2026-05-31):**
+- The library remains near-done for its stated Meilisearch-first Phoenix/Ecto scope.
+- Highest-leverage next pull is **contract repair and proof hardening**, not new feature breadth.
+- Concrete repair targets: generated `__scrypath__(:fan_outs)` reflection for `use Scrypath, fan_outs:`, tenant-preserving ecommerce E2E readiness filters, and refreshed roadmap/JTBD truth.
+
+**v1.29 Phase 106 — Fan-Out Reflection Contract Repair** completed on **2026-05-31**.
+
+**What shipped:**
+- Ordinary schemas using `use Scrypath, fan_outs:` expose generated `__scrypath__(:fan_outs)` metadata.
+- Existing hand-written owner-only fan-out reflection remains compatible.
+- Inline and Oban related-sync paths have service-free regression proof through `mix verify.phase106`.
 
 **v1.27 — Adopter Contract Hardening** shipped + archived in-repo on **2026-05-30** across phases **97–101**.
 
@@ -96,8 +113,10 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Next Milestone Goals
 
-- **Determine next steps.** No active feature milestone. Feature lane requires PR-scoped milestone work and outside-adopter evidence before reopening. 
-- **Start a new milestone** via `/gsd:new-milestone` when readiness and evidence are established.
+- **Active bounded milestone:** v1.29 Contract Repair and Proof Hardening.
+- **Goal:** Close post-v1.28 shipped-contract rough edges before returning to maintenance/evidence mode.
+- **Targets:** finish and verify fan-out reflection, harden the ecommerce E2E tenant/category readiness proof, refresh post-v1.28 roadmap/JTBD truth, and keep `phase105-e2e` advisory unless release policy explicitly promotes it.
+- **Feature lane remains evidence-gated:** autocomplete/suggestions, broader OPSUI productization, tenant-token helpers, multi-backend, vector/hybrid, and new UI surfaces still require outside-adopter evidence or a concrete production bug.
 
 ## Last shipped milestone
 
@@ -113,12 +132,13 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Planning window
 
-**No active milestone.** Standing by for outside-adopter evidence or bug reports. Feature lane is currently closed.
+**v1.29 active.** This is a bounded repair closeout, not a new feature lane. After v1.29, default back to maintenance, release/support truth, and outside-adopter evidence unless a concrete bug or reviewed adopter evidence reopens scope.
 
 ## Requirements
 
 ### Validated
 
+- [x] **Phase 106** (2026-05-31): **FAN-01**–**FAN-02** — generated fan-out reflection for ordinary `use Scrypath, fan_outs:` schemas and compatibility for hand-written owner reflection, verified by `mix verify.phase106`.
 - [x] **Phase 103** (2026-05-30): **APP-01**–**APP-03** — Demo App Foundation (e-commerce, multi-tenant)
 - [x] **v1.28** (2026-05-31): **OPS-01**–**OPS-02**, **APP-01**–**APP-03**, **INT-01**–**INT-04**, **E2E-01**–**E2E-06** — mountable admin UI engine, multi-tenant e-commerce example, storefront/operator E2E proof, and advisory real-services CI lane.
 - [x] **v1.27** (2026-05-30): Adopter Contract Hardening — requirements TRUTH-01–TRUTH-03, PROOF-01–PROOF-03, SUP-01–SUP-02, TEST-01–TEST-03, GATE-01–GATE-02, SCOPE-01.
@@ -182,7 +202,8 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 <!-- Current scope. Building toward these. -->
 
-No active requirements. Start the next milestone with `/gsd:new-milestone` when there is approved scope.
+- [ ] **E2E-01**: Ecommerce readiness probes preserve tenant scope when category filtering is present.
+- [ ] **TRUTH-01**: Related-data docs and planning/JTBD truth describe the repaired contract and keep deferred breadth out of v1.29.
 
 ### Out of Scope
 
@@ -212,4 +233,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-31 — v1.28 shipped + archived in-repo*
+*Last updated: 2026-05-31 — Phase 106 fan-out reflection repair completed*

@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.29
 milestone_name: Contract Repair and Proof Hardening
-status: verifying
-last_updated: "2026-05-31T15:48:39.301Z"
+status: ready_to_plan
+last_updated: 2026-05-31T15:53:15.262Z
 last_activity: 2026-05-31
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
+  total_plans: 18
+  completed_plans: 40
   percent: 33
+stopped_at: Phase 106 complete (1/1) — ready to discuss Phase 107
 ---
 
 # Project State
@@ -18,13 +19,13 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 106 — Fan-Out Reflection Contract Repair
+**Current Focus:** Phase 107 — ecommerce readiness regression guard
 
 ## Current Position
 
-Phase: 106 (Fan-Out Reflection Contract Repair) — EXECUTING
-Plan: 1 of 1
-Status: Phase complete — ready for verification
+Phase: 107
+Plan: Not started
+Status: Ready to plan
 Last activity: 2026-05-31
 
 ## Performance Metrics
