@@ -62,7 +62,7 @@ defmodule ScrypathEcommerce.MixProject do
       setup: ["deps.get", "ecto.setup"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      "e2e.prepare": ["ecto.create --quiet", "ecto.migrate --quiet"],
+      "e2e.prepare": ["ecto.create --quiet", "ecto.migrate --quiet", "e2e.prepare_search"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]
     ]

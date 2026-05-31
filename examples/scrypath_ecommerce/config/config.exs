@@ -19,6 +19,16 @@ config :scrypath, :defaults,
   oban: Oban,
   oban_queue: :scrypath_sync
 
+config :scrypath_ops,
+  schema_allowlist: [ScrypathEcommerce.Catalog.Product],
+  backend: Scrypath.Meilisearch,
+  meilisearch_url: System.get_env("SCRYPATH_MEILISEARCH_URL") || "http://localhost:7700",
+  index_prefix: "ecommerce_",
+  sync_mode: :oban,
+  oban: Oban,
+  oban_queue: :scrypath_sync,
+  oban_inspector: ScrypathEcommerceWeb.E2EObanInspector
+
 config :scrypath_ecommerce, Oban,
   repo: ScrypathEcommerce.Repo,
   plugins: [Oban.Plugins.Pruner],

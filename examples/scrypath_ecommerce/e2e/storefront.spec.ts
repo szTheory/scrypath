@@ -19,7 +19,7 @@ test("consumer can search and facet deterministic catalog results", async ({ pag
     expectedName: "Quantum CyberPhone Pro"
   });
 
-  await page.goto("/");
+  await page.goto(`/?tenant_id=${seed.tenant_id}`);
 
   await page.getByLabel("Search products").fill("quantum");
 
@@ -59,11 +59,11 @@ test("related category changes become visible in storefront search", async ({ pa
     expectedName: "Quantum CyberPhone X"
   });
 
-  await page.goto("/?q=quantum");
+  await page.goto(`/?tenant_id=${seed.tenant_id}&q=quantum`);
 
   const results = page.getByTestId("storefront-results");
 
   await expect(results.getByText("Quantum CyberPhone X")).toBeVisible();
   await expect(results.getByText("Quantum CyberPhone Pro")).toBeVisible();
-  await expect(results.getByText("Category: Pocket Superphones")).toBeVisible();
+  await expect(results).toContainText("Category: Pocket Superphones");
 });

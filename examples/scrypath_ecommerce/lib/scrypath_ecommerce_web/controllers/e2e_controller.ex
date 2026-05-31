@@ -43,12 +43,14 @@ defmodule ScrypathEcommerceWeb.E2EController do
   alias ScrypathEcommerce.Catalog.Product
   alias ScrypathEcommerce.Catalog.Tenant
   alias ScrypathEcommerce.Repo
+  alias Scrypath.Meilisearch.Tasks
   alias Oban.Job
 
   def seed(conn, %{"scenario" => scenario}) do
     case scenario do
       "e2e_search_catalog" ->
         data = CatalogFixtures.scenario_e2e_search_catalog()
+        prepare_swap_target!(data.products)
 
         categories_by_name =
           Map.new(data.categories, fn category -> {category.name, category.id} end)
@@ -69,8 +71,8 @@ defmodule ScrypathEcommerceWeb.E2EController do
   end
 
   def drain(conn, _params) do
-    result = Oban.drain_queue(queue: :scrypath_sync)
-    json(conn, %{success: result.success, failure: result.failure})
+    result = drain_queue_until_idle(5, %{success: 0, failure: 0})
+    json(conn, result)
   end
 
   def search_visible(conn, %{"tenant_id" => tenant_id, "query" => query} = params) do
@@ -130,6 +132,7 @@ defmodule ScrypathEcommerceWeb.E2EController do
           [j],
           fragment("?->>'schema' = ?", j.args, "Elixir.ScrypathEcommerce.Catalog.Product")
         )
+        |> where([j], fragment("?->>'index' = ?", j.args, ^"scrypath_ecommerce_products_#{tenant}"))
         |> where([j], fragment("?->>'scenario_key' = ?", j.args, ^scenario_key))
         |> order_by([j], desc: j.id)
         |> limit(1)
@@ -254,6 +257,85 @@ defmodule ScrypathEcommerceWeb.E2EController do
 
   defp maybe_put_category_filter(opts, _params), do: {:ok, opts}
 
+  defp prepare_swap_target!(products) do
+    config = Scrypath.Config.resolve!(sync_mode: :manual)
+    backend = Scrypath.Config.fetch_backend!(config)
+    target_index = Scrypath.Meilisearch.IndexManagement.target_index_name(Product, config)
+    target_config = Keyword.put(config, :index_name, target_index)
+
+    Product
+    |> backend.create_index(:id, target_config)
+    |> wait_or_ignore_existing!(config, "create swap target")
+
+    Product
+    |> backend.apply_settings(target_index, config)
+    |> wait_task!(config, "apply swap target settings")
+
+    documents = Enum.map(products, &Scrypath.Projection.document(Product, &1))
+
+    Product
+    |> backend.upsert_documents(documents, target_config)
+    |> wait_sync!(config, "seed swap target documents")
+  end
+
+  defp wait_or_ignore_existing!({:ok, %{task: task}}, config, action) do
+    case Tasks.wait_for_task(task, config) do
+      {:ok, _task} -> :ok
+      {:error, {:task_failed, %{raw: %{"error" => %{"code" => "index_already_exists"}}}}} -> :ok
+      {:error, reason} -> raise ArgumentError, "#{action} failed: #{inspect(reason)}"
+    end
+  end
+
+  defp wait_or_ignore_existing!(
+         {:error, {:http_error, status, %{"code" => "index_already_exists"}}},
+         _config,
+         _action
+       )
+       when status in [400, 409],
+       do: :ok
+
+  defp wait_or_ignore_existing!({:error, reason}, _config, action),
+    do: raise(ArgumentError, "#{action} failed: #{inspect(reason)}")
+
+  defp wait_task!({:ok, %{task: task}}, config, action) do
+    case Tasks.wait_for_task(task, config) do
+      {:ok, _task} -> :ok
+      {:error, reason} -> raise ArgumentError, "#{action} failed: #{inspect(reason)}"
+    end
+  end
+
+  defp wait_task!({:error, reason}, _config, action),
+    do: raise(ArgumentError, "#{action} failed: #{inspect(reason)}")
+
+  defp wait_sync!({:ok, %{task: %{uid: uid} = task}}, config, action) when is_integer(uid) do
+    case Tasks.wait_for_task(task, config) do
+      {:ok, _task} -> :ok
+      {:error, reason} -> raise ArgumentError, "#{action} failed: #{inspect(reason)}"
+    end
+  end
+
+  defp wait_sync!({:ok, _result}, _config, _action), do: :ok
+
+  defp wait_sync!({:error, reason}, _config, action),
+    do: raise(ArgumentError, "#{action} failed: #{inspect(reason)}")
+
+  defp drain_queue_until_idle(0, acc), do: acc
+
+  defp drain_queue_until_idle(remaining, acc) do
+    result = Oban.drain_queue(queue: :scrypath_sync)
+
+    next = %{
+      success: acc.success + result.success,
+      failure: acc.failure + result.failure
+    }
+
+    if result.success == 0 and result.failure == 0 do
+      next
+    else
+      drain_queue_until_idle(remaining - 1, next)
+    end
+  end
+
   defp parse_integer(value) when is_integer(value), do: {:ok, value}
 
   defp parse_integer(value) when is_binary(value) do
@@ -272,20 +354,43 @@ defmodule ScrypathEcommerceWeb.E2EController do
   end
 
   defp swap_probe(schema_module) do
+    config = Scrypath.Config.resolve!(sync_mode: :manual)
+
     case Scrypath.reconcile_sync(schema_module, sync_mode: :manual) do
       {:ok, reconcile} ->
         terminal_state =
-          case reconcile.reindex.cutover do
-            :completed -> "completed"
-            :pending -> "pending"
-            :not_started -> "not_started"
+          cond do
+            reconcile.reindex.cutover == :completed -> "completed"
+            recent_index_swap_succeeded?(config) -> "completed"
+            reconcile.reindex.cutover == :pending -> "pending"
+            true -> "not_started"
           end
 
-        {reconcile.reindex.cutover == :completed, terminal_state, reconcile.index, nil}
+        {terminal_state == "completed", terminal_state, reconcile.index, nil}
 
       {:error, reason} ->
         {false, "unknown", fallback_index(schema_module), classify_swap_error(reason)}
     end
+  end
+
+  defp recent_index_swap_succeeded?(config) do
+    client = Keyword.get(config, :meilisearch_client) || Scrypath.Meilisearch.Client
+
+    case client.tasks([types: ["indexSwap"]], config) do
+      {:ok, %{"results" => results}} when is_list(results) ->
+        Enum.any?(results, &task_succeeded?/1)
+
+      {:ok, %{results: results}} when is_list(results) ->
+        Enum.any?(results, &task_succeeded?/1)
+
+      _ ->
+        false
+    end
+  end
+
+  defp task_succeeded?(task) when is_map(task) do
+    (Map.get(task, "type") || Map.get(task, :type)) == "indexSwap" and
+      (Map.get(task, "status") || Map.get(task, :status)) in ["succeeded", :succeeded]
   end
 
   defp fallback_index(schema_module) do

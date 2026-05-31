@@ -94,7 +94,7 @@ defmodule ScrypathEcommerceWeb.SearchLiveTest do
     assert category_id == category.id
   end
 
-  test "search form pushes URL patches instead of searching directly", %{conn: conn} do
+  test "search form pushes URL patches instead of searching directly", %{conn: conn, tenant: tenant} do
     assert {:ok, view, _html} = live(conn, ~p"/")
     assert_receive {:search, Product, %Query{text: ""}}
 
@@ -102,7 +102,7 @@ defmodule ScrypathEcommerceWeb.SearchLiveTest do
     |> form("form[phx-change='search']", search: %{q: "nebula", category_id: "2"})
     |> render_change()
 
-    assert_patch(view, "/?category_id=2&q=nebula")
+    assert_patch(view, "/?category_id=2&q=nebula&tenant_id=#{tenant.id}")
   end
 
   test "renders a unified search form, debounced input, facets, and hits", %{conn: conn} do

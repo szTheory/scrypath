@@ -5,6 +5,8 @@
   </header>
 
   <.form for={@form} phx-change="search" class="storefront-search__layout">
+    <input type="hidden" name={@form[:tenant_id].name} value={@form[:tenant_id].value} />
+
     <aside class="storefront-search__filters" aria-label="Search filters">
       <label class="storefront-search__search-field">
         <span>Search products</span>

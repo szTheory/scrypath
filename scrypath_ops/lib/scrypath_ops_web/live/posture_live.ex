@@ -9,6 +9,7 @@ defmodule ScrypathOpsWeb.PostureLive do
   use ScrypathOpsWeb, :live_view
 
   alias ScrypathOps.Integrations.Sigra.Gating
+  alias Scrypath.Meilisearch.Tasks
 
   @meilisearch_ops_guide "https://github.com/szTheory/scrypath/blob/main/guides/meilisearch-operations.md"
 
@@ -115,16 +116,31 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   defp swap_live(socket, mod) do
     Gating.gate_sensitive_action(socket, :swap_live, fn ->
-      case Scrypath.Meilisearch.swap_indexes(mod, socket.assigns.scrypath_opts) do
-        {:ok, _result} ->
-          socket
-          |> load_posture()
-          |> put_flash(:info, "Swap live index completed")
+      scrypath_opts = socket.assigns.scrypath_opts
+      wait_opts = task_wait_opts(scrypath_opts)
+
+      case Scrypath.Meilisearch.swap_indexes(mod, scrypath_opts) do
+        {:ok, %{task: task}} ->
+          case Tasks.wait_for_task(task, wait_opts) do
+            {:ok, _waited} ->
+              socket
+              |> load_posture()
+              |> put_flash(:info, "Swap live index completed")
+
+            {:error, reason} ->
+              put_flash(socket, :error, "Swap live failed: #{inspect(reason)}")
+          end
 
         {:error, reason} ->
           put_flash(socket, :error, "Swap live failed: #{inspect(reason)}")
       end
     end)
+  end
+
+  defp task_wait_opts(opts) do
+    opts
+    |> Keyword.put_new(:inline_poll_interval, 50)
+    |> Keyword.put_new(:inline_timeout, 15_000)
   end
 
   defp jtbd_state(:empty_allowlist, _, _mount_path) do
