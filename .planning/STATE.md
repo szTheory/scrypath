@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.29
-milestone_name: Contract Repair and Proof Hardening
-status: Awaiting next milestone
-last_updated: "2026-05-31T17:28:04.448Z"
-last_activity: 2026-05-31 — Milestone v1.29 completed and archived
+milestone: v1.30
+milestone_name: Release Trust and Evidence Maintenance
+status: planning
+last_updated: "2026-05-31T18:33:19.224Z"
+last_activity: 2026-05-31 — Milestone v1.30 initialized with Phases 109-112
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 3
-  completed_plans: 3
-  percent: 100
+  total_phases: 4
+  completed_phases: 0
+  total_plans: 4
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -18,14 +18,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** v1.29 complete — maintenance-and-evidence mode
+**Current Focus:** v1.30 Release Trust and Evidence Maintenance
 
 ## Current Position
 
-Phase: Milestone v1.29 complete
+Phase: 109 — Release Train and Package Truth Audit
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-05-31 — Milestone v1.29 completed and archived
+Status: Roadmap ready; phase discussion/planning not started
+Last activity: 2026-05-31 — Milestone v1.30 initialized with Phases 109-112
 
 ## Performance Metrics
 
@@ -62,9 +62,10 @@ Last activity: 2026-05-31 — Milestone v1.29 completed and archived
 
 ### Todos
 
-- Verify fan-out reflection contract repair with focused schema tests.
-- Verify ecommerce readiness filter regression with focused example controller tests.
-- Maintain release/support truth, proof stability, and outside-adopter evidence after v1.29 closeout.
+- Phase 109: audit release train and package truth.
+- Phase 110: audit support intake and evidence routing.
+- Phase 111: decide advisory proof stability posture for `phase105-e2e`.
+- Phase 112: align public website/docs truth and scope guard claims.
 
 ### Historical Contract Pointers
 
@@ -72,7 +73,7 @@ Last activity: 2026-05-31 — Milestone v1.29 completed and archived
 
 ## Session Continuity
 
-- **Last Session:** 2026-05-31T16:43:19.151Z
+- **Last Session:** 2026-05-31T18:33:19.221Z
 
 - [x] Initialized v1.28 roadmap with Phases 102-105.
 
@@ -103,4 +104,4 @@ Last activity: 2026-05-31 — Milestone v1.29 completed and archived
 
 ## Operator Next Steps
 
-- Start the next milestone with `$gsd-new-milestone`.
+- Start Phase 109 with `$gsd-discuss-phase 109` or `$gsd-plan-phase 109`.
