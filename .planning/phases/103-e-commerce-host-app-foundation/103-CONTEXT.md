@@ -17,10 +17,10 @@ Scaffold the e-commerce testbed with multi-tenant Ecto schemas (Tenant, Category
 - **D-02:** Adopt a strict "scoped context" pattern where the Context API always requires a tenant or scope struct. Utilize Ecto's `prepare_query/3` repo hook to enforce that every query has a `tenant_id` filter applied by default, ensuring zero cross-tenant leakage.
 
 ### Variant Modeling
-- **D-03:** Model Product as the logical container and Variant as the strictly sellable unit. A cart or order line item should always reference a `Variant`, never a `Product`.
+- **D-03 [informational]:** Model Product as the logical container and Variant as the strictly sellable unit. A cart or order line item should always reference a `Variant`, never a `Product`.
 - **D-04:** Product Schema: `id`, `tenant_id`, `name`, `description`, `category_id`.
 - **D-05:** Variant Schema: `id`, `tenant_id`, `product_id`, `sku`, `price_cents`, `currency`, `inventory_count`, and an `options` map (JSONB) for dynamic traits like size/color.
-- **D-06:** Search Context: Index the Product as the primary search document, but project the Variant data into it (array of SKUs, min/max price calculated from variants).
+- **D-06 [informational]:** Search Context: Index the Product as the primary search document, but project the Variant data into it (array of SKUs, min/max price calculated from variants).
 
 ### Seed Data Strategy
 - **D-07:** Use pure Elixir function factories (`*Fixtures` modules) as the single source of truth for generating data, instead of ExMachina or Mix tasks.

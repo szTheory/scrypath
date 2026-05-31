@@ -1,0 +1,477 @@
+---
+phase: 103-e-commerce-host-app-foundation
+plan: 00
+type: execute
+wave: 0
+depends_on: []
+files_modified:
+  - examples/scrypath_ecommerce/test/scrypath_ecommerce/catalog_test.exs
+  - examples/scrypath_ecommerce/test/scrypath_ecommerce_web/controllers/e2e_controller_test.exs
+requirements: [APP-01, APP-02, APP-03]
+autonomous: true
+must_haves:
+  truths:
+    - Test stubs exist for Catalog context and E2E Controller.
+  artifacts:
+    - path: examples/scrypath_ecommerce/test/scrypath_ecommerce/catalog_test.exs
+      provides: Test stubs for Catalog tenancy enforcement.
+      min_lines: 5
+    - path: examples/scrypath_ecommerce/test/scrypath_ecommerce_web/controllers/e2e_controller_test.exs
+      provides: Test stubs for E2E Seed Controller.
+      min_lines: 5
+  key_links: []
+---
+
+<objective>
+Implement Wave 0 test stubs for the Catalog context and E2E Seed Controller to satisfy the validation strategy and nyquist_compliant testing requirements.
+
+Purpose: Provide a test scaffold that subsequent plans can automate against to verify behavioral requirements rather than just compilation.
+Output: Initial stub files for `catalog_test.exs` and `e2e_controller_test.exs`.
+</objective>
+
+<execution_context>
+@$HOME/.gemini/get-shit-done/workflows/execute-plan.md
+@$HOME/.gemini/get-shit-done/templates/summary.md
+</execution_context>
+
+<context>
+@.planning/PROJECT.md
+@.planning/ROADMAP.md
+@.planning/STATE.md
+@.planning/phases/103-e-commerce-host-app-foundation/103-VALIDATION.md
+</context>
+
+<tasks>
+
+<task type="auto">
+  <name>Task 1: Catalog Test Stubs</name>
+  <files>examples/scrypath_ecommerce/test/scrypath_ecommerce/catalog_test.exs</files>
+  <action>
+    Create or update `examples/scrypath_ecommerce/test/scrypath_ecommerce/catalog_test.exs`. If it does not exist, define the `ScrypathEcommerce.CatalogTest` module with `use ScrypathEcommerce.DataCase`. Add failing or skipped test stubs for the new tenancy behavior, such as "Repo tenancy enforcement via prepare_query/3", "Tenant management functions", and "Tenant-scoped CRUD".
+  </action>
+  <verify>
+    <automated>cd examples/scrypath_ecommerce && mix test test/scrypath_ecommerce/catalog_test.exs || true</automated>
+  </verify>
+  <done>The file `catalog_test.exs` exists and contains structural test cases for tenancy requirements.</done>
+</task>
+
+<task type="auto">
+  <name>Task 2: E2E Controller Test Stubs</name>
+  <files>examples/scrypath_ecommerce/test/scrypath_ecommerce_web/controllers/e2e_controller_test.exs</files>
+  <action>
+    Create `examples/scrypath_ecommerce/test/scrypath_ecommerce_web/controllers/e2e_controller_test.exs`. Define `ScrypathEcommerceWeb.E2EControllerTest` module with `use ScrypathEcommerceWeb.ConnCase`. Add stubbed test cases for the E2E seed endpoint, e.g., "seed/2 dynamically invokes catalog fixtures".
+  </action>
+  <verify>
+    <automated>cd examples/scrypath_ecommerce && mix test test/scrypath_ecommerce_web/controllers/e2e_controller_test.exs || true</automated>
+  </verify>
+  <done>The file `e2e_controller_test.exs` exists and contains stubbed assertions for the E2E seed route.</done>
+</task>
+
+</tasks>
+
+<threat_model>
+## Trust Boundaries
+| Boundary | Description |
+|----------|-------------|
+| Test | Stubs enforce behavioral correctness tests rather than only compile checks. |
+
+## STRIDE Threat Register
+| Threat ID | Category | Component | Disposition | Mitigation Plan |
+|-----------|----------|-----------|-------------|-----------------|
+| T-103-W0 | Repudiation | Tests | mitigate | Establish test files in Wave 0 to ensure validation strategy is followed. |
+</threat_model>
+
+<verification>
+`mix test` might show failing/skipped tests, which is expected at Wave 0.
+</verification>
+
+<success_criteria>
+Test stubs are available for plans 01, 02, and 03 to use in their automated verify blocks.
+</success_criteria>
+
+<output>
+Create `.planning/phases/103-e-commerce-host-app-foundation/103-00-SUMMARY.md` when done
+</output>---
+phase: 103-e-commerce-host-app-foundation
+plan: 01
+type: execute
+wave: 1
+depends_on: []
+files_modified:
+  - examples/scrypath_ecommerce/priv/repo/migrations/
+  - examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog/tenant.ex
+  - examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog/category.ex
+  - examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog/product.ex
+  - examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog/variant.ex
+  - examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog.ex
+  - examples/scrypath_ecommerce/lib/scrypath_ecommerce/repo.ex
+  - examples/scrypath_ecommerce/test/scrypath_ecommerce/catalog_test.exs
+autonomous: true
+requirements:
+  - APP-02
+must_haves:
+  truths:
+    - Queries without tenant_id or skip_tenant_id raise an error
+    - Developer can run migrations without tenant_id errors
+    - Domain models reflect B2B E-commerce marketplace structure
+  artifacts:
+    - path: examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog/variant.ex
+      provides: Variant schema
+    - path: examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog/tenant.ex
+      provides: Tenant schema
+  key_links:
+    - from: examples/scrypath_ecommerce/lib/scrypath_ecommerce/repo.ex
+      to: Ecto.Query
+      via: prepare_query/3
+      pattern: opts\[:tenant_id\]
+---
+
+<objective>
+Scaffold the multi-tenant E-Commerce catalog models and enforce strict tenant isolation via Ecto.
+
+Purpose: Implement APP-02 (Tenant, Category, Product, Variant) and D-01/D-02 (tenant_id on every model, enforced by prepare_query).
+Output: A fully functional, tenant-isolated Ecto domain model with tests.
+</objective>
+
+<execution_context>
+@$HOME/.gemini/get-shit-done/workflows/execute-plan.md
+@$HOME/.gemini/get-shit-done/templates/summary.md
+</execution_context>
+
+<context>
+@.planning/PROJECT.md
+@.planning/ROADMAP.md
+@.planning/STATE.md
+@.planning/phases/103-e-commerce-host-app-foundation/103-CONTEXT.md
+@.planning/phases/103-e-commerce-host-app-foundation/103-RESEARCH.md
+</context>
+
+<tasks>
+
+<task type="auto" tdd="true">
+  <name>Task 1: Catalog Domain Models (APP-02)</name>
+  <files>
+    examples/scrypath_ecommerce/priv/repo/migrations/*,
+    examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog/tenant.ex,
+    examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog/category.ex,
+    examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog/product.ex,
+    examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog/variant.ex,
+    examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog/brand.ex
+  </files>
+  <behavior>
+    - Test 1: Tenant schema exists and has valid changeset
+    - Test 2: Category belongs to Tenant
+    - Test 3: Product belongs to Tenant and Category
+    - Test 4: Variant belongs to Tenant and Product
+  </behavior>
+  <action>
+    Delete existing migrations for brands, categories, products (`priv/repo/migrations/20260530*_create_*.exs`, ignore oban migration).
+    Delete `brand.ex`.
+    Create a new sequential migration (`priv/repo/migrations/<timestamp>_create_catalog.exs`) that creates tables in order: `tenants`, `categories`, `products`, `variants`.
+    Ensure `tenant_id` is on every table (D-01).
+    Update/Create the schema files in `lib/scrypath_ecommerce/catalog/` matching D-04 and D-05 structure.
+    For Product: id, tenant_id, name, description, category_id.
+    For Variant: id, tenant_id, product_id, sku, price_cents, currency, inventory_count, options (map).
+  </action>
+  <verify>
+    <automated>cd examples/scrypath_ecommerce && mix ecto.reset --quiet && echo "Migrations succeed"</automated>
+  </verify>
+  <done>Clean slate catalog structure exists in db with all required models.</done>
+</task>
+
+<task type="auto" tdd="true">
+  <name>Task 2: Tenancy Enforcement (D-02)</name>
+  <files>
+    examples/scrypath_ecommerce/lib/scrypath_ecommerce/repo.ex,
+    examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog.ex,
+    examples/scrypath_ecommerce/test/scrypath_ecommerce/catalog_test.exs
+  </files>
+  <behavior>
+    - Test 1: Repo operations without `:tenant_id` or `:skip_tenant_id` raise ArgumentError.
+    - Test 2: Catalog functions (e.g., `list_products(tenant)`) pass `:tenant_id` and successfully scope results.
+  </behavior>
+  <action>
+    Implement `prepare_query/3` in `ScrypathEcommerce.Repo` to enforce `:tenant_id` globally. Allow `:schema_migration` and `:skip_tenant_id` to bypass.
+    Update `ScrypathEcommerce.Catalog` to accept a `tenant` struct or `tenant_id` in its CRUD APIs and pass `[tenant_id: tenant_id]` to `Repo` calls.
+    Implement comprehensive unit tests in `catalog_test.exs` verifying cross-tenant leakage is prevented.
+  </action>
+  <verify>
+    <automated>cd examples/scrypath_ecommerce && mix test test/scrypath_ecommerce/catalog_test.exs</automated>
+  </verify>
+  <done>Global tenancy enforcement works natively via Repo options.</done>
+</task>
+
+</tasks>
+
+<threat_model>
+## Trust Boundaries
+
+| Boundary | Description |
+|----------|-------------|
+| DB Query Layer | API requests must not read or modify cross-tenant data |
+
+## STRIDE Threat Register
+
+| Threat ID | Category | Component | Disposition | Mitigation Plan |
+|-----------|----------|-----------|-------------|-----------------|
+| T-103-01 | Information Disclosure | ScrypathEcommerce.Repo | mitigate | `prepare_query/3` explicitly enforces tenant boundaries on all requests |
+</threat_model>
+
+<verification>
+Automated tests confirm cross-tenant leakage is prevented by Ecto.
+</verification>
+
+<success_criteria>
+Migrations execute successfully and the domain model tests pass.
+</success_criteria>
+
+<output>
+Create `.planning/phases/103-e-commerce-host-app-foundation/103-01-SUMMARY.md` when done
+</output>
+---
+phase: 103-e-commerce-host-app-foundation
+plan: 02
+type: execute
+wave: 2
+depends_on:
+  - 103-01
+files_modified:
+  - examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog_fixtures.ex
+  - examples/scrypath_ecommerce/lib/mix/tasks/scrypath.seed.ex
+autonomous: true
+requirements:
+  - APP-02
+must_haves:
+  truths:
+    - Developer can seed a multi-tenant catalog via a Mix task
+    - Fixtures act as the single source of truth for test data
+  artifacts:
+    - path: examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog_fixtures.ex
+      provides: Fixture functions
+    - path: examples/scrypath_ecommerce/lib/mix/tasks/scrypath.seed.ex
+      provides: CLI seed runner
+  key_links:
+    - from: examples/scrypath_ecommerce/lib/mix/tasks/scrypath.seed.ex
+      to: examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog_fixtures.ex
+      via: function calls
+      pattern: CatalogFixtures\.
+---
+
+<objective>
+Implement pure Elixir function fixtures and a mix task to generate a multi-tenant test catalog.
+
+Purpose: Implement APP-02 requirements for local developer tooling and test isolation via fixtures (D-07, D-08).
+Output: Reusable `CatalogFixtures` module and a `mix scrypath.seed` task.
+</objective>
+
+<execution_context>
+@$HOME/.gemini/get-shit-done/workflows/execute-plan.md
+@$HOME/.gemini/get-shit-done/templates/summary.md
+</execution_context>
+
+<context>
+@.planning/PROJECT.md
+@.planning/ROADMAP.md
+@.planning/STATE.md
+@.planning/phases/103-e-commerce-host-app-foundation/103-CONTEXT.md
+@.planning/phases/103-e-commerce-host-app-foundation/103-RESEARCH.md
+</context>
+
+<tasks>
+
+<task type="auto" tdd="true">
+  <name>Task 1: Catalog Fixtures (D-07)</name>
+  <files>
+    examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog_fixtures.ex,
+    examples/scrypath_ecommerce/test/scrypath_ecommerce/catalog_fixtures_test.exs
+  </files>
+  <behavior>
+    - Test 1: `tenant_fixture/1` creates a Tenant.
+    - Test 2: `scenario_standard_catalog/1` creates a tenant, 2 categories, 3 products, and 2 variants per product, returning a map of created entities.
+  </behavior>
+  <action>
+    Create `ScrypathEcommerce.CatalogFixtures`.
+    Implement basic generator functions for tenants, categories, products, and variants (using the `Catalog` context CRUD functions to ensure defaults and `tenant_id` scopes are applied correctly).
+    Implement a `scenario_standard_catalog()` function that chains these together to generate a realistic small catalog for a new tenant.
+  </action>
+  <verify>
+    <automated>cd examples/scrypath_ecommerce && mix test test/scrypath_ecommerce/catalog_fixtures_test.exs</automated>
+  </verify>
+  <done>Fixtures module can reliably construct multi-tenant domain graphs.</done>
+</task>
+
+<task type="auto">
+  <name>Task 2: Mix Seed Task (D-08)</name>
+  <files>
+    examples/scrypath_ecommerce/lib/mix/tasks/scrypath.seed.ex
+  </files>
+  <action>
+    Create `Mix.Tasks.Scrypath.Seed`.
+    It should start the required applications (`Mix.Task.run("app.start")`), then call `CatalogFixtures.scenario_standard_catalog()` to generate sample data in the DB.
+    Optionally, emit an `IO.puts` summarizing the created data (e.g., "Created 1 Tenant, 2 Categories, 3 Products, 6 Variants").
+    Ensure it gracefully handles duplicate runs if needed or is explicitly documented as additive.
+  </action>
+  <verify>
+    <automated>cd examples/scrypath_ecommerce && mix scrypath.seed</automated>
+  </verify>
+  <done>Developer can run `mix scrypath.seed` to populate their local DB.</done>
+</task>
+
+</tasks>
+
+<threat_model>
+## Trust Boundaries
+
+| Boundary | Description |
+|----------|-------------|
+| Testing Layer | Fixtures run in test/dev context and shouldn't impact production DBs inadvertently |
+
+## STRIDE Threat Register
+
+| Threat ID | Category | Component | Disposition | Mitigation Plan |
+|-----------|----------|-----------|-------------|-----------------|
+| T-103-02 | Tampering | Mix Seed Task | mitigate | Mix tasks naturally don't run automatically in prod, but ensure standard Ecto safeties |
+</threat_model>
+
+<verification>
+`mix scrypath.seed` completes without error.
+</verification>
+
+<success_criteria>
+CatalogFixtures provides standard testing graphs and `mix scrypath.seed` populates the DB.
+</success_criteria>
+
+<output>
+Create `.planning/phases/103-e-commerce-host-app-foundation/103-02-SUMMARY.md` when done
+</output>
+---
+phase: 103-e-commerce-host-app-foundation
+plan: 03
+type: execute
+wave: 3
+depends_on:
+  - 103-02
+files_modified:
+  - examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/endpoint.ex
+  - examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/router.ex
+  - examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/controllers/e2e_controller.ex
+  - examples/scrypath_ecommerce/test/scrypath_ecommerce_web/controllers/e2e_controller_test.exs
+  - examples/scrypath_ecommerce/config/test.exs
+  - examples/scrypath_ecommerce/config/dev.exs
+autonomous: true
+requirements:
+  - APP-03
+must_haves:
+  truths:
+    - E2E tools can seed specific fixture scenarios via POST /dev/e2e/seed
+    - API endpoints correctly utilize Ecto Sandbox for parallel testing
+    - Seed endpoints are strictly unavailable in production
+  artifacts:
+    - path: examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/controllers/e2e_controller.ex
+      provides: Test seeding API
+  key_links:
+    - from: examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/endpoint.ex
+      to: Phoenix.Ecto.SQL.Sandbox
+      via: endpoint plug
+      pattern: plug Phoenix\.Ecto\.SQL\.Sandbox
+---
+
+<objective>
+Configure the Phoenix Ecto SQL Sandbox and implement the E2E seed endpoint for parallel Playwright tests.
+
+Purpose: Implement APP-03 by enabling safe, concurrent test runs via shared sandbox mode and providing a hidden API for generating deterministic test states (D-09).
+Output: Configured endpoint sandbox, a secure `/dev/e2e/seed` route, and tests.
+</objective>
+
+<execution_context>
+@$HOME/.gemini/get-shit-done/workflows/execute-plan.md
+@$HOME/.gemini/get-shit-done/templates/summary.md
+</execution_context>
+
+<context>
+@.planning/PROJECT.md
+@.planning/ROADMAP.md
+@.planning/STATE.md
+@.planning/phases/103-e-commerce-host-app-foundation/103-CONTEXT.md
+@.planning/phases/103-e-commerce-host-app-foundation/103-RESEARCH.md
+</context>
+
+<tasks>
+
+<task type="auto" tdd="true">
+  <name>Task 1: Sandbox Configuration (APP-03)</name>
+  <files>
+    examples/scrypath_ecommerce/config/test.exs,
+    examples/scrypath_ecommerce/config/dev.exs,
+    examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/endpoint.ex
+  </files>
+  <behavior>
+    - Test 1: Compile checks pass with Ecto Sandbox plug present.
+  </behavior>
+  <action>
+    Update `config/test.exs` and `config/dev.exs` to include `config :scrypath_ecommerce, sandbox: true` (or equivalent structure expected by endpoint).
+    Update `lib/scrypath_ecommerce_web/endpoint.ex` to unconditionally compile the plug (if configured) high up in the endpoint:
+    ```elixir
+    if sandbox = Application.compile_env(:scrypath_ecommerce, :sandbox) do
+      plug Phoenix.Ecto.SQL.Sandbox, sandbox: sandbox
+    end
+    ```
+    Ensure this is placed before the router or any custom plugs that touch the DB.
+  </action>
+  <verify>
+    <automated>cd examples/scrypath_ecommerce && mix compile</automated>
+  </verify>
+  <done>Phoenix endpoint supports Ecto Sandbox headers for isolated E2E tests.</done>
+</task>
+
+<task type="auto" tdd="true">
+  <name>Task 2: E2E Seeding Endpoint (D-09)</name>
+  <files>
+    examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/router.ex,
+    examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/controllers/e2e_controller.ex,
+    examples/scrypath_ecommerce/test/scrypath_ecommerce_web/controllers/e2e_controller_test.exs
+  </files>
+  <behavior>
+    - Test 1: `POST /dev/e2e/seed` with `scenario=standard_catalog` returns 200 OK and JSON of seeded data.
+    - Test 2: Invalid scenarios return 400 Bad Request.
+  </behavior>
+  <action>
+    Create `ScrypathEcommerceWeb.E2EController` with a `seed/2` action.
+    The action should pattern match on `scenario` name, calling `CatalogFixtures.scenario_standard_catalog()` for the `"standard_catalog"` string.
+    Update `lib/scrypath_ecommerce_web/router.ex` to define the `POST /dev/e2e/seed` route.
+    **CRITICAL SECURITY**: Wrap the route definition in `if Mix.env() in [:dev, :test] do` to guarantee it never ships to production.
+    Implement `e2e_controller_test.exs` verifying the route returns successful test data state.
+  </action>
+  <verify>
+    <automated>cd examples/scrypath_ecommerce && mix test test/scrypath_ecommerce_web/controllers/e2e_controller_test.exs</automated>
+  </verify>
+  <done>E2E tests can dynamically provision tenant catalog fixtures safely.</done>
+</task>
+
+</tasks>
+
+<threat_model>
+## Trust Boundaries
+
+| Boundary | Description |
+|----------|-------------|
+| Network | External clients (Playwright) calling the dev/test endpoint |
+
+## STRIDE Threat Register
+
+| Threat ID | Category | Component | Disposition | Mitigation Plan |
+|-----------|----------|-----------|-------------|-----------------|
+| T-103-03 | Tampering | E2EController / Router | mitigate | Ensure `/dev/e2e/seed` is strictly gated by environment config (`Mix.env() in [:dev, :test]`) to prevent production data corruption. |
+</threat_model>
+
+<verification>
+E2E controller test confirms successful execution of seed fixtures via HTTP POST.
+</verification>
+
+<success_criteria>
+Ecto Sandbox is enabled for external testing and the E2E seed route works under dev/test only.
+</success_criteria>
+
+<output>
+Create `.planning/phases/103-e-commerce-host-app-foundation/103-03-SUMMARY.md` when done
+</output>

@@ -40,7 +40,14 @@ Phase 97 through 99 banned capability classes:
 
 ## Current State
 
-**Phase 103** complete — e-commerce-host-app-foundation.
+**v1.28 — Realistic Demo App & Admin UI Proof** shipped + archived in-repo on **2026-05-31** across phases **102–105**.
+
+**What shipped:**
+- Mountable `scrypath_ops` router engine for embedding in host Phoenix applications.
+- Multi-tenant e-commerce example app under `examples/scrypath_ecommerce`.
+- Storefront search proving tenant filtering, category faceting, and related-data propagation.
+- Operator E2E proof for failed-sync triage and zero-downtime swap posture.
+- Advisory `phase105-e2e` CI lane with real Postgres, Meilisearch, Playwright, health checks, and failure artifacts.
 
 **v1.27 — Adopter Contract Hardening** shipped + archived in-repo on **2026-05-30** across phases **97–101**.
 
@@ -94,7 +101,9 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Last shipped milestone
 
-**v1.27 — Adopter Contract Hardening** (shipped + archived in-repo **2026-05-30**). Delivered install/version contract reconciliation, drift gates, and compatibility truth alignment — see **`milestones/v1.27-{ROADMAP,REQUIREMENTS}.md`**.
+**v1.28 — Realistic Demo App & Admin UI Proof** (shipped + archived in-repo **2026-05-31**). Delivered the mountable admin UI engine, multi-tenant e-commerce example, storefront/operator E2E proof, and advisory real-services CI lane — see **`milestones/v1.28-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+
+**Prior:** **v1.27 — Adopter Contract Hardening** (shipped + archived in-repo **2026-05-30**) — **`milestones/v1.27-{ROADMAP,REQUIREMENTS}.md`**.
 
 **Prior:** **v1.26 — Facet Value Vocabulary Search** (shipped + archived in-repo **2026-05-26**) — **`milestones/v1.26-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
@@ -111,6 +120,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 ### Validated
 
 - [x] **Phase 103** (2026-05-30): **APP-01**–**APP-03** — Demo App Foundation (e-commerce, multi-tenant)
+- [x] **v1.28** (2026-05-31): **OPS-01**–**OPS-02**, **APP-01**–**APP-03**, **INT-01**–**INT-04**, **E2E-01**–**E2E-06** — mountable admin UI engine, multi-tenant e-commerce example, storefront/operator E2E proof, and advisory real-services CI lane.
 - [x] **v1.27** (2026-05-30): Adopter Contract Hardening — requirements TRUTH-01–TRUTH-03, PROOF-01–PROOF-03, SUP-01–SUP-02, TEST-01–TEST-03, GATE-01–GATE-02, SCOPE-01.
 - [x] **v1.26** (2026-05-26): **FACET-UX-01**–**FACET-UX-03**, **DOC-01**–**DOC-02**, **TEST-01**–**TEST-02** — `search_facet_values/4`, response parsing, LiveView examples, and `mix verify.phase96` gate.
 - [x] **v1.25** (2026-05-26): **TNNT-01**–**TNNT-05** — Multitenancy guide, `tenant_field:` declaration, `tenant_scope:` runtime safety, and `mix verify.phase94` gate.
@@ -172,9 +182,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 <!-- Current scope. Building toward these. -->
 
-- [x] **Phase 102** (2026-05-30): **OPS-01**–**OPS-02** — Admin UI Refactor (mountable router engine)
-- [ ] [INT-01, INT-02, INT-03, INT-04] Search Integration & Operations Proof
-- [ ] [E2E-01, E2E-02, E2E-03, E2E-04, E2E-05, E2E-06] Hermetic E2E Pipeline
+No active requirements. Start the next milestone with `/gsd:new-milestone` when there is approved scope.
 
 ### Out of Scope
 
@@ -191,7 +199,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has **twenty-five** shipped planning milestones through **`v1.27`** (**`v1.0`**–**`v1.27`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`** for shipped arcs.
+The repository has **twenty-six** shipped planning milestones through **`v1.28`** (**`v1.0`**–**`v1.28`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`** for shipped arcs.
 
 ## Evolution
 
@@ -204,4 +212,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-30 — v1.27 shipped + archived in-repo*
+*Last updated: 2026-05-31 — v1.28 shipped + archived in-repo*

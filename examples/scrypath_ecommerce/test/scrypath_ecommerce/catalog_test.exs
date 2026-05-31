@@ -50,30 +50,110 @@ defmodule ScrypathEcommerce.CatalogTest do
     end
 
     test "create_product/2 enqueues a sync job", %{tenant: tenant, category: category} do
-      assert {:ok, product} = Catalog.create_product(tenant, %{name: "Laptop", description: "Fast", category_id: category.id})
-      assert_enqueued worker: Scrypath.Oban.UpsertWorker, args: %{"document_ids" => [product.id]}
+      assert {:ok, product} =
+               Catalog.create_product(tenant, %{
+                 name: "Laptop",
+                 description: "Fast",
+                 category_id: category.id
+               })
+
+      assert_enqueued(worker: Scrypath.Oban.UpsertWorker, args: %{"document_ids" => [product.id]})
+
+      assert Scrypath.Projection.document(Catalog.Product, product).data.category_name ==
+               "Electronics"
     end
 
     test "update_product/3 enqueues a sync job", %{tenant: tenant, category: category} do
-      {:ok, product} = Catalog.create_product(tenant, %{name: "Laptop", description: "Fast", category_id: category.id})
+      {:ok, product} =
+        Catalog.create_product(tenant, %{
+          name: "Laptop",
+          description: "Fast",
+          category_id: category.id
+        })
+
       assert {:ok, product} = Catalog.update_product(tenant, product, %{name: "Gaming Laptop"})
-      assert_enqueued worker: Scrypath.Oban.UpsertWorker, args: %{"document_ids" => [product.id]}
+      assert_enqueued(worker: Scrypath.Oban.UpsertWorker, args: %{"document_ids" => [product.id]})
+
+      assert Scrypath.Projection.document(Catalog.Product, product).data.category_name ==
+               "Electronics"
+    end
+
+    test "update_category/3 enqueues related product sync", %{tenant: tenant, category: category} do
+      {:ok, _product} =
+        Catalog.create_product(tenant, %{
+          name: "Laptop",
+          description: "Fast",
+          category_id: category.id
+        })
+
+      assert {:ok, category} = Catalog.update_category(tenant, category, %{name: "Computers"})
+
+      assert_enqueued(
+        worker: Scrypath.Sync.RelatedWorker,
+        args: %{
+          "schema" => to_string(Catalog.Category),
+          "document_ids" => [category.id],
+          "fan_out" => "products"
+        }
+      )
+    end
+
+    test "resolve_products_for_categories/1 reloads category products with category names", %{
+      tenant: tenant,
+      category: category
+    } do
+      {:ok, product} =
+        Catalog.create_product(tenant, %{
+          name: "Laptop",
+          description: "Fast",
+          category_id: category.id
+        })
+
+      [resolved] = Catalog.resolve_products_for_categories([category.id])
+
+      assert resolved.id == product.id
+      assert resolved.category.name == "Electronics"
+
+      assert Scrypath.Projection.document(Catalog.Product, resolved).data.category_name ==
+               "Electronics"
+
+      [resolved_from_struct] = Catalog.resolve_products_for_categories([category])
+
+      assert resolved_from_struct.id == product.id
     end
 
     test "delete_product/2 enqueues a sync job", %{tenant: tenant, category: category} do
-      {:ok, product} = Catalog.create_product(tenant, %{name: "Laptop", description: "Fast", category_id: category.id})
+      {:ok, product} =
+        Catalog.create_product(tenant, %{
+          name: "Laptop",
+          description: "Fast",
+          category_id: category.id
+        })
+
       assert {:ok, product} = Catalog.delete_product(tenant, product)
-      assert_enqueued worker: Scrypath.Oban.DeleteWorker, args: %{"document_ids" => [product.id]}
+      assert_enqueued(worker: Scrypath.Oban.DeleteWorker, args: %{"document_ids" => [product.id]})
     end
 
     test "list_products/1 returns products for tenant", %{tenant: tenant, category: category} do
-      {:ok, product} = Catalog.create_product(tenant, %{name: "Laptop", description: "Fast", category_id: category.id})
+      {:ok, product} =
+        Catalog.create_product(tenant, %{
+          name: "Laptop",
+          description: "Fast",
+          category_id: category.id
+        })
+
       assert [fetched] = Catalog.list_products(tenant)
       assert fetched.id == product.id
     end
 
     test "create_variant/2 creates a variant", %{tenant: tenant, category: category} do
-      {:ok, product} = Catalog.create_product(tenant, %{name: "Laptop", description: "Fast", category_id: category.id})
+      {:ok, product} =
+        Catalog.create_product(tenant, %{
+          name: "Laptop",
+          description: "Fast",
+          category_id: category.id
+        })
+
       assert {:ok, variant} =
                Catalog.create_variant(tenant, %{
                  sku: "LAP-01",

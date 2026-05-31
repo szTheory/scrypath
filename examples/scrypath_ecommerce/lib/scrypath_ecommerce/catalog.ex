@@ -4,6 +4,7 @@ defmodule ScrypathEcommerce.Catalog do
   Enforces multi-tenancy. All operations require a tenant except those on Tenant itself.
   """
 
+  alias Ecto.Multi
   import Ecto.Query, warn: false
   alias ScrypathEcommerce.Repo
   alias ScrypathEcommerce.Catalog.{Tenant, Category, Product, Variant}
@@ -16,9 +17,14 @@ defmodule ScrypathEcommerce.Catalog do
 
   defp put_tenant_id(attrs, tenant_id) do
     cond do
-      is_map(attrs) and Enum.any?(Map.keys(attrs), &is_atom/1) -> Map.put(attrs, :tenant_id, tenant_id)
-      is_map(attrs) -> Map.put(attrs, "tenant_id", tenant_id)
-      true -> Keyword.put(attrs, :tenant_id, tenant_id)
+      is_map(attrs) and Enum.any?(Map.keys(attrs), &is_atom/1) ->
+        Map.put(attrs, :tenant_id, tenant_id)
+
+      is_map(attrs) ->
+        Map.put(attrs, "tenant_id", tenant_id)
+
+      true ->
+        Keyword.put(attrs, :tenant_id, tenant_id)
     end
   end
 
@@ -55,9 +61,19 @@ defmodule ScrypathEcommerce.Catalog do
   end
 
   def update_category(tenant, %Category{} = category, attrs) do
-    category
-    |> Category.changeset(attrs)
-    |> Repo.update(tenant_opts(tenant))
+    opts = tenant_opts(tenant)
+
+    Multi.new()
+    |> Multi.update(:category, Category.changeset(category, attrs), opts)
+    |> Multi.run(:sync_related_products, fn _repo, %{category: category} ->
+      Scrypath.sync_related(Category, category, fan_out: :products)
+    end)
+    |> Repo.transaction(opts)
+    |> case do
+      {:ok, %{category: category}} -> {:ok, category}
+      {:error, :category, changeset, _changes} -> {:error, changeset}
+      {:error, :sync_related_products, reason, _changes} -> {:error, reason}
+    end
   end
 
   def delete_category(tenant, %Category{} = category) do
@@ -74,6 +90,25 @@ defmodule ScrypathEcommerce.Catalog do
     Repo.all(Product, tenant_opts(tenant))
   end
 
+  def resolve_products_for_categories([%Category{} | _] = categories) do
+    category_ids = Enum.map(categories, & &1.id)
+    tenant_ids = Enum.map(categories, & &1.tenant_id)
+
+    Product
+    |> where([product], product.category_id in ^category_ids and product.tenant_id in ^tenant_ids)
+    |> preload(:category)
+    |> Repo.all(skip_tenant_id: true)
+  end
+
+  def resolve_products_for_categories([_id | _] = category_ids) do
+    Product
+    |> where([product], product.category_id in ^category_ids)
+    |> preload(:category)
+    |> Repo.all(skip_tenant_id: true)
+  end
+
+  def resolve_products_for_categories([]), do: []
+
   def get_product!(tenant, id) do
     Repo.get!(Product, id, tenant_opts(tenant))
   end
@@ -86,6 +121,7 @@ defmodule ScrypathEcommerce.Catalog do
     |> Repo.insert(opts)
     |> case do
       {:ok, product} ->
+        product = Repo.preload(product, :category, opts)
         Scrypath.sync_record(Product, product)
         {:ok, product}
 
@@ -100,6 +136,7 @@ defmodule ScrypathEcommerce.Catalog do
     |> Repo.update(tenant_opts(tenant))
     |> case do
       {:ok, product} ->
+        product = Repo.preload(product, :category, tenant_opts(tenant))
         Scrypath.sync_record(Product, product)
         {:ok, product}
 

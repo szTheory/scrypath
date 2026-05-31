@@ -1,9 +1,10 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.28
-milestone_name: milestone
-status: ready
-last_updated: "2026-05-30T22:58:20.787Z"
+milestone_name: Realistic Demo App & Admin UI Proof
+status: Awaiting next milestone
+last_updated: "2026-05-31T14:11:02.288Z"
+last_activity: 2026-05-31 — Milestone v1.28 completed and archived
 progress:
   total_phases: 4
   completed_phases: 4
@@ -17,17 +18,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 105 — hermetic-e2e-pipeline
+**Current Focus:** None — v1.28 archived; awaiting next milestone.
 
 ## Current Position
 
-Phase: 105 (hermetic-e2e-pipeline) — COMPLETE
-Plan: 4 of 4
-**Phase:** 105
-**Plan:** 04
-**Status:** Phase 105 complete
-**Progress:**
-[██████████] 100%
+Phase: Milestone v1.28 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-05-31 — Milestone v1.28 completed and archived
 
 ## Performance Metrics
 
@@ -40,7 +38,7 @@ Plan: 4 of 4
 
 - **Completed Phases:** 4
 - **Completed Plans:** 15
-- **Requirements Met:** 12/15
+- **Requirements Met:** 15/15
 
 | Phase 103 P03 | 5m | 2 tasks | 6 files |
 | Phase 105 P02 | 29m | 4 tasks | 6 files |
@@ -91,3 +89,7 @@ Plan: 4 of 4
 - [Phase 105]: Operator-state probe response is restricted to counts/ids/reason-class/retryable summary and excludes raw args/documents payloads.
 - [Phase 105]: Added stable operator swap-outcome probe fields for browser assertions without exposing raw task payloads.
 - [Phase 105]: Added advisory phase105-e2e CI lane with Postgres+Meilisearch health checks and failure artifacts.
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone

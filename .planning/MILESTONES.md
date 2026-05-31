@@ -1,5 +1,38 @@
 # Milestones
 
+## v1.28 Realistic Demo App & Admin UI Proof (Shipped: 2026-05-31)
+
+**Phases completed:** 4 phases, 15 plans, 18 tasks
+
+**Key accomplishments:**
+
+- Phoenix Ecto SQL Sandbox configured for concurrent tests with a protected E2E seeding endpoint.
+- Playwright harness scaffolded in the example app with deterministic dev/test E2E contracts and bounded readiness helpers.
+- Deterministic Playwright coverage now proves storefront search/faceting and related category propagation through Scrypath, Oban, and Meilisearch.
+- Operator failed-sync triage is now proven through a scenario-scoped harness, stable backend operator-state contract, and mounted `/admin/search/failed-sync` Playwright flow.
+- Zero-downtime swap browser proof and an advisory real-services `phase105-e2e` CI lane are now in place with explicit health checks and failure artifacts.
+
+**Milestone audit:** Tech debt only — 15/15 requirements, 4/4 phases, 4/4 flows; see `milestones/v1.28-MILESTONE-AUDIT.md`.
+
+**Archives:** `milestones/v1.28-ROADMAP.md`, `milestones/v1.28-REQUIREMENTS.md`, `milestones/v1.28-MILESTONE-AUDIT.md` · **Git tag:** `v1.28` (planning milestone marker)
+
+---
+
+## v1.27 Adopter Contract Hardening (Shipped + archived: 2026-05-30)
+
+**Phases completed:** **5** (**97-101**), **16** plans, **14** requirements (**TRUTH-01**-**TRUTH-03**, **SCOPE-01**, **PROOF-01**-**PROOF-03**, **SUP-01**-**SUP-02**, **TEST-01**-**TEST-03**, **GATE-01**-**GATE-02**)
+
+**Key accomplishments:**
+
+- Enforced a canonical SCOPE-01 guard to block runtime feature expansion and bind reopen policy to explicit evidence.
+- Reconciled fast/live proof boundaries and install/release truth wording across README, CONTRIBUTING, and support guides.
+- Created required contract-trust CI coverage and a dedicated compatibility-truth lane without widening required check boundaries.
+- Formalized outside-adopter intake classes with mandatory evidence and deterministic triage mappings.
+
+**Archives:** `milestones/v1.27-ROADMAP.md`, `milestones/v1.27-REQUIREMENTS.md`
+
+---
+
 ## v1.26 Facet Value Vocabulary Search (Shipped + archived: 2026-05-26)
 
 **Phases completed:** **2** (**95–96**), **3** plans, **7** requirements (**FACET-UX-01**–**FACET-UX-03**, **DOC-01**–**DOC-02**, **TEST-01**–**TEST-02**)

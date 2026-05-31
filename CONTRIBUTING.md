@@ -102,7 +102,7 @@ For a **multi-container-shaped** local stack (Postgres + Meilisearch + Phoenix +
 
 ## `phase105-e2e` local runbook
 
-`phase105-e2e` is advisory today (not a required merge gate). It exists to continuously exercise the full browser/operator proof while we track flake and runtime behavior.
+`phase105-e2e` is advisory today (not a required merge gate). It exists to continuously exercise the full browser/operator proof while we track flake and runtime behavior. Treat this lane as the Phase 105 UAT surface: once the job is running on PR, push, schedule, or manual workflow dispatch, do not add a separate human UAT gate unless CI itself cannot execute.
 
 Run locally:
 

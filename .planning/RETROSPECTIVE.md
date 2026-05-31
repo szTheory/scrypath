@@ -2,6 +2,30 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.28 — Realistic Demo App & Admin UI Proof
+
+**Shipped (planning):** 2026-05-31
+**Archived:** 2026-05-31
+**Phases:** 4 (102-105) | **Plans:** 15 | **Requirements:** 15
+
+### What was built
+
+`scrypath_ops` became a mountable router engine, a multi-tenant Phoenix e-commerce example app landed under `examples/`, product search now demonstrates tenant filtering and related category propagation, and the example includes deterministic Playwright coverage for storefront search, operator failed-sync triage, and zero-downtime swap posture against real Postgres and Meilisearch services.
+
+### What worked
+
+Using the realistic demo app as a proof harness exposed integration seams that unit-only work would not have found: router-engine mount configuration, dev/test-only E2E endpoints, related-data visibility in rendered search results, and sanitized operator-state probes.
+
+### What was inefficient
+
+The milestone audit still found process debt: partial Nyquist metadata in older phase validation files, an advisory rather than required E2E lane, and one harness warning where category-filtered readiness probes can replace tenant filters. Those are follow-up hygiene items, not unsatisfied v1.28 requirements.
+
+### Key lessons
+
+Browser proof should stay service-orchestrated by Mix/CI while Playwright owns assertions only. That boundary kept the E2E suite debuggable and avoided hiding operational startup failures inside the browser test runner.
+
+---
+
 ## Milestone: v1.24 — Related-Data and Dependency Propagation
 
 **Shipped (planning):** 2026-05-25
