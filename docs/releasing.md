@@ -44,7 +44,7 @@ For a faster slice while iterating on OPSUI accessibility semantics (tests tagge
 cd scrypath_ops && mix opsui.test_a11y
 ```
 
-That alias applies the same **`scrypath_ops`** **`test`** prerequisite steps as the default **`mix test`** alias, then runs **`mix test --only opsui_a11y`**. It runs the package metadata test, the clean-consumer smoke test, the release-doc contract, docs with warnings as errors, release workflow checks, and `mix hex.build --unpack`.
+That alias runs `scrypath_ops.check_nav_contract`, creates and migrates the OPSUI database quietly, then runs **`mix test --only opsui_a11y`**. It is an OPSUI accessibility slice; it does not run package metadata, clean-consumer smoke, release-doc contract, docs, release workflow, or `mix hex.build --unpack` checks. Use **`mix verify.phase11`** for the auth-free release/package truth gate.
 
 Use this release-only credential check only when you are preparing an actual publish with a publisher-scoped Hex key:
 
