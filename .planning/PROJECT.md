@@ -131,7 +131,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Last shipped milestone
 
-**v1.29 — Contract Repair and Proof Hardening** (completed in-repo **2026-05-31**). Delivered generated fan-out reflection repair, tenant-preserving ecommerce readiness regression proof, and aligned roadmap/JTBD truth while keeping `phase105-e2e` advisory.
+**v1.29 — Contract Repair and Proof Hardening** (shipped + archived in-repo **2026-05-31**). Delivered generated fan-out reflection repair, tenant-preserving ecommerce readiness regression proof, and aligned roadmap/JTBD truth while keeping `phase105-e2e` advisory — see **`milestones/v1.29-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **Prior:** **v1.28 — Realistic Demo App & Admin UI Proof** (shipped + archived in-repo **2026-05-31**). Delivered the mountable admin UI engine, multi-tenant e-commerce example, storefront/operator E2E proof, and advisory real-services CI lane — see **`milestones/v1.28-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 

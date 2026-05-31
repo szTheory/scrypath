@@ -1,5 +1,21 @@
 # Milestones
 
+## v1.29 Contract Repair and Proof Hardening (Shipped: 2026-05-31)
+
+**Phases completed:** 3 phases, 3 plans, 9 tasks
+
+**Key accomplishments:**
+
+- Ordinary `use Scrypath, fan_outs:` reflection is now contract-locked and proven consumable by both inline and Oban related-sync paths via a focused phase gate.
+- The e-commerce readiness probe now preserves tenant scope while adding category filtering, with a fast service-free `mix verify.phase107` guard proving the exact query filter contract.
+- v1.29 truth surfaces now describe the repaired fan-out contract, preserve advisory browser proof posture, and return Scrypath to maintenance-and-evidence mode.
+
+**Milestone audit:** Passed — 4/4 requirements, 3/3 phases, 3/3 integration flows; see `milestones/v1.29-MILESTONE-AUDIT.md`.
+
+**Archives:** `milestones/v1.29-ROADMAP.md`, `milestones/v1.29-REQUIREMENTS.md`, `milestones/v1.29-MILESTONE-AUDIT.md`
+
+---
+
 ## v1.28 Realistic Demo App & Admin UI Proof (Shipped: 2026-05-31)
 
 **Phases completed:** 4 phases, 15 plans, 18 tasks

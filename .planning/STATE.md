@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.29
 milestone_name: Contract Repair and Proof Hardening
-status: milestone_complete
-last_updated: "2026-05-31T17:31:00Z"
-last_activity: 2026-05-31 -- Phase 108 completed
+status: Awaiting next milestone
+last_updated: "2026-05-31T17:28:04.448Z"
+last_activity: 2026-05-31 — Milestone v1.29 completed and archived
 progress:
   total_phases: 3
   completed_phases: 3
   total_plans: 3
   completed_plans: 3
   percent: 100
-stopped_at: Milestone complete (Phase 108 was final phase)
 ---
 
 # Project State
@@ -23,10 +22,10 @@ stopped_at: Milestone complete (Phase 108 was final phase)
 
 ## Current Position
 
-Phase: 108 (truth-alignment-and-closeout-proof) — COMPLETE
-Plan: 1 of 1 complete
-Status: Milestone complete; maintenance-and-evidence mode is the default lane
-Last activity: 2026-05-31 -- Phase 108 completed
+Phase: Milestone v1.29 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-05-31 — Milestone v1.29 completed and archived
 
 ## Performance Metrics
 
@@ -104,4 +103,4 @@ Last activity: 2026-05-31 -- Phase 108 completed
 
 ## Operator Next Steps
 
-- Default to maintenance-and-evidence mode: keep main green, preserve release/support truth, and gather outside-adopter evidence before opening new feature breadth.
+- Start the next milestone with `$gsd-new-milestone`.
