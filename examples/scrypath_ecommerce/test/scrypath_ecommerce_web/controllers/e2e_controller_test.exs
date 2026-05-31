@@ -2,7 +2,38 @@ defmodule ScrypathEcommerceWeb.E2EControllerTest do
   use ScrypathEcommerceWeb.ConnCase
   use Oban.Testing, repo: ScrypathEcommerce.Repo
 
+  alias Scrypath.Query
   alias ScrypathEcommerce.Catalog.Product
+
+  defmodule SearchVisibleBackend do
+    @behaviour Scrypath.Backend
+
+    @impl true
+    def name, do: :e2e_controller_test
+
+    @impl true
+    def index_name(_schema_module, _config), do: "e2e_controller_test_products"
+
+    @impl true
+    def upsert_documents(_schema_module, documents, _config), do: {:ok, documents}
+
+    @impl true
+    def delete_documents(_schema_module, document_ids, _config), do: {:ok, document_ids}
+
+    @impl true
+    def search(schema_module, %Query{} = query, _config) do
+      if pid = Process.whereis(:e2e_controller_test) do
+        send(pid, {:search_visible_query, schema_module, query})
+      end
+
+      {:ok, %{"hits" => [%{"name" => "Quantum CyberPhone X"}]}}
+    end
+
+    @impl true
+    def search_facet_values(_schema_module, _facet_name, facet_query, _opts, _config) do
+      {:ok, %{"facetQuery" => facet_query, "facetHits" => []}}
+    end
+  end
 
   describe "POST /dev/e2e/seed" do
     test "seeds e2e_search_catalog and returns deterministic ids", %{conn: conn} do
@@ -46,6 +77,40 @@ defmodule ScrypathEcommerceWeb.E2EControllerTest do
       assert %{"success" => success, "failure" => failure} = json_response(conn, 200)
       assert is_integer(success)
       assert is_integer(failure)
+    end
+  end
+
+  describe "GET /dev/e2e/search-visible" do
+    test "category readiness filter preserves tenant scope", %{conn: conn} do
+      Process.register(self(), :e2e_controller_test)
+
+      defaults = Application.get_env(:scrypath, :defaults, [])
+
+      Application.put_env(
+        :scrypath,
+        :defaults,
+        Keyword.put(defaults, :backend, SearchVisibleBackend)
+      )
+
+      on_exit(fn ->
+        Application.put_env(:scrypath, :defaults, defaults)
+
+        if Process.whereis(:e2e_controller_test) do
+          Process.unregister(:e2e_controller_test)
+        end
+      end)
+
+      conn =
+        get(conn, ~p"/dev/e2e/search-visible", %{
+          tenant_id: "101",
+          category_id: "202",
+          query: "quantum"
+        })
+
+      assert %{"hits" => ["Quantum CyberPhone X"]} = json_response(conn, 200)
+
+      assert_receive {:search_visible_query, Product, %Query{text: "quantum", filter: filter}}
+      assert Enum.sort(filter) == [category_id: 202, tenant_id: 101]
     end
   end
 
