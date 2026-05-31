@@ -64,6 +64,7 @@ defmodule Scrypath.MixProject do
         "verify.phase99": :test,
         "verify.phase106": :test,
         "verify.phase107": :test,
+        "verify.phase108": :test,
         "verify.adopter": :test,
         "verify.opsui": :test,
         "verify.meilisearch_smoke": :test,
