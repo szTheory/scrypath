@@ -14,7 +14,7 @@ Requirements for this bounded repair milestone. Each maps to exactly one roadmap
 
 ### Ecommerce Proof
 
-- [ ] **E2E-01**: Ecommerce readiness probes preserve tenant scope when category filtering is present.
+- [x] **E2E-01**: Ecommerce readiness probes preserve tenant scope when category filtering is present.
 
 ### Truth Alignment
 
@@ -52,7 +52,7 @@ Explicit exclusions for v1.29.
 |-------------|-------|--------|
 | FAN-01 | Phase 106 | Complete |
 | FAN-02 | Phase 106 | Complete |
-| E2E-01 | Phase 107 | Pending |
+| E2E-01 | Phase 107 | Complete |
 | TRUTH-01 | Phase 108 | Pending |
 
 **Coverage:**
