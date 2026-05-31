@@ -1,6 +1,6 @@
 ---
 phase: 105-hermetic-e2e-pipeline
-verified: 2026-05-30T23:09:01Z
+verified: 2026-05-31T01:35:00Z
 status: human_needed
 score: 10/12 must-haves verified
 overrides_applied: 0
@@ -16,7 +16,7 @@ human_verification:
 # Phase 105: Hermetic E2E Pipeline Verification Report
 
 **Phase Goal:** The entire system is validated continuously via an automated end-to-end browser test pipeline against a live search backend  
-**Verified:** 2026-05-30T23:09:01Z  
+**Verified:** 2026-05-31T01:35:00Z  
 **Status:** human_needed  
 **Re-verification:** No - initial verification
 
@@ -77,7 +77,7 @@ human_verification:
 | --- | --- | --- | --- |
 | Playwright suite is discoverable without booting Phoenix | `cd examples/scrypath_ecommerce && npm run test:e2e:list` | Listed 5 tests across harness/storefront/operator specs | ✓ PASS |
 | Harness controller contracts execute and pass | `cd examples/scrypath_ecommerce && mix test test/scrypath_ecommerce_web/controllers/e2e_controller_test.exs` | `8 tests, 0 failures` | ✓ PASS |
-| Full browser E2E with live services | `cd examples/scrypath_ecommerce && npm run test:e2e` | Not run in this verifier session (no service orchestration started) | ? SKIP |
+| Full browser E2E with live services | `cd examples/scrypath_ecommerce && PLAYWRIGHT_BASE_URL=http://127.0.0.1:4002 npm run test:e2e` | `5 passed (3.4s)` against Phoenix test server, Postgres on `PGPORT=15433`, and Meilisearch on `127.0.0.1:7700` | ✓ PASS |
 
 ### Probe Execution
 
@@ -118,10 +118,10 @@ No blocker debt markers (`TBD`, `FIXME`, `XXX`) or placeholder/stub implementati
 
 ### Gaps Summary
 
-No code-level blockers were found: must-have artifacts exist, wiring is present, and local non-service checks pass.  
+No code-level blockers were found: must-have artifacts exist, wiring is present, local non-service checks pass, and the full browser suite passes locally against live Postgres + Meilisearch.  
 Status is `human_needed` because the phase goal includes continuous live-service CI validation and flake behavior, which requires human review of actual GitHub Actions run outcomes/history.
 
 ---
 
-_Verified: 2026-05-30T23:09:01Z_  
+_Verified: 2026-05-31T01:35:00Z_  
 _Verifier: the agent (gsd-verifier)_
