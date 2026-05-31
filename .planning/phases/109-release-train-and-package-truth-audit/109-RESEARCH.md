@@ -224,12 +224,12 @@ mix hex.build --unpack
 
 All substantive claims were verified from repo files or cited official docs in this session.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **How far should semantic parsing go in `verify.phase11` for YAML checks?**
    - What we know: D-03 prefers semantic checks but allows existing grep anchors.
    - What's unclear: Whether maintainers want new parser dependency vs simple shell/Elixir parsing.
-   - Recommendation: Keep parser-free Elixir-native checks first (JSON decode + targeted line assertions), escalate only if drift noise persists.
+   - RESOLVED: Keep parser-free Elixir-native checks first for Phase 109. Use JSON decoding where the repo already has JSON inputs and targeted source/workflow assertions for YAML, without adding a new YAML parser dependency. Escalate to parser-backed YAML checks only if this phase exposes repeated false positives or drift that line-level assertions cannot represent.
 
 ## Environment Availability
 
