@@ -64,6 +64,7 @@ completed: 2026-05-31
 1. **Task 108-01-01: Rewrite the related-data authority around the repaired ordinary fan-out path** - `3b4ca06` (docs)
 2. **Task 108-01-02: Add the service-free Phase 108 truth gate and keep contributor CI posture explicit** - `4bd7ea9` (test)
 3. **Task 108-01-03: Close v1.29 in the planning and JTBD authorities without widening scope** - `c68599a` (docs)
+4. **Verification anchor fix: Add key-link verifier anchors** - `9b7ca9d` (test)
 
 ## Files Created/Modified
 
@@ -101,6 +102,15 @@ completed: 2026-05-31
 **Total deviations:** 1 auto-fixed (missing critical).
 **Impact on plan:** Kept planning truth consistent with the closeout without adding new scope.
 
+### Verification Fixes
+
+**1. Added key-link verifier anchor phrases**
+- **Found during:** Phase-level key-link verification
+- **Issue:** The plan's key-link verifier could not find its stable pattern phrases even though the files were wired correctly.
+- **Fix:** Added minimal comments at the actual contract locations in `mix.exs`, `lib/mix/tasks/verify.phase108.ex`, and `test/scrypath/phase108_contract_test.exs`.
+- **Verification:** `gsd-sdk query verify.key-links .planning/phases/108-truth-alignment-and-closeout-proof/108-01-PLAN.md` returned `all_verified: true`.
+- **Committed in:** `9b7ca9d`
+
 ## Issues Encountered
 
 - The first contract-test run failed because the test expected unbolded roadmap text and a contributor-doc label inside the CI workflow. The assertions and roadmap token were corrected before the final gate.
@@ -117,8 +127,9 @@ None - no external service configuration required.
 ## Self-Check: PASSED
 
 - Found: `.planning/phases/108-truth-alignment-and-closeout-proof/108-01-SUMMARY.md`
-- Found commits: `3b4ca06`, `4bd7ea9`, `c68599a`
+- Found commits: `3b4ca06`, `4bd7ea9`, `c68599a`, `9b7ca9d`
 - Verification: `mix verify.phase108` passed with 6 tests, 0 failures.
+- Key links: `all_verified: true`.
 
 ---
 *Phase: 108-truth-alignment-and-closeout-proof*
