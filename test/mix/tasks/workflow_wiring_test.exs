@@ -50,6 +50,47 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     end
   end
 
+  describe "REL-03 D-10..D-13: canonical publish and monitor wiring" do
+    test "release-please publish job runs the canonical ordered proof chain" do
+      yml = File.read!(@release_please_yml)
+
+      assert_ordered_steps(yml, [
+        "mix verify.workspace_clean",
+        ~s(grep -n "@version \\"${{ needs.release-please.outputs.version }}\\"" mix.exs),
+        "mix verify.phase11",
+        "mix hex.publish --dry-run --yes",
+        "mix hex.publish --yes",
+        ~s(mix verify.release_publish "${{ needs.release-please.outputs.version }}"),
+        ~s(mix verify.release_parity "${{ needs.release-please.outputs.version }}")
+      ])
+    end
+
+    test "publish-hex recovery job mirrors the same ordered proof chain from explicit inputs" do
+      yml = File.read!(@publish_hex_yml)
+
+      assert_ordered_steps(yml, [
+        "mix verify.workspace_clean",
+        ~s(grep -n "@version \\"${{ inputs.release_version }}\\"" mix.exs),
+        "mix verify.phase11",
+        "mix hex.publish --dry-run --yes",
+        "mix hex.publish --yes",
+        ~s(mix verify.release_publish "${{ inputs.release_version }}"),
+        ~s(mix verify.release_parity "${{ inputs.release_version }}")
+      ])
+    end
+
+    test "published-release monitor stays publish-free and schedule-deduped" do
+      yml = File.read!(@verify_published_yml)
+
+      assert yml =~ "version=\"$(jq -r '.latest_stable_version // .latest_version // empty' package.json)\""
+      assert yml =~ "mix verify.release_publish \"${{ steps.resolve-version.outputs.version }}\""
+      assert yml =~ "mix verify.release_parity \"${{ steps.resolve-version.outputs.version }}\""
+      refute yml =~ "mix hex.publish --yes"
+      assert yml =~ "failure() && github.event_name == 'schedule'"
+      assert yml =~ "update_existing: true"
+    end
+  end
+
   describe "INFRA-03 D-13: ci.yml action pins on Node 24 runtime" do
     test "ci.yml uses actions/checkout@v6 everywhere" do
       yml = File.read!(@ci_yml)
@@ -304,5 +345,15 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert log =~ ~r/^feat\(18\): add release-parity gates \+ Node 20 CI cleanup$/m,
              "expected the D-22 closing commit subject in recent history"
     end
+  end
+
+  defp assert_ordered_steps(content, [first | rest]) do
+    {start_idx, _} = :binary.match(content, first)
+
+    Enum.reduce(rest, start_idx, fn step, prev_idx ->
+      {idx, _} = :binary.match(content, step)
+      assert idx > prev_idx, "expected #{inspect(step)} to appear after previous release step"
+      idx
+    end)
   end
 end
