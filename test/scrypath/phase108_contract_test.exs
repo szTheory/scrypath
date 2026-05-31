@@ -1,6 +1,7 @@
 defmodule Scrypath.Phase108ContractTest do
   use ExUnit.Case, async: true
   @moduletag :phase108_contract
+  # bounded truth-surface drift gate
 
   @related_guide File.read!("guides/related-data-and-reindexing.md")
   @jtbd_gap_map File.read!("docs/jtbd-gap-map.md")

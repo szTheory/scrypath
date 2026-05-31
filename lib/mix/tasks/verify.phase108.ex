@@ -4,6 +4,7 @@ defmodule Mix.Tasks.Verify.Phase108 do
 
   @shortdoc "Runs truth alignment and closeout proof checks (Phase 108)"
 
+  # task runs only the phase108 contract suite and task self-test
   @focused_tests [
     "test/scrypath/phase108_contract_test.exs",
     "test/mix/tasks/verify.phase108_test.exs"
