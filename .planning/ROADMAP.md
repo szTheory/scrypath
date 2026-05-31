@@ -34,8 +34,8 @@
 **Success Criteria** (what must be TRUE):
   1. Ecommerce readiness probes preserve tenant scope while applying category readiness filtering.
   2. Regression coverage proves the known filter-merge issue without expanding into deeper cross-tenant Playwright fixtures.
-**Plans:** 1 plan
-- [ ] 107-01-PLAN.md — Ecommerce readiness tenant-scope regression guard
+**Plans:** 1/1 plans complete
+- [x] 107-01-PLAN.md — Ecommerce readiness tenant-scope regression guard
 
 ### Phase 108: Truth Alignment and Closeout Proof
 
@@ -54,7 +54,7 @@
 | Milestone | Phases | Plans Complete | Status | Shipped |
 |-----------|--------|----------------|--------|---------|
 | v1.28 Realistic Demo App & Admin UI Proof | 102-105 | 15/15 | Complete | 2026-05-31 |
-| v1.29 Contract Repair and Proof Hardening | 106-108 | 0/3 | Active | — |
+| v1.29 Contract Repair and Proof Hardening | 106-108 | 1/3 | Active | — |
 
 ## Historical Contract Anchors
 
