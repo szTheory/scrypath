@@ -39,16 +39,16 @@ Plans:
 
 **Requirements:** SUP-01, SUP-02
 
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 **Wave 1**
 
-- [ ] 110-01-PLAN.md — Route support/readiness authority and harden outside-adopter intake surfaces
+- [x] 110-01-PLAN.md — Route support/readiness authority and harden outside-adopter intake surfaces
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 110-02-PLAN.md — Add fast service-free Phase 110 contract proof to `mix verify.adopter`
+- [x] 110-02-PLAN.md — Add fast service-free Phase 110 contract proof to `mix verify.adopter` (completed 2026-05-31)
 
 **Success criteria:**
 
@@ -62,6 +62,17 @@ Plans:
 **Goal:** Decide with evidence whether `phase105-e2e` remains advisory, needs hardening, or is ready for future required-check promotion.
 
 **Requirements:** STAB-01, STAB-02
+
+**Plans:** 0/2 plans complete
+
+Plans:
+**Wave 1**
+
+- [ ] 111-01-PLAN.md — Harden `phase105-e2e` advisory evidence capture and workflow contracts
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 111-02-PLAN.md — Freeze the advisory decision record and wire it into the existing lean trust lane
 
 **Success criteria:**
 
@@ -89,17 +100,17 @@ Plans:
 |-----------|--------|----------------|--------|---------|
 | v1.28 Realistic Demo App & Admin UI Proof | 102-105 | 15/15 | Complete | 2026-05-31 |
 | v1.29 Contract Repair and Proof Hardening | 106-108 | 3/3 | Complete | 2026-05-31 |
-| v1.30 Release Trust and Evidence Maintenance | 109-112 | 0/4 | Planning | — |
+| v1.30 Release Trust and Evidence Maintenance | 109-112 | 5/7 current plans | Active | — |
 
 ## Requirement Coverage
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REL-01 | Phase 109 | Pending |
-| REL-02 | Phase 109 | Pending |
-| REL-03 | Phase 109 | Pending |
-| SUP-01 | Phase 110 | Pending |
-| SUP-02 | Phase 110 | Pending |
+| REL-01 | Phase 109 | Complete |
+| REL-02 | Phase 109 | Complete |
+| REL-03 | Phase 109 | Complete |
+| SUP-01 | Phase 110 | Complete |
+| SUP-02 | Phase 110 | Complete |
 | STAB-01 | Phase 111 | Pending |
 | STAB-02 | Phase 111 | Pending |
 | WEB-01 | Phase 112 | Pending |

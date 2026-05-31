@@ -199,12 +199,12 @@ Source: [CITED: `examples/scrypath_ecommerce/playwright.config.ts`]
 |---|-------|---------|---------------|
 | A1 | A new `phase111_contract_test.exs` is the best place for STAB-specific guardrails | Architecture Patterns | Medium: planner may choose existing test file instead |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **What numeric threshold defines “sustained low flake” for promotion readiness?**
    - What we know: Thresholds are intentionally left to planner discretion. [VERIFIED: `111-CONTEXT.md`]
-   - What's unclear: Required minimum run count/window.
-   - Recommendation: Choose explicit minimums in plan and lock them in phase output.
+   - Resolution: Phase 111 planning locks the promotion-readiness evidence floor as 20 eligible runs total, including 10 `main`/scheduled runs and 10 `pull_request` runs; flake rate must be `<= 5%`, p95 runtime must be `<= 900 seconds`, owner response must be within 1 business day, and the shadow-required window must cover 14 calendar days plus 10 consecutive eligible pull requests.
+   - Plan linkage: `111-02-PLAN.md` requires these exact values in `111-DECISION.md`, contributor guidance, and Phase 111 contract tests.
 
 ## Environment Availability
 
