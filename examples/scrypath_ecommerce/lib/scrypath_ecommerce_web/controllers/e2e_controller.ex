@@ -132,7 +132,10 @@ defmodule ScrypathEcommerceWeb.E2EController do
           [j],
           fragment("?->>'schema' = ?", j.args, "Elixir.ScrypathEcommerce.Catalog.Product")
         )
-        |> where([j], fragment("?->>'index' = ?", j.args, ^"scrypath_ecommerce_products_#{tenant}"))
+        |> where(
+          [j],
+          fragment("?->>'index' = ?", j.args, ^"scrypath_ecommerce_products_#{tenant}")
+        )
         |> where([j], fragment("?->>'scenario_key' = ?", j.args, ^scenario_key))
         |> order_by([j], desc: j.id)
         |> limit(1)
@@ -251,7 +254,12 @@ defmodule ScrypathEcommerceWeb.E2EController do
 
   defp maybe_put_category_filter(opts, %{"category_id" => category_id}) do
     with {:ok, category_id} <- parse_integer(category_id) do
-      {:ok, Keyword.put(opts, :filter, category_id: category_id)}
+      filters =
+        opts
+        |> Keyword.get(:filter, [])
+        |> Keyword.put(:category_id, category_id)
+
+      {:ok, Keyword.put(opts, :filter, filters)}
     end
   end
 
