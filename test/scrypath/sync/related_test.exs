@@ -138,6 +138,10 @@ defmodule Scrypath.Sync.RelatedTest do
     assert result.document_ids == [3]
 
     assert %{queue: :test_queue} = result.oban
+    assert_received {:oban_insert, job}
+    assert job.queue == "test_queue"
+    assert job.args["document_ids"] == [3]
+    assert job.args["fan_out"] == "comments"
   end
 
   test "generated use Scrypath fan_out metadata is consumed for inline sync_related/3" do
@@ -158,7 +162,11 @@ defmodule Scrypath.Sync.RelatedTest do
 
     assert_received {:upsert_documents, DummyTarget, documents, _config}
     assert Enum.map(documents, & &1.id) == [700, 800]
-    assert Enum.map(documents, & &1.data[:title]) == ["Ordinary for Source 7", "Ordinary for Source 8"]
+
+    assert Enum.map(documents, & &1.data[:title]) == [
+             "Ordinary for Source 7",
+             "Ordinary for Source 8"
+           ]
   end
 
   test "generated use Scrypath fan_out metadata is consumed for oban enqueue" do
@@ -177,6 +185,11 @@ defmodule Scrypath.Sync.RelatedTest do
     assert result.mode == :oban
     assert result.document_ids == [9]
     assert result.document_count == 1
+
+    assert_received {:oban_insert, job}
+    assert job.queue == "test_queue"
+    assert job.args["document_ids"] == [9]
+    assert job.args["fan_out"] == "comments"
   end
 
   test "missing fan_out raises ArgumentError" do

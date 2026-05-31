@@ -122,7 +122,11 @@ defmodule Scrypath.Sync.RelatedWorkerTest do
 
       assert_received {:upsert_documents, DummyTarget, documents, _config}
       assert Enum.map(documents, & &1.id) == [4, 5]
-      assert Enum.map(documents, & &1.data[:title]) == ["Ordinary worker comment 4", "Ordinary worker comment 5"]
+
+      assert Enum.map(documents, & &1.data[:title]) == [
+               "Ordinary worker comment 4",
+               "Ordinary worker comment 5"
+             ]
     end
 
     test "perform/1 cancels job on invalid schema" do
@@ -270,6 +274,10 @@ defmodule Scrypath.Sync.RelatedWorkerTest do
       }
 
       assert {:error, :some_generic_error} = RelatedWorker.perform(%Oban.Job{args: args})
+    end
+  else
+    test "Oban.Worker is required for related worker contract tests" do
+      flunk("Oban.Worker not loaded; related worker contract tests were skipped")
     end
   end
 end

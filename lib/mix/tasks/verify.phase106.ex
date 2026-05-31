@@ -13,8 +13,8 @@ defmodule Mix.Tasks.Verify.Phase106 do
 
   @impl true
   def run(args) do
-    Mix.Task.run("app.start")
     ensure_no_args!(args)
+    Mix.Task.run("app.start")
 
     Mix.shell().info("==> verify.phase106: fan-out reflection contract checks")
     run_test!(@focused_tests, "Phase 106 fan-out reflection contract verification")
