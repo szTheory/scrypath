@@ -32,6 +32,25 @@ defmodule Scrypath.Release.PackageMetadataTest do
            }
   end
 
+  test "package file allowlist only targets root library surfaces" do
+    package_files = MixProject.project()[:package][:files]
+
+    assert "lib" in package_files
+    assert "mix.exs" in package_files
+    assert "README.md" in package_files
+    assert "CHANGELOG.md" in package_files
+    assert "guides" in package_files
+    assert "docs/releasing.md" in package_files
+
+    refute "scrypath_ops" in package_files
+    refute "examples" in package_files
+    refute "website" in package_files
+    refute ".planning" in package_files
+    refute "node_modules" in package_files
+    refute "playwright-report" in package_files
+    refute "test-results" in package_files
+  end
+
   test "docs metadata keeps release guide and version-aware source links" do
     project = MixProject.project()
     docs = project[:docs]

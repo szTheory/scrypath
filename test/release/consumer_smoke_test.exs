@@ -21,6 +21,29 @@ defmodule Scrypath.Release.ConsumerSmokeTest do
     on_exit(fn -> File.rm_rf(tmp_root) end)
 
     build_packaged_artifact!(repo_root, artifact_dir)
+    artifact_paths = artifact_paths!(artifact_dir)
+
+    assert Enum.any?(artifact_paths, &String.starts_with?(&1, "lib/"))
+    assert "mix.exs" in artifact_paths
+    assert "README.md" in artifact_paths
+    assert "CHANGELOG.md" in artifact_paths
+    assert Enum.any?(artifact_paths, &String.starts_with?(&1, "guides/"))
+    assert "docs/releasing.md" in artifact_paths
+
+    forbidden_prefixes = [
+      "scrypath_ops/",
+      "examples/",
+      "website/",
+      ".planning/",
+      "node_modules/",
+      "playwright-report/",
+      "test-results/"
+    ]
+
+    for prefix <- forbidden_prefixes do
+      refute Enum.any?(artifact_paths, &String.starts_with?(&1, prefix)),
+             "artifact unexpectedly included forbidden path prefix #{prefix}"
+    end
 
     artifact_git_url =
       artifact_dir
@@ -159,5 +182,16 @@ defmodule Scrypath.Release.ConsumerSmokeTest do
 
     File.mkdir_p!(path)
     path
+  end
+
+  defp artifact_paths!(artifact_dir) do
+    artifact_dir
+    |> Path.join("**")
+    |> Path.wildcard(match_dot: true)
+    |> Enum.map(&Path.relative_to(&1, artifact_dir))
+    |> Enum.reject(&(&1 in [".", ".git"]))
+    |> Enum.reject(&String.starts_with?(&1, ".git/"))
+    |> Enum.reject(&(String.ends_with?(&1, "/")))
+    |> Enum.sort()
   end
 end
