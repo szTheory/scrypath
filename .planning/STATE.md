@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.30
 milestone_name: Release Trust and Evidence Maintenance
 status: executing
-last_updated: "2026-05-31T19:00:55.057Z"
-last_activity: 2026-05-31 -- Phase 109 planning complete
+last_updated: "2026-05-31T20:16:53.201Z"
+last_activity: 2026-05-31
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 3
-  completed_plans: 0
+  completed_plans: 1
   percent: 0
 ---
 
@@ -18,14 +18,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** v1.30 Release Trust and Evidence Maintenance
+**Current Focus:** Phase 109 — release-train-and-package-truth-audit
 
 ## Current Position
 
-Phase: 109 — Release Train and Package Truth Audit
-Plan: —
+Phase: 109 (release-train-and-package-truth-audit) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-05-31 -- Phase 109 planning complete
+Last activity: 2026-05-31
 
 ## Performance Metrics
 
@@ -46,6 +46,7 @@ Last activity: 2026-05-31 -- Phase 109 planning complete
 | Phase 105 P04 | 52m | 4 tasks | 8 files |
 | Phase 106 P01 | 21 min | 3 tasks | 6 files |
 | Phase 107 P01 | 27 min | 3 tasks | 5 files |
+| Phase 109 P01 | 24m | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -73,7 +74,7 @@ Last activity: 2026-05-31 -- Phase 109 planning complete
 
 ## Session Continuity
 
-- **Last Session:** 2026-05-31T18:33:19.221Z
+- **Last Session:** 2026-05-31T20:16:09.964Z
 
 - [x] Initialized v1.28 roadmap with Phases 102-105.
 
@@ -101,6 +102,8 @@ Last activity: 2026-05-31 -- Phase 109 planning complete
 - [Phase 106]: Locked ordinary fan-out declaration contract on generated __scrypath__(:fan_outs). — Preserves existing runtime seam and avoids new public API surface.
 - [Phase 106]: Added verify.phase106 focused gate and self-test. — Provides deterministic service-free proof for FAN-01/FAN-02 without CI topology changes.
 - [Phase 108]: Closed v1.29 truth surfaces with mix verify.phase108. — Keeps related-data, roadmap/JTBD, requirements, and contributor posture aligned without promoting phase105-e2e.
+- [Phase 109]: verify.phase11 now performs semantic agreement checks across mix.exs, release manifest/config, and CHANGELOG heading.
+- [Phase 109]: Release tests now assert unpacked artifact allowlist and explicit denylist exclusions for non-library repo output.
 
 ## Operator Next Steps
 
