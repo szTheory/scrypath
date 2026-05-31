@@ -248,12 +248,11 @@ Source: `test/scrypath/phase98_contract_test.exs` [VERIFIED: codebase grep]
 |---|-------|---------|---------------|
 | A1 | `website/src/pages/index.html` does not require Phase 110 edits because current support/intake routing is not misleading. [ASSUMED] | Common Pitfalls / scope fences | Could miss a small route-only ambiguity that should be fixed now. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should `phase110_contract_test.exs` also be listed in any phase-local verify task?**
+1. **RESOLVED: Should `phase110_contract_test.exs` also be listed in any phase-local verify task?**
    - What we know: locked decision prefers `verify.adopter` integration and avoids new required lane.
-   - What's unclear: whether maintainers still want an optional `verify.phase110` convenience command.
-   - Recommendation: plan for `verify.adopter` integration only; add optional `verify.phase110` only if planner can justify no-sprawl ergonomics.
+   - Resolution: do not add a phase-local `verify.phase110` task for Phase 110. The plan wires `phase110_contract_test.exs` into the existing fast, service-free `mix verify.adopter` lane and explicitly forbids new gate sprawl unless future evidence changes that posture.
 
 ## Environment Availability
 
@@ -347,4 +346,3 @@ Source: `test/scrypath/phase98_contract_test.exs` [VERIFIED: codebase grep]
 
 **Research date:** 2026-05-31  
 **Valid until:** 2026-06-30
-

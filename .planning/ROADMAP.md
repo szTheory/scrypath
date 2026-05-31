@@ -39,6 +39,17 @@ Plans:
 
 **Requirements:** SUP-01, SUP-02
 
+**Plans:** 2 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 110-01-PLAN.md — Route support/readiness authority and harden outside-adopter intake surfaces
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 110-02-PLAN.md — Add fast service-free Phase 110 contract proof to `mix verify.adopter`
+
 **Success criteria:**
 
 1. README, CONTRIBUTING, outside-adopter intake, and related public docs route compatibility/readiness authority to `guides/support-and-compatibility.md`.
