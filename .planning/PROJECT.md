@@ -8,14 +8,16 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Milestone: v1.29 Contract Repair and Proof Hardening
+## Current Mode: maintenance-and-evidence mode
 
-**Goal:** Close post-v1.28 shipped-contract rough edges without opening new product breadth.
+**Goal:** Keep release/support truth, proof stability, and outside-adopter evidence current after v1.29 closed the bounded repair milestone.
 
-**Target features:**
-- Generated `__scrypath__(:fan_outs)` reflection for ordinary `use Scrypath, fan_outs:` schemas.
-- Tenant-preserving ecommerce readiness filter regression proof.
-- Post-v1.28 roadmap, JTBD, and support/proof truth aligned with the repaired contract.
+**v1.29 closed outcomes:**
+- Repaired generated `__scrypath__(:fan_outs)` for ordinary `use Scrypath, fan_outs:` schemas.
+- Tenant-preserving ecommerce readiness regression proof.
+- Aligned roadmap/JTBD truth for the repair closeout.
+
+The three closed outcomes are repaired generated `__scrypath__(:fan_outs)`, tenant-preserving ecommerce readiness regression proof, and aligned roadmap/JTBD truth.
 
 ## Canonical Adopter Contract
 
@@ -54,11 +56,6 @@ Phase 97 through 99 banned capability classes:
 - Operator E2E proof for failed-sync triage and zero-downtime swap posture.
 - Advisory `phase105-e2e` CI lane with real Postgres, Meilisearch, Playwright, health checks, and failure artifacts.
 
-**Post-v1.28 next-step assessment (2026-05-31):**
-- The library remains near-done for its stated Meilisearch-first Phoenix/Ecto scope.
-- Highest-leverage next pull is **contract repair and proof hardening**, not new feature breadth.
-- Concrete repair targets: generated `__scrypath__(:fan_outs)` reflection for `use Scrypath, fan_outs:`, tenant-preserving ecommerce E2E readiness filters, and refreshed roadmap/JTBD truth.
-
 **v1.29 Phase 106 — Fan-Out Reflection Contract Repair** completed on **2026-05-31**.
 
 **What shipped:**
@@ -72,6 +69,13 @@ Phase 97 through 99 banned capability classes:
 - `/dev/e2e/search-visible` preserves `tenant_id` while applying category readiness filtering.
 - A backend-stubbed Phoenix controller regression proves the resulting `%Scrypath.Query.filter` contains both `tenant_id` and `category_id`.
 - `mix verify.phase107` provides a focused, service-free contributor gate without promoting `phase105-e2e` or changing CI topology.
+
+**v1.29 Phase 108 — Truth Alignment and Closeout Proof** completed on **2026-05-31**.
+
+**What shipped:**
+- Related-data guidance now presents `use Scrypath, fan_outs:` as the ordinary searchable-schema path and keeps hand-written owner-only reflection as a supported low-level escape hatch.
+- `mix verify.phase108` provides a focused, service-free closeout proof for bounded truth surfaces.
+- Roadmap, requirements, project, and JTBD truth now close v1.29 as repaired contract work and return the repo to maintenance-and-evidence mode.
 
 **v1.27 — Adopter Contract Hardening** shipped + archived in-repo on **2026-05-30** across phases **97–101**.
 
@@ -102,7 +106,7 @@ Phase 97 through 99 banned capability classes:
 
 </details>
 
-**The library scope is now complete for its stated mission.** Future work will focus on maintenance, bug fixes, release-train stability, and evaluating stopping based on outside-adopter evidence.
+**The library scope is now complete for its stated mission.** Future work will focus on maintenance, bug fixes, release-train stability, proof stability, and evaluating stopping based on outside-adopter evidence.
 
 **Release-train posture:** keep `main` green on lean merge gates, ship patch-first while pre-1.0, and land serious milestone work through PRs rather than direct `main` development.
 
@@ -120,14 +124,16 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Next Milestone Goals
 
-- **Active bounded milestone:** v1.29 Contract Repair and Proof Hardening.
-- **Goal:** Close post-v1.28 shipped-contract rough edges before returning to maintenance/evidence mode.
-- **Targets:** finish and verify fan-out reflection, harden the ecommerce E2E tenant/category readiness proof, refresh post-v1.28 roadmap/JTBD truth, and keep `phase105-e2e` advisory unless release policy explicitly promotes it.
-- **Feature lane remains evidence-gated:** autocomplete/suggestions, broader OPSUI productization, tenant-token helpers, multi-backend, vector/hybrid, and new UI surfaces still require outside-adopter evidence or a concrete production bug.
+- **Default lane:** maintenance-and-evidence mode.
+- **Goal:** Keep release/support truth and proof stability current while gathering outside-adopter evidence.
+- **Targets:** keep required gates green, keep `phase105-e2e` advisory unless release policy explicitly promotes it, and route real adopter friction into patch-sized fixes.
+- **Feature lane remains evidence-gated:** autocomplete/suggestions, broader OPSUI productization, tenant-token helpers, multi-backend, vector/hybrid, and new UI surfaces still require reviewed outside-adopter evidence or a concrete production bug.
 
 ## Last shipped milestone
 
-**v1.28 — Realistic Demo App & Admin UI Proof** (shipped + archived in-repo **2026-05-31**). Delivered the mountable admin UI engine, multi-tenant e-commerce example, storefront/operator E2E proof, and advisory real-services CI lane — see **`milestones/v1.28-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**v1.29 — Contract Repair and Proof Hardening** (completed in-repo **2026-05-31**). Delivered generated fan-out reflection repair, tenant-preserving ecommerce readiness regression proof, and aligned roadmap/JTBD truth while keeping `phase105-e2e` advisory.
+
+**Prior:** **v1.28 — Realistic Demo App & Admin UI Proof** (shipped + archived in-repo **2026-05-31**). Delivered the mountable admin UI engine, multi-tenant e-commerce example, storefront/operator E2E proof, and advisory real-services CI lane — see **`milestones/v1.28-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **Prior:** **v1.27 — Adopter Contract Hardening** (shipped + archived in-repo **2026-05-30**) — **`milestones/v1.27-{ROADMAP,REQUIREMENTS}.md`**.
 
@@ -139,7 +145,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Planning window
 
-**v1.29 active.** This is a bounded repair closeout, not a new feature lane. After v1.29, default back to maintenance, release/support truth, and outside-adopter evidence unless a concrete bug or reviewed adopter evidence reopens scope.
+**v1.29 complete.** This was a bounded repair closeout, not a new feature lane. After v1.29, default back to maintenance/support truth, proof stability, and outside-adopter evidence unless a concrete bug or reviewed adopter evidence reopens scope.
 
 ## Requirements
 
@@ -147,6 +153,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 - [x] **Phase 106** (2026-05-31): **FAN-01**–**FAN-02** — generated fan-out reflection for ordinary `use Scrypath, fan_outs:` schemas and compatibility for hand-written owner reflection, verified by `mix verify.phase106`.
 - [x] **Phase 107** (2026-05-31): **E2E-01** — ecommerce readiness probes preserve tenant scope when category filtering is present, verified by `mix verify.phase107`.
+- [x] **Phase 108** (2026-05-31): **TRUTH-01** — related-data docs and planning/JTBD truth describe the repaired contract and keep deferred breadth out of v1.29, verified by `mix verify.phase108`.
 - [x] **Phase 103** (2026-05-30): **APP-01**–**APP-03** — Demo App Foundation (e-commerce, multi-tenant)
 - [x] **v1.28** (2026-05-31): **OPS-01**–**OPS-02**, **APP-01**–**APP-03**, **INT-01**–**INT-04**, **E2E-01**–**E2E-06** — mountable admin UI engine, multi-tenant e-commerce example, storefront/operator E2E proof, and advisory real-services CI lane.
 - [x] **v1.27** (2026-05-30): Adopter Contract Hardening — requirements TRUTH-01–TRUTH-03, PROOF-01–PROOF-03, SUP-01–SUP-02, TEST-01–TEST-03, GATE-01–GATE-02, SCOPE-01.
@@ -210,7 +217,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 <!-- Current scope. Building toward these. -->
 
-- [ ] **TRUTH-01**: Related-data docs and planning/JTBD truth describe the repaired contract and keep deferred breadth out of v1.29.
+No active feature or repair requirements. The default lane is maintenance-and-evidence mode: release/support truth, proof stability, and outside-adopter evidence.
 
 ### Out of Scope
 
@@ -240,4 +247,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-31 — Phase 107 ecommerce readiness regression guard completed*
+*Last updated: 2026-05-31 — v1.29 contract repair and proof hardening completed*

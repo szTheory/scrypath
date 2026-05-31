@@ -2,7 +2,7 @@
 
 **Audience:** maintainers and repeat adopters updating Scrypath docs or planning future milestones.
 
-**Last reviewed:** 2026-05-27
+**Last reviewed:** 2026-05-31
 
 This document answers four questions:
 
@@ -45,17 +45,18 @@ The goal is to keep future doc updates and milestone planning anchored in the cu
 
 The Phase 87 evidence review concluded that outside-adopter attempts on defended paths faced significant friction around related data and tenant isolation. v1.24 through v1.26 closed the planned product wedges that followed from that evidence.
 
-The current highest-leverage work is maintenance, not feature breadth:
+v1.27 and v1.28 then closed the adopter contract hardening and realistic demo/admin proof wedges. v1.29 is now complete as a bounded contract-repair and proof-hardening closeout, not feature breadth:
 
-1. Ship the coherent Release Please patch train for v1.25/v1.26 work.
-2. Gather reviewed outside-adopter evidence on the defended path.
-3. Reconcile the v1.20 `Scrypath.SearchModule` archive/code drift so planning truth stops overstating shipped surface.
+1. Fan-out declaration repair is verified so `use Scrypath, fan_outs:` exposes `__scrypath__(:fan_outs)`.
+2. The v1.28 ecommerce E2E readiness regression guard verifies category probes preserve tenant scope.
+3. Roadmap/JTBD truth is refreshed for the repair closeout, and the repo returns to maintenance-and-evidence mode.
 
 Why this now outranks more feature work:
 
 - the highest-risk product gaps identified by prior evidence are now shipped
+- the remaining concrete gaps are shipped-contract and proof-quality gaps, not new user-facing breadth
 - the repo is now close enough to done that generic ergonomics breadth is likely overbuilding
-- the remaining confidence gap is outside use, release truth, and planning truth
+- the remaining confidence gap is outside-adopter evidence and proof stability, not another in-repo feature wedge
 
 ## Biggest remaining gaps
 
@@ -75,30 +76,74 @@ Current state:
 
 - `guides/outside-adopter-intake.md` defines the evidence path
 - `mix verify.adopter` and the Phoenix example defend the in-repo route
+- future feature breadth should reopen only with reviewed outside-adopter evidence or a concrete production bug
 
 Priority:
 
 - **very high** as a decision input, but it should produce patch-sized work unless evidence proves otherwise
 
-### 2. Planning truth drift
+### 2. Maintenance-and-evidence mode
 
-The v1.20 archive claims a `Scrypath.SearchModule` layer, while the current checkout does not expose it.
+v1.29 closed the remaining shipped-contract repair wedge. The default pull is now release/support truth, proof stability, and outside-adopter evidence.
+
+Why it matters:
+
+- release and support truth are higher leverage than speculative new surface
+- proof stability tells maintainers whether advisory lanes should stay advisory, be fixed, or eventually be promoted by policy
+- maintenance mode keeps Scrypath honest while real adoption catches up
+
+Current state:
+
+- v1.29 repairs generated `__scrypath__(:fan_outs)` reflection for `use Scrypath, fan_outs:`
+- v1.29 guards the category-filtered readiness probe so it merges with, rather than replaces, the tenant filter
+- `phase105-e2e` remains advisory until explicit release-policy approval and stability evidence justify promotion
+
+Priority:
+
+- **very high** as the default operating mode
+- should not expand into new runtime categories
+
+### 3. Closed: contract repair and proof hardening
+
+Scrypath has a strong related-data and realistic E2E story, and v1.29 tightened the shipped-contract details needed before the repo can mostly stop.
+
+Why it matters:
+
+- adopters should be able to use `use Scrypath, fan_outs:` instead of hand-writing reflection for ordinary searchable fan-out schemas
+- tenant/category proof must not accidentally weaken tenant scope inside the E2E harness
+- stale post-v1.26 ranking docs can mislead future milestone selection
+
+Closed state:
+
+- `Scrypath.sync_related/3` is real and documented
+- v1.29 repairs generated `__scrypath__(:fan_outs)` reflection for `use Scrypath, fan_outs:`
+- v1.29 guards the category-filtered readiness probe so it merges with, rather than replaces, the tenant filter
+- v1.29 aligns roadmap/JTBD truth and closes TRUTH-01 through `mix verify.phase108`
+
+Priority:
+
+- **closed** as the v1.29 bounded repair wedge
+
+### 4. Planning truth freshness
+
+The v1.20 `Scrypath.SearchModule` archive/code mismatch is resolved as archive-correction, but some ranking docs still carried post-v1.26 priorities after v1.27/v1.28 shipped.
 
 Why it matters:
 
 - future milestone selection depends on knowing what is actually shipped
-- archive/code disagreement lowers confidence and wastes planning tokens
+- stale ranking docs lower confidence and waste planning tokens
 
 Current state:
 
-- the mismatch is documented in this file and `.planning/todos/search-module-archive-code-drift.md`
+- `.planning/todos/search-module-archive-code-drift.md` is resolved
 - current public docs do not route adopters through `Scrypath.SearchModule`
+- post-v1.28 planning should point at contract repair/proof hardening before any feature work
 
 Priority:
 
-- **high** as maintenance truth cleanup, not as a user-facing feature unless salvage proves the layer should return
+- **high** as maintenance truth cleanup, not as a user-facing feature
 
-### 3. Autocomplete and suggestion-class flows
+### 4. Autocomplete and suggestion-class flows
 
 Scrypath has solid core search and facet value typeahead, but not a general first-class suggestion/autocomplete API.
 
@@ -117,6 +162,8 @@ Priority:
 - **Association and dependency propagation** — closed by v1.24 with `Scrypath.sync_related/3`, `RelatedWorker`, the related-data guide, and Phoenix example fan-out proof.
 - **Tenant-safe search access** — closed by v1.25 with `tenant_field:`, `schema_capabilities/1` reflection, `tenant_scope:`, and the multitenancy guide.
 - **High-cardinality facet value search** — closed by v1.26 with `Scrypath.search_facet_values/4`, `FacetSearchResult`, Meilisearch `/facet-search` routing, and LiveView examples.
+- **Adopter contract hardening** — closed by v1.27 with contract freeze, support/proof boundary reconciliation, and trust gates.
+- **Realistic demo/admin proof** — closed by v1.28 with mountable admin UI, multi-tenant ecommerce example, storefront/operator E2E, and advisory real-services CI.
 
 ## Gaps that are real but lower leverage
 
@@ -145,12 +192,12 @@ The repo's current discipline here is correct. Mature ecosystems show that widen
 
 ## Updated priority order
 
-1. **Release follow-through**
-   Ship the coherent patch train for v1.25/v1.26 work before opening new feature work.
+1. **Maintenance-and-evidence mode**
+   Keep release/support truth, required gates, focused proof commands, and advisory proof posture coherent after v1.29.
 2. **Outside-adopter evidence**
    Use real integration attempts to decide whether future work is a bugfix, docs patch, or no-op.
-3. **Planning truth drift**
-   Reconcile the v1.20 `Scrypath.SearchModule` archive/code mismatch.
+3. **Release and planning truth maintenance**
+   Keep the release train, docs/support truth, and roadmap/JTBD rankings coherent.
 4. **Autocomplete and suggestion flows**
    Open only with outside-adopter evidence; otherwise treat as adjacent product polish.
 
@@ -173,7 +220,7 @@ That means the likely diminishing-returns boundary is:
 - **before** deep OPSUI productization
 - **before** search-adjacent delight features become the main story
 
-In practical terms, Scrypath now looks roughly **93-95% done** for its stated v1 scope. That means:
+In practical terms, Scrypath now looks roughly **92-94% done** for its stated v1 scope. That means:
 
 - another generic ergonomics milestone is likely low leverage without outside-adopter evidence
 - release and adoption evidence matter more than feature breadth
@@ -206,6 +253,4 @@ When revisiting this document:
 
 ## Current repo caveat
 
-The planning archive currently claims a thin `Scrypath.SearchModule` layer shipped in `v1.20`, while the checked-out code does not expose that layer. Keep future JTBD docs and milestone decisions grounded in the code surface until that mismatch is reconciled.
-
-Phase 86 restored the current support/readiness authority at `guides/support-and-compatibility.md` and repaired `mix verify.adopter` so its fast path now runs a real `test/scrypath/readiness_contract_test.exs` seam. The remaining credibility issue is the archive-vs-branch-tip `SearchModule` mismatch, not the support/proof surface.
+The `v1.20` `Scrypath.SearchModule` mismatch is resolved as archive-correction: branch tip does not ship that module and future milestone planning must not assume it exists. The remaining credibility issues are narrower: keep shipped fan-out declarations ergonomic, keep v1.28 E2E tenant proof honest, and continue treating outside-adopter evidence as the only reason to reopen major feature breadth.

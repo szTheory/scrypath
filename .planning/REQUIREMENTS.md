@@ -18,7 +18,7 @@ Requirements for this bounded repair milestone. Each maps to exactly one roadmap
 
 ### Truth Alignment
 
-- [ ] **TRUTH-01**: Related-data docs and planning/JTBD truth describe the repaired contract and keep deferred breadth out of v1.29.
+- [x] **TRUTH-01**: Related-data docs and planning/JTBD truth describe the repaired contract and keep deferred breadth out of v1.29.
 
 ## Future Requirements
 
@@ -53,7 +53,7 @@ Explicit exclusions for v1.29.
 | FAN-01 | Phase 106 | Complete |
 | FAN-02 | Phase 106 | Complete |
 | E2E-01 | Phase 107 | Complete |
-| TRUTH-01 | Phase 108 | Pending |
+| TRUTH-01 | Phase 108 | Complete |
 
 **Coverage:**
 - v1 requirements: 4 total
@@ -62,4 +62,4 @@ Explicit exclusions for v1.29.
 
 ---
 *Requirements defined: 2026-05-31*
-*Last updated: 2026-05-31 after v1.29 milestone initialization*
+*Last updated: 2026-05-31 after v1.29 milestone closeout*
