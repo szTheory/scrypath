@@ -211,7 +211,7 @@ export async function operatorState(
   request: APIRequestContext,
   args: { tenantId: number; timeoutMs?: number; minFailedSyncCount?: number }
 ): Promise<OperatorState> {
-  if (args.minFailedSyncCount) {
+  if (args.minFailedSyncCount !== undefined) {
     await expect
       .poll(
         async () => {

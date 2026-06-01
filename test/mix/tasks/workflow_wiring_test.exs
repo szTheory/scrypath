@@ -8,7 +8,10 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
   describe "INFRA-01 D-14: workspace_clean gate on all three publish paths" do
     test "ci.yml quality job runs mix verify" do
-      assert File.read!(@ci_yml) =~ "mix verify"
+      ci = File.read!(@ci_yml)
+      repo_hygiene_job = workflow_job_block(ci, "repo-hygiene")
+
+      assert repo_hygiene_job =~ "mix verify"
     end
 
     test "publish-hex.yml runs mix verify.workspace_clean" do
@@ -387,5 +390,16 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert idx > prev_idx, "expected #{inspect(step)} to appear after previous release step"
       idx
     end)
+  end
+
+  defp workflow_job_block(content, job_name) do
+    marker = "\n  #{job_name}:\n"
+    {start_idx, marker_len} = :binary.match(content, marker)
+    rest = binary_part(content, start_idx + marker_len, byte_size(content) - start_idx - marker_len)
+
+    case Regex.run(~r/\n  [a-zA-Z0-9_-]+:\n/, rest, return: :index) do
+      [{next_idx, _}] -> binary_part(rest, 0, next_idx)
+      nil -> rest
+    end
   end
 end

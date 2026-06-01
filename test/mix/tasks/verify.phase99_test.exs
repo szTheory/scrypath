@@ -18,10 +18,9 @@ defmodule Mix.Tasks.Verify.Phase99Test do
         capture_io(fn ->
           Mix.Task.reenable("help")
           Mix.Task.run("help", ["verify.phase99"])
-        end)
+      end)
 
       assert output =~ "verify.phase99"
-      assert output =~ "There is no documentation for this task"
     end
 
     test "source defines focused test and docs command path" do

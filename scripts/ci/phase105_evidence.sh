@@ -74,6 +74,8 @@ function isFailedOutcome(status) {
 }
 
 function classifyFailure(events, report) {
+  if (events.length === 0) return "infra_boot";
+
   const evOps = new Set(events.map((ev) => ev.operation));
   const hadSeed = evOps.has("seed");
   const hadDrain = evOps.has("drain");
@@ -87,7 +89,6 @@ function classifyFailure(events, report) {
 
   const specOutcomes = extractSpecs(report).flatMap((spec) => spec.tests || []).flatMap((test) => test.results || []);
   if (specOutcomes.some((result) => isFailedOutcome(result.status))) return "playwright_assertion";
-  if (events.length === 0) return "infra_boot";
   return "unknown";
 }
 
