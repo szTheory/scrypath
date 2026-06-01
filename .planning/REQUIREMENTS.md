@@ -19,7 +19,7 @@
 ### Proof Stability
 
 - [x] **STAB-01**: Maintainer can make an evidence-based `phase105-e2e` advisory/required decision using recent outcomes, flake/runtime signal, artifact usefulness, and owner-response expectations.
-- [ ] **STAB-02**: Routine required gates remain lean unless evidence justifies promoting a heavier live/browser check.
+- [x] **STAB-02**: Routine required gates remain lean unless evidence justifies promoting a heavier live/browser check.
 
 ### Public Truth
 
@@ -63,7 +63,7 @@ Deferred unless backed by concrete production bugs, reviewed outside-adopter evi
 | SUP-01 | Phase 110 | Complete |
 | SUP-02 | Phase 110 | Complete |
 | STAB-01 | Phase 111 | Complete |
-| STAB-02 | Phase 111 | Pending |
+| STAB-02 | Phase 111 | Complete |
 | WEB-01 | Phase 112 | Pending |
 | WEB-02 | Phase 112 | Pending |
 | SCOPE-01 | Phase 112 | Pending |

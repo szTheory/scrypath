@@ -108,6 +108,15 @@ For a **multi-container-shaped** local stack (Postgres + Meilisearch + Phoenix +
 
 `phase105-e2e` is advisory today (not a required merge gate). It exists to continuously exercise the full browser/operator proof while we track flake and runtime behavior. Treat this lane as the Phase 105 UAT surface: once the job is running on PR, push, schedule, or manual workflow dispatch, do not add a separate human UAT gate unless CI itself cannot execute.
 
+Phase 111 freezes a dual-window evidence model for any future promotion decision:
+
+- Canonical stability evidence comes from push-to-main and scheduled runs.
+- Merge-risk evidence comes from `pull_request` runs.
+- Treat pre-change and post-change job identity evidence separately.
+- Retry-as-flake rule: a pass after retry counts as flaky evidence, not clean stability proof.
+- Owner response expectation for lane failures is 1 business day.
+- Path-scoped required promotion is not part of Phase 111.
+
 For the human-facing tour of what this lane protects, including the storefront,
 operator routes, demo tenants, and Compose launch path, see
 [`examples/scrypath_ecommerce/README.md`](examples/scrypath_ecommerce/README.md).
@@ -135,3 +144,4 @@ npm run test:e2e
 - Failure artifacts remain actionable (`playwright-report`, `test-results`, Phoenix log).
 - Lane owners respond to failures before required-check escalation.
 - Trigger rules stay explicit so PR checks do not sit in ambiguous skipped/pending states.
+- Evidence artifacts stay bounded and machine-auditable as `phase105-playwright.json`, `phase105-evidence.ndjson`, `phase105-evidence.json`, and `phase105-evidence-summary.md`.

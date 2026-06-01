@@ -63,7 +63,7 @@ Plans:
 
 **Requirements:** STAB-01, STAB-02
 
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 **Wave 1**
@@ -72,7 +72,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 111-02-PLAN.md — Freeze the advisory decision record and wire it into the existing lean trust lane
+- [x] 111-02-PLAN.md — Freeze the advisory decision record and wire it into the existing lean trust lane
 
 **Success criteria:**
 
