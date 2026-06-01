@@ -1,5 +1,29 @@
 # Milestones
 
+## v1.30 Release Trust and Evidence Maintenance (Shipped: 2026-06-01)
+
+**Phases completed:** 4 phases, 11 plans, 20 tasks
+
+**Key accomplishments:**
+
+- Semantic release-source agreement checks plus artifact-first package denylist proof harden the auth-free `verify.phase11` gate.
+- Reinstated historical Phase 97 contract and scope-guard authorities at the canonical archive path required by docs-contract and planning pointers.
+- Canonical and recovery publish workflows now share one enforced ordered proof chain, with docs/tests aligned to the same release-truth contract.
+- Support and evidence routing now points to one compatibility authority and one outside-adopter intake vocabulary.
+- Phase 110 support and intake routing is pinned by a focused service-free contract inside `mix verify.adopter`.
+- Hardened `phase105-e2e` as an advisory evidence lane by adding structured run manifests, stage events, and bounded failure triage artifacts for promotion-readiness review.
+- Frozen advisory-versus-required CI policy for `phase105-e2e` with explicit promotion thresholds and deterministic trust-lane drift checks.
+- Published a single canonical scope/reopen policy guide and routed README/support/intake scope pressure to that authority with ExDoc navigation wiring.
+- Guide map, sync semantics, operator support, and JTBD docs now share one scope-policy authority and the exact three-trigger reopen rule.
+- Website route pages now use the fixed Ecto-native claim envelope, explicit README/scope-policy authority links, and concise visibility/scope truth without becoming a second docs system.
+- Focused contract proof now enforces public-claim envelope and website route-map boundaries through a standalone `mix verify.phase112` command.
+
+**Milestone audit:** Tech debt accepted — 10/10 requirements, 4/4 phases, 5/5 flows; see `milestones/v1.30-MILESTONE-AUDIT.md`.
+
+**Archives:** `milestones/v1.30-ROADMAP.md`, `milestones/v1.30-REQUIREMENTS.md`, `milestones/v1.30-MILESTONE-AUDIT.md`
+
+---
+
 ## v1.29 Contract Repair and Proof Hardening (Shipped: 2026-05-31)
 
 **Phases completed:** 3 phases, 3 plans, 9 tasks

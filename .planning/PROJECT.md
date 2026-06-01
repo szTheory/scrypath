@@ -8,16 +8,19 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
+## Current Milestone: none
+
+v1.30 shipped on 2026-06-01. No active milestone is open.
+
 ## Current Mode: maintenance-and-evidence mode
 
-**Goal:** Keep release/support truth, proof stability, and outside-adopter evidence current after v1.29 closed the bounded repair milestone.
+**Goal:** Keep release/support truth, proof stability, public website/docs claims, and outside-adopter evidence current without reopening product breadth by default.
 
-**v1.29 closed outcomes:**
+**Recent closed outcomes:**
+- v1.30 release train/package truth, support intake routing, advisory proof stability, and public website/docs truth alignment.
 - Repaired generated `__scrypath__(:fan_outs)` for ordinary `use Scrypath, fan_outs:` schemas.
 - Tenant-preserving ecommerce readiness regression proof.
 - Aligned roadmap/JTBD truth for the repair closeout.
-
-The three closed outcomes are repaired generated `__scrypath__(:fan_outs)`, tenant-preserving ecommerce readiness regression proof, and aligned roadmap/JTBD truth.
 
 ## Canonical Adopter Contract
 
@@ -46,6 +49,15 @@ Phase 97 through 99 banned capability classes:
 - new public runtime API categories
 
 ## Current State
+
+**v1.30 — Release Trust and Evidence Maintenance** shipped + archived in-repo on **2026-06-01** across phases **109-112**.
+
+**What shipped:**
+- Release-source agreement and Hex package-shape proof hardened through deterministic `mix verify.phase11` checks.
+- Canonical and recovery publish workflows now share one ordered proof chain with release docs aligned to that contract.
+- Support/readiness and outside-adopter evidence routing now point to one compatibility authority and one intake vocabulary, pinned by `mix verify.adopter`.
+- `phase105-e2e` remains advisory with structured evidence capture, explicit promotion thresholds, and lean trust-lane drift checks.
+- Public website/docs truth now routes to README, guides, examples, Hex, GitHub, and the scope/reopen policy without becoming a second docs site.
 
 **v1.28 — Realistic Demo App & Admin UI Proof** shipped + archived in-repo on **2026-05-31** across phases **102–105**.
 
@@ -106,13 +118,14 @@ Phase 97 through 99 banned capability classes:
 
 </details>
 
-**The library scope is now complete for its stated mission.** Future work will focus on maintenance, bug fixes, release-train stability, proof stability, and evaluating stopping based on outside-adopter evidence.
+**The library scope is now effectively complete for its stated mission.** Future work should focus on maintenance, bug fixes, release-train stability, proof stability, and outside-adopter evidence. Do not keep extending the roadmap just because additional polish is imaginable.
 
 **Release-train posture:** keep `main` green on lean merge gates, ship patch-first while pre-1.0, and land serious milestone work through PRs rather than direct `main` development.
 
 **Unified operating lanes:**
 - **Maintenance lane (default):** release follow-through, support/docs truth, outside-adopter evidence loop, and planning-truth reconciliation while `main` stays green.
-- **Feature lane (evidence-gated):** reopen only as PR-scoped milestone work; merge only after PR CI is green and scope remains bounded to the approved wedge.
+- **Silence lane:** when there is no release follow-through, support/proof drift, production bug, or outside-adopter evidence, do not manufacture a milestone. Say the release train is idle.
+- **Feature lane (evidence-gated):** reopen only as PR-scoped milestone work when a concrete bug, reviewed outside-adopter evidence, or explicit strategic wedge justifies it; merge only after PR CI is green and scope remains bounded to the approved wedge.
 
 **Boundary discipline retained:** Scrypath remains framework-agnostic at the view layer.
 
@@ -124,14 +137,17 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Next Milestone Goals
 
-- **Default lane:** maintenance-and-evidence mode.
-- **Goal:** Keep release/support truth and proof stability current while gathering outside-adopter evidence.
-- **Targets:** keep required gates green, keep `phase105-e2e` advisory unless release policy explicitly promotes it, and route real adopter friction into patch-sized fixes.
+- **Active lane:** none.
+- **Goal:** Keep the release train idle and honest unless concrete evidence justifies new work.
+- **Targets:** release follow-through, support/proof drift, production bug reports, outside-adopter evidence, or explicit strategic decisions.
 - **Feature lane remains evidence-gated:** autocomplete/suggestions, broader OPSUI productization, tenant-token helpers, multi-backend, vector/hybrid, and new UI surfaces still require reviewed outside-adopter evidence or a concrete production bug.
+- **Done-ness posture:** the stated v1 library scope is effectively done; future milestone discovery should not re-litigate this unless new evidence changes it.
 
 ## Last shipped milestone
 
-**v1.29 — Contract Repair and Proof Hardening** (shipped + archived in-repo **2026-05-31**). Delivered generated fan-out reflection repair, tenant-preserving ecommerce readiness regression proof, and aligned roadmap/JTBD truth while keeping `phase105-e2e` advisory — see **`milestones/v1.29-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**v1.30 — Release Trust and Evidence Maintenance** (shipped + archived in-repo **2026-06-01**). Delivered release/package truth hardening, support intake routing, advisory proof stability policy, and public website/docs truth alignment while keeping product scope closed — see **`milestones/v1.30-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+
+**Prior:** **v1.29 — Contract Repair and Proof Hardening** (shipped + archived in-repo **2026-05-31**). Delivered generated fan-out reflection repair, tenant-preserving ecommerce readiness regression proof, and aligned roadmap/JTBD truth while keeping `phase105-e2e` advisory — see **`milestones/v1.29-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **Prior:** **v1.28 — Realistic Demo App & Admin UI Proof** (shipped + archived in-repo **2026-05-31**). Delivered the mountable admin UI engine, multi-tenant e-commerce example, storefront/operator E2E proof, and advisory real-services CI lane — see **`milestones/v1.28-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
@@ -145,12 +161,13 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Planning window
 
-**v1.29 complete.** This was a bounded repair closeout, not a new feature lane. After v1.29, default back to maintenance/support truth, proof stability, and outside-adopter evidence unless a concrete bug or reviewed adopter evidence reopens scope.
+**No active milestone.** The default posture is idle maintenance. Start a new milestone only for release follow-through, support/proof drift, concrete production bugs, reviewed outside-adopter evidence, or an explicit strategic decision.
 
 ## Requirements
 
 ### Validated
 
+- [x] **v1.30** (2026-06-01): **REL-01**–**REL-03**, **SUP-01**–**SUP-02**, **STAB-01**–**STAB-02**, **WEB-01**–**WEB-02**, **SCOPE-01** — release/package truth, support intake evidence routing, advisory proof stability, and website/docs claim alignment.
 - [x] **Phase 106** (2026-05-31): **FAN-01**–**FAN-02** — generated fan-out reflection for ordinary `use Scrypath, fan_outs:` schemas and compatibility for hand-written owner reflection, verified by `mix verify.phase106`.
 - [x] **Phase 107** (2026-05-31): **E2E-01** — ecommerce readiness probes preserve tenant scope when category filtering is present, verified by `mix verify.phase107`.
 - [x] **Phase 108** (2026-05-31): **TRUTH-01** — related-data docs and planning/JTBD truth describe the repaired contract and keep deferred breadth out of v1.29, verified by `mix verify.phase108`.
@@ -217,7 +234,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 <!-- Current scope. Building toward these. -->
 
-No active feature or repair requirements. The default lane is maintenance-and-evidence mode: release/support truth, proof stability, and outside-adopter evidence.
+No active feature or repair requirements. The default lane is idle maintenance-and-evidence mode: release/support truth, proof stability, public claim drift, and outside-adopter evidence only when concrete signal appears.
 
 ### Out of Scope
 
@@ -234,7 +251,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has **twenty-six** shipped planning milestones through **`v1.28`** (**`v1.0`**–**`v1.28`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`** for shipped arcs.
+The repository has shipped planning milestones through **`v1.30`** (**`v1.0`**–**`v1.30`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`** for shipped arcs.
 
 ## Evolution
 
@@ -247,4 +264,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-31 — v1.29 contract repair and proof hardening completed*
+*Last updated: 2026-06-01 — v1.30 release trust and evidence maintenance completed*

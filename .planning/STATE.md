@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.30
 milestone_name: Release Trust and Evidence Maintenance
-status: milestone_complete
-last_updated: 2026-06-01T16:32:34.108Z
-last_activity: 2026-06-01 -- Phase 112 marked complete
+status: Awaiting next milestone
+last_updated: "2026-06-01T16:48:53.031Z"
+last_activity: 2026-06-01 — Milestone v1.30 completed and archived
 progress:
   total_phases: 4
   completed_phases: 4
   total_plans: 11
   completed_plans: 11
   percent: 100
-stopped_at: Milestone complete (Phase 112 was final phase)
 ---
 
 # Project State
@@ -19,14 +18,14 @@ stopped_at: Milestone complete (Phase 112 was final phase)
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Milestone complete
+**Current Focus:** Awaiting next milestone
 
 ## Current Position
 
-Phase: 112 — COMPLETE
-Plan: 4 of 4
-Status: Milestone complete
-Last activity: 2026-06-01 -- Phase 112 marked complete
+Phase: Milestone v1.30 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-06-01 — Milestone v1.30 completed and archived
 
 ## Performance Metrics
 
@@ -38,8 +37,8 @@ Last activity: 2026-06-01 -- Phase 112 marked complete
 | 105 | 03 | 46m | 4 | 6 |
 
 - **Completed Phases:** 4
-- **Completed Plans:** 15
-- **Requirements Met:** 15/15
+- **Completed Plans:** 11
+- **Requirements Met:** 10/10
 
 | Phase 103 P03 | 5m | 2 tasks | 6 files |
 | Phase 105 P02 | 29m | 4 tasks | 6 files |
@@ -70,10 +69,8 @@ Last activity: 2026-06-01 -- Phase 112 marked complete
 
 ### Todos
 
-- Phase 109: audit release train and package truth.
-- Phase 110: audit support intake and evidence routing.
-- Phase 111: decide advisory proof stability posture for `phase105-e2e`.
-- Phase 112: align public website/docs truth and scope guard claims.
+- No active milestone todos.
+- Start new work only for release follow-through, support/proof drift, production bug evidence, reviewed outside-adopter evidence, or an explicit strategic decision.
 
 ### Historical Contract Pointers
 
@@ -124,4 +121,4 @@ Last activity: 2026-06-01 -- Phase 112 marked complete
 
 ## Operator Next Steps
 
-- Start Phase 109 with `$gsd-discuss-phase 109` or `$gsd-plan-phase 109`.
+- Start the next milestone with `$gsd-new-milestone` only when the idle release-train criteria are met.

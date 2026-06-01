@@ -295,10 +295,40 @@ Ship **`audit-open` acknowledgments** into **`STATE.md`** at close when tooling 
 
 ---
 
+## Milestone: v1.30 — Release Trust and Evidence Maintenance
+
+**Shipped:** 2026-06-01
+**Phases:** 4 (109-112) | **Plans:** 11
+
+### What Was Built
+
+Release-source agreement and package-shape proof were hardened in `mix verify.phase11`; support intake and outside-adopter evidence routing were pinned through `mix verify.adopter`; `phase105-e2e` stayed advisory with explicit promotion thresholds; public website/docs truth was aligned around route-first pages and the canonical scope/reopen policy.
+
+### What Worked
+
+Focused service-free verification kept the milestone auditable without widening required CI. The release/support/proof/public-truth work stayed inside the maintenance lane and preserved the post-v1.29 done posture.
+
+### What Was Inefficient
+
+The closeout audit passed requirements and flows but still surfaced metadata/process debt, especially Phase 111 validation frontmatter and standalone public-truth proof that depends on maintainer discipline rather than required CI.
+
+### Patterns Established
+
+- Maintenance milestones should pin drift-prone public truth with small direct-file contract tests.
+- Advisory browser proof can be useful when promotion thresholds, artifact names, and owner-response rules are explicit.
+- Website pages should route to canonical authorities instead of becoming a second docs site.
+
+### Key Lessons
+
+Do not reopen feature scope to make proof feel more complete. Accept non-blocking proof/process debt explicitly at close, then require concrete adoption or drift signal before starting another milestone.
+
+---
+
 ## Cross-Milestone Trends
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|
+| v1.30 | 109-112 | Release/package truth, support intake routing, advisory proof stability, and website/docs truth alignment |
 | v1.15 | 62–64 | OPSUI second slice: playground capture, playbook catalog/metadata, bounded team persistence + validate Mix |
 | v1.14 | 57–61 | B1 evidence gate + operator playbooks: **`Playbook.V1`**, **`/ops/playbooks`**, portable JSON |
 | v1.9 | 42–43 | Per-query tuning: locked pipeline spec, `:per_query` runtime, verify.phase43 |
