@@ -66,6 +66,7 @@ defmodule Scrypath.MixProject do
         "verify.phase107": :test,
         # preferred_envs includes the phase108 task
         "verify.phase108": :test,
+        "verify.phase112": :test,
         "verify.adopter": :test,
         "verify.opsui": :test,
         "verify.meilisearch_smoke": :test,
