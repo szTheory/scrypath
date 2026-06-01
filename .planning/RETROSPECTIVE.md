@@ -2,6 +2,30 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.32 — Admin UI/UX Design System Cleanup
+
+**Shipped (planning):** 2026-06-01
+**Archived:** 2026-06-01
+**Phases:** 3 (116-118) | **Plans:** 3 | **Requirements:** 8
+
+### What was built
+
+The existing ScrypathOps `/ops` shell and mounted `/admin/search/*` surface now use project-owned operator tokens, explicit mounted asset hooks, shared LiveView UI primitives, posture-first screen hierarchy, clearer search/playbook workflow ordering, and focused route/component verification.
+
+### What worked
+
+Keeping v1.32 framed as bounded admin proof polish prevented runtime product-scope drift. The final audit was able to trace every requirement through requirements, phase summaries, verification artifacts, and focused test evidence.
+
+### What was inefficient
+
+Earlier phase verification hit local Postgres connection pressure, which made the closeout depend on later sequential reruns. The final focused suites passed, but long-lived local DB pressure remains a recurring verification friction point.
+
+### Key lessons
+
+Mounted admin UI work needs explicit host asset contracts and route-level smoke tests; visual cleanup alone is not enough when the surface is embedded in another Phoenix application.
+
+---
+
 ## Milestone: v1.28 — Realistic Demo App & Admin UI Proof
 
 **Shipped (planning):** 2026-05-31

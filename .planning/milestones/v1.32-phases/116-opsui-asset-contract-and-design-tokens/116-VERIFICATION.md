@@ -1,24 +1,18 @@
 ---
 phase: 116-opsui-asset-contract-and-design-tokens
-verified: 2026-06-01T18:39:00Z
-status: human_needed
-score: 2/3 must-haves verified
+verified: 2026-06-01T20:56:55Z
+status: passed
+score: 3/3 must-haves verified
 overrides_applied: 0
-human_verification:
-  - test: "Rerun ops shell contract suite after clearing local Postgres saturation"
-    expected: "`cd scrypath_ops && mix test test/scrypath_ops_web/ops_shell_contract_test.exs` exits 0 and proves CSS/JS shell contract assertions"
-    why_human: "Verifier run is blocked by `Postgrex.Error FATAL 53300 (too_many_connections)` and cannot complete DB-backed test execution."
-  - test: "Rerun mounted ecommerce route contract suite after clearing local Postgres saturation"
-    expected: "`cd examples/scrypath_ecommerce && mix test test/scrypath_ecommerce_web/controllers/page_controller_test.exs` exits 0 and proves `/admin/search/*` asset hook behavior"
-    why_human: "Verifier run is blocked by `Postgrex.Error FATAL 53300 (too_many_connections)` and cannot complete DB-backed test execution."
+human_verification: []
 ---
 
 # Phase 116: OPSUI Asset Contract and Design Tokens Verification Report
 
 **Phase Goal:** Make mounted `/admin/search/*` styling explicit and replace Phoenix-default visual residue with Scrypath operator tokens.
-**Verified:** 2026-06-01T18:39:00Z
-**Status:** human_needed
-**Re-verification:** No — initial verification
+**Verified:** 2026-06-01T20:56:55Z
+**Status:** passed
+**Re-verification:** Yes — focused suites rerun after local Postgres connection pressure cleared
 
 ## Goal Achievement
 
@@ -26,11 +20,11 @@ human_verification:
 
 | #   | Truth   | Status     | Evidence       |
 | --- | ------- | ---------- | -------------- |
-| 1 | Mounted host apps have an explicit, tested path for loading ScrypathOps CSS/JS under `/admin/search/*` (`ASSET-01`) | ? UNCERTAIN (WARNING) | Explicit path and wiring exist in code: conditional host link in `examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/components/layouts.ex` and mounted assets forwarding in `scrypath_ops/lib/scrypath_ops_web/router.ex`; route-level assertions exist in `examples/scrypath_ecommerce/test/scrypath_ecommerce_web/controllers/page_controller_test.exs`. Runtime proof blocked because `mix test` fails with `Postgrex.Error FATAL 53300 (too_many_connections)` and DB creation killed. |
+| 1 | Mounted host apps have an explicit, tested path for loading ScrypathOps CSS/JS under `/admin/search/*` (`ASSET-01`) | ✓ VERIFIED | Explicit path and wiring exist in code: conditional host link in `examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/components/layouts.ex` and mounted assets forwarding in `scrypath_ops/lib/scrypath_ops_web/router.ex`; route-level assertions pass in `examples/scrypath_ecommerce/test/scrypath_ecommerce_web/controllers/page_controller_test.exs`. |
 | 2 | OPSUI uses Scrypath-owned operator tokens and no undefined spacing/type utility assumptions (`TOKEN-01`) | ✓ VERIFIED | `scrypath_ops/assets/css/app.css` defines explicit quiet-ops token themes (`--color-base-*`, `--color-primary`, etc.), includes intentional unprefixed daisyUI contract comment, and no placeholder token stubs found. |
 | 3 | OPSUI removes Phoenix-default visual residue and follows quiet ops console direction (`BRAND-01`) | ✓ VERIFIED | `scrypath_ops/assets/css/app.css` includes quiet-ops shell/panel/route-mark styles and themed gradients; `scrypath_ops/test/scrypath_ops_web/ops_shell_contract_test.exs` asserts brand/logo and labelled theme controls in shell output contract. |
 
-**Score:** 2/3 truths verified
+**Score:** 3/3 truths verified
 
 ### Required Artifacts
 
@@ -61,8 +55,12 @@ human_verification:
 
 | Behavior | Command | Result | Status |
 | -------- | ------- | ------ | ------ |
-| Ops shell contract suite runs and validates mounted asset/brand markers | `cd scrypath_ops && mix test test/scrypath_ops_web/ops_shell_contract_test.exs` | Exit 1, repeated `Postgrex.Error FATAL 53300 (too_many_connections)`, ended with `The database for ScrypathOps.Repo couldn't be created: killed` | ✗ FAIL (environmental block) |
-| Mounted ecommerce route contract suite runs and validates `/admin/search/*` asset hooks | `cd examples/scrypath_ecommerce && mix test test/scrypath_ecommerce_web/controllers/page_controller_test.exs` | Exit 1, `Postgrex.Error FATAL 53300 (too_many_connections)`, ended with `The database for ScrypathEcommerce.Repo couldn't be created: killed` | ✗ FAIL (environmental block) |
+| Ops shell contract suite runs and validates mounted asset/brand markers | `cd scrypath_ops && mix test test/scrypath_ops_web/ops_shell_contract_test.exs` | 2026-06-01T20:56:00Z rerun exited 0: 4 tests, 0 failures | ✓ PASS |
+| Mounted ecommerce route contract suite runs and validates `/admin/search/*` asset hooks | `cd examples/scrypath_ecommerce && mix test test/scrypath_ecommerce_web/controllers/page_controller_test.exs` | 2026-06-01T20:56:55Z rerun exited 0: 3 tests, 0 failures | ✓ PASS |
+
+### Environment Diagnostics
+
+The earlier 2026-06-01T18:46:51Z rerun was blocked by local Postgres connection saturation. A later sequential rerun completed both focused DB-backed suites successfully.
 
 ### Probe Execution
 
@@ -74,7 +72,7 @@ human_verification:
 
 | Requirement | Source Plan | Description | Status | Evidence |
 | ----------- | ---------- | ----------- | ------ | -------- |
-| ASSET-01 | `116-PLAN.md` | Mounted host apps have explicit, tested path for loading ScrypathOps CSS/JS under `/admin/search/*` | ? NEEDS HUMAN | Path and wiring are present in layouts/router/tests, but focused test execution blocked by local Postgres saturation (`FATAL 53300`). |
+| ASSET-01 | `116-PLAN.md` | Mounted host apps have explicit, tested path for loading ScrypathOps CSS/JS under `/admin/search/*` | ✓ SATISFIED | Path and wiring are present in layouts/router/tests; focused route contract suite passes. |
 | TOKEN-01 | `116-PLAN.md` | OPSUI uses Scrypath-owned operator tokens and no undefined spacing/type utility assumptions | ✓ SATISFIED | `scrypath_ops/assets/css/app.css` defines Scrypath token themes and keeps unprefixed daisyUI contract explicit. |
 | BRAND-01 | `116-PLAN.md` | OPSUI removes Phoenix-default residue and follows quiet ops console direction | ✓ SATISFIED | Quiet-ops shell/panel/route-mark styling plus shell brand marker assertions in ops contract test file. |
 
@@ -88,23 +86,13 @@ No orphaned Phase 116 requirements found in `.planning/REQUIREMENTS.md`.
 
 ### Human Verification Required
 
-### 1. Ops Shell Contract Suite
-
-**Test:** Run `cd scrypath_ops && mix test test/scrypath_ops_web/ops_shell_contract_test.exs` after clearing local Postgres connection pressure.
-**Expected:** Test exits 0 with assertions validating mounted `/ops` CSS/JS links, ScrypathOps branding, and labelled theme controls.
-**Why human:** Current environment cannot establish DB connections (`FATAL 53300 too_many_connections`), so runtime behavior cannot be verified automatically.
-
-### 2. Mounted Ecommerce Route Contract Suite
-
-**Test:** Run `cd examples/scrypath_ecommerce && mix test test/scrypath_ecommerce_web/controllers/page_controller_test.exs` after clearing local Postgres connection pressure.
-**Expected:** Test exits 0 proving `/admin/search/posture` includes ops asset hooks and storefront `/` excludes mounted ops CSS.
-**Why human:** Current environment cannot establish DB connections (`FATAL 53300 too_many_connections`), so runtime behavior cannot be verified automatically.
+None.
 
 ### Gaps Summary
 
-No implementation gaps were found in static code/wiring checks for the phase scope. Verification remains open because DB-backed runtime evidence for `ASSET-01` cannot be produced in this environment until local Postgres saturation is cleared and focused suites are rerun.
+No implementation gaps were found. DB-backed runtime evidence for `ASSET-01` is now present.
 
 ---
 
-_Verified: 2026-06-01T18:39:00Z_
+_Verified: 2026-06-01T20:56:55Z_
 _Verifier: the agent (gsd-verifier)_

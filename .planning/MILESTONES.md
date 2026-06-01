@@ -1,5 +1,38 @@
 # Milestones
 
+## v1.32 Admin UI/UX Design System Cleanup (Shipped: 2026-06-01)
+
+**Phases completed:** 3 phases, 3 plans, 10 tasks
+
+**Key accomplishments:**
+
+- Shared Phoenix LiveView OPSUI primitives now drive stable operator notices, actions, metrics, empty states, tables, schema controls, toolbars, code blocks, and modal shells across the admin screens.
+- The ScrypathOps admin screens now apply the quiet ops console system consistently while preserving posture-first operator triage and bounded operational honesty.
+
+**Milestone audit:** Passed — 8/8 requirements, 3/3 phases, 5/5 integration flows, 4/4 E2E flows; see `milestones/v1.32-MILESTONE-AUDIT.md`.
+
+**Archives:** `milestones/v1.32-ROADMAP.md`, `milestones/v1.32-REQUIREMENTS.md`, `milestones/v1.32-MILESTONE-AUDIT.md`, `milestones/v1.32-phases/`
+
+---
+
+## v1.31 Adoption Evidence Demo Hardening (UAT Passed: 2026-06-01)
+
+**Phases:** 3 phases planned, 3 complete; maintainer UAT passed
+
+**Scope:** Bounded proof and demo DX hardening. This is not a runtime product-surface expansion.
+
+**Completed so far:**
+
+- Realistic e-commerce demo browser evidence now covers storefront search/faceting, tenant isolation, related category propagation, delete visibility, zero-results behavior, operator failed-sync triage, and zero-downtime swap.
+- Demo Docker/dev DX now supports cleaner build context, dependency layering, and bind-mounted iteration through `compose.dev.yaml`.
+- Docs and evidence summaries now make the demo easier to start, inspect, and understand while preserving advisory CI posture.
+- Ops UI gained active navigation state and clearer retry/swap action context for first-time local evaluation.
+- Maintainer UAT passed locally on 2026-06-01 and directly led into the bounded v1.32 admin UI cleanup wedge.
+
+**Next:** archive v1.31 when closing the planning batch.
+
+---
+
 ## v1.30 Release Trust and Evidence Maintenance (Shipped: 2026-06-01)
 
 **Phases completed:** 4 phases, 11 plans, 20 tasks

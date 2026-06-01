@@ -8,16 +8,18 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Milestone: none
+## Current Milestone
 
-v1.30 shipped on 2026-06-01. No active milestone is open.
+No active milestone. v1.32 shipped and archived on 2026-06-01.
 
-## Current Mode: maintenance-and-evidence mode
+## Current Mode: idle release train
 
-**Goal:** Keep release/support truth, proof stability, public website/docs claims, and outside-adopter evidence current without reopening product breadth by default.
+**Goal:** Keep `main` green, preserve release/support truth, and avoid inventing new roadmap scope without concrete evidence.
 
 **Recent closed outcomes:**
 - v1.30 release train/package truth, support intake routing, advisory proof stability, and public website/docs truth alignment.
+- v1.31 adoption-evidence demo pass: richer deterministic Playwright coverage, Docker/dev iteration support, ops UI clarity, evidence summary reporting, and maintainer UAT passed.
+- v1.32 admin UI cleanup: ScrypathOps design tokens, shared operator primitives, mounted e-commerce asset contract, screen cleanup, and focused verification.
 - Repaired generated `__scrypath__(:fan_outs)` for ordinary `use Scrypath, fan_outs:` schemas.
 - Tenant-preserving ecommerce readiness regression proof.
 - Aligned roadmap/JTBD truth for the repair closeout.
@@ -49,6 +51,22 @@ Phase 97 through 99 banned capability classes:
 - new public runtime API categories
 
 ## Current State
+
+**v1.32 — Admin UI/UX Design System Cleanup** shipped + archived in-repo on **2026-06-01** across phases **116-118**.
+
+**What shipped:**
+- ScrypathOps shell/theme cleanup with project-owned operator tokens, route-mark logo, improved focus/typography/numeric handling, and shared shell surfaces.
+- Shared LiveView primitives now cover operator panels, notices, metrics, empty states, schema selects, buttons, code blocks, and modals.
+- Posture, failed sync, sync/drift, search/federation, and playbooks now use clearer content hierarchy and natural workflow ordering.
+- Mounted e-commerce admin routes conditionally load ScrypathOps CSS and host-side JS handles theme/diagnostics-copy events without loading a second LiveSocket.
+- Focused ScrypathOps LiveView, root OPSUI, and mounted ecommerce admin route tests passed.
+
+**v1.31 — Adoption Evidence Demo Hardening** passed maintainer UAT on **2026-06-01** across phases **113-115**.
+
+**What shipped into the next wedge:**
+- Realistic e-commerce demo hardening for tenant isolation, delete sync, no-results state, category propagation, operator triage, and zero-downtime swap browser proof.
+- Docker/dev DX with bind-mounted iteration and clearer cache behavior for the demo app.
+- Documentation and evidence summaries explaining the demo's advisory status, click-around value, and proof boundaries.
 
 **v1.30 — Release Trust and Evidence Maintenance** shipped + archived in-repo on **2026-06-01** across phases **109-112**.
 
@@ -118,7 +136,7 @@ Phase 97 through 99 banned capability classes:
 
 </details>
 
-**The library scope is now effectively complete for its stated mission.** Future work should focus on maintenance, bug fixes, release-train stability, proof stability, and outside-adopter evidence. Do not keep extending the roadmap just because additional polish is imaginable.
+**The library scope remains effectively complete for its stated mission.** v1.32 is not runtime breadth; it is a bounded UI polish/design-system wedge for the existing operator/admin proof surface. Future work should still focus on maintenance, bug fixes, release-train stability, proof stability, and outside-adopter evidence. Do not keep extending the roadmap just because additional polish is imaginable.
 
 **Release-train posture:** keep `main` green on lean merge gates, ship patch-first while pre-1.0, and land serious milestone work through PRs rather than direct `main` development.
 
@@ -138,14 +156,18 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 ## Next Milestone Goals
 
 - **Active lane:** none.
-- **Goal:** Keep the release train idle and honest unless concrete evidence justifies new work.
-- **Targets:** release follow-through, support/proof drift, production bug reports, outside-adopter evidence, or explicit strategic decisions.
+- **Goal:** Keep the release train idle unless maintenance, support truth, proof drift, production bug evidence, outside-adopter evidence, or an explicit strategic wedge justifies new scope.
+- **Potential targets:** release follow-through, support/readiness truth, outside-adopter evidence, and proof stability.
 - **Feature lane remains evidence-gated:** autocomplete/suggestions, broader OPSUI productization, tenant-token helpers, multi-backend, vector/hybrid, and new UI surfaces still require reviewed outside-adopter evidence or a concrete production bug.
 - **Done-ness posture:** the stated v1 library scope is effectively done; future milestone discovery should not re-litigate this unless new evidence changes it.
 
 ## Last shipped milestone
 
-**v1.30 — Release Trust and Evidence Maintenance** (shipped + archived in-repo **2026-06-01**). Delivered release/package truth hardening, support intake routing, advisory proof stability policy, and public website/docs truth alignment while keeping product scope closed — see **`milestones/v1.30-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**v1.32 — Admin UI/UX Design System Cleanup** (shipped + archived in-repo **2026-06-01**). Bounded existing-admin polish wedge for ScrypathOps tokens, shared operator primitives, mounted `/admin/search/*` asset contract, and screen cleanup — see **`milestones/v1.32-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+
+**Last shipped milestone:** **v1.31 — Adoption Evidence Demo Hardening** (UAT passed **2026-06-01**). Bounded strategic proof wedge for realistic demo app DX, deterministic browser evidence, docs, and closeout.
+
+**Prior:** **v1.30 — Release Trust and Evidence Maintenance** (shipped + archived in-repo **2026-06-01**). Delivered release/package truth hardening, support intake routing, advisory proof stability policy, and public website/docs truth alignment while keeping product scope closed — see **`milestones/v1.30-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **Prior:** **v1.29 — Contract Repair and Proof Hardening** (shipped + archived in-repo **2026-05-31**). Delivered generated fan-out reflection repair, tenant-preserving ecommerce readiness regression proof, and aligned roadmap/JTBD truth while keeping `phase105-e2e` advisory — see **`milestones/v1.29-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
@@ -161,12 +183,14 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Planning window
 
-**No active milestone.** The default posture is idle maintenance. Start a new milestone only for release follow-through, support/proof drift, concrete production bugs, reviewed outside-adopter evidence, or an explicit strategic decision.
+**Active milestone:** none. The release train is idle after v1.32 archive.
 
 ## Requirements
 
 ### Validated
 
+- [x] **v1.32** (2026-06-01): **ASSET-01**, **TOKEN-01**, **BRAND-01**, **COMP-01**, **A11Y-01**, **SCREEN-01**, **SCREEN-02**, **VERIFY-01** — mounted admin asset contract, Scrypath operator tokens, shared LiveView primitives, screen hierarchy cleanup, and focused verification.
+- [x] **v1.31** (2026-06-01): **DEMO-01**–**DEMO-02**, **E2E-01**–**E2E-03**, **DX-01**, **DOC-01**, **OPS-01**, **CLOSE-01** — realistic seeded demo, deterministic advisory E2E proof, Docker/dev DX, documentation, ops UI clarity, and maintainer closeout.
 - [x] **v1.30** (2026-06-01): **REL-01**–**REL-03**, **SUP-01**–**SUP-02**, **STAB-01**–**STAB-02**, **WEB-01**–**WEB-02**, **SCOPE-01** — release/package truth, support intake evidence routing, advisory proof stability, and website/docs claim alignment.
 - [x] **Phase 106** (2026-05-31): **FAN-01**–**FAN-02** — generated fan-out reflection for ordinary `use Scrypath, fan_outs:` schemas and compatibility for hand-written owner reflection, verified by `mix verify.phase106`.
 - [x] **Phase 107** (2026-05-31): **E2E-01** — ecommerce readiness probes preserve tenant scope when category filtering is present, verified by `mix verify.phase107`.
@@ -251,7 +275,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has shipped planning milestones through **`v1.30`** (**`v1.0`**–**`v1.30`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`** for shipped arcs.
+The repository has shipped planning milestones through **`v1.32`** (**`v1.0`**–**`v1.32`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`** for shipped arcs.
 
 ## Evolution
 
@@ -264,4 +288,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-01 — v1.30 release trust and evidence maintenance completed*
+*Last updated: 2026-06-01 — v1.32 admin UI/UX design-system cleanup completed*
