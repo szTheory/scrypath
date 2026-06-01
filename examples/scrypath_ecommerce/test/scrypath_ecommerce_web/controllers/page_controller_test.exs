@@ -12,7 +12,7 @@ defmodule ScrypathEcommerceWeb.PageControllerTest do
 
     assert html =~ "Posture / health"
     assert html =~ ~s(href="/admin/search/assets/css/app.css")
-    assert html =~ ~s(src="/assets/js/app.js")
+    assert html =~ ~r/src="\/assets\/js\/app(?:-[^"]+)?\.js(?:\?[^"]*)?"/
   end
 
   test "GET / keeps ScrypathOps mounted asset out of storefront", %{conn: conn} do
