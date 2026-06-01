@@ -20,7 +20,7 @@ Use this release-backed Hex dependency snippet for adopter installs:
 Release-backed guidance is the default adopter path.
 main may contain unreleased changes.
 
-This guide is the normative owner for install and release policy. Other surfaces should route here rather than restating a full policy matrix.
+This guide is the normative owner for install, runtime support, readiness, and release policy. Other surfaces should route here rather than restating a full policy matrix.
 
 Those claims are intentionally narrow. They are backed by this repository's `mix.exs`, GitHub Actions workflow, published guides, and the runnable Phoenix example under `examples/phoenix_meilisearch/`.
 
@@ -96,7 +96,7 @@ Scrypath currently has in-repo verification for its Phoenix + Meilisearch path. 
 - in-repo verification means the current checkout, CI, guides, and example app support the documented path
 - outside-adopter evidence means a real external integration has been reviewed and folded back into the support posture
 
-If you are trying the documented path and encounter issues, or if you want to submit outside-adopter evidence for review, see [Outside-adopter intake](outside-adopter-intake.md).
+If you are trying the documented path and encounter issues, or if you want to submit outside-adopter evidence for review, see [Outside-adopter intake](outside-adopter-intake.md). That guide owns the report classification vocabulary and maintainer routing actions; this support guide only routes to it.
 
 ## What this guide does not promise
 
@@ -108,5 +108,7 @@ Scrypath v1 does not currently promise:
 - that every Elixir, OTP, Phoenix, Ecto, or Meilisearch combination outside the versions above is verified by CI
 - that accepted sync work means immediate search visibility
 - that the host application stops owning deployment, service, and search-visibility responsibilities
+
+Scope-boundary and feature-lane reopen authority is owned by [Scope and reopen policy](scope-and-reopen-policy.md). This guide does not duplicate that policy body.
 
 If you need the first-hour path, start with [Golden path](golden-path.md). If you need the runnable live example, continue to [`examples/phoenix_meilisearch/README.md`](../examples/phoenix_meilisearch/README.md). If you need sync semantics, use [Sync modes and visibility](sync-modes-and-visibility.md).
