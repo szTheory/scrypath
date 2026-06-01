@@ -1,0 +1,192 @@
+@import "tailwindcss" source(none);
+
+@source "../../lib/scrypath_ecommerce_web";
+@source "../../deps/scrypath_ops/lib/scrypath_ops_web";
+
+@layer base {
+  body.scrypath-demo {
+    margin: 0;
+    min-height: 100vh;
+    background: #f6f7f9;
+    color: #1f2933;
+    font-family:
+      Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  a {
+    color: inherit;
+  }
+}
+
+@layer components {
+  .storefront-search {
+    min-height: 100vh;
+  }
+
+  .storefront-search__header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 2rem clamp(1rem, 4vw, 3rem);
+    border-bottom: 1px solid #d8dee6;
+    background: #ffffff;
+  }
+
+  .storefront-search__header h1 {
+    margin: 0.25rem 0;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    line-height: 1;
+    letter-spacing: 0;
+  }
+
+  .storefront-search__eyebrow {
+    margin: 0;
+    color: #386641;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .storefront-search__lede {
+    max-width: 48rem;
+    margin: 0.75rem 0 0;
+    color: #52606d;
+  }
+
+  .storefront-search__ops-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 0.5rem;
+  }
+
+  .storefront-search__ops-links a {
+    border: 1px solid #bcccdc;
+    border-radius: 0.375rem;
+    padding: 0.55rem 0.75rem;
+    background: #ffffff;
+    color: #243b53;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .storefront-search__layout {
+    display: grid;
+    grid-template-columns: minmax(16rem, 20rem) 1fr;
+    gap: 1.25rem;
+    padding: 1.25rem clamp(1rem, 4vw, 3rem) 3rem;
+  }
+
+  .storefront-search__filters,
+  .storefront-search__results {
+    min-width: 0;
+  }
+
+  .storefront-search__filters {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .storefront-search__search-field,
+  .storefront-search__facet-group,
+  .storefront-search__result,
+  .storefront-search__empty {
+    border: 1px solid #d8dee6;
+    border-radius: 0.5rem;
+    background: #ffffff;
+    padding: 1rem;
+  }
+
+  .storefront-search__search-field {
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  .storefront-search__search-field span,
+  .storefront-search__facet-group h2,
+  .storefront-search__meta dt {
+    color: #52606d;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .storefront-search__search-field input,
+  .storefront-search__search-field select {
+    width: 100%;
+    border: 1px solid #bcccdc;
+    border-radius: 0.375rem;
+    padding: 0.65rem 0.75rem;
+    font: inherit;
+  }
+
+  .storefront-search__facet-group h2 {
+    margin: 0 0 0.75rem;
+  }
+
+  .storefront-search__facet {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.45rem 0;
+  }
+
+  .storefront-search__facet small {
+    color: #627d98;
+  }
+
+  .storefront-search__results-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: end;
+    margin-bottom: 1rem;
+  }
+
+  .storefront-search__results-header h2 {
+    margin: 0.15rem 0 0;
+    font-size: 1.5rem;
+  }
+
+  .storefront-search__result {
+    margin-bottom: 0.75rem;
+  }
+
+  .storefront-search__result h2 {
+    margin: 0 0 0.35rem;
+    font-size: 1.15rem;
+  }
+
+  .storefront-search__result p,
+  .storefront-search__empty p {
+    margin: 0;
+    color: #52606d;
+  }
+
+  .storefront-search__meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: 0.75rem;
+    margin: 1rem 0 0;
+  }
+
+  .storefront-search__meta dd {
+    margin: 0.2rem 0 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .storefront-search__header,
+  .storefront-search__layout,
+  .storefront-search__results-header {
+    display: block;
+  }
+
+  .storefront-search__ops-links,
+  .storefront-search__results {
+    margin-top: 1rem;
+  }
+}
