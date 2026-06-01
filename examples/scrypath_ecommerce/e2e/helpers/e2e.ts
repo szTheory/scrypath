@@ -1,4 +1,5 @@
 import { expect, type APIRequestContext } from "@playwright/test";
+import { appendFile } from "node:fs/promises";
 
 type SeedResult = {
   tenant_id: number;
@@ -23,6 +24,21 @@ type OperatorState = {
   swap_error_class: string | null;
 };
 
+type EvidencePayload = Record<string, unknown>;
+
+async function emitEvidence(operation: string, payload: EvidencePayload): Promise<void> {
+  const evidencePath = process.env.PHASE105_EVIDENCE_PATH;
+  if (!evidencePath) return;
+
+  const entry = {
+    ts_utc: new Date().toISOString(),
+    operation,
+    ...payload
+  };
+
+  await appendFile(evidencePath, `${JSON.stringify(entry)}\n`);
+}
+
 async function requestJson<T>(
   request: APIRequestContext,
   path: string,
@@ -46,17 +62,33 @@ export async function seedScenario(
   request: APIRequestContext,
   scenario = "e2e_search_catalog"
 ): Promise<SeedResult> {
-  return await requestJson<SeedResult>(request, "/dev/e2e/seed", {
+  const result = await requestJson<SeedResult>(request, "/dev/e2e/seed", {
     method: "POST",
     data: { scenario }
   });
+
+  await emitEvidence("seed", {
+    scenario,
+    tenant_id: result.tenant_id,
+    category_keys: Object.keys(result.categories),
+    product_keys: Object.keys(result.products)
+  });
+
+  return result;
 }
 
 export async function drainSearchQueue(request: APIRequestContext): Promise<DrainResult> {
-  return await requestJson<DrainResult>(request, "/dev/e2e/drain", {
+  const result = await requestJson<DrainResult>(request, "/dev/e2e/drain", {
     method: "POST",
     data: {}
   });
+
+  await emitEvidence("drain", {
+    success: result.success,
+    failure: result.failure
+  });
+
+  return result;
 }
 
 export async function waitForSearchVisible(
@@ -91,13 +123,24 @@ export async function waitForSearchVisible(
     )
     .toContain(args.expectedName);
 
-  return await requestJson<{ hits: string[] }>(request, "/dev/e2e/search-visible", {
+  const result = await requestJson<{ hits: string[] }>(request, "/dev/e2e/search-visible", {
     params: {
       tenant_id: String(args.tenantId),
       query: args.query,
       ...(args.categoryId ? { category_id: String(args.categoryId) } : {})
     }
   });
+
+  await emitEvidence("search_visible", {
+    tenant_id: args.tenantId,
+    query: args.query,
+    category_id: args.categoryId ?? null,
+    expected_name: args.expectedName,
+    hit_count: result.hits.length,
+    first_hits: result.hits.slice(0, 5)
+  });
+
+  return result;
 }
 
 export async function renameCategory(
@@ -120,14 +163,27 @@ export async function renameCategory(
     );
   }
 
-  return (await response.json()) as { category_id: number; name: string; queued_related_sync: boolean };
+  const result = (await response.json()) as {
+    category_id: number;
+    name: string;
+    queued_related_sync: boolean;
+  };
+
+  await emitEvidence("rename_category", {
+    tenant_id: args.tenantId,
+    category_id: args.categoryId,
+    name: args.name,
+    queued_related_sync: result.queued_related_sync
+  });
+
+  return result;
 }
 
 export async function injectFailedSync(
   request: APIRequestContext,
   args: { tenantId: number; scenarioKey?: string }
 ): Promise<{ failed_work_id: number; schema: string; state: string; reason_class: string }> {
-  return await requestJson<{ failed_work_id: number; schema: string; state: string; reason_class: string }>(
+  const result = await requestJson<{ failed_work_id: number; schema: string; state: string; reason_class: string }>(
     request,
     "/dev/e2e/inject-failed-sync",
     {
@@ -138,6 +194,17 @@ export async function injectFailedSync(
       }
     }
   );
+
+  await emitEvidence("inject_failed_sync", {
+    tenant_id: args.tenantId,
+    scenario_key: args.scenarioKey ?? null,
+    failed_work_id: result.failed_work_id,
+    schema: result.schema,
+    state: result.state,
+    reason_class: result.reason_class
+  });
+
+  return result;
 }
 
 export async function operatorState(
@@ -162,9 +229,23 @@ export async function operatorState(
       .toBeGreaterThanOrEqual(args.minFailedSyncCount);
   }
 
-  return await requestJson<OperatorState>(request, "/dev/e2e/operator-state", {
+  const result = await requestJson<OperatorState>(request, "/dev/e2e/operator-state", {
     params: { tenant_id: String(args.tenantId) }
   });
+
+  await emitEvidence("operator_state", {
+    tenant_id: args.tenantId,
+    min_failed_sync_count: args.minFailedSyncCount ?? null,
+    failed_count: result.failed_count,
+    first_failed_work_id: result.first_failed_work_id,
+    retryable: result.retryable,
+    swap_terminal_success: result.swap_terminal_success,
+    swap_terminal_state: result.swap_terminal_state,
+    active_index_visible: result.active_index_visible,
+    swap_error_class: result.swap_error_class
+  });
+
+  return result;
 }
 
 export async function waitForSwapOutcome(
@@ -190,7 +271,20 @@ export async function waitForSwapOutcome(
       active_index_visible: true
     });
 
-  return await requestJson<OperatorState>(request, "/dev/e2e/operator-state", {
+  const result = await requestJson<OperatorState>(request, "/dev/e2e/operator-state", {
     params: { tenant_id: String(args.tenantId) }
   });
+
+  await emitEvidence("swap_outcome", {
+    tenant_id: args.tenantId,
+    failed_count: result.failed_count,
+    retryable: result.retryable,
+    swap_terminal_success: result.swap_terminal_success,
+    swap_terminal_state: result.swap_terminal_state,
+    active_index: result.active_index,
+    active_index_visible: result.active_index_visible,
+    swap_error_class: result.swap_error_class
+  });
+
+  return result;
 }

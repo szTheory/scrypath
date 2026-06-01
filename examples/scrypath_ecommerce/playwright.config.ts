@@ -9,7 +9,13 @@ export default defineConfig({
     baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:4002",
     trace: "on-first-retry"
   },
-  reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
+  reporter: process.env.CI
+    ? [
+        ["list"],
+        ["html", { open: "never" }],
+        ["json", { outputFile: "test-results/phase105-playwright.json" }]
+      ]
+    : "list",
   projects: [
     {
       name: "chromium",

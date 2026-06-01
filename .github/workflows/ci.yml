@@ -564,6 +564,7 @@ jobs:
       PGPORT: "5433"
       SCRYPATH_MEILISEARCH_URL: http://127.0.0.1:7700
       PLAYWRIGHT_BASE_URL: http://127.0.0.1:4002
+      PHASE105_EVIDENCE_PATH: examples/scrypath_ecommerce/test-results/phase105-evidence.ndjson
 
     steps:
       - uses: actions/checkout@v6
@@ -641,7 +642,28 @@ jobs:
 
       - name: Run phase 105 browser E2E lane
         working-directory: examples/scrypath_ecommerce
-        run: npm run test:e2e
+        run: |
+          STARTED_AT="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          echo "PHASE105_E2E_STARTED_AT=${STARTED_AT}" >> "$GITHUB_ENV"
+          set +e
+          npm run test:e2e
+          STATUS=$?
+          ENDED_AT="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          echo "PHASE105_E2E_ENDED_AT=${ENDED_AT}" >> "$GITHUB_ENV"
+          if [ "$STATUS" -eq 0 ]; then
+            echo "PHASE105_E2E_CONCLUSION=success" >> "$GITHUB_ENV"
+          else
+            echo "PHASE105_E2E_CONCLUSION=failure" >> "$GITHUB_ENV"
+          fi
+          exit "$STATUS"
+
+      - name: Generate phase105 evidence summary
+        if: always()
+        run: scripts/ci/phase105_evidence.sh
+
+      - name: Append phase105 evidence to job summary
+        if: always()
+        run: cat examples/scrypath_ecommerce/test-results/phase105-evidence-summary.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload phase105-e2e failure artifacts
         if: failure()
@@ -652,4 +674,7 @@ jobs:
             /tmp/phase105-e2e-phx.log
             examples/scrypath_ecommerce/playwright-report
             examples/scrypath_ecommerce/test-results
+            examples/scrypath_ecommerce/test-results/phase105-evidence.ndjson
+            examples/scrypath_ecommerce/test-results/phase105-evidence.json
+            examples/scrypath_ecommerce/test-results/phase105-evidence-summary.md
           if-no-files-found: warn

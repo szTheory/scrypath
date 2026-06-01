@@ -13,12 +13,12 @@
 
 ### Support Intake
 
-- [ ] **SUP-01**: Adopter-facing docs route support/readiness truth to `guides/support-and-compatibility.md` instead of duplicating compatibility matrices.
-- [ ] **SUP-02**: Maintainer can classify outside-adopter reports as Class A-D and route each finding to bugfix, docs gap, app-side error, environment failure, or needs-info.
+- [x] **SUP-01**: Adopter-facing docs route support/readiness truth to `guides/support-and-compatibility.md` instead of duplicating compatibility matrices.
+- [x] **SUP-02**: Maintainer can classify outside-adopter reports as Class A-D and route each finding to bugfix, docs gap, app-side error, environment failure, or needs-info.
 
 ### Proof Stability
 
-- [ ] **STAB-01**: Maintainer can make an evidence-based `phase105-e2e` advisory/required decision using recent outcomes, flake/runtime signal, artifact usefulness, and owner-response expectations.
+- [x] **STAB-01**: Maintainer can make an evidence-based `phase105-e2e` advisory/required decision using recent outcomes, flake/runtime signal, artifact usefulness, and owner-response expectations.
 - [ ] **STAB-02**: Routine required gates remain lean unless evidence justifies promoting a heavier live/browser check.
 
 ### Public Truth
@@ -60,9 +60,9 @@ Deferred unless backed by concrete production bugs, reviewed outside-adopter evi
 | REL-01 | Phase 109 | Complete |
 | REL-02 | Phase 109 | Complete |
 | REL-03 | Phase 109 | Complete |
-| SUP-01 | Phase 110 | Pending |
-| SUP-02 | Phase 110 | Pending |
-| STAB-01 | Phase 111 | Pending |
+| SUP-01 | Phase 110 | Complete |
+| SUP-02 | Phase 110 | Complete |
+| STAB-01 | Phase 111 | Complete |
 | STAB-02 | Phase 111 | Pending |
 | WEB-01 | Phase 112 | Pending |
 | WEB-02 | Phase 112 | Pending |

@@ -347,6 +347,38 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     end
   end
 
+  describe "STAB-01 advisory evidence wiring" do
+    test "phase105-e2e exports evidence env and runs always-on summary script" do
+      ci = File.read!(@ci_yml)
+
+      assert ci =~ "PHASE105_EVIDENCE_PATH: examples/scrypath_ecommerce/test-results/phase105-evidence.ndjson"
+      assert ci =~ "- name: Generate phase105 evidence summary"
+      assert ci =~ "if: always()"
+      assert ci =~ "run: scripts/ci/phase105_evidence.sh"
+      assert ci =~ "phase105-evidence-summary.md >> \"$GITHUB_STEP_SUMMARY\""
+    end
+
+    test "phase105-e2e artifacts are bounded to the advisory evidence bundle" do
+      ci = File.read!(@ci_yml)
+
+      assert ci =~ "/tmp/phase105-e2e-phx.log"
+      assert ci =~ "examples/scrypath_ecommerce/playwright-report"
+      assert ci =~ "examples/scrypath_ecommerce/test-results"
+      assert ci =~ "examples/scrypath_ecommerce/test-results/phase105-evidence.ndjson"
+      assert ci =~ "examples/scrypath_ecommerce/test-results/phase105-evidence.json"
+      assert ci =~ "examples/scrypath_ecommerce/test-results/phase105-evidence-summary.md"
+    end
+
+    test "playwright config emits structured phase105 report and keeps retry-based flake visibility" do
+      config = File.read!("examples/scrypath_ecommerce/playwright.config.ts")
+
+      assert config =~ "retries: process.env.CI ? 1 : 0"
+      assert config =~ "workers: process.env.CI ? 1 : undefined"
+      assert config =~ "trace: \"on-first-retry\""
+      assert config =~ "phase105-playwright.json"
+    end
+  end
+
   defp assert_ordered_steps(content, [first | rest]) do
     {start_idx, _} = :binary.match(content, first)
 

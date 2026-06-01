@@ -63,12 +63,12 @@ Plans:
 
 **Requirements:** STAB-01, STAB-02
 
-**Plans:** 0/2 plans complete
+**Plans:** 1/2 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 111-01-PLAN.md — Harden `phase105-e2e` advisory evidence capture and workflow contracts
+- [x] 111-01-PLAN.md — Harden `phase105-e2e` advisory evidence capture and workflow contracts
 
 **Wave 2** *(blocked on Wave 1 completion)*
 

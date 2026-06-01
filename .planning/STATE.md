@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.30
 milestone_name: Release Trust and Evidence Maintenance
 status: executing
-last_updated: "2026-05-31T21:52:29.566Z"
-last_activity: 2026-05-31 -- Phase 111 planning complete
+last_updated: "2026-06-01T00:20:09.960Z"
+last_activity: 2026-06-01
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 7
-  completed_plans: 5
+  completed_plans: 6
   percent: 50
 ---
 
@@ -18,14 +18,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 111 — advisory proof stability decision
+**Current Focus:** Phase 111 — advisory-proof-stability-decision
 
 ## Current Position
 
-Phase: 111
-Plan: Not started
+Phase: 111 (advisory-proof-stability-decision) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
-Last activity: 2026-05-31 -- Phase 111 planning complete
+Last activity: 2026-06-01
 
 ## Performance Metrics
 
@@ -48,6 +48,7 @@ Last activity: 2026-05-31 -- Phase 111 planning complete
 | Phase 107 P01 | 27 min | 3 tasks | 5 files |
 | Phase 109 P01 | 24m | 2 tasks | 4 files |
 | Phase 109 P03 | 31min | 2 tasks | 5 files |
+| Phase 111 P01 | 20 min | 1 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -75,7 +76,7 @@ Last activity: 2026-05-31 -- Phase 111 planning complete
 
 ## Session Continuity
 
-- **Last Session:** 2026-05-31T21:29:02.816Z
+- **Last Session:** 2026-06-01T00:20:04.089Z
 
 - [x] Initialized v1.28 roadmap with Phases 102-105.
 
@@ -107,6 +108,7 @@ Last activity: 2026-05-31 -- Phase 111 planning complete
 - [Phase 109]: Release tests now assert unpacked artifact allowlist and explicit denylist exclusions for non-library repo output.
 - [Phase 109]: Kept release-please.yml as canonical release authority; publish-hex.yml remains explicit break-glass replay from reviewed tag/version inputs. — Maintains a single release authority while preserving deterministic recovery from explicit inputs.
 - [Phase 109]: Kept mix verify.phase11 deterministic/auth-free while keeping mix verify.release_publish and mix verify.release_parity on post-publish and scheduled monitor paths. — Preserves stable required CI gates while retaining live proof checks where credentials and external state are expected.
+- [Phase 111]: Hardened advisory phase105-e2e evidence capture with structured flake and failure classification while keeping required gates unchanged. — Satisfies STAB-01 while preserving lean required gates per STAB-02 posture.
 
 ## Operator Next Steps
 
