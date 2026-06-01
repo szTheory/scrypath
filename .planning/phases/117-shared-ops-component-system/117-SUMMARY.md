@@ -49,7 +49,7 @@ completed: 2026-06-01
 - **Duration:** 33 min
 - **Started:** 2026-06-01T18:19:00Z
 - **Completed:** 2026-06-01T18:52:00Z
-- **Tasks:** 5
+- **Tasks:** 6
 - **Files modified:** 9
 
 ## Accomplishments
@@ -66,6 +66,7 @@ completed: 2026-06-01
 3. **Task 3: Component/a11y contract assertions** - `122e2d8` (feat)
 4. **Task 4: Code review fixes for multi-schema forms, playbook reads, and modal keyboard semantics** - `11b0f7f` (fix)
 5. **Task 5: Verification gap closure for shared tables and toolbar adoption** - `1bf7e69` (fix)
+6. **Task 6: Failed-sync rendered metric assertion alignment** - `213dcaa` (test)
 
 ## Files Created/Modified
 
@@ -116,6 +117,11 @@ completed: 2026-06-01
 - Adopted `ops_toolbar/1` in repeated page/section action rows.
 - Compile verification passed after the gap closure.
 
+### Verification Test Fix
+
+- Updated the failed-sync rollup assertion to match the shared metric component output.
+- Verified `cd scrypath_ops && mix test test/scrypath_ops_web/live/failed_sync_live_test.exs --max-cases 1` passes.
+
 ## Issues Encountered
 
 - Focused ScrypathOps LiveView tests could not run because local Postgres was unavailable/saturated:
@@ -139,6 +145,7 @@ None - no external service configuration required.
 - Found task commit `122e2d8` in git history.
 - Found review fix commit `11b0f7f` in git history.
 - Found verification gap closure commit `1bf7e69` in git history.
+- Found failed-sync assertion fix commit `213dcaa` in git history.
 - Found clean code review report at `.planning/phases/117-shared-ops-component-system/117-REVIEW.md`.
 - Verified compile with `cd scrypath_ops && mix compile --warnings-as-errors`.
 - DB-backed tests attempted and blocked by local Postgres availability, recorded above.
