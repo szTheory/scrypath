@@ -87,7 +87,7 @@ Plans:
 
 **Requirements:** WEB-01, WEB-02, SCOPE-01
 
-**Plans:** 1/4 plans executed
+**Plans:** 3/4 plans executed
 
 Plans:
 **Wave 1**
@@ -96,8 +96,8 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 112-02-PLAN.md — Align guide-map and maintainer-facing public docs to the claim envelope and exact reopen rule
-- [ ] 112-03-PLAN.md — Tighten website route-map copy and add README/scope-policy routes without expanding the site
+- [x] 112-02-PLAN.md — Align guide-map and maintainer-facing public docs to the claim envelope and exact reopen rule
+- [x] 112-03-PLAN.md — Tighten website route-map copy and add README/scope-policy routes without expanding the site
 
 **Wave 3** *(blocked on Waves 1-2 completion)*
 
