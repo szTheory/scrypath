@@ -18,8 +18,8 @@ Scrypath is not reopening runtime product breadth. v1.32 exists to make the exis
 
 ### Component System
 
-- [ ] **COMP-01**: Repeated admin UI primitives use shared Phoenix components for notices, metrics, empty states, tables, schema selects, toolbars, buttons, code blocks, and modals.
-- [ ] **A11Y-01**: Shared components provide visible focus, labelled icon controls, semantic headings, labelled fields, safe modals, and 40px minimum hit areas where applicable.
+- [x] **COMP-01**: Repeated admin UI primitives use shared Phoenix components for notices, metrics, empty states, tables, schema selects, toolbars, buttons, code blocks, and modals.
+- [x] **A11Y-01**: Shared components provide visible focus, labelled icon controls, semantic headings, labelled fields, safe modals, and 40px minimum hit areas where applicable.
 
 ### Screen Cleanup
 
@@ -43,8 +43,8 @@ Scrypath is not reopening runtime product breadth. v1.32 exists to make the exis
 | ASSET-01 | Phase 116 | Active |
 | TOKEN-01 | Phase 116 | Active |
 | BRAND-01 | Phase 116 | Active |
-| COMP-01 | Phase 117 | Pending |
-| A11Y-01 | Phase 117 | Pending |
+| COMP-01 | Phase 117 | Complete |
+| A11Y-01 | Phase 117 | Complete |
 | SCREEN-01 | Phase 118 | Pending |
 | SCREEN-02 | Phase 118 | Pending |
 | VERIFY-01 | Phase 118 | Pending |

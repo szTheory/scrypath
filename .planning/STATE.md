@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.32
 milestone_name: Admin UI/UX Design System Cleanup
 status: verifying
-last_updated: "2026-06-01T18:32:14.748Z"
+last_updated: "2026-06-01T18:53:19.522Z"
 last_activity: 2026-06-01
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 3
-  completed_plans: 1
-  percent: 33
+  completed_plans: 2
+  percent: 67
 ---
 
 # Project State
@@ -18,11 +18,11 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 116 — opsui-asset-contract-and-design-tokens
+**Current Focus:** Phase 117 — shared-ops-component-system
 
 ## Current Position
 
-Phase: 116 (opsui-asset-contract-and-design-tokens) — EXECUTING
+Phase: 117 (shared-ops-component-system) — READY FOR VERIFICATION
 Plan: 1 of 1
 Status: Phase complete — ready for verification
 Last activity: 2026-06-01
@@ -51,6 +51,8 @@ This milestone is a bounded OPSUI polish and design-system wedge. It does not re
 - Verification should resume with sequential, lower-connection test runs once local Postgres has available connection slots.
 - Mounted `/admin/search/*` host tests must explicitly prove ScrypathOps asset hooks and avoid storefront bleed.
 - OPSUI token cleanup removes Tailwind utility-prefix residue and keeps unprefixed daisyUI usage an explicit contract.
+- OPSUI shared primitives stay as small Phoenix function components; no LiveComponent state boundary was needed for Phase 117.
+- Schema selectors and swap actions must compare against configured allowlists and reject unknown strings without atom creation.
 
 ### Active Blockers
 
@@ -66,3 +68,9 @@ This milestone is a bounded OPSUI polish and design-system wedge. It does not re
 ## Operator Next Steps
 
 - Clear local DB connection pressure and rerun the focused verification commands from this implementation pass.
+
+## Performance Metrics
+
+| Phase | Plan | Duration | Notes |
+|-------|------|----------|-------|
+| Phase 117 P117 | 33min | 3 tasks | 9 files |
