@@ -87,12 +87,12 @@ Plans:
 
 **Requirements:** WEB-01, WEB-02, SCOPE-01
 
-**Plans:** 4 plans
+**Plans:** 1/4 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 112-01-PLAN.md — Create the canonical scope/reopen policy guide and route README/support/intake surfaces to it
+- [x] 112-01-PLAN.md — Create the canonical scope/reopen policy guide and route README/support/intake surfaces to it
 
 **Wave 2** *(blocked on Wave 1 completion)*
 

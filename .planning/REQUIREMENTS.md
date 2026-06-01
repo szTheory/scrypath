@@ -23,9 +23,9 @@
 
 ### Public Truth
 
-- [ ] **WEB-01**: Public website and docs consistently present Scrypath as the Ecto-native search indexing library without implying hosted search, AI, magic callbacks, or public multi-backend v1 support.
+- [x] **WEB-01**: Public website and docs consistently present Scrypath as the Ecto-native search indexing library without implying hosted search, AI, magic callbacks, or public multi-backend v1 support.
 - [ ] **WEB-02**: Public website remains a route map into README, guides, examples, Hex, and GitHub rather than a second docs site.
-- [ ] **SCOPE-01**: Feature-lane reopen policy remains explicit and evidence-gated.
+- [x] **SCOPE-01**: Feature-lane reopen policy remains explicit and evidence-gated.
 
 ## Future Requirements
 
@@ -64,9 +64,9 @@ Deferred unless backed by concrete production bugs, reviewed outside-adopter evi
 | SUP-02 | Phase 110 | Complete |
 | STAB-01 | Phase 111 | Complete |
 | STAB-02 | Phase 111 | Complete |
-| WEB-01 | Phase 112 | Pending |
+| WEB-01 | Phase 112 | Complete |
 | WEB-02 | Phase 112 | Pending |
-| SCOPE-01 | Phase 112 | Pending |
+| SCOPE-01 | Phase 112 | Complete |
 
 **Coverage:**
 - v1.30 requirements: 10 total

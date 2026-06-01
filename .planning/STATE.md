@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.30
 milestone_name: Release Trust and Evidence Maintenance
 status: executing
-last_updated: "2026-06-01T16:09:47.678Z"
-last_activity: 2026-06-01 -- Phase 112 planning complete
+last_updated: "2026-06-01T16:16:15.619Z"
+last_activity: 2026-06-01
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 11
-  completed_plans: 7
-  percent: 64
+  completed_plans: 8
+  percent: 73
 ---
 
 # Project State
@@ -18,14 +18,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 112 — public website and docs truth alignment
+**Current Focus:** Phase 112 — public-website-and-docs-truth-alignment
 
 ## Current Position
 
-Phase: 112
-Plan: Not started
+Phase: 112 (public-website-and-docs-truth-alignment) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-06-01 -- Phase 112 planning complete
+Last activity: 2026-06-01
 
 ## Performance Metrics
 
@@ -50,6 +50,7 @@ Last activity: 2026-06-01 -- Phase 112 planning complete
 | Phase 109 P03 | 31min | 2 tasks | 5 files |
 | Phase 111 P01 | 20 min | 1 tasks | 6 files |
 | Phase 111 P02 | 25min | 1 tasks | 6 files |
+| Phase 112 P01 | 16m | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -77,7 +78,7 @@ Last activity: 2026-06-01 -- Phase 112 planning complete
 
 ## Session Continuity
 
-- **Last Session:** 2026-06-01T15:38:15.095Z
+- **Last Session:** 2026-06-01T16:14:29.458Z
 
 - [x] Initialized v1.28 roadmap with Phases 102-105.
 
@@ -111,6 +112,8 @@ Last activity: 2026-06-01 -- Phase 112 planning complete
 - [Phase 109]: Kept mix verify.phase11 deterministic/auth-free while keeping mix verify.release_publish and mix verify.release_parity on post-publish and scheduled monitor paths. — Preserves stable required CI gates while retaining live proof checks where credentials and external state are expected.
 - [Phase 111]: Hardened advisory phase105-e2e evidence capture with structured flake and failure classification while keeping required gates unchanged. — Satisfies STAB-01 while preserving lean required gates per STAB-02 posture.
 - [Phase 111]: Kept phase105-e2e advisory in Phase 111 with dual-window thresholds frozen in 111-DECISION.md and enforced via mix verify.phase99.
+- [Phase 112]: Published guides/scope-and-reopen-policy.md through ExDoc extras and Getting Started group so policy links resolve on HexDocs.
+- [Phase 112]: Kept scope/reopen policy single-sourced in guides/scope-and-reopen-policy.md and routed README/support/intake surfaces to it.
 
 ## Operator Next Steps
 
