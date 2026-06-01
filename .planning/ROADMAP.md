@@ -116,7 +116,7 @@ Plans:
 |-----------|--------|----------------|--------|---------|
 | v1.28 Realistic Demo App & Admin UI Proof | 102-105 | 15/15 | Complete | 2026-05-31 |
 | v1.29 Contract Repair and Proof Hardening | 106-108 | 3/3 | Complete | 2026-05-31 |
-| v1.30 Release Trust and Evidence Maintenance | 109-112 | 5/9 current plans | Active | — |
+| v1.30 Release Trust and Evidence Maintenance | 109-112 | 10/11 current plans | Active | — |
 
 ## Requirement Coverage
 
@@ -129,9 +129,9 @@ Plans:
 | SUP-02 | Phase 110 | Complete |
 | STAB-01 | Phase 111 | Pending |
 | STAB-02 | Phase 111 | Pending |
-| WEB-01 | Phase 112 | Pending |
-| WEB-02 | Phase 112 | Pending |
-| SCOPE-01 | Phase 112 | Pending |
+| WEB-01 | Phase 112 | Complete |
+| WEB-02 | Phase 112 | Complete |
+| SCOPE-01 | Phase 112 | Complete |
 
 **Coverage:** 10/10 requirements mapped.
 

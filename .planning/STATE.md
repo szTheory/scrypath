@@ -51,6 +51,7 @@ Last activity: 2026-06-01
 | Phase 111 P01 | 20 min | 1 tasks | 6 files |
 | Phase 111 P02 | 25min | 1 tasks | 6 files |
 | Phase 112 P01 | 16m | 2 tasks | 5 files |
+| Phase 112 P02 | 2m | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -114,6 +115,8 @@ Last activity: 2026-06-01
 - [Phase 111]: Kept phase105-e2e advisory in Phase 111 with dual-window thresholds frozen in 111-DECISION.md and enforced via mix verify.phase99.
 - [Phase 112]: Published guides/scope-and-reopen-policy.md through ExDoc extras and Getting Started group so policy links resolve on HexDocs.
 - [Phase 112]: Kept scope/reopen policy single-sourced in guides/scope-and-reopen-policy.md and routed README/support/intake surfaces to it.
+- [Phase 112]: Routed guide-map and sync semantics scope pressure to guides/scope-and-reopen-policy.md while keeping visibility semantics explicit.
+- [Phase 112]: Standardized maintainer-facing reopen language on concrete production bug, reviewed outside-adopter evidence, or deliberate strategic product decision.
 
 ## Operator Next Steps
 
