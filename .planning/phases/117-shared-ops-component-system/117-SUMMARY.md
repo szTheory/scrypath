@@ -42,21 +42,22 @@ completed: 2026-06-01
 
 # Phase 117 Plan 117: Shared Ops Component System Summary
 
-**Shared Phoenix LiveView OPSUI primitives now drive stable operator notices, actions, metrics, empty states, schema controls, code blocks, and modal shells across the admin screens.**
+**Shared Phoenix LiveView OPSUI primitives now drive stable operator notices, actions, metrics, empty states, tables, schema controls, toolbars, code blocks, and modal shells across the admin screens.**
 
 ## Performance
 
 - **Duration:** 33 min
 - **Started:** 2026-06-01T18:19:00Z
 - **Completed:** 2026-06-01T18:52:00Z
-- **Tasks:** 4
+- **Tasks:** 5
 - **Files modified:** 9
 
 ## Accomplishments
 
-- Extended `ScrypathOpsWeb.OpsUi` with shared panel, toolbar, button, notice, metric, empty state, schema select, code block, and modal primitives.
+- Extended `ScrypathOpsWeb.OpsUi` with shared panel, toolbar, table, button, notice, metric, empty state, schema select, code block, and modal primitives.
 - Replaced repeated hand-rolled markup across posture, failed sync, sync/drift, search/federation, and saved playbooks where the component contract was stable.
 - Added and aligned allowlist rejection coverage for schema controls so malicious or stale module strings do not create atoms or crash operator LiveViews.
+- Closed verifier gap by wiring shared table and toolbar primitives into the migrated operator screens.
 
 ## Task Commits
 
@@ -64,6 +65,7 @@ completed: 2026-06-01
 2. **Task 2: Allowlist-backed schema control hardening** - `122e2d8` (feat)
 3. **Task 3: Component/a11y contract assertions** - `122e2d8` (feat)
 4. **Task 4: Code review fixes for multi-schema forms, playbook reads, and modal keyboard semantics** - `11b0f7f` (fix)
+5. **Task 5: Verification gap closure for shared tables and toolbar adoption** - `1bf7e69` (fix)
 
 ## Files Created/Modified
 
@@ -107,6 +109,13 @@ completed: 2026-06-01
 - Added shared modal close-button and Escape semantics through `cancel_event`.
 - Re-review passed clean in `.planning/phases/117-shared-ops-component-system/117-REVIEW.md`.
 
+### Verification Gap Closure
+
+- Added `ops_table/1` as the shared responsive table primitive required by `COMP-01`.
+- Replaced hand-rolled table wrappers in failed sync, posture, and sync/drift screens.
+- Adopted `ops_toolbar/1` in repeated page/section action rows.
+- Compile verification passed after the gap closure.
+
 ## Issues Encountered
 
 - Focused ScrypathOps LiveView tests could not run because local Postgres was unavailable/saturated:
@@ -129,6 +138,7 @@ None - no external service configuration required.
 - Found summary file at `.planning/phases/117-shared-ops-component-system/117-SUMMARY.md`.
 - Found task commit `122e2d8` in git history.
 - Found review fix commit `11b0f7f` in git history.
+- Found verification gap closure commit `1bf7e69` in git history.
 - Found clean code review report at `.planning/phases/117-shared-ops-component-system/117-REVIEW.md`.
 - Verified compile with `cd scrypath_ops && mix compile --warnings-as-errors`.
 - DB-backed tests attempted and blocked by local Postgres availability, recorded above.
