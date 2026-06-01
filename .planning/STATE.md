@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.30
-milestone_name: Release Trust and Evidence Maintenance
-status: Awaiting next milestone
-last_updated: "2026-06-01T16:48:53.031Z"
-last_activity: 2026-06-01 — Milestone v1.30 completed and archived
+milestone: v1.32
+milestone_name: Admin UI/UX Design System Cleanup
+status: verifying
+last_updated: "2026-06-01T18:32:14.748Z"
+last_activity: 2026-06-01
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 11
-  completed_plans: 11
-  percent: 100
+  total_phases: 3
+  completed_phases: 1
+  total_plans: 3
+  completed_plans: 1
+  percent: 33
 ---
 
 # Project State
@@ -18,50 +18,39 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Awaiting next milestone
+**Current Focus:** Phase 116 — opsui-asset-contract-and-design-tokens
 
 ## Current Position
 
-Phase: Milestone v1.30 complete
-Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-06-01 — Milestone v1.30 completed and archived
+Phase: 116 (opsui-asset-contract-and-design-tokens) — EXECUTING
+Plan: 1 of 1
+Status: Phase complete — ready for verification
+Last activity: 2026-06-01
 
-## Performance Metrics
+## Current Milestone
 
-| Phase | Plan | Duration | Tasks | Files |
-|-------|------|----------|-------|-------|
-| 103 | 00 | 5m | 2 | 2 |
-| 104 | 04 | 5m | 2 | 3 |
-| 105 | 01 | 38m | 4 | 9 |
-| 105 | 03 | 46m | 4 | 6 |
+**v1.32 Admin UI/UX Design System Cleanup**
 
-- **Completed Phases:** 4
-- **Completed Plans:** 11
-- **Requirements Met:** 10/10
+This milestone is a bounded OPSUI polish and design-system wedge. It does not reopen Scrypath runtime product scope.
 
-| Phase 103 P03 | 5m | 2 tasks | 6 files |
-| Phase 105 P02 | 29m | 4 tasks | 6 files |
-| Phase 105 P03 | 46m | 4 tasks | 6 files |
-| Phase 105 P04 | 52m | 4 tasks | 8 files |
-| Phase 106 P01 | 21 min | 3 tasks | 6 files |
-| Phase 107 P01 | 27 min | 3 tasks | 5 files |
-| Phase 109 P01 | 24m | 2 tasks | 4 files |
-| Phase 109 P03 | 31min | 2 tasks | 5 files |
-| Phase 111 P01 | 20 min | 1 tasks | 6 files |
-| Phase 111 P02 | 25min | 1 tasks | 6 files |
-| Phase 112 P01 | 16m | 2 tasks | 5 files |
-| Phase 112 P02 | 2m | 2 tasks | 4 files |
-| Phase 112-public-website-and-docs-truth-alignment P04 | 26m | 2 tasks | 5 files |
+### Planned
+
+- Phase 116: OPSUI Asset Contract and Design Tokens — implementation pass complete
+- Phase 117: Shared Ops Component System — implementation pass complete
+- Phase 118: Admin Screen UX Cleanup — implementation pass complete; DB-backed verification pending
 
 ## Accumulated Context
 
 ### Key Decisions
 
-- Adopted the mountable engine pattern for `scrypath_ops` to enable embedding within host apps.
-- Created an isolated e-commerce testbed app (`examples/scrypath_ecommerce`) rather than bloating the root library or using trivial domains.
-- E2E testing uses standard Node `@playwright/test` integrated with `Ecto.Adapters.SQL.Sandbox` in shared mode, verified against a live Meilisearch CI container.
-- Provided structural test cases for tenancy requirements.
+- v1.31 maintainer UAT passed; the realistic demo worked locally.
+- v1.32 uses the System + Screens scope and Quiet Ops Console visual direction.
+- OPSUI cleanup must preserve posture-first IA: posture, failed sync, sync/drift, search/federation, saved playbooks.
+- `phase105-e2e` remains advisory; UI cleanup does not promote browser proof to a required merge gate.
+- The admin UI is a mounted, host-owned operator surface, not a new hosted/productized admin product.
+- Verification should resume with sequential, lower-connection test runs once local Postgres has available connection slots.
+- Mounted `/admin/search/*` host tests must explicitly prove ScrypathOps asset hooks and avoid storefront bleed.
+- OPSUI token cleanup removes Tailwind utility-prefix residue and keeps unprefixed daisyUI usage an explicit contract.
 
 ### Active Blockers
 
@@ -69,56 +58,11 @@ Last activity: 2026-06-01 — Milestone v1.30 completed and archived
 
 ### Todos
 
-- No active milestone todos.
-- Start new work only for release follow-through, support/proof drift, production bug evidence, reviewed outside-adopter evidence, or an explicit strategic decision.
-
-### Historical Contract Pointers
-
-- Phase 32 AUDT-01 retained immutable planning pointers: `18-VERIFICATION.md`, `v1.4-MILESTONE-AUDIT.md`, `260416-eoj-SUMMARY.md`, `260416-if2-SUMMARY.md`.
-
-## Session Continuity
-
-- **Last Session:** 2026-06-01T16:23:59.160Z
-
-- [x] Initialized v1.28 roadmap with Phases 102-105.
-
-## Decisions
-
-- [Phase ?]: Configured Phoenix.Ecto.SQL.Sandbox conditionally in the endpoint based on application environment configuration.
-- [Phase 103]: Wrapped the /dev/e2e/seed route in `if Mix.env() in [:dev, :test] do` to strictly prevent production access.
-- [Phase 103]: Delegated standard scenario creation to existing ScrypathEcommerce.CatalogFixtures functions.
-- [Phase 104]: Use specific product names in e2e scenario fixture to enable strict, deterministic search assertions later in the phase.
-- [Phase 104]: Related category-to-product propagation uses Scrypath's built-in related-sync worker rather than an app-specific worker.
-- [Phase 104]: Recovered the minimal Phoenix scaffold for examples/scrypath_ecommerce so Phase 104 execution can compile and test inside the host app.
-- [Phase 104]: Storefront search uses URL-driven LiveView state and explicit tenant_id filtering for Scrypath.search/3 tenant isolation.
-- [Phase 105]: Playwright remains browser-only with Mix/CI owning Phoenix/service lifecycle orchestration.
-- [Phase 105]: Standardized deterministic dev/test `/dev/e2e` contracts for seed, drain, readiness polling, and operator probes.
-- [Phase 105]: Added storefront result test ids and category rendering to support robust browser-visible E2E assertions. — Playwright needs stable repeated-result scoping and visible related-data text.
-- [Phase 105]: Enforced deterministic readiness chain (seed -> drain -> waitForSearchVisible) before storefront assertions. — Avoids flaky timing-based assertions and matches threat mitigation requirements.
-- [Phase 105]: Failed-sync harness injection is scenario-keyed one-shot and remains example-local/dev-test only to avoid public Scrypath failure-injection surface.
-- [Phase 105]: Operator-state probe response is restricted to counts/ids/reason-class/retryable summary and excludes raw args/documents payloads.
-- [Phase 105]: Added stable operator swap-outcome probe fields for browser assertions without exposing raw task payloads.
-- [Phase 105]: Added advisory phase105-e2e CI lane with Postgres+Meilisearch health checks and failure artifacts.
-- [Post-v1.28]: Next pull is contract repair and proof hardening, not new product breadth.
-- [Post-v1.28]: Repair `use Scrypath, fan_outs:` reflection so `__scrypath__(:fan_outs)` is generated by the schema macro while preserving hand-written accessors.
-- [Post-v1.28]: Keep `phase105-e2e` advisory until stability evidence or explicit release policy promotes it.
-- [v1.29]: Defer `Scrypath.FanOuts`, public fan-out reflection helpers, duplicate/nil fan-out validation tightening, deeper cross-tenant Playwright fixtures, and `phase105-e2e` promotion.
-- [Phase 106]: Locked ordinary fan-out declaration contract on generated __scrypath__(:fan_outs). — Preserves existing runtime seam and avoids new public API surface.
-- [Phase 106]: Added verify.phase106 focused gate and self-test. — Provides deterministic service-free proof for FAN-01/FAN-02 without CI topology changes.
-- [Phase 108]: Closed v1.29 truth surfaces with mix verify.phase108. — Keeps related-data, roadmap/JTBD, requirements, and contributor posture aligned without promoting phase105-e2e.
-- [Phase 109]: verify.phase11 now performs semantic agreement checks across mix.exs, release manifest/config, and CHANGELOG heading.
-- [Phase 109]: Release tests now assert unpacked artifact allowlist and explicit denylist exclusions for non-library repo output.
-- [Phase 109]: Kept release-please.yml as canonical release authority; publish-hex.yml remains explicit break-glass replay from reviewed tag/version inputs. — Maintains a single release authority while preserving deterministic recovery from explicit inputs.
-- [Phase 109]: Kept mix verify.phase11 deterministic/auth-free while keeping mix verify.release_publish and mix verify.release_parity on post-publish and scheduled monitor paths. — Preserves stable required CI gates while retaining live proof checks where credentials and external state are expected.
-- [Phase 111]: Hardened advisory phase105-e2e evidence capture with structured flake and failure classification while keeping required gates unchanged. — Satisfies STAB-01 while preserving lean required gates per STAB-02 posture.
-- [Phase 111]: Kept phase105-e2e advisory in Phase 111 with dual-window thresholds frozen in 111-DECISION.md and enforced via mix verify.phase99.
-- [Phase 112]: Published guides/scope-and-reopen-policy.md through ExDoc extras and Getting Started group so policy links resolve on HexDocs.
-- [Phase 112]: Kept scope/reopen policy single-sourced in guides/scope-and-reopen-policy.md and routed README/support/intake surfaces to it.
-- [Phase 112]: Routed guide-map and sync semantics scope pressure to guides/scope-and-reopen-policy.md while keeping visibility semantics explicit.
-- [Phase 112]: Standardized maintainer-facing reopen language on concrete production bug, reviewed outside-adopter evidence, or deliberate strategic product decision.
-- [Phase 112]: Scoped misleading-claim negatives so evaluate-page non-fit wording stays legal while positive drift tokens remain forbidden.
-- [Phase 112]: Added standalone mix verify.phase112 with focused file list, self-test coverage, and preferred_env registration without widening CI lanes.
+- Rerun focused ScrypathOps LiveView tests once local Postgres is no longer saturated.
+- Rerun mounted e-commerce admin smoke test once local Postgres is no longer saturated.
+- Decide whether a screenshot/browser polish pass is warranted before v1.32 archive.
+- Keep future runtime breadth closed unless concrete production bug evidence, reviewed outside-adopter evidence, or an explicit strategic decision justifies it.
 
 ## Operator Next Steps
 
-- Start the next milestone with `$gsd-new-milestone` only when the idle release-train criteria are met.
+- Clear local DB connection pressure and rerun the focused verification commands from this implementation pass.

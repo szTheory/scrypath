@@ -5,22 +5,34 @@
 - ✅ **v1.28 Realistic Demo App & Admin UI Proof** — Phases 102-105 (shipped 2026-05-31) — see `milestones/v1.28-ROADMAP.md`
 - ✅ **v1.29 Contract Repair and Proof Hardening** — Phases 106-108 (shipped 2026-05-31) — see `milestones/v1.29-ROADMAP.md`
 - ✅ **v1.30 Release Trust and Evidence Maintenance** — Phases 109-112 (shipped 2026-06-01) — see `milestones/v1.30-ROADMAP.md`
+- ✅ **v1.31 Adoption Evidence Demo Hardening** — Phases 113-115 (UAT passed 2026-06-01)
+- ◆ **v1.32 Admin UI/UX Design System Cleanup** — Phases 116-118 (active)
 
 ## Phases
 
-<details>
-<summary>✅ v1.30 Release Trust and Evidence Maintenance (Phases 109-112) — SHIPPED 2026-06-01</summary>
+### Phase 116: OPSUI Asset Contract and Design Tokens
 
-- [x] Phase 109: Release Train and Package Truth Audit (3/3 plans) — completed 2026-05-31
-- [x] Phase 110: Support Intake and Evidence Routing (2/2 plans) — completed 2026-05-31
-- [x] Phase 111: Advisory Proof Stability Decision (2/2 plans) — completed 2026-06-01
-- [x] Phase 112: Public Website and Docs Truth Alignment (4/4 plans) — completed 2026-06-01
+**Goal:** Make mounted `/admin/search/*` styling explicit and replace Phoenix-default visual residue with Scrypath operator tokens.
 
-Archive: `milestones/v1.30-ROADMAP.md`
+**Requirements:** ASSET-01, TOKEN-01, BRAND-01
 
-Known accepted tech debt is recorded in `milestones/v1.30-MILESTONE-AUDIT.md`.
+**Status:** Active
 
-</details>
+### Phase 117: Shared Ops Component System
+
+**Goal:** Move repeated admin UI primitives into project-owned components so screen polish is consistent and testable.
+
+**Requirements:** COMP-01, A11Y-01
+
+**Status:** Pending
+
+### Phase 118: Admin Screen UX Cleanup
+
+**Goal:** Apply the quiet ops console system across posture, failed sync, sync/drift, search/federation, and playbooks.
+
+**Requirements:** SCREEN-01, SCREEN-02, VERIFY-01
+
+**Status:** Pending
 
 ## Progress
 
@@ -29,23 +41,23 @@ Known accepted tech debt is recorded in `milestones/v1.30-MILESTONE-AUDIT.md`.
 | v1.28 Realistic Demo App & Admin UI Proof | 102-105 | 15/15 | Complete | 2026-05-31 |
 | v1.29 Contract Repair and Proof Hardening | 106-108 | 3/3 | Complete | 2026-05-31 |
 | v1.30 Release Trust and Evidence Maintenance | 109-112 | 11/11 | Complete | 2026-06-01 |
+| v1.31 Adoption Evidence Demo Hardening | 113-115 | 3/3 phases complete | UAT passed | 2026-06-01 |
+| v1.32 Admin UI/UX Design System Cleanup | 116-118 | implementation pass complete, DB-backed verification pending | Active | — |
 
 ## Requirement Coverage
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REL-01 | Phase 109 | Complete |
-| REL-02 | Phase 109 | Complete |
-| REL-03 | Phase 109 | Complete |
-| SUP-01 | Phase 110 | Complete |
-| SUP-02 | Phase 110 | Complete |
-| STAB-01 | Phase 111 | Complete |
-| STAB-02 | Phase 111 | Complete |
-| WEB-01 | Phase 112 | Complete |
-| WEB-02 | Phase 112 | Complete |
-| SCOPE-01 | Phase 112 | Complete |
+| ASSET-01 | Phase 116 | Implemented; DB-backed test rerun pending |
+| TOKEN-01 | Phase 116 | Implemented; scan/compile passed |
+| BRAND-01 | Phase 116 | Implemented; scan/compile passed |
+| COMP-01 | Phase 117 | Implemented; DB-backed test rerun pending |
+| A11Y-01 | Phase 117 | Implemented; DB-backed test rerun pending |
+| SCREEN-01 | Phase 118 | Implemented; DB-backed test rerun pending |
+| SCREEN-02 | Phase 118 | Implemented; DB-backed test rerun pending |
+| VERIFY-01 | Phase 118 | In progress; compile passed, focused tests blocked by local Postgres saturation |
 
-**Coverage:** 10/10 requirements complete.
+**Coverage:** 8/8 requirements mapped.
 
 ## Historical Contract Anchors
 
@@ -54,8 +66,4 @@ Known accepted tech debt is recorded in `milestones/v1.30-MILESTONE-AUDIT.md`.
 
 ## Next
 
-No active milestone is open.
-
-Start the next milestone only when release follow-through, support/proof drift, production bug evidence, reviewed outside-adopter evidence, or an explicit strategic decision justifies it:
-
-`$gsd-new-milestone`
+Clear local Postgres connection pressure, rerun focused ScrypathOps and mounted e-commerce tests, then close or polish based on findings.
