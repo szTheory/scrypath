@@ -578,7 +578,11 @@ defmodule ScrypathOpsWeb.SearchLive do
           <.link navigate={"#{@mount_path}/playbooks"} class="link link-hover">Saved playbooks</.link>
         </div>
 
-        <.ops_notice id="search-honesty-panel" kind={:warning} title="Non-production search playground">
+        <.ops_notice
+          id="search-honesty-panel"
+          kind={:warning}
+          title="Non-production search playground"
+        >
           Exploratory queries may be logged by Meilisearch or proxies depending on deployment.
           <strong>Do not</strong>
           paste production secrets or PII; keep <code class="text-xs">page.size</code>
@@ -713,7 +717,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                     <label class="flex cursor-pointer items-center gap-2 text-sm">
                       <input
                         type="checkbox"
-                        name="schemas"
+                        name="schemas[]"
                         value={inspect(mod)}
                         class="checkbox checkbox-sm"
                       />

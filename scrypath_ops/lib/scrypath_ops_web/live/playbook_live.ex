@@ -132,14 +132,18 @@ defmodule ScrypathOpsWeb.PlaybookLive do
         path = Path.join(socket.assigns.examples_dir, name)
 
         if Store.safe_basename?(name) and File.exists?(path) do
-          {:ok, bin} = File.read(path)
+          case File.read(path) do
+            {:ok, bin} ->
+              socket =
+                socket
+                |> assign(:selected_basename, name)
+                |> apply_decoded(bin, :load)
 
-          socket =
-            socket
-            |> assign(:selected_basename, name)
-            |> apply_decoded(bin, :load)
+              {:noreply, socket}
 
-          {:noreply, socket}
+            {:error, _} ->
+              {:noreply, put_flash(socket, :error, "Could not read that example file.")}
+          end
         else
           {:noreply, put_flash(socket, :error, "Could not read that example file.")}
         end
@@ -838,7 +842,11 @@ defmodule ScrypathOpsWeb.PlaybookLive do
       <div class="space-y-6">
         <.ops_page_header title={@page_title} />
 
-        <.ops_notice id="playbook-honesty-panel" kind={:warning} title="Non-production playbook workspace">
+        <.ops_notice
+          id="playbook-honesty-panel"
+          kind={:warning}
+          title="Non-production playbook workspace"
+        >
           Exploratory runs use the same bounded search path as the playground and may be logged by backends or proxies.
           <strong>Do not</strong>
           paste production secrets or PII; keep <code class="text-xs">page.size</code>
@@ -856,7 +864,9 @@ defmodule ScrypathOpsWeb.PlaybookLive do
           <p :if={@examples_mode?} class="text-sm text-base-content/80">
             Examples (read-only) — set <code class="text-sm">SCRYPATH_OPS_PLAYBOOK_DIR</code>
             to enable saving and deleting under a dedicated directory. See
-            <.link class="link link-hover" navigate={"#{@mount_path}/search"}>Search & federation</.link>
+            <.link class="link link-hover" navigate={"#{@mount_path}/search"}>
+              Search & federation
+            </.link>
             to export a playbook JSON, then use <strong>Import playbook JSON</strong>
             below.
           </p>
@@ -1074,68 +1084,83 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             </div>
           </div>
 
-          <.ops_modal :if={@delete_pending} id="delete-playbook-modal" title="Delete playbook file">
-              <p class="py-4 text-sm">
-                This permanently deletes <code class="font-mono text-xs">{@delete_pending}</code>
-                from the playbook directory. This cannot be undone.
-              </p>
-              <.form for={%{}} phx-submit="confirm_delete" class="space-y-2">
-                <label class="label">
-                  <span class="label-text">Type the filename to confirm</span>
-                </label>
-                <input
-                  type="text"
-                  name="confirm"
-                  class="input input-bordered w-full font-mono text-sm"
-                  autocomplete="off"
-                />
-                <div class="modal-action">
-                  <.ops_button phx-click="cancel_delete">Cancel</.ops_button>
-                  <.ops_button type="submit" variant={:danger}>Confirm delete</.ops_button>
-                </div>
-              </.form>
+          <.ops_modal
+            :if={@delete_pending}
+            id="delete-playbook-modal"
+            title="Delete playbook file"
+            cancel_event="cancel_delete"
+          >
+            <p class="py-4 text-sm">
+              This permanently deletes <code class="font-mono text-xs">{@delete_pending}</code>
+              from the playbook directory. This cannot be undone.
+            </p>
+            <.form for={%{}} phx-submit="confirm_delete" class="space-y-2">
+              <label class="label">
+                <span class="label-text">Type the filename to confirm</span>
+              </label>
+              <input
+                type="text"
+                name="confirm"
+                class="input input-bordered w-full font-mono text-sm"
+                autocomplete="off"
+              />
+              <div class="modal-action">
+                <.ops_button phx-click="cancel_delete">Cancel</.ops_button>
+                <.ops_button type="submit" variant={:danger}>Confirm delete</.ops_button>
+              </div>
+            </.form>
           </.ops_modal>
 
-          <.ops_modal :if={@rename_modal} id="rename-playbook-modal" title="Rename playbook">
-              <p class="py-2 text-sm">
-                Renaming <code class="font-mono text-xs">{@rename_modal.from}</code>
-              </p>
-              <.form for={%{}} phx-submit="rename_submit" class="space-y-2">
-                <label class="label">
-                  <span class="label-text">New basename (.json)</span>
-                </label>
-                <input
-                  type="text"
-                  name="new_name"
-                  class="input input-bordered w-full font-mono text-sm"
-                  placeholder="new-name.json"
-                />
-                <div class="modal-action">
-                  <.ops_button phx-click="rename_cancel">Cancel</.ops_button>
-                  <.ops_button type="submit" variant={:primary}>Rename</.ops_button>
-                </div>
-              </.form>
+          <.ops_modal
+            :if={@rename_modal}
+            id="rename-playbook-modal"
+            title="Rename playbook"
+            cancel_event="rename_cancel"
+          >
+            <p class="py-2 text-sm">
+              Renaming <code class="font-mono text-xs">{@rename_modal.from}</code>
+            </p>
+            <.form for={%{}} phx-submit="rename_submit" class="space-y-2">
+              <label class="label">
+                <span class="label-text">New basename (.json)</span>
+              </label>
+              <input
+                type="text"
+                name="new_name"
+                class="input input-bordered w-full font-mono text-sm"
+                placeholder="new-name.json"
+              />
+              <div class="modal-action">
+                <.ops_button phx-click="rename_cancel">Cancel</.ops_button>
+                <.ops_button type="submit" variant={:primary}>Rename</.ops_button>
+              </div>
+            </.form>
           </.ops_modal>
 
-          <.ops_modal :if={@duplicate_modal} id="duplicate-playbook-modal" title="Duplicate playbook">
-              <p class="py-2 text-sm">
-                Copying <code class="font-mono text-xs">{@duplicate_modal.from}</code>
-              </p>
-              <.form for={%{}} phx-submit="dup_submit" class="space-y-2">
-                <label class="label">
-                  <span class="label-text">New basename (.json)</span>
-                </label>
-                <input
-                  type="text"
-                  name="to_name"
-                  value={@duplicate_modal.to}
-                  class="input input-bordered w-full font-mono text-sm"
-                />
-                <div class="modal-action">
-                  <.ops_button phx-click="dup_cancel">Cancel</.ops_button>
-                  <.ops_button type="submit" variant={:primary}>Duplicate</.ops_button>
-                </div>
-              </.form>
+          <.ops_modal
+            :if={@duplicate_modal}
+            id="duplicate-playbook-modal"
+            title="Duplicate playbook"
+            cancel_event="dup_cancel"
+          >
+            <p class="py-2 text-sm">
+              Copying <code class="font-mono text-xs">{@duplicate_modal.from}</code>
+            </p>
+            <.form for={%{}} phx-submit="dup_submit" class="space-y-2">
+              <label class="label">
+                <span class="label-text">New basename (.json)</span>
+              </label>
+              <input
+                type="text"
+                name="to_name"
+                value={@duplicate_modal.to}
+                class="input input-bordered w-full font-mono text-sm"
+              />
+              <div class="modal-action">
+                <.ops_button phx-click="dup_cancel">Cancel</.ops_button>
+                <.ops_button type="submit" variant={:primary}>Duplicate</.ops_button>
+              </div>
+            </.form>
           </.ops_modal>
         </.ops_panel>
       </div>

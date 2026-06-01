@@ -195,6 +195,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Accessible modal shell for blocking file actions."
   attr(:title, :string, required: true)
   attr(:id, :string, required: true)
+  attr(:cancel_event, :string, default: nil)
   attr(:class, :any, default: nil)
   slot(:inner_block, required: true)
 
@@ -206,8 +207,20 @@ defmodule ScrypathOpsWeb.OpsUi do
       role="dialog"
       aria-modal="true"
       aria-labelledby={"#{@id}-title"}
+      phx-window-keydown={@cancel_event}
+      phx-key={if @cancel_event, do: "escape", else: nil}
     >
-      <div class={["modal-box rounded-lg", @class]}>
+      <div class={["modal-box relative rounded-lg", @class]} tabindex="-1">
+        <button
+          :if={@cancel_event}
+          type="button"
+          class="btn btn-circle btn-ghost btn-sm absolute right-3 top-3"
+          phx-click={@cancel_event}
+          aria-label="Close dialog"
+          autofocus
+        >
+          <span aria-hidden="true">×</span>
+        </button>
         <h3 id={"#{@id}-title"} class="text-lg font-semibold">{@title}</h3>
         <div class="mt-3">{render_slot(@inner_block)}</div>
       </div>
