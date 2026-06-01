@@ -24,7 +24,7 @@
 
 **Requirements:** COMP-01, A11Y-01
 
-**Status:** Pending
+**Status:** Complete (2026-06-01)
 
 ### Phase 118: Admin Screen UX Cleanup
 
@@ -51,8 +51,8 @@
 | ASSET-01 | Phase 116 | Implemented; DB-backed test rerun pending |
 | TOKEN-01 | Phase 116 | Implemented; scan/compile passed |
 | BRAND-01 | Phase 116 | Implemented; scan/compile passed |
-| COMP-01 | Phase 117 | Implemented; DB-backed test rerun pending |
-| A11Y-01 | Phase 117 | Implemented; DB-backed test rerun pending |
+| COMP-01 | Phase 117 | Verified |
+| A11Y-01 | Phase 117 | Verified |
 | SCREEN-01 | Phase 118 | Implemented; DB-backed test rerun pending |
 | SCREEN-02 | Phase 118 | Implemented; DB-backed test rerun pending |
 | VERIFY-01 | Phase 118 | In progress; compile passed, focused tests blocked by local Postgres saturation |

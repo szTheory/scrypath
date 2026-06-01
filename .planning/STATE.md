@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.32
 milestone_name: Admin UI/UX Design System Cleanup
-status: verifying
-last_updated: "2026-06-01T18:53:19.522Z"
+status: ready_to_plan
+last_updated: 2026-06-01T19:10:58.485Z
 last_activity: 2026-06-01
 progress:
   total_phases: 3
@@ -11,6 +11,7 @@ progress:
   total_plans: 3
   completed_plans: 2
   percent: 67
+stopped_at: Phase 117 complete (1/1) — ready to discuss Phase 118
 ---
 
 # Project State
@@ -18,13 +19,13 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 117 — shared-ops-component-system
+**Current Focus:** Phase 118 — admin screen ux cleanup
 
 ## Current Position
 
-Phase: 117 (shared-ops-component-system) — READY FOR VERIFICATION
-Plan: 1 of 1
-Status: Phase complete — ready for verification
+Phase: 118
+Plan: Not started
+Status: Ready to plan
 Last activity: 2026-06-01
 
 ## Current Milestone
@@ -60,7 +61,7 @@ This milestone is a bounded OPSUI polish and design-system wedge. It does not re
 
 ### Todos
 
-- Rerun focused ScrypathOps LiveView tests once local Postgres is no longer saturated.
+- Rerun remaining Phase 116/118 ScrypathOps LiveView tests once local Postgres is stable.
 - Rerun mounted e-commerce admin smoke test once local Postgres is no longer saturated.
 - Decide whether a screenshot/browser polish pass is warranted before v1.32 archive.
 - Keep future runtime breadth closed unless concrete production bug evidence, reviewed outside-adopter evidence, or an explicit strategic decision justifies it.
@@ -73,4 +74,4 @@ This milestone is a bounded OPSUI polish and design-system wedge. It does not re
 
 | Phase | Plan | Duration | Notes |
 |-------|------|----------|-------|
-| Phase 117 P117 | 33min | 3 tasks | 9 files |
+| Phase 117 P117 | 33min | 6 tasks | 9 files |
