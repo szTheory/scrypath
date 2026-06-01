@@ -49,7 +49,7 @@ completed: 2026-06-01
 - **Duration:** 33 min
 - **Started:** 2026-06-01T18:19:00Z
 - **Completed:** 2026-06-01T18:52:00Z
-- **Tasks:** 3
+- **Tasks:** 4
 - **Files modified:** 9
 
 ## Accomplishments
@@ -63,6 +63,7 @@ completed: 2026-06-01
 1. **Task 1: Shared OpsUi component primitives and screen replacements** - `122e2d8` (feat)
 2. **Task 2: Allowlist-backed schema control hardening** - `122e2d8` (feat)
 3. **Task 3: Component/a11y contract assertions** - `122e2d8` (feat)
+4. **Task 4: Code review fixes for multi-schema forms, playbook reads, and modal keyboard semantics** - `11b0f7f` (fix)
 
 ## Files Created/Modified
 
@@ -99,6 +100,13 @@ completed: 2026-06-01
 **Total deviations:** 1 auto-fixed (1 missing critical)
 **Impact on plan:** The fix strengthens the component contract and operator safety without expanding product scope.
 
+### Code Review Fixes
+
+- Fixed multi-index checkbox field naming so all selected schemas submit as `schemas[]`.
+- Replaced example playbook read pattern matching with an error-returning flash path.
+- Added shared modal close-button and Escape semantics through `cancel_event`.
+- Re-review passed clean in `.planning/phases/117-shared-ops-component-system/117-REVIEW.md`.
+
 ## Issues Encountered
 
 - Focused ScrypathOps LiveView tests could not run because local Postgres was unavailable/saturated:
@@ -120,5 +128,7 @@ None - no external service configuration required.
 
 - Found summary file at `.planning/phases/117-shared-ops-component-system/117-SUMMARY.md`.
 - Found task commit `122e2d8` in git history.
+- Found review fix commit `11b0f7f` in git history.
+- Found clean code review report at `.planning/phases/117-shared-ops-component-system/117-REVIEW.md`.
 - Verified compile with `cd scrypath_ops && mix compile --warnings-as-errors`.
 - DB-backed tests attempted and blocked by local Postgres availability, recorded above.
