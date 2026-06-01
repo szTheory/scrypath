@@ -87,6 +87,22 @@ Plans:
 
 **Requirements:** WEB-01, WEB-02, SCOPE-01
 
+**Plans:** 4 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 112-01-PLAN.md — Create the canonical scope/reopen policy guide and route README/support/intake surfaces to it
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 112-02-PLAN.md — Align guide-map and maintainer-facing public docs to the claim envelope and exact reopen rule
+- [ ] 112-03-PLAN.md — Tighten website route-map copy and add README/scope-policy routes without expanding the site
+
+**Wave 3** *(blocked on Waves 1-2 completion)*
+
+- [ ] 112-04-PLAN.md — Add focused Phase 112 contract proof and a standalone `mix verify.phase112` command
+
 **Success criteria:**
 
 1. Website and public docs consistently describe Scrypath as the Ecto-native search indexing library for Phoenix and Ecto teams.
@@ -100,7 +116,7 @@ Plans:
 |-----------|--------|----------------|--------|---------|
 | v1.28 Realistic Demo App & Admin UI Proof | 102-105 | 15/15 | Complete | 2026-05-31 |
 | v1.29 Contract Repair and Proof Hardening | 106-108 | 3/3 | Complete | 2026-05-31 |
-| v1.30 Release Trust and Evidence Maintenance | 109-112 | 5/7 current plans | Active | — |
+| v1.30 Release Trust and Evidence Maintenance | 109-112 | 5/9 current plans | Active | — |
 
 ## Requirement Coverage
 
@@ -126,8 +142,8 @@ Plans:
 
 ## Next
 
-Start with **Phase 109: Release Train and Package Truth Audit**.
+Execute **Phase 112: Public Website and Docs Truth Alignment**.
 
-`$gsd-discuss-phase 109`
+`$gsd-execute-phase 112`
 
-Also: `$gsd-plan-phase 109` — skip discussion and plan directly.
+Also: `$gsd-execute-phase 112 --wave 1` — run the authority plan first if you want to pace the phase.
