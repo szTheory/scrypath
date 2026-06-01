@@ -21,7 +21,6 @@ defmodule Mix.Tasks.Verify.Phase112Test do
         end)
 
       assert output =~ "verify.phase112"
-      assert output =~ "There is no documentation for this task"
     end
 
     test "source defines focused phase112 checks" do
@@ -29,6 +28,7 @@ defmodule Mix.Tasks.Verify.Phase112Test do
 
       assert source =~ ~S|"test/scrypath/phase112_contract_test.exs"|
       assert source =~ ~S|"test/mix/tasks/verify.phase112_test.exs"|
+      assert source =~ "Runs public website and docs truth alignment checks (Phase 112)"
       assert source =~ "verify.phase112: public website and docs truth alignment checks"
       assert source =~ "Phase 112 public website and docs truth alignment verification"
     end

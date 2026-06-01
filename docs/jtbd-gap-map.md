@@ -143,7 +143,7 @@ Priority:
 
 - **high** as maintenance truth cleanup, not as a user-facing feature
 
-### 4. Autocomplete and suggestion-class flows
+### 5. Autocomplete and suggestion-class flows
 
 Scrypath has solid core search and facet value typeahead, but not a general first-class suggestion/autocomplete API.
 
