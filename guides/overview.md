@@ -1,6 +1,6 @@
 # Guides
 
-Short map of published guides. Start with the [Golden path](golden-path.md) for a linear first-hour setup, or [JTBD and user flows](jtbd-and-user-flows.md) if you want the mental model first.
+Short map of published guides for Scrypath, the Ecto-native search indexing library. Start with the [Golden path](golden-path.md) for a linear first-hour setup, or [JTBD and user flows](jtbd-and-user-flows.md) if you want the mental model first.
 
 For supported versions, install guidance, and verification commands, use [Support and compatibility](support-and-compatibility.md).
 
@@ -18,11 +18,13 @@ The intended app boundary is a Phoenix context that owns the search flow, with c
 | Guide | Purpose |
 | ----- | ------- |
 | [JTBD and user flows](jtbd-and-user-flows.md) | Canonical mental model: what jobs Scrypath serves, the main user flows, and what "success" honestly means in each one. |
+| [Meilisearch concepts](meilisearch-concepts.md) | Short crash course on the Meilisearch nouns, async task model, settings-as-migrations posture, and projection boundary Scrypath relies on. |
 | [Common mistakes](common-mistakes.md) | Evidence-led pitfalls (symptom → wrong model → fix) with links back to canonical guides. |
 | [Getting started](getting-started.md) | Mental model: what you configure, where sync and search live in the app. |
 | [Golden path](golden-path.md) | Checklist from `mix.exs` through first `Scrypath.search/3` with **inline** sync. |
 | [Support and compatibility](support-and-compatibility.md) | Current install, runtime, Meilisearch, sync-mode, and verification guidance. |
 | [Outside-adopter intake](outside-adopter-intake.md) | What to include when a real app integration fails or the documented path is unclear. |
+| [Scope and reopen policy](scope-and-reopen-policy.md) | Current non-goals and the only three triggers that reopen feature-lane scope. |
 | [Request-edge search](request-edge-search.md) | Browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix`, and context-owned `Scrypath.search/3`. |
 | [Composing real-app search](composing-real-app-search.md) | Reusable `defaults`, `fixed` scopes, host-owned rendering, and `compose_many/2` lowering. |
 | [Related data and reindexing](related-data-and-reindexing.md) | Canonical guidance for associated-data fan-out, when direct sync is enough, and when to escalate to backfill or reindex. |
@@ -39,15 +41,16 @@ The intended app boundary is a Phoenix context that owns the search flow, with c
 | [Relevance tuning](relevance-tuning.md) | Meilisearch settings, verification, and tuning from schema declarations. |
 | [Per-query tuning pipeline](per-query-tuning-pipeline.md) | Request-time Meilisearch search parameters vs index-time settings — canonical merge and mapping spec. |
 
-The runnable Phoenix example (Postgres + Meilisearch + Oban) lives under [`examples/phoenix_meilisearch/`](../examples/phoenix_meilisearch/README.md).
+The minimal runnable Phoenix example (Postgres + Meilisearch + Oban) lives under [`examples/phoenix_meilisearch/`](../examples/phoenix_meilisearch/README.md). For a richer click-around showcase with a multi-tenant storefront and mounted operator UI, use [`examples/scrypath_ecommerce/`](../examples/scrypath_ecommerce/README.md).
 
 ## Recommended reading order
 
 1. [Golden path](golden-path.md)
 2. [JTBD and user flows](jtbd-and-user-flows.md)
-3. [Request-edge search](request-edge-search.md)
-4. [Composing real-app search](composing-real-app-search.md)
-5. [Phoenix walkthrough](phoenix-walkthrough.md)
-6. [Sync modes and visibility](sync-modes-and-visibility.md)
-7. [Related data and reindexing](related-data-and-reindexing.md)
-8. [Drift recovery](drift-recovery.md)
+3. [Meilisearch concepts](meilisearch-concepts.md)
+4. [Request-edge search](request-edge-search.md)
+5. [Composing real-app search](composing-real-app-search.md)
+6. [Phoenix walkthrough](phoenix-walkthrough.md)
+7. [Sync modes and visibility](sync-modes-and-visibility.md)
+8. [Related data and reindexing](related-data-and-reindexing.md)
+9. [Drift recovery](drift-recovery.md)
