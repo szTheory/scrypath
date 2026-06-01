@@ -71,19 +71,23 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   end
 
   def handle_event("select_schema", %{"schema" => mod_str}, socket) do
-    mod = mod_from_flat!(mod_str)
+    case mod_from_allowlist(mod_str, socket.assigns.schema_allowlist) do
+      {:ok, mod} ->
+        socket =
+          socket
+          |> assign(:selected_schema, mod)
+          |> assign(:reconcile_result, nil)
+          |> assign(:reconcile_loaded_at, nil)
+          |> assign(:drift_result, nil)
+          |> assign(:drift_loaded_at, nil)
+          |> assign(:drift_error, nil)
+          |> load_reconcile_on_mount()
 
-    socket =
-      socket
-      |> assign(:selected_schema, mod)
-      |> assign(:reconcile_result, nil)
-      |> assign(:reconcile_loaded_at, nil)
-      |> assign(:drift_result, nil)
-      |> assign(:drift_loaded_at, nil)
-      |> assign(:drift_error, nil)
-      |> load_reconcile_on_mount()
+        {:noreply, socket}
 
-    {:noreply, socket}
+      :error ->
+        {:noreply, put_flash(socket, :error, "Select an allowlisted schema.")}
+    end
   end
 
   def handle_event("swap_live", _params, socket) do
@@ -94,12 +98,13 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     mod |> Atom.to_string() |> String.replace_prefix("Elixir.", "")
   end
 
-  defp mod_from_flat!(str) when is_binary(str) do
-    str
-    |> String.trim()
-    |> String.split(".")
-    |> Enum.map(&String.to_atom/1)
-    |> Module.concat()
+  defp mod_from_allowlist(str, allowlist) when is_binary(str) do
+    name = String.trim(str)
+
+    case Enum.find(allowlist, &(module_flat_name(&1) == name)) do
+      nil -> :error
+      mod -> {:ok, mod}
+    end
   end
 
   defp refresh_reconcile(socket) do
@@ -174,40 +179,32 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app mount_path={@mount_path} flash={@flash} shell={@shell}>
+    <Layouts.app mount_path={@mount_path} flash={@flash} shell={@shell} page_title={@page_title}>
       <.ops_page_header title={@page_title} />
 
-      <form :if={@schema_allowlist != []} class="mt-4 flex flex-wrap items-center gap-2">
-        <label for="sync-schema-select" class="text-sm">Schema</label>
-        <select
-          id="sync-schema-select"
-          name="schema"
-          class="select select-bordered select-sm"
-          phx-change="select_schema"
-        >
-          <%= for mod <- @schema_allowlist do %>
-            <option value={module_flat_name(mod)} selected={mod == @selected_schema}>
-              {module_flat_name(mod)}
-            </option>
-          <% end %>
-        </select>
-      </form>
+      <.ops_schema_select
+        id="sync-schema-select"
+        schemas={@schema_allowlist}
+        selected={@selected_schema}
+        phx-change="select_schema"
+        class="mt-4"
+      />
 
-      <p class="mt-4 text-sm text-base-content/70">
+      <.ops_notice kind={:info} title="Read-only Recovery Map" class="mt-4">
         Use <code class="text-xs">mix scrypath.reconcile</code>, <code class="text-xs">mix scrypath.index.contract_drift</code>, <code class="text-xs">guides/drift-recovery.md</code>,
         <code class="text-xs">guides/sync-modes-and-visibility.md</code>
         for canonical workflows. This page stays read-only over
         <code class="text-xs">Scrypath.reconcile_sync/2</code>
         and <code class="text-xs">Scrypath.index_contract_drift/2</code>.
-      </p>
+      </.ops_notice>
 
       <.ops_panel>
         <section aria-labelledby="sync-reconcile-heading" class="mt-2 space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <h2 id="sync-reconcile-heading" class="text-lg font-semibold">Sync & queue posture</h2>
-            <button type="button" phx-click="refresh_reconcile" class="btn btn-sm btn-primary">
+            <.ops_button phx-click="refresh_reconcile" variant={:primary}>
               Refresh reconcile
-            </button>
+            </.ops_button>
           </div>
 
           <p :if={@reconcile_loaded_at} class="text-xs text-base-content/60">
@@ -255,18 +252,16 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               Index contract (declared vs live)
             </h2>
             <div class="flex flex-wrap gap-2">
-              <button type="button" phx-click="load_drift" class="btn btn-sm">
+              <.ops_button phx-click="load_drift">
                 Load / refresh contract drift
-              </button>
-              <button
+              </.ops_button>
+              <.ops_button
                 :if={@selected_schema}
-                type="button"
                 phx-click="swap_live"
-                class="btn btn-sm btn-outline"
                 phx-disable-with="Swapping..."
               >
                 Swap live index
-              </button>
+              </.ops_button>
             </div>
           </div>
 

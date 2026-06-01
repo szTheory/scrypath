@@ -828,27 +828,29 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app mount_path={@mount_path} flash={@flash} shell={@shell} ops_main_width={:wide}>
+    <Layouts.app
+      mount_path={@mount_path}
+      flash={@flash}
+      shell={@shell}
+      page_title={@page_title}
+      ops_main_width={:wide}
+    >
       <div class="space-y-6">
         <.ops_page_header title={@page_title} />
 
-        <div
-          id="playbook-honesty-panel"
-          class="rounded-md border border-warning/40 bg-warning/10 px-sm py-sm text-sm text-base-content"
-        >
-          <strong>Non-production playbook workspace</strong>
-          — exploratory runs use the same bounded search path as the playground and may be logged by backends or proxies.
+        <.ops_notice id="playbook-honesty-panel" kind={:warning} title="Non-production playbook workspace">
+          Exploratory runs use the same bounded search path as the playground and may be logged by backends or proxies.
           <strong>Do not</strong>
           paste production secrets or PII; keep <code class="text-xs">page.size</code>
           and schema lists within configured caps.
-        </div>
+        </.ops_notice>
 
-        <div class="card bg-base-100 border border-base-300 rounded-lg p-4 md:p-6 space-y-6">
-          <div class="flex flex-wrap items-center justify-between gap-sm">
+        <.ops_panel class="space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
             <h2 class="text-lg font-semibold">Workspace files</h2>
-            <button type="button" phx-click="refresh_list" class="btn btn-sm btn-ghost">
+            <.ops_button phx-click="refresh_list" variant={:ghost}>
               Reload list
-            </button>
+            </.ops_button>
           </div>
 
           <p :if={@examples_mode?} class="text-sm text-base-content/80">
@@ -860,7 +862,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
           </p>
 
           <p :if={@workspace_files == []} class="text-base-content/80">
-            <span class="text-heading font-semibold">No playbooks in this folder</span>
+            <span class="text-base font-semibold">No playbooks in this folder</span>
             — export a playbook from Search or import JSON to add a <code class="text-xs">.json</code>
             file. Schema reference: <a
               class="link link-hover"
@@ -886,59 +888,59 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                 <span class="font-mono text-xs">{row.name}</span>
               </div>
               <span class="flex flex-wrap gap-1">
-                <button
-                  type="button"
+                <.ops_button
                   phx-click="load"
                   phx-value-name={row.name}
-                  class="btn btn-xs btn-ghost"
+                  variant={:ghost}
+                  size={:xs}
                 >
                   Load
-                </button>
-                <button
+                </.ops_button>
+                <.ops_button
                   :if={@schema_allowlist != [] && Keyword.has_key?(@scrypath_opts, :backend)}
-                  type="button"
                   phx-click="run_now"
                   phx-value-name={row.name}
-                  class="btn btn-xs btn-primary"
+                  variant={:primary}
+                  size={:xs}
                 >
                   Run now
-                </button>
-                <button
+                </.ops_button>
+                <.ops_button
                   :if={@workspace_writable?}
-                  type="button"
                   phx-click="dup_open"
                   phx-value-name={row.name}
-                  class="btn btn-xs btn-ghost"
+                  variant={:ghost}
+                  size={:xs}
                 >
                   Duplicate
-                </button>
-                <button
+                </.ops_button>
+                <.ops_button
                   :if={@workspace_writable?}
-                  type="button"
                   phx-click="rename_open"
                   phx-value-name={row.name}
-                  class="btn btn-xs btn-ghost"
+                  variant={:ghost}
+                  size={:xs}
                 >
                   Rename
-                </button>
-                <button
+                </.ops_button>
+                <.ops_button
                   :if={@workspace_writable?}
-                  type="button"
                   phx-click="request_delete"
                   phx-value-name={row.name}
-                  class="btn btn-xs btn-error btn-outline"
+                  variant={:danger}
+                  size={:xs}
                 >
                   Delete
-                </button>
+                </.ops_button>
               </span>
             </li>
           </ul>
 
           <div class="divider" />
 
-          <section class="space-y-md">
+          <section class="space-y-4">
             <h2 class="text-lg font-semibold">Import playbook JSON</h2>
-            <.form for={%{}} phx-submit="import_upload" class="space-y-sm max-w-xl">
+            <.form for={%{}} phx-submit="import_upload" class="space-y-2 max-w-xl">
               <label class="label">
                 <span class="label-text text-sm font-semibold">
                   Upload (.json, max {@max_import_bytes} bytes)
@@ -948,25 +950,25 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                 upload={@uploads.playbook_file}
                 class="file-input file-input-bordered w-full max-w-md"
               />
-              <button type="submit" class="btn btn-primary btn-sm min-h-10">
+              <.ops_button type="submit" variant={:primary}>
                 Import playbook JSON
-              </button>
+              </.ops_button>
             </.form>
 
             <details class="max-w-xl">
               <summary class="cursor-pointer text-sm link link-hover">Or paste JSON</summary>
-              <.form for={%{}} phx-submit="import_paste" class="mt-2 space-y-sm">
+              <.form for={%{}} phx-submit="import_paste" class="mt-2 space-y-2">
                 <textarea
                   name="json"
                   class="textarea textarea-bordered w-full font-mono text-xs min-h-32"
                   placeholder="Paste playbook JSON"
                 ></textarea>
-                <button type="submit" class="btn btn-ghost btn-sm">Import from paste</button>
+                <.ops_button type="submit" variant={:ghost}>Import from paste</.ops_button>
               </.form>
             </details>
           </section>
 
-          <div :if={@draft_playbook} class="space-y-md">
+          <div :if={@draft_playbook} class="space-y-4">
             <div class="divider" />
             <h2 class="text-lg font-semibold">Preview</h2>
             <p
@@ -976,29 +978,26 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             >
               Validated playbook preview
             </p>
-            <pre
-              :if={@preview_json}
-              class="max-h-96 overflow-auto rounded-md bg-base-200 p-sm text-xs font-mono whitespace-pre-wrap break-words"
-            ><%= @preview_json %></pre>
+            <.ops_code_block :if={@preview_json}>{@preview_json}</.ops_code_block>
 
-            <div class="flex flex-wrap gap-sm items-end">
-              <button
+            <div class="flex flex-wrap gap-2 items-end">
+              <.ops_button
                 :if={@schema_allowlist != [] && Keyword.has_key?(@scrypath_opts, :backend)}
-                type="button"
                 phx-click="run"
-                class="btn btn-primary min-h-10"
+                variant={:primary}
+                size={:md}
                 disabled={@run_ui.phase == :running}
               >
                 Run saved playbook
-              </button>
-              <button
+              </.ops_button>
+              <.ops_button
                 :if={@run_ui.phase == :running}
-                type="button"
                 phx-click="cancel_run"
-                class="btn btn-ghost min-h-10"
+                variant={:ghost}
+                size={:md}
               >
                 Cancel run
-              </button>
+              </.ops_button>
               <p
                 :if={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
                 class="text-sm text-base-content/70"
@@ -1043,13 +1042,9 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   >
                     Related doc
                   </a>
-                  <button
-                    type="button"
-                    phx-click="copy_run_diagnostics"
-                    class="btn btn-xs btn-ghost"
-                  >
+                  <.ops_button phx-click="copy_run_diagnostics" variant={:ghost} size={:xs}>
                     Copy diagnostics
-                  </button>
+                  </.ops_button>
                 </div>
               </div>
             </div>
@@ -1058,7 +1053,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               {run_result_summary(@run_result)}
             </p>
 
-            <div :if={@workspace_writable?} class="space-y-sm max-w-md">
+            <div :if={@workspace_writable?} class="space-y-2 max-w-md">
               <h3 class="text-sm font-semibold">Save playbook to workspace</h3>
               <.form for={%{}} phx-submit="save" class="flex flex-wrap gap-2 items-end">
                 <div>
@@ -1072,21 +1067,19 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                     placeholder="my-playbook.json"
                   />
                 </div>
-                <button type="submit" class="btn btn-primary btn-sm min-h-10">
+                <.ops_button type="submit" variant={:primary}>
                   Save playbook to workspace
-                </button>
+                </.ops_button>
               </.form>
             </div>
           </div>
 
-          <div :if={@delete_pending} class="modal modal-open">
-            <div class="modal-box">
-              <h3 class="font-bold text-lg">Delete playbook file</h3>
+          <.ops_modal :if={@delete_pending} id="delete-playbook-modal" title="Delete playbook file">
               <p class="py-4 text-sm">
                 This permanently deletes <code class="font-mono text-xs">{@delete_pending}</code>
                 from the playbook directory. This cannot be undone.
               </p>
-              <.form for={%{}} phx-submit="confirm_delete" class="space-y-sm">
+              <.form for={%{}} phx-submit="confirm_delete" class="space-y-2">
                 <label class="label">
                   <span class="label-text">Type the filename to confirm</span>
                 </label>
@@ -1097,20 +1090,17 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   autocomplete="off"
                 />
                 <div class="modal-action">
-                  <button type="button" class="btn" phx-click="cancel_delete">Cancel</button>
-                  <button type="submit" class="btn btn-error">Confirm delete</button>
+                  <.ops_button phx-click="cancel_delete">Cancel</.ops_button>
+                  <.ops_button type="submit" variant={:danger}>Confirm delete</.ops_button>
                 </div>
               </.form>
-            </div>
-          </div>
+          </.ops_modal>
 
-          <div :if={@rename_modal} class="modal modal-open">
-            <div class="modal-box">
-              <h3 class="font-bold text-lg">Rename playbook</h3>
+          <.ops_modal :if={@rename_modal} id="rename-playbook-modal" title="Rename playbook">
               <p class="py-2 text-sm">
                 Renaming <code class="font-mono text-xs">{@rename_modal.from}</code>
               </p>
-              <.form for={%{}} phx-submit="rename_submit" class="space-y-sm">
+              <.form for={%{}} phx-submit="rename_submit" class="space-y-2">
                 <label class="label">
                   <span class="label-text">New basename (.json)</span>
                 </label>
@@ -1121,20 +1111,17 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   placeholder="new-name.json"
                 />
                 <div class="modal-action">
-                  <button type="button" class="btn" phx-click="rename_cancel">Cancel</button>
-                  <button type="submit" class="btn btn-primary">Rename</button>
+                  <.ops_button phx-click="rename_cancel">Cancel</.ops_button>
+                  <.ops_button type="submit" variant={:primary}>Rename</.ops_button>
                 </div>
               </.form>
-            </div>
-          </div>
+          </.ops_modal>
 
-          <div :if={@duplicate_modal} class="modal modal-open">
-            <div class="modal-box">
-              <h3 class="font-bold text-lg">Duplicate playbook</h3>
+          <.ops_modal :if={@duplicate_modal} id="duplicate-playbook-modal" title="Duplicate playbook">
               <p class="py-2 text-sm">
                 Copying <code class="font-mono text-xs">{@duplicate_modal.from}</code>
               </p>
-              <.form for={%{}} phx-submit="dup_submit" class="space-y-sm">
+              <.form for={%{}} phx-submit="dup_submit" class="space-y-2">
                 <label class="label">
                   <span class="label-text">New basename (.json)</span>
                 </label>
@@ -1145,13 +1132,12 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   class="input input-bordered w-full font-mono text-sm"
                 />
                 <div class="modal-action">
-                  <button type="button" class="btn" phx-click="dup_cancel">Cancel</button>
-                  <button type="submit" class="btn btn-primary">Duplicate</button>
+                  <.ops_button phx-click="dup_cancel">Cancel</.ops_button>
+                  <.ops_button type="submit" variant={:primary}>Duplicate</.ops_button>
                 </div>
               </.form>
-            </div>
-          </div>
-        </div>
+          </.ops_modal>
+        </.ops_panel>
       </div>
     </Layouts.app>
     """

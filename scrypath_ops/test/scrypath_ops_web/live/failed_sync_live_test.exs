@@ -137,6 +137,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert html =~ "Failed sync jobs"
     assert html =~ "Refresh failed sync jobs"
     assert html =~ "Retry job"
+    assert html =~ "Retry re-enqueues the original sync work"
 
     assert Enum.any?(
              ~w(transport validation backend_rejected queue_exhausted unknown),
@@ -191,6 +192,18 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert assigns.last_refresh_at != nil
     assert assigns.load_error == nil
     assert assigns.inspection != nil
+  end
+
+  test "schema selector rejects non-allowlisted module strings without crashing", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+
+    mod_str = "ScrypathOps.Test.NotAllowlisted#{System.unique_integer([:positive])}"
+    html = render_change(view, "select_schema", %{"schema" => mod_str})
+
+    assert html =~ "Select an allowlisted schema."
+
+    assigns = :sys.get_state(view.pid).socket.assigns
+    assert assigns.selected_schema == OpsPostA
   end
 
   defp put_live_assigns(view, assigns) do

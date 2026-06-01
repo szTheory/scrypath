@@ -139,6 +139,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     html = render(lv)
     assert html =~ "Degraded"
     assert html =~ "/ops/failed-sync"
+    assert html =~ "Swaps the prepared target index into the live alias"
 
     [_before, rest] = String.split(html, ~s(data-testid="posture-next-checks"), parts: 2)
     [section | _] = String.split(rest, "</section>", parts: 2)
@@ -207,6 +208,22 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert inspect(updated_socket.redirected) =~ "return_to=%2Fops%2Fposture"
     assert Agent.get(:posture_live_test_state, & &1.swap_called) != true
     assert Agent.get(:posture_live_test_state, & &1.tasks_calls) == 0
+    assert updated_socket.assigns.local_ui_state == :keep
+  end
+
+  test "swap live rejects non-allowlisted module strings before gating" do
+    mod_str = "ScrypathOps.Test.NotAllowlisted#{System.unique_integer([:positive])}"
+
+    socket =
+      posture_socket(%{
+        schema_allowlist: [OpsPostA],
+        local_ui_state: :keep
+      })
+
+    assert {:noreply, updated_socket} =
+             PostureLive.handle_event("swap_live", %{"schema" => mod_str}, socket)
+
+    assert flash_value(updated_socket, "error") =~ "allowlisted"
     assert updated_socket.assigns.local_ui_state == :keep
   end
 

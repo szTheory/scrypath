@@ -21,17 +21,17 @@ defmodule ScrypathOpsWeb.SearchLive do
   def empty_or_hits_single(assigns) do
     ~H"""
     <%= if @result.hits == [] do %>
-      <div class="rounded-lg bg-base-200 p-lg">
-        <h2 class="text-heading font-semibold">No hits for this query.</h2>
+      <div class="rounded-lg bg-base-200 p-4">
+        <h2 class="text-base font-semibold">No hits for this query.</h2>
         <p class="mt-2 text-sm text-base-content/80">
           Widen filters or try another sample; see the honesty panel for merge ceilings and backend limits.
           (<a class="link link-primary" href={@guide_href}>guides/multi-index-search.md</a>).
         </p>
       </div>
     <% else %>
-      <ul class="space-y-sm">
+      <ul class="space-y-2">
         <%= for hit <- @result.hits do %>
-          <li class="rounded border border-base-300 p-sm font-mono text-xs">{inspect(hit)}</li>
+          <li class="rounded border border-base-300 p-2 font-mono text-xs">{inspect(hit)}</li>
         <% end %>
       </ul>
     <% end %>
@@ -564,7 +564,13 @@ defmodule ScrypathOpsWeb.SearchLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app mount_path={@mount_path} flash={@flash} shell={@shell} ops_main_width={:wide}>
+    <Layouts.app
+      mount_path={@mount_path}
+      flash={@flash}
+      shell={@shell}
+      page_title={@page_title}
+      ops_main_width={:wide}
+    >
       <div class="space-y-6">
         <.ops_page_header title={@page_title} />
 
@@ -572,115 +578,29 @@ defmodule ScrypathOpsWeb.SearchLive do
           <.link navigate={"#{@mount_path}/playbooks"} class="link link-hover">Saved playbooks</.link>
         </div>
 
-        <div
-          id="search-honesty-panel"
-          class="rounded-md border border-warning/40 bg-warning/10 px-sm py-sm text-sm text-base-content"
-        >
-          <strong>Non-production search playground</strong>
-          — exploratory queries may be logged by Meilisearch or proxies depending on deployment.
+        <.ops_notice id="search-honesty-panel" kind={:warning} title="Non-production search playground">
+          Exploratory queries may be logged by Meilisearch or proxies depending on deployment.
           <strong>Do not</strong>
           paste production secrets or PII; keep <code class="text-xs">page.size</code>
           and schema lists bounded.
-        </div>
+        </.ops_notice>
 
-        <div
-          class="card bg-base-100 border border-base-300 rounded-lg p-4 md:p-6 space-y-md"
-          aria-describedby="search-honesty-panel"
-        >
-          <h2 class="text-lg font-semibold">Save search as playbook</h2>
-          <p :if={@capture_base == nil} class="text-sm text-base-content/80">
-            <strong>Run a search first</strong>
-            — this panel captures the <strong>last successful</strong>
-            single- or multi-search inputs (including honesty caps on page size and schema count). After a successful run, set an optional title and description, review the JSON preview, then save under a
-            <code class="text-xs">*.json</code>
-            basename. Safety copy: see the honesty panel above.
-          </p>
-
-          <.form
-            :if={@capture_base != nil}
-            for={%{}}
-            as={:capture}
-            phx-change="capture_change"
-            phx-submit="save_search_capture"
-            class="space-y-md max-w-2xl"
-            id="search-capture-form"
-          >
-            <div class="grid gap-sm md:grid-cols-2">
-              <div>
-                <label class="label label-text text-sm font-semibold" for="capture_title">
-                  Title
-                </label>
-                <input
-                  id="capture_title"
-                  type="text"
-                  name="capture[title]"
-                  value={@capture_title}
-                  class="input input-bordered w-full"
-                  placeholder="Optional"
-                />
-              </div>
-              <div>
-                <label class="label label-text text-sm font-semibold" for="capture_basename">
-                  Basename (.json)
-                </label>
-                <input
-                  id="capture_basename"
-                  type="text"
-                  name="capture[basename]"
-                  value={@capture_basename}
-                  class="input input-bordered w-full font-mono text-sm"
-                  placeholder="my-search.json"
-                  required
-                />
-              </div>
-            </div>
-            <div>
-              <label class="label label-text text-sm font-semibold" for="capture_description">
-                Description
-              </label>
-              <textarea
-                id="capture_description"
-                name="capture[description]"
-                class="textarea textarea-bordered w-full text-sm min-h-24"
-                placeholder="Optional"
-              ><%= @capture_description %></textarea>
-            </div>
-
-            <p
-              :if={@capture_preview_ok?}
-              class="text-xs text-base-content/70"
-              data-testid="playbook-preview-marker"
-            >
-              Validated playbook preview
-            </p>
-            <pre
-              :if={@capture_preview_json}
-              class="max-h-96 overflow-auto rounded-md bg-base-200 p-sm text-xs font-mono whitespace-pre-wrap break-words"
-              data-testid="search-capture-preview-pre"
-            ><%= @capture_preview_json %></pre>
-
-            <button type="submit" class="btn btn-primary btn-sm min-h-10">
-              Save search as playbook
-            </button>
-          </.form>
-        </div>
-
-        <div class="card bg-base-100 border border-base-300 rounded-lg p-4 md:p-6 space-y-6">
-          <p :if={@schema_allowlist == []} class="text-base-content/80">
+        <.ops_panel class="space-y-6" aria-describedby="search-honesty-panel">
+          <.ops_empty_state :if={@schema_allowlist == []} title="No Schemas Configured">
             No schemas configured for OPSUI. Set <code class="text-sm">schema_allowlist</code>
             under <code class="text-sm">:scrypath_ops</code>
             or use <code class="text-sm">SCRYPATH_OPS_SCHEMAS</code>
             — see <code class="text-sm">scrypath_ops/README.md</code>.
-          </p>
+          </.ops_empty_state>
 
-          <p
+          <.ops_empty_state
             :if={@schema_allowlist != [] && !Keyword.has_key?(@scrypath_opts, :backend)}
-            class="text-base-content/80"
+            title="Runtime Not Configured"
           >
             Scrypath runtime is not configured (missing <code class="text-sm">:backend</code>
             and related
             options under <code class="text-sm">:scrypath_ops</code>). See <code class="text-sm">scrypath_ops/README.md</code>.
-          </p>
+          </.ops_empty_state>
 
           <.form
             for={%{}}
@@ -688,33 +608,31 @@ defmodule ScrypathOpsWeb.SearchLive do
             phx-submit="search"
             id="ops-search-playground-form"
             class={[
-              "space-y-md",
+              "space-y-5",
               if(@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend),
                 do: "opacity-50 pointer-events-none",
                 else: nil
               )
             ]}
           >
-            <fieldset class="space-y-sm border-0 p-0 m-0 min-w-0">
-              <legend class="text-sm font-semibold text-base-content mb-sm">Search mode</legend>
-              <div class="flex flex-wrap gap-sm">
-                <button
-                  type="button"
+            <fieldset class="space-y-2 border-0 p-0 m-0 min-w-0">
+              <legend class="mb-2 text-sm font-semibold text-base-content">Search mode</legend>
+              <div class="flex flex-wrap gap-2">
+                <.ops_button
                   phx-click="set_mode"
                   phx-value-mode="single"
-                  class={["btn", "btn-sm"] ++ if(@mode == :single, do: ["btn-primary"], else: [])}
+                  variant={if @mode == :single, do: :primary, else: :default}
                 >
                   Single index
-                </button>
-                <button
-                  type="button"
+                </.ops_button>
+                <.ops_button
                   phx-click="set_mode"
                   phx-value-mode="multi"
                   data-testid="search-mode-multi"
-                  class={["btn", "btn-sm"] ++ if(@mode == :multi, do: ["btn-primary"], else: [])}
+                  variant={if @mode == :multi, do: :primary, else: :default}
                 >
                   Multi index
-                </button>
+                </.ops_button>
               </div>
               <p :if={@mode == :single} class="text-sm text-base-content/80">
                 Merge order is a federation view — per-schema scores stay local. Multi index mode shows merge, weights, partial failures, and
@@ -725,8 +643,8 @@ defmodule ScrypathOpsWeb.SearchLive do
               </p>
             </fieldset>
 
-            <fieldset class="space-y-sm border-0 p-0 m-0 min-w-0">
-              <legend class="text-sm font-semibold text-base-content mb-sm">Query</legend>
+            <fieldset class="space-y-2 border-0 p-0 m-0 min-w-0">
+              <legend class="mb-2 text-sm font-semibold text-base-content">Query</legend>
               <div>
                 <label class="label label-text text-sm font-semibold" for="search_q">
                   Search text
@@ -743,8 +661,8 @@ defmodule ScrypathOpsWeb.SearchLive do
               </div>
             </fieldset>
 
-            <fieldset class="space-y-sm border-0 p-0 m-0 min-w-0">
-              <legend class="text-sm font-semibold text-base-content mb-sm">Limits / safety</legend>
+            <fieldset class="space-y-2 border-0 p-0 m-0 min-w-0">
+              <legend class="mb-2 text-sm font-semibold text-base-content">Limits / safety</legend>
               <p id="search-limits-copy" class="text-xs text-base-content/70">
                 Page size is capped at {SearchPlayground.max_page_size_allowed()} hits per request; keep queries bounded for operator safety.
               </p>
@@ -765,8 +683,8 @@ defmodule ScrypathOpsWeb.SearchLive do
               </div>
             </fieldset>
 
-            <fieldset :if={@mode == :single} class="space-y-sm border-0 p-0 m-0 min-w-0">
-              <legend class="text-sm font-semibold text-base-content mb-sm">
+            <fieldset :if={@mode == :single} class="space-y-2 border-0 p-0 m-0 min-w-0">
+              <legend class="mb-2 text-sm font-semibold text-base-content">
                 Federation / merge
               </legend>
               <label class="label label-text text-sm font-semibold" for="search_schema">Schema</label>
@@ -779,20 +697,20 @@ defmodule ScrypathOpsWeb.SearchLive do
               </select>
             </fieldset>
 
-            <fieldset :if={@mode == :multi} class="space-y-sm border-0 p-0 m-0 min-w-0">
-              <legend class="text-sm font-semibold text-base-content mb-sm">
+            <fieldset :if={@mode == :multi} class="space-y-2 border-0 p-0 m-0 min-w-0">
+              <legend class="mb-2 text-sm font-semibold text-base-content">
                 Federation / merge
               </legend>
-              <fieldset class="space-y-sm border border-base-300 rounded-md p-sm min-w-0">
+              <fieldset class="space-y-2 border border-base-300 rounded-md p-3 min-w-0">
                 <legend class="text-xs font-semibold text-base-content/80 px-1">
                   Schemas to include (search_many)
                 </legend>
                 <p class="text-sm text-base-content/80">
                   Select up to {SearchPlayground.max_schemas_allowed()} schema(s) for <code class="text-xs">search_many/2</code>.
                 </p>
-                <div class="flex flex-col gap-sm">
+                <div class="flex flex-col gap-2">
                   <%= for mod <- @schema_allowlist do %>
-                    <label class="flex cursor-pointer items-center gap-sm text-sm">
+                    <label class="flex cursor-pointer items-center gap-2 text-sm">
                       <input
                         type="checkbox"
                         name="schemas"
@@ -806,11 +724,11 @@ defmodule ScrypathOpsWeb.SearchLive do
               </fieldset>
             </fieldset>
 
-            <fieldset class="space-y-sm border-0 p-0 m-0 min-w-0">
-              <legend class="text-sm font-semibold text-base-content mb-sm">Actions</legend>
-              <button type="submit" class="btn btn-primary min-h-10">
+            <fieldset class="space-y-2 border-0 p-0 m-0 min-w-0">
+              <legend class="mb-2 text-sm font-semibold text-base-content">Actions</legend>
+              <.ops_button type="submit" variant={:primary} size={:md}>
                 Run sample searches
-              </button>
+              </.ops_button>
             </fieldset>
           </.form>
 
@@ -828,12 +746,12 @@ defmodule ScrypathOpsWeb.SearchLive do
             </div>
           </div>
 
-          <div :if={@result_single} class="space-y-md">
-            <h2 class="text-heading font-semibold">Results</h2>
+          <div :if={@result_single} class="space-y-3">
+            <h2 class="text-lg font-semibold">Results</h2>
             <.empty_or_hits_single result={@result_single} guide_href={@guide_href} />
           </div>
 
-          <div :if={@result_multi} class="space-y-md">
+          <div :if={@result_multi} class="space-y-3">
             <div id="search-federation-status" role="status" class="text-sm space-y-2">
               <p :if={@result_multi.failures == []} class="text-base-content/70">
                 All selected indexes returned results on this run.
@@ -870,7 +788,7 @@ defmodule ScrypathOpsWeb.SearchLive do
               </div>
             </div>
 
-            <div class="rounded-lg bg-base-200 p-lg text-sm">
+            <div class="rounded-lg bg-base-200 p-4 text-sm">
               <p class="font-semibold">Federation summary</p>
               <p class="mt-1 text-base-content/80">
                 <strong>Merged order is a federation view</strong>
@@ -885,7 +803,7 @@ defmodule ScrypathOpsWeb.SearchLive do
 
             <details
               :if={match?([_ | _], MultiSearchResult.merge_projection(@result_multi))}
-              class="rounded-lg bg-base-200 p-md"
+              class="rounded-lg bg-base-200 p-3"
             >
               <summary>
                 Merge trace ({length(MultiSearchResult.merge_projection(@result_multi))} row(s))
@@ -902,7 +820,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                 is_list(@result_multi.merge_hit_order) && @result_multi.merge_hit_order != [] &&
                   MultiSearchResult.merge_projection(@result_multi) == []
               }
-              class="rounded-lg bg-base-200 p-md"
+              class="rounded-lg bg-base-200 p-3"
             >
               <summary>
                 Merge trace ({length(@result_multi.merge_hit_order)} federation position(s))
@@ -914,7 +832,7 @@ defmodule ScrypathOpsWeb.SearchLive do
               </ol>
             </details>
 
-            <details :if={@result_multi.federation} class="rounded-lg bg-base-200 p-md">
+            <details :if={@result_multi.federation} class="rounded-lg bg-base-200 p-3">
               <summary>Federation metadata</summary>
               <p class="mt-2 text-xs text-base-content/60">
                 Per-entry weights are uniform when the backend does not expose per-entry overrides.
@@ -922,10 +840,10 @@ defmodule ScrypathOpsWeb.SearchLive do
               <pre class="mt-2 overflow-x-auto font-mono text-xs">{inspect(@result_multi.federation, pretty: true)}</pre>
             </details>
 
-            <div class="space-y-md">
-              <h2 class="text-heading font-semibold">Per-schema panels</h2>
+            <div class="space-y-3">
+              <h2 class="text-lg font-semibold">Per-schema panels</h2>
               <%= for {mod, sres} <- @result_multi.ordered do %>
-                <div class="rounded-lg border border-base-300 p-md">
+                <div class="rounded-lg border border-base-300 p-3">
                   <h3 class="font-mono text-sm font-semibold">{inspect(mod)}</h3>
                   <p class="text-xs text-base-content/70">
                     Hits: {length(sres.hits)} · estimatedTotalHits: {Map.get(
@@ -937,7 +855,82 @@ defmodule ScrypathOpsWeb.SearchLive do
               <% end %>
             </div>
           </div>
-        </div>
+
+          <div class="divider" />
+
+          <section aria-labelledby="search-capture-heading" class="space-y-3">
+            <h2 id="search-capture-heading" class="text-lg font-semibold">Save Search As Playbook</h2>
+            <p :if={@capture_base == nil} class="text-sm text-base-content/75">
+              Run a search first. This panel captures the last successful single- or multi-search inputs after you have inspected the result.
+            </p>
+
+            <.form
+              :if={@capture_base != nil}
+              for={%{}}
+              as={:capture}
+              phx-change="capture_change"
+              phx-submit="save_search_capture"
+              class="max-w-2xl space-y-4"
+              id="search-capture-form"
+            >
+              <div class="grid gap-3 md:grid-cols-2">
+                <div>
+                  <label class="label label-text text-sm font-semibold" for="capture_title">
+                    Title
+                  </label>
+                  <input
+                    id="capture_title"
+                    type="text"
+                    name="capture[title]"
+                    value={@capture_title}
+                    class="input input-bordered w-full"
+                    placeholder="Optional"
+                  />
+                </div>
+                <div>
+                  <label class="label label-text text-sm font-semibold" for="capture_basename">
+                    Basename (.json)
+                  </label>
+                  <input
+                    id="capture_basename"
+                    type="text"
+                    name="capture[basename]"
+                    value={@capture_basename}
+                    class="input input-bordered w-full font-mono text-sm"
+                    placeholder="my-search.json"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label class="label label-text text-sm font-semibold" for="capture_description">
+                  Description
+                </label>
+                <textarea
+                  id="capture_description"
+                  name="capture[description]"
+                  class="textarea textarea-bordered min-h-24 w-full text-sm"
+                  placeholder="Optional"
+                ><%= @capture_description %></textarea>
+              </div>
+
+              <p
+                :if={@capture_preview_ok?}
+                class="text-xs text-base-content/70"
+                data-testid="playbook-preview-marker"
+              >
+                Validated playbook preview
+              </p>
+              <.ops_code_block :if={@capture_preview_json} data-testid="search-capture-preview-pre">
+                {@capture_preview_json}
+              </.ops_code_block>
+
+              <.ops_button type="submit" variant={:primary}>
+                Save search as playbook
+              </.ops_button>
+            </.form>
+          </section>
+        </.ops_panel>
       </div>
     </Layouts.app>
     """

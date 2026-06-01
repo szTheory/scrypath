@@ -51,9 +51,13 @@ defmodule ScrypathOpsWeb.PostureLive do
   end
 
   def handle_event("swap_live", %{"schema" => mod_str}, socket) do
-    mod = mod_from_flat!(mod_str)
+    case mod_from_allowlist(mod_str, socket.assigns.schema_allowlist) do
+      {:ok, mod} ->
+        {:noreply, swap_live(socket, mod)}
 
-    {:noreply, swap_live(socket, mod)}
+      :error ->
+        {:noreply, put_flash(socket, :error, "Select an allowlisted schema.")}
+    end
   end
 
   defp load_posture(socket) do
@@ -239,11 +243,13 @@ defmodule ScrypathOpsWeb.PostureLive do
     mod |> Atom.to_string() |> String.replace_prefix("Elixir.", "")
   end
 
-  defp mod_from_flat!(str) when is_binary(str) do
+  defp mod_from_allowlist(str, allowlist) when is_binary(str) do
     name = String.trim(str)
 
-    Enum.find(ScrypathOps.Schemas.allowlist(), &(module_flat_name(&1) == name)) ||
-      raise ArgumentError, "unsupported schema"
+    case Enum.find(allowlist, &(module_flat_name(&1) == name)) do
+      nil -> :error
+      mod -> {:ok, mod}
+    end
   end
 
   defp sort_rows(rows) do
@@ -259,16 +265,21 @@ defmodule ScrypathOpsWeb.PostureLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app mount_path={@mount_path} flash={@flash} shell={@shell}>
+    <Layouts.app
+      mount_path={@mount_path}
+      flash={@flash}
+      shell={@shell}
+      page_title={@page_title}
+      ops_main_width={:wide}
+    >
       <div class="flex flex-wrap items-end justify-between gap-4">
-        <.ops_page_header title={@page_title} />
-        <button
-          type="button"
-          phx-click="refresh"
-          class="btn btn-sm btn-primary"
-        >
+        <.ops_page_header
+          title={@page_title}
+          subtitle="Refresh allowlisted schemas, inspect queue/backend posture, and promote a prepared index only when the signals are quiet."
+        />
+        <.ops_button phx-click="refresh" variant={:primary}>
           Refresh posture
-        </button>
+        </.ops_button>
       </div>
 
       <.ops_panel :if={@next_checks != []}>
@@ -302,17 +313,25 @@ defmodule ScrypathOpsWeb.PostureLive do
         Auto-refresh is not enabled by default; only manual refresh runs in this build.
       </p>
 
-      <p :if={@posture_rows == :empty_allowlist} class="mt-4 text-base-content/80">
+      <.ops_empty_state
+        :if={@posture_rows == :empty_allowlist}
+        title="No Schemas Configured"
+        class="mt-4"
+      >
         No schemas configured for OPSUI. Set <code class="text-sm">schema_allowlist</code>
         under <code class="text-sm">:scrypath_ops</code>
         or use <code class="text-sm">SCRYPATH_OPS_SCHEMAS</code>
         — see <code class="text-sm">scrypath_ops/README.md</code>.
-      </p>
+      </.ops_empty_state>
 
-      <p :if={@posture_rows == :missing_backend} class="mt-4 text-base-content/80">
+      <.ops_empty_state
+        :if={@posture_rows == :missing_backend}
+        title="Runtime Not Configured"
+        class="mt-4"
+      >
         Scrypath runtime is not configured (missing <code class="text-sm">:backend</code> and related
         options under <code class="text-sm">:scrypath_ops</code>). See <code class="text-sm">scrypath_ops/README.md</code>.
-      </p>
+      </.ops_empty_state>
 
       <.ops_panel :if={match?({:ok, _}, @posture_rows)}>
         <section aria-labelledby="posture-fleet-heading">
@@ -366,15 +385,17 @@ defmodule ScrypathOpsWeb.PostureLive do
                         <td>{length(status.queue.failed)}</td>
                         <td>{format_state_ts(status.queue.last_succeeded)}</td>
                         <td>
-                          <button
-                            type="button"
+                          <p class="mb-2 max-w-xs text-xs text-base-content/70">
+                            Swaps the prepared target index into the live alias for this schema.
+                          </p>
+                          <.ops_button
                             phx-click="swap_live"
                             phx-value-schema={module_flat_name(mod)}
-                            class="btn btn-xs btn-outline"
                             phx-disable-with="Swapping..."
+                            size={:xs}
                           >
                             Swap live index
-                          </button>
+                          </.ops_button>
                         </td>
                       <% {:error, reason} -> %>
                         <td class="font-mono text-xs">{inspect(mod)}</td>
@@ -394,16 +415,16 @@ defmodule ScrypathOpsWeb.PostureLive do
   end
 
   defp posture_next_checks_class("Degraded"),
-    do: "rounded-lg border border-transparent alert alert-warning p-3"
+    do: "rounded-md border border-warning/40 bg-warning/10 p-3"
 
   defp posture_next_checks_class("Broken"),
-    do: "rounded-lg border border-transparent alert alert-error p-3"
+    do: "rounded-md border border-error/40 bg-error/10 p-3"
 
   defp posture_next_checks_class("Not configured"),
-    do: "rounded-lg border border-transparent alert alert-warning p-3"
+    do: "rounded-md border border-warning/40 bg-warning/10 p-3"
 
   defp posture_next_checks_class(_),
-    do: "rounded-lg border border-base-300 bg-base-200/40 p-3"
+    do: "ops-muted-panel p-3"
 
   defp format_dt(nil), do: "—"
 

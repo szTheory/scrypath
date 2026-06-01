@@ -48,12 +48,16 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   end
 
   def handle_event("select_schema", %{"schema" => mod_str}, socket) do
-    mod = mod_from_flat!(mod_str)
+    case mod_from_allowlist(mod_str, socket.assigns.schema_allowlist) do
+      {:ok, mod} ->
+        {:noreply,
+         socket
+         |> assign(:selected_schema, mod)
+         |> refresh_inspection()}
 
-    {:noreply,
-     socket
-     |> assign(:selected_schema, mod)
-     |> refresh_inspection()}
+      :error ->
+        {:noreply, put_flash(socket, :error, "Select an allowlisted schema.")}
+    end
   end
 
   def handle_event("toggle_compact", _params, socket) do
@@ -147,11 +151,13 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     mod |> Atom.to_string() |> String.replace_prefix("Elixir.", "")
   end
 
-  defp mod_from_flat!(str) when is_binary(str) do
+  defp mod_from_allowlist(str, allowlist) when is_binary(str) do
     name = String.trim(str)
 
-    Enum.find(ScrypathOps.Schemas.allowlist(), &(module_flat_name(&1) == name)) ||
-      raise ArgumentError, "unsupported schema"
+    case Enum.find(allowlist, &(module_flat_name(&1) == name)) do
+      nil -> :error
+      mod -> {:ok, mod}
+    end
   end
 
   defp sorted_entries(%FailedSyncWorkInspection{entries: entries}) do
@@ -175,44 +181,42 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app mount_path={@mount_path} flash={@flash} shell={@shell}>
+    <Layouts.app mount_path={@mount_path} flash={@flash} shell={@shell} page_title={@page_title}>
       <div class="flex flex-wrap items-end justify-between gap-4">
-        <.ops_page_header title={@page_title} />
+        <.ops_page_header
+          title={@page_title}
+          subtitle="Triage failed queue/backend work without exposing raw task payloads or hiding retry tradeoffs."
+        />
         <div class="flex flex-wrap gap-2">
-          <button type="button" phx-click="refresh" class="btn btn-sm btn-primary">
+          <.ops_button phx-click="refresh" variant={:primary}>
             Refresh failed sync jobs
-          </button>
-          <button type="button" phx-click="toggle_compact" class="btn btn-sm">
+          </.ops_button>
+          <.ops_button phx-click="toggle_compact">
             Toggle compact mode
-          </button>
+          </.ops_button>
         </div>
       </div>
 
-      <form :if={@schema_allowlist != []} class="mt-4 flex flex-wrap items-center gap-2">
-        <label for="schema-select" class="text-sm">Schema</label>
-        <select
-          id="schema-select"
-          name="schema"
-          class="select select-bordered select-sm"
-          phx-change="select_schema"
-        >
-          <%= for mod <- @schema_allowlist do %>
-            <option value={module_flat_name(mod)} selected={mod == @selected_schema}>
-              {module_flat_name(mod)}
-            </option>
-          <% end %>
-        </select>
-      </form>
+      <.ops_schema_select
+        id="schema-select"
+        schemas={@schema_allowlist}
+        selected={@selected_schema}
+        phx-change="select_schema"
+        class="mt-4"
+      />
 
-      <p :if={@load_error == :no_schemas} class="mt-4 text-base-content/80">
-        No schemas configured — set <code class="text-sm">schema_allowlist</code>
-        in <code class="text-sm">:scrypath_ops</code>
-        (see README).
-      </p>
+      <.ops_empty_state :if={@load_error == :no_schemas} title="No Schemas Configured" class="mt-4">
+        Set <code class="text-sm">schema_allowlist</code>
+        in <code class="text-sm">:scrypath_ops</code>.
+      </.ops_empty_state>
 
-      <p :if={@load_error == :missing_backend} class="mt-4 text-base-content/80">
+      <.ops_empty_state
+        :if={@load_error == :missing_backend}
+        title="Runtime Not Configured"
+        class="mt-4"
+      >
         Scrypath runtime is not configured — see <code class="text-sm">scrypath_ops/README.md</code>.
-      </p>
+      </.ops_empty_state>
 
       <p
         :if={@inspection == nil && @load_error && @load_error not in [:no_schemas, :missing_backend]}
@@ -223,17 +227,23 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
 
       <.ops_panel :if={@inspection}>
         <section aria-labelledby="failed-sync-rollups-heading">
-          <div class={["rounded border border-base-300 p-3", @compact_mode && "hidden"]}>
+          <div class={["grid gap-3 sm:grid-cols-2 lg:grid-cols-6", @compact_mode && "hidden"]}>
             <h2
               id="failed-sync-rollups-heading"
-              class="text-sm font-semibold uppercase tracking-wide text-base-content/70"
+              class="sr-only"
             >
               Rollups
             </h2>
-            <p class="mt-2 font-mono text-sm tabular-nums">
-              total <span class="font-bold">{@inspection.counts.total}</span>
-              · transport {@inspection.counts.by_class.transport} · validation {@inspection.counts.by_class.validation} · backend_rejected {@inspection.counts.by_class.backend_rejected} · queue_exhausted {@inspection.counts.by_class.queue_exhausted} · unknown {@inspection.counts.by_class.unknown}
-            </p>
+            <.ops_metric
+              label="Total"
+              value={@inspection.counts.total}
+              tone={metric_tone(@inspection.counts.total)}
+            />
+            <.ops_metric label="Transport" value={@inspection.counts.by_class.transport} />
+            <.ops_metric label="Validation" value={@inspection.counts.by_class.validation} />
+            <.ops_metric label="Backend" value={@inspection.counts.by_class.backend_rejected} />
+            <.ops_metric label="Queue" value={@inspection.counts.by_class.queue_exhausted} />
+            <.ops_metric label="Unknown" value={@inspection.counts.by_class.unknown} />
           </div>
 
           <p class="mt-4 text-xs text-base-content/60">
@@ -246,7 +256,15 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
           <h2 id="failed-sync-table-heading" class="text-base font-semibold text-base-content">
             Failed sync jobs
           </h2>
-          <div class="mt-2 overflow-x-auto min-w-0">
+          <.ops_empty_state
+            :if={@inspection.counts.total == 0}
+            title="No Failed Sync Jobs"
+            class="mt-2"
+          >
+            No failed sync work is visible for this schema. Keep checking posture and drift before changing indexes.
+          </.ops_empty_state>
+
+          <div :if={@inspection.counts.total > 0} class="mt-2 overflow-x-auto min-w-0">
             <table class="table table-zebra table-sm">
               <thead>
                 <tr>
@@ -291,15 +309,19 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                           <code class="text-xs">guides/operator-mix-tasks.md</code>
                         </p>
                         <div :if={row.recovery} class="mt-3">
-                          <button
-                            type="button"
+                          <p class="mb-2 max-w-sm text-xs text-base-content/70">
+                            Retry re-enqueues the original sync work and keeps this row visible until
+                            the backend confirms recovery.
+                          </p>
+                          <.ops_button
                             phx-click="retry"
                             phx-value-id={row.id}
                             data-testid="failed-sync-retry"
-                            class="btn btn-xs btn-primary"
+                            variant={:primary}
+                            size={:xs}
                           >
                             Retry job
-                          </button>
+                          </.ops_button>
                         </div>
                       </details>
                     </td>
@@ -319,4 +341,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp format_dt(%DateTime{} = dt) do
     Calendar.strftime(dt, "%Y-%m-%d %H:%M:%SZ")
   end
+
+  defp metric_tone(0), do: :success
+  defp metric_tone(_), do: :warning
 end
