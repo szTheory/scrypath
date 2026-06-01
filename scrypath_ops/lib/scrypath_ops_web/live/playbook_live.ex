@@ -854,12 +854,12 @@ defmodule ScrypathOpsWeb.PlaybookLive do
         </.ops_notice>
 
         <.ops_panel class="space-y-6">
-          <div class="flex flex-wrap items-center justify-between gap-3">
+          <.ops_toolbar>
             <h2 class="text-lg font-semibold">Workspace files</h2>
             <.ops_button phx-click="refresh_list" variant={:ghost}>
               Reload list
             </.ops_button>
-          </div>
+          </.ops_toolbar>
 
           <p :if={@examples_mode?} class="text-sm text-base-content/80">
             Examples (read-only) — set <code class="text-sm">SCRYPATH_OPS_PLAYBOOK_DIR</code>

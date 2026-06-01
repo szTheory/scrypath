@@ -200,44 +200,42 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
       <.ops_panel>
         <section aria-labelledby="sync-reconcile-heading" class="mt-2 space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-2">
+          <.ops_toolbar class="gap-2">
             <h2 id="sync-reconcile-heading" class="text-lg font-semibold">Sync & queue posture</h2>
             <.ops_button phx-click="refresh_reconcile" variant={:primary}>
               Refresh reconcile
             </.ops_button>
-          </div>
+          </.ops_toolbar>
 
           <p :if={@reconcile_loaded_at} class="text-xs text-base-content/60">
             Last loaded: <span class="font-mono tabular-nums">{format_dt(@reconcile_loaded_at)}</span>
           </p>
 
-          <div
+          <.ops_table
             :if={@reconcile_result}
-            class="rounded border border-base-300 p-3 text-sm overflow-x-auto min-w-0"
+            class="rounded border border-base-300 p-3 text-sm"
           >
-            <table class="table table-sm">
-              <thead>
-                <tr>
-                  <th scope="col">Signal</th>
-                  <th scope="col">Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th scope="row" class="font-medium align-top">Index</th>
-                  <td><code class="text-xs">{@reconcile_result.index}</code></td>
-                </tr>
-                <tr>
-                  <th scope="row" class="font-medium align-top">Mode</th>
-                  <td>{@reconcile_result.mode}</td>
-                </tr>
-                <tr>
-                  <th scope="row" class="font-medium align-top">Drift signals</th>
-                  <td class="font-mono text-xs">{inspect(@reconcile_result.drift_signals)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+            <thead>
+              <tr>
+                <th scope="col">Signal</th>
+                <th scope="col">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row" class="font-medium align-top">Index</th>
+                <td><code class="text-xs">{@reconcile_result.index}</code></td>
+              </tr>
+              <tr>
+                <th scope="row" class="font-medium align-top">Mode</th>
+                <td>{@reconcile_result.mode}</td>
+              </tr>
+              <tr>
+                <th scope="row" class="font-medium align-top">Drift signals</th>
+                <td class="font-mono text-xs">{inspect(@reconcile_result.drift_signals)}</td>
+              </tr>
+            </tbody>
+          </.ops_table>
 
           <p :if={@reconcile_result == nil && @selected_schema} class="text-sm text-base-content/70">
             Reconcile not loaded yet — choose a schema or tap “Refresh reconcile”.
@@ -247,7 +245,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
       <.ops_panel>
         <section aria-labelledby="sync-drift-heading" class="mt-2 space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-2">
+          <.ops_toolbar class="gap-2">
             <h2 id="sync-drift-heading" class="text-lg font-semibold">
               Index contract (declared vs live)
             </h2>
@@ -263,7 +261,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
                 Swap live index
               </.ops_button>
             </div>
-          </div>
+          </.ops_toolbar>
 
           <p :if={@drift_loaded_at} class="text-xs text-base-content/60">
             Last loaded: <span class="font-mono tabular-nums">{format_dt(@drift_loaded_at)}</span>
@@ -273,31 +271,29 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             Drift error (reconcile above stays usable): {inspect(@drift_error)}
           </p>
 
-          <div
+          <.ops_table
             :if={@drift_result}
-            class="rounded border border-base-300 p-3 text-sm overflow-x-auto min-w-0"
+            class="rounded border border-base-300 p-3 text-sm"
           >
-            <table class="table table-sm">
-              <thead>
-                <tr>
-                  <th scope="col">Field</th>
-                  <th scope="col">Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th scope="row" class="font-medium align-top">Summary</th>
-                  <td>Index contract snapshot</td>
-                </tr>
-                <tr>
-                  <th scope="row" class="font-medium align-top">Version · index</th>
-                  <td class="font-mono text-xs tabular-nums">
-                    version {@drift_result.version} · index {@drift_result.index}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+            <thead>
+              <tr>
+                <th scope="col">Field</th>
+                <th scope="col">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row" class="font-medium align-top">Summary</th>
+                <td>Index contract snapshot</td>
+              </tr>
+              <tr>
+                <th scope="row" class="font-medium align-top">Version · index</th>
+                <td class="font-mono text-xs tabular-nums">
+                  version {@drift_result.version} · index {@drift_result.index}
+                </td>
+              </tr>
+            </tbody>
+          </.ops_table>
 
           <p :if={@drift_result == nil && @drift_error == nil} class="text-sm text-base-content/70">
             Contract drift has not been loaded yet — it runs only after the explicit control.

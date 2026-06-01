@@ -182,7 +182,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   def render(assigns) do
     ~H"""
     <Layouts.app mount_path={@mount_path} flash={@flash} shell={@shell} page_title={@page_title}>
-      <div class="flex flex-wrap items-end justify-between gap-4">
+      <.ops_toolbar class="items-end gap-4">
         <.ops_page_header
           title={@page_title}
           subtitle="Triage failed queue/backend work without exposing raw task payloads or hiding retry tradeoffs."
@@ -195,7 +195,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             Toggle compact mode
           </.ops_button>
         </div>
-      </div>
+      </.ops_toolbar>
 
       <.ops_schema_select
         id="schema-select"
@@ -264,72 +264,70 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             No failed sync work is visible for this schema. Keep checking posture and drift before changing indexes.
           </.ops_empty_state>
 
-          <div :if={@inspection.counts.total > 0} class="mt-2 overflow-x-auto min-w-0">
-            <table class="table table-zebra table-sm">
-              <thead>
-                <tr>
-                  <th scope="col">ID</th>
-                  <th scope="col">reason_class</th>
-                  <th scope="col">Operation</th>
-                  <th scope="col">State</th>
-                  <th scope="col">Source</th>
-                  <th scope="col">Last attempt</th>
-                  <th scope="col">Detail</th>
-                </tr>
-              </thead>
-              <tbody class="text-sm leading-snug tabular-nums">
-                <%= for row <- sorted_entries(@inspection) do %>
-                  <tr id={"failed-#{row.id}"} data-testid="failed-sync-row">
-                    <td class="font-mono text-xs">{inspect(row.id)}</td>
-                    <td>{reason_class_label(row.reason_class)}</td>
-                    <td>{row.operation}</td>
-                    <td>{row.state}</td>
-                    <td>{row.source}</td>
-                    <td class="font-mono text-xs">
-                      {format_dt(row.last_attempt_at || row.failed_at)}
-                    </td>
-                    <td>
-                      <details id={"failed-detail-#{row.id}"}>
-                        <summary
-                          class="cursor-pointer text-sm"
-                          aria-label={"Row detail for job #{inspect(row.id)}"}
-                        >
-                          Row detail
-                        </summary>
-                        <pre
-                          id={"failed-detail-body-#{row.id}"}
-                          class="mt-2 max-h-48 overflow-auto text-xs whitespace-pre-wrap"
-                        ><%= row.reason %></pre>
-                        <pre
-                          :if={map_size(row.metadata) > 0}
-                          class="mt-2 text-xs"
-                        ><%= inspect(row.metadata, pretty: true) %></pre>
-                        <p class="mt-2 text-xs">
-                          See guides: <code class="text-xs">guides/drift-recovery.md</code>,
-                          <code class="text-xs">guides/operator-mix-tasks.md</code>
+          <.ops_table :if={@inspection.counts.total > 0} zebra class="mt-2">
+            <thead>
+              <tr>
+                <th scope="col">ID</th>
+                <th scope="col">reason_class</th>
+                <th scope="col">Operation</th>
+                <th scope="col">State</th>
+                <th scope="col">Source</th>
+                <th scope="col">Last attempt</th>
+                <th scope="col">Detail</th>
+              </tr>
+            </thead>
+            <tbody class="text-sm leading-snug tabular-nums">
+              <%= for row <- sorted_entries(@inspection) do %>
+                <tr id={"failed-#{row.id}"} data-testid="failed-sync-row">
+                  <td class="font-mono text-xs">{inspect(row.id)}</td>
+                  <td>{reason_class_label(row.reason_class)}</td>
+                  <td>{row.operation}</td>
+                  <td>{row.state}</td>
+                  <td>{row.source}</td>
+                  <td class="font-mono text-xs">
+                    {format_dt(row.last_attempt_at || row.failed_at)}
+                  </td>
+                  <td>
+                    <details id={"failed-detail-#{row.id}"}>
+                      <summary
+                        class="cursor-pointer text-sm"
+                        aria-label={"Row detail for job #{inspect(row.id)}"}
+                      >
+                        Row detail
+                      </summary>
+                      <pre
+                        id={"failed-detail-body-#{row.id}"}
+                        class="mt-2 max-h-48 overflow-auto text-xs whitespace-pre-wrap"
+                      ><%= row.reason %></pre>
+                      <pre
+                        :if={map_size(row.metadata) > 0}
+                        class="mt-2 text-xs"
+                      ><%= inspect(row.metadata, pretty: true) %></pre>
+                      <p class="mt-2 text-xs">
+                        See guides: <code class="text-xs">guides/drift-recovery.md</code>,
+                        <code class="text-xs">guides/operator-mix-tasks.md</code>
+                      </p>
+                      <div :if={row.recovery} class="mt-3">
+                        <p class="mb-2 max-w-sm text-xs text-base-content/70">
+                          Retry re-enqueues the original sync work and keeps this row visible until
+                          the backend confirms recovery.
                         </p>
-                        <div :if={row.recovery} class="mt-3">
-                          <p class="mb-2 max-w-sm text-xs text-base-content/70">
-                            Retry re-enqueues the original sync work and keeps this row visible until
-                            the backend confirms recovery.
-                          </p>
-                          <.ops_button
-                            phx-click="retry"
-                            phx-value-id={row.id}
-                            data-testid="failed-sync-retry"
-                            variant={:primary}
-                            size={:xs}
-                          >
-                            Retry job
-                          </.ops_button>
-                        </div>
-                      </details>
-                    </td>
-                  </tr>
-                <% end %>
-              </tbody>
-            </table>
-          </div>
+                        <.ops_button
+                          phx-click="retry"
+                          phx-value-id={row.id}
+                          data-testid="failed-sync-retry"
+                          variant={:primary}
+                          size={:xs}
+                        >
+                          Retry job
+                        </.ops_button>
+                      </div>
+                    </details>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </.ops_table>
         </section>
       </.ops_panel>
     </Layouts.app>

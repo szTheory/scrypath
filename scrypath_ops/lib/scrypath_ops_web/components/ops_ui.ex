@@ -56,6 +56,23 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
+  @doc "Responsive table wrapper for dense operator data."
+  attr(:zebra, :boolean, default: false)
+  attr(:class, :any, default: nil)
+  attr(:table_class, :any, default: nil)
+  attr(:rest, :global)
+  slot(:inner_block, required: true)
+
+  def ops_table(assigns) do
+    ~H"""
+    <div class={["overflow-x-auto min-w-0", @class]} {@rest}>
+      <table class={["table table-sm", @zebra && "table-zebra", @table_class]}>
+        {render_slot(@inner_block)}
+      </table>
+    </div>
+    """
+  end
+
   @doc "Button styling wrapper for operator actions."
   attr(:variant, :atom,
     default: :default,

@@ -272,7 +272,7 @@ defmodule ScrypathOpsWeb.PostureLive do
       page_title={@page_title}
       ops_main_width={:wide}
     >
-      <div class="flex flex-wrap items-end justify-between gap-4">
+      <.ops_toolbar class="items-end gap-4">
         <.ops_page_header
           title={@page_title}
           subtitle="Refresh allowlisted schemas, inspect queue/backend posture, and promote a prepared index only when the signals are quiet."
@@ -280,7 +280,7 @@ defmodule ScrypathOpsWeb.PostureLive do
         <.ops_button phx-click="refresh" variant={:primary}>
           Refresh posture
         </.ops_button>
-      </div>
+      </.ops_toolbar>
 
       <.ops_panel :if={@next_checks != []}>
         <section
@@ -344,70 +344,68 @@ defmodule ScrypathOpsWeb.PostureLive do
             <span class="font-mono text-xs tabular-nums">{format_dt(@last_refresh_at)}</span>
           </p>
 
-          <div class="mt-3 overflow-x-auto min-w-0">
-            <table class="table table-zebra table-sm">
-              <thead>
-                <tr>
-                  <th scope="col">Schema</th>
-                  <th scope="col">Index</th>
-                  <th scope="col">sync_mode</th>
-                  <th scope="col">Backend pending</th>
-                  <th scope="col">Backend failed</th>
-                  <th scope="col">Backend last OK</th>
-                  <th scope="col">Queue observed</th>
-                  <th scope="col">Queue pending</th>
-                  <th scope="col">Queue retrying</th>
-                  <th scope="col">Queue failed</th>
-                  <th scope="col">Queue last OK</th>
-                  <th scope="col">Actions</th>
+          <.ops_table zebra class="mt-3">
+            <thead>
+              <tr>
+                <th scope="col">Schema</th>
+                <th scope="col">Index</th>
+                <th scope="col">sync_mode</th>
+                <th scope="col">Backend pending</th>
+                <th scope="col">Backend failed</th>
+                <th scope="col">Backend last OK</th>
+                <th scope="col">Queue observed</th>
+                <th scope="col">Queue pending</th>
+                <th scope="col">Queue retrying</th>
+                <th scope="col">Queue failed</th>
+                <th scope="col">Queue last OK</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="text-sm leading-snug tabular-nums">
+              <%= for {mod, row} <- elem(@posture_rows, 1) do %>
+                <tr data-testid="posture-row" id={"posture-#{inspect(mod)}"}>
+                  <%= case row do %>
+                    <% {:ok, status} -> %>
+                      <td class="font-mono text-xs">{inspect(mod)}</td>
+                      <td class="font-mono text-xs">{status.index}</td>
+                      <td>{status.mode}</td>
+                      <td>{length(status.backend.pending)}</td>
+                      <td>{length(status.backend.failed)}</td>
+                      <td>{format_state_ts(status.backend.last_succeeded)}</td>
+                      <td>
+                        <%= if status.queue.observed? do %>
+                          true
+                        <% else %>
+                          <span class="text-warning">queue not observed</span>
+                        <% end %>
+                      </td>
+                      <td>{length(status.queue.pending)}</td>
+                      <td>{length(status.queue.retrying)}</td>
+                      <td>{length(status.queue.failed)}</td>
+                      <td>{format_state_ts(status.queue.last_succeeded)}</td>
+                      <td>
+                        <p class="mb-2 max-w-xs text-xs text-base-content/70">
+                          Swaps the prepared target index into the live alias for this schema.
+                        </p>
+                        <.ops_button
+                          phx-click="swap_live"
+                          phx-value-schema={module_flat_name(mod)}
+                          phx-disable-with="Swapping..."
+                          size={:xs}
+                        >
+                          Swap live index
+                        </.ops_button>
+                      </td>
+                    <% {:error, reason} -> %>
+                      <td class="font-mono text-xs">{inspect(mod)}</td>
+                      <td colspan="11" class="text-error">
+                        fetch error: {inspect(reason)}
+                      </td>
+                  <% end %>
                 </tr>
-              </thead>
-              <tbody class="text-sm leading-snug tabular-nums">
-                <%= for {mod, row} <- elem(@posture_rows, 1) do %>
-                  <tr data-testid="posture-row" id={"posture-#{inspect(mod)}"}>
-                    <%= case row do %>
-                      <% {:ok, status} -> %>
-                        <td class="font-mono text-xs">{inspect(mod)}</td>
-                        <td class="font-mono text-xs">{status.index}</td>
-                        <td>{status.mode}</td>
-                        <td>{length(status.backend.pending)}</td>
-                        <td>{length(status.backend.failed)}</td>
-                        <td>{format_state_ts(status.backend.last_succeeded)}</td>
-                        <td>
-                          <%= if status.queue.observed? do %>
-                            true
-                          <% else %>
-                            <span class="text-warning">queue not observed</span>
-                          <% end %>
-                        </td>
-                        <td>{length(status.queue.pending)}</td>
-                        <td>{length(status.queue.retrying)}</td>
-                        <td>{length(status.queue.failed)}</td>
-                        <td>{format_state_ts(status.queue.last_succeeded)}</td>
-                        <td>
-                          <p class="mb-2 max-w-xs text-xs text-base-content/70">
-                            Swaps the prepared target index into the live alias for this schema.
-                          </p>
-                          <.ops_button
-                            phx-click="swap_live"
-                            phx-value-schema={module_flat_name(mod)}
-                            phx-disable-with="Swapping..."
-                            size={:xs}
-                          >
-                            Swap live index
-                          </.ops_button>
-                        </td>
-                      <% {:error, reason} -> %>
-                        <td class="font-mono text-xs">{inspect(mod)}</td>
-                        <td colspan="11" class="text-error">
-                          fetch error: {inspect(reason)}
-                        </td>
-                    <% end %>
-                  </tr>
-                <% end %>
-              </tbody>
-            </table>
-          </div>
+              <% end %>
+            </tbody>
+          </.ops_table>
         </section>
       </.ops_panel>
     </Layouts.app>
