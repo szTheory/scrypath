@@ -76,7 +76,7 @@ Current state:
 
 - `guides/outside-adopter-intake.md` defines the evidence path
 - `mix verify.adopter` and the Phoenix example defend the in-repo route
-- future feature breadth should reopen only with reviewed outside-adopter evidence or a concrete production bug
+- future feature breadth should reopen only through [scope-and-reopen-policy](../guides/scope-and-reopen-policy.md): a **concrete production bug**, **reviewed outside-adopter evidence**, or a **deliberate strategic product decision**
 
 Priority:
 
@@ -187,6 +187,8 @@ These should stay out of the default roadmap pull until real adoption pressure s
 - personalization
 - analytics-heavy search product features
 - trying to turn Scrypath into a full hosted-search platform
+
+Future reopening for these non-goals should still route through [scope-and-reopen-policy](../guides/scope-and-reopen-policy.md) and use the same three triggers: **concrete production bug**, **reviewed outside-adopter evidence**, or **deliberate strategic product decision**.
 
 The repo's current discipline here is correct. Mature ecosystems show that widening too early creates confusing abstractions and weakens the core indexing/sync story.
 
