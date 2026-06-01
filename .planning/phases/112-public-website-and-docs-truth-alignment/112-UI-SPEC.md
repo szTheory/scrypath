@@ -1,10 +1,11 @@
 ---
 phase: 112
 slug: public-website-and-docs-truth-alignment
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-06-01
+reviewed_at: 2026-06-01T00:00:00-04:00
 ---
 
 # Phase 112 — UI Design Contract
@@ -67,6 +68,12 @@ Accent reserved for: homepage/docs/evaluate primary route links, GitHub star/act
 
 ---
 
+## Visual Hierarchy
+
+Primary screen focal point: the first interactive destination row on the homepage must draw first attention, with `Read the Docs` as the dominant route. Secondary routes to guides, examples, Hex, and GitHub should remain visible but visually quieter.
+
+---
+
 ## Copywriting Contract
 
 | Element | Copy |
@@ -90,11 +97,11 @@ Accent reserved for: homepage/docs/evaluate primary route links, GitHub star/act
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved
