@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.30
 milestone_name: Release Trust and Evidence Maintenance
-status: executing
-last_updated: "2026-06-01T16:18:52.941Z"
+status: verifying
+last_updated: "2026-06-01T16:23:59.163Z"
 last_activity: 2026-06-01
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 11
-  completed_plans: 10
-  percent: 75
+  completed_plans: 11
+  percent: 100
 ---
 
 # Project State
@@ -24,7 +24,7 @@ progress:
 
 Phase: 112 (public-website-and-docs-truth-alignment) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-01
 
 ## Performance Metrics
@@ -52,6 +52,7 @@ Last activity: 2026-06-01
 | Phase 111 P02 | 25min | 1 tasks | 6 files |
 | Phase 112 P01 | 16m | 2 tasks | 5 files |
 | Phase 112 P02 | 2m | 2 tasks | 4 files |
+| Phase 112-public-website-and-docs-truth-alignment P04 | 26m | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -79,7 +80,7 @@ Last activity: 2026-06-01
 
 ## Session Continuity
 
-- **Last Session:** 2026-06-01T16:18:52.937Z
+- **Last Session:** 2026-06-01T16:23:59.160Z
 
 - [x] Initialized v1.28 roadmap with Phases 102-105.
 
@@ -117,6 +118,8 @@ Last activity: 2026-06-01
 - [Phase 112]: Kept scope/reopen policy single-sourced in guides/scope-and-reopen-policy.md and routed README/support/intake surfaces to it.
 - [Phase 112]: Routed guide-map and sync semantics scope pressure to guides/scope-and-reopen-policy.md while keeping visibility semantics explicit.
 - [Phase 112]: Standardized maintainer-facing reopen language on concrete production bug, reviewed outside-adopter evidence, or deliberate strategic product decision.
+- [Phase 112]: Scoped misleading-claim negatives so evaluate-page non-fit wording stays legal while positive drift tokens remain forbidden.
+- [Phase 112]: Added standalone mix verify.phase112 with focused file list, self-test coverage, and preferred_env registration without widening CI lanes.
 
 ## Operator Next Steps
 
