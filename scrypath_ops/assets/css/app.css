@@ -747,6 +747,38 @@
   transition-timing-function: var(--ease-ops-standard);
 }
 
+/* One-shot reveals. Opacity/transform only — never animate <details> height (auto
+   height can't transition and would reflow). Neutralized by reduced-motion below. */
+.ops-disclosure[open] > .ops-disclosure-body {
+  animation: ops-fade-in var(--duration-ops-standard) var(--ease-ops-standard);
+}
+
+.modal-open > .modal-box {
+  animation: ops-modal-in var(--duration-ops-slow) var(--ease-ops-out);
+}
+
+@keyframes ops-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ops-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

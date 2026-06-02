@@ -830,7 +830,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       <summary class="cursor-pointer text-sm font-medium text-base-content">
         {@summary}
       </summary>
-      <div class="mt-2 text-sm text-base-content/80">
+      <div class="ops-disclosure-body mt-2 text-sm text-base-content/80">
         {render_slot(@inner_block)}
       </div>
     </details>
