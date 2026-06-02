@@ -231,7 +231,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         </div>
       </.ops_toolbar>
 
-      <.ops_journey mount_path={@mount_path} current={:failed_sync} />
+      <.ops_trail mount_path={@mount_path} current={:failed_sync} />
 
       <.ops_panel>
         <.ops_schema_select
@@ -411,11 +411,11 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         </section>
       </.ops_panel>
 
-      <.ops_toolbar :if={@inspection} class="justify-end">
-        <.ops_link_button navigate={"#{@mount_path}/sync-drift"} variant={:ghost} size={:sm}>
-          Worked the queue? Verify sync drift <span aria-hidden="true">→</span>
-        </.ops_link_button>
-      </.ops_toolbar>
+      <.ops_handoff :if={@inspection}>
+        <:step navigate={"#{@mount_path}/sync-drift"} hint="When the queue's clear —">
+          Verify sync drift
+        </:step>
+      </.ops_handoff>
     </Layouts.app>
     """
   end

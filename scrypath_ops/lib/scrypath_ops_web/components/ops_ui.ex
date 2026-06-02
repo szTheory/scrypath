@@ -384,11 +384,12 @@ defmodule ScrypathOpsWeb.OpsUi do
   end
 
   @doc """
-  Operator workflow map for ScrypathOps.
+  Contextual breadcrumb trail for ScrypathOps surfaces.
 
-  Group-aware (not a linear pipeline): a Control Room home chip, then the two task
-  clusters that mirror `Nav` groups — Triage (posture → failed sync → sync drift) and
-  Probe & capture (search → playbooks). `current` highlights the active surface.
+  A short "where am I" trail — `Control Room › <group> › <page>` — not a map of the
+  whole product (that's the header nav's job). Siblings are deliberately omitted; the
+  group label (Triage / Explore) is context, not a link. Renders nothing on the
+  Control Room landing (a breadcrumb that says "you are at the top" is noise).
   """
   attr(:current, :atom,
     required: true,
@@ -398,48 +399,63 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:mount_path, :string, required: true)
   attr(:class, :any, default: nil)
 
-  def ops_journey(assigns) do
-    assigns =
-      assign(assigns, :groups, [
-        %{
-          label: "Triage",
-          steps: [
-            %{key: :posture, label: "Posture", path: "#{assigns.mount_path}/posture"},
-            %{key: :failed_sync, label: "Failed Sync", path: "#{assigns.mount_path}/failed-sync"},
-            %{key: :sync_drift, label: "Sync Drift", path: "#{assigns.mount_path}/sync-drift"}
-          ]
-        },
-        %{
-          label: "Probe & capture",
-          steps: [
-            %{key: :search, label: "Search", path: "#{assigns.mount_path}/search"},
-            %{key: :playbooks, label: "Playbooks", path: "#{assigns.mount_path}/playbooks"}
-          ]
-        }
-      ])
+  def ops_trail(assigns) do
+    assigns = assign(assigns, :trail, trail_for(assigns.current))
 
     ~H"""
-    <nav aria-label="Operator workflow" class={["ops-surface-flat px-3 py-2", @class]}>
-      <div class="ops-journey">
-        <.link
-          navigate={@mount_path}
-          class={["ops-journey-home", @current == :control_room && "ops-journey-step-active"]}
-          aria-current={if @current == :control_room, do: "page", else: nil}
-        >
-          <span aria-hidden="true">⌂</span> Control Room
-        </.link>
-        <span :for={{group, idx} <- Enum.with_index(@groups)} class="ops-journey-group">
-          <span :if={idx > 0} class="ops-journey-divider" aria-hidden="true"></span>
-          <span class="ops-journey-group-label">{group.label}</span>
-          <.link
-            :for={step <- group.steps}
-            navigate={step.path}
-            class={["ops-journey-step", step.key == @current && "ops-journey-step-active"]}
-            aria-current={if step.key == @current, do: "step", else: nil}
-          >
-            {step.label}
+    <nav :if={@trail} aria-label="Breadcrumb" class={["ops-trail", @class]}>
+      <ol class="ops-trail__list">
+        <li>
+          <.link navigate={@mount_path} class="ops-trail__crumb ops-trail__link">
+            Control Room
           </.link>
-        </span>
+        </li>
+        <li class="ops-trail__sep" aria-hidden="true">›</li>
+        <li><span class="ops-trail__crumb ops-trail__group">{elem(@trail, 0)}</span></li>
+        <li class="ops-trail__sep" aria-hidden="true">›</li>
+        <li>
+          <span class="ops-trail__crumb ops-trail__current" aria-current="page">
+            {elem(@trail, 1)}
+          </span>
+        </li>
+      </ol>
+    </nav>
+    """
+  end
+
+  defp trail_for(:posture), do: {"Triage", "Posture"}
+  defp trail_for(:failed_sync), do: {"Triage", "Failed Sync"}
+  defp trail_for(:sync_drift), do: {"Triage", "Sync Drift"}
+  defp trail_for(:search), do: {"Explore", "Search"}
+  defp trail_for(:playbooks), do: {"Explore", "Playbooks"}
+  defp trail_for(_), do: nil
+
+  @doc """
+  Unified "Next step" page-footer handoff.
+
+  Every triage/explore surface ends with the same affordance so operators learn that
+  the bottom of the page tells them where to go next. One consistent grammar: an
+  optional muted completion-condition, then an imperative link with a trailing arrow.
+  Pass 1–2 `:step` slots (primary first) for branch points.
+  """
+  attr(:class, :any, default: nil)
+
+  slot :step, required: true do
+    attr(:navigate, :string, required: true)
+    attr(:hint, :string, doc: "muted completion-condition shown before the link")
+  end
+
+  def ops_handoff(assigns) do
+    ~H"""
+    <nav aria-label="Next step" class={["ops-handoff", @class]}>
+      <p class="ops-handoff__eyebrow">Next step</p>
+      <div class="ops-handoff__steps">
+        <div :for={step <- @step} class="ops-handoff__step">
+          <span :if={step[:hint]} class="ops-handoff__hint">{step[:hint]}</span>
+          <.link navigate={step.navigate} class="ops-handoff__link">
+            {render_slot(step)} <span aria-hidden="true">→</span>
+          </.link>
+        </div>
       </div>
     </nav>
     """
@@ -457,15 +473,26 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:route_label, :string, required: true)
   attr(:navigate, :string, required: true)
   attr(:kind, :atom, default: :neutral, values: [:neutral, :info, :success, :warning, :error])
+
+  attr(:recommended, :boolean,
+    default: false,
+    doc: "marks this card as the state-recommended next action (renders a 'Start here' flag)"
+  )
+
   attr(:rest, :global, include: ~w(data-testid))
 
   def ops_intent_card(assigns) do
     ~H"""
     <.link
       navigate={@navigate}
-      class={["ops-intent-card", @kind != :neutral && tone_class(@kind)]}
+      class={[
+        "ops-intent-card",
+        @kind != :neutral && tone_class(@kind),
+        @recommended && "ops-intent-card--recommended"
+      ]}
       {@rest}
     >
+      <span :if={@recommended} class="ops-intent-card__flag">Start here</span>
       <span class="ops-intent-card__icon" aria-hidden="true">{@icon}</span>
       <span class="ops-intent-card__title">{@title}</span>
       <span class="ops-intent-card__summary">{@summary}</span>

@@ -209,7 +209,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         subtitle="Check one schema before you promote it: reconcile, compare drift, then swap."
       />
 
-      <.ops_journey mount_path={@mount_path} current={:sync_drift} class="mt-4" />
+      <.ops_trail mount_path={@mount_path} current={:sync_drift} class="mt-4" />
 
       <.ops_panel class="mt-4">
         <.ops_schema_select
@@ -413,11 +413,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         </.ops_section>
       </.ops_panel>
 
-      <.ops_toolbar class="justify-end">
-        <.ops_link_button navigate={"#{@mount_path}/posture"} variant={:ghost} size={:sm}>
-          Re-check fleet posture <span aria-hidden="true">→</span>
-        </.ops_link_button>
-      </.ops_toolbar>
+      <.ops_handoff>
+        <:step navigate={"#{@mount_path}/posture"} hint="After promoting —">
+          Re-check fleet posture
+        </:step>
+      </.ops_handoff>
     </Layouts.app>
     """
   end

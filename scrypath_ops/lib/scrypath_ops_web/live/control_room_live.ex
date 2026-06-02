@@ -54,44 +54,32 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
         </.ops_button>
       </.ops_toolbar>
 
-      <.ops_journey mount_path={@mount_path} current={:control_room} />
+      <section aria-labelledby="control-room-posture-heading" class="space-y-4">
+        <h2 id="control-room-posture-heading" class="sr-only">Fleet posture</h2>
 
-      <.ops_panel>
-        <section aria-labelledby="control-room-posture-heading" class="space-y-4">
-          <h2 id="control-room-posture-heading" class="sr-only">Fleet posture</h2>
+        <.ops_config_empty :if={@posture.state == :unconfigured} kind={:no_schemas} />
+        <.ops_config_empty :if={@posture.state == :missing_backend} kind={:missing_backend} />
 
-          <.ops_config_empty :if={@posture.state == :unconfigured} kind={:no_schemas} />
-          <.ops_config_empty :if={@posture.state == :missing_backend} kind={:missing_backend} />
-
-          <.ops_verdict
-            :if={@posture.state in [:ok, :degraded]}
-            kind={Posture.badge_kind(@posture.state)}
-            label="Can I trust search right now?"
-            headline={@posture.headline}
-          >
-            <:actions>
-              <.ops_link_button navigate={"#{@mount_path}/posture"} variant={:ghost} size={:sm}>
-                Open full posture <span aria-hidden="true">→</span>
-              </.ops_link_button>
-            </:actions>
-            <p>{@posture.evidence}</p>
-            <p class="mt-2 text-ops-sm text-base-content/60">
-              {@posture.schema_count} schema(s) · {@posture.error_count} fetch error(s) · {@posture.backend_failed_count} failed backend · refreshed {format_dt(
-                @posture.refreshed_at
-              )}
-            </p>
-          </.ops_verdict>
-
-          <.ops_link_button
-            :if={@posture.state in [:unconfigured, :missing_backend]}
-            navigate={"#{@mount_path}/posture"}
-            variant={:ghost}
-            size={:sm}
-          >
-            Open full posture <span aria-hidden="true">→</span>
-          </.ops_link_button>
-        </section>
-      </.ops_panel>
+        <.ops_verdict
+          :if={@posture.state in [:ok, :degraded]}
+          kind={Posture.badge_kind(@posture.state)}
+          label="Can I trust search right now?"
+          headline={@posture.headline}
+          class="ops-verdict--hero"
+        >
+          <:actions>
+            <.ops_link_button navigate={"#{@mount_path}/posture"} variant={:ghost} size={:sm}>
+              Open full posture <span aria-hidden="true">→</span>
+            </.ops_link_button>
+          </:actions>
+          <p>{@posture.evidence}</p>
+          <p class="mt-2 text-ops-sm text-base-content/60">
+            {@posture.schema_count} schema(s) · {@posture.error_count} fetch error(s) · {@posture.backend_failed_count} failed backend · refreshed {format_dt(
+              @posture.refreshed_at
+            )}
+          </p>
+        </.ops_verdict>
+      </section>
 
       <section aria-labelledby="control-room-intents-heading" class="space-y-3">
         <.ops_heading level={2} id="control-room-intents-heading">
@@ -101,6 +89,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
           <.ops_intent_card
             icon="🚨"
             kind={intent_tone(@posture)}
+            recommended={@posture.state in [:degraded, :missing_backend]}
             title="Something looks broken"
             summary="Triage an incident. Check fleet posture, work the failed-sync queue, then confirm sync drift."
             route_label="Start triage"
@@ -126,25 +115,33 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
         </div>
       </section>
 
-      <.ops_section
-        title="Jump to"
-        subtitle="Power-user shortcuts — every surface is one click away."
-      >
+      <section aria-labelledby="control-room-jump-heading" class="space-y-2 pt-ops-2">
+        <div class="flex flex-wrap items-baseline justify-between gap-3">
+          <h2
+            id="control-room-jump-heading"
+            class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/55"
+          >
+            Jump to
+          </h2>
+          <p class="text-ops-sm text-base-content/55">
+            Press <kbd class="ops-kbd">⌘K</kbd> to jump anywhere
+          </p>
+        </div>
         <div class="flex flex-wrap gap-ops-control-gap">
-          <.ops_link_button navigate={"#{@mount_path}/failed-sync"} size={:sm}>
+          <.ops_link_button navigate={"#{@mount_path}/failed-sync"} variant={:ghost} size={:sm}>
             Failed sync
           </.ops_link_button>
-          <.ops_link_button navigate={"#{@mount_path}/sync-drift"} size={:sm}>
+          <.ops_link_button navigate={"#{@mount_path}/sync-drift"} variant={:ghost} size={:sm}>
             Sync drift
           </.ops_link_button>
-          <.ops_link_button navigate={"#{@mount_path}/search"} size={:sm}>
+          <.ops_link_button navigate={"#{@mount_path}/search"} variant={:ghost} size={:sm}>
             Search
           </.ops_link_button>
-          <.ops_link_button navigate={"#{@mount_path}/playbooks"} size={:sm}>
+          <.ops_link_button navigate={"#{@mount_path}/playbooks"} variant={:ghost} size={:sm}>
             Playbooks
           </.ops_link_button>
         </div>
-      </.ops_section>
+      </section>
     </Layouts.app>
     """
   end

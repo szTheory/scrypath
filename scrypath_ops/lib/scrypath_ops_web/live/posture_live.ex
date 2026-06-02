@@ -147,7 +147,7 @@ defmodule ScrypathOpsWeb.PostureLive do
         </.ops_button>
       </.ops_toolbar>
 
-      <.ops_journey mount_path={@mount_path} current={:posture} />
+      <.ops_trail mount_path={@mount_path} current={:posture} />
 
       <.ops_panel :if={match?({:ok, _}, @posture_rows)}>
         <section aria-labelledby="posture-summary-heading" class="space-y-4">
@@ -157,16 +157,6 @@ defmodule ScrypathOpsWeb.PostureLive do
             label="Fleet posture"
             headline={@posture_headline}
           >
-            <:actions>
-              <.ops_link_button
-                :if={@posture_state == :degraded}
-                navigate={"#{@mount_path}/failed-sync"}
-                variant={:primary}
-                size={:sm}
-              >
-                Start triage: failed sync <span aria-hidden="true">→</span>
-              </.ops_link_button>
-            </:actions>
             {@posture_evidence}
           </.ops_verdict>
           <.ops_metric_grid cols={5}>
@@ -288,6 +278,15 @@ defmodule ScrypathOpsWeb.PostureLive do
           </.ops_table>
         </.ops_section>
       </.ops_panel>
+
+      <.ops_handoff :if={match?({:ok, _}, @posture_rows)}>
+        <:step
+          navigate={"#{@mount_path}/failed-sync"}
+          hint="When you've spotted a failing schema —"
+        >
+          Work the failed-sync queue
+        </:step>
+      </.ops_handoff>
     </Layouts.app>
     """
   end
