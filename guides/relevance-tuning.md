@@ -4,6 +4,8 @@ This guide covers the declarative settings Scrypath exposes for Meilisearch rele
 
 **Request-time vs index-time:** this guide is **index settings (Plane A)** — synonyms, ranking rules order, typo policy, and attribute projections you declare on the schema and apply through reindex workflows. Search **request parameters** (filters, pagination, ranking score display options, and related per-call knobs) live in the [Per-query tuning pipeline](per-query-tuning-pipeline.md) spec.
 
+Treat Meilisearch settings like migrations. They define the index contract, and many changes affect internal search structures. For large indexes, a casual settings edit can become an expensive reindex at exactly the wrong time.
+
 ## The five declarative settings knobs
 
 Scrypath recognizes these snake_case settings keys on `use Scrypath` (each maps to a Meilisearch-native field when translated):
@@ -33,6 +35,21 @@ After settings are applied and the Meilisearch task is waited on, managed reinde
 - Comparison is **declared-subset-of-applied**: only keys Scrypath declared are compared. Extra keys returned by Meilisearch (for example default `rankingRules` when you did not declare ranking rules) are not treated as drift.
 - Drift returns `{:error, {:settings_drift, [{key, declared, actual}]}}` with wire-style keys (typically binary camelCase).
 - A missing index maps to `{:error, :index_not_found}` (404 bodies are not propagated).
+
+Settings drift is not cosmetic. If a field is missing from `filterableAttributes`, filters that look correct in Phoenix can fail or silently narrow the wrong way at the search backend. If a sortable or searchable field changed, a live-index patch may be too risky for production data. Prefer managed reindex when the search contract changed broadly.
+
+## Settings impact posture
+
+Use this default posture when reviewing a schema settings change:
+
+| Change | Default Scrypath posture |
+| --- | --- |
+| `searchable_attributes`, `filterable_attributes`, `sortable_attributes`, `displayed_attributes` | Treat as index-contract work. Apply before import or use managed reindex for existing indexes. |
+| `ranking_rules` or `distinct_attribute` | Treat as relevance contract work. Rehearse on a target index and verify representative queries. |
+| `synonyms`, `stop_words`, `typo_tolerance` | May be eligible for bounded hot apply through the explicit hot-apply path below. Keep schema parity checks in place. |
+| Tenant, authorization, or visibility fields | Treat as correctness-sensitive. Verify filters and hydration behavior before cutover. |
+
+When in doubt, create or rebuild a target index, apply settings first, backfill, run smoke queries, then cut over deliberately. Do not discover after a large import that a field should have been filterable.
 
 ### Skipping verification (escape hatch)
 

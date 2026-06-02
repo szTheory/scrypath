@@ -121,6 +121,8 @@ Phase 111 freezes a dual-window evidence model for any future promotion decision
 For the human-facing tour of what this lane protects, including the storefront,
 operator routes, demo tenants, and Compose launch path, see
 [`examples/scrypath_ecommerce/README.md`](examples/scrypath_ecommerce/README.md).
+That demo README also documents the bind-mounted Compose dev mode for fast UI
+iteration without rebuilding dependency layers after every HEEx/CSS change.
 
 Run locally:
 
@@ -146,3 +148,4 @@ npm run test:e2e
 - Lane owners respond to failures before required-check escalation.
 - Trigger rules stay explicit so PR checks do not sit in ambiguous skipped/pending states.
 - Evidence artifacts stay bounded and machine-auditable as `phase105-playwright.json`, `phase105-evidence.ndjson`, `phase105-evidence.json`, and `phase105-evidence-summary.md`.
+- Evidence summaries include spec/test/attempt counts, operation counts, failed spec names, runtime, flake signal, and failure classification.

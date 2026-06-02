@@ -41,7 +41,7 @@ The intended app boundary is a Phoenix context that owns the search flow, with c
 | [Relevance tuning](relevance-tuning.md) | Meilisearch settings, verification, and tuning from schema declarations. |
 | [Per-query tuning pipeline](per-query-tuning-pipeline.md) | Request-time Meilisearch search parameters vs index-time settings — canonical merge and mapping spec. |
 
-The minimal runnable Phoenix example (Postgres + Meilisearch + Oban) lives under [`examples/phoenix_meilisearch/`](../examples/phoenix_meilisearch/README.md). For a richer click-around showcase with a multi-tenant storefront and mounted operator UI, use [`examples/scrypath_ecommerce/`](../examples/scrypath_ecommerce/README.md).
+The minimal runnable Phoenix example (Postgres + Meilisearch + Oban) lives under [`examples/phoenix_meilisearch/`](../examples/phoenix_meilisearch/README.md). For a richer click-around showcase with a multi-tenant storefront, mounted operator UI, Docker Compose, realistic seeds, and the advisory browser evidence lane, use [`examples/scrypath_ecommerce/`](../examples/scrypath_ecommerce/README.md).
 
 ## Recommended reading order
 
