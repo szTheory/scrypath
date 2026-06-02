@@ -709,6 +709,72 @@
     text-underline-offset: 2px;
   }
 
+  /* Promotion preflight checklist (Sync Drift): a sequential, gated wizard. Locked
+     steps dim and lose their hover affordance so the eye follows the open step. */
+  .ops-preflight {
+    display: grid;
+    gap: var(--spacing-ops-3);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  @media (min-width: 768px) {
+    .ops-preflight {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .ops-preflight__card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-ops-2);
+    border: 1px solid color-mix(in oklch, var(--color-base-content) 12%, transparent);
+    border-radius: var(--radius-ops-lg);
+    background: color-mix(in oklch, var(--color-base-100) 94%, transparent);
+    padding: var(--spacing-ops-4);
+    transition:
+      opacity var(--duration-ops-standard) var(--ease-ops-standard),
+      border-color var(--duration-ops-status) var(--ease-ops-standard);
+  }
+
+  .ops-preflight__card--locked {
+    opacity: 0.55;
+    background: color-mix(in oklch, var(--color-base-200) 60%, transparent);
+  }
+
+  .ops-preflight__head {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-ops-2);
+  }
+
+  .ops-preflight__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    flex: none;
+    border-radius: 999px;
+    font-size: var(--text-ops-sm);
+    font-weight: 700;
+    color: var(--color-primary);
+    background: color-mix(in oklch, var(--color-primary) 14%, transparent);
+  }
+
+  .ops-preflight__title {
+    font-size: var(--text-ops-body);
+    font-weight: 650;
+    color: var(--color-base-content);
+  }
+
+  .ops-preflight__hint {
+    font-size: var(--text-ops-sm);
+    line-height: var(--leading-ops-body);
+    color: color-mix(in oklch, var(--color-base-content) 60%, transparent);
+  }
+
   .ops-intent-card {
     display: flex;
     flex-direction: column;

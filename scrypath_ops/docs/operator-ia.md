@@ -7,6 +7,7 @@ Canonical contract for the optional **ScrypathOps** Phoenix shell: who uses it, 
 - **On-call engineer** — owns incident response when search indexing or sync pipelines misbehave; needs fast triage signals and safe recovery hooks.
 - **Library maintainer** — ships Scrypath releases, runs verification tasks, and keeps Hex packaging and docs honest with runtime behavior.
 - **Search owner** — accountable for relevance, federation semantics, and operational posture across environments without pretending indexes are magically unified.
+- **First-run operator** — arrives with the console freshly mounted (an `unconfigured` or `missing_backend` verdict) and asks "why is everything empty / what is this?"; needs orientation and a setup-oriented next step, not a diagnostic one. The Control Room verdict + intent cards are their onboarding (no separate tour); config-empty states carry the guidance to wire schemas/backend, and the first green verdict is their success signal.
 
 ## Jobs-to-be-done
 
@@ -42,6 +43,19 @@ and **`on_mount`** callbacks in
 The `/ops` root (`/ops/`) is the **Control Room** landing: a glanceable fleet-posture strip plus three intent task-cards that route by the job the operator brought — incident triage (→ `/ops/posture`), shipping a change (→ `/ops/sync-drift`), or explore & capture (→ `/ops/search`). It is the start page, not a sixth nav item; the deep per-schema posture table stays on `/ops/posture`.
 
 Primary chrome under `/ops` follows **roadmap triage order**: posture first, failed sync second, read-only sync/drift (with doc and Mix links) third, bounded search and federation honesty last (search **not** co-equal with triage).
+
+### Journey loops & handoffs
+
+The surfaces thread into three named loops, each a hub-and-spoke trip from the Control Room. Within a cluster the steps are sequential; the header nav stays free so a power user is never trapped.
+
+- **Incident-response loop** (on-call): Control Room verdict (degraded) → Posture (which schemas?) → Failed Sync (why? retry) → Sync Drift (did it stick?) → Control Room (verdict green). The loop closes on the verdict flipping green — that round-trip is the success signal.
+- **Ship-a-change preflight loop** (search owner / maintainer): Control Room ("shipping a change") → Sync Drift preflight (reconcile → contract drift → mismatches → gated promote) → re-check Posture.
+- **Explore → capture loop** (search owner): Control Room ("explore") → Search (probe) → capture → Playbooks (save/run) → back to Search.
+
+Two shared components carry this structure so it stays consistent (principle of least surprise):
+
+- **`ops_trail`** — a contextual breadcrumb (`Control Room › <group> › <page>`), not a map of the whole product. Siblings live in the header nav; the landing shows no trail.
+- **`ops_handoff`** — the unified "Next step" page footer. One eyebrow + imperative grammar on every triage/explore surface so the bottom of each page reliably tells the operator where to go next, and the loops visibly close.
 
 | Job | Primary persona | Top nav label | Route | Scrypath / doc / Mix follow-up |
 | --- | --- | --- | --- | --- |

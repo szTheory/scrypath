@@ -200,6 +200,76 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp drift_dimension_rows(_), do: []
 
+  # Sequential promotion preflight. Each step's `locked?` gates the next so the
+  # checklist reads as a wizard: contract drift waits on reconcile, mismatches wait
+  # on drift, and promote lights up only when checks 1–3 are green.
+  defp preflight_steps(reconcile, drift, drift_error) do
+    recon_done? = not is_nil(reconcile)
+    drift_done? = not is_nil(drift)
+    mismatches = if drift_done?, do: drift_mismatch_count(drift), else: nil
+    clean? = drift_done? and mismatches == 0
+
+    [
+      %{
+        num: 1,
+        title: "Reconcile",
+        badge_kind: if(recon_done?, do: :success, else: :warning),
+        badge: if(recon_done?, do: "loaded", else: "needed"),
+        locked?: false,
+        hint:
+          if(recon_done?,
+            do: "Queue & backend posture loaded.",
+            else: "Run the reconcile check below to begin."
+          )
+      },
+      %{
+        num: 2,
+        title: "Contract drift",
+        badge_kind: drift_status_kind(drift, drift_error),
+        badge: drift_status_title(drift, drift_error),
+        locked?: not recon_done?,
+        hint:
+          cond do
+            not recon_done? -> "Locked — load reconcile first."
+            drift_done? -> "Declared vs live contract loaded."
+            true -> "Load the contract-drift check below."
+          end
+      },
+      %{
+        num: 3,
+        title: "Mismatches",
+        badge_kind:
+          cond do
+            clean? -> :success
+            drift_done? -> :warning
+            true -> :neutral
+          end,
+        badge: if(drift_done?, do: "#{mismatches} mismatch(es)", else: "unknown"),
+        locked?: not drift_done?,
+        hint:
+          cond do
+            not drift_done? -> "Locked — run contract drift first."
+            clean? -> "No dimension mismatches."
+            true -> "Resolve drift before promoting."
+          end
+      },
+      %{
+        num: 4,
+        title: "Promote",
+        badge_kind: promotion_readiness_kind(reconcile, drift),
+        badge: promotion_readiness_label(reconcile, drift),
+        locked?: not (recon_done? and clean?),
+        hint:
+          cond do
+            recon_done? and clean? -> "Ready for the gated swap below."
+            not recon_done? -> "Locked — checks 1–3 must pass."
+            not drift_done? -> "Locked — run contract drift."
+            true -> "Locked — resolve mismatches first."
+          end
+      }
+    ]
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -236,34 +306,24 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           >
             Promotion preflight
           </h2>
-          <div class="grid gap-3 md:grid-cols-4">
-            <.ops_data_card title="1. Reconcile">
-              <.ops_badge kind={if @reconcile_result, do: :success, else: :warning}>
-                {if @reconcile_result, do: "loaded", else: "needed"}
-              </.ops_badge>
-            </.ops_data_card>
-            <.ops_data_card title="2. Contract drift">
-              <.ops_badge kind={drift_status_kind(@drift_result, @drift_error)}>
-                {drift_status_title(@drift_result, @drift_error)}
-              </.ops_badge>
-            </.ops_data_card>
-            <.ops_data_card title="3. Mismatches">
-              <.ops_badge kind={
-                if @drift_result && drift_mismatch_count(@drift_result) == 0,
-                  do: :success,
-                  else: :warning
-              }>
-                {if @drift_result,
-                  do: "#{drift_mismatch_count(@drift_result)} mismatch(es)",
-                  else: "unknown"}
-              </.ops_badge>
-            </.ops_data_card>
-            <.ops_data_card title="4. Promote">
-              <.ops_badge kind={promotion_readiness_kind(@reconcile_result, @drift_result)}>
-                {promotion_readiness_label(@reconcile_result, @drift_result)}
-              </.ops_badge>
-            </.ops_data_card>
-          </div>
+          <p class="text-ops-body text-base-content/70">
+            Work the checks in order — each unlocks the next, and promotion lights up only
+            when all are green.
+          </p>
+          <ol class="ops-preflight">
+            <li
+              :for={step <- preflight_steps(@reconcile_result, @drift_result, @drift_error)}
+              class={["ops-preflight__card", step.locked? && "ops-preflight__card--locked"]}
+              aria-disabled={to_string(step.locked?)}
+            >
+              <div class="ops-preflight__head">
+                <span class="ops-preflight__num" aria-hidden="true">{step.num}</span>
+                <span class="ops-preflight__title">{step.title}</span>
+              </div>
+              <.ops_badge kind={step.badge_kind}>{step.badge}</.ops_badge>
+              <p class="ops-preflight__hint">{step.hint}</p>
+            </li>
+          </ol>
         </section>
       </.ops_panel>
 
