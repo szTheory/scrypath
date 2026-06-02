@@ -22,7 +22,7 @@ defmodule Mix.Tasks.E2e.PrepareSearch do
     index = backend.index_name(Product, config)
 
     Product
-    |> backend.create_index(:id, config)
+    |> backend.create_index(:id, Keyword.put(config, :target_index, index))
     |> wait_or_ignore_existing(config)
 
     Product

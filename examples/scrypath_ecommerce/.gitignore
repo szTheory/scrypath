@@ -2,3 +2,6 @@
 /deps/
 /priv/static/assets/
 .DS_Store
+
+# Per-dev Docker host-port overrides; defaults live in compose + .env.example.
+.env

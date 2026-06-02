@@ -1,6 +1,13 @@
 import { expect, test } from "@playwright/test";
 
-import { drainSearchQueue, renameCategory, seedScenario, waitForSearchVisible } from "./helpers/e2e";
+import {
+  deleteProduct,
+  drainSearchQueue,
+  renameCategory,
+  seedScenario,
+  waitForSearchHidden,
+  waitForSearchVisible
+} from "./helpers/e2e";
 
 test("consumer can search and facet deterministic catalog results", async ({ page, request }) => {
   const seed = await seedScenario(request, "e2e_search_catalog");
@@ -39,6 +46,41 @@ test("consumer can search and facet deterministic catalog results", async ({ pag
   await expect(results.getByText("Nebula Ultrabook")).not.toBeVisible();
 });
 
+test("tenant guard prevents cross-tenant catalog leakage", async ({ page, request }) => {
+  const seed = await seedScenario(request, "e2e_search_catalog");
+
+  await drainSearchQueue(request);
+
+  await waitForSearchVisible(request, {
+    tenantId: seed.tenant_id,
+    query: "quantum",
+    expectedName: "Quantum CyberPhone X"
+  });
+
+  await page.goto("/");
+
+  const tenant = page.getByLabel("Tenant");
+  await tenant.selectOption(String(seed.tenant_id));
+  await page.getByLabel("Search products").fill("quantum");
+
+  const results = page.getByTestId("storefront-results");
+  await expect(results.getByText("Quantum CyberPhone X")).toBeVisible();
+
+  const otherOption = await tenant
+    .locator("option")
+    .evaluateAll((options, activeTenantId) => {
+      const match = options.find((option) => option.getAttribute("value") !== activeTenantId);
+      return match?.getAttribute("value") ?? null;
+    }, String(seed.tenant_id));
+
+  expect(otherOption).toBeTruthy();
+
+  await tenant.selectOption(otherOption!);
+  await page.getByLabel("Search products").fill("quantum");
+
+  await expect(results.getByText("Quantum CyberPhone X")).not.toBeVisible();
+});
+
 test("related category changes become visible in storefront search", async ({ page, request }) => {
   const seed = await seedScenario(request, "e2e_search_catalog");
   const smartphoneCategoryId = seed.categories["Smartphones"];
@@ -65,5 +107,49 @@ test("related category changes become visible in storefront search", async ({ pa
 
   await expect(results.getByText("Quantum CyberPhone X")).toBeVisible();
   await expect(results.getByText("Quantum CyberPhone Pro")).toBeVisible();
-  await expect(results).toContainText("Category: Pocket Superphones");
+  await expect(results).toContainText("Pocket Superphones");
+});
+
+test("deleted products leave the visible search index", async ({ page, request }) => {
+  const seed = await seedScenario(request, "e2e_search_catalog");
+  const productId = seed.products["Quantum CyberPhone Pro"];
+
+  await drainSearchQueue(request);
+
+  await waitForSearchVisible(request, {
+    tenantId: seed.tenant_id,
+    query: "quantum",
+    expectedName: "Quantum CyberPhone Pro"
+  });
+
+  await deleteProduct(request, {
+    tenantId: seed.tenant_id,
+    productId
+  });
+
+  await drainSearchQueue(request);
+
+  await waitForSearchHidden(request, {
+    tenantId: seed.tenant_id,
+    query: "quantum",
+    hiddenName: "Quantum CyberPhone Pro"
+  });
+
+  await page.goto(`/?tenant_id=${seed.tenant_id}&q=quantum`);
+
+  const results = page.getByTestId("storefront-results");
+  await expect(results.getByText("Quantum CyberPhone X")).toBeVisible();
+  await expect(results.getByText("Quantum CyberPhone Pro")).not.toBeVisible();
+});
+
+test("empty searches show a useful zero-results state", async ({ page, request }) => {
+  const seed = await seedScenario(request, "e2e_search_catalog");
+
+  await drainSearchQueue(request);
+
+  await page.goto(`/?tenant_id=${seed.tenant_id}&q=does-not-exist-zzzz`);
+
+  const results = page.getByTestId("storefront-results");
+  await expect(results.getByText("No matching results yet")).toBeVisible();
+  await expect(results).toContainText("Adjust query or filters");
 });

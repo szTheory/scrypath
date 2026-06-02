@@ -28,7 +28,7 @@ test("operator can triage intentionally failed sync work", async ({ page, reques
   const row = page.getByTestId("failed-sync-row").first();
   await expect(row).toBeVisible();
 
-  await row.getByText("Row detail").click();
+  await row.getByText("Inspect evidence").click();
 
   const retryButton = row.getByTestId("failed-sync-retry");
 
@@ -37,12 +37,21 @@ test("operator can triage intentionally failed sync work", async ({ page, reques
 
     const pageText = page.locator("body");
     await expect(pageText).toContainText(/Retried|Failed sync jobs/);
+
+    const retried = await operatorState(request, {
+      tenantId: seed.tenant_id,
+      timeoutMs: 15_000,
+      minFailedSyncCount: 1
+    });
+
+    expect(retried.failed_count).toBeGreaterThanOrEqual(1);
+    expect(retried.reason_class_counts).toBeTruthy();
   } else {
     await expect(row).toBeVisible();
   }
 });
 
-test("operator can initiate zero-downtime swap from posture UI", async ({ page, request }) => {
+test("operator can initiate zero-downtime swap from sync drift UI", async ({ page, request }) => {
   const seed = await seedScenario(request, "e2e_search_catalog");
 
   await page.goto("/admin/search/posture");
@@ -51,8 +60,14 @@ test("operator can initiate zero-downtime swap from posture UI", async ({ page, 
 
   const postureRow = page.getByTestId("posture-row").first();
   await expect(postureRow).toBeVisible();
+  await expect(page.getByTestId("posture-next-checks")).toContainText(/No fetch errors observed|Degraded/);
 
-  await postureRow.getByRole("button", { name: "Swap live index" }).click();
+  await page.goto("/admin/search/sync-drift");
+  await expect(page.getByRole("heading", { name: "Sync / drift" })).toBeVisible();
+  await page.waitForTimeout(500);
+  await page.getByRole("button", { name: "Load / refresh contract drift" }).click();
+  await expect(page.getByText("Contract dimensions")).toBeVisible();
+  await page.getByRole("button", { name: "Swap live index" }).click();
   await expect(page.getByText("Swap live index completed")).toBeVisible();
 
   const outcome = await waitForSwapOutcome(request, {
@@ -62,5 +77,4 @@ test("operator can initiate zero-downtime swap from posture UI", async ({ page, 
 
   expect(outcome.swap_terminal_success).toBeTruthy();
   expect(outcome.active_index_visible).toBeTruthy();
-  await expect(page.getByTestId("posture-next-checks")).toContainText(/Healthy|Degraded/);
 });

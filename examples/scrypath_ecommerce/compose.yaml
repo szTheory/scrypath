@@ -1,0 +1,45 @@
+# Project name namespaces the default network, volumes, and container names so this
+# stack never collides with sibling library demos. Override with `-p` / COMPOSE_PROJECT_NAME
+# to run a second copy. Host ports come from .env (per-demo "lanes") — see .env.example.
+name: scrypath_ecommerce
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: scrypath_ecommerce_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.15
+    environment:
+      MEILI_NO_ANALYTICS: "true"
+
+  web:
+    build:
+      context: ../..
+      dockerfile: examples/scrypath_ecommerce/Dockerfile
+    environment:
+      MIX_ENV: test
+      PHX_SERVER: "true"
+      PGHOST: postgres
+      PGPORT: "5432"
+      SCRYPATH_MEILISEARCH_URL: http://meilisearch:7700
+      PLAYWRIGHT_BASE_URL: http://127.0.0.1:${WEB_PORT:-4002}
+    # Loopback-bound + parameterized: defaults to 4002 (what CI/Playwright expect) but
+    # bump WEB_PORT in .env to run alongside other demos. Postgres/Meilisearch stay
+    # unpublished here — `web` reaches them over the compose network — which removes the
+    # whole 5432/7700 host-collision class.
+    ports:
+      - "127.0.0.1:${WEB_PORT:-4002}:4002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      meilisearch:
+        condition: service_started

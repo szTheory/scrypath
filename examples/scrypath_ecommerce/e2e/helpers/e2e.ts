@@ -179,6 +179,80 @@ export async function renameCategory(
   return result;
 }
 
+export async function deleteProduct(
+  request: APIRequestContext,
+  args: { tenantId: number; productId: number }
+): Promise<{ product_id: number; deleted: boolean; queued_delete_sync: boolean }> {
+  const result = await requestJson<{ product_id: number; deleted: boolean; queued_delete_sync: boolean }>(
+    request,
+    "/dev/e2e/product-delete",
+    {
+      method: "POST",
+      data: {
+        tenant_id: args.tenantId,
+        product_id: args.productId
+      }
+    }
+  );
+
+  await emitEvidence("delete_product", {
+    tenant_id: args.tenantId,
+    product_id: args.productId,
+    deleted: result.deleted,
+    queued_delete_sync: result.queued_delete_sync
+  });
+
+  return result;
+}
+
+export async function waitForSearchHidden(
+  request: APIRequestContext,
+  args: {
+    tenantId: number;
+    query: string;
+    hiddenName: string;
+    timeoutMs?: number;
+  }
+): Promise<{ hits: string[] }> {
+  const timeoutMs = args.timeoutMs ?? 15_000;
+
+  await expect
+    .poll(
+      async () => {
+        const result = await requestJson<{ hits: string[] }>(request, "/dev/e2e/search-visible", {
+          params: {
+            tenant_id: String(args.tenantId),
+            query: args.query
+          }
+        });
+
+        return result.hits;
+      },
+      {
+        timeout: timeoutMs,
+        message: `Timed out waiting for /dev/e2e/search-visible query=${args.query} to remove ${args.hiddenName}`
+      }
+    )
+    .not.toContain(args.hiddenName);
+
+  const result = await requestJson<{ hits: string[] }>(request, "/dev/e2e/search-visible", {
+    params: {
+      tenant_id: String(args.tenantId),
+      query: args.query
+    }
+  });
+
+  await emitEvidence("search_hidden", {
+    tenant_id: args.tenantId,
+    query: args.query,
+    hidden_name: args.hiddenName,
+    hit_count: result.hits.length,
+    first_hits: result.hits.slice(0, 5)
+  });
+
+  return result;
+}
+
 export async function injectFailedSync(
   request: APIRequestContext,
   args: { tenantId: number; scenarioKey?: string }

@@ -8,7 +8,7 @@ import Config
 config :scrypath_ecommerce, ScrypathEcommerce.Repo,
   username: "postgres",
   password: "postgres",
-  hostname: "localhost",
+  hostname: System.get_env("PGHOST") || "localhost",
   port: String.to_integer(System.get_env("PGPORT") || "5432"),
   database: "scrypath_ecommerce_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
@@ -21,7 +21,10 @@ config :scrypath_ecommerce, Oban, testing: :manual
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :scrypath_ecommerce, ScrypathEcommerceWeb.Endpoint,
-  http: [ip: {127, 0, 0, 1}, port: 4002],
+  http: [
+    ip: if(System.get_env("PHX_SERVER") == "true", do: {0, 0, 0, 0}, else: {127, 0, 0, 1}),
+    port: 4002
+  ],
   check_origin: false,
   secret_key_base: "Ls0BVRFJGZispLpoVX0t5uvto4v4vcEHU+n8hYDhpW2XCxwTA4VOqOM3vg5pP3he",
   server: System.get_env("PHX_SERVER") == "true"
