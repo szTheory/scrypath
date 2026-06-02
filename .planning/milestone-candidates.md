@@ -1,11 +1,11 @@
 # Milestone candidates — developer-first roadmap stack
 
 **Purpose:** Prioritized themes for **`/gsd-new-milestone`** — **onboarding + QoL** for people using and contributing to Scrypath; **avoid busywork** and maintainer-only work masquerading as product.  
-**Last reviewed:** 2026-05-31 — **v1.28** shipped (realistic demo app and admin UI proof). Repo-grounded reassessment keeps Scrypath at **~92–94% done**. The last planned product wedges — related-data propagation, tenant-safe search, facet value search, adopter contract hardening, and realistic E2E proof — are shipped. Default posture is **contract repair, proof hardening, outside-adopter evidence, and otherwise stop**. If feature work reopens after this repair pass, it should require reviewed outside-adopter evidence.
+**Last reviewed:** 2026-05-31 — **v1.29** shipped (contract repair and proof hardening). Repo-grounded reassessment keeps Scrypath at **~96–98% done** for its stated Meilisearch-first, Ecto-native, Phoenix-friendly scope. The last planned product wedges — related-data propagation, tenant-safe search, facet value search, adopter contract hardening, realistic E2E proof, and bounded contract repair — are shipped. Default posture is **release, maintenance, support truth, proof stability, outside-adopter evidence, and otherwise stop**. If feature work reopens, it should require a concrete production bug, reviewed outside-adopter evidence, or an explicit strategic wedge.
 
 **Reconciliation note:** the `v1.20` archive says `Scrypath.SearchModule` shipped, but the current checkout does not expose that layer or its guide. This was resolved as archive-correction on 2026-05-27 and must not drive future feature selection.
 
-**Post-v1.29 closeout note:** related-data fan-out shipped in v1.24, and v1.29 repaired normal `use Scrypath, fan_outs:` reflection, hardened the v1.28 tenant/category E2E readiness proof, and refreshed roadmap/JTBD truth. Default posture is now maintenance-and-evidence mode.
+**Post-v1.29 closeout note:** related-data fan-out shipped in v1.24, and v1.29 repaired normal `use Scrypath, fan_outs:` reflection, hardened the v1.28 tenant/category E2E readiness proof, and refreshed roadmap/JTBD truth. Default posture is now maintenance-and-evidence mode. New milestones should be silent by default unless there is release work, support/proof drift, outside-adopter evidence, a concrete bug, or a deliberate strategic build decision.
 
 ---
 
@@ -90,7 +90,7 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 
 | # | Theme | Notes |
 |---|--------|--------|
-| **F1** | **Release + adoption evidence + planning truth** | Current default after the bounded repair pass. Keep main green, keep release truth coherent, and capture outside-adopter evidence before opening new product work. |
+| **F1** | **Release + adoption evidence + planning truth** | Current default after the bounded repair pass. Keep main green, keep release truth coherent, and capture outside-adopter evidence before opening new product work. This is maintenance posture, not an endless roadmap. |
 
 ### Tier G — Companion surface
 
@@ -103,7 +103,8 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 Use these lanes to avoid reopening feature breadth by habit:
 
 - **Maintenance lane (default):** patch train, docs/support truth, outside-adopter evidence loop, and planning-truth reconciliation while `main` stays green.
-- **Feature lane (evidence-gated):** open only via approved PR-scoped milestone when a concrete bug or reviewed outside-adopter evidence justifies it.
+- **Silence lane:** when there is no release follow-through, support/proof drift, production bug, or outside-adopter evidence, do not manufacture a milestone. Say the release train is idle.
+- **Feature lane (evidence-gated):** open only via approved PR-scoped milestone when a concrete bug, reviewed outside-adopter evidence, or explicit strategic wedge justifies it.
 - **Merge contract for feature lane:** serious milestone work merges only after PR CI is green; avoid direct-`main` depth work.
 
 ### Still explicit strategy (unchanged)
@@ -145,8 +146,9 @@ Use these lanes to avoid reopening feature breadth by habit:
    - Is this still above the post-`v1.19` diminishing-returns line?
 2. Optionally split strong themes into **`.planning/seeds/SEED-*.md`** so **`/gsd-new-milestone`** auto-offers matching seeds (see **`gsd-plant-seed`**).
 3. After each shipped milestone, **update this file** — what landed, what moved, and whether the repo is now actually near “stop soon” territory.
-4. After v1.28, the default answer to generic “what next?” prompts is **no feature milestone** unless there is bounded contract repair, outside-adopter evidence, or a concrete bug.
+4. After v1.29, the default answer to generic “what next?” prompts is **no feature milestone** unless there is release work, support/proof drift, outside-adopter evidence, a concrete bug, or an explicit strategic build decision.
 5. If feature work reopens, treat this file as PR-lane input: define the wedge first, run it on a PR branch, and do not merge until PR CI is green.
+6. Do not keep asking whether Scrypath is done at every milestone boundary. Treat the durable answer as: **the stated v1 library scope is effectively done; maintain by default; build strategically only when evidence changes the decision.**
 
 ---
 

@@ -8,11 +8,12 @@ Use this thread when future milestone conversations start drifting toward more
 internal breadth without revisiting whether Scrypath is already close to done
 for its stated scope.
 
-## Current call (updated 2026-05-27 — post-v1.26)
+## Current call (updated 2026-05-31 — post-v1.29)
 
-- **Rough done-%:** ~93–95% (was 86% before v1.23 and ~91–93% after v1.24)
-- **Territory:** near-done; diminishing returns are here unless outside adopters produce concrete evidence
-- **Default next pull:** release/adoption-evidence/planning-truth maintenance, not feature work
+- **Rough done-%:** ~96–98% for Scrypath's stated Meilisearch-first, Ecto-native, Phoenix-friendly scope.
+- **Territory:** effectively done for the original product promise; diminishing returns are now the default for internal feature expansion.
+- **Default next pull:** release, maintenance, support truth, proof stability, and outside-adopter evidence. Do not open a feature milestone just because more polish is imaginable.
+- **Strategic lane:** only reopen product-building when a concrete production bug, reviewed outside-adopter evidence, or an explicit strategic wedge justifies it.
 
 ## Why the library already looks strong
 
@@ -24,20 +25,20 @@ for its stated scope.
 - Related-data propagation (`sync_related/3`) shipped v1.24 — the biggest correctness gap is closed.
 - Tenant-safe shared-index search shipped v1.25 with explicit `tenant_scope:` enforcement.
 - Facet value vocabulary search shipped v1.26 with `Scrypath.search_facet_values/4`.
+- Adopter contract hardening shipped v1.27, including install/support/proof coherence and trust gates.
+- Realistic demo/admin proof shipped v1.28, including the e-commerce host app, mountable ops engine proof, and advisory real-services E2E lane.
+- Contract repair and proof hardening shipped v1.29, including generated fan-out reflection and tenant-preserving ecommerce readiness regression proof.
 - **Ahead of all comparable libs (Searchkick, Scout, meilisearch-rails) on:** operator recovery, admin UI, facets, federation, per-query tuning, related-data, and explicit tenant-scope safety.
 
-## Highest-leverage remaining gaps (reranked post-v1.26)
+## Highest-leverage remaining gaps (reranked post-v1.29)
 
 1. **Outside-adopter evidence loop**
    - The repo has strong in-repo proof, but the remaining confidence gap is real use outside the maintained example.
    - Scope: review Class A/B evidence through `guides/outside-adopter-intake.md`; fix only evidence-backed bugs or doc gaps.
 2. **Release follow-through**
-   - v1.25/v1.26 functionality should ship through Release Please as `0.3.8` before any new feature milestone.
+   - Current accumulated functionality should ship through the release train before any new feature milestone.
    - Scope: keep required checks green, merge the release PR when coherent, and verify post-publish parity.
-3. **SearchModule archive/code reconciliation**
-   - The v1.20 archive still claims a `Scrypath.SearchModule` layer that branch tip does not expose.
-   - Scope: recover it only if salvage proves it is real and still worth publishing; otherwise correct archive language.
-4. **Autocomplete / suggestions**
+3. **Autocomplete / suggestions**
    - Moderate gap, but now below the evidence threshold. Open only if an adopter needs it.
 
 ## Work that is likely near diminishing returns
@@ -52,14 +53,16 @@ for its stated scope.
 
 ## Concrete drift status (updated)
 
-- `v1.20` archive claims `Scrypath.SearchModule` — confirmed NOT in tree as of 2026-05-27. Documented in `/docs/jtbd-gap-map.md`. Planning debt only; not a product gap for users today.
+- `v1.20` archive claimed `Scrypath.SearchModule` — resolved as archive-correction and must not drive future feature selection.
 - `guides/support-and-compatibility.md` — **RESTORED** at v1.23. Guide exists, 5.2 KB.
 - `test/scrypath/readiness_contract_test.exs` — **RESTORED** at v1.23. `mix verify.adopter` points to a real test again.
 - SEED-001 (query toolkit) and SEED-002 (composition depth) — **both shipped** (v1.21 and v1.22). Seeds are stale.
 
-## Decision rule for future milestone selection (updated)
+## Decision rule for future milestone selection (updated post-v1.29)
 
 - Do not open a new feature milestone by default.
-- Ship the current release train, reconcile planning truth, and gather outside-adopter evidence.
+- If the prompt is generic "what next?", answer with maintenance/release/evidence posture, not a generated backlog.
+- Ship the current release train, keep proof/support truth current, and gather outside-adopter evidence.
 - Autocomplete/suggestions only with adopter evidence.
 - Do not open OPSUI breadth, multi-backend, vector/hybrid, or generic ergonomics milestones.
+- Super-duper polish belongs later and should be patch-sized unless it fixes a concrete adopter problem.
