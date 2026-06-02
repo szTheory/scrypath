@@ -56,11 +56,11 @@ defmodule ScrypathOpsWeb.CoreComponents do
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
-      class="toast toast-top toast-end z-50"
+      class="z-50"
       {@rest}
     >
       <div class={[
-        "alert w-80 sm:w-96 max-w-80 sm:max-w-96 text-wrap",
+        "alert w-full max-w-full text-wrap",
         @kind == :info && "alert-info",
         @kind == :error && "alert-error"
       ]}>
@@ -425,15 +425,15 @@ defmodule ScrypathOpsWeb.CoreComponents do
   @doc """
   Renders a [Heroicon](https://heroicons.com).
 
-  Heroicons come in three styles – outline, solid, and mini.
+  Heroicons come in four styles – outline, solid, mini, and micro.
   By default, the outline style is used, but solid and mini may
-  be applied by using the `-solid` and `-mini` suffix.
+  be applied by using the `-solid`, `-mini`, and `-micro` suffix.
 
   You can customize the size and colors of the icons by setting
   width, height, and background color classes.
 
-  Icons are extracted from the `deps/heroicons` directory and bundled within
-  your compiled app.css by the plugin in `assets/vendor/heroicons.js`.
+  Icons render through the Hex `heroicons` Phoenix components so ScrypathOps
+  does not depend on npm Heroicons assets being present in host applications.
 
   ## Examples
 
@@ -444,10 +444,37 @@ defmodule ScrypathOpsWeb.CoreComponents do
   attr(:class, :any, default: "size-4")
 
   def icon(%{name: "hero-" <> _} = assigns) do
-    ~H"""
-    <span class={[@name, @class]} />
-    """
+    case heroicon(assigns.name) do
+      {icon, style} ->
+        attrs =
+          %{class: assigns.class}
+          |> maybe_put_icon_style(style)
+
+        apply(Heroicons, icon, [attrs])
+
+      :error ->
+        ~H"""
+        <span class={[@name, @class]} />
+        """
+    end
   end
+
+  defp heroicon("hero-" <> name) do
+    {name, style} =
+      cond do
+        String.ends_with?(name, "-solid") -> {String.replace_suffix(name, "-solid", ""), :solid}
+        String.ends_with?(name, "-mini") -> {String.replace_suffix(name, "-mini", ""), :mini}
+        String.ends_with?(name, "-micro") -> {String.replace_suffix(name, "-micro", ""), :micro}
+        true -> {name, :outline}
+      end
+
+    {:erlang.binary_to_existing_atom(String.replace(name, "-", "_")), style}
+  rescue
+    ArgumentError -> :error
+  end
+
+  defp maybe_put_icon_style(attrs, :outline), do: attrs
+  defp maybe_put_icon_style(attrs, style), do: Map.put(attrs, style, true)
 
   ## JS Commands
 

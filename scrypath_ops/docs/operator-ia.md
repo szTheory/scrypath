@@ -39,18 +39,20 @@ and **`on_mount`** callbacks in
 
 ## Navigation
 
+The `/ops` root (`/ops/`) is the **Control Room** landing: a glanceable fleet-posture strip plus three intent task-cards that route by the job the operator brought — incident triage (→ `/ops/posture`), shipping a change (→ `/ops/sync-drift`), or explore & capture (→ `/ops/search`). It is the start page, not a sixth nav item; the deep per-schema posture table stays on `/ops/posture`.
+
 Primary chrome under `/ops` follows **roadmap triage order**: posture first, failed sync second, read-only sync/drift (with doc and Mix links) third, bounded search and federation honesty last (search **not** co-equal with triage).
 
 | Job | Primary persona | Top nav label | Route | Scrypath / doc / Mix follow-up |
 | --- | --- | --- | --- | --- |
-| 1 | On-call engineer | Posture / health | /ops/posture | Phase 45 — posture dashboards; until then see [guides/meilisearch-operations.md](../../guides/meilisearch-operations.md) |
-| 2 | On-call engineer | Failed sync work | /ops/failed-sync | Phase 45 — failed work UI; today use `mix scrypath.failed` from [guides/operator-mix-tasks.md](../../guides/operator-mix-tasks.md) |
-| 3 | Search owner | Sync / drift | /ops/sync-drift | Shipped **phase 45** — read-only reconcile + lazy index contract drift in OPSUI; still use `mix scrypath.status`, [guides/drift-recovery.md](../../guides/drift-recovery.md), [guides/sync-modes-and-visibility.md](../../guides/sync-modes-and-visibility.md) |
-| 4 | Search owner | Search & federation | /ops/search | Shipped in phase 46 — bounded single/multi playground with federation-honest inspector; semantics in [guides/multi-index-search.md](../../guides/multi-index-search.md) |
-| 4b | Search owner | Saved playbooks | /ops/playbooks | JSON format and caps in [playbook-schema-v1.md](playbook-schema-v1.md); persistence and workspace authority in [team-playbook-persistence.md](team-playbook-persistence.md); runs use the same `SearchPlayground` dispatch path as `/ops/search` |
+| 1 | On-call engineer | Posture | /ops/posture | Phase 45 — posture dashboards; until then see [guides/meilisearch-operations.md](../../guides/meilisearch-operations.md) |
+| 2 | On-call engineer | Failed Sync | /ops/failed-sync | Phase 45 — failed work UI; today use `mix scrypath.failed` from [guides/operator-mix-tasks.md](../../guides/operator-mix-tasks.md) |
+| 3 | Search owner | Sync Drift | /ops/sync-drift | Shipped **phase 45** — read-only reconcile + lazy index contract drift in OPSUI; still use `mix scrypath.status`, [guides/drift-recovery.md](../../guides/drift-recovery.md), [guides/sync-modes-and-visibility.md](../../guides/sync-modes-and-visibility.md) |
+| 4 | Search owner | Search | /ops/search | Shipped in phase 46 — bounded single/multi playground with federation-honest inspector; semantics in [guides/multi-index-search.md](../../guides/multi-index-search.md) |
+| 4b | Search owner | Playbooks | /ops/playbooks | JSON format and caps in [playbook-schema-v1.md](playbook-schema-v1.md); persistence and workspace authority in [team-playbook-persistence.md](team-playbook-persistence.md); runs use the same `SearchPlayground` dispatch path as `/ops/search` |
 <!-- scrypath:nav-contract-begin -->
-[{"route":"/ops/posture","label":"Posture / health"},{"route":"/ops/failed-sync","label":"Failed sync work"},{"route":"/ops/sync-drift","label":"Sync / drift"},{"route":"/ops/search","label":"Search & federation"},{"route":"/ops/playbooks","label":"Saved playbooks"}]
+[{"route":"/ops/posture","label":"Posture"},{"route":"/ops/failed-sync","label":"Failed Sync"},{"route":"/ops/sync-drift","label":"Sync Drift"},{"route":"/ops/search","label":"Search"},{"route":"/ops/playbooks","label":"Playbooks"}]
 <!-- scrypath:nav-contract-end -->
-| 5 | Library maintainer | Sync / drift | /ops/sync-drift | Mix tasks index: [guides/operator-mix-tasks.md](../../guides/operator-mix-tasks.md) |
-| 6 | Library maintainer | Posture / health | /ops/posture | Library verification: [CONTRIBUTING.md](../../CONTRIBUTING.md) |
-| 7 | On-call engineer | Failed sync work | /ops/failed-sync | SRE-style expectations: [docs/search-backend-sre.md](../../docs/search-backend-sre.md) |
+| 5 | Library maintainer | Sync Drift | /ops/sync-drift | Mix tasks index: [guides/operator-mix-tasks.md](../../guides/operator-mix-tasks.md) |
+| 6 | Library maintainer | Posture | /ops/posture | Library verification: [CONTRIBUTING.md](../../CONTRIBUTING.md) |
+| 7 | On-call engineer | Failed Sync | /ops/failed-sync | SRE-style expectations: [docs/search-backend-sre.md](../../docs/search-backend-sre.md) |

@@ -10,11 +10,13 @@ defmodule ScrypathOps.ApplicationTest do
 
     on_exit(fn ->
       Application.stop(:scrypath_ops)
+
       if original == nil do
         Application.delete_env(:scrypath_ops, :standalone)
       else
         Application.put_env(:scrypath_ops, :standalone, original)
       end
+
       Application.ensure_all_started(:scrypath_ops)
     end)
 
@@ -22,12 +24,14 @@ defmodule ScrypathOps.ApplicationTest do
 
     children = Supervisor.which_children(ScrypathOps.Supervisor)
     # The format of which_children is [{id, child, type, modules}]
-    modules = Enum.map(children, fn {_, _, _, mods} ->
-      case mods do
-        [mod] -> mod
-        _ -> nil
-      end
-    end) |> Enum.reject(&is_nil/1)
+    modules =
+      Enum.map(children, fn {_, _, _, mods} ->
+        case mods do
+          [mod] -> mod
+          _ -> nil
+        end
+      end)
+      |> Enum.reject(&is_nil/1)
 
     assert ScrypathOpsWeb.Telemetry in modules
     assert Phoenix.PubSub.Supervisor in modules

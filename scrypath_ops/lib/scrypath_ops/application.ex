@@ -48,6 +48,7 @@ defmodule ScrypathOps.Application do
     if Application.get_env(:scrypath_ops, :standalone, false) do
       ScrypathOpsWeb.Endpoint.config_change(changed, removed)
     end
+
     :ok
   end
 end

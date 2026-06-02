@@ -10,8 +10,8 @@ defmodule ScrypathOpsWeb.AssetPlug do
   def init(opts), do: opts
 
   @impl true
-  def call(conn, _opts) do
-    path_segments = conn.path_info
+  def call(conn, opts) do
+    path_segments = path_segments(conn.path_info, opts)
 
     if Enum.any?(path_segments, &(&1 in ["..", ".", ""])) do
       send_resp(conn, 404, "Not found")
@@ -36,6 +36,13 @@ defmodule ScrypathOpsWeb.AssetPlug do
       else
         send_resp(conn, 404, "Not found")
       end
+    end
+  end
+
+  defp path_segments(path_info, opts) do
+    case Keyword.get(opts, :path_prefix) do
+      prefix when is_binary(prefix) and prefix != "" -> [prefix | path_info]
+      _ -> path_info
     end
   end
 end

@@ -69,15 +69,23 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
     ]
 
     expected_labels = [
-      "Posture / health",
-      "Failed sync work",
-      "Sync / drift",
-      "Search & federation",
-      "Saved playbooks"
+      "Posture",
+      "Failed Sync",
+      "Sync Drift",
+      "Search",
+      "Playbooks"
     ]
 
     assert Enum.map(items, &(&1.path |> to_string())) == expected_path_strings
     assert Enum.map(items, & &1.label) == expected_labels
+
+    assert Enum.map(items, & &1.title) == [
+             "Posture / health",
+             "Failed sync work",
+             "Sync / drift",
+             "Search & federation",
+             "Saved playbooks"
+           ]
   end
 
   test "every live route in live_session :ops appears in Nav.primary/0" do
@@ -86,7 +94,7 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
       |> Enum.map(fn %{path: p} -> p |> to_string() end)
       |> MapSet.new()
 
-    for ops_path <- ops_live_paths(@router) do
+    for ops_path <- ops_live_paths(@router), ops_path != "/ops/" do
       assert MapSet.member?(nav_path_strings, ops_path),
              "expected Nav.primary/0 to include #{inspect(ops_path)} for router :ops parity"
     end
