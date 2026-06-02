@@ -3,7 +3,7 @@ defmodule Scrypath.Phase111ContractTest do
   @moduletag :phase111_contract
 
   @roadmap File.read!(".planning/ROADMAP.md")
-  @requirements File.read!(".planning/REQUIREMENTS.md")
+  @requirements File.read!(".planning/milestones/v1.29-REQUIREMENTS.md")
   @project File.read!(".planning/PROJECT.md")
   @decision File.read!(".planning/phases/111-advisory-proof-stability-decision/111-DECISION.md")
   @contributing File.read!("CONTRIBUTING.md")

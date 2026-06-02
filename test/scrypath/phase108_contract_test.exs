@@ -5,8 +5,12 @@ defmodule Scrypath.Phase108ContractTest do
 
   @related_guide File.read!("guides/related-data-and-reindexing.md")
   @jtbd_gap_map File.read!("docs/jtbd-gap-map.md")
-  @roadmap File.read!(".planning/ROADMAP.md")
-  @requirements File.read!(".planning/REQUIREMENTS.md")
+  # v1.29 closeout gate: assert against the immutable v1.29 milestone archive, not the
+  # living ROADMAP.md/REQUIREMENTS.md, which advanced (and the top-level REQUIREMENTS.md
+  # was retired) through v1.30–v1.32. The archived snapshots are the canonical record of
+  # what the v1.29 repair milestone delivered.
+  @roadmap File.read!(".planning/milestones/v1.29-ROADMAP.md")
+  @requirements File.read!(".planning/milestones/v1.29-REQUIREMENTS.md")
   @project File.read!(".planning/PROJECT.md")
   @contributing File.read!("CONTRIBUTING.md")
   @mix_exs File.read!("mix.exs")
@@ -44,11 +48,14 @@ defmodule Scrypath.Phase108ContractTest do
         "concrete production bug"
       ])
 
+      # NOTE: the v1.29-specific phrase "repaired generated `__scrypath__(:fan_outs)`"
+      # was dropped from the living PROJECT.md as the charter advanced through
+      # v1.30–v1.32; it is archived nowhere and is no longer a durable framing token.
+      # The remaining tokens still assert the maintenance-and-evidence framing.
       assert_contains_all(@project, [
         "maintenance-and-evidence mode",
         "outside-adopter evidence",
         "concrete production bug",
-        "repaired generated `__scrypath__(:fan_outs)`",
         "tenant-preserving ecommerce readiness regression proof",
         "aligned roadmap/JTBD truth"
       ])
