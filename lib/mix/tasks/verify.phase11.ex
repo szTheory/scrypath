@@ -1,8 +1,6 @@
 defmodule Mix.Tasks.Verify.Phase11 do
   use Mix.Task
 
-  alias Scrypath.MixProject
-
   @shortdoc "Runs the release-alignment gate (package, consumer, docs, Release Please wiring)"
 
   @moduledoc """
@@ -169,7 +167,9 @@ defmodule Mix.Tasks.Verify.Phase11 do
   defp maybe_add_mismatch(messages, false, _message), do: messages
 
   defp release_sources! do
-    project = MixProject.project()
+    # Mix.Project.config/0 (not Scrypath.MixProject.project/0) so Dialyzer can resolve the
+    # call — mix.exs is not part of Dialyzer's analyzed beam set.
+    project = Mix.Project.config()
     manifest = File.read!(".release-please-manifest.json") |> Jason.decode!()
     release_config = File.read!("release-please-config.json") |> Jason.decode!()
 
