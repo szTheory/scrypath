@@ -147,6 +147,7 @@
   --control-h-sm: 2.25rem;   /* segmented buttons, checkbox rows (= legacy min-h-9) */
   --control-h-md: 2.5rem;    /* default: inputs, selects, nav items, buttons */
   --control-h-lg: 2.75rem;   /* prominent / touch */
+  --control-h-textarea: 6rem; /* multi-line input min-height (= legacy min-h-24) */
   --control-pad-x-sm: 0.625rem;
   --control-pad-x-md: 0.75rem;
 
@@ -400,6 +401,41 @@
   .ops-badge-running {
     border-color: color-mix(in oklch, var(--color-primary) 48%, transparent);
     background: color-mix(in oklch, var(--color-primary) 12%, transparent);
+  }
+
+  /* Labelled tone chip (ops_tone_chip): a `label : value` pill that settles to a
+     status tone. Composes with `.ops-tone-*` for the surface; the trailing value
+     picks up the matching accent color. Tone settles like metrics/verdict. */
+  .ops-tone-chip {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-ops-2);
+    border: 1px solid transparent;
+    border-radius: var(--radius-ops-md);
+    padding: 0.5rem 0.75rem;
+    font-size: var(--text-ops-sm);
+    transition:
+      background-color var(--duration-ops-status) var(--ease-ops-standard),
+      border-color var(--duration-ops-status) var(--ease-ops-standard);
+  }
+
+  .ops-tone-chip__value {
+    margin-left: auto;
+    font-weight: 600;
+    color: color-mix(in oklch, var(--color-base-content) 75%, transparent);
+  }
+
+  .ops-tone-chip.ops-tone-success .ops-tone-chip__value {
+    color: var(--color-success);
+  }
+
+  .ops-tone-chip.ops-tone-warning .ops-tone-chip__value,
+  .ops-tone-chip.ops-tone-partial .ops-tone-chip__value {
+    color: var(--color-warning);
+  }
+
+  .ops-tone-chip.ops-tone-error .ops-tone-chip__value {
+    color: var(--color-error);
   }
 
   /* Shared button height + press feel. Radius is applied as the `rounded-ops-control`

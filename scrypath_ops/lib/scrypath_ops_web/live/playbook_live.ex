@@ -904,8 +904,8 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             </.ops_button>
           </.ops_toolbar>
 
-          <p :if={@examples_mode?} class="text-sm text-base-content/80">
-            Examples (read-only) — set <code class="text-sm">SCRYPATH_OPS_PLAYBOOK_DIR</code>
+          <p :if={@examples_mode?} class="text-ops-body text-base-content/80">
+            Examples (read-only) — set <code class="text-ops-body">SCRYPATH_OPS_PLAYBOOK_DIR</code>
             to enable saving and deleting under a dedicated directory. See
             <.link class="link link-hover" navigate={"#{@mount_path}/search"}>
               Search & federation
@@ -929,14 +929,14 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               active={row.name == @selected_basename}
             >
               <div class="flex min-w-0 flex-col gap-0.5">
-                <span class="text-sm font-semibold text-base-content">{row.display_title}</span>
+                <span class="text-ops-body font-semibold text-base-content">{row.display_title}</span>
                 <span
                   :if={row.description != ""}
-                  class="line-clamp-2 text-xs text-base-content/70"
+                  class="line-clamp-2 text-ops-sm text-base-content/70"
                 >
                   {row.description}
                 </span>
-                <span class="font-mono text-xs text-base-content/65">{row.name}</span>
+                <span class="font-mono text-ops-sm text-base-content/65">{row.name}</span>
               </div>
               <:actions>
                 <.ops_action_group>
@@ -1015,12 +1015,12 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             </.ops_upload_box>
 
             <details class="max-w-xl">
-              <summary class="cursor-pointer text-sm link link-hover">Or paste JSON</summary>
+              <summary class="cursor-pointer text-ops-body link link-hover">Or paste JSON</summary>
               <.form for={%{}} phx-submit="import_paste" class="mt-2 space-y-2">
                 <.ops_textarea
                   id="playbook-paste-json"
                   name="json"
-                  class="font-mono text-xs"
+                  class="font-mono text-ops-sm"
                   placeholder="Paste playbook JSON"
                 />
                 <.ops_button type="submit" variant={:ghost}>Import from paste</.ops_button>
@@ -1033,18 +1033,18 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             <.ops_heading level={2}>Preview</.ops_heading>
             <p
               :if={@preview_marker}
-              class="text-xs text-base-content/70"
+              class="text-ops-sm text-base-content/70"
               data-testid="playbook-preview-marker"
             >
               Validated playbook preview
             </p>
             <.ops_data_card title="Playbook summary" subtitle="Review this before running.">
-              <dl class="grid gap-2 text-sm sm:grid-cols-2">
+              <dl class="grid gap-2 text-ops-body sm:grid-cols-2">
                 <div :for={{label, value} <- playbook_summary(@draft_playbook)}>
-                  <dt class="text-xs font-semibold uppercase tracking-wide text-base-content/60">
+                  <dt class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/60">
                     {label}
                   </dt>
-                  <dd class="mt-0.5 font-mono text-xs text-base-content">{value}</dd>
+                  <dd class="mt-0.5 font-mono text-ops-sm text-base-content">{value}</dd>
                 </div>
               </dl>
             </.ops_data_card>
@@ -1072,7 +1072,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               </.ops_button>
               <p
                 :if={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
-                class="text-sm text-base-content/70"
+                class="text-ops-body text-base-content/70"
               >
                 Configure schema allowlist and Scrypath backend to enable runs (see README).
               </p>
@@ -1080,7 +1080,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
             <.ops_notice :if={@run_ui.phase == :running} kind={:running} title="Running playbook">
               <span>
-                Applying results for run <code class="text-xs">{@run_ui.run_id}</code> only.
+                Applying results for run <code class="text-ops-sm">{@run_ui.run_id}</code> only.
               </span>
             </.ops_notice>
 
@@ -1147,7 +1147,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                     id="save_basename"
                     name="basename"
                     value={@save_basename}
-                    class="font-mono text-sm"
+                    class="font-mono text-ops-body"
                     placeholder="my-playbook.json"
                   />
                 </.ops_field>
@@ -1164,8 +1164,8 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             title="Delete playbook file"
             cancel_event="cancel_delete"
           >
-            <p class="py-4 text-sm">
-              This permanently deletes <code class="font-mono text-xs">{@delete_pending}</code>
+            <p class="py-4 text-ops-body">
+              This permanently deletes <code class="font-mono text-ops-sm">{@delete_pending}</code>
               from the playbook directory. This cannot be undone.
             </p>
             <.form for={%{}} phx-submit="confirm_delete" class="space-y-3">
@@ -1173,7 +1173,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                 <.ops_text_input
                   id="delete-confirm-input"
                   name="confirm"
-                  class="font-mono text-sm"
+                  class="font-mono text-ops-body"
                   autocomplete="off"
                 />
               </.ops_field>
@@ -1190,15 +1190,15 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             title="Rename playbook"
             cancel_event="rename_cancel"
           >
-            <p class="py-2 text-sm">
-              Renaming <code class="font-mono text-xs">{@rename_modal.from}</code>
+            <p class="py-2 text-ops-body">
+              Renaming <code class="font-mono text-ops-sm">{@rename_modal.from}</code>
             </p>
             <.form for={%{}} phx-submit="rename_submit" class="space-y-3">
               <.ops_field id="rename-new-name-input" label="New basename (.json)">
                 <.ops_text_input
                   id="rename-new-name-input"
                   name="new_name"
-                  class="font-mono text-sm"
+                  class="font-mono text-ops-body"
                   placeholder="new-name.json"
                 />
               </.ops_field>
@@ -1215,8 +1215,8 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             title="Duplicate playbook"
             cancel_event="dup_cancel"
           >
-            <p class="py-2 text-sm">
-              Copying <code class="font-mono text-xs">{@duplicate_modal.from}</code>
+            <p class="py-2 text-ops-body">
+              Copying <code class="font-mono text-ops-sm">{@duplicate_modal.from}</code>
             </p>
             <.form for={%{}} phx-submit="dup_submit" class="space-y-3">
               <.ops_field id="dup-to-name-input" label="New basename (.json)">
@@ -1224,7 +1224,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   id="dup-to-name-input"
                   name="to_name"
                   value={@duplicate_modal.to}
-                  class="font-mono text-sm"
+                  class="font-mono text-ops-body"
                 />
               </.ops_field>
               <div class="flex justify-between gap-2">

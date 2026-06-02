@@ -51,7 +51,7 @@ defmodule ScrypathOpsWeb.Layouts do
     ~H"""
     <a
       href="#ops-main"
-      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-base-100 focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-base-100 focus:px-3 focus:py-2 focus:text-ops-body focus:font-medium focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary"
     >
       Skip to operator content
     </a>
@@ -61,8 +61,8 @@ defmodule ScrypathOpsWeb.Layouts do
         <.link navigate={@mount_path} class="flex w-fit items-center gap-3">
           <img src={"#{@mount_path}/images/logo.svg"} width="36" height="36" alt="" />
           <span>
-            <span class="block text-sm font-semibold leading-4">ScrypathOps</span>
-            <span class="block text-xs text-base-content/60">Ecto-native search operations</span>
+            <span class="block text-ops-body font-semibold leading-4">ScrypathOps</span>
+            <span class="block text-ops-sm text-base-content/60">Ecto-native search operations</span>
           </span>
         </.link>
 
@@ -109,7 +109,7 @@ defmodule ScrypathOpsWeb.Layouts do
       <div class="flex-1">
         <a href={"#{@mount_path}"} class="flex-1 flex w-fit items-center gap-2">
           <img src={"#{@mount_path}/images/logo.svg"} width="36" height="36" alt="" />
-          <span class="text-sm font-semibold">v{Application.spec(:phoenix, :vsn)}</span>
+          <span class="text-ops-body font-semibold">v{Application.spec(:phoenix, :vsn)}</span>
         </a>
       </div>
       <div class="flex-none">
@@ -217,7 +217,7 @@ defmodule ScrypathOpsWeb.Layouts do
       />
 
       <button
-        class="flex min-h-10 min-w-10 cursor-pointer items-center justify-center p-2"
+        class="flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-2"
         type="button"
         aria-label="Use system theme"
         phx-click={JS.dispatch("phx:set-theme")}
@@ -227,7 +227,7 @@ defmodule ScrypathOpsWeb.Layouts do
       </button>
 
       <button
-        class="flex min-h-10 min-w-10 cursor-pointer items-center justify-center p-2"
+        class="flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-2"
         type="button"
         aria-label="Use light theme"
         phx-click={JS.dispatch("phx:set-theme")}
@@ -237,7 +237,7 @@ defmodule ScrypathOpsWeb.Layouts do
       </button>
 
       <button
-        class="flex min-h-10 min-w-10 cursor-pointer items-center justify-center p-2"
+        class="flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-2"
         type="button"
         aria-label="Use dark theme"
         phx-click={JS.dispatch("phx:set-theme")}

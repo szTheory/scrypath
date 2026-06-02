@@ -75,7 +75,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
               </.ops_link_button>
             </:actions>
             <p>{@posture.evidence}</p>
-            <p class="mt-2 text-xs text-base-content/60">
+            <p class="mt-2 text-ops-sm text-base-content/60">
               {@posture.schema_count} schema(s) · {@posture.error_count} fetch error(s) · {@posture.backend_failed_count} failed backend · refreshed {format_dt(
                 @posture.refreshed_at
               )}
@@ -94,9 +94,9 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
       </.ops_panel>
 
       <section aria-labelledby="control-room-intents-heading" class="space-y-3">
-        <h2 id="control-room-intents-heading" class="text-lg font-semibold text-base-content">
+        <.ops_heading level={2} id="control-room-intents-heading">
           What do you need to do?
-        </h2>
+        </.ops_heading>
         <div class="grid gap-4 md:grid-cols-3">
           <.ops_intent_card
             icon="🚨"

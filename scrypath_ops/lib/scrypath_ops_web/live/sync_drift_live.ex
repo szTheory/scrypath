@@ -221,11 +221,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       </.ops_panel>
 
       <.ops_notice kind={:info} title="Read-only checks first" class="mt-4">
-        Use <code class="text-xs">mix scrypath.reconcile</code>, <code class="text-xs">mix scrypath.index.contract_drift</code>, <code class="text-xs">guides/drift-recovery.md</code>,
-        <code class="text-xs">guides/sync-modes-and-visibility.md</code>
+        Use <code class="text-ops-sm">mix scrypath.reconcile</code>, <code class="text-ops-sm">mix scrypath.index.contract_drift</code>, <code class="text-ops-sm">guides/drift-recovery.md</code>,
+        <code class="text-ops-sm">guides/sync-modes-and-visibility.md</code>
         for canonical workflows. The primary checks below stay read-only over
-        <code class="text-xs">Scrypath.reconcile_sync/2</code>
-        and <code class="text-xs">Scrypath.index_contract_drift/2</code>.
+        <code class="text-ops-sm">Scrypath.reconcile_sync/2</code>
+        and <code class="text-ops-sm">Scrypath.index_contract_drift/2</code>.
       </.ops_notice>
 
       <.ops_panel>
@@ -290,7 +290,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             <tbody>
               <tr>
                 <th scope="row" class="font-medium align-top">Index</th>
-                <td><code class="text-xs">{@reconcile_result.index}</code></td>
+                <td><code class="text-ops-sm">{@reconcile_result.index}</code></td>
               </tr>
               <tr>
                 <th scope="row" class="font-medium align-top">Mode</th>
@@ -312,7 +312,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             </tbody>
           </.ops_signal_table>
 
-          <p :if={@reconcile_result == nil && @selected_schema} class="text-sm text-base-content/70">
+          <p
+            :if={@reconcile_result == nil && @selected_schema}
+            class="text-ops-body text-base-content/70"
+          >
             Reconcile not loaded yet — choose a schema or tap “Refresh reconcile”.
           </p>
         </.ops_section>
@@ -358,13 +361,13 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               </tr>
               <tr>
                 <th scope="row" class="font-medium align-top">Version · index</th>
-                <td class="font-mono text-xs tabular-nums">
+                <td class="font-mono text-ops-sm tabular-nums">
                   version {@drift_result.version} · index {@drift_result.index}
                 </td>
               </tr>
               <tr>
                 <th scope="row" class="font-medium align-top">Dimension mismatches</th>
-                <td class="font-mono text-xs tabular-nums">
+                <td class="font-mono text-ops-sm tabular-nums">
                   {drift_mismatch_count(@drift_result)} of {map_size(@drift_result.dimensions)}
                 </td>
               </tr>
@@ -372,19 +375,12 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           </.ops_signal_table>
           <.ops_data_card :if={@drift_result} title="Contract dimensions" class="mt-3">
             <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              <div
+              <.ops_tone_chip
                 :for={{label, match?} <- drift_dimension_rows(@drift_result)}
-                class={[
-                  "rounded-ops-md border px-3 py-2 text-ops-xs",
-                  match? && "ops-tone-success",
-                  not match? && "ops-tone-warning"
-                ]}
-              >
-                <span class="font-semibold">{label}</span>
-                <span class={["ml-2", match? && "text-success", not match? && "text-warning"]}>
-                  {if match?, do: "matches", else: "differs"}
-                </span>
-              </div>
+                kind={if match?, do: :success, else: :warning}
+                label={label}
+                value={if match?, do: "matches", else: "differs"}
+              />
             </div>
           </.ops_data_card>
         </.ops_section>
@@ -406,7 +402,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             drift clean before the gated swap is safe.
           </.ops_verdict>
           <.ops_action_group tone={:advanced}>
-            <p class="max-w-xl text-sm text-base-content/75">
+            <p class="max-w-xl text-ops-body text-base-content/75">
               Swap the prepared target index into the live alias for <code>{module_flat_name(@selected_schema)}</code>. This runs the existing gated
               recovery path and refreshes loaded checks afterward.
             </p>

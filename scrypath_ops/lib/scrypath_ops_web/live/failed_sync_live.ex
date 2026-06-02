@@ -279,7 +279,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             · refreshed <span class="font-mono tabular-nums">{format_dt(@last_refresh_at)}</span>
           </.ops_status>
 
-          <div class={["grid gap-3 sm:grid-cols-2 lg:grid-cols-6", @compact_mode && "hidden"]}>
+          <.ops_metric_grid cols={6} class={@compact_mode && "hidden"}>
             <h2
               id="failed-sync-rollups-heading"
               class="sr-only"
@@ -296,7 +296,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             <.ops_metric label="Backend" value={@inspection.counts.by_class.backend_rejected} />
             <.ops_metric label="Queue" value={@inspection.counts.by_class.queue_exhausted} />
             <.ops_metric label="Unknown" value={@inspection.counts.by_class.unknown} />
-          </div>
+          </.ops_metric_grid>
 
           <.ops_disclosure
             summary="Triage guidance"
@@ -307,7 +307,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                 title="Triage order"
                 subtitle="Use the largest nonzero class first, then inspect retryable rows."
               >
-                <ol class="list-inside list-decimal space-y-1 text-xs text-base-content/75">
+                <ol class="list-inside list-decimal space-y-1 text-ops-sm text-base-content/75">
                   <li>Transport: check connectivity, timeout, and credential drift.</li>
                   <li>Validation: compare payload shape against the current schema contract.</li>
                   <li>Backend / queue: inspect backend rejection and retry exhaustion separately.</li>
@@ -317,7 +317,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                 title="Unknown failures"
                 subtitle="Unknown means Scrypath could not classify the stored failure into a known operational bucket."
               >
-                <p class="text-xs text-base-content/75">
+                <p class="text-ops-sm text-base-content/75">
                   Open row evidence before retrying. Unknown rows usually need a human read of the raw reason.
                 </p>
               </.ops_data_card>
@@ -325,16 +325,16 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                 title="Retry semantics"
                 subtitle="Retry re-enqueues original work; it does not erase history or guarantee backend acceptance."
               >
-                <p class="text-xs text-base-content/75">
+                <p class="text-ops-sm text-base-content/75">
                   Retry only after the class-specific cause is addressed. The row remains useful evidence until the next successful sync path updates operator state.
                 </p>
               </.ops_data_card>
             </div>
           </.ops_disclosure>
 
-          <p class="mt-4 text-xs text-base-content/60">
-            For recovery actions use <code class="text-sm">mix scrypath.failed</code>
-            and the repo guides <code class="text-sm">guides/drift-recovery.md</code>, <code class="text-sm">guides/operator-mix-tasks.md</code>.
+          <p class="mt-4 text-ops-sm text-base-content/60">
+            For recovery actions use <code class="text-ops-body">mix scrypath.failed</code>
+            and the repo guides <code class="text-ops-body">guides/drift-recovery.md</code>, <code class="text-ops-body">guides/operator-mix-tasks.md</code>.
           </p>
         </section>
 
@@ -345,7 +345,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
           >
             Failed sync jobs
           </h2>
-          <p class="mt-1 max-w-3xl text-sm text-base-content/70">
+          <p class="mt-1 max-w-3xl text-ops-body text-base-content/70">
             Rows are sorted by latest attempt so the newest operator evidence stays at the top.
             Open evidence only when needed; retry is scoped to the selected row.
           </p>
@@ -391,7 +391,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                     </.ops_code_block>
                   </div>
                   <.ops_action_group :if={row.recovery} tone={:advanced} class="items-start">
-                    <p class="text-xs text-base-content/75">
+                    <p class="text-ops-sm text-base-content/75">
                       Retry re-enqueues the original sync work and keeps this row visible until the backend confirms recovery.
                     </p>
                     <.ops_button

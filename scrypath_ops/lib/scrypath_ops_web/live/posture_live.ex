@@ -169,7 +169,7 @@ defmodule ScrypathOpsWeb.PostureLive do
             </:actions>
             {@posture_evidence}
           </.ops_verdict>
-          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <.ops_metric_grid cols={5}>
             <.ops_metric
               label="Schemas"
               value={posture_schema_count(@posture_rows)}
@@ -195,7 +195,7 @@ defmodule ScrypathOpsWeb.PostureLive do
               value={format_dt(@last_refresh_at)}
               kind={:neutral}
             />
-          </div>
+          </.ops_metric_grid>
         </section>
       </.ops_panel>
 
@@ -206,8 +206,8 @@ defmodule ScrypathOpsWeb.PostureLive do
           class="space-y-1"
         >
           <.ops_heading level={2} id="posture-jtbd-heading">Next checks</.ops_heading>
-          <p class="text-sm text-base-content/80">{@posture_evidence}</p>
-          <ol class="mt-3 list-decimal list-inside space-y-2 text-sm text-base-content/90">
+          <p class="text-ops-body text-base-content/80">{@posture_evidence}</p>
+          <ol class="mt-3 list-decimal list-inside space-y-2 text-ops-body text-base-content/90">
             <li :for={check <- @next_checks} class="pl-1">
               <span>{check.text}</span>
               <span :if={check[:navigate]} class="ml-2">
@@ -216,7 +216,7 @@ defmodule ScrypathOpsWeb.PostureLive do
               <span :if={check[:href]} class="ml-2">
                 <a href={check.href} class="link link-primary">Open guide</a>
               </span>
-              <span :if={check[:mix]} class="mt-1 block font-mono text-xs text-base-content/70">
+              <span :if={check[:mix]} class="mt-1 block font-mono text-ops-sm text-base-content/70">
                 {check.mix}
               </span>
             </li>
@@ -224,7 +224,7 @@ defmodule ScrypathOpsWeb.PostureLive do
         </section>
       </.ops_panel>
 
-      <p :if={@auto_refresh} class="mt-2 text-sm text-base-content/70">
+      <p :if={@auto_refresh} class="mt-2 text-ops-body text-base-content/70">
         Auto-refresh is not enabled by default; only manual refresh runs in this build.
       </p>
 
@@ -254,13 +254,13 @@ defmodule ScrypathOpsWeb.PostureLive do
                 <th scope="col">Queue last OK</th>
               </tr>
             </thead>
-            <tbody class="text-sm leading-snug tabular-nums">
+            <tbody class="text-ops-body leading-snug tabular-nums">
               <%= for {mod, row} <- elem(@posture_rows, 1) do %>
                 <tr data-testid="posture-row" id={"posture-#{inspect(mod)}"}>
                   <%= case row do %>
                     <% {:ok, status} -> %>
-                      <td class="font-mono text-xs">{inspect(mod)}</td>
-                      <td class="font-mono text-xs">{status.index}</td>
+                      <td class="font-mono text-ops-sm">{inspect(mod)}</td>
+                      <td class="font-mono text-ops-sm">{status.index}</td>
                       <td>{status.mode}</td>
                       <td>{length(status.backend.pending)}</td>
                       <td>{length(status.backend.failed)}</td>
@@ -277,7 +277,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                       <td>{length(status.queue.failed)}</td>
                       <td>{format_state_ts(status.queue.last_succeeded)}</td>
                     <% {:error, reason} -> %>
-                      <td class="font-mono text-xs">{inspect(mod)}</td>
+                      <td class="font-mono text-ops-sm">{inspect(mod)}</td>
                       <td colspan="10" class="text-error">
                         fetch error: {inspect(reason)}
                       </td>

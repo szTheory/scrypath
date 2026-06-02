@@ -20,14 +20,16 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_page_header(assigns) do
     ~H"""
     <div class="space-y-1">
-      <p class="text-xs font-semibold uppercase tracking-wide text-secondary">Operator workspace</p>
+      <p class="text-ops-sm font-semibold uppercase tracking-wide text-secondary">
+        Operator workspace
+      </p>
       <h1
         id={@title_id}
         class="text-ops-h1 font-semibold leading-ops-tight tracking-normal text-base-content"
       >
         {@title}
       </h1>
-      <p :if={@subtitle} class="max-w-3xl text-sm text-base-content/70">{@subtitle}</p>
+      <p :if={@subtitle} class="max-w-3xl text-ops-body text-base-content/70">{@subtitle}</p>
     </div>
     """
   end
@@ -111,8 +113,8 @@ defmodule ScrypathOpsWeb.OpsUi do
           <h2 id={@heading_id} class="text-ops-h2 font-semibold leading-ops-tight text-base-content">
             {@title}
           </h2>
-          <p :if={@subtitle} class="max-w-3xl text-sm text-base-content/75">{@subtitle}</p>
-          <p :if={@meta} class="font-mono text-xs tabular-nums text-base-content/60">{@meta}</p>
+          <p :if={@subtitle} class="max-w-3xl text-ops-body text-base-content/75">{@subtitle}</p>
+          <p :if={@meta} class="font-mono text-ops-sm tabular-nums text-base-content/60">{@meta}</p>
         </div>
         <div :if={@actions != []} class="flex flex-wrap items-center justify-end gap-2">
           {render_slot(@actions)}
@@ -202,7 +204,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <div
       class={[
-        "rounded-ops-control border px-4 py-3 text-sm text-base-content",
+        "rounded-ops-control border px-4 py-3 text-ops-body text-base-content",
         tone_class(@kind),
         @class
       ]}
@@ -231,7 +233,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <div
       class={[
-        "rounded-ops-control border px-4 py-3 text-sm text-base-content shadow-ops-surface",
+        "rounded-ops-control border px-4 py-3 text-ops-body text-base-content shadow-ops-surface",
         tone_class(@kind),
         @class
       ]}
@@ -259,8 +261,54 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_metric(assigns) do
     ~H"""
     <div class={["ops-metric ops-muted-panel px-3 py-2", metric_tone_class(@kind)]}>
-      <p class="text-xs font-semibold uppercase tracking-wide text-base-content/60">{@label}</p>
+      <p class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/60">{@label}</p>
       <p class="mt-1 font-mono text-ops-lg font-semibold tabular-nums">{@value}</p>
+    </div>
+    """
+  end
+
+  @doc """
+  Responsive grid wrapper for `ops_metric/1` tiles (and other rollup cards).
+
+  `cols` is the column count at the `lg` breakpoint; every grid stacks to one column
+  on mobile and two on `sm`, so metric rollups read consistently everywhere. Column
+  classes are emitted as literals (`metric_grid_cols/1`) so Tailwind's source scan
+  keeps them.
+  """
+  attr(:cols, :integer, default: 4, values: [3, 4, 5, 6])
+  attr(:class, :any, default: nil)
+  attr(:rest, :global)
+  slot(:inner_block, required: true)
+
+  def ops_metric_grid(assigns) do
+    ~H"""
+    <div class={["grid gap-3", metric_grid_cols(@cols), @class]} {@rest}>
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
+  @doc """
+  Labelled tone chip — a compact `label : value` pill whose surface settles to a
+  status tone. The single shared home for "this dimension matches / differs" style
+  status rows (drift dimensions, per-reason flags) so tone branching stays out of
+  templates and routes through the `tone_class/1` authority.
+  """
+  attr(:kind, :atom,
+    default: :neutral,
+    values: [:neutral, :info, :success, :warning, :error, :partial, :running]
+  )
+
+  attr(:label, :string, required: true)
+  attr(:value, :string, default: nil)
+  attr(:class, :any, default: nil)
+  attr(:rest, :global)
+
+  def ops_tone_chip(assigns) do
+    ~H"""
+    <div class={["ops-tone-chip", tone_chip_class(@kind), @class]} {@rest}>
+      <span class="font-semibold">{@label}</span>
+      <span :if={@value} class="ops-tone-chip__value">{@value}</span>
     </div>
     """
   end
@@ -315,7 +363,7 @@ defmodule ScrypathOpsWeb.OpsUi do
         <div class="min-w-0 space-y-1">
           <p
             :if={@label}
-            class="text-xs font-semibold uppercase tracking-wide text-base-content/55"
+            class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/55"
           >
             {@label}
           </p>
@@ -323,7 +371,7 @@ defmodule ScrypathOpsWeb.OpsUi do
             <span class="ops-verdict__dot" aria-hidden="true"></span>
             {@headline}
           </p>
-          <div :if={@inner_block != []} class="text-sm text-base-content/75">
+          <div :if={@inner_block != []} class="text-ops-body text-base-content/75">
             {render_slot(@inner_block)}
           </div>
         </div>
@@ -433,7 +481,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_empty_state(assigns) do
     ~H"""
-    <div class={["ops-muted-panel p-5 text-sm", @class]}>
+    <div class={["ops-muted-panel p-5 text-ops-body", @class]}>
       <h2 class="text-ops-h3 font-semibold leading-ops-tight text-base-content">{@title}</h2>
       <div class="mt-2 text-base-content/75">{render_slot(@inner_block)}</div>
     </div>
@@ -449,8 +497,8 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_upload_box(assigns) do
     ~H"""
     <div class={["ops-surface-flat p-3", @class]}>
-      <p class="text-sm font-semibold text-base-content">{@label}</p>
-      <p :if={@hint} class="mt-1 text-xs leading-5 text-base-content/65">{@hint}</p>
+      <p class="text-ops-body font-semibold text-base-content">{@label}</p>
+      <p :if={@hint} class="mt-1 text-ops-sm leading-5 text-base-content/65">{@hint}</p>
       <div class="mt-3">{render_slot(@inner_block)}</div>
     </div>
     """
@@ -496,8 +544,8 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <fieldset class={["space-y-3 border-0 p-0 m-0 min-w-0", @class]}>
       <div class="space-y-1">
-        <legend class="text-sm font-semibold text-base-content">{@legend}</legend>
-        <p :if={@hint} class="max-w-3xl text-xs leading-5 text-base-content/70">{@hint}</p>
+        <legend class="text-ops-body font-semibold text-base-content">{@legend}</legend>
+        <p :if={@hint} class="max-w-3xl text-ops-sm leading-5 text-base-content/70">{@hint}</p>
       </div>
       {render_slot(@inner_block)}
     </fieldset>
@@ -514,9 +562,9 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_field(assigns) do
     ~H"""
     <div class={["space-y-ops-field", @class]}>
-      <label class="block text-sm font-semibold text-base-content/75" for={@id}>{@label}</label>
+      <label class="block text-ops-body font-semibold text-base-content/75" for={@id}>{@label}</label>
       {render_slot(@inner_block)}
-      <p :if={@hint} class="text-xs leading-5 text-base-content/65">{@hint}</p>
+      <p :if={@hint} class="text-ops-sm leading-5 text-base-content/65">{@hint}</p>
     </div>
     """
   end
@@ -581,7 +629,10 @@ defmodule ScrypathOpsWeb.OpsUi do
       id={@id}
       name={@name}
       placeholder={@placeholder}
-      class={["textarea textarea-bordered min-h-24 w-full text-sm", @class]}
+      class={[
+        "textarea textarea-bordered min-h-[var(--control-h-textarea)] w-full text-ops-body",
+        @class
+      ]}
       {@rest}
     ><%= @value %></textarea>
     """
@@ -639,7 +690,7 @@ defmodule ScrypathOpsWeb.OpsUi do
           name="schema"
           options={@options}
           selected={module_flat_name(@selected)}
-          class="font-mono text-xs"
+          class="font-mono text-ops-sm"
         />
       </.ops_field>
     </form>
@@ -656,7 +707,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_segmented_control(assigns) do
     ~H"""
     <div class={["space-y-2", @class]}>
-      <p class="text-sm font-semibold text-base-content">{@label}</p>
+      <p class="text-ops-body font-semibold text-base-content">{@label}</p>
       <div class="inline-flex flex-wrap gap-1 rounded-ops-control border border-base-300 bg-base-200/70 p-1">
         <button
           :for={{label, value} <- @items}
@@ -688,7 +739,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     <div class={["ops-data-card p-3", @class]}>
       <label
         :for={{label, value} <- @options}
-        class="flex min-h-9 cursor-pointer items-center gap-2 text-sm"
+        class="flex min-h-[var(--control-h-sm)] cursor-pointer items-center gap-2 text-ops-body"
       >
         <input
           type="checkbox"
@@ -697,7 +748,7 @@ defmodule ScrypathOpsWeb.OpsUi do
           checked={value in @selected}
           class="checkbox checkbox-sm rounded"
         />
-        <span class="min-w-0 font-mono text-xs">{label}</span>
+        <span class="min-w-0 font-mono text-ops-sm">{label}</span>
       </label>
     </div>
     """
@@ -730,14 +781,14 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_data_card(assigns) do
     ~H"""
-    <div class={["ops-data-card p-4 text-sm", @class]}>
+    <div class={["ops-data-card p-4 text-ops-body", @class]}>
       <div
         :if={@title || @subtitle || @actions != []}
         class="mb-3 flex flex-wrap items-start justify-between gap-3"
       >
         <div class="min-w-0">
           <p :if={@title} class="font-semibold text-base-content">{@title}</p>
-          <p :if={@subtitle} class="mt-0.5 text-xs leading-5 text-base-content/65">{@subtitle}</p>
+          <p :if={@subtitle} class="mt-0.5 text-ops-sm leading-5 text-base-content/65">{@subtitle}</p>
         </div>
         <div :if={@actions != []} class="flex flex-wrap gap-2">
           {render_slot(@actions)}
@@ -759,10 +810,10 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_result_row(assigns) do
     ~H"""
-    <article class={["ops-result-row text-sm", @class]} {@rest}>
+    <article class={["ops-result-row text-ops-body", @class]} {@rest}>
       <div class="min-w-0">
         <h3 class="font-semibold text-base-content">{@title}</h3>
-        <p :if={@subtitle} class="mt-1 text-xs leading-5 text-base-content/70">{@subtitle}</p>
+        <p :if={@subtitle} class="mt-1 text-ops-sm leading-5 text-base-content/70">{@subtitle}</p>
         <div :if={@meta != []} class="mt-2 flex flex-wrap gap-2">
           {render_slot(@meta)}
         </div>
@@ -827,10 +878,10 @@ defmodule ScrypathOpsWeb.OpsUi do
       ]}
       {@rest}
     >
-      <summary class="cursor-pointer text-sm font-medium text-base-content">
+      <summary class="cursor-pointer text-ops-body font-medium text-base-content">
         {@summary}
       </summary>
-      <div class="ops-disclosure-body mt-2 text-sm text-base-content/80">
+      <div class="ops-disclosure-body mt-2 text-ops-body text-base-content/80">
         {render_slot(@inner_block)}
       </div>
     </details>
@@ -860,7 +911,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <pre
       class={[
-        "overflow-auto rounded-md font-mono text-xs whitespace-pre-wrap break-words",
+        "overflow-auto rounded-md font-mono text-ops-sm whitespace-pre-wrap break-words",
         @variant == :default && "max-h-96 bg-base-200 p-3",
         @variant == :compact && "max-h-48 bg-base-100 p-2",
         @variant == :embedded && "max-h-64 bg-base-100/70 p-3",
@@ -877,7 +928,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_inline_code(assigns) do
     ~H"""
-    <code class={["font-mono text-xs tabular-nums", @class]}>{render_slot(@inner_block)}</code>
+    <code class={["font-mono text-ops-sm tabular-nums", @class]}>{render_slot(@inner_block)}</code>
     """
   end
 
@@ -1039,13 +1090,13 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_workspace_mode_indicator(assigns) do
     ~H"""
-    <span class={["inline-flex flex-wrap items-center gap-1.5 text-xs", @class]}>
+    <span class={["inline-flex flex-wrap items-center gap-1.5 text-ops-sm", @class]}>
       <.ops_badge kind={if @mode == :examples, do: :warning, else: :neutral}>
         {if @mode == :examples, do: "Examples (read-only)", else: "Workspace"}
       </.ops_badge>
       <span
         :if={@path && @mode == :workspace}
-        class="max-w-xs truncate font-mono text-xs text-base-content/55"
+        class="max-w-xs truncate font-mono text-ops-sm text-base-content/55"
       >
         {@path}
       </span>
@@ -1082,6 +1133,16 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp tone_class(:partial), do: "ops-tone-partial"
   defp tone_class(:running), do: "ops-tone-running"
   defp tone_class(_), do: "ops-tone-info"
+
+  # Literal column classes so Tailwind's source scan keeps them; mobile-first base.
+  defp metric_grid_cols(3), do: "sm:grid-cols-2 lg:grid-cols-3"
+  defp metric_grid_cols(5), do: "sm:grid-cols-2 lg:grid-cols-5"
+  defp metric_grid_cols(6), do: "sm:grid-cols-2 lg:grid-cols-6"
+  defp metric_grid_cols(_), do: "sm:grid-cols-2 lg:grid-cols-4"
+
+  # Tone chips reuse the surface tones; :neutral stays a quiet muted panel (never blue).
+  defp tone_chip_class(:neutral), do: "ops-muted-panel"
+  defp tone_chip_class(kind), do: tone_class(kind)
 
   # Metric tiles keep their muted-panel background and only accent the border by tone,
   # so they route through their own border-only modifiers (not the full tinted surface).

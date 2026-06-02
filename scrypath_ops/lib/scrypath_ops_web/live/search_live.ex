@@ -22,7 +22,7 @@ defmodule ScrypathOpsWeb.SearchLive do
     ~H"""
     <%= if @result.hits == [] do %>
       <.ops_data_card title="No hits for this query.">
-        <p class="text-sm text-base-content/80">
+        <p class="text-ops-body text-base-content/80">
           Widen filters or try another sample; see the honesty panel for merge ceilings and backend limits.
           (<a class="link link-primary" href={@guide_href}>guides/multi-index-search.md</a>).
         </p>
@@ -735,19 +735,19 @@ defmodule ScrypathOpsWeb.SearchLive do
 
         <.ops_panel class="space-y-6" aria-describedby="search-honesty-panel">
           <.ops_empty_state :if={@schema_allowlist == []} title="No Schemas Configured">
-            No schemas configured for OPSUI. Set <code class="text-sm">schema_allowlist</code>
-            under <code class="text-sm">:scrypath_ops</code>
-            or use <code class="text-sm">SCRYPATH_OPS_SCHEMAS</code>
-            — see <code class="text-sm">scrypath_ops/README.md</code>.
+            No schemas configured for OPSUI. Set <code class="text-ops-body">schema_allowlist</code>
+            under <code class="text-ops-body">:scrypath_ops</code>
+            or use <code class="text-ops-body">SCRYPATH_OPS_SCHEMAS</code>
+            — see <code class="text-ops-body">scrypath_ops/README.md</code>.
           </.ops_empty_state>
 
           <.ops_empty_state
             :if={@schema_allowlist != [] && !Keyword.has_key?(@scrypath_opts, :backend)}
             title="Runtime Not Configured"
           >
-            Scrypath runtime is not configured (missing <code class="text-sm">:backend</code>
+            Scrypath runtime is not configured (missing <code class="text-ops-body">:backend</code>
             and related
-            options under <code class="text-sm">:scrypath_ops</code>). See <code class="text-sm">scrypath_ops/README.md</code>.
+            options under <code class="text-ops-body">:scrypath_ops</code>). See <code class="text-ops-body">scrypath_ops/README.md</code>.
           </.ops_empty_state>
 
           <.ops_status
@@ -780,10 +780,10 @@ defmodule ScrypathOpsWeb.SearchLive do
                   selected={to_string(@mode)}
                   items={[{"Single index", "single"}, {"Multi index", "multi"}]}
                 />
-                <p :if={@mode == :single} class="text-sm text-base-content/80">
+                <p :if={@mode == :single} class="text-ops-body text-base-content/80">
                   Run one allowlisted schema through the bounded Scrypath search path.
                 </p>
-                <p :if={@mode == :multi} class="text-sm text-base-content/80">
+                <p :if={@mode == :multi} class="text-ops-body text-base-content/80">
                   Multi index mode shows merge order as a federation view. Per-schema scores stay local. <a
                     class="link link-hover text-primary"
                     href={@guide_href}
@@ -804,7 +804,7 @@ defmodule ScrypathOpsWeb.SearchLive do
               </.ops_fieldset>
 
               <.ops_fieldset legend="Limits / safety">
-                <p id="search-limits-copy" class="text-xs leading-5 text-base-content/70">
+                <p id="search-limits-copy" class="text-ops-sm leading-5 text-base-content/70">
                   Page size is capped at {SearchPlayground.max_page_size_allowed()} hits per request.
                 </p>
                 <.ops_field id="search_page_size" label="Page size" class="w-full max-w-xs">
@@ -830,7 +830,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                     name="schema"
                     options={schema_options(@schema_allowlist)}
                     selected={inspect(@selected_schema)}
-                    class="font-mono text-xs"
+                    class="font-mono text-ops-sm"
                   />
                 </.ops_field>
               </.ops_fieldset>
@@ -872,7 +872,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                 role="alert"
               >
                 <p>{format_run_error(@run_error)}</p>
-                <p class="mt-2 text-xs">
+                <p class="mt-2 text-ops-sm">
                   Fix the query options or operator config, then run bounded search again.
                 </p>
               </.ops_status>
@@ -889,7 +889,7 @@ defmodule ScrypathOpsWeb.SearchLive do
               </div>
 
               <div :if={@result_multi} class="space-y-3">
-                <div id="search-federation-status" role="status" class="text-sm space-y-2">
+                <div id="search-federation-status" role="status" class="text-ops-body space-y-2">
                   <p :if={@result_multi.failures == []} class="text-base-content/70">
                     All selected indexes returned results on this run.
                   </p>
@@ -899,11 +899,11 @@ defmodule ScrypathOpsWeb.SearchLive do
                     class="rounded-ops-control border p-4 ops-tone-warning"
                   >
                     <p class="font-semibold">Some indexes did not return results.</p>
-                    <p class="mt-1 text-xs">
+                    <p class="mt-1 text-ops-sm">
                       Failures are per schema and do not cancel the whole response. Next: open failure details, adjust entries or backend, then re-run <strong>Run sample searches</strong>.
                     </p>
-                    <p class="mt-2 text-xs text-base-content/70">
-                      <code class="text-xs">:all</code>
+                    <p class="mt-2 text-ops-sm text-base-content/70">
+                      <code class="text-ops-sm">:all</code>
                       entries expanded follow declaration order before limits apply when multi-search uses global expansion.
                     </p>
                     <.ops_disclosure
@@ -911,15 +911,15 @@ defmodule ScrypathOpsWeb.SearchLive do
                       variant={:compact}
                       class="mt-2"
                     >
-                      <ul class="list-inside list-disc font-mono text-xs">
+                      <ul class="list-inside list-disc font-mono text-ops-sm">
                         <%= for %{schema: s, reason: r} <- @result_multi.failures do %>
                           <li>{inspect(s)} — {inspect(r)}</li>
                         <% end %>
                       </ul>
-                      <p :if={@show_all_footnote} class="mt-2 text-xs text-base-content/80">
-                        <code class="text-xs">:all</code>
+                      <p :if={@show_all_footnote} class="mt-2 text-ops-sm text-base-content/80">
+                        <code class="text-ops-sm">:all</code>
                         entries expanded to the configured global schema list in declaration order before limits apply; empty registry and missing
-                        <code class="text-xs">otp_app</code>
+                        <code class="text-ops-sm">otp_app</code>
                         errors match library invalid_options / all_expansion vocabulary.
                       </p>
                     </.ops_disclosure>
@@ -931,7 +931,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                     <strong>Merged order is a federation view</strong>
                     — per-schema relevance scores stay local; positions in the merge list are not a single-index ranking.
                   </p>
-                  <p class="mt-2 text-xs text-base-content/70">
+                  <p class="mt-2 text-ops-sm text-base-content/70">
                     Schemas in this response: {length(@result_multi.ordered)} · failures: {length(
                       @result_multi.failures
                     )}
@@ -943,7 +943,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   summary={"Merge trace (#{length(MultiSearchResult.merge_projection(@result_multi))} row(s))"}
                   variant={:compact}
                 >
-                  <ol class="mt-2 list-inside list-decimal font-mono text-xs">
+                  <ol class="mt-2 list-inside list-decimal font-mono text-ops-sm">
                     <%= for {mod, hit} <- MultiSearchResult.merge_projection(@result_multi) do %>
                       <li>{inspect(mod)} — {inspect(hit)}</li>
                     <% end %>
@@ -958,7 +958,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   summary={"Merge trace (#{length(@result_multi.merge_hit_order)} federation position(s))"}
                   variant={:compact}
                 >
-                  <ol class="mt-2 list-inside list-decimal font-mono text-xs">
+                  <ol class="mt-2 list-inside list-decimal font-mono text-ops-sm">
                     <%= for pair <- @result_multi.merge_hit_order do %>
                       <li>{inspect(pair)}</li>
                     <% end %>
@@ -970,7 +970,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   summary="Federation metadata"
                   variant={:compact}
                 >
-                  <p class="mt-2 text-xs text-base-content/60">
+                  <p class="mt-2 text-ops-sm text-base-content/60">
                     Per-entry weights are uniform when the backend does not expose per-entry overrides.
                   </p>
                   <.ops_code_block variant={:compact} class="mt-2">
@@ -982,7 +982,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   <.ops_heading level={2}>Per-schema panels</.ops_heading>
                   <%= for {mod, sres} <- @result_multi.ordered do %>
                     <.ops_data_card title={inspect(mod)}>
-                      <p class="text-xs text-base-content/70">
+                      <p class="text-ops-sm text-base-content/70">
                         Hits: {length(sres.hits)} · estimatedTotalHits: {Map.get(
                           sres.raw,
                           "estimatedTotalHits"
@@ -1011,7 +1011,7 @@ defmodule ScrypathOpsWeb.SearchLive do
             </h2>
             <div
               :if={@capture_base == nil}
-              class="ops-muted-panel p-4 text-sm text-base-content/70"
+              class="ops-muted-panel p-4 text-ops-body text-base-content/70"
             >
               Run a search first. This panel captures the last successful single- or multi-search inputs after you have inspected the result.
             </div>
@@ -1039,7 +1039,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                     id="capture_basename"
                     name="capture[basename]"
                     value={@capture_basename}
-                    class="font-mono text-sm"
+                    class="font-mono text-ops-body"
                     placeholder="my-search.json"
                     required
                   />
@@ -1056,7 +1056,7 @@ defmodule ScrypathOpsWeb.SearchLive do
 
               <p
                 :if={@capture_preview_ok?}
-                class="text-xs text-base-content/70"
+                class="text-ops-sm text-base-content/70"
                 data-testid="playbook-preview-marker"
               >
                 Validated playbook preview
