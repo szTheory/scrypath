@@ -1,0 +1,10 @@
+{
+  "playbook_format": 1,
+  "mode": "search",
+  "schema": "MyApp.Catalog.Product",
+  "q": "lightweight jacket",
+  "opts": {},
+  "title": "Single-index product probe",
+  "description": "A bounded read-only search against one allowlisted schema. Swap the schema and query to match your app, preview the exact payload, then run.",
+  "tags": ["example", "single-index"]
+}

@@ -1,0 +1,12 @@
+{
+  "playbook_format": 1,
+  "mode": "search_many",
+  "entries": [
+    ["MyApp.Catalog.Product", "jacket", {}],
+    ["MyApp.Catalog.Variant", "jacket", {}]
+  ],
+  "opts": {},
+  "title": "Federated catalog probe",
+  "description": "Runs the same query across two allowlisted schemas and shows the merged federation view. Per-schema relevance stays local — the merge order is a federation view, not a single ranking.",
+  "tags": ["example", "multi-index", "federation"]
+}
