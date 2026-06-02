@@ -1,0 +1,10 @@
+{
+  "playbook_format": 1,
+  "mode": "search",
+  "schema": "ScrypathEcommerce.Catalog.Product",
+  "q": "zzzz-no-such-product",
+  "opts": {},
+  "title": "Empty-result probe",
+  "description": "A deliberately unmatched query so you can see the honest no-hits state and confirm the probe path runs even when nothing matches.",
+  "tags": ["example", "empty-state"]
+}

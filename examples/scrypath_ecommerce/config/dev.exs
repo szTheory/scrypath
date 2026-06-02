@@ -4,7 +4,7 @@ import Config
 config :scrypath_ecommerce, ScrypathEcommerce.Repo,
   username: "postgres",
   password: "postgres",
-  hostname: "localhost",
+  hostname: System.get_env("PGHOST") || "localhost",
   port: String.to_integer(System.get_env("PGPORT") || "5432"),
   database: "scrypath_ecommerce_dev",
   stacktrace: true,
@@ -13,6 +13,13 @@ config :scrypath_ecommerce, ScrypathEcommerce.Repo,
 
 config :scrypath_ecommerce, sandbox: true
 
+# Point the operator Playbooks page at this example's own runnable playbooks (Product +
+# Variant against the seeded "Quantum" catalog). This is the demo's writable workspace,
+# so the page also exercises save/rename/delete/duplicate — the library's bundled
+# `priv/playbooks` stay generic adopter templates and are not coupled to this app.
+config :scrypath_ops,
+  playbook_workspace_dir: Path.expand("../priv/playbooks", __DIR__)
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
@@ -20,9 +27,12 @@ config :scrypath_ecommerce, sandbox: true
 # watchers to your application. For example, we can use it
 # to bundle .js and .css sources.
 config :scrypath_ecommerce, ScrypathEcommerceWeb.Endpoint,
-  # Binding to loopback ipv4 address prevents access from other machines.
-  # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
-  http: [ip: {127, 0, 0, 1}],
+  # Defaults to loopback:4000 for a bare `mix phx.server`. Set PORT to pick a free lane
+  # (the Makefile uses 4002) and PHX_HOST_IP=0.0.0.0 to serve through a container port map.
+  http: [
+    ip: if(System.get_env("PHX_HOST_IP") == "0.0.0.0", do: {0, 0, 0, 0}, else: {127, 0, 0, 1}),
+    port: String.to_integer(System.get_env("PORT") || "4000")
+  ],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,

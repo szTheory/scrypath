@@ -20,7 +20,7 @@ config :scrypath, :defaults,
   oban_queue: :scrypath_sync
 
 config :scrypath_ops,
-  schema_allowlist: [ScrypathEcommerce.Catalog.Product],
+  schema_allowlist: [ScrypathEcommerce.Catalog.Product, ScrypathEcommerce.Catalog.Variant],
   backend: Scrypath.Meilisearch,
   meilisearch_url: System.get_env("SCRYPATH_MEILISEARCH_URL") || "http://localhost:7700",
   index_prefix: "ecommerce_",
@@ -31,7 +31,10 @@ config :scrypath_ops,
 
 config :scrypath_ecommerce, Oban,
   repo: ScrypathEcommerce.Repo,
-  plugins: [Oban.Plugins.Pruner],
+  # A long prune window keeps the demo's deliberately-seeded failed sync work
+  # (mix scrypath.demo.seed) visible on the Failed Sync page instead of vanishing
+  # after the default 60s. Real failures still age out within the week.
+  plugins: [{Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7}],
   queues: [default: 10, scrypath_sync: 5]
 
 # Configure the endpoint
