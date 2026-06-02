@@ -74,7 +74,7 @@ const CommandPalette = {
       return
     }
     if (this.isTyping() || e.metaKey || e.ctrlKey || e.altKey) return
-    if (e.key === "?") { e.preventDefault(); this.openSheet() }
+    if (e.key === "?" || (e.key === "/" && e.shiftKey)) { e.preventDefault(); this.openSheet() }
     else if (e.key === "r") { this.refresh() }
   },
   open() {
