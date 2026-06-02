@@ -104,6 +104,19 @@ if (fs.existsSync(playwrightJsonPath)) {
 const events = readNdjson(evidenceNdjsonPath);
 const specs = report ? extractSpecs(report) : [];
 const testResults = specs.flatMap((spec) => spec.tests || []);
+const allResultAttempts = testResults.flatMap((test) => test.results || []);
+const failedSpecs = specs
+  .filter((spec) =>
+    (spec.tests || []).some((test) =>
+      (test.results || []).some((result) => isFailedOutcome(result.status))
+    )
+  )
+  .map((spec) => spec.title);
+const operationCounts = events.reduce((acc, event) => {
+  const operation = event.operation || "unknown";
+  acc[operation] = (acc[operation] || 0) + 1;
+  return acc;
+}, {});
 
 const flakySignal = testResults.some((test) =>
   (test.results || []).some((result) => result.retry > 0 && result.status === "passed")
@@ -119,6 +132,11 @@ const summary = {
   runtime_seconds: runtimeSeconds,
   flaky_signal: flakySignal,
   failure_classification: conclusion === "success" ? null : classifyFailure(events, report),
+  specs_total: specs.length,
+  tests_total: testResults.length,
+  attempts_total: allResultAttempts.length,
+  failed_specs: failedSpecs,
+  operation_counts: operationCounts,
   evidence_events_count: events.length,
   generated_at_utc: new Date().toISOString()
 };
@@ -135,8 +153,23 @@ const lines = [
   `- runtime_seconds: ${summary.runtime_seconds ?? "unknown"}`,
   `- flaky_signal: ${summary.flaky_signal}`,
   `- failure_classification: ${summary.failure_classification ?? "none"}`,
+  `- specs_total: ${summary.specs_total}`,
+  `- tests_total: ${summary.tests_total}`,
+  `- attempts_total: ${summary.attempts_total}`,
   `- evidence_events_count: ${summary.evidence_events_count}`,
-  `- generated_at_utc: ${summary.generated_at_utc}`
+  `- generated_at_utc: ${summary.generated_at_utc}`,
+  "",
+  "## Operation Counts",
+  "",
+  ...Object.entries(summary.operation_counts)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([operation, count]) => `- ${operation}: ${count}`),
+  "",
+  "## Failed Specs",
+  "",
+  ...(summary.failed_specs.length === 0
+    ? ["- none"]
+    : summary.failed_specs.map((title) => `- ${title}`))
 ];
 
 fs.writeFileSync(evidenceJsonPath, JSON.stringify(summary, null, 2));
