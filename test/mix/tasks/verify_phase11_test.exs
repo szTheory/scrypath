@@ -17,7 +17,11 @@ defmodule Mix.Tasks.Verify.Phase11Test do
       assert {:error, messages} = Phase11.validate_release_agreement(fixture)
 
       assert Enum.any?(messages, &String.contains?(&1, "mix.exs version=0.3.8"))
-      assert Enum.any?(messages, &String.contains?(&1, ".release-please-manifest.json version=0.3.7"))
+
+      assert Enum.any?(
+               messages,
+               &String.contains?(&1, ".release-please-manifest.json version=0.3.7")
+             )
     end
 
     test "rejects release-please config drift for root package settings" do

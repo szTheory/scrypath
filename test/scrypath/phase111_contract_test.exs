@@ -62,7 +62,9 @@ defmodule Scrypath.Phase111ContractTest do
     end
 
     test "promotion language excludes immediate or path-scoped required escalation" do
-      combined = @decision <> "\n" <> @contributing <> "\n" <> @roadmap <> "\n" <> @requirements <> "\n" <> @project
+      combined =
+        @decision <>
+          "\n" <> @contributing <> "\n" <> @roadmap <> "\n" <> @requirements <> "\n" <> @project
 
       assert combined =~ "no path-scoped required promotion"
       assert combined =~ "no branch-protection change in Phase 111"

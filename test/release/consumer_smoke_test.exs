@@ -189,9 +189,9 @@ defmodule Scrypath.Release.ConsumerSmokeTest do
     |> Path.join("**")
     |> Path.wildcard(match_dot: true)
     |> Enum.map(&Path.relative_to(&1, artifact_dir))
-    |> Enum.reject(&(&1 in [".", ".git"]))
-    |> Enum.reject(&String.starts_with?(&1, ".git/"))
-    |> Enum.reject(&(String.ends_with?(&1, "/")))
+    |> Enum.reject(
+      &(&1 in [".", ".git"] or String.starts_with?(&1, ".git/") or String.ends_with?(&1, "/"))
+    )
     |> Enum.sort()
   end
 end

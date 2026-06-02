@@ -85,7 +85,9 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     test "published-release monitor stays publish-free and schedule-deduped" do
       yml = File.read!(@verify_published_yml)
 
-      assert yml =~ "version=\"$(jq -r '.latest_stable_version // .latest_version // empty' package.json)\""
+      assert yml =~
+               "version=\"$(jq -r '.latest_stable_version // .latest_version // empty' package.json)\""
+
       assert yml =~ "mix verify.release_publish \"${{ steps.resolve-version.outputs.version }}\""
       assert yml =~ "mix verify.release_parity \"${{ steps.resolve-version.outputs.version }}\""
       refute yml =~ "mix hex.publish --yes"
@@ -354,7 +356,9 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     test "phase105-e2e exports evidence env and runs always-on summary script" do
       ci = File.read!(@ci_yml)
 
-      assert ci =~ "PHASE105_EVIDENCE_PATH: examples/scrypath_ecommerce/test-results/phase105-evidence.ndjson"
+      assert ci =~
+               "PHASE105_EVIDENCE_PATH: examples/scrypath_ecommerce/test-results/phase105-evidence.ndjson"
+
       assert ci =~ "- name: Generate phase105 evidence summary"
       assert ci =~ "if: always()"
       assert ci =~ "run: scripts/ci/phase105_evidence.sh"
@@ -395,7 +399,9 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
   defp workflow_job_block(content, job_name) do
     marker = "\n  #{job_name}:\n"
     {start_idx, marker_len} = :binary.match(content, marker)
-    rest = binary_part(content, start_idx + marker_len, byte_size(content) - start_idx - marker_len)
+
+    rest =
+      binary_part(content, start_idx + marker_len, byte_size(content) - start_idx - marker_len)
 
     case Regex.run(~r/\n  [a-zA-Z0-9_-]+:\n/, rest, return: :index) do
       [{next_idx, _}] -> binary_part(rest, 0, next_idx)
