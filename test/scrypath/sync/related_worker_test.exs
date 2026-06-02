@@ -66,6 +66,28 @@ defmodule Scrypath.Sync.RelatedWorkerTest do
       end
     end
 
+    defmodule OrdinaryWorkerSource do
+      use Ecto.Schema
+
+      use Scrypath,
+        fields: [:name],
+        fan_outs: [
+          comments: [
+            target: DummyTarget,
+            resolver: {__MODULE__, :resolve_comments, [:extra_arg]}
+          ]
+        ]
+
+      @primary_key {:id, :id, autogenerate: true}
+      schema "ordinary_worker_sources" do
+        field(:name, :string)
+      end
+
+      def resolve_comments([_ | _] = ids, :extra_arg) do
+        Enum.map(ids, &%DummyTarget{id: &1, title: "Ordinary worker comment #{&1}"})
+      end
+    end
+
     test "perform/1 runs the resolver and calls sync_records" do
       args = %{
         "schema" => to_string(DummySchema),
@@ -83,6 +105,28 @@ defmodule Scrypath.Sync.RelatedWorkerTest do
       assert length(documents) == 2
       assert Enum.map(documents, & &1.id) == [1, 2]
       assert config[:backend] == RecordingBackend
+    end
+
+    test "perform/1 consumes generated fan_out metadata from use Scrypath schema" do
+      args = %{
+        "schema" => to_string(OrdinaryWorkerSource),
+        "document_ids" => [4, 5],
+        "fan_out" => "comments",
+        "opts" => %{
+          "backend" => to_string(RecordingBackend),
+          "index_prefix" => "test"
+        }
+      }
+
+      assert :ok = RelatedWorker.perform(%Oban.Job{args: args})
+
+      assert_received {:upsert_documents, DummyTarget, documents, _config}
+      assert Enum.map(documents, & &1.id) == [4, 5]
+
+      assert Enum.map(documents, & &1.data[:title]) == [
+               "Ordinary worker comment 4",
+               "Ordinary worker comment 5"
+             ]
     end
 
     test "perform/1 cancels job on invalid schema" do
@@ -230,6 +274,10 @@ defmodule Scrypath.Sync.RelatedWorkerTest do
       }
 
       assert {:error, :some_generic_error} = RelatedWorker.perform(%Oban.Job{args: args})
+    end
+  else
+    test "Oban.Worker is required for related worker contract tests" do
+      flunk("Oban.Worker not loaded; related worker contract tests were skipped")
     end
   end
 end

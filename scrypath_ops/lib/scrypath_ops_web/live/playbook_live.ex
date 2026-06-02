@@ -132,14 +132,18 @@ defmodule ScrypathOpsWeb.PlaybookLive do
         path = Path.join(socket.assigns.examples_dir, name)
 
         if Store.safe_basename?(name) and File.exists?(path) do
-          {:ok, bin} = File.read(path)
+          case File.read(path) do
+            {:ok, bin} ->
+              socket =
+                socket
+                |> assign(:selected_basename, name)
+                |> apply_decoded(bin, :load)
 
-          socket =
-            socket
-            |> assign(:selected_basename, name)
-            |> apply_decoded(bin, :load)
+              {:noreply, socket}
 
-          {:noreply, socket}
+            {:error, _} ->
+              {:noreply, put_flash(socket, :error, "Could not read that example file.")}
+          end
         else
           {:noreply, put_flash(socket, :error, "Could not read that example file.")}
         end
@@ -778,6 +782,36 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
   defp run_result_summary(_), do: "Run finished."
 
+  # Loop the operator back to Search with this playbook's query pre-filled, mapping the
+  # playbook mode (search / search_many) onto the Search UI mode (single / multi). Schema
+  # is left to the Search default to avoid leaking the inspect() module format here.
+  defp search_loopback_path(mount_path, playbook) when is_map(playbook) do
+    mode = if Map.get(playbook, "mode") == "search_many", do: "multi", else: "single"
+    query = playbook |> Map.get("q") |> to_string()
+    "#{mount_path}/search?" <> URI.encode_query(%{"mode" => mode, "q" => query})
+  end
+
+  defp playbook_summary(nil), do: []
+
+  defp playbook_summary(playbook) when is_map(playbook) do
+    opts = Map.get(playbook, "opts") || %{}
+    page = Map.get(opts, "page") || %{}
+
+    [
+      {"Mode", Map.get(playbook, "mode")},
+      {"Schema", Map.get(playbook, "schema")},
+      {"Query", Map.get(playbook, "q")},
+      {"Entries", playbook |> Map.get("entries") |> entry_count_label()},
+      {"Page size", Map.get(page, "size")}
+    ]
+    |> Enum.reject(fn {_label, value} -> value in [nil, "", []] end)
+  end
+
+  defp entry_count_label(entries) when is_list(entries),
+    do: "#{length(entries)} schema query entries"
+
+  defp entry_count_label(_), do: nil
+
   defp diagnostics_payload(enriched) when is_map(enriched) do
     Map.take(enriched, [:failure_class, :reason, :message, :copy, :doc])
   end
@@ -828,330 +862,378 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} shell={@shell} ops_main_width={:wide}>
+    <Layouts.app
+      mount_path={@mount_path}
+      flash={@flash}
+      shell={@shell}
+      page_title={@page_title}
+      ops_main_width={:wide}
+    >
       <div class="space-y-6">
-        <.ops_page_header title={@page_title} />
-
-        <div
-          id="playbook-honesty-panel"
-          class="rounded-md border border-warning/40 bg-warning/10 px-sm py-sm text-sm text-base-content"
-        >
-          <strong>Non-production playbook workspace</strong>
-          — exploratory runs use the same bounded search path as the playground and may be logged by backends or proxies.
-          <strong>Do not</strong>
-          paste production secrets or PII; keep <code class="text-xs">page.size</code>
-          and schema lists within configured caps.
-        </div>
-
-        <div class="card bg-base-100 border border-base-300 rounded-lg p-4 md:p-6 space-y-6">
-          <div class="flex flex-wrap items-center justify-between gap-sm">
-            <h2 class="text-lg font-semibold">Workspace files</h2>
-            <button type="button" phx-click="refresh_list" class="btn btn-sm btn-ghost">
-              Reload list
-            </button>
+        <.ops_toolbar class="items-end">
+          <div class="space-y-1.5">
+            <.ops_page_header
+              title={@page_title}
+              subtitle="Replay saved search probes after previewing the exact schema, query, limits, and JSON payload."
+            />
+            <.ops_workspace_mode_indicator
+              mode={if @examples_mode?, do: :examples, else: :workspace}
+              path={@workspace_root}
+            />
           </div>
+          <.ops_link_button navigate={"#{@mount_path}/search"} variant={:ghost}>
+            Search
+          </.ops_link_button>
+        </.ops_toolbar>
 
-          <p :if={@examples_mode?} class="text-sm text-base-content/80">
-            Examples (read-only) — set <code class="text-sm">SCRYPATH_OPS_PLAYBOOK_DIR</code>
+        <.ops_trail mount_path={@mount_path} current={:playbooks} />
+
+        <.ops_notice
+          id="playbook-honesty-panel"
+          kind={:warning}
+          title="Non-production playbook workspace"
+        >
+          Playbook runs use the same bounded search path as Search. Do not paste production secrets or PII; keep page size and schema lists within configured caps.
+        </.ops_notice>
+
+        <.ops_panel class="space-y-6">
+          <.ops_toolbar>
+            <.ops_heading level={2}>Workspace files</.ops_heading>
+            <.ops_button phx-click="refresh_list" variant={:ghost}>
+              Reload list
+            </.ops_button>
+          </.ops_toolbar>
+
+          <p :if={@examples_mode?} class="text-ops-body text-base-content/80">
+            Examples (read-only) — set <code class="text-ops-body">SCRYPATH_OPS_PLAYBOOK_DIR</code>
             to enable saving and deleting under a dedicated directory. See
-            <.link class="link link-hover" navigate={~p"/ops/search"}>Search &amp; federation</.link>
+            <.link class="link link-hover" navigate={"#{@mount_path}/search"}>
+              Search & federation
+            </.link>
             to export a playbook JSON, then use <strong>Import playbook JSON</strong>
             below.
           </p>
 
-          <p :if={@workspace_files == []} class="text-base-content/80">
-            <span class="text-heading font-semibold">No playbooks in this folder</span>
-            — export a playbook from Search or import JSON to add a <code class="text-xs">.json</code>
-            file. Schema reference: <a
+          <.ops_empty_state :if={@workspace_files == []} title="No playbooks in this folder">
+            Import JSON below, or capture a successful probe from Search. Schema reference: <a
               class="link link-hover"
               href={@playbook_schema_doc.primary}
             >
               playbook-schema-v1.md
             </a>.
-          </p>
+          </.ops_empty_state>
 
-          <ul :if={@catalog_entries != []} class="menu menu-sm bg-base-200 rounded-md max-w-xl">
-            <li
+          <.ops_object_list :if={@catalog_entries != []} class="max-w-3xl">
+            <.ops_object_item
               :for={row <- @catalog_entries}
-              class="flex flex-wrap items-center gap-2 justify-between"
+              active={row.name == @selected_basename}
             >
-              <div class="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span class="text-sm font-semibold">{row.display_title}</span>
+              <div class="flex min-w-0 flex-col gap-0.5">
+                <span class="text-ops-body font-semibold text-base-content">{row.display_title}</span>
                 <span
                   :if={row.description != ""}
-                  class="line-clamp-2 text-xs text-base-content/70"
+                  class="line-clamp-2 text-ops-sm text-base-content/70"
                 >
                   {row.description}
                 </span>
-                <span class="font-mono text-xs">{row.name}</span>
+                <span class="font-mono text-ops-sm text-base-content/65">{row.name}</span>
               </div>
-              <span class="flex flex-wrap gap-1">
-                <button
-                  type="button"
-                  phx-click="load"
-                  phx-value-name={row.name}
-                  class="btn btn-xs btn-ghost"
-                >
-                  Load
-                </button>
-                <button
+              <:actions>
+                <.ops_action_group>
+                  <.ops_button
+                    phx-click="load"
+                    phx-value-name={row.name}
+                    variant={:ghost}
+                    size={:xs}
+                  >
+                    Load preview
+                  </.ops_button>
+                </.ops_action_group>
+                <.ops_action_group
                   :if={@schema_allowlist != [] && Keyword.has_key?(@scrypath_opts, :backend)}
-                  type="button"
-                  phx-click="run_now"
-                  phx-value-name={row.name}
-                  class="btn btn-xs btn-primary"
+                  tone={:advanced}
                 >
-                  Run now
-                </button>
-                <button
-                  :if={@workspace_writable?}
-                  type="button"
-                  phx-click="dup_open"
-                  phx-value-name={row.name}
-                  class="btn btn-xs btn-ghost"
-                >
-                  Duplicate
-                </button>
-                <button
-                  :if={@workspace_writable?}
-                  type="button"
-                  phx-click="rename_open"
-                  phx-value-name={row.name}
-                  class="btn btn-xs btn-ghost"
-                >
-                  Rename
-                </button>
-                <button
-                  :if={@workspace_writable?}
-                  type="button"
-                  phx-click="request_delete"
-                  phx-value-name={row.name}
-                  class="btn btn-xs btn-error btn-outline"
-                >
-                  Delete
-                </button>
-              </span>
-            </li>
-          </ul>
+                  <.ops_button
+                    :if={@schema_allowlist != [] && Keyword.has_key?(@scrypath_opts, :backend)}
+                    phx-click="run_now"
+                    phx-value-name={row.name}
+                    variant={:ghost}
+                    size={:xs}
+                    aria-label={"Run #{row.name} without preview"}
+                  >
+                    Run without preview
+                  </.ops_button>
+                </.ops_action_group>
+                <.ops_action_group :if={@workspace_writable?} tone={:advanced}>
+                  <.ops_button
+                    phx-click="dup_open"
+                    phx-value-name={row.name}
+                    variant={:ghost}
+                    size={:xs}
+                  >
+                    Duplicate
+                  </.ops_button>
+                  <.ops_button
+                    phx-click="rename_open"
+                    phx-value-name={row.name}
+                    variant={:ghost}
+                    size={:xs}
+                  >
+                    Rename
+                  </.ops_button>
+                  <.ops_button
+                    phx-click="request_delete"
+                    phx-value-name={row.name}
+                    variant={:danger}
+                    size={:xs}
+                  >
+                    Delete
+                  </.ops_button>
+                </.ops_action_group>
+              </:actions>
+            </.ops_object_item>
+          </.ops_object_list>
 
           <div class="divider" />
 
-          <section class="space-y-md">
-            <h2 class="text-lg font-semibold">Import playbook JSON</h2>
-            <.form for={%{}} phx-submit="import_upload" class="space-y-sm max-w-xl">
-              <label class="label">
-                <span class="label-text text-sm font-semibold">
-                  Upload (.json, max {@max_import_bytes} bytes)
-                </span>
-              </label>
-              <.live_file_input
-                upload={@uploads.playbook_file}
-                class="file-input file-input-bordered w-full max-w-md"
-              />
-              <button type="submit" class="btn btn-primary btn-sm min-h-10">
-                Import playbook JSON
-              </button>
-            </.form>
+          <section class="space-y-4">
+            <.ops_heading level={2}>Import playbook JSON</.ops_heading>
+            <.ops_upload_box
+              label="Upload playbook file"
+              hint={"JSON only, max #{@max_import_bytes} bytes. Preview is required before running."}
+              class="max-w-xl"
+            >
+              <.form for={%{}} phx-submit="import_upload" class="space-y-3">
+                <.live_file_input
+                  upload={@uploads.playbook_file}
+                  class="file-input file-input-bordered w-full max-w-md"
+                />
+                <.ops_button type="submit" variant={:primary}>
+                  Import playbook JSON
+                </.ops_button>
+              </.form>
+            </.ops_upload_box>
 
             <details class="max-w-xl">
-              <summary class="cursor-pointer text-sm link link-hover">Or paste JSON</summary>
-              <.form for={%{}} phx-submit="import_paste" class="mt-2 space-y-sm">
-                <textarea
+              <summary class="cursor-pointer text-ops-body link link-hover">Or paste JSON</summary>
+              <.form for={%{}} phx-submit="import_paste" class="mt-2 space-y-2">
+                <.ops_textarea
+                  id="playbook-paste-json"
                   name="json"
-                  class="textarea textarea-bordered w-full font-mono text-xs min-h-32"
+                  class="font-mono text-ops-sm"
                   placeholder="Paste playbook JSON"
-                ></textarea>
-                <button type="submit" class="btn btn-ghost btn-sm">Import from paste</button>
+                />
+                <.ops_button type="submit" variant={:ghost}>Import from paste</.ops_button>
               </.form>
             </details>
           </section>
 
-          <div :if={@draft_playbook} class="space-y-md">
+          <div :if={@draft_playbook} class="space-y-4">
             <div class="divider" />
-            <h2 class="text-lg font-semibold">Preview</h2>
+            <.ops_heading level={2}>Preview</.ops_heading>
             <p
               :if={@preview_marker}
-              class="text-xs text-base-content/70"
+              class="text-ops-sm text-base-content/70"
               data-testid="playbook-preview-marker"
             >
               Validated playbook preview
             </p>
-            <pre
-              :if={@preview_json}
-              class="max-h-96 overflow-auto rounded-md bg-base-200 p-sm text-xs font-mono whitespace-pre-wrap break-words"
-            ><%= @preview_json %></pre>
+            <.ops_data_card title="Playbook summary" subtitle="Review this before running.">
+              <dl class="grid gap-2 text-ops-body sm:grid-cols-2">
+                <div :for={{label, value} <- playbook_summary(@draft_playbook)}>
+                  <dt class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/60">
+                    {label}
+                  </dt>
+                  <dd class="mt-0.5 font-mono text-ops-sm text-base-content">{value}</dd>
+                </div>
+              </dl>
+            </.ops_data_card>
+            <.ops_disclosure :if={@preview_json} summary="Raw playbook JSON" variant={:compact}>
+              <.ops_code_block variant={:compact}>{@preview_json}</.ops_code_block>
+            </.ops_disclosure>
 
-            <div class="flex flex-wrap gap-sm items-end">
-              <button
+            <div class="flex flex-wrap gap-2 items-end">
+              <.ops_button
                 :if={@schema_allowlist != [] && Keyword.has_key?(@scrypath_opts, :backend)}
-                type="button"
                 phx-click="run"
-                class="btn btn-primary min-h-10"
+                variant={:primary}
+                size={:md}
                 disabled={@run_ui.phase == :running}
               >
                 Run saved playbook
-              </button>
-              <button
+              </.ops_button>
+              <.ops_button
                 :if={@run_ui.phase == :running}
-                type="button"
                 phx-click="cancel_run"
-                class="btn btn-ghost min-h-10"
+                variant={:ghost}
+                size={:md}
               >
                 Cancel run
-              </button>
+              </.ops_button>
               <p
                 :if={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
-                class="text-sm text-base-content/70"
+                class="text-ops-body text-base-content/70"
               >
                 Configure schema allowlist and Scrypath backend to enable runs (see README).
               </p>
             </div>
 
-            <p :if={@run_ui.phase == :running} class="alert text-sm">
-              <strong>Running playbook…</strong>
-              applying results for run <code class="text-xs">{@run_ui.run_id}</code>
-              only.
-            </p>
+            <.ops_notice :if={@run_ui.phase == :running} kind={:running} title="Running playbook">
+              <span>
+                Applying results for run <code class="text-ops-sm">{@run_ui.run_id}</code> only.
+              </span>
+            </.ops_notice>
 
-            <div
+            <.ops_notice
               :if={@run_ui.phase == :error && @run_failure_enriched}
-              class="alert alert-error items-start text-sm"
+              kind={:error}
+              title={to_string(@run_failure_enriched.failure_class)}
               role="alert"
               data-testid="run-failure-panel"
             >
-              <div class="space-y-3">
-                <p>
-                  <strong>{@run_failure_enriched.failure_class}</strong>
-                  {": "}
-                  {@run_failure_enriched.message}
-                </p>
-                <div class="flex flex-wrap gap-2">
-                  <a
-                    class="link link-hover"
-                    href={@run_failure_enriched.doc.primary}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Read troubleshooting
-                  </a>
-                  <a
-                    :for={related <- @run_failure_enriched.doc.related}
-                    class="link link-hover"
-                    href={related}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Related doc
-                  </a>
-                  <button
-                    type="button"
-                    phx-click="copy_run_diagnostics"
-                    class="btn btn-xs btn-ghost"
-                  >
-                    Copy diagnostics
-                  </button>
-                </div>
+              <p>{@run_failure_enriched.message}</p>
+              <div class="mt-3 flex flex-wrap gap-2">
+                <a
+                  class="link link-hover"
+                  href={@run_failure_enriched.doc.primary}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Read troubleshooting
+                </a>
+                <a
+                  :for={related <- @run_failure_enriched.doc.related}
+                  class="link link-hover"
+                  href={related}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Related doc
+                </a>
+                <.ops_button phx-click="copy_run_diagnostics" variant={:ghost} size={:xs}>
+                  Copy diagnostics
+                </.ops_button>
               </div>
-            </div>
+            </.ops_notice>
 
-            <p :if={@run_ui.phase == :ok && @run_result} class="alert alert-success text-sm">
+            <.ops_status
+              :if={@run_ui.phase == :ok && @run_result}
+              kind={:success}
+              title="Playbook run completed"
+            >
               {run_result_summary(@run_result)}
-            </p>
+              <span :if={@selected_basename}>
+                · file <code>{@selected_basename}</code>
+              </span>
+              <span :if={@draft_playbook && Map.get(@draft_playbook, "mode")}>
+                · mode <code>{Map.get(@draft_playbook, "mode")}</code>
+              </span>
+            </.ops_status>
 
-            <div :if={@workspace_writable?} class="space-y-sm max-w-md">
-              <h3 class="text-sm font-semibold">Save playbook to workspace</h3>
+            <.ops_link_button
+              :if={@run_ui.phase == :ok && @draft_playbook}
+              navigate={search_loopback_path(@mount_path, @draft_playbook)}
+              variant={:ghost}
+              size={:sm}
+            >
+              Explore this query in Search <span aria-hidden="true">→</span>
+            </.ops_link_button>
+
+            <div :if={@workspace_writable?} class="space-y-2 max-w-md">
+              <.ops_heading level={3}>Save playbook to workspace</.ops_heading>
               <.form for={%{}} phx-submit="save" class="flex flex-wrap gap-2 items-end">
-                <div>
-                  <label class="label label-text text-xs" for="save_basename">Basename (.json)</label>
-                  <input
+                <.ops_field id="save_basename" label="Basename (.json)" class="w-64">
+                  <.ops_text_input
                     id="save_basename"
-                    type="text"
                     name="basename"
                     value={@save_basename}
-                    class="input input-bordered input-sm w-64"
+                    class="font-mono text-ops-body"
                     placeholder="my-playbook.json"
                   />
-                </div>
-                <button type="submit" class="btn btn-primary btn-sm min-h-10">
+                </.ops_field>
+                <.ops_button type="submit" variant={:primary}>
                   Save playbook to workspace
-                </button>
+                </.ops_button>
               </.form>
             </div>
           </div>
 
-          <div :if={@delete_pending} class="modal modal-open">
-            <div class="modal-box">
-              <h3 class="font-bold text-lg">Delete playbook file</h3>
-              <p class="py-4 text-sm">
-                This permanently deletes <code class="font-mono text-xs">{@delete_pending}</code>
-                from the playbook directory. This cannot be undone.
-              </p>
-              <.form for={%{}} phx-submit="confirm_delete" class="space-y-sm">
-                <label class="label">
-                  <span class="label-text">Type the filename to confirm</span>
-                </label>
-                <input
-                  type="text"
+          <.ops_modal
+            :if={@delete_pending}
+            id="delete-playbook-modal"
+            title="Delete playbook file"
+            cancel_event="cancel_delete"
+          >
+            <p class="py-4 text-ops-body">
+              This permanently deletes <code class="font-mono text-ops-sm">{@delete_pending}</code>
+              from the playbook directory. This cannot be undone.
+            </p>
+            <.form for={%{}} phx-submit="confirm_delete" class="space-y-3">
+              <.ops_field id="delete-confirm-input" label="Type the filename to confirm">
+                <.ops_text_input
+                  id="delete-confirm-input"
                   name="confirm"
-                  class="input input-bordered w-full font-mono text-sm"
+                  class="font-mono text-ops-body"
                   autocomplete="off"
                 />
-                <div class="modal-action">
-                  <button type="button" class="btn" phx-click="cancel_delete">Cancel</button>
-                  <button type="submit" class="btn btn-error">Confirm delete</button>
-                </div>
-              </.form>
-            </div>
-          </div>
+              </.ops_field>
+              <div class="flex justify-between gap-2">
+                <.ops_button phx-click="cancel_delete" variant={:ghost}>Cancel</.ops_button>
+                <.ops_button type="submit" variant={:danger}>Confirm delete</.ops_button>
+              </div>
+            </.form>
+          </.ops_modal>
 
-          <div :if={@rename_modal} class="modal modal-open">
-            <div class="modal-box">
-              <h3 class="font-bold text-lg">Rename playbook</h3>
-              <p class="py-2 text-sm">
-                Renaming <code class="font-mono text-xs">{@rename_modal.from}</code>
-              </p>
-              <.form for={%{}} phx-submit="rename_submit" class="space-y-sm">
-                <label class="label">
-                  <span class="label-text">New basename (.json)</span>
-                </label>
-                <input
-                  type="text"
+          <.ops_modal
+            :if={@rename_modal}
+            id="rename-playbook-modal"
+            title="Rename playbook"
+            cancel_event="rename_cancel"
+          >
+            <p class="py-2 text-ops-body">
+              Renaming <code class="font-mono text-ops-sm">{@rename_modal.from}</code>
+            </p>
+            <.form for={%{}} phx-submit="rename_submit" class="space-y-3">
+              <.ops_field id="rename-new-name-input" label="New basename (.json)">
+                <.ops_text_input
+                  id="rename-new-name-input"
                   name="new_name"
-                  class="input input-bordered w-full font-mono text-sm"
+                  class="font-mono text-ops-body"
                   placeholder="new-name.json"
                 />
-                <div class="modal-action">
-                  <button type="button" class="btn" phx-click="rename_cancel">Cancel</button>
-                  <button type="submit" class="btn btn-primary">Rename</button>
-                </div>
-              </.form>
-            </div>
-          </div>
+              </.ops_field>
+              <div class="flex justify-between gap-2">
+                <.ops_button phx-click="rename_cancel" variant={:ghost}>Cancel</.ops_button>
+                <.ops_button type="submit" variant={:primary}>Rename</.ops_button>
+              </div>
+            </.form>
+          </.ops_modal>
 
-          <div :if={@duplicate_modal} class="modal modal-open">
-            <div class="modal-box">
-              <h3 class="font-bold text-lg">Duplicate playbook</h3>
-              <p class="py-2 text-sm">
-                Copying <code class="font-mono text-xs">{@duplicate_modal.from}</code>
-              </p>
-              <.form for={%{}} phx-submit="dup_submit" class="space-y-sm">
-                <label class="label">
-                  <span class="label-text">New basename (.json)</span>
-                </label>
-                <input
-                  type="text"
+          <.ops_modal
+            :if={@duplicate_modal}
+            id="duplicate-playbook-modal"
+            title="Duplicate playbook"
+            cancel_event="dup_cancel"
+          >
+            <p class="py-2 text-ops-body">
+              Copying <code class="font-mono text-ops-sm">{@duplicate_modal.from}</code>
+            </p>
+            <.form for={%{}} phx-submit="dup_submit" class="space-y-3">
+              <.ops_field id="dup-to-name-input" label="New basename (.json)">
+                <.ops_text_input
+                  id="dup-to-name-input"
                   name="to_name"
                   value={@duplicate_modal.to}
-                  class="input input-bordered w-full font-mono text-sm"
+                  class="font-mono text-ops-body"
                 />
-                <div class="modal-action">
-                  <button type="button" class="btn" phx-click="dup_cancel">Cancel</button>
-                  <button type="submit" class="btn btn-primary">Duplicate</button>
-                </div>
-              </.form>
-            </div>
-          </div>
-        </div>
+              </.ops_field>
+              <div class="flex justify-between gap-2">
+                <.ops_button phx-click="dup_cancel" variant={:ghost}>Cancel</.ops_button>
+                <.ops_button type="submit" variant={:primary}>Duplicate</.ops_button>
+              </div>
+            </.form>
+          </.ops_modal>
+        </.ops_panel>
       </div>
     </Layouts.app>
     """

@@ -5,7 +5,8 @@ config :scrypath_ops, ScrypathOps.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
-  database: "scrypath_ops_dev",
+  port: String.to_integer(System.get_env("PGPORT") || "5432"),
+  database: System.get_env("SCRYPATH_OPS_DATABASE_NAME") || "scrypath_ops_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
@@ -92,6 +93,11 @@ config :phoenix_live_view,
 config :swoosh, :api_client, false
 
 config :scrypath_ops, :validate_opsui_auth_on_start, false
+config :scrypath_ops, standalone: true
+
+config :scrypath_ops,
+  backend: Scrypath.Meilisearch,
+  meilisearch_url: System.get_env("SCRYPATH_OPS_MEILISEARCH_URL") || "http://localhost:7700"
 
 # OPSUI schema allowlist: set `SCRYPATH_OPS_SCHEMAS=MyApp.Blog.Post` at runtime,
 # or assign `config :scrypath_ops, :schema_allowlist, [MyApp.Blog.Post]` here.

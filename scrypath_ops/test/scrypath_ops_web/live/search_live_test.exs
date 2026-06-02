@@ -50,7 +50,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     {:ok, _lv, html} = live(conn, ~p"/ops/search")
 
     assert html =~ "Non-production search playground"
-    assert html =~ "Run sample searches"
+    assert html =~ "Run bounded search"
     refute html =~ "Per-schema panels"
     refute html =~ ~s(<h2 class="text-heading font-semibold">Results</h2>)
   end

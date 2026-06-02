@@ -8,7 +8,10 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
   describe "INFRA-01 D-14: workspace_clean gate on all three publish paths" do
     test "ci.yml quality job runs mix verify" do
-      assert File.read!(@ci_yml) =~ "mix verify"
+      ci = File.read!(@ci_yml)
+      repo_hygiene_job = workflow_job_block(ci, "repo-hygiene")
+
+      assert repo_hygiene_job =~ "mix verify"
     end
 
     test "publish-hex.yml runs mix verify.workspace_clean" do
@@ -47,6 +50,49 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       {idx_pub, _} = :binary.match(yml, "mix verify.release_publish")
       {idx_par, _} = :binary.match(yml, "mix verify.release_parity")
       assert idx_pub < idx_par
+    end
+  end
+
+  describe "REL-03 D-10..D-13: canonical publish and monitor wiring" do
+    test "release-please publish job runs the canonical ordered proof chain" do
+      yml = File.read!(@release_please_yml)
+
+      assert_ordered_steps(yml, [
+        "mix verify.workspace_clean",
+        ~s(grep -n "@version \\"${{ needs.release-please.outputs.version }}\\"" mix.exs),
+        "mix verify.phase11",
+        "mix hex.publish --dry-run --yes",
+        "mix hex.publish --yes",
+        ~s(mix verify.release_publish "${{ needs.release-please.outputs.version }}"),
+        ~s(mix verify.release_parity "${{ needs.release-please.outputs.version }}")
+      ])
+    end
+
+    test "publish-hex recovery job mirrors the same ordered proof chain from explicit inputs" do
+      yml = File.read!(@publish_hex_yml)
+
+      assert_ordered_steps(yml, [
+        "mix verify.workspace_clean",
+        ~s(grep -n "@version \\"${{ inputs.release_version }}\\"" mix.exs),
+        "mix verify.phase11",
+        "mix hex.publish --dry-run --yes",
+        "mix hex.publish --yes",
+        ~s(mix verify.release_publish "${{ inputs.release_version }}"),
+        ~s(mix verify.release_parity "${{ inputs.release_version }}")
+      ])
+    end
+
+    test "published-release monitor stays publish-free and schedule-deduped" do
+      yml = File.read!(@verify_published_yml)
+
+      assert yml =~
+               "version=\"$(jq -r '.latest_stable_version // .latest_version // empty' package.json)\""
+
+      assert yml =~ "mix verify.release_publish \"${{ steps.resolve-version.outputs.version }}\""
+      assert yml =~ "mix verify.release_parity \"${{ steps.resolve-version.outputs.version }}\""
+      refute yml =~ "mix hex.publish --yes"
+      assert yml =~ "failure() && github.event_name == 'schedule'"
+      assert yml =~ "update_existing: true"
     end
   end
 
@@ -303,6 +349,63 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
       assert log =~ ~r/^feat\(18\): add release-parity gates \+ Node 20 CI cleanup$/m,
              "expected the D-22 closing commit subject in recent history"
+    end
+  end
+
+  describe "STAB-01 advisory evidence wiring" do
+    test "phase105-e2e exports evidence env and runs always-on summary script" do
+      ci = File.read!(@ci_yml)
+
+      assert ci =~
+               "PHASE105_EVIDENCE_PATH: examples/scrypath_ecommerce/test-results/phase105-evidence.ndjson"
+
+      assert ci =~ "- name: Generate phase105 evidence summary"
+      assert ci =~ "if: always()"
+      assert ci =~ "run: scripts/ci/phase105_evidence.sh"
+      assert ci =~ "phase105-evidence-summary.md >> \"$GITHUB_STEP_SUMMARY\""
+    end
+
+    test "phase105-e2e artifacts are bounded to the advisory evidence bundle" do
+      ci = File.read!(@ci_yml)
+
+      assert ci =~ "/tmp/phase105-e2e-phx.log"
+      assert ci =~ "examples/scrypath_ecommerce/playwright-report"
+      assert ci =~ "examples/scrypath_ecommerce/test-results"
+      assert ci =~ "examples/scrypath_ecommerce/test-results/phase105-evidence.ndjson"
+      assert ci =~ "examples/scrypath_ecommerce/test-results/phase105-evidence.json"
+      assert ci =~ "examples/scrypath_ecommerce/test-results/phase105-evidence-summary.md"
+    end
+
+    test "playwright config emits structured phase105 report and keeps retry-based flake visibility" do
+      config = File.read!("examples/scrypath_ecommerce/playwright.config.ts")
+
+      assert config =~ "retries: process.env.CI ? 1 : 0"
+      assert config =~ "workers: process.env.CI ? 1 : undefined"
+      assert config =~ "trace: \"on-first-retry\""
+      assert config =~ "phase105-playwright.json"
+    end
+  end
+
+  defp assert_ordered_steps(content, [first | rest]) do
+    {start_idx, _} = :binary.match(content, first)
+
+    Enum.reduce(rest, start_idx, fn step, prev_idx ->
+      {idx, _} = :binary.match(content, step)
+      assert idx > prev_idx, "expected #{inspect(step)} to appear after previous release step"
+      idx
+    end)
+  end
+
+  defp workflow_job_block(content, job_name) do
+    marker = "\n  #{job_name}:\n"
+    {start_idx, marker_len} = :binary.match(content, marker)
+
+    rest =
+      binary_part(content, start_idx + marker_len, byte_size(content) - start_idx - marker_len)
+
+    case Regex.run(~r/\n  [a-zA-Z0-9_-]+:\n/, rest, return: :index) do
+      [{next_idx, _}] -> binary_part(rest, 0, next_idx)
+      nil -> rest
     end
   end
 end

@@ -48,12 +48,16 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   end
 
   def handle_event("select_schema", %{"schema" => mod_str}, socket) do
-    mod = mod_from_flat!(mod_str)
+    case mod_from_allowlist(mod_str, socket.assigns.schema_allowlist) do
+      {:ok, mod} ->
+        {:noreply,
+         socket
+         |> assign(:selected_schema, mod)
+         |> refresh_inspection()}
 
-    {:noreply,
-     socket
-     |> assign(:selected_schema, mod)
-     |> refresh_inspection()}
+      :error ->
+        {:noreply, put_flash(socket, :error, "Select an allowlisted schema.")}
+    end
   end
 
   def handle_event("toggle_compact", _params, socket) do
@@ -147,12 +151,13 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     mod |> Atom.to_string() |> String.replace_prefix("Elixir.", "")
   end
 
-  defp mod_from_flat!(str) when is_binary(str) do
-    str
-    |> String.trim()
-    |> String.split(".")
-    |> Enum.map(&String.to_atom/1)
-    |> Module.concat()
+  defp mod_from_allowlist(str, allowlist) when is_binary(str) do
+    name = String.trim(str)
+
+    case Enum.find(allowlist, &(module_flat_name(&1) == name)) do
+      nil -> :error
+      mod -> {:ok, mod}
+    end
   end
 
   defp sorted_entries(%FailedSyncWorkInspection{entries: entries}) do
@@ -167,7 +172,35 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
 
   defp reason_class_label(nil), do: "unknown"
   defp reason_class_label(:unknown), do: "unknown"
-  defp reason_class_label(other), do: to_string(other)
+
+  defp reason_class_label(other) do
+    other
+    |> to_string()
+    |> String.replace("_", " ")
+  end
+
+  defp failed_sync_status_kind(%FailedSyncWorkInspection{counts: %{total: 0}}), do: :success
+  defp failed_sync_status_kind(_inspection), do: :warning
+
+  defp failed_sync_status_title(%FailedSyncWorkInspection{counts: %{total: 0}}),
+    do: "No failed sync work visible"
+
+  defp failed_sync_status_title(%FailedSyncWorkInspection{counts: counts}),
+    do: "#{counts.total} failed sync job(s) need triage"
+
+  defp dominant_reason_class(%FailedSyncWorkInspection{counts: %{by_class: by_class}}) do
+    by_class
+    |> maybe_map_from_struct()
+    |> Enum.max_by(fn {_class, count} -> count end, fn -> {:unknown, 0} end)
+    |> elem(0)
+  end
+
+  defp maybe_map_from_struct(%_{} = struct), do: Map.from_struct(struct)
+  defp maybe_map_from_struct(map) when is_map(map), do: map
+
+  defp retryable_count(%FailedSyncWorkInspection{entries: entries}) do
+    Enum.count(entries, & &1.retryable?)
+  end
 
   defp normalize_live_reply({:noreply, %Phoenix.LiveView.Socket{} = socket}), do: socket
   defp normalize_live_reply(%Phoenix.LiveView.Socket{} = socket), do: socket
@@ -176,140 +209,213 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} shell={@shell}>
-      <div class="flex flex-wrap items-end justify-between gap-4">
-        <.ops_page_header title={@page_title} />
+    <Layouts.app
+      mount_path={@mount_path}
+      flash={@flash}
+      shell={@shell}
+      page_title={@page_title}
+      ops_main_width={:wide}
+    >
+      <.ops_toolbar class="items-end gap-4">
+        <.ops_page_header
+          title={@page_title}
+          subtitle="Inspect failed queue/backend work by newest evidence first. Retry only after the failure class and row evidence make sense."
+        />
         <div class="flex flex-wrap gap-2">
-          <button type="button" phx-click="refresh" class="btn btn-sm btn-primary">
+          <.ops_button phx-click="refresh" variant={:primary} data-ops-refresh>
             Refresh failed sync jobs
-          </button>
-          <button type="button" phx-click="toggle_compact" class="btn btn-sm">
-            Toggle compact mode
-          </button>
+          </.ops_button>
+          <.ops_button phx-click="toggle_compact" variant={:ghost}>
+            {if @compact_mode, do: "Show reason rollups", else: "Hide reason rollups"}
+          </.ops_button>
         </div>
-      </div>
+      </.ops_toolbar>
 
-      <form :if={@schema_allowlist != []} class="mt-4 flex flex-wrap items-center gap-2">
-        <label for="schema-select" class="text-sm">Schema</label>
-        <select
+      <.ops_trail mount_path={@mount_path} current={:failed_sync} />
+
+      <.ops_panel>
+        <.ops_schema_select
           id="schema-select"
-          name="schema"
-          class="select select-bordered select-sm"
+          schemas={@schema_allowlist}
+          selected={@selected_schema}
           phx-change="select_schema"
-        >
-          <%= for mod <- @schema_allowlist do %>
-            <option value={module_flat_name(mod)} selected={mod == @selected_schema}>
-              {module_flat_name(mod)}
-            </option>
-          <% end %>
-        </select>
-      </form>
+          hint="Choose the allowlisted schema whose failed queue/backend work you want to inspect."
+        />
+      </.ops_panel>
 
-      <p :if={@load_error == :no_schemas} class="mt-4 text-base-content/80">
-        No schemas configured — set <code class="text-sm">schema_allowlist</code>
-        in <code class="text-sm">:scrypath_ops</code>
-        (see README).
-      </p>
+      <.ops_empty_state :if={@load_error == :no_schemas} title="No Schemas Configured">
+        Set
+        <.ops_inline_code>schema_allowlist</.ops_inline_code>
+        in <.ops_inline_code>:scrypath_ops</.ops_inline_code>.
+      </.ops_empty_state>
 
-      <p :if={@load_error == :missing_backend} class="mt-4 text-base-content/80">
-        Scrypath runtime is not configured — see <code class="text-sm">scrypath_ops/README.md</code>.
-      </p>
-
-      <p
-        :if={@inspection == nil && @load_error && @load_error not in [:no_schemas, :missing_backend]}
-        class="mt-4 text-error"
+      <.ops_empty_state
+        :if={@load_error == :missing_backend}
+        title="Runtime Not Configured"
       >
-        {inspect(@load_error)}
-      </p>
+        Scrypath runtime is not configured — see <.ops_inline_code>scrypath_ops/README.md</.ops_inline_code>.
+      </.ops_empty_state>
+
+      <.ops_status
+        :if={@inspection == nil && @load_error && @load_error not in [:no_schemas, :missing_backend]}
+        kind={:error}
+        title="Failed sync work could not load"
+        role="alert"
+      >
+        The selected schema could not be inspected. Check backend and queue configuration, then
+        refresh failed sync jobs. Reason: <code>{inspect(@load_error)}</code>
+      </.ops_status>
 
       <.ops_panel :if={@inspection}>
         <section aria-labelledby="failed-sync-rollups-heading">
-          <div class={["rounded border border-base-300 p-3", @compact_mode && "hidden"]}>
+          <.ops_status
+            kind={failed_sync_status_kind(@inspection)}
+            title={failed_sync_status_title(@inspection)}
+          >
+            Selected schema: <code>{module_flat_name(@selected_schema)}</code>
+            · dominant reason:
+            <strong>{reason_class_label(dominant_reason_class(@inspection))}</strong>
+            · retryable jobs: <strong>{retryable_count(@inspection)}</strong>
+            · refreshed <span class="font-mono tabular-nums">{format_dt(@last_refresh_at)}</span>
+          </.ops_status>
+
+          <.ops_metric_grid cols={6} class={@compact_mode && "hidden"}>
             <h2
               id="failed-sync-rollups-heading"
-              class="text-sm font-semibold uppercase tracking-wide text-base-content/70"
+              class="sr-only"
             >
               Rollups
             </h2>
-            <p class="mt-2 font-mono text-sm tabular-nums">
-              total <span class="font-bold">{@inspection.counts.total}</span>
-              · transport {@inspection.counts.by_class.transport} · validation {@inspection.counts.by_class.validation} · backend_rejected {@inspection.counts.by_class.backend_rejected} · queue_exhausted {@inspection.counts.by_class.queue_exhausted} · unknown {@inspection.counts.by_class.unknown}
-            </p>
-          </div>
+            <.ops_metric
+              label="Total"
+              value={@inspection.counts.total}
+              kind={metric_tone(@inspection.counts.total)}
+            />
+            <.ops_metric label="Transport" value={@inspection.counts.by_class.transport} />
+            <.ops_metric label="Validation" value={@inspection.counts.by_class.validation} />
+            <.ops_metric label="Backend" value={@inspection.counts.by_class.backend_rejected} />
+            <.ops_metric label="Queue" value={@inspection.counts.by_class.queue_exhausted} />
+            <.ops_metric label="Unknown" value={@inspection.counts.by_class.unknown} />
+          </.ops_metric_grid>
 
-          <p class="mt-4 text-xs text-base-content/60">
-            For recovery actions use <code class="text-sm">mix scrypath.failed</code>
-            and the repo guides <code class="text-sm">guides/drift-recovery.md</code>, <code class="text-sm">guides/operator-mix-tasks.md</code>.
+          <.ops_disclosure
+            summary="Triage guidance"
+            class="mt-4"
+          >
+            <div class="grid gap-3 lg:grid-cols-3">
+              <.ops_data_card
+                title="Triage order"
+                subtitle="Use the largest nonzero class first, then inspect retryable rows."
+              >
+                <ol class="list-inside list-decimal space-y-1 text-ops-sm text-base-content/75">
+                  <li>Transport: check connectivity, timeout, and credential drift.</li>
+                  <li>Validation: compare payload shape against the current schema contract.</li>
+                  <li>Backend / queue: inspect backend rejection and retry exhaustion separately.</li>
+                </ol>
+              </.ops_data_card>
+              <.ops_data_card
+                title="Unknown failures"
+                subtitle="Unknown means Scrypath could not classify the stored failure into a known operational bucket."
+              >
+                <p class="text-ops-sm text-base-content/75">
+                  Open row evidence before retrying. Unknown rows usually need a human read of the raw reason.
+                </p>
+              </.ops_data_card>
+              <.ops_data_card
+                title="Retry semantics"
+                subtitle="Retry re-enqueues original work; it does not erase history or guarantee backend acceptance."
+              >
+                <p class="text-ops-sm text-base-content/75">
+                  Retry only after the class-specific cause is addressed. The row remains useful evidence until the next successful sync path updates operator state.
+                </p>
+              </.ops_data_card>
+            </div>
+          </.ops_disclosure>
+
+          <p class="mt-4 text-ops-sm text-base-content/60">
+            For recovery actions use <code class="text-ops-body">mix scrypath.failed</code>
+            and the repo guides <code class="text-ops-body">guides/drift-recovery.md</code>, <code class="text-ops-body">guides/operator-mix-tasks.md</code>.
           </p>
         </section>
 
         <section aria-labelledby="failed-sync-table-heading" class="mt-4">
-          <h2 id="failed-sync-table-heading" class="text-base font-semibold text-base-content">
+          <h2
+            id="failed-sync-table-heading"
+            class="text-ops-h2 font-semibold leading-ops-tight text-base-content"
+          >
             Failed sync jobs
           </h2>
-          <div class="mt-2 overflow-x-auto min-w-0">
-            <table class="table table-zebra table-sm">
-              <thead>
-                <tr>
-                  <th scope="col">ID</th>
-                  <th scope="col">reason_class</th>
-                  <th scope="col">Operation</th>
-                  <th scope="col">State</th>
-                  <th scope="col">Source</th>
-                  <th scope="col">Last attempt</th>
-                  <th scope="col">Detail</th>
-                </tr>
-              </thead>
-              <tbody class="text-sm leading-snug tabular-nums">
-                <%= for row <- sorted_entries(@inspection) do %>
-                  <tr id={"failed-#{row.id}"}>
-                    <td class="font-mono text-xs">{inspect(row.id)}</td>
-                    <td>{reason_class_label(row.reason_class)}</td>
-                    <td>{row.operation}</td>
-                    <td>{row.state}</td>
-                    <td>{row.source}</td>
-                    <td class="font-mono text-xs">
-                      {format_dt(row.last_attempt_at || row.failed_at)}
-                    </td>
-                    <td>
-                      <details id={"failed-detail-#{row.id}"}>
-                        <summary
-                          class="cursor-pointer text-sm"
-                          aria-label={"Row detail for job #{inspect(row.id)}"}
-                        >
-                          Row detail
-                        </summary>
-                        <pre
-                          id={"failed-detail-body-#{row.id}"}
-                          class="mt-2 max-h-48 overflow-auto text-xs whitespace-pre-wrap"
-                        ><%= row.reason %></pre>
-                        <pre
-                          :if={map_size(row.metadata) > 0}
-                          class="mt-2 text-xs"
-                        ><%= inspect(row.metadata, pretty: true) %></pre>
-                        <p class="mt-2 text-xs">
-                          See guides: <code class="text-xs">guides/drift-recovery.md</code>,
-                          <code class="text-xs">guides/operator-mix-tasks.md</code>
-                        </p>
-                        <div :if={row.recovery} class="mt-3">
-                          <button
-                            type="button"
-                            phx-click="retry"
-                            phx-value-id={row.id}
-                            class="btn btn-xs btn-primary"
-                          >
-                            Retry job
-                          </button>
-                        </div>
-                      </details>
-                    </td>
-                  </tr>
-                <% end %>
-              </tbody>
-            </table>
+          <p class="mt-1 max-w-3xl text-ops-body text-base-content/70">
+            Rows are sorted by latest attempt so the newest operator evidence stays at the top.
+            Open evidence only when needed; retry is scoped to the selected row.
+          </p>
+          <.ops_empty_state
+            :if={@inspection.counts.total == 0}
+            title="No Failed Sync Jobs"
+            class="mt-2"
+          >
+            No failed sync work is visible for this schema. Keep checking posture and drift before changing indexes.
+          </.ops_empty_state>
+
+          <div :if={@inspection.counts.total > 0} class="mt-3 grid gap-2">
+            <.ops_result_row
+              :for={row <- sorted_entries(@inspection)}
+              title={"Failed job #{inspect(row.id)}"}
+              subtitle={"#{row.operation} · #{row.source} · last attempt #{format_dt(row.last_attempt_at || row.failed_at)}"}
+              data-testid="failed-sync-row"
+            >
+              <:meta>
+                <.ops_badge kind={:warning}>{reason_class_label(row.reason_class)}</.ops_badge>
+                <.ops_badge kind={:error}>{row.state}</.ops_badge>
+                <.ops_badge :if={row.retryable?} kind={:partial}>retryable</.ops_badge>
+              </:meta>
+              <.ops_disclosure
+                id={"failed-detail-#{row.id}"}
+                summary="View evidence"
+                variant={:compact}
+              >
+                <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_18rem]">
+                  <div>
+                    <.ops_code_block
+                      id={"failed-detail-body-#{row.id}"}
+                      variant={:embedded}
+                    >
+                      {row.reason}
+                    </.ops_code_block>
+                    <.ops_code_block
+                      :if={map_size(row.metadata) > 0}
+                      variant={:embedded}
+                      class="mt-2"
+                    >
+                      {inspect(row.metadata, pretty: true)}
+                    </.ops_code_block>
+                  </div>
+                  <.ops_action_group :if={row.recovery} tone={:advanced} class="items-start">
+                    <p class="text-ops-sm text-base-content/75">
+                      Retry re-enqueues the original sync work and keeps this row visible until the backend confirms recovery.
+                    </p>
+                    <.ops_button
+                      phx-click="retry"
+                      phx-value-id={row.id}
+                      data-testid="failed-sync-retry"
+                      variant={:primary}
+                      size={:xs}
+                    >
+                      Retry job
+                    </.ops_button>
+                  </.ops_action_group>
+                </div>
+              </.ops_disclosure>
+            </.ops_result_row>
           </div>
         </section>
       </.ops_panel>
+
+      <.ops_handoff :if={@inspection}>
+        <:step navigate={"#{@mount_path}/sync-drift"} hint="When the queue's clear —">
+          Verify sync drift
+        </:step>
+      </.ops_handoff>
     </Layouts.app>
     """
   end
@@ -319,4 +425,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp format_dt(%DateTime{} = dt) do
     Calendar.strftime(dt, "%Y-%m-%d %H:%M:%SZ")
   end
+
+  defp metric_tone(0), do: :success
+  defp metric_tone(_), do: :warning
 end

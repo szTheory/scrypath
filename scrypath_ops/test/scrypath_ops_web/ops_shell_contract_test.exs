@@ -105,12 +105,22 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
   defp assert_ops_shell!(html, title_fragment) do
     assert html =~ "data-phx-session"
     assert html =~ title_fragment
+    assert html =~ ~r/href="\/ops\/assets\/css\/app(?:-[^"]+)?\.css(?:\?[^"]*)?"/
+    assert html =~ ~r/src="\/ops\/assets\/js\/app(?:-[^"]+)?\.js(?:\?[^"]*)?"/
     assert html =~ ~s(id="flash-group")
     assert Regex.scan(~r/id=\"flash-group\"/, html) |> length() == 1
     assert html =~ ~s(id="ops-main")
     assert html =~ "Skip to operator content"
     assert html =~ ~s(href="#ops-main")
     assert html =~ ~s(id="ops-page-title")
+    assert html =~ ~s(aria-current="page")
+    assert html =~ ~s(href="/ops/posture")
+    assert html =~ ~s(src="/ops/images/logo.svg")
+    assert html =~ "ScrypathOps"
+    assert html =~ ~s(aria-label="Theme preference")
+    assert html =~ ~s(aria-label="Use system theme")
+    assert html =~ ~s(aria-label="Use light theme")
+    assert html =~ ~s(aria-label="Use dark theme")
   end
 
   describe "ops shell markers" do

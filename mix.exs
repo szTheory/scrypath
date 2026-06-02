@@ -62,6 +62,11 @@ defmodule Scrypath.MixProject do
         "verify.phase97": :test,
         "verify.phase98": :test,
         "verify.phase99": :test,
+        "verify.phase106": :test,
+        "verify.phase107": :test,
+        # preferred_envs includes the phase108 task
+        "verify.phase108": :test,
+        "verify.phase112": :test,
         "verify.adopter": :test,
         "verify.opsui": :test,
         "verify.meilisearch_smoke": :test,
@@ -103,37 +108,47 @@ defmodule Scrypath.MixProject do
   end
 
   defp test_alias(args) do
-    case maybe_delegate_opsui_test(args) do
+    case maybe_delegate_external_test(args) do
       :handled -> :ok
       :passthrough -> Mix.Tasks.Test.run(args)
     end
   end
 
-  defp maybe_delegate_opsui_test(args) when is_list(args) do
+  defp maybe_delegate_external_test(args) when is_list(args) do
     paths = Enum.filter(args, &test_path_arg?/1)
     passthrough_args = Enum.reject(args, &test_path_arg?/1)
 
-    if paths != [] and Enum.all?(paths, &String.starts_with?(&1, "scrypath_ops/test/")) do
-      ops_dir = Path.expand("scrypath_ops", File.cwd!())
+    cond do
+      paths != [] and Enum.all?(paths, &String.starts_with?(&1, "scrypath_ops/test/")) ->
+        delegate_test_paths("scrypath_ops", paths, passthrough_args)
 
-      ops_args =
-        Enum.map(paths, &String.replace_prefix(&1, "scrypath_ops/", "")) ++ passthrough_args
+      paths != [] and
+          Enum.all?(paths, &String.starts_with?(&1, "examples/scrypath_ecommerce/test/")) ->
+        delegate_test_paths("examples/scrypath_ecommerce", paths, passthrough_args)
 
-      Mix.shell().info("==> test: delegating scrypath_ops paths into #{ops_dir}")
-
-      {out, status} =
-        System.cmd("mix", ["test" | ops_args], cd: ops_dir, stderr_to_stdout: true)
-
-      Mix.shell().info(out)
-
-      if status != 0 do
-        Mix.raise("test delegation for scrypath_ops failed with status #{status}")
-      end
-
-      :handled
-    else
-      :passthrough
+      true ->
+        :passthrough
     end
+  end
+
+  defp delegate_test_paths(app_dir, paths, passthrough_args) do
+    app_path = Path.expand(app_dir, File.cwd!())
+
+    app_args =
+      Enum.map(paths, &String.replace_prefix(&1, "#{app_dir}/", "")) ++ passthrough_args
+
+    Mix.shell().info("==> test: delegating #{app_dir} paths into #{app_path}")
+
+    {out, status} =
+      System.cmd("mix", ["test" | app_args], cd: app_path, stderr_to_stdout: true)
+
+    Mix.shell().info(out)
+
+    if status != 0 do
+      Mix.raise("test delegation for #{app_dir} failed with status #{status}")
+    end
+
+    :handled
   end
 
   defp test_path_arg?(<<"-", _::binary>>), do: false
@@ -155,6 +170,8 @@ defmodule Scrypath.MixProject do
         "guides/golden-path.md",
         "guides/support-and-compatibility.md",
         "guides/outside-adopter-intake.md",
+        "guides/scope-and-reopen-policy.md",
+        "guides/meilisearch-concepts.md",
         "guides/request-edge-search.md",
         "guides/composing-real-app-search.md",
         "guides/jtbd-and-user-flows.md",
@@ -184,6 +201,8 @@ defmodule Scrypath.MixProject do
           "guides/golden-path.md",
           "guides/support-and-compatibility.md",
           "guides/outside-adopter-intake.md",
+          "guides/scope-and-reopen-policy.md",
+          "guides/meilisearch-concepts.md",
           "guides/request-edge-search.md",
           "guides/composing-real-app-search.md",
           "guides/related-data-and-reindexing.md",

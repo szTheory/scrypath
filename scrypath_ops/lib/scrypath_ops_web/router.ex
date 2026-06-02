@@ -1,56 +1,53 @@
 defmodule ScrypathOpsWeb.Router do
-  use ScrypathOpsWeb, :router
+  @moduledoc """
+  Provides the `scrypath_ops_routes/2` macro to mount the Scrypath Ops UI in a host Phoenix application.
+  """
 
-  pipeline :browser do
-    plug(:accepts, ["html"])
-    plug(:fetch_session)
-    plug(:fetch_live_flash)
-    plug(:put_root_layout, html: {ScrypathOpsWeb.Layouts, :root})
-    plug(:protect_from_forgery)
-    plug(:put_secure_browser_headers)
-  end
+  @doc """
+  Mounts the Scrypath Ops UI routes in the host application router.
 
-  pipeline :api do
-    plug(:accepts, ["json"])
-  end
+  ## Options
 
-  scope "/", ScrypathOpsWeb do
-    pipe_through(:browser)
+    * `:repo` - (Required) The Ecto Repo to use for posture and telemetry.
+  """
+  defmacro scrypath_ops_routes(path, opts \\ []) do
+    quote bind_quoted: [path: path, opts: opts] do
+      validated_opts = ScrypathOpsWeb.Router.__options__(opts)
 
-    get("/", PageController, :home)
-  end
+      # Assign the mount path so the engine knows its own base path
+      validated_opts = Keyword.put(validated_opts, :mount_path, path)
 
-  scope "/ops", ScrypathOpsWeb do
-    pipe_through(:browser)
+      scope path, alias: false, as: false do
+        import Phoenix.LiveView.Router, only: [live: 2, live: 3, live: 4, live_session: 3]
+        import Phoenix.Router, only: [forward: 2, forward: 3]
 
-    live_session :ops, on_mount: [{ScrypathOpsWeb.Live.OnMount, :default}] do
-      live("/posture", PostureLive)
-      live("/failed-sync", FailedSyncLive)
-      live("/sync-drift", SyncDriftLive)
-      live("/search", SearchLive)
-      live("/playbooks", PlaybookLive)
+        forward("/assets", ScrypathOpsWeb.AssetPlug, path_prefix: "assets")
+        forward("/images", ScrypathOpsWeb.AssetPlug, path_prefix: "images")
+
+        live_session :ops,
+          on_mount: [{ScrypathOpsWeb.Live.OnMount, :default}],
+          session: %{"scrypath_ops_opts" => validated_opts} do
+          live("/", ScrypathOpsWeb.ControlRoomLive)
+          live("/posture", ScrypathOpsWeb.PostureLive)
+          live("/failed-sync", ScrypathOpsWeb.FailedSyncLive)
+          live("/sync-drift", ScrypathOpsWeb.SyncDriftLive)
+          live("/search", ScrypathOpsWeb.SearchLive)
+          live("/playbooks", ScrypathOpsWeb.PlaybookLive)
+        end
+      end
     end
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", ScrypathOpsWeb do
-  #   pipe_through :api
-  # end
+  @doc false
+  def __options__(opts) do
+    schema = [
+      repo: [
+        type: :atom,
+        required: true,
+        doc: "The Ecto.Repo module"
+      ]
+    ]
 
-  # Enable LiveDashboard and Swoosh mailbox preview in development
-  if Application.compile_env(:scrypath_ops, :dev_routes) do
-    # If you want to use the LiveDashboard in production, you should put
-    # it behind authentication and allow only admins to access it.
-    # If your application does not have an admins-only section yet,
-    # you can use Plug.BasicAuth to set up some basic authentication
-    # as long as you are also using SSL (which you should anyway).
-    import Phoenix.LiveDashboard.Router
-
-    scope "/dev" do
-      pipe_through(:browser)
-
-      live_dashboard("/dashboard", metrics: ScrypathOpsWeb.Telemetry)
-      forward("/mailbox", Plug.Swoosh.MailboxPreview)
-    end
+    NimbleOptions.validate!(opts, schema)
   end
 end

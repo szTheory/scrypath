@@ -1,0 +1,12 @@
+{
+  "playbook_format": 1,
+  "mode": "search_many",
+  "entries": [
+    ["ScrypathEcommerce.Catalog.Product", "Quantum", {}],
+    ["ScrypathEcommerce.Catalog.Variant", "Quantum", {}]
+  ],
+  "opts": {},
+  "title": "Federated catalog probe",
+  "description": "Runs \"Quantum\" across the Product and Variant (SKU) indices and shows the merged federation view. Per-schema relevance stays local — the merge order is a federation view, not a single ranking.",
+  "tags": ["example", "multi-index", "federation"]
+}

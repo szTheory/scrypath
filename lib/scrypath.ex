@@ -186,7 +186,8 @@ defmodule Scrypath do
 
   @doc """
   Propagates sync updates for associated parent records when a child record changes.
-  Uses the explicit `fan_outs:` metadata declared on the child schema.
+  Uses the explicit `fan_outs:` metadata declared on the owning schema whose
+  change fans out to target search documents.
 
   Returns `{:ok, Scrypath.Operations.Result.t()}` describing the applied synchronization work.
   """

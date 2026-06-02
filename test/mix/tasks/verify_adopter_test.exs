@@ -76,6 +76,7 @@ defmodule Mix.Tasks.Verify.AdopterTest do
       source = File.read!("lib/mix/tasks/verify.adopter.ex")
 
       assert source =~ ~S|"test/scrypath/readiness_contract_test.exs"|
+      assert source =~ ~S|"test/scrypath/phase110_contract_test.exs"|
       assert source =~ ~S|"test/mix/tasks/verify_adopter_test.exs"|
     end
 
@@ -87,6 +88,7 @@ defmodule Mix.Tasks.Verify.AdopterTest do
         end)
 
       assert output =~ "mix test test/scrypath/readiness_contract_test.exs"
+      assert output =~ "mix test test/scrypath/phase110_contract_test.exs"
       assert output =~ "mix test test/mix/tasks/verify_adopter_test.exs"
       assert output =~ "SCRYPATH_EXAMPLE_INTEGRATION"
       assert output =~ "PGPORT"

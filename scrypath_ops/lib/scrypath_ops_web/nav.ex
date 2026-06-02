@@ -6,23 +6,43 @@ defmodule ScrypathOpsWeb.Nav do
   the ordered subset of paths and labels rendered in the ops layout.
   """
 
-  use Phoenix.VerifiedRoutes,
-    endpoint: ScrypathOpsWeb.Endpoint,
-    router: ScrypathOpsWeb.Router,
-    statics: ScrypathOpsWeb.static_paths()
-
   @doc """
   Returns the ordered primary nav items for `/ops` LiveViews.
 
-  Each entry is `%{path: verified_path, label: binary}`.
+  Each entry is `%{path: path, label: binary, title: binary, group: atom}`.
   """
-  def primary do
+  def primary(mount_path \\ "/ops") do
     [
-      %{path: ~p"/ops/posture", label: "Posture / health"},
-      %{path: ~p"/ops/failed-sync", label: "Failed sync work"},
-      %{path: ~p"/ops/sync-drift", label: "Sync / drift"},
-      %{path: ~p"/ops/search", label: "Search & federation"},
-      %{path: ~p"/ops/playbooks", label: "Saved playbooks"}
+      %{
+        path: "#{mount_path}/posture",
+        label: "Posture",
+        title: "Posture / health",
+        group: :triage
+      },
+      %{
+        path: "#{mount_path}/failed-sync",
+        label: "Failed Sync",
+        title: "Failed sync work",
+        group: :triage
+      },
+      %{
+        path: "#{mount_path}/sync-drift",
+        label: "Sync Drift",
+        title: "Sync / drift",
+        group: :triage
+      },
+      %{
+        path: "#{mount_path}/search",
+        label: "Search",
+        title: "Search & federation",
+        group: :probes
+      },
+      %{
+        path: "#{mount_path}/playbooks",
+        label: "Playbooks",
+        title: "Saved playbooks",
+        group: :probes
+      }
     ]
   end
 end

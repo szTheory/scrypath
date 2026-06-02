@@ -1,6 +1,8 @@
 defmodule Scrypath.SchemaTest do
   use ExUnit.Case, async: true
 
+  def resolve_fan_out(_records), do: []
+
   describe "__scrypath__/1" do
     test "returns normalized schema metadata" do
       assert SearchablePost.__scrypath__(:config) == %{
@@ -19,6 +21,7 @@ defmodule Scrypath.SchemaTest do
 
       assert SearchablePost.__scrypath__(:fields) == [:title, :body]
       assert SearchablePost.__scrypath__(:faceting) == []
+      assert SearchablePost.__scrypath__(:fan_outs) == []
       assert SearchablePost.__scrypath__(:document_id) == :id
       assert Scrypath.schema_config(SearchablePost) == SearchablePost.__scrypath__(:config)
       assert Scrypath.schema_fields(SearchablePost) == [:title, :body]
@@ -40,6 +43,29 @@ defmodule Scrypath.SchemaTest do
 
     test "returns nil for tenant_field if omitted" do
       assert SearchablePost.__scrypath__(:tenant_field) == nil
+    end
+
+    test "reflects declared fan_outs metadata" do
+      [{mod, _}] =
+        Code.compile_string("""
+        defmodule FanOutSchemaTest.Source do
+          use Scrypath,
+            fields: [:name],
+            fan_outs: [
+              comments: [
+                target: SearchablePost,
+                resolver: {Scrypath.SchemaTest, :resolve_fan_out, []}
+              ]
+            ]
+        end
+        """)
+
+      assert mod.__scrypath__(:fan_outs) == [
+               comments: [
+                 target: SearchablePost,
+                 resolver: {Scrypath.SchemaTest, :resolve_fan_out, []}
+               ]
+             ]
     end
 
     test "stores and reflects declared settings metadata" do

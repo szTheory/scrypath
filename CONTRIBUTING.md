@@ -17,6 +17,7 @@ Skim [`guides/common-mistakes.md`](guides/common-mistakes.md) when search or syn
 ## Release train and merge policy
 
 - Scrypath runs a **release train on `main`**: keep `main` green, let Release Please maintain the release PR, and merge that PR when the next patch is ready to ship.
+- Keep release mechanics centralized in [`docs/releasing.md`](docs/releasing.md): `mix verify.phase11` is the always-on auth-free gate, while `mix verify.release_publish` and `mix verify.release_parity` stay on post-publish and scheduled monitor paths.
 - **Default release posture is patch-first while Scrypath remains pre-1.0.** The repo already uses Release Please's pre-1.0 knobs, so merged work rolls into patch cadence unless maintainers intentionally open a larger semver conversation.
 - **Serious feature-depth work is PR-first.** Do not land it directly on `main`; shape it as a branch + PR slice that respects the release train.
 - **Squash merge only.** The PR title should be treated as the release-facing summary because it becomes the squash commit title that Release Please reads.
@@ -68,6 +69,8 @@ Some focused Mix tasks keep historical names. Choose them by scope:
 | Tenant safety | <code>mix verify.phase94</code> | `tenant_field:`, `schema_capabilities/1` tenant reflection, `tenant_scope:`, or the multitenancy guide. |
 | Facet value search | <code>mix verify.phase96</code> | `search_facet_values/4`, facet-search result structures, contract tests, or associated examples. |
 | Release/support trust gates | <code>mix verify.phase97</code>, <code>mix verify.phase98</code>, <code>mix verify.phase99</code> | Support/readiness routing, install/release contract checks, compatibility assertions, or workflow wiring tests. |
+| v1.29 closeout truth | <code>mix verify.phase108</code> | Related-data fan-out wording, planning/JTBD closeout truth, and advisory `phase105-e2e` posture. |
+| Public website/docs truth alignment | <code>mix verify.phase112</code> | README, `website/`, `guides/scope-and-reopen-policy.md`, or other public truth-copy updates that affect claim envelope, route-map depth, or reopen-policy wording. |
 
 Run **`mix verify.opsui`** from the repository root when you change the optional **`scrypath_ops`** operator Phoenix app or its path dependency on the core library. It runs **`cd scrypath_ops && mix deps.get && mix test`**, and the dedicated **`scrypath-ops`** CI job now invokes this same root task (Postgres-backed Ecto setup, no Meilisearch service).
 
@@ -89,12 +92,60 @@ GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
 | **`phase13-verification`** | Service: Meilisearch. `SCRYPATH_INTEGRATION=1`, `mix verify.phase13` (operator integration path) |
 | **`meilisearch-smoke`** | Service: Meilisearch. `mix verify.meilisearch_smoke` (curated live suites: `live_meilisearch_verification`, `live_operator_verification`, `search_many_integration`, `settings_hot_apply_integration`) |
 | **`phoenix-example-integration`** | Services: Postgres 16 + Meilisearch v1.15. `SCRYPATH_EXAMPLE_INTEGRATION=1`, `PGPORT=5433`, `SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700`. **CI** runs **`cd examples/phoenix_meilisearch`**, then **`mix deps.get`**, then **`mix test`** (same sequence as `.github/workflows/ci.yml`) - **not** `./scripts/smoke.sh`. **`./scripts/smoke.sh`** is a **local DX harness** under `examples/phoenix_meilisearch/` (Compose + env defaults aligned to CI); use it for interactive runs, not as the Actions test driver. See the example README for env tables. |
+| **`phase105-e2e`** | Advisory browser lane with Postgres 16 + Meilisearch v1.15 for `examples/scrypath_ecommerce`; uses explicit `pg_isready` and `/health` checks and uploads failure artifacts (`playwright-report`, `test-results`, Phoenix log). |
 | **`scrypath-ops-path-check` / `scrypath-ops`** | Service: Postgres 16 only (no Meilisearch). Path gate: runs on **`push` to `main`** unconditionally, and on **`pull_request`** when **`scrypath_ops/**`**, **`lib/**`**, **`mix.exs`**, **`mix.lock`**, or **`scrypath_ops/mix.lock`** change. Local contributors should use **`mix verify.opsui`** from the repo root; the dedicated CI job mirrors the same sequence by running **`cd scrypath_ops`**, then **`mix deps.get`**, then **`mix test`**. |
 
 Treat **`main-ci`**, **`repo-hygiene`**, **`release-truth`**, and **`phase99-trust`** as the routine required merge gate blockers for this trust-hardening lane. **`compatibility-truth`** remains advisory evidence coverage, while phase-101 compatibility assertions close through <code>mix verify.phase99</code> rather than introducing a new required trust lane.
+
+For v1.29 closeout proof, run <code>mix verify.phase108</code> locally when related-data fan-out wording, roadmap/JTBD closeout truth, or contributor verification posture changes. It is a focused service-free truth gate; it does not promote **`phase105-e2e`** to a required merge blocker.
 
 The root [`compose.yaml`](compose.yaml) is only for **local** Meilisearch when running smoke tasks; CI uses the workflow **`services:`** block instead.
 
 ## Example app (Postgres + Meilisearch)
 
 For a **multi-container-shaped** local stack (Postgres + Meilisearch + Phoenix + **Oban**) and a scripted E2E smoke (**inline** and **`:oban`** paths), see [`examples/phoenix_meilisearch/README.md`](examples/phoenix_meilisearch/README.md) - that file is the **canonical env + command** reference for the example. **CI** under **`phoenix-example-integration`** runs **`cd examples/phoenix_meilisearch`**, then **`mix deps.get`**, then **`mix test`** (see **CI** table); **`./scripts/smoke.sh`** remains a **local** orchestration path, not the GitHub Actions entrypoint.
+
+## `phase105-e2e` local runbook
+
+`phase105-e2e` is advisory today (not a required merge gate). It exists to continuously exercise the full browser/operator proof while we track flake and runtime behavior. Treat this lane as the Phase 105 UAT surface: once the job is running on PR, push, schedule, or manual workflow dispatch, do not add a separate human UAT gate unless CI itself cannot execute.
+
+Phase 111 freezes a dual-window evidence model for any future promotion decision:
+
+- Canonical stability evidence comes from push-to-main and scheduled runs.
+- Merge-risk evidence comes from `pull_request` runs.
+- Treat pre-change and post-change job identity evidence separately.
+- Retry-as-flake rule: a pass after retry counts as flaky evidence, not clean stability proof.
+- Owner response expectation for lane failures is 1 business day.
+- Path-scoped required promotion is not part of Phase 111.
+
+For the human-facing tour of what this lane protects, including the storefront,
+operator routes, demo tenants, and Compose launch path, see
+[`examples/scrypath_ecommerce/README.md`](examples/scrypath_ecommerce/README.md).
+That demo README also documents the bind-mounted Compose dev mode for fast UI
+iteration without rebuilding dependency layers after every HEEx/CSS change.
+
+Run locally:
+
+```sh
+mix deps.get
+cd examples/scrypath_ecommerce
+mix deps.get
+mix e2e.prepare
+npm ci
+npx playwright install --with-deps chromium
+MIX_ENV=test PHX_SERVER=true mix phx.server
+# second shell
+cd examples/scrypath_ecommerce
+npm run test:e2e
+```
+
+### Promotion criteria
+
+- Stable job name remains `phase105-e2e`.
+- Sustained low flake rate across PR and scheduled runs.
+- Runtime stays bounded enough for PR feedback.
+- Failure artifacts remain actionable (`playwright-report`, `test-results`, Phoenix log).
+- Lane owners respond to failures before required-check escalation.
+- Trigger rules stay explicit so PR checks do not sit in ambiguous skipped/pending states.
+- Evidence artifacts stay bounded and machine-auditable as `phase105-playwright.json`, `phase105-evidence.ndjson`, `phase105-evidence.json`, and `phase105-evidence-summary.md`.
+- Evidence summaries include spec/test/attempt counts, operation counts, failed spec names, runtime, flake signal, and failure classification.

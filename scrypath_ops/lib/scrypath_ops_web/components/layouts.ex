@@ -20,12 +20,14 @@ defmodule ScrypathOpsWeb.Layouts do
 
   ## Examples
 
-      <Layouts.app flash={@flash}>
+      <Layouts.app mount_path={@mount_path} flash={@flash}>
         <h1>Content</h1>
       </Layouts.app>
 
   """
+  attr(:mount_path, :string, required: true, doc: "The dynamic engine mount path")
   attr(:flash, :map, required: true, doc: "the map of flash messages")
+  attr(:page_title, :string, default: nil)
 
   attr(:shell, :atom,
     default: :default,
@@ -49,34 +51,47 @@ defmodule ScrypathOpsWeb.Layouts do
     ~H"""
     <a
       href="#ops-main"
-      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-base-100 focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-base-100 focus:px-3 focus:py-2 focus:text-ops-body focus:font-medium focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary"
     >
       Skip to operator content
     </a>
 
-    <header class="navbar px-4 sm:px-6 lg:px-8 border-b border-base-300">
-      <div class="flex-1">
-        <.link navigate={~p"/"} class="flex w-fit items-center gap-2 text-sm font-semibold">
-          <img src={~p"/images/logo.svg"} width="36" alt="" />
-          <span>ScrypathOps</span>
+    <header class="ops-header px-4 py-3 sm:px-6 lg:px-8">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <.link navigate={@mount_path} class="flex w-fit items-center gap-3">
+          <img src={"#{@mount_path}/images/logo.svg"} width="36" height="36" alt="" />
+          <span>
+            <span class="block text-ops-body font-semibold leading-4">ScrypathOps</span>
+            <span class="block text-ops-sm text-base-content/60">Ecto-native search operations</span>
+          </span>
         </.link>
-      </div>
-      <nav class="flex-none" aria-label="Operator primary">
-        <ul class="menu menu-horizontal px-1 text-sm">
-          <li :for={item <- ScrypathOpsWeb.Nav.primary()}>
-            <.link navigate={item.path} class="link link-hover">{item.label}</.link>
-          </li>
-        </ul>
-      </nav>
-      <div class="flex-none pl-4">
-        <.theme_toggle />
+
+        <div class="flex flex-wrap items-center gap-3">
+          <nav aria-label="Operator primary">
+            <ul class="ops-nav-list">
+              <li
+                :for={item <- ScrypathOpsWeb.Nav.primary(@mount_path)}
+                class={item.group == :probes && "ops-nav-group-probes"}
+              >
+                <.link
+                  navigate={item.path}
+                  class={nav_link_classes(item, @page_title)}
+                  aria-current={if item.title == @page_title, do: "page", else: nil}
+                >
+                  {item.label}
+                </.link>
+              </li>
+            </ul>
+          </nav>
+          <.theme_toggle />
+        </div>
       </div>
     </header>
 
     <main
       id="ops-main"
       aria-labelledby="ops-page-title"
-      class="px-4 py-10 sm:px-6 lg:px-8"
+      class="ops-shell min-h-screen px-4 pt-ops-4 pb-ops-6 sm:px-6 lg:px-8"
     >
       <div class={main_width_classes(@ops_main_width)}>
         {render_slot(@inner_block)}
@@ -84,6 +99,7 @@ defmodule ScrypathOpsWeb.Layouts do
     </main>
 
     <.flash_group flash={@flash} id="flash-group" />
+    <.ops_command_palette mount_path={@mount_path} />
     """
   end
 
@@ -91,25 +107,25 @@ defmodule ScrypathOpsWeb.Layouts do
     ~H"""
     <header class="navbar px-4 sm:px-6 lg:px-8">
       <div class="flex-1">
-        <a href="/" class="flex-1 flex w-fit items-center gap-2">
-          <img src={~p"/images/logo.svg"} width="36" />
-          <span class="text-sm font-semibold">v{Application.spec(:phoenix, :vsn)}</span>
+        <a href={"#{@mount_path}"} class="flex-1 flex w-fit items-center gap-2">
+          <img src={"#{@mount_path}/images/logo.svg"} width="36" height="36" alt="" />
+          <span class="text-ops-body font-semibold">v{Application.spec(:phoenix, :vsn)}</span>
         </a>
       </div>
       <div class="flex-none">
         <ul class="flex flex-column px-1 space-x-4 items-center">
           <li>
-            <a href="https://phoenixframework.org/" class="btn btn-ghost">Website</a>
+            <a href="https://github.com/szTheory/scrypath" class="btn btn-ghost">GitHub</a>
           </li>
           <li>
-            <a href="https://github.com/phoenixframework/phoenix" class="btn btn-ghost">GitHub</a>
+            <a href={"#{@mount_path}/posture"} class="btn btn-ghost">Operator UI</a>
           </li>
           <li>
             <.theme_toggle />
           </li>
           <li>
-            <a href="https://hexdocs.pm/phoenix/overview.html" class="btn btn-primary">
-              Get Started <span aria-hidden="true">&rarr;</span>
+            <a href={"#{@mount_path}/posture"} class="btn btn-primary">
+              Open Posture <span aria-hidden="true">&rarr;</span>
             </a>
           </li>
         </ul>
@@ -128,6 +144,16 @@ defmodule ScrypathOpsWeb.Layouts do
 
   defp main_width_classes(:wide), do: ~w(mx-auto max-w-7xl w-full min-w-0 space-y-4)
   defp main_width_classes(_), do: ~w(mx-auto max-w-3xl w-full min-w-0 space-y-4)
+
+  defp nav_link_classes(item, page_title) do
+    # Focus indication comes from the single global `:focus-visible` outline (app.css
+    # @layer base). No per-element `ring-*` — the outline isn't clipped by the nav's
+    # flex-wrap container and double-drawing reads as muddy.
+    [
+      "ops-nav-item",
+      item.title == page_title && "ops-nav-item-active"
+    ]
+  end
 
   @doc """
   Shows the flash group with standard titles and content.
@@ -181,7 +207,9 @@ defmodule ScrypathOpsWeb.Layouts do
     ~H"""
     <div
       id="theme-toggle"
-      class="card relative flex flex-row items-center border-2 border-base-300 bg-base-300 rounded-full"
+      class="card relative flex flex-row items-center border border-base-300 bg-base-300 rounded-full"
+      role="group"
+      aria-label="Theme preference"
     >
       <div
         id="theme-toggle-pill"
@@ -189,7 +217,9 @@ defmodule ScrypathOpsWeb.Layouts do
       />
 
       <button
-        class="flex p-2 cursor-pointer w-1/3"
+        class="flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-2"
+        type="button"
+        aria-label="Use system theme"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="system"
       >
@@ -197,7 +227,9 @@ defmodule ScrypathOpsWeb.Layouts do
       </button>
 
       <button
-        class="flex p-2 cursor-pointer w-1/3"
+        class="flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-2"
+        type="button"
+        aria-label="Use light theme"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="light"
       >
@@ -205,7 +237,9 @@ defmodule ScrypathOpsWeb.Layouts do
       </button>
 
       <button
-        class="flex p-2 cursor-pointer w-1/3"
+        class="flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-2"
+        type="button"
+        aria-label="Use dark theme"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="dark"
       >
