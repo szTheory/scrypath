@@ -12,6 +12,16 @@
     <p class="eyebrow">First hour</p>
     <h2>Start with one schema and one context.</h2>
   </div>
+  <div class="route-list">
+    <a class="route-item" href="{{REPO_URL}}/blob/main/README.md">
+      <strong>Repository README</strong>
+      <span>Open the canonical install, claim envelope, and route map before choosing a deeper guide.</span>
+    </a>
+    <a class="route-item" href="{{REPO_URL}}/blob/main/guides/scope-and-reopen-policy.md">
+      <strong>Scope and reopen policy</strong>
+      <span>Check feature-lane reopen triggers and out-of-scope boundaries before requesting broader product work.</span>
+    </a>
+  </div>
   <div class="grid two">
     <article class="tile">
       <h3>Quick path</h3>
@@ -22,6 +32,11 @@
       <h3>Mental model</h3>
       <p>Understand where Scrypath fits in a Phoenix app before you thread it through write paths.</p>
       <a href="{{REPO_URL}}/blob/main/guides/jtbd-and-user-flows.md">JTBD and user flows</a>
+    </article>
+    <article class="tile">
+      <h3>Meilisearch concepts</h3>
+      <p>Learn the index, document, task, settings, backup, and projection vocabulary Scrypath expects.</p>
+      <a href="{{REPO_URL}}/blob/main/guides/meilisearch-concepts.md">Open the concepts guide</a>
     </article>
   </div>
 </section>
@@ -52,6 +67,10 @@
     <a class="route-item" href="{{REPO_URL}}/blob/main/guides/related-data-and-reindexing.md">
       <strong>Related data and reindexing</strong>
       <span>Keep documents current when associated records change, and decide when to backfill or rebuild.</span>
+    </a>
+    <a class="route-item" href="{{REPO_URL}}/blob/main/guides/meilisearch-operations.md">
+      <strong>Meilisearch operations</strong>
+      <span>Run the backend deliberately: keys, storage, capacity, backups, upgrades, and task visibility.</span>
     </a>
     <a class="route-item" href="{{REPO_URL}}/blob/main/guides/multitenancy.md">
       <strong>Multitenancy</strong>
@@ -86,8 +105,8 @@
 
 <section class="section" id="example">
   <div class="section-head">
-    <p class="eyebrow">Example app</p>
-    <h2>Run the Phoenix + Meilisearch path before you depend on it.</h2>
+    <p class="eyebrow">Example apps</p>
+    <h2>Run the Phoenix paths before you depend on them.</h2>
   </div>
   <div class="grid two">
     <article class="tile">
@@ -99,11 +118,19 @@
       <a href="{{REPO_URL}}/blob/main/examples/phoenix_meilisearch/README.md">Open the runbook</a>
     </article>
     <article class="tile">
+      <h3>E-commerce/admin showcase</h3>
+      <p>
+        Click through tenant-scoped catalog search, category facets, related-data propagation,
+        and the optional operator UI in a realistic demo app.
+      </p>
+      <a href="{{REPO_URL}}/blob/main/examples/scrypath_ecommerce/README.md">Open the showcase</a>
+    </article>
+    <article class="tile">
       <h3>Support posture</h3>
       <p>
         Use <code>mix verify.adopter</code> for a fast local confidence check. Use
         <code>mix verify.adopter --live</code> when Meilisearch and the example app prerequisites
-        are available.
+        are available. Send outside-adopter evidence through the intake guide.
       </p>
       <a href="{{REPO_URL}}/blob/main/guides/support-and-compatibility.md">See support guide</a>
     </article>

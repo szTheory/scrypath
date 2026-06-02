@@ -16,3 +16,8 @@
 # locally-rebuilt hex package artifacts
 /scrypath-*/
 *.tar
+
+# generated local browser/demo artifacts
+examples/scrypath_ecommerce/node_modules/
+examples/scrypath_ecommerce/test-results/
+tmp_phx/

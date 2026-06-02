@@ -14,6 +14,7 @@ Canonical routing before you submit evidence:
 
 Use release-backed guidance as the default adopter path; main may contain unreleased changes.
 This intake guide stays route-first and is not a compatibility tuple authority.
+Outside-adopter evidence can reopen feature-lane work only through [Scope and reopen policy](scope-and-reopen-policy.md), not by treating every unsupported integration as roadmap work.
 
 ### Repo-clone versus Hex-package boundary
 
@@ -47,23 +48,27 @@ Evidence bundles are classified into one of four classes to determine how we res
 - **Class C:** Integration attempt outside the supported runtime matrix (e.g. older OTP or different search backend). Will likely be closed as unsupported, but logged for future roadmap consideration.
 - **Class D:** Incomplete evidence, missing context, or missing ordered commands. Returned for clarification.
 
-## Evidence Findings and Review Rubric
+## Evidence findings and review rubric
 
-When maintainers review an evidence bundle, they sort the outcome into one of four finding buckets:
+When maintainers review an evidence bundle, they sort the outcome into one of five finding buckets:
 
 1. **Bug in Scrypath:** The library failed its contract.
 2. **Doc or Contract Gap:** The library behaved as intended, but the docs were missing or misleading.
 3. **App-Side Error:** The integration steps in the host app were incorrect.
 4. **Environment Failure:** The failure was caused by local OS, Docker, or port issues.
+5. **Needs Information:** The bundle is missing the path, version/ref, first failing step, or enough sanitized output to classify.
 
 ## Maintainer triage routing
 
-Use the finding bucket to drive the next maintainer action:
+Use the evidence class and finding bucket to drive the next maintainer action:
 
-- **Bug in Scrypath** -> open or route a bugfix issue with reproducible references from the evidence bundle.
-- **Doc or Contract Gap** -> open a docs correction issue linked to the offending contract surface.
-- **App-Side Error** -> respond with correction guidance and close as a user-integration issue.
-- **Environment Failure** -> request environment fixes and ask the adopter to rerun the same evidence path.
+| Class | Finding bucket | Maintainer action |
+| ----- | -------------- | ----------------- |
+| Class A or Class B | **Bug in Scrypath** | Open a patch-sized bugfix issue with the reproducer, affected ref/version, and first failing command step. |
+| Class A or Class B | **Doc or Contract Gap** | Open a docs correction issue linked to the offending contract surface. |
+| Class B or Class C | **App-Side Error** | Reply with correction guidance and close as a user-integration issue once the documented path is clear. |
+| Class A, Class B, or Class C | **Environment Failure** | Request an environment fix request and ask the adopter to rerun the same evidence path. |
+| Class D | **Needs Information** | Send a needs-info response that names the missing evidence fields. |
 
 Needs information response for Class D flow:
 
@@ -78,14 +83,14 @@ To submit evidence of a failure or confusion, use the outside-adopter evidence i
 Open it from GitHub's new issue flow or use this direct template link: [outside-adopter evidence](https://github.com/szTheory/scrypath/issues/new?template=outside-adopter-evidence.md).
 
 Required evidence must include all of the following checklist items:
-1. Environment matrix
-2. Scrypath Ref or Hex version
-3. Chosen path
-4. Sync mode
-5. Ordered commands
-6. Expected versus actual outcome
-7. First failure point
-8. Supporting logs
+1. Path
+2. Runtime versus support matrix
+3. Reporter class guess
+4. Reporter finding guess
+5. Scrypath ref or Hex version
+6. First failing command step
+7. Logs or artifacts
+8. Expected versus actual outcome
 
 Incomplete evidence bundles (missing context, missing ordered commands, or missing logs) are classified as Class D and returned for clarification.
 

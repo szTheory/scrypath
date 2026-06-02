@@ -7,6 +7,7 @@ This guide is for **operators** who already ship Scrypath with Meilisearch and n
 - [`guides/relevance-tuning.md`](relevance-tuning.md) — open when ranking, searchable attributes, or verify-applied settings are in question.
 - [`guides/faceted-search-with-phoenix-liveview.md`](faceted-search-with-phoenix-liveview.md) — open when filters, facet counts, or `filterableAttributes` explain the mismatch.
 - [`guides/multi-index-search.md`](multi-index-search.md) — open when the wrong index or federation-style `search_many/2` behavior is suspected.
+- [`guides/meilisearch-operations.md`](meilisearch-operations.md) — open when the symptom looks like service health, task backlog, disk, memory, backup, or upgrade posture.
 
 ## Empty index (documents exist in the DB but search returns nothing)
 
@@ -48,6 +49,16 @@ This guide is for **operators** who already ship Scrypath with Meilisearch and n
 
 **Verify** — Re-run `Scrypath.failed_sync_work/2` until the list is empty or only contains expected non-retryable rows. Confirm Meilisearch’s task list stops growing failed tasks for the same root cause.
 
+## Meilisearch task backlog keeps growing
+
+**Symptom** — `/tasks` shows old `enqueued` or `processing` work, Scrypath status shows lag, or users report stale search after writes continue to succeed.
+
+**Diagnosis** — Backlog is a freshness problem, not necessarily a data-loss problem. Look for high-churn fields, one-document batches, long-running settings changes, resource pressure, or repeated validation failures blocking useful work.
+
+**Action** — First stop making the queue worse: pause noisy producers or reduce batch/concurrency where your app controls it. Inspect recent failed tasks and Scrypath failed work before replaying. If the backlog came from a broad contract change, prefer a managed reindex target over trying to repair the live index record by record.
+
+**Verify** — Oldest pending task age should shrink, failed task rate should stop rising, and representative searches should catch up after the queue drains.
+
 ## Settings drift (ranking or attributes changed)
 
 **Symptom** — Search “works” but ranking, typo tolerance, or displayed fields are wrong after a deploy that changed schema settings.
@@ -78,6 +89,16 @@ This guide is for **operators** who already ship Scrypath with Meilisearch and n
 
 **Verify** — Confirm the active index UID in config matches the index your app queries. Run `mix scrypath.reconcile` before and after to keep decisions explicit.
 
+## Version or restore mismatch
+
+**Symptom** — Meilisearch starts failing after an upgrade, import, restore, or image tag change; tasks fail with backend-shaped errors even though Scrypath code did not change.
+
+**Diagnosis** — Treat this as backend-version or backup/restore posture until proven otherwise. Meilisearch version changes can affect database compatibility, task behavior, settings responses, or search API details.
+
+**Action** — Compare the running Meilisearch version against [Support and compatibility](support-and-compatibility.md). If production moved ahead of the verified target, reproduce in staging with the same dump/import path before changing Scrypath code. Use settings diff and known search/filter/facet smoke queries to separate backend migration issues from app projection bugs.
+
+**Verify** — Health, stats, settings diff, known queries, filters, facets, and Scrypath status should all pass on the restored or upgraded instance before workers resume normal traffic.
+
 ## Related guides
 
 - [`guides/sync-modes-and-visibility.md`](sync-modes-and-visibility.md) — `:inline`, `:oban`, and `:manual` semantics.
@@ -85,3 +106,4 @@ This guide is for **operators** who already ship Scrypath with Meilisearch and n
 - [`guides/relevance-tuning.md`](relevance-tuning.md) — settings, verify-applied, and ranking workflows.
 - [`guides/faceted-search-with-phoenix-liveview.md`](faceted-search-with-phoenix-liveview.md) — facet drift and LiveView-oriented checks.
 - [`guides/multi-index-search.md`](multi-index-search.md) — `search_many/2` and multi-schema operations.
+- [`guides/meilisearch-operations.md`](meilisearch-operations.md) — service operations, backups, upgrades, and capacity posture.

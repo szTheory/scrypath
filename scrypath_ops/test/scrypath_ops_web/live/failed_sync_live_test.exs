@@ -128,15 +128,24 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     :ok
   end
 
-  test "renders rollups and reason_class columns", %{conn: conn} do
+  test "renders triage summary, rollups, and human reason-class columns", %{conn: conn} do
     {:ok, _lv, html} = live(conn, ~p"/ops/failed-sync")
 
-    assert html =~ ~r/total[^\d]*2/s
-
-    assert Enum.any?(
-             ~w(transport validation backend_rejected queue_exhausted unknown),
-             &String.contains?(html, &1)
-           )
+    assert html =~ "failed sync job(s) need triage"
+    assert html =~ "dominant reason"
+    assert html =~ "retryable jobs"
+    assert html =~ "Total"
+    assert html =~ ~r/<p[^>]*class="[^"]*tabular-nums[^"]*"[^>]*>\s*2\s*<\/p>/s
+    assert html =~ "data-testid=\"failed-sync-row\""
+    assert html =~ "data-testid=\"failed-sync-retry\""
+    assert html =~ "Failed sync jobs"
+    assert html =~ "Refresh failed sync jobs"
+    assert html =~ "Retry job"
+    assert html =~ "Retry re-enqueues the original sync work"
+    # Reason-class rollup tiles (the single, branded representation of by-class counts).
+    assert html =~ "Transport"
+    assert html =~ "Validation"
+    assert html =~ "Unknown"
   end
 
   test "sigra retry redirects stale sudo and keeps the failed-sync row in place", %{} do
@@ -186,6 +195,18 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert assigns.last_refresh_at != nil
     assert assigns.load_error == nil
     assert assigns.inspection != nil
+  end
+
+  test "schema selector rejects non-allowlisted module strings without crashing", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+
+    mod_str = "ScrypathOps.Test.NotAllowlisted#{System.unique_integer([:positive])}"
+    html = render_change(view, "select_schema", %{"schema" => mod_str})
+
+    assert html =~ "Select an allowlisted schema."
+
+    assigns = :sys.get_state(view.pid).socket.assigns
+    assert assigns.selected_schema == OpsPostA
   end
 
   defp put_live_assigns(view, assigns) do

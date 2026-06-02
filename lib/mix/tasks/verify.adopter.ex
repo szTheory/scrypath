@@ -9,6 +9,7 @@ defmodule Mix.Tasks.Verify.Adopter do
   Default mode is the fast, auth-free, service-free adopter contract slice:
 
   - `mix test test/scrypath/readiness_contract_test.exs`
+  - `mix test test/scrypath/phase110_contract_test.exs`
   - `mix test test/mix/tasks/verify_adopter_test.exs`
 
   Pass `--live` to run the canonical Phoenix example proof path under
@@ -37,6 +38,7 @@ defmodule Mix.Tasks.Verify.Adopter do
 
   @fast_tests [
     "test/scrypath/readiness_contract_test.exs",
+    "test/scrypath/phase110_contract_test.exs",
     "test/mix/tasks/verify_adopter_test.exs"
   ]
 

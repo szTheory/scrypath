@@ -20,6 +20,24 @@ mix phx.server
 
 Then open [http://localhost:4000](http://localhost:4000).
 
+## Mounted host app assets
+
+When a Phoenix host mounts ScrypathOps under a path such as `/admin/search/*`, the host
+root layout must load the operator stylesheet for those routes:
+
+```heex
+<link phx-track-static rel="stylesheet" href="/admin/search/assets/css/app.css" />
+```
+
+The host JavaScript should also handle the operator shell events:
+
+- `phx:set-theme` — set or clear `data-theme` on `document.documentElement` and persist the
+  explicit light/dark preference when present.
+- `phx:copy_run_diagnostics` — copy the playbook run diagnostics payload to the clipboard.
+
+The e-commerce demo wires both pieces in its root layout and app JavaScript so `/admin/search/*`
+looks and behaves like the standalone `/ops` shell without loading a second LiveSocket.
+
 ## OPSUI schema allowlist
 
 The `/ops` LiveViews only load schema modules listed in **`schema_allowlist`** under

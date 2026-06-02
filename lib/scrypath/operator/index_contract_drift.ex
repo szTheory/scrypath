@@ -155,11 +155,23 @@ defmodule Scrypath.Operator.IndexContractDrift do
         [Atom.to_string(a)]
 
       %{} = m ->
-        case {Map.get(m, "attribute"), Map.get(m, :attribute)} do
-          {nil, nil} -> []
-          {x, _} when is_binary(x) -> [x]
-          {nil, x} when is_atom(x) -> [Atom.to_string(x)]
-          _ -> []
+        patterns = Map.get(m, "attributePatterns") || Map.get(m, :attribute_patterns)
+
+        cond do
+          is_list(patterns) ->
+            Enum.filter(patterns, &is_binary/1)
+
+          is_binary(Map.get(m, "attribute")) ->
+            [Map.get(m, "attribute")]
+
+          is_binary(Map.get(m, :attribute)) ->
+            [Map.get(m, :attribute)]
+
+          is_atom(Map.get(m, :attribute)) ->
+            [Atom.to_string(Map.get(m, :attribute))]
+
+          true ->
+            []
         end
 
       _ ->

@@ -1,0 +1,10 @@
+{
+  "playbook_format": 1,
+  "mode": "search",
+  "schema": "ScrypathEcommerce.Catalog.Product",
+  "q": "Quantum",
+  "opts": {},
+  "title": "Single-index product probe",
+  "description": "A bounded read-only search over the Product index for the seeded demo catalog. \"Quantum\" matches the CyberPhone family — preview the payload, then run.",
+  "tags": ["example", "single-index"]
+}

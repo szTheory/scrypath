@@ -137,6 +137,7 @@ defmodule ScrypathOps.Playbook.Runner do
          true <- Keyword.has_key?(scrypath_opts, :backend) do
       merged =
         scrypath_opts
+        |> ScrypathOps.Schemas.runtime_opts()
         |> Keyword.merge(Keyword.delete(playbook_kw, :page))
         |> maybe_put_page(page_kw)
 

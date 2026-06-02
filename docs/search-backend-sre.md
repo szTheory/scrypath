@@ -40,10 +40,12 @@ Stable event prefixes (each has `:start`, `:stop`, and on failure `:exception` w
 Prioritize signals that predict **outage**, **data loss risk**, or **unbounded backlog**. Exact metric names depend on your exporter (Prometheus sidecar, cloud vendor agent, or logs). Map these **concepts** to your stack:
 
 1. **Process up / ready** — HTTP `GET /health` (or vendor equivalent) from the same network path as the app. Page when **unreachable** for longer than a short window (e.g. two failed checks), not on single blips.
-2. **Disk free** — Meilisearch persists indexes; **running out of disk** is a top cause of corruption and wedged tasks. Alert on **free space percentage or absolute GB** with headroom for compactions and reindexes.
-3. **Memory pressure** — Large batches and concurrent indexing drive RSS. Page on **OOM kills** or **sustained** memory limit pressure from your orchestrator, not one-off spikes during planned reindex.
+2. **Disk free** — Meilisearch persists indexes; **running out of disk** is a top cause of corruption and wedged tasks. Alert on **free space percentage or absolute GB** with headroom for snapshots, dumps, task DB growth, and reindexes.
+3. **Memory pressure** — Meilisearch uses LMDB and memory-mapped I/O, so high RSS/page-cache-looking memory can be normal. Page on **OOM kills** or **sustained** memory limit pressure from your orchestrator, not one-off spikes during planned reindex.
 4. **Task failures** — Meilisearch indexes work through a **task** queue. Sustained **failed** tasks (not every transient validation error) indicate a bad deploy, schema mismatch, or upstream bug. Prefer a **rate** or **count over a window**, not every single failure.
-5. **Replication / multi-node** (if used) — **split brain or lag** between nodes is a separate product surface; follow Meilisearch’s own HA docs for your version.
+5. **Task backlog age** — A queue with recent work may be healthy; a queue whose oldest task age keeps growing means users may see stale search even while the app is otherwise healthy.
+6. **Task DB size / retention** — High-churn apps can create large task histories. Track task count or task DB size where your Meilisearch version/exporter exposes it, and define a retention/compaction policy before disk pressure makes it urgent.
+7. **Replication / multi-node** (if used) — **split brain or lag** between nodes is a separate product surface; follow Meilisearch’s own HA docs for your version.
 
 **Avoid alert fatigue:** do **not** page on single slow searches, one failed document in a batch, or Meilisearch `202 Accepted` enqueue latency alone. Those belong on dashboards or SLO burn-rate rules with long windows.
 
@@ -54,6 +56,19 @@ Prioritize signals that predict **outage**, **data loss risk**, or **unbounded b
 - **Settings verify skipped** — `skip_settings_verification?: true` speeds emergencies but **hides drift** until the next verify. Treat as a **temporary** flag; do not leave it on silently.
 - **Sync mode semantics** — `:oban` means **durable enqueue**, not “search is updated.” Paging on queue depth without checking **search visibility** misdiagnoses user impact; see sync modes guide.
 - **Version skew** — Meilisearch minor versions change task and index behavior. Pin server **and** client expectations per environment; roll upgrades in a canary before production.
+- **Live database on slow/network storage** — Keep the live Meilisearch data path on low-latency local or block storage. Object storage is fine for dump/snapshot artifacts, not for the active database.
+- **Too many tiny writes** — Per-record or high-churn updates can create task debt. Batch, debounce, or omit fields that do not affect search.
+- **Master key sprawl** — The master key is an administrative credential. Application workers should use scoped keys, and browser access should use narrow search keys or tenant tokens only when direct client search is intentional.
+
+## Backup and upgrade posture
+
+Scrypath can rebuild from the source of truth, but large indexes may make rebuild-only DR too slow. Keep both ideas in the runbook:
+
+- **Snapshots** are for fast same-version restore.
+- **Dumps** are for portability and version migration.
+- **Rebuild from Postgres/source data** is the most trustworthy repair when projection or settings drift is suspected.
+
+Before a Meilisearch version upgrade, rehearse dump/import in staging and run known Scrypath smoke checks: health, stats, settings diff, search, filters, facets, and sync status. Do not let production be the first place a new Meilisearch binary sees your data.
 
 ## What to run before you tune alerts
 
@@ -68,3 +83,5 @@ From the repo root (maintainer checks):
 - [guides/sync-modes-and-visibility.md](../guides/sync-modes-and-visibility.md) — `:inline` / `:oban` / `:manual`
 - [guides/operator-mix-tasks.md](../guides/operator-mix-tasks.md) — thin Mix wrappers over `Scrypath.*`
 - [guides/relevance-tuning.md](../guides/relevance-tuning.md) — settings and verify-applied semantics
+- [guides/meilisearch-concepts.md](../guides/meilisearch-concepts.md) — adopter-level Meilisearch mental model
+- [guides/meilisearch-operations.md](../guides/meilisearch-operations.md) — production checklist, backup, upgrade, and storage posture

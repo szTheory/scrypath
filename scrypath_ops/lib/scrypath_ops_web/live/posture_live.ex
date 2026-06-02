@@ -9,8 +9,7 @@ defmodule ScrypathOpsWeb.PostureLive do
   use ScrypathOpsWeb, :live_view
 
   alias ScrypathOps.Integrations.Sigra.Gating
-
-  @meilisearch_ops_guide "https://github.com/szTheory/scrypath/blob/main/guides/meilisearch-operations.md"
+  alias Scrypath.Meilisearch.Tasks
 
   @impl true
   def mount(_params, _session, socket) do
@@ -26,6 +25,7 @@ defmodule ScrypathOpsWeb.PostureLive do
       |> assign(:posture_rows, [])
       |> assign(:aggregate_error_count, 0)
       |> assign(:last_refresh_at, nil)
+      |> assign(:posture_state, :ok)
       |> assign(:posture_headline, "—")
       |> assign(:posture_evidence, "")
       |> assign(:next_checks, [])
@@ -50,218 +50,154 @@ defmodule ScrypathOpsWeb.PostureLive do
   end
 
   def handle_event("swap_live", %{"schema" => mod_str}, socket) do
-    mod = mod_from_flat!(mod_str)
+    case mod_from_allowlist(mod_str, socket.assigns.schema_allowlist) do
+      {:ok, mod} ->
+        {:noreply, swap_live(socket, mod)}
 
-    {:noreply, swap_live(socket, mod)}
-  end
-
-  defp load_posture(socket) do
-    allowlist = socket.assigns.schema_allowlist
-    opts = socket.assigns.scrypath_opts
-
-    cond do
-      allowlist == [] ->
-        socket
-        |> assign(:posture_rows, :empty_allowlist)
-        |> assign(:aggregate_error_count, 0)
-        |> assign(:last_refresh_at, DateTime.utc_now())
-        |> assign_jtbd_summary()
-
-      not Keyword.has_key?(opts, :backend) ->
-        socket
-        |> assign(:posture_rows, :missing_backend)
-        |> assign(:aggregate_error_count, 0)
-        |> assign(:last_refresh_at, DateTime.utc_now())
-        |> assign_jtbd_summary()
-
-      true ->
-        rows =
-          allowlist
-          |> Task.async_stream(
-            fn mod ->
-              {mod, Scrypath.sync_status(mod, opts)}
-            end,
-            max_concurrency: 3,
-            timeout: 15_000,
-            on_timeout: :kill_task
-          )
-          |> Enum.map(fn
-            {:ok, {mod, res}} -> {mod, res}
-            {:exit, reason} -> {:posture_stream, {:error, {:async_stream, reason}}}
-          end)
-          |> sort_rows()
-
-        err_count = Enum.count(rows, fn {_m, r} -> match?({:error, _}, r) end)
-
-        socket
-        |> assign(:posture_rows, {:ok, rows})
-        |> assign(:aggregate_error_count, err_count)
-        |> assign(:last_refresh_at, DateTime.utc_now())
-        |> assign_jtbd_summary()
+      :error ->
+        {:noreply, put_flash(socket, :error, "Select an allowlisted schema.")}
     end
   end
 
-  defp assign_jtbd_summary(socket) do
-    rows = socket.assigns.posture_rows
-    err_count = socket.assigns.aggregate_error_count
-
-    {headline, evidence, checks} = jtbd_state(rows, err_count)
+  defp load_posture(socket) do
+    summary =
+      ScrypathOps.Posture.summary(
+        socket.assigns.schema_allowlist,
+        socket.assigns.scrypath_opts
+      )
 
     socket
-    |> assign(:posture_headline, headline)
-    |> assign(:posture_evidence, evidence)
-    |> assign(:next_checks, Enum.take(checks, 5))
+    |> assign(:posture_rows, posture_rows_assign(summary))
+    |> assign(:aggregate_error_count, summary.error_count)
+    |> assign(:last_refresh_at, summary.refreshed_at)
+    |> assign(:posture_state, summary.state)
+    |> assign(:posture_headline, summary.headline)
+    |> assign(:posture_evidence, summary.evidence)
+    |> assign(
+      :next_checks,
+      summary |> ScrypathOps.Posture.next_checks(socket.assigns.mount_path) |> Enum.take(5)
+    )
   end
+
+  # Map the shared summary back onto this view's legacy `posture_rows` assign,
+  # which the per-schema table and empty-state guards still pattern-match on.
+  defp posture_rows_assign(%ScrypathOps.Posture{state: :unconfigured}), do: :empty_allowlist
+  defp posture_rows_assign(%ScrypathOps.Posture{state: :missing_backend}), do: :missing_backend
+  defp posture_rows_assign(%ScrypathOps.Posture{rows: rows}), do: {:ok, rows}
 
   defp swap_live(socket, mod) do
     Gating.gate_sensitive_action(socket, :swap_live, fn ->
-      case Scrypath.Meilisearch.swap_indexes(mod, socket.assigns.scrypath_opts) do
-        {:ok, _result} -> load_posture(socket)
-        {:error, reason} -> put_flash(socket, :error, "Swap live failed: #{inspect(reason)}")
+      scrypath_opts = socket.assigns.scrypath_opts
+      wait_opts = task_wait_opts(scrypath_opts)
+
+      case Scrypath.Meilisearch.swap_indexes(mod, scrypath_opts) do
+        {:ok, %{task: task}} ->
+          case Tasks.wait_for_task(task, wait_opts) do
+            {:ok, _waited} ->
+              socket
+              |> load_posture()
+              |> put_flash(:info, "Swap live index completed for #{module_flat_name(mod)}")
+
+            {:error, reason} ->
+              put_flash(socket, :error, "Swap live failed: #{inspect(reason)}")
+          end
+
+        {:error, reason} ->
+          put_flash(socket, :error, "Swap live failed: #{inspect(reason)}")
       end
     end)
   end
 
-  defp jtbd_state(:empty_allowlist, _) do
-    checks = [
-      %{
-        text:
-          "Add schemas to the OPSUI allowlist in :scrypath_ops config or SCRYPATH_OPS_SCHEMAS.",
-        href: "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/README.md"
-      }
-    ]
-
-    {"Not configured",
-     "No schemas are allowlisted for posture — configure schema_allowlist or SCRYPATH_OPS_SCHEMAS (see scrypath_ops README).",
-     checks}
-  end
-
-  defp jtbd_state(:missing_backend, _) do
-    checks = [
-      %{
-        text: "Wire :backend and related :scrypath_ops options so sync_status can run.",
-        href: "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/README.md"
-      }
-    ]
-
-    {"Broken",
-     "Scrypath runtime is missing :backend under :scrypath_ops — posture cannot query sync status.",
-     checks}
-  end
-
-  defp jtbd_state({:ok, _rows}, err_count) when err_count > 0 do
-    checks =
-      [
-        %{
-          text: "Open failed sync work to triage fetch and queue errors first.",
-          navigate: ~p"/ops/failed-sync"
-        },
-        %{
-          text: "Review read-only sync and drift signals before changing indexes.",
-          navigate: ~p"/ops/sync-drift"
-        },
-        %{
-          text: "Walk Meilisearch operations expectations for the search backend.",
-          href: @meilisearch_ops_guide
-        }
-      ]
-      |> maybe_append_mix_status()
-
-    {"Degraded",
-     "#{err_count} schema(s) report fetch or sync errors on this refresh — treat as incident triage, not green.",
-     checks}
-  end
-
-  defp jtbd_state({:ok, _rows}, 0) do
-    checks =
-      [
-        %{
-          text: "Scan failed sync work periodically even when posture is green.",
-          navigate: ~p"/ops/failed-sync"
-        },
-        %{
-          text: "Confirm drift and queue visibility when changing sync modes.",
-          navigate: ~p"/ops/sync-drift"
-        },
-        %{
-          text: "Use search playground only after triage surfaces are quiet.",
-          navigate: ~p"/ops/search"
-        }
-      ]
-      |> maybe_append_mix_status()
-
-    {"Healthy", "No fetch errors on this refresh — continue spot-checking failed work and drift.",
-     checks}
-  end
-
-  defp operator_mix_guide_path do
-    Path.expand("../../../guides/operator-mix-tasks.md", __DIR__)
-  end
-
-  defp maybe_append_mix_status(checks) do
-    path = operator_mix_guide_path()
-
-    if File.exists?(path) and String.contains?(File.read!(path), "mix scrypath.status") do
-      checks ++
-        [
-          %{
-            text: "Snapshot a schema from the CLI when you need raw sync_status output.",
-            mix: "mix scrypath.status"
-          }
-        ]
-    else
-      checks
-    end
+  defp task_wait_opts(opts) do
+    opts
+    |> Keyword.put_new(:inline_poll_interval, 50)
+    |> Keyword.put_new(:inline_timeout, 15_000)
   end
 
   defp module_flat_name(mod) when is_atom(mod) do
     mod |> Atom.to_string() |> String.replace_prefix("Elixir.", "")
   end
 
-  defp mod_from_flat!(str) when is_binary(str) do
-    str
-    |> String.trim()
-    |> String.split(".")
-    |> Enum.map(&String.to_atom/1)
-    |> Module.concat()
-  end
+  defp mod_from_allowlist(str, allowlist) when is_binary(str) do
+    name = String.trim(str)
 
-  defp sort_rows(rows) do
-    Enum.sort_by(
-      rows,
-      fn
-        {_m, {:error, _}} -> 0
-        _ -> 1
-      end
-    )
+    case Enum.find(allowlist, &(module_flat_name(&1) == name)) do
+      nil -> :error
+      mod -> {:ok, mod}
+    end
   end
 
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} shell={@shell}>
-      <div class="flex flex-wrap items-end justify-between gap-4">
-        <.ops_page_header title={@page_title} />
-        <button
-          type="button"
-          phx-click="refresh"
-          class="btn btn-sm btn-primary"
-        >
+    <Layouts.app
+      mount_path={@mount_path}
+      flash={@flash}
+      shell={@shell}
+      page_title={@page_title}
+      ops_main_width={:wide}
+    >
+      <.ops_toolbar class="items-end gap-4">
+        <.ops_page_header
+          title="Posture"
+          subtitle="The fleet's sync health, schema by schema. Start here when something looks wrong."
+        />
+        <.ops_button phx-click="refresh" variant={:primary} data-ops-refresh>
           Refresh posture
-        </button>
-      </div>
+        </.ops_button>
+      </.ops_toolbar>
+
+      <.ops_trail mount_path={@mount_path} current={:posture} />
+
+      <.ops_panel :if={match?({:ok, _}, @posture_rows)}>
+        <section aria-labelledby="posture-summary-heading" class="space-y-4">
+          <h2 id="posture-summary-heading" class="sr-only">Fleet posture</h2>
+          <.ops_verdict
+            kind={ScrypathOps.Posture.badge_kind(@posture_state)}
+            label="Fleet posture"
+            headline={@posture_headline}
+          >
+            {@posture_evidence}
+          </.ops_verdict>
+          <.ops_metric_grid cols={5}>
+            <.ops_metric
+              label="Schemas"
+              value={posture_schema_count(@posture_rows)}
+              kind={:neutral}
+            />
+            <.ops_metric
+              label="Fetch errors"
+              value={@aggregate_error_count}
+              kind={metric_tone(@aggregate_error_count)}
+            />
+            <.ops_metric
+              label="Failed backend"
+              value={posture_backend_failed_count(@posture_rows)}
+              kind={metric_tone(posture_backend_failed_count(@posture_rows))}
+            />
+            <.ops_metric
+              label="Queue observed"
+              value={posture_queue_observed_count(@posture_rows)}
+              kind={:neutral}
+            />
+            <.ops_metric
+              label="Refreshed"
+              value={format_dt(@last_refresh_at)}
+              kind={:neutral}
+            />
+          </.ops_metric_grid>
+        </section>
+      </.ops_panel>
 
       <.ops_panel :if={@next_checks != []}>
         <section
           data-testid="posture-next-checks"
           aria-labelledby="posture-jtbd-heading"
-          class={posture_next_checks_class(@posture_headline)}
+          class="space-y-1"
         >
-          <h2 id="posture-jtbd-heading" class="text-lg font-semibold text-base-content">
-            {@posture_headline}
-          </h2>
-          <p class="mt-1 text-sm text-base-content/80">{@posture_evidence}</p>
-          <ol class="mt-3 list-decimal list-inside space-y-2 text-sm text-base-content/90">
+          <.ops_heading level={2} id="posture-jtbd-heading">Next checks</.ops_heading>
+          <p class="text-ops-body text-base-content/80">{@posture_evidence}</p>
+          <ol class="mt-3 list-decimal list-inside space-y-2 text-ops-body text-base-content/90">
             <li :for={check <- @next_checks} class="pl-1">
               <span>{check.text}</span>
               <span :if={check[:navigate]} class="ml-2">
@@ -270,7 +206,7 @@ defmodule ScrypathOpsWeb.PostureLive do
               <span :if={check[:href]} class="ml-2">
                 <a href={check.href} class="link link-primary">Open guide</a>
               </span>
-              <span :if={check[:mix]} class="mt-1 block font-mono text-xs text-base-content/70">
+              <span :if={check[:mix]} class="mt-1 block font-mono text-ops-sm text-base-content/70">
                 {check.mix}
               </span>
             </li>
@@ -278,112 +214,103 @@ defmodule ScrypathOpsWeb.PostureLive do
         </section>
       </.ops_panel>
 
-      <p :if={@auto_refresh} class="mt-2 text-sm text-base-content/70">
+      <p :if={@auto_refresh} class="mt-2 text-ops-body text-base-content/70">
         Auto-refresh is not enabled by default; only manual refresh runs in this build.
       </p>
 
-      <p :if={@posture_rows == :empty_allowlist} class="mt-4 text-base-content/80">
-        No schemas configured for OPSUI. Set <code class="text-sm">schema_allowlist</code>
-        under <code class="text-sm">:scrypath_ops</code>
-        or use <code class="text-sm">SCRYPATH_OPS_SCHEMAS</code>
-        — see <code class="text-sm">scrypath_ops/README.md</code>.
-      </p>
-
-      <p :if={@posture_rows == :missing_backend} class="mt-4 text-base-content/80">
-        Scrypath runtime is not configured (missing <code class="text-sm">:backend</code> and related
-        options under <code class="text-sm">:scrypath_ops</code>). See <code class="text-sm">scrypath_ops/README.md</code>.
-      </p>
+      <.ops_config_empty :if={@posture_rows == :empty_allowlist} kind={:no_schemas} class="mt-4" />
+      <.ops_config_empty :if={@posture_rows == :missing_backend} kind={:missing_backend} class="mt-4" />
 
       <.ops_panel :if={match?({:ok, _}, @posture_rows)}>
-        <section aria-labelledby="posture-fleet-heading">
-          <h2 id="posture-fleet-heading" class="text-base font-semibold text-base-content">
-            Per-schema signals
-          </h2>
-          <p class="mt-2 text-sm text-base-content/80">
-            <span class="font-medium">{@aggregate_error_count}</span>
-            schema(s) with fetch errors · refreshed
-            <span class="font-mono text-xs tabular-nums">{format_dt(@last_refresh_at)}</span>
-          </p>
-
-          <div class="mt-3 overflow-x-auto min-w-0">
-            <table class="table table-zebra table-sm">
-              <thead>
-                <tr>
-                  <th scope="col">Schema</th>
-                  <th scope="col">Index</th>
-                  <th scope="col">sync_mode</th>
-                  <th scope="col">Backend pending</th>
-                  <th scope="col">Backend failed</th>
-                  <th scope="col">Backend last OK</th>
-                  <th scope="col">Queue observed</th>
-                  <th scope="col">Queue pending</th>
-                  <th scope="col">Queue retrying</th>
-                  <th scope="col">Queue failed</th>
-                  <th scope="col">Queue last OK</th>
-                  <th scope="col">Actions</th>
+        <.ops_section
+          id="posture-fleet-heading"
+          title="Per-schema signals"
+          subtitle={"#{@aggregate_error_count} schema(s) with fetch errors"}
+          meta={"refreshed #{format_dt(@last_refresh_at)}"}
+        >
+          <.ops_table zebra class="mt-3">
+            <thead>
+              <tr>
+                <th scope="col">Schema</th>
+                <th scope="col">Index</th>
+                <th scope="col">Sync mode</th>
+                <th scope="col">Backend pending</th>
+                <th scope="col">Backend failed</th>
+                <th scope="col">Backend last OK</th>
+                <th scope="col">Queue observed</th>
+                <th scope="col">Queue pending</th>
+                <th scope="col">Queue retrying</th>
+                <th scope="col">Queue failed</th>
+                <th scope="col">Queue last OK</th>
+              </tr>
+            </thead>
+            <tbody class="text-ops-body leading-snug tabular-nums">
+              <%= for {mod, row} <- elem(@posture_rows, 1) do %>
+                <tr data-testid="posture-row" id={"posture-#{inspect(mod)}"}>
+                  <%= case row do %>
+                    <% {:ok, status} -> %>
+                      <td class="font-mono text-ops-sm">{inspect(mod)}</td>
+                      <td class="font-mono text-ops-sm">{status.index}</td>
+                      <td>{status.mode}</td>
+                      <td>{length(status.backend.pending)}</td>
+                      <td>{length(status.backend.failed)}</td>
+                      <td>{format_state_ts(status.backend.last_succeeded)}</td>
+                      <td>
+                        <%= if status.queue.observed? do %>
+                          <.ops_badge kind={:success}>observed</.ops_badge>
+                        <% else %>
+                          <.ops_badge kind={:warning}>queue not observed</.ops_badge>
+                        <% end %>
+                      </td>
+                      <td>{length(status.queue.pending)}</td>
+                      <td>{length(status.queue.retrying)}</td>
+                      <td>{length(status.queue.failed)}</td>
+                      <td>{format_state_ts(status.queue.last_succeeded)}</td>
+                    <% {:error, reason} -> %>
+                      <td class="font-mono text-ops-sm">{inspect(mod)}</td>
+                      <td colspan="10" class="text-error">
+                        fetch error: {inspect(reason)}
+                      </td>
+                  <% end %>
                 </tr>
-              </thead>
-              <tbody class="text-sm leading-snug tabular-nums">
-                <%= for {mod, row} <- elem(@posture_rows, 1) do %>
-                  <tr data-testid="posture-row" id={"posture-#{inspect(mod)}"}>
-                    <%= case row do %>
-                      <% {:ok, status} -> %>
-                        <td class="font-mono text-xs">{inspect(mod)}</td>
-                        <td class="font-mono text-xs">{status.index}</td>
-                        <td>{status.mode}</td>
-                        <td>{length(status.backend.pending)}</td>
-                        <td>{length(status.backend.failed)}</td>
-                        <td>{format_state_ts(status.backend.last_succeeded)}</td>
-                        <td>
-                          <%= if status.queue.observed? do %>
-                            true
-                          <% else %>
-                            <span class="text-warning">queue not observed</span>
-                          <% end %>
-                        </td>
-                        <td>{length(status.queue.pending)}</td>
-                        <td>{length(status.queue.retrying)}</td>
-                        <td>{length(status.queue.failed)}</td>
-                        <td>{format_state_ts(status.queue.last_succeeded)}</td>
-                        <td>
-                          <button
-                            type="button"
-                            phx-click="swap_live"
-                            phx-value-schema={module_flat_name(mod)}
-                            class="btn btn-xs btn-outline"
-                            phx-disable-with="Swapping..."
-                          >
-                            Swap live index
-                          </button>
-                        </td>
-                      <% {:error, reason} -> %>
-                        <td class="font-mono text-xs">{inspect(mod)}</td>
-                        <td colspan="11" class="text-error">
-                          fetch error: {inspect(reason)}
-                        </td>
-                    <% end %>
-                  </tr>
-                <% end %>
-              </tbody>
-            </table>
-          </div>
-        </section>
+              <% end %>
+            </tbody>
+          </.ops_table>
+        </.ops_section>
       </.ops_panel>
+
+      <.ops_handoff :if={match?({:ok, _}, @posture_rows)}>
+        <:step
+          navigate={"#{@mount_path}/failed-sync"}
+          hint="When you've spotted a failing schema —"
+        >
+          Work the failed-sync queue
+        </:step>
+      </.ops_handoff>
     </Layouts.app>
     """
   end
 
-  defp posture_next_checks_class("Degraded"),
-    do: "rounded-lg border border-transparent alert alert-warning p-3"
+  defp posture_schema_count({:ok, rows}), do: length(rows)
+  defp posture_schema_count(_), do: 0
 
-  defp posture_next_checks_class("Broken"),
-    do: "rounded-lg border border-transparent alert alert-error p-3"
+  defp posture_backend_failed_count({:ok, rows}) do
+    Enum.reduce(rows, 0, fn
+      {_mod, {:ok, status}}, acc -> acc + length(status.backend.failed)
+      _row, acc -> acc
+    end)
+  end
 
-  defp posture_next_checks_class("Not configured"),
-    do: "rounded-lg border border-transparent alert alert-warning p-3"
+  defp posture_backend_failed_count(_), do: 0
 
-  defp posture_next_checks_class(_),
-    do: "rounded-lg border border-base-300 bg-base-200/40 p-3"
+  defp posture_queue_observed_count({:ok, rows}) do
+    Enum.count(rows, fn
+      {_mod, {:ok, status}} -> status.queue.observed?
+      _row -> false
+    end)
+  end
+
+  defp posture_queue_observed_count(_), do: 0
 
   defp format_dt(nil), do: "—"
 
@@ -393,4 +320,7 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   defp format_state_ts(nil), do: "—"
   defp format_state_ts(%Scrypath.Operator.State{} = s), do: format_dt(s.at)
+
+  defp metric_tone(0), do: :success
+  defp metric_tone(_), do: :warning
 end

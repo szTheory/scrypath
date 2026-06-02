@@ -1,5 +1,111 @@
 # Milestones
 
+## v1.32 Admin UI/UX Design System Cleanup (Shipped: 2026-06-01)
+
+**Phases completed:** 3 phases, 3 plans, 10 tasks
+
+**Key accomplishments:**
+
+- Shared Phoenix LiveView OPSUI primitives now drive stable operator notices, actions, metrics, empty states, tables, schema controls, toolbars, code blocks, and modal shells across the admin screens.
+- The ScrypathOps admin screens now apply the quiet ops console system consistently while preserving posture-first operator triage and bounded operational honesty.
+
+**Milestone audit:** Passed — 8/8 requirements, 3/3 phases, 5/5 integration flows, 4/4 E2E flows; see `milestones/v1.32-MILESTONE-AUDIT.md`.
+
+**Archives:** `milestones/v1.32-ROADMAP.md`, `milestones/v1.32-REQUIREMENTS.md`, `milestones/v1.32-MILESTONE-AUDIT.md`, `milestones/v1.32-phases/`
+
+---
+
+## v1.31 Adoption Evidence Demo Hardening (UAT Passed: 2026-06-01)
+
+**Phases:** 3 phases planned, 3 complete; maintainer UAT passed
+
+**Scope:** Bounded proof and demo DX hardening. This is not a runtime product-surface expansion.
+
+**Completed so far:**
+
+- Realistic e-commerce demo browser evidence now covers storefront search/faceting, tenant isolation, related category propagation, delete visibility, zero-results behavior, operator failed-sync triage, and zero-downtime swap.
+- Demo Docker/dev DX now supports cleaner build context, dependency layering, and bind-mounted iteration through `compose.dev.yaml`.
+- Docs and evidence summaries now make the demo easier to start, inspect, and understand while preserving advisory CI posture.
+- Ops UI gained active navigation state and clearer retry/swap action context for first-time local evaluation.
+- Maintainer UAT passed locally on 2026-06-01 and directly led into the bounded v1.32 admin UI cleanup wedge.
+
+**Next:** archive v1.31 when closing the planning batch.
+
+---
+
+## v1.30 Release Trust and Evidence Maintenance (Shipped: 2026-06-01)
+
+**Phases completed:** 4 phases, 11 plans, 20 tasks
+
+**Key accomplishments:**
+
+- Semantic release-source agreement checks plus artifact-first package denylist proof harden the auth-free `verify.phase11` gate.
+- Reinstated historical Phase 97 contract and scope-guard authorities at the canonical archive path required by docs-contract and planning pointers.
+- Canonical and recovery publish workflows now share one enforced ordered proof chain, with docs/tests aligned to the same release-truth contract.
+- Support and evidence routing now points to one compatibility authority and one outside-adopter intake vocabulary.
+- Phase 110 support and intake routing is pinned by a focused service-free contract inside `mix verify.adopter`.
+- Hardened `phase105-e2e` as an advisory evidence lane by adding structured run manifests, stage events, and bounded failure triage artifacts for promotion-readiness review.
+- Frozen advisory-versus-required CI policy for `phase105-e2e` with explicit promotion thresholds and deterministic trust-lane drift checks.
+- Published a single canonical scope/reopen policy guide and routed README/support/intake scope pressure to that authority with ExDoc navigation wiring.
+- Guide map, sync semantics, operator support, and JTBD docs now share one scope-policy authority and the exact three-trigger reopen rule.
+- Website route pages now use the fixed Ecto-native claim envelope, explicit README/scope-policy authority links, and concise visibility/scope truth without becoming a second docs system.
+- Focused contract proof now enforces public-claim envelope and website route-map boundaries through a standalone `mix verify.phase112` command.
+
+**Milestone audit:** Tech debt accepted — 10/10 requirements, 4/4 phases, 5/5 flows; see `milestones/v1.30-MILESTONE-AUDIT.md`.
+
+**Archives:** `milestones/v1.30-ROADMAP.md`, `milestones/v1.30-REQUIREMENTS.md`, `milestones/v1.30-MILESTONE-AUDIT.md`
+
+---
+
+## v1.29 Contract Repair and Proof Hardening (Shipped: 2026-05-31)
+
+**Phases completed:** 3 phases, 3 plans, 9 tasks
+
+**Key accomplishments:**
+
+- Ordinary `use Scrypath, fan_outs:` reflection is now contract-locked and proven consumable by both inline and Oban related-sync paths via a focused phase gate.
+- The e-commerce readiness probe now preserves tenant scope while adding category filtering, with a fast service-free `mix verify.phase107` guard proving the exact query filter contract.
+- v1.29 truth surfaces now describe the repaired fan-out contract, preserve advisory browser proof posture, and return Scrypath to maintenance-and-evidence mode.
+
+**Milestone audit:** Passed — 4/4 requirements, 3/3 phases, 3/3 integration flows; see `milestones/v1.29-MILESTONE-AUDIT.md`.
+
+**Archives:** `milestones/v1.29-ROADMAP.md`, `milestones/v1.29-REQUIREMENTS.md`, `milestones/v1.29-MILESTONE-AUDIT.md`
+
+---
+
+## v1.28 Realistic Demo App & Admin UI Proof (Shipped: 2026-05-31)
+
+**Phases completed:** 4 phases, 15 plans, 18 tasks
+
+**Key accomplishments:**
+
+- Phoenix Ecto SQL Sandbox configured for concurrent tests with a protected E2E seeding endpoint.
+- Playwright harness scaffolded in the example app with deterministic dev/test E2E contracts and bounded readiness helpers.
+- Deterministic Playwright coverage now proves storefront search/faceting and related category propagation through Scrypath, Oban, and Meilisearch.
+- Operator failed-sync triage is now proven through a scenario-scoped harness, stable backend operator-state contract, and mounted `/admin/search/failed-sync` Playwright flow.
+- Zero-downtime swap browser proof and an advisory real-services `phase105-e2e` CI lane are now in place with explicit health checks and failure artifacts.
+
+**Milestone audit:** Tech debt only — 15/15 requirements, 4/4 phases, 4/4 flows; see `milestones/v1.28-MILESTONE-AUDIT.md`.
+
+**Archives:** `milestones/v1.28-ROADMAP.md`, `milestones/v1.28-REQUIREMENTS.md`, `milestones/v1.28-MILESTONE-AUDIT.md` · **Git tag:** `v1.28` (planning milestone marker)
+
+---
+
+## v1.27 Adopter Contract Hardening (Shipped + archived: 2026-05-30)
+
+**Phases completed:** **5** (**97-101**), **16** plans, **14** requirements (**TRUTH-01**-**TRUTH-03**, **SCOPE-01**, **PROOF-01**-**PROOF-03**, **SUP-01**-**SUP-02**, **TEST-01**-**TEST-03**, **GATE-01**-**GATE-02**)
+
+**Key accomplishments:**
+
+- Enforced a canonical SCOPE-01 guard to block runtime feature expansion and bind reopen policy to explicit evidence.
+- Reconciled fast/live proof boundaries and install/release truth wording across README, CONTRIBUTING, and support guides.
+- Created required contract-trust CI coverage and a dedicated compatibility-truth lane without widening required check boundaries.
+- Formalized outside-adopter intake classes with mandatory evidence and deterministic triage mappings.
+
+**Archives:** `milestones/v1.27-ROADMAP.md`, `milestones/v1.27-REQUIREMENTS.md`
+
+---
+
 ## v1.26 Facet Value Vocabulary Search (Shipped + archived: 2026-05-26)
 
 **Phases completed:** **2** (**95–96**), **3** plans, **7** requirements (**FACET-UX-01**–**FACET-UX-03**, **DOC-01**–**DOC-02**, **TEST-01**–**TEST-02**)

@@ -10,6 +10,18 @@ assignees: ""
 
 Briefly describe what you are trying to accomplish, such as running the repo-clone example path or adding Scrypath to an existing app.
 
+## Evidence Block (required)
+
+- Path:
+- Runtime vs support matrix:
+- Reporter class guess:
+- Reporter finding guess:
+- Scrypath ref or Hex version:
+- First failing command step:
+- Logs or artifacts:
+
+Before posting logs or artifacts in this public issue, redact secrets, tokens, API keys, credentials, customer data, and sensitive private dumps.
+
 ## Environment matrix
 
 - OS / architecture:
@@ -62,6 +74,6 @@ Paste relevant shell output, error messages, or logs.
 
 For maintainer use only.
 
-- Classification:
-- Findings:
-- Action:
+- Classification (A-D):
+- Finding bucket:
+- Maintainer action:

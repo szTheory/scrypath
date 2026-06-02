@@ -117,24 +117,79 @@ defmodule Mix.Tasks.Verify.Phase11 do
       "publish job post-publish verification validation"
     )
 
-    run_system_command!(
-      "sh",
-      [
-        "-c",
-        ~S"""
-        VERSION=$(grep -m1 '@version "' mix.exs | sed -E 's/.*"([^"]+)".*/\1/')
-        MANIFEST_VERSION=$(grep -m1 '"\."' .release-please-manifest.json | sed -E 's/.*"([^"]+)".*/\1/')
-        test "$VERSION" = "$MANIFEST_VERSION"
-        """
-      ],
-      "release-please-manifest version alignment"
-    )
+    release_sources = release_sources!()
 
-    run_system_command!(
-      "grep",
-      ["-n", ~S(@source_ref "v#{@version}"), "mix.exs"],
-      "source_ref version anchor validation"
+    case validate_release_agreement(release_sources) do
+      :ok ->
+        :ok
+
+      {:error, messages} ->
+        Mix.raise("release agreement check failed:\n- " <> Enum.join(messages, "\n- "))
+    end
+  end
+
+  def validate_release_agreement(%{
+        mix_version: mix_version,
+        source_ref: source_ref,
+        manifest_version: manifest_version,
+        release_type: release_type,
+        include_v_in_tag: include_v_in_tag,
+        top_changelog_version: top_changelog_version
+      }) do
+    []
+    |> maybe_add_mismatch(
+      mix_version != manifest_version,
+      "mix.exs version=#{mix_version} does not match .release-please-manifest.json version=#{manifest_version}"
     )
+    |> maybe_add_mismatch(
+      source_ref != "v#{mix_version}",
+      "mix.exs source_ref=#{source_ref} does not match expected v#{mix_version}"
+    )
+    |> maybe_add_mismatch(
+      release_type != "elixir",
+      "release-please-config.json release-type=#{inspect(release_type)} is not \"elixir\""
+    )
+    |> maybe_add_mismatch(
+      include_v_in_tag != true,
+      "release-please-config.json packages[\".\"].include-v-in-tag=#{inspect(include_v_in_tag)} is not true"
+    )
+    |> maybe_add_mismatch(
+      top_changelog_version != mix_version,
+      "CHANGELOG.md top release heading version=#{inspect(top_changelog_version)} does not match mix.exs version=#{mix_version}"
+    )
+    |> case do
+      [] -> :ok
+      messages -> {:error, messages}
+    end
+  end
+
+  defp maybe_add_mismatch(messages, true, message), do: [message | messages]
+  defp maybe_add_mismatch(messages, false, _message), do: messages
+
+  defp release_sources! do
+    # Mix.Project.config/0 (not Scrypath.MixProject.project/0) so Dialyzer can resolve the
+    # call — mix.exs is not part of Dialyzer's analyzed beam set.
+    project = Mix.Project.config()
+    manifest = File.read!(".release-please-manifest.json") |> Jason.decode!()
+    release_config = File.read!("release-please-config.json") |> Jason.decode!()
+
+    %{
+      mix_version: project[:version],
+      source_ref: project[:source_ref],
+      manifest_version: manifest["."],
+      release_type: release_config["release-type"],
+      include_v_in_tag: get_in(release_config, ["packages", ".", "include-v-in-tag"]),
+      top_changelog_version: top_changelog_version!()
+    }
+  end
+
+  defp top_changelog_version! do
+    changelog = File.read!("CHANGELOG.md")
+
+    case Regex.run(~r/^## \[(\d+\.\d+\.\d+)\]/m, changelog, capture: :all_but_first) do
+      [version] -> version
+      _ -> nil
+    end
   end
 
   defp run_command!(args, label) do

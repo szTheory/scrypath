@@ -4,6 +4,8 @@ This guide is for maintainers supporting early Scrypath production usage.
 
 For **metrics, paging discipline, and Meilisearch cluster footguns** (SRE / platform view), see [Search backend operations](search-backend-sre.md).
 
+For supported versions, readiness posture, and `mix verify.adopter` versus `mix verify.adopter --live`, use [Support and compatibility](../guides/support-and-compatibility.md). For outside-adopter evidence, Class A-D classification, and maintainer routing vocabulary, use [Outside-adopter intake](../guides/outside-adopter-intake.md).
+
 The support contract stays simple:
 
 1. operator code calls the root APIs on `Scrypath.*`
@@ -17,12 +19,16 @@ The support contract stays simple:
 When a team reports drift, failed sync, or uncertain visibility:
 
 1. ask which schema is affected
-2. run `mix scrypath.status` for current visibility
-3. run `mix scrypath.failed` for explicit recovery candidates
-4. run **`mix scrypath.index.contract_drift YOUR_SCHEMA`** (or **`Scrypath.index_contract_drift/2`**) when the question is **declared schema vs live index contract** (fields, filterables, sortables, faceting, settings families) — distinct from queue failure triage alone
-5. run `mix scrypath.reconcile` when you need report-first guidance before changing anything
+2. route support/readiness questions to [Support and compatibility](../guides/support-and-compatibility.md)
+3. route outside-adopter reports to [Outside-adopter intake](../guides/outside-adopter-intake.md)
+4. run `mix scrypath.status` for current visibility
+5. run `mix scrypath.failed` for explicit recovery candidates
+6. run **`mix scrypath.index.contract_drift YOUR_SCHEMA`** (or **`Scrypath.index_contract_drift/2`**) when the question is **declared schema vs live index contract** (fields, filterables, sortables, faceting, settings families) — distinct from queue failure triage alone
+7. run `mix scrypath.reconcile` when you need report-first guidance before changing anything
 
 Use `mix scrypath.retry` only when you already selected a concrete failed-work id.
+
+If a report asks to reopen feature-lane scope, route the decision to [Scope and reopen policy](../guides/scope-and-reopen-policy.md): reopening requires a **concrete production bug**, **reviewed outside-adopter evidence**, or a **deliberate strategic product decision** before proposing new scope.
 
 ## Sync Mode Triage
 

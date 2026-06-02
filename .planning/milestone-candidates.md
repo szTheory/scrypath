@@ -1,9 +1,11 @@
 # Milestone candidates — developer-first roadmap stack
 
 **Purpose:** Prioritized themes for **`/gsd-new-milestone`** — **onboarding + QoL** for people using and contributing to Scrypath; **avoid busywork** and maintainer-only work masquerading as product.  
-**Last reviewed:** 2026-05-27 — **v1.26** shipped (facet value vocabulary search). Repo-grounded reassessments (2026-05-27) keep Scrypath at **~93–95% done**. The last planned product wedges — related-data propagation, tenant-safe search, facet value search, and the public website launch surface — are shipped. Default posture is **release, gather outside-adopter evidence, reconcile planning truth, and otherwise stop**. If feature work reopens, the highest-leverage bounded wedge is now **Adopter Contract Hardening** before broader feature depth.
+**Last reviewed:** 2026-05-31 — **v1.29** shipped (contract repair and proof hardening). Repo-grounded reassessment keeps Scrypath at **~96–98% done** for its stated Meilisearch-first, Ecto-native, Phoenix-friendly scope. The last planned product wedges — related-data propagation, tenant-safe search, facet value search, adopter contract hardening, realistic E2E proof, and bounded contract repair — are shipped. Default posture is **release, maintenance, support truth, proof stability, outside-adopter evidence, and otherwise stop**. If feature work reopens, it should require a concrete production bug, reviewed outside-adopter evidence, or an explicit strategic wedge.
 
-**Reconciliation note:** the `v1.20` archive says `Scrypath.SearchModule` shipped, but the current checkout does not expose that layer or its guide. Documented in `/docs/jtbd-gap-map.md`. Planning debt only; not a product gap for users today.
+**Reconciliation note:** the `v1.20` archive says `Scrypath.SearchModule` shipped, but the current checkout does not expose that layer or its guide. This was resolved as archive-correction on 2026-05-27 and must not drive future feature selection.
+
+**Post-v1.29 closeout note:** related-data fan-out shipped in v1.24, and v1.29 repaired normal `use Scrypath, fan_outs:` reflection, hardened the v1.28 tenant/category E2E readiness proof, and refreshed roadmap/JTBD truth. Default posture is now maintenance-and-evidence mode. New milestones should be silent by default unless there is release work, support/proof drift, outside-adopter evidence, a concrete bug, or a deliberate strategic build decision.
 
 ---
 
@@ -81,13 +83,14 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 | # | Theme | Notes |
 |---|--------|--------|
 | **E1** | **Outside-adopter evidence and support-truth reconciliation** | **Done in v1.23; continue as maintenance evidence loop** — no new feature milestone should open unless outside-adopter evidence shows a concrete gap. |
-| **E2** | **Adopter Contract Hardening (docs/support/install/proof coherence)** | **Current top bounded wedge if work reopens** — align install/version contract across README + guides + intake, clarify Hex vs repo-clone proof boundary, and lock with docs contracts. |
+| **E2** | **Adopter Contract Hardening (docs/support/install/proof coherence)** | **Done in v1.27** — canonical contract freeze, support/proof boundary reconciliation, and trust gates shipped. Keep as historical context only. |
+| **E3** | **Contract Repair and Proof Hardening** | **Done in v1.29** — repaired `use Scrypath, fan_outs:` reflection, hardened the tenant/category E2E readiness proof, refreshed roadmap/JTBD truth, and avoided new runtime breadth. |
 
 ### Tier F — Current maintenance pull
 
 | # | Theme | Notes |
 |---|--------|--------|
-| **F1** | **Release + adoption evidence + planning truth** | Current default. Ship the Release Please PR, keep main green, reconcile the v1.20 `SearchModule` archive/code drift, and capture outside-adopter evidence before opening new product work. |
+| **F1** | **Release + adoption evidence + planning truth** | Current default after the bounded repair pass. Keep main green, keep release truth coherent, and capture outside-adopter evidence before opening new product work. This is maintenance posture, not an endless roadmap. |
 
 ### Tier G — Companion surface
 
@@ -100,7 +103,8 @@ Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent t
 Use these lanes to avoid reopening feature breadth by habit:
 
 - **Maintenance lane (default):** patch train, docs/support truth, outside-adopter evidence loop, and planning-truth reconciliation while `main` stays green.
-- **Feature lane (evidence-gated):** open only via approved PR-scoped milestone when a concrete bug or reviewed outside-adopter evidence justifies it.
+- **Silence lane:** when there is no release follow-through, support/proof drift, production bug, or outside-adopter evidence, do not manufacture a milestone. Say the release train is idle.
+- **Feature lane (evidence-gated):** open only via approved PR-scoped milestone when a concrete bug, reviewed outside-adopter evidence, or explicit strategic wedge justifies it.
 - **Merge contract for feature lane:** serious milestone work merges only after PR CI is green; avoid direct-`main` depth work.
 
 ### Still explicit strategy (unchanged)
@@ -122,9 +126,11 @@ Use these lanes to avoid reopening feature breadth by habit:
 | 5 | **B1** | **Shipped v1.24** — `sync_related/3`, fan-out, canonical guide |
 | 6 | **B2** | **Shipped v1.25** — tenant guide, declaration, reflection, and runtime enforcement. |
 | 7 | **B4** | **Shipped v1.26** — `search_facet_values/4` wrapping `/facet-search`. |
-| 8 | **E2** | If another bounded wedge is opened now, Adopter Contract Hardening is the highest-leverage trust move before new runtime breadth. |
-| 9 | **F1** | Current maintenance pull: release, outside-adopter evidence, and planning-truth reconciliation. |
-| 10 | **B5** | Only with adopter evidence. Otherwise stop after v1.26 / v0.3.8. |
+| 8 | **E2** | **Shipped v1.27** — Adopter Contract Hardening. |
+| 9 | **G1 / v1.28** | **Shipped v1.28** — realistic demo app, mountable admin UI proof, and advisory browser E2E lane. |
+| 10 | **E3** | **Shipped v1.29** — contract repair and proof hardening. |
+| 11 | **F1** | Current maintenance pull: release truth, outside-adopter evidence, and planning-truth refresh. |
+| 12 | **B5** | Only with adopter evidence. Otherwise stop after contract repair / proof hardening. |
 | Parallel | **D*** | When annoyance cost exceeds fix cost — do not headline a consumer milestone here |
 
 ---
@@ -140,8 +146,9 @@ Use these lanes to avoid reopening feature breadth by habit:
    - Is this still above the post-`v1.19` diminishing-returns line?
 2. Optionally split strong themes into **`.planning/seeds/SEED-*.md`** so **`/gsd-new-milestone`** auto-offers matching seeds (see **`gsd-plant-seed`**).
 3. After each shipped milestone, **update this file** — what landed, what moved, and whether the repo is now actually near “stop soon” territory.
-4. After v1.26, the default answer to generic “what next?” prompts is **no feature milestone** unless there is release follow-through, outside-adopter evidence, or a concrete bug.
+4. After v1.29, the default answer to generic “what next?” prompts is **no feature milestone** unless there is release work, support/proof drift, outside-adopter evidence, a concrete bug, or an explicit strategic build decision.
 5. If feature work reopens, treat this file as PR-lane input: define the wedge first, run it on a PR branch, and do not merge until PR CI is green.
+6. Do not keep asking whether Scrypath is done at every milestone boundary. Treat the durable answer as: **the stated v1 library scope is effectively done; maintain by default; build strategically only when evidence changes the decision.**
 
 ---
 

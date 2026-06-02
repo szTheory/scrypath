@@ -2,13 +2,10 @@
    https://tailwindcss.com/docs/configuration */
 
 @import "tailwindcss" source(none);
+
 @source "../css";
 @source "../js";
 @source "../../lib/scrypath_ops_web";
-
-/* A Tailwind plugin that makes "hero-#{ICON}" classes available.
-   The heroicons installation itself is managed by your mix.exs */
-@plugin "../vendor/heroicons";
 
 /* daisyUI Tailwind Plugin. You can update this file by fetching the latest version with:
    curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui.js
@@ -17,35 +14,37 @@
   themes: false;
 }
 
+/* Keep daisyUI classnames unprefixed (`btn`, `menu`, etc.) in OPSUI templates. */
+
 /* daisyUI theme plugin. You can update this file by fetching the latest version with:
   curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui-theme.js
-  We ship with two themes, a light one inspired on Phoenix colors and a dark one inspired
-  on Elixir colors. Build your own at: https://daisyui.com/theme-generator/ */
+  ScrypathOps ships with two quiet operator themes. Build your own at:
+  https://daisyui.com/theme-generator/ */
 @plugin "../vendor/daisyui-theme" {
   name: "dark";
   default: false;
   prefersdark: true;
   color-scheme: "dark";
-  --color-base-100: oklch(30.33% 0.016 252.42);
-  --color-base-200: oklch(25.26% 0.014 253.1);
-  --color-base-300: oklch(20.15% 0.012 254.09);
-  --color-base-content: oklch(97.807% 0.029 256.847);
-  --color-primary: oklch(58% 0.233 277.117);
-  --color-primary-content: oklch(96% 0.018 272.314);
-  --color-secondary: oklch(58% 0.233 277.117);
-  --color-secondary-content: oklch(96% 0.018 272.314);
-  --color-accent: oklch(60% 0.25 292.717);
-  --color-accent-content: oklch(96% 0.016 293.756);
-  --color-neutral: oklch(37% 0.044 257.287);
-  --color-neutral-content: oklch(98% 0.003 247.858);
-  --color-info: oklch(58% 0.158 241.966);
-  --color-info-content: oklch(97% 0.013 236.62);
-  --color-success: oklch(60% 0.118 184.704);
-  --color-success-content: oklch(98% 0.014 180.72);
-  --color-warning: oklch(66% 0.179 58.318);
-  --color-warning-content: oklch(98% 0.022 95.277);
-  --color-error: oklch(58% 0.253 17.585);
-  --color-error-content: oklch(96% 0.015 12.422);
+  --color-base-100: #141923;
+  --color-base-200: #0c0f14;
+  --color-base-300: #2a3446;
+  --color-base-content: #f4f1ea;
+  --color-primary: #6c5ce7;
+  --color-primary-content: #f4f1ea;
+  --color-secondary: #c17a3e;
+  --color-secondary-content: #0c0f14;
+  --color-accent: #5b4ad1;
+  --color-accent-content: #f4f1ea;
+  --color-neutral: #2a3446;
+  --color-neutral-content: #f4f1ea;
+  --color-info: #5ca9e6;
+  --color-info-content: #0c0f14;
+  --color-success: #4fae74;
+  --color-success-content: #0c0f14;
+  --color-warning: #d9a441;
+  --color-warning-content: #0c0f14;
+  --color-error: #d96262;
+  --color-error-content: #0c0f14;
   --radius-selector: 0.25rem;
   --radius-field: 0.25rem;
   --radius-box: 0.5rem;
@@ -61,26 +60,26 @@
   default: true;
   prefersdark: false;
   color-scheme: "light";
-  --color-base-100: oklch(98% 0 0);
-  --color-base-200: oklch(96% 0.001 286.375);
-  --color-base-300: oklch(92% 0.004 286.32);
-  --color-base-content: oklch(21% 0.006 285.885);
-  --color-primary: oklch(70% 0.213 47.604);
-  --color-primary-content: oklch(98% 0.016 73.684);
-  --color-secondary: oklch(55% 0.027 264.364);
-  --color-secondary-content: oklch(98% 0.002 247.839);
-  --color-accent: oklch(0% 0 0);
-  --color-accent-content: oklch(100% 0 0);
-  --color-neutral: oklch(44% 0.017 285.786);
-  --color-neutral-content: oklch(98% 0 0);
-  --color-info: oklch(62% 0.214 259.815);
-  --color-info-content: oklch(97% 0.014 254.604);
-  --color-success: oklch(70% 0.14 182.503);
-  --color-success-content: oklch(98% 0.014 180.72);
-  --color-warning: oklch(66% 0.179 58.318);
-  --color-warning-content: oklch(98% 0.022 95.277);
-  --color-error: oklch(58% 0.253 17.585);
-  --color-error-content: oklch(96% 0.015 12.422);
+  --color-base-100: #fffdf8;
+  --color-base-200: #faf7f2;
+  --color-base-300: #ded8ce;
+  --color-base-content: #141923;
+  --color-primary: #5b4ad1;
+  --color-primary-content: #f4f1ea;
+  --color-secondary: #a85d2e;
+  --color-secondary-content: #fffdf8;
+  --color-accent: #6c5ce7;
+  --color-accent-content: #fffdf8;
+  --color-neutral: #2a3446;
+  --color-neutral-content: #f4f1ea;
+  --color-info: #5ca9e6;
+  --color-info-content: #0c0f14;
+  --color-success: #4fae74;
+  --color-success-content: #0c0f14;
+  --color-warning: #d9a441;
+  --color-warning-content: #0c0f14;
+  --color-error: #d96262;
+  --color-error-content: #0c0f14;
   --radius-selector: 0.25rem;
   --radius-field: 0.25rem;
   --radius-box: 0.5rem;
@@ -112,11 +111,972 @@
 /* Make LiveView wrapper divs transparent for layout */
 [data-phx-session], [data-phx-teleported-src] { display: contents }
 
+@theme {
+  --spacing-ops-1: 0.25rem;
+  --spacing-ops-2: 0.5rem;
+  --spacing-ops-3: 0.75rem;
+  --spacing-ops-4: 1rem;
+  --spacing-ops-5: 1.25rem;
+  --spacing-ops-6: 1.5rem;
+  --spacing-ops-field: 0.375rem;
+  --spacing-ops-row: 1rem;
+  --spacing-ops-section: 1.5rem;
+  --spacing-ops-panel: 1.25rem;
+  --spacing-ops-control-gap: 0.5rem;
+  --spacing-ops-page-gap: 1.5rem;
+  --radius-ops-sm: 0.25rem;
+  --radius-ops-md: 0.375rem;
+  --radius-ops-lg: 0.5rem;
+  --radius-ops-control: 0.375rem;
+  --radius-ops-surface: 0.5rem;
+  --radius-ops-overlay: 0.75rem;
+  /* Elevation ladder: surface (resting) → mid (hover / interactive state feedback)
+     → raised (the element lifts off the page) → overlay (modals / flash). */
+  --shadow-ops-surface: 0 1px 2px color-mix(in oklch, var(--color-base-content) 8%, transparent);
+  --shadow-ops-mid: 0 1px 4px color-mix(in oklch, var(--color-base-content) 9%, transparent);
+  --shadow-ops-raised: 0 2px 10px color-mix(in oklch, var(--color-base-content) 10%, transparent);
+  --shadow-ops-overlay: 0 8px 24px color-mix(in oklch, var(--color-base-content) 12%, transparent);
+  /* Reserved escape hatch for an inset focus indicator inside overflow-clipping
+     containers. Prefer the global :focus-visible outline (see @layer base) — a box-shadow
+     ring is clipped by overflow-x-auto (e.g. .ops-table) where the outline is not. */
+  --shadow-ops-focus: 0 0 0 3px color-mix(in oklch, var(--color-primary) 30%, transparent);
+
+  /* Control sizing. Component-only tokens (no Tailwind utility namespace);
+     consume via var() so every control shares one height authority. */
+  --control-h-xs: 1.75rem;   /* compact inline: disclosure summaries, dense chips */
+  --control-h-sm: 2.25rem;   /* segmented buttons, checkbox rows (= legacy min-h-9) */
+  --control-h-md: 2.5rem;    /* default: inputs, selects, nav items, buttons */
+  --control-h-lg: 2.75rem;   /* prominent / touch */
+  --control-h-textarea: 6rem; /* multi-line input min-height (= legacy min-h-24) */
+  --control-pad-x-sm: 0.625rem;
+  --control-pad-x-md: 0.75rem;
+
+  /* Z-index. `--z-index-*` is the Tailwind v4 namespace that generates `z-ops-*`. */
+  --z-index-ops-skip-link: 50;
+  --z-index-ops-flash: 60;
+  --z-index-ops-modal: 70;
+  --z-index-ops-command: 80;
+
+  /* Motion. Durations stay component-only (no `--duration-*` utility namespace in v4);
+     `--ease-*` generates `ease-ops-*` utilities. Keep restrained — animate state, not layout. */
+  --duration-ops-instant: 90ms;   /* tap/press feedback */
+  --duration-ops-fast: 120ms;     /* hover, status/tone color shifts */
+  --duration-ops-standard: 180ms; /* disclosure expand, larger surfaces */
+  --duration-ops-slow: 240ms;     /* overlay/modal entrance only */
+  --duration-ops-status: 200ms;   /* status/verdict tone settle — eye-catch without a snap */
+  --ease-ops-standard: cubic-bezier(0.2, 0.8, 0.2, 1); /* ease-out: enter */
+  --ease-ops-out: cubic-bezier(0.16, 1, 0.3, 1);        /* stronger ease-out: overlays */
+  --ease-ops-in-out: cubic-bezier(0.45, 0, 0.55, 1);    /* symmetric: position toggles */
+
+  --text-ops-xs:   0.6875rem;
+  --text-ops-sm:   0.75rem;
+  --text-ops-body: 0.875rem;
+  --text-ops-md:   1rem;
+  --text-ops-lg:   1.125rem;
+
+  /* Heading scale. Generates `text-ops-h1/h2/h3` utilities so headings stop reaching
+     for raw `text-2xl`/`text-lg`/`text-base`. Pair with `leading-ops-tight font-semibold`.
+     Rule: page <h1> → h1, section <h2> → h2, card/subsection <h3> → h3. */
+  --text-ops-h1:   1.5rem;     /* page title */
+  --text-ops-h2:   1.125rem;   /* section heading */
+  --text-ops-h3:   1rem;       /* card / subsection heading */
+
+  /* Line height. `--leading-*` is the Tailwind v4 namespace that generates `leading-ops-*`. */
+  --leading-ops-tight:  1.3;
+  --leading-ops-body:   1.5;
+}
+
 /* This file is for your main application CSS */
+
+@layer base {
+  html {
+    color-scheme: light dark;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background: var(--color-base-200);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p,
+  li {
+    text-wrap: pretty;
+  }
+
+  code,
+  pre,
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  .ops-header {
+    min-height: 4.25rem;
+    border-bottom: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
+    background: color-mix(in oklch, var(--color-base-100) 96%, transparent);
+    box-shadow: var(--shadow-ops-surface);
+  }
+
+  .ops-shell {
+    background:
+      radial-gradient(circle at top left, color-mix(in oklch, var(--color-primary) 14%, transparent), transparent 34rem),
+      linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
+  }
+
+  .ops-panel {
+    border: 1px solid color-mix(in oklch, var(--color-base-content) 14%, transparent);
+    border-radius: var(--radius-ops-lg);
+    background: color-mix(in oklch, var(--color-base-100) 96%, transparent);
+    box-shadow: var(--shadow-ops-surface);
+  }
+
+  .ops-surface-flat {
+    border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
+    border-radius: var(--radius-ops-surface);
+    background: color-mix(in oklch, var(--color-base-100) 94%, transparent);
+  }
+
+  .ops-muted-panel {
+    border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
+    border-radius: var(--radius-ops-lg);
+    background: color-mix(in oklch, var(--color-base-200) 64%, transparent);
+  }
+
+  .ops-data-card {
+    border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
+    border-radius: var(--radius-ops-lg);
+    background: color-mix(in oklch, var(--color-base-100) 92%, transparent);
+  }
+
+  .ops-tone-info {
+    border-color: color-mix(in oklch, var(--color-info) 44%, transparent);
+    background: color-mix(in oklch, var(--color-info) 11%, transparent);
+  }
+
+  .ops-tone-success {
+    border-color: color-mix(in oklch, var(--color-success) 45%, transparent);
+    background: color-mix(in oklch, var(--color-success) 10%, transparent);
+  }
+
+  .ops-tone-warning,
+  .ops-tone-partial {
+    border-color: color-mix(in oklch, var(--color-warning) 48%, transparent);
+    background: color-mix(in oklch, var(--color-warning) 12%, transparent);
+  }
+
+  .ops-tone-error {
+    border-color: color-mix(in oklch, var(--color-error) 48%, transparent);
+    background: color-mix(in oklch, var(--color-error) 10%, transparent);
+  }
+
+  .ops-tone-running {
+    border-color: color-mix(in oklch, var(--color-primary) 46%, transparent);
+    background: color-mix(in oklch, var(--color-primary) 10%, transparent);
+  }
+
+  /* Metric tiles keep the muted-panel fill; tone only accents the border. The border
+     color settles over --duration-ops-status so a count flipping on Refresh catches the
+     eye without a snap (state, not layout). */
+  .ops-metric {
+    transition: border-color var(--duration-ops-status) var(--ease-ops-standard);
+  }
+
+  .ops-metric-success {
+    border-color: color-mix(in oklch, var(--color-success) 45%, transparent);
+  }
+
+  .ops-metric-warning {
+    border-color: color-mix(in oklch, var(--color-warning) 50%, transparent);
+  }
+
+  .ops-metric-error {
+    border-color: color-mix(in oklch, var(--color-error) 50%, transparent);
+  }
+
+  /* Trust-verdict hero. Tone surface comes from `.ops-tone-*` (or `.ops-verdict-neutral`);
+     the surface color settles over --duration-ops-status when the verdict changes. */
+  .ops-verdict {
+    transition:
+      background-color var(--duration-ops-status) var(--ease-ops-standard),
+      border-color var(--duration-ops-status) var(--ease-ops-standard);
+  }
+
+  .ops-verdict-neutral {
+    border-color: color-mix(in oklch, var(--color-base-content) 14%, transparent);
+    background: color-mix(in oklch, var(--color-base-200) 64%, transparent);
+  }
+
+  /* Landing hero: the verdict is the single most important answer on the page, so it
+     gets extra presence (lift + a larger dot). Only properties no utility sets on the
+     root are touched here, so it survives Tailwind's utility layer. */
+  .ops-verdict--hero {
+    box-shadow: var(--shadow-ops-raised);
+  }
+
+  .ops-verdict--hero .ops-verdict__dot {
+    width: 0.625rem;
+    height: 0.625rem;
+  }
+
+  .ops-verdict__dot {
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--color-base-content) 40%, transparent);
+  }
+
+  .ops-verdict.ops-tone-success .ops-verdict__dot {
+    background: var(--color-success);
+  }
+
+  .ops-verdict.ops-tone-warning .ops-verdict__dot,
+  .ops-verdict.ops-tone-partial .ops-verdict__dot {
+    background: var(--color-warning);
+  }
+
+  .ops-verdict.ops-tone-error .ops-verdict__dot {
+    background: var(--color-error);
+  }
+
+  .ops-verdict.ops-tone-info .ops-verdict__dot {
+    background: var(--color-info);
+  }
+
+  .ops-verdict.ops-tone-running .ops-verdict__dot {
+    background: var(--color-primary);
+  }
+
+  /* Segmented-control button: shares the control-height authority instead of a raw
+     min-h-9, with the small radius matching the inner pill. */
+  .ops-segmented-btn {
+    min-height: var(--control-h-sm);
+    border-radius: var(--radius-ops-sm);
+  }
+
+  .ops-badge {
+    display: inline-flex;
+    min-height: 1.625rem;
+    align-items: center;
+    border: 1px solid color-mix(in oklch, var(--color-base-content) 12%, transparent);
+    border-radius: 999px;
+    padding-inline: 0.625rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: 650;
+    white-space: nowrap;
+    transition:
+      background-color var(--duration-ops-fast) var(--ease-ops-standard),
+      border-color var(--duration-ops-fast) var(--ease-ops-standard),
+      color var(--duration-ops-fast) var(--ease-ops-standard);
+  }
+
+  .ops-badge-neutral {
+    background: color-mix(in oklch, var(--color-base-200) 74%, transparent);
+    color: color-mix(in oklch, var(--color-base-content) 82%, transparent);
+  }
+
+  .ops-badge-info {
+    border-color: color-mix(in oklch, var(--color-info) 44%, transparent);
+    background: color-mix(in oklch, var(--color-info) 12%, transparent);
+  }
+
+  .ops-badge-success {
+    border-color: color-mix(in oklch, var(--color-success) 45%, transparent);
+    background: color-mix(in oklch, var(--color-success) 12%, transparent);
+  }
+
+  .ops-badge-warning,
+  .ops-badge-partial {
+    border-color: color-mix(in oklch, var(--color-warning) 50%, transparent);
+    background: color-mix(in oklch, var(--color-warning) 13%, transparent);
+  }
+
+  .ops-badge-error {
+    border-color: color-mix(in oklch, var(--color-error) 50%, transparent);
+    background: color-mix(in oklch, var(--color-error) 12%, transparent);
+  }
+
+  .ops-badge-running {
+    border-color: color-mix(in oklch, var(--color-primary) 48%, transparent);
+    background: color-mix(in oklch, var(--color-primary) 12%, transparent);
+  }
+
+  /* Labelled tone chip (ops_tone_chip): a `label : value` pill that settles to a
+     status tone. Composes with `.ops-tone-*` for the surface; the trailing value
+     picks up the matching accent color. Tone settles like metrics/verdict. */
+  .ops-tone-chip {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-ops-2);
+    border: 1px solid transparent;
+    border-radius: var(--radius-ops-md);
+    padding: 0.5rem 0.75rem;
+    font-size: var(--text-ops-sm);
+    transition:
+      background-color var(--duration-ops-status) var(--ease-ops-standard),
+      border-color var(--duration-ops-status) var(--ease-ops-standard);
+  }
+
+  .ops-tone-chip__value {
+    margin-left: auto;
+    font-weight: 600;
+    color: color-mix(in oklch, var(--color-base-content) 75%, transparent);
+  }
+
+  .ops-tone-chip.ops-tone-success .ops-tone-chip__value {
+    color: var(--color-success);
+  }
+
+  .ops-tone-chip.ops-tone-warning .ops-tone-chip__value,
+  .ops-tone-chip.ops-tone-partial .ops-tone-chip__value {
+    color: var(--color-warning);
+  }
+
+  .ops-tone-chip.ops-tone-error .ops-tone-chip__value {
+    color: var(--color-error);
+  }
+
+  /* Shared button height + press feel. Radius is applied as the `rounded-ops-control`
+     utility at the call site so it wins over daisyUI's component-layer radius. */
+  .ops-btn {
+    min-height: var(--control-h-md);
+    transition: transform var(--duration-ops-instant) var(--ease-ops-standard);
+  }
+
+  .ops-btn:active {
+    transform: scale(0.97);
+  }
+
+  .ops-form-control {
+    min-height: var(--control-h-md);
+    border-radius: var(--radius-ops-md);
+  }
+
+  /* Single owner of select chrome: height (.ops-form-control), radius, padding,
+     and a theme-aware chevron. A <select> is a replaced element (no pseudo-els,
+     no currentColor in background data-URIs), so the chevron is a baked SVG that
+     swaps stroke color across light / explicit-dark / system-dark. */
+  select.ops-form-control {
+    appearance: none;
+    padding-inline: var(--control-pad-x-md);
+    padding-block: 0.5rem;
+    padding-right: 2.25rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b6b76' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.625rem center;
+  }
+
+  [data-theme="dark"] select.ops-form-control {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a6adba' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  }
+
+  @media (prefers-color-scheme: dark) {
+    html:not([data-theme="light"]) select.ops-form-control {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a6adba' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    }
+  }
+
+  .ops-text-label { font-size: var(--text-ops-sm); line-height: var(--leading-ops-tight); font-weight: 500; }
+  .ops-text-body  { font-size: var(--text-ops-body); line-height: var(--leading-ops-body); }
+  .ops-text-meta  { font-size: var(--text-ops-xs); line-height: var(--leading-ops-body); color: color-mix(in oklch, var(--color-base-content) 55%, transparent); }
+  .ops-text-mono  { font-family: ui-monospace, "Cascadia Code", Menlo, monospace; font-size: var(--text-ops-sm); }
+
+  .ops-transition-status {
+    transition:
+      background-color var(--duration-ops-fast) var(--ease-ops-standard),
+      color var(--duration-ops-fast) var(--ease-ops-standard),
+      border-color var(--duration-ops-fast) var(--ease-ops-standard);
+  }
+
+  .ops-transition-expand {
+    transition: opacity var(--duration-ops-standard) var(--ease-ops-standard);
+  }
+
+  .ops-nav-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: var(--radius-ops-lg);
+    background: color-mix(in oklch, var(--color-base-200) 72%, transparent);
+    padding: 0.25rem;
+  }
+
+  .ops-nav-item {
+    display: inline-flex;
+    min-height: var(--control-h-md);
+    align-items: center;
+    border-radius: var(--radius-ops-md);
+    padding-inline: 0.875rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    transition-property: background-color, color, box-shadow;
+    transition-duration: var(--duration-ops-fast);
+    transition-timing-function: var(--ease-ops-standard);
+  }
+
+  .ops-nav-item:hover {
+    background: color-mix(in oklch, var(--color-base-content) 7%, transparent);
+  }
+
+  .ops-nav-item-active {
+    background: var(--color-primary);
+    color: var(--color-primary-content);
+    font-weight: 650;
+    box-shadow: var(--shadow-ops-surface);
+  }
+
+  .ops-nav-group-probes {
+    margin-left: 0.5rem;
+    padding-left: 0.5rem;
+    border-left: 1px solid color-mix(in oklch, var(--color-base-content) 12%, transparent);
+  }
+
+  .ops-disclosure {
+    border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
+    border-radius: var(--radius-ops-lg);
+    background: color-mix(in oklch, var(--color-base-200) 58%, transparent);
+    padding: var(--spacing-ops-3);
+  }
+
+  /* Shared rotating chevron so every disclosure reads as a control, not a bare link.
+     `list-style: none` removes the native marker (incl. Safari's ::-webkit-details-marker). */
+  .ops-disclosure summary,
+  .ops-disclosure-compact summary {
+    display: flex;
+    align-items: center;
+    min-height: var(--control-h-md);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .ops-disclosure summary::-webkit-details-marker,
+  .ops-disclosure-compact summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .ops-disclosure summary::before,
+  .ops-disclosure-compact summary::before {
+    content: "";
+    flex: none;
+    width: 0.7em;
+    height: 0.7em;
+    margin-right: 0.4em;
+    background-color: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 18 15 12 9 6'%3E%3C/polyline%3E%3C/svg%3E") center / contain no-repeat;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 18 15 12 9 6'%3E%3C/polyline%3E%3C/svg%3E") center / contain no-repeat;
+    transition: transform var(--duration-ops-fast) var(--ease-ops-standard);
+  }
+
+  .ops-disclosure[open] > summary::before {
+    transform: rotate(90deg);
+  }
+
+  .ops-disclosure-compact {
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    background: transparent;
+  }
+
+  .ops-disclosure-compact summary {
+    display: inline-flex;
+    min-height: var(--control-h-xs);
+    align-items: center;
+    padding: 0;
+    color: var(--color-primary);
+    font-weight: 650;
+  }
+
+  .ops-disclosure-compact summary:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .ops-object-list {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .ops-object-item {
+    border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
+    border-radius: var(--radius-ops-lg);
+    background: color-mix(in oklch, var(--color-base-100) 92%, transparent);
+    padding: 0.875rem;
+  }
+
+  .ops-object-item-active {
+    border-color: color-mix(in oklch, var(--color-primary) 55%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-primary) 20%, transparent);
+  }
+
+  /* Contextual breadcrumb trail (ops_trail): Control Room › group › page. Quiet
+     by design — it orients, it doesn't compete with the header nav or the verdict. */
+  .ops-trail__list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-ops-2);
+    font-size: var(--text-ops-sm);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .ops-trail__crumb {
+    color: color-mix(in oklch, var(--color-base-content) 60%, transparent);
+  }
+
+  .ops-trail__link {
+    border-radius: var(--radius-ops-sm);
+    transition: color var(--duration-ops-fast) var(--ease-ops-standard);
+  }
+
+  .ops-trail__link:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .ops-trail__current {
+    color: var(--color-base-content);
+    font-weight: 600;
+  }
+
+  .ops-trail__sep {
+    color: color-mix(in oklch, var(--color-base-content) 35%, transparent);
+  }
+
+  /* Unified "Next step" footer (ops_handoff): a consistent, learnable end-of-page
+     affordance. Quiet eyebrow + imperative link(s) so the journey loops visibly close. */
+  .ops-handoff {
+    margin-top: var(--spacing-ops-section);
+    padding-top: var(--spacing-ops-4);
+    border-top: 1px solid color-mix(in oklch, var(--color-base-content) 12%, transparent);
+  }
+
+  .ops-handoff__eyebrow {
+    font-size: var(--text-ops-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    color: color-mix(in oklch, var(--color-base-content) 50%, transparent);
+  }
+
+  .ops-handoff__steps {
+    margin-top: var(--spacing-ops-2);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-ops-2);
+  }
+
+  .ops-handoff__step {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--spacing-ops-2);
+  }
+
+  .ops-handoff__hint {
+    font-size: var(--text-ops-body);
+    color: color-mix(in oklch, var(--color-base-content) 60%, transparent);
+  }
+
+  .ops-handoff__link {
+    font-size: var(--text-ops-body);
+    font-weight: 600;
+    color: var(--color-primary);
+    border-radius: var(--radius-ops-sm);
+    transition: color var(--duration-ops-fast) var(--ease-ops-standard);
+  }
+
+  .ops-handoff__link:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* Promotion preflight checklist (Sync Drift): a sequential, gated wizard. Locked
+     steps dim and lose their hover affordance so the eye follows the open step. */
+  .ops-preflight {
+    display: grid;
+    gap: var(--spacing-ops-3);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  @media (min-width: 768px) {
+    .ops-preflight {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .ops-preflight__card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-ops-2);
+    border: 1px solid color-mix(in oklch, var(--color-base-content) 12%, transparent);
+    border-radius: var(--radius-ops-lg);
+    background: color-mix(in oklch, var(--color-base-100) 94%, transparent);
+    padding: var(--spacing-ops-4);
+    transition:
+      opacity var(--duration-ops-standard) var(--ease-ops-standard),
+      border-color var(--duration-ops-status) var(--ease-ops-standard);
+  }
+
+  .ops-preflight__card--locked {
+    opacity: 0.55;
+    background: color-mix(in oklch, var(--color-base-200) 60%, transparent);
+  }
+
+  .ops-preflight__head {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-ops-2);
+  }
+
+  .ops-preflight__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    flex: none;
+    border-radius: 999px;
+    font-size: var(--text-ops-sm);
+    font-weight: 700;
+    color: var(--color-primary);
+    background: color-mix(in oklch, var(--color-primary) 14%, transparent);
+  }
+
+  .ops-preflight__title {
+    font-size: var(--text-ops-body);
+    font-weight: 650;
+    color: var(--color-base-content);
+  }
+
+  .ops-preflight__hint {
+    font-size: var(--text-ops-sm);
+    line-height: var(--leading-ops-body);
+    color: color-mix(in oklch, var(--color-base-content) 60%, transparent);
+  }
+
+  .ops-intent-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    height: 100%;
+    border: 1px solid color-mix(in oklch, var(--color-base-content) 12%, transparent);
+    border-radius: var(--radius-ops-lg);
+    background: color-mix(in oklch, var(--color-base-100) 94%, transparent);
+    padding: var(--spacing-ops-panel);
+    box-shadow: var(--shadow-ops-surface);
+    transition:
+      transform var(--duration-ops-fast) var(--ease-ops-standard),
+      box-shadow var(--duration-ops-fast) var(--ease-ops-standard),
+      border-color var(--duration-ops-fast) var(--ease-ops-standard);
+  }
+
+  .ops-intent-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-ops-raised);
+    border-color: color-mix(in oklch, var(--color-primary) 40%, transparent);
+  }
+
+  /* State-recommended card: a quiet ring so the eye lands on the right job first,
+     without shouting. Pairs with the kind tone (e.g. warning) when degraded. */
+  .ops-intent-card--recommended {
+    box-shadow:
+      var(--shadow-ops-surface),
+      inset 0 0 0 1px color-mix(in oklch, var(--color-primary) 45%, transparent);
+  }
+
+  .ops-intent-card__flag {
+    align-self: flex-start;
+    border-radius: 999px;
+    padding-inline: var(--control-pad-x-sm);
+    padding-block: 0.125rem;
+    font-size: var(--text-ops-sm);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-primary);
+    background: color-mix(in oklch, var(--color-primary) 12%, transparent);
+  }
+
+  .ops-intent-card__icon {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  .ops-intent-card__title {
+    font-size: var(--text-ops-md);
+    font-weight: 650;
+    color: var(--color-base-content);
+  }
+
+  .ops-intent-card__summary {
+    flex: 1;
+    font-size: var(--text-ops-body);
+    line-height: var(--leading-ops-body);
+    color: color-mix(in oklch, var(--color-base-content) 75%, transparent);
+  }
+
+  .ops-intent-card__cta {
+    font-size: var(--text-ops-sm);
+    font-weight: 650;
+    color: var(--color-primary);
+  }
+
+  .ops-result-row {
+    display: grid;
+    gap: 0.75rem;
+    border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
+    border-radius: var(--radius-ops-surface);
+    background: color-mix(in oklch, var(--color-base-100) 94%, transparent);
+    padding: 0.875rem;
+  }
+
+  @media (min-width: 768px) {
+    .ops-result-row {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+    }
+  }
+
+  .ops-signal-table table {
+    width: 100%;
+  }
+
+  .ops-signal-table th[scope="row"] {
+    width: 12rem;
+    vertical-align: top;
+    color: color-mix(in oklch, var(--color-base-content) 78%, transparent);
+  }
+
+  .ops-route-mark {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-primary-content) 30%, transparent) inset;
+  }
+
+  #flash-group {
+    position: fixed;
+    top: 5.75rem;
+    right: 1rem;
+    z-index: var(--z-index-ops-flash);
+    display: grid;
+    width: min(22rem, calc(100vw - 2rem));
+    gap: 0.75rem;
+    pointer-events: none;
+  }
+
+  #flash-group > * {
+    pointer-events: auto;
+    box-shadow: var(--shadow-ops-overlay);
+  }
+
+  @media (max-width: 640px) {
+    #flash-group {
+      top: auto;
+      right: 1rem;
+      bottom: 1rem;
+    }
+  }
+
+  /* Command palette (⌘K) + cheat-sheet overlay. */
+  .ops-cmdk {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-index-ops-command);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 12vh;
+  }
+
+  .ops-cmdk[hidden] {
+    display: none;
+  }
+
+  .ops-cmdk__backdrop {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in oklch, var(--color-base-content) 32%, transparent);
+    backdrop-filter: blur(2px);
+  }
+
+  .ops-cmdk__panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: min(34rem, calc(100vw - 2rem));
+    max-height: 70vh;
+    overflow: hidden;
+    border: 1px solid color-mix(in oklch, var(--color-base-content) 14%, transparent);
+    border-radius: var(--radius-ops-overlay);
+    background: color-mix(in oklch, var(--color-base-100) 98%, transparent);
+    box-shadow: var(--shadow-ops-overlay);
+    animation: ops-modal-in var(--duration-ops-slow) var(--ease-ops-out);
+  }
+
+  .ops-cmdk__panel--sheet {
+    gap: var(--spacing-ops-3);
+    padding: var(--spacing-ops-panel);
+  }
+
+  .ops-cmdk__input {
+    width: 100%;
+    min-height: var(--control-h-lg);
+    padding-inline: var(--spacing-ops-panel);
+    border: 0;
+    border-bottom: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
+    background: transparent;
+    font-size: var(--text-ops-md);
+    color: var(--color-base-content);
+  }
+
+  .ops-cmdk__input:focus {
+    outline: none;
+  }
+
+  .ops-cmdk__list {
+    margin: 0;
+    padding: var(--spacing-ops-2);
+    overflow-y: auto;
+    list-style: none;
+  }
+
+  .ops-cmdk__item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-ops-3);
+    padding: var(--spacing-ops-2) var(--spacing-ops-3);
+    border-radius: var(--radius-ops-control);
+    color: var(--color-base-content);
+    cursor: pointer;
+  }
+
+  .ops-cmdk__item:hover,
+  .ops-cmdk__item.is-active {
+    background: color-mix(in oklch, var(--color-primary) 14%, transparent);
+  }
+
+  .ops-cmdk__item-label {
+    font-size: var(--text-ops-body);
+    font-weight: 650;
+  }
+
+  .ops-cmdk__item-hint {
+    font-size: var(--text-ops-xs);
+    color: color-mix(in oklch, var(--color-base-content) 55%, transparent);
+  }
+
+  .ops-cmdk__empty {
+    padding: var(--spacing-ops-3) var(--spacing-ops-panel);
+    color: color-mix(in oklch, var(--color-base-content) 55%, transparent);
+    font-size: var(--text-ops-body);
+  }
+
+  .ops-cheatsheet__list {
+    display: grid;
+    gap: var(--spacing-ops-2);
+  }
+
+  .ops-cheatsheet__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-ops-4);
+    font-size: var(--text-ops-body);
+  }
+
+  .ops-cheatsheet__row dt {
+    display: inline-flex;
+    gap: 0.25rem;
+  }
+
+  .ops-cheatsheet__row dd {
+    margin: 0;
+    color: color-mix(in oklch, var(--color-base-content) 70%, transparent);
+  }
+
+  .ops-kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    padding: 0.1rem 0.4rem;
+    border: 1px solid color-mix(in oklch, var(--color-base-content) 18%, transparent);
+    border-radius: var(--radius-ops-sm);
+    background: color-mix(in oklch, var(--color-base-200) 70%, transparent);
+    font-family: ui-monospace, "Cascadia Code", Menlo, monospace;
+    font-size: var(--text-ops-xs);
+    font-weight: 650;
+  }
+}
 
 /* Theme toggle: pill position follows `html[data-theme-effective]` (root inline script). */
 #theme-toggle-pill {
-  transition: left 150ms ease;
+  transition-property: left;
+  transition-duration: var(--duration-ops-fast);
+  transition-timing-function: var(--ease-ops-standard);
+}
+
+/* One-shot reveals. Opacity/transform only — never animate <details> height (auto
+   height can't transition and would reflow). Neutralized by reduced-motion below. */
+.ops-disclosure[open] > .ops-disclosure-body {
+  animation: ops-fade-in var(--duration-ops-standard) var(--ease-ops-standard);
+}
+
+.modal-open > .modal-box {
+  animation: ops-modal-in var(--duration-ops-slow) var(--ease-ops-out);
+}
+
+@keyframes ops-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ops-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
 
 html[data-theme-effective="light"] #theme-toggle-pill {

@@ -1,0 +1,43 @@
+# Dev override: bind-mount source + named build/deps volumes, publish infra on loopback
+# lanes for host tooling, and run the ops-app Tailwind watcher alongside the server so
+# edits to scrypath_ops CSS actually rebuild the served stylesheet.
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:${PG_PORT:-5432}:5432"
+
+  meilisearch:
+    ports:
+      - "127.0.0.1:${MEILI_PORT:-7700}:7700"
+
+  web:
+    environment:
+      MIX_ENV: dev
+      PHX_SERVER: "true"
+      # dev.exs reads these so the dev server binds where the port mapping expects.
+      PORT: "4002"
+      PHX_HOST_IP: "0.0.0.0"
+      PGHOST: postgres
+      PGPORT: "5432"
+      SCRYPATH_MEILISEARCH_URL: http://meilisearch:7700
+    # Run the ops-app CSS watcher next to the entrypoint so operator-UI style edits
+    # rebuild scrypath_ops/priv/static without an image rebuild.
+    command: >
+      sh -c "cd /app/scrypath_ops && mix tailwind scrypath_ops --watch &
+             cd /app/examples/scrypath_ecommerce && exec sh ./docker-entrypoint.sh"
+    volumes:
+      - ../..:/app
+      - scrypath_ecommerce_deps:/app/examples/scrypath_ecommerce/deps
+      - scrypath_ecommerce_build:/app/examples/scrypath_ecommerce/_build
+      - scrypath_ops_deps:/app/scrypath_ops/deps
+      - scrypath_ops_build:/app/scrypath_ops/_build
+      - root_deps:/app/deps
+      - root_build:/app/_build
+
+volumes:
+  scrypath_ecommerce_deps:
+  scrypath_ecommerce_build:
+  scrypath_ops_deps:
+  scrypath_ops_build:
+  root_deps:
+  root_build:

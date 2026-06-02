@@ -2,8 +2,9 @@
   <p class="eyebrow">Operations</p>
   <h1>Recovery, verification, and drift should be boring.</h1>
   <p class="lede">
-    Use this path when search is stale, failing, or unclear. Start with status and failed
-    work, then decide whether to retry, reconcile, backfill, or reindex.
+    Use this path when search is stale, failing, unclear, or needs production hardening.
+    Start with status and failed work, then decide whether to retry, reconcile, backfill,
+    reindex, restore, or upgrade.
   </p>
 </section>
 
@@ -12,6 +13,7 @@
     <p class="eyebrow">Sync modes</p>
     <h2>Accepted work is not the same thing as visible search.</h2>
   </div>
+  <p>Accepted work is not the same thing as visible search.</p>
 
   <div class="grid three">
     <article class="tile">
@@ -48,11 +50,19 @@
     <article class="tile">
       <h3>When you need more</h3>
       <p>
-        If the fast checks pass but the app still behaves differently, use the Phoenix +
-        Meilisearch example and intake guide to pin down whether the issue is app wiring,
-        queue state, or backend behavior.
+        If the fast checks pass but the app still behaves differently, use the support
+        guide for readiness truth and the intake guide to submit enough evidence for
+        maintainer classification.
       </p>
       <a href="{{REPO_URL}}/blob/main/guides/outside-adopter-intake.md">Report an integration issue</a>
+    </article>
+    <article class="tile">
+      <h3>Run Meilisearch</h3>
+      <p>
+        Use the operations guide for version pinning, keys, storage, backups, upgrades,
+        and task backlog posture through a Scrypath lens.
+      </p>
+      <a href="{{REPO_URL}}/blob/main/guides/meilisearch-operations.md">Open operations guide</a>
     </article>
   </div>
 </section>
@@ -67,7 +77,7 @@
     <article class="tile">
       <h3>Observe</h3>
       <p>
-        Track search latency, hydration misses, sync error rate, and queued work before paging on raw queue depth.
+        Track search latency, hydration misses, sync error rate, task backlog age, failed tasks, disk, and memory pressure.
       </p>
     </article>
     <article class="tile">
@@ -79,7 +89,7 @@
     <article class="tile">
       <h3>Escalate</h3>
       <p>
-        Bring version, command output, schema metadata, and backend evidence before widening
+        Bring version, command output, schema metadata, task evidence, and backend health before widening
         the issue beyond the supported path.
       </p>
     </article>
@@ -92,8 +102,15 @@
     <h2>Start with status, then choose the repair.</h2>
   </div>
   <p>
-    Use the support guide for supported versions and verification commands. Use the SRE
-    notes for platform signals such as latency, task backlog, and Meilisearch health.
-    Use the example app when you need a known-good Phoenix path to compare against.
+    Use the <a href="{{REPO_URL}}/blob/main/guides/support-and-compatibility.md">support guide</a>
+    for supported versions and verification commands. Use the
+    <a href="{{REPO_URL}}/blob/main/guides/outside-adopter-intake.md">outside-adopter intake guide</a>
+    for evidence submission and maintainer routing. Use the SRE notes for platform signals
+    such as latency, task backlog, disk pressure, and Meilisearch health.
+  </p>
+  <p>
+    Scope pressure routes through the
+    <a href="{{REPO_URL}}/blob/main/guides/scope-and-reopen-policy.md">scope-and-reopen-policy.md</a>
+    and reviewed outside-adopter intake evidence, not implied feature expansion.
   </p>
 </section>

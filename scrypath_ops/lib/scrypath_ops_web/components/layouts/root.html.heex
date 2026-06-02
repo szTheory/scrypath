@@ -7,8 +7,8 @@
     <.live_title default="ScrypathOps" suffix=" · ScrypathOps">
       {assigns[:page_title]}
     </.live_title>
-    <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
-    <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
+    <link phx-track-static rel="stylesheet" href={"#{@mount_path}/assets/css/app.css"} />
+    <script defer phx-track-static type="text/javascript" src={"#{@mount_path}/assets/js/app.js"}>
     </script>
     <script>
       (() => {

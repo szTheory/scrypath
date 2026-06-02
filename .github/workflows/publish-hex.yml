@@ -35,14 +35,14 @@ jobs:
       - name: Install Rebar
         run: mix local.rebar --force
 
-      - name: Verify release version
-        run: grep -n "@version \"${{ inputs.release_version }}\"" mix.exs
-
       - name: Install dependencies
         run: mix deps.get
 
       - name: Verify workspace is clean
         run: mix verify.workspace_clean
+
+      - name: Verify release version
+        run: grep -n "@version \"${{ inputs.release_version }}\"" mix.exs
 
       - name: Run release contract gate
         run: mix verify.phase11

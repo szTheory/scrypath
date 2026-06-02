@@ -42,13 +42,35 @@ defmodule Scrypath.Meilisearch.Settings do
         _ -> Map.merge(declared, override)
       end
 
-    merge_faceting_filterable_attributes(schema_module, merged)
+    schema_module
+    |> merge_declared_filterable_attributes(merged)
+    |> merge_faceting_filterable_attributes(schema_module)
+  end
+
+  defp merge_declared_filterable_attributes(schema_module, settings) do
+    declared =
+      schema_module.__scrypath__(:filterable)
+      |> List.wrap()
+
+    if declared == [] do
+      settings
+    else
+      existing = filterable_attributes_list(Map.get(settings, :filterable_attributes))
+      covered = filterable_covered_names(existing)
+
+      appended =
+        declared
+        |> Enum.reject(&(filterable_name(&1) in covered))
+        |> Enum.map(&filterable_name/1)
+
+      Map.put(settings, :filterable_attributes, existing ++ appended)
+    end
   end
 
   # Facet-derived `filterableAttributes` entries augment `resolve/2` after declared settings
   # merge. Explicit `settings:` entries for the same attribute win: existing maps are kept
-  # unchanged; bare strings for facet attributes are upgraded to object form with facetSearch.
-  defp merge_faceting_filterable_attributes(schema_module, settings) do
+  # unchanged; bare strings for facet attributes are upgraded to granular object form with facet search.
+  defp merge_faceting_filterable_attributes(settings, schema_module) do
     faceting = Scrypath.schema_faceting(schema_module)
     attrs = Keyword.get(faceting, :attributes, [])
 
@@ -76,6 +98,41 @@ defmodule Scrypath.Meilisearch.Settings do
 
   defp filterable_attributes_list(list) when is_list(list), do: list
   defp filterable_attributes_list(_), do: []
+
+  defp filterable_covered_names(entries) do
+    entries
+    |> Enum.flat_map(fn
+      entry when is_atom(entry) -> [Atom.to_string(entry)]
+      entry when is_binary(entry) -> [entry]
+      %{} = entry -> filterable_entry_names(entry)
+      _ -> []
+    end)
+    |> MapSet.new()
+  end
+
+  defp filterable_entry_names(%{} = m) do
+    patterns = Map.get(m, :attribute_patterns) || Map.get(m, "attributePatterns")
+
+    cond do
+      is_list(patterns) ->
+        Enum.filter(patterns, &is_binary/1)
+
+      is_binary(Map.get(m, :attribute)) ->
+        [Map.get(m, :attribute)]
+
+      is_binary(Map.get(m, "attribute")) ->
+        [Map.get(m, "attribute")]
+
+      is_atom(Map.get(m, :attribute)) ->
+        [Atom.to_string(Map.get(m, :attribute))]
+
+      true ->
+        []
+    end
+  end
+
+  defp filterable_name(attr) when is_atom(attr), do: Atom.to_string(attr)
+  defp filterable_name(attr) when is_binary(attr), do: attr
 
   defp transform_filterable_for_faceting(entry, facet_names, covered) when is_binary(entry) do
     if MapSet.member?(facet_names, entry) do
@@ -110,20 +167,36 @@ defmodule Scrypath.Meilisearch.Settings do
   end
 
   defp attribute_string_from_filterable_entry(m) do
-    case {Map.get(m, :attribute), Map.get(m, "attribute")} do
-      {a, _} when is_atom(a) -> Atom.to_string(a)
-      {b, _} when is_binary(b) -> b
-      {nil, b} when is_binary(b) -> b
-      _ -> nil
+    patterns = Map.get(m, :attribute_patterns) || Map.get(m, "attributePatterns")
+
+    cond do
+      is_list(patterns) ->
+        Enum.find(patterns, &is_binary/1)
+
+      true ->
+        case {Map.get(m, :attribute), Map.get(m, "attribute")} do
+          {a, _} when is_atom(a) -> Atom.to_string(a)
+          {b, _} when is_binary(b) -> b
+          {nil, b} when is_binary(b) -> b
+          _ -> nil
+        end
     end
   end
 
   defp facet_filterable_object_string(name) when is_binary(name) do
-    %{attribute: name, features: ["facetSearch"]}
+    %{
+      attribute_patterns: [name],
+      features: %{
+        facet_search: true,
+        filter: %{equality: true, comparison: true}
+      }
+    }
   end
 
   defp facet_filterable_object(attr) when is_atom(attr) do
-    %{attribute: Atom.to_string(attr), features: ["facetSearch"]}
+    attr
+    |> Atom.to_string()
+    |> facet_filterable_object_string()
   end
 
   @spec apply(module(), String.t(), keyword()) :: {:ok, map()} | {:error, term()}
@@ -263,6 +336,10 @@ defmodule Scrypath.Meilisearch.Settings do
 
       {camel_k, recursively_camelize(v)}
     end)
+  end
+
+  defp recursively_camelize(value) when is_list(value) do
+    Enum.map(value, &recursively_camelize/1)
   end
 
   defp recursively_camelize(value), do: value

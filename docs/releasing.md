@@ -8,7 +8,7 @@ Release Please owns the version bump, changelog PR, and Git tag for Scrypath. Th
 
 Scrypath now runs a **green-main release train**:
 
-- `main` stays green on the lean required gates only: **main CI**, **repo hygiene**, and **release truth**.
+- `main` stays green on the lean required gates only: **main CI**, **repo hygiene**, **release truth**, and **`phase99-trust`**.
 - The default shipping posture is **patch-first while the library remains pre-1.0**. The existing Release Please configuration already uses the pre-1.0 bump knobs, so ordinary merged work rolls forward on patch cadence.
 - Serious milestone or feature-depth work should land through **PRs**, not direct `main` development.
 - **Squash merge only** is the intended feed into Release Please. The PR title should be treated as the release-facing summary because it becomes the squash commit title.
@@ -44,7 +44,7 @@ For a faster slice while iterating on OPSUI accessibility semantics (tests tagge
 cd scrypath_ops && mix opsui.test_a11y
 ```
 
-That alias applies the same **`scrypath_ops`** **`test`** prerequisite steps as the default **`mix test`** alias, then runs **`mix test --only opsui_a11y`**. It runs the package metadata test, the clean-consumer smoke test, the release-doc contract, docs with warnings as errors, release workflow checks, and `mix hex.build --unpack`.
+That alias runs `scrypath_ops.check_nav_contract`, creates and migrates the OPSUI database quietly, then runs **`mix test --only opsui_a11y`**. It is an OPSUI accessibility slice; it does not run package metadata, clean-consumer smoke, release-doc contract, docs, release workflow, or `mix hex.build --unpack` checks. Use **`mix verify.phase11`** for the auth-free release/package truth gate.
 
 Use this release-only credential check only when you are preparing an actual publish with a publisher-scoped Hex key:
 
@@ -109,7 +109,7 @@ Treat failures in this workflow as operational regressions in the published pack
 2. Review the Release Please PR. The version in `mix.exs`, `.release-please-manifest.json`, and the top changelog entry should all describe the same `vX.Y.Z` release.
    On the train, the release PR should be the only version-changing PR in flight.
 3. Merge the Release Please PR to `main`. The existing `.github/workflows/release-please.yml` workflow is the only release path. When `release_created == true`, the `publish-hex` job checks out `tag_name` and runs `mix hex.publish --yes`.
-   Before the real publish, that job also verifies `mix.exs` matches the Release Please version, runs `mix verify.phase11`, and runs `mix hex.publish --dry-run --yes`.
+   Before the real publish, that job runs the same ordered proof chain as recovery: `mix verify.workspace_clean` -> version grep -> `mix verify.phase11` -> `mix hex.publish --dry-run --yes` -> `mix hex.publish --yes` -> `mix verify.release_publish` -> `mix verify.release_parity`.
 4. After the workflow finishes, confirm the release artifacts:
 
    ```bash

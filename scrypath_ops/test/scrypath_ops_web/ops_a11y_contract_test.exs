@@ -109,7 +109,7 @@ defmodule ScrypathOpsWeb.OpsA11yContractTest do
     assert html =~ ~s(id="ops-main")
     assert html =~ ~s(href="#ops-main")
     assert html =~ "Skip to operator content"
-    assert html =~ ~s(<header class="navbar)
+    assert html =~ ~s(<header class="ops-header)
     assert html =~ ~s(aria-label="Operator primary")
     assert html =~ ~s(id="ops-page-title")
 

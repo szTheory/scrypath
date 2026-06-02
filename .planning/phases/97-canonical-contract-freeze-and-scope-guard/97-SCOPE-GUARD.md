@@ -1,5 +1,7 @@
 # Phase 97 Scope Guard (`SCOPE-01`)
 
+> Reconstructed at the historical Phase 97 path during Phase 109 release-truth recovery (2026-05-31).
+
 ## Banned capability classes
 
 Phase 97 through Phase 99 are contract-hardening-only slices. The following runtime-breadth classes are explicitly banned during this milestone:

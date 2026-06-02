@@ -1,0 +1,14 @@
+{
+  "name": "scrypath-ecommerce-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e": "playwright test",
+    "test:e2e:list": "playwright test --list",
+    "test:e2e:admin-screens": "playwright test e2e/admin_screenshots.spec.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.2"
+  }
+}

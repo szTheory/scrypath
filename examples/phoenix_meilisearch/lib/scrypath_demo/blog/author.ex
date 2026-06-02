@@ -11,13 +11,10 @@ defmodule ScrypathDemo.Blog.Author do
     * `__scrypath__(:document_id)` — used by `Scrypath.Identity.document_ids/2`
       when the `:oban` fan-out path enqueues only the owning document IDs.
 
-  These accessors are declared by hand (the same pattern the library's own fan-out
-  tests use — see `test/scrypath/sync/related_test.exs` and
-  `test/scrypath/sync/related_worker_test.exs`) rather than through
-  `use Scrypath, fan_outs: ...`. The shipped `use Scrypath` declaration macro does
-  not yet resolve module aliases in `fan_outs:` at macro-expansion time, and it does
-  not generate a `__scrypath__(:fan_outs)` accessor, so the hand-written reflection
-  is the correct, library-respecting (read-only) declaration path for the example.
+  These accessors are declared by hand because this example keeps `Author` out of
+  the searchable-schema declaration path. Ordinary schemas can declare the same
+  metadata with `use Scrypath, fan_outs: ...`; hand-written accessors remain a
+  supported low-level shape for owning schemas that only participate in fan-out.
   """
   use Ecto.Schema
 

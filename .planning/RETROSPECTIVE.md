@@ -2,6 +2,54 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.32 — Admin UI/UX Design System Cleanup
+
+**Shipped (planning):** 2026-06-01
+**Archived:** 2026-06-01
+**Phases:** 3 (116-118) | **Plans:** 3 | **Requirements:** 8
+
+### What was built
+
+The existing ScrypathOps `/ops` shell and mounted `/admin/search/*` surface now use project-owned operator tokens, explicit mounted asset hooks, shared LiveView UI primitives, posture-first screen hierarchy, clearer search/playbook workflow ordering, and focused route/component verification.
+
+### What worked
+
+Keeping v1.32 framed as bounded admin proof polish prevented runtime product-scope drift. The final audit was able to trace every requirement through requirements, phase summaries, verification artifacts, and focused test evidence.
+
+### What was inefficient
+
+Earlier phase verification hit local Postgres connection pressure, which made the closeout depend on later sequential reruns. The final focused suites passed, but long-lived local DB pressure remains a recurring verification friction point.
+
+### Key lessons
+
+Mounted admin UI work needs explicit host asset contracts and route-level smoke tests; visual cleanup alone is not enough when the surface is embedded in another Phoenix application.
+
+---
+
+## Milestone: v1.28 — Realistic Demo App & Admin UI Proof
+
+**Shipped (planning):** 2026-05-31
+**Archived:** 2026-05-31
+**Phases:** 4 (102-105) | **Plans:** 15 | **Requirements:** 15
+
+### What was built
+
+`scrypath_ops` became a mountable router engine, a multi-tenant Phoenix e-commerce example app landed under `examples/`, product search now demonstrates tenant filtering and related category propagation, and the example includes deterministic Playwright coverage for storefront search, operator failed-sync triage, and zero-downtime swap posture against real Postgres and Meilisearch services.
+
+### What worked
+
+Using the realistic demo app as a proof harness exposed integration seams that unit-only work would not have found: router-engine mount configuration, dev/test-only E2E endpoints, related-data visibility in rendered search results, and sanitized operator-state probes.
+
+### What was inefficient
+
+The milestone audit still found process debt: partial Nyquist metadata in older phase validation files, an advisory rather than required E2E lane, and one harness warning where category-filtered readiness probes can replace tenant filters. Those are follow-up hygiene items, not unsatisfied v1.28 requirements.
+
+### Key lessons
+
+Browser proof should stay service-orchestrated by Mix/CI while Playwright owns assertions only. That boundary kept the E2E suite debuggable and avoided hiding operational startup failures inside the browser test runner.
+
+---
+
 ## Milestone: v1.24 — Related-Data and Dependency Propagation
 
 **Shipped (planning):** 2026-05-25
@@ -271,10 +319,40 @@ Ship **`audit-open` acknowledgments** into **`STATE.md`** at close when tooling 
 
 ---
 
+## Milestone: v1.30 — Release Trust and Evidence Maintenance
+
+**Shipped:** 2026-06-01
+**Phases:** 4 (109-112) | **Plans:** 11
+
+### What Was Built
+
+Release-source agreement and package-shape proof were hardened in `mix verify.phase11`; support intake and outside-adopter evidence routing were pinned through `mix verify.adopter`; `phase105-e2e` stayed advisory with explicit promotion thresholds; public website/docs truth was aligned around route-first pages and the canonical scope/reopen policy.
+
+### What Worked
+
+Focused service-free verification kept the milestone auditable without widening required CI. The release/support/proof/public-truth work stayed inside the maintenance lane and preserved the post-v1.29 done posture.
+
+### What Was Inefficient
+
+The closeout audit passed requirements and flows but still surfaced metadata/process debt, especially Phase 111 validation frontmatter and standalone public-truth proof that depends on maintainer discipline rather than required CI.
+
+### Patterns Established
+
+- Maintenance milestones should pin drift-prone public truth with small direct-file contract tests.
+- Advisory browser proof can be useful when promotion thresholds, artifact names, and owner-response rules are explicit.
+- Website pages should route to canonical authorities instead of becoming a second docs site.
+
+### Key Lessons
+
+Do not reopen feature scope to make proof feel more complete. Accept non-blocking proof/process debt explicitly at close, then require concrete adoption or drift signal before starting another milestone.
+
+---
+
 ## Cross-Milestone Trends
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|
+| v1.30 | 109-112 | Release/package truth, support intake routing, advisory proof stability, and website/docs truth alignment |
 | v1.15 | 62–64 | OPSUI second slice: playground capture, playbook catalog/metadata, bounded team persistence + validate Mix |
 | v1.14 | 57–61 | B1 evidence gate + operator playbooks: **`Playbook.V1`**, **`/ops/playbooks`**, portable JSON |
 | v1.9 | 42–43 | Per-query tuning: locked pipeline spec, `:per_query` runtime, verify.phase43 |

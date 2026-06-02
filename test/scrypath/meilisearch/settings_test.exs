@@ -600,16 +600,16 @@ defmodule Scrypath.Meilisearch.SettingsTest do
   end
 
   describe "FACET-07 facet-derived filterableAttributes in resolve/2" do
-    test "FacetableMovie gets facetSearch objects for declared facet attrs" do
+    test "FacetableMovie gets granular facetSearch objects for declared facet attrs" do
       resolved = Settings.resolve(FacetableMovie, [])
       wire = Settings.translate_settings(resolved)
 
       assert length(wire["filterableAttributes"]) == 4
 
       assert Enum.all?(wire["filterableAttributes"], fn entry ->
-               attr = entry["attribute"] || entry[:attribute]
-               fs = entry["features"] || entry[:features]
-               is_binary(attr) and is_list(fs) and "facetSearch" in fs
+               patterns = entry["attributePatterns"] || entry[:attribute_patterns]
+               features = entry["features"] || entry[:features]
+               is_list(patterns) and features["facetSearch"] == true
              end)
     end
 
@@ -618,17 +618,17 @@ defmodule Scrypath.Meilisearch.SettingsTest do
       wire = Settings.translate_settings(resolved)
 
       attrs =
-        Enum.map(wire["filterableAttributes"], fn entry ->
-          entry["attribute"] || entry[:attribute]
+        Enum.flat_map(wire["filterableAttributes"], fn entry ->
+          entry["attributePatterns"] || entry[:attribute_patterns]
         end)
 
       assert "categories.lvl0" in attrs
       assert "categories.lvl1" in attrs
 
       assert Enum.all?(wire["filterableAttributes"], fn entry ->
-               attr = entry["attribute"] || entry[:attribute]
-               fs = entry["features"] || entry[:features]
-               is_binary(attr) and is_list(fs) and "facetSearch" in fs
+               patterns = entry["attributePatterns"] || entry[:attribute_patterns]
+               features = entry["features"] || entry[:features]
+               is_list(patterns) and features["facetSearch"] == true
              end)
     end
 
@@ -649,6 +649,37 @@ defmodule Scrypath.Meilisearch.SettingsTest do
     test "explicit filterableAttributes entry wins over facet-derived replacement" do
       resolved = Settings.resolve(FacetOverrideSchema, [])
       assert [%{attribute: "genre", features: ["filtering"]}] == resolved[:filterable_attributes]
+    end
+
+    defmodule FacetAndTenantSchema do
+      use Ecto.Schema
+
+      use Scrypath,
+        fields: [:title, :tenant_id, :category_id],
+        filterable: [:category_id, :tenant_id],
+        tenant_field: :tenant_id,
+        faceting: [attributes: [:category_id]]
+
+      embedded_schema do
+        field(:title, :string)
+        field(:tenant_id, :integer)
+        field(:category_id, :integer)
+      end
+    end
+
+    test "declared non-facet filterable attributes are preserved beside facet objects" do
+      resolved = Settings.resolve(FacetAndTenantSchema, [])
+      wire = Settings.translate_settings(resolved)
+
+      assert "tenant_id" in wire["filterableAttributes"]
+
+      assert Enum.any?(wire["filterableAttributes"], fn
+               %{"attributePatterns" => ["category_id"], "features" => %{"facetSearch" => true}} ->
+                 true
+
+               _ ->
+                 false
+             end)
     end
   end
 

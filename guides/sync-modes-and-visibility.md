@@ -1,6 +1,8 @@
 # Sync Modes And Visibility
 
-Scrypath makes sync mode explicit because search visibility is an operational concern, not hidden framework magic.
+Scrypath, the Ecto-native search indexing library, makes sync mode explicit because search visibility is an operational concern, not hidden framework magic.
+
+Meilisearch makes this unavoidable: document writes, settings updates, deletes, swaps, snapshots, and dumps are task-driven operations. A backend response can mean "task accepted" before the work is visible to a user's next search.
 
 ## The Contract
 
@@ -11,6 +13,14 @@ Scrypath makes sync mode explicit because search visibility is an operational co
 | `:oban` | the enqueue is durable | the backend write has not happened yet |
 
 Accepted work is not the same thing as search visibility.
+
+Read every sync result through that lens:
+
+- database commit means the source of truth changed
+- durable enqueue means Scrypath accepted responsibility to do work later
+- backend accepted means Meilisearch accepted an async task
+- terminal backend success means the tracked task finished
+- visible search means a later query observes the updated projection
 
 ## Operator lifecycle
 
@@ -101,6 +111,8 @@ This wording matters in Phoenix because a controller response, JSON payload, or 
 
 The recommended boundary is still the same: let the context choose the mode, then let the controller or LiveView present the outcome honestly.
 
+For user-facing copy, prefer language like "saved" or "queued for search indexing" over "now searchable" unless the path actually waited for terminal backend success and your product can tolerate any remaining eventual visibility edge.
+
 ## Where To Put The Decision
 
 Choose sync mode in the context that owns the feature. That keeps consistency and recovery tradeoffs close to the repo write and close to the operator workflow that will respond when drift appears.
@@ -110,3 +122,5 @@ Choose sync mode in the context that owns the feature. That keeps consistency an
 Retries, stale deletes, and drift are normal operator concerns. When the live index contract is still correct, backfill into the live index. When the contract changed or you do not trust the live index, rebuild into a target index and review before cutover.
 
 The thin CLI wrappers in `guides/operator-mix-tasks.md` exist to make those checks easy from a terminal, but the real operator contract still lives on `Scrypath.*`.
+
+When a sync-semantics discussion starts to become a feature-scope argument, route that decision to `guides/scope-and-reopen-policy.md` instead of expanding sync-mode guidance into product policy.

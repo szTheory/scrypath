@@ -1,5 +1,7 @@
 # Phase 97 Canonical Contract Statements
 
+> Reconstructed at the historical Phase 97 path during Phase 109 release-truth recovery (2026-05-31).
+
 ## CST-TRUTH-01-INSTALL
 
 Canonical statement:

@@ -42,6 +42,7 @@ config :phoenix,
   sort_verified_routes_query_params: true
 
 config :scrypath_ops, :validate_opsui_auth_on_start, false
+config :scrypath_ops, standalone: true
 
 # Default playbook workspace for tests (partitioned for MIX_TEST_PARTITION).
 playbook_test_root =

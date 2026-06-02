@@ -27,6 +27,8 @@ This README stays route-first and does not duplicate compatibility tuple values.
 
 **Outside integrations and evidence:** if you are trying Scrypath in a real app and something fails or feels unclear, read [guides/outside-adopter-intake.md](guides/outside-adopter-intake.md).
 
+**Scope and reopen policy:** scope reopens only for a **concrete production bug**, **reviewed outside-adopter evidence**, or a **deliberate strategic product decision**. The canonical policy owner is [guides/scope-and-reopen-policy.md](guides/scope-and-reopen-policy.md).
+
 **Request-edge contract:** for browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix` glue, and context-owned `Scrypath.search/3`, read [guides/request-edge-search.md](guides/request-edge-search.md).
 
 **Real-app composition and metadata:** for reusable `defaults` / `fixed` search policy, host-owned metadata rendering, and `compose_many/2` lowering into the existing runtime, read [guides/composing-real-app-search.md](guides/composing-real-app-search.md).
@@ -37,11 +39,15 @@ If you need the real-app story for related rows, fan-out, and when to choose dir
 
 If you want the architecture and JTBD crash course before reading the full guides, start with [guides/overview.md](guides/overview.md).
 
+If you need the Meilisearch mental model behind Scrypath's choices, read [guides/meilisearch-concepts.md](guides/meilisearch-concepts.md) before the operations guide.
+
 For symptom-style "why is search wrong?" debugging, see [guides/common-mistakes.md](guides/common-mistakes.md).
 
 **Sync authority:** sync semantics, sync modes (`:inline`, `:oban`, `:manual`), eventual consistency, and operator lifecycle recovery language are defined in [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md). Support/readiness posture and verification commands live in [guides/support-and-compatibility.md](guides/support-and-compatibility.md); this README does not restate either guide body.
 
 **Operator UI (maintainers):** the optional Phoenix shell lives under [scrypath_ops/README.md](scrypath_ops/README.md) in the repository checkout and is not part of the Hex package. From the repository root, **`mix verify.opsui`** runs the same checks against **`scrypath_ops/`** that the **`scrypath-ops`** CI job exercises; see [`CONTRIBUTING.md`](CONTRIBUTING.md) for the CI ↔ **`mix verify.*`** matrix and job names.
+
+**Realistic e-commerce/admin demo:** if you want to see Scrypath in action before wiring your own app, run [examples/scrypath_ecommerce](examples/scrypath_ecommerce/README.md). It mounts the optional operator UI beside a multi-tenant catalog storefront so you can click through tenant-scoped search, category facets, related-data propagation, failed sync triage, and swap posture. The demo is also the advisory browser evidence surface behind `phase105-e2e`.
 
 **Integration smoke (optional):** the repo ships **`examples/phoenix_meilisearch`** with Docker Compose and env vars documented there (including how it relates to CI - see [`CONTRIBUTING.md`](CONTRIBUTING.md) for GitHub job names ↔ `mix verify.*` tasks). From the clone root, run **`cd examples/phoenix_meilisearch && ./scripts/smoke.sh`** (the example's **`./scripts/smoke.sh`** exists only under that directory, not at the repository root).
 
@@ -97,6 +103,7 @@ If you are wiring Scrypath into a Phoenix app, read these next:
 
 - [Guides overview](guides/overview.md) (table of contents for all guides)
 - [JTBD and user flows](guides/jtbd-and-user-flows.md) (mental model and flow map before the implementation guides)
+- [Meilisearch concepts](guides/meilisearch-concepts.md) (search projection, task, settings, and backup vocabulary)
 - [Request-edge search](guides/request-edge-search.md) (canonical shared story for `QueryParams`, optional `Scrypath.Phoenix`, and context-owned runtime calls)
 - [Composing real-app search](guides/composing-real-app-search.md) (canonical guide for `Scrypath.Composition`, `Scrypath.Metadata`, and the worked catalog/global-search flows)
 - [Related data and reindexing](guides/related-data-and-reindexing.md) (what to do when associated data changes many documents)
@@ -262,11 +269,15 @@ docker compose down
 
 For a minimal consumer-shaped setup (Docker Compose with Postgres and Meilisearch on an explicit network, path dependency on this repo, and a scripted smoke test), see [examples/phoenix_meilisearch/README.md](examples/phoenix_meilisearch/README.md).
 
+For a richer click-around showcase with a multi-tenant storefront and mounted operator UI, see [examples/scrypath_ecommerce/README.md](examples/scrypath_ecommerce/README.md).
+
 ## Architecture
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the full runtime boundary, sync guarantees, drift model, and managed reindex workflow order.
 
 For operational guides, see [Sync Modes and Visibility](guides/sync-modes-and-visibility.md),
+[Meilisearch Concepts](guides/meilisearch-concepts.md),
+[Meilisearch Operations](guides/meilisearch-operations.md),
 [Operator Mix Tasks](guides/operator-mix-tasks.md),
 [Operator Support](docs/operator-support.md), and
 [Search backend operations - SRE view](docs/search-backend-sre.md).

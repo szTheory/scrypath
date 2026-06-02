@@ -132,6 +132,26 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert updated_socket.assigns.drift_error == :settings
   end
 
+  test "schema selector rejects non-allowlisted module strings without creating atoms" do
+    mod_str = "ScrypathOps.Test.NotAllowlisted#{System.unique_integer([:positive])}"
+
+    socket =
+      sync_drift_socket(%{
+        schema_allowlist: [OpsPostA],
+        selected_schema: OpsPostA
+      })
+
+    assert {:noreply, updated_socket} =
+             SyncDriftLive.handle_event("select_schema", %{"schema" => mod_str}, socket)
+
+    assert updated_socket.assigns.selected_schema == OpsPostA
+    assert flash_value(updated_socket, "error") =~ "allowlisted"
+
+    assert_raise ArgumentError, fn ->
+      String.to_existing_atom(mod_str)
+    end
+  end
+
   test "swap live blocks impersonation before any refresh" do
     socket =
       sync_drift_socket(%{
