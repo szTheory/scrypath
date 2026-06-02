@@ -98,7 +98,7 @@ defmodule ScrypathOpsWeb.CoreComponents do
     case heroicon(assigns.name) do
       {icon, style} ->
         attrs =
-          %{class: assigns.class}
+          %{class: assigns.class, __changed__: nil}
           |> maybe_put_icon_style(style)
 
         apply(Heroicons, icon, [attrs])
