@@ -21,7 +21,9 @@ defmodule ScrypathEcommerce.CatalogFixturesTest do
                tenant: %Tenant{} = tenant,
                categories: [%Category{} = cat1, %Category{} = cat2],
                products: [%Product{} = prod1, %Product{} = prod2, %Product{} = prod3],
-               variants: [%Variant{}, %Variant{}, %Variant{}, %Variant{}, %Variant{}, %Variant{}] = variants
+               variants:
+                 [%Variant{}, %Variant{}, %Variant{}, %Variant{}, %Variant{}, %Variant{}] =
+                   variants
              } = graph
 
       assert tenant.name == "Scenario Tenant"
@@ -35,7 +37,7 @@ defmodule ScrypathEcommerce.CatalogFixturesTest do
       assert prod3.category_id == cat2.id
 
       assert Enum.all?(variants, fn v -> v.tenant_id == tenant.id end)
-      
+
       # Variant 1 and 2 belong to product 1
       assert Enum.count(variants, fn v -> v.product_id == prod1.id end) == 2
       # Variant 3 and 4 belong to product 2
@@ -66,6 +68,47 @@ defmodule ScrypathEcommerce.CatalogFixturesTest do
       assert prod3.name == "Nebula Ultrabook"
 
       assert length(variants) == 4
+    end
+  end
+
+  describe "scenario_demo_showcase/1" do
+    test "creates a richer click-around catalog graph" do
+      graph = CatalogFixtures.scenario_demo_showcase(%{name: "Nova Outfitters"})
+
+      assert %{
+               tenant: %Tenant{} = tenant,
+               categories: categories,
+               products: products,
+               variants: variants
+             } =
+               graph
+
+      assert tenant.name == "Nova Outfitters"
+      assert length(categories) == 5
+      assert length(products) >= 15
+      assert length(variants) >= length(products)
+
+      assert Enum.any?(categories, &(&1.name == "Smartphones"))
+      assert Enum.any?(products, &(&1.name == "Quantum CyberPhone X"))
+      assert Enum.all?(products, &(&1.tenant_id == tenant.id))
+      assert Enum.all?(variants, &(&1.tenant_id == tenant.id))
+    end
+  end
+
+  describe "scenario_demo_sparse/1" do
+    test "creates a low-volume tenant for sparse demo states" do
+      graph = CatalogFixtures.scenario_demo_sparse(%{name: "Quiet Branch Supply"})
+
+      assert %{
+               tenant: %Tenant{} = tenant,
+               categories: [_category],
+               products: [product],
+               variants: [_variant]
+             } =
+               graph
+
+      assert tenant.name == "Quiet Branch Supply"
+      assert product.name == "Archive Barcode Wand"
     end
   end
 end

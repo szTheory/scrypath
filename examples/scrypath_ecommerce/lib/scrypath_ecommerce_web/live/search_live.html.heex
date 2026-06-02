@@ -1,13 +1,31 @@
 <main class="storefront-search">
   <header class="storefront-search__header">
-    <p class="storefront-search__eyebrow">Scrypath Ecommerce</p>
-    <h1>Catalog Search</h1>
+    <div>
+      <p class="storefront-search__eyebrow">Scrypath Ecommerce Demo</p>
+      <h1>Tenant-scoped catalog search</h1>
+      <p class="storefront-search__lede">
+        Search a realistic multi-tenant catalog, watch category facets update, then inspect the same
+        indexing posture from the embedded operator UI.
+      </p>
+    </div>
+    <nav class="storefront-search__ops-links" aria-label="Demo operator links">
+      <a href="/admin/search/posture">Operator posture</a>
+      <a href="/admin/search/failed-sync">Failed sync</a>
+      <a href="/admin/search/search">Search playground</a>
+    </nav>
   </header>
 
   <.form for={@form} phx-change="search" class="storefront-search__layout">
-    <input type="hidden" name={@form[:tenant_id].name} value={@form[:tenant_id].value} />
-
     <aside class="storefront-search__filters" aria-label="Search filters">
+      <label class="storefront-search__search-field">
+        <span>Tenant</span>
+        <select name={@form[:tenant_id].name}>
+          <option :for={tenant <- @tenants} value={tenant.id} selected={@tenant && tenant.id == @tenant.id}>
+            {tenant.name}
+          </option>
+        </select>
+      </label>
+
       <label class="storefront-search__search-field">
         <span>Search products</span>
         <input
@@ -31,19 +49,52 @@
             value={bucket.value}
             checked={to_string(bucket.value) == to_string(@category_id)}
           />
-          <span>Category {bucket.value}</span>
+          <span>{category_label(@category_labels, bucket.value)}</span>
           <small>{bucket.count} products</small>
         </label>
+      </section>
+
+      <section class="storefront-search__facet-group" aria-labelledby="demo-notes-heading">
+        <h2 id="demo-notes-heading">Demo path</h2>
+        <p>
+          Try "quantum", "studio", "scanner", or "cable". The admin UI is mounted under
+          <strong>/admin/search</strong>
+          using the host app repo and Scrypath config.
+        </p>
       </section>
     </aside>
 
     <section class="storefront-search__results" aria-label="Search results" data-testid="storefront-results">
+      <div class="storefront-search__results-header">
+        <div>
+          <p class="storefront-search__eyebrow">Active tenant</p>
+          <h2>{@tenant && @tenant.name || "No tenant seeded"}</h2>
+        </div>
+        <p>{length(@results.hits)} visible hits</p>
+      </div>
+
       <article :for={hit <- @results.hits} class="storefront-search__result" data-testid="storefront-result">
+        <% summary = hit_summary(@product_summaries, hit) %>
         <h2>{hit["name"] || hit[:name]}</h2>
         <p>{hit["description"] || hit[:description]}</p>
-        <p :if={(hit["category_name"] || hit[:category_name])} class="storefront-search__meta">
-          Category: {hit["category_name"] || hit[:category_name]}
-        </p>
+        <dl class="storefront-search__meta">
+          <div>
+            <dt>Category</dt>
+            <dd>{summary[:category] || hit["category_name"] || hit[:category_name] || "Unknown"}</dd>
+          </div>
+          <div :if={summary[:price]}>
+            <dt>Price</dt>
+            <dd>{summary[:price]}</dd>
+          </div>
+          <div :if={summary[:variants]}>
+            <dt>Variants</dt>
+            <dd>{summary[:variants]}</dd>
+          </div>
+          <div :if={summary[:inventory]}>
+            <dt>Inventory</dt>
+            <dd>{summary[:inventory]} units</dd>
+          </div>
+        </dl>
       </article>
 
       <div :if={@results.hits == []} class="storefront-search__empty">

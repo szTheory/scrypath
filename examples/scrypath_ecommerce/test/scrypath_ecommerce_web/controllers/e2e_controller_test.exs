@@ -6,33 +6,59 @@ defmodule ScrypathEcommerceWeb.E2EControllerTest do
   alias ScrypathEcommerce.Catalog.Product
 
   defmodule SearchVisibleBackend do
-    @behaviour Scrypath.Backend
-
-    @impl true
     def name, do: :e2e_controller_test
 
-    @impl true
     def index_name(_schema_module, _config), do: "e2e_controller_test_products"
 
-    @impl true
-    def upsert_documents(_schema_module, documents, _config), do: {:ok, documents}
+    def create_index(_index_name, _primary_key, _config),
+      do: {:ok, %{"taskUid" => 1, "status" => "enqueued"}}
 
-    @impl true
-    def delete_documents(_schema_module, document_ids, _config), do: {:ok, document_ids}
+    def update_settings(_index_name, _settings, _config),
+      do: {:ok, %{"taskUid" => 2, "status" => "enqueued"}}
 
-    @impl true
-    def search(schema_module, %Query{} = query, _config) do
+    def upsert_documents(_index_name, documents, _config),
+      do: {:ok, %{"taskUid" => 3, "status" => "enqueued", "documents" => documents}}
+
+    def delete_documents(_index_name, document_ids, _config),
+      do: {:ok, %{"taskUid" => 4, "status" => "enqueued", "document_ids" => document_ids}}
+
+    def task(uid, _config), do: {:ok, %{"uid" => uid, "status" => "succeeded"}}
+
+    def tasks(_filters, _config), do: {:ok, %{"results" => []}}
+
+    def get_settings(_index_name, _config), do: {:ok, %{}}
+
+    def swap_indexes(_pair, _config), do: {:ok, %{"taskUid" => 5, "status" => "enqueued"}}
+
+    def search(index_name, %Query{} = query, _config) do
       if pid = Process.whereis(:e2e_controller_test) do
-        send(pid, {:search_visible_query, schema_module, query})
+        send(pid, {:search_visible_query, index_name, query})
       end
 
       {:ok, %{"hits" => [%{"name" => "Quantum CyberPhone X"}]}}
     end
 
-    @impl true
-    def search_facet_values(_schema_module, _facet_name, facet_query, _opts, _config) do
+    def facet_search(_index_name, _facet_name, facet_query, _opts, _config) do
       {:ok, %{"facetQuery" => facet_query, "facetHits" => []}}
     end
+
+    def multi_search(_payload, _config), do: {:ok, %{"hits" => []}}
+  end
+
+  setup do
+    defaults = Application.get_env(:scrypath, :defaults, [])
+
+    Application.put_env(
+      :scrypath,
+      :defaults,
+      Keyword.put(defaults, :meilisearch_client, SearchVisibleBackend)
+    )
+
+    on_exit(fn ->
+      Application.put_env(:scrypath, :defaults, defaults)
+    end)
+
+    :ok
   end
 
   describe "POST /dev/e2e/seed" do
@@ -84,17 +110,7 @@ defmodule ScrypathEcommerceWeb.E2EControllerTest do
     test "category readiness filter preserves tenant scope", %{conn: conn} do
       Process.register(self(), :e2e_controller_test)
 
-      defaults = Application.get_env(:scrypath, :defaults, [])
-
-      Application.put_env(
-        :scrypath,
-        :defaults,
-        Keyword.put(defaults, :backend, SearchVisibleBackend)
-      )
-
       on_exit(fn ->
-        Application.put_env(:scrypath, :defaults, defaults)
-
         if Process.whereis(:e2e_controller_test) do
           Process.unregister(:e2e_controller_test)
         end
@@ -109,7 +125,7 @@ defmodule ScrypathEcommerceWeb.E2EControllerTest do
 
       assert %{"hits" => ["Quantum CyberPhone X"]} = json_response(conn, 200)
 
-      assert_receive {:search_visible_query, Product, %Query{text: "quantum", filter: filter}}
+      assert_receive {:search_visible_query, _index_name, %Query{text: "quantum", filter: filter}}
       assert Enum.sort(filter) == [category_id: 202, tenant_id: 101]
     end
   end
@@ -152,6 +168,39 @@ defmodule ScrypathEcommerceWeb.E2EControllerTest do
           tenant_id: "not-an-int",
           category_id: "also-bad",
           name: "Pocket Superphones"
+        })
+
+      assert %{"error" => "invalid integer parameter"} = json_response(conn, 400)
+    end
+  end
+
+  describe "POST /dev/e2e/product-delete" do
+    test "deletes a seeded product and queues delete sync", %{conn: conn} do
+      seed_conn = post(conn, ~p"/dev/e2e/seed", scenario: "e2e_search_catalog")
+
+      assert %{
+               "tenant_id" => tenant_id,
+               "products" => %{"Quantum CyberPhone Pro" => product_id}
+             } = json_response(seed_conn, 200)
+
+      conn =
+        post(conn, ~p"/dev/e2e/product-delete", %{
+          tenant_id: tenant_id,
+          product_id: product_id
+        })
+
+      assert %{
+               "product_id" => ^product_id,
+               "deleted" => true,
+               "queued_delete_sync" => true
+             } = json_response(conn, 200)
+    end
+
+    test "returns deterministic 400 for invalid numeric params", %{conn: conn} do
+      conn =
+        post(conn, ~p"/dev/e2e/product-delete", %{
+          tenant_id: "not-an-int",
+          product_id: "also-bad"
         })
 
       assert %{"error" => "invalid integer parameter"} = json_response(conn, 400)

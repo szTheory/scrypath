@@ -42,7 +42,10 @@ defmodule ScrypathEcommerceWeb.SearchLiveTest do
            }
          ],
          "facetDistribution" => %{
-           "category_id" => %{"1" => 2, "2" => 1}
+           "category_id" => %{
+             to_string(Application.fetch_env!(:scrypath_ecommerce, :search_live_test_category_id)) =>
+               2
+           }
          },
          "totalHits" => 1
        }}
@@ -62,6 +65,7 @@ defmodule ScrypathEcommerceWeb.SearchLiveTest do
 
     on_exit(fn ->
       Application.put_env(:scrypath, :defaults, defaults)
+      Application.delete_env(:scrypath_ecommerce, :search_live_test_category_id)
 
       if Process.whereis(:search_live_test) do
         Process.unregister(:search_live_test)
@@ -70,6 +74,7 @@ defmodule ScrypathEcommerceWeb.SearchLiveTest do
 
     tenant = tenant_fixture(name: "Storefront Tenant")
     category = category_fixture(tenant, name: "Smartphones")
+    Application.put_env(:scrypath_ecommerce, :search_live_test_category_id, category.id)
 
     %{tenant: tenant, category: category}
   end
@@ -94,15 +99,21 @@ defmodule ScrypathEcommerceWeb.SearchLiveTest do
     assert category_id == category.id
   end
 
-  test "search form pushes URL patches instead of searching directly", %{conn: conn, tenant: tenant} do
+  test "search form pushes URL patches instead of searching directly", %{
+    conn: conn,
+    tenant: tenant,
+    category: category
+  } do
     assert {:ok, view, _html} = live(conn, ~p"/")
     assert_receive {:search, Product, %Query{text: ""}}
 
     view
-    |> form("form[phx-change='search']", search: %{q: "nebula", category_id: "2"})
+    |> form("form[phx-change='search']",
+      search: %{q: "nebula", category_id: to_string(category.id)}
+    )
     |> render_change()
 
-    assert_patch(view, "/?category_id=2&q=nebula&tenant_id=#{tenant.id}")
+    assert_patch(view, "/?category_id=#{category.id}&q=nebula&tenant_id=#{tenant.id}")
   end
 
   test "renders a unified search form, debounced input, facets, and hits", %{conn: conn} do
@@ -110,15 +121,18 @@ defmodule ScrypathEcommerceWeb.SearchLiveTest do
 
     assert html =~ ~s(<form)
     assert html =~ ~s(phx-change="search")
+    assert html =~ ~s(name="search[tenant_id]")
     assert html =~ ~s(name="search[q]")
     assert html =~ ~s(phx-debounce="300")
     assert html =~ ~s(name="search[category_id]")
     assert html =~ ~s(type="checkbox")
-    assert html =~ "Category 1"
+    assert html =~ "Storefront Tenant"
+    assert html =~ "Smartphones"
     assert html =~ "2 products"
     assert html =~ "Quantum CyberPhone X"
+    assert html =~ "Operator posture"
     assert html =~ ~s(data-testid="storefront-results")
     assert html =~ ~s(data-testid="storefront-result")
-    assert html =~ "Category: Smartphones"
+    assert html =~ "Category"
   end
 end

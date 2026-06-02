@@ -120,6 +120,23 @@ defmodule ScrypathEcommerceWeb.E2EController do
     end
   end
 
+  def product_delete(conn, %{"tenant_id" => tenant_id, "product_id" => product_id}) do
+    with {:ok, tenant_id} <- parse_integer(tenant_id),
+         {:ok, product_id} <- parse_integer(product_id) do
+      product = Catalog.get_product!(tenant_id, product_id)
+
+      case Catalog.delete_product(tenant_id, product) do
+        {:ok, product} ->
+          json(conn, %{product_id: product.id, deleted: true, queued_delete_sync: true})
+
+        {:error, reason} ->
+          conn |> put_status(:bad_request) |> json(%{error: inspect(reason)})
+      end
+    else
+      {:error, :invalid_integer} -> invalid_integer(conn)
+    end
+  end
+
   def inject_failed_sync(conn, %{"tenant_id" => tenant_id} = params) do
     with {:ok, tenant} <- parse_integer(tenant_id) do
       category_id = find_category_id(tenant)
@@ -294,6 +311,8 @@ defmodule ScrypathEcommerceWeb.E2EController do
     end
   end
 
+  defp wait_or_ignore_existing!({:ok, _result}, _config, _action), do: :ok
+
   defp wait_or_ignore_existing!(
          {:error, {:http_error, status, %{"code" => "index_already_exists"}}},
          _config,
@@ -311,6 +330,8 @@ defmodule ScrypathEcommerceWeb.E2EController do
       {:error, reason} -> raise ArgumentError, "#{action} failed: #{inspect(reason)}"
     end
   end
+
+  defp wait_task!({:ok, _result}, _config, _action), do: :ok
 
   defp wait_task!({:error, reason}, _config, action),
     do: raise(ArgumentError, "#{action} failed: #{inspect(reason)}")
