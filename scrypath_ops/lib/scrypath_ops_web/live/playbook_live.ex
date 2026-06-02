@@ -782,6 +782,36 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
   defp run_result_summary(_), do: "Run finished."
 
+  # Loop the operator back to Search with this playbook's query pre-filled, mapping the
+  # playbook mode (search / search_many) onto the Search UI mode (single / multi). Schema
+  # is left to the Search default to avoid leaking the inspect() module format here.
+  defp search_loopback_path(mount_path, playbook) when is_map(playbook) do
+    mode = if Map.get(playbook, "mode") == "search_many", do: "multi", else: "single"
+    query = playbook |> Map.get("q") |> to_string()
+    "#{mount_path}/search?" <> URI.encode_query(%{"mode" => mode, "q" => query})
+  end
+
+  defp playbook_summary(nil), do: []
+
+  defp playbook_summary(playbook) when is_map(playbook) do
+    opts = Map.get(playbook, "opts") || %{}
+    page = Map.get(opts, "page") || %{}
+
+    [
+      {"Mode", Map.get(playbook, "mode")},
+      {"Schema", Map.get(playbook, "schema")},
+      {"Query", Map.get(playbook, "q")},
+      {"Entries", playbook |> Map.get("entries") |> entry_count_label()},
+      {"Page size", Map.get(page, "size")}
+    ]
+    |> Enum.reject(fn {_label, value} -> value in [nil, "", []] end)
+  end
+
+  defp entry_count_label(entries) when is_list(entries),
+    do: "#{length(entries)} schema query entries"
+
+  defp entry_count_label(_), do: nil
+
   defp diagnostics_payload(enriched) when is_map(enriched) do
     Map.take(enriched, [:failure_class, :reason, :message, :copy, :doc])
   end
@@ -840,22 +870,35 @@ defmodule ScrypathOpsWeb.PlaybookLive do
       ops_main_width={:wide}
     >
       <div class="space-y-6">
-        <.ops_page_header title={@page_title} />
+        <.ops_toolbar class="items-end">
+          <div class="space-y-1.5">
+            <.ops_page_header
+              title={@page_title}
+              subtitle="Replay saved search probes after previewing the exact schema, query, limits, and JSON payload."
+            />
+            <.ops_workspace_mode_indicator
+              mode={if @examples_mode?, do: :examples, else: :workspace}
+              path={@workspace_root}
+            />
+          </div>
+          <.ops_link_button navigate={"#{@mount_path}/search"} variant={:ghost}>
+            Search
+          </.ops_link_button>
+        </.ops_toolbar>
+
+        <.ops_journey mount_path={@mount_path} current={:playbooks} />
 
         <.ops_notice
           id="playbook-honesty-panel"
           kind={:warning}
           title="Non-production playbook workspace"
         >
-          Exploratory runs use the same bounded search path as the playground and may be logged by backends or proxies.
-          <strong>Do not</strong>
-          paste production secrets or PII; keep <code class="text-xs">page.size</code>
-          and schema lists within configured caps.
+          Playbook runs use the same bounded search path as Search. Do not paste production secrets or PII; keep page size and schema lists within configured caps.
         </.ops_notice>
 
         <.ops_panel class="space-y-6">
           <.ops_toolbar>
-            <h2 class="text-lg font-semibold">Workspace files</h2>
+            <.ops_heading level={2}>Workspace files</.ops_heading>
             <.ops_button phx-click="refresh_list" variant={:ghost}>
               Reload list
             </.ops_button>
@@ -871,108 +914,115 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             below.
           </p>
 
-          <p :if={@workspace_files == []} class="text-base-content/80">
-            <span class="text-base font-semibold">No playbooks in this folder</span>
-            — export a playbook from Search or import JSON to add a <code class="text-xs">.json</code>
-            file. Schema reference: <a
+          <.ops_empty_state :if={@workspace_files == []} title="No playbooks in this folder">
+            Import JSON below, or capture a successful probe from Search. Schema reference: <a
               class="link link-hover"
               href={@playbook_schema_doc.primary}
             >
               playbook-schema-v1.md
             </a>.
-          </p>
+          </.ops_empty_state>
 
-          <ul :if={@catalog_entries != []} class="menu menu-sm bg-base-200 rounded-md max-w-xl">
-            <li
+          <.ops_object_list :if={@catalog_entries != []} class="max-w-3xl">
+            <.ops_object_item
               :for={row <- @catalog_entries}
-              class="flex flex-wrap items-center gap-2 justify-between"
+              active={row.name == @selected_basename}
             >
-              <div class="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span class="text-sm font-semibold">{row.display_title}</span>
+              <div class="flex min-w-0 flex-col gap-0.5">
+                <span class="text-sm font-semibold text-base-content">{row.display_title}</span>
                 <span
                   :if={row.description != ""}
                   class="line-clamp-2 text-xs text-base-content/70"
                 >
                   {row.description}
                 </span>
-                <span class="font-mono text-xs">{row.name}</span>
+                <span class="font-mono text-xs text-base-content/65">{row.name}</span>
               </div>
-              <span class="flex flex-wrap gap-1">
-                <.ops_button
-                  phx-click="load"
-                  phx-value-name={row.name}
-                  variant={:ghost}
-                  size={:xs}
-                >
-                  Load
-                </.ops_button>
-                <.ops_button
+              <:actions>
+                <.ops_action_group>
+                  <.ops_button
+                    phx-click="load"
+                    phx-value-name={row.name}
+                    variant={:ghost}
+                    size={:xs}
+                  >
+                    Load preview
+                  </.ops_button>
+                </.ops_action_group>
+                <.ops_action_group
                   :if={@schema_allowlist != [] && Keyword.has_key?(@scrypath_opts, :backend)}
-                  phx-click="run_now"
-                  phx-value-name={row.name}
-                  variant={:primary}
-                  size={:xs}
+                  tone={:advanced}
                 >
-                  Run now
-                </.ops_button>
-                <.ops_button
-                  :if={@workspace_writable?}
-                  phx-click="dup_open"
-                  phx-value-name={row.name}
-                  variant={:ghost}
-                  size={:xs}
-                >
-                  Duplicate
-                </.ops_button>
-                <.ops_button
-                  :if={@workspace_writable?}
-                  phx-click="rename_open"
-                  phx-value-name={row.name}
-                  variant={:ghost}
-                  size={:xs}
-                >
-                  Rename
-                </.ops_button>
-                <.ops_button
-                  :if={@workspace_writable?}
-                  phx-click="request_delete"
-                  phx-value-name={row.name}
-                  variant={:danger}
-                  size={:xs}
-                >
-                  Delete
-                </.ops_button>
-              </span>
-            </li>
-          </ul>
+                  <.ops_button
+                    :if={@schema_allowlist != [] && Keyword.has_key?(@scrypath_opts, :backend)}
+                    phx-click="run_now"
+                    phx-value-name={row.name}
+                    variant={:ghost}
+                    size={:xs}
+                    aria-label={"Run #{row.name} without preview"}
+                  >
+                    Run without preview
+                  </.ops_button>
+                </.ops_action_group>
+                <.ops_action_group :if={@workspace_writable?} tone={:advanced}>
+                  <.ops_button
+                    phx-click="dup_open"
+                    phx-value-name={row.name}
+                    variant={:ghost}
+                    size={:xs}
+                  >
+                    Duplicate
+                  </.ops_button>
+                  <.ops_button
+                    phx-click="rename_open"
+                    phx-value-name={row.name}
+                    variant={:ghost}
+                    size={:xs}
+                  >
+                    Rename
+                  </.ops_button>
+                  <.ops_button
+                    phx-click="request_delete"
+                    phx-value-name={row.name}
+                    variant={:danger}
+                    size={:xs}
+                  >
+                    Delete
+                  </.ops_button>
+                </.ops_action_group>
+              </:actions>
+            </.ops_object_item>
+          </.ops_object_list>
 
           <div class="divider" />
 
           <section class="space-y-4">
-            <h2 class="text-lg font-semibold">Import playbook JSON</h2>
-            <.form for={%{}} phx-submit="import_upload" class="space-y-2 max-w-xl">
-              <label class="label">
-                <span class="label-text text-sm font-semibold">
-                  Upload (.json, max {@max_import_bytes} bytes)
-                </span>
-              </label>
-              <.live_file_input
-                upload={@uploads.playbook_file}
-                class="file-input file-input-bordered w-full max-w-md"
-              />
-              <.ops_button type="submit" variant={:primary}>
-                Import playbook JSON
-              </.ops_button>
-            </.form>
+            <.ops_heading level={2}>Import playbook JSON</.ops_heading>
+            <.ops_upload_box
+              label="Upload playbook file"
+              hint={"JSON only, max #{@max_import_bytes} bytes. Preview is required before running."}
+              class="max-w-xl"
+            >
+              <.form for={%{}} phx-submit="import_upload" class="space-y-3">
+                <.live_file_input
+                  upload={@uploads.playbook_file}
+                  class="file-input file-input-bordered w-full max-w-md"
+                />
+                <.ops_button type="submit" variant={:primary}>
+                  Import playbook JSON
+                </.ops_button>
+              </.form>
+            </.ops_upload_box>
 
             <details class="max-w-xl">
               <summary class="cursor-pointer text-sm link link-hover">Or paste JSON</summary>
               <.form for={%{}} phx-submit="import_paste" class="mt-2 space-y-2">
-                <textarea
+                <.ops_textarea
+                  id="playbook-paste-json"
                   name="json"
-                  class="textarea textarea-bordered w-full font-mono text-xs min-h-32"
+                  class="font-mono text-xs"
                   placeholder="Paste playbook JSON"
-                ></textarea>
+                />
                 <.ops_button type="submit" variant={:ghost}>Import from paste</.ops_button>
               </.form>
             </details>
@@ -980,7 +1030,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
           <div :if={@draft_playbook} class="space-y-4">
             <div class="divider" />
-            <h2 class="text-lg font-semibold">Preview</h2>
+            <.ops_heading level={2}>Preview</.ops_heading>
             <p
               :if={@preview_marker}
               class="text-xs text-base-content/70"
@@ -988,7 +1038,19 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             >
               Validated playbook preview
             </p>
-            <.ops_code_block :if={@preview_json}>{@preview_json}</.ops_code_block>
+            <.ops_data_card title="Playbook summary" subtitle="Review this before running.">
+              <dl class="grid gap-2 text-sm sm:grid-cols-2">
+                <div :for={{label, value} <- playbook_summary(@draft_playbook)}>
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-base-content/60">
+                    {label}
+                  </dt>
+                  <dd class="mt-0.5 font-mono text-xs text-base-content">{value}</dd>
+                </div>
+              </dl>
+            </.ops_data_card>
+            <.ops_disclosure :if={@preview_json} summary="Raw playbook JSON" variant={:compact}>
+              <.ops_code_block variant={:compact}>{@preview_json}</.ops_code_block>
+            </.ops_disclosure>
 
             <div class="flex flex-wrap gap-2 items-end">
               <.ops_button
@@ -1016,67 +1078,79 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               </p>
             </div>
 
-            <p :if={@run_ui.phase == :running} class="alert text-sm">
-              <strong>Running playbook…</strong>
-              applying results for run <code class="text-xs">{@run_ui.run_id}</code>
-              only.
-            </p>
+            <.ops_notice :if={@run_ui.phase == :running} kind={:running} title="Running playbook">
+              <span>
+                Applying results for run <code class="text-xs">{@run_ui.run_id}</code> only.
+              </span>
+            </.ops_notice>
 
-            <div
+            <.ops_notice
               :if={@run_ui.phase == :error && @run_failure_enriched}
-              class="alert alert-error items-start text-sm"
+              kind={:error}
+              title={to_string(@run_failure_enriched.failure_class)}
               role="alert"
               data-testid="run-failure-panel"
             >
-              <div class="space-y-3">
-                <p>
-                  <strong>{@run_failure_enriched.failure_class}</strong>
-                  {": "}
-                  {@run_failure_enriched.message}
-                </p>
-                <div class="flex flex-wrap gap-2">
-                  <a
-                    class="link link-hover"
-                    href={@run_failure_enriched.doc.primary}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Read troubleshooting
-                  </a>
-                  <a
-                    :for={related <- @run_failure_enriched.doc.related}
-                    class="link link-hover"
-                    href={related}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Related doc
-                  </a>
-                  <.ops_button phx-click="copy_run_diagnostics" variant={:ghost} size={:xs}>
-                    Copy diagnostics
-                  </.ops_button>
-                </div>
+              <p>{@run_failure_enriched.message}</p>
+              <div class="mt-3 flex flex-wrap gap-2">
+                <a
+                  class="link link-hover"
+                  href={@run_failure_enriched.doc.primary}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Read troubleshooting
+                </a>
+                <a
+                  :for={related <- @run_failure_enriched.doc.related}
+                  class="link link-hover"
+                  href={related}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Related doc
+                </a>
+                <.ops_button phx-click="copy_run_diagnostics" variant={:ghost} size={:xs}>
+                  Copy diagnostics
+                </.ops_button>
               </div>
-            </div>
+            </.ops_notice>
 
-            <p :if={@run_ui.phase == :ok && @run_result} class="alert alert-success text-sm">
+            <.ops_status
+              :if={@run_ui.phase == :ok && @run_result}
+              kind={:success}
+              title="Playbook run completed"
+            >
               {run_result_summary(@run_result)}
-            </p>
+              <span :if={@selected_basename}>
+                · file <code>{@selected_basename}</code>
+              </span>
+              <span :if={@draft_playbook && Map.get(@draft_playbook, "mode")}>
+                · mode <code>{Map.get(@draft_playbook, "mode")}</code>
+              </span>
+            </.ops_status>
+
+            <.ops_link_button
+              :if={@run_ui.phase == :ok && @draft_playbook}
+              navigate={search_loopback_path(@mount_path, @draft_playbook)}
+              variant={:ghost}
+              size={:sm}
+            >
+              Explore this query in Search <span aria-hidden="true">→</span>
+            </.ops_link_button>
 
             <div :if={@workspace_writable?} class="space-y-2 max-w-md">
-              <h3 class="text-sm font-semibold">Save playbook to workspace</h3>
+              <.ops_heading level={3}>Save playbook to workspace</.ops_heading>
               <.form for={%{}} phx-submit="save" class="flex flex-wrap gap-2 items-end">
-                <div>
-                  <label class="label label-text text-xs" for="save_basename">Basename (.json)</label>
-                  <input
+                <.ops_field id="save_basename" label="Basename (.json)" class="w-64">
+                  <.ops_text_input
                     id="save_basename"
-                    type="text"
                     name="basename"
                     value={@save_basename}
-                    class="input input-bordered input-sm w-64"
+                    class="font-mono text-sm"
                     placeholder="my-playbook.json"
                   />
-                </div>
+                </.ops_field>
                 <.ops_button type="submit" variant={:primary}>
                   Save playbook to workspace
                 </.ops_button>
@@ -1094,18 +1168,17 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               This permanently deletes <code class="font-mono text-xs">{@delete_pending}</code>
               from the playbook directory. This cannot be undone.
             </p>
-            <.form for={%{}} phx-submit="confirm_delete" class="space-y-2">
-              <label class="label">
-                <span class="label-text">Type the filename to confirm</span>
-              </label>
-              <input
-                type="text"
-                name="confirm"
-                class="input input-bordered w-full font-mono text-sm"
-                autocomplete="off"
-              />
-              <div class="modal-action">
-                <.ops_button phx-click="cancel_delete">Cancel</.ops_button>
+            <.form for={%{}} phx-submit="confirm_delete" class="space-y-3">
+              <.ops_field id="delete-confirm-input" label="Type the filename to confirm">
+                <.ops_text_input
+                  id="delete-confirm-input"
+                  name="confirm"
+                  class="font-mono text-sm"
+                  autocomplete="off"
+                />
+              </.ops_field>
+              <div class="flex justify-between gap-2">
+                <.ops_button phx-click="cancel_delete" variant={:ghost}>Cancel</.ops_button>
                 <.ops_button type="submit" variant={:danger}>Confirm delete</.ops_button>
               </div>
             </.form>
@@ -1120,18 +1193,17 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             <p class="py-2 text-sm">
               Renaming <code class="font-mono text-xs">{@rename_modal.from}</code>
             </p>
-            <.form for={%{}} phx-submit="rename_submit" class="space-y-2">
-              <label class="label">
-                <span class="label-text">New basename (.json)</span>
-              </label>
-              <input
-                type="text"
-                name="new_name"
-                class="input input-bordered w-full font-mono text-sm"
-                placeholder="new-name.json"
-              />
-              <div class="modal-action">
-                <.ops_button phx-click="rename_cancel">Cancel</.ops_button>
+            <.form for={%{}} phx-submit="rename_submit" class="space-y-3">
+              <.ops_field id="rename-new-name-input" label="New basename (.json)">
+                <.ops_text_input
+                  id="rename-new-name-input"
+                  name="new_name"
+                  class="font-mono text-sm"
+                  placeholder="new-name.json"
+                />
+              </.ops_field>
+              <div class="flex justify-between gap-2">
+                <.ops_button phx-click="rename_cancel" variant={:ghost}>Cancel</.ops_button>
                 <.ops_button type="submit" variant={:primary}>Rename</.ops_button>
               </div>
             </.form>
@@ -1146,18 +1218,17 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             <p class="py-2 text-sm">
               Copying <code class="font-mono text-xs">{@duplicate_modal.from}</code>
             </p>
-            <.form for={%{}} phx-submit="dup_submit" class="space-y-2">
-              <label class="label">
-                <span class="label-text">New basename (.json)</span>
-              </label>
-              <input
-                type="text"
-                name="to_name"
-                value={@duplicate_modal.to}
-                class="input input-bordered w-full font-mono text-sm"
-              />
-              <div class="modal-action">
-                <.ops_button phx-click="dup_cancel">Cancel</.ops_button>
+            <.form for={%{}} phx-submit="dup_submit" class="space-y-3">
+              <.ops_field id="dup-to-name-input" label="New basename (.json)">
+                <.ops_text_input
+                  id="dup-to-name-input"
+                  name="to_name"
+                  value={@duplicate_modal.to}
+                  class="font-mono text-sm"
+                />
+              </.ops_field>
+              <div class="flex justify-between gap-2">
+                <.ops_button phx-click="dup_cancel" variant={:ghost}>Cancel</.ops_button>
                 <.ops_button type="submit" variant={:primary}>Duplicate</.ops_button>
               </div>
             </.form>

@@ -47,7 +47,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
       <.ops_toolbar class="items-end gap-4">
         <.ops_page_header
           title="Control Room"
-          subtitle="Start here. Pick the job you're doing — ScrypathOps routes you to the right surface."
+          subtitle="Start here. See whether search is in sync, then pick the job you're doing."
         />
         <.ops_button phx-click="refresh" variant={:primary}>
           Refresh posture
@@ -58,46 +58,36 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
 
       <.ops_panel>
         <section aria-labelledby="control-room-posture-heading" class="space-y-4">
-          <div class="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 id="control-room-posture-heading" class="text-lg font-semibold text-base-content">
-                Fleet posture
-              </h2>
-              <p class="mt-1 text-sm text-base-content/70">
-                Is search telling the truth about your data right now? One scan across
-                allowlisted schemas.
-              </p>
-            </div>
-            <.ops_badge kind={Posture.badge_kind(@posture.state)}>
-              {@posture.headline}
-            </.ops_badge>
-          </div>
+          <h2 id="control-room-posture-heading" class="sr-only">Fleet posture</h2>
 
           <.ops_config_empty :if={@posture.state == :unconfigured} kind={:no_schemas} />
           <.ops_config_empty :if={@posture.state == :missing_backend} kind={:missing_backend} />
 
-          <div
+          <.ops_verdict
             :if={@posture.state in [:ok, :degraded]}
-            class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5"
+            kind={Posture.badge_kind(@posture.state)}
+            label="Can I trust search right now?"
+            headline={@posture.headline}
           >
-            <.ops_metric label="Schemas" value={@posture.schema_count} kind={:neutral} />
-            <.ops_metric
-              label="Fetch errors"
-              value={@posture.error_count}
-              kind={Posture.metric_tone(@posture.error_count)}
-            />
-            <.ops_metric
-              label="Failed backend"
-              value={@posture.backend_failed_count}
-              kind={Posture.metric_tone(@posture.backend_failed_count)}
-            />
-            <.ops_metric label="Queue observed" value={@posture.queue_observed_count} kind={:neutral} />
-            <.ops_metric label="Refreshed" value={format_dt(@posture.refreshed_at)} kind={:neutral} />
-          </div>
+            <:actions>
+              <.ops_link_button navigate={"#{@mount_path}/posture"} variant={:ghost} size={:sm}>
+                Open full posture <span aria-hidden="true">→</span>
+              </.ops_link_button>
+            </:actions>
+            <p>{@posture.evidence}</p>
+            <p class="mt-2 text-xs text-base-content/60">
+              {@posture.schema_count} schema(s) · {@posture.error_count} fetch error(s) · {@posture.backend_failed_count} failed backend · refreshed {format_dt(
+                @posture.refreshed_at
+              )}
+            </p>
+          </.ops_verdict>
 
-          <p class="text-sm text-base-content/80">{@posture.evidence}</p>
-
-          <.ops_link_button navigate={"#{@mount_path}/posture"} variant={:ghost} size={:sm}>
+          <.ops_link_button
+            :if={@posture.state in [:unconfigured, :missing_backend]}
+            navigate={"#{@mount_path}/posture"}
+            variant={:ghost}
+            size={:sm}
+          >
             Open full posture <span aria-hidden="true">→</span>
           </.ops_link_button>
         </section>

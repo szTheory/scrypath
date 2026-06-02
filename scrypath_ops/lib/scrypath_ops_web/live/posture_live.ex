@@ -25,6 +25,7 @@ defmodule ScrypathOpsWeb.PostureLive do
       |> assign(:posture_rows, [])
       |> assign(:aggregate_error_count, 0)
       |> assign(:last_refresh_at, nil)
+      |> assign(:posture_state, :ok)
       |> assign(:posture_headline, "—")
       |> assign(:posture_evidence, "")
       |> assign(:next_checks, [])
@@ -69,6 +70,7 @@ defmodule ScrypathOpsWeb.PostureLive do
     |> assign(:posture_rows, posture_rows_assign(summary))
     |> assign(:aggregate_error_count, summary.error_count)
     |> assign(:last_refresh_at, summary.refreshed_at)
+    |> assign(:posture_state, summary.state)
     |> assign(:posture_headline, summary.headline)
     |> assign(:posture_evidence, summary.evidence)
     |> assign(
@@ -137,8 +139,8 @@ defmodule ScrypathOpsWeb.PostureLive do
     >
       <.ops_toolbar class="items-end gap-4">
         <.ops_page_header
-          title={@page_title}
-          subtitle="Start here during incidents and deploy checks. Posture answers whether the fleet deserves deeper triage before search exploration."
+          title="Posture"
+          subtitle="The fleet's sync health, schema by schema. Start here when something looks wrong."
         />
         <.ops_button phx-click="refresh" variant={:primary}>
           Refresh posture
@@ -149,19 +151,24 @@ defmodule ScrypathOpsWeb.PostureLive do
 
       <.ops_panel :if={match?({:ok, _}, @posture_rows)}>
         <section aria-labelledby="posture-summary-heading" class="space-y-4">
-          <div class="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 id="posture-summary-heading" class="text-lg font-semibold text-base-content">
-                Fleet posture
-              </h2>
-              <p class="mt-1 text-sm text-base-content/70">
-                One scan across allowlisted schemas. Use this as the entry point, then follow the operator path.
-              </p>
-            </div>
-            <.ops_badge kind={posture_badge_kind(@posture_headline)}>
-              {@posture_headline}
-            </.ops_badge>
-          </div>
+          <h2 id="posture-summary-heading" class="sr-only">Fleet posture</h2>
+          <.ops_verdict
+            kind={ScrypathOps.Posture.badge_kind(@posture_state)}
+            label="Fleet posture"
+            headline={@posture_headline}
+          >
+            <:actions>
+              <.ops_link_button
+                :if={@posture_state == :degraded}
+                navigate={"#{@mount_path}/failed-sync"}
+                variant={:primary}
+                size={:sm}
+              >
+                Start triage: failed sync <span aria-hidden="true">→</span>
+              </.ops_link_button>
+            </:actions>
+            {@posture_evidence}
+          </.ops_verdict>
           <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <.ops_metric
               label="Schemas"
@@ -181,7 +188,7 @@ defmodule ScrypathOpsWeb.PostureLive do
             <.ops_metric
               label="Queue observed"
               value={posture_queue_observed_count(@posture_rows)}
-              kind={if posture_queue_observed_count(@posture_rows) > 0, do: :success, else: :warning}
+              kind={:neutral}
             />
             <.ops_metric
               label="Refreshed"
@@ -196,12 +203,10 @@ defmodule ScrypathOpsWeb.PostureLive do
         <section
           data-testid="posture-next-checks"
           aria-labelledby="posture-jtbd-heading"
-          class={posture_next_checks_class(@posture_headline)}
+          class="space-y-1"
         >
-          <h2 id="posture-jtbd-heading" class="text-lg font-semibold text-base-content">
-            {@posture_headline}
-          </h2>
-          <p class="mt-1 text-sm text-base-content/80">{@posture_evidence}</p>
+          <.ops_heading level={2} id="posture-jtbd-heading">Next checks</.ops_heading>
+          <p class="text-sm text-base-content/80">{@posture_evidence}</p>
           <ol class="mt-3 list-decimal list-inside space-y-2 text-sm text-base-content/90">
             <li :for={check <- @next_checks} class="pl-1">
               <span>{check.text}</span>
@@ -286,23 +291,6 @@ defmodule ScrypathOpsWeb.PostureLive do
     </Layouts.app>
     """
   end
-
-  defp posture_next_checks_class("Degraded"),
-    do: "rounded-md border border-warning/40 bg-warning/10 p-3"
-
-  defp posture_next_checks_class("Broken"),
-    do: "rounded-md border border-error/40 bg-error/10 p-3"
-
-  defp posture_next_checks_class("Not configured"),
-    do: "rounded-md border border-warning/40 bg-warning/10 p-3"
-
-  defp posture_next_checks_class(_),
-    do: "ops-muted-panel p-3"
-
-  defp posture_badge_kind("Degraded"), do: :warning
-  defp posture_badge_kind("Broken"), do: :error
-  defp posture_badge_kind("Not configured"), do: :warning
-  defp posture_badge_kind(_), do: :success
 
   defp posture_schema_count({:ok, rows}), do: length(rows)
   defp posture_schema_count(_), do: 0

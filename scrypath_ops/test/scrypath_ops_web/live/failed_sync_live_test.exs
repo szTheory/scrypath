@@ -128,9 +128,12 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     :ok
   end
 
-  test "renders rollups and reason_class columns", %{conn: conn} do
+  test "renders triage summary, rollups, and human reason-class columns", %{conn: conn} do
     {:ok, _lv, html} = live(conn, ~p"/ops/failed-sync")
 
+    assert html =~ "failed sync job(s) need triage"
+    assert html =~ "dominant reason"
+    assert html =~ "retryable jobs"
     assert html =~ "Total"
     assert html =~ ~r/<p[^>]*class="[^"]*tabular-nums[^"]*"[^>]*>\s*2\s*<\/p>/s
     assert html =~ "data-testid=\"failed-sync-row\""
@@ -139,11 +142,10 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert html =~ "Refresh failed sync jobs"
     assert html =~ "Retry job"
     assert html =~ "Retry re-enqueues the original sync work"
-
-    assert Enum.any?(
-             ~w(transport validation backend_rejected queue_exhausted unknown),
-             &String.contains?(html, &1)
-           )
+    # Reason-class rollup tiles (the single, branded representation of by-class counts).
+    assert html =~ "Transport"
+    assert html =~ "Validation"
+    assert html =~ "Unknown"
   end
 
   test "sigra retry redirects stale sudo and keeps the failed-sync row in place", %{} do

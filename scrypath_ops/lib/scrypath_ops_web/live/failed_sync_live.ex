@@ -226,20 +226,22 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             Refresh failed sync jobs
           </.ops_button>
           <.ops_button phx-click="toggle_compact" variant={:ghost}>
-            {if @compact_mode, do: "Expand rollups", else: "Collapse rollups"}
+            {if @compact_mode, do: "Show reason rollups", else: "Hide reason rollups"}
           </.ops_button>
         </div>
       </.ops_toolbar>
 
       <.ops_journey mount_path={@mount_path} current={:failed_sync} />
 
-      <.ops_schema_select
-        id="schema-select"
-        schemas={@schema_allowlist}
-        selected={@selected_schema}
-        phx-change="select_schema"
-        hint="Choose the allowlisted schema whose failed queue/backend work you want to inspect."
-      />
+      <.ops_panel>
+        <.ops_schema_select
+          id="schema-select"
+          schemas={@schema_allowlist}
+          selected={@selected_schema}
+          phx-change="select_schema"
+          hint="Choose the allowlisted schema whose failed queue/backend work you want to inspect."
+        />
+      </.ops_panel>
 
       <.ops_empty_state :if={@load_error == :no_schemas} title="No Schemas Configured">
         Set
@@ -296,17 +298,6 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             <.ops_metric label="Unknown" value={@inspection.counts.by_class.unknown} />
           </div>
 
-          <.ops_data_card title="Reason class focus" class={["mt-4", @compact_mode && "hidden"]}>
-            <div class="flex flex-wrap gap-2">
-              <.ops_badge
-                :for={{label, value} <- reason_count_pairs(@inspection)}
-                kind={if value > 0, do: :warning, else: :neutral}
-              >
-                {label}: {value}
-              </.ops_badge>
-            </div>
-          </.ops_data_card>
-
           <.ops_disclosure
             summary="Triage guidance"
             class="mt-4"
@@ -348,7 +339,10 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         </section>
 
         <section aria-labelledby="failed-sync-table-heading" class="mt-4">
-          <h2 id="failed-sync-table-heading" class="text-base font-semibold text-base-content">
+          <h2
+            id="failed-sync-table-heading"
+            class="text-ops-h2 font-semibold leading-ops-tight text-base-content"
+          >
             Failed sync jobs
           </h2>
           <p class="mt-1 max-w-3xl text-sm text-base-content/70">
@@ -434,16 +428,4 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
 
   defp metric_tone(0), do: :success
   defp metric_tone(_), do: :warning
-
-  defp reason_count_pairs(%FailedSyncWorkInspection{counts: %{by_class: by_class}}) do
-    by_class = maybe_map_from_struct(by_class)
-
-    [
-      {"transport", Map.get(by_class, :transport, 0)},
-      {"validation", Map.get(by_class, :validation, 0)},
-      {"backend", Map.get(by_class, :backend_rejected, 0)},
-      {"queue", Map.get(by_class, :queue_exhausted, 0)},
-      {"unknown", Map.get(by_class, :unknown, 0)}
-    ]
-  end
 end

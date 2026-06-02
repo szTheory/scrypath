@@ -158,6 +158,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             socket
             |> refresh_reconcile()
             |> maybe_refresh_drift()
+            |> put_flash(:info, "Swap live index completed for #{module_flat_name(mod)}")
 
           {:error, reason} ->
             put_flash(socket, :error, "Swap live failed: #{inspect(reason)}")
@@ -176,45 +177,110 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     end
   end
 
+  defp reconcile_signal_label(signal) do
+    signal
+    |> to_string()
+    |> String.trim_leading(":")
+    |> String.replace("_", " ")
+  end
+
+  defp drift_dimension_label(key) do
+    key
+    |> to_string()
+    |> String.replace("_", " ")
+  end
+
+  defp drift_dimension_rows(%{dimensions: dimensions}) when is_map(dimensions) do
+    dimensions
+    |> Enum.map(fn {key, dimension} ->
+      {drift_dimension_label(key), Map.get(dimension, :match, false)}
+    end)
+    |> Enum.sort_by(fn {label, match?} -> {match?, label} end)
+  end
+
+  defp drift_dimension_rows(_), do: []
+
   @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app mount_path={@mount_path} flash={@flash} shell={@shell} page_title={@page_title}>
-      <.ops_page_header title={@page_title} />
-
-      <.ops_schema_select
-        id="sync-schema-select"
-        schemas={@schema_allowlist}
-        selected={@selected_schema}
-        phx-change="select_schema"
-        class="mt-4"
+      <.ops_page_header
+        title="Sync & Drift"
+        subtitle="Check one schema before you promote it: reconcile, compare drift, then swap."
       />
 
-      <.ops_notice kind={:info} title="Read-only Recovery Map" class="mt-4">
+      <.ops_journey mount_path={@mount_path} current={:sync_drift} class="mt-4" />
+
+      <.ops_panel class="mt-4">
+        <.ops_schema_select
+          id="sync-schema-select"
+          schemas={@schema_allowlist}
+          selected={@selected_schema}
+          phx-change="select_schema"
+        />
+      </.ops_panel>
+
+      <.ops_notice kind={:info} title="Read-only checks first" class="mt-4">
         Use <code class="text-xs">mix scrypath.reconcile</code>, <code class="text-xs">mix scrypath.index.contract_drift</code>, <code class="text-xs">guides/drift-recovery.md</code>,
         <code class="text-xs">guides/sync-modes-and-visibility.md</code>
-        for canonical workflows. This page stays read-only over
+        for canonical workflows. The primary checks below stay read-only over
         <code class="text-xs">Scrypath.reconcile_sync/2</code>
         and <code class="text-xs">Scrypath.index_contract_drift/2</code>.
       </.ops_notice>
 
       <.ops_panel>
-        <section aria-labelledby="sync-reconcile-heading" class="mt-2 space-y-3">
-          <.ops_toolbar class="gap-2">
-            <h2 id="sync-reconcile-heading" class="text-lg font-semibold">Sync & queue posture</h2>
+        <section aria-labelledby="sync-preflight-heading" class="space-y-3">
+          <h2
+            id="sync-preflight-heading"
+            class="text-ops-h2 font-semibold leading-ops-tight text-base-content"
+          >
+            Promotion preflight
+          </h2>
+          <div class="grid gap-3 md:grid-cols-4">
+            <.ops_data_card title="1. Reconcile">
+              <.ops_badge kind={if @reconcile_result, do: :success, else: :warning}>
+                {if @reconcile_result, do: "loaded", else: "needed"}
+              </.ops_badge>
+            </.ops_data_card>
+            <.ops_data_card title="2. Contract drift">
+              <.ops_badge kind={drift_status_kind(@drift_result, @drift_error)}>
+                {drift_status_title(@drift_result, @drift_error)}
+              </.ops_badge>
+            </.ops_data_card>
+            <.ops_data_card title="3. Mismatches">
+              <.ops_badge kind={
+                if @drift_result && drift_mismatch_count(@drift_result) == 0,
+                  do: :success,
+                  else: :warning
+              }>
+                {if @drift_result,
+                  do: "#{drift_mismatch_count(@drift_result)} mismatch(es)",
+                  else: "unknown"}
+              </.ops_badge>
+            </.ops_data_card>
+            <.ops_data_card title="4. Promote">
+              <.ops_badge kind={promotion_readiness_kind(@reconcile_result, @drift_result)}>
+                {promotion_readiness_label(@reconcile_result, @drift_result)}
+              </.ops_badge>
+            </.ops_data_card>
+          </div>
+        </section>
+      </.ops_panel>
+
+      <.ops_panel>
+        <.ops_section
+          id="sync-reconcile-heading"
+          title="Sync & queue posture"
+          subtitle="The fast reconcile check answers whether Scrypath can see queue and backend posture for this schema."
+          meta={if @reconcile_loaded_at, do: "last loaded #{format_dt(@reconcile_loaded_at)}"}
+        >
+          <:actions>
             <.ops_button phx-click="refresh_reconcile" variant={:primary}>
               Refresh reconcile
             </.ops_button>
-          </.ops_toolbar>
+          </:actions>
 
-          <p :if={@reconcile_loaded_at} class="text-xs text-base-content/60">
-            Last loaded: <span class="font-mono tabular-nums">{format_dt(@reconcile_loaded_at)}</span>
-          </p>
-
-          <.ops_table
-            :if={@reconcile_result}
-            class="rounded border border-base-300 p-3 text-sm"
-          >
+          <.ops_signal_table :if={@reconcile_result}>
             <thead>
               <tr>
                 <th scope="col">Signal</th>
@@ -228,53 +294,57 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               </tr>
               <tr>
                 <th scope="row" class="font-medium align-top">Mode</th>
-                <td>{@reconcile_result.mode}</td>
+                <td>{reconcile_signal_label(@reconcile_result.mode)}</td>
               </tr>
               <tr>
                 <th scope="row" class="font-medium align-top">Drift signals</th>
-                <td class="font-mono text-xs">{inspect(@reconcile_result.drift_signals)}</td>
+                <td>
+                  <div class="flex flex-wrap gap-1">
+                    <.ops_badge
+                      :for={signal <- @reconcile_result.drift_signals}
+                      kind={:neutral}
+                    >
+                      {reconcile_signal_label(signal)}
+                    </.ops_badge>
+                  </div>
+                </td>
               </tr>
             </tbody>
-          </.ops_table>
+          </.ops_signal_table>
 
           <p :if={@reconcile_result == nil && @selected_schema} class="text-sm text-base-content/70">
             Reconcile not loaded yet — choose a schema or tap “Refresh reconcile”.
           </p>
-        </section>
+        </.ops_section>
       </.ops_panel>
 
       <.ops_panel>
-        <section aria-labelledby="sync-drift-heading" class="mt-2 space-y-3">
-          <.ops_toolbar class="gap-2">
-            <h2 id="sync-drift-heading" class="text-lg font-semibold">
-              Index contract (declared vs live)
-            </h2>
-            <div class="flex flex-wrap gap-2">
-              <.ops_button phx-click="load_drift">
-                Load / refresh contract drift
-              </.ops_button>
-              <.ops_button
-                :if={@selected_schema}
-                phx-click="swap_live"
-                phx-disable-with="Swapping..."
-              >
-                Swap live index
+        <.ops_section
+          id="sync-drift-heading"
+          title="Index contract (declared vs live)"
+          subtitle="This check compares declared schema settings with the live Meilisearch index contract."
+          meta={if @drift_loaded_at, do: "last loaded #{format_dt(@drift_loaded_at)}"}
+        >
+          <:actions>
+            <.ops_button phx-click="load_drift">
+              Load / refresh contract drift
+            </.ops_button>
+          </:actions>
+
+          <.ops_status
+            kind={drift_status_kind(@drift_result, @drift_error)}
+            title={drift_status_title(@drift_result, @drift_error)}
+            role={if @drift_error, do: "alert"}
+          >
+            {drift_status_copy(@drift_result, @drift_error)}
+            <div :if={is_nil(@drift_result) && is_nil(@drift_error)} class="mt-3">
+              <.ops_button phx-click="load_drift" variant={:primary} size={:sm}>
+                Run contract drift now
               </.ops_button>
             </div>
-          </.ops_toolbar>
+          </.ops_status>
 
-          <p :if={@drift_loaded_at} class="text-xs text-base-content/60">
-            Last loaded: <span class="font-mono tabular-nums">{format_dt(@drift_loaded_at)}</span>
-          </p>
-
-          <p :if={@drift_error} class="text-sm text-error">
-            Drift error (reconcile above stays usable): {inspect(@drift_error)}
-          </p>
-
-          <.ops_table
-            :if={@drift_result}
-            class="rounded border border-base-300 p-3 text-sm"
-          >
+          <.ops_signal_table :if={@drift_result}>
             <thead>
               <tr>
                 <th scope="col">Field</th>
@@ -292,16 +362,132 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
                   version {@drift_result.version} · index {@drift_result.index}
                 </td>
               </tr>
+              <tr>
+                <th scope="row" class="font-medium align-top">Dimension mismatches</th>
+                <td class="font-mono text-xs tabular-nums">
+                  {drift_mismatch_count(@drift_result)} of {map_size(@drift_result.dimensions)}
+                </td>
+              </tr>
             </tbody>
-          </.ops_table>
-
-          <p :if={@drift_result == nil && @drift_error == nil} class="text-sm text-base-content/70">
-            Contract drift has not been loaded yet — it runs only after the explicit control.
-          </p>
-        </section>
+          </.ops_signal_table>
+          <.ops_data_card :if={@drift_result} title="Contract dimensions" class="mt-3">
+            <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              <div
+                :for={{label, match?} <- drift_dimension_rows(@drift_result)}
+                class={[
+                  "rounded-ops-md border px-3 py-2 text-ops-xs",
+                  match? && "ops-tone-success",
+                  not match? && "ops-tone-warning"
+                ]}
+              >
+                <span class="font-semibold">{label}</span>
+                <span class={["ml-2", match? && "text-success", not match? && "text-warning"]}>
+                  {if match?, do: "matches", else: "differs"}
+                </span>
+              </div>
+            </div>
+          </.ops_data_card>
+        </.ops_section>
       </.ops_panel>
+
+      <.ops_panel :if={@selected_schema}>
+        <.ops_section
+          id="sync-advanced-recovery-heading"
+          title="Advanced recovery"
+          subtitle="Promotion is intentionally separate from read-only drift checks. Use it only after posture and failed-sync signals are quiet."
+        >
+          <.ops_verdict
+            kind={promotion_readiness_kind(@reconcile_result, @drift_result)}
+            label="Promotion readiness"
+            headline={promotion_readiness_headline(@reconcile_result, @drift_result)}
+            class="mb-3"
+          >
+            The preflight above is the source of truth: reconcile must be loaded and contract
+            drift clean before the gated swap is safe.
+          </.ops_verdict>
+          <.ops_action_group tone={:advanced}>
+            <p class="max-w-xl text-sm text-base-content/75">
+              Swap the prepared target index into the live alias for <code>{module_flat_name(@selected_schema)}</code>. This runs the existing gated
+              recovery path and refreshes loaded checks afterward.
+            </p>
+            <.ops_button phx-click="swap_live" phx-disable-with="Swapping...">
+              Swap live index
+            </.ops_button>
+          </.ops_action_group>
+        </.ops_section>
+      </.ops_panel>
+
+      <.ops_toolbar class="justify-end">
+        <.ops_link_button navigate={"#{@mount_path}/posture"} variant={:ghost} size={:sm}>
+          Re-check fleet posture <span aria-hidden="true">→</span>
+        </.ops_link_button>
+      </.ops_toolbar>
     </Layouts.app>
     """
+  end
+
+  defp drift_status_kind(_result, error) when not is_nil(error), do: :error
+  defp drift_status_kind(nil, nil), do: :info
+
+  defp drift_status_kind(result, nil),
+    do: if(drift_mismatch_count(result) == 0, do: :success, else: :warning)
+
+  defp drift_status_title(_result, error) when not is_nil(error), do: "Drift check failed"
+  defp drift_status_title(nil, nil), do: "Drift not loaded"
+
+  defp drift_status_title(result, nil) do
+    if drift_mismatch_count(result) == 0,
+      do: "No contract drift detected",
+      else: "Contract drift detected"
+  end
+
+  defp drift_status_copy(_result, error) when not is_nil(error) do
+    "Reconcile above remains usable. Fix the drift check input or backend state, then reload contract drift. Reason: #{inspect(error)}"
+  end
+
+  defp drift_status_copy(nil, nil) do
+    "Contract drift runs only after the explicit control so this screen does not hide a backend read behind page load."
+  end
+
+  defp drift_status_copy(result, nil) do
+    mismatches = drift_mismatch_count(result)
+
+    if mismatches == 0 do
+      "Declared fields, filterable attributes, sortable attributes, faceting, and settings match this snapshot."
+    else
+      "#{mismatches} contract dimension(s) differ from the live index. Use the operator guides before changing aliases."
+    end
+  end
+
+  defp drift_mismatch_count(%{dimensions: dimensions}) when is_map(dimensions) do
+    Enum.count(dimensions, fn {_key, dimension} -> not Map.get(dimension, :match, false) end)
+  end
+
+  defp promotion_readiness_kind(reconcile_result, drift_result) do
+    if reconcile_result && drift_result && drift_mismatch_count(drift_result) == 0 do
+      :success
+    else
+      :warning
+    end
+  end
+
+  defp promotion_readiness_label(reconcile_result, drift_result) do
+    cond do
+      is_nil(reconcile_result) -> "load reconcile first"
+      is_nil(drift_result) -> "load drift first"
+      drift_mismatch_count(drift_result) == 0 -> "ready for gated swap"
+      true -> "resolve drift first"
+    end
+  end
+
+  # Sentence-cased verdict headline for the Advanced-recovery promotion hero.
+  defp promotion_readiness_headline(reconcile_result, drift_result) do
+    cond do
+      is_nil(reconcile_result) -> "Load reconcile to begin"
+      is_nil(drift_result) -> "Load contract drift to continue"
+      drift_mismatch_count(drift_result) == 0 -> "Ready for the gated swap"
+      true -> "Resolve drift before promoting"
+    end
   end
 
   defp format_dt(nil), do: "—"
