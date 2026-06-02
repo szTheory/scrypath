@@ -154,6 +154,7 @@
   --z-index-ops-skip-link: 50;
   --z-index-ops-flash: 60;
   --z-index-ops-modal: 70;
+  --z-index-ops-command: 80;
 
   /* Motion. Durations stay component-only (no `--duration-*` utility namespace in v4);
      `--ease-*` generates `ease-ops-*` utilities. Keep restrained — animate state, not layout. */
@@ -737,6 +738,138 @@
       right: 1rem;
       bottom: 1rem;
     }
+  }
+
+  /* Command palette (⌘K) + cheat-sheet overlay. */
+  .ops-cmdk {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-index-ops-command);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 12vh;
+  }
+
+  .ops-cmdk[hidden] {
+    display: none;
+  }
+
+  .ops-cmdk__backdrop {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in oklch, var(--color-base-content) 32%, transparent);
+    backdrop-filter: blur(2px);
+  }
+
+  .ops-cmdk__panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: min(34rem, calc(100vw - 2rem));
+    max-height: 70vh;
+    overflow: hidden;
+    border: 1px solid color-mix(in oklch, var(--color-base-content) 14%, transparent);
+    border-radius: var(--radius-ops-overlay);
+    background: color-mix(in oklch, var(--color-base-100) 98%, transparent);
+    box-shadow: var(--shadow-ops-overlay);
+    animation: ops-modal-in var(--duration-ops-slow) var(--ease-ops-out);
+  }
+
+  .ops-cmdk__panel--sheet {
+    gap: var(--spacing-ops-3);
+    padding: var(--spacing-ops-panel);
+  }
+
+  .ops-cmdk__input {
+    width: 100%;
+    min-height: var(--control-h-lg);
+    padding-inline: var(--spacing-ops-panel);
+    border: 0;
+    border-bottom: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
+    background: transparent;
+    font-size: var(--text-ops-md);
+    color: var(--color-base-content);
+  }
+
+  .ops-cmdk__input:focus {
+    outline: none;
+  }
+
+  .ops-cmdk__list {
+    margin: 0;
+    padding: var(--spacing-ops-2);
+    overflow-y: auto;
+    list-style: none;
+  }
+
+  .ops-cmdk__item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-ops-3);
+    padding: var(--spacing-ops-2) var(--spacing-ops-3);
+    border-radius: var(--radius-ops-control);
+    color: var(--color-base-content);
+    cursor: pointer;
+  }
+
+  .ops-cmdk__item:hover,
+  .ops-cmdk__item.is-active {
+    background: color-mix(in oklch, var(--color-primary) 14%, transparent);
+  }
+
+  .ops-cmdk__item-label {
+    font-size: var(--text-ops-body);
+    font-weight: 650;
+  }
+
+  .ops-cmdk__item-hint {
+    font-size: var(--text-ops-xs);
+    color: color-mix(in oklch, var(--color-base-content) 55%, transparent);
+  }
+
+  .ops-cmdk__empty {
+    padding: var(--spacing-ops-3) var(--spacing-ops-panel);
+    color: color-mix(in oklch, var(--color-base-content) 55%, transparent);
+    font-size: var(--text-ops-body);
+  }
+
+  .ops-cheatsheet__list {
+    display: grid;
+    gap: var(--spacing-ops-2);
+  }
+
+  .ops-cheatsheet__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-ops-4);
+    font-size: var(--text-ops-body);
+  }
+
+  .ops-cheatsheet__row dt {
+    display: inline-flex;
+    gap: 0.25rem;
+  }
+
+  .ops-cheatsheet__row dd {
+    margin: 0;
+    color: color-mix(in oklch, var(--color-base-content) 70%, transparent);
+  }
+
+  .ops-kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    padding: 0.1rem 0.4rem;
+    border: 1px solid color-mix(in oklch, var(--color-base-content) 18%, transparent);
+    border-radius: var(--radius-ops-sm);
+    background: color-mix(in oklch, var(--color-base-200) 70%, transparent);
+    font-family: ui-monospace, "Cascadia Code", Menlo, monospace;
+    font-size: var(--text-ops-xs);
+    font-weight: 650;
   }
 }
 

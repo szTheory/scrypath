@@ -142,7 +142,7 @@ defmodule ScrypathOpsWeb.PostureLive do
           title="Posture"
           subtitle="The fleet's sync health, schema by schema. Start here when something looks wrong."
         />
-        <.ops_button phx-click="refresh" variant={:primary}>
+        <.ops_button phx-click="refresh" variant={:primary} data-ops-refresh>
           Refresh posture
         </.ops_button>
       </.ops_toolbar>

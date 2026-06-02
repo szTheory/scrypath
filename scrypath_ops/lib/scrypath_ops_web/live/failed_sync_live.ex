@@ -222,7 +222,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
           subtitle="Inspect failed queue/backend work by newest evidence first. Retry only after the failure class and row evidence make sense."
         />
         <div class="flex flex-wrap gap-2">
-          <.ops_button phx-click="refresh" variant={:primary}>
+          <.ops_button phx-click="refresh" variant={:primary} data-ops-refresh>
             Refresh failed sync jobs
           </.ops_button>
           <.ops_button phx-click="toggle_compact" variant={:ghost}>

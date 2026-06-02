@@ -99,6 +99,7 @@ defmodule ScrypathOpsWeb.Layouts do
     </main>
 
     <.flash_group flash={@flash} id="flash-group" />
+    <.ops_command_palette mount_path={@mount_path} />
     """
   end
 

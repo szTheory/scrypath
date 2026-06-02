@@ -275,7 +275,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           meta={if @reconcile_loaded_at, do: "last loaded #{format_dt(@reconcile_loaded_at)}"}
         >
           <:actions>
-            <.ops_button phx-click="refresh_reconcile" variant={:primary}>
+            <.ops_button phx-click="refresh_reconcile" variant={:primary} data-ops-refresh>
               Refresh reconcile
             </.ops_button>
           </:actions>

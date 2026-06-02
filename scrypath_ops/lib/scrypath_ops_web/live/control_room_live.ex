@@ -49,7 +49,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
           title="Control Room"
           subtitle="Start here. See whether search is in sync, then pick the job you're doing."
         />
-        <.ops_button phx-click="refresh" variant={:primary}>
+        <.ops_button phx-click="refresh" variant={:primary} data-ops-refresh>
           Refresh posture
         </.ops_button>
       </.ops_toolbar>

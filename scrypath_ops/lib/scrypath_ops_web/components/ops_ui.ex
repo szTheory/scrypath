@@ -152,7 +152,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:rest, :global,
     include:
-      ~w(phx-click phx-value-id phx-value-mode phx-value-name phx-value-schema phx-disable-with disabled data-testid aria-label)
+      ~w(phx-click phx-value-id phx-value-mode phx-value-name phx-value-schema phx-disable-with disabled data-testid data-ops-refresh aria-label)
   )
 
   slot(:inner_block, required: true)
@@ -912,6 +912,102 @@ defmodule ScrypathOpsWeb.OpsUi do
         </button>
         <h3 id={"#{@id}-title"} class="text-ops-h2 font-semibold leading-ops-tight">{@title}</h3>
         <div class="mt-3">{render_slot(@inner_block)}</div>
+      </div>
+    </div>
+    """
+  end
+
+  @doc """
+  Operator command palette (⌘K / Ctrl-K) + keyboard cheat-sheet (`?`).
+
+  Pure client-side: every item is a live-navigation link, so the palette needs no
+  server event. The `CommandPalette` JS hook owns open/close, fuzzy filter, arrow
+  navigation, `?` for the cheat-sheet, and `r` to click the page's `[data-ops-refresh]`
+  control. Rendered once in the `:ops` shell so it is available on every surface.
+  """
+  attr(:mount_path, :string, required: true)
+
+  def ops_command_palette(assigns) do
+    assigns =
+      assign(assigns, :items, [
+        %{path: assigns.mount_path, label: "Control Room", hint: "Home · trust verdict"}
+        | Enum.map(
+            ScrypathOpsWeb.Nav.primary(assigns.mount_path),
+            &%{path: &1.path, label: &1.label, hint: &1.title}
+          )
+      ])
+
+    ~H"""
+    <div id="ops-command-palette" phx-hook="CommandPalette" data-cheatsheet="ops-cheatsheet">
+      <div
+        id="ops-cmdk"
+        class="ops-cmdk"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Command palette"
+        hidden
+      >
+        <div class="ops-cmdk__backdrop" data-cmdk-close aria-hidden="true"></div>
+        <div class="ops-cmdk__panel">
+          <input
+            type="text"
+            class="ops-cmdk__input"
+            placeholder="Jump to a surface…"
+            aria-label="Search surfaces"
+            autocomplete="off"
+            spellcheck="false"
+            data-cmdk-input
+          />
+          <ul class="ops-cmdk__list" role="listbox" aria-label="Surfaces">
+            <li :for={item <- @items}>
+              <.link
+                navigate={item.path}
+                class="ops-cmdk__item"
+                role="option"
+                data-cmdk-item
+                data-cmdk-label={String.downcase("#{item.label} #{item.hint}")}
+              >
+                <span class="ops-cmdk__item-label">{item.label}</span>
+                <span class="ops-cmdk__item-hint">{item.hint}</span>
+              </.link>
+            </li>
+          </ul>
+          <p class="ops-cmdk__empty" data-cmdk-empty hidden>No matching surface.</p>
+        </div>
+      </div>
+
+      <div
+        id="ops-cheatsheet"
+        class="ops-cmdk"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Keyboard shortcuts"
+        hidden
+      >
+        <div class="ops-cmdk__backdrop" data-cmdk-close aria-hidden="true"></div>
+        <div class="ops-cmdk__panel ops-cmdk__panel--sheet">
+          <h2 class="text-ops-h3 font-semibold leading-ops-tight text-base-content">
+            Keyboard shortcuts
+          </h2>
+          <dl class="ops-cheatsheet__list">
+            <div class="ops-cheatsheet__row">
+              <dt><kbd class="ops-kbd">⌘</kbd> <kbd class="ops-kbd">K</kbd></dt>
+              <dd>Jump to any surface</dd>
+            </div>
+            <div class="ops-cheatsheet__row">
+              <dt><kbd class="ops-kbd">r</kbd></dt>
+              <dd>Refresh this surface</dd>
+            </div>
+            <div class="ops-cheatsheet__row">
+              <dt><kbd class="ops-kbd">?</kbd></dt>
+              <dd>Show this cheat-sheet</dd>
+            </div>
+            <div class="ops-cheatsheet__row">
+              <dt><kbd class="ops-kbd">Esc</kbd></dt>
+              <dd>Close</dd>
+            </div>
+          </dl>
+        </div>
       </div>
     </div>
     """
