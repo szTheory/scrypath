@@ -25,6 +25,7 @@ defmodule ScrypathOps.Posture do
           error_count: non_neg_integer(),
           schema_count: non_neg_integer(),
           backend_failed_count: non_neg_integer(),
+          queue_failed_count: non_neg_integer(),
           queue_observed_count: non_neg_integer(),
           refreshed_at: DateTime.t() | nil,
           headline: String.t(),
@@ -36,6 +37,7 @@ defmodule ScrypathOps.Posture do
             error_count: 0,
             schema_count: 0,
             backend_failed_count: 0,
+            queue_failed_count: 0,
             queue_observed_count: 0,
             refreshed_at: nil,
             headline: "—",
@@ -59,13 +61,23 @@ defmodule ScrypathOps.Posture do
       true ->
         rows = scan(allowlist, opts)
         err = Enum.count(rows, fn {_m, r} -> match?({:error, _}, r) end)
+        backend_failed = backend_failed_count(rows)
+        queue_failed = queue_failed_count(rows)
+
+        # Honest "can I trust search right now?" verdict: fetch errors degrade it, and
+        # so does sync work that already failed and won't self-heal (terminal backend
+        # rejections + discarded queue jobs) — that means the live index may be missing
+        # documents. Retrying/pending work is in-flight, so it stays neutral (no crying
+        # wolf over work that may yet succeed).
+        stuck_failed = backend_failed + queue_failed
 
         classify(%Posture{
-          state: if(err > 0, do: :degraded, else: :ok),
+          state: if(err > 0 or stuck_failed > 0, do: :degraded, else: :ok),
           rows: rows,
           error_count: err,
           schema_count: length(rows),
-          backend_failed_count: backend_failed_count(rows),
+          backend_failed_count: backend_failed,
+          queue_failed_count: queue_failed,
           queue_observed_count: queue_observed_count(rows),
           refreshed_at: DateTime.utc_now()
         })
@@ -174,6 +186,13 @@ defmodule ScrypathOps.Posture do
     end)
   end
 
+  defp queue_failed_count(rows) do
+    Enum.reduce(rows, 0, fn
+      {_mod, {:ok, status}}, acc -> acc + length(status.queue.failed)
+      _row, acc -> acc
+    end)
+  end
+
   defp queue_observed_count(rows) do
     Enum.count(rows, fn
       {_mod, {:ok, status}} -> status.queue.observed?
@@ -199,12 +218,11 @@ defmodule ScrypathOps.Posture do
     }
   end
 
-  defp classify(%Posture{state: :degraded, error_count: err} = summary) do
+  defp classify(%Posture{state: :degraded} = summary) do
     %{
       summary
       | headline: "Degraded",
-        evidence:
-          "#{err} schema(s) report fetch or sync errors on this refresh — treat as incident triage, not green."
+        evidence: degraded_evidence(summary)
     }
   end
 
@@ -215,6 +233,27 @@ defmodule ScrypathOps.Posture do
         evidence:
           "This refresh found no schema fetch errors. Keep failed work and drift checks in the loop before treating the fleet as ready for promotion."
     }
+  end
+
+  # Name the real cause so "Degraded" never reads as a vague alarm. Fetch errors and
+  # stuck failed sync work are distinct signals; report whichever (or both) fired.
+  defp degraded_evidence(%Posture{
+         error_count: err,
+         backend_failed_count: backend_failed,
+         queue_failed_count: queue_failed
+       }) do
+    stuck = backend_failed + queue_failed
+
+    parts =
+      [
+        err > 0 && "#{err} schema(s) report fetch errors on this refresh",
+        stuck > 0 &&
+          "#{stuck} sync job(s) failed to apply and will not self-heal (the live index may be missing documents)"
+      ]
+      |> Enum.filter(& &1)
+
+    Enum.join(parts, "; ") <>
+      " — treat as incident triage, not green. Work the failed-sync queue first."
   end
 
   defp operator_mix_guide_path do
