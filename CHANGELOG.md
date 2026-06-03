@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 Release Please manages versioned entries after this baseline.
 
+## [0.3.10](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.9...scrypath-v0.3.10) (2026-06-03)
+
+
+### Bug Fixes
+
+* **release:** include docs/jtbd-gap-map.md in the Hex package ([#38](https://github.com/szTheory/scrypath/issues/38)) ([2aa180b](https://github.com/szTheory/scrypath/commit/2aa180b0105b57a5693e15bc80dab02d9b203199))
+
 ## [0.3.9](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.8...scrypath-v0.3.9) (2026-06-03)
 
 
