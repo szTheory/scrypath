@@ -242,7 +242,7 @@ defmodule Scrypath.MixProject do
       # The optional Phoenix operator app under scrypath_ops/ must never be listed in
       # files: above — it is not part of the Hex tarball (see docs/releasing.md).
       files:
-        ~w(lib .formatter.exs mix.exs README.md CONTRIBUTING.md ARCHITECTURE.md CHANGELOG.md LICENSE SECURITY.md guides docs/releasing.md docs/operator-support.md docs/search-backend-sre.md),
+        ~w(lib .formatter.exs mix.exs README.md CONTRIBUTING.md ARCHITECTURE.md CHANGELOG.md LICENSE SECURITY.md guides docs/jtbd-gap-map.md docs/releasing.md docs/operator-support.md docs/search-backend-sre.md),
       links: %{
         "GitHub" => @source_url,
         "HexDocs" => @release_docs_url,
