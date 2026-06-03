@@ -10,11 +10,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Current Milestone
 
-No active milestone. v1.32 shipped and archived on 2026-06-01.
+**v1.33 — Admin UI Insane Polish** (phases 119-127, active 2026-06-03). Owner-initiated, screenshot-backed UI/UX + design-system iteration of the `scrypath_ops` admin console — the next-level pass on v1.32's foundation. See `milestones/v1.33-{ROADMAP,REQUIREMENTS}.md`.
 
-## Current Mode: idle release train
+## Current Mode: evidence-gated feature lane (UI polish wedge)
 
-**Goal:** Keep `main` green, preserve release/support truth, and avoid inventing new roadmap scope without concrete evidence.
+**Goal:** Execute v1.33's bounded admin-UI polish wedge — task-first IA, design-system tightening for compounding reuse, mobile-first responsiveness, restrained brand motion — while keeping `main` green and runtime scope closed. This wedge is an explicit owner decision that overrides the default idle posture; it adds no runtime/product breadth.
 
 **Recent closed outcomes:**
 - v1.30 release train/package truth, support intake routing, advisory proof stability, and public website/docs truth alignment.
@@ -183,7 +183,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Planning window
 
-**Active milestone:** none. The release train is idle after v1.32 archive.
+**Active milestone:** v1.33 — Admin UI Insane Polish (phases 119-127). Owner-initiated polish wedge; the release train is otherwise idle.
 
 ## Requirements
 
@@ -258,7 +258,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 <!-- Current scope. Building toward these. -->
 
-No active feature or repair requirements. The default lane is idle maintenance-and-evidence mode: release/support truth, proof stability, public claim drift, and outside-adopter evidence only when concrete signal appears.
+- [ ] **v1.33 Admin UI Insane Polish** (phases 119-127): **HARNESS-01**, **SEED-01**, **AUDIT-01**, **TOKEN-01**, **COMP-01**, **MOTION-01**, **IA-01**, **COPY-01**, **RECOVER-01**, **EXPLORE-01**, **SHELL-01**, **VERIFY-01** — screenshot-driven audit harness + seed scenarios, per-touchpoint audit, design-system tightening (tokens/components/motion), task-first IA + front-door, per-screen polish, and shell coherence + verification. Bounded admin-UI polish; no runtime breadth. See `milestones/v1.33-REQUIREMENTS.md`.
 
 ### Out of Scope
 

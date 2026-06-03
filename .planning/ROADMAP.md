@@ -7,10 +7,21 @@
 - ✅ **v1.30 Release Trust and Evidence Maintenance** — Phases 109-112 (shipped 2026-06-01) — see `milestones/v1.30-ROADMAP.md`
 - ✅ **v1.31 Adoption Evidence Demo Hardening** — Phases 113-115 (UAT passed 2026-06-01)
 - ✅ **v1.32 Admin UI/UX Design System Cleanup** — Phases 116-118 (shipped 2026-06-01) — see `milestones/v1.32-ROADMAP.md`
+- ◆ **v1.33 Admin UI Insane Polish** — Phases 119-127 (active) — see `milestones/v1.33-ROADMAP.md`
 
 ## Phases
 
-No active milestone. Start the next planning cycle with `$gsd-new-milestone` when there is concrete release follow-through, support/proof drift, production bug evidence, outside-adopter evidence, or an explicit strategic wedge.
+Active milestone: **v1.33 Admin UI Insane Polish**. Owner-initiated, screenshot-backed polish wedge that deliberately overrides idle posture. Full phase detail in `milestones/v1.33-ROADMAP.md`. Legend: `[R]` research · `[S]` screenshot-loop · `[G]` gate.
+
+- **Phase 119** — Audit harness + seed-scenario coverage `[S]` — HARNESS-01, SEED-01
+- **Phase 120** — Per-touchpoint audit pass `[S]` — AUDIT-01
+- **Phase 121** — Design-system tightening: tokens `[G]` — TOKEN-01
+- **Phase 122** — Design-system tightening: components `[G]` — COMP-01
+- **Phase 123** — Micro-animation layer `[R] [G]` — MOTION-01
+- **Phase 124** — IA + Control Room front-door `[S]` — IA-01, COPY-01
+- **Phase 125** — Recover screens polish (Posture, Failed Sync, Sync/Drift) `[S]` — RECOVER-01
+- **Phase 126** — Explore screens polish (Search/Federation, Playbooks) `[S]` — EXPLORE-01
+- **Phase 127** — Shell coherence + milestone verification & UAT `[S] [G]` — SHELL-01, VERIFY-01
 
 ## Progress
 
@@ -21,6 +32,7 @@ No active milestone. Start the next planning cycle with `$gsd-new-milestone` whe
 | v1.30 Release Trust and Evidence Maintenance | 109-112 | 11/11 | Complete | 2026-06-01 |
 | v1.31 Adoption Evidence Demo Hardening | 113-115 | 3/3 phases complete | UAT passed | 2026-06-01 |
 | v1.32 Admin UI/UX Design System Cleanup | 116-118 | 3/3 phases complete | Complete | 2026-06-01 |
+| v1.33 Admin UI Insane Polish | 119-127 | 0/9 phases complete | Active | — |
 
 ## Historical Contract Anchors
 
@@ -29,4 +41,4 @@ No active milestone. Start the next planning cycle with `$gsd-new-milestone` whe
 
 ## Next
 
-No active milestone. Use `$gsd-new-milestone` only when the evidence-gated feature lane or maintenance lane justifies fresh scope.
+Plan and execute **Phase 119** (audit harness + seed scenarios). v1.33 is an owner-initiated polish wedge; see `milestones/v1.33-{ROADMAP,REQUIREMENTS}.md` for full scope, methodology, and locked design decisions.

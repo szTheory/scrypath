@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.32
-milestone_name: milestone
-status: Awaiting next milestone
-last_updated: "2026-06-02T08:04:48.976Z"
-last_activity: 2026-06-01 — Milestone v1.32 completed and archived
+milestone: v1.33
+milestone_name: Admin UI Insane Polish
+status: Active — Phase 119 pending
+last_updated: "2026-06-03"
+last_activity: 2026-06-03 — Milestone v1.33 scaffolded; phases 119-127 defined
 progress:
-  total_phases: 8
-  completed_phases: 5
-  total_plans: 12
-  completed_plans: 14
-  percent: 63
+  total_phases: 9
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -18,18 +18,20 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Awaiting next milestone
+**Current Focus:** v1.33 Admin UI Insane Polish — Phase 119 (audit harness + seed scenarios)
 
 ## Current Position
 
-Phase: Milestone v1.32 complete
+Phase: 119 — Audit harness + seed-scenario coverage (pending)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-06-01 — Milestone v1.32 completed and archived
+Status: Active — milestone scaffolded, Phase 119 not yet planned
+Last activity: 2026-06-03 — Milestone v1.33 scaffolded; phases 119-127 defined
 
 ## Current Milestone
 
-No active milestone. v1.32 Admin UI/UX Design System Cleanup is complete and archived.
+**v1.33 Admin UI Insane Polish** (phases 119-127) — owner-initiated, screenshot-backed UI/UX + design-system iteration of the `scrypath_ops` admin console, building on the v1.32 foundation. Deliberately overrides the idle/maintenance posture as an explicit polish wedge. See `milestones/v1.33-{ROADMAP,REQUIREMENTS}.md`.
+
+**Locked decisions:** task-first IA restructure (we commit, no external gate) · elevate brand within "reserved" (one signature verdict tone-settle) · scaffold + run autonomously, checkpoint at gate phases (121,122,123,127) + IA before/after (124).
 
 ## Accumulated Context
 
@@ -56,7 +58,7 @@ No active milestone. v1.32 Admin UI/UX Design System Cleanup is complete and arc
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Plan and execute Phase 119 (audit harness + seed scenarios) with the GSD phase loop.
 
 ## Performance Metrics
 
