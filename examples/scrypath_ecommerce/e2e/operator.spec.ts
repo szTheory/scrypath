@@ -1,6 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-import { injectFailedSync, operatorState, seedScenario, waitForSwapOutcome } from "./helpers/e2e";
+import {
+  injectFailedSync,
+  operatorState,
+  seedScenario,
+  waitForLiveConnected,
+  waitForSwapOutcome
+} from "./helpers/e2e";
 
 test("operator can triage intentionally failed sync work", async ({ page, request }) => {
   const seed = await seedScenario(request, "e2e_search_catalog");
@@ -28,7 +34,7 @@ test("operator can triage intentionally failed sync work", async ({ page, reques
   const row = page.getByTestId("failed-sync-row").first();
   await expect(row).toBeVisible();
 
-  await row.getByText("Inspect evidence").click();
+  await row.getByText("View evidence").click();
 
   const retryButton = row.getByTestId("failed-sync-retry");
 
@@ -55,16 +61,19 @@ test("operator can initiate zero-downtime swap from sync drift UI", async ({ pag
   const seed = await seedScenario(request, "e2e_search_catalog");
 
   await page.goto("/admin/search/posture");
+  await waitForLiveConnected(page);
   await expect(page.getByRole("button", { name: "Refresh posture" })).toBeVisible();
   await page.getByRole("button", { name: "Refresh posture" }).click();
 
   const postureRow = page.getByTestId("posture-row").first();
   await expect(postureRow).toBeVisible();
-  await expect(page.getByTestId("posture-next-checks")).toContainText(/No fetch errors observed|Degraded/);
+  await expect(page.getByTestId("posture-next-checks")).toContainText(
+    /no schema fetch errors|incident triage/i
+  );
 
   await page.goto("/admin/search/sync-drift");
-  await expect(page.getByRole("heading", { name: "Sync / drift" })).toBeVisible();
-  await page.waitForTimeout(500);
+  await waitForLiveConnected(page);
+  await expect(page.getByRole("heading", { name: "Sync & Drift" })).toBeVisible();
   await page.getByRole("button", { name: "Load / refresh contract drift" }).click();
   await expect(page.getByText("Contract dimensions")).toBeVisible();
   await page.getByRole("button", { name: "Swap live index" }).click();
