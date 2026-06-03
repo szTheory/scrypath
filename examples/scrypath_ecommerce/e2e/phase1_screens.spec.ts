@@ -27,7 +27,7 @@ test("control room", async ({ page }, testInfo) => {
 
 test("posture", async ({ page }, testInfo) => {
   await page.goto("/admin/search/posture");
-  await page.getByRole("heading", { name: "Posture / health" }).waitFor();
+  await page.getByRole("heading", { name: "Posture", exact: true }).waitFor();
   await page.waitForTimeout(300);
   await capture(page, testInfo, "02-posture");
 });
@@ -48,7 +48,7 @@ test("failed sync (collapsed + expanded evidence)", async ({ page }, testInfo) =
 
 test("sync drift (loaded)", async ({ page }, testInfo) => {
   await page.goto("/admin/search/sync-drift");
-  await page.getByRole("heading", { name: "Sync / drift" }).waitFor();
+  await page.getByRole("heading", { name: "Sync & Drift", exact: true }).waitFor();
   await page.waitForTimeout(300);
   const loadBtn = page.getByRole("button", { name: /contract drift/i }).first();
   if (await loadBtn.count()) {
