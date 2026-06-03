@@ -631,6 +631,18 @@ jobs:
           npm ci
           npx playwright install --with-deps chromium
 
+      # priv/static/assets is gitignored and built by the dev watchers, so a fresh CI
+      # checkout has no app.js/app.css. Without them the LiveView client never loads and
+      # every interactive (phx-change / phx-click) test fails. Build the assets explicitly
+      # so the storefront + operator UIs are actually interactive under Playwright.
+      - name: Build example assets (LiveView client JS + CSS)
+        working-directory: examples/scrypath_ecommerce
+        run: |
+          mix esbuild.install --if-missing
+          mix tailwind.install --if-missing
+          mix esbuild scrypath_ecommerce
+          mix tailwind scrypath_ecommerce
+
       - name: Start example Phoenix server
         working-directory: examples/scrypath_ecommerce
         env:
