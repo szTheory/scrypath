@@ -1,5 +1,6 @@
 import { expect, type APIRequestContext } from "@playwright/test";
-import { appendFile } from "node:fs/promises";
+import { appendFile, mkdir } from "node:fs/promises";
+import { dirname } from "node:path";
 
 type SeedResult = {
   tenant_id: number;
@@ -36,6 +37,7 @@ async function emitEvidence(operation: string, payload: EvidencePayload): Promis
     ...payload
   };
 
+  await mkdir(dirname(evidencePath), { recursive: true });
   await appendFile(evidencePath, `${JSON.stringify(entry)}\n`);
 }
 

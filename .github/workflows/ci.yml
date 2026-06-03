@@ -582,6 +582,15 @@ jobs:
           cache: npm
           cache-dependency-path: examples/scrypath_ecommerce/package-lock.json
 
+      - uses: actions/cache@v5
+        with:
+          path: |
+            deps
+            _build
+            examples/scrypath_ecommerce/deps
+            examples/scrypath_ecommerce/_build
+          key: ${{ runner.os }}-phase105-e2e-${{ hashFiles('mix.lock', 'examples/scrypath_ecommerce/mix.lock') }}
+
       - name: Install postgres client (pg_isready)
         run: sudo apt-get update -qq && sudo apt-get install -y postgresql-client
 
@@ -624,19 +633,31 @@ jobs:
 
       - name: Start example Phoenix server
         working-directory: examples/scrypath_ecommerce
+        env:
+          # test.exs gates the endpoint on PHX_SERVER=true (server: + bind ip:). Without it,
+          # the listener only starts via mix phx.server's serve_endpoints override, which races
+          # endpoint init in CI and leaves the process alive but nothing bound on :4002.
+          PHX_SERVER: "true"
         run: |
+          # Compile synchronously first so the readiness window below times boot, not compile.
+          mix compile
           mix phx.server > /tmp/phase105-e2e-phx.log 2>&1 &
           echo $! > /tmp/phase105-e2e-phx.pid
 
       - name: Wait for app readiness
         run: |
-          for _ in $(seq 1 60); do
+          for _ in $(seq 1 120); do
             if curl --silent --fail "$PLAYWRIGHT_BASE_URL" >/dev/null; then
               exit 0
             fi
             sleep 1
           done
           echo "Phoenix app failed to become ready"
+          echo "--- verbose curl (connection state / HTTP status) ---"
+          curl -sv --max-time 5 "$PLAYWRIGHT_BASE_URL" 2>&1 | tail -n 40 || true
+          echo "--- server process alive? ---"
+          (kill -0 "$(cat /tmp/phase105-e2e-phx.pid 2>/dev/null)" 2>/dev/null && echo "phx.server pid alive") || echo "phx.server pid NOT alive"
+          echo "--- phx boot log ---"
           tail -n 200 /tmp/phase105-e2e-phx.log || true
           exit 1
 
