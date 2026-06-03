@@ -97,6 +97,11 @@ does this for you). Leading: `tight` 1.3 · `body` 1.5. Mono stack lives in `.op
 Six states: `info` · `success` · `warning` (= `partial`) · `error` · `running`, plus
 `neutral` for badges. The single mapping authority is `tone_class/1` / `badge_class/1`
 in `ops_ui.ex`; route any tinted surface (notice, status, action group) through them.
+The **full tone set is supported everywhere a tone is consumed** — surfaces
+(`.ops-tone-*`), badges (`.ops-badge-*`), and the metric border-accent modifiers
+(`.ops-metric-{info,success,warning,partial,error,running}` via `metric_tone_class/1`,
+where `:partial` settles like `:warning` and `:running` accents the brand primary). No
+tone has a "supported on badges but silently `nil` on metrics" gap.
 **Semantics:** neutral facts (counts) use `:neutral`; only real problems use
 `:warning`/`:error`. Don't cry wolf (e.g. "0 queues observed" is neutral, not a warning).
 Red is reserved for "the tool genuinely can't answer" (missing backend); a single degraded
@@ -124,6 +129,7 @@ schema is amber, not red.
 | `--ease-ops-standard` | cubic-bezier(0.2,0.8,0.2,1) | ease-out, enter |
 | `--ease-ops-out` | cubic-bezier(0.16,1,0.3,1) | stronger ease-out, overlay/modal entrance |
 | `--ease-ops-in-out` | cubic-bezier(0.45,0,0.55,1) | symmetric, position toggles |
+| `--ease-ops-exit` | cubic-bezier(0.4,0,1,1) | ease-in, crisp dismissal (modal/palette/flash **close**); faster/more linear than the enter eases |
 
 Everything below is neutralized under `@media (prefers-reduced-motion: reduce)` (one global
 rule), so any new transition is reduced-motion-safe by default. Keep it restrained:

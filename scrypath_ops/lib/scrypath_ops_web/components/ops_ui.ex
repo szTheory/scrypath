@@ -256,7 +256,11 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Small metric tile for rollups and status counts."
   attr(:label, :string, required: true)
   attr(:value, :any, required: true)
-  attr(:kind, :atom, default: :neutral, values: [:neutral, :success, :warning, :error])
+
+  attr(:kind, :atom,
+    default: :neutral,
+    values: [:neutral, :info, :success, :warning, :error, :partial, :running]
+  )
 
   def ops_metric(assigns) do
     ~H"""
@@ -472,7 +476,11 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:summary, :string, required: true)
   attr(:route_label, :string, required: true)
   attr(:navigate, :string, required: true)
-  attr(:kind, :atom, default: :neutral, values: [:neutral, :info, :success, :warning, :error])
+
+  attr(:kind, :atom,
+    default: :neutral,
+    values: [:neutral, :info, :success, :warning, :error, :partial, :running]
+  )
 
   attr(:recommended, :boolean,
     default: false,
@@ -508,9 +516,9 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_empty_state(assigns) do
     ~H"""
-    <div class={["ops-muted-panel p-5 text-ops-body", @class]}>
+    <div class={["ops-muted-panel p-ops-5 text-ops-body", @class]}>
       <h2 class="text-ops-h3 font-semibold leading-ops-tight text-base-content">{@title}</h2>
-      <div class="mt-2 text-base-content/75">{render_slot(@inner_block)}</div>
+      <div class="mt-ops-2 text-base-content/75">{render_slot(@inner_block)}</div>
     </div>
     """
   end
@@ -523,10 +531,10 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_upload_box(assigns) do
     ~H"""
-    <div class={["ops-surface-flat p-3", @class]}>
+    <div class={["ops-surface-flat p-ops-3", @class]}>
       <p class="text-ops-body font-semibold text-base-content">{@label}</p>
-      <p :if={@hint} class="mt-1 text-ops-sm leading-5 text-base-content/65">{@hint}</p>
-      <div class="mt-3">{render_slot(@inner_block)}</div>
+      <p :if={@hint} class="mt-ops-1 text-ops-sm leading-5 text-base-content/65">{@hint}</p>
+      <div class="mt-ops-3">{render_slot(@inner_block)}</div>
     </div>
     """
   end
@@ -763,7 +771,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_checkbox_list(assigns) do
     ~H"""
-    <div class={["ops-data-card p-3", @class]}>
+    <div class={["ops-data-card p-ops-3", @class]}>
       <label
         :for={{label, value} <- @options}
         class="flex min-h-[var(--control-h-sm)] cursor-pointer items-center gap-2 text-ops-body"
@@ -773,7 +781,7 @@ defmodule ScrypathOpsWeb.OpsUi do
           name={@name}
           value={value}
           checked={value in @selected}
-          class="checkbox checkbox-sm rounded"
+          class="checkbox checkbox-sm rounded-ops-sm"
         />
         <span class="min-w-0 font-mono text-ops-sm">{label}</span>
       </label>
@@ -808,14 +816,14 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_data_card(assigns) do
     ~H"""
-    <div class={["ops-data-card p-4 text-ops-body", @class]}>
+    <div class={["ops-data-card p-ops-4 text-ops-body", @class]}>
       <div
         :if={@title || @subtitle || @actions != []}
         class="mb-3 flex flex-wrap items-start justify-between gap-3"
       >
         <div class="min-w-0">
           <p :if={@title} class="font-semibold text-base-content">{@title}</p>
-          <p :if={@subtitle} class="mt-0.5 text-ops-sm leading-5 text-base-content/65">{@subtitle}</p>
+          <p :if={@subtitle} class="mt-ops-1 text-ops-sm leading-5 text-base-content/65">{@subtitle}</p>
         </div>
         <div :if={@actions != []} class="flex flex-wrap gap-2">
           {render_slot(@actions)}
@@ -981,7 +989,7 @@ defmodule ScrypathOpsWeb.OpsUi do
         <button
           :if={@cancel_event}
           type="button"
-          class="btn btn-circle btn-ghost btn-sm absolute right-3 top-3"
+          class="btn btn-circle btn-ghost btn-sm absolute right-ops-3 top-ops-3"
           phx-click={@cancel_event}
           aria-label="Close dialog"
           autofocus
@@ -1176,6 +1184,9 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp metric_tone_class(:success), do: "ops-metric-success"
   defp metric_tone_class(:warning), do: "ops-metric-warning"
   defp metric_tone_class(:error), do: "ops-metric-error"
+  defp metric_tone_class(:info), do: "ops-metric-info"
+  defp metric_tone_class(:partial), do: "ops-metric-partial"
+  defp metric_tone_class(:running), do: "ops-metric-running"
   defp metric_tone_class(_), do: nil
 
   # The verdict hero uses the full tinted surface for non-neutral states; neutral gets a

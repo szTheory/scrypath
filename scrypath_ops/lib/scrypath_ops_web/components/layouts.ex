@@ -51,7 +51,7 @@ defmodule ScrypathOpsWeb.Layouts do
     ~H"""
     <a
       href="#ops-main"
-      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-base-100 focus:px-3 focus:py-2 focus:text-ops-body focus:font-medium focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-ops-2 focus:left-ops-2 focus:z-ops-skip-link focus:rounded-ops-control focus:bg-base-100 focus:px-ops-3 focus:py-ops-2 focus:text-ops-body focus:font-medium focus:shadow-ops-overlay"
     >
       Skip to operator content
     </a>
@@ -213,11 +213,11 @@ defmodule ScrypathOpsWeb.Layouts do
     >
       <div
         id="theme-toggle-pill"
-        class="absolute top-0 w-1/3 h-full rounded-full border-1 border-base-200 bg-base-100 brightness-200 left-0"
+        class="absolute top-0 left-0 h-full w-1/3 rounded-full border border-base-200 bg-base-100"
       />
 
       <button
-        class="flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-2"
+        class="flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-ops-2"
         type="button"
         aria-label="Use system theme"
         phx-click={JS.dispatch("phx:set-theme")}
@@ -227,7 +227,7 @@ defmodule ScrypathOpsWeb.Layouts do
       </button>
 
       <button
-        class="flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-2"
+        class="flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-ops-2"
         type="button"
         aria-label="Use light theme"
         phx-click={JS.dispatch("phx:set-theme")}
@@ -237,7 +237,7 @@ defmodule ScrypathOpsWeb.Layouts do
       </button>
 
       <button
-        class="flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-2"
+        class="flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-ops-2"
         type="button"
         aria-label="Use dark theme"
         phx-click={JS.dispatch("phx:set-theme")}

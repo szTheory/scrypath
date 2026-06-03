@@ -167,6 +167,7 @@
   --ease-ops-standard: cubic-bezier(0.2, 0.8, 0.2, 1); /* ease-out: enter */
   --ease-ops-out: cubic-bezier(0.16, 1, 0.3, 1);        /* stronger ease-out: overlays */
   --ease-ops-in-out: cubic-bezier(0.45, 0, 0.55, 1);    /* symmetric: position toggles */
+  --ease-ops-exit: cubic-bezier(0.4, 0, 1, 1);          /* ease-in: crisp dismissal (modal/palette/flash close) */
 
   --text-ops-xs:   0.6875rem;
   --text-ops-sm:   0.75rem;
@@ -304,6 +305,20 @@
 
   .ops-metric-error {
     border-color: color-mix(in oklch, var(--color-error) 50%, transparent);
+  }
+
+  .ops-metric-info {
+    border-color: color-mix(in oklch, var(--color-info) 48%, transparent);
+  }
+
+  /* :partial settles like :warning (shared tone family); :running uses the brand
+     primary so an in-flight count reads as "working", not as a problem. */
+  .ops-metric-partial {
+    border-color: color-mix(in oklch, var(--color-warning) 50%, transparent);
+  }
+
+  .ops-metric-running {
+    border-color: color-mix(in oklch, var(--color-primary) 48%, transparent);
   }
 
   /* Trust-verdict hero. Tone surface comes from `.ops-tone-*` (or `.ops-verdict-neutral`);
@@ -616,7 +631,7 @@
     border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
     border-radius: var(--radius-ops-lg);
     background: color-mix(in oklch, var(--color-base-100) 92%, transparent);
-    padding: 0.875rem;
+    padding: var(--spacing-ops-3);
   }
 
   .ops-object-item-active {
@@ -719,7 +734,15 @@
     padding: 0;
   }
 
-  @media (min-width: 768px) {
+  /* Tablet intermediate: 2-col at sm so the four steps aren't a cramped 4-up at 768px,
+     then the full 4-col single-row wizard at lg. */
+  @media (min-width: 640px) {
+    .ops-preflight {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1024px) {
     .ops-preflight {
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
