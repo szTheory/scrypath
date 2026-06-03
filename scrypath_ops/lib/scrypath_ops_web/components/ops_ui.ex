@@ -940,6 +940,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:summary, :string, required: true)
   attr(:id, :string, default: nil)
   attr(:variant, :atom, default: :default, values: [:default, :compact])
+  attr(:open, :boolean, default: false)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
   slot(:inner_block, required: true)
@@ -948,6 +949,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <details
       id={@id}
+      open={@open}
       class={[
         "ops-disclosure",
         @variant == :compact && "ops-disclosure-compact",

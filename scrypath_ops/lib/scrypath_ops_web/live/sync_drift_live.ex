@@ -33,6 +33,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       |> assign(:drift_result, nil)
       |> assign(:drift_loaded_at, nil)
       |> assign(:drift_error, nil)
+      |> assign(:drift_loading, false)
 
     {:ok, load_reconcile_on_mount(socket)}
   end
@@ -67,7 +68,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   end
 
   def handle_event("load_drift", _params, socket) do
-    {:noreply, refresh_drift(socket)}
+    # Two-step so the loading skeleton paints before the bounded backend read runs.
+    # The contract-drift call is fast but synchronous; deferring it to handle_info/2
+    # lets LiveView push the `:drift_loading` frame first. Event name unchanged.
+    send(self(), :run_drift)
+    {:noreply, assign(socket, :drift_loading, true)}
   end
 
   def handle_event("select_schema", %{"schema" => mod_str}, socket) do
@@ -81,6 +86,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           |> assign(:drift_result, nil)
           |> assign(:drift_loaded_at, nil)
           |> assign(:drift_error, nil)
+          |> assign(:drift_loading, false)
           |> load_reconcile_on_mount()
 
         {:noreply, socket}
@@ -92,6 +98,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   def handle_event("swap_live", _params, socket) do
     {:noreply, swap_live(socket)}
+  end
+
+  @impl true
+  def handle_info(:run_drift, socket) do
+    {:noreply, refresh_drift(socket)}
   end
 
   defp module_flat_name(mod) when is_atom(mod) do
@@ -129,6 +140,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp refresh_drift(socket) do
     mod = socket.assigns.selected_schema
     opts = socket.assigns.scrypath_opts
+
+    socket = assign(socket, :drift_loading, false)
 
     if mod && Keyword.has_key?(opts, :backend) do
       case Scrypath.index_contract_drift(mod, ScrypathOps.Schemas.runtime_opts(opts)) do
@@ -273,7 +286,13 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app mount_path={@mount_path} flash={@flash} shell={@shell} page_title={@page_title}>
+    <Layouts.app
+      mount_path={@mount_path}
+      flash={@flash}
+      shell={@shell}
+      page_title={@page_title}
+      ops_main_width={:wide}
+    >
       <.ops_page_header
         title="Sync and drift"
         subtitle="Check one schema before you promote it: reconcile, compare drift, then swap."
@@ -291,11 +310,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       </.ops_panel>
 
       <.ops_notice kind={:info} title="Read-only checks first" class="mt-4">
-        Use <code class="text-ops-sm">mix scrypath.reconcile</code>, <code class="text-ops-sm">mix scrypath.index.contract_drift</code>, <code class="text-ops-sm">guides/drift-recovery.md</code>,
-        <code class="text-ops-sm">guides/sync-modes-and-visibility.md</code>
+        Use <.ops_inline_code>mix scrypath.reconcile</.ops_inline_code>, <.ops_inline_code>mix scrypath.index.contract_drift</.ops_inline_code>, <.ops_inline_code>guides/drift-recovery.md</.ops_inline_code>,
+        <.ops_inline_code>guides/sync-modes-and-visibility.md</.ops_inline_code>
         for canonical workflows. The primary checks below stay read-only over
-        <code class="text-ops-sm">Scrypath.reconcile_sync/2</code>
-        and <code class="text-ops-sm">Scrypath.index_contract_drift/2</code>.
+        <.ops_inline_code>Scrypath.reconcile_sync/2</.ops_inline_code>
+        and <.ops_inline_code>Scrypath.index_contract_drift/2</.ops_inline_code>.
       </.ops_notice>
 
       <.ops_panel>
@@ -350,7 +369,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             <tbody>
               <tr>
                 <th scope="row" class="font-medium align-top">Index</th>
-                <td><code class="text-ops-sm">{@reconcile_result.index}</code></td>
+                <td><.ops_inline_code>{@reconcile_result.index}</.ops_inline_code></td>
               </tr>
               <tr>
                 <th scope="row" class="font-medium align-top">Mode</th>
@@ -389,12 +408,25 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           meta={if @drift_loaded_at, do: "last loaded #{format_dt(@drift_loaded_at)}"}
         >
           <:actions>
-            <.ops_button phx-click="load_drift">
+            <.ops_button phx-click="load_drift" phx-disable-with="Loading…" disabled={@drift_loading}>
               Load / refresh contract drift
             </.ops_button>
           </:actions>
 
+          <div
+            :if={@drift_loading}
+            class="space-y-3"
+            role="status"
+            aria-label="Loading contract drift"
+          >
+            <p class="text-ops-body text-base-content/70">
+              Comparing the declared contract against the live index…
+            </p>
+            <.ops_loading lines={4} label="Loading contract drift" />
+          </div>
+
           <.ops_status
+            :if={!@drift_loading}
             kind={drift_status_kind(@drift_result, @drift_error)}
             title={drift_status_title(@drift_result, @drift_error)}
             role={if @drift_error, do: "alert"}
@@ -407,7 +439,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             </div>
           </.ops_status>
 
-          <.ops_signal_table :if={@drift_result}>
+          <.ops_signal_table :if={@drift_result && !@drift_loading}>
             <thead>
               <tr>
                 <th scope="col">Field</th>
@@ -433,7 +465,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               </tr>
             </tbody>
           </.ops_signal_table>
-          <.ops_data_card :if={@drift_result} title="Contract dimensions" class="mt-3">
+          <.ops_data_card :if={@drift_result && !@drift_loading} title="Contract dimensions" class="mt-3">
             <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               <.ops_tone_chip
                 :for={{label, match?} <- drift_dimension_rows(@drift_result)}
@@ -463,7 +495,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           </.ops_verdict>
           <.ops_action_group tone={:advanced}>
             <p class="max-w-xl text-ops-body text-base-content/75">
-              Swap the prepared target index into the live alias for <code>{module_flat_name(@selected_schema)}</code>. This runs the existing gated
+              Swap the prepared target index into the live alias for <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>. This runs the existing gated
               recovery path and refreshes loaded checks afterward.
             </p>
             <.ops_button phx-click="swap_live" phx-disable-with="Swapping...">
