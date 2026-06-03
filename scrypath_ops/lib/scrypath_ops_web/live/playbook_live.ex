@@ -981,6 +981,8 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   >
                     Rename
                   </.ops_button>
+                </.ops_action_group>
+                <.ops_action_group :if={@workspace_writable?} tone={:danger}>
                   <.ops_button
                     phx-click="request_delete"
                     phx-value-name={row.name}
