@@ -340,7 +340,12 @@
   }
 
   /* Trust-verdict hero. Tone surface comes from `.ops-tone-*` (or `.ops-verdict-neutral`);
-     the surface color settles over --duration-ops-status when the verdict changes. */
+     the surface color settles over --duration-ops-status when the verdict changes.
+     A2 (signature tone-settle): the verdict surface, its status dot, AND the page's metric
+     borders all transition on the SAME --duration-ops-status + --ease-ops-standard pair, so a
+     Refresh that flips posture reads as ONE coherent beat ("the answer just moved") rather than
+     6 independent flickers. Pure CSS — no JS hook, no stagger; coordination is the shared timing
+     token, which is the restrained move for an ops console. */
   .ops-verdict {
     transition:
       background-color var(--duration-ops-status) var(--ease-ops-standard),
@@ -370,6 +375,10 @@
     height: 0.5rem;
     border-radius: 999px;
     background: color-mix(in oklch, var(--color-base-content) 40%, transparent);
+    /* Settle the dot's tone in lockstep with the surface (same token pair) so the verdict
+       reads as a single beat — the dot is the loudest tone signal, so a snapping dot would
+       break the "one answer moved" coherence A2 is built for. */
+    transition: background-color var(--duration-ops-status) var(--ease-ops-standard);
   }
 
   .ops-verdict.ops-tone-success .ops-verdict__dot {
@@ -650,8 +659,12 @@
     border-radius: var(--radius-ops-lg);
     background: color-mix(in oklch, var(--color-base-100) 92%, transparent);
     padding: var(--spacing-ops-3);
+    /* A4 (press/hover timing polish): hover color/elevation settle over --duration-ops-fast
+       (matches nav/badge/card hover), but the press transform runs at --duration-ops-instant
+       so the tap feels as immediate and crisp as .ops-btn:active — one press-feel authority
+       across buttons, cards, and interactive rows. */
     transition:
-      transform var(--duration-ops-fast) var(--ease-ops-standard),
+      transform var(--duration-ops-instant) var(--ease-ops-standard),
       border-color var(--duration-ops-fast) var(--ease-ops-standard),
       box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
   }
@@ -894,15 +907,17 @@
     border-radius: var(--radius-ops-surface);
     background: color-mix(in oklch, var(--color-base-100) 94%, transparent);
     padding: var(--spacing-ops-3);
+    /* A4: see .ops-object-item — press transform at --duration-ops-instant, hover settle at
+       --duration-ops-fast, so rows share the button/card press-feel authority. */
     transition:
-      transform var(--duration-ops-fast) var(--ease-ops-standard),
+      transform var(--duration-ops-instant) var(--ease-ops-standard),
       border-color var(--duration-ops-fast) var(--ease-ops-standard),
       box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
   }
 
   /* Hover/press parity for interactive-feeling rows: the same restrained transform/elevation
      vocabulary buttons (.ops-btn:active) and cards (.ops-intent-card:hover) already use, scoped
-     to rows that carry an action. Static state styling here; motion timing polish is Phase 123. */
+     to rows that carry an action. Timing polished in Phase 123 (A4): press = instant, hover = fast. */
   .ops-result-row:hover,
   .ops-object-item:hover {
     border-color: color-mix(in oklch, var(--color-primary) 32%, transparent);
@@ -1008,6 +1023,18 @@
 
   .ops-cmdk[hidden] {
     display: none;
+  }
+
+  /* Exit beat: the JS hook adds `.ops-cmdk--closing` for one --duration-ops-fast tick
+     before it sets [hidden], so the panel dismissal eases out with --ease-ops-exit instead
+     of vanishing. Enter eases in (--ease-ops-out, longer); exit is crisp (ease-in, faster) —
+     the enter/exit asymmetry that makes "close" feel as intentional as "open". */
+  .ops-cmdk--closing .ops-cmdk__panel {
+    animation: ops-modal-out var(--duration-ops-fast) var(--ease-ops-exit) forwards;
+  }
+
+  .ops-cmdk--closing .ops-cmdk__backdrop {
+    animation: ops-fade-out var(--duration-ops-fast) var(--ease-ops-exit) forwards;
   }
 
   .ops-cmdk__backdrop {
@@ -1175,6 +1202,31 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* Exit mirror of ops-modal-in (origin-aware: settles back toward where it entered from).
+   Paired with --ease-ops-exit + a shorter --duration-ops-fast so dismissal reads crisp,
+   not as a slow reverse of the entrance. */
+@keyframes ops-modal-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+}
+
+@keyframes ops-fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
   }
 }
 

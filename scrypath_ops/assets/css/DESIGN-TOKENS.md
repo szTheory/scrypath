@@ -135,6 +135,38 @@ Everything below is neutralized under `@media (prefers-reduced-motion: reduce)` 
 rule), so any new transition is reduced-motion-safe by default. Keep it restrained:
 transform/opacity only, < 300ms, ease-out for enter, no bounce (this is an incident tool).
 
+### Enter/exit keyframes (Phase 123, MOTION-01)
+
+| Keyframe | Direction | Pairing | Used by |
+| --- | --- | --- | --- |
+| `ops-modal-in` | enter | `--duration-ops-slow` + `--ease-ops-out` | `.modal-box`, `.ops-cmdk__panel` (open) |
+| `ops-modal-out` | exit | `--duration-ops-fast` + `--ease-ops-exit` | `.ops-cmdk--closing .ops-cmdk__panel` (palette/sheet close) |
+| `ops-fade-in` | enter | `--duration-ops-standard` + `--ease-ops-standard` | `.ops-disclosure[open] > .ops-disclosure-body` |
+| `ops-fade-out` | exit | `--duration-ops-fast` + `--ease-ops-exit` | `.ops-cmdk--closing .ops-cmdk__backdrop` |
+
+**Enter/exit asymmetry (the A1 rule):** enters ease *out* (longer, decelerating — `ease-ops-out`,
+~240ms); exits ease *in* (shorter, accelerating — `ease-ops-exit`, ~120ms). Close feels as
+intentional as open without dragging. The modal close also rides this via `phx-remove`
+(`ops_modal`), and flash/banner show/hide via `core_components` `show/2`/`hide/2`. The command
+palette plays `ops-modal-out` through a `.ops-cmdk--closing` class the JS hook adds for one tick
+before `[hidden]` (re-opening cancels it → interruptible). Origin-aware: the exit settles back
+toward the same `translateY(4px) scale(0.98)` the enter came from.
+
+**A2 — signature verdict tone-settle:** `.ops-verdict` (surface), `.ops-verdict__dot`, and every
+`.ops-metric` border share the *same* `--duration-ops-status` + `--ease-ops-standard` transition,
+so a Refresh that flips posture reads as one coherent "the answer just moved" beat — not 6
+independent flickers. Pure CSS (shared token, no JS, no stagger). The dot gets a transition so the
+loudest tone signal doesn't snap ahead of the surface.
+
+**A4 — row press/hover:** `.ops-result-row`/`.ops-object-item` press transform runs at
+`--duration-ops-instant` (matching `.ops-btn:active`); hover color/elevation settle at
+`--duration-ops-fast` — one press-feel authority across buttons, cards, and interactive rows.
+
+**A3 (staggered result reveal) — deliberately NOT shipped.** A CSS-only `nth-child` stagger would
+re-fire on every LiveView DOM patch of the result list (re-runs, re-sorts), reading as flicker —
+the dashboard-toy bar the reserved brand rejects. Gating it to first-reveal needs a JS hook this
+item explicitly forbids, so it was skipped on the side of restraint.
+
 | Animate | Never animate |
 | --- | --- |
 | tone/badge/verdict **color** settle (≤200ms) | layout/reflow: width, height, margin, content top/left |

@@ -17,7 +17,7 @@ Active milestone: **v1.33 Admin UI Insane Polish**. Owner-initiated, screenshot-
 - ✅ **Phase 120** — Per-touchpoint audit pass `[S]` — AUDIT-01
 - ✅ **Phase 121** — Design-system tightening: tokens `[G]` — TOKEN-01
 - ✅ **Phase 122** — Design-system tightening: components `[G]` — COMP-01
-- **Phase 123** — Micro-animation layer `[R] [G]` — MOTION-01
+- ✅ **Phase 123** — Micro-animation layer `[R] [G]` — MOTION-01
 - **Phase 124** — IA + Control Room front-door `[S]` — IA-01, COPY-01
 - **Phase 125** — Recover screens polish (Posture, Failed Sync, Sync/Drift) `[S]` — RECOVER-01
 - **Phase 126** — Explore screens polish (Search/Federation, Playbooks) `[S]` — EXPLORE-01
@@ -41,4 +41,4 @@ Active milestone: **v1.33 Admin UI Insane Polish**. Owner-initiated, screenshot-
 
 ## Next
 
-Phases 121 (TOKEN-01) + 122 (COMP-01) complete in one owner-approved pass — the systemic design-system dividend: exit-easing token, complete status-tone set, raw-step-leak removal, preflight tablet step, notice/status consolidation, ops_code_block tokens, ops_loading primitive, row hover/press parity, shared-copy sentence-case, table scroll affordance. `DESIGN-TOKENS.md` in lockstep; gates green (verify.opsui 129/0, LiveView 129/0, ecommerce compile clean, 40-shot matrix re-captured with no regressions). Next: plan and execute **Phase 123** (micro-animation layer `[R] [G]` — wire `--ease-ops-exit` onto modal/palette/flash close, the signature page-wide verdict tone-settle, the row press/hover timing; reduced-motion proofs), owner-gated. v1.33 is an owner-initiated polish wedge; see `milestones/v1.33-{ROADMAP,REQUIREMENTS}.md`.
+Phases 121 (TOKEN-01) + 122 (COMP-01) + 123 (MOTION-01) complete — the systemic design-system + motion dividend. 121/122: exit-easing token, complete status-tone set, raw-step-leak removal, preflight tablet step, notice/status consolidation, ops_code_block tokens, ops_loading primitive, row hover/press parity, shared-copy sentence-case, table scroll affordance. 123 (micro-animation layer): A1 exit easing wired onto flash/modal/palette close (`ops-modal-out`/`ops-fade-out` keyframes, interruptible palette), A2 signature verdict tone-settle (verdict surface + dot + metric borders on one `--duration-ops-status` beat, pure CSS), A4 row press/hover timing; A3 staggered reveal skipped on restraint. `DESIGN-TOKENS.md` in lockstep; gates green (verify.opsui 129/0, LiveView 129/0, ecommerce compile clean, 40-shot matrix re-captured no regressions, reduced-motion confirmed). Next: **Phase 124** (IA nav rename Recover/Explore + front-door + microcopy sweep `[S]`) — owner gate before the nav rename. v1.33 is an owner-initiated polish wedge; see `milestones/v1.33-{ROADMAP,REQUIREMENTS}.md`.

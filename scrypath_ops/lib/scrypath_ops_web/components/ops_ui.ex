@@ -1021,7 +1021,18 @@ defmodule ScrypathOpsWeb.OpsUi do
       phx-window-keydown={@cancel_event}
       phx-key={if @cancel_event, do: "escape", else: nil}
     >
-      <div class={["modal-box relative rounded-ops-overlay", @class]} tabindex="-1">
+      <div
+        class={["modal-box relative rounded-ops-overlay", @class]}
+        tabindex="-1"
+        phx-remove={
+          Phoenix.LiveView.JS.transition(
+            {"transition-all ease-ops-exit duration-200",
+             "opacity-100 translate-y-0 scale-100",
+             "opacity-0 translate-y-1 scale-[0.98]"},
+            time: 120
+          )
+        }
+      >
         <button
           :if={@cancel_event}
           type="button"
