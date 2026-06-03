@@ -900,7 +900,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
           <.ops_toolbar>
             <.ops_heading level={2}>Workspace files</.ops_heading>
             <.ops_button phx-click="refresh_list" variant={:ghost}>
-              Reload list
+              Reload playbooks
             </.ops_button>
           </.ops_toolbar>
 

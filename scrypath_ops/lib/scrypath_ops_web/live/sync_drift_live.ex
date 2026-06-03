@@ -275,7 +275,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     ~H"""
     <Layouts.app mount_path={@mount_path} flash={@flash} shell={@shell} page_title={@page_title}>
       <.ops_page_header
-        title="Sync & Drift"
+        title="Sync and drift"
         subtitle="Check one schema before you promote it: reconcile, compare drift, then swap."
       />
 

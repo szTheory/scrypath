@@ -582,7 +582,7 @@
     box-shadow: var(--shadow-ops-surface);
   }
 
-  .ops-nav-group-probes {
+  .ops-nav-group-explore {
     margin-left: 0.5rem;
     padding-left: 0.5rem;
     border-left: 1px solid color-mix(in oklch, var(--color-base-content) 12%, transparent);
@@ -877,8 +877,12 @@
   }
 
   .ops-intent-card__icon {
-    font-size: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     line-height: 1;
+    color: var(--color-primary);
+    opacity: 0.85;
   }
 
   .ops-intent-card__title {

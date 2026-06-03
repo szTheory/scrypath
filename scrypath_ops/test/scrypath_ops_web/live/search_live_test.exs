@@ -60,7 +60,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     {:ok, _lv, html} = live(conn, ~p"/ops/search")
 
-    assert html =~ "No schemas configured for OPSUI"
+    assert html =~ "No schemas configured"
     assert html =~ "pointer-events-none"
   end
 

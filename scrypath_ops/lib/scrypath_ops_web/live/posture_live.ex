@@ -201,7 +201,7 @@ defmodule ScrypathOpsWeb.PostureLive do
             <li :for={check <- @next_checks} class="pl-1">
               <span>{check.text}</span>
               <span :if={check[:navigate]} class="ml-2">
-                <.link navigate={check.navigate} class="link link-primary">Open in OPSUI</.link>
+                <.link navigate={check.navigate} class="link link-primary">Open this check</.link>
               </span>
               <span :if={check[:href]} class="ml-2">
                 <a href={check.href} class="link link-primary">Open guide</a>

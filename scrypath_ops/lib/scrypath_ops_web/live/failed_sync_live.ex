@@ -243,17 +243,18 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         />
       </.ops_panel>
 
-      <.ops_empty_state :if={@load_error == :no_schemas} title="No Schemas Configured">
-        Set
+      <.ops_empty_state :if={@load_error == :no_schemas} title="No schemas configured">
+        Add allowlisted schema modules with
         <.ops_inline_code>schema_allowlist</.ops_inline_code>
-        in <.ops_inline_code>:scrypath_ops</.ops_inline_code>.
+        in <.ops_inline_code>:scrypath_ops</.ops_inline_code>, then refresh failed sync jobs.
       </.ops_empty_state>
 
       <.ops_empty_state
         :if={@load_error == :missing_backend}
-        title="Runtime Not Configured"
+        title="Runtime not configured"
       >
-        Scrypath runtime is not configured — see <.ops_inline_code>scrypath_ops/README.md</.ops_inline_code>.
+        Configure the Scrypath runtime under <.ops_inline_code>:scrypath_ops</.ops_inline_code>
+        — see <.ops_inline_code>scrypath_ops/README.md</.ops_inline_code>, then refresh.
       </.ops_empty_state>
 
       <.ops_status
@@ -351,10 +352,10 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
           </p>
           <.ops_empty_state
             :if={@inspection.counts.total == 0}
-            title="No Failed Sync Jobs"
+            title="No failed sync jobs"
             class="mt-2"
           >
-            No failed sync work is visible for this schema. Keep checking posture and drift before changing indexes.
+            Nothing to retry for this schema. Re-check fleet posture and verify sync drift before you change indexes.
           </.ops_empty_state>
 
           <div :if={@inspection.counts.total > 0} class="mt-3 grid gap-2">

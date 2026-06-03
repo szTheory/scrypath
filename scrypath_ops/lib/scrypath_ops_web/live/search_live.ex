@@ -734,16 +734,16 @@ defmodule ScrypathOpsWeb.SearchLive do
         </.ops_notice>
 
         <.ops_panel class="space-y-6" aria-describedby="search-honesty-panel">
-          <.ops_empty_state :if={@schema_allowlist == []} title="No Schemas Configured">
-            No schemas configured for OPSUI. Set <code class="text-ops-body">schema_allowlist</code>
+          <.ops_empty_state :if={@schema_allowlist == []} title="No schemas configured">
+            Add allowlisted schema modules with <code class="text-ops-body">schema_allowlist</code>
             under <code class="text-ops-body">:scrypath_ops</code>
-            or use <code class="text-ops-body">SCRYPATH_OPS_SCHEMAS</code>
-            — see <code class="text-ops-body">scrypath_ops/README.md</code>.
+            or <code class="text-ops-body">SCRYPATH_OPS_SCHEMAS</code>
+            — see <code class="text-ops-body">scrypath_ops/README.md</code> — then reload this screen.
           </.ops_empty_state>
 
           <.ops_empty_state
             :if={@schema_allowlist != [] && !Keyword.has_key?(@scrypath_opts, :backend)}
-            title="Runtime Not Configured"
+            title="Runtime not configured"
           >
             Scrypath runtime is not configured (missing <code class="text-ops-body">:backend</code>
             and related
@@ -861,7 +861,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   Results
                 </h2>
                 <.ops_badge kind={if @result_single || @result_multi, do: :success, else: :neutral}>
-                  {if @result_single || @result_multi, do: "last run loaded", else: "run a probe"}
+                  {if @result_single || @result_multi, do: "Last run loaded", else: "Run a probe"}
                 </.ops_badge>
               </div>
 
@@ -900,7 +900,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   >
                     <p class="font-semibold">Some indexes did not return results.</p>
                     <p class="mt-1 text-ops-sm">
-                      Failures are per schema and do not cancel the whole response. Next: open failure details, adjust entries or backend, then re-run <strong>Run sample searches</strong>.
+                      Failures are per schema and do not cancel the whole response. Next: open failure details, adjust entries or backend, then run bounded search again.
                     </p>
                     <p class="mt-2 text-ops-sm text-base-content/70">
                       <code class="text-ops-sm">:all</code>
@@ -1071,6 +1071,12 @@ defmodule ScrypathOpsWeb.SearchLive do
             </.form>
           </section>
         </.ops_panel>
+
+        <.ops_handoff>
+          <:step navigate={"#{@mount_path}/playbooks"} hint="Once a probe earns its keep —">
+            Save it and open playbooks
+          </:step>
+        </.ops_handoff>
       </div>
     </Layouts.app>
     """

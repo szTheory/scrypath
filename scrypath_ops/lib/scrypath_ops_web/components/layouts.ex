@@ -71,7 +71,7 @@ defmodule ScrypathOpsWeb.Layouts do
             <ul class="ops-nav-list">
               <li
                 :for={item <- ScrypathOpsWeb.Nav.primary(@mount_path)}
-                class={item.group == :probes && "ops-nav-group-probes"}
+                class={item.group == :explore && "ops-nav-group-explore"}
               >
                 <.link
                   navigate={item.path}

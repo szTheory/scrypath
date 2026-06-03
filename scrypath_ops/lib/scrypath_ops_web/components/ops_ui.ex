@@ -427,9 +427,9 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
-  defp trail_for(:posture), do: {"Triage", "Posture"}
-  defp trail_for(:failed_sync), do: {"Triage", "Failed Sync"}
-  defp trail_for(:sync_drift), do: {"Triage", "Sync Drift"}
+  defp trail_for(:posture), do: {"Recover", "Posture"}
+  defp trail_for(:failed_sync), do: {"Recover", "Failed Sync"}
+  defp trail_for(:sync_drift), do: {"Recover", "Sync Drift"}
   defp trail_for(:search), do: {"Explore", "Search"}
   defp trail_for(:playbooks), do: {"Explore", "Playbooks"}
   defp trail_for(_), do: nil
@@ -471,7 +471,11 @@ defmodule ScrypathOpsWeb.OpsUi do
   The whole card is a single navigation target; `route_label` is the visible
   affordance. Composes the `.ops-*` surface layer so it inherits branded styling.
   """
-  attr(:icon, :string, required: true)
+  attr(:icon, :string,
+    required: true,
+    doc: "a `hero-*` Heroicon name; rendered as a monoline mark, not an emoji"
+  )
+
   attr(:title, :string, required: true)
   attr(:summary, :string, required: true)
   attr(:route_label, :string, required: true)
@@ -501,7 +505,9 @@ defmodule ScrypathOpsWeb.OpsUi do
       {@rest}
     >
       <span :if={@recommended} class="ops-intent-card__flag">Start here</span>
-      <span class="ops-intent-card__icon" aria-hidden="true">{@icon}</span>
+      <span class="ops-intent-card__icon" aria-hidden="true">
+        <ScrypathOpsWeb.CoreComponents.icon name={@icon} class="size-6" />
+      </span>
       <span class="ops-intent-card__title">{@title}</span>
       <span class="ops-intent-card__summary">{@summary}</span>
       <span class="ops-intent-card__cta">{@route_label} <span aria-hidden="true">→</span></span>
