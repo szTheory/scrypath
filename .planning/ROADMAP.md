@@ -14,7 +14,7 @@
 Active milestone: **v1.33 Admin UI Insane Polish**. Owner-initiated, screenshot-backed polish wedge that deliberately overrides idle posture. Full phase detail in `milestones/v1.33-ROADMAP.md`. Legend: `[R]` research · `[S]` screenshot-loop · `[G]` gate.
 
 - ✅ **Phase 119** — Audit harness + seed-scenario coverage `[S]` — HARNESS-01, SEED-01
-- **Phase 120** — Per-touchpoint audit pass `[S]` — AUDIT-01
+- ✅ **Phase 120** — Per-touchpoint audit pass `[S]` — AUDIT-01
 - **Phase 121** — Design-system tightening: tokens `[G]` — TOKEN-01
 - **Phase 122** — Design-system tightening: components `[G]` — COMP-01
 - **Phase 123** — Micro-animation layer `[R] [G]` — MOTION-01
@@ -32,7 +32,7 @@ Active milestone: **v1.33 Admin UI Insane Polish**. Owner-initiated, screenshot-
 | v1.30 Release Trust and Evidence Maintenance | 109-112 | 11/11 | Complete | 2026-06-01 |
 | v1.31 Adoption Evidence Demo Hardening | 113-115 | 3/3 phases complete | UAT passed | 2026-06-01 |
 | v1.32 Admin UI/UX Design System Cleanup | 116-118 | 3/3 phases complete | Complete | 2026-06-01 |
-| v1.33 Admin UI Insane Polish | 119-127 | 1/9 phases complete | Active | — |
+| v1.33 Admin UI Insane Polish | 119-127 | 2/9 phases complete | Active | — |
 
 ## Historical Contract Anchors
 
@@ -41,4 +41,4 @@ Active milestone: **v1.33 Admin UI Insane Polish**. Owner-initiated, screenshot-
 
 ## Next
 
-Plan and execute **Phase 120** (per-touchpoint audit pass — 9 read-only subagent audits → one ranked, fix-class-tagged backlog; no code changes). Phase 119 landed the seed scenarios + screenshot matrix and a 40-shot baseline in `.tmp/admin-screenshots/`. v1.33 is an owner-initiated polish wedge; see `milestones/v1.33-{ROADMAP,REQUIREMENTS}.md` for full scope, methodology, and locked design decisions.
+Plan and execute **Phase 121** (design-system tightening — tokens `[G]`). Phase 120 produced the ranked per-touchpoint backlog (`milestones/v1.33-phases/120-per-touchpoint-audit/120-AUDIT-BACKLOG.md`: 47 findings — 6 blocker / 9 structural / 32 polish — with 11 systemic fixes mapped to Phases 121-122). Phase 121 is an owner-gated checkpoint: review the systemic token set (exit easing, tone-map completeness, raw-step leaks, preflight tablet step) before executing. v1.33 is an owner-initiated polish wedge; see `milestones/v1.33-{ROADMAP,REQUIREMENTS}.md`.
