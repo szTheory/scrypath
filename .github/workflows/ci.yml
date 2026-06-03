@@ -638,6 +638,11 @@ jobs:
           # the listener only starts via mix phx.server's serve_endpoints override, which races
           # endpoint init in CI and leaves the process alive but nothing bound on :4002.
           PHX_SERVER: "true"
+          # Run the e2e server against a persistent, NON-sandbox DB so the real
+          # create_product -> Oban enqueue -> drain -> active index path persists across
+          # the separate HTTP requests Playwright makes (see config/runtime.exs). Set on this
+          # step only; `mix e2e.prepare` stays on the default sandbox path.
+          SCRYPATH_E2E_NO_SANDBOX: "1"
         run: |
           # Compile synchronously first so the readiness window below times boot, not compile.
           mix compile

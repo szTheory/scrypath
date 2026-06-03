@@ -36,8 +36,18 @@ defmodule ScrypathEcommerceWeb.Endpoint do
     plug Phoenix.Ecto.CheckRepoStatus, otp_app: :scrypath_ecommerce
   end
 
-  if sandbox = Application.compile_env(:scrypath_ecommerce, :sandbox) do
-    plug Phoenix.Ecto.SQL.Sandbox, sandbox: sandbox
+  # Runtime-gated so the e2e browser lane can disable the sandbox via config/runtime.exs
+  # (SCRYPATH_E2E_NO_SANDBOX=1) without tripping Application.compile_env validation at boot.
+  # The plug is always compiled in; it no-ops when :sandbox is false/nil.
+  plug :maybe_sql_sandbox
+
+  @doc false
+  def maybe_sql_sandbox(conn, _opts) do
+    case Application.get_env(:scrypath_ecommerce, :sandbox) do
+      nil -> conn
+      false -> conn
+      sandbox -> Phoenix.Ecto.SQL.Sandbox.call(conn, Phoenix.Ecto.SQL.Sandbox.init(sandbox: sandbox))
+    end
   end
 
   plug Plug.RequestId
