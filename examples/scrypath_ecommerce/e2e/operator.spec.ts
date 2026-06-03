@@ -60,7 +60,9 @@ test("operator can initiate zero-downtime swap from sync drift UI", async ({ pag
 
   const postureRow = page.getByTestId("posture-row").first();
   await expect(postureRow).toBeVisible();
-  await expect(page.getByTestId("posture-next-checks")).toContainText(/No fetch errors observed|Degraded/);
+  await expect(page.getByTestId("posture-next-checks")).toContainText(
+    /no schema fetch errors|incident triage/i
+  );
 
   await page.goto("/admin/search/sync-drift");
   await expect(page.getByRole("heading", { name: "Sync & Drift" })).toBeVisible();

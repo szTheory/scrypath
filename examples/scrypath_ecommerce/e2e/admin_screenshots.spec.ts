@@ -33,7 +33,7 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
 
   await page.goto("/admin/search/posture");
   await page.getByRole("button", { name: "Refresh posture" }).click();
-  await expect(page.getByRole("heading", { name: "Posture" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Posture", exact: true })).toBeVisible();
   await capture(page, testInfo, "01-posture-health");
 
   await page.goto("/admin/search/failed-sync");
