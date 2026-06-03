@@ -12,6 +12,12 @@ defmodule Mix.Tasks.E2e.PrepareSearch do
 
   alias Scrypath.Meilisearch.Tasks
   alias ScrypathEcommerce.Catalog.Product
+  alias ScrypathEcommerce.Catalog.Variant
+
+  # Both schemas the operator UI federates over (Search & federation / multi-index). The
+  # index must exist before Playwright runs a multi-index probe, or Meilisearch returns
+  # index_not_found for the un-prepared schema and the whole federation errors.
+  @schemas [Product, Variant]
 
   @impl true
   def run(_args) do
@@ -19,17 +25,20 @@ defmodule Mix.Tasks.E2e.PrepareSearch do
 
     config = Scrypath.Config.resolve!(sync_mode: :manual)
     backend = Scrypath.Config.fetch_backend!(config)
-    index = backend.index_name(Product, config)
 
-    Product
-    |> backend.create_index(:id, Keyword.put(config, :target_index, index))
-    |> wait_or_ignore_existing(config)
+    for schema <- @schemas do
+      index = backend.index_name(schema, config)
 
-    Product
-    |> backend.apply_settings(index, config)
-    |> wait!(config, "apply Product index settings")
+      schema
+      |> backend.create_index(:id, Keyword.put(config, :target_index, index))
+      |> wait_or_ignore_existing(config)
 
-    Mix.shell().info("Prepared E2E search index settings for #{index}.")
+      schema
+      |> backend.apply_settings(index, config)
+      |> wait!(config, "apply #{inspect(schema)} index settings")
+
+      Mix.shell().info("Prepared E2E search index settings for #{index}.")
+    end
   end
 
   defp wait_or_ignore_existing({:ok, %{task: task}}, config) do

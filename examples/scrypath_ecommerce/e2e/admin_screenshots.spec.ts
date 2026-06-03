@@ -2,7 +2,13 @@ import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
-import { drainSearchQueue, injectFailedSync, seedScenario, waitForSearchVisible } from "./helpers/e2e";
+import {
+  drainSearchQueue,
+  injectFailedSync,
+  seedScenario,
+  waitForLiveConnected,
+  waitForSearchVisible
+} from "./helpers/e2e";
 
 const screenshotDir = process.env.ADMIN_SCREENSHOT_DIR || "test-results/admin-screenshots";
 
@@ -32,11 +38,13 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   await capture(page, testInfo, "00-control-room");
 
   await page.goto("/admin/search/posture");
+  await waitForLiveConnected(page);
   await page.getByRole("button", { name: "Refresh posture" }).click();
   await expect(page.getByRole("heading", { name: "Posture", exact: true })).toBeVisible();
   await capture(page, testInfo, "01-posture-health");
 
   await page.goto("/admin/search/failed-sync");
+  await waitForLiveConnected(page);
   await page.getByRole("button", { name: "Refresh failed sync jobs" }).click();
   await expect(page.getByRole("heading", { name: "Failed sync jobs" })).toBeVisible();
   const failedRow = page.getByTestId("failed-sync-row").first();
@@ -52,13 +60,14 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   await capture(page, testInfo, "03-failed-sync-compact");
 
   await page.goto("/admin/search/sync-drift");
+  await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Sync & Drift" })).toBeVisible();
-  await page.waitForTimeout(500);
   await page.getByRole("button", { name: "Load / refresh contract drift" }).click();
   await expect(page.getByText("Contract dimensions")).toBeVisible();
   await capture(page, testInfo, "04-sync-drift-loaded");
 
   await page.goto("/admin/search/search");
+  await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Search & federation" })).toBeVisible();
   await page.getByLabel("Search text").fill("quantum");
   await page.getByRole("button", { name: "Run bounded search" }).click();
@@ -75,6 +84,7 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   await capture(page, testInfo, "06-search-multi-results");
 
   await page.goto("/admin/search/playbooks");
+  await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Saved playbooks" })).toBeVisible();
   await page.getByText("Or paste JSON").click();
   await page.locator("textarea[name='json']").fill(

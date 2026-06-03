@@ -5,6 +5,7 @@ import {
   drainSearchQueue,
   renameCategory,
   seedScenario,
+  waitForLiveConnected,
   waitForSearchHidden,
   waitForSearchVisible
 } from "./helpers/e2e";
@@ -27,6 +28,7 @@ test("consumer can search and facet deterministic catalog results", async ({ pag
   });
 
   await page.goto(`/?tenant_id=${seed.tenant_id}`);
+  await waitForLiveConnected(page);
 
   await page.getByLabel("Search products").fill("quantum");
   // The search input is debounced; wait for the query to land in the URL before the next
@@ -62,6 +64,7 @@ test("tenant guard prevents cross-tenant catalog leakage", async ({ page, reques
   });
 
   await page.goto("/");
+  await waitForLiveConnected(page);
 
   const tenant = page.getByLabel("Tenant");
   await tenant.selectOption(String(seed.tenant_id));
