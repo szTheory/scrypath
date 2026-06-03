@@ -5,6 +5,7 @@ import {
   drainSearchQueue,
   renameCategory,
   seedScenario,
+  waitForLiveConnected,
   waitForSearchHidden,
   waitForSearchVisible
 } from "./helpers/e2e";
@@ -27,8 +28,12 @@ test("consumer can search and facet deterministic catalog results", async ({ pag
   });
 
   await page.goto(`/?tenant_id=${seed.tenant_id}`);
+  await waitForLiveConnected(page);
 
   await page.getByLabel("Search products").fill("quantum");
+  // The search input is debounced; wait for the query to land in the URL before the next
+  // interaction so a still-pending change can't race the facet click back to browse mode.
+  await expect(page).toHaveURL(/[?&]q=quantum/);
 
   const results = page.getByTestId("storefront-results");
 
@@ -40,6 +45,7 @@ test("consumer can search and facet deterministic catalog results", async ({ pag
   await page
     .locator(`input[type='checkbox'][name='search[category_id]'][value='${smartphoneCategoryId}']`)
     .check();
+  await expect(page).toHaveURL(new RegExp(`category_id=${smartphoneCategoryId}`));
 
   await expect(results.getByText("Quantum CyberPhone X")).toBeVisible();
   await expect(results.getByText("Quantum CyberPhone Pro")).toBeVisible();
@@ -58,10 +64,13 @@ test("tenant guard prevents cross-tenant catalog leakage", async ({ page, reques
   });
 
   await page.goto("/");
+  await waitForLiveConnected(page);
 
   const tenant = page.getByLabel("Tenant");
   await tenant.selectOption(String(seed.tenant_id));
   await page.getByLabel("Search products").fill("quantum");
+  // Let the debounced query commit before switching tenants below.
+  await expect(page).toHaveURL(/[?&]q=quantum/);
 
   const results = page.getByTestId("storefront-results");
   await expect(results.getByText("Quantum CyberPhone X")).toBeVisible();
@@ -75,8 +84,11 @@ test("tenant guard prevents cross-tenant catalog leakage", async ({ page, reques
 
   expect(otherOption).toBeTruthy();
 
+  // Switching the tenant re-runs the (already "quantum") search for the other tenant.
+  // Wait for the tenant change to land in the URL — a redundant re-fill here would race the
+  // debounced input and revert the active tenant before the assertion.
   await tenant.selectOption(otherOption!);
-  await page.getByLabel("Search products").fill("quantum");
+  await expect(page).toHaveURL(new RegExp(`tenant_id=${otherOption}`));
 
   await expect(results.getByText("Quantum CyberPhone X")).not.toBeVisible();
 });

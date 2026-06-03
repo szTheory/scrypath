@@ -1,6 +1,23 @@
-import { expect, type APIRequestContext } from "@playwright/test";
+import { expect, type APIRequestContext, type Page } from "@playwright/test";
 import { appendFile, mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
+
+/**
+ * Wait until the page's LiveView socket is connected before driving interactive
+ * (phx-change / phx-click) controls. On a fresh navigation the first interaction can
+ * otherwise fire before the socket reconnects — the event is dropped and the search /
+ * drift load never runs. The host app exposes `window.liveSocket` (assets/js/app.js).
+ */
+export async function waitForLiveConnected(page: Page): Promise<void> {
+  await page.waitForFunction(
+    () => {
+      const ls = (window as unknown as { liveSocket?: { isConnected?: () => boolean } }).liveSocket;
+      return Boolean(ls && typeof ls.isConnected === "function" && ls.isConnected());
+    },
+    undefined,
+    { timeout: 15_000 }
+  );
+}
 
 type SeedResult = {
   tenant_id: number;

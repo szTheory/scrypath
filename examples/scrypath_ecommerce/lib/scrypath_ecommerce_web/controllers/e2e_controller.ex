@@ -42,13 +42,26 @@ defmodule ScrypathEcommerceWeb.E2EController do
   alias ScrypathEcommerce.Catalog.Category
   alias ScrypathEcommerce.Catalog.Product
   alias ScrypathEcommerce.Catalog.Tenant
+  alias ScrypathEcommerce.Catalog.Variant
   alias ScrypathEcommerce.Repo
+  alias Scrypath.Meilisearch.IndexManagement
   alias Scrypath.Meilisearch.Tasks
   alias Oban.Job
 
   def seed(conn, %{"scenario" => scenario}) do
     case scenario do
       "e2e_search_catalog" ->
+        # The e2e lane runs against a persistent (non-sandbox) DB + shared global
+        # Meilisearch index, so reset prior catalog/queue/index state before seeding —
+        # otherwise identically-named products from earlier tests accumulate and break
+        # the tenant-guard / facet assertions.
+        reset_state!()
+
+        # A quantum-free control tenant so the tenant-guard test has a second tenant to
+        # switch to whose catalog does NOT contain "Quantum CyberPhone X". Seeded first so
+        # the deterministic e2e tenant keeps the highest id (storefront default tenant).
+        _control = CatalogFixtures.scenario_demo_sparse()
+
         data = CatalogFixtures.scenario_e2e_search_catalog()
         prepare_swap_target!(data.products)
 
@@ -281,6 +294,46 @@ defmodule ScrypathEcommerceWeb.E2EController do
   end
 
   defp maybe_put_category_filter(opts, _params), do: {:ok, opts}
+
+  # Reset persistent state before a scenario seed: clear the search index documents,
+  # truncate the catalog tables, and drop queued sync jobs. Index docs are cleared by the
+  # ids currently in the DB (every indexed doc came from a persisted product), which clears
+  # the previous scenario's documents from both the active and swap-target indexes before
+  # the tables are truncated.
+  defp reset_state! do
+    clear_search_indexes!()
+
+    Repo.delete_all(Variant, skip_tenant_id: true)
+    Repo.delete_all(Product, skip_tenant_id: true)
+    Repo.delete_all(Category, skip_tenant_id: true)
+    Repo.delete_all(Tenant, skip_tenant_id: true)
+    Repo.delete_all(Job, skip_tenant_id: true)
+  end
+
+  defp clear_search_indexes! do
+    config = Scrypath.Config.resolve!(sync_mode: :manual)
+    backend = Scrypath.Config.fetch_backend!(config)
+    target_index = IndexManagement.target_index_name(Product, config)
+    ids = Product |> Repo.all(skip_tenant_id: true) |> Enum.map(& &1.id)
+
+    if ids != [] do
+      clear_index_docs!(backend, ids, config)
+      clear_index_docs!(backend, ids, Keyword.put(config, :index_name, target_index))
+    end
+  end
+
+  defp clear_index_docs!(backend, ids, config) do
+    case backend.delete_documents(Product, ids, config) do
+      {:ok, %{task: %{uid: uid} = task}} when is_integer(uid) ->
+        _ = Tasks.wait_for_task(task, config)
+        :ok
+
+      _ ->
+        :ok
+    end
+  rescue
+    _ -> :ok
+  end
 
   defp prepare_swap_target!(products) do
     config = Scrypath.Config.resolve!(sync_mode: :manual)
