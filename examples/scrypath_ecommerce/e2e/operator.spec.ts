@@ -28,7 +28,7 @@ test("operator can triage intentionally failed sync work", async ({ page, reques
   const row = page.getByTestId("failed-sync-row").first();
   await expect(row).toBeVisible();
 
-  await row.getByText("Inspect evidence").click();
+  await row.getByText("View evidence").click();
 
   const retryButton = row.getByTestId("failed-sync-retry");
 
@@ -63,7 +63,7 @@ test("operator can initiate zero-downtime swap from sync drift UI", async ({ pag
   await expect(page.getByTestId("posture-next-checks")).toContainText(/No fetch errors observed|Degraded/);
 
   await page.goto("/admin/search/sync-drift");
-  await expect(page.getByRole("heading", { name: "Sync / drift" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sync & Drift" })).toBeVisible();
   await page.waitForTimeout(500);
   await page.getByRole("button", { name: "Load / refresh contract drift" }).click();
   await expect(page.getByText("Contract dimensions")).toBeVisible();

@@ -33,7 +33,7 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
 
   await page.goto("/admin/search/posture");
   await page.getByRole("button", { name: "Refresh posture" }).click();
-  await expect(page.getByRole("heading", { name: "Posture / health" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Posture" })).toBeVisible();
   await capture(page, testInfo, "01-posture-health");
 
   await page.goto("/admin/search/failed-sync");
@@ -52,7 +52,7 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   await capture(page, testInfo, "03-failed-sync-compact");
 
   await page.goto("/admin/search/sync-drift");
-  await expect(page.getByRole("heading", { name: "Sync / drift" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sync & Drift" })).toBeVisible();
   await page.waitForTimeout(500);
   await page.getByRole("button", { name: "Load / refresh contract drift" }).click();
   await expect(page.getByText("Contract dimensions")).toBeVisible();
