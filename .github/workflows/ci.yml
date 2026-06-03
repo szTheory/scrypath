@@ -633,6 +633,11 @@ jobs:
 
       - name: Start example Phoenix server
         working-directory: examples/scrypath_ecommerce
+        env:
+          # test.exs gates the endpoint on PHX_SERVER=true (server: + bind ip:). Without it,
+          # the listener only starts via mix phx.server's serve_endpoints override, which races
+          # endpoint init in CI and leaves the process alive but nothing bound on :4002.
+          PHX_SERVER: "true"
         run: |
           # Compile synchronously first so the readiness window below times boot, not compile.
           mix compile
