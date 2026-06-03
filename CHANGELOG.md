@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 Release Please manages versioned entries after this baseline.
 
+## [0.3.9](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.8...scrypath-v0.3.9) (2026-06-03)
+
+
+### Features
+
+* **97-03:** add mix verify.phase97 task scaffold ([885f93d](https://github.com/szTheory/scrypath/commit/885f93d4f0075adaffe903c3e1d61cc0e8487d13))
+* **98-04:** add focused verify.phase98 gate task ([3c794c0](https://github.com/szTheory/scrypath/commit/3c794c0382ae4f317087bb32990604c765b743ba))
+* **99-02:** add dedicated verify.phase99 trust gate task ([0a3bf6b](https://github.com/szTheory/scrypath/commit/0a3bf6bda8c1f0cbdb647ad55affbb4abaf981c8))
+* **ops-ui:** operator console iteration + v1.28–v1.32 reconciliation ([#35](https://github.com/szTheory/scrypath/issues/35)) ([1fcea7c](https://github.com/szTheory/scrypath/commit/1fcea7cb99d2ab9c33704e170085dcc09180dfe5))
+
 ## [0.3.8](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.7...scrypath-v0.3.8) (2026-05-27)
 
 
