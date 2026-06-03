@@ -134,7 +134,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_table(assigns) do
     ~H"""
-    <div class={["overflow-x-auto min-w-0", @class]} {@rest}>
+    <div class={["ops-table-scroll overflow-x-auto min-w-0", @class]} {@rest}>
       <table class={["table table-sm", @zebra && "table-zebra", @table_class]}>
         {render_slot(@inner_block)}
       </table>
@@ -204,7 +204,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <div
       class={[
-        "rounded-ops-control border px-4 py-3 text-ops-body text-base-content",
+        "ops-notice-surface",
         tone_class(@kind),
         @class
       ]}
@@ -233,7 +233,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <div
       class={[
-        "rounded-ops-control border px-4 py-3 text-ops-body text-base-content shadow-ops-surface",
+        "ops-notice-surface ops-notice-surface--raised",
         tone_class(@kind),
         @class
       ]}
@@ -523,6 +523,42 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
+  @doc """
+  Restrained loading primitive for in-flight operator reads.
+
+  `:bars` renders an opacity-pulsing skeleton (a stand-in for content that's loading);
+  `:inline` is a compact pulsing "working…" label for buttons/status rows. Opacity-only
+  and neutralized under reduced-motion (the global rule). Presentation-only — the screen
+  owns when it's shown; wiring into specific reads (drift, search, swap) is Phase 125/126.
+  """
+  attr(:variant, :atom, default: :bars, values: [:bars, :inline])
+  attr(:lines, :integer, default: 3)
+  attr(:label, :string, default: "Loading…")
+  attr(:class, :any, default: nil)
+  attr(:rest, :global)
+
+  def ops_loading(assigns) do
+    ~H"""
+    <div
+      :if={@variant == :bars}
+      class={["ops-loading ops-loading__bars", @class]}
+      role="status"
+      aria-label={@label}
+      {@rest}
+    >
+      <span :for={n <- 1..@lines} class="ops-loading__bar" style={loading_bar_width(n, @lines)}></span>
+    </div>
+    <span
+      :if={@variant == :inline}
+      class={["ops-loading inline-flex items-center gap-2 text-ops-sm text-base-content/65", @class]}
+      role="status"
+      {@rest}
+    >
+      {@label}
+    </span>
+    """
+  end
+
   @doc "Shared shell for file-upload controls."
   attr(:label, :string, required: true)
   attr(:hint, :string, default: nil)
@@ -547,7 +583,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <.ops_empty_state
       :if={@kind == :no_schemas}
-      title="No Schemas Configured"
+      title="No schemas configured"
       class={@class}
     >
       Add allowlisted schema modules with
@@ -558,7 +594,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     </.ops_empty_state>
     <.ops_empty_state
       :if={@kind == :missing_backend}
-      title="Runtime Not Configured"
+      title="Runtime not configured"
       class={@class}
     >
       Configure
@@ -946,10 +982,10 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <pre
       class={[
-        "overflow-auto rounded-md font-mono text-ops-sm whitespace-pre-wrap break-words",
-        @variant == :default && "max-h-96 bg-base-200 p-3",
-        @variant == :compact && "max-h-48 bg-base-100 p-2",
-        @variant == :embedded && "max-h-64 bg-base-100/70 p-3",
+        "overflow-auto rounded-ops-md font-mono text-ops-sm whitespace-pre-wrap break-words",
+        @variant == :default && "max-h-96 bg-base-200 p-ops-3",
+        @variant == :compact && "max-h-48 bg-base-100 p-ops-2",
+        @variant == :embedded && "max-h-64 bg-base-100/70 p-ops-3",
         @class
       ]}
       {@rest}
@@ -1161,6 +1197,10 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp module_flat_name(mod) when is_atom(mod) do
     mod |> Atom.to_string() |> String.replace_prefix("Elixir.", "")
   end
+
+  # Skeleton bars taper: the last line is short so the pulse reads as text, not a block.
+  defp loading_bar_width(n, total) when n == total and total > 1, do: "width: 60%"
+  defp loading_bar_width(_n, _total), do: "width: 100%"
 
   defp tone_class(:success), do: "ops-tone-success"
   defp tone_class(:warning), do: "ops-tone-warning"

@@ -262,6 +262,24 @@
     background: color-mix(in oklch, var(--color-base-100) 92%, transparent);
   }
 
+  /* Shared tinted-surface internals for notice/status idioms. ops_notice and ops_status
+     are the same surface (rounded control radius, 1px tone border, body text, panel
+     padding); only ops_status adds resting elevation + a titled/action header. Both route
+     here so tone/padding/radius can't drift between the two. Tone comes from `.ops-tone-*`
+     composed at the call site. */
+  .ops-notice-surface {
+    border-width: 1px;
+    border-style: solid;
+    border-radius: var(--radius-ops-control);
+    padding: var(--spacing-ops-3) var(--spacing-ops-4);
+    font-size: var(--text-ops-body);
+    color: var(--color-base-content);
+  }
+
+  .ops-notice-surface--raised {
+    box-shadow: var(--shadow-ops-surface);
+  }
+
   .ops-tone-info {
     border-color: color-mix(in oklch, var(--color-info) 44%, transparent);
     background: color-mix(in oklch, var(--color-info) 11%, transparent);
@@ -632,6 +650,10 @@
     border-radius: var(--radius-ops-lg);
     background: color-mix(in oklch, var(--color-base-100) 92%, transparent);
     padding: var(--spacing-ops-3);
+    transition:
+      transform var(--duration-ops-fast) var(--ease-ops-standard),
+      border-color var(--duration-ops-fast) var(--ease-ops-standard),
+      box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
   }
 
   .ops-object-item-active {
@@ -871,7 +893,25 @@
     border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
     border-radius: var(--radius-ops-surface);
     background: color-mix(in oklch, var(--color-base-100) 94%, transparent);
-    padding: 0.875rem;
+    padding: var(--spacing-ops-3);
+    transition:
+      transform var(--duration-ops-fast) var(--ease-ops-standard),
+      border-color var(--duration-ops-fast) var(--ease-ops-standard),
+      box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
+  }
+
+  /* Hover/press parity for interactive-feeling rows: the same restrained transform/elevation
+     vocabulary buttons (.ops-btn:active) and cards (.ops-intent-card:hover) already use, scoped
+     to rows that carry an action. Static state styling here; motion timing polish is Phase 123. */
+  .ops-result-row:hover,
+  .ops-object-item:hover {
+    border-color: color-mix(in oklch, var(--color-primary) 32%, transparent);
+    box-shadow: var(--shadow-ops-mid);
+  }
+
+  .ops-result-row:active,
+  .ops-object-item:active {
+    transform: scale(0.995);
   }
 
   @media (min-width: 768px) {
@@ -879,6 +919,41 @@
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: start;
     }
+  }
+
+  /* Restrained loading primitive (ops_loading): a quiet opacity pulse for in-flight reads
+     (drift, search, swap) so loading states read consistently. Opacity-only, neutralized by
+     the global reduced-motion rule. `--bar` renders a skeleton placeholder line; `--inline`
+     is a compact spinner-free pulse for "working…" labels. Wiring into screens is 125/126. */
+  .ops-loading {
+    animation: ops-pulse 1.4s var(--ease-ops-in-out) infinite;
+  }
+
+  .ops-loading__bar {
+    height: 0.75rem;
+    border-radius: var(--radius-ops-sm);
+    background: color-mix(in oklch, var(--color-base-content) 12%, transparent);
+  }
+
+  .ops-loading__bars {
+    display: grid;
+    gap: var(--spacing-ops-2);
+  }
+
+  /* Horizontal scroll affordance for dense tables (ops_table). Pure CSS: edge linear
+     gradients mark "more content this way", and `background-attachment: local` cover
+     gradients hide each edge shadow once you scroll to that end. No JS, no layout shift. */
+  .ops-table-scroll {
+    background:
+      /* left/right cover gradients (scroll with content, hide the edge shadow at the ends) */
+      linear-gradient(to right, var(--color-base-100) 30%, transparent) left center,
+      linear-gradient(to left, var(--color-base-100) 30%, transparent) right center,
+      /* left/right edge shadows (pinned to the box) */
+      radial-gradient(farthest-side at 0 50%, color-mix(in oklch, var(--color-base-content) 14%, transparent), transparent) left center,
+      radial-gradient(farthest-side at 100% 50%, color-mix(in oklch, var(--color-base-content) 14%, transparent), transparent) right center;
+    background-repeat: no-repeat;
+    background-size: 2.5rem 100%, 2.5rem 100%, 0.75rem 100%, 0.75rem 100%;
+    background-attachment: local, local, scroll, scroll;
   }
 
   .ops-signal-table table {
@@ -1077,6 +1152,17 @@
 
   to {
     opacity: 1;
+  }
+}
+
+@keyframes ops-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.45;
   }
 }
 

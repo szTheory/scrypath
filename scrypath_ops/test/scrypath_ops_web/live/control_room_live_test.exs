@@ -52,7 +52,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
   test "unconfigured fleet shows the config empty state but keeps the intent cards", %{conn: conn} do
     {:ok, _lv, html} = live(conn, ~p"/ops")
 
-    assert html =~ "No Schemas Configured"
+    assert html =~ "No schemas configured"
     assert html =~ "Something looks broken"
     assert html =~ "Explore &amp; capture"
   end

@@ -141,4 +141,5 @@ transform/opacity only, < 300ms, ease-out for enter, no bounce (this is an incid
 | disclosure chevron rotate + body **opacity** fade | `<details>` height (auto height can't transition → reflow) |
 | button press scale, card hover lift (transform) | table row insertion / sort |
 | nav/segmented hover, modal opacity+translateY entrance | metric **value** count-ups (no dashboard-toy tickers) |
-| | flash bounce, focus rings, anything looping/decorative |
+| row hover/press (`.ops-result-row`/`.ops-object-item`: border + `shadow-ops-mid`, subtle scale) | flash bounce, focus rings, decorative loops |
+| loading **opacity** pulse (`.ops-loading`, the one sanctioned in-flight loop besides the reconnect spinner) | |
