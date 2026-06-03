@@ -18,9 +18,9 @@ Active milestone: **v1.33 Admin UI Insane Polish**. Owner-initiated, screenshot-
 - ✅ **Phase 121** — Design-system tightening: tokens `[G]` — TOKEN-01
 - ✅ **Phase 122** — Design-system tightening: components `[G]` — COMP-01
 - ✅ **Phase 123** — Micro-animation layer `[R] [G]` — MOTION-01
-- **Phase 124** — IA + Control Room front-door `[S]` — IA-01, COPY-01
-- **Phase 125** — Recover screens polish (Posture, Failed Sync, Sync/Drift) `[S]` — RECOVER-01
-- **Phase 126** — Explore screens polish (Search/Federation, Playbooks) `[S]` — EXPLORE-01
+- ✅ **Phase 124** — IA + Control Room front-door `[S]` — IA-01, COPY-01
+- ✅ **Phase 125** — Recover screens polish (Posture, Failed Sync, Sync/Drift) `[S]` — RECOVER-01
+- ✅ **Phase 126** — Explore screens polish (Search/Federation, Playbooks) `[S]` — EXPLORE-01
 - **Phase 127** — Shell coherence + milestone verification & UAT `[S] [G]` — SHELL-01, VERIFY-01
 
 ## Progress
@@ -32,7 +32,7 @@ Active milestone: **v1.33 Admin UI Insane Polish**. Owner-initiated, screenshot-
 | v1.30 Release Trust and Evidence Maintenance | 109-112 | 11/11 | Complete | 2026-06-01 |
 | v1.31 Adoption Evidence Demo Hardening | 113-115 | 3/3 phases complete | UAT passed | 2026-06-01 |
 | v1.32 Admin UI/UX Design System Cleanup | 116-118 | 3/3 phases complete | Complete | 2026-06-01 |
-| v1.33 Admin UI Insane Polish | 119-127 | 4/9 phases complete | Active | — |
+| v1.33 Admin UI Insane Polish | 119-127 | 8/9 phases complete | Active | — |
 
 ## Historical Contract Anchors
 
@@ -41,4 +41,4 @@ Active milestone: **v1.33 Admin UI Insane Polish**. Owner-initiated, screenshot-
 
 ## Next
 
-Phases 121 (TOKEN-01) + 122 (COMP-01) + 123 (MOTION-01) complete — the systemic design-system + motion dividend. 121/122: exit-easing token, complete status-tone set, raw-step-leak removal, preflight tablet step, notice/status consolidation, ops_code_block tokens, ops_loading primitive, row hover/press parity, shared-copy sentence-case, table scroll affordance. 123 (micro-animation layer): A1 exit easing wired onto flash/modal/palette close (`ops-modal-out`/`ops-fade-out` keyframes, interruptible palette), A2 signature verdict tone-settle (verdict surface + dot + metric borders on one `--duration-ops-status` beat, pure CSS), A4 row press/hover timing; A3 staggered reveal skipped on restraint. `DESIGN-TOKENS.md` in lockstep; gates green (verify.opsui 129/0, LiveView 129/0, ecommerce compile clean, 40-shot matrix re-captured no regressions, reduced-motion confirmed). Next: **Phase 124** (IA nav rename Recover/Explore + front-door + microcopy sweep `[S]`) — owner gate before the nav rename. v1.33 is an owner-initiated polish wedge; see `milestones/v1.33-{ROADMAP,REQUIREMENTS}.md`.
+Phases 119-126 complete (8/9). 121-123 landed the systemic design-system + motion dividend; 124 (IA-01/COPY-01) did the task-first nav rename + front-door + microcopy sweep; 125 (RECOVER-01) + 126 (EXPLORE-01) are the per-screen passes. **125:** Posture worst-first default sort + mobile swipe-cue over the table scroll affordance (B1), Sync/Drift `:wide` width showcasing the preflight wizard (B6), contract-drift `ops_loading` skeleton (S3), Failed Sync triage-guidance expanded-on-empty + code-block rhythm + inline-code (P22/P25). **126:** Search `ops_loading` during bounded runs + "Running…" badge (S2), human-field-first result titles (P29), zero-results `ops_empty_state` with a named next action, Playbooks destructive Delete split into its own danger action group (P28). Gates green both phases (verify.opsui 129/0, LiveView 129/0, ecommerce compile clean, 40-shot matrix re-captured both themes, B1 mobile + B6 width visually confirmed). Next: **Phase 127** (shell coherence + milestone verify/UAT `[S] [G]`) — unify the per-screen trust verdict (SHELL-01 P5), header-nav mobile collapse (P6), then before/after gallery + milestone audit + human UAT (VERIFY-01). v1.33 is an owner-initiated polish wedge; see `milestones/v1.33-{ROADMAP,REQUIREMENTS}.md`.

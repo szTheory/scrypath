@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.33
 milestone_name: Admin UI Insane Polish
-status: Active — Phases 121 (TOKEN-01) + 122 (COMP-01) + 123 (MOTION-01) complete; Phase 124 next (owner gate before nav rename)
+status: Active — Phases 119-126 complete (8/9); Phase 127 next (shell coherence + milestone verify/UAT, gate phase)
 last_updated: "2026-06-03"
-last_activity: 2026-06-03 — Phase 123 (micro-animation layer, MOTION-01) complete: A1 exit easing on flash/modal/palette close, A2 signature verdict tone-settle, A4 row press/hover timing; A3 skipped on restraint; DESIGN-TOKENS.md in lockstep; all gates green incl. reduced-motion proof
+last_activity: 2026-06-03 — Phases 125 (RECOVER-01) + 126 (EXPLORE-01) complete: Posture worst-first + mobile scroll cue (B1), Sync/Drift :wide width (B6) + drift loading (S3), Failed Sync states; Search ops_loading (S2) + human-field titles (P29) + zero-results next action, Playbooks danger-action split (P28); gates green, 40-shot matrix re-captured both themes
 progress:
   total_phases: 9
-  completed_phases: 5
-  total_plans: 5
-  completed_plans: 5
-  percent: 56
+  completed_phases: 8
+  total_plans: 8
+  completed_plans: 8
+  percent: 89
 ---
 
 # Project State
@@ -18,14 +18,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** v1.33 Admin UI Insane Polish — Phase 124 (IA nav rename + front-door + microcopy) — owner gate before the nav rename
+**Current Focus:** v1.33 Admin UI Insane Polish — Phase 127 (shell coherence + milestone verification & UAT) — the final gate stop
 
 ## Current Position
 
-Phase: 124 — IA + Control Room front-door (next, owner gate before nav rename)
+Phase: 127 — Shell coherence + milestone verification & UAT (next, gate phase, owner UAT stop)
 Plan: —
-Status: Active — Phases 121 (TOKEN-01) + 122 (COMP-01) + 123 (MOTION-01) complete; Phase 124 not yet planned
-Last activity: 2026-06-03 — Phase 123 (micro-animation layer) complete: the motion half of "elevate within reserved" — A1 exit easing, A2 signature verdict tone-settle, A4 row press/hover timing
+Status: Active — Phases 119-126 complete (8/9); Phase 127 not yet planned
+Last activity: 2026-06-03 — Phases 125 (RECOVER-01) + 126 (EXPLORE-01) complete: the per-screen Recover + Explore polish passes; B1 (Posture mobile) + B6 (Sync/Drift width) resolved, ops_loading wired into Sync/Drift + Search
 
 ## Current Milestone
 
@@ -53,6 +53,9 @@ Last activity: 2026-06-03 — Phase 123 (micro-animation layer) complete: the mo
 - (Phase 123, MOTION-01) Added the micro-animation layer — the motion half of "elevate within reserved", CSS + existing JS-transition hooks only, no behavior change. **A1 exit easing:** flash/banner via `core_components` `show/hide` (raw `ease-out`/`ease-in` → `ease-ops-out`/`ease-ops-exit`, enter ~240ms / exit ~120ms — also cleans a raw-step leak); modal via `ops_modal` `phx-remove` (`ease-ops-exit`, 120ms); command palette + cheat sheet via a `.ops-cmdk--closing` class the JS hook adds for ~160ms before `[hidden]`, playing new `ops-modal-out`/`ops-fade-out` keyframes (re-open cancels the pending close → interruptible). **A2 signature verdict tone-settle:** `.ops-verdict` surface + `.ops-verdict__dot` (dot gained a transition, it snapped before) + every `.ops-metric` border share ONE `--duration-ops-status` + `--ease-ops-standard` beat, so a posture flip reads as "the answer just moved", not 6 flickers — pure CSS, no JS/stagger (a stagger would read as a dashboard toy). **A4 row press/hover:** `.ops-result-row`/`.ops-object-item` press transform at `--duration-ops-instant` (button parity), hover settle at `--duration-ops-fast`. **A3 staggered reveal SKIPPED** on restraint: a CSS-only stagger re-fires on every LiveView DOM patch of the result list → flicker; first-reveal gating needs a forbidden JS hook. emilkowalski principles applied: enter/exit asymmetry, ease-out enter, <300ms, interruptibility, origin-aware exit, transform/opacity only, reduced-motion respect; rejected: spring/bounce, count-up tickers, decorative default stagger. `DESIGN-TOKENS.md` in lockstep (keyframe table + A1/A2/A4 rules + A3 rationale). Gates: verify.opsui 129/0, LiveView 129/0, ecommerce compile clean, 40-shot matrix re-captured (booted :4002, seeded incident, ops assets built) no regressions, reduced-motion neutralization (`.ops-verdict` transition → 0.01ms) + functional integrity (palette/sheet open-close-reopen, disclosure toggle) confirmed via Playwright `reducedMotion: reduce`.
 - (Phases 121+122, one owner-approved pass) Landed the systemic design-system dividend, presentation/semantics only (no behavior change). **Tokens (121, `15d77e4`):** `--ease-ops-exit` defined (ease-in; wiring is 123); status-tone set completed — `metric_tone_class/1` maps info/partial/running + `.ops-metric-{info,partial,running}` classes + widened `ops_metric`/`ops_intent_card` enums; raw-step leaks routed to `-ops-` tokens (skip-link ring-2 dropped, theme-toggle brightness-200 dropped, empty-state/upload/checkbox/data-card/modal/object-item); preflight gains `sm:` 2-col (4-col only at lg). **Components (122, `d90fa04`):** `.ops-notice-surface` (+`--raised`) consolidates notice/status; `ops_code_block`→`rounded-ops-md`+`p-ops-*`; new `ops_loading` skeleton/pulse primitive (opacity-only, reduced-motion-safe, available — screen wiring is 125/126); hover/press parity on `ops_result_row`/`ops_object_item`; shared `ops_config_empty` copy sentence-cased; `.ops-table-scroll` scroll-shadow affordance. `DESIGN-TOKENS.md` kept in lockstep. Decision: consolidate via a shared CSS class, not a HEEx partial, so both notice/status APIs + DOM stay distinct. Deferred per scope: motion wiring (123), per-screen Title-Case copy (124), Posture table responsive collapse + Sync/Drift `:wide` width (125). Gates: verify.opsui 129/0, LiveView 129/0, ecommerce compile clean, 40-shot matrix re-captured (booted :4002 on seeded incident DB) with no regressions (search-page height grew only because the live index now returns 15 hits vs the baseline's 2 — data, not CSS).
 
+- (Phase 124, IA-01/COPY-01, `9ca6510`) Task-first IA: nav groups renamed Triage→Recover / Probes→Explore in lockstep across `nav.ex` + the `ops_ui.ex` breadcrumb labels + `operator-ia.md` (nav-contract test gates it); CTAs match the new vocabulary; front-door trimmed (Jump-to rail → single ⌘K hint + quiet orientation link; emoji intent icons → violet monoline Heroicons); Search→Playbooks handoff threads the explore loop; sentence-case titles + concrete-next-action empty/error states. Labels/copy/icons only — no route/handler/mount change. (Roadmap/state status advanced retroactively at the start of the 125/126 pass.)
+- (Phases 125 + 126, RECOVER-01 `e1b9330` / EXPLORE-01 `4f0d6f4`) The per-screen polish passes; presentation + finding-driven minimal behavior only. **125 Recover:** Posture per-schema table sorts **worst-first** by default (`posture_rows_worst_first/1`: fetch error → backend failures → queue not observed/failing → clean) with a `sm:hidden` "swipe sideways" cue over the `ops-table-scroll` affordance (B1 — usable at 390px); Sync/Drift now `ops_main_width={:wide}` matching every other screen, showcasing the 4-step preflight + drift tables (B6); contract-drift read wired to `ops_loading` by deferring it to a `:run_drift` message (S3, event name unchanged); Failed Sync triage-guidance `ops_disclosure` `open={total == 0}` (expanded on the quiet first-visit, collapsed for a busy operator), stacked code blocks → `space-y-ops-2` (P22), inline `<code>` → `ops_inline_code` (P25); `ops_disclosure` gained an `open` attr. **126 Explore:** Search wired to `ops_loading` by deferring the bounded read to a `:run_search` message + `phx-disable-with` + a state-aware "Run a probe/Running…/Last run loaded" badge (S2); single-index result rows lead with the hit's human field name (P29, `hit_title/2`) not "Hit 1/2"; zero-results is an `ops_empty_state` naming the next action; Playbooks destructive Delete split into its own `ops_action_group tone={:danger}` (P28). The S2/S3 deferred-read loading states are the only behavior change (the loading findings require it); the worst-first sort is the other (B1 requirement). Tests updated for the deferred renders (2 sync-drift, 4 search). Matrix gotcha: the ecommerce dev server does NOT live-reload the `scrypath_ops` path-dep beams mid-run — restart `mix phx.server` to pick up ops LiveView edits before re-shooting. Gates both phases: verify.opsui 129/0, LiveView 129/0, ecommerce compile clean, 40-shot matrix re-captured both themes; B1 (Posture mobile 390) + B6 (Sync/Drift width) visually confirmed; baseline at `.tmp/admin-screenshots/` updated.
+
 ### Active Blockers
 
 - None.
@@ -63,7 +66,7 @@ Last activity: 2026-06-03 — Phase 123 (micro-animation layer) complete: the mo
 
 ## Operator Next Steps
 
-- Owner gate: Phase 124 (IA + Control Room front-door `[S]`) — nav group rename Recover/Explore (`nav.ex` + the `ops_ui.ex` trail group labels + `operator-ia.md` nav contract in lockstep), in-page "next step" threading links, front-door trims (demote the "Jump to" rail to a single ⌘K hint, add a P1 orientation link), and the COPY-01 sentence-case sweep (Title-Case empty/error titles, page-title casing forks, "Open in OPSUI"/"Reload list" vocab). The owner wants to review the nav rename before commit (surface before/after). Backlog anchors: P1/P2/P4/P12/P13/P14/P24/P26 in `120-AUDIT-BACKLOG.md`.
+- Phase 127 (Shell coherence + milestone verification & UAT `[S] [G]`) — the final gate/UAT stop (SHELL-01, VERIFY-01). Shell coherence: unify the per-screen **trust verdict** so it reads identically on Control Room / Posture / Sync-Drift (P5 — labels currently fork: "Can I trust search right now?" / "Fleet posture" / "Promotion readiness"; unify label + dot + tone "as a unit"); collapse the **header nav** to a menu/hidden on small screens so it stops duplicating the sidebar at mobile (P6, `layouts.ex`); confirm the chrome (header, nav, palette, theme toggle, flash, trail) is consistent across every screen. VERIFY-01: produce a v1.32→v1.33 before/after gallery, run the milestone audit against intent, and pass human UAT. Note for 127: the matrix spec's per-screen heading assertions were already aligned to the 124 rename; the ops path-dep needs a server restart (not live-reload) before re-shooting. Backlog anchors: P5/P6 in `120-AUDIT-BACKLOG.md`.
 
 ## Performance Metrics
 
@@ -73,3 +76,5 @@ Last activity: 2026-06-03 — Phase 123 (micro-animation layer) complete: the mo
 | Phase 121 P121 | one pass | TOKEN-01 | 4 files (app.css, DESIGN-TOKENS.md, ops_ui.ex, layouts.ex) |
 | Phase 122 P122 | one pass | COMP-01 | 4 files (app.css, DESIGN-TOKENS.md, ops_ui.ex, + 1 test) |
 | Phase 123 P123 | one pass | MOTION-01 | 5 files (app.css, DESIGN-TOKENS.md, app.js, core_components.ex, ops_ui.ex) |
+| Phase 125 P125 | one pass | RECOVER-01 | 6 files (posture/sync_drift/failed_sync live, ops_ui.ex, 1 test, matrix spec) |
+| Phase 126 P126 | one pass | EXPLORE-01 | 3 files (search/playbook live, 1 test) |
