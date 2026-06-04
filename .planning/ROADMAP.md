@@ -82,7 +82,7 @@ Plans:
 2. `.ops-muted-panel`, `.ops-data-card`, `.ops-surface-flat`, `.ops-nav-list`, `.ops-disclosure`, `.ops-kbd`, `.ops-result-row`, `.ops-preflight__card--locked` step up (not down) in dark.
 3. The light theme is pixel-identical (light matrix + light contrast gate unchanged); `DESIGN-TOKENS.md` records the dark ramp.
 
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 **Wave 1**
@@ -99,7 +99,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 130-04-PLAN.md — Run D-11 proof bundle, update DESIGN-TOKENS.md elevation-surface subsection
+- [x] 130-04-PLAN.md — Run D-11 proof bundle, update DESIGN-TOKENS.md elevation-surface subsection
 
 **Status:** Pending
 

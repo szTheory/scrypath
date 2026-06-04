@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
-status: executing
-last_updated: "2026-06-04T15:29:33.843Z"
+status: verifying
+last_updated: "2026-06-04T16:11:20.520Z"
 last_activity: 2026-06-04
 progress:
   total_phases: 9
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 8
-  completed_plans: 7
-  percent: 22
+  completed_plans: 8
+  percent: 33
 ---
 
 # Project State
@@ -24,7 +24,7 @@ progress:
 
 Phase: 130 (dark-surface-ramp-depth-tokens-g) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-04
 
 ## Current Milestone
@@ -85,6 +85,7 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 | Phase 130 P01 | 5min | 2 tasks | 4 files |
 | Phase 130 P02 | 5min | 1 tasks | 1 files |
 | Phase 130 P03 | 10min | 2 tasks | 2 files |
+| Phase 130 P130-04 | ~3hrs | 3 tasks | 4 files |
 
 ## Decisions
 
@@ -94,3 +95,4 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 - [Phase ?]: light-pixel-diff SKIP behavior
 - [Phase ?]: Elevation tokens declared in @plugin blocks (not @theme) for automatic both-path dark coverage via daisyUI plugin pass-through (D-02)
 - [Phase ?]: 9 recipe inner tokens swapped to --ops-surface-1/--ops-surface-2 inside color-mix wrappers; .ops-data-card + .ops-result-row get D-05 dark-scoped overrides; D-10 shadow dual-path rgba ladder; ops_code_block :default rerouted to bg-ops-surface-2
+- [Phase ?]: Option B approved: defer residual Cluster 3 primary-violet 4.3:1 violations to Phase 132; --color-primary unchanged; dark ramp visually confirmed correct
