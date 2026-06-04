@@ -465,6 +465,40 @@
     background: color-mix(in oklch, var(--color-primary) 12%, transparent);
   }
 
+  /* Glow opt-in: quiet violet aura via --shadow-ops-glow (none in light, faint in dark).
+     Apply to route-mark, active nav pill, recommended intent-card. Never text/bg floods. */
+  .ops-glow {
+    box-shadow: var(--shadow-ops-glow);
+    transition: box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
+  }
+
+  /* Copper accent vocabulary — brand accent, NOT a status tone.
+     Never route through tone_class/1 or badge_class/1.
+     .ops-copper-badge composes with .ops-badge for layout (class="ops-badge ops-copper-badge").
+     .ops-copper-badge/node/node--fill are declared here but not wired to templates until Phase 134. */
+  .ops-copper-eyebrow {
+    font-size: var(--text-ops-sm);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-secondary);            /* AA: dark 5.13:1 / light 4.84:1 on surface-1 (spec-verified) */
+  }
+
+  .ops-copper-badge {                          /* compose with .ops-badge for layout */
+    border-color: color-mix(in oklch, var(--color-secondary) 44%, transparent);
+    background:   color-mix(in oklch, var(--color-secondary) 12%, transparent);
+    color: var(--color-base-content);          /* AA: dark 12.07:1 / light 14.86:1 (spec-verified) */
+  }
+
+  .ops-copper-node {
+    color: var(--color-secondary);
+  }
+
+  .ops-copper-node--fill {
+    color: var(--color-secondary-content);
+    background: var(--color-secondary);
+  }
+
   /* Labelled tone chip (ops_tone_chip): a `label : value` pill that settles to a
      status tone. Composes with `.ops-tone-*` for the surface; the trailing value
      picks up the matching accent color. Tone settles like metrics/verdict. */
