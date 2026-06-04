@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
 status: executing
-last_updated: "2026-06-04T07:25:14.014Z"
-last_activity: 2026-06-04 -- Phase 128 planning complete
+last_updated: "2026-06-04T07:32:05.158Z"
+last_activity: 2026-06-04
 progress:
   total_phases: 9
   completed_phases: 0
   total_plans: 3
-  completed_plans: 0
+  completed_plans: 1
   percent: 0
 ---
 
@@ -18,14 +18,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136)
+**Current Focus:** Phase 128 — contrast-gate-harness-dark-seed-coverage-s-g
 
 ## Current Position
 
-Phase: Not started (roadmap defined; ready for Phase 128)
-Plan: —
+Phase: 128 (contrast-gate-harness-dark-seed-coverage-s-g) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-06-04 -- Phase 128 planning complete
+Last activity: 2026-06-04 -- Completed 128-01-PLAN.md (axe dep + contrast-pairs.mjs)
 
 ## Current Milestone
 
@@ -52,6 +52,8 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 - (Phases 121+122, one owner-approved pass) Landed the systemic design-system dividend, presentation/semantics only (no behavior change). **Tokens (121, `15d77e4`):** `--ease-ops-exit` defined (ease-in; wiring is 123); status-tone set completed — `metric_tone_class/1` maps info/partial/running + `.ops-metric-{info,partial,running}` classes + widened `ops_metric`/`ops_intent_card` enums; raw-step leaks routed to `-ops-` tokens (skip-link ring-2 dropped, theme-toggle brightness-200 dropped, empty-state/upload/checkbox/data-card/modal/object-item); preflight gains `sm:` 2-col (4-col only at lg). **Components (122, `d90fa04`):** `.ops-notice-surface` (+`--raised`) consolidates notice/status; `ops_code_block`→`rounded-ops-md`+`p-ops-*`; new `ops_loading` skeleton/pulse primitive (opacity-only, reduced-motion-safe, available — screen wiring is 125/126); hover/press parity on `ops_result_row`/`ops_object_item`; shared `ops_config_empty` copy sentence-cased; `.ops-table-scroll` scroll-shadow affordance. `DESIGN-TOKENS.md` kept in lockstep. Decision: consolidate via a shared CSS class, not a HEEx partial, so both notice/status APIs + DOM stay distinct. Deferred per scope: motion wiring (123), per-screen Title-Case copy (124), Posture table responsive collapse + Sync/Drift `:wide` width (125). Gates: verify.opsui 129/0, LiveView 129/0, ecommerce compile clean, 40-shot matrix re-captured (booted :4002 on seeded incident DB) with no regressions (search-page height grew only because the live index now returns 15 hits vs the baseline's 2 — data, not CSS).
 
 - (Phase 124, IA-01/COPY-01, `9ca6510`) Task-first IA: nav groups renamed Triage→Recover / Probes→Explore in lockstep across `nav.ex` + the `ops_ui.ex` breadcrumb labels + `operator-ia.md` (nav-contract test gates it); CTAs match the new vocabulary; front-door trimmed (Jump-to rail → single ⌘K hint + quiet orientation link; emoji intent icons → violet monoline Heroicons); Search→Playbooks handoff threads the explore loop; sentence-case titles + concrete-next-action empty/error states. Labels/copy/icons only — no route/handler/mount change. (Roadmap/state status advanced retroactively at the start of the 125/126 pass.)
+- (Phase 128 Plan 01) @axe-core/playwright devDep installed + test:e2e:admin-contrast wired; contrast-pairs.mjs muted-alpha manifest (D-11) created with 13 entries — 12 contrast-gated + 1 decorative (.ops-trail__sep). D-10: token names only (no hex). D-12: sRGB compositing matches axe-core. D-15 lockstep guard input ready for Plan 02. CONTRAST-HARNESS-01 closed.
+
 - (Phases 125 + 126, RECOVER-01 `e1b9330` / EXPLORE-01 `4f0d6f4`) The per-screen polish passes; presentation + finding-driven minimal behavior only. **125 Recover:** Posture per-schema table sorts **worst-first** by default (`posture_rows_worst_first/1`: fetch error → backend failures → queue not observed/failing → clean) with a `sm:hidden` "swipe sideways" cue over the `ops-table-scroll` affordance (B1 — usable at 390px); Sync/Drift now `ops_main_width={:wide}` matching every other screen, showcasing the 4-step preflight + drift tables (B6); contract-drift read wired to `ops_loading` by deferring it to a `:run_drift` message (S3, event name unchanged); Failed Sync triage-guidance `ops_disclosure` `open={total == 0}` (expanded on the quiet first-visit, collapsed for a busy operator), stacked code blocks → `space-y-ops-2` (P22), inline `<code>` → `ops_inline_code` (P25); `ops_disclosure` gained an `open` attr. **126 Explore:** Search wired to `ops_loading` by deferring the bounded read to a `:run_search` message + `phx-disable-with` + a state-aware "Run a probe/Running…/Last run loaded" badge (S2); single-index result rows lead with the hit's human field name (P29, `hit_title/2`) not "Hit 1/2"; zero-results is an `ops_empty_state` naming the next action; Playbooks destructive Delete split into its own `ops_action_group tone={:danger}` (P28). The S2/S3 deferred-read loading states are the only behavior change (the loading findings require it); the worst-first sort is the other (B1 requirement). Tests updated for the deferred renders (2 sync-drift, 4 search). Matrix gotcha: the ecommerce dev server does NOT live-reload the `scrypath_ops` path-dep beams mid-run — restart `mix phx.server` to pick up ops LiveView edits before re-shooting. Gates both phases: verify.opsui 129/0, LiveView 129/0, ecommerce compile clean, 40-shot matrix re-captured both themes; B1 (Posture mobile 390) + B6 (Sync/Drift width) visually confirmed; baseline at `.tmp/admin-screenshots/` updated.
 
 ### Active Blockers
@@ -76,3 +78,4 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 | Phase 123 P123 | one pass | MOTION-01 | 5 files (app.css, DESIGN-TOKENS.md, app.js, core_components.ex, ops_ui.ex) |
 | Phase 125 P125 | one pass | RECOVER-01 | 6 files (posture/sync_drift/failed_sync live, ops_ui.ex, 1 test, matrix spec) |
 | Phase 126 P126 | one pass | EXPLORE-01 | 3 files (search/playbook live, 1 test) |
+| Phase 128 P01 | 4min | CONTRAST-HARNESS-01 | 3 files (package.json, package-lock.json, contrast-pairs.mjs) |

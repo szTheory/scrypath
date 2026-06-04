@@ -26,7 +26,7 @@ The brand book's dark surface ramp has **four** steps — Night `#0C0F14` (bg) �
 
 ### Audit harness and evidence
 
-- [ ] **CONTRAST-HARNESS-01**: An automated WCAG contrast gate (`@axe-core/playwright`, cloned from the existing `admin_screenshot_matrix.spec.ts` harness) walks every admin screen across light + dark + **system-dark** × seed scenarios, **fails the build on any AA violation** (4.5:1 text / 3:1 large-text & UI), and reports AAA (7:1) status for body/long-form text as advisory. Re-runnable locally (`npm run test:e2e:admin-contrast` / `make contrast`, plus a fast custom token-pair pre-check) and usable as a phase gate.
+- [x] **CONTRAST-HARNESS-01**: An automated WCAG contrast gate (`@axe-core/playwright`, cloned from the existing `admin_screenshot_matrix.spec.ts` harness) walks every admin screen across light + dark + **system-dark** × seed scenarios, **fails the build on any AA violation** (4.5:1 text / 3:1 large-text & UI), and reports AAA (7:1) status for body/long-form text as advisory. Re-runnable locally (`npm run test:e2e:admin-contrast` / `make contrast`, plus a fast custom token-pair pre-check) and usable as a phase gate.
 - [ ] **DARKAUDIT-01**: Every dark surface is scored against the brand-book dark rules (4-step midnight ramp adherence, 65/20/10/5 neutral/structure/violet/copper ratio, "quiet glow not loud," "faint ambient shadow plus border," restrained path-line glow, AA pass/fail from the contrast harness), producing one ranked, fix-class-tagged backlog (`129-DARK-AUDIT-BACKLOG.md`) with a systemic-vs-per-screen split. The `#1B2230` surface-2 ramp gap is finding #1. Mirrors v1.33's 47-finding audit format.
 
 ### Design-system tightening (systemic)
@@ -65,7 +65,7 @@ The brand book's dark surface ramp has **four** steps — Night `#0C0F14` (bg) �
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CONTRAST-HARNESS-01 | Phase 128 | Pending |
+| CONTRAST-HARNESS-01 | Phase 128 | Complete |
 | DARKAUDIT-01 | Phase 129 | Pending |
 | DARKTOKEN-01 | Phase 130 | Pending |
 | GLOW-01 | Phase 131 | Pending |
