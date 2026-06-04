@@ -413,6 +413,106 @@ if (process.argv.includes("--self-test")) {
     nestedSelectorOk
   );
 
+  // Phase 132: theme blocks now include a scoped text-bearing primary-strong token.
+  // The token-count guard must require that semantic token instead of only counting.
+  const primaryStrongBlocks = parseThemeBlocks(`@plugin "../vendor/daisyui-theme" {
+    name: "light";
+    --color-base-100: #fffdf8;
+    --color-base-200: #faf7f2;
+    --color-base-300: #ded8ce;
+    --color-base-content: #141923;
+    --color-primary: #5b4ad1;
+    --color-primary-content: #f4f1ea;
+    --color-primary-strong: #5b4ad1;
+    --color-secondary: #a85d2e;
+    --color-secondary-content: #fffdf8;
+    --color-accent: #6c5ce7;
+    --color-accent-content: #fffdf8;
+    --color-neutral: #2a3446;
+    --color-neutral-content: #f4f1ea;
+    --color-info: #5ca9e6;
+    --color-info-content: #0c0f14;
+    --color-success: #4fae74;
+    --color-success-content: #0c0f14;
+    --color-warning: #d9a441;
+    --color-warning-content: #0c0f14;
+    --color-error: #d96262;
+    --color-error-content: #0c0f14;
+  }`);
+  let primaryStrongTokenOk = true;
+  try {
+    assertTokenCount(primaryStrongBlocks);
+  } catch (err) {
+    primaryStrongTokenOk = false;
+  }
+  assert(
+    "Phase 132: token guard accepts 21 --color-* tokens including primary-strong",
+    primaryStrongTokenOk,
+    primaryStrongTokenOk
+  );
+
+  const missingPrimaryStrongBlocks = {
+    light: Object.fromEntries(
+      Object.entries(primaryStrongBlocks.light).filter(([key]) => key !== "primary-strong")
+    ),
+  };
+  let missingPrimaryStrongThrew = false;
+  try {
+    assertTokenCount(missingPrimaryStrongBlocks);
+  } catch (err) {
+    missingPrimaryStrongThrew = true;
+  }
+  assert(
+    "Phase 132: token guard rejects theme blocks without primary-strong",
+    missingPrimaryStrongThrew,
+    missingPrimaryStrongThrew
+  );
+
+  // Phase 132: readable muted text can route through the named AA-floor token instead
+  // of a raw color-mix declaration. The manifest css_var entry keeps that source in
+  // the D-15 bidirectional lockstep contract.
+  const namedMutedCss = `@plugin "../vendor/daisyui-theme" {
+    name: "light";
+    --ops-text-muted: color-mix(in oklch, var(--color-base-content) 64%, transparent);
+  }
+  @layer ops {
+    .ops-fixture-muted { color: var(--ops-text-muted); }
+  }`;
+  const namedMutedManifest = [
+    {
+      selector: ".ops-fixture-muted",
+      css_var: "ops-text-muted",
+      alpha: 0.64,
+      fg_token: "base-content",
+      bg_token: "base-100",
+      role: "text",
+    },
+  ];
+  let namedMutedOk = true;
+  try {
+    assertNoUntrackedMutedTokens(namedMutedCss, namedMutedManifest);
+  } catch (err) {
+    namedMutedOk = false;
+  }
+  assert(
+    "Phase 132: named muted token css_var entries are matched against color: var(--ops-text-muted)",
+    namedMutedOk,
+    namedMutedOk
+  );
+
+  const wrongNamedMutedCss = namedMutedCss.replace("64%", "63%");
+  let wrongNamedMutedThrew = false;
+  try {
+    assertNoUntrackedMutedTokens(wrongNamedMutedCss, namedMutedManifest);
+  } catch (err) {
+    wrongNamedMutedThrew = true;
+  }
+  assert(
+    "Phase 132: named muted token alpha must match css_var manifest alpha",
+    wrongNamedMutedThrew,
+    wrongNamedMutedThrew
+  );
+
   // WR-01: the threshold compare must use the UN-ROUNDED ratio. No discrete 6-hex
   // grayscale pair lands in the (4.495, 4.5) round-up window (confirmed empirically), so
   // we lock the two load-bearing invariants directly:
