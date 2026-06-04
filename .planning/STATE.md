@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
 status: executing
-last_updated: "2026-06-04T18:25:10.365Z"
+last_updated: "2026-06-04T18:29:39.231Z"
 last_activity: 2026-06-04
 progress:
   total_phases: 9
   completed_phases: 3
   total_plans: 12
-  completed_plans: 10
+  completed_plans: 11
   percent: 33
 ---
 
@@ -23,7 +23,7 @@ progress:
 ## Current Position
 
 Phase: 131 (glow-dark-shadow-and-copper-accent-system-r-g) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-06-04
 
@@ -88,6 +88,7 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 | Phase 130 P130-04 | ~3hrs | 3 tasks | 4 files |
 | Phase 131 P01 | 15min | 3 tasks | 1 files |
 | Phase 131 P02 | 25min | 3 tasks | 1 files |
+| Phase 131 P03 | ~10min | 2 tasks | 2 files |
 
 ## Decisions
 
@@ -98,3 +99,4 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 - [Phase ?]: Elevation tokens declared in @plugin blocks (not @theme) for automatic both-path dark coverage via daisyUI plugin pass-through (D-02)
 - [Phase ?]: 9 recipe inner tokens swapped to --ops-surface-1/--ops-surface-2 inside color-mix wrappers; .ops-data-card + .ops-result-row get D-05 dark-scoped overrides; D-10 shadow dual-path rgba ladder; ops_code_block :default rerouted to bg-ops-surface-2
 - [Phase ?]: Option B approved: defer residual Cluster 3 primary-violet 4.3:1 violations to Phase 132; --color-primary unchanged; dark ramp visually confirmed correct
+- [Phase ?]: (Phase 131 Plan 03) ops_page_header eyebrow swapped from four inline utilities to .ops-copper-eyebrow; DESIGN-TOKENS.md lockstep sections added
