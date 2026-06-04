@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.33
-milestone_name: Admin UI Insane Polish
-status: Awaiting next milestone
-last_updated: "2026-06-03"
-last_activity: 2026-06-03 — Milestone v1.33 shipped + archived (PR #43 squash-merged; all CI green incl. phase105-e2e live admin smoke)
+milestone: v1.34
+milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
+status: planning
+last_updated: "2026-06-04T06:25:27.561Z"
+last_activity: 2026-06-04
 progress:
-  total_phases: 9
-  completed_phases: 9
-  total_plans: 8
-  completed_plans: 8
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -18,18 +18,18 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Awaiting next milestone
+**Current Focus:** v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136)
 
 ## Current Position
 
-Phase: Milestone v1.33 complete
+Phase: Not started (roadmap defined; ready for Phase 128)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-06-03 — Milestone v1.33 shipped and archived
+Status: Roadmap defined — ready to plan Phase 128 (CONTRAST-HARNESS-01)
+Last activity: 2026-06-04 — Milestone v1.34 started (requirements + roadmap defined)
 
 ## Current Milestone
 
-No active milestone. v1.33 Admin UI Insane Polish (phases 119-127) is shipped and archived (2026-06-03). The release train returns to idle/maintenance posture.
+v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Make the existing dark/light/system theming of the `scrypath_ops` admin UI genuinely perfect and brand-expressive — dark as the signature look, light at parity — per `prompts/scrypath-brand-book.md`, backed by a formal automated WCAG AA contrast gate (AAA body text), plus continued design-system/IA polish on v1.33's under-touched surfaces. Owner-initiated polish wedge overriding the idle posture; UI polish only (Phase 97 scope guard holds). Locked: comprehensive both-themes scope, system-follows-OS default preserved, AA hard gate / AAA-body, keep Tailwind v4 + daisyUI + `.ops-*`. Central fix: the dark surface ramp drops the brand's `#1B2230` surface-2 step, so "raised" surfaces flatten in dark — repaired via theme-scoped elevation tokens that leave light pixel-identical. Source plan: `~/.claude/plans/v1-33-admin-ui-deep-tower.md`.
 
 ## Accumulated Context
 
