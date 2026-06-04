@@ -20,10 +20,29 @@ export async function waitForLiveConnected(page: Page): Promise<void> {
 }
 
 type SeedResult = {
-  tenant_id: number;
+  tenant_id: number | null;
   categories: Record<string, number>;
   products: Record<string, number>;
+  scenario?: string;
+  failed_count?: number;
+  drift?: boolean;
 };
+
+/**
+ * Named operational scenarios understood by /dev/e2e/seed (SEED-01). Each drives the
+ * operator UI into a deterministic posture for the screenshot/audit harness:
+ *   all_green — catalog synced, no failed sync, no drift (verdict trusts search)
+ *   degraded  — catalog synced, drift only (verdict degraded)
+ *   incident  — catalog synced, all failed-sync reason classes + drift (can't-fully-trust)
+ *   empty     — no synced products / signals (every empty state)
+ * `e2e_search_catalog` remains the original deterministic search/tenant-guard lane.
+ */
+export type SeedScenario =
+  | "all_green"
+  | "degraded"
+  | "incident"
+  | "empty"
+  | "e2e_search_catalog";
 
 type DrainResult = {
   success: number;
@@ -79,7 +98,7 @@ async function requestJson<T>(
 
 export async function seedScenario(
   request: APIRequestContext,
-  scenario = "e2e_search_catalog"
+  scenario: SeedScenario = "e2e_search_catalog"
 ): Promise<SeedResult> {
   const result = await requestJson<SeedResult>(request, "/dev/e2e/seed", {
     method: "POST",

@@ -16,7 +16,7 @@ test("showcase navigation exposes storefront and operator surfaces", async ({ pa
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
 
   await page.goto("/admin/search/sync-drift");
-  await expect(page.getByRole("heading", { name: "Sync & Drift", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sync and drift", exact: true })).toBeVisible();
 
   await page.goto("/admin/search/search");
   await expect(page.getByRole("heading", { name: "Search & federation" })).toBeVisible();

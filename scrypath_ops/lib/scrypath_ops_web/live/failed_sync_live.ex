@@ -243,17 +243,18 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         />
       </.ops_panel>
 
-      <.ops_empty_state :if={@load_error == :no_schemas} title="No Schemas Configured">
-        Set
+      <.ops_empty_state :if={@load_error == :no_schemas} title="No schemas configured">
+        Add allowlisted schema modules with
         <.ops_inline_code>schema_allowlist</.ops_inline_code>
-        in <.ops_inline_code>:scrypath_ops</.ops_inline_code>.
+        in <.ops_inline_code>:scrypath_ops</.ops_inline_code>, then refresh failed sync jobs.
       </.ops_empty_state>
 
       <.ops_empty_state
         :if={@load_error == :missing_backend}
-        title="Runtime Not Configured"
+        title="Runtime not configured"
       >
-        Scrypath runtime is not configured — see <.ops_inline_code>scrypath_ops/README.md</.ops_inline_code>.
+        Configure the Scrypath runtime under <.ops_inline_code>:scrypath_ops</.ops_inline_code>
+        — see <.ops_inline_code>scrypath_ops/README.md</.ops_inline_code>, then refresh.
       </.ops_empty_state>
 
       <.ops_status
@@ -263,7 +264,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         role="alert"
       >
         The selected schema could not be inspected. Check backend and queue configuration, then
-        refresh failed sync jobs. Reason: <code>{inspect(@load_error)}</code>
+        refresh failed sync jobs. Reason: <.ops_inline_code>{inspect(@load_error)}</.ops_inline_code>
       </.ops_status>
 
       <.ops_panel :if={@inspection}>
@@ -272,7 +273,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             kind={failed_sync_status_kind(@inspection)}
             title={failed_sync_status_title(@inspection)}
           >
-            Selected schema: <code>{module_flat_name(@selected_schema)}</code>
+            Selected schema: <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>
             · dominant reason:
             <strong>{reason_class_label(dominant_reason_class(@inspection))}</strong>
             · retryable jobs: <strong>{retryable_count(@inspection)}</strong>
@@ -301,6 +302,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
           <.ops_disclosure
             summary="Triage guidance"
             class="mt-4"
+            open={@inspection.counts.total == 0}
           >
             <div class="grid gap-3 lg:grid-cols-3">
               <.ops_data_card
@@ -333,8 +335,8 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
           </.ops_disclosure>
 
           <p class="mt-4 text-ops-sm text-base-content/60">
-            For recovery actions use <code class="text-ops-body">mix scrypath.failed</code>
-            and the repo guides <code class="text-ops-body">guides/drift-recovery.md</code>, <code class="text-ops-body">guides/operator-mix-tasks.md</code>.
+            For recovery actions use <.ops_inline_code>mix scrypath.failed</.ops_inline_code>
+            and the repo guides <.ops_inline_code>guides/drift-recovery.md</.ops_inline_code>, <.ops_inline_code>guides/operator-mix-tasks.md</.ops_inline_code>.
           </p>
         </section>
 
@@ -351,10 +353,10 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
           </p>
           <.ops_empty_state
             :if={@inspection.counts.total == 0}
-            title="No Failed Sync Jobs"
+            title="No failed sync jobs"
             class="mt-2"
           >
-            No failed sync work is visible for this schema. Keep checking posture and drift before changing indexes.
+            Nothing to retry for this schema. Re-check fleet posture and verify sync drift before you change indexes.
           </.ops_empty_state>
 
           <div :if={@inspection.counts.total > 0} class="mt-3 grid gap-2">
@@ -375,7 +377,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                 variant={:compact}
               >
                 <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_18rem]">
-                  <div>
+                  <div class="space-y-ops-2">
                     <.ops_code_block
                       id={"failed-detail-body-#{row.id}"}
                       variant={:embedded}
@@ -385,7 +387,6 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                     <.ops_code_block
                       :if={map_size(row.metadata) > 0}
                       variant={:embedded}
-                      class="mt-2"
                     >
                       {inspect(row.metadata, pretty: true)}
                     </.ops_code_block>

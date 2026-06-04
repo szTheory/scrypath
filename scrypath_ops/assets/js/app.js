@@ -79,17 +79,41 @@ const CommandPalette = {
   },
   open() {
     this.closeSheet()
+    this.cancelDismiss(this.cmdk)
     this.cmdk.removeAttribute("hidden")
     this.input.value = ""
     this.filter()
     this.input.focus()
   },
   close() {
-    this.cmdk.setAttribute("hidden", "")
+    this.dismiss(this.cmdk)
     this.setActive(-1)
   },
-  openSheet() { this.sheet.removeAttribute("hidden") },
-  closeSheet() { this.sheet.setAttribute("hidden", "") },
+  openSheet() { this.cancelDismiss(this.sheet); this.sheet.removeAttribute("hidden") },
+  closeSheet() { this.dismiss(this.sheet) },
+  // A1 exit beat: play the crisp --ease-ops-exit dismissal (`.ops-cmdk--closing`, ~120ms)
+  // before hiding, so close feels as intentional as open. Behavior is unchanged — the panel
+  // still ends up [hidden]; this only eases the transition. Re-opening cancels any pending
+  // close so an interrupted dismissal snaps back open (interruptibility). Reduced-motion makes
+  // the animation ~instant via the global rule, so the panel still hides on the next frame.
+  dismiss(el) {
+    if (el._opsCloseTimer) return
+    el.classList.add("ops-cmdk--closing")
+    el._opsCloseTimer = window.setTimeout(() => {
+      el._opsCloseTimer = null
+      el.classList.remove("ops-cmdk--closing")
+      el.setAttribute("hidden", "")
+    }, 160)
+  },
+  // Interrupt a pending dismissal (re-open mid-close): clear the timer + the closing class
+  // so the panel stays open and re-enters cleanly instead of fading out under the user.
+  cancelDismiss(el) {
+    if (el._opsCloseTimer) {
+      window.clearTimeout(el._opsCloseTimer)
+      el._opsCloseTimer = null
+    }
+    el.classList.remove("ops-cmdk--closing")
+  },
   refresh() {
     const btn = document.querySelector("[data-ops-refresh]")
     if (btn) btn.click()

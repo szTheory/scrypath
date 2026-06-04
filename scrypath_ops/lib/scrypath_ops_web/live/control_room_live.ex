@@ -12,11 +12,14 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
 
   alias ScrypathOps.Posture
 
+  @orientation_href "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/operator-ia.md"
+
   @impl true
   def mount(_params, _session, socket) do
     socket =
       socket
       |> assign(:page_title, "Control Room")
+      |> assign(:orientation_href, @orientation_href)
       |> assign(:schema_allowlist, ScrypathOps.Schemas.allowlist())
       |> assign(:scrypath_opts, ScrypathOps.Schemas.scrypath_opts())
       |> load_summary()
@@ -87,60 +90,45 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
         </.ops_heading>
         <div class="grid gap-4 md:grid-cols-3">
           <.ops_intent_card
-            icon="🚨"
+            icon="hero-wrench-screwdriver"
             kind={intent_tone(@posture)}
             recommended={@posture.state in [:degraded, :missing_backend]}
             title="Something looks broken"
-            summary="Triage an incident. Check fleet posture, work the failed-sync queue, then confirm sync drift."
-            route_label="Start triage"
+            summary="Recover from an incident. Check fleet posture, work the failed-sync queue, then confirm sync drift."
+            route_label="Start recovery"
             navigate={"#{@mount_path}/posture"}
             data-testid="intent-incident"
           />
           <.ops_intent_card
-            icon="🚀"
+            icon="hero-arrow-up-tray"
             title="I'm shipping a change"
             summary="Pre-flight a deploy. Reconcile sync posture, compare index-contract drift, then promote with the gated swap."
-            route_label="Open sync drift"
+            route_label="Pre-flight sync drift"
             navigate={"#{@mount_path}/sync-drift"}
             data-testid="intent-change"
           />
           <.ops_intent_card
-            icon="🔎"
+            icon="hero-map"
             title="Explore & capture"
             summary="Probe search behavior with bounded read-only queries, then save the useful ones as reusable playbooks."
-            route_label="Open search"
+            route_label="Explore search"
             navigate={"#{@mount_path}/search"}
             data-testid="intent-explore"
           />
         </div>
       </section>
 
-      <section aria-labelledby="control-room-jump-heading" class="space-y-2 pt-ops-2">
-        <div class="flex flex-wrap items-baseline justify-between gap-3">
-          <h2
-            id="control-room-jump-heading"
-            class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/55"
-          >
-            Jump to
-          </h2>
-          <p class="text-ops-sm text-base-content/55">
-            Press <kbd class="ops-kbd">⌘K</kbd> to jump anywhere
-          </p>
-        </div>
-        <div class="flex flex-wrap gap-ops-control-gap">
-          <.ops_link_button navigate={"#{@mount_path}/failed-sync"} variant={:ghost} size={:sm}>
-            Failed sync
-          </.ops_link_button>
-          <.ops_link_button navigate={"#{@mount_path}/sync-drift"} variant={:ghost} size={:sm}>
-            Sync drift
-          </.ops_link_button>
-          <.ops_link_button navigate={"#{@mount_path}/search"} variant={:ghost} size={:sm}>
-            Search
-          </.ops_link_button>
-          <.ops_link_button navigate={"#{@mount_path}/playbooks"} variant={:ghost} size={:sm}>
-            Playbooks
-          </.ops_link_button>
-        </div>
+      <section
+        aria-labelledby="control-room-orient-heading"
+        class="flex flex-wrap items-center justify-between gap-3 pt-ops-2 text-ops-sm text-base-content/55"
+      >
+        <h2 id="control-room-orient-heading" class="sr-only">Getting around</h2>
+        <p>
+          Press <kbd class="ops-kbd">⌘K</kbd> to jump to any surface.
+        </p>
+        <a href={@orientation_href} class="link link-hover">
+          New here? See what each surface does <span aria-hidden="true">→</span>
+        </a>
       </section>
     </Layouts.app>
     """

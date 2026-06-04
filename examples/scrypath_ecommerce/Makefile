@@ -23,7 +23,7 @@ COMPOSE_DEV := docker compose -f compose.yaml -f compose.dev.yaml
 MEILI_URL   := http://127.0.0.1:$(MEILI_PORT)
 
 .DEFAULT_GOAL := help
-.PHONY: help dev infra infra-pg up down reset seed screenshots logs ps
+.PHONY: help dev infra infra-pg up down reset seed screenshots screenshots-matrix logs ps
 
 help: ## List targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -62,6 +62,11 @@ screenshots: ## Capture admin-UI screenshots against the running dev server
 	@ADMIN_SCREENSHOT_DIR=$${ADMIN_SCREENSHOT_DIR:-test-results/admin-screenshots} \
 	  PLAYWRIGHT_BASE_URL=http://127.0.0.1:$(WEB_PORT) \
 	  npm run test:e2e:admin-screens
+
+screenshots-matrix: ## Capture the full theme×viewport×state admin screenshot matrix
+	@ADMIN_SCREENSHOT_DIR=$${ADMIN_SCREENSHOT_DIR:-test-results/admin-screenshots} \
+	  PLAYWRIGHT_BASE_URL=http://127.0.0.1:$(WEB_PORT) \
+	  npm run test:e2e:admin-matrix
 
 logs: ## Tail infra logs
 	$(COMPOSE_DEV) logs -f

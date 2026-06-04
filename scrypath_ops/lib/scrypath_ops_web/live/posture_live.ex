@@ -154,7 +154,7 @@ defmodule ScrypathOpsWeb.PostureLive do
           <h2 id="posture-summary-heading" class="sr-only">Fleet posture</h2>
           <.ops_verdict
             kind={ScrypathOps.Posture.badge_kind(@posture_state)}
-            label="Fleet posture"
+            label="Can I trust search right now?"
             headline={@posture_headline}
           >
             {@posture_evidence}
@@ -201,7 +201,7 @@ defmodule ScrypathOpsWeb.PostureLive do
             <li :for={check <- @next_checks} class="pl-1">
               <span>{check.text}</span>
               <span :if={check[:navigate]} class="ml-2">
-                <.link navigate={check.navigate} class="link link-primary">Open in OPSUI</.link>
+                <.link navigate={check.navigate} class="link link-primary">Open this check</.link>
               </span>
               <span :if={check[:href]} class="ml-2">
                 <a href={check.href} class="link link-primary">Open guide</a>
@@ -228,6 +228,9 @@ defmodule ScrypathOpsWeb.PostureLive do
           subtitle={"#{@aggregate_error_count} schema(s) with fetch errors"}
           meta={"refreshed #{format_dt(@last_refresh_at)}"}
         >
+          <p class="mt-1 text-ops-sm text-base-content/60 sm:hidden">
+            Worst-first. Swipe the table sideways to see every signal column.
+          </p>
           <.ops_table zebra class="mt-3">
             <thead>
               <tr>
@@ -245,7 +248,7 @@ defmodule ScrypathOpsWeb.PostureLive do
               </tr>
             </thead>
             <tbody class="text-ops-body leading-snug tabular-nums">
-              <%= for {mod, row} <- elem(@posture_rows, 1) do %>
+              <%= for {mod, row} <- posture_rows_worst_first(elem(@posture_rows, 1)) do %>
                 <tr data-testid="posture-row" id={"posture-#{inspect(mod)}"}>
                   <%= case row do %>
                     <% {:ok, status} -> %>
@@ -290,6 +293,29 @@ defmodule ScrypathOpsWeb.PostureLive do
     </Layouts.app>
     """
   end
+
+  # Default-sort the per-schema table worst-first so a red/degraded schema lands at the
+  # top of the scan path (B1). Rank: fetch error (0) → backend failures (1) → queue not
+  # observed or queue failures (2) → clean (3); ties break alphabetically by module name.
+  defp posture_rows_worst_first(rows) when is_list(rows) do
+    Enum.sort_by(rows, fn {mod, row} -> {posture_row_rank(row), inspect(mod)} end)
+  end
+
+  defp posture_rows_worst_first(rows), do: rows
+
+  defp posture_row_rank({:error, _reason}), do: 0
+
+  defp posture_row_rank({:ok, status}) do
+    cond do
+      length(status.backend.failed) > 0 -> 1
+      not status.queue.observed? -> 2
+      length(status.queue.failed) > 0 -> 2
+      length(status.queue.retrying) > 0 -> 2
+      true -> 3
+    end
+  end
+
+  defp posture_row_rank(_), do: 3
 
   defp posture_schema_count({:ok, rows}), do: length(rows)
   defp posture_schema_count(_), do: 0

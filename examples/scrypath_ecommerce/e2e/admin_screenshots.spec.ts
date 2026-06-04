@@ -61,7 +61,7 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
 
   await page.goto("/admin/search/sync-drift");
   await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Sync & Drift" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
   await page.getByRole("button", { name: "Load / refresh contract drift" }).click();
   await expect(page.getByText("Contract dimensions")).toBeVisible();
   await capture(page, testInfo, "04-sync-drift-loaded");

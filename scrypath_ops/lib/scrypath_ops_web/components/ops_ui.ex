@@ -134,7 +134,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_table(assigns) do
     ~H"""
-    <div class={["overflow-x-auto min-w-0", @class]} {@rest}>
+    <div class={["ops-table-scroll overflow-x-auto min-w-0", @class]} {@rest}>
       <table class={["table table-sm", @zebra && "table-zebra", @table_class]}>
         {render_slot(@inner_block)}
       </table>
@@ -204,7 +204,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <div
       class={[
-        "rounded-ops-control border px-4 py-3 text-ops-body text-base-content",
+        "ops-notice-surface",
         tone_class(@kind),
         @class
       ]}
@@ -233,7 +233,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <div
       class={[
-        "rounded-ops-control border px-4 py-3 text-ops-body text-base-content shadow-ops-surface",
+        "ops-notice-surface ops-notice-surface--raised",
         tone_class(@kind),
         @class
       ]}
@@ -256,7 +256,11 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Small metric tile for rollups and status counts."
   attr(:label, :string, required: true)
   attr(:value, :any, required: true)
-  attr(:kind, :atom, default: :neutral, values: [:neutral, :success, :warning, :error])
+
+  attr(:kind, :atom,
+    default: :neutral,
+    values: [:neutral, :info, :success, :warning, :error, :partial, :running]
+  )
 
   def ops_metric(assigns) do
     ~H"""
@@ -423,9 +427,9 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
-  defp trail_for(:posture), do: {"Triage", "Posture"}
-  defp trail_for(:failed_sync), do: {"Triage", "Failed Sync"}
-  defp trail_for(:sync_drift), do: {"Triage", "Sync Drift"}
+  defp trail_for(:posture), do: {"Recover", "Posture"}
+  defp trail_for(:failed_sync), do: {"Recover", "Failed Sync"}
+  defp trail_for(:sync_drift), do: {"Recover", "Sync Drift"}
   defp trail_for(:search), do: {"Explore", "Search"}
   defp trail_for(:playbooks), do: {"Explore", "Playbooks"}
   defp trail_for(_), do: nil
@@ -467,12 +471,20 @@ defmodule ScrypathOpsWeb.OpsUi do
   The whole card is a single navigation target; `route_label` is the visible
   affordance. Composes the `.ops-*` surface layer so it inherits branded styling.
   """
-  attr(:icon, :string, required: true)
+  attr(:icon, :string,
+    required: true,
+    doc: "a `hero-*` Heroicon name; rendered as a monoline mark, not an emoji"
+  )
+
   attr(:title, :string, required: true)
   attr(:summary, :string, required: true)
   attr(:route_label, :string, required: true)
   attr(:navigate, :string, required: true)
-  attr(:kind, :atom, default: :neutral, values: [:neutral, :info, :success, :warning, :error])
+
+  attr(:kind, :atom,
+    default: :neutral,
+    values: [:neutral, :info, :success, :warning, :error, :partial, :running]
+  )
 
   attr(:recommended, :boolean,
     default: false,
@@ -493,7 +505,9 @@ defmodule ScrypathOpsWeb.OpsUi do
       {@rest}
     >
       <span :if={@recommended} class="ops-intent-card__flag">Start here</span>
-      <span class="ops-intent-card__icon" aria-hidden="true">{@icon}</span>
+      <span class="ops-intent-card__icon" aria-hidden="true">
+        <ScrypathOpsWeb.CoreComponents.icon name={@icon} class="size-6" />
+      </span>
       <span class="ops-intent-card__title">{@title}</span>
       <span class="ops-intent-card__summary">{@summary}</span>
       <span class="ops-intent-card__cta">{@route_label} <span aria-hidden="true">→</span></span>
@@ -508,10 +522,46 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_empty_state(assigns) do
     ~H"""
-    <div class={["ops-muted-panel p-5 text-ops-body", @class]}>
+    <div class={["ops-muted-panel p-ops-5 text-ops-body", @class]}>
       <h2 class="text-ops-h3 font-semibold leading-ops-tight text-base-content">{@title}</h2>
-      <div class="mt-2 text-base-content/75">{render_slot(@inner_block)}</div>
+      <div class="mt-ops-2 text-base-content/75">{render_slot(@inner_block)}</div>
     </div>
+    """
+  end
+
+  @doc """
+  Restrained loading primitive for in-flight operator reads.
+
+  `:bars` renders an opacity-pulsing skeleton (a stand-in for content that's loading);
+  `:inline` is a compact pulsing "working…" label for buttons/status rows. Opacity-only
+  and neutralized under reduced-motion (the global rule). Presentation-only — the screen
+  owns when it's shown; wiring into specific reads (drift, search, swap) is Phase 125/126.
+  """
+  attr(:variant, :atom, default: :bars, values: [:bars, :inline])
+  attr(:lines, :integer, default: 3)
+  attr(:label, :string, default: "Loading…")
+  attr(:class, :any, default: nil)
+  attr(:rest, :global)
+
+  def ops_loading(assigns) do
+    ~H"""
+    <div
+      :if={@variant == :bars}
+      class={["ops-loading ops-loading__bars", @class]}
+      role="status"
+      aria-label={@label}
+      {@rest}
+    >
+      <span :for={n <- 1..@lines} class="ops-loading__bar" style={loading_bar_width(n, @lines)}></span>
+    </div>
+    <span
+      :if={@variant == :inline}
+      class={["ops-loading inline-flex items-center gap-2 text-ops-sm text-base-content/65", @class]}
+      role="status"
+      {@rest}
+    >
+      {@label}
+    </span>
     """
   end
 
@@ -523,10 +573,10 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_upload_box(assigns) do
     ~H"""
-    <div class={["ops-surface-flat p-3", @class]}>
+    <div class={["ops-surface-flat p-ops-3", @class]}>
       <p class="text-ops-body font-semibold text-base-content">{@label}</p>
-      <p :if={@hint} class="mt-1 text-ops-sm leading-5 text-base-content/65">{@hint}</p>
-      <div class="mt-3">{render_slot(@inner_block)}</div>
+      <p :if={@hint} class="mt-ops-1 text-ops-sm leading-5 text-base-content/65">{@hint}</p>
+      <div class="mt-ops-3">{render_slot(@inner_block)}</div>
     </div>
     """
   end
@@ -539,7 +589,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <.ops_empty_state
       :if={@kind == :no_schemas}
-      title="No Schemas Configured"
+      title="No schemas configured"
       class={@class}
     >
       Add allowlisted schema modules with
@@ -550,7 +600,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     </.ops_empty_state>
     <.ops_empty_state
       :if={@kind == :missing_backend}
-      title="Runtime Not Configured"
+      title="Runtime not configured"
       class={@class}
     >
       Configure
@@ -763,7 +813,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_checkbox_list(assigns) do
     ~H"""
-    <div class={["ops-data-card p-3", @class]}>
+    <div class={["ops-data-card p-ops-3", @class]}>
       <label
         :for={{label, value} <- @options}
         class="flex min-h-[var(--control-h-sm)] cursor-pointer items-center gap-2 text-ops-body"
@@ -773,7 +823,7 @@ defmodule ScrypathOpsWeb.OpsUi do
           name={@name}
           value={value}
           checked={value in @selected}
-          class="checkbox checkbox-sm rounded"
+          class="checkbox checkbox-sm rounded-ops-sm"
         />
         <span class="min-w-0 font-mono text-ops-sm">{label}</span>
       </label>
@@ -808,14 +858,14 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_data_card(assigns) do
     ~H"""
-    <div class={["ops-data-card p-4 text-ops-body", @class]}>
+    <div class={["ops-data-card p-ops-4 text-ops-body", @class]}>
       <div
         :if={@title || @subtitle || @actions != []}
         class="mb-3 flex flex-wrap items-start justify-between gap-3"
       >
         <div class="min-w-0">
           <p :if={@title} class="font-semibold text-base-content">{@title}</p>
-          <p :if={@subtitle} class="mt-0.5 text-ops-sm leading-5 text-base-content/65">{@subtitle}</p>
+          <p :if={@subtitle} class="mt-ops-1 text-ops-sm leading-5 text-base-content/65">{@subtitle}</p>
         </div>
         <div :if={@actions != []} class="flex flex-wrap gap-2">
           {render_slot(@actions)}
@@ -890,6 +940,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:summary, :string, required: true)
   attr(:id, :string, default: nil)
   attr(:variant, :atom, default: :default, values: [:default, :compact])
+  attr(:open, :boolean, default: false)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
   slot(:inner_block, required: true)
@@ -898,6 +949,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <details
       id={@id}
+      open={@open}
       class={[
         "ops-disclosure",
         @variant == :compact && "ops-disclosure-compact",
@@ -938,10 +990,10 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <pre
       class={[
-        "overflow-auto rounded-md font-mono text-ops-sm whitespace-pre-wrap break-words",
-        @variant == :default && "max-h-96 bg-base-200 p-3",
-        @variant == :compact && "max-h-48 bg-base-100 p-2",
-        @variant == :embedded && "max-h-64 bg-base-100/70 p-3",
+        "overflow-auto rounded-ops-md font-mono text-ops-sm whitespace-pre-wrap break-words",
+        @variant == :default && "max-h-96 bg-base-200 p-ops-3",
+        @variant == :compact && "max-h-48 bg-base-100 p-ops-2",
+        @variant == :embedded && "max-h-64 bg-base-100/70 p-ops-3",
         @class
       ]}
       {@rest}
@@ -977,11 +1029,22 @@ defmodule ScrypathOpsWeb.OpsUi do
       phx-window-keydown={@cancel_event}
       phx-key={if @cancel_event, do: "escape", else: nil}
     >
-      <div class={["modal-box relative rounded-ops-overlay", @class]} tabindex="-1">
+      <div
+        class={["modal-box relative rounded-ops-overlay", @class]}
+        tabindex="-1"
+        phx-remove={
+          Phoenix.LiveView.JS.transition(
+            {"transition-all ease-ops-exit duration-200",
+             "opacity-100 translate-y-0 scale-100",
+             "opacity-0 translate-y-1 scale-[0.98]"},
+            time: 120
+          )
+        }
+      >
         <button
           :if={@cancel_event}
           type="button"
-          class="btn btn-circle btn-ghost btn-sm absolute right-3 top-3"
+          class="btn btn-circle btn-ghost btn-sm absolute right-ops-3 top-ops-3"
           phx-click={@cancel_event}
           aria-label="Close dialog"
           autofocus
@@ -1154,6 +1217,10 @@ defmodule ScrypathOpsWeb.OpsUi do
     mod |> Atom.to_string() |> String.replace_prefix("Elixir.", "")
   end
 
+  # Skeleton bars taper: the last line is short so the pulse reads as text, not a block.
+  defp loading_bar_width(n, total) when n == total and total > 1, do: "width: 60%"
+  defp loading_bar_width(_n, _total), do: "width: 100%"
+
   defp tone_class(:success), do: "ops-tone-success"
   defp tone_class(:warning), do: "ops-tone-warning"
   defp tone_class(:error), do: "ops-tone-error"
@@ -1176,6 +1243,9 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp metric_tone_class(:success), do: "ops-metric-success"
   defp metric_tone_class(:warning), do: "ops-metric-warning"
   defp metric_tone_class(:error), do: "ops-metric-error"
+  defp metric_tone_class(:info), do: "ops-metric-info"
+  defp metric_tone_class(:partial), do: "ops-metric-partial"
+  defp metric_tone_class(:running), do: "ops-metric-running"
   defp metric_tone_class(_), do: nil
 
   # The verdict hero uses the full tinted surface for non-neutral states; neutral gets a

@@ -5,20 +5,39 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
   Seeds a richer multi-tenant catalog for the click-around Scrypath demo.
 
       mix scrypath.demo.seed
+      mix scrypath.demo.seed --scenario all_green
+      mix scrypath.demo.seed --scenario degraded
+      mix scrypath.demo.seed --scenario incident   # default
+      mix scrypath.demo.seed --scenario empty
 
   The task creates deterministic demo tenants, prepares Meilisearch settings, and
   syncs product documents inline so the storefront is immediately searchable.
 
-  To make the operator UI tell its full story, it then injects deliberate
-  operational signals scoped to the **Ops Incident Lab** tenant:
+  ## Named operational scenarios (`--scenario`)
 
-    * failed sync work across every reason class (transport / validation /
-      backend / queue / unknown), mixing retryable and terminal jobs, so the
-      Failed Sync page is non-empty; and
-    * an index-contract drift (the live index drops a declared filterable
-      attribute) so the Sync / drift page shows a real dimension mismatch.
+  Each scenario parameterizes the SAME catalog + injection logic so the operator
+  UI can be driven into a deterministic posture covering every screen's state
+  range. The catalog fixtures are unchanged between scenarios; only the
+  injected operational signals (failed sync + contract drift + whether products
+  are synced) differ:
 
-  Both injections are idempotent and reset-safe across re-runs.
+    * `all_green` — full catalog seeded + synced; NO failed-sync injection, NO
+      drift. Posture reads all-healthy, the verdict trusts search.
+    * `degraded` — catalog seeded + synced; contract drift injected (the live
+      index drops a declared filterable) but NO failed-sync. Posture shows a
+      partial/warning, the verdict is degraded.
+    * `incident` (default) — all reason classes of failed-sync work injected
+      (transport / validation / backend / queue / unknown, mixing retryable and
+      terminal jobs) PLUS contract drift. Posture reads red, the verdict can't
+      fully trust search. This preserves the historical `make dev` / E2E
+      behavior.
+    * `empty` — catalog tables truncated and the live index cleared after
+      preparation; NO products synced, NO failed work, NO drift. Every screen
+      renders its empty state (no synced schemas / no failed work / no results /
+      empty playbook workspace).
+
+  All injections are idempotent and reset-safe across re-runs (the task drops
+  `demo_seed_*` Oban jobs and resets catalog tables before reseeding).
   """
 
   use Mix.Task
@@ -88,8 +107,13 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
     }
   ]
 
+  @scenarios ~w(all_green degraded incident empty)
+  @default_scenario "incident"
+
   @impl true
-  def run(_args) do
+  def run(args) do
+    scenario = parse_scenario!(args)
+
     Mix.Task.run("app.start")
     Mix.Task.run("e2e.prepare_search")
     reset_demo_data!()
@@ -98,18 +122,10 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
     ops = CatalogFixtures.scenario_e2e_search_catalog(%{name: "Ops Incident Lab"})
     sparse = CatalogFixtures.scenario_demo_sparse(%{name: "Quiet Branch Supply"})
 
-    [showcase, ops, sparse]
-    |> Enum.flat_map(& &1.products)
-    |> preload_categories()
-    |> sync_products!()
-
-    variant_count = sync_variants!()
-
-    failed_count = inject_failed_sync_work!(ops)
-    drift_status = inject_contract_drift!()
+    {variant_count, failed_count, drift_status} = apply_scenario!(scenario, [showcase, ops, sparse], ops)
 
     Mix.shell().info("""
-    Scrypath e-commerce demo seeded.
+    Scrypath e-commerce demo seeded (scenario: #{scenario}).
 
     Tenants:
       - #{showcase.tenant.name}: #{length(showcase.products)} products across #{length(showcase.categories)} categories
@@ -126,6 +142,50 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
 
     Open the storefront at / and OPSUI at /admin/search/ (Control Room).
     """)
+  end
+
+  defp parse_scenario!(args) do
+    {opts, _rest, _invalid} = OptionParser.parse(args, strict: [scenario: :string])
+    scenario = opts[:scenario] || @default_scenario
+
+    unless scenario in @scenarios do
+      Mix.raise(
+        "Unknown --scenario #{inspect(scenario)}. Expected one of: #{Enum.join(@scenarios, ", ")}"
+      )
+    end
+
+    scenario
+  end
+
+  # Parameterize the shared catalog + injection logic per named operational scenario.
+  # The catalog fixtures are identical across scenarios; only sync state + injected
+  # signals differ. Returns {variant_count, failed_count, drift_status}.
+
+  # empty: clear the live index + truncate the catalog so every screen renders its
+  # empty state — no synced schemas, no failed work, no drift, no results.
+  defp apply_scenario!("empty", _scenarios, _ops) do
+    clear_product_index!()
+    reset_demo_data!()
+    {0, 0, "none (empty scenario — no synced products)"}
+  end
+
+  defp apply_scenario!(scenario, scenarios, ops) do
+    scenarios
+    |> Enum.flat_map(& &1.products)
+    |> preload_categories()
+    |> sync_products!()
+
+    variant_count = sync_variants!()
+
+    failed_count =
+      if scenario == "incident", do: inject_failed_sync_work!(ops), else: 0
+
+    drift_status =
+      if scenario in ["incident", "degraded"],
+        do: inject_contract_drift!(),
+        else: "none (#{scenario} scenario — declared contract matches live index)"
+
+    {variant_count, failed_count, drift_status}
   end
 
   defp preload_categories(products) do
@@ -355,5 +415,28 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
   defp product_index_name(config \\ Scrypath.Config.resolve!(sync_mode: :manual)) do
     backend = Scrypath.Config.fetch_backend!(config)
     backend.index_name(Product, config)
+  end
+
+  # ── Empty-scenario index clear ───────────────────────────────────────────────
+  #
+  # Remove every product document currently in the active index so the `empty`
+  # scenario truly renders empty states (no synced documents). Called before the
+  # catalog tables are truncated so the in-DB ids still resolve the indexed docs.
+  # Tolerant: a missing backend / index must not abort seeding.
+  defp clear_product_index! do
+    config = Scrypath.Config.resolve!(sync_mode: :manual)
+    backend = Scrypath.Config.fetch_backend!(config)
+    ids = Product |> Repo.all(skip_tenant_id: true) |> Enum.map(& &1.id)
+
+    if ids != [] do
+      case backend.delete_documents(Product, ids, config) do
+        {:ok, %{task: task}} -> _ = Scrypath.Meilisearch.Tasks.wait_for_task(task, config)
+        _ -> :ok
+      end
+    end
+
+    :ok
+  rescue
+    _ -> :ok
   end
 end

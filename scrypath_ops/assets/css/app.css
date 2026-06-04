@@ -167,6 +167,7 @@
   --ease-ops-standard: cubic-bezier(0.2, 0.8, 0.2, 1); /* ease-out: enter */
   --ease-ops-out: cubic-bezier(0.16, 1, 0.3, 1);        /* stronger ease-out: overlays */
   --ease-ops-in-out: cubic-bezier(0.45, 0, 0.55, 1);    /* symmetric: position toggles */
+  --ease-ops-exit: cubic-bezier(0.4, 0, 1, 1);          /* ease-in: crisp dismissal (modal/palette/flash close) */
 
   --text-ops-xs:   0.6875rem;
   --text-ops-sm:   0.75rem;
@@ -261,6 +262,24 @@
     background: color-mix(in oklch, var(--color-base-100) 92%, transparent);
   }
 
+  /* Shared tinted-surface internals for notice/status idioms. ops_notice and ops_status
+     are the same surface (rounded control radius, 1px tone border, body text, panel
+     padding); only ops_status adds resting elevation + a titled/action header. Both route
+     here so tone/padding/radius can't drift between the two. Tone comes from `.ops-tone-*`
+     composed at the call site. */
+  .ops-notice-surface {
+    border-width: 1px;
+    border-style: solid;
+    border-radius: var(--radius-ops-control);
+    padding: var(--spacing-ops-3) var(--spacing-ops-4);
+    font-size: var(--text-ops-body);
+    color: var(--color-base-content);
+  }
+
+  .ops-notice-surface--raised {
+    box-shadow: var(--shadow-ops-surface);
+  }
+
   .ops-tone-info {
     border-color: color-mix(in oklch, var(--color-info) 44%, transparent);
     background: color-mix(in oklch, var(--color-info) 11%, transparent);
@@ -306,8 +325,27 @@
     border-color: color-mix(in oklch, var(--color-error) 50%, transparent);
   }
 
+  .ops-metric-info {
+    border-color: color-mix(in oklch, var(--color-info) 48%, transparent);
+  }
+
+  /* :partial settles like :warning (shared tone family); :running uses the brand
+     primary so an in-flight count reads as "working", not as a problem. */
+  .ops-metric-partial {
+    border-color: color-mix(in oklch, var(--color-warning) 50%, transparent);
+  }
+
+  .ops-metric-running {
+    border-color: color-mix(in oklch, var(--color-primary) 48%, transparent);
+  }
+
   /* Trust-verdict hero. Tone surface comes from `.ops-tone-*` (or `.ops-verdict-neutral`);
-     the surface color settles over --duration-ops-status when the verdict changes. */
+     the surface color settles over --duration-ops-status when the verdict changes.
+     A2 (signature tone-settle): the verdict surface, its status dot, AND the page's metric
+     borders all transition on the SAME --duration-ops-status + --ease-ops-standard pair, so a
+     Refresh that flips posture reads as ONE coherent beat ("the answer just moved") rather than
+     6 independent flickers. Pure CSS — no JS hook, no stagger; coordination is the shared timing
+     token, which is the restrained move for an ops console. */
   .ops-verdict {
     transition:
       background-color var(--duration-ops-status) var(--ease-ops-standard),
@@ -337,6 +375,10 @@
     height: 0.5rem;
     border-radius: 999px;
     background: color-mix(in oklch, var(--color-base-content) 40%, transparent);
+    /* Settle the dot's tone in lockstep with the surface (same token pair) so the verdict
+       reads as a single beat — the dot is the loudest tone signal, so a snapping dot would
+       break the "one answer moved" coherence A2 is built for. */
+    transition: background-color var(--duration-ops-status) var(--ease-ops-standard);
   }
 
   .ops-verdict.ops-tone-success .ops-verdict__dot {
@@ -540,7 +582,7 @@
     box-shadow: var(--shadow-ops-surface);
   }
 
-  .ops-nav-group-probes {
+  .ops-nav-group-explore {
     margin-left: 0.5rem;
     padding-left: 0.5rem;
     border-left: 1px solid color-mix(in oklch, var(--color-base-content) 12%, transparent);
@@ -616,7 +658,15 @@
     border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
     border-radius: var(--radius-ops-lg);
     background: color-mix(in oklch, var(--color-base-100) 92%, transparent);
-    padding: 0.875rem;
+    padding: var(--spacing-ops-3);
+    /* A4 (press/hover timing polish): hover color/elevation settle over --duration-ops-fast
+       (matches nav/badge/card hover), but the press transform runs at --duration-ops-instant
+       so the tap feels as immediate and crisp as .ops-btn:active — one press-feel authority
+       across buttons, cards, and interactive rows. */
+    transition:
+      transform var(--duration-ops-instant) var(--ease-ops-standard),
+      border-color var(--duration-ops-fast) var(--ease-ops-standard),
+      box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
   }
 
   .ops-object-item-active {
@@ -719,7 +769,15 @@
     padding: 0;
   }
 
-  @media (min-width: 768px) {
+  /* Tablet intermediate: 2-col at sm so the four steps aren't a cramped 4-up at 768px,
+     then the full 4-col single-row wizard at lg. */
+  @media (min-width: 640px) {
+    .ops-preflight {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1024px) {
     .ops-preflight {
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
@@ -819,8 +877,12 @@
   }
 
   .ops-intent-card__icon {
-    font-size: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     line-height: 1;
+    color: var(--color-primary);
+    opacity: 0.85;
   }
 
   .ops-intent-card__title {
@@ -848,7 +910,27 @@
     border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
     border-radius: var(--radius-ops-surface);
     background: color-mix(in oklch, var(--color-base-100) 94%, transparent);
-    padding: 0.875rem;
+    padding: var(--spacing-ops-3);
+    /* A4: see .ops-object-item — press transform at --duration-ops-instant, hover settle at
+       --duration-ops-fast, so rows share the button/card press-feel authority. */
+    transition:
+      transform var(--duration-ops-instant) var(--ease-ops-standard),
+      border-color var(--duration-ops-fast) var(--ease-ops-standard),
+      box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
+  }
+
+  /* Hover/press parity for interactive-feeling rows: the same restrained transform/elevation
+     vocabulary buttons (.ops-btn:active) and cards (.ops-intent-card:hover) already use, scoped
+     to rows that carry an action. Timing polished in Phase 123 (A4): press = instant, hover = fast. */
+  .ops-result-row:hover,
+  .ops-object-item:hover {
+    border-color: color-mix(in oklch, var(--color-primary) 32%, transparent);
+    box-shadow: var(--shadow-ops-mid);
+  }
+
+  .ops-result-row:active,
+  .ops-object-item:active {
+    transform: scale(0.995);
   }
 
   @media (min-width: 768px) {
@@ -856,6 +938,41 @@
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: start;
     }
+  }
+
+  /* Restrained loading primitive (ops_loading): a quiet opacity pulse for in-flight reads
+     (drift, search, swap) so loading states read consistently. Opacity-only, neutralized by
+     the global reduced-motion rule. `--bar` renders a skeleton placeholder line; `--inline`
+     is a compact spinner-free pulse for "working…" labels. Wiring into screens is 125/126. */
+  .ops-loading {
+    animation: ops-pulse 1.4s var(--ease-ops-in-out) infinite;
+  }
+
+  .ops-loading__bar {
+    height: 0.75rem;
+    border-radius: var(--radius-ops-sm);
+    background: color-mix(in oklch, var(--color-base-content) 12%, transparent);
+  }
+
+  .ops-loading__bars {
+    display: grid;
+    gap: var(--spacing-ops-2);
+  }
+
+  /* Horizontal scroll affordance for dense tables (ops_table). Pure CSS: edge linear
+     gradients mark "more content this way", and `background-attachment: local` cover
+     gradients hide each edge shadow once you scroll to that end. No JS, no layout shift. */
+  .ops-table-scroll {
+    background:
+      /* left/right cover gradients (scroll with content, hide the edge shadow at the ends) */
+      linear-gradient(to right, var(--color-base-100) 30%, transparent) left center,
+      linear-gradient(to left, var(--color-base-100) 30%, transparent) right center,
+      /* left/right edge shadows (pinned to the box) */
+      radial-gradient(farthest-side at 0 50%, color-mix(in oklch, var(--color-base-content) 14%, transparent), transparent) left center,
+      radial-gradient(farthest-side at 100% 50%, color-mix(in oklch, var(--color-base-content) 14%, transparent), transparent) right center;
+    background-repeat: no-repeat;
+    background-size: 2.5rem 100%, 2.5rem 100%, 0.75rem 100%, 0.75rem 100%;
+    background-attachment: local, local, scroll, scroll;
   }
 
   .ops-signal-table table {
@@ -910,6 +1027,18 @@
 
   .ops-cmdk[hidden] {
     display: none;
+  }
+
+  /* Exit beat: the JS hook adds `.ops-cmdk--closing` for one --duration-ops-fast tick
+     before it sets [hidden], so the panel dismissal eases out with --ease-ops-exit instead
+     of vanishing. Enter eases in (--ease-ops-out, longer); exit is crisp (ease-in, faster) —
+     the enter/exit asymmetry that makes "close" feel as intentional as "open". */
+  .ops-cmdk--closing .ops-cmdk__panel {
+    animation: ops-modal-out var(--duration-ops-fast) var(--ease-ops-exit) forwards;
+  }
+
+  .ops-cmdk--closing .ops-cmdk__backdrop {
+    animation: ops-fade-out var(--duration-ops-fast) var(--ease-ops-exit) forwards;
   }
 
   .ops-cmdk__backdrop {
@@ -1057,6 +1186,17 @@
   }
 }
 
+@keyframes ops-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
+}
+
 @keyframes ops-modal-in {
   from {
     opacity: 0;
@@ -1066,6 +1206,31 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* Exit mirror of ops-modal-in (origin-aware: settles back toward where it entered from).
+   Paired with --ease-ops-exit + a shorter --duration-ops-fast so dismissal reads crisp,
+   not as a slow reverse of the entrance. */
+@keyframes ops-modal-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+}
+
+@keyframes ops-fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
   }
 }
 
