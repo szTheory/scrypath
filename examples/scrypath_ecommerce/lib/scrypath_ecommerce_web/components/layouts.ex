@@ -26,7 +26,7 @@ defmodule ScrypathEcommerceWeb.Layouts do
         <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
         </script>
       </head>
-      <body class="scrypath-demo">
+      <body class={unless ops_admin_path?(@conn), do: "scrypath-demo"}>
         <.flash_group flash={@flash} />
         {@inner_content}
       </body>
