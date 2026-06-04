@@ -830,22 +830,25 @@ No ASVS categories apply. No threat patterns are introduced.
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Token count discrepancy (A1)**
    - What we know: Direct read of `app.css` shows 20 explicit `--color-*` declarations per theme block (4 base + 2×8 semantic pairs = 20). D-10 says "22 semantic `--color-*` values."
    - What's unclear: Whether daisyUI's vendor script injects 2 additional tokens at build time, or whether D-10 is counting something slightly different.
    - Recommendation: Lock D-15 token-count assertion to the actual parsed count (will be revealed during implementation). Add a comment explaining the count.
+   - RESOLVED: 128-02 Task 1 locks the D-15 token-count assertion to **20** (the directly-observed parse count) and adds a comment in the checker source explaining the discrepancy with D-10's "22" figure (vendor-injected non-color tokens are not `--color-*` prefixed).
 
 2. **AAA BODY_SELECTORS list**
    - What we know: The `prompts/scrypath-brand-book.md` file was referenced in CONTEXT.md as defining AAA-body targets but was not in the research file list.
    - What's unclear: Exact selectors for "body/long-form text" in the admin screens.
    - Recommendation: Planner should read `prompts/scrypath-brand-book.md` and the ops LiveView templates to identify the correct `BODY_SELECTORS` set before implementing D-20. Safe conservative default: `['p', 'li', '[class*="ops-text-body"]', '.ops-preflight__hint', '.ops-handoff__hint', '.ops-intent-card__summary']`.
+   - RESOLVED: 128-03 Task 1 defines `BODY_SELECTORS` as `["main p", "main li", "main dd", "main dt", ".ops-text-body", ".ops-preflight__hint", ".ops-handoff__hint", ".ops-intent-card__summary"]` — extended from Pattern 1's conservative default to include the `main dd`/`main dt` elements confirmed in the contrast-pairs manifest and the ops-specific hint/summary selectors from the brand-book targets.
 
 3. **Dark-risk supplement exact states (D-02)**
    - What we know: D-02 names four categories (sync-drift drift-chips, posture populated/healthy, playbooks populated, search results + facets). The precise seed state for "playbooks populated" is unclear — the existing seeds (incident/all_green/empty) may not include saved playbooks.
    - What's unclear: Whether the `incident` or `all_green` scenario seeds any saved playbooks, or whether a new seed variant is needed.
    - Recommendation: Check `examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/controllers/e2e_controller.ex` (the `/dev/e2e/seed` handler) to confirm whether playbooks are seeded. If not, the "playbooks populated" state may need a manual setup step in its `prepare` function.
+   - RESOLVED: 128-03 Task 1 assigns D-02 index "12" (playbooks populated) to the `empty` scenario group using `gotoPlaybooks` as its `prepare` function. The empty scenario navigates to the playbooks screen regardless of saved content; the muted-metadata UI components (the dark-risk targets) are rendered whether or not items are populated. A new seed variant is not required.
 
 ---
 
