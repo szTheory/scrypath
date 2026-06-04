@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
-status: completed
-last_updated: "2026-06-04T19:15:18.085Z"
-last_activity: 2026-06-04 -- Phase 131 marked complete
+status: planning
+last_updated: "2026-06-04T19:33:58.197Z"
+last_activity: 2026-06-04 -- Phase 132 UI-SPEC approved
 progress:
   total_phases: 9
   completed_phases: 4
