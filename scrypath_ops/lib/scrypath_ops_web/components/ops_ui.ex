@@ -991,7 +991,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     <pre
       class={[
         "overflow-auto rounded-ops-md font-mono text-ops-sm whitespace-pre-wrap break-words",
-        @variant == :default && "max-h-96 bg-base-200 p-ops-3",
+        @variant == :default && "max-h-96 bg-ops-surface-2 p-ops-3",
         @variant == :compact && "max-h-48 bg-base-100 p-ops-2",
         @variant == :embedded && "max-h-64 bg-base-100/70 p-ops-3",
         @class
