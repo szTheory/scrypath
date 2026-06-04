@@ -66,6 +66,8 @@ Phase 97 through 99 banned capability classes:
 
 ## Current State
 
+**v1.34 — Both-Themes Perfection (Dark Signature + AA Gate)** is active. Phase 132 completed on **2026-06-04**: A11Y-TOKEN-01 is validated with rebuilt assets, zero AA failures for light/dark/system-dark, AAA body/long-form advisory evidence, and light-baseline recapture recorded in `132-CONTRAST-REPORT.md`.
+
 **v1.32 — Admin UI/UX Design System Cleanup** shipped + archived in-repo on **2026-06-01** across phases **116-118**.
 
 **What shipped:**
@@ -199,12 +201,13 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Planning window
 
-**Active milestone:** none. The release train is idle after v1.33 archive.
+**Active milestone:** v1.34 Both-Themes Perfection — Dark Signature + AA Gate. Phase 132 is complete; Phase 133 (DARKMOTION-01) is next.
 
 ## Requirements
 
 ### Validated
 
+- [x] **Phase 132** (2026-06-04): **A11Y-TOKEN-01** — both-theme AA hard gate green for muted text and selected violet fills; browser contrast proof covers light, dark, and system-dark; AAA body/long-form status remains advisory/report-only.
 - [x] **v1.33** (2026-06-03): **HARNESS-01**, **SEED-01**, **AUDIT-01**, **TOKEN-01**, **COMP-01**, **MOTION-01**, **IA-01**, **COPY-01**, **RECOVER-01**, **EXPLORE-01**, **SHELL-01**, **VERIFY-01** — task-first admin-UI IA (Recover/Explore nav + front-door), design-system tightening, restrained micro-animation, per-screen polish, and shell coherence; screenshot-driven audit + 40-shot matrix; live admin smoke green in CI.
 - [x] **v1.32** (2026-06-01): **ASSET-01**, **TOKEN-01**, **BRAND-01**, **COMP-01**, **A11Y-01**, **SCREEN-01**, **SCREEN-02**, **VERIFY-01** — mounted admin asset contract, Scrypath operator tokens, shared LiveView primitives, screen hierarchy cleanup, and focused verification.
 - [x] **v1.31** (2026-06-01): **DEMO-01**–**DEMO-02**, **E2E-01**–**E2E-03**, **DX-01**, **DOC-01**, **OPS-01**, **CLOSE-01** — realistic seeded demo, deterministic advisory E2E proof, Docker/dev DX, documentation, ops UI clarity, and maintainer closeout.
@@ -305,4 +308,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-04 — v1.34 Both-Themes Perfection (Dark Signature + AA Gate) milestone started*
+*Last updated: 2026-06-04 — Phase 132 completed; v1.34 ready for Phase 133*
