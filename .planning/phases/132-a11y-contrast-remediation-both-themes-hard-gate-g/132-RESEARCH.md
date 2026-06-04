@@ -333,12 +333,13 @@ node e2e/light-pixel-diff.mjs
 | A1 | `--ops-text-muted` can be declared in daisyUI `@plugin` blocks with `color-mix(...)` values and emitted correctly to both explicit and system theme paths. `[ASSUMED]` | Architecture Patterns | If plugin pass-through does not preserve functional values, executor should declare the token in a normal CSS selector block for light/dark/system instead. |
 | A2 | One normal muted tier plus one strong tier will be enough for all flagged text sites. `[ASSUMED]` | Summary / Standard Stack | If actual surfaces differ, planner must allow task-level calibration and justify additional tiers. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should `bg-primary` template utilities be replaced globally or wrapped with a local strong class?**
    - What we know: `ops_segmented_control` uses `"bg-primary text-primary-content"` for selected buttons, and `.ops-nav-item-active` has a CSS rule. `[VERIFIED: ops_ui.ex:795-798 + app.css:620-624]`
    - What's unclear: whether every `bg-primary text-primary-content` use should be strong-violet, or only selected text-bearing controls identified by the matrix. `[VERIFIED: codebase grep]`
    - Recommendation: plan a grep-driven local replacement for text-bearing interactive fills only, then rerun the matrix. `[VERIFIED: 132-CONTEXT.md]`
+   - Resolution: Phase 132 will use the scoped CSS route already selected in the approved plans: `.ops-nav-item-active` uses `background: var(--color-primary-strong)`, and `.bg-primary.text-primary-content` gets a local CSS override using `background-color: var(--color-primary-strong)`. This avoids global replacement of all `bg-primary` utilities and avoids Phoenix component/template edits while preserving decorative `--color-primary` uses. `[RESOLVED: 132-01-PLAN.md]`
 
 ## Environment Availability
 
