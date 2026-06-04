@@ -31,6 +31,13 @@ gate (AAA for body text), and continues polish on v1.33's under-touched surfaces
 3. A fast Node token-pair contrast checker (`make contrast`) grades every declared `--color-*` pair + documented muted alphas at AA/AAA with no browser.
 4. The existing 40-shot screenshot matrix still captures both themes cleanly as the dark-audit substrate.
 
+**Plans:** 3 plans
+
+Plans:
+- [ ] 128-01-PLAN.md — Install @axe-core/playwright, create contrast-pairs.mjs muted manifest, wire test:e2e:admin-contrast script
+- [ ] 128-02-PLAN.md — Create contrast-checker.mjs with WCAG math/self-test/D-15 guards, Makefile targets, DESIGN-TOKENS.md update
+- [ ] 128-03-PLAN.md — Create admin_contrast_matrix.spec.ts axe gate, run full matrix, commit 128-CONTRAST-REPORT.md
+
 **Status:** Pending
 
 ### Phase 129: Dark-theme brand-expression audit `[S] [R]`
