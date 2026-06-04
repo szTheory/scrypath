@@ -82,7 +82,7 @@ Plans:
 2. `.ops-muted-panel`, `.ops-data-card`, `.ops-surface-flat`, `.ops-nav-list`, `.ops-disclosure`, `.ops-kbd`, `.ops-result-row`, `.ops-preflight__card--locked` step up (not down) in dark.
 3. The light theme is pixel-identical (light matrix + light contrast gate unchanged); `DESIGN-TOKENS.md` records the dark ramp.
 
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 
 Plans:
 **Wave 1**
@@ -91,7 +91,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 130-02-PLAN.md — Declare --ops-bg/surface-1/surface-2 tokens in both @plugin blocks
+- [x] 130-02-PLAN.md — Declare --ops-bg/surface-1/surface-2 tokens in both @plugin blocks
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
