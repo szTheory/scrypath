@@ -179,9 +179,12 @@ item explicitly forbids, so it was skipped on the side of restraint.
 ## Muted-Text Contrast Registry
 
 The muted-alpha text pairs are tracked in [`contrast-pairs.mjs`](./contrast-pairs.mjs) (beside
-this file) — the single source for the D-15 lockstep guard in `contrast-checker.mjs`. Every
-`color: color-mix(in oklch, var(--color-base-content) NN%, transparent)` occurrence in `app.css`
-must have a corresponding entry there, or `make contrast` fails.
+this file) — the single source for the D-15 lockstep guard in `contrast-checker.mjs`. The guard
+is **bidirectional**: every `color: color-mix(in oklch, var(--color-base-content) NN%, transparent)`
+occurrence in `app.css` (including single-line rules and rules nested inside `@media` blocks) must
+have a corresponding manifest entry, AND every non-`decorative` manifest entry must match an actual
+`app.css` rule (so stale/removed entries are caught too). Either direction failing makes
+`make contrast` fail.
 
 ### Alpha Compositing Algorithm (D-12)
 
