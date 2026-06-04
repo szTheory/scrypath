@@ -40,6 +40,21 @@ daisyUI semantic tokens, two themes (light default, dark via `prefers-dark` / ex
 | `base-content` | `#141923` | `#f4f1ea` | text |
 | `info` / `success` / `warning` / `error` | `#5ca9e6` / `#4fae74` / `#d9a441` / `#d96262` | (same hues) | status semantics |
 
+## Elevation surfaces — `--ops-bg`, `--ops-surface-1`, `--ops-surface-2`
+
+Named elevation tokens declared in the daisyUI `@plugin` blocks (dark + light). The plugin
+spreads them to both `[data-theme="dark"]` and `@media (prefers-color-scheme: dark)` for
+free. Ramp direction in dark: bg (floor) → surface-1 (resting panel) → surface-2 (raised).
+
+| Token | Light value | Dark value | Use |
+| --- | --- | --- | --- |
+| `--ops-bg` | `#faf7f2` | `#0c0f14` | Page floor / Night — app background |
+| `--ops-surface-1` | `#fffdf8` | `#141923` | Resting panel / Ink — `.ops-panel`, `.ops-surface-flat`, `.ops-preflight__card` |
+| `--ops-surface-2` | `#faf7f2` | `#1b2230` | Raised / muted step — `.ops-muted-panel`, `.ops-disclosure`, `.ops-nav-list`, `.ops-kbd`, `.ops-verdict-neutral`, `.ops-preflight__card--locked` |
+
+Dark 4-step midnight ramp: `#0C0F14` (bg) → `#141923` (surface-1) → `#1B2230` (surface-2) → `#2A3446` (base-300 / borders).
+Light values are byte-identical to the prior `base-200`/`base-100` references — zero light regression.
+
 ## Spacing — `--spacing-ops-*` → `p-ops-*` / `gap-ops-*` / `space-y-ops-*`
 
 | Token | Value | Use |
