@@ -44,7 +44,7 @@ gate_run: 2026-06-04
 
 | Success Criterion | Requirement | Check Type | Automated Command | Expected | Status |
 |-------------------|-------------|-----------|-------------------|----------|--------|
-| SC-1 seated dark depth, light keeps lift | GLOW-01 | pixel-identity + manual | `node e2e/light-pixel-diff.mjs`; human dark-browser check | Failed pairs **0/20**; dark seated-depth confirmed (perceptual) | ✅ 0/20 PASS; perceptual: awaiting Task 3 human verify |
+| SC-1 seated dark depth, light keeps lift | GLOW-01 | pixel-identity + manual | `node e2e/light-pixel-diff.mjs`; human dark-browser check | Failed pairs **0/20**; dark seated-depth confirmed (perceptual) | ✅ 0/20 PASS; perceptual: APPROVED 2026-06-04 (Task 3 human-verify) |
 | SC-2 glow on route/active/hover only | GLOW-01 | pixel-identity + static grep | `light-pixel-diff` + grep `--shadow-ops-glow` light default = `none` | 0/20; `none` in `@theme`; glow absent on forbidden targets | ✅ 0/20; `--shadow-ops-glow: none` at app.css:149 confirmed |
 | SC-3 AA-safe copper vocabulary @~5% | COPPER-01 | static spec assertion (F8) + axe (eyebrow) | UI-SPEC 9-pairing table review; `npm run test:e2e:admin-contrast` | AA table all PASS (manual); Cluster 1 = 0 | ✅ all-PASS (Task 2 manual re-confirm); Cluster 1 = 0 |
 | Light non-regression (all changes) | GLOW-01, COPPER-01 | regression | `node contrast-checker.mjs`; `light-pixel-diff` | 3 AA / 12 AAA; 0/20 | ✅ 3 AA / 12 AAA (baseline unchanged); 0/20 |
@@ -218,8 +218,10 @@ app.css:149:  --shadow-ops-glow: none;          /* light no-op — Precedent A o
 | Behavior | Requirement | Why Manual | Status |
 |----------|-------------|------------|--------|
 | Copper 9-pairing AA table holds | COPPER-01 | F8 — copper classes use raw `var(--color-secondary)`/`var(--color-base-content)` refs the contrast harness does not track | ✅ All 9 re-confirmed PASS (Task 2) |
-| Dark seated-depth reads correctly | GLOW-01 | Perceptual — shadow depth is not machine-measurable | ⬜ Awaiting Task 3 human-verify |
-| Quiet glow restraint | GLOW-01 | Perceptual — "quiet not loud" is a brand judgment | ⬜ Awaiting Task 3 human-verify |
+| Dark seated-depth reads correctly | GLOW-01 | Perceptual — shadow depth is not machine-measurable | ✅ APPROVED 2026-06-04 — seated depth confirmed (panels pressed into surface with border, not floating) |
+| Quiet glow restraint | GLOW-01 | Perceptual — "quiet not loud" is a brand judgment | ✅ APPROVED 2026-06-04 — violet glow appropriately quiet and scoped to route mark, active nav pill, recommended intent-card only |
+| Copper eyebrow renders correctly on all screens | COPPER-01 | Perceptual — correct color rendering requires human confirmation | ✅ APPROVED 2026-06-04 — copper eyebrow confirmed on all 6 screens at ~5% accent ratio |
+| Light mode non-regression | GLOW-01, COPPER-01 | Perceptual final confirmation + 0/20 pixel-diff backing | ✅ APPROVED 2026-06-04 — light mode unchanged; 0/20 pixel-diff confirmed |
 
 ---
 
@@ -233,4 +235,4 @@ app.css:149:  --shadow-ops-glow: none;          /* light no-op — Precedent A o
 - [x] Cluster 3 (primary-violet) recorded as out-of-scope-known-fail → deferred to Phase 132
 - [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending Task 3 human-verify (dark seated-depth, glow restraint, copper eyebrow, light non-regression visual sign-off)
+**Approval:** APPROVED 2026-06-04 — all four perceptual criteria confirmed by human review: seated depth reads correctly (panels pressed into surface with border shadow, not floating), violet glow is appropriately quiet and scoped (route mark, active nav pill, recommended intent-card only — never on text, resting panels, or background floods), copper eyebrow renders correctly on all 6 screens at ~5% accent ratio, and light mode is pixel-identical (0/20 confirmed).
