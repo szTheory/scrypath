@@ -34,6 +34,26 @@
 //   note      — human-readable description
 
 export const MUTED_PAIRS = [
+  // app.css line 252 — header utility override
+  {
+    selector: ".ops-header .text-base-content\\/60",
+    css_var: "ops-text-muted",
+    alpha: 0.64,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "header utility override"
+  },
+  // app.css line 256 — shell utility override
+  {
+    selector: ".ops-shell .text-base-content\\/60",
+    css_var: "ops-text-muted",
+    alpha: 0.64,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "shell utility override"
+  },
   // app.css line 537 — meta/secondary text
   {
     selector: ".ops-text-meta",

@@ -27,7 +27,7 @@ $ cd examples/scrypath_ecommerce && CONTRAST_REPORT_DIR=test-results/contrast/ph
 
 Contrast check: PASS
   AA failures:  0
-  AAA advisory: 17
+  AAA advisory: 19
   Report: test-results/contrast/phase132-token/contrast-report.token.json
 ```
 
@@ -111,7 +111,7 @@ The browser contrast matrix exited 0 without axe exclusions, disabled rules, or 
 
 Static token advisory status is report-only:
 
-- Token checker `AAA advisory: 17`
+- Token checker `AAA advisory: 19`
 - AAA findings did not affect the static gate exit status.
 - Phase 132 keeps AA as the hard gate and does not change thresholds or typography to chase AAA.
 
@@ -203,3 +203,34 @@ Task 2 evidence artifacts kept out of git:
 - `examples/scrypath_ecommerce/.tmp/pixel-diff-fresh/**`
 - `examples/scrypath_ecommerce/.tmp/admin-screenshots/**`
 - untracked `scrypath_ops/priv/static/**`
+
+## Post-Review Correction
+
+The Phase 132 review found that named `--ops-text-muted` consumers could be missed by
+the static manifest guard. The checker now fails on any unmanifested
+`color: var(--ops-text-muted)` consumer, the grouped shell/header utility override was
+split into two explicit CSS rules, and both selectors are listed in
+`contrast-pairs.mjs`.
+
+Post-review verification:
+
+```console
+$ node --check examples/scrypath_ecommerce/contrast-checker.mjs
+$ node examples/scrypath_ecommerce/contrast-checker.mjs --self-test
+self-test passed
+
+$ cd examples/scrypath_ecommerce && CONTRAST_REPORT_DIR=test-results/contrast/phase132-token node contrast-checker.mjs
+
+Contrast check: PASS
+  AA failures:  0
+  AAA advisory: 19
+  Report: test-results/contrast/phase132-token/contrast-report.token.json
+
+$ cd scrypath_ops && ELIXIR_ERL_OPTIONS='+S 2' mix assets.build && ELIXIR_ERL_OPTIONS='+S 2' mix verify.opsui
+2 doctests, 129 tests, 0 failures
+```
+
+The lower scheduler count only constrains local test database pool size; it does not
+change ScrypathOps code or contrast thresholds. It was needed because unrelated
+`/Users/jon/projects/scoria` BEAM test processes were holding many idle local Postgres
+connections.

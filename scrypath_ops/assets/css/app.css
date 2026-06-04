@@ -249,7 +249,10 @@
       linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
   }
 
-  .ops-header .text-base-content\/60,
+  .ops-header .text-base-content\/60 {
+    color: var(--ops-text-muted);
+  }
+
   .ops-shell .text-base-content\/60 {
     color: var(--ops-text-muted);
   }
