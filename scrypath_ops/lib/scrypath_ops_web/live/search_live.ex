@@ -522,11 +522,17 @@ defmodule ScrypathOpsWeb.SearchLive do
   end
 
   defp search_status_badge_kind(%{searching: true}), do: :running
-  defp search_status_badge_kind(%{result_single: r1, result_multi: r2}) when not is_nil(r1) or not is_nil(r2), do: :success
+
+  defp search_status_badge_kind(%{result_single: r1, result_multi: r2})
+       when not is_nil(r1) or not is_nil(r2), do: :success
+
   defp search_status_badge_kind(_), do: :neutral
 
   defp search_status_badge_label(%{searching: true}), do: "Running…"
-  defp search_status_badge_label(%{result_single: r1, result_multi: r2}) when not is_nil(r1) or not is_nil(r2), do: "Last run loaded"
+
+  defp search_status_badge_label(%{result_single: r1, result_multi: r2})
+       when not is_nil(r1) or not is_nil(r2), do: "Last run loaded"
+
   defp search_status_badge_label(_), do: "Run a probe"
 
   # Lead a single-index hit row with its most human field (name/title/sku) so result
