@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
 status: planning
-last_updated: "2026-06-04T21:40:14.459Z"
+last_updated: "2026-06-04T21:40:46.549Z"
 last_activity: 2026-06-04
 progress:
   total_phases: 9
@@ -25,7 +25,7 @@ progress:
 Phase: 133
 Plan: Not started
 Status: Ready to plan
-Resume: .planning/phases/132-a11y-contrast-remediation-both-themes-hard-gate-g/132-CONTEXT.md
+Resume: .planning/phases/133-dark-path-motion-expression-r-g/133-CONTEXT.md
 Last activity: 2026-06-04
 
 ## Current Milestone
