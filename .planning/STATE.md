@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
-status: verifying
-last_updated: "2026-06-04T21:16:02.604Z"
+status: ready_to_plan
+last_updated: 2026-06-04T21:31:01.313Z
 last_activity: 2026-06-04
 progress:
   total_phases: 9
@@ -11,6 +11,7 @@ progress:
   total_plans: 14
   completed_plans: 14
   percent: 56
+stopped_at: Phase 132 complete (2/2) — ready to discuss Phase 133
 ---
 
 # Project State
@@ -18,13 +19,13 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 132 — a11y-contrast-remediation-both-themes-hard-gate-g
+**Current Focus:** Phase 133 — dark/path motion expression `[r] [g]`
 
 ## Current Position
 
-Phase: 132 (a11y-contrast-remediation-both-themes-hard-gate-g) — VERIFYING
-Plan: 2 of 2
-Status: Phase complete — ready for verification
+Phase: 133
+Plan: Not started
+Status: Ready to plan
 Resume: .planning/phases/132-a11y-contrast-remediation-both-themes-hard-gate-g/132-CONTEXT.md
 Last activity: 2026-06-04
 
