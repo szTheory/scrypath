@@ -28,15 +28,15 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Baseline: the Jun-3 light screenshots stored in .tmp/admin-screenshots/
-const BASELINE_DIR = path.resolve(__dirname, "../../.tmp/admin-screenshots");
+const BASELINE_DIR = path.resolve(__dirname, "../.tmp/admin-screenshots");
 // Fresh shots: caller must place re-shot light PNGs here before running this script
 const FRESH_DIR =
   process.env.PIXEL_DIFF_FRESH_DIR ??
-  path.resolve(__dirname, "../../.tmp/pixel-diff-fresh");
+  path.resolve(__dirname, "../.tmp/pixel-diff-fresh");
 // Diff output: write side-by-side diff PNGs for any failing pair
 const DIFF_DIR =
   process.env.PIXEL_DIFF_DIFF_DIR ??
-  path.resolve(__dirname, "../../.tmp/pixel-diff-out");
+  path.resolve(__dirname, "../.tmp/pixel-diff-out");
 
 // ─── MAIN ──────────────────────────────────────────────────────────────────────
 
