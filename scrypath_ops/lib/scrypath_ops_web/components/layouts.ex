@@ -67,7 +67,10 @@ defmodule ScrypathOpsWeb.Layouts do
         </.link>
 
         <div class="flex flex-wrap items-center gap-3">
-          <nav aria-label="Operator primary">
+          <%!-- Header nav duplicates the command palette (⌘K) on mobile and wraps into a
+          second row at 390px. Hide it below `sm`; ⌘K + the breadcrumb trail are the
+          mobile navigation tiers. --%>
+          <nav aria-label="Operator primary" class="hidden sm:block">
             <ul class="ops-nav-list">
               <li
                 :for={item <- ScrypathOpsWeb.Nav.primary(@mount_path)}

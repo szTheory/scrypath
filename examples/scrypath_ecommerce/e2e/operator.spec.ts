@@ -73,7 +73,7 @@ test("operator can initiate zero-downtime swap from sync drift UI", async ({ pag
 
   await page.goto("/admin/search/sync-drift");
   await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Sync & Drift" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
   await page.getByRole("button", { name: "Load / refresh contract drift" }).click();
   await expect(page.getByText("Contract dimensions")).toBeVisible();
   await page.getByRole("button", { name: "Swap live index" }).click();

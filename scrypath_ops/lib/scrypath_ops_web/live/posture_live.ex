@@ -154,7 +154,7 @@ defmodule ScrypathOpsWeb.PostureLive do
           <h2 id="posture-summary-heading" class="sr-only">Fleet posture</h2>
           <.ops_verdict
             kind={ScrypathOps.Posture.badge_kind(@posture_state)}
-            label="Fleet posture"
+            label="Can I trust search right now?"
             headline={@posture_headline}
           >
             {@posture_evidence}
