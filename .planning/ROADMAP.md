@@ -26,6 +26,7 @@ gate (AAA for body text), and continues polish on v1.33's under-touched surfaces
 **Requirements:** CONTRAST-HARNESS-01
 
 **Success criteria:**
+
 1. `npm run test:e2e:admin-contrast` runs the full screen × {light, dark, system-dark} × scenario matrix and exits non-zero on any AA color-contrast violation.
 2. The AAA (7:1) status for body/long-form text is reported without failing the build.
 3. A fast Node token-pair contrast checker (`make contrast`) grades every declared `--color-*` pair + documented muted alphas at AA/AAA with no browser.
@@ -34,8 +35,16 @@ gate (AAA for body text), and continues polish on v1.33's under-touched surfaces
 **Plans:** 3 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 128-01-PLAN.md — Install @axe-core/playwright, create contrast-pairs.mjs muted manifest, wire test:e2e:admin-contrast script
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 128-02-PLAN.md — Create contrast-checker.mjs with WCAG math/self-test/D-15 guards, Makefile targets, DESIGN-TOKENS.md update
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 128-03-PLAN.md — Create admin_contrast_matrix.spec.ts axe gate, run full matrix, commit 128-CONTRAST-REPORT.md
 
 **Status:** Pending
@@ -47,6 +56,7 @@ Plans:
 **Requirements:** DARKAUDIT-01
 
 **Success criteria:**
+
 1. Every dark touchpoint is scored on the brand's dark dimensions (4-step ramp, 65/20/10/5 ratio, quiet-vs-loud glow, ambient-shadow-plus-border, path-line glow restraint, AA pass/fail).
 2. Findings are tagged by fix class and split systemic (≥3 screens → token/component fix) vs per-screen.
 3. The backlog mirrors v1.33's `120-AUDIT-BACKLOG.md` format and is the single source for phases 130–135.
@@ -60,6 +70,7 @@ Plans:
 **Requirements:** DARKTOKEN-01
 
 **Success criteria:**
+
 1. Dark renders a true four-step ramp: bg `#0C0F14` → panel `#141923` → raised/muted `#1B2230` → border `#2A3446`.
 2. `.ops-muted-panel`, `.ops-data-card`, `.ops-surface-flat`, `.ops-nav-list`, `.ops-disclosure`, `.ops-kbd`, `.ops-result-row`, `.ops-preflight__card--locked` step up (not down) in dark.
 3. The light theme is pixel-identical (light matrix + light contrast gate unchanged); `DESIGN-TOKENS.md` records the dark ramp.
@@ -73,6 +84,7 @@ Plans:
 **Requirements:** GLOW-01, COPPER-01
 
 **Success criteria:**
+
 1. Dark panels (`.ops-panel`, `.ops-cmdk__panel`, `#flash-group`, `.ops-intent-card`) read as seated depth via a dark ambient shadow + the existing border; light keeps its vertical lift.
 2. A low-spread violet glow token applies to the route mark / active-path / key-callout hover only — never text, resting panels, or background floods.
 3. A `.ops-*` copper accent family (eyebrow, key-callout badge, key-node emphasis) ships with AA-safe dark-text-on-copper pairings and is used at roughly the brand's 5% ratio.
@@ -86,6 +98,7 @@ Plans:
 **Requirements:** A11Y-TOKEN-01
 
 **Success criteria:**
+
 1. `.ops-text-meta`, `.ops-trail__crumb`, header nav, handoff/palette/preflight hints all clear AA 4.5:1 in both themes (the flagged weak dark header-nav contrast is fixed).
 2. Large-text/UI elements clear ≥3:1; body/long-form text reaches AAA (≥7:1).
 3. The contrast gate is green for light, dark, and system-dark; `DESIGN-TOKENS.md` records the new alpha floors.
@@ -99,6 +112,7 @@ Plans:
 **Requirements:** DARKMOTION-01
 
 **Success criteria:**
+
 1. New motion is transform/opacity only, <300ms, no bounce, and neutralized under `prefers-reduced-motion`.
 2. It honors v1.33's A3 precedent — no per-LiveView-patch re-firing reveals on result lists.
 3. Motion reads "deliberate/infrastructural" in dark and does not regress light; reduced-motion + functional integrity confirmed via Playwright.
@@ -112,6 +126,7 @@ Plans:
 **Requirements:** SCREEN-DARK-01
 
 **Success criteria:**
+
 1. Search result rows visibly separate in dark (reseated on the surface-2 raised token + dark ambient-shadow-plus-border; hover keeps `shadow-ops-mid` + violet border).
 2. Sync/Drift drift-chips and preflight gain depth; Playbooks empty + populated are polished — both themes, all seed scenarios.
 3. Earned copper/glow accents appear where they serve the scan path, not decoratively.
@@ -125,6 +140,7 @@ Plans:
 **Requirements:** SHELL-DARK-01
 
 **Success criteria:**
+
 1. Header nav contrast passes AA in dark; the `.ops-shell` radial violet wash reads as a quiet ambient glow on Night, not a blob.
 2. Command palette + flash adopt the dark ambient-shadow-plus-border recipe; theme-toggle states are verified.
 3. Chrome is consistent across Control Room, Posture, Failed Sync, Sync/Drift, Search, Playbooks in both themes.
@@ -138,6 +154,7 @@ Plans:
 **Requirements:** DUALVERIFY-01
 
 **Success criteria:**
+
 1. `mix verify.opsui` + ScrypathOps LiveView suite + ecommerce admin Playwright smoke all green.
 2. CONTRAST-HARNESS-01 passes AA in both themes with the AAA-body report attached; reduced-motion neutralization holds.
 3. A v1.33→v1.34 before/after gallery (dark-weighted) and a milestone audit against this intent are produced; human UAT passes.
