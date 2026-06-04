@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.33
 milestone_name: Admin UI Insane Polish
-status: Active — Phases 119-126 complete (8/9); Phase 127 next (shell coherence + milestone verify/UAT, gate phase)
+status: Implementation complete (phases 119-127, 9/9); awaiting owner UAT sign-off
 last_updated: "2026-06-03"
-last_activity: 2026-06-03 — Phases 125 (RECOVER-01) + 126 (EXPLORE-01) complete: Posture worst-first + mobile scroll cue (B1), Sync/Drift :wide width (B6) + drift loading (S3), Failed Sync states; Search ops_loading (S2) + human-field titles (P29) + zero-results next action, Playbooks danger-action split (P28); gates green, 40-shot matrix re-captured both themes
+last_activity: 2026-06-03 — Phase 127 complete (SHELL-01 verdict unify + mobile header nav; VERIFY-01 static gates green: verify.opsui 129/0, ecommerce compile clean); milestone audit PASSED/tech_debt; live admin smoke + recapture gallery + human UAT deferred to owner sign-off
 progress:
   total_phases: 9
-  completed_phases: 8
+  completed_phases: 9
   total_plans: 8
   completed_plans: 8
-  percent: 89
+  percent: 100
 ---
 
 # Project State
@@ -18,13 +18,13 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** v1.33 Admin UI Insane Polish — Phase 127 (shell coherence + milestone verification & UAT) — the final gate stop
+**Current Focus:** v1.33 Admin UI Insane Polish — implementation complete (9/9 phases); awaiting owner UAT sign-off
 
 ## Current Position
 
-Phase: 127 — Shell coherence + milestone verification & UAT (next, gate phase, owner UAT stop)
+Phase: 127 — Shell coherence + milestone verification & UAT (implementation complete; owner UAT pending)
 Plan: —
-Status: Active — Phases 119-126 complete (8/9); Phase 127 not yet planned
+Status: Implementation complete (9/9 phases, 119-127); awaiting owner UAT sign-off before PR/merge/archive
 Last activity: 2026-06-03 — Phases 125 (RECOVER-01) + 126 (EXPLORE-01) complete: the per-screen Recover + Explore polish passes; B1 (Posture mobile) + B6 (Sync/Drift width) resolved, ops_loading wired into Sync/Drift + Search
 
 ## Current Milestone

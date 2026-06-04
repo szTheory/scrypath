@@ -32,7 +32,7 @@ Active milestone: **v1.33 Admin UI Insane Polish**. Owner-initiated, screenshot-
 | v1.30 Release Trust and Evidence Maintenance | 109-112 | 11/11 | Complete | 2026-06-01 |
 | v1.31 Adoption Evidence Demo Hardening | 113-115 | 3/3 phases complete | UAT passed | 2026-06-01 |
 | v1.32 Admin UI/UX Design System Cleanup | 116-118 | 3/3 phases complete | Complete | 2026-06-01 |
-| v1.33 Admin UI Insane Polish | 119-127 | 8/9 phases complete | Active | — |
+| v1.33 Admin UI Insane Polish | 119-127 | 9/9 phases complete | Implementation done; awaiting UAT | — |
 
 ## Historical Contract Anchors
 
