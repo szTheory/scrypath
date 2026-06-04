@@ -115,6 +115,22 @@ Plans:
 2. A low-spread violet glow token applies to the route mark / active-path / key-callout hover only — never text, resting panels, or background floods.
 3. A `.ops-*` copper accent family (eyebrow, key-callout badge, key-node emphasis) ships with AA-safe dark-text-on-copper pairings and is used at roughly the brand's 5% ratio.
 
+**Plans:** 4 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 131-01-PLAN.md — Declare 3 dark shadow tokens + glow/copper classes; Wave-0 baseline freshness
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 131-02-PLAN.md — Apply panel-dark + violet glow (dark-scoped, compose) + shell wash mobile tune
+- [ ] 131-03-PLAN.md — Eyebrow copper re-style (ops_ui.ex) + DESIGN-TOKENS.md lockstep sections
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 131-04-PLAN.md — Run D-11 proof bundle + copper AA re-confirm + human verify
+
 **Status:** Pending
 
 ### Phase 132: A11y contrast remediation — both themes (hard gate) `[G]`

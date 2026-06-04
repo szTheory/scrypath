@@ -358,10 +358,10 @@ This is a CSS/token/doc phase with one one-line template re-style. There is **no
 
 **All other claims** are VERIFIED against live files (line numbers, alias contents, precedent shapes, token values, gate scripts) or CITED from the UI-SPEC/ROADMAP/REQUIREMENTS/130-VERIFICATION.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Baseline freshness (A1)** — see Assumptions Log. Recommendation: planner adds a Wave-0 step to re-shoot + re-confirm the light baseline before the first `light-pixel-diff` run, OR confirm via `git log` that `.tmp/admin-screenshots/*light*` post-dates Phase 130's last light-affecting commit.
-2. **One shared panel-dark selector list vs per-selector blocks** — Claude's Discretion (CONTEXT). Both are pixel-safe; recommend a single grouped dark-scoped selector list for the four panels to minimize block count, with `#flash-group > *` and `.ops-cmdk__panel` kept in a composing variant (they keep `--shadow-ops-overlay`; `.ops-panel`/`.ops-intent-card` keep `--shadow-ops-surface`). The two groups have different base layers, so likely **two** grouped blocks, not one.
+1. **Baseline freshness (A1)** — RESOLVED by Plan 131-01 Task 1 (the Wave-0 baseline-freshness gate runs before any `light-pixel-diff`). Recommendation: planner adds a Wave-0 step to re-shoot + re-confirm the light baseline before the first `light-pixel-diff` run, OR confirm via `git log` that `.tmp/admin-screenshots/*light*` post-dates Phase 130's last light-affecting commit.
+2. **One shared panel-dark selector list vs per-selector blocks** — RESOLVED by Plan 131-02 Task 1 (Claude's-Discretion item, resolved to the recommended two grouped dark-scoped blocks). Both are pixel-safe; recommend a single grouped dark-scoped selector list for the four panels to minimize block count, with `#flash-group > *` and `.ops-cmdk__panel` kept in a composing variant (they keep `--shadow-ops-overlay`; `.ops-panel`/`.ops-intent-card` keep `--shadow-ops-surface`). The two groups have different base layers, so likely **two** grouped blocks, not one.
 
 ## Environment Availability
 
