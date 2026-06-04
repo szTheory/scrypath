@@ -175,3 +175,34 @@ item explicitly forbids, so it was skipped on the side of restraint.
 | nav/segmented hover, modal opacity+translateY entrance | metric **value** count-ups (no dashboard-toy tickers) |
 | row hover/press (`.ops-result-row`/`.ops-object-item`: border + `shadow-ops-mid`, subtle scale) | flash bounce, focus rings, decorative loops |
 | loading **opacity** pulse (`.ops-loading`, the one sanctioned in-flight loop besides the reconnect spinner) | |
+
+## Muted-Text Contrast Registry
+
+The muted-alpha text pairs are tracked in [`contrast-pairs.mjs`](./contrast-pairs.mjs) (beside
+this file) — the single source for the D-15 lockstep guard in `contrast-checker.mjs`. Every
+`color: color-mix(in oklch, var(--color-base-content) NN%, transparent)` occurrence in `app.css`
+must have a corresponding entry there, or `make contrast` fails.
+
+### Alpha Compositing Algorithm (D-12)
+
+Alpha compositing uses sRGB:
+
+```
+out_channel = fg_channel × α + bg_channel × (1−α)
+```
+
+per channel (0–255 space). This matches axe-core's compositing algorithm, ensuring the fast token
+checker and the browser-based axe gate render one verdict on the same fg/bg pair.
+
+### Thresholds (D-14)
+
+Thresholds per D-14:
+
+| Role | AA | AAA |
+|------|-----|-----|
+| `text` (body/inline) | 4.5:1 | 7.0:1 |
+| `large` (uppercase + bold, WCAG large text) | 3.0:1 | 4.5:1 |
+| `ui` (non-text, semantic pairs `X-content/X`) | 3.0:1 | 4.5:1 |
+
+The `contrast-checker.mjs` gate exits non-zero iff AA failures exist; AAA is reported as advisory
+only and never affects the exit code.
