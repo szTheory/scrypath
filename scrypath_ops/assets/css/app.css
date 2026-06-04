@@ -1054,6 +1054,14 @@
       right: 1rem;
       bottom: 1rem;
     }
+
+    /* DK-10: shell radial wash tuned for mobile — 14%→10% alpha, 34rem→28rem extent.
+       Both themes (not dark-scoped). Base .ops-shell at L242 is byte-unchanged. */
+    .ops-shell {
+      background:
+        radial-gradient(circle at top left, color-mix(in oklch, var(--color-primary) 10%, transparent), transparent 28rem),
+        linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
+    }
   }
 
   /* Command palette (⌘K) + cheat-sheet overlay. */
