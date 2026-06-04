@@ -21,6 +21,10 @@
 // Field reference:
 //   selector  — exact CSS selector as it appears in app.css
 //   alpha     — decimal 0–1 (e.g. 0.55 for 55%)
+//   css_var   — optional named CSS variable for readable muted text entries that
+//               route through `color: var(--ops-text-muted)` instead of a raw
+//               inline color-mix declaration; the token declaration must carry
+//               the same alpha in app.css
 //   fg_token  — token name without `--color-` prefix (always "base-content" here)
 //   bg_token  — token name without `--color-` prefix (the opaque surface)
 //   role      — "text" → AA 4.5 / AAA 7.0
@@ -33,7 +37,8 @@ export const MUTED_PAIRS = [
   // app.css line 537 — meta/secondary text
   {
     selector: ".ops-text-meta",
-    alpha: 0.55,
+    css_var: "ops-text-muted",
+    alpha: 0.64,
     fg_token: "base-content",
     bg_token: "base-100",
     role: "text",
@@ -42,7 +47,8 @@ export const MUTED_PAIRS = [
   // app.css line 691 — breadcrumb text
   {
     selector: ".ops-trail__crumb",
-    alpha: 0.60,
+    css_var: "ops-text-muted",
+    alpha: 0.64,
     fg_token: "base-content",
     bg_token: "base-100",
     role: "text",
@@ -60,7 +66,8 @@ export const MUTED_PAIRS = [
   // app.css line 746 — hint copy
   {
     selector: ".ops-handoff__hint",
-    alpha: 0.60,
+    css_var: "ops-text-muted",
+    alpha: 0.64,
     fg_token: "base-content",
     bg_token: "base-100",
     role: "text",
@@ -69,7 +76,8 @@ export const MUTED_PAIRS = [
   // app.css line 833 — hint copy
   {
     selector: ".ops-preflight__hint",
-    alpha: 0.60,
+    css_var: "ops-text-muted",
+    alpha: 0.64,
     fg_token: "base-content",
     bg_token: "base-100",
     role: "text",
@@ -114,7 +122,8 @@ export const MUTED_PAIRS = [
   // app.css line 1115 — command palette item hint
   {
     selector: ".ops-cmdk__item-hint",
-    alpha: 0.55,
+    css_var: "ops-text-muted",
+    alpha: 0.64,
     fg_token: "base-content",
     bg_token: "base-100",
     role: "text",
@@ -123,7 +132,8 @@ export const MUTED_PAIRS = [
   // app.css line 1120 — command palette empty state
   {
     selector: ".ops-cmdk__empty",
-    alpha: 0.55,
+    css_var: "ops-text-muted",
+    alpha: 0.64,
     fg_token: "base-content",
     bg_token: "base-100",
     role: "text",
