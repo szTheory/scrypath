@@ -1,10 +1,11 @@
 ---
 phase: 130
 slug: dark-surface-ramp-depth-tokens-g
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: complete
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-06-04
+completed: 2026-06-04
 ---
 
 # Phase 130 — Validation Strategy
@@ -45,13 +46,21 @@ created: 2026-06-04
 
 | Req ID | Behavior | Test Type | Automated Command | File Exists | Status |
 |--------|----------|-----------|-------------------|-------------|--------|
-| DARKTOKEN-01-a | Dark ramp renders 4 distinct steps (`#0C0F14→#141923→#1B2230→#2A3446`) | e2e contrast | `npm run test:e2e:admin-contrast` | ✅ `admin_contrast_matrix.spec.ts` | ⬜ pending |
-| DARKTOKEN-01-b | Named recipes step **up** in elevation in dark (cluster 1 → 0 AA fails) | e2e contrast | `npm run test:e2e:admin-contrast` | ✅ | ⬜ pending |
-| DARKTOKEN-01-c | Light is **pixel-identical** (0 diff pixels, 20 shots) | visual diff | `node e2e/light-pixel-diff.mjs` (Wave 0) | ❌ W0 | ⬜ pending |
-| DARKTOKEN-01-d | No Elixir test regressions | unit | `mix test` | ✅ existing suite | ⬜ pending |
-| DARKTOKEN-01-e | No a11y regressions | unit/a11y | `mix opsui.test_a11y` | ✅ | ⬜ pending |
-| DARKTOKEN-01-f | Light token contrast counts unchanged vs Phase 128 | fast token check | `node contrast-checker.mjs` | ✅ | ⬜ pending |
-| DARKTOKEN-01-g | `DESIGN-TOKENS.md` records the 4-step elevation ramp | manual review | `git diff scrypath_ops/assets/css/DESIGN-TOKENS.md` | ✅ file exists, section to add | ⬜ pending |
+| DARKTOKEN-01-a | Dark ramp renders 4 distinct steps (`#0C0F14→#141923→#1B2230→#2A3446`) | e2e contrast | `npm run test:e2e:admin-contrast` | ✅ `admin_contrast_matrix.spec.ts` | ✅ green |
+| DARKTOKEN-01-b | Named recipes step **up** in elevation in dark (cluster 1 → 0 AA fails) | e2e contrast | `npm run test:e2e:admin-contrast` | ✅ | ✅ green |
+| DARKTOKEN-01-c | Light is **pixel-identical** (0 diff pixels, 20 shots) | visual diff | `node e2e/light-pixel-diff.mjs` (Wave 0) | ✅ W0 | ✅ green |
+| DARKTOKEN-01-d | No Elixir test regressions | unit | `mix test` | ✅ existing suite | ✅ green |
+| DARKTOKEN-01-e | No a11y regressions | unit/a11y | `mix opsui.test_a11y` | ✅ | ✅ green |
+| DARKTOKEN-01-f | Light token contrast counts unchanged vs Phase 128 | fast token check | `node contrast-checker.mjs` | ✅ | ✅ green |
+| DARKTOKEN-01-g | `DESIGN-TOKENS.md` records the 4-step elevation ramp | manual review | `git diff scrypath_ops/assets/css/DESIGN-TOKENS.md` | ✅ file exists, section added | ✅ green |
+
+> **Note on admin-contrast gate exit code:** `npm run test:e2e:admin-contrast` exits 1, NOT 0.
+> The residual 8/16/12 violations are ALL Cluster 3 primary-violet `#6c5ce7` at 4.3:1
+> (`.ops-nav-item-active` + `.bg-primary`). These are explicitly **out of DARKTOKEN-01 scope**
+> and are deferred to Phase 132 per the plan. Cluster 1 (`.leading-4` ramp collapse — the
+> Phase 130 target) IS resolved at 0 violations. DARKTOKEN-01-a and -b are met as scoped
+> (Cluster 1 is the surface-2 ramp criterion; Cluster 3 is the primary-violet AA criterion
+> which belongs to Phase 132).
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -59,8 +68,8 @@ created: 2026-06-04
 
 ## Wave 0 Requirements
 
-- [ ] `examples/scrypath_ecommerce/e2e/light-pixel-diff.mjs` (or equivalent) — disposable Node script that re-shoots the 20 light-mode admin PNGs, `pixelmatch`-diffs each against `.tmp/admin-screenshots/*light*`, and exits non-zero on any diff > 0. This is the minimal light-parity gate artifact (D-11 step 4 / D-12 defers the full matrix to Phase 136).
-- [ ] Verify `pixelmatch` (+ `pngjs`) availability in `examples/scrypath_ecommerce/package.json`; install if absent (research flagged this as LOW-confidence / unverified).
+- [x] `examples/scrypath_ecommerce/e2e/light-pixel-diff.mjs` — created in Plan 01; paths corrected in Plan 04. Runs and exits 0 with "Failed pairs: 0 / 20".
+- [x] `pixelmatch` + `pngjs` available in `examples/scrypath_ecommerce/package.json` — confirmed present.
 
 *All other infrastructure (ExUnit, a11y task, contrast matrix spec, contrast-checker.mjs, light baseline PNGs) already exists.*
 
@@ -77,11 +86,11 @@ created: 2026-06-04
 
 ## Validation Sign-Off
 
-- [ ] All tasks have an `<automated>` verify or a Wave 0 dependency
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers the MISSING reference (`light-pixel-diff.mjs`)
-- [ ] No watch-mode flags
-- [ ] Feedback latency acceptable (sub-second token check available per-commit)
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have an `<automated>` verify or a Wave 0 dependency
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers the MISSING reference (`light-pixel-diff.mjs`)
+- [x] No watch-mode flags
+- [x] Feedback latency acceptable (sub-second token check available per-commit)
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** complete — 2026-06-04
