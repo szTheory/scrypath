@@ -1,7 +1,8 @@
 ---
 phase: 132
 slug: a11y-contrast-remediation-both-themes-hard-gate-g
-status: draft
+status: approved
+reviewed_at: 2026-06-04
 shadcn_initialized: false
 preset: none
 created: 2026-06-04
@@ -113,6 +114,8 @@ Source: `132-CONTEXT.md` locks CSS + token only, no behavior changes, no LiveVie
 | Primary buttons / active nav | If cream text on violet fails AA, switch only the text-bearing background to `--color-primary-strong`; do not alter borders, focus rings, glow roles, or decorative violet accents |
 | Screenshot and pixel baselines | Light changes are expected and correct. Re-capture the light baseline after AA remediation instead of enforcing Phase 131's 0/20 light pixel-diff expectation |
 
+Visual hierarchy note: primary visual hierarchy is unchanged. The existing ops shell and header-nav structure remain the focal frame; Phase 132 is limited to contrast-token remediation and must not introduce a new focal element, new visual weight, or altered scan order.
+
 ---
 
 ## Registry Safety
@@ -126,14 +129,14 @@ Source: `132-CONTEXT.md` locks CSS + token only, no behavior changes, no LiveVie
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-06-04
 
 ---
 
