@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
 status: executing
-last_updated: "2026-06-04T15:15:10.891Z"
-last_activity: 2026-06-04 -- Phase 130 planning complete
+last_updated: "2026-06-04T15:20:09.906Z"
+last_activity: 2026-06-04
 progress:
   total_phases: 9
   completed_phases: 2
   total_plans: 8
-  completed_plans: 4
+  completed_plans: 5
   percent: 22
 ---
 
@@ -18,14 +18,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 130 — dark surface ramp + depth tokens `[g]`
+**Current Focus:** Phase 130 — dark-surface-ramp-depth-tokens-g
 
 ## Current Position
 
-Phase: 130
-Plan: Not started
+Phase: 130 (dark-surface-ramp-depth-tokens-g) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-06-04 -- Phase 130 planning complete
+Last activity: 2026-06-04
 
 ## Current Milestone
 
@@ -82,8 +82,11 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 | Phase 128 P01 | 4min | CONTRAST-HARNESS-01 | 3 files (package.json, package-lock.json, contrast-pairs.mjs) |
 | Phase 128 P02 | 8min | 2 tasks | 3 files |
 | Phase 128 P03 | 15min | 3 tasks | 3 files (admin_contrast_matrix.spec.ts, 128-CONTRAST-REPORT.md, VALIDATION.md) |
+| Phase 130 P01 | 5min | 2 tasks | 4 files |
 
 ## Decisions
 
 - [Phase ?]: #767676 vs white is 4.54:1 (not 4.48:1) — #777777 is the actual known-fail pair for AA at 4.48:1
 - [Phase ?]: D-15 Guard 2 selector extraction uses whitespace-aware regex to handle indented CSS rules inside @layer blocks
+- [Phase ?]: Wave 0 FRESH_DIR convention
+- [Phase ?]: light-pixel-diff SKIP behavior
