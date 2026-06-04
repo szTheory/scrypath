@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
-status: executing
-last_updated: "2026-06-04T21:06:10.595Z"
+status: verifying
+last_updated: "2026-06-04T21:16:02.604Z"
 last_activity: 2026-06-04
 progress:
   total_phases: 9
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 14
-  completed_plans: 13
-  percent: 44
+  completed_plans: 14
+  percent: 56
 ---
 
 # Project State
@@ -22,9 +22,9 @@ progress:
 
 ## Current Position
 
-Phase: 132 (a11y-contrast-remediation-both-themes-hard-gate-g) — EXECUTING
+Phase: 132 (a11y-contrast-remediation-both-themes-hard-gate-g) — VERIFYING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Resume: .planning/phases/132-a11y-contrast-remediation-both-themes-hard-gate-g/132-CONTEXT.md
 Last activity: 2026-06-04
 
@@ -92,6 +92,7 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 | Phase 131 P03 | ~10min | 2 tasks | 2 files |
 | Phase 131 P04 | 20min | 3 tasks | 1 files |
 | Phase 132 P01 | ~6min | 3 tasks | 4 files |
+| Phase 132 P02 | ~10min | 2 tasks | 2 files |
 
 ## Decisions
 
@@ -105,3 +106,6 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 - [Phase ?]: (Phase 131 Plan 03) ops_page_header eyebrow swapped from four inline utilities to .ops-copper-eyebrow; DESIGN-TOKENS.md lockstep sections added
 - [Phase ?]: D-11 gate condition for Phase 131 is Cluster 1 = 0 (not matrix exit 0); Cluster 3 primary-violet deferred to Phase 132 (A11Y-TOKEN-01)
 - [Phase 132 Plan 01]: A11Y-TOKEN-01 source remediation uses named --ops-text-muted at 64% and scoped --color-primary-strong (#5b4ad1) for text-bearing selected fills only; AA is hard gate and AAA remains advisory/report-only.
+- [Phase 132 Plan 02]: Hard-gate evidence is attached in `132-CONTRAST-REPORT.md`: rebuilt assets, `mix verify.opsui`, fast token checker, Playwright matrix, and light baseline recapture all passed; AA failures are zero for light, dark, and system-dark.
+- [Phase 132 Plan 02]: AAA body/long-form findings remain advisory/report-only. The browser proof recorded 12 empty-scenario advisory findings at 6.76:1 vs target 7, and those findings did not affect exit status.
+- [Phase 132 Plan 02]: The intentional light-token visual change is accepted by recapturing the local light baseline; generated `test-results/`, `.tmp/`, and untracked `scrypath_ops/priv/static/**` evidence artifacts stay out of git.
