@@ -53,6 +53,9 @@
   --border: 1.5px;
   --depth: 1;
   --noise: 0;
+  --ops-bg: #0c0f14;
+  --ops-surface-1: #141923;
+  --ops-surface-2: #1b2230;
 }
 
 @plugin "../vendor/daisyui-theme" {
@@ -88,6 +91,9 @@
   --border: 1.5px;
   --depth: 1;
   --noise: 0;
+  --ops-bg: #faf7f2;
+  --ops-surface-1: #fffdf8;
+  --ops-surface-2: #faf7f2;
 }
 
 /* Add variants based on LiveView classes */
