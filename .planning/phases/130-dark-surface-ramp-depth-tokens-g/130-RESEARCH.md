@@ -475,17 +475,19 @@ Step 2.5 does not apply — this is a CSS/token/component phase (no rename, no m
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **`verify.opsui` alias — add it or not?**
    - What we know: the alias does not exist (D-13 confirmed); REQUIREMENTS.md and ROADMAP.md reference it.
    - What's unclear: whether the planner should add it as a Wave 0 task or just document it as a doc-drift.
    - Recommendation: Add `"verify.opsui": ["test", "opsui.test_a11y"]` as an alias in `mix.exs` — one-line fix that makes future milestone docs (Phase 136's DUALVERIFY-01 instructions) literal. Claude's Discretion.
+   - **RESOLVED by Plan 01 Task 2:** adds the `"verify.opsui": ["test", "opsui.test_a11y"]` alias to `scrypath_ops/mix.exs`.
 
 2. **`pixelmatch` availability**
    - What we know: `.tmp/admin-screenshots/*light*` has 20 baseline PNGs.
    - What's unclear: whether `pixelmatch` is already in `examples/scrypath_ecommerce/package.json`.
    - Recommendation: Wave 0 task should verify and install if absent.
+   - **RESOLVED by Plan 01 Task 1:** adds `pixelmatch` and `pngjs` to `examples/scrypath_ecommerce/package.json` devDependencies.
 
 ---
 
