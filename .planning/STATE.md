@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
 status: executing
-last_updated: "2026-06-04T20:55:05.761Z"
-last_activity: 2026-06-04 -- Phase 132 planning complete
+last_updated: "2026-06-04T21:06:10.595Z"
+last_activity: 2026-06-04
 progress:
   total_phases: 9
   completed_phases: 4
   total_plans: 14
-  completed_plans: 12
+  completed_plans: 13
   percent: 44
 ---
 
@@ -18,15 +18,15 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 132 — a11y-contrast-remediation-both-themes-hard-gate-g (context gathered)
+**Current Focus:** Phase 132 — a11y-contrast-remediation-both-themes-hard-gate-g
 
 ## Current Position
 
-Phase: 132 — CONTEXT GATHERED (Phase 131 COMPLETE)
-Plan: 0 of ? (not yet planned)
+Phase: 132 (a11y-contrast-remediation-both-themes-hard-gate-g) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
 Resume: .planning/phases/132-a11y-contrast-remediation-both-themes-hard-gate-g/132-CONTEXT.md
-Last activity: 2026-06-04 -- Phase 132 planning complete
+Last activity: 2026-06-04
 
 ## Current Milestone
 
@@ -91,6 +91,7 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 | Phase 131 P02 | 25min | 3 tasks | 1 files |
 | Phase 131 P03 | ~10min | 2 tasks | 2 files |
 | Phase 131 P04 | 20min | 3 tasks | 1 files |
+| Phase 132 P01 | ~6min | 3 tasks | 4 files |
 
 ## Decisions
 
@@ -103,3 +104,4 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 - [Phase ?]: Option B approved: defer residual Cluster 3 primary-violet 4.3:1 violations to Phase 132; --color-primary unchanged; dark ramp visually confirmed correct
 - [Phase ?]: (Phase 131 Plan 03) ops_page_header eyebrow swapped from four inline utilities to .ops-copper-eyebrow; DESIGN-TOKENS.md lockstep sections added
 - [Phase ?]: D-11 gate condition for Phase 131 is Cluster 1 = 0 (not matrix exit 0); Cluster 3 primary-violet deferred to Phase 132 (A11Y-TOKEN-01)
+- [Phase 132 Plan 01]: A11Y-TOKEN-01 source remediation uses named --ops-text-muted at 64% and scoped --color-primary-strong (#5b4ad1) for text-bearing selected fills only; AA is hard gate and AAA remains advisory/report-only.
