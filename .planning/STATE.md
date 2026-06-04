@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
-status: verifying
-last_updated: "2026-06-04T09:13:00.181Z"
+status: ready_to_plan
+last_updated: 2026-06-04T09:21:03.678Z
 last_activity: 2026-06-04
 progress:
   total_phases: 9
   completed_phases: 2
   total_plans: 4
-  completed_plans: 4
+  completed_plans: 18
   percent: 22
+stopped_at: Phase 129 complete (1/1) — ready to discuss Phase 130
 ---
 
 # Project State
@@ -18,13 +19,13 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 129 — dark-theme-brand-expression-audit-s-r
+**Current Focus:** Phase 130 — dark surface ramp + depth tokens `[g]`
 
 ## Current Position
 
-Phase: 129 (dark-theme-brand-expression-audit-s-r) — EXECUTING
-Plan: 1 of 1
-Status: Phase complete — ready for verification
+Phase: 130
+Plan: Not started
+Status: Ready to plan
 Last activity: 2026-06-04
 
 ## Current Milestone
