@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
-status: executing
-last_updated: "2026-06-04T18:29:39.231Z"
+status: verifying
+last_updated: "2026-06-04T18:40:10.809Z"
 last_activity: 2026-06-04
 progress:
   total_phases: 9
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 12
-  completed_plans: 11
-  percent: 33
+  completed_plans: 12
+  percent: 44
 ---
 
 # Project State
@@ -24,7 +24,7 @@ progress:
 
 Phase: 131 (glow-dark-shadow-and-copper-accent-system-r-g) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-04
 
 ## Current Milestone
@@ -89,6 +89,7 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 | Phase 131 P01 | 15min | 3 tasks | 1 files |
 | Phase 131 P02 | 25min | 3 tasks | 1 files |
 | Phase 131 P03 | ~10min | 2 tasks | 2 files |
+| Phase 131 P04 | 20min | 3 tasks | 1 files |
 
 ## Decisions
 
@@ -100,3 +101,4 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 - [Phase ?]: 9 recipe inner tokens swapped to --ops-surface-1/--ops-surface-2 inside color-mix wrappers; .ops-data-card + .ops-result-row get D-05 dark-scoped overrides; D-10 shadow dual-path rgba ladder; ops_code_block :default rerouted to bg-ops-surface-2
 - [Phase ?]: Option B approved: defer residual Cluster 3 primary-violet 4.3:1 violations to Phase 132; --color-primary unchanged; dark ramp visually confirmed correct
 - [Phase ?]: (Phase 131 Plan 03) ops_page_header eyebrow swapped from four inline utilities to .ops-copper-eyebrow; DESIGN-TOKENS.md lockstep sections added
+- [Phase ?]: D-11 gate condition for Phase 131 is Cluster 1 = 0 (not matrix exit 0); Cluster 3 primary-violet deferred to Phase 132 (A11Y-TOKEN-01)
