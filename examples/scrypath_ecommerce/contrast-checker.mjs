@@ -94,6 +94,7 @@ const PAIR_RULES = [
   { fg: "base-content",       bg: "base-200",   role: "text" },
   { fg: "base-content",       bg: "base-300",   role: "text" },
   { fg: "primary-content",    bg: "primary",    role: "ui"   }, // button pairs → 3.0 threshold
+  { fg: "primary-content",    bg: "primary-strong", role: "text" }, // selected text fills → 4.5 threshold
   { fg: "secondary-content",  bg: "secondary",  role: "ui"   },
   { fg: "accent-content",     bg: "accent",     role: "ui"   },
   { fg: "neutral-content",    bg: "neutral",    role: "ui"   },
@@ -549,19 +550,21 @@ if (process.argv.includes("--self-test")) {
 // ─── D-15 LOCKSTEP GUARDS ─────────────────────────────────────────────────────
 
 // Guard 1 — Token count assertion
-// D-10 says "22 semantic --color-* values"; direct parse of app.css shows 20
-// explicit declarations per theme block (4 base + 16 semantic = 20). The vendor
+// D-10 says "22 semantic --color-* values"; direct parse of app.css now shows 21
+// explicit declarations per theme block (4 base + 17 semantic = 21). The vendor
 // daisyui-theme plugin injects non-color tokens (--radius-*, --size-*, --border,
-// --depth, --noise, etc.) that are NOT --color-* prefixed. Lock assertion to 20.
+// --depth, --noise, etc.) that are NOT --color-* prefixed. Lock assertion to 21
+// and require the scoped text-bearing primary-strong token.
 function assertTokenCount(blocks) {
   for (const [theme, tokens] of Object.entries(blocks)) {
     const count = Object.keys(tokens).length;
-    if (count !== 20) {
+    if (count !== 21 || !tokens["primary-strong"]) {
       throw new Error(
-        `D-15 Guard 1: expected 20 --color-* tokens in "${theme}" theme block, got ${count}.\n` +
+        `D-15 Guard 1: expected 21 --color-* tokens in "${theme}" theme block, got ${count}.\n` +
           `Tokens found: ${Object.keys(tokens).join(", ")}\n` +
-          `Note: lock is 20 (not 22) because --radius-*, --size-*, --border, --depth, --noise ` +
-          `are non-color tokens injected by the daisyui-theme plugin and are NOT --color-* prefixed.`
+          `Note: lock is 21 because Phase 132 adds --color-primary-strong; --radius-*, ` +
+          `--size-*, --border, --depth, --noise are non-color tokens injected by the ` +
+          `daisyui-theme plugin and are NOT --color-* prefixed.`
       );
     }
   }
@@ -586,6 +589,8 @@ function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
   // `border-color:`/`background-color:` because those have a word char (`r`/`d`)
   // immediately before `color:`, not start-of-line, `{`, or `;`.
   const colorMixRe = /(?:^\s*|[{;]\s*)color:\s*color-mix\(in oklch,\s*var\(--color-base-content\)\s*(\d+)%,\s*transparent\)/;
+  const namedMutedRe = /(?:^\s*|[{;]\s*)color:\s*var\(--([\w-]+)\)/;
+  const cssVarAlphaRe = /--([\w-]+):\s*color-mix\(in oklch,\s*var\(--color-base-content\)\s*(\d+)%,\s*transparent\)/g;
   // We need to find the selector for each match. Walk backwards from the match line.
   // Allow leading whitespace (CSS is often indented within @layer blocks).
   // Must start with an alphanumeric, dot, hash, colon, or bracket — NOT @, /, or *
@@ -595,13 +600,48 @@ function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
   const sameLineSelectorRe = /^\s*([^{}@]+?)\s*\{/;
 
   const found = [];
+  const namedFound = [];
+  const cssVarAlphas = new Map();
+  const cssVarEntries = mutedPairs.filter((pair) => pair.css_var);
+
+  let cssVarMatch;
+  while ((cssVarMatch = cssVarAlphaRe.exec(cssText)) !== null) {
+    const cssVar = cssVarMatch[1];
+    const alpha = parseInt(cssVarMatch[2], 10) / 100;
+    if (!cssVarAlphas.has(cssVar)) {
+      cssVarAlphas.set(cssVar, []);
+    }
+    cssVarAlphas.get(cssVar).push(alpha);
+  }
+
+  for (const pair of cssVarEntries) {
+    const alphas = cssVarAlphas.get(pair.css_var);
+    if (!alphas || alphas.length === 0) {
+      throw new Error(
+        `D-15 Guard 2: named muted token --${pair.css_var} is referenced by ` +
+          `"${pair.selector}" but no matching declaration exists in app.css.`
+      );
+    }
+
+    const mismatched = alphas.find((alpha) => Math.abs(alpha - pair.alpha) > 0.01);
+    if (mismatched !== undefined) {
+      throw new Error(
+        `D-15 Guard 2: named muted token --${pair.css_var} alpha mismatch!\n` +
+          `  Manifest alpha: ${pair.alpha} (${Math.round(pair.alpha * 100)}%)\n` +
+          `  CSS alpha: ${mismatched} (${Math.round(mismatched * 100)}%)\n` +
+          `  Keep contrast-pairs.mjs css_var entries in lockstep with app.css.`
+      );
+    }
+  }
 
   for (let i = 0; i < lines.length; i++) {
     const colorMatch = colorMixRe.exec(lines[i]);
-    if (!colorMatch) continue;
+    const namedMatch = namedMutedRe.exec(lines[i]);
+    if (!colorMatch && !namedMatch) continue;
 
-    const alphaPercent = parseInt(colorMatch[1], 10);
-    const alpha = alphaPercent / 100;
+    const alphaPercent = colorMatch ? parseInt(colorMatch[1], 10) : null;
+    const alpha = colorMatch ? alphaPercent / 100 : null;
+    const cssVar = namedMatch ? namedMatch[1] : null;
 
     // CR-01: if the matching line itself opens a rule (contains a `{` before the match),
     // the selector is on this line — use it directly instead of walking backwards.
@@ -663,11 +703,16 @@ function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
     if (!selector) {
       throw new Error(
         `D-15 Guard 2: found untracked muted color: pattern at line ${i + 1} ` +
-          `(alpha ${alphaPercent}%) but could not determine its selector.`
+          `${colorMatch ? `(alpha ${alphaPercent}%)` : `(--${cssVar})`} but could not determine its selector.`
       );
     }
 
-    found.push({ selector, alpha, lineNumber: i + 1 });
+    if (colorMatch) {
+      found.push({ selector, alpha, lineNumber: i + 1 });
+    } else if (cssVarEntries.some((pair) => pair.css_var === cssVar)) {
+      const alphaForVar = cssVarAlphas.get(cssVar)?.[0];
+      namedFound.push({ selector, css_var: cssVar, alpha: alphaForVar, lineNumber: i + 1 });
+    }
   }
 
   // Check each found (selector, alpha) pair is in the manifest
@@ -693,16 +738,24 @@ function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
   // any CSS rule, which the forward (css→manifest) scan above cannot detect.
   for (const pair of mutedPairs) {
     if (pair.role === "decorative") continue;
-    const hasCssHit = found.some(
-      (f) => f.selector === pair.selector && Math.abs(f.alpha - pair.alpha) <= 0.01
-    );
+    const hasCssHit = pair.css_var
+      ? namedFound.some(
+          (f) =>
+            f.selector === pair.selector &&
+            f.css_var === pair.css_var &&
+            Math.abs(f.alpha - pair.alpha) <= 0.01
+        )
+      : found.some(
+          (f) => f.selector === pair.selector && Math.abs(f.alpha - pair.alpha) <= 0.01
+        );
     if (!hasCssHit) {
       throw new Error(
         `D-15 Guard 2 (reverse): stale manifest entry!\n` +
           `  Selector: "${pair.selector}" alpha: ${pair.alpha} (${Math.round(pair.alpha * 100)}%)\n` +
           `  This entry is in contrast-pairs.mjs but no matching ` +
-          `color: color-mix(in oklch, var(--color-base-content) ${Math.round(pair.alpha * 100)}%, transparent) ` +
-          `rule exists in app.css.\n` +
+          (pair.css_var
+            ? `color: var(--${pair.css_var}) rule exists in app.css with a matching token alpha.\n`
+            : `color: color-mix(in oklch, var(--color-base-content) ${Math.round(pair.alpha * 100)}%, transparent) rule exists in app.css.\n`) +
           `  Remove the stale entry from scrypath_ops/assets/css/contrast-pairs.mjs, or ` +
           `restore the corresponding rule in app.css.\n` +
           `  (D-15: the lockstep guard is bidirectional — manifest and CSS must agree both ways.)`
