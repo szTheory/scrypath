@@ -82,12 +82,12 @@ Plans:
 2. `.ops-muted-panel`, `.ops-data-card`, `.ops-surface-flat`, `.ops-nav-list`, `.ops-disclosure`, `.ops-kbd`, `.ops-result-row`, `.ops-preflight__card--locked` step up (not down) in dark.
 3. The light theme is pixel-identical (light matrix + light contrast gate unchanged); `DESIGN-TOKENS.md` records the dark ramp.
 
-**Plans:** 4 plans
+**Plans:** 1/4 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 130-01-PLAN.md — Scaffold light-pixel-diff.mjs gate script, add pixelmatch/pngjs devDeps, add verify.opsui alias
+- [x] 130-01-PLAN.md — Scaffold light-pixel-diff.mjs gate script, add pixelmatch/pngjs devDeps, add verify.opsui alias
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
