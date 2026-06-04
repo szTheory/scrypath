@@ -68,7 +68,7 @@ Plans:
 
 - [x] 129-01-PLAN.md — Score 6-screen × DD1–DD6 dark brand audit; assemble 129-DARK-AUDIT-BACKLOG.md
 
-**Status:** Pending
+**Status:** Complete (verified 2026-06-04 — rebuilt assets, static token gate, ops UI suite, Playwright AA matrix for light/dark/system-dark, AAA advisory, and light baseline recapture recorded)
 
 ### Phase 130: Dark surface ramp + depth tokens `[G]`
 
@@ -145,7 +145,7 @@ Plans:
 2. Large-text/UI elements clear ≥3:1; body/long-form text reaches AAA (≥7:1).
 3. The contrast gate is green for light, dark, and system-dark; `DESIGN-TOKENS.md` records the new alpha floors.
 
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 **Wave 1**
@@ -154,9 +154,9 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 132-02-PLAN.md — Rebuild assets, run static and browser contrast gates, attach AAA advisory, and refresh light baseline evidence
+- [x] 132-02-PLAN.md — Rebuild assets, run static and browser contrast gates, attach AAA advisory, and refresh light baseline evidence
 
-**Status:** Pending
+**Status:** Complete (verified 2026-06-04 — rebuilt assets, static token gate, ops UI suite, Playwright AA matrix for light/dark/system-dark, AAA advisory, and light baseline recapture recorded)
 
 ### Phase 133: Dark/path motion expression `[R] [G]`
 
@@ -222,7 +222,7 @@ Plans:
 | 129 Dark brand-expression audit | DARKAUDIT-01 | Pending |
 | 130 Dark surface ramp + depth tokens | DARKTOKEN-01 | Pending |
 | 131 Glow + dark shadow + copper system | GLOW-01, COPPER-01 | Pending |
-| 132 A11y contrast remediation (hard gate) | A11Y-TOKEN-01 | Pending |
+| 132 A11y contrast remediation (hard gate) | A11Y-TOKEN-01 | Complete |
 | 133 Dark/path motion expression | DARKMOTION-01 | Pending |
 | 134 Under-iterated surface polish | SCREEN-DARK-01 | Pending |
 | 135 Shell chrome polish | SHELL-DARK-01 | Pending |
@@ -237,7 +237,7 @@ Plans:
 | DARKTOKEN-01 | Phase 130 | Complete |
 | GLOW-01 | Phase 131 | Complete |
 | COPPER-01 | Phase 131 | Complete |
-| A11Y-TOKEN-01 | Phase 132 | Pending |
+| A11Y-TOKEN-01 | Phase 132 | Complete |
 | DARKMOTION-01 | Phase 133 | Pending |
 | SCREEN-DARK-01 | Phase 134 | Pending |
 | SHELL-DARK-01 | Phase 135 | Pending |
