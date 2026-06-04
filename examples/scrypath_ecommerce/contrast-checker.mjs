@@ -62,13 +62,22 @@ function relativeLuminance(hex) {
   return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
 }
 
-// WCAG contrast ratio, rounded to 2 decimal places
-function contrastRatio(fg, bg) {
+// WCAG contrast ratio at FULL precision (no rounding). WR-01: the AA/AAA threshold
+// comparison must use this un-rounded value so a boundary ratio (e.g. 4.497) is not
+// rounded UP to 4.50 and mis-classified as a pass — axe-core compares the un-rounded
+// ratio, and the harness must render one verdict with it.
+function contrastRatioRaw(fg, bg) {
   const L1 = relativeLuminance(fg);
   const L2 = relativeLuminance(bg);
   const lighter = Math.max(L1, L2);
   const darker = Math.min(L1, L2);
-  return Math.round(((lighter + 0.05) / (darker + 0.05)) * 100) / 100;
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+// WCAG contrast ratio rounded to 2 decimal places — DISPLAY ONLY (report fields,
+// console). Never use the rounded value for a threshold comparison (see WR-01).
+function contrastRatio(fg, bg) {
+  return Math.round(contrastRatioRaw(fg, bg) * 100) / 100;
 }
 
 // D-13 golden self-test: contrastRatio("#000000", "#ffffff") === 21.00
@@ -305,6 +314,128 @@ if (process.argv.includes("--self-test")) {
   const passExitCode = passReport.summary.aa_fail > 0 ? 1 : 0;
   assert("advisory fixture: exit code === 0", passExitCode === 0, passExitCode);
 
+  // ── C. D-15 GUARD 2 STRUCTURAL FIXTURES (CR-01 / WR-02 / WR-03 regression locks) ─
+
+  // CR-01: a single-line muted rule (color: mid-line, selector on the same line) MUST be
+  // detected and validated against the manifest. Before the fix the `^\s*color:` anchor
+  // skipped these entirely (false negative). Manifest matches → guard must NOT throw.
+  const singleLineCss = `@layer ops {
+  .ops-fixture-meta  { font-size: 12px; color: color-mix(in oklch, var(--color-base-content) 55%, transparent); }
+}`;
+  const singleLineManifest = [
+    { selector: ".ops-fixture-meta", alpha: 0.55, fg_token: "base-content", bg_token: "base-100", role: "text" },
+  ];
+  let singleLineDetected = true;
+  try {
+    assertNoUntrackedMutedTokens(singleLineCss, singleLineManifest);
+  } catch (err) {
+    // Should NOT throw — the entry is tracked. A throw here means either it was not
+    // detected (and reverse-check flagged the manifest entry as stale) or mis-attributed.
+    singleLineDetected = false;
+  }
+  assert(
+    "CR-01: single-line muted rule is detected & matched against manifest",
+    singleLineDetected,
+    singleLineDetected
+  );
+
+  // CR-01 (negative): an UNTRACKED single-line muted rule MUST throw (proves the guard
+  // actually scans the line, not just that it tolerates it).
+  let singleLineUntrackedThrew = false;
+  try {
+    assertNoUntrackedMutedTokens(singleLineCss, []);
+  } catch (err) {
+    singleLineUntrackedThrew = true;
+  }
+  assert(
+    "CR-01: untracked single-line muted rule throws (guard scans the line)",
+    singleLineUntrackedThrew,
+    singleLineUntrackedThrew
+  );
+
+  // WR-02: a stale manifest entry (no corresponding app.css rule) MUST throw via the
+  // reverse check, even when every CSS occurrence is tracked.
+  let staleManifestThrew = false;
+  try {
+    assertNoUntrackedMutedTokens(singleLineCss, [
+      ...singleLineManifest,
+      { selector: ".ops-fixture-removed", alpha: 0.6, fg_token: "base-content", bg_token: "base-100", role: "text" },
+    ]);
+  } catch (err) {
+    staleManifestThrew = true;
+  }
+  assert(
+    "WR-02: stale manifest entry with no CSS hit throws (reverse lockstep)",
+    staleManifestThrew,
+    staleManifestThrew
+  );
+
+  // WR-03: a muted color: nested directly inside an @media block (no inner selector)
+  // MUST fail loudly rather than silently bind to an outer selector.
+  const nestedAtRuleCss = `@layer ops {
+  @media (min-width: 800px) {
+    color: color-mix(in oklch, var(--color-base-content) 55%, transparent);
+  }
+}`;
+  let nestedAtRuleThrew = false;
+  try {
+    assertNoUntrackedMutedTokens(nestedAtRuleCss, []);
+  } catch (err) {
+    nestedAtRuleThrew = true;
+  }
+  assert(
+    "WR-03: muted color: nested directly in @media fails loudly (no mis-attribution)",
+    nestedAtRuleThrew,
+    nestedAtRuleThrew
+  );
+
+  // WR-03: a muted color: inside a real selector that is itself nested in an @media block
+  // MUST attribute to the inner selector, not the @media wrapper.
+  const nestedSelectorCss = `@layer ops {
+  @media (min-width: 800px) {
+    .ops-fixture-nested { color: color-mix(in oklch, var(--color-base-content) 60%, transparent); }
+  }
+}`;
+  let nestedSelectorOk = true;
+  try {
+    assertNoUntrackedMutedTokens(nestedSelectorCss, [
+      { selector: ".ops-fixture-nested", alpha: 0.6, fg_token: "base-content", bg_token: "base-100", role: "text" },
+    ]);
+  } catch (err) {
+    nestedSelectorOk = false;
+  }
+  assert(
+    "WR-03: muted color: in a selector nested in @media attributes to the inner selector",
+    nestedSelectorOk,
+    nestedSelectorOk
+  );
+
+  // WR-01: the threshold compare must use the UN-ROUNDED ratio. No discrete 6-hex
+  // grayscale pair lands in the (4.495, 4.5) round-up window (confirmed empirically), so
+  // we lock the two load-bearing invariants directly:
+  //   (1) contrastRatioRaw returns full precision (NOT pre-rounded to 2 decimals).
+  //   (2) evaluatePair classifies #777777/#ffffff (raw ≈ 4.478, rounds to 4.48) as
+  //       aa-fail — and its DISPLAY actual_ratio is the rounded 4.48.
+  const rawPrecision = contrastRatioRaw("#777777", "#ffffff");
+  assert(
+    "WR-01: contrastRatioRaw is full-precision (not pre-rounded)",
+    Math.abs(rawPrecision - Math.round(rawPrecision * 100) / 100) > 0,
+    rawPrecision
+  );
+  const wr01Finding = evaluatePair({
+    fg: "#777777",
+    bg: "#ffffff",
+    role: "text",
+    selector: ".wr01",
+    theme: "light",
+    tokenPair: "x",
+  });
+  assert(
+    "WR-01: sub-4.5 raw ratio classified aa-fail; display value is rounded",
+    wr01Finding.severity === "aa-fail" && wr01Finding.actual_ratio === 4.48,
+    { severity: wr01Finding.severity, actual: wr01Finding.actual_ratio }
+  );
+
   if (failed) {
     process.exit(1);
   }
@@ -343,11 +474,22 @@ function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
   // Strategy: line-by-line scan. Track the most recent selector line.
   // A selector line is one that ends with `{` and is not a @-rule or comment.
   const lines = cssText.split("\n");
-  const colorMixRe = /^\s*color:\s*color-mix\(in oklch,\s*var\(--color-base-content\)\s*(\d+)%,\s*transparent\)/;
+  // CR-01: match `color: color-mix(...)` ANYWHERE on the line, not just at line start.
+  // The leading `(?:^\s*|[{;]\s*)` group requires the property to be either at the start
+  // of the line (with optional indentation — the common multi-line declaration case) OR
+  // immediately after a `{` (single-line rule like
+  // `.ops-text-meta { ...; color: color-mix(...); }`) or a `;` (multiple decls on one
+  // line). The `[{;]` boundary (and the `\b`-less start anchor) excludes
+  // `border-color:`/`background-color:` because those have a word char (`r`/`d`)
+  // immediately before `color:`, not start-of-line, `{`, or `;`.
+  const colorMixRe = /(?:^\s*|[{;]\s*)color:\s*color-mix\(in oklch,\s*var\(--color-base-content\)\s*(\d+)%,\s*transparent\)/;
   // We need to find the selector for each match. Walk backwards from the match line.
   // Allow leading whitespace (CSS is often indented within @layer blocks).
   // Must start with an alphanumeric, dot, hash, colon, or bracket — NOT @, /, or *
   const selectorRe = /^\s*([\.\#\:\[\&][^@{]*|[a-zA-Z][^@{]*)\s*\{/;
+  // CR-01: detect a selector declared on the SAME line as the muted `color:` (single-line
+  // rule). Capture the text before the first `{`, excluding @-rules (which start with `@`).
+  const sameLineSelectorRe = /^\s*([^{}@]+?)\s*\{/;
 
   const found = [];
 
@@ -355,31 +497,63 @@ function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
     const colorMatch = colorMixRe.exec(lines[i]);
     if (!colorMatch) continue;
 
-    // Skip if this is NOT a text color property — look for non-color: prefixes.
-    // The regex already anchors to `color:` only (not `border-color:`, `background:`, etc.)
-    // Extra safety: ensure the line doesn't have a property prefix that would make it
-    // something other than `color:`.
-    const trimmedLine = lines[i].trim();
-    if (
-      trimmedLine.startsWith("border-color:") ||
-      trimmedLine.startsWith("background:") ||
-      trimmedLine.startsWith("box-shadow:") ||
-      trimmedLine.startsWith("--shadow-") ||
-      trimmedLine.startsWith("fill:")
-    ) {
-      continue;
-    }
-
     const alphaPercent = parseInt(colorMatch[1], 10);
     const alpha = alphaPercent / 100;
 
-    // Find the nearest selector by walking backwards
+    // CR-01: if the matching line itself opens a rule (contains a `{` before the match),
+    // the selector is on this line — use it directly instead of walking backwards.
     let selector = null;
-    for (let j = i - 1; j >= 0; j--) {
-      const selectorMatch = selectorRe.exec(lines[j]);
-      if (selectorMatch) {
-        selector = selectorMatch[1].trim();
-        break;
+    const braceIdx = lines[i].indexOf("{");
+    const colorIdx = lines[i].indexOf("color:");
+    if (braceIdx !== -1 && braceIdx < colorIdx) {
+      const sameLineMatch = sameLineSelectorRe.exec(lines[i]);
+      if (sameLineMatch) {
+        selector = sameLineMatch[1].trim();
+      }
+    }
+
+    // Otherwise, find the nearest enclosing selector by walking backwards.
+    // WR-03: track brace depth so the walk binds to the INNERMOST still-open rule and
+    // does not mis-attribute a muted color nested inside an @media (or other at-rule)
+    // wrapper. We count `}` (closing a sibling/inner rule we've already passed) and `{`
+    // while scanning upward; the owning selector is the first selector-opening line we
+    // reach once depth returns to the level of the match.
+    if (!selector) {
+      let depth = 0;
+      for (let j = i - 1; j >= 0; j--) {
+        const line = lines[j];
+        // Count braces on this line (closing braces seen on the way up mean we passed an
+        // already-closed inner block; opening braces mean we've stepped out of one).
+        const opens = (line.match(/\{/g) || []).length;
+        const closes = (line.match(/\}/g) || []).length;
+
+        // A line that opens a rule at the current depth level is the owning selector,
+        // but only if we are not currently "inside" a deeper sibling block (depth > 0).
+        if (depth === 0) {
+          const selectorMatch = selectorRe.exec(line);
+          // WR-03: reject at-rule wrappers (@media/@supports/@layer). If the nearest
+          // open block at depth 0 is an at-rule rather than a real selector, the simple
+          // walk cannot attribute the muted color — fail loudly rather than bind it to
+          // the wrong (outer) selector.
+          const atRuleMatch = /^\s*@[\w-]+[^{}]*\{/.test(line);
+          if (atRuleMatch && opens > closes) {
+            throw new Error(
+              `D-15 Guard 2: muted color: at app.css line ${i + 1} is nested directly ` +
+                `inside an at-rule block (e.g. @media) at line ${j + 1}; the selector ` +
+                `walk cannot attribute it. Refactor so the muted rule has an explicit ` +
+                `selector, or extend the guard to resolve into at-rule wrappers.`
+            );
+          }
+          if (selectorMatch && opens > closes) {
+            selector = selectorMatch[1].trim();
+            break;
+          }
+        }
+
+        // Update depth for the next line up: each `}` we passed opened a level going up,
+        // each `{` closed one. (We move upward, so braces invert relative to top-down.)
+        depth += closes - opens;
+        if (depth < 0) depth = 0;
       }
     }
 
@@ -409,6 +583,29 @@ function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
       );
     }
   }
+
+  // WR-02: reverse lockstep — every non-decorative manifest entry must correspond to an
+  // actual `color: color-mix(...)` occurrence found in app.css (within 0.01 alpha
+  // tolerance). This catches stale/renamed/removed manifest entries that no longer match
+  // any CSS rule, which the forward (css→manifest) scan above cannot detect.
+  for (const pair of mutedPairs) {
+    if (pair.role === "decorative") continue;
+    const hasCssHit = found.some(
+      (f) => f.selector === pair.selector && Math.abs(f.alpha - pair.alpha) <= 0.01
+    );
+    if (!hasCssHit) {
+      throw new Error(
+        `D-15 Guard 2 (reverse): stale manifest entry!\n` +
+          `  Selector: "${pair.selector}" alpha: ${pair.alpha} (${Math.round(pair.alpha * 100)}%)\n` +
+          `  This entry is in contrast-pairs.mjs but no matching ` +
+          `color: color-mix(in oklch, var(--color-base-content) ${Math.round(pair.alpha * 100)}%, transparent) ` +
+          `rule exists in app.css.\n` +
+          `  Remove the stale entry from scrypath_ops/assets/css/contrast-pairs.mjs, or ` +
+          `restore the corresponding rule in app.css.\n` +
+          `  (D-15: the lockstep guard is bidirectional — manifest and CSS must agree both ways.)`
+      );
+    }
+  }
 }
 
 // ─── PAIR EVALUATION ──────────────────────────────────────────────────────────
@@ -416,9 +613,11 @@ function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
 // Evaluate a single pair and return a finding object (D-18 schema)
 function evaluatePair({ fg, bg, role, selector, theme, tokenPair }) {
   const thresholds = THRESHOLDS[role] || THRESHOLDS.text;
-  const actual = contrastRatio(fg, bg);
-  const passAA = actual >= thresholds.aa;
-  const passAAA = actual >= thresholds.aaa;
+  // WR-01: compare the UN-ROUNDED ratio against the threshold; round only for display.
+  const raw = contrastRatioRaw(fg, bg);
+  const passAA = raw >= thresholds.aa;
+  const passAAA = raw >= thresholds.aaa;
+  const actual = Math.round(raw * 100) / 100; // display value only
 
   let severity;
   if (!passAA) {
