@@ -20,7 +20,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_page_header(assigns) do
     ~H"""
     <div class="space-y-1">
-      <p class="text-ops-sm font-semibold uppercase tracking-wide text-secondary">
+      <p class="ops-copper-eyebrow">
         Operator workspace
       </p>
       <h1
