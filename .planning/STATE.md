@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
 status: executing
-last_updated: "2026-06-04T17:20:09.380Z"
-last_activity: 2026-06-04 -- Phase 131 planning complete
+last_updated: "2026-06-04T18:14:39.638Z"
+last_activity: 2026-06-04
 progress:
   total_phases: 9
   completed_phases: 3
   total_plans: 12
-  completed_plans: 8
+  completed_plans: 9
   percent: 33
 ---
 
@@ -18,14 +18,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 130 — dark-surface-ramp-depth-tokens-g
+**Current Focus:** Phase 131 — glow-dark-shadow-and-copper-accent-system-r-g
 
 ## Current Position
 
-Phase: 131 (glow-dark-shadow-and-copper-accent-system-r-g) — PLANNED
-Plan: 0 of 4
+Phase: 131 (glow-dark-shadow-and-copper-accent-system-r-g) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-06-04 -- Phase 131 planning complete
+Last activity: 2026-06-04
 
 ## Current Milestone
 
@@ -86,6 +86,7 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 | Phase 130 P02 | 5min | 1 tasks | 1 files |
 | Phase 130 P03 | 10min | 2 tasks | 2 files |
 | Phase 130 P130-04 | ~3hrs | 3 tasks | 4 files |
+| Phase 131 P01 | 15min | 3 tasks | 1 files |
 
 ## Decisions
 
