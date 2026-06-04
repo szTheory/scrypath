@@ -1358,6 +1358,43 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
   }
 }
 
+/* D-10 application: glow composed onto .ops-route-mark (keep inset ring) in dark. */
+[data-theme="dark"] .ops-route-mark {
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-primary-content) 30%, transparent) inset, var(--shadow-ops-glow);
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .ops-route-mark {
+    box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-primary-content) 30%, transparent) inset, var(--shadow-ops-glow);
+  }
+}
+
+/* D-10 application: glow composed onto .ops-nav-item-active (keep surface lift) in dark. */
+[data-theme="dark"] .ops-nav-item-active {
+  box-shadow: var(--shadow-ops-surface), var(--shadow-ops-glow);
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .ops-nav-item-active {
+    box-shadow: var(--shadow-ops-surface), var(--shadow-ops-glow);
+  }
+}
+
+/* D-02: recommended intent-card dark 3-layer composition (ring→seat→glow).
+   Light base at .ops-intent-card--recommended is byte-unchanged (D-02a). */
+[data-theme="dark"] .ops-intent-card--recommended {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklch, var(--color-primary) 45%, transparent),
+    var(--shadow-ops-panel-dark),
+    var(--shadow-ops-glow);
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .ops-intent-card--recommended {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in oklch, var(--color-primary) 45%, transparent),
+      var(--shadow-ops-panel-dark),
+      var(--shadow-ops-glow);
+  }
+}
+
 /* D-10: --shadow-ops-* are @theme tokens, not daisyUI keys — must hand-author both dark paths.
    Same offsets/blur as light; color/alpha only. Cascades to all 14 shadow consumers. */
 [data-theme="dark"] {
