@@ -1331,6 +1331,33 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
   }
 }
 
+/* D-10 application: panel-dark seated depth — GROUP 1 (surface-base panels).
+   .ops-panel/.ops-intent-card carry --shadow-ops-surface at rest; swap to panel-dark in dark.
+   Base definitions untouched; light stays pixel-identical. */
+[data-theme="dark"] .ops-panel,
+[data-theme="dark"] .ops-intent-card {
+  box-shadow: var(--shadow-ops-panel-dark);
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .ops-panel,
+  html:not([data-theme="light"]) .ops-intent-card {
+    box-shadow: var(--shadow-ops-panel-dark);
+  }
+}
+
+/* D-10 application: panel-dark seated depth — GROUP 2 (overlay-base panels).
+   #flash-group > * and .ops-cmdk__panel carry --shadow-ops-overlay; compose (keep overlay first). */
+[data-theme="dark"] #flash-group > *,
+[data-theme="dark"] .ops-cmdk__panel {
+  box-shadow: var(--shadow-ops-overlay), var(--shadow-ops-panel-dark);
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) #flash-group > *,
+  html:not([data-theme="light"]) .ops-cmdk__panel {
+    box-shadow: var(--shadow-ops-overlay), var(--shadow-ops-panel-dark);
+  }
+}
+
 /* D-10: --shadow-ops-* are @theme tokens, not daisyUI keys — must hand-author both dark paths.
    Same offsets/blur as light; color/alpha only. Cascades to all 14 shadow consumers. */
 [data-theme="dark"] {
