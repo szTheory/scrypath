@@ -21,9 +21,11 @@ PGHOST     ?= localhost
 COMPOSE     := docker compose -f compose.yaml
 COMPOSE_DEV := docker compose -f compose.yaml -f compose.dev.yaml
 MEILI_URL   := http://127.0.0.1:$(MEILI_PORT)
+ADMIN_SCREENSHOT_DIR ?= test-results/admin-screenshots
+CONTRAST_REPORT_DIR  ?= test-results/contrast
 
 .DEFAULT_GOAL := help
-.PHONY: help dev infra infra-pg up down reset seed screenshots screenshots-matrix logs ps
+.PHONY: help dev infra infra-pg up down reset seed screenshots screenshots-matrix contrast contrast-matrix logs ps
 
 help: ## List targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -59,14 +61,23 @@ seed: ## Re-seed the dev database (storefront + Ops Incident Lab signals)
 	  mix scrypath.demo.seed
 
 screenshots: ## Capture admin-UI screenshots against the running dev server
-	@ADMIN_SCREENSHOT_DIR=$${ADMIN_SCREENSHOT_DIR:-test-results/admin-screenshots} \
+	@ADMIN_SCREENSHOT_DIR=$${ADMIN_SCREENSHOT_DIR:-$(ADMIN_SCREENSHOT_DIR)} \
 	  PLAYWRIGHT_BASE_URL=http://127.0.0.1:$(WEB_PORT) \
 	  npm run test:e2e:admin-screens
 
 screenshots-matrix: ## Capture the full theme×viewport×state admin screenshot matrix
-	@ADMIN_SCREENSHOT_DIR=$${ADMIN_SCREENSHOT_DIR:-test-results/admin-screenshots} \
+	@ADMIN_SCREENSHOT_DIR=$${ADMIN_SCREENSHOT_DIR:-$(ADMIN_SCREENSHOT_DIR)} \
 	  PLAYWRIGHT_BASE_URL=http://127.0.0.1:$(WEB_PORT) \
 	  npm run test:e2e:admin-matrix
+
+contrast: ## Run the fast token-pair contrast checker (no browser, <1s)
+	@CONTRAST_REPORT_DIR=$${CONTRAST_REPORT_DIR:-$(CONTRAST_REPORT_DIR)} \
+	  node contrast-checker.mjs
+
+contrast-matrix: ## Run the full axe contrast matrix (browser required — server must be running)
+	@CONTRAST_REPORT_DIR=$${CONTRAST_REPORT_DIR:-$(CONTRAST_REPORT_DIR)} \
+	  PLAYWRIGHT_BASE_URL=http://127.0.0.1:$(WEB_PORT) \
+	  npm run test:e2e:admin-contrast
 
 logs: ## Tail infra logs
 	$(COMPOSE_DEV) logs -f
