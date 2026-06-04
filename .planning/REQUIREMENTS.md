@@ -34,7 +34,7 @@ The brand book's dark surface ramp has **four** steps — Night `#0C0F14` (bg) �
 - [x] **DARKTOKEN-01**: The dark theme gains a true 4-step surface ramp (introduce the missing `#1B2230` surface-2 elevation), and the `.ops-*` fill recipes resolve correctly in **both** themes via theme-scoped elevation tokens (no more "muted = darker/flatter" in dark) — with light staying pixel-identical and `DESIGN-TOKENS.md` kept in lockstep.
 - [x] **GLOW-01**: A dark-specific "faint ambient shadow **plus** border" panel recipe gives dark surfaces seated depth, and a tokenized, opt-in, low-spread violet "quiet glow" is available for route/path/diagram lines and key hover states only — never text or background floods. The allowed `linear-gradient(135deg,#5B4AD1,#6C5CE7,#C17A3E)` is reserved for hero highlight lines / diagram emphasis.
 - [x] **COPPER-01**: Copper (secondary) is promoted to its branded 5% role — a `.ops-*` copper accent vocabulary (eyebrow labels, key-callout badges, key-node diagram/route emphasis) usable in both themes, with AA-safe **dark-text-on-copper** pairings. Copper is a brand accent, never a status tone.
-- [ ] **A11Y-TOKEN-01**: Muted-text alphas (`.ops-text-meta`, `.ops-trail__crumb`, header nav `/60`, handoff/palette/preflight hints) are re-tuned to clear AA 4.5:1 in both themes; body/long-form text targets AAA — all enforced by CONTRAST-HARNESS-01.
+- [x] **A11Y-TOKEN-01**: Muted-text alphas (`.ops-text-meta`, `.ops-trail__crumb`, header nav `/60`, handoff/palette/preflight hints) are re-tuned to clear AA 4.5:1 in both themes; body/long-form text targets AAA — all enforced by CONTRAST-HARNESS-01.
 
 ### Motion
 
@@ -70,7 +70,7 @@ The brand book's dark surface ramp has **four** steps — Night `#0C0F14` (bg) �
 | DARKTOKEN-01 | Phase 130 | Complete |
 | GLOW-01 | Phase 131 | Complete |
 | COPPER-01 | Phase 131 | Complete |
-| A11Y-TOKEN-01 | Phase 132 | Pending |
+| A11Y-TOKEN-01 | Phase 132 | Complete |
 | DARKMOTION-01 | Phase 133 | Pending |
 | SCREEN-DARK-01 | Phase 134 | Pending |
 | SHELL-DARK-01 | Phase 135 | Pending |

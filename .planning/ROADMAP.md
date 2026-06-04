@@ -145,12 +145,12 @@ Plans:
 2. Large-text/UI elements clear ≥3:1; body/long-form text reaches AAA (≥7:1).
 3. The contrast gate is green for light, dark, and system-dark; `DESIGN-TOKENS.md` records the new alpha floors.
 
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 132-01-PLAN.md — Implement named muted AA floor, scoped primary-strong fill, checker/manifest support, and token docs
+- [x] 132-01-PLAN.md — Implement named muted AA floor, scoped primary-strong fill, checker/manifest support, and token docs
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
