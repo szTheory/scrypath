@@ -32,6 +32,7 @@ daisyUI semantic tokens, two themes (light default, dark via `prefers-dark` / ex
 | Token | Light | Dark | Use |
 | --- | --- | --- | --- |
 | `primary` | `#5b4ad1` | `#6c5ce7` | brand/accent, active nav, primary actions |
+| `--color-primary-strong` | `#5b4ad1` | `#5b4ad1` | text-bearing selected fills only; see Phase 132 floor |
 | `secondary` | `#a85d2e` | `#c17a3e` | warm accent, eyebrow labels |
 | `accent` | `#6c5ce7` | `#5b4ad1` | gradient partner (route mark) |
 | `base-100` | `#fffdf8` | `#141923` | surfaces |
@@ -39,6 +40,28 @@ daisyUI semantic tokens, two themes (light default, dark via `prefers-dark` / ex
 | `base-300` | `#ded8ce` | `#2a3446` | borders, dividers |
 | `base-content` | `#141923` | `#f4f1ea` | text |
 | `info` / `success` / `warning` / `error` | `#5ca9e6` / `#4fae74` / `#d9a441` / `#d96262` | (same hues) | status semantics |
+
+## A11y contrast floors -- Phase 132
+
+AA contrast is the hard gate for the operator UI. Body and long-form AAA status is
+advisory/report-only; AAA findings should stay visible in reports, but AA failures block
+the contrast gate.
+
+| Token | Light | Dark | Consumers |
+| --- | --- | --- | --- |
+| `--ops-text-muted` | `color-mix(in oklch, var(--color-base-content) 64%, transparent)` | `color-mix(in oklch, var(--color-base-content) 64%, transparent)` | `.ops-text-meta`, `.ops-trail__crumb`, `.ops-handoff__hint`, `.ops-preflight__hint`, `.ops-cmdk__item-hint`, `.ops-cmdk__empty`, `.ops-header .text-base-content/60`, `.ops-shell .text-base-content/60` |
+| `--color-primary-strong` | `#5b4ad1` | `#5b4ad1` | `.ops-nav-item-active`, `.bg-primary.text-primary-content` |
+
+`--ops-text-muted` is the named readable-muted floor. Do not reintroduce raw
+`color-mix(in oklch, var(--color-base-content) NN%, transparent)` declarations for
+the consumers above. `contrast-pairs.mjs` entries that use `css_var: "ops-text-muted"`
+remain part of the D-15 lockstep contract: the manifest selector, token name, and
+`64%` alpha must match `app.css`.
+
+`--color-primary-strong` is allowed only for text-bearing interactive/selected fills:
+`.ops-nav-item-active` and `.bg-primary.text-primary-content`. Decorative primary and
+accent recipes stay on `--color-primary` / `--color-accent` so the violet brand wash,
+glow, borders, focus, and route-mark treatments are not globally retuned.
 
 ## Elevation surfaces — `--ops-bg`, `--ops-surface-1`, `--ops-surface-2`
 
