@@ -10,11 +10,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Current Milestone
 
-**v1.33 — Admin UI Insane Polish** (phases 119-127, active 2026-06-03). Owner-initiated, screenshot-backed UI/UX + design-system iteration of the `scrypath_ops` admin console — the next-level pass on v1.32's foundation. See `milestones/v1.33-{ROADMAP,REQUIREMENTS}.md`.
+No active milestone. v1.33 Admin UI Insane Polish shipped and archived on 2026-06-03.
 
-## Current Mode: evidence-gated feature lane (UI polish wedge)
+## Current Mode: idle release train
 
-**Goal:** Execute v1.33's bounded admin-UI polish wedge — task-first IA, design-system tightening for compounding reuse, mobile-first responsiveness, restrained brand motion — while keeping `main` green and runtime scope closed. This wedge is an explicit owner decision that overrides the default idle posture; it adds no runtime/product breadth.
+**Goal:** Keep `main` green, preserve release/support truth, and avoid inventing new roadmap scope without concrete evidence.
 
 **Recent closed outcomes:**
 - v1.30 release train/package truth, support intake routing, advisory proof stability, and public website/docs truth alignment.
@@ -163,7 +163,9 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Last shipped milestone
 
-**v1.32 — Admin UI/UX Design System Cleanup** (shipped + archived in-repo **2026-06-01**). Bounded existing-admin polish wedge for ScrypathOps tokens, shared operator primitives, mounted `/admin/search/*` asset contract, and screen cleanup — see **`milestones/v1.32-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**v1.33 — Admin UI Insane Polish** (shipped + archived in-repo **2026-06-03**). Owner-initiated next-level admin-UI polish wedge: task-first IA (Recover/Explore nav + front-door), design-system tightening for compounding reuse, restrained brand motion, per-screen polish, and shell coherence — see **`milestones/v1.33-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+
+**Prior:** **v1.32 — Admin UI/UX Design System Cleanup** (shipped + archived in-repo **2026-06-01**). Bounded existing-admin polish wedge for ScrypathOps tokens, shared operator primitives, mounted `/admin/search/*` asset contract, and screen cleanup — see **`milestones/v1.32-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **Last shipped milestone:** **v1.31 — Adoption Evidence Demo Hardening** (UAT passed **2026-06-01**). Bounded strategic proof wedge for realistic demo app DX, deterministic browser evidence, docs, and closeout.
 
@@ -183,12 +185,13 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Planning window
 
-**Active milestone:** v1.33 — Admin UI Insane Polish (phases 119-127). Owner-initiated polish wedge; the release train is otherwise idle.
+**Active milestone:** none. The release train is idle after v1.33 archive.
 
 ## Requirements
 
 ### Validated
 
+- [x] **v1.33** (2026-06-03): **HARNESS-01**, **SEED-01**, **AUDIT-01**, **TOKEN-01**, **COMP-01**, **MOTION-01**, **IA-01**, **COPY-01**, **RECOVER-01**, **EXPLORE-01**, **SHELL-01**, **VERIFY-01** — task-first admin-UI IA (Recover/Explore nav + front-door), design-system tightening, restrained micro-animation, per-screen polish, and shell coherence; screenshot-driven audit + 40-shot matrix; live admin smoke green in CI.
 - [x] **v1.32** (2026-06-01): **ASSET-01**, **TOKEN-01**, **BRAND-01**, **COMP-01**, **A11Y-01**, **SCREEN-01**, **SCREEN-02**, **VERIFY-01** — mounted admin asset contract, Scrypath operator tokens, shared LiveView primitives, screen hierarchy cleanup, and focused verification.
 - [x] **v1.31** (2026-06-01): **DEMO-01**–**DEMO-02**, **E2E-01**–**E2E-03**, **DX-01**, **DOC-01**, **OPS-01**, **CLOSE-01** — realistic seeded demo, deterministic advisory E2E proof, Docker/dev DX, documentation, ops UI clarity, and maintainer closeout.
 - [x] **v1.30** (2026-06-01): **REL-01**–**REL-03**, **SUP-01**–**SUP-02**, **STAB-01**–**STAB-02**, **WEB-01**–**WEB-02**, **SCOPE-01** — release/package truth, support intake evidence routing, advisory proof stability, and website/docs claim alignment.
@@ -258,7 +261,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 <!-- Current scope. Building toward these. -->
 
-- [ ] **v1.33 Admin UI Insane Polish** (phases 119-127): **HARNESS-01**, **SEED-01**, **AUDIT-01**, **TOKEN-01**, **COMP-01**, **MOTION-01**, **IA-01**, **COPY-01**, **RECOVER-01**, **EXPLORE-01**, **SHELL-01**, **VERIFY-01** — screenshot-driven audit harness + seed scenarios, per-touchpoint audit, design-system tightening (tokens/components/motion), task-first IA + front-door, per-screen polish, and shell coherence + verification. Bounded admin-UI polish; no runtime breadth. See `milestones/v1.33-REQUIREMENTS.md`.
+No active feature or repair requirements. The default lane is idle maintenance-and-evidence mode: release/support truth, proof stability, public claim drift, and outside-adopter evidence only when concrete signal appears.
 
 ### Out of Scope
 

@@ -1,5 +1,23 @@
 # Milestones
 
+## v1.33 Admin UI Insane Polish (Shipped: 2026-06-03)
+
+**Phases completed:** 9 phases (119-127), 9 plans
+
+**Key accomplishments:**
+
+- Task-first information architecture: nav groups renamed Triage→Recover / Probes→Explore (lockstep with the nav-contract test), inter-screen threading, and a trimmed Control Room front-door (violet monoline icons, ⌘K hint, orientation link).
+- Design-system tightening for compounding reuse: completed status-tone set + `--ease-ops-exit`, raw Tailwind-step leak sweep, `ops_notice`/`ops_status` consolidation, shared `ops_loading` primitive, hover/press parity — `DESIGN-TOKENS.md` kept in lockstep.
+- Restrained micro-animation ("elevate within reserved"): enter/exit easing asymmetry, one coordinated page-wide verdict tone-settle, crisp row press — all reduced-motion-safe; spring/bounce/count-ups rejected.
+- Per-screen polish: Posture mobile table + worst-first sort (B1), Sync/Drift `:wide` width + preflight (B6), Search loading + zero-results, Playbooks workspace clarity; unified trust verdict + mobile header-nav collapse.
+- Screenshot-driven proof: four named seed scenarios (all_green/degraded/incident/empty) + a 40-shot theme×viewport×state matrix; a 47-finding per-touchpoint audit backlog.
+
+**Milestone audit:** Passed (tech_debt) — 12/12 requirements, 9/9 phases; live admin Playwright smoke green in CI (`phase105-e2e`); see `milestones/v1.33-MILESTONE-AUDIT.md`.
+
+**Archives:** `milestones/v1.33-ROADMAP.md`, `milestones/v1.33-REQUIREMENTS.md`, `milestones/v1.33-MILESTONE-AUDIT.md`, `milestones/v1.33-phases/`
+
+---
+
 ## v1.32 Admin UI/UX Design System Cleanup (Shipped: 2026-06-01)
 
 **Phases completed:** 3 phases, 3 plans, 10 tasks

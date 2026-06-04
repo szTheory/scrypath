@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.33
 milestone_name: Admin UI Insane Polish
-status: Implementation complete (phases 119-127, 9/9); awaiting owner UAT sign-off
+status: Awaiting next milestone
 last_updated: "2026-06-03"
-last_activity: 2026-06-03 — Phase 127 complete (SHELL-01 verdict unify + mobile header nav; VERIFY-01 static gates green: verify.opsui 129/0, ecommerce compile clean); milestone audit PASSED/tech_debt; live admin smoke + recapture gallery + human UAT deferred to owner sign-off
+last_activity: 2026-06-03 — Milestone v1.33 shipped + archived (PR #43 squash-merged; all CI green incl. phase105-e2e live admin smoke)
 progress:
   total_phases: 9
   completed_phases: 9
@@ -18,20 +18,18 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** v1.33 Admin UI Insane Polish — implementation complete (9/9 phases); awaiting owner UAT sign-off
+**Current Focus:** Awaiting next milestone
 
 ## Current Position
 
-Phase: 127 — Shell coherence + milestone verification & UAT (implementation complete; owner UAT pending)
+Phase: Milestone v1.33 complete
 Plan: —
-Status: Implementation complete (9/9 phases, 119-127); awaiting owner UAT sign-off before PR/merge/archive
-Last activity: 2026-06-03 — Phases 125 (RECOVER-01) + 126 (EXPLORE-01) complete: the per-screen Recover + Explore polish passes; B1 (Posture mobile) + B6 (Sync/Drift width) resolved, ops_loading wired into Sync/Drift + Search
+Status: Awaiting next milestone
+Last activity: 2026-06-03 — Milestone v1.33 shipped and archived
 
 ## Current Milestone
 
-**v1.33 Admin UI Insane Polish** (phases 119-127) — owner-initiated, screenshot-backed UI/UX + design-system iteration of the `scrypath_ops` admin console, building on the v1.32 foundation. Deliberately overrides the idle/maintenance posture as an explicit polish wedge. See `milestones/v1.33-{ROADMAP,REQUIREMENTS}.md`.
-
-**Locked decisions:** task-first IA restructure (we commit, no external gate) · elevate brand within "reserved" (one signature verdict tone-settle) · scaffold + run autonomously, checkpoint at gate phases (121,122,123,127) + IA before/after (124).
+No active milestone. v1.33 Admin UI Insane Polish (phases 119-127) is shipped and archived (2026-06-03). The release train returns to idle/maintenance posture.
 
 ## Accumulated Context
 
