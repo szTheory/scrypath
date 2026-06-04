@@ -27,7 +27,7 @@ defmodule ScrypathOps.MixProject do
 
   def cli do
     [
-      preferred_envs: [precommit: :test, "opsui.test_a11y": :test]
+      preferred_envs: [precommit: :test, "opsui.test_a11y": :test, "verify.opsui": :test]
     ]
   end
 
