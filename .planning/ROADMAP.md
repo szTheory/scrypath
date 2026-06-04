@@ -32,7 +32,7 @@ gate (AAA for body text), and continues polish on v1.33's under-touched surfaces
 3. A fast Node token-pair contrast checker (`make contrast`) grades every declared `--color-*` pair + documented muted alphas at AA/AAA with no browser.
 4. The existing 40-shot screenshot matrix still captures both themes cleanly as the dark-audit substrate.
 
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 **Wave 1**
@@ -41,7 +41,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 128-02-PLAN.md — Create contrast-checker.mjs with WCAG math/self-test/D-15 guards, Makefile targets, DESIGN-TOKENS.md update
+- [x] 128-02-PLAN.md — Create contrast-checker.mjs with WCAG math/self-test/D-15 guards, Makefile targets, DESIGN-TOKENS.md update
 
 **Wave 3** *(blocked on Wave 2 completion)*
 

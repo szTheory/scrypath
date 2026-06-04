@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
 status: executing
-last_updated: "2026-06-04T07:32:05.158Z"
+last_updated: "2026-06-04T07:41:33.360Z"
 last_activity: 2026-06-04
 progress:
   total_phases: 9
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -23,9 +23,9 @@ progress:
 ## Current Position
 
 Phase: 128 (contrast-gate-harness-dark-seed-coverage-s-g) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
-Last activity: 2026-06-04 -- Completed 128-01-PLAN.md (axe dep + contrast-pairs.mjs)
+Last activity: 2026-06-04
 
 ## Current Milestone
 
@@ -79,3 +79,9 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 | Phase 125 P125 | one pass | RECOVER-01 | 6 files (posture/sync_drift/failed_sync live, ops_ui.ex, 1 test, matrix spec) |
 | Phase 126 P126 | one pass | EXPLORE-01 | 3 files (search/playbook live, 1 test) |
 | Phase 128 P01 | 4min | CONTRAST-HARNESS-01 | 3 files (package.json, package-lock.json, contrast-pairs.mjs) |
+| Phase 128 P02 | 8min | 2 tasks | 3 files |
+
+## Decisions
+
+- [Phase ?]: #767676 vs white is 4.54:1 (not 4.48:1) — #777777 is the actual known-fail pair for AA at 4.48:1
+- [Phase ?]: D-15 Guard 2 selector extraction uses whitespace-aware regex to handle indented CSS rules inside @layer blocks
