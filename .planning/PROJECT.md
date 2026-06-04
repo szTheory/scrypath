@@ -8,9 +8,23 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Milestone
+## Current Milestone: v1.34 Both-Themes Perfection — Dark Signature + AA Gate
 
-No active milestone. v1.33 Admin UI Insane Polish shipped and archived on 2026-06-03.
+**Goal:** Make the `scrypath_ops` admin UI's existing dark/light/system theming genuinely perfect and brand-expressive in both modes — dark as the signature look, light at parity — backed by a formal automated WCAG AA contrast gate, with continued design-system/IA polish on the surfaces v1.33 under-touched.
+
+**Target features:**
+- A dark-theme brand-expression audit + an automated WCAG AA contrast gate (AAA for body text) over both themes × seed scenarios.
+- Systemic theme fixes: the missing 4-step midnight surface ramp (`#1B2230` surface-2), dark "ambient-shadow-plus-border" depth, a restrained violet "quiet glow," and copper promoted to its branded 5% accent role.
+- A11y contrast remediation so both themes pass AA (body text AAA); restrained brand path-motion expression tuned for dark.
+- Per-screen + shell-chrome dual-theme polish on the under-iterated surfaces (Search result rows, Sync/Drift depth, Playbooks, header nav).
+
+**Locked decisions:**
+- Comprehensive both-themes perfection **+** broad design-system/IA iteration (not just dark plumbing — that already exists and works).
+- Default stays **system-follows-OS** (dark is the signature look, never force-defaulted).
+- **WCAG AA enforced as a hard automated gate in both themes**; body/long-form text targets AAA (advisory report).
+- Keep **Tailwind v4 + daisyUI + `.ops-*`** architecture — no BEM switch, no `--sp-*` rename.
+
+This milestone consciously overrides the documented idle/maintenance posture as an explicit owner-initiated polish wedge, building directly on v1.33. It is UI polish only — Phase 97–99 runtime scope guard still applies. Source plan: `~/.claude/plans/v1-33-admin-ui-deep-tower.md`.
 
 ## Current Mode: idle release train
 
@@ -291,4 +305,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-01 — v1.32 admin UI/UX design-system cleanup completed*
+*Last updated: 2026-06-04 — v1.34 Both-Themes Perfection (Dark Signature + AA Gate) milestone started*
