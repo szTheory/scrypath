@@ -61,12 +61,12 @@ Plans:
 2. Findings are tagged by fix class and split systemic (≥3 screens → token/component fix) vs per-screen.
 3. The backlog mirrors v1.33's `120-AUDIT-BACKLOG.md` format and is the single source for phases 130–135.
 
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
 **Wave 1**
 
-- [ ] 129-01-PLAN.md — Score 6-screen × DD1–DD6 dark brand audit; assemble 129-DARK-AUDIT-BACKLOG.md
+- [x] 129-01-PLAN.md — Score 6-screen × DD1–DD6 dark brand audit; assemble 129-DARK-AUDIT-BACKLOG.md
 
 **Status:** Pending
 
