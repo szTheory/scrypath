@@ -92,6 +92,72 @@ Elevation ladder: `surface` (1px, resting) → `mid` (subtle hover / interactive
 `focus` is **reserved** — prefer the global `:focus-visible` outline (see Focus below);
 the box-shadow ring is only an escape hatch for inset focus inside overflow-clipped boxes.
 
+**Dark-only augmentation:** `--shadow-ops-panel-dark` is a dark-only supplement declared in
+the D-10 dual-path blocks; it is **not** declared in light. Light panels continue to use
+`--shadow-ops-surface` (vertical lift). See §Glow + dark ambient depth — Phase 131 below.
+
+## Glow + dark ambient depth — Phase 131
+
+Three new shadow tokens extending the ladder for dark brand expression. Light values for the
+glow tokens are `none` (declared in `@theme`) so they produce zero visual change in light;
+`--shadow-ops-panel-dark` has no light declaration at all — the absence is the mechanism that
+keeps light panels pixel-identical.
+
+| Token | Light value | Dark value | Use |
+| --- | --- | --- | --- |
+| `--shadow-ops-panel-dark` | (not declared in light) | `0 0 0 1px rgba(0,0,0,0.30), 0 1px 3px rgba(0,0,0,0.45)` | Ambient seated-depth shadow on dark panels: `.ops-panel`, `.ops-cmdk__panel`, `#flash-group > *`, `.ops-intent-card` |
+| `--shadow-ops-glow` | `none` | `0 0 8px 2px rgba(108,92,231,0.30)` | Quiet violet glow — route mark / active nav / key-callout hover only. Never on text, resting panels, or background floods |
+| `--shadow-ops-glow-copper` | `none` | `0 0 6px 1px rgba(193,122,62,0.25)` | Quiet copper glow — key-node hover only. No consumer in Phase 131 (reserved for Phase 133/134) |
+
+**Panel-dark detail:** the `0 0 0 1px` zero-offset ring reads as ambient inset depth (panel
+seated into the surface, not floating above it); the `0 1px 3px` retains the subtle downward
+lift. Combined with the panel's `border: 1px solid color-mix(base-content 14%)`, the result is
+dark seated depth without visible shadow lift.
+
+**Glow-copper restraint:** Lower alpha (0.25) and tighter spread (6px/1px) than the violet
+glow — copper is the 5% accent; violet is the 10% primary. The `.ops-glow` class wraps
+`--shadow-ops-glow` only; copper glow is applied per-site as needed (not via a shared class).
+
+## Copper accent vocabulary — Phase 131
+
+Copper (`--color-secondary`: `#c17a3e` dark / `#a85d2e` light) is the brand's **5% accent**.
+Three component classes expose it for eyebrow labels, key-callout badges, and key-node markers.
+
+**Hard rule:** Copper is a brand accent, **NEVER a status tone**. It does not appear in
+`tone_class/1` or `badge_class/1`. It carries no semantic meaning (not info / success /
+warning / error / partial / running / neutral). Do not route copper through status machinery.
+
+### Allowed application sites (exhaustive — no others)
+
+| Class | Allowed sites | Screen(s) |
+| --- | --- | --- |
+| `.ops-copper-eyebrow` | Page eyebrow label ("Operator workspace") | All 6 screens |
+| `.ops-copper-badge` (compose with `.ops-badge`) | Intent-card federation badge, playbook file-type badge, key-callout badge | Control Room, Search, Playbooks |
+| `.ops-copper-node` | Key-node / diagram icon emphasis (color only) | Future Phase 133/134 |
+| `.ops-copper-node--fill` | Filled copper icon container | Future Phase 133/134 |
+
+### Text color rules
+
+**Badge text:** Always `var(--color-base-content)` inside `.ops-copper-badge` — never
+`var(--color-secondary)` as the badge label text. Light AA fails at 4.15:1 on tinted copper
+background (below the 4.5:1 AA threshold for small text).
+
+**Eyebrow text:** `var(--color-secondary)` as eyebrow text on a `--ops-surface-1` background
+is AA-safe in both themes. Do NOT use `var(--color-secondary)` as badge label text.
+
+### AA pairing evidence
+
+| Pairing | Theme | Ratio | AA verdict |
+| --- | --- | --- | --- |
+| `base-content` (`#f4f1ea`) text on `.ops-copper-badge` tinted bg | Dark | 12.07:1 | PASS |
+| `base-content` (`#141923`) text on `.ops-copper-badge` tinted bg | Light | 14.86:1 | PASS |
+| `.ops-copper-eyebrow` (`--color-secondary` `#c17a3e`) on `--ops-surface-1` `#141923` | Dark | 5.13:1 | PASS |
+| `.ops-copper-eyebrow` (`--color-secondary` `#a85d2e`) on `--ops-surface-1` `#fffdf8` | Light | 4.84:1 | PASS |
+| `--color-secondary-content` (`#0c0f14`) on solid copper `#c17a3e` | Dark | 5.59:1 | PASS |
+| Copper text `#c17a3e` on `--ops-surface-2` `#1b2230` | Dark | 4.64:1 | PASS |
+
+All ratios computed with sRGB relative luminance (D-12 compliant, matching axe-core).
+
 ## Focus
 
 One ring for the whole shell: the global `:focus-visible { outline: 2px solid primary;
