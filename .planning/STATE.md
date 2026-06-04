@@ -2,7 +2,7 @@
 gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
-status: verifying
+status: verified
 last_updated: "2026-06-04T16:11:20.520Z"
 last_activity: 2026-06-04
 progress:
@@ -22,9 +22,9 @@ progress:
 
 ## Current Position
 
-Phase: 130 (dark-surface-ramp-depth-tokens-g) — EXECUTING
+Phase: 130 (dark-surface-ramp-depth-tokens-g) — VERIFIED
 Plan: 4 of 4
-Status: Phase complete — ready for verification
+Status: Phase verified — DARKTOKEN-01 met (dark ramp renders, light pixel-identical). Cluster 3 primary-violet 4.3:1 deferred to Phase 132 per user (Option B).
 Last activity: 2026-06-04
 
 ## Current Milestone

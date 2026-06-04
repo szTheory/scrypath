@@ -207,7 +207,7 @@ Plans:
 |-------------|-------|--------|
 | CONTRAST-HARNESS-01 | Phase 128 | Pending |
 | DARKAUDIT-01 | Phase 129 | Pending |
-| DARKTOKEN-01 | Phase 130 | Pending |
+| DARKTOKEN-01 | Phase 130 | Complete |
 | GLOW-01 | Phase 131 | Pending |
 | COPPER-01 | Phase 131 | Pending |
 | A11Y-TOKEN-01 | Phase 132 | Pending |
