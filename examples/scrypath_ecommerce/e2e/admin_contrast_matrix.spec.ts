@@ -259,8 +259,12 @@ async function writeContrastReport(findings: ContrastFinding[], scenario: SeedSc
   };
 
   await mkdir(contrastReportDir, { recursive: true });
+  // CR-02/WR-04: namespace the report by producer AND scenario so the three scenario
+  // tests (incident/all_green/empty) do not clobber one another, and so the axe producer
+  // does not collide with the token checker's report. Each scenario gets its own file.
+  const reportBase = `contrast-report.axe.${scenario}`;
   await writeFile(
-    path.join(contrastReportDir, "contrast-report.json"),
+    path.join(contrastReportDir, `${reportBase}.json`),
     JSON.stringify(report, null, 2)
   );
 
@@ -304,7 +308,7 @@ async function writeContrastReport(findings: ContrastFinding[], scenario: SeedSc
   }
 
   await writeFile(
-    path.join(contrastReportDir, "contrast-report.md"),
+    path.join(contrastReportDir, `${reportBase}.md`),
     md
   );
 }
@@ -351,12 +355,41 @@ async function axeCheck(
       .withRules(["color-contrast"])
       .analyze();
 
-    // D-20: AAA advisory pass — scoped to body selectors; NEVER affects exit code
-    const aaaBuilder = new AxeBuilder({ page }).withRules(["color-contrast-enhanced"]);
-    for (const sel of BODY_SELECTORS) {
-      aaaBuilder.include(sel);
+    // D-20: AAA advisory pass — scoped to body selectors; NEVER affects exit code.
+    // CR-03: axe-core throws `No elements found for include in page Context` when the
+    // ENTIRE include set resolves to zero elements (e.g. empty-state screens with none of
+    // the BODY_SELECTORS present). Guard it so the advisory pass can never propagate a
+    // throw out of axeCheck and fail the gate. Two layers of protection:
+    //   (1) only add includes that actually match on this page, and skip the pass
+    //       entirely when nothing matches (no body text to advise on);
+    //   (2) wrap analyze() in try/catch as a belt-and-braces — any AAA error is swallowed
+    //       and treated as zero advisory findings (D-20: advisory NEVER gates).
+    let aaaResults: {
+      violations: Array<{
+        id: string;
+        impact: string | null;
+        nodes: Array<{
+          target: string[];
+          any: Array<{ data?: { fgColor?: string; bgColor?: string; contrastRatio?: number } }>;
+        }>;
+      }>;
+    } = { violations: [] };
+    try {
+      const aaaBuilder = new AxeBuilder({ page }).withRules(["color-contrast-enhanced"]);
+      let includedAny = false;
+      for (const sel of BODY_SELECTORS) {
+        if ((await page.locator(sel).count()) > 0) {
+          aaaBuilder.include(sel);
+          includedAny = true;
+        }
+      }
+      if (includedAny) {
+        aaaResults = await aaaBuilder.analyze();
+      }
+    } catch (err) {
+      // D-20: AAA is advisory — never let it affect the gate.
+      console.warn(`AAA advisory pass skipped (${(err as Error).message})`);
     }
-    const aaaResults = await aaaBuilder.analyze();
 
     // Accumulate into unified report (D-17/D-18)
     appendFindings(findings, { capture, mode, viewport, aaResults, aaaResults });
