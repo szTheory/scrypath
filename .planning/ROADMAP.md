@@ -131,7 +131,7 @@ Plans:
 
 - [x] 131-04-PLAN.md — Run D-11 proof bundle + copper AA re-confirm + human verify
 
-**Status:** Pending
+**Status:** Complete (verified 2026-06-04 — D-11 bundle green, human-verify APPROVED)
 
 ### Phase 132: A11y contrast remediation — both themes (hard gate) `[G]`
 
@@ -224,8 +224,8 @@ Plans:
 | CONTRAST-HARNESS-01 | Phase 128 | Pending |
 | DARKAUDIT-01 | Phase 129 | Pending |
 | DARKTOKEN-01 | Phase 130 | Complete |
-| GLOW-01 | Phase 131 | Pending |
-| COPPER-01 | Phase 131 | Pending |
+| GLOW-01 | Phase 131 | Complete |
+| COPPER-01 | Phase 131 | Complete |
 | A11Y-TOKEN-01 | Phase 132 | Pending |
 | DARKMOTION-01 | Phase 133 | Pending |
 | SCREEN-DARK-01 | Phase 134 | Pending |
