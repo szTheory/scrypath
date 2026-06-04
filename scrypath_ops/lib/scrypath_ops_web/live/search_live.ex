@@ -21,16 +21,15 @@ defmodule ScrypathOpsWeb.SearchLive do
   def empty_or_hits_single(assigns) do
     ~H"""
     <%= if @result.hits == [] do %>
-      <.ops_data_card title="No hits for this query.">
-        <p class="text-ops-body text-base-content/80">
-          Widen filters or try another sample; see the honesty panel for merge ceilings and backend limits.
-          (<a class="link link-primary" href={@guide_href}>guides/multi-index-search.md</a>).
-        </p>
-      </.ops_data_card>
+      <.ops_empty_state title="No hits for this query">
+        Next: widen or simplify the query, raise the page size, or pick another schema, then run
+        bounded search again. The honesty panel above explains merge ceilings and backend limits
+        (<a class="link link-primary" href={@guide_href}>guides/multi-index-search.md</a>).
+      </.ops_empty_state>
     <% else %>
       <div class="grid gap-2">
         <%= for {hit, idx} <- Enum.with_index(@result.hits, 1) do %>
-          <.ops_result_row title={"Hit #{idx}"} subtitle={hit_summary(hit)}>
+          <.ops_result_row title={hit_title(hit, idx)} subtitle={hit_summary(hit)}>
             <.ops_disclosure summary="Raw hit payload" variant={:compact}>
               <.ops_code_block variant={:compact}>{inspect(hit, pretty: true)}</.ops_code_block>
             </.ops_disclosure>
@@ -60,6 +59,7 @@ defmodule ScrypathOpsWeb.SearchLive do
       |> assign(:result_single, nil)
       |> assign(:result_multi, nil)
       |> assign(:run_error, nil)
+      |> assign(:searching, false)
       |> assign(:show_all_footnote, false)
       |> assign_capture_defaults()
 
@@ -223,6 +223,24 @@ defmodule ScrypathOpsWeb.SearchLive do
   end
 
   def handle_event("search", params, socket) do
+    # Two-step so the loading skeleton paints before the bounded read runs (S2). The
+    # Scrypath search dispatch is synchronous; deferring it to handle_info/2 lets LiveView
+    # push the `:searching` frame first. Clear prior results immediately so the skeleton
+    # isn't drawn over a stale result panel.
+    send(self(), {:run_search, params})
+
+    socket =
+      socket
+      |> assign(:result_single, nil)
+      |> assign(:result_multi, nil)
+      |> assign(:run_error, nil)
+      |> assign(:searching, true)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:run_search, params}, socket) do
     start_ms = System.monotonic_time(:millisecond)
 
     q = params["q"] |> to_string() |> String.trim()
@@ -239,6 +257,7 @@ defmodule ScrypathOpsWeb.SearchLive do
       |> assign(:result_single, nil)
       |> assign(:result_multi, nil)
       |> assign(:run_error, nil)
+      |> assign(:searching, false)
       |> assign(:show_all_footnote, false)
       |> assign_capture_defaults()
 
@@ -502,6 +521,43 @@ defmodule ScrypathOpsWeb.SearchLive do
     Enum.map(allowlist, &{inspect(&1), inspect(&1)})
   end
 
+  defp search_status_badge_kind(%{searching: true}), do: :running
+
+  defp search_status_badge_kind(%{result_single: r1, result_multi: r2})
+       when not is_nil(r1) or not is_nil(r2), do: :success
+
+  defp search_status_badge_kind(_), do: :neutral
+
+  defp search_status_badge_label(%{searching: true}), do: "Running…"
+
+  defp search_status_badge_label(%{result_single: r1, result_multi: r2})
+       when not is_nil(r1) or not is_nil(r2), do: "Last run loaded"
+
+  defp search_status_badge_label(_), do: "Run a probe"
+
+  # Lead a single-index hit row with its most human field (name/title/sku) so result
+  # titles read meaningfully instead of "Hit 1 / Hit 2" (P29). Falls back to the
+  # ordinal when the hit exposes no human-readable field.
+  defp hit_title(hit, idx) when is_map(hit) do
+    case hit_human_field(hit) do
+      nil -> "Hit #{idx}"
+      value -> "#{value}"
+    end
+  end
+
+  defp hit_title(_hit, idx), do: "Hit #{idx}"
+
+  defp hit_human_field(hit) do
+    ["name", :name, "title", :title, "sku", :sku, "id", :id]
+    |> Enum.find_value(fn key ->
+      case Map.get(hit, key) do
+        nil -> nil
+        "" -> nil
+        value -> to_string(value)
+      end
+    end)
+  end
+
   defp hit_summary(hit) when is_map(hit) do
     hit
     |> Map.take(["id", :id, "title", :title, "name", :name, "sku", :sku])
@@ -734,16 +790,16 @@ defmodule ScrypathOpsWeb.SearchLive do
         </.ops_notice>
 
         <.ops_panel class="space-y-6" aria-describedby="search-honesty-panel">
-          <.ops_empty_state :if={@schema_allowlist == []} title="No Schemas Configured">
-            No schemas configured for OPSUI. Set <code class="text-ops-body">schema_allowlist</code>
+          <.ops_empty_state :if={@schema_allowlist == []} title="No schemas configured">
+            Add allowlisted schema modules with <code class="text-ops-body">schema_allowlist</code>
             under <code class="text-ops-body">:scrypath_ops</code>
-            or use <code class="text-ops-body">SCRYPATH_OPS_SCHEMAS</code>
-            — see <code class="text-ops-body">scrypath_ops/README.md</code>.
+            or <code class="text-ops-body">SCRYPATH_OPS_SCHEMAS</code>
+            — see <code class="text-ops-body">scrypath_ops/README.md</code> — then reload this screen.
           </.ops_empty_state>
 
           <.ops_empty_state
             :if={@schema_allowlist != [] && !Keyword.has_key?(@scrypath_opts, :backend)}
-            title="Runtime Not Configured"
+            title="Runtime not configured"
           >
             Scrypath runtime is not configured (missing <code class="text-ops-body">:backend</code>
             and related
@@ -847,7 +903,12 @@ defmodule ScrypathOpsWeb.SearchLive do
                 />
               </.ops_fieldset>
 
-              <.ops_button type="submit" variant={:primary} size={:md}>
+              <.ops_button
+                type="submit"
+                variant={:primary}
+                size={:md}
+                phx-disable-with="Running…"
+              >
                 Run bounded search
               </.ops_button>
             </.form>
@@ -860,13 +921,25 @@ defmodule ScrypathOpsWeb.SearchLive do
                 >
                   Results
                 </h2>
-                <.ops_badge kind={if @result_single || @result_multi, do: :success, else: :neutral}>
-                  {if @result_single || @result_multi, do: "last run loaded", else: "run a probe"}
+                <.ops_badge kind={search_status_badge_kind(assigns)}>
+                  {search_status_badge_label(assigns)}
                 </.ops_badge>
               </div>
 
+              <div
+                :if={@searching}
+                class="space-y-3"
+                role="status"
+                aria-label="Running bounded search"
+              >
+                <p class="text-ops-body text-base-content/70">
+                  Running the bounded read-only search…
+                </p>
+                <.ops_loading lines={4} label="Running bounded search" />
+              </div>
+
               <.ops_status
-                :if={@run_error}
+                :if={@run_error && !@searching}
                 kind={:error}
                 title="Search could not run"
                 role="alert"
@@ -878,7 +951,10 @@ defmodule ScrypathOpsWeb.SearchLive do
               </.ops_status>
 
               <.ops_empty_state
-                :if={is_nil(@result_single) && is_nil(@result_multi) && is_nil(@run_error)}
+                :if={
+                  !@searching && is_nil(@result_single) && is_nil(@result_multi) &&
+                    is_nil(@run_error)
+                }
                 title="No probe has run yet"
               >
                 Choose a mode, set a bounded query, and run search. Results stay read-only and can be captured as a playbook after a successful run.
@@ -900,7 +976,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   >
                     <p class="font-semibold">Some indexes did not return results.</p>
                     <p class="mt-1 text-ops-sm">
-                      Failures are per schema and do not cancel the whole response. Next: open failure details, adjust entries or backend, then re-run <strong>Run sample searches</strong>.
+                      Failures are per schema and do not cancel the whole response. Next: open failure details, adjust entries or backend, then run bounded search again.
                     </p>
                     <p class="mt-2 text-ops-sm text-base-content/70">
                       <code class="text-ops-sm">:all</code>
@@ -1071,6 +1147,12 @@ defmodule ScrypathOpsWeb.SearchLive do
             </.form>
           </section>
         </.ops_panel>
+
+        <.ops_handoff>
+          <:step navigate={"#{@mount_path}/playbooks"} hint="Once a probe earns its keep —">
+            Save it and open playbooks
+          </:step>
+        </.ops_handoff>
       </div>
     </Layouts.app>
     """

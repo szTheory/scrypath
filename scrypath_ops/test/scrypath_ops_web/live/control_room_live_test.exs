@@ -10,7 +10,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     prev_auth_mode = System.get_env("OPSUI_AUTH_MODE")
 
     # Empty allowlist keeps this test free of a live backend while still exercising
-    # the full Control Room chrome (strip + intent cards + jump-to shortcuts).
+    # the full Control Room chrome (strip + intent cards + ⌘K/orientation footer).
     Application.put_env(:scrypath_ops, :schema_allowlist, [])
     Application.delete_env(:scrypath_ops, :backend)
     System.put_env("OPSUI_AUTH_MODE", "sigra")
@@ -52,7 +52,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
   test "unconfigured fleet shows the config empty state but keeps the intent cards", %{conn: conn} do
     {:ok, _lv, html} = live(conn, ~p"/ops")
 
-    assert html =~ "No Schemas Configured"
+    assert html =~ "No schemas configured"
     assert html =~ "Something looks broken"
     assert html =~ "Explore &amp; capture"
   end

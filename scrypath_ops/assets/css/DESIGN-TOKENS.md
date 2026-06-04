@@ -97,6 +97,11 @@ does this for you). Leading: `tight` 1.3 · `body` 1.5. Mono stack lives in `.op
 Six states: `info` · `success` · `warning` (= `partial`) · `error` · `running`, plus
 `neutral` for badges. The single mapping authority is `tone_class/1` / `badge_class/1`
 in `ops_ui.ex`; route any tinted surface (notice, status, action group) through them.
+The **full tone set is supported everywhere a tone is consumed** — surfaces
+(`.ops-tone-*`), badges (`.ops-badge-*`), and the metric border-accent modifiers
+(`.ops-metric-{info,success,warning,partial,error,running}` via `metric_tone_class/1`,
+where `:partial` settles like `:warning` and `:running` accents the brand primary). No
+tone has a "supported on badges but silently `nil` on metrics" gap.
 **Semantics:** neutral facts (counts) use `:neutral`; only real problems use
 `:warning`/`:error`. Don't cry wolf (e.g. "0 queues observed" is neutral, not a warning).
 Red is reserved for "the tool genuinely can't answer" (missing backend); a single degraded
@@ -124,10 +129,43 @@ schema is amber, not red.
 | `--ease-ops-standard` | cubic-bezier(0.2,0.8,0.2,1) | ease-out, enter |
 | `--ease-ops-out` | cubic-bezier(0.16,1,0.3,1) | stronger ease-out, overlay/modal entrance |
 | `--ease-ops-in-out` | cubic-bezier(0.45,0,0.55,1) | symmetric, position toggles |
+| `--ease-ops-exit` | cubic-bezier(0.4,0,1,1) | ease-in, crisp dismissal (modal/palette/flash **close**); faster/more linear than the enter eases |
 
 Everything below is neutralized under `@media (prefers-reduced-motion: reduce)` (one global
 rule), so any new transition is reduced-motion-safe by default. Keep it restrained:
 transform/opacity only, < 300ms, ease-out for enter, no bounce (this is an incident tool).
+
+### Enter/exit keyframes (Phase 123, MOTION-01)
+
+| Keyframe | Direction | Pairing | Used by |
+| --- | --- | --- | --- |
+| `ops-modal-in` | enter | `--duration-ops-slow` + `--ease-ops-out` | `.modal-box`, `.ops-cmdk__panel` (open) |
+| `ops-modal-out` | exit | `--duration-ops-fast` + `--ease-ops-exit` | `.ops-cmdk--closing .ops-cmdk__panel` (palette/sheet close) |
+| `ops-fade-in` | enter | `--duration-ops-standard` + `--ease-ops-standard` | `.ops-disclosure[open] > .ops-disclosure-body` |
+| `ops-fade-out` | exit | `--duration-ops-fast` + `--ease-ops-exit` | `.ops-cmdk--closing .ops-cmdk__backdrop` |
+
+**Enter/exit asymmetry (the A1 rule):** enters ease *out* (longer, decelerating — `ease-ops-out`,
+~240ms); exits ease *in* (shorter, accelerating — `ease-ops-exit`, ~120ms). Close feels as
+intentional as open without dragging. The modal close also rides this via `phx-remove`
+(`ops_modal`), and flash/banner show/hide via `core_components` `show/2`/`hide/2`. The command
+palette plays `ops-modal-out` through a `.ops-cmdk--closing` class the JS hook adds for one tick
+before `[hidden]` (re-opening cancels it → interruptible). Origin-aware: the exit settles back
+toward the same `translateY(4px) scale(0.98)` the enter came from.
+
+**A2 — signature verdict tone-settle:** `.ops-verdict` (surface), `.ops-verdict__dot`, and every
+`.ops-metric` border share the *same* `--duration-ops-status` + `--ease-ops-standard` transition,
+so a Refresh that flips posture reads as one coherent "the answer just moved" beat — not 6
+independent flickers. Pure CSS (shared token, no JS, no stagger). The dot gets a transition so the
+loudest tone signal doesn't snap ahead of the surface.
+
+**A4 — row press/hover:** `.ops-result-row`/`.ops-object-item` press transform runs at
+`--duration-ops-instant` (matching `.ops-btn:active`); hover color/elevation settle at
+`--duration-ops-fast` — one press-feel authority across buttons, cards, and interactive rows.
+
+**A3 (staggered result reveal) — deliberately NOT shipped.** A CSS-only `nth-child` stagger would
+re-fire on every LiveView DOM patch of the result list (re-runs, re-sorts), reading as flicker —
+the dashboard-toy bar the reserved brand rejects. Gating it to first-reveal needs a JS hook this
+item explicitly forbids, so it was skipped on the side of restraint.
 
 | Animate | Never animate |
 | --- | --- |
@@ -135,4 +173,5 @@ transform/opacity only, < 300ms, ease-out for enter, no bounce (this is an incid
 | disclosure chevron rotate + body **opacity** fade | `<details>` height (auto height can't transition → reflow) |
 | button press scale, card hover lift (transform) | table row insertion / sort |
 | nav/segmented hover, modal opacity+translateY entrance | metric **value** count-ups (no dashboard-toy tickers) |
-| | flash bounce, focus rings, anything looping/decorative |
+| row hover/press (`.ops-result-row`/`.ops-object-item`: border + `shadow-ops-mid`, subtle scale) | flash bounce, focus rings, decorative loops |
+| loading **opacity** pulse (`.ops-loading`, the one sanctioned in-flight loop besides the reconnect spinner) | |

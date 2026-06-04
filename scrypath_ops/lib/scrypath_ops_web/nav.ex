@@ -17,31 +17,31 @@ defmodule ScrypathOpsWeb.Nav do
         path: "#{mount_path}/posture",
         label: "Posture",
         title: "Posture / health",
-        group: :triage
+        group: :recover
       },
       %{
         path: "#{mount_path}/failed-sync",
         label: "Failed Sync",
         title: "Failed sync work",
-        group: :triage
+        group: :recover
       },
       %{
         path: "#{mount_path}/sync-drift",
         label: "Sync Drift",
         title: "Sync / drift",
-        group: :triage
+        group: :recover
       },
       %{
         path: "#{mount_path}/search",
         label: "Search",
         title: "Search & federation",
-        group: :probes
+        group: :explore
       },
       %{
         path: "#{mount_path}/playbooks",
         label: "Playbooks",
         title: "Saved playbooks",
-        group: :probes
+        group: :explore
       }
     ]
   end

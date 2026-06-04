@@ -129,23 +129,27 @@ defmodule ScrypathOpsWeb.CoreComponents do
 
   ## JS Commands
 
+  # Enter eases in with the overlay ease (`ease-ops-out`); flash/banner shows over 240ms
+  # (= --duration-ops-slow). Routes through the house ease token, not a raw Tailwind step.
   def show(js \\ %JS{}, selector) do
     JS.show(js,
       to: selector,
-      time: 300,
+      time: 240,
       transition:
-        {"transition-all ease-out duration-300",
+        {"transition-all ease-ops-out duration-200",
          "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
          "opacity-100 translate-y-0 sm:scale-100"}
     )
   end
 
+  # Exit is the crisp dismissal beat: `ease-ops-exit` (ease-in), faster than the enter, so
+  # closing a flash/banner feels as intentional as it appearing (A1 enter/exit asymmetry).
   def hide(js \\ %JS{}, selector) do
     JS.hide(js,
       to: selector,
-      time: 200,
+      time: 120,
       transition:
-        {"transition-all ease-in duration-200", "opacity-100 translate-y-0 sm:scale-100",
+        {"transition-all ease-ops-exit duration-200", "opacity-100 translate-y-0 sm:scale-100",
          "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"}
     )
   end

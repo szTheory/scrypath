@@ -60,7 +60,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     {:ok, _lv, html} = live(conn, ~p"/ops/search")
 
-    assert html =~ "No schemas configured for OPSUI"
+    assert html =~ "No schemas configured"
     assert html =~ "pointer-events-none"
   end
 
@@ -76,31 +76,31 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/ops/search?mode=multi")
 
-    html =
-      view
-      |> element("#ops-search-playground-form")
-      |> render_submit(%{
-        "q" => "hello",
-        "page_size" => "10",
-        "schemas" => [inspect(OpsPostA), inspect(OpsPostB)]
-      })
+    view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{
+      "q" => "hello",
+      "page_size" => "10",
+      "schemas" => [inspect(OpsPostA), inspect(OpsPostB)]
+    })
 
-    assert html =~ "Some indexes did not return results."
+    # The bounded read is deferred to a :run_search message (S2 loading state);
+    # render/1 flushes it and returns the result HTML.
+    assert render(view) =~ "Some indexes did not return results."
   end
 
   test "page_size above ceiling surfaces 50 in error messaging", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/ops/search")
 
-    html =
-      view
-      |> element("#ops-search-playground-form")
-      |> render_submit(%{
-        "q" => "x",
-        "page_size" => "99",
-        "schema" => inspect(OpsPostA)
-      })
+    view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{
+      "q" => "x",
+      "page_size" => "99",
+      "schema" => inspect(OpsPostA)
+    })
 
-    assert html =~ "50"
+    assert render(view) =~ "50"
   end
 
   test "merge stub exposes merge trace block", %{conn: conn} do
@@ -108,16 +108,15 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/ops/search?mode=multi")
 
-    html =
-      view
-      |> element("#ops-search-playground-form")
-      |> render_submit(%{
-        "q" => "merge",
-        "page_size" => "10",
-        "schemas" => [inspect(OpsPostA), inspect(OpsPostB)]
-      })
+    view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{
+      "q" => "merge",
+      "page_size" => "10",
+      "schemas" => [inspect(OpsPostA), inspect(OpsPostB)]
+    })
 
-    assert html =~ "Merge trace"
+    assert render(view) =~ "Merge trace"
   end
 
   test "successful single search shows validated capture preview", %{conn: conn} do
@@ -142,15 +141,15 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     {:ok, view, html} = live(conn, ~p"/ops/search")
     assert html =~ "Run a search first"
 
-    html =
-      view
-      |> element("#ops-search-playground-form")
-      |> render_submit(%{
-        "q" => "hello",
-        "page_size" => "10",
-        "schema" => inspect(OpsPostA)
-      })
+    view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{
+      "q" => "hello",
+      "page_size" => "10",
+      "schema" => inspect(OpsPostA)
+    })
 
+    html = render(view)
     assert html =~ "Validated playbook preview"
     assert html =~ ~s(data-testid="playbook-preview-marker")
     assert html =~ ~s(data-testid="search-capture-preview-pre")
@@ -161,15 +160,15 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/ops/search?mode=multi")
 
-    html =
-      view
-      |> element("#ops-search-playground-form")
-      |> render_submit(%{
-        "q" => "boom",
-        "page_size" => "10",
-        "schemas" => [inspect(OpsPostA), inspect(OpsPostB)]
-      })
+    view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{
+      "q" => "boom",
+      "page_size" => "10",
+      "schemas" => [inspect(OpsPostA), inspect(OpsPostB)]
+    })
 
+    html = render(view)
     assert html =~ "Search could not run"
     assert html =~ "stub_hard_failure"
     refute html =~ "Some indexes did not return results."

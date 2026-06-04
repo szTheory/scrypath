@@ -900,7 +900,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
           <.ops_toolbar>
             <.ops_heading level={2}>Workspace files</.ops_heading>
             <.ops_button phx-click="refresh_list" variant={:ghost}>
-              Reload list
+              Reload playbooks
             </.ops_button>
           </.ops_toolbar>
 
@@ -981,6 +981,8 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   >
                     Rename
                   </.ops_button>
+                </.ops_action_group>
+                <.ops_action_group :if={@workspace_writable?} tone={:danger}>
                   <.ops_button
                     phx-click="request_delete"
                     phx-value-name={row.name}

@@ -42,11 +42,11 @@ and **`on_mount`** callbacks in
 
 The `/ops` root (`/ops/`) is the **Control Room** landing: a glanceable fleet-posture strip plus three intent task-cards that route by the job the operator brought — incident triage (→ `/ops/posture`), shipping a change (→ `/ops/sync-drift`), or explore & capture (→ `/ops/search`). It is the start page, not a sixth nav item; the deep per-schema posture table stays on `/ops/posture`.
 
-Primary chrome under `/ops` follows **roadmap triage order**: posture first, failed sync second, read-only sync/drift (with doc and Mix links) third, bounded search and federation honesty last (search **not** co-equal with triage).
+Primary chrome under `/ops` is grouped by the job the operator brought, in **recover-first order**: the **Recover** chain comes first (posture → failed sync → read-only sync/drift, ordered as the incident walk), then **Explore** (bounded search and federation honesty → saved playbooks). Search is **not** co-equal with recovery work — Explore stays below the Recover chain.
 
 ### Journey loops & handoffs
 
-The surfaces thread into three named loops, each a hub-and-spoke trip from the Control Room. Within a cluster the steps are sequential; the header nav stays free so a power user is never trapped.
+The surfaces thread into two task groups — **Recover** (posture → failed sync → sync drift) and **Explore** (search → playbooks) — and three named loops, each a hub-and-spoke trip from the Control Room. Within a group the steps are sequential; the header nav stays free so a power user is never trapped.
 
 - **Incident-response loop** (on-call): Control Room verdict (degraded) → Posture (which schemas?) → Failed Sync (why? retry) → Sync Drift (did it stick?) → Control Room (verdict green). The loop closes on the verdict flipping green — that round-trip is the success signal.
 - **Ship-a-change preflight loop** (search owner / maintainer): Control Room ("shipping a change") → Sync Drift preflight (reconcile → contract drift → mismatches → gated promote) → re-check Posture.

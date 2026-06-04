@@ -100,10 +100,17 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert html =~ "sdv_ops_post_a"
     refute html =~ ":settings"
 
-    html2 =
+    # `load_drift` now defers the bounded backend read to a `:run_drift` message so the
+    # loading skeleton paints first (S3). The click shows the in-flight state; rendering
+    # again flushes the deferred read and surfaces the drift result.
+    loading_html =
       lv
       |> element("button", "Load / refresh contract drift")
       |> render_click()
+
+    assert loading_html =~ "Loading contract drift"
+
+    html2 = render(lv)
 
     assert html2 =~ ":settings"
     assert html2 =~ "sdv_ops_post_a"
@@ -117,9 +124,14 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       })
 
     {:noreply, socket} = SyncDriftLive.handle_event("load_drift", %{}, socket)
+    # load_drift now defers the read; it sets the loading flag and the actual
+    # contract-drift read happens in the :run_drift message handler (S3).
+    assert socket.assigns.drift_loading == true
+    {:noreply, socket} = SyncDriftLive.handle_info(:run_drift, socket)
 
     assert Agent.get(:sync_drift_live_test_state, & &1.settings_calls) == 1
     assert socket.assigns.drift_error == :settings
+    assert socket.assigns.drift_loading == false
 
     assert {:noreply, updated_socket} = SyncDriftLive.handle_event("swap_live", %{}, socket)
 
@@ -208,6 +220,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       drift_result: nil,
       drift_loaded_at: nil,
       drift_error: nil,
+      drift_loading: false,
       current_scope: scope,
       operator_context: operator_context,
       local_ui_state: nil

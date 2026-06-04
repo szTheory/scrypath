@@ -7,10 +7,11 @@
 - ✅ **v1.30 Release Trust and Evidence Maintenance** — Phases 109-112 (shipped 2026-06-01) — see `milestones/v1.30-ROADMAP.md`
 - ✅ **v1.31 Adoption Evidence Demo Hardening** — Phases 113-115 (UAT passed 2026-06-01)
 - ✅ **v1.32 Admin UI/UX Design System Cleanup** — Phases 116-118 (shipped 2026-06-01) — see `milestones/v1.32-ROADMAP.md`
+- ✅ **v1.33 Admin UI Insane Polish** — Phases 119-127 (shipped 2026-06-03) — see `milestones/v1.33-ROADMAP.md`
 
 ## Phases
 
-No active milestone. Start the next planning cycle with `$gsd-new-milestone` when there is concrete release follow-through, support/proof drift, production bug evidence, outside-adopter evidence, or an explicit strategic wedge.
+No active milestone. **v1.33 Admin UI Insane Polish** (phases 119-127) shipped + archived 2026-06-03 — see `milestones/v1.33-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`. Start the next planning cycle with `$gsd-new-milestone` when there is concrete release follow-through, support/proof drift, production bug evidence, outside-adopter evidence, or an explicit strategic wedge.
 
 ## Progress
 
@@ -21,6 +22,7 @@ No active milestone. Start the next planning cycle with `$gsd-new-milestone` whe
 | v1.30 Release Trust and Evidence Maintenance | 109-112 | 11/11 | Complete | 2026-06-01 |
 | v1.31 Adoption Evidence Demo Hardening | 113-115 | 3/3 phases complete | UAT passed | 2026-06-01 |
 | v1.32 Admin UI/UX Design System Cleanup | 116-118 | 3/3 phases complete | Complete | 2026-06-01 |
+| v1.33 Admin UI Insane Polish | 119-127 | 9/9 phases complete | Complete | 2026-06-03 |
 
 ## Historical Contract Anchors
 
@@ -29,4 +31,4 @@ No active milestone. Start the next planning cycle with `$gsd-new-milestone` whe
 
 ## Next
 
-No active milestone. Use `$gsd-new-milestone` only when the evidence-gated feature lane or maintenance lane justifies fresh scope.
+No active milestone. v1.33 shipped + archived (PR #43, all CI green incl. the `phase105-e2e` live admin smoke). Use `$gsd-new-milestone` only when the evidence-gated feature lane or maintenance lane justifies fresh scope.
