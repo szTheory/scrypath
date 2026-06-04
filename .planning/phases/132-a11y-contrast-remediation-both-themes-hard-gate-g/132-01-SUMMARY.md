@@ -100,7 +100,7 @@ None - plan executed exactly as written.
 
 - `node --check examples/scrypath_ecommerce/contrast-checker.mjs` - exit 0.
 - `node examples/scrypath_ecommerce/contrast-checker.mjs --self-test` - `self-test passed`.
-- `cd examples/scrypath_ecommerce && CONTRAST_REPORT_DIR=test-results/contrast/phase132-token node contrast-checker.mjs` - `Contrast check: PASS`, `AA failures:  0`, `AAA advisory: 17`.
+- `cd examples/scrypath_ecommerce && CONTRAST_REPORT_DIR=test-results/contrast/phase132-token node contrast-checker.mjs` - `Contrast check: PASS`, `AA failures:  0`, `AAA advisory: 19` after the post-review named-token guard fix added the two shell/header muted consumers.
 - `cd scrypath_ops && mix assets.build && mix verify.opsui` - Tailwind/daisyUI build completed; ExUnit completed `2 doctests, 129 tests, 0 failures`.
 
 ## Known Stubs

@@ -49,7 +49,7 @@ the contrast gate.
 
 | Token | Light | Dark | Consumers |
 | --- | --- | --- | --- |
-| `--ops-text-muted` | `color-mix(in oklch, var(--color-base-content) 64%, transparent)` | `color-mix(in oklch, var(--color-base-content) 64%, transparent)` | `.ops-text-meta`, `.ops-trail__crumb`, `.ops-handoff__hint`, `.ops-preflight__hint`, `.ops-cmdk__item-hint`, `.ops-cmdk__empty`, `.ops-header .text-base-content/60`, `.ops-shell .text-base-content/60` |
+| `--ops-text-muted` | `color-mix(in oklch, var(--color-base-content) 64%, transparent)` | `color-mix(in oklch, var(--color-base-content) 64%, transparent)` | `.ops-header .text-base-content/60`, `.ops-shell .text-base-content/60`, `.ops-text-meta`, `.ops-trail__crumb`, `.ops-handoff__hint`, `.ops-preflight__hint`, `.ops-cmdk__item-hint`, `.ops-cmdk__empty` |
 | `--color-primary-strong` | `#5b4ad1` | `#5b4ad1` | `.ops-nav-item-active`, `.bg-primary.text-primary-content` |
 
 `--ops-text-muted` is the named readable-muted floor. Do not reintroduce raw

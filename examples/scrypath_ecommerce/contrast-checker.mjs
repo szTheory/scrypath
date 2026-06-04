@@ -20,8 +20,7 @@
 // T-128-03: CSS content is parsed as text ONLY (regex/string ops on static text).
 //           NO eval() or execution of any CSS content.
 
-import { readFile, mkdir, writeFile, appendFile } from "node:fs/promises";
-import { createWriteStream } from "node:fs";
+import { readFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -501,6 +500,18 @@ if (process.argv.includes("--self-test")) {
     namedMutedOk
   );
 
+  let untrackedNamedMutedThrew = false;
+  try {
+    assertNoUntrackedMutedTokens(namedMutedCss, []);
+  } catch (err) {
+    untrackedNamedMutedThrew = true;
+  }
+  assert(
+    "Phase 132: untracked named muted token consumer throws",
+    untrackedNamedMutedThrew,
+    untrackedNamedMutedThrew
+  );
+
   const wrongNamedMutedCss = namedMutedCss.replace("64%", "63%");
   let wrongNamedMutedThrew = false;
   try {
@@ -709,7 +720,7 @@ function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
 
     if (colorMatch) {
       found.push({ selector, alpha, lineNumber: i + 1 });
-    } else if (cssVarEntries.some((pair) => pair.css_var === cssVar)) {
+    } else if (cssVarAlphas.has(cssVar)) {
       const alphaForVar = cssVarAlphas.get(cssVar)?.[0];
       namedFound.push({ selector, css_var: cssVar, alpha: alphaForVar, lineNumber: i + 1 });
     }
@@ -728,6 +739,26 @@ function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
           `  This (selector, alpha) pair is NOT present in contrast-pairs.mjs.\n` +
           `  Add an entry for "${selector}" with alpha: ${alpha} to scrypath_ops/assets/css/contrast-pairs.mjs.\n` +
           `  (D-15: the lockstep guard ensures all muted text tokens are contrast-gated.)`
+      );
+    }
+  }
+
+  for (const { selector, css_var, alpha, lineNumber } of namedFound) {
+    const inManifest = mutedPairs.some(
+      (pair) =>
+        pair.selector === selector &&
+        pair.css_var === css_var &&
+        Math.abs(pair.alpha - alpha) <= 0.01
+    );
+    if (!inManifest) {
+      throw new Error(
+        `D-15 Guard 2: untracked named muted text token!\n` +
+          `  Selector: "${selector}" at app.css line ${lineNumber}\n` +
+          `  CSS var: --${css_var}\n` +
+          `  Alpha: ${alpha} (${Math.round(alpha * 100)}%)\n` +
+          `  This (selector, css_var, alpha) tuple is NOT present in contrast-pairs.mjs.\n` +
+          `  Add an entry for "${selector}" with css_var: "${css_var}" and alpha: ${alpha}.\n` +
+          `  (D-15: the lockstep guard ensures all named muted text tokens are contrast-gated.)`
       );
     }
   }
@@ -778,7 +809,7 @@ function evaluatePair({ fg, bg, role, selector, theme, tokenPair }) {
   let severity;
   if (!passAA) {
     severity = "aa-fail";
-  } else if (!passAAA) {
+  } else if (role === "text" && !passAAA) {
     severity = "aaa-body-advisory";
   } else {
     severity = "pass";
@@ -796,7 +827,7 @@ function evaluatePair({ fg, bg, role, selector, theme, tokenPair }) {
     required_ratio: thresholds.aa,
     aaa_required: thresholds.aaa,
     pass_aa: passAA,
-    aaa_body_status: passAAA ? "pass" : "advisory",
+    aaa_body_status: role === "text" && !passAAA ? "advisory" : "pass",
     element_role: role,
     screen: "token-check",
     viewport: "n/a",

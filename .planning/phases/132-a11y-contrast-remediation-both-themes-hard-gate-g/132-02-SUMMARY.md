@@ -60,7 +60,7 @@ completed: 2026-06-04
 ## Accomplishments
 
 - Created `132-CONTRAST-REPORT.md` with the required sections for static token proof, ops UI regression proof, browser AA matrix proof, AAA advisory status, light baseline recapture, and scope guard.
-- Ran `mix assets.build` before proof commands, then verified `mix verify.opsui` and the fast token checker with `Contrast check: PASS`, `AA failures:  0`, and `AAA advisory: 17`.
+- Ran `mix assets.build` before proof commands, then verified `mix verify.opsui` and the fast token checker with `Contrast check: PASS`, `AA failures:  0`, and `AAA advisory: 19` after the post-review named-token guard fix added the two shell/header muted consumers.
 - Prepared the ecommerce E2E environment, ran the Playwright axe matrix against `http://127.0.0.1:4002`, and recorded zero AA failures for light, dark, and system-dark.
 - Recorded AAA body/long-form advisory status as report-only: browser reports had 12 advisory findings in the empty scenario, all non-blocking.
 - Recaptured 20 light PNGs into the local baseline and verified `Light pixel-diff: PASS` with `Failed pairs: 0 / 20`.
@@ -109,7 +109,7 @@ Each task was committed atomically:
 
 - `cd scrypath_ops && mix assets.build` - exit 0.
 - `cd scrypath_ops && mix verify.opsui` - `2 doctests, 129 tests, 0 failures`.
-- `cd examples/scrypath_ecommerce && CONTRAST_REPORT_DIR=test-results/contrast/phase132-token node contrast-checker.mjs` - `Contrast check: PASS`, `AA failures:  0`, `AAA advisory: 17`.
+- `cd examples/scrypath_ecommerce && CONTRAST_REPORT_DIR=test-results/contrast/phase132-token node contrast-checker.mjs` - `Contrast check: PASS`, `AA failures:  0`, `AAA advisory: 19`.
 - `cd examples/scrypath_ecommerce && MIX_ENV=test mix e2e.prepare` - exit 0 after starting local Meilisearch.
 - `cd examples/scrypath_ecommerce && PLAYWRIGHT_BASE_URL=http://127.0.0.1:4002 CONTRAST_REPORT_DIR=test-results/contrast/phase132 npm run test:e2e:admin-contrast` - `3 passed (1.2m)`.
 - `cd examples/scrypath_ecommerce && PLAYWRIGHT_BASE_URL=http://127.0.0.1:4002 ADMIN_SCREENSHOT_DIR=.tmp/pixel-diff-fresh npm run test:e2e:admin-matrix` - `3 passed (18.8s)`.
