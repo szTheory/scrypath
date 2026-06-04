@@ -10,8 +10,11 @@
 //   node contrast-checker.mjs --self-test # gate-liveness proof, exits 0 or 1
 //
 // Report output: CONTRAST_REPORT_DIR env (default: test-results/contrast/)
-//   contrast-report.json   — machine source of truth (gitignored)
-//   contrast-report.md     — generated human view (gitignored)
+//   contrast-report.token.json   — machine source of truth (gitignored)
+//   contrast-report.token.md     — generated human view (gitignored)
+// WR-04: the filename is producer-namespaced (.token.) so this fast checker's report
+// never clobbers the axe matrix's contrast-report.axe.<scenario>.{json,md} in the shared
+// CONTRAST_REPORT_DIR.
 //
 // D-16: lives in examples/scrypath_ecommerce Node lane; scrypath_ops stays Node-free.
 // T-128-03: CSS content is parsed as text ONLY (regex/string ops on static text).
@@ -747,12 +750,14 @@ async function main() {
 
   // (f) D-21: write report BEFORE deciding exit
   await mkdir(REPORT_DIR, { recursive: true });
+  // WR-04: producer-namespaced filename so the token checker's report does not clobber
+  // the axe matrix's contrast-report.axe.<scenario>.{json,md} in the shared report dir.
   await writeFile(
-    path.join(REPORT_DIR, "contrast-report.json"),
+    path.join(REPORT_DIR, "contrast-report.token.json"),
     JSON.stringify(report, null, 2)
   );
   await writeFile(
-    path.join(REPORT_DIR, "contrast-report.md"),
+    path.join(REPORT_DIR, "contrast-report.token.md"),
     buildMarkdownReport(report)
   );
 
@@ -777,7 +782,7 @@ async function main() {
       if (key && !seen.has(key)) {
         seen.add(key);
         console.log(
-          `::warning file=contrast-report.md,title=ContrastCluster::${key}`
+          `::warning file=contrast-report.token.md,title=ContrastCluster::${key}`
         );
       }
     }
@@ -788,7 +793,7 @@ async function main() {
   console.log(`\nContrast check: ${verdict}`);
   console.log(`  AA failures:  ${report.summary.aa_fail}`);
   console.log(`  AAA advisory: ${report.summary.aaa_advisory}`);
-  console.log(`  Report: ${path.join(REPORT_DIR, "contrast-report.json")}`);
+  console.log(`  Report: ${path.join(REPORT_DIR, "contrast-report.token.json")}`);
 
   if (report.summary.aa_fail > 0) {
     console.log(`\nAA Failures:`);
