@@ -82,7 +82,7 @@ Plans:
 2. `.ops-muted-panel`, `.ops-data-card`, `.ops-surface-flat`, `.ops-nav-list`, `.ops-disclosure`, `.ops-kbd`, `.ops-result-row`, `.ops-preflight__card--locked` step up (not down) in dark.
 3. The light theme is pixel-identical (light matrix + light contrast gate unchanged); `DESIGN-TOKENS.md` records the dark ramp.
 
-**Plans:** 2/4 plans executed
+**Plans:** 3/4 plans executed
 
 Plans:
 **Wave 1**
@@ -95,7 +95,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 130-03-PLAN.md — Recipe routing: 8 token-swaps + .bg-ops-surface-2 helper + D-05 dark overrides + D-10 shadow dual-path + ops_code_block DK-09
+- [x] 130-03-PLAN.md — Recipe routing: 8 token-swaps + .bg-ops-surface-2 helper + D-05 dark overrides + D-10 shadow dual-path + ops_code_block DK-09
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
