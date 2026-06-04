@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
-status: executing
-last_updated: "2026-06-04T07:41:33.360Z"
+status: verifying
+last_updated: "2026-06-04T08:03:17.968Z"
 last_activity: 2026-06-04
 progress:
   total_phases: 9
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
-  percent: 0
+  completed_plans: 3
+  percent: 11
 ---
 
 # Project State
@@ -22,9 +22,9 @@ progress:
 
 ## Current Position
 
-Phase: 128 (contrast-gate-harness-dark-seed-coverage-s-g) — EXECUTING
+Phase: 128 (contrast-gate-harness-dark-seed-coverage-s-g) — COMPLETE
 Plan: 3 of 3
-Status: Ready to execute
+Status: All 3 plans executed — CONTRAST-HARNESS-01 satisfied; 128-CONTRAST-REPORT.md committed
 Last activity: 2026-06-04
 
 ## Current Milestone
@@ -53,6 +53,7 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 
 - (Phase 124, IA-01/COPY-01, `9ca6510`) Task-first IA: nav groups renamed Triage→Recover / Probes→Explore in lockstep across `nav.ex` + the `ops_ui.ex` breadcrumb labels + `operator-ia.md` (nav-contract test gates it); CTAs match the new vocabulary; front-door trimmed (Jump-to rail → single ⌘K hint + quiet orientation link; emoji intent icons → violet monoline Heroicons); Search→Playbooks handoff threads the explore loop; sentence-case titles + concrete-next-action empty/error states. Labels/copy/icons only — no route/handler/mount change. (Roadmap/state status advanced retroactively at the start of the 125/126 pass.)
 - (Phase 128 Plan 01) @axe-core/playwright devDep installed + test:e2e:admin-contrast wired; contrast-pairs.mjs muted-alpha manifest (D-11) created with 13 entries — 12 contrast-gated + 1 decorative (.ops-trail__sep). D-10: token names only (no hex). D-12: sRGB compositing matches axe-core. D-15 lockstep guard input ready for Plan 02. CONTRAST-HARNESS-01 closed.
+- (Phase 128 Plans 02+03) Full contrast gate harness complete (Wave 0). 108 AA violations measured across 3 scenarios (incident 22 / all_green 60 / empty 26). Top systemic: `.leading-4` at 1.08:1 in dark — the `#1B2230` surface-2 ramp collapse (DARKAUDIT-01 finding #1); dark form inputs at 1.19:1 (`#1f2933`/`#141923`); `.bg-primary` at 4.3:1 near-miss. Fast checker found 3 light-theme muted-text AA fails at 3.9:1 (.ops-text-meta etc.). All AA failures at mobile only; desktop passes. system-dark parity confirmed (D-08 invariants working). 128-CONTRAST-REPORT.md committed as baseline evidence for phases 129/132.
 
 - (Phases 125 + 126, RECOVER-01 `e1b9330` / EXPLORE-01 `4f0d6f4`) The per-screen polish passes; presentation + finding-driven minimal behavior only. **125 Recover:** Posture per-schema table sorts **worst-first** by default (`posture_rows_worst_first/1`: fetch error → backend failures → queue not observed/failing → clean) with a `sm:hidden` "swipe sideways" cue over the `ops-table-scroll` affordance (B1 — usable at 390px); Sync/Drift now `ops_main_width={:wide}` matching every other screen, showcasing the 4-step preflight + drift tables (B6); contract-drift read wired to `ops_loading` by deferring it to a `:run_drift` message (S3, event name unchanged); Failed Sync triage-guidance `ops_disclosure` `open={total == 0}` (expanded on the quiet first-visit, collapsed for a busy operator), stacked code blocks → `space-y-ops-2` (P22), inline `<code>` → `ops_inline_code` (P25); `ops_disclosure` gained an `open` attr. **126 Explore:** Search wired to `ops_loading` by deferring the bounded read to a `:run_search` message + `phx-disable-with` + a state-aware "Run a probe/Running…/Last run loaded" badge (S2); single-index result rows lead with the hit's human field name (P29, `hit_title/2`) not "Hit 1/2"; zero-results is an `ops_empty_state` naming the next action; Playbooks destructive Delete split into its own `ops_action_group tone={:danger}` (P28). The S2/S3 deferred-read loading states are the only behavior change (the loading findings require it); the worst-first sort is the other (B1 requirement). Tests updated for the deferred renders (2 sync-drift, 4 search). Matrix gotcha: the ecommerce dev server does NOT live-reload the `scrypath_ops` path-dep beams mid-run — restart `mix phx.server` to pick up ops LiveView edits before re-shooting. Gates both phases: verify.opsui 129/0, LiveView 129/0, ecommerce compile clean, 40-shot matrix re-captured both themes; B1 (Posture mobile 390) + B6 (Sync/Drift width) visually confirmed; baseline at `.tmp/admin-screenshots/` updated.
 
@@ -80,6 +81,7 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 | Phase 126 P126 | one pass | EXPLORE-01 | 3 files (search/playbook live, 1 test) |
 | Phase 128 P01 | 4min | CONTRAST-HARNESS-01 | 3 files (package.json, package-lock.json, contrast-pairs.mjs) |
 | Phase 128 P02 | 8min | 2 tasks | 3 files |
+| Phase 128 P03 | 15min | 3 tasks | 3 files (admin_contrast_matrix.spec.ts, 128-CONTRAST-REPORT.md, VALIDATION.md) |
 
 ## Decisions
 
