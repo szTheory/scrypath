@@ -21,7 +21,7 @@ jobs:
       version: ${{ steps.resolve-version.outputs.version }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # `mix verify.release_parity` resolves the Hex tarball against git tag
           # `scrypath-v*`, which requires tags to exist in the checkout clone.
