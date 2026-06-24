@@ -267,6 +267,13 @@ Plans:
 2. It honors v1.33's A3 precedent — no per-LiveView-patch re-firing reveals on result lists.
 3. Motion reads "deliberate/infrastructural" in dark and does not regress light; reduced-motion + functional integrity confirmed via Playwright.
 
+**Plans:** 3 plans
+
+Plans:
+- [ ] 133-01-PLAN.md — `.ops-path-*` CSS motion vocabulary + `shimmer` attr on `ops_code_block` + anchor wiring + DESIGN-TOKENS.md docs
+- [ ] 133-02-PLAN.md — static CSS contract test (transform/opacity-only + tokenized <300ms + dual-dark-path) running inside `mix verify.opsui`
+- [ ] 133-03-PLAN.md — focused Playwright proof: reduced-motion + hover-shimmer + active-path + patch-refire, dark AND light, + targeted screenshots
+
 **Status:** Pending
 
 ### Phase 134: Under-iterated surface polish (dual-theme) `[S]`
