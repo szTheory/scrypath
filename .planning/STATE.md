@@ -2,9 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
+current_phase: 133
+current_phase_name: Dark/path motion expression
 status: in_progress
-last_updated: "2026-06-24T00:00:00.000Z"
+last_updated: "2026-06-24T21:21:25.636Z"
 last_activity: 2026-06-24
+last_activity_desc: Phase 133 planning complete
 progress:
   total_phases: 9
   completed_phases: 5
@@ -26,7 +29,7 @@ Phase: 133 (v1.34) — ready to plan
 Plan: Not started (133-CONTEXT.md + 133-DISCUSSION-LOG.md already exist → run `/gsd-plan-phase 133`)
 Status: ▶ Resumed v1.34 Both-Themes Perfection after completing v1.35 brand milestone. Next: Phase 133 (DARKMOTION-01), then 134 (SCREEN-DARK-01), 135 (SHELL-DARK-01), 136 (DUALVERIFY-01).
 Resume: **v1.34 Phase 133** — `.planning/phases/133-dark-path-motion-expression-r-g/133-CONTEXT.md`.
-Last activity: 2026-06-24
+Last activity: 2026-06-24 — Phase 133 planning complete
 
 ## Completed Milestone (interleaved)
 
@@ -43,6 +46,7 @@ Last activity: 2026-06-24
 ## v1.35 Accumulated Context
 
 ### Key Decisions
+
 - **Sequencing:** v1.35 begins at **phase 137**; v1.34 (133–136) paused and resumes after.
 - **Adoption:** build the `brandbook/` package **and** rewire the chosen logo/tokens into ops UI, website, favicon, OG image, README (not artifacts-only).
 - **Palette/type:** open to evidence-based refinement (not locked), but bias-to-keep — the violet+copper palette + Space Grotesk/Inter/IBM Plex Mono stack is already implemented live in `scrypath_ops` (Tailwind v4 + daisyUI) and `website/`; any change must keep the `contrast-pairs.mjs` AA gate green.
@@ -50,6 +54,7 @@ Last activity: 2026-06-24
 - **Logo non-negotiables:** no rectangular `<rect>` cage (both existing logos have one — replace, don't reuse); unified mark+logotype sharing geometry/weight; mark sits close to the type; primary lockup has NO subtitle; ≥1 integrated typemark with the route/node motif worked into the letterforms; show options, owner picks.
 
 ### Active Blockers
+
 - **Phase 138 selection checkpoint:** awaiting owner's choice of primary logo direction before phases 139–143 can finalize the family / tokens / book / adoption.
 
 ---

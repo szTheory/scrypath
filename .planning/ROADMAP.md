@@ -270,7 +270,12 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 133-01-PLAN.md — `.ops-path-*` CSS motion vocabulary + `shimmer` attr on `ops_code_block` + anchor wiring + DESIGN-TOKENS.md docs
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 133-02-PLAN.md — static CSS contract test (transform/opacity-only + tokenized <300ms + dual-dark-path) running inside `mix verify.opsui`
 - [ ] 133-03-PLAN.md — focused Playwright proof: reduced-motion + hover-shimmer + active-path + patch-refire, dark AND light, + targeted screenshots
 
