@@ -1,4 +1,9 @@
-# Scrypath
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brandbook/assets/logo-primary-inverse.svg">
+    <img alt="scrypath — Ecto-native search indexing" src="brandbook/assets/logo-primary.svg" width="300">
+  </picture>
+</p>
 
 [![CI](https://github.com/szTheory/scrypath/actions/workflows/ci.yml/badge.svg)](https://github.com/szTheory/scrypath/actions/workflows/ci.yml) [![Hex.pm](https://img.shields.io/hexpm/v/scrypath.svg)](https://hex.pm/packages/scrypath) [![HexDocs](https://img.shields.io/badge/hex-docs-blue.svg)](https://hexdocs.pm/scrypath) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/szTheory/scrypath/blob/main/LICENSE)
 

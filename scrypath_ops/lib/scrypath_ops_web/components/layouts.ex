@@ -59,7 +59,7 @@ defmodule ScrypathOpsWeb.Layouts do
     <header class="ops-header px-4 py-3 sm:px-6 lg:px-8">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <.link navigate={@mount_path} class="flex w-fit items-center gap-3">
-          <img src={"#{@mount_path}/images/logo.svg"} width="36" height="36" alt="" />
+          <.brand_mark />
           <span>
             <span class="block text-ops-body font-semibold leading-4">ScrypathOps</span>
             <span class="block text-ops-sm text-base-content/60">Ecto-native search operations</span>
@@ -111,7 +111,7 @@ defmodule ScrypathOpsWeb.Layouts do
     <header class="navbar px-4 sm:px-6 lg:px-8">
       <div class="flex-1">
         <a href={"#{@mount_path}"} class="flex-1 flex w-fit items-center gap-2">
-          <img src={"#{@mount_path}/images/logo.svg"} width="36" height="36" alt="" />
+          <.brand_mark />
           <span class="text-ops-body font-semibold">v{Application.spec(:phoenix, :vsn)}</span>
         </a>
       </div>
@@ -142,6 +142,38 @@ defmodule ScrypathOpsWeb.Layouts do
     </main>
 
     <.flash_group flash={@flash} id="flash-group" />
+    """
+  end
+
+  @doc false
+  # Brand mark: the scrypath `s/p` monogram. Inlined (not <img>) so the letters ride
+  # `currentColor` and adapt to light/dark, with the copper "/" as the fixed brand accent —
+  # mirroring the wordmark's "ink letters + copper slash" logic. Decorative; the adjacent
+  # "ScrypathOps" text is the accessible name.
+  attr :class, :string, default: nil
+
+  defp brand_mark(assigns) do
+    ~H"""
+    <svg
+      class={@class}
+      width="36"
+      height="36"
+      viewBox="-21 868 205 205"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M30 1002Q20 1002 14 998Q8 995 5 990Q2 986 2 981H17Q18 983 20 986Q21 988 24 989Q27 990 31 990Q35 990 38 988Q40 987 40 984Q40 982 38 980Q36 978 31 977L24 975Q19 973 15 971Q10 969 7 965Q5 962 5 956Q5 948 11 943Q17 938 28 938Q36 938 41 941Q47 944 49 948Q52 952 52 957H37Q37 953 34 951Q32 949 28 949Q24 949 22 951Q20 952 20 955Q20 958 22 959Q24 961 28 962L36 965Q41 966 45 968Q49 970 52 974Q55 977 55 983Q55 991 48 996Q42 1002 30 1002Z"
+        fill="currentColor"
+      />
+      <path d="M55 1010V1009L83 920H96V921L68 1010Z" fill="#C17A3E" />
+      <path
+        d="M102 1020V940H117V948H119Q121 944 125 941Q129 939 136 939Q144 939 149 943Q155 947 157 954Q160 961 160 970Q160 979 157 986Q154 993 149 997Q144 1001 136 1001Q130 1001 126 999Q122 997 120 993H118V1020ZM131 990Q137 990 140 985Q143 980 143 970Q143 960 140 955Q137 950 131 950Q125 950 121 956Q118 961 118 970Q118 979 121 984Q125 990 131 990Z"
+        fill="currentColor"
+      />
+    </svg>
     """
   end
 

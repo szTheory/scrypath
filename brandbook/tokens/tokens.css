@@ -1,0 +1,106 @@
+/* ============================================================================
+   scrypath design tokens — CSS custom properties (light + dark)
+   Single source mirrored from the live scrypath_ops theme. Prefix: --sp-*
+   Pair with assets/fonts/fonts.css for the brand type. Toggle dark via
+   <html data-theme="dark"> (or the prefers-color-scheme block below).
+   ============================================================================ */
+
+:root {
+  /* ---- primitive palette (theme-independent) ---- */
+  --sp-night:        #0C0F14;
+  --sp-ink:          #141923;
+  --sp-slate:        #2A3446;
+  --sp-mist:         #B3BDCF;
+  --sp-paper:        #F4F1EA;
+  --sp-violet-600:   #5B4AD1;   /* primary action */
+  --sp-violet-500:   #6C5CE7;   /* accent / link / glow */
+  --sp-copper-500:   #C17A3E;   /* warm accent — the logo slash */
+  --sp-copper-600:   #A85D2E;   /* darker copper for light bg */
+  --sp-canvas:       #FAF7F2;
+  --sp-panel:        #FFFDF8;
+  --sp-panel-2:      #F2EEE7;
+
+  /* ---- semantic — LIGHT (default) ---- */
+  --sp-bg:           #FAF7F2;
+  --sp-surface:      #FFFDF8;
+  --sp-surface-2:    #F2EEE7;
+  --sp-border:       #D7D0C4;
+  --sp-text:         #141923;
+  --sp-text-muted:   #475066;
+  --sp-text-soft:    #6B7388;
+  --sp-primary:      #5B4AD1;
+  --sp-primary-2:    #6C5CE7;
+  --sp-on-primary:   #F4F1EA;
+  --sp-accent:       #A85D2E;   /* copper, contrast-safe on light */
+  --sp-accent-2:     #C17A3E;   /* copper — the brand slash */
+  --sp-success:      #4FAE74;
+  --sp-info:         #5CA9E6;
+  --sp-warning:      #D9A441;
+  --sp-danger:       #D96262;
+  --sp-focus:        #6C5CE7;   /* focus ring */
+
+  /* ---- type ---- */
+  --sp-font-display: "Familjen Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sp-font-sans:    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sp-font-mono:    "IBM Plex Mono", ui-monospace, "Cascadia Code", Menlo, monospace;
+  --sp-text-xs:   0.75rem;  --sp-text-sm: 0.875rem; --sp-text-base: 1rem;
+  --sp-text-lg:   1.125rem; --sp-text-xl: 1.25rem;  --sp-text-2xl: 1.5rem;
+  --sp-text-3xl:  2rem;     --sp-text-4xl: 2.5rem;  --sp-text-5xl: 3.5rem;  --sp-text-6xl: 4.5rem;
+  --sp-leading-hero: 1.05;  --sp-leading-head: 1.15; --sp-leading-body: 1.6; --sp-leading-code: 1.5;
+
+  /* ---- spacing (8px base) ---- */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px; --sp-5: 24px;
+  --sp-6: 32px; --sp-7: 40px; --sp-8: 48px; --sp-9: 64px; --sp-10: 80px; --sp-11: 96px;
+
+  /* ---- radius ---- */
+  --sp-radius-input:  12px;
+  --sp-radius-card:   16px;
+  --sp-radius-panel:  24px;
+  --sp-radius-pill:   999px;
+
+  /* ---- shadow (soft, low-spread) ---- */
+  --sp-shadow-sm:  0 1px 2px rgba(20,25,35,.06), 0 1px 1px rgba(20,25,35,.04);
+  --sp-shadow-md:  0 4px 12px rgba(20,25,35,.08), 0 1px 2px rgba(20,25,35,.05);
+  --sp-shadow-lg:  0 12px 32px rgba(20,25,35,.12), 0 2px 6px rgba(20,25,35,.06);
+  --sp-glow:       none;  /* violet glow is dark-theme only */
+
+  /* ---- motion ---- */
+  --sp-dur-fast:  120ms;
+  --sp-dur-base:  180ms;
+  --sp-dur-slow:  240ms;
+  --sp-ease:      cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ---- semantic — DARK ---- */
+[data-theme="dark"] {
+  --sp-bg:         #0C0F14;
+  --sp-surface:    #141923;
+  --sp-surface-2:  #1B2230;   /* the surface-2 ramp the dark-mode milestone fixed */
+  --sp-border:     #2A3446;
+  --sp-text:       #F4F1EA;
+  --sp-text-muted: #B3BDCF;
+  --sp-text-soft:  #7F8AA3;
+  --sp-primary:    #6C5CE7;   /* brighter violet on dark */
+  --sp-primary-2:  #5B4AD1;
+  --sp-on-primary: #F4F1EA;
+  --sp-accent:     #C17A3E;
+  --sp-accent-2:   #E0B487;
+  --sp-focus:      #6C5CE7;
+  --sp-shadow-sm:  0 1px 2px rgba(0,0,0,.5);
+  --sp-shadow-md:  0 6px 18px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.02) inset;
+  --sp-shadow-lg:  0 18px 44px rgba(0,0,0,.6),  0 1px 0 rgba(255,255,255,.03) inset;
+  --sp-glow:       0 0 0 1px rgba(108,92,231,.25), 0 8px 30px rgba(108,92,231,.18);
+}
+
+/* Auto dark when the OS prefers it and no explicit data-theme is set. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --sp-bg:#0C0F14; --sp-surface:#141923; --sp-surface-2:#1B2230; --sp-border:#2A3446;
+    --sp-text:#F4F1EA; --sp-text-muted:#B3BDCF; --sp-text-soft:#7F8AA3;
+    --sp-primary:#6C5CE7; --sp-primary-2:#5B4AD1; --sp-accent:#C17A3E; --sp-accent-2:#E0B487; --sp-focus:#6C5CE7;
+    --sp-shadow-sm:0 1px 2px rgba(0,0,0,.5);
+    --sp-shadow-md:0 6px 18px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.02) inset;
+    --sp-shadow-lg:0 18px 44px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.03) inset;
+    --sp-glow:0 0 0 1px rgba(108,92,231,.25), 0 8px 30px rgba(108,92,231,.18);
+  }
+}

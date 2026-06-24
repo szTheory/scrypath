@@ -8,23 +8,27 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Milestone: v1.34 Both-Themes Perfection — Dark Signature + AA Gate
+## Current Milestone: v1.35 Brand System & Logo Identity
 
-**Goal:** Make the `scrypath_ops` admin UI's existing dark/light/system theming genuinely perfect and brand-expressive in both modes — dark as the signature look, light at parity — backed by a formal automated WCAG AA contrast gate, with continued design-system/IA polish on the surfaces v1.33 under-touched.
+**Goal:** Turn the strategy-only `prompts/scrypath-brand-book.md` into a high-fidelity, repo-safe, **self-contained `brandbook/` package** with a **proper logo system the owner chooses from** at its center, then adopt the chosen identity across the live product. The existing logos are AI-generic and sit in the rectangular `<rect>` cage the owner dislikes — they are replaced, not reused.
 
 **Target features:**
-- A dark-theme brand-expression audit + an automated WCAG AA contrast gate (AAA for body text) over both themes × seed scenarios.
-- Systemic theme fixes: the missing 4-step midnight surface ramp (`#1B2230` surface-2), dark "ambient-shadow-plus-border" depth, a restrained violet "quiet glow," and copper promoted to its branded 5% accent role.
-- A11y contrast remediation so both themes pass AA (body text AAA); restrained brand path-motion expression tuned for dark.
-- Per-screen + shell-chrome dual-theme polish on the under-iterated surfaces (Search result rows, Sync/Drift depth, Playbooks, header nav).
+- A senior-lens **brand pressure-test + cited research + decision-log** (keep-vs-refine palette/type, logo architecture, token expression).
+- A **logo system the owner picks from**: 3–5 distinct transparent/un-caged directions (refined routed monogram, a fully-integrated typemark, a waypoint mark), then the full optimized SVG family (primary no-tagline, inverse, typemark, mark, mono, stacked, optional tagline, favicon, social card) + usage rules.
+- An interoperable **design-tokens package** (JSON/CSS/daisyUI theme) mirroring the live ops tokens, plus **self-contained subset woff2** fonts.
+- A standalone, scoped, light/dark **HTML brand book** + copy-ready examples + accessibility checks.
+- **Adoption** of the chosen logo/tokens across `scrypath_ops` (logo + favicon), `website/` (brand-mark + OG), and the root README — keeping the contrast gate green.
 
 **Locked decisions:**
-- Comprehensive both-themes perfection **+** broad design-system/IA iteration (not just dark plumbing — that already exists and works).
-- Default stays **system-follows-OS** (dark is the signature look, never force-defaulted).
-- **WCAG AA enforced as a hard automated gate in both themes**; body/long-form text targets AAA (advisory report).
-- Keep **Tailwind v4 + daisyUI + `.ops-*`** architecture — no BEM switch, no `--sp-*` rename.
+- New milestone **v1.35** at **phase 137**; **v1.34 (phases 133–136) paused** and resumes after.
+- **Build + adopt** (not artifacts-only): the chosen logo/tokens are wired into ops UI, website, favicon, OG, README.
+- Palette/type are **open to evidence-based refinement** but **bias-to-keep** — they're implemented live; any change keeps the `contrast-pairs.mjs` AA gate green.
+- Fonts shipped as **subset woff2** (SIL OFL, license-clean) so the book is self-contained offline.
+- Logo: **no rectangular cage**, unified mark+logotype, mark close to type, **no subtitle on the primary**, **≥1 integrated typemark**, **owner picks the direction**.
 
-This milestone consciously overrides the documented idle/maintenance posture as an explicit owner-initiated polish wedge, building directly on v1.33. It is UI polish only — Phase 97–99 runtime scope guard still applies. Source plan: `~/.claude/plans/v1-33-admin-ui-deep-tower.md`.
+This is an explicit owner-initiated brand wedge. It is brand/UI work only — Phase 97–99 runtime scope guard still applies. Source plan: `~/.claude/plans/brand-book-pressure-test-scalable-alpaca.md`.
+
+> **Paused:** v1.34 Both-Themes Perfection (phases 128–136) is paused at Phase 133 (5/9 complete). It resumes at `.planning/phases/133-dark-path-motion-expression-r-g/133-CONTEXT.md` after v1.35 ships; any v1.35 brand-token refinement feeds forward into v1.34's remaining dark-polish phases. Source plan: `~/.claude/plans/v1-33-admin-ui-deep-tower.md`.
 
 ## Current Mode: idle release train
 
@@ -201,7 +205,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Planning window
 
-**Active milestone:** v1.34 Both-Themes Perfection — Dark Signature + AA Gate. Phase 132 is complete; Phase 133 (DARKMOTION-01) is next.
+**Active milestone:** v1.35 Brand System & Logo Identity (phases 137–143). Milestone scaffolded; Phase 137 (BRAND-AUDIT-01) + Phase 138 (LOGO-DIRECTIONS-01) under way, blocked at the logo selection checkpoint. **Paused:** v1.34 Both-Themes Perfection (resume at Phase 133, DARKMOTION-01).
 
 ## Requirements
 
@@ -308,4 +312,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-04 — Phase 132 completed; v1.34 ready for Phase 133*
+*Last updated: 2026-06-22 — v1.34 paused at Phase 133; v1.35 Brand System & Logo Identity opened (phases 137–143)*

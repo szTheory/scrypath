@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>scrypath — component sheet (brand example)</title>
+<link rel="icon" href="../assets/favicon.svg">
+<link rel="stylesheet" href="../assets/fonts/fonts.css">
+<link rel="stylesheet" href="../tokens/tokens.css">
+<style>
+*{box-sizing:border-box}body{margin:0;background:var(--sp-bg);color:var(--sp-text);font-family:var(--sp-font-sans);line-height:var(--sp-leading-body)}
+.wrap{max-width:1000px;margin:0 auto;padding:28px 24px 90px}
+.bar{display:flex;align-items:center;gap:16px;margin-bottom:8px}
+.bar img{height:24px}.bar img.dk{display:none}[data-theme=dark] .bar img.lt{display:none}[data-theme=dark] .bar img.dk{display:block}
+.toggle{margin-left:auto;font-family:var(--sp-font-mono);font-size:12px;border:1.5px solid var(--sp-border);background:var(--sp-surface);color:var(--sp-text);border-radius:999px;padding:6px 13px;cursor:pointer}
+h1{font-family:var(--sp-font-display);font-size:26px;letter-spacing:-.02em;margin:14px 0 2px}
+h2{font-family:var(--sp-font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--sp-accent);margin:34px 0 12px}
+.muted{color:var(--sp-text-muted)}
+.panel{background:var(--sp-surface);border:1px solid var(--sp-border);border-radius:var(--sp-radius-card);padding:22px;box-shadow:var(--sp-shadow-sm)}
+.grid{display:grid;gap:16px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:720px){.g2,.g3{grid-template-columns:1fr}}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font-family:var(--sp-font-sans);font-weight:600;font-size:14px;border-radius:var(--sp-radius-input);padding:10px 18px;border:1.5px solid transparent;cursor:pointer;transition:all var(--sp-dur-fast) var(--sp-ease)}
+.btn:focus-visible{outline:2px solid var(--sp-focus);outline-offset:2px}
+.btn-p{background:var(--sp-primary);color:var(--sp-on-primary)}.btn-p:hover{background:var(--sp-primary-2)}
+.btn-g{background:transparent;color:var(--sp-text);border-color:var(--sp-border)}.btn-g:hover{border-color:var(--sp-primary);color:var(--sp-primary)}
+.btn-a{background:var(--sp-accent);color:#fff}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.lbl{font-family:var(--sp-font-mono);font-size:11px;color:var(--sp-text-muted);display:block;margin-bottom:5px}
+.input{font-family:var(--sp-font-sans);font-size:14px;width:100%;padding:10px 13px;border-radius:var(--sp-radius-input);border:1.5px solid var(--sp-border);background:var(--sp-bg);color:var(--sp-text)}
+.input:focus-visible{outline:2px solid var(--sp-focus);outline-offset:1px;border-color:var(--sp-primary)}
+.input.err{border-color:var(--sp-danger)}
+.err-txt{color:var(--sp-danger);font-size:12px;margin-top:5px}
+.badge{font-family:var(--sp-font-mono);font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid var(--sp-border);color:var(--sp-text-muted)}
+.badge.v{color:var(--sp-primary);border-color:color-mix(in srgb,var(--sp-primary) 45%,transparent);background:color-mix(in srgb,var(--sp-primary) 8%,transparent)}
+.badge.ok{color:var(--sp-success);border-color:color-mix(in srgb,var(--sp-success) 45%,transparent)}
+.badge.warn{color:var(--sp-warning);border-color:color-mix(in srgb,var(--sp-warning) 45%,transparent)}
+.badge.err{color:var(--sp-danger);border-color:color-mix(in srgb,var(--sp-danger) 45%,transparent)}
+.alert{border-radius:var(--sp-radius-input);padding:12px 15px;border:1px solid var(--sp-border);border-left:3px solid var(--sp-primary);background:var(--sp-surface-2);font-size:14px;margin-bottom:8px}
+.alert.ok{border-left-color:var(--sp-success)}.alert.warn{border-left-color:var(--sp-warning)}.alert.err{border-left-color:var(--sp-danger)}
+pre.code{font-family:var(--sp-font-mono);font-size:13px;line-height:1.55;background:var(--sp-night);color:#E7E3DA;border-radius:var(--sp-radius-card);padding:16px 18px;overflow:auto;border:1px solid var(--sp-border)}
+.code .cm{color:#7F8AA3}.code .k{color:#C9A2F5}.code .tk{color:var(--sp-accent-2)}.code .st{color:#9FD5A8}
+table.tk{border-collapse:collapse;width:100%;font-size:14px}
+table.tk th,table.tk td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--sp-border)}
+table.tk th{font-family:var(--sp-font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--sp-text-muted)}
+.mono{font-family:var(--sp-font-mono)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--sp-border)}
+.tab{font-size:14px;padding:9px 14px;border-bottom:2px solid transparent;cursor:pointer;color:var(--sp-text-muted)}
+.tab.on{color:var(--sp-primary);border-bottom-color:var(--sp-primary);font-weight:600}
+.empty{text-align:center;padding:34px 16px;color:var(--sp-text-muted)}
+.empty .ic{font-family:var(--sp-font-mono);font-size:24px;color:var(--sp-accent-2);opacity:.7}
+.skel{height:12px;border-radius:6px;background:linear-gradient(90deg,var(--sp-surface-2),var(--sp-border),var(--sp-surface-2));background-size:200% 100%;animation:sh 1.3s linear infinite;margin:8px 0}
+@keyframes sh{to{background-position:-200% 0}}
+.spinner{width:18px;height:18px;border:2.5px solid var(--sp-border);border-top-color:var(--sp-primary);border-radius:50%;animation:sp .7s linear infinite;display:inline-block;vertical-align:-3px}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style></head>
+<body><div class="wrap">
+  <div class="bar"><img class="lt" src="../assets/logo-primary.svg" alt="scrypath"><img class="dk" src="../assets/logo-primary-inverse.svg" alt="scrypath">
+    <button class="toggle" id="t">◐ theme</button></div>
+  <h1>Component sheet</h1>
+  <p class="muted">Every element is driven by <span class="mono">tokens.css</span>. Toggle the theme to verify both modes.</p>
+
+  <h2>Buttons</h2>
+  <div class="panel"><div class="row">
+    <button class="btn btn-p">Index now</button>
+    <button class="btn btn-g">View docs</button>
+    <button class="btn btn-a">Rebuild</button>
+    <button class="btn btn-p" disabled>Indexing…</button>
+    <button class="btn btn-g"><span class="spinner"></span>&nbsp; Working</button>
+  </div></div>
+
+  <h2>Forms</h2>
+  <div class="grid g2">
+    <div class="panel"><label class="lbl" for="a">search query</label>
+      <input id="a" class="input" placeholder="scry &quot;ecto fragment&quot;…">
+      <div class="row" style="margin-top:10px"><span class="badge v">filter: posts</span><span class="badge">limit: 25</span></div></div>
+    <div class="panel"><label class="lbl" for="b">index name</label>
+      <input id="b" class="input err" value="posts!">
+      <div class="err-txt">Index names must be lowercase a–z, 0–9, underscore.</div></div>
+  </div>
+
+  <h2>Badges &amp; status</h2>
+  <div class="panel"><div class="row"><span class="badge v">indexed</span><span class="badge ok">healthy</span><span class="badge warn">drift</span><span class="badge err">failed</span><span class="badge">queued</span></div></div>
+
+  <h2>Alerts</h2>
+  <div class="panel">
+    <div class="alert ok">Reindex complete — <b>42,180</b> documents in 3.2s.</div>
+    <div class="alert">Index <span class="mono">comments</span> is up to date.</div>
+    <div class="alert warn">Index drift detected on <span class="mono">posts</span> — 14 documents stale.</div>
+    <div class="alert err" style="margin-bottom:0">Adapter connection refused (<span class="mono">Postgres</span>).</div>
+  </div>
+
+  <h2>Tabs · table</h2>
+  <div class="panel">
+    <div class="tabs"><div class="tab on">Indexes</div><div class="tab">Queries</div><div class="tab">Settings</div></div>
+    <table class="tk" style="margin-top:6px"><thead><tr><th>index</th><th>documents</th><th>status</th></tr></thead><tbody>
+      <tr><td class="mono">posts</td><td>42,180</td><td><span class="badge ok">healthy</span></td></tr>
+      <tr><td class="mono">comments</td><td>118,902</td><td><span class="badge ok">healthy</span></td></tr>
+      <tr><td class="mono">users</td><td>9,431</td><td><span class="badge warn">reindexing</span></td></tr>
+    </tbody></table>
+  </div>
+
+  <h2>Code</h2>
+  <div class="panel"><pre class="code"><span class="cm"># mix task</span>
+$ mix scry.index <span class="tk">--rebuild</span> posts
+<span class="st">✓</span> indexed 42,180 documents in 3.2s</pre></div>
+
+  <h2>Empty · loading · skeleton</h2>
+  <div class="grid g3">
+    <div class="panel"><div class="empty"><div class="ic">⌕</div><div>No results for <b>“xyzzy”</b>.<br><span class="muted">Try a broader query.</span></div></div></div>
+    <div class="panel"><div class="empty"><span class="spinner"></span><div style="margin-top:10px">Searching indexes…</div></div></div>
+    <div class="panel"><div class="skel" style="width:70%"></div><div class="skel"></div><div class="skel" style="width:85%"></div><div class="skel" style="width:55%"></div></div>
+  </div>
+</div>
+<script>
+document.getElementById('t').onclick=function(){var r=document.documentElement;r.setAttribute('data-theme',r.getAttribute('data-theme')==='dark'?'light':'dark')};
+</script>
+</body></html>
