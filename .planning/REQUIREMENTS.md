@@ -1,67 +1,91 @@
-# Requirements: Scrypath v1.34 Both-Themes Perfection — Dark Signature + AA Gate
+# Requirements: Scrypath v1.35 Brand System & Logo Identity
 
-**Defined:** 2026-06-04
+**Defined:** 2026-06-22
 **Status:** Active
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
+> **Paused milestone:** v1.34 Both-Themes Perfection (phases 128–136) is paused at Phase 133 with 5/9 phases complete. Its requirements are preserved verbatim in the **Appendix** at the bottom of this file for an exact resume after v1.35 ships.
+
 ## Milestone Intent
 
-A deliberate, owner-initiated UI/UX + design-system iteration of the `scrypath_ops` admin/ops console — the **next-level pass** building directly on v1.33's task-first IA, completed token set, and restrained-motion layer. The pivotal framing: **dark/light/system theming already exists and works** (Tailwind v4 + daisyUI two themes, a 3-way System/Light/Dark toggle, a no-flash init script, `localStorage` `phx:theme` persistence, `prefers-color-scheme` following, multi-tab sync, and a 40-shot screenshot matrix that already captures both themes). This milestone is therefore **not** "build dark mode."
+An owner-initiated brand/identity wedge: take `prompts/scrypath-brand-book.md` — a strategically thorough but
+artifact-thin "deep-research" brand doc — and turn it into a **genuinely high-fidelity, implementation-ready,
+repo-safe brand package**, with a **proper logo system the owner chooses from** at its center.
 
-It is: **make both themes genuinely perfect and brand-expressive** — dark as the *signature* look, light at parity — per `prompts/scrypath-brand-book.md` (a "dark-mode-forward" brand: midnight neutrals, violet primary, copper accent, quiet glows, route/path diagrams), **backed by a formal automated WCAG AA contrast gate** (AAA for body text), with continued per-screen and design-system polish on the surfaces v1.33 under-touched.
+The two concrete gaps this milestone closes:
+1. **The logos are AI-generic and caged.** Both `scrypath_ops/priv/static/images/logo.svg` and
+   `website/src/assets/brand-mark.svg` are a "path-S" mark inside a `<rect rx="12">` dark box — exactly the
+   rectangular-background cage the owner dislikes. There is no proper lockup, no integrated typemark, no usage
+   system, no favicon/social family. These are **replaced, not reused**.
+2. **There is no real, self-contained brand book** — the existing `.md` is a strategy doc, not a usable
+   design-system package an engineer can build UI / landing pages / docs from.
 
-This is **not** runtime product breadth. This milestone consciously overrides the documented idle/maintenance posture (`.planning/PROJECT.md`) as an explicit strategic polish wedge, decided by the owner. Evidence is screenshot-backed (v1.33→v1.34 before/after across light/dark/system-dark × mobile/desktop × seed states) plus an automated contrast report.
+The milestone pressure-tests the brand from a senior brand-designer + design-system + a11y + Elixir-OSS lens,
+designs and lets the owner **choose** a logo direction, ships a self-contained `brandbook/` HTML package
+(logos, tokens, subset-woff2 fonts, component examples, usage rules, a11y notes), then **adopts** the chosen
+identity across the live product surfaces.
 
-### The mechanical root cause this milestone fixes (verified in `app.css`)
-The brand book's dark surface ramp has **four** steps — Night `#0C0F14` (bg) → Ink `#141923` (surface) → **surface-2 `#1B2230`** → Slate `#2A3446` (border). The dark daisyUI theme drops `#1B2230` entirely, and its `base-200` (Night) is *darker* than `base-100` (Ink). The `.ops-*` fill recipes build "raised/muted" surfaces by mixing toward `base-200` — tuned for the *light* ramp — so in dark, raised surfaces go **darker and flatter** instead of stepping *up* in elevation. This is the architectural heart of "dark feels like a generic dashboard, not Scrypath." The fix is theme-scoped elevation tokens that leave light pixel-identical while giving dark a true Ink→surface-2 lift.
-
-### Locked design decisions
-- **Scope — comprehensive both-themes perfection + broad iteration.** Dark is the headline; light reaches parity; continue design-system/IA/JTBD polish on v1.33's under-touched surfaces. Not just plumbing (already done).
-- **Default theme — keep system-follows-OS.** Do not force dark on first visit. Dark becomes the most-polished "signature" look, not a forced default. (Honors the brand's dark-forward identity through *craft*, not by overriding the user's OS preference.)
-- **A11y — WCAG AA enforced as a hard automated gate in both themes**; body/long-form text targets AAA (advisory report, not build-fail).
-- **CSS architecture — keep Tailwind v4 + daisyUI + `.ops-*`.** No BEM switch, no `--sp-*` rename. Double down on existing momentum.
-- **Motion — restrained, in service of JTBD.** Honor v1.33's A3 precedent (no per-LiveView-patch re-firing reveals); transform/opacity only, <300ms, reduced-motion-safe, "deliberate not playful."
+### Locked decisions
+- **Sequencing:** new milestone **v1.35** beginning at **phase 137**; v1.34 (133–136) paused, resumes after.
+- **Adoption:** build the `brandbook/` package **and** rewire the chosen logo/tokens into ops UI, website, favicon, OG image, README (not artifacts-only).
+- **Palette/type:** open to **evidence-based refinement** (not locked), but **bias-to-keep** — the violet+copper palette + Space Grotesk / Inter / IBM Plex Mono stack is already implemented live in `scrypath_ops` (Tailwind v4 + daisyUI) and `website/`; any change must keep the `contrast-pairs.mjs` AA gate green and is justified in the decision-log.
+- **Fonts:** check in **subset woff2** (the three families are SIL OFL → embed+subset is license-clean; include OFL files) so the HTML book is self-contained offline.
+- **Logo non-negotiables:** transparent / **no rectangular `<rect>` cage**; unified mark+logotype sharing geometry/weight; mark sits close to the type; **primary lockup has no subtitle** (a tagline lockup is a separate optional file); **≥1 fully-integrated typemark** with the route/node motif worked into the letterforms; **show options, owner picks**.
+- **Repo hygiene:** everything self-contained under `/brandbook/`; SVG/HTML/CSS/JSON/MD first; svgo every SVG; subset fonts; prefer the live HTML over raster screenshots; no build system added for the book; total new brand-asset weight kept small (target < ~400KB).
+- **Scope guard holds:** Phase 97–99 runtime breadth ban is unaffected — this is brand/UI work, not library runtime scope.
 
 ## Requirements
 
-### Audit harness and evidence
+### Pressure-test & research
 
-- [x] **CONTRAST-HARNESS-01**: An automated WCAG contrast gate (`@axe-core/playwright`, cloned from the existing `admin_screenshot_matrix.spec.ts` harness) walks every admin screen across light + dark + **system-dark** × seed scenarios, **fails the build on any AA violation** (4.5:1 text / 3:1 large-text & UI), and reports AAA (7:1) status for body/long-form text as advisory. Re-runnable locally (`npm run test:e2e:admin-contrast` / `make contrast`, plus a fast custom token-pair pre-check) and usable as a phase gate.
-- [x] **DARKAUDIT-01**: Every dark surface is scored against the brand-book dark rules (4-step midnight ramp adherence, 65/20/10/5 neutral/structure/violet/copper ratio, "quiet glow not loud," "faint ambient shadow plus border," restrained path-line glow, AA pass/fail from the contrast harness), producing one ranked, fix-class-tagged backlog (`129-DARK-AUDIT-BACKLOG.md`) with a systemic-vs-per-screen split. The `#1B2230` surface-2 ramp gap is finding #1. Mirrors v1.33's 47-finding audit format.
+- [ ] **BRAND-AUDIT-01**: The current brand book is audited against a full expert-lens decision-point sweep, producing `brandbook/notes/pressure-test.md` (scored dark-spots/footguns across brand strategy, distinctiveness, logo system, color, type, layout, components, voice, OSS DX, Phoenix readiness, repo hygiene), `brandbook/notes/research.md` (cited current references), and `brandbook/notes/decision-log.md` (decision-matrix with explicit ship/reject/defer + confidence for keep-vs-refine palette, keep-vs-refine type, logo architecture, token expression). Default recommendation: keep palette/type, spend creativity on the logo unless a concrete defect is found.
 
-### Design-system tightening (systemic)
+### Logo system
 
-- [x] **DARKTOKEN-01**: The dark theme gains a true 4-step surface ramp (introduce the missing `#1B2230` surface-2 elevation), and the `.ops-*` fill recipes resolve correctly in **both** themes via theme-scoped elevation tokens (no more "muted = darker/flatter" in dark) — with light staying pixel-identical and `DESIGN-TOKENS.md` kept in lockstep.
-- [x] **GLOW-01**: A dark-specific "faint ambient shadow **plus** border" panel recipe gives dark surfaces seated depth, and a tokenized, opt-in, low-spread violet "quiet glow" is available for route/path/diagram lines and key hover states only — never text or background floods. The allowed `linear-gradient(135deg,#5B4AD1,#6C5CE7,#C17A3E)` is reserved for hero highlight lines / diagram emphasis.
-- [x] **COPPER-01**: Copper (secondary) is promoted to its branded 5% role — a `.ops-*` copper accent vocabulary (eyebrow labels, key-callout badges, key-node diagram/route emphasis) usable in both themes, with AA-safe **dark-text-on-copper** pairings. Copper is a brand accent, never a status tone.
-- [x] **A11Y-TOKEN-01**: Muted-text alphas (`.ops-text-meta`, `.ops-trail__crumb`, header nav `/60`, handoff/palette/preflight hints) are re-tuned to clear AA 4.5:1 in both themes; body/long-form text targets AAA — all enforced by CONTRAST-HARNESS-01.
+- [ ] **LOGO-DIRECTIONS-01**: 3–5 genuinely distinct, transparent, un-caged logo directions exist as real SVG (each as icon-only mark, primary horizontal lockup, and small 16/24px size), spanning at least a refined routed monogram, a fully-integrated typemark, and a waypoint/wayfinding mark; `brandbook/notes/logo-options.html` shows them on transparent + light + dark + in-context (favicon, navbar, README header) at real scale; the **owner selects** a primary direction (and optional alt) at an explicit checkpoint, recorded in `brandbook/notes/logo-options.md`.
+- [ ] **LOGO-SYSTEM-01**: From the chosen direction, `brandbook/assets/` holds the full optimized transparent family — `logo-primary.svg` (no tagline), `-primary-inverse`, `-typemark`, `-mark`, `-mark-mono`, `-stacked`, `-with-tagline` (separate/optional), `favicon.svg`, `social-card.svg` (1200×630) — with clear-space, minimum-size, one-color, and misuse rules; every mark is legible at 16px and hero scale; no `<rect>` cage; transparency verified.
 
-### Motion
+### Design system package
 
-- [ ] **DARKMOTION-01**: The restrained motion vocabulary gains the brand book's path-expression patterns where they serve a JTBD (line draw/reveal, node pulse, active-path tracing on the route mark / diagrams, code-block shimmer on hover), expressed through the existing `--duration-ops-*`/`--ease-ops-*` tokens, transform/opacity only, reduced-motion-safe, "deliberate not playful," tuned to read best in dark without breaking light. Honors v1.33's A3 no-re-fire precedent.
+- [ ] **TOKENS-PKG-01**: `brandbook/tokens/{tokens.json, tokens.css, daisyui-theme.example.js}` express primitive + semantic tokens (light + dark, state colors, focus-ring) reconciled with `scrypath_ops/assets/css/DESIGN-TOKENS.md` and the `contrast-pairs.mjs` guard; subset woff2 for the three OFL families land in `brandbook/assets/fonts/` with `@font-face` + OFL license text; any phase-137 refinement is expressed once here as the single source.
+- [ ] **BRANDBOOK-HTML-01**: `brandbook/index.html` is a standalone, responsive, scoped (no-leak) HTML brand book with a light/dark toggle that opens from `file://` and covers strategy/voice, logo system + do/don't, color palette with contrast notes, type scale, spacing/radius/shadow/motion tokens, component examples + states in both modes, microcopy good/bad + error pattern, imagery rules, implementation notes, and license credits; with `brandbook/examples/{components.html, landing-page-section.html, readme-header-example.md}`, `brandbook/README.md`, and `brandbook/notes/accessibility-checks.md`.
 
-### Per-screen and shell (under-iterated surfaces first)
+### Adoption & verification
 
-- [ ] **SCREEN-DARK-01**: The under-iterated surfaces — Search result rows (flagged as lacking separation in dark), Sync/Drift drift-chips/preflight depth, and Playbooks empty/populated — reach dark-signature + light-parity quality (separation, depth, copper/glow accents where earned, full seed-state coverage).
-- [ ] **SHELL-DARK-01**: The shell chrome (header/nav, command palette, theme toggle, flash, `.ops-shell` radial violet wash) is brand-expressive and AA-clean in both themes — the flagged weak header-nav dark contrast is fixed, the `.ops-shell` wash is tuned for dark "quiet glow," and palette/flash adopt the dark ambient-shadow-plus-border recipe.
-
-### Verification
-
-- [ ] **DUALVERIFY-01**: The milestone is proven end-to-end — `mix verify.opsui`, the ScrypathOps LiveView suite, and the mounted ecommerce admin Playwright smoke stay green; CONTRAST-HARNESS-01 passes AA in **both** themes (with the AAA-body report attached); the 40-shot matrix is re-captured with a v1.33→v1.34 before/after gallery (dark-weighted); a milestone audit against this intent is produced; and human UAT passes.
+- [ ] **BRAND-ADOPT-01**: The chosen identity + any token refinement is adopted across the live product — `scrypath_ops` logo + favicon, `website/src/assets/brand-mark.svg` + `og-image.svg`, and the root `README.md` header — with the `contrast-pairs.mjs` AA gate **green** in both themes, `scrypath_ops` assets + `website` rebuilding and rendering correctly in light and dark, and `mix verify.opsui` + design-token/contrast contracts passing.
+- [ ] **BRAND-VERIFY-01**: The milestone is proven end-to-end — the brand book + examples open standalone (fonts offline, light/dark works), every `brandbook/assets/*.svg` is transparent/cage-free/svgo-clean and legible at 16px + hero scale, repo hygiene holds (no unrelated diffs, no binary bloat, weight within budget, fonts subset), and a final report ships with artifact manifest, top decisions, cited research, commands run, and a must/should/nice next-commit plan; human UAT passes.
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Building dark mode from scratch | It already exists and works (two daisyUI themes, 3-way toggle, no-flash init, localStorage persistence, system-following). This milestone *perfects* it, not builds it. |
-| Forcing dark as the first-visit default | Locked decision: default stays system-follows-OS. Dark is the signature look, not an OS-override. |
-| New Scrypath runtime APIs or search capabilities (autocomplete, vector, hybrid, multi-backend) | Phase 97–99 scope guard still applies; v1.34 is UI polish, not runtime breadth. |
-| New admin screens or productizing OPSUI into a commercial admin surface | This re-styles the existing 6 screens; it does not add product surfaces. The admin UI remains a mounted, host-owned operator proof. |
-| Switching CSS architecture (BEM) or renaming tokens to `--sp-*` | Tailwind v4 + daisyUI + `.ops-*` has momentum; double down, do not switch. |
-| A user-customizable / per-org theme editor | Out of this polish pass; theming stays the two brand-defined themes + system. |
-| Promoting `phase105-e2e` or visual-regression to a required CI gate | The new contrast gate is a phase gate this milestone; promoting browser/visual proof to a required *merge* gate still needs an explicit policy change. |
+| Renaming the project / changing the `scrypath` Hex package name | The library is published as `scrypath`; this milestone styles the existing name. Naming-collision nuance is handled by always pairing "Scrypath" with a descriptor, not by a rename. |
+| New Scrypath runtime APIs or search capabilities | Phase 97–99 scope guard still applies; v1.35 is brand/UI work, not runtime breadth. |
+| A user-customizable / per-org theme editor | Theming stays the two brand-defined themes + system. |
+| Wholesale palette/type replacement "to look different" | Refinement is allowed only where the pressure-test finds a concrete defect; gratuitous change causes thrash in the already-built ops UI. Bias-to-keep. |
+| Checking in heavy raster artifacts (large PNG screenshots, font superfamilies) | Repo-size hygiene: the live HTML renders palettes/components; fonts are subset; raster is last-resort only. |
+| Adding a build system / bundler for the brand book | The book is plain standalone HTML/CSS/SVG; no toolchain dependency. |
+| Promoting brand assets to a required CI merge gate | Out of scope; the brand book is a reference + adopted assets, not a new gate. |
 
 ## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| BRAND-AUDIT-01 | Phase 137 | In progress |
+| LOGO-DIRECTIONS-01 | Phase 138 | In progress (awaiting owner pick) |
+| LOGO-SYSTEM-01 | Phase 139 | Pending |
+| TOKENS-PKG-01 | Phase 140 | Pending |
+| BRANDBOOK-HTML-01 | Phase 141 | Pending |
+| BRAND-ADOPT-01 | Phase 142 | Pending |
+| BRAND-VERIFY-01 | Phase 143 | Pending |
+
+---
+
+## Appendix — PAUSED v1.34 Requirements (resume after v1.35)
+
+> Preserved verbatim from the v1.34 milestone (defined 2026-06-04). v1.34 is paused at Phase 133; phases 128–132 are complete, 133–136 pending. Resume at `.planning/phases/133-dark-path-motion-expression-r-g/133-CONTEXT.md`.
+
+**Milestone intent:** Make the `scrypath_ops` admin UI's existing dark/light/system theming genuinely perfect and brand-expressive in both modes (dark signature, light at parity), backed by a formal automated WCAG AA contrast gate (AAA for body text), with continued design-system/IA polish on v1.33's under-touched surfaces. Locked: comprehensive both-themes scope; system-follows-OS default; AA hard gate / AAA-body advisory; keep Tailwind v4 + daisyUI + `.ops-*`.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
@@ -75,3 +99,8 @@ The brand book's dark surface ramp has **four** steps — Night `#0C0F14` (bg) �
 | SCREEN-DARK-01 | Phase 134 | Pending |
 | SHELL-DARK-01 | Phase 135 | Pending |
 | DUALVERIFY-01 | Phase 136 | Pending |
+
+- **DARKMOTION-01** (Phase 133, pending): restrained path-expression motion (line draw/reveal, node pulse, active-path tracing on the route mark/diagrams, code-block shimmer on hover) via existing `--duration-ops-*`/`--ease-ops-*` tokens, transform/opacity only, reduced-motion-safe, tuned for dark without breaking light; honors v1.33's A3 no-re-fire precedent.
+- **SCREEN-DARK-01** (Phase 134, pending): under-iterated surfaces (Search result rows, Sync/Drift drift-chips/preflight depth, Playbooks empty/populated) reach dark-signature + light-parity quality across all seed states.
+- **SHELL-DARK-01** (Phase 135, pending): shell chrome (header/nav, command palette, theme toggle, flash, `.ops-shell` radial violet wash) brand-expressive and AA-clean in both themes; weak header-nav dark contrast fixed; palette/flash adopt the dark ambient-shadow-plus-border recipe.
+- **DUALVERIFY-01** (Phase 136, pending): end-to-end proof — `mix verify.opsui` + ScrypathOps LiveView suite + mounted ecommerce admin Playwright smoke green; CONTRAST-HARNESS-01 AA in both themes with AAA-body report; 40-shot matrix re-captured with a v1.33→v1.34 before/after gallery; milestone audit + human UAT.
