@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.35
-milestone_name: Brand System & Logo Identity
-status: complete
+milestone: v1.34
+milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
+status: in_progress
 last_updated: "2026-06-24T00:00:00.000Z"
 last_activity: 2026-06-24
 progress:
-  total_phases: 7
-  completed_phases: 7
+  total_phases: 9
+  completed_phases: 5
   total_plans: 0
   completed_plans: 0
-  percent: 100
+  percent: 56
 ---
 
 # Project State
@@ -18,25 +18,27 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** v1.35 COMPLETE — resume paused v1.34 at Phase 133.
+**Current Focus:** v1.34 Phase 133 — Dark path-motion expression `[R][G]` (DARKMOTION-01). Ready to plan (CONTEXT + DISCUSSION-LOG exist).
 
 ## Current Position
 
-Phase: 143 (final) — DONE
-Plan: n/a (executed from source plan)
-Status: ✅ v1.35 COMPLETE & verified. Logo direction = **"scry/path" with a copper `/` separator** (direction C; routed-S killed). Full family in `brandbook/assets/`, self-contained HTML brand book (`brandbook/index.html`) with subset-woff2 fonts + tokens, adopted across scrypath_ops (header mark + SVG favicon), website (brand-mark + OG card), and root README. `mix compile` green; contrast gate inputs (app.css) untouched → still green; all logos transparent/no-cage; brandbook 328K (≤400K budget).
-Resume: **v1.34 Phase 133** — `.planning/phases/133-dark-path-motion-expression-r-g/133-CONTEXT.md` (DARKMOTION-01).
+Phase: 133 (v1.34) — ready to plan
+Plan: Not started (133-CONTEXT.md + 133-DISCUSSION-LOG.md already exist → run `/gsd-plan-phase 133`)
+Status: ▶ Resumed v1.34 Both-Themes Perfection after completing v1.35 brand milestone. Next: Phase 133 (DARKMOTION-01), then 134 (SCREEN-DARK-01), 135 (SHELL-DARK-01), 136 (DUALVERIFY-01).
+Resume: **v1.34 Phase 133** — `.planning/phases/133-dark-path-motion-expression-r-g/133-CONTEXT.md`.
 Last activity: 2026-06-24
 
-## Paused Milestone (resume after v1.35)
+## Completed Milestone (interleaved)
 
-**v1.34 Both-Themes Perfection — Dark Signature + AA Gate** (phases 128–136) is **PAUSED**, not abandoned, to make room for the owner-prioritized v1.35 brand milestone ("brand book this week"). 5/9 phases complete (128–132); **phases 133–136 remain pending**.
-- **Resume v1.34 at:** Phase 133 — `.planning/phases/133-dark-path-motion-expression-r-g/133-CONTEXT.md` (DARKMOTION-01, ready to plan), then 134 (SCREEN-DARK-01), 135 (SHELL-DARK-01), 136 (DUALVERIFY-01).
-- v1.34's full accumulated context is retained below under **"Accumulated Context"** for an exact resume. Note: any brand-token refinement that ships in v1.35 Phase 142 feeds forward into v1.34's remaining dark-polish phases.
+**v1.35 Brand System & Logo Identity** (phases 137–143) — ✅ **COMPLETE 2026-06-24, committed `fcb8fc7`.** Built **directly (not through GSD plan/execute artifacts)**, so phase dirs 138–143 and PLAN/SUMMARY files do not exist on disk and `roadmap.analyze` will show v1.35 at 0% — this is a known bookkeeping gap, NOT incomplete work. Delivered: logo direction "C" = **"scry/path" with a copper `/` separator** (routed-S killed); full family in `brandbook/assets/`; self-contained HTML brand book (`brandbook/index.html`) with subset-woff2 fonts + tokens; adopted across scrypath_ops (header mark + SVG favicon), website (brand-mark + OG card), and root README. Palette/type unchanged → contrast gate stayed green; `mix compile` green; all logos transparent/no-cage; brandbook 328K. Brand-token refinement note: none shipped, so v1.34's remaining dark-polish phases inherit the existing tokens unchanged.
 
 ## Current Milestone
 
-**v1.35 Brand System & Logo Identity** (phases 137–143). Pressure-test the existing `prompts/scrypath-brand-book.md` from a senior brand-designer + design-system + a11y + Elixir-OSS lens, design a **proper logo system the owner chooses from** (transparent/no rectangular cage, unified mark+logotype, ≥1 fully-integrated typemark, no subtitle on the primary lockup), and ship a high-fidelity, repo-safe, **self-contained `brandbook/` HTML package** (logos, tokens, subset-woff2 fonts, component examples, usage rules, a11y notes) — then **adopt** the chosen identity across the live product (scrypath_ops logo+favicon, website brand-mark+OG, README). Palette/type are open to evidence-based refinement but bias-to-keep to avoid product thrash; the `scrypath_ops` AA contrast gate must stay green. Owner-initiated wedge; library runtime scope guard (Phase 97) still holds. Source plan: `~/.claude/plans/brand-book-pressure-test-scalable-alpaca.md`.
+**v1.34 Both-Themes Perfection — Dark Signature + AA Gate** (phases 128–136). 5/9 complete (128–132); **resumed at Phase 133** (then 134 SCREEN-DARK-01, 135 SHELL-DARK-01, 136 DUALVERIFY-01). Next-level UI/UX + perfect BOTH light & dark themes with a WCAG AA hard gate. Dark mode already EXISTS — polish/expression, do not rebuild. v1.34's accumulated context is retained below. The interleaved v1.35 brand milestone is recorded above under "Completed Milestone".
+
+## v1.35 Brand Milestone Context (archived)
+
+**v1.35 Brand System & Logo Identity** (phases 137–143) — see "Completed Milestone" above. Pressure-test the existing `prompts/scrypath-brand-book.md` from a senior brand-designer + design-system + a11y + Elixir-OSS lens, design a **proper logo system the owner chooses from** (transparent/no rectangular cage, unified mark+logotype, ≥1 fully-integrated typemark, no subtitle on the primary lockup), and ship a high-fidelity, repo-safe, **self-contained `brandbook/` HTML package** (logos, tokens, subset-woff2 fonts, component examples, usage rules, a11y notes) — then **adopt** the chosen identity across the live product (scrypath_ops logo+favicon, website brand-mark+OG, README). Palette/type are open to evidence-based refinement but bias-to-keep to avoid product thrash; the `scrypath_ops` AA contrast gate must stay green. Owner-initiated wedge; library runtime scope guard (Phase 97) still holds. Source plan: `~/.claude/plans/brand-book-pressure-test-scalable-alpaca.md`.
 
 ## v1.35 Accumulated Context
 
