@@ -8,10 +8,10 @@
 - ✅ **v1.31 Adoption Evidence Demo Hardening** — Phases 113-115 (UAT passed 2026-06-01)
 - ✅ **v1.32 Admin UI/UX Design System Cleanup** — Phases 116-118 (shipped 2026-06-01) — see `milestones/v1.32-ROADMAP.md`
 - ✅ **v1.33 Admin UI Insane Polish** — Phases 119-127 (shipped 2026-06-03) — see `milestones/v1.33-ROADMAP.md`
-- ⏸️ **v1.34 Both-Themes Perfection — Dark Signature + AA Gate** — Phases 128-136 (**paused** 2026-06-22 at Phase 133; 5/9 complete) — resumes after v1.35
-- 🔨 **v1.35 Brand System & Logo Identity** — Phases 137-143 (active, defined 2026-06-22)
+- 🔨 **v1.34 Both-Themes Perfection — Dark Signature + AA Gate** — Phases 128-136 (**active**; resumed 2026-06-24 at Phase 133; 5/9 complete)
+- ✅ **v1.35 Brand System & Logo Identity** — Phases 137-143 (**complete** 2026-06-24, commit `fcb8fc7`; shipped directly, not via GSD plan/execute artifacts — `roadmap.analyze` shows 0% by design, see STATE.md "Completed Milestone")
 
-## Phases — v1.35 Brand System & Logo Identity (ACTIVE)
+## Phases — v1.35 Brand System & Logo Identity (COMPLETE — shipped 2026-06-24)
 
 **Milestone v1.35 — Brand System & Logo Identity (phases 137–143).** Pressure-test the existing
 `prompts/scrypath-brand-book.md` from a senior brand-designer + design-system + a11y + Elixir-OSS lens,
@@ -107,7 +107,7 @@ evidence-based refinement but bias-to-keep (they're implemented live in `scrypat
 2. Repo hygiene: only intended files changed, no unrelated diffs, no binary bloat, total new brand-asset weight within budget (target < ~400KB), fonts subset.
 3. A final report ships with artifact manifest, top decisions (ship/reject/defer), cited research, commands run, and a must/should/nice next-commit plan; human UAT passes.
 
-## Phases — v1.34 Both-Themes Perfection (PAUSED at Phase 133)
+## Phases — v1.34 Both-Themes Perfection (ACTIVE — resumed at Phase 133)
 
 **Milestone v1.34 — Both-Themes Perfection: Dark Signature + AA Gate (phases 128–136).** Next-level UI/UX +
 design-system iteration of the `scrypath_ops` admin console, building on v1.33. Dark/light/system theming
