@@ -1219,6 +1219,88 @@
     font-size: var(--text-ops-xs);
     font-weight: 650;
   }
+
+  /* ============================================================
+     Phase 133 — .ops-path-* path-motion vocabulary (DARKMOTION-01)
+     A small, named, opt-in path-expression system applied ONLY to
+     stable JTBD anchors. Reuses existing --duration-ops-*/--ease-ops-*
+     and --shadow-ops-glow[-copper] tokens — no new literals, no new
+     keyframes, no @keyframes-on-mount, no nth-child stagger.
+     Transform/opacity/box-shadow end states only (A3 patch-safe).
+     ============================================================ */
+
+  /* 1. Path line-draw — a state-driven pseudo-element copying the
+     `.ops-disclosure summary::before` precedent (transition, NOT animation).
+     Rests collapsed+invisible; draws to full width ONLY on :hover or on a
+     persistent server-state class. The route/path underline of an anchor. */
+  .ops-path-trace {
+    position: relative;
+  }
+
+  .ops-path-trace::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    display: block;
+    border-bottom: 2px solid transparent;
+    border-image: linear-gradient(90deg, var(--color-primary), var(--color-secondary)) 1;
+    transform: scaleX(0);
+    transform-origin: left center;
+    opacity: 0;
+    transition:
+      transform var(--duration-ops-fast) var(--ease-ops-standard),
+      opacity var(--duration-ops-fast) var(--ease-ops-standard);
+  }
+
+  /* Visible end state — fires on hover OR on a persistent active/current state.
+     Never on mount/insert; never via an nth-child stagger. */
+  .ops-path-trace:hover::after,
+  .ops-path-trace.ops-path-trace--active::after,
+  .ops-path-trace[aria-current="page"]::after {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+
+  /* 2. Active-path node glow — quiet violet route/path emphasis via the
+     existing --shadow-ops-glow token (none in light, faint violet in dark),
+     copying the `.ops-glow` precedent. Only ever applied to active path/key
+     node anchors, never to text/resting panels/backgrounds. */
+  .ops-path-node {
+    box-shadow: var(--shadow-ops-glow);
+    transition: box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
+  }
+
+  /* Key node — copper accent, wires the declared-but-unused `.ops-copper-node`
+     (Phase 133 is its first consumer) to the copper glow token. */
+  .ops-path-node--copper {
+    box-shadow: var(--shadow-ops-glow-copper);
+    transition: box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
+  }
+
+  /* 3. Code-block hover glint — opt-in only (`shimmer={true}` on ops_code_block).
+     A pseudo-element border overlay using opacity ONLY, on :hover, gated to
+     hover-capable pointers. No infinite loop, no mount animation, no
+     background-position sweep. Default code blocks (no modifier) stay inert. */
+  .ops-code-block--shimmer {
+    position: relative;
+  }
+
+  @media (hover: hover) {
+    .ops-code-block--shimmer::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-primary) 35%, transparent);
+      opacity: 0;
+      transition: opacity var(--duration-ops-fast) var(--ease-ops-standard);
+    }
+
+    .ops-code-block--shimmer:hover::after {
+      opacity: 1;
+    }
+  }
 }
 
 /* Phase 132: selected/text-bearing primary fills use the AA-safe violet only when
@@ -1402,6 +1484,20 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
 @media (prefers-color-scheme: dark) {
   html:not([data-theme="light"]) .ops-nav-item-active {
     box-shadow: var(--shadow-ops-surface), var(--shadow-ops-glow);
+  }
+}
+
+/* Phase 133 (DARKMOTION-01): active Playbook item carries the active-path node mark.
+   Compose the violet glow onto the existing inset ring (Precedent D) so the
+   active path node lifts in dark while keeping its light ring byte-unchanged.
+   Keyed off the persistent .ops-object-item-active server-state class — patch-safe,
+   no new attr, no @keyframes. Glow is route/path emphasis, never a decorative loop. */
+[data-theme="dark"] .ops-object-item-active {
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-primary) 20%, transparent), var(--shadow-ops-glow);
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .ops-object-item-active {
+    box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-primary) 20%, transparent), var(--shadow-ops-glow);
   }
 }
 
