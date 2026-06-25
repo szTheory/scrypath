@@ -8,7 +8,7 @@
 - ✅ **v1.31 Adoption Evidence Demo Hardening** — Phases 113-115 (UAT passed 2026-06-01)
 - ✅ **v1.32 Admin UI/UX Design System Cleanup** — Phases 116-118 (shipped 2026-06-01) — see `milestones/v1.32-ROADMAP.md`
 - ✅ **v1.33 Admin UI Insane Polish** — Phases 119-127 (shipped 2026-06-03) — see `milestones/v1.33-ROADMAP.md`
-- 🔨 **v1.34 Both-Themes Perfection — Dark Signature + AA Gate** — Phases 128-136 (**active**; resumed 2026-06-24 at Phase 133; 6/9 complete — Phase 133 ready for verification)
+- 🔨 **v1.34 Both-Themes Perfection — Dark Signature + AA Gate** — Phases 128-136 (**active**; Phases 128–133 complete & verified, 6/9; next Phase 134 SCREEN-DARK-01)
 - ✅ **v1.35 Brand System & Logo Identity** — Phases 137-143 (**complete** 2026-06-24, commit `fcb8fc7`; shipped directly, not via GSD plan/execute artifacts — `roadmap.analyze` shows 0% by design, see STATE.md "Completed Milestone")
 
 ## Phases — v1.35 Brand System & Logo Identity (COMPLETE — shipped 2026-06-24)
@@ -107,7 +107,7 @@ evidence-based refinement but bias-to-keep (they're implemented live in `scrypat
 2. Repo hygiene: only intended files changed, no unrelated diffs, no binary bloat, total new brand-asset weight within budget (target < ~400KB), fonts subset.
 3. A final report ships with artifact manifest, top decisions (ship/reject/defer), cited research, commands run, and a must/should/nice next-commit plan; human UAT passes.
 
-## Phases — v1.34 Both-Themes Perfection (ACTIVE — resumed at Phase 133)
+## Phases — v1.34 Both-Themes Perfection (ACTIVE — 128–133 complete; next Phase 134)
 
 **Milestone v1.34 — Both-Themes Perfection: Dark Signature + AA Gate (phases 128–136).** Next-level UI/UX +
 design-system iteration of the `scrypath_ops` admin console, building on v1.33. Dark/light/system theming
@@ -349,31 +349,31 @@ Plans:
 
 **Coverage:** 7/7 requirements mapped across 7 phases.
 
-## Progress — v1.34 (paused at Phase 133)
+## Progress — v1.34 (active — Phases 128–133 complete)
 
 | Phase | Requirements | Status |
 |-------|--------------|--------|
-| 128 Contrast gate harness + dark seed coverage | CONTRAST-HARNESS-01 | Pending |
-| 129 Dark brand-expression audit | DARKAUDIT-01 | Pending |
-| 130 Dark surface ramp + depth tokens | DARKTOKEN-01 | Pending |
-| 131 Glow + dark shadow + copper system | GLOW-01, COPPER-01 | Pending |
+| 128 Contrast gate harness + dark seed coverage | CONTRAST-HARNESS-01 | Complete |
+| 129 Dark brand-expression audit | DARKAUDIT-01 | Complete |
+| 130 Dark surface ramp + depth tokens | DARKTOKEN-01 | Complete |
+| 131 Glow + dark shadow + copper system | GLOW-01, COPPER-01 | Complete |
 | 132 A11y contrast remediation (hard gate) | A11Y-TOKEN-01 | Complete |
-| 133 Dark/path motion expression | DARKMOTION-01 | Pending |
+| 133 Dark/path motion expression | DARKMOTION-01 | Complete |
 | 134 Under-iterated surface polish | SCREEN-DARK-01 | Pending |
 | 135 Shell chrome polish | SHELL-DARK-01 | Pending |
 | 136 Milestone verification & UAT | DUALVERIFY-01 | Pending |
 
-## Requirement Coverage — v1.34 (paused)
+## Requirement Coverage — v1.34 (active)
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CONTRAST-HARNESS-01 | Phase 128 | Pending |
-| DARKAUDIT-01 | Phase 129 | Pending |
+| CONTRAST-HARNESS-01 | Phase 128 | Complete |
+| DARKAUDIT-01 | Phase 129 | Complete |
 | DARKTOKEN-01 | Phase 130 | Complete |
 | GLOW-01 | Phase 131 | Complete |
 | COPPER-01 | Phase 131 | Complete |
 | A11Y-TOKEN-01 | Phase 132 | Complete |
-| DARKMOTION-01 | Phase 133 | Pending |
+| DARKMOTION-01 | Phase 133 | Complete |
 | SCREEN-DARK-01 | Phase 134 | Pending |
 | SHELL-DARK-01 | Phase 135 | Pending |
 | DUALVERIFY-01 | Phase 136 | Pending |
@@ -406,6 +406,7 @@ is blocked at the **Phase 138 selection checkpoint** awaiting the owner's choice
 After the pick: 139 finalize the logo family → 140 tokens+fonts → 141 the HTML brand book → 142 adopt across
 product → 143 verify/UAT. Source plan: `~/.claude/plans/brand-book-pressure-test-scalable-alpaca.md`.
 
-**Paused: milestone v1.34 (phases 128–136), resume at Phase 133 (DARKMOTION-01)** —
-`.planning/phases/133-dark-path-motion-expression-r-g/133-CONTEXT.md` — once v1.35 ships. Any v1.35 brand-token
-refinement feeds forward into v1.34's remaining dark-polish phases (133–135).
+**Resumed & advanced: milestone v1.34 (phases 128–136).** v1.35 shipped 2026-06-24; v1.34 resumed and Phases
+128–133 are now complete & verified (Phase 133 DARKMOTION-01 verification fully automated, 0 human UAT, 2026-06-25).
+**Next: Phase 134 (SCREEN-DARK-01).** No v1.35 brand-token refinement shipped, so the remaining dark-polish phases
+(134–135) inherit the existing tokens unchanged.
