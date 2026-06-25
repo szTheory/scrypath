@@ -267,7 +267,7 @@ Plans:
 2. It honors v1.33's A3 precedent — no per-LiveView-patch re-firing reveals on result lists.
 3. Motion reads "deliberate/infrastructural" in dark and does not regress light; reduced-motion + functional integrity confirmed via Playwright.
 
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 **Wave 1**
@@ -276,7 +276,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 133-02-PLAN.md — static CSS contract test (transform/opacity-only + tokenized <300ms + dual-dark-path) running inside `mix verify.opsui`
+- [x] 133-02-PLAN.md — static CSS contract test (transform/opacity-only + tokenized <300ms + dual-dark-path) running inside `mix verify.opsui`
 - [ ] 133-03-PLAN.md — focused Playwright proof: reduced-motion + hover-shimmer + active-path + patch-refire, dark AND light, + targeted screenshots
 
 **Status:** Pending
