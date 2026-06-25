@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
+status: executing
 current_phase: 133
 current_phase_name: dark-path-motion-expression-r-g
-status: executing
-last_updated: "2026-06-25T02:20:21.103Z"
-last_activity: 2026-06-25
-last_activity_desc: Completed 133-01-PLAN.md (.ops-path-* motion vocabulary)
+last_updated: "2026-06-25T02:27:49.951Z"
+last_activity: 2026-06-25 — Completed 133-02-PLAN.md (motion-discipline static CSS contract)
+last_activity_desc: Completed 133-02-PLAN.md (motion-discipline static CSS contract)
 progress:
   total_phases: 9
   completed_phases: 5
   total_plans: 17
-  completed_plans: 15
+  completed_plans: 16
   percent: 56
 ---
 
@@ -26,10 +26,10 @@ progress:
 ## Current Position
 
 Phase: 133 (dark-path-motion-expression-r-g) — EXECUTING
-Plan: 2 of 3
-Status: Plan 01 complete — ready to execute Plan 02
-Resume: **v1.34 Phase 133** — `.planning/phases/133-dark-path-motion-expression-r-g/133-02-PLAN.md`.
-Last activity: 2026-06-25 — Completed 133-01-PLAN.md (.ops-path-* motion vocabulary)
+Plan: 3 of 3
+Status: Plan 02 complete — ready to execute Plan 03
+Resume: **v1.34 Phase 133** — `.planning/phases/133-dark-path-motion-expression-r-g/133-03-PLAN.md`.
+Last activity: 2026-06-25 — Completed 133-02-PLAN.md (motion-discipline static CSS contract)
 
 ## Completed Milestone (interleaved)
 
@@ -125,6 +125,7 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 | Phase 132 P01 | ~6min | 3 tasks | 4 files |
 | Phase 132 P02 | ~10min | 2 tasks | 2 files |
 | Phase 133 P01 | ~12min | 3 tasks | 4 files |
+| Phase 133 P02 | ~2min | 1 tasks | 1 files |
 
 ## Decisions
 
@@ -143,3 +144,4 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 - [Phase 132 Plan 02]: Hard-gate evidence is attached in `132-CONTRAST-REPORT.md`: rebuilt assets, `mix verify.opsui`, fast token checker, Playwright matrix, and light baseline recapture all passed; AA failures are zero for light, dark, and system-dark.
 - [Phase 132 Plan 02]: AAA body/long-form findings remain advisory/report-only. The browser proof recorded 12 empty-scenario advisory findings at 6.76:1 vs target 7, and those findings did not affect exit status.
 - [Phase 132 Plan 02]: The intentional light-token visual change is accepted by recapturing the local light baseline; generated `test-results/`, `.tmp/`, and untracked `scrypath_ops/priv/static/**` evidence artifacts stay out of git.
+- [Phase ?]: (Phase 133-02) Motion-discipline self-enforcing: ScrypathOpsWeb.MotionContractTest statically asserts transform/opacity/box-shadow-only + tokenized <300ms + dual-dark-path over .ops-path-*, inside mix verify.opsui; inset is the sanctioned static alternative to banned width/height/top/left.

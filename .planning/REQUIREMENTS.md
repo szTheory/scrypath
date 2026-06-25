@@ -95,7 +95,7 @@ identity across the live product surfaces.
 | GLOW-01 | Phase 131 | Complete |
 | COPPER-01 | Phase 131 | Complete |
 | A11Y-TOKEN-01 | Phase 132 | Complete |
-| DARKMOTION-01 | Phase 133 | Pending |
+| DARKMOTION-01 | Phase 133 | Complete |
 | SCREEN-DARK-01 | Phase 134 | Pending |
 | SHELL-DARK-01 | Phase 135 | Pending |
 | DUALVERIFY-01 | Phase 136 | Pending |
