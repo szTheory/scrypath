@@ -193,6 +193,28 @@ async function runningKeyframeAnimationCount(page: Page, selector: string): Prom
   }, selector);
 }
 
+// Glow probes (NEW — the deterministic replacement for the former subjective
+// "deliberate in dark / no light regression" human read, D-02). The dual-dark glow lives
+// in one token, `--shadow-ops-glow`: the `none` no-op in light, a faint violet aura
+// (rgba(108,92,231,0.30)) in dark + system-dark. `glowBoxShadow` reads the anchor's
+// composited box-shadow so we can prove the glow is actually WIRED onto the element (not
+// just that the token exists); `glowToken` reads the token itself as a cheap invariant.
+const GLOW_RGB = "108, 92, 231"; // getComputedStyle resolves rgba(108,92,231,…) with this triplet
+
+async function glowBoxShadow(page: Page, selector: string): Promise<string> {
+  return page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    if (!el) throw new Error(`glow probe: element not found for ${sel}`);
+    return getComputedStyle(el).boxShadow;
+  }, selector);
+}
+
+async function glowToken(page: Page): Promise<string> {
+  return page.evaluate(() =>
+    getComputedStyle(document.documentElement).getPropertyValue("--shadow-ops-glow").trim()
+  );
+}
+
 // ── Spec ─────────────────────────────────────────────────────────────────────
 
 test.describe("admin path motion — DARKMOTION-01", () => {
@@ -223,6 +245,20 @@ test.describe("admin path motion — DARKMOTION-01", () => {
         // Reduced-motion: the card's own transition (box-shadow/glow settle) is neutralized.
         const dur = await maxMotionDurationMs(page, '[data-testid="intent-incident"]');
         expect(dur, `recommended card motion duration under reduce (${theme})`).toBeLessThanOrEqual(0.02);
+
+        // Dark expression present / light unchanged — the deterministic replacement for the
+        // former subjective "deliberate in dark, no light regression" human read (D-02). The
+        // glow is an end-state (box-shadow), so it is present even under reduced motion; it
+        // just snaps in instead of fading. Token invariant first, then the element wiring.
+        const token = await glowToken(page);
+        const cardGlow = await glowBoxShadow(page, '[data-testid="intent-incident"]');
+        if (theme === "light") {
+          expect(token, "light --shadow-ops-glow must be the `none` no-op").toBe("none");
+          expect(cardGlow, `recommended card must carry NO violet glow in ${theme} (light regression guard)`).not.toContain(GLOW_RGB);
+        } else {
+          expect(token, `${theme} --shadow-ops-glow must resolve to a real aura, not none`).not.toBe("none");
+          expect(cardGlow, `recommended card must carry the violet glow in ${theme}`).toContain(GLOW_RGB);
+        }
 
         await snap(page, `recommended-card--${theme}--reduced-motion`);
       } finally {
@@ -339,6 +375,17 @@ test.describe("admin path motion — DARKMOTION-01", () => {
           await runningKeyframeAnimationCount(page, ".ops-object-item-active"),
           "running animations on active playbook item A"
         ).toBe(0);
+
+        // Dark expression present / light unchanged on the active-path anchor (D-02): the
+        // active-item glow carries --shadow-ops-glow only in dark/system-dark. Deterministic
+        // proof of the same "no spurious glow in light" claim that was a human read.
+        const activeGlow = await glowBoxShadow(page, ".ops-object-item-active");
+        if (theme === "light") {
+          expect(activeGlow, "active playbook item must carry NO violet glow in light").not.toContain(GLOW_RGB);
+        } else {
+          expect(activeGlow, `active playbook item must carry the violet glow in ${theme}`).toContain(GLOW_RGB);
+        }
+
         await snap(page, `playbook-active-A--${theme}`);
 
         // Select playbook B — the active marker moves (push_patch re-render). Assert no

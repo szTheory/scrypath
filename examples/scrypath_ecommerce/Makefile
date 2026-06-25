@@ -25,7 +25,7 @@ ADMIN_SCREENSHOT_DIR ?= test-results/admin-screenshots
 CONTRAST_REPORT_DIR  ?= test-results/contrast
 
 .DEFAULT_GOAL := help
-.PHONY: help dev infra infra-pg up down reset seed screenshots screenshots-matrix contrast contrast-matrix logs ps
+.PHONY: help dev infra infra-pg up down reset seed screenshots screenshots-matrix contrast contrast-matrix verify-path-motion logs ps
 
 help: ## List targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -78,6 +78,27 @@ contrast-matrix: ## Run the full axe contrast matrix (browser required — serve
 	@CONTRAST_REPORT_DIR=$${CONTRAST_REPORT_DIR:-$(CONTRAST_REPORT_DIR)} \
 	  PLAYWRIGHT_BASE_URL=http://127.0.0.1:$(WEB_PORT) \
 	  npm run test:e2e:admin-contrast
+
+verify-path-motion: ## One-command path-motion proof: boot test stack, run spec, tear down (no human UAT)
+	@echo "Booting containerized test stack on http://127.0.0.1:$(WEB_PORT) (Playwright/CI shape)..."
+	$(COMPOSE) up --build -d
+	@echo "Waiting for app readiness on :$(WEB_PORT)..."
+	@for _ in $$(seq 1 120); do \
+	  if curl --silent --fail "http://127.0.0.1:$(WEB_PORT)" >/dev/null; then break; fi; \
+	  sleep 1; \
+	done
+	@curl --silent --fail "http://127.0.0.1:$(WEB_PORT)" >/dev/null \
+	  || { echo "App failed to become ready on :$(WEB_PORT)"; $(COMPOSE) logs web | tail -n 80; $(COMPOSE) down; exit 1; }
+	@# Warm the route under test + the seed endpoint: MIX_ENV=test compiles routes lazily, so
+	@# the very first request after boot can hang up the socket before Playwright's first seed.
+	@curl --silent --max-time 30 "http://127.0.0.1:$(WEB_PORT)/admin/search" >/dev/null 2>&1 || true
+	@echo "Running admin path-motion proof..."
+	@# retries=1 mirrors CI (playwright.config retries: CI?1:0) so a one-off cold-start flake
+	@# is absorbed rather than failing the proof.
+	@PLAYWRIGHT_BASE_URL=http://127.0.0.1:$(WEB_PORT) npm run test:e2e:path-motion -- --retries=1; \
+	  STATUS=$$?; \
+	  $(COMPOSE) down; \
+	  exit $$STATUS
 
 logs: ## Tail infra logs
 	$(COMPOSE_DEV) logs -f
