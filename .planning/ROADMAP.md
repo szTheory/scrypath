@@ -267,12 +267,12 @@ Plans:
 2. It honors v1.33's A3 precedent — no per-LiveView-patch re-firing reveals on result lists.
 3. Motion reads "deliberate/infrastructural" in dark and does not regress light; reduced-motion + functional integrity confirmed via Playwright.
 
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 133-01-PLAN.md — `.ops-path-*` CSS motion vocabulary + `shimmer` attr on `ops_code_block` + anchor wiring + DESIGN-TOKENS.md docs
+- [x] 133-01-PLAN.md — `.ops-path-*` CSS motion vocabulary + `shimmer` attr on `ops_code_block` + anchor wiring + DESIGN-TOKENS.md docs
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
