@@ -150,7 +150,7 @@ defmodule ScrypathOpsWeb.Layouts do
   # `currentColor` and adapt to light/dark, with the copper "/" as the fixed brand accent —
   # mirroring the wordmark's "ink letters + copper slash" logic. Decorative; the adjacent
   # "ScrypathOps" text is the accessible name.
-  attr :class, :string, default: nil
+  attr(:class, :string, default: nil)
 
   defp brand_mark(assigns) do
     ~H"""

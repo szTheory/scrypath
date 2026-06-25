@@ -104,11 +104,15 @@ defmodule ScrypathOpsWeb.MotionContractTest do
 
     assert missing_token == [],
            "Every path-motion transition/animation must reference a --duration-ops-* token.\n" <>
-             Enum.map_join(missing_token, "\n", fn {sel, kind, v} -> "  #{kind}: #{v}  in  #{sel}" end)
+             Enum.map_join(missing_token, "\n", fn {sel, kind, v} ->
+               "  #{kind}: #{v}  in  #{sel}"
+             end)
 
     assert raw_literal == [],
            "Path-motion durations must be --duration-ops-* tokens (all ≤240ms), not raw literals.\n" <>
-             Enum.map_join(raw_literal, "\n", fn {sel, kind, v} -> "  #{kind}: #{v}  in  #{sel}" end)
+             Enum.map_join(raw_literal, "\n", fn {sel, kind, v} ->
+               "  #{kind}: #{v}  in  #{sel}"
+             end)
   end
 
   test "every dark-only path glow end state is mirrored in both dark paths" do
