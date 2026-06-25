@@ -100,7 +100,7 @@ identity across the live product surfaces.
 | SHELL-DARK-01 | Phase 135 | Pending |
 | DUALVERIFY-01 | Phase 136 | Pending |
 
-- **DARKMOTION-01** (Phase 133, pending): restrained path-expression motion (line draw/reveal, node pulse, active-path tracing on the route mark/diagrams, code-block shimmer on hover) via existing `--duration-ops-*`/`--ease-ops-*` tokens, transform/opacity only, reduced-motion-safe, tuned for dark without breaking light; honors v1.33's A3 no-re-fire precedent.
+- **DARKMOTION-01** (Phase 133, complete): restrained path-expression motion (line draw/reveal, node pulse, active-path tracing on the route mark/diagrams, code-block shimmer on hover) via existing `--duration-ops-*`/`--ease-ops-*` tokens, transform/opacity only, reduced-motion-safe, tuned for dark without breaking light; honors v1.33's A3 no-re-fire precedent.
 - **SCREEN-DARK-01** (Phase 134, pending): under-iterated surfaces (Search result rows, Sync/Drift drift-chips/preflight depth, Playbooks empty/populated) reach dark-signature + light-parity quality across all seed states.
 - **SHELL-DARK-01** (Phase 135, pending): shell chrome (header/nav, command palette, theme toggle, flash, `.ops-shell` radial violet wash) brand-expressive and AA-clean in both themes; weak header-nav dark contrast fixed; palette/flash adopt the dark ambient-shadow-plus-border recipe.
 - **DUALVERIFY-01** (Phase 136, pending): end-to-end proof — `mix verify.opsui` + ScrypathOps LiveView suite + mounted ecommerce admin Playwright smoke green; CONTRAST-HARNESS-01 AA in both themes with AAA-body report; 40-shot matrix re-captured with a v1.33→v1.34 before/after gallery; milestone audit + human UAT.

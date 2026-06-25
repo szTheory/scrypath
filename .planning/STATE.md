@@ -2,18 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
-status: executing
-current_phase: 133
-current_phase_name: dark-path-motion-expression-r-g
-last_updated: "2026-06-25T02:27:49.951Z"
-last_activity: 2026-06-25 — Completed 133-02-PLAN.md (motion-discipline static CSS contract)
-last_activity_desc: Completed 133-02-PLAN.md (motion-discipline static CSS contract)
+status: verifying
+last_updated: "2026-06-25T02:42:19.951Z"
+last_activity: 2026-06-25 — Completed 133-03-PLAN.md (DARKMOTION-01 browser proof) — Phase 133 ready for verification
+last_activity_desc: Completed 133-03-PLAN.md (DARKMOTION-01 browser proof)
 progress:
   total_phases: 9
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 17
-  completed_plans: 16
-  percent: 56
+  completed_plans: 17
+  percent: 67
 ---
 
 # Project State
@@ -25,11 +23,11 @@ progress:
 
 ## Current Position
 
-Phase: 133 (dark-path-motion-expression-r-g) — EXECUTING
-Plan: 3 of 3
-Status: Plan 02 complete — ready to execute Plan 03
-Resume: **v1.34 Phase 133** — `.planning/phases/133-dark-path-motion-expression-r-g/133-03-PLAN.md`.
-Last activity: 2026-06-25 — Completed 133-02-PLAN.md (motion-discipline static CSS contract)
+Phase: 133 (dark-path-motion-expression-r-g) — READY FOR VERIFICATION
+Plan: 3 of 3 (all complete)
+Status: Phase complete — ready for verification (`/gsd-verify-work` / Phase 136 DUALVERIFY-01)
+Resume: **v1.34 Phase 133 verification**, then Phase 134 (SCREEN-DARK-01) — see `.planning/phases/133-dark-path-motion-expression-r-g/133-03-SUMMARY.md`.
+Last activity: 2026-06-25 — Completed 133-03-PLAN.md (DARKMOTION-01 browser proof)
 
 ## Completed Milestone (interleaved)
 
@@ -126,9 +124,11 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 | Phase 132 P02 | ~10min | 2 tasks | 2 files |
 | Phase 133 P01 | ~12min | 3 tasks | 4 files |
 | Phase 133 P02 | ~2min | 1 tasks | 1 files |
+| Phase 133 P03 | ~30min | 1 tasks | 1 files |
 
 ## Decisions
 
+- [Phase 133 Plan 03]: DARKMOTION-01 browser proof shipped — `admin_path_motion.spec.ts` (7 tests, dark+light+system-dark) green against a booted seeded ops server. Patch-refire proof (A3) counts ONLY running `CSSAnimation` (`@keyframes`), EXCLUDING `CSSTransition`: a running transition is the intended state-driven glow/line-draw settle, so only a re-firing keyframe reveal is the failure mode worth catching; probe scoped to the anchor itself (incl. `::after`), not the descendant subtree where intended Phase-123 `ops-fade-in` reveals run. Reduced-motion proof asserts computed duration ≤ ~0.02ms via the global rule + active end state still visible (functional integrity). Shimmer coverage ships the shippable half (evidence code blocks asserted shimmer-OFF) since no live template sets `shimmer={true}`. Targeted 9-shot screenshot set produced; full 40-shot recapture/gallery/UAT deferred to Phase 136 (D-05c). Booted via compose dev lane with free host lanes `PG_PORT=5455 MEILI_PORT=7755` (sibling containers held 5432/7700). Phase 133 now ready for verification.
 - [Phase 133 Plan 01]: DARKMOTION-01 `.ops-path-*` vocabulary shipped — line-draw via `.ops-path-trace::after` as a `transition` (NOT `@keyframes`-on-mount, A3 patch-safety), active-path node glow via `.ops-path-node[--copper]` reusing `--shadow-ops-glow[-copper]`, opt-in `.ops-code-block--shimmer` hover glint. Only new component API is `attr(:shimmer, :boolean, default: false)` on `ops_code_block/1`; default-false keeps evidence calm. Anchors (merge-trace, active Playbook item, recommended card) wired via existing server-state classes — no new state attrs, no new JS hooks, no new tokens. Active-item glow hand-authored in both dark paths. `mix compile --warnings-as-errors` green; verify.opsui static-CSS contract is Plan 02, browser proof is Plan 03.
 - [Phase 133 Plan 01]: 4 pre-existing `OpsShellContractTest` failures (logo.svg → inline-SVG drift from v1.35 brand adoption `fcb8fc7`) are out of Phase 133 scope — logged to `deferred-items.md`; this plan's 4 files don't touch the header/logo/layouts.
 - [Phase ?]: #767676 vs white is 4.54:1 (not 4.48:1) — #777777 is the actual known-fail pair for AA at 4.48:1

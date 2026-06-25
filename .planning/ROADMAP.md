@@ -8,7 +8,7 @@
 - ✅ **v1.31 Adoption Evidence Demo Hardening** — Phases 113-115 (UAT passed 2026-06-01)
 - ✅ **v1.32 Admin UI/UX Design System Cleanup** — Phases 116-118 (shipped 2026-06-01) — see `milestones/v1.32-ROADMAP.md`
 - ✅ **v1.33 Admin UI Insane Polish** — Phases 119-127 (shipped 2026-06-03) — see `milestones/v1.33-ROADMAP.md`
-- 🔨 **v1.34 Both-Themes Perfection — Dark Signature + AA Gate** — Phases 128-136 (**active**; resumed 2026-06-24 at Phase 133; 5/9 complete)
+- 🔨 **v1.34 Both-Themes Perfection — Dark Signature + AA Gate** — Phases 128-136 (**active**; resumed 2026-06-24 at Phase 133; 6/9 complete — Phase 133 ready for verification)
 - ✅ **v1.35 Brand System & Logo Identity** — Phases 137-143 (**complete** 2026-06-24, commit `fcb8fc7`; shipped directly, not via GSD plan/execute artifacts — `roadmap.analyze` shows 0% by design, see STATE.md "Completed Milestone")
 
 ## Phases — v1.35 Brand System & Logo Identity (COMPLETE — shipped 2026-06-24)
@@ -267,7 +267,7 @@ Plans:
 2. It honors v1.33's A3 precedent — no per-LiveView-patch re-firing reveals on result lists.
 3. Motion reads "deliberate/infrastructural" in dark and does not regress light; reduced-motion + functional integrity confirmed via Playwright.
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 **Wave 1**
@@ -277,7 +277,7 @@ Plans:
 **Wave 2** *(blocked on Wave 1 completion)*
 
 - [x] 133-02-PLAN.md — static CSS contract test (transform/opacity-only + tokenized <300ms + dual-dark-path) running inside `mix verify.opsui`
-- [ ] 133-03-PLAN.md — focused Playwright proof: reduced-motion + hover-shimmer + active-path + patch-refire, dark AND light, + targeted screenshots
+- [x] 133-03-PLAN.md — focused Playwright proof: reduced-motion + hover-shimmer + active-path + patch-refire, dark AND light, + targeted screenshots
 
 **Status:** Pending
 
