@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
 current_phase: 133
-current_phase_name: Dark/path motion expression
-status: in_progress
-last_updated: "2026-06-24T21:21:25.636Z"
-last_activity: 2026-06-24
-last_activity_desc: Phase 133 planning complete
+current_phase_name: dark-path-motion-expression-r-g
+status: executing
+last_updated: "2026-06-25T02:20:21.103Z"
+last_activity: 2026-06-25
+last_activity_desc: Completed 133-01-PLAN.md (.ops-path-* motion vocabulary)
 progress:
   total_phases: 9
   completed_phases: 5
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 17
+  completed_plans: 15
   percent: 56
 ---
 
@@ -21,15 +21,15 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** v1.34 Phase 133 — Dark path-motion expression `[R][G]` (DARKMOTION-01). Ready to plan (CONTEXT + DISCUSSION-LOG exist).
+**Current Focus:** Phase 133 — dark-path-motion-expression-r-g
 
 ## Current Position
 
-Phase: 133 (v1.34) — ready to plan
-Plan: Not started (133-CONTEXT.md + 133-DISCUSSION-LOG.md already exist → run `/gsd-plan-phase 133`)
-Status: ▶ Resumed v1.34 Both-Themes Perfection after completing v1.35 brand milestone. Next: Phase 133 (DARKMOTION-01), then 134 (SCREEN-DARK-01), 135 (SHELL-DARK-01), 136 (DUALVERIFY-01).
-Resume: **v1.34 Phase 133** — `.planning/phases/133-dark-path-motion-expression-r-g/133-CONTEXT.md`.
-Last activity: 2026-06-24 — Phase 133 planning complete
+Phase: 133 (dark-path-motion-expression-r-g) — EXECUTING
+Plan: 2 of 3
+Status: Plan 01 complete — ready to execute Plan 02
+Resume: **v1.34 Phase 133** — `.planning/phases/133-dark-path-motion-expression-r-g/133-02-PLAN.md`.
+Last activity: 2026-06-25 — Completed 133-01-PLAN.md (.ops-path-* motion vocabulary)
 
 ## Completed Milestone (interleaved)
 
@@ -124,9 +124,12 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 | Phase 131 P04 | 20min | 3 tasks | 1 files |
 | Phase 132 P01 | ~6min | 3 tasks | 4 files |
 | Phase 132 P02 | ~10min | 2 tasks | 2 files |
+| Phase 133 P01 | ~12min | 3 tasks | 4 files |
 
 ## Decisions
 
+- [Phase 133 Plan 01]: DARKMOTION-01 `.ops-path-*` vocabulary shipped — line-draw via `.ops-path-trace::after` as a `transition` (NOT `@keyframes`-on-mount, A3 patch-safety), active-path node glow via `.ops-path-node[--copper]` reusing `--shadow-ops-glow[-copper]`, opt-in `.ops-code-block--shimmer` hover glint. Only new component API is `attr(:shimmer, :boolean, default: false)` on `ops_code_block/1`; default-false keeps evidence calm. Anchors (merge-trace, active Playbook item, recommended card) wired via existing server-state classes — no new state attrs, no new JS hooks, no new tokens. Active-item glow hand-authored in both dark paths. `mix compile --warnings-as-errors` green; verify.opsui static-CSS contract is Plan 02, browser proof is Plan 03.
+- [Phase 133 Plan 01]: 4 pre-existing `OpsShellContractTest` failures (logo.svg → inline-SVG drift from v1.35 brand adoption `fcb8fc7`) are out of Phase 133 scope — logged to `deferred-items.md`; this plan's 4 files don't touch the header/logo/layouts.
 - [Phase ?]: #767676 vs white is 4.54:1 (not 4.48:1) — #777777 is the actual known-fail pair for AA at 4.48:1
 - [Phase ?]: D-15 Guard 2 selector extraction uses whitespace-aware regex to handle indented CSS rules inside @layer blocks
 - [Phase ?]: Wave 0 FRESH_DIR convention
