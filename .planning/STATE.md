@@ -2,10 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
+current_phase: 134
+current_phase_name: under-iterated-surface-polish-dual-theme-s
 status: planning
-last_updated: "2026-06-25T17:30:00.000Z"
-last_activity: 2026-06-25 — Phase 133 verified (DARKMOTION-01 path-motion, fully automated / 0 human UAT); reconciled 130/131 verification to passed. Phases 128–133 complete; next Phase 134 (SCREEN-DARK-01).
-last_activity_desc: Phase 133 verified + v1.34 state reconciled (128–133 complete)
+stopped_at: Phase 134 context gathered
+last_updated: "2026-06-25T19:43:34.841Z"
+last_activity: 2026-06-25 — Phase 134 (SCREEN-DARK-01) context gathered — 4 gray areas researched + locked (copper scope, cross-screen tune, verification gate, hover boost)
+last_activity_desc: Phase 134 context gathered (CONTEXT.md + DISCUSSION-LOG.md committed)
 progress:
   total_phases: 9
   completed_phases: 6
@@ -145,3 +148,9 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 - [Phase 132 Plan 02]: AAA body/long-form findings remain advisory/report-only. The browser proof recorded 12 empty-scenario advisory findings at 6.76:1 vs target 7, and those findings did not affect exit status.
 - [Phase 132 Plan 02]: The intentional light-token visual change is accepted by recapturing the local light baseline; generated `test-results/`, `.tmp/`, and untracked `scrypath_ops/priv/static/**` evidence artifacts stay out of git.
 - [Phase ?]: (Phase 133-02) Motion-discipline self-enforcing: ScrypathOpsWeb.MotionContractTest statically asserts transform/opacity/box-shadow-only + tokenized <300ms + dual-dark-path over .ops-path-*, inside mix verify.opsui; inset is the sanctioned static alternative to banned width/height/top/left.
+
+## Session
+
+**Last session:** 2026-06-25T19:43:34.836Z
+**Stopped at:** Phase 134 context gathered
+**Resume file:** .planning/phases/134-under-iterated-surface-polish-dual-theme-s/134-CONTEXT.md
