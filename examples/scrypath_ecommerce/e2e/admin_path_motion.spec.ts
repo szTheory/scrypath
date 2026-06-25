@@ -43,8 +43,7 @@ import {
   drainSearchQueue,
   seedScenario,
   waitForLiveConnected,
-  waitForSearchVisible,
-  type SeedScenario
+  waitForSearchVisible
 } from "./helpers/e2e";
 
 const screenshotDir =

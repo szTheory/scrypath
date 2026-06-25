@@ -147,8 +147,11 @@ defmodule ScrypathOpsWeb.MotionContractTest do
     # card) predate Phase 133 and have their own dual-path coverage; we only
     # assert that whatever path-active glow exists in one dark branch exists in
     # the other.
-    path_explicit = MapSet.filter(explicit_dark, &String.contains?(&1, "object-item-active"))
-    path_system = MapSet.filter(system_dark, &String.contains?(&1, "object-item-active"))
+    path_explicit =
+      explicit_dark |> Enum.filter(&String.contains?(&1, "object-item-active")) |> MapSet.new()
+
+    path_system =
+      system_dark |> Enum.filter(&String.contains?(&1, "object-item-active")) |> MapSet.new()
 
     only_explicit = MapSet.difference(path_explicit, path_system)
     only_system = MapSet.difference(path_system, path_explicit)
