@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
-status: verifying
-last_updated: "2026-06-25T02:42:19.951Z"
-last_activity: 2026-06-25 — Completed 133-03-PLAN.md (DARKMOTION-01 browser proof) — Phase 133 ready for verification
-last_activity_desc: Completed 133-03-PLAN.md (DARKMOTION-01 browser proof)
+status: planning
+last_updated: "2026-06-25T17:30:00.000Z"
+last_activity: 2026-06-25 — Phase 133 verified (DARKMOTION-01 path-motion, fully automated / 0 human UAT); reconciled 130/131 verification to passed. Phases 128–133 complete; next Phase 134 (SCREEN-DARK-01).
+last_activity_desc: Phase 133 verified + v1.34 state reconciled (128–133 complete)
 progress:
   total_phases: 9
   completed_phases: 6
@@ -19,15 +19,15 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 133 — dark-path-motion-expression-r-g
+**Current Focus:** Phase 134 — under-iterated-surface-polish-dual-theme (SCREEN-DARK-01) — next to plan
 
 ## Current Position
 
-Phase: 133 (dark-path-motion-expression-r-g) — READY FOR VERIFICATION
+Phase: 133 (dark-path-motion-expression-r-g) — ✅ COMPLETE & VERIFIED (2026-06-25)
 Plan: 3 of 3 (all complete)
-Status: Phase complete — ready for verification (`/gsd-verify-work` / Phase 136 DUALVERIFY-01)
-Resume: **v1.34 Phase 133 verification**, then Phase 134 (SCREEN-DARK-01) — see `.planning/phases/133-dark-path-motion-expression-r-g/133-03-SUMMARY.md`.
-Last activity: 2026-06-25 — Completed 133-03-PLAN.md (DARKMOTION-01 browser proof)
+Status: Phases 128–133 complete & verified. Phase 133 DARKMOTION-01 verification fully automated (deterministic dark/light glow assertions + CI ops-asset build; 0 human UAT; PR #49 green). 130/131 reconciled to passed (VALIDATION.md human approval accepted).
+Resume: **Plan Phase 134 (SCREEN-DARK-01)** — `/gsd-plan-phase 134`. Then 135 (SHELL-DARK-01), 136 (DUALVERIFY-01).
+Last activity: 2026-06-25 — Phase 133 verified + v1.34 state reconciled (128–133 complete)
 
 ## Completed Milestone (interleaved)
 

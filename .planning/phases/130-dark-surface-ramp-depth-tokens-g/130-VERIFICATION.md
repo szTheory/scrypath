@@ -1,7 +1,9 @@
 ---
 phase: 130-dark-surface-ramp-depth-tokens-g
 verified: 2026-06-04T00:00:00Z
-status: human_needed
+status: passed
+reconciled: 2026-06-25T00:00:00Z
+reconciled_note: "Human perceptual checks recorded APPROVED 2026-06-04 in 130-VALIDATION.md (Plan 04 Task 3 executor checkpoint); owner accepted that sign-off as sufficient on 2026-06-25 during v1.34 state reconciliation. No open human items remain."
 score: 7/8
 overrides_applied: 0
 re_verification: false
