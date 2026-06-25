@@ -1,8 +1,8 @@
 ---
 phase: 134
 slug: under-iterated-surface-polish-dual-theme-s
-status: draft
-nyquist_compliant: false
+status: approved
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-06-25
 ---
