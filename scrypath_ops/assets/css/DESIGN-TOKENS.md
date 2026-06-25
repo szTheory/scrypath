@@ -280,6 +280,45 @@ item explicitly forbids, so it was skipped on the side of restraint.
 | row hover/press (`.ops-result-row`/`.ops-object-item`: border + `shadow-ops-mid`, subtle scale) | flash bounce, focus rings, decorative loops |
 | loading **opacity** pulse (`.ops-loading`, the one sanctioned in-flight loop besides the reconnect spinner) | |
 
+### `.ops-path-*` path-motion vocabulary (Phase 133, DARKMOTION-01)
+
+A small, named, **opt-in** path-expression layer applied **only** to stable JTBD anchors — the
+design-system dividend Phase 134/135 reuse. No new keyframes (line-draw is a `transition`, not an
+`@keyframes` — the A3 patch-safety precedent), no new JS hooks, no new tokens (reuses
+`--duration-ops-fast`, `--ease-ops-standard`, `--shadow-ops-glow`, `--shadow-ops-glow-copper`).
+Transform/opacity/box-shadow end states only.
+
+| Class / token | What it does | Tokens | Fires on |
+| --- | --- | --- | --- |
+| `.ops-path-trace` + `::after` | Path line-draw underline (`transform: scaleX(0→1)` + opacity) — a pseudo-element copying the `.ops-disclosure summary::before` precedent | `--duration-ops-fast` + `--ease-ops-standard` | `:hover`, `.ops-path-trace--active`, or `[aria-current="page"]` — **never** mount/insert, **never** an `nth-child` stagger |
+| `.ops-path-node` | Active-path node glow (violet route/path emphasis) via `--shadow-ops-glow` (none in light, faint in dark — dual-dark-path is free through the token) | `--shadow-ops-glow`, `--duration-ops-fast` | active path/key-node state only |
+| `.ops-path-node--copper` | Key-node copper glow — first consumer of the declared `.ops-copper-node` vocabulary | `--shadow-ops-glow-copper`, `--duration-ops-fast` | active key node only |
+| `.ops-object-item-active` (dark override) | Active Playbook item composes the violet glow onto its existing inset ring (Precedent D), **hand-authored in BOTH** `[data-theme="dark"]` and `@media (prefers-color-scheme: dark) html:not([data-theme="light"])` | `--shadow-ops-glow` | persistent active server-state class (patch-safe) |
+| `.ops-code-block--shimmer` | Opt-in code-block hover glint — an opacity-only `::after` ring inside `@media (hover: hover)`; surfaced via `shimmer={true}` on `ops_code_block/1` | `--duration-ops-fast` + `--ease-ops-standard` | `:hover` on hover-capable pointers only |
+
+**Anchors (the allowed surface):** the route mark, the recommended Control Room intent card
+(`.ops-intent-card--recommended`), Search federation/merge-trace disclosures (`.ops-path-trace`),
+the active Playbook item (`.ops-object-item-active`), and optionally the breadcrumb current path
+(`[aria-current="page"]`). Every path/node signal is paired with the existing visible
+text/ARIA state so motion never carries status meaning alone (D-07).
+
+**Deliberately NOT shipped / restraint boundaries (the A3 voice):**
+- **No result-list reveal stagger** — it would re-fire on every LiveView patch of the result list
+  (re-runs, re-sorts) and read as flicker; the merge-trace line-draw is hover/state-driven, never
+  list-entry (D-06).
+- **`shimmer` never on evidence** — Failed Sync code blocks and search/merge payloads stay calm and
+  readable; `shimmer` defaults to `false` and is never set on evidence panes (D-04a/c).
+- **Glow is route/path emphasis only** — never on text, resting panels, ordinary buttons, broad
+  backgrounds, or status surfaces (D-03b).
+
+| Animate (path-motion) | Never animate (path-motion) |
+| --- | --- |
+| path line-draw (`.ops-path-trace` scaleX + opacity, hover/active) | SVG `stroke-dashoffset` line draws |
+| active-path node glow (`.ops-path-node[--copper]` box-shadow) | `background-position` shimmer sweeps |
+| opt-in code-block hover glint (`.ops-code-block--shimmer` opacity) | `filter:` animation |
+| | result-list entry/reveal stagger (re-fires on patch) |
+| | `shimmer` on evidence code blocks (Failed Sync / search-merge payloads) |
+
 ## Muted-Text Contrast Registry
 
 The muted-alpha text pairs are tracked in [`contrast-pairs.mjs`](./contrast-pairs.mjs) (beside
