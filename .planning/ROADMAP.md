@@ -287,6 +287,13 @@ Plans:
 
 **Requirements:** SCREEN-DARK-01
 
+**Plans:** 3 plans
+
+Plans:
+- [ ] 134-01-PLAN.md — Wave 0 harness: new admin_surface_depth.spec.ts computed-style gate + test:e2e:admin-depth script + populated-playbooks seed (R4) + new ExUnit token tripwire (R3)
+- [ ] 134-02-PLAN.md — Application core: dark hover-border boost to primary 55% (D-15/16), earned copper badge on the recommended intent-card (D-01), conditional DK-13 posture-table tune (D-08), verify-only DK-11/14/15 sweep, filled depth-spec assertions
+- [ ] 134-03-PLAN.md — Verification gate: light pixel-diff threshold 0 (D-13) + AA gate green in 3 themes + mix verify.opsui + depth spec, plus the two human-only aesthetic spot-reviews (D-13/D-06)
+
 **Success criteria:**
 
 1. Search result rows visibly separate in dark (reseated on the surface-2 raised token + dark ambient-shadow-plus-border; hover keeps `shadow-ops-mid` + violet border).
