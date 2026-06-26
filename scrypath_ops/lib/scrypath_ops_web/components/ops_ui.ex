@@ -492,6 +492,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   )
 
   attr(:rest, :global, include: ~w(data-testid))
+  slot(:badge)
 
   def ops_intent_card(assigns) do
     ~H"""
@@ -507,6 +508,9 @@ defmodule ScrypathOpsWeb.OpsUi do
       <span :if={@recommended} class="ops-intent-card__flag">Start here</span>
       <span class="ops-intent-card__icon" aria-hidden="true">
         <ScrypathOpsWeb.CoreComponents.icon name={@icon} class="size-6" />
+      </span>
+      <span :if={@badge != []} class="flex flex-wrap items-center gap-2">
+        {render_slot(@badge)}
       </span>
       <span class="ops-intent-card__title">{@title}</span>
       <span class="ops-intent-card__summary">{@summary}</span>
