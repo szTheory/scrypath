@@ -129,9 +129,19 @@ const preferenceTheme = () => {
   return "system";
 };
 
+const syncThemeButtons = () => {
+  const preference = preferenceTheme();
+  document.querySelectorAll("[data-phx-theme]").forEach((button) => {
+    const selected = button.dataset.phxTheme === preference;
+    button.setAttribute("aria-pressed", selected ? "true" : "false");
+    button.setAttribute("data-theme-selected", selected ? "true" : "false");
+  });
+};
+
 const syncThemeMeta = () => {
   document.documentElement.setAttribute("data-theme-effective", effectiveTheme());
   document.documentElement.setAttribute("data-theme-preference", preferenceTheme());
+  syncThemeButtons();
 };
 
 const setTheme = (theme) => {
@@ -146,10 +156,21 @@ const setTheme = (theme) => {
 };
 
 setTheme(localStorage.getItem("phx:theme") || "system");
-window.addEventListener("phx:set-theme", (event) => setTheme(event.target.dataset.phxTheme));
+window.addEventListener("phx:set-theme", (event) => {
+  const button = event.target.closest("[data-phx-theme]");
+  if (button) setTheme(button.dataset.phxTheme);
+});
 window
   .matchMedia("(prefers-color-scheme: dark)")
   .addEventListener("change", () => syncThemeMeta());
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => syncThemeMeta(), { once: true });
+} else {
+  syncThemeMeta();
+}
+
+window.addEventListener("phx:page-loading-stop", () => syncThemeMeta());
 
 window.addEventListener("phx:copy_run_diagnostics", async ({ detail }) => {
   const text = detail?.text;
