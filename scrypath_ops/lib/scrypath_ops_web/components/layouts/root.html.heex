@@ -26,9 +26,19 @@
           return "system";
         };
 
+        const syncThemeButtons = () => {
+          const preference = preferenceTheme();
+          document.querySelectorAll("[data-phx-theme]").forEach((button) => {
+            const selected = button.dataset.phxTheme === preference;
+            button.setAttribute("aria-pressed", selected ? "true" : "false");
+            button.setAttribute("data-theme-selected", selected ? "true" : "false");
+          });
+        };
+
         const syncThemeMeta = () => {
           document.documentElement.setAttribute("data-theme-effective", effectiveTheme());
           document.documentElement.setAttribute("data-theme-preference", preferenceTheme());
+          syncThemeButtons();
         };
 
         const setTheme = (theme) => {
