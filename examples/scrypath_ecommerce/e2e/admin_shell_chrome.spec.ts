@@ -179,6 +179,20 @@ async function expectAriaModalTruth(
   }
 }
 
+async function expectOneSelectedCommandItem(page: Page): Promise<string> {
+  const selected = page.locator("#ops-cmdk [data-cmdk-item][aria-selected='true']");
+  await expect(selected).toHaveCount(1);
+
+  const selectedId = await selected.first().getAttribute("id");
+  expect(selectedId, "selected command item exposes a stable id").toBeTruthy();
+  await expect(page.locator("[data-cmdk-input]")).toHaveAttribute(
+    "aria-activedescendant",
+    selectedId as string
+  );
+
+  return selectedId as string;
+}
+
 async function expectThemeRootState(page: Page, theme: "system" | "light" | "dark"): Promise<void> {
   await expect(page.locator("html")).toHaveAttribute("data-theme-preference", theme);
 
@@ -369,13 +383,22 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
           await openCommandPalette(page);
 
           const input = page.locator("[data-cmdk-input]");
+          const initialActiveId = await expectOneSelectedCommandItem(page);
+          await page.keyboard.press("ArrowDown");
+          const nextActiveId = await expectOneSelectedCommandItem(page);
+          expect(nextActiveId, "ArrowDown moves the active command option").not.toBe(initialActiveId);
+
           await input.fill("zzzz-no-match");
           await expect(page.locator("[data-cmdk-empty]")).toBeVisible();
+          await expect(page.locator("#ops-cmdk [data-cmdk-item][aria-selected='true']")).toHaveCount(0);
+          await expect(input).not.toHaveAttribute("aria-activedescendant");
+
           await input.fill("");
-          await expect(page.locator(".ops-cmdk__item.is-active")).toHaveCount(1);
+          await expectOneSelectedCommandItem(page);
 
           await expectNoColorContrastViolations(page, ["#ops-cmdk"], "command palette");
           await expectAriaModalTruth(page, "#ops-cmdk", opener);
+          await expect(page.locator("#ops-cmdk [data-cmdk-item][aria-selected='true']")).toHaveCount(0);
         } finally {
           await close();
         }
