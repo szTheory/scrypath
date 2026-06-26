@@ -128,7 +128,7 @@ keeps light panels pixel-identical.
 
 | Token | Light value | Dark value | Use |
 | --- | --- | --- | --- |
-| `--shadow-ops-panel-dark` | (not declared in light) | `0 0 0 1px rgba(0,0,0,0.30), 0 1px 3px rgba(0,0,0,0.45)` | Ambient seated-depth shadow on dark panels and shell chrome: `.ops-panel`, `.ops-header`, `.ops-theme-toggle`, `.ops-cmdk__panel`, `#flash-group > *`, `.ops-intent-card` |
+| `--shadow-ops-panel-dark` | (not declared in light) | `0 0 0 1px rgba(0,0,0,0.30), 0 1px 3px rgba(0,0,0,0.45)` | Ambient seated-depth shadow on dark panels and shell chrome: `.ops-panel`, `.ops-header`, `.ops-theme-toggle`, `.ops-cmdk__panel`, `.ops-flash`, `.ops-intent-card` |
 | `--shadow-ops-glow` | `none` | `0 0 8px 2px rgba(108,92,231,0.30)` | Quiet violet glow — live brand mark, active nav, theme-toggle selected pill/button, route/path nodes, and key-callout hover only. Never on text, resting panels, or background floods |
 | `--shadow-ops-glow-copper` | `none` | `0 0 6px 1px rgba(193,122,62,0.25)` | Quiet copper glow — key-node hover only. No consumer in Phase 131 (reserved for Phase 133/134) |
 
@@ -191,10 +191,10 @@ box-shadow ring is, and double-drawing outline + ring reads as muddy.
 ## Shell chrome — Phase 135
 
 Shell chrome is the shared operator frame: `.ops-header`, `.ops-shell`, `.ops-brand-mark`,
-`.ops-nav-list`, `.ops-nav-item-active`, and `.ops-theme-toggle*`. Light remains on the base
-recipes by default; custom shell depth is dark-only and must be authored in both explicit
-`[data-theme="dark"]` and system-dark `@media (prefers-color-scheme: dark)
-html:not([data-theme="light"])` paths.
+`.ops-nav-list`, `.ops-nav-item-active`, `.ops-theme-toggle*`, `.ops-cmdk__panel`, and
+`.ops-flash`. Light remains on the base recipes by default; custom shell depth is dark-only
+and must be authored in both explicit `[data-theme="dark"]` and system-dark
+`@media (prefers-color-scheme: dark) html:not([data-theme="light"])` paths.
 
 | Selector | Contract |
 | --- | --- |
@@ -203,6 +203,8 @@ html:not([data-theme="light"])` paths.
 | `.ops-brand-mark` | Stable class on the live inline SVG brand mark. Dark paths apply only a quiet primary drop-shadow; proof must not rely only on stale `.ops-route-mark`. |
 | `.ops-nav-item-active` | Text-bearing selected fill stays `--color-primary-strong`; dark paths compose `--shadow-ops-surface` with `--shadow-ops-glow`. |
 | `.ops-theme-toggle`, `.ops-theme-toggle__pill`, `.ops-theme-toggle__button` | Class selectors mirror the existing IDs. Selected state is exposed through `aria-pressed` and `data-theme-selected`; dark paths use `--shadow-ops-panel-dark`, `--shadow-ops-glow`, and `--color-primary-strong`. |
+| `.ops-cmdk__panel`, `.ops-flash` | Overlay chrome uses `--shadow-ops-overlay` in light. In explicit dark and system dark, compose overlay first (`--shadow-ops-overlay`) and panel-dark second (`--shadow-ops-panel-dark`) so transient shell surfaces keep depth without glow. |
+| `.ops-flash`, `.ops-flash--info`, `.ops-flash--error` | Durable flash classes live on the passive `role="alert"` wrapper. Kind-specific classes tune non-text border accents while the icon/text pair and close button carry the status semantics. |
 
 ## Typography — `--text-ops-*` → `text-ops-*`, `--leading-ops-*` → `leading-ops-*`
 
