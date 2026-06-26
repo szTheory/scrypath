@@ -1440,6 +1440,19 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
   }
 }
 
+/* D-15/D-16: dark-only hover border boost on the paired Search row + Playbook item selector.
+   Base hover remains primary 32% for light and fallback; hover stays border-only, not glow. */
+[data-theme="dark"] .ops-result-row:hover,
+[data-theme="dark"] .ops-object-item:hover {
+  border-color: color-mix(in oklch, var(--color-primary) 55%, transparent);
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .ops-result-row:hover,
+  html:not([data-theme="light"]) .ops-object-item:hover {
+    border-color: color-mix(in oklch, var(--color-primary) 55%, transparent);
+  }
+}
+
 /* D-10 application: panel-dark seated depth — GROUP 1 (surface-base panels).
    .ops-panel/.ops-intent-card carry --shadow-ops-surface at rest; swap to panel-dark in dark.
    Base definitions untouched; light stays pixel-identical. */
