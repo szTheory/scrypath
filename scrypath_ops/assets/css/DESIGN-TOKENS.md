@@ -128,8 +128,8 @@ keeps light panels pixel-identical.
 
 | Token | Light value | Dark value | Use |
 | --- | --- | --- | --- |
-| `--shadow-ops-panel-dark` | (not declared in light) | `0 0 0 1px rgba(0,0,0,0.30), 0 1px 3px rgba(0,0,0,0.45)` | Ambient seated-depth shadow on dark panels: `.ops-panel`, `.ops-cmdk__panel`, `#flash-group > *`, `.ops-intent-card` |
-| `--shadow-ops-glow` | `none` | `0 0 8px 2px rgba(108,92,231,0.30)` | Quiet violet glow — route mark / active nav / key-callout hover only. Never on text, resting panels, or background floods |
+| `--shadow-ops-panel-dark` | (not declared in light) | `0 0 0 1px rgba(0,0,0,0.30), 0 1px 3px rgba(0,0,0,0.45)` | Ambient seated-depth shadow on dark panels and shell chrome: `.ops-panel`, `.ops-header`, `.ops-theme-toggle`, `.ops-cmdk__panel`, `#flash-group > *`, `.ops-intent-card` |
+| `--shadow-ops-glow` | `none` | `0 0 8px 2px rgba(108,92,231,0.30)` | Quiet violet glow — live brand mark, active nav, theme-toggle selected pill/button, route/path nodes, and key-callout hover only. Never on text, resting panels, or background floods |
 | `--shadow-ops-glow-copper` | `none` | `0 0 6px 1px rgba(193,122,62,0.25)` | Quiet copper glow — key-node hover only. No consumer in Phase 131 (reserved for Phase 133/134) |
 
 **Panel-dark detail:** the `0 0 0 1px` zero-offset ring reads as ambient inset depth (panel
@@ -187,6 +187,22 @@ One ring for the whole shell: the global `:focus-visible { outline: 2px solid pr
 outline-offset: 2px }` in `@layer base`. Do **not** add per-element `focus-visible:ring-*`
 utilities — an `outline` is not clipped by `overflow-x-auto` (e.g. `.ops-table`) where a
 box-shadow ring is, and double-drawing outline + ring reads as muddy.
+
+## Shell chrome — Phase 135
+
+Shell chrome is the shared operator frame: `.ops-header`, `.ops-shell`, `.ops-brand-mark`,
+`.ops-nav-list`, `.ops-nav-item-active`, and `.ops-theme-toggle*`. Light remains on the base
+recipes by default; custom shell depth is dark-only and must be authored in both explicit
+`[data-theme="dark"]` and system-dark `@media (prefers-color-scheme: dark)
+html:not([data-theme="light"])` paths.
+
+| Selector | Contract |
+| --- | --- |
+| `.ops-header` | In dark, composes `--shadow-ops-surface` with `--shadow-ops-panel-dark` plus a 14% base-content divider so the header reads as a seated operator surface. Light keeps the base `--shadow-ops-surface` lift. |
+| `.ops-shell` | Exactly one top-left `radial-gradient(...)` wash plus one `linear-gradient(...)` page floor per rule. Base/light stays 14% / 34rem; dark is bounded to 10% / 30rem and dark mobile to 8% / 24rem. No extra gradient layers, orbs, bokeh, texture, or loops. |
+| `.ops-brand-mark` | Stable class on the live inline SVG brand mark. Dark paths apply only a quiet primary drop-shadow; proof must not rely only on stale `.ops-route-mark`. |
+| `.ops-nav-item-active` | Text-bearing selected fill stays `--color-primary-strong`; dark paths compose `--shadow-ops-surface` with `--shadow-ops-glow`. |
+| `.ops-theme-toggle`, `.ops-theme-toggle__pill`, `.ops-theme-toggle__button` | Class selectors mirror the existing IDs. Selected state is exposed through `aria-pressed` and `data-theme-selected`; dark paths use `--shadow-ops-panel-dark`, `--shadow-ops-glow`, and `--color-primary-strong`. |
 
 ## Typography — `--text-ops-*` → `text-ops-*`, `--leading-ops-*` → `leading-ops-*`
 
