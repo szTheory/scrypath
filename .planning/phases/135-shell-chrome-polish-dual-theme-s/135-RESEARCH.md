@@ -415,22 +415,25 @@ expect(results.violations).toEqual([]);
 |---|-------|---------|---------------|
 | A1 | All implementation work can fit without new external packages. [ASSUMED] | Standard Stack | If focused browser proof reveals a hard ARIA gap in the current palette, planner may need a human decision on whether to downgrade semantics or adopt a dependency. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should the command palette keep `aria-modal="true"`?**
    - What we know: Current markup uses `role="dialog"` and `aria-modal="true"`; current hook opens/focuses input and closes on Escape. [VERIFIED: scrypath_ops/lib/scrypath_ops_web/components/ops_ui.ex][VERIFIED: scrypath_ops/assets/js/app.js]
    - What's unclear: Whether Tab focus containment and focus return meet the semantic claim. [VERIFIED: 135-CONTEXT.md]
    - Recommendation: Make the browser spec answer this before finalizing markup; either prove bounded behavior or reduce the semantic claim. [CITED: https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/]
+   - RESOLVED: `.planning/phases/135-shell-chrome-polish-dual-theme-s/135-01-PLAN.md` Task 1 creates the browser proof branch, `.planning/phases/135-shell-chrome-polish-dual-theme-s/135-03-PLAN.md` Task 1 implements either bounded focus behavior or semantic downgrade, `.planning/phases/135-shell-chrome-polish-dual-theme-s/135-03-PLAN.md` Task 3 runs the focused browser proof, and `.planning/phases/135-shell-chrome-polish-dual-theme-s/135-04-PLAN.md` Task 2 records the final resolution.
 
 2. **Should static shell CSS tripwires be added to `mix verify.opsui`?**
    - What we know: Static token/motion/depth contracts already exist and are cheap. [VERIFIED: scrypath_ops/test/scrypath_ops_web/design_tokens_contract_test.exs][VERIFIED: scrypath_ops/test/scrypath_ops_web/motion_contract_test.exs][VERIFIED: scrypath_ops/test/scrypath_ops_web/surface_depth_token_contract_test.exs]
    - What's unclear: Whether shell-specific CSS rules will be complex enough to justify another regex test. [VERIFIED: codebase grep]
    - Recommendation: Add static checks only for durable invariants that are easy to express, such as dual-dark mirror presence or required shell classes. [VERIFIED: codebase grep]
+   - RESOLVED: `.planning/phases/135-shell-chrome-polish-dual-theme-s/135-02-PLAN.md` Task 2 adds `shell_chrome_token_contract_test.exs` only for durable shell invariants, `.planning/phases/135-shell-chrome-polish-dual-theme-s/135-03-PLAN.md` Task 2 extends static tripwires for palette/flash dual-dark mirrors, and `.planning/phases/135-shell-chrome-polish-dual-theme-s/135-04-PLAN.md` Task 1 runs `mix verify.opsui` plus the nested app `mix precommit` gate.
 
 3. **How much wash tuning is enough?**
    - What we know: `.ops-shell` currently uses one top-left radial with 14% alpha/34rem base and 10%/28rem mobile. [VERIFIED: scrypath_ops/assets/css/app.css]
    - What's unclear: Whether dark desktop still reads too blob-like after Phase 131 mobile tuning. [VERIFIED: 129-DARK-AUDIT-BACKLOG.md]
    - Recommendation: Use computed/background-string checks to prevent extra layers, plus screenshot spot review for the subjective "quiet ambient glow" read. [VERIFIED: 135-CONTEXT.md]
+   - RESOLVED: `.planning/phases/135-shell-chrome-polish-dual-theme-s/135-02-PLAN.md` Task 2 bounds `.ops-shell` to one radial wash plus the existing linear floor, `.planning/phases/135-shell-chrome-polish-dual-theme-s/135-02-PLAN.md` Task 3 proves the wash by computed browser checks across themes/viewports/screens, and `.planning/phases/135-shell-chrome-polish-dual-theme-s/135-04-PLAN.md` Task 2 records wash boundedness in the final evidence report.
 
 ## Environment Availability
 
