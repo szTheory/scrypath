@@ -155,7 +155,7 @@ defmodule ScrypathOpsWeb.Layouts do
   defp brand_mark(assigns) do
     ~H"""
     <svg
-      class={@class}
+      class={["ops-brand-mark", @class]}
       width="36"
       height="36"
       viewBox="-21 868 205 205"
@@ -242,19 +242,21 @@ defmodule ScrypathOpsWeb.Layouts do
     ~H"""
     <div
       id="theme-toggle"
-      class="card relative flex flex-row items-center border border-base-300 bg-base-300 rounded-full"
+      class="ops-theme-toggle card relative flex flex-row items-center border border-base-300 bg-base-300 rounded-full"
       role="group"
       aria-label="Theme preference"
     >
       <div
         id="theme-toggle-pill"
-        class="absolute top-0 left-0 h-full w-1/3 rounded-full border border-base-200 bg-base-100"
+        class="ops-theme-toggle__pill absolute top-0 left-0 h-full w-1/3 rounded-full border border-base-200 bg-base-100"
       />
 
       <button
-        class="flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-ops-2"
+        class="ops-theme-toggle__button flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-ops-2"
         type="button"
         aria-label="Use system theme"
+        aria-pressed="false"
+        data-theme-selected="false"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="system"
       >
@@ -262,9 +264,11 @@ defmodule ScrypathOpsWeb.Layouts do
       </button>
 
       <button
-        class="flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-ops-2"
+        class="ops-theme-toggle__button flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-ops-2"
         type="button"
         aria-label="Use light theme"
+        aria-pressed="false"
+        data-theme-selected="false"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="light"
       >
@@ -272,9 +276,11 @@ defmodule ScrypathOpsWeb.Layouts do
       </button>
 
       <button
-        class="flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-ops-2"
+        class="ops-theme-toggle__button flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-ops-2"
         type="button"
         aria-label="Use dark theme"
+        aria-pressed="false"
+        data-theme-selected="false"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="dark"
       >
