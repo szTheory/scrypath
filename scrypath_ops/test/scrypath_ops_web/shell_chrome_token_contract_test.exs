@@ -8,8 +8,10 @@ defmodule ScrypathOpsWeb.ShellChromeTokenContractTest do
   use ExUnit.Case, async: true
 
   @app_css Path.join(__DIR__, "../../assets/css/app.css") |> Path.expand()
+  @design_tokens Path.join(__DIR__, "../../assets/css/DESIGN-TOKENS.md") |> Path.expand()
 
   defp css, do: File.read!(@app_css)
+  defp design_tokens, do: File.read!(@design_tokens)
 
   test ".ops-shell wash keeps exactly one radial layer plus one linear floor per rule" do
     blocks =
@@ -108,5 +110,37 @@ defmodule ScrypathOpsWeb.ShellChromeTokenContractTest do
              source
            ),
            ".ops-brand-mark system-dark treatment must mirror explicit dark."
+  end
+
+  test "palette and flash overlay shadows are mirrored in both dark paths" do
+    source = css()
+
+    for selector <- [".ops-cmdk__panel", ".ops-flash"] do
+      assert Regex.match?(
+               Regex.compile!(
+                 ~s/\\[data-theme="dark"\\]\\s+#{Regex.escape(selector)}\\s*\\{[^{}]*box-shadow:\\s*var\\(--shadow-ops-overlay\\),\\s*var\\(--shadow-ops-panel-dark\\)/
+               ),
+               source
+             ),
+             "#{selector} explicit-dark overlay shadow must compose overlay first, panel-dark second."
+
+      assert Regex.match?(
+               Regex.compile!(
+                 ~s/html:not\\(\\[data-theme="light"\\]\\)\\s+#{Regex.escape(selector)}\\s*\\{[^{}]*box-shadow:\\s*var\\(--shadow-ops-overlay\\),\\s*var\\(--shadow-ops-panel-dark\\)/
+               ),
+               source
+             ),
+             "#{selector} system-dark overlay shadow must mirror explicit dark."
+    end
+  end
+
+  test "design tokens document palette and flash overlay composition" do
+    source = design_tokens()
+
+    assert source =~ ".ops-cmdk__panel"
+    assert source =~ ".ops-flash"
+    assert source =~ "--shadow-ops-overlay"
+    assert source =~ "--shadow-ops-panel-dark"
+    assert source =~ "overlay first"
   end
 end

@@ -284,7 +284,9 @@ async function triggerSearchSaveFlash(page: Page): Promise<void> {
   const basename = `${SHELL_PLAYBOOK_PREFIX}${Date.now()}.json`;
   await page.getByLabel("Basename (.json)").fill(basename);
   await page.getByRole("button", { name: "Save search as playbook" }).click();
-  await expect(page.locator("#flash-group [role='alert']")).toContainText(`Saved playbook ${basename}.`);
+  await expect(page.locator("#flash-group [role='alert']:not([hidden])")).toContainText(
+    `Saved playbook ${basename}.`
+  );
 }
 
 test.describe("admin shell chrome -- SHELL-DARK-01", () => {
@@ -442,8 +444,12 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
             await assertSystemDarkInvariants(page);
           }
 
-          const flash = page.locator("#flash-group [role='alert']").first();
+          const flash = page.locator("#flash-group [role='alert']:not([hidden])").first();
           await expect(flash).toBeVisible();
+          await expect(flash).toHaveClass(/ops-flash/);
+          await expect(flash).toHaveClass(/ops-flash--info/);
+          await expect(flash.locator("svg")).not.toHaveCount(0);
+          await expect(flash.getByRole("button", { name: "Close notification" })).toBeVisible();
           await expect(page.locator("#flash-group")).toHaveCount(1);
 
           const shadow = await flash.evaluate((el) => getComputedStyle(el).boxShadow);
