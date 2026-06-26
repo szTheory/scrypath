@@ -38,6 +38,7 @@ key_files:
     - scrypath_ops/assets/css/app.css
     - scrypath_ops/assets/css/DESIGN-TOKENS.md
     - scrypath_ops/test/scrypath_ops_web/ops_shell_contract_test.exs
+    - examples/scrypath_ecommerce/e2e/helpers/e2e.ts
     - examples/scrypath_ecommerce/assets/js/app.js
     - examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/components/layouts.ex
 decisions:
@@ -55,6 +56,7 @@ metrics:
     - 675019e
     - 66438db
     - 019f652
+    - 6ee3c39
 ---
 
 # Phase 135 Plan 02: Shell Chrome Polish Summary
@@ -68,6 +70,7 @@ Shell chrome dark polish now has durable DOM selectors, dual-dark CSS contracts,
 - Added dark-only shell chrome treatment for `.ops-header`, `.ops-shell`, `.ops-brand-mark`, `.ops-theme-toggle*`, and documented the selector/token contract.
 - Added `shell_chrome_token_contract_test.exs` to guard one-radial shell wash, dual-dark mirrors, active-nav `--color-primary-strong`, and live brand selector usage.
 - Fixed mounted ecommerce demo behavior found by browser proof: duplicate host flash chrome on ops routes, mounted theme selected-state sync, nested icon click theme dispatch, and deterministic pill position.
+- Hardened the shared Playwright LiveView readiness helper after the post-wave browser gate exposed dropped `phx-click` events during mounted route transitions.
 
 ## Task Commits
 
@@ -78,6 +81,7 @@ Shell chrome dark polish now has durable DOM selectors, dual-dark CSS contracts,
 | 2 RED | Add failing shell chrome token contract | `675019e` | Added static CSS/token tripwires. |
 | 2 GREEN | Tune shell chrome dark CSS | `66438db` | Added dual-dark CSS, token docs, and formatted focused contract tests. |
 | 3 | Stabilize shell chrome browser proof | `019f652` | Fixed browser-discovered mounted-shell integration issues and reran proof. |
+| Post-wave gate fix | Wait for mounted LiveView readiness | `6ee3c39` | Required the mounted LiveView root to reach `.phx-connected` before E2E helpers drive `phx-click` controls. |
 
 ## Verification
 
@@ -85,6 +89,7 @@ Shell chrome dark polish now has durable DOM selectors, dual-dark CSS contracts,
 - `cd examples/scrypath_ecommerce && PLAYWRIGHT_BASE_URL=http://127.0.0.1:4002 npm run test:e2e:admin-shell -- --grep "shared surfaces|theme toggle" --reporter=line` - passed, 12 tests.
 - `cd scrypath_ops && mix verify.opsui` - passed, 2 doctests and 143 tests.
 - `cd scrypath_ops && mix precommit` - passed, 2 doctests and 143 tests. The command formatted unrelated files; those unrelated deltas were discarded by explicit path and logged in `deferred-items.md`.
+- Orchestrator post-wave rerun against the containerized test stack initially failed because `gotoSyncDrift` could click before the mounted LiveView root joined. After `6ee3c39`, the same `shared surfaces|theme toggle` run passed 12/12.
 
 ## Deviations from Plan
 
@@ -111,6 +116,13 @@ Shell chrome dark polish now has durable DOM selectors, dual-dark CSS contracts,
 - **Files modified:** `scrypath_ops/assets/css/app.css`
 - **Commit:** `019f652`
 
+**4. [Rule 1 - Bug] Hardened mounted LiveView readiness in browser helpers**
+- **Found during:** Orchestrator post-wave browser gate.
+- **Issue:** `waitForLiveConnected/1` only checked the global LiveSocket connection. During repeated mounted-route navigation, the global socket could already be connected while the new LiveView root had not yet joined, so the Sync/Drift `phx-click` was dropped and the proof stayed in "Drift not loaded".
+- **Fix:** Require `[data-phx-main]` to have the `phx-connected` class before browser helpers drive interactive controls.
+- **Files modified:** `examples/scrypath_ecommerce/e2e/helpers/e2e.ts`
+- **Commit:** `6ee3c39`
+
 ### Out-of-Scope Findings
 
 - `mix precommit` exposed formatter churn in unrelated files outside Plan 135-02. Details are logged in `.planning/phases/135-shell-chrome-polish-dual-theme-s/deferred-items.md`.
@@ -130,4 +142,4 @@ None. The added browser behavior stays within the plan's existing theme localSto
 ## Self-Check: PASSED
 
 - Found summary, deferred-items log, and `shell_chrome_token_contract_test.exs`.
-- Found task commits `7be108b`, `23a3709`, `675019e`, `66438db`, and `019f652`.
+- Found task commits `7be108b`, `23a3709`, `675019e`, `66438db`, `019f652`, and post-wave gate fix `6ee3c39`.
