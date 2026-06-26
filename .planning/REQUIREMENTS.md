@@ -4,7 +4,7 @@
 **Status:** Active
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-> **Paused milestone:** v1.34 Both-Themes Perfection (phases 128–136) is paused at Phase 133 with 5/9 phases complete. Its requirements are preserved verbatim in the **Appendix** at the bottom of this file for an exact resume after v1.35 ships.
+> **Resumed milestone:** v1.34 Both-Themes Perfection (phases 128–136) has advanced through Phase 134 with 7/9 phases complete. Its remaining requirements are preserved in the **Appendix** at the bottom of this file for Phase 135 and Phase 136.
 
 ## Milestone Intent
 
@@ -83,7 +83,7 @@ identity across the live product surfaces.
 
 ## Appendix — PAUSED v1.34 Requirements (resume after v1.35)
 
-> Preserved verbatim from the v1.34 milestone (defined 2026-06-04). v1.34 is paused at Phase 133; phases 128–132 are complete, 133–136 pending. Resume at `.planning/phases/133-dark-path-motion-expression-r-g/133-CONTEXT.md`.
+> Preserved from the v1.34 milestone (defined 2026-06-04). v1.34 has advanced through Phase 134; phases 128–134 are complete, 135–136 pending. Resume with Phase 135 planning.
 
 **Milestone intent:** Make the `scrypath_ops` admin UI's existing dark/light/system theming genuinely perfect and brand-expressive in both modes (dark signature, light at parity), backed by a formal automated WCAG AA contrast gate (AAA for body text), with continued design-system/IA polish on v1.33's under-touched surfaces. Locked: comprehensive both-themes scope; system-follows-OS default; AA hard gate / AAA-body advisory; keep Tailwind v4 + daisyUI + `.ops-*`.
 
@@ -96,11 +96,11 @@ identity across the live product surfaces.
 | COPPER-01 | Phase 131 | Complete |
 | A11Y-TOKEN-01 | Phase 132 | Complete |
 | DARKMOTION-01 | Phase 133 | Complete |
-| SCREEN-DARK-01 | Phase 134 | Pending |
+| SCREEN-DARK-01 | Phase 134 | Complete |
 | SHELL-DARK-01 | Phase 135 | Pending |
 | DUALVERIFY-01 | Phase 136 | Pending |
 
 - **DARKMOTION-01** (Phase 133, complete): restrained path-expression motion (line draw/reveal, node pulse, active-path tracing on the route mark/diagrams, code-block shimmer on hover) via existing `--duration-ops-*`/`--ease-ops-*` tokens, transform/opacity only, reduced-motion-safe, tuned for dark without breaking light; honors v1.33's A3 no-re-fire precedent.
-- **SCREEN-DARK-01** (Phase 134, pending): under-iterated surfaces (Search result rows, Sync/Drift drift-chips/preflight depth, Playbooks empty/populated) reach dark-signature + light-parity quality across all seed states.
+- **SCREEN-DARK-01** (Phase 134, complete): under-iterated surfaces (Search result rows, Sync/Drift drift-chips/preflight depth, Playbooks empty/populated) reach dark-signature + light-parity quality across all seed states.
 - **SHELL-DARK-01** (Phase 135, pending): shell chrome (header/nav, command palette, theme toggle, flash, `.ops-shell` radial violet wash) brand-expressive and AA-clean in both themes; weak header-nav dark contrast fixed; palette/flash adopt the dark ambient-shadow-plus-border recipe.
 - **DUALVERIFY-01** (Phase 136, pending): end-to-end proof — `mix verify.opsui` + ScrypathOps LiveView suite + mounted ecommerce admin Playwright smoke green; CONTRAST-HARNESS-01 AA in both themes with AAA-body report; 40-shot matrix re-captured with a v1.33→v1.34 before/after gallery; milestone audit + human UAT.
