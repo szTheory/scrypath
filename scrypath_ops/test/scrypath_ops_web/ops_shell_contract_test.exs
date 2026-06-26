@@ -5,6 +5,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
 
   import Phoenix.LiveViewTest
 
+  alias ScrypathOpsWeb.CoreComponents
   alias ScrypathOps.Test.OpsPostA
   alias ScrypathOps.Test.OpsPostB
   alias ScrypathOps.Test.SearchPlaygroundStubAdapter
@@ -191,5 +192,35 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert source =~ "syncThemeButtons();"
     assert source =~ "DOMContentLoaded"
     assert source =~ "closest(\"[data-phx-theme]\")"
+  end
+
+  test "flash component exposes durable passive alert chrome" do
+    info =
+      render_component(&CoreComponents.flash/1,
+        kind: :info,
+        flash: %{"info" => "Saved playbook."}
+      )
+
+    error =
+      render_component(&CoreComponents.flash/1,
+        kind: :error,
+        flash: %{"error" => "Search sync failed."}
+      )
+
+    assert info =~ ~s(role="alert")
+    assert info =~ "ops-flash"
+    assert info =~ "ops-flash--info"
+    assert info =~ "Saved playbook."
+    assert info =~ ~s(aria-label="Close notification")
+    assert info =~ "lv:clear-flash"
+    assert info =~ "hero-information-circle"
+
+    assert error =~ ~s(role="alert")
+    assert error =~ "ops-flash"
+    assert error =~ "ops-flash--error"
+    assert error =~ "Search sync failed."
+    assert error =~ ~s(aria-label="Close notification")
+    assert error =~ "lv:clear-flash"
+    assert error =~ "hero-exclamation-circle"
   end
 end
