@@ -7,6 +7,7 @@
     "test:e2e": "playwright test",
     "test:e2e:list": "playwright test --list",
     "test:e2e:path-motion": "playwright test e2e/admin_path_motion.spec.ts",
+    "test:e2e:admin-depth": "playwright test e2e/admin_surface_depth.spec.ts",
     "test:e2e:admin-screens": "playwright test e2e/admin_screenshots.spec.ts",
     "test:e2e:admin-matrix": "playwright test e2e/admin_screenshot_matrix.spec.ts",
     "test:e2e:admin-contrast": "playwright test e2e/admin_contrast_matrix.spec.ts"
