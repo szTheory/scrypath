@@ -1154,7 +1154,13 @@ defmodule ScrypathOpsWeb.OpsUi do
           </h2>
           <dl class="ops-cheatsheet__list">
             <div class="ops-cheatsheet__row">
-              <dt><kbd class="ops-kbd">⌘</kbd> <kbd class="ops-kbd">K</kbd></dt>
+              <dt>
+                <span class="sr-only">Command or Control K</span>
+                <span aria-hidden="true">
+                  <kbd class="ops-kbd">⌘</kbd>/<kbd class="ops-kbd">Ctrl</kbd>
+                  <kbd class="ops-kbd">K</kbd>
+                </span>
+              </dt>
               <dd>Jump to any surface</dd>
             </div>
             <div class="ops-cheatsheet__row">
