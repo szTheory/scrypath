@@ -69,6 +69,8 @@
           if (button) setTheme(button.dataset.phxTheme);
         });
 
+        window.addEventListener("phx:page-loading-stop", () => syncThemeMeta());
+
         window
           .matchMedia("(prefers-color-scheme: dark)")
           .addEventListener("change", () => syncThemeMeta());
