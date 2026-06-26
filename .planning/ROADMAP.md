@@ -316,7 +316,7 @@ Plans:
 
 **Requirements:** SHELL-DARK-01
 
-**Plans:** 2/4 plans executed
+**Plans:** 3/4 plans executed
 
 Plans:
 **Wave 1**
@@ -329,7 +329,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 135-03-PLAN.md — Command palette and flash chrome polish
+- [x] 135-03-PLAN.md — Command palette and flash chrome polish
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
