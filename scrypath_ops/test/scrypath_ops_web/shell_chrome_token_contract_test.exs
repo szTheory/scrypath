@@ -22,10 +22,10 @@ defmodule ScrypathOpsWeb.ShellChromeTokenContractTest do
     assert blocks != [], "Expected at least one .ops-shell background rule."
 
     for body <- blocks do
-      assert (Regex.scan(~r/radial-gradient/, body) |> length()) == 1,
+      assert Regex.scan(~r/radial-gradient/, body) |> length() == 1,
              ".ops-shell must keep exactly one quiet radial wash per rule."
 
-      assert (Regex.scan(~r/linear-gradient/, body) |> length()) == 1,
+      assert Regex.scan(~r/linear-gradient/, body) |> length() == 1,
              ".ops-shell must keep exactly one linear page-floor gradient per rule."
 
       assert body =~ "circle at top left",
