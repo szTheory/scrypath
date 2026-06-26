@@ -247,11 +247,14 @@ This is a styling/verification phase (CSS + template class wiring + new e2e test
 | A2 | `getComputedStyle().backgroundColor` returns the composited rgb (not a literal `color-mix` string) on the test browser | R2 | If engine returns `oklch`/`color-mix` string, exact-rgb assertions need parsing regardless of flat vs mixed |
 | A3 | Index-12 populated-playbooks seed currently renders without a created playbook | R4 | If a fixture already seeds one, R4 is moot — confirm when authoring spec |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **DK-13 override scope (R1)** — Where does the dark-only table-row-border rule live so it stays leaf-scoped to the posture table? Recommendation: pass a `table_class` (e.g. `ops-posture-table`) to `<.ops_table>` and scope the dark override to it — avoids leaking to other daisyUI tables; stays a leaf edit (D-09 holds).
+   **RESOLVED:** Plan 02 Task 3 adopts the `table_class` leaf-scope route — the dark-only row-border override is scoped to a `.ops-posture-table` wrapper class passed to `<.ops_table>`, so it never leaks to other daisyUI tables (R1 recommendation accepted; D-09 leaf-edit posture holds).
 2. **Luminance-delta floor / 1.20:1 trigger (Claude's Discretion)** — start at 0.015 / 1.20:1; tune to smallest reliable non-flaking value; must stay an objective number.
+   **RESOLVED:** Explicitly Claude's Discretion per 134-CONTEXT.md (`### Claude's Discretion`). Executor starts at 0.015 / 1.20:1 and tunes to the smallest reliable non-flaking objective number — no further planning decision required.
 3. **Copper badge content (Claude's Discretion)** — "Federated" vs a key-scope callout on the recommended card; executor's call, must be a genuine scan-path key fact.
+   **RESOLVED:** Explicitly Claude's Discretion per 134-CONTEXT.md (`### Claude's Discretion`). Executor picks the genuine scan-path key fact ("Federated" or a key-scope callout) at implementation time — no further planning decision required.
 
 ## Environment Availability
 
