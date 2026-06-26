@@ -64,11 +64,20 @@
           }
         });
 
-        window.addEventListener("phx:set-theme", (e) => setTheme(e.target.dataset.phxTheme));
+        window.addEventListener("phx:set-theme", (e) => {
+          const button = e.target.closest("[data-phx-theme]");
+          if (button) setTheme(button.dataset.phxTheme);
+        });
 
         window
           .matchMedia("(prefers-color-scheme: dark)")
           .addEventListener("change", () => syncThemeMeta());
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", () => syncThemeMeta(), { once: true });
+        } else {
+          syncThemeMeta();
+        }
       })();
     </script>
   </head>
