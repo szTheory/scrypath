@@ -316,6 +316,14 @@ Plans:
 
 **Requirements:** SHELL-DARK-01
 
+**Plans:** 4 plans
+
+Plans:
+- [ ] 135-01-PLAN.md — Wave 0 shell browser proof scaffold and npm script
+- [ ] 135-02-PLAN.md — Header/nav/wash/theme-toggle shell polish
+- [ ] 135-03-PLAN.md — Command palette and flash chrome polish
+- [ ] 135-04-PLAN.md — Final shell evidence and source audit report
+
 **Success criteria:**
 
 1. Header nav contrast passes AA in dark; the `.ops-shell` radial violet wash reads as a quiet ambient glow on Night, not a blob.
