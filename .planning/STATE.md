@@ -2,13 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
-current_phase: 135
-current_phase_name: shell-chrome-polish-dual-theme
-status: ready_to_plan
-stopped_at: Phase 134 complete (3/3) — ready to discuss Phase 135
-last_updated: 2026-06-26T02:21:28.112Z
-last_activity: 2026-06-26 -- Phase 134 complete; SCREEN-DARK-01 verified with light pixel parity, AA contrast, depth spec, and dark spot review
-last_activity_desc: Phase 134 complete (3/3 plans); ready to plan Phase 135 SHELL-DARK-01
+status: planning
+stopped_at: Phase 135 context gathered
+last_updated: "2026-06-26T03:00:09.313Z"
+last_activity: 2026-06-26 — Phase 134 SCREEN-DARK-01 complete and verified
 progress:
   total_phases: 9
   completed_phases: 7
@@ -151,6 +148,6 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 
 ## Session
 
-**Last session:** 2026-06-25T19:43:34.836Z
-**Stopped at:** Phase 134 complete; ready to plan Phase 135
-**Resume file:** .planning/phases/134-under-iterated-surface-polish-dual-theme-s/134-03-SUMMARY.md
+**Last session:** 2026-06-26T03:00:09.308Z
+**Stopped at:** Phase 135 context gathered
+**Resume file:** .planning/phases/135-shell-chrome-polish-dual-theme-s/135-CONTEXT.md
