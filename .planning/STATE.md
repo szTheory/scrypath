@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection
-status: executing
-stopped_at: Completed 135-03-PLAN.md
-last_updated: "2026-06-26T10:45:14.241Z"
+status: verifying
+stopped_at: Completed 135-04-PLAN.md
+last_updated: "2026-06-26T12:11:50.830Z"
 last_activity: 2026-06-26
 progress:
   total_phases: 9
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 24
-  completed_plans: 23
-  percent: 78
+  completed_plans: 24
+  percent: 89
 ---
 
 # Project State
@@ -25,7 +25,7 @@ progress:
 
 Phase: 135 (shell-chrome-polish-dual-theme-s) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Resume: **Execute Plan 135-02** — Header/nav/wash/theme-toggle shell polish. Then continue 135-03, 135-04, and Phase 136 (DUALVERIFY-01).
 Last activity: 2026-06-26
 
@@ -118,6 +118,7 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 | Phase 135 P01 | 5 min | 2 tasks | 2 files |
 | Phase 135 P02 | 23m27s | 3 tasks | 8 files |
 | Phase 135 P03 | 25min | 3 tasks | 9 files |
+| Phase 135 P04 | 1h 2m | 2 tasks | 2 files |
 
 ## Decisions
 
@@ -146,9 +147,12 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 - [Phase 135]: Plan 03 keeps aria-modal=true and makes the existing CommandPalette hook defend bounded focus and focus return instead of downgrading semantics. — Browser proof now verifies bounded focus, focus return, active option state, and Escape close behavior across required themes/viewports.
 - [Phase 135]: Plan 03 mirrors command palette hook hardening into the ecommerce host bundle because mounted ops routes use the host LiveSocket. — The mounted browser proof loads /assets/js/app.js from the ecommerce host, so standalone ops hook changes alone do not exercise real mounted behavior.
 - [Phase 135]: Plan 03 uses durable ops-flash classes on the passive alert wrapper while preserving Phoenix.Flash lookup and lv:clear-flash dismissal. — This gives palette/flash static CSS tripwires and browser-proofed chrome without adding focus steal, loops, dependencies, or public API changes.
+- [Phase 135]: No D-03 light-theme exception was recorded in Plans 02 or 03, so the conditional light-pixel-diff gate was not run for Plan 135-04. — Plan 135-04 made the light pixel diff conditional on a recorded D-03 light exception; the final report documents that none existed.
+- [Phase 135]: aria-modal stayed on the command palette and shortcut sheet because browser proof verifies bounded focus and focus return. — The final evidence report records modal focus containment and focus-return behavior across the shell browser gate.
+- [Phase 135]: Phase 136 retains full 40-shot recapture, v1.33 to v1.34 gallery, milestone audit, and human UAT. — Plan 135-04 closes the shell evidence slice and explicitly leaves broad milestone verification to Phase 136.
 
 ## Session
 
-**Last session:** 2026-06-26T10:45:14.236Z
-**Stopped at:** Completed 135-03-PLAN.md
+**Last session:** 2026-06-26T12:11:50.826Z
+**Stopped at:** Completed 135-04-PLAN.md
 **Resume file:** None

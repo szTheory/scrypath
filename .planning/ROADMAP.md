@@ -316,7 +316,7 @@ Plans:
 
 **Requirements:** SHELL-DARK-01
 
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 **Wave 1**
@@ -333,7 +333,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 135-04-PLAN.md — Final shell evidence and source audit report
+- [x] 135-04-PLAN.md — Final shell evidence and source audit report
 
 **Success criteria:**
 
