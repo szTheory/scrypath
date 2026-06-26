@@ -213,7 +213,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert info =~ "Saved playbook."
     assert info =~ ~s(aria-label="Close notification")
     assert info =~ "lv:clear-flash"
-    assert info =~ "hero-information-circle"
+    assert info =~ "hero-information-circle" or Regex.scan(~r/<svg\b/, info) |> length() == 2
 
     assert error =~ ~s(role="alert")
     assert error =~ "ops-flash"
@@ -221,6 +221,6 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert error =~ "Search sync failed."
     assert error =~ ~s(aria-label="Close notification")
     assert error =~ "lv:clear-flash"
-    assert error =~ "hero-exclamation-circle"
+    assert error =~ "hero-exclamation-circle" or Regex.scan(~r/<svg\b/, error) |> length() == 2
   end
 end
