@@ -319,9 +319,20 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 135-01-PLAN.md — Wave 0 shell browser proof scaffold and npm script
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 135-02-PLAN.md — Header/nav/wash/theme-toggle shell polish
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 135-03-PLAN.md — Command palette and flash chrome polish
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
 - [ ] 135-04-PLAN.md — Final shell evidence and source audit report
 
 **Success criteria:**
