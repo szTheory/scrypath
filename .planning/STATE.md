@@ -5,15 +5,15 @@ milestone_name: Both-Themes Perfection
 current_phase: 135
 current_phase_name: shell-chrome-polish-dual-theme-s
 status: executing
-stopped_at: Completed 135-01-PLAN.md
-last_updated: "2026-06-26T09:12:50.108Z"
+stopped_at: Completed 135-02-PLAN.md
+last_updated: "2026-06-26T09:45:18.660Z"
 last_activity: 2026-06-26
 last_activity_desc: Phase 135 Plan 01 shell browser proof scaffold complete
 progress:
   total_phases: 9
   completed_phases: 7
   total_plans: 24
-  completed_plans: 21
+  completed_plans: 22
   percent: 78
 ---
 
@@ -27,7 +27,7 @@ progress:
 ## Current Position
 
 Phase: 135 (shell-chrome-polish-dual-theme-s) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Resume: **Execute Plan 135-02** — Header/nav/wash/theme-toggle shell polish. Then continue 135-03, 135-04, and Phase 136 (DUALVERIFY-01).
 Last activity: 2026-06-26 — Phase 135 Plan 01 shell browser proof scaffold complete
@@ -119,6 +119,7 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 | Phase 133 P02 | ~2min | 1 tasks | 1 files |
 | Phase 133 P03 | ~30min | 1 tasks | 1 files |
 | Phase 135 P01 | 5 min | 2 tasks | 2 files |
+| Phase 135 P02 | 23m27s | 3 tasks | 8 files |
 
 ## Decisions
 
@@ -141,9 +142,12 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 - [Phase ?]: (Phase 133-02) Motion-discipline self-enforcing: ScrypathOpsWeb.MotionContractTest statically asserts transform/opacity/box-shadow-only + tokenized <300ms + dual-dark-path over .ops-path-*, inside mix verify.opsui; inset is the sanctioned static alternative to banned width/height/top/left.
 - [Phase 135]: Plan 01 uses existing theme-grid helpers for the shell browser proof instead of creating a parallel harness. — Matches D-14/D-15 and keeps explicit-light, explicit-dark, and system-dark semantics aligned with existing E2E proofs.
 - [Phase 135]: Plan 01 performs no package install or upgrade; package-lock.json remains unchanged. — Research flagged no new dependency need and required preserving the existing Playwright and axe versions.
+- [Phase 135]: Plan 02 keeps shell chrome proof selectors on the live inline brand mark and existing theme-toggle DOM rather than adding a new shell abstraction. — Matches the phase goal of polishing shared shell chrome without nav IA churn.
+- [Phase 135]: Plan 02 mirrors custom shell chrome dark CSS in both explicit dark and system-dark paths. — Preserves system-follows-OS parity while keeping light theme unchanged by default.
+- [Phase 135]: Plan 02 extends the ecommerce demo's existing theme provider so mounted ScrypathOps routes expose the same selected-state semantics as standalone ops root. — The browser proof showed mounted routes use the host bundle, so the mounted integration must mirror aria/data selected state too.
 
 ## Session
 
-**Last session:** 2026-06-26T09:12:50.108Z
-**Stopped at:** Completed 135-01-PLAN.md
+**Last session:** 2026-06-26T09:45:18.654Z
+**Stopped at:** Completed 135-02-PLAN.md
 **Resume file:** None
