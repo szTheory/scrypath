@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
-current_phase: 134
-current_phase_name: under-iterated-surface-polish-dual-theme-s
-status: planning
-stopped_at: Phase 134 context gathered
-last_updated: "2026-06-25T19:43:34.841Z"
-last_activity: 2026-06-25 — Phase 134 (SCREEN-DARK-01) context gathered — 4 gray areas researched + locked (copper scope, cross-screen tune, verification gate, hover boost)
-last_activity_desc: Phase 134 context gathered (CONTEXT.md + DISCUSSION-LOG.md committed)
+current_phase: 135
+current_phase_name: shell-chrome-polish-dual-theme
+status: ready_to_plan
+stopped_at: Phase 134 complete (3/3) — ready to discuss Phase 135
+last_updated: 2026-06-26T02:21:28.112Z
+last_activity: 2026-06-26 -- Phase 134 complete; SCREEN-DARK-01 verified with light pixel parity, AA contrast, depth spec, and dark spot review
+last_activity_desc: Phase 134 complete (3/3 plans); ready to plan Phase 135 SHELL-DARK-01
 progress:
   total_phases: 9
-  completed_phases: 6
-  total_plans: 17
-  completed_plans: 17
-  percent: 67
+  completed_phases: 7
+  total_plans: 20
+  completed_plans: 20
+  percent: 78
 ---
 
 # Project State
@@ -22,15 +22,15 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 134 — under-iterated-surface-polish-dual-theme (SCREEN-DARK-01) — next to plan
+**Current Focus:** Phase 135 — shell chrome polish (dual theme) `[S]`
 
 ## Current Position
 
-Phase: 133 (dark-path-motion-expression-r-g) — ✅ COMPLETE & VERIFIED (2026-06-25)
-Plan: 3 of 3 (all complete)
-Status: Phases 128–133 complete & verified. Phase 133 DARKMOTION-01 verification fully automated (deterministic dark/light glow assertions + CI ops-asset build; 0 human UAT; PR #49 green). 130/131 reconciled to passed (VALIDATION.md human approval accepted).
-Resume: **Plan Phase 134 (SCREEN-DARK-01)** — `/gsd-plan-phase 134`. Then 135 (SHELL-DARK-01), 136 (DUALVERIFY-01).
-Last activity: 2026-06-25 — Phase 133 verified + v1.34 state reconciled (128–133 complete)
+Phase: 135
+Plan: Not started
+Status: Ready to plan
+Resume: **Plan Phase 135 (SHELL-DARK-01)** — `/gsd-plan-phase 135`. Then 136 (DUALVERIFY-01).
+Last activity: 2026-06-26 — Phase 134 SCREEN-DARK-01 complete and verified
 
 ## Completed Milestone (interleaved)
 
@@ -38,7 +38,7 @@ Last activity: 2026-06-25 — Phase 133 verified + v1.34 state reconciled (128�
 
 ## Current Milestone
 
-**v1.34 Both-Themes Perfection — Dark Signature + AA Gate** (phases 128–136). 5/9 complete (128–132); **resumed at Phase 133** (then 134 SCREEN-DARK-01, 135 SHELL-DARK-01, 136 DUALVERIFY-01). Next-level UI/UX + perfect BOTH light & dark themes with a WCAG AA hard gate. Dark mode already EXISTS — polish/expression, do not rebuild. v1.34's accumulated context is retained below. The interleaved v1.35 brand milestone is recorded above under "Completed Milestone".
+**v1.34 Both-Themes Perfection — Dark Signature + AA Gate** (phases 128–136). 7/9 complete (128–134); **next is Phase 135 SHELL-DARK-01**, then Phase 136 DUALVERIFY-01. Next-level UI/UX + perfect BOTH light & dark themes with a WCAG AA hard gate. Dark mode already EXISTS — polish/expression, do not rebuild. v1.34's accumulated context is retained below. The interleaved v1.35 brand milestone is recorded above under "Completed Milestone".
 
 ## v1.35 Brand Milestone Context (archived)
 
@@ -152,5 +152,5 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 ## Session
 
 **Last session:** 2026-06-25T19:43:34.836Z
-**Stopped at:** Phase 134 context gathered
-**Resume file:** .planning/phases/134-under-iterated-surface-polish-dual-theme-s/134-CONTEXT.md
+**Stopped at:** Phase 134 complete; ready to plan Phase 135
+**Resume file:** .planning/phases/134-under-iterated-surface-polish-dual-theme-s/134-03-SUMMARY.md

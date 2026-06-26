@@ -8,7 +8,7 @@
 - ✅ **v1.31 Adoption Evidence Demo Hardening** — Phases 113-115 (UAT passed 2026-06-01)
 - ✅ **v1.32 Admin UI/UX Design System Cleanup** — Phases 116-118 (shipped 2026-06-01) — see `milestones/v1.32-ROADMAP.md`
 - ✅ **v1.33 Admin UI Insane Polish** — Phases 119-127 (shipped 2026-06-03) — see `milestones/v1.33-ROADMAP.md`
-- 🔨 **v1.34 Both-Themes Perfection — Dark Signature + AA Gate** — Phases 128-136 (**active**; Phases 128–133 complete & verified, 6/9; next Phase 134 SCREEN-DARK-01)
+- 🔨 **v1.34 Both-Themes Perfection — Dark Signature + AA Gate** — Phases 128-136 (**active**; Phases 128–134 complete & verified, 7/9; next Phase 135 SHELL-DARK-01)
 - ✅ **v1.35 Brand System & Logo Identity** — Phases 137-143 (**complete** 2026-06-24, commit `fcb8fc7`; shipped directly, not via GSD plan/execute artifacts — `roadmap.analyze` shows 0% by design, see STATE.md "Completed Milestone")
 
 ## Phases — v1.35 Brand System & Logo Identity (COMPLETE — shipped 2026-06-24)
@@ -107,7 +107,7 @@ evidence-based refinement but bias-to-keep (they're implemented live in `scrypat
 2. Repo hygiene: only intended files changed, no unrelated diffs, no binary bloat, total new brand-asset weight within budget (target < ~400KB), fonts subset.
 3. A final report ships with artifact manifest, top decisions (ship/reject/defer), cited research, commands run, and a must/should/nice next-commit plan; human UAT passes.
 
-## Phases — v1.34 Both-Themes Perfection (ACTIVE — 128–133 complete; next Phase 134)
+## Phases — v1.34 Both-Themes Perfection (ACTIVE — 128–134 complete; next Phase 135)
 
 **Milestone v1.34 — Both-Themes Perfection: Dark Signature + AA Gate (phases 128–136).** Next-level UI/UX +
 design-system iteration of the `scrypath_ops` admin console, building on v1.33. Dark/light/system theming
@@ -144,7 +144,7 @@ Plans:
 
 - [x] 128-03-PLAN.md — Create admin_contrast_matrix.spec.ts axe gate, run full matrix, commit 128-CONTRAST-REPORT.md
 
-**Status:** Pending
+**Status:** Complete
 
 ### Phase 129: Dark-theme brand-expression audit `[S] [R]`
 
@@ -198,7 +198,7 @@ Plans:
 
 - [x] 130-04-PLAN.md — Run D-11 proof bundle, update DESIGN-TOKENS.md elevation-surface subsection
 
-**Status:** Pending
+**Status:** Complete
 
 ### Phase 131: Glow, dark shadow, and copper accent system `[R] [G]`
 
@@ -287,20 +287,20 @@ Plans:
 
 **Requirements:** SCREEN-DARK-01
 
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 **Wave 1**
 
-- [ ] 134-01-PLAN.md — Wave 0 harness: new admin_surface_depth.spec.ts computed-style gate + test:e2e:admin-depth script + populated-playbooks seed (R4) + new ExUnit token tripwire (R3)
+- [x] 134-01-PLAN.md — Wave 0 harness: new admin_surface_depth.spec.ts computed-style gate + test:e2e:admin-depth script + populated-playbooks seed (R4) + new ExUnit token tripwire (R3)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 134-02-PLAN.md — Application core: dark hover-border boost to primary 55% (D-15/16), earned copper badge on the recommended intent-card (D-01), conditional DK-13 posture-table tune (D-08), verify-only DK-11/14/15 sweep, filled depth-spec assertions
+- [x] 134-02-PLAN.md — Application core: dark hover-border boost to primary 55% (D-15/16), earned copper badge on the recommended intent-card (D-01), conditional DK-13 posture-table tune (D-08), verify-only DK-11/14/15 sweep, filled depth-spec assertions
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 134-03-PLAN.md — Verification gate: light pixel-diff threshold 0 (D-13) + AA gate green in 3 themes + mix verify.opsui + depth spec, plus the two human-only aesthetic spot-reviews (D-13/D-06)
+- [x] 134-03-PLAN.md — Verification gate: light pixel-diff threshold 0 (D-13) + AA gate green in 3 themes + mix verify.opsui + depth spec, plus the two human-only aesthetic spot-reviews (D-13/D-06)
 
 **Success criteria:**
 
@@ -308,7 +308,7 @@ Plans:
 2. Sync/Drift drift-chips and preflight gain depth; Playbooks empty + populated are polished — both themes, all seed scenarios.
 3. Earned copper/glow accents appear where they serve the scan path, not decoratively.
 
-**Status:** Pending
+**Status:** Complete
 
 ### Phase 135: Shell chrome polish (dual-theme) `[S]`
 
@@ -364,7 +364,7 @@ Plans:
 
 **Coverage:** 7/7 requirements mapped across 7 phases.
 
-## Progress — v1.34 (active — Phases 128–133 complete)
+## Progress — v1.34 (active — Phases 128–134 complete)
 
 | Phase | Requirements | Status |
 |-------|--------------|--------|
@@ -374,7 +374,7 @@ Plans:
 | 131 Glow + dark shadow + copper system | GLOW-01, COPPER-01 | Complete |
 | 132 A11y contrast remediation (hard gate) | A11Y-TOKEN-01 | Complete |
 | 133 Dark/path motion expression | DARKMOTION-01 | Complete |
-| 134 Under-iterated surface polish | SCREEN-DARK-01 | Pending |
+| 134 Under-iterated surface polish | SCREEN-DARK-01 | Complete |
 | 135 Shell chrome polish | SHELL-DARK-01 | Pending |
 | 136 Milestone verification & UAT | DUALVERIFY-01 | Pending |
 
@@ -389,7 +389,7 @@ Plans:
 | COPPER-01 | Phase 131 | Complete |
 | A11Y-TOKEN-01 | Phase 132 | Complete |
 | DARKMOTION-01 | Phase 133 | Complete |
-| SCREEN-DARK-01 | Phase 134 | Pending |
+| SCREEN-DARK-01 | Phase 134 | Complete |
 | SHELL-DARK-01 | Phase 135 | Pending |
 | DUALVERIFY-01 | Phase 136 | Pending |
 
@@ -422,6 +422,6 @@ After the pick: 139 finalize the logo family → 140 tokens+fonts → 141 the HT
 product → 143 verify/UAT. Source plan: `~/.claude/plans/brand-book-pressure-test-scalable-alpaca.md`.
 
 **Resumed & advanced: milestone v1.34 (phases 128–136).** v1.35 shipped 2026-06-24; v1.34 resumed and Phases
-128–133 are now complete & verified (Phase 133 DARKMOTION-01 verification fully automated, 0 human UAT, 2026-06-25).
-**Next: Phase 134 (SCREEN-DARK-01).** No v1.35 brand-token refinement shipped, so the remaining dark-polish phases
+128–134 are now complete & verified (Phase 133 DARKMOTION-01 verification fully automated, 0 human UAT, 2026-06-25; Phase 134 SCREEN-DARK-01 verified 2026-06-26).
+**Next: Phase 135 (SHELL-DARK-01).** No v1.35 brand-token refinement shipped, so the remaining dark-polish phases
 (134–135) inherit the existing tokens unchanged.
