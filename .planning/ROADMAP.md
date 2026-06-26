@@ -316,7 +316,7 @@ Plans:
 
 **Requirements:** SHELL-DARK-01
 
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 
 Plans:
 **Wave 1**
@@ -325,7 +325,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 135-02-PLAN.md — Header/nav/wash/theme-toggle shell polish
+- [x] 135-02-PLAN.md — Header/nav/wash/theme-toggle shell polish
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
