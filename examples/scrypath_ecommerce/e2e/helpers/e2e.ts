@@ -17,6 +17,10 @@ export async function waitForLiveConnected(page: Page): Promise<void> {
     undefined,
     { timeout: 15_000 }
   );
+
+  await expect(page.locator("[data-phx-main]")).toHaveClass(/\bphx-connected\b/, {
+    timeout: 15_000
+  });
 }
 
 type SeedResult = {
