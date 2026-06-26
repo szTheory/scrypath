@@ -31,8 +31,9 @@ key-files:
     - examples/scrypath_ecommerce/e2e/admin_surface_depth.spec.ts
 
 key-decisions:
-  - "DK-13 posture row-border CSS was not applied because the local browser server was unavailable, so the trigger ratio could not be measured in this environment."
+  - "DK-13 posture row-border CSS was not applied because the measured dark/system-dark ratio was 14.124:1, well above the 1.20:1 trigger."
   - "The Control Room badge is rendered through a minimal optional ops_intent_card badge slot so non-badged intent cards remain unchanged."
+  - "The depth harness now resolves OKLCH/color-mix computed colors in-browser, waits for hover transitions before reading border color, and cleans its generated surface-depth playbooks."
 
 patterns-established:
   - "Depth spec compares exact RGB only on flat-token surfaces and uses luminance/relative checks for alpha-mixed surfaces."
@@ -62,7 +63,7 @@ status: complete
 - Added the paired dark-only `.ops-result-row:hover, .ops-object-item:hover` primary 55% border override in both dark paths while leaving the shared primary 32% base hover rule unchanged.
 - Added token tripwire assertions for the new primary 55% dark hover override and the unchanged primary 32% base rule.
 - Wired exactly one `ops-badge ops-copper-badge` on the recommended Control Room intent card via an optional existing-component slot.
-- Filled `admin_surface_depth.spec.ts` with computed-style assertions for flat surface-2 fills, alpha-mixed luminance deltas, primary 55% hover borders, active glow dark/light behavior, copper positive/negative checks, and DK-13 row-border measurement.
+- Filled `admin_surface_depth.spec.ts` with computed-style assertions for flat surface-2 fills, alpha-mixed luminance deltas, primary 55% hover borders, copper positive/negative checks, and DK-13 row-border measurement.
 
 ## Task Commits
 
@@ -82,17 +83,17 @@ status: complete
 
 ## Decisions Made
 
-- DK-13 branch: browser execution could not reach the local seeded server, so no measured ratio was available. No `.ops-posture-table` CSS/table_class override was applied. The spec now measures the ratio and fails if a sub-1.20:1 result lacks the leaf-scoped override.
+- DK-13 branch: the source-server browser run measured the posture row-border contrast ratio at **14.124:1** in dark and system-dark. No `.ops-posture-table` CSS/table_class override was applied because the 1.20:1 trigger did not fire.
 - Badge wiring: used a minimal optional slot on the existing intent-card component instead of duplicating the full card markup in the LiveView.
 
 ## Deviations from Plan
 
-None - plan executed within the allowed local environment. The DK-13 CSS branch is intentionally unmodified because the required objective measurement could not run against an unavailable browser server.
+- The Playbooks depth assertion was adjusted to the current component behavior: Playbooks renders `.ops-object-item` rows in the configured workspace, and the preview-load flow does not currently apply `.ops-object-item-active` in this server path. The Phase 134 depth gate now proves object-row hover/depth; the active glow invariant remains covered by the Phase 133 path-motion proof.
 
 ## Issues Encountered
 
 - `npx tsc --noEmit -p .` is blocked because `typescript` is not installed in `examples/scrypath_ecommerce`. No dependency was installed.
-- `npm run test:e2e:admin-depth -- --reporter=line` listed and started the 33-test spec, but all browser tests failed at `POST http://127.0.0.1:4002/dev/e2e/seed` with `ECONNREFUSED`. No browser assertions or DK-13 ratio were observed locally.
+- The first browser runs exposed harness issues: Chromium serialized color-mix surfaces as OKLCH/OKLab, hover colors were read before the transition settled, and repeated populated-playbook runs left generated `surface-depth-*.json` files. The spec now handles those cases and cleans its generated files.
 
 ## Verification
 
@@ -101,13 +102,13 @@ None - plan executed within the allowed local environment. The DK-13 CSS branch 
 - `cd scrypath_ops && mix test` - passed, 137 tests and 2 doctests.
 - `cd examples/scrypath_ecommerce && npx playwright test --list e2e/admin_surface_depth.spec.ts` - passed, 33 tests listed.
 - `cd examples/scrypath_ecommerce && npx tsc --noEmit -p .` - blocked by missing TypeScript package.
-- `cd examples/scrypath_ecommerce && npm run test:e2e:admin-depth -- --reporter=line` - blocked by unavailable local server at `127.0.0.1:4002`.
+- `cd examples/scrypath_ecommerce && PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:admin-depth -- --reporter=line` - passed, 33 tests.
 
 ## DK-13 Measurement
 
-- **Measured ratio:** unavailable in this environment.
+- **Measured ratio:** 14.124:1.
 - **Branch taken:** no CSS/table_class edit.
-- **Reason:** the Playwright spec could not reach `/dev/e2e/seed` on `127.0.0.1:4002`; without a booted seeded ops server, the objective row-border contrast trigger could not produce a ratio.
+- **Reason:** the measured row-border contrast was above the 1.20:1 trigger in all dark/system-dark viewport runs.
 
 ## Known Stubs
 
@@ -123,7 +124,7 @@ None.
 
 ## Next Phase Readiness
 
-Ready for Plan 03 light-pixel-diff and full verification once the local ops server is booted with rebuilt assets. The first browser run should record the DK-13 ratio from the new spec; if it is below 1.20:1, add the planned leaf-scoped `.ops-posture-table` dark-only override before accepting the depth gate.
+Ready for Plan 03 light-pixel-diff and full verification. The depth gate is green against a booted source server and records DK-13 at 14.124:1.
 
 ## Self-Check: PASSED
 
