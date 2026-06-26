@@ -1336,7 +1336,7 @@
 }
 
 #theme-toggle-pill {
-  transition-property: left, background-color, border-color, box-shadow;
+  transition-property: background-color, border-color, box-shadow;
   transition-duration: var(--duration-ops-fast);
   transition-timing-function: var(--ease-ops-standard);
 }

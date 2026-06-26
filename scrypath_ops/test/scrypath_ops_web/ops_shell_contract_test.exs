@@ -177,5 +177,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert source =~ "setAttribute(\"aria-pressed\""
     assert source =~ "setAttribute(\"data-theme-selected\""
     assert source =~ "syncThemeButtons();"
+    assert source =~ "DOMContentLoaded"
+    assert source =~ "closest(\"[data-phx-theme]\")"
   end
 end
