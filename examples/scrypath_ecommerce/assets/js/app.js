@@ -19,9 +19,14 @@ const CommandPalette = {
     this.items = Array.from(this.cmdk.querySelectorAll("[data-cmdk-item]"));
     this.visible = this.items.slice();
     this.activeIndex = -1;
+    this.previousFocus = null;
 
     this.onKeydown = (e) => this.handleKeydown(e);
+    this.onCmdkKeydown = (e) => this.overlayKeydown(e, this.cmdk);
+    this.onSheetKeydown = (e) => this.overlayKeydown(e, this.sheet);
     window.addEventListener("keydown", this.onKeydown);
+    this.cmdk.addEventListener("keydown", this.onCmdkKeydown);
+    this.sheet.addEventListener("keydown", this.onSheetKeydown);
 
     this.cmdk.querySelectorAll("[data-cmdk-close]").forEach((el) =>
       el.addEventListener("click", () => this.close()));
@@ -32,6 +37,8 @@ const CommandPalette = {
   },
   destroyed() {
     window.removeEventListener("keydown", this.onKeydown);
+    this.cmdk.removeEventListener("keydown", this.onCmdkKeydown);
+    this.sheet.removeEventListener("keydown", this.onSheetKeydown);
   },
   isTyping() {
     const a = document.activeElement;
@@ -59,21 +66,107 @@ const CommandPalette = {
     else if (e.key === "r") { this.refresh(); }
   },
   open() {
-    this.closeSheet();
+    this.rememberFocus();
+    this.closeSheet({ restoreFocus: false });
+    this.cancelDismiss(this.cmdk);
     this.cmdk.removeAttribute("hidden");
     this.input.value = "";
     this.filter();
     this.input.focus();
   },
-  close() {
-    this.cmdk.setAttribute("hidden", "");
+  close({ restoreFocus = true } = {}) {
+    if (!this.isOpen()) return;
+    this.dismiss(this.cmdk);
     this.setActive(-1);
+    if (restoreFocus) this.restoreFocus();
   },
-  openSheet() { this.sheet.removeAttribute("hidden"); },
-  closeSheet() { this.sheet.setAttribute("hidden", ""); },
+  openSheet() {
+    this.rememberFocus();
+    this.cancelDismiss(this.sheet);
+    this.sheet.removeAttribute("hidden");
+    this.focusOverlay(this.sheet);
+  },
+  closeSheet({ restoreFocus = true } = {}) {
+    if (!this.sheetOpen()) return;
+    this.dismiss(this.sheet);
+    if (restoreFocus) this.restoreFocus();
+  },
+  dismiss(el) {
+    if (el.hasAttribute("hidden")) return;
+    if (el._opsCloseTimer) return;
+    el.classList.add("ops-cmdk--closing");
+    el._opsCloseTimer = window.setTimeout(() => {
+      el._opsCloseTimer = null;
+      el.classList.remove("ops-cmdk--closing");
+      el.setAttribute("hidden", "");
+    }, 160);
+  },
+  cancelDismiss(el) {
+    if (el._opsCloseTimer) {
+      window.clearTimeout(el._opsCloseTimer);
+      el._opsCloseTimer = null;
+    }
+    el.classList.remove("ops-cmdk--closing");
+  },
   refresh() {
     const btn = document.querySelector("[data-ops-refresh]");
     if (btn) btn.click();
+  },
+  rememberFocus() {
+    const active = document.activeElement;
+    this.previousFocus = active && active !== document.body && active !== document.documentElement
+      ? active
+      : null;
+  },
+  restoreFocus() {
+    const target = this.previousFocus;
+    this.previousFocus = null;
+    if (target && target.isConnected && typeof target.focus === "function") {
+      target.focus({ preventScroll: true });
+    }
+  },
+  focusableElements(root) {
+    const selector = [
+      "a[href]",
+      "button:not([disabled])",
+      "input:not([disabled])",
+      "select:not([disabled])",
+      "textarea:not([disabled])",
+      "[tabindex]:not([tabindex='-1'])"
+    ].join(",");
+
+    return Array.from(root.querySelectorAll(selector)).filter((el) =>
+      !el.closest("[hidden]") && el.getAttribute("aria-hidden") !== "true");
+  },
+  focusOverlay(root) {
+    const focusables = this.focusableElements(root);
+    const panel = root.querySelector(".ops-cmdk__panel");
+    const target = root === this.cmdk ? this.input : (focusables[0] || panel || root);
+    target.focus({ preventScroll: true });
+  },
+  overlayKeydown(e, root) {
+    if (e.key !== "Tab") return;
+
+    const focusables = this.focusableElements(root);
+    if (!focusables.length) {
+      e.preventDefault();
+      this.focusOverlay(root);
+      return;
+    }
+
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+
+    if (!root.contains(document.activeElement)) {
+      e.preventDefault();
+      first.focus({ preventScroll: true });
+    } else if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus({ preventScroll: true });
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus({ preventScroll: true });
+    }
   },
   filter() {
     const q = this.input.value.trim().toLowerCase();
@@ -87,11 +180,17 @@ const CommandPalette = {
     this.setActive(this.visible.length ? 0 : -1);
   },
   setActive(idx) {
-    this.items.forEach((i) => i.classList.remove("is-active"));
+    this.items.forEach((i) => {
+      i.classList.remove("is-active");
+      i.setAttribute("aria-selected", "false");
+    });
+    this.input.removeAttribute("aria-activedescendant");
     this.activeIndex = idx;
     const item = idx >= 0 && this.visible[idx];
     if (item) {
       item.classList.add("is-active");
+      item.setAttribute("aria-selected", "true");
+      this.input.setAttribute("aria-activedescendant", item.id);
       item.scrollIntoView({ block: "nearest" });
     }
   },
@@ -106,7 +205,7 @@ const CommandPalette = {
     } else if (e.key === "Enter") {
       e.preventDefault();
       const item = this.visible[this.activeIndex] || this.visible[0];
-      if (item) { this.close(); item.click(); }
+      if (item) { this.close({ restoreFocus: false }); item.click(); }
     }
   },
 };

@@ -556,7 +556,8 @@ defmodule ScrypathOpsWeb.OpsUi do
       aria-label={@label}
       {@rest}
     >
-      <span :for={n <- 1..@lines} class="ops-loading__bar" style={loading_bar_width(n, @lines)}></span>
+      <span :for={n <- 1..@lines} class="ops-loading__bar" style={loading_bar_width(n, @lines)}>
+      </span>
     </div>
     <span
       :if={@variant == :inline}
@@ -869,7 +870,9 @@ defmodule ScrypathOpsWeb.OpsUi do
       >
         <div class="min-w-0">
           <p :if={@title} class="font-semibold text-base-content">{@title}</p>
-          <p :if={@subtitle} class="mt-ops-1 text-ops-sm leading-5 text-base-content/65">{@subtitle}</p>
+          <p :if={@subtitle} class="mt-ops-1 text-ops-sm leading-5 text-base-content/65">
+            {@subtitle}
+          </p>
         </div>
         <div :if={@actions != []} class="flex flex-wrap gap-2">
           {render_slot(@actions)}
@@ -1042,8 +1045,7 @@ defmodule ScrypathOpsWeb.OpsUi do
         tabindex="-1"
         phx-remove={
           Phoenix.LiveView.JS.transition(
-            {"transition-all ease-ops-exit duration-200",
-             "opacity-100 translate-y-0 scale-100",
+            {"transition-all ease-ops-exit duration-200", "opacity-100 translate-y-0 scale-100",
              "opacity-0 translate-y-1 scale-[0.98]"},
             time: 120
           )
@@ -1077,17 +1079,26 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:mount_path, :string, required: true)
 
   def ops_command_palette(assigns) do
-    assigns =
-      assign(assigns, :items, [
+    items =
+      [
         %{path: assigns.mount_path, label: "Control Room", hint: "Home · trust verdict"}
         | Enum.map(
             ScrypathOpsWeb.Nav.primary(assigns.mount_path),
             &%{path: &1.path, label: &1.label, hint: &1.title}
           )
-      ])
+      ]
+      |> Enum.with_index()
+      |> Enum.map(fn {item, index} -> Map.put(item, :id, "ops-cmdk-item-#{index}") end)
+
+    assigns = assign(assigns, :items, items)
 
     ~H"""
-    <div id="ops-command-palette" phx-hook="CommandPalette" data-cheatsheet="ops-cheatsheet">
+    <div
+      id="ops-command-palette"
+      phx-hook="CommandPalette"
+      phx-update="ignore"
+      data-cheatsheet="ops-cheatsheet"
+    >
       <div
         id="ops-cmdk"
         class="ops-cmdk"
@@ -1097,22 +1108,25 @@ defmodule ScrypathOpsWeb.OpsUi do
         hidden
       >
         <div class="ops-cmdk__backdrop" data-cmdk-close aria-hidden="true"></div>
-        <div class="ops-cmdk__panel">
+        <div class="ops-cmdk__panel" tabindex="-1">
           <input
             type="text"
             class="ops-cmdk__input"
             placeholder="Jump to a surface…"
             aria-label="Search surfaces"
+            aria-controls="ops-cmdk-list"
             autocomplete="off"
             spellcheck="false"
             data-cmdk-input
           />
-          <ul class="ops-cmdk__list" role="listbox" aria-label="Surfaces">
+          <ul id="ops-cmdk-list" class="ops-cmdk__list" role="listbox" aria-label="Surfaces">
             <li :for={item <- @items}>
               <.link
+                id={item.id}
                 navigate={item.path}
                 class="ops-cmdk__item"
                 role="option"
+                aria-selected="false"
                 data-cmdk-item
                 data-cmdk-label={String.downcase("#{item.label} #{item.hint}")}
               >
@@ -1134,7 +1148,7 @@ defmodule ScrypathOpsWeb.OpsUi do
         hidden
       >
         <div class="ops-cmdk__backdrop" data-cmdk-close aria-hidden="true"></div>
-        <div class="ops-cmdk__panel ops-cmdk__panel--sheet">
+        <div class="ops-cmdk__panel ops-cmdk__panel--sheet" tabindex="-1">
           <h2 class="text-ops-h3 font-semibold leading-ops-tight text-base-content">
             Keyboard shortcuts
           </h2>
