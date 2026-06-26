@@ -33,48 +33,23 @@ import path from "node:path";
 import {
   drainSearchQueue,
   seedScenario,
-  waitForLiveConnected,
   waitForSearchVisible,
   type SeedScenario
 } from "./helpers/e2e";
+import {
+  assertSystemDarkInvariants,
+  SCENARIO_CAPTURES,
+  THEME_MODES,
+  themeSlug,
+  VIEWPORT_NAMES,
+  VIEWPORTS,
+  type ScreenCapture,
+  type ThemeMode,
+  type ViewportName
+} from "./helpers/theme-grid";
 import { AxeBuilder } from "@axe-core/playwright";
 
 const contrastReportDir = process.env.CONTRAST_REPORT_DIR || "test-results/contrast";
-
-// ── D-09: Discriminated union for theme modes ─────────────────────────────────
-
-type ThemeMode =
-  | { kind: "explicit"; theme: "light" | "dark" }
-  | { kind: "system"; colorScheme: "dark" };
-
-const THEME_MODES: ThemeMode[] = [
-  { kind: "explicit", theme: "light" },
-  { kind: "explicit", theme: "dark" },
-  { kind: "system", colorScheme: "dark" }
-];
-
-// Flat slug for file naming and report schema `theme` field (D-18):
-function themeSlug(mode: ThemeMode): string {
-  return mode.kind === "system" ? `system-${mode.colorScheme}` : mode.theme;
-}
-
-type ViewportName = "mobile" | "desktop";
-
-const VIEWPORTS: Record<ViewportName, { width: number; height: number }> = {
-  mobile: { width: 390, height: 844 },
-  desktop: { width: 1440, height: 900 }
-};
-
-const VIEWPORT_NAMES: ViewportName[] = ["mobile", "desktop"];
-
-// A single capture target: which screen, what posture state label, and the per-page
-// preparation (navigate + trigger + wait for the load-bearing content) before the axe pass.
-type ScreenCapture = {
-  index: string;
-  screen: string;
-  state: string;
-  prepare: (page: Page) => Promise<void>;
-};
 
 // ── D-18: Finding schema ───────────────────────────────────────────────────────
 
@@ -117,20 +92,6 @@ const BODY_SELECTORS = [
   ".ops-handoff__hint",
   ".ops-intent-card__summary"
 ];
-
-// ── D-08: System-dark runtime invariants ──────────────────────────────────────
-
-async function assertSystemDarkInvariants(page: Page): Promise<void> {
-  // 1. <html> must have NO data-theme (proves we're on the media-query path, not explicit)
-  await expect(page.locator("html")).not.toHaveAttribute("data-theme");
-  // 2. Playwright colorScheme emulation must be active (guards silent no-op)
-  const mediaMatches = await page.evaluate(
-    () => window.matchMedia("(prefers-color-scheme: dark)").matches
-  );
-  expect(mediaMatches).toBe(true);
-  // 3. App's own OS-resolution logic must resolve to dark
-  await expect(page.locator("html")).toHaveAttribute("data-theme-effective", "dark");
-}
 
 // ── Report accumulation helpers (D-17/D-18/D-19) ─────────────────────────────
 
@@ -441,158 +402,8 @@ function describeScenario(scenario: SeedScenario, captures: ScreenCapture[]): vo
   });
 }
 
-// ── Shared prepare steps (verbatim from admin_screenshot_matrix.spec.ts) ──────
-
-async function gotoControlRoom(page: Page): Promise<void> {
-  await page.goto("/admin/search");
-  await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Control Room" })).toBeVisible();
-}
-
-async function gotoPosture(page: Page): Promise<void> {
-  await page.goto("/admin/search/posture");
-  await waitForLiveConnected(page);
-  await page.getByRole("button", { name: "Refresh posture" }).click();
-  await expect(page.getByRole("heading", { name: "Posture", exact: true })).toBeVisible();
-}
-
-async function gotoFailedSync(page: Page): Promise<void> {
-  await page.goto("/admin/search/failed-sync");
-  await waitForLiveConnected(page);
-  await page.getByRole("button", { name: "Refresh failed sync jobs" }).click();
-  await expect(page.getByRole("heading", { name: "Failed sync jobs", exact: true })).toBeVisible();
-}
-
-async function gotoSyncDrift(page: Page): Promise<void> {
-  await page.goto("/admin/search/sync-drift");
-  await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
-  await page.getByRole("button", { name: "Load / refresh contract drift" }).click();
-  // load_drift defers the bounded backend read to a :run_drift message (S3 loading
-  // state), so the dimensions panel appears a render after the click — toBeVisible polls.
-  await expect(page.getByText("Contract dimensions")).toBeVisible();
-}
-
-async function gotoSearch(page: Page): Promise<void> {
-  await page.goto("/admin/search/search");
-  await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Search & federation" })).toBeVisible();
-}
-
-async function gotoPlaybooks(page: Page): Promise<void> {
-  await page.goto("/admin/search/playbooks");
-  await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Saved playbooks" })).toBeVisible();
-}
-
-async function runSearch(page: Page, query: string): Promise<void> {
-  await page.getByLabel("Search text").fill(query);
-  await page.getByRole("button", { name: "Run bounded search" }).click();
-}
-
 // ── Scenario groups (D-01 curated 9 states + D-02 dark-risk supplement) ──────
 
-// incident: red posture, populated failed sync, contract drift, can't-fully-trust verdict.
-// D-02 supplement index "10": sync-drift drift-chips on the incident surface (dark-risk target).
-describeScenario("incident", [
-  { index: "00", screen: "control-room", state: "incident", prepare: gotoControlRoom },
-  { index: "01", screen: "posture", state: "incident", prepare: gotoPosture },
-  {
-    index: "02",
-    screen: "failed-sync",
-    state: "populated",
-    prepare: async (page) => {
-      await gotoFailedSync(page);
-      const row = page.getByTestId("failed-sync-row").first();
-      await expect(row).toBeVisible();
-    }
-  },
-  { index: "03", screen: "sync-drift", state: "drift", prepare: gotoSyncDrift },
-  // D-02 dark-risk supplement: drift chips + muted metadata on non-incident surface
-  {
-    index: "10",
-    screen: "sync-drift",
-    state: "drift-detail",
-    prepare: async (page) => {
-      await gotoSyncDrift(page);
-      // drift chips + muted metadata visible — dark #1B2230 surface-2 gap target
-    }
-  }
-]);
-
-// all_green: healthy posture, trusted verdict, search returns results.
-// D-02 supplements: posture healthy-detail (index 11) + search results-with-facets (index 13).
-describeScenario("all_green", [
-  { index: "04", screen: "control-room", state: "all-green", prepare: gotoControlRoom },
-  { index: "05", screen: "posture", state: "all-green", prepare: gotoPosture },
-  {
-    index: "06",
-    screen: "search",
-    state: "results",
-    prepare: async (page) => {
-      await gotoSearch(page);
-      await runSearch(page, "quantum");
-      await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
-    }
-  },
-  // D-02 dark-risk supplement: posture populated/healthy — muted metadata rows
-  {
-    index: "11",
-    screen: "posture",
-    state: "healthy-detail",
-    prepare: async (page) => {
-      await gotoPosture(page);
-      // posture populated/healthy detail — muted metadata rows in dark
-    }
-  },
-  // D-02 dark-risk supplement: search results with facets/secondary text visible
-  {
-    index: "13",
-    screen: "search",
-    state: "results-with-facets",
-    prepare: async (page) => {
-      await gotoSearch(page);
-      await runSearch(page, "quantum");
-      await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
-      // facet/secondary text visible — muted text contrast target
-    }
-  }
-]);
-
-// empty: no synced products / signals — every screen renders its empty state.
-// D-02 supplement: playbooks populated (index 12) — muted metadata rows in dark.
-describeScenario("empty", [
-  {
-    index: "07",
-    screen: "failed-sync",
-    state: "empty",
-    prepare: gotoFailedSync
-  },
-  {
-    index: "08",
-    screen: "search",
-    state: "zero-results",
-    prepare: async (page) => {
-      await gotoSearch(page);
-      await runSearch(page, "nothingmatchesthisquery");
-      // Either an explicit Results heading with no rows, or the empty/zero-result state.
-      await page.waitForTimeout(500);
-    }
-  },
-  {
-    index: "09",
-    screen: "playbooks",
-    state: "empty-workspace",
-    prepare: gotoPlaybooks
-  },
-  // D-02 dark-risk supplement: playbooks with saved items — muted metadata rows in dark
-  {
-    index: "12",
-    screen: "playbooks",
-    state: "populated",
-    prepare: async (page) => {
-      await gotoPlaybooks(page);
-      // playbooks with saved items — muted metadata rows in dark
-    }
-  }
-]);
+describeScenario("incident", SCENARIO_CAPTURES.incident);
+describeScenario("all_green", SCENARIO_CAPTURES.all_green);
+describeScenario("empty", SCENARIO_CAPTURES.empty);
