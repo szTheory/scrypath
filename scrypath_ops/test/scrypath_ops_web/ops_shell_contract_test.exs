@@ -192,6 +192,15 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert source =~ "syncThemeButtons();"
     assert source =~ "DOMContentLoaded"
     assert source =~ "closest(\"[data-phx-theme]\")"
+    assert source =~ "phx:page-loading-stop"
+  end
+
+  test "shortcut sheet advertises command palette shortcut across platforms", %{conn: conn} do
+    {:ok, _lv, html} = live(conn, ~p"/ops/posture")
+
+    assert html =~ "Command or Control K"
+    assert html =~ "<kbd"
+    assert html =~ "Ctrl"
   end
 
   test "flash component exposes durable passive alert chrome" do
