@@ -3,16 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection
 current_phase: 135
+current_phase_name: shell-chrome-polish-dual-theme-s
 status: executing
-stopped_at: Phase 135 context gathered
-last_updated: "2026-06-26T08:54:54.792Z"
+stopped_at: Completed 135-01-PLAN.md
+last_updated: "2026-06-26T09:12:50.108Z"
 last_activity: 2026-06-26
-last_activity_desc: Phase 134 SCREEN-DARK-01 complete and verified
+last_activity_desc: Phase 135 Plan 01 shell browser proof scaffold complete
 progress:
   total_phases: 9
   completed_phases: 7
-  total_plans: 20
-  completed_plans: 20
+  total_plans: 24
+  completed_plans: 21
   percent: 78
 ---
 
@@ -21,15 +22,15 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 135 — shell chrome polish (dual theme) `[S]`
+**Current Focus:** Phase 135 — shell-chrome-polish-dual-theme-s
 
 ## Current Position
 
-Phase: 135
-Plan: Not started
+Phase: 135 (shell-chrome-polish-dual-theme-s) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Resume: **Plan Phase 135 (SHELL-DARK-01)** — `/gsd-plan-phase 135`. Then 136 (DUALVERIFY-01).
-Last activity: 2026-06-26 — Phase 134 SCREEN-DARK-01 complete and verified
+Resume: **Execute Plan 135-02** — Header/nav/wash/theme-toggle shell polish. Then continue 135-03, 135-04, and Phase 136 (DUALVERIFY-01).
+Last activity: 2026-06-26 — Phase 135 Plan 01 shell browser proof scaffold complete
 
 ## Completed Milestone (interleaved)
 
@@ -97,20 +98,10 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 
 - Keep future runtime breadth closed unless concrete production bug evidence, reviewed outside-adopter evidence, or an explicit strategic decision justifies it.
 
-## Operator Next Steps
-
-- Phase 127 (Shell coherence + milestone verification & UAT `[S] [G]`) — the final gate/UAT stop (SHELL-01, VERIFY-01). Shell coherence: unify the per-screen **trust verdict** so it reads identically on Control Room / Posture / Sync-Drift (P5 — labels currently fork: "Can I trust search right now?" / "Fleet posture" / "Promotion readiness"; unify label + dot + tone "as a unit"); collapse the **header nav** to a menu/hidden on small screens so it stops duplicating the sidebar at mobile (P6, `layouts.ex`); confirm the chrome (header, nav, palette, theme toggle, flash, trail) is consistent across every screen. VERIFY-01: produce a v1.32→v1.33 before/after gallery, run the milestone audit against intent, and pass human UAT. Note for 127: the matrix spec's per-screen heading assertions were already aligned to the 124 rename; the ops path-dep needs a server restart (not live-reload) before re-shooting. Backlog anchors: P5/P6 in `120-AUDIT-BACKLOG.md`.
-
 ## Performance Metrics
 
 | Phase | Plan | Duration | Notes |
 |-------|------|----------|-------|
-| Phase 117 P117 | 33min | 6 tasks | 9 files |
-| Phase 121 P121 | one pass | TOKEN-01 | 4 files (app.css, DESIGN-TOKENS.md, ops_ui.ex, layouts.ex) |
-| Phase 122 P122 | one pass | COMP-01 | 4 files (app.css, DESIGN-TOKENS.md, ops_ui.ex, + 1 test) |
-| Phase 123 P123 | one pass | MOTION-01 | 5 files (app.css, DESIGN-TOKENS.md, app.js, core_components.ex, ops_ui.ex) |
-| Phase 125 P125 | one pass | RECOVER-01 | 6 files (posture/sync_drift/failed_sync live, ops_ui.ex, 1 test, matrix spec) |
-| Phase 126 P126 | one pass | EXPLORE-01 | 3 files (search/playbook live, 1 test) |
 | Phase 128 P01 | 4min | CONTRAST-HARNESS-01 | 3 files (package.json, package-lock.json, contrast-pairs.mjs) |
 | Phase 128 P02 | 8min | 2 tasks | 3 files |
 | Phase 128 P03 | 15min | 3 tasks | 3 files (admin_contrast_matrix.spec.ts, 128-CONTRAST-REPORT.md, VALIDATION.md) |
@@ -127,6 +118,7 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 | Phase 133 P01 | ~12min | 3 tasks | 4 files |
 | Phase 133 P02 | ~2min | 1 tasks | 1 files |
 | Phase 133 P03 | ~30min | 1 tasks | 1 files |
+| Phase 135 P01 | 5 min | 2 tasks | 2 files |
 
 ## Decisions
 
@@ -147,9 +139,11 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 - [Phase 132 Plan 02]: AAA body/long-form findings remain advisory/report-only. The browser proof recorded 12 empty-scenario advisory findings at 6.76:1 vs target 7, and those findings did not affect exit status.
 - [Phase 132 Plan 02]: The intentional light-token visual change is accepted by recapturing the local light baseline; generated `test-results/`, `.tmp/`, and untracked `scrypath_ops/priv/static/**` evidence artifacts stay out of git.
 - [Phase ?]: (Phase 133-02) Motion-discipline self-enforcing: ScrypathOpsWeb.MotionContractTest statically asserts transform/opacity/box-shadow-only + tokenized <300ms + dual-dark-path over .ops-path-*, inside mix verify.opsui; inset is the sanctioned static alternative to banned width/height/top/left.
+- [Phase 135]: Plan 01 uses existing theme-grid helpers for the shell browser proof instead of creating a parallel harness. — Matches D-14/D-15 and keeps explicit-light, explicit-dark, and system-dark semantics aligned with existing E2E proofs.
+- [Phase 135]: Plan 01 performs no package install or upgrade; package-lock.json remains unchanged. — Research flagged no new dependency need and required preserving the existing Playwright and axe versions.
 
 ## Session
 
-**Last session:** 2026-06-26T03:00:09.308Z
-**Stopped at:** Phase 135 context gathered
-**Resume file:** .planning/phases/135-shell-chrome-polish-dual-theme-s/135-CONTEXT.md
+**Last session:** 2026-06-26T09:12:50.108Z
+**Stopped at:** Completed 135-01-PLAN.md
+**Resume file:** None

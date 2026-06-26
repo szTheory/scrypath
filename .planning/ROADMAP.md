@@ -316,12 +316,12 @@ Plans:
 
 **Requirements:** SHELL-DARK-01
 
-**Plans:** 4 plans
+**Plans:** 1/4 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 135-01-PLAN.md — Wave 0 shell browser proof scaffold and npm script
+- [x] 135-01-PLAN.md — Wave 0 shell browser proof scaffold and npm script
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
