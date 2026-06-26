@@ -9,6 +9,9 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
   alias ScrypathOps.Test.OpsPostB
   alias ScrypathOps.Test.SearchPlaygroundStubAdapter
 
+  @root_template Path.join(__DIR__, "../../lib/scrypath_ops_web/components/layouts/root.html.heex")
+                 |> Path.expand()
+
   defmodule OpsShellContractMeili do
     @moduledoc false
     def tasks(filters, config) do
@@ -114,16 +117,26 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert html =~ ~s(href="#ops-main")
     assert html =~ ~s(id="ops-page-title")
     assert html =~ ~s(aria-current="page")
+    assert Regex.scan(~r/<a[^>]*class=\"[^\"]*ops-nav-item-active[^\"]*\"[^>]*aria-current=\"page\"/, html)
+           |> length() == 1
     assert html =~ ~s(href="/ops/posture")
     # v1.5 brand: the shell header renders the inline-SVG brand mark (decorative,
     # aria-hidden) with the copper "/" accent — no more <img src="/ops/images/logo.svg">.
     # "ScrypathOps" below is its accessible name.
+    assert html =~ ~s(ops-brand-mark)
     assert html =~ ~s(fill="#C17A3E")
     assert html =~ "ScrypathOps"
+    assert html =~ ~s(class="ops-theme-toggle)
+    assert html =~ ~s(id="theme-toggle-pill")
+    assert html =~ ~s(ops-theme-toggle__pill)
+    assert Regex.scan(~r/class=\"[^\"]*ops-theme-toggle__button/, html) |> length() == 3
+    assert Regex.scan(~r/data-phx-theme=\"(?:system|light|dark)\"/, html) |> length() == 3
     assert html =~ ~s(aria-label="Theme preference")
     assert html =~ ~s(aria-label="Use system theme")
     assert html =~ ~s(aria-label="Use light theme")
     assert html =~ ~s(aria-label="Use dark theme")
+    assert Regex.scan(~r/aria-pressed=\"false\"/, html) |> length() == 3
+    assert Regex.scan(~r/data-theme-selected=\"false\"/, html) |> length() == 3
   end
 
   describe "ops shell markers" do
@@ -146,5 +159,15 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
       {:ok, _lv, html} = live(conn, ~p"/ops/search")
       assert_ops_shell!(html, "Search &amp; federation")
     end
+  end
+
+  test "root theme provider synchronizes selected theme button state" do
+    source = File.read!(@root_template)
+
+    assert source =~ "syncThemeButtons"
+    assert source =~ "querySelectorAll(\"[data-phx-theme]\")"
+    assert source =~ "setAttribute(\"aria-pressed\""
+    assert source =~ "setAttribute(\"data-theme-selected\""
+    assert source =~ "syncThemeButtons();"
   end
 end
