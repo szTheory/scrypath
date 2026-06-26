@@ -1062,7 +1062,28 @@
 
   #flash-group > * {
     pointer-events: auto;
+  }
+
+  .ops-flash {
+    overflow: hidden;
+    border: 1px solid color-mix(in oklch, var(--color-base-content) 14%, transparent);
+    border-radius: var(--radius-ops-overlay);
+    background: color-mix(in oklch, var(--color-base-100) 98%, transparent);
     box-shadow: var(--shadow-ops-overlay);
+  }
+
+  .ops-flash--info {
+    border-color: color-mix(in oklch, var(--color-info) 35%, var(--color-base-content) 14%);
+  }
+
+  .ops-flash--error {
+    border-color: color-mix(in oklch, var(--color-error) 35%, var(--color-base-content) 14%);
+  }
+
+  .ops-flash > .alert {
+    border: 0;
+    border-radius: calc(var(--radius-ops-overlay) - 1px);
+    box-shadow: none;
   }
 
   @media (max-width: 640px) {
@@ -1581,14 +1602,21 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
 }
 
 /* D-10 application: panel-dark seated depth — GROUP 2 (overlay-base panels).
-   #flash-group > * and .ops-cmdk__panel carry --shadow-ops-overlay; compose (keep overlay first). */
-[data-theme="dark"] #flash-group > *,
+   .ops-flash and .ops-cmdk__panel carry --shadow-ops-overlay; compose overlay first. */
 [data-theme="dark"] .ops-cmdk__panel {
   box-shadow: var(--shadow-ops-overlay), var(--shadow-ops-panel-dark);
 }
+
+[data-theme="dark"] .ops-flash {
+  box-shadow: var(--shadow-ops-overlay), var(--shadow-ops-panel-dark);
+}
+
 @media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) #flash-group > *,
   html:not([data-theme="light"]) .ops-cmdk__panel {
+    box-shadow: var(--shadow-ops-overlay), var(--shadow-ops-panel-dark);
+  }
+
+  html:not([data-theme="light"]) .ops-flash {
     box-shadow: var(--shadow-ops-overlay), var(--shadow-ops-panel-dark);
   }
 }
