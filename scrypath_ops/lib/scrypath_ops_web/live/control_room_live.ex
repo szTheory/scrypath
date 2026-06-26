@@ -98,7 +98,11 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
             route_label="Start recovery"
             navigate={"#{@mount_path}/posture"}
             data-testid="intent-incident"
-          />
+          >
+            <:badge>
+              <span class="ops-badge ops-copper-badge">Federated</span>
+            </:badge>
+          </.ops_intent_card>
           <.ops_intent_card
             icon="hero-arrow-up-tray"
             title="I'm shipping a change"
