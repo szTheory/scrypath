@@ -97,7 +97,7 @@ identity across the live product surfaces.
 | A11Y-TOKEN-01 | Phase 132 | Complete |
 | DARKMOTION-01 | Phase 133 | Complete |
 | SCREEN-DARK-01 | Phase 134 | Complete |
-| SHELL-DARK-01 | Phase 135 | Pending |
+| SHELL-DARK-01 | Phase 135 | Complete |
 | DUALVERIFY-01 | Phase 136 | Pending |
 
 - **DARKMOTION-01** (Phase 133, complete): restrained path-expression motion (line draw/reveal, node pulse, active-path tracing on the route mark/diagrams, code-block shimmer on hover) via existing `--duration-ops-*`/`--ease-ops-*` tokens, transform/opacity only, reduced-motion-safe, tuned for dark without breaking light; honors v1.33's A3 no-re-fire precedent.
