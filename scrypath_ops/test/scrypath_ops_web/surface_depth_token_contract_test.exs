@@ -45,5 +45,25 @@ defmodule ScrypathOpsWeb.SurfaceDepthTokenContractTest do
            ".ops-result-row system-dark fill must mirror var(--ops-surface-2)."
   end
 
-  # Plan 02 appends the dark hover-border boost tripwire after the selector exists.
+  test "dark hover-border boost resolves to primary 55% on the paired row/item selector" do
+    assert Regex.match?(
+             ~r/\[data-theme="dark"\]\s+\.ops-result-row:hover,\s*\[data-theme="dark"\]\s+\.ops-object-item:hover\s*\{[^{}]*border-color:\s*color-mix\(in oklch,\s*var\(--color-primary\)\s*55%,\s*transparent\)/,
+             css()
+           ),
+           "Dark hover-border boost must keep the paired .ops-result-row/.ops-object-item selector at primary 55%."
+
+    assert Regex.match?(
+             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-result-row:hover,\s*html:not\(\[data-theme="light"\]\)\s+\.ops-object-item:hover\s*\{[^{}]*border-color:\s*color-mix\(in oklch,\s*var\(--color-primary\)\s*55%,\s*transparent\)/,
+             css()
+           ),
+           "System-dark hover-border boost must mirror the paired selector at primary 55%."
+  end
+
+  test "base shared hover rule stays primary 32% with the neutral mid shadow" do
+    assert Regex.match?(
+             ~r/\.ops-result-row:hover,\s*\.ops-object-item:hover\s*\{[^{}]*border-color:\s*color-mix\(in oklch,\s*var\(--color-primary\)\s*32%,\s*transparent\);[^{}]*box-shadow:\s*var\(--shadow-ops-mid\)/,
+             css()
+           ),
+           "Base shared hover rule must remain paired at primary 32% plus var(--shadow-ops-mid) for light and fallback."
+  end
 end
