@@ -145,6 +145,18 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert html =~ ~s(aria-label="Use dark theme")
     assert Regex.scan(~r/aria-pressed=\"false\"/, html) |> length() == 3
     assert Regex.scan(~r/data-theme-selected=\"false\"/, html) |> length() == 3
+    assert html =~ ~s(id="ops-command-palette")
+    assert html =~ ~s(phx-hook="CommandPalette")
+    assert html =~ ~s(data-cheatsheet="ops-cheatsheet")
+    assert html =~ ~s(id="ops-cmdk")
+    assert html =~ ~s(id="ops-cheatsheet")
+    assert html =~ ~s(data-cmdk-close)
+    assert html =~ ~s(data-cmdk-input)
+    assert html =~ ~s(data-cmdk-empty)
+    assert Regex.scan(~r/data-cmdk-item/, html) |> length() == 6
+    assert Regex.scan(~r/aria-selected=\"false\"/, html) |> length() == 6
+    assert Regex.scan(~r/id=\"ops-cmdk-item-\d+\"/, html) |> length() == 6
+    assert html =~ ~s(aria-controls="ops-cmdk-list")
   end
 
   describe "ops shell markers" do
