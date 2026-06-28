@@ -1,0 +1,133 @@
+# Milestone Audit: v1.34 Both-Themes Perfection
+
+**Audited:** 2026-06-28  
+**Phases:** 128-136 (9 phases)  
+**Requirement set:** CONTRAST-HARNESS-01, DARKAUDIT-01, DARKTOKEN-01, GLOW-01, COPPER-01, A11Y-TOKEN-01, DARKMOTION-01, SCREEN-DARK-01, SHELL-DARK-01, DUALVERIFY-01  
+**Verdict:** **PENDING UAT** - automated DUALVERIFY-01 evidence is green and the gallery/audit artifacts exist, but the milestone is not PASSED until Phase 136 Plan 03 creates `136-UAT.md` with completed human sign-off.
+
+## Intent vs delivery
+
+v1.34 Both-Themes Perfection set out to make the existing ScrypathOps admin UI genuinely excellent in both light and dark, with dark as the signature look, light at parity, system-dark proven separately, and WCAG AA promoted from review concern to hard gate. The milestone was bounded to the existing operator/admin proof surface: no new runtime search capabilities, no new public backend abstraction, no productized admin expansion, and no nav IA reopening beyond previously approved v1.33 vocabulary.
+
+Delivery matches that intent for automated proof:
+
+- Phase 128 made contrast measurable before changing pixels.
+- Phase 129 identified the dark brand-expression backlog and the surface-ramp gap.
+- Phases 130-132 repaired dark depth, glow/copper roles, and AA contrast.
+- Phases 133-135 proved restrained path motion, screen depth, and shell chrome across explicit light, explicit dark, and system-dark browser paths.
+- Phase 136 Plan 01 reran source-backed Mix, contrast, browser, mounted smoke, and 40-shot screenshot evidence from the current checkout.
+- Phase 136 Plan 02 adds this audit plus the claim-based before/after gallery.
+
+The only open milestone closeout item is bounded human UAT. Until Plan 03 records that sign-off, this audit remains PENDING UAT rather than PASSED.
+
+## Requirement coverage
+
+| Requirement | Phase | Status | Evidence |
+| --- | --- | --- | --- |
+| CONTRAST-HARNESS-01 | 128 | Complete | `128-CONTRAST-REPORT.md` baseline; `make contrast` and browser axe matrix established AA hard gate plus AAA advisory reporting. |
+| DARKAUDIT-01 | 129 | Complete | Dark touchpoint audit/backlog identified systemic fixes, including the surface-2 ramp collapse. |
+| DARKTOKEN-01 | 130 | Complete | Dark four-step ramp, theme-scoped elevation tokens, light parity guard, and DESIGN-TOKENS lockstep recorded in Phase 130 summaries/state. |
+| GLOW-01 | 131 | Complete | Restrained dark ambient shadow/glow system shipped and verified through Phase 131 proof bundle. |
+| COPPER-01 | 131 | Complete | Copper accent role shipped as a limited key-fact accent with AA-safe pairings and token documentation. |
+| A11Y-TOKEN-01 | 132 | Complete | `132-CONTRAST-REPORT.md` records static token AA failures 0, browser AA failures 0 in light/dark/system-dark, and AAA body findings as advisory. |
+| DARKMOTION-01 | 133 | Complete | `133-03-SUMMARY.md` records `admin_path_motion.spec.ts` 7/7 green, reduced-motion neutralization, and no LiveView patch-refire keyframe regression. |
+| SCREEN-DARK-01 | 134 | Complete | `134-03-SUMMARY.md` records light pixel diff 0/20 failed, contrast 3/3, depth 33/33, and a 40-PNG matrix. |
+| SHELL-DARK-01 | 135 | Complete | `135-SHELL-CHROME-REPORT.md` records shell chrome proof across six surfaces, three theme modes, focus return, command palette/sheet semantics, flash, theme toggle, and header/nav AA. Phase 136 reran shell proof at 33/33. |
+| DUALVERIFY-01 | 136 | PENDING UAT | `136-DUALVERIFY-REPORT.md` and `136-ARTIFACT-MANIFEST.json` record source-backed automated gates and 40-shot checksums; `136-BEFORE-AFTER.md` and this audit are complete; human UAT remains open for Plan 03. |
+
+## Phase coverage
+
+| Phase | Status | Closeout note |
+| --- | --- | --- |
+| 128 | Complete | Contrast harness and dark seed coverage made AA measurable before remediation. |
+| 129 | Complete | Dark brand-expression audit produced the ranked repair backlog. |
+| 130 | Complete | Dark surface ramp/depth tokens repaired flattened dark elevations. |
+| 131 | Complete | Glow, dark shadow, and copper accent system shipped within the restrained brand ratio. |
+| 132 | Complete | A11y token remediation closed AA failures in light, dark, and system-dark. |
+| 133 | Complete | Dark/path motion expression is tokenized, reduced-motion-safe, and patch-safe. |
+| 134 | Complete | Search rows, Sync/Drift, and Playbooks received dual-theme depth polish and proof. |
+| 135 | Complete | Shell chrome, palette/sheet, flash, theme toggle, and wash proof shipped; planning tables may still show stale pending status, but `135-04-SUMMARY.md` and `135-SHELL-CHROME-REPORT.md` record completion. |
+| 136 | In progress | Automated proof, gallery, and audit are complete; human UAT remains the final gate. |
+
+## Gate summary
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| Root ops UI gate | PASS: 2 doctests, 147 tests, 0 failures | `136-DUALVERIFY-REPORT.md` |
+| ScrypathOps app gate | PASS: 2 doctests, 147 tests, 0 failures | `136-DUALVERIFY-REPORT.md` |
+| ScrypathOps precommit | PASS: 2 doctests, 147 tests, 0 failures | `136-DUALVERIFY-REPORT.md` |
+| Static token contrast | PASS: AA failures 0, AAA advisory 27 | `136-DUALVERIFY-REPORT.md`; generated report path in `136-ARTIFACT-MANIFEST.json` |
+| Browser axe contrast | PASS: 3/3 scenarios, AA failures 0 | Incident AAA advisory 24, all_green AAA advisory 48, empty AAA advisory 0; advisory-only. |
+| Surface depth | PASS: 33/33 | Explicit dark, system-dark, light guard coverage. |
+| Path motion | PASS: 7/7 | Reduced-motion and active Playbook glow end-state proof. |
+| Shell chrome | PASS: 33/33 | Focus, theme toggle, command palette/sheet, flash, and shell wash coverage. |
+| Mounted operator smoke | PASS: 2/2 | Failed-sync triage and zero-downtime swap smoke. |
+| Screenshot matrix | PASS: 3/3 scenario tests; 40 PNGs | Manifest expected_count 40, actual_count 40, with SHA-256 checksums. |
+| Contrast suppression guard | PASS | No `exclude(`, `disableRules`, or color-contrast disabled pattern in the contrast spec. |
+
+AA remains the hard gate. AAA body/long-form findings remain advisory/report-only and did not fail the milestone proof.
+
+## Artifact summary
+
+Committed Phase 136 evidence artifacts:
+
+- `136-DUALVERIFY-REPORT.md` - source-backed automated gate report.
+- `136-ARTIFACT-MANIFEST.json` - command, generated artifact, screenshot count, and checksum manifest.
+- `136-BEFORE-AFTER.md` - dark-weighted, claim-based v1.33 to v1.34 gallery.
+- `136-MILESTONE-AUDIT.md` - this requirement-by-requirement audit.
+
+Generated artifacts remain uncommitted evidence:
+
+- `examples/scrypath_ecommerce/test-results/admin-screenshots/phase136/**` - 40-shot light/dark screenshot matrix.
+- `examples/scrypath_ecommerce/test-results/contrast/**` - static/browser contrast JSON and Markdown outputs.
+- `.tmp/**`, browser traces, raw Playwright reports, and built `scrypath_ops/priv/static/**` outputs.
+
+## Gallery evidence summary
+
+`136-BEFORE-AFTER.md` contains gallery evidence for route orientation, posture trust, failed-sync recovery, drift clarity, search exploration, playbook workspace clarity, shell restraint, focus, and theme parity.
+
+All before/after gallery claims have paired evidence:
+
+- Still-image claims cite v1.33 before evidence from the historical 40-shot set under `.tmp/admin-screenshots/` and v1.34 after evidence from the `phase136` manifest-backed 40-shot matrix.
+- Browser-behavior claims, including focus and system-dark, pair the v1.33 audit/report baseline with v1.34 source-backed browser proof.
+- Maintainer-accepted evidence exceptions: **none**.
+
+The main gallery intentionally stays light/dark for historical comparability. system-dark is proven by browser gates and is not silently folded into the historical 40-shot light/dark gallery.
+
+## Scope guard
+
+Phase 136 did not introduce runtime/library breadth, nav IA expansion, token direction change, permanent CI promotion, package installs, or new public API surface.
+
+The v1.34 scope guard held:
+
+- No autocomplete, vector/hybrid, public multi-backend, or new runtime search capability was added.
+- No Phoenix-dependent runtime core or productized hosted admin surface was introduced.
+- No new nav IA direction was opened; the UI stays on the existing Control Room, Posture, Failed Sync, Sync/Drift, Search, and Playbooks surfaces.
+- No palette/type/logo direction change was introduced by Phase 136; v1.35 brand work kept product tokens stable for this closeout.
+- The full browser proof remains advisory closeout evidence, not a permanent required CI or branch-protection gate.
+
+## Accepted follow-ups
+
+Accepted follow-ups are limited to D-19 categories and are not blockers:
+
+| Follow-up | Category | Blocking? |
+| --- | --- | --- |
+| Full system-dark screenshot matrix expansion | D-19 supplemental evidence | No; system-dark is already covered by browser contrast, shell, and motion gates. |
+| Permanent CI promotion of the browser proof bundle | D-19 release-policy decision | No; Phase 136 records proof without changing branch-protection topology. |
+| Extra gallery automation or artifact upload workflow | D-19 evidence ergonomics | No; current Markdown plus JSON manifest is sufficient for auditability. |
+| Small aesthetic nits found during Plan 03 UAT, if any | D-19 minor polish | Only acceptable if they do not affect trust, accessibility, scanability, focus, reduced-motion, or theme parity. |
+| Broader brand/docs/HexDocs adoption polish unrelated to v1.34 operator UI | D-19 out-of-scope polish | No; v1.35 already handled brand adoption separately. |
+
+The following are **not** accepted follow-ups and would be blockers: failing required commands, AA failures, disabled/suppressed color-contrast rules, focus or focus-return regressions, reduced-motion regressions, LiveView patch-refiring motion, stale-server proof, stale asset proof, seed proof gaps, or screenshot count/checksum mismatch.
+
+## Blockers
+
+No automated must-fix blocker remains from Plans 01-02.
+
+Open closeout gate:
+
+- **Human UAT:** `136-UAT.md` has not yet been created with completed sign-off. The milestone verdict must stay PENDING UAT until Phase 136 Plan 03 finishes bounded dark-first/light-parity/system-dark review.
+
+## Verdict
+
+Automated proof and evidence artifacts support DUALVERIFY-01, but final milestone status is **PENDING UAT**. After Plan 03 records human sign-off, this audit can be promoted by the milestone-completion workflow; this plan must not preemptively mark v1.34 PASSED.
