@@ -5,16 +5,16 @@ milestone_name: Both-Themes Perfection
 current_phase: 136
 current_phase_name: milestone-verification-uat-s-g
 status: executing
-stopped_at: Phase 136 planning complete
-last_updated: "2026-06-28T22:28:46.624Z"
+stopped_at: Completed 136-01-PLAN.md
+last_updated: "2026-06-28T23:16:31.329Z"
 last_activity: 2026-06-28
-last_activity_desc: Phase 136 planning complete
+last_activity_desc: Completed 136-01 automated proof/report manifest
 progress:
   total_phases: 9
   completed_phases: 8
   total_plans: 27
-  completed_plans: 24
-  percent: 89
+  completed_plans: 25
+  percent: 93
 ---
 
 # Project State
@@ -26,11 +26,11 @@ progress:
 
 ## Current Position
 
-Phase: 136 (milestone-verification-uat-s-g) — READY TO EXECUTE
-Plan: 0 of 3
-Status: Ready to execute
+Phase: 136 (milestone-verification-uat-s-g) — EXECUTING
+Plan: 2 of 3
+Status: Executing Phase 136
 Resume: **Execute Phase 136** — run 136-01 automated proof/report manifest, 136-02 before/after gallery and milestone audit, then 136-03 bounded human UAT closeout.
-Last activity: 2026-06-28 — Phase 136 planning complete
+Last activity: 2026-06-28 — Completed 136-01 automated proof/report manifest
 
 ## Completed Milestone (interleaved)
 
@@ -122,6 +122,7 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 | Phase 135 P02 | 23m27s | 3 tasks | 8 files |
 | Phase 135 P03 | 25min | 3 tasks | 9 files |
 | Phase 135 P04 | 1h 2m | 2 tasks | 2 files |
+| Phase 136 P01 | 33m 18s | 3 tasks | 6 files |
 
 ## Decisions
 
@@ -153,9 +154,11 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 - [Phase 135]: No D-03 light-theme exception was recorded in Plans 02 or 03, so the conditional light-pixel-diff gate was not run for Plan 135-04. — Plan 135-04 made the light pixel diff conditional on a recorded D-03 light exception; the final report documents that none existed.
 - [Phase 135]: aria-modal stayed on the command palette and shortcut sheet because browser proof verifies bounded focus and focus return. — The final evidence report records modal focus containment and focus-return behavior across the shell browser gate.
 - [Phase 135]: Phase 136 retains full 40-shot recapture, v1.33 to v1.34 gallery, milestone audit, and human UAT. — Plan 135-04 closes the shell evidence slice and explicitly leaves broad milestone verification to Phase 136.
+- [Phase 136]: Phase 136 Plan 01 used a source-backed Phoenix server on port 4012 for automated UAT proof instead of the existing containerized 4002 server. — Avoids stale-server false positives while the working tree contains active UI/demo changes.
+- [Phase 136]: Phase 136 Plan 01 records generated screenshot evidence as checksums in the artifact manifest rather than committing browser PNGs or traces. — Keeps generated browser evidence out of git while preserving auditability for DUALVERIFY-01.
 
 ## Session
 
-**Last session:** 2026-06-28T21:20:03.915Z
-**Stopped at:** Phase 136 context gathered
-**Resume file:** .planning/phases/136-milestone-verification-uat-s-g/136-CONTEXT.md
+**Last session:** 2026-06-28T23:16:31.318Z
+**Stopped at:** Completed 136-01-PLAN.md
+**Resume file:** None
