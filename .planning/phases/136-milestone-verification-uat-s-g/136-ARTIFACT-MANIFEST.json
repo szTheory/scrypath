@@ -3,13 +3,14 @@
   "phase": "136",
   "plan": "01",
   "requirement": "DUALVERIFY-01",
-  "generated": "2026-06-28T22:45:58Z",
+  "generated": "2026-06-28T23:08:14Z",
   "source_commit": "0494d92385c242da2fbb2c0bb0abd8775456639c",
   "working_tree": {
     "status": "dirty-preexisting",
     "notes": [
       "Plan ran against the current dirty working tree provided by prior UI/demo work.",
-      "Only Phase 136 report and manifest artifacts are intended for staging."
+      "Generated screenshots, traces, .tmp files, browser JSON, and built static assets are not staged.",
+      "Task 2 staged only Phase 136 report/manifest updates plus narrowly documented D-18 proof fixes."
     ]
   },
   "base_url": "http://127.0.0.1:4012",
@@ -24,34 +25,88 @@
   },
   "commands": [
     {
+      "task": 1,
       "name": "asset-build",
       "command": "cd scrypath_ops && mix assets.build",
       "status": "pass",
       "committed": false
     },
     {
+      "task": 1,
       "name": "meilisearch-infra",
       "command": "cd examples/scrypath_ecommerce && make infra",
       "status": "pass",
       "committed": false
     },
     {
+      "task": 1,
       "name": "root-verify-opsui",
       "command": "mix verify.opsui",
       "status": "pass",
       "summary": "2 doctests, 147 tests, 0 failures"
     },
     {
+      "task": 1,
       "name": "app-verify-opsui",
       "command": "cd scrypath_ops && mix verify.opsui",
       "status": "pass",
       "summary": "2 doctests, 147 tests, 0 failures"
     },
     {
+      "task": 1,
       "name": "app-precommit",
       "command": "cd scrypath_ops && mix precommit",
       "status": "pass",
       "summary": "2 doctests, 147 tests, 0 failures"
+    },
+    {
+      "task": 2,
+      "name": "static-token-contrast",
+      "command": "CONTRAST_REPORT_DIR=test-results/contrast/phase136-token make contrast",
+      "status": "pass",
+      "summary": "AA failures: 0; AAA advisory: 27"
+    },
+    {
+      "task": 2,
+      "name": "browser-axe-contrast",
+      "command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 CONTRAST_REPORT_DIR=test-results/contrast/phase136 npm run test:e2e:admin-contrast -- --reporter=line",
+      "status": "pass",
+      "summary": "3 passed; incident AA 0/AAA 24, all_green AA 0/AAA 48, empty AA 0/AAA 0"
+    },
+    {
+      "task": 2,
+      "name": "surface-depth",
+      "command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:admin-depth -- --reporter=line",
+      "status": "pass",
+      "summary": "33 passed"
+    },
+    {
+      "task": 2,
+      "name": "path-motion",
+      "command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:path-motion -- --reporter=line",
+      "status": "pass",
+      "summary": "7 passed"
+    },
+    {
+      "task": 2,
+      "name": "shell-chrome",
+      "command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:admin-shell -- --reporter=line",
+      "status": "pass",
+      "summary": "33 passed"
+    },
+    {
+      "task": 2,
+      "name": "operator-smoke",
+      "command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e -- e2e/operator.spec.ts --reporter=line",
+      "status": "pass",
+      "summary": "2 passed"
+    },
+    {
+      "task": 2,
+      "name": "contrast-suppression-guard",
+      "command": "for term in \"exclude\\\\(\" \"disableRules\" \"color-contrast.*disabled\"; do rg -n -- \"$term\" e2e/admin_contrast_matrix.spec.ts && exit 1; done",
+      "status": "pass",
+      "summary": "No forbidden suppression patterns found"
     }
   ],
   "artifacts": [
@@ -64,6 +119,60 @@
       "kind": "phase-manifest",
       "path": ".planning/phases/136-milestone-verification-uat-s-g/136-ARTIFACT-MANIFEST.json",
       "committed": true
+    },
+    {
+      "kind": "static-token-contrast-json",
+      "path": "examples/scrypath_ecommerce/test-results/contrast/phase136-token/contrast-report.token.json",
+      "committed": false,
+      "summary": {
+        "aa_fail": 0,
+        "aaa_advisory": 27,
+        "total": 27
+      }
+    },
+    {
+      "kind": "browser-axe-contrast-json",
+      "path": "examples/scrypath_ecommerce/test-results/contrast/phase136",
+      "committed": false,
+      "summary": {
+        "incident": {
+          "aa_fail": 0,
+          "aaa_advisory": 24
+        },
+        "all_green": {
+          "aa_fail": 0,
+          "aaa_advisory": 48
+        },
+        "empty": {
+          "aa_fail": 0,
+          "aaa_advisory": 0
+        }
+      }
+    },
+    {
+      "kind": "browser-test-results",
+      "path": "examples/scrypath_ecommerce/test-results",
+      "committed": false
+    }
+  ],
+  "source_fixes": [
+    {
+      "task": 2,
+      "rule": "Rule 2 - Missing Critical Proof Coverage",
+      "path": "scrypath_ops/assets/css/contrast-pairs.mjs",
+      "reason": "Added current muted text consumers to the D-15 static contrast manifest."
+    },
+    {
+      "task": 2,
+      "rule": "Rule 1 - Proof Selector Drift",
+      "path": "examples/scrypath_ecommerce/e2e/admin_surface_depth.spec.ts",
+      "reason": "Retargeted the posture depth proof from removed table markup to current signal cards."
+    },
+    {
+      "task": 2,
+      "rule": "Rule 1 - Flaky Proof Timing",
+      "path": "examples/scrypath_ecommerce/e2e/admin_path_motion.spec.ts",
+      "reason": "Polled for the active Playbook glow computed end-state instead of sampling one transition frame."
     }
   ]
 }

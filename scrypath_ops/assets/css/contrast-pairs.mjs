@@ -44,6 +44,16 @@ export const MUTED_PAIRS = [
     role: "text",
     note: "header utility override"
   },
+  // app.css line 292 — sidebar footer text
+  {
+    selector: ".ops-sidebar__footer",
+    css_var: "ops-text-muted",
+    alpha: 0.64,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "sidebar footer text"
+  },
   // app.css line 256 — shell utility override
   {
     selector: ".ops-shell .text-base-content\\/60",
@@ -63,6 +73,81 @@ export const MUTED_PAIRS = [
     bg_token: "base-100",
     role: "text",
     note: "meta/secondary text — xs size"
+  },
+  // app.css line 748 — timestamp label text
+  {
+    selector: ".ops-time__label",
+    alpha: 0.62,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "timestamp label text"
+  },
+  // app.css line 741 — timestamp text container
+  {
+    selector: ".ops-time",
+    css_var: "ops-text-muted",
+    alpha: 0.64,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "timestamp text container"
+  },
+  // app.css line 763 — timestamp copy icon button
+  {
+    selector: ".ops-time__copy",
+    alpha: 0.58,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "ui",
+    note: "timestamp copy icon button"
+  },
+  // app.css line 877 — sidebar nav group label
+  {
+    selector: ".ops-nav-group__label",
+    alpha: 0.48,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "large",
+    note: "uppercase sidebar nav group label"
+  },
+  // app.css line 840 — schema option metadata
+  {
+    selector: ".ops-schema-option__meta",
+    css_var: "ops-text-muted",
+    alpha: 0.64,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "schema option metadata"
+  },
+  // app.css line 899 — sidebar nav item text
+  {
+    selector: ".ops-nav-item",
+    alpha: 0.74,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "sidebar nav item text"
+  },
+  // app.css line 1434 — signal group title
+  {
+    selector: ".ops-signal-group__title",
+    alpha: 0.58,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "large",
+    note: "uppercase signal group title"
+  },
+  // app.css line 1457 — signal metric term
+  {
+    selector: ".ops-signal-metrics dt",
+    css_var: "ops-text-muted",
+    alpha: 0.64,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "large",
+    note: "uppercase signal metric term"
   },
   // app.css line 691 — breadcrumb text
   {
