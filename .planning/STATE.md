@@ -2,14 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection
-status: verifying
-stopped_at: Phase 136 context gathered
-last_updated: "2026-06-28T21:20:03.921Z"
-last_activity: 2026-06-26
+current_phase: 136
+current_phase_name: milestone-verification-uat-s-g
+status: executing
+stopped_at: Phase 136 planning complete
+last_updated: "2026-06-28T22:28:46.624Z"
+last_activity: 2026-06-28
+last_activity_desc: Phase 136 planning complete
 progress:
   total_phases: 9
   completed_phases: 8
-  total_plans: 24
+  total_plans: 27
   completed_plans: 24
   percent: 89
 ---
@@ -19,15 +22,15 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 135 — shell-chrome-polish-dual-theme-s
+**Current Focus:** Phase 136 — milestone-verification-uat-s-g
 
 ## Current Position
 
-Phase: 135 (shell-chrome-polish-dual-theme-s) — EXECUTING
-Plan: 4 of 4
-Status: Phase complete — ready for verification
-Resume: **Execute Plan 135-02** — Header/nav/wash/theme-toggle shell polish. Then continue 135-03, 135-04, and Phase 136 (DUALVERIFY-01).
-Last activity: 2026-06-26
+Phase: 136 (milestone-verification-uat-s-g) — READY TO EXECUTE
+Plan: 0 of 3
+Status: Ready to execute
+Resume: **Execute Phase 136** — run 136-01 automated proof/report manifest, 136-02 before/after gallery and milestone audit, then 136-03 bounded human UAT closeout.
+Last activity: 2026-06-28 — Phase 136 planning complete
 
 ## Completed Milestone (interleaved)
 
@@ -35,7 +38,7 @@ Last activity: 2026-06-26
 
 ## Current Milestone
 
-**v1.34 Both-Themes Perfection — Dark Signature + AA Gate** (phases 128–136). 7/9 complete (128–134); **next is Phase 135 SHELL-DARK-01**, then Phase 136 DUALVERIFY-01. Next-level UI/UX + perfect BOTH light & dark themes with a WCAG AA hard gate. Dark mode already EXISTS — polish/expression, do not rebuild. v1.34's accumulated context is retained below. The interleaved v1.35 brand milestone is recorded above under "Completed Milestone".
+**v1.34 Both-Themes Perfection — Dark Signature + AA Gate** (phases 128–136). 8/9 complete (128–135); **next is Phase 136 DUALVERIFY-01 execution**. Next-level UI/UX + perfect BOTH light & dark themes with a WCAG AA hard gate. Dark mode already EXISTS — polish/expression, do not rebuild. v1.34's accumulated context is retained below. The interleaved v1.35 brand milestone is recorded above under "Completed Milestone".
 
 ## v1.35 Brand Milestone Context (archived)
 
