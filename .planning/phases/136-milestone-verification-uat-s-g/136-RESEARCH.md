@@ -478,22 +478,20 @@ Source: Phase 136 human UAT constraints. [VERIFIED: 136-CONTEXT.md]
 | A1 | A standard checksum tool such as `shasum -a 256` is acceptable for manifest checksums. | Don't Hand-Roll / Code Examples | Planner may prefer Node `crypto`; either standard approach is fine if deterministic. |
 | A2 | A human reviewer will be available to complete bounded UAT during Phase 136. | Architecture Patterns / Validation Architecture | If no reviewer is available, automated proof can finish but milestone UAT cannot honestly pass. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Exact v1.33 screenshot source for before/after pairs**
-   - What we know: commit `ae33d36` is the v1.33 admin milestone commit, `origin/gsd/v1.33-admin-ui-insane-polish` exists, and the old `v1.33-BEFORE-AFTER.md` documents the 40-shot pattern. [VERIFIED: git log + git branch + file read]
-   - What's unclear: the untracked `.tmp/admin-screenshots` directories are not durable evidence and may have been overwritten by later v1.34 recaptures. [VERIFIED: find + .gitignore]
-   - Recommendation: use a separate worktree or recorded commit checkout if exact v1.33 screenshots must be regenerated; otherwise label any narrative-only v1.33 comparison honestly in `136-BEFORE-AFTER.md`. [VERIFIED: git log] [ASSUMED]
+1. **Exact v1.33 screenshot source for before/after pairs — RESOLVED**
+   - Resolution: lock the v1.33 comparison source to commit `ae33d36` and remote branch `origin/gsd/v1.33-admin-ui-insane-polish`. The Phase 136 gallery must use paired before/after evidence for each gallery claim: v1.33 evidence from that commit/branch and v1.34 evidence from the fresh `phase136` screenshot matrix and manifest. [VERIFIED: git log + git branch + file read]
+   - Execution rule: regenerate exact v1.33 screenshots from a separate worktree or recorded checkout whenever possible, and record commit, branch, worktree, boot method, base URL, seed method, and artifact paths. If exact v1.33 screenshots cannot be regenerated for a claim, the executor must stop or obtain explicit maintainer acceptance recorded in both `136-BEFORE-AFTER.md` and `136-MILESTONE-AUDIT.md` for that claim before closing it. [VERIFIED: 136-CONTEXT.md]
+   - Guardrail: no gallery claim may silently degrade to an unpaired prose-only comparison; every claim is either paired by evidence or explicitly accepted as an exception in the two closeout artifacts above. [VERIFIED: 136-CONTEXT.md]
 
-2. **Separate contrast report or subsection**
-   - What we know: context allows either a contrast subsection in `136-DUALVERIFY-REPORT.md` or a separate `136-CONTRAST-REPORT.md`. [VERIFIED: 136-CONTEXT.md]
-   - What's unclear: whether the planner wants a smaller main report or one consolidated closeout report. [VERIFIED: 136-CONTEXT.md]
-   - Recommendation: keep one `136-DUALVERIFY-REPORT.md` with a contrast subsection unless the browser report volume becomes unwieldy. [ASSUMED]
+2. **Separate contrast report or subsection — RESOLVED**
+   - Resolution: keep contrast evidence in `136-DUALVERIFY-REPORT.md` by default. Create optional `136-CONTRAST-REPORT.md` only if browser/static contrast detail becomes too large for a readable main report. [VERIFIED: 136-CONTEXT.md]
+   - Execution rule: whichever shape is used, the closeout must contain one clear AA/AAA summary with generated report paths, explicit light/dark/system-dark coverage, `AA failures: 0`, and AAA body findings recorded as advisory unless they reveal a new trust/readability regression. [VERIFIED: 136-CONTEXT.md]
 
-3. **Server boot lane**
-   - What we know: Docker is available, an app is listening on `127.0.0.1:4002`, but Meilisearch is not listening on `127.0.0.1:7700` during research. [VERIFIED: docker info + curl probes]
-   - What's unclear: whether the current `:4002` app is source-fresh enough for final proof. [VERIFIED: curl probe only]
-   - Recommendation: restart or boot the lane explicitly during execution and record commands instead of relying on the pre-existing process. [VERIFIED: 136-CONTEXT.md]
+3. **Server boot lane — RESOLVED**
+   - Resolution: use the existing Makefile/compose/source lane rather than a new ad hoc boot path. Record the selected path, commands, `PLAYWRIGHT_BASE_URL`, port, seed method, asset-build command, source commit, and freshness proof in `136-DUALVERIFY-REPORT.md`. [VERIFIED: Makefile + 136-CONTEXT.md]
+   - Execution rule: a stale source lane, stale assets, wrong server lane, missing seed proof, or inability to prove freshness is a D-18 blocker. The executor must restart or re-boot from current source and rerun affected browser gates before proceeding. [VERIFIED: 136-CONTEXT.md]
 
 ## Environment Availability
 
