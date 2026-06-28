@@ -355,6 +355,21 @@ Plans:
 2. CONTRAST-HARNESS-01 passes AA in both themes with the AAA-body report attached; reduced-motion neutralization holds.
 3. A v1.33→v1.34 before/after gallery (dark-weighted) and a milestone audit against this intent are produced; human UAT passes.
 
+**Plans:** 3 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 136-01-PLAN.md — Run source-backed automated gates, recapture 40-shot matrix, and create report/manifest
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 136-02-PLAN.md — Create v1.33 to v1.34 before/after gallery and milestone audit
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 136-03-PLAN.md — Run bounded human UAT and finalize closeout artifacts
+
 **Status:** Pending
 
 ## Progress — v1.35 (active)
