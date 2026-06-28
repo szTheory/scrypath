@@ -140,12 +140,12 @@ function alphaChannel(raw: string): number {
 }
 
 function oklchToRgb(raw: string): [number, number, number, number] {
-  const match = raw.match(/oklch\(\s*([0-9.]+%?)\s+([0-9.]+)\s+([0-9.]+)(?:deg)?(?:\s*\/\s*([0-9.]+%?))?\s*\)/);
+  const match = raw.match(/oklch\(\s*([0-9.]+%?)\s+([0-9.]+)\s+(none|[0-9.]+)(?:deg)?(?:\s*\/\s*([0-9.]+%?))?\s*\)/);
   if (!match) throw new Error(`Expected computed rgb/rgba/oklch color, got ${raw}`);
 
   const lightness = match[1].endsWith("%") ? Number(match[1].slice(0, -1)) / 100 : Number(match[1]);
   const chroma = Number(match[2]);
-  const hue = Number(match[3]) * Math.PI / 180;
+  const hue = (match[3] === "none" ? 0 : Number(match[3])) * Math.PI / 180;
   const alpha = match[4] ? (match[4].endsWith("%") ? Number(match[4].slice(0, -1)) / 100 : Number(match[4])) : 1;
   const a = chroma * Math.cos(hue);
   const b = chroma * Math.sin(hue);
@@ -294,23 +294,26 @@ async function expectNoStatusCopper(page: Page): Promise<void> {
   expect(matches, "status tone/badge classes must never compute to copper").toEqual([]);
 }
 
-async function expectPostureTableBorderMeasured(page: Page): Promise<number> {
-  const cell = ".ops-table-scroll table tbody tr:first-child td:first-child";
-  await expect(page.locator(cell)).toBeVisible();
-  const border = await readComputedStyle(page, cell, "borderColor");
+async function expectPostureSignalCardsMeasured(page: Page): Promise<void> {
+  const card = ".ops-schema-signal-card";
+  await expect(page.locator(card).first()).toBeVisible();
+
+  const bg = await readComputedStyle(page, card, "backgroundColor");
+  const shadow = await readComputedStyle(page, card, "boxShadow");
+  expect(bg, "posture signal cards use the dark surface-2 depth token").toBe(DARK_SURFACE_2_RGB);
+  expect(shadow, "posture signal cards must keep seated dark-panel depth").not.toBe("none");
+
+  const signalGroup = ".ops-signal-group";
+  await expect(page.locator(signalGroup).first()).toBeVisible();
+  const border = await readComputedStyle(page, signalGroup, "borderColor");
   const ratio = contrastRatio(border, DARK_SURFACE_2_RGB);
-  console.info(`DK-13 posture row-border contrast ratio: ${ratio.toFixed(3)}:1`);
+  console.info(`posture signal-group border contrast ratio: ${ratio.toFixed(3)}:1`);
+  expect(
+    ratio,
+    `posture signal-group border ratio must stay at or above ${DK13_ROW_BORDER_TRIGGER}:1`
+  ).toBeGreaterThanOrEqual(DK13_ROW_BORDER_TRIGGER);
 
-  if (ratio < DK13_ROW_BORDER_TRIGGER) {
-    await expect(
-      page.locator(".ops-posture-table"),
-      `DK-13 row-border ratio ${ratio.toFixed(3)}:1 is below ${DK13_ROW_BORDER_TRIGGER}:1, so the leaf-scoped override must be present`
-    ).toHaveCount(1);
-    const boostedBorder = await readComputedStyle(page, ".ops-posture-table tbody tr:first-child td:first-child", "borderColor");
-    expect(contrastRatio(boostedBorder, DARK_SURFACE_2_RGB)).toBeGreaterThanOrEqual(ratio);
-  }
-
-  return ratio;
+  await expect(page.locator(".ops-signal-metrics dd").first()).toBeVisible();
 }
 
 async function preparePopulatedPlaybooks(page: Page): Promise<void> {
@@ -367,10 +370,10 @@ const DEPTH_TARGETS: DepthTarget[] = [
     prepare: gotoControlRoom
   },
   {
-    id: "posture-table",
+    id: "posture-signal-cards",
     scenario: "incident",
     captureIndex: "01",
-    selectors: [".ops-table-scroll table"],
+    selectors: [".ops-schema-signal-card", ".ops-signal-group", ".ops-signal-metrics"],
     prepare: gotoPosture
   },
   {
@@ -445,8 +448,8 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
                   expect(heroShadow, "control-room verdict hero should not carry a copper warm halo").not.toContain(COPPER_RGB);
                 }
                 break;
-              case "posture-table": {
-                await expectPostureTableBorderMeasured(page);
+              case "posture-signal-cards": {
+                await expectPostureSignalCardsMeasured(page);
                 break;
               }
               case "failed-sync-notice":

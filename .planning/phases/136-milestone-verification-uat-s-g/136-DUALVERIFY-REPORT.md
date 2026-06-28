@@ -3,7 +3,7 @@
 **Requirement:** DUALVERIFY-01
 **Plan:** 136-01
 **Evidence started:** 2026-06-28T22:39:59Z
-**Last updated:** 2026-06-28T22:45:58Z
+**Last updated:** 2026-06-28T23:08:14Z
 
 DUALVERIFY-01 is being verified with source-backed Mix, ScrypathOps, browser,
 contrast, motion, shell, mounted smoke, and screenshot evidence before Phase 136
@@ -42,7 +42,62 @@ closeout prose claims success.
 
 ## Browser Gate Results
 
-Pending Task 2.
+Task 2 ran the contrast, depth, motion, shell, and operator gates against the
+source-backed server at `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012`.
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Static token contrast | `CONTRAST_REPORT_DIR=test-results/contrast/phase136-token make contrast` | PASS: AA failures: 0; AAA advisory: 27. |
+| Browser axe contrast | `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 CONTRAST_REPORT_DIR=test-results/contrast/phase136 npm run test:e2e:admin-contrast -- --reporter=line` | PASS: 3/3 scenarios. Incident AA 0 / AAA advisory 24; all_green AA 0 / AAA advisory 48; empty AA 0 / AAA advisory 0. Covers light, dark, and system-dark. |
+| Surface depth | `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:admin-depth -- --reporter=line` | PASS: 33/33 tests. |
+| Path motion | `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:path-motion -- --reporter=line` | PASS: 7/7 tests, including reduced-motion and active Playbook glow end-state. |
+| Shell chrome | `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:admin-shell -- --reporter=line` | PASS: 33/33 tests across light, dark, and system-dark mobile/desktop shell states. |
+| Operator smoke | `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e -- e2e/operator.spec.ts --reporter=line` | PASS: 2/2 tests. |
+| Contrast suppression guard | `for term in "exclude\\(" "disableRules" "color-contrast.*disabled"; do rg -n -- "$term" e2e/admin_contrast_matrix.spec.ts && exit 1; done` | PASS: no forbidden axe contrast suppression patterns. |
+
+Task 2 assertions covered:
+
+- AA failures: 0 for both static token contrast and browser axe contrast.
+- AAA advisory counts are recorded as advisory-only evidence, not gate failures.
+- `system-dark` is represented in browser contrast, shell chrome, and motion proof.
+- `reduced-motion` is covered by `admin_path_motion.spec.ts`.
+- `admin_surface_depth`, `admin_path_motion`, `admin_shell_chrome`, and `operator.spec.ts`
+  all ran against the Phase 136 source-backed server.
+
+## Deviations from Plan
+
+### Auto-fixed Issues
+
+**1. [Rule 2 - Missing Critical Proof Coverage] Added missing muted-token rows**
+- **Found during:** Task 2 static token contrast.
+- **Issue:** The D-15 contrast lockstep guard could not verify current muted text consumers
+  because several selectors in `app.css` had no manifest entries.
+- **Fix:** Added manifest rows for current sidebar, timestamp, schema option, nav, and
+  posture signal muted text consumers.
+- **Files modified:** `scrypath_ops/assets/css/contrast-pairs.mjs`
+- **Verification:** `CONTRAST_REPORT_DIR=test-results/contrast/phase136-token make contrast`
+  passed with AA failures: 0 and AAA advisory: 27.
+
+**2. [Rule 1 - Proof Selector Drift] Updated posture depth proof to current UI**
+- **Found during:** Task 2 surface depth run.
+- **Issue:** The depth spec still targeted the removed posture table selector while the
+  current posture UI renders signal cards.
+- **Fix:** Replaced the stale posture table assertion with signal-card, signal-group, and
+  metric assertions; extended the OKLCH parser to handle `none` hue values emitted by the
+  browser for neutral colors.
+- **Files modified:** `examples/scrypath_ecommerce/e2e/admin_surface_depth.spec.ts`
+- **Verification:** `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:admin-depth -- --reporter=line`
+  passed with 33/33 tests.
+
+**3. [Rule 1 - Flaky Proof Timing] Waited for active Playbook glow end-state**
+- **Found during:** Task 2 path-motion run.
+- **Issue:** The dark Playbook active-row assertion sampled `box-shadow` immediately after
+  the active class appeared, before the CSS transition settled to the violet glow end-state.
+- **Fix:** Added a polling helper so the test proves the computed end-state instead of a
+  single transition frame.
+- **Files modified:** `examples/scrypath_ecommerce/e2e/admin_path_motion.spec.ts`
+- **Verification:** `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:path-motion -- --reporter=line`
+  passed with 7/7 tests.
 
 ## Screenshot Matrix
 
@@ -50,10 +105,14 @@ Pending Task 3.
 
 ## Artifact Hygiene
 
-Generated artifacts stayed out of git staging as of Task 1. Phase 136 will commit only:
+Generated artifacts stayed out of git staging as of Task 2. Phase 136 has committed or will
+commit only:
 
 - `.planning/phases/136-milestone-verification-uat-s-g/136-DUALVERIFY-REPORT.md`
 - `.planning/phases/136-milestone-verification-uat-s-g/136-ARTIFACT-MANIFEST.json`
+- `scrypath_ops/assets/css/contrast-pairs.mjs`
+- `examples/scrypath_ecommerce/e2e/admin_surface_depth.spec.ts`
+- `examples/scrypath_ecommerce/e2e/admin_path_motion.spec.ts`
 
 ## Starting Dirty Tree Transcript
 

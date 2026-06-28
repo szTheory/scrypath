@@ -215,6 +215,24 @@ async function glowToken(page: Page): Promise<string> {
   );
 }
 
+async function expectGlowSettled(page: Page, selector: string, theme: ThemeMode): Promise<void> {
+  if (theme === "light") {
+    await expect
+      .poll(() => glowBoxShadow(page, selector), {
+        timeout: 5_000,
+        message: `${selector} must carry no violet glow in light`
+      })
+      .not.toContain(GLOW_RGB);
+  } else {
+    await expect
+      .poll(() => glowBoxShadow(page, selector), {
+        timeout: 5_000,
+        message: `${selector} must settle to the violet glow in ${theme}`
+      })
+      .toContain(GLOW_RGB);
+  }
+}
+
 // ── Spec ─────────────────────────────────────────────────────────────────────
 
 test.describe("admin path motion — DARKMOTION-01", () => {
@@ -378,13 +396,10 @@ test.describe("admin path motion — DARKMOTION-01", () => {
 
         // Dark expression present / light unchanged on the active-path anchor (D-02): the
         // active-item glow carries --shadow-ops-glow only in dark/system-dark. Deterministic
-        // proof of the same "no spurious glow in light" claim that was a human read.
-        const activeGlow = await glowBoxShadow(page, ".ops-object-item-active");
-        if (theme === "light") {
-          expect(activeGlow, "active playbook item must carry NO violet glow in light").not.toContain(GLOW_RGB);
-        } else {
-          expect(activeGlow, `active playbook item must carry the violet glow in ${theme}`).toContain(GLOW_RGB);
-        }
+        // proof of the same "no spurious glow in light" claim that was a human read. The
+        // active class is present before its box-shadow transition settles, so poll the
+        // computed end-state instead of sampling a single transition frame.
+        await expectGlowSettled(page, ".ops-object-item-active", theme);
 
         await snap(page, `playbook-active-A--${theme}`);
 
