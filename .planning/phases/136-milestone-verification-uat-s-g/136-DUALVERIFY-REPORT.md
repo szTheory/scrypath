@@ -3,7 +3,7 @@
 **Requirement:** DUALVERIFY-01
 **Plan:** 136-01
 **Evidence started:** 2026-06-28T22:39:59Z
-**Last updated:** 2026-06-28T23:08:14Z
+**Last updated:** 2026-06-28T23:10:57Z
 
 DUALVERIFY-01 is being verified with source-backed Mix, ScrypathOps, browser,
 contrast, motion, shell, mounted smoke, and screenshot evidence before Phase 136
@@ -101,11 +101,25 @@ Task 2 assertions covered:
 
 ## Screenshot Matrix
 
-Pending Task 3.
+Task 3 recaptured the historical 40-shot light/dark admin screenshot matrix against the
+same source-backed server.
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Screenshot matrix | `ADMIN_SCREENSHOT_DIR=test-results/admin-screenshots/phase136 PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:admin-matrix -- --reporter=line` | PASS: 3/3 scenario tests; 40 PNGs generated. |
+| Screenshot count | `find test-results/admin-screenshots/phase136 -type f -name '*.png' \| wc -l` | PASS: 40. |
+| Screenshot checksums | `find test-results/admin-screenshots/phase136 -type f -name '*.png' \| sort \| xargs shasum -a 256` | PASS: checksums recorded in `136-ARTIFACT-MANIFEST.json`. |
+
+The matrix preserves the historical 10 screen/state lanes across light and dark desktop/mobile:
+control room incident, posture incident, failed sync populated, sync drift, control room
+all-green, posture all-green, search results, failed sync empty, search zero-results, and
+playbooks empty workspace. This is broader visual capture evidence for Phase 136 and does
+not replace the Task 2 focused browser gates for contrast, depth, shell chrome, reduced-motion,
+or operator workflows.
 
 ## Artifact Hygiene
 
-Generated artifacts stayed out of git staging as of Task 2. Phase 136 has committed or will
+Generated artifacts stayed out of git staging as of Task 3. Phase 136 has committed or will
 commit only:
 
 - `.planning/phases/136-milestone-verification-uat-s-g/136-DUALVERIFY-REPORT.md`
