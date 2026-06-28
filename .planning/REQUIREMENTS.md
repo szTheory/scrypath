@@ -13,10 +13,12 @@ artifact-thin "deep-research" brand doc — and turn it into a **genuinely high-
 repo-safe brand package**, with a **proper logo system the owner chooses from** at its center.
 
 The two concrete gaps this milestone closes:
+
 1. **The logos are AI-generic and caged.** Both `scrypath_ops/priv/static/images/logo.svg` and
    `website/src/assets/brand-mark.svg` are a "path-S" mark inside a `<rect rx="12">` dark box — exactly the
    rectangular-background cage the owner dislikes. There is no proper lockup, no integrated typemark, no usage
    system, no favicon/social family. These are **replaced, not reused**.
+
 2. **There is no real, self-contained brand book** — the existing `.md` is a strategy doc, not a usable
    design-system package an engineer can build UI / landing pages / docs from.
 
@@ -26,6 +28,7 @@ designs and lets the owner **choose** a logo direction, ships a self-contained `
 identity across the live product surfaces.
 
 ### Locked decisions
+
 - **Sequencing:** new milestone **v1.35** beginning at **phase 137**; v1.34 (133–136) paused, resumes after.
 - **Adoption:** build the `brandbook/` package **and** rewire the chosen logo/tokens into ops UI, website, favicon, OG image, README (not artifacts-only).
 - **Palette/type:** open to **evidence-based refinement** (not locked), but **bias-to-keep** — the violet+copper palette + Space Grotesk / Inter / IBM Plex Mono stack is already implemented live in `scrypath_ops` (Tailwind v4 + daisyUI) and `website/`; any change must keep the `contrast-pairs.mjs` AA gate green and is justified in the decision-log.
@@ -98,7 +101,7 @@ identity across the live product surfaces.
 | DARKMOTION-01 | Phase 133 | Complete |
 | SCREEN-DARK-01 | Phase 134 | Complete |
 | SHELL-DARK-01 | Phase 135 | Complete |
-| DUALVERIFY-01 | Phase 136 | Pending |
+| DUALVERIFY-01 | Phase 136 | Complete |
 
 - **DARKMOTION-01** (Phase 133, complete): restrained path-expression motion (line draw/reveal, node pulse, active-path tracing on the route mark/diagrams, code-block shimmer on hover) via existing `--duration-ops-*`/`--ease-ops-*` tokens, transform/opacity only, reduced-motion-safe, tuned for dark without breaking light; honors v1.33's A3 no-re-fire precedent.
 - **SCREEN-DARK-01** (Phase 134, complete): under-iterated surfaces (Search result rows, Sync/Drift drift-chips/preflight depth, Playbooks empty/populated) reach dark-signature + light-parity quality across all seed states.
