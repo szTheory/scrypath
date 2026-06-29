@@ -1,13 +1,15 @@
 # Phase 136 Dual Verify Report
 
 **Requirement:** DUALVERIFY-01
-**Plan:** 136-01
+**Plans:** 136-01 through 136-03
 **Evidence started:** 2026-06-28T22:39:59Z
-**Last updated:** 2026-06-28T23:10:57Z
+**Last updated:** 2026-06-29T18:29:04Z
+**Final status:** PASSED
 
-DUALVERIFY-01 is being verified with source-backed Mix, ScrypathOps, browser,
-contrast, motion, shell, mounted smoke, and screenshot evidence before Phase 136
-closeout prose claims success.
+DUALVERIFY-01 is verified with source-backed Mix, ScrypathOps, browser,
+contrast, motion, shell, mounted smoke, screenshot evidence, and approved
+Human UAT. Phase 136 closeout artifacts now agree that no D-18 must-fix blocker
+remains.
 
 ## Source-Backed Lane
 
@@ -117,13 +119,42 @@ playbooks empty workspace. This is broader visual capture evidence for Phase 136
 not replace the Task 2 focused browser gates for contrast, depth, shell chrome, reduced-motion,
 or operator workflows.
 
+## Human UAT
+
+Phase 136 Plan 03 created the bounded UAT checklist and paused for human review. The
+reviewer response was `approved`.
+
+| Field | Result |
+| --- | --- |
+| UAT artifact | `.planning/phases/136-milestone-verification-uat-s-g/136-UAT.md` |
+| Reviewer response | `approved` |
+| Status | PASS |
+| Required surfaces | PASS: Control Room, Posture, Failed Sync, Sync/Drift, Search, Playbooks |
+| Theme sequence | PASS: dark first, light parity, system-dark evidence |
+| D-18 must-fix blockers | 0 |
+| D-19 accepted follow-ups from UAT | 0 |
+| Blocked status | No pending blocker |
+
+## Final Defect And Follow-Up Decisions
+
+- No D-18 must-fix blocker was reported during Human UAT.
+- No product-source repair was needed after UAT approval, so no additional Mix or browser
+  rerun was required for Plan 03.
+- No new accepted follow-up was created by UAT. The existing D-19 categories in
+  `136-MILESTONE-AUDIT.md` remain nonblocking release-policy or supplemental-evidence
+  options, not hidden closeout defects.
+
 ## Artifact Hygiene
 
-Generated artifacts stayed out of git staging as of Task 3. Phase 136 has committed or will
-commit only:
+Generated-artifact hygiene: generated PNGs, traces, `.tmp` content, raw browser JSON, and
+built `scrypath_ops/priv/static/**` outputs stayed out of git staging. Phase 136 committed
+or will commit only source/report metadata:
 
 - `.planning/phases/136-milestone-verification-uat-s-g/136-DUALVERIFY-REPORT.md`
 - `.planning/phases/136-milestone-verification-uat-s-g/136-ARTIFACT-MANIFEST.json`
+- `.planning/phases/136-milestone-verification-uat-s-g/136-BEFORE-AFTER.md`
+- `.planning/phases/136-milestone-verification-uat-s-g/136-MILESTONE-AUDIT.md`
+- `.planning/phases/136-milestone-verification-uat-s-g/136-UAT.md`
 - `scrypath_ops/assets/css/contrast-pairs.mjs`
 - `examples/scrypath_ecommerce/e2e/admin_surface_depth.spec.ts`
 - `examples/scrypath_ecommerce/e2e/admin_path_motion.spec.ts`
