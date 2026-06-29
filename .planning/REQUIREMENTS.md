@@ -84,9 +84,9 @@ identity across the live product surfaces.
 
 ---
 
-## Appendix — PAUSED v1.34 Requirements (resume after v1.35)
+## Appendix — Completed v1.34 Requirements
 
-> Preserved from the v1.34 milestone (defined 2026-06-04). v1.34 has advanced through Phase 134; phases 128–134 are complete, 135–136 pending. Resume with Phase 135 planning.
+> Preserved from the v1.34 milestone (defined 2026-06-04). v1.34 completed on 2026-06-29 after Phase 136 passed DUALVERIFY-01 with approved Human UAT.
 
 **Milestone intent:** Make the `scrypath_ops` admin UI's existing dark/light/system theming genuinely perfect and brand-expressive in both modes (dark signature, light at parity), backed by a formal automated WCAG AA contrast gate (AAA for body text), with continued design-system/IA polish on v1.33's under-touched surfaces. Locked: comprehensive both-themes scope; system-follows-OS default; AA hard gate / AAA-body advisory; keep Tailwind v4 + daisyUI + `.ops-*`.
 
@@ -105,5 +105,5 @@ identity across the live product surfaces.
 
 - **DARKMOTION-01** (Phase 133, complete): restrained path-expression motion (line draw/reveal, node pulse, active-path tracing on the route mark/diagrams, code-block shimmer on hover) via existing `--duration-ops-*`/`--ease-ops-*` tokens, transform/opacity only, reduced-motion-safe, tuned for dark without breaking light; honors v1.33's A3 no-re-fire precedent.
 - **SCREEN-DARK-01** (Phase 134, complete): under-iterated surfaces (Search result rows, Sync/Drift drift-chips/preflight depth, Playbooks empty/populated) reach dark-signature + light-parity quality across all seed states.
-- **SHELL-DARK-01** (Phase 135, pending): shell chrome (header/nav, command palette, theme toggle, flash, `.ops-shell` radial violet wash) brand-expressive and AA-clean in both themes; weak header-nav dark contrast fixed; palette/flash adopt the dark ambient-shadow-plus-border recipe.
-- **DUALVERIFY-01** (Phase 136, pending): end-to-end proof — `mix verify.opsui` + ScrypathOps LiveView suite + mounted ecommerce admin Playwright smoke green; CONTRAST-HARNESS-01 AA in both themes with AAA-body report; 40-shot matrix re-captured with a v1.33→v1.34 before/after gallery; milestone audit + human UAT.
+- **SHELL-DARK-01** (Phase 135, complete): shell chrome (header/nav, command palette, theme toggle, flash, `.ops-shell` radial violet wash) brand-expressive and AA-clean in both themes; weak header-nav dark contrast fixed; palette/flash adopt the dark ambient-shadow-plus-border recipe.
+- **DUALVERIFY-01** (Phase 136, complete): end-to-end proof — `mix verify.opsui` + ScrypathOps LiveView suite + mounted ecommerce admin Playwright smoke green; CONTRAST-HARNESS-01 AA in both themes with AAA-body report; 40-shot matrix re-captured with a v1.33→v1.34 before/after gallery; milestone audit + human UAT.
