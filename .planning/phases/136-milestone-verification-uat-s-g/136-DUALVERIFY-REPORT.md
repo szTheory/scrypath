@@ -3,7 +3,7 @@
 **Requirement:** DUALVERIFY-01
 **Plans:** 136-01 through 136-03
 **Evidence started:** 2026-06-28T22:39:59Z
-**Last updated:** 2026-06-29T18:29:04Z
+**Last updated:** 2026-06-29T19:04:07Z
 **Final status:** PASSED
 
 DUALVERIFY-01 is verified with source-backed Mix, ScrypathOps, browser,
@@ -49,8 +49,8 @@ source-backed server at `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012`.
 
 | Gate | Command | Result |
 | --- | --- | --- |
-| Static token contrast | `CONTRAST_REPORT_DIR=test-results/contrast/phase136-token make contrast` | PASS: AA failures: 0; AAA advisory: 27. |
-| Browser axe contrast | `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 CONTRAST_REPORT_DIR=test-results/contrast/phase136 npm run test:e2e:admin-contrast -- --reporter=line` | PASS: 3/3 scenarios. Incident AA 0 / AAA advisory 24; all_green AA 0 / AAA advisory 48; empty AA 0 / AAA advisory 0. Covers light, dark, and system-dark. |
+| Static token contrast | `CONTRAST_REPORT_DIR=test-results/contrast/phase136-review-fix2-token make contrast` | PASS: AA failures: 0; AAA advisory: 35. |
+| Browser axe contrast | `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 CONTRAST_REPORT_DIR=test-results/contrast/phase136-review-fix2 npm run test:e2e:admin-contrast -- --reporter=line` | PASS: 3/3 scenarios. Incident AA 0 / AAA advisory 24; all_green AA 0 / AAA advisory 48; empty AA 0 / AAA advisory 12. Covers light, dark, and system-dark. |
 | Surface depth | `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:admin-depth -- --reporter=line` | PASS: 33/33 tests. |
 | Path motion | `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:path-motion -- --reporter=line` | PASS: 7/7 tests, including reduced-motion and active Playbook glow end-state. |
 | Shell chrome | `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:admin-shell -- --reporter=line` | PASS: 33/33 tests across light, dark, and system-dark mobile/desktop shell states. |
@@ -65,6 +65,7 @@ Task 2 assertions covered:
 - `reduced-motion` is covered by `admin_path_motion.spec.ts`.
 - `admin_surface_depth`, `admin_path_motion`, `admin_shell_chrome`, and `operator.spec.ts`
   all ran against the Phase 136 source-backed server.
+- Execute-post code review is clean in `136-REVIEW.md` after the post-review fixes.
 
 ## Deviations from Plan
 
@@ -98,6 +99,29 @@ Task 2 assertions covered:
 - **Fix:** Added a polling helper so the test proves the computed end-state instead of a
   single transition frame.
 - **Files modified:** `examples/scrypath_ecommerce/e2e/admin_path_motion.spec.ts`
+- **Verification:** `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:path-motion -- --reporter=line`
+  passed with 7/7 tests.
+
+**4. [D-18 Code Review Blocker] Corrected muted small-text contrast thresholds**
+- **Found during:** Execute-post code review.
+- **Issue:** Several small uppercase muted labels were classified as WCAG large text in
+  `contrast-pairs.mjs`, letting the static gate apply the relaxed 3.0 AA threshold.
+- **Fix:** Classified `.ops-nav-group__label`, `.ops-signal-group__title`,
+  `.ops-signal-metrics dt`, and `.ops-handoff__eyebrow` as normal text; raised or reused
+  the 64% muted text treatment in the current source lane.
+- **Files modified:** `scrypath_ops/assets/css/contrast-pairs.mjs`,
+  `scrypath_ops/assets/css/app.css`.
+- **Verification:** `CONTRAST_REPORT_DIR=test-results/contrast/phase136-review-fix2-token make contrast`
+  passed with AA failures: 0 and AAA advisory: 35; browser contrast rerun passed 3/3 with
+  AA failures: 0.
+
+**5. [D-18 Code Review Warning] Tightened merge-trace line-draw proof**
+- **Found during:** Execute-post code review.
+- **Issue:** The hover line-draw assertion only checked that the computed transform was not
+  `none`, which could pass at the resting `scaleX(0)` matrix state.
+- **Fix:** Added a numeric pseudo-element scale probe and asserted `scaleX(0)` before hover
+  and `scaleX(1)` after hover.
+- **Files modified:** `examples/scrypath_ecommerce/e2e/admin_path_motion.spec.ts`.
 - **Verification:** `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:path-motion -- --reporter=line`
   passed with 7/7 tests.
 
@@ -138,8 +162,9 @@ reviewer response was `approved`.
 ## Final Defect And Follow-Up Decisions
 
 - No D-18 must-fix blocker was reported during Human UAT.
-- No product-source repair was needed after UAT approval, so no additional Mix or browser
-  rerun was required for Plan 03.
+- Execute-post code review found contrast-gate and test-proof defects after UAT approval.
+  Those were fixed in the smallest scoped files and rerun with `make contrast`, browser
+  contrast, path-motion, and `mix verify.opsui`.
 - No new accepted follow-up was created by UAT. The existing D-19 categories in
   `136-MILESTONE-AUDIT.md` remain nonblocking release-policy or supplemental-evidence
   options, not hidden closeout defects.
@@ -156,8 +181,10 @@ or will commit only source/report metadata:
 - `.planning/phases/136-milestone-verification-uat-s-g/136-MILESTONE-AUDIT.md`
 - `.planning/phases/136-milestone-verification-uat-s-g/136-UAT.md`
 - `scrypath_ops/assets/css/contrast-pairs.mjs`
+- `scrypath_ops/assets/css/app.css`
 - `examples/scrypath_ecommerce/e2e/admin_surface_depth.spec.ts`
 - `examples/scrypath_ecommerce/e2e/admin_path_motion.spec.ts`
+- `.planning/phases/136-milestone-verification-uat-s-g/136-REVIEW.md`
 
 ## Starting Dirty Tree Transcript
 

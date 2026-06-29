@@ -60,18 +60,18 @@
       "summary": "2 doctests, 147 tests, 0 failures"
     },
     {
-      "task": 2,
+      "task": "execute-post",
       "name": "static-token-contrast",
-      "command": "CONTRAST_REPORT_DIR=test-results/contrast/phase136-token make contrast",
+      "command": "CONTRAST_REPORT_DIR=test-results/contrast/phase136-review-fix2-token make contrast",
       "status": "pass",
-      "summary": "AA failures: 0; AAA advisory: 27"
+      "summary": "AA failures: 0; AAA advisory: 35"
     },
     {
-      "task": 2,
+      "task": "execute-post",
       "name": "browser-axe-contrast",
-      "command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 CONTRAST_REPORT_DIR=test-results/contrast/phase136 npm run test:e2e:admin-contrast -- --reporter=line",
+      "command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 CONTRAST_REPORT_DIR=test-results/contrast/phase136-review-fix2 npm run test:e2e:admin-contrast -- --reporter=line",
       "status": "pass",
-      "summary": "3 passed; incident AA 0/AAA 24, all_green AA 0/AAA 48, empty AA 0/AAA 0"
+      "summary": "3 passed; incident AA 0/AAA 24, all_green AA 0/AAA 48, empty AA 0/AAA 12"
     },
     {
       "task": 2,
@@ -81,11 +81,11 @@
       "summary": "33 passed"
     },
     {
-      "task": 2,
+      "task": "execute-post",
       "name": "path-motion",
       "command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:path-motion -- --reporter=line",
       "status": "pass",
-      "summary": "7 passed"
+      "summary": "7 passed after numeric line-draw scale assertion fix"
     },
     {
       "task": 2,
@@ -121,6 +121,20 @@
       "command": "find test-results/admin-screenshots/phase136 -type f -name '*.png' | sort | wc -l",
       "status": "pass",
       "summary": "40"
+    },
+    {
+      "name": "post-review-opsui-gate",
+      "task": "execute-post",
+      "command": "mix verify.opsui",
+      "status": "pass",
+      "summary": "2 doctests, 147 tests, 0 failures"
+    },
+    {
+      "name": "code-review",
+      "task": "execute-post",
+      "command": "/gsd:code-review 136 (standard depth)",
+      "status": "pass",
+      "summary": "136-REVIEW.md clean; 4 files reviewed; 0 findings"
     }
   ],
   "artifacts": [
@@ -136,17 +150,17 @@
     },
     {
       "kind": "static-token-contrast-json",
-      "path": "examples/scrypath_ecommerce/test-results/contrast/phase136-token/contrast-report.token.json",
+      "path": "examples/scrypath_ecommerce/test-results/contrast/phase136-review-fix2-token/contrast-report.token.json",
       "committed": false,
       "summary": {
         "aa_fail": 0,
-        "aaa_advisory": 27,
-        "total": 27
+        "aaa_advisory": 35,
+        "total": 35
       }
     },
     {
       "kind": "browser-axe-contrast-json",
-      "path": "examples/scrypath_ecommerce/test-results/contrast/phase136",
+      "path": "examples/scrypath_ecommerce/test-results/contrast/phase136-review-fix2",
       "committed": false,
       "summary": {
         "incident": {
@@ -159,7 +173,7 @@
         },
         "empty": {
           "aa_fail": 0,
-          "aaa_advisory": 0
+          "aaa_advisory": 12
         }
       }
     },
@@ -336,6 +350,11 @@
           "path": "test-results/admin-screenshots/phase136/09-playbooks--light--mobile--empty-workspace.png"
         }
       ]
+    },
+    {
+      "kind": "code-review",
+      "path": ".planning/phases/136-milestone-verification-uat-s-g/136-REVIEW.md",
+      "committed": true
     }
   ],
   "source_fixes": [
@@ -356,6 +375,24 @@
       "rule": "Rule 1 - Flaky Proof Timing",
       "path": "examples/scrypath_ecommerce/e2e/admin_path_motion.spec.ts",
       "reason": "Polled for the active Playbook glow computed end-state instead of sampling one transition frame."
+    },
+    {
+      "task": "execute-post",
+      "rule": "D-18 Code Review Blocker - Muted Small Text Thresholds",
+      "path": "scrypath_ops/assets/css/contrast-pairs.mjs",
+      "reason": "Classified small muted labels as normal text and raised manifest alphas to the 4.5 AA threshold path."
+    },
+    {
+      "task": "execute-post",
+      "rule": "D-18 Code Review Blocker - Muted Small Text Thresholds",
+      "path": "scrypath_ops/assets/css/app.css",
+      "reason": "Routed the existing handoff eyebrow through --ops-text-muted and verified current dirty source alpha lockstep for newly introduced small labels."
+    },
+    {
+      "task": "execute-post",
+      "rule": "D-18 Code Review Warning - Line Draw Proof False Positive",
+      "path": "examples/scrypath_ecommerce/e2e/admin_path_motion.spec.ts",
+      "reason": "Asserted numeric ::after scaleX before and after hover so the proof cannot pass at the resting scaleX(0) state."
     }
   ],
   "plans": [
@@ -363,7 +400,7 @@
     "136-02",
     "136-03"
   ],
-  "finalized": "2026-06-29T18:29:04Z",
+  "finalized": "2026-06-29T19:04:07Z",
   "final_status": "passed",
   "human_uat": {
     "path": ".planning/phases/136-milestone-verification-uat-s-g/136-UAT.md",
@@ -381,7 +418,7 @@
       "committed": true,
       "checksum_algorithm": "sha256",
       "checksum_scope": "file-content",
-      "sha256": "ff04251b2376ebe561d2e30e9ecdbdaedc8f44b50c75464995c0fdac11111913"
+      "sha256": "5342fc6a18a3ad1eec52324446eb8ec7aef8aa799f4139be245e20d195043cea"
     },
     {
       "kind": "phase-manifest",
@@ -389,7 +426,7 @@
       "committed": true,
       "checksum_algorithm": "sha256",
       "checksum_scope": "canonical-json-with-this-sha256-null",
-      "sha256": "dad441c9a277dcb619c33ea13b9e8b9f4990823ab18689d69a20a33bf957a622"
+      "sha256": "ae2831990be27f44fc3426d790b0b0bf5bf889fa7425031a85d95026126c93be"
     },
     {
       "kind": "before-after-gallery",
@@ -405,7 +442,7 @@
       "committed": true,
       "checksum_algorithm": "sha256",
       "checksum_scope": "file-content",
-      "sha256": "95a7a8e28df74b3feeacaa55aa0b9175c92526d9eb81b81fd45e787e211275af"
+      "sha256": "a0b9243c49922de20ec060271cc0eff087a58684f85e36bd7fc191a2ae542442"
     },
     {
       "kind": "human-uat",
@@ -414,6 +451,14 @@
       "checksum_algorithm": "sha256",
       "checksum_scope": "file-content",
       "sha256": "b03c1648314478d3fc7511d2ff8a933a110e5191d2ab4383808cbc9e2bb4bcf8"
+    },
+    {
+      "kind": "code-review",
+      "path": ".planning/phases/136-milestone-verification-uat-s-g/136-REVIEW.md",
+      "committed": true,
+      "checksum_algorithm": "sha256",
+      "checksum_scope": "file-content",
+      "sha256": "d7e969e69668c287329ff1830e6a3a899cbe55d592fc7fc079ea223ef57e1cb4"
     }
   ]
 }
