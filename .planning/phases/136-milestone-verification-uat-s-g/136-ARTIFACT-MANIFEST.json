@@ -109,16 +109,16 @@
       "summary": "No forbidden suppression patterns found"
     },
     {
-      "task": 3,
+      "task": "verification-gap",
       "name": "screenshot-matrix",
       "command": "ADMIN_SCREENSHOT_DIR=test-results/admin-screenshots/phase136 PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:admin-matrix -- --reporter=line",
       "status": "pass",
-      "summary": "3 passed; 40 PNGs generated"
+      "summary": "3 passed; 40 PNGs recaptured after verification found the artifact root empty"
     },
     {
-      "task": 3,
+      "task": "verification-gap",
       "name": "screenshot-count",
-      "command": "find test-results/admin-screenshots/phase136 -type f -name '*.png' | sort | wc -l",
+      "command": "find examples/scrypath_ecommerce/test-results/admin-screenshots/phase136 -maxdepth 1 -type f -name '*.png' | wc -l",
       "status": "pass",
       "summary": "40"
     },
@@ -190,71 +190,71 @@
       "actual_count": 40,
       "checksums": [
         {
-          "sha256": "53e85f79177942a8128c7eb60cf8a0a03cae132447520ecbde10cbf56656fcbe",
+          "sha256": "de0f6734b901e755cc1f2056c4e1ab9cb998b34142ddd005349419933c38ace5",
           "path": "test-results/admin-screenshots/phase136/00-control-room--dark--desktop--incident.png"
         },
         {
-          "sha256": "fffa1af8123903db6136e2e10de374049b8027042c13caf2a8ee239ecfadbffa",
+          "sha256": "f1b81c11f2a8fab1c8c769c5524812a7b9fa9e1d3b96a1b13cb4fcc74f19fc71",
           "path": "test-results/admin-screenshots/phase136/00-control-room--dark--mobile--incident.png"
         },
         {
-          "sha256": "38db757b1c832dcc248e1bcbddd9d80a8d439a92266d6c5ed73ad3f2a088e933",
+          "sha256": "05578b65d1fcb0efe122a587eaf1acbf61513191abc41c7986a060fee16e3c62",
           "path": "test-results/admin-screenshots/phase136/00-control-room--light--desktop--incident.png"
         },
         {
-          "sha256": "02fd3f641b498c45c87908cae3d6343af449f2010026555e80cb94502b085917",
+          "sha256": "f0ab8c54a33b62d24be387e6baf849547b08325ed93c8661ed7bd97370f377af",
           "path": "test-results/admin-screenshots/phase136/00-control-room--light--mobile--incident.png"
         },
         {
-          "sha256": "58db88a3db242bd6af96bfb7f563a681ba6c751c3d7cb352cf88d06a611527d5",
+          "sha256": "c6bc506c280ec0aca729fbebae3fcdcc8a313f3f3c4c80113abc0d25b0c177ec",
           "path": "test-results/admin-screenshots/phase136/01-posture--dark--desktop--incident.png"
         },
         {
-          "sha256": "1a68c940db1c382d35bb33c2a5806d9377c8f14c5dee5b8d8545b0bb5b429bf2",
+          "sha256": "ce82f805872eb6c61b5d24268d24765c93b2c3488bdfa775ab4b1a27cddecb24",
           "path": "test-results/admin-screenshots/phase136/01-posture--dark--mobile--incident.png"
         },
         {
-          "sha256": "6ff4a4c500c12d9979556be7a5bc65cc0f55ed4441aeccd09ddb86073faf2fed",
+          "sha256": "97aad3dd88697e8e0ff04c3e30fb3ef198b113a4e40d4fcb3347a73980bc670f",
           "path": "test-results/admin-screenshots/phase136/01-posture--light--desktop--incident.png"
         },
         {
-          "sha256": "3d244eaf0d96c8b7a1f8739f828d2ddb7164cf3edb896a5402897c57d5549e1c",
+          "sha256": "454d8df740439c1228aedec2dabdba1ef1e396bf667618fc499f5d86c0436955",
           "path": "test-results/admin-screenshots/phase136/01-posture--light--mobile--incident.png"
         },
         {
-          "sha256": "fed8196df4f9da021aed261c538dacb4e01c011da6c3decdadff64c07a49b8d2",
+          "sha256": "cad08b528b7e42425c5e219147b9979583d0b694a41c886be74759f38fc670c4",
           "path": "test-results/admin-screenshots/phase136/02-failed-sync--dark--desktop--populated.png"
         },
         {
-          "sha256": "50b9182c0dcb3e18967f3e30ab70853990808a84ce0ccaaf3be1916284f9d096",
+          "sha256": "27dd8294df8d388b78477779f438889240166bad9cfac4732532476ef437f825",
           "path": "test-results/admin-screenshots/phase136/02-failed-sync--dark--mobile--populated.png"
         },
         {
-          "sha256": "bcd75f110a551b058a06e3e649afafc178475b288d243ab24513570e23b9a839",
+          "sha256": "2d3faaf8a4a3e313fe55db53d9195de6de81ba4974bac1558e38f90770c24873",
           "path": "test-results/admin-screenshots/phase136/02-failed-sync--light--desktop--populated.png"
         },
         {
-          "sha256": "f6d8f30acea1604d72c701cfd417fc7b77d0321db216ee7cc8d3879a477c241f",
+          "sha256": "7df91b6aae79d1c98bc2c02916d75f826ad27907f65d4c9939d606327f120786",
           "path": "test-results/admin-screenshots/phase136/02-failed-sync--light--mobile--populated.png"
         },
         {
-          "sha256": "6d64c9bc4a3fd40cfcb0ac0e4098a28c21c39267a3d75fb0d0eba0ae7e3116b2",
+          "sha256": "fda33fe2b8d52b4b0726e6e7f0ba0cc6497d6703ccb3853f39015ee4999164fa",
           "path": "test-results/admin-screenshots/phase136/03-sync-drift--dark--desktop--drift.png"
         },
         {
-          "sha256": "729cd3a91e56dff701b45766aa60031ec97b7c62df3484b5d063c0b5b8190a8a",
+          "sha256": "ee11608da2f58664d239768ea2f5018789abb7b59448bf00520d2cc1822bfc4e",
           "path": "test-results/admin-screenshots/phase136/03-sync-drift--dark--mobile--drift.png"
         },
         {
-          "sha256": "9a71ba84900f33b498b3174fc99f7dc54cf1654f03034834b55af6ca01d2184a",
+          "sha256": "51cc990219d03677197c5a2a58309b85e33a5165f7566fe90d431126e73eed24",
           "path": "test-results/admin-screenshots/phase136/03-sync-drift--light--desktop--drift.png"
         },
         {
-          "sha256": "daab8a21960644e141c4fcae7a494275b862df636f643ba73874081d684cd306",
+          "sha256": "1b7ce6cd9a957fa9e6ccaa0279566a7f3d4d9d7390a17c92ca02f9d2c202c0c3",
           "path": "test-results/admin-screenshots/phase136/03-sync-drift--light--mobile--drift.png"
         },
         {
-          "sha256": "8bebf1944e61bd02dbf401cb1c1e82935aea88ef3adb1ebde7e0f4817897c5c8",
+          "sha256": "0c7cd8dd4ff18f405842016ca2f82510074628ad66cb63f4ac093d6245924aff",
           "path": "test-results/admin-screenshots/phase136/04-control-room--dark--desktop--all-green.png"
         },
         {
@@ -262,7 +262,7 @@
           "path": "test-results/admin-screenshots/phase136/04-control-room--dark--mobile--all-green.png"
         },
         {
-          "sha256": "7648fd291b6e0410145390532653291514e6070eccb2277bc15cb7ee967aa13f",
+          "sha256": "ac5be66bb40c433a5c959d01fe72d76b0f6fcc5ee4a8449e000343005e6369e0",
           "path": "test-results/admin-screenshots/phase136/04-control-room--light--desktop--all-green.png"
         },
         {
@@ -270,71 +270,71 @@
           "path": "test-results/admin-screenshots/phase136/04-control-room--light--mobile--all-green.png"
         },
         {
-          "sha256": "00ecfbd1ccdeae463cae7dc1d9a1ce232ed3180b749b06e0c8e8831e06507e13",
+          "sha256": "02aaac3a8a474b334b8c7d03939b46c0e01849a3135d20561b6e8ad6f2998575",
           "path": "test-results/admin-screenshots/phase136/05-posture--dark--desktop--all-green.png"
         },
         {
-          "sha256": "04c5deaa938ecfb83ba5fd1f7c867102c824ff0b08aa3b6932d5d2d5615fe76d",
+          "sha256": "f827a0f04f32effbae70df467d82dfba9ba03ff389f585a6a3e7e7c2fced6f69",
           "path": "test-results/admin-screenshots/phase136/05-posture--dark--mobile--all-green.png"
         },
         {
-          "sha256": "34c562df12f0ff2aafc4452d0c8ed106e08bc84c4e8663f60717bb49f82245c3",
+          "sha256": "e6a10602b9504be7a232eec39d970988a9e39ab1c51c9f5d57b4077a88c3fb24",
           "path": "test-results/admin-screenshots/phase136/05-posture--light--desktop--all-green.png"
         },
         {
-          "sha256": "34df296bb0b5f128e225c0a415cc1e51ff142af15807ed3102ab502083dcd3cf",
+          "sha256": "df34644560d1b230b7f3b3071eceadb95239d07d96111a5f65578325e54edae5",
           "path": "test-results/admin-screenshots/phase136/05-posture--light--mobile--all-green.png"
         },
         {
-          "sha256": "ec5d0671032a8a9679cf7218fff3ba8ae47c61b38324f6d7f8fc7fbb31f3a9b7",
+          "sha256": "3d9022856f3acc7c336319534d71d6237e8130bd741c58e8ebf0e3ee4b23ad36",
           "path": "test-results/admin-screenshots/phase136/06-search--dark--desktop--results.png"
         },
         {
-          "sha256": "dc95cfae8a4d217d1957acd0a146ae91959c5eb0ff886e4d79e48d9a93c72cc5",
+          "sha256": "06a40d8197a466a6333818c07e6e277d23215d9d69e03bcad9e90e0ab61e1da5",
           "path": "test-results/admin-screenshots/phase136/06-search--dark--mobile--results.png"
         },
         {
-          "sha256": "16ba08832fe00d4dcad619eb4305edd497753a7d525ec0faa3617ffeb140e43c",
+          "sha256": "9f91abd888c4fb35e662f4b400438d7f1a0f4c570e884aef0877a81d8273deeb",
           "path": "test-results/admin-screenshots/phase136/06-search--light--desktop--results.png"
         },
         {
-          "sha256": "8f72c5a28f14cb50012021e0e5e34998abb58b688ee4f568409c408ea2d7e497",
+          "sha256": "9e042ff232ab65adea479f4fc2916d2fff679998e3d50fc030f2a84c549884d7",
           "path": "test-results/admin-screenshots/phase136/06-search--light--mobile--results.png"
         },
         {
-          "sha256": "03af47f2a320811091a0e2c6599a7dfc33775d1830ed4481566a7478ff0a1e79",
+          "sha256": "9948323aac461d348cab08d3efe01fc53be8d930b0fd706387bb6087f4c59e1f",
           "path": "test-results/admin-screenshots/phase136/07-failed-sync--dark--desktop--empty.png"
         },
         {
-          "sha256": "2d272ed591639dedc5c0c089c64a94ed11221f499e63e26eb4e9e5bac207d0bf",
+          "sha256": "fa00e3afeea2660953fbbdf65022165f52a99c272ef2101e97044c52dc5ab373",
           "path": "test-results/admin-screenshots/phase136/07-failed-sync--dark--mobile--empty.png"
         },
         {
-          "sha256": "032424f3f96c2c1387df7d8d08650aeefe07dc5902a7935529266075adfa2e07",
+          "sha256": "f4890133a3bd208d5efc0ef5a8a231797f257b8cd516877b1dd02e2b5ba25443",
           "path": "test-results/admin-screenshots/phase136/07-failed-sync--light--desktop--empty.png"
         },
         {
-          "sha256": "2524db1a26a8145b8cdff78b6ebd0a04eadfb53a2c31b147430def0db440edec",
+          "sha256": "cf3bb7c52cbb001d27b899fc0836c93c703d3fa46139ff41c9bdf48d439afe96",
           "path": "test-results/admin-screenshots/phase136/07-failed-sync--light--mobile--empty.png"
         },
         {
-          "sha256": "0e368751ebed80297dafed287956880df2de583b8aa0839c000aa2f764f3e36a",
+          "sha256": "780383991ae0d10144557081381cf849d2599a702cb02f6e5d58b65c3339f626",
           "path": "test-results/admin-screenshots/phase136/08-search--dark--desktop--zero-results.png"
         },
         {
-          "sha256": "9bb81a89c5a4c6cdc54802a2bcdaa89ab3fd12c32fcd3a1ad11378824b4a3bbf",
+          "sha256": "02ed4e5cae3385ba43cb98686791132b801bff244626f48b883dedc5b7458034",
           "path": "test-results/admin-screenshots/phase136/08-search--dark--mobile--zero-results.png"
         },
         {
-          "sha256": "04d610cb4b6de09019719459247e6cb8a88cf651331529561118169876540513",
+          "sha256": "dd9d6ed68d5fa0501a502f716f22fb7849a4dc730dbb56ff0de5ca8a46666e39",
           "path": "test-results/admin-screenshots/phase136/08-search--light--desktop--zero-results.png"
         },
         {
-          "sha256": "d1c623200255513d8bc9413b63a7e1a1820ea449f1c1c4fbde2d3cfd0dc32ecd",
+          "sha256": "0a7cbf6fad8240ff169b675f46525efe23e685bafc60acce497d1b1e0d924267",
           "path": "test-results/admin-screenshots/phase136/08-search--light--mobile--zero-results.png"
         },
         {
-          "sha256": "bea9ad3393814e37e36b5cf94df905331a0c30476d544711d7506b8bc2c1fea9",
+          "sha256": "8b3abc3f4c7002b5f24f5ad343a4e6a6eeee24afa67378e007c99d18003c6813",
           "path": "test-results/admin-screenshots/phase136/09-playbooks--dark--desktop--empty-workspace.png"
         },
         {
@@ -342,14 +342,16 @@
           "path": "test-results/admin-screenshots/phase136/09-playbooks--dark--mobile--empty-workspace.png"
         },
         {
-          "sha256": "afddef05885b28accdd83df974ce552d975f52f5707029414f0e38618001ba68",
+          "sha256": "a158edefb12dbb4a463b5c0b3723023f7f70ebf4c6726e86f8608409602979fe",
           "path": "test-results/admin-screenshots/phase136/09-playbooks--light--desktop--empty-workspace.png"
         },
         {
           "sha256": "eca8943df54055fb96439040ee336225fa4b97248334276ff1fc6c9fa6ed7847",
           "path": "test-results/admin-screenshots/phase136/09-playbooks--light--mobile--empty-workspace.png"
         }
-      ]
+      ],
+      "recaptured": "2026-06-29T19:18:18Z",
+      "recap_command": "ADMIN_SCREENSHOT_DIR=test-results/admin-screenshots/phase136 PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:admin-matrix -- --reporter=line"
     },
     {
       "kind": "code-review",
@@ -400,7 +402,7 @@
     "136-02",
     "136-03"
   ],
-  "finalized": "2026-06-29T19:04:07Z",
+  "finalized": "2026-06-29T19:18:18Z",
   "final_status": "passed",
   "human_uat": {
     "path": ".planning/phases/136-milestone-verification-uat-s-g/136-UAT.md",
@@ -418,7 +420,7 @@
       "committed": true,
       "checksum_algorithm": "sha256",
       "checksum_scope": "file-content",
-      "sha256": "5342fc6a18a3ad1eec52324446eb8ec7aef8aa799f4139be245e20d195043cea"
+      "sha256": "66a233597f56cb6d2a64e88162124f637339f0e4ce60b76faf624920372cda81"
     },
     {
       "kind": "phase-manifest",
@@ -426,7 +428,7 @@
       "committed": true,
       "checksum_algorithm": "sha256",
       "checksum_scope": "canonical-json-with-this-sha256-null",
-      "sha256": "ae2831990be27f44fc3426d790b0b0bf5bf889fa7425031a85d95026126c93be"
+      "sha256": "2023365426df192c84cbbef5aec01a65745790e6225b0b794d1b49c27fbed661"
     },
     {
       "kind": "before-after-gallery",
@@ -442,7 +444,7 @@
       "committed": true,
       "checksum_algorithm": "sha256",
       "checksum_scope": "file-content",
-      "sha256": "a0b9243c49922de20ec060271cc0eff087a58684f85e36bd7fc191a2ae542442"
+      "sha256": "6b3352f349321e10333a5963f7de8c8b1a8c1502e4098d18a008791f61f61e71"
     },
     {
       "kind": "human-uat",

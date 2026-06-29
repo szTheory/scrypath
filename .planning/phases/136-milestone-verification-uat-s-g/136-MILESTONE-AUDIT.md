@@ -63,7 +63,7 @@ No closeout blocker remains. The Human UAT response was `approved`, with no D-18
 | Path motion | PASS: 7/7 | Reduced-motion and active Playbook glow end-state proof. |
 | Shell chrome | PASS: 33/33 | Focus, theme toggle, command palette/sheet, flash, and shell wash coverage. |
 | Mounted operator smoke | PASS: 2/2 | Failed-sync triage and zero-downtime swap smoke. |
-| Screenshot matrix | PASS: 3/3 scenario tests; 40 PNGs | Manifest expected_count 40, actual_count 40, with SHA-256 checksums. |
+| Screenshot matrix | PASS: 3/3 scenario tests; 40 PNGs | Manifest expected_count 40, actual_count 40, with SHA-256 checksums; artifact root was recaptured after verification found it empty. |
 | Contrast suppression guard | PASS | No `exclude(`, `disableRules`, or color-contrast disabled pattern in the contrast spec. |
 | Execute-post code review | PASS: clean | `136-REVIEW.md` after contrast-threshold and line-draw assertion fixes. |
 
