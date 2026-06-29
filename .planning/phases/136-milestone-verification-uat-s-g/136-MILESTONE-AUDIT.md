@@ -3,7 +3,7 @@
 **Audited:** 2026-06-28  
 **Phases:** 128-136 (9 phases)  
 **Requirement set:** CONTRAST-HARNESS-01, DARKAUDIT-01, DARKTOKEN-01, GLOW-01, COPPER-01, A11Y-TOKEN-01, DARKMOTION-01, SCREEN-DARK-01, SHELL-DARK-01, DUALVERIFY-01  
-**Verdict:** **PENDING UAT** - automated DUALVERIFY-01 evidence is green and the gallery/audit artifacts exist, but the milestone is not PASSED until Phase 136 Plan 03 creates `136-UAT.md` with completed human sign-off.
+**Verdict:** **PASSED** - automated DUALVERIFY-01 evidence is green, the gallery/audit artifacts exist, and Phase 136 Plan 03 records approved Human UAT with no D-18 must-fix blocker.
 
 ## Intent vs delivery
 
@@ -17,8 +17,9 @@ Delivery matches that intent for automated proof:
 - Phases 133-135 proved restrained path motion, screen depth, and shell chrome across explicit light, explicit dark, and system-dark browser paths.
 - Phase 136 Plan 01 reran source-backed Mix, contrast, browser, mounted smoke, and 40-shot screenshot evidence from the current checkout.
 - Phase 136 Plan 02 adds this audit plus the claim-based before/after gallery.
+- Phase 136 Plan 03 records approved Human UAT and reconciles the final report, manifest, and audit status.
 
-The only open milestone closeout item is bounded human UAT. Until Plan 03 records that sign-off, this audit remains PENDING UAT rather than PASSED.
+No closeout blocker remains. The Human UAT response was `approved`, with no D-18 must-fix blocker and no UAT-created accepted follow-up.
 
 ## Requirement coverage
 
@@ -33,7 +34,7 @@ The only open milestone closeout item is bounded human UAT. Until Plan 03 record
 | DARKMOTION-01 | 133 | Complete | `133-03-SUMMARY.md` records `admin_path_motion.spec.ts` 7/7 green, reduced-motion neutralization, and no LiveView patch-refire keyframe regression. |
 | SCREEN-DARK-01 | 134 | Complete | `134-03-SUMMARY.md` records light pixel diff 0/20 failed, contrast 3/3, depth 33/33, and a 40-PNG matrix. |
 | SHELL-DARK-01 | 135 | Complete | `135-SHELL-CHROME-REPORT.md` records shell chrome proof across six surfaces, three theme modes, focus return, command palette/sheet semantics, flash, theme toggle, and header/nav AA. Phase 136 reran shell proof at 33/33. |
-| DUALVERIFY-01 | 136 | PENDING UAT | `136-DUALVERIFY-REPORT.md` and `136-ARTIFACT-MANIFEST.json` record source-backed automated gates and 40-shot checksums; `136-BEFORE-AFTER.md` and this audit are complete; human UAT remains open for Plan 03. |
+| DUALVERIFY-01 | 136 | Complete | `136-DUALVERIFY-REPORT.md` and `136-ARTIFACT-MANIFEST.json` record source-backed automated gates and 40-shot checksums; `136-BEFORE-AFTER.md` and this audit are complete; `136-UAT.md` records approved Human UAT with no D-18 blocker. |
 
 ## Phase coverage
 
@@ -47,7 +48,7 @@ The only open milestone closeout item is bounded human UAT. Until Plan 03 record
 | 133 | Complete | Dark/path motion expression is tokenized, reduced-motion-safe, and patch-safe. |
 | 134 | Complete | Search rows, Sync/Drift, and Playbooks received dual-theme depth polish and proof. |
 | 135 | Complete | Shell chrome, palette/sheet, flash, theme toggle, and wash proof shipped; planning tables may still show stale pending status, but `135-04-SUMMARY.md` and `135-SHELL-CHROME-REPORT.md` record completion. |
-| 136 | In progress | Automated proof, gallery, and audit are complete; human UAT remains the final gate. |
+| 136 | Complete | Automated proof, gallery, audit, artifact manifest, and approved Human UAT are complete. |
 
 ## Gate summary
 
@@ -75,6 +76,7 @@ Committed Phase 136 evidence artifacts:
 - `136-ARTIFACT-MANIFEST.json` - command, generated artifact, screenshot count, and checksum manifest.
 - `136-BEFORE-AFTER.md` - dark-weighted, claim-based v1.33 to v1.34 gallery.
 - `136-MILESTONE-AUDIT.md` - this requirement-by-requirement audit.
+- `136-UAT.md` - bounded Human UAT checklist and approved sign-off.
 
 Generated artifacts remain uncommitted evidence:
 
@@ -115,19 +117,16 @@ Accepted follow-ups are limited to D-19 categories and are not blockers:
 | Full system-dark screenshot matrix expansion | D-19 supplemental evidence | No; system-dark is already covered by browser contrast, shell, and motion gates. |
 | Permanent CI promotion of the browser proof bundle | D-19 release-policy decision | No; Phase 136 records proof without changing branch-protection topology. |
 | Extra gallery automation or artifact upload workflow | D-19 evidence ergonomics | No; current Markdown plus JSON manifest is sufficient for auditability. |
-| Small aesthetic nits found during Plan 03 UAT, if any | D-19 minor polish | Only acceptable if they do not affect trust, accessibility, scanability, focus, reduced-motion, or theme parity. |
 | Broader brand/docs/HexDocs adoption polish unrelated to v1.34 operator UI | D-19 out-of-scope polish | No; v1.35 already handled brand adoption separately. |
+
+Plan 03 UAT created no new accepted follow-up.
 
 The following are **not** accepted follow-ups and would be blockers: failing required commands, AA failures, disabled/suppressed color-contrast rules, focus or focus-return regressions, reduced-motion regressions, LiveView patch-refiring motion, stale-server proof, stale asset proof, seed proof gaps, or screenshot count/checksum mismatch.
 
 ## Blockers
 
-No automated must-fix blocker remains from Plans 01-02.
-
-Open closeout gate:
-
-- **Human UAT:** `136-UAT.md` has not yet been created with completed sign-off. The milestone verdict must stay PENDING UAT until Phase 136 Plan 03 finishes bounded dark-first/light-parity/system-dark review.
+None. No automated must-fix blocker remains from Plans 01-02, and Human UAT passed in Plan 03.
 
 ## Verdict
 
-Automated proof and evidence artifacts support DUALVERIFY-01, but final milestone status is **PENDING UAT**. After Plan 03 records human sign-off, this audit can be promoted by the milestone-completion workflow; this plan must not preemptively mark v1.34 PASSED.
+Automated proof, evidence artifacts, and approved Human UAT support DUALVERIFY-01. Final milestone status is **PASSED** for v1.34 Both-Themes Perfection.
