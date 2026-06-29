@@ -2,19 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.34
 milestone_name: Both-Themes Perfection
-current_phase: 136
-current_phase_name: milestone-verification-uat-s-g
-status: executing
-stopped_at: Completed 136-01-PLAN.md
-last_updated: "2026-06-28T23:16:31.329Z"
-last_activity: 2026-06-28
-last_activity_desc: Completed 136-01 automated proof/report manifest
+status: complete
+stopped_at: Completed 136-03-PLAN.md
+last_updated: "2026-06-29T18:34:54.872Z"
+last_activity: 2026-06-29
 progress:
   total_phases: 9
-  completed_phases: 8
+  completed_phases: 9
   total_plans: 27
-  completed_plans: 25
-  percent: 93
+  completed_plans: 27
+  percent: 100
 ---
 
 # Project State
@@ -26,11 +23,11 @@ progress:
 
 ## Current Position
 
-Phase: 136 (milestone-verification-uat-s-g) — EXECUTING
-Plan: 2 of 3
-Status: Executing Phase 136
-Resume: **Execute Phase 136** — run 136-01 automated proof/report manifest, 136-02 before/after gallery and milestone audit, then 136-03 bounded human UAT closeout.
-Last activity: 2026-06-28 — Completed 136-01 automated proof/report manifest
+Phase: 136 (milestone-verification-uat-s-g) — COMPLETE
+Plan: 3 of 3
+Status: Phase 136 complete; DUALVERIFY-01 passed with approved Human UAT
+Resume: None
+Last activity: 2026-06-29 — Completed 136-03 bounded human UAT closeout
 
 ## Completed Milestone (interleaved)
 
@@ -38,7 +35,7 @@ Last activity: 2026-06-28 — Completed 136-01 automated proof/report manifest
 
 ## Current Milestone
 
-**v1.34 Both-Themes Perfection — Dark Signature + AA Gate** (phases 128–136). 8/9 complete (128–135); **next is Phase 136 DUALVERIFY-01 execution**. Next-level UI/UX + perfect BOTH light & dark themes with a WCAG AA hard gate. Dark mode already EXISTS — polish/expression, do not rebuild. v1.34's accumulated context is retained below. The interleaved v1.35 brand milestone is recorded above under "Completed Milestone".
+**v1.34 Both-Themes Perfection — Dark Signature + AA Gate** (phases 128–136). 9/9 complete; DUALVERIFY-01 passed with approved Human UAT on 2026-06-29. Next-level UI/UX + perfect BOTH light & dark themes with a WCAG AA hard gate. Dark mode already EXISTS — polish/expression, do not rebuild. v1.34's accumulated context is retained below. The interleaved v1.35 brand milestone is recorded above under "Completed Milestone".
 
 ## v1.35 Brand Milestone Context (archived)
 
@@ -123,6 +120,7 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 | Phase 135 P03 | 25min | 3 tasks | 9 files |
 | Phase 135 P04 | 1h 2m | 2 tasks | 2 files |
 | Phase 136 P01 | 33m 18s | 3 tasks | 6 files |
+| Phase 136 P03 | 5 min | 3 tasks | 5 files |
 
 ## Decisions
 
@@ -156,9 +154,12 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 - [Phase 135]: Phase 136 retains full 40-shot recapture, v1.33 to v1.34 gallery, milestone audit, and human UAT. — Plan 135-04 closes the shell evidence slice and explicitly leaves broad milestone verification to Phase 136.
 - [Phase 136]: Phase 136 Plan 01 used a source-backed Phoenix server on port 4012 for automated UAT proof instead of the existing containerized 4002 server. — Avoids stale-server false positives while the working tree contains active UI/demo changes.
 - [Phase 136]: Phase 136 Plan 01 records generated screenshot evidence as checksums in the artifact manifest rather than committing browser PNGs or traces. — Keeps generated browser evidence out of git while preserving auditability for DUALVERIFY-01.
+- [Phase 136]: Human UAT approval passed DUALVERIFY-01 with no D-18 must-fix blocker. — 136-UAT.md records `approved`, one passed UAT test, zero pending items, and zero blockers.
+- [Phase 136]: No UAT-created accepted follow-ups were recorded. — Existing D-19 categories remain nonblocking policy/evidence options only, not hidden closeout defects.
+- [Phase 136]: Manifest committed-artifact checksums use file-content SHA-256 except the manifest self-entry. — The self-entry uses canonical JSON with its own `sha256` field nulled to avoid an impossible self-referential hash.
 
 ## Session
 
-**Last session:** 2026-06-28T23:16:31.318Z
-**Stopped at:** Completed 136-01-PLAN.md
+**Last session:** 2026-06-29T18:34:54.866Z
+**Stopped at:** Completed 136-03-PLAN.md
 **Resume file:** None
