@@ -428,7 +428,7 @@
       "committed": true,
       "checksum_algorithm": "sha256",
       "checksum_scope": "canonical-json-with-this-sha256-null",
-      "sha256": "2023365426df192c84cbbef5aec01a65745790e6225b0b794d1b49c27fbed661"
+      "sha256": "9ae5bbe36c523f4dd9ce352ddc626e897a0018744c729540fc4359f0b8da905a"
     },
     {
       "kind": "before-after-gallery",
@@ -436,7 +436,7 @@
       "committed": true,
       "checksum_algorithm": "sha256",
       "checksum_scope": "file-content",
-      "sha256": "2befa8385655296af80c042aff56af0875d71aab3729c65eb46e99bad47bca44"
+      "sha256": "8e1369c538a104d9d8aa8df8ae15c0741b4f85b5ec9ebe8448c21d2674883906"
     },
     {
       "kind": "milestone-audit",
