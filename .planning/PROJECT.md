@@ -28,7 +28,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 This is an explicit owner-initiated brand wedge. It is brand/UI work only — Phase 97–99 runtime scope guard still applies. Source plan: `~/.claude/plans/brand-book-pressure-test-scalable-alpaca.md`.
 
-> **Paused:** v1.34 Both-Themes Perfection (phases 128–136) is paused at Phase 133 (5/9 complete). It resumes at `.planning/phases/133-dark-path-motion-expression-r-g/133-CONTEXT.md` after v1.35 ships; any v1.35 brand-token refinement feeds forward into v1.34's remaining dark-polish phases. Source plan: `~/.claude/plans/v1-33-admin-ui-deep-tower.md`.
+> **Completed:** v1.34 Both-Themes Perfection (phases 128–136) completed on 2026-06-29. DUALVERIFY-01 passed with approved Human UAT, final report/audit/manifest agreement, and no D-18 must-fix blocker.
 
 ## Current Mode: idle release train
 
@@ -70,7 +70,7 @@ Phase 97 through 99 banned capability classes:
 
 ## Current State
 
-**v1.34 — Both-Themes Perfection (Dark Signature + AA Gate)** is active. Phase 132 completed on **2026-06-04**: A11Y-TOKEN-01 is validated with rebuilt assets, zero AA failures for light/dark/system-dark, AAA body/long-form advisory evidence, and light-baseline recapture recorded in `132-CONTRAST-REPORT.md`.
+**v1.34 — Both-Themes Perfection (Dark Signature + AA Gate)** completed on **2026-06-29** across phases **128–136**. DUALVERIFY-01 passed with source-backed automated proof, zero AA failures, recaptured 40-shot matrix, v1.33→v1.34 before/after gallery, milestone audit, clean code review, and approved Human UAT.
 
 **v1.32 — Admin UI/UX Design System Cleanup** shipped + archived in-repo on **2026-06-01** across phases **116-118**.
 
@@ -205,13 +205,14 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Planning window
 
-**Active milestone:** v1.35 Brand System & Logo Identity (phases 137–143). Milestone scaffolded; Phase 137 (BRAND-AUDIT-01) + Phase 138 (LOGO-DIRECTIONS-01) under way, blocked at the logo selection checkpoint. **Paused:** v1.34 Both-Themes Perfection (resume at Phase 133, DARKMOTION-01).
+**Active milestone:** v1.35 Brand System & Logo Identity (phases 137–143). Milestone scaffolded; Phase 137 (BRAND-AUDIT-01) + Phase 138 (LOGO-DIRECTIONS-01) under way, blocked at the logo selection checkpoint. **Completed:** v1.34 Both-Themes Perfection passed DUALVERIFY-01 on 2026-06-29.
 
 ## Requirements
 
 ### Validated
 
 - [x] **Phase 132** (2026-06-04): **A11Y-TOKEN-01** — both-theme AA hard gate green for muted text and selected violet fills; browser contrast proof covers light, dark, and system-dark; AAA body/long-form status remains advisory/report-only.
+- [x] **v1.34** (2026-06-29): **CONTRAST-HARNESS-01**, **DARKAUDIT-01**, **DARKTOKEN-01**, **GLOW-01**, **COPPER-01**, **A11Y-TOKEN-01**, **DARKMOTION-01**, **SCREEN-DARK-01**, **SHELL-DARK-01**, **DUALVERIFY-01** — both-themes perfection wedge closed with dark signature, light parity, AA hard gate, browser proof, screenshot matrix recapture, before/after gallery, milestone audit, and approved Human UAT.
 - [x] **v1.33** (2026-06-03): **HARNESS-01**, **SEED-01**, **AUDIT-01**, **TOKEN-01**, **COMP-01**, **MOTION-01**, **IA-01**, **COPY-01**, **RECOVER-01**, **EXPLORE-01**, **SHELL-01**, **VERIFY-01** — task-first admin-UI IA (Recover/Explore nav + front-door), design-system tightening, restrained micro-animation, per-screen polish, and shell coherence; screenshot-driven audit + 40-shot matrix; live admin smoke green in CI.
 - [x] **v1.32** (2026-06-01): **ASSET-01**, **TOKEN-01**, **BRAND-01**, **COMP-01**, **A11Y-01**, **SCREEN-01**, **SCREEN-02**, **VERIFY-01** — mounted admin asset contract, Scrypath operator tokens, shared LiveView primitives, screen hierarchy cleanup, and focused verification.
 - [x] **v1.31** (2026-06-01): **DEMO-01**–**DEMO-02**, **E2E-01**–**E2E-03**, **DX-01**, **DOC-01**, **OPS-01**, **CLOSE-01** — realistic seeded demo, deterministic advisory E2E proof, Docker/dev DX, documentation, ops UI clarity, and maintainer closeout.
@@ -299,7 +300,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has shipped planning milestones through **`v1.32`** (**`v1.0`**–**`v1.32`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`** for shipped arcs.
+The repository has shipped planning milestones through **`v1.34`** (**`v1.0`**–**`v1.34`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`** for shipped arcs.
 
 ## Evolution
 
@@ -312,4 +313,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-22 — v1.34 paused at Phase 133; v1.35 Brand System & Logo Identity opened (phases 137–143)*
+*Last updated: 2026-06-29 — v1.34 Both-Themes Perfection completed; v1.35 Brand System & Logo Identity remains the active planning window*
