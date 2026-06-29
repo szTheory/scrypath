@@ -1,7 +1,7 @@
 {
   "schema": "scrypath.phase136.artifacts.v1",
   "phase": "136",
-  "plan": "01",
+  "plan": "03",
   "requirement": "DUALVERIFY-01",
   "generated": "2026-06-28T23:10:57Z",
   "source_commit": "0494d92385c242da2fbb2c0bb0abd8775456639c",
@@ -356,6 +356,64 @@
       "rule": "Rule 1 - Flaky Proof Timing",
       "path": "examples/scrypath_ecommerce/e2e/admin_path_motion.spec.ts",
       "reason": "Polled for the active Playbook glow computed end-state instead of sampling one transition frame."
+    }
+  ],
+  "plans": [
+    "136-01",
+    "136-02",
+    "136-03"
+  ],
+  "finalized": "2026-06-29T18:29:04Z",
+  "final_status": "passed",
+  "human_uat": {
+    "path": ".planning/phases/136-milestone-verification-uat-s-g/136-UAT.md",
+    "status": "passed",
+    "reviewer_response": "approved",
+    "must_fix_blockers": 0,
+    "accepted_follow_ups": 0,
+    "blocked": false,
+    "signed_off": "2026-06-29T18:29:04Z"
+  },
+  "committed_artifacts": [
+    {
+      "kind": "phase-report",
+      "path": ".planning/phases/136-milestone-verification-uat-s-g/136-DUALVERIFY-REPORT.md",
+      "committed": true,
+      "checksum_algorithm": "sha256",
+      "checksum_scope": "file-content",
+      "sha256": "ff04251b2376ebe561d2e30e9ecdbdaedc8f44b50c75464995c0fdac11111913"
+    },
+    {
+      "kind": "phase-manifest",
+      "path": ".planning/phases/136-milestone-verification-uat-s-g/136-ARTIFACT-MANIFEST.json",
+      "committed": true,
+      "checksum_algorithm": "sha256",
+      "checksum_scope": "canonical-json-with-this-sha256-null",
+      "sha256": "dad441c9a277dcb619c33ea13b9e8b9f4990823ab18689d69a20a33bf957a622"
+    },
+    {
+      "kind": "before-after-gallery",
+      "path": ".planning/phases/136-milestone-verification-uat-s-g/136-BEFORE-AFTER.md",
+      "committed": true,
+      "checksum_algorithm": "sha256",
+      "checksum_scope": "file-content",
+      "sha256": "2befa8385655296af80c042aff56af0875d71aab3729c65eb46e99bad47bca44"
+    },
+    {
+      "kind": "milestone-audit",
+      "path": ".planning/phases/136-milestone-verification-uat-s-g/136-MILESTONE-AUDIT.md",
+      "committed": true,
+      "checksum_algorithm": "sha256",
+      "checksum_scope": "file-content",
+      "sha256": "95a7a8e28df74b3feeacaa55aa0b9175c92526d9eb81b81fd45e787e211275af"
+    },
+    {
+      "kind": "human-uat",
+      "path": ".planning/phases/136-milestone-verification-uat-s-g/136-UAT.md",
+      "committed": true,
+      "checksum_algorithm": "sha256",
+      "checksum_scope": "file-content",
+      "sha256": "b03c1648314478d3fc7511d2ff8a933a110e5191d2ab4383808cbc9e2bb4bcf8"
     }
   ]
 }
