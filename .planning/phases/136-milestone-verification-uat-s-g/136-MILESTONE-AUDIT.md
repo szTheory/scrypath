@@ -3,7 +3,7 @@
 **Audited:** 2026-06-28  
 **Phases:** 128-136 (9 phases)  
 **Requirement set:** CONTRAST-HARNESS-01, DARKAUDIT-01, DARKTOKEN-01, GLOW-01, COPPER-01, A11Y-TOKEN-01, DARKMOTION-01, SCREEN-DARK-01, SHELL-DARK-01, DUALVERIFY-01  
-**Verdict:** **PASSED** - automated DUALVERIFY-01 evidence is green, the gallery/audit artifacts exist, and Phase 136 Plan 03 records approved Human UAT with no D-18 must-fix blocker.
+**Verdict:** **PASSED** - automated DUALVERIFY-01 evidence is green after post-review fixes, the gallery/audit artifacts exist, and Phase 136 Plan 03 records approved Human UAT with no D-18 must-fix blocker.
 
 ## Intent vs delivery
 
@@ -57,14 +57,15 @@ No closeout blocker remains. The Human UAT response was `approved`, with no D-18
 | Root ops UI gate | PASS: 2 doctests, 147 tests, 0 failures | `136-DUALVERIFY-REPORT.md` |
 | ScrypathOps app gate | PASS: 2 doctests, 147 tests, 0 failures | `136-DUALVERIFY-REPORT.md` |
 | ScrypathOps precommit | PASS: 2 doctests, 147 tests, 0 failures | `136-DUALVERIFY-REPORT.md` |
-| Static token contrast | PASS: AA failures 0, AAA advisory 27 | `136-DUALVERIFY-REPORT.md`; generated report path in `136-ARTIFACT-MANIFEST.json` |
-| Browser axe contrast | PASS: 3/3 scenarios, AA failures 0 | Incident AAA advisory 24, all_green AAA advisory 48, empty AAA advisory 0; advisory-only. |
+| Static token contrast | PASS: AA failures 0, AAA advisory 35 | `136-DUALVERIFY-REPORT.md`; generated report path in `136-ARTIFACT-MANIFEST.json` |
+| Browser axe contrast | PASS: 3/3 scenarios, AA failures 0 | Incident AAA advisory 24, all_green AAA advisory 48, empty AAA advisory 12; advisory-only. |
 | Surface depth | PASS: 33/33 | Explicit dark, system-dark, light guard coverage. |
 | Path motion | PASS: 7/7 | Reduced-motion and active Playbook glow end-state proof. |
 | Shell chrome | PASS: 33/33 | Focus, theme toggle, command palette/sheet, flash, and shell wash coverage. |
 | Mounted operator smoke | PASS: 2/2 | Failed-sync triage and zero-downtime swap smoke. |
 | Screenshot matrix | PASS: 3/3 scenario tests; 40 PNGs | Manifest expected_count 40, actual_count 40, with SHA-256 checksums. |
 | Contrast suppression guard | PASS | No `exclude(`, `disableRules`, or color-contrast disabled pattern in the contrast spec. |
+| Execute-post code review | PASS: clean | `136-REVIEW.md` after contrast-threshold and line-draw assertion fixes. |
 
 AA remains the hard gate. AAA body/long-form findings remain advisory/report-only and did not fail the milestone proof.
 
@@ -77,6 +78,7 @@ Committed Phase 136 evidence artifacts:
 - `136-BEFORE-AFTER.md` - dark-weighted, claim-based v1.33 to v1.34 gallery.
 - `136-MILESTONE-AUDIT.md` - this requirement-by-requirement audit.
 - `136-UAT.md` - bounded Human UAT checklist and approved sign-off.
+- `136-REVIEW.md` - execute-post code review, clean after fixes.
 
 Generated artifacts remain uncommitted evidence:
 
@@ -125,7 +127,9 @@ The following are **not** accepted follow-ups and would be blockers: failing req
 
 ## Blockers
 
-None. No automated must-fix blocker remains from Plans 01-02, and Human UAT passed in Plan 03.
+None. Execute-post code review found contrast-threshold and path-motion proof defects after
+Plan 03 approval; both were fixed and rerun. No automated must-fix blocker remains, and
+Human UAT passed in Plan 03.
 
 ## Verdict
 
