@@ -3,7 +3,7 @@
 **Requirement:** DUALVERIFY-01
 **Plans:** 136-01 through 136-03
 **Evidence started:** 2026-06-28T22:39:59Z
-**Last updated:** 2026-06-29T19:04:07Z
+**Last updated:** 2026-06-29T19:18:18Z
 **Final status:** PASSED
 
 DUALVERIFY-01 is verified with source-backed Mix, ScrypathOps, browser,
@@ -135,6 +135,10 @@ same source-backed server.
 | Screenshot matrix | `ADMIN_SCREENSHOT_DIR=test-results/admin-screenshots/phase136 PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:admin-matrix -- --reporter=line` | PASS: 3/3 scenario tests; 40 PNGs generated. |
 | Screenshot count | `find test-results/admin-screenshots/phase136 -type f -name '*.png' \| wc -l` | PASS: 40. |
 | Screenshot checksums | `find test-results/admin-screenshots/phase136 -type f -name '*.png' \| sort \| xargs shasum -a 256` | PASS: checksums recorded in `136-ARTIFACT-MANIFEST.json`. |
+
+Verification initially found the generated screenshot artifact root empty after later browser
+runs cleaned `test-results`. The 40-shot matrix was recaptured on 2026-06-29 against
+`http://127.0.0.1:4012`, and the manifest checksums now match the restored files.
 
 The matrix preserves the historical 10 screen/state lanes across light and dark desktop/mobile:
 control room incident, posture incident, failed sync populated, sync drift, control room
