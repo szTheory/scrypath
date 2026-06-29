@@ -8,7 +8,7 @@
 - ✅ **v1.31 Adoption Evidence Demo Hardening** — Phases 113-115 (UAT passed 2026-06-01)
 - ✅ **v1.32 Admin UI/UX Design System Cleanup** — Phases 116-118 (shipped 2026-06-01) — see `milestones/v1.32-ROADMAP.md`
 - ✅ **v1.33 Admin UI Insane Polish** — Phases 119-127 (shipped 2026-06-03) — see `milestones/v1.33-ROADMAP.md`
-- 🔨 **v1.34 Both-Themes Perfection — Dark Signature + AA Gate** — Phases 128-136 (**active**; Phases 128–134 complete & verified, 7/9; next Phase 135 SHELL-DARK-01)
+- ✅ **v1.34 Both-Themes Perfection — Dark Signature + AA Gate** — Phases 128-136 (complete 2026-06-29; DUALVERIFY-01 passed with approved Human UAT)
 - ✅ **v1.35 Brand System & Logo Identity** — Phases 137-143 (**complete** 2026-06-24, commit `fcb8fc7`; shipped directly, not via GSD plan/execute artifacts — `roadmap.analyze` shows 0% by design, see STATE.md "Completed Milestone")
 
 ## Phases — v1.35 Brand System & Logo Identity (COMPLETE — shipped 2026-06-24)
@@ -279,7 +279,7 @@ Plans:
 - [x] 133-02-PLAN.md — static CSS contract test (transform/opacity-only + tokenized <300ms + dual-dark-path) running inside `mix verify.opsui`
 - [x] 133-03-PLAN.md — focused Playwright proof: reduced-motion + hover-shimmer + active-path + patch-refire, dark AND light, + targeted screenshots
 
-**Status:** Pending
+**Status:** Complete
 
 ### Phase 134: Under-iterated surface polish (dual-theme) `[S]`
 
@@ -341,7 +341,7 @@ Plans:
 2. Command palette + flash adopt the dark ambient-shadow-plus-border recipe; theme-toggle states are verified.
 3. Chrome is consistent across Control Room, Posture, Failed Sync, Sync/Drift, Search, Playbooks in both themes.
 
-**Status:** Pending
+**Status:** Complete
 
 ### Phase 136: Milestone verification & UAT `[S] [G]`
 
@@ -355,7 +355,7 @@ Plans:
 2. CONTRAST-HARNESS-01 passes AA in both themes with the AAA-body report attached; reduced-motion neutralization holds.
 3. A v1.33→v1.34 before/after gallery (dark-weighted) and a milestone audit against this intent are produced; human UAT passes.
 
-**Plans:** 1/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 **Wave 1**
@@ -364,13 +364,13 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 136-02-PLAN.md — Create v1.33 to v1.34 before/after gallery and milestone audit
+- [x] 136-02-PLAN.md — Create v1.33 to v1.34 before/after gallery and milestone audit
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 136-03-PLAN.md — Run bounded human UAT and finalize closeout artifacts
+- [x] 136-03-PLAN.md — Run bounded human UAT and finalize closeout artifacts
 
-**Status:** Pending
+**Status:** Complete
 
 ## Progress — v1.35 (active)
 
@@ -398,7 +398,7 @@ Plans:
 
 **Coverage:** 7/7 requirements mapped across 7 phases.
 
-## Progress — v1.34 (active — Phases 128–134 complete)
+## Progress — v1.34 (complete)
 
 | Phase | Requirements | Status |
 |-------|--------------|--------|
@@ -409,8 +409,8 @@ Plans:
 | 132 A11y contrast remediation (hard gate) | A11Y-TOKEN-01 | Complete |
 | 133 Dark/path motion expression | DARKMOTION-01 | Complete |
 | 134 Under-iterated surface polish | SCREEN-DARK-01 | Complete |
-| 135 Shell chrome polish | SHELL-DARK-01 | Pending |
-| 136 Milestone verification & UAT | DUALVERIFY-01 | Pending |
+| 135 Shell chrome polish | SHELL-DARK-01 | Complete |
+| 136 Milestone verification & UAT | DUALVERIFY-01 | Complete |
 
 ## Requirement Coverage — v1.34 (active)
 
@@ -424,8 +424,8 @@ Plans:
 | A11Y-TOKEN-01 | Phase 132 | Complete |
 | DARKMOTION-01 | Phase 133 | Complete |
 | SCREEN-DARK-01 | Phase 134 | Complete |
-| SHELL-DARK-01 | Phase 135 | Pending |
-| DUALVERIFY-01 | Phase 136 | Pending |
+| SHELL-DARK-01 | Phase 135 | Complete |
+| DUALVERIFY-01 | Phase 136 | Complete |
 
 **Coverage:** 10/10 requirements mapped across 9 phases.
 
@@ -455,7 +455,6 @@ is blocked at the **Phase 138 selection checkpoint** awaiting the owner's choice
 After the pick: 139 finalize the logo family → 140 tokens+fonts → 141 the HTML brand book → 142 adopt across
 product → 143 verify/UAT. Source plan: `~/.claude/plans/brand-book-pressure-test-scalable-alpaca.md`.
 
-**Resumed & advanced: milestone v1.34 (phases 128–136).** v1.35 shipped 2026-06-24; v1.34 resumed and Phases
-128–134 are now complete & verified (Phase 133 DARKMOTION-01 verification fully automated, 0 human UAT, 2026-06-25; Phase 134 SCREEN-DARK-01 verified 2026-06-26).
-**Next: Phase 135 (SHELL-DARK-01).** No v1.35 brand-token refinement shipped, so the remaining dark-polish phases
-(134–135) inherit the existing tokens unchanged.
+**Completed: milestone v1.34 (phases 128–136).** v1.35 shipped 2026-06-24; v1.34 resumed afterward and now has all
+9 phases complete. DUALVERIFY-01 passed on 2026-06-29 with approved Human UAT, final report/audit/manifest agreement,
+and no D-18 must-fix blocker.
