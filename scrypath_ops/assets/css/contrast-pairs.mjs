@@ -28,7 +28,7 @@
 //   fg_token  — token name without `--color-` prefix (always "base-content" here)
 //   bg_token  — token name without `--color-` prefix (the opaque surface)
 //   role      — "text" → AA 4.5 / AAA 7.0
-//               "large" → AA 3.0 (uppercase/bold qualifies as large text per WCAG)
+//               "large" → AA 3.0 (only text that meets WCAG large-text size/weight)
 //               "ui"    → AA 3.0 (non-text UI components)
 //               decorative  → skipped by checker (no threshold applied)
 //   note      — human-readable description
@@ -105,10 +105,10 @@ export const MUTED_PAIRS = [
   // app.css line 877 — sidebar nav group label
   {
     selector: ".ops-nav-group__label",
-    alpha: 0.48,
+    alpha: 0.64,
     fg_token: "base-content",
     bg_token: "base-100",
-    role: "large",
+    role: "text",
     note: "uppercase sidebar nav group label"
   },
   // app.css line 840 — schema option metadata
@@ -133,10 +133,10 @@ export const MUTED_PAIRS = [
   // app.css line 1434 — signal group title
   {
     selector: ".ops-signal-group__title",
-    alpha: 0.58,
+    alpha: 0.64,
     fg_token: "base-content",
     bg_token: "base-100",
-    role: "large",
+    role: "text",
     note: "uppercase signal group title"
   },
   // app.css line 1457 — signal metric term
@@ -146,7 +146,7 @@ export const MUTED_PAIRS = [
     alpha: 0.64,
     fg_token: "base-content",
     bg_token: "base-100",
-    role: "large",
+    role: "text",
     note: "uppercase signal metric term"
   },
   // app.css line 691 — breadcrumb text
@@ -159,14 +159,15 @@ export const MUTED_PAIRS = [
     role: "text",
     note: "breadcrumb text"
   },
-  // app.css line 727 — uppercase eyebrow label (large text: uppercase + font-weight 700)
+  // app.css line 1082 — uppercase eyebrow label
   {
     selector: ".ops-handoff__eyebrow",
-    alpha: 0.50,
+    css_var: "ops-text-muted",
+    alpha: 0.64,
     fg_token: "base-content",
     bg_token: "base-100",
-    role: "large",
-    note: "uppercase eyebrow label — qualifies as large text by weight+size"
+    role: "text",
+    note: "uppercase eyebrow label"
   },
   // app.css line 746 — hint copy
   {

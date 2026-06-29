@@ -193,6 +193,24 @@ async function runningKeyframeAnimationCount(page: Page, selector: string): Prom
   }, selector);
 }
 
+async function pseudoScaleX(page: Page, selector: string, pseudo: "::before" | "::after"): Promise<number> {
+  return page.evaluate(
+    ({ sel, pseudoName }) => {
+      const el = document.querySelector(sel);
+      if (!el) throw new Error(`scale probe: element not found for ${sel}`);
+
+      const transform = getComputedStyle(el, pseudoName).transform;
+      if (transform === "none") return 1;
+
+      const matrix = transform.match(/^matrix\(([^,]+)/);
+      if (!matrix) throw new Error(`scale probe: unexpected transform for ${sel}${pseudoName}: ${transform}`);
+
+      return Number(matrix[1]);
+    },
+    { sel: selector, pseudoName: pseudo }
+  );
+}
+
 // Glow probes (NEW — the deterministic replacement for the former subjective
 // "deliberate in dark / no light regression" human read, D-02). The dual-dark glow lives
 // in one token, `--shadow-ops-glow`: the `none` no-op in light, a faint violet aura
@@ -331,18 +349,20 @@ test.describe("admin path motion — DARKMOTION-01", () => {
         await expect(page.locator(".ops-code-block--shimmer")).toHaveCount(0);
 
         // Hover the merge-trace affordance and assert the line-draw end state is reached
-        // (::after transform settles to scaleX(1)). We read the computed transform of the
-        // pseudo-element after hover.
+        // (::after transform settles from scaleX(0) to scaleX(1)).
+        await expect
+          .poll(() => pseudoScaleX(page, ".ops-path-trace", "::after"), {
+            timeout: 5_000,
+            message: `merge-trace ::after must rest collapsed before hover (${theme})`
+          })
+          .toBeLessThanOrEqual(0.01);
         await trace.hover();
-        const drawn = await page.evaluate(() => {
-          const el = document.querySelector(".ops-path-trace");
-          if (!el) return null;
-          const t = getComputedStyle(el, "::after").transform;
-          return t;
-        });
-        // scaleX(1) → identity matrix or a matrix with a == 1. "none" (rest) would mean the
-        // hover end state was not reached. Accept any non-rest matrix that scales to full.
-        expect(drawn, `merge-trace ::after transform on hover (${theme})`).not.toBe("none");
+        await expect
+          .poll(() => pseudoScaleX(page, ".ops-path-trace", "::after"), {
+            timeout: 5_000,
+            message: `merge-trace ::after must draw to full scale on hover (${theme})`
+          })
+          .toBeGreaterThanOrEqual(0.99);
 
         // Patch-refire probe: toggle multi→single→multi. Each toggle is a push_patch that
         // re-renders the results/merge region. The trace anchor must not start a running
