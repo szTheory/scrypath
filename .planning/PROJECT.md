@@ -20,7 +20,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - **Adoption** of the chosen logo/tokens across `scrypath_ops` (logo + favicon), `website/` (brand-mark + OG), and the root README — keeping the contrast gate green.
 
 **Locked decisions:**
-- New milestone **v1.35** at **phase 137**; **v1.34 (phases 133–136) paused** and resumes after.
+- New milestone **v1.35** at **phase 137**; **v1.34 (phases 133–136) paused** during the brand work, then resumed and completed.
 - **Build + adopt** (not artifacts-only): the chosen logo/tokens are wired into ops UI, website, favicon, OG, README.
 - Palette/type are **open to evidence-based refinement** but **bias-to-keep** — they're implemented live; any change keeps the `contrast-pairs.mjs` AA gate green.
 - Fonts shipped as **subset woff2** (SIL OFL, license-clean) so the book is self-contained offline.
@@ -70,7 +70,13 @@ Phase 97 through 99 banned capability classes:
 
 ## Current State
 
-**v1.34 — Both-Themes Perfection (Dark Signature + AA Gate)** completed on **2026-06-29** across phases **128–136**. DUALVERIFY-01 passed with source-backed automated proof, zero AA failures, recaptured 40-shot matrix, v1.33→v1.34 before/after gallery, milestone audit, clean code review, and approved Human UAT.
+**v1.34 — Both-Themes Perfection (Dark Signature + AA Gate)** shipped on **2026-06-29** and was archived in-repo on **2026-07-11** across phases **128–136**. DUALVERIFY-01 passed with source-backed automated proof, zero AA failures, recaptured 40-shot matrix, v1.33→v1.34 before/after gallery, milestone audit, clean code review, and approved Human UAT.
+
+**What shipped:**
+- WCAG AA became a hard proof gate for ScrypathOps via fast token-pair checks and browser axe coverage across light, dark, and system-dark.
+- Dark elevation now uses a true four-step midnight ramp, with light parity controlled by scoped tokens and proof gates.
+- Shell chrome, command palette, flash, theme toggle, path motion, Search, Sync/Drift, and Playbooks received dual-theme polish without runtime scope expansion.
+- The milestone archive now lives at `milestones/v1.34-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`; root `REQUIREMENTS.md` remains the v1.35 planning file.
 
 **v1.32 — Admin UI/UX Design System Cleanup** shipped + archived in-repo on **2026-06-01** across phases **116-118**.
 
@@ -171,7 +177,7 @@ Phase 97 through 99 banned capability classes:
 
 The public website launch surface now exists under `website/` and is deployed to GitHub Pages as a companion front door, not a HexDocs replacement.
 
-Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under **`.planning/milestones/`**.
+Current planning files: **`.planning/{ROADMAP,REQUIREMENTS,STATE}.md`** plus archives under **`.planning/milestones/`**.
 
 ## Next Milestone Goals
 
@@ -183,7 +189,9 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Last shipped milestone
 
-**v1.33 — Admin UI Insane Polish** (shipped + archived in-repo **2026-06-03**). Owner-initiated next-level admin-UI polish wedge: task-first IA (Recover/Explore nav + front-door), design-system tightening for compounding reuse, restrained brand motion, per-screen polish, and shell coherence — see **`milestones/v1.33-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**v1.34 — Both-Themes Perfection (Dark Signature + AA Gate)** (shipped **2026-06-29**, archived in-repo **2026-07-11**). Owner-initiated both-theme ScrypathOps polish wedge: dark signature, light parity, AA hard gate, browser proof, 40-shot matrix, before/after gallery, milestone audit, and approved Human UAT — see **`milestones/v1.34-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+
+**Prior:** **v1.33 — Admin UI Insane Polish** (shipped + archived in-repo **2026-06-03**). Owner-initiated next-level admin-UI polish wedge: task-first IA (Recover/Explore nav + front-door), design-system tightening for compounding reuse, restrained brand motion, per-screen polish, and shell coherence — see **`milestones/v1.33-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **Prior:** **v1.32 — Admin UI/UX Design System Cleanup** (shipped + archived in-repo **2026-06-01**). Bounded existing-admin polish wedge for ScrypathOps tokens, shared operator primitives, mounted `/admin/search/*` asset contract, and screen cleanup — see **`milestones/v1.32-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
@@ -313,4 +321,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-29 — v1.34 Both-Themes Perfection completed; v1.35 Brand System & Logo Identity remains the active planning window*
+*Last updated: 2026-07-11 — v1.34 Both-Themes Perfection archived; v1.35 Brand System & Logo Identity requirements preserved*
