@@ -8,36 +8,23 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Milestone: v1.35 Brand System & Logo Identity
+## Current Milestone: none
 
-**Goal:** Turn the strategy-only `prompts/scrypath-brand-book.md` into a high-fidelity, repo-safe, **self-contained `brandbook/` package** with a **proper logo system the owner chooses from** at its center, then adopt the chosen identity across the live product. The existing logos are AI-generic and sit in the rectangular `<rect>` cage the owner dislikes — they are replaced, not reused.
+No active milestone. v1.35 Brand System & Logo Identity shipped directly on 2026-06-24 in commit `fcb8fc7` and was archived on 2026-07-11 from direct evidence.
 
-**Target features:**
-- A senior-lens **brand pressure-test + cited research + decision-log** (keep-vs-refine palette/type, logo architecture, token expression).
-- A **logo system the owner picks from**: 3–5 distinct transparent/un-caged directions (refined routed monogram, a fully-integrated typemark, a waypoint mark), then the full optimized SVG family (primary no-tagline, inverse, typemark, mark, mono, stacked, optional tagline, favicon, social card) + usage rules.
-- An interoperable **design-tokens package** (JSON/CSS/daisyUI theme) mirroring the live ops tokens, plus **self-contained subset woff2** fonts.
-- A standalone, scoped, light/dark **HTML brand book** + copy-ready examples + accessibility checks.
-- **Adoption** of the chosen logo/tokens across `scrypath_ops` (logo + favicon), `website/` (brand-mark + OG), and the root README — keeping the contrast gate green.
-
-**Locked decisions:**
-- New milestone **v1.35** at **phase 137**; **v1.34 (phases 133–136) paused** during the brand work, then resumed and completed.
-- **Build + adopt** (not artifacts-only): the chosen logo/tokens are wired into ops UI, website, favicon, OG, README.
-- Palette/type are **open to evidence-based refinement** but **bias-to-keep** — they're implemented live; any change keeps the `contrast-pairs.mjs` AA gate green.
-- Fonts shipped as **subset woff2** (SIL OFL, license-clean) so the book is self-contained offline.
-- Logo: **no rectangular cage**, unified mark+logotype, mark close to type, **no subtitle on the primary**, **≥1 integrated typemark**, **owner picks the direction**.
-
-This is an explicit owner-initiated brand wedge. It is brand/UI work only — Phase 97–99 runtime scope guard still applies. Source plan: `~/.claude/plans/brand-book-pressure-test-scalable-alpaca.md`.
-
-> **Completed:** v1.34 Both-Themes Perfection (phases 128–136) completed on 2026-06-29. DUALVERIFY-01 passed with approved Human UAT, final report/audit/manifest agreement, and no D-18 must-fix blocker.
+The release train is idle. Future work should stay in maintenance, release/support truth, proof stability, public claim drift, outside-adopter evidence, or an explicitly approved strategic wedge. Do not reopen phases 137-143 or synthesize missing v1.35 phase artifacts.
 
 ## Current Mode: idle release train
 
 **Goal:** Keep `main` green, preserve release/support truth, and avoid inventing new roadmap scope without concrete evidence.
 
 **Recent closed outcomes:**
-- v1.30 release train/package truth, support intake routing, advisory proof stability, and public website/docs truth alignment.
-- v1.31 adoption-evidence demo pass: richer deterministic Playwright coverage, Docker/dev iteration support, ops UI clarity, evidence summary reporting, and maintainer UAT passed.
+- v1.35 brand system and logo identity: self-contained `brandbook/`, copper `/` `scry/path` logo, subset fonts/tokens, README/ScrypathOps/website adoption, direct-completion archive.
+- v1.34 both-themes perfection: ScrypathOps dark signature, light parity, AA hard gate, browser proof, 40-shot matrix, and Human UAT passed.
+- v1.33 admin UI polish: task-first IA, design-system tightening, restrained motion, per-screen polish, and shell coherence.
 - v1.32 admin UI cleanup: ScrypathOps design tokens, shared operator primitives, mounted e-commerce asset contract, screen cleanup, and focused verification.
+- v1.31 adoption-evidence demo pass: richer deterministic Playwright coverage, Docker/dev iteration support, ops UI clarity, evidence summary reporting, and maintainer UAT passed.
+- v1.30 release train/package truth, support intake routing, advisory proof stability, and public website/docs truth alignment.
 - Repaired generated `__scrypath__(:fan_outs)` for ordinary `use Scrypath, fan_outs:` schemas.
 - Tenant-preserving ecommerce readiness regression proof.
 - Aligned roadmap/JTBD truth for the repair closeout.
@@ -70,13 +57,22 @@ Phase 97 through 99 banned capability classes:
 
 ## Current State
 
+**v1.35 - Brand System & Logo Identity** shipped directly on **2026-06-24** and was archived in-repo on **2026-07-11** across phases **137-143**. It delivered the copper `/` **scry/path** identity, full transparent SVG family, self-contained `brandbook/` package, subset woff2 fonts, portable tokens, accessibility notes, examples, and adoption across README, ScrypathOps, website, favicon, and OG surfaces.
+
+**What shipped:**
+- `brandbook/` static brand book, examples, notes, tokens, font assets, and SVG identity family.
+- Final owner-selected logo direction C: copper `/` path separator; routed-S concepts rejected.
+- Root README logo header, ScrypathOps logo/favicon/inline mark, and website brand mark/OG adoption.
+- Archive files now live at `milestones/v1.35-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`.
+- Direct-completion caveat: phases 138-143 intentionally have no GSD plan artifacts; do not reopen them.
+
 **v1.34 — Both-Themes Perfection (Dark Signature + AA Gate)** shipped on **2026-06-29** and was archived in-repo on **2026-07-11** across phases **128–136**. DUALVERIFY-01 passed with source-backed automated proof, zero AA failures, recaptured 40-shot matrix, v1.33→v1.34 before/after gallery, milestone audit, clean code review, and approved Human UAT.
 
 **What shipped:**
 - WCAG AA became a hard proof gate for ScrypathOps via fast token-pair checks and browser axe coverage across light, dark, and system-dark.
 - Dark elevation now uses a true four-step midnight ramp, with light parity controlled by scoped tokens and proof gates.
 - Shell chrome, command palette, flash, theme toggle, path motion, Search, Sync/Drift, and Playbooks received dual-theme polish without runtime scope expansion.
-- The milestone archive now lives at `milestones/v1.34-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`; root `REQUIREMENTS.md` remains the v1.35 planning file.
+- The milestone archive now lives at `milestones/v1.34-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`.
 
 **v1.32 — Admin UI/UX Design System Cleanup** shipped + archived in-repo on **2026-06-01** across phases **116-118**.
 
@@ -162,7 +158,7 @@ Phase 97 through 99 banned capability classes:
 
 </details>
 
-**The library scope remains effectively complete for its stated mission.** v1.32 is not runtime breadth; it is a bounded UI polish/design-system wedge for the existing operator/admin proof surface. Future work should still focus on maintenance, bug fixes, release-train stability, proof stability, and outside-adopter evidence. Do not keep extending the roadmap just because additional polish is imaginable.
+**The library scope remains effectively complete for its stated mission.** v1.34 and v1.35 were bounded UI/brand polish wedges, not runtime breadth. Future work should still focus on maintenance, bug fixes, release-train stability, proof stability, and outside-adopter evidence. Do not keep extending the roadmap just because additional polish is imaginable.
 
 **Release-train posture:** keep `main` green on lean merge gates, ship patch-first while pre-1.0, and land serious milestone work through PRs rather than direct `main` development.
 
@@ -189,13 +185,15 @@ Current planning files: **`.planning/{ROADMAP,REQUIREMENTS,STATE}.md`** plus arc
 
 ## Last shipped milestone
 
-**v1.34 — Both-Themes Perfection (Dark Signature + AA Gate)** (shipped **2026-06-29**, archived in-repo **2026-07-11**). Owner-initiated both-theme ScrypathOps polish wedge: dark signature, light parity, AA hard gate, browser proof, 40-shot matrix, before/after gallery, milestone audit, and approved Human UAT — see **`milestones/v1.34-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**v1.35 - Brand System & Logo Identity** (shipped **2026-06-24**, archived in-repo **2026-07-11**). Owner-initiated brand wedge: copper `/` `scry/path` identity, transparent SVG family, self-contained brandbook, subset fonts/tokens, README/ScrypathOps/website adoption, and direct-completion archive - see **`milestones/v1.35-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+
+**Prior:** **v1.34 - Both-Themes Perfection (Dark Signature + AA Gate)** (shipped **2026-06-29**, archived in-repo **2026-07-11**). Owner-initiated both-theme ScrypathOps polish wedge: dark signature, light parity, AA hard gate, browser proof, 40-shot matrix, before/after gallery, milestone audit, and approved Human UAT - see **`milestones/v1.34-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **Prior:** **v1.33 — Admin UI Insane Polish** (shipped + archived in-repo **2026-06-03**). Owner-initiated next-level admin-UI polish wedge: task-first IA (Recover/Explore nav + front-door), design-system tightening for compounding reuse, restrained brand motion, per-screen polish, and shell coherence — see **`milestones/v1.33-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **Prior:** **v1.32 — Admin UI/UX Design System Cleanup** (shipped + archived in-repo **2026-06-01**). Bounded existing-admin polish wedge for ScrypathOps tokens, shared operator primitives, mounted `/admin/search/*` asset contract, and screen cleanup — see **`milestones/v1.32-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
-**Last shipped milestone:** **v1.31 — Adoption Evidence Demo Hardening** (UAT passed **2026-06-01**). Bounded strategic proof wedge for realistic demo app DX, deterministic browser evidence, docs, and closeout.
+**Prior:** **v1.31 — Adoption Evidence Demo Hardening** (UAT passed **2026-06-01**). Bounded strategic proof wedge for realistic demo app DX, deterministic browser evidence, docs, and closeout.
 
 **Prior:** **v1.30 — Release Trust and Evidence Maintenance** (shipped + archived in-repo **2026-06-01**). Delivered release/package truth hardening, support intake routing, advisory proof stability policy, and public website/docs truth alignment while keeping product scope closed — see **`milestones/v1.30-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
@@ -213,12 +211,13 @@ Current planning files: **`.planning/{ROADMAP,REQUIREMENTS,STATE}.md`** plus arc
 
 ## Planning window
 
-**Active milestone:** v1.35 Brand System & Logo Identity (phases 137–143). Milestone scaffolded; Phase 137 (BRAND-AUDIT-01) + Phase 138 (LOGO-DIRECTIONS-01) under way, blocked at the logo selection checkpoint. **Completed:** v1.34 Both-Themes Perfection passed DUALVERIFY-01 on 2026-06-29.
+**Active milestone:** none. The release train is idle. v1.35 is complete and archived from direct evidence; missing phase artifacts for phases 138-143 are expected and must not be treated as work to resume.
 
 ## Requirements
 
 ### Validated
 
+- [x] **v1.35** (2026-06-24): **BRAND-AUDIT-01**, **LOGO-DIRECTIONS-01**, **LOGO-SYSTEM-01**, **TOKENS-PKG-01**, **BRANDBOOK-HTML-01**, **BRAND-ADOPT-01**, **BRAND-VERIFY-01** — brand system and logo identity closed by direct evidence: copper `/` `scry/path` identity, transparent SVG family, self-contained brandbook, subset fonts/tokens, accessibility notes, README/ScrypathOps/website adoption, and direct-completion archive. No phase artifacts should be synthesized for phases 138-143.
 - [x] **Phase 132** (2026-06-04): **A11Y-TOKEN-01** — both-theme AA hard gate green for muted text and selected violet fills; browser contrast proof covers light, dark, and system-dark; AAA body/long-form status remains advisory/report-only.
 - [x] **v1.34** (2026-06-29): **CONTRAST-HARNESS-01**, **DARKAUDIT-01**, **DARKTOKEN-01**, **GLOW-01**, **COPPER-01**, **A11Y-TOKEN-01**, **DARKMOTION-01**, **SCREEN-DARK-01**, **SHELL-DARK-01**, **DUALVERIFY-01** — both-themes perfection wedge closed with dark signature, light parity, AA hard gate, browser proof, screenshot matrix recapture, before/after gallery, milestone audit, and approved Human UAT.
 - [x] **v1.33** (2026-06-03): **HARNESS-01**, **SEED-01**, **AUDIT-01**, **TOKEN-01**, **COMP-01**, **MOTION-01**, **IA-01**, **COPY-01**, **RECOVER-01**, **EXPLORE-01**, **SHELL-01**, **VERIFY-01** — task-first admin-UI IA (Recover/Explore nav + front-door), design-system tightening, restrained micro-animation, per-screen polish, and shell coherence; screenshot-driven audit + 40-shot matrix; live admin smoke green in CI.
@@ -308,7 +307,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has shipped planning milestones through **`v1.34`** (**`v1.0`**–**`v1.34`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`** for shipped arcs.
+The repository has shipped planning milestones through **`v1.35`** (**`v1.0`**-**`v1.35`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`** for shipped arcs.
 
 ## Evolution
 
@@ -321,4 +320,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-11 — v1.34 Both-Themes Perfection archived; v1.35 Brand System & Logo Identity requirements preserved*
+*Last updated: 2026-07-11 - v1.35 direct-completion bookkeeping reconciled; release train idle*

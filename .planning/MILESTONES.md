@@ -1,5 +1,31 @@
 # Milestones
 
+## v1.35 Brand System & Logo Identity (Shipped: 2026-06-24; Archived: 2026-07-11)
+
+**Phases completed:** 7 conceptual phases (137-143), direct completion in commit `fcb8fc7`
+
+**Key accomplishments:**
+
+- Shipped the final **scry/path** identity: Familjen Grotesk wordmark with a weight-matched copper `/` path separator and an `s/p` monogram for favicon/avatar use.
+- Replaced caged AI-generic logos with transparent, cage-free SVG assets and explicit usage rules.
+- Delivered a self-contained `brandbook/` package with HTML brand book, examples, notes, tokens, subset woff2 fonts, OFL licenses, and accessibility checks.
+- Adopted the identity across root README, ScrypathOps logo/favicon/layout, website brand mark, and OG image.
+- Preserved the Phase 97 runtime scope guard; no search runtime breadth or public API surface was added.
+
+**Milestone audit:** Passed for direct-completion archive - 7/7 requirements complete by committed evidence; see `milestones/v1.35-MILESTONE-AUDIT.md`.
+
+**Known deferred items at close:** raster favicon set if a target surface later needs it, HexDocs logo/theming adoption, and optional motion-logo exploration. None are blockers.
+
+**Archives:** `milestones/v1.35-ROADMAP.md`, `milestones/v1.35-REQUIREMENTS.md`, `milestones/v1.35-MILESTONE-AUDIT.md`
+
+**Git commit:** `fcb8fc7` (`feat(brand): v1.35 brand system & scry/path logo + adoption`)
+
+**Direct-completion note:** phases 138-143 intentionally have no phase directories or PLAN/SUMMARY files. Do not reopen or synthesize them.
+
+**What's next:** Preserve the idle release train unless maintenance, support truth, proof drift, production bug evidence, outside-adopter evidence, or an explicit strategic wedge justifies new scope.
+
+---
+
 ## v1.34 Both-Themes Perfection - Dark Signature + AA Gate (Shipped: 2026-06-29; Archived: 2026-07-11)
 
 **Phases completed:** 9 phases (128-136), 27 plans
@@ -20,7 +46,7 @@
 
 **Git range:** `a1a902b` -> `f898ac6`
 
-**What's next:** Preserve the idle release train unless maintenance, support truth, proof drift, production bug evidence, outside-adopter evidence, or an explicit strategic wedge justifies new scope. The root `REQUIREMENTS.md` is intentionally preserved because it currently carries v1.35 Brand System & Logo Identity planning state.
+**What's next:** Superseded by the v1.35 archive above. Preserve the idle release train unless maintenance, support truth, proof drift, production bug evidence, outside-adopter evidence, or an explicit strategic wedge justifies new scope.
 
 ---
 
