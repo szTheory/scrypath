@@ -121,7 +121,7 @@ async function switchSearchMode(page: Page, mode: "single" | "multi"): Promise<v
 
 async function runBoundedSearch(page: Page, query: string): Promise<void> {
   await page.getByLabel("Search text").fill(query);
-  await page.getByRole("button", { name: "Run bounded search" }).click();
+  await page.getByRole("button", { name: "Run search" }).click();
 }
 
 async function snap(page: Page, name: string): Promise<void> {
@@ -330,7 +330,7 @@ test.describe("admin path motion — DARKMOTION-01", () => {
         // in multi mode, once the multi result carries a merge projection.
         await switchSearchMode(page, "multi");
         await runBoundedSearch(page, "quantum");
-        await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
+        await expect(page.getByRole("heading", { name: "Results", exact: true })).toBeVisible();
 
         // The merge trace is the <details> disclosure carrying .ops-path-trace. Its
         // line-draw lives on ::after and fires on :hover only — never on (re)insertion.
@@ -370,7 +370,7 @@ test.describe("admin path motion — DARKMOTION-01", () => {
         await switchSearchMode(page, "single");
         await switchSearchMode(page, "multi");
         await runBoundedSearch(page, "quantum");
-        await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
+        await expect(page.getByRole("heading", { name: "Results", exact: true })).toBeVisible();
         await expect(page.locator(".ops-path-trace").first()).toBeVisible();
         const afterPatch = await runningKeyframeAnimationCount(page, ".ops-path-trace");
         expect(afterPatch, "running animations on .ops-path-trace after patch round-trip").toBe(0);

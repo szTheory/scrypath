@@ -42,11 +42,11 @@ and **`on_mount`** callbacks in
 
 The `/ops` root (`/ops/`) is the **Control Room** landing: a glanceable fleet-posture strip plus three intent task-cards that route by the job the operator brought — incident triage (→ `/ops/posture`), shipping a change (→ `/ops/sync-drift`), or explore & capture (→ `/ops/search`). It is the start page, not a sixth nav item; the deep per-schema posture table stays on `/ops/posture`.
 
-Primary chrome under `/ops` is grouped by the job the operator brought, in **recover-first order**: the **Recover** chain comes first (posture → failed sync → read-only sync/drift, ordered as the incident walk), then **Explore** (bounded search and federation honesty → saved playbooks). Search is **not** co-equal with recovery work — Explore stays below the Recover chain.
+Primary shell navigation under `/ops` is grouped by the job the operator brought, in **recover-first order**: the **Recover** chain comes first (posture → failed sync → read-only sync/drift, ordered as the incident walk), then **Explore** (bounded search and federation honesty → saved playbooks). Search is **not** co-equal with recovery work — Explore stays below the Recover chain.
 
 ### Journey loops & handoffs
 
-The surfaces thread into two task groups — **Recover** (posture → failed sync → sync drift) and **Explore** (search → playbooks) — and three named loops, each a hub-and-spoke trip from the Control Room. Within a group the steps are sequential; the header nav stays free so a power user is never trapped.
+The surfaces thread into two task groups — **Recover** (posture → failed sync → sync drift) and **Explore** (search → playbooks) — and three named loops, each a hub-and-spoke trip from the Control Room. Within a group the steps are sequential; the primary shell nav stays free so a power user is never trapped.
 
 - **Incident-response loop** (on-call): Control Room verdict (degraded) → Posture (which schemas?) → Failed Sync (why? retry) → Sync Drift (did it stick?) → Control Room (verdict green). The loop closes on the verdict flipping green — that round-trip is the success signal.
 - **Ship-a-change preflight loop** (search owner / maintainer): Control Room ("shipping a change") → Sync Drift preflight (reconcile → contract drift → mismatches → gated promote) → re-check Posture.
@@ -54,10 +54,10 @@ The surfaces thread into two task groups — **Recover** (posture → failed syn
 
 Two shared components carry this structure so it stays consistent (principle of least surprise):
 
-- **`ops_trail`** — a contextual breadcrumb (`Control Room › <group> › <page>`), not a map of the whole product. Siblings live in the header nav; the landing shows no trail.
+- **`ops_trail`** — a contextual breadcrumb (`Control Room › <group> › <page>`), not a map of the whole product. Siblings live in the primary shell nav; the landing shows no trail.
 - **`ops_handoff`** — the unified "Next step" page footer. One eyebrow + imperative grammar on every triage/explore surface so the bottom of each page reliably tells the operator where to go next, and the loops visibly close.
 
-| Job | Primary persona | Top nav label | Route | Scrypath / doc / Mix follow-up |
+| Job | Primary persona | Nav label | Route | Scrypath / doc / Mix follow-up |
 | --- | --- | --- | --- | --- |
 | 1 | On-call engineer | Posture | /ops/posture | Phase 45 — posture dashboards; until then see [guides/meilisearch-operations.md](../../guides/meilisearch-operations.md) |
 | 2 | On-call engineer | Failed Sync | /ops/failed-sync | Phase 45 — failed work UI; today use `mix scrypath.failed` from [guides/operator-mix-tasks.md](../../guides/operator-mix-tasks.md) |

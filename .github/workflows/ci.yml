@@ -691,22 +691,51 @@ jobs:
           tail -n 200 /tmp/phase105-e2e-phx.log || true
           exit 1
 
-      - name: Run phase 105 browser E2E lane
+      - name: Run phase 105 deterministic browser and visual gates
         working-directory: examples/scrypath_ecommerce
         run: |
           STARTED_AT="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
           echo "PHASE105_E2E_STARTED_AT=${STARTED_AT}" >> "$GITHUB_ENV"
           set +e
           npm run test:e2e
-          STATUS=$?
+          BROWSER_STATUS=$?
+          npm run test:e2e:admin-light-parity
+          LIGHT_STATUS=$?
+          make contrast
+          CONTRAST_STATUS=$?
           ENDED_AT="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
           echo "PHASE105_E2E_ENDED_AT=${ENDED_AT}" >> "$GITHUB_ENV"
-          if [ "$STATUS" -eq 0 ]; then
+          if [ "$BROWSER_STATUS" -eq 0 ]; then
+            echo "PHASE105_BROWSER_CONCLUSION=success" >> "$GITHUB_ENV"
+          else
+            echo "PHASE105_BROWSER_CONCLUSION=failure" >> "$GITHUB_ENV"
+          fi
+          if [ "$LIGHT_STATUS" -eq 0 ]; then
+            echo "PHASE105_LIGHT_PARITY_CONCLUSION=success" >> "$GITHUB_ENV"
+          else
+            echo "PHASE105_LIGHT_PARITY_CONCLUSION=failure" >> "$GITHUB_ENV"
+          fi
+          if [ "$CONTRAST_STATUS" -eq 0 ]; then
+            echo "PHASE105_CONTRAST_CONCLUSION=success" >> "$GITHUB_ENV"
+          else
+            echo "PHASE105_CONTRAST_CONCLUSION=failure" >> "$GITHUB_ENV"
+          fi
+          if [ "$BROWSER_STATUS" -eq 0 ] && [ "$LIGHT_STATUS" -eq 0 ] && [ "$CONTRAST_STATUS" -eq 0 ]; then
             echo "PHASE105_E2E_CONCLUSION=success" >> "$GITHUB_ENV"
+            exit 0
           else
             echo "PHASE105_E2E_CONCLUSION=failure" >> "$GITHUB_ENV"
+            exit 1
           fi
-          exit "$STATUS"
+
+      - name: Run advisory ops UI visual judge
+        if: always()
+        working-directory: examples/scrypath_ecommerce
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPS_UI_LLM_JUDGE: ${{ vars.OPS_UI_LLM_JUDGE || '0' }}
+          OPS_UI_LLM_MODEL: ${{ vars.OPS_UI_LLM_MODEL || 'gpt-4.1' }}
+        run: node e2e/ops-ui-visual-judge.mjs
 
       - name: Generate phase105 evidence summary
         if: always()
@@ -728,4 +757,7 @@ jobs:
             examples/scrypath_ecommerce/test-results/phase105-evidence.ndjson
             examples/scrypath_ecommerce/test-results/phase105-evidence.json
             examples/scrypath_ecommerce/test-results/phase105-evidence-summary.md
+            examples/scrypath_ecommerce/test-results/admin-light-parity.json
+            examples/scrypath_ecommerce/test-results/ops-ui-visual-judge.json
+            examples/scrypath_ecommerce/test-results/ops-ui-visual-judge.md
           if-no-files-found: warn

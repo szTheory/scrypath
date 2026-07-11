@@ -56,50 +56,56 @@ defmodule ScrypathOpsWeb.Layouts do
       Skip to operator content
     </a>
 
-    <header class="ops-header px-4 py-3 sm:px-6 lg:px-8">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <.link navigate={@mount_path} class="flex w-fit items-center gap-3">
-          <.brand_mark />
-          <span>
-            <span class="block text-ops-body font-semibold leading-4">ScrypathOps</span>
-            <span class="block text-ops-sm text-base-content/60">Ecto-native search operations</span>
-          </span>
-        </.link>
+    <div id="ops-shell-frame" class="ops-shell-frame" phx-hook="OpsNavDrawer">
+      <.ops_sidebar mount_path={@mount_path} page_title={@page_title} />
+      <.ops_mobile_nav mount_path={@mount_path} page_title={@page_title} />
 
-        <div class="flex flex-wrap items-center gap-3">
-          <%!-- Header nav duplicates the command palette (⌘K) on mobile and wraps into a
-          second row at 390px. Hide it below `sm`; ⌘K + the breadcrumb trail are the
-          mobile navigation tiers. --%>
-          <nav aria-label="Operator primary" class="hidden sm:block">
-            <ul class="ops-nav-list">
-              <li
-                :for={item <- ScrypathOpsWeb.Nav.primary(@mount_path)}
-                class={item.group == :explore && "ops-nav-group-explore"}
+      <div class="ops-shell-content">
+        <header class="ops-header px-4 py-2 sm:px-6 lg:px-8">
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex min-w-0 items-center gap-3 xl:hidden">
+              <button
+                type="button"
+                class="ops-nav-trigger"
+                aria-label="Open navigation"
+                aria-controls="ops-mobile-nav"
+                aria-expanded="false"
+                data-ops-nav-open
               >
-                <.link
-                  navigate={item.path}
-                  class={nav_link_classes(item, @page_title)}
-                  aria-current={if item.title == @page_title, do: "page", else: nil}
-                >
-                  {item.label}
-                </.link>
-              </li>
-            </ul>
-          </nav>
-          <.theme_toggle />
-        </div>
-      </div>
-    </header>
+                <.icon name="hero-bars-3" class="size-5" />
+              </button>
+              <.link navigate={@mount_path} class="flex w-fit min-w-0 items-center gap-3">
+                <.brand_mark />
+                <span class="min-w-0">
+                  <span class="block text-ops-body font-semibold leading-4">ScrypathOps</span>
+                  <span class="block truncate text-ops-sm text-base-content/60">
+                    Ecto-native search operations
+                  </span>
+                </span>
+              </.link>
+            </div>
 
-    <main
-      id="ops-main"
-      aria-labelledby="ops-page-title"
-      class="ops-shell min-h-screen px-4 pt-ops-4 pb-ops-6 sm:px-6 lg:px-8"
-    >
-      <div class={main_width_classes(@ops_main_width)}>
-        {render_slot(@inner_block)}
+            <div class="hidden min-w-0 xl:flex">
+              <.ops_command_hint />
+            </div>
+
+            <div class="flex shrink-0 items-center gap-3">
+              <.theme_toggle />
+            </div>
+          </div>
+        </header>
+
+        <main
+          id="ops-main"
+          aria-labelledby="ops-page-title"
+          class="ops-shell min-h-screen px-4 pt-ops-4 pb-ops-6 sm:px-6 lg:px-8"
+        >
+          <div class={main_width_classes(@ops_main_width)}>
+            {render_slot(@inner_block)}
+          </div>
+        </main>
       </div>
-    </main>
+    </div>
 
     <.flash_group flash={@flash} id="flash-group" />
     <.ops_command_palette mount_path={@mount_path} />
@@ -145,6 +151,109 @@ defmodule ScrypathOpsWeb.Layouts do
     """
   end
 
+  attr(:mount_path, :string, required: true)
+  attr(:page_title, :string, default: nil)
+
+  defp ops_sidebar(assigns) do
+    ~H"""
+    <aside class="ops-sidebar" aria-label="Operator primary">
+      <div class="ops-sidebar__brand">
+        <.link navigate={@mount_path} class="flex min-w-0 items-center gap-3">
+          <.brand_mark />
+          <span class="min-w-0">
+            <span class="block text-ops-body font-semibold leading-4">ScrypathOps</span>
+            <span class="block truncate text-ops-sm text-base-content/60">
+              Ecto-native search operations
+            </span>
+          </span>
+        </.link>
+      </div>
+
+      <.ops_primary_nav mount_path={@mount_path} page_title={@page_title} />
+
+      <div class="ops-sidebar__footer">
+        <.ops_command_hint prefix="Jump fast with" suffix="" />
+      </div>
+    </aside>
+    """
+  end
+
+  attr(:mount_path, :string, required: true)
+  attr(:page_title, :string, default: nil)
+
+  defp ops_mobile_nav(assigns) do
+    ~H"""
+    <div
+      id="ops-mobile-nav"
+      class="ops-mobile-nav"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ops-mobile-nav-title"
+      hidden
+      data-ops-nav-drawer
+    >
+      <div class="ops-mobile-nav__backdrop" data-ops-nav-close aria-hidden="true"></div>
+      <aside class="ops-mobile-nav__panel" tabindex="-1" data-ops-nav-panel>
+        <div class="ops-mobile-nav__header">
+          <.link navigate={@mount_path} class="flex min-w-0 items-center gap-3" data-ops-nav-link>
+            <.brand_mark />
+            <span class="min-w-0">
+              <span id="ops-mobile-nav-title" class="block text-ops-body font-semibold leading-4">
+                ScrypathOps
+              </span>
+              <span class="block truncate text-ops-sm text-base-content/60">
+                Ecto-native search operations
+              </span>
+            </span>
+          </.link>
+          <button
+            type="button"
+            class="ops-nav-close"
+            aria-label="Close navigation"
+            data-ops-nav-close
+          >
+            <.icon name="hero-x-mark" class="size-5" />
+          </button>
+        </div>
+
+        <.ops_primary_nav mount_path={@mount_path} page_title={@page_title} />
+      </aside>
+    </div>
+    """
+  end
+
+  attr(:mount_path, :string, required: true)
+  attr(:page_title, :string, default: nil)
+
+  defp ops_primary_nav(assigns) do
+    assigns = assign(assigns, :nav_sections, nav_sections(assigns.mount_path))
+
+    ~H"""
+    <nav class="ops-primary-nav" aria-label="Operator primary">
+      <div class="ops-nav-groups">
+        <section :for={section <- @nav_sections} class="ops-nav-group">
+          <p class="ops-nav-group__label">{section.label}</p>
+          <ul class="ops-nav-list">
+            <li :for={item <- section.items}>
+              <.link
+                navigate={item.path}
+                class={nav_link_classes(item, @page_title)}
+                aria-current={if nav_item_active?(item, @page_title), do: "page", else: nil}
+                data-ops-nav-link
+              >
+                <span class="ops-nav-item__icon" aria-hidden="true">
+                  <.icon name={item.icon} class="size-4" />
+                </span>
+                <span class="ops-nav-item__label">{item.label}</span>
+              </.link>
+            </li>
+          </ul>
+        </section>
+      </div>
+    </nav>
+    """
+  end
+
   @doc false
   # Brand mark: the scrypath `s/p` monogram. Inlined (not <img>) so the letters ride
   # `currentColor` and adapt to light/dark, with the copper "/" as the fixed brand accent —
@@ -186,9 +295,44 @@ defmodule ScrypathOpsWeb.Layouts do
     # flex-wrap container and double-drawing reads as muddy.
     [
       "ops-nav-item",
-      item.title == page_title && "ops-nav-item-active"
+      nav_item_active?(item, page_title) && "ops-nav-item-active"
     ]
   end
+
+  defp nav_item_active?(item, page_title), do: item.title == page_title
+
+  defp nav_sections(mount_path) do
+    [
+      %{
+        label: "Home",
+        items: [
+          %{
+            path: mount_path,
+            label: "Control Room",
+            title: "Control Room",
+            group: :home,
+            icon: "hero-rectangle-group"
+          }
+        ]
+      }
+      | mount_path
+        |> ScrypathOpsWeb.Nav.primary()
+        |> Enum.map(&Map.put(&1, :icon, nav_item_icon(&1)))
+        |> Enum.chunk_by(& &1.group)
+        |> Enum.map(fn items -> %{label: nav_group_label(hd(items).group), items: items} end)
+    ]
+  end
+
+  defp nav_group_label(:recover), do: "Recover"
+  defp nav_group_label(:explore), do: "Explore"
+  defp nav_group_label(group), do: group |> to_string() |> String.capitalize()
+
+  defp nav_item_icon(%{label: "Posture"}), do: "hero-shield-check"
+  defp nav_item_icon(%{label: "Failed Sync"}), do: "hero-exclamation-triangle"
+  defp nav_item_icon(%{label: "Sync Drift"}), do: "hero-arrows-right-left"
+  defp nav_item_icon(%{label: "Search"}), do: "hero-magnifying-glass"
+  defp nav_item_icon(%{label: "Playbooks"}), do: "hero-book-open"
+  defp nav_item_icon(_item), do: "hero-square-2-stack"
 
   @doc """
   Shows the flash group with standard titles and content.

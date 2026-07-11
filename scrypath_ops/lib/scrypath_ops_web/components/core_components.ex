@@ -119,6 +119,8 @@ defmodule ScrypathOpsWeb.CoreComponents do
   end
 
   defp heroicon("hero-" <> name) do
+    Code.ensure_loaded?(Heroicons)
+
     {name, style} =
       cond do
         String.ends_with?(name, "-solid") -> {String.replace_suffix(name, "-solid", ""), :solid}

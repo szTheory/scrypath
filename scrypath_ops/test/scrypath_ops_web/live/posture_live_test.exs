@@ -124,11 +124,13 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
   end
 
   test "renders posture rows with sync_status and surfaces errors first", %{conn: conn} do
-    {:ok, _lv, html} = live(conn, ~p"/ops/posture")
+    {:ok, lv, html} = live(conn, ~p"/ops/posture")
 
     assert html =~ "data-testid=\"posture-row\""
     assert html =~ "fetch error: :boom"
     assert html =~ "queue not observed"
+    refute html =~ ~r/>\s*Refresh posture\s*</
+    assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh posture checks']")
   end
 
   test "posture shows next checks block with ordered items and failed-sync egress", %{conn: conn} do
