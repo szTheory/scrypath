@@ -4,7 +4,7 @@
 **Status:** Active
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-> **Resumed milestone:** v1.34 Both-Themes Perfection (phases 128–136) has advanced through Phase 134 with 7/9 phases complete. Its remaining requirements are preserved in the **Appendix** at the bottom of this file for Phase 135 and Phase 136.
+> **Completed milestone:** v1.34 Both-Themes Perfection (phases 128–136) completed on 2026-06-29 and was archived on 2026-07-11. Its completed requirements are preserved in the **Appendix** and archived at `milestones/v1.34-REQUIREMENTS.md`.
 
 ## Milestone Intent
 
@@ -29,7 +29,7 @@ identity across the live product surfaces.
 
 ### Locked decisions
 
-- **Sequencing:** new milestone **v1.35** beginning at **phase 137**; v1.34 (133–136) paused, resumes after.
+- **Sequencing:** new milestone **v1.35** beginning at **phase 137**; v1.34 (133–136) paused during the brand work, then resumed and completed.
 - **Adoption:** build the `brandbook/` package **and** rewire the chosen logo/tokens into ops UI, website, favicon, OG image, README (not artifacts-only).
 - **Palette/type:** open to **evidence-based refinement** (not locked), but **bias-to-keep** — the violet+copper palette + Space Grotesk / Inter / IBM Plex Mono stack is already implemented live in `scrypath_ops` (Tailwind v4 + daisyUI) and `website/`; any change must keep the `contrast-pairs.mjs` AA gate green and is justified in the decision-log.
 - **Fonts:** check in **subset woff2** (the three families are SIL OFL → embed+subset is license-clean; include OFL files) so the HTML book is self-contained offline.

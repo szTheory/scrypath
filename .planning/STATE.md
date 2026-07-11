@@ -5,9 +5,9 @@ milestone_name: Both-Themes Perfection
 current_phase: 136
 status: complete
 stopped_at: Completed 136-03-PLAN.md
-last_updated: "2026-07-11T00:10:33Z"
-last_activity: 2026-06-29
-last_activity_desc: Phase 136 complete
+last_updated: "2026-07-11T12:00:00Z"
+last_activity: 2026-07-11
+last_activity_desc: v1.34 milestone archived
 progress:
   total_phases: 9
   completed_phases: 9
@@ -21,15 +21,15 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 136 — milestone-verification-uat-s-g
+**Current Focus:** v1.34 archived; preserve v1.35 requirements until a targeted v1.35 reconciliation or new milestone starts.
 
 ## Current Position
 
 Phase: 136 (milestone-verification-uat-s-g) — COMPLETE
 Plan: 3 of 3
-Status: Phase 136 complete; DUALVERIFY-01 passed with approved Human UAT
+Status: v1.34 archived; DUALVERIFY-01 passed with approved Human UAT
 Resume: None
-Last activity: 2026-06-29 — Phase 136 verified and complete
+Last activity: 2026-07-11 — v1.34 roadmap, requirements, audit, milestone registry, and retrospective archived
 
 ## Completed Milestone (interleaved)
 
@@ -37,7 +37,7 @@ Last activity: 2026-06-29 — Phase 136 verified and complete
 
 ## Current Milestone
 
-**v1.34 Both-Themes Perfection — Dark Signature + AA Gate** (phases 128–136). 9/9 complete; DUALVERIFY-01 passed with approved Human UAT on 2026-06-29. Next-level UI/UX + perfect BOTH light & dark themes with a WCAG AA hard gate. Dark mode already EXISTS — polish/expression, do not rebuild. v1.34's accumulated context is retained below. The interleaved v1.35 brand milestone is recorded above under "Completed Milestone".
+**v1.34 Both-Themes Perfection — Dark Signature + AA Gate** (phases 128–136) is archived. 9/9 phases and 27/27 plans completed; DUALVERIFY-01 passed with approved Human UAT on 2026-06-29. Archive files: `.planning/milestones/v1.34-ROADMAP.md`, `.planning/milestones/v1.34-REQUIREMENTS.md`, `.planning/milestones/v1.34-MILESTONE-AUDIT.md`. The interleaved v1.35 brand milestone context is recorded above; root `.planning/REQUIREMENTS.md` is intentionally preserved because it contains v1.35 planning state.
 
 ## v1.35 Brand Milestone Context (archived)
 
@@ -47,7 +47,7 @@ Last activity: 2026-06-29 — Phase 136 verified and complete
 
 ### Key Decisions
 
-- **Sequencing:** v1.35 begins at **phase 137**; v1.34 (133–136) paused and resumes after.
+- **Sequencing:** v1.35 begins at **phase 137**; v1.34 (133–136) paused during the brand work, then resumed and completed.
 - **Adoption:** build the `brandbook/` package **and** rewire the chosen logo/tokens into ops UI, website, favicon, OG image, README (not artifacts-only).
 - **Palette/type:** open to evidence-based refinement (not locked), but bias-to-keep — the violet+copper palette + Space Grotesk/Inter/IBM Plex Mono stack is already implemented live in `scrypath_ops` (Tailwind v4 + daisyUI) and `website/`; any change must keep the `contrast-pairs.mjs` AA gate green.
 - **Fonts:** check in **subset woff2** (Inter / Space Grotesk / IBM Plex Mono are SIL OFL → embed+subset is license-clean; include OFL files) so the HTML book is self-contained offline.
@@ -59,7 +59,7 @@ Last activity: 2026-06-29 — Phase 136 verified and complete
 
 ---
 
-## Accumulated Context (PAUSED v1.34 — retained for resume)
+## Accumulated Context (archived v1.34)
 
 v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Make the existing dark/light/system theming of the `scrypath_ops` admin UI genuinely perfect and brand-expressive — dark as the signature look, light at parity — per `prompts/scrypath-brand-book.md`, backed by a formal automated WCAG AA contrast gate (AAA body text), plus continued design-system/IA polish on v1.33's under-touched surfaces. Owner-initiated polish wedge overriding the idle posture; UI polish only (Phase 97 scope guard holds). Locked: comprehensive both-themes scope, system-follows-OS default preserved, AA hard gate / AAA-body, keep Tailwind v4 + daisyUI + `.ops-*`. Central fix: the dark surface ramp drops the brand's `#1B2230` surface-2 step, so "raised" surfaces flatten in dark — repaired via theme-scoped elevation tokens that leave light pixel-identical. Source plan: `~/.claude/plans/v1-33-admin-ui-deep-tower.md`.
 
@@ -99,6 +99,16 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 - Pending: Rewrite Ops UI microcopy around operator JTBD (`.planning/todos/pending/2026-07-01-rewrite-ops-ui-microcopy-around-operator-jtbd.md`).
 - Completed follow-up: Restructure Search playground workflow (`.planning/todos/completed/2026-07-01-restructure-search-playground-workflow.md`).
 - Completed follow-up: Normalize Playbooks row action styling (`.planning/todos/completed/2026-07-01-normalize-playbooks-row-action-styling.md`).
+
+## Deferred Items
+
+Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
+
+| Category | Item | Status |
+|----------|------|--------|
+| todo | 2026-07-01-rewrite-ops-ui-microcopy-around-operator-jtbd.md | pending |
+| uat-audit-noise | Phase 134 `134-UAT.md` | passed; 0 pending scenarios |
+| uat-audit-noise | Phase 136 `136-UAT.md` | passed; 0 pending scenarios |
 
 ## Performance Metrics
 

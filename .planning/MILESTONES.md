@@ -1,5 +1,29 @@
 # Milestones
 
+## v1.34 Both-Themes Perfection - Dark Signature + AA Gate (Shipped: 2026-06-29; Archived: 2026-07-11)
+
+**Phases completed:** 9 phases (128-136), 27 plans
+
+**Key accomplishments:**
+
+- Promoted WCAG AA from review concern to hard gate with a fast token-pair checker, browser axe matrix, and AAA advisory reporting across light, dark, and system-dark.
+- Repaired dark elevation with a true four-step midnight surface ramp while preserving light-theme parity through scoped tokens and proof gates.
+- Added restrained dark ambient depth, quiet violet glow, copper accents, and purposeful path motion without expanding runtime scope or visual noise.
+- Brought Search, Sync/Drift, Playbooks, and shell chrome to dual-theme quality with focused browser proof for depth, focus, flash, palette, theme toggle, and motion.
+- Closed DUALVERIFY-01 with source-backed automated proof, a checksumed 40-shot screenshot matrix, v1.33-to-v1.34 before/after gallery, clean code review, and approved Human UAT.
+
+**Milestone audit:** Passed - 10/10 requirements, 9/9 phases, all required gates green; see `milestones/v1.34-MILESTONE-AUDIT.md`.
+
+**Known deferred items at close:** 1 pending nonblocking TODO; see `STATE.md` Deferred Items. The open-artifact audit also reported Phase 134 and Phase 136 UAT files as gaps, but both files are `passed` with zero pending scenarios and zero blockers.
+
+**Archives:** `milestones/v1.34-ROADMAP.md`, `milestones/v1.34-REQUIREMENTS.md`, `milestones/v1.34-MILESTONE-AUDIT.md` · **Git tag:** `v1.34` (planning milestone marker)
+
+**Git range:** `a1a902b` -> `f898ac6`
+
+**What's next:** Preserve the idle release train unless maintenance, support truth, proof drift, production bug evidence, outside-adopter evidence, or an explicit strategic wedge justifies new scope. The root `REQUIREMENTS.md` is intentionally preserved because it currently carries v1.35 Brand System & Logo Identity planning state.
+
+---
+
 ## v1.33 Admin UI Insane Polish (Shipped: 2026-06-03)
 
 **Phases completed:** 9 phases (119-127), 9 plans
