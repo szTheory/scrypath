@@ -5,7 +5,7 @@ milestone_name: Both-Themes Perfection
 current_phase: 136
 status: complete
 stopped_at: Completed 136-03-PLAN.md
-last_updated: "2026-06-29T20:04:20.482Z"
+last_updated: "2026-07-11T00:10:33Z"
 last_activity: 2026-06-29
 last_activity_desc: Phase 136 complete
 progress:
@@ -96,6 +96,9 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 ### Todos
 
 - Keep future runtime breadth closed unless concrete production bug evidence, reviewed outside-adopter evidence, or an explicit strategic decision justifies it.
+- Pending: Rewrite Ops UI microcopy around operator JTBD (`.planning/todos/pending/2026-07-01-rewrite-ops-ui-microcopy-around-operator-jtbd.md`).
+- Completed follow-up: Restructure Search playground workflow (`.planning/todos/completed/2026-07-01-restructure-search-playground-workflow.md`).
+- Completed follow-up: Normalize Playbooks row action styling (`.planning/todos/completed/2026-07-01-normalize-playbooks-row-action-styling.md`).
 
 ## Performance Metrics
 
@@ -162,6 +165,10 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 
 ## Session
 
-**Last session:** 2026-06-29T18:34:54.866Z
-**Stopped at:** Completed 136-03-PLAN.md
+**Resume checked:** 2026-07-10T23:59:22Z
+**Stopped at:** Progress automation complete. The stale Phase 134 checkpoint is removed; `.planning/phases/134-under-iterated-surface-polish-dual-theme-s/134-UAT.md` records Tests 1-6 passed; Phase 135 verification remains passed; Search workflow and Playbooks row-action TODOs are closed with evidence.
 **Resume file:** None
+
+**Context:** Formal milestone state remains complete. One broad pending follow-up remains: rewrite Ops UI microcopy around operator JTBD. Targeted checks run during progress automation: `mix verify.opsui` passed (152 tests, 2 doctests), `make contrast` passed with AA failures 0, and `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4002 npm run test:e2e:admin-depth -- --reporter=line` passed 33/33 after rebuilding `scrypath_ops` static assets and restarting the demo web container.
+
+**Pending follow-up checkpoint consumed:** `.planning/phases/134-under-iterated-surface-polish-dual-theme-s/.continue-here.md` removed on 2026-07-10 because it pointed to already-passed UAT Test 4.

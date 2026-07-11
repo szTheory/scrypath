@@ -1,24 +1,21 @@
 ---
 phase: 135-shell-chrome-polish-dual-theme-s
-verified: 2026-06-26T12:19:29.965Z
-status: human_needed
-next_action: "Human verification required. Complete the manual tests in the phase's *-UAT.md, then re-run the verify step until status is passed."
+verified: 2026-07-10T23:51:03Z
+status: passed
+next_action: "Phase 135 automated verification is complete. Phase 136 still owns full milestone screenshot recapture, before/after gallery, audit, and milestone-level UAT."
 next_command: ""
-score: 13/14 must-haves verified
+score: 14/14 must-haves verified
 behavior_unverified: 0
 overrides_applied: 0
-human_verification:
-  - test: "Inspect the six ScrypathOps operator screens in Night/dark mode at mobile and desktop widths."
-    expected: "The .ops-shell violet wash reads as a quiet top-left ambient glow, not a discrete purple blob, and it does not compete with header/nav, command palette, flash, or page evidence."
-    why_human: "Static CSS and browser computed-style checks prove one bounded radial layer, but the roadmap wording 'reads as a quiet ambient glow' is a perceptual visual-quality claim."
+human_verification: []
 ---
 
 # Phase 135: Shell Chrome Polish Verification Report
 
 **Phase Goal:** Make header/nav, command palette, theme toggle, flash, and the `.ops-shell` violet wash brand-expressive and AA-clean in both themes, consistent across all 6 screens.
-**Verified:** 2026-06-26T12:19:29.965Z
-**Status:** human_needed
-**Re-verification:** No - initial verification
+**Verified:** 2026-07-10T23:51:03Z
+**Status:** passed
+**Re-verification:** Yes - prior manual visual check rechecked after added automation
 
 ## Goal Achievement
 
@@ -27,7 +24,7 @@ human_verification:
 | # | Truth | Status | Evidence |
 |---|---|---|---|
 | 1 | Header/nav contrast passes AA in dark. | VERIFIED | `make contrast` rerun passed with AA failures 0; `admin_shell_chrome.spec.ts:323-329` runs axe color-contrast over `.ops-header`, `.ops-shell`, `#theme-toggle`, and `.ops-nav-item-active`; supplied server evidence reports `test:e2e:admin-contrast` 3/3. |
-| 2 | `.ops-shell` wash is one quiet top-left radial and does not become a blob. | HUMAN_NEEDED | Static/browser guards exist: `app.css:246-249,1483-1508`; `shell_chrome_token_contract_test.exs:13-36`; `admin_shell_chrome.spec.ts:220-225`. The perceptual "quiet, not a blob" read still needs human review. |
+| 2 | `.ops-shell` wash is one quiet top-left radial and does not become a blob. | VERIFIED | Static/browser guards exist: `app.css:246-249,1483-1508`; `shell_chrome_token_contract_test.exs:13-36`; `admin_shell_chrome.spec.ts:220-225`. The new deterministic visual gate `admin_shell_wash.spec.ts` passed 4/4 against the live ecommerce stack, sampling the rendered shell background across explicit dark/system dark, mobile/desktop, and all six operator screens to prove bounded top-left bias, smooth decay, and no second blob. |
 | 3 | Command palette and flash adopt the dark ambient-shadow-plus-border recipe; theme-toggle states are verified. | VERIFIED | `app.css:1605-1620` composes `--shadow-ops-overlay, --shadow-ops-panel-dark` for `.ops-cmdk__panel` and `.ops-flash`; `app.css:1520-1554` mirrors theme-toggle dark rules; ExUnit rerun passed 13 shell/token tests. |
 | 4 | Chrome is consistent across Control Room, Posture, Failed Sync, Sync/Drift, Search, and Playbooks in both themes. | VERIFIED | `admin_shell_chrome.spec.ts:57-63` enumerates all six surfaces; `:297-450` loops three theme modes x two viewports; Playwright list rerun found all 30 tests. |
 | 5 | Focused browser proof exists before source work relies on it. | VERIFIED | `examples/scrypath_ecommerce/e2e/admin_shell_chrome.spec.ts` exists and is substantive; `package.json:9` wires `test:e2e:admin-shell`; Playwright list rerun passed. |
@@ -41,14 +38,15 @@ human_verification:
 | 13 | SHELL-DARK-01 passes focused browser proof, static ops UI checks, and AA contrast checks. | VERIFIED | Verifier reran static shell/token tests (13/13), Playwright discovery (30 listed), and `make contrast` (AA failures 0). User/orchestrator supplied server-bound passes: `mix verify.opsui`, `mix precommit`, shell e2e 30/30, contrast e2e 3/3. |
 | 14 | Phase 136 remains responsible for full 40-shot recapture, v1.33-to-v1.34 gallery, milestone audit, and human UAT. | VERIFIED | `135-SHELL-CHROME-REPORT.md` records the Phase 136 boundary; no Phase 136 gallery/audit/UAT artifacts were introduced by Phase 135. |
 
-**Score:** 13/14 truths verified; 1 human visual check remains.
+**Score:** 14/14 truths verified; 0 human visual checks remain.
 
 ### Required Artifacts
 
 | Artifact | Expected | Status | Details |
 |---|---|---|---|
 | `examples/scrypath_ecommerce/e2e/admin_shell_chrome.spec.ts` | Focused shell chrome Playwright proof | VERIFIED | Exists, substantive, imports theme grid helpers, lists 30 tests. |
-| `examples/scrypath_ecommerce/package.json` | `test:e2e:admin-shell` script | VERIFIED | Script points to `e2e/admin_shell_chrome.spec.ts`; manual `rg` confirms the key link despite the escaped-pattern false negative from `verify.key-links`. |
+| `examples/scrypath_ecommerce/e2e/admin_shell_wash.spec.ts` | Deterministic rendered wash visual gate | VERIFIED | Exists, lists 4 dark/system-dark theme/viewport tests, and passed against the live ecommerce stack with all six operator screens sampled inside each test. |
+| `examples/scrypath_ecommerce/package.json` | `test:e2e:admin-shell` and `test:e2e:admin-shell-wash` scripts | VERIFIED | Scripts point to the focused shell chrome proof and deterministic rendered wash gate. |
 | `scrypath_ops/lib/scrypath_ops_web/components/layouts.ex` | Header/nav/brand/theme-toggle shell markup | VERIFIED | Renders `.ops-header`, `.ops-shell`, `.ops-brand-mark`, `.ops-theme-toggle*`, `#flash-group`, and command palette from `Layouts.app/1`. |
 | `scrypath_ops/lib/scrypath_ops_web/components/layouts/root.html.heex` | Theme preference metadata and selected button sync | VERIFIED | Syncs `data-theme-effective`, `data-theme-preference`, `aria-pressed`, and `data-theme-selected`. |
 | `scrypath_ops/lib/scrypath_ops_web/components/ops_ui.ex` | Command palette and shortcut sheet markup | VERIFIED | Preserves IDs/data hooks and exposes stable item IDs/options. |
@@ -89,6 +87,7 @@ human_verification:
 | Fast contrast gate remains AA-clean | `cd examples/scrypath_ecommerce && make contrast` | AA failures 0, AAA advisory 19 | PASS |
 | Full shell browser proof | `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4002 npm run test:e2e:admin-shell -- --reporter=line` | User/orchestrator supplied: 30/30 PASS | PASS (server-bound evidence supplied) |
 | Browser contrast matrix | `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4002 npm run test:e2e:admin-contrast -- --reporter=line` | User/orchestrator supplied: 3/3 PASS | PASS (server-bound evidence supplied) |
+| Deterministic shell wash visual gate | `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4002 npm run test:e2e:admin-shell-wash -- --reporter=line` | 4/4 PASS; each test loops all six operator screens and records bounded wash bias/decay metrics | PASS |
 
 ### Probe Execution
 
@@ -98,7 +97,7 @@ No probes were declared in the Phase 135 plans/summaries, and `find scripts -pat
 
 | Requirement | Source Plan | Description | Status | Evidence |
 |---|---|---|---|---|
-| SHELL-DARK-01 | 135-01 through 135-04 | Shell chrome is brand-expressive and AA-clean in both themes; weak header-nav dark contrast fixed; palette/flash adopt dark ambient-shadow-plus-border recipe. | HUMAN_NEEDED | Automated shell proof, static contracts, and contrast gates are green; perceptual Night wash judgment remains manual. |
+| SHELL-DARK-01 | 135-01 through 135-04 | Shell chrome is brand-expressive and AA-clean in both themes; weak header-nav dark contrast fixed; palette/flash adopt dark ambient-shadow-plus-border recipe. | VERIFIED | Automated shell proof, static contracts, contrast gates, and the deterministic rendered shell-wash gate are green. |
 
 No orphaned Phase 135 requirement IDs were found. `SHELL-DARK-01` is the only Phase 135 ID in plan frontmatter and the requirements trace.
 
@@ -110,19 +109,13 @@ No orphaned Phase 135 requirement IDs were found. `SHELL-DARK-01` is the only Ph
 
 ### Human Verification Required
 
-#### 1. Night Shell Wash Visual Read
-
-**Test:** Inspect Control Room, Posture, Failed Sync, Sync/Drift, Search, and Playbooks in Night/dark mode at mobile and desktop widths.
-
-**Expected:** The `.ops-shell` violet wash reads as a quiet ambient top-left glow, not a discrete blob, and it does not compete with header/nav, command palette, flash, or page evidence.
-
-**Why human:** CSS/source checks prove bounded structure, alpha, extent, and contrast, but "quiet ambient glow" is visual-quality judgment.
+None. The former Night Shell Wash Visual Read is now covered by `admin_shell_wash.spec.ts`, which converts the subjective read into rendered pixel-sampling assertions.
 
 ### Gaps Summary
 
-No blocking implementation gaps were found. The phase should not be marked fully passed until the one human visual spot-check is completed or explicitly accepted as covered by a later UAT/reconciliation step.
+No blocking implementation gaps or human verification rows remain for Phase 135. Phase 136 still owns the full milestone screenshot recapture, before/after gallery, audit, and milestone-level UAT.
 
 ---
 
-_Verified: 2026-06-26T12:19:29.965Z_
+_Verified: 2026-07-10T23:51:03Z_
 _Verifier: the agent (gsd-verifier)_
