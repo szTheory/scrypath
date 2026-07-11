@@ -1,19 +1,19 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.34
-milestone_name: Both-Themes Perfection
-current_phase: 136
-status: complete
-stopped_at: Completed 136-03-PLAN.md
-last_updated: "2026-07-11T12:00:00Z"
+milestone: none
+milestone_name: Release Train Idle
+current_phase: null
+status: idle
+stopped_at: v1.35 direct-completion bookkeeping reconciled
+last_updated: "2026-07-11T00:55:21Z"
 last_activity: 2026-07-11
-last_activity_desc: v1.34 milestone archived
+last_activity_desc: v1.35 milestone archived from direct evidence; release train idle
 progress:
-  total_phases: 9
-  completed_phases: 9
-  total_plans: 27
-  completed_plans: 27
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,41 +21,44 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** v1.34 archived; preserve v1.35 requirements until a targeted v1.35 reconciliation or new milestone starts.
+**Current Focus:** release train idle; no active milestone or phase.
 
 ## Current Position
 
-Phase: 136 (milestone-verification-uat-s-g) — COMPLETE
-Plan: 3 of 3
-Status: v1.34 archived; DUALVERIFY-01 passed with approved Human UAT
+Phase: None
+Plan: None
+Status: v1.35 archived from direct evidence; v1.34 archived; release train idle
 Resume: None
-Last activity: 2026-07-11 — v1.34 roadmap, requirements, audit, milestone registry, and retrospective archived
+Last activity: 2026-07-11 - v1.35 roadmap, requirements, audit, milestone registry, and root planning posture reconciled
 
-## Completed Milestone (interleaved)
+## Completed Milestones
 
-**v1.35 Brand System & Logo Identity** (phases 137–143) — ✅ **COMPLETE 2026-06-24, committed `fcb8fc7`.** Built **directly (not through GSD plan/execute artifacts)**, so phase dirs 138–143 and PLAN/SUMMARY files do not exist on disk and `roadmap.analyze` will show v1.35 at 0% — this is a known bookkeeping gap, NOT incomplete work. Delivered: logo direction "C" = **"scry/path" with a copper `/` separator** (routed-S killed); full family in `brandbook/assets/`; self-contained HTML brand book (`brandbook/index.html`) with subset-woff2 fonts + tokens; adopted across scrypath_ops (header mark + SVG favicon), website (brand-mark + OG card), and root README. Palette/type unchanged → contrast gate stayed green; `mix compile` green; all logos transparent/no-cage; brandbook 328K. Brand-token refinement note: none shipped, so v1.34's remaining dark-polish phases inherit the existing tokens unchanged.
+**v1.35 Brand System & Logo Identity** (phases 137-143) - COMPLETE 2026-06-24, committed `fcb8fc7`, archived 2026-07-11. Built directly, not through GSD plan/execute artifacts; phase dirs 138-143 and PLAN/SUMMARY files do not exist on disk by design. `roadmap.analyze` may show v1.35 at 0%; that is a known bookkeeping artifact, not incomplete work. Delivered: logo direction C = **scry/path with a copper `/` separator** (routed-S killed); full transparent/no-cage SVG family in `brandbook/assets/`; self-contained HTML brand book with subset woff2 fonts and tokens; adoption across ScrypathOps, website, and root README. Archive files: `.planning/milestones/v1.35-ROADMAP.md`, `.planning/milestones/v1.35-REQUIREMENTS.md`, `.planning/milestones/v1.35-MILESTONE-AUDIT.md`.
+
+**v1.34 Both-Themes Perfection - Dark Signature + AA Gate** (phases 128-136) - COMPLETE 2026-06-29, archived 2026-07-11. 9/9 phases and 27/27 plans completed; DUALVERIFY-01 passed with approved Human UAT. Archive files: `.planning/milestones/v1.34-ROADMAP.md`, `.planning/milestones/v1.34-REQUIREMENTS.md`, `.planning/milestones/v1.34-MILESTONE-AUDIT.md`.
 
 ## Current Milestone
 
-**v1.34 Both-Themes Perfection — Dark Signature + AA Gate** (phases 128–136) is archived. 9/9 phases and 27/27 plans completed; DUALVERIFY-01 passed with approved Human UAT on 2026-06-29. Archive files: `.planning/milestones/v1.34-ROADMAP.md`, `.planning/milestones/v1.34-REQUIREMENTS.md`, `.planning/milestones/v1.34-MILESTONE-AUDIT.md`. The interleaved v1.35 brand milestone context is recorded above; root `.planning/REQUIREMENTS.md` is intentionally preserved because it contains v1.35 planning state.
+None. The release train is idle.
 
 ## v1.35 Brand Milestone Context (archived)
 
-**v1.35 Brand System & Logo Identity** (phases 137–143) — see "Completed Milestone" above. Pressure-test the existing `prompts/scrypath-brand-book.md` from a senior brand-designer + design-system + a11y + Elixir-OSS lens, design a **proper logo system the owner chooses from** (transparent/no rectangular cage, unified mark+logotype, ≥1 fully-integrated typemark, no subtitle on the primary lockup), and ship a high-fidelity, repo-safe, **self-contained `brandbook/` HTML package** (logos, tokens, subset-woff2 fonts, component examples, usage rules, a11y notes) — then **adopt** the chosen identity across the live product (scrypath_ops logo+favicon, website brand-mark+OG, README). Palette/type are open to evidence-based refinement but bias-to-keep to avoid product thrash; the `scrypath_ops` AA contrast gate must stay green. Owner-initiated wedge; library runtime scope guard (Phase 97) still holds. Source plan: `~/.claude/plans/brand-book-pressure-test-scalable-alpaca.md`.
+**v1.35 Brand System & Logo Identity** (phases 137-143) - see "Completed Milestones" above. Source plan: `~/.claude/plans/brand-book-pressure-test-scalable-alpaca.md`. Direct-completion archive supersedes stale in-progress phase context.
 
 ## v1.35 Accumulated Context
 
 ### Key Decisions
 
-- **Sequencing:** v1.35 begins at **phase 137**; v1.34 (133–136) paused during the brand work, then resumed and completed.
-- **Adoption:** build the `brandbook/` package **and** rewire the chosen logo/tokens into ops UI, website, favicon, OG image, README (not artifacts-only).
-- **Palette/type:** open to evidence-based refinement (not locked), but bias-to-keep — the violet+copper palette + Space Grotesk/Inter/IBM Plex Mono stack is already implemented live in `scrypath_ops` (Tailwind v4 + daisyUI) and `website/`; any change must keep the `contrast-pairs.mjs` AA gate green.
-- **Fonts:** check in **subset woff2** (Inter / Space Grotesk / IBM Plex Mono are SIL OFL → embed+subset is license-clean; include OFL files) so the HTML book is self-contained offline.
-- **Logo non-negotiables:** no rectangular `<rect>` cage (both existing logos have one — replace, don't reuse); unified mark+logotype sharing geometry/weight; mark sits close to the type; primary lockup has NO subtitle; ≥1 integrated typemark with the route/node motif worked into the letterforms; show options, owner picks.
+- **Sequencing:** v1.35 began at phase 137; v1.34 paused during brand work, then resumed and completed.
+- **Adoption:** the `brandbook/` package and chosen identity were wired into ops UI, website, favicon, OG image, and README.
+- **Palette/type:** product palette stayed stable; final display face is Familjen Grotesk for the brand wordmark, with Inter and IBM Plex Mono retained in the brand package.
+- **Fonts:** subset woff2 fonts and OFL license files ship inside `brandbook/assets/fonts/`.
+- **Logo decision:** final direction is the copper `/` `scry/path` wordmark plus `s/p` monogram; routed-S concepts are rejected historical exploration.
+- **Direct-completion guard:** do not synthesize phase dirs or PLAN/SUMMARY files for phases 138-143.
 
 ### Active Blockers
 
-- **Phase 138 selection checkpoint:** awaiting owner's choice of primary logo direction before phases 139–143 can finalize the family / tokens / book / adoption.
+- None.
 
 ---
 
