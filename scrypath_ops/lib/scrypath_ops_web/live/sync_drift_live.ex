@@ -369,7 +369,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             <tbody>
               <tr>
                 <th scope="row" class="font-medium align-top">Index</th>
-                <td><.ops_inline_code>{@reconcile_result.index}</.ops_inline_code></td>
+                <td>
+                  <.ops_inline_code>{@reconcile_result.index}</.ops_inline_code>
+                </td>
               </tr>
               <tr>
                 <th scope="row" class="font-medium align-top">Mode</th>
@@ -408,7 +410,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           meta={if @drift_loaded_at, do: "last loaded #{format_dt(@drift_loaded_at)}"}
         >
           <:actions>
-            <.ops_button phx-click="load_drift" phx-disable-with="Loading…" disabled={@drift_loading}>
+            <.ops_button
+              phx-click="load_drift"
+              phx-disable-with="Loading…"
+              disabled={@drift_loading}
+            >
               Load / refresh contract drift
             </.ops_button>
           </:actions>
@@ -465,7 +471,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               </tr>
             </tbody>
           </.ops_signal_table>
-          <.ops_data_card :if={@drift_result && !@drift_loading} title="Contract dimensions" class="mt-3">
+          <.ops_data_card
+            :if={@drift_result && !@drift_loading}
+            title="Contract dimensions"
+            class="mt-3"
+          >
             <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               <.ops_tone_chip
                 :for={{label, match?} <- drift_dimension_rows(@drift_result)}

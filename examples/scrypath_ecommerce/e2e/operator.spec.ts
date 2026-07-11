@@ -62,8 +62,8 @@ test("operator can initiate zero-downtime swap from sync drift UI", async ({ pag
 
   await page.goto("/admin/search/posture");
   await waitForLiveConnected(page);
-  await expect(page.getByRole("button", { name: "Refresh posture" })).toBeVisible();
-  await page.getByRole("button", { name: "Refresh posture" }).click();
+  await expect(page.locator("[data-ops-refresh]")).toBeVisible();
+  await page.locator("[data-ops-refresh]").click();
 
   const postureRow = page.getByTestId("posture-row").first();
   await expect(postureRow).toBeVisible();

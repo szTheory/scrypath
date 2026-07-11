@@ -16,6 +16,8 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
                  )
                  |> Path.expand()
 
+  @app_js Path.join(__DIR__, "../../assets/js/app.js") |> Path.expand()
+
   defmodule OpsShellContractMeili do
     @moduledoc false
     def tasks(filters, config) do
@@ -126,9 +128,21 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
              ~r/<a[^>]*class=\"[^\"]*ops-nav-item-active[^\"]*\"[^>]*aria-current=\"page\"/,
              html
            )
-           |> length() == 1
+           |> length() == 2
 
     assert html =~ ~s(href="/ops/posture")
+    assert html =~ ~s(id="ops-shell-frame")
+    assert html =~ ~s(phx-hook="OpsNavDrawer")
+    assert html =~ ~s(class="ops-sidebar")
+    assert html =~ ~s(id="ops-mobile-nav")
+    assert html =~ ~s(data-ops-nav-drawer)
+    assert html =~ ~s(data-ops-nav-panel)
+    assert html =~ ~s(data-ops-nav-open)
+    assert html =~ ~s(aria-label="Open navigation")
+    assert html =~ ~s(aria-controls="ops-mobile-nav")
+    assert html =~ ~s(aria-expanded="false")
+    assert html =~ ~s(aria-label="Close navigation")
+    assert html =~ ~s(data-ops-nav-link)
     # v1.5 brand: the shell header renders the inline-SVG brand mark (decorative,
     # aria-hidden) with the copper "/" accent — no more <img src="/ops/images/logo.svg">.
     # "ScrypathOps" below is its accessible name.
@@ -149,6 +163,9 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert html =~ ~s(id="ops-command-palette")
     assert html =~ ~s(phx-hook="CommandPalette")
     assert html =~ ~s(data-cheatsheet="ops-cheatsheet")
+    assert Regex.scan(~r/data-ops-command-open/, html) |> length() >= 2
+    assert Regex.scan(~r/aria-label=\"Open command palette\"/, html) |> length() >= 2
+    assert html =~ ~s(aria-keyshortcuts="Meta+K Control+K")
     assert html =~ ~s(id="ops-cmdk")
     assert html =~ ~s(id="ops-cheatsheet")
     assert html =~ ~s(data-cmdk-close)
@@ -201,6 +218,15 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert html =~ "Command or Control K"
     assert html =~ "<kbd"
     assert html =~ "Ctrl"
+  end
+
+  test "command palette hook opens from visible shortcut affordances" do
+    source = File.read!(@app_js)
+
+    assert source =~ ~S|closest("[data-ops-command-open]")|
+    assert source =~ ~S|document.addEventListener("click", this.onCommandOpenClick)|
+    assert source =~ ~S|document.removeEventListener("click", this.onCommandOpenClick)|
+    assert source =~ "this.open()"
   end
 
   test "flash component exposes durable passive alert chrome" do

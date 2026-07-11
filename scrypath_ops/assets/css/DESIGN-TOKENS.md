@@ -85,13 +85,21 @@ Light values are byte-identical to the prior `base-200`/`base-100` references �
 | `--spacing-ops-1..6` | 0.25 → 1.5rem | raw steps |
 | `--spacing-ops-field` | 0.375rem | label↔input gap (`space-y-ops-field`) |
 | `--spacing-ops-row` | 1rem | between list items |
-| `--spacing-ops-section` | 1.5rem | between major page sections |
+| `--spacing-ops-section` | 1.5rem | between major page sections and grouped form fieldsets |
 | `--spacing-ops-panel` | 1.25rem | panel interior padding (`p-ops-panel`) |
 | `--spacing-ops-control-gap` | 0.5rem | gap between adjacent controls |
 | `--spacing-ops-page-gap` | 1.5rem | top-level page section gap |
 
 **Page rhythm:** the `:ops` shell wraps page content in `space-y-4`; do **not** add `mt-*`
 to its direct children (that double-spaces them). Use the container gap.
+
+**Form rhythm:** use `.ops-form-stack` around groups of `.ops-fieldset`. Fieldsets keep
+legend/hint copy tight, then use `--spacing-ops-3` before controls and
+`--spacing-ops-section` between groups.
+
+**Empty states:** use `.ops-empty-hero` for high-attention blank sections where the user
+needs orientation and a next action. Keep `.ops-muted-panel` / `<.ops_empty_state>` for
+compact config guards, errors, and small no-result messages.
 
 ## Control sizing — `--control-*` (component-only, via `var()`)
 

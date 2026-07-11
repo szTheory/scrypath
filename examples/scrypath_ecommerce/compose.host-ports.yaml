@@ -1,0 +1,14 @@
+# Optional host-tooling overlay.
+#
+# The default Docker dev stack keeps Postgres and Meilisearch private to the
+# Compose network so sibling demos do not fight over 5432/7700. Add this overlay
+# only when host tools need direct access from macOS, for example psql, TablePlus,
+# or a host-run Phoenix server.
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:${PG_PORT:-5432}:5432"
+
+  meilisearch:
+    ports:
+      - "127.0.0.1:${MEILI_PORT:-7700}:7700"

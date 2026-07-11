@@ -4,16 +4,16 @@ This Phoenix app is the click-around Scrypath showcase: a realistic multi-tenant
 catalog, live Meilisearch, Postgres, browser E2E coverage, and the optional
 operator UI mounted inside the host app.
 
-**Start here:** run `docker compose up --build`, open `http://localhost:4002`,
-search for `quantum`, then visit `/admin/search/posture`. You will see the
-same Scrypath ideas from the guides in one place: tenant-scoped search,
-category facets, related-data propagation, failed sync triage, and
-zero-downtime swap posture.
+**Start here:** run `make docker-dev`, open the URL block it prints, search for
+`quantum`, then visit `/admin/search/posture`. You will see the same Scrypath
+ideas from the guides in one place: tenant-scoped search, category facets,
+related-data propagation, failed sync triage, and zero-downtime swap posture.
 
-**Iterating on UI:** after the first image build, use
-`docker compose -f compose.yaml -f compose.dev.yaml up` for a bind-mounted dev
-container. Source changes under the repository checkout are visible to Phoenix
-without rebuilding dependency layers.
+**Iterating on UI:** `make docker-dev` runs the app in Docker with the repository
+bind-mounted and named `deps` / `_build` volumes. HEEx, CSS, and LiveView edits
+reload without rebuilding dependency layers. If you already keep Elixir/OTP
+installed locally, `make dev` keeps Phoenix on the host and uses Docker only for
+Meilisearch by default.
 
 The demo host layout loads the ScrypathOps stylesheet only for `/admin/search/*`,
 and its app JavaScript handles the operator theme and diagnostics-copy events.
@@ -49,30 +49,48 @@ It is a high-signal shift-left proof before outside-adopter evidence exists.
 A `Makefile` wraps the common flows. Run `make help` to list targets.
 
 ```sh
-make dev          # primary loop: host dev server + dockerized Meilisearch + ops-CSS watcher
-make up           # full containerized test stack (what Playwright/CI use)
-make screenshots  # capture admin-UI screenshots against the running dev server
-make reset        # stop and delete volumes (clean DB + Meilisearch)
+make docker-dev  # Docker-only dev loop: Postgres + Meilisearch + Phoenix + ops CSS watcher
+make urls        # print storefront, operator routes, and current port lane
+make doctor      # check Docker Compose and common host-port conflicts
+make dev         # host Phoenix loop + Dockerized Meilisearch
+make up          # containerized test stack, matching the Playwright/CI shape
+make reset       # stop containers and delete this demo's volumes
 ```
 
-`make dev` runs the app in `MIX_ENV=dev` so **seeded data is visible in the browser**
-(the `MIX_ENV=test` stack uses an Ecto sandbox pool that hides data from a plain browser —
-that path is for the automated Playwright suite, not click-through). It expects a Postgres
-reachable at `PGHOST` (default `localhost`); if you don't run Postgres natively, use
-`make infra-pg` and `make dev PGHOST=127.0.0.1`.
+Use `make docker-dev` for the hands-off browser loop. It runs `MIX_ENV=dev`, so
+**seeded data is visible in the browser**. The default Docker dev stack publishes
+only the web UI on `WEB_PORT`; Postgres and Meilisearch stay inside the Compose
+network so they do not collide with other projects on `5432` or `7700`.
+
+Use `make dev` when you want Phoenix running directly on your machine. It expects
+Postgres at `PGHOST` (default `localhost`) and starts Meilisearch in Docker on
+`MEILI_PORT`. If you do not run Postgres natively, start it with Docker too:
+
+```sh
+make infra-pg
+make dev PGHOST=127.0.0.1
+```
+
+Use `make up` for the image-only `MIX_ENV=test` stack that Playwright and CI use.
+That path is for automated proof, not the nicest click-through loop.
 
 ### Running several demos at once (host-port lanes)
 
-Host ports are parameterized via `.env` (see `.env.example`). To run this demo beside
-other library demos without collisions, copy `.env.example` to `.env` and bump the lane:
+Host ports are parameterized via `.env` (see `.env.example`). To run this demo
+beside other library demos, copy `.env.example` to `.env` and bump the lane:
 
 ```sh
 WEB_PORT=4012 PG_PORT=5442 MEILI_PORT=7710   # example: a second demo's lane
 ```
 
-The Compose project is namespaced (`name: scrypath_ecommerce`), so its network, volumes,
-and containers never clash with sibling stacks. Infra ports are only published by the dev
-override; the base stack keeps Postgres/Meilisearch inside the Compose network.
+For `make docker-dev`, only `WEB_PORT` is published. `PG_PORT` and `MEILI_PORT`
+matter only for host-tooling flows such as `make dev`, `make infra`, and
+`make infra-pg`.
+
+The Compose project is namespaced (`COMPOSE_PROJECT_NAME`, default
+`scrypath_ecommerce`), so its network, volumes, and containers do not clash with
+sibling stacks. Use a different `COMPOSE_PROJECT_NAME` when running two worktrees
+of this same demo at once.
 
 ## Run it with Docker Compose
 
@@ -84,15 +102,18 @@ Prerequisites:
 From this directory:
 
 ```sh
-docker compose up --build
+make docker-dev
 ```
 
 The first boot compiles the Phoenix apps, prepares Meilisearch index settings,
-seeds the demo catalog, and starts the server. A successful boot prints:
+seeds the demo catalog, and starts the server. A successful boot prints the full
+route list:
 
 ```sh
-Scrypath e-commerce demo seeded.
-Open the storefront at / and OPSUI at /admin/search/posture.
+Scrypath e-commerce demo is ready.
+  Storefront        http://127.0.0.1:4002
+  Control room      http://127.0.0.1:4002/admin/search
+  Posture           http://127.0.0.1:4002/admin/search/posture
 ```
 
 Then open:
@@ -107,19 +128,22 @@ Then open:
 Reset the demo:
 
 ```sh
-docker compose down -v
+make reset
 ```
 
-The reset removes the Postgres and Meilisearch volumes for this demo stack.
+The reset clears this demo's containers, generated build/dependency volumes, and
+demo data.
 
-For faster UI iteration after the first build:
+The raw Compose equivalent for Docker dev is:
 
 ```sh
 docker compose -f compose.yaml -f compose.dev.yaml up
 ```
 
-Use the same reset command when you want to clear data. If dependency manifests
-change, rebuild once with `docker compose build web`.
+Add `-f compose.host-ports.yaml` only when host tools need direct Postgres or
+Meilisearch access. If dependency manifests change, rebuild once with
+`docker compose build web`. For the longer maintainer runbook, see
+[`docs/local-demo-docker-dx.md`](../../docs/local-demo-docker-dx.md).
 
 ## Guided click-through
 

@@ -55,7 +55,7 @@ type ShellSurface = {
 };
 
 const SHELL_SURFACES: ShellSurface[] = [
-  { name: "Control Room", prepare: gotoControlRoom, hasPrimaryNavItem: false },
+  { name: "Control Room", prepare: gotoControlRoom, hasPrimaryNavItem: true },
   { name: "Posture", prepare: gotoPosture, hasPrimaryNavItem: true },
   { name: "Failed Sync", prepare: gotoFailedSync, hasPrimaryNavItem: true },
   { name: "Sync/Drift", prepare: gotoSyncDrift, hasPrimaryNavItem: true },
@@ -229,13 +229,47 @@ async function expectShellWash(page: Page): Promise<void> {
   expect(background, ".ops-shell keeps its structural floor gradient").toContain("linear-gradient");
 }
 
-async function expectHeaderChrome(page: Page): Promise<void> {
-  await expect(page.locator(".ops-header")).toBeVisible();
+async function expectHeaderChrome(page: Page, viewport: ViewportName): Promise<void> {
+  const header = page.locator(".ops-header");
+  await expect(header).toBeVisible();
 
   const shadow = await readComputedStyle(page, ".ops-header", "box-shadow");
   const border = await readComputedStyle(page, ".ops-header", "border-bottom-color");
   expect(shadow, ".ops-header must read as a separated shell surface").not.toBe("none");
   expect(border, ".ops-header must expose a measurable divider").not.toBe("rgba(0, 0, 0, 0)");
+
+  const headerBox = await header.boundingBox();
+  expect(headerBox, ".ops-header must be measurable").not.toBeNull();
+  if (!headerBox) return;
+
+  const maxHeight = viewport === "desktop" ? 96 : 80;
+  expect(
+    headerBox.height,
+    ".ops-header should stay compact as utility chrome"
+  ).toBeLessThanOrEqual(maxHeight);
+
+  if (viewport === "desktop") {
+    const sidebar = page.locator(".ops-sidebar");
+    await expect(sidebar, "desktop primary navigation should live in the sidebar").toBeVisible();
+    await expect(page.locator("[data-ops-nav-open]"), "desktop should not show hamburger").toBeHidden();
+
+    const sidebarBox = await sidebar.boundingBox();
+    const mainBox = await page.locator("#ops-main").boundingBox();
+    expect(sidebarBox, ".ops-sidebar must be measurable on desktop").not.toBeNull();
+    expect(mainBox, "#ops-main must be measurable on desktop").not.toBeNull();
+    if (!sidebarBox || !mainBox) return;
+
+    expect(sidebarBox.width, ".ops-sidebar should keep a stable desktop rail width").toBeGreaterThan(
+      240
+    );
+    expect(mainBox.x, "#ops-main should not sit underneath the fixed sidebar").toBeGreaterThanOrEqual(
+      sidebarBox.width - 1
+    );
+  } else {
+    await expect(page.locator(".ops-sidebar"), "mobile should hide desktop sidebar").toBeHidden();
+    await expect(page.locator("[data-ops-nav-open]"), "mobile should expose hamburger").toBeVisible();
+    await expect(page.locator("#ops-mobile-nav"), "mobile drawer starts closed").toBeHidden();
+  }
 }
 
 async function expectActiveNavChrome(
@@ -250,10 +284,14 @@ async function expectActiveNavChrome(
     return;
   }
 
-  await expect(active, `${surface.name} should mark exactly one active nav item`).toHaveCount(1);
+  await expect(active, `${surface.name} should mark active sidebar and drawer nav items`).toHaveCount(
+    2
+  );
 
   if (viewport === "desktop") {
-    await expect(active).toBeVisible();
+    await expect(page.locator(".ops-nav-item-active:visible")).toHaveCount(1);
+  } else {
+    await expect(page.locator(".ops-nav-item-active:visible")).toHaveCount(0);
   }
 
   const bg = await readComputedStyle(page, ".ops-nav-item-active", "background-color");
@@ -262,6 +300,40 @@ async function expectActiveNavChrome(
   expect(bg, ".ops-nav-item-active must have a visible selected fill").not.toBe("rgba(0, 0, 0, 0)");
   expect(color, ".ops-nav-item-active must resolve readable text color").not.toBe("rgba(0, 0, 0, 0)");
   expect(shadow, ".ops-nav-item-active keeps shell depth/glow contract").not.toBe("none");
+}
+
+async function expectMobileNavigationDrawer(page: Page): Promise<void> {
+  const opener = page.locator("[data-ops-nav-open]");
+  const drawer = page.locator("#ops-mobile-nav");
+
+  await expect(opener).toBeVisible();
+  await expect(opener).toHaveAttribute("aria-expanded", "false");
+
+  await opener.click();
+  await expect(drawer).toBeVisible();
+  await expect(opener).toHaveAttribute("aria-expanded", "true");
+  await expect(drawer.locator(".ops-nav-item-active")).toBeVisible();
+  await expectNoColorContrastViolations(page, ["#ops-mobile-nav"], "mobile navigation drawer");
+
+  await page.keyboard.press("Escape");
+  await expect(drawer).toBeHidden();
+  await expect(opener).toHaveAttribute("aria-expanded", "false");
+
+  await opener.click();
+  await expect(drawer).toBeVisible();
+  await drawer.locator(".ops-mobile-nav__backdrop").click({ position: { x: 340, y: 20 } });
+  await expect(drawer).toBeHidden();
+
+  await opener.click();
+  await expect(drawer).toBeVisible();
+  await drawer.getByRole("button", { name: "Close navigation" }).click();
+  await expect(drawer).toBeHidden();
+
+  await opener.click();
+  await expect(drawer).toBeVisible();
+  await drawer.getByRole("link", { name: /Posture/ }).click();
+  await expect(page).toHaveURL(/\/admin\/search\/posture$/);
+  await expect(drawer).toBeHidden();
 }
 
 async function seedAllGreenSearch(request: APIRequestContext): Promise<void> {
@@ -279,11 +351,12 @@ async function seedAllGreenSearch(request: APIRequestContext): Promise<void> {
 async function triggerSearchSaveFlash(page: Page): Promise<void> {
   await gotoSearch(page);
   await runSearch(page, "quantum");
-  await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Results", exact: true })).toBeVisible();
 
   const basename = `${SHELL_PLAYBOOK_PREFIX}${Date.now()}.json`;
+  await page.getByRole("button", { name: "Save as playbook" }).click();
   await page.getByLabel("Basename (.json)").fill(basename);
-  await page.getByRole("button", { name: "Save search as playbook" }).click();
+  await page.getByRole("button", { name: "Save playbook" }).click();
   await expect(page.locator("#flash-group [role='alert']:not([hidden])")).toContainText(
     `Saved playbook ${basename}.`
   );
@@ -316,12 +389,12 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
             await expect(page.locator("#flash-group")).toHaveCount(1);
             await expect(page.locator(".ops-shell")).toBeVisible();
 
-            await expectHeaderChrome(page);
+            await expectHeaderChrome(page, viewport);
             await expectActiveNavChrome(page, viewport, surface);
             await expectShellWash(page);
             await expectNoColorContrastViolations(
               page,
-              [".ops-header", ".ops-shell", "#theme-toggle", ".ops-nav-item-active"],
+              [".ops-header", ".ops-sidebar", ".ops-shell", "#theme-toggle", ".ops-nav-item-active"],
               `${surface.name} shell chrome`
             );
           }
@@ -329,6 +402,27 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
           await close();
         }
       });
+
+      if (viewport === "mobile") {
+        test(`[shell-chrome] mobile navigation drawer (${themeSlug(mode)}, ${viewport})`, async ({
+          browser,
+          request
+        }) => {
+          await seedScenario(request, "incident");
+
+          const { page, close } = await newThemedPage(browser, mode, viewport);
+          try {
+            await gotoControlRoom(page);
+            if (mode.kind === "system") {
+              await assertSystemDarkInvariants(page);
+            }
+
+            await expectMobileNavigationDrawer(page);
+          } finally {
+            await close();
+          }
+        });
+      }
 
       test(`[shell-chrome] theme toggle (${themeSlug(mode)}, ${viewport})`, async ({
         browser,
@@ -401,6 +495,12 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
           await expectNoColorContrastViolations(page, ["#ops-cmdk"], "command palette");
           await expectAriaModalTruth(page, "#ops-cmdk", opener);
           await expect(page.locator("#ops-cmdk [data-cmdk-item][aria-selected='true']")).toHaveCount(0);
+
+          await openCommandPalette(page);
+          await expect(page.locator("#ops-cmdk-item-0")).toHaveAttribute("href", "/admin/search");
+          await page.keyboard.press("Enter");
+          await expect(page).toHaveURL(/\/admin\/search$/);
+          await expect(page.getByRole("heading", { name: "Control Room" })).toBeVisible();
         } finally {
           await close();
         }
