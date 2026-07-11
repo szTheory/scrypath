@@ -319,12 +319,13 @@ async function expectPostureSignalCardsMeasured(page: Page): Promise<void> {
 async function preparePopulatedPlaybooks(page: Page): Promise<void> {
   await gotoSearch(page);
   await page.getByLabel("Search text").fill("quantum");
-  await page.getByRole("button", { name: "Run bounded search" }).click();
-  await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
+  await page.getByRole("button", { name: "Run search" }).click();
+  await expect(page.getByRole("heading", { name: "Results", exact: true })).toBeVisible();
 
   const basename = `surface-depth-${Date.now()}.json`;
+  await page.getByRole("button", { name: "Save as playbook" }).click();
   await page.getByLabel("Basename (.json)").fill(basename);
-  await page.getByRole("button", { name: "Save search as playbook" }).click();
+  await page.getByRole("button", { name: "Save playbook" }).click();
   await expect(page.getByText(new RegExp(`Saved playbook ${basename.replace(".", "\\.")}`))).toBeVisible();
 
   await gotoPlaybooks(page);

@@ -117,7 +117,7 @@ async function gotoControlRoom(page: Page): Promise<void> {
 async function gotoPosture(page: Page): Promise<void> {
   await page.goto("/admin/search/posture");
   await waitForLiveConnected(page);
-  await page.getByRole("button", { name: "Refresh posture" }).click();
+  await page.locator("[data-ops-refresh]").click();
   await expect(page.getByRole("heading", { name: "Posture", exact: true })).toBeVisible();
 }
 
@@ -152,7 +152,7 @@ async function gotoPlaybooks(page: Page): Promise<void> {
 
 async function runSearch(page: Page, query: string): Promise<void> {
   await page.getByLabel("Search text").fill(query);
-  await page.getByRole("button", { name: "Run bounded search" }).click();
+  await page.getByRole("button", { name: "Run search" }).click();
 }
 
 // ── Scenario groups ──────────────────────────────────────────────────────────
@@ -185,7 +185,7 @@ describeScenario("all_green", [
     prepare: async (page) => {
       await gotoSearch(page);
       await runSearch(page, "quantum");
-      await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Results", exact: true })).toBeVisible();
     }
   }
 ]);

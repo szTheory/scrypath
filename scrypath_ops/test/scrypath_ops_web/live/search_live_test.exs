@@ -50,8 +50,13 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     {:ok, _lv, html} = live(conn, ~p"/ops/search")
 
     assert html =~ "Non-production search playground"
-    assert html =~ "Run bounded search"
-    refute html =~ "Per-schema panels"
+    assert html =~ "Run search"
+    assert html =~ "ops-form-stack"
+    assert html =~ "ops-fieldset__legend"
+    assert html =~ ~s(data-testid="search-empty-hero")
+    assert html =~ "Run a search to see results"
+    assert html =~ ~s(form="ops-search-playground-form")
+    refute html =~ "Index details"
     refute html =~ ~s(<h2 class="text-heading font-semibold">Results</h2>)
   end
 
@@ -139,7 +144,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     end)
 
     {:ok, view, html} = live(conn, ~p"/ops/search")
-    assert html =~ "Run a search first"
+    refute html =~ "Save as playbook"
 
     view
     |> element("#ops-search-playground-form")
@@ -150,7 +155,8 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     })
 
     html = render(view)
-    assert html =~ "Validated playbook preview"
+    assert html =~ "Save as playbook"
+    assert html =~ "Playbook preview is ready"
     assert html =~ ~s(data-testid="playbook-preview-marker")
     assert html =~ ~s(data-testid="search-capture-preview-pre")
   end

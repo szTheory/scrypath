@@ -43,7 +43,17 @@ const CommandPalette = {
     this.onKeydown = e => this.handleKeydown(e)
     this.onCmdkKeydown = e => this.overlayKeydown(e, this.cmdk)
     this.onSheetKeydown = e => this.overlayKeydown(e, this.sheet)
+    this.onCommandOpenClick = e => {
+      const opener = e.target instanceof Element
+        ? e.target.closest("[data-ops-command-open]")
+        : null
+      if (!opener) return
+
+      e.preventDefault()
+      this.open()
+    }
     window.addEventListener("keydown", this.onKeydown)
+    document.addEventListener("click", this.onCommandOpenClick)
     this.cmdk.addEventListener("keydown", this.onCmdkKeydown)
     this.sheet.addEventListener("keydown", this.onSheetKeydown)
 
@@ -56,6 +66,7 @@ const CommandPalette = {
   },
   destroyed() {
     window.removeEventListener("keydown", this.onKeydown)
+    document.removeEventListener("click", this.onCommandOpenClick)
     this.cmdk.removeEventListener("keydown", this.onCmdkKeydown)
     this.sheet.removeEventListener("keydown", this.onSheetKeydown)
   },
@@ -236,10 +247,131 @@ const CommandPalette = {
   },
 }
 
+const OpsNavDrawer = {
+  mounted() {
+    this.drawer = this.el.querySelector("[data-ops-nav-drawer]")
+    this.panel = this.el.querySelector("[data-ops-nav-panel]")
+    this.openers = Array.from(this.el.querySelectorAll("[data-ops-nav-open]"))
+    this.closers = Array.from(this.el.querySelectorAll("[data-ops-nav-close]"))
+    this.links = Array.from(this.el.querySelectorAll("[data-ops-nav-link]"))
+    this.previousFocus = null
+    this.closeTimer = null
+    this.desktopQuery = window.matchMedia("(min-width: 1280px)")
+
+    this.onKeydown = e => this.handleKeydown(e)
+    this.onDesktopChange = () => {
+      if (this.desktopQuery.matches) this.close({restoreFocus: false})
+    }
+
+    this.openers.forEach(el => el.addEventListener("click", () => this.open()))
+    this.closers.forEach(el => el.addEventListener("click", () => this.close()))
+    this.links.forEach(el => el.addEventListener("click", () => this.close({restoreFocus: false})))
+    window.addEventListener("keydown", this.onKeydown)
+    this.desktopQuery.addEventListener("change", this.onDesktopChange)
+  },
+  destroyed() {
+    window.removeEventListener("keydown", this.onKeydown)
+    this.desktopQuery.removeEventListener("change", this.onDesktopChange)
+    document.body.classList.remove("ops-nav-drawer-open")
+  },
+  isOpen() {
+    return this.drawer && !this.drawer.hasAttribute("hidden")
+  },
+  open() {
+    if (!this.drawer || this.isOpen()) return
+
+    this.previousFocus = document.activeElement
+    if (this.closeTimer) {
+      window.clearTimeout(this.closeTimer)
+      this.closeTimer = null
+    }
+
+    this.drawer.removeAttribute("hidden")
+    document.body.classList.add("ops-nav-drawer-open")
+    this.openers.forEach(el => el.setAttribute("aria-expanded", "true"))
+    window.requestAnimationFrame(() => {
+      this.drawer.classList.add("is-open")
+      this.focusPanel()
+    })
+  },
+  close({restoreFocus = true} = {}) {
+    if (!this.drawer || !this.isOpen()) return
+
+    this.drawer.classList.remove("is-open")
+    document.body.classList.remove("ops-nav-drawer-open")
+    this.openers.forEach(el => el.setAttribute("aria-expanded", "false"))
+
+    if (this.closeTimer) window.clearTimeout(this.closeTimer)
+    this.closeTimer = window.setTimeout(() => {
+      this.drawer.setAttribute("hidden", "")
+      this.closeTimer = null
+      if (restoreFocus) this.restoreFocus()
+    }, 180)
+  },
+  handleKeydown(e) {
+    if (!this.isOpen()) return
+
+    if (e.key === "Escape") {
+      e.preventDefault()
+      this.close()
+    } else if (e.key === "Tab") {
+      this.trapFocus(e)
+    }
+  },
+  focusableElements() {
+    const selector = [
+      "a[href]",
+      "button:not([disabled])",
+      "input:not([disabled])",
+      "select:not([disabled])",
+      "textarea:not([disabled])",
+      "[tabindex]:not([tabindex='-1'])"
+    ].join(",")
+
+    return Array.from(this.panel.querySelectorAll(selector)).filter(el =>
+      !el.closest("[hidden]") && el.getAttribute("aria-hidden") !== "true")
+  },
+  focusPanel() {
+    const focusables = this.focusableElements()
+    const active = this.panel.querySelector(".ops-nav-item-active")
+    const target = active || focusables[0] || this.panel
+    target.focus({preventScroll: true})
+  },
+  trapFocus(e) {
+    const focusables = this.focusableElements()
+    if (!focusables.length) {
+      e.preventDefault()
+      this.panel.focus({preventScroll: true})
+      return
+    }
+
+    const first = focusables[0]
+    const last = focusables[focusables.length - 1]
+
+    if (!this.panel.contains(document.activeElement)) {
+      e.preventDefault()
+      first.focus({preventScroll: true})
+    } else if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault()
+      last.focus({preventScroll: true})
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault()
+      first.focus({preventScroll: true})
+    }
+  },
+  restoreFocus() {
+    const target = this.previousFocus
+    this.previousFocus = null
+    if (target && target.isConnected && typeof target.focus === "function") {
+      target.focus({preventScroll: true})
+    }
+  },
+}
+
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks, CommandPalette},
+  hooks: {...colocatedHooks, CommandPalette, OpsNavDrawer},
 })
 
 // Show progress bar on live navigation and form submits
@@ -255,6 +387,17 @@ window.addEventListener("phx:copy_run_diagnostics", async ({detail}) => {
     await navigator.clipboard.writeText(text)
   } catch (_error) {
     // Flash feedback still confirms the action when clipboard permissions are unavailable.
+  }
+})
+window.addEventListener("phx:copy_to_clipboard", async ({detail}) => {
+  const text = detail?.text
+
+  if (!text || !navigator.clipboard?.writeText) return
+
+  try {
+    await navigator.clipboard.writeText(text)
+  } catch (_error) {
+    // Clipboard permissions vary by browser; the exact value remains visible in title text.
   }
 })
 

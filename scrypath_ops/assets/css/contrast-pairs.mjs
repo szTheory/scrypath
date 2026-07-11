@@ -54,6 +54,16 @@ export const MUTED_PAIRS = [
     role: "text",
     note: "sidebar footer text"
   },
+  // app.css line 306 — command hint pill text
+  {
+    selector: ".ops-command-hint",
+    css_var: "ops-text-muted",
+    alpha: 0.64,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "command hint pill text"
+  },
   // app.css line 256 — shell utility override
   {
     selector: ".ops-shell .text-base-content\\/60",
@@ -189,6 +199,15 @@ export const MUTED_PAIRS = [
     role: "text",
     note: "hint copy"
   },
+  // app.css line 815 — fieldset hint copy
+  {
+    selector: ".ops-fieldset__hint",
+    alpha: 0.70,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "fieldset hint copy"
+  },
   // app.css line 898 — card body text (intent-card bg is base-100 94% ≈ opaque base-100)
   {
     selector: ".ops-intent-card__summary",
@@ -206,6 +225,15 @@ export const MUTED_PAIRS = [
     bg_token: "base-100",
     role: "text",
     note: "chip value text (default/no-tone state)"
+  },
+  // app.css line 493 — empty-state body text
+  {
+    selector: ".ops-empty-hero__body",
+    alpha: 0.74,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "empty-state body text"
   },
   // app.css line 431 — neutral badge text (badge bg is base-200 74% ≈ base-200, not base-100)
   {

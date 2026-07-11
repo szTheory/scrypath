@@ -4,6 +4,8 @@ defmodule ScrypathOpsWeb.OpsUi do
   """
   use Phoenix.Component
 
+  alias Phoenix.LiveView.JS
+
   use Gettext, backend: ScrypathOpsWeb.Gettext
 
   @doc """
@@ -31,6 +33,32 @@ defmodule ScrypathOpsWeb.OpsUi do
       </h1>
       <p :if={@subtitle} class="max-w-3xl text-ops-body text-base-content/70">{@subtitle}</p>
     </div>
+    """
+  end
+
+  @doc """
+  Click/touch affordance for opening the operator command palette.
+
+  The CommandPalette hook owns the behavior via `data-ops-command-open`; this component
+  keeps visible shortcut hints from reading like inert text.
+  """
+  attr(:prefix, :string, default: "Press")
+  attr(:suffix, :string, default: "to jump to any surface.")
+  attr(:class, :any, default: nil)
+
+  def ops_command_hint(assigns) do
+    ~H"""
+    <button
+      type="button"
+      class={["ops-command-hint", @class]}
+      data-ops-command-open
+      aria-label="Open command palette"
+      aria-keyshortcuts="Meta+K Control+K"
+    >
+      <span>{@prefix}</span>
+      <kbd class="ops-kbd">⌘K</kbd>
+      <span :if={@suffix != ""}>{@suffix}</span>
+    </button>
     """
   end
 
@@ -154,7 +182,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:rest, :global,
     include:
-      ~w(phx-click phx-value-id phx-value-mode phx-value-name phx-value-schema phx-disable-with disabled data-testid data-ops-refresh aria-label)
+      ~w(phx-click phx-value-id phx-value-mode phx-value-name phx-value-schema phx-disable-with disabled form data-testid data-ops-refresh aria-label aria-controls)
   )
 
   slot(:inner_block, required: true)
@@ -164,6 +192,40 @@ defmodule ScrypathOpsWeb.OpsUi do
     <button type={@type} class={[button_classes(@variant, @size), @class]} {@rest}>
       {render_slot(@inner_block)}
     </button>
+    """
+  end
+
+  @doc "Contextual refresh action for operator status surfaces."
+  attr(:label, :string, default: "Refresh")
+  attr(:aria_label, :string, required: true)
+
+  attr(:variant, :atom,
+    default: :ghost,
+    values: [:default, :primary, :secondary, :danger, :ghost]
+  )
+
+  attr(:size, :atom, default: :sm, values: [:xs, :sm, :md])
+  attr(:class, :any, default: nil)
+
+  attr(:rest, :global,
+    include:
+      ~w(phx-click phx-disable-with disabled data-testid title phx-value-id phx-value-mode phx-value-name phx-value-schema)
+  )
+
+  def ops_refresh_button(assigns) do
+    ~H"""
+    <.ops_button
+      variant={@variant}
+      size={@size}
+      class={["gap-1.5", @class]}
+      data-ops-refresh
+      aria-label={@aria_label}
+      phx-disable-with="Refreshing..."
+      {@rest}
+    >
+      <ScrypathOpsWeb.CoreComponents.icon name="hero-arrow-path" class="size-3.5" />
+      <span>{@label}</span>
+    </.ops_button>
     """
   end
 
@@ -363,8 +425,8 @@ defmodule ScrypathOpsWeb.OpsUi do
       ]}
       {@rest}
     >
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <div class="min-w-0 space-y-1">
+      <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div class="min-w-0 flex-1 space-y-1">
           <p
             :if={@label}
             class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/55"
@@ -379,7 +441,10 @@ defmodule ScrypathOpsWeb.OpsUi do
             {render_slot(@inner_block)}
           </div>
         </div>
-        <div :if={@actions != []} class="flex flex-wrap items-center justify-end gap-2">
+        <div
+          :if={@actions != []}
+          class="flex shrink-0 flex-wrap items-center justify-start gap-2 md:justify-end"
+        >
           {render_slot(@actions)}
         </div>
       </div>
@@ -391,7 +456,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   Contextual breadcrumb trail for ScrypathOps surfaces.
 
   A short "where am I" trail — `Control Room › <group> › <page>` — not a map of the
-  whole product (that's the header nav's job). Siblings are deliberately omitted; the
+  whole product (that's the primary shell nav's job). Siblings are deliberately omitted; the
   group label (Triage / Explore) is context, not a link. Renders nothing on the
   Control Room landing (a breadcrumb that says "you are at the top" is noise).
   """
@@ -505,12 +570,16 @@ defmodule ScrypathOpsWeb.OpsUi do
       ]}
       {@rest}
     >
-      <span :if={@recommended} class="ops-intent-card__flag">Start here</span>
-      <span class="ops-intent-card__icon" aria-hidden="true">
-        <ScrypathOpsWeb.CoreComponents.icon name={@icon} class="size-6" />
-      </span>
-      <span :if={@badge != []} class="flex flex-wrap items-center gap-2">
-        {render_slot(@badge)}
+      <span class="ops-intent-card__topline">
+        <span class="ops-intent-card__icon" aria-hidden="true">
+          <ScrypathOpsWeb.CoreComponents.icon name={@icon} class="size-5" />
+        </span>
+        <span class="ops-intent-card__markers">
+          <span :if={@recommended} class="ops-intent-card__flag">Start here</span>
+          <span :if={@badge != []} class="ops-intent-card__badges">
+            {render_slot(@badge)}
+          </span>
+        </span>
       </span>
       <span class="ops-intent-card__title">{@title}</span>
       <span class="ops-intent-card__summary">{@summary}</span>
@@ -522,6 +591,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Consistent empty/config state."
   attr(:title, :string, required: true)
   attr(:class, :any, default: nil)
+  slot(:actions)
   slot(:inner_block, required: true)
 
   def ops_empty_state(assigns) do
@@ -529,6 +599,61 @@ defmodule ScrypathOpsWeb.OpsUi do
     <div class={["ops-muted-panel p-ops-5 text-ops-body", @class]}>
       <h2 class="text-ops-h3 font-semibold leading-ops-tight text-base-content">{@title}</h2>
       <div class="mt-ops-2 text-base-content/75">{render_slot(@inner_block)}</div>
+      <div :if={@actions != []} class="mt-ops-4 flex flex-wrap gap-2">
+        {render_slot(@actions)}
+      </div>
+    </div>
+    """
+  end
+
+  @doc "Hero-style empty state for high-attention blank sections."
+  attr(:id, :string, default: nil)
+  attr(:title, :string, required: true)
+  attr(:icon, :string, required: true)
+  attr(:heading_level, :integer, default: 3, values: [2, 3])
+  attr(:class, :any, default: nil)
+  attr(:rest, :global)
+  slot(:actions)
+  slot(:inner_block, required: true)
+
+  def ops_empty_hero(assigns) do
+    assigns =
+      assign_new(assigns, :heading_id, fn ->
+        if assigns.id,
+          do: "#{assigns.id}-heading",
+          else: "ops-empty-hero-heading-#{System.unique_integer([:positive])}"
+      end)
+
+    ~H"""
+    <div
+      id={@id}
+      class={["ops-empty-hero", @class]}
+      aria-labelledby={@heading_id}
+      {@rest}
+    >
+      <span class="ops-empty-hero__mark" aria-hidden="true">
+        <ScrypathOpsWeb.CoreComponents.icon name={@icon} class="size-6" />
+      </span>
+      <div class="ops-empty-hero__copy">
+        <h2
+          :if={@heading_level == 2}
+          id={@heading_id}
+          class="ops-empty-hero__title text-ops-h2 font-semibold leading-ops-tight text-base-content"
+        >
+          {@title}
+        </h2>
+        <h3
+          :if={@heading_level == 3}
+          id={@heading_id}
+          class="ops-empty-hero__title text-ops-h3 font-semibold leading-ops-tight text-base-content"
+        >
+          {@title}
+        </h3>
+        <div class="ops-empty-hero__body">{render_slot(@inner_block)}</div>
+      </div>
+      <div :if={@actions != []} class="ops-empty-hero__actions">
+        {render_slot(@actions)}
+      </div>
     </div>
     """
   end
@@ -589,6 +714,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Canned configuration empty state for common OPSUI setup gaps."
   attr(:kind, :atom, required: true, values: [:no_schemas, :missing_backend])
   attr(:class, :any, default: nil)
+  slot(:actions)
 
   def ops_config_empty(assigns) do
     ~H"""
@@ -602,6 +728,9 @@ defmodule ScrypathOpsWeb.OpsUi do
       in
       <.ops_inline_code>:scrypath_ops</.ops_inline_code>
       or <.ops_inline_code>SCRYPATH_OPS_SCHEMAS</.ops_inline_code>. Then refresh this screen.
+      <:actions :for={action <- @actions}>
+        {render_slot(action)}
+      </:actions>
     </.ops_empty_state>
     <.ops_empty_state
       :if={@kind == :missing_backend}
@@ -612,6 +741,9 @@ defmodule ScrypathOpsWeb.OpsUi do
       <.ops_inline_code>:backend</.ops_inline_code>
       and the Scrypath runtime options under <.ops_inline_code>:scrypath_ops</.ops_inline_code>.
       This screen cannot query operator state until the runtime is wired.
+      <:actions :for={action <- @actions}>
+        {render_slot(action)}
+      </:actions>
     </.ops_empty_state>
     """
   end
@@ -624,12 +756,12 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_fieldset(assigns) do
     ~H"""
-    <fieldset class={["space-y-3 border-0 p-0 m-0 min-w-0", @class]}>
-      <div class="space-y-1">
-        <legend class="text-ops-body font-semibold text-base-content">{@legend}</legend>
-        <p :if={@hint} class="max-w-3xl text-ops-sm leading-5 text-base-content/70">{@hint}</p>
+    <fieldset class={["ops-fieldset", @class]}>
+      <legend class="ops-fieldset__legend">{@legend}</legend>
+      <p :if={@hint} class="ops-fieldset__hint">{@hint}</p>
+      <div class="ops-fieldset__body">
+        {render_slot(@inner_block)}
       </div>
-      {render_slot(@inner_block)}
     </fieldset>
     """
   end
@@ -758,23 +890,56 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_schema_select(assigns) do
     assigns =
-      assign(
-        assigns,
+      assigns
+      |> assign(:schema_items, schema_picker_items(assigns.schemas, assigns.selected))
+      |> assign(:compact_schema_picker?, length(assigns.schemas) <= 4)
+      |> assign(
         :options,
         Enum.map(assigns.schemas, &{module_flat_name(&1), module_flat_name(&1)})
       )
 
     ~H"""
-    <form :if={@schemas != []} class={["max-w-xl", @class]} {@rest}>
-      <.ops_field id={@id} label={@label} hint={@hint}>
-        <.ops_select
-          id={@id}
-          name="schema"
-          options={@options}
-          selected={module_flat_name(@selected)}
-          class="font-mono text-ops-sm"
-        />
-      </.ops_field>
+    <form :if={@schemas != []} class={["ops-schema-picker", @class]} {@rest}>
+      <fieldset class="space-y-ops-field">
+        <legend class="block text-ops-body font-semibold text-base-content/75">{@label}</legend>
+        <p :if={@hint} id={"#{@id}-hint"} class="max-w-3xl text-ops-sm leading-5 text-base-content/65">
+          {@hint}
+        </p>
+
+        <div :if={@compact_schema_picker?} class="ops-schema-picker__cards">
+          <label
+            :for={item <- @schema_items}
+            for={"#{@id}-#{item.dom_id}"}
+            class={[
+              "ops-schema-option",
+              item.selected && "ops-schema-option--selected"
+            ]}
+          >
+            <input
+              id={"#{@id}-#{item.dom_id}"}
+              type="radio"
+              name="schema"
+              value={item.name}
+              checked={item.selected}
+              class="sr-only"
+              aria-describedby={@hint && "#{@id}-hint"}
+            />
+            <span class="ops-schema-option__main">{item.short_name}</span>
+            <span class="ops-schema-option__meta">{item.namespace}</span>
+          </label>
+        </div>
+
+        <div :if={!@compact_schema_picker?} class="max-w-xl">
+          <.ops_select
+            id={@id}
+            name="schema"
+            options={@options}
+            selected={module_flat_name(@selected)}
+            class="font-mono text-ops-sm"
+            aria-describedby={@hint && "#{@id}-hint"}
+          />
+        </div>
+      </fieldset>
     </form>
     """
   end
@@ -837,7 +1002,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   end
 
   @doc "Consistent action grouping for table rows and toolbar action clusters."
-  attr(:tone, :atom, default: :default, values: [:default, :advanced, :danger])
+  attr(:tone, :atom, default: :default, values: [:default, :secondary, :advanced, :danger])
   attr(:class, :any, default: nil)
   slot(:inner_block, required: true)
 
@@ -845,6 +1010,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <div class={[
       "flex flex-wrap items-center gap-ops-control-gap",
+      @tone == :secondary && "rounded-ops-control border border-base-300 bg-base-100/70 p-ops-2",
       @tone == :advanced && ["rounded-ops-control border p-ops-2", tone_class(:warning)],
       @tone == :danger && ["rounded-ops-control border p-ops-2", tone_class(:error)],
       @class
@@ -909,6 +1075,51 @@ defmodule ScrypathOpsWeb.OpsUi do
         {render_slot(@actions)}
       </div>
     </article>
+    """
+  end
+
+  @doc "Compact timestamp that shows a human scan value, exact ISO on hover, and copy affordance."
+  attr(:dt, :any, required: true)
+  attr(:label, :string, default: nil)
+  attr(:copy, :boolean, default: true)
+  attr(:class, :any, default: nil)
+
+  def ops_time(assigns) do
+    assigns =
+      assigns
+      |> assign(:exact, exact_dt(assigns.dt))
+      |> assign(:human, human_dt(assigns.dt))
+      |> assign(
+        :aria_label,
+        time_aria_label(assigns.label, human_dt(assigns.dt), exact_dt(assigns.dt))
+      )
+
+    ~H"""
+    <span class={["ops-time", @class]}>
+      <span :if={@label} class="ops-time__label">{@label}</span>
+      <%= if @exact do %>
+        <time
+          class="ops-time__value"
+          datetime={@exact}
+          title={@exact}
+          aria-label={@aria_label}
+        >
+          {@human}
+        </time>
+        <button
+          :if={@copy}
+          type="button"
+          class="ops-time__copy"
+          phx-click={JS.dispatch("phx:copy_to_clipboard", detail: %{text: @exact})}
+          aria-label={"Copy exact timestamp #{@exact}"}
+          title={"Copy exact timestamp #{@exact}"}
+        >
+          <ScrypathOpsWeb.CoreComponents.icon name="hero-clipboard-document" class="size-3.5" />
+        </button>
+      <% else %>
+        <span class="ops-time__value">—</span>
+      <% end %>
+    </span>
     """
   end
 
@@ -1084,7 +1295,7 @@ defmodule ScrypathOpsWeb.OpsUi do
         %{path: assigns.mount_path, label: "Control Room", hint: "Home · trust verdict"}
         | Enum.map(
             ScrypathOpsWeb.Nav.primary(assigns.mount_path),
-            &%{path: &1.path, label: &1.label, hint: &1.title}
+            &%{path: &1.path, label: &1.label, hint: "#{nav_group_label(&1.group)} · #{&1.title}"}
           )
       ]
       |> Enum.with_index()
@@ -1244,6 +1455,82 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp module_flat_name(mod) when is_atom(mod) do
     mod |> Atom.to_string() |> String.replace_prefix("Elixir.", "")
   end
+
+  defp schema_picker_items(schemas, selected) do
+    selected_name = module_flat_name(selected)
+
+    Enum.map(schemas, fn schema ->
+      name = module_flat_name(schema)
+      {namespace, short_name} = schema_name_parts(name)
+
+      %{
+        name: name,
+        namespace: namespace,
+        short_name: short_name,
+        dom_id: schema_dom_id(name),
+        selected: name == selected_name
+      }
+    end)
+  end
+
+  defp schema_name_parts(nil), do: {"", ""}
+
+  defp schema_name_parts(name) do
+    parts = String.split(name, ".")
+
+    case parts do
+      [] -> {"", ""}
+      [only] -> {"", only}
+      _ -> {parts |> Enum.drop(-1) |> Enum.join("."), List.last(parts)}
+    end
+  end
+
+  defp schema_dom_id(name) do
+    name
+    |> to_string()
+    |> String.replace(~r/[^A-Za-z0-9_-]+/, "-")
+    |> String.trim("-")
+  end
+
+  defp exact_dt(nil), do: nil
+
+  defp exact_dt(%DateTime{} = dt) do
+    dt
+    |> DateTime.truncate(:second)
+    |> DateTime.to_iso8601()
+  end
+
+  defp human_dt(nil), do: "—"
+
+  defp human_dt(%DateTime{} = dt) do
+    diff = DateTime.diff(DateTime.utc_now(), dt, :second)
+
+    cond do
+      diff >= 0 and diff < 60 ->
+        "just now"
+
+      diff >= 0 and diff < 3_600 ->
+        minutes = div(diff, 60)
+        "#{minutes} #{pluralize(minutes, "min")} ago"
+
+      diff >= 0 and diff < 86_400 ->
+        hours = div(diff, 3_600)
+        "#{hours} #{pluralize(hours, "hr")} ago"
+
+      true ->
+        Calendar.strftime(dt, "%b %d, %Y at %H:%M UTC")
+    end
+  end
+
+  defp pluralize(1, unit), do: unit
+  defp pluralize(_count, unit), do: "#{unit}s"
+
+  defp time_aria_label(nil, human, exact), do: "#{human}; exact timestamp #{exact}"
+  defp time_aria_label(label, human, exact), do: "#{label} #{human}; exact timestamp #{exact}"
+
+  defp nav_group_label(:recover), do: "Recover"
+  defp nav_group_label(:explore), do: "Explore"
+  defp nav_group_label(group), do: group |> to_string() |> String.capitalize()
 
   # Skeleton bars taper: the last line is short so the pulse reads as text, not a block.
   defp loading_bar_width(n, total) when n == total and total > 1, do: "width: 60%"

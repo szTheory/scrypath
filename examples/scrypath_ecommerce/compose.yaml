@@ -1,7 +1,7 @@
 # Project name namespaces the default network, volumes, and container names so this
 # stack never collides with sibling library demos. Override with `-p` / COMPOSE_PROJECT_NAME
 # to run a second copy. Host ports come from .env (per-demo "lanes") — see .env.example.
-name: scrypath_ecommerce
+name: ${COMPOSE_PROJECT_NAME:-scrypath_ecommerce}
 
 services:
   postgres:
@@ -32,6 +32,7 @@ services:
       PGPORT: "5432"
       SCRYPATH_MEILISEARCH_URL: http://meilisearch:7700
       PLAYWRIGHT_BASE_URL: http://127.0.0.1:${WEB_PORT:-4002}
+      DEMO_BASE_URL: http://127.0.0.1:${WEB_PORT:-4002}
     # Loopback-bound + parameterized: defaults to 4002 (what CI/Playwright expect) but
     # bump WEB_PORT in .env to run alongside other demos. Postgres/Meilisearch stay
     # unpublished here — `web` reaches them over the compose network — which removes the
