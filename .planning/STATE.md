@@ -4,10 +4,10 @@ milestone: none
 milestone_name: Release Train Idle
 current_phase: null
 status: idle
-stopped_at: v1.35 direct-completion bookkeeping reconciled
-last_updated: "2026-07-11T00:55:21Z"
-last_activity: 2026-07-11
-last_activity_desc: v1.35 milestone archived from direct evidence; release train idle
+stopped_at: "Quick task 260816-thg complete: Ops UI operator-job microcopy"
+last_updated: "2026-08-17T01:20:19Z"
+last_activity: 2026-08-16
+last_activity_desc: "Completed quick task 260816-thg: Rewrite Ops UI microcopy around operator JTBD"
 progress:
   total_phases: 0
   completed_phases: 0
@@ -29,7 +29,7 @@ Phase: None
 Plan: None
 Status: v1.35 archived from direct evidence; v1.34 archived; release train idle
 Resume: None
-Last activity: 2026-07-11 - v1.35 roadmap, requirements, audit, milestone registry, and root planning posture reconciled
+Last activity: 2026-08-16 - Completed quick task 260816-thg: Rewrite Ops UI microcopy around operator JTBD
 
 ## Completed Milestones
 
@@ -96,10 +96,16 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 
 - None.
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260816-thg | Rewrite Ops UI microcopy around operator JTBD | 2026-08-16 | 9c94458 | [260816-thg-rewrite-ops-ui-microcopy-around-operator](./quick/260816-thg-rewrite-ops-ui-microcopy-around-operator/) |
+
 ### Todos
 
 - Keep future runtime breadth closed unless concrete production bug evidence, reviewed outside-adopter evidence, or an explicit strategic decision justifies it.
-- Pending: Rewrite Ops UI microcopy around operator JTBD (`.planning/todos/pending/2026-07-01-rewrite-ops-ui-microcopy-around-operator-jtbd.md`).
+- Completed follow-up: Rewrite Ops UI microcopy around operator JTBD (`.planning/todos/completed/2026-07-01-rewrite-ops-ui-microcopy-around-operator-jtbd.md`).
 - Completed follow-up: Restructure Search playground workflow (`.planning/todos/completed/2026-07-01-restructure-search-playground-workflow.md`).
 - Completed follow-up: Normalize Playbooks row action styling (`.planning/todos/completed/2026-07-01-normalize-playbooks-row-action-styling.md`).
 
@@ -109,7 +115,7 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 
 | Category | Item | Status |
 |----------|------|--------|
-| todo | 2026-07-01-rewrite-ops-ui-microcopy-around-operator-jtbd.md | pending |
+| todo | 2026-07-01-rewrite-ops-ui-microcopy-around-operator-jtbd.md | completed by quick task 260816-thg |
 | uat-audit-noise | Phase 134 `134-UAT.md` | passed; 0 pending scenarios |
 | uat-audit-noise | Phase 136 `136-UAT.md` | passed; 0 pending scenarios |
 
@@ -179,9 +185,9 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 ## Session
 
 **Resume checked:** 2026-07-10T23:59:22Z
-**Stopped at:** Progress automation complete. The stale Phase 134 checkpoint is removed; `.planning/phases/134-under-iterated-surface-polish-dual-theme-s/134-UAT.md` records Tests 1-6 passed; Phase 135 verification remains passed; Search workflow and Playbooks row-action TODOs are closed with evidence.
+**Stopped at:** Quick task 260816-thg complete. Operator-facing copy across Control Room, Search, Sync/Drift, and Playbooks now leads with the operator job; the Ops UI gate passed.
 **Resume file:** None
 
-**Context:** Formal milestone state remains complete. One broad pending follow-up remains: rewrite Ops UI microcopy around operator JTBD. Targeted checks run during progress automation: `mix verify.opsui` passed (152 tests, 2 doctests), `make contrast` passed with AA failures 0, and `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4002 npm run test:e2e:admin-depth -- --reporter=line` passed 33/33 after rebuilding `scrypath_ops` static assets and restarting the demo web container.
+**Context:** Formal milestone state remains complete and the release train remains idle. Quick task 260816-thg completed the operator-job microcopy follow-up without changing routes, controls, safety semantics, or runtime behavior. `mix verify.opsui` passed (152 tests, 2 doctests).
 
 **Pending follow-up checkpoint consumed:** `.planning/phases/134-under-iterated-surface-polish-dual-theme-s/.continue-here.md` removed on 2026-07-10 because it pointed to already-passed UAT Test 4.
