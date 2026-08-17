@@ -55,6 +55,10 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
 
     assert html =~ "Control Room"
     assert html =~ "What do you need to do?"
+
+    assert html =~
+             "Recover search, verify a change before promotion, or inspect and save a useful search check."
+
     refute html =~ "Refresh posture"
     assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search trust status']")
     # Overview, not the deep per-schema table (that lives on /ops/posture).
@@ -67,6 +71,9 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     assert has_element?(lv, "[data-testid='intent-incident'][href$='/ops/posture']")
     assert has_element?(lv, "[data-testid='intent-change'][href$='/ops/sync-drift']")
     assert has_element?(lv, "[data-testid='intent-explore'][href$='/ops/search']")
+    assert html =~ "Recover search when something looks wrong."
+    assert html =~ "Verify a change before promotion."
+    assert html =~ "Inspect a search result, then save a useful check."
 
     html
     |> card_fragment("intent-incident")
@@ -78,10 +85,10 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
 
     assert html =~ "No schemas configured"
     assert has_element?(lv, ".ops-muted-panel [data-ops-refresh]")
-    assert html =~ "If something looks broken"
-    refute html =~ "Something looks broken"
+    assert html =~ "Recover search"
+    refute html =~ "If something looks broken"
     refute html =~ "Federated"
-    assert html =~ "Explore &amp; capture"
+    assert html =~ "Inspect and save a search check"
   end
 
   test "degraded fleet marks the recommended recovery card with one earned copper badge", %{
