@@ -4,10 +4,10 @@ milestone: none
 milestone_name: Release Train Idle
 current_phase: null
 status: idle
-stopped_at: "Quick task 260816-thg complete: Ops UI operator-job microcopy"
-last_updated: "2026-08-17T01:20:19Z"
+stopped_at: "Quick task 260816-tzr complete: dependency advisory triage"
+last_updated: "2026-08-17T01:49:19Z"
 last_activity: 2026-08-16
-last_activity_desc: "Completed quick task 260816-thg: Rewrite Ops UI microcopy around operator JTBD"
+last_activity_desc: "Completed quick task 260816-tzr: Triage dependency security advisories reported by mix deps.get"
 progress:
   total_phases: 0
   completed_phases: 0
@@ -29,7 +29,7 @@ Phase: None
 Plan: None
 Status: v1.35 archived from direct evidence; v1.34 archived; release train idle
 Resume: None
-Last activity: 2026-08-16 - Completed quick task 260816-thg: Rewrite Ops UI microcopy around operator JTBD
+Last activity: 2026-08-16 - Completed quick task 260816-tzr: Triage dependency security advisories reported by mix deps.get
 
 ## Completed Milestones
 
@@ -98,12 +98,14 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 
 ### Quick Tasks Completed
 
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 260816-thg | Rewrite Ops UI microcopy around operator JTBD | 2026-08-16 | 9c94458 | [260816-thg-rewrite-ops-ui-microcopy-around-operator](./quick/260816-thg-rewrite-ops-ui-microcopy-around-operator/) |
+| # | Description | Date | Commit | Status | Directory |
+|---|-------------|------|--------|--------|-----------|
+| 260816-thg | Rewrite Ops UI microcopy around operator JTBD | 2026-08-16 | 9c94458 |  | [260816-thg-rewrite-ops-ui-microcopy-around-operator](./quick/260816-thg-rewrite-ops-ui-microcopy-around-operator/) |
+| 260816-tzr | Triage dependency security advisories reported by mix deps.get | 2026-08-16 | docs-only | Verified | [260816-tzr-triage-dependency-security-advisories-re](./quick/260816-tzr-triage-dependency-security-advisories-re/) |
 
 ### Todos
 
+- Pending security maintenance: remediate the reproduced dependency advisories in four isolated batches; triage is complete, remediation remains pending (`.planning/todos/pending/2026-08-16-remediate-dependency-security-advisories.md`).
 - Keep future runtime breadth closed unless concrete production bug evidence, reviewed outside-adopter evidence, or an explicit strategic decision justifies it.
 - Completed follow-up: Rewrite Ops UI microcopy around operator JTBD (`.planning/todos/completed/2026-07-01-rewrite-ops-ui-microcopy-around-operator-jtbd.md`).
 - Completed follow-up: Restructure Search playground workflow (`.planning/todos/completed/2026-07-01-restructure-search-playground-workflow.md`).
@@ -185,9 +187,9 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 ## Session
 
 **Resume checked:** 2026-07-10T23:59:22Z
-**Stopped at:** Quick task 260816-thg complete. Operator-facing copy across Control Room, Search, Sync/Drift, and Playbooks now leads with the operator job; the Ops UI gate passed.
+**Stopped at:** Quick task 260816-tzr complete. Dependency advisories are inventoried and verified; remediation remains pending in four isolated batches.
 **Resume file:** None
 
-**Context:** Formal milestone state remains complete and the release train remains idle. Quick task 260816-thg completed the operator-job microcopy follow-up without changing routes, controls, safety semantics, or runtime behavior. `mix verify.opsui` passed (152 tests, 2 doctests).
+**Context:** Formal milestone state remains complete and the release train remains idle. Quick task 260816-tzr recorded the reproduced dependency advisories, fixed minima, exposure uncertainty, and verification-gated remediation plan without changing manifests, lockfiles, ROADMAP, or source files.
 
 **Pending follow-up checkpoint consumed:** `.planning/phases/134-under-iterated-surface-polish-dual-theme-s/.continue-here.md` removed on 2026-07-10 because it pointed to already-passed UAT Test 4.
