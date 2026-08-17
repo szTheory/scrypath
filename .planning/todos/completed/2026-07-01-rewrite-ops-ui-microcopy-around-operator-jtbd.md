@@ -1,5 +1,6 @@
 ---
 created: 2026-07-01T23:04:16Z
+completed: 2026-08-17T01:20:19Z
 title: Rewrite Ops UI microcopy around operator JTBD
 area: ui
 files:
@@ -16,3 +17,8 @@ Operator-facing copy is drifting into backend/library jargon instead of meeting 
 ## Solution
 
 Audit the primary scan-path copy across Control Room, Search, Sync/Drift, and Playbooks. Prefer calm, task-oriented operator language. Keep precise terms like schema, federation, and bounded only where they clarify a concrete operational constraint, not as default marketing/helper copy.
+
+## Completion Evidence
+
+- Control Room, Search, Sync/Drift, and Playbooks now lead with the operator's job and next action while retaining precise safety, cap, drift, and gated-promotion disclosures.
+- Focused LiveView wording contracts passed (37 tests), and `mix verify.opsui` passed (152 tests, 2 doctests).
