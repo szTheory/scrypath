@@ -874,7 +874,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
           <div class="space-y-1.5">
             <.ops_page_header
               title={@page_title}
-              subtitle="Review saved search checks before you run them again."
+              subtitle="Use saved, repeatable search checks: preview, run, import, or save the next one."
             />
             <.ops_workspace_mode_indicator
               mode={if @examples_mode?, do: :examples, else: :workspace}
@@ -890,7 +890,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
           kind={:warning}
           title="Non-production playbook workspace"
         >
-          Playbooks rerun saved Search checks. Do not paste production secrets or PII; keep page size and selected indexes within configured caps.
+          Playbooks repeat saved Search checks. Do not paste production secrets or PII; keep page size and selected indexes within configured caps.
         </.ops_notice>
 
         <.ops_panel class="space-y-6">
@@ -917,7 +917,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             icon="hero-book-open"
             data-testid="playbooks-empty-hero"
           >
-            Save a useful Search run as a playbook, or import playbook JSON below.
+            Save a useful search check, or import a playbook JSON file below.
             <:actions>
               <.ops_link_button href="#playbook-import" variant={:primary}>
                 Import JSON
@@ -1007,7 +1007,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             <.ops_heading level={2} id="playbook-import-heading">Import playbook JSON</.ops_heading>
             <.ops_upload_box
               label="Upload playbook file"
-              hint={"JSON only, max #{@max_import_bytes} bytes. Preview is required before running."}
+              hint={"JSON only, max #{@max_import_bytes} bytes. Preview it before running."}
               class="max-w-xl"
             >
               <.form for={%{}} phx-submit="import_upload" class="space-y-3">
@@ -1045,7 +1045,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             >
               Playbook preview is ready
             </p>
-            <.ops_data_card title="Playbook summary" subtitle="Review this before running.">
+            <.ops_data_card title="Playbook summary" subtitle="Check this before running.">
               <dl class="grid gap-2 text-ops-body sm:grid-cols-2">
                 <div :for={{label, value} <- playbook_summary(@draft_playbook)}>
                   <dt class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/60">

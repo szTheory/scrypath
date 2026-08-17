@@ -59,7 +59,11 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
 
   test "mount shows honesty panel", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
-    assert render(view) =~ "Non-production playbook workspace"
+    html = render(view)
+    assert html =~ "Non-production playbook workspace"
+
+    assert html =~
+             "Use saved, repeatable search checks: preview, run, import, or save the next one."
   end
 
   test "empty workspace shows the empty hero and import anchor", %{conn: conn} do

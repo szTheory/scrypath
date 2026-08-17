@@ -769,7 +769,7 @@ defmodule ScrypathOpsWeb.SearchLive do
         <.ops_toolbar class="items-end">
           <.ops_page_header
             title={@page_title}
-            subtitle="Check how search answers before you save a useful run as a playbook."
+            subtitle="Choose an index, run a query, inspect the answer, then save a repeatable check."
           />
         </.ops_toolbar>
 
@@ -832,10 +832,10 @@ defmodule ScrypathOpsWeb.SearchLive do
                   items={[{"Single index", "single"}, {"Multi index", "multi"}]}
                 />
                 <p :if={@mode == :single} class="text-ops-body text-base-content/80">
-                  Search one index.
+                  Choose one index for this search.
                 </p>
                 <p :if={@mode == :multi} class="text-ops-body text-base-content/80">
-                  Search multiple indexes together. Merged order is a cross-index view, not one global score. <a
+                  Compare multiple indexes. Merged order is a federation view, not one global score. <a
                     class="link link-hover text-primary"
                     href={@guide_href}
                   >Read semantics</a>.
@@ -952,7 +952,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                 icon="hero-magnifying-glass"
                 data-testid="search-empty-hero"
               >
-                Choose an index, enter a query, then run it. Useful results can be saved as playbooks.
+                Choose an index, enter a query, inspect the answer, then save a useful check.
                 <:actions>
                   <.ops_button
                     type="submit"

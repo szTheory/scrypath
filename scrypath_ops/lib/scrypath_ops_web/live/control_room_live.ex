@@ -50,7 +50,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
       <.ops_toolbar class="items-end gap-4">
         <.ops_page_header
           title="Control Room"
-          subtitle="Start here. See whether search is in sync, then pick the job you're doing."
+          subtitle="Recover search, verify a change before promotion, or inspect and save a useful search check."
         />
       </.ops_toolbar>
 
@@ -99,8 +99,8 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
             icon="hero-wrench-screwdriver"
             kind={intent_tone(@posture)}
             recommended={@posture.state in [:degraded, :missing_backend]}
-            title="If something looks broken"
-            summary="Recover from an incident. Check fleet posture, work the failed-sync queue, then confirm sync drift."
+            title="Recover search"
+            summary="Recover search when something looks wrong. Check posture, work failed syncs, then confirm drift."
             route_label="Start recovery"
             navigate={"#{@mount_path}/posture"}
             data-testid="intent-incident"
@@ -111,16 +111,16 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
           </.ops_intent_card>
           <.ops_intent_card
             icon="hero-arrow-up-tray"
-            title="I'm shipping a change"
-            summary="Pre-flight a deploy. Reconcile sync posture, compare index-contract drift, then promote with the gated swap."
+            title="Verify a change"
+            summary="Verify a change before promotion. Reconcile, compare contract drift, then use the gated swap."
             route_label="Pre-flight sync drift"
             navigate={"#{@mount_path}/sync-drift"}
             data-testid="intent-change"
           />
           <.ops_intent_card
             icon="hero-map"
-            title="Explore & capture"
-            summary="Probe search behavior with bounded read-only queries, then save the useful ones as reusable playbooks."
+            title="Inspect and save a search check"
+            summary="Inspect a search result, then save a useful check. Queries stay bounded and read-only."
             route_label="Explore search"
             navigate={"#{@mount_path}/search"}
             data-testid="intent-explore"

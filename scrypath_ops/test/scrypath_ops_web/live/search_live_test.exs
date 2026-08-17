@@ -50,11 +50,16 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     {:ok, _lv, html} = live(conn, ~p"/ops/search")
 
     assert html =~ "Non-production search playground"
+
+    assert html =~
+             "Choose an index, run a query, inspect the answer, then save a repeatable check."
+
     assert html =~ "Run search"
     assert html =~ "ops-form-stack"
     assert html =~ "ops-fieldset__legend"
     assert html =~ ~s(data-testid="search-empty-hero")
     assert html =~ "Run a search to see results"
+    assert html =~ "Choose an index, enter a query, inspect the answer, then save a useful check."
     assert html =~ ~s(form="ops-search-playground-form")
     refute html =~ "Index details"
     refute html =~ ~s(<h2 class="text-heading font-semibold">Results</h2>)

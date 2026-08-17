@@ -96,6 +96,11 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     {:ok, lv, html} = live(conn, ~p"/ops/sync-drift")
 
     assert html =~ "queue posture"
+
+    assert html =~
+             "Prepare a schema for promotion: reconcile its state, compare declared and live contracts, then use the gated swap."
+
+    assert html =~ "Confirm the current sync and queue state for this schema."
     assert html =~ "Index contract (declared vs live)"
     assert html =~ "sdv_ops_post_a"
     refute html =~ ":settings"
