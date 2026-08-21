@@ -1,13 +1,10 @@
 ---
 gsd_state_version: 1.0
-milestone: none
-milestone_name: Release Train Idle
-current_phase: null
-status: idle
-stopped_at: "Quick task 260816-tzr complete: dependency advisory triage"
-last_updated: "2026-08-17T01:49:19Z"
-last_activity: 2026-08-16
-last_activity_desc: "Completed quick task 260816-tzr: Triage dependency security advisories reported by mix deps.get"
+milestone: v1.36
+milestone_name: Dependency Security Remediation
+status: planning
+last_updated: "2026-08-21T21:16:17.386Z"
+last_activity: 2026-08-21
 progress:
   total_phases: 0
   completed_phases: 0
@@ -25,11 +22,10 @@ progress:
 
 ## Current Position
 
-Phase: None
-Plan: None
-Status: v1.35 archived from direct evidence; v1.34 archived; release train idle
-Resume: None
-Last activity: 2026-08-16 - Completed quick task 260816-tzr: Triage dependency security advisories reported by mix deps.get
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-08-21 — Milestone v1.36 started
 
 ## Completed Milestones
 
