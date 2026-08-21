@@ -8,15 +8,21 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Milestone: none
+## Current Milestone: v1.36 Dependency Security Remediation
 
-No active milestone. v1.35 Brand System & Logo Identity shipped directly on 2026-06-24 in commit `fcb8fc7` and was archived on 2026-07-11 from direct evidence.
+**Goal:** Clear the reproduced dependency advisories across all four independent Mix dependency graphs while preserving behavior and release confidence.
 
-The release train is idle. Future work should stay in maintenance, release/support truth, proof stability, public claim drift, outside-adopter evidence, or an explicitly approved strategic wedge. Do not reopen phases 137-143 or synthesize missing v1.35 phase artifacts.
+**Target batches:**
+- Root Scrypath HTTP client dependencies.
+- Legacy Phoenix example, including Ecto/Decimal alignment.
+- ScrypathOps web/client dependencies.
+- Ecommerce example web/client dependencies.
 
-## Current Mode: idle release train
+**Boundary:** This is a maintenance-only milestone. Execute four isolated commits, pass each batch's gates before starting the next, prefer the recorded fixed-compatible versions over package-head upgrades, and close only after all four projects no longer report the recorded advisories.
 
-**Goal:** Keep `main` green, preserve release/support truth, and avoid inventing new roadmap scope without concrete evidence.
+## Current Mode: security maintenance
+
+**Goal:** Restore a clean dependency-security posture without broadening product scope or weakening the green-main release train.
 
 **Recent closed outcomes:**
 - v1.35 brand system and logo identity: self-contained `brandbook/`, copper `/` `scry/path` logo, subset fonts/tokens, README/ScrypathOps/website adoption, direct-completion archive.
@@ -290,7 +296,10 @@ Current planning files: **`.planning/{ROADMAP,REQUIREMENTS,STATE}.md`** plus arc
 
 <!-- Current scope. Building toward these. -->
 
-No active feature or repair requirements. The default lane is idle maintenance-and-evidence mode: release/support truth, proof stability, public claim drift, and outside-adopter evidence only when concrete signal appears.
+- [ ] Root Scrypath resolves the recorded Req, Mint, hpax, and Plug advisories and passes the root release-train gates.
+- [ ] The legacy Phoenix example resolves the recorded web/client advisories and aligns Ecto/Ecto SQL with Decimal 3 without regression.
+- [ ] ScrypathOps resolves the recorded web/client advisories and passes its dedicated verification plus the root gates.
+- [ ] The ecommerce example independently resolves the recorded web/client advisories and passes its preparation and available browser proof.
 
 ### Out of Scope
 
@@ -320,4 +329,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-11 - v1.35 direct-completion bookkeeping reconciled; release train idle*
+*Last updated: 2026-08-21 - initialized v1.36 Dependency Security Remediation*
