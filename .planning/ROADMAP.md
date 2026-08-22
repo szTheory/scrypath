@@ -37,7 +37,7 @@
   1. A fresh root dependency resolution selects fixed-compatible Req, Mint, hpax, and Plug versions rather than the recorded advisory versions.
   2. The root library's documented deterministic compile, fast-test, verification, phase-11, and phase-99 gates pass on the remediated graph.
   3. Existing Req-backed Meilisearch request/error handling and Swoosh behavior remain covered and pass after the Req 0.6 transition.
-  4. The root-only manifest and lockfile change can be reviewed as a minimal first commit with no unrelated upgrades.
+  4. One minimal, explained shared Req compatibility handoff spans the three direct manifests and four locks, followed by graph-local legacy, Ops, and ecommerce remediation.
 
 **Plans**: 3 plans
 

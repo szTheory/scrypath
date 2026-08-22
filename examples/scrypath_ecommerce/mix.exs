@@ -49,7 +49,7 @@ defmodule ScrypathEcommerce.MixProject do
       {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
       {:heroicons, "~> 0.5.7", app: false},
       {:swoosh, "~> 1.16"},
-      {:req, "~> 0.5"},
+      {:req, "~> 0.6.1"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.2"},

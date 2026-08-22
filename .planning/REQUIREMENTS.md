@@ -22,7 +22,7 @@
 ### Security Evidence
 
 - [ ] **EVID-01:** Maintainers have dated `mix deps.get` evidence from all four project directories showing none of the advisories recorded on 2026-08-16.
-- [ ] **EVID-02:** The milestone delivers four ordered, graph-local commits with explained lockfile changes and no unrelated upgrades.
+- [ ] **EVID-02:** The milestone delivers one minimal, explained shared Req compatibility handoff across the three direct manifests and four locks, followed by graph-local legacy, Ops, and ecommerce remediation with no unrelated upgrades.
 - [ ] **EVID-03:** Postgrex changes remain blocked until both the live advisory and Hex registry confirm a stable published fixed release; maintainers do not substitute an invented version or prerelease.
 
 ## Future Requirements
