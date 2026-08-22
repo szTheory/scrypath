@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.36
 milestone_name: Dependency Security Remediation
 current_phase: 144
-current_phase_name: Root HTTP Client Dependency Remediation
+current_phase_name: root-http-client-dependency-remediation
 status: executing
-stopped_at: Phase 144 context gathered
-last_updated: "2026-08-22T16:12:24.152Z"
-last_activity: 2026-08-21
-last_activity_desc: v1.36 four-phase security-remediation roadmap created
+stopped_at: Completed 144-01-PLAN.md
+last_updated: "2026-08-22T16:19:18.963Z"
+last_activity: 2026-08-22
+last_activity_desc: Phase 144 execution started
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 3
-  completed_plans: 0
+  completed_plans: 1
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 144 — Root HTTP Client Dependency Remediation.
+**Current Focus:** Phase 144 — root-http-client-dependency-remediation
 
 ## Current Position
 
-Phase: 144 of 147 (Root HTTP Client Dependency Remediation)
-Plan: —
-Status: Ready to execute
-Last activity: 2026-08-21 — v1.36 four-phase security-remediation roadmap created
+Phase: 144 (root-http-client-dependency-remediation) — EXECUTING
+Plan: 2 of 3
+Status: Executing Phase 144
+Last activity: 2026-08-22 — Phase 144 execution started
 
 ## Completed Milestones
 
@@ -146,6 +146,11 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 | Phase 135 P04 | 1h 2m | 2 tasks | 2 files |
 | Phase 136 P01 | 33m 18s | 3 tasks | 6 files |
 | Phase 136 P03 | 5 min | 3 tasks | 5 files |
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 144 P01 | 16m | 1 tasks | 9 files |
 
 ## Decisions
 
@@ -182,9 +187,10 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 - [Phase 136]: Human UAT approval passed DUALVERIFY-01 with no D-18 must-fix blocker. — 136-UAT.md records `approved`, one passed UAT test, zero pending items, and zero blockers.
 - [Phase 136]: No UAT-created accepted follow-ups were recorded. — Existing D-19 categories remain nonblocking policy/evidence options only, not hidden closeout defects.
 - [Phase 136]: Manifest committed-artifact checksums use file-content SHA-256 except the manifest self-entry. — The self-entry uses canonical JSON with its own `sha256` field nulled to avoid an impossible self-referential hash.
+- [Phase 144 Plan 01]: Used targeted Mix dependency unlocks to preserve graph-local remediation ownership while aligning the shared Req closure.
 
 ## Session
 
-**Last session:** 2026-08-22T00:34:06.541Z
-**Stopped at:** Phase 144 context gathered
-**Resume file:** .planning/phases/144-root-http-client-dependency-remediation/144-CONTEXT.md
+**Last session:** 2026-08-22T16:19:18.949Z
+**Stopped at:** Completed 144-01-PLAN.md
+**Resume file:** None
