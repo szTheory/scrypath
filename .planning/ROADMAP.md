@@ -18,6 +18,8 @@
 
 **Execution guardrails:** Execute the four phases and commits in order. Each batch owns only its graph-local manifest, lockfile, and any narrowly demonstrated compatibility fix; stop on any failed required gate before beginning the next batch. Use recorded fixed-compatible versions rather than package-head upgrades. Required deterministic proof and service-dependent advisory proof must be reported separately. A Postgrex constraint change is blocked until the live advisory and Hex registry both confirm a stable, published fixed release; never invent a version or use a prerelease.
 
+[PHASE97-SCOPE-GUARD] Phase 97/98/99 reject runtime breadth expansion unless reopen policy conditions are met.
+
 ## Phases
 
 - [x] **Phase 144: Root HTTP Client Dependency Remediation** - Remediate the root Req/HTTP stack with behavior-preserving library proof. (completed 2026-08-22)
