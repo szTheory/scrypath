@@ -4,6 +4,7 @@ status: pending
 priority: high
 category: security-dependency
 created: 2026-08-16
+resolves_phase: 147
 ---
 
 # Remediate reproduced dependency security advisories
