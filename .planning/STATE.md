@@ -2,14 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.36
 milestone_name: Dependency Security Remediation
-status: planning
+current_phase: 145
+current_phase_name: Legacy Phoenix and Ecto/Decimal Remediation
+status: executing
 stopped_at: Phase 145 context gathered
-last_updated: "2026-08-22T17:24:43.384Z"
-last_activity: 2026-08-22 — Phase 144 complete, transitioned to Phase 145
+last_updated: "2026-08-22T18:18:24.037Z"
+last_activity: 2026-08-22
+last_activity_desc: Phase 144 complete, transitioned to Phase 145
 progress:
-  total_phases: 4
+  total_phases: 2
   completed_phases: 1
-  total_plans: 3
+  total_plans: 5
   completed_plans: 3
   percent: 25
 ---
@@ -25,7 +28,7 @@ progress:
 
 Phase: 145 — Legacy Phoenix and Ecto/Decimal Remediation
 Plan: Not started
-Status: Ready to plan
+Status: Ready to execute
 Last activity: 2026-08-22 — Phase 144 complete, transitioned to Phase 145
 
 ## Completed Milestones
