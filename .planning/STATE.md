@@ -2,15 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.36
 milestone_name: Dependency Security Remediation
+current_phase: 144
+current_phase_name: Root HTTP Client Dependency Remediation
 status: planning
-last_updated: "2026-08-21T21:16:17.386Z"
+stopped_at: Phase 144 context gathered
+last_updated: "2026-08-22T00:34:06.549Z"
 last_activity: 2026-08-21
+last_activity_desc: v1.36 four-phase security-remediation roadmap created
 progress:
-  total_phases: 4
+  total_phases: 1
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
-  percent: 0
 ---
 
 # Project State
@@ -182,10 +185,6 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 
 ## Session
 
-**Resume checked:** 2026-07-10T23:59:22Z
-**Stopped at:** Quick task 260816-tzr complete. Dependency advisories are inventoried and verified; remediation remains pending in four isolated batches.
-**Resume file:** None
-
-**Context:** Formal milestone state remains complete and the release train remains idle. Quick task 260816-tzr recorded the reproduced dependency advisories, fixed minima, exposure uncertainty, and verification-gated remediation plan without changing manifests, lockfiles, ROADMAP, or source files.
-
-**Pending follow-up checkpoint consumed:** `.planning/phases/134-under-iterated-surface-polish-dual-theme-s/.continue-here.md` removed on 2026-07-10 because it pointed to already-passed UAT Test 4.
+**Last session:** 2026-08-22T00:34:06.541Z
+**Stopped at:** Phase 144 context gathered
+**Resume file:** .planning/phases/144-root-http-client-dependency-remediation/144-CONTEXT.md
