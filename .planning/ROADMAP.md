@@ -39,7 +39,7 @@
   3. Existing Req-backed Meilisearch request/error handling and Swoosh behavior remain covered and pass after the Req 0.6 transition.
   4. One minimal, explained shared Req compatibility handoff spans the three direct manifests and four locks, followed by graph-local legacy, Ops, and ecommerce remediation.
 
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans executed
 
 Plans:
 **Wave 1**
@@ -52,7 +52,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 144-03-PLAN.md — Run deterministic release gates and exact-candidate fresh-resolution/audit evidence.
+- [x] 144-03-PLAN.md — Run deterministic release gates and exact-candidate fresh-resolution/audit evidence.
 
 ### Phase 145: Legacy Phoenix and Ecto/Decimal Remediation
 
@@ -102,7 +102,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 144. Root HTTP Client Dependency Remediation | 2/3 | In Progress|  |
+| 144. Root HTTP Client Dependency Remediation | 3/3 | In Progress|  |
 | 145. Legacy Phoenix and Ecto/Decimal Remediation | 0/TBD | Not started | - |
 | 146. ScrypathOps Web/Client Remediation | 0/TBD | Not started | - |
 | 147. Ecommerce Mounted-Ops Remediation and Closure Evidence | 0/TBD | Not started | - |
