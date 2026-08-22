@@ -5,15 +5,15 @@ milestone_name: Dependency Security Remediation
 current_phase: 145
 current_phase_name: legacy-phoenix-and-ecto-decimal-remediation
 status: executing
-stopped_at: Completed 145-01-PLAN.md
-last_updated: "2026-08-22T21:05:35.339Z"
+stopped_at: Completed 145-02-PLAN.md
+last_updated: "2026-08-22T21:11:37.917Z"
 last_activity: 2026-08-22
 last_activity_desc: Phase 145 execution started
 progress:
   total_phases: 2
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State
@@ -26,8 +26,8 @@ progress:
 ## Current Position
 
 Phase: 145 (legacy-phoenix-and-ecto-decimal-remediation) — EXECUTING
-Plan: 1 of 2
-Status: Executing Phase 145
+Plan: 2 of 2
+Status: Ready to execute
 Last activity: 2026-08-22 — Phase 145 execution started
 
 ## Completed Milestones
@@ -154,6 +154,7 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 | Phase 144 P02 | 5m | 1 tasks | 2 files |
 | Phase 144 P03 | ~7m | 2 tasks | 1 files |
 | Phase 145-legacy-phoenix-and-ecto-decimal-remediation P01 | 15m | 1 tasks | 4 files |
+| Phase 145 P02 | 2m 25s | 2 tasks | 2 files |
 
 ## Decisions
 
@@ -195,9 +196,11 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 - [Phase ?]: Phase 144 Plan 03: deterministic root gates and an exact-SHA detached fresh Hex audit both passed; Meilisearch smoke was unavailable and remains supplemental, while Swoosh proof remains Phase 146.
 - [Phase ?]: Kept the legacy graph limited to four direct compatibility bounds and their causal lock closure.
 - [Phase ?]: Used a direct supervised Bandit plug listener with ThousandIsland listener introspection, avoiding endpoint-policy changes.
+- [Phase ?]: Phase 145 Plan 02 directly bounds legacy Plug at ~> 1.19.5; the reviewed lock remains unchanged because it already selected Plug 1.19.5.
+- [Phase ?]: Phase 145 recovery proof binds deterministic, detached unsuppressed audit, and supplemental live-smoke evidence to recovery commit 4e2abed.
 
 ## Session
 
-**Last session:** 2026-08-22T20:31:44.913Z
-**Stopped at:** Completed 145-01-PLAN.md
+**Last session:** 2026-08-22T21:11:37.910Z
+**Stopped at:** Completed 145-02-PLAN.md
 **Resume file:** None
