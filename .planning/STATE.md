@@ -4,16 +4,16 @@ milestone: v1.36
 milestone_name: Dependency Security Remediation
 current_phase: 144
 current_phase_name: root-http-client-dependency-remediation
-status: executing
-stopped_at: Completed 144-02-PLAN.md
-last_updated: "2026-08-22T16:23:59.792Z"
+status: verifying
+stopped_at: Completed 144-03-PLAN.md
+last_updated: "2026-08-22T16:29:46.318Z"
 last_activity: 2026-08-22
 last_activity_desc: Phase 144 execution started
 progress:
   total_phases: 1
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # Project State
@@ -27,7 +27,7 @@ progress:
 
 Phase: 144 (root-http-client-dependency-remediation) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-08-22 — Phase 144 execution started
 
 ## Completed Milestones
@@ -152,6 +152,7 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 |------|----------|-------|-------|
 | Phase 144 P01 | 16m | 1 tasks | 9 files |
 | Phase 144 P02 | 5m | 1 tasks | 2 files |
+| Phase 144 P03 | ~7m | 2 tasks | 1 files |
 
 ## Decisions
 
@@ -190,9 +191,10 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 - [Phase 136]: Manifest committed-artifact checksums use file-content SHA-256 except the manifest self-entry. — The self-entry uses canonical JSON with its own `sha256` field nulled to avoid an impossible self-referential hash.
 - [Phase 144 Plan 01]: Used targeted Mix dependency unlocks to preserve graph-local remediation ownership while aligning the shared Req closure.
 - [Phase ?]: [Phase 144 Plan 02]: Req 0.6.3 passes causal public-boundary transport, header merge, task-filter, and telemetry privacy coverage without a private client change; Swoosh runtime proof remains Phase 146 scope.
+- [Phase ?]: Phase 144 Plan 03: deterministic root gates and an exact-SHA detached fresh Hex audit both passed; Meilisearch smoke was unavailable and remains supplemental, while Swoosh proof remains Phase 146.
 
 ## Session
 
-**Last session:** 2026-08-22T16:23:59.784Z
-**Stopped at:** Completed 144-02-PLAN.md
+**Last session:** 2026-08-22T16:29:46.310Z
+**Stopped at:** Completed 144-03-PLAN.md
 **Resume file:** None
