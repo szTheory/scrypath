@@ -40,6 +40,7 @@ defmodule ScrypathDemo.MixProject do
   defp deps do
     [
       {:phoenix, "~> 1.8.9"},
+      {:plug, "~> 1.19.5"},
       {:phoenix_ecto, "~> 4.5"},
       {:ecto_sql, "~> 3.14.0"},
       {:postgrex, "~> 0.22.4"},
