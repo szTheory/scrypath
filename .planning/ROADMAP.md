@@ -68,7 +68,16 @@ Plans:
   3. Legacy application database, migration, fixture, cast, and endpoint behavior remains usable under the coordinated Ecto/Decimal upgrade.
   4. The legacy example's manifest and lockfile form one isolated, explained second commit with no Decimal override or package-head churn.
 
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 145-01-PLAN.md — Land the atomic fixed-compatible legacy dependency graph with causal Ecto and real Phoenix/Bandit compatibility contracts.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 145-02-PLAN.md — Run the binding deterministic gates and exact-candidate fresh-resolution, audit, and supplemental-live evidence.
 
 ### Phase 146: ScrypathOps Web/Client Remediation
 
@@ -105,7 +114,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 144. Root HTTP Client Dependency Remediation | 3/3 | Complete    | 2026-08-22 |
-| 145. Legacy Phoenix and Ecto/Decimal Remediation | 0/TBD | Not started | - |
+| 145. Legacy Phoenix and Ecto/Decimal Remediation | 0/2 | Not started | - |
 | 146. ScrypathOps Web/Client Remediation | 0/TBD | Not started | - |
 | 147. Ecommerce Mounted-Ops Remediation and Closure Evidence | 0/TBD | Not started | - |
 
