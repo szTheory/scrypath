@@ -35,6 +35,72 @@ defmodule Scrypath.Meilisearch.ClientTest do
                  req_options: [plug: {Req.Test, stub}]
                )
     end
+
+    test "normalizes a retry-disabled transport failure through the public tuple" do
+      stub = Module.concat(__MODULE__, GetSettingsTransportErrorStub)
+
+      Req.Test.stub(stub, fn conn ->
+        Req.Test.transport_error(conn, :timeout)
+      end)
+
+      assert {:error, {:transport_error, %Req.TransportError{reason: :timeout}}} =
+               Client.get_settings("posts_v2",
+                 meilisearch_url: "http://localhost:7700",
+                 req_options: [plug: {Req.Test, stub}, retry: false]
+               )
+    end
+
+    test "merges the configured API key with caller headers and options" do
+      stub = Module.concat(__MODULE__, GetSettingsHeaderMergeStub)
+
+      Req.Test.stub(stub, fn conn ->
+        assert Plug.Conn.get_req_header(conn, "x-meili-api-key") == ["api-key-144"]
+        assert Plug.Conn.get_req_header(conn, "x-request-id") == ["request-144"]
+
+        Req.Test.json(conn, %{"rankingRules" => ["words"]})
+      end)
+
+      assert {:ok, %{"rankingRules" => ["words"]}} =
+               Client.get_settings("posts_v2",
+                 meilisearch_url: "http://localhost:7700",
+                 meilisearch_api_key: "api-key-144",
+                 req_options: [
+                   plug: {Req.Test, stub},
+                   headers: [{"x-request-id", "request-144"}]
+                 ]
+               )
+    end
+  end
+
+  describe "tasks/2" do
+    test "encodes list filters once as comma-separated camelCase query values" do
+      stub = Module.concat(__MODULE__, TasksFilterEncodingStub)
+
+      Req.Test.stub(stub, fn conn ->
+        assert conn.method == "GET"
+        assert conn.request_path == "/tasks"
+
+        assert conn.query_params == %{
+                 "indexUids" => "posts_v2,comments_v2",
+                 "statuses" => "enqueued,failed",
+                 "types" => "documentAdditionOrUpdate,documentDeletion"
+               }
+
+        Req.Test.json(conn, %{"results" => []})
+      end)
+
+      assert {:ok, %{"results" => []}} =
+               Client.tasks(
+                 [
+                   statuses: [:enqueued, :failed],
+                   types: ["documentAdditionOrUpdate", "documentDeletion"],
+                   index_uids: ["posts_v2", "comments_v2"],
+                   from: nil
+                 ],
+                 meilisearch_url: "http://localhost:7700",
+                 req_options: [plug: {Req.Test, stub}]
+               )
+    end
   end
 
   describe "facet_search/5" do
