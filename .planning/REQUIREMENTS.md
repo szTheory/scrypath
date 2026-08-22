@@ -8,7 +8,7 @@
 
 ### Dependency Remediation
 
-- [ ] **SEC-01:** Maintainers can resolve root Scrypath beyond its recorded Req, Mint, hpax, and Plug advisories using fixed-compatible constraints.
+- [x] **SEC-01:** Maintainers can resolve root Scrypath beyond its recorded Req, Mint, hpax, and Plug advisories using fixed-compatible constraints.
 - [ ] **SEC-02:** Maintainers can resolve the legacy Phoenix example's recorded advisories through coordinated Phoenix/Bandit and Ecto/Ecto SQL/Decimal upgrades.
 - [ ] **SEC-03:** Maintainers can independently resolve ScrypathOps beyond its recorded web, LiveView, mailer, HTTP, and database advisories.
 - [ ] **SEC-04:** Maintainers can independently resolve the ecommerce example beyond its recorded advisories after the remediated root and ScrypathOps sources are green.
@@ -16,7 +16,7 @@
 ### Compatibility Proof
 
 - [ ] **COMPAT-01:** Each dependency graph passes its documented deterministic gates before maintainers begin the next remediation batch.
-- [ ] **COMPAT-02:** Existing Req-backed Meilisearch and Swoosh behavior remains covered after the Req 0.6 transition.
+- [x] **COMPAT-02:** Existing Req-backed Meilisearch and Swoosh behavior remains covered after the Req 0.6 transition.
 - [ ] **COMPAT-03:** Maintainers record available ecommerce browser proof separately from required deterministic checks and never report unavailable prerequisites as passing.
 
 ### Security Evidence
@@ -48,18 +48,19 @@ Roadmap creation maps each v1.36 requirement to exactly one phase.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SEC-01 | Phase 144 | Pending |
+| SEC-01 | Phase 144 | Complete |
 | SEC-02 | Phase 145 | Pending |
 | SEC-03 | Phase 146 | Pending |
 | SEC-04 | Phase 147 | Pending |
 | COMPAT-01 | Phase 147 | Pending |
-| COMPAT-02 | Phase 144 | Pending |
+| COMPAT-02 | Phase 144 | Complete |
 | COMPAT-03 | Phase 147 | Pending |
 | EVID-01 | Phase 147 | Pending |
 | EVID-02 | Phase 147 | Pending |
 | EVID-03 | Phase 146 | Pending |
 
 **Coverage:**
+
 - v1.36 requirements: 10 total
 - Mapped to phases: 10
 - Unmapped: 0
