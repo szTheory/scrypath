@@ -384,7 +384,7 @@ on_exit(fn -> :telemetry.detach(handler_id) end)
 
 ### Pitfall 5: Misreporting unavailable external proof
 
-**What goes wrong:** [VERIFIED: environment audit] Local Postgres at 5433 and Meilisearch at 7700 were unavailable during research.
+**What goes wrong:** [VERIFIED: initial environment audit; refreshed 2026-08-22] Local Postgres at 5433 and Meilisearch at 7700 were unavailable during initial research, then became healthy after the orchestrator started the documented Compose stack. Availability is a runtime prerequisite, not a durable pass condition.
 
 **Why it happens:** [VERIFIED: repository code] The smoke lane needs both services; ordinary `mix test` also requires Postgres for its create/migrate alias.
 
@@ -446,12 +446,11 @@ end, nil)
 |---|-------|---------|---------------|
 | A1 | The implementation can obtain the ephemeral listener's bound port using the final selected public Phoenix/Bandit server-info interface without changing permanent endpoint policy. | Architecture Patterns | The real-HTTP contract would need a smaller harness adjustment; no dependency or public-scope decision changes. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Exact ephemeral-listener startup shape after the Bandit patch-line update**
+1. **RESOLVED — Exact ephemeral-listener startup shape after the Bandit patch-line update**
    - What we know: [CITED: https://bandit.hexdocs.pm/Bandit.PhoenixAdapter.html] Bandit supports Phoenix endpoint adapter configuration and exposes bound-server information; [VERIFIED: repository code] the installed Phoenix endpoint supports startup options merged with endpoint config.
-   - What's unclear: [VERIFIED: repository code] Test config starts the normal endpoint with `server: false`, so the executor must choose the smallest supervised test-only startup shape that preserves the configured endpoint Plug/adapter contract.
-   - Recommendation: Use the Phase Context D-14 acceptance condition as the decision rule; prove a loopback port, normal HTTP/1 JSON response, request-stop event, and deterministic teardown before retaining the harness. Stop and re-plan if this requires endpoint policy redesign or a permanent service.
+   - Resolution: [VERIFIED: Phase 145 Plan 01 implementation `e50fbd5` and `145-01-SUMMARY.md`] The focused contract starts a supervised direct Bandit listener with `ScrypathDemoWeb.Endpoint` as the Plug, obtains the ephemeral address through `ThousandIsland.listener_info/1` returning `{:ok, {ip, port}}`, performs the loopback HTTP/1 request, observes the request-stop event, and tears the listener down without changing permanent endpoint policy.
 
 ## Environment Availability
 
@@ -459,8 +458,8 @@ end, nil)
 |------------|-------------|-----------|---------|----------|
 | Elixir/Mix | resolver and all Mix gates | ✓ | Elixir/Mix 1.19.5, OTP 28 | — |
 | Docker Compose | optional local live smoke | ✓ | Docker 29.5.2 | GitHub Actions service job |
-| PostgreSQL listener at `localhost:5433` | legacy test alias, migration check, DB contract | ✗ | client 14.17; listener absent | Start documented Compose/CI-shaped Postgres 16 service |
-| Meilisearch at `127.0.0.1:7700` | supplemental live smoke only | ✗ | — | Start documented Compose/CI-shaped Meilisearch v1.15 service |
+| PostgreSQL listener at `localhost:5433` | legacy test alias, migration check, DB contract | ✓ on 2026-08-22 recovery run | Postgres 16 Compose service healthy | Re-check at execution; start documented Compose/CI-shaped service if absent |
+| Meilisearch at `127.0.0.1:7700` | supplemental live smoke only | ✓ on 2026-08-22 recovery run | Meilisearch v1.15 Compose service healthy | Re-check at execution; classify a later outage as supplemental unavailable |
 | Hex registry/advisory feed | detached resolution and `mix hex.audit` | ✓ during research lookup | registry reachable | None; outage is unavailable evidence |
 
 **Missing dependencies with no fallback:**
