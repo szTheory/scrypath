@@ -66,7 +66,7 @@ Plans:
   1. A fresh resolution from the legacy example directory selects the bounded fixed-compatible Phoenix/Bandit and Ecto/Ecto SQL/Decimal set without its recorded advisories.
   2. The legacy example's documented deterministic tests and required root fast regression proof pass with its local path dependency.
   3. Legacy application database, migration, fixture, cast, and endpoint behavior remains usable under the coordinated Ecto/Decimal upgrade.
-  4. The legacy example's manifest and lockfile form one isolated, explained second commit with no Decimal override or package-head churn.
+  4. The legacy example's manifest and lockfile changes remain isolated and explained across the completed cohort commit plus the execution-discovered Plug-bound recovery commit, with no Decimal override or package-head churn.
 
 **Plans**: 2/2 plans executed
 
@@ -77,7 +77,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [x] 145-02-PLAN.md — Run the binding deterministic gates and exact-candidate fresh-resolution, audit, and supplemental-live evidence.
+- [x] 145-02-PLAN.md — Add the approved direct Plug boundary, rerun binding deterministic gates, and capture exact-candidate audit plus supplemental-live evidence.
 
 ### Phase 146: ScrypathOps Web/Client Remediation
 
