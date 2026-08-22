@@ -25,6 +25,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 **Goal:** Restore a clean dependency-security posture without broadening product scope or weakening the green-main release train.
 
 **Recent closed outcomes:**
+- Phase 144 root HTTP client dependency remediation: bounded Req 0.6.3 and Plug 1.19.5 handoff across four checked locks, focused Req.Test/telemetry compatibility proof, full root release-train verification, and clean fresh-resolution Hex audit.
 - v1.35 brand system and logo identity: self-contained `brandbook/`, copper `/` `scry/path` logo, subset fonts/tokens, README/ScrypathOps/website adoption, direct-completion archive.
 - v1.34 both-themes perfection: ScrypathOps dark signature, light parity, AA hard gate, browser proof, 40-shot matrix, and Human UAT passed.
 - v1.33 admin UI polish: task-first IA, design-system tightening, restrained motion, per-screen polish, and shell coherence.
@@ -62,6 +63,8 @@ Phase 97 through 99 banned capability classes:
 - new public runtime API categories
 
 ## Current State
+
+**v1.36 Phase 144 — Root HTTP Client Dependency Remediation** completed on **2026-08-22**. Root Scrypath and the checked path-consumer graphs now share the bounded Req 0.6 compatibility floor; root deterministic gates, focused Meilisearch/telemetry tests, detached fresh resolution, and the unsuppressed root Hex audit passed. Phase 145 is next; configured Swoosh runtime proof remains explicitly owned by Phase 146.
 
 **v1.35 - Brand System & Logo Identity** shipped directly on **2026-06-24** and was archived in-repo on **2026-07-11** across phases **137-143**. It delivered the copper `/` **scry/path** identity, full transparent SVG family, self-contained `brandbook/` package, subset woff2 fonts, portable tokens, accessibility notes, examples, and adoption across README, ScrypathOps, website, favicon, and OG surfaces.
 
@@ -217,12 +220,13 @@ Current planning files: **`.planning/{ROADMAP,REQUIREMENTS,STATE}.md`** plus arc
 
 ## Planning window
 
-**Active milestone:** none. The release train is idle. v1.35 is complete and archived from direct evidence; missing phase artifacts for phases 138-143 are expected and must not be treated as work to resume.
+**Active milestone:** v1.36 Dependency Security Remediation. Phase 144 is complete; Phase 145 (legacy Phoenix and Ecto/Decimal remediation) is next. v1.35 remains complete and archived from direct evidence; missing phase artifacts for phases 138-143 are expected and must not be treated as work to resume.
 
 ## Requirements
 
 ### Validated
 
+- [x] **Phase 144** (2026-08-22): **SEC-01**, **COMPAT-02** — root and checked path-consumer Req floors aligned at fixed-compatible versions; focused Req-backed behavior, deterministic release gates, detached fresh resolution, and unsuppressed root advisory audit passed. Configured Swoosh runtime proof remains Phase 146's explicit responsibility.
 - [x] **v1.35** (2026-06-24): **BRAND-AUDIT-01**, **LOGO-DIRECTIONS-01**, **LOGO-SYSTEM-01**, **TOKENS-PKG-01**, **BRANDBOOK-HTML-01**, **BRAND-ADOPT-01**, **BRAND-VERIFY-01** — brand system and logo identity closed by direct evidence: copper `/` `scry/path` identity, transparent SVG family, self-contained brandbook, subset fonts/tokens, accessibility notes, README/ScrypathOps/website adoption, and direct-completion archive. No phase artifacts should be synthesized for phases 138-143.
 - [x] **Phase 132** (2026-06-04): **A11Y-TOKEN-01** — both-theme AA hard gate green for muted text and selected violet fills; browser contrast proof covers light, dark, and system-dark; AAA body/long-form status remains advisory/report-only.
 - [x] **v1.34** (2026-06-29): **CONTRAST-HARNESS-01**, **DARKAUDIT-01**, **DARKTOKEN-01**, **GLOW-01**, **COPPER-01**, **A11Y-TOKEN-01**, **DARKMOTION-01**, **SCREEN-DARK-01**, **SHELL-DARK-01**, **DUALVERIFY-01** — both-themes perfection wedge closed with dark signature, light parity, AA hard gate, browser proof, screenshot matrix recapture, before/after gallery, milestone audit, and approved Human UAT.
@@ -329,4 +333,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-21 - initialized v1.36 Dependency Security Remediation*
+*Last updated: 2026-08-22 - Phase 144 root HTTP client dependency remediation complete*
