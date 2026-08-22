@@ -49,7 +49,7 @@ Roadmap creation maps each v1.36 requirement to exactly one phase.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | SEC-01 | Phase 144 | Complete |
-| SEC-02 | Phase 145 | Pending |
+| SEC-02 | Phase 145 | Complete |
 | SEC-03 | Phase 146 | Pending |
 | SEC-04 | Phase 147 | Pending |
 | COMPAT-01 | Phase 147 | Pending |

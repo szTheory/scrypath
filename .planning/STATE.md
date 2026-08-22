@@ -3,18 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.36
 milestone_name: Dependency Security Remediation
 current_phase: 145
-current_phase_name: Legacy Phoenix and Ecto/Decimal Remediation
+current_phase_name: legacy-phoenix-and-ecto-decimal-remediation
 status: executing
-stopped_at: Phase 145 context gathered
-last_updated: "2026-08-22T18:18:24.037Z"
+stopped_at: Completed 145-01-PLAN.md
+last_updated: "2026-08-22T20:31:44.925Z"
 last_activity: 2026-08-22
-last_activity_desc: Phase 144 complete, transitioned to Phase 145
+last_activity_desc: Phase 145 execution started
 progress:
   total_phases: 2
   completed_phases: 1
   total_plans: 5
-  completed_plans: 3
-  percent: 25
+  completed_plans: 4
 ---
 
 # Project State
@@ -22,14 +21,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 144 — root-http-client-dependency-remediation
+**Current Focus:** Phase 145 — legacy-phoenix-and-ecto-decimal-remediation
 
 ## Current Position
 
-Phase: 145 — Legacy Phoenix and Ecto/Decimal Remediation
-Plan: Not started
+Phase: 145 (legacy-phoenix-and-ecto-decimal-remediation) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
-Last activity: 2026-08-22 — Phase 144 complete, transitioned to Phase 145
+Last activity: 2026-08-22 — Phase 145 execution started
 
 ## Completed Milestones
 
@@ -154,6 +153,7 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 | Phase 144 P01 | 16m | 1 tasks | 9 files |
 | Phase 144 P02 | 5m | 1 tasks | 2 files |
 | Phase 144 P03 | ~7m | 2 tasks | 1 files |
+| Phase 145-legacy-phoenix-and-ecto-decimal-remediation P01 | 15m | 1 tasks | 4 files |
 
 ## Decisions
 
@@ -193,9 +193,11 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 - [Phase 144 Plan 01]: Used targeted Mix dependency unlocks to preserve graph-local remediation ownership while aligning the shared Req closure.
 - [Phase ?]: [Phase 144 Plan 02]: Req 0.6.3 passes causal public-boundary transport, header merge, task-filter, and telemetry privacy coverage without a private client change; Swoosh runtime proof remains Phase 146 scope.
 - [Phase ?]: Phase 144 Plan 03: deterministic root gates and an exact-SHA detached fresh Hex audit both passed; Meilisearch smoke was unavailable and remains supplemental, while Swoosh proof remains Phase 146.
+- [Phase ?]: Kept the legacy graph limited to four direct compatibility bounds and their causal lock closure.
+- [Phase ?]: Used a direct supervised Bandit plug listener with ThousandIsland listener introspection, avoiding endpoint-policy changes.
 
 ## Session
 
-**Last session:** 2026-08-22T17:24:43.378Z
-**Stopped at:** Phase 145 context gathered
-**Resume file:** .planning/phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-CONTEXT.md
+**Last session:** 2026-08-22T20:31:44.913Z
+**Stopped at:** Completed 145-01-PLAN.md
+**Resume file:** None
