@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.36
 milestone_name: Dependency Security Remediation
-current_phase: 145
-current_phase_name: legacy-phoenix-and-ecto-decimal-remediation
-status: executing
+current_phase: 146
+current_phase_name: ScrypathOps Web/Client Remediation
+status: planning
 stopped_at: Completed 145-02-PLAN.md
-last_updated: "2026-08-22T21:11:37.917Z"
+last_updated: "2026-08-22T21:24:22.953Z"
 last_activity: 2026-08-22
-last_activity_desc: Phase 145 execution started
+last_activity_desc: Phase 145 complete, transitioned to Phase 146
 progress:
   total_phases: 2
   completed_phases: 2
@@ -25,10 +25,10 @@ progress:
 
 ## Current Position
 
-Phase: 145 (legacy-phoenix-and-ecto-decimal-remediation) — EXECUTING
-Plan: 2 of 2
-Status: Ready to execute
-Last activity: 2026-08-22 — Phase 145 execution started
+Phase: 146 — ScrypathOps Web/Client Remediation
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-08-22 — Phase 145 complete, transitioned to Phase 146
 
 ## Completed Milestones
 
