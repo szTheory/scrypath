@@ -48,21 +48,21 @@ Roadmap creation maps each v1.36 requirement to exactly one phase.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SEC-01 | TBD | Pending |
-| SEC-02 | TBD | Pending |
-| SEC-03 | TBD | Pending |
-| SEC-04 | TBD | Pending |
-| COMPAT-01 | TBD | Pending |
-| COMPAT-02 | TBD | Pending |
-| COMPAT-03 | TBD | Pending |
-| EVID-01 | TBD | Pending |
-| EVID-02 | TBD | Pending |
-| EVID-03 | TBD | Pending |
+| SEC-01 | Phase 144 | Pending |
+| SEC-02 | Phase 145 | Pending |
+| SEC-03 | Phase 146 | Pending |
+| SEC-04 | Phase 147 | Pending |
+| COMPAT-01 | Phase 147 | Pending |
+| COMPAT-02 | Phase 144 | Pending |
+| COMPAT-03 | Phase 147 | Pending |
+| EVID-01 | Phase 147 | Pending |
+| EVID-02 | Phase 147 | Pending |
+| EVID-03 | Phase 146 | Pending |
 
 **Coverage:**
 - v1.36 requirements: 10 total
-- Mapped to phases: 0
-- Unmapped: 10
+- Mapped to phases: 10
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-08-21*
