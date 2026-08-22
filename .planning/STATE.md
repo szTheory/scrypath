@@ -6,7 +6,7 @@ status: planning
 last_updated: "2026-08-21T21:16:17.386Z"
 last_activity: 2026-08-21
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -18,14 +18,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** release train idle; no active milestone or phase.
+**Current Focus:** Phase 144 — Root HTTP Client Dependency Remediation.
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 144 of 147 (Root HTTP Client Dependency Remediation)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-08-21 — Milestone v1.36 started
+Status: Ready to plan
+Last activity: 2026-08-21 — v1.36 four-phase security-remediation roadmap created
 
 ## Completed Milestones
 
@@ -35,7 +35,7 @@ Last activity: 2026-08-21 — Milestone v1.36 started
 
 ## Current Milestone
 
-None. The release train is idle.
+v1.36 Dependency Security Remediation is planned across Phases 144-147: root, legacy Phoenix, ScrypathOps, then ecommerce mounted Ops. Execute one graph-local commit per ordered batch and stop on any failed required gate; distinguish required deterministic proof from advisory service/browser evidence. Postgrex changes remain blocked until live advisory and Hex registry evidence confirm a stable published fixed release.
 
 ## v1.35 Brand Milestone Context (archived)
 
