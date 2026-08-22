@@ -217,10 +217,10 @@ This protects the client-owned list-filter serialization rather than Req interna
 | Req automatic archive/compressed decoding | Req 0.6 JSON default; Req 0.6.1 compression opt-in | 2026-06-08 | Keep Scrypath JSON-only defaults. [CITED: https://github.com/wojtekmach/req/releases/tag/v0.6.0] [CITED: https://github.com/wojtekmach/req/releases/tag/v0.6.1] |
 | Root-only roadmap wording | One minimal cross-graph handoff then graph-local commits | Phase 144 prerequisite | Correct roadmap success criterion 4 and EVID-02 wording. [VERIFIED: 144-CONTEXT.md] |
 
-## Open Questions
+## Execution-Time Observations (RESOLVED)
 
-1. **Which exact lock rows will move?** Solver hashes and compatible closure rows are network output. Review each moved row against Req/Finch/Mint/hpax or root Plug before committing. [VERIFIED: 144-CONTEXT.md]
-2. **Is any production compatibility patch required?** The current seam is JSON-only; resolve and run focused tests before touching source. Stop/re-plan if the fix alters locked semantics. [VERIFIED: local client; VERIFIED: 144-CONTEXT.md]
+1. **Exact moved lock rows — RESOLVED:** Solver hashes and compatible closure rows remain execution-time output. Review every moved row against the stated causal Req/Finch/Mint/hpax or root Plug set before committing; any unrelated or unexplained row triggers stop/re-plan. [VERIFIED: 144-CONTEXT.md]
+2. **Production compatibility patch — RESOLVED:** Do not edit production source speculatively. Resolve the atomic dependency state and run the focused compatibility tests first; production edits occur only after a focused demonstrated failure, remain inside the private seam, and trigger stop/re-plan if they would alter locked semantics. [VERIFIED: local client; VERIFIED: 144-CONTEXT.md]
 
 ## Environment Availability
 
