@@ -25,6 +25,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 **Goal:** Restore a clean dependency-security posture without broadening product scope or weakening the green-main release train.
 
 **Recent closed outcomes:**
+- Phase 145 legacy Phoenix and Ecto/Decimal remediation: bounded Phoenix, Bandit, Ecto SQL, Postgrex, and Plug to the fixed-compatible cohort; preserved transitive Ecto/Decimal ownership; passed deterministic, detached fresh-resolution, Hex audit, root regression, and Docker-backed Postgres/Meilisearch proof.
 - Phase 144 root HTTP client dependency remediation: bounded Req 0.6.3 and Plug 1.19.5 handoff across four checked locks, focused Req.Test/telemetry compatibility proof, full root release-train verification, and clean fresh-resolution Hex audit.
 - v1.35 brand system and logo identity: self-contained `brandbook/`, copper `/` `scry/path` logo, subset fonts/tokens, README/ScrypathOps/website adoption, direct-completion archive.
 - v1.34 both-themes perfection: ScrypathOps dark signature, light parity, AA hard gate, browser proof, 40-shot matrix, and Human UAT passed.
@@ -64,7 +65,7 @@ Phase 97 through 99 banned capability classes:
 
 ## Current State
 
-**v1.36 Phase 144 — Root HTTP Client Dependency Remediation** completed on **2026-08-22**. Root Scrypath and the checked path-consumer graphs now share the bounded Req 0.6 compatibility floor; root deterministic gates, focused Meilisearch/telemetry tests, detached fresh resolution, and the unsuppressed root Hex audit passed. Phase 145 is next; configured Swoosh runtime proof remains explicitly owned by Phase 146.
+**v1.36 Phase 145 — Legacy Phoenix and Ecto/Decimal Remediation** completed on **2026-08-22**. The legacy Phoenix example now resolves a bounded fixed-compatible Phoenix/Bandit/Ecto SQL/Postgrex/Plug cohort with transitive Ecto 3.14 and Decimal 3; deterministic checks, detached fresh resolution, the unsuppressed Hex audit, root regression, and Docker-backed Postgres/Meilisearch proof passed. Phase 146 is next and retains ownership of configured Swoosh runtime proof.
 
 **v1.35 - Brand System & Logo Identity** shipped directly on **2026-06-24** and was archived in-repo on **2026-07-11** across phases **137-143**. It delivered the copper `/` **scry/path** identity, full transparent SVG family, self-contained `brandbook/` package, subset woff2 fonts, portable tokens, accessibility notes, examples, and adoption across README, ScrypathOps, website, favicon, and OG surfaces.
 
@@ -220,12 +221,13 @@ Current planning files: **`.planning/{ROADMAP,REQUIREMENTS,STATE}.md`** plus arc
 
 ## Planning window
 
-**Active milestone:** v1.36 Dependency Security Remediation. Phase 144 is complete; Phase 145 (legacy Phoenix and Ecto/Decimal remediation) is next. v1.35 remains complete and archived from direct evidence; missing phase artifacts for phases 138-143 are expected and must not be treated as work to resume.
+**Active milestone:** v1.36 Dependency Security Remediation. Phases 144 and 145 are complete; Phase 146 (ScrypathOps web/client remediation) is next. v1.35 remains complete and archived from direct evidence; missing phase artifacts for phases 138-143 are expected and must not be treated as work to resume.
 
 ## Requirements
 
 ### Validated
 
+- [x] **Phase 145** (2026-08-22): **SEC-02** — legacy Phoenix example aligned to the bounded fixed-compatible Phoenix/Bandit/Ecto SQL/Postgrex/Plug cohort with transitive Ecto 3.14 and Decimal 3; deterministic compatibility checks, detached fresh resolution, unsuppressed Hex audit, root regression, and Docker-backed service proof passed.
 - [x] **Phase 144** (2026-08-22): **SEC-01**, **COMPAT-02** — root and checked path-consumer Req floors aligned at fixed-compatible versions; focused Req-backed behavior, deterministic release gates, detached fresh resolution, and unsuppressed root advisory audit passed. Configured Swoosh runtime proof remains Phase 146's explicit responsibility.
 - [x] **v1.35** (2026-06-24): **BRAND-AUDIT-01**, **LOGO-DIRECTIONS-01**, **LOGO-SYSTEM-01**, **TOKENS-PKG-01**, **BRANDBOOK-HTML-01**, **BRAND-ADOPT-01**, **BRAND-VERIFY-01** — brand system and logo identity closed by direct evidence: copper `/` `scry/path` identity, transparent SVG family, self-contained brandbook, subset fonts/tokens, accessibility notes, README/ScrypathOps/website adoption, and direct-completion archive. No phase artifacts should be synthesized for phases 138-143.
 - [x] **Phase 132** (2026-06-04): **A11Y-TOKEN-01** — both-theme AA hard gate green for muted text and selected violet fills; browser contrast proof covers light, dark, and system-dark; AAA body/long-form status remains advisory/report-only.
@@ -300,8 +302,6 @@ Current planning files: **`.planning/{ROADMAP,REQUIREMENTS,STATE}.md`** plus arc
 
 <!-- Current scope. Building toward these. -->
 
-- [ ] Root Scrypath resolves the recorded Req, Mint, hpax, and Plug advisories and passes the root release-train gates.
-- [ ] The legacy Phoenix example resolves the recorded web/client advisories and aligns Ecto/Ecto SQL with Decimal 3 without regression.
 - [ ] ScrypathOps resolves the recorded web/client advisories and passes its dedicated verification plus the root gates.
 - [ ] The ecommerce example independently resolves the recorded web/client advisories and passes its preparation and available browser proof.
 
@@ -333,4 +333,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-22 - Phase 144 root HTTP client dependency remediation complete*
+*Last updated: 2026-08-22 - Phase 145 legacy Phoenix and Ecto/Decimal remediation complete*
