@@ -526,6 +526,80 @@ end, nil)
 | Cross-process DB access outlives Sandbox owner | Denial of service / correctness | [CITED: https://ecto-sql.hexdocs.pm/Ecto.Adapters.SQL.Sandbox.html] Existing owner lifecycle, explicit allowance/shared-mode discipline, and supervised cleanup. |
 | Scope expansion masks remediation risk | Elevation of privilege / maintainability | [VERIFIED: phase context D-20/D-22] Stop on routes, sockets, schema migrations, public API, endpoint-policy redesign, or broad modernization. |
 
+## Execution-Recovery Addendum — 2026-08-22
+
+### Trigger and recommendation
+
+[VERIFIED: execution evidence] The detached, lockless resolution at implementation SHA `e50fbd5694c75ff5f25c2a07046185f35c107dd9` selected Plug `1.20.3`, so it compiled but correctly stopped before the audit and live smoke: the D-05 assertion requires `>= 1.19.5 and < 1.20.0`.
+
+**Primary recommendation:** Add the existing transitive package as one explicit, ordinary direct requirement in `examples/phoenix_meilisearch/mix.exs`:
+
+```elixir
+{:plug, "~> 1.19.5"},
+```
+
+[VERIFIED: Mix resolution, 2026-08-22] In Mix, this three-part pessimistic requirement resolves the reviewed `1.19.x` line (`>= 1.19.5 and < 1.20.0`); a detached, lockless resolution at the implementation SHA selected Plug `1.19.5`, preserved Phoenix `1.8.12`, Bandit `1.12.5`, Ecto `3.14.2`, Ecto SQL `3.14.0`, Postgrex `0.22.4`, Decimal `3.1.1`, Req `0.6.3`, Mint `1.9.3`, and hpax `1.0.4`, and compiled successfully.
+
+[VERIFIED: Hex registry API, 2026-08-22] Plug `1.19.5` is the patched release for the `1.19` advisories listed by Hex: the affected ranges end before `1.19.5`; the direct-bound fresh graph also returned `No retired or security advisory packages found` from unsuppressed `mix hex.audit`.
+
+### Why this is the smallest safe recovery
+
+| Alternative | Evidence | Decision |
+|-------------|----------|----------|
+| Add `{:plug, "~> 1.19.5"}` and retain the D-05 ceiling | [VERIFIED: Mix resolution, 2026-08-22] The one-entry manifest change makes the fresh solver select `1.19.5`; the candidate compiles and unsuppressed audit is clean. | **Use.** It makes the already-reviewed 1.19.x cohort reproducible without an override, suppression, source change, or broader modernization. |
+| Widen D-05 to permit `>= 1.19.5 and < 1.21.0` | [VERIFIED: Hex registry API, 2026-08-22] Phoenix `1.8.9` declares Plug `~> 1.14` and Bandit `1.12.5` declares Plug `~> 1.18`, both of which admit Plug `1.20.3`; the unbounded fresh graph compiles and audits cleanly. | **Reject.** Plug `1.20.3` is currently security-fixed and declared-compatible, but widening replaces an explicit reviewed minor ceiling with a newly admitted minor line and weakens the phase's causal cohort contract. |
+| Pin `== 1.19.5` | [VERIFIED: Hex registry API, 2026-08-22] `1.19.5` is current and audited cleanly. | **Reject.** It unnecessarily denies later patched `1.19.x` releases; `~> 1.19.5` expresses the intended fixed-compatible patch line. |
+| Use `override: true`, a lock-only pin, or an audit suppression | [VERIFIED: Mix resolution, 2026-08-22] The normal solver accepts the direct `~> 1.19.5` requirement without conflict. | **Reject.** No conflict exists to justify an override; a lock-only outcome fails the detached-fresh proof; a suppression contradicts D-06. |
+
+### Compatibility and security finding
+
+[VERIFIED: Hex registry API, 2026-08-22] Plug `1.20.3` is technically compatible with the selected Phoenix/Bandit cohort under their published requirements: Phoenix `1.8.9` requires Plug `~> 1.14`, Bandit `1.12.5` requires Plug `~> 1.18`, and both ranges admit `1.20.3`.
+
+[VERIFIED: Hex registry API, 2026-08-22] Plug `1.20.3` is also currently outside Hex's affected `1.20` advisory ranges, which end before `1.20.3`; the detached unbounded graph's unsuppressed `mix hex.audit` returned clean. This does **not** make it the recovery choice: the phase's binding D-05 ceiling intentionally defines the narrower compatibility cohort, and D-22 requires re-planning rather than silently accepting an out-of-range fresh result.
+
+### Decision-contract disposition
+
+| Context decision | Recovery disposition |
+|------------------|----------------------|
+| D-01 | **Amend narrowly.** Add Plug `~> 1.19.5` as a fifth direct fixed-compatible cohort owner; retain the existing Phoenix, Bandit, Ecto SQL, and Postgrex ranges exactly. |
+| D-03 | **Remain locked.** Ecto and Decimal remain transitive; this adds neither, and it uses no Decimal override or `override: true`. |
+| D-05 | **Reinterpret ownership; retain the exact range.** Plug `>= 1.19.5 and < 1.20.0` stays binding, but it must now be enforced by the direct `~> 1.19.5` manifest requirement rather than inferred only from the reviewed lock. |
+| D-20 | **Remain locked.** The recovery adds no Mix task, policy layer, CI topology, service, or UI evidence. |
+| D-21 | **Remain locked and not invoked.** No source compatibility fix is demonstrated or allowed by this recovery. |
+| D-22 | **Remain locked; trigger satisfied.** The observed out-of-range fresh result caused this re-plan. After the direct bound, another out-of-range resolution, audit finding, unexplained tracked-lock churn, or deterministic regression remains a stop condition. |
+| D-23 through D-27 | **Remain locked.** The direct manifest bound keeps the repair understandable and reproducible, preserves normal Mix workflows and the existing Phoenix/Ecto example, uses the established domain language, and supports the stated security/correctness/compatibility/evidence-quality pillars. |
+
+### Implementation and verification contract for the recovery plan
+
+1. [VERIFIED: Mix resolution, 2026-08-22] Make one graph-local implementation commit that adds only `{:plug, "~> 1.19.5"}` to the example manifest. Do not alter application source, test source, routes, schemas, endpoint policy, CI, or the root graph. The existing lock already selects `1.19.5`; retain it only if `mix deps.get --check-locked` confirms it remains valid, otherwise explain every lock row before committing.
+2. [VERIFIED: phase context D-17/D-22] Treat the manifest amendment as a new exact candidate SHA and rerun the deterministic D-17 sequence on that SHA before a fresh network probe; Plan 145-01's completed commit and summary remain historical evidence and are not rewritten.
+3. [VERIFIED: Mix resolution, 2026-08-22] In the detached, lockless probe, retain the existing assertion `Version.match?(plug, ">= 1.19.5 and < 1.20.0")`. Run `mix deps.get`, `mix compile --warnings-as-errors`, the ten package assertions, and unsuppressed `mix hex.audit`; require Plug `1.19.5` under today's registry. Record a future registry or advisory outage as unavailable/blocking, never as pass.
+4. [VERIFIED: phase context D-19] Preserve the compact evidence format: recovery SHA, UTC time, Elixir/OTP/Mix/Hex versions, selected versions, direct Plug rationale, audit exit, and primary-lock hash/clean-worktree result. The existing Postgres/Meilisearch live lane remains supplemental and is not changed by this dependency-only recovery.
+
+### Exact recovery commands
+
+```bash
+# On the recovery candidate, from examples/phoenix_meilisearch
+mix deps.get --check-locked
+mix test
+mix ecto.migrate --quiet
+mix precommit
+
+# From the repository root after the legacy deterministic gates
+mix test --exclude integration --exclude docs_contract
+
+# In the detached lockless worktree after mix deps.get and mix compile
+mix run --no-compile --no-deps-check -e '
+lock = Mix.Dep.Lock.read()
+version = lock |> Map.fetch!(:plug) |> elem(2)
+Version.match?(version, ">= 1.19.5 and < 1.20.0") ||
+  raise "plug #{version} violates >= 1.19.5 and < 1.20.0"
+'
+mix hex.audit
+```
+
+[VERIFIED: project constraints] This recovery introduces no new external package: Plug is already a resolved Hex dependency of Phoenix, Bandit, Phoenix Ecto, and WebSock Adapter. Therefore the package-legitimacy gate for a newly introduced package is not applicable; Hex registry metadata and the normal resolver/audit remain the authoritative checks.
+
 ## Sources
 
 ### Primary (HIGH confidence)
@@ -534,6 +608,8 @@ end, nil)
 - [VERIFIED: repository code] `examples/phoenix_meilisearch/lib/{scrypath_demo/blog*.ex,scrypath_demo_web/{endpoint,router}.ex}` and migrations — real data and request boundaries.
 - [VERIFIED: phase context] `145-CONTEXT.md`, Phase 144 artifacts, roadmap, requirements, advisory triage, README, CONTRIBUTING, and CI workflow — locked scope, target ranges, proof taxonomy, and gate order.
 - [VERIFIED: Hex registry via `mix hex.info`] Phoenix, Bandit, Ecto SQL, and Postgrex selected fixed-line publication evidence.
+- [VERIFIED: Hex registry API, 2026-08-22] `https://hex.pm/api/packages/{plug,phoenix,bandit}/releases/{version}` and `https://hex.pm/api/packages/plug` — published Plug requirements, release metadata, and the current affected-version ranges.
+- [VERIFIED: detached Mix resolution, 2026-08-22] Exact-SHA disposable probes of `e50fbd5694c75ff5f25c2a07046185f35c107dd9` — unbounded Plug `1.20.3` and direct-`~> 1.19.5` Plug `1.19.5` both compile and pass unsuppressed `mix hex.audit`; only the latter satisfies D-05.
 
 ### Secondary (MEDIUM confidence)
 
@@ -556,5 +632,5 @@ end, nil)
 - Architecture: HIGH — codebase supplies the exact schemas, endpoint, generated support, smoke lane, and configured adapter.
 - Pitfalls: HIGH — constraints enumerate stop conditions and official Sandbox/Bandit documentation corroborates the operational hazards.
 
-**Research date:** 2026-08-22
+**Research date:** 2026-08-22 (execution-recovery addendum added 2026-08-22)
 **Valid until:** 2026-08-29 (fast-moving advisory and package-resolution domain)
