@@ -252,6 +252,43 @@ defmodule Scrypath.TelemetryTest do
     assert wait_stop.metadata.final_status == :succeeded
   end
 
+  test "meilisearch request errors retain identity without request secrets or payloads" do
+    api_key = "telemetry-api-key-144"
+    request_body = "telemetry-body-144"
+    stub = Module.concat(__MODULE__, RequestErrorStub)
+
+    Req.Test.stub(stub, fn conn ->
+      Req.Test.transport_error(conn, :timeout)
+    end)
+
+    events =
+      capture_events([[:scrypath, :meilisearch, :request]], fn ->
+        assert {:error, {:transport_error, %Req.TransportError{reason: :timeout}}} =
+                 Client.get_settings("telemetry_posts",
+                   meilisearch_url: "http://localhost:7700",
+                   meilisearch_api_key: api_key,
+                   req_options: [
+                     plug: {Req.Test, stub},
+                     retry: false,
+                     headers: [{"x-request-body", request_body}]
+                   ]
+                 )
+      end)
+
+    request_stop = find_event(events, [:scrypath, :meilisearch, :request, :stop])
+    metadata = request_stop.metadata
+
+    assert metadata.method == :get
+    assert metadata.path == "/indexes/telemetry_posts/settings"
+    assert is_binary(metadata.error)
+    assert metadata.error =~ "Req.TransportError"
+    refute Map.has_key?(metadata, :headers)
+    refute Map.has_key?(metadata, :body)
+    refute Map.has_key?(metadata, :payload)
+    refute inspect(metadata) =~ api_key
+    refute inspect(metadata) =~ request_body
+  end
+
   test "docs explain the sync mode matrix and async lifecycle contract" do
     readme = File.read!("README.md")
     sync_guide = File.read!("guides/sync-modes-and-visibility.md")
