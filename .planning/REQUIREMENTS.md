@@ -1,87 +1,69 @@
-# Requirements: Scrypath
+# Requirements: Scrypath v1.36 Dependency Security Remediation
 
-**Status:** No active feature or repair requirements
-**Last reconciled:** 2026-07-11
+**Defined:** 2026-08-21
+**Status:** Active
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Active
+## v1.36 Requirements
 
-No active feature, repair, or brand requirements.
+### Dependency Remediation
 
-The default lane is idle maintenance-and-evidence mode: release/support truth, proof stability, public claim drift, and outside-adopter evidence only when concrete signal appears. Do not open a new milestone just because additional polish is imaginable.
+- [ ] **SEC-01:** Maintainers can resolve root Scrypath beyond its recorded Req, Mint, hpax, and Plug advisories using fixed-compatible constraints.
+- [ ] **SEC-02:** Maintainers can resolve the legacy Phoenix example's recorded advisories through coordinated Phoenix/Bandit and Ecto/Ecto SQL/Decimal upgrades.
+- [ ] **SEC-03:** Maintainers can independently resolve ScrypathOps beyond its recorded web, LiveView, mailer, HTTP, and database advisories.
+- [ ] **SEC-04:** Maintainers can independently resolve the ecommerce example beyond its recorded advisories after the remediated root and ScrypathOps sources are green.
 
-## Recently Validated
+### Compatibility Proof
 
-### v1.35 Brand System & Logo Identity
+- [ ] **COMPAT-01:** Each dependency graph passes its documented deterministic gates before maintainers begin the next remediation batch.
+- [ ] **COMPAT-02:** Existing Req-backed Meilisearch and Swoosh behavior remains covered after the Req 0.6 transition.
+- [ ] **COMPAT-03:** Maintainers record available ecommerce browser proof separately from required deterministic checks and never report unavailable prerequisites as passing.
 
-**Shipped:** 2026-06-24
-**Archived:** 2026-07-11
-**Completion mode:** Direct completion in commit `fcb8fc7`; phases 138-143 intentionally have no GSD phase directories or PLAN/SUMMARY artifacts.
+### Security Evidence
 
-- [x] **BRAND-AUDIT-01:** Brand pressure-test, cited research, and decision-log completed under `brandbook/notes/`.
-- [x] **LOGO-DIRECTIONS-01:** Owner selection recorded; final direction is the copper `/` `scry/path` identity. Routed-S concepts are rejected historical exploration.
-- [x] **LOGO-SYSTEM-01:** Transparent, cage-free SVG family shipped under `brandbook/assets/`.
-- [x] **TOKENS-PKG-01:** Portable token package and subset woff2 fonts shipped under `brandbook/tokens/` and `brandbook/assets/fonts/`.
-- [x] **BRANDBOOK-HTML-01:** Self-contained brand book, examples, README, and accessibility notes shipped under `brandbook/`.
-- [x] **BRAND-ADOPT-01:** New identity adopted across root README, ScrypathOps logo/favicon/layout, website brand mark, and OG image.
-- [x] **BRAND-VERIFY-01:** Direct evidence archived through commit `fcb8fc7`, brandbook notes, logo proof sheet, accessibility checks, package-size discipline, and planning audit.
+- [ ] **EVID-01:** Maintainers have dated `mix deps.get` evidence from all four project directories showing none of the advisories recorded on 2026-08-16.
+- [ ] **EVID-02:** The milestone delivers four ordered, graph-local commits with explained lockfile changes and no unrelated upgrades.
+- [ ] **EVID-03:** Postgrex changes remain blocked until both the live advisory and Hex registry confirm a stable published fixed release; maintainers do not substitute an invented version or prerelease.
 
-Archive files:
+## Future Requirements
 
-- `milestones/v1.35-ROADMAP.md`
-- `milestones/v1.35-REQUIREMENTS.md`
-- `milestones/v1.35-MILESTONE-AUDIT.md`
+### Dependency Maintenance
 
-### v1.34 Both-Themes Perfection - Dark Signature + AA Gate
-
-**Shipped:** 2026-06-29
-**Archived:** 2026-07-11
-
-- [x] **CONTRAST-HARNESS-01**, **DARKAUDIT-01**, **DARKTOKEN-01**, **GLOW-01**, **COPPER-01**, **A11Y-TOKEN-01**, **DARKMOTION-01**, **SCREEN-DARK-01**, **SHELL-DARK-01**, **DUALVERIFY-01** - both-themes perfection wedge closed with dark signature, light parity, AA hard gate, browser proof, screenshot matrix recapture, before/after gallery, milestone audit, and approved Human UAT.
-
-Archive files:
-
-- `milestones/v1.34-ROADMAP.md`
-- `milestones/v1.34-REQUIREMENTS.md`
-- `milestones/v1.34-MILESTONE-AUDIT.md`
-
-## Traceability
-
-| Requirement | Milestone | Phase | Final Status | Evidence |
-|-------------|-----------|-------|--------------|----------|
-| BRAND-AUDIT-01 | v1.35 | 137 | Complete | `brandbook/notes/pressure-test.md`, `research.md`, `decision-log.md` |
-| LOGO-DIRECTIONS-01 | v1.35 | 138 | Complete | `brandbook/notes/logo-options.md` |
-| LOGO-SYSTEM-01 | v1.35 | 139 | Complete | `brandbook/assets/*.svg`, `brandbook/notes/logo-final-c.html` |
-| TOKENS-PKG-01 | v1.35 | 140 | Complete | `brandbook/tokens/*`, `brandbook/assets/fonts/*` |
-| BRANDBOOK-HTML-01 | v1.35 | 141 | Complete | `brandbook/index.html`, `brandbook/examples/*`, `brandbook/README.md` |
-| BRAND-ADOPT-01 | v1.35 | 142 | Complete | README, ScrypathOps logo/favicon/layout, website brand-mark/OG |
-| BRAND-VERIFY-01 | v1.35 | 143 | Complete | `fcb8fc7`, accessibility notes, logo proof sheet, archive audit |
-| CONTRAST-HARNESS-01 | v1.34 | 128 | Complete | `milestones/v1.34-REQUIREMENTS.md` |
-| DARKAUDIT-01 | v1.34 | 129 | Complete | `milestones/v1.34-REQUIREMENTS.md` |
-| DARKTOKEN-01 | v1.34 | 130 | Complete | `milestones/v1.34-REQUIREMENTS.md` |
-| GLOW-01 | v1.34 | 131 | Complete | `milestones/v1.34-REQUIREMENTS.md` |
-| COPPER-01 | v1.34 | 131 | Complete | `milestones/v1.34-REQUIREMENTS.md` |
-| A11Y-TOKEN-01 | v1.34 | 132 | Complete | `milestones/v1.34-REQUIREMENTS.md` |
-| DARKMOTION-01 | v1.34 | 133 | Complete | `milestones/v1.34-REQUIREMENTS.md` |
-| SCREEN-DARK-01 | v1.34 | 134 | Complete | `milestones/v1.34-REQUIREMENTS.md` |
-| SHELL-DARK-01 | v1.34 | 135 | Complete | `milestones/v1.34-REQUIREMENTS.md` |
-| DUALVERIFY-01 | v1.34 | 136 | Complete | `milestones/v1.34-REQUIREMENTS.md` |
-
-## Open Follow-ups
-
-- Pending nonblocking TODO: `.planning/todos/pending/2026-07-01-rewrite-ops-ui-microcopy-around-operator-jtbd.md`.
-
-This is not an active milestone requirement.
+- **DEPS-01:** Maintainers can perform broader dependency modernization after a separate compatibility review establishes value beyond the reproduced advisories.
+- **AUTO-01:** Maintainers can evaluate additional security automation or cross-project dependency tooling after repeated maintenance cycles establish a concrete need.
 
 ## Out of Scope
 
-- Postgres-native full-text search as a first-class v1 product surface.
-- Public multi-backend support before real adoption pressure proves the common contract deserves to widen.
-- Advanced relevance features such as vector search, hybrid retrieval, personalization, analytics, or autocomplete/suggestions before the operational core and public release story settle.
-- Public `%Scrypath.Query{}` or other internal normalization structs as semver-stable contract.
-- Schema-generated runtime search verbs, controller/LiveView macros, or any helper that turns Scrypath into a framework facade.
-- Reusable UI widgets, search-page scaffolds, or broader composition/preset systems.
+| Feature | Reason |
+|---------|--------|
+| Package-head modernization | Expands regression scope beyond the recorded advisories and weakens causal review. |
+| Advisory suppression or ignore configuration | Silences findings without providing patched dependency evidence. |
+| New permanent CI or security infrastructure | Changes green-main policy and requires a separately approved design. |
+| Product APIs, search behavior, backend breadth, or Phoenix UI work | v1.36 is maintenance-only and must preserve the existing product contract. |
+| Broad compatibility refactors | Only narrowly demonstrated fixes required by an approved dependency transition belong in this milestone. |
 
-## Archive Policy
+## Traceability
 
-Root requirements describe current posture and recently validated requirements only. Detailed milestone requirements live under `milestones/v*-REQUIREMENTS.md`.
+Roadmap creation maps each v1.36 requirement to exactly one phase.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| SEC-01 | TBD | Pending |
+| SEC-02 | TBD | Pending |
+| SEC-03 | TBD | Pending |
+| SEC-04 | TBD | Pending |
+| COMPAT-01 | TBD | Pending |
+| COMPAT-02 | TBD | Pending |
+| COMPAT-03 | TBD | Pending |
+| EVID-01 | TBD | Pending |
+| EVID-02 | TBD | Pending |
+| EVID-03 | TBD | Pending |
+
+**Coverage:**
+- v1.36 requirements: 10 total
+- Mapped to phases: 0
+- Unmapped: 10
+
+---
+*Requirements defined: 2026-08-21*
+*Last updated: 2026-08-21 after v1.36 requirements approval*
