@@ -3,7 +3,7 @@ phase: 144
 slug: root-http-client-dependency-remediation
 status: draft
 nyquist_compliant: false
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-08-22
 ---
 
@@ -39,20 +39,22 @@ created: 2026-08-22
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
 | 144-01-01 | 01 | 1 | SEC-01, COMPAT-02 | T-144-01 | All three direct Req constraints use `~> 0.6.1`; root Plug uses `~> 1.19.5`; all four locks resolve one compatible Req closure without unrelated upgrades | manifest/lock contract | `mix deps.get --check-locked` in root, `scrypath_ops`, `examples/phoenix_meilisearch`, and `examples/scrypath_ecommerce` | ✅ manifests/locks | ⬜ pending |
-| 144-01-02 | 01 | 1 | COMPAT-02 | T-144-02, T-144-03 | Req 0.6 preserves tagged errors, caller/default header merging, unique task-filter encoding, and error telemetry redaction | focused ExUnit/Req.Test | `mix test test/scrypath/meilisearch/client_test.exs test/scrypath/telemetry_test.exs --exclude integration --exclude docs_contract` | ❌ Wave 0 causal cases | ⬜ pending |
-| 144-02-01 | 02 | 2 | SEC-01, COMPAT-02 | T-144-01, T-144-02, T-144-03 | Deterministic compile, fast-test, verify, phase-11, and phase-99 gates pass on the checked locks | root verification bundle | `mix deps.get && mix compile --warnings-as-errors && mix test --exclude integration --exclude docs_contract && mix verify --exclude integration && mix verify.phase11 && mix verify.phase99` | ✅ existing tasks | ⬜ pending |
-| 144-02-02 | 02 | 2 | SEC-01 | T-144-01 | A detached exact-candidate root resolution selects Req `>= 0.6.1` and `< 0.7.0`, Plug `>= 1.19.5` and `< 1.20.0`, Mint `>= 1.9.3`, hpax `>= 1.0.4`, and `mix hex.audit` exits zero without suppression | isolated network proof | Disposable-worktree `mix deps.get` followed by `mix hex.audit` and version/path inspection | ❌ execution procedure | ⬜ pending |
+| 144-02-01 | 02 | 2 | COMPAT-02 | T-144-02, T-144-03, T-144-04 | Req 0.6 preserves tagged errors, caller/default header merging, unique task-filter encoding, and error telemetry redaction | focused ExUnit/Req.Test | `mix test test/scrypath/meilisearch/client_test.exs test/scrypath/telemetry_test.exs --exclude integration --exclude docs_contract` | ❌ Plan 02 / Wave 2 causal cases | ⬜ pending |
+| 144-03-01 | 03 | 3 | SEC-01, COMPAT-02 | T-144-01, T-144-02, T-144-03 | Deterministic compile, fast-test, verify, phase-11, and phase-99 gates pass on the checked locks after the focused compatibility plan | root verification bundle | `mix deps.get && mix compile --warnings-as-errors && mix test --exclude integration --exclude docs_contract && mix verify --exclude integration && mix verify.phase11 && mix verify.phase99` | ✅ existing tasks | ⬜ pending |
+| 144-03-02 | 03 | 3 | SEC-01 | T-144-05, T-144-06 | A detached exact-candidate root resolution selects Req `>= 0.6.1` and `< 0.7.0`, Plug `>= 1.19.5` and `< 1.20.0`, Mint `>= 1.9.3`, hpax `>= 1.0.4`, and `mix hex.audit` exits zero without suppression | isolated network proof | Disposable-worktree `mix deps.get` followed by `mix hex.audit` and version/path inspection | ❌ Plan 03 / Wave 3 execution evidence | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
 ---
 
-## Wave 0 Requirements
+## Plan-Scoped Test Additions (No Wave 0)
 
-- [ ] Extend `test/scrypath/meilisearch/client_test.exs` (or one focused equivalent) with retry-disabled transport-error normalization, default/caller header merging, and unique task-filter encoding coverage for COMPAT-02.
-- [ ] Extend `test/scrypath/telemetry_test.exs` with error-event assertions proving headers, bodies, and API keys are absent for COMPAT-02.
-- [ ] Define the disposable detached-worktree command sequence for the exact-candidate fresh-resolution and `mix hex.audit` evidence required by SEC-01; do not add a permanent script or CI lane.
-- [ ] Add no test framework or dependency; reuse ExUnit and `Req.Test`.
+Existing infrastructure covers all phase requirements; no Wave 0 plan or framework setup is required.
+
+- [ ] Plan 144-02 / Wave 2 extends `test/scrypath/meilisearch/client_test.exs` (or one focused equivalent) with retry-disabled transport-error normalization, default/caller header merging, and unique task-filter encoding coverage for COMPAT-02.
+- [ ] Plan 144-02 / Wave 2 extends `test/scrypath/telemetry_test.exs` with error-event assertions proving headers, bodies, and API keys are absent for COMPAT-02.
+- [ ] Plan 144-03 / Wave 3 executes the disposable detached-worktree command sequence for the exact-candidate fresh-resolution and `mix hex.audit` evidence required by SEC-01; do not add a permanent script or CI lane.
+- [ ] Add no test framework or dependency; Plans 144-02 and 144-03 reuse ExUnit, `Req.Test`, and the existing command surface.
 
 ---
 
@@ -67,9 +69,9 @@ created: 2026-08-22
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verification or Wave 0 dependencies.
+- [ ] All tasks have `<automated>` verification.
 - [ ] Sampling continuity: no three consecutive tasks without automated verification.
-- [ ] Wave 0 covers all missing references.
+- [x] No Wave 0 prerequisites remain; existing infrastructure supports all planned verification.
 - [ ] No watch-mode flags.
 - [ ] Task-level feedback latency is under 60 seconds.
 - [ ] `nyquist_compliant: true` set in frontmatter after validation.
