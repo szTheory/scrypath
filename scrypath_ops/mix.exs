@@ -56,7 +56,7 @@ defmodule ScrypathOps.MixProject do
       # Hex package avoids git-based heroicons fetch (GitHub credential helpers can block `mix deps.get` in some environments).
       {:heroicons, "~> 0.5.7", app: false},
       {:swoosh, "~> 1.16"},
-      {:req, "~> 0.5"},
+      {:req, "~> 0.6.1"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 1.0"},
