@@ -92,7 +92,19 @@ Plans:
   4. Any Postgrex update uses only a stable published release confirmed fixed by both the live advisory and Hex registry; otherwise this batch stops without a substitute version.
   5. The ScrypathOps manifest and lockfile form one isolated, explained third commit with no unrelated upgrades.
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+**Wave 1**
+
+- [ ] 146-01-PLAN.md — Create the atomic fixed-compatible Ops candidate and real service-free Swoosh Req contract.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 146-02-PLAN.md — Prove the exact candidate through the binding Ops and named root deterministic gates.
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 146-03-PLAN.md — Capture detached exact-SHA fresh-resolution, Postgrex authority, audit, cleanup, and handoff evidence.
 
 ### Phase 147: Ecommerce Mounted-Ops Remediation and Closure Evidence
 
