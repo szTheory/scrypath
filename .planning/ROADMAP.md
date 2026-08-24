@@ -92,7 +92,7 @@ Plans:
   4. Any Postgrex update uses only a stable published release confirmed fixed by both the live advisory and Hex registry; otherwise this batch stops without a substitute version.
   5. The ScrypathOps manifest and lockfile form one isolated, explained third commit with no unrelated upgrades.
 
-**Plans**: 1/3 plans executed
+**Plans**: 2/3 plans executed
 
 **Wave 1**
 
@@ -100,7 +100,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 146-02-PLAN.md — Prove the exact candidate through the binding Ops and named root deterministic gates.
+- [x] 146-02-PLAN.md — Prove the exact candidate through the binding Ops and named root deterministic gates.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -127,7 +127,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 144. Root HTTP Client Dependency Remediation | 3/3 | Complete    | 2026-08-22 |
 | 145. Legacy Phoenix and Ecto/Decimal Remediation | 2/2 | Complete    | 2026-08-22 |
-| 146. ScrypathOps Web/Client Remediation | 1/3 | In Progress|  |
+| 146. ScrypathOps Web/Client Remediation | 2/3 | In Progress|  |
 | 147. Ecommerce Mounted-Ops Remediation and Closure Evidence | 0/TBD | Not started | - |
 
 ## Direct-Completion Bookkeeping Note
