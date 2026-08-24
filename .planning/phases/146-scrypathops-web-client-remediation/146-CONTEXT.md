@@ -135,6 +135,22 @@ policy listed v1.20 for bug fixes and v1.19 for security patches only.
 - **D-18:** Keep the ScrypathOps manifest, lock, focused Swoosh contract, and any
   unavoidable causal compatibility fix in one isolated third remediation commit.
   Do not include ecommerce files or unrelated upgrades.
+
+#### Execution-discovered verifier amendment — D-18 test-only closure (2026-08-24)
+
+Phase verification found that the focused contract committed in `59d2e6a` uses
+a `text/plain` response and therefore cannot discriminate Swoosh's required
+`decode_body: false` precedence from the conflicting caller option
+`client_options[:decode_body] = true`. Preserve `59d2e6a` as the one dependency
+remediation implementation commit containing the manifest, lock, and initial
+focused contract. Permit exactly one separately labeled verifier-driven closure
+commit that changes only
+`scrypath_ops/test/scrypath_ops/swoosh_api_client_req_test.exs` to return an
+`application/json` response and assert the exact raw JSON binary. The closure
+commit must not change production/runtime code, the manifest, the lock, UI,
+routes, schema, provider configuration, CI, or ecommerce, and its evidence must
+report the two-commit history truthfully rather than squash, amend, or rewrite
+the existing dependency commit.
 - **D-19:** Stop and re-plan if remediation would require public Scrypath API or
   configuration changes, a new route/screen/socket, a database migration, UI
   behavior or brand changes, a mail-provider decision, a permanent CI/security
