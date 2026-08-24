@@ -17,7 +17,10 @@ defmodule ScrypathOps.SwooshApiClientReqTest do
       assert Plug.Conn.get_req_header(conn, "x-conflicting-client-option") == []
 
       assert {:ok, ^body, conn} = Plug.Conn.read_body(conn)
-      Req.Test.text(conn, "raw provider response")
+
+      conn
+      |> Plug.Conn.put_resp_content_type("application/json")
+      |> Plug.Conn.send_resp(200, ~s({"accepted":true}))
     end)
 
     email = %Swoosh.Email{
@@ -35,7 +38,7 @@ defmodule ScrypathOps.SwooshApiClientReqTest do
 
     assert :ok = Swoosh.ApiClient.Req.init()
 
-    assert {:ok, 200, response_headers, "raw provider response"} =
+    assert {:ok, 200, response_headers, ~s({"accepted":true})} =
              Swoosh.ApiClient.Req.post(
                url,
                [{"x-provider-token", "token-146"}, {"x-client-option", "forwarded-146"}],
@@ -43,7 +46,7 @@ defmodule ScrypathOps.SwooshApiClientReqTest do
                email
              )
 
-    assert {"content-type", "text/plain; charset=utf-8"} in response_headers
+    assert {"content-type", "application/json; charset=utf-8"} in response_headers
   end
 
   test "propagates Req transport errors without changing the wrapper shape" do
