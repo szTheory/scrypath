@@ -24,7 +24,7 @@
 
 - [x] **Phase 144: Root HTTP Client Dependency Remediation** - Remediate the root Req/HTTP stack with behavior-preserving library proof. (completed 2026-08-22)
 - [x] **Phase 145: Legacy Phoenix and Ecto/Decimal Remediation** - Resolve the legacy example's coordinated web and data dependency constraints. (completed 2026-08-22)
-- [ ] **Phase 146: ScrypathOps Web/Client Remediation** - Prove ScrypathOps independently resolves and operates on fixed-compatible dependencies.
+- [x] **Phase 146: ScrypathOps Web/Client Remediation** - Prove ScrypathOps independently resolves and operates on fixed-compatible dependencies. (completed 2026-08-24)
 - [ ] **Phase 147: Ecommerce Mounted-Ops Remediation and Closure Evidence** - Remediate the mounted integration and close all four graph-local evidence and commit boundaries.
 
 ## Phase Details
@@ -129,7 +129,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 144. Root HTTP Client Dependency Remediation | 3/3 | Complete    | 2026-08-22 |
 | 145. Legacy Phoenix and Ecto/Decimal Remediation | 2/2 | Complete    | 2026-08-22 |
-| 146. ScrypathOps Web/Client Remediation | 4/4 | In Progress|  |
+| 146. ScrypathOps Web/Client Remediation | 4/4 | Complete    | 2026-08-24 |
 | 147. Ecommerce Mounted-Ops Remediation and Closure Evidence | 0/TBD | Not started | - |
 
 ## Direct-Completion Bookkeeping Note
