@@ -5,15 +5,15 @@ milestone_name: Dependency Security Remediation
 current_phase: 146
 current_phase_name: ScrypathOps Web/Client Remediation
 status: executing
-stopped_at: Completed 146-01-PLAN.md
-last_updated: "2026-08-24T20:38:38.121Z"
+stopped_at: Completed 146-02-PLAN.md
+last_updated: "2026-08-24T20:43:02.661Z"
 last_activity: 2026-08-24
 last_activity_desc: Phase 146 execution started
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 8
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -26,7 +26,7 @@ progress:
 ## Current Position
 
 Phase: 146 (ScrypathOps Web/Client Remediation) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-08-24 — Phase 146 execution started
 
@@ -156,6 +156,7 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 | Phase 145-legacy-phoenix-and-ecto-decimal-remediation P01 | 15m | 1 tasks | 4 files |
 | Phase 145 P02 | 2m 25s | 2 tasks | 2 files |
 | Phase 146 P01 | 24m | 1 tasks | 3 files |
+| Phase 146 P02 | 2min | 2 tasks | 1 files |
 
 ## Decisions
 
@@ -201,9 +202,10 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 - [Phase ?]: Phase 145 recovery proof binds deterministic, detached unsuppressed audit, and supplemental live-smoke evidence to recovery commit 4e2abed.
 - [Phase ?]: Phase 146 Plan 01 retained the reviewed Plug 1.19.5 causal lock selection rather than accepting the solver's out-of-range 1.20.3 package-head result.
 - [Phase ?]: Phase 146 Plan 01 proves Swoosh.ApiClient.Req through per-test Req.Test plugs without changing global Swoosh test configuration.
+- [Phase ?]: Phase 146 Plan 02: Exact candidate 59d2e6a passed ordered deterministic Ops and root release-train gates; primary Ops lock remained byte-identical.
 
 ## Session
 
-**Last session:** 2026-08-24T20:38:38.107Z
-**Stopped at:** Completed 146-01-PLAN.md
+**Last session:** 2026-08-24T20:43:02.652Z
+**Stopped at:** Completed 146-02-PLAN.md
 **Resume file:** None
