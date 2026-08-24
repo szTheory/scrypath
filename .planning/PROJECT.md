@@ -25,6 +25,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 **Goal:** Restore a clean dependency-security posture without broadening product scope or weakening the green-main release train.
 
 **Recent closed outcomes:**
+- Phase 146 ScrypathOps web/client remediation: bounded Phoenix, LiveView, Bandit, Swoosh, Postgrex, and Req; proved the real Req-backed Swoosh client with a discriminating raw-JSON contract; passed standalone Ops and root release gates, detached fresh resolution, live Postgrex/Plug predicates, unsuppressed audit, and security verification.
 - Phase 145 legacy Phoenix and Ecto/Decimal remediation: bounded Phoenix, Bandit, Ecto SQL, Postgrex, and Plug to the fixed-compatible cohort; preserved transitive Ecto/Decimal ownership; passed deterministic, detached fresh-resolution, Hex audit, root regression, and Docker-backed Postgres/Meilisearch proof.
 - Phase 144 root HTTP client dependency remediation: bounded Req 0.6.3 and Plug 1.19.5 handoff across four checked locks, focused Req.Test/telemetry compatibility proof, full root release-train verification, and clean fresh-resolution Hex audit.
 - v1.35 brand system and logo identity: self-contained `brandbook/`, copper `/` `scry/path` logo, subset fonts/tokens, README/ScrypathOps/website adoption, direct-completion archive.
@@ -65,7 +66,7 @@ Phase 97 through 99 banned capability classes:
 
 ## Current State
 
-**v1.36 Phase 145 — Legacy Phoenix and Ecto/Decimal Remediation** completed on **2026-08-22**. The legacy Phoenix example now resolves a bounded fixed-compatible Phoenix/Bandit/Ecto SQL/Postgrex/Plug cohort with transitive Ecto 3.14 and Decimal 3; deterministic checks, detached fresh resolution, the unsuppressed Hex audit, root regression, and Docker-backed Postgres/Meilisearch proof passed. Phase 146 is next and retains ownership of configured Swoosh runtime proof.
+**v1.36 Phase 146 — ScrypathOps Web/Client Remediation** completed on **2026-08-24**. ScrypathOps now resolves the approved fixed-compatible Phoenix/LiveView/Bandit/Swoosh/Postgrex/Req cohort, retains reviewed transitive ownership, and has direct service-free proof of the production-selected Swoosh Req client—including raw JSON response precedence. Standalone Ops, root release-train, detached fresh-resolution, live publication, unsuppressed audit, cleanup, code-review, and threat-verification gates passed. Phase 147 is next and retains the ecommerce mounted integration plus all-four-graph closure evidence.
 
 **v1.35 - Brand System & Logo Identity** shipped directly on **2026-06-24** and was archived in-repo on **2026-07-11** across phases **137-143**. It delivered the copper `/` **scry/path** identity, full transparent SVG family, self-contained `brandbook/` package, subset woff2 fonts, portable tokens, accessibility notes, examples, and adoption across README, ScrypathOps, website, favicon, and OG surfaces.
 
@@ -221,12 +222,13 @@ Current planning files: **`.planning/{ROADMAP,REQUIREMENTS,STATE}.md`** plus arc
 
 ## Planning window
 
-**Active milestone:** v1.36 Dependency Security Remediation. Phases 144 and 145 are complete; Phase 146 (ScrypathOps web/client remediation) is next. v1.35 remains complete and archived from direct evidence; missing phase artifacts for phases 138-143 are expected and must not be treated as work to resume.
+**Active milestone:** v1.36 Dependency Security Remediation. Phases 144–146 are complete; Phase 147 (ecommerce mounted-Ops remediation and all-four-graph closure evidence) is next. v1.35 remains complete and archived from direct evidence; missing phase artifacts for phases 138-143 are expected and must not be treated as work to resume.
 
 ## Requirements
 
 ### Validated
 
+- [x] **Phase 146** (2026-08-24): **SEC-03**, **EVID-03** — ScrypathOps aligned to the approved fixed-compatible web/client/data cohort; real `Swoosh.ApiClient.Req` behavior, raw JSON precedence, standalone Ops, root release gates, detached fresh resolution, live Postgrex/Plug eligibility, unsuppressed audit, cleanup, code review, and threat verification passed.
 - [x] **Phase 145** (2026-08-22): **SEC-02** — legacy Phoenix example aligned to the bounded fixed-compatible Phoenix/Bandit/Ecto SQL/Postgrex/Plug cohort with transitive Ecto 3.14 and Decimal 3; deterministic compatibility checks, detached fresh resolution, unsuppressed Hex audit, root regression, and Docker-backed service proof passed.
 - [x] **Phase 144** (2026-08-22): **SEC-01**, **COMPAT-02** — root and checked path-consumer Req floors aligned at fixed-compatible versions; focused Req-backed behavior, deterministic release gates, detached fresh resolution, and unsuppressed root advisory audit passed. Configured Swoosh runtime proof remains Phase 146's explicit responsibility.
 - [x] **v1.35** (2026-06-24): **BRAND-AUDIT-01**, **LOGO-DIRECTIONS-01**, **LOGO-SYSTEM-01**, **TOKENS-PKG-01**, **BRANDBOOK-HTML-01**, **BRAND-ADOPT-01**, **BRAND-VERIFY-01** — brand system and logo identity closed by direct evidence: copper `/` `scry/path` identity, transparent SVG family, self-contained brandbook, subset fonts/tokens, accessibility notes, README/ScrypathOps/website adoption, and direct-completion archive. No phase artifacts should be synthesized for phases 138-143.
@@ -333,4 +335,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-22 - Phase 145 legacy Phoenix and Ecto/Decimal remediation complete*
+*Last updated: 2026-08-24 - Phase 146 ScrypathOps web/client remediation complete*
