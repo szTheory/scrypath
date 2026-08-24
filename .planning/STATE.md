@@ -5,15 +5,15 @@ milestone_name: Dependency Security Remediation
 current_phase: 146
 current_phase_name: ScrypathOps Web/Client Remediation
 status: executing
-stopped_at: Phase 146 UI-SPEC approved
-last_updated: "2026-08-24T20:30:12.216Z"
-last_activity: 2026-08-22
-last_activity_desc: Phase 145 complete, transitioned to Phase 146
+stopped_at: Completed 146-01-PLAN.md
+last_updated: "2026-08-24T20:38:38.121Z"
+last_activity: 2026-08-24
+last_activity_desc: Phase 146 execution started
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 8
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 145 — legacy-phoenix-and-ecto-decimal-remediation
+**Current Focus:** Phase 146 — ScrypathOps Web/Client Remediation
 
 ## Current Position
 
-Phase: 146 — ScrypathOps Web/Client Remediation
-Plan: Not started
+Phase: 146 (ScrypathOps Web/Client Remediation) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-08-22 — Phase 145 complete, transitioned to Phase 146
+Last activity: 2026-08-24 — Phase 146 execution started
 
 ## Completed Milestones
 
@@ -155,6 +155,7 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 | Phase 144 P03 | ~7m | 2 tasks | 1 files |
 | Phase 145-legacy-phoenix-and-ecto-decimal-remediation P01 | 15m | 1 tasks | 4 files |
 | Phase 145 P02 | 2m 25s | 2 tasks | 2 files |
+| Phase 146 P01 | 24m | 1 tasks | 3 files |
 
 ## Decisions
 
@@ -198,9 +199,11 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 - [Phase ?]: Used a direct supervised Bandit plug listener with ThousandIsland listener introspection, avoiding endpoint-policy changes.
 - [Phase ?]: Phase 145 Plan 02 directly bounds legacy Plug at ~> 1.19.5; the reviewed lock remains unchanged because it already selected Plug 1.19.5.
 - [Phase ?]: Phase 145 recovery proof binds deterministic, detached unsuppressed audit, and supplemental live-smoke evidence to recovery commit 4e2abed.
+- [Phase ?]: Phase 146 Plan 01 retained the reviewed Plug 1.19.5 causal lock selection rather than accepting the solver's out-of-range 1.20.3 package-head result.
+- [Phase ?]: Phase 146 Plan 01 proves Swoosh.ApiClient.Req through per-test Req.Test plugs without changing global Swoosh test configuration.
 
 ## Session
 
-**Last session:** 2026-08-24T20:04:56.746Z
-**Stopped at:** Phase 146 UI-SPEC approved
-**Resume file:** .planning/phases/146-scrypathops-web-client-remediation/146-UI-SPEC.md
+**Last session:** 2026-08-24T20:38:38.107Z
+**Stopped at:** Completed 146-01-PLAN.md
+**Resume file:** None
