@@ -1,27 +1,25 @@
 ---
 phase: 146-scrypathops-web-client-remediation
-verified: 2026-08-24T21:43:02Z
-status: gaps_found
-score: 4/5 must-haves verified
+verified: 2026-08-24T22:05:50Z
+status: passed
+score: 5/5 must-haves verified
 behavior_unverified: 0
 overrides_applied: 0
-gaps:
-  - truth: "The configured Req-backed Swoosh integration remains covered and works without relying on ecommerce as proof."
-    status: partial
-    reason: "The real Swoosh.ApiClient.Req path is invoked and the focused test passes, but its only raw-response case uses text/plain. That result is identical whether Swoosh overrides conflicting client_options[:decode_body] = true to false or incorrectly lets Req decode JSON responses. The required Swoosh-owned decode_body precedence and raw JSON-body invariant are therefore not proven."
-    artifacts:
-      - path: "scrypath_ops/test/scrypath_ops/swoosh_api_client_req_test.exs"
-        issue: "The Req.Test stub returns text/plain instead of JSON with application/json while the caller supplies decode_body: true."
-    missing:
-      - "Return a JSON application/json response from the Req.Test stub and assert Swoosh.ApiClient.Req.post/4 returns the original JSON binary despite client_options decode_body: true."
+re_verification:
+  previous_status: gaps_found
+  previous_score: 4/5
+  gaps_closed:
+    - "The configured Req-backed Swoosh integration returns the exact raw JSON binary despite conflicting decode_body: true."
+  gaps_remaining: []
+  regressions: []
 ---
 
 # Phase 146: ScrypathOps Web/Client Remediation Verification Report
 
 **Phase Goal:** Maintainers can independently run ScrypathOps on its fixed-compatible web, LiveView, mailer, HTTP, database, and transitive dependency graph.
-**Verified:** 2026-08-24T21:43:02Z
-**Status:** gaps_found
-**Re-verification:** No — initial verification
+**Verified:** 2026-08-24T22:05:50Z
+**Status:** passed
+**Re-verification:** Yes — after gap closure
 
 ## Goal Achievement
 
@@ -29,94 +27,87 @@ gaps:
 
 | # | Truth | Status | Evidence |
 | --- | --- | --- | --- |
-| 1 | A fresh ScrypathOps resolution selects fixed-compatible bounded web, LiveView, Swoosh, Req, and applicable transitive versions without recorded advisories. | ✓ VERIFIED | Current checked lock selects Phoenix 1.8.12, LiveView 1.1.33, Bandit 1.12.5, Swoosh 1.26.3, Postgrex 0.22.4, Req 0.6.3, Plug 1.19.5, Mint 1.9.3, and hpax 1.0.4. Fresh lockless exact-SHA evidence in `146-03-SUMMARY.md` records compatible selections (including transitive Plug 1.20.3) and an unsuppressed `mix hex.audit` exit 0; the verifier independently reran the current checked-lock audit, also exit 0. |
-| 2 | `mix verify.opsui` and the named required root regression gates pass against the standalone remediated ScrypathOps graph. | ✓ VERIFIED | Verifier reran `mix verify.opsui`: 2 doctests and 154 tests, 0 failures. `146-02-SUMMARY.md` records the exact candidate SHA and zero exits for `main-ci`, `repo-hygiene`, `release-truth`, and `phase99-trust`; all are planning-only descendants of the candidate. |
-| 3 | The configured Req-backed Swoosh integration remains covered and works without relying on ecommerce as proof. | ✗ FAILED | `prod.exs` selects `Swoosh.ApiClient.Req`, `test.exs` retains `Swoosh.Adapters.Test` and `api_client: false`, and the direct service-free Req.Test module passes. However, the passing happy-path stub emits text/plain, so it cannot distinguish raw preservation from an erroneous JSON decode when `client_options` supplies `decode_body: true`. |
-| 4 | Any Postgrex update uses only a stable published release confirmed fixed by both the live advisory and Hex registry; otherwise this batch stops without a substitute version. | ✓ VERIFIED | Current live Hex predicate confirms stable, unretired Postgrex 0.22.4; current EEF CNA predicate confirms affected `>= 0.19.3, < 0.22.4`. Manifest and lock select `~> 0.22.4` / 0.22.4. |
-| 5 | The ScrypathOps manifest and lockfile form one isolated, explained third commit with no unrelated upgrades. | ✓ VERIFIED | `59d2e6a` is the sole commit in its implementation range touching the owned paths and changes exactly `scrypath_ops/mix.exs`, `scrypath_ops/mix.lock`, and the focused contract test. No UI, route, schema, provider, CI, ecommerce, or public API file appears. |
+| 1 | A fresh ScrypathOps resolution selects fixed-compatible bounded web, LiveView, Swoosh, Req, and applicable transitive versions without recorded advisories. | ✓ VERIFIED | Current isolated lock is unchanged and selects Phoenix 1.8.12, LiveView 1.1.33, Bandit 1.12.5, Swoosh 1.26.3, Postgrex 0.22.4, Req 0.6.3, Plug 1.19.5, Mint 1.9.3, and hpax 1.0.4. The exact-SHA detached proof remains applicable because the current manifest and lock hashes exactly equal its recorded inputs; a fresh checked-lock resolution and unsuppressed `mix hex.audit` both passed. |
+| 2 | `mix verify.opsui` and the named required root regression gates pass against the standalone remediated ScrypathOps graph. | ✓ VERIFIED | Freshly passed: Ops precommit; retried binding `mix verify.opsui` (2 doctests, 154 tests); root warnings-as-errors compile; root main-ci test command (2 properties, 538 tests); `mix verify --exclude integration`; `mix verify.phase11`; and `mix verify.phase99`. |
+| 3 | The configured Req-backed Swoosh integration remains covered and works without relying on ecommerce as proof. | ✓ VERIFIED | Production config selects `Swoosh.ApiClient.Req`; test config remains `Swoosh.Adapters.Test` with API client disabled. The direct service-free `Req.Test` contract retained conflicting `decode_body: true`, returned `application/json`, and a focused run passed while asserting `post/4` returns the exact `~s({"accepted":true})` binary. |
+| 4 | Any Postgrex update uses only a stable published release confirmed fixed by both the live advisory and Hex registry; otherwise this batch stops without a substitute version. | ✓ VERIFIED | Fresh official Hex predicate confirms stable, unretired Postgrex 0.22.4; fresh EEF CNA predicate confirms the affected range begins at 0.19.3 and ends before 0.22.4. Manifest and lock select `~> 0.22.4` / 0.22.4. |
+| 5 | The ScrypathOps manifest and lockfile form one isolated, explained third commit with no unrelated upgrades. | ✓ VERIFIED | `59d2e6a` changes only `scrypath_ops/mix.exs`, `scrypath_ops/mix.lock`, and the focused contract. `ff1531c` is its ancestor-descendant, separately labelled verifier closure and changes only that focused test. No forbidden runtime, UI, route, schema, provider, CI, ecommerce, or public-API path is in either implementation diff. |
 
-**Score:** 4/5 truths verified (0 present, behavior-unverified)
+**Score:** 5/5 truths verified (0 present, behavior-unverified)
 
 ### Decision Contract Coverage (D-01–D-22)
 
 | Decision | Status | Actual code/evidence |
 | --- | --- | --- |
-| D-01, D-03, D-04, D-05 | ✓ VERIFIED | Exact direct bounds are present; forbidden dependencies remain transitive/no override; checked lock and recorded exact-SHA fresh range matrix are causal and audit-clean. |
-| D-02 | ✓ VERIFIED | Current dual live Hex/EEF-CNA predicates pass for stable, unretired 0.22.4 and the fixed advisory boundary. |
-| D-06 | ✓ VERIFIED | Direct `Swoosh.ApiClient.Req.init/0` and `post/4` use a per-test `Req.Test` plug, with no provider traffic. |
-| D-07 | ✗ FAILED | Headers and body precedence, normalization, and transport-error shape are tested; `decode_body: false` precedence/raw JSON body preservation is not discriminated by text/plain. |
-| D-08, D-09 | ✓ VERIFIED | Test configuration remains Test adapter + disabled API client; production still selects Req; `ScrypathOps.Mailer` is unchanged. |
-| D-10, D-12 | ✓ VERIFIED | Current `mix verify.opsui` passed; candidate diff has no UI-owned file and no ecommerce/browser proof is substituted. |
-| D-11 | ✓ VERIFIED | Current `mix hex.audit` was unsuppressed and exited 0; no copied exploit tests or permanent lane exists. |
-| D-13, D-16, D-18, D-19 | ✓ VERIFIED | No source compatibility fix was added; exact one implementation commit and scope inspection show the required stop/isolation boundaries. |
-| D-14, D-15, D-17 | ✓ VERIFIED | Candidate summaries record ordered named deterministic gates, detached fresh resolver/audit, cleanup, lock/dirty-baseline preservation, and compact evidence only. |
-| D-20, D-21, D-22 | ✓ VERIFIED | Diff and current passing Ops gate show familiar Mix interfaces and no capability/UI/schema/provider/CI/policy modernization expansion. |
+| D-01–D-05 | ✓ VERIFIED | Six approved direct bounds are present; forbidden packages remain transitive/no override; checked lock contains the reviewed fixed cohort. Exact-SHA detached range/audit evidence remains tied to the same manifest and lock hashes. |
+| D-06–D-07 | ✓ VERIFIED | The direct Req.Test reaches real `Swoosh.ApiClient.Req.init/0` and `post/4`; it asserts method, URL/path/query, headers, user agent, raw request body, client-option precedence, exact JSON binary, normalized content type, and transport error. |
+| D-08–D-09 | ✓ VERIFIED | `config/test.exs` keeps Test adapter + `api_client: false`; `config/prod.exs` explicitly selects Req; `ScrypathOps.Mailer` is unchanged. |
+| D-10, D-12 | ✓ VERIFIED | Fresh standalone Ops gate passes. Implementation commits contain no UI-owned path; ecommerce/browser proof was not substituted. |
+| D-11 | ✓ VERIFIED | Fresh unsuppressed `cd scrypath_ops && mix hex.audit` exited 0 with no retired or advisory packages. |
+| D-13–D-19 | ✓ VERIFIED | No runtime compatibility fix was added. `59d2e6a` is the one dependency-remediation commit; `ff1531c` is the one separately labelled, test-only verifier closure. Current hashes preserve the detached-proof input, and current user-owned dirty files were not touched. |
+| D-20–D-22 | ✓ VERIFIED | Familiar Mix interfaces only; no capability, route, UI, schema, provider, CI, policy, or modernization expansion. The eight UI preservation states are protected by the no-UI diff plus passing `mix verify.opsui`. |
 
 ### Required Artifacts
 
 | Artifact | Expected | Status | Details |
 | --- | --- | --- | --- |
-| `scrypath_ops/mix.exs` | Six approved fixed-compatible requirements | ✓ VERIFIED | Contains Phoenix `~> 1.8.9`, LiveView `~> 1.1.33`, Bandit `~> 1.12.1`, Swoosh `~> 1.26.3`, Postgrex `~> 0.22.4`, Req `~> 0.6.1`; no override/direct Plug/Mint/hpax/Finch/Ecto/Decimal ownership. |
-| `scrypath_ops/mix.lock` | Causal deterministic standalone resolution | ✓ VERIFIED | `mix deps.get --check-locked` passed; selected fixed cohort and transitive dependency versions match the contract. |
-| `scrypath_ops/test/scrypath_ops/swoosh_api_client_req_test.exs` | Direct, service-free production Req-client contract | ⚠️ PARTIAL | Substantive and executed (2 tests pass), but its text/plain response leaves the required decode-body precedence invariant untested. |
+| `scrypath_ops/mix.exs` | Six approved direct fixed-compatible requirements | ✓ VERIFIED | Contains Phoenix `~> 1.8.9`, LiveView `~> 1.1.33`, Bandit `~> 1.12.1`, Swoosh `~> 1.26.3`, Postgrex `~> 0.22.4`, and Req `~> 0.6.1`; no direct Plug/Mint/hpax/Finch/Ecto/Decimal or override. SHA-256: `a624ce14…d0bd07e`. |
+| `scrypath_ops/mix.lock` | Reviewed causal standalone resolution | ✓ VERIFIED | Checked-lock resolution passed; fixed cohort is selected. SHA-256: `30c54587…6588ea4`, unchanged before and after fresh gates. |
+| `scrypath_ops/test/scrypath_ops/swoosh_api_client_req_test.exs` | Direct, discriminating service-free Req-client contract | ✓ VERIFIED | Substantive two-test module, executed by the focused command and Ops suite. JSON/content-type fixture with conflicting `decode_body: true` proves raw body preservation. |
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 | --- | --- | --- | --- | --- |
-| `scrypath_ops/mix.exs` | `scrypath_ops/mix.lock` | Mix checked-lock resolution | ✓ WIRED | Fresh `mix deps.get --check-locked` succeeded and retained the lock. |
-| `Swoosh.ApiClient.Req.post/4` | `Req.Test` | `email.private[:client_options]` `plug` tuple, retry disabled | ⚠️ PARTIAL | Direct test reaches the selected client and Req.Test; raw JSON / forced-decode precedence is not proven. |
-| `config/prod.exs` | `Swoosh.ApiClient.Req` | `config :swoosh, api_client: ...` | ✓ WIRED | Production selection is explicit and unchanged. |
-| Live Hex + EEF CNA | Postgrex manifest bound | fail-closed jq predicates | ✓ WIRED | Both predicates freshly passed before this report. |
+| `scrypath_ops/mix.exs` | `scrypath_ops/mix.lock` | Mix checked-lock resolution | ✓ WIRED | `mix deps.get --check-locked` passed without changing the lock. |
+| `Swoosh.ApiClient.Req.post/4` | `Req.Test` JSON response | Email `client_options` carries plug/retry/`decode_body: true`; test asserts exact return | ✓ WIRED | Focused behavior test passed: a JSON response remains the original binary, so the Swoosh-owned `decode_body: false` precedence is exercised rather than inferred. |
+| `config/prod.exs` | `Swoosh.ApiClient.Req` | `config :swoosh, api_client: ...` | ✓ WIRED | Production selection is explicit; test configuration remains isolated. |
+| Official Hex + EEF CNA | Postgrex manifest bound | Fail-closed `curl | jq` predicates | ✓ WIRED | Both live predicates passed for stable/unretired 0.22.4 and the fixed advisory boundary. |
 
 ### Data-Flow Trace (Level 4)
 
 | Artifact | Data Variable | Source | Produces Real Data | Status |
 | --- | --- | --- | --- | --- |
-| Swoosh Req contract | response body | `Req.Test` plug → real `Swoosh.ApiClient.Req.post/4` → Req response | Service-free synthetic transport response; text/plain branch only | ⚠️ PARTIAL |
+| Swoosh Req contract | Response body | `Req.Test` plug → real `Swoosh.ApiClient.Req.post/4` → Req response | Synthetic `application/json` transport response, returned as the exact asserted raw JSON binary | ✓ FLOWING |
 
 ### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
 | --- | --- | --- | --- |
-| Real Swoosh Req service-free contract | `cd scrypath_ops && mix test test/scrypath_ops/swoosh_api_client_req_test.exs` | 2 tests, 0 failures | ✗ INSUFFICIENT — not discriminating for decode-body contract |
-| Checked lock / compile | `cd scrypath_ops && mix deps.get --check-locked && mix compile --warnings-as-errors` | Exit 0 | ✓ PASS |
-| Unsuppressed advisory audit | `cd scrypath_ops && mix hex.audit` | Exit 0; no retired/advisory packages | ✓ PASS |
-| Standalone Ops application | `mix verify.opsui` | 2 doctests, 154 tests, 0 failures | ✓ PASS |
-| Live Postgrex evidence | Hex + EEF CNA `curl | jq` predicates | Both true | ✓ PASS |
+| Raw JSON / decode-body precedence | `cd scrypath_ops && mix test test/scrypath_ops/swoosh_api_client_req_test.exs` | 2 tests, 0 failures | ✓ PASS |
+| Focused format, lock, compile, audit | `mix format --check-formatted … && mix deps.get --check-locked && mix compile --warnings-as-errors && mix hex.audit` | All exit 0; audit reported no retired/advisory packages | ✓ PASS |
+| Standalone Ops application | `mix verify.opsui` | Initial CI-mode run exposed a pre-existing `PostureLiveTest` cleanup race; the named test and immediate full retry both passed (2 doctests, 154 tests). The implicated test predates this phase and neither implementation commit touches it. | ✓ PASS (retry; non-phase transient noted) |
+| Required root release gates | `mix compile --warnings-as-errors`; main-ci test command; `mix verify --exclude integration`; `mix verify.phase11`; `mix verify.phase99` | All exit 0; main-ci test command: 2 properties, 538 tests, 0 failures | ✓ PASS |
+| Postgrex publication guard | Hex and EEF CNA fail-closed predicates | Both exit 0 | ✓ PASS |
 
 ### Probe Execution
 
 | Probe | Command | Result | Status |
 | --- | --- | --- | --- |
-| Exact-SHA detached fresh resolver/audit | Candidate `59d2e6a` disposable worktree procedure recorded in `146-03-SUMMARY.md` | Compatible nine-package matrix, exact selected Plug live predicate, audit, and cleanup recorded PASS | PASS — corroborating historical evidence; no summary claim was used to excuse the failed client contract |
+| Exact-SHA detached fresh resolver/audit | Validated Phase 146 detached-worktree procedure at `59d2e6a` | Detached proof records all nine D-05 ranges, exact Plug registry predicate, unsuppressed audit, cleanup, and primary-lock preservation. Its input hashes still exactly match current files; it was deliberately not repeated after test-only `ff1531c`. | ✓ PASS |
 
 ### Requirements Coverage
 
 | Requirement | Source Plan | Description | Status | Evidence |
 | --- | --- | --- | --- | --- |
-| SEC-03 | 146-01, 146-02, 146-03 | Independently resolve ScrypathOps beyond recorded web, LiveView, mailer, HTTP, and database advisories. | ✗ BLOCKED | Dependency, audit, and Ops evidence are green, but the required configured Req-backed Swoosh raw/decode precedence behavior is not actually covered. |
-| EVID-03 | 146-01, 146-03 | Block Postgrex changes until live advisory and Hex confirm a stable published fixed release. | ✓ SATISFIED | Fresh dual live predicates pass and the manifest/lock use 0.22.4. |
+| SEC-03 | 146-01 through 146-04 | Independently resolve ScrypathOps beyond recorded web, LiveView, mailer, HTTP, and database advisories. | ✓ SATISFIED | Fixed lock, fresh audit/current checked lock, direct configured Req-client behavior test, standalone Ops gate, and named root gates pass. |
+| EVID-03 | 146-01, 146-03 | Block Postgrex changes until live advisory and Hex confirm a stable published fixed release. | ✓ SATISFIED | Fresh dual live predicates pass; manifest and lock select only stable 0.22.4. |
 
-No orphaned Phase 146 requirements: all plans declare SEC-03 and/or EVID-03, the only roadmap requirements assigned to the phase.
+No orphaned Phase 146 requirements: SEC-03 and EVID-03 are the only roadmap requirements assigned to this phase and are declared by the plans.
 
 ### Anti-Patterns Found
 
-| File | Line | Pattern | Severity | Impact |
-| --- | --- | --- | --- | --- |
-| `scrypath_ops/test/scrypath_ops/swoosh_api_client_req_test.exs` | 20 | Happy-path response is `Req.Test.text/2` / text/plain | 🛑 Blocker | The contractual `decode_body: false` precedence can regress with no test failure. |
-
-No phase-owned source file contains an unreferenced `TBD`, `FIXME`, or `XXX` debt marker. The user-owned working-tree modifications to `.planning/REQUIREMENTS.md`, `.planning/config.json`, and `.planning/v1.36-v1.36-MILESTONE-AUDIT.md` were preserved.
+No phase-owned `TBD`, `FIXME`, `XXX`, placeholder, empty implementation, hardcoded-empty rendering path, or forbidden-scope change was found. The lockfile's word `hackney` is a transitive package name, not a debt marker.
 
 ### Human Verification Required
 
-None. The missing proof is deterministic and should be repaired with an automated Req.Test case, not a human checkpoint.
+None. All must-haves are deterministically exercised; the phase does not add a visual or external-provider user flow requiring human acceptance.
 
 ### Gaps Summary
 
-WR-01 is a real must-have failure, not merely a code-review preference. Swoosh source currently documents and implements `Keyword.merge(options, required_options)` with `decode_body: false`; presence of that source code is useful but cannot replace the specified behavioral proof. The current test supplies a conflicting `decode_body: true`, but text/plain remains a binary under either setting. Add an `application/json` response and assert the raw JSON binary remains unchanged. Rerun the focused contract, checked-lock/compile, `mix verify.opsui`, and audit before re-verification.
+The previous blocking gap is closed. The `ff1531c` test now uses a JSON response and proves exact raw-binary preservation under the conflicting `decode_body: true` condition that previously made the text/plain test non-discriminating. No remaining goal-blocking gap was found.
 
 ---
 
-_Verified: 2026-08-24T21:43:02Z_
+_Verified: 2026-08-24T22:05:50Z_
 _Verifier: the agent (gsd-verifier)_
