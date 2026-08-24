@@ -4,16 +4,16 @@ milestone: v1.36
 milestone_name: Dependency Security Remediation
 current_phase: 146
 current_phase_name: ScrypathOps Web/Client Remediation
-status: executing
-stopped_at: Completed 146-02-PLAN.md
-last_updated: "2026-08-24T20:43:02.661Z"
+status: verifying
+stopped_at: Completed 146-03-PLAN.md
+last_updated: "2026-08-24T21:37:00.300Z"
 last_activity: 2026-08-24
 last_activity_desc: Phase 146 execution started
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
 ---
 
 # Project State
@@ -27,7 +27,7 @@ progress:
 
 Phase: 146 (ScrypathOps Web/Client Remediation) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-08-24 — Phase 146 execution started
 
 ## Completed Milestones
@@ -157,6 +157,7 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 | Phase 145 P02 | 2m 25s | 2 tasks | 2 files |
 | Phase 146 P01 | 24m | 1 tasks | 3 files |
 | Phase 146 P02 | 2min | 2 tasks | 1 files |
+| Phase 146 P03 | 18min | 2 tasks | 1 files |
 
 ## Decisions
 
@@ -203,9 +204,10 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 - [Phase ?]: Phase 146 Plan 01 retained the reviewed Plug 1.19.5 causal lock selection rather than accepting the solver's out-of-range 1.20.3 package-head result.
 - [Phase ?]: Phase 146 Plan 01 proves Swoosh.ApiClient.Req through per-test Req.Test plugs without changing global Swoosh test configuration.
 - [Phase ?]: Phase 146 Plan 02: Exact candidate 59d2e6a passed ordered deterministic Ops and root release-train gates; primary Ops lock remained byte-identical.
+- [Phase ?]: Phase 146 Plan 03: macOS /var and /private/var worktree spellings were accepted only after fail-closed canonical equivalence, unique registration, ownership, symlink, prefix, and exact-child validation; cleanup and preservation checks passed.
 
 ## Session
 
-**Last session:** 2026-08-24T20:43:02.652Z
-**Stopped at:** Completed 146-02-PLAN.md
+**Last session:** 2026-08-24T21:37:00.292Z
+**Stopped at:** Completed 146-03-PLAN.md
 **Resume file:** None

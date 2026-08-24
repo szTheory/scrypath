@@ -92,7 +92,7 @@ Plans:
   4. Any Postgrex update uses only a stable published release confirmed fixed by both the live advisory and Hex registry; otherwise this batch stops without a substitute version.
   5. The ScrypathOps manifest and lockfile form one isolated, explained third commit with no unrelated upgrades.
 
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans executed
 
 **Wave 1**
 
@@ -104,7 +104,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 146-03-PLAN.md — Capture detached exact-SHA fresh-resolution, Postgrex authority, audit, cleanup, and handoff evidence.
+- [x] 146-03-PLAN.md — Capture detached exact-SHA fresh-resolution, Postgrex authority, audit, cleanup, and handoff evidence.
 
 ### Phase 147: Ecommerce Mounted-Ops Remediation and Closure Evidence
 
@@ -127,7 +127,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 144. Root HTTP Client Dependency Remediation | 3/3 | Complete    | 2026-08-22 |
 | 145. Legacy Phoenix and Ecto/Decimal Remediation | 2/2 | Complete    | 2026-08-22 |
-| 146. ScrypathOps Web/Client Remediation | 2/3 | In Progress|  |
+| 146. ScrypathOps Web/Client Remediation | 3/3 | In Progress|  |
 | 147. Ecommerce Mounted-Ops Remediation and Closure Evidence | 0/TBD | Not started | - |
 
 ## Direct-Completion Bookkeeping Note
