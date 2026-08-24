@@ -79,18 +79,18 @@ No copy is introduced or changed in this phase. Preserve all existing labels, ca
 
 ## UI Considerations
 
-Applicable state considerations resolved: none applicable — this phase creates or changes no UI element, UI state, route, screen, or user interaction. Existing state behavior remains under the established `mix verify.opsui` regression gate; it is not a new implementation surface.
+The post-verification UI probe resolved 8/8 preservation considerations with explicit evidence. This phase creates or changes no UI element, UI state, route, screen, or user interaction; the diff restriction plus `mix verify.opsui` preserve the established surface.
 
 | Category | Element(s) | Status | Resolution / Reason |
 |----------|------------|--------|---------------------|
-| empty | none | ✅ covered | No new or changed UI collection, form, or media surface. Existing empty states remain unchanged. |
-| loading | none | ✅ covered | No new or changed loading UI. Existing LiveView loading behavior remains unchanged. |
-| error | none | ✅ covered | No new or changed user-visible failure UI. Existing error states remain unchanged. |
-| populated | none | ✅ covered | No new or changed populated collection or media surface. |
-| partial | none | ✅ covered | No new or changed form or collection data state. |
-| overflow | none | ✅ covered | No layout or text-container change is authorized. |
-| zero-one-many | none | ✅ covered | No new or changed collection. |
-| long-text | none | ✅ covered | No changed static content, control label, or navigation item. |
+| empty | preserved operator UI | ✅ covered | The phase diff changes no HEEx, LiveView render, router, layout, CSS, JS, component API, or UI asset, and `mix verify.opsui` passes. |
+| loading | preserved operator UI | ✅ covered | No loading UI changes; the UI-file diff restriction and `mix verify.opsui` preserve existing behavior. |
+| error | preserved operator UI | ✅ covered | No user-visible error UI or copy changes; the UI-file diff restriction and `mix verify.opsui` preserve existing behavior. |
+| populated | preserved operator UI | ✅ covered | No populated view changes; the UI-file diff restriction and `mix verify.opsui` preserve existing behavior. |
+| partial | preserved operator UI | ✅ covered | No partial-data UI changes; the UI-file diff restriction and `mix verify.opsui` preserve existing behavior. |
+| overflow | preserved operator UI | ✅ covered | No layout or text-container changes; the UI-file diff restriction and `mix verify.opsui` preserve existing overflow behavior. |
+| zero-one-many | preserved operator UI | ✅ covered | No collection or count-sensitive copy changes; the UI-file diff restriction and `mix verify.opsui` preserve existing behavior. |
+| long-text | preserved operator UI | ✅ covered | No text, label, navigation item, or container changes; the UI-file diff restriction and `mix verify.opsui` preserve existing behavior. |
 
 ---
 
@@ -105,14 +105,14 @@ Applicable state considerations resolved: none applicable — this phase creates
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS — preservation-only review pending
-- [ ] Dimension 2 Visuals: PASS — preservation-only review pending
-- [ ] Dimension 3 Color: PASS — preservation-only review pending
-- [ ] Dimension 4 Typography: PASS — preservation-only review pending
-- [ ] Dimension 5 Spacing: PASS — preservation-only review pending
-- [ ] Dimension 6 Registry Safety: PASS — preservation-only review pending
+- [x] Dimension 1 Copywriting: PASS — no copy changes
+- [x] Dimension 2 Visuals: PASS — no visual or interaction changes
+- [x] Dimension 3 Color: PASS — existing themes and semantic roles preserved
+- [x] Dimension 4 Typography: PASS — four existing roles preserved
+- [x] Dimension 5 Spacing: PASS — non-numeric no-change invariant
+- [x] Dimension 6 Registry Safety: PASS — no registry additions
 
-**Approval:** pending
+**Approval:** approved 2026-08-24 — UI checker verified 6/6 dimensions; post-verification probe resolved 8/8 considerations explicitly.
 
 ## Source Decisions
 
