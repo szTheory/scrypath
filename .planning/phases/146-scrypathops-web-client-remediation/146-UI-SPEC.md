@@ -29,18 +29,9 @@ created: 2026-08-24
 
 ## Spacing Scale
 
-The existing ScrypathOps scale is preserved, not redesigned.
+Spacing is preservation-only and is not declared or redesigned by this phase. Do not alter spacing tokens or layout dimensions.
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| ops-1 | 4px | Existing icon gaps and compact inline spacing |
-| ops-2 | 8px | Existing compact element spacing |
-| ops-3 | 12px | Existing compact group spacing |
-| ops-4 | 16px | Existing default element and row spacing |
-| ops-5 | 20px | Existing panel spacing |
-| ops-6 | 24px | Existing section and page gaps |
-
-Exceptions: none. Do not alter spacing tokens or layout dimensions.
+**Testable invariant:** the phase diff must contain no changes to spacing tokens, layouts, HEEx templates, CSS, JavaScript, or UI assets. Verify this restriction through phase-diff review and the existing `mix verify.opsui` gate.
 
 ---
 
