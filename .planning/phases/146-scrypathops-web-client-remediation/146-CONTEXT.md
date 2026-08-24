@@ -50,8 +50,23 @@ all-four-graph closure evidence remain Phase 147 work.
   Phoenix `>= 1.8.9 and < 1.9.0`, Phoenix LiveView
   `>= 1.1.33 and < 1.2.0`, Bandit `>= 1.12.1 and < 1.13.0`, Swoosh
   `>= 1.26.3 and < 1.27.0`, Postgrex `>= 0.22.4 and < 0.23.0`, Req
-  `>= 0.6.1 and < 0.7.0`, Plug `>= 1.19.5 and < 1.20.0`, Mint
+  `>= 0.6.1 and < 0.7.0`, Plug `>= 1.19.5 and < 2.0.0`, Mint
   `>= 1.9.3`, and hpax `>= 1.0.4`.
+
+#### Execution-discovery amendment — D-05 Plug range (2026-08-24)
+
+Plan 146-03's first exact-SHA detached, lockless probe selected Plug `1.20.3`.
+The former D-05 upper bound of `< 1.20.0` was not enforceable while D-03 keeps
+Plug transitive and forbids a direct requirement or override. The Plug portion
+of D-05 is therefore corrected only to `>= 1.19.5 and < 2.0.0`; the other eight
+fresh-resolution ranges and every other decision remain unchanged. This is a
+consistency correction for the solver-owned transitive dependency, not broader
+dependency modernization. The reviewed primary lock remains deterministically
+at Plug `1.19.5`; fresh proof may select Plug `1.20.3` or another compatible
+transitive 1.x release only when it is unretired and the mandatory unsuppressed
+`mix hex.audit` exits zero. On 2026-08-24, Hex listed Plug `1.20.3` as current,
+unretired, and published 2026-07-09, while Plug's official supported-versions
+policy listed v1.20 for bug fixes and v1.19 for security patches only.
 
 ### 2. Production-shaped Swoosh/Req compatibility proof
 

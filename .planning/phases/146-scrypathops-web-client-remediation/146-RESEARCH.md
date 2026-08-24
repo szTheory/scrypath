@@ -12,7 +12,7 @@
 - **D-01:** Direct bounds are Phoenix `~> 1.8.9`, Phoenix LiveView `~> 1.1.33`, Bandit `~> 1.12.1`, Swoosh `~> 1.26.3`, Postgrex `~> 0.22.4`, and retained Req `~> 0.6.1`; permit reviewed patches only.
 - **D-02:** Re-check live Hex and EEF CNA evidence for stable, unretired Postgrex `0.22.4`; contradictory/missing evidence stops the batch—no prerelease, invented substitute, or vulnerable fallback.
 - **D-03–D-04:** Keep Plug, Mint, hpax, Finch, Ecto, Decimal, Phoenix Ecto, and Ecto SQL transitive; add neither direct requirements nor overrides; refresh only causal solver closure and explain every moved lock row.
-- **D-05:** Detached lockless exact-candidate proof must select Phoenix `>= 1.8.9 < 1.9.0`, LiveView `>= 1.1.33 < 1.2.0`, Bandit `>= 1.12.1 < 1.13.0`, Swoosh `>= 1.26.3 < 1.27.0`, Postgrex `>= 0.22.4 < 0.23.0`, Req `>= 0.6.1 < 0.7.0`, Plug `>= 1.19.5 < 1.20.0`, Mint `>= 1.9.3`, hpax `>= 1.0.4`.
+- **D-05:** Detached lockless exact-candidate proof must select Phoenix `>= 1.8.9 < 1.9.0`, LiveView `>= 1.1.33 < 1.2.0`, Bandit `>= 1.12.1 < 1.13.0`, Swoosh `>= 1.26.3 < 1.27.0`, Postgrex `>= 0.22.4 < 0.23.0`, Req `>= 0.6.1 < 0.7.0`, Plug `>= 1.19.5 < 2.0.0`, Mint `>= 1.9.3`, hpax `>= 1.0.4`.
 - **D-06–D-09:** Test the real `Swoosh.ApiClient.Req` with a supported Req test seam, no provider/network/credentials/fake adapter. Cover init, POST URL/body/headers/Swoosh UA, `email.private[:client_options]`, Swoosh precedence for headers/body/`decode_body: false`, raw body, normalized tuple, and transport error. Preserve `Swoosh.Adapters.Test`, test `api_client: false`, `ScrypathOps.Mailer`, and production `Swoosh.ApiClient.Req` selection.
 - **D-10–D-13:** Root `mix verify.opsui` is binding; it owns Ops routes, LiveView, boot, Repo/migrations, contracts, and UI invariants. Fixed selection plus unsuppressed audit owns upstream-advisory proof. No ecommerce/browser/protocol lane. A compile/test-proven fix must be minimal and internal, with no public API, route/UI, mail semantic, schema, or operational change.
 - **D-14–D-19:** Inspect diff; Ops checked-lock + warnings-as-errors compile; root `mix verify.opsui`; then root `main-ci`, `repo-hygiene`, `release-truth`, `phase99-trust`. Afterwards detached exact-SHA worktree with isolated dependency/build paths removes only disposable Ops lock, resolves, asserts D-05, and audits unsuppressed. Record compact candidate/time/tool/commands/status/version/audit/causal-diff evidence; network/feed outage, audit/range/gate failure, dirty primary lock, unexplained churn, Postgrex-evidence loss, or Swoosh failure stops handoff. One isolated third remediation commit only.
@@ -48,6 +48,24 @@
 
 ## Summary
 
+### Execution-discovery amendment (2026-08-24)
+
+[VERIFIED: Plan 146-03 execution evidence] The exact-SHA detached lockless
+resolution selected Plug `1.20.3`. D-03 deliberately keeps Plug transitive and
+forbids a direct constraint or override, so the prior D-05 `< 1.20.0` ceiling
+could not be enforced by the manifest. D-05's Plug range is corrected only to
+`>= 1.19.5 and < 2.0.0`; all other eight ranges remain as researched. This does
+not reopen the reviewed deterministic lock or authorize package-head churn: the
+primary lock remains at Plug `1.19.5`, while fresh proof may accept an unretired,
+audit-clean compatible Plug 1.x selected by the transitive graph.
+
+[CITED: https://hex.pm/packages/plug; https://hex.pm/packages/plug/versions]
+On 2026-08-24, Hex listed Plug `1.20.3` as current and unretired, published
+2026-07-09. [CITED: https://github.com/elixir-plug/plug] Plug's official support
+table lists v1.20 for bug fixes and v1.19 for security patches only. The
+mandatory unsuppressed `mix hex.audit` remains the execution-time authority for
+the actual fresh graph.
+
 [VERIFIED: repository code] ScrypathOps is an independent Mix graph. Its current manifest selects outdated direct Phoenix (`~> 1.8.5`), LiveView (`~> 1.1.0`), Swoosh (`~> 1.16`), Postgrex (unbounded), and Bandit (`~> 1.5`) while already retaining Req `~> 0.6.1`; its lock has the unresolved advisory versions. `mix hex.audit` currently reports the Phase-146 web/mailer/database findings. The remediation therefore belongs solely in `scrypath_ops/mix.exs`, `scrypath_ops/mix.lock`, a focused contract test, and compact phase evidence.
 
 [CITED: https://hex.pm/api/packages/postgrex] Hex confirms the selected non-retired releases Phoenix 1.8.9, LiveView 1.1.33, Bandit 1.12.1, Swoosh 1.26.3, Postgrex 0.22.4, and Req 0.6.3 were published. [CITED: https://cna.erlef.org/cves/CVE-2026-66838.json] The EEF CNA marks Postgrex `0.19.3` through `< 0.22.4` affected. Re-query both authorities during execution; this research result is not permission to bypass D-02.
@@ -82,7 +100,7 @@
 
 | Library | Version | Purpose | When to Use |
 |---|---|---|---|
-| Plug | transitive `>= 1.19.5, < 1.20.0` | Phoenix/Req pipeline | Assert fresh selection; do not add direct ownership. [VERIFIED: context D-03/D-05] |
+| Plug | transitive `>= 1.19.5, < 2.0.0` | Phoenix/Req pipeline | Assert a compatible 1.x fresh selection; do not add direct ownership. [VERIFIED: context D-03/D-05 and execution-discovery amendment] |
 | Mint / hpax | transitive `>= 1.9.3` / `>= 1.0.4` | Req/Finch HTTP closure | Preserve inherited fixed closure. [VERIFIED: lock/context] |
 | Ecto / Decimal / Finch | transitive | existing data/HTTP closure | Keep untouched unless causal failure proves otherwise. [VERIFIED: context D-03] |
 

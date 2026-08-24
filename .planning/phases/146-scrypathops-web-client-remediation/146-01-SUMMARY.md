@@ -21,7 +21,7 @@ key-files:
     - scrypath_ops/mix.exs
     - scrypath_ops/mix.lock
 key-decisions:
-  - "Retained the reviewed Plug 1.19.5 causal lock selection rather than accepting the solver's out-of-range 1.20.3 package-head result."
+  - "Retained the reviewed Plug 1.19.5 causal lock selection for deterministic proof; the later execution-discovery amendment accepts an audit-clean compatible transitive Plug 1.x in lockless evidence without moving the primary lock."
   - "Called Swoosh.ApiClient.Req directly with per-test Req.Test plugs, preserving the suite-wide Swoosh test adapter configuration."
 patterns-established:
   - "Swoosh HTTP-client compatibility is proven through direct API-client calls and per-test Req.Test ownership, without provider traffic or global config changes."
@@ -93,16 +93,16 @@ status: complete
 
 ## Decisions Made
 
-- Kept the reviewed causal Plug 1.19.5 lock row because the live targeted solver otherwise chose 1.20.3, outside this plan's fixed-compatible `< 1.20.0` range; no direct Plug ownership or override was introduced.
+- Kept the reviewed causal Plug 1.19.5 lock row for deterministic proof and introduced no direct Plug ownership or override. Plan 146-03 later established that the former `< 1.20.0` fresh-proof ceiling conflicted with transitive ownership; amended D-05 now accepts an audit-clean compatible Plug 1.x for lockless evidence without changing this lock result.
 - Used direct calls to `Swoosh.ApiClient.Req` so normal test configuration remains `Swoosh.Adapters.Test` with `api_client: false`.
 
 ## Deviations from Plan
 
-None - plan executed exactly as written. The lock review retained the plan-required Plug range instead of accepting unrelated package-head churn.
+None - plan executed exactly as written at the time. The reviewed lock retained Plug 1.19.5; the later D-05 execution-discovery amendment changes only what lockless evidence may accept, not this deterministic result.
 
 ## Issues Encountered
 
-- The first targeted resolver result selected Plug 1.20.3. The reviewed 1.19.5 lock selection is compatible with the approved bounds and passed the checked-lock, compile, focused-test, and precommit gates.
+- The first targeted resolver result selected Plug 1.20.3. The reviewed 1.19.5 lock selection passed the checked-lock, compile, focused-test, and precommit gates. Plan 146-03 later confirmed 1.20.3 as a valid transitive 1.x fresh selection under amended D-05, subject to the mandatory unsuppressed audit.
 
 ## User Setup Required
 
