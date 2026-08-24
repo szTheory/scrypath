@@ -204,13 +204,12 @@ end
 
 All substantive dependency/advisory/API claims were checked against repository code or current official sources. No user confirmation is required beyond the execution-time D-02 re-check.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Will the fixed bounds expose a repository-owned compile/test incompatibility?**
-   - Known: existing full Ops test gate covers broad application behavior.
-   - Handle: make only the demonstrated minimal internal fix with focused test; otherwise stop/re-plan.
+   - **Resolved handling:** Plan 146-01 permits only a compile/test-demonstrated, minimal ScrypathOps-internal D-13 compatibility fix with focused regression coverage; Plan 146-02 runs the full Ops and named root gates. If the failure cannot be resolved within that boundary, execution stops and re-plans.
 2. **Will live Hex/CNA evidence remain available at execution time?**
-   - Handle: query both again immediately before the Postgrex change; outage or contradiction blocks rather than downgrades evidence.
+   - **Resolved handling:** Plan 146-01 re-queries both D-02 authorities before the Postgrex change, and Plan 146-03 re-queries them in the detached exact-candidate evidence window. An outage, missing predicate, or contradiction blocks execution under D-16 rather than downgrading the evidence.
 
 ## Environment Availability
 
