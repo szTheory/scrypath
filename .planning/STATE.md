@@ -2,18 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.36
 milestone_name: Dependency Security Remediation
-current_phase: 146
-current_phase_name: ScrypathOps Web/Client Remediation
 status: planning
-stopped_at: Completed 145-02-PLAN.md
-last_updated: "2026-08-22T21:24:22.953Z"
-last_activity: 2026-08-22
-last_activity_desc: Phase 145 complete, transitioned to Phase 146
+stopped_at: Phase 146 context gathered
+last_updated: "2026-08-24T19:50:41.700Z"
+last_activity: 2026-08-22 — Phase 145 complete, transitioned to Phase 146
 progress:
-  total_phases: 2
+  total_phases: 4
   completed_phases: 2
   total_plans: 5
   completed_plans: 5
+  percent: 50
 ---
 
 # Project State
@@ -201,6 +199,6 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 
 ## Session
 
-**Last session:** 2026-08-22T21:11:37.910Z
-**Stopped at:** Completed 145-02-PLAN.md
-**Resume file:** None
+**Last session:** 2026-08-24T19:50:41.691Z
+**Stopped at:** Phase 146 context gathered
+**Resume file:** .planning/phases/146-scrypathops-web-client-remediation/146-CONTEXT.md
