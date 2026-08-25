@@ -115,7 +115,10 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert html =~ ~s(id="ops-page-title")
     assert html =~ ~s(aria-current="page")
     assert html =~ ~s(href="/ops/posture")
-    assert html =~ ~s(src="/ops/images/logo.svg")
+    # v1.5 brand: the shell header renders the inline-SVG brand mark (decorative,
+    # aria-hidden) with the copper "/" accent — no more <img src="/ops/images/logo.svg">.
+    # "ScrypathOps" below is its accessible name.
+    assert html =~ ~s(fill="#C17A3E")
     assert html =~ "ScrypathOps"
     assert html =~ ~s(aria-label="Theme preference")
     assert html =~ ~s(aria-label="Use system theme")

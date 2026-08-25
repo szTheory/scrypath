@@ -32,6 +32,7 @@ daisyUI semantic tokens, two themes (light default, dark via `prefers-dark` / ex
 | Token | Light | Dark | Use |
 | --- | --- | --- | --- |
 | `primary` | `#5b4ad1` | `#6c5ce7` | brand/accent, active nav, primary actions |
+| `--color-primary-strong` | `#5b4ad1` | `#5b4ad1` | text-bearing selected fills only; see Phase 132 floor |
 | `secondary` | `#a85d2e` | `#c17a3e` | warm accent, eyebrow labels |
 | `accent` | `#6c5ce7` | `#5b4ad1` | gradient partner (route mark) |
 | `base-100` | `#fffdf8` | `#141923` | surfaces |
@@ -39,6 +40,43 @@ daisyUI semantic tokens, two themes (light default, dark via `prefers-dark` / ex
 | `base-300` | `#ded8ce` | `#2a3446` | borders, dividers |
 | `base-content` | `#141923` | `#f4f1ea` | text |
 | `info` / `success` / `warning` / `error` | `#5ca9e6` / `#4fae74` / `#d9a441` / `#d96262` | (same hues) | status semantics |
+
+## A11y contrast floors -- Phase 132
+
+AA contrast is the hard gate for the operator UI. Body and long-form AAA status is
+advisory/report-only; AAA findings should stay visible in reports, but AA failures block
+the contrast gate.
+
+| Token | Light | Dark | Consumers |
+| --- | --- | --- | --- |
+| `--ops-text-muted` | `color-mix(in oklch, var(--color-base-content) 64%, transparent)` | `color-mix(in oklch, var(--color-base-content) 64%, transparent)` | `.ops-header .text-base-content/60`, `.ops-shell .text-base-content/60`, `.ops-text-meta`, `.ops-trail__crumb`, `.ops-handoff__hint`, `.ops-preflight__hint`, `.ops-cmdk__item-hint`, `.ops-cmdk__empty` |
+| `--color-primary-strong` | `#5b4ad1` | `#5b4ad1` | `.ops-nav-item-active`, `.bg-primary.text-primary-content` |
+
+`--ops-text-muted` is the named readable-muted floor. Do not reintroduce raw
+`color-mix(in oklch, var(--color-base-content) NN%, transparent)` declarations for
+the consumers above. `contrast-pairs.mjs` entries that use `css_var: "ops-text-muted"`
+remain part of the D-15 lockstep contract: the manifest selector, token name, and
+`64%` alpha must match `app.css`.
+
+`--color-primary-strong` is allowed only for text-bearing interactive/selected fills:
+`.ops-nav-item-active` and `.bg-primary.text-primary-content`. Decorative primary and
+accent recipes stay on `--color-primary` / `--color-accent` so the violet brand wash,
+glow, borders, focus, and route-mark treatments are not globally retuned.
+
+## Elevation surfaces — `--ops-bg`, `--ops-surface-1`, `--ops-surface-2`
+
+Named elevation tokens declared in the daisyUI `@plugin` blocks (dark + light). The plugin
+spreads them to both `[data-theme="dark"]` and `@media (prefers-color-scheme: dark)` for
+free. Ramp direction in dark: bg (floor) → surface-1 (resting panel) → surface-2 (raised).
+
+| Token | Light value | Dark value | Use |
+| --- | --- | --- | --- |
+| `--ops-bg` | `#faf7f2` | `#0c0f14` | Page floor / Night — app background |
+| `--ops-surface-1` | `#fffdf8` | `#141923` | Resting panel / Ink — `.ops-panel`, `.ops-surface-flat`, `.ops-preflight__card` |
+| `--ops-surface-2` | `#faf7f2` | `#1b2230` | Raised / muted step — `.ops-muted-panel`, `.ops-disclosure`, `.ops-nav-list`, `.ops-kbd`, `.ops-verdict-neutral`, `.ops-preflight__card--locked` |
+
+Dark 4-step midnight ramp: `#0C0F14` (bg) → `#141923` (surface-1) → `#1B2230` (surface-2) → `#2A3446` (base-300 / borders).
+Light values are byte-identical to the prior `base-200`/`base-100` references — zero light regression.
 
 ## Spacing — `--spacing-ops-*` → `p-ops-*` / `gap-ops-*` / `space-y-ops-*`
 
@@ -76,6 +114,72 @@ Elevation ladder: `surface` (1px, resting) → `mid` (subtle hover / interactive
 `mid` for hover/selected feedback, `raised` only for a genuine lift (intent-card hover).
 `focus` is **reserved** — prefer the global `:focus-visible` outline (see Focus below);
 the box-shadow ring is only an escape hatch for inset focus inside overflow-clipped boxes.
+
+**Dark-only augmentation:** `--shadow-ops-panel-dark` is a dark-only supplement declared in
+the D-10 dual-path blocks; it is **not** declared in light. Light panels continue to use
+`--shadow-ops-surface` (vertical lift). See §Glow + dark ambient depth — Phase 131 below.
+
+## Glow + dark ambient depth — Phase 131
+
+Three new shadow tokens extending the ladder for dark brand expression. Light values for the
+glow tokens are `none` (declared in `@theme`) so they produce zero visual change in light;
+`--shadow-ops-panel-dark` has no light declaration at all — the absence is the mechanism that
+keeps light panels pixel-identical.
+
+| Token | Light value | Dark value | Use |
+| --- | --- | --- | --- |
+| `--shadow-ops-panel-dark` | (not declared in light) | `0 0 0 1px rgba(0,0,0,0.30), 0 1px 3px rgba(0,0,0,0.45)` | Ambient seated-depth shadow on dark panels: `.ops-panel`, `.ops-cmdk__panel`, `#flash-group > *`, `.ops-intent-card` |
+| `--shadow-ops-glow` | `none` | `0 0 8px 2px rgba(108,92,231,0.30)` | Quiet violet glow — route mark / active nav / key-callout hover only. Never on text, resting panels, or background floods |
+| `--shadow-ops-glow-copper` | `none` | `0 0 6px 1px rgba(193,122,62,0.25)` | Quiet copper glow — key-node hover only. No consumer in Phase 131 (reserved for Phase 133/134) |
+
+**Panel-dark detail:** the `0 0 0 1px` zero-offset ring reads as ambient inset depth (panel
+seated into the surface, not floating above it); the `0 1px 3px` retains the subtle downward
+lift. Combined with the panel's `border: 1px solid color-mix(base-content 14%)`, the result is
+dark seated depth without visible shadow lift.
+
+**Glow-copper restraint:** Lower alpha (0.25) and tighter spread (6px/1px) than the violet
+glow — copper is the 5% accent; violet is the 10% primary. The `.ops-glow` class wraps
+`--shadow-ops-glow` only; copper glow is applied per-site as needed (not via a shared class).
+
+## Copper accent vocabulary — Phase 131
+
+Copper (`--color-secondary`: `#c17a3e` dark / `#a85d2e` light) is the brand's **5% accent**.
+Three component classes expose it for eyebrow labels, key-callout badges, and key-node markers.
+
+**Hard rule:** Copper is a brand accent, **NEVER a status tone**. It does not appear in
+`tone_class/1` or `badge_class/1`. It carries no semantic meaning (not info / success /
+warning / error / partial / running / neutral). Do not route copper through status machinery.
+
+### Allowed application sites (exhaustive — no others)
+
+| Class | Allowed sites | Screen(s) |
+| --- | --- | --- |
+| `.ops-copper-eyebrow` | Page eyebrow label ("Operator workspace") | All 6 screens |
+| `.ops-copper-badge` (compose with `.ops-badge`) | Intent-card federation badge, playbook file-type badge, key-callout badge | Control Room, Search, Playbooks |
+| `.ops-copper-node` | Key-node / diagram icon emphasis (color only) | Future Phase 133/134 |
+| `.ops-copper-node--fill` | Filled copper icon container | Future Phase 133/134 |
+
+### Text color rules
+
+**Badge text:** Always `var(--color-base-content)` inside `.ops-copper-badge` — never
+`var(--color-secondary)` as the badge label text. Light AA fails at 4.15:1 on tinted copper
+background (below the 4.5:1 AA threshold for small text).
+
+**Eyebrow text:** `var(--color-secondary)` as eyebrow text on a `--ops-surface-1` background
+is AA-safe in both themes. Do NOT use `var(--color-secondary)` as badge label text.
+
+### AA pairing evidence
+
+| Pairing | Theme | Ratio | AA verdict |
+| --- | --- | --- | --- |
+| `base-content` (`#f4f1ea`) text on `.ops-copper-badge` tinted bg | Dark | 12.07:1 | PASS |
+| `base-content` (`#141923`) text on `.ops-copper-badge` tinted bg | Light | 14.86:1 | PASS |
+| `.ops-copper-eyebrow` (`--color-secondary` `#c17a3e`) on `--ops-surface-1` `#141923` | Dark | 5.13:1 | PASS |
+| `.ops-copper-eyebrow` (`--color-secondary` `#a85d2e`) on `--ops-surface-1` `#fffdf8` | Light | 4.84:1 | PASS |
+| `--color-secondary-content` (`#0c0f14`) on solid copper `#c17a3e` | Dark | 5.59:1 | PASS |
+| Copper text `#c17a3e` on `--ops-surface-2` `#1b2230` | Dark | 4.64:1 | PASS |
+
+All ratios computed with sRGB relative luminance (D-12 compliant, matching axe-core).
 
 ## Focus
 
@@ -175,3 +279,76 @@ item explicitly forbids, so it was skipped on the side of restraint.
 | nav/segmented hover, modal opacity+translateY entrance | metric **value** count-ups (no dashboard-toy tickers) |
 | row hover/press (`.ops-result-row`/`.ops-object-item`: border + `shadow-ops-mid`, subtle scale) | flash bounce, focus rings, decorative loops |
 | loading **opacity** pulse (`.ops-loading`, the one sanctioned in-flight loop besides the reconnect spinner) | |
+
+### `.ops-path-*` path-motion vocabulary (Phase 133, DARKMOTION-01)
+
+A small, named, **opt-in** path-expression layer applied **only** to stable JTBD anchors — the
+design-system dividend Phase 134/135 reuse. No new keyframes (line-draw is a `transition`, not an
+`@keyframes` — the A3 patch-safety precedent), no new JS hooks, no new tokens (reuses
+`--duration-ops-fast`, `--ease-ops-standard`, `--shadow-ops-glow`, `--shadow-ops-glow-copper`).
+Transform/opacity/box-shadow end states only.
+
+| Class / token | What it does | Tokens | Fires on |
+| --- | --- | --- | --- |
+| `.ops-path-trace` + `::after` | Path line-draw underline (`transform: scaleX(0→1)` + opacity) — a pseudo-element copying the `.ops-disclosure summary::before` precedent | `--duration-ops-fast` + `--ease-ops-standard` | `:hover`, `.ops-path-trace--active`, or `[aria-current="page"]` — **never** mount/insert, **never** an `nth-child` stagger |
+| `.ops-path-node` | Active-path node glow (violet route/path emphasis) via `--shadow-ops-glow` (none in light, faint in dark — dual-dark-path is free through the token) | `--shadow-ops-glow`, `--duration-ops-fast` | active path/key-node state only |
+| `.ops-path-node--copper` | Key-node copper glow — first consumer of the declared `.ops-copper-node` vocabulary | `--shadow-ops-glow-copper`, `--duration-ops-fast` | active key node only |
+| `.ops-object-item-active` (dark override) | Active Playbook item composes the violet glow onto its existing inset ring (Precedent D), **hand-authored in BOTH** `[data-theme="dark"]` and `@media (prefers-color-scheme: dark) html:not([data-theme="light"])` | `--shadow-ops-glow` | persistent active server-state class (patch-safe) |
+| `.ops-code-block--shimmer` | Opt-in code-block hover glint — an opacity-only `::after` ring inside `@media (hover: hover)`; surfaced via `shimmer={true}` on `ops_code_block/1` | `--duration-ops-fast` + `--ease-ops-standard` | `:hover` on hover-capable pointers only |
+
+**Anchors (the allowed surface):** the route mark, the recommended Control Room intent card
+(`.ops-intent-card--recommended`), Search federation/merge-trace disclosures (`.ops-path-trace`),
+the active Playbook item (`.ops-object-item-active`), and optionally the breadcrumb current path
+(`[aria-current="page"]`). Every path/node signal is paired with the existing visible
+text/ARIA state so motion never carries status meaning alone (D-07).
+
+**Deliberately NOT shipped / restraint boundaries (the A3 voice):**
+- **No result-list reveal stagger** — it would re-fire on every LiveView patch of the result list
+  (re-runs, re-sorts) and read as flicker; the merge-trace line-draw is hover/state-driven, never
+  list-entry (D-06).
+- **`shimmer` never on evidence** — Failed Sync code blocks and search/merge payloads stay calm and
+  readable; `shimmer` defaults to `false` and is never set on evidence panes (D-04a/c).
+- **Glow is route/path emphasis only** — never on text, resting panels, ordinary buttons, broad
+  backgrounds, or status surfaces (D-03b).
+
+| Animate (path-motion) | Never animate (path-motion) |
+| --- | --- |
+| path line-draw (`.ops-path-trace` scaleX + opacity, hover/active) | SVG `stroke-dashoffset` line draws |
+| active-path node glow (`.ops-path-node[--copper]` box-shadow) | `background-position` shimmer sweeps |
+| opt-in code-block hover glint (`.ops-code-block--shimmer` opacity) | `filter:` animation |
+| | result-list entry/reveal stagger (re-fires on patch) |
+| | `shimmer` on evidence code blocks (Failed Sync / search-merge payloads) |
+
+## Muted-Text Contrast Registry
+
+The muted-alpha text pairs are tracked in [`contrast-pairs.mjs`](./contrast-pairs.mjs) (beside
+this file) — the single source for the D-15 lockstep guard in `contrast-checker.mjs`. The guard
+is **bidirectional**: every `color: color-mix(in oklch, var(--color-base-content) NN%, transparent)`
+occurrence in `app.css` (including single-line rules and rules nested inside `@media` blocks) must
+have a corresponding manifest entry, AND every non-`decorative` manifest entry must match an actual
+`app.css` rule (so stale/removed entries are caught too). Either direction failing makes
+`make contrast` fail.
+
+### Alpha Compositing Algorithm (D-12)
+
+Alpha compositing uses sRGB:
+
+```
+out_channel = fg_channel × α + bg_channel × (1−α)
+```
+
+per channel (0–255 space). This matches axe-core's compositing algorithm, ensuring the fast token
+checker and the browser-based axe gate render one verdict on the same fg/bg pair.
+
+### Thresholds (D-14)
+
+Thresholds per D-14:
+
+| Role | AA | AAA |
+|------|-----|-----|
+| `text` (body/inline) | 4.5:1 | 7.0:1 |
+| `large` (uppercase + bold, WCAG large text) | 3.0:1 | 4.5:1 |
+| `ui` (non-text, semantic pairs `X-content/X`) | 3.0:1 | 4.5:1 |
+
+The `contrast-checker.mjs` gate exits non-zero iff AA failures exist; AAA is reported as advisory
+only and never affects the exit code.

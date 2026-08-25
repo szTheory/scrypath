@@ -1018,6 +1018,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   :if={match?([_ | _], MultiSearchResult.merge_projection(@result_multi))}
                   summary={"Merge trace (#{length(MultiSearchResult.merge_projection(@result_multi))} row(s))"}
                   variant={:compact}
+                  class="ops-path-trace"
                 >
                   <ol class="mt-2 list-inside list-decimal font-mono text-ops-sm">
                     <%= for {mod, hit} <- MultiSearchResult.merge_projection(@result_multi) do %>
@@ -1033,6 +1034,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   }
                   summary={"Merge trace (#{length(@result_multi.merge_hit_order)} federation position(s))"}
                   variant={:compact}
+                  class="ops-path-trace"
                 >
                   <ol class="mt-2 list-inside list-decimal font-mono text-ops-sm">
                     <%= for pair <- @result_multi.merge_hit_order do %>

@@ -27,7 +27,7 @@ defmodule ScrypathOps.MixProject do
 
   def cli do
     [
-      preferred_envs: [precommit: :test, "opsui.test_a11y": :test]
+      preferred_envs: [precommit: :test, "opsui.test_a11y": :test, "verify.opsui": :test]
     ]
   end
 
@@ -84,6 +84,7 @@ defmodule ScrypathOps.MixProject do
         "test"
       ],
       "opsui.test_a11y": &opsui_test_a11y/1,
+      "verify.opsui": ["test", "opsui.test_a11y"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.build": ["compile", "tailwind scrypath_ops", "esbuild scrypath_ops"],
       "assets.deploy": [

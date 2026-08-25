@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>scrypath — landing section (brand example)</title>
+<link rel="icon" href="../assets/favicon.svg">
+<link rel="stylesheet" href="../assets/fonts/fonts.css">
+<link rel="stylesheet" href="../tokens/tokens.css">
+<style>
+*{box-sizing:border-box}body{margin:0;background:var(--sp-bg);color:var(--sp-text);font-family:var(--sp-font-sans);line-height:var(--sp-leading-body)}
+.nav{display:flex;align-items:center;gap:20px;max-width:1080px;margin:0 auto;padding:20px 24px}
+.nav img{height:24px}.nav a{margin-left:auto;color:var(--sp-text-muted);font-family:var(--sp-font-mono);font-size:13px;text-decoration:none}
+.hero{max-width:1080px;margin:0 auto;padding:60px 24px 30px;text-align:center}
+.kicker{font-family:var(--sp-font-mono);text-transform:uppercase;letter-spacing:.16em;font-size:12px;color:var(--sp-accent-2)}
+.hero h1{font-family:var(--sp-font-display);font-weight:700;letter-spacing:-.025em;line-height:1.05;
+  font-size:clamp(40px,7vw,76px);margin:18px auto 16px;max-width:18ch}
+.hero h1 .v{color:var(--sp-primary)}
+.sub{color:var(--sp-text-muted);font-size:clamp(16px,2.4vw,21px);max-width:60ch;margin:0 auto 28px}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{font-weight:600;font-size:15px;border-radius:var(--sp-radius-input);padding:13px 24px;border:1.5px solid transparent;cursor:pointer;text-decoration:none;display:inline-block;transition:all var(--sp-dur-fast) var(--sp-ease)}
+.btn-p{background:var(--sp-primary);color:var(--sp-on-primary)}.btn-p:hover{background:var(--sp-primary-2)}
+.btn-g{border-color:var(--sp-border);color:var(--sp-text)}.btn-g:hover{border-color:var(--sp-primary);color:var(--sp-primary)}
+.code{max-width:680px;margin:40px auto 0;text-align:left;font-family:var(--sp-font-mono);font-size:14px;line-height:1.6;
+  background:var(--sp-surface);border:1px solid var(--sp-border);border-radius:var(--sp-radius-card);padding:20px 24px;box-shadow:var(--sp-glow)}
+.code .cm{color:var(--sp-text-soft)}.code .k{color:#C9A2F5}.code .tk{color:var(--sp-accent-2)}.code .st{color:#9FD5A8}
+.feat{max-width:1080px;margin:60px auto 0;padding:0 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:760px){.feat{grid-template-columns:1fr}}
+.f{background:var(--sp-surface);border:1px solid var(--sp-border);border-radius:var(--sp-radius-card);padding:22px}
+.f .ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--sp-primary) 14%,transparent);color:var(--sp-primary);font-family:var(--sp-font-mono);margin-bottom:12px}
+.f h3{font-family:var(--sp-font-display);margin:0 0 6px;font-size:18px}.f p{margin:0;color:var(--sp-text-muted);font-size:14px}
+</style></head>
+<body>
+  <nav class="nav">
+    <img src="../assets/logo-primary-inverse.svg" alt="scrypath">
+    <a href="#">docs · hexdocs ↗</a>
+  </nav>
+  <header class="hero">
+    <div class="kicker">Ecto-native · Elixir / Phoenix</div>
+    <h1>Search that lives next to <span class="v">your data</span>.</h1>
+    <p class="sub">scrypath indexes straight from your Ecto schemas — no separate search cluster to babysit, no drift. Add one line, query everything.</p>
+    <div class="cta">
+      <a class="btn btn-p" href="#">Get started</a>
+      <a class="btn btn-g" href="#">mix hex.info scrypath</a>
+    </div>
+    <pre class="code"><span class="cm"># lib/my_app/post.ex</span>
+<span class="k">use</span> Scrypath.Indexable,
+  fields: [<span class="tk">:title</span>, <span class="tk">:body</span>, <span class="tk">:tags</span>],
+  adapter: <span class="st">Scrypath.Adapters.Postgres</span>
+
+<span class="cm"># then, anywhere</span>
+Post |> <span class="k">Scrypath.search</span>(<span class="st">"ecto fragment"</span>) |> Repo.all()</pre>
+  </header>
+  <section class="feat">
+    <div class="f"><div class="ic">/</div><h3>One source of truth</h3><p>Indexes derive from your schemas, so search can't drift from your data.</p></div>
+    <div class="f"><div class="ic">⌕</div><h3>Composable queries</h3><p>Search is an Ecto query fragment — filter, join, and paginate as usual.</p></div>
+    <div class="f"><div class="ic">⠿</div><h3>Federated fan-out</h3><p>Query across many indexes in one call, ranked and merged for you.</p></div>
+  </section>
+</body>
+</html>

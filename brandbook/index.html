@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>scrypath — brand book</title>
+<link rel="icon" href="assets/favicon.svg">
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="tokens/tokens.css">
+<style>
+/* ---- page (scoped to .bb) ------------------------------------------------ */
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--sp-bg);color:var(--sp-text);font-family:var(--sp-font-sans);
+  font-size:16px;line-height:var(--sp-leading-body);-webkit-font-smoothing:antialiased;
+  transition:background var(--sp-dur-base) var(--sp-ease),color var(--sp-dur-base) var(--sp-ease)}
+.bb{max-width:1080px;margin:0 auto;padding:0 24px 120px}
+.bb h1,.bb h2,.bb h3,.bb .display{font-family:var(--sp-font-display);font-weight:700;letter-spacing:-.02em;line-height:var(--sp-leading-head)}
+.bb code,.bb kbd,.bb .mono{font-family:var(--sp-font-mono)}
+.bb a{color:var(--sp-primary);text-decoration:none}
+.bb a:hover{text-decoration:underline}
+.bb section{padding:46px 0;border-top:1px solid var(--sp-border)}
+.bb .eyebrow{font-family:var(--sp-font-mono);text-transform:uppercase;letter-spacing:.14em;
+  font-size:11px;color:var(--sp-accent);margin:0 0 10px}
+.bb h2{font-size:var(--sp-text-3xl);margin:0 0 6px}
+.bb h3{font-size:var(--sp-text-lg);margin:30px 0 12px}
+.bb .lede{color:var(--sp-text-muted);max-width:68ch;font-size:var(--sp-text-lg)}
+.bb p{max-width:70ch}
+.bb .muted{color:var(--sp-text-muted)}
+
+/* header / nav */
+.bb-top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--sp-bg) 86%,transparent);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--sp-border)}
+.bb-top .row{max-width:1080px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:18px}
+.bb-logo{height:26px;display:block}
+.bb-logo.dark{display:none}
+[data-theme="dark"] .bb-logo.light{display:none}
+[data-theme="dark"] .bb-logo.dark{display:block}
+.bb-nav{display:flex;gap:18px;margin-left:auto;flex-wrap:wrap}
+.bb-nav a{font-size:13px;color:var(--sp-text-muted);font-family:var(--sp-font-mono)}
+.bb-nav a:hover{color:var(--sp-text);text-decoration:none}
+.toggle{font-family:var(--sp-font-mono);font-size:12px;border:1.5px solid var(--sp-border);
+  background:var(--sp-surface);color:var(--sp-text);border-radius:var(--sp-radius-pill);
+  padding:6px 13px;cursor:pointer;transition:border-color var(--sp-dur-fast) var(--sp-ease)}
+.toggle:hover{border-color:var(--sp-primary)}
+
+/* hero */
+.bb-hero{padding:64px 0 30px;border-top:none}
+.bb-hero .word{font-size:clamp(46px,9vw,104px);line-height:1;margin:14px 0 18px}
+.bb-hero .word .sl{color:var(--sp-accent-2)}
+.bb-hero .word .v{color:var(--sp-primary)}
+
+/* layout helpers */
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:760px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.card{background:var(--sp-surface);border:1px solid var(--sp-border);border-radius:var(--sp-radius-card);
+  padding:22px;box-shadow:var(--sp-shadow-sm)}
+.tile{border:1px solid var(--sp-border);border-radius:var(--sp-radius-card);display:flex;
+  align-items:center;justify-content:center;padding:34px;min-height:120px;background:var(--sp-surface)}
+.tile.dark{background:var(--sp-night)}
+.tile.light{background:#FFFDF8}
+.tile img{max-height:54px;max-width:100%}
+.cap{font-family:var(--sp-font-mono);font-size:11px;color:var(--sp-text-muted);margin-top:8px;display:block}
+
+/* colour swatches */
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.sw{border:1px solid var(--sp-border);border-radius:12px;overflow:hidden;background:var(--sp-surface)}
+.sw .chip{height:64px}
+.sw .meta{padding:9px 11px;font-family:var(--sp-font-mono);font-size:11px}
+.sw .meta b{display:block;font-size:12px;font-family:var(--sp-font-sans);margin-bottom:2px;color:var(--sp-text)}
+.sw .meta span{color:var(--sp-text-muted)}
+.aa{display:inline-block;font-family:var(--sp-font-mono);font-size:10px;padding:1px 6px;border-radius:999px;
+  border:1px solid var(--sp-border);color:var(--sp-text-muted);margin-top:5px}
+.aa.pass{color:var(--sp-success);border-color:color-mix(in srgb,var(--sp-success) 50%,transparent)}
+
+/* type specimens */
+.specimen{border:1px solid var(--sp-border);border-radius:var(--sp-radius-card);padding:24px;background:var(--sp-surface)}
+.scale > div{display:flex;align-items:baseline;gap:16px;padding:8px 0;border-bottom:1px dashed var(--sp-border)}
+.scale .lbl{font-family:var(--sp-font-mono);font-size:11px;color:var(--sp-text-muted);width:96px;flex:none}
+
+/* components demo */
+.btn{font-family:var(--sp-font-sans);font-weight:600;font-size:14px;border-radius:var(--sp-radius-input);
+  padding:10px 18px;border:1.5px solid transparent;cursor:pointer;transition:all var(--sp-dur-fast) var(--sp-ease)}
+.btn-primary{background:var(--sp-primary);color:var(--sp-on-primary)}
+.btn-primary:hover{background:var(--sp-primary-2)}
+.btn-ghost{background:transparent;color:var(--sp-text);border-color:var(--sp-border)}
+.btn-ghost:hover{border-color:var(--sp-primary);color:var(--sp-primary)}
+.btn-accent{background:var(--sp-accent);color:#fff}
+.btn:focus-visible{outline:2px solid var(--sp-focus);outline-offset:2px}
+.input{font-family:var(--sp-font-sans);font-size:14px;width:100%;padding:10px 13px;border-radius:var(--sp-radius-input);
+  border:1.5px solid var(--sp-border);background:var(--sp-bg);color:var(--sp-text)}
+.input:focus-visible{outline:2px solid var(--sp-focus);outline-offset:1px;border-color:var(--sp-primary)}
+.badge{font-family:var(--sp-font-mono);font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid var(--sp-border);color:var(--sp-text-muted)}
+.badge.v{color:var(--sp-primary);border-color:color-mix(in srgb,var(--sp-primary) 45%,transparent);background:color-mix(in srgb,var(--sp-primary) 8%,transparent)}
+.badge.ok{color:var(--sp-success);border-color:color-mix(in srgb,var(--sp-success) 45%,transparent)}
+.alert{border-radius:var(--sp-radius-input);padding:13px 16px;border:1px solid var(--sp-border);
+  border-left:3px solid var(--sp-primary);background:var(--sp-surface-2);font-size:14px}
+.alert.warn{border-left-color:var(--sp-warning)}
+.alert.err{border-left-color:var(--sp-danger)}
+pre.code{font-family:var(--sp-font-mono);font-size:13px;line-height:var(--sp-leading-code);
+  background:var(--sp-night);color:#E7E3DA;border-radius:var(--sp-radius-card);padding:18px 20px;overflow:auto;border:1px solid var(--sp-border)}
+pre.code .k{color:#C9A2F5}.tk{color:var(--sp-accent-2)}.st{color:#9FD5A8}.cm{color:#7F8AA3}
+table.tk{border-collapse:collapse;width:100%;font-size:14px}
+table.tk th,table.tk td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--sp-border)}
+table.tk th{font-family:var(--sp-font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--sp-text-muted);font-weight:600}
+.do dont{}
+.dd{border:1px solid var(--sp-border);border-radius:var(--sp-radius-card);padding:16px 18px}
+.dd .h{font-family:var(--sp-font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:9px}
+.dd.do .h{color:var(--sp-success)}.dd.dont .h{color:var(--sp-danger)}
+.dd ul{margin:0;padding-left:18px}.dd li{margin:5px 0;font-size:14px;color:var(--sp-text-muted)}
+.tokrow{font-family:var(--sp-font-mono);font-size:12px;display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed var(--sp-border)}
+.tokrow span:last-child{color:var(--sp-text-muted)}
+.foot{padding-top:36px;color:var(--sp-text-muted);font-size:13px}
+.shadowbox{height:80px;border-radius:var(--sp-radius-card);background:var(--sp-surface);border:1px solid var(--sp-border)}
+.radbox{height:64px;background:color-mix(in srgb,var(--sp-primary) 14%,transparent);border:1.5px solid var(--sp-primary);display:flex;align-items:center;justify-content:center;font-family:var(--sp-font-mono);font-size:11px;color:var(--sp-primary)}
+</style>
+</head>
+<body>
+
+<header class="bb-top"><div class="row">
+  <img class="bb-logo light" src="assets/logo-primary.svg" alt="scrypath">
+  <img class="bb-logo dark"  src="assets/logo-primary-inverse.svg" alt="scrypath">
+  <nav class="bb-nav">
+    <a href="#logo">logo</a><a href="#color">color</a><a href="#type">type</a>
+    <a href="#tokens">tokens</a><a href="#components">components</a><a href="#voice">voice</a><a href="#dev">dev</a>
+  </nav>
+  <button class="toggle" id="themeBtn" aria-label="Toggle theme">◐ theme</button>
+</div></header>
+
+<div class="bb">
+
+  <!-- HERO -->
+  <section class="bb-hero">
+    <p class="eyebrow">scrypath · brand book · v1.35</p>
+    <div class="display word"><span class="v">scry</span><span class="sl">/</span>path</div>
+    <p class="lede">The brand system for <b>scrypath</b> — an Ecto-native search-indexing library for Elixir &amp; Phoenix. Calm, exact, and built for engineers. This page is self-contained: fonts, tokens, and logo travel with it.</p>
+    <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
+      <span class="badge v">Ecto-native</span><span class="badge">Elixir / Phoenix</span><span class="badge">SIL OFL type</span><span class="badge ok">WCAG AA</span>
+    </div>
+  </section>
+
+  <!-- LOGO -->
+  <section id="logo">
+    <p class="eyebrow">identity</p><h2>The logo</h2>
+    <p class="lede">The wordmark is the logo. Pristine Familjen Grotesk letters with one signature move: a weight-matched <b>copper&nbsp;<span style="color:var(--sp-accent-2)">/</span></b> path-separator. It reads instantly as a path, it's developer-native, and it never relies on a font at runtime (the SVG is outlined to vectors).</p>
+
+    <h3>Primary lockup</h3>
+    <div class="grid g2">
+      <div><div class="tile light"><img src="assets/logo-primary.svg" alt="scrypath logo on light"></div><span class="cap">logo-primary.svg · on light</span></div>
+      <div><div class="tile dark"><img src="assets/logo-primary-inverse.svg" alt="scrypath logo on dark"></div><span class="cap">logo-primary-inverse.svg · on dark</span></div>
+    </div>
+
+    <h3>The mark &amp; favicon — <span class="mono">s/p</span> monogram</h3>
+    <div class="grid g4">
+      <div><div class="tile light"><img src="assets/logo-mark.svg" style="max-height:62px" alt="mark"></div><span class="cap">logo-mark.svg</span></div>
+      <div><div class="tile dark"><img src="assets/logo-mark-inverse.svg" style="max-height:62px" alt="mark inverse"></div><span class="cap">logo-mark-inverse.svg</span></div>
+      <div><div class="tile light"><img src="assets/logo-stacked.svg" style="max-height:96px" alt="stacked"></div><span class="cap">logo-stacked.svg</span></div>
+      <div><div class="tile light" style="gap:18px"><img src="assets/favicon.svg" style="max-height:16px"><img src="assets/favicon.svg" style="max-height:32px"><img src="assets/favicon.svg" style="max-height:48px"></div><span class="cap">favicon.svg · 16/32/48</span></div>
+    </div>
+
+    <h3>Clear space &amp; minimum size</h3>
+    <div class="grid g2">
+      <div class="card"><p class="muted" style="margin-top:0">Keep clear space around the lockup equal to the <b>cap-height of the “s”</b> on all sides. Don't crowd it with other marks or text.</p>
+        <div class="tile light" style="padding:46px"><img src="assets/logo-primary.svg" style="max-height:40px;outline:1px dashed var(--sp-border);outline-offset:22px"></div></div>
+      <div class="card"><p class="muted" style="margin-top:0"><b>Minimum size.</b> Wordmark never below <b>18px</b> tall (≈96px wide). The <span class="mono">s/p</span> favicon is tuned to stay legible at <b>16px</b>.</p>
+        <div class="tile light" style="gap:26px"><img src="assets/logo-primary.svg" style="max-height:18px"><span class="cap">18px floor</span></div></div>
+    </div>
+
+    <h3>Do / Don't</h3>
+    <div class="grid g2">
+      <div class="dd do"><div class="h">✓ do</div><ul>
+        <li>Use the copper <span class="mono">/</span> at full strength — it's the signature.</li>
+        <li>Place on warm-neutral or night backgrounds with clear contrast.</li>
+        <li>Use the inverse file on dark; the monogram for avatars/favicons.</li>
+        <li>Let the wordmark breathe — honour the clear space.</li>
+      </ul></div>
+      <div class="dd dont"><div class="h">✗ don't</div><ul>
+        <li>No box, cage, pill, or filled background behind the mark.</li>
+        <li>Don't recolor the slash to a status color or gradient.</li>
+        <li>Don't stretch, condense, outline, or add shadow.</li>
+        <li>Don't add a tagline to the primary lockup (use the tagline file).</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <!-- COLOR -->
+  <section id="color">
+    <p class="eyebrow">palette</p><h2>Color</h2>
+    <p class="lede">Violet leads, copper accents (≈5% of any surface — the slash, a hover, a focal node — never a status tone), over warm neutrals and a deep night. The same tokens drive light and dark.</p>
+
+    <h3>Brand &amp; neutrals</h3>
+    <div class="swatches">
+      <div class="sw"><div class="chip" style="background:#5B4AD1"></div><div class="meta"><b>Violet 600</b><span>#5B4AD1 · primary</span><br><span class="aa pass">AA on paper</span></div></div>
+      <div class="sw"><div class="chip" style="background:#6C5CE7"></div><div class="meta"><b>Violet 500</b><span>#6C5CE7 · accent/link</span></div></div>
+      <div class="sw"><div class="chip" style="background:#C17A3E"></div><div class="meta"><b>Copper 500</b><span>#C17A3E · the slash</span></div></div>
+      <div class="sw"><div class="chip" style="background:#A85D2E"></div><div class="meta"><b>Copper 600</b><span>#A85D2E · copper on light</span><br><span class="aa pass">AA text on paper</span></div></div>
+      <div class="sw"><div class="chip" style="background:#0C0F14"></div><div class="meta"><b>Night</b><span>#0C0F14 · dark bg</span></div></div>
+      <div class="sw"><div class="chip" style="background:#141923"></div><div class="meta"><b>Ink</b><span>#141923 · text/surface</span></div></div>
+      <div class="sw"><div class="chip" style="background:#2A3446"></div><div class="meta"><b>Slate</b><span>#2A3446 · border (dark)</span></div></div>
+      <div class="sw"><div class="chip" style="background:#F4F1EA;border-bottom:1px solid var(--sp-border)"></div><div class="meta"><b>Paper</b><span>#F4F1EA · text on dark</span></div></div>
+      <div class="sw"><div class="chip" style="background:#FAF7F2;border-bottom:1px solid var(--sp-border)"></div><div class="meta"><b>Canvas</b><span>#FAF7F2 · light bg</span></div></div>
+    </div>
+
+    <h3>Status</h3>
+    <div class="swatches">
+      <div class="sw"><div class="chip" style="background:#4FAE74"></div><div class="meta"><b>Success</b><span>#4FAE74</span></div></div>
+      <div class="sw"><div class="chip" style="background:#5CA9E6"></div><div class="meta"><b>Info</b><span>#5CA9E6</span></div></div>
+      <div class="sw"><div class="chip" style="background:#D9A441"></div><div class="meta"><b>Warning</b><span>#D9A441</span></div></div>
+      <div class="sw"><div class="chip" style="background:#D96262"></div><div class="meta"><b>Danger</b><span>#D96262</span></div></div>
+    </div>
+    <p class="muted" style="font-size:14px;margin-top:14px">Contrast is enforced in product by <span class="mono">contrast-pairs.mjs</span> (WCAG AA: 4.5:1 text, 3.0:1 large/non-text), composited in sRGB. Muted text rides a 64% mix of <span class="mono">base-content</span> and still clears AA in both themes. See <span class="mono">notes/accessibility-checks.md</span>.</p>
+  </section>
+
+  <!-- TYPE -->
+  <section id="type">
+    <p class="eyebrow">typography</p><h2>Type</h2>
+    <p class="lede">Three SIL OFL faces. <b>Familjen Grotesk</b> for display, <b>Inter</b> for UI &amp; prose, <b>IBM Plex Mono</b> for code &amp; CLI. (Familjen replaces Space Grotesk — reserved for a sibling project.)</p>
+    <div class="grid g3" style="margin-top:18px">
+      <div class="specimen"><span class="cap">display · Familjen Grotesk 600/700</span><div class="display" style="font-size:34px;margin-top:8px">scry/path</div><div style="font-family:var(--sp-font-display);font-size:15px;margin-top:6px">Index. Search. Route.</div></div>
+      <div class="specimen"><span class="cap">body · Inter 400/600</span><div style="font-size:15px;margin-top:8px">Ecto-native search indexing for Elixir &amp; Phoenix — <b>fast, predictable, composable.</b></div></div>
+      <div class="specimen"><span class="cap">mono · IBM Plex Mono 400/500</span><div class="mono" style="font-size:14px;margin-top:8px">mix scry.index --rebuild<br>{:ok, %Scrypath.Hit{}}</div></div>
+    </div>
+    <h3>Scale</h3>
+    <div class="specimen scale">
+      <div><span class="lbl">6xl · 72</span><span class="display" style="font-size:72px">scry/path</span></div>
+      <div><span class="lbl">4xl · 40</span><span class="display" style="font-size:40px">scry/path</span></div>
+      <div><span class="lbl">2xl · 24</span><span class="display" style="font-size:24px">Search, indexed</span></div>
+      <div><span class="lbl">base · 16</span><span style="font-size:16px">Body copy in Inter, set at 16px with 1.6 line-height.</span></div>
+      <div><span class="lbl">sm · 14</span><span style="font-size:14px">Secondary UI text and table cells.</span></div>
+      <div><span class="lbl">mono · 13</span><span class="mono" style="font-size:13px">config :scrypath, adapter: Scrypath.Adapters.Postgres</span></div>
+    </div>
+  </section>
+
+  <!-- TOKENS -->
+  <section id="tokens">
+    <p class="eyebrow">foundations</p><h2>Spacing · radius · shadow · motion</h2>
+    <div class="grid g2">
+      <div class="card"><h3 style="margin-top:0">Spacing — 8px base</h3>
+        <div class="tokrow"><span>--sp-2 … --sp-9</span><span>8 · 12 · 16 · 24 · 32 · 48 · 64</span></div>
+        <div style="display:flex;gap:6px;align-items:flex-end;margin-top:12px">
+          <div style="width:8px;height:8px;background:var(--sp-primary)"></div><div style="width:12px;height:12px;background:var(--sp-primary)"></div>
+          <div style="width:16px;height:16px;background:var(--sp-primary)"></div><div style="width:24px;height:24px;background:var(--sp-primary)"></div>
+          <div style="width:32px;height:32px;background:var(--sp-primary)"></div><div style="width:48px;height:48px;background:var(--sp-primary)"></div></div></div>
+      <div class="card"><h3 style="margin-top:0">Radius</h3>
+        <div class="grid g3"><div class="radbox" style="border-radius:12px">12 input</div><div class="radbox" style="border-radius:16px">16 card</div><div class="radbox" style="border-radius:24px">24 panel</div></div></div>
+      <div class="card"><h3 style="margin-top:0">Shadow ladder</h3>
+        <div class="grid g3"><div class="shadowbox" style="box-shadow:var(--sp-shadow-sm)"></div><div class="shadowbox" style="box-shadow:var(--sp-shadow-md)"></div><div class="shadowbox" style="box-shadow:var(--sp-shadow-lg)"></div></div>
+        <p class="muted" style="font-size:13px;margin-bottom:0">Soft, low-spread. Dark theme swaps to ambient depth + an optional violet glow.</p></div>
+      <div class="card"><h3 style="margin-top:0">Motion</h3>
+        <div class="tokrow"><span>fast</span><span>120ms</span></div><div class="tokrow"><span>base</span><span>180ms</span></div>
+        <div class="tokrow"><span>slow</span><span>240ms</span></div><div class="tokrow"><span>ease</span><span>cubic-bezier(.2,.8,.2,1)</span></div></div>
+    </div>
+  </section>
+
+  <!-- COMPONENTS -->
+  <section id="components">
+    <p class="eyebrow">in use</p><h2>Components</h2>
+    <p class="lede">Built straight from the tokens — they render correctly in both themes. Toggle the theme (top-right) to verify.</p>
+    <div class="grid g2">
+      <div class="card"><h3 style="margin-top:0">Buttons &amp; focus</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary">Index now</button><button class="btn btn-ghost">View docs</button><button class="btn btn-accent">Rebuild</button></div>
+        <p class="muted" style="font-size:13px">Tab to a button to see the single global focus ring (<span class="mono">2px var(--sp-focus)</span>).</p></div>
+      <div class="card"><h3 style="margin-top:0">Form input</h3>
+        <label class="cap" for="q">search query</label>
+        <input id="q" class="input" placeholder="scry &quot;ecto fragment&quot; in posts…" style="margin-top:6px">
+        <div style="margin-top:10px;display:flex;gap:8px"><span class="badge v">filter: posts</span><span class="badge">limit: 25</span></div></div>
+      <div class="card"><h3 style="margin-top:0">Badges &amp; alerts</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><span class="badge v">indexed</span><span class="badge ok">healthy</span><span class="badge">queued</span></div>
+        <div class="alert" style="margin-bottom:8px">Reindex complete — <b>42,180</b> documents in 3.2s.</div>
+        <div class="alert warn" style="margin-bottom:8px">Index drift detected on <span class="mono">posts</span>.</div>
+        <div class="alert err">Adapter connection refused.</div></div>
+      <div class="card"><h3 style="margin-top:0">Code block</h3>
+<pre class="code"><span class="cm"># add scrypath to your schema</span>
+<span class="k">use</span> Scrypath.Indexable,
+  fields: [<span class="tk">:title</span>, <span class="tk">:body</span>],
+  adapter: <span class="st">Scrypath.Adapters.Postgres</span></pre></div>
+    </div>
+    <h3>Table</h3>
+    <div class="card" style="padding:6px 18px">
+      <table class="tk"><thead><tr><th>index</th><th>documents</th><th>status</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">posts</td><td>42,180</td><td><span class="badge ok">healthy</span></td></tr>
+        <tr><td class="mono">comments</td><td>118,902</td><td><span class="badge ok">healthy</span></td></tr>
+        <tr><td class="mono">users</td><td>9,431</td><td><span class="badge">reindexing</span></td></tr>
+      </tbody></table>
+    </div>
+  </section>
+
+  <!-- VOICE -->
+  <section id="voice">
+    <p class="eyebrow">writing</p><h2>Voice &amp; microcopy</h2>
+    <p class="lede">Calm, exact, capable. Explain — don't hype. Be specific. Assume engineering literacy. Sound composed under complexity. Metaphor sparingly.</p>
+    <div class="grid g2">
+      <div class="dd do"><div class="h">✓ on-brand</div><ul>
+        <li>“Reindexed 42,180 documents in 3.2s.”</li>
+        <li>“Add <span class="mono">use Scrypath.Indexable</span> to your schema.”</li>
+        <li>“Search across federated indexes with one query.”</li>
+      </ul></div>
+      <div class="dd dont"><div class="h">✗ off-brand</div><ul>
+        <li>“Blazing-fast, magical search! 🚀”</li>
+        <li>“The only search you'll ever need.”</li>
+        <li>“Effortlessly supercharge your data!”</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <!-- DEV -->
+  <section id="dev">
+    <p class="eyebrow">implementation</p><h2>For developers</h2>
+    <p class="lede">Everything here ships as plain files — no build step.</p>
+    <table class="tk" style="margin-top:8px"><thead><tr><th>need</th><th>use</th></tr></thead><tbody>
+      <tr><td>CSS variables (both themes)</td><td class="mono">tokens/tokens.css</td></tr>
+      <tr><td>Token data (JSON)</td><td class="mono">tokens/tokens.json</td></tr>
+      <tr><td>daisyUI theme (copy-paste)</td><td class="mono">tokens/daisyui-theme.example.js</td></tr>
+      <tr><td>Brand fonts (@font-face)</td><td class="mono">assets/fonts/fonts.css</td></tr>
+      <tr><td>Logo &amp; favicon</td><td class="mono">assets/logo-*.svg · favicon.svg</td></tr>
+      <tr><td>Examples</td><td class="mono">examples/components.html · landing-page-section.html · readme-header-example.md</td></tr>
+    </tbody></table>
+<pre class="code" style="margin-top:16px"><span class="cm">/* drop into any page */</span>
+<span class="k">@import</span> <span class="st">"tokens/tokens.css"</span>;
+<span class="k">@import</span> <span class="st">"assets/fonts/fonts.css"</span>;
+<span class="cm">/* then use var(--sp-primary), var(--sp-font-display), … */</span></pre>
+    <p class="foot">scrypath brand book · v1.35 · self-contained. Type: Familjen Grotesk, Inter, IBM Plex Mono — all <a href="https://opensource.org/license/ofl-1-1">SIL OFL 1.1</a> (see <span class="mono">assets/fonts/OFL-*.txt</span>). Palette &amp; tokens mirror the live <span class="mono">scrypath_ops</span> theme. © scrypath.</p>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  var root=document.documentElement, btn=document.getElementById('themeBtn');
+  var saved=null; try{saved=localStorage.getItem('sp-theme')}catch(e){}
+  if(saved){root.setAttribute('data-theme',saved);}
+  else if(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches){root.setAttribute('data-theme','dark');}
+  btn.addEventListener('click',function(){
+    var next=root.getAttribute('data-theme')==='dark'?'light':'dark';
+    root.setAttribute('data-theme',next);
+    try{localStorage.setItem('sp-theme',next)}catch(e){}
+  });
+})();
+</script>
+</body>
+</html>
