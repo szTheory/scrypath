@@ -584,6 +584,7 @@ jobs:
       MIX_ENV: test
       PGPORT: "5433"
       SCRYPATH_MEILISEARCH_URL: http://127.0.0.1:7700
+      SCRYPATH_OPS_PLAYBOOK_DIR: ${{ github.workspace }}/examples/scrypath_ecommerce/priv/playbooks
       PLAYWRIGHT_BASE_URL: http://127.0.0.1:4002
       PHASE105_EVIDENCE_PATH: examples/scrypath_ecommerce/test-results/phase105-evidence.ndjson
 
