@@ -30,7 +30,7 @@ jobs:
           elixir-version: "1.19.0"
           otp-version: "28.1"
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             deps
@@ -62,7 +62,7 @@ jobs:
           elixir-version: "1.19.0"
           otp-version: "28.1"
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             deps
@@ -89,7 +89,7 @@ jobs:
           elixir-version: "1.19.0"
           otp-version: "28.1"
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             deps
@@ -115,7 +115,7 @@ jobs:
           elixir-version: "1.19.0"
           otp-version: "28.1"
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             deps
@@ -150,7 +150,7 @@ jobs:
           elixir-version: ${{ matrix.elixir-version }}
           otp-version: ${{ matrix.otp-version }}
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             deps
@@ -179,7 +179,7 @@ jobs:
           elixir-version: "1.19.0"
           otp-version: "28.1"
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             deps
@@ -220,7 +220,7 @@ jobs:
           elixir-version: "1.19.0"
           otp-version: "28.1"
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             deps
@@ -258,7 +258,7 @@ jobs:
           elixir-version: "1.19.0"
           otp-version: "28.1"
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             deps
@@ -307,7 +307,7 @@ jobs:
           elixir-version: "1.19.0"
           otp-version: "28.0"
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             deps
@@ -356,7 +356,7 @@ jobs:
           elixir-version: "1.19.0"
           otp-version: "28.1"
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             deps
@@ -414,7 +414,7 @@ jobs:
           elixir-version: "1.19.0"
           otp-version: "28.1"
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             deps
@@ -511,7 +511,7 @@ jobs:
           elixir-version: "1.19.0"
           otp-version: "28.1"
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             scrypath_ops/deps
@@ -603,7 +603,7 @@ jobs:
           cache: npm
           cache-dependency-path: examples/scrypath_ecommerce/package-lock.json
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             deps

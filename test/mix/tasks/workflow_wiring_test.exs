@@ -103,10 +103,11 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert yml =~ "actions/checkout@v6"
     end
 
-    test "ci.yml uses actions/cache@v5 everywhere" do
+    test "ci.yml uses actions/cache@v6 everywhere" do
       yml = File.read!(@ci_yml)
       refute yml =~ "actions/cache@v4", "expected no legacy cache@v4 pins"
-      assert yml =~ "actions/cache@v5"
+      refute yml =~ "actions/cache@v5", "expected no legacy cache@v5 pins"
+      assert yml =~ "actions/cache@v6"
     end
 
     test "ci.yml has at least 4 checkout@v6 references (test matrix + quality + phase5-verification + phase13-verification)" do
@@ -120,15 +121,15 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert count >= 4, "expected >= 4 checkout@v6 refs in ci.yml, got #{count}"
     end
 
-    test "ci.yml has at least 4 cache@v5 references" do
+    test "ci.yml has at least 4 cache@v6 references" do
       count =
         @ci_yml
         |> File.read!()
-        |> String.split("actions/cache@v5")
+        |> String.split("actions/cache@v6")
         |> length()
         |> Kernel.-(1)
 
-      assert count >= 4, "expected >= 4 cache@v5 refs in ci.yml, got #{count}"
+      assert count >= 4, "expected >= 4 cache@v6 refs in ci.yml, got #{count}"
     end
   end
 
