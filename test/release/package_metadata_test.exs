@@ -51,6 +51,22 @@ defmodule Scrypath.Release.PackageMetadataTest do
     refute "test-results" in package_files
   end
 
+  test "every root docs file is covered by the package allowlist" do
+    package_files = MixProject.project()[:package][:files]
+
+    root_docs =
+      "docs/**/*"
+      |> Path.wildcard()
+      |> Enum.filter(&File.regular?/1)
+
+    assert root_docs != []
+
+    for doc <- root_docs do
+      assert doc in package_files,
+             "#{doc} is checked by release parity but missing from package.files"
+    end
+  end
+
   test "docs metadata keeps release guide and version-aware source links" do
     project = MixProject.project()
     docs = project[:docs]
