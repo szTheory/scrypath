@@ -30,7 +30,7 @@ ADMIN_SCREENSHOT_DIR ?= test-results/admin-screenshots
 CONTRAST_REPORT_DIR  ?= test-results/contrast
 
 .DEFAULT_GOAL := help
-.PHONY: help docker-dev dev doctor urls infra infra-pg up down reset seed screenshots screenshots-matrix contrast contrast-matrix verify-path-motion verify-shell-wash logs ps
+.PHONY: help docker-dev dev doctor urls infra infra-pg up down reset seed screenshots screenshots-matrix contrast contrast-matrix verify-mounted verify-e2e verify-path-motion verify-shell-wash logs ps
 
 help: ## List targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -153,6 +153,12 @@ contrast-matrix: ## Run the full axe contrast matrix (browser required — serve
 	@CONTRAST_REPORT_DIR=$${CONTRAST_REPORT_DIR:-$(CONTRAST_REPORT_DIR)} \
 	  PLAYWRIGHT_BASE_URL=http://127.0.0.1:$(WEB_PORT) \
 	  npm run test:e2e:admin-contrast
+
+verify-mounted: ## Zero-touch Docker proof for mounted routing and operator workflows (required lane)
+	@bash ./scripts/verify-e2e.sh focused
+
+verify-e2e: ## Zero-touch Docker proof for the full advisory browser/visual lane
+	@bash ./scripts/verify-e2e.sh full
 
 verify-path-motion: ## One-command path-motion proof: boot test stack, run spec, tear down (no human UAT)
 	@echo "Booting containerized test stack on http://127.0.0.1:$(WEB_PORT) (Playwright/CI shape)..."

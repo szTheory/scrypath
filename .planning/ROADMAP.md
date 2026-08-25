@@ -116,15 +116,15 @@ Plans:
 **Success Criteria** (what must be TRUE):
 
   1. A fresh ecommerce-directory resolution selects fixed-compatible dependencies without its recorded advisories while consuming the green root and ScrypathOps sources through their mounted paths.
-  2. `mix e2e.prepare` and the documented required deterministic checks pass before the ecommerce batch is committed.
-  3. Available ecommerce browser proof is recorded separately as passed, failed, or unavailable with its prerequisites; unavailable service/browser prerequisites are never reported as passing required proof.
+  2. The Docker-only `make verify-mounted` lifecycle owns service readiness, `mix e2e.prepare`, both asset builds, focused mounted browser proof, diagnostics, and cleanup without host setup or human UAT; documented deterministic checks pass before the ecommerce batch is committed.
+  3. The focused `ecommerce-mounted-smoke` job is a required merge check and records passed, failed, or unavailable evidence honestly; the complete `phase105-e2e` visual/browser lane remains advisory.
   4. Dated `mix deps.get` evidence from each of the root, legacy Phoenix, ScrypathOps, and ecommerce directories shows none of the 2026-08-16 recorded advisories.
   5. The final evidence records four ordered, graph-local commits and explains every manifest/lockfile change, with each required gate passing before the following batch began.
 
 **Plans**: 0/3 plans executed
 **Wave 1**
 
-- [ ] 147-01-PLAN.md
+- [ ] 147-01-PLAN.md — Zero-touch Docker verification, required focused CI parity, and the isolated ecommerce dependency remediation.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 

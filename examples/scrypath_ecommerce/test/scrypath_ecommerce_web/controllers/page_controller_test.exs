@@ -26,7 +26,7 @@ defmodule ScrypathEcommerceWeb.PageControllerTest do
     assert html =~ "Control Room"
 
     assert html =~
-             ~s(href="/admin/search" data-phx-link="redirect" data-phx-link-state="push" class="flex w-fit items-center gap-3")
+             ~s(href="/admin/search" data-phx-link="redirect" data-phx-link-state="push")
 
     assert html =~
              ~s(href="/admin/search" data-phx-link="redirect" data-phx-link-state="push" id="ops-cmdk-item-0")

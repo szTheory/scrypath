@@ -54,8 +54,22 @@ make urls        # print storefront, operator routes, and current port lane
 make doctor      # check Docker Compose and common host-port conflicts
 make dev         # host Phoenix loop + Dockerized Meilisearch
 make up          # containerized test stack, matching the Playwright/CI shape
+make verify-mounted # zero-touch required mounted integration/browser proof
+make verify-e2e    # zero-touch full advisory browser/visual proof
 make reset       # stop containers and delete this demo's volumes
 ```
+
+`make verify-mounted` is the shortest trustworthy proof for the mounted host:
+it builds the exact checkout, prepares Postgres and Meilisearch, builds both
+asset bundles, runs the focused Playwright routing/operator specs, saves
+diagnostics under `test-results/docker-focused/`, and tears everything down.
+It requires only Docker Compose and publishes no host ports. `make verify-e2e`
+uses the same isolated lifecycle for the complete advisory browser and
+deterministic visual lane, with output under `test-results/docker-full/`.
+
+Both commands use unique Compose project names, so parallel worktrees and
+already-running services do not collide. Set `KEEP_E2E_STACK=1` only when you
+want a failed verifier stack left running for investigation.
 
 Use `make docker-dev` for the hands-off browser loop. It runs `MIX_ENV=dev`, so
 **seeded data is visible in the browser**. The default Docker dev stack publishes
@@ -207,6 +221,18 @@ MIX_ENV=test PHX_SERVER=true mix phx.server
 Use the same URLs listed above after Phoenix starts.
 
 ## Verification
+
+The canonical no-UAT local/CI proof is:
+
+```sh
+make verify-mounted
+```
+
+For the broader advisory lane:
+
+```sh
+make verify-e2e
+```
 
 The browser E2E lane remains:
 

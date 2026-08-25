@@ -353,6 +353,17 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
   end
 
   describe "STAB-01 advisory evidence wiring" do
+    test "Phase 147 adds a distinct required mounted smoke without promoting phase105" do
+      ci = File.read!(@ci_yml)
+      contributing = File.read!("CONTRIBUTING.md")
+
+      assert workflow_job_block(ci, "ecommerce-mounted-smoke") =~
+               "make -C examples/scrypath_ecommerce verify-mounted"
+
+      assert contributing =~ "**`ecommerce-mounted-smoke`** | Required merge gate"
+      assert contributing =~ "`phase105-e2e` is advisory today"
+    end
+
     test "phase105-e2e exports evidence env and runs always-on summary script" do
       ci = File.read!(@ci_yml)
 

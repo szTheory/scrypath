@@ -538,6 +538,27 @@ jobs:
           mix deps.get
           mix test
 
+  ecommerce-mounted-smoke:
+    name: ecommerce-mounted-smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Run zero-touch mounted ecommerce proof
+        run: make -C examples/scrypath_ecommerce verify-mounted
+
+      - name: Upload mounted-smoke failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ecommerce-mounted-smoke-artifacts
+          path: examples/scrypath_ecommerce/test-results/docker-focused
+          if-no-files-found: warn
+
   phase105-e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 20

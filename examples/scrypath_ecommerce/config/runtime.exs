@@ -18,4 +18,15 @@ if config_env() == :test and System.get_env("SCRYPATH_E2E_NO_SANDBOX") == "1" do
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
 
   config :scrypath_ecommerce, sandbox: false
+
+  # A dependency's runtime.exs is not imported by its parent application. Bridge
+  # the explicit E2E workspace here so the browser and server can share the
+  # disposable Compose volume used by playbook save/list/delete scenarios.
+  case System.get_env("SCRYPATH_OPS_PLAYBOOK_DIR") do
+    path when is_binary(path) and path != "" ->
+      config :scrypath_ops, playbook_workspace_dir: Path.expand(path)
+
+    _other ->
+      :ok
+  end
 end

@@ -100,10 +100,11 @@ surface, not an implementation surface.
 
 ### 4. Proportional browser evidence
 
-- **D-17:** When browser prerequisites are available, run the existing focused
-  mounted subset with `e2e/harness.spec.ts` and `e2e/operator.spec.ts`. This is the
-  proportional dependency-regression proof for mounted routing and operator flows;
-  add no new browser harness or package script solely for Phase 147.
+- **D-17:** Run the existing focused mounted subset with `e2e/harness.spec.ts` and
+  `e2e/operator.spec.ts` through the reusable Docker-only `make verify-mounted`
+  lifecycle. The command owns services, assets, readiness, browser execution,
+  diagnostics, and teardown without adding new browser specs or requiring host
+  Elixir/Node/Postgres/Meilisearch setup.
 - **D-18:** If the complete advisory `phase105-e2e` job runs for the exact candidate
   SHA, reference its existing evidence rather than manufacturing a second full local
   run. The full storefront, theme, screenshot, contrast, and visual-judge suite
@@ -123,6 +124,13 @@ surface, not an implementation surface.
   and Phase 105 evidence summary behavior. Do not commit generated browser artifacts.
   Current `brandbook/` guidance supersedes older prompt material if a visual result
   needs interpretation, but Phase 147 makes no visual or brand changes.
+- **D-33:** Automated evidence replaces human verification for Phase 147. A green
+  focused required lane plus the existing deterministic/service/audit gates closes
+  mounted behavior without a UAT file. Any proposed human verification item is an
+  automation gap to close, not a manual acceptance step.
+- **D-34:** Add a distinct required `ecommerce-mounted-smoke` job that invokes the
+  same Docker command as local contributors. Keep the complete `phase105-e2e` lane
+  advisory; this is a new focused gate, not a promotion or rename of that lane.
 
 ### 5. Hybrid four-graph closure ledger
 
@@ -334,6 +342,9 @@ surface, not an implementation surface.
   smoke without inventing a new test surface.
 - The `phase105-e2e` job already owns services, assets, server boot, browser retries,
   failure artifacts, and structured evidence summaries.
+- `make verify-mounted` and `make verify-e2e` provide the approved reusable
+  Docker-only orchestration layer; the focused command is required and the full
+  deterministic visual/browser command remains advisory.
 - Phase 144-146 summaries already contain exact-SHA fresh proof that the final hybrid
   ledger can reference rather than rerun locklessly.
 
@@ -378,9 +389,10 @@ surface, not an implementation surface.
 <deferred>
 ## Deferred Ideas
 
-None — discussion stayed within phase scope. Permanent dependency automation, a new
-security CI lane, browser-lane promotion, package-head modernization, and UI/brand
-changes remain outside v1.36.
+Package-head modernization, promotion of the complete `phase105-e2e` lane, and
+UI/brand changes remain outside v1.36. The owner explicitly approved reusable
+Docker-only mounted verification and a separate focused required CI check for
+Phase 147; those are no longer deferred.
 
 </deferred>
 

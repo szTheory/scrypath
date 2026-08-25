@@ -92,10 +92,11 @@ GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
 | **`phase13-verification`** | Service: Meilisearch. `SCRYPATH_INTEGRATION=1`, `mix verify.phase13` (operator integration path) |
 | **`meilisearch-smoke`** | Service: Meilisearch. `mix verify.meilisearch_smoke` (curated live suites: `live_meilisearch_verification`, `live_operator_verification`, `search_many_integration`, `settings_hot_apply_integration`) |
 | **`phoenix-example-integration`** | Services: Postgres 16 + Meilisearch v1.15. `SCRYPATH_EXAMPLE_INTEGRATION=1`, `PGPORT=5433`, `SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700`. **CI** runs **`cd examples/phoenix_meilisearch`**, then **`mix deps.get`**, then **`mix test`** (same sequence as `.github/workflows/ci.yml`) - **not** `./scripts/smoke.sh`. **`./scripts/smoke.sh`** is a **local DX harness** under `examples/phoenix_meilisearch/` (Compose + env defaults aligned to CI); use it for interactive runs, not as the Actions test driver. See the example README for env tables. |
+| **`ecommerce-mounted-smoke`** | Required merge gate: runs `make -C examples/scrypath_ecommerce verify-mounted`, a Docker-only proof of mounted routing, failed-sync triage, and zero-downtime swap behavior. The verifier owns health checks, preparation, assets, browser execution, artifacts, and teardown. |
 | **`phase105-e2e`** | Advisory browser lane with Postgres 16 + Meilisearch v1.15 for `examples/scrypath_ecommerce`; runs browser E2E, light screenshot inventory/viewport parity, static contrast, and optional advisory LLM visual judgment, with failure artifacts (`playwright-report`, `test-results`, Phoenix log). |
 | **`scrypath-ops-path-check` / `scrypath-ops`** | Service: Postgres 16 only (no Meilisearch). Path gate: runs on **`push` to `main`** unconditionally, and on **`pull_request`** when **`scrypath_ops/**`**, **`lib/**`**, **`mix.exs`**, **`mix.lock`**, or **`scrypath_ops/mix.lock`** change. Local contributors should use **`mix verify.opsui`** from the repo root; the dedicated CI job mirrors the same sequence by running **`cd scrypath_ops`**, then **`mix deps.get`**, then **`mix test`**. |
 
-Treat **`main-ci`**, **`repo-hygiene`**, **`release-truth`**, and **`phase99-trust`** as the routine required merge gate blockers for this trust-hardening lane. **`compatibility-truth`** remains advisory evidence coverage, while phase-101 compatibility assertions close through <code>mix verify.phase99</code> rather than introducing a new required trust lane.
+Treat **`main-ci`**, **`repo-hygiene`**, **`release-truth`**, **`phase99-trust`**, and **`ecommerce-mounted-smoke`** as the routine required merge gate blockers for this trust-hardening lane. **`compatibility-truth`** remains advisory evidence coverage, while phase-101 compatibility assertions close through <code>mix verify.phase99</code>.
 
 For v1.29 closeout proof, run <code>mix verify.phase108</code> locally when related-data fan-out wording, roadmap/JTBD closeout truth, or contributor verification posture changes. It is a focused service-free truth gate; it does not promote **`phase105-e2e`** to a required merge blocker.
 
@@ -107,6 +108,22 @@ For a **multi-container-shaped** local stack (Postgres + Meilisearch + Phoenix +
 
 ## `phase105-e2e` local runbook
 
+The required mounted subset has a zero-touch Docker entrypoint:
+
+```sh
+make -C examples/scrypath_ecommerce verify-mounted
+```
+
+That command is the local/CI parity surface for `ecommerce-mounted-smoke`. It
+requires only Docker Compose, publishes no host ports, and tears down its
+uniquely named containers, network, and volumes after collecting diagnostics.
+Set `KEEP_E2E_STACK=1` only when intentionally preserving a failed stack for
+debugging. Run the complete advisory lane with:
+
+```sh
+make -C examples/scrypath_ecommerce verify-e2e
+```
+
 `phase105-e2e` is advisory today (not a required merge gate). It exists to continuously exercise the full browser/operator proof while we track flake and runtime behavior. Treat this lane as the Phase 105 UAT surface: once the job is running on PR, push, schedule, or manual workflow dispatch, do not add a separate human UAT gate unless CI itself cannot execute. The lane now shifts visual UAT left through deterministic browser checks, light screenshot inventory/viewport parity, static contrast, and an optional advisory LLM judge for brand/trust review.
 
 Phase 111 freezes a dual-window evidence model for any future promotion decision:
@@ -116,7 +133,7 @@ Phase 111 freezes a dual-window evidence model for any future promotion decision
 - Treat pre-change and post-change job identity evidence separately.
 - Retry-as-flake rule: a pass after retry counts as flaky evidence, not clean stability proof.
 - Owner response expectation for lane failures is 1 business day.
-- Path-scoped required promotion is not part of Phase 111.
+- Path-scoped promotion of the full `phase105-e2e` lane was not part of Phase 111. Phase 147 adds a separate focused deterministic check; the full lane remains advisory.
 
 For the human-facing tour of what this lane protects, including the storefront,
 operator routes, demo tenants, and Compose launch path, see

@@ -18,11 +18,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 - ScrypathOps web/client dependencies.
 - Ecommerce example web/client dependencies.
 
-**Boundary:** This is a maintenance-only milestone. Execute four isolated commits, pass each batch's gates before starting the next, prefer the recorded fixed-compatible versions over package-head upgrades, and close only after all four projects no longer report the recorded advisories.
+**Boundary:** This remains dependency-security maintenance with one approved operational addition: Phase 147 may add a reusable Docker-only mounted integration/E2E verifier so required service and browser proof no longer needs human setup or UAT. Keep library runtime/public API/UI scope closed, preserve ordered graph ownership, prefer recorded fixed-compatible versions over package-head upgrades, and close only after all four projects no longer report the recorded advisories.
 
 ## Current Mode: security maintenance
 
-**Goal:** Restore a clean dependency-security posture without broadening product scope or weakening the green-main release train.
+**Goal:** Restore a clean dependency-security posture and make mounted ecommerce proof zero-touch without broadening Scrypath's runtime/product API or weakening the green-main release train.
 
 **Recent closed outcomes:**
 - Phase 146 ScrypathOps web/client remediation: bounded Phoenix, LiveView, Bandit, Swoosh, Postgrex, and Req; proved the real Req-backed Swoosh client with a discriminating raw-JSON contract; passed standalone Ops and root release gates, detached fresh resolution, live Postgrex/Plug predicates, unsuppressed audit, and security verification.
@@ -66,7 +66,7 @@ Phase 97 through 99 banned capability classes:
 
 ## Current State
 
-**v1.36 Phase 146 — ScrypathOps Web/Client Remediation** completed on **2026-08-24**. ScrypathOps now resolves the approved fixed-compatible Phoenix/LiveView/Bandit/Swoosh/Postgrex/Req cohort, retains reviewed transitive ownership, and has direct service-free proof of the production-selected Swoosh Req client—including raw JSON response precedence. Standalone Ops, root release-train, detached fresh-resolution, live publication, unsuppressed audit, cleanup, code-review, and threat-verification gates passed. Phase 147 is next and retains the ecommerce mounted integration plus all-four-graph closure evidence.
+**v1.36 Phase 147 — Ecommerce Mounted-Ops Remediation and Closure Evidence** is executing. In addition to bounded ecommerce dependency remediation and the four-graph closure receipt, it now owns a reusable Docker-only mounted verification path: focused deterministic browser proof becomes a required merge check, the full Phase 105 lane stays advisory, and no separate human UAT is required when automated evidence is green.
 
 **v1.35 - Brand System & Logo Identity** shipped directly on **2026-06-24** and was archived in-repo on **2026-07-11** across phases **137-143**. It delivered the copper `/` **scry/path** identity, full transparent SVG family, self-contained `brandbook/` package, subset woff2 fonts, portable tokens, accessibility notes, examples, and adoption across README, ScrypathOps, website, favicon, and OG surfaces.
 
