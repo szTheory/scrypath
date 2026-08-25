@@ -445,14 +445,13 @@ The harness asserts storefront navigation and mounted `/admin/search` pages; ope
 
 | # | Claim | Section | Risk if Wrong |
 |---|---|---|---|
-| A1 | The exact focused deterministic test can remain `search_live_test.exs`; the planner must inspect the current route/asset/link test surface before finalizing the command. | Code Examples | A too-narrow test could miss mounted route/asset integration. [ASSUMED] |
+| A1 | Planner and pattern-map inspection selected `examples/scrypath_ecommerce/test/scrypath_ecommerce_web/controllers/page_controller_test.exs` as the D-11 focused deterministic contract. | Code Examples | Resolved: the existing controller contract covers the mounted posture route, Ops CSS/host JS, nested mount links, and absence of storefront asset bleed. [VERIFIED: 147-01-PLAN.md] [VERIFIED: 147-PATTERNS.md] |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Which existing deterministic test is the narrowest complete D-11 route/asset/link contract?**
-   - What we know: `search_live_test.exs`, controller contracts, and browser specs already cover storefront and mounted paths. [VERIFIED: examples/scrypath_ecommerce/test] [VERIFIED: e2e/harness.spec.ts]
-   - What's unclear: The final planner should name the specific existing test that jointly exercises the intended host route, mounted asset/link contract, and fast deterministic surface. [ASSUMED]
-   - Recommendation: Add a Wave 0 inspection task; do not create a test unless inspection shows a real coverage gap. [VERIFIED: 147-CONTEXT.md]
+   - Resolution: Use `examples/scrypath_ecommerce/test/scrypath_ecommerce_web/controllers/page_controller_test.exs`, as selected by Plan 01 and confirmed by the pattern map. It is the existing fast deterministic contract that exercises the mounted posture route, verifies the Ops CSS and host JavaScript asset references, checks nested mounted links, and proves the storefront does not receive Ops asset bleed. [VERIFIED: 147-01-PLAN.md] [VERIFIED: 147-PATTERNS.md]
+   - Execution consequence: Run that file in D-11's locked diagnostic order under the isolated Mix paths; no Wave 0 inspection task or new test is required. [VERIFIED: 147-01-PLAN.md] [VERIFIED: 147-VALIDATION.md]
 
 ## Environment Availability
 
