@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 Release Please manages versioned entries after this baseline.
 
+## [0.3.12](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.11...scrypath-v0.3.12) (2026-08-25)
+
+
+### Bug Fixes
+
+* **release:** keep demo runbook outside package parity scope ([#60](https://github.com/szTheory/scrypath/issues/60)) ([682c9c1](https://github.com/szTheory/scrypath/commit/682c9c116aed4846e85ee010d1384330c0fe5aea))
+
 ## [0.3.11](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.10...scrypath-v0.3.11) (2026-08-25)
 
 ### Added
