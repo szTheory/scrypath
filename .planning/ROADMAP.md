@@ -121,7 +121,11 @@ Plans:
   4. Dated `mix deps.get` evidence from each of the root, legacy Phoenix, ScrypathOps, and ecommerce directories shows none of the 2026-08-16 recorded advisories.
   5. The final evidence records four ordered, graph-local commits and explains every manifest/lockfile change, with each required gate passing before the following batch began.
 
-**Plans**: TBD
+**Plans**: 0/3 plans executed
+
+- [ ] 147-01-PLAN.md
+- [ ] 147-02-PLAN.md
+- [ ] 147-03-PLAN.md
 
 ## Progress
 
@@ -130,7 +134,7 @@ Plans:
 | 144. Root HTTP Client Dependency Remediation | 3/3 | Complete    | 2026-08-22 |
 | 145. Legacy Phoenix and Ecto/Decimal Remediation | 2/2 | Complete    | 2026-08-22 |
 | 146. ScrypathOps Web/Client Remediation | 4/4 | Complete    | 2026-08-24 |
-| 147. Ecommerce Mounted-Ops Remediation and Closure Evidence | 0/TBD | Not started | - |
+| 147. Ecommerce Mounted-Ops Remediation and Closure Evidence | 0/3 | Planned    |  |
 
 ## Direct-Completion Bookkeeping Note
 
