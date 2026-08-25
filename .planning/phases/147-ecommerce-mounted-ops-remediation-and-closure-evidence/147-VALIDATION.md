@@ -94,3 +94,4 @@ Current audit evidence:
 - The closure ledger contains the four graph rows in order, every constituent remediation commit, and exactly one honest focused-browser classification.
 - Live `main` protection includes `ecommerce-mounted-smoke` as a strict required status context.
 - `make -C examples/scrypath_ecommerce verify-mounted` passed 4 focused Chromium tests on the first run and removed all owned containers, network, and volume.
+- The required `ecommerce-mounted-smoke` PR job passed on a clean GitHub runner in 3m29s after the Compose health contract gained a five-minute cold-initialization period; run `32893006895`, job `97949120013`.
