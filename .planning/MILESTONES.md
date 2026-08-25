@@ -1,5 +1,31 @@
 # Milestones
 
+## v1.36 Dependency Security Remediation (Shipped: 2026-08-25)
+
+**Delivered:** Four independently audit-clean Mix dependency graphs with behavior-preserving Req, Phoenix/Ecto, standalone Ops, and mounted ecommerce proof, plus a required zero-touch browser gate.
+
+**Phases completed:** 4 phases (144-147), 12 plans, 19 tasks
+
+**Key accomplishments:**
+
+- Aligned the shared Req/Mint/hpax floor across root and all path consumers while preserving public Meilisearch request, error, header, filter, and telemetry behavior.
+- Remediated the legacy Phoenix/Ecto graph with real persistence, migration, Bandit endpoint, detached resolution, and live-stack evidence.
+- Remediated standalone ScrypathOps and proved the production-selected `Swoosh.ApiClient.Req` contract without relying on ecommerce.
+- Remediated the mounted ecommerce graph and added a hermetic Docker lifecycle for service preparation, both asset builds, focused Playwright proof, diagnostics, and cleanup.
+- Made `ecommerce-mounted-smoke` a strict required `main` context and confirmed repeated clean-run success on GitHub Actions.
+
+**Milestone audit:** Passed — 10/10 requirements, 4/4 phases, 8/8 integrations, 6/6 flows, and 4/4 Nyquist validations; see `milestones/v1.36-MILESTONE-AUDIT.md`.
+
+**Stats:** 95 files changed, 10,473 insertions, 176 deletions across 88 commits from 2026-08-21 to 2026-08-25.
+
+**Git range:** `04d5efc` → `1cc6057`
+
+**Archives:** `milestones/v1.36-ROADMAP.md`, `milestones/v1.36-REQUIREMENTS.md`, `milestones/v1.36-MILESTONE-AUDIT.md`, `milestones/v1.36-phases/`
+
+**What's next:** No active milestone. Keep the green-main release train idle until concrete maintenance, adopter, bug, proof-drift, or strategic evidence authorizes work.
+
+---
+
 ## v1.35 Brand System & Logo Identity (Shipped: 2026-06-24; Archived: 2026-07-11)
 
 **Phases completed:** 7 conceptual phases (137-143), direct completion in commit `fcb8fc7`
