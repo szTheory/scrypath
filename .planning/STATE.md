@@ -2,18 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.36
 milestone_name: Dependency Security Remediation
-current_phase: 147
-current_phase_name: Ecommerce Mounted-Ops Remediation and Closure Evidence
 status: planning
-stopped_at: Completed 146-04-PLAN.md
-last_updated: "2026-08-24T22:11:10.896Z"
-last_activity: 2026-08-24
-last_activity_desc: Phase 146 complete, transitioned to Phase 147
+stopped_at: Phase 147 context gathered
+last_updated: "2026-08-25T16:47:39.046Z"
+last_activity: 2026-08-24 — Phase 146 complete, transitioned to Phase 147
 progress:
-  total_phases: 3
+  total_phases: 4
   completed_phases: 3
   total_plans: 9
   completed_plans: 9
+  percent: 75
 ---
 
 # Project State
@@ -210,6 +208,6 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 
 ## Session
 
-**Last session:** 2026-08-24T22:00:52.310Z
-**Stopped at:** Completed 146-04-PLAN.md
-**Resume file:** None
+**Last session:** 2026-08-25T16:47:39.041Z
+**Stopped at:** Phase 147 context gathered
+**Resume file:** .planning/phases/147-ecommerce-mounted-ops-remediation-and-closure-evidence/147-CONTEXT.md
