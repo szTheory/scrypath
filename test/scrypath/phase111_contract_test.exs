@@ -72,6 +72,15 @@ defmodule Scrypath.Phase111ContractTest do
       refute combined =~ "path-scoped required check"
       refute combined =~ "immediate required promotion"
     end
+
+    test "Phase 147 uses a separate focused check without rewriting Phase 111 history" do
+      assert @decision =~ "no path-scoped required promotion"
+      assert @contributing =~ "**`ecommerce-mounted-smoke`**"
+      assert @contributing =~ "separate focused deterministic check"
+      assert @contributing =~ "full lane remains advisory"
+      assert @ci_workflow =~ "ecommerce-mounted-smoke:"
+      assert @ci_workflow =~ "phase105-e2e:"
+    end
   end
 
   defp assert_contains_all(content, tokens) do

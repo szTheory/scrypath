@@ -44,9 +44,14 @@ defmodule ScrypathEcommerceWeb.Endpoint do
   @doc false
   def maybe_sql_sandbox(conn, _opts) do
     case Application.get_env(:scrypath_ecommerce, :sandbox) do
-      nil -> conn
-      false -> conn
-      sandbox -> Phoenix.Ecto.SQL.Sandbox.call(conn, Phoenix.Ecto.SQL.Sandbox.init(sandbox: sandbox))
+      nil ->
+        conn
+
+      false ->
+        conn
+
+      sandbox ->
+        Phoenix.Ecto.SQL.Sandbox.call(conn, Phoenix.Ecto.SQL.Sandbox.init(sandbox: sandbox))
     end
   end
 
