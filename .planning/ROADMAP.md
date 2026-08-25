@@ -16,6 +16,8 @@
 
 No active milestone. The green-main release train is idle until maintenance, support/proof drift, production bug evidence, reviewed outside-adopter evidence, or an explicit strategic wedge authorizes new work.
 
+[PHASE97-SCOPE-GUARD] Phase 97/98/99 reject runtime breadth expansion unless reopen policy conditions are met.
+
 ## Archived Milestone Note
 
 Historical phase details and evidence live under `milestones/`. Phases 137-143 are direct-completion history and must never be synthesized or reused. The next milestone continues phase numbering from Phase 148.
