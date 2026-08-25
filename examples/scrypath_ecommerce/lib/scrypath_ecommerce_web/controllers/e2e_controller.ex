@@ -664,13 +664,30 @@ defmodule ScrypathEcommerceWeb.E2EController do
     |> Enum.with_index()
     |> Enum.each(fn {spec, idx} ->
       attempted_at = DateTime.add(now, -idx * 137, :second)
-      insert_failed_job!(spec, tenant_id, category_id, product_id, index, attempted_at, far_future)
+
+      insert_failed_job!(
+        spec,
+        tenant_id,
+        category_id,
+        product_id,
+        index,
+        attempted_at,
+        far_future
+      )
     end)
 
     length(@failed_sync_specs)
   end
 
-  defp insert_failed_job!(spec, tenant_id, category_id, product_id, index, attempted_at, far_future) do
+  defp insert_failed_job!(
+         spec,
+         tenant_id,
+         category_id,
+         product_id,
+         index,
+         attempted_at,
+         far_future
+       ) do
     base = %{
       "operation" => spec.operation,
       "schema" => @product_schema,
@@ -683,7 +700,11 @@ defmodule ScrypathEcommerceWeb.E2EController do
     args = Map.merge(base, replay_args(spec, tenant_id, category_id, product_id))
 
     errors = [
-      %{"attempt" => spec.attempt, "at" => DateTime.to_iso8601(attempted_at), "error" => spec.error}
+      %{
+        "attempt" => spec.attempt,
+        "at" => DateTime.to_iso8601(attempted_at),
+        "error" => spec.error
+      }
     ]
 
     scheduled_at = if spec.state == "retryable", do: far_future, else: attempted_at
