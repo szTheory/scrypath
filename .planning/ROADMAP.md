@@ -25,7 +25,7 @@
 - [x] **Phase 144: Root HTTP Client Dependency Remediation** - Remediate the root Req/HTTP stack with behavior-preserving library proof. (completed 2026-08-22)
 - [x] **Phase 145: Legacy Phoenix and Ecto/Decimal Remediation** - Resolve the legacy example's coordinated web and data dependency constraints. (completed 2026-08-22)
 - [x] **Phase 146: ScrypathOps Web/Client Remediation** - Prove ScrypathOps independently resolves and operates on fixed-compatible dependencies. (completed 2026-08-24)
-- [ ] **Phase 147: Ecommerce Mounted-Ops Remediation and Closure Evidence** - Remediate the mounted integration and close all four graph-local evidence and commit boundaries.
+- [x] **Phase 147: Ecommerce Mounted-Ops Remediation and Closure Evidence** - Remediate the mounted integration and close all four graph-local evidence and batch boundaries. (completed 2026-08-25)
 
 ## Phase Details
 
@@ -119,20 +119,20 @@ Plans:
   2. The Docker-only `make verify-mounted` lifecycle owns service readiness, `mix e2e.prepare`, both asset builds, focused mounted browser proof, diagnostics, and cleanup without host setup or human UAT; documented deterministic checks pass before the ecommerce batch is committed.
   3. The focused `ecommerce-mounted-smoke` job is a required merge check and records passed, failed, or unavailable evidence honestly; the complete `phase105-e2e` visual/browser lane remains advisory.
   4. Dated `mix deps.get` evidence from each of the root, legacy Phoenix, ScrypathOps, and ecommerce directories shows none of the 2026-08-16 recorded advisories.
-  5. The final evidence records four ordered, graph-local commits and explains every manifest/lockfile change, with each required gate passing before the following batch began.
+  5. The final evidence records four ordered remediation batches and every constituent commit role, including the shared cross-graph Req handoff and later graph-local changes, with each required gate passing before the following batch began.
 
-**Plans**: 0/3 plans executed
+**Plans**: 3/3 plans executed
 **Wave 1**
 
-- [ ] 147-01-PLAN.md — Zero-touch Docker verification, required focused CI parity, and the isolated ecommerce dependency remediation.
+- [x] 147-01-PLAN.md — Zero-touch Docker verification, required focused CI parity, and the isolated ecommerce dependency remediation.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 147-02-PLAN.md
+- [x] 147-02-PLAN.md — Capture exact-SHA fresh-resolution, focused browser classification, and guarded cleanup evidence.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 147-03-PLAN.md
+- [x] 147-03-PLAN.md — Close the four-graph same-window matrix, ordered batch topology, requirements, and advisory todo.
 
 ## Progress
 
@@ -141,7 +141,7 @@ Plans:
 | 144. Root HTTP Client Dependency Remediation | 3/3 | Complete    | 2026-08-22 |
 | 145. Legacy Phoenix and Ecto/Decimal Remediation | 2/2 | Complete    | 2026-08-22 |
 | 146. ScrypathOps Web/Client Remediation | 4/4 | Complete    | 2026-08-24 |
-| 147. Ecommerce Mounted-Ops Remediation and Closure Evidence | 0/3 | Planned    |  |
+| 147. Ecommerce Mounted-Ops Remediation and Closure Evidence | 3/3 | Complete    | 2026-08-25 |
 
 ## Direct-Completion Bookkeeping Note
 
