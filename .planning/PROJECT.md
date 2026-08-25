@@ -8,9 +8,27 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Milestone
+## Current Milestone: v1.35 Brand System & Logo Identity
 
-No active milestone. v1.33 Admin UI Insane Polish shipped and archived on 2026-06-03.
+**Goal:** Turn the strategy-only `prompts/scrypath-brand-book.md` into a high-fidelity, repo-safe, **self-contained `brandbook/` package** with a **proper logo system the owner chooses from** at its center, then adopt the chosen identity across the live product. The existing logos are AI-generic and sit in the rectangular `<rect>` cage the owner dislikes — they are replaced, not reused.
+
+**Target features:**
+- A senior-lens **brand pressure-test + cited research + decision-log** (keep-vs-refine palette/type, logo architecture, token expression).
+- A **logo system the owner picks from**: 3–5 distinct transparent/un-caged directions (refined routed monogram, a fully-integrated typemark, a waypoint mark), then the full optimized SVG family (primary no-tagline, inverse, typemark, mark, mono, stacked, optional tagline, favicon, social card) + usage rules.
+- An interoperable **design-tokens package** (JSON/CSS/daisyUI theme) mirroring the live ops tokens, plus **self-contained subset woff2** fonts.
+- A standalone, scoped, light/dark **HTML brand book** + copy-ready examples + accessibility checks.
+- **Adoption** of the chosen logo/tokens across `scrypath_ops` (logo + favicon), `website/` (brand-mark + OG), and the root README — keeping the contrast gate green.
+
+**Locked decisions:**
+- New milestone **v1.35** at **phase 137**; **v1.34 (phases 133–136) paused** and resumes after.
+- **Build + adopt** (not artifacts-only): the chosen logo/tokens are wired into ops UI, website, favicon, OG, README.
+- Palette/type are **open to evidence-based refinement** but **bias-to-keep** — they're implemented live; any change keeps the `contrast-pairs.mjs` AA gate green.
+- Fonts shipped as **subset woff2** (SIL OFL, license-clean) so the book is self-contained offline.
+- Logo: **no rectangular cage**, unified mark+logotype, mark close to type, **no subtitle on the primary**, **≥1 integrated typemark**, **owner picks the direction**.
+
+This is an explicit owner-initiated brand wedge. It is brand/UI work only — Phase 97–99 runtime scope guard still applies. Source plan: `~/.claude/plans/brand-book-pressure-test-scalable-alpaca.md`.
+
+> **Paused:** v1.34 Both-Themes Perfection (phases 128–136) is paused at Phase 133 (5/9 complete). It resumes at `.planning/phases/133-dark-path-motion-expression-r-g/133-CONTEXT.md` after v1.35 ships; any v1.35 brand-token refinement feeds forward into v1.34's remaining dark-polish phases. Source plan: `~/.claude/plans/v1-33-admin-ui-deep-tower.md`.
 
 ## Current Mode: idle release train
 
@@ -51,6 +69,8 @@ Phase 97 through 99 banned capability classes:
 - new public runtime API categories
 
 ## Current State
+
+**v1.34 — Both-Themes Perfection (Dark Signature + AA Gate)** is active. Phase 132 completed on **2026-06-04**: A11Y-TOKEN-01 is validated with rebuilt assets, zero AA failures for light/dark/system-dark, AAA body/long-form advisory evidence, and light-baseline recapture recorded in `132-CONTRAST-REPORT.md`.
 
 **v1.32 — Admin UI/UX Design System Cleanup** shipped + archived in-repo on **2026-06-01** across phases **116-118**.
 
@@ -185,12 +205,13 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Planning window
 
-**Active milestone:** none. The release train is idle after v1.33 archive.
+**Active milestone:** v1.35 Brand System & Logo Identity (phases 137–143). Milestone scaffolded; Phase 137 (BRAND-AUDIT-01) + Phase 138 (LOGO-DIRECTIONS-01) under way, blocked at the logo selection checkpoint. **Paused:** v1.34 Both-Themes Perfection (resume at Phase 133, DARKMOTION-01).
 
 ## Requirements
 
 ### Validated
 
+- [x] **Phase 132** (2026-06-04): **A11Y-TOKEN-01** — both-theme AA hard gate green for muted text and selected violet fills; browser contrast proof covers light, dark, and system-dark; AAA body/long-form status remains advisory/report-only.
 - [x] **v1.33** (2026-06-03): **HARNESS-01**, **SEED-01**, **AUDIT-01**, **TOKEN-01**, **COMP-01**, **MOTION-01**, **IA-01**, **COPY-01**, **RECOVER-01**, **EXPLORE-01**, **SHELL-01**, **VERIFY-01** — task-first admin-UI IA (Recover/Explore nav + front-door), design-system tightening, restrained micro-animation, per-screen polish, and shell coherence; screenshot-driven audit + 40-shot matrix; live admin smoke green in CI.
 - [x] **v1.32** (2026-06-01): **ASSET-01**, **TOKEN-01**, **BRAND-01**, **COMP-01**, **A11Y-01**, **SCREEN-01**, **SCREEN-02**, **VERIFY-01** — mounted admin asset contract, Scrypath operator tokens, shared LiveView primitives, screen hierarchy cleanup, and focused verification.
 - [x] **v1.31** (2026-06-01): **DEMO-01**–**DEMO-02**, **E2E-01**–**E2E-03**, **DX-01**, **DOC-01**, **OPS-01**, **CLOSE-01** — realistic seeded demo, deterministic advisory E2E proof, Docker/dev DX, documentation, ops UI clarity, and maintainer closeout.
@@ -291,4 +312,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-01 — v1.32 admin UI/UX design-system cleanup completed*
+*Last updated: 2026-06-22 — v1.34 paused at Phase 133; v1.35 Brand System & Logo Identity opened (phases 137–143)*

@@ -643,6 +643,19 @@ jobs:
           mix esbuild scrypath_ecommerce
           mix tailwind scrypath_ecommerce
 
+      # The operator UI mounted at /admin/search loads its OWN stylesheet
+      # (/admin/search/assets/css/app.css) built from scrypath_ops/assets/css/app.css and
+      # served from scrypath_ops/priv/static — which is gitignored and symlinked into the
+      # example's _build (path dep). Without this build, CI serves no .ops-* CSS: glow tokens,
+      # path-motion rules, and the recommended-card box-shadow are all absent, so any spec that
+      # asserts ops styling (admin_path_motion) fails and the other ops e2e tests run unstyled.
+      - name: Build operator UI assets (scrypath_ops CSS/JS at /admin/search)
+        working-directory: scrypath_ops
+        run: |
+          mix deps.get
+          mix assets.setup
+          mix assets.build
+
       - name: Start example Phoenix server
         working-directory: examples/scrypath_ecommerce
         env:

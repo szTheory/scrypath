@@ -20,7 +20,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_page_header(assigns) do
     ~H"""
     <div class="space-y-1">
-      <p class="text-ops-sm font-semibold uppercase tracking-wide text-secondary">
+      <p class="ops-copper-eyebrow">
         Operator workspace
       </p>
       <h1
@@ -982,6 +982,9 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   @doc "Scrollable code/data block."
   attr(:variant, :atom, default: :default, values: [:default, :compact, :embedded])
+  # Phase 133 (DARKMOTION-01): opt-in hover glint. Default false is load-bearing —
+  # evidence code blocks (Failed Sync, search/merge payloads) must stay calm (D-04a/c).
+  attr(:shimmer, :boolean, default: false)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
   slot(:inner_block, required: true)
@@ -991,9 +994,10 @@ defmodule ScrypathOpsWeb.OpsUi do
     <pre
       class={[
         "overflow-auto rounded-ops-md font-mono text-ops-sm whitespace-pre-wrap break-words",
-        @variant == :default && "max-h-96 bg-base-200 p-ops-3",
+        @variant == :default && "max-h-96 bg-ops-surface-2 p-ops-3",
         @variant == :compact && "max-h-48 bg-base-100 p-ops-2",
         @variant == :embedded && "max-h-64 bg-base-100/70 p-ops-3",
+        @shimmer && "ops-code-block--shimmer",
         @class
       ]}
       {@rest}
