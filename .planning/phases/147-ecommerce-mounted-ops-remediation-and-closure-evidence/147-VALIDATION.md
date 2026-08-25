@@ -1,7 +1,7 @@
 ---
 phase: 147
 slug: ecommerce-mounted-ops-remediation-and-closure-evidence
-status: ready
+status: validated
 nyquist_compliant: true
 wave_0_complete: true
 created: 2026-08-25
@@ -40,11 +40,11 @@ created: 2026-08-25
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 147-01-01 | 01 | 1 | SEC-04, COMPAT-01 | T-147-01, T-147-02, T-147-06 | Six approved bounds, causal lock, canonical mounted sources, ecommerce gates, required service preparation, and root gates pass before the atomic commit | tracer/resolver/integration | Checked lock; `Mix.Project.deps_paths/0`; `mix test test/scrypath_ecommerce_web/controllers/page_controller_test.exs`; `mix precommit`; `mix e2e.prepare`; unsuppressed audit; named root gates | ✅ existing Mix/ExUnit commands | ⬜ pending |
-| 147-02-01 | 02 | 2 | SEC-04 | T-147-02, T-147-04, T-147-05 | Exact implementation SHA fresh-resolves in range, uses canonical mounted paths, passes required proof, and cleans up safely | resolver/integration/evidence | Detached lockless `mix deps.get`; nine-package range assertion; mounted-path assertion; focused/full/service/audit gates; cleanup/preservation assertions | ✅ receipt authored in task | ⬜ pending |
-| 147-02-02 | 02 | 2 | COMPAT-03 | T-147-03, T-147-05 | Browser proof is separately classified and never upgraded from unavailable or retry-flaky to clean passing | browser/classification | `npx playwright test e2e/harness.spec.ts e2e/operator.spec.ts --workers=1` when exact-SHA prerequisites exist; deterministic ledger-structure check always runs | ✅ specs/config exist | ⬜ pending |
-| 147-03-01 | 03 | 3 | COMPAT-01, EVID-01, EVID-02 | T-147-03, T-147-05 | Four ordered graph rows are nonempty/audit-clean and the topology names four batches with exact commit roles | repository/evidence | `mix deps.get --check-locked && mix hex.audit` in root, legacy, Ops, ecommerce; `git merge-base --is-ancestor`; `git diff-tree`; ledger structure check | ✅ receipt authored in task | ⬜ pending |
-| 147-03-02 | 03 | 3 | EVID-02 | T-147-03, T-147-07 | Closure truth and todo state advance only after every ledger predicate passes | planning/evidence | File-location, ordered-batch wording, requirement-checkbox, protected-file, and ledger closure assertions | ✅ existing planning files | ⬜ pending |
+| 147-01-01 | 01 | 1 | SEC-04, COMPAT-01 | T-147-01, T-147-02, T-147-06 | Six approved bounds, causal lock, canonical mounted sources, ecommerce gates, required service preparation, and root gates pass before the atomic commit | tracer/resolver/integration | Checked lock; `Mix.Project.deps_paths/0`; `mix test test/scrypath_ecommerce_web/controllers/page_controller_test.exs`; `mix precommit`; `mix e2e.prepare`; unsuppressed audit; named root gates | ✅ existing Mix/ExUnit commands | ✅ green |
+| 147-02-01 | 02 | 2 | SEC-04 | T-147-02, T-147-04, T-147-05 | Exact implementation SHA fresh-resolves in range, uses canonical mounted paths, passes required proof, and cleans up safely | resolver/integration/evidence | Detached lockless `mix deps.get`; nine-package range assertion; mounted-path assertion; focused/full/service/audit gates; cleanup/preservation assertions | ✅ receipt authored in task | ✅ green |
+| 147-02-02 | 02 | 2 | COMPAT-03 | T-147-03, T-147-05 | Browser proof is separately classified and never upgraded from unavailable or retry-flaky to clean passing | browser/classification | `npx playwright test e2e/harness.spec.ts e2e/operator.spec.ts --workers=1` when exact-SHA prerequisites exist; deterministic ledger-structure check always runs | ✅ specs/config exist | ✅ green |
+| 147-03-01 | 03 | 3 | COMPAT-01, EVID-01, EVID-02 | T-147-03, T-147-05 | Four ordered graph rows are nonempty/audit-clean and the topology names four batches with exact commit roles | repository/evidence | `mix deps.get --check-locked && mix hex.audit` in root, legacy, Ops, ecommerce; `git merge-base --is-ancestor`; `git diff-tree`; ledger structure check | ✅ receipt authored in task | ✅ green |
+| 147-03-02 | 03 | 3 | EVID-02 | T-147-03, T-147-07 | Closure truth and todo state advance only after every ledger predicate passes | planning/evidence | File-location, ordered-batch wording, requirement-checkbox, protected-file, and ledger closure assertions | ✅ existing planning files | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -75,4 +75,22 @@ created: 2026-08-25
 - [x] Feedback latency is measured in task summaries; required long gates are sequenced after causal checks
 - [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** validated 2026-08-25
+
+---
+
+## Validation Audit 2026-08-25
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+
+Current audit evidence:
+
+- Root, legacy Phoenix, ScrypathOps, and ecommerce each passed checked-lock resolution and an unsuppressed Hex audit.
+- The Compose model validated and the Phase 147 workflow/CI contract suite passed with 47 tests and 0 failures.
+- The closure ledger contains the four graph rows in order, every constituent remediation commit, and exactly one honest focused-browser classification.
+- Live `main` protection includes `ecommerce-mounted-smoke` as a strict required status context.
+- `make -C examples/scrypath_ecommerce verify-mounted` passed 4 focused Chromium tests on the first run and removed all owned containers, network, and volume.
