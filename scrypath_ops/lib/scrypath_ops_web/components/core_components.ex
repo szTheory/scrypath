@@ -50,7 +50,11 @@ defmodule ScrypathOpsWeb.CoreComponents do
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
-      class="z-50"
+      class={[
+        "ops-flash z-50",
+        @kind == :info && "ops-flash--info",
+        @kind == :error && "ops-flash--error"
+      ]}
       {@rest}
     >
       <div class={[
@@ -65,7 +69,11 @@ defmodule ScrypathOpsWeb.CoreComponents do
           <p>{msg}</p>
         </div>
         <div class="flex-1" />
-        <button type="button" class="group self-start cursor-pointer" aria-label={gettext("close")}>
+        <button
+          type="button"
+          class="group self-start cursor-pointer"
+          aria-label={gettext("Close notification")}
+        >
           <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
         </button>
       </div>
@@ -111,6 +119,8 @@ defmodule ScrypathOpsWeb.CoreComponents do
   end
 
   defp heroicon("hero-" <> name) do
+    Code.ensure_loaded?(Heroicons)
+
     {name, style} =
       cond do
         String.ends_with?(name, "-solid") -> {String.replace_suffix(name, "-solid", ""), :solid}

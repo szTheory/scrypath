@@ -1,0 +1,87 @@
+{
+  "schema": "scrypath.admin-light-baseline.v1",
+  "source": "examples/scrypath_ecommerce/e2e/admin_screenshot_matrix.spec.ts",
+  "description": "Accepted light-theme admin screenshot inventory. Full PNG hashes and full-page heights are intentionally not gated because operational data includes dynamic timestamps, IDs, and repeated seed rows; filenames and viewport widths are stable.",
+  "files": [
+    {
+      "file": "00-control-room--light--desktop--incident.png",
+      "width": 1440
+    },
+    {
+      "file": "00-control-room--light--mobile--incident.png",
+      "width": 390
+    },
+    {
+      "file": "01-posture--light--desktop--incident.png",
+      "width": 1440
+    },
+    {
+      "file": "01-posture--light--mobile--incident.png",
+      "width": 390
+    },
+    {
+      "file": "02-failed-sync--light--desktop--populated.png",
+      "width": 1440
+    },
+    {
+      "file": "02-failed-sync--light--mobile--populated.png",
+      "width": 390
+    },
+    {
+      "file": "03-sync-drift--light--desktop--drift.png",
+      "width": 1440
+    },
+    {
+      "file": "03-sync-drift--light--mobile--drift.png",
+      "width": 390
+    },
+    {
+      "file": "04-control-room--light--desktop--all-green.png",
+      "width": 1440
+    },
+    {
+      "file": "04-control-room--light--mobile--all-green.png",
+      "width": 390
+    },
+    {
+      "file": "05-posture--light--desktop--all-green.png",
+      "width": 1440
+    },
+    {
+      "file": "05-posture--light--mobile--all-green.png",
+      "width": 390
+    },
+    {
+      "file": "06-search--light--desktop--results.png",
+      "width": 1440
+    },
+    {
+      "file": "06-search--light--mobile--results.png",
+      "width": 390
+    },
+    {
+      "file": "07-failed-sync--light--desktop--empty.png",
+      "width": 1440
+    },
+    {
+      "file": "07-failed-sync--light--mobile--empty.png",
+      "width": 390
+    },
+    {
+      "file": "08-search--light--desktop--zero-results.png",
+      "width": 1440
+    },
+    {
+      "file": "08-search--light--mobile--zero-results.png",
+      "width": 390
+    },
+    {
+      "file": "09-playbooks--light--desktop--empty-workspace.png",
+      "width": 1440
+    },
+    {
+      "file": "09-playbooks--light--mobile--empty-workspace.png",
+      "width": 390
+    }
+  ]
+}

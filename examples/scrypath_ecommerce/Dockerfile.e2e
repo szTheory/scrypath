@@ -1,0 +1,15 @@
+# syntax=docker/dockerfile:1
+ARG PLAYWRIGHT_VERSION=1.60.0
+FROM mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble
+
+WORKDIR /app/examples/scrypath_ecommerce
+
+COPY examples/scrypath_ecommerce/package.json examples/scrypath_ecommerce/package-lock.json ./
+RUN npm ci
+
+WORKDIR /app
+COPY . .
+RUN cp -R examples/scrypath_ecommerce/priv/playbooks /opt/scrypath-e2e-playbooks
+
+WORKDIR /app/examples/scrypath_ecommerce
+CMD ["bash", "./docker-playwright.sh"]

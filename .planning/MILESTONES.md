@@ -1,5 +1,81 @@
 # Milestones
 
+## v1.36 Dependency Security Remediation (Shipped: 2026-08-25)
+
+**Delivered:** Four independently audit-clean Mix dependency graphs with behavior-preserving Req, Phoenix/Ecto, standalone Ops, and mounted ecommerce proof, plus a required zero-touch browser gate.
+
+**Phases completed:** 4 phases (144-147), 12 plans, 19 tasks
+
+**Key accomplishments:**
+
+- Aligned the shared Req/Mint/hpax floor across root and all path consumers while preserving public Meilisearch request, error, header, filter, and telemetry behavior.
+- Remediated the legacy Phoenix/Ecto graph with real persistence, migration, Bandit endpoint, detached resolution, and live-stack evidence.
+- Remediated standalone ScrypathOps and proved the production-selected `Swoosh.ApiClient.Req` contract without relying on ecommerce.
+- Remediated the mounted ecommerce graph and added a hermetic Docker lifecycle for service preparation, both asset builds, focused Playwright proof, diagnostics, and cleanup.
+- Made `ecommerce-mounted-smoke` a strict required `main` context and confirmed repeated clean-run success on GitHub Actions.
+
+**Milestone audit:** Passed — 10/10 requirements, 4/4 phases, 8/8 integrations, 6/6 flows, and 4/4 Nyquist validations; see `milestones/v1.36-MILESTONE-AUDIT.md`.
+
+**Stats:** 95 files changed, 10,473 insertions, 176 deletions across 88 commits from 2026-08-21 to 2026-08-25.
+
+**Git range:** `04d5efc` → `1cc6057`
+
+**Archives:** `milestones/v1.36-ROADMAP.md`, `milestones/v1.36-REQUIREMENTS.md`, `milestones/v1.36-MILESTONE-AUDIT.md`, `milestones/v1.36-phases/`
+
+**What's next:** No active milestone. Keep the green-main release train idle until concrete maintenance, adopter, bug, proof-drift, or strategic evidence authorizes work.
+
+---
+
+## v1.35 Brand System & Logo Identity (Shipped: 2026-06-24; Archived: 2026-07-11)
+
+**Phases completed:** 7 conceptual phases (137-143), direct completion in commit `fcb8fc7`
+
+**Key accomplishments:**
+
+- Shipped the final **scry/path** identity: Familjen Grotesk wordmark with a weight-matched copper `/` path separator and an `s/p` monogram for favicon/avatar use.
+- Replaced caged AI-generic logos with transparent, cage-free SVG assets and explicit usage rules.
+- Delivered a self-contained `brandbook/` package with HTML brand book, examples, notes, tokens, subset woff2 fonts, OFL licenses, and accessibility checks.
+- Adopted the identity across root README, ScrypathOps logo/favicon/layout, website brand mark, and OG image.
+- Preserved the Phase 97 runtime scope guard; no search runtime breadth or public API surface was added.
+
+**Milestone audit:** Passed for direct-completion archive - 7/7 requirements complete by committed evidence; see `milestones/v1.35-MILESTONE-AUDIT.md`.
+
+**Known deferred items at close:** raster favicon set if a target surface later needs it, HexDocs logo/theming adoption, and optional motion-logo exploration. None are blockers.
+
+**Archives:** `milestones/v1.35-ROADMAP.md`, `milestones/v1.35-REQUIREMENTS.md`, `milestones/v1.35-MILESTONE-AUDIT.md`
+
+**Git commit:** `fcb8fc7` (`feat(brand): v1.35 brand system & scry/path logo + adoption`)
+
+**Direct-completion note:** phases 138-143 intentionally have no phase directories or PLAN/SUMMARY files. Do not reopen or synthesize them.
+
+**What's next:** Preserve the idle release train unless maintenance, support truth, proof drift, production bug evidence, outside-adopter evidence, or an explicit strategic wedge justifies new scope.
+
+---
+
+## v1.34 Both-Themes Perfection - Dark Signature + AA Gate (Shipped: 2026-06-29; Archived: 2026-07-11)
+
+**Phases completed:** 9 phases (128-136), 27 plans
+
+**Key accomplishments:**
+
+- Promoted WCAG AA from review concern to hard gate with a fast token-pair checker, browser axe matrix, and AAA advisory reporting across light, dark, and system-dark.
+- Repaired dark elevation with a true four-step midnight surface ramp while preserving light-theme parity through scoped tokens and proof gates.
+- Added restrained dark ambient depth, quiet violet glow, copper accents, and purposeful path motion without expanding runtime scope or visual noise.
+- Brought Search, Sync/Drift, Playbooks, and shell chrome to dual-theme quality with focused browser proof for depth, focus, flash, palette, theme toggle, and motion.
+- Closed DUALVERIFY-01 with source-backed automated proof, a checksumed 40-shot screenshot matrix, v1.33-to-v1.34 before/after gallery, clean code review, and approved Human UAT.
+
+**Milestone audit:** Passed - 10/10 requirements, 9/9 phases, all required gates green; see `milestones/v1.34-MILESTONE-AUDIT.md`.
+
+**Known deferred items at close:** 1 pending nonblocking TODO; see `STATE.md` Deferred Items. The open-artifact audit also reported Phase 134 and Phase 136 UAT files as gaps, but both files are `passed` with zero pending scenarios and zero blockers.
+
+**Archives:** `milestones/v1.34-ROADMAP.md`, `milestones/v1.34-REQUIREMENTS.md`, `milestones/v1.34-MILESTONE-AUDIT.md` · **Git tag:** `v1.34` (planning milestone marker)
+
+**Git range:** `a1a902b` -> `f898ac6`
+
+**What's next:** Superseded by the v1.35 archive above. Preserve the idle release train unless maintenance, support truth, proof drift, production bug evidence, outside-adopter evidence, or an explicit strategic wedge justifies new scope.
+
+---
+
 ## v1.33 Admin UI Insane Polish (Shipped: 2026-06-03)
 
 **Phases completed:** 9 phases (119-127), 9 plans

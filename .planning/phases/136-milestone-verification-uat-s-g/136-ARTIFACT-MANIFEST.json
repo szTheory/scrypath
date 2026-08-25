@@ -1,0 +1,466 @@
+{
+  "schema": "scrypath.phase136.artifacts.v1",
+  "phase": "136",
+  "plan": "03",
+  "requirement": "DUALVERIFY-01",
+  "generated": "2026-06-28T23:10:57Z",
+  "source_commit": "0494d92385c242da2fbb2c0bb0abd8775456639c",
+  "working_tree": {
+    "status": "dirty-preexisting",
+    "notes": [
+      "Plan ran against the current dirty working tree provided by prior UI/demo work.",
+      "Generated screenshots, traces, .tmp files, browser JSON, and built static assets are not staged.",
+      "Task 2 staged only Phase 136 report/manifest updates plus narrowly documented D-18 proof fixes."
+    ]
+  },
+  "base_url": "http://127.0.0.1:4012",
+  "asset_build_command": "cd scrypath_ops && mix assets.build",
+  "server_boot": {
+    "method": "host-phoenix-current-checkout",
+    "command": "MIX_ENV=dev PHX_SERVER=true PORT=4012 PGHOST=localhost PGPORT=5432 SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700 mix phx.server",
+    "port": 4012,
+    "base_url": "http://127.0.0.1:4012",
+    "seed_method": "mix scrypath.demo.seed",
+    "stale_server_safeguard": "Existing containerized server on 4002 was not used for proof; fresh host server on 4012 was booted from the current checkout after asset build."
+  },
+  "commands": [
+    {
+      "task": 1,
+      "name": "asset-build",
+      "command": "cd scrypath_ops && mix assets.build",
+      "status": "pass",
+      "committed": false
+    },
+    {
+      "task": 1,
+      "name": "meilisearch-infra",
+      "command": "cd examples/scrypath_ecommerce && make infra",
+      "status": "pass",
+      "committed": false
+    },
+    {
+      "task": 1,
+      "name": "root-verify-opsui",
+      "command": "mix verify.opsui",
+      "status": "pass",
+      "summary": "2 doctests, 147 tests, 0 failures"
+    },
+    {
+      "task": 1,
+      "name": "app-verify-opsui",
+      "command": "cd scrypath_ops && mix verify.opsui",
+      "status": "pass",
+      "summary": "2 doctests, 147 tests, 0 failures"
+    },
+    {
+      "task": 1,
+      "name": "app-precommit",
+      "command": "cd scrypath_ops && mix precommit",
+      "status": "pass",
+      "summary": "2 doctests, 147 tests, 0 failures"
+    },
+    {
+      "task": "execute-post",
+      "name": "static-token-contrast",
+      "command": "CONTRAST_REPORT_DIR=test-results/contrast/phase136-review-fix2-token make contrast",
+      "status": "pass",
+      "summary": "AA failures: 0; AAA advisory: 35"
+    },
+    {
+      "task": "execute-post",
+      "name": "browser-axe-contrast",
+      "command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 CONTRAST_REPORT_DIR=test-results/contrast/phase136-review-fix2 npm run test:e2e:admin-contrast -- --reporter=line",
+      "status": "pass",
+      "summary": "3 passed; incident AA 0/AAA 24, all_green AA 0/AAA 48, empty AA 0/AAA 12"
+    },
+    {
+      "task": 2,
+      "name": "surface-depth",
+      "command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:admin-depth -- --reporter=line",
+      "status": "pass",
+      "summary": "33 passed"
+    },
+    {
+      "task": "execute-post",
+      "name": "path-motion",
+      "command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:path-motion -- --reporter=line",
+      "status": "pass",
+      "summary": "7 passed after numeric line-draw scale assertion fix"
+    },
+    {
+      "task": 2,
+      "name": "shell-chrome",
+      "command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:admin-shell -- --reporter=line",
+      "status": "pass",
+      "summary": "33 passed"
+    },
+    {
+      "task": 2,
+      "name": "operator-smoke",
+      "command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e -- e2e/operator.spec.ts --reporter=line",
+      "status": "pass",
+      "summary": "2 passed"
+    },
+    {
+      "task": 2,
+      "name": "contrast-suppression-guard",
+      "command": "for term in \"exclude\\\\(\" \"disableRules\" \"color-contrast.*disabled\"; do rg -n -- \"$term\" e2e/admin_contrast_matrix.spec.ts && exit 1; done",
+      "status": "pass",
+      "summary": "No forbidden suppression patterns found"
+    },
+    {
+      "task": "verification-gap",
+      "name": "screenshot-matrix",
+      "command": "ADMIN_SCREENSHOT_DIR=test-results/admin-screenshots/phase136 PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:admin-matrix -- --reporter=line",
+      "status": "pass",
+      "summary": "3 passed; 40 PNGs recaptured after verification found the artifact root empty"
+    },
+    {
+      "task": "verification-gap",
+      "name": "screenshot-count",
+      "command": "find examples/scrypath_ecommerce/test-results/admin-screenshots/phase136 -maxdepth 1 -type f -name '*.png' | wc -l",
+      "status": "pass",
+      "summary": "40"
+    },
+    {
+      "name": "post-review-opsui-gate",
+      "task": "execute-post",
+      "command": "mix verify.opsui",
+      "status": "pass",
+      "summary": "2 doctests, 147 tests, 0 failures"
+    },
+    {
+      "name": "code-review",
+      "task": "execute-post",
+      "command": "/gsd:code-review 136 (standard depth)",
+      "status": "pass",
+      "summary": "136-REVIEW.md clean; 4 files reviewed; 0 findings"
+    }
+  ],
+  "artifacts": [
+    {
+      "kind": "phase-report",
+      "path": ".planning/phases/136-milestone-verification-uat-s-g/136-DUALVERIFY-REPORT.md",
+      "committed": true
+    },
+    {
+      "kind": "phase-manifest",
+      "path": ".planning/phases/136-milestone-verification-uat-s-g/136-ARTIFACT-MANIFEST.json",
+      "committed": true
+    },
+    {
+      "kind": "static-token-contrast-json",
+      "path": "examples/scrypath_ecommerce/test-results/contrast/phase136-review-fix2-token/contrast-report.token.json",
+      "committed": false,
+      "summary": {
+        "aa_fail": 0,
+        "aaa_advisory": 35,
+        "total": 35
+      }
+    },
+    {
+      "kind": "browser-axe-contrast-json",
+      "path": "examples/scrypath_ecommerce/test-results/contrast/phase136-review-fix2",
+      "committed": false,
+      "summary": {
+        "incident": {
+          "aa_fail": 0,
+          "aaa_advisory": 24
+        },
+        "all_green": {
+          "aa_fail": 0,
+          "aaa_advisory": 48
+        },
+        "empty": {
+          "aa_fail": 0,
+          "aaa_advisory": 12
+        }
+      }
+    },
+    {
+      "kind": "browser-test-results",
+      "path": "examples/scrypath_ecommerce/test-results",
+      "committed": false
+    },
+    {
+      "kind": "screenshot-matrix",
+      "path": "examples/scrypath_ecommerce/test-results/admin-screenshots/phase136",
+      "committed": false,
+      "expected_count": 40,
+      "actual_count": 40,
+      "checksums": [
+        {
+          "sha256": "de0f6734b901e755cc1f2056c4e1ab9cb998b34142ddd005349419933c38ace5",
+          "path": "test-results/admin-screenshots/phase136/00-control-room--dark--desktop--incident.png"
+        },
+        {
+          "sha256": "f1b81c11f2a8fab1c8c769c5524812a7b9fa9e1d3b96a1b13cb4fcc74f19fc71",
+          "path": "test-results/admin-screenshots/phase136/00-control-room--dark--mobile--incident.png"
+        },
+        {
+          "sha256": "05578b65d1fcb0efe122a587eaf1acbf61513191abc41c7986a060fee16e3c62",
+          "path": "test-results/admin-screenshots/phase136/00-control-room--light--desktop--incident.png"
+        },
+        {
+          "sha256": "f0ab8c54a33b62d24be387e6baf849547b08325ed93c8661ed7bd97370f377af",
+          "path": "test-results/admin-screenshots/phase136/00-control-room--light--mobile--incident.png"
+        },
+        {
+          "sha256": "c6bc506c280ec0aca729fbebae3fcdcc8a313f3f3c4c80113abc0d25b0c177ec",
+          "path": "test-results/admin-screenshots/phase136/01-posture--dark--desktop--incident.png"
+        },
+        {
+          "sha256": "ce82f805872eb6c61b5d24268d24765c93b2c3488bdfa775ab4b1a27cddecb24",
+          "path": "test-results/admin-screenshots/phase136/01-posture--dark--mobile--incident.png"
+        },
+        {
+          "sha256": "97aad3dd88697e8e0ff04c3e30fb3ef198b113a4e40d4fcb3347a73980bc670f",
+          "path": "test-results/admin-screenshots/phase136/01-posture--light--desktop--incident.png"
+        },
+        {
+          "sha256": "454d8df740439c1228aedec2dabdba1ef1e396bf667618fc499f5d86c0436955",
+          "path": "test-results/admin-screenshots/phase136/01-posture--light--mobile--incident.png"
+        },
+        {
+          "sha256": "cad08b528b7e42425c5e219147b9979583d0b694a41c886be74759f38fc670c4",
+          "path": "test-results/admin-screenshots/phase136/02-failed-sync--dark--desktop--populated.png"
+        },
+        {
+          "sha256": "27dd8294df8d388b78477779f438889240166bad9cfac4732532476ef437f825",
+          "path": "test-results/admin-screenshots/phase136/02-failed-sync--dark--mobile--populated.png"
+        },
+        {
+          "sha256": "2d3faaf8a4a3e313fe55db53d9195de6de81ba4974bac1558e38f90770c24873",
+          "path": "test-results/admin-screenshots/phase136/02-failed-sync--light--desktop--populated.png"
+        },
+        {
+          "sha256": "7df91b6aae79d1c98bc2c02916d75f826ad27907f65d4c9939d606327f120786",
+          "path": "test-results/admin-screenshots/phase136/02-failed-sync--light--mobile--populated.png"
+        },
+        {
+          "sha256": "fda33fe2b8d52b4b0726e6e7f0ba0cc6497d6703ccb3853f39015ee4999164fa",
+          "path": "test-results/admin-screenshots/phase136/03-sync-drift--dark--desktop--drift.png"
+        },
+        {
+          "sha256": "ee11608da2f58664d239768ea2f5018789abb7b59448bf00520d2cc1822bfc4e",
+          "path": "test-results/admin-screenshots/phase136/03-sync-drift--dark--mobile--drift.png"
+        },
+        {
+          "sha256": "51cc990219d03677197c5a2a58309b85e33a5165f7566fe90d431126e73eed24",
+          "path": "test-results/admin-screenshots/phase136/03-sync-drift--light--desktop--drift.png"
+        },
+        {
+          "sha256": "1b7ce6cd9a957fa9e6ccaa0279566a7f3d4d9d7390a17c92ca02f9d2c202c0c3",
+          "path": "test-results/admin-screenshots/phase136/03-sync-drift--light--mobile--drift.png"
+        },
+        {
+          "sha256": "0c7cd8dd4ff18f405842016ca2f82510074628ad66cb63f4ac093d6245924aff",
+          "path": "test-results/admin-screenshots/phase136/04-control-room--dark--desktop--all-green.png"
+        },
+        {
+          "sha256": "d4830047d31832e49c97ac59aa1547753220a201ff7b6d1468c32e9a8c6997c5",
+          "path": "test-results/admin-screenshots/phase136/04-control-room--dark--mobile--all-green.png"
+        },
+        {
+          "sha256": "ac5be66bb40c433a5c959d01fe72d76b0f6fcc5ee4a8449e000343005e6369e0",
+          "path": "test-results/admin-screenshots/phase136/04-control-room--light--desktop--all-green.png"
+        },
+        {
+          "sha256": "9893428e82b32094e98b93add090c54ad6d1129032fff48d498d0e63ce590833",
+          "path": "test-results/admin-screenshots/phase136/04-control-room--light--mobile--all-green.png"
+        },
+        {
+          "sha256": "02aaac3a8a474b334b8c7d03939b46c0e01849a3135d20561b6e8ad6f2998575",
+          "path": "test-results/admin-screenshots/phase136/05-posture--dark--desktop--all-green.png"
+        },
+        {
+          "sha256": "f827a0f04f32effbae70df467d82dfba9ba03ff389f585a6a3e7e7c2fced6f69",
+          "path": "test-results/admin-screenshots/phase136/05-posture--dark--mobile--all-green.png"
+        },
+        {
+          "sha256": "e6a10602b9504be7a232eec39d970988a9e39ab1c51c9f5d57b4077a88c3fb24",
+          "path": "test-results/admin-screenshots/phase136/05-posture--light--desktop--all-green.png"
+        },
+        {
+          "sha256": "df34644560d1b230b7f3b3071eceadb95239d07d96111a5f65578325e54edae5",
+          "path": "test-results/admin-screenshots/phase136/05-posture--light--mobile--all-green.png"
+        },
+        {
+          "sha256": "3d9022856f3acc7c336319534d71d6237e8130bd741c58e8ebf0e3ee4b23ad36",
+          "path": "test-results/admin-screenshots/phase136/06-search--dark--desktop--results.png"
+        },
+        {
+          "sha256": "06a40d8197a466a6333818c07e6e277d23215d9d69e03bcad9e90e0ab61e1da5",
+          "path": "test-results/admin-screenshots/phase136/06-search--dark--mobile--results.png"
+        },
+        {
+          "sha256": "9f91abd888c4fb35e662f4b400438d7f1a0f4c570e884aef0877a81d8273deeb",
+          "path": "test-results/admin-screenshots/phase136/06-search--light--desktop--results.png"
+        },
+        {
+          "sha256": "9e042ff232ab65adea479f4fc2916d2fff679998e3d50fc030f2a84c549884d7",
+          "path": "test-results/admin-screenshots/phase136/06-search--light--mobile--results.png"
+        },
+        {
+          "sha256": "9948323aac461d348cab08d3efe01fc53be8d930b0fd706387bb6087f4c59e1f",
+          "path": "test-results/admin-screenshots/phase136/07-failed-sync--dark--desktop--empty.png"
+        },
+        {
+          "sha256": "fa00e3afeea2660953fbbdf65022165f52a99c272ef2101e97044c52dc5ab373",
+          "path": "test-results/admin-screenshots/phase136/07-failed-sync--dark--mobile--empty.png"
+        },
+        {
+          "sha256": "f4890133a3bd208d5efc0ef5a8a231797f257b8cd516877b1dd02e2b5ba25443",
+          "path": "test-results/admin-screenshots/phase136/07-failed-sync--light--desktop--empty.png"
+        },
+        {
+          "sha256": "cf3bb7c52cbb001d27b899fc0836c93c703d3fa46139ff41c9bdf48d439afe96",
+          "path": "test-results/admin-screenshots/phase136/07-failed-sync--light--mobile--empty.png"
+        },
+        {
+          "sha256": "780383991ae0d10144557081381cf849d2599a702cb02f6e5d58b65c3339f626",
+          "path": "test-results/admin-screenshots/phase136/08-search--dark--desktop--zero-results.png"
+        },
+        {
+          "sha256": "02ed4e5cae3385ba43cb98686791132b801bff244626f48b883dedc5b7458034",
+          "path": "test-results/admin-screenshots/phase136/08-search--dark--mobile--zero-results.png"
+        },
+        {
+          "sha256": "dd9d6ed68d5fa0501a502f716f22fb7849a4dc730dbb56ff0de5ca8a46666e39",
+          "path": "test-results/admin-screenshots/phase136/08-search--light--desktop--zero-results.png"
+        },
+        {
+          "sha256": "0a7cbf6fad8240ff169b675f46525efe23e685bafc60acce497d1b1e0d924267",
+          "path": "test-results/admin-screenshots/phase136/08-search--light--mobile--zero-results.png"
+        },
+        {
+          "sha256": "8b3abc3f4c7002b5f24f5ad343a4e6a6eeee24afa67378e007c99d18003c6813",
+          "path": "test-results/admin-screenshots/phase136/09-playbooks--dark--desktop--empty-workspace.png"
+        },
+        {
+          "sha256": "73ed9b3c55d6534a801db2bf3546760519123b24f4c8c8316082feea1f743ac8",
+          "path": "test-results/admin-screenshots/phase136/09-playbooks--dark--mobile--empty-workspace.png"
+        },
+        {
+          "sha256": "a158edefb12dbb4a463b5c0b3723023f7f70ebf4c6726e86f8608409602979fe",
+          "path": "test-results/admin-screenshots/phase136/09-playbooks--light--desktop--empty-workspace.png"
+        },
+        {
+          "sha256": "eca8943df54055fb96439040ee336225fa4b97248334276ff1fc6c9fa6ed7847",
+          "path": "test-results/admin-screenshots/phase136/09-playbooks--light--mobile--empty-workspace.png"
+        }
+      ],
+      "recaptured": "2026-06-29T19:18:18Z",
+      "recap_command": "ADMIN_SCREENSHOT_DIR=test-results/admin-screenshots/phase136 PLAYWRIGHT_BASE_URL=http://127.0.0.1:4012 npm run test:e2e:admin-matrix -- --reporter=line"
+    },
+    {
+      "kind": "code-review",
+      "path": ".planning/phases/136-milestone-verification-uat-s-g/136-REVIEW.md",
+      "committed": true
+    }
+  ],
+  "source_fixes": [
+    {
+      "task": 2,
+      "rule": "Rule 2 - Missing Critical Proof Coverage",
+      "path": "scrypath_ops/assets/css/contrast-pairs.mjs",
+      "reason": "Added current muted text consumers to the D-15 static contrast manifest."
+    },
+    {
+      "task": 2,
+      "rule": "Rule 1 - Proof Selector Drift",
+      "path": "examples/scrypath_ecommerce/e2e/admin_surface_depth.spec.ts",
+      "reason": "Retargeted the posture depth proof from removed table markup to current signal cards."
+    },
+    {
+      "task": 2,
+      "rule": "Rule 1 - Flaky Proof Timing",
+      "path": "examples/scrypath_ecommerce/e2e/admin_path_motion.spec.ts",
+      "reason": "Polled for the active Playbook glow computed end-state instead of sampling one transition frame."
+    },
+    {
+      "task": "execute-post",
+      "rule": "D-18 Code Review Blocker - Muted Small Text Thresholds",
+      "path": "scrypath_ops/assets/css/contrast-pairs.mjs",
+      "reason": "Classified small muted labels as normal text and raised manifest alphas to the 4.5 AA threshold path."
+    },
+    {
+      "task": "execute-post",
+      "rule": "D-18 Code Review Blocker - Muted Small Text Thresholds",
+      "path": "scrypath_ops/assets/css/app.css",
+      "reason": "Routed the existing handoff eyebrow through --ops-text-muted and verified current dirty source alpha lockstep for newly introduced small labels."
+    },
+    {
+      "task": "execute-post",
+      "rule": "D-18 Code Review Warning - Line Draw Proof False Positive",
+      "path": "examples/scrypath_ecommerce/e2e/admin_path_motion.spec.ts",
+      "reason": "Asserted numeric ::after scaleX before and after hover so the proof cannot pass at the resting scaleX(0) state."
+    }
+  ],
+  "plans": [
+    "136-01",
+    "136-02",
+    "136-03"
+  ],
+  "finalized": "2026-06-29T19:18:18Z",
+  "final_status": "passed",
+  "human_uat": {
+    "path": ".planning/phases/136-milestone-verification-uat-s-g/136-UAT.md",
+    "status": "passed",
+    "reviewer_response": "approved",
+    "must_fix_blockers": 0,
+    "accepted_follow_ups": 0,
+    "blocked": false,
+    "signed_off": "2026-06-29T18:29:04Z"
+  },
+  "committed_artifacts": [
+    {
+      "kind": "phase-report",
+      "path": ".planning/phases/136-milestone-verification-uat-s-g/136-DUALVERIFY-REPORT.md",
+      "committed": true,
+      "checksum_algorithm": "sha256",
+      "checksum_scope": "file-content",
+      "sha256": "66a233597f56cb6d2a64e88162124f637339f0e4ce60b76faf624920372cda81"
+    },
+    {
+      "kind": "phase-manifest",
+      "path": ".planning/phases/136-milestone-verification-uat-s-g/136-ARTIFACT-MANIFEST.json",
+      "committed": true,
+      "checksum_algorithm": "sha256",
+      "checksum_scope": "canonical-json-with-this-sha256-null",
+      "sha256": "9ae5bbe36c523f4dd9ce352ddc626e897a0018744c729540fc4359f0b8da905a"
+    },
+    {
+      "kind": "before-after-gallery",
+      "path": ".planning/phases/136-milestone-verification-uat-s-g/136-BEFORE-AFTER.md",
+      "committed": true,
+      "checksum_algorithm": "sha256",
+      "checksum_scope": "file-content",
+      "sha256": "8e1369c538a104d9d8aa8df8ae15c0741b4f85b5ec9ebe8448c21d2674883906"
+    },
+    {
+      "kind": "milestone-audit",
+      "path": ".planning/phases/136-milestone-verification-uat-s-g/136-MILESTONE-AUDIT.md",
+      "committed": true,
+      "checksum_algorithm": "sha256",
+      "checksum_scope": "file-content",
+      "sha256": "6b3352f349321e10333a5963f7de8c8b1a8c1502e4098d18a008791f61f61e71"
+    },
+    {
+      "kind": "human-uat",
+      "path": ".planning/phases/136-milestone-verification-uat-s-g/136-UAT.md",
+      "committed": true,
+      "checksum_algorithm": "sha256",
+      "checksum_scope": "file-content",
+      "sha256": "b03c1648314478d3fc7511d2ff8a933a110e5191d2ab4383808cbc9e2bb4bcf8"
+    },
+    {
+      "kind": "code-review",
+      "path": ".planning/phases/136-milestone-verification-uat-s-g/136-REVIEW.md",
+      "committed": true,
+      "checksum_algorithm": "sha256",
+      "checksum_scope": "file-content",
+      "sha256": "d7e969e69668c287329ff1830e6a3a899cbe55d592fc7fc079ea223ef57e1cb4"
+    }
+  ]
+}

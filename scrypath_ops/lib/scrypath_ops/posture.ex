@@ -231,7 +231,7 @@ defmodule ScrypathOps.Posture do
       summary
       | headline: "No fetch errors observed",
         evidence:
-          "This refresh found no schema fetch errors. Keep failed work and drift checks in the loop before treating the fleet as ready for promotion."
+          "This check found no schema fetch errors. Keep failed work and drift checks in the loop before treating the fleet as ready for promotion."
     }
   end
 
@@ -246,7 +246,7 @@ defmodule ScrypathOps.Posture do
 
     parts =
       [
-        err > 0 && "#{err} schema(s) report fetch errors on this refresh",
+        err > 0 && "#{err} schema(s) report fetch errors on this check",
         stuck > 0 &&
           "#{stuck} sync job(s) failed to apply and will not self-heal (the live index may be missing documents)"
       ]
