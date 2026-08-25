@@ -239,7 +239,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
           schemas={@schema_allowlist}
           selected={@selected_schema}
           phx-change="select_schema"
-          hint="Choose the allowlisted schema whose failed queue/backend work you want to inspect."
+          hint="Choose the allowlisted schema whose failed queue/backend work you want to inspect. Small allowlists stay visible so failures are easy to compare."
         />
       </.ops_panel>
 
@@ -253,7 +253,8 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         :if={@load_error == :missing_backend}
         title="Runtime not configured"
       >
-        Configure the Scrypath runtime under <.ops_inline_code>:scrypath_ops</.ops_inline_code>
+        Configure the Scrypath runtime under
+        <.ops_inline_code>:scrypath_ops</.ops_inline_code>
         — see <.ops_inline_code>scrypath_ops/README.md</.ops_inline_code>, then refresh.
       </.ops_empty_state>
 
@@ -264,7 +265,8 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         role="alert"
       >
         The selected schema could not be inspected. Check backend and queue configuration, then
-        refresh failed sync jobs. Reason: <.ops_inline_code>{inspect(@load_error)}</.ops_inline_code>
+        refresh failed sync jobs. Reason:
+        <.ops_inline_code>{inspect(@load_error)}</.ops_inline_code>
       </.ops_status>
 
       <.ops_panel :if={@inspection}>
@@ -273,14 +275,15 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             kind={failed_sync_status_kind(@inspection)}
             title={failed_sync_status_title(@inspection)}
           >
-            Selected schema: <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>
+            Selected schema:
+            <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>
             · dominant reason:
             <strong>{reason_class_label(dominant_reason_class(@inspection))}</strong>
             · retryable jobs: <strong>{retryable_count(@inspection)}</strong>
-            · refreshed <span class="font-mono tabular-nums">{format_dt(@last_refresh_at)}</span>
+            · <.ops_time label="Refreshed" dt={@last_refresh_at} />
           </.ops_status>
 
-          <.ops_metric_grid cols={6} class={@compact_mode && "hidden"}>
+          <.ops_metric_grid cols={6} class={["mt-3", @compact_mode && "hidden"]}>
             <h2
               id="failed-sync-rollups-heading"
               class="sr-only"
@@ -335,7 +338,8 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
           </.ops_disclosure>
 
           <p class="mt-4 text-ops-sm text-base-content/60">
-            For recovery actions use <.ops_inline_code>mix scrypath.failed</.ops_inline_code>
+            For recovery actions use
+            <.ops_inline_code>mix scrypath.failed</.ops_inline_code>
             and the repo guides <.ops_inline_code>guides/drift-recovery.md</.ops_inline_code>, <.ops_inline_code>guides/operator-mix-tasks.md</.ops_inline_code>.
           </p>
         </section>
@@ -351,13 +355,20 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             Rows are sorted by latest attempt so the newest operator evidence stays at the top.
             Open evidence only when needed; retry is scoped to the selected row.
           </p>
-          <.ops_empty_state
+          <.ops_empty_hero
             :if={@inspection.counts.total == 0}
             title="No failed sync jobs"
-            class="mt-2"
+            icon="hero-shield-check"
+            class="mt-3"
+            data-testid="failed-sync-empty-hero"
           >
-            Nothing to retry for this schema. Re-check fleet posture and verify sync drift before you change indexes.
-          </.ops_empty_state>
+            Nothing needs retry for this schema. If you are confirming recovery, check sync drift before changing indexes.
+            <:actions>
+              <.ops_button phx-click="refresh" variant={:default}>
+                Refresh this view
+              </.ops_button>
+            </:actions>
+          </.ops_empty_hero>
 
           <div :if={@inspection.counts.total > 0} class="mt-3 grid gap-2">
             <.ops_result_row
@@ -424,7 +435,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp format_dt(nil), do: "—"
 
   defp format_dt(%DateTime{} = dt) do
-    Calendar.strftime(dt, "%Y-%m-%d %H:%M:%SZ")
+    Calendar.strftime(dt, "%b %d, %Y at %H:%M UTC")
   end
 
   defp metric_tone(0), do: :success

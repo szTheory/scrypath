@@ -121,7 +121,7 @@ async function switchSearchMode(page: Page, mode: "single" | "multi"): Promise<v
 
 async function runBoundedSearch(page: Page, query: string): Promise<void> {
   await page.getByLabel("Search text").fill(query);
-  await page.getByRole("button", { name: "Run bounded search" }).click();
+  await page.getByRole("button", { name: "Run search" }).click();
 }
 
 async function snap(page: Page, name: string): Promise<void> {
@@ -193,6 +193,24 @@ async function runningKeyframeAnimationCount(page: Page, selector: string): Prom
   }, selector);
 }
 
+async function pseudoScaleX(page: Page, selector: string, pseudo: "::before" | "::after"): Promise<number> {
+  return page.evaluate(
+    ({ sel, pseudoName }) => {
+      const el = document.querySelector(sel);
+      if (!el) throw new Error(`scale probe: element not found for ${sel}`);
+
+      const transform = getComputedStyle(el, pseudoName).transform;
+      if (transform === "none") return 1;
+
+      const matrix = transform.match(/^matrix\(([^,]+)/);
+      if (!matrix) throw new Error(`scale probe: unexpected transform for ${sel}${pseudoName}: ${transform}`);
+
+      return Number(matrix[1]);
+    },
+    { sel: selector, pseudoName: pseudo }
+  );
+}
+
 // Glow probes (NEW — the deterministic replacement for the former subjective
 // "deliberate in dark / no light regression" human read, D-02). The dual-dark glow lives
 // in one token, `--shadow-ops-glow`: the `none` no-op in light, a faint violet aura
@@ -213,6 +231,24 @@ async function glowToken(page: Page): Promise<string> {
   return page.evaluate(() =>
     getComputedStyle(document.documentElement).getPropertyValue("--shadow-ops-glow").trim()
   );
+}
+
+async function expectGlowSettled(page: Page, selector: string, theme: ThemeMode): Promise<void> {
+  if (theme === "light") {
+    await expect
+      .poll(() => glowBoxShadow(page, selector), {
+        timeout: 5_000,
+        message: `${selector} must carry no violet glow in light`
+      })
+      .not.toContain(GLOW_RGB);
+  } else {
+    await expect
+      .poll(() => glowBoxShadow(page, selector), {
+        timeout: 5_000,
+        message: `${selector} must settle to the violet glow in ${theme}`
+      })
+      .toContain(GLOW_RGB);
+  }
 }
 
 // ── Spec ─────────────────────────────────────────────────────────────────────
@@ -294,7 +330,7 @@ test.describe("admin path motion — DARKMOTION-01", () => {
         // in multi mode, once the multi result carries a merge projection.
         await switchSearchMode(page, "multi");
         await runBoundedSearch(page, "quantum");
-        await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
+        await expect(page.getByRole("heading", { name: "Results", exact: true })).toBeVisible();
 
         // The merge trace is the <details> disclosure carrying .ops-path-trace. Its
         // line-draw lives on ::after and fires on :hover only — never on (re)insertion.
@@ -313,18 +349,20 @@ test.describe("admin path motion — DARKMOTION-01", () => {
         await expect(page.locator(".ops-code-block--shimmer")).toHaveCount(0);
 
         // Hover the merge-trace affordance and assert the line-draw end state is reached
-        // (::after transform settles to scaleX(1)). We read the computed transform of the
-        // pseudo-element after hover.
+        // (::after transform settles from scaleX(0) to scaleX(1)).
+        await expect
+          .poll(() => pseudoScaleX(page, ".ops-path-trace", "::after"), {
+            timeout: 5_000,
+            message: `merge-trace ::after must rest collapsed before hover (${theme})`
+          })
+          .toBeLessThanOrEqual(0.01);
         await trace.hover();
-        const drawn = await page.evaluate(() => {
-          const el = document.querySelector(".ops-path-trace");
-          if (!el) return null;
-          const t = getComputedStyle(el, "::after").transform;
-          return t;
-        });
-        // scaleX(1) → identity matrix or a matrix with a == 1. "none" (rest) would mean the
-        // hover end state was not reached. Accept any non-rest matrix that scales to full.
-        expect(drawn, `merge-trace ::after transform on hover (${theme})`).not.toBe("none");
+        await expect
+          .poll(() => pseudoScaleX(page, ".ops-path-trace", "::after"), {
+            timeout: 5_000,
+            message: `merge-trace ::after must draw to full scale on hover (${theme})`
+          })
+          .toBeGreaterThanOrEqual(0.99);
 
         // Patch-refire probe: toggle multi→single→multi. Each toggle is a push_patch that
         // re-renders the results/merge region. The trace anchor must not start a running
@@ -332,7 +370,7 @@ test.describe("admin path motion — DARKMOTION-01", () => {
         await switchSearchMode(page, "single");
         await switchSearchMode(page, "multi");
         await runBoundedSearch(page, "quantum");
-        await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
+        await expect(page.getByRole("heading", { name: "Results", exact: true })).toBeVisible();
         await expect(page.locator(".ops-path-trace").first()).toBeVisible();
         const afterPatch = await runningKeyframeAnimationCount(page, ".ops-path-trace");
         expect(afterPatch, "running animations on .ops-path-trace after patch round-trip").toBe(0);
@@ -378,13 +416,10 @@ test.describe("admin path motion — DARKMOTION-01", () => {
 
         // Dark expression present / light unchanged on the active-path anchor (D-02): the
         // active-item glow carries --shadow-ops-glow only in dark/system-dark. Deterministic
-        // proof of the same "no spurious glow in light" claim that was a human read.
-        const activeGlow = await glowBoxShadow(page, ".ops-object-item-active");
-        if (theme === "light") {
-          expect(activeGlow, "active playbook item must carry NO violet glow in light").not.toContain(GLOW_RGB);
-        } else {
-          expect(activeGlow, `active playbook item must carry the violet glow in ${theme}`).toContain(GLOW_RGB);
-        }
+        // proof of the same "no spurious glow in light" claim that was a human read. The
+        // active class is present before its box-shadow transition settles, so poll the
+        // computed end-state instead of sampling a single transition frame.
+        await expectGlowSettled(page, ".ops-object-item-active", theme);
 
         await snap(page, `playbook-active-A--${theme}`);
 

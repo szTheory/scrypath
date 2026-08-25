@@ -39,15 +39,16 @@ defmodule ScrypathDemo.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.8.5"},
+      {:phoenix, "~> 1.8.9"},
+      {:plug, "~> 1.19.5"},
       {:phoenix_ecto, "~> 4.5"},
-      {:ecto_sql, "~> 3.13"},
-      {:postgrex, ">= 0.0.0"},
+      {:ecto_sql, "~> 3.14.0"},
+      {:postgrex, "~> 0.22.4"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
-      {:bandit, "~> 1.5"},
+      {:bandit, "~> 1.12.1"},
       {:oban, "~> 2.21"},
       {:scrypath, path: "../.."}
     ]

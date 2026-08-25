@@ -1,17 +1,19 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.34
-milestone_name: Both-Themes Perfection — Dark Signature + AA Gate
-status: verifying
-last_updated: "2026-06-25T02:42:19.951Z"
-last_activity: 2026-06-25 — Completed 133-03-PLAN.md (DARKMOTION-01 browser proof) — Phase 133 ready for verification
-last_activity_desc: Completed 133-03-PLAN.md (DARKMOTION-01 browser proof)
+milestone: v1.36
+milestone_name: Dependency Security Remediation
+status: Awaiting next milestone
+stopped_at: Phase 147 context gathered
+last_updated: "2026-08-25T20:13:36.914Z"
+last_activity: 2026-08-25
+last_activity_desc: Milestone v1.36 completed and archived
 progress:
-  total_phases: 9
-  completed_phases: 6
-  total_plans: 17
-  completed_plans: 17
-  percent: 67
+  total_phases: 4
+  completed_phases: 4
+  total_plans: 12
+  completed_plans: 12
+current_phase: 147
+current_phase_name: ecommerce-mounted-ops-remediation-and-closure-evidence
 ---
 
 # Project State
@@ -19,45 +21,49 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 133 — dark-path-motion-expression-r-g
+**Current Focus:** Release train idle — no active milestone
 
 ## Current Position
 
-Phase: 133 (dark-path-motion-expression-r-g) — READY FOR VERIFICATION
-Plan: 3 of 3 (all complete)
-Status: Phase complete — ready for verification (`/gsd-verify-work` / Phase 136 DUALVERIFY-01)
-Resume: **v1.34 Phase 133 verification**, then Phase 134 (SCREEN-DARK-01) — see `.planning/phases/133-dark-path-motion-expression-r-g/133-03-SUMMARY.md`.
-Last activity: 2026-06-25 — Completed 133-03-PLAN.md (DARKMOTION-01 browser proof)
+Phase: Milestone v1.36 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-08-25 — Milestone v1.36 completed and archived
 
-## Completed Milestone (interleaved)
+## Completed Milestones
 
-**v1.35 Brand System & Logo Identity** (phases 137–143) — ✅ **COMPLETE 2026-06-24, committed `fcb8fc7`.** Built **directly (not through GSD plan/execute artifacts)**, so phase dirs 138–143 and PLAN/SUMMARY files do not exist on disk and `roadmap.analyze` will show v1.35 at 0% — this is a known bookkeeping gap, NOT incomplete work. Delivered: logo direction "C" = **"scry/path" with a copper `/` separator** (routed-S killed); full family in `brandbook/assets/`; self-contained HTML brand book (`brandbook/index.html`) with subset-woff2 fonts + tokens; adopted across scrypath_ops (header mark + SVG favicon), website (brand-mark + OG card), and root README. Palette/type unchanged → contrast gate stayed green; `mix compile` green; all logos transparent/no-cage; brandbook 328K. Brand-token refinement note: none shipped, so v1.34's remaining dark-polish phases inherit the existing tokens unchanged.
+**v1.36 Dependency Security Remediation** (phases 144-147) - COMPLETE and archived 2026-08-25. All 12 plans and 10 requirements passed; four dependency graphs are audit-clean; `ecommerce-mounted-smoke` is a strict required `main` context with clean-run proof. Archive files: `.planning/milestones/v1.36-ROADMAP.md`, `.planning/milestones/v1.36-REQUIREMENTS.md`, `.planning/milestones/v1.36-MILESTONE-AUDIT.md`, and `.planning/milestones/v1.36-phases/`.
 
-## Current Milestone
+**v1.35 Brand System & Logo Identity** (phases 137-143) - COMPLETE 2026-06-24, committed `fcb8fc7`, archived 2026-07-11. Built directly, not through GSD plan/execute artifacts; phase dirs 138-143 and PLAN/SUMMARY files do not exist on disk by design. `roadmap.analyze` may show v1.35 at 0%; that is a known bookkeeping artifact, not incomplete work. Delivered: logo direction C = **scry/path with a copper `/` separator** (routed-S killed); full transparent/no-cage SVG family in `brandbook/assets/`; self-contained HTML brand book with subset woff2 fonts and tokens; adoption across ScrypathOps, website, and root README. Archive files: `.planning/milestones/v1.35-ROADMAP.md`, `.planning/milestones/v1.35-REQUIREMENTS.md`, `.planning/milestones/v1.35-MILESTONE-AUDIT.md`.
 
-**v1.34 Both-Themes Perfection — Dark Signature + AA Gate** (phases 128–136). 5/9 complete (128–132); **resumed at Phase 133** (then 134 SCREEN-DARK-01, 135 SHELL-DARK-01, 136 DUALVERIFY-01). Next-level UI/UX + perfect BOTH light & dark themes with a WCAG AA hard gate. Dark mode already EXISTS — polish/expression, do not rebuild. v1.34's accumulated context is retained below. The interleaved v1.35 brand milestone is recorded above under "Completed Milestone".
+**v1.34 Both-Themes Perfection - Dark Signature + AA Gate** (phases 128-136) - COMPLETE 2026-06-29, archived 2026-07-11. 9/9 phases and 27/27 plans completed; DUALVERIFY-01 passed with approved Human UAT. Archive files: `.planning/milestones/v1.34-ROADMAP.md`, `.planning/milestones/v1.34-REQUIREMENTS.md`, `.planning/milestones/v1.34-MILESTONE-AUDIT.md`.
+
+## Last Completed Milestone
+
+v1.36 Dependency Security Remediation is complete across Phases 144-147: root, legacy Phoenix, ScrypathOps, then ecommerce mounted Ops. Four ordered remediation batches are audit-clean, and the ecommerce mounted integration now has zero-touch Docker verification with no human UAT requirement.
 
 ## v1.35 Brand Milestone Context (archived)
 
-**v1.35 Brand System & Logo Identity** (phases 137–143) — see "Completed Milestone" above. Pressure-test the existing `prompts/scrypath-brand-book.md` from a senior brand-designer + design-system + a11y + Elixir-OSS lens, design a **proper logo system the owner chooses from** (transparent/no rectangular cage, unified mark+logotype, ≥1 fully-integrated typemark, no subtitle on the primary lockup), and ship a high-fidelity, repo-safe, **self-contained `brandbook/` HTML package** (logos, tokens, subset-woff2 fonts, component examples, usage rules, a11y notes) — then **adopt** the chosen identity across the live product (scrypath_ops logo+favicon, website brand-mark+OG, README). Palette/type are open to evidence-based refinement but bias-to-keep to avoid product thrash; the `scrypath_ops` AA contrast gate must stay green. Owner-initiated wedge; library runtime scope guard (Phase 97) still holds. Source plan: `~/.claude/plans/brand-book-pressure-test-scalable-alpaca.md`.
+**v1.35 Brand System & Logo Identity** (phases 137-143) - see "Completed Milestones" above. Source plan: `~/.claude/plans/brand-book-pressure-test-scalable-alpaca.md`. Direct-completion archive supersedes stale in-progress phase context.
 
 ## v1.35 Accumulated Context
 
 ### Key Decisions
 
-- **Sequencing:** v1.35 begins at **phase 137**; v1.34 (133–136) paused and resumes after.
-- **Adoption:** build the `brandbook/` package **and** rewire the chosen logo/tokens into ops UI, website, favicon, OG image, README (not artifacts-only).
-- **Palette/type:** open to evidence-based refinement (not locked), but bias-to-keep — the violet+copper palette + Space Grotesk/Inter/IBM Plex Mono stack is already implemented live in `scrypath_ops` (Tailwind v4 + daisyUI) and `website/`; any change must keep the `contrast-pairs.mjs` AA gate green.
-- **Fonts:** check in **subset woff2** (Inter / Space Grotesk / IBM Plex Mono are SIL OFL → embed+subset is license-clean; include OFL files) so the HTML book is self-contained offline.
-- **Logo non-negotiables:** no rectangular `<rect>` cage (both existing logos have one — replace, don't reuse); unified mark+logotype sharing geometry/weight; mark sits close to the type; primary lockup has NO subtitle; ≥1 integrated typemark with the route/node motif worked into the letterforms; show options, owner picks.
+- **Sequencing:** v1.35 began at phase 137; v1.34 paused during brand work, then resumed and completed.
+- **Adoption:** the `brandbook/` package and chosen identity were wired into ops UI, website, favicon, OG image, and README.
+- **Palette/type:** product palette stayed stable; final display face is Familjen Grotesk for the brand wordmark, with Inter and IBM Plex Mono retained in the brand package.
+- **Fonts:** subset woff2 fonts and OFL license files ship inside `brandbook/assets/fonts/`.
+- **Logo decision:** final direction is the copper `/` `scry/path` wordmark plus `s/p` monogram; routed-S concepts are rejected historical exploration.
+- **Direct-completion guard:** do not synthesize phase dirs or PLAN/SUMMARY files for phases 138-143.
 
 ### Active Blockers
 
-- **Phase 138 selection checkpoint:** awaiting owner's choice of primary logo direction before phases 139–143 can finalize the family / tokens / book / adoption.
+- None.
 
 ---
 
-## Accumulated Context (PAUSED v1.34 — retained for resume)
+## Accumulated Context (archived v1.34)
 
 v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Make the existing dark/light/system theming of the `scrypath_ops` admin UI genuinely perfect and brand-expressive — dark as the signature look, light at parity — per `prompts/scrypath-brand-book.md`, backed by a formal automated WCAG AA contrast gate (AAA body text), plus continued design-system/IA polish on v1.33's under-touched surfaces. Owner-initiated polish wedge overriding the idle posture; UI polish only (Phase 97 scope guard holds). Locked: comprehensive both-themes scope, system-follows-OS default preserved, AA hard gate / AAA-body, keep Tailwind v4 + daisyUI + `.ops-*`. Central fix: the dark surface ramp drops the brand's `#1B2230` surface-2 step, so "raised" surfaces flatten in dark — repaired via theme-scoped elevation tokens that leave light pixel-identical. Source plan: `~/.claude/plans/v1-33-admin-ui-deep-tower.md`.
 
@@ -91,24 +97,35 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 
 - None.
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Status | Directory |
+|---|-------------|------|--------|--------|-----------|
+| 260816-thg | Rewrite Ops UI microcopy around operator JTBD | 2026-08-16 | 9c94458 |  | [260816-thg-rewrite-ops-ui-microcopy-around-operator](./quick/260816-thg-rewrite-ops-ui-microcopy-around-operator/) |
+| 260816-tzr | Triage dependency security advisories reported by mix deps.get | 2026-08-16 | docs-only | Verified | [260816-tzr-triage-dependency-security-advisories-re](./quick/260816-tzr-triage-dependency-security-advisories-re/) |
+
 ### Todos
 
+- Completed security maintenance: the four dependency-advisory batches and closure evidence shipped in v1.36 (`.planning/todos/completed/2026-08-16-remediate-dependency-security-advisories.md`).
 - Keep future runtime breadth closed unless concrete production bug evidence, reviewed outside-adopter evidence, or an explicit strategic decision justifies it.
+- Completed follow-up: Rewrite Ops UI microcopy around operator JTBD (`.planning/todos/completed/2026-07-01-rewrite-ops-ui-microcopy-around-operator-jtbd.md`).
+- Completed follow-up: Restructure Search playground workflow (`.planning/todos/completed/2026-07-01-restructure-search-playground-workflow.md`).
+- Completed follow-up: Normalize Playbooks row action styling (`.planning/todos/completed/2026-07-01-normalize-playbooks-row-action-styling.md`).
 
-## Operator Next Steps
+## Deferred Items
 
-- Phase 127 (Shell coherence + milestone verification & UAT `[S] [G]`) — the final gate/UAT stop (SHELL-01, VERIFY-01). Shell coherence: unify the per-screen **trust verdict** so it reads identically on Control Room / Posture / Sync-Drift (P5 — labels currently fork: "Can I trust search right now?" / "Fleet posture" / "Promotion readiness"; unify label + dot + tone "as a unit"); collapse the **header nav** to a menu/hidden on small screens so it stops duplicating the sidebar at mobile (P6, `layouts.ex`); confirm the chrome (header, nav, palette, theme toggle, flash, trail) is consistent across every screen. VERIFY-01: produce a v1.32→v1.33 before/after gallery, run the milestone audit against intent, and pass human UAT. Note for 127: the matrix spec's per-screen heading assertions were already aligned to the 124 rename; the ops path-dep needs a server restart (not live-reload) before re-shooting. Backlog anchors: P5/P6 in `120-AUDIT-BACKLOG.md`.
+Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
+
+| Category | Item | Status |
+|----------|------|--------|
+| todo | 2026-07-01-rewrite-ops-ui-microcopy-around-operator-jtbd.md | completed by quick task 260816-thg |
+| uat-audit-noise | Phase 134 `134-UAT.md` | passed; 0 pending scenarios |
+| uat-audit-noise | Phase 136 `136-UAT.md` | passed; 0 pending scenarios |
 
 ## Performance Metrics
 
 | Phase | Plan | Duration | Notes |
 |-------|------|----------|-------|
-| Phase 117 P117 | 33min | 6 tasks | 9 files |
-| Phase 121 P121 | one pass | TOKEN-01 | 4 files (app.css, DESIGN-TOKENS.md, ops_ui.ex, layouts.ex) |
-| Phase 122 P122 | one pass | COMP-01 | 4 files (app.css, DESIGN-TOKENS.md, ops_ui.ex, + 1 test) |
-| Phase 123 P123 | one pass | MOTION-01 | 5 files (app.css, DESIGN-TOKENS.md, app.js, core_components.ex, ops_ui.ex) |
-| Phase 125 P125 | one pass | RECOVER-01 | 6 files (posture/sync_drift/failed_sync live, ops_ui.ex, 1 test, matrix spec) |
-| Phase 126 P126 | one pass | EXPLORE-01 | 3 files (search/playbook live, 1 test) |
 | Phase 128 P01 | 4min | CONTRAST-HARNESS-01 | 3 files (package.json, package-lock.json, contrast-pairs.mjs) |
 | Phase 128 P02 | 8min | 2 tasks | 3 files |
 | Phase 128 P03 | 15min | 3 tasks | 3 files (admin_contrast_matrix.spec.ts, 128-CONTRAST-REPORT.md, VALIDATION.md) |
@@ -125,6 +142,25 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 | Phase 133 P01 | ~12min | 3 tasks | 4 files |
 | Phase 133 P02 | ~2min | 1 tasks | 1 files |
 | Phase 133 P03 | ~30min | 1 tasks | 1 files |
+| Phase 135 P01 | 5 min | 2 tasks | 2 files |
+| Phase 135 P02 | 23m27s | 3 tasks | 8 files |
+| Phase 135 P03 | 25min | 3 tasks | 9 files |
+| Phase 135 P04 | 1h 2m | 2 tasks | 2 files |
+| Phase 136 P01 | 33m 18s | 3 tasks | 6 files |
+| Phase 136 P03 | 5 min | 3 tasks | 5 files |
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 144 P01 | 16m | 1 tasks | 9 files |
+| Phase 144 P02 | 5m | 1 tasks | 2 files |
+| Phase 144 P03 | ~7m | 2 tasks | 1 files |
+| Phase 145-legacy-phoenix-and-ecto-decimal-remediation P01 | 15m | 1 tasks | 4 files |
+| Phase 145 P02 | 2m 25s | 2 tasks | 2 files |
+| Phase 146 P01 | 24m | 1 tasks | 3 files |
+| Phase 146 P02 | 2min | 2 tasks | 1 files |
+| Phase 146 P03 | 18min | 2 tasks | 1 files |
+| Phase 146-scrypathops-web-client-remediation P04 | 3min | 1 tasks | 1 files |
 
 ## Decisions
 
@@ -145,3 +181,41 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 - [Phase 132 Plan 02]: AAA body/long-form findings remain advisory/report-only. The browser proof recorded 12 empty-scenario advisory findings at 6.76:1 vs target 7, and those findings did not affect exit status.
 - [Phase 132 Plan 02]: The intentional light-token visual change is accepted by recapturing the local light baseline; generated `test-results/`, `.tmp/`, and untracked `scrypath_ops/priv/static/**` evidence artifacts stay out of git.
 - [Phase ?]: (Phase 133-02) Motion-discipline self-enforcing: ScrypathOpsWeb.MotionContractTest statically asserts transform/opacity/box-shadow-only + tokenized <300ms + dual-dark-path over .ops-path-*, inside mix verify.opsui; inset is the sanctioned static alternative to banned width/height/top/left.
+- [Phase 135]: Plan 01 uses existing theme-grid helpers for the shell browser proof instead of creating a parallel harness. — Matches D-14/D-15 and keeps explicit-light, explicit-dark, and system-dark semantics aligned with existing E2E proofs.
+- [Phase 135]: Plan 01 performs no package install or upgrade; package-lock.json remains unchanged. — Research flagged no new dependency need and required preserving the existing Playwright and axe versions.
+- [Phase 135]: Plan 02 keeps shell chrome proof selectors on the live inline brand mark and existing theme-toggle DOM rather than adding a new shell abstraction. — Matches the phase goal of polishing shared shell chrome without nav IA churn.
+- [Phase 135]: Plan 02 mirrors custom shell chrome dark CSS in both explicit dark and system-dark paths. — Preserves system-follows-OS parity while keeping light theme unchanged by default.
+- [Phase 135]: Plan 02 extends the ecommerce demo's existing theme provider so mounted ScrypathOps routes expose the same selected-state semantics as standalone ops root. — The browser proof showed mounted routes use the host bundle, so the mounted integration must mirror aria/data selected state too.
+- [Phase 135]: Plan 03 keeps aria-modal=true and makes the existing CommandPalette hook defend bounded focus and focus return instead of downgrading semantics. — Browser proof now verifies bounded focus, focus return, active option state, and Escape close behavior across required themes/viewports.
+- [Phase 135]: Plan 03 mirrors command palette hook hardening into the ecommerce host bundle because mounted ops routes use the host LiveSocket. — The mounted browser proof loads /assets/js/app.js from the ecommerce host, so standalone ops hook changes alone do not exercise real mounted behavior.
+- [Phase 135]: Plan 03 uses durable ops-flash classes on the passive alert wrapper while preserving Phoenix.Flash lookup and lv:clear-flash dismissal. — This gives palette/flash static CSS tripwires and browser-proofed chrome without adding focus steal, loops, dependencies, or public API changes.
+- [Phase 135]: No D-03 light-theme exception was recorded in Plans 02 or 03, so the conditional light-pixel-diff gate was not run for Plan 135-04. — Plan 135-04 made the light pixel diff conditional on a recorded D-03 light exception; the final report documents that none existed.
+- [Phase 135]: aria-modal stayed on the command palette and shortcut sheet because browser proof verifies bounded focus and focus return. — The final evidence report records modal focus containment and focus-return behavior across the shell browser gate.
+- [Phase 135]: Phase 136 retains full 40-shot recapture, v1.33 to v1.34 gallery, milestone audit, and human UAT. — Plan 135-04 closes the shell evidence slice and explicitly leaves broad milestone verification to Phase 136.
+- [Phase 136]: Phase 136 Plan 01 used a source-backed Phoenix server on port 4012 for automated UAT proof instead of the existing containerized 4002 server. — Avoids stale-server false positives while the working tree contains active UI/demo changes.
+- [Phase 136]: Phase 136 Plan 01 records generated screenshot evidence as checksums in the artifact manifest rather than committing browser PNGs or traces. — Keeps generated browser evidence out of git while preserving auditability for DUALVERIFY-01.
+- [Phase 136]: Human UAT approval passed DUALVERIFY-01 with no D-18 must-fix blocker. — 136-UAT.md records `approved`, one passed UAT test, zero pending items, and zero blockers.
+- [Phase 136]: No UAT-created accepted follow-ups were recorded. — Existing D-19 categories remain nonblocking policy/evidence options only, not hidden closeout defects.
+- [Phase 136]: Manifest committed-artifact checksums use file-content SHA-256 except the manifest self-entry. — The self-entry uses canonical JSON with its own `sha256` field nulled to avoid an impossible self-referential hash.
+- [Phase 144 Plan 01]: Used targeted Mix dependency unlocks to preserve graph-local remediation ownership while aligning the shared Req closure.
+- [Phase ?]: [Phase 144 Plan 02]: Req 0.6.3 passes causal public-boundary transport, header merge, task-filter, and telemetry privacy coverage without a private client change; Swoosh runtime proof remains Phase 146 scope.
+- [Phase ?]: Phase 144 Plan 03: deterministic root gates and an exact-SHA detached fresh Hex audit both passed; Meilisearch smoke was unavailable and remains supplemental, while Swoosh proof remains Phase 146.
+- [Phase ?]: Kept the legacy graph limited to four direct compatibility bounds and their causal lock closure.
+- [Phase ?]: Used a direct supervised Bandit plug listener with ThousandIsland listener introspection, avoiding endpoint-policy changes.
+- [Phase ?]: Phase 145 Plan 02 directly bounds legacy Plug at ~> 1.19.5; the reviewed lock remains unchanged because it already selected Plug 1.19.5.
+- [Phase ?]: Phase 145 recovery proof binds deterministic, detached unsuppressed audit, and supplemental live-smoke evidence to recovery commit 4e2abed.
+- [Phase ?]: Phase 146 Plan 01 retained the reviewed Plug 1.19.5 causal lock selection rather than accepting the solver's out-of-range 1.20.3 package-head result.
+- [Phase ?]: Phase 146 Plan 01 proves Swoosh.ApiClient.Req through per-test Req.Test plugs without changing global Swoosh test configuration.
+- [Phase ?]: Phase 146 Plan 02: Exact candidate 59d2e6a passed ordered deterministic Ops and root release-train gates; primary Ops lock remained byte-identical.
+- [Phase ?]: Phase 146 Plan 03: macOS /var and /private/var worktree spellings were accepted only after fail-closed canonical equivalence, unique registration, ownership, symlink, prefix, and exact-child validation; cleanup and preservation checks passed.
+- [Phase ?]: Phase 146 Plan 04 retained decode_body: true and uses application/json to prove Swoosh.ApiClient.Req preserves the raw JSON binary; ff1531c is the sole separately labeled test-only closure after 59d2e6a.
+
+## Session
+
+**Last session:** 2026-08-25T16:47:39.041Z
+**Stopped at:** Phase 147 context gathered
+**Resume file:** .planning/phases/147-ecommerce-mounted-ops-remediation-and-closure-evidence/147-CONTEXT.md
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone

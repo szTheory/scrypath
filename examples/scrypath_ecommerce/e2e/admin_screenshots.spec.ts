@@ -39,7 +39,7 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
 
   await page.goto("/admin/search/posture");
   await waitForLiveConnected(page);
-  await page.getByRole("button", { name: "Refresh posture" }).click();
+  await page.locator("[data-ops-refresh]").click();
   await expect(page.getByRole("heading", { name: "Posture", exact: true })).toBeVisible();
   await capture(page, testInfo, "01-posture-health");
 
@@ -70,8 +70,8 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Search & federation" })).toBeVisible();
   await page.getByLabel("Search text").fill("quantum");
-  await page.getByRole("button", { name: "Run bounded search" }).click();
-  await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
+  await page.getByRole("button", { name: "Run search" }).click();
+  await expect(page.getByRole("heading", { name: "Results", exact: true })).toBeVisible();
   await capture(page, testInfo, "05-search-single-results");
 
   await page.getByRole("button", { name: "Multi index" }).click();
@@ -79,7 +79,7 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   if (!(await firstSchema.isChecked())) {
     await firstSchema.check();
   }
-  await page.getByRole("button", { name: "Run bounded search" }).click();
+  await page.getByRole("button", { name: "Run search" }).click();
   await expect(page.getByText("Federation summary")).toBeVisible();
   await capture(page, testInfo, "06-search-multi-results");
 

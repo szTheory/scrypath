@@ -353,16 +353,45 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
   end
 
   describe "STAB-01 advisory evidence wiring" do
+    test "Phase 147 adds a distinct required mounted smoke without promoting phase105" do
+      ci = File.read!(@ci_yml)
+      contributing = File.read!("CONTRIBUTING.md")
+
+      assert workflow_job_block(ci, "ecommerce-mounted-smoke") =~
+               "make -C examples/scrypath_ecommerce verify-mounted"
+
+      assert contributing =~ "**`ecommerce-mounted-smoke`** | Required merge gate"
+      assert contributing =~ "`phase105-e2e` is advisory today"
+    end
+
     test "phase105-e2e exports evidence env and runs always-on summary script" do
       ci = File.read!(@ci_yml)
 
       assert ci =~
                "PHASE105_EVIDENCE_PATH: examples/scrypath_ecommerce/test-results/phase105-evidence.ndjson"
 
+      assert ci =~ "PHASE105_BROWSER_CONCLUSION"
+      assert ci =~ "PHASE105_LIGHT_PARITY_CONCLUSION"
+      assert ci =~ "PHASE105_CONTRAST_CONCLUSION"
       assert ci =~ "- name: Generate phase105 evidence summary"
       assert ci =~ "if: always()"
       assert ci =~ "run: scripts/ci/phase105_evidence.sh"
       assert ci =~ "phase105-evidence-summary.md >> \"$GITHUB_STEP_SUMMARY\""
+    end
+
+    test "phase105-e2e shifts light parity and visual judgment into CI" do
+      ci = File.read!(@ci_yml)
+      package_json = File.read!("examples/scrypath_ecommerce/package.json")
+
+      assert package_json =~ ~s("test:e2e": "playwright test --workers=1")
+      assert package_json =~ "test:e2e:admin-light-parity"
+      assert package_json =~ "test:e2e:admin-shell-wash"
+      assert package_json =~ "test:e2e:ops-ui-visual-judge"
+      assert ci =~ "npm run test:e2e:admin-light-parity"
+      assert ci =~ "- name: Run advisory ops UI visual judge"
+      assert ci =~ "OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}"
+      assert ci =~ "OPS_UI_LLM_JUDGE: ${{ vars.OPS_UI_LLM_JUDGE || '0' }}"
+      assert ci =~ "node e2e/ops-ui-visual-judge.mjs"
     end
 
     test "phase105-e2e artifacts are bounded to the advisory evidence bundle" do
@@ -374,6 +403,9 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert ci =~ "examples/scrypath_ecommerce/test-results/phase105-evidence.ndjson"
       assert ci =~ "examples/scrypath_ecommerce/test-results/phase105-evidence.json"
       assert ci =~ "examples/scrypath_ecommerce/test-results/phase105-evidence-summary.md"
+      assert ci =~ "examples/scrypath_ecommerce/test-results/admin-light-parity.json"
+      assert ci =~ "examples/scrypath_ecommerce/test-results/ops-ui-visual-judge.json"
+      assert ci =~ "examples/scrypath_ecommerce/test-results/ops-ui-visual-judge.md"
     end
 
     test "playwright config emits structured phase105 report and keeps retry-based flake visibility" do
@@ -383,6 +415,18 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert config =~ "workers: process.env.CI ? 1 : undefined"
       assert config =~ "trace: \"on-first-retry\""
       assert config =~ "phase105-playwright.json"
+    end
+
+    test "phase105 evidence summary includes shifted-left visual gates" do
+      summary_script = File.read!("scripts/ci/phase105_evidence.sh")
+
+      assert summary_script =~ "admin-light-parity.json"
+      assert summary_script =~ "ops-ui-visual-judge.json"
+      assert summary_script =~ "light_parity_status"
+      assert summary_script =~ "shell_wash_conclusion"
+      assert summary_script =~ "shell_wash_visual"
+      assert summary_script =~ "visual_judge_status"
+      assert summary_script =~ "visual_judge_claims"
     end
   end
 

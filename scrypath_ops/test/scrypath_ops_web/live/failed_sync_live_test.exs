@@ -148,6 +148,18 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert html =~ "Unknown"
   end
 
+  test "zero failed sync work shows the empty hero", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
+    Application.put_env(:scrypath_ops, :oban_jobs, [])
+
+    {:ok, _lv, html} = live(conn, ~p"/ops/failed-sync")
+
+    assert html =~ ~s(data-testid="failed-sync-empty-hero")
+    assert html =~ "No failed sync jobs"
+    assert html =~ "Refresh this view"
+    refute html =~ "data-testid=\"failed-sync-row\""
+  end
+
   test "sigra retry redirects stale sudo and keeps the failed-sync row in place", %{} do
     socket = %Phoenix.LiveView.Socket{
       assigns: %{

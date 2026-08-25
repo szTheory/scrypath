@@ -59,7 +59,37 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
 
   test "mount shows honesty panel", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
-    assert render(view) =~ "Non-production playbook workspace"
+    html = render(view)
+    assert html =~ "Non-production playbook workspace"
+
+    assert html =~
+             "Use saved, repeatable search checks: preview, run, import, or save the next one."
+  end
+
+  test "empty workspace shows the empty hero and import anchor", %{conn: conn} do
+    dir =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath_ops_playbooks_empty_#{:erlang.unique_integer([:positive])}"
+      )
+
+    :ok = File.mkdir_p!(dir)
+    prev_workspace = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
+
+    on_exit(fn ->
+      File.rm_rf(dir)
+
+      if prev_workspace == nil,
+        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
+        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_workspace)
+    end)
+
+    {:ok, _view, html} = live(conn, ~p"/ops/playbooks")
+
+    assert html =~ ~s(data-testid="playbooks-empty-hero")
+    assert html =~ "No playbooks yet"
+    assert html =~ ~s(href="#playbook-import")
   end
 
   test "paste import validates and shows preview marker", %{conn: conn} do

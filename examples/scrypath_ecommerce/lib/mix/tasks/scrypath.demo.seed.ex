@@ -122,7 +122,8 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
     ops = CatalogFixtures.scenario_e2e_search_catalog(%{name: "Ops Incident Lab"})
     sparse = CatalogFixtures.scenario_demo_sparse(%{name: "Quiet Branch Supply"})
 
-    {variant_count, failed_count, drift_status} = apply_scenario!(scenario, [showcase, ops, sparse], ops)
+    {variant_count, failed_count, drift_status} =
+      apply_scenario!(scenario, [showcase, ops, sparse], ops)
 
     Mix.shell().info("""
     Scrypath e-commerce demo seeded (scenario: #{scenario}).

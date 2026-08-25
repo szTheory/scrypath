@@ -5,9 +5,18 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
 
   import Phoenix.LiveViewTest
 
+  alias ScrypathOpsWeb.CoreComponents
   alias ScrypathOps.Test.OpsPostA
   alias ScrypathOps.Test.OpsPostB
   alias ScrypathOps.Test.SearchPlaygroundStubAdapter
+
+  @root_template Path.join(
+                   __DIR__,
+                   "../../lib/scrypath_ops_web/components/layouts/root.html.heex"
+                 )
+                 |> Path.expand()
+
+  @app_js Path.join(__DIR__, "../../assets/js/app.js") |> Path.expand()
 
   defmodule OpsShellContractMeili do
     @moduledoc false
@@ -114,16 +123,58 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert html =~ ~s(href="#ops-main")
     assert html =~ ~s(id="ops-page-title")
     assert html =~ ~s(aria-current="page")
+
+    assert Regex.scan(
+             ~r/<a[^>]*class=\"[^\"]*ops-nav-item-active[^\"]*\"[^>]*aria-current=\"page\"/,
+             html
+           )
+           |> length() == 2
+
     assert html =~ ~s(href="/ops/posture")
+    assert html =~ ~s(id="ops-shell-frame")
+    assert html =~ ~s(phx-hook="OpsNavDrawer")
+    assert html =~ ~s(class="ops-sidebar")
+    assert html =~ ~s(id="ops-mobile-nav")
+    assert html =~ ~s(data-ops-nav-drawer)
+    assert html =~ ~s(data-ops-nav-panel)
+    assert html =~ ~s(data-ops-nav-open)
+    assert html =~ ~s(aria-label="Open navigation")
+    assert html =~ ~s(aria-controls="ops-mobile-nav")
+    assert html =~ ~s(aria-expanded="false")
+    assert html =~ ~s(aria-label="Close navigation")
+    assert html =~ ~s(data-ops-nav-link)
     # v1.5 brand: the shell header renders the inline-SVG brand mark (decorative,
     # aria-hidden) with the copper "/" accent — no more <img src="/ops/images/logo.svg">.
     # "ScrypathOps" below is its accessible name.
+    assert html =~ ~s(ops-brand-mark)
     assert html =~ ~s(fill="#C17A3E")
     assert html =~ "ScrypathOps"
+    assert html =~ ~s(class="ops-theme-toggle)
+    assert html =~ ~s(id="theme-toggle-pill")
+    assert html =~ ~s(ops-theme-toggle__pill)
+    assert Regex.scan(~r/class=\"[^\"]*ops-theme-toggle__button/, html) |> length() == 3
+    assert Regex.scan(~r/data-phx-theme=\"(?:system|light|dark)\"/, html) |> length() == 3
     assert html =~ ~s(aria-label="Theme preference")
     assert html =~ ~s(aria-label="Use system theme")
     assert html =~ ~s(aria-label="Use light theme")
     assert html =~ ~s(aria-label="Use dark theme")
+    assert Regex.scan(~r/aria-pressed=\"false\"/, html) |> length() == 3
+    assert Regex.scan(~r/data-theme-selected=\"false\"/, html) |> length() == 3
+    assert html =~ ~s(id="ops-command-palette")
+    assert html =~ ~s(phx-hook="CommandPalette")
+    assert html =~ ~s(data-cheatsheet="ops-cheatsheet")
+    assert Regex.scan(~r/data-ops-command-open/, html) |> length() >= 2
+    assert Regex.scan(~r/aria-label=\"Open command palette\"/, html) |> length() >= 2
+    assert html =~ ~s(aria-keyshortcuts="Meta+K Control+K")
+    assert html =~ ~s(id="ops-cmdk")
+    assert html =~ ~s(id="ops-cheatsheet")
+    assert html =~ ~s(data-cmdk-close)
+    assert html =~ ~s(data-cmdk-input)
+    assert html =~ ~s(data-cmdk-empty)
+    assert Regex.scan(~r/data-cmdk-item/, html) |> length() == 6
+    assert Regex.scan(~r/aria-selected=\"false\"/, html) |> length() == 6
+    assert Regex.scan(~r/id=\"ops-cmdk-item-\d+\"/, html) |> length() == 6
+    assert html =~ ~s(aria-controls="ops-cmdk-list")
   end
 
   describe "ops shell markers" do
@@ -146,5 +197,65 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
       {:ok, _lv, html} = live(conn, ~p"/ops/search")
       assert_ops_shell!(html, "Search &amp; federation")
     end
+  end
+
+  test "root theme provider synchronizes selected theme button state" do
+    source = File.read!(@root_template)
+
+    assert source =~ "syncThemeButtons"
+    assert source =~ "querySelectorAll(\"[data-phx-theme]\")"
+    assert source =~ "setAttribute(\"aria-pressed\""
+    assert source =~ "setAttribute(\"data-theme-selected\""
+    assert source =~ "syncThemeButtons();"
+    assert source =~ "DOMContentLoaded"
+    assert source =~ "closest(\"[data-phx-theme]\")"
+    assert source =~ "phx:page-loading-stop"
+  end
+
+  test "shortcut sheet advertises command palette shortcut across platforms", %{conn: conn} do
+    {:ok, _lv, html} = live(conn, ~p"/ops/posture")
+
+    assert html =~ "Command or Control K"
+    assert html =~ "<kbd"
+    assert html =~ "Ctrl"
+  end
+
+  test "command palette hook opens from visible shortcut affordances" do
+    source = File.read!(@app_js)
+
+    assert source =~ ~S|closest("[data-ops-command-open]")|
+    assert source =~ ~S|document.addEventListener("click", this.onCommandOpenClick)|
+    assert source =~ ~S|document.removeEventListener("click", this.onCommandOpenClick)|
+    assert source =~ "this.open()"
+  end
+
+  test "flash component exposes durable passive alert chrome" do
+    info =
+      render_component(&CoreComponents.flash/1,
+        kind: :info,
+        flash: %{"info" => "Saved playbook."}
+      )
+
+    error =
+      render_component(&CoreComponents.flash/1,
+        kind: :error,
+        flash: %{"error" => "Search sync failed."}
+      )
+
+    assert info =~ ~s(role="alert")
+    assert info =~ "ops-flash"
+    assert info =~ "ops-flash--info"
+    assert info =~ "Saved playbook."
+    assert info =~ ~s(aria-label="Close notification")
+    assert info =~ "lv:clear-flash"
+    assert info =~ "hero-information-circle" or Regex.scan(~r/<svg\b/, info) |> length() == 2
+
+    assert error =~ ~s(role="alert")
+    assert error =~ "ops-flash"
+    assert error =~ "ops-flash--error"
+    assert error =~ "Search sync failed."
+    assert error =~ ~s(aria-label="Close notification")
+    assert error =~ "lv:clear-flash"
+    assert error =~ "hero-exclamation-circle" or Regex.scan(~r/<svg\b/, error) |> length() == 2
   end
 end

@@ -2,6 +2,37 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.34 — Both-Themes Perfection
+
+**Shipped (planning):** 2026-06-29
+**Archived:** 2026-07-11
+**Phases:** 9 (128-136) | **Plans:** 27 | **Requirements:** 10
+
+### What was built
+
+ScrypathOps now has a proven both-theme polish layer: AA contrast hard gates, a true dark surface ramp, seated dark depth, restrained glow/copper accents, purposeful path motion, polished Search/Sync/Playbooks/shell surfaces, and final DUALVERIFY-01 evidence through automated gates, screenshot matrix, before/after gallery, audit, and approved Human UAT.
+
+### What worked
+
+The milestone worked because it made visual quality measurable before tuning pixels. Phase 128's contrast harness and Phase 129's ranked dark audit gave later token and screen work a concrete target, and the final Phase 136 proof avoided stale-server false positives by running source-backed browser lanes.
+
+### What was inefficient
+
+The closeout was manual because the root `REQUIREMENTS.md` had already advanced to v1.35 while v1.34 still needed archival. The generic milestone helper would have archived the wrong requirements file, so the archive had to be reconstructed from the v1.34 appendix, roadmap section, phase summaries, and Phase 136 audit.
+
+### Patterns established
+
+- Treat AA contrast as a hard gate and AAA body text as advisory unless product policy changes.
+- Keep dark-theme polish scoped through explicit tokens and browser proof instead of broad light-theme redesign.
+- Record generated screenshot evidence with manifest checksums rather than committing bulky browser artifacts.
+- Run final browser proof against source-backed servers when stale containers could hide local changes.
+
+### Key lessons
+
+Milestone close tooling assumes the root planning files still describe the milestone being archived. When work interleaves, archive the older milestone before advancing the root requirements file, or explicitly use a targeted closeout that preserves the newer requirements state.
+
+---
+
 ## Milestone: v1.32 — Admin UI/UX Design System Cleanup
 
 **Shipped (planning):** 2026-06-01
@@ -348,10 +379,45 @@ Do not reopen feature scope to make proof feel more complete. Accept non-blockin
 
 ---
 
+## Milestone: v1.36 — Dependency Security Remediation
+
+**Shipped:** 2026-08-25
+**Phases:** 4 (144-147) | **Plans:** 12 | **Tasks:** 19
+
+### What Was Built
+
+Four graph-local dependency remediations closed the recorded Req/HTTP, legacy Phoenix/Ecto, standalone ScrypathOps, and mounted ecommerce advisories. The milestone also delivered a hermetic Docker verifier that owns service preparation, both asset builds, focused Playwright proof, diagnostics, and cleanup, with `ecommerce-mounted-smoke` enforced as a strict required `main` context.
+
+### What Worked
+
+- Ordered graph ownership and exact-SHA receipts kept dependency causality reviewable.
+- Direct boundary tests caught compatibility at public behavior seams instead of relying on compilation alone.
+- Separating deterministic, service, focused-browser, and advisory-browser evidence kept closure claims honest.
+- The final milestone audit combined phase verification, Nyquist validation, a dedicated integration checker, live branch-protection inspection, and clean-run CI evidence.
+
+### What Was Inefficient
+
+- A warm local Docker cache hid that clean GitHub runners exceeded the original two-minute health budget; the first required run exposed the cold-start timing defect.
+- Phase 144 summary attribution and one Phase 145 command environment lagged execution truth and required closeout reconciliation.
+- The archival helper undercounted tasks when summaries omitted `tasks_completed`, so the milestone ledger was corrected from plan task nodes.
+
+### Patterns Established
+
+- Give long cold initialization a health-check `start_period`; reserve retry budgets for steady-state health failure.
+- Treat branch-protection configuration as runtime release infrastructure and verify it live, not only through workflow YAML.
+- Require each independent Mix graph to pass checked-lock plus unsuppressed audit in the same closure window.
+
+### Key Lessons
+
+Local success is insufficient for a required zero-touch gate when the local build cache differs materially from CI. The clean-run required context is the final proof, and planning metadata should be reconciled before verification timestamps to avoid artificial closeout staleness.
+
+---
+
 ## Cross-Milestone Trends
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|
+| v1.36 | 144-147 | Four-graph dependency security remediation, behavior preservation, and required zero-touch mounted proof |
 | v1.30 | 109-112 | Release/package truth, support intake routing, advisory proof stability, and website/docs truth alignment |
 | v1.15 | 62–64 | OPSUI second slice: playground capture, playbook catalog/metadata, bounded team persistence + validate Mix |
 | v1.14 | 57–61 | B1 evidence gate + operator playbooks: **`Playbook.V1`**, **`/ops/playbooks`**, portable JSON |

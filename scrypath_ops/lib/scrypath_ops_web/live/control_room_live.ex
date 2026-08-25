@@ -50,18 +50,23 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
       <.ops_toolbar class="items-end gap-4">
         <.ops_page_header
           title="Control Room"
-          subtitle="Start here. See whether search is in sync, then pick the job you're doing."
+          subtitle="Recover search, verify a change before promotion, or inspect and save a useful search check."
         />
-        <.ops_button phx-click="refresh" variant={:primary} data-ops-refresh>
-          Refresh posture
-        </.ops_button>
       </.ops_toolbar>
 
       <section aria-labelledby="control-room-posture-heading" class="space-y-4">
         <h2 id="control-room-posture-heading" class="sr-only">Fleet posture</h2>
 
-        <.ops_config_empty :if={@posture.state == :unconfigured} kind={:no_schemas} />
-        <.ops_config_empty :if={@posture.state == :missing_backend} kind={:missing_backend} />
+        <.ops_config_empty :if={@posture.state == :unconfigured} kind={:no_schemas}>
+          <:actions>
+            <.ops_refresh_button phx-click="refresh" aria_label="Refresh search trust status" />
+          </:actions>
+        </.ops_config_empty>
+        <.ops_config_empty :if={@posture.state == :missing_backend} kind={:missing_backend}>
+          <:actions>
+            <.ops_refresh_button phx-click="refresh" aria_label="Refresh search trust status" />
+          </:actions>
+        </.ops_config_empty>
 
         <.ops_verdict
           :if={@posture.state in [:ok, :degraded]}
@@ -71,15 +76,16 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
           class="ops-verdict--hero"
         >
           <:actions>
+            <.ops_refresh_button phx-click="refresh" aria_label="Refresh search trust status" />
             <.ops_link_button navigate={"#{@mount_path}/posture"} variant={:ghost} size={:sm}>
               Open full posture <span aria-hidden="true">→</span>
             </.ops_link_button>
           </:actions>
           <p>{@posture.evidence}</p>
           <p class="mt-2 text-ops-sm text-base-content/60">
-            {@posture.schema_count} schema(s) · {@posture.error_count} fetch error(s) · {@posture.backend_failed_count} failed backend · refreshed {format_dt(
-              @posture.refreshed_at
-            )}
+            {schema_health_label(@posture.schema_count)} · {fetch_health_label(@posture.error_count)} · {backend_health_label(
+              @posture.backend_failed_count
+            )} · <.ops_time label="Checked" dt={@posture.refreshed_at} />
           </p>
         </.ops_verdict>
       </section>
@@ -93,24 +99,28 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
             icon="hero-wrench-screwdriver"
             kind={intent_tone(@posture)}
             recommended={@posture.state in [:degraded, :missing_backend]}
-            title="Something looks broken"
-            summary="Recover from an incident. Check fleet posture, work the failed-sync queue, then confirm sync drift."
+            title="Recover search"
+            summary="Recover search when something looks wrong. Check posture, work failed syncs, then confirm drift."
             route_label="Start recovery"
             navigate={"#{@mount_path}/posture"}
             data-testid="intent-incident"
-          />
+          >
+            <:badge :if={@posture.state == :degraded}>
+              <span class="ops-badge ops-copper-badge">Federated</span>
+            </:badge>
+          </.ops_intent_card>
           <.ops_intent_card
             icon="hero-arrow-up-tray"
-            title="I'm shipping a change"
-            summary="Pre-flight a deploy. Reconcile sync posture, compare index-contract drift, then promote with the gated swap."
+            title="Verify a change"
+            summary="Verify a change before promotion. Reconcile, compare contract drift, then use the gated swap."
             route_label="Pre-flight sync drift"
             navigate={"#{@mount_path}/sync-drift"}
             data-testid="intent-change"
           />
           <.ops_intent_card
             icon="hero-map"
-            title="Explore & capture"
-            summary="Probe search behavior with bounded read-only queries, then save the useful ones as reusable playbooks."
+            title="Inspect and save a search check"
+            summary="Inspect a search result, then save a useful check. Queries stay bounded and read-only."
             route_label="Explore search"
             navigate={"#{@mount_path}/search"}
             data-testid="intent-explore"
@@ -123,9 +133,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
         class="flex flex-wrap items-center justify-between gap-3 pt-ops-2 text-ops-sm text-base-content/55"
       >
         <h2 id="control-room-orient-heading" class="sr-only">Getting around</h2>
-        <p>
-          Press <kbd class="ops-kbd">⌘K</kbd> to jump to any surface.
-        </p>
+        <.ops_command_hint />
         <a href={@orientation_href} class="link link-hover">
           New here? See what each surface does <span aria-hidden="true">→</span>
         </a>
@@ -138,9 +146,14 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
   defp intent_tone(%Posture{state: :missing_backend}), do: :error
   defp intent_tone(_), do: :neutral
 
-  defp format_dt(nil), do: "—"
+  defp schema_health_label(1), do: "1 schema checked"
+  defp schema_health_label(count), do: "#{count} schemas checked"
 
-  defp format_dt(%DateTime{} = dt) do
-    Calendar.strftime(dt, "%Y-%m-%d %H:%M:%SZ")
-  end
+  defp fetch_health_label(0), do: "All fetches healthy"
+  defp fetch_health_label(1), do: "1 fetch needs attention"
+  defp fetch_health_label(count), do: "#{count} fetches need attention"
+
+  defp backend_health_label(0), do: "All backends healthy"
+  defp backend_health_label(1), do: "1 backend needs attention"
+  defp backend_health_label(count), do: "#{count} backends need attention"
 end

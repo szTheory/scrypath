@@ -59,6 +59,11 @@ defmodule ScrypathOpsWeb.PostureLive do
     end
   end
 
+  @impl true
+  def handle_params(_params, _uri, socket) do
+    {:noreply, refresh_next_checks(socket)}
+  end
+
   defp load_posture(socket) do
     summary =
       ScrypathOps.Posture.summary(
@@ -73,11 +78,20 @@ defmodule ScrypathOpsWeb.PostureLive do
     |> assign(:posture_state, summary.state)
     |> assign(:posture_headline, summary.headline)
     |> assign(:posture_evidence, summary.evidence)
-    |> assign(
+    |> assign(:posture_summary, summary)
+    |> refresh_next_checks()
+  end
+
+  defp refresh_next_checks(%{assigns: %{posture_summary: summary}} = socket)
+       when is_struct(summary, ScrypathOps.Posture) do
+    assign(
+      socket,
       :next_checks,
       summary |> ScrypathOps.Posture.next_checks(socket.assigns.mount_path) |> Enum.take(5)
     )
   end
+
+  defp refresh_next_checks(socket), do: socket
 
   # Map the shared summary back onto this view's legacy `posture_rows` assign,
   # which the per-schema table and empty-state guards still pattern-match on.
@@ -142,9 +156,11 @@ defmodule ScrypathOpsWeb.PostureLive do
           title="Posture"
           subtitle="The fleet's sync health, schema by schema. Start here when something looks wrong."
         />
-        <.ops_button phx-click="refresh" variant={:primary} data-ops-refresh>
-          Refresh posture
-        </.ops_button>
+        <.ops_refresh_button
+          phx-click="refresh"
+          variant={:primary}
+          aria_label="Refresh posture checks"
+        />
       </.ops_toolbar>
 
       <.ops_trail mount_path={@mount_path} current={:posture} />
@@ -159,7 +175,7 @@ defmodule ScrypathOpsWeb.PostureLive do
           >
             {@posture_evidence}
           </.ops_verdict>
-          <.ops_metric_grid cols={5}>
+          <.ops_metric_grid cols={4}>
             <.ops_metric
               label="Schemas"
               value={posture_schema_count(@posture_rows)}
@@ -180,12 +196,8 @@ defmodule ScrypathOpsWeb.PostureLive do
               value={posture_queue_observed_count(@posture_rows)}
               kind={:neutral}
             />
-            <.ops_metric
-              label="Refreshed"
-              value={format_dt(@last_refresh_at)}
-              kind={:neutral}
-            />
           </.ops_metric_grid>
+          <.ops_time label="Checked" dt={@last_refresh_at} class="mt-3 flex" />
         </section>
       </.ops_panel>
 
@@ -225,60 +237,108 @@ defmodule ScrypathOpsWeb.PostureLive do
         <.ops_section
           id="posture-fleet-heading"
           title="Per-schema signals"
-          subtitle={"#{@aggregate_error_count} schema(s) with fetch errors"}
-          meta={"refreshed #{format_dt(@last_refresh_at)}"}
+          subtitle="Worst-first schema health. Scan backend work, queue posture, and last successful sync without opening row details."
         >
-          <p class="mt-1 text-ops-sm text-base-content/60 sm:hidden">
-            Worst-first. Swipe the table sideways to see every signal column.
-          </p>
-          <.ops_table zebra class="mt-3">
-            <thead>
-              <tr>
-                <th scope="col">Schema</th>
-                <th scope="col">Index</th>
-                <th scope="col">Sync mode</th>
-                <th scope="col">Backend pending</th>
-                <th scope="col">Backend failed</th>
-                <th scope="col">Backend last OK</th>
-                <th scope="col">Queue observed</th>
-                <th scope="col">Queue pending</th>
-                <th scope="col">Queue retrying</th>
-                <th scope="col">Queue failed</th>
-                <th scope="col">Queue last OK</th>
-              </tr>
-            </thead>
-            <tbody class="text-ops-body leading-snug tabular-nums">
-              <%= for {mod, row} <- posture_rows_worst_first(elem(@posture_rows, 1)) do %>
-                <tr data-testid="posture-row" id={"posture-#{inspect(mod)}"}>
-                  <%= case row do %>
-                    <% {:ok, status} -> %>
-                      <td class="font-mono text-ops-sm">{inspect(mod)}</td>
-                      <td class="font-mono text-ops-sm">{status.index}</td>
-                      <td>{status.mode}</td>
-                      <td>{length(status.backend.pending)}</td>
-                      <td>{length(status.backend.failed)}</td>
-                      <td>{format_state_ts(status.backend.last_succeeded)}</td>
-                      <td>
-                        <%= if status.queue.observed? do %>
-                          <.ops_badge kind={:success}>observed</.ops_badge>
-                        <% else %>
-                          <.ops_badge kind={:warning}>queue not observed</.ops_badge>
-                        <% end %>
-                      </td>
-                      <td>{length(status.queue.pending)}</td>
-                      <td>{length(status.queue.retrying)}</td>
-                      <td>{length(status.queue.failed)}</td>
-                      <td>{format_state_ts(status.queue.last_succeeded)}</td>
-                    <% {:error, reason} -> %>
-                      <td class="font-mono text-ops-sm">{inspect(mod)}</td>
-                      <td colspan="10" class="text-error">
-                        fetch error: {inspect(reason)}
-                      </td>
-                  <% end %>
-                </tr>
-              <% end %>
-            </tbody>
-          </.ops_table>
+          <:actions>
+            <.ops_time label="Checked" dt={@last_refresh_at} />
+          </:actions>
+
+          <div class="ops-schema-signal-list">
+            <%= for {mod, row} <- posture_rows_worst_first(elem(@posture_rows, 1)) do %>
+              <article
+                data-testid="posture-row"
+                id={"posture-#{inspect(mod)}"}
+                class={[
+                  "ops-schema-signal-card",
+                  posture_card_tone(row)
+                ]}
+              >
+                <%= case row do %>
+                  <% {:ok, status} -> %>
+                    <div class="ops-schema-signal-card__header">
+                      <div class="min-w-0">
+                        <h3 class="font-mono text-ops-body font-semibold text-base-content">
+                          {inspect(mod)}
+                        </h3>
+                        <p class="mt-1 text-ops-sm text-base-content/65">
+                          Index
+                          <.ops_inline_code>{status.index}</.ops_inline_code>
+                          · sync mode <strong>{status.mode}</strong>
+                        </p>
+                      </div>
+                      <div class="ops-schema-signal-card__badges">
+                        <.ops_badge kind={backend_badge_kind(status)}>
+                          {backend_badge_label(status)}
+                        </.ops_badge>
+                        <.ops_badge kind={queue_badge_kind(status)}>
+                          {queue_badge_label(status)}
+                        </.ops_badge>
+                      </div>
+                    </div>
+
+                    <div class="ops-schema-signal-card__groups">
+                      <section
+                        aria-label={"Backend signals for #{inspect(mod)}"}
+                        class="ops-signal-group"
+                      >
+                        <p class="ops-signal-group__title">Backend</p>
+                        <dl class="ops-signal-metrics">
+                          <div>
+                            <dt>Pending</dt>
+                            <dd>{length(status.backend.pending)}</dd>
+                          </div>
+                          <div>
+                            <dt>Failed</dt>
+                            <dd>{length(status.backend.failed)}</dd>
+                          </div>
+                          <div class="ops-signal-metrics__wide">
+                            <dt>Last OK</dt>
+                            <dd>{format_state_ts(status.backend.last_succeeded)}</dd>
+                          </div>
+                        </dl>
+                      </section>
+
+                      <section
+                        aria-label={"Queue signals for #{inspect(mod)}"}
+                        class="ops-signal-group"
+                      >
+                        <p class="ops-signal-group__title">Queue</p>
+                        <dl class="ops-signal-metrics">
+                          <div>
+                            <dt>Pending</dt>
+                            <dd>{length(status.queue.pending)}</dd>
+                          </div>
+                          <div>
+                            <dt>Retrying</dt>
+                            <dd>{length(status.queue.retrying)}</dd>
+                          </div>
+                          <div>
+                            <dt>Failed</dt>
+                            <dd>{length(status.queue.failed)}</dd>
+                          </div>
+                          <div class="ops-signal-metrics__wide">
+                            <dt>Last OK</dt>
+                            <dd>{format_state_ts(status.queue.last_succeeded)}</dd>
+                          </div>
+                        </dl>
+                      </section>
+                    </div>
+                  <% {:error, reason} -> %>
+                    <div class="ops-schema-signal-card__header">
+                      <div class="min-w-0">
+                        <h3 class="font-mono text-ops-body font-semibold text-base-content">
+                          {inspect(mod)}
+                        </h3>
+                        <p class="mt-1 text-ops-sm text-error">fetch error: {inspect(reason)}</p>
+                      </div>
+                      <div class="ops-schema-signal-card__badges">
+                        <.ops_badge kind={:error}>fetch error</.ops_badge>
+                      </div>
+                    </div>
+                <% end %>
+              </article>
+            <% end %>
+          </div>
         </.ops_section>
       </.ops_panel>
 
@@ -341,7 +401,7 @@ defmodule ScrypathOpsWeb.PostureLive do
   defp format_dt(nil), do: "—"
 
   defp format_dt(%DateTime{} = dt) do
-    Calendar.strftime(dt, "%Y-%m-%d %H:%M:%SZ")
+    Calendar.strftime(dt, "%b %d, %Y at %H:%M UTC")
   end
 
   defp format_state_ts(nil), do: "—"
@@ -349,4 +409,44 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   defp metric_tone(0), do: :success
   defp metric_tone(_), do: :warning
+
+  defp posture_card_tone({:error, _reason}), do: "ops-schema-signal-card--error"
+
+  defp posture_card_tone({:ok, status}) do
+    cond do
+      length(status.backend.failed) > 0 -> "ops-schema-signal-card--warning"
+      length(status.queue.failed) > 0 -> "ops-schema-signal-card--warning"
+      length(status.queue.retrying) > 0 -> "ops-schema-signal-card--warning"
+      not status.queue.observed? -> "ops-schema-signal-card--warning"
+      true -> "ops-schema-signal-card--success"
+    end
+  end
+
+  defp posture_card_tone(_), do: nil
+
+  defp backend_badge_kind(status) do
+    if length(status.backend.failed) > 0, do: :warning, else: :success
+  end
+
+  defp backend_badge_label(status) do
+    if length(status.backend.failed) > 0, do: "backend failed", else: "backend clear"
+  end
+
+  defp queue_badge_kind(status) do
+    if status.queue.observed? and length(status.queue.failed) == 0 and
+         length(status.queue.retrying) == 0 do
+      :success
+    else
+      :warning
+    end
+  end
+
+  defp queue_badge_label(status) do
+    cond do
+      not status.queue.observed? -> "queue not observed"
+      length(status.queue.failed) > 0 -> "queue failed"
+      length(status.queue.retrying) > 0 -> "queue retrying"
+      true -> "queue observed"
+    end
+  end
 end

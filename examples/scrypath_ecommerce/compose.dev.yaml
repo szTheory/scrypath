@@ -1,15 +1,11 @@
-# Dev override: bind-mount source + named build/deps volumes, publish infra on loopback
-# lanes for host tooling, and run the ops-app Tailwind watcher alongside the server so
-# edits to scrypath_ops CSS actually rebuild the served stylesheet.
+# Dev override: bind-mount source + named build/deps volumes, and run the
+# ops-app Tailwind watcher alongside the server so edits to scrypath_ops CSS
+# rebuild the served stylesheet without an image rebuild.
+#
+# Postgres and Meilisearch stay private to the Compose network by default. Add
+# compose.host-ports.yaml only when host tools need direct access to those
+# services.
 services:
-  postgres:
-    ports:
-      - "127.0.0.1:${PG_PORT:-5432}:5432"
-
-  meilisearch:
-    ports:
-      - "127.0.0.1:${MEILI_PORT:-7700}:7700"
-
   web:
     environment:
       MIX_ENV: dev

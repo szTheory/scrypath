@@ -28,7 +28,7 @@
 //   fg_token  — token name without `--color-` prefix (always "base-content" here)
 //   bg_token  — token name without `--color-` prefix (the opaque surface)
 //   role      — "text" → AA 4.5 / AAA 7.0
-//               "large" → AA 3.0 (uppercase/bold qualifies as large text per WCAG)
+//               "large" → AA 3.0 (only text that meets WCAG large-text size/weight)
 //               "ui"    → AA 3.0 (non-text UI components)
 //               decorative  → skipped by checker (no threshold applied)
 //   note      — human-readable description
@@ -43,6 +43,26 @@ export const MUTED_PAIRS = [
     bg_token: "base-100",
     role: "text",
     note: "header utility override"
+  },
+  // app.css line 292 — sidebar footer text
+  {
+    selector: ".ops-sidebar__footer",
+    css_var: "ops-text-muted",
+    alpha: 0.64,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "sidebar footer text"
+  },
+  // app.css line 306 — command hint pill text
+  {
+    selector: ".ops-command-hint",
+    css_var: "ops-text-muted",
+    alpha: 0.64,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "command hint pill text"
   },
   // app.css line 256 — shell utility override
   {
@@ -64,6 +84,81 @@ export const MUTED_PAIRS = [
     role: "text",
     note: "meta/secondary text — xs size"
   },
+  // app.css line 748 — timestamp label text
+  {
+    selector: ".ops-time__label",
+    alpha: 0.62,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "timestamp label text"
+  },
+  // app.css line 741 — timestamp text container
+  {
+    selector: ".ops-time",
+    css_var: "ops-text-muted",
+    alpha: 0.64,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "timestamp text container"
+  },
+  // app.css line 763 — timestamp copy icon button
+  {
+    selector: ".ops-time__copy",
+    alpha: 0.58,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "ui",
+    note: "timestamp copy icon button"
+  },
+  // app.css line 877 — sidebar nav group label
+  {
+    selector: ".ops-nav-group__label",
+    alpha: 0.64,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "uppercase sidebar nav group label"
+  },
+  // app.css line 840 — schema option metadata
+  {
+    selector: ".ops-schema-option__meta",
+    css_var: "ops-text-muted",
+    alpha: 0.64,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "schema option metadata"
+  },
+  // app.css line 899 — sidebar nav item text
+  {
+    selector: ".ops-nav-item",
+    alpha: 0.74,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "sidebar nav item text"
+  },
+  // app.css line 1434 — signal group title
+  {
+    selector: ".ops-signal-group__title",
+    alpha: 0.64,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "uppercase signal group title"
+  },
+  // app.css line 1457 — signal metric term
+  {
+    selector: ".ops-signal-metrics dt",
+    css_var: "ops-text-muted",
+    alpha: 0.64,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "uppercase signal metric term"
+  },
   // app.css line 691 — breadcrumb text
   {
     selector: ".ops-trail__crumb",
@@ -74,14 +169,15 @@ export const MUTED_PAIRS = [
     role: "text",
     note: "breadcrumb text"
   },
-  // app.css line 727 — uppercase eyebrow label (large text: uppercase + font-weight 700)
+  // app.css line 1082 — uppercase eyebrow label
   {
     selector: ".ops-handoff__eyebrow",
-    alpha: 0.50,
+    css_var: "ops-text-muted",
+    alpha: 0.64,
     fg_token: "base-content",
     bg_token: "base-100",
-    role: "large",
-    note: "uppercase eyebrow label — qualifies as large text by weight+size"
+    role: "text",
+    note: "uppercase eyebrow label"
   },
   // app.css line 746 — hint copy
   {
@@ -103,6 +199,15 @@ export const MUTED_PAIRS = [
     role: "text",
     note: "hint copy"
   },
+  // app.css line 815 — fieldset hint copy
+  {
+    selector: ".ops-fieldset__hint",
+    alpha: 0.70,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "fieldset hint copy"
+  },
   // app.css line 898 — card body text (intent-card bg is base-100 94% ≈ opaque base-100)
   {
     selector: ".ops-intent-card__summary",
@@ -120,6 +225,15 @@ export const MUTED_PAIRS = [
     bg_token: "base-100",
     role: "text",
     note: "chip value text (default/no-tone state)"
+  },
+  // app.css line 493 — empty-state body text
+  {
+    selector: ".ops-empty-hero__body",
+    alpha: 0.74,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "empty-state body text"
   },
   // app.css line 431 — neutral badge text (badge bg is base-200 74% ≈ base-200, not base-100)
   {

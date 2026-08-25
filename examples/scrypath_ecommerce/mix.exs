@@ -35,25 +35,25 @@ defmodule ScrypathEcommerce.MixProject do
     [
       {:scrypath, path: "../.."},
       {:scrypath_ops, path: "../../scrypath_ops"},
-      {:phoenix, "~> 1.8.5"},
+      {:phoenix, "~> 1.8.9"},
       {:phoenix_ecto, "~> 4.5"},
       {:ecto_sql, "~> 3.13"},
-      {:postgrex, ">= 0.0.0"},
+      {:postgrex, "~> 0.22.4"},
       {:oban, "~> 2.21"},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 1.1.0"},
+      {:phoenix_live_view, "~> 1.1.33"},
       {:lazy_html, ">= 0.1.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.8.3"},
       {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
       {:heroicons, "~> 0.5.7", app: false},
-      {:swoosh, "~> 1.16"},
-      {:req, "~> 0.5"},
+      {:swoosh, "~> 1.26.3"},
+      {:req, "~> 0.6.1"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.2"},
-      {:bandit, "~> 1.5"}
+      {:bandit, "~> 1.12.1"}
     ]
   end
 

@@ -27,7 +27,7 @@ defmodule ScrypathEcommerceWeb.Layouts do
         </script>
       </head>
       <body class={unless ops_admin_path?(@conn), do: "scrypath-demo"}>
-        <.flash_group flash={@flash} />
+        <.flash_group :if={!ops_admin_path?(@conn)} flash={@flash} />
         {@inner_content}
       </body>
     </html>

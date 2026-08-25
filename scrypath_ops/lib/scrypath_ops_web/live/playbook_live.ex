@@ -874,16 +874,13 @@ defmodule ScrypathOpsWeb.PlaybookLive do
           <div class="space-y-1.5">
             <.ops_page_header
               title={@page_title}
-              subtitle="Replay saved search probes after previewing the exact schema, query, limits, and JSON payload."
+              subtitle="Use saved, repeatable search checks: preview, run, import, or save the next one."
             />
             <.ops_workspace_mode_indicator
               mode={if @examples_mode?, do: :examples, else: :workspace}
               path={@workspace_root}
             />
           </div>
-          <.ops_link_button navigate={"#{@mount_path}/search"} variant={:ghost}>
-            Search
-          </.ops_link_button>
         </.ops_toolbar>
 
         <.ops_trail mount_path={@mount_path} current={:playbooks} />
@@ -893,7 +890,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
           kind={:warning}
           title="Non-production playbook workspace"
         >
-          Playbook runs use the same bounded search path as Search. Do not paste production secrets or PII; keep page size and schema lists within configured caps.
+          Playbooks repeat saved Search checks. Do not paste production secrets or PII; keep page size and selected indexes within configured caps.
         </.ops_notice>
 
         <.ops_panel class="space-y-6">
@@ -914,14 +911,22 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             below.
           </p>
 
-          <.ops_empty_state :if={@workspace_files == []} title="No playbooks in this folder">
-            Import JSON below, or capture a successful probe from Search. Schema reference: <a
-              class="link link-hover"
-              href={@playbook_schema_doc.primary}
-            >
-              playbook-schema-v1.md
-            </a>.
-          </.ops_empty_state>
+          <.ops_empty_hero
+            :if={@workspace_files == []}
+            title="No playbooks yet"
+            icon="hero-book-open"
+            data-testid="playbooks-empty-hero"
+          >
+            Save a useful search check, or import a playbook JSON file below.
+            <:actions>
+              <.ops_link_button href="#playbook-import" variant={:primary}>
+                Import JSON
+              </.ops_link_button>
+              <.ops_link_button navigate={"#{@mount_path}/search"} variant={:default}>
+                Open Search
+              </.ops_link_button>
+            </:actions>
+          </.ops_empty_hero>
 
           <.ops_object_list :if={@catalog_entries != []} class="max-w-3xl">
             <.ops_object_item
@@ -943,7 +948,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   <.ops_button
                     phx-click="load"
                     phx-value-name={row.name}
-                    variant={:ghost}
+                    variant={:default}
                     size={:xs}
                   >
                     Load preview
@@ -957,18 +962,18 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                     :if={@schema_allowlist != [] && Keyword.has_key?(@scrypath_opts, :backend)}
                     phx-click="run_now"
                     phx-value-name={row.name}
-                    variant={:ghost}
+                    variant={:default}
                     size={:xs}
                     aria-label={"Run #{row.name} without preview"}
                   >
                     Run without preview
                   </.ops_button>
                 </.ops_action_group>
-                <.ops_action_group :if={@workspace_writable?} tone={:advanced}>
+                <.ops_action_group :if={@workspace_writable?} tone={:secondary}>
                   <.ops_button
                     phx-click="dup_open"
                     phx-value-name={row.name}
-                    variant={:ghost}
+                    variant={:default}
                     size={:xs}
                   >
                     Duplicate
@@ -976,7 +981,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   <.ops_button
                     phx-click="rename_open"
                     phx-value-name={row.name}
-                    variant={:ghost}
+                    variant={:default}
                     size={:xs}
                   >
                     Rename
@@ -998,11 +1003,11 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
           <div class="divider" />
 
-          <section class="space-y-4">
-            <.ops_heading level={2}>Import playbook JSON</.ops_heading>
+          <section id="playbook-import" aria-labelledby="playbook-import-heading" class="space-y-4">
+            <.ops_heading level={2} id="playbook-import-heading">Import playbook JSON</.ops_heading>
             <.ops_upload_box
               label="Upload playbook file"
-              hint={"JSON only, max #{@max_import_bytes} bytes. Preview is required before running."}
+              hint={"JSON only, max #{@max_import_bytes} bytes. Preview it before running."}
               class="max-w-xl"
             >
               <.form for={%{}} phx-submit="import_upload" class="space-y-3">
@@ -1038,9 +1043,9 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               class="text-ops-sm text-base-content/70"
               data-testid="playbook-preview-marker"
             >
-              Validated playbook preview
+              Playbook preview is ready
             </p>
-            <.ops_data_card title="Playbook summary" subtitle="Review this before running.">
+            <.ops_data_card title="Playbook summary" subtitle="Check this before running.">
               <dl class="grid gap-2 text-ops-body sm:grid-cols-2">
                 <div :for={{label, value} <- playbook_summary(@draft_playbook)}>
                   <dt class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/60">

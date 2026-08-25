@@ -295,7 +295,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     >
       <.ops_page_header
         title="Sync and drift"
-        subtitle="Check one schema before you promote it: reconcile, compare drift, then swap."
+        subtitle="Prepare a schema for promotion: reconcile its state, compare declared and live contracts, then use the gated swap."
       />
 
       <.ops_trail mount_path={@mount_path} current={:sync_drift} class="mt-4" />
@@ -350,7 +350,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         <.ops_section
           id="sync-reconcile-heading"
           title="Sync & queue posture"
-          subtitle="The fast reconcile check answers whether Scrypath can see queue and backend posture for this schema."
+          subtitle="Confirm the current sync and queue state for this schema."
           meta={if @reconcile_loaded_at, do: "last loaded #{format_dt(@reconcile_loaded_at)}"}
         >
           <:actions>
@@ -369,7 +369,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             <tbody>
               <tr>
                 <th scope="row" class="font-medium align-top">Index</th>
-                <td><.ops_inline_code>{@reconcile_result.index}</.ops_inline_code></td>
+                <td>
+                  <.ops_inline_code>{@reconcile_result.index}</.ops_inline_code>
+                </td>
               </tr>
               <tr>
                 <th scope="row" class="font-medium align-top">Mode</th>
@@ -404,11 +406,15 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         <.ops_section
           id="sync-drift-heading"
           title="Index contract (declared vs live)"
-          subtitle="This check compares declared schema settings with the live Meilisearch index contract."
+          subtitle="Compare the declared schema contract with the live Meilisearch index before promoting."
           meta={if @drift_loaded_at, do: "last loaded #{format_dt(@drift_loaded_at)}"}
         >
           <:actions>
-            <.ops_button phx-click="load_drift" phx-disable-with="Loading…" disabled={@drift_loading}>
+            <.ops_button
+              phx-click="load_drift"
+              phx-disable-with="Loading…"
+              disabled={@drift_loading}
+            >
               Load / refresh contract drift
             </.ops_button>
           </:actions>
@@ -465,7 +471,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               </tr>
             </tbody>
           </.ops_signal_table>
-          <.ops_data_card :if={@drift_result && !@drift_loading} title="Contract dimensions" class="mt-3">
+          <.ops_data_card
+            :if={@drift_result && !@drift_loading}
+            title="Contract dimensions"
+            class="mt-3"
+          >
             <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               <.ops_tone_chip
                 :for={{label, match?} <- drift_dimension_rows(@drift_result)}
@@ -482,7 +492,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         <.ops_section
           id="sync-advanced-recovery-heading"
           title="Advanced recovery"
-          subtitle="Promotion is intentionally separate from read-only drift checks. Use it only after posture and failed-sync signals are quiet."
+          subtitle="Promote only after the read-only checks, posture, and failed-sync signals are clear."
         >
           <.ops_verdict
             kind={promotion_readiness_kind(@reconcile_result, @drift_result)}
@@ -490,13 +500,12 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             headline={promotion_readiness_headline(@reconcile_result, @drift_result)}
             class="mb-3"
           >
-            The preflight above is the source of truth: reconcile must be loaded and contract
-            drift clean before the gated swap is safe.
+            Reconcile must be loaded and contract drift must be clean before the gated swap is safe.
           </.ops_verdict>
           <.ops_action_group tone={:advanced}>
             <p class="max-w-xl text-ops-body text-base-content/75">
-              Swap the prepared target index into the live alias for <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>. This runs the existing gated
-              recovery path and refreshes loaded checks afterward.
+              Promote the prepared target index to the live alias for <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>. This gated,
+              irreversible step refreshes the loaded checks afterward.
             </p>
             <.ops_button phx-click="swap_live" phx-disable-with="Swapping...">
               Swap live index

@@ -1,0 +1,36 @@
+# Zero-touch verification override. The verifier stays entirely inside the
+# Compose network: no host database/search/web ports and no host BEAM/Node
+# toolchain are required.
+services:
+  web:
+    ports: !reset []
+    command: ["sh", "./docker-e2e-entrypoint.sh"]
+    environment:
+      SCRYPATH_OPS_PLAYBOOK_DIR: /app/examples/scrypath_ecommerce/priv/playbooks
+    volumes:
+      - e2e_playbooks:/app/examples/scrypath_ecommerce/priv/playbooks
+    init: true
+
+  browser:
+    build:
+      context: ../..
+      dockerfile: examples/scrypath_ecommerce/Dockerfile.e2e
+      args:
+        PLAYWRIGHT_VERSION: ${PLAYWRIGHT_VERSION:-1.60.0}
+    environment:
+      CI: "1"
+      E2E_SCOPE: ${E2E_SCOPE:-focused}
+      PLAYWRIGHT_BASE_URL: http://web:4002
+      OPS_UI_LLM_JUDGE: ${OPS_UI_LLM_JUDGE:-0}
+      OPS_UI_LLM_JUDGE_REQUIRED: ${OPS_UI_LLM_JUDGE_REQUIRED:-0}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    depends_on:
+      web:
+        condition: service_healthy
+    volumes:
+      - e2e_playbooks:/app/examples/scrypath_ecommerce/priv/playbooks
+    init: true
+    ipc: host
+
+volumes:
+  e2e_playbooks:
