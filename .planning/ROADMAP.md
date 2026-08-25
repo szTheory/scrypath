@@ -122,9 +122,16 @@ Plans:
   5. The final evidence records four ordered, graph-local commits and explains every manifest/lockfile change, with each required gate passing before the following batch began.
 
 **Plans**: 0/3 plans executed
+**Wave 1**
 
 - [ ] 147-01-PLAN.md
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 147-02-PLAN.md
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 147-03-PLAN.md
 
 ## Progress
