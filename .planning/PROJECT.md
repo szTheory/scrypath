@@ -8,21 +8,9 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Milestone: v1.36 Dependency Security Remediation
+## Current Mode: release-train idle
 
-**Goal:** Clear the reproduced dependency advisories across all four independent Mix dependency graphs while preserving behavior and release confidence.
-
-**Target batches:**
-- Root Scrypath HTTP client dependencies.
-- Legacy Phoenix example, including Ecto/Decimal alignment.
-- ScrypathOps web/client dependencies.
-- Ecommerce example web/client dependencies.
-
-**Boundary:** This remains dependency-security maintenance with one approved operational addition: Phase 147 may add a reusable Docker-only mounted integration/E2E verifier so required service and browser proof no longer needs human setup or UAT. Keep library runtime/public API/UI scope closed, preserve ordered graph ownership, prefer recorded fixed-compatible versions over package-head upgrades, and close only after all four projects no longer report the recorded advisories.
-
-## Current Mode: security maintenance
-
-**Goal:** Restore a clean dependency-security posture and make mounted ecommerce proof zero-touch without broadening Scrypath's runtime/product API or weakening the green-main release train.
+**Goal:** Keep `main` green and avoid speculative milestone reopening. Start new work only for concrete maintenance, support/proof drift, production bug evidence, reviewed outside-adopter evidence, or an explicit strategic wedge.
 
 **Recent closed outcomes:**
 - Phase 147 ecommerce mounted-Ops remediation and closure: bounded the ecommerce web/client graph, added hermetic focused/full Docker E2E verification and an always-running focused CI gate, passed exact-SHA service/browser proof, and closed the four-graph audit ledger with no human UAT.
@@ -185,7 +173,7 @@ Phase 97 through 99 banned capability classes:
 
 The public website launch surface now exists under `website/` and is deployed to GitHub Pages as a companion front door, not a HexDocs replacement.
 
-Current planning files: **`.planning/{ROADMAP,REQUIREMENTS,STATE}.md`** plus archives under **`.planning/milestones/`**.
+Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under **`.planning/milestones/`**. The next approved milestone creates a fresh `REQUIREMENTS.md`.
 
 ## Next Milestone Goals
 
@@ -197,7 +185,9 @@ Current planning files: **`.planning/{ROADMAP,REQUIREMENTS,STATE}.md`** plus arc
 
 ## Last shipped milestone
 
-**v1.35 - Brand System & Logo Identity** (shipped **2026-06-24**, archived in-repo **2026-07-11**). Owner-initiated brand wedge: copper `/` `scry/path` identity, transparent SVG family, self-contained brandbook, subset fonts/tokens, README/ScrypathOps/website adoption, and direct-completion archive - see **`milestones/v1.35-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**v1.36 — Dependency Security Remediation** (shipped and archived **2026-08-25**). Four audit-clean Mix graphs, behavior-preserving Req/Phoenix/Ecto/Ops proof, a zero-touch mounted ecommerce verifier, and strict required `ecommerce-mounted-smoke` enforcement — see **`milestones/v1.36-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+
+**Prior:** **v1.35 - Brand System & Logo Identity** (shipped **2026-06-24**, archived in-repo **2026-07-11**). Owner-initiated brand wedge: copper `/` `scry/path` identity, transparent SVG family, self-contained brandbook, subset fonts/tokens, README/ScrypathOps/website adoption, and direct-completion archive - see **`milestones/v1.35-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **Prior:** **v1.34 - Both-Themes Perfection (Dark Signature + AA Gate)** (shipped **2026-06-29**, archived in-repo **2026-07-11**). Owner-initiated both-theme ScrypathOps polish wedge: dark signature, light parity, AA hard gate, browser proof, 40-shot matrix, before/after gallery, milestone audit, and approved Human UAT - see **`milestones/v1.34-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
@@ -337,4 +327,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-25 - Phase 147 and v1.36 dependency remediation complete*
+*Last updated: 2026-08-25 after v1.36 milestone archival*

@@ -1,6 +1,6 @@
 ---
 phase: 144-root-http-client-dependency-remediation
-verified: 2026-08-22T16:45:00Z
+verified: 2026-08-25T20:12:30Z
 status: passed
 score: 7/7 must-haves verified
 behavior_unverified: 0
@@ -14,9 +14,9 @@ deferred:
 # Phase 144: Root HTTP Client Dependency Remediation Verification Report
 
 **Phase Goal:** Maintainers can use the root Scrypath dependency graph without its recorded Req, Mint, hpax, or Plug advisories while retaining covered Req-backed behavior.
-**Verified:** 2026-08-22T16:45:00Z
+**Verified:** 2026-08-25T20:12:30Z
 **Status:** passed
-**Re-verification:** No — initial verification
+**Re-verification:** Yes — summary requirement attribution was repaired after the initial verification. Current checked-lock/audit and focused Req/telemetry evidence remain green; no implementation changed.
 
 ## Goal Achievement
 

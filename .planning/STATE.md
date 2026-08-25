@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.36
 milestone_name: Dependency Security Remediation
-current_phase: 147
-status: completed
-stopped_at: Phase 147 verified complete
-last_updated: "2026-08-25T19:10:54.851Z"
+status: Awaiting next milestone
+stopped_at: Phase 147 context gathered
+last_updated: "2026-08-25T20:13:36.914Z"
 last_activity: 2026-08-25
-last_activity_desc: Phase 147 complete
+last_activity_desc: Milestone v1.36 completed and archived
 progress:
   total_phases: 4
   completed_phases: 4
   total_plans: 12
   completed_plans: 12
+current_phase: 147
 current_phase_name: ecommerce-mounted-ops-remediation-and-closure-evidence
 ---
 
@@ -21,22 +21,24 @@ current_phase_name: ecommerce-mounted-ops-remediation-and-closure-evidence
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** v1.36 complete — all four dependency graphs verified
+**Current Focus:** Release train idle — no active milestone
 
 ## Current Position
 
-Phase: 147
-Plan: 3 of 3
-Status: All phases complete
-Last activity: 2026-08-25 — Phase 147 complete
+Phase: Milestone v1.36 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-08-25 — Milestone v1.36 completed and archived
 
 ## Completed Milestones
+
+**v1.36 Dependency Security Remediation** (phases 144-147) - COMPLETE and archived 2026-08-25. All 12 plans and 10 requirements passed; four dependency graphs are audit-clean; `ecommerce-mounted-smoke` is a strict required `main` context with clean-run proof. Archive files: `.planning/milestones/v1.36-ROADMAP.md`, `.planning/milestones/v1.36-REQUIREMENTS.md`, `.planning/milestones/v1.36-MILESTONE-AUDIT.md`, and `.planning/milestones/v1.36-phases/`.
 
 **v1.35 Brand System & Logo Identity** (phases 137-143) - COMPLETE 2026-06-24, committed `fcb8fc7`, archived 2026-07-11. Built directly, not through GSD plan/execute artifacts; phase dirs 138-143 and PLAN/SUMMARY files do not exist on disk by design. `roadmap.analyze` may show v1.35 at 0%; that is a known bookkeeping artifact, not incomplete work. Delivered: logo direction C = **scry/path with a copper `/` separator** (routed-S killed); full transparent/no-cage SVG family in `brandbook/assets/`; self-contained HTML brand book with subset woff2 fonts and tokens; adoption across ScrypathOps, website, and root README. Archive files: `.planning/milestones/v1.35-ROADMAP.md`, `.planning/milestones/v1.35-REQUIREMENTS.md`, `.planning/milestones/v1.35-MILESTONE-AUDIT.md`.
 
 **v1.34 Both-Themes Perfection - Dark Signature + AA Gate** (phases 128-136) - COMPLETE 2026-06-29, archived 2026-07-11. 9/9 phases and 27/27 plans completed; DUALVERIFY-01 passed with approved Human UAT. Archive files: `.planning/milestones/v1.34-ROADMAP.md`, `.planning/milestones/v1.34-REQUIREMENTS.md`, `.planning/milestones/v1.34-MILESTONE-AUDIT.md`.
 
-## Current Milestone
+## Last Completed Milestone
 
 v1.36 Dependency Security Remediation is complete across Phases 144-147: root, legacy Phoenix, ScrypathOps, then ecommerce mounted Ops. Four ordered remediation batches are audit-clean, and the ecommerce mounted integration now has zero-touch Docker verification with no human UAT requirement.
 
@@ -104,7 +106,7 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 
 ### Todos
 
-- Pending security maintenance: remediate the reproduced dependency advisories in four isolated batches; triage is complete, remediation remains pending (`.planning/todos/pending/2026-08-16-remediate-dependency-security-advisories.md`).
+- Completed security maintenance: the four dependency-advisory batches and closure evidence shipped in v1.36 (`.planning/todos/completed/2026-08-16-remediate-dependency-security-advisories.md`).
 - Keep future runtime breadth closed unless concrete production bug evidence, reviewed outside-adopter evidence, or an explicit strategic decision justifies it.
 - Completed follow-up: Rewrite Ops UI microcopy around operator JTBD (`.planning/todos/completed/2026-07-01-rewrite-ops-ui-microcopy-around-operator-jtbd.md`).
 - Completed follow-up: Restructure Search playground workflow (`.planning/todos/completed/2026-07-01-restructure-search-playground-workflow.md`).
@@ -213,3 +215,7 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 **Last session:** 2026-08-25T16:47:39.041Z
 **Stopped at:** Phase 147 context gathered
 **Resume file:** .planning/phases/147-ecommerce-mounted-ops-remediation-and-closure-evidence/147-CONTEXT.md
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone
