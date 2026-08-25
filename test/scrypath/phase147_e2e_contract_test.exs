@@ -5,6 +5,7 @@ defmodule Scrypath.Phase147E2EContractTest do
 
   @example "examples/scrypath_ecommerce"
   @makefile File.read!(Path.join(@example, "Makefile"))
+  @compose_base File.read!(Path.join(@example, "compose.yaml"))
   @compose File.read!(Path.join(@example, "compose.e2e.yaml"))
   @runner File.read!(Path.join(@example, "scripts/verify-e2e.sh"))
   @browser_runner File.read!(Path.join(@example, "docker-playwright.sh"))
@@ -26,6 +27,9 @@ defmodule Scrypath.Phase147E2EContractTest do
 
     assert @compose =~ "e2e_playbooks:/app/examples/scrypath_ecommerce/priv/playbooks"
     assert @compose =~ "condition: service_healthy"
+
+    assert @compose_base =~ "start_period: 5m"
+    assert @compose_base =~ "retries: 60"
 
     assert @runner =~ "--abort-on-container-exit"
     assert @runner =~ "--exit-code-from browser"

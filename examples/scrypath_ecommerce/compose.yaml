@@ -53,4 +53,8 @@ services:
       test: ["CMD", "curl", "--silent", "--fail", "http://127.0.0.1:4002/"]
       interval: 2s
       timeout: 5s
+      # A clean CI runner compiles both Phoenix applications and builds both
+      # asset trees before starting the server. Keep that cold initialization
+      # separate from the steady-state health failure budget below.
+      start_period: 5m
       retries: 60
