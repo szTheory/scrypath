@@ -371,9 +371,13 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
     test "phase105-e2e exports evidence env and runs always-on summary script" do
       ci = File.read!(@ci_yml)
+      phase105 = workflow_job_block(ci, "phase105-e2e")
 
       assert ci =~
                "PHASE105_EVIDENCE_PATH: examples/scrypath_ecommerce/test-results/phase105-evidence.ndjson"
+
+      assert phase105 =~
+               "SCRYPATH_OPS_PLAYBOOK_DIR: ${{ github.workspace }}/examples/scrypath_ecommerce/priv/playbooks"
 
       assert ci =~ "PHASE105_BROWSER_CONCLUSION"
       assert ci =~ "PHASE105_LIGHT_PARITY_CONCLUSION"
