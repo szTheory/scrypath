@@ -1,9 +1,9 @@
 ---
 phase: 147
 slug: ecommerce-mounted-ops-remediation-and-closure-evidence
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: ready
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-08-25
 ---
 
@@ -19,7 +19,7 @@ created: 2026-08-25
 |----------|-------|
 | **Framework** | ExUnit/Phoenix; Playwright for advisory browser proof |
 | **Config file** | `examples/scrypath_ecommerce/mix.exs`; `playwright.config.ts` |
-| **Quick run command** | `cd examples/scrypath_ecommerce && mix test <focused-existing-test>` (exact test selected during planner inspection) |
+| **Quick run command** | `cd examples/scrypath_ecommerce && mix test test/scrypath_ecommerce_web/controllers/page_controller_test.exs` |
 | **Full suite command** | `cd examples/scrypath_ecommerce && mix precommit` plus the required root suite from `CONTRIBUTING.md` |
 | **Estimated runtime** | To be measured and recorded with the closure receipts |
 
@@ -27,9 +27,10 @@ created: 2026-08-25
 
 ## Sampling Rate
 
-- **After every dependency edit:** Inspect the ecommerce manifest/lock diff and run isolated checked-lock and mounted-path receipts.
-- **Before the ecommerce commit:** Run the complete deterministic gate bundle and stop on any drift or failure.
-- **After the ecommerce commit:** Run exact-SHA detached proof, validate safe cleanup, then capture the four-graph same-window closure rows.
+- **After the Plan 01 dependency edit:** Inspect the ecommerce manifest/lock diff and run isolated checked-lock and canonical mounted-path receipts.
+- **Before the Plan 01 commit:** Run the complete deterministic and required-service gate bundle and stop on any drift or failure.
+- **Wave 2:** Run exact-SHA detached proof and cleanup before classifying the focused browser subset.
+- **Wave 3:** Capture the four-graph same-window closure rows before changing requirement/todo closure state.
 - **Before `$gsd-verify-work`:** Required deterministic and service evidence must pass; browser evidence must be classified truthfully as passed, failed, or unavailable.
 - **Max feedback latency:** Record measured command durations; no three consecutive implementation tasks may lack automated evidence.
 
@@ -39,11 +40,11 @@ created: 2026-08-25
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 147-01-01 | 01 | 1 | SEC-04 | T-147-01, T-147-02 | Approved bounds resolve without advisories and mounted dependencies resolve to the intended local sources | resolver/integration | Isolated `mix deps.get`, range assertion, `Mix.Project.deps_paths/0`, and `mix hex.audit` | ❌ W0 receipt commands | ⬜ pending |
-| 147-01-02 | 01 | 1 | COMPAT-01 | T-147-01 | Ecommerce compile, focused regression, and precommit checks pass before commit | integration/regression | `mix compile --warnings-as-errors`, selected focused test, and `mix precommit` in `examples/scrypath_ecommerce` | ✅ commands exist | ⬜ pending |
-| 147-02-01 | 02 | 2 | COMPAT-03 | T-147-03 | Browser proof is reported separately and never upgraded from unavailable to passing | browser/manual classification | `npx playwright test e2e/harness.spec.ts e2e/operator.spec.ts --workers=1` when prerequisites exist | ✅ specs/config exist | ⬜ pending |
-| 147-02-02 | 02 | 2 | EVID-01 | T-147-03, T-147-05 | Each graph has a dated checked-lock/audit row with selected versions and honest outcome | evidence | `mix deps.get --check-locked && mix hex.audit` in root, legacy Phoenix, ScrypathOps, and ecommerce | ❌ W0 ledger | ⬜ pending |
-| 147-02-03 | 02 | 2 | EVID-02 | T-147-03, T-147-04 | Ordered graph-local commits and causal manifest/lock changes are auditable without unsafe cleanup | repository/evidence | `git diff`, `git diff-tree`, `git merge-base --is-ancestor`, exact-SHA detached proof, and cleanup assertions | ❌ W0 ledger | ⬜ pending |
+| 147-01-01 | 01 | 1 | SEC-04, COMPAT-01 | T-147-01, T-147-02, T-147-06 | Six approved bounds, causal lock, canonical mounted sources, ecommerce gates, required service preparation, and root gates pass before the atomic commit | tracer/resolver/integration | Checked lock; `Mix.Project.deps_paths/0`; `mix test test/scrypath_ecommerce_web/controllers/page_controller_test.exs`; `mix precommit`; `mix e2e.prepare`; unsuppressed audit; named root gates | ✅ existing Mix/ExUnit commands | ⬜ pending |
+| 147-02-01 | 02 | 2 | SEC-04 | T-147-02, T-147-04, T-147-05 | Exact implementation SHA fresh-resolves in range, uses canonical mounted paths, passes required proof, and cleans up safely | resolver/integration/evidence | Detached lockless `mix deps.get`; nine-package range assertion; mounted-path assertion; focused/full/service/audit gates; cleanup/preservation assertions | ✅ receipt authored in task | ⬜ pending |
+| 147-02-02 | 02 | 2 | COMPAT-03 | T-147-03, T-147-05 | Browser proof is separately classified and never upgraded from unavailable or retry-flaky to clean passing | browser/classification | `npx playwright test e2e/harness.spec.ts e2e/operator.spec.ts --workers=1` when exact-SHA prerequisites exist; deterministic ledger-structure check always runs | ✅ specs/config exist | ⬜ pending |
+| 147-03-01 | 03 | 3 | COMPAT-01, EVID-01, EVID-02 | T-147-03, T-147-05 | Four ordered graph rows are nonempty/audit-clean and the topology names four batches with exact commit roles | repository/evidence | `mix deps.get --check-locked && mix hex.audit` in root, legacy, Ops, ecommerce; `git merge-base --is-ancestor`; `git diff-tree`; ledger structure check | ✅ receipt authored in task | ⬜ pending |
+| 147-03-02 | 03 | 3 | EVID-02 | T-147-03, T-147-07 | Closure truth and todo state advance only after every ledger predicate passes | planning/evidence | File-location, ordered-batch wording, requirement-checkbox, protected-file, and ledger closure assertions | ✅ existing planning files | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -51,9 +52,9 @@ created: 2026-08-25
 
 ## Wave 0 Requirements
 
-- [ ] Define a non-persistent receipt block that exports both isolation variables for every ecommerce proof command.
-- [ ] Define a compact, redacted four-graph closure matrix and ordered-batch topology ledger in phase evidence.
-- [ ] Inspect existing ecommerce tests and select the narrowest route/asset/link regression command; do not create a speculative test.
+- [x] No new test scaffold is required: `page_controller_test.exs` is the inspected narrow route/asset/link contract.
+- [x] Plan 01 defines the non-persistent two-variable isolation receipt and stop ordering.
+- [x] Plans 02-03 define the compact `147-CLOSURE-EVIDENCE.md` schema, exact-SHA cleanup receipt, four-graph matrix, and topology ledger.
 
 ---
 
@@ -61,18 +62,17 @@ created: 2026-08-25
 
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
-| Browser proof classification | COMPAT-03 | Browser and service prerequisites may be absent in the execution environment | Record prerequisites and command; classify the outcome as passed, failed, or unavailable without treating unavailable as required proof passing |
-| Four-graph closure review | EVID-01, EVID-02 | Maintainer must audit graph-local history and the explanation for each causal manifest/lockfile change | Review dated rows, lock hashes, selected versions, audit output, four ordered commits, and the before-next-batch gate evidence |
+| None | — | Every required phase predicate has an automated command or fail-closed evidence assertion; browser availability is classified by the executor rather than manually approved | — |
 
 ---
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verification or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verification
-- [ ] Wave 0 covers all missing receipt and ledger references
-- [ ] No watch-mode flags
-- [ ] Feedback latency is measured and acceptable
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All five tasks have `<automated>` verification
+- [x] Sampling continuity: every task has automated evidence
+- [x] Wave 0 covers receipt, focused-test, ledger, and topology references
+- [x] No watch-mode flags
+- [x] Feedback latency is measured in task summaries; required long gates are sequenced after causal checks
+- [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
