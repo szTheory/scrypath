@@ -97,38 +97,40 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
   end
 
   describe "INFRA-03 D-13: ci.yml action pins on Node 24 runtime" do
-    test "ci.yml uses actions/checkout@v6 everywhere" do
+    test "ci.yml uses actions/checkout@v7 everywhere" do
       yml = File.read!(@ci_yml)
       refute yml =~ "actions/checkout@v4", "expected no legacy checkout@v4 pins"
-      assert yml =~ "actions/checkout@v6"
+      refute yml =~ "actions/checkout@v6", "expected no legacy checkout@v6 pins"
+      assert yml =~ "actions/checkout@v7"
     end
 
-    test "ci.yml uses actions/cache@v5 everywhere" do
+    test "ci.yml uses actions/cache@v6 everywhere" do
       yml = File.read!(@ci_yml)
       refute yml =~ "actions/cache@v4", "expected no legacy cache@v4 pins"
-      assert yml =~ "actions/cache@v5"
+      refute yml =~ "actions/cache@v5", "expected no legacy cache@v5 pins"
+      assert yml =~ "actions/cache@v6"
     end
 
-    test "ci.yml has at least 4 checkout@v6 references (test matrix + quality + phase5-verification + phase13-verification)" do
+    test "ci.yml has at least 4 checkout@v7 references (test matrix + quality + phase5-verification + phase13-verification)" do
       count =
         @ci_yml
         |> File.read!()
-        |> String.split("actions/checkout@v6")
+        |> String.split("actions/checkout@v7")
         |> length()
         |> Kernel.-(1)
 
-      assert count >= 4, "expected >= 4 checkout@v6 refs in ci.yml, got #{count}"
+      assert count >= 4, "expected >= 4 checkout@v7 refs in ci.yml, got #{count}"
     end
 
-    test "ci.yml has at least 4 cache@v5 references" do
+    test "ci.yml has at least 4 cache@v6 references" do
       count =
         @ci_yml
         |> File.read!()
-        |> String.split("actions/cache@v5")
+        |> String.split("actions/cache@v6")
         |> length()
         |> Kernel.-(1)
 
-      assert count >= 4, "expected >= 4 cache@v5 refs in ci.yml, got #{count}"
+      assert count >= 4, "expected >= 4 cache@v6 refs in ci.yml, got #{count}"
     end
   end
 
@@ -266,9 +268,12 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       refute ci =~ "actions/cache@v4",
              "legacy actions/cache@v4 pin found — Node 20 deprecation risk"
 
-      # checkout went to @v6, cache went to @v5 — neither should sit at @v5/@v6 respectively
+      # checkout is now @v7 and cache is @v6; retain explicit regression checks.
       refute ci =~ "actions/checkout@v5",
-             "actions/checkout should be pinned to @v6, not @v5"
+             "actions/checkout should be pinned to @v7, not @v5"
+
+      refute ci =~ "actions/checkout@v6",
+             "actions/checkout should be pinned to @v7, not @v6"
     end
 
     test "UAT-06: docs/releasing.md ships §Release parity gate section to HexDocs" do
