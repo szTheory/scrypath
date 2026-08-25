@@ -3,18 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.36
 milestone_name: Dependency Security Remediation
 current_phase: 147
-current_phase_name: Ecommerce Mounted-Ops Remediation and Closure Evidence
-status: executing
-stopped_at: Phase 147 context gathered
-last_updated: "2026-08-25T17:21:17.056Z"
-last_activity: 2026-08-24
-last_activity_desc: Phase 146 complete, transitioned to Phase 147
+status: completed
+stopped_at: Phase 147 verified complete
+last_updated: "2026-08-25T19:10:54.851Z"
+last_activity: 2026-08-25
+last_activity_desc: Phase 147 complete
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 12
-  completed_plans: 9
-  percent: 75
+  completed_plans: 12
+current_phase_name: ecommerce-mounted-ops-remediation-and-closure-evidence
 ---
 
 # Project State
@@ -22,14 +21,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 146 — ScrypathOps Web/Client Remediation
+**Current Focus:** v1.36 complete — all four dependency graphs verified
 
 ## Current Position
 
-Phase: 147 — Ecommerce Mounted-Ops Remediation and Closure Evidence
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-08-24 — Phase 146 complete, transitioned to Phase 147
+Phase: 147
+Plan: 3 of 3
+Status: All phases complete
+Last activity: 2026-08-25 — Phase 147 complete
 
 ## Completed Milestones
 
@@ -39,7 +38,7 @@ Last activity: 2026-08-24 — Phase 146 complete, transitioned to Phase 147
 
 ## Current Milestone
 
-v1.36 Dependency Security Remediation is planned across Phases 144-147: root, legacy Phoenix, ScrypathOps, then ecommerce mounted Ops. Execute one graph-local commit per ordered batch and stop on any failed required gate; distinguish required deterministic proof from advisory service/browser evidence. Postgrex changes remain blocked until live advisory and Hex registry evidence confirm a stable published fixed release.
+v1.36 Dependency Security Remediation is complete across Phases 144-147: root, legacy Phoenix, ScrypathOps, then ecommerce mounted Ops. Four ordered remediation batches are audit-clean, and the ecommerce mounted integration now has zero-touch Docker verification with no human UAT requirement.
 
 ## v1.35 Brand Milestone Context (archived)
 
