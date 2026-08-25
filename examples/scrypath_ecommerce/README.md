@@ -157,7 +157,7 @@ docker compose -f compose.yaml -f compose.dev.yaml up
 Add `-f compose.host-ports.yaml` only when host tools need direct Postgres or
 Meilisearch access. If dependency manifests change, rebuild once with
 `docker compose build web`. For the longer maintainer runbook, see
-[`docs/local-demo-docker-dx.md`](../../docs/local-demo-docker-dx.md).
+[`docs/local-demo-docker-dx.md`](docs/local-demo-docker-dx.md).
 
 ## Guided click-through
 
