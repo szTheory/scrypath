@@ -181,9 +181,16 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 - **Milestone:** v1.37 Code Quality Ratchet.
 - **Goal:** Systematically raise non-UI engineering quality until remaining opportunities are low-leverage, controversial, or unsupported by evidence.
-- **Current phase:** 148 — Quality Baseline.
+- **Current phase:** 158 — Ratchet Closeout complete; ready for milestone audit and ship.
 - **Constraints:** Preserve public APIs/behavior; use evidence-led, risk/leverage prioritization; no cosmetic sweep; exclude ScrypathOps presentation/UX/visual review.
 - **Scope guard:** autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, and new UI surfaces remain out of scope.
+
+**v1.37 implementation outcome (2026-08-26):** runtime input and secret
+boundaries hardened; runtime xref cycles reduced to zero; write/search/settings/
+failed-work responsibilities extracted behind compatible facades; canonical
+verification capabilities and a lean SHA-pinned CI graph established; live
+Meilisearch, package, release, static-analysis, and compatibility proof passed;
+measured pure hot paths did not justify speculative optimization.
 
 ## Last shipped milestone
 
@@ -215,7 +222,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Planning window
 
-**Active milestone:** v1.37 Code Quality Ratchet. Phases 148-158 cover the approved 31 runtime-safety, architecture, test-quality, CI/release, performance, and closeout requirements. The sequence starts with an evidence ledger and characterization baseline, resolves safety risks before refactors, then closes with measurement and disposition evidence. v1.36 remains complete and archived; v1.35 remains complete from direct evidence, and missing phase artifacts for phases 138-143 must not be treated as work to resume.
+**Active milestone:** v1.37 Code Quality Ratchet implementation is complete across Phases 148-158 and all 31 requirements; milestone audit/ship is next. The evidence ledger records implemented fixes and the diminishing-return boundary. v1.36 remains complete and archived; v1.35 remains complete from direct evidence, and missing phase artifacts for phases 138-143 must not be treated as work to resume.
 
 ## Requirements
 

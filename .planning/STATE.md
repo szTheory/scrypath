@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.37
 milestone_name: Code Quality Ratchet
-status: Ready to plan Phase 148
-stopped_at: Milestone v1.37 roadmap approved
-last_updated: "2026-08-26T00:00:00.000Z"
+status: Milestone implementation complete; ready for audit and ship
+stopped_at: Phase 158 quality ratchet closeout verified
+last_updated: "2026-08-26T12:00:00.000-04:00"
 last_activity: 2026-08-26
 last_activity_desc: v1.37 roadmap and requirements materialized
 progress:
   total_phases: 11
-  completed_phases: 0
+  completed_phases: 11
   total_plans: 0
   completed_plans: 0
-current_phase: 148
-current_phase_name: quality-baseline
+current_phase: 158
+current_phase_name: ratchet-closeout
 ---
 
 # Project State
@@ -21,14 +21,14 @@ current_phase_name: quality-baseline
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** v1.37 Code Quality Ratchet — Phase 148 Quality Baseline
+**Current Focus:** v1.37 Code Quality Ratchet — implementation complete; milestone audit/ship next
 
 ## Current Position
 
-Phase: 148 of 158 (v1.37)
+Phase: 158 of 158 (v1.37)
 Plan: —
-Status: Ready to plan
-Last activity: 2026-08-26 — v1.37 roadmap and requirements materialized
+Status: Complete and verified
+Last activity: 2026-08-26 — non-UI quality ratchet implemented and verified
 
 ## Active Milestone: v1.37 Code Quality Ratchet
 
@@ -36,11 +36,19 @@ Last activity: 2026-08-26 — v1.37 roadmap and requirements materialized
 
 **Scope:** Runtime safety, internal architecture, tests, Mix tasks, examples, CI/CD, release proof, and measured performance. Preserve public APIs and behavior. ScrypathOps presentation/UX/visual review is excluded.
 
-**Current phase:** Phase 148 — establish the ranked quality ledger and executable characterization/warning baseline before safety hardening and refactors.
+**Current phase:** Phase 158 complete — all 31 requirements are implemented; no confirmed compatible high- or medium-leverage finding remains open.
 
 **Milestone sequence:** 148 quality baseline → 149 runtime safety → 150 dependency leaf → 151 write result → 152 options/settings → 153 search/failed work → 154 verification commands → 155 CI proof → 156 supply chain/release → 157 performance evidence → 158 closeout.
 
 **Quality gates:** Every phase requires verification and code review; runtime safety plus CI/supply-chain phases also require security review.
+
+**Closeout evidence:** canonical core, package, repository-contract, compatibility,
+deep-quality, and live Meilisearch backend commands passed; actionlint and immutable
+action pins passed; runtime xref reports no cycles. See `.planning/QUALITY-LEDGER.md`.
+
+**Known disposition:** the sole canonical optional-app command is
+`mix verify.ops_ui`. Keeping the case-only historical `verify.opsui` spelling
+would create colliding BEAM module names on case-insensitive filesystems.
 
 ## Completed Milestones
 
