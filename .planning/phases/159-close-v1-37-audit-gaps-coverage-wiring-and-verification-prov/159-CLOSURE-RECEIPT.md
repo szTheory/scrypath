@@ -8,8 +8,8 @@ and it does not publish a Hex package or reopen release-parity work.
 
 | Field | Value |
 | --- | --- |
-| Local source SHA | `7409ee87b4c3c355644fb2b5a60fc271b845139c` |
-| Local evidence window (UTC) | `2026-08-26T20:33:21Z`–`2026-08-26T20:35:12Z` |
+| Local source SHA | `9dd7683f8d41526bdc81623f446e165a35ed10dc` |
+| Local evidence window (UTC) | `2026-08-26T21:05:35Z`–`2026-08-26T21:07:07Z` |
 | Git | `2.41.0` |
 | Elixir / Mix | `1.19.5` / `1.19.5` |
 | OTP | `28` (`erts-16.3`) |
@@ -25,16 +25,16 @@ logs are not retained in this receipt.
 
 | Check | Command | UTC window | Exit | Bounded result | Scope |
 | --- | --- | --- | ---: | --- | --- |
-| Core | `mix verify.core --exclude integration --exclude docs_contract` | `20:33:21Z`–`20:35:12Z` | 0 | Format, packaged-path cleanliness, warning-fatal compile, Credo, fast suite, and docs gate passed. | Required root release-train gate; service/docs-contract exclusions are explicit. |
-| Optional-dependency fence | `mix verify.no_optional_deps` | `20:33:21Z`–`20:35:12Z` | 0 | Compiled 142 files without optional dependencies, warnings fatal. | Root optional-dependency boundary. |
-| Repository contracts | `mix verify.repository_contracts` | `20:33:21Z`–`20:35:12Z` | 0 | 61 trust/repository contract tests passed. | Required workflow/repository topology. |
-| Package contract | `mix verify.package` | `20:33:21Z`–`20:35:12Z` | 0 | Release package/consumer contract suite passed. | Required package/release-source contract; no publish. |
-| Deep quality | `mix verify.deep_quality` | `20:34:00Z`–`20:35:12Z` | 0 | Optional-dependency compile, namespace fence, Hex audit, and Dialyzer completed with zero errors. | Advisory deep-analysis capability, verified locally only. |
-| Coverage producer | `mix verify.coverage` | `20:34:00Z`–`20:35:12Z` | 0 | Informational fast-suite coverage report produced under `cover/` (3.3 MiB locally). | Producer success only; hosted retention/artifact identity remains pending D-19. |
-| Xref cycles | `mix xref graph --format cycles` | `20:34:00Z`–`20:35:12Z` | 0 | `No cycles found`. | Runtime dependency graph. |
-| Workflow wiring | `mix test test/mix/tasks/workflow_wiring_test.exs --warnings-as-errors` | `20:34:00Z`–`20:35:12Z` | 0 | Focused executable workflow contract passed, including advisory coverage wiring. | CI configuration contract. |
-| Workflow syntax | `actionlint .github/workflows/ci.yml` | `20:34:00Z`–`20:35:12Z` | 0 | No syntax findings. | CI workflow syntax. |
-| Pin / least-privilege proof | immutable-pin scan over `.github/workflows/*.yml`; inspect `permissions` in `ci.yml` and `workflow-security.yml` | `20:34:00Z`–`20:35:12Z` | 0 | Every executable `uses:` ref is a 40-character SHA; both checked workflows default to `contents: read`; dependency review has only its job-scoped read permissions. | Phase 156 supply-chain and least-privilege source contract; no secrets emitted. |
+| Core | `mix verify.core --exclude integration --exclude docs_contract` | `21:05:35Z`–`21:05:54Z` | 0 | Format, packaged-path cleanliness, warning-fatal compile, Credo, fast suite, and docs gate passed. | Required root release-train gate; service/docs-contract exclusions are explicit. |
+| Optional-dependency fence | `mix verify.no_optional_deps` | `21:05:54Z`–`21:05:55Z` | 0 | Compiled 142 files without optional dependencies, warnings fatal. | Root optional-dependency boundary. |
+| Repository contracts | `mix verify.repository_contracts` | `21:05:55Z`–`21:05:56Z` | 0 | 61 trust/repository contract tests passed, including the explicit full-history checkout contract for UAT-09. | Required workflow/repository topology. |
+| Package contract | `mix verify.package` | `21:05:56Z`–`21:06:06Z` | 0 | Release package/consumer contract suite passed. | Required package/release-source contract; no publish. |
+| Deep quality | `mix verify.deep_quality` | `21:07:01Z`–`21:07:07Z` | 0 | Optional-dependency compile, namespace fence, Hex audit, and Dialyzer completed with zero errors. | Advisory deep-analysis capability, verified locally only. |
+| Coverage producer | `mix verify.coverage` | `21:06:34Z`–`21:06:53Z` | 0 | Informational fast-suite coverage report produced under `cover/` (3.3 MiB locally). | Producer success only; hosted retention/artifact identity remains pending D-19. |
+| Xref cycles | `mix xref graph --format cycles` | `21:06:53Z`–`21:06:53Z` | 0 | `No cycles found`. | Runtime dependency graph. |
+| Workflow wiring | `mix test test/mix/tasks/workflow_wiring_test.exs --warnings-as-errors` | `21:06:53Z`–`21:06:54Z` | 0 | Focused executable workflow contract passed, including advisory coverage wiring and the history checkout contract. | CI configuration contract. |
+| Workflow syntax | `actionlint .github/workflows/ci.yml` | `21:06:54Z`–`21:06:54Z` | 0 | No syntax findings. | CI workflow syntax. |
+| Pin / least-privilege proof | `find .github/workflows -name '*.yml' -type f -print0 | xargs -0 rg -o 'uses: [^ @]+@[0-9a-f]{40}'`; immutable-ref negative scan; inspect `permissions` in `ci.yml` and `workflow-security.yml` | `21:06:54Z`–`21:06:54Z` | 0 | Every executable `uses:` ref is a 40-character SHA; both checked workflows declare least-privilege permissions, with `ci.yml` defaulting to `contents: read`; dependency review has only its job-scoped read permissions. | Phase 156 supply-chain and least-privilege source contract; no secrets emitted. |
 
 The source-only proof confirms the planned coverage job remains scheduled/manual,
 informational, and non-blocking. It cannot establish that a hosted run used this
