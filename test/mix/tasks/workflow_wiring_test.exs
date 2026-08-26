@@ -201,14 +201,22 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
   end
 
   describe "canonical repository and compatibility wiring" do
+    test "every CI lane that runs the history-sensitive root suite fetches full history" do
+      ci = File.read!(@ci_yml)
+
+      for job_name <- ["core", "repository-contracts", "compatibility", "coverage"] do
+        job = workflow_job_block(ci, job_name)
+
+        assert job =~ "fetch-depth: 0",
+               "#{job_name} runs a history-sensitive root suite and must not use checkout's shallow default"
+      end
+    end
+
     test "ci defines repository-contracts and routes it to the canonical command" do
       ci = File.read!(@ci_yml)
-      repository_contracts_job = workflow_job_block(ci, "repository-contracts")
 
-      assert repository_contracts_job =~ "run: mix verify.repository_contracts"
-
-      assert repository_contracts_job =~ "fetch-depth: 0",
-             "repository contracts inspect release history and must not use checkout's shallow default"
+      assert workflow_job_block(ci, "repository-contracts") =~
+               "run: mix verify.repository_contracts"
     end
 
     test "ci defines compatibility matrix lane with floor/head tuple evidence" do
