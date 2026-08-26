@@ -414,7 +414,10 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
       assert length(Regex.scan(~r/^  coverage:$/m, ci)) == 1
       assert coverage_job =~ "name: coverage (advisory)"
-      assert coverage_job =~ "if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'"
+
+      assert coverage_job =~
+               "if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'"
+
       assert coverage_job =~ "continue-on-error: true"
       assert length(Regex.scan(~r/^\s*- run: mix verify\.coverage$/m, coverage_job)) == 1
       assert coverage_job =~ "- name: Upload informational coverage report"
