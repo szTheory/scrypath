@@ -5,12 +5,12 @@ milestone_name: Code Quality Ratchet
 current_phase: Phase 158 complete — all 31 requirements are implemented; no confirmed compatible high- or medium-leverage finding remains open.
 current_phase_name: ratchet-closeout
 status: Milestone implementation complete; ready for audit and ship
-stopped_at: Phase 148 context gathered
-last_updated: "2026-08-26T17:40:58.908Z"
+stopped_at: Phase 159 context gathered
+last_updated: "2026-08-26T18:58:42.355Z"
 last_activity: 2026-08-26
 last_activity_desc: non-UI quality ratchet implemented and verified
 progress:
-  total_phases: 1
+  total_phases: 2
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -132,6 +132,10 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 - Completed follow-up: Restructure Search playground workflow (`.planning/todos/completed/2026-07-01-restructure-search-playground-workflow.md`).
 - Completed follow-up: Normalize Playbooks row action styling (`.planning/todos/completed/2026-07-01-normalize-playbooks-row-action-styling.md`).
 
+### Roadmap Evolution
+
+- Phase 159 added: Close v1.37 audit gaps: coverage wiring and verification provenance
+
 ## Deferred Items
 
 Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
@@ -232,9 +236,9 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 
 ## Session
 
-**Last session:** 2026-08-26T17:40:58.902Z
-**Stopped at:** Phase 148 context gathered
-**Resume file:** .planning/phases/148-quality-baseline/148-CONTEXT.md
+**Last session:** 2026-08-26T18:58:42.349Z
+**Stopped at:** Phase 159 context gathered
+**Resume file:** .planning/phases/159-close-v1-37-audit-gaps-coverage-wiring-and-verification-prov/159-CONTEXT.md
 
 ## Operator Next Steps
 
