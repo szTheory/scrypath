@@ -5,15 +5,15 @@ milestone_name: Code Quality Ratchet
 current_phase: 159
 current_phase_name: close-v1-37-audit-gaps-coverage-wiring-and-verification-prov
 status: executing
-stopped_at: Completed 159-01-PLAN.md
-last_updated: "2026-08-26T20:07:01.115Z"
+stopped_at: Completed 159-02-PLAN.md
+last_updated: "2026-08-26T20:12:48.290Z"
 last_activity: 2026-08-26
 last_activity_desc: Phase 159 execution started
 progress:
   total_phases: 2
   completed_phases: 0
   total_plans: 7
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -26,7 +26,7 @@ progress:
 ## Current Position
 
 Phase: 159 (close-v1-37-audit-gaps-coverage-wiring-and-verification-prov) — EXECUTING
-Plan: 2 of 7
+Plan: 3 of 7
 Status: Ready to execute
 Last activity: 2026-08-26 — Phase 159 execution started
 
@@ -186,6 +186,7 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 | Phase 146 P03 | 18min | 2 tasks | 1 files |
 | Phase 146-scrypathops-web-client-remediation P04 | 3min | 1 tasks | 1 files |
 | Phase 159-close-v1-37-audit-gaps-coverage-wiring-and-verification-prov P01 | 1min | 2 tasks | 3 files |
+| Phase 159 P02 | 8min | 2 tasks | 2 files |
 
 ## Decisions
 
@@ -236,11 +237,13 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 - [Phase ?]: Phase 146 Plan 04 retained decode_body: true and uses application/json to prove Swoosh.ApiClient.Req preserves the raw JSON binary; ff1531c is the sole separately labeled test-only closure after 59d2e6a.
 - [Phase ?]: Coverage remains schedule/manual-only, advisory, informational, and non-blocking.
 - [Phase ?]: The built-in Mix coverage report is retained directly with no hosted service, threshold, token, or new dependency.
+- [Phase ?]: Historical characterization is fail-closed when an exact parent test cannot reproduce; TEST-01 retains only a narrow chronology waiver.
+- [Phase ?]: Phase 159 organizes canonical evidence but preserves every original Phase 148–158 requirement owner.
 
 ## Session
 
-**Last session:** 2026-08-26T20:07:01.109Z
-**Stopped at:** Completed 159-01-PLAN.md
+**Last session:** 2026-08-26T20:12:48.284Z
+**Stopped at:** Completed 159-02-PLAN.md
 **Resume file:** None
 
 ## Operator Next Steps
