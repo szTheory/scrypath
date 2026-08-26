@@ -167,7 +167,7 @@ Phase 97 through 99 banned capability classes:
 **Unified operating lanes:**
 - **Maintenance lane (default):** release follow-through, support/docs truth, outside-adopter evidence loop, and planning-truth reconciliation while `main` stays green.
 - **Silence lane:** when there is no release follow-through, support/proof drift, production bug, or outside-adopter evidence, do not manufacture a milestone. Say the release train is idle.
-- **Feature lane (evidence-gated):** reopen only as PR-scoped milestone work when a concrete bug, reviewed outside-adopter evidence, or explicit strategic wedge justifies it; merge only after PR CI is green and scope remains bounded to the approved wedge.
+- **Feature lane (evidence-gated):** reopen only as PR-scoped milestone work when a concrete production bug, reviewed outside-adopter evidence, or explicit strategic wedge justifies it; merge only after PR CI is green and scope remains bounded to the approved wedge.
 
 **Boundary discipline retained:** Scrypath remains framework-agnostic at the view layer.
 

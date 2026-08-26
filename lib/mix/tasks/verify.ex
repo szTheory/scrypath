@@ -23,7 +23,7 @@ defmodule Mix.Tasks.Verify do
 
     Mix.shell().info("==> [4/5] Running unit tests...")
     Mix.Task.reenable("test")
-    Mix.Task.run("test", args)
+    Mix.Task.run("test", ["--warnings-as-errors" | args])
 
     Mix.shell().info("==> [5/5] Building docs with warnings as errors...")
     Mix.Task.reenable("docs")
