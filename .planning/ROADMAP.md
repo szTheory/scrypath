@@ -178,3 +178,33 @@
 ## Historical Milestone Note
 
 Historical phase details and evidence live under `milestones/`. Phases 137-143 are direct-completion history and must never be synthesized or reused.
+
+### Phase 159: Audit Gap Closure — Coverage Wiring and Verification Provenance
+
+**Goal:** Maintainers can close v1.37 with a scheduled/manual informational coverage artifact and truthful, exact-SHA verification provenance that preserves original requirement ownership and historical limitations.
+**Requirements**: None newly mapped — repairs TEST-05's integration path and restores evidence for the original Phase 148–158 ownership.
+**Depends on:** Phase 158
+**Plans:** 7 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 159-01-PLAN.md — Wire and structurally prove the scheduled/manual advisory coverage tracer.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 159-02-PLAN.md — Run bounded Git forensics and build the canonical 31-row evidence matrix.
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 159-03-PLAN.md — Restore retrospective SUMMARY/VERIFICATION indexes for Phases 148–151.
+- [ ] 159-04-PLAN.md — Restore retrospective SUMMARY/VERIFICATION indexes for Phases 152–155.
+- [ ] 159-05-PLAN.md — Restore retrospective SUMMARY/VERIFICATION indexes for Phases 156–158.
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 159-06-PLAN.md — Perform per-phase Nyquist validation and reconcile the Phase 159 task map.
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
+- [ ] 159-07-PLAN.md — Capture local/hosted exact-SHA closure evidence, rerun the audit last, and obtain human provenance approval.
