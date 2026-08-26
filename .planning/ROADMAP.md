@@ -218,7 +218,7 @@ Historical phase details and evidence live under `milestones/`. Phases 137-143 a
 **Requirements**: TBD
 **Scope note:** No requirements are newly mapped; this phase repairs TEST-05's integration path and restores evidence for the original Phase 148–158 ownership.
 **Depends on:** Phase 158
-**Plans:** 1/7 plans executed
+**Plans:** 2/7 plans executed
 
 Plans:
 **Wave 1**
@@ -227,7 +227,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 159-02-PLAN.md — Run bounded Git forensics and build the canonical 31-row evidence matrix.
+- [x] 159-02-PLAN.md — Run bounded Git forensics and build the canonical 31-row evidence matrix.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
