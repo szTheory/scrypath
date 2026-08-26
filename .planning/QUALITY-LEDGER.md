@@ -30,7 +30,7 @@ explicitly excluded.
 - `mix verify.core --exclude integration --exclude docs_contract`: 556 tests, 4 properties, strict Credo, format, warning-free compile, workspace proof, and ExDoc passed.
 - `mix verify.package`: 76 release/package tests and unpacked Hex build passed.
 - `mix verify.repository_contracts`: 60 repository/workflow contract tests passed.
-- `mix verify.compatibility`: 556 tests and 4 properties passed locally; CI owns the four explicit Elixir/OTP tuples.
+- `mix verify.compatibility`: 557 tests and 4 properties passed locally; CI owns the four explicit Elixir/OTP tuples.
 - `mix verify.deep_quality`: no-optional-dependencies compile, namespace fence, Hex audit, and Dialyzer passed with zero findings.
 - `mix verify.backend`: 7 live Meilisearch integration tests across four curated suites passed.
 - `actionlint .github/workflows/*.yml` and the immutable action-pin scan passed.
