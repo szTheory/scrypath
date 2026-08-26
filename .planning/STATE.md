@@ -1,19 +1,19 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.36
-milestone_name: Dependency Security Remediation
-status: Awaiting next milestone
-stopped_at: Phase 147 context gathered
-last_updated: "2026-08-25T20:13:36.914Z"
-last_activity: 2026-08-25
-last_activity_desc: Milestone v1.36 completed and archived
+milestone: v1.37
+milestone_name: Code Quality Ratchet
+status: Ready to plan Phase 148
+stopped_at: Milestone v1.37 roadmap approved
+last_updated: "2026-08-26T00:00:00.000Z"
+last_activity: 2026-08-26
+last_activity_desc: v1.37 roadmap and requirements materialized
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 12
-  completed_plans: 12
-current_phase: 147
-current_phase_name: ecommerce-mounted-ops-remediation-and-closure-evidence
+  total_phases: 11
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+current_phase: 148
+current_phase_name: quality-baseline
 ---
 
 # Project State
@@ -21,14 +21,26 @@ current_phase_name: ecommerce-mounted-ops-remediation-and-closure-evidence
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Release train idle — no active milestone
+**Current Focus:** v1.37 Code Quality Ratchet — Phase 148 Quality Baseline
 
 ## Current Position
 
-Phase: Milestone v1.36 complete
+Phase: 148 of 158 (v1.37)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-08-25 — Milestone v1.36 completed and archived
+Status: Ready to plan
+Last activity: 2026-08-26 — v1.37 roadmap and requirements materialized
+
+## Active Milestone: v1.37 Code Quality Ratchet
+
+**Goal:** Systematically raise non-UI engineering quality until remaining opportunities are low-leverage, controversial, or unsupported by evidence.
+
+**Scope:** Runtime safety, internal architecture, tests, Mix tasks, examples, CI/CD, release proof, and measured performance. Preserve public APIs and behavior. ScrypathOps presentation/UX/visual review is excluded.
+
+**Current phase:** Phase 148 — establish the ranked quality ledger and executable characterization/warning baseline before safety hardening and refactors.
+
+**Milestone sequence:** 148 quality baseline → 149 runtime safety → 150 dependency leaf → 151 write result → 152 options/settings → 153 search/failed work → 154 verification commands → 155 CI proof → 156 supply chain/release → 157 performance evidence → 158 closeout.
+
+**Quality gates:** Every phase requires verification and code review; runtime safety plus CI/supply-chain phases also require security review.
 
 ## Completed Milestones
 

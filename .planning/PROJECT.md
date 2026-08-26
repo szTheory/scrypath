@@ -8,9 +8,11 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Mode: release-train idle
+## Current Mode: v1.37 Code Quality Ratchet
 
-**Goal:** Keep `main` green and avoid speculative milestone reopening. Start new work only for concrete maintenance, support/proof drift, production bug evidence, reviewed outside-adopter evidence, or an explicit strategic wedge.
+**Goal:** Systematically raise non-UI engineering quality until remaining opportunities are low-leverage, controversial, or unsupported by evidence, while keeping `main` green and preserving public behavior/APIs.
+
+**Approved scope:** Runtime safety, internal architecture, tests, Mix tasks, examples, CI/CD, release proof, and measured performance. ScrypathOps presentation, UX, and visual review are excluded. Small additive APIs are allowed only when they materially simplify an existing contract.
 
 **Recent closed outcomes:**
 - Phase 147 ecommerce mounted-Ops remediation and closure: bounded the ecommerce web/client graph, added hermetic focused/full Docker E2E verification and an always-running focused CI gate, passed exact-SHA service/browser proof, and closed the four-graph audit ledger with no human UAT.
@@ -175,13 +177,13 @@ The public website launch surface now exists under `website/` and is deployed to
 
 Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under **`.planning/milestones/`**. The next approved milestone creates a fresh `REQUIREMENTS.md`.
 
-## Next Milestone Goals
+## Active Milestone Goals
 
-- **Active lane:** none.
-- **Goal:** Keep the release train idle unless maintenance, support truth, proof drift, production bug evidence, outside-adopter evidence, or an explicit strategic wedge justifies new scope.
-- **Potential targets:** release follow-through, support/readiness truth, outside-adopter evidence, and proof stability.
-- **Feature lane remains evidence-gated:** autocomplete/suggestions, broader OPSUI productization, tenant-token helpers, multi-backend, vector/hybrid, and new UI surfaces still require reviewed outside-adopter evidence or a concrete production bug.
-- **Done-ness posture:** the stated v1 library scope is effectively done; future milestone discovery should not re-litigate this unless new evidence changes it.
+- **Milestone:** v1.37 Code Quality Ratchet.
+- **Goal:** Systematically raise non-UI engineering quality until remaining opportunities are low-leverage, controversial, or unsupported by evidence.
+- **Current phase:** 148 — Quality Baseline.
+- **Constraints:** Preserve public APIs/behavior; use evidence-led, risk/leverage prioritization; no cosmetic sweep; exclude ScrypathOps presentation/UX/visual review.
+- **Scope guard:** autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, and new UI surfaces remain out of scope.
 
 ## Last shipped milestone
 
@@ -213,7 +215,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Planning window
 
-**Completed milestone:** v1.36 Dependency Security Remediation. Phases 144–147 and all 12 plans are complete; all four graphs have independent checked-lock/audit evidence, and Phase 147 requires no human UAT. v1.35 remains complete and archived from direct evidence; missing phase artifacts for phases 138-143 are expected and must not be treated as work to resume.
+**Active milestone:** v1.37 Code Quality Ratchet. Phases 148-158 cover the approved 31 runtime-safety, architecture, test-quality, CI/release, performance, and closeout requirements. The sequence starts with an evidence ledger and characterization baseline, resolves safety risks before refactors, then closes with measurement and disposition evidence. v1.36 remains complete and archived; v1.35 remains complete from direct evidence, and missing phase artifacts for phases 138-143 must not be treated as work to resume.
 
 ## Requirements
 
@@ -327,4 +329,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-25 after v1.36 milestone archival*
+*Last updated: 2026-08-26 for v1.37 Code Quality Ratchet initialization*
