@@ -23,6 +23,7 @@ them nonblocking; authentication and genuinely pre-implementation decisions rema
 explicit boundaries rather than simulated approvals.
 
 **Recent closed outcomes:**
+- Phase 159 automated v1.37 audit/provenance closure: reconciled the 31-requirement audit, preserved the bounded TEST-01 chronology waiver, added a fail-closed candidate/final exact-SHA CI authority, and prohibited new post-implementation human verification or UAT debt.
 - Phase 147 ecommerce mounted-Ops remediation and closure: bounded the ecommerce web/client graph, added hermetic focused/full Docker E2E verification and an always-running focused CI gate, passed exact-SHA service/browser proof, and closed the four-graph audit ledger with no human UAT.
 - Phase 146 ScrypathOps web/client remediation: bounded Phoenix, LiveView, Bandit, Swoosh, Postgrex, and Req; proved the real Req-backed Swoosh client with a discriminating raw-JSON contract; passed standalone Ops and root release gates, detached fresh resolution, live Postgrex/Plug predicates, unsuppressed audit, and security verification.
 - Phase 145 legacy Phoenix and Ecto/Decimal remediation: bounded Phoenix, Bandit, Ecto SQL, Postgrex, and Plug to the fixed-compatible cohort; preserved transitive Ecto/Decimal ownership; passed deterministic, detached fresh-resolution, Hex audit, root regression, and Docker-backed Postgres/Meilisearch proof.
@@ -189,7 +190,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 - **Milestone:** v1.37 Code Quality Ratchet.
 - **Goal:** Systematically raise non-UI engineering quality until remaining opportunities are low-leverage, controversial, or unsupported by evidence.
-- **Current phase:** 158 — Ratchet Closeout complete; ready for milestone audit and ship.
+- **Current phase:** 159 — Audit/provenance closure complete; ready for milestone archive/ship.
 - **Constraints:** Preserve public APIs/behavior; use evidence-led, risk/leverage prioritization; no cosmetic sweep; exclude ScrypathOps presentation/UX/visual review.
 - **Scope guard:** autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, and new UI surfaces remain out of scope.
 
@@ -230,7 +231,7 @@ measured pure hot paths did not justify speculative optimization.
 
 ## Planning window
 
-**Active milestone:** v1.37 Code Quality Ratchet implementation is complete across Phases 148-158 and all 31 requirements; milestone audit/ship is next. The evidence ledger records implemented fixes and the diminishing-return boundary. v1.36 remains complete and archived; v1.35 remains complete from direct evidence, and missing phase artifacts for phases 138-143 must not be treated as work to resume.
+**Active milestone:** v1.37 Code Quality Ratchet is complete across Phases 148-159 and all 31 requirements, with the narrow TEST-01 chronology waiver recorded; milestone archive/ship is next. The evidence ledger records implemented fixes and the diminishing-return boundary. v1.36 remains complete and archived; v1.35 remains complete from direct evidence, and missing phase artifacts for phases 138-143 must not be treated as work to resume.
 
 ## Requirements
 
