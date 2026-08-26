@@ -2,36 +2,31 @@ defmodule Mix.Tasks.Verify.Capability do
   @moduledoc false
 
   @spec run(atom(), [String.t()]) :: :ok
-  def run(capability, args) do
-    case capability do
-      :core ->
-        run_task!("verify", args)
+  def run(:core, args), do: run_task!("verify", args)
 
-      :package ->
-        no_args!(capability, args, &Mix.Tasks.Verify.Phase11.run_without_docs/0)
+  def run(:package, args),
+    do: no_args!(:package, args, &Mix.Tasks.Verify.Phase11.run_without_docs/0)
 
-      :repository_contracts ->
-        no_args!(capability, args, &Mix.Tasks.Verify.Phase99.run_without_docs/0)
+  def run(:repository_contracts, args),
+    do: no_args!(:repository_contracts, args, &Mix.Tasks.Verify.Phase99.run_without_docs/0)
 
-      :backend ->
-        backend!(args)
+  def run(:backend, args), do: backend!(args)
+  def run(:compatibility, args), do: compatibility!(args)
+  def run(:deep_quality, args), do: deep_quality!(args)
 
-      :compatibility ->
-        compatibility!(args)
+  def run(:ecommerce_mounted, args),
+    do:
+      command!(:ecommerce_mounted, args, "make", [
+        "-C",
+        "examples/scrypath_ecommerce",
+        "verify-mounted"
+      ])
 
-      :deep_quality ->
-        deep_quality!(args)
+  def run(:phoenix_example, args), do: phoenix_example!(args)
 
-      :ecommerce_mounted ->
-        command!(capability, args, "make", ["-C", "examples/scrypath_ecommerce", "verify-mounted"])
-
-      :phoenix_example ->
-        phoenix_example!(args)
-
-      :ecommerce_e2e ->
-        command!(capability, args, "make", ["-C", "examples/scrypath_ecommerce", "verify-e2e"])
-    end
-  end
+  def run(:ecommerce_e2e, args),
+    do:
+      command!(:ecommerce_e2e, args, "make", ["-C", "examples/scrypath_ecommerce", "verify-e2e"])
 
   defp no_args!(_capability, [], callback), do: callback.()
 

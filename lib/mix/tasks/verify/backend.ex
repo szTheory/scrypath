@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Verify.Backend do
+  @moduledoc false
   use Mix.Task
   @shortdoc "Runs canonical Meilisearch backend verification"
   @impl true

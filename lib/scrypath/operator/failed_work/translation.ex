@@ -214,23 +214,35 @@ defmodule Scrypath.Operator.FailedWork.Translation do
     lowered = String.downcase(text)
 
     cond do
-      String.contains?(lowered, "ecto.casterror") or String.contains?(lowered, "argumenterror") ->
+      validation_signal?(lowered) ->
         :validation
 
-      String.contains?(lowered, "req.transporterror") or
-        String.contains?(lowered, "mint.transporterror") or
-        String.contains?(lowered, "timeout") or
-          Regex.match?(~r/\b(401|403|408|429|50[0-9])\b/, text) ->
+      transport_signal?(lowered, text) ->
         :transport
 
-      String.contains?(lowered, "invalid_state") or
-        String.contains?(lowered, "database_size_limit") or
-          String.contains?(lowered, "no_space_left_on_device") ->
+      backend_rejection_signal?(lowered) ->
         :backend_rejected
 
       true ->
         :unknown
     end
+  end
+
+  defp validation_signal?(text) do
+    String.contains?(text, "ecto.casterror") or String.contains?(text, "argumenterror")
+  end
+
+  defp transport_signal?(lowered, original) do
+    String.contains?(lowered, "req.transporterror") or
+      String.contains?(lowered, "mint.transporterror") or
+      String.contains?(lowered, "timeout") or
+      Regex.match?(~r/\b(401|403|408|429|50[0-9])\b/, original)
+  end
+
+  defp backend_rejection_signal?(text) do
+    String.contains?(text, "invalid_state") or
+      String.contains?(text, "database_size_limit") or
+      String.contains?(text, "no_space_left_on_device")
   end
 
   defp args(job), do: value(job, :args) || %{}
