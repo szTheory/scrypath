@@ -14,6 +14,14 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 **Approved scope:** Runtime safety, internal architecture, tests, Mix tasks, examples, CI/CD, release proof, and measured performance. ScrypathOps presentation, UX, and visual review are excluded. Small additive APIs are allowed only when they materially simplify an existing contract.
 
+**Automation-first verification policy:** Post-implementation acceptance must be
+machine-verifiable. Incomplete plans may not require human verification,
+`human_needed` disposition, verification backstops, or pending UAT. Convert claims
+to deterministic tests, browser/accessibility automation, API probes, or exact-SHA
+hosted evidence. Resolve subjective product decisions before implementation or keep
+them nonblocking; authentication and genuinely pre-implementation decisions remain
+explicit boundaries rather than simulated approvals.
+
 **Recent closed outcomes:**
 - Phase 147 ecommerce mounted-Ops remediation and closure: bounded the ecommerce web/client graph, added hermetic focused/full Docker E2E verification and an always-running focused CI gate, passed exact-SHA service/browser proof, and closed the four-graph audit ledger with no human UAT.
 - Phase 146 ScrypathOps web/client remediation: bounded Phoenix, LiveView, Bandit, Swoosh, Postgrex, and Req; proved the real Req-backed Swoosh client with a discriminating raw-JSON contract; passed standalone Ops and root release gates, detached fresh resolution, live Postgrex/Plug predicates, unsuppressed audit, and security verification.
@@ -336,4 +344,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-26 for v1.37 Code Quality Ratchet initialization*
+*Last updated: 2026-08-26 for v1.37 exact-SHA automated closeout*
