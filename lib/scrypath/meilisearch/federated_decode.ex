@@ -75,7 +75,7 @@ defmodule Scrypath.Meilisearch.FederatedDecode do
   end
 
   defp document_id_fallback(hit, schema) do
-    key = schema.__scrypath__(:document_id) |> Atom.to_string()
+    key = schema |> Scrypath.Schema.Metadata.document_id() |> Atom.to_string()
 
     case Map.fetch(hit, key) do
       {:ok, id} -> {:ok, id}

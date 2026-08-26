@@ -472,8 +472,8 @@ defmodule Scrypath.Options do
   """
   @spec validate_search_options(module(), keyword()) :: {:ok, keyword()} | {:error, term()}
   def validate_search_options(schema_module, opts) when is_list(opts) do
-    filterable = MapSet.new(schema_module.__scrypath__(:filterable))
-    sortable = MapSet.new(schema_module.__scrypath__(:sortable))
+    filterable = MapSet.new(Scrypath.Schema.Metadata.filterable(schema_module))
+    sortable = MapSet.new(Scrypath.Schema.Metadata.sortable(schema_module))
     search_opts = Keyword.drop(opts, runtime_option_keys())
 
     with {:ok, validated} <- nimble_options_result(@search_options, search_opts),
@@ -527,7 +527,7 @@ defmodule Scrypath.Options do
   end
 
   defp faceting_attributes_list(schema_module) do
-    case schema_module.__scrypath__(:faceting) do
+    case Scrypath.Schema.Metadata.faceting(schema_module) do
       [] -> []
       kw -> Keyword.get(kw, :attributes, [])
     end
@@ -1308,7 +1308,7 @@ defmodule Scrypath.Options do
         opts
 
       {:ok, tenant_scope} ->
-        tenant_field = schema_module.__scrypath__(:tenant_field)
+        tenant_field = Scrypath.Schema.Metadata.tenant_field(schema_module)
 
         if is_nil(tenant_field) do
           raise ArgumentError,

@@ -17,7 +17,11 @@ defmodule Scrypath.Meilisearch.TasksTest do
 
     def tasks(filters, config) do
       send(self(), {:client_tasks, filters, config})
-      {:ok, %{results: Keyword.get(config, :task_history, [])}}
+
+      case Keyword.get(config, :task_pages) do
+        nil -> {:ok, %{results: Keyword.get(config, :task_history, [])}}
+        agent -> Agent.get_and_update(agent, fn [page | rest] -> {page, rest} end)
+      end
     end
   end
 
@@ -122,6 +126,73 @@ defmodule Scrypath.Meilisearch.TasksTest do
     assert_received {:client_tasks, filters, _config}
     assert filters[:index_uids] == ["tenant_posts__reindex"]
     assert "indexSwap" in filters[:types]
+  end
+
+  test "task history paginates until the configured cap" do
+    {:ok, pages} =
+      Agent.start_link(fn ->
+        [
+          {:ok,
+           %{
+             "results" => [
+               %{
+                 "uid" => 601,
+                 "status" => "failed",
+                 "type" => "documentDeletion",
+                 "indexUid" => "tenant_posts"
+               }
+             ],
+             "next" => 600
+           }},
+          {:ok,
+           %{
+             "results" => [
+               %{
+                 "uid" => 600,
+                 "status" => "succeeded",
+                 "type" => "documentAdditionOrUpdate",
+                 "indexUid" => "tenant_posts"
+               }
+             ],
+             "next" => nil
+           }}
+        ]
+      end)
+
+    assert {:ok, [%OperationTask{id: 601}, %OperationTask{id: 600}]} =
+             Tasks.list_sync_tasks("tenant_posts",
+               meilisearch_client: SequencedClient,
+               task_pages: pages,
+               task_history_limit: 2
+             )
+  end
+
+  test "task history signals truncation at the configured cap" do
+    {:ok, pages} =
+      Agent.start_link(fn ->
+        [
+          {:ok,
+           %{
+             "results" => [
+               %{
+                 "uid" => 701,
+                 "status" => "failed",
+                 "type" => "documentDeletion",
+                 "indexUid" => "tenant_posts"
+               }
+             ],
+             "next" => 700
+           }}
+        ]
+      end)
+
+    assert {:error,
+            {:task_history_truncated, %{index_uid: "tenant_posts", limit: 1, observed: 1}}} =
+             Tasks.list_sync_tasks("tenant_posts",
+               meilisearch_client: SequencedClient,
+               task_pages: pages,
+               task_history_limit: 1
+             )
   end
 
   test "backend task failure returns a distinct failure shape", %{task_responses: agent} do

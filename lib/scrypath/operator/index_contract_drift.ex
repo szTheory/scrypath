@@ -61,7 +61,7 @@ defmodule Scrypath.Operator.IndexContractDrift do
   defp compare_fields(schema_module, applied_wire) do
     declared =
       schema_module
-      |> Scrypath.schema_fields()
+      |> Scrypath.Schema.Metadata.fields()
       |> Enum.map(&Atom.to_string/1)
       |> MapSet.new()
 
@@ -112,7 +112,7 @@ defmodule Scrypath.Operator.IndexContractDrift do
   end
 
   defp compare_faceting(schema_module, applied_wire) do
-    declared = faceting_declared_wire(Scrypath.schema_faceting(schema_module))
+    declared = faceting_declared_wire(Scrypath.Schema.Metadata.faceting(schema_module))
     applied = faceting_applied_wire(Map.get(applied_wire, "faceting"))
 
     if declared == applied do
@@ -137,7 +137,7 @@ defmodule Scrypath.Operator.IndexContractDrift do
     end
   end
 
-  defp schema_call(schema_module, key), do: schema_module.__scrypath__(key)
+  defp schema_call(schema_module, key), do: Scrypath.Schema.Metadata.fetch!(schema_module, key)
 
   defp filterable_declared_names(list) do
     Enum.map(list, fn

@@ -17,12 +17,9 @@ defmodule Scrypath.Composition do
   or `warnings`.
   """
 
-  alias Scrypath.Composition.Merge
+  alias Scrypath.Composition.Compose
   alias Scrypath.Composition.Multi
-  alias Scrypath.Composition.Normalize
   alias Scrypath.Composition.Result
-
-  @search_option_keys [:filter, :sort, :page, :facets, :facet_filter, :per_query]
 
   @typedoc "Public fragment envelope used to compose presets and scopes."
   @type fragment :: %{
@@ -80,10 +77,7 @@ defmodule Scrypath.Composition do
   """
   @spec compose(fragment() | [fragment()], criteria()) :: {:ok, result()} | {:error, term()}
   def compose(fragments, criteria \\ %{}) do
-    with {:ok, normalized_fragments} <- Normalize.normalize_fragments(fragments),
-         {:ok, normalized_criteria} <- Normalize.normalize_criteria(criteria) do
-      Merge.merge(normalized_fragments, normalized_criteria)
-    end
+    Compose.compose(fragments, criteria)
   end
 
   @doc """
@@ -103,18 +97,8 @@ defmodule Scrypath.Composition do
   """
   @spec to_search_args(result()) :: {String.t(), keyword()}
   def to_search_args(%{} = composition) do
-    text = Map.get(composition, :text, "")
-
-    opts =
-      Enum.map(@search_option_keys, fn key ->
-        {key, Map.get(composition, key, default_value(key))}
-      end)
-
-    {text, opts}
+    Compose.to_search_args(composition)
   end
-
-  defp default_value(:per_query), do: %{}
-  defp default_value(_key), do: []
 
   @doc """
   Composes multi-search entries into the existing tuple/shared-option contract.
