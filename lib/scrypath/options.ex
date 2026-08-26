@@ -375,61 +375,12 @@ defmodule Scrypath.Options do
     ]
   ]
 
-  @recognized_subkeys [
-    :synonyms,
-    :typo_tolerance,
-    :ranking_rules,
-    :distinct_attribute,
-    :stop_words
-  ]
-
-  @legacy_camel_allowlist [
-    :searchableAttributes,
-    :sortableAttributes,
-    :filterableAttributes,
-    :displayedAttributes,
-    :typoTolerance
-  ]
-
-  @legacy_camel_strings Enum.map(@legacy_camel_allowlist, &Atom.to_string/1)
-
-  @attribute_keys [
-    :searchable_attributes,
-    :sortable_attributes,
-    :filterable_attributes,
-    :displayed_attributes
-  ]
-
-  @meilisearch_default_ranking_rules [:words, :typo, :proximity, :attribute, :sort, :exactness]
-
-  @nested_settings_schema [
-    synonyms: [type: {:or, [:map, {:list, :any}]}, required: false],
-    typo_tolerance: [
-      type: {:or, [:keyword_list, :map]},
-      keys: [
-        enabled: [type: :boolean, required: false],
-        min_word_size_for_typos: [type: :map, required: false],
-        disable_on_words: [type: {:list, :string}, required: false],
-        disable_on_attributes: [type: {:list, :string}, required: false]
-      ],
-      required: false
-    ],
-    ranking_rules: [type: {:list, {:or, [:atom, :string]}}, required: false],
-    ranking_rules_strict?: [type: :boolean, required: false],
-    distinct_attribute: [type: {:or, [:atom, :string, nil]}, required: false],
-    stop_words: [type: {:list, :string}, required: false],
-    searchable_attributes: [type: {:list, :any}, required: false],
-    sortable_attributes: [type: {:list, :any}, required: false],
-    filterable_attributes: [type: {:list, :any}, required: false],
-    displayed_attributes: [type: {:list, :any}, required: false]
-  ]
-
   @spec validate_schema_options!(keyword()) :: map()
   def validate_schema_options!(opts) do
     opts
     |> validate!(@schema_options)
     |> ensure_non_empty_fields!()
-    |> validate_faceting_rules!()
+    |> Scrypath.Options.Faceting.validate_rules!()
     |> normalize_tenant_field!()
     |> Map.put(:document_source, :fields)
   end
@@ -472,24 +423,12 @@ defmodule Scrypath.Options do
   """
   @spec validate_search_options(module(), keyword()) :: {:ok, keyword()} | {:error, term()}
   def validate_search_options(schema_module, opts) when is_list(opts) do
-    filterable = MapSet.new(Scrypath.Schema.Metadata.filterable(schema_module))
-    sortable = MapSet.new(Scrypath.Schema.Metadata.sortable(schema_module))
-    search_opts = Keyword.drop(opts, runtime_option_keys())
-
-    with {:ok, validated} <- nimble_options_result(@search_options, search_opts),
-         :ok <- validate_search_facets(schema_module, Keyword.get(validated, :facets, [])),
-         :ok <-
-           validate_search_facet_filter(schema_module, Keyword.get(validated, :facet_filter, [])) do
-      try do
-        validated
-        |> inject_tenant_scope!(schema_module)
-        |> validate_filterable_fields!(filterable)
-        |> validate_sortable_fields!(sortable)
-        |> then(&{:ok, &1})
-      rescue
-        e in ArgumentError -> {:error, {:validation, Exception.message(e)}}
-      end
-    end
+    Scrypath.Options.Search.validate(
+      schema_module,
+      opts,
+      @search_options,
+      Keyword.keys(@runtime_options)
+    )
   end
 
   @spec validate_search_options!(module(), keyword()) :: keyword()
@@ -512,106 +451,10 @@ defmodule Scrypath.Options do
     end
   end
 
-  defp nimble_options_result(schema, opts) do
-    case NimbleOptions.validate(opts, schema) do
-      {:ok, validated} ->
-        {:ok, validated}
-
-      {:error, %NimbleOptions.ValidationError{} = error} ->
-        {:error, nimble_validation_to_invalid_options(error)}
-    end
-  end
-
-  defp nimble_validation_to_invalid_options(%NimbleOptions.ValidationError{} = error) do
-    {:invalid_options, error.key, Exception.message(error)}
-  end
-
-  defp faceting_attributes_list(schema_module) do
-    case Scrypath.Schema.Metadata.faceting(schema_module) do
-      [] -> []
-      kw -> Keyword.get(kw, :attributes, [])
-    end
-  end
-
-  defp validate_search_facets(schema_module, facets) do
-    declared = faceting_attributes_list(schema_module)
-
-    cond do
-      facets == [] ->
-        :ok
-
-      declared == [] ->
-        {:error, {:unknown_facet, hd(facets)}}
-
-      true ->
-        case Enum.find(facets, &(&1 not in declared)) do
-          nil -> :ok
-          bad -> {:error, {:unknown_facet, bad}}
-        end
-    end
-  end
-
-  defp validate_search_facet_filter(schema_module, facet_filter) do
-    declared = faceting_attributes_list(schema_module)
-
-    cond do
-      facet_filter == [] ->
-        :ok
-
-      declared == [] ->
-        {:error, {:invalid_facet_filter, :faceting_not_declared}}
-
-      true ->
-        case Enum.find(Keyword.keys(facet_filter), &(&1 not in declared)) do
-          nil -> :ok
-          bad -> {:error, {:invalid_facet_filter, {:unknown_facet_field, bad}}}
-        end
-    end
-  end
-
   @doc false
-  def validate_schema_faceting([]), do: {:ok, []}
-
-  def validate_schema_faceting(value) when is_list(value) do
-    case coerce_schema_faceting_kw(value) do
-      :invalid ->
-        {:error, "faceting must be a keyword list or []"}
-
-      [] ->
-        {:ok, []}
-
-      kw when is_list(kw) ->
-        validate_faceting_declaration_shape(kw)
-    end
-  end
-
-  def validate_schema_faceting(_value), do: {:error, "faceting must be a keyword list or []"}
-
-  defp coerce_schema_faceting_kw(value) when is_list(value) do
-    cond do
-      Keyword.keyword?(value) ->
-        value
-
-      Macro.quoted_literal?(value) ->
-        coerce_schema_faceting_from_literal(value)
-
-      true ->
-        :invalid
-    end
-  end
-
-  defp coerce_schema_faceting_from_literal(value) do
-    case Code.eval_quoted(value) do
-      {evaluated, _} when evaluated == [] ->
-        []
-
-      {evaluated, _} when is_list(evaluated) ->
-        if Keyword.keyword?(evaluated), do: evaluated, else: :invalid
-
-      _ ->
-        :invalid
-    end
-  end
+  defdelegate validate_schema_faceting(value),
+    to: Scrypath.Options.Faceting,
+    as: :validate_declaration
 
   def validate_optional_string(value) when is_binary(value), do: {:ok, value}
   def validate_optional_string(nil), do: {:ok, nil}
@@ -633,181 +476,21 @@ defmodule Scrypath.Options do
   def validate_global_schemas(_value),
     do: {:error, "global_schemas must be a list of module atoms or be omitted"}
 
-  def validate_settings(value) when is_map(value) do
-    canonical = normalize_settings(value)
-
-    case validate_recognized_subkeys(canonical) do
-      :ok ->
-        check_ranking_rules_completeness(canonical)
-        {:ok, canonical}
-
-      {:error, msg} ->
-        {:error, msg}
-    end
-  end
-
-  def validate_settings(value) do
-    cond do
-      Macro.quoted_literal?(value) ->
-        {evaluated, _binding} = Code.eval_quoted(value)
-
-        if is_map(evaluated) do
-          validate_settings(evaluated)
-        else
-          {:error, "expected settings to be a plain map"}
-        end
-
-      true ->
-        {:error, "expected settings to be a plain map"}
-    end
-  end
+  defdelegate validate_settings(value), to: Scrypath.Options.Settings, as: :validate
 
   @doc false
   @spec normalize_settings(map()) :: map()
-  def normalize_settings(value) when is_map(value) do
-    entries =
-      Enum.map(value, fn {raw_key, val} ->
-        ckey = canonicalize_key(raw_key)
-        {raw_key, ckey, val}
-      end)
-
-    emit_camel_hint? =
-      Enum.any?(entries, fn {raw_key, _ckey, _val} -> camel_case_source_key?(raw_key) end)
-
-    if emit_camel_hint? do
-      IO.puts(
-        :stderr,
-        "[scrypath] a schema declared settings using camelCase keys. Canonical form is snake_case atom keys for recognized settings. Both forms work; No action required."
-      )
-    end
-
-    {recognized_pairs, unrecognized_pairs} =
-      Enum.split_with(entries, fn {_raw, ckey, _val} -> is_atom(ckey) end)
-
-    recognized_pairs =
-      Enum.map(recognized_pairs, fn {_raw, ckey, val} -> {ckey, val} end)
-
-    unrecognized_pairs =
-      Enum.map(unrecognized_pairs, fn {_raw, {:unrecognized, rk}, val} -> {rk, val} end)
-
-    recognized_map = Map.new(recognized_pairs)
-    unrecognized_map = Map.new(unrecognized_pairs)
-
-    Map.put(recognized_map, :__unrecognized__, unrecognized_map)
-  end
+  defdelegate normalize_settings(value), to: Scrypath.Options.Settings, as: :normalize
 
   @doc false
-  def canonicalize_key(key) when is_atom(key) do
-    cond do
-      key in @recognized_subkeys ->
-        key
-
-      key in @attribute_keys ->
-        key
-
-      key in @legacy_camel_allowlist ->
-        key
-        |> Atom.to_string()
-        |> Macro.underscore()
-        |> string_to_existing_atom!()
-
-      true ->
-        {:unrecognized, key}
-    end
-  end
-
-  def canonicalize_key(key) when is_binary(key) do
-    cond do
-      key in @legacy_camel_strings ->
-        legacy = Enum.find(@legacy_camel_allowlist, &(Atom.to_string(&1) == key))
-        canonicalize_key(legacy)
-
-      true ->
-        snake = Macro.underscore(key)
-        snake_atom = safe_string_to_existing_atom(snake)
-
-        cond do
-          snake_atom != nil and snake_atom in @recognized_subkeys ->
-            snake_atom
-
-          snake_atom != nil and snake_atom in @attribute_keys ->
-            snake_atom
-
-          true ->
-            {:unrecognized, key}
-        end
-    end
-  end
-
-  def canonicalize_key(key), do: {:unrecognized, key}
+  defdelegate canonicalize_key(key), to: Scrypath.Options.Settings
 
   @doc false
   @spec validate_recognized_subkeys(map()) :: :ok | {:error, String.t()}
-  def validate_recognized_subkeys(canonical) when is_map(canonical) do
-    slice =
-      canonical
-      |> Map.delete(:__unrecognized__)
-      |> Map.to_list()
-
-    case NimbleOptions.validate(slice, @nested_settings_schema) do
-      {:ok, _} ->
-        :ok
-
-      {:error, %NimbleOptions.ValidationError{} = error} ->
-        {:error, Exception.message(error)}
-    end
-  end
+  defdelegate validate_recognized_subkeys(canonical), to: Scrypath.Options.Settings
 
   @doc false
-  def check_ranking_rules_completeness(canonical) when is_map(canonical) do
-    rules = canonical[:ranking_rules]
-    strict? = Map.get(canonical, :ranking_rules_strict?)
-
-    if is_list(rules) and strict? != false do
-      normalized =
-        Enum.map(rules, fn rule ->
-          cond do
-            is_atom(rule) ->
-              rule
-
-            is_binary(rule) ->
-              safe_string_to_existing_atom(rule) || rule
-
-            true ->
-              rule
-          end
-        end)
-
-      missing = @meilisearch_default_ranking_rules -- normalized
-
-      if missing != [] do
-        IO.puts(
-          :stderr,
-          "[scrypath] ranking_rules is missing the following Meilisearch defaults: #{inspect(missing)}. Add them or set ranking_rules_strict?: false. This is a warning; reindex will hard-error (TUNE-04)."
-        )
-      end
-    end
-
-    canonical
-  end
-
-  defp camel_case_source_key?(key) when is_atom(key), do: key in @legacy_camel_allowlist
-
-  defp camel_case_source_key?(key) when is_binary(key) do
-    String.match?(key, ~r/[A-Z]/)
-  end
-
-  defp camel_case_source_key?(_), do: false
-
-  defp string_to_existing_atom!(str) do
-    String.to_existing_atom(str)
-  end
-
-  defp safe_string_to_existing_atom(str) when is_binary(str) do
-    String.to_existing_atom(str)
-  rescue
-    ArgumentError -> nil
-  end
+  defdelegate check_ranking_rules_completeness(canonical), to: Scrypath.Options.Settings
 
   def validate_backend(value) when is_atom(value) or is_nil(value), do: {:ok, value}
   def validate_backend(_value), do: {:error, "expected a module, atom, or nil"}
@@ -1057,115 +740,6 @@ defmodule Scrypath.Options do
     end
   end
 
-  defp validate_faceting_declaration_shape(kw) do
-    allowed = [
-      :attributes,
-      :max_values_per_facet,
-      :sort_facet_values_by,
-      :nested_facet_paths,
-      :hierarchy
-    ]
-
-    case Keyword.keys(kw) -- allowed do
-      [] ->
-        case preprocess_faceting_declarations(kw) do
-          {:error, msg} -> {:error, msg}
-          {:ok, kw2} -> validate_faceting_attributes_entry(kw2)
-        end
-
-      keys ->
-        {:error, "unknown faceting options: #{inspect(keys)}"}
-    end
-  end
-
-  defp preprocess_faceting_declarations(kw) when is_list(kw) do
-    nested = Keyword.get(kw, :nested_facet_paths, false)
-
-    cond do
-      not is_boolean(nested) ->
-        {:error, "faceting :nested_facet_paths must be a boolean"}
-
-      true ->
-        case expand_faceting_hierarchy_if_present(kw) do
-          {:error, _} = err -> err
-          {:ok, kw2} -> {:ok, Keyword.delete(kw2, :hierarchy)}
-        end
-    end
-  end
-
-  defp expand_faceting_hierarchy_if_present(kw) do
-    case Keyword.fetch(kw, :hierarchy) do
-      :error ->
-        {:ok, kw}
-
-      {:ok, hi} ->
-        case parse_hierarchy_declaration(hi) do
-          {:ok, base, depth} ->
-            expanded = hierarchy_facet_attribute_atoms(base, depth)
-            attrs = Keyword.get(kw, :attributes, [])
-            merged = dedupe_preserve_order(expanded ++ attrs)
-
-            {:ok,
-             kw
-             |> Keyword.put(:attributes, merged)
-             |> Keyword.delete(:hierarchy)
-             |> Keyword.put(:nested_facet_paths, true)}
-
-          {:error, _} = err ->
-            err
-        end
-    end
-  end
-
-  defp parse_hierarchy_declaration(hi) when is_list(hi) and hi != [] do
-    if Keyword.keyword?(hi) do
-      with {:ok, base} <- fetch_hierarchy_atom(hi, :base),
-           {:ok, depth} <- fetch_hierarchy_depth(hi) do
-        {:ok, base, depth}
-      end
-    else
-      {:error, "faceting :hierarchy must be a keyword list"}
-    end
-  end
-
-  defp parse_hierarchy_declaration(_),
-    do: {:error, "faceting :hierarchy must be a keyword list"}
-
-  defp fetch_hierarchy_atom(kw, key) do
-    case Keyword.fetch(kw, key) do
-      {:ok, a} when is_atom(a) ->
-        {:ok, a}
-
-      {:ok, other} ->
-        {:error, "faceting :hierarchy :#{key} must be an atom, got: #{inspect(other)}"}
-
-      :error ->
-        {:error, "faceting :hierarchy requires :base field atom"}
-    end
-  end
-
-  defp fetch_hierarchy_depth(kw) do
-    case Keyword.fetch(kw, :depth) do
-      {:ok, d} when is_integer(d) and d > 0 ->
-        {:ok, d}
-
-      {:ok, other} ->
-        {:error, "faceting :hierarchy :depth must be a positive integer, got: #{inspect(other)}"}
-
-      :error ->
-        {:error, "faceting :hierarchy requires :depth positive integer"}
-    end
-  end
-
-  defp hierarchy_facet_attribute_atoms(base, depth)
-       when is_atom(base) and is_integer(depth) and depth > 0 do
-    prefix = Atom.to_string(base)
-
-    for i <- 0..(depth - 1) do
-      String.to_atom("#{prefix}.lvl#{i}")
-    end
-  end
-
   defp dedupe_preserve_order(attrs) when is_list(attrs) do
     {uniq, _} =
       Enum.reduce(attrs, {[], MapSet.new()}, fn a, {acc, seen} ->
@@ -1177,218 +751,6 @@ defmodule Scrypath.Options do
       end)
 
     Enum.reverse(uniq)
-  end
-
-  defp valid_nested_facet_path_atom?(attr) when is_atom(attr) do
-    s = Atom.to_string(attr)
-
-    cond do
-      not String.contains?(s, ".") ->
-        true
-
-      match?([_, _], String.split(s, ".")) ->
-        [_, suffix] = String.split(s, ".", parts: 2)
-        String.match?(suffix, ~r/^lvl[0-9]+$/)
-
-      true ->
-        false
-    end
-  end
-
-  defp validate_faceting_attributes_entry(kw) do
-    case Keyword.fetch(kw, :attributes) do
-      :error ->
-        {:error, "faceting requires :attributes when faceting options are given"}
-
-      {:ok, []} ->
-        {:error, "faceting :attributes must be a non-empty list of atoms"}
-
-      {:ok, attrs} when is_list(attrs) ->
-        validate_faceting_attributes_list(kw, attrs)
-
-      {:ok, _} ->
-        {:error, "faceting :attributes must be a non-empty list of atoms"}
-    end
-  end
-
-  defp validate_faceting_attributes_list(kw, attrs) do
-    if Enum.all?(attrs, &is_atom/1) do
-      max_values = Keyword.get(kw, :max_values_per_facet, 100)
-      sort_by = Keyword.get(kw, :sort_facet_values_by, %{})
-
-      nested_paths = Keyword.get(kw, :nested_facet_paths, false)
-
-      with :ok <- validate_faceting_max_values(max_values),
-           {:ok, sort_map} <- normalize_sort_facet_values_by(sort_by) do
-        {:ok,
-         [
-           attributes: attrs,
-           max_values_per_facet: max_values,
-           sort_facet_values_by: sort_map,
-           nested_facet_paths: nested_paths
-         ]}
-      end
-    else
-      {:error, "faceting :attributes must be a non-empty list of atoms"}
-    end
-  end
-
-  defp validate_faceting_max_values(n) when is_integer(n) and n > 0, do: :ok
-
-  defp validate_faceting_max_values(_),
-    do: {:error, "faceting :max_values_per_facet must be a positive integer"}
-
-  defp normalize_sort_facet_values_by(map) when is_map(map) do
-    Enum.reduce_while(map, {:ok, %{}}, fn {k, v}, {:ok, acc} ->
-      cond do
-        not is_atom(k) ->
-          {:halt, {:error, "faceting :sort_facet_values_by keys must be atoms"}}
-
-        v in [:alpha, :count] ->
-          {:cont, {:ok, Map.put(acc, k, v)}}
-
-        true ->
-          {:halt, {:error, "faceting :sort_facet_values_by values must be :alpha or :count"}}
-      end
-    end)
-  end
-
-  defp normalize_sort_facet_values_by(kw) when is_list(kw) do
-    if Keyword.keyword?(kw) do
-      normalize_sort_facet_values_by(Map.new(kw))
-    else
-      {:error, "faceting :sort_facet_values_by must be a map or keyword"}
-    end
-  end
-
-  defp normalize_sort_facet_values_by(_),
-    do: {:error, "faceting :sort_facet_values_by must be a map or keyword"}
-
-  defp validate_faceting_rules!(%{faceting: []} = m), do: m
-
-  defp validate_faceting_rules!(%{faceting: faceting} = m) when is_list(faceting) do
-    attrs = Keyword.fetch!(faceting, :attributes)
-    filterable = Map.fetch!(m, :filterable) |> MapSet.new()
-    nested? = Keyword.get(faceting, :nested_facet_paths, false)
-
-    if Enum.any?(attrs, &(&1 == :*)) do
-      raise ArgumentError, "faceting wildcard :* in attributes is not supported"
-    end
-
-    Enum.each(attrs, fn attr ->
-      if is_atom(attr) and String.contains?(Atom.to_string(attr), ".") do
-        cond do
-          not nested? ->
-            raise ArgumentError,
-                  "hierarchical facet attribute #{inspect(attr)} is not supported (set faceting nested_facet_paths: true for Meilisearch-style dotted paths)"
-
-          not valid_nested_facet_path_atom?(attr) ->
-            raise ArgumentError,
-                  "hierarchical facet attribute #{inspect(attr)} is not supported (dotted names must use a single dot with an lvlN suffix such as :\"categories.lvl0\")"
-
-          true ->
-            :ok
-        end
-      end
-    end)
-
-    Enum.each(attrs, fn attr ->
-      unless MapSet.member?(filterable, attr) do
-        raise ArgumentError,
-              "facet attribute #{Atom.to_string(attr)} is not in filterable"
-      end
-    end)
-
-    m
-  end
-
-  defp inject_tenant_scope!(opts, schema_module) do
-    case Keyword.fetch(opts, :tenant_scope) do
-      :error ->
-        opts
-
-      {:ok, tenant_scope} ->
-        tenant_field = Scrypath.Schema.Metadata.tenant_field(schema_module)
-
-        if is_nil(tenant_field) do
-          raise ArgumentError,
-                "tenant_scope: provided but schema #{inspect(schema_module)} does not declare a tenant_field:"
-        end
-
-        existing = Keyword.get(opts, :filter, [])
-
-        if Keyword.has_key?(existing, tenant_field) do
-          raise ArgumentError,
-                "tenant_scope: cannot be used because filter: already contains the tenant_field #{inspect(tenant_field)}. Remove it from filter: to allow tenant enforcement."
-        end
-
-        new_filter = Keyword.put(existing, tenant_field, tenant_scope)
-
-        opts
-        |> Keyword.delete(:tenant_scope)
-        |> Keyword.put(:filter, new_filter)
-    end
-  end
-
-  defp validate_filterable_fields!(opts, filterable) do
-    filter =
-      opts
-      |> Keyword.get(:filter, [])
-      |> Enum.map(&validate_filter_entry!(&1, filterable))
-
-    Keyword.put(opts, :filter, filter)
-  end
-
-  defp validate_sortable_fields!(opts, sortable) do
-    sort =
-      opts
-      |> Keyword.get(:sort, [])
-      |> Enum.map(&validate_sort_entry!(&1, sortable))
-
-    Keyword.put(opts, :sort, sort)
-  end
-
-  defp validate_filter_entry!({operator, _value}, _filterable)
-       when operator in [:or, :and, :not] do
-    raise ArgumentError, "boolean composition is not supported in common search filters"
-  end
-
-  defp validate_filter_entry!({field, value}, filterable) do
-    unless MapSet.member?(filterable, field) do
-      raise ArgumentError, "filter field #{inspect(field)} is not declared as filterable"
-    end
-
-    {field, validate_filter_value!(field, value)}
-  end
-
-  defp validate_filter_value!(_field, value) when is_list(value) do
-    unless Keyword.keyword?(value) do
-      raise ArgumentError, "range filter operators must be a keyword list"
-    end
-
-    allowed = [:eq, :gt, :gte, :lt, :lte]
-
-    Enum.each(value, fn {operator, _operand} ->
-      unless operator in allowed do
-        raise ArgumentError, "unsupported filter operator #{inspect(operator)}"
-      end
-    end)
-
-    value
-  end
-
-  defp validate_filter_value!(_field, value), do: value
-
-  defp validate_sort_entry!({direction, field}, sortable) when direction in [:asc, :desc] do
-    unless MapSet.member?(sortable, field) do
-      raise ArgumentError, "sort field #{inspect(field)} is not declared as sortable"
-    end
-
-    {direction, field}
-  end
-
-  defp validate_sort_entry!({direction, _field}, _sortable) do
-    raise ArgumentError, "sort direction must be :asc or :desc, got #{inspect(direction)}"
   end
 
   defp validate_page_bounds!(page) do
@@ -1418,9 +780,5 @@ defmodule Scrypath.Options do
         required: false
       ]
     ]
-  end
-
-  defp runtime_option_keys do
-    Keyword.keys(@runtime_options)
   end
 end
