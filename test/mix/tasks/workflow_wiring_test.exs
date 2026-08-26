@@ -407,6 +407,31 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     end
   end
 
+  describe "TEST-05 scheduled/manual informational coverage" do
+    test "coverage is a bounded scheduled/manual advisory job with a retained source-SHA report" do
+      ci = File.read!(@ci_yml)
+      coverage_job = workflow_job_block(ci, "coverage")
+
+      assert length(Regex.scan(~r/^  coverage:$/m, ci)) == 1
+      assert coverage_job =~ "name: coverage (advisory)"
+      assert coverage_job =~ "if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'"
+      assert coverage_job =~ "continue-on-error: true"
+      assert length(Regex.scan(~r/^\s*- run: mix verify\.coverage$/m, coverage_job)) == 1
+      assert coverage_job =~ "- name: Upload informational coverage report"
+      assert coverage_job =~ "if: always()"
+
+      assert coverage_job =~
+               "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7"
+
+      assert coverage_job =~ "name: coverage-report-${{ github.sha }}"
+      assert coverage_job =~ "path: cover/"
+      assert coverage_job =~ "if-no-files-found: warn"
+      assert coverage_job =~ "retention-days: 7"
+      refute coverage_job =~ "secrets."
+      refute coverage_job =~ "id-token"
+    end
+  end
+
   defp assert_ordered_steps(content, [first | rest]) do
     {start_idx, _} = :binary.match(content, first)
 
