@@ -203,8 +203,12 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
   describe "canonical repository and compatibility wiring" do
     test "ci defines repository-contracts and routes it to the canonical command" do
       ci = File.read!(@ci_yml)
-      assert ci =~ "\n  repository-contracts:\n"
-      assert ci =~ "run: mix verify.repository_contracts"
+      repository_contracts_job = workflow_job_block(ci, "repository-contracts")
+
+      assert repository_contracts_job =~ "run: mix verify.repository_contracts"
+
+      assert repository_contracts_job =~ "fetch-depth: 0",
+             "repository contracts inspect release history and must not use checkout's shallow default"
     end
 
     test "ci defines compatibility matrix lane with floor/head tuple evidence" do
