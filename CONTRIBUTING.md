@@ -29,6 +29,24 @@ Use the normal fast suite during development:
 mix test --exclude integration --exclude docs_contract
 ```
 
+Quality-baseline commands are capability-named and safe to run locally:
+
+```sh
+# Ensure the root library does not accidentally require optional dependencies.
+mix verify.no_optional_deps
+
+# Produce a built-in line-coverage report for the fast suite. This is
+# informational; Scrypath does not enforce a coverage percentage.
+mix verify.coverage
+```
+
+Run test files with warnings promoted to failures when changing test support or
+test infrastructure:
+
+```sh
+MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors --exclude integration --exclude docs_contract
+```
+
 For adopter support verification:
 
 ```sh
