@@ -29,7 +29,7 @@ updated: 2026-08-26
 | 159-07-03 | 5 | 159-07-02 | blocking human verification of hosted provenance and narrow audit disposition | complete (reviewer `approved`) |
 | 159-08-01 | 6 | 159-07 | Step-scoped coverage/checkout regression guard | complete (`b53e603`) |
 | 159-08-02 | 6 | 159-08-01 | Single reconciled audit with pending exact-SHA authority | complete (`ffd0013`, revised by Plan 08 automation) |
-| 159-08-03 | 6 | 159-08-02 | Candidate and final exact-SHA closeout attestations | pending candidate run |
+| 159-08-03 | 6 | 159-08-02 | Candidate and final exact-SHA closeout attestations | complete (candidate run `33019846420`; final authority attaches to completion SHA) |
 
 Plans 03–05 are parallel Wave 3 work after Plan 02. Plan 06 depends on all three; Plan 07 depends on Plan 06; Plan 08 closes the audit without post-implementation human verification. No obsolete graph or task ID is retained.
 
@@ -61,3 +61,12 @@ Plans 03–05 are parallel Wave 3 work after Plan 02. Plan 06 depends on all thr
 - **Artifact proof:** both `coverage-report-<sha>` and `closeout-attestation-<sha>` are live, belong to that run/SHA, and carry non-empty immutable digests.
 - **Final gate:** after all SUMMARY, VERIFICATION, audit, validation, ROADMAP, STATE, REQUIREMENTS, and PROJECT changes are committed, repeat the same gate at the exact final SHA and make no tracked writes afterward.
 - **Failure behavior:** any mismatch, failed/skipped job, missing/expired artifact, timeout, or API/auth error leaves closeout unauthorized and returns the audit to `pending_exact_sha_ci` in the repair commit.
+
+### Candidate receipt
+
+- **Run:** [33019846420](https://github.com/szTheory/scrypath/actions/runs/33019846420)
+- **Event / exact head SHA:** `workflow_dispatch` / `32f5856791005c20b481a532c248dae8f6b90c78`
+- **Jobs:** all five required jobs, `coverage (advisory)`, and `closeout-attestation` concluded `success`.
+- **Coverage artifact:** ID `9626072777`, digest `sha256:e69ece6eb840ec6d86cebc0355ee605b2eba6af15beacaec27ffe4ef6637550d`.
+- **Closeout artifact:** ID `9626151895`, digest `sha256:6eeb74e418e84a06e91a675328b15ff331376c428f7fcb4e0de7812f9ecfa99f`.
+- **Final binding:** the completion commit is accepted only by a second newly dispatched exact-SHA run. Its Actions run and artifacts are the authoritative receipt because a tracked document cannot embed its own containing commit SHA without changing that SHA.

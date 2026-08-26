@@ -1,46 +1,69 @@
 ---
 phase: 159-close-v1-37-audit-gaps-coverage-wiring-and-verification-prov
-reviewed: 2026-08-26T21:29:10Z
+reviewed: 2026-08-26T22:40:00Z
 depth: standard
-files_reviewed: 2
-files_reviewed_list:
-  - .github/workflows/ci.yml
-  - test/mix/tasks/workflow_wiring_test.exs
+files_reviewed: 13
 findings:
   critical: 0
-  warning: 2
+  warning: 0
   info: 0
-  total: 2
-status: issues_found
+  total: 0
+status: passed
 ---
 
-# Phase 159: Code Review Report
+# Phase 159 Code Review Report
 
-**Reviewed:** 2026-08-26T21:29:10Z
-**Depth:** standard
-**Files Reviewed:** 2
-**Status:** issues_found
+**Status:** PASSED — no unresolved correctness, security, performance, or
+maintainability findings in Plan 08.
 
-## Summary
+## Review Scope
 
-The coverage job correctly uses the scheduled/manual event guard, full checkout history, an immutable artifact-action pin, seven-day retention, and the current checkout default makes `github.sha` identify the tested commit. The added ExUnit contract, however, does not bind two key assertions to the artifact-upload step. It can therefore pass after changes that either skip the report on a failed coverage run or label an artifact with a SHA different from the checked-out source.
+- `.github/workflows/ci.yml`
+- `scripts/ci_monitor.cjs`
+- `test/scripts/ci_monitor_test.exs`
+- `test/scrypath/no_human_gates_contract_test.exs`
+- `lib/mix/tasks/verify.phase99.ex`
+- `test/mix/tasks/workflow_wiring_test.exs`
+- `CONTRIBUTING.md`
+- `AGENTS.md`
+- `.planning/PROJECT.md`
+- `159-08-PLAN.md`, `159-VALIDATION.md`, and `159-VERIFICATION.md`
+- `.planning/v1.37-MILESTONE-AUDIT.md`
 
-## Warnings
+## Resolved Prior Findings
 
-### WR-01: Coverage test does not require the artifact upload to run after a failed coverage command
+| Finding | Resolution | Proof |
+|---|---|---|
+| WR-01: upload policy assertion was job-wide | The test extracts the named coverage upload step and requires its own `if: always()`. | Focused workflow suite and repository-contract gate pass. |
+| WR-02: artifact SHA was not tied to checkout source | The test extracts the coverage checkout step, rejects a `ref` override, and validates the SHA-named artifact in the upload step. | Focused workflow suite and candidate exact-SHA hosted run pass. |
 
-**File:** `test/mix/tasks/workflow_wiring_test.exs:435-436`
-**Issue:** The test independently checks for the upload step name and for `if: always()` anywhere in the job. A later edit can remove `if: always()` from the upload step (so a failed `mix verify.coverage` produces no hosted report) and add `if: always()` to any other coverage step; this test still passes. That makes the claimed failure-evidence contract a false positive.
-**Fix:** Isolate the upload step (or parse the workflow YAML) and assert its own `if` expression. For example, extract the block beginning at `- name: Upload informational coverage report` through the next step and assert that block contains `if: always()`.
+## New Automation Review
 
-### WR-02: SHA-label assertion is not tied to the source that checkout tested
+- The monitor passes arguments directly to child processes without shell
+  interpolation, validates full lowercase SHAs, compares the remote branch head,
+  excludes all pre-dispatch run IDs, and fails closed on job/artifact mismatch.
+- Candidate and final authority require the established five merge checks plus
+  coverage and `closeout-attestation`; advisory/path-scoped topology is not
+  promoted accidentally.
+- Coverage remains nonblocking for ordinary schedule/manual evidence, while the
+  manual closeout consumer independently requires the coverage step outcome and
+  artifact outputs to be successful and non-empty.
+- Branch protection uses the targeted required-status-checks endpoint, preserves
+  unrelated protection settings, and verifies convergence after applying.
+- The zero-human repository contract is prospective for incomplete plans and
+  also rejects unresolved active verification/UAT status without rewriting
+  historical passed records.
+- Workflow permissions remain `contents: read`; all external actions are pinned
+  to immutable 40-character SHAs.
 
-**File:** `test/mix/tasks/workflow_wiring_test.exs:441`
-**Issue:** The test only searches for `coverage-report-${{ github.sha }}`. It still passes if the checkout step is later given `with.ref: main`, a tag, or another revision while the artifact retains the event SHA in its name. In that configuration the artifact label can assert evidence for one commit while `mix verify.coverage` ran against another—especially for a manually dispatched run on a non-default ref.
-**Fix:** Assert the coverage checkout block has no `ref` override (or explicitly uses `${{ github.sha }}`), and assert the artifact name in the upload-step block. Parsing the YAML into a map and checking `jobs.coverage.steps` by `name` is more durable than independent substring checks.
+## Verification Reviewed
+
+- 565-test fast suite: 0 failures (79 excluded).
+- 69 repository-contract tests: 0 failures.
+- `actionlint`, immutable-action checks, semantic 31-row audit comparisons, and
+  candidate exact-SHA CI: passed.
 
 ---
 
-_Reviewed: 2026-08-26T21:29:10Z_
-_Reviewer: the agent (gsd-code-reviewer)_
-_Depth: standard_
+_Reviewed: 2026-08-26T22:40:00Z_
+_Reviewer: automated Codex review_

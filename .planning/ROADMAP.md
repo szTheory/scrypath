@@ -218,7 +218,7 @@ Historical phase details and evidence live under `milestones/`. Phases 137-143 a
 **Requirements**: TBD
 **Scope note:** No requirements are newly mapped; this phase repairs TEST-05's integration path and restores evidence for the original Phase 148–158 ownership.
 **Depends on:** Phase 158
-**Plans:** 8 plans (7 executed, 1 gap-closure plan pending)
+**Plans:** 8/8 plans complete
 
 Plans:
 **Wave 1**
@@ -241,8 +241,8 @@ Plans:
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
-- [x] 159-07-PLAN.md — Capture local/hosted exact-SHA closure evidence, rerun the audit last, and obtain human provenance approval.
+- [x] 159-07-PLAN.md — Capture the original local/hosted exact-SHA closure evidence and preserve its historical review record.
 
 **Wave 6** *(blocked on Wave 5 completion)*
 
-- [ ] 159-08-PLAN.md — Tighten TEST-05 step-scoped guards, semantically reconcile the final audit, and record fresh attributable approval before closeout.
+- [x] 159-08-PLAN.md — Tighten TEST-05 guards, reconcile the final audit, and authorize closeout through candidate/final exact-SHA CI.

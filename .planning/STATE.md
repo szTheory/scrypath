@@ -4,16 +4,16 @@ milestone: v1.37
 milestone_name: Code Quality Ratchet
 current_phase: 159
 current_phase_name: close-v1-37-audit-gaps-coverage-wiring-and-verification-prov
-status: executing
-stopped_at: Completed 159-07-PLAN.md
-last_updated: "2026-08-26T21:52:41.923Z"
+status: completed
+stopped_at: Completed Phase 159
+last_updated: "2026-08-26T22:41:23.371Z"
 last_activity: 2026-08-26
-last_activity_desc: Phase 159 execution started
+last_activity_desc: Phase 159 complete
 progress:
   total_phases: 12
   completed_phases: 1
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 159 — close-v1-37-audit-gaps-coverage-wiring-and-verification-prov
+**Current Focus:** v1.37 milestone closeout
 
 ## Current Position
 
-Phase: 159 (close-v1-37-audit-gaps-coverage-wiring-and-verification-prov) — EXECUTING
-Plan: 7 of 7
-Status: Ready to execute
-Last activity: 2026-08-26 — Phase 159 execution started
+Phase: 159 (close-v1-37-audit-gaps-coverage-wiring-and-verification-prov) — COMPLETE
+Plan: 8 of 8
+Status: All phases complete — ready for milestone closeout
+Last activity: 2026-08-26 — Phase 159 complete
 
 ## Active Milestone: v1.37 Code Quality Ratchet
 
@@ -36,11 +36,11 @@ Last activity: 2026-08-26 — Phase 159 execution started
 
 **Scope:** Runtime safety, internal architecture, tests, Mix tasks, examples, CI/CD, release proof, and measured performance. Preserve public APIs and behavior. ScrypathOps presentation/UX/visual review is excluded.
 
-**Current phase:** 159
+**Current phase:** 159 complete
 
-**Milestone sequence:** 148 quality baseline → 149 runtime safety → 150 dependency leaf → 151 write result → 152 options/settings → 153 search/failed work → 154 verification commands → 155 CI proof → 156 supply chain/release → 157 performance evidence → 158 closeout.
+**Milestone sequence:** 148 quality baseline → 149 runtime safety → 150 dependency leaf → 151 write result → 152 options/settings → 153 search/failed work → 154 verification commands → 155 CI proof → 156 supply chain/release → 157 performance evidence → 158 closeout → 159 audit/provenance closure.
 
-**Quality gates:** Every phase requires verification and code review; runtime safety plus CI/supply-chain phases also require security review.
+**Quality gates:** Every phase requires automated verification and code review; runtime safety plus CI/supply-chain phases also require security review.
 
 **Closeout evidence:** canonical core, package, repository-contract, compatibility,
 deep-quality, and live Meilisearch backend commands passed; actionlint and immutable
