@@ -105,6 +105,7 @@ defmodule Scrypath.MixProject do
       {:plug, "~> 1.19.5", only: :test},
       {:stream_data, "~> 1.3", only: :test},
       {:ecto_sqlite3, "~> 0.22", only: :test, runtime: false},
+      {:benchee, "~> 1.5", only: :dev, runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.37", only: [:dev, :test], runtime: false}
