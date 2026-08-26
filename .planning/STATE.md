@@ -5,15 +5,15 @@ milestone_name: Code Quality Ratchet
 current_phase: 159
 current_phase_name: close-v1-37-audit-gaps-coverage-wiring-and-verification-prov
 status: executing
-stopped_at: Completed 159-05-PLAN.md
-last_updated: "2026-08-26T20:25:59.461Z"
+stopped_at: Completed 159-06-PLAN.md
+last_updated: "2026-08-26T20:30:44.374Z"
 last_activity: 2026-08-26
 last_activity_desc: Phase 159 execution started
 progress:
   total_phases: 12
   completed_phases: 0
   total_plans: 7
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -26,7 +26,7 @@ progress:
 ## Current Position
 
 Phase: 159 (close-v1-37-audit-gaps-coverage-wiring-and-verification-prov) — EXECUTING
-Plan: 6 of 7
+Plan: 7 of 7
 Status: Ready to execute
 Last activity: 2026-08-26 — Phase 159 execution started
 
@@ -190,6 +190,7 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 | Phase 159-close-v1-37-audit-gaps-coverage-wiring-and-verification-prov P03 | 5min | 1 tasks | 9 files |
 | Phase 159-close-v1-37-audit-gaps-coverage-wiring-and-verification-prov P04 | 3m 21s | 1 tasks | 8 files |
 | Phase 159 P05 | 3min | 1 tasks | 6 files |
+| Phase 159 P06 | 8min | 2 tasks | 12 files |
 
 ## Decisions
 
@@ -247,11 +248,13 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 - [Phase ?]: Retrospective phase records retain canonical D-07 classes and distinguish fresh present-state checks from chronology.
 - [Phase ?]: Phase 155 preserves required/advisory and independent-root CI topology without promoting advisory lanes.
 - [Phase ?]: Phase 156-158 retrospective records retain canonical D-07 classes and distinguish immutable receipts from fresh proof.
+- [Phase ?]: Phase 159 validations mark coverage only when current evidence is complete; hosted closure gaps remain non-compliant until Plan 07.
+- [Phase ?]: TEST-01 chronology remains historically unprovable under its narrow D-11 waiver; hosted TEST-05 proof remains Plan 07 work.
 
 ## Session
 
-**Last session:** 2026-08-26T20:25:59.455Z
-**Stopped at:** Completed 159-05-PLAN.md
+**Last session:** 2026-08-26T20:30:44.366Z
+**Stopped at:** Completed 159-06-PLAN.md
 **Resume file:** None
 
 ## Operator Next Steps
