@@ -57,6 +57,13 @@ mix verify.no_optional_deps
 mix verify.coverage
 ```
 
+The **`coverage`** CI job is a scheduled/manual, advisory, informational, and
+non-blocking lane. To reproduce it locally, run `mix verify.coverage`. If a
+maintainer needs fresh hosted evidence, redispatch [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+with `workflow_dispatch`, then download the SHA-bound `coverage-report-<sha>`
+artifact from that run. GitHub retains the report for seven days; it is evidence
+only, not a merge gate or coverage-percentage threshold.
+
 Run test files with warnings promoted to failures when changing test support or
 test infrastructure:
 
@@ -126,6 +133,7 @@ GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
 | **`deep-quality`** | Advisory `mix verify.deep_quality`: optional-dependency compile, namespace fence, `mix hex.audit`, and Dialyzer. |
 | **`phoenix-example`** | Advisory Postgres 16 + Meilisearch v1.15 proof: `mix verify.phoenix_example`, which runs the live consumer-shaped example. |
 | **`ops-ui-path` / `ops-ui`** | Path-scoped optional-app proof. `mix verify.ops_ui` delegates to the existing ScrypathOps test orchestration. |
+| **`coverage`** | Scheduled/manual advisory, informational, non-blocking coverage evidence: `mix verify.coverage` produces a SHA-bound report artifact retained for seven days. |
 | **`ecommerce-e2e`** | Scheduled/manual advisory Docker/browser proof. `mix verify.ecommerce_e2e` runs the full lane and always uploads its bounded evidence bundle. |
 
 Treat **`core`**, **`package`**, **`repository-contracts`**, **`backend`**, and **`ecommerce-mounted`** as required merge gates. The compatibility, deep-quality, Phoenix example, optional operator app, and full E2E lanes remain advisory or path-scoped as labeled.
