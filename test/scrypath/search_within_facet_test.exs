@@ -5,6 +5,10 @@ defmodule Scrypath.SearchWithinFacetTest do
 
   alias Scrypath.SearchResult
 
+  def capture_search_stop(_event, _measurements, metadata, parent) do
+    send(parent, {:search_stop_meta, metadata})
+  end
+
   test "search_within_facet rejects duplicate facet attribute in facet_filter" do
     assert_raise ArgumentError, ~r/^search_within_facet:/, fn ->
       Scrypath.search_within_facet(FacetableMovie, "x", {:genre, "Action"},
@@ -20,8 +24,8 @@ defmodule Scrypath.SearchWithinFacetTest do
     :telemetry.attach_many(
       handler_id,
       [[:scrypath, :search, :stop]],
-      fn _event, _meas, meta, _ -> send(self(), {:search_stop_meta, meta}) end,
-      nil
+      &__MODULE__.capture_search_stop/4,
+      self()
     )
 
     on_exit(fn -> :telemetry.detach(handler_id) end)

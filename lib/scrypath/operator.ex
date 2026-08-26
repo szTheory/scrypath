@@ -11,6 +11,7 @@ defmodule Scrypath.Operator do
 
   @operator_only_opts [
     :meilisearch_tasks,
+    :task_history_limit,
     :oban_jobs,
     :oban_inspector,
     :target_index,

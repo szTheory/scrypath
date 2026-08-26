@@ -153,10 +153,16 @@ defmodule Scrypath.Meilisearch.Client do
     options =
       config
       |> Keyword.get(:req_options, [])
-      |> Keyword.put_new(:base_url, base_url!(config))
-      |> Keyword.update(:headers, default_headers(config), &(default_headers(config) ++ &1))
+      |> Keyword.delete(:base_url)
+      |> Keyword.update(:headers, [], &drop_meilisearch_auth_header/1)
+      |> Keyword.put(:base_url, base_url!(config))
 
-    Req.new(options)
+    request = Req.new(options)
+
+    case Config.meilisearch_api_key(config) do
+      nil -> request
+      api_key -> Req.Request.put_header(request, "x-meili-api-key", api_key)
+    end
   end
 
   defp normalize_response({:ok, %Req.Response{status: status, body: body}})
@@ -173,7 +179,7 @@ defmodule Scrypath.Meilisearch.Client do
   end
 
   defp response_metadata({:ok, %Req.Response{status: status}}), do: %{status_code: status}
-  defp response_metadata({:error, exception}), do: %{error: inspect(exception)}
+  defp response_metadata({:error, _exception}), do: %{error_kind: :transport}
 
   defp document_payload(%Document{id: id, data: data}, document_id_field) when is_map(data) do
     Map.put(data, document_id_field, id)
@@ -208,11 +214,10 @@ defmodule Scrypath.Meilisearch.Client do
     |> then(&String.replace_prefix(&1, String.first(&1), String.downcase(String.first(&1))))
   end
 
-  defp default_headers(config) do
-    case Config.meilisearch_api_key(config) do
-      nil -> []
-      api_key -> [{"x-meili-api-key", api_key}]
-    end
+  defp drop_meilisearch_auth_header(headers) do
+    Enum.reject(headers, fn {key, _value} ->
+      String.downcase(to_string(key)) == "x-meili-api-key"
+    end)
   end
 
   defp base_url!(config) do

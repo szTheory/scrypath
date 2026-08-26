@@ -725,6 +725,19 @@ defmodule Scrypath.Meilisearch.SettingsTest do
       refute_received {:client_update_settings, _, _, _}
     end
 
+    test "unknown string hot-apply keys remain strings" do
+      unknown_key = "unknown_setting_#{System.unique_integer([:positive])}"
+
+      assert {:error, {:unsupported_hot_apply_keys, [^unknown_key]}} =
+               Settings.hot_apply(ApplyWireSchema, "idx",
+                 acknowledge_live_index: true,
+                 meilisearch_client: HotApplySucceededClient,
+                 settings: %{unknown_key => true}
+               )
+
+      assert_raise ArgumentError, fn -> String.to_existing_atom(unknown_key) end
+    end
+
     test "happy path: succeeded task without polling" do
       expected_wire = Settings.translate_settings(%{stop_words: ["the"]})
 

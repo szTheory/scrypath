@@ -114,9 +114,12 @@ defmodule Scrypath.Operator.RecoveryAction do
   end
 
   defp oban_retry_config(action, opts) do
-    opts
-    |> base_retry_config(action, :oban)
-    |> Keyword.put_new(:oban_queue, normalize_queue(Map.get(action.reference, :queue)))
+    opts = base_retry_config(opts, action, :oban)
+
+    case normalize_queue(Map.get(action.reference, :queue)) do
+      nil -> opts
+      queue -> Keyword.put_new(opts, :oban_queue, queue)
+    end
   end
 
   defp base_retry_config(opts, action, sync_mode) do
@@ -126,7 +129,13 @@ defmodule Scrypath.Operator.RecoveryAction do
   end
 
   defp normalize_queue(queue) when is_atom(queue), do: queue
-  defp normalize_queue(queue) when is_binary(queue), do: String.to_atom(queue)
+
+  defp normalize_queue(queue) when is_binary(queue) do
+    String.to_existing_atom(queue)
+  rescue
+    ArgumentError -> nil
+  end
+
   defp normalize_queue(_queue), do: nil
 
   defp decode_documents(documents) when is_list(documents) do

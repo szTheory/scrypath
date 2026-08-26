@@ -280,8 +280,7 @@ defmodule Scrypath.TelemetryTest do
 
     assert metadata.method == :get
     assert metadata.path == "/indexes/telemetry_posts/settings"
-    assert is_binary(metadata.error)
-    assert metadata.error =~ "Req.TransportError"
+    assert metadata.error_kind == :transport
     refute Map.has_key?(metadata, :headers)
     refute Map.has_key?(metadata, :body)
     refute Map.has_key?(metadata, :payload)
