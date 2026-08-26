@@ -53,8 +53,11 @@ accessibility, theme, and brandbook decisions are not applicable.
   Update `CONTRIBUTING.md` with the CI job and manual recovery path.
 - **D-06:** Do not add ExCoveralls, Codecov, GitHub Code Quality conversion,
   Cobertura/LCOV dependencies, historical trend storage, third-party tokens, or an
-  artifact attestation. Those solve needs not demonstrated by this phase and would
-  conflict with the dependency-free, least-privilege, no-vanity-metric posture.
+  artifact attestation for the transient coverage report. Those solve needs not
+  demonstrated by this phase and would conflict with the dependency-free,
+  least-privilege, no-vanity-metric posture. The dependency-free closeout JSON
+  receipt introduced by D-23 is workflow evidence, not a signed supply-chain
+  attestation for a published asset.
 
 ### Characterization chronology
 - **D-07:** Every retrospective claim uses one of four evidence classes:
@@ -127,6 +130,15 @@ accessibility, theme, and brandbook decisions are not applicable.
   evidence, Nyquist validation, local proof, and exact-SHA hosted proof exist. Close
   every repairable gap; use an explicit override only for a precisely documented,
   historically irrecoverable TEST-01 chronology gap.
+- **D-23:** Final Phase 159 authority is machine-verifiable. Run a candidate and a
+  final `workflow_dispatch` against their exact SHAs; require all five established
+  required jobs, the coverage producer, and the `closeout-attestation` job plus both
+  immutable SHA-bound artifacts. A human or simulated reviewer identity is not an
+  acceptance criterion.
+- **D-24:** Future engineering plans must shift verification left. Incomplete plans
+  may not contain post-implementation human verification, human-check backstops, or
+  unresolved UAT debt. Subjective product choices happen before implementation or
+  remain nonblocking; executable tests and hosted evidence own completion.
 
 ### the agent's Discretion
 - Exact stable matrix column widths, phase-local cross-link wording, detached-worktree

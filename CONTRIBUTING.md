@@ -64,6 +64,24 @@ with `workflow_dispatch`, then download the SHA-bound `coverage-report-<sha>`
 artifact from that run. GitHub retains the report for seven days; it is evidence
 only, not a merge gate or coverage-percentage threshold.
 
+Milestone and phase closeout use machine authority rather than post-implementation
+human verification or UAT. Prepare a candidate commit, then run:
+
+```sh
+node scripts/ci_monitor.cjs closeout --push \
+  --branch "$(git branch --show-current)" \
+  --sha "$(git rev-parse HEAD)"
+```
+
+The command dispatches `ci.yml`, selects only a new `workflow_dispatch` run at
+the requested SHA, and fails closed unless all five required jobs, coverage, and
+`closeout-attestation` succeed and both SHA-bound artifacts have immutable
+digests. Closeout uses two stages: attest the pending candidate, commit all final
+tracking and verification artifacts, then attest the exact final SHA. Do not
+write tracked files after the final successful run. Authentication or product
+decisions may still stop work before implementation; they are not acceptance
+tests and must never be represented as simulated approval.
+
 Run test files with warnings promoted to failures when changing test support or
 test infrastructure:
 

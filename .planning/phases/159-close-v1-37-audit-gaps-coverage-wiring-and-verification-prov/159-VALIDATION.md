@@ -9,7 +9,7 @@ updated: 2026-08-26
 
 # Phase 159 Validation Map
 
-**Current execution graph:** seven plans across five waves: **01 → 02 → {03, 04, 05} → 06 → 07**. Phase 159 organizes evidence only; all 31 original requirements remain owned by Phases 148–158 and the [canonical matrix](159-EVIDENCE-MATRIX.md) is authoritative.
+**Current execution graph:** eight plans across six waves: **01 → 02 → {03, 04, 05} → 06 → 07 → 08**. Phase 159 organizes evidence only; all 31 original requirements remain owned by Phases 148–158 and the [canonical matrix](159-EVIDENCE-MATRIX.md) is authoritative.
 
 ## Current task map
 
@@ -27,8 +27,11 @@ updated: 2026-08-26
 | 159-07-01 | 5 | 159-06 | D-18 local closure bundle | complete (`a358741`) |
 | 159-07-02 | 5 | 159-07-01 | exact-SHA GitHub run/artifact inspection and final audit | complete (run `33014343041`) |
 | 159-07-03 | 5 | 159-07-02 | blocking human verification of hosted provenance and narrow audit disposition | complete (reviewer `approved`) |
+| 159-08-01 | 6 | 159-07 | Step-scoped coverage/checkout regression guard | complete (`b53e603`) |
+| 159-08-02 | 6 | 159-08-01 | Single reconciled audit with pending exact-SHA authority | complete (`ffd0013`, revised by Plan 08 automation) |
+| 159-08-03 | 6 | 159-08-02 | Candidate and final exact-SHA closeout attestations | pending candidate run |
 
-Plans 03–05 are parallel Wave 3 work after Plan 02. Plan 06 depends on all three; Plan 07 depends on Plan 06. No obsolete four-plan graph or task ID is retained.
+Plans 03–05 are parallel Wave 3 work after Plan 02. Plan 06 depends on all three; Plan 07 depends on Plan 06; Plan 08 closes the audit without post-implementation human verification. No obsolete graph or task ID is retained.
 
 ## Wave 0 reconciliation
 
@@ -40,7 +43,7 @@ Plans 03–05 are parallel Wave 3 work after Plan 02. Plan 06 depends on all thr
 
 ## Closure disposition
 
-`nyquist_compliant: true`: D-18 and exact-SHA D-19 evidence are complete and the final blocking human review approved the hosted provenance and narrow audit disposition. TEST-01 remains **historically unprovable** for the four finite parent probes under its narrow D-11 waiver.
+`nyquist_compliant: true`: D-18 and the original exact-SHA D-19 evidence are complete. Plan 08 replaces the non-attributable review record as closeout authority with deterministic candidate/final GitHub Actions attestations. TEST-01 remains **historically unprovable** for the four finite parent probes under its narrow D-11 waiver.
 
 ## Hosted checkpoint approval
 
@@ -49,3 +52,12 @@ Plans 03–05 are parallel Wave 3 work after Plan 02. Plan 06 depends on all thr
 - **Candidate / workflow source / run head SHA:** `a35874178b79392caa0f3c1dcc010ea149e1e5bf` (equal)
 - **Approved scope:** required-job success, coverage producer and retained artifact provenance, advisory/path-scoped lane posture, TEST-05 closure, and the bounded TEST-01 chronology waiver.
 - **No broadened claim:** this approval does not convert the four historically-unprovable TEST-01 parent probes into historical passes or alter original Phase 148–158 ownership.
+
+## Automated exact-SHA closeout authority
+
+- **Authority:** `github-actions-exact-sha`; no person or simulated reviewer identity is required.
+- **Candidate gate:** dispatch `.github/workflows/ci.yml` on the candidate branch and accept only a newly created `workflow_dispatch` run whose `headSha` equals the candidate commit.
+- **Required evidence:** `core (required)`, `package (required)`, `repository-contracts (required)`, `backend (required)`, `ecommerce-mounted (required)`, `coverage (advisory)`, and `closeout-attestation` each conclude `success`.
+- **Artifact proof:** both `coverage-report-<sha>` and `closeout-attestation-<sha>` are live, belong to that run/SHA, and carry non-empty immutable digests.
+- **Final gate:** after all SUMMARY, VERIFICATION, audit, validation, ROADMAP, STATE, REQUIREMENTS, and PROJECT changes are committed, repeat the same gate at the exact final SHA and make no tracked writes afterward.
+- **Failure behavior:** any mismatch, failed/skipped job, missing/expired artifact, timeout, or API/auth error leaves closeout unauthorized and returns the audit to `pending_exact_sha_ci` in the repair commit.

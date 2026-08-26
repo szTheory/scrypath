@@ -95,6 +95,8 @@ Agents should default to the repo's **green-main release train** posture:
 
 - keep `main` green on the lean required gates
 - prefer **PR-first** execution for serious milestone or feature-depth work
+- shift verification left: completion must be backed by executable tests or exact-SHA hosted evidence, never post-implementation human verification or pending UAT
+- resolve subjective choices before implementation or keep them nonblocking; do not simulate a reviewer identity or silently auto-approve a trust gate
 - avoid speculative milestone reopening when no active milestone, release follow-up, or concrete bug/adopter evidence exists
 - when the release train is idle and there is no approved work item, say so plainly instead of inventing work
 
