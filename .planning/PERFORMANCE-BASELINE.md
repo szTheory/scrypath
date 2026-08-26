@@ -2,7 +2,8 @@
 
 **Captured:** 2026-08-26
 
-**Baseline commit:** `92abcd9` plus the uncommitted v1.37 architecture extraction
+**Code state:** benchmark harness committed in `e0a930f`; measured architecture
+state subsequently committed in `4f0f354`
 
 **Environment:** macOS, Apple M5 Pro, 18 available cores, 64 GB memory,
 Elixir 1.19.5, Erlang/OTP 28.4.1, JIT enabled
