@@ -215,10 +215,10 @@ Historical phase details and evidence live under `milestones/`. Phases 137-143 a
 ### Phase 159: Audit Gap Closure — Coverage Wiring and Verification Provenance
 
 **Goal:** Maintainers can close v1.37 with a scheduled/manual informational coverage artifact and truthful, exact-SHA verification provenance that preserves original requirement ownership and historical limitations.
-**Requirements**: TBD
+**Requirements**: None — gap closure preserves original Phase 148–158 ownership.
 **Scope note:** No requirements are newly mapped; this phase repairs TEST-05's integration path and restores evidence for the original Phase 148–158 ownership.
 **Depends on:** Phase 158
-**Plans:** 7/7 plans executed
+**Plans:** 8 plans (7 executed, 1 gap-closure plan pending)
 
 Plans:
 **Wave 1**
@@ -242,3 +242,7 @@ Plans:
 **Wave 5** *(blocked on Wave 4 completion)*
 
 - [x] 159-07-PLAN.md — Capture local/hosted exact-SHA closure evidence, rerun the audit last, and obtain human provenance approval.
+
+**Wave 6** *(blocked on Wave 5 completion)*
+
+- [ ] 159-08-PLAN.md — Replace the contradictory audit body with one evidence-derived final disposition.
