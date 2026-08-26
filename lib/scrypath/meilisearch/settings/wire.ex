@@ -27,9 +27,7 @@ defmodule Scrypath.Meilisearch.Settings.Wire do
   def translate(canonical) when is_map(canonical) do
     {unrecognized, recognized} = Map.pop(canonical, :__unrecognized__, %{})
 
-    one_way =
-      Map.get(recognized, :one_way) || Map.get(unrecognized, :one_way) ||
-        Map.get(unrecognized, "one_way") || false
+    one_way = one_way_setting(recognized, unrecognized)
 
     recognized = Map.delete(recognized, :one_way)
     unrecognized = unrecognized |> Map.delete(:one_way) |> Map.delete("one_way")
@@ -69,6 +67,19 @@ defmodule Scrypath.Meilisearch.Settings.Wire do
           end)
       end
     end)
+  end
+
+  defp one_way_setting(recognized, unrecognized) do
+    case {
+      Map.get(recognized, :one_way),
+      Map.get(unrecognized, :one_way),
+      Map.get(unrecognized, "one_way")
+    } do
+      {value, _, _} when not is_nil(value) -> value
+      {_, value, _} when not is_nil(value) -> value
+      {_, _, value} when not is_nil(value) -> value
+      _ -> false
+    end
   end
 
   defp strip_meta_keys(map) do

@@ -151,6 +151,22 @@ defmodule Scrypath.Meilisearch.SettingsTest do
 
       assert result == %{"synonyms" => %{}}
     end
+
+    test "recognized one_way false takes precedence over duplicate unrecognized values" do
+      result =
+        Settings.translate_settings(%{
+          synonyms: [["nyc", "new york"]],
+          one_way: false,
+          __unrecognized__: %{"one_way" => true, one_way: true}
+        })
+
+      assert result == %{
+               "synonyms" => %{
+                 "nyc" => ["new york"],
+                 "new york" => ["nyc"]
+               }
+             }
+    end
   end
 
   describe "apply/3 wire-shape (TUNE-01/02/04)" do
