@@ -35,57 +35,48 @@ defmodule Scrypath.Meilisearch.Tasks do
       [index_uids: [index_uid], types: types, limit: remaining]
       |> maybe_put_from(from)
 
-    case client(config).tasks(filters, config) do
-      {:ok, response} ->
-        response
-        |> Map.get(:results, Map.get(response, "results", []))
-        |> Enum.reduce_while({:ok, []}, fn payload, {:ok, page} ->
-          case TaskPayload.normalize(payload, :poll) do
-            {:ok, normalized_task} ->
-              {:cont,
-               {:ok, [Operations.task_from_backend(normalized_task, source: :meilisearch) | page]}}
+    with {:ok, response} <- client(config).tasks(filters, config),
+         {:ok, page} <- normalize_task_page(response) do
+      continue_task_pages(index_uid, types, config, response, page, acc)
+    end
+  end
 
-            {:error, reason} ->
-              {:halt, {:error, reason}}
-          end
-        end)
-        |> case do
-          {:ok, page} ->
-            page = Enum.reverse(page)
-            next = Map.get(response, :next, Map.get(response, "next"))
-            observed = length(acc) + length(page)
+  defp normalize_task_page(response) do
+    response
+    |> Map.get(:results, Map.get(response, "results", []))
+    |> Enum.reduce_while({:ok, []}, fn payload, {:ok, page} ->
+      case TaskPayload.normalize(payload, :poll) do
+        {:ok, normalized_task} ->
+          task = Operations.task_from_backend(normalized_task, source: :meilisearch)
+          {:cont, {:ok, [task | page]}}
 
-            cond do
-              is_nil(next) ->
-                {:ok, acc ++ page}
+        {:error, reason} ->
+          {:halt, {:error, reason}}
+      end
+    end)
+    |> then(fn
+      {:ok, page} -> {:ok, Enum.reverse(page)}
+      {:error, _reason} = error -> error
+    end)
+  end
 
-              observed >= task_history_limit(config) ->
-                {:error,
-                 {:task_history_truncated,
-                  %{
-                    index_uid: index_uid,
-                    limit: task_history_limit(config),
-                    observed: observed,
-                    next: next
-                  }}}
+  defp continue_task_pages(index_uid, types, config, response, page, acc) do
+    next = Map.get(response, :next, Map.get(response, "next"))
+    all_tasks = acc ++ page
+    observed = length(all_tasks)
+    limit = task_history_limit(config)
 
-              true ->
-                list_task_pages(
-                  index_uid,
-                  types,
-                  config,
-                  task_history_limit(config) - observed,
-                  next,
-                  acc ++ page
-                )
-            end
+    cond do
+      is_nil(next) ->
+        {:ok, all_tasks}
 
-          {:error, reason} ->
-            {:error, reason}
-        end
+      observed >= limit ->
+        {:error,
+         {:task_history_truncated,
+          %{index_uid: index_uid, limit: limit, observed: observed, next: next}}}
 
-      {:error, reason} ->
-        {:error, reason}
+      true ->
+        list_task_pages(index_uid, types, config, limit - observed, next, all_tasks)
     end
   end
 

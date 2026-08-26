@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Verify.DeepQuality do
+  @moduledoc false
   use Mix.Task
   @shortdoc "Runs canonical deep-quality verification"
   @impl true

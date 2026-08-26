@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Verify.Compatibility do
+  @moduledoc false
   use Mix.Task
   @shortdoc "Runs canonical compatibility-contract verification"
   @impl true
