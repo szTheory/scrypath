@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Scrypath.Reconcile do
     {opts, argv} = OperatorTask.parse!(args, @switches)
     schema = OperatorTask.schema_from_argv!(argv)
     runtime_opts = OperatorTask.runtime_opts(opts) ++ OperatorTask.test_operator_opts()
-    operator_opts = OperatorTask.target_index_opt(opts)
+    operator_opts = OperatorTask.target_index_opt(opts) ++ OperatorTask.task_history_opt(opts)
 
     case Keyword.get(opts, :action) do
       nil ->

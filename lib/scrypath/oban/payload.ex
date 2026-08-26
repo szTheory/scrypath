@@ -49,7 +49,6 @@ defmodule Scrypath.Oban.Payload do
   defp runtime_job_fields(config) do
     %{}
     |> put_optional_job_string(config, :meilisearch_url)
-    |> put_optional_job_string(config, :meilisearch_api_key)
     |> put_optional_job_string(config, :index_prefix)
   end
 

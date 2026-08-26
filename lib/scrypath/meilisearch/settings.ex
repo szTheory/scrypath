@@ -461,16 +461,7 @@ defmodule Scrypath.Meilisearch.Settings do
   end
 
   defp hot_apply_unrecognized_key_atom(k) when is_atom(k), do: k
-
-  defp hot_apply_unrecognized_key_atom(k) when is_binary(k) do
-    underscored = Macro.underscore(k)
-
-    try do
-      String.to_existing_atom(underscored)
-    rescue
-      ArgumentError -> String.to_atom(underscored)
-    end
-  end
+  defp hot_apply_unrecognized_key_atom(k) when is_binary(k), do: k
 
   defp public_hot_apply_task(%OpTask{} = task) do
     task

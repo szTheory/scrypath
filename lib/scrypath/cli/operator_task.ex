@@ -31,7 +31,8 @@ defmodule Scrypath.CLI.OperatorTask do
     oban_queue: :string,
     oban_max_attempts: :integer,
     repo: :string,
-    otp_app: :string
+    otp_app: :string,
+    task_history_limit: :integer
   ]
 
   def parse!(args, extra_switches \\ []) do
@@ -67,6 +68,14 @@ defmodule Scrypath.CLI.OperatorTask do
     case Keyword.get(opts, :target_index) do
       nil -> []
       value -> [target_index: value]
+    end
+  end
+
+  def task_history_opt(opts) do
+    case Keyword.get(opts, :task_history_limit) do
+      nil -> []
+      limit when is_integer(limit) and limit > 0 -> [task_history_limit: limit]
+      _ -> Mix.raise("task_history_limit must be a positive integer")
     end
   end
 

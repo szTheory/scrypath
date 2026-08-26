@@ -23,7 +23,8 @@ defmodule Mix.Tasks.Scrypath.Status do
 
     case Scrypath.sync_status(
            schema,
-           OperatorTask.runtime_opts(opts) ++ OperatorTask.test_operator_opts()
+           OperatorTask.runtime_opts(opts) ++
+             OperatorTask.task_history_opt(opts) ++ OperatorTask.test_operator_opts()
          ) do
       {:ok, status} -> Mix.shell().info(OperatorTask.render_status(status))
       {:error, reason} -> OperatorTask.error!("scrypath.status", reason)

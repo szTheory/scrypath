@@ -3,6 +3,14 @@ defmodule Scrypath.ReindexTest do
 
   import ExUnit.CaptureLog
 
+  def capture_reindex_event(event, measurements, metadata, parent) do
+    send(parent, {:telemetry_event, event, measurements, metadata})
+  end
+
+  def capture_settings_verified(event, measurements, metadata, parent) do
+    send(parent, {:telemetry_span, event, measurements, metadata})
+  end
+
   defmodule ReindexRankingFullSchema do
     use Ecto.Schema
 
@@ -588,10 +596,8 @@ defmodule Scrypath.ReindexTest do
         :telemetry.attach(
           handler_id,
           [:scrypath, :reindex, :verify_skipped],
-          fn event, measurements, metadata, _ ->
-            send(parent, {:telemetry_event, event, measurements, metadata})
-          end,
-          nil
+          &__MODULE__.capture_reindex_event/4,
+          parent
         )
 
       log =
@@ -627,10 +633,8 @@ defmodule Scrypath.ReindexTest do
             [:scrypath, :reindex, :settings_verified, :start],
             [:scrypath, :reindex, :settings_verified, :stop]
           ],
-          fn event, measurements, metadata, _ ->
-            send(parent, {:telemetry_span, event, measurements, metadata})
-          end,
-          nil
+          &__MODULE__.capture_settings_verified/4,
+          parent
         )
 
       assert {:ok, %{}} =

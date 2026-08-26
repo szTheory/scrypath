@@ -37,7 +37,8 @@ defmodule Mix.Tasks.Scrypath.Failed do
       |> Keyword.drop([:json, :no_class_summary])
       |> OperatorTask.runtime_opts()
 
-    full_opts = runtime_opts ++ OperatorTask.test_operator_opts()
+    full_opts =
+      runtime_opts ++ OperatorTask.task_history_opt(opts) ++ OperatorTask.test_operator_opts()
 
     if json? do
       case Scrypath.failed_sync_work(schema, full_opts ++ [reason_class_counts: true]) do
