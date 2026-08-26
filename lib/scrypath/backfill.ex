@@ -139,7 +139,6 @@ defmodule Scrypath.Backfill do
     }
   end
 
-  defp public_task(task) when is_map(task), do: task
   defp public_task(_task), do: nil
 
   defp maybe_drop_nil(map, key) do

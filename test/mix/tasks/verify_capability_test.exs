@@ -59,4 +59,8 @@ defmodule Mix.Tasks.Verify.CapabilityTest do
       assert preferred_envs[String.to_existing_atom(task)] == :test
     end
   end
+
+  test "historical ops command delegates to the canonical spelling" do
+    assert Mix.Project.config()[:aliases][:"verify.opsui"] == "verify.ops_ui"
+  end
 end

@@ -124,7 +124,8 @@ defmodule Scrypath.MixProject do
 
   defp aliases do
     [
-      test: &test_alias/1
+      test: &test_alias/1,
+      "verify.opsui": "verify.ops_ui"
     ]
   end
 

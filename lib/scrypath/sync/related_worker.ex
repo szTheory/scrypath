@@ -25,7 +25,7 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
 
         config = Config.resolve!(opts)
 
-        fan_outs = Scrypath.Schema.Metadata.fan_outs(schema_module) || []
+        fan_outs = Scrypath.Schema.Metadata.fan_outs(schema_module)
 
         fan_out_config =
           Keyword.get(fan_outs, fan_out_key) ||
@@ -80,7 +80,7 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
     defp resolve_fan_out(schema_module, %{"fan_out" => fan_out_string})
          when is_binary(fan_out_string) do
       fan_out_key = String.to_existing_atom(fan_out_string)
-      fan_outs = Scrypath.Schema.Metadata.fan_outs(schema_module) || []
+      fan_outs = Scrypath.Schema.Metadata.fan_outs(schema_module)
 
       if Keyword.has_key?(fan_outs, fan_out_key) do
         {:ok, fan_out_key}

@@ -28,9 +28,6 @@ defmodule Mix.Tasks.Verify.Capability do
       :phoenix_example ->
         phoenix_example!(args)
 
-      :ops_ui ->
-        no_args!(capability, args, fn -> run_task!("verify.opsui", []) end)
-
       :ecommerce_e2e ->
         command!(capability, args, "make", ["-C", "examples/scrypath_ecommerce", "verify-e2e"])
     end
@@ -64,8 +61,8 @@ defmodule Mix.Tasks.Verify.Capability do
   defp deep_quality!([]) do
     run_task!("verify.no_optional_deps", [])
     Mix.Task.run("scrypath.namespace_fence")
-    Mix.Task.run("hex.audit")
-    Mix.Task.run("dialyzer")
+    run_mix_command!("hex.audit", [])
+    run_mix_command!("dialyzer", [])
     :ok
   end
 
@@ -111,5 +108,21 @@ defmodule Mix.Tasks.Verify.Capability do
     Mix.Task.reenable(task)
     Mix.Task.run(task, args)
     :ok
+  end
+
+  defp run_mix_command!(task, args) do
+    mix = System.find_executable("mix") || Mix.raise("could not find the mix executable")
+
+    {output, status} =
+      System.cmd(mix, [task | args],
+        env: [{"MIX_ENV", Atom.to_string(Mix.env())}],
+        stderr_to_stdout: true
+      )
+
+    Mix.shell().info(output)
+
+    if status != 0 do
+      Mix.raise("mix #{task} failed")
+    end
   end
 end
