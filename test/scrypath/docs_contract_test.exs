@@ -270,7 +270,7 @@ defmodule Scrypath.DocsContractTest do
       "guides/support-and-compatibility.md",
       "mix verify.adopter",
       "mix verify.adopter --live",
-      "phoenix-example-integration"
+      "phoenix-example"
     ])
 
     assert_contains_all(@support_guide, [
@@ -306,14 +306,13 @@ defmodule Scrypath.DocsContractTest do
   end
 
   test "example runbook and CI preserve the same ordered proof command chain" do
-    assert String.contains?(@example_readme, "phoenix-example-integration")
+    assert String.contains?(@example_readme, "phoenix-example")
     assert ordered?(@example_readme, "cd examples/phoenix_meilisearch", "mix deps.get")
     assert ordered?(@example_readme, "mix deps.get", "mix test")
 
-    [_head, job_tail] = String.split(@ci_workflow, "phoenix-example-integration:", parts: 2)
+    [_head, job_tail] = String.split(@ci_workflow, "phoenix-example:", parts: 2)
     job_head = String.slice(job_tail, 0, 4000)
-    assert ordered?(job_head, "cd examples/phoenix_meilisearch", "mix deps.get")
-    assert ordered?(job_head, "mix deps.get", "mix test")
+    assert String.contains?(job_head, "mix verify.phoenix_example")
   end
 
   test "verify.phase83 stays wired into the focused maintainer flow" do
@@ -633,18 +632,16 @@ defmodule Scrypath.DocsContractTest do
   test "CONTRIBUTING documents default test path and live integration jobs (VRFY)" do
     assert_contains_all(@contributing, [
       "mix test --exclude integration",
-      "**`main-ci`**",
-      "**`repo-hygiene`**",
-      "**`release-truth`**",
-      "**`phase5-verification`**",
-      "**`phase13-verification`**",
-      "**`meilisearch-smoke`**",
-      "**`phoenix-example-integration`**",
+      "**`core`**",
+      "**`package`**",
+      "**`repository-contracts`**",
+      "**`backend`**",
+      "**`phoenix-example`**",
       "examples/phoenix_meilisearch"
     ])
 
-    assert String.contains?(@contributing, "Service: Meilisearch")
-    assert String.contains?(@contributing, "Services: Postgres")
+    assert String.contains?(@contributing, "Required Meilisearch")
+    assert String.contains?(@contributing, "Postgres 16 + Meilisearch")
   end
 
   test "example smoke script exists only under phoenix_meilisearch (Phase 33)" do
@@ -663,7 +660,7 @@ defmodule Scrypath.DocsContractTest do
 
     assert ordered?(
              @contributing,
-             "phoenix-example-integration",
+             "phoenix-example",
              "cd examples/phoenix_meilisearch"
            )
 
@@ -675,7 +672,7 @@ defmodule Scrypath.DocsContractTest do
 
     assert_contains_all(golden, [
       "examples/phoenix_meilisearch/README.md",
-      "phoenix-example-integration",
+      "phoenix-example",
       "pull requests",
       "GitHub Actions",
       "SCRYPATH_EXAMPLE_INTEGRATION=1",
@@ -688,20 +685,18 @@ defmodule Scrypath.DocsContractTest do
 
   test "CI workflow includes Phoenix example integration job wired to example path" do
     assert_contains_all(@ci_workflow, [
-      "phoenix-example-integration:",
-      "examples/phoenix_meilisearch",
+      "phoenix-example:",
       "SCRYPATH_EXAMPLE_INTEGRATION",
       "PGPORT",
       "postgres:16-alpine",
       "getmeili/meilisearch:v1.15",
       "mix deps.get",
-      "mix test"
+      "mix verify.phoenix_example"
     ])
 
-    [_head, job_tail] = String.split(@ci_workflow, "phoenix-example-integration:", parts: 2)
+    [_head, job_tail] = String.split(@ci_workflow, "phoenix-example:", parts: 2)
     job_head = String.slice(job_tail, 0, 4000)
-    assert ordered?(job_head, "cd examples/phoenix_meilisearch", "mix deps.get")
-    assert ordered?(job_head, "mix deps.get", "mix test")
+    assert ordered?(job_head, "mix deps.get", "mix verify.phoenix_example")
   end
 
   test "README sync authority ties sync-modes guide link to authority wording (Phase 51)" do
@@ -725,43 +720,40 @@ defmodule Scrypath.DocsContractTest do
     ])
   end
 
-  test "CONTRIBUTING phoenix-example-integration matches ci.yml mix ordering (Phase 51)" do
-    assert String.contains?(@contributing, "phoenix-example-integration")
+  test "CONTRIBUTING phoenix-example matches ci.yml canonical command (Phase 51)" do
+    assert String.contains?(@contributing, "phoenix-example")
 
-    [_head, row_tail] = String.split(@contributing, "phoenix-example-integration", parts: 2)
-    assert ordered?(row_tail, "mix deps.get", "mix test")
+    [_head, row_tail] = String.split(@contributing, "| **`phoenix-example`** |", parts: 2)
+    assert String.contains?(String.slice(row_tail, 0, 1000), "mix verify.phoenix_example")
 
-    [_head, job_tail] = String.split(@ci_workflow, "phoenix-example-integration:", parts: 2)
+    [_head, job_tail] = String.split(@ci_workflow, "phoenix-example:", parts: 2)
     job_head = String.slice(job_tail, 0, 4000)
-    assert ordered?(job_head, "cd examples/phoenix_meilisearch", "mix deps.get")
-    assert ordered?(job_head, "mix deps.get", "mix test")
+    assert ordered?(job_head, "mix deps.get", "mix verify.phoenix_example")
   end
 
-  test "README surfaces mix verify.opsui for optional scrypath_ops (Phase 53)" do
-    assert String.contains?(@readme, "mix verify.opsui")
+  test "README surfaces canonical ops verification for optional scrypath_ops (Phase 53)" do
+    assert String.contains?(@readme, "mix verify.ops_ui")
   end
 
   test "CONTRIBUTING documents scrypath_ops playbooks validate for fixture directories (Phase 64)" do
     assert String.contains?(@contributing, "mix scrypath_ops.playbooks.validate")
   end
 
-  test "CONTRIBUTING scrypath-ops row matches ci.yml mix ordering (Phase 53)" do
-    assert String.contains?(@contributing, "scrypath-ops")
+  test "CONTRIBUTING ops-ui row matches ci.yml canonical command (Phase 53)" do
+    assert String.contains?(@contributing, "ops-ui")
 
     [_head, row_tail] =
       String.split(
         @contributing,
-        "`scrypath-ops-path-check` / `scrypath-ops`",
+        "`ops-ui-path` / `ops-ui`",
         parts: 2
       )
 
-    assert ordered?(row_tail, "cd scrypath_ops", "mix deps.get")
-    assert ordered?(row_tail, "mix deps.get", "mix test")
+    assert String.contains?(String.slice(row_tail, 0, 1000), "mix verify.ops_ui")
 
-    [_head, from_job] = String.split(@ci_workflow, "\n  scrypath-ops:\n", parts: 2)
+    [_head, from_job] = String.split(@ci_workflow, "\n  ops-ui:\n", parts: 2)
     job_window = String.slice(from_job, 0, 4000)
-    assert ordered?(job_window, "cd scrypath_ops", "mix deps.get")
-    assert ordered?(job_window, "mix deps.get", "mix test")
+    assert ordered?(job_window, "mix deps.get", "mix verify.ops_ui")
   end
 
   test "verify.opsui Mix task keeps orchestration markers (Phase 53)" do
@@ -772,16 +764,16 @@ defmodule Scrypath.DocsContractTest do
 
   test "release docs and CI keep the package gate auth-free" do
     assert_contains_all(@ci_workflow, [
-      "mix verify",
-      "mix verify.phase5",
-      "Operator integration verification (`mix verify.phase13`)",
-      "mix verify.phase13"
+      "mix verify.core",
+      "mix verify.package",
+      "mix verify.repository_contracts",
+      "mix verify.backend"
     ])
 
     refute @ci_workflow =~ "mix hex.publish --dry-run"
 
     assert_contains_all(@release_docs, [
-      "mix verify.phase11",
+      "mix verify.package",
       "mix verify.release_publish X.Y.Z",
       "./scripts/verify_phase11_docker.sh",
       ".github/workflows/publish-hex.yml",
@@ -975,7 +967,7 @@ defmodule Scrypath.DocsContractTest do
     assert_contains_all(@release_workflow, [
       "ref: ${{ needs.release-please.outputs.tag_name }}",
       "grep -n \"@version \\\"${{ needs.release-please.outputs.version }}\\\"\" mix.exs",
-      "run: mix verify.phase11",
+      "run: mix verify.package",
       "run: mix hex.publish --dry-run --yes",
       "run: mix hex.publish --yes",
       ~s|run: mix verify.release_publish "${{ needs.release-please.outputs.version }}"|
@@ -987,7 +979,7 @@ defmodule Scrypath.DocsContractTest do
       "name: Publish Hex Recovery",
       "ref: ${{ inputs.tag }}",
       "grep -n \"@version \\\"${{ inputs.release_version }}\\\"\" mix.exs",
-      "run: mix verify.phase11",
+      "run: mix verify.package",
       "run: mix hex.publish --dry-run --yes",
       "run: mix hex.publish --yes",
       ~s|run: mix verify.release_publish "${{ inputs.release_version }}"|
@@ -1070,8 +1062,8 @@ defmodule Scrypath.DocsContractTest do
     ])
 
     assert_contains_all(@ci_workflow, [
-      "Run repository hygiene gate (`mix verify --exclude integration`)",
-      "run: mix verify --exclude integration"
+      "core (required)",
+      "run: mix verify.core --exclude integration --exclude docs_contract"
     ])
   end
 

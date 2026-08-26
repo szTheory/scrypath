@@ -1,6 +1,6 @@
 # Releasing Scrypath
 
-**For library adopters:** the [README](../README.md) summarizes versioning expectations and points at release notes. **This document** is the maintainer source of truth for Release Please, **`mix verify.phase11`**, publish checks, and parity workflows—read it before changing release automation. **Live Meilisearch job names** (`meilisearch-smoke`, `phase5-verification`, etc.) stay indexed in [`CONTRIBUTING.md`](../CONTRIBUTING.md) alongside `.github/workflows/ci.yml`—avoid duplicating that matrix here.
+**For library adopters:** the [README](../README.md) summarizes versioning expectations and points at release notes. **This document** is the maintainer source of truth for Release Please, **`mix verify.package`**, publish checks, and parity workflows—read it before changing release automation. **Live backend jobs** stay indexed in [`CONTRIBUTING.md`](../CONTRIBUTING.md) alongside `.github/workflows/ci.yml`—avoid duplicating that matrix here.
 
 Release Please owns the version bump, changelog PR, and Git tag for Scrypath. The only publish path is the existing GitHub Actions workflow: Release Please creates `vX.Y.Z`, Actions checks out that tag, and `mix hex.publish --yes` runs from that tagged ref.
 
@@ -8,7 +8,7 @@ Release Please owns the version bump, changelog PR, and Git tag for Scrypath. Th
 
 Scrypath now runs a **green-main release train**:
 
-- `main` stays green on the lean required gates only: **main CI**, **repo hygiene**, **release truth**, and **`phase99-trust`**.
+- `main` stays green on the lean required gates only: **`core`**, **`package`**, **`repository-contracts`**, **`backend`**, and **`ecommerce-mounted`**.
 - The default shipping posture is **patch-first while the library remains pre-1.0**. The existing Release Please configuration already uses the pre-1.0 bump knobs, so ordinary merged work rolls forward on patch cadence.
 - Serious milestone or feature-depth work should land through **PRs**, not direct `main` development.
 - **Squash merge only** is the intended feed into Release Please. The PR title should be treated as the release-facing summary because it becomes the squash commit title.
@@ -23,7 +23,7 @@ The optional operator Phoenix app lives in **`scrypath_ops/`** at the repository
 Run the auth-free package gate before you merge a release PR or when you need the same checks outside CI:
 
 ```bash
-mix verify.phase11
+mix verify.package
 ```
 
 That command is the always-on CI gate for the release contract.
@@ -44,7 +44,7 @@ For a faster slice while iterating on OPSUI accessibility semantics (tests tagge
 cd scrypath_ops && mix opsui.test_a11y
 ```
 
-That alias runs `scrypath_ops.check_nav_contract`, creates and migrates the OPSUI database quietly, then runs **`mix test --only opsui_a11y`**. It is an OPSUI accessibility slice; it does not run package metadata, clean-consumer smoke, release-doc contract, docs, release workflow, or `mix hex.build --unpack` checks. Use **`mix verify.phase11`** for the auth-free release/package truth gate.
+That alias runs `scrypath_ops.check_nav_contract`, creates and migrates the OPSUI database quietly, then runs **`mix test --only opsui_a11y`**. It is an OPSUI accessibility slice; it does not run package metadata, clean-consumer smoke, release-doc contract, docs, release workflow, or `mix hex.build --unpack` checks. Use **`mix verify.package`** for the auth-free release/package truth gate.
 
 Use this release-only credential check only when you are preparing an actual publish with a publisher-scoped Hex key:
 
@@ -80,7 +80,7 @@ For a deterministic local reproduction of the always-on release contract gate, r
 ./scripts/verify_phase11_docker.sh
 ```
 
-That gives you the same `mix verify.phase11` path CI executes, without depending on your host Beam toolchain or a real Hex publish.
+That script retains the historical `verify.phase11` wrapper while enforcing the same package proof as `mix verify.package`, without depending on your host Beam toolchain or a real Hex publish.
 
 If you prefer `act`, keep it as a secondary option and pin a runner image that has a working Beam/OpenSSL stack for your host architecture. The Docker wrapper is the default because it is less brittle.
 
@@ -100,7 +100,7 @@ Treat failures in this workflow as operational regressions in the published pack
 1. Confirm the repo state before merge:
 
    ```bash
-   mix verify.phase11
+mix verify.package
    grep -n '@version\|@source_ref' mix.exs
    cat .release-please-manifest.json
    sed -n '1,80p' CHANGELOG.md
@@ -109,7 +109,7 @@ Treat failures in this workflow as operational regressions in the published pack
 2. Review the Release Please PR. The version in `mix.exs`, `.release-please-manifest.json`, and the top changelog entry should all describe the same `vX.Y.Z` release.
    On the train, the release PR should be the only version-changing PR in flight.
 3. Merge the Release Please PR to `main`. The existing `.github/workflows/release-please.yml` workflow is the only release path. When `release_created == true`, the `publish-hex` job checks out `tag_name` and runs `mix hex.publish --yes`.
-   Before the real publish, that job runs the same ordered proof chain as recovery: `mix verify.workspace_clean` -> version grep -> `mix verify.phase11` -> `mix hex.publish --dry-run --yes` -> `mix hex.publish --yes` -> `mix verify.release_publish` -> `mix verify.release_parity`.
+   Before the real publish, that job runs the same ordered proof chain as recovery: `mix verify.workspace_clean` -> version grep -> `mix verify.package` -> `mix hex.publish --dry-run --yes` -> `mix hex.publish --yes` -> `mix verify.release_publish` -> `mix verify.release_parity`.
 4. After the workflow finishes, confirm the release artifacts:
 
    ```bash
@@ -164,7 +164,7 @@ Use the same tagged release ref that Release Please created. Do not invent a sec
    git fetch --tags origin
    git checkout vX.Y.Z
    mix deps.get
-   mix verify.phase11
+mix verify.package
    HEX_API_KEY=... mix hex.publish --dry-run --yes
    ```
 
@@ -175,7 +175,7 @@ Use the same tagged release ref that Release Please created. Do not invent a sec
    - set `tag` to the reviewed release tag or commit ref
    - set `release_version` to `X.Y.Z`
 
-   That workflow reruns `mix verify.phase11`, `mix hex.publish --dry-run --yes`, `mix hex.publish --yes`, and `mix verify.release_publish X.Y.Z` from the explicit ref, then mirrors the canonical path with `mix verify.release_parity X.Y.Z` using the same retry environment variables.
+   That workflow reruns `mix verify.package`, `mix hex.publish --dry-run --yes`, `mix hex.publish --yes`, and `mix verify.release_publish X.Y.Z` from the explicit ref, then mirrors the canonical path with `mix verify.release_parity X.Y.Z` using the same retry environment variables.
 
 4. After a successful publish, rerun:
 
@@ -203,7 +203,7 @@ Use `--replace` only when Hex still allows replacing the published version and t
 1. Confirm the mismatch from the published artifact, local package contents, and docs path:
 
    ```bash
-   mix verify.phase11
+mix verify.package
    mix hex.build --unpack
    mix hex.info scrypath
    curl -Ifs https://hexdocs.pm/scrypath/X.Y.Z

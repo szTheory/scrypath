@@ -33,9 +33,11 @@ Those claims are intentionally narrow. They are backed by this repository's `mix
 GitHub Actions CI evidence currently exercises these explicit tuples:
 
 - Elixir `1.17.3` with OTP `26.2.5`
+- Elixir `1.18.4` with OTP `27.3`
+- Elixir `1.19.0` with OTP `26.2.5`
 - Elixir `1.19.0` with OTP `28.1`
 
-Compatibility is policy plus verification: the floor policy remains `~> 1.17`, and CI tuple evidence is anchored to the two combinations above. That means Scrypath publicly supports Elixir 1.17 through the current stable line this repo tests, with OTP 26 through 28 as the tested runtime range.
+Compatibility is policy plus verification: the floor policy remains `~> 1.17`, and CI tuple evidence is anchored to the four combinations above. That means Scrypath publicly supports Elixir 1.17 through the current stable line this repo tests, with OTP 26 through 28 as the tested runtime range.
 
 ### Phoenix + Meilisearch adoption path
 

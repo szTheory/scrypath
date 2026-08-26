@@ -2,8 +2,7 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
   workflow_dispatch:
   schedule:
@@ -13,772 +12,236 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  main-ci:
+  core:
+    name: core (required)
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
+        with: {elixir-version: "1.19.0", otp-version: "28.1"}
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
-          fetch-depth: 0
-
-      - uses: erlef/setup-beam@v1
-        with:
-          elixir-version: "1.19.0"
-          otp-version: "28.1"
-
-      - uses: actions/cache@v5
-        with:
-          path: |
+          path: |-
             deps
             _build
-          key: ${{ runner.os }}-main-ci-${{ hashFiles('mix.lock') }}
+          key: ${{ runner.os }}-test-elixir-1.19.0-otp-28.1-${{ hashFiles('mix.lock', 'mix.exs') }}
+      - run: mix deps.get
+      - run: mix verify.core --exclude integration --exclude docs_contract
 
-      - name: Install dependencies
-        run: mix deps.get
-
-      - name: Compile
-        run: mix compile --warnings-as-errors
-
-      - name: Test
-        run: mix test --exclude integration --exclude docs_contract --include requires_clean_workspace
-
-  repo-hygiene:
+  package:
+    name: package (required)
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
+        with: {elixir-version: "1.19.0", otp-version: "28.1"}
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
-          fetch-depth: 0
-
-      - name: Validate release-please-config.json
-        run: jq empty release-please-config.json
-
-      - uses: erlef/setup-beam@v1
-        with:
-          elixir-version: "1.19.0"
-          otp-version: "28.1"
-
-      - uses: actions/cache@v5
-        with:
-          path: |
+          path: |-
             deps
             _build
-            priv/plts
-          key: ${{ runner.os }}-quality-${{ hashFiles('mix.lock') }}
+          key: ${{ runner.os }}-test-elixir-1.19.0-otp-28.1-${{ hashFiles('mix.lock', 'mix.exs') }}
+      - run: mix deps.get
+      - run: mix verify.package
 
-      - name: Install dependencies
-        run: mix deps.get
-
-      - name: Run repository hygiene gate (`mix verify --exclude integration`)
-        run: mix verify --exclude integration
-
-  release-truth:
+  repository-contracts:
+    name: repository-contracts (required)
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
+        with: {elixir-version: "1.19.0", otp-version: "28.1"}
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
-          fetch-depth: 0
-
-      - uses: erlef/setup-beam@v1
-        with:
-          elixir-version: "1.19.0"
-          otp-version: "28.1"
-
-      - uses: actions/cache@v5
-        with:
-          path: |
+          path: |-
             deps
             _build
-          key: ${{ runner.os }}-release-truth-${{ hashFiles('mix.lock') }}
+          key: ${{ runner.os }}-test-elixir-1.19.0-otp-28.1-${{ hashFiles('mix.lock', 'mix.exs') }}
+      - run: mix deps.get
+      - run: mix verify.repository_contracts
 
-      - name: Install dependencies
-        run: mix deps.get
-
-      - name: Run release-truth gate (`mix verify.phase11`)
-        run: mix verify.phase11
-
-  phase99-trust:
+  backend:
+    name: backend (required)
     runs-on: ubuntu-latest
-
+    services:
+      meilisearch:
+        image: getmeili/meilisearch:v1.15
+        ports: [7700:7700]
+        env: {MEILI_NO_ANALYTICS: "true"}
+    env:
+      SCRYPATH_INTEGRATION: "1"
+      SCRYPATH_MEILISEARCH_URL: http://127.0.0.1:7700
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
+        with: {elixir-version: "1.19.0", otp-version: "28.1"}
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
-          fetch-depth: 0
-
-      - uses: erlef/setup-beam@v1
-        with:
-          elixir-version: "1.19.0"
-          otp-version: "28.1"
-
-      - uses: actions/cache@v5
-        with:
-          path: |
+          path: |-
             deps
             _build
-          key: ${{ runner.os }}-phase99-trust-${{ hashFiles('mix.lock') }}
+          key: ${{ runner.os }}-test-elixir-1.19.0-otp-28.1-${{ hashFiles('mix.lock', 'mix.exs') }}
+      - run: mix deps.get
+      - name: Wait for Meilisearch
+        run: |
+          for _ in $(seq 1 30); do curl --silent --fail "$SCRYPATH_MEILISEARCH_URL/health" && exit 0; sleep 2; done
+          echo "Meilisearch failed to start"; exit 1
+      - run: mix verify.backend
+      - name: Backend failure diagnostics
+        if: failure()
+        run: |
+          curl -sv --max-time 5 "$SCRYPATH_MEILISEARCH_URL/health" || true
+          docker ps -a
+          container_ids="$(docker ps -aq --filter ancestor=getmeili/meilisearch:v1.15)"
+          if [ -n "$container_ids" ]; then docker logs "$container_ids" || true; fi
 
-      - name: Install dependencies
-        run: mix deps.get
-
-      - name: Run phase99 trust gate (`mix verify.phase99`)
-        run: mix verify.phase99
-
-  compatibility-truth:
+  compatibility:
+    name: compatibility (advisory)
     runs-on: ubuntu-latest
-
+    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
         include:
-          - elixir-version: "1.17.3"
-            otp-version: "26.2.5"
-          - elixir-version: "1.19.0"
-            otp-version: "28.1"
-
+          - {elixir: "1.17.3", otp: "26.2.5"}
+          - {elixir: "1.18.4", otp: "27.3"}
+          - {elixir: "1.19.0", otp: "26.2.5"}
+          - {elixir: "1.19.0", otp: "28.1"}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
+        with: {elixir-version: "${{ matrix.elixir }}", otp-version: "${{ matrix.otp }}"}
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
-          fetch-depth: 0
-
-      - uses: erlef/setup-beam@v1
-        with:
-          elixir-version: ${{ matrix.elixir-version }}
-          otp-version: ${{ matrix.otp-version }}
-
-      - uses: actions/cache@v5
-        with:
-          path: |
+          path: |-
             deps
             _build
-          key: ${{ runner.os }}-compatibility-truth-${{ matrix.elixir-version }}-${{ matrix.otp-version }}-${{ hashFiles('mix.lock') }}
-
-      - name: Install dependencies
-        run: mix deps.get
-
-      - name: Compile
-        run: mix compile --warnings-as-errors
-
-      - name: Test
-        run: mix test --exclude integration --exclude docs_contract --include requires_clean_workspace
+          key: ${{ runner.os }}-test-elixir-${{ matrix.elixir }}-otp-${{ matrix.otp }}-${{ hashFiles('mix.lock', 'mix.exs') }}
+      - run: mix deps.get
+      - run: mix verify.compatibility
 
   deep-quality:
+    name: deep-quality (advisory)
     runs-on: ubuntu-latest
-
+    continue-on-error: true
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
+        with: {elixir-version: "1.19.0", otp-version: "28.1"}
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
-          fetch-depth: 0
-
-      - uses: erlef/setup-beam@v1
-        with:
-          elixir-version: "1.19.0"
-          otp-version: "28.1"
-
-      - uses: actions/cache@v5
-        with:
-          path: |
+          path: |-
             deps
             _build
             priv/plts
-          key: ${{ runner.os }}-deep-quality-${{ hashFiles('mix.lock') }}
+          key: ${{ runner.os }}-test-elixir-1.19.0-otp-28.1-deep-${{ hashFiles('mix.lock', 'mix.exs') }}
+      - run: mix deps.get
+      - run: mix verify.deep_quality
 
-      - name: Install dependencies
-        run: mix deps.get
-
-      - name: Compile scrypath_ops without optional deps (SIGRA-02)
-        working-directory: scrypath_ops
-        env:
-          MIX_ENV: test
-        run: |
-          mix deps.get
-          mix compile --no-optional-deps --warnings-as-errors
-
-      - name: Run namespace fence (`mix scrypath.namespace_fence`)
-        run: mix scrypath.namespace_fence
-
-      - name: Audit Hex dependencies
-        run: mix hex.audit
-
-      - name: Run Dialyzer
-        run: mix dialyzer
-
-  adopter-verify:
+  phoenix-example:
+    name: phoenix-example (advisory)
     runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - uses: erlef/setup-beam@v1
-        with:
-          elixir-version: "1.19.0"
-          otp-version: "28.1"
-
-      - uses: actions/cache@v5
-        with:
-          path: |
-            deps
-            _build
-          key: ${{ runner.os }}-adopter-verify-${{ hashFiles('mix.lock') }}
-
-      - name: Install dependencies
-        run: mix deps.get
-
-      - name: Adopter verify (`mix verify.adopter`)
-        run: mix verify.adopter
-
-  phase5-verification:
-    runs-on: ubuntu-latest
-
-    services:
-      meilisearch:
-        image: getmeili/meilisearch:v1.15
-        ports:
-          - 7700:7700
-        env:
-          MEILI_NO_ANALYTICS: "true"
-
-    env:
-      SCRYPATH_INTEGRATION: "1"
-      SCRYPATH_MEILISEARCH_URL: http://127.0.0.1:7700
-
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - uses: erlef/setup-beam@v1
-        with:
-          elixir-version: "1.19.0"
-          otp-version: "28.1"
-
-      - uses: actions/cache@v5
-        with:
-          path: |
-            deps
-            _build
-          key: ${{ runner.os }}-phase5-${{ hashFiles('mix.lock') }}
-
-      - name: Install dependencies
-        run: mix deps.get
-
-      - name: Wait for Meilisearch
-        run: |
-          for _ in $(seq 1 30); do
-            if curl --silent --fail "$SCRYPATH_MEILISEARCH_URL/health" >/dev/null; then
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "Meilisearch failed to start"
-          exit 1
-
-      - name: Backfill + integration verification (`mix verify.phase5`)
-        run: mix verify.phase5
-
-  phase13-verification:
-    runs-on: ubuntu-latest
-
-    services:
-      meilisearch:
-        image: getmeili/meilisearch:v1.15
-        ports:
-          - 7700:7700
-        env:
-          MEILI_NO_ANALYTICS: "true"
-
-    env:
-      SCRYPATH_INTEGRATION: "1"
-      SCRYPATH_MEILISEARCH_URL: http://127.0.0.1:7700
-
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - uses: erlef/setup-beam@v1
-        with:
-          elixir-version: "1.19.0"
-          otp-version: "28.0"
-
-      - uses: actions/cache@v5
-        with:
-          path: |
-            deps
-            _build
-          key: ${{ runner.os }}-phase13-${{ hashFiles('mix.lock') }}
-
-      - name: Install dependencies
-        run: mix deps.get
-
-      - name: Wait for Meilisearch
-        run: |
-          for _ in $(seq 1 30); do
-            if curl --silent --fail "$SCRYPATH_MEILISEARCH_URL/health" >/dev/null; then
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "Meilisearch failed to start"
-          exit 1
-
-      - name: Operator integration verification (`mix verify.phase13`)
-        run: mix verify.phase13
-
-  meilisearch-smoke:
-    runs-on: ubuntu-latest
-
-    services:
-      meilisearch:
-        image: getmeili/meilisearch:v1.15
-        ports:
-          - 7700:7700
-        env:
-          MEILI_NO_ANALYTICS: "true"
-
-    env:
-      SCRYPATH_INTEGRATION: "1"
-      SCRYPATH_MEILISEARCH_URL: http://127.0.0.1:7700
-
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - uses: erlef/setup-beam@v1
-        with:
-          elixir-version: "1.19.0"
-          otp-version: "28.1"
-
-      - uses: actions/cache@v5
-        with:
-          path: |
-            deps
-            _build
-          key: ${{ runner.os }}-meilisearch-smoke-${{ hashFiles('mix.lock') }}
-
-      - name: Install dependencies
-        run: mix deps.get
-
-      - name: Wait for Meilisearch
-        run: |
-          for _ in $(seq 1 30); do
-            if curl --silent --fail "$SCRYPATH_MEILISEARCH_URL/health" >/dev/null; then
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "Meilisearch failed to start"
-          exit 1
-
-      - name: Run Meilisearch integration smoke
-        run: mix verify.meilisearch_smoke
-
-  phoenix-example-integration:
-    runs-on: ubuntu-latest
-
+    continue-on-error: true
     services:
       postgres:
         image: postgres:16-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5433:5432
-
+        env: {POSTGRES_USER: postgres, POSTGRES_PASSWORD: postgres}
+        ports: [5433:5432]
       meilisearch:
         image: getmeili/meilisearch:v1.15
-        ports:
-          - 7700:7700
-        env:
-          MEILI_NO_ANALYTICS: "true"
-
-    env:
-      PGPORT: "5433"
-      SCRYPATH_MEILISEARCH_URL: http://127.0.0.1:7700
-      SCRYPATH_EXAMPLE_INTEGRATION: "1"
-
+        ports: [7700:7700]
+        env: {MEILI_NO_ANALYTICS: "true"}
+    env: {PGPORT: "5433", SCRYPATH_MEILISEARCH_URL: http://127.0.0.1:7700, SCRYPATH_EXAMPLE_INTEGRATION: "1"}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
+        with: {elixir-version: "1.19.0", otp-version: "28.1"}
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
-          fetch-depth: 0
-
-      - uses: erlef/setup-beam@v1
-        with:
-          elixir-version: "1.19.0"
-          otp-version: "28.1"
-
-      - uses: actions/cache@v5
-        with:
-          path: |
+          path: |-
             deps
             _build
-            examples/phoenix_meilisearch/deps
-            examples/phoenix_meilisearch/_build
-          key: ${{ runner.os }}-phx-example-${{ hashFiles('examples/phoenix_meilisearch/mix.lock') }}-${{ hashFiles('mix.lock') }}
+          key: ${{ runner.os }}-test-elixir-1.19.0-otp-28.1-${{ hashFiles('mix.lock', 'mix.exs') }}
+      - run: mix deps.get
+      - run: mix verify.phoenix_example
 
-      - name: Install postgres client (pg_isready)
-        run: sudo apt-get update -qq && sudo apt-get install -y postgresql-client
-
-      - name: Wait for Postgres
-        run: |
-          for _ in $(seq 1 60); do
-            if pg_isready -h 127.0.0.1 -p "$PGPORT" -U postgres; then
-              exit 0
-            fi
-            sleep 1
-          done
-          echo "Postgres failed to become ready"
-          exit 1
-
-      - name: Wait for Meilisearch
-        run: |
-          for _ in $(seq 1 30); do
-            if curl --silent --fail "$SCRYPATH_MEILISEARCH_URL/health" >/dev/null; then
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "Meilisearch failed to start"
-          exit 1
-
-      - name: Phoenix example integration (`cd examples/phoenix_meilisearch && mix deps.get && mix test`)
-        run: |
-          cd examples/phoenix_meilisearch
-          mix deps.get
-          mix test
-
-  # Path gate for OPSUI: always run on push to main; on pull_request only when
-  # library or scrypath_ops paths change (see phase 47 CONTEXT D-03).
-  scrypath-ops-path-check:
+  ops-ui-path:
     runs-on: ubuntu-latest
-    outputs:
-      run: ${{ steps.check.outputs.run }}
+    outputs: {run: "${{ steps.check.outputs.run }}"}
     steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Decide whether OPSUI CI should run
-        id: check
-        shell: bash
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with: {fetch-depth: 0}
+      - id: check
         run: |
-          if [[ "${GITHUB_EVENT_NAME}" == "push" && "${GITHUB_REF}" == "refs/heads/main" ]]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
-            git fetch origin "${GITHUB_BASE_REF}" --depth=1
-            if git diff --name-only "origin/${GITHUB_BASE_REF}...HEAD" | grep -qE '^(scrypath_ops/|lib/|mix\.exs|mix\.lock|scrypath_ops/mix\.lock)'; then
-              echo "run=true" >> "$GITHUB_OUTPUT"
-            else
-              echo "run=false" >> "$GITHUB_OUTPUT"
-            fi
-            exit 0
-          fi
-          echo "run=false" >> "$GITHUB_OUTPUT"
+          if [[ "$GITHUB_EVENT_NAME" == push && "$GITHUB_REF" == refs/heads/main ]]; then echo run=true >> "$GITHUB_OUTPUT"; exit 0; fi
+          if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then git fetch origin "$GITHUB_BASE_REF" --depth=1; fi
+          if [[ "$GITHUB_EVENT_NAME" == pull_request ]] && git diff --name-only "origin/$GITHUB_BASE_REF...HEAD" | grep -qE '^(scrypath_ops/|lib/|mix\.exs|mix\.lock)'; then echo run=true >> "$GITHUB_OUTPUT"; else echo run=false >> "$GITHUB_OUTPUT"; fi
 
-  scrypath-ops:
-    needs: scrypath-ops-path-check
-    if: needs.scrypath-ops-path-check.outputs.run == 'true'
+  ops-ui:
+    name: ops-ui (path-scoped)
+    needs: ops-ui-path
+    if: needs.ops-ui-path.outputs.run == 'true'
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5433:5432
-
-    env:
-      PGPORT: "5433"
-
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
+        with: {elixir-version: "1.19.0", otp-version: "28.1"}
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
-          fetch-depth: 0
+          path: |-
+            deps
+            _build
+          key: ${{ runner.os }}-test-elixir-1.19.0-otp-28.1-${{ hashFiles('mix.lock', 'mix.exs') }}
+      - run: mix deps.get
+      - run: mix verify.ops_ui
 
-      - uses: erlef/setup-beam@v1
-        with:
-          elixir-version: "1.19.0"
-          otp-version: "28.1"
-
-      - uses: actions/cache@v5
-        with:
-          path: |
-            scrypath_ops/deps
-            scrypath_ops/_build
-          key: ${{ runner.os }}-scrypath-ops-${{ hashFiles('mix.lock', 'scrypath_ops/mix.lock') }}
-
-      - name: Install postgres client (pg_isready)
-        run: sudo apt-get update -qq && sudo apt-get install -y postgresql-client
-
-      - name: Wait for Postgres
-        run: |
-          for _ in $(seq 1 60); do
-            if pg_isready -h 127.0.0.1 -p "$PGPORT" -U postgres; then
-              exit 0
-            fi
-            sleep 1
-          done
-          echo "Postgres failed to become ready"
-          exit 1
-
-      - name: ScrypathOps tests
-        run: |
-          cd scrypath_ops
-          mix deps.get
-          mix test
-
-  ecommerce-mounted-smoke:
-    name: ecommerce-mounted-smoke
+  ecommerce-mounted:
+    name: ecommerce-mounted (required)
     runs-on: ubuntu-latest
     timeout-minutes: 20
-
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
+        with: {elixir-version: "1.19.0", otp-version: "28.1"}
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
-          fetch-depth: 0
-
-      - name: Run zero-touch mounted ecommerce proof
-        run: make -C examples/scrypath_ecommerce verify-mounted
-
-      - name: Upload mounted-smoke failure artifacts
-        if: failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: ecommerce-mounted-smoke-artifacts
-          path: examples/scrypath_ecommerce/test-results/docker-focused
-          if-no-files-found: warn
-
-  phase105-e2e:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: scrypath_ecommerce_test
-        ports:
-          - 5433:5432
-
-      meilisearch:
-        image: getmeili/meilisearch:v1.15
-        ports:
-          - 7700:7700
-        env:
-          MEILI_NO_ANALYTICS: "true"
-
-    env:
-      MIX_ENV: test
-      PGPORT: "5433"
-      SCRYPATH_MEILISEARCH_URL: http://127.0.0.1:7700
-      PLAYWRIGHT_BASE_URL: http://127.0.0.1:4002
-      PHASE105_EVIDENCE_PATH: examples/scrypath_ecommerce/test-results/phase105-evidence.ndjson
-
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - uses: erlef/setup-beam@v1
-        with:
-          elixir-version: "1.19.0"
-          otp-version: "28.1"
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: examples/scrypath_ecommerce/package-lock.json
-
-      - uses: actions/cache@v5
-        with:
-          path: |
+          path: |-
             deps
             _build
-            examples/scrypath_ecommerce/deps
-            examples/scrypath_ecommerce/_build
-          key: ${{ runner.os }}-phase105-e2e-${{ hashFiles('mix.lock', 'examples/scrypath_ecommerce/mix.lock') }}
+          key: ${{ runner.os }}-test-elixir-1.19.0-otp-28.1-${{ hashFiles('mix.lock', 'mix.exs') }}
+      - run: mix deps.get
+      - run: mix verify.ecommerce_mounted
+      - if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with: {name: ecommerce-mounted-artifacts, path: examples/scrypath_ecommerce/test-results/docker-focused, if-no-files-found: warn, retention-days: 7}
 
-      - name: Install postgres client (pg_isready)
-        run: sudo apt-get update -qq && sudo apt-get install -y postgresql-client
-
-      - name: Wait for Postgres
-        run: |
-          for _ in $(seq 1 60); do
-            if pg_isready -h 127.0.0.1 -p "$PGPORT" -U postgres; then
-              exit 0
-            fi
-            sleep 1
-          done
-          echo "Postgres failed to become ready"
-          exit 1
-
-      - name: Wait for Meilisearch
-        run: |
-          for _ in $(seq 1 60); do
-            if curl --silent --fail "$SCRYPATH_MEILISEARCH_URL/health" >/dev/null; then
-              exit 0
-            fi
-            sleep 1
-          done
-          echo "Meilisearch failed to become ready"
-          exit 1
-
-      - name: Install root dependencies
-        run: mix deps.get
-
-      - name: Install example dependencies and prepare DB
-        working-directory: examples/scrypath_ecommerce
-        run: |
-          mix deps.get
-          mix e2e.prepare
-
-      - name: Install Playwright dependencies
-        working-directory: examples/scrypath_ecommerce
-        run: |
-          npm ci
-          npx playwright install --with-deps chromium
-
-      # priv/static/assets is gitignored and built by the dev watchers, so a fresh CI
-      # checkout has no app.js/app.css. Without them the LiveView client never loads and
-      # every interactive (phx-change / phx-click) test fails. Build the assets explicitly
-      # so the storefront + operator UIs are actually interactive under Playwright.
-      - name: Build example assets (LiveView client JS + CSS)
-        working-directory: examples/scrypath_ecommerce
-        run: |
-          mix esbuild.install --if-missing
-          mix tailwind.install --if-missing
-          mix esbuild scrypath_ecommerce
-          mix tailwind scrypath_ecommerce
-
-      # The operator UI mounted at /admin/search loads its OWN stylesheet
-      # (/admin/search/assets/css/app.css) built from scrypath_ops/assets/css/app.css and
-      # served from scrypath_ops/priv/static — which is gitignored and symlinked into the
-      # example's _build (path dep). Without this build, CI serves no .ops-* CSS: glow tokens,
-      # path-motion rules, and the recommended-card box-shadow are all absent, so any spec that
-      # asserts ops styling (admin_path_motion) fails and the other ops e2e tests run unstyled.
-      - name: Build operator UI assets (scrypath_ops CSS/JS at /admin/search)
-        working-directory: scrypath_ops
-        run: |
-          mix deps.get
-          mix assets.setup
-          mix assets.build
-
-      - name: Start example Phoenix server
-        working-directory: examples/scrypath_ecommerce
-        env:
-          # test.exs gates the endpoint on PHX_SERVER=true (server: + bind ip:). Without it,
-          # the listener only starts via mix phx.server's serve_endpoints override, which races
-          # endpoint init in CI and leaves the process alive but nothing bound on :4002.
-          PHX_SERVER: "true"
-          # Run the e2e server against a persistent, NON-sandbox DB so the real
-          # create_product -> Oban enqueue -> drain -> active index path persists across
-          # the separate HTTP requests Playwright makes (see config/runtime.exs). Set on this
-          # step only; `mix e2e.prepare` stays on the default sandbox path.
-          SCRYPATH_E2E_NO_SANDBOX: "1"
-        run: |
-          # Compile synchronously first so the readiness window below times boot, not compile.
-          mix compile
-          mix phx.server > /tmp/phase105-e2e-phx.log 2>&1 &
-          echo $! > /tmp/phase105-e2e-phx.pid
-
-      - name: Wait for app readiness
-        run: |
-          for _ in $(seq 1 120); do
-            if curl --silent --fail "$PLAYWRIGHT_BASE_URL" >/dev/null; then
-              exit 0
-            fi
-            sleep 1
-          done
-          echo "Phoenix app failed to become ready"
-          echo "--- verbose curl (connection state / HTTP status) ---"
-          curl -sv --max-time 5 "$PLAYWRIGHT_BASE_URL" 2>&1 | tail -n 40 || true
-          echo "--- server process alive? ---"
-          (kill -0 "$(cat /tmp/phase105-e2e-phx.pid 2>/dev/null)" 2>/dev/null && echo "phx.server pid alive") || echo "phx.server pid NOT alive"
-          echo "--- phx boot log ---"
-          tail -n 200 /tmp/phase105-e2e-phx.log || true
-          exit 1
-
-      - name: Run phase 105 deterministic browser and visual gates
-        working-directory: examples/scrypath_ecommerce
-        run: |
-          STARTED_AT="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-          echo "PHASE105_E2E_STARTED_AT=${STARTED_AT}" >> "$GITHUB_ENV"
-          set +e
-          npm run test:e2e
-          BROWSER_STATUS=$?
-          npm run test:e2e:admin-light-parity
-          LIGHT_STATUS=$?
-          make contrast
-          CONTRAST_STATUS=$?
-          ENDED_AT="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-          echo "PHASE105_E2E_ENDED_AT=${ENDED_AT}" >> "$GITHUB_ENV"
-          if [ "$BROWSER_STATUS" -eq 0 ]; then
-            echo "PHASE105_BROWSER_CONCLUSION=success" >> "$GITHUB_ENV"
-          else
-            echo "PHASE105_BROWSER_CONCLUSION=failure" >> "$GITHUB_ENV"
-          fi
-          if [ "$LIGHT_STATUS" -eq 0 ]; then
-            echo "PHASE105_LIGHT_PARITY_CONCLUSION=success" >> "$GITHUB_ENV"
-          else
-            echo "PHASE105_LIGHT_PARITY_CONCLUSION=failure" >> "$GITHUB_ENV"
-          fi
-          if [ "$CONTRAST_STATUS" -eq 0 ]; then
-            echo "PHASE105_CONTRAST_CONCLUSION=success" >> "$GITHUB_ENV"
-          else
-            echo "PHASE105_CONTRAST_CONCLUSION=failure" >> "$GITHUB_ENV"
-          fi
-          if [ "$BROWSER_STATUS" -eq 0 ] && [ "$LIGHT_STATUS" -eq 0 ] && [ "$CONTRAST_STATUS" -eq 0 ]; then
-            echo "PHASE105_E2E_CONCLUSION=success" >> "$GITHUB_ENV"
-            exit 0
-          else
-            echo "PHASE105_E2E_CONCLUSION=failure" >> "$GITHUB_ENV"
-            exit 1
-          fi
-
-      - name: Run advisory ops UI visual judge
-        if: always()
-        working-directory: examples/scrypath_ecommerce
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPS_UI_LLM_JUDGE: ${{ vars.OPS_UI_LLM_JUDGE || '0' }}
-          OPS_UI_LLM_MODEL: ${{ vars.OPS_UI_LLM_MODEL || 'gpt-4.1' }}
-        run: node e2e/ops-ui-visual-judge.mjs
-
-      - name: Generate phase105 evidence summary
-        if: always()
-        run: scripts/ci/phase105_evidence.sh
-
-      - name: Append phase105 evidence to job summary
-        if: always()
-        run: cat examples/scrypath_ecommerce/test-results/phase105-evidence-summary.md >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload phase105-e2e failure artifacts
-        if: failure()
-        uses: actions/upload-artifact@v7
+  ecommerce-e2e:
+    name: ecommerce-e2e (advisory)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
+        with: {elixir-version: "1.19.0", otp-version: "28.1"}
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
-          name: phase105-e2e-artifacts
-          path: |
-            /tmp/phase105-e2e-phx.log
-            examples/scrypath_ecommerce/playwright-report
-            examples/scrypath_ecommerce/test-results
-            examples/scrypath_ecommerce/test-results/phase105-evidence.ndjson
-            examples/scrypath_ecommerce/test-results/phase105-evidence.json
-            examples/scrypath_ecommerce/test-results/phase105-evidence-summary.md
-            examples/scrypath_ecommerce/test-results/admin-light-parity.json
-            examples/scrypath_ecommerce/test-results/ops-ui-visual-judge.json
-            examples/scrypath_ecommerce/test-results/ops-ui-visual-judge.md
+          path: |-
+            deps
+            _build
+          key: ${{ runner.os }}-test-elixir-1.19.0-otp-28.1-${{ hashFiles('mix.lock', 'mix.exs') }}
+      - run: mix deps.get
+      - run: mix verify.ecommerce_e2e
+      - name: Upload advisory E2E evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ecommerce-e2e-evidence
+          path: examples/scrypath_ecommerce/test-results/docker-full
           if-no-files-found: warn
+          retention-days: 7

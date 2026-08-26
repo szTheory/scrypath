@@ -1,5 +1,15 @@
 defmodule Scrypath.Search do
-  @moduledoc false
+  @moduledoc """
+  Internal implementation facade for Scrypath's search operations.
+
+  Public callers normally use the corresponding functions on `Scrypath`.
+
+  ## Scores vs merge ordering
+
+  Ranking scores are meaningful within one index. Multi-index results therefore
+  preserve backend merge ordering instead of treating scores from unrelated
+  indexes as globally comparable.
+  """
 
   alias Scrypath.MultiSearchResult
   alias Scrypath.Search.FacetValues
