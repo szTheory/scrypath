@@ -282,17 +282,16 @@ Record the fully resolved extraction and parent SHAs, test path/selector, comman
 |---|---|---|---|
 | A1 | A broad whole-workflow string assertion can accidentally validate settings belonging to another job. | Common Pitfalls | The focused structural test could be weaker than intended; the planner should keep assertions job-scoped. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Which TEST-01 extractions can meet the exact-parent standard?**
-   - What we know: the committed history includes mixed production/test commits and a runtime-safety commit before the later quality-baseline commit. [VERIFIED: `159-CONTEXT.md`; VERIFIED: `git log`]
-   - What's unclear: the extraction-by-extraction parent test inventory and whether old dependency resolution permits each focused test to run. [VERIFIED: `159-CONTEXT.md`]
-   - Recommendation: inventory all production/extraction commits first, probe only relevant parents in disposable worktrees, and emit a narrowly scoped waiver for every non-provable row. [VERIFIED: `159-CONTEXT.md`]
+1. **RESOLVED — TEST-01 exact-parent reproducibility is determined during execution by a bounded procedure.**
+   - Execution inventories the finite set of relevant production/extraction commits, resolves each exact parent SHA, and probes that parent in a disposable detached worktree. A slice is `historically proven` only when the relevant observable-contract test exists at that exact parent and passes there. [VERIFIED: `159-CONTEXT.md`]
+   - Missing tests, same-commit tests, unavailable dependencies, unrunnable probes, failed tests, or ambiguous evidence are classified `historically unprovable` and receive a narrow requirement-scoped waiver. Present-state checks never substitute for the missing historical predicate. [VERIFIED: `159-CONTEXT.md`]
+   - The row-by-row outcome intentionally remains an execution result; the planning question is resolved by the fail-closed procedure per D-08–D-11.
 
-2. **What exact SHA will close the phase?**
-   - What we know: the hosted proof must target the final closing commit, not an earlier workflow test commit. [VERIFIED: `159-CONTEXT.md`]
-   - What's unclear: that SHA does not exist until execution produces it. [VERIFIED: current `git log`]
-   - Recommendation: make SHA capture and hosted-run receipt an explicit post-commit task with no substitution by a branch-head or rerun on another revision. [VERIFIED: `159-CONTEXT.md`]
+2. **RESOLVED — the closing SHA is derived only after all local changes and evidence commits are complete.**
+   - Execution captures the candidate closing SHA after the coverage wiring, provenance records, retrospective indexes, validations, and local evidence receipt are committed and reachable on the configured GitHub remote. It then dispatches or observes one `ci.yml` run for that exact SHA and records equality among the candidate closing SHA, hosted source/head SHA, and workflow/source provenance. [VERIFIED: `159-CONTEXT.md`]
+   - The literal SHA cannot and should not be known at plan time. The resolved procedure forbids substituting a branch name, a later branch head, an earlier workflow commit, or a run for another source SHA per D-19/D-22.
 
 ## Environment Availability
 
