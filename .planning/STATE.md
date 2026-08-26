@@ -4,15 +4,15 @@ milestone: v1.37
 milestone_name: Code Quality Ratchet
 current_phase: 159
 current_phase_name: close-v1-37-audit-gaps-coverage-wiring-and-verification-prov
-status: verifying
+status: executing
 stopped_at: Completed 159-07-PLAN.md
-last_updated: "2026-08-26T21:26:07.545Z"
+last_updated: "2026-08-26T21:52:41.923Z"
 last_activity: 2026-08-26
 last_activity_desc: Phase 159 execution started
 progress:
   total_phases: 12
   completed_phases: 1
-  total_plans: 7
+  total_plans: 8
   completed_plans: 7
 ---
 
@@ -27,7 +27,7 @@ progress:
 
 Phase: 159 (close-v1-37-audit-gaps-coverage-wiring-and-verification-prov) — EXECUTING
 Plan: 7 of 7
-Status: Phase complete — ready for verification
+Status: Ready to execute
 Last activity: 2026-08-26 — Phase 159 execution started
 
 ## Active Milestone: v1.37 Code Quality Ratchet
