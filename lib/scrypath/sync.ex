@@ -44,7 +44,7 @@ defmodule Scrypath.Sync do
       Keyword.get(opts, :fan_out) ||
         raise ArgumentError, "opts[:fan_out] is required"
 
-    fan_outs = Scrypath.Schema.Metadata.fan_outs(schema_module) || []
+    fan_outs = Scrypath.Schema.Metadata.fan_outs(schema_module)
 
     fan_out_config =
       Keyword.get(fan_outs, fan_out_key) ||

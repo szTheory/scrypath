@@ -30,7 +30,7 @@ defmodule Scrypath.DocsContractTest do
   @verify_phase85 File.read!("lib/mix/tasks/verify.phase85.ex")
   @verify_phase91 File.read!("lib/mix/tasks/verify.phase91.ex")
   @verify_phase96 File.read!("lib/mix/tasks/verify.phase96.ex")
-  @verify_opsui File.read!("lib/mix/tasks/verify.opsui.ex")
+  @verify_opsui File.read!("lib/mix/tasks/verify.ops_ui.ex")
   @verify_release_publish File.read!("lib/mix/tasks/verify.release_publish.ex")
   @guide_paths [
     "guides/common-mistakes.md",
