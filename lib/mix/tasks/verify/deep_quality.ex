@@ -1,5 +1,5 @@
 defmodule Mix.Tasks.Verify.DeepQuality do
-  @moduledoc false
+  @moduledoc "Runs the canonical advisory static-analysis capability."
   use Mix.Task
   @shortdoc "Runs canonical deep-quality verification"
   @impl true

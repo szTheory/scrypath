@@ -1,5 +1,5 @@
 defmodule Mix.Tasks.Verify.RepositoryContracts do
-  @moduledoc false
+  @moduledoc "Runs the canonical repository-contract capability."
   use Mix.Task
   @shortdoc "Runs canonical repository-contract verification"
   @impl true

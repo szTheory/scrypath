@@ -76,7 +76,6 @@ defmodule Scrypath.MixProject do
         "verify.phase108": :test,
         "verify.phase112": :test,
         "verify.adopter": :test,
-        "verify.opsui": :test,
         "verify.meilisearch_smoke": :test,
         "verify.all": :test,
         verify: :test,
@@ -124,8 +123,7 @@ defmodule Scrypath.MixProject do
 
   defp aliases do
     [
-      test: &test_alias/1,
-      "verify.opsui": "verify.ops_ui"
+      test: &test_alias/1
     ]
   end
 

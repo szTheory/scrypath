@@ -756,7 +756,7 @@ defmodule Scrypath.DocsContractTest do
     assert ordered?(job_window, "mix deps.get", "mix verify.ops_ui")
   end
 
-  test "verify.opsui Mix task keeps orchestration markers (Phase 53)" do
+  test "verify.ops_ui Mix task keeps orchestration markers (Phase 53)" do
     assert String.contains?(@verify_opsui, "cd: ops_dir")
     assert String.contains?(@verify_opsui, "mix test")
     assert String.contains?(@verify_opsui, "ensure_no_args!")

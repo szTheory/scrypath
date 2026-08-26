@@ -31,13 +31,13 @@ Use capability-named commands for new work. Historical `verify.phase*` commands 
 | --- | --- | --- |
 | Core library | `mix verify.core` | Standard root maturity gate (`mix verify`) |
 | Package/release contract | `mix verify.package` | Package, consumer, docs, and release agreement (`mix verify.phase11`) |
-| Repository contracts | `mix verify.repository_contracts` | Trust/repository contract gate (`mix verify.phase99`) |
+| Repository contracts | `mix verify.repository_contracts` | Trust/repository contract gate (<code>mix verify.phase99</code>) |
 | Meilisearch backend | `mix verify.backend` | Curated live backend smoke (`mix verify.meilisearch_smoke`) |
-| Compatibility contract | `mix verify.compatibility` | Compatibility-truth contract (`mix verify.phase99`) |
+| Compatibility contract | `mix verify.compatibility` | Compatibility-truth contract (<code>mix verify.phase99</code>) |
 | Deep quality | `mix verify.deep_quality` | No-optional-deps, namespace, Hex audit, and Dialyzer checks |
 | Mounted ecommerce | `mix verify.ecommerce_mounted` | Docker-only mounted proof (`make -C examples/scrypath_ecommerce verify-mounted`) |
 | Phoenix example | `mix verify.phoenix_example` | Live consumer-shaped example proof (`mix verify.adopter --live`) |
-| ScrypathOps | `mix verify.ops_ui` | Optional operator app proof (`mix verify.opsui`) |
+| ScrypathOps | `mix verify.ops_ui` | Optional operator app proof |
 | Full ecommerce E2E | `mix verify.ecommerce_e2e` | Advisory Docker/browser proof (`make -C examples/scrypath_ecommerce verify-e2e`) |
 
 Use the normal fast suite during development:
@@ -107,7 +107,7 @@ Some focused Mix tasks keep historical names. Choose them by scope:
 | v1.29 closeout truth | <code>mix verify.phase108</code> | Related-data fan-out wording, planning/JTBD closeout truth, and advisory `phase105-e2e` posture. |
 | Public website/docs truth alignment | <code>mix verify.phase112</code> | README, `website/`, `guides/scope-and-reopen-policy.md`, or other public truth-copy updates that affect claim envelope, route-map depth, or reopen-policy wording. |
 
-Run **`mix verify.ops_ui`** from the repository root when you change the optional **`scrypath_ops`** operator Phoenix app or its path dependency on the core library. It delegates to the historical `mix verify.opsui` orchestration, which runs **`cd scrypath_ops && mix deps.get && mix test`**. The path-scoped **`ops-ui`** CI job invokes the canonical command (Postgres-backed Ecto setup, no Meilisearch service).
+Run **`mix verify.ops_ui`** from the repository root when you change the optional **`scrypath_ops`** operator Phoenix app or its path dependency on the core library. It runs **`cd scrypath_ops && mix deps.get && mix test`**. The path-scoped **`ops-ui`** CI job invokes the same canonical command (Postgres-backed Ecto setup, no Meilisearch service).
 
 When you change **`scrypath_ops/docs/*.json`** playbook fixtures, golden workspace playbooks, or other flat `*.json` catalogs that ship beside **`scrypath_ops`**, also run **`cd scrypath_ops && mix scrypath_ops.playbooks.validate PATH`** from the repository root, where **`PATH`** is the directory containing those JSON files (non-recursive; same invocation shape as the Mix task **`Mix.Tasks.ScrypathOps.Playbooks.Validate`**).
 

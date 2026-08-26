@@ -1,5 +1,5 @@
 defmodule Mix.Tasks.Verify.EcommerceMounted do
-  @moduledoc false
+  @moduledoc "Runs the canonical mounted ecommerce capability."
   use Mix.Task
   @shortdoc "Runs canonical mounted ecommerce verification"
   @impl true

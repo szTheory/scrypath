@@ -33,7 +33,7 @@ That command is the always-on CI gate for the release contract.
 The optional operator Phoenix app under **`scrypath_ops/`** is not published to Hex, but it still has a first-class verification gate. From the repository root, run:
 
 ```bash
-mix verify.opsui
+mix verify.ops_ui
 ```
 
 That task mirrors CI: it runs **`cd scrypath_ops && mix deps.get && mix test`** (full suite, including navigation contract setup).

@@ -1,5 +1,5 @@
 defmodule Mix.Tasks.Verify.Core do
-  @moduledoc false
+  @moduledoc "Runs the canonical core-library verification capability."
   use Mix.Task
   @shortdoc "Runs the canonical core repository gate"
   @impl true
