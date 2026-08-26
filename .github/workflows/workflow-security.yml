@@ -28,7 +28,7 @@ jobs:
               echo "Unpinned action reference: $action_ref" >&2
               exit 1
             fi
-          done < <(rg -o 'uses:\s*[^[:space:]#]+' .github/workflows | sed -E 's/^.*uses:[[:space:]]*//')
+          done < <(sed -nE 's/^[[:space:]]*-[[:space:]]*uses:[[:space:]]*([^[:space:]#]+).*$/\1/p' .github/workflows/*.yml)
 
   dependency-review:
     if: github.event_name == 'pull_request'
