@@ -218,7 +218,7 @@ Historical phase details and evidence live under `milestones/`. Phases 137-143 a
 **Requirements**: TBD
 **Scope note:** No requirements are newly mapped; this phase repairs TEST-05's integration path and restores evidence for the original Phase 148–158 ownership.
 **Depends on:** Phase 158
-**Plans:** 4/7 plans executed
+**Plans:** 5/7 plans executed
 
 Plans:
 **Wave 1**
@@ -233,7 +233,7 @@ Plans:
 
 - [x] 159-03-PLAN.md — Restore retrospective SUMMARY/VERIFICATION indexes for Phases 148–151.
 - [x] 159-04-PLAN.md — Restore retrospective SUMMARY/VERIFICATION indexes for Phases 152–155.
-- [ ] 159-05-PLAN.md — Restore retrospective SUMMARY/VERIFICATION indexes for Phases 156–158.
+- [x] 159-05-PLAN.md — Restore retrospective SUMMARY/VERIFICATION indexes for Phases 156–158.
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
