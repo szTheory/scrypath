@@ -18,9 +18,8 @@ defmodule Mix.Tasks.Verify.OpsUi do
 
   Expect Postgres-backed Ecto tests for **`scrypath_ops`**; there is **no** Meilisearch service on this path.
 
-  This task does not accept arguments. The historical `mix verify.opsui`
-  spelling remains a Mix alias. For the full CI ↔ **`mix verify.*`** matrix and
-  job names, see [CONTRIBUTING.md](CONTRIBUTING.md).
+  This task does not accept arguments. For the full CI ↔ **`mix verify.*`**
+  matrix and job names, see [CONTRIBUTING.md](CONTRIBUTING.md).
   """
 
   @impl true

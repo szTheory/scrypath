@@ -1,5 +1,5 @@
 defmodule Mix.Tasks.Verify.EcommerceE2e do
-  @moduledoc false
+  @moduledoc "Runs the canonical full ecommerce browser capability."
   use Mix.Task
   @shortdoc "Runs canonical full ecommerce E2E verification"
   @impl true

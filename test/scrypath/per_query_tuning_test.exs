@@ -5,9 +5,11 @@ defmodule Scrypath.PerQueryTuningTest do
   alias Scrypath.Options
   alias Scrypath.Query
 
-  def capture_search_start(_event, _measurements, metadata, parent) do
+  def capture_search_start(_event, _measurements, %{schema: SearchablePost} = metadata, parent) do
     send(parent, {:search_start_meta, metadata})
   end
+
+  def capture_search_start(_event, _measurements, _metadata, _parent), do: :ok
 
   test "per_query rejects unknown inner keys" do
     assert {:error, _} = Options.validate_search_options(SearchablePost, per_query: [bad: :key])

@@ -1,5 +1,5 @@
 defmodule Mix.Tasks.Verify.Package do
-  @moduledoc false
+  @moduledoc "Runs the canonical package and release-contract capability."
   use Mix.Task
   @shortdoc "Runs the canonical package and release-contract gate"
   @impl true

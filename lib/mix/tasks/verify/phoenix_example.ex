@@ -1,5 +1,5 @@
 defmodule Mix.Tasks.Verify.PhoenixExample do
-  @moduledoc false
+  @moduledoc "Runs the canonical live Phoenix example capability."
   use Mix.Task
   @shortdoc "Runs canonical live Phoenix example verification"
   @impl true
