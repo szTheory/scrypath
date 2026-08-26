@@ -8,9 +8,10 @@ defmodule Scrypath.Operator.RecoveryAction do
   """
 
   alias Scrypath.Document
+  alias Scrypath.Backfill
   alias Scrypath.Oban.Enqueue
-  alias Scrypath.Operator.FailedWork
   alias Scrypath.Sync
+  alias Scrypath.Reindex
 
   @enforce_keys [:schema, :backend, :mode, :operation]
   defstruct [:schema, :backend, :mode, :operation, :index, kind: :retry, reference: %{}]
@@ -28,23 +29,16 @@ defmodule Scrypath.Operator.RecoveryAction do
   @spec new(keyword()) :: t()
   def new(attrs) when is_list(attrs), do: struct!(__MODULE__, attrs)
 
-  @spec retry(FailedWork.t() | t(), keyword()) :: {:ok, map()} | {:error, term()}
-  def retry(%FailedWork{retryable?: false}, _opts), do: {:error, :not_retryable}
-
-  def retry(%FailedWork{recovery: %__MODULE__{} = recovery}, opts) do
-    retry(recovery, opts)
-  end
-
-  def retry(%FailedWork{}, _opts), do: {:error, :missing_recovery_action}
+  @spec retry(t(), keyword()) :: {:ok, map()} | {:error, term()}
 
   def retry(%__MODULE__{kind: :backfill} = action, opts) do
     opts = Keyword.put_new(opts, :backend, action.backend)
-    Scrypath.backfill(action.schema, opts)
+    Backfill.backfill(action.schema, opts)
   end
 
   def retry(%__MODULE__{kind: :reindex} = action, opts) do
     opts = Keyword.put_new(opts, :backend, action.backend)
-    Scrypath.reindex(action.schema, opts)
+    Reindex.run(action.schema, opts)
   end
 
   def retry(%__MODULE__{mode: :oban} = action, opts) do

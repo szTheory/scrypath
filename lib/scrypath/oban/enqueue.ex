@@ -139,10 +139,9 @@ defmodule Scrypath.Oban.Enqueue do
     end
   end
 
-  # Oban jobs survive process restarts, while per-call credentials do not. Never
-  # put a Meilisearch key in durable job args; require the worker's durable
-  # application configuration to provide the same key instead.
-  defp ensure_durable_api_key!(config) do
+  @doc false
+  @spec ensure_durable_api_key!(keyword()) :: :ok
+  def ensure_durable_api_key!(config) do
     durable_config =
       [backend: Config.fetch_backend!(config), sync_mode: :manual]
       |> Config.resolve!()

@@ -2,8 +2,8 @@ defmodule Scrypath.Meilisearch.Tasks do
   @moduledoc false
 
   alias Scrypath.Config
-  alias Scrypath.Meilisearch
   alias Scrypath.Meilisearch.Client
+  alias Scrypath.Meilisearch.TaskPayload
   alias Scrypath.Operations
   alias Scrypath.Operations.Task
   alias Scrypath.Telemetry
@@ -40,7 +40,7 @@ defmodule Scrypath.Meilisearch.Tasks do
         response
         |> Map.get(:results, Map.get(response, "results", []))
         |> Enum.reduce_while({:ok, []}, fn payload, {:ok, page} ->
-          case Meilisearch.normalize_task(payload, :poll) do
+          case TaskPayload.normalize(payload, :poll) do
             {:ok, normalized_task} ->
               {:cont,
                {:ok, [Operations.task_from_backend(normalized_task, source: :meilisearch) | page]}}
@@ -163,7 +163,7 @@ defmodule Scrypath.Meilisearch.Tasks do
 
       case client(config).task(task.id, config) do
         {:ok, response} ->
-          case Meilisearch.normalize_task(response, :poll) do
+          case TaskPayload.normalize(response, :poll) do
             {:ok, normalized_task} ->
               normalized_task
               |> Operations.task_from_backend(source: :meilisearch)
@@ -215,7 +215,7 @@ defmodule Scrypath.Meilisearch.Tasks do
   defp normalize_initial_task(%Task{} = task), do: {:ok, task}
 
   defp normalize_initial_task(task) when is_map(task) do
-    case Meilisearch.normalize_task(task, :initial) do
+    case TaskPayload.normalize(task, :initial) do
       {:ok, normalized_task} ->
         {:ok, Operations.task_from_backend(normalized_task, source: :meilisearch)}
 

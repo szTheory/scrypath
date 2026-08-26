@@ -21,7 +21,7 @@ defmodule Scrypath.Identity do
   end
 
   defp default_document_id(schema_module, source_record) when is_map(source_record) do
-    document_id_field = schema_module.__scrypath__(:document_id)
+    document_id_field = Scrypath.Schema.Metadata.document_id(schema_module)
 
     cond do
       Map.has_key?(source_record, document_id_field) ->

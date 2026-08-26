@@ -5,6 +5,7 @@ defmodule Scrypath.Backfill do
 
   alias Scrypath.Meilisearch.Operations, as: MeilisearchOperations
   alias Scrypath.Options
+  alias Scrypath.Operations
   alias Scrypath.Operations.Result
   alias Scrypath.Operations.Task
   alias Scrypath.Projection
@@ -58,10 +59,17 @@ defmodule Scrypath.Backfill do
                  Keyword.fetch!(config, :backend),
                  config,
                  index
+               ),
+             result <-
+               Operations.normalize_write_result(backend_result,
+                 mode: Keyword.fetch!(config, :sync_mode),
+                 document_ids: Enum.map(documents, & &1.id),
+                 document_count: length(documents),
+                 index: index
                ) do
           batch_result =
             batch_result(
-              backend_result,
+              result,
               index,
               length(documents),
               last_primary_key
@@ -121,16 +129,6 @@ defmodule Scrypath.Backfill do
     |> maybe_drop_nil(:task)
   end
 
-  defp batch_result(result, index, documents, last_primary_key) when is_map(result) do
-    %{
-      index: Map.get(result, :index, index),
-      documents: documents,
-      last_primary_key: last_primary_key,
-      task: public_task(Map.get(result, :task))
-    }
-    |> maybe_drop_nil(:task)
-  end
-
   defp public_task(%Task{} = task) do
     %{
       uid: task.id,
@@ -160,7 +158,7 @@ defmodule Scrypath.Backfill do
   defp primary_key(schema_module) do
     case schema_module.__schema__(:primary_key) do
       [field | _rest] -> field
-      [] -> Scrypath.document_id_field(schema_module)
+      [] -> Scrypath.Schema.Metadata.document_id(schema_module)
     end
   end
 end

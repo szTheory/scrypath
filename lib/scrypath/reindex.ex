@@ -62,7 +62,7 @@ defmodule Scrypath.Reindex do
   end
 
   defp enforce_ranking_rules_strict!(schema_module) do
-    declared = Scrypath.schema_settings(schema_module)
+    declared = Scrypath.Schema.Metadata.settings(schema_module)
 
     case Map.get(declared, :ranking_rules) do
       nil ->
@@ -244,7 +244,7 @@ defmodule Scrypath.Reindex do
   defp primary_key(schema_module) do
     case schema_module.__schema__(:primary_key) do
       [field | _rest] -> field
-      [] -> Scrypath.document_id_field(schema_module)
+      [] -> Scrypath.Schema.Metadata.document_id(schema_module)
     end
   end
 end
