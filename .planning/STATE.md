@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.37
 milestone_name: Code Quality Ratchet
-current_phase: Phase 158 complete — all 31 requirements are implemented; no confirmed compatible high- or medium-leverage finding remains open.
-current_phase_name: ratchet-closeout
-status: Milestone implementation complete; ready for audit and ship
-stopped_at: Phase 159 context gathered
-last_updated: "2026-08-26T18:58:42.355Z"
+current_phase: 159
+current_phase_name: close-v1-37-audit-gaps-coverage-wiring-and-verification-prov
+status: executing
+stopped_at: Completed 159-01-PLAN.md
+last_updated: "2026-08-26T20:07:01.115Z"
 last_activity: 2026-08-26
-last_activity_desc: non-UI quality ratchet implemented and verified
+last_activity_desc: Phase 159 execution started
 progress:
   total_phases: 2
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 7
+  completed_plans: 1
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** v1.37 Code Quality Ratchet — implementation complete; milestone audit/ship next
+**Current Focus:** Phase 159 — close-v1-37-audit-gaps-coverage-wiring-and-verification-prov
 
 ## Current Position
 
-Phase: 158 of 158 (v1.37)
-Plan: —
-Status: Complete and verified
-Last activity: 2026-08-26 — non-UI quality ratchet implemented and verified
+Phase: 159 (close-v1-37-audit-gaps-coverage-wiring-and-verification-prov) — EXECUTING
+Plan: 2 of 7
+Status: Ready to execute
+Last activity: 2026-08-26 — Phase 159 execution started
 
 ## Active Milestone: v1.37 Code Quality Ratchet
 
@@ -36,7 +36,7 @@ Last activity: 2026-08-26 — non-UI quality ratchet implemented and verified
 
 **Scope:** Runtime safety, internal architecture, tests, Mix tasks, examples, CI/CD, release proof, and measured performance. Preserve public APIs and behavior. ScrypathOps presentation/UX/visual review is excluded.
 
-**Current phase:** Phase 158 complete — all 31 requirements are implemented; no confirmed compatible high- or medium-leverage finding remains open.
+**Current phase:** 159
 
 **Milestone sequence:** 148 quality baseline → 149 runtime safety → 150 dependency leaf → 151 write result → 152 options/settings → 153 search/failed work → 154 verification commands → 155 CI proof → 156 supply chain/release → 157 performance evidence → 158 closeout.
 
@@ -185,6 +185,7 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 | Phase 146 P02 | 2min | 2 tasks | 1 files |
 | Phase 146 P03 | 18min | 2 tasks | 1 files |
 | Phase 146-scrypathops-web-client-remediation P04 | 3min | 1 tasks | 1 files |
+| Phase 159-close-v1-37-audit-gaps-coverage-wiring-and-verification-prov P01 | 1min | 2 tasks | 3 files |
 
 ## Decisions
 
@@ -233,12 +234,14 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 - [Phase ?]: Phase 146 Plan 02: Exact candidate 59d2e6a passed ordered deterministic Ops and root release-train gates; primary Ops lock remained byte-identical.
 - [Phase ?]: Phase 146 Plan 03: macOS /var and /private/var worktree spellings were accepted only after fail-closed canonical equivalence, unique registration, ownership, symlink, prefix, and exact-child validation; cleanup and preservation checks passed.
 - [Phase ?]: Phase 146 Plan 04 retained decode_body: true and uses application/json to prove Swoosh.ApiClient.Req preserves the raw JSON binary; ff1531c is the sole separately labeled test-only closure after 59d2e6a.
+- [Phase ?]: Coverage remains schedule/manual-only, advisory, informational, and non-blocking.
+- [Phase ?]: The built-in Mix coverage report is retained directly with no hosted service, threshold, token, or new dependency.
 
 ## Session
 
-**Last session:** 2026-08-26T18:58:42.349Z
-**Stopped at:** Phase 159 context gathered
-**Resume file:** .planning/phases/159-close-v1-37-audit-gaps-coverage-wiring-and-verification-prov/159-CONTEXT.md
+**Last session:** 2026-08-26T20:07:01.109Z
+**Stopped at:** Completed 159-01-PLAN.md
+**Resume file:** None
 
 ## Operator Next Steps
 
