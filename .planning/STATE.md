@@ -4,16 +4,16 @@ milestone: v1.37
 milestone_name: Code Quality Ratchet
 current_phase: 159
 current_phase_name: close-v1-37-audit-gaps-coverage-wiring-and-verification-prov
-status: executing
-stopped_at: Completed 159-06-PLAN.md
-last_updated: "2026-08-26T20:30:44.374Z"
+status: verifying
+stopped_at: Completed 159-07-PLAN.md
+last_updated: "2026-08-26T21:26:07.545Z"
 last_activity: 2026-08-26
 last_activity_desc: Phase 159 execution started
 progress:
   total_phases: 12
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 7
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -27,7 +27,7 @@ progress:
 
 Phase: 159 (close-v1-37-audit-gaps-coverage-wiring-and-verification-prov) — EXECUTING
 Plan: 7 of 7
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-08-26 — Phase 159 execution started
 
 ## Active Milestone: v1.37 Code Quality Ratchet
@@ -191,6 +191,7 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 | Phase 159-close-v1-37-audit-gaps-coverage-wiring-and-verification-prov P04 | 3m 21s | 1 tasks | 8 files |
 | Phase 159 P05 | 3min | 1 tasks | 6 files |
 | Phase 159 P06 | 8min | 2 tasks | 12 files |
+| Phase 159 P07 | 14min | 3 tasks | 6 files |
 
 ## Decisions
 
@@ -250,11 +251,12 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 - [Phase ?]: Phase 156-158 retrospective records retain canonical D-07 classes and distinguish immutable receipts from fresh proof.
 - [Phase ?]: Phase 159 validations mark coverage only when current evidence is complete; hosted closure gaps remain non-compliant until Plan 07.
 - [Phase ?]: TEST-01 chronology remains historically unprovable under its narrow D-11 waiver; hosted TEST-05 proof remains Plan 07 work.
+- [Phase ?]: Accepted only hosted run 33014343041 because candidate, workflow-source, and head SHA all equal a35874178b79392caa0f3c1dcc010ea149e1e5bf; the reviewer approved without widening the four-row TEST-01 chronology waiver.
 
 ## Session
 
-**Last session:** 2026-08-26T20:30:44.366Z
-**Stopped at:** Completed 159-06-PLAN.md
+**Last session:** 2026-08-26T21:26:07.536Z
+**Stopped at:** Completed 159-07-PLAN.md
 **Resume file:** None
 
 ## Operator Next Steps

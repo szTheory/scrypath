@@ -26,7 +26,7 @@ updated: 2026-08-26
 | 159-06-02 | 4 | 159-03, 159-04, 159-05 | Phase 154–158 triple loop plus this seven-plan map | complete (this plan) |
 | 159-07-01 | 5 | 159-06 | D-18 local closure bundle | complete (`a358741`) |
 | 159-07-02 | 5 | 159-07-01 | exact-SHA GitHub run/artifact inspection and final audit | complete (run `33014343041`) |
-| 159-07-03 | 5 | 159-07-02 | blocking human verification of hosted provenance and narrow audit disposition | awaiting reviewer |
+| 159-07-03 | 5 | 159-07-02 | blocking human verification of hosted provenance and narrow audit disposition | complete (reviewer `approved`) |
 
 Plans 03–05 are parallel Wave 3 work after Plan 02. Plan 06 depends on all three; Plan 07 depends on Plan 06. No obsolete four-plan graph or task ID is retained.
 
@@ -38,6 +38,14 @@ Plans 03–05 are parallel Wave 3 work after Plan 02. Plan 06 depends on all thr
 - [x] This map now reflects seven plans/five waves and Plan 06’s all-three dependency.
 - [x] Spec-less probe fallback remains skipped truthfully: Phase 159 owns no new requirement IDs, so no predicates were invented.
 
-## Pending closure boundaries
+## Closure disposition
 
-`nyquist_compliant: true`: D-18 and exact-SHA D-19 evidence are complete; the final blocking human review remains. TEST-01 remains **historically unprovable** for the four finite parent probes under its narrow D-11 waiver.
+`nyquist_compliant: true`: D-18 and exact-SHA D-19 evidence are complete and the final blocking human review approved the hosted provenance and narrow audit disposition. TEST-01 remains **historically unprovable** for the four finite parent probes under its narrow D-11 waiver.
+
+## Hosted checkpoint approval
+
+- **Reviewer response:** `approved`
+- **Reviewed run:** https://github.com/szTheory/scrypath/actions/runs/33014343041
+- **Candidate / workflow source / run head SHA:** `a35874178b79392caa0f3c1dcc010ea149e1e5bf` (equal)
+- **Approved scope:** required-job success, coverage producer and retained artifact provenance, advisory/path-scoped lane posture, TEST-05 closure, and the bounded TEST-01 chronology waiver.
+- **No broadened claim:** this approval does not convert the four historically-unprovable TEST-01 parent probes into historical passes or alter original Phase 148–158 ownership.

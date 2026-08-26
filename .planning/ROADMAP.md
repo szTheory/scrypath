@@ -218,7 +218,7 @@ Historical phase details and evidence live under `milestones/`. Phases 137-143 a
 **Requirements**: TBD
 **Scope note:** No requirements are newly mapped; this phase repairs TEST-05's integration path and restores evidence for the original Phase 148–158 ownership.
 **Depends on:** Phase 158
-**Plans:** 6/7 plans executed
+**Plans:** 7/7 plans executed
 
 Plans:
 **Wave 1**
@@ -241,4 +241,4 @@ Plans:
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
-- [ ] 159-07-PLAN.md — Capture local/hosted exact-SHA closure evidence, rerun the audit last, and obtain human provenance approval.
+- [x] 159-07-PLAN.md — Capture local/hosted exact-SHA closure evidence, rerun the audit last, and obtain human provenance approval.
