@@ -8,7 +8,7 @@ and it does not publish a Hex package or reopen release-parity work.
 
 | Field | Value |
 | --- | --- |
-| Local source SHA | `9dd7683f8d41526bdc81623f446e165a35ed10dc` |
+| Local source SHA | `9dd768368cf1e9de9dcea78db39ab7e54b48b310` |
 | Local evidence window (UTC) | `2026-08-26T21:05:35Z`–`2026-08-26T21:07:07Z` |
 | Git | `2.41.0` |
 | Elixir / Mix | `1.19.5` / `1.19.5` |
