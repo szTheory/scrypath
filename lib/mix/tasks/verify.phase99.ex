@@ -13,8 +13,17 @@ defmodule Mix.Tasks.Verify.Phase99 do
 
   @impl true
   def run(args) do
-    Mix.Task.run("app.start")
     ensure_no_args!(args)
+    verify!(docs?: true)
+  end
+
+  @doc false
+  def run_without_docs do
+    verify!(docs?: false)
+  end
+
+  defp verify!(opts) do
+    Mix.Task.run("app.start")
 
     Mix.shell().info(
       "==> verify.phase99: drift-gate trust lane with phase100 install/release, phase101 compatibility-truth closure, and phase111 advisory-proof stability contract checks"
@@ -22,9 +31,11 @@ defmodule Mix.Tasks.Verify.Phase99 do
 
     run_test!(@focused_tests, "Phase 99 trust-hardening verification")
 
-    Mix.shell().info("==> Building docs with warnings as errors")
-    Mix.Task.reenable("docs")
-    Mix.Task.run("docs", ["--warnings-as-errors"])
+    if opts[:docs?] do
+      Mix.shell().info("==> Building docs with warnings as errors")
+      Mix.Task.reenable("docs")
+      Mix.Task.run("docs", ["--warnings-as-errors"])
+    end
   end
 
   defp run_test!(args, label) do

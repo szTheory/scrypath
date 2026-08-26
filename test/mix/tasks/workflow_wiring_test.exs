@@ -5,13 +5,15 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
   @publish_hex_yml ".github/workflows/publish-hex.yml"
   @release_please_yml ".github/workflows/release-please.yml"
   @verify_published_yml ".github/workflows/verify-published-release.yml"
+  @verify_task "lib/mix/tasks/verify.ex"
 
   describe "INFRA-01 D-14: workspace_clean gate on all three publish paths" do
-    test "ci.yml quality job runs mix verify" do
+    test "ci.yml core job runs the canonical gate, which includes workspace cleanliness" do
       ci = File.read!(@ci_yml)
-      repo_hygiene_job = workflow_job_block(ci, "repo-hygiene")
+      core_job = workflow_job_block(ci, "core")
 
-      assert repo_hygiene_job =~ "mix verify"
+      assert core_job =~ "mix verify.core"
+      assert File.read!(@verify_task) =~ ~s|Mix.Task.run("verify.workspace_clean")|
     end
 
     test "publish-hex.yml runs mix verify.workspace_clean" do
@@ -60,7 +62,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert_ordered_steps(yml, [
         "mix verify.workspace_clean",
         ~s(grep -n "@version \\"${{ needs.release-please.outputs.version }}\\"" mix.exs),
-        "mix verify.phase11",
+        "mix verify.package",
         "mix hex.publish --dry-run --yes",
         "mix hex.publish --yes",
         ~s(mix verify.release_publish "${{ needs.release-please.outputs.version }}"),
@@ -74,7 +76,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert_ordered_steps(yml, [
         "mix verify.workspace_clean",
         ~s(grep -n "@version \\"${{ inputs.release_version }}\\"" mix.exs),
-        "mix verify.phase11",
+        "mix verify.package",
         "mix hex.publish --dry-run --yes",
         "mix hex.publish --yes",
         ~s(mix verify.release_publish "${{ inputs.release_version }}"),
@@ -97,38 +99,28 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
   end
 
   describe "INFRA-03 D-13: ci.yml action pins on Node 24 runtime" do
-    test "ci.yml uses actions/checkout@v6 everywhere" do
+    test "ci.yml pins actions/checkout v6 to immutable commits" do
       yml = File.read!(@ci_yml)
       refute yml =~ "actions/checkout@v4", "expected no legacy checkout@v4 pins"
-      assert yml =~ "actions/checkout@v6"
+      assert yml =~ ~r|actions/checkout@[0-9a-f]{40} # v6|
     end
 
-    test "ci.yml uses actions/cache@v5 everywhere" do
+    test "ci.yml pins actions/cache v5 to immutable commits" do
       yml = File.read!(@ci_yml)
       refute yml =~ "actions/cache@v4", "expected no legacy cache@v4 pins"
-      assert yml =~ "actions/cache@v5"
+      assert yml =~ ~r|actions/cache@[0-9a-f]{40} # v5|
     end
 
-    test "ci.yml has at least 4 checkout@v6 references (test matrix + quality + phase5-verification + phase13-verification)" do
-      count =
-        @ci_yml
-        |> File.read!()
-        |> String.split("actions/checkout@v6")
-        |> length()
-        |> Kernel.-(1)
+    test "ci.yml pins checkout in every executable job" do
+      count = Regex.scan(~r|actions/checkout@[0-9a-f]{40} # v6|, File.read!(@ci_yml)) |> length()
 
-      assert count >= 4, "expected >= 4 checkout@v6 refs in ci.yml, got #{count}"
+      assert count >= 10, "expected checkout pins across the CI graph, got #{count}"
     end
 
-    test "ci.yml has at least 4 cache@v5 references" do
-      count =
-        @ci_yml
-        |> File.read!()
-        |> String.split("actions/cache@v5")
-        |> length()
-        |> Kernel.-(1)
+    test "ci.yml caches each BEAM verification lane" do
+      count = Regex.scan(~r|actions/cache@[0-9a-f]{40} # v5|, File.read!(@ci_yml)) |> length()
 
-      assert count >= 4, "expected >= 4 cache@v5 refs in ci.yml, got #{count}"
+      assert count >= 9, "expected cache pins across BEAM jobs, got #{count}"
     end
   end
 
@@ -138,9 +130,9 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert yml =~ "failure() && github.event_name == 'schedule'"
     end
 
-    test "create-an-issue step uses JasonEtco/create-an-issue@v2" do
+    test "create-an-issue step pins JasonEtco/create-an-issue v2" do
       yml = File.read!(@verify_published_yml)
-      assert yml =~ "JasonEtco/create-an-issue@v2"
+      assert yml =~ ~r|JasonEtco/create-an-issue@[0-9a-f]{40} # v2|
     end
 
     test "create-an-issue step sets update_existing: true for per-version dedup" do
@@ -208,30 +200,28 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     end
   end
 
-  describe "phase99 required-check wiring parity" do
-    test "ci defines phase99-trust job and routes it to mix verify.phase99" do
+  describe "canonical repository and compatibility wiring" do
+    test "ci defines repository-contracts and routes it to the canonical command" do
       ci = File.read!(@ci_yml)
-      assert ci =~ "\n  phase99-trust:\n"
-      assert ci =~ "Run phase99 trust gate (`mix verify.phase99`)"
-      assert ci =~ "run: mix verify.phase99"
+      assert ci =~ "\n  repository-contracts:\n"
+      assert ci =~ "run: mix verify.repository_contracts"
     end
 
-    test "ci defines compatibility-truth matrix lane with floor/head tuple evidence" do
+    test "ci defines compatibility matrix lane with floor/head tuple evidence" do
       ci = File.read!(@ci_yml)
-      assert ci =~ "\n  compatibility-truth:\n"
-      assert ci =~ ~s(elixir-version: "1.17.3")
-      assert ci =~ ~s(otp-version: "26.2.5")
-      assert ci =~ ~s(elixir-version: "1.19.0")
-      assert ci =~ ~s(otp-version: "28.1")
+      assert ci =~ "\n  compatibility:\n"
+      assert ci =~ ~s({elixir: "1.17.3", otp: "26.2.5"})
+      assert ci =~ ~s({elixir: "1.19.0", otp: "28.1"})
+      assert ci =~ "run: mix verify.compatibility"
     end
 
-    test "contributing required-check contract includes phase99-trust" do
+    test "contributing required-check contract includes canonical jobs" do
       contributing = File.read!("CONTRIBUTING.md")
 
-      assert contributing =~ "**`main-ci`**"
-      assert contributing =~ "**`repo-hygiene`**"
-      assert contributing =~ "**`release-truth`**"
-      assert contributing =~ "**`phase99-trust`**"
+      assert contributing =~ "**`core`**"
+      assert contributing =~ "**`package`**"
+      assert contributing =~ "**`repository-contracts`**"
+      assert contributing =~ "**`backend`**"
     end
 
     test "no docs or workflow guidance introduces verify.phase100/phase101 drift" do
@@ -242,13 +232,13 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
              "verify.phase100 guidance must not be added; phase100 enforcement stays under verify.phase99"
 
       refute ci =~ "mix verify.phase100",
-             "CI trust lane must remain on mix verify.phase99 without verify.phase100 proliferation"
+             "CI trust lane must remain on the canonical repository contract without verify.phase100 proliferation"
 
       refute contributing =~ "mix verify.phase101",
              "verify.phase101 guidance must not be added; phase101 compatibility checks stay under verify.phase99"
 
       refute ci =~ "mix verify.phase101",
-             "CI trust lane must remain on mix verify.phase99 without verify.phase101 proliferation"
+             "CI trust lane must remain on the canonical repository contract without verify.phase101 proliferation"
     end
   end
 
@@ -353,59 +343,46 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
   end
 
   describe "STAB-01 advisory evidence wiring" do
-    test "Phase 147 adds a distinct required mounted smoke without promoting phase105" do
+    test "the mounted proof remains distinct and required without promoting full E2E" do
       ci = File.read!(@ci_yml)
       contributing = File.read!("CONTRIBUTING.md")
 
-      assert workflow_job_block(ci, "ecommerce-mounted-smoke") =~
-               "make -C examples/scrypath_ecommerce verify-mounted"
+      assert workflow_job_block(ci, "ecommerce-mounted") =~ "mix verify.ecommerce_mounted"
 
-      assert contributing =~ "**`ecommerce-mounted-smoke`** | Required merge gate"
-      assert contributing =~ "`phase105-e2e` is advisory today"
+      assert contributing =~ "**`ecommerce-mounted`**"
+      assert contributing =~ "`ecommerce-e2e` is advisory today"
     end
 
-    test "phase105-e2e exports evidence env and runs always-on summary script" do
+    test "ecommerce-e2e runs the canonical full proof and always uploads evidence" do
       ci = File.read!(@ci_yml)
 
-      assert ci =~
-               "PHASE105_EVIDENCE_PATH: examples/scrypath_ecommerce/test-results/phase105-evidence.ndjson"
-
-      assert ci =~ "PHASE105_BROWSER_CONCLUSION"
-      assert ci =~ "PHASE105_LIGHT_PARITY_CONCLUSION"
-      assert ci =~ "PHASE105_CONTRAST_CONCLUSION"
-      assert ci =~ "- name: Generate phase105 evidence summary"
+      assert workflow_job_block(ci, "ecommerce-e2e") =~ "mix verify.ecommerce_e2e"
+      assert ci =~ "- name: Upload advisory E2E evidence"
       assert ci =~ "if: always()"
-      assert ci =~ "run: scripts/ci/phase105_evidence.sh"
-      assert ci =~ "phase105-evidence-summary.md >> \"$GITHUB_STEP_SUMMARY\""
+      assert ci =~ "examples/scrypath_ecommerce/test-results/docker-full"
     end
 
-    test "phase105-e2e shifts light parity and visual judgment into CI" do
-      ci = File.read!(@ci_yml)
+    test "full Docker proof retains browser, light parity, contrast, and optional visual judgment" do
+      docker_runner = File.read!("examples/scrypath_ecommerce/docker-playwright.sh")
       package_json = File.read!("examples/scrypath_ecommerce/package.json")
 
       assert package_json =~ ~s("test:e2e": "playwright test --workers=1")
       assert package_json =~ "test:e2e:admin-light-parity"
       assert package_json =~ "test:e2e:admin-shell-wash"
       assert package_json =~ "test:e2e:ops-ui-visual-judge"
-      assert ci =~ "npm run test:e2e:admin-light-parity"
-      assert ci =~ "- name: Run advisory ops UI visual judge"
-      assert ci =~ "OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}"
-      assert ci =~ "OPS_UI_LLM_JUDGE: ${{ vars.OPS_UI_LLM_JUDGE || '0' }}"
-      assert ci =~ "node e2e/ops-ui-visual-judge.mjs"
+      assert docker_runner =~ "npm run test:e2e"
+      assert docker_runner =~ "npm run test:e2e:admin-light-parity"
+      assert docker_runner =~ "node contrast-checker.mjs"
+      assert docker_runner =~ "npm run test:e2e:ops-ui-visual-judge"
     end
 
-    test "phase105-e2e artifacts are bounded to the advisory evidence bundle" do
-      ci = File.read!(@ci_yml)
+    test "Docker verifier bounds collected artifacts to logs and browser reports" do
+      verifier = File.read!("examples/scrypath_ecommerce/scripts/verify-e2e.sh")
 
-      assert ci =~ "/tmp/phase105-e2e-phx.log"
-      assert ci =~ "examples/scrypath_ecommerce/playwright-report"
-      assert ci =~ "examples/scrypath_ecommerce/test-results"
-      assert ci =~ "examples/scrypath_ecommerce/test-results/phase105-evidence.ndjson"
-      assert ci =~ "examples/scrypath_ecommerce/test-results/phase105-evidence.json"
-      assert ci =~ "examples/scrypath_ecommerce/test-results/phase105-evidence-summary.md"
-      assert ci =~ "examples/scrypath_ecommerce/test-results/admin-light-parity.json"
-      assert ci =~ "examples/scrypath_ecommerce/test-results/ops-ui-visual-judge.json"
-      assert ci =~ "examples/scrypath_ecommerce/test-results/ops-ui-visual-judge.md"
+      assert verifier =~ "test-results/docker-${scope}"
+      assert verifier =~ "compose.log"
+      assert verifier =~ "test-results/."
+      assert verifier =~ "playwright-report/."
     end
 
     test "playwright config emits structured phase105 report and keeps retry-based flake visibility" do

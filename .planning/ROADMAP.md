@@ -17,6 +17,8 @@
 
 **Milestone goal:** Systematically raise Scrypath's non-UI engineering quality until remaining opportunities are low-leverage, controversial, or unsupported by evidence. Preserve public behavior and APIs; only small additive APIs that materially simplify are in scope. ScrypathOps presentation, UX, and visual review are excluded.
 
+[PHASE97-SCOPE-GUARD] Runtime breadth remains closed unless the established reopen-policy evidence is met; this milestone improves the existing library contract.
+
 ## Phases
 
 - [ ] **Phase 148: Quality Baseline** - Evidence ledger and executable behavior baseline before extraction.

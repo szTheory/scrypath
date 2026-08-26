@@ -65,7 +65,7 @@ defmodule Scrypath.ReadinessContractTest do
     assert String.contains?(@readme, "mix verify.adopter --live")
     assert String.contains?(@contributing, "mix verify.adopter")
     assert String.contains?(@contributing, "mix verify.adopter --live")
-    assert String.contains?(@contributing, "phoenix-example-integration")
+    assert String.contains?(@contributing, "phoenix-example")
     assert String.contains?(@contributing, "SCRYPATH_EXAMPLE_INTEGRATION")
     assert String.contains?(@contributing, "PGPORT")
     assert String.contains?(@contributing, "SCRYPATH_MEILISEARCH_URL")

@@ -24,7 +24,7 @@ jobs:
       version: ${{ steps.release.outputs.version }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
 
@@ -32,7 +32,7 @@ jobs:
       # node24 runner—watch releases: https://github.com/googleapis/release-please-action
       - name: Run Release Please
         id: release
-        uses: googleapis/release-please-action@v5.0.0
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
@@ -48,11 +48,11 @@ jobs:
       HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.release-please.outputs.tag_name }}
 
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           elixir-version: "1.19.0"
           otp-version: "28.1"
@@ -73,7 +73,7 @@ jobs:
         run: grep -n "@version \"${{ needs.release-please.outputs.version }}\"" mix.exs
 
       - name: Run release contract gate
-        run: mix verify.phase11
+        run: mix verify.package
 
       - name: Dry run Hex publish
         run: mix hex.publish --dry-run --yes

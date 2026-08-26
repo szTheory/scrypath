@@ -1,0 +1,41 @@
+name: Workflow Security
+
+on:
+  pull_request:
+    paths: [".github/**"]
+  push:
+    branches: [main]
+    paths: [".github/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: rhysd/actionlint@914e7df21a07ef503a81201c76d2b11c789d3fca # v1.7.12
+
+  action-pins:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Require immutable action pins
+        run: |
+          while IFS= read -r action_ref; do
+            if [[ ! "$action_ref" =~ @[0-9a-f]{40}$ ]]; then
+              echo "Unpinned action reference: $action_ref" >&2
+              exit 1
+            fi
+          done < <(rg -o 'uses:\s*[^[:space:]#]+' .github/workflows | sed -E 's/^.*uses:[[:space:]]*//')
+
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
