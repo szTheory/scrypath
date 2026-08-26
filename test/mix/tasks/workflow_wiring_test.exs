@@ -424,6 +424,15 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       ci = File.read!(@ci_yml)
       coverage_job = workflow_job_block(ci, "coverage")
 
+      coverage_upload =
+        workflow_named_step_block(coverage_job, "Upload informational coverage report")
+
+      coverage_checkout =
+        workflow_step_with_uses_block(
+          coverage_job,
+          "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6"
+        )
+
       assert length(Regex.scan(~r/^  coverage:$/m, ci)) == 1
       assert coverage_job =~ "name: coverage (advisory)"
 
@@ -432,16 +441,17 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
       assert coverage_job =~ "continue-on-error: true"
       assert length(Regex.scan(~r/^\s*- run: mix verify\.coverage$/m, coverage_job)) == 1
-      assert coverage_job =~ "- name: Upload informational coverage report"
-      assert coverage_job =~ "if: always()"
+      assert coverage_upload =~ "if: always()"
 
-      assert coverage_job =~
+      assert coverage_upload =~
                "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7"
 
-      assert coverage_job =~ "name: coverage-report-${{ github.sha }}"
-      assert coverage_job =~ "path: cover/"
-      assert coverage_job =~ "if-no-files-found: warn"
-      assert coverage_job =~ "retention-days: 7"
+      assert coverage_upload =~ "name: coverage-report-${{ github.sha }}"
+      assert coverage_upload =~ "path: cover/"
+      assert coverage_upload =~ "if-no-files-found: warn"
+      assert coverage_upload =~ "retention-days: 7"
+      assert coverage_checkout =~ "with: {fetch-depth: 0}"
+      refute coverage_checkout =~ ~r/^\s*ref:/m
       refute coverage_job =~ "secrets."
       refute coverage_job =~ "id-token"
     end
@@ -467,6 +477,30 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     case Regex.run(~r/\n  [a-zA-Z0-9_-]+:\n/, rest, return: :index) do
       [{next_idx, _}] -> binary_part(rest, 0, next_idx)
       nil -> rest
+    end
+  end
+
+  defp workflow_named_step_block(job_block, step_name) do
+    workflow_step_block(job_block, "\n      - name: #{step_name}\n")
+  end
+
+  defp workflow_step_with_uses_block(job_block, action) do
+    workflow_step_block(job_block, "\n      - uses: #{action}\n")
+  end
+
+  defp workflow_step_block(job_block, marker) do
+    {start_idx, marker_len} = :binary.match(job_block, marker)
+
+    rest =
+      binary_part(
+        job_block,
+        start_idx + marker_len,
+        byte_size(job_block) - start_idx - marker_len
+      )
+
+    case :binary.match(rest, "\n      - ") do
+      {next_idx, _} -> binary_part(rest, 0, next_idx)
+      :nomatch -> rest
     end
   end
 end
