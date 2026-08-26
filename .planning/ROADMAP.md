@@ -245,4 +245,4 @@ Plans:
 
 **Wave 6** *(blocked on Wave 5 completion)*
 
-- [ ] 159-08-PLAN.md — Replace the contradictory audit body with one evidence-derived final disposition.
+- [ ] 159-08-PLAN.md — Tighten TEST-05 step-scoped guards, semantically reconcile the final audit, and record fresh attributable approval before closeout.
