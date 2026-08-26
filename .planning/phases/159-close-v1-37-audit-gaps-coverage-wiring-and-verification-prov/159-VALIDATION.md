@@ -1,8 +1,8 @@
 ---
 phase: 159
 slug: close-v1-37-audit-gaps-coverage-wiring-and-verification-prov
-status: executing
-nyquist_compliant: false
+status: validated
+nyquist_compliant: true
 wave_0_complete: true
 updated: 2026-08-26
 ---
@@ -24,9 +24,9 @@ updated: 2026-08-26
 | 159-05-01 | 3 | 159-02 | Phase 156–158 summary/verification link loop | complete (`eafc8ab`) |
 | 159-06-01 | 4 | 159-03, 159-04, 159-05 | Phase 148–153 summary/verification/validation triple and verdict loop | complete (`15f4787`) |
 | 159-06-02 | 4 | 159-03, 159-04, 159-05 | Phase 154–158 triple loop plus this seven-plan map | complete (this plan) |
-| 159-07-01 | 5 | 159-06 | D-18 local closure bundle | pending |
-| 159-07-02 | 5 | 159-07-01 | exact-SHA GitHub run/artifact inspection and final audit | pending |
-| 159-07-03 | 5 | 159-07-02 | blocking human verification of hosted provenance and narrow audit disposition | pending |
+| 159-07-01 | 5 | 159-06 | D-18 local closure bundle | complete (`a358741`) |
+| 159-07-02 | 5 | 159-07-01 | exact-SHA GitHub run/artifact inspection and final audit | complete (run `33014343041`) |
+| 159-07-03 | 5 | 159-07-02 | blocking human verification of hosted provenance and narrow audit disposition | awaiting reviewer |
 
 Plans 03–05 are parallel Wave 3 work after Plan 02. Plan 06 depends on all three; Plan 07 depends on Plan 06. No obsolete four-plan graph or task ID is retained.
 
@@ -40,4 +40,4 @@ Plans 03–05 are parallel Wave 3 work after Plan 02. Plan 06 depends on all thr
 
 ## Pending closure boundaries
 
-`nyquist_compliant: false`: Plan 07 alone may record the D-18 local receipt, exact-SHA hosted TEST-05/required-CI evidence, artifact metadata, rerun milestone audit, and blocking human checkpoint. TEST-01 remains **historically unprovable** for the four finite parent probes under its narrow D-11 waiver; neither current validation nor hosted proof can change that chronology class.
+`nyquist_compliant: true`: D-18 and exact-SHA D-19 evidence are complete; the final blocking human review remains. TEST-01 remains **historically unprovable** for the four finite parent probes under its narrow D-11 waiver.

@@ -41,7 +41,7 @@ informational, and non-blocking. It cannot establish that a hosted run used this
 source or that an always-uploaded artifact had a successful producer; those facts
 are intentionally deferred to the hosted section.
 
-## Hosted exact-SHA evidence — pending Task 2
+## Hosted exact-SHA evidence — Task 2 verified
 
 Task 1 must be committed before a candidate closing SHA is derived. Task 2 will
 record the candidate SHA, GitHub repository/workflow/run URL, trigger, attempt,
@@ -51,11 +51,16 @@ digest, and retention here. Branch-name-only evidence is insufficient.
 
 | Field | Value |
 | --- | --- |
-| Candidate closing SHA | Pending Task 1 evidence commit |
-| Hosted run ID | Pending exact-SHA run |
-| Hosted workflow/source SHA | Pending exact-SHA run |
-| Coverage artifact | Pending exact-SHA run |
-| D-20 advisory/path-scoped disposition | Pending observation; no promotion is authorized |
+| Candidate closing SHA | `a35874178b79392caa0f3c1dcc010ea149e1e5bf` |
+| Hosted run ID | `33014343041` |
+| Hosted workflow/source SHA | `a35874178b79392caa0f3c1dcc010ea149e1e5bf` / `a35874178b79392caa0f3c1dcc010ea149e1e5bf` (equal to candidate) |
+| Hosted workflow / repository / URL | CI / `szTheory/scrypath` / https://github.com/szTheory/scrypath/actions/runs/33014343041 |
+| Trigger / attempt / created | `workflow_dispatch` / `1` / `2026-08-26T21:13:33Z` |
+| Required jobs | `core`, `package`, `repository-contracts`, `backend`, and `ecommerce-mounted`: all `success` |
+| Coverage producer / upload | `Run mix verify.coverage`: `success`; `Upload informational coverage report`: `success` |
+| Coverage artifact | `coverage-report-a35874178b79392caa0f3c1dcc010ea149e1e5bf` (ID `9623867267`), 559,802 bytes hosted, expires `2026-09-02T21:14:32Z` |
+| Artifact inspection | Downloaded once to a unique `/tmp` directory; report root had `index.html` and 149 files (3,256 KiB); SHA-256 archive `35a80d3bd0a52c080c20bd8bef0299570103aff7792206e846418d7a1ab45819`; content-tree SHA-256 `0b93aad8a14dc2f8f03ad697693dc675f4474d18dd4c41b7b80b083389999dbc`; validated directory removed. |
+| D-20 advisory/path-scoped disposition | Compatibility (all four), deep quality, and Phoenix example succeeded; `ops-ui` was correctly path-scoped/skipped; full ecommerce E2E was still in progress at inspection and remains advisory/nonblocking. No lane was promoted. |
 | D-21 release disposition | No Hex publish and no release-parity reopening performed |
 
 ## Evidence boundary
