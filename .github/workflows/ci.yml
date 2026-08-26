@@ -231,6 +231,11 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     continue-on-error: true
+    outputs:
+      verification_outcome: ${{ steps.coverage_verify.outcome }}
+      artifact_id: ${{ steps.coverage_upload.outputs.artifact-id }}
+      artifact_url: ${{ steps.coverage_upload.outputs.artifact-url }}
+      artifact_digest: ${{ steps.coverage_upload.outputs.artifact-digest }}
     steps:
       # Coverage runs the root test suite, which validates release history in UAT-09.
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -244,14 +249,66 @@ jobs:
             _build
           key: ${{ runner.os }}-test-elixir-1.19.0-otp-28.1-${{ hashFiles('mix.lock', 'mix.exs') }}
       - run: mix deps.get
-      - run: mix verify.coverage
+      - name: Run informational coverage
+        id: coverage_verify
+        run: mix verify.coverage
       - name: Upload informational coverage report
+        id: coverage_upload
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: coverage-report-${{ github.sha }}
           path: cover/
           if-no-files-found: warn
+          retention-days: 7
+
+  closeout-attestation:
+    name: closeout-attestation
+    if: ${{ always() && github.event_name == 'workflow_dispatch' }}
+    needs: [core, package, repository-contracts, backend, ecommerce-mounted, coverage]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify exact-SHA closeout inputs
+        env:
+          CORE_RESULT: ${{ needs.core.result }}
+          PACKAGE_RESULT: ${{ needs.package.result }}
+          REPOSITORY_CONTRACTS_RESULT: ${{ needs.repository-contracts.result }}
+          BACKEND_RESULT: ${{ needs.backend.result }}
+          ECOMMERCE_MOUNTED_RESULT: ${{ needs.ecommerce-mounted.result }}
+          COVERAGE_OUTCOME: ${{ needs.coverage.outputs.verification_outcome }}
+          COVERAGE_ARTIFACT_ID: ${{ needs.coverage.outputs.artifact_id }}
+          COVERAGE_ARTIFACT_URL: ${{ needs.coverage.outputs.artifact_url }}
+          COVERAGE_ARTIFACT_DIGEST: ${{ needs.coverage.outputs.artifact_digest }}
+        run: |
+          test "$CORE_RESULT" = success
+          test "$PACKAGE_RESULT" = success
+          test "$REPOSITORY_CONTRACTS_RESULT" = success
+          test "$BACKEND_RESULT" = success
+          test "$ECOMMERCE_MOUNTED_RESULT" = success
+          test "$COVERAGE_OUTCOME" = success
+          test -n "$COVERAGE_ARTIFACT_ID"
+          test -n "$COVERAGE_ARTIFACT_URL"
+          test -n "$COVERAGE_ARTIFACT_DIGEST"
+          jq -n \
+            --arg authority "github-actions-exact-sha" \
+            --arg repository "$GITHUB_REPOSITORY" \
+            --arg workflow "$GITHUB_WORKFLOW" \
+            --arg run_id "$GITHUB_RUN_ID" \
+            --arg run_attempt "$GITHUB_RUN_ATTEMPT" \
+            --arg run_url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --arg event "$GITHUB_EVENT_NAME" \
+            --arg head_sha "$GITHUB_SHA" \
+            --arg coverage_artifact_id "$COVERAGE_ARTIFACT_ID" \
+            --arg coverage_artifact_url "$COVERAGE_ARTIFACT_URL" \
+            --arg coverage_artifact_digest "$COVERAGE_ARTIFACT_DIGEST" \
+            '{schema: 1, authority: $authority, repository: $repository, workflow: $workflow, run_id: $run_id, run_attempt: $run_attempt, run_url: $run_url, event: $event, head_sha: $head_sha, required_jobs: ["core (required)", "package (required)", "repository-contracts (required)", "backend (required)", "ecommerce-mounted (required)"], coverage: {outcome: "success", artifact_id: $coverage_artifact_id, artifact_url: $coverage_artifact_url, artifact_digest: $coverage_artifact_digest}}' \
+            > closeout-attestation.json
+      - name: Upload exact-SHA closeout attestation
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: closeout-attestation-${{ github.sha }}
+          path: closeout-attestation.json
+          if-no-files-found: error
           retention-days: 7
 
   ecommerce-e2e:

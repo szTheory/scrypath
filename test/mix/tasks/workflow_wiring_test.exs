@@ -427,6 +427,8 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       coverage_upload =
         workflow_named_step_block(coverage_job, "Upload informational coverage report")
 
+      coverage_verify = workflow_named_step_block(coverage_job, "Run informational coverage")
+
       coverage_checkout =
         workflow_step_with_uses_block(
           coverage_job,
@@ -440,8 +442,11 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
                "if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'"
 
       assert coverage_job =~ "continue-on-error: true"
-      assert length(Regex.scan(~r/^\s*- run: mix verify\.coverage$/m, coverage_job)) == 1
+      assert coverage_verify =~ "id: coverage_verify"
+      assert coverage_verify =~ "run: mix verify.coverage"
+      assert coverage_job =~ "verification_outcome: ${{ steps.coverage_verify.outcome }}"
       assert coverage_upload =~ "if: always()"
+      assert coverage_upload =~ "id: coverage_upload"
 
       assert coverage_upload =~
                "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7"
@@ -450,10 +455,53 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert coverage_upload =~ "path: cover/"
       assert coverage_upload =~ "if-no-files-found: warn"
       assert coverage_upload =~ "retention-days: 7"
+      assert coverage_job =~ "artifact_id: ${{ steps.coverage_upload.outputs.artifact-id }}"
+      assert coverage_job =~ "artifact_url: ${{ steps.coverage_upload.outputs.artifact-url }}"
+
+      assert coverage_job =~
+               "artifact_digest: ${{ steps.coverage_upload.outputs.artifact-digest }}"
+
       assert coverage_checkout =~ "with: {fetch-depth: 0}"
       refute coverage_checkout =~ ~r/^\s*ref:/m
       refute coverage_job =~ "secrets."
       refute coverage_job =~ "id-token"
+    end
+
+    test "manual closeout attestation fails closed over exact required jobs and coverage artifact provenance" do
+      ci = File.read!(@ci_yml)
+      closeout_job = workflow_job_block(ci, "closeout-attestation")
+
+      closeout_upload =
+        workflow_named_step_block(closeout_job, "Upload exact-SHA closeout attestation")
+
+      assert closeout_job =~ "name: closeout-attestation"
+      assert closeout_job =~ "if: ${{ always() && github.event_name == 'workflow_dispatch' }}"
+
+      assert closeout_job =~
+               "needs: [core, package, repository-contracts, backend, ecommerce-mounted, coverage]"
+
+      for result <-
+            ~w(CORE_RESULT PACKAGE_RESULT REPOSITORY_CONTRACTS_RESULT BACKEND_RESULT ECOMMERCE_MOUNTED_RESULT) do
+        assert closeout_job =~ ~s(test "$#{result}" = success)
+      end
+
+      assert closeout_job =~ ~s(test "$COVERAGE_OUTCOME" = success)
+      assert closeout_job =~ ~s(test -n "$COVERAGE_ARTIFACT_ID")
+      assert closeout_job =~ ~s(test -n "$COVERAGE_ARTIFACT_URL")
+      assert closeout_job =~ ~s(test -n "$COVERAGE_ARTIFACT_DIGEST")
+      assert closeout_job =~ "github-actions-exact-sha"
+      assert closeout_job =~ "head_sha: $head_sha"
+      assert closeout_job =~ "run_id: $run_id"
+
+      assert closeout_upload =~
+               "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7"
+
+      assert closeout_upload =~ "name: closeout-attestation-${{ github.sha }}"
+      assert closeout_upload =~ "path: closeout-attestation.json"
+      assert closeout_upload =~ "if-no-files-found: error"
+      assert closeout_upload =~ "retention-days: 7"
+      refute closeout_job =~ "secrets."
+      refute closeout_job =~ "id-token"
     end
   end
 

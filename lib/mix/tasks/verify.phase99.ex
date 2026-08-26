@@ -7,8 +7,10 @@ defmodule Mix.Tasks.Verify.Phase99 do
   @focused_tests [
     "test/scrypath/phase99_contract_test.exs",
     "test/scrypath/phase111_contract_test.exs",
+    "test/scrypath/no_human_gates_contract_test.exs",
     "test/mix/tasks/verify.phase99_test.exs",
-    "test/mix/tasks/workflow_wiring_test.exs"
+    "test/mix/tasks/workflow_wiring_test.exs",
+    "test/scripts/ci_monitor_test.exs"
   ]
 
   @impl true
