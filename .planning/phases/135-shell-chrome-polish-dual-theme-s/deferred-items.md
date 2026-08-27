@@ -2,9 +2,7 @@
 
 ## Plan 135-02
 
-- `mix precommit` rewrote formatter-only changes in unrelated ScrypathOps files outside this
-  plan's scope: `scrypath_ops/lib/scrypath_ops_web/components/ops_ui.ex`,
-  `scrypath_ops/lib/scrypath_ops_web/live/failed_sync_live.ex`,
-  `scrypath_ops/lib/scrypath_ops_web/live/search_live.ex`, and
-  `scrypath_ops/lib/scrypath_ops_web/live/sync_drift_live.ex`. The check passed, then those
-  unrelated working-tree deltas were discarded by explicit path to keep Plan 135-02 scoped.
+- truth: "`mix precommit` produced formatter-only changes outside Phase 135 Plan 02's scope."
+  status: resolved
+  resolution: "The named ScrypathOps files are now canonically formatted; no product or verification work remains."
+  evidence: "`mix format --check-formatted` passed for all four named files on 2026-08-27."
