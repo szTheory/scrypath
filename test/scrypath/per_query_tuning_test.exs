@@ -1,5 +1,7 @@
 defmodule Scrypath.PerQueryTuningTest do
-  use ExUnit.Case, async: true
+  # Telemetry handlers are VM-global. Keep this module synchronous so another
+  # SearchablePost query cannot satisfy the receive before this test's event.
+  use ExUnit.Case, async: false
 
   alias Scrypath.Meilisearch.Query, as: MeilisearchQuery
   alias Scrypath.Options
