@@ -4,6 +4,28 @@ defmodule Scrypath.Operations do
   alias Scrypath.Operations.Result
   alias Scrypath.Operations.Task
 
+  @spec normalize_write_result(Result.t() | map(), keyword()) :: Result.t()
+  def normalize_write_result(result, opts \\ [])
+
+  def normalize_write_result(%Result{} = result, _opts), do: result
+
+  def normalize_write_result(result, opts) when is_map(result) do
+    document_ids = Map.get(result, :document_ids, Keyword.get(opts, :document_ids, []))
+
+    Result.new(
+      mode: Map.get(result, :mode, Keyword.get(opts, :mode, :manual)),
+      status: Map.get(result, :status, Keyword.get(opts, :status, :accepted)),
+      document_ids: document_ids,
+      document_count:
+        Map.get(result, :document_count, Keyword.get(opts, :document_count, length(document_ids))),
+      task: normalize_task(Map.get(result, :task)),
+      metadata: %{
+        backend_result: result,
+        index: Map.get(result, :index, Keyword.get(opts, :index))
+      }
+    )
+  end
+
   @spec task_from_backend(map(), keyword()) :: Task.t()
   def task_from_backend(payload, opts \\ []) when is_map(payload) do
     source = Keyword.get(opts, :source, :meilisearch)
@@ -56,6 +78,10 @@ defmodule Scrypath.Operations do
   def to_public_sync(%Result{} = result) do
     Result.to_public_sync(result)
   end
+
+  defp normalize_task(%Task{} = task), do: task
+  defp normalize_task(task) when is_map(task), do: task_from_backend(task)
+  defp normalize_task(_task), do: nil
 
   defp normalize_backend_state(status) when is_binary(status) do
     case status do

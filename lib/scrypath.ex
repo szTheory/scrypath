@@ -84,7 +84,7 @@ defmodule Scrypath do
 
   @spec schema_config(module()) :: map()
   def schema_config(schema_module) do
-    schema_module.__scrypath__(:config)
+    Scrypath.Schema.Metadata.config(schema_module)
   end
 
   @doc """
@@ -97,12 +97,12 @@ defmodule Scrypath do
 
   @spec schema_fields(module()) :: [atom()]
   def schema_fields(schema_module) do
-    schema_module.__scrypath__(:fields)
+    Scrypath.Schema.Metadata.fields(schema_module)
   end
 
   @spec schema_settings(module()) :: map()
   def schema_settings(schema_module) do
-    schema_module.__scrypath__(:settings)
+    Scrypath.Schema.Metadata.settings(schema_module)
   end
 
   @doc """
@@ -113,7 +113,7 @@ defmodule Scrypath do
   """
   @spec schema_faceting(module()) :: keyword()
   def schema_faceting(schema_module) do
-    schema_module.__scrypath__(:faceting)
+    Scrypath.Schema.Metadata.faceting(schema_module)
   end
 
   @spec document_source(module()) :: atom()
@@ -123,7 +123,7 @@ defmodule Scrypath do
 
   @spec document_id_field(module()) :: atom()
   def document_id_field(schema_module) do
-    schema_module.__scrypath__(:document_id)
+    Scrypath.Schema.Metadata.document_id(schema_module)
   end
 
   @doc """

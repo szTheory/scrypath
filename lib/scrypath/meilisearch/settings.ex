@@ -1,34 +1,21 @@
 defmodule Scrypath.Meilisearch.Settings do
   @moduledoc false
 
-  alias Scrypath.Meilisearch
   alias Scrypath.Meilisearch.Client
+  alias Scrypath.Meilisearch.Settings.Wire
   alias Scrypath.Meilisearch.Tasks
+  alias Scrypath.Meilisearch.TaskPayload
   alias Scrypath.Options
   alias Scrypath.Operations.Task, as: OpTask
   alias Scrypath.Telemetry
 
   @hot_apply_allowlist [:synonyms, :stop_words, :typo_tolerance]
 
-  @canonical_to_camel %{
-    synonyms: "synonyms",
-    typo_tolerance: "typoTolerance",
-    ranking_rules: "rankingRules",
-    distinct_attribute: "distinctAttribute",
-    stop_words: "stopWords",
-    searchable_attributes: "searchableAttributes",
-    sortable_attributes: "sortableAttributes",
-    filterable_attributes: "filterableAttributes",
-    displayed_attributes: "displayedAttributes"
-  }
-
-  @scrypath_meta_keys [:ranking_rules_strict?]
-
   @spec resolve(module(), keyword()) :: map()
   def resolve(schema_module, config) do
     declared =
       schema_module
-      |> Scrypath.schema_settings()
+      |> Scrypath.Schema.Metadata.settings()
       |> maybe_normalize()
 
     override =
@@ -71,7 +58,7 @@ defmodule Scrypath.Meilisearch.Settings do
   # merge. Explicit `settings:` entries for the same attribute win: existing maps are kept
   # unchanged; bare strings for facet attributes are upgraded to granular object form with facet search.
   defp merge_faceting_filterable_attributes(settings, schema_module) do
-    faceting = Scrypath.schema_faceting(schema_module)
+    faceting = Scrypath.Schema.Metadata.faceting(schema_module)
     attrs = Keyword.get(faceting, :attributes, [])
 
     if attrs == [] do
@@ -205,7 +192,7 @@ defmodule Scrypath.Meilisearch.Settings do
     translated = translate_settings(settings)
 
     with {:ok, response} <- client(config).update_settings(index_name, translated, config),
-         {:ok, task} <- Meilisearch.normalize_task(response) do
+         {:ok, task} <- TaskPayload.normalize(response) do
       {:ok,
        %{
          index: index_name,
@@ -227,35 +214,7 @@ defmodule Scrypath.Meilisearch.Settings do
   `{groups, one_way: true}` disables bidirectional expansion (first term keys into rest).
   """
   @spec expand_synonyms(list() | map() | {list(), keyword()}) :: map()
-  def expand_synonyms(groups) when is_map(groups), do: groups
-
-  def expand_synonyms(groups) when is_list(groups), do: expand_groups(groups, false)
-
-  def expand_synonyms({groups, opts}) when is_list(groups) and is_list(opts) do
-    one_way = Keyword.get(opts, :one_way, false)
-    expand_groups(groups, one_way)
-  end
-
-  defp expand_groups(groups, one_way) do
-    Enum.reduce(groups, %{}, fn group, acc ->
-      stringified = Enum.map(group, &to_string/1)
-
-      cond do
-        stringified == [] ->
-          acc
-
-        one_way ->
-          [head | rest] = stringified
-          Map.update(acc, head, rest, fn existing -> existing ++ rest end)
-
-        true ->
-          Enum.reduce(stringified, acc, fn term, acc2 ->
-            others = stringified -- [term]
-            Map.update(acc2, term, others, fn existing -> existing ++ others end)
-          end)
-      end
-    end)
-  end
+  def expand_synonyms(groups), do: Wire.expand_synonyms(groups)
 
   @doc """
   Translates a canonical atom-snake settings map to Meilisearch-native camelCase
@@ -265,84 +224,8 @@ defmodule Scrypath.Meilisearch.Settings do
   """
   @spec translate_settings(map()) :: map()
   def translate_settings(canonical) when is_map(canonical) do
-    {unrecognized, recognized} = Map.pop(canonical, :__unrecognized__, %{})
-
-    one_way =
-      case {Map.get(recognized, :one_way), Map.get(unrecognized, :one_way),
-            Map.get(unrecognized, "one_way")} do
-        {ow, _, _} when not is_nil(ow) -> ow
-        {_, ow, _} when not is_nil(ow) -> ow
-        {_, _, ow} when not is_nil(ow) -> ow
-        _ -> false
-      end
-
-    recognized = Map.delete(recognized, :one_way)
-
-    unrecognized =
-      unrecognized
-      |> Map.delete(:one_way)
-      |> Map.delete("one_way")
-
-    stripped = strip_scrypath_meta_keys(recognized)
-
-    recognized_camel =
-      Enum.into(stripped, %{}, fn {k, v} ->
-        v =
-          case k do
-            :synonyms ->
-              if is_list(v) do
-                expand_synonyms({v, [one_way: one_way]})
-              else
-                expand_synonyms(v)
-              end
-
-            _ ->
-              recursively_camelize(v)
-          end
-
-        camel = Map.get(@canonical_to_camel, k) || camelize_atom(k)
-        {camel, v}
-      end)
-
-    Map.merge(recognized_camel, unrecognized)
+    Wire.translate(canonical)
   end
-
-  defp strip_scrypath_meta_keys(map) when is_map(map) do
-    map
-    |> Enum.reject(fn {k, _} ->
-      k in @scrypath_meta_keys or
-        (is_atom(k) and String.ends_with?(Atom.to_string(k), "_strict?"))
-    end)
-    |> Map.new()
-  end
-
-  defp camelize_atom(atom) when is_atom(atom) do
-    atom
-    |> Atom.to_string()
-    |> Macro.camelize()
-    |> then(fn s ->
-      String.downcase(String.slice(s, 0..0)) <> String.slice(s, 1..-1//1)
-    end)
-  end
-
-  defp recursively_camelize(value) when is_map(value) do
-    Enum.into(value, %{}, fn {k, v} ->
-      camel_k =
-        cond do
-          is_atom(k) -> camelize_atom(k)
-          is_binary(k) -> k
-          true -> k
-        end
-
-      {camel_k, recursively_camelize(v)}
-    end)
-  end
-
-  defp recursively_camelize(value) when is_list(value) do
-    Enum.map(value, &recursively_camelize/1)
-  end
-
-  defp recursively_camelize(value), do: value
 
   defp maybe_normalize(%{__unrecognized__: _} = already_canonical), do: already_canonical
 
@@ -409,7 +292,7 @@ defmodule Scrypath.Meilisearch.Settings do
               Telemetry.span([:scrypath, :settings, :hot_apply], metadata, fn ->
                 result =
                   with {:ok, response} <- client(config).update_settings(index_name, wire, config),
-                       {:ok, task_map} <- Meilisearch.normalize_task(response),
+                       {:ok, task_map} <- TaskPayload.normalize(response),
                        {:ok, waited} <- Tasks.wait_for_task(task_map, config) do
                     {:ok, %{index: index_name, task: public_hot_apply_task(waited)}}
                   else
@@ -461,16 +344,7 @@ defmodule Scrypath.Meilisearch.Settings do
   end
 
   defp hot_apply_unrecognized_key_atom(k) when is_atom(k), do: k
-
-  defp hot_apply_unrecognized_key_atom(k) when is_binary(k) do
-    underscored = Macro.underscore(k)
-
-    try do
-      String.to_existing_atom(underscored)
-    rescue
-      ArgumentError -> String.to_atom(underscored)
-    end
-  end
+  defp hot_apply_unrecognized_key_atom(k) when is_binary(k), do: k
 
   defp public_hot_apply_task(%OpTask{} = task) do
     task

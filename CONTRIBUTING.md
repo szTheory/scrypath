@@ -17,16 +17,76 @@ Skim [`guides/common-mistakes.md`](guides/common-mistakes.md) when search or syn
 ## Release train and merge policy
 
 - Scrypath runs a **release train on `main`**: keep `main` green, let Release Please maintain the release PR, and merge that PR when the next patch is ready to ship.
-- Keep release mechanics centralized in [`docs/releasing.md`](docs/releasing.md): `mix verify.phase11` is the always-on auth-free gate, while `mix verify.release_publish` and `mix verify.release_parity` stay on post-publish and scheduled monitor paths.
+- Keep release mechanics centralized in [`docs/releasing.md`](docs/releasing.md): `mix verify.package` is the always-on auth-free gate, while `mix verify.release_publish` and `mix verify.release_parity` stay on post-publish and scheduled monitor paths.
 - **Default release posture is patch-first while Scrypath remains pre-1.0.** The repo already uses Release Please's pre-1.0 knobs, so merged work rolls into patch cadence unless maintainers intentionally open a larger semver conversation.
 - **Serious feature-depth work is PR-first.** Do not land it directly on `main`; shape it as a branch + PR slice that respects the release train.
 - **Squash merge only.** The PR title should be treated as the release-facing summary because it becomes the squash commit title that Release Please reads.
 - If `main` is green, the release PR is coherent, and there is no approved feature slice or bugfix to work, the default maintainer posture is **nothing to do**.
 
+## Canonical verification commands
+
+Use capability-named commands for new work. Historical `verify.phase*` commands remain supported for their original focused proof and print/retain their original argument contracts; prefer the corresponding capability command when its scope matches.
+
+| Capability | Canonical command | Preserved proof |
+| --- | --- | --- |
+| Core library | `mix verify.core` | Standard root maturity gate (`mix verify`) |
+| Package/release contract | `mix verify.package` | Package, consumer, docs, and release agreement (`mix verify.phase11`) |
+| Repository contracts | `mix verify.repository_contracts` | Trust/repository contract gate (<code>mix verify.phase99</code>) |
+| Meilisearch backend | `mix verify.backend` | Curated live backend smoke (`mix verify.meilisearch_smoke`) |
+| Compatibility contract | `mix verify.compatibility` | Compatibility-truth contract (<code>mix verify.phase99</code>) |
+| Deep quality | `mix verify.deep_quality` | No-optional-deps, namespace, Hex audit, and Dialyzer checks |
+| Mounted ecommerce | `mix verify.ecommerce_mounted` | Docker-only mounted proof (`make -C examples/scrypath_ecommerce verify-mounted`) |
+| Phoenix example | `mix verify.phoenix_example` | Live consumer-shaped example proof (`mix verify.adopter --live`) |
+| ScrypathOps | `mix verify.ops_ui` | Optional operator app proof |
+| Full ecommerce E2E | `mix verify.ecommerce_e2e` | Advisory Docker/browser proof (`make -C examples/scrypath_ecommerce verify-e2e`) |
+
 Use the normal fast suite during development:
 
 ```sh
 mix test --exclude integration --exclude docs_contract
+```
+
+Quality-baseline commands are capability-named and safe to run locally:
+
+```sh
+# Ensure the root library does not accidentally require optional dependencies.
+mix verify.no_optional_deps
+
+# Produce a built-in line-coverage report for the fast suite. This is
+# informational; Scrypath does not enforce a coverage percentage.
+mix verify.coverage
+```
+
+The **`coverage`** CI job is a scheduled/manual, advisory, informational, and
+non-blocking lane. To reproduce it locally, run `mix verify.coverage`. If a
+maintainer needs fresh hosted evidence, redispatch [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+with `workflow_dispatch`, then download the SHA-bound `coverage-report-<sha>`
+artifact from that run. GitHub retains the report for seven days; it is evidence
+only, not a merge gate or coverage-percentage threshold.
+
+Milestone and phase closeout use machine authority rather than post-implementation
+human verification or UAT. Prepare a candidate commit, then run:
+
+```sh
+node scripts/ci_monitor.cjs closeout --push \
+  --branch "$(git branch --show-current)" \
+  --sha "$(git rev-parse HEAD)"
+```
+
+The command dispatches `ci.yml`, selects only a new `workflow_dispatch` run at
+the requested SHA, and fails closed unless all five required jobs, coverage, and
+`closeout-attestation` succeed and both SHA-bound artifacts have immutable
+digests. Closeout uses two stages: attest the pending candidate, commit all final
+tracking and verification artifacts, then attest the exact final SHA. Do not
+write tracked files after the final successful run. Authentication or product
+decisions may still stop work before implementation; they are not acceptance
+tests and must never be represented as simulated approval.
+
+Run test files with warnings promoted to failures when changing test support or
+test infrastructure:
+
+```sh
+MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors --exclude integration --exclude docs_contract
 ```
 
 For adopter support verification:
@@ -37,14 +97,14 @@ mix verify.adopter
 
 That fast path stays service-free and guards the current support/readiness contract. `mix verify.adopter --live` is the Phoenix + Meilisearch live check and requires `SCRYPATH_EXAMPLE_INTEGRATION`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL` after starting the example services; the detailed runbook lives in [`examples/phoenix_meilisearch/README.md`](examples/phoenix_meilisearch/README.md).
 
-The live branch maps directly to the GitHub Actions **`phoenix-example-integration`** job contract: from `examples/phoenix_meilisearch`, the command path is `mix deps.get` then `mix test` with `SCRYPATH_EXAMPLE_INTEGRATION`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL` set.
+The live branch maps directly to the GitHub Actions **`phoenix-example`** job contract. The canonical root command validates `SCRYPATH_EXAMPLE_INTEGRATION`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL`, then runs `mix deps.get` and `mix test` from `examples/phoenix_meilisearch`.
 
-Run the full integration verification (`mix verify.phase5`) when you change backfill, reindex, Meilisearch integration, or the operator docs:
+Run the canonical backend verification (`mix verify.backend`) when you change Meilisearch integration. The historical `mix verify.phase5` remains the focused backfill/reindex/operator-docs wrapper:
 
 ```sh
 SCRYPATH_INTEGRATION=1 \
 SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700 \
-mix verify.phase5
+mix verify.backend
 ```
 
 That command runs:
@@ -56,14 +116,14 @@ That command runs:
 If you do not have a Meilisearch instance running locally, you can still run the non-integration portion:
 
 ```sh
-mix verify.phase5 --skip-integration
+mix verify.backend --skip-integration
 ```
 
 Some focused Mix tasks keep historical names. Choose them by scope:
 
 | Scope | Local command | When to run |
 | ----- | ------------- | ----------- |
-| Federation and multi-search | <code>mix verify.phase41</code> | `search_many/2`, federation weights, `:all` expansion, or merged ordering semantics. |
+| Federation and multi-search | <code>mix verify.phase41</code> (historical focused wrapper) | `search_many/2`, federation weights, `:all` expansion, or merged ordering semantics. |
 | Per-query tuning | <code>mix verify.phase43</code> | `:per_query` options, search option merging, ranking score knobs, or related docs. |
 | request-edge docs/examples contract | <code>mix verify.phase82</code> | Request-edge guide, Phoenix guides, `Scrypath.QueryParams`, `Scrypath.Phoenix`, or example request-shape fixtures. |
 | Tenant safety | <code>mix verify.phase94</code> | `tenant_field:`, `schema_capabilities/1` tenant reflection, `tenant_scope:`, or the multitenancy guide. |
@@ -72,7 +132,7 @@ Some focused Mix tasks keep historical names. Choose them by scope:
 | v1.29 closeout truth | <code>mix verify.phase108</code> | Related-data fan-out wording, planning/JTBD closeout truth, and advisory `phase105-e2e` posture. |
 | Public website/docs truth alignment | <code>mix verify.phase112</code> | README, `website/`, `guides/scope-and-reopen-policy.md`, or other public truth-copy updates that affect claim envelope, route-map depth, or reopen-policy wording. |
 
-Run **`mix verify.opsui`** from the repository root when you change the optional **`scrypath_ops`** operator Phoenix app or its path dependency on the core library. It runs **`cd scrypath_ops && mix deps.get && mix test`**, and the dedicated **`scrypath-ops`** CI job now invokes this same root task (Postgres-backed Ecto setup, no Meilisearch service).
+Run **`mix verify.ops_ui`** from the repository root when you change the optional **`scrypath_ops`** operator Phoenix app or its path dependency on the core library. It runs **`cd scrypath_ops && mix deps.get && mix test`**. The path-scoped **`ops-ui`** CI job invokes the same canonical command (Postgres-backed Ecto setup, no Meilisearch service).
 
 When you change **`scrypath_ops/docs/*.json`** playbook fixtures, golden workspace playbooks, or other flat `*.json` catalogs that ship beside **`scrypath_ops`**, also run **`cd scrypath_ops && mix scrypath_ops.playbooks.validate PATH`** from the repository root, where **`PATH`** is the directory containing those JSON files (non-recursive; same invocation shape as the Mix task **`Mix.Tasks.ScrypathOps.Playbooks.Validate`**).
 
@@ -82,21 +142,19 @@ GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
 
 | Job | Purpose |
 |-----|---------|
-| **`main-ci`** | Required merge gate: `mix compile --warnings-as-errors`, then `mix test --exclude integration --exclude docs_contract --include requires_clean_workspace` on Elixir 1.19 / OTP 28. |
-| **`repo-hygiene`** | Required merge gate: `mix verify --exclude integration` for format, workspace cleanliness, Credo, fast tests, and docs build. |
-| **`release-truth`** | Required merge gate: `mix verify.phase11` to keep package metadata, docs, Release Please wiring, and Hex packaging truth aligned. |
-| **`phase99-trust`** | Required merge gate: <code>mix verify.phase99</code> for deterministic phase 99 trust-hardening contract and wiring checks. |
-| **`compatibility-truth`** | Advisory compatibility-evidence lane: validates floor/head Elixir + OTP support truth using the canonical tuple authority in `guides/support-and-compatibility.md`. |
-| **`deep-quality`** | Advisory quality sweep: optional-deps compile for `scrypath_ops`, namespace fence, `mix hex.audit`, and Dialyzer. |
-| **`phase5-verification`** | Service: Meilisearch v1.15. `SCRYPATH_INTEGRATION=1`, `mix verify.phase5` (live integration + docs slice for backfill/reindex) |
-| **`phase13-verification`** | Service: Meilisearch. `SCRYPATH_INTEGRATION=1`, `mix verify.phase13` (operator integration path) |
-| **`meilisearch-smoke`** | Service: Meilisearch. `mix verify.meilisearch_smoke` (curated live suites: `live_meilisearch_verification`, `live_operator_verification`, `search_many_integration`, `settings_hot_apply_integration`) |
-| **`phoenix-example-integration`** | Services: Postgres 16 + Meilisearch v1.15. `SCRYPATH_EXAMPLE_INTEGRATION=1`, `PGPORT=5433`, `SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700`. **CI** runs **`cd examples/phoenix_meilisearch`**, then **`mix deps.get`**, then **`mix test`** (same sequence as `.github/workflows/ci.yml`) - **not** `./scripts/smoke.sh`. **`./scripts/smoke.sh`** is a **local DX harness** under `examples/phoenix_meilisearch/` (Compose + env defaults aligned to CI); use it for interactive runs, not as the Actions test driver. See the example README for env tables. |
-| **`ecommerce-mounted-smoke`** | Required merge gate: runs `make -C examples/scrypath_ecommerce verify-mounted`, a Docker-only proof of mounted routing, failed-sync triage, and zero-downtime swap behavior. The verifier owns health checks, preparation, assets, browser execution, artifacts, and teardown. |
-| **`phase105-e2e`** | Advisory browser lane with Postgres 16 + Meilisearch v1.15 for `examples/scrypath_ecommerce`; runs browser E2E, light screenshot inventory/viewport parity, static contrast, and optional advisory LLM visual judgment, with failure artifacts (`playwright-report`, `test-results`, Phoenix log). |
-| **`scrypath-ops-path-check` / `scrypath-ops`** | Service: Postgres 16 only (no Meilisearch). Path gate: runs on **`push` to `main`** unconditionally, and on **`pull_request`** when **`scrypath_ops/**`**, **`lib/**`**, **`mix.exs`**, **`mix.lock`**, or **`scrypath_ops/mix.lock`** change. Local contributors should use **`mix verify.opsui`** from the repo root; the dedicated CI job mirrors the same sequence by running **`cd scrypath_ops`**, then **`mix deps.get`**, then **`mix test`**. |
+| **`core`** | Required merge gate: `mix verify.core --exclude integration --exclude docs_contract` for warning-free compilation, format, workspace cleanliness, Credo, fast tests, and the single CI docs build. |
+| **`package`** | Required merge gate: `mix verify.package` for package metadata, consumer, release wiring, and unpacked Hex-package truth. |
+| **`repository-contracts`** | Required merge gate: `mix verify.repository_contracts` for deterministic repository and workflow contracts. |
+| **`backend`** | Required Meilisearch v1.15 proof: `mix verify.backend` with live integration enabled and failure diagnostics. |
+| **`ecommerce-mounted`** | Required Docker-only proof: `mix verify.ecommerce_mounted` for mounted routing, failed-sync triage, and zero-downtime swap behavior. |
+| **`compatibility`** | Advisory Elixir/OTP tuple matrix: `mix verify.compatibility` on 1.17/26, 1.18/27, 1.19/26, and 1.19/28. |
+| **`deep-quality`** | Advisory `mix verify.deep_quality`: optional-dependency compile, namespace fence, `mix hex.audit`, and Dialyzer. |
+| **`phoenix-example`** | Advisory Postgres 16 + Meilisearch v1.15 proof: `mix verify.phoenix_example`, which runs the live consumer-shaped example. |
+| **`ops-ui-path` / `ops-ui`** | Path-scoped optional-app proof. `mix verify.ops_ui` delegates to the existing ScrypathOps test orchestration. |
+| **`coverage`** | Scheduled/manual advisory, informational, non-blocking coverage evidence: `mix verify.coverage` produces a SHA-bound report artifact retained for seven days. |
+| **`ecommerce-e2e`** | Scheduled/manual advisory Docker/browser proof. `mix verify.ecommerce_e2e` runs the full lane and always uploads its bounded evidence bundle. |
 
-Treat **`main-ci`**, **`repo-hygiene`**, **`release-truth`**, **`phase99-trust`**, and **`ecommerce-mounted-smoke`** as the routine required merge gate blockers for this trust-hardening lane. **`compatibility-truth`** remains advisory evidence coverage, while phase-101 compatibility assertions close through <code>mix verify.phase99</code>.
+Treat **`core`**, **`package`**, **`repository-contracts`**, **`backend`**, and **`ecommerce-mounted`** as required merge gates. The compatibility, deep-quality, Phoenix example, optional operator app, and full E2E lanes remain advisory or path-scoped as labeled.
 
 For v1.29 closeout proof, run <code>mix verify.phase108</code> locally when related-data fan-out wording, roadmap/JTBD closeout truth, or contributor verification posture changes. It is a focused service-free truth gate; it does not promote **`phase105-e2e`** to a required merge blocker.
 
@@ -104,7 +162,7 @@ The root [`compose.yaml`](compose.yaml) is only for **local** Meilisearch when r
 
 ## Example app (Postgres + Meilisearch)
 
-For a **multi-container-shaped** local stack (Postgres + Meilisearch + Phoenix + **Oban**) and a scripted E2E smoke (**inline** and **`:oban`** paths), see [`examples/phoenix_meilisearch/README.md`](examples/phoenix_meilisearch/README.md) - that file is the **canonical env + command** reference for the example. **CI** under **`phoenix-example-integration`** runs **`cd examples/phoenix_meilisearch`**, then **`mix deps.get`**, then **`mix test`** (see **CI** table); **`./scripts/smoke.sh`** remains a **local** orchestration path, not the GitHub Actions entrypoint.
+For a **multi-container-shaped** local stack (Postgres + Meilisearch + Phoenix + **Oban**) and a scripted E2E smoke (**inline** and **`:oban`** paths), see [`examples/phoenix_meilisearch/README.md`](examples/phoenix_meilisearch/README.md) - that file is the **canonical env + command** reference for the example. **CI** runs the same proof through **`mix verify.phoenix_example`**. For the local orchestration harness, run `cd examples/phoenix_meilisearch` and then `./scripts/smoke.sh`; that script is not the GitHub Actions entrypoint.
 
 ## `phase105-e2e` local runbook
 
@@ -114,7 +172,7 @@ The required mounted subset has a zero-touch Docker entrypoint:
 make -C examples/scrypath_ecommerce verify-mounted
 ```
 
-That command is the local/CI parity surface for `ecommerce-mounted-smoke`. It
+That command is the local/CI parity surface for `ecommerce-mounted`. It
 requires only Docker Compose, publishes no host ports, and tears down its
 uniquely named containers, network, and volumes after collecting diagnostics.
 Set `KEEP_E2E_STACK=1` only when intentionally preserving a failed stack for
@@ -124,7 +182,7 @@ debugging. Run the complete advisory lane with:
 make -C examples/scrypath_ecommerce verify-e2e
 ```
 
-`phase105-e2e` is advisory today (not a required merge gate). It exists to continuously exercise the full browser/operator proof while we track flake and runtime behavior. Treat this lane as the Phase 105 UAT surface: once the job is running on PR, push, schedule, or manual workflow dispatch, do not add a separate human UAT gate unless CI itself cannot execute. The lane now shifts visual UAT left through deterministic browser checks, light screenshot inventory/viewport parity, static contrast, and an optional advisory LLM judge for brand/trust review.
+`ecommerce-e2e` is advisory today (not a required merge gate). It preserves the full Phase 105 browser/operator proof on scheduled and manual runs through one Docker-owned command, including deterministic browser checks, light screenshot parity, static contrast, optional visual judgment, cleanup, and bounded artifacts.
 
 Phase 111 freezes a dual-window evidence model for any future promotion decision:
 

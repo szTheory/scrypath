@@ -69,7 +69,7 @@ defmodule Scrypath.Operator.Status do
     case Config.fetch_backend!(config) do
       Scrypath.Meilisearch ->
         config
-        |> Keyword.merge(Keyword.take(operator_opts, [:meilisearch_tasks]))
+        |> Keyword.merge(Keyword.take(operator_opts, [:meilisearch_tasks, :task_history_limit]))
         |> then(&Tasks.list_sync_tasks(index, &1))
         |> case do
           {:ok, tasks} -> {:ok, Enum.map(tasks, &State.from_backend_task/1)}

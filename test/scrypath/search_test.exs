@@ -338,6 +338,25 @@ defmodule Scrypath.SearchTest do
     assert facets.stats[:genre][:max] == 10
   end
 
+  test "unknown facet-stat response keys remain strings" do
+    unknown_key = "remote_stat_#{System.unique_integer([:positive])}"
+    query = Query.new("x", facets: [:genre])
+
+    result =
+      SearchResult.new(
+        query,
+        %{
+          "hits" => [],
+          "facetStats" => %{"genre" => %{unknown_key => 42}}
+        },
+        [],
+        []
+      )
+
+    assert result.facets.stats.genre[unknown_key] == 42
+    assert_raise ArgumentError, fn -> String.to_existing_atom(unknown_key) end
+  end
+
   test "facetDistribution decodes hierarchical dotted facet attribute keys" do
     assert {:ok, %SearchResult{facets: facets}} =
              Scrypath.search(FacetableHierarchy, "x",

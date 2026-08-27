@@ -56,10 +56,10 @@ defmodule Scrypath.Hydration do
     if function_exported?(schema_module, :__schema__, 1) do
       case schema_module.__schema__(:primary_key) do
         [field | _] -> field
-        _ -> Scrypath.document_id_field(schema_module)
+        _ -> Scrypath.Schema.Metadata.document_id(schema_module)
       end
     else
-      Scrypath.document_id_field(schema_module)
+      Scrypath.Schema.Metadata.document_id(schema_module)
     end
   end
 

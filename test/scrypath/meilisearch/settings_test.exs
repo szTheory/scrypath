@@ -151,6 +151,22 @@ defmodule Scrypath.Meilisearch.SettingsTest do
 
       assert result == %{"synonyms" => %{}}
     end
+
+    test "recognized one_way false takes precedence over duplicate unrecognized values" do
+      result =
+        Settings.translate_settings(%{
+          synonyms: [["nyc", "new york"]],
+          one_way: false,
+          __unrecognized__: %{"one_way" => true, one_way: true}
+        })
+
+      assert result == %{
+               "synonyms" => %{
+                 "nyc" => ["new york"],
+                 "new york" => ["nyc"]
+               }
+             }
+    end
   end
 
   describe "apply/3 wire-shape (TUNE-01/02/04)" do
@@ -723,6 +739,19 @@ defmodule Scrypath.Meilisearch.SettingsTest do
                )
 
       refute_received {:client_update_settings, _, _, _}
+    end
+
+    test "unknown string hot-apply keys remain strings" do
+      unknown_key = "unknown_setting_#{System.unique_integer([:positive])}"
+
+      assert {:error, {:unsupported_hot_apply_keys, [^unknown_key]}} =
+               Settings.hot_apply(ApplyWireSchema, "idx",
+                 acknowledge_live_index: true,
+                 meilisearch_client: HotApplySucceededClient,
+                 settings: %{unknown_key => true}
+               )
+
+      assert_raise ArgumentError, fn -> String.to_existing_atom(unknown_key) end
     end
 
     test "happy path: succeeded task without polling" do

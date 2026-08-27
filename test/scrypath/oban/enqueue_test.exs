@@ -139,4 +139,18 @@ defmodule Scrypath.Oban.EnqueueTest do
     assert task.state == :retrying
     assert task.metadata.oban_state == "retryable"
   end
+
+  test "rejects an ephemeral Oban API key before job insertion" do
+    assert_raise ArgumentError, ~r/must be configured durably/, fn ->
+      Scrypath.Oban.Enqueue.enqueue_upsert(SearchablePost, [],
+        backend: RecordingBackend,
+        sync_mode: :oban,
+        oban: RecordingOban,
+        oban_queue: :search_sync,
+        meilisearch_api_key: "ephemeral-key"
+      )
+    end
+
+    refute_received {:oban_insert, _}
+  end
 end

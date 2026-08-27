@@ -33,7 +33,7 @@ defmodule Scrypath.Projection do
       |> schema_module.search_document()
       |> ensure_projection_map!()
 
-    id_field = schema_module.__scrypath__(:document_id)
+    id_field = Scrypath.Schema.Metadata.document_id(schema_module)
 
     {id, data} =
       case Map.pop(projected, :id) do
@@ -56,7 +56,7 @@ defmodule Scrypath.Projection do
   end
 
   defp maybe_inject_tenant_field(schema_module, source_record, data) do
-    case schema_module.__scrypath__(:tenant_field) do
+    case Scrypath.Schema.Metadata.tenant_field(schema_module) do
       nil ->
         data
 
@@ -70,8 +70,8 @@ defmodule Scrypath.Projection do
   end
 
   defp build_field_document(schema_module, source_record) do
-    fields = schema_module.__scrypath__(:fields)
-    id_field = schema_module.__scrypath__(:document_id)
+    fields = Scrypath.Schema.Metadata.fields(schema_module)
+    id_field = Scrypath.Schema.Metadata.document_id(schema_module)
 
     data =
       Map.new(fields, fn field ->

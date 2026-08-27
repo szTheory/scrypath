@@ -11,6 +11,7 @@ defmodule Scrypath.Operator do
 
   @operator_only_opts [
     :meilisearch_tasks,
+    :task_history_limit,
     :oban_jobs,
     :oban_inspector,
     :target_index,
@@ -59,9 +60,10 @@ defmodule Scrypath.Operator do
 
   @spec retry_sync_work(FailedWork.t() | RecoveryAction.t(), keyword()) ::
           {:ok, map()} | {:error, term()}
-  def retry_sync_work(work_or_action, opts \\ []) do
-    RecoveryAction.retry(work_or_action, opts)
-  end
+  def retry_sync_work(work_or_action, opts \\ [])
+
+  def retry_sync_work(%FailedWork{} = work, opts), do: FailedWork.retry(work, opts)
+  def retry_sync_work(%RecoveryAction{} = action, opts), do: RecoveryAction.retry(action, opts)
 
   @spec reconcile_sync(module(), keyword()) :: {:ok, Reconcile.t()} | {:error, term()}
   def reconcile_sync(schema_module, opts \\ []) do

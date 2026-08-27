@@ -18,6 +18,8 @@ defmodule Scrypath.Oban.Enqueue do
       |> Config.resolve!()
       |> Config.ensure_oban_ready!()
 
+    ensure_durable_api_key!(config)
+
     changeset = upsert_job_changeset(schema_module, documents, config)
 
     enqueue_job(changeset, config)
@@ -29,6 +31,8 @@ defmodule Scrypath.Oban.Enqueue do
       config
       |> Config.resolve!()
       |> Config.ensure_oban_ready!()
+
+    ensure_durable_api_key!(config)
 
     changeset = delete_job_changeset(schema_module, document_ids, config)
 
@@ -42,6 +46,8 @@ defmodule Scrypath.Oban.Enqueue do
       |> Config.resolve!()
       |> Config.ensure_oban_ready!()
 
+    ensure_durable_api_key!(config)
+
     payload = Payload.build_upsert(schema_module, documents, config)
 
     job_changeset(payload, @upsert_worker, config)
@@ -53,6 +59,8 @@ defmodule Scrypath.Oban.Enqueue do
       config
       |> Config.resolve!()
       |> Config.ensure_oban_ready!()
+
+    ensure_durable_api_key!(config)
 
     payload = Payload.build_delete(schema_module, document_ids, config)
 
@@ -128,6 +136,26 @@ defmodule Scrypath.Oban.Enqueue do
     else
       raise ArgumentError,
             "Oban dependency is required for sync_mode :oban. Add {:oban, \"~> 2.21\", optional: true} to your deps."
+    end
+  end
+
+  @doc false
+  @spec ensure_durable_api_key!(keyword()) :: :ok
+  def ensure_durable_api_key!(config) do
+    durable_config =
+      [backend: Config.fetch_backend!(config), sync_mode: :manual]
+      |> Config.resolve!()
+
+    case {Config.meilisearch_api_key(config), Config.meilisearch_api_key(durable_config)} do
+      {nil, _} ->
+        :ok
+
+      {key, durable_key} when is_binary(key) and key == durable_key ->
+        :ok
+
+      {_key, _} ->
+        raise ArgumentError,
+              "meilisearch_api_key for sync_mode :oban must be configured durably; per-call API keys are not persisted in Oban job args"
     end
   end
 end

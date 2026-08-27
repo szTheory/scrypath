@@ -79,7 +79,10 @@ defmodule Scrypath.SearchResult do
   defp decode_stats_map(_), do: %{}
 
   defp normalize_stat_key(k) when is_atom(k), do: k
-  defp normalize_stat_key(k) when is_binary(k), do: String.to_atom(k)
+  # Meilisearch responses are external data. Only the documented min/max keys
+  # become atoms; unknown keys remain binaries so a malformed response cannot
+  # exhaust the BEAM atom table.
+  defp normalize_stat_key(k) when is_binary(k), do: k
 
   defp decode_count(n) when is_integer(n), do: n
   defp decode_count(n) when is_float(n), do: trunc(n)

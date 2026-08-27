@@ -70,6 +70,27 @@ defmodule Scrypath.Meilisearch.ClientTest do
                  ]
                )
     end
+
+    test "configured endpoint and API key override transport options" do
+      stub = Module.concat(__MODULE__, GetSettingsConfiguredEndpointStub)
+
+      Req.Test.stub(stub, fn conn ->
+        assert conn.host == "configured.example.test"
+        assert Plug.Conn.get_req_header(conn, "x-meili-api-key") == ["configured-key"]
+        Req.Test.json(conn, %{})
+      end)
+
+      assert {:ok, %{}} =
+               Client.get_settings("posts_v2",
+                 meilisearch_url: "https://configured.example.test",
+                 meilisearch_api_key: "configured-key",
+                 req_options: [
+                   plug: {Req.Test, stub},
+                   base_url: "https://untrusted.example.test",
+                   headers: [{"x-meili-api-key", "untrusted-key"}]
+                 ]
+               )
+    end
   end
 
   describe "tasks/2" do

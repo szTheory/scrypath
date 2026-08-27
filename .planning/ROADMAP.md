@@ -11,13 +11,10 @@
 - ✅ **v1.34 Both-Themes Perfection — Dark Signature + AA Gate** — Phases 128-136 (shipped 2026-06-29; archived 2026-07-11) — see `milestones/v1.34-ROADMAP.md`
 - ✅ **v1.35 Brand System & Logo Identity** — Phases 137-143 (shipped directly 2026-06-24; archived 2026-07-11) — see `milestones/v1.35-ROADMAP.md`
 - ✅ **v1.36 Dependency Security Remediation** — Phases 144-147 (shipped 2026-08-25) — see `milestones/v1.36-ROADMAP.md`
+- ✅ **v1.37 Code Quality Ratchet** — Phases 148-159 (shipped 2026-08-26) — see `milestones/v1.37-ROADMAP.md`
 
-## Active Roadmap
+## Current Posture
 
-No active milestone. The green-main release train is idle until maintenance, support/proof drift, production bug evidence, reviewed outside-adopter evidence, or an explicit strategic wedge authorizes new work.
+No active milestone. Keep the green-main release train idle until a concrete maintenance item, adopter signal, production bug, proof drift, or explicit strategic decision authorizes new work.
 
-[PHASE97-SCOPE-GUARD] Phase 97/98/99 reject runtime breadth expansion unless reopen policy conditions are met.
-
-## Archived Milestone Note
-
-Historical phase details and evidence live under `milestones/`. Phases 137-143 are direct-completion history and must never be synthesized or reused. The next milestone continues phase numbering from Phase 148.
+The next approved milestone should be created with a fresh requirements file and phase sequence. Historical phase details and evidence live under `milestones/`.

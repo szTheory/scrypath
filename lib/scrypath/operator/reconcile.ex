@@ -127,7 +127,10 @@ defmodule Scrypath.Operator.Reconcile do
       Scrypath.Meilisearch ->
         case Tasks.list_index_tasks(
                target_index,
-               Keyword.merge(config, Keyword.take(operator_opts, [:meilisearch_tasks]))
+               Keyword.merge(
+                 config,
+                 Keyword.take(operator_opts, [:meilisearch_tasks, :task_history_limit])
+               )
              ) do
           {:ok, tasks} ->
             {:ok, summarize_reindex(tasks, live_index, target_index)}

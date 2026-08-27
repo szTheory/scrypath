@@ -76,14 +76,14 @@ defmodule Scrypath.Phase108ContractTest do
   end
 
   describe "verification posture" do
-    test "phase108 is a local truth gate and phase105-e2e remains advisory" do
+    test "phase108 is local while the renamed full E2E lane remains advisory" do
       assert_contains_all(@contributing, [
         "mix verify.phase108",
-        "**`main-ci`**",
-        "**`repo-hygiene`**",
-        "**`release-truth`**",
-        "**`phase99-trust`**",
-        "phase105-e2e",
+        "**`core`**",
+        "**`package`**",
+        "**`repository-contracts`**",
+        "**`backend`**",
+        "ecommerce-e2e",
         "advisory"
       ])
 
@@ -92,18 +92,18 @@ defmodule Scrypath.Phase108ContractTest do
       ])
 
       assert_contains_all(@ci_workflow, [
-        "phase105-e2e",
-        "playwright-report",
-        "test-results"
+        "ecommerce-e2e",
+        "mix verify.ecommerce_e2e",
+        "test-results/docker-full"
       ])
 
       assert_absent_all(@ci_workflow, [
         "verify.phase108"
       ])
 
-      assert ordered?(@contributing, "**`main-ci`**", "**`repo-hygiene`**")
-      assert ordered?(@contributing, "**`repo-hygiene`**", "**`release-truth`**")
-      assert ordered?(@contributing, "**`release-truth`**", "**`phase99-trust`**")
+      assert ordered?(@contributing, "**`core`**", "**`package`**")
+      assert ordered?(@contributing, "**`package`**", "**`repository-contracts`**")
+      assert ordered?(@contributing, "**`repository-contracts`**", "**`backend`**")
     end
   end
 
