@@ -193,6 +193,17 @@ jobs:
     needs: ops-ui-path
     if: needs.ops-ui-path.outputs.run == 'true'
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env: {POSTGRES_USER: postgres, POSTGRES_PASSWORD: postgres}
+        ports: [5433:5432]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env: {PGPORT: "5433"}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1

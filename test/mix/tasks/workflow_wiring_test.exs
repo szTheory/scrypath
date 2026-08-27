@@ -355,6 +355,19 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
   end
 
   describe "STAB-01 advisory evidence wiring" do
+    test "path-scoped ops-ui job provides its Postgres test dependency" do
+      ops_ui = @ci_yml |> File.read!() |> workflow_job_block("ops-ui")
+
+      assert ops_ui =~ "services:"
+      assert ops_ui =~ "postgres:"
+      assert ops_ui =~ "image: postgres:16-alpine"
+      assert ops_ui =~ "POSTGRES_USER: postgres"
+      assert ops_ui =~ "POSTGRES_PASSWORD: postgres"
+      assert ops_ui =~ "ports: [5433:5432]"
+      assert ops_ui =~ "pg_isready -U postgres"
+      assert ops_ui =~ ~s(env: {PGPORT: "5433"})
+    end
+
     test "the mounted proof remains distinct and required without promoting full E2E" do
       ci = File.read!(@ci_yml)
       contributing = File.read!("CONTRIBUTING.md")
