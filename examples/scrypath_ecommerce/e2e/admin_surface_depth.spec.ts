@@ -150,6 +150,35 @@ function oklchToRgb(raw: string): [number, number, number, number] {
   const a = chroma * Math.cos(hue);
   const b = chroma * Math.sin(hue);
 
+  return oklabChannelsToRgb(lightness, a, b, alpha);
+}
+
+function oklabToRgb(raw: string): [number, number, number, number] {
+  const match = raw.match(
+    /oklab\(\s*([0-9.]+%?)\s+(-?[0-9.]+)\s+(-?[0-9.]+)(?:\s*\/\s*([0-9.]+%?))?\s*\)/
+  );
+  if (!match) throw new Error(`Expected computed oklab color, got ${raw}`);
+
+  const lightness = match[1].endsWith("%")
+    ? Number(match[1].slice(0, -1)) / 100
+    : Number(match[1]);
+  const a = Number(match[2]);
+  const b = Number(match[3]);
+  const alpha = match[4]
+    ? match[4].endsWith("%")
+      ? Number(match[4].slice(0, -1)) / 100
+      : Number(match[4])
+    : 1;
+
+  return oklabChannelsToRgb(lightness, a, b, alpha);
+}
+
+function oklabChannelsToRgb(
+  lightness: number,
+  a: number,
+  b: number,
+  alpha: number
+): [number, number, number, number] {
   const lPrime = lightness + 0.3963377774 * a + 0.2158037573 * b;
   const mPrime = lightness - 0.1055613458 * a - 0.0638541728 * b;
   const sPrime = lightness - 0.0894841775 * a - 1.291485548 * b;
@@ -171,11 +200,26 @@ function oklchToRgb(raw: string): [number, number, number, number] {
   return [srgb[0] * 255, srgb[1] * 255, srgb[2] * 255, alpha];
 }
 
-function colorChannels(raw: string, backdrop?: string): [number, number, number] {
+function colorRgbaChannels(raw: string): [number, number, number, number] {
   const trimmed = raw.trim();
-  const [r, g, b, alpha] = trimmed.startsWith("oklch(")
-    ? oklchToRgb(trimmed)
-    : [...rgbChannels(trimmed), alphaChannel(trimmed)];
+
+  if (trimmed.startsWith("oklch(")) return oklchToRgb(trimmed);
+  if (trimmed.startsWith("oklab(")) return oklabToRgb(trimmed);
+
+  return [...rgbChannels(trimmed), alphaChannel(trimmed)];
+}
+
+function colorsEquivalent(actual: string, expected: string): boolean {
+  const actualChannels = colorRgbaChannels(actual);
+  const expectedChannels = colorRgbaChannels(expected);
+
+  return actualChannels.every((channel, index) =>
+    Math.abs(channel - expectedChannels[index]) <= (index === 3 ? 0.005 : 1)
+  );
+}
+
+function colorChannels(raw: string, backdrop?: string): [number, number, number] {
+  const [r, g, b, alpha] = colorRgbaChannels(raw);
 
   if (alpha >= 1 || !backdrop) return [r, g, b];
 
@@ -257,14 +301,28 @@ async function expectCopperBadge(page: Page): Promise<void> {
     "background: color-mix(in oklch, var(--color-secondary) 12%, transparent)",
     "backgroundColor"
   );
-  const border = await readComputedStyle(page, '[data-testid="intent-incident"] .ops-copper-badge', "borderColor");
-  const bg = await readComputedStyle(page, '[data-testid="intent-incident"] .ops-copper-badge', "backgroundColor");
-  const text = await readComputedStyle(page, '[data-testid="intent-incident"] .ops-copper-badge', "color");
   const baseContent = await resolveCssColor(page, "border-color: var(--color-base-content)");
 
-  expect(border, "copper badge border resolves to secondary tint").toBe(expectedBorder);
-  expect(bg, "copper badge background resolves to secondary tint").toBe(expectedBg);
-  expect(text, "copper badge text stays base-content").toBe(baseContent);
+  for (const [property, expected, label] of [
+    ["borderColor", expectedBorder, "copper badge border resolves to secondary tint"],
+    ["backgroundColor", expectedBg, "copper badge background resolves to secondary tint"],
+    ["color", baseContent, "copper badge text stays base-content"]
+  ] as const) {
+    await expect
+      .poll(
+        async () =>
+          colorsEquivalent(
+            await readComputedStyle(
+              page,
+              '[data-testid="intent-incident"] .ops-copper-badge',
+              property
+            ),
+            expected
+          ),
+        { message: label }
+      )
+      .toBe(true);
+  }
 }
 
 async function expectNoStatusCopper(page: Page): Promise<void> {
@@ -277,19 +335,32 @@ async function expectNoStatusCopper(page: Page): Promise<void> {
     "background: color-mix(in oklch, var(--color-secondary) 12%, transparent)",
     "backgroundColor"
   );
-  const matches = await page.evaluate(
-    ([expectedBorder, expectedBg]) => {
-      const statusClassPattern = /\b(ops-tone-|ops-badge-(success|warning|error|partial|running|info|neutral)|ops-metric-)/;
-      return Array.from(document.querySelectorAll<HTMLElement>("[class]"))
-        .filter((el) => statusClassPattern.test(el.className) && !el.classList.contains("ops-copper-badge"))
-        .filter((el) => {
-          const style = getComputedStyle(el);
-          return style.borderColor === expectedBorder || style.backgroundColor === expectedBg;
-        })
-        .map((el) => el.className);
-    },
-    [copperBorder, copperBg] as const
-  );
+  const candidates = await page.evaluate(() => {
+    const statusClassPattern =
+      /\b(ops-tone-|ops-badge-(success|warning|error|partial|running|info|neutral)|ops-metric-)/;
+
+    return Array.from(document.querySelectorAll<HTMLElement>("[class]"))
+      .filter(
+        (el) =>
+          statusClassPattern.test(el.className) && !el.classList.contains("ops-copper-badge")
+      )
+      .map((el) => {
+        const style = getComputedStyle(el);
+        return {
+          className: el.className,
+          borderColor: style.borderColor,
+          backgroundColor: style.backgroundColor
+        };
+      });
+  });
+
+  const matches = candidates
+    .filter(
+      (candidate) =>
+        colorsEquivalent(candidate.borderColor, copperBorder) ||
+        colorsEquivalent(candidate.backgroundColor, copperBg)
+    )
+    .map((candidate) => candidate.className);
 
   expect(matches, "status tone/badge classes must never compute to copper").toEqual([]);
 }

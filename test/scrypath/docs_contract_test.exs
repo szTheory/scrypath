@@ -1224,7 +1224,12 @@ defmodule Scrypath.DocsContractTest do
     ])
 
     assert String.contains?(File.read!(".planning/PROJECT.md"), "97-SCOPE-GUARD.md")
-    assert String.contains?(File.read!(".planning/ROADMAP.md"), "[PHASE97-SCOPE-GUARD]")
+
+    roadmap_contracts =
+      [".planning/ROADMAP.md" | Path.wildcard(".planning/milestones/*-ROADMAP.md")]
+      |> Enum.map(&File.read!/1)
+
+    assert Enum.any?(roadmap_contracts, &String.contains?(&1, "[PHASE97-SCOPE-GUARD]"))
   end
 
   test "facet value search documentation contains type-ahead examples" do
