@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.37
 milestone_name: Code Quality Ratchet
-current_phase: 159
-current_phase_name: close-v1-37-audit-gaps-coverage-wiring-and-verification-prov
-status: completed
-stopped_at: Completed Phase 159
-last_updated: "2026-08-26T22:41:23.371Z"
+current_phase: null
+status: Awaiting next milestone
+stopped_at: Milestone v1.37 archived
+last_updated: "2026-08-27T01:14:10.150Z"
 last_activity: 2026-08-26
-last_activity_desc: Phase 159 complete
+last_activity_desc: Milestone v1.37 completed and archived
 progress:
   total_phases: 12
-  completed_phases: 1
+  completed_phases: 12
   total_plans: 8
   completed_plans: 8
+current_phase_name: null
 ---
 
 # Project State
@@ -21,22 +21,22 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** v1.37 milestone closeout
+**Current Focus:** Green-main release train idle; awaiting an evidence-authorized next milestone
 
 ## Current Position
 
-Phase: 159 (close-v1-37-audit-gaps-coverage-wiring-and-verification-prov) — COMPLETE
-Plan: 8 of 8
-Status: All phases complete — ready for milestone closeout
-Last activity: 2026-08-26 — Phase 159 complete
+Phase: Milestone v1.37 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-08-26 — Milestone v1.37 completed and archived
 
-## Active Milestone: v1.37 Code Quality Ratchet
+## Completed Milestone: v1.37 Code Quality Ratchet
 
 **Goal:** Systematically raise non-UI engineering quality until remaining opportunities are low-leverage, controversial, or unsupported by evidence.
 
 **Scope:** Runtime safety, internal architecture, tests, Mix tasks, examples, CI/CD, release proof, and measured performance. Preserve public APIs and behavior. ScrypathOps presentation/UX/visual review is excluded.
 
-**Current phase:** 159 complete
+**Current phase:** Archived; no active phase
 
 **Milestone sequence:** 148 quality baseline → 149 runtime safety → 150 dependency leaf → 151 write result → 152 options/settings → 153 search/failed work → 154 verification commands → 155 CI proof → 156 supply chain/release → 157 performance evidence → 158 closeout → 159 audit/provenance closure.
 
@@ -50,7 +50,11 @@ action pins passed; runtime xref reports no cycles. See `.planning/QUALITY-LEDGE
 `mix verify.ops_ui`. Keeping the case-only historical `verify.opsui` spelling
 would create colliding BEAM module names on case-insensitive filesystems.
 
+**Archive:** `.planning/milestones/v1.37-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and `.planning/milestones/v1.37-phases/`.
+
 ## Completed Milestones
+
+**v1.37 Code Quality Ratchet** (phases 148-159) - COMPLETE and archived 2026-08-26. All 31 requirements are complete with the bounded TEST-01 chronology waiver; the audit passed 12/12 phases, 10/10 integrations, and 8/8 flows. Candidate/final exact-SHA CI authority leaves zero pending human verification or UAT debt. Closeout used an owner-approved artifact-shape override because Phases 148-158 were direct execution with retrospective evidence indexes rather than native plans. Archive files: `.planning/milestones/v1.37-ROADMAP.md`, `.planning/milestones/v1.37-REQUIREMENTS.md`, `.planning/milestones/v1.37-MILESTONE-AUDIT.md`, and `.planning/milestones/v1.37-phases/`.
 
 **v1.36 Dependency Security Remediation** (phases 144-147) - COMPLETE and archived 2026-08-25. All 12 plans and 10 requirements passed; four dependency graphs are audit-clean; `ecommerce-mounted-smoke` is a strict required `main` context with clean-run proof. Archive files: `.planning/milestones/v1.36-ROADMAP.md`, `.planning/milestones/v1.36-REQUIREMENTS.md`, `.planning/milestones/v1.36-MILESTONE-AUDIT.md`, and `.planning/milestones/v1.36-phases/`.
 
@@ -60,7 +64,7 @@ would create colliding BEAM module names on case-insensitive filesystems.
 
 ## Last Completed Milestone
 
-v1.36 Dependency Security Remediation is complete across Phases 144-147: root, legacy Phoenix, ScrypathOps, then ecommerce mounted Ops. Four ordered remediation batches are audit-clean, and the ecommerce mounted integration now has zero-touch Docker verification with no human UAT requirement.
+v1.37 Code Quality Ratchet is complete across Phases 148-159. Runtime and architecture hardening, capability verification, lean CI, release-chain trust, measured performance, and exact-SHA machine authority all shipped without public API change; no human verification or UAT remains pending.
 
 ## v1.35 Brand Milestone Context (archived)
 
@@ -138,13 +142,15 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 
 ## Deferred Items
 
-Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
+Items acknowledged at prior milestone closeouts and the v1.37 artifact-shape override:
 
 | Category | Item | Status |
 |----------|------|--------|
 | todo | 2026-07-01-rewrite-ops-ui-microcopy-around-operator-jtbd.md | completed by quick task 260816-thg |
 | uat-audit-noise | Phase 134 `134-UAT.md` | passed; 0 pending scenarios |
 | uat-audit-noise | Phase 136 `136-UAT.md` | passed; 0 pending scenarios |
+| verification-override | Phases 148-158 direct-execution artifact shape | accepted at v1.37 close: audit and exact-SHA machine authority passed; canonical manager sees zero native plans and `verification: not_required`; no implementation or UAT debt |
+| evidence-waiver | Four TEST-01 characterization-before-extraction chronology rows | bounded historical chronology cannot be reconstructed; behavior and closeout evidence passed and the waiver is preserved in the v1.37 audit |
 
 ## Performance Metrics
 

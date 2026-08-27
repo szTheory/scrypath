@@ -1,5 +1,34 @@
 # Milestones
 
+## v1.37 Code Quality Ratchet (Shipped: 2026-08-26)
+
+**Delivered:** A behavior-preserving non-UI quality ratchet spanning runtime safety, dependency structure, orchestration boundaries, verification ergonomics, CI/release trust, measured performance, and exact-SHA automated closeout.
+
+**Phases completed:** 12 phases (148-159), 8 native Phase 159 plans, 10 recorded plan tasks; Phases 148-158 were executed directly and indexed retrospectively.
+
+**Key accomplishments:**
+
+- Hardened external-input, secret, transport, telemetry, and backend-task polling boundaries without changing public APIs.
+- Removed runtime dependency cycles and separated metadata/composition, neutral write results, settings, search, and failed-work responsibilities behind compatible facades.
+- Added capability-named verification commands and a lean independent CI graph covering supported BEAM tuples, optional-dependency absence, static analysis, package truth, and required mounted ecommerce proof.
+- Secured the release proof chain with immutable action pins, least privilege, package/publish/consumer/HexDocs/parity ordering, and actionable credential-safe diagnostics.
+- Established reproducible performance baselines, rejected unsupported optimization, and closed the quality ledger with no unresolved compatible high- or medium-leverage findings.
+- Added scheduled/manual source-SHA-bound coverage evidence and fail-closed candidate/final exact-SHA authority, leaving zero pending human verification or UAT debt.
+
+**Milestone audit:** Passed — 31/31 requirements complete, with a bounded four-row TEST-01 chronology waiver; 12/12 phases, 10/10 integrations, and 8/8 end-to-end flows. See `milestones/v1.37-MILESTONE-AUDIT.md`.
+
+**Closeout classification:** `override_closeout` was owner-approved solely because Phases 148-158 used direct execution plus retrospective SUMMARY/VERIFICATION/VALIDATION indexes, so the canonical manager reports zero native plans and `verification: not_required` for those eleven phases. Product delivery and automated evidence passed; this is an artifact-shape exception, not open implementation or UAT debt.
+
+**Stats:** 180 files changed, 9,158 insertions, 2,906 deletions across 60 commits on 2026-08-26.
+
+**Git range:** `bc2f59a` → `55d6706`
+
+**Archives:** `milestones/v1.37-ROADMAP.md`, `milestones/v1.37-REQUIREMENTS.md`, `milestones/v1.37-MILESTONE-AUDIT.md`, `milestones/v1.37-phases/`
+
+**What's next:** No active milestone. Keep the green-main release train idle until concrete maintenance, adopter, bug, proof-drift, or strategic evidence authorizes work.
+
+---
+
 ## v1.36 Dependency Security Remediation (Shipped: 2026-08-25)
 
 **Delivered:** Four independently audit-clean Mix dependency graphs with behavior-preserving Req, Phoenix/Ecto, standalone Ops, and mounted ecommerce proof, plus a required zero-touch browser gate.
