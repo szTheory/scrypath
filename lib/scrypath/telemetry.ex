@@ -49,11 +49,11 @@ defmodule Scrypath.Telemetry do
   end
 
   def stop_metadata({:error, reason}, extra) do
-    Map.merge(%{error: inspect(reason)}, Map.new(extra))
+    Map.merge(%{error_kind: error_kind(reason)}, Map.new(extra))
   end
 
   def stop_metadata(result, extra) do
-    Map.merge(%{result: inspect(result)}, Map.new(extra))
+    Map.merge(%{result_kind: result_kind(result)}, Map.new(extra))
   end
 
   defp result_metadata(result) do
@@ -71,6 +71,19 @@ defmodule Scrypath.Telemetry do
 
   defp count(value) when is_list(value), do: length(value)
   defp count(_value), do: nil
+
+  defp error_kind({:http_error, status, _body}) when is_integer(status), do: :http
+  defp error_kind({:transport_error, _}), do: :transport
+  defp error_kind({:timeout, _}), do: :timeout
+  defp error_kind({:task_failed, _}), do: :task_failed
+  defp error_kind({:cancelled, _}), do: :cancelled
+  defp error_kind({:invalid_task_payload, _}), do: :invalid_task_payload
+  defp error_kind(reason) when is_atom(reason), do: reason
+  defp error_kind(_), do: :other
+
+  defp result_kind(result) when is_tuple(result), do: :tuple
+  defp result_kind(result) when is_atom(result), do: result
+  defp result_kind(_), do: :other
 
   defp maybe_put(metadata, _key, nil), do: metadata
   defp maybe_put(metadata, _key, ""), do: metadata

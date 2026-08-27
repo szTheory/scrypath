@@ -78,6 +78,28 @@ defmodule Scrypath.OperationsTest do
     assert task.metadata.oban_state == "retryable"
   end
 
+  test "normalizes legacy adapter maps into the backend-neutral write result" do
+    adapter_result = %{
+      index: "tenant_posts",
+      document_ids: [21, 22],
+      adapter_note: :preserve_me
+    }
+
+    assert %Result{} =
+             result =
+             Operations.normalize_write_result(adapter_result,
+               mode: :manual,
+               status: :accepted
+             )
+
+    assert result.mode == :manual
+    assert result.status == :accepted
+    assert result.document_ids == [21, 22]
+    assert result.document_count == 2
+    assert result.metadata.index == "tenant_posts"
+    assert result.metadata.backend_result == adapter_result
+  end
+
   test "result structs adapt back into the current public sync fields" do
     result =
       Result.new(

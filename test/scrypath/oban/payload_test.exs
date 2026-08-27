@@ -128,6 +128,20 @@ defmodule Scrypath.Oban.PayloadTest do
     refute Map.has_key?(payload, "documents")
   end
 
+  test "build_upsert/3 never persists the Meilisearch API key" do
+    payload =
+      Payload.build_upsert(SearchablePost, [],
+        backend: RecordingBackend,
+        sync_mode: :oban,
+        meilisearch_url: "https://search.example.test",
+        meilisearch_api_key: "secret-key"
+      )
+
+    assert payload["meilisearch_url"] == "https://search.example.test"
+    refute Map.has_key?(payload, "meilisearch_api_key")
+    refute inspect(payload) =~ "secret-key"
+  end
+
   test "build_upsert/3 rejects structs and unsupported nested values" do
     bad_documents = [
       %Document{

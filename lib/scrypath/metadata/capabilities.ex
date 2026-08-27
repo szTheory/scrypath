@@ -7,18 +7,18 @@ defmodule Scrypath.Metadata.Capabilities do
 
   @spec schema_capabilities(module()) :: map()
   def schema_capabilities(schema_module) when is_atom(schema_module) do
-    faceting = schema_module.__scrypath__(:faceting)
+    faceting = Scrypath.Schema.Metadata.faceting(schema_module)
     facet_attributes = Keyword.get(faceting, :attributes, [])
 
     %{
-      tenant: schema_module.__scrypath__(:tenant_field),
+      tenant: Scrypath.Schema.Metadata.tenant_field(schema_module),
       filters: %{
-        supported: schema_module.__scrypath__(:filterable) != [],
-        fields: schema_module.__scrypath__(:filterable)
+        supported: Scrypath.Schema.Metadata.filterable(schema_module) != [],
+        fields: Scrypath.Schema.Metadata.filterable(schema_module)
       },
       sorts: %{
-        supported: schema_module.__scrypath__(:sortable) != [],
-        fields: schema_module.__scrypath__(:sortable)
+        supported: Scrypath.Schema.Metadata.sortable(schema_module) != [],
+        fields: Scrypath.Schema.Metadata.sortable(schema_module)
       },
       facets: %{
         supported: facet_attributes != [],

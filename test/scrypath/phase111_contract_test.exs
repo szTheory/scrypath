@@ -33,13 +33,13 @@ defmodule Scrypath.Phase111ContractTest do
   end
 
   describe "policy consistency across planning and contributor surfaces" do
-    test "required gates stay lean and phase105-e2e remains advisory" do
+    test "required gates stay lean and full E2E remains advisory" do
       assert_contains_all(@contributing, [
-        "**`main-ci`**",
-        "**`repo-hygiene`**",
-        "**`release-truth`**",
-        "**`phase99-trust`**",
-        "phase105-e2e",
+        "**`core`**",
+        "**`package`**",
+        "**`repository-contracts`**",
+        "**`backend`**",
+        "ecommerce-e2e",
         "advisory",
         "phase105-playwright.json",
         "phase105-evidence.ndjson",
@@ -48,16 +48,16 @@ defmodule Scrypath.Phase111ContractTest do
         "1 business day"
       ])
 
-      assert ordered?(@contributing, "**`main-ci`**", "**`repo-hygiene`**")
-      assert ordered?(@contributing, "**`repo-hygiene`**", "**`release-truth`**")
-      assert ordered?(@contributing, "**`release-truth`**", "**`phase99-trust`**")
+      assert ordered?(@contributing, "**`core`**", "**`package`**")
+      assert ordered?(@contributing, "**`package`**", "**`repository-contracts`**")
+      assert ordered?(@contributing, "**`repository-contracts`**", "**`backend`**")
 
       assert_contains_all(@ci_workflow, [
-        "main-ci:",
-        "repo-hygiene:",
-        "release-truth:",
-        "phase99-trust:",
-        "phase105-e2e:"
+        "core:",
+        "package:",
+        "repository-contracts:",
+        "backend:",
+        "ecommerce-e2e:"
       ])
     end
 
@@ -75,11 +75,11 @@ defmodule Scrypath.Phase111ContractTest do
 
     test "Phase 147 uses a separate focused check without rewriting Phase 111 history" do
       assert @decision =~ "no path-scoped required promotion"
-      assert @contributing =~ "**`ecommerce-mounted-smoke`**"
+      assert @contributing =~ "**`ecommerce-mounted`**"
       assert @contributing =~ "separate focused deterministic check"
       assert @contributing =~ "full lane remains advisory"
-      assert @ci_workflow =~ "ecommerce-mounted-smoke:"
-      assert @ci_workflow =~ "phase105-e2e:"
+      assert @ci_workflow =~ "ecommerce-mounted:"
+      assert @ci_workflow =~ "ecommerce-e2e:"
     end
   end
 

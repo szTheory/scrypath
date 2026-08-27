@@ -34,17 +34,15 @@ docker compose up -d
 
 CI uses the same **Meilisearch v1.15** image tag as this `compose.yaml` (see root **`CONTRIBUTING.md`** for which GitHub Actions jobs run live Meilisearch). This README is the **single detailed** runbook for the example; the golden path links here instead of duplicating the table.
 
-## GitHub Actions (`phoenix-example-integration`)
+## GitHub Actions (`phoenix-example`)
 
-On **pull requests** and pushes to **`main`**, job **`phoenix-example-integration`** starts **Postgres 16** and **Meilisearch v1.15** as workflow services, sets **`SCRYPATH_EXAMPLE_INTEGRATION=1`**, **`PGPORT=5433`**, and **`SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700`**, then runs (from the repository root):
+On **pull requests** and pushes to **`main`**, advisory job **`phoenix-example`** starts **Postgres 16** and **Meilisearch v1.15** as workflow services, sets **`SCRYPATH_EXAMPLE_INTEGRATION=1`**, **`PGPORT=5433`**, and **`SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700`**, then runs from the repository root:
 
 ```bash
-cd examples/phoenix_meilisearch
-mix deps.get
-mix test
+mix verify.phoenix_example
 ```
 
-**CI** uses that **`mix deps.get`** then **`mix test`** sequence as the test driver for this example. **`./scripts/smoke.sh`** is **local** orchestration (Docker Compose + the same env defaults); it is **not** what GitHub Actions invokes in place of the **`mix`** steps above.
+The canonical task validates service prerequisites, then runs **`mix deps.get`** followed by **`mix test`** inside `examples/phoenix_meilisearch`. **`./scripts/smoke.sh`** is local orchestration (Docker Compose + the same env defaults); it is not the Actions entrypoint.
 
 ## End-to-end smoke
 

@@ -69,7 +69,7 @@ defmodule Scrypath.MultiSearchResult do
   end
 
   defp hit_matches_id?(hit, schema, id) when is_map(hit) do
-    doc_key = schema.__scrypath__(:document_id) |> Atom.to_string()
+    doc_key = schema |> Scrypath.Schema.Metadata.document_id() |> Atom.to_string()
     hit_id = Map.get(hit, "id") || Map.get(hit, doc_key)
     ids_equivalent?(hit_id, id)
   end

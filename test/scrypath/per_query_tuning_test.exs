@@ -1,9 +1,17 @@
 defmodule Scrypath.PerQueryTuningTest do
-  use ExUnit.Case, async: true
+  # Telemetry handlers are VM-global. Keep this module synchronous so another
+  # SearchablePost query cannot satisfy the receive before this test's event.
+  use ExUnit.Case, async: false
 
   alias Scrypath.Meilisearch.Query, as: MeilisearchQuery
   alias Scrypath.Options
   alias Scrypath.Query
+
+  def capture_search_start(_event, _measurements, %{schema: SearchablePost} = metadata, parent) do
+    send(parent, {:search_start_meta, metadata})
+  end
+
+  def capture_search_start(_event, _measurements, _metadata, _parent), do: :ok
 
   test "per_query rejects unknown inner keys" do
     assert {:error, _} = Options.validate_search_options(SearchablePost, per_query: [bad: :key])
@@ -29,8 +37,8 @@ defmodule Scrypath.PerQueryTuningTest do
     :telemetry.attach_many(
       handler_id,
       [[:scrypath, :search, :start]],
-      fn _event, _meas, meta, _ -> send(self(), {:search_start_meta, meta}) end,
-      nil
+      &__MODULE__.capture_search_start/4,
+      self()
     )
 
     on_exit(fn -> :telemetry.detach(handler_id) end)

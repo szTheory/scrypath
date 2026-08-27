@@ -2,6 +2,7 @@ defmodule Scrypath.Composition.Multi do
   @moduledoc false
 
   alias Scrypath.Composition
+  alias Scrypath.Composition.Compose
 
   @criteria_keys [:filter, :sort, :page, :facets, :facet_filter, :per_query]
 
@@ -21,7 +22,7 @@ defmodule Scrypath.Composition.Multi do
           {:ok, many_result()} | {:error, term()}
   def compose_many(entries, opts \\ []) when is_list(entries) and is_list(opts) do
     with {:ok, shared} <- normalize_shared(Keyword.get(opts, :shared, %{})),
-         {:ok, shared_result} <- Composition.compose(shared, %{}),
+         {:ok, shared_result} <- Compose.compose(shared, %{}),
          {:ok, normalized_entries} <- normalize_entries(entries) do
       normalized_entries
       |> Enum.reduce_while({:ok, []}, fn entry, {:ok, acc} ->
@@ -165,7 +166,7 @@ defmodule Scrypath.Composition.Multi do
     shared_fragment = List.wrap(shared)
     entry_fragments = List.wrap(entry.fragments)
 
-    case Composition.compose(
+    case Compose.compose(
            shared_fragment ++ entry_fragments,
            Map.put(entry.criteria, :text, entry.text)
          ) do

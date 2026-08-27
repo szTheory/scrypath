@@ -142,6 +142,7 @@ defmodule Scrypath.Sync.RelatedTest do
     assert job.queue == "test_queue"
     assert job.args["document_ids"] == [3]
     assert job.args["fan_out"] == "comments"
+    refute Map.has_key?(job.args["opts"], "meilisearch_api_key")
   end
 
   test "generated use Scrypath fan_out metadata is consumed for inline sync_related/3" do
@@ -190,6 +191,21 @@ defmodule Scrypath.Sync.RelatedTest do
     assert job.queue == "test_queue"
     assert job.args["document_ids"] == [9]
     assert job.args["fan_out"] == "comments"
+  end
+
+  test "Oban related sync rejects an ephemeral API key before insertion" do
+    assert_raise ArgumentError, ~r/must be configured durably/, fn ->
+      Scrypath.sync_related(DummySource, [%DummySource{id: 3, name: "Source 3"}],
+        fan_out: :comments,
+        sync_mode: :oban,
+        oban: EnqueueOban,
+        oban_queue: :test_queue,
+        backend: RecordingBackend,
+        meilisearch_api_key: "ephemeral-key"
+      )
+    end
+
+    refute_received {:oban_insert, _job}
   end
 
   test "missing fan_out raises ArgumentError" do

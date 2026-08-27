@@ -1,19 +1,19 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.36
-milestone_name: Dependency Security Remediation
+milestone: v1.37
+milestone_name: Code Quality Ratchet
+current_phase: null
 status: Awaiting next milestone
-stopped_at: Phase 147 context gathered
-last_updated: "2026-08-25T20:13:36.914Z"
-last_activity: 2026-08-25
-last_activity_desc: Milestone v1.36 completed and archived
+stopped_at: Milestone v1.37 archived
+last_updated: "2026-08-27T01:14:10.150Z"
+last_activity: 2026-08-26
+last_activity_desc: Milestone v1.37 completed and archived
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 12
-  completed_plans: 12
-current_phase: 147
-current_phase_name: ecommerce-mounted-ops-remediation-and-closure-evidence
+  total_phases: 12
+  completed_phases: 12
+  total_plans: 8
+  completed_plans: 8
+current_phase_name: null
 ---
 
 # Project State
@@ -21,16 +21,40 @@ current_phase_name: ecommerce-mounted-ops-remediation-and-closure-evidence
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Release train idle — no active milestone
+**Current Focus:** Green-main release train idle; awaiting an evidence-authorized next milestone
 
 ## Current Position
 
-Phase: Milestone v1.36 complete
+Phase: Milestone v1.37 complete
 Plan: —
 Status: Awaiting next milestone
-Last activity: 2026-08-25 — Milestone v1.36 completed and archived
+Last activity: 2026-08-26 — Milestone v1.37 completed and archived
+
+## Completed Milestone: v1.37 Code Quality Ratchet
+
+**Goal:** Systematically raise non-UI engineering quality until remaining opportunities are low-leverage, controversial, or unsupported by evidence.
+
+**Scope:** Runtime safety, internal architecture, tests, Mix tasks, examples, CI/CD, release proof, and measured performance. Preserve public APIs and behavior. ScrypathOps presentation/UX/visual review is excluded.
+
+**Current phase:** Archived; no active phase
+
+**Milestone sequence:** 148 quality baseline → 149 runtime safety → 150 dependency leaf → 151 write result → 152 options/settings → 153 search/failed work → 154 verification commands → 155 CI proof → 156 supply chain/release → 157 performance evidence → 158 closeout → 159 audit/provenance closure.
+
+**Quality gates:** Every phase requires automated verification and code review; runtime safety plus CI/supply-chain phases also require security review.
+
+**Closeout evidence:** canonical core, package, repository-contract, compatibility,
+deep-quality, and live Meilisearch backend commands passed; actionlint and immutable
+action pins passed; runtime xref reports no cycles. See `.planning/QUALITY-LEDGER.md`.
+
+**Known disposition:** the sole canonical optional-app command is
+`mix verify.ops_ui`. Keeping the case-only historical `verify.opsui` spelling
+would create colliding BEAM module names on case-insensitive filesystems.
+
+**Archive:** `.planning/milestones/v1.37-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and `.planning/milestones/v1.37-phases/`.
 
 ## Completed Milestones
+
+**v1.37 Code Quality Ratchet** (phases 148-159) - COMPLETE and archived 2026-08-26. All 31 requirements are complete with the bounded TEST-01 chronology waiver; the audit passed 12/12 phases, 10/10 integrations, and 8/8 flows. Candidate/final exact-SHA CI authority leaves zero pending human verification or UAT debt. Closeout used an owner-approved artifact-shape override because Phases 148-158 were direct execution with retrospective evidence indexes rather than native plans. Archive files: `.planning/milestones/v1.37-ROADMAP.md`, `.planning/milestones/v1.37-REQUIREMENTS.md`, `.planning/milestones/v1.37-MILESTONE-AUDIT.md`, and `.planning/milestones/v1.37-phases/`.
 
 **v1.36 Dependency Security Remediation** (phases 144-147) - COMPLETE and archived 2026-08-25. All 12 plans and 10 requirements passed; four dependency graphs are audit-clean; `ecommerce-mounted-smoke` is a strict required `main` context with clean-run proof. Archive files: `.planning/milestones/v1.36-ROADMAP.md`, `.planning/milestones/v1.36-REQUIREMENTS.md`, `.planning/milestones/v1.36-MILESTONE-AUDIT.md`, and `.planning/milestones/v1.36-phases/`.
 
@@ -40,7 +64,7 @@ Last activity: 2026-08-25 — Milestone v1.36 completed and archived
 
 ## Last Completed Milestone
 
-v1.36 Dependency Security Remediation is complete across Phases 144-147: root, legacy Phoenix, ScrypathOps, then ecommerce mounted Ops. Four ordered remediation batches are audit-clean, and the ecommerce mounted integration now has zero-touch Docker verification with no human UAT requirement.
+v1.37 Code Quality Ratchet is complete across Phases 148-159. Runtime and architecture hardening, capability verification, lean CI, release-chain trust, measured performance, and exact-SHA machine authority all shipped without public API change; no human verification or UAT remains pending.
 
 ## v1.35 Brand Milestone Context (archived)
 
@@ -112,15 +136,21 @@ v1.34 Both-Themes Perfection — Dark Signature + AA Gate (phases 128–136). Ma
 - Completed follow-up: Restructure Search playground workflow (`.planning/todos/completed/2026-07-01-restructure-search-playground-workflow.md`).
 - Completed follow-up: Normalize Playbooks row action styling (`.planning/todos/completed/2026-07-01-normalize-playbooks-row-action-styling.md`).
 
+### Roadmap Evolution
+
+- Phase 159 added: Close v1.37 audit gaps: coverage wiring and verification provenance
+
 ## Deferred Items
 
-Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
+Items acknowledged at prior milestone closeouts and the v1.37 artifact-shape override:
 
 | Category | Item | Status |
 |----------|------|--------|
 | todo | 2026-07-01-rewrite-ops-ui-microcopy-around-operator-jtbd.md | completed by quick task 260816-thg |
 | uat-audit-noise | Phase 134 `134-UAT.md` | passed; 0 pending scenarios |
 | uat-audit-noise | Phase 136 `136-UAT.md` | passed; 0 pending scenarios |
+| verification-override | Phases 148-158 direct-execution artifact shape | accepted at v1.37 close: audit and exact-SHA machine authority passed; canonical manager sees zero native plans and `verification: not_required`; no implementation or UAT debt |
+| evidence-waiver | Four TEST-01 characterization-before-extraction chronology rows | bounded historical chronology cannot be reconstructed; behavior and closeout evidence passed and the waiver is preserved in the v1.37 audit |
 
 ## Performance Metrics
 
@@ -161,6 +191,13 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 | Phase 146 P02 | 2min | 2 tasks | 1 files |
 | Phase 146 P03 | 18min | 2 tasks | 1 files |
 | Phase 146-scrypathops-web-client-remediation P04 | 3min | 1 tasks | 1 files |
+| Phase 159-close-v1-37-audit-gaps-coverage-wiring-and-verification-prov P01 | 1min | 2 tasks | 3 files |
+| Phase 159 P02 | 8min | 2 tasks | 2 files |
+| Phase 159-close-v1-37-audit-gaps-coverage-wiring-and-verification-prov P03 | 5min | 1 tasks | 9 files |
+| Phase 159-close-v1-37-audit-gaps-coverage-wiring-and-verification-prov P04 | 3m 21s | 1 tasks | 8 files |
+| Phase 159 P05 | 3min | 1 tasks | 6 files |
+| Phase 159 P06 | 8min | 2 tasks | 12 files |
+| Phase 159 P07 | 14min | 3 tasks | 6 files |
 
 ## Decisions
 
@@ -209,12 +246,24 @@ Items acknowledged and deferred at v1.34 milestone close on 2026-07-11:
 - [Phase ?]: Phase 146 Plan 02: Exact candidate 59d2e6a passed ordered deterministic Ops and root release-train gates; primary Ops lock remained byte-identical.
 - [Phase ?]: Phase 146 Plan 03: macOS /var and /private/var worktree spellings were accepted only after fail-closed canonical equivalence, unique registration, ownership, symlink, prefix, and exact-child validation; cleanup and preservation checks passed.
 - [Phase ?]: Phase 146 Plan 04 retained decode_body: true and uses application/json to prove Swoosh.ApiClient.Req preserves the raw JSON binary; ff1531c is the sole separately labeled test-only closure after 59d2e6a.
+- [Phase ?]: Coverage remains schedule/manual-only, advisory, informational, and non-blocking.
+- [Phase ?]: The built-in Mix coverage report is retained directly with no hosted service, threshold, token, or new dependency.
+- [Phase ?]: Historical characterization is fail-closed when an exact parent test cannot reproduce; TEST-01 retains only a narrow chronology waiver.
+- [Phase ?]: Phase 159 organizes canonical evidence but preserves every original Phase 148–158 requirement owner.
+- [Phase ?]: Phase 148–151 retain requirement ownership; Phase 159 supplies only retrospective evidence indexes.
+- [Phase ?]: TEST-01 remains historically unprovable for four bounded parent probes; present-state tests cannot establish chronology.
+- [Phase ?]: Retrospective phase records retain canonical D-07 classes and distinguish fresh present-state checks from chronology.
+- [Phase ?]: Phase 155 preserves required/advisory and independent-root CI topology without promoting advisory lanes.
+- [Phase ?]: Phase 156-158 retrospective records retain canonical D-07 classes and distinguish immutable receipts from fresh proof.
+- [Phase ?]: Phase 159 validations mark coverage only when current evidence is complete; hosted closure gaps remain non-compliant until Plan 07.
+- [Phase ?]: TEST-01 chronology remains historically unprovable under its narrow D-11 waiver; hosted TEST-05 proof remains Plan 07 work.
+- [Phase ?]: Accepted only hosted run 33014343041 because candidate, workflow-source, and head SHA all equal a35874178b79392caa0f3c1dcc010ea149e1e5bf; the reviewer approved without widening the four-row TEST-01 chronology waiver.
 
 ## Session
 
-**Last session:** 2026-08-25T16:47:39.041Z
-**Stopped at:** Phase 147 context gathered
-**Resume file:** .planning/phases/147-ecommerce-mounted-ops-remediation-and-closure-evidence/147-CONTEXT.md
+**Last session:** 2026-08-26T21:26:07.536Z
+**Stopped at:** Completed 159-07-PLAN.md
+**Resume file:** None
 
 ## Operator Next Steps
 

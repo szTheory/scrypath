@@ -9,7 +9,6 @@ defmodule Scrypath.Oban.JobConfig do
   def merge_job_runtime_opts(keyword, args) when is_list(keyword) and is_map(args) do
     keyword
     |> put_from_arg(args, "meilisearch_url", :meilisearch_url)
-    |> put_from_arg(args, "meilisearch_api_key", :meilisearch_api_key)
     |> put_from_arg(args, "index_prefix", :index_prefix)
   end
 

@@ -13,8 +13,17 @@ defmodule Mix.Tasks.Verify.Phase11 do
 
   @impl true
   def run(args) do
-    Mix.Task.run("app.start")
     ensure_no_args!(args)
+    verify!(docs?: true)
+  end
+
+  @doc false
+  def run_without_docs do
+    verify!(docs?: false)
+  end
+
+  defp verify!(opts) do
+    Mix.Task.run("app.start")
 
     run_test!(
       [
@@ -25,9 +34,11 @@ defmodule Mix.Tasks.Verify.Phase11 do
       "Release contract tests"
     )
 
-    Mix.shell().info("==> Building docs with warnings as errors")
-    Mix.Task.reenable("docs")
-    Mix.Task.run("docs", ["--warnings-as-errors"])
+    if opts[:docs?] do
+      Mix.shell().info("==> Building docs with warnings as errors")
+      Mix.Task.reenable("docs")
+      Mix.Task.run("docs", ["--warnings-as-errors"])
+    end
 
     validate_release_contract!()
 
@@ -91,7 +102,7 @@ defmodule Mix.Tasks.Verify.Phase11 do
 
     run_system_command!(
       "grep",
-      ["-nF", "run: mix verify.phase11", ".github/workflows/release-please.yml"],
+      ["-nF", "run: mix verify.package", ".github/workflows/release-please.yml"],
       "publish job release gate validation"
     )
 

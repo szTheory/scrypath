@@ -1,0 +1,12 @@
+# Phase 149 Verification — Retrospective Evidence Index
+
+**Retrospective, not a contemporaneous verification record.** Each row uses the single D-07 class from the [Phase 159 evidence matrix](../159-close-v1-37-audit-gaps-coverage-wiring-and-verification-prov/159-EVIDENCE-MATRIX.md).
+
+| Requirement | D-07 class and provenance | Limitation | Verdict |
+|---|---|---|---|
+| SAFE-01 | **supported by prior committed evidence** — `b098b9c0cae6c6b195752288eceba6f5a5101415` (2026-08-26), settings/enqueue safety sources and `runtime_safety_property_test.exs`; matrix SAFE-01. Present-state focused safety group passed (31 tests/2 properties) at `649dc31b46eda7fb4c98b6a567d4c6e2bbcbf80a`, 2026-08-26, Elixir 1.19.5/OTP 28. | Neither receipt nor fresh proof establishes pre-extraction order. | Current contract supported; chronology not asserted. |
+| SAFE-02 | **supported by prior committed evidence** — `b098b9c0cae6c6b195752288eceba6f5a5101415` (2026-08-26), Oban payload/job-config sources and `payload_test.exs`; matrix SAFE-02. | No live queue/secret run or historical sequencing is claimed. | Current contract supported; chronology not asserted. |
+| SAFE-03 | **supported by prior committed evidence** — `b098b9c0cae6c6b195752288eceba6f5a5101415` (2026-08-26), client boundary source and `client_test.exs`; matrix SAFE-03. | No fresh network run or old-state test ordering is claimed. | Current contract supported; chronology not asserted. |
+| SAFE-04 | **supported by prior committed evidence** — `b098b9c0cae6c6b195752288eceba6f5a5101415` (2026-08-26), telemetry source and `telemetry_test.exs`; matrix SAFE-04. | Prior receipt is not a parent probe. | Current contract supported; chronology not asserted. |
+| SAFE-05 | **supported by prior committed evidence** — `b098b9c0cae6c6b195752288eceba6f5a5101415` (2026-08-26), bounded task-polling source and `tasks_test.exs`; matrix SAFE-05. | Parent execution was unavailable in the bounded receipt. | Current contract supported; chronology not asserted. |
+| TEST-02 | **supported by prior committed evidence** — `b098b9c0cae6c6b195752288eceba6f5a5101415` and `4f0f35408abe8179f49c8efc7a6f99ec0bece0fb` (2026-08-26); matrix TEST-02. `MIX_ENV=test mix test --warnings-as-errors test/scrypath/runtime_safety_property_test.exs test/scrypath/composition_property_test.exs` passed (4 properties) at `649dc31b46eda7fb4c98b6a567d4c6e2bbcbf80a`, 2026-08-26, Elixir 1.19.5/OTP 28. | No fresh Phase 159 property run is used to prove historical chronology. | Current test coverage supported; chronology not asserted. |

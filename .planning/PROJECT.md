@@ -8,11 +8,22 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Mode: release-train idle
+## Current Mode: Green-Main Release Train Idle
 
-**Goal:** Keep `main` green and avoid speculative milestone reopening. Start new work only for concrete maintenance, support/proof drift, production bug evidence, reviewed outside-adopter evidence, or an explicit strategic wedge.
+**Goal:** Preserve the shipped product and its automated proof. Start new milestone work only from concrete maintenance, adopter, production-bug, proof-drift, or explicit strategic evidence.
+
+**Last completed scope:** v1.37 raised runtime safety, internal architecture, verification, CI/CD, release proof, and performance evidence while preserving public behavior/APIs and excluding ScrypathOps presentation, UX, and visual review.
+
+**Automation-first verification policy:** Post-implementation acceptance must be
+machine-verifiable. Incomplete plans may not require human verification,
+`human_needed` disposition, verification backstops, or pending UAT. Convert claims
+to deterministic tests, browser/accessibility automation, API probes, or exact-SHA
+hosted evidence. Resolve subjective product decisions before implementation or keep
+them nonblocking; authentication and genuinely pre-implementation decisions remain
+explicit boundaries rather than simulated approvals.
 
 **Recent closed outcomes:**
+- Phase 159 automated v1.37 audit/provenance closure: reconciled the 31-requirement audit, preserved the bounded TEST-01 chronology waiver, added a fail-closed candidate/final exact-SHA CI authority, and prohibited new post-implementation human verification or UAT debt.
 - Phase 147 ecommerce mounted-Ops remediation and closure: bounded the ecommerce web/client graph, added hermetic focused/full Docker E2E verification and an always-running focused CI gate, passed exact-SHA service/browser proof, and closed the four-graph audit ledger with no human UAT.
 - Phase 146 ScrypathOps web/client remediation: bounded Phoenix, LiveView, Bandit, Swoosh, Postgrex, and Req; proved the real Req-backed Swoosh client with a discriminating raw-JSON contract; passed standalone Ops and root release gates, detached fresh resolution, live Postgrex/Plug predicates, unsuppressed audit, and security verification.
 - Phase 145 legacy Phoenix and Ecto/Decimal remediation: bounded Phoenix, Bandit, Ecto SQL, Postgrex, and Plug to the fixed-compatible cohort; preserved transitive Ecto/Decimal ownership; passed deterministic, detached fresh-resolution, Hex audit, root regression, and Docker-backed Postgres/Meilisearch proof.
@@ -54,6 +65,8 @@ Phase 97 through 99 banned capability classes:
 - new public runtime API categories
 
 ## Current State
+
+**v1.37 Code Quality Ratchet** completed and was archived on **2026-08-26** across Phases **148-159**. All 31 requirements are complete with a bounded four-row TEST-01 chronology waiver; the milestone audit passed 12/12 phases, 10/10 integrations, and 8/8 flows. Candidate/final exact-SHA CI authority leaves no pending human verification or UAT. Closeout used an owner-approved artifact-shape override because Phases 148-158 were direct execution with retrospective evidence indexes rather than native plans.
 
 **v1.36 Dependency Security Remediation** completed on **2026-08-25**. All four Mix graphs are independently audit-clean; the final ecommerce batch passed exact-SHA mounted-source, service, and focused browser proof. A reusable Docker-only verifier now owns focused/full E2E setup and teardown, the focused lane is an always-running merge check, the full Phase 105 lane stays advisory, and no separate human UAT is required when automated evidence is green.
 
@@ -165,7 +178,7 @@ Phase 97 through 99 banned capability classes:
 **Unified operating lanes:**
 - **Maintenance lane (default):** release follow-through, support/docs truth, outside-adopter evidence loop, and planning-truth reconciliation while `main` stays green.
 - **Silence lane:** when there is no release follow-through, support/proof drift, production bug, or outside-adopter evidence, do not manufacture a milestone. Say the release train is idle.
-- **Feature lane (evidence-gated):** reopen only as PR-scoped milestone work when a concrete bug, reviewed outside-adopter evidence, or explicit strategic wedge justifies it; merge only after PR CI is green and scope remains bounded to the approved wedge.
+- **Feature lane (evidence-gated):** reopen only as PR-scoped milestone work when a concrete production bug, reviewed outside-adopter evidence, or explicit strategic wedge justifies it; merge only after PR CI is green and scope remains bounded to the approved wedge.
 
 **Boundary discipline retained:** Scrypath remains framework-agnostic at the view layer.
 
@@ -175,17 +188,26 @@ The public website launch surface now exists under `website/` and is deployed to
 
 Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under **`.planning/milestones/`**. The next approved milestone creates a fresh `REQUIREMENTS.md`.
 
-## Next Milestone Goals
+## Release Train Posture
 
-- **Active lane:** none.
-- **Goal:** Keep the release train idle unless maintenance, support truth, proof drift, production bug evidence, outside-adopter evidence, or an explicit strategic wedge justifies new scope.
-- **Potential targets:** release follow-through, support/readiness truth, outside-adopter evidence, and proof stability.
-- **Feature lane remains evidence-gated:** autocomplete/suggestions, broader OPSUI productization, tenant-token helpers, multi-backend, vector/hybrid, and new UI surfaces still require reviewed outside-adopter evidence or a concrete production bug.
-- **Done-ness posture:** the stated v1 library scope is effectively done; future milestone discovery should not re-litigate this unless new evidence changes it.
+- **Active milestone:** None.
+- **Current phase:** None.
+- **Policy:** Keep `main` green on the lean required gates and prefer PR-first execution for serious milestone or feature-depth work.
+- **Authorization:** Do not reopen speculative work without a concrete maintenance item, adopter signal, production bug, proof drift, or explicit strategic decision.
+- **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, and new UI surfaces remain out of scope.
+
+**v1.37 implementation outcome (2026-08-26):** runtime input and secret
+boundaries hardened; runtime xref cycles reduced to zero; write/search/settings/
+failed-work responsibilities extracted behind compatible facades; canonical
+verification capabilities and a lean SHA-pinned CI graph established; live
+Meilisearch, package, release, static-analysis, and compatibility proof passed;
+measured pure hot paths did not justify speculative optimization.
 
 ## Last shipped milestone
 
-**v1.36 — Dependency Security Remediation** (shipped and archived **2026-08-25**). Four audit-clean Mix graphs, behavior-preserving Req/Phoenix/Ecto/Ops proof, a zero-touch mounted ecommerce verifier, and strict required `ecommerce-mounted-smoke` enforcement — see **`milestones/v1.36-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+**v1.37 — Code Quality Ratchet** (shipped and archived **2026-08-26**). Runtime safety and architecture hardening, capability-named verification, lean CI and release trust, evidence-based performance, scheduled coverage, and candidate/final exact-SHA zero-human closeout — see **`milestones/v1.37-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
+
+**Prior:** **v1.36 — Dependency Security Remediation** (shipped and archived **2026-08-25**). Four audit-clean Mix graphs, behavior-preserving Req/Phoenix/Ecto/Ops proof, a zero-touch mounted ecommerce verifier, and strict required `ecommerce-mounted-smoke` enforcement — see **`milestones/v1.36-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **Prior:** **v1.35 - Brand System & Logo Identity** (shipped **2026-06-24**, archived in-repo **2026-07-11**). Owner-initiated brand wedge: copper `/` `scry/path` identity, transparent SVG family, self-contained brandbook, subset fonts/tokens, README/ScrypathOps/website adoption, and direct-completion archive - see **`milestones/v1.35-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
@@ -213,7 +235,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 ## Planning window
 
-**Completed milestone:** v1.36 Dependency Security Remediation. Phases 144–147 and all 12 plans are complete; all four graphs have independent checked-lock/audit evidence, and Phase 147 requires no human UAT. v1.35 remains complete and archived from direct evidence; missing phase artifacts for phases 138-143 are expected and must not be treated as work to resume.
+**Active milestone:** None. v1.37 is complete and archived across Phases 148-159 and all 31 requirements, with the narrow TEST-01 chronology waiver and artifact-shape override recorded. Keep the release train idle until evidence authorizes a new milestone; do not treat historical direct-execution artifact shapes as work to resume.
 
 ## Requirements
 
@@ -296,8 +318,7 @@ Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under *
 
 <!-- Current scope. Building toward these. -->
 
-- [ ] ScrypathOps resolves the recorded web/client advisories and passes its dedicated verification plus the root gates.
-- [ ] The ecommerce example independently resolves the recorded web/client advisories and passes its preparation and available browser proof.
+- No active requirements. The next approved milestone creates a fresh `.planning/REQUIREMENTS.md`.
 
 ### Out of Scope
 
@@ -314,7 +335,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has shipped planning milestones through **`v1.35`** (**`v1.0`**-**`v1.35`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`** for shipped arcs.
+The repository has shipped planning milestones through **`v1.37`** (**`v1.0`**-**`v1.37`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`** for shipped arcs.
 
 ## Evolution
 
@@ -327,4 +348,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-25 after v1.36 milestone archival*
+*Last updated: 2026-08-26 for v1.37 milestone archive and idle release-train posture*

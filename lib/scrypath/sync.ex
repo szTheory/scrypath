@@ -6,9 +6,11 @@ defmodule Scrypath.Sync do
   alias Scrypath.Meilisearch.Operations, as: MeilisearchOperations
   alias Scrypath.Meilisearch.Tasks
   alias Scrypath.Oban.Enqueue
+  alias Scrypath.Operations
   alias Scrypath.Operations.Result
   alias Scrypath.Operations.Task, as: OperationTask
   alias Scrypath.Projection
+  alias Scrypath.Sync.RelatedEnqueue
   alias Scrypath.Telemetry
 
   @spec sync_record(module(), struct() | map(), keyword()) :: {:ok, term()} | {:error, term()}
@@ -42,7 +44,7 @@ defmodule Scrypath.Sync do
       Keyword.get(opts, :fan_out) ||
         raise ArgumentError, "opts[:fan_out] is required"
 
-    fan_outs = schema_module.__scrypath__(:fan_outs) || []
+    fan_outs = Scrypath.Schema.Metadata.fan_outs(schema_module)
 
     fan_out_config =
       Keyword.get(fan_outs, fan_out_key) ||
@@ -55,7 +57,7 @@ defmodule Scrypath.Sync do
       :oban ->
         config
         |> Config.ensure_oban_ready!()
-        |> then(&Scrypath.Sync.RelatedWorker.enqueue(schema_module, records, fan_out_key, &1))
+        |> then(&RelatedEnqueue.enqueue(schema_module, records, fan_out_key, &1))
         |> decorate_result(config)
 
       _other ->
@@ -139,6 +141,7 @@ defmodule Scrypath.Sync do
 
       _other ->
         backend_upsert_documents(schema_module, documents, config)
+        |> normalize_write_result(documents, config)
         |> maybe_wait_for_task(config)
         |> decorate_result(config)
     end
@@ -154,6 +157,7 @@ defmodule Scrypath.Sync do
 
       _other ->
         backend_delete_documents(schema_module, document_ids, config)
+        |> normalize_write_result(document_ids, config)
         |> maybe_wait_for_task(config)
         |> decorate_result(config)
     end
@@ -211,23 +215,16 @@ defmodule Scrypath.Sync do
     {:ok, public_result(result)}
   end
 
-  defp decorate_result({:ok, result}, config) when is_map(result) do
-    {:ok,
-     result
-     |> Map.put(:mode, Keyword.fetch!(config, :sync_mode))
-     |> Map.put(:status, result_status(config))}
-  end
-
   defp decorate_result(result, _config), do: result
 
   defp noop_result(config) do
     {:ok,
-     %{
+     Result.new(
        mode: Keyword.fetch!(config, :sync_mode),
        status: :noop,
        document_ids: [],
        document_count: 0
-     }}
+     )}
   end
 
   defp result_status(config) do
@@ -239,12 +236,14 @@ defmodule Scrypath.Sync do
   end
 
   defp public_result(%Result{} = result) do
-    %{
+    result.metadata
+    |> Map.get(:backend_result, %{})
+    |> Map.merge(%{
       mode: result.mode,
       status: result.status,
       document_ids: result.document_ids,
       document_count: result.document_count
-    }
+    })
     |> maybe_put(:index, Map.get(result.metadata, :index))
     |> maybe_put(:oban, Map.get(result.metadata, :oban))
     |> maybe_put_operation_reference(result.task)
@@ -292,4 +291,18 @@ defmodule Scrypath.Sync do
 
   defp maybe_put(map, _key, nil), do: map
   defp maybe_put(map, key, value), do: Map.put(map, key, value)
+
+  defp normalize_write_result({:ok, result}, items, config) when is_map(result) do
+    {:ok,
+     Operations.normalize_write_result(result,
+       mode: Keyword.fetch!(config, :sync_mode),
+       document_ids: item_ids(items),
+       document_count: length(items)
+     )}
+  end
+
+  defp normalize_write_result(result, _items, _config), do: result
+
+  defp item_ids([%Scrypath.Document{} | _rest] = documents), do: Enum.map(documents, & &1.id)
+  defp item_ids(document_ids), do: document_ids
 end

@@ -96,25 +96,25 @@ defmodule Scrypath.Phase99ContractTest do
       ])
     end
 
-    test "required-check names and phase99 gate wiring stay aligned across workflow and docs" do
+    test "canonical required checks and repository contract wiring stay aligned" do
       assert_contains_all(@ci_workflow, [
-        "phase99-trust",
-        "mix verify.phase99",
-        "main-ci",
-        "repo-hygiene",
-        "release-truth"
+        "repository-contracts:",
+        "mix verify.repository_contracts",
+        "core:",
+        "package:",
+        "backend:"
       ])
 
       assert_contains_all(@contributing, [
-        "**`main-ci`**",
-        "**`repo-hygiene`**",
-        "**`release-truth`**",
-        "**`phase99-trust`**"
+        "**`core`**",
+        "**`package`**",
+        "**`repository-contracts`**",
+        "**`backend`**"
       ])
 
-      assert ordered?(@contributing, "**`main-ci`**", "**`repo-hygiene`**")
-      assert ordered?(@contributing, "**`repo-hygiene`**", "**`release-truth`**")
-      assert ordered?(@contributing, "**`release-truth`**", "**`phase99-trust`**")
+      assert ordered?(@contributing, "**`core`**", "**`package`**")
+      assert ordered?(@contributing, "**`package`**", "**`repository-contracts`**")
+      assert ordered?(@contributing, "**`repository-contracts`**", "**`backend`**")
     end
   end
 
@@ -222,13 +222,13 @@ defmodule Scrypath.Phase99ContractTest do
 
   defp extract_workflow_ci_tuples(content) do
     case Regex.run(
-           ~r/\n  compatibility-truth:\n(?<lane>.*?)(?:\n  [a-z0-9][a-z0-9-]*:\n|\z)/ms,
+           ~r/\n  compatibility:\n(?<lane>.*?)(?:\n  [a-z0-9][a-z0-9-]*:\n|\z)/ms,
            content,
            capture: :all_names
          ) do
       [lane] ->
         Regex.scan(
-          ~r/-\s*elixir-version:\s*"([^"]+)"\n\s+otp-version:\s*"([^"]+)"/,
+          ~r/-\s*\{elixir:\s*"([^"]+)",\s*otp:\s*"([^"]+)"\}/,
           lane,
           capture: :all_but_first
         )

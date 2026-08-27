@@ -2,6 +2,41 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.37 — Code Quality Ratchet
+
+**Shipped and archived:** 2026-08-26
+**Phases:** 12 (148-159) | **Native plans:** 8 (Phase 159) | **Recorded tasks:** 10 | **Requirements:** 31
+
+### What Was Built
+
+Scrypath's non-UI quality floor now includes hardened runtime input/secret/transport/telemetry/task boundaries; an acyclic dependency-leaf core; focused write-result, settings, search, and failed-work modules; capability-named local verification; lean independent CI; immutable least-privilege release proof; reproducible performance baselines; scheduled/manual coverage artifacts; and a two-stage exact-SHA machine closeout authority.
+
+### What Worked
+
+- Evidence-led prioritization kept public behavior stable and stopped the milestone at the diminishing-return boundary instead of manufacturing optimization work.
+- Capability-named checks made local, CI, packaging, compatibility, and live-backend proof easier to reason about independently.
+- The final candidate/final protocol bound local receipts, hosted runs, artifacts, and branch protection to exact commits, eliminating post-implementation human verification and UAT.
+- A canonical 31-row matrix preserved original requirement ownership while making retrospective evidence limitations explicit.
+
+### What Was Inefficient
+
+- Phases 148-158 were executed directly without native PLAN artifacts, so milestone closeout required retrospective SUMMARY, VERIFICATION, and VALIDATION indexes and an owner-approved `override_closeout` artifact-shape exception.
+- Four TEST-01 rows asked for characterization-before-extraction chronology that Git history cannot now prove; bounded forensics established the limit but could not recreate contemporaneous evidence.
+- The generated milestone accomplishment roll-up treated retrospective index disclaimers as accomplishments and required a manual ledger correction.
+
+### Patterns Established
+
+- Post-implementation acceptance is machine-verifiable; do not create human-verification, `human_needed`, or pending-UAT debt for automatable claims.
+- Serious closeout uses a candidate SHA followed by a final metadata-only SHA, with required CI and retained source-SHA-bound artifacts at both stages.
+- Branch-protection contexts are runtime release infrastructure and must be reconciled against the workflow contract.
+- Direct execution must still create contemporaneous plan/summary metadata when canonical milestone tooling depends on it.
+
+### Key Lessons
+
+Automation can own end-to-end acceptance, but provenance must be designed before implementation. Exact-SHA evidence is strongest when plans, characterization tests, CI contexts, and artifact retention are established at the start; retrospective reconstruction should remain a bounded exception, never a substitute for contemporaneous proof.
+
+---
+
 ## Milestone: v1.34 — Both-Themes Perfection
 
 **Shipped (planning):** 2026-06-29
@@ -417,6 +452,7 @@ Local success is insufficient for a required zero-touch gate when the local buil
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|
+| v1.37 | 148-159 | Runtime/architecture quality ratchet, lean CI and release trust, exact-SHA zero-human closeout |
 | v1.36 | 144-147 | Four-graph dependency security remediation, behavior preservation, and required zero-touch mounted proof |
 | v1.30 | 109-112 | Release/package truth, support intake routing, advisory proof stability, and website/docs truth alignment |
 | v1.15 | 62–64 | OPSUI second slice: playground capture, playbook catalog/metadata, bounded team persistence + validate Mix |

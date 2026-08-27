@@ -21,6 +21,14 @@ defmodule Scrypath.MixProject do
       source_ref: @source_ref,
       description: "Ecto-native search indexing and orchestration for Elixir apps",
       aliases: aliases(),
+      # Mix 1.19 discovers both .ex and .exs files below test/. Support modules
+      # are loaded explicitly by test_helper; tell Mix that those non-test files
+      # are intentional without masking accidentally misnamed test files elsewhere.
+      test_ignore_filters: [&support_file?/1],
+      # Coverage is an inspection tool for this library, not a release gate. A
+      # zero threshold keeps Mix's built-in summary informative without turning
+      # a percentage into an acceptance criterion.
+      test_coverage: [summary: [threshold: 0]],
       dialyzer: [
         plt_add_apps: [:mix],
         plt_file: {:no_warn, "priv/plts/scrypath.plt"}
@@ -68,13 +76,24 @@ defmodule Scrypath.MixProject do
         "verify.phase108": :test,
         "verify.phase112": :test,
         "verify.adopter": :test,
-        "verify.opsui": :test,
         "verify.meilisearch_smoke": :test,
         "verify.all": :test,
         verify: :test,
         "verify.release_publish": :test,
         "verify.workspace_clean": :test,
         "verify.release_parity": :test,
+        "verify.no_optional_deps": :test,
+        "verify.coverage": :test,
+        "verify.core": :test,
+        "verify.package": :test,
+        "verify.repository_contracts": :test,
+        "verify.backend": :test,
+        "verify.compatibility": :test,
+        "verify.deep_quality": :test,
+        "verify.ecommerce_mounted": :test,
+        "verify.phoenix_example": :test,
+        "verify.ops_ui": :test,
+        "verify.ecommerce_e2e": :test,
         "scrypath.index.contract_drift": :test,
         "scrypath.settings.diff": :test,
         "scrypath.settings.read": :test,
@@ -95,6 +114,7 @@ defmodule Scrypath.MixProject do
       {:plug, "~> 1.19.5", only: :test},
       {:stream_data, "~> 1.3", only: :test},
       {:ecto_sqlite3, "~> 0.22", only: :test, runtime: false},
+      {:benchee, "~> 1.5", only: :dev, runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.37", only: [:dev, :test], runtime: false}
@@ -153,6 +173,10 @@ defmodule Scrypath.MixProject do
 
   defp test_path_arg?(<<"-", _::binary>>), do: false
   defp test_path_arg?(arg), do: String.ends_with?(arg, ".exs")
+
+  defp support_file?(path) do
+    String.starts_with?(path, "test/support/") and not String.ends_with?(path, "_test.exs")
+  end
 
   defp docs do
     [

@@ -57,14 +57,14 @@ defmodule Scrypath.Phase147E2EContractTest do
     assert dockerfile =~ "mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble"
   end
 
-  test "focused job is uniquely required while phase105 remains advisory" do
-    assert @ci =~ "ecommerce-mounted-smoke:"
-    assert @ci =~ "name: ecommerce-mounted-smoke"
-    assert @ci =~ "make -C examples/scrypath_ecommerce verify-mounted"
-    assert @ci =~ "ecommerce-mounted-smoke-artifacts"
+  test "focused job is uniquely required while full E2E remains advisory" do
+    assert @ci =~ "ecommerce-mounted:"
+    assert @ci =~ "name: ecommerce-mounted (required)"
+    assert @ci =~ "mix verify.ecommerce_mounted"
+    assert @ci =~ "ecommerce-mounted-artifacts"
 
-    assert @contributing =~ "**`ecommerce-mounted-smoke`** | Required merge gate"
-    assert @contributing =~ "`phase105-e2e` is advisory today"
+    assert @contributing =~ "**`ecommerce-mounted`**"
+    assert @contributing =~ "`ecommerce-e2e` is advisory today"
     refute @contributing =~ "phase105-e2e is now required"
   end
 end

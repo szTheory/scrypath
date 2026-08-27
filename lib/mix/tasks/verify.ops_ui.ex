@@ -1,10 +1,11 @@
-defmodule Mix.Tasks.Verify.Opsui do
+defmodule Mix.Tasks.Verify.OpsUi do
   use Mix.Task
 
-  @shortdoc "Runs ScrypathOps (`scrypath_ops`) tests the same way the scrypath-ops CI job does"
+  @shortdoc "Runs canonical ScrypathOps verification"
 
   @moduledoc """
-  Runs the `scrypath_ops` application tests the same way the **`scrypath-ops`** GitHub Actions job does.
+  Runs the `scrypath_ops` application tests the same way the path-scoped
+  **`ops-ui`** GitHub Actions job does.
 
   Use this from the **repository root** when you change the optional operator Phoenix app under
   **`scrypath_ops/`**, the core library under **`lib/`**, root **`mix.exs`**, **`mix.lock`**, or
@@ -17,8 +18,8 @@ defmodule Mix.Tasks.Verify.Opsui do
 
   Expect Postgres-backed Ecto tests for **`scrypath_ops`**; there is **no** Meilisearch service on this path.
 
-  This task does not accept arguments. For the full CI ↔ **`mix verify.*`** matrix and job names, see
-  [CONTRIBUTING.md](CONTRIBUTING.md).
+  This task does not accept arguments. For the full CI ↔ **`mix verify.*`**
+  matrix and job names, see [CONTRIBUTING.md](CONTRIBUTING.md).
   """
 
   @impl true
@@ -29,12 +30,12 @@ defmodule Mix.Tasks.Verify.Opsui do
     ops_dir = Path.expand("scrypath_ops", File.cwd!())
 
     unless File.dir?(ops_dir) do
-      Mix.raise("verify.opsui: expected #{ops_dir} to exist")
+      Mix.raise("verify.ops_ui: expected #{ops_dir} to exist")
     end
 
     # CI mirrors GitHub Actions (non-interactive). `printf` answers "n" if Hex ever
     # prompts for re-auth on a workstation TTY — same commands as `.github/workflows/ci.yml`.
-    Mix.shell().info("==> verify.opsui: cd scrypath_ops && mix deps.get && mix test")
+    Mix.shell().info("==> verify.ops_ui: cd scrypath_ops && mix deps.get && mix test")
 
     script = "export CI=true; printf 'n\\n' | mix deps.get && mix test"
 
@@ -44,13 +45,13 @@ defmodule Mix.Tasks.Verify.Opsui do
     Mix.shell().info(out)
 
     if status != 0 do
-      Mix.raise("verify.opsui failed: `#{script}` (in #{ops_dir}) exited #{status}")
+      Mix.raise("verify.ops_ui failed: `#{script}` (in #{ops_dir}) exited #{status}")
     end
   end
 
   defp ensure_no_args!([]), do: :ok
 
   defp ensure_no_args!(args) do
-    Mix.raise("verify.opsui does not accept arguments, got: #{Enum.join(args, " ")}")
+    Mix.raise("verify.ops_ui does not accept arguments, got: #{Enum.join(args, " ")}")
   end
 end

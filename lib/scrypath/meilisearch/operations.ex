@@ -2,8 +2,9 @@ defmodule Scrypath.Meilisearch.Operations do
   @moduledoc false
 
   alias Scrypath.Document
-  alias Scrypath.Meilisearch
   alias Scrypath.Meilisearch.Client
+  alias Scrypath.Meilisearch.Naming
+  alias Scrypath.Meilisearch.TaskPayload
   alias Scrypath.Operations
   alias Scrypath.Operations.Result
   alias Scrypath.Operations.Task
@@ -11,8 +12,8 @@ defmodule Scrypath.Meilisearch.Operations do
   @spec upsert_documents(module(), [Document.t()], keyword()) ::
           {:ok, Result.t()} | {:error, term()}
   def upsert_documents(schema_module, documents, config) when is_list(documents) do
-    index = Keyword.get(config, :index_name) || Meilisearch.index_name(schema_module, config)
-    document_id_field = Scrypath.document_id_field(schema_module)
+    index = Keyword.get(config, :index_name) || Naming.index_name(schema_module, config)
+    document_id_field = Scrypath.Schema.Metadata.document_id(schema_module)
 
     with {:ok, response} <-
            client(config).upsert_documents(
@@ -20,7 +21,7 @@ defmodule Scrypath.Meilisearch.Operations do
              documents,
              Keyword.put(config, :document_id_field, document_id_field)
            ),
-         {:ok, task} <- Meilisearch.normalize_task(response) do
+         {:ok, task} <- TaskPayload.normalize(response) do
       {:ok,
        Result.new(
          mode: Keyword.get(config, :sync_mode, :manual),
@@ -35,10 +36,10 @@ defmodule Scrypath.Meilisearch.Operations do
 
   @spec delete_documents(module(), [term()], keyword()) :: {:ok, Result.t()} | {:error, term()}
   def delete_documents(schema_module, document_ids, config) when is_list(document_ids) do
-    index = Keyword.get(config, :index_name) || Meilisearch.index_name(schema_module, config)
+    index = Keyword.get(config, :index_name) || Naming.index_name(schema_module, config)
 
     with {:ok, response} <- client(config).delete_documents(index, document_ids, config),
-         {:ok, task} <- Meilisearch.normalize_task(response) do
+         {:ok, task} <- TaskPayload.normalize(response) do
       {:ok,
        Result.new(
          mode: Keyword.get(config, :sync_mode, :manual),

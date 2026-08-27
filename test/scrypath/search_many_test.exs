@@ -4,6 +4,14 @@ defmodule Scrypath.SearchManyTest do
   alias Scrypath.MultiSearchResult
   alias Scrypath.SearchResult
 
+  def capture_telemetry(event, measurements, metadata, parent) do
+    send(parent, {:telemetry, event, measurements, metadata})
+  end
+
+  def capture_partial(_event, measurements, metadata, parent) do
+    send(parent, {:partial, measurements, metadata})
+  end
+
   defmodule SlowRepo do
     @moduledoc false
     def all(%Ecto.Query{}) do
@@ -382,10 +390,8 @@ defmodule Scrypath.SearchManyTest do
     :telemetry.attach_many(
       "search-many-test",
       [[:scrypath, :search_many, :start], [:scrypath, :search_many, :stop]],
-      fn event, measurements, metadata, _ ->
-        send(parent, {:telemetry, event, measurements, metadata})
-      end,
-      nil
+      &__MODULE__.capture_telemetry/4,
+      parent
     )
 
     on_exit(fn -> :telemetry.detach("search-many-test") end)
@@ -411,8 +417,8 @@ defmodule Scrypath.SearchManyTest do
     :telemetry.attach_many(
       "search-many-partial",
       [[:scrypath, :search_many, :partial]],
-      fn _e, m, md, _ -> send(parent, {:partial, m, md}) end,
-      nil
+      &__MODULE__.capture_partial/4,
+      parent
     )
 
     on_exit(fn -> :telemetry.detach("search-many-partial") end)
