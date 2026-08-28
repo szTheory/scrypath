@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # UAT-09 asserts a release-history subject from the root test suite.
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: {fetch-depth: 0}
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
@@ -38,7 +38,7 @@ jobs:
     name: package (required)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
       - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
@@ -56,7 +56,7 @@ jobs:
     steps:
       # UAT-09 checks a release-history subject, so the contract suite requires
       # history beyond checkout's default depth of one.
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: {fetch-depth: 0}
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
@@ -81,7 +81,7 @@ jobs:
       SCRYPATH_INTEGRATION: "1"
       SCRYPATH_MEILISEARCH_URL: http://127.0.0.1:7700
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
       - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
@@ -118,7 +118,7 @@ jobs:
           - {elixir: "1.19.0", otp: "28.1"}
     steps:
       # The compatibility lane also runs the root test suite, including UAT-09.
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: {fetch-depth: 0}
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "${{ matrix.elixir }}", otp-version: "${{ matrix.otp }}"}
@@ -136,7 +136,7 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
       - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
@@ -164,7 +164,7 @@ jobs:
         env: {MEILI_NO_ANALYTICS: "true"}
     env: {PGPORT: "5433", SCRYPATH_MEILISEARCH_URL: http://127.0.0.1:7700, SCRYPATH_EXAMPLE_INTEGRATION: "1"}
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
       - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
@@ -180,7 +180,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs: {run: "${{ steps.check.outputs.run }}"}
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: {fetch-depth: 0}
       - id: check
         run: |
@@ -205,7 +205,7 @@ jobs:
           --health-retries 5
     env: {PGPORT: "5433"}
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
       - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
@@ -222,7 +222,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
       - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
@@ -249,7 +249,7 @@ jobs:
       artifact_digest: ${{ steps.coverage_upload.outputs.artifact-digest }}
     steps:
       # Coverage runs the root test suite, which validates release history in UAT-09.
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: {fetch-depth: 0}
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
@@ -329,7 +329,7 @@ jobs:
     continue-on-error: true
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
       - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
