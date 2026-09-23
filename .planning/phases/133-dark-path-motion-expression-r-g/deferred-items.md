@@ -4,6 +4,10 @@ Out-of-scope discoveries logged during execution (not caused by Phase 133 change
 
 ## Pre-existing OpsShellContractTest failures (logo.svg → inline SVG drift)
 
+status: resolved
+
+- **Resolution:** The shell contract now asserts the inline SVG brand mark and its accessible name instead of the removed logo image path. Verified with `mix verify.ops_ui` on Elixir 1.19.5 / OTP 28.5: 154 tests and 2 doctests passed, 0 failures.
+
 - **Discovered during:** Plan 01 verification (`mix verify.opsui`).
 - **Symptom:** 4 failures in `test/scrypath_ops_web/ops_shell_contract_test.exs` asserting
   `assert html =~ ~s(src="/ops/images/logo.svg")` on `/ops`, `/ops/posture`, `/ops/sync-drift`,

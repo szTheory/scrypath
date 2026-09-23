@@ -1224,7 +1224,8 @@ defmodule Scrypath.DocsContractTest do
     ])
 
     assert String.contains?(File.read!(".planning/PROJECT.md"), "97-SCOPE-GUARD.md")
-    assert String.contains?(File.read!(".planning/ROADMAP.md"), "[PHASE97-SCOPE-GUARD]")
+    v130_roadmap = File.read!(".planning/milestones/v1.30-ROADMAP.md")
+    assert String.contains?(v130_roadmap, "[PHASE97-SCOPE-GUARD]")
   end
 
   test "facet value search documentation contains type-ahead examples" do

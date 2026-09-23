@@ -5,9 +5,9 @@ milestone_name: Code Quality Ratchet
 current_phase: null
 status: Awaiting next milestone
 stopped_at: Milestone v1.37 archived
-last_updated: "2026-08-27T01:14:10.150Z"
-last_activity: 2026-08-26
-last_activity_desc: Milestone v1.37 completed and archived
+last_updated: "2026-09-23T21:58:23Z"
+last_activity: 2026-09-23
+last_activity_desc: GSD closeout metadata reconciled; deferred contract issues verified and resolved
 progress:
   total_phases: 12
   completed_phases: 12
@@ -262,9 +262,9 @@ Items acknowledged at prior milestone closeouts and the v1.37 artifact-shape ove
 ## Session
 
 **Last session:** 2026-08-26T21:26:07.536Z
-**Stopped at:** Completed 159-07-PLAN.md
+**Stopped at:** v1.37 archived after Phase 159 Plan 08 exact-SHA closeout
 **Resume file:** None
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Keep the release train idle until an evidence-authorized work item is approved; then start it with `$gsd-new-milestone`.

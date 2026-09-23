@@ -81,7 +81,7 @@ Architecture not yet mapped. Follow existing patterns found in the codebase.
 <!-- GSD:skills-start source:skills/ -->
 ## Project Skills
 
-No project skills found. Add skills to any of: `.claude/skills/`, `.agents/skills/`, `.cursor/skills/`, or `.github/skills/` with a `SKILL.md` index file.
+No project skills found. Add skills to `.codex/skills/` or `.agents/skills/` with a `SKILL.md` index file.
 <!-- GSD:skills-end -->
 
 <!-- GSD:workflow-start source:GSD defaults -->
@@ -90,6 +90,8 @@ No project skills found. Add skills to any of: `.claude/skills/`, `.agents/skill
 **Contributors:** follow **[CONTRIBUTING.md](CONTRIBUTING.md)** for verify tasks, CI, and release gates. When **`.planning/`** is present, it holds milestone context for maintainers.
 
 **Automated coding agents:** honor the constraints in this file; keep edits focused, run the checks **CONTRIBUTING** names for your change, and update **`.planning/PROJECT.md`** when you intentionally change product scope or shipped claims.
+
+When `.planning/STATE.md` says `Awaiting next milestone`, the root `.planning/ROADMAP.md` is an index of shipped milestones, not an active phase roadmap. OpenGSD may report `roadmap.analyze` with `scope: unscoped` because the archived milestone version in STATE has no active milestone section in that index. Its `init.progress` inventory may also surface historical phase directories as `current_phase` or `has_work_in_progress`; these are not active while STATE says no phase is active. Treat this as the expected idle state: use STATE and the roadmap's Current Posture, do not route into historical phase directories, and do not present the scope result as missing or corrupt planning data.
 
 Agents should default to the repo's **green-main release train** posture:
 
@@ -108,6 +110,6 @@ Maintainers who use the separate GSD toolkit should follow that tool’s docs so
 <!-- GSD:profile-start -->
 ## Developer Profile
 
-> Profile not yet configured. Run `/gsd-profile-user` to generate your developer profile.
-> This section is managed by `generate-claude-profile` -- do not edit manually.
+> Profile not yet configured. Run the GSD profile workflow to generate your developer profile.
+> This section is managed by GSD -- do not edit manually.
 <!-- GSD:profile-end -->
