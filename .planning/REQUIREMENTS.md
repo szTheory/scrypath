@@ -7,13 +7,13 @@
 
 ### Package Artifact
 
-- [ ] **PKG-01**: A maintainer can build the library package artifact from the current checkout and compile a clean consumer schema against that artifact, without a path dependency.
-- [ ] **PKG-02**: A maintainer can run the existing Phoenix adopter example’s selected real-service integration flows against the built package artifact, including its existing inline, Oban, and related-data scenarios, without changing the example’s normal path-dependency workflow.
+- [x] **PKG-01**: A maintainer can build the library package artifact from the current checkout and compile a clean consumer schema against that artifact, without a path dependency.
+- [x] **PKG-02**: A maintainer can run the existing Phoenix adopter example’s selected real-service integration flows against the built package artifact, including its existing inline, Oban, and related-data scenarios, without changing the example’s normal path-dependency workflow.
 - [ ] **PKG-03**: The package-backed example proof uses isolated temporary files and reports setup, service, and test failures clearly; successful and failed runs clean up task-owned temporary resources by default.
 
 ### Verification and Documentation
 
-- [ ] **PROOF-01**: A documented, deterministic maintainer command exposes the package-backed Phoenix proof and uses the existing example and service prerequisites; the command, CI wiring, and documentation are guarded against drift by automated checks.
+- [x] **PROOF-01**: A documented, deterministic maintainer command exposes the package-backed Phoenix proof and uses the existing example and service prerequisites; the command, CI wiring, and documentation are guarded against drift by automated checks.
 - [ ] **DOC-01**: Adopter-facing and maintainer documentation accurately states what package-backed proof exercises, how to run it, its service prerequisites, and what synthetic evidence does and does not establish.
 - [ ] **HYGIENE-01**: Milestone changes remain idiomatic and self-documenting; affected canonical docs and examples match executable behavior, and final review finds no stale planning narration, temporary scaffolding, or task-owned generated debris.
 
@@ -39,16 +39,17 @@ None identified for this bounded milestone.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PKG-01 | Phase 160 | Pending |
-| PKG-02 | Phase 160 | Pending |
+| PKG-01 | Phase 160 | Complete |
+| PKG-02 | Phase 160 | Complete |
 | PKG-03 | Phase 160 | Pending |
-| PROOF-01 | Phase 160 | Pending |
+| PROOF-01 | Phase 160 | Complete |
 | DOC-01 | Phase 161 | Pending |
 | HYGIENE-01 | Phase 161 | Pending |
 | REL-01 | Phase 161 | Pending |
 | CLOSE-01 | Phase 161 | Pending |
 
 **Coverage:**
+
 - v1.38 requirements: 8 total
 - Mapped to phases: 8
 - Unmapped: 0 ✓

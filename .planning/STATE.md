@@ -4,17 +4,17 @@ milestone: v1.38
 milestone_name: Packaged Adopter Proof
 current_phase: 160
 current_phase_name: Package-Backed Phoenix Proof
-status: executing
-stopped_at: Phase 160 execution blocked at required package-backed live-service acceptance
-last_updated: "2026-09-24T02:46:18.701Z"
+status: verifying
+stopped_at: Completed 160-03-PLAN.md
+last_updated: "2026-09-24T12:36:45.884Z"
 last_activity: 2026-09-23
 last_activity_desc: Phase 160 execution started
-state_head: 787ad60d2db5c32ffddadf366200d6f85ea82dff
+state_head: bc2bcc36b885dcb5e68b9ad5168a43c02f5cdd94
 progress:
   total_phases: 2
   completed_phases: 0
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 3
+  completed_plans: 3
   percent: 0
 ---
 
@@ -28,8 +28,8 @@ progress:
 ## Current Position
 
 Phase: 160 (Package-Backed Phoenix Proof) — EXECUTING
-Plan: 1 of 2
-Status: Executing Phase 160
+Plan: 2 of 2
+Status: Phase complete — ready for verification
 Last activity: 2026-09-23 — Phase 160 execution started
 
 Progress: [░░░░░░░░░░] 0%
@@ -202,6 +202,7 @@ Items acknowledged at prior milestone closeouts and the v1.37 artifact-shape ove
 | Phase 159 P05 | 3min | 1 tasks | 6 files |
 | Phase 159 P06 | 8min | 2 tasks | 12 files |
 | Phase 159 P07 | 14min | 3 tasks | 6 files |
+| Phase 160 P03 | 16 min | 1 tasks | 3 files |
 
 ## Decisions
 
@@ -263,12 +264,14 @@ Items acknowledged at prior milestone closeouts and the v1.37 artifact-shape ove
 - [Phase ?]: Phase 159 validations mark coverage only when current evidence is complete; hosted closure gaps remain non-compliant until Plan 07.
 - [Phase ?]: TEST-01 chronology remains historically unprovable under its narrow D-11 waiver; hosted TEST-05 proof remains Plan 07 work.
 - [Phase ?]: Accepted only hosted run 33014343041 because candidate, workflow-source, and head SHA all equal a35874178b79392caa0f3c1dcc010ea149e1e5bf; the reviewer approved without widening the four-row TEST-01 chronology waiver.
+- [Phase 160]: Recorded only the exact-SHA phoenix-example job as package acceptance; the parent run conclusion does not replace named job evidence.
+- [Phase 160]: Kept failures in deep-quality, core, and closeout-attestation visible as broader CI follow-up outside Plan 160-03.
 
 ## Session
 
-**Last session:** 2026-09-24T12:15:29Z
-**Stopped at:** Phase 160 package provenance corrections are committed as `5880ff4`; the gap-closure plan can now run exact-SHA hosted package proof. GitHub authentication and repository API access pass.
-**Resume file:** .planning/phases/160-package-backed-phoenix-proof/160-03-PLAN.md
+**Last session:** 2026-09-24T12:34:53.172Z
+**Stopped at:** Completed 160-03-PLAN.md
+**Resume file:** None
 
 ## Operator Next Steps
 
