@@ -25,7 +25,7 @@ defmodule Mix.Tasks.Verify.PhoenixExample.Package do
     rescue
       error in Mix.Error ->
         Process.put({__MODULE__, :failed}, true)
-        raise error
+        reraise error, __STACKTRACE__
 
       error ->
         Process.put({__MODULE__, :failed}, true)
