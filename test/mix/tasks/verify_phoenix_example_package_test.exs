@@ -18,15 +18,22 @@ defmodule Mix.Tasks.Verify.PhoenixExample.PackageTest do
 
     output =
       capture_io(fn ->
-        assert_raise Mix.Error, ~r/service stage: invalid SCRYPATH_MEILISEARCH_URL/, fn ->
-          Mix.Tasks.Verify.PhoenixExample.Package.run(
-            service_check: fn -> Mix.raise("invalid SCRYPATH_MEILISEARCH_URL: #{secret_url}") end,
-            command_runner: runner
-          )
-        end
+        error =
+          assert_raise Mix.Error, ~r/service stage: invalid SCRYPATH_MEILISEARCH_URL/, fn ->
+            Mix.Tasks.Verify.PhoenixExample.Package.run(
+              service_check: fn ->
+                Mix.raise("invalid SCRYPATH_MEILISEARCH_URL: #{secret_url}")
+              end,
+              command_runner: runner
+            )
+          end
+
+        Process.put(:package_preflight_error, error)
       end)
 
+    error = Process.delete(:package_preflight_error)
     refute output =~ secret_url
+    refute Exception.message(error) =~ secret_url
   end
 
   test "package proof module provides an explicit local artifact command" do
