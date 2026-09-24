@@ -76,5 +76,5 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 160. Package-Backed Phoenix Proof | v1.38 | 3/3 | In Progress|  |
+| 160. Package-Backed Phoenix Proof | v1.38 | 3/3 | Complete    | 2026-09-24 |
 | 161. Release and Tidy Closeout | v1.38 | 0/TBD | Not started | - |

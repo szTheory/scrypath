@@ -9,7 +9,7 @@
 
 - [x] **PKG-01**: A maintainer can build the library package artifact from the current checkout and compile a clean consumer schema against that artifact, without a path dependency.
 - [x] **PKG-02**: A maintainer can run the existing Phoenix adopter example’s selected real-service integration flows against the built package artifact, including its existing inline, Oban, and related-data scenarios, without changing the example’s normal path-dependency workflow.
-- [ ] **PKG-03**: The package-backed example proof uses isolated temporary files and reports setup, service, and test failures clearly; successful and failed runs clean up task-owned temporary resources by default.
+- [x] **PKG-03**: The package-backed example proof uses isolated temporary files and reports setup, service, and test failures clearly; successful and failed runs clean up task-owned temporary resources by default.
 
 ### Verification and Documentation
 
@@ -41,7 +41,7 @@ None identified for this bounded milestone.
 |-------------|-------|--------|
 | PKG-01 | Phase 160 | Complete |
 | PKG-02 | Phase 160 | Complete |
-| PKG-03 | Phase 160 | Pending |
+| PKG-03 | Phase 160 | Complete |
 | PROOF-01 | Phase 160 | Complete |
 | DOC-01 | Phase 161 | Pending |
 | HYGIENE-01 | Phase 161 | Pending |

@@ -2,20 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v1.38
 milestone_name: Packaged Adopter Proof
-current_phase: 160
-current_phase_name: Package-Backed Phoenix Proof
-status: verifying
-stopped_at: Completed 160-03-PLAN.md
-last_updated: "2026-09-24T12:36:45.884Z"
-last_activity: 2026-09-23
-last_activity_desc: Phase 160 execution started
-state_head: bc2bcc36b885dcb5e68b9ad5168a43c02f5cdd94
+current_phase: 161 — Release and Tidy Closeout
+current_phase_name: Release and Tidy Closeout
+status: planning
+stopped_at: Phase 160 complete, ready to plan Phase 161
+last_updated: "2026-09-24T13:06:33.935Z"
+last_activity: 2026-09-24
+last_activity_desc: Phase 160 complete, transitioned to Phase 161
+state_head: 16082caf318cb99b45a4fb8571988bf169c548ae
 progress:
   total_phases: 2
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
   completed_plans: 3
-  percent: 0
+  percent: 50
 ---
 
 # Project State
@@ -23,16 +23,16 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 160 — Package-Backed Phoenix Proof
+**Current Focus:** Phase 161 — Release and Tidy Closeout
 
 ## Current Position
 
-Phase: 160 (Package-Backed Phoenix Proof) — EXECUTING
-Plan: 2 of 2
-Status: Phase complete — ready for verification
-Last activity: 2026-09-23 — Phase 160 execution started
+Phase: 161 (Release and Tidy Closeout) — READY TO PLAN
+Plan: Not started
+Status: Phase 160 complete; no Phase 161 plan exists yet
+Last activity: 2026-09-24 — Phase 160 verification passed and tracking advanced
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█████░░░░░] 50%
 
 ## Completed Milestone: v1.37 Code Quality Ratchet
 
@@ -40,7 +40,7 @@ Progress: [░░░░░░░░░░] 0%
 
 **Scope:** Runtime safety, internal architecture, tests, Mix tasks, examples, CI/CD, release proof, and measured performance. Preserve public APIs and behavior. ScrypathOps presentation/UX/visual review is excluded.
 
-**Current phase:** 160
+**Current phase:** 161 — Release and Tidy Closeout
 
 **Milestone sequence:** 148 quality baseline → 149 runtime safety → 150 dependency leaf → 151 write result → 152 options/settings → 153 search/failed work → 154 verification commands → 155 CI proof → 156 supply chain/release → 157 performance evidence → 158 closeout → 159 audit/provenance closure.
 
@@ -264,19 +264,19 @@ Items acknowledged at prior milestone closeouts and the v1.37 artifact-shape ove
 - [Phase ?]: Phase 159 validations mark coverage only when current evidence is complete; hosted closure gaps remain non-compliant until Plan 07.
 - [Phase ?]: TEST-01 chronology remains historically unprovable under its narrow D-11 waiver; hosted TEST-05 proof remains Plan 07 work.
 - [Phase ?]: Accepted only hosted run 33014343041 because candidate, workflow-source, and head SHA all equal a35874178b79392caa0f3c1dcc010ea149e1e5bf; the reviewer approved without widening the four-row TEST-01 chronology waiver.
-- [Phase 160]: Recorded only the exact-SHA phoenix-example job as package acceptance; the parent run conclusion does not replace named job evidence.
-- [Phase 160]: Kept failures in deep-quality, core, and closeout-attestation visible as broader CI follow-up outside Plan 160-03.
+- [Phase 160]: Accepted exact-SHA run 36000999039 at `7931271abe53e83261d85a22077176f75898eb81`; path then package Phoenix proof passed, required jobs and closeout passed, and `deep-quality` remains advisory-red on three Mint 1.9.3 advisories.
+- [Phase 160]: Corrected package setup error propagation to `reraise error, __STACKTRACE__` after the initial candidate's Credo finding; review found no issues and the refreshed exact-SHA run passed.
 
 ## Session
 
-**Last session:** 2026-09-24T12:34:53.172Z
-**Stopped at:** Completed 160-03-PLAN.md
+**Last session:** 2026-09-24T13:06:33.935Z
+**Stopped at:** Phase 160 complete, ready to plan Phase 161
 **Resume file:** None
 
 ## Operator Next Steps
 
-- Next: Run `$gsd-execute-phase 160 --gaps-only` to execute Plan 03 and record exact-SHA `phoenix-example` hosted proof. Candidate implementation commit: `5880ff4`. GitHub authentication and a read-only repository API request passed on 2026-09-24. No maintainer UAT is required.
+- Next: Run `$gsd-progress` to route Phase 161 into planning. Phase 160's exact-SHA hosted proof and required gates passed; no human UAT is pending.
 
 ### Blockers
 
-- Phase 160 Plan 03 still requires exact-SHA hosted package-backed Phoenix integration evidence (or the equivalent local run with Postgres and Meilisearch). Local services are unavailable. GitHub CLI authentication and API access pass.
+- None for Phase 160. Phase 161 release and tidy-closeout work is unplanned.
