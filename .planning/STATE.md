@@ -6,10 +6,10 @@ current_phase: 161
 current_phase_name: Release and Tidy Closeout
 current_plan: Not started
 status: release-ready
-stopped_at: Phase 161 complete — all phases complete
-last_updated: "2026-09-24T21:07:08.078Z"
+stopped_at: Phase 161 complete — awaiting maintainer review/merge of PR #77 and subsequent Release Please publication
+last_updated: "2026-09-24T21:30:45Z"
 last_activity: 2026-09-24
-last_activity_desc: Phase 161 complete
+last_activity_desc: Phase 161 complete with exact-SHA closeout; PR #77 review/merge and publication remain external
 state_head: 4ebfd083004bf710778b04bc72840e6fa82d5184
 progress:
   total_phases: 2
@@ -31,7 +31,7 @@ progress:
 Phase: 161 (Release and Tidy Closeout) — RELEASE-READY, UNPUBLISHED
 Current Plan: Not started
 External next step: maintainer review and merge of PR #77, then the generated Release Please publish and parity gates
-Last activity: 2026-09-24 — Phase 161 complete
+Last activity: 2026-09-24 — Phase 161 complete; exact final-SHA closeout passed, awaiting PR #77 review/merge
 
 Progress: [██████████] 100%
 
@@ -275,14 +275,14 @@ Items acknowledged at prior milestone closeouts and the v1.37 artifact-shape ove
 
 ## Session
 
-**Last session:** 2026-09-24T17:43:36.505Z
-**Stopped at:** Phase 161 complete — all phases complete
+**Last session:** 2026-09-24T21:30:45Z
+**Stopped at:** Phase 161 complete — awaiting maintainer review/merge of PR #77 and subsequent Release Please publication
 **Resume file:** None
 
 ## Operator Next Steps
 
-- Next: Run `$gsd-progress` to route Phase 161 into planning. Phase 160's exact-SHA hosted proof and required gates passed; no human UAT is pending.
+- Next: Obtain a real maintainer review and merge decision for PR #77. After merge, review the generated Release Please PR and follow its tag through Hex, HexDocs, consumer verification, and package-to-tag parity. Do not call v1.38 shipped until those publication gates pass.
 
 ### Blockers
 
-- None for Phase 160. Phase 161 release and tidy-closeout work is unplanned.
+- Phase 161 is complete and release-ready, but unpublished. PR #77 awaits maintainer review and merge; Release Please publication and parity checks follow that decision.
