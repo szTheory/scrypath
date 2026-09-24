@@ -1,6 +1,6 @@
 # Requirements: Scrypath — v1.38 Packaged Adopter Proof
 
-**Defined:** 2026-09-23  
+**Defined:** 2026-09-23
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
 ## v1.38 Requirements
@@ -54,5 +54,5 @@ None identified for this bounded milestone.
 - Unmapped: 0 ✓
 
 ---
-*Requirements defined: 2026-09-23*  
+*Requirements defined: 2026-09-23*
 *Last updated: 2026-09-23 after v1.38 scope approval*

@@ -195,14 +195,14 @@ Phase 97 through 99 banned capability classes:
 
 The public website launch surface now exists under `website/` and is deployed to GitHub Pages as a companion front door, not a HexDocs replacement.
 
-Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under **`.planning/milestones/`**. The next approved milestone creates a fresh `REQUIREMENTS.md`.
+Current planning files: **`.planning/{PROJECT,REQUIREMENTS,ROADMAP,STATE}.md`** plus archives under **`.planning/milestones/`**.
 
 ## Release Train Posture
 
-- **Active milestone:** None.
-- **Current phase:** None.
+- **Active milestone:** v1.38 Packaged Adopter Proof, explicitly authorized as a bounded verification wedge.
+- **Current phase:** Phase 160 — Package-Backed Phoenix Proof (ready to plan).
 - **Policy:** Keep `main` green on the lean required gates and prefer PR-first execution for serious milestone or feature-depth work.
-- **Authorization:** Do not reopen speculative work without a concrete maintenance item, adopter signal, production bug, proof drift, or explicit strategic decision.
+- **Authorization:** v1.38 is the explicitly approved strategic proof wedge; do not reopen unrelated speculative work without concrete maintenance, adopter, production-bug, proof-drift, or explicit strategic evidence.
 - **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, and new UI surfaces remain out of scope.
 
 **v1.37 implementation outcome (2026-08-26):** runtime input and secret
