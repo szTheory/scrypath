@@ -4,7 +4,7 @@ Minimal API-only Phoenix app that depends on Scrypath via **`path: "../.."`** fr
 
 This README is the proof/runbook surface for the real-service path. The HexDocs guides teach the public request-edge boundary and API shape; this example proves the operational path, CI parity, env vars, and local smoke commands.
 
-From the repository root, the canonical maintainer entrypoint for this live path is `mix verify.adopter --live`. That root task checks for `SCRYPATH_EXAMPLE_INTEGRATION`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL`, verifies Postgres and Meilisearch are reachable, then shells into this example with `cd examples/phoenix_meilisearch && mix deps.get && mix test` (the same sequence CI uses).
+From the repository root, `mix verify.phoenix_example` runs this live proof using the example's normal `path:` dependency. `mix verify.phoenix_example --package` builds and unpacks Scrypath from the current checkout, stages an isolated copy of the example, and runs the same integration scenarios against the locally tagged package artifact. Both commands require `SCRYPATH_EXAMPLE_INTEGRATION=1`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL`, with Postgres and Meilisearch already reachable. The package command does not change this example's normal `path:` workflow.
 
 ## Prerequisites
 
@@ -40,9 +40,10 @@ On **pull requests** and pushes to **`main`**, advisory job **`phoenix-example`*
 
 ```bash
 mix verify.phoenix_example
+mix verify.phoenix_example --package
 ```
 
-The canonical task validates service prerequisites, then runs **`mix deps.get`** followed by **`mix test`** inside `examples/phoenix_meilisearch`. **`./scripts/smoke.sh`** is local orchestration (Docker Compose + the same env defaults); it is not the Actions entrypoint.
+For the path-backed command, the underlying example sequence remains `cd examples/phoenix_meilisearch && mix deps.get && mix test`. The first command validates service prerequisites, then runs **`mix deps.get`** and **`mix test`** inside `examples/phoenix_meilisearch`. The second validates the same prerequisites, proves staged dependency and lockfile resolution to the current checkout's package artifact, compiles the staged consumer, then runs **`mix test`** with the integration tag enabled. In CI, the advisory job runs these commands in this order against the same Postgres 16 and Meilisearch v1.15 service definitions. **`./scripts/smoke.sh`** is local orchestration (Docker Compose + the same env defaults); it is not the Actions entrypoint.
 
 ## End-to-end smoke
 

@@ -699,6 +699,34 @@ defmodule Scrypath.DocsContractTest do
     assert ordered?(job_head, "mix deps.get", "mix verify.phoenix_example")
   end
 
+  test "Phoenix package proof follows path proof in its existing advisory service job" do
+    [_, job] =
+      Regex.run(~r/  phoenix-example:\n(.*?)(?=\n  [a-z][a-z0-9-]*:\n|\z)/s, @ci_workflow)
+
+    assert job =~ "continue-on-error: true"
+    assert job =~ "postgres:16-alpine"
+    assert job =~ "getmeili/meilisearch:v1.15"
+    assert ordered?(job, "mix verify.phoenix_example", "mix verify.phoenix_example --package")
+
+    assert_contains_all(@contributing, [
+      "mix verify.phoenix_example --package",
+      "SCRYPATH_EXAMPLE_INTEGRATION",
+      "PGPORT",
+      "SCRYPATH_MEILISEARCH_URL",
+      "Advisory Postgres 16 + Meilisearch v1.15"
+    ])
+
+    assert_contains_all(@example_readme, [
+      "mix verify.phoenix_example --package",
+      "SCRYPATH_EXAMPLE_INTEGRATION",
+      "PGPORT",
+      "SCRYPATH_MEILISEARCH_URL"
+    ])
+
+    example_mix = File.read!("examples/phoenix_meilisearch/mix.exs")
+    assert example_mix =~ "{:scrypath, path: \"../..\"}"
+  end
+
   test "README sync authority ties sync-modes guide link to authority wording (Phase 51)" do
     assert @readme =~ ~S|](guides/sync-modes-and-visibility.md)|
 
