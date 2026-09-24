@@ -4,7 +4,9 @@ Minimal API-only Phoenix app that depends on Scrypath via **`path: "../.."`** fr
 
 This README is the proof/runbook surface for the real-service path. The HexDocs guides teach the public request-edge boundary and API shape; this example proves the operational path, CI parity, env vars, and local smoke commands.
 
-From the repository root, `mix verify.phoenix_example` runs this live proof using the example's normal `path:` dependency. `mix verify.phoenix_example --package` builds and unpacks Scrypath from the current checkout, stages an isolated copy of the example, and runs the same integration scenarios against the locally tagged package artifact. Both commands require `SCRYPATH_EXAMPLE_INTEGRATION=1`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL`, with Postgres and Meilisearch already reachable. The package command does not change this example's normal `path:` workflow.
+From the repository root, `mix verify.phoenix_example` runs this live proof using the example's normal `path:` dependency. `mix verify.phoenix_example --package` builds and unpacks Scrypath from the current checkout, stages an isolated copy of the example, and runs the same integration scenarios against the locally built artifact. Both commands require `SCRYPATH_EXAMPLE_INTEGRATION=1`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL`, with reachable Postgres and reachable Meilisearch services. The package command does not change this example's normal `path:` workflow.
+
+The live proof covers four existing scenario classes: inline sync, Oban sync, related-data fan-out with inline sync, and related-data fan-out with Oban. Docs contracts and synthetic checks prove only the wiring and claims they assert; the live package proof exercises these scenarios against real services, but does not establish every adopter deployment or production reliability.
 
 ## Prerequisites
 

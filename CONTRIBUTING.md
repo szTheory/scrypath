@@ -162,7 +162,7 @@ The root [`compose.yaml`](compose.yaml) is only for **local** Meilisearch when r
 
 ## Example app (Postgres + Meilisearch)
 
-For a **multi-container-shaped** local stack (Postgres + Meilisearch + Phoenix + **Oban**) and a scripted E2E smoke (**inline** and **`:oban`** paths), see [`examples/phoenix_meilisearch/README.md`](examples/phoenix_meilisearch/README.md) - that file is the **canonical env + command** reference for the example. **CI** runs the same proof through **`mix verify.phoenix_example`**. For the local orchestration harness, run `cd examples/phoenix_meilisearch` and then `./scripts/smoke.sh`; that script is not the GitHub Actions entrypoint.
+For the **canonical environment, service, and command runbook**, see [`examples/phoenix_meilisearch/README.md`](examples/phoenix_meilisearch/README.md). The advisory `phoenix-example` CI job runs `mix verify.phoenix_example` first against the example's `path:` dependency, then `mix verify.phoenix_example --package` against the locally built package artifact. Both commands use real Postgres and Meilisearch services and cover inline, Oban, and related-data scenarios. A passing docs contract proves documentation and wiring assertions; it is not live-service proof. The package command is the live package-backed service proof, and does not establish every adopter deployment or production reliability. For the local orchestration harness, run `cd examples/phoenix_meilisearch` and then `./scripts/smoke.sh`; that script is not the GitHub Actions entrypoint.
 
 ## `phase105-e2e` local runbook
 

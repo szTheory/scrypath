@@ -763,7 +763,7 @@ defmodule Scrypath.DocsContractTest do
       "mix verify.package",
       "focused docs contract",
       "pre-publish checks",
-      "post-publish evidence",
+      "Post-publish evidence",
       "mix verify.release_publish X.Y.Z",
       "mix verify.release_parity X.Y.Z",
       "Release Please owns"
