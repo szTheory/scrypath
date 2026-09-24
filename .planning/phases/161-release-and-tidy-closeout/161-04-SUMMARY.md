@@ -2,13 +2,34 @@
 phase: 161-release-and-tidy-closeout
 plan: 04
 type: execute
+subsystem: closeout
+tags: [ownership-inventory, repository-hygiene, release-readiness]
+requires:
+  - phase: 161-release-and-tidy-closeout
+    provides: Authorized PR #77 and exact-head review/check inventory
 provides:
   - Ownership-scoped cleanup record with unrelated user work preserved
   - Final release-ready disposition and post-summary exact-SHA closeout receipt
 affects: [repository-hygiene, release-readiness]
-requirements-completed: [CLOSE-01]
-status: complete
+actuals:
+  tokens: 1200
+  tasks: 2
+  commits: 2
+tech-stack:
+  added: []
+  patterns: [Ownership evidence before cleanup, External final-SHA receipt]
+key-files:
+  created: [.planning/phases/161-release-and-tidy-closeout/161-04-SUMMARY.md]
+  modified: [.planning/STATE.md, .planning/ROADMAP.md, .planning/REQUIREMENTS.md, .planning/phases/161-release-and-tidy-closeout/161-VALIDATION.md, .planning/phases/161-release-and-tidy-closeout/161-RELEASE-EVIDENCE.md]
+key-decisions:
+  - "Retain the pre-existing candidate branch while PR #77 remains open."
+  - "Report release-ready and unpublished while real review/merge and publisher workflows are pending."
+patterns-established:
+  - "Preserve unrelated work and other projects' running resources during closeout."
+requirements-completed: [HYGIENE-01, CLOSE-01]
+duration: 50min
 completed: 2026-09-24
+status: complete
 ---
 
 # Phase 161 Plan 04: Tidy Closeout and Final Disposition

@@ -31,7 +31,7 @@ progress:
 Phase: 161 (Release and Tidy Closeout) — RELEASE-READY, UNPUBLISHED
 Current Plan: 4/4 complete
 External next step: maintainer review and merge of PR #77, then the generated Release Please publish and parity gates
-Last activity: 2026-09-24 — all Phase 161 plans complete; exact final-SHA CI is recorded in the executor closeout receipt
+Last activity: 2026-09-24 — all Phase 161 plans complete; exact final-SHA CI is recorded in `/private/tmp/scrypath-161-final-closeout.json`
 
 Progress: [██████████] 100%
 

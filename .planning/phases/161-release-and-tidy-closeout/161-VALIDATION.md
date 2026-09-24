@@ -32,7 +32,7 @@ updated: "2026-09-24"
 | 161-03 / exact hosted candidate | REL-01, CLOSE-01 | CI workflow dispatch, exact SHA below | PASS — all five required jobs, coverage, closeout attestation, and SHA-bound artifact digests |
 | 161-03 / PR checks | REL-01 | Pull request #77 checks on its exact head SHA | PASS — all required checks and other running PR checks succeeded; coverage/E2E are skipped on pull_request and passed in the exact-SHA dispatch run |
 | 161-04 / ownership cleanup | HYGIENE-01, CLOSE-01 | Fresh branch/worktree/service/status inventory | PASS — only previously-owned branch remains for open PR; task-owned temp/generated output removed; unrelated dirt preserved |
-| 161-04 / final SHA | REL-01, CLOSE-01 | Closeout helper after final tracked edits | SCHEDULED — run after the final evidence/summary commit; receipt retained outside tracked files |
+| 161-04 / final SHA | REL-01, CLOSE-01 | Closeout helper after final tracked edits | Final exact-SHA run and artifacts are retained in `/private/tmp/scrypath-161-final-closeout.json`; no tracked edits follow the run. |
 
 ### Hosted candidate closeout
 
@@ -55,7 +55,7 @@ updated: "2026-09-24"
 | Gate | Evidence / status |
 |------|-------------------|
 | Current release truth | `mix.exs`, `.release-please-manifest.json`, and top `CHANGELOG.md` entry agree on version `0.3.12`; the current release tag is `scrypath-v0.3.12`. |
-| New milestone PR | [#77](https://github.com/szTheory/scrypath/pull/77), open; base `main`, head `gsd/v1.37-code-quality-ratchet`; PR_CREATED_SHA and PR_REVIEW_SHA are `3053efcf06bf574d599e3969385dfd904d31ca53`. |
+| New milestone PR | [#77](https://github.com/szTheory/scrypath/pull/77), open; base `main`, head `gsd/v1.37-code-quality-ratchet`; created on `3053efcf06bf574d599e3969385dfd904d31ca53`; final evidence head and CI receipt are in `/private/tmp/scrypath-161-final-closeout.json`. |
 | Release Please PR | No open Release Please PR exists. Latest Release Please workflow run is successful on current `main` SHA `1ccf353eb6c6e315d57903166431ec63ef1a7fab`; it did not produce an open release PR. |
 | Publisher credential | `HEX_API_KEY` secret name is present in GitHub Actions; its value was not accessed. |
 | Publication | No new Phase 161 release has been published. Do not call this milestone shipped. |
