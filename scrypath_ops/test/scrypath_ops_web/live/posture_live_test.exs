@@ -76,8 +76,10 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
       Agent.stop(pid)
     end
 
+    # Keep the fixture alive until on_exit/1 performs deterministic cleanup.
+    # A linked Agent can exit with the test process before the callback runs.
     {:ok, _pid} =
-      Agent.start_link(fn -> %{tasks_calls: 0, swap_called: false} end,
+      Agent.start(fn -> %{tasks_calls: 0, swap_called: false} end,
         name: :posture_live_test_state
       )
 

@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 Release Please manages versioned entries after this baseline.
 
+## [0.3.12](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.11...scrypath-v0.3.12) (2026-08-25)
+
+
+### Bug Fixes
+
+* **release:** keep demo runbook outside package parity scope ([#60](https://github.com/szTheory/scrypath/issues/60)) ([682c9c1](https://github.com/szTheory/scrypath/commit/682c9c116aed4846e85ee010d1384330c0fe5aea))
+
+## [0.3.11](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.10...scrypath-v0.3.11) (2026-08-25)
+
+### Added
+
+- **ScrypathOps operator experience:** ships the v1.33-v1.35 admin UI, dual-theme design system, WCAG AA contrast gate, deterministic motion proof, and the `scry/path` brand identity ([#43](https://github.com/szTheory/scrypath/pull/43), [#49](https://github.com/szTheory/scrypath/pull/49)).
+- **Mounted ecommerce proof:** adds zero-touch Docker verification for mounted routing, failed-sync triage, and zero-downtime swaps, enforced by the required `ecommerce-mounted-smoke` check ([#57](https://github.com/szTheory/scrypath/pull/57)).
+
+### Changed
+
+- **Dependency security:** closes audited dependency graphs across the core library, legacy Phoenix example, ScrypathOps, and ecommerce demo, including Req/Swoosh runtime coverage and explicit Plug compatibility bounds ([#57](https://github.com/szTheory/scrypath/pull/57)).
+- **Maintenance:** refreshes Credo, Ecto, Ecto SQLite, and the official checkout/cache/setup-node GitHub Actions while preserving reviewed transitive locks ([#58](https://github.com/szTheory/scrypath/pull/58)).
+
+### Bug Fixes
+
+- **tests:** serialize the options test module to remove flaky stderr capture ([#42](https://github.com/szTheory/scrypath/pull/42)).
+- **phase105-e2e:** run the E2E server on a non-sandbox database so the active index populates ([#40](https://github.com/szTheory/scrypath/issues/40)) ([c79ae3b](https://github.com/szTheory/scrypath/commit/c79ae3bfc91f487ef4e463517ee8e5a5dee5dd7a)).
+- **operator proof:** build the ScrypathOps assets in CI and align shell contracts with the inline brand mark ([#49](https://github.com/szTheory/scrypath/pull/49)).
+
 ## [0.3.10](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.9...scrypath-v0.3.10) (2026-06-03)
 
 

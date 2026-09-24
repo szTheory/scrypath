@@ -744,8 +744,16 @@ defmodule Scrypath.DocsContractTest do
       "does not establish every adopter deployment or production reliability"
     ])
 
-    assert ordered?(@example_readme, "mix verify.phoenix_example`", "mix verify.phoenix_example --package")
-    assert String.contains?(File.read!("examples/phoenix_meilisearch/mix.exs"), "{:scrypath, path: \"../..\"}")
+    assert ordered?(
+             @example_readme,
+             "mix verify.phoenix_example`",
+             "mix verify.phoenix_example --package"
+           )
+
+    assert String.contains?(
+             File.read!("examples/phoenix_meilisearch/mix.exs"),
+             "{:scrypath, path: \"../..\"}"
+           )
   end
 
   test "maintainer and release docs preserve command and evidence boundaries" do
@@ -757,7 +765,11 @@ defmodule Scrypath.DocsContractTest do
       "live-service proof"
     ])
 
-    assert ordered?(@contributing, "mix verify.phoenix_example`", "mix verify.phoenix_example --package")
+    assert ordered?(
+             @contributing,
+             "mix verify.phoenix_example`",
+             "mix verify.phoenix_example --package"
+           )
 
     assert_contains_all(@release_docs, [
       "mix verify.package",
@@ -1295,8 +1307,12 @@ defmodule Scrypath.DocsContractTest do
     ])
 
     assert String.contains?(File.read!(".planning/PROJECT.md"), "97-SCOPE-GUARD.md")
-    v130_roadmap = File.read!(".planning/milestones/v1.30-ROADMAP.md")
-    assert String.contains?(v130_roadmap, "[PHASE97-SCOPE-GUARD]")
+
+    roadmap_contracts =
+      [".planning/ROADMAP.md" | Path.wildcard(".planning/milestones/*-ROADMAP.md")]
+      |> Enum.map(&File.read!/1)
+
+    assert Enum.any?(roadmap_contracts, &String.contains?(&1, "[PHASE97-SCOPE-GUARD]"))
   end
 
   test "facet value search documentation contains type-ahead examples" do

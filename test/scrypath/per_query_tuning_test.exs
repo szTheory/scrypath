@@ -1,45 +1,13 @@
 defmodule Scrypath.PerQueryTuningTest do
-  use ExUnit.Case, async: true
+  # Telemetry handlers are VM-global. Keep this module synchronous so another
+  # SearchablePost query cannot satisfy the receive before this test's event.
+  use ExUnit.Case, async: false
 
   alias Scrypath.Meilisearch.Query, as: MeilisearchQuery
   alias Scrypath.Options
   alias Scrypath.Query
 
-  defmodule RankingDetailsBackend do
-    @moduledoc false
-    @behaviour Scrypath.Backend
-
-    @impl true
-    def name, do: :ranking_details_test
-
-    @impl true
-    defdelegate index_name(schema_module, config), to: Scrypath.TestSupport.FakeBackend
-
-    @impl true
-    defdelegate upsert_documents(schema_module, documents, config),
-      to: Scrypath.TestSupport.FakeBackend
-
-    @impl true
-    defdelegate delete_documents(schema_module, document_ids, config),
-      to: Scrypath.TestSupport.FakeBackend
-
-    @impl true
-    defdelegate search(schema_module, query, config), to: Scrypath.TestSupport.FakeBackend
-
-    @impl true
-    defdelegate search_facet_values(schema_module, facet_name, facet_query, opts, config),
-      to: Scrypath.TestSupport.FakeBackend
-
-    @impl true
-    defdelegate search_many(paired_queries, config), to: Scrypath.TestSupport.FakeBackend
-  end
-
-  def capture_search_start(
-        _event,
-        _measurements,
-        %{schema: SearchablePost, backend: :ranking_details_test} = metadata,
-        parent
-      ) do
+  def capture_search_start(_event, _measurements, %{schema: SearchablePost} = metadata, parent) do
     send(parent, {:search_start_meta, metadata})
   end
 
@@ -77,7 +45,7 @@ defmodule Scrypath.PerQueryTuningTest do
 
     assert {:ok, _} =
              Scrypath.search(SearchablePost, "x",
-               backend: RankingDetailsBackend,
+               backend: Scrypath.TestSupport.FakeBackend,
                per_query: [show_ranking_score_details: true]
              )
 
