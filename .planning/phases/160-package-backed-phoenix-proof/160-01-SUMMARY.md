@@ -86,4 +86,4 @@ The command and deterministic failure lifecycle are implemented, but the plan is
 
 ## Resume Requirement
 
-Resolve the regression command's unexpected exit code, then start or provide the documented Postgres and Meilisearch services and rerun the package-backed command, confirming all four integration scenarios pass. Until those gates pass, PKG-01 and PKG-02 remain unverified and Plan 01 remains halted.
+Prefer the `phoenix-example` hosted CI run for this exact commit as the real-service acceptance evidence. It provisions Postgres and Meilisearch and runs the path-backed proof followed by `mix verify.phoenix_example --package`; confirm its package stage markers and four integration scenarios pass, then reconcile PKG-01/PKG-02 and Plan 01. Do not require a maintainer to recreate the service environment locally when exact-commit hosted evidence is available. The local cross-phase regression invocation also needs its unexpected exit code 2 resolved or superseded by an equivalent successful canonical CI gate before phase verification.

@@ -5,10 +5,10 @@ milestone_name: Packaged Adopter Proof
 current_phase: 160
 current_phase_name: Package-Backed Phoenix Proof
 status: executing
-stopped_at: Phase 160 waiting for live services and regression exit diagnosis
-last_updated: "2026-09-24T02:29:20.134Z"
+stopped_at: Phase 160 waiting for exact-SHA Phoenix CI proof and regression exit diagnosis
+last_updated: "2026-09-24T02:29:58.357Z"
 last_activity: 2026-09-23
-last_activity_desc: Phase 160 implementation and CI/docs complete; live Meilisearch proof and regression command exit status remain unresolved
+last_activity_desc: Phase 160 implementation and CI/docs complete; exact-SHA live proof and regression command exit status remain unresolved
 state_head: 72255f3ba0cf54e9a0491b3dde9043bd2474fc47
 progress:
   total_phases: 2
@@ -23,14 +23,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 160 — Package-Backed Phoenix Proof; implementation and documentation are committed, awaiting the real-service package proof
+**Current Focus:** Phase 160 — Package-Backed Phoenix Proof; implementation and documentation are committed, awaiting exact-SHA hosted service evidence
 
 ## Current Position
 
 Phase: 160 (Package-Backed Phoenix Proof) — IN PROGRESS
 Plan: 160-01 — halted at live service acceptance; Plan 160-02 implementation is complete
-Status: Waiting for Meilisearch at 127.0.0.1:7700 and diagnosis of the regression command's exit code 2
-Last activity: 2026-09-23 — implementation and automated contracts completed; live proof preflight could not reach Meilisearch
+Status: Waiting for the exact-SHA `phoenix-example` CI result and diagnosis of the regression command's exit code 2
+Last activity: 2026-09-23 — implementation and automated contracts completed; prefer hosted exact-SHA evidence for unavailable local service proof
 
 Progress: [█████░░░░░] 50%
 
