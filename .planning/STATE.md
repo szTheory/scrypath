@@ -5,11 +5,11 @@ milestone_name: Packaged Adopter Proof
 current_phase: 161 — Release and Tidy Closeout
 current_phase_name: Release and Tidy Closeout
 status: planning
-stopped_at: Phase 160 complete, ready to plan Phase 161
-last_updated: "2026-09-24T13:06:33.935Z"
+stopped_at: Phase 161 context gathered
+last_updated: "2026-09-24T14:34:34.992Z"
 last_activity: 2026-09-24
 last_activity_desc: Phase 160 complete, transitioned to Phase 161
-state_head: 16082caf318cb99b45a4fb8571988bf169c548ae
+state_head: 2a60777721a83ff6aebcd9d378231b0ada450324
 progress:
   total_phases: 2
   completed_phases: 1
@@ -269,9 +269,9 @@ Items acknowledged at prior milestone closeouts and the v1.37 artifact-shape ove
 
 ## Session
 
-**Last session:** 2026-09-24T13:06:33.935Z
-**Stopped at:** Phase 160 complete, ready to plan Phase 161
-**Resume file:** None
+**Last session:** 2026-09-24T14:34:34.974Z
+**Stopped at:** Phase 161 context gathered
+**Resume file:** .planning/phases/161-release-and-tidy-closeout/161-CONTEXT.md
 
 ## Operator Next Steps
 
