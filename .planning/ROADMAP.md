@@ -82,4 +82,4 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 160. Package-Backed Phoenix Proof | v1.38 | 3/3 | Complete    | 2026-09-24 |
-| 161. Release and Tidy Closeout | v1.38 | 4/4 | Release-ready (unpublished) | 2026-09-24 |
+| 161. Release and Tidy Closeout | v1.38 | 4/4 | Complete    | 2026-09-24 |

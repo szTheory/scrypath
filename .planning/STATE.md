@@ -2,15 +2,15 @@
 gsd_state_version: "1.0"
 milestone: v1.38
 milestone_name: Packaged Adopter Proof
-current_phase: 161 — Release and Tidy Closeout
+current_phase: 161
 current_phase_name: Release and Tidy Closeout
-current_plan: 4
+current_plan: Not started
 status: release-ready
-stopped_at: Completed 161-04-PLAN.md; awaiting maintainer review/merge of PR #77 and subsequent Release Please publication
-last_updated: "2026-09-24T19:20:00Z"
+stopped_at: Phase 161 complete — all phases complete
+last_updated: "2026-09-24T21:07:08.078Z"
 last_activity: 2026-09-24
-last_activity_desc: Phase 161 plans complete with exact-SHA evidence; release-ready pending human PR review and merge
-state_head: "3053efcf06bf574d599e3969385dfd904d31ca53"
+last_activity_desc: Phase 161 complete
+state_head: 4ebfd083004bf710778b04bc72840e6fa82d5184
 progress:
   total_phases: 2
   completed_phases: 2
@@ -29,9 +29,9 @@ progress:
 ## Current Position
 
 Phase: 161 (Release and Tidy Closeout) — RELEASE-READY, UNPUBLISHED
-Current Plan: 4/4 complete
+Current Plan: Not started
 External next step: maintainer review and merge of PR #77, then the generated Release Please publish and parity gates
-Last activity: 2026-09-24 — all Phase 161 plans complete; exact final-SHA CI is recorded in `/private/tmp/scrypath-161-final-closeout.json`
+Last activity: 2026-09-24 — Phase 161 complete
 
 Progress: [██████████] 100%
 
@@ -41,7 +41,7 @@ Progress: [██████████] 100%
 
 **Scope:** Runtime safety, internal architecture, tests, Mix tasks, examples, CI/CD, release proof, and measured performance. Preserve public APIs and behavior. ScrypathOps presentation/UX/visual review is excluded.
 
-**Current phase:** 161 — Release and Tidy Closeout
+**Current phase:** 161
 
 **Milestone sequence:** 148 quality baseline → 149 runtime safety → 150 dependency leaf → 151 write result → 152 options/settings → 153 search/failed work → 154 verification commands → 155 CI proof → 156 supply chain/release → 157 performance evidence → 158 closeout → 159 audit/provenance closure.
 
@@ -276,7 +276,7 @@ Items acknowledged at prior milestone closeouts and the v1.37 artifact-shape ove
 ## Session
 
 **Last session:** 2026-09-24T17:43:36.505Z
-**Stopped at:** Completed 161-02-PLAN.md
+**Stopped at:** Phase 161 complete — all phases complete
 **Resume file:** None
 
 ## Operator Next Steps
