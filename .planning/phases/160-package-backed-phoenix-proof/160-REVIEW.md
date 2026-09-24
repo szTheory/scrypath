@@ -1,6 +1,6 @@
 ---
 phase: 160-package-backed-phoenix-proof
-reviewed: 2026-09-24T03:15:32Z
+reviewed: 2026-09-24T12:42:52Z
 depth: standard
 files_reviewed: 3
 files_reviewed_list:
@@ -17,19 +17,19 @@ status: clean
 
 # Phase 160: Code Review Report
 
-**Reviewed:** 2026-09-24T03:15:32Z
+**Reviewed:** 2026-09-24T12:42:52Z
 **Depth:** standard
 **Files Reviewed:** 3
 **Status:** clean
 
 ## Summary
 
-Reviewed the package proof's lockfile AST matching and workspace lifecycle paths, plus the focused tests for lock provenance, cleanup, and ranking-details telemetry. The lock matcher checks the Scrypath entry's Git URL and tag together, and the tested success and stage-failure paths clean their owned workspace. No correctness, security, or quality defects were found in the scoped changes.
+Reviewed the package proof's lockfile AST matching and workspace lifecycle paths, the focused tests for lock provenance, cleanup, and ranking-details telemetry, and the follow-up change that preserves the original stacktrace when a `Mix.Error` is reraised. The original exception propagates through the task's `after` cleanup path without being replaced by the generic setup error wrapper. No correctness, security, or quality defects were found in the scoped changes.
 
 All reviewed files meet quality standards. No issues found.
 
 ---
 
-_Reviewed: 2026-09-24T03:15:32Z_
+_Reviewed: 2026-09-24T12:42:52Z_
 _Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_
