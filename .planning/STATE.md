@@ -4,18 +4,18 @@ milestone: v1.38
 milestone_name: Packaged Adopter Proof
 current_phase: 161 — Release and Tidy Closeout
 current_phase_name: Release and Tidy Closeout
-current_plan: 2
+current_plan: 3
 status: executing
-stopped_at: Completed 161-01-PLAN.md
-last_updated: "2026-09-24T15:32:41.868Z"
+stopped_at: Completed 161-02-PLAN.md
+last_updated: "2026-09-24T17:43:36.527Z"
 last_activity: 2026-09-24
 last_activity_desc: Phase 160 complete, transitioned to Phase 161
-state_head: c468ce6c8595709a30a12c07fbe042d6492b14be
+state_head: "0b8662076faf5714453d44d0cbbffdd8d8a67006"
 progress:
   total_phases: 2
   completed_phases: 1
   total_plans: 7
-  completed_plans: 4
+  completed_plans: 5
   percent: 50
 ---
 
@@ -29,7 +29,7 @@ progress:
 ## Current Position
 
 Phase: 161 (Release and Tidy Closeout) — READY TO EXECUTE
-Current Plan: 2
+Current Plan: 3
 Total Plans in Phase: 4
 Plan: Phase 161-01 — Canonical proof documentation
 Status: Ready to execute
@@ -207,6 +207,7 @@ Items acknowledged at prior milestone closeouts and the v1.37 artifact-shape ove
 | Phase 159 P07 | 14min | 3 tasks | 6 files |
 | Phase 160 P03 | 16 min | 1 tasks | 3 files |
 | Phase 161 P01 | 30 min | 2 tasks | 4 files |
+| Phase 161 P02 | 129 min | 2 tasks | 2 files |
 
 ## Decisions
 
@@ -272,11 +273,12 @@ Items acknowledged at prior milestone closeouts and the v1.37 artifact-shape ove
 - [Phase 160]: Corrected package setup error propagation to `reraise error, __STACKTRACE__` after the initial candidate's Credo finding; review found no issues and the refreshed exact-SHA run passed.
 - [Phase 161 — Release and Tidy Closeout]: Keep the example README as the sole detailed Phoenix service runbook; maintainer docs link to it.
 - [Phase 161 — Release and Tidy Closeout]: Treat package/docs-contract checks as pre-publish evidence and release_publish/release_parity as post-publish evidence.
+- [Phase 161 — Release and Tidy Closeout]: Use an explicit no_return() spec on the intentional package-proof raise helper to satisfy the deep-quality Dialyzer gate without runtime changes (user-approved).
 
 ## Session
 
-**Last session:** 2026-09-24T15:32:27.311Z
-**Stopped at:** Completed 161-01-PLAN.md
+**Last session:** 2026-09-24T17:43:36.505Z
+**Stopped at:** Completed 161-02-PLAN.md
 **Resume file:** None
 
 ## Operator Next Steps
