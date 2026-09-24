@@ -8,9 +8,18 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Mode: Green-Main Release Train Idle
+## Current Mode: Green-Main Release Train — v1.38 Packaged Adopter Proof
 
-**Goal:** Preserve the shipped product and its automated proof. Start new milestone work only from concrete maintenance, adopter, production-bug, proof-drift, or explicit strategic evidence.
+**Goal:** Close the package-to-live-example verification gap with a bounded, deterministic adopter proof while preserving the shipped product and green-main release train.
+
+## Current Milestone: v1.38 Packaged Adopter Proof
+
+**Goal:** Prove that the built Scrypath package artifact supports the existing Phoenix/Ecto adopter example against real Postgres and Meilisearch services.
+
+**Target features:**
+- Run the existing Phoenix example’s selected integration flows against the built package artifact rather than only the repository path dependency.
+- Keep proof, setup, and cleanup deterministic, machine-verifiable, and reuse the current example and package gates.
+- Close with reviewed and triaged milestone PRs, green exact-SHA required checks and `main`, an actually verified Release Please/Hex/HexDocs release, and tidy milestone-owned work.
 
 **Last completed scope:** v1.37 raised runtime safety, internal architecture, verification, CI/CD, release proof, and performance evidence while preserving public behavior/APIs and excluding ScrypathOps presentation, UX, and visual review.
 
@@ -235,7 +244,7 @@ measured pure hot paths did not justify speculative optimization.
 
 ## Planning window
 
-**Active milestone:** None. v1.37 is complete and archived across Phases 148-159 and all 31 requirements, with the narrow TEST-01 chronology waiver and artifact-shape override recorded. Keep the release train idle until evidence authorizes a new milestone; do not treat historical direct-execution artifact shapes as work to resume.
+**Active milestone:** v1.38 Packaged Adopter Proof. v1.37 is complete and archived across Phases 148-159 and all 31 requirements, with the narrow TEST-01 chronology waiver and artifact-shape override recorded. v1.38 is an explicitly authorized, bounded verification wedge; it does not reopen runtime feature breadth or treat historical phase directories as active work.
 
 ## Requirements
 
@@ -348,4 +357,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-26 for v1.37 milestone archive and idle release-train posture*
+*Last updated: 2026-09-23 for v1.38 Packaged Adopter Proof*

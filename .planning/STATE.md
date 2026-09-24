@@ -1,19 +1,16 @@
 ---
-gsd_state_version: 1.0
-milestone: v1.37
-milestone_name: Code Quality Ratchet
-current_phase: null
-status: Awaiting next milestone
-stopped_at: Milestone v1.37 archived
-last_updated: "2026-09-23T21:58:23Z"
+gsd_state_version: "1.0"
+milestone: v1.38
+milestone_name: Packaged Adopter Proof
+status: planning
+last_updated: "2026-09-24T00:55:20Z"
 last_activity: 2026-09-23
-last_activity_desc: GSD closeout metadata reconciled; deferred contract issues verified and resolved
 progress:
-  total_phases: 12
-  completed_phases: 12
-  total_plans: 8
-  completed_plans: 8
-current_phase_name: null
+  total_phases: 2
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,14 +18,16 @@ current_phase_name: null
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Green-main release train idle; awaiting an evidence-authorized next milestone
+**Current Focus:** Phase 160 — Package-Backed Phoenix Proof; v1.38 roadmap approved and ready for phase planning
 
 ## Current Position
 
-Phase: Milestone v1.37 complete
-Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-08-26 — Milestone v1.37 completed and archived
+Phase: 160 of 161 (Package-Backed Phoenix Proof)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-09-23 — v1.38 roadmap approved; ready to plan Phase 160
+
+Progress: [░░░░░░░░░░] 0%
 
 ## Completed Milestone: v1.37 Code Quality Ratchet
 
@@ -261,10 +260,10 @@ Items acknowledged at prior milestone closeouts and the v1.37 artifact-shape ove
 
 ## Session
 
-**Last session:** 2026-08-26T21:26:07.536Z
-**Stopped at:** v1.37 archived after Phase 159 Plan 08 exact-SHA closeout
+**Last session:** 2026-09-24T00:55:20Z
+**Stopped at:** v1.38 Packaged Adopter Proof roadmap created and approved; Phase 160 ready to plan
 **Resume file:** None
 
 ## Operator Next Steps
 
-- Keep the release train idle until an evidence-authorized work item is approved; then start it with `$gsd-new-milestone`.
+- Next: `$gsd-plan-phase 160` — plan the approved package-backed Phoenix proof, preserving the checkout's pre-existing changes through closeout.
