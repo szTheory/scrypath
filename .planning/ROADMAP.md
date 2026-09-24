@@ -12,7 +12,7 @@
 - ✅ **v1.35 Brand System & Logo Identity** — Phases 137-143 (shipped directly 2026-06-24; archived 2026-07-11) — see `milestones/v1.35-ROADMAP.md`
 - ✅ **v1.36 Dependency Security Remediation** — Phases 144-147 (shipped 2026-08-25) — see `milestones/v1.36-ROADMAP.md`
 - ✅ **v1.37 Code Quality Ratchet** — Phases 148-159 (shipped 2026-08-26) — see `milestones/v1.37-ROADMAP.md`
-- 🚧 **v1.38 Packaged Adopter Proof** — Phases 160-161 (planning)
+- 🚧 **v1.38 Packaged Adopter Proof** — Phases 160-161 (release-ready, unpublished; PR #77 awaits maintainer review/merge)
 
 ## Current Posture
 
@@ -22,12 +22,12 @@ Historical phase details and evidence live under `milestones/`.
 
 ## Phases
 
-- [ ] **Phase 160: Package-Backed Phoenix Proof** - Exercise the existing Phoenix adopter example's inline, Oban, and related-data integration scenarios against the built package artifact with deterministic setup and cleanup.
-- [ ] **Phase 161: Release and Tidy Closeout** - Align adopter-facing proof truth and machine-checked contracts, verify release evidence, and clean milestone-owned resources while preserving pre-existing changes.
+- [x] **Phase 160: Package-Backed Phoenix Proof** - Exercise the existing Phoenix adopter example's inline, Oban, and related-data integration scenarios against the built package artifact with deterministic setup and cleanup.
+- [x] **Phase 161: Release and Tidy Closeout** - Align adopter-facing proof truth and machine-checked contracts, verify release evidence, and clean milestone-owned resources while preserving pre-existing changes.
 
 ## Phase Details
 
-### 🚧 v1.38 Packaged Adopter Proof (In Progress)
+### 🚧 v1.38 Packaged Adopter Proof (Release-ready; unpublished)
 
 **Milestone Goal:** Prove that the built Scrypath package artifact supports the existing Phoenix/Ecto adopter example against real Postgres and Meilisearch services, then close with verified release evidence or an explicit release-ready disposition and tidy milestone-owned work.
 
@@ -70,16 +70,16 @@ Plans:
   3. Closeout records reviewed and triaged milestone PRs, green required checks on the exact final commit, and green `main` after merge; the documented Release Please/Hex/HexDocs post-publish checks confirm the package, changelog, docs, tag, and source agree. If external credentials, permissions, or services block publication, the result is explicitly `release-ready` with the blocker and exact resume action, never reported as shipped.
   4. Milestone-owned branches, worktrees, services, generated artifacts, and working-tree changes are cleaned up; the closeout record confirms unrelated or pre-existing changes were preserved and reports any external cleanup limitation.
 
-**Plans**: TBD
+**Plans**: 4/4 plans executed; release-ready pending real maintainer review and merge of PR #77. Publication/parity remains pending under REL-01.
 
 - [x] 161-01-PLAN.md
 - [x] 161-02-PLAN.md
-- [ ] 161-03-PLAN.md
-- [ ] 161-04-PLAN.md
+- [x] 161-03-PLAN.md
+- [x] 161-04-PLAN.md
 
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 160. Package-Backed Phoenix Proof | v1.38 | 3/3 | Complete    | 2026-09-24 |
-| 161. Release and Tidy Closeout | v1.38 | 2/4 | In Progress|  |
+| 161. Release and Tidy Closeout | v1.38 | 4/4 | Release-ready (unpublished) | 2026-09-24 |

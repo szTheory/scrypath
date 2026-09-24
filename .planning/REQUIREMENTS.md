@@ -20,7 +20,7 @@
 ### Release and Closeout
 
 - [ ] **REL-01**: Before the milestone is reported shipped, milestone PRs are reviewed and triaged, required checks pass on the exact final commit, `main` is verified green after merge, and the documented Release Please/Hex/HexDocs path confirms the released package, changelog, docs, tag, and source agree through post-publish verification.
-- [ ] **CLOSE-01**: Milestone-owned branches, worktrees, service stacks, generated artifacts, and working-tree changes are cleaned up; unrelated or pre-existing user changes are preserved and reported. If a release dependency blocks publication, all available checks finish and the milestone is reported as release-ready with the specific blocker and resume action, never as shipped.
+- [x] **CLOSE-01**: Milestone-owned branches, worktrees, service stacks, generated artifacts, and working-tree changes are cleaned up; unrelated or pre-existing user changes are preserved and reported. If a release dependency blocks publication, all available checks finish and the milestone is reported as release-ready with the specific blocker and resume action, never as shipped.
 
 ## Future Requirements
 
@@ -45,8 +45,8 @@ None identified for this bounded milestone.
 | PROOF-01 | Phase 160 | Complete |
 | DOC-01 | Phase 161 | Complete |
 | HYGIENE-01 | Phase 161 | Complete |
-| REL-01 | Phase 161 | Pending |
-| CLOSE-01 | Phase 161 | Pending |
+| REL-01 | Phase 161 | Release-ready; pending maintainer review/merge, Release Please, and post-publish verification |
+| CLOSE-01 | Phase 161 | Complete — owned resources cleaned; unrelated work preserved; release-ready blocker recorded |
 
 **Coverage:**
 
@@ -56,4 +56,4 @@ None identified for this bounded milestone.
 
 ---
 *Requirements defined: 2026-09-23*
-*Last updated: 2026-09-23 after v1.38 scope approval*
+*Last updated: 2026-09-24 after Phase 161 release-ready closeout*

@@ -4,19 +4,19 @@ milestone: v1.38
 milestone_name: Packaged Adopter Proof
 current_phase: 161 — Release and Tidy Closeout
 current_phase_name: Release and Tidy Closeout
-current_plan: 3
-status: executing
-stopped_at: Completed 161-02-PLAN.md
-last_updated: "2026-09-24T17:43:36.527Z"
+current_plan: 4
+status: release-ready
+stopped_at: Completed 161-04-PLAN.md; awaiting maintainer review/merge of PR #77 and subsequent Release Please publication
+last_updated: "2026-09-24T19:20:00Z"
 last_activity: 2026-09-24
-last_activity_desc: Phase 160 complete, transitioned to Phase 161
-state_head: "0b8662076faf5714453d44d0cbbffdd8d8a67006"
+last_activity_desc: Phase 161 plans complete with exact-SHA evidence; release-ready pending human PR review and merge
+state_head: "3053efcf06bf574d599e3969385dfd904d31ca53"
 progress:
   total_phases: 2
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 7
-  completed_plans: 5
-  percent: 50
+  completed_plans: 7
+  percent: 100
 ---
 
 # Project State
@@ -28,14 +28,12 @@ progress:
 
 ## Current Position
 
-Phase: 161 (Release and Tidy Closeout) — READY TO EXECUTE
-Current Plan: 3
-Total Plans in Phase: 4
-Plan: Phase 161-01 — Canonical proof documentation
-Status: Ready to execute
-Last activity: 2026-09-24 — Phase 161-01 documentation contracts passed and summary recorded
+Phase: 161 (Release and Tidy Closeout) — RELEASE-READY, UNPUBLISHED
+Current Plan: 4/4 complete
+External next step: maintainer review and merge of PR #77, then the generated Release Please publish and parity gates
+Last activity: 2026-09-24 — all Phase 161 plans complete; exact final-SHA CI is recorded in the executor closeout receipt
 
-Progress: [█████░░░░░] 50%
+Progress: [██████████] 100%
 
 ## Completed Milestone: v1.37 Code Quality Ratchet
 
