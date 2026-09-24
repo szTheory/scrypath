@@ -24,8 +24,8 @@ key-files:
     - .planning/phases/160-package-backed-phoenix-proof/160-VALIDATION.md
     - .planning/phases/160-package-backed-phoenix-proof/160-01-SUMMARY.md
 key-decisions:
-  - "Accepted only CI run 35998481376 after matching its head SHA and inspecting the phoenix-example job steps and logs."
-  - "Recorded the named Phoenix job as passing even though unrelated jobs caused the parent workflow run to conclude failure."
+  - "Revalidated hosted package acceptance on corrected candidate 7931271abe53e83261d85a22077176f75898eb81 in CI run 36000999039."
+  - "Required gates and closeout attestation passed; advisory deep-quality still reports Mint 1.9.3 security advisories."
 requirements-completed: [PKG-01, PKG-02, PROOF-01]
 coverage:
   - id: D1
@@ -33,7 +33,7 @@ coverage:
     requirement: PKG-01
     verification:
       - kind: integration
-        ref: "https://github.com/szTheory/scrypath/actions/runs/35998481376/job/107629043080 — package artifact/tag, staged dependency, and consumer compile PASS markers"
+        ref: "https://github.com/szTheory/scrypath/actions/runs/36000999039/job/107637337872 — package artifact/tag, staged dependency, and consumer compile PASS markers"
         status: pass
     human_judgment: false
   - id: D2
@@ -41,7 +41,7 @@ coverage:
     requirement: PKG-02
     verification:
       - kind: e2e
-        ref: "https://github.com/szTheory/scrypath/actions/runs/35998481376/job/107629043080 — 10 tests, 0 failures, integration completion marker, no integration exclusion"
+        ref: "https://github.com/szTheory/scrypath/actions/runs/36000999039/job/107637337872 — 10 tests, 0 failures, integration completion marker, no integration exclusion"
         status: pass
     human_judgment: false
   - id: D3
@@ -49,19 +49,19 @@ coverage:
     requirement: PROOF-01
     verification:
       - kind: other
-        ref: "gh run view 35998481376 --json headSha,jobs — exact SHA and ordered success conclusions for both named steps"
+        ref: "gh run view 36000999039 --json headSha,jobs — exact SHA and ordered success conclusions for both named steps"
         status: pass
     human_judgment: false
 duration: 18min
 completed: 2026-09-24
 status: complete
-plan_head_before: d7b499b93d9ebcc4c84b16c316266fa524dfc61a
+plan_head_before: 7931271abe53e83261d85a22077176f75898eb81
 commits: 1
 ---
 
 # Phase 160 Plan 03: Exact-SHA hosted Phoenix package proof
 
-**The tagged package artifact, staged lock provenance, consumer compile, and all four live Phoenix integration scenarios passed on candidate SHA `d7b499b93d9ebcc4c84b16c316266fa524dfc61a`.**
+**The tagged package artifact, staged lock provenance, consumer compile, and all four live Phoenix integration scenarios passed on corrected candidate SHA `7931271abe53e83261d85a22077176f75898eb81`.**
 
 ## Performance
 
@@ -77,6 +77,8 @@ commits: 1
 - Verified `phoenix-example (advisory)` job 107629043080 succeeded, with `mix verify.phoenix_example` passing before `mix verify.phoenix_example --package`.
 - Inspected package logs: artifact `v0.3.10` built and tagged, staged dependencies resolved to `file:///tmp/scrypath-phoenix-package-1/artifact` at that tag, consumer compiled, and integration scenarios completed with **10 tests, 0 failures** and no integration exclusion.
 - Reconciled Plan 01 and the Phase 160 validation map with the hosted proof.
+- After the initial candidate exposed a Credo `reraise` requirement, corrected package setup error propagation, reviewed the fix with no findings, and reran CI on the corrected candidate SHA.
+- The corrected exact-SHA run passed all required jobs, the Phoenix path-then-package proof, ecommerce mounted proof, E2E advisory proof, and closeout attestation.
 
 ## Task Commits
 
@@ -90,7 +92,7 @@ commits: 1
 
 ## Decisions Made
 
-- The candidate SHA, individual job, ordered command steps, and package log markers are the acceptance authority. The parent CI run concluded failure because `deep-quality (advisory)`, `core (required)`, and `closeout-attestation` failed; these outcomes do not change the successful named Phoenix job evidence and were not represented as a green full run.
+- The candidate SHA, individual job, ordered command steps, and package log markers are the acceptance authority. Initial run 35998481376 is superseded for final evidence because the later `reraise` code correction changed the source candidate. Corrected run 36000999039 is the final evidence source: overall conclusion success, with required jobs and closeout attestation green. Its advisory deep-quality job fails at `mix hex.audit` on three Mint 1.9.3 advisories (two medium, one high), which remains a separate dependency follow-up.
 - The earlier local cross-phase regression invocation remains recorded as an unresolved exit-code-2 result in the Plan 01 summary. It is outside this hosted package-proof task and is not represented as passing.
 
 ## Deviations from Plan
@@ -101,12 +103,12 @@ None — the exact-SHA hosted proof and evidence updates followed the plan. `gh 
 
 ## Issues Encountered
 
-- The parent workflow concluded failure in three other jobs: `deep-quality (advisory)`, `core (required)`, and `closeout-attestation`. The target `phoenix-example (advisory)` job and both proof steps passed. These unrelated CI failures are retained for visibility and were not changed by this plan.
+- Initial candidate CI run 35998481376 exposed the required core Credo issue (`raise` inside rescue); this was fixed in commit `29bf460`, reviewed cleanly, and validated on the exact corrected SHA by run 36000999039. Advisory deep-quality continues to fail on Mint 1.9.3 OSV/GHSA advisories, while the workflow's required gates and closeout attestation pass.
 - Local Postgres/Meilisearch prerequisites were unavailable, so the previous local integration attempt could not serve as evidence. Hosted services supplied the required proof.
 
 ## Next Phase Readiness
 
-The Phase 160 live package acceptance gap is closed with exact-SHA evidence. Phase verification can consume the updated validation map and Plan 01 summary. The parent workflow's other failed jobs remain visible for the repository's broader CI follow-up.
+The Phase 160 live package acceptance gap is closed with exact-SHA evidence. Phase verification can consume the updated validation map and summaries. The Mint advisories remain visible for dependency maintenance follow-up.
 
 ---
 *Phase: 160-package-backed-phoenix-proof*

@@ -38,7 +38,7 @@ coverage:
         ref: test/mix/tasks/verify_phoenix_example_package_test.exs
         status: pass
       - kind: integration
-        ref: "https://github.com/szTheory/scrypath/actions/runs/35998481376/job/107629043080 — exact-SHA package artifact/tag, staged dependency provenance, and consumer compile PASS"
+        ref: "https://github.com/szTheory/scrypath/actions/runs/36000999039/job/107637337872 — exact-SHA package artifact/tag, staged dependency provenance, and consumer compile PASS"
         status: pass
     human_judgment: false
   - id: D2
@@ -46,7 +46,7 @@ coverage:
     requirement: PKG-02
     verification:
       - kind: integration
-        ref: "https://github.com/szTheory/scrypath/actions/runs/35998481376/job/107629043080 — integration scenarios completed; 10 tests, 0 failures; no integration exclusion"
+        ref: "https://github.com/szTheory/scrypath/actions/runs/36000999039/job/107637337872 — integration scenarios completed; 10 tests, 0 failures; no integration exclusion"
         status: pass
     human_judgment: false
   - id: D3
@@ -86,8 +86,8 @@ The command and deterministic failure lifecycle are implemented, and the require
 
 ## Hosted Acceptance
 
-- Candidate and workflow source SHA: `d7b499b93d9ebcc4c84b16c316266fa524dfc61a`.
-- [CI run 35998481376](https://github.com/szTheory/scrypath/actions/runs/35998481376), job `phoenix-example (advisory)` ID `107629043080`, ran on that exact SHA.
+- Candidate and workflow source SHA: `7931271abe53e83261d85a22077176f75898eb81`.
+- [CI run 36000999039](https://github.com/szTheory/scrypath/actions/runs/36000999039), job `phoenix-example (advisory)` ID `107637337872`, ran on that exact SHA.
 - The path-backed command passed before the package-backed command; both named steps concluded `success`.
 - Package artifact `v0.3.10` was built and tagged; the staged lock resolved Scrypath from `file:///tmp/scrypath-phoenix-package-1/artifact` at that tag; the consumer compiled.
 - With `SCRYPATH_EXAMPLE_INTEGRATION=1`, package tests completed with **10 tests, 0 failures** and no integration exclusion. The four exercised integration modules are inline, Oban, related-inline, and related-Oban.
