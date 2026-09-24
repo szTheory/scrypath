@@ -40,7 +40,11 @@ Historical phase details and evidence live under `milestones/`.
   2. A deterministic maintainer command runs the existing Phoenix example's inline, Oban, and related-data integration scenarios against that artifact and reports their results.
   3. The normal Phoenix example path-dependency workflow still works, and the package-backed proof reuses the existing service prerequisites and advisory Phoenix service lane without adding or promoting a required gate.
   4. Success and injected setup, service, compile, or test failures report the failing stage and clean task-owned temporary files by default; an automated contract check catches drift among the command, CI wiring, and proof documentation.
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 160-01-PLAN.md — Add the package-backed Phoenix proof command and cleanup contracts
+- [ ] 160-02-PLAN.md — Wire advisory CI order and guard maintainer documentation
 
 #### Phase 161: Release and Tidy Closeout
 **Goal**: Adopters and maintainers can understand the package-backed proof's scope, and the milestone closes with verified release evidence or an explicit release-ready disposition and tidy repository state.
