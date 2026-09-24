@@ -2,20 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v1.38
 milestone_name: Packaged Adopter Proof
-current_phase: Archived; no active phase
+current_phase: 160
 current_phase_name: Package-Backed Phoenix Proof
 status: executing
-stopped_at: Phase 160 context gathered
-last_updated: "2026-09-24T02:00:29.818Z"
+stopped_at: Phase 160 package proof waiting for Meilisearch service
+last_updated: "2026-09-24T02:17:22.766Z"
 last_activity: 2026-09-23
-last_activity_desc: v1.38 roadmap approved; ready to plan Phase 160
+last_activity_desc: Phase 160 implementation, contracts, and CI/docs complete; live acceptance blocked by unavailable local Meilisearch
 state_head: 72255f3ba0cf54e9a0491b3dde9043bd2474fc47
 progress:
   total_phases: 2
   completed_phases: 0
   total_plans: 2
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 50
 ---
 
 # Project State
@@ -23,16 +23,16 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 160 — Package-Backed Phoenix Proof; v1.38 roadmap approved and ready for phase planning
+**Current Focus:** Phase 160 — Package-Backed Phoenix Proof; implementation and documentation are committed, awaiting the real-service package proof
 
 ## Current Position
 
-Phase: 160 (Package-Backed Phoenix Proof) — READY TO EXECUTE
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-09-23 — v1.38 roadmap approved; ready to plan Phase 160
+Phase: 160 (Package-Backed Phoenix Proof) — IN PROGRESS
+Plan: 160-01 — halted at live service acceptance; Plan 160-02 implementation is complete
+Status: Waiting for Meilisearch at 127.0.0.1:7700 before the required package-backed integration run
+Last activity: 2026-09-23 — implementation and automated contracts completed; live proof preflight could not reach Meilisearch
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█████░░░░░] 50%
 
 ## Completed Milestone: v1.37 Code Quality Ratchet
 

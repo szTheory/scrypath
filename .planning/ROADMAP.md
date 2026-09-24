@@ -52,7 +52,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 160-02-PLAN.md — Wire advisory CI order and guard maintainer documentation
+- [x] 160-02-PLAN.md — Wire advisory CI order and guard maintainer documentation
 
 #### Phase 161: Release and Tidy Closeout
 
@@ -72,5 +72,5 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 160. Package-Backed Phoenix Proof | v1.38 | 0/TBD | Not started | - |
+| 160. Package-Backed Phoenix Proof | v1.38 | 1/2 | In progress — waiting for live service proof | - |
 | 161. Release and Tidy Closeout | v1.38 | 0/TBD | Not started | - |
