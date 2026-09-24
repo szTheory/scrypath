@@ -43,6 +43,25 @@ defmodule Mix.Tasks.Verify.PhoenixExample.PackageTest do
     assert source =~ "MIX_HOME"
   end
 
+  test "lock provenance requires the expected URL and tag on the Scrypath entry" do
+    valid = ~S|%{"scrypath" => {:git, "file:///artifact", "abc123", [tag: "v1.2.3"]}}|
+
+    mismatched_entry =
+      ~S|%{"scrypath" => {:git, "file:///artifact", "abc123", [tag: "v0.9.0"]}, "other" => {:git, "file:///other", "def456", [tag: "v1.2.3"]}}|
+
+    assert Mix.Tasks.Verify.PhoenixExample.Package.lock_resolves_to_artifact?(
+             valid,
+             "file:///artifact",
+             "v1.2.3"
+           )
+
+    refute Mix.Tasks.Verify.PhoenixExample.Package.lock_resolves_to_artifact?(
+             mismatched_entry,
+             "file:///artifact",
+             "v1.2.3"
+           )
+  end
+
   test "artifact command failure reports status and removes the owned workspace" do
     runner = fn "mix", ["hex.build", "--unpack", "--output", artifact], _opts ->
       Process.put(:package_test_root, Path.dirname(artifact))
@@ -60,6 +79,66 @@ defmodule Mix.Tasks.Verify.PhoenixExample.PackageTest do
 
     root = Process.delete(:package_test_root)
     refute File.exists?(root)
+  end
+
+  test "success and later-stage failures clean the owned workspace" do
+    for failed_stage <- [nil, :dependency, :compile, :test] do
+      root_key = {__MODULE__, make_ref()}
+
+      runner = fn
+        "mix", ["hex.build", "--unpack", "--output", artifact], _opts ->
+          Process.put(root_key, Path.dirname(artifact))
+          File.write!(Path.join(artifact, "README.md"), "synthetic package")
+          {"", 0}
+
+        "git", args, opts ->
+          System.cmd("git", args, opts)
+
+        "mix", ["deps.get"], opts ->
+          if failed_stage == :dependency do
+            {"dependency failed", 17}
+          else
+            artifact = Path.join(Process.get(root_key), "artifact")
+            artifact_url = "file://#{Path.expand(artifact)}"
+            tag = "v#{Mix.Project.config()[:version]}"
+            lock = ~s|%{"scrypath" => {:git, "#{artifact_url}", "abc123", [tag: "#{tag}"]}}|
+            File.write!(Path.join(opts[:cd], "mix.lock"), lock)
+            {"", 0}
+          end
+
+        "mix", ["compile"], _opts when failed_stage == :compile ->
+          {"compile failed", 17}
+
+        "mix", ["test"], _opts when failed_stage == :test ->
+          {"integration tests failed", 17}
+
+        "mix", _args, _opts ->
+          {"", 0}
+      end
+
+      run = fn ->
+        Mix.Tasks.Verify.PhoenixExample.Package.run(
+          service_check: fn -> :ok end,
+          command_runner: runner
+        )
+      end
+
+      case failed_stage do
+        nil ->
+          capture_io(fn -> assert :ok = run.() end)
+
+        stage ->
+          stage_name = Atom.to_string(stage)
+
+          assert_raise Mix.Error, ~r/#{stage_name} stage:.*exited 17/, fn ->
+            capture_io(fn -> run.() end)
+          end
+      end
+
+      root = Process.delete(root_key)
+      assert is_binary(root)
+      refute File.exists?(root)
+    end
   end
 
   test "failed workspace retention is opt in" do

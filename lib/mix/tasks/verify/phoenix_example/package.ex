@@ -89,13 +89,12 @@ defmodule Mix.Tasks.Verify.PhoenixExample.Package do
     invoke!(runner, :dependency, "mix", ["deps.get"], cd: consumer, env: isolated)
     lock = File.read!(Path.join(consumer, "mix.lock"))
 
-    unless String.contains?(lock, "scrypath\": {:git, \"#{artifact_url}\"") and
-             String.contains?(lock, "tag: \"#{tag}\""),
-           do:
-             fail!(
-               :dependency,
-               "staged lock does not resolve Scrypath from the tagged local artifact"
-             )
+    unless lock_resolves_to_artifact?(lock, artifact_url, tag),
+      do:
+        fail!(
+          :dependency,
+          "staged lock does not resolve Scrypath from the tagged local artifact"
+        )
 
     Mix.shell().info(
       "PASS package proof: staged dependencies resolve to #{artifact_url} at #{tag}"
@@ -119,6 +118,22 @@ defmodule Mix.Tasks.Verify.PhoenixExample.Package do
 
     Mix.shell().info("PASS package proof: integration scenarios completed")
     :ok
+  end
+
+  @doc false
+  def lock_resolves_to_artifact?(lock, expected_url, expected_tag) do
+    with {:ok, {:%{}, _meta, entries}} <- Code.string_to_quoted(lock),
+         {:{}, _tuple_meta, [:git, ^expected_url, _revision, options | _rest]} <-
+           Enum.find_value(entries, fn
+             {"scrypath", value} -> value
+             {:scrypath, value} -> value
+             _ -> nil
+           end),
+         true <- Enum.any?(options, &match?({:tag, ^expected_tag}, &1)) do
+      true
+    else
+      _ -> false
+    end
   end
 
   defp stage_example!(consumer) do
