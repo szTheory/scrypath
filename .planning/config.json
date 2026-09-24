@@ -57,6 +57,7 @@
     "gsd-verifier": "gpt-6-luna",
     "gsd-code-reviewer": "gpt-6-luna",
     "gsd-nyquist-auditor": "gpt-6-luna",
-    "gsd-integration-checker": "gpt-6-luna"
+    "gsd-integration-checker": "gpt-6-luna",
+    "gsd-security-auditor": "gpt-6-sol"
   }
 }
