@@ -82,7 +82,8 @@ The command and deterministic failure lifecycle are implemented, but the plan is
 ## Issues Encountered
 
 - The required package-backed integration command stopped at service preflight: Postgres was reachable, but no Meilisearch listener was available at `127.0.0.1:7700`. Per plan instructions, Docker was not started.
+- The cross-phase regression command ran 151 tests with 0 assertion failures but returned exit code 2. Isolating `test/mix/tasks/verify_adopter_test.exs` reproduced exit code 2 with 8 tests and 0 failures; this gate is unresolved and was not reported as passed.
 
 ## Resume Requirement
 
-Start or provide the documented Postgres and Meilisearch services, then rerun the package-backed command and confirm all four integration scenarios pass. Until that evidence exists, PKG-01 and PKG-02 remain unverified and Plan 01 remains halted.
+Resolve the regression command's unexpected exit code, then start or provide the documented Postgres and Meilisearch services and rerun the package-backed command, confirming all four integration scenarios pass. Until those gates pass, PKG-01 and PKG-02 remain unverified and Plan 01 remains halted.

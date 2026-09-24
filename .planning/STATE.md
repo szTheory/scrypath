@@ -5,10 +5,10 @@ milestone_name: Packaged Adopter Proof
 current_phase: 160
 current_phase_name: Package-Backed Phoenix Proof
 status: executing
-stopped_at: Phase 160 package proof waiting for Meilisearch service
-last_updated: "2026-09-24T02:17:22.766Z"
+stopped_at: Phase 160 waiting for live services and regression exit diagnosis
+last_updated: "2026-09-24T02:22:57.829Z"
 last_activity: 2026-09-23
-last_activity_desc: Phase 160 implementation, contracts, and CI/docs complete; live acceptance blocked by unavailable local Meilisearch
+last_activity_desc: Phase 160 implementation and CI/docs complete; live Meilisearch proof and regression command exit status remain unresolved
 state_head: 72255f3ba0cf54e9a0491b3dde9043bd2474fc47
 progress:
   total_phases: 2
@@ -29,7 +29,7 @@ progress:
 
 Phase: 160 (Package-Backed Phoenix Proof) — IN PROGRESS
 Plan: 160-01 — halted at live service acceptance; Plan 160-02 implementation is complete
-Status: Waiting for Meilisearch at 127.0.0.1:7700 before the required package-backed integration run
+Status: Waiting for Meilisearch at 127.0.0.1:7700 and diagnosis of the regression command's exit code 2
 Last activity: 2026-09-23 — implementation and automated contracts completed; live proof preflight could not reach Meilisearch
 
 Progress: [█████░░░░░] 50%
