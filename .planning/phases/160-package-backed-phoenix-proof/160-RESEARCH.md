@@ -235,10 +235,6 @@ Reuse the adopter's required environment-name and TCP reachability checks before
 
 **How to avoid:** When package flow invokes Mix tasks directly more than once, explicitly reenable those tasks or prefer a subprocess boundary with its own clean Mix invocation. Existing root verification tasks already use `Mix.Task.reenable("test")` before rerunning tests. [VERIFIED: `lib/mix/tasks/verify.adopter.ex:100-103`]
 
-## Runtime State Inventory
-
-Not applicable — Phase 160 adds a verifier and temporary artifacts; it does not rename, refactor, or migrate persisted runtime state. [VERIFIED: phase boundary in `.planning/phases/160-package-backed-phoenix-proof/160-CONTEXT.md`]
-
 ## Environment Availability
 
 | Dependency | Required By | Available | Version / observation | Fallback |
@@ -304,6 +300,29 @@ This is developer tooling, not an authentication or authorization feature. Treat
 | Secret value leaked in task output | Information disclosure | Never echo full endpoint or environment values; show required variable names and service reachability only. |
 | Staged package/example escapes intended temp workspace or clobbers tracked app | Tampering | Generate a unique task-owned temp root, use explicit `cd` for child commands, stage from source without mutating tracked files, and remove only the owned root. |
 | Shell interpolation of paths/options | Tampering | Prefer direct `System.cmd/3` executable + argv over interpolated shell scripts; use a shell only when required and quote fixed script inputs. Existing adopter shell precedent uses fixed literal command. [VERIFIED: `lib/mix/tasks/verify.adopter.ex:88-92`] |
+
+## Code Examples
+
+Package build invocation already used by the consumer smoke test:
+
+```elixir
+System.cmd("mix", ["hex.build", "--unpack", "--output", artifact_dir],
+  cd: repo_root,
+  stderr_to_stdout: true
+)
+```
+
+The in-repo value quote is `run_mix!(["hex.build", "--unpack", "--output", artifact_dir], cd: repo_root)` [VERIFIED: `test/release/consumer_smoke_test.exs:140-142`]. Hex documents that `--unpack` builds and unpacks the tarball and `--output` selects the destination [CITED: [Hex build docs](https://hex.hexdocs.pm/Mix.Tasks.Hex.Build.html)]. Keep this child command before application-starting tasks as described in the Hex docs.
+
+Subprocess stage result handling should preserve output and status:
+
+```elixir
+{output, status} = System.cmd("mix", args, cd: example_dir, stderr_to_stdout: true)
+Mix.shell().info(output)
+if status != 0, do: Mix.raise("#{stage} failed with exit status #{status}")
+```
+
+This mirrors the existing `System.cmd("bash", ["-lc", script], cd: example_dir, stderr_to_stdout: true)` call [VERIFIED: `lib/mix/tasks/verify.adopter.ex:88-92`]. See the official [System.cmd/3 docs](https://hexdocs.pm/elixir/System.html#cmd/3) for command argument, output, and status semantics.
 
 ## Sources
 
