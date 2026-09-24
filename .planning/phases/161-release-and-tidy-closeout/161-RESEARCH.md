@@ -282,17 +282,13 @@ After merge, verify `main` remains green. Before a release PR merge compare the 
 |---|-------|---------|---------------|
 | A1 | Contract/synthetic fixtures prove their encoded command and wording invariants but do not prove live service behavior; live service proof does not prove all production or adopter deployment behavior. | Common Pitfalls | Overclaiming package support or narrowing trust claims beyond actual evidence. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Will the Release Please PR merge and will publish authorization/services be available during execution?**
-   - What we know: the user selected publication as the target when merge, secret, and services are available; a configured Hex publisher key is required for CI publish. [VERIFIED: .planning/phases/161-release-and-tidy-closeout/161-CONTEXT.md:20-22] [VERIFIED: docs/releasing.md:67-73]
-   - What's unclear: release PR status and whether the publishing secret and external services are usable at execution time. Secret contents must not be inspected or logged.
-   - Recommendation: do all repo and exact-SHA checks first; if a blocker persists, document the specific blocker, finish other checks, and record one precise resume action with `release-ready`. [VERIFIED: .planning/phases/161-release-and-tidy-closeout/161-CONTEXT.md:20-22]
+1. **(RESOLVED) Release Please authorization and service availability.**
+   - Execution-time rule: D-03 targets publication through the existing Release Please path when merge and publisher authorization, secrets, and services are available. Observe each prerequisite during execution without inspecting or logging secret contents. Under D-04, only a genuine external blocker after all attainable checks permits `release-ready`, with `Published: no`, the specific blocker, and the exact resume action; an absent PR alone remains pending. Current external availability is unknown. [VERIFIED: .planning/phases/161-release-and-tidy-closeout/161-CONTEXT.md:20-22] [VERIFIED: docs/releasing.md:67-73]
 
-2. **Does the Mint graph update remain lockfile-only?**
-   - What we know: Mint enters the current root lock via Finch, which accepts `~> 1.8`; Mint 1.10.1 is published. [VERIFIED: mix.lock:19,26] [CITED: https://hex.pm/packages/mint]
-   - What's unclear: resolver result and resulting lockfile closure after update.
-   - Recommendation: try the minimal Mint update, inspect the diff and `mix deps.tree mint`, and alter project dependency constraints only if the resolver demonstrates necessity. [VERIFIED: mix.lock:19,26]
+2. **(RESOLVED) Mint graph scope.**
+   - Execution-time rule: resolve the existing Finch-owned transitive Mint edge to `1.10.1` or later with the smallest compatible graph change, then inspect the lock diff and `mix deps.tree mint`. Change project dependency constraints only if solver evidence shows the existing graph cannot reach that floor; do not assume the result is lockfile-only before resolution. [VERIFIED: mix.lock:19,26] [CITED: https://hex.pm/packages/mint] [VERIFIED: .planning/phases/161-release-and-tidy-closeout/161-CONTEXT.md:16-18]
 
 ## Environment Availability
 
