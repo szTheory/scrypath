@@ -6,7 +6,7 @@ current_phase: 160
 current_phase_name: Package-Backed Phoenix Proof
 status: executing
 stopped_at: Phase 160 waiting for live services and regression exit diagnosis
-last_updated: "2026-09-24T02:22:57.829Z"
+last_updated: "2026-09-24T02:29:20.134Z"
 last_activity: 2026-09-23
 last_activity_desc: Phase 160 implementation and CI/docs complete; live Meilisearch proof and regression command exit status remain unresolved
 state_head: 72255f3ba0cf54e9a0491b3dde9043bd2474fc47
@@ -205,6 +205,7 @@ Items acknowledged at prior milestone closeouts and the v1.37 artifact-shape ove
 
 ## Decisions
 
+- [GSD default]: Shift verification left and target zero human verification/UAT. Add integration, E2E, smoke, and seam checks to CI when recurring risk reduction justifies runtime/maintenance cost; use advisory or scheduled lanes for expensive checks where appropriate. Keep handoffs for irreducible external actions only, and prefer exact-commit hosted evidence over routine user-run acceptance.
 - [Phase 133 Plan 03]: DARKMOTION-01 browser proof shipped — `admin_path_motion.spec.ts` (7 tests, dark+light+system-dark) green against a booted seeded ops server. Patch-refire proof (A3) counts ONLY running `CSSAnimation` (`@keyframes`), EXCLUDING `CSSTransition`: a running transition is the intended state-driven glow/line-draw settle, so only a re-firing keyframe reveal is the failure mode worth catching; probe scoped to the anchor itself (incl. `::after`), not the descendant subtree where intended Phase-123 `ops-fade-in` reveals run. Reduced-motion proof asserts computed duration ≤ ~0.02ms via the global rule + active end state still visible (functional integrity). Shimmer coverage ships the shippable half (evidence code blocks asserted shimmer-OFF) since no live template sets `shimmer={true}`. Targeted 9-shot screenshot set produced; full 40-shot recapture/gallery/UAT deferred to Phase 136 (D-05c). Booted via compose dev lane with free host lanes `PG_PORT=5455 MEILI_PORT=7755` (sibling containers held 5432/7700). Phase 133 now ready for verification.
 - [Phase 133 Plan 01]: DARKMOTION-01 `.ops-path-*` vocabulary shipped — line-draw via `.ops-path-trace::after` as a `transition` (NOT `@keyframes`-on-mount, A3 patch-safety), active-path node glow via `.ops-path-node[--copper]` reusing `--shadow-ops-glow[-copper]`, opt-in `.ops-code-block--shimmer` hover glint. Only new component API is `attr(:shimmer, :boolean, default: false)` on `ops_code_block/1`; default-false keeps evidence calm. Anchors (merge-trace, active Playbook item, recommended card) wired via existing server-state classes — no new state attrs, no new JS hooks, no new tokens. Active-item glow hand-authored in both dark paths. `mix compile --warnings-as-errors` green; verify.opsui static-CSS contract is Plan 02, browser proof is Plan 03.
 - [Phase 133 Plan 01]: 4 pre-existing `OpsShellContractTest` failures (logo.svg → inline-SVG drift from v1.35 brand adoption `fcb8fc7`) are out of Phase 133 scope — logged to `deferred-items.md`; this plan's 4 files don't touch the header/logo/layouts.
