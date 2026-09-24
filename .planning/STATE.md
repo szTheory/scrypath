@@ -5,17 +5,17 @@ milestone_name: Packaged Adopter Proof
 current_phase: 160
 current_phase_name: Package-Backed Phoenix Proof
 status: executing
-stopped_at: Phase 160 waiting for exact-SHA Phoenix CI proof and regression exit diagnosis
-last_updated: "2026-09-24T02:29:58.357Z"
+stopped_at: Phase 160 execution blocked at required package-backed live-service acceptance
+last_updated: "2026-09-24T02:46:18.701Z"
 last_activity: 2026-09-23
-last_activity_desc: Phase 160 implementation and CI/docs complete; exact-SHA live proof and regression command exit status remain unresolved
-state_head: 72255f3ba0cf54e9a0491b3dde9043bd2474fc47
+last_activity_desc: Phase 160 execution started
+state_head: 787ad60d2db5c32ffddadf366200d6f85ea82dff
 progress:
   total_phases: 2
   completed_phases: 0
   total_plans: 2
-  completed_plans: 1
-  percent: 50
+  completed_plans: 2
+  percent: 0
 ---
 
 # Project State
@@ -23,16 +23,16 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 160 — Package-Backed Phoenix Proof; implementation and documentation are committed, awaiting exact-SHA hosted service evidence
+**Current Focus:** Phase 160 — Package-Backed Phoenix Proof
 
 ## Current Position
 
-Phase: 160 (Package-Backed Phoenix Proof) — IN PROGRESS
-Plan: 160-01 — halted at live service acceptance; Plan 160-02 implementation is complete
-Status: Waiting for the exact-SHA `phoenix-example` CI result and diagnosis of the regression command's exit code 2
-Last activity: 2026-09-23 — implementation and automated contracts completed; prefer hosted exact-SHA evidence for unavailable local service proof
+Phase: 160 (Package-Backed Phoenix Proof) — EXECUTING
+Plan: 1 of 2
+Status: Executing Phase 160
+Last activity: 2026-09-23 — Phase 160 execution started
 
-Progress: [█████░░░░░] 50%
+Progress: [░░░░░░░░░░] 0%
 
 ## Completed Milestone: v1.37 Code Quality Ratchet
 
@@ -40,7 +40,7 @@ Progress: [█████░░░░░] 50%
 
 **Scope:** Runtime safety, internal architecture, tests, Mix tasks, examples, CI/CD, release proof, and measured performance. Preserve public APIs and behavior. ScrypathOps presentation/UX/visual review is excluded.
 
-**Current phase:** Archived; no active phase
+**Current phase:** 160
 
 **Milestone sequence:** 148 quality baseline → 149 runtime safety → 150 dependency leaf → 151 write result → 152 options/settings → 153 search/failed work → 154 verification commands → 155 CI proof → 156 supply chain/release → 157 performance evidence → 158 closeout → 159 audit/provenance closure.
 
@@ -266,10 +266,14 @@ Items acknowledged at prior milestone closeouts and the v1.37 artifact-shape ove
 
 ## Session
 
-**Last session:** 2026-09-24T01:26:45.039Z
-**Stopped at:** Phase 160 context gathered
-**Resume file:** .planning/phases/160-package-backed-phoenix-proof/160-CONTEXT.md
+**Last session:** 2026-09-24T12:15:29Z
+**Stopped at:** Phase 160 package provenance corrections are committed as `5880ff4`; the gap-closure plan can now run exact-SHA hosted package proof. GitHub authentication and repository API access pass.
+**Resume file:** .planning/phases/160-package-backed-phoenix-proof/160-03-PLAN.md
 
 ## Operator Next Steps
 
-- Next: `$gsd-plan-phase 160` — plan the approved package-backed Phoenix proof, preserving the checkout's pre-existing changes through closeout.
+- Next: Run `$gsd-execute-phase 160 --gaps-only` to execute Plan 03 and record exact-SHA `phoenix-example` hosted proof. Candidate implementation commit: `5880ff4`. GitHub authentication and a read-only repository API request passed on 2026-09-24. No maintainer UAT is required.
+
+### Blockers
+
+- Phase 160 Plan 03 still requires exact-SHA hosted package-backed Phoenix integration evidence (or the equivalent local run with Postgres and Meilisearch). Local services are unavailable. GitHub CLI authentication and API access pass.

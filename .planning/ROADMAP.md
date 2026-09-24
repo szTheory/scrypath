@@ -43,7 +43,7 @@ Historical phase details and evidence live under `milestones/`.
   3. The normal Phoenix example path-dependency workflow still works, and the package-backed proof reuses the existing service prerequisites and advisory Phoenix service lane without adding or promoting a required gate.
   4. Success and injected setup, service, compile, or test failures report the failing stage and clean task-owned temporary files by default; an automated contract check catches drift among the command, CI wiring, and proof documentation.
 
-**Plans**: 2 plans
+**Plans**: 3 plans
 
 Plans:
 **Wave 1**
@@ -53,6 +53,10 @@ Plans:
 **Wave 2** *(blocked on Wave 1 completion)*
 
 - [x] 160-02-PLAN.md — Wire advisory CI order and guard maintainer documentation
+
+**Wave 3** *(blocked on exact-SHA hosted service evidence)*
+
+- [ ] 160-03-PLAN.md — Obtain and record the package-backed Phoenix proof on the candidate SHA
 
 #### Phase 161: Release and Tidy Closeout
 
@@ -72,5 +76,5 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 160. Package-Backed Phoenix Proof | v1.38 | 1/2 | In progress — waiting for live service proof | - |
+| 160. Package-Backed Phoenix Proof | v1.38 | 1/3 | In progress — waiting for exact-SHA hosted service proof | - |
 | 161. Release and Tidy Closeout | v1.38 | 0/TBD | Not started | - |

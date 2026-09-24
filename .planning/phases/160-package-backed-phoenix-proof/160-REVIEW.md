@@ -1,17 +1,35 @@
 ---
-status: clean
+phase: 160-package-backed-phoenix-proof
+reviewed: 2026-09-24T03:15:32Z
 depth: standard
-files_reviewed: 9
-critical: 0
-warning: 0
-info: 0
-total: 0
+files_reviewed: 3
+files_reviewed_list:
+  - lib/mix/tasks/verify/phoenix_example/package.ex
+  - test/mix/tasks/verify_phoenix_example_package_test.exs
+  - test/scrypath/per_query_tuning_test.exs
+findings:
+  critical: 0
+  warning: 0
+  info: 0
+  total: 0
+status: clean
 ---
 
-# Phase 160 Code Review
+# Phase 160: Code Review Report
 
-Reviewed the package verification implementation, adopter preflight, capability dispatch, focused task tests, CI job, maintainer documentation, example runbook, and docs contract.
+**Reviewed:** 2026-09-24T03:15:32Z
+**Depth:** standard
+**Files Reviewed:** 3
+**Status:** clean
 
-No additional source or contract issues were found. The package workspace is created exclusively and cleanup is restricted to its generated temp-directory child. Child output and preflight exceptions redact configured sensitive environment values before reporting.
+## Summary
 
-This review was completed inline because this session's collaboration policy prohibits spawning a reviewer agent unless the user explicitly requests subagents. The real-service package proof remains unverified because Meilisearch was unavailable during preflight; that acceptance gap is recorded in `160-01-SUMMARY.md` and keeps the phase incomplete.
+Reviewed the package proof's lockfile AST matching and workspace lifecycle paths, plus the focused tests for lock provenance, cleanup, and ranking-details telemetry. The lock matcher checks the Scrypath entry's Git URL and tag together, and the tested success and stage-failure paths clean their owned workspace. No correctness, security, or quality defects were found in the scoped changes.
+
+All reviewed files meet quality standards. No issues found.
+
+---
+
+_Reviewed: 2026-09-24T03:15:32Z_
+_Reviewer: the agent (gsd-code-reviewer)_
+_Depth: standard_
