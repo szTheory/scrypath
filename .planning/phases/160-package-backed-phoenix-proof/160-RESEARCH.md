@@ -349,17 +349,11 @@ This mirrors the existing `System.cmd("bash", ["-lc", script], cd: example_dir, 
 | A1 | Omitting staged `_build` and dependency build artifacts is necessary to prevent package mode from reusing app beams built from the path dependency. | Common Pitfalls | Package mode might accidentally exercise previously compiled path code and yield false confidence. |
 | A2 | A disposable example copy can be made without a new external file-copy package and still preserve all configuration needed by existing integration scenarios. | Architecture Patterns | Missing a required tracked file would make package proof fail during setup; inspect the app's tracked inputs while implementing. |
 
-## Open Questions
+## Resolved Questions
 
-1. **What local dependency source form is most robust for the unpacked artifact?**
-   - What we know: The package artifact contains Mix package sources; current consumer smoke locally initializes a Git repo/tag in the unpacked directory and uses a local file URL.
-   - What's unclear: The cleanest resolution form for a full Phoenix project's `scrypath` dependency, including lockfile updates, has not been exercised in this phase research.
-   - Recommendation: Reuse the proven local artifact Git/tag method unless a minimal experiment shows that the example's dependency graph needs a different artifact-local representation. Keep implementation behind `--package`.
+1. **Use an artifact-local Git tag and `file://` dependency source for the unpacked package.** The existing `test/release/consumer_smoke_test.exs` builds and unpacks the current package, initializes a Git repository in that artifact directory, commits and tags it as `v#{version}`, and configures a clean consumer with `{:scrypath, git: "file://...", tag: tag}`. It asserts that the dependency declaration has no `path:` source, then runs `deps.get` and compiles a schema using `Scrypath`. Phase 160 selects that same artifact handoff for the staged Phoenix example; `160-01-PLAN.md` requires checking both its staged manifest and resolved lock entry against the exact artifact URL and tag before compile or tests. The full Phoenix dependency graph remains covered by that planned package-mode contract and live proof; it does not leave the source-form choice open.
 
-2. **How to keep DB isolation when the path-backed and package-backed run share services?**
-   - What we know: Existing integration tests use `DataCase` and unique Meilisearch index prefixes; CI runs both proofs in a single service job by decision.
-   - What's unclear: Confirm whether the staged example's database name/config is sufficiently isolated from the first run.
-   - Recommendation: Preserve the example's test DB conventions and avoid changing external service state beyond its normal test database and uniquely prefixed search indexes.
+2. **Reuse the Phoenix example's normal test database and isolation conventions across both runs.** `examples/phoenix_meilisearch/mix.exs` defines the `test` alias as `ecto.create --quiet`, `ecto.migrate --quiet`, then `test`; `config/test.exs` names the database `scrypath_demo_test#{MIX_TEST_PARTITION}` and configures `Ecto.Adapters.SQL.Sandbox`. `test/support/data_case.ex` starts a sandbox owner per test and stops it on exit, while `test/test_helper.exs` sets sandbox mode to `:manual`; each of the four integration modules uses `DataCase` with `async: false`. Those modules also create unique Meilisearch index prefixes and delete their indexes on exit, and test config runs Oban inline. The selected Phase 160 implementation therefore uses the existing test alias and database convention, with per-test SQL sandbox rollback and unique, cleaned-up Meilisearch indexes; it does not need a second database for the package-backed run. These behaviors are documented by the example README's test and integration coverage sections.
 
 ## Metadata
 
