@@ -32,29 +32,40 @@ Historical phase details and evidence live under `milestones/`.
 **Milestone Goal:** Prove that the built Scrypath package artifact supports the existing Phoenix/Ecto adopter example against real Postgres and Meilisearch services, then close with verified release evidence or an explicit release-ready disposition and tidy milestone-owned work.
 
 #### Phase 160: Package-Backed Phoenix Proof
+
 **Goal**: Maintainers can verify that the package artifact produced from the current checkout supports the existing Phoenix adopter example against real Postgres and Meilisearch services.
 **Depends on**: Phase 159
 **Requirements**: PKG-01, PKG-02, PKG-03, PROOF-01
 **Success Criteria** (what must be TRUE):
+
   1. The package verification path builds and unpacks the artifact, and a clean consumer schema compiles against it without a repository path dependency.
   2. A deterministic maintainer command runs the existing Phoenix example's inline, Oban, and related-data integration scenarios against that artifact and reports their results.
   3. The normal Phoenix example path-dependency workflow still works, and the package-backed proof reuses the existing service prerequisites and advisory Phoenix service lane without adding or promoting a required gate.
   4. Success and injected setup, service, compile, or test failures report the failing stage and clean task-owned temporary files by default; an automated contract check catches drift among the command, CI wiring, and proof documentation.
+
 **Plans**: 2 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 160-01-PLAN.md — Add the package-backed Phoenix proof command and cleanup contracts
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 160-02-PLAN.md — Wire advisory CI order and guard maintainer documentation
 
 #### Phase 161: Release and Tidy Closeout
+
 **Goal**: Adopters and maintainers can understand the package-backed proof's scope, and the milestone closes with verified release evidence or an explicit release-ready disposition and tidy repository state.
 **Depends on**: Phase 160
 **Requirements**: DOC-01, HYGIENE-01, REL-01, CLOSE-01
 **Success Criteria** (what must be TRUE):
+
   1. Adopter and maintainer documentation states the exercised inline, Oban, and related-data flows, the command and real-service prerequisites, and the limits of synthetic proof; automated documentation/contract checks detect drift from executable behavior.
   2. Final review and machine checks find affected canonical documentation and example guidance consistent with the command, no stale v1.38 planning claims, and no task-owned temporary scaffolding or generated debris.
   3. Closeout records reviewed and triaged milestone PRs, green required checks on the exact final commit, and green `main` after merge; the documented Release Please/Hex/HexDocs post-publish checks confirm the package, changelog, docs, tag, and source agree. If external credentials, permissions, or services block publication, the result is explicitly `release-ready` with the blocker and exact resume action, never reported as shipped.
   4. Milestone-owned branches, worktrees, services, generated artifacts, and working-tree changes are cleaned up; the closeout record confirms unrelated or pre-existing changes were preserved and reports any external cleanup limitation.
+
 **Plans**: TBD
 
 ## Progress
