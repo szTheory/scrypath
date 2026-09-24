@@ -4,18 +4,19 @@ milestone: v1.38
 milestone_name: Packaged Adopter Proof
 current_phase: 161 — Release and Tidy Closeout
 current_phase_name: Release and Tidy Closeout
+current_plan: 2
 status: executing
-stopped_at: Phase 161 context gathered
-last_updated: "2026-09-24T15:23:31.748Z"
+stopped_at: Completed 161-01-PLAN.md
+last_updated: "2026-09-24T15:32:41.868Z"
 last_activity: 2026-09-24
 last_activity_desc: Phase 160 complete, transitioned to Phase 161
-state_head: f5524dc443c44b2d4d7988f44ac9c1343d3050ff
+state_head: c468ce6c8595709a30a12c07fbe042d6492b14be
 progress:
   total_phases: 2
   completed_phases: 1
   total_plans: 7
-  completed_plans: 3
-  percent: 43
+  completed_plans: 4
+  percent: 50
 ---
 
 # Project State
@@ -28,11 +29,13 @@ progress:
 ## Current Position
 
 Phase: 161 (Release and Tidy Closeout) — READY TO EXECUTE
-Plan: Not started
+Current Plan: 2
+Total Plans in Phase: 4
+Plan: Phase 161-01 — Canonical proof documentation
 Status: Ready to execute
-Last activity: 2026-09-24 — Phase 160 verification passed and tracking advanced
+Last activity: 2026-09-24 — Phase 161-01 documentation contracts passed and summary recorded
 
-Progress: [████░░░░░░] 43%
+Progress: [█████░░░░░] 50%
 
 ## Completed Milestone: v1.37 Code Quality Ratchet
 
@@ -203,6 +206,7 @@ Items acknowledged at prior milestone closeouts and the v1.37 artifact-shape ove
 | Phase 159 P06 | 8min | 2 tasks | 12 files |
 | Phase 159 P07 | 14min | 3 tasks | 6 files |
 | Phase 160 P03 | 16 min | 1 tasks | 3 files |
+| Phase 161 P01 | 30 min | 2 tasks | 4 files |
 
 ## Decisions
 
@@ -266,12 +270,14 @@ Items acknowledged at prior milestone closeouts and the v1.37 artifact-shape ove
 - [Phase ?]: Accepted only hosted run 33014343041 because candidate, workflow-source, and head SHA all equal a35874178b79392caa0f3c1dcc010ea149e1e5bf; the reviewer approved without widening the four-row TEST-01 chronology waiver.
 - [Phase 160]: Accepted exact-SHA run 36000999039 at `7931271abe53e83261d85a22077176f75898eb81`; path then package Phoenix proof passed, required jobs and closeout passed, and `deep-quality` remains advisory-red on three Mint 1.9.3 advisories.
 - [Phase 160]: Corrected package setup error propagation to `reraise error, __STACKTRACE__` after the initial candidate's Credo finding; review found no issues and the refreshed exact-SHA run passed.
+- [Phase 161 — Release and Tidy Closeout]: Keep the example README as the sole detailed Phoenix service runbook; maintainer docs link to it.
+- [Phase 161 — Release and Tidy Closeout]: Treat package/docs-contract checks as pre-publish evidence and release_publish/release_parity as post-publish evidence.
 
 ## Session
 
-**Last session:** 2026-09-24T14:34:34.974Z
-**Stopped at:** Phase 161 context gathered
-**Resume file:** .planning/phases/161-release-and-tidy-closeout/161-CONTEXT.md
+**Last session:** 2026-09-24T15:32:27.311Z
+**Stopped at:** Completed 161-01-PLAN.md
+**Resume file:** None
 
 ## Operator Next Steps
 

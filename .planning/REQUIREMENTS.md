@@ -14,8 +14,8 @@
 ### Verification and Documentation
 
 - [x] **PROOF-01**: A documented, deterministic maintainer command exposes the package-backed Phoenix proof and uses the existing example and service prerequisites; the command, CI wiring, and documentation are guarded against drift by automated checks.
-- [ ] **DOC-01**: Adopter-facing and maintainer documentation accurately states what package-backed proof exercises, how to run it, its service prerequisites, and what synthetic evidence does and does not establish.
-- [ ] **HYGIENE-01**: Milestone changes remain idiomatic and self-documenting; affected canonical docs and examples match executable behavior, and final review finds no stale planning narration, temporary scaffolding, or task-owned generated debris.
+- [x] **DOC-01**: Adopter-facing and maintainer documentation accurately states what package-backed proof exercises, how to run it, its service prerequisites, and what synthetic evidence does and does not establish.
+- [x] **HYGIENE-01**: Milestone changes remain idiomatic and self-documenting; affected canonical docs and examples match executable behavior, and final review finds no stale planning narration, temporary scaffolding, or task-owned generated debris.
 
 ### Release and Closeout
 
@@ -43,8 +43,8 @@ None identified for this bounded milestone.
 | PKG-02 | Phase 160 | Complete |
 | PKG-03 | Phase 160 | Complete |
 | PROOF-01 | Phase 160 | Complete |
-| DOC-01 | Phase 161 | Pending |
-| HYGIENE-01 | Phase 161 | Pending |
+| DOC-01 | Phase 161 | Complete |
+| HYGIENE-01 | Phase 161 | Complete |
 | REL-01 | Phase 161 | Pending |
 | CLOSE-01 | Phase 161 | Pending |
 

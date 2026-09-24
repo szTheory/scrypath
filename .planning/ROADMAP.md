@@ -72,9 +72,14 @@ Plans:
 
 **Plans**: TBD
 
+- [x] 161-01-PLAN.md
+- [ ] 161-02-PLAN.md
+- [ ] 161-03-PLAN.md
+- [ ] 161-04-PLAN.md
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 160. Package-Backed Phoenix Proof | v1.38 | 3/3 | Complete    | 2026-09-24 |
-| 161. Release and Tidy Closeout | v1.38 | 0/TBD | Not started | - |
+| 161. Release and Tidy Closeout | v1.38 | 1/4 | In Progress|  |
