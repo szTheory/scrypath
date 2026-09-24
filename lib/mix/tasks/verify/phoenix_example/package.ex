@@ -47,7 +47,6 @@ defmodule Mix.Tasks.Verify.PhoenixExample.Package do
   end
 
   defp execute!(root, runner) do
-    File.mkdir_p!(root)
     artifact = Path.join(root, "artifact")
     consumer = Path.join(root, "consumer")
     hex_home = Path.join(root, "HEX_HOME")
@@ -188,15 +187,38 @@ defmodule Mix.Tasks.Verify.PhoenixExample.Package do
   end
 
   defp unique_root! do
-    Path.join(
-      System.tmp_dir!(),
-      "scrypath-phoenix-package-#{System.unique_integer([:positive, :monotonic])}"
-    )
+    root =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath-phoenix-package-#{System.unique_integer([:positive, :monotonic])}"
+      )
+
+    case File.mkdir(root) do
+      :ok ->
+        root
+
+      {:error, :eexist} ->
+        unique_root!()
+
+      {:error, reason} ->
+        Mix.raise(
+          "package Phoenix proof failed during setup stage: cannot create temporary workspace (#{:file.format_error(reason)})"
+        )
+    end
   end
 
   defp remove_owned_root!(root) do
-    prefix = Path.join(System.tmp_dir!(), "scrypath-phoenix-package-")
-    if String.starts_with?(Path.expand(root), prefix), do: File.rm_rf!(root)
+    tmp = Path.expand(System.tmp_dir!())
+    expanded = Path.expand(root)
+    basename = Path.basename(expanded)
+
+    with true <- Path.dirname(expanded) == tmp,
+         true <- Regex.match?(~r/^scrypath-phoenix-package-[0-9]+$/, basename),
+         {:ok, %{type: :directory}} <- File.lstat(expanded) do
+      File.rm_rf!(expanded)
+    else
+      _ -> :ok
+    end
   end
 
   defp fail!(stage, message) do
