@@ -236,6 +236,7 @@ defmodule Mix.Tasks.Verify.PhoenixExample.Package do
     end
   end
 
+  @spec fail!(atom(), String.t()) :: no_return()
   defp fail!(stage, message) do
     Process.put({__MODULE__, :failed}, true)
     Mix.raise("package Phoenix proof failed during #{stage} stage: #{message}")
