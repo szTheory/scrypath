@@ -9,9 +9,9 @@ Requirements for the whole-product non-UI readiness assessment. This milestone e
 
 ### Baseline
 
-- [ ] **BASE-01**: A maintainer can assess every approved non-UI readiness dimension against the relevant adopter or operator jobs and record whether each claim is supported, insufficiently supported, or unknown.
-- [ ] **BASE-02**: A maintainer can trace each reused or newly gathered evidence item to its source, result, date, commit or hosted run and environment where applicable, claim boundary, freshness, and limitations; missing evidence remains explicit rather than being inferred as a pass or defect.
-- [ ] **BASE-03**: A maintainer can review the adopter lifecycle from first-hour setup through indexing, search, failure diagnosis, recovery, upgrade, and release using a bounded set of representative roles and integration boundaries, without duplicating canonical evidence.
+- [x] **BASE-01**: A maintainer can assess every approved non-UI readiness dimension against the relevant adopter or operator jobs and record whether each claim is supported, insufficiently supported, or unknown.
+- [x] **BASE-02**: A maintainer can trace each reused or newly gathered evidence item to its source, result, date, commit or hosted run and environment where applicable, claim boundary, freshness, and limitations; missing evidence remains explicit rather than being inferred as a pass or defect.
+- [x] **BASE-03**: A maintainer can review the adopter lifecycle from first-hour setup through indexing, search, failure diagnosis, recovery, upgrade, and release using a bounded set of representative roles and integration boundaries, without duplicating canonical evidence.
 
 ### Findings and Dispositions
 
@@ -50,9 +50,9 @@ Requirements for the whole-product non-UI readiness assessment. This milestone e
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BASE-01 | Phase 162 | Pending |
-| BASE-02 | Phase 162 | Pending |
-| BASE-03 | Phase 162 | Pending |
+| BASE-01 | Phase 162 | Complete |
+| BASE-02 | Phase 162 | Complete |
+| BASE-03 | Phase 162 | Complete |
 | FIND-01 | Phase 163 | Pending |
 | FIND-02 | Phase 163 | Pending |
 | FIND-03 | Phase 163 | Pending |

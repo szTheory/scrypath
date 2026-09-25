@@ -21,7 +21,7 @@ Readiness remains **NOT READY** until every approved dimension and exit conditio
 
 **Milestone Goal:** Assess Scrypath's non-UI quality and adopter readiness, close evidence-backed critical, high, and medium-leverage gaps in bounded milestones, and establish an auditable gate for when ScrypathOps can become the next strategic focus.
 
-- [ ] **Phase 162: Whole-Product Evidence Baseline** - Map the full non-UI adopter lifecycle to evidence, freshness, and claim limits.
+- [x] **Phase 162: Whole-Product Evidence Baseline** - Map the full non-UI adopter lifecycle to evidence, freshness, and claim limits. (completed 2026-09-25)
 - [ ] **Phase 163: Findings and Bounded Follow-up** - Turn substantiated observations into explicit decisions and separately scoped, automation-backed follow-up candidates.
 - [ ] **Phase 164: Readiness Gate and Reconciliation** - Reconcile readiness evidence and make the fail-closed strategic recommendation.
 
@@ -38,20 +38,20 @@ Readiness remains **NOT READY** until every approved dimension and exit conditio
   2. Every reused or newly gathered evidence item links to its source and result, dated provenance, applicable environment, claim boundary, freshness, and known limitations, so absent proof is never reported as a pass or a defect.
   3. The index covers first-hour setup, indexing, search, failure diagnosis, recovery, upgrade, and release for representative roles and integration boundaries while linking canonical evidence instead of duplicating it.
 
-**Plans**: 3 plans
+**Plans**: 3/3 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 162-01-PLAN.md — Canonical baseline and first-hour package-to-search tracer
+- [x] 162-01-PLAN.md — Canonical baseline and first-hour package-to-search tracer
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 162-02-PLAN.md — Feature-owner lifecycle and operator diagnosis/recovery evidence
+- [x] 162-02-PLAN.md — Feature-owner lifecycle and operator diagnosis/recovery evidence
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 162-03-PLAN.md — Maintainer release/support evidence and whole-baseline integrity audit
+- [x] 162-03-PLAN.md — Maintainer release/support evidence and whole-baseline integrity audit
 
 ### Phase 163: Findings and Bounded Follow-up
 
@@ -85,6 +85,6 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 162. Whole-Product Evidence Baseline | 0/TBD | Not started | - |
+| 162. Whole-Product Evidence Baseline | 3/3 | Complete    | 2026-09-25 |
 | 163. Findings and Bounded Follow-up | 0/TBD | Not started | - |
 | 164. Readiness Gate and Reconciliation | 0/TBD | Not started | - |
