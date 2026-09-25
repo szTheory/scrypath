@@ -96,7 +96,8 @@ defmodule Scrypath.Release.PackageMetadataTest do
              "CONTRIBUTING.md",
              "docs/releasing.md",
              "docs/operator-support.md",
-             "docs/search-backend-sre.md"
+             "docs/search-backend-sre.md",
+             "docs/local-demo-docker-dx.md"
            ]
   end
 end

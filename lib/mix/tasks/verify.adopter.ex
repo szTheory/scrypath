@@ -78,8 +78,7 @@ defmodule Mix.Tasks.Verify.Adopter do
       Mix.raise("verify.adopter: expected #{example_dir} to exist")
     end
 
-    ensure_live_env!()
-    ensure_live_services!()
+    ensure_live_prerequisites!()
 
     Mix.shell().info(
       "==> verify.adopter: cd examples/phoenix_meilisearch && mix deps.get && mix test"
@@ -95,6 +94,13 @@ defmodule Mix.Tasks.Verify.Adopter do
     if status != 0 do
       Mix.raise("verify.adopter failed: `#{script}` (in #{example_dir}) exited #{status}")
     end
+  end
+
+  @doc false
+  def ensure_live_prerequisites! do
+    ensure_live_env!()
+    ensure_live_services!()
+    :ok
   end
 
   defp run_test!(args, label) do
@@ -187,7 +193,7 @@ defmodule Mix.Tasks.Verify.Adopter do
 
       _ ->
         Mix.raise(
-          "verify.adopter --live requires SCRYPATH_MEILISEARCH_URL to include a valid host, got: #{inspect(url)}"
+          "verify.adopter --live requires SCRYPATH_MEILISEARCH_URL to include a valid host"
         )
     end
   end

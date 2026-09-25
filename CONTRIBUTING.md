@@ -36,7 +36,7 @@ Use capability-named commands for new work. Historical `verify.phase*` commands 
 | Compatibility contract | `mix verify.compatibility` | Compatibility-truth contract (<code>mix verify.phase99</code>) |
 | Deep quality | `mix verify.deep_quality` | No-optional-deps, namespace, Hex audit, and Dialyzer checks |
 | Mounted ecommerce | `mix verify.ecommerce_mounted` | Docker-only mounted proof (`make -C examples/scrypath_ecommerce verify-mounted`) |
-| Phoenix example | `mix verify.phoenix_example` | Live consumer-shaped example proof (`mix verify.adopter --live`) |
+| Phoenix example | `mix verify.phoenix_example` / `mix verify.phoenix_example --package` | Live path-backed and package-backed consumer proof (`mix verify.adopter --live`) |
 | ScrypathOps | `mix verify.ops_ui` | Optional operator app proof |
 | Full ecommerce E2E | `mix verify.ecommerce_e2e` | Advisory Docker/browser proof (`make -C examples/scrypath_ecommerce verify-e2e`) |
 
@@ -95,9 +95,9 @@ For adopter support verification:
 mix verify.adopter
 ```
 
-That fast path stays service-free and guards the current support/readiness contract. `mix verify.adopter --live` is the Phoenix + Meilisearch live check and requires `SCRYPATH_EXAMPLE_INTEGRATION`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL` after starting the example services; the detailed runbook lives in [`examples/phoenix_meilisearch/README.md`](examples/phoenix_meilisearch/README.md).
+That fast path stays service-free and guards the current support/readiness contract. `mix verify.phoenix_example` runs the existing path-backed Phoenix proof; `mix verify.phoenix_example --package` builds the current checkout's Hex artifact and runs the same consumer integration scenarios against it. Both live modes require `SCRYPATH_EXAMPLE_INTEGRATION`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL`, with Postgres and Meilisearch already running; the detailed runbook lives in [`examples/phoenix_meilisearch/README.md`](examples/phoenix_meilisearch/README.md).
 
-The live branch maps directly to the GitHub Actions **`phoenix-example`** job contract. The canonical root command validates `SCRYPATH_EXAMPLE_INTEGRATION`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL`, then runs `mix deps.get` and `mix test` from `examples/phoenix_meilisearch`.
+The live branch maps directly to the GitHub Actions **`phoenix-example`** job contract. That job runs the path-backed command first, then the package-backed command in the same advisory job and shared service block. The package-backed mode stages an isolated example copy and verifies that Scrypath resolves from the locally tagged artifact; the example's ordinary `path:` dependency remains unchanged.
 
 Run the canonical backend verification (`mix verify.backend`) when you change Meilisearch integration. The historical `mix verify.phase5` remains the focused backfill/reindex/operator-docs wrapper:
 
@@ -149,7 +149,7 @@ GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
 | **`ecommerce-mounted`** | Required Docker-only proof: `mix verify.ecommerce_mounted` for mounted routing, failed-sync triage, and zero-downtime swap behavior. |
 | **`compatibility`** | Advisory Elixir/OTP tuple matrix: `mix verify.compatibility` on 1.17/26, 1.18/27, 1.19/26, and 1.19/28. |
 | **`deep-quality`** | Advisory `mix verify.deep_quality`: optional-dependency compile, namespace fence, `mix hex.audit`, and Dialyzer. |
-| **`phoenix-example`** | Advisory Postgres 16 + Meilisearch v1.15 proof: `mix verify.phoenix_example`, which runs the live consumer-shaped example. |
+| **`phoenix-example`** | Advisory Postgres 16 + Meilisearch v1.15 proof: `mix verify.phoenix_example` followed by `mix verify.phoenix_example --package`, covering path-backed and package-backed live consumers. |
 | **`ops-ui-path` / `ops-ui`** | Path-scoped optional-app proof. `mix verify.ops_ui` delegates to the existing ScrypathOps test orchestration. |
 | **`coverage`** | Scheduled/manual advisory, informational, non-blocking coverage evidence: `mix verify.coverage` produces a SHA-bound report artifact retained for seven days. |
 | **`ecommerce-e2e`** | Scheduled/manual advisory Docker/browser proof. `mix verify.ecommerce_e2e` runs the full lane and always uploads its bounded evidence bundle. |
@@ -162,7 +162,7 @@ The root [`compose.yaml`](compose.yaml) is only for **local** Meilisearch when r
 
 ## Example app (Postgres + Meilisearch)
 
-For a **multi-container-shaped** local stack (Postgres + Meilisearch + Phoenix + **Oban**) and a scripted E2E smoke (**inline** and **`:oban`** paths), see [`examples/phoenix_meilisearch/README.md`](examples/phoenix_meilisearch/README.md) - that file is the **canonical env + command** reference for the example. **CI** runs the same proof through **`mix verify.phoenix_example`**. For the local orchestration harness, run `cd examples/phoenix_meilisearch` and then `./scripts/smoke.sh`; that script is not the GitHub Actions entrypoint.
+For the **canonical environment, service, and command runbook**, see [`examples/phoenix_meilisearch/README.md`](examples/phoenix_meilisearch/README.md). The advisory `phoenix-example` CI job runs `mix verify.phoenix_example` first against the example's `path:` dependency, then `mix verify.phoenix_example --package` against the locally built package artifact. Both commands use real Postgres and Meilisearch services and cover inline, Oban, and related-data scenarios. A passing docs contract proves documentation and wiring assertions; it is not live-service proof. The package command is the live package-backed service proof, and does not establish every adopter deployment or production reliability. For the local orchestration harness, run `cd examples/phoenix_meilisearch` and then `./scripts/smoke.sh`; that script is not the GitHub Actions entrypoint.
 
 ## `phase105-e2e` local runbook
 

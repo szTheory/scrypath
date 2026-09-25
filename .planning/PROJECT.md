@@ -8,19 +8,44 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Mode: Green-Main Release Train Idle
+## Current Mode: Green-Main Release Train — v1.38 Packaged Adopter Proof
 
-**Goal:** Preserve the shipped product and its automated proof. Start new milestone work only from concrete maintenance, adopter, production-bug, proof-drift, or explicit strategic evidence.
+**Goal:** Close the package-to-live-example verification gap with a bounded, deterministic adopter proof while preserving the shipped product and green-main release train.
+
+## Current Milestone: v1.38 Packaged Adopter Proof
+
+**Goal:** Prove that the built Scrypath package artifact supports the existing Phoenix/Ecto adopter example against real Postgres and Meilisearch services.
+
+**Target features:**
+- Run the existing Phoenix example’s selected integration flows against the built package artifact rather than only the repository path dependency.
+- Keep proof, setup, and cleanup deterministic, machine-verifiable, and reuse the current example and package gates.
+- Close with reviewed and triaged milestone PRs, green exact-SHA required checks and `main`, an actually verified Release Please/Hex/HexDocs release, and tidy milestone-owned work.
 
 **Last completed scope:** v1.37 raised runtime safety, internal architecture, verification, CI/CD, release proof, and performance evidence while preserving public behavior/APIs and excluding ScrypathOps presentation, UX, and visual review.
 
 **Automation-first verification policy:** Post-implementation acceptance must be
-machine-verifiable. Incomplete plans may not require human verification,
-`human_needed` disposition, verification backstops, or pending UAT. Convert claims
-to deterministic tests, browser/accessibility automation, API probes, or exact-SHA
-hosted evidence. Resolve subjective product decisions before implementation or keep
-them nonblocking; authentication and genuinely pre-implementation decisions remain
-explicit boundaries rather than simulated approvals.
+machine-verifiable, with a standing goal of zero human verification or UAT. For GSD
+verification, first map each acceptance claim to explicit passing automated evidence;
+when every claim is covered, record the evidence and complete UAT without presenting
+a blanket human checkpoint. Hand off only irreducible external actions such as
+credentials, permissions, unresolved product decisions, or physical-world checks.
+Shift verification left: cover behavior with the cheapest reliable layer that proves
+it (unit, contract, or seam tests first, then integration, smoke, and E2E where those
+exercise real boundaries). Run checks during implementation and automate them in CI
+when their repeat frequency and risk reduction justify their runtime and maintenance
+cost. Keep expensive or service-backed checks advisory or scheduled when that gives
+recurring confidence without burdening every change; promote checks to required gates
+only when their evidence warrants it. CI should own repeatable service setup, health
+checks, isolation, timeouts, diagnostics, and teardown whenever practical.
+
+Incomplete plans may not require post-implementation human verification,
+`human_needed` disposition, verification backstops, or pending UAT. Convert acceptance
+claims to deterministic tests, browser/accessibility automation, API probes, or
+exact-SHA hosted evidence. Use human handoffs only for irreducible external actions
+such as credentials, permissions, a real product decision, or physical-world checks;
+never route routine software acceptance to a user when automation can prove it.
+Resolve subjective product decisions before implementation or keep them nonblocking;
+do not simulate approvals.
 
 **Recent closed outcomes:**
 - Phase 159 automated v1.37 audit/provenance closure: reconciled the 31-requirement audit, preserved the bounded TEST-01 chronology waiver, added a fail-closed candidate/final exact-SHA CI authority, and prohibited new post-implementation human verification or UAT debt.
@@ -46,7 +71,8 @@ explicit boundaries rather than simulated approvals.
 
 **Support and proof policy:**
 - `mix verify.adopter` is the canonical adopter proof spine.
-- Fast proof is required for routine PR confidence; live proof remains explicit and prerequisite-bound.
+- Fast proof is required for routine PR confidence; repeatable live proof should run in CI when its recurring confidence justifies the cost, and must remain prerequisite-bound and explicit.
+- Prefer exact-commit CI evidence for service-backed acceptance so maintainers do not have to repeat routine UAT locally.
 - Adopter issue intake must request reproducible evidence and flow classification.
 
 **Non-goals:**
@@ -186,14 +212,14 @@ Phase 97 through 99 banned capability classes:
 
 The public website launch surface now exists under `website/` and is deployed to GitHub Pages as a companion front door, not a HexDocs replacement.
 
-Current planning files: **`.planning/{ROADMAP,STATE}.md`** plus archives under **`.planning/milestones/`**. The next approved milestone creates a fresh `REQUIREMENTS.md`.
+Current planning files: **`.planning/{PROJECT,REQUIREMENTS,ROADMAP,STATE}.md`** plus archives under **`.planning/milestones/`**.
 
 ## Release Train Posture
 
-- **Active milestone:** None.
-- **Current phase:** None.
+- **Active milestone:** v1.38 Packaged Adopter Proof, explicitly authorized as a bounded verification wedge.
+- **Current phase:** Phase 160 — Package-Backed Phoenix Proof (ready to plan).
 - **Policy:** Keep `main` green on the lean required gates and prefer PR-first execution for serious milestone or feature-depth work.
-- **Authorization:** Do not reopen speculative work without a concrete maintenance item, adopter signal, production bug, proof drift, or explicit strategic decision.
+- **Authorization:** v1.38 is the explicitly approved strategic proof wedge; do not reopen unrelated speculative work without concrete maintenance, adopter, production-bug, proof-drift, or explicit strategic evidence.
 - **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, and new UI surfaces remain out of scope.
 
 **v1.37 implementation outcome (2026-08-26):** runtime input and secret
@@ -235,7 +261,7 @@ measured pure hot paths did not justify speculative optimization.
 
 ## Planning window
 
-**Active milestone:** None. v1.37 is complete and archived across Phases 148-159 and all 31 requirements, with the narrow TEST-01 chronology waiver and artifact-shape override recorded. Keep the release train idle until evidence authorizes a new milestone; do not treat historical direct-execution artifact shapes as work to resume.
+**Active milestone:** v1.38 Packaged Adopter Proof. v1.37 is complete and archived across Phases 148-159 and all 31 requirements, with the narrow TEST-01 chronology waiver and artifact-shape override recorded. v1.38 is an explicitly authorized, bounded verification wedge; it does not reopen runtime feature breadth or treat historical phase directories as active work.
 
 ## Requirements
 
@@ -348,4 +374,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-26 for v1.37 milestone archive and idle release-train posture*
+*Last updated: 2026-09-23 for v1.38 Packaged Adopter Proof*
