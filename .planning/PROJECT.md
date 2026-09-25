@@ -24,9 +24,13 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 **Last completed scope:** v1.37 raised runtime safety, internal architecture, verification, CI/CD, release proof, and performance evidence while preserving public behavior/APIs and excluding ScrypathOps presentation, UX, and visual review.
 
 **Automation-first verification policy:** Post-implementation acceptance must be
-machine-verifiable, with a standing goal of zero human verification or UAT. Shift
-verification left: cover behavior with the cheapest reliable layer that proves it
-(unit, contract, or seam tests first, then integration, smoke, and E2E where those
+machine-verifiable, with a standing goal of zero human verification or UAT. For GSD
+verification, first map each acceptance claim to explicit passing automated evidence;
+when every claim is covered, record the evidence and complete UAT without presenting
+a blanket human checkpoint. Hand off only irreducible external actions such as
+credentials, permissions, unresolved product decisions, or physical-world checks.
+Shift verification left: cover behavior with the cheapest reliable layer that proves
+it (unit, contract, or seam tests first, then integration, smoke, and E2E where those
 exercise real boundaries). Run checks during implementation and automate them in CI
 when their repeat frequency and risk reduction justify their runtime and maintenance
 cost. Keep expensive or service-backed checks advisory or scheduled when that gives

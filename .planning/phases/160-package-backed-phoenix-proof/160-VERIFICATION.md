@@ -1,6 +1,6 @@
 ---
 phase: 160-package-backed-phoenix-proof
-verified: 2026-09-24T13:03:59Z
+verified: 2026-09-25T00:42:36Z
 status: passed
 score: 4/4 must-haves verified
 covered_files:
@@ -14,7 +14,9 @@ covered_files:
   - .planning/phases/160-package-backed-phoenix-proof/160-03-SUMMARY.md
   - .planning/phases/160-package-backed-phoenix-proof/160-CONTEXT.md
   - .planning/phases/160-package-backed-phoenix-proof/160-REVIEW.md
+  - .planning/phases/160-package-backed-phoenix-proof/160-UAT.md
   - .planning/phases/160-package-backed-phoenix-proof/160-VALIDATION.md
+  - .planning/phases/160-package-backed-phoenix-proof/COVERAGE.md
   - CONTRIBUTING.md
   - examples/phoenix_meilisearch/README.md
   - examples/phoenix_meilisearch/mix.exs
@@ -24,7 +26,7 @@ covered_files:
   - test/mix/tasks/verify_capability_test.exs
   - test/mix/tasks/verify_phoenix_example_package_test.exs
   - test/scrypath/docs_contract_test.exs
-covered_digest: "v1:sha256:23a76e898211b3bb6707e6e5eb3ef5d4e2e8b2e720ee969d54c2e6edf47240d5"
+covered_digest: "v1:sha256:3dc174521a704f5d0aa73891a1105466267b9d805df74de37f11b45053f00ac3"
 behavior_unverified: 0
 overrides_applied: 0
 re_verification:
@@ -44,7 +46,7 @@ decision_coverage:
 # Phase 160: Package-Backed Phoenix Proof Verification Report
 
 **Phase Goal:** Maintainers can verify that the package artifact produced from the current checkout supports the existing Phoenix adopter example against real Postgres and Meilisearch services.
-**Verified:** 2026-09-24T13:03:59Z
+**Verified:** 2026-09-25T00:42:36Z
 **Status:** passed
 **Re-verification:** Yes — after exact-SHA evidence closed the prior live acceptance gap.
 
@@ -54,10 +56,10 @@ decision_coverage:
 
 | # | Truth | Status | Evidence |
 |---|---|---|---|
-| 1 | The package path builds and unpacks the artifact, resolves a clean consumer to that exact local artifact tag without a repository path dependency, and compiles the consumer schema. | ✓ VERIFIED | `package.ex` builds with `mix hex.build --unpack --output`, tags the unpacked artifact `v0.3.10`, copies the Phoenix example to an isolated workspace, rewrites only the staged dependency to the local Git artifact, rejects a staged `path:` dependency, and validates the Scrypath lock entry's URL and tag. In run [36000999039](https://github.com/szTheory/scrypath/actions/runs/36000999039), head SHA `7931271abe53e83261d85a22077176f75898eb81` matched the package job's source; logs record the artifact/tag, `file:///tmp/scrypath-phoenix-package-1/artifact` lock provenance, and `PASS package proof: consumer compiled`. The implementation and workflow files on current HEAD are unchanged from that tested SHA; subsequent commits only update planning evidence. |
-| 2 | The deterministic package command reports and completes the existing inline, Oban, and related-data live scenarios against the package artifact. | ✓ VERIFIED | Run 36000999039 head SHA is exactly `7931271abe53e83261d85a22077176f75898eb81`; Phoenix job `107637337872` used Postgres 16 and Meilisearch v1.15. The `--package` step logged `PASS package proof: integration scenarios completed`, followed by **10 tests, 0 failures**. No integration exclusion line appears. The staged suite contains the existing inline, Oban, related-inline, and related-Oban smoke modules. |
-| 3 | The normal path workflow succeeds first, and package proof reuses the existing service prerequisites and advisory Phoenix lane without promoting a required gate. | ✓ VERIFIED | The same exact-SHA job ran `mix verify.phoenix_example` at step 7 and `mix verify.phoenix_example --package` at step 8; both conclusions were success. The path-backed step reported 10 tests, 0 failures. `.github/workflows/ci.yml` still puts both steps in `phoenix-example` with Postgres 16, Meilisearch v1.15, and `continue-on-error: true`; the normal example manifest still declares `{:scrypath, path: "../.."}`. The docs contract asserts this order, service setup, advisory posture, prerequisites, and path dependency. |
-| 4 | Success and injected setup, service, compile, or test failures identify their stage and clean task-owned temporary resources by default; drift across command, CI, and proof documentation is checked automatically. | ✓ VERIFIED | `package.ex` has stage-specific errors and an `after` cleanup guard constrained to its unique owned temp root. The package lifecycle tests exercise default cleanup after success and artifact, dependency, compile, and test failures; the service preflight test asserts fail-fast behavior and redaction; failed-workspace retention is opt-in. The exact-SHA required `core` job passed the 572-test service-free suite, which includes these package lifecycle assertions. `docs_contract_test.exs` checks command and documentation drift. The implementation preserves the original Mix exception stack with `reraise error, __STACKTRACE__`. |
+| 1 | The package path builds and unpacks the artifact, resolves a clean consumer to that exact local artifact tag without a repository path dependency, and compiles the consumer schema. | ✓ VERIFIED | `package.ex` builds with `mix hex.build --unpack --output`, tags the unpacked artifact `v0.3.10`, copies the Phoenix example to an isolated workspace, rewrites only the staged dependency to the local Git artifact, rejects a staged `path:` dependency, and validates the Scrypath lock entry's URL and tag. In run [36000999039](https://github.com/szTheory/scrypath/actions/runs/36000999039), head SHA `7931271abe53e83261d85a22077176f75898eb81` matched the package job's source; logs record the artifact/tag, `file:///tmp/scrypath-phoenix-package-1/artifact` lock provenance, and `PASS package proof: consumer compiled`. Current HEAD adds an explicit `no_return()` spec to the failure helper; implementation behavior remains as tested on the exact candidate SHA. |
+| 2 | The deterministic package command reports and completes the existing inline, Oban, and related-data live scenarios against the package artifact. | ✓ VERIFIED | Independently queried run 36000999039: its head SHA is `7931271abe53e83261d85a22077176f75898eb81`; Phoenix job `107637337872` used Postgres 16 and Meilisearch v1.15 and concluded success. The `--package` step logged `PASS package proof: integration scenarios completed`, followed by **10 tests, 0 failures**. No integration exclusion line appears. The staged suite contains the existing inline, Oban, related-inline, and related-Oban smoke modules. |
+| 3 | The normal path workflow succeeds first, and package proof reuses the existing service prerequisites and advisory Phoenix lane without promoting a required gate. | ✓ VERIFIED | Queried run 36000999039 reports named path and package steps both success, in that order; the path-backed step reported 10 tests, 0 failures. Current `.github/workflows/ci.yml` still puts both steps in `phoenix-example` with Postgres 16, Meilisearch v1.15, and `continue-on-error: true`; the normal example manifest still declares `{:scrypath, path: "../.."}`. Current docs contracts check order, services, advisory posture, prerequisites, path dependency, and package-proof evidence limits. |
+| 4 | Success and injected setup, service, compile, or test failures identify their stage and clean task-owned temporary resources by default; drift across command, CI, and proof documentation is checked automatically. | ✓ VERIFIED | `package.ex` has stage-specific errors and an `after` cleanup guard constrained to its unique owned temp root. The package lifecycle tests exercise default cleanup after success and artifact, dependency, compile, and test failures; service preflight checks ordering and redaction; failed-workspace retention is opt-in. The exact-SHA required `core` job passed the 572-test service-free suite, which includes these lifecycle assertions. Current `docs_contract_test.exs` covers command and documentation drift. The implementation preserves the original Mix exception stack with `reraise error, __STACKTRACE__`. |
 
 **Score:** 4/4 truths verified (0 present, behavior-unverified)
 
@@ -99,6 +101,7 @@ The Plan 01 artifact list spells the adopter Mix task path as `lib/mix/tasks/ver
 | Behavior | Command/evidence | Result | Status |
 |---|---|---|---|
 | Exact-SHA attribution | `gh run view 36000999039 -R szTheory/scrypath --json headSha,jobs` | Head SHA `7931271abe53e83261d85a22077176f75898eb81`; Phoenix job `107637337872`; both ordered named steps succeeded | ✓ PASS |
+| Current-source regression checks | `mix test test/mix/tasks/verify_phoenix_example_package_test.exs test/scrypath/docs_contract_test.exs` (Elixir 1.19.5 / OTP 28.5) | 79 tests, 0 failures; package integration cases remain excluded from this service-free run | ✓ PASS |
 | Existing path proof against services | Phoenix job log, step 7 `mix verify.phoenix_example` | 10 tests, 0 failures | ✓ PASS |
 | Package artifact and consumer proof | Phoenix job log, step 8 | Artifact `v0.3.10`; staged lock points to the local artifact/tag; consumer compilation passed | ✓ PASS |
 | Package integration behavior | Phoenix job log, step 8 | 10 tests, 0 failures; completion marker present; no integration exclusion | ✓ PASS |
@@ -149,9 +152,9 @@ None. This is a CI/package verification phase; its service-backed behavior was e
 
 ### Gaps Summary
 
-The prior live acceptance gap is closed. The defining package-backed proof and the preserved path-backed proof both ran successfully on the same exact candidate SHA in the existing advisory service lane. Package generation, staged dependency provenance, consumer compilation, and the four live integration scenarios have executable hosted evidence. Required gates and closeout passed. PKG-03 is now marked complete in the root requirement checklist, consistent with the tested cleanup, error-stage, preflight, redaction, and retention behavior. The Mint audit result remains visible as an advisory dependency follow-up.
+The prior live acceptance gap is closed. The defining package-backed proof and the preserved path-backed proof both ran successfully on the same exact candidate SHA in the existing advisory service lane. Package generation, staged dependency provenance, consumer compilation, and the four live integration scenarios have executable hosted evidence. Required gates and closeout passed. The current UAT record reports 9/9 checks passed, zero issues, and zero pending items. PKG-03 is marked complete in the root requirement checklist, consistent with the tested cleanup, error-stage, preflight, redaction, and retention behavior. The Mint audit result remains visible as an advisory dependency follow-up.
 
 ---
 
-_Verified: 2026-09-24T13:03:59Z_
+_Verified: 2026-09-25T00:42:36Z_
 _Verifier: the agent (gsd-verifier)_
