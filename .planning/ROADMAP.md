@@ -66,7 +66,7 @@ Plans:
   4. Each qualifying finding is either defined as a separate bounded follow-up milestone with a user outcome, scope authority, and automated acceptance claims, or is recorded as not qualifying; v1.39 itself does not invent implementation scope.
   5. Each selected acceptance claim uses the cheapest reliable automated proof layer, and any CI promotion is justified by recurring confidence relative to runtime and maintenance cost without routine human UAT.
 
-**Plans**: 1/3 plans executed
+**Plans**: 2/3 plans executed
 
 Plans:
 **Wave 1**
@@ -75,7 +75,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 163-02-PLAN.md — Complete claim triage, qualitative ranks, and accountable material dispositions
+- [x] 163-02-PLAN.md — Complete claim triage, qualitative ranks, and accountable material dispositions
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -99,5 +99,5 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 162. Whole-Product Evidence Baseline | 3/3 | Complete   | 2026-09-25 |
-| 163. Findings and Bounded Follow-up | 1/3 | In Progress|  |
+| 163. Findings and Bounded Follow-up | 2/3 | In Progress|  |
 | 164. Readiness Gate and Reconciliation | 0/TBD | Not started | - |

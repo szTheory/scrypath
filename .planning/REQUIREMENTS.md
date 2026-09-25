@@ -16,7 +16,7 @@ Requirements for the whole-product non-UI readiness assessment. This milestone e
 ### Findings and Dispositions
 
 - [x] **FIND-01**: A maintainer can distinguish confirmed behavior defects, evidence gaps, and product opportunities so that missing or stale proof is not mislabeled as a product defect.
-- [ ] **FIND-02**: A maintainer can rank each confirmed material finding with evidence provenance, affected job, impact and frequency, confidence, compatibility/security/privacy/data-integrity/operational risk, implementation and regression cost, recurring verification cost, and a concise qualitative rationale; severity cannot be averaged away by cost.
+- [x] **FIND-02**: A maintainer can rank each confirmed material finding with evidence provenance, affected job, impact and frequency, confidence, compatibility/security/privacy/data-integrity/operational risk, implementation and regression cost, recurring verification cost, and a concise qualitative rationale; severity cannot be averaged away by cost.
 - [x] **FIND-03**: A maintainer can close, explicitly accept, defer, or reject each material finding with supporting evidence or rationale, owner decision when risk is accepted, and a revisit trigger when work is deferred; no critical, high, or medium-leverage finding is left without an explicit disposition.
 
 ### Bounded Follow-up and Automated Acceptance
@@ -54,7 +54,7 @@ Requirements for the whole-product non-UI readiness assessment. This milestone e
 | BASE-02 | Phase 162 | Complete |
 | BASE-03 | Phase 162 | Complete |
 | FIND-01 | Phase 163 | Complete |
-| FIND-02 | Phase 163 | Pending |
+| FIND-02 | Phase 163 | Complete |
 | FIND-03 | Phase 163 | Complete |
 | CLOSE-01 | Phase 163 | Pending |
 | CLOSE-02 | Phase 163 | Pending |
