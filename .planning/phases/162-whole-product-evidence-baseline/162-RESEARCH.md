@@ -92,7 +92,7 @@ Use the exact seven program categories as the row coverage checklist: public API
 
 ### Row contract
 
-Each claim row should carry: stable claim ID; dimension; named role and user job; lifecycle stage; producer-to-consumer seam; precise assertion; source link and observed result; date; commit or hosted run; environment/version if relevant; evidence class and CI enforcement posture; what it proves; known limits; claim assessment (`supported`, `insufficiently supported`, `unknown`); evidence freshness (`current`, `reusable within boundary`, `stale after invalidator`, `unknown`); and next narrow evidence question if needed. The two quoted status lists are locked verbatim by D-06. [VERIFIED: .planning/phases/162-whole-product-evidence-baseline/162-CONTEXT.md:15-35]
+Each claim row should carry: stable claim ID; dimension; named role and user job; lifecycle stage; producer-to-consumer seam; precise assertion; source link and observed result; date; commit or hosted run; environment/version if relevant; evidence class and CI enforcement posture; what it proves; known limits; claim assessment (`supported`, `insufficiently supported`, `unknown`); evidence freshness (`current`, `reusable within its stated boundary`, `stale after a relevant invalidator`, `unknown`); and next narrow evidence question if needed. The two quoted status lists are locked verbatim by D-06. [VERIFIED: .planning/phases/162-whole-product-evidence-baseline/162-CONTEXT.md:15-35]
 
 Do not copy full archived matrices into the baseline. Link the v1.37 Phase 159 matrix for source/present-state/chronology class and the v1.38 coverage, verification, and release receipts for their exact-SHA package/release claims. [VERIFIED: .planning/research/ARCHITECTURE.md:1-29] [VERIFIED: .planning/milestones/v1.37-phases/159-close-v1-37-audit-gaps-coverage-wiring-and-verification-prov/159-EVIDENCE-MATRIX.md:1-26]
 
@@ -157,10 +157,10 @@ ASVS 5.0 category naming below follows OWASP's current taxonomy. This is a way t
 |---|---|---|
 | A1 | [ASSUMED] A lightweight static link/column check can be implemented without adding a permanent CI job. | Planner should treat it as optional if existing tooling does not support it cheaply. |
 
-## Open Questions
+## Planning Resolutions and Execution Assessments
 
-1. Which individual claims have become stale after the last cited SHA? The executor should compare each source and invalidator to current HEAD, then revalidate only decision-relevant rows. [VERIFIED: .planning/phases/162-whole-product-evidence-baseline/162-CONTEXT.md:23-35]
-2. Which important workflow rows have no direct executable or hosted proof? Mark those `insufficiently supported` or `unknown` and pass the evidence question to Phase 163; do not infer defects. [VERIFIED: .planning/REQUIREMENTS.md:8-27]
+1. **RESOLVED for planning — freshness method:** The plan requires a claim-by-claim comparison of each cited source, SHA, and D-07 invalidator with current HEAD. The factual answer to which claims became stale is an execution assessment recorded per baseline row; this research does not label any individual claim current or stale in advance. Revalidate only a decision-relevant affected claim at the cheapest reliable layer. [VERIFIED: .planning/phases/162-whole-product-evidence-baseline/162-CONTEXT.md:23-35]
+2. **RESOLVED for planning — missing-proof method:** The plan requires every workflow claim to name direct proof and observed result or explicitly state that direct proof/result is absent. The factual inventory of rows lacking proof is an execution assessment recorded in the baseline and handed to Phase 163 as claim-specific evidence questions. An absent receipt yields `insufficiently supported` or `unknown`, not a presumed defect. [VERIFIED: .planning/REQUIREMENTS.md:8-27]
 
 ## Sources
 
