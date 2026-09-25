@@ -136,7 +136,12 @@ class FindingsContractTests(unittest.TestCase):
             self.validate(fixture(), None, "complete")
 
     def test_claim_relationships_do_not_depend_on_row_order(self) -> None:
-        self.validate(fixture(), ["C-21"])
+        second = "| [C-22](162-BASELINE.md#c-22) | Maintainer docs | no-new-observation | [receipt](receipt.md) | No decision change | — | not-qualifying — no new observation |"
+        original = fixture().replace("\n\n## Material findings", "\n" + second + "\n\n## Material findings", 1)
+        first = "| [C-21](162-BASELINE.md#c-21) | Maintainer security posture | evidence-gap | [receipt](receipt.md); historical only | Named advisory disposition | — | not-qualifying — reconciled chronology |"
+        reversed_rows = original.replace(first + "\n" + second, second + "\n" + first)
+        self.validate(original, ["C-21", "C-22"])
+        self.validate(reversed_rows, ["C-21", "C-22"])
 
 
 if __name__ == "__main__":
