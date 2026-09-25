@@ -2,21 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v1.38
 milestone_name: Packaged Adopter Proof
-current_phase: 161
-current_phase_name: Release and Tidy Closeout
-current_plan: Not started
-status: release-ready
-stopped_at: Phase 161 complete — awaiting maintainer review/merge of PR #77 and subsequent Release Please publication
-last_updated: "2026-09-24T21:30:45Z"
-last_activity: 2026-09-24
-last_activity_desc: Phase 161 complete with exact-SHA closeout; PR #77 review/merge and publication remain external
-state_head: 4ebfd083004bf710778b04bc72840e6fa82d5184
+current_phase: null
+status: Awaiting next milestone
+stopped_at: v1.38 archived after Scrypath 0.3.13 publication
+last_updated: "2026-09-25T02:16:52.338Z"
+last_activity: 2026-09-25
+last_activity_desc: Milestone v1.38 completed and archived
+state_head: 28d3877a05479f2cc104754fc24ab0c9d545c01b
 progress:
   total_phases: 2
   completed_phases: 2
   total_plans: 7
   completed_plans: 7
   percent: 100
+current_phase_name: null
 ---
 
 # Project State
@@ -24,24 +23,30 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 161 — Release and Tidy Closeout
+**Current Focus:** No active milestone; green-main release train idle after Scrypath 0.3.13 publication
 
 ## Current Position
 
-Phase: 161 (Release and Tidy Closeout) — RELEASE-READY, UNPUBLISHED
-Current Plan: Not started
-External next step: maintainer review and merge of PR #77, then the generated Release Please publish and parity gates
-Last activity: 2026-09-24 — Phase 161 complete; exact final-SHA closeout passed, awaiting PR #77 review/merge
+Phase: Milestone v1.38 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-09-25 — Milestone v1.38 archived after Scrypath 0.3.13 publication
 
-Progress: [██████████] 100%
+## Completed Milestone: v1.38 Packaged Adopter Proof
 
-## Completed Milestone: v1.37 Code Quality Ratchet
+**Outcome:** Scrypath 0.3.13 published; exact-head checks, post-merge main CI, versioned HexDocs, clean consumer compile, and package-to-tag parity passed. All eight requirements and both phase verification reports passed. The audit records the advisory Phoenix lane and no GitHub review objects for the explicitly authorized PR merges as nonblocking process notes.
+
+**Archive:** `.planning/milestones/v1.38-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and `.planning/milestones/v1.38-phases/`.
+
+**Next:** No active milestone. Keep the release train idle until concrete evidence authorizes more work.
+
+## Prior Completed Milestone: v1.37 Code Quality Ratchet
 
 **Goal:** Systematically raise non-UI engineering quality until remaining opportunities are low-leverage, controversial, or unsupported by evidence.
 
 **Scope:** Runtime safety, internal architecture, tests, Mix tasks, examples, CI/CD, release proof, and measured performance. Preserve public APIs and behavior. ScrypathOps presentation/UX/visual review is excluded.
 
-**Current phase:** 161
+**Current phase:** None — no active milestone.
 
 **Milestone sequence:** 148 quality baseline → 149 runtime safety → 150 dependency leaf → 151 write result → 152 options/settings → 153 search/failed work → 154 verification commands → 155 CI proof → 156 supply chain/release → 157 performance evidence → 158 closeout → 159 audit/provenance closure.
 
@@ -69,7 +74,7 @@ would create colliding BEAM module names on case-insensitive filesystems.
 
 ## Last Completed Milestone
 
-v1.37 Code Quality Ratchet is complete across Phases 148-159. Runtime and architecture hardening, capability verification, lean CI, release-chain trust, measured performance, and exact-SHA machine authority all shipped without public API change; no human verification or UAT remains pending.
+v1.38 Packaged Adopter Proof is complete and archived across Phases 160–161. Scrypath 0.3.13 passed exact-SHA CI, post-merge main CI, Hex/HexDocs publication, consumer compilation, and package-to-tag parity. No human verification or UAT remains pending.
 
 ## v1.35 Brand Milestone Context (archived)
 
@@ -275,14 +280,14 @@ Items acknowledged at prior milestone closeouts and the v1.37 artifact-shape ove
 
 ## Session
 
-**Last session:** 2026-09-24T21:30:45Z
-**Stopped at:** Phase 161 complete — awaiting maintainer review/merge of PR #77 and subsequent Release Please publication
+**Last session:** 2026-09-25T02:20:00Z
+**Stopped at:** v1.38 complete and archived after Scrypath 0.3.13 publication
 **Resume file:** None
 
 ## Operator Next Steps
 
-- Next: Obtain a real maintainer review and merge decision for PR #77. After merge, review the generated Release Please PR and follow its tag through Hex, HexDocs, consumer verification, and package-to-tag parity. Do not call v1.38 shipped until those publication gates pass.
+- Start the next milestone with $gsd-new-milestone
 
 ### Blockers
 
-- Phase 161 is complete and release-ready, but unpublished. PR #77 awaits maintainer review and merge; Release Please publication and parity checks follow that decision.
+- Phase 161 is complete. PR #77 and Release Please PR #78 were merged after checks passed; Scrypath 0.3.13 publication, HexDocs, clean-consumer verification, and package/tag parity all passed.

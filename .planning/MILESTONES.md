@@ -1,5 +1,25 @@
 # Milestones
 
+## v1.38 Packaged Adopter Proof (Shipped: 2026-09-25)
+
+**Phases completed:** 2 phases (160–161), 7 plans, 14 plan tasks
+
+**Key accomplishments:**
+
+- Added a deterministic package-backed Phoenix proof that builds the Hex artifact, compiles a clean consumer against it, and runs inline, Oban, and related-data live scenarios with owned-resource cleanup.
+- Wired path-backed and package-backed proof plus documentation drift contracts into the existing advisory CI service lane.
+- Updated Mint to 1.10.1 and hpax to 1.1.0 to clear the identified advisories; retained clean deep-quality and package gates.
+- Merged Phase 161 and Release Please PRs after exact-head checks; confirmed post-merge main CI, Hex 0.3.13 publication, versioned HexDocs, clean-consumer compile, and package-to-tag parity.
+- Established and used an automation-first GSD acceptance policy: complete routine software verification from executable evidence and hand off only irreducible external decisions or checks.
+
+**Milestone audit:** Passed with nonblocking tech debt — 8/8 requirements, 2/2 phases, 5/5 integration connections, 2/2 end-to-end flows, and 2/2 Nyquist validations. The live Phoenix proof remains advisory; PR merges had maintainer authorization but no GitHub review object. See `milestones/v1.38-MILESTONE-AUDIT.md`.
+
+**Archives:** `milestones/v1.38-ROADMAP.md`, `milestones/v1.38-REQUIREMENTS.md`, `milestones/v1.38-MILESTONE-AUDIT.md`, `milestones/v1.38-phases/` · **Release:** Hex `scrypath 0.3.13`, tag `scrypath-v0.3.13`.
+
+**What's next:** No active milestone. Keep the green-main release train idle until concrete maintenance, adopter, bug, proof-drift, or strategic evidence authorizes work.
+
+---
+
 ## v1.37 Code Quality Ratchet (Shipped: 2026-08-26)
 
 **Delivered:** A behavior-preserving non-UI quality ratchet spanning runtime safety, dependency structure, orchestration boundaries, verification ergonomics, CI/release trust, measured performance, and exact-SHA automated closeout.
