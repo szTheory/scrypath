@@ -699,6 +699,89 @@ defmodule Scrypath.DocsContractTest do
     assert ordered?(job_head, "mix deps.get", "mix verify.phoenix_example")
   end
 
+  test "Phoenix package proof follows path proof in its existing advisory service job" do
+    [_, job] =
+      Regex.run(~r/  phoenix-example:\n(.*?)(?=\n  [a-z][a-z0-9-]*:\n|\z)/s, @ci_workflow)
+
+    assert job =~ "continue-on-error: true"
+    assert job =~ "postgres:16-alpine"
+    assert job =~ "getmeili/meilisearch:v1.15"
+    assert ordered?(job, "mix verify.phoenix_example", "mix verify.phoenix_example --package")
+
+    assert_contains_all(@contributing, [
+      "mix verify.phoenix_example --package",
+      "SCRYPATH_EXAMPLE_INTEGRATION",
+      "PGPORT",
+      "SCRYPATH_MEILISEARCH_URL",
+      "Advisory Postgres 16 + Meilisearch v1.15"
+    ])
+
+    assert_contains_all(@example_readme, [
+      "mix verify.phoenix_example --package",
+      "SCRYPATH_EXAMPLE_INTEGRATION",
+      "PGPORT",
+      "SCRYPATH_MEILISEARCH_URL"
+    ])
+
+    example_mix = File.read!("examples/phoenix_meilisearch/mix.exs")
+    assert example_mix =~ "{:scrypath, path: \"../..\"}"
+  end
+
+  test "Phoenix package runbook states the artifact, scenarios, prerequisites, and evidence limit" do
+    assert_contains_all(@example_readme, [
+      "mix verify.phoenix_example --package",
+      "locally built artifact",
+      "SCRYPATH_EXAMPLE_INTEGRATION",
+      "PGPORT",
+      "SCRYPATH_MEILISEARCH_URL",
+      "reachable Postgres",
+      "reachable Meilisearch",
+      "Inline",
+      "Oban",
+      "Fan-out Inline",
+      "Fan-out Oban",
+      "synthetic checks",
+      "does not establish every adopter deployment or production reliability"
+    ])
+
+    assert ordered?(
+             @example_readme,
+             "mix verify.phoenix_example`",
+             "mix verify.phoenix_example --package"
+           )
+
+    assert String.contains?(
+             File.read!("examples/phoenix_meilisearch/mix.exs"),
+             "{:scrypath, path: \"../..\"}"
+           )
+  end
+
+  test "maintainer and release docs preserve command and evidence boundaries" do
+    assert_contains_all(@contributing, [
+      "mix verify.phoenix_example",
+      "mix verify.phoenix_example --package",
+      "advisory",
+      "examples/phoenix_meilisearch/README.md",
+      "live-service proof"
+    ])
+
+    assert ordered?(
+             @contributing,
+             "mix verify.phoenix_example`",
+             "mix verify.phoenix_example --package"
+           )
+
+    assert_contains_all(@release_docs, [
+      "mix verify.package",
+      "focused docs contract",
+      "pre-publish checks",
+      "Post-publish evidence",
+      "mix verify.release_publish X.Y.Z",
+      "mix verify.release_parity X.Y.Z",
+      "Release Please owns"
+    ])
+  end
+
   test "README sync authority ties sync-modes guide link to authority wording (Phase 51)" do
     assert @readme =~ ~S|](guides/sync-modes-and-visibility.md)|
 

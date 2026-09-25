@@ -52,6 +52,14 @@ defmodule Mix.Tasks.Verify.CapabilityTest do
     end
   end
 
+  test "Phoenix package mode accepts its two documented switches only" do
+    for args <- [["--unknown"], ["stray"], ["--keep-temp-on-failure"]] do
+      assert_raise Mix.Error, ~r/does not accept arguments/, fn ->
+        Mix.Tasks.Verify.Capability.run(:phoenix_example, args)
+      end
+    end
+  end
+
   test "canonical capabilities select the test environment before dispatch" do
     preferred_envs = Scrypath.MixProject.cli()[:preferred_envs]
 

@@ -37,7 +37,7 @@
     "plan_bounce_passes": 2,
     "auto_prune_state": false,
     "_auto_chain_active": false,
-    "use_worktrees": false
+    "use_worktrees": true
   },
   "hooks": {
     "context_warnings": true
@@ -45,6 +45,19 @@
   "project_code": null,
   "phase_naming": "sequential",
   "agent_skills": {},
-  "claude_md_path": "./CLAUDE.md",
-  "resolve_model_ids": "omit"
+  "resolve_model_ids": "omit",
+  "runtime": "codex",
+  "model_overrides": {
+    "gsd-planner": "gpt-6-sol",
+    "gsd-phase-researcher": "gpt-6-sol",
+    "gsd-project-researcher": "gpt-6-sol",
+    "gsd-plan-checker": "gpt-6-sol",
+    "gsd-domain-researcher": "gpt-6-sol",
+    "gsd-executor": "gpt-6-luna",
+    "gsd-verifier": "gpt-6-luna",
+    "gsd-code-reviewer": "gpt-6-luna",
+    "gsd-nyquist-auditor": "gpt-6-luna",
+    "gsd-integration-checker": "gpt-6-luna",
+    "gsd-security-auditor": "gpt-6-sol"
+  }
 }

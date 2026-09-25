@@ -1,19 +1,22 @@
 ---
-gsd_state_version: 1.0
-milestone: v1.37
-milestone_name: Code Quality Ratchet
-current_phase: null
-status: Awaiting next milestone
-stopped_at: Milestone v1.37 archived
-last_updated: "2026-08-27T01:14:10.150Z"
-last_activity: 2026-08-26
-last_activity_desc: Milestone v1.37 completed and archived
+gsd_state_version: "1.0"
+milestone: v1.38
+milestone_name: Packaged Adopter Proof
+current_phase: 161
+current_phase_name: Release and Tidy Closeout
+current_plan: Not started
+status: release-ready
+stopped_at: Phase 161 complete — awaiting maintainer review/merge of PR #77 and subsequent Release Please publication
+last_updated: "2026-09-24T21:30:45Z"
+last_activity: 2026-09-24
+last_activity_desc: Phase 161 complete with exact-SHA closeout; PR #77 review/merge and publication remain external
+state_head: 4ebfd083004bf710778b04bc72840e6fa82d5184
 progress:
-  total_phases: 12
-  completed_phases: 12
-  total_plans: 8
-  completed_plans: 8
-current_phase_name: null
+  total_phases: 2
+  completed_phases: 2
+  total_plans: 7
+  completed_plans: 7
+  percent: 100
 ---
 
 # Project State
@@ -21,14 +24,16 @@ current_phase_name: null
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Green-main release train idle; awaiting an evidence-authorized next milestone
+**Current Focus:** Phase 161 — Release and Tidy Closeout
 
 ## Current Position
 
-Phase: Milestone v1.37 complete
-Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-08-26 — Milestone v1.37 completed and archived
+Phase: 161 (Release and Tidy Closeout) — RELEASE-READY, UNPUBLISHED
+Current Plan: Not started
+External next step: maintainer review and merge of PR #77, then the generated Release Please publish and parity gates
+Last activity: 2026-09-24 — Phase 161 complete; exact final-SHA closeout passed, awaiting PR #77 review/merge
+
+Progress: [██████████] 100%
 
 ## Completed Milestone: v1.37 Code Quality Ratchet
 
@@ -36,7 +41,7 @@ Last activity: 2026-08-26 — Milestone v1.37 completed and archived
 
 **Scope:** Runtime safety, internal architecture, tests, Mix tasks, examples, CI/CD, release proof, and measured performance. Preserve public APIs and behavior. ScrypathOps presentation/UX/visual review is excluded.
 
-**Current phase:** Archived; no active phase
+**Current phase:** 161
 
 **Milestone sequence:** 148 quality baseline → 149 runtime safety → 150 dependency leaf → 151 write result → 152 options/settings → 153 search/failed work → 154 verification commands → 155 CI proof → 156 supply chain/release → 157 performance evidence → 158 closeout → 159 audit/provenance closure.
 
@@ -198,9 +203,13 @@ Items acknowledged at prior milestone closeouts and the v1.37 artifact-shape ove
 | Phase 159 P05 | 3min | 1 tasks | 6 files |
 | Phase 159 P06 | 8min | 2 tasks | 12 files |
 | Phase 159 P07 | 14min | 3 tasks | 6 files |
+| Phase 160 P03 | 16 min | 1 tasks | 3 files |
+| Phase 161 P01 | 30 min | 2 tasks | 4 files |
+| Phase 161 P02 | 129 min | 2 tasks | 2 files |
 
 ## Decisions
 
+- [GSD default]: Shift verification left and target zero human verification/UAT. Add integration, E2E, smoke, and seam checks to CI when recurring risk reduction justifies runtime/maintenance cost; use advisory or scheduled lanes for expensive checks where appropriate. Keep handoffs for irreducible external actions only, and prefer exact-commit hosted evidence over routine user-run acceptance.
 - [Phase 133 Plan 03]: DARKMOTION-01 browser proof shipped — `admin_path_motion.spec.ts` (7 tests, dark+light+system-dark) green against a booted seeded ops server. Patch-refire proof (A3) counts ONLY running `CSSAnimation` (`@keyframes`), EXCLUDING `CSSTransition`: a running transition is the intended state-driven glow/line-draw settle, so only a re-firing keyframe reveal is the failure mode worth catching; probe scoped to the anchor itself (incl. `::after`), not the descendant subtree where intended Phase-123 `ops-fade-in` reveals run. Reduced-motion proof asserts computed duration ≤ ~0.02ms via the global rule + active end state still visible (functional integrity). Shimmer coverage ships the shippable half (evidence code blocks asserted shimmer-OFF) since no live template sets `shimmer={true}`. Targeted 9-shot screenshot set produced; full 40-shot recapture/gallery/UAT deferred to Phase 136 (D-05c). Booted via compose dev lane with free host lanes `PG_PORT=5455 MEILI_PORT=7755` (sibling containers held 5432/7700). Phase 133 now ready for verification.
 - [Phase 133 Plan 01]: DARKMOTION-01 `.ops-path-*` vocabulary shipped — line-draw via `.ops-path-trace::after` as a `transition` (NOT `@keyframes`-on-mount, A3 patch-safety), active-path node glow via `.ops-path-node[--copper]` reusing `--shadow-ops-glow[-copper]`, opt-in `.ops-code-block--shimmer` hover glint. Only new component API is `attr(:shimmer, :boolean, default: false)` on `ops_code_block/1`; default-false keeps evidence calm. Anchors (merge-trace, active Playbook item, recommended card) wired via existing server-state classes — no new state attrs, no new JS hooks, no new tokens. Active-item glow hand-authored in both dark paths. `mix compile --warnings-as-errors` green; verify.opsui static-CSS contract is Plan 02, browser proof is Plan 03.
 - [Phase 133 Plan 01]: 4 pre-existing `OpsShellContractTest` failures (logo.svg → inline-SVG drift from v1.35 brand adoption `fcb8fc7`) are out of Phase 133 scope — logged to `deferred-items.md`; this plan's 4 files don't touch the header/logo/layouts.
@@ -258,13 +267,22 @@ Items acknowledged at prior milestone closeouts and the v1.37 artifact-shape ove
 - [Phase ?]: Phase 159 validations mark coverage only when current evidence is complete; hosted closure gaps remain non-compliant until Plan 07.
 - [Phase ?]: TEST-01 chronology remains historically unprovable under its narrow D-11 waiver; hosted TEST-05 proof remains Plan 07 work.
 - [Phase ?]: Accepted only hosted run 33014343041 because candidate, workflow-source, and head SHA all equal a35874178b79392caa0f3c1dcc010ea149e1e5bf; the reviewer approved without widening the four-row TEST-01 chronology waiver.
+- [Phase 160]: Accepted exact-SHA run 36000999039 at `7931271abe53e83261d85a22077176f75898eb81`; path then package Phoenix proof passed, required jobs and closeout passed, and `deep-quality` remains advisory-red on three Mint 1.9.3 advisories.
+- [Phase 160]: Corrected package setup error propagation to `reraise error, __STACKTRACE__` after the initial candidate's Credo finding; review found no issues and the refreshed exact-SHA run passed.
+- [Phase 161 — Release and Tidy Closeout]: Keep the example README as the sole detailed Phoenix service runbook; maintainer docs link to it.
+- [Phase 161 — Release and Tidy Closeout]: Treat package/docs-contract checks as pre-publish evidence and release_publish/release_parity as post-publish evidence.
+- [Phase 161 — Release and Tidy Closeout]: Use an explicit no_return() spec on the intentional package-proof raise helper to satisfy the deep-quality Dialyzer gate without runtime changes (user-approved).
 
 ## Session
 
-**Last session:** 2026-08-26T21:26:07.536Z
-**Stopped at:** Completed 159-07-PLAN.md
+**Last session:** 2026-09-24T21:30:45Z
+**Stopped at:** Phase 161 complete — awaiting maintainer review/merge of PR #77 and subsequent Release Please publication
 **Resume file:** None
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Next: Obtain a real maintainer review and merge decision for PR #77. After merge, review the generated Release Please PR and follow its tag through Hex, HexDocs, consumer verification, and package-to-tag parity. Do not call v1.38 shipped until those publication gates pass.
+
+### Blockers
+
+- Phase 161 is complete and release-ready, but unpublished. PR #77 awaits maintainer review and merge; Release Please publication and parity checks follow that decision.

@@ -175,6 +175,7 @@ jobs:
           key: ${{ runner.os }}-test-elixir-1.19.0-otp-28.1-${{ hashFiles('mix.lock', 'mix.exs') }}
       - run: mix deps.get
       - run: mix verify.phoenix_example
+      - run: mix verify.phoenix_example --package
 
   ops-ui-path:
     runs-on: ubuntu-latest

@@ -50,7 +50,18 @@ defmodule Mix.Tasks.Verify.Capability do
   defp phoenix_example!([]), do: run_task!("verify.adopter", ["--live"])
 
   defp phoenix_example!(args) do
-    Mix.raise("verify.phoenix_example does not accept arguments, got: #{Enum.join(args, " ")}")
+    {opts, argv, invalid} =
+      OptionParser.parse(args, strict: [package: :boolean, keep_temp_on_failure: :boolean])
+
+    if argv != [] or invalid != [] or opts[:package] != true do
+      Mix.raise(
+        "verify.phoenix_example does not accept arguments other than --package [--keep-temp-on-failure]"
+      )
+    end
+
+    Mix.Tasks.Verify.PhoenixExample.Package.run(
+      keep_temp_on_failure: opts[:keep_temp_on_failure] || false
+    )
   end
 
   defp deep_quality!([]) do

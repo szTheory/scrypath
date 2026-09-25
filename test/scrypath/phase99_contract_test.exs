@@ -45,7 +45,7 @@ defmodule Scrypath.Phase99ContractTest do
         "mix verify.adopter --live"
       ])
 
-      assert String.contains?(@example_readme, "mix verify.adopter --live")
+      assert String.contains?(@example_readme, "mix verify.phoenix_example")
     end
   end
 

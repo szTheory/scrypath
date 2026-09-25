@@ -28,6 +28,8 @@ mix verify.package
 
 That command is the always-on CI gate for the release contract.
 
+`mix verify.package` and the focused docs contract (`mix test test/scrypath/docs_contract_test.exs`) are pre-publish checks: they verify the package and the documented release flow before publication. They do not prove that a version is visible on Hex or HexDocs. Post-publish evidence comes from `mix verify.release_publish X.Y.Z`, which checks package and documentation availability, followed by `mix verify.release_parity X.Y.Z` to compare the published artifact with the Release Please-owned tag. Release Please owns the version bump, changelog, and tag.
+
 ### Operator UI (`scrypath_ops`)
 
 The optional operator Phoenix app under **`scrypath_ops/`** is not published to Hex, but it still has a first-class verification gate. From the repository root, run:
