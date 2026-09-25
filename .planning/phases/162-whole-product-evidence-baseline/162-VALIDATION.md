@@ -1,7 +1,7 @@
 ---
 phase: "162"
 slug: "whole-product-evidence-baseline"
-status: draft
+status: validated
 nyquist_compliant: true
 wave_0_complete: true
 created: "2026-09-25"
@@ -35,12 +35,12 @@ This is a planned documentation-artifact validation contract. `nyquist_compliant
 
 | Task ID | Wave | Requirement | Threat | Artifact check | Evidence assessment | Status |
 |---------|------|-------------|--------|----------------|---------------------|--------|
-| 162-01-01 | 1 | BASE-01, BASE-02, BASE-03 | T-162-01 to T-162-03 | `python3 .planning/phases/162-whole-product-evidence-baseline/check_baseline.py --through 1` | Check C-01 against Phase 160/161 receipts and host ownership boundary. | planned |
-| 162-01-02 | 1 | BASE-01, BASE-02, BASE-03 | T-162-02, T-162-03 | `python3 .planning/phases/162-whole-product-evidence-baseline/check_baseline.py --through 6` | Inspect C-02–C-06 source/result, selected tuple, and package opt-outs. | planned |
-| 162-02-01 | 2 | BASE-01, BASE-02, BASE-03 | T-162-04 | `python3 .planning/phases/162-whole-product-evidence-baseline/check_baseline.py --through 12` | Inspect C-07–C-12 write, queue, backend, and visibility boundaries. | planned |
-| 162-02-02 | 2 | BASE-01, BASE-02, BASE-03 | T-162-05, T-162-06 | `python3 .planning/phases/162-whole-product-evidence-baseline/check_baseline.py --through 17` | Inspect C-13–C-17 diagnosis, chosen repair, and observed outcome separately. | planned |
-| 162-03-01 | 3 | BASE-01, BASE-02, BASE-03 | T-162-07, T-162-08 | `python3 .planning/phases/162-whole-product-evidence-baseline/check_baseline.py --through 24` | Inspect C-18–C-24 release, support, security, and quality receipt limits. | planned |
-| 162-03-02 | 3 | BASE-01, BASE-02, BASE-03 | T-162-09 | `python3 .planning/phases/162-whole-product-evidence-baseline/check_baseline.py --through 24 --full-coverage` | Compare every row's source/result and invalidator with current HEAD; record stale and absent-proof rows explicitly. | planned |
+| 162-01-01 | 1 | BASE-01, BASE-02, BASE-03 | T-162-01 to T-162-03 | `python3 .planning/phases/162-whole-product-evidence-baseline/check_baseline.py --through 1` | Check C-01 against Phase 160/161 receipts and host ownership boundary. | verified |
+| 162-01-02 | 1 | BASE-01, BASE-02, BASE-03 | T-162-02, T-162-03 | `python3 .planning/phases/162-whole-product-evidence-baseline/check_baseline.py --through 6` | Inspect C-02–C-06 source/result, selected tuple, and package opt-outs. | verified |
+| 162-02-01 | 2 | BASE-01, BASE-02, BASE-03 | T-162-04 | `python3 .planning/phases/162-whole-product-evidence-baseline/check_baseline.py --through 12` | Inspect C-07–C-12 write, queue, backend, and visibility boundaries. | verified |
+| 162-02-02 | 2 | BASE-01, BASE-02, BASE-03 | T-162-05, T-162-06 | `python3 .planning/phases/162-whole-product-evidence-baseline/check_baseline.py --through 17` | Inspect C-13–C-17 diagnosis, chosen repair, and observed outcome separately. | verified |
+| 162-03-01 | 3 | BASE-01, BASE-02, BASE-03 | T-162-07, T-162-08 | `python3 .planning/phases/162-whole-product-evidence-baseline/check_baseline.py --through 24` | Inspect C-18–C-24 release, support, security, and quality receipt limits. | verified |
+| 162-03-02 | 3 | BASE-01, BASE-02, BASE-03 | T-162-09 | `python3 .planning/phases/162-whole-product-evidence-baseline/check_baseline.py --through 24 --full-coverage` | Compare every row's source/result and invalidator with current HEAD; record stale and absent-proof rows explicitly. | verified |
 
 ## Wave 0 and Handoff
 
@@ -51,6 +51,14 @@ No Wave 0 dependency, new test file, or framework installation is required. The 
 - [x] Every planned task has a row-level automated artifact check.
 - [x] The final command checks per-row completeness plus dimension, role, and stage coverage.
 - [x] No watch mode, required CI promotion, or routine human UAT is planned.
-- [ ] Execute the six checks as their tasks complete and record results in the plan summaries.
+- [x] Execute the six checks as their tasks complete and record results in the plan summaries.
 
-**Design approval:** planned 2026-09-25; execution evidence pending.
+**Validation:** All six artifact checks passed on 2026-09-25; the final full-coverage command confirms 24 unique ordered rows, resolving repository-local links, and coverage of the seven dimensions, four roles, and seven stages. `git diff --check` passed. No product tests, service reruns, CI changes, or human UAT were needed or performed.
+
+## Validation Audit 2026-09-25
+
+| Metric | Count |
+|--------|-------|
+| Planned checks run | 6 |
+| Passed | 6 |
+| Gaps found | 0 |

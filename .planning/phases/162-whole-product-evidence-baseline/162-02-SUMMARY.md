@@ -14,6 +14,7 @@ actuals:
   tokens: 2600
   tasks: 2
   commits: 2
+plan_head_before: 4a4fea0
 tech-stack:
   added: []
   patterns: [separate async lifecycle stages, evidence question at each unsupported boundary]

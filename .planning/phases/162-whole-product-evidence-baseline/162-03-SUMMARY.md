@@ -14,6 +14,7 @@ actuals:
   tokens: 2500
   tasks: 2
   commits: 2
+plan_head_before: 210b4c4
 tech-stack:
   added: []
   patterns: [event-triggered freshness, independent evidence limits per row]
@@ -86,7 +87,7 @@ None - plan executed exactly as written.
 
 ## Issues Encountered
 
-The first full coverage check exposed that rows were in claim-ID order rather than the required dimension/lifecycle order. Rows were reordered and the checker now enforces that order. No plan scope or evidence claims changed as a result.
+The first full coverage check exposed that rows were in claim-ID order rather than the required dimension/lifecycle order. Rows were reordered and the checker now enforces that order. The post-phase code review also found two checker edge cases (absolute local paths and a missing Markdown separator); both were fixed and independently re-reviewed as clean. All six planned artifact checks pass. No plan scope or evidence claims changed as a result.
 
 ## User Setup Required
 

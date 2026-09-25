@@ -12,6 +12,7 @@ actuals:
   tokens: 2300
   tasks: 2
   commits: 2
+plan_head_before: f10a9ae0c12c436120d374774de3433ce92e668e
 tech-stack:
   added: []
   patterns: [claim-level evidence rows, independent assessment and freshness]
