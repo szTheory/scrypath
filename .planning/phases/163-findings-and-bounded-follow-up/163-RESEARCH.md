@@ -298,12 +298,25 @@ No certification or exhaustive ASVS assessment is claimed. [VERIFIED: .planning/
 
 No factual claim relies on unverified package identity, inferred compatibility from absent metadata, or a fabricated test result. Proposed artifact/checker names, rank definitions, and plan decomposition are explicitly recommendations within the phase's discretion. No selected future candidate or current product defect is assumed. The unresolved evidence questions below must remain open until examined. [VERIFIED: .planning/phases/163-findings-and-bounded-follow-up/163-CONTEXT.md:39-42]
 
-## Open Questions
+## Execution Evidence and Owner Inputs
+
+**Planning status: RESOLVED.** Each question below has an execution approach and fallback assigned to an existing plan/task. No planning research question remains unresolved. The substantive evidence results and any required owner decisions remain pending execution inputs or limits; this status does not establish proof, accept risk, select a new CI lane, or decide readiness.
 
 1. **Does existing mounted proof fully answer the representative cutover claim?** Source asserts terminal swap and visible seeded search, and prior release receipts report mounted success. Trace the relevant exact run to that source/fixture before updating the baseline. Preserve untested failure/rollback boundaries. [VERIFIED: examples/scrypath_ecommerce/e2e/operator.spec.ts:60-89] [VERIFIED: .planning/milestones/v1.38-phases/161-release-and-tidy-closeout/161-VALIDATION.md:39-48]
+
+   **Planning approach — RESOLVED:** [163-01 Task 2](163-01-PLAN.md) matches the hosted receipt to the source SHA, selected test, seed fixture, terminal swap, visible-search oracle, and environment before changing C-17. **Execution input/fallback:** The match remains to be established. If access or matching evidence is unavailable, retain the bounded committed evidence and state the precise residual gap; source assertions alone cannot establish execution or rollback coverage.
+
 2. **Which residual recovery/delete/search/upgrade gaps change an actual decision?** Inspect existing lower-layer proof and its oracle first. No new product failure was reproduced in this research; an evidence gap remains a gap. [VERIFIED: .planning/phases/162-whole-product-evidence-baseline/162-BASELINE.md:24-41] [VERIFIED: .planning/phases/163-findings-and-bounded-follow-up/163-CONTEXT.md:17-19]
+
+   **Planning approach — RESOLVED:** [163-01 Task 2](163-01-PLAN.md) separates diagnosis/retry interaction from repaired state; [163-02 Task 1](163-02-PLAN.md) completes claim-level triage, including delete/search proof boundaries and a concrete prior-version transition for upgrade proof. Inspect existing receipts, then source, and name the decision further evidence could change. **Execution input/fallback:** Actual sufficiency and materiality remain to be assessed. Preserve unranked gaps with their C-IDs and nonqualification reasons when no decision-relevant or substantiated finding is established; [163-03 Tasks 1–2](163-03-PLAN.md) carry those limits into qualification and the Phase 164 handoff.
+
 3. **Does any substantiated residual risk need owner acceptance?** No owner acceptance for a future finding may be inferred from approved triage scope. Resolve it as a real decision or retain deferred work with owner/event; Phase 164 evaluates the consequence. [VERIFIED: .planning/phases/163-findings-and-bounded-follow-up/163-CONTEXT.md:25-31]
+
+   **Planning approach — RESOLVED:** [163-02 Task 2](163-02-PLAN.md) requires an actual owner's dated decision source for acceptance and otherwise records an honest deferred disposition with an accountable owner/role, event trigger, and unresolved risk. **Execution input/fallback:** Whether a substantiated risk requires acceptance and whether the owner grants it remain pending factual and owner inputs. Missing, inaccessible, or ambiguous authority remains unresolved; [163-03 Task 2](163-03-PLAN.md) preserves it for Phase 164 without treating deferral as acceptance or readiness.
+
 4. **Are recurring proof changes justified?** No new lane is selected by this research. Use observed run cost and reliability if proposing promotion; record unknown cost honestly if unavailable. [VERIFIED: .planning/phases/163-findings-and-bounded-follow-up/163-CONTEXT.md:23-24,33-37]
+
+   **Planning approach — RESOLVED:** [163-03 Task 1](163-03-PLAN.md) selects the cheapest reliable claim-specific proof and requires a comparison of repeated regression risk, incremental confidence, runtime, maintenance, reliability, isolation, and diagnostics for a proposed lane or trigger/blocking change. **Execution input/fallback:** Qualification and observed costs remain execution evidence. Record unavailable measurements as unknown; retain claim-local economics for unchanged CI posture and nonqualification where value or acceptance is insufficient. This phase authors proposed acceptance only and changes no CI configuration.
 
 ## Sources and Research Method
 
