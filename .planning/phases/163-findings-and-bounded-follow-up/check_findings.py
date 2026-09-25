@@ -106,6 +106,22 @@ def _nested_cards(lines: list[str], prefix: str) -> dict[str, dict[str, str]]:
     return cards
 
 
+def _section_fields(lines: list[str], heading: str) -> dict[str, str]:
+    start = next((i for i, line in enumerate(lines) if line == heading), None)
+    if start is None:
+        _fail("FINDINGS", heading, "section missing")
+    end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ") and lines[i] != heading), len(lines))
+    result: dict[str, str] = {}
+    for line in lines[start + 1:end]:
+        if line.startswith("- ") and ":" in line:
+            key, value = line[2:].split(":", 1)
+            key, value = key.strip(), value.strip()
+            if key in result:
+                _fail("FINDINGS", f"{heading}.{key}", "duplicate field")
+            result[key] = value
+    return result
+
+
 def _baseline_ids(path: Path, root: Path) -> set[str]:
     ids: set[str] = set()
     for target in re.findall(r"\[[^]]+\]\(([^)]+)\)", path.read_text(encoding="utf-8")):
@@ -159,6 +175,12 @@ def validate_document(path: Path, root: Path, claims: list[str] | None = None, s
     findings = _cards(lines, "## Material findings", "F")
     candidates = _cards(lines, "## Follow-up candidates", "K")
     proofs = _nested_cards(lines, "P")
+    for section, cards in (("## Material findings", findings), ("## Follow-up candidates", candidates)):
+        if not cards:
+            start = lines.index(section)
+            end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
+            if not any("None" in line and re.search(r"\[[^]]+\]\([^)]+\)", line) for line in lines[start + 1:end]):
+                _fail("FINDINGS", section, "empty section must state None with a linked inventory rationale")
     referenced_f: set[str] = set()
     referenced_k: set[str] = set()
     referenced_p: set[str] = set()
@@ -234,6 +256,8 @@ def validate_document(path: Path, root: Path, claims: list[str] | None = None, s
                 _fail(kid, "Findings", f"unknown finding {fid}")
             if findings[fid].get("Rank") not in RANKS:
                 _fail(kid, "Findings", f"candidate owner {fid} is not material")
+            if kid not in re.findall(r"\bK-\d{2}\b", findings[fid].get("Route", "")):
+                _fail(kid, "Findings", f"finding {fid} does not link back to candidate")
     for pid, fields in proofs.items():
         if not fields.get("Oracle", "").strip():
             _fail(pid, "Oracle", "proof card requires an oracle")
@@ -242,9 +266,33 @@ def validate_document(path: Path, root: Path, claims: list[str] | None = None, s
         if pid not in referenced_p:
             _fail(pid, "Oracle", "orphan proof card has no finding owner reference")
     if stage in {"dispositions", "complete"} and claims is None:
-        _fail("FINDINGS", "Disposition summary", "global disposition summary is required")
-    if stage == "complete" and claims is None and "## Phase 164 handoff" not in lines:
-        _fail("FINDINGS", "Phase 164 handoff", "complete mode requires the handoff section")
+        summary = _section_fields(lines, "## Disposition summary")
+        required = {"Claims", "Material findings", "Closed", "Accepted", "Deferred", "Rejected", "Unresolved gate-rank findings"}
+        if set(summary) < required:
+            _fail("FINDINGS", "Disposition summary", "missing " + ", ".join(sorted(required - set(summary))))
+        if summary["Claims"] != str(len(baseline)):
+            _fail("FINDINGS", "Disposition summary.Claims", f"expected {len(baseline)} claims")
+        expected_lists = {
+            "Material findings": set(findings),
+            "Closed": {fid for fid, f in findings.items() if f.get("Disposition") == "closed"},
+            "Accepted": {fid for fid, f in findings.items() if f.get("Disposition") == "accepted"},
+            "Deferred": {fid for fid, f in findings.items() if f.get("Disposition") == "deferred"},
+            "Rejected": {fid for fid, f in findings.items() if f.get("Disposition") == "rejected"},
+            "Unresolved gate-rank findings": {fid for fid, f in findings.items() if f.get("Rank") in {"Critical", "High", "Medium-leverage"} and f.get("Risk state") == "unresolved"},
+        }
+        for field, expected in expected_lists.items():
+            actual = set(re.findall(r"\bF-\d{2}\b", summary[field]))
+            if summary[field].strip().lower() in {"none", "0", "none — none"}:
+                actual = set()
+            if actual != expected:
+                _fail("FINDINGS", f"Disposition summary.{field}", f"expected F-ID list {sorted(expected)}")
+    if stage == "complete" and claims is None:
+        handoff = _section_fields(lines, "## Phase 164 handoff")
+        required_handoff = {"Baseline", "Dispositions", "Residual gaps", "Candidate and nonqualification outcome", "Unresolved owner decisions", "Gate ownership"}
+        if set(handoff) < required_handoff:
+            _fail("FINDINGS", "Phase 164 handoff", "missing " + ", ".join(sorted(required_handoff - set(handoff))))
+        if "Phase 164" not in handoff["Gate ownership"]:
+            _fail("FINDINGS", "Phase 164 handoff.Gate ownership", "must state Phase 164 owns the readiness gate")
     return {"claims": sorted(selected), "findings": len(referenced_f), "candidates": len(candidates), "proofs": len(proofs)}
 
 
