@@ -17,7 +17,7 @@ created: "2026-09-25"
 
 | Property | Value |
 |----------|-------|
-| **Framework** | Python standard library; documentation-contract checker (proposed) |
+| **Framework** | Python standard library; documentation-contract checker |
 | **Config file** | None required |
 | **Quick run command** | `python3 .planning/phases/163-findings-and-bounded-follow-up/check_findings.py` (after Wave 0 creates it) |
 | **Full suite command** | Same focused checker; run the Phase 162 baseline checker only when its artifact changes |
@@ -38,12 +38,12 @@ created: "2026-09-25"
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 163-01-01 | 01 | 1 | FIND-01, FIND-03 | T-163-01, T-163-02 | Bounded C-21 chronology; data-only checker; positive/negative contract fixtures | documentation contract | `python3 -m unittest discover -s .planning/phases/163-findings-and-bounded-follow-up -p 'test_check_findings.py' -v` — 12 tests passed; `python3 .planning/phases/163-findings-and-bounded-follow-up/check_findings.py --claims C-21` — PARTIAL, one selected claim | ✅ created and executed in 163-01; see [plan summary](163-01-SUMMARY.md#self-check-passed) | ✅ pass |
+| 163-01-01 | 01 | 1 | FIND-01, FIND-03 | T-163-01, T-163-02 | Bounded C-21 chronology; data-only checker; positive/negative contract fixtures | documentation contract | `python3 -m unittest discover -s .planning/phases/163-findings-and-bounded-follow-up -p 'test_check_findings.py' -v` — 13 tests passed; `python3 .planning/phases/163-findings-and-bounded-follow-up/check_findings.py --claims C-21` — PARTIAL, one selected claim | ✅ created and executed in 163-01; see [plan summary](163-01-SUMMARY.md#self-check-passed) | ✅ pass |
 | 163-01-02 | 01 | 1 | FIND-01, FIND-03 | T-163-01, T-163-03 | Match receipt to source/oracle; secret-safe diagnosis versus repair claims | documentation contract | `python3 .planning/phases/163-findings-and-bounded-follow-up/check_findings.py --claims C-15,C-16,C-17,C-21 --stage triage` — PARTIAL, four selected claims | ✅ created in 163-01 | ✅ pass |
 | 163-02-01 | 02 | 2 | FIND-01, FIND-02 | T-163-04 | Complete baseline coverage and independent materiality/rank factors | documentation contract | `python3 .planning/phases/163-findings-and-bounded-follow-up/check_findings.py --stage triage` — PARTIAL, complete 24-claim triage | ✅ created in 163-01 | ✅ pass |
 | 163-02-02 | 02 | 2 | FIND-02, FIND-03 | T-163-05, T-163-06 | Real owner authority, event-based deferral, visible unresolved risk | documentation contract | `python3 .planning/phases/163-findings-and-bounded-follow-up/check_findings.py --stage dispositions` — PARTIAL, dispositions complete | ✅ created in 163-01 | ✅ pass |
 | 163-03-01 | 03 | 3 | CLOSE-01, CLOSE-02 | T-163-07, T-163-08 | Authorized bounded outcomes and owned claim-proof records | documentation contract | `python3 .planning/phases/163-findings-and-bounded-follow-up/check_findings.py` — PASS: 24 claims, 0 material findings, 0 candidates, 0 proofs | ✅ created in 163-01 | ✅ pass (fresh run 2026-09-25) |
-| 163-03-02 | 03 | 3 | CLOSE-01, CLOSE-02 | T-163-08, T-163-09 | Complete linkage and honest Phase 164 handoff | documentation contract | `python3 -m unittest discover -s .planning/phases/163-findings-and-bounded-follow-up -p 'test_check_findings.py' -v` — 12 tests passed; `python3 .planning/phases/163-findings-and-bounded-follow-up/check_findings.py` — PASS: 24 claims, 0 material findings, 0 candidates, 0 proofs | ✅ created in 163-01 | ✅ pass (fresh run 2026-09-25) |
+| 163-03-02 | 03 | 3 | CLOSE-01, CLOSE-02 | T-163-08, T-163-09 | Complete linkage and honest Phase 164 handoff | documentation contract | `python3 -m unittest discover -s .planning/phases/163-findings-and-bounded-follow-up -p 'test_check_findings.py' -v` — 13 tests passed; `python3 .planning/phases/163-findings-and-bounded-follow-up/check_findings.py` — PASS: 24 claims, 0 material findings, 0 candidates, 0 proofs | ✅ created in 163-01 | ✅ pass (fresh run 2026-09-25) |
 
 When a task amends the canonical baseline, reuse `python3 .planning/phases/162-whole-product-evidence-baseline/check_baseline.py --through 24 --full-coverage`. Selected-ID and earlier-stage results are explicitly partial; the no-argument findings command requires complete coverage, final qualification, and the handoff. All task commands have failing-direction statements in the plans. Structural success is not product proof, source-truth certification, owner approval, or readiness.
 
@@ -75,5 +75,15 @@ Wave 0 completed with 12 discovered fixtures. The fixture suite passed in Plans 
 - [x] No watch-mode flags
 - [x] Feedback latency < 30s (observed focused checks completed in under one second)
 - [x] `nyquist_compliant: true` set in frontmatter
+
+## Validation Audit 2026-09-25
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+
+The code-review follow-up added explicit rejection coverage for blank candidate scope authority. Candidate/proof positive linkage and field-specific summary parsing are covered by the focused fixture path and reviewed directly; the live inventory has no candidates or proof claims.
 
 **Validation status:** Automated checks complete. Owner decisions remain an irreducible decision record; no approval is claimed or simulated.
