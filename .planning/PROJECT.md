@@ -8,9 +8,9 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Mode: Pre-Operator UI Readiness Ratchet — v1.39 Active Planning
+## Current Mode: Pre-Operator UI Readiness Ratchet — v1.39 Phase 162 Complete
 
-Scrypath 0.3.13 is published. v1.38 Packaged Adopter Proof is complete and archived. The owner-approved v1.39 milestone is formally initialized with requirements and a three-phase roadmap; Phase 162 is ready to plan. The release train remains on routine maintenance while the whole-product non-UI readiness assessment proceeds.
+Scrypath 0.3.13 is published. v1.38 Packaged Adopter Proof is complete and archived. The owner-approved v1.39 milestone is formally initialized with requirements and a three-phase roadmap. Phase 162 established and verified the whole-product evidence baseline; Phase 163 is ready to plan. The release train remains on routine maintenance while the whole-product non-UI readiness assessment proceeds.
 
 ## Current Milestone: v1.39 Pre-Operator UI Quality Readiness Ratchet
 
@@ -265,7 +265,7 @@ measured pure hot paths did not justify speculative optimization.
 
 ## Planning window
 
-v1.39 Pre-Operator UI Quality Readiness Ratchet is active in planning, beginning at Phase 162. v1.38 Packaged Adopter Proof is complete and archived across Phases 160–161; all eight requirements passed automated verification and Scrypath 0.3.13 is published. Historical phase directories are archived under `.planning/milestones/v1.38-phases/`.
+v1.39 Pre-Operator UI Quality Readiness Ratchet is active in planning at Phase 163. Phase 162 completed the whole-product evidence baseline; evidence-qualified findings and bounded follow-up are next, while the readiness decision remains Phase 164. v1.38 Packaged Adopter Proof is complete and archived across Phases 160–161; all eight requirements passed automated verification and Scrypath 0.3.13 is published. Historical phase directories are archived under `.planning/milestones/v1.38-phases/`.
 
 ## Requirements
 
@@ -379,4 +379,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-09-25 after v1.38 Packaged Adopter Proof and Scrypath 0.3.13 publication*
+*Last updated: 2026-09-25 after Phase 162 Whole-Product Evidence Baseline*

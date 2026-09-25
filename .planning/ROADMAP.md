@@ -38,7 +38,7 @@ Readiness remains **NOT READY** until every approved dimension and exit conditio
   2. Every reused or newly gathered evidence item links to its source and result, dated provenance, applicable environment, claim boundary, freshness, and known limitations, so absent proof is never reported as a pass or a defect.
   3. The index covers first-hour setup, indexing, search, failure diagnosis, recovery, upgrade, and release for representative roles and integration boundaries while linking canonical evidence instead of duplicating it.
 
-**Plans**: 3/3 plans executed
+**Plans**: 3/3 plans complete
 
 Plans:
 **Wave 1**
@@ -85,6 +85,6 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 162. Whole-Product Evidence Baseline | 3/3 | Complete    | 2026-09-25 |
+| 162. Whole-Product Evidence Baseline | 3/3 | Complete   | 2026-09-25 |
 | 163. Findings and Bounded Follow-up | 0/TBD | Not started | - |
 | 164. Readiness Gate and Reconciliation | 0/TBD | Not started | - |
