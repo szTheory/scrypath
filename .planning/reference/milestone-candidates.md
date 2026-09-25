@@ -2,15 +2,15 @@
 
 **Purpose:** Help `$gsd-new-milestone` select work that improves Scrypath adopters or protects release trust without creating roadmap work for its own sake.
 **Reviewed:** 2026-09-25 against v1.37 Code Quality Ratchet and v1.38 Packaged Adopter Proof.
-**Current posture:** no active milestone; Scrypath 0.3.13 is published and verified. The owner has approved a pre-operator UI quality-readiness ratchet as the next strategic planning initiative. v1.39 is not active until formal GSD requirements and a roadmap are created.
+**Current posture:** v1.39 Pre-Operator UI Quality Readiness Ratchet is active in planning; Scrypath 0.3.13 is published and verified.
 
 Use evidence-gated horizons, not calendar commitments. Reassess these candidates at each milestone boundary. See [`../../prompts/scrypath-milestone-ratchet-roadmap.txt`](../../prompts/scrypath-milestone-ratchet-roadmap.txt) for the durable decision guide.
 
-The governing program and explicit **READY FOR OPERATOR UI** exit criteria are in [`PRE-OPERATOR-UI-READINESS.md`](PRE-OPERATOR-UI-READINESS.md). The handoff for `$gsd-new-milestone` is `.planning/MILESTONE-CONTEXT.md`.
+The governing program and explicit **READY FOR OPERATOR UI** exit criteria are in [`PRE-OPERATOR-UI-READINESS.md`](PRE-OPERATOR-UI-READINESS.md); active requirements and phases are in `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md`.
 
 ## Near term — maintenance and trust
 
-**Immediate next step:** use the owner-approved pre-UI readiness initiative to formally define a broad non-UI baseline milestone. Keep `main` green, maintain package/support/docs truth, review incoming adopter evidence, and release when a warranted change is ready. Routine upkeep that fits a focused patch or quick task does not need a milestone.
+**Immediate next step:** assess the whole-product non-UI baseline in Phase 162, then rank findings and evaluate the gate through Phases 163–164. Keep `main` green, maintain package/support/docs truth, review incoming adopter evidence, and release when a warranted change is ready. Routine upkeep that fits a focused patch or quick task does not need a milestone.
 
 Open work when there is a concrete production or security bug, compatibility change, release requirement, support/proof drift, or reviewed adopter report. Require a named outcome, smallest useful slice, and proof plan before adding scope.
 

@@ -1,11 +1,11 @@
 # Pre-Operator UI Quality Readiness Program
 
-**Status:** APPROVED STRATEGIC INTENT — NOT STARTED
+**Status:** ACTIVE — v1.39 PRE-OPERATOR UI QUALITY READINESS RATCHET
 **Readiness:** NOT READY — whole-product baseline not yet assessed
 **Last reconciled:** 2026-09-25, following v1.38 Packaged Adopter Proof
 **Purpose:** Identify and close worthwhile non-UI gaps before ScrypathOps becomes the next strategic focus. Establish an evidence-backed, durable gate for saying the non-UI work has reached diminishing returns.
 
-This program records the owner's approved direction. It is not an active milestone: no v1.39 requirements or roadmap have been created. Use `.planning/MILESTONE-CONTEXT.md` when starting the formal GSD milestone so this intent survives context resets.
+This program is the scope and exit-gate authority for active milestone **v1.39 Pre-Operator UI Quality Readiness Ratchet**. Its formal requirements and roadmap are in `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md`; Phase 162 is next. The one-time `.planning/MILESTONE-CONTEXT.md` handoff has been consumed.
 
 ## Current evidence
 
@@ -75,4 +75,4 @@ Owner direction captured 2026-09-25 from the adapted Scrypath milestone-ratchet 
 - `.planning/reference/milestone-candidates.md` — evidence-gated portfolio candidates.
 - `.planning/reference/MILESTONE-ARC.md` — near/mid/long posture.
 - `.planning/reference/QUALITY-LEDGER.md` and `.planning/milestones/v1.37-*`, `.planning/milestones/v1.38-*` — prior evidence.
-- `.planning/MILESTONE-CONTEXT.md` — handoff for formal milestone initialization.
+- `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md` — active v1.39 scope and phase sequence.

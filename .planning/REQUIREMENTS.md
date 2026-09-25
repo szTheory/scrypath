@@ -50,24 +50,24 @@ Requirements for the whole-product non-UI readiness assessment. This milestone e
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BASE-01 | Pending roadmap | Pending |
-| BASE-02 | Pending roadmap | Pending |
-| BASE-03 | Pending roadmap | Pending |
-| FIND-01 | Pending roadmap | Pending |
-| FIND-02 | Pending roadmap | Pending |
-| FIND-03 | Pending roadmap | Pending |
-| CLOSE-01 | Pending roadmap | Pending |
-| CLOSE-02 | Pending roadmap | Pending |
-| GATE-01 | Pending roadmap | Pending |
-| GATE-02 | Pending roadmap | Pending |
-| GATE-03 | Pending roadmap | Pending |
+| BASE-01 | Phase 162 | Pending |
+| BASE-02 | Phase 162 | Pending |
+| BASE-03 | Phase 162 | Pending |
+| FIND-01 | Phase 163 | Pending |
+| FIND-02 | Phase 163 | Pending |
+| FIND-03 | Phase 163 | Pending |
+| CLOSE-01 | Phase 163 | Pending |
+| CLOSE-02 | Phase 163 | Pending |
+| GATE-01 | Phase 164 | Pending |
+| GATE-02 | Phase 164 | Pending |
+| GATE-03 | Phase 164 | Pending |
 
 **Coverage:**
 
 - v1.39 requirements: 11 total
-- Mapped to phases: 0
-- Unmapped: 11 (roadmap pending)
+- Mapped to phases: 11
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-09-25*
-*Last updated: 2026-09-25 after v1.39 evidence research and approved scope* 
+*Last updated: 2026-09-25 after v1.39 roadmap initialization*

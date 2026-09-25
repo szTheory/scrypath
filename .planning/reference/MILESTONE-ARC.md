@@ -1,17 +1,17 @@
 # Milestone Arc
 
-## Current arc: Release train idle
+## Current arc: Pre-operator UI readiness assessment
 
-**Status:** no active milestone; v1.38 Packaged Adopter Proof is complete and archived.
+**Status:** v1.39 Pre-Operator UI Quality Readiness Ratchet is active in planning; Phase 162 is next. v1.38 Packaged Adopter Proof is complete and archived.
 **Current release:** Scrypath 0.3.13, published and parity-verified.
-**Approved next strategic initiative:** establish whole-product non-UI quality readiness before further ScrypathOps work. No milestone is active; create its formal GSD requirements and roadmap from `.planning/MILESTONE-CONTEXT.md`.
+**Current initiative:** establish whole-product non-UI quality readiness before further ScrypathOps work. Requirements and the Phase 162–164 roadmap are active in `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md`.
 **Default:** keep `main` green, maintain support/package/proof truth, and release when warranted.
 
 ## Near, mid, and long horizons
 
 These are evidence gates, not dated commitments. Refresh them at each milestone boundary.
 
-- **Near — baseline and urgent gaps:** formally start the approved readiness milestone, inventory non-UI quality dimensions against existing evidence, and close worthwhile critical/high-impact gaps. Keep normal maintenance and release hygiene active.
+- **Near — baseline and urgent gaps:** inventory non-UI quality dimensions against existing evidence, then route worthwhile critical/high-impact gaps to bounded follow-up work. Keep normal maintenance and release hygiene active.
 - **Mid — evidence-ranked ratchet:** group confirmed high/medium-leverage non-UI gaps into bounded milestones; allow evidence-backed runtime/API changes after explicit scope review. Defer lower-return work with rationale.
 - **Long — readiness transition and conditional expansion:** when the readiness gate passes, recommend ScrypathOps as next focus, subject to owner availability. Broader backend/API/search capabilities remain evidence-gated and require explicit scope decisions.
 
