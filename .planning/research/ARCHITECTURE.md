@@ -1,157 +1,117 @@
-# Architecture Research: v1.36 Dependency Security Remediation
+# Architecture Patterns
 
-**Domain:** Multi-project Elixir/Mix dependency maintenance
-**Researched:** 2026-08-21
-**Confidence:** HIGH for repository topology and required CI gates; MEDIUM for the upstream fixed-version compatibility asserted by the advisory ledger.
+**Domain:** Whole-product non-UI adopter-readiness assessment for an Ecto-native Elixir search library  
+**Researched:** 2026-09-25  
+**Confidence:** HIGH for the planning/evidence architecture; MEDIUM for completeness of prior product evidence
 
-## Executive Summary
+## Recommended Architecture
 
-Scrypath is a repository with four independently resolved Mix projects, not an umbrella application or a single shared dependency graph. Each project owns a `mix.exs` and a `mix.lock`; `mix deps.get` run from one working directory does not rewrite or validate another project's resolution. The remediation must therefore be four sequential, graph-local commits, each restricted to its manifest/lockfile pair (plus only the tests or code required to resolve a demonstrated compatibility break).
+Treat v1.39 as an evidence and decision architecture over the existing product, not as a runtime restructuring project. Use a single capability-by-evidence baseline as the index across adopter jobs and the seven readiness dimensions. Each row should identify the adopter job, capability/boundary, current evidence links, evidence class and freshness, what the evidence actually proves, known limits, and disposition. Link existing v1.37/v1.38 evidence rather than copying its claims. Keep implementation findings in a separate linked register so an assessed capability is not conflated with a confirmed gap or a planned fix.
 
-The path dependencies create a directional source relationship, not a lockfile relationship: `scrypath_ops` and the legacy Phoenix example consume root `scrypath` by path, while ecommerce consumes both root `scrypath` and `scrypath_ops` by path. A downstream `mix deps.get` must still solve its own complete graph against those local sources. Root batch success proves the root lock and library behavior; it does not prove that the three downstream solvers select the safe versions. Conversely, ecommerce is the only graph that compiles the mounted Ops app inside the host application, but it must not be used as a substitute for the dedicated Ops graph test.
+The durable readiness program remains the authority for scope and the exit gate. The milestone baseline should add evidence and dispositions beneath that policy, then each bounded closure milestone should own its requirements, plans, automated acceptance, and audit. At each closeout, reconcile the closure result back into the readiness record and milestone candidate list. This avoids creating a second competing product backlog or treating a milestone audit as the whole-product readiness decision.
 
-The smallest architecture-preserving sequence is: root HTTP client; legacy Phoenix example with its Ecto/Decimal coordinated upgrade; standalone ScrypathOps; then ecommerce/mounted-Ops. This follows source and risk dependencies while retaining fault isolation. Do not add a workspace, copy locks, centralize constraints, or alter CI topology solely for this maintenance milestone.
-
-## Standard Architecture
-
-### Dependency-resolution overview
-
-```
-Repository root (independent Mix project)             Required root CI gates
-mix.exs + mix.lock                                    main-ci / repo-hygiene /
-Scrypath library                                      release-truth / phase99-trust
-        │
-        │ local source only: {:scrypath, path: ".."} or "../.."
-        ├─────────────────────────────┐
-        │                             │
-        ▼                             ▼
-scrypath_ops/                    examples/phoenix_meilisearch/
-mix.exs + mix.lock               mix.exs + mix.lock
-Ops Phoenix graph                legacy Phoenix graph
-        │                             (separate direct solver)
-        │ local source only: {:scrypath_ops, path: "../../scrypath_ops"}
-        ▼
-examples/scrypath_ecommerce/
-mix.exs + mix.lock
-ecommerce Phoenix + mounted Ops graph
+```text
+Adopter jobs and lifecycle boundaries
+             |
+             v
+Capability-by-evidence baseline -----> Prior evidence (v1.37, v1.38, source, CI)
+             |                              [linked with limits/freshness]
+             v
+Evidence-ranked finding register
+       |                 |
+       v                 v
+Bounded closure      Disposition with rationale/revisit trigger
+milestones                |
+       |                  |
+       +-------> readiness record / exit-gate decision
 ```
 
-### Lock-graph ownership and proof
+### Component Boundaries
 
-| Graph / working directory | Owned resolver inputs | Local path inputs | Batch | Minimum proof before next batch |
-|---|---|---|---|---|
-| Root `.` | `mix.exs`, `mix.lock` | none | 1 | root clean resolution, compile, fast test, `verify`, phase 11, phase 99 |
-| `examples/phoenix_meilisearch` | example `mix.exs`, example `mix.lock` | `../../` `scrypath` | 2 | example `deps.get` + test, then root fast test |
-| `scrypath_ops` | Ops `mix.exs`, Ops `mix.lock` | `../` `scrypath` | 3 | root `mix verify.opsui`, then root required gates |
-| `examples/scrypath_ecommerce` | ecommerce `mix.exs`, ecommerce `mix.lock` | `../../` `scrypath`; `../../scrypath_ops` | 4 | root and ecommerce clean resolution, ecommerce DB preparation; advisory browser proof when services are available |
-
-All four current locks carry distinct resolver state. The legacy example is intentionally different: its locked Ecto/Ecto SQL 3.13.5 require Decimal 2.x, so the recorded fix requires an explicit aligned Ecto/Ecto SQL 3.14.x move before Decimal 3.x can resolve. The other three locks already select Ecto/Ecto SQL 3.14.0 and Decimal 3.1.1; that change belongs only to the legacy graph.
-
-## Recommended Change and Verification Sequence
-
-### Batch 1 — Root Scrypath HTTP client
-
-**Owned files:** root `mix.exs` and `mix.lock` only, unless a documented Req 0.6 compatibility failure requires a narrow core code/test adjustment.
-
-1. Change the direct `Req` constraint to the recorded compatible line (`~> 0.6.1`), then run `mix deps.get` from repository root.
-2. Inspect root `mix.lock`; do not assume downstream locks changed. Confirm the recorded root set is no longer selected: Req 0.5.18, Mint 1.8.0, hpax 1.0.3, and Plug 1.19.2.
-3. Run, in root: `mix compile --warnings-as-errors`; `mix test --exclude integration --exclude docs_contract`; `mix verify --exclude integration`; `mix verify.phase11`; `mix verify.phase99`.
-4. Commit only after all gates pass. Stop here on a resolver, compiler, or gate failure.
-
-### Batch 2 — Legacy Phoenix example and Ecto/Decimal alignment
-
-**Owned files:** `examples/phoenix_meilisearch/mix.exs` and `examples/phoenix_meilisearch/mix.lock`, plus only example-local compatibility edits if tests require them.
-
-1. From `examples/phoenix_meilisearch`, update constraints and run `mix deps.get` there. This graph owns its own Bandit, Phoenix, Ecto, Ecto SQL, and path-to-root Scrypath selection.
-2. Move Ecto and Ecto SQL together to the recorded 3.14.x compatibility line; do not try to force Decimal 3 into the prior Ecto 3.13 solution.
-3. Run `mix test` in that directory (the test alias creates/migrates its Postgres database). Then return to root and run `mix test --exclude integration --exclude docs_contract` to prove the path-consumed root remains sound.
-4. Treat the CI `phoenix-example-integration` job (Postgres + Meilisearch, same `cd` → `deps.get` → `test` shape) as the authoritative live follow-up, not `scripts/smoke.sh`.
-
-### Batch 3 — Standalone ScrypathOps web/client graph
-
-**Owned files:** `scrypath_ops/mix.exs` and `scrypath_ops/mix.lock`, plus only Ops-local compatibility edits if necessary.
-
-1. Resolve from `scrypath_ops`, never by running root `mix deps.get`. Keep its path reference to root `scrypath`; do not add a public dependency abstraction.
-2. Lock the recorded fixed-compatible web/client set: Bandit, Phoenix, Phoenix LiveView, Plug, Postgrex, Mint, hpax, Swoosh, and Req.
-3. From root run `mix verify.opsui`. It deliberately executes `cd scrypath_ops && mix deps.get && mix test` with Postgres and no Meilisearch, matching the dedicated CI job.
-4. Re-run batch-1 root gates because root and Ops interact through a local path dependency. Commit only when both the graph-local and root proof are green.
-
-### Batch 4 — Ecommerce web/client and mounted-Ops graph
-
-**Owned files:** `examples/scrypath_ecommerce/mix.exs` and `examples/scrypath_ecommerce/mix.lock`, plus only ecommerce-local compatibility edits if necessary.
-
-1. Start with root `mix deps.get`, then run `mix deps.get` from `examples/scrypath_ecommerce`. The former proves root separately; the latter is the only command that resolves ecommerce's direct graph with both local paths.
-2. Select the same recorded safe family as Ops independently. Matching versions are an outcome to verify, not a reason to copy Ops' lockfile.
-3. Run `mix e2e.prepare` in the ecommerce directory for Ecto/database readiness. This is required local proof but not a browser substitute.
-4. When Postgres, Meilisearch, Node, and Playwright are available, run the documented advisory `phase105-e2e` sequence. It proves the mounted `scrypath_ops` asset/application path and is valuable regression evidence, but remains advisory—not a condition that silently weakens the four required merge gates.
-
-## Clean-resolution Protocol
-
-Before every batch, record `git status --short`, then operate in exactly one graph's working directory. Use ordinary `mix deps.get` with that graph's lock retained: this is a reproducibility check plus a constrained resolver refresh. Do not run `deps.unlock --unused`, `deps.update` without package scope, delete `deps/` or `_build/`, or copy a lockfile between projects as a substitute for a resolution.
-
-After every `deps.get`, inspect that graph's `mix.lock` and run `mix deps.tree`/`mix deps` from the same directory when a required indirect version did not move as expected. A lock diff should be explainable by direct constraints and their required transitive consequences; unrelated package churn is a stop signal, not an acceptable side effect of security work.
-
-Root's test alias can delegate selected test-file paths to Ops or ecommerce, but it is not a dependency resolver. Use the directory-native commands above for resolution and application tests; use delegated root tests only as an additional invocation convenience.
-
-## Required vs Advisory Gates
-
-| Level | Gates | Meaning |
+| Component | Responsibility | Communicates With |
 |---|---|---|
-| Mandatory per-batch | Each batch's `mix deps.get`, compile/test gate, and specified root proof | Required to establish a clean, graph-local remediation before advancing |
-| Required merge gates | `main-ci`, `repo-hygiene`, `release-truth`, `phase99-trust` | CI blockers for green-main; all root-oriented and triggered by the root lock change |
-| Required path proof | `mix verify.opsui` / `scrypath-ops` CI for the Ops batch | Required because the Ops graph consumes root by path; CI path filter includes root and Ops manifests/locks |
-| Advisory evidence | `compatibility-truth`, `deep-quality`, live integration jobs, `phase105-e2e` | Run when available or as CI supplies them; report failure, but do not relabel them as required for this milestone |
+| Readiness program record | Owns approved scope, baseline dimensions, exit criteria, and current readiness status | Baseline index, closure evidence, milestone arc |
+| Capability-by-evidence baseline | Records assessment coverage and the strength, recency, and limits of proof for each adopter-facing capability | Existing test/source/CI artifacts; finding register |
+| Finding register | Captures only evidence-backed candidate gaps and ranks impact, confidence, risk, churn, and recurring verification cost | Baseline rows; bounded milestone requirements or documented dispositions |
+| Bounded GSD milestone | Owns implementation requirements and cheapest reliable automated acceptance for a selected set of findings | Finding IDs, repo checks, exact-SHA hosted evidence if needed |
+| Closeout reconciliation | Updates readiness evidence and terminal dispositions without erasing source history | Readiness record, candidate list, milestone audit |
 
-The `scrypath-ops` pull-request path filter observes `scrypath_ops/**`, `lib/**`, root `mix.exs`, root `mix.lock`, and `scrypath_ops/mix.lock`. It does not key off either example lockfile. Therefore a legacy or ecommerce-only change requires its explicit directory-native proof; a skipped Ops job would not establish safety for those graphs.
+### Data Flow
 
-## Anti-Patterns
+Start from named adopter jobs, including install/first-use, indexing and search, synchronization and deletion, operational recovery, upgrade/release, and support diagnosis. Map each job to relevant capabilities and failure boundaries. For each capability, inspect existing implementation, tests, docs, package proof, and hosted CI receipts; classify evidence precisely and record gaps in coverage. Only a demonstrated defect, inadequate proof for an important claim, or material adopter friction becomes a finding. Rank such findings before selecting implementation scope. Close each selected finding with automated evidence, then reconcile accepted/deferred low-leverage opportunities and any accepted risks into the readiness gate.
 
-### Treating path dependencies as a shared lock
+The architecture should preserve three distinct states: **not assessed**, **assessed with sufficient evidence**, and **assessed with a finding/disposition**. A passing bounded audit is not equivalent to a whole-product assessment. Missing evidence is an uncertainty to investigate, not automatically a runtime defect.
 
-**What goes wrong:** Root `mix deps.get` passes and the work is declared complete.
+## Evidence and Integration Seams
 
-**Why it is wrong:** Path packages expose local source, while each consuming Mix project still independently solves and locks the complete transitive graph.
+| Seam | Reusable evidence | Boundary that must stay explicit |
+|---|---|---|
+| Runtime safety, internal architecture, command/CI topology, supply chain, measured performance | v1.37 quality ledger and its phase 159 canonical evidence matrix | v1.37 states its bounded code-quality scope; it does not assess every adopter or product dimension. Its rows distinguish committed/present-state evidence from historically unprovable chronology. |
+| Package-backed Phoenix integration and release truth | v1.38 phase 160 verification, phase 161 release evidence, and v1.38 milestone audit | Phase 160's API coverage matrix is explicit about excluded capabilities: settings inspection, index swap, document delete, task listing, facet search, and multi-search. Do not imply those flows were exercised by package proof. |
+| Live-service confidence | Exact-SHA v1.38 package/path Phoenix runs and release CI receipts | The Phoenix service lane remains advisory in CI even though the final candidate passed. The readiness baseline should record both observed success and gate strength. |
+| Compatibility | v1.37's four curated CI tuples and v1.38 clean consumer compile | These prove only their named runtime/version tuple and consumer shape; do not extrapolate to all supported combinations or downstream deployments. |
+| ScrypathOps operator UX | v1.32–v1.34 records and accessibility evidence | The pre-UI program intentionally assesses non-UI product readiness; existing UI evidence is context and is not a reason to add UI work to v1.39. |
 
-**Do this instead:** Refresh and inspect all four locks in their own directory, retaining each graph's own manifest and lock ownership.
+## Patterns to Follow
 
-### Stacking all upgrades before proof
+### Pattern 1: Claim-to-evidence rows with explicit limits
+**What:** Give each readiness claim a stable identifier and attach the direct source, test/command, immutable receipt or exact-SHA hosted run that supports it. State the evidence class, date/SHA/environment where applicable, and what it does not prove.  
+**When:** For baseline rows, findings, and exit-gate claims.  
+**Example:** v1.37 Phase 159's `159-EVIDENCE-MATRIX.md` separates historically proven, present-state verified, supported by prior committed evidence, and historically unprovable; it also records a limitation and disposition per requirement. Reuse this discipline, not necessarily its detailed chronology schema for every baseline row.
 
-**What goes wrong:** A broad resolver diff and failures appear after four batches have accumulated.
+### Pattern 2: Explicit producer-consumer and end-to-end seam maps
+**What:** Trace important claims across actual boundaries and name the producer artifact, consumer, trigger, and result.  
+**When:** For package/build/release flow, adopter integration, asynchronous sync, and operations/recovery claims.  
+**Example:** v1.38's audit traces package proof from CI services through staging, dependency provenance, clean consumer compile, and live scenarios; release proof proceeds from Release Please through CI, tag, Hex, HexDocs, and package parity. This gives the baseline a proven format for connecting artifacts without duplicating them.
 
-**Why it is wrong:** The failing graph and changed constraints are no longer attributable, and downstream tests can hide which lock introduced incompatible behavior.
+### Pattern 3: Findings are evidence-derived and separately dispositioned
+**What:** Keep coverage inventory distinct from the ranked list of confirmed issues; include a closed/deferred rationale and a trigger for revisiting deferred items.  
+**When:** After enough of the baseline has been assessed to compare gaps by adopter impact and cost.  
+**Example:** v1.37's quality ledger records evidence, benefit, churn, verification, and disposition; the milestone candidates guide requires concrete signal before new roadmap scope. Extend the fields only as the approved readiness rubric requires.
 
-**Do this instead:** One manifest/lock batch, its native proof, its root regression proof, then one commit. Stop immediately on the first failed required gate.
+## Anti-Patterns to Avoid
 
-### Reusing ecommerce E2E as Ops proof
+### Anti-Pattern 1: Treating prior milestone status as universal readiness
+**What:** Marking a broad dimension complete because a prior milestone passed or an audit had no integration gaps.  
+**Why bad:** Audits are bounded by their requirements and test surfaces; a connected set of phase outputs is not proof that every important adopter workflow has been examined.  
+**Instead:** Map each v1.37/v1.38 artifact to the specific claims it covers and record untested capabilities and runtime combinations.
 
-**What goes wrong:** A passing or skipped browser lane is treated as proof that `scrypath_ops` resolves and tests independently.
+### Anti-Pattern 2: One giant duplicated readiness ledger
+**What:** Copying all archived requirements, test results, and current backlog candidates into a new omnibus table.  
+**Why bad:** Evidence goes stale and conflicting copies emerge; the v1.37 audit already demonstrates that source rows, chronology limits, and retrospective indexes need clear ownership.  
+**Instead:** Keep the baseline as an index with links and concise claim/limit fields. Preserve detailed phase evidence in its source artifact and keep finding dispositions distinct.
 
-**Why it is wrong:** E2E is advisory and environment-dependent; it verifies the mounted integration, not the standalone Ops project's whole test contract.
+### Anti-Pattern 3: Converting uncertainty directly into implementation
+**What:** Adding APIs, runtime changes, broad test suites, or required CI jobs because a dimension has thin evidence.  
+**Why bad:** Thin evidence could mean an assessment gap rather than a product defect; unnecessary runtime or CI surface increases maintenance and may cross the existing scope guard.  
+**Instead:** First choose the cheapest discriminating inspection or automated proof. Plan product changes only for evidence-backed adopter value, with explicit scope-guard review.
 
-**Do this instead:** Keep `mix verify.opsui` mandatory in batch 3 and use phase105 only as the final integration-evidence layer.
+### Anti-Pattern 4: Collapsing advisory and required proof
+**What:** Reporting a live-service check as a merge gate when CI classifies it as advisory, or treating local source/test evidence as an exact-SHA hosted result.  
+**Why bad:** This overstates release and integration guarantees. v1.38 explicitly records a successful service run and its advisory status as separate facts.  
+**Instead:** Record execution outcome and enforcement posture independently; cite immutable run and SHA for hosted claims.
 
-### Centralizing dependencies or changing CI topology
+## Scalability Considerations
 
-**What goes wrong:** The maintenance milestone introduces an umbrella/workspace, shared lockfile, new required job, or package-head upgrades.
-
-**Why it is wrong:** It expands scope and changes the established release-train architecture without evidence that the existing four-project topology is broken.
-
-**Do this instead:** Preserve the topology, target the recorded fixed-compatible versions, and improve no CI policy unless a separate approved change requires it.
-
-## Stop Conditions and Handoff
-
-Stop the current batch—and do not start the next—if any of these occurs: the solver cannot select the recorded floor under declared constraints; the lockfile changes unrelated packages without a clear constraint path; compile/tests/required verification fail; a path project compiles against an unexpected root source; or an advisory remains in that graph after resolution. Consult the relevant upstream migration/release notes before changing another constraint, then retry only the current graph.
-
-The handoff from every phase should include: the exact manifest and lockfile diff; `mix deps`/lock evidence that the recorded affected packages no longer resolve in that graph; commands run with working directory; gate results; and an explicit statement of advisory lanes that were unavailable or failed. The milestone closes only when all four separate `mix deps.get` resolutions no longer select the recorded advisory packages and their required proofs are green.
+| Concern | At current project scale | As evidence/findings grow | At broad adopter scale |
+|---|---|---|---|
+| Baseline size | One markdown capability-by-evidence index linked to canonical artifacts | Split by lifecycle or dimension only when navigation becomes difficult; keep one index of coverage and status | Avoid a custom database/dashboard unless maintainers cannot keep source-linked markdown accurate |
+| Evidence freshness | Record dates, commits, supported versions, and hosted run IDs for unstable evidence | Reassess evidence when code, CI contract, or support matrix changes | Automate freshness checks only for stable machine-readable claims that warrant recurring CI cost |
+| Finding throughput | Rank a small register and create bounded milestones only for worthwhile confirmed gaps | Group findings by shared cause, but retain separate adopter impact and closure criteria | Use incoming reproducible adopter reports to refresh candidates; do not prepopulate speculative work |
+| Verification cost | Prefer existing service-free and capability gates; use exact-SHA hosted proof at real integration seams | Measure runtime and maintenance cost before promotion to required CI | Keep expensive confidence runs scheduled/advisory until evidence supports blocking merges |
 
 ## Sources
 
-- `.planning/PROJECT.md` — current v1.36 scope and four isolated batches.
-- `.planning/quick/260816-tzr-triage-dependency-security-advisories-re/260816-tzr-ADVISORY-TRIAGE.md` — reproduced graph inventory, fixed-compatible targets, and per-batch gates.
-- `.planning/todos/pending/2026-08-16-remediate-dependency-security-advisories.md` — acceptance and ordered execution constraint.
-- `mix.exs`, `scrypath_ops/mix.exs`, `examples/phoenix_meilisearch/mix.exs`, `examples/scrypath_ecommerce/mix.exs` and their four `mix.lock` files — independent project and path-dependency topology.
-- `CONTRIBUTING.md`, `.github/workflows/ci.yml`, and `lib/mix/tasks/verify.opsui.ex` — local command contracts, CI path filters, and required/advisory gate boundaries.
+- [Pre-Operator UI Quality Readiness Program](../reference/PRE-OPERATOR-UI-READINESS.md) — dimensions, baseline shape, prioritization fields, exit gate, and operating rules.
+- [Milestone Context](../MILESTONE-CONTEXT.md) — approved scope and sequencing for the formal v1.39 milestone.
+- [v1.37 Quality Evidence Ledger](../reference/QUALITY-LEDGER.md) — existing bounded findings, evidence, churn, verification, and dispositions.
+- [v1.37 Milestone Audit](../milestones/v1.37-MILESTONE-AUDIT.md) and [Phase 159 Evidence Matrix](../milestones/v1.37-phases/159-close-v1-37-audit-gaps-coverage-wiring-and-verification-prov/159-EVIDENCE-MATRIX.md) — evidence ownership, provenance classes, limitations, and integration coverage.
+- [v1.38 Milestone Audit](../milestones/v1.38-MILESTONE-AUDIT.md), [Phase 160 API Coverage](../milestones/v1.38-phases/160-package-backed-phoenix-proof/COVERAGE.md), [Phase 160 Verification](../milestones/v1.38-phases/160-package-backed-phoenix-proof/160-VERIFICATION.md), and [Phase 161 Release Evidence](../milestones/v1.38-phases/161-release-and-tidy-closeout/161-RELEASE-EVIDENCE.md) — package and release seams, exact-SHA evidence, test boundaries, and advisory lane caveats.
+- [Milestone Candidates](../reference/milestone-candidates.md) and [Milestone Arc](../reference/MILESTONE-ARC.md) — evidence-gated roadmap posture and selection/closeout rules.
 
----
-*Architecture research for: Scrypath v1.36 Dependency Security Remediation*
-*Researched: 2026-08-21*
+## Caveats
+
+- This is architecture guidance for the readiness assessment and evidence flow; it does not establish that any particular quality dimension is already assessed or sufficient.
+- The readiness program is approved intent, and v1.39 is only now being formalized. Do not treat a research document as baseline evidence or change the program's `NOT READY` status from this analysis.
+- The archive was inspected as planning evidence; this document does not independently rerun tests, re-query hosted workflows, review all source modules, or certify current runtime behavior.
+- Exact-SHA, dependency-version, and service-backed claims age. Recheck only when the baseline depends on them for a current readiness decision.

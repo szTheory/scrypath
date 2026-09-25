@@ -1,214 +1,109 @@
-# Domain Pitfalls: v1.36 Dependency Security Remediation
+# Domain Pitfalls: Pre-Operator UI Quality Readiness Ratchet
 
-**Domain:** Security maintenance across independent Elixir/Mix dependency graphs
-**Researched:** 2026-08-21
-**Confidence:** HIGH for repository-specific resolution and gate risks; MEDIUM for deployment-only runtime reachability.
+**Domain:** Whole-product quality and adopter-readiness assessment for a mature, pre-1.0 Elixir OSS library
+**Researched:** 2026-09-25
+**Confidence:** HIGH for repository-specific evidence and process failure modes; MEDIUM for general audit-program tradeoffs
+
+This assessment applies the approved readiness program and the concrete evidence limits recorded in v1.37 and v1.38. It is not a new finding that Scrypath currently has any of these defects; these are failure modes the v1.39 baseline and closure process must guard against.
 
 ## Critical Pitfalls
 
-### Pitfall 1: Treating the four applications as one lock graph
+### Pitfall 1: Treating old evidence as current, complete, or independent proof
 
-**What goes wrong:** A root `mix deps.get` or lockfile update is taken as proof that the advisories are fixed everywhere. `mix.lock`, `scrypath_ops/mix.lock`, `examples/phoenix_meilisearch/mix.lock`, and `examples/scrypath_ecommerce/mix.lock` resolve separately, so vulnerable versions can remain in three projects.
+**What goes wrong:** A milestone report or passing command is carried forward as proof that the same claim holds for the current source, every adopter path, and the whole product. Historical coverage is either rerun without a decision-relevant reason or accepted wholesale without checking the claim, source SHA, environment, age, and limitations.
 
-**Why it happens:** The apps use local path dependencies and share broad requirements, which makes their graphs look coupled while Mix locks each project independently.
+**Why it happens:** Large audits contain many linked artifacts, repeated command names, and different evidence classes. The v1.37 audit distinguishes prior committed support, present-state verification, exact-SHA hosted evidence, and historical chronology; v1.38's package proof also explicitly opts out of document deletion, index swapping, facets, task listing, and other capabilities outside its scenarios.
 
-**How to avoid:** Give each batch ownership of exactly one manifest/lock graph. From that project directory, run `mix deps.get`, inspect its resolved versions, and record that its recorded advisory set is absent before proceeding. Do not carry a lockfile from another graph into the batch.
+**Prevention:** Build one capability-by-evidence matrix. For each user job and claim, link the narrowest authoritative evidence and record source SHA/date, environment, evidence class, relevant scope, freshness/currentness, and known limit. Reuse a passing artifact only for the exact claim it supports. Mark stale or absent proof as a gap or uncertainty, not as failure and not as a pass. Do not rerun a gate unless it answers a decision-relevant freshness, coverage, or regression question.
 
-**Warning signs:** `mix deps.get` continues to print an advisory after root succeeds; `git diff` lacks the graph’s own `mix.lock`; a command is launched from the repository root when the batch requires an example directory.
+**Detection:** A claim says “all workflows” while its cited test covers only an upsert; it relies on a prior receipt without identifying its source SHA; a broad matrix duplicates source rows instead of linking to one canonical ledger; or a current test is used to imply historical chronology.
 
-**Stop / rollback boundary:** Stop the current batch if its own resolver retains an affected package, requires an unplanned major/minor line, or edits another graph. Revert only the uncommitted current batch; do not amend a previous green batch.
+### Pitfall 2: Turning synthetic or source-only proof into real-boundary assurance
 
-**Phase to address:** Batch 1 owns root; Batch 2 owns legacy Phoenix; Batch 3 owns Ops; Batch 4 owns ecommerce.
+**What goes wrong:** Unit stubs, compile checks, workflow-source assertions, or generated artifacts are described as proof of live backend behavior, hosted CI success, external service compatibility, package installation, or historical behavior.
 
----
+**Why it happens:** Synthetic tests are cheap and valuable but their seam is easy to overstate. Phase 159 records that workflow source cannot prove a hosted successful run, and source/current-state tests cannot reconstruct a pre-extraction test chronology. Phase 160 separates lifecycle-contract assertions from actual package-backed Phoenix scenarios against Postgres and Meilisearch.
 
-### Pitfall 2: Broad unlocking or stale artifacts create a false resolution result
+**Prevention:** Label evidence by boundary: source/static, unit/property, contract/seam, integration with real service, browser/E2E, or exact-SHA hosted evidence. State exactly what each proves and excludes. Use a more realistic boundary only when the adopter claim crosses it; for published package or release claims, require artifact-backed consumer or exact-SHA hosted evidence where the program says so. Never synthesize evidence for unavailable history, external systems, or user decisions.
 
-**What goes wrong:** `mix deps.update`, `deps.unlock --all`, or a broad clean advances unrelated packages; conversely, stale `_build` output lets a test exercise an older compiled dependency. The resulting diff either exceeds the security fix or gives misleading green evidence.
+**Detection:** A mock-only suite is cited for network/service behavior; workflow YAML assertions are called “CI passed”; local success is presented as exact-SHA hosted proof; or later green tests are used to claim tests passed before an earlier refactor.
 
-**Why it happens:** Mix’s resolver follows declared ranges, not the advisory ledger’s intended minima; build artifacts are not evidence of the lockfile currently under review.
+### Pitfall 3: Closing important findings without an explicit severity disposition
 
-**How to avoid:** Start from the committed lockfile and change only the declared constraints required by the ledger. Review `mix deps.tree` and `git diff -- mix.exs mix.lock` after resolution. If diagnosis needs cleaning, use a named dependency or named build artifact only; `mix deps.clean` is intentionally destructive and must never be a routine broad cleanup. Recompile after any targeted clean.
+**What goes wrong:** A Critical, High, or Medium-leverage issue disappears into narrative, is relabeled low without evidence, or remains “known” at closeout without verification or an explicit owner acceptance. This makes a “READY FOR OPERATOR UI” decision unauditable.
 
-**Warning signs:** Unrelated direct/transitive packages move, the diff contains `deps.unlock --unused` fallout, compilation shows no dependency rebuild after a lock change, or CI succeeds only with an existing cache.
+**Why it happens:** A readiness program mixes implementation findings, uncertainty, polish ideas, and process limitations. They are easy to conflate, especially when a long candidate list becomes a backlog rather than a disposition ledger.
 
-**Stop / rollback boundary:** Stop if the resolver changes packages outside the recorded path without a documented necessity. Restore the current batch’s manifest and lockfile rather than accepting package-head drift.
+**Prevention:** Give every confirmed finding an ID, affected adopter job, evidence/provenance, impact/frequency, confidence, compatibility/security/data-integrity risk, implementation/regression/CI cost, severity/leverage, owner, and disposition. Critical/High/Medium findings must be closed with verification or explicitly accepted with rationale and an owner decision before the exit gate passes. Accepted-at-risk does not mean unresolved, and the rationale and decision-maker must remain visible. Give deferred low/speculative items a revisit trigger; delete stale candidates.
 
-**Phase to address:** Every batch; Batch 1 establishes the diff-review procedure.
+**Detection:** The final audit contains open rows without owners or decisions; a severity changes but the evidence does not; an item is deferred “for later” without trigger; or the readiness marker changes while any high/medium-leverage item is unresolved.
 
----
+## Moderate Pitfalls
 
-### Pitfall 3: Updating Req only in the lockfile or assuming 0.5 → 0.6 is invisible
+### Pitfall 4: Growing the audit into an unbounded cleanup or product expansion
 
-**What goes wrong:** `req` remains declared as `~> 0.5` in root/Ops/ecommerce, so a future resolve downgrades it back to a vulnerable line; or Req 0.6 changes expose request/test assumptions in the core Meilisearch client and its extensive `Req.Test` plug stubs.
+**What goes wrong:** “Whole product” is interpreted as a mandate to fix every rough edge, add new feature families, refactor architecture speculatively, or polish ScrypathOps UI during this non-UI milestone.
 
-**Why it happens:** The root library and both web/client apps declare Req directly, while the legacy example receives it through the local root path dependency. A lockfile-only fix masks the public compatibility constraint.
+**Prevention:** Keep baseline breadth separate from implementation breadth. Assess each named dimension, but plan only evidence-backed, worthwhile non-UI gaps in small independent milestones. Use the explicit scope guard for any candidate runtime/API work; banned capability classes require a separate owner-approved scope change. Leave operator UI work outside this milestone. Preserve a defer/no-change disposition where the case is weak.
 
-**How to avoid:** In Batch 1, change root to `~> 0.6.1` and prove the core request paths using the existing service-free tests. In Batches 3 and 4, make the same direct-constraint change in their manifests. Do not add a direct Req dependency to the legacy example merely to force its lock; resolve it through its local `{:scrypath, path: "../.."}` dependency. Audit production Swoosh configuration because Ops explicitly uses `Swoosh.ApiClient.Req`.
+**Warning signs:** A candidate is justified only by possibility or taste; an audit row becomes a feature request without adopter evidence; a “completeness” pass starts changing public surface or UI; or the milestone grows without an independent outcome.
 
-**Warning signs:** a manifest still says `~> 0.5`; tests using `Req.Test.stub/2` or `plug: {Req.Test, ...}` fail; request options produce warnings; production mail config no longer starts.
+### Pitfall 5: Making every useful check a required CI gate
 
-**Stop / rollback boundary:** Stop if a test failure requires application-code changes outside the maintenance scope, or if a public Req constraint cannot resolve on the supported Elixir/OTP tuple. Keep the prior published constraint until the compatibility break has a separately approved fix.
+**What goes wrong:** The matrix closes only after all service-backed, browser, compatibility, security, performance, and deep-quality checks run on every change. CI becomes slow, costly, flaky, and less informative, weakening the signal of required gates.
 
-**Phase to address:** Batch 1 owns the core/API constraint; Batch 3 owns Ops mail-client behavior; Batch 4 validates it through mounted ecommerce.
+**Why it happens:** A passing run feels like stronger assurance, while setup and maintenance costs are less visible. The project's existing policy deliberately keeps repeatable service/E2E proof advisory or scheduled where the incremental confidence does not warrant merge-blocking cost.
 
----
+**Prevention:** Map claims to the cheapest reliable layer first. Promote a check to required only when recurrence, risk reduction, stability, and diagnostic value justify runtime and maintenance cost. Otherwise run it locally, on exact-SHA release candidates, scheduled, or advisory. For service checks, automate setup, health checks, isolation, timeouts, diagnostics, and teardown. Record why the lane is required/advisory and what its result means.
 
-### Pitfall 4: Solving Decimal without its Ecto/Ecto SQL contract
+**Warning signs:** CI adds overlapping suites with the same claim; long service setup runs before cheap deterministic failures can surface; repeated flakes are retried without diagnosis; or gate promotion is justified by “more testing” without a cost or risk argument.
 
-**What goes wrong:** Batch 2 tries to unlock `decimal` from 2.3.0 alone. The legacy example’s resolved `Ecto 3.13.5` declares the Decimal 2 line, creating an unsatisfiable graph or a partial fix that future resolution undoes.
+### Pitfall 6: Leaving routine software acceptance as human-UAT debt
 
-**Why it happens:** Decimal is transitive, but the vulnerable fixed minimum is `3.0.0`; the required compatibility move is the Ecto/Ecto SQL 3.14 line as a coordinated graph upgrade.
+**What goes wrong:** Plans close with “verify manually,” a pending UAT checklist, or a blanket approval checkpoint for routine behavior already testable through deterministic automation. This contradicts the approved zero-routine-human-verification goal and makes milestone completion depend on post-implementation judgment.
 
-**How to avoid:** Make Batch 2 explicitly own `ecto`, `ecto_sql`, and `decimal` together. Resolve the smallest 3.14-compatible line, review Ecto/Ecto SQL release notes before modifying requirements, then run the example’s test alias so migrations, Repo startup, casts, and sandbox setup compile against the new contract.
+**Prevention:** Map every acceptance claim to executable automated evidence before implementation. Use unit/property and contract tests first, then integration, browser/accessibility automation, API probes, or exact-SHA hosted proof as needed. Keep only irreducible external actions (credentials, permissions, unresolved product decisions, physical-world checks) as handoffs. Resolve subjective decisions before implementation or keep them nonblocking; do not simulate a reviewer or approval.
 
-**Warning signs:** `mix deps.get` reports conflicting Decimal requirements; only `decimal` changes in the lockfile; `ecto.create`, migrations, or tests fail after a previously green compile.
+**Warning signs:** UAT rows say “looks good” without a defined oracle; plans require maintainer click-through for repeatable software behavior; a task is considered done before automation is green; or a handoff has no external prerequisite.
 
-**Stop / rollback boundary:** Stop on any conflict or migration/test regression; do not paper over it with an override or lockfile edit. Revert the whole legacy-example batch, preserving the already-green root batch.
+### Pitfall 7: Reporting counts and green checks without explaining evidence limits
 
-**Phase to address:** Batch 2 only.
+**What goes wrong:** High requirement/phase counts create confidence while narrow waivers, opt-outs, advisory status, historical artifact overrides, or bounded coverage exclusions are hidden in prose. Readers mistake “30/31 plus waiver” for 31 fully proven requirements or treat “coverage report generated” as adequate test assurance.
 
----
+**Prevention:** Put limitations next to the score and in each evidence row. Separate requirement coverage from phase artifact completeness, cross-phase integration, representative flows, and hosted proof. Name any waiver precisely, cap its scope, explain why it cannot be reconstructed, and state what it does not claim. Keep the readiness gate fail-closed on unknowns until assessed; do not turn an explicit boundary into a universal guarantee.
 
-### Pitfall 5: Under-testing Phoenix/Bandit/LiveView changes as a compile-only upgrade
+**Warning signs:** Summaries have only a numerator; waiver details are buried; evidence classes are collapsed to “supported”; or opt-outs vanish between coverage and milestone audit.
 
-**What goes wrong:** Fixed versions resolve, but the web server, endpoint parser, LiveView socket/navigation, WebSocket handling, or Postgres-backed test startup regresses. This is especially risky for Bandit `1.11 → 1.12`, Phoenix `1.8.5/1.8.7 → 1.8.9`, and LiveView `1.1.31 → 1.1.33`.
+## Minor Pitfalls
 
-**Why it happens:** The vulnerable surfaces are runtime inbound HTTP/2/WebSocket/request-parser paths. Compilation cannot prove the apps boot, the endpoint accepts a connection, or mounted LiveView behavior remains compatible.
+### Pitfall 8: Letting the evidence ledger become a permanent speculative backlog
 
-**How to avoid:** Use each app’s real test alias, not a bare root test: legacy `cd examples/phoenix_meilisearch && mix deps.get && mix test`; Ops `mix verify.opsui`; ecommerce `cd examples/scrypath_ecommerce && mix deps.get && mix e2e.prepare` plus the advisory `phase105-e2e` browser lane when services are available. Treat unavailable Postgres/Meilisearch as missing evidence, not a passing substitute.
+**What goes wrong:** Old candidates survive after their trigger disappears, every audit adds more ideas, and closure becomes an endless polish program rather than a diminishing-return decision.
 
-**Warning signs:** `Bandit.PhoenixAdapter` startup errors, socket/LiveView tests fail, `Plug.Parsers` errors, an Ecto repo cannot create/migrate, flaky browser connection failures, or a test passes only because it did not reach the app process.
+**Prevention:** Reconcile candidate rows at each milestone boundary against current adopter evidence, release state, and scope. Remove stale entries. Retain deferred items only with a concise reason and a concrete revisit trigger; classify unsupported or low-leverage ideas explicitly.
 
-**Stop / rollback boundary:** Stop the web graph at the first runtime-gate failure. Preserve its patch as an uncommitted diagnostic only; do not combine it with later graphs or blame the service until service health/logs prove that conclusion.
+### Pitfall 9: Duplicating canonical evidence in several artifacts
 
-**Phase to address:** Batch 2 owns legacy server behavior; Batch 3 owns Ops endpoint/LiveView/mailer behavior; Batch 4 owns browser and mounted-app behavior.
+**What goes wrong:** A copied evidence table drifts from its source and later readers cannot tell which result or limitation controls.
 
----
+**Prevention:** Maintain one canonical evidence matrix/ledger per assessment and link to it from retrospective indexes, summaries, and audits. Allow summaries to aggregate, but not silently mutate evidence rows. Reconcile cross-references at closeout.
 
-### Pitfall 6: Breaking ecommerce through its mounted path dependencies
+## Phase-Specific Warnings
 
-**What goes wrong:** Ecommerce resolves fixed external packages but fails because it mounts both root Scrypath and `scrypath_ops` by path. An Ops graph that is green in isolation may be incompatible when compiled as a dependency of the ecommerce app.
-
-**Why it happens:** Batch 4 has three relevant sources of code and two different lockfile perspectives. The ecommerce compiler list also includes `:phoenix_live_view`, so client/server asset and LiveView assumptions meet in this graph.
-
-**How to avoid:** Keep Batch 4 separate after Batch 3 is committed. From ecommerce, run `mix deps.get` and inspect its own lock, then run `mix e2e.prepare` before starting browser tests. Preserve the existing test-server contract: `SCRYPATH_E2E_NO_SANDBOX=1` is only for the long-running browser server; preparation/tests retain sandbox isolation.
-
-**Warning signs:** path dependency is reported stale, a root-only test is green while ecommerce compilation fails, `e2e.prepare_search` fails, or browser tests cannot see seeded data because the sandbox/server environment was changed.
-
-**Stop / rollback boundary:** Stop Batch 4 if path dependency compilation or preparation fails. Do not modify the parent graphs to make ecommerce resolve unless the earlier batch’s own gates are rerun and the scope is re-approved.
-
-**Phase to address:** Batch 4 only.
-
----
-
-### Pitfall 7: Calling the advisory feed clean before reproducing it in every cwd
-
-**What goes wrong:** The milestone is declared closed from a stale, changed, or root-only security-feed result. Conversely, a feed outage is misreported as a clean result.
-
-**Why it happens:** Advisory data is external and changes over time; the acceptance criterion is specifically the recorded advisory set reproduced by `mix deps.get` on 2026-08-16, not an unqualified claim that no advisory exists anywhere.
-
-**How to avoid:** Before and after each batch, capture the exact `mix deps.get` output from the owning project cwd and compare the affected package versions against the triage ledger. If the feed is unavailable, retain the lockfile/version evidence and mark advisory-feed confirmation pending; retry in CI or when service returns.
-
-**Warning signs:** no dated command output; `mix deps.get` cannot contact the feed; advisories disappear without the affected lock package moving; a report says “all clear” but does not name all four projects.
-
-**Stop / rollback boundary:** Do not close the milestone while any graph lacks either a successful feed result or a documented feed-outage exception plus verified fixed versions. An outage blocks closure, not implementation of an already-green batch.
-
-**Phase to address:** Every batch, with final closeout owning the four-graph evidence matrix.
-
----
-
-### Pitfall 8: Losing the maintenance boundary through non-atomic commits
-
-**What goes wrong:** Multiple graph upgrades, source refactors, docs changes, generated assets, or an opportunistic package-head update land together. A regression cannot be attributed or safely reverted, and Release Please gets a misleading release unit.
-
-**Why it happens:** The packages overlap transitively and all vulnerabilities feel related, but their runtime and rollback surfaces differ materially.
-
-**How to avoid:** Use exactly four commits in ledger order: root, legacy example, Ops, ecommerce. Each commit includes only its manifest/lock changes and any narrowly required compatibility fix; all stated gates must pass before the next starts. Keep the required root release-truth gates after every root-affecting batch.
-
-**Warning signs:** one commit modifies more than one project’s lockfile without stated ownership; `git status` contains generated browser artifacts or unrelated planning/docs edits; an earlier batch has no recorded green gate; a later batch is started while the current one is unresolved.
-
-**Stop / rollback boundary:** Stop before committing if the diff crosses the current batch boundary. Revert the single offending commit if it has landed; never squash all four into one recovery commit.
-
-**Phase to address:** Roadmap orchestration and every batch handoff.
-
-## Technical Debt Patterns
-
-| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
-|---|---|---|---|
-| Lockfile-only Req upgrade | Small diff | Next resolver returns to vulnerable 0.5; public requirement lies | Never |
-| `deps.unlock --all` / package-head refresh | One resolver run | Unreviewable transitive behavior changes and unclear advisory causality | Never for this milestone |
-| Root-only verification | Fast feedback | Leaves three independently locked graphs vulnerable/unproven | Only as a precheck, never as batch acceptance |
-| Treating `phase105-e2e` as required | Strong-looking guarantee | Changes established CI posture and blocks maintenance on an advisory lane | Never; run it as available evidence |
-| Broad cache/build deletion | Sometimes clears a local issue | Destroys diagnosis and may hide an unnecessary re-resolve | Only targeted, named diagnostic cleanup |
-
-## Integration Gotchas
-
-| Integration | Common Mistake | Correct Approach |
+| Phase topic | Likely pitfall | Mitigation |
 |---|---|---|
-| Req / Mint / hpax | Upgrade Req but do not verify its transitive HTTP stack in the owning lockfile | Resolve `Req 0.6.1+`, `Mint 1.9.3`, and `hpax 1.0.4` per graph; run client tests |
-| Phoenix / Bandit / LiveView | Consider `mix compile` proof of endpoint safety | Boot/migrate/test each web app and run browser evidence for ecommerce when services are available |
-| Ecto / Ecto SQL / Decimal | Add a Decimal override | Align the legacy example’s Ecto/Ecto SQL 3.14 line so Decimal 3 is a real solver result |
-| Swoosh | Ignore it because local test uses `Swoosh.Adapters.Test` | Check Ops production’s `Swoosh.ApiClient.Req` and keep Swoosh at `1.26.3+` |
-| Path dependencies | Test `scrypath_ops` only from `scrypath_ops/` | Also resolve and prepare ecommerce, which consumes Ops and root through paths |
-| Advisory service | Equate service failure with zero findings | Keep version evidence and mark feed confirmation pending until rerun |
-
-## Performance Traps
-
-| Trap | Symptoms | Prevention | When It Breaks |
-|---|---|---|---|
-| Re-running all services before each resolver tweak | Slow, noisy feedback and unrelated flakes | Use service-free batch gates first; run service/browser proof only after resolution is stable | Immediately in local iteration |
-| Cache-only confidence | A green build that did not recompile changed deps | Confirm lock diff and fresh compile; targeted-clean only if evidence is ambiguous | Any dependency upgrade |
-| Parallel graph edits | Conflicting lockfiles and unclear attribution | Strictly serialize the four batches and commits | As soon as a shared path dependency changes |
-
-## Security Mistakes
-
-| Mistake | Risk | Prevention |
-|---|---|---|
-| Claiming advisories fixed from root only | HIGH: web examples retain known vulnerable packages | Require dated `mix deps.get` evidence for all four cwd-owned graphs |
-| Upgrading past minima without review | MEDIUM/HIGH: avoids one CVE but adds untested runtime changes | Use recorded fixed-compatible minima; stop on accidental transitive unlocking |
-| Treating disabled/unavailable services as pass | HIGH: hides Phoenix/Bandit/LiveView and Meilisearch client regressions | Mark live/browser evidence unavailable, collect logs/health proof, and rerun in CI |
-| Relaxing sandbox/server flags during E2E repair | MEDIUM: test isolation and browser data visibility regress | Preserve the documented `SCRYPATH_E2E_NO_SANDBOX` boundary |
-
-## "Looks Done But Isn't" Checklist
-
-- [ ] **Root Req fix:** root `mix.exs` says `~> 0.6.1`, not only root `mix.lock`.
-- [ ] **Four graph closure:** each owning cwd has post-change `mix deps.get` evidence with the recorded advisories absent (or a documented feed outage awaiting retry).
-- [ ] **Legacy Decimal remediation:** Ecto, Ecto SQL, and Decimal resolve together; no override masks a conflict.
-- [ ] **Ops behavior:** `mix verify.opsui` proves Postgres-backed app startup/tests and root required gates remain green.
-- [ ] **Ecommerce mount:** ecommerce resolves both path dependencies, completes `mix e2e.prepare`, and retains the advisory browser evidence boundary.
-- [ ] **Runtime service evidence:** a missing Postgres/Meilisearch service is reported as unavailable, never silently counted as pass.
-- [ ] **Atomic release history:** four isolated, independently green commits exist in recorded order.
-
-## Recovery Strategies
-
-| Pitfall | Recovery Cost | Recovery Steps |
-|---|---|---|
-| Accidental broad unlock | MEDIUM | Discard only the current uncommitted graph diff; re-resolve from its committed lock with minimal declared constraints |
-| Req compatibility failure | MEDIUM | Keep Batch 1 uncommitted, reduce to fixed-compatible 0.6.x, inspect upstream change notes, and add only a scope-approved compatibility patch |
-| Ecto/Decimal solver conflict | MEDIUM | Revert the entire Batch 2 graph; align Ecto/Ecto SQL before asking Decimal to move |
-| Ops/ecommerce runtime regression | HIGH | Preserve logs and exact lock diff, revert the one batch, and reproduce in its owning cwd/service lane |
-| Advisory-feed outage | LOW implementation / MEDIUM release | Preserve fixed-version and gate evidence; rerun `mix deps.get` when feed access returns before closure |
-
-## Pitfall-to-Phase Mapping
-
-| Pitfall | Prevention Phase | Verification |
-|---|---|---|
-| Independent lock graph / Req public constraint / stale artifacts | Batch 1 — Root core client | Root resolver, warning-as-error compile, fast tests, `mix verify --exclude integration`, phases 11 and 99 |
-| Ecto–Decimal conflict / legacy server runtime | Batch 2 — Legacy Phoenix example | Example-cwd `mix deps.get && mix test`, then root fast tests |
-| Phoenix/Bandit/LiveView/Swoosh runtime | Batch 3 — ScrypathOps | `mix verify.opsui` plus root required gates |
-| Mounted path coupling / E2E sandbox and service evidence | Batch 4 — Ecommerce | Ecommerce-cwd resolution, `mix e2e.prepare`, advisory `phase105-e2e` or documented service-unavailable result |
-| Feed drift and non-atomic history | Cross-batch closeout | Four dated resolver outputs, package-version matrix, and four separate commits |
+| Whole-product baseline | Treating v1.37/v1.38 as complete coverage, or rerunning all gates indiscriminately | Map every named dimension and adopter job; reuse only evidence that directly covers the claim; run fresh checks only where decision-relevant. |
+| Gap ranking | Mixing confirmed defects, uncertainty, and aspirational features | Maintain separate evidence-ranked findings and opportunity dispositions; use explicit impact, confidence, risk, and cost. |
+| Bounded closure | Expanding into public API or banned capability classes | Review scope authority before planning implementation; require evidence and owner approval for scope changes. |
+| Verification/CI | Requiring every expensive service/browser check on every PR | Apply cheapest-reliable-layer mapping and recurring-value cost review; preserve advisory/scheduled status when appropriate. |
+| Readiness closeout | Hiding accepted risk, waivers, proof gaps, or human-UAT debt behind a green label | Verify all six program exit conditions; leave NOT READY until every dimension is assessed and no Critical/High/Medium-leverage item is unresolved. |
 
 ## Sources
 
-- Repository advisory ledger: `.planning/quick/260816-tzr-triage-dependency-security-advisories-re/260816-tzr-ADVISORY-TRIAGE.md` (HIGH)
-- Repository triage research and pending remediation task: `.planning/quick/260816-tzr-triage-dependency-security-advisories-re/260816-tzr-RESEARCH.md`; `.planning/todos/pending/2026-08-16-remediate-dependency-security-advisories.md` (HIGH)
-- Repository manifests, verification commands, CI and runtime configuration: `mix.exs`, `scrypath_ops/mix.exs`, both example `mix.exs` files, `CONTRIBUTING.md`, and `.github/workflows/ci.yml` (HIGH)
-- [Ecto 3.14 changelog](https://github.com/elixir-ecto/ecto/blob/master/CHANGELOG.md) and [Ecto SQL 3.14 changelog](https://hex.pm/packages/ecto_sql/3.14.0/files/CHANGELOG.md) (MEDIUM, official current sources)
-- [Mix `deps.clean` documentation](https://hexdocs.pm/mix/main/Mix.Tasks.Deps.Clean.html) and [Req.Test documentation](https://hexdocs.pm/req/0.4.11/Req.Test.html) (MEDIUM, official documentation)
-
----
-
-*Pitfalls research for: Scrypath v1.36 dependency security remediation*
-*Researched: 2026-08-21*
+- `.planning/reference/PRE-OPERATOR-UI-READINESS.md` — approved sequence, evidence-ranked disposition fields, six-part exit gate, operating rules.
+- `.planning/PROJECT.md` — zero-routine-human-verification policy, cheapest reliable evidence layer, CI cost posture, scope guard, v1.37/v1.38 outcomes.
+- `.planning/reference/QUALITY-LEDGER.md` — v1.37 finding/risk/churn/verification/disposition ledger and measured diminishing-return boundary.
+- `.planning/milestones/v1.37-MILESTONE-AUDIT.md` — bounded 30/31 coverage with a narrow TEST-01 chronology waiver, evidence-class limits, retrospective artifact-shape override, and a corrected hosted lookup false negative.
+- `.planning/milestones/v1.37-phases/159-close-v1-37-audit-gaps-coverage-wiring-and-verification-prov/159-EVIDENCE-MATRIX.md` and `159-CLOSURE-RECEIPT.md` — canonical evidence classes, source/SHA limits, hosted/local boundaries, and exact-SHA closeout.
+- `.planning/milestones/v1.38-phases/160-package-backed-phoenix-proof/COVERAGE.md` — explicit integration/opt-out boundary for package-backed Phoenix scenarios.
+- `.planning/milestones/v1.38-MILESTONE-AUDIT.md` — package and release flow evidence, exact-SHA and service proof, advisory lane and process notes.
