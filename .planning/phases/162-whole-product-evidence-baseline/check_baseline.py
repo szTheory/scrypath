@@ -54,13 +54,10 @@ def main() -> int:
     if not rows:
         fail("BASELINE", "matrix", "no claim rows found")
 
-    orderable = [(int(c[1]), STAGE_ORDER.index(c[4]) if c[4] in STAGE_ORDER else len(STAGE_ORDER), c[0]) for _, c in rows]
-    if orderable != sorted(orderable):
-        fail("BASELINE", "row order", "rows must be ordered by dimension, lifecycle stage, then claim ID")
-
     seen: set[str] = set()
     assertions: dict[str, str] = {}
     base_counts: dict[int, int] = {}
+    orderable: list[tuple[int, int, str]] = []
     dims, roles, stages = set(), set(), set()
     for cid, c in rows:
         if not re.fullmatch(r"C-\d{2}(?:[A-Z])?", cid):
@@ -71,7 +68,8 @@ def main() -> int:
         if cid in seen:
             fail(cid, "ID", "duplicate claim ID")
         seen.add(cid)
-        base_counts[base] = base_counts.get(base, 0) + 1
+        if re.fullmatch(r"C-\d{2}", cid):
+            base_counts[base] = base_counts.get(base, 0) + 1
         for name, value in zip(HEADER[1:], c[1:]):
             if not value:
                 fail(cid, name, "blank cell")
@@ -83,6 +81,7 @@ def main() -> int:
             fail(cid, "Role", f"invalid role {c[2]!r}")
         if c[4] not in STAGES:
             fail(cid, "Stage", f"invalid stage {c[4]!r}")
+        orderable.append((int(c[1]), STAGE_ORDER.index(c[4]), cid))
         if c[16] not in ASSESSMENTS:
             fail(cid, "Assessment", f"invalid assessment {c[16]!r}")
         if c[17] not in FRESHNESS:
@@ -120,6 +119,8 @@ def main() -> int:
             resolved = (BASELINE.parent / local).resolve()
             if not resolved.exists():
                 fail(cid, "Source", f"unresolved local link {target!r}")
+    if orderable != sorted(orderable):
+        fail("BASELINE", "row order", "rows must be ordered by dimension, lifecycle stage, then claim ID")
     if args.through is not None:
         for n in range(1, args.through + 1):
             if base_counts.get(n, 0) != 1:
