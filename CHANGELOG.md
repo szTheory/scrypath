@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 Release Please manages versioned entries after this baseline.
 
+## [0.3.13](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.12...scrypath-v0.3.13) (2026-09-25)
+
+
+### Bug Fixes
+
+* complete Phase 161 release and package-proof closeout ([#77](https://github.com/szTheory/scrypath/issues/77)) ([465aef9](https://github.com/szTheory/scrypath/commit/465aef9bc6c9c05fb021b5aa3d5b6b584aed568d))
+
 ## [0.3.12](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.11...scrypath-v0.3.12) (2026-08-25)
 
 
