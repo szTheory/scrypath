@@ -200,7 +200,7 @@ causal compatibility proof and truthful fresh-resolution/advisory evidence.
   — reproduced advisory evidence, exposure analysis, and fixed minima.
 - `.planning/quick/260816-tzr-triage-dependency-security-advisories-re/260816-tzr-ADVISORY-TRIAGE.md`
   — advisory ledger, legacy high-regression-risk classification, and gate table.
-- `.planning/phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md`
+- `.planning/milestones/v1.27-phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md`
   — authority preventing unrelated public/runtime capability expansion.
 
 ### Legacy dependency graph and contributor contract

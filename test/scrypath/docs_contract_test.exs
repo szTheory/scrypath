@@ -65,13 +65,13 @@ defmodule Scrypath.DocsContractTest do
   @support_guide File.read!("guides/support-and-compatibility.md")
   @verify_adopter File.read!("lib/mix/tasks/verify.adopter.ex")
   @phase97_contract_statements File.read!(
-                                 ".planning/phases/97-canonical-contract-freeze-and-scope-guard/97-CONTRACT-STATEMENTS.md"
+                                 ".planning/milestones/v1.27-phases/97-canonical-contract-freeze-and-scope-guard/97-CONTRACT-STATEMENTS.md"
                                )
   @phase97_contract_traceability File.read!(
-                                   ".planning/phases/97-canonical-contract-freeze-and-scope-guard/97-CONTRACT-TRACEABILITY.md"
+                                   ".planning/milestones/v1.27-phases/97-canonical-contract-freeze-and-scope-guard/97-CONTRACT-TRACEABILITY.md"
                                  )
   @phase97_scope_guard File.read!(
-                         ".planning/phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md"
+                         ".planning/milestones/v1.27-phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md"
                        )
 
   # Paths shipped as ExDoc extras (mix.exs :docs extras) plus top-level narrative docs.

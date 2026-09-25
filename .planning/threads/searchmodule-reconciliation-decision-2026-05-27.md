@@ -38,7 +38,7 @@ Should Scrypath recover the historical `Scrypath.SearchModule` layer from salvag
   - `.planning/PROJECT.md`
   - `.planning/STATE.md`
   - `.planning/MILESTONES.md`
-  - `.planning/MILESTONE-ARC.md`
+  - `.planning/reference/MILESTONE-ARC.md`
 - `v1.20` archive trio updated with explicit historical-classification wording:
   - `.planning/milestones/v1.20-ROADMAP.md`
   - `.planning/milestones/v1.20-REQUIREMENTS.md`

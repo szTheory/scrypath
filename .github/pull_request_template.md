@@ -16,7 +16,7 @@ Evidence:
 
 **`EVID-57-NN`**
 
-Replace **`NN`** with the matching row ID from **`.planning/EVID-01-b1-v1.14.md`** (for example **`EVID-57-01`**). Skip this section only for obvious typo-only or non-normative planning-only edits called out in **`.planning/phases/57-evidence-triage-and-b1-scope-lock/57-CONTEXT.md`**.
+Replace **`NN`** with the matching row ID from **`.planning/milestones/v1.14-EVID-01-b1.md`** (for example **`EVID-57-01`**). Skip this section only for obvious typo-only or non-normative planning-only edits called out in the archived [Phase 57 scope lock](../.planning/milestones/v1.14-ROADMAP.md#phase-57-evidence-triage-and-b1-scope-lock).
 
 ## Verification
 

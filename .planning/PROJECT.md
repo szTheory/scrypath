@@ -74,7 +74,7 @@ do not simulate approvals.
 
 ## Scope Guard Authority
 
-Source of truth: `.planning/phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md`
+Source of truth: `.planning/milestones/v1.27-phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md`
 
 Phase 97 through 99 banned capability classes:
 - autocomplete/suggestions

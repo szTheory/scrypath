@@ -20,7 +20,7 @@ key-files:
     - .planning/ROADMAP.md
     - .planning/REQUIREMENTS.md
     - .planning/STATE.md
-    - .planning/milestone-candidates.md
+    - .planning/reference/milestone-candidates.md
 requirements-completed: [INTG-06]
 completed: 2026-04-23T02:20:00Z
 ---
@@ -31,7 +31,7 @@ completed: 2026-04-23T02:20:00Z
 
 ## Accomplishments
 
-- Updated `.planning/PROJECT.md`, `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/STATE.md`, and `.planning/milestone-candidates.md` so they all tell the same closed-milestone story.
+- Updated `.planning/PROJECT.md`, `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/STATE.md`, and `.planning/reference/milestone-candidates.md` so they all tell the same closed-milestone story.
 - Marked the remaining `INTG-*` rows complete only after confirming the papercut and adopter-proof evidence already existed.
 - Created the frozen `v1.17-*` archive trio with a direct `outside_feedback_next: true` readiness verdict.
 
@@ -41,14 +41,14 @@ completed: 2026-04-23T02:20:00Z
 - `.planning/ROADMAP.md`
 - `.planning/REQUIREMENTS.md`
 - `.planning/STATE.md`
-- `.planning/milestone-candidates.md`
+- `.planning/reference/milestone-candidates.md`
 - `.planning/milestones/v1.17-ROADMAP.md`
 - `.planning/milestones/v1.17-REQUIREMENTS.md`
 - `.planning/milestones/v1.17-MILESTONE-AUDIT.md`
 
 ## Verification
 
-- `rg -n "INTG-05|INTG-06|Phase 70|v1.17|readiness checkpoint|outside integration feedback" .planning/PROJECT.md .planning/ROADMAP.md .planning/REQUIREMENTS.md .planning/STATE.md .planning/milestone-candidates.md`
+- `rg -n "INTG-05|INTG-06|Phase 70|v1.17|readiness checkpoint|outside integration feedback" .planning/PROJECT.md .planning/ROADMAP.md .planning/REQUIREMENTS.md .planning/STATE.md .planning/reference/milestone-candidates.md`
 - `test -f .planning/milestones/v1.17-ROADMAP.md && test -f .planning/milestones/v1.17-REQUIREMENTS.md && test -f .planning/milestones/v1.17-MILESTONE-AUDIT.md && rg -n "v1.17|INTG-05|INTG-06|readiness checkpoint|outside integration feedback|outside_feedback_next" .planning/milestones/v1.17-ROADMAP.md .planning/milestones/v1.17-REQUIREMENTS.md .planning/milestones/v1.17-MILESTONE-AUDIT.md`
 
 ## Issues Encountered

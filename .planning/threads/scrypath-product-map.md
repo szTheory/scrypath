@@ -62,8 +62,8 @@ The recurring jobs are:
 - `guides/phoenix-liveview.md`
 - `.planning/PROJECT.md`
 - `.planning/STATE.md`
-- `.planning/MILESTONE-ARC.md`
-- `.planning/milestone-candidates.md`
+- `.planning/reference/MILESTONE-ARC.md`
+- `.planning/reference/milestone-candidates.md`
 - `scrypath_ops/docs/operator-ia.md`
 
 ## Resolution

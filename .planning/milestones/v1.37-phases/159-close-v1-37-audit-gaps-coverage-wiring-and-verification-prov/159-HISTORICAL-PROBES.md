@@ -12,8 +12,8 @@ to both exist and pass at the extraction parent before a claim may be called
 - **Primary HEAD:** `f214f7e1d1141fe83be12f5651c9ecb6c54c17a7`
 - **Primary branch:** `gsd/v1.37-code-quality-ratchet`
 - **Initial user-owned paths:**
-  - modified `.planning/phases/134-under-iterated-surface-polish-dual-theme-s/134-UAT.md`
-  - modified `.planning/phases/136-milestone-verification-uat-s-g/136-UAT.md`
+  - modified `.planning/milestones/v1.34-phases/134-under-iterated-surface-polish-dual-theme-s/134-UAT.md`
+  - modified `.planning/milestones/v1.34-phases/136-milestone-verification-uat-s-g/136-UAT.md`
   - untracked `.planning/phases/159-close-v1-37-audit-gaps-coverage-wiring-and-verification-prov/.gitkeep`
   - untracked `.planning/research/.cache/`
 - **Primary old-revision execution:** none. Every old-revision command below ran

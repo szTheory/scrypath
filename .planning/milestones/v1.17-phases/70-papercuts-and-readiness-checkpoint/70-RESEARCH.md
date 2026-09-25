@@ -21,7 +21,7 @@
 | ID | Description | Research Support |
 |----|-------------|------------------|
 | INTG-05 | The milestone closes at most three concrete adopter-friction papercuts surfaced by the current docs, example, warnings, or dogfood flows, and each fix lands with a regression test or doc-contract anchor. [VERIFIED: .planning/REQUIREMENTS.md] | Plan three or fewer contract-backed fixes drawn from current docs/example/verify friction, not new API work. [VERIFIED: README.md] [VERIFIED: CONTRIBUTING.md] [VERIFIED: guides/golden-path.md] [VERIFIED: guides/support-and-compatibility.md] [VERIFIED: lib/mix/tasks/verify.adopter.ex] |
-| INTG-06 | Rolling planning artifacts and milestone-close notes explicitly treat v1.17 as a readiness checkpoint, not another breadth milestone, and end with a clear reassessment of whether external integration feedback should replace further in-repo polish. [VERIFIED: .planning/REQUIREMENTS.md] | Use the existing milestone archive trio plus rolling file updates, but add an explicit readiness verdict and “outside feedback next?” decision to the close artifacts. [VERIFIED: .planning/milestones/v1.16-MILESTONE-AUDIT.md] [VERIFIED: .planning/milestones/v1.16-ROADMAP.md] [VERIFIED: .planning/milestone-candidates.md] |
+| INTG-06 | Rolling planning artifacts and milestone-close notes explicitly treat v1.17 as a readiness checkpoint, not another breadth milestone, and end with a clear reassessment of whether external integration feedback should replace further in-repo polish. [VERIFIED: .planning/REQUIREMENTS.md] | Use the existing milestone archive trio plus rolling file updates, but add an explicit readiness verdict and “outside feedback next?” decision to the close artifacts. [VERIFIED: .planning/milestones/v1.16-MILESTONE-AUDIT.md] [VERIFIED: .planning/milestones/v1.16-ROADMAP.md] [VERIFIED: .planning/reference/milestone-candidates.md] |
 </phase_requirements>
 
 ## Summary
@@ -110,7 +110,7 @@ The highest-leverage papercuts still visible in the repo are not missing feature
 |-------------------|---------|---------|-------------|
 | `examples/phoenix_meilisearch/README.md` | Current repo state. [VERIFIED: examples/phoenix_meilisearch/README.md] | Canonical live proof and env/run-order contract. [VERIFIED: examples/phoenix_meilisearch/README.md] | Use as the single runnable proof reference; do not create a second example or duplicate full env tables elsewhere. [VERIFIED: .planning/PROJECT.md] [VERIFIED: examples/phoenix_meilisearch/README.md] |
 | `guides/support-and-compatibility.md` | Current repo state. [VERIFIED: guides/support-and-compatibility.md] | Canonical support and compatibility contract. [VERIFIED: guides/support-and-compatibility.md] | Use for explicit support posture rather than widening version claims in README or CONTRIBUTING. [VERIFIED: CONTRIBUTING.md] |
-| `.planning/milestone-candidates.md` | Current repo state. [VERIFIED: .planning/milestone-candidates.md] | Carries the “outside feedback before more breadth” recommendation into future milestone selection. [VERIFIED: .planning/milestone-candidates.md] | Update only at milestone close, after the readiness verdict is known. [VERIFIED: .planning/milestone-candidates.md] |
+| `.planning/reference/milestone-candidates.md` | Current repo state. [VERIFIED: .planning/reference/milestone-candidates.md] | Carries the “outside feedback before more breadth” recommendation into future milestone selection. [VERIFIED: .planning/reference/milestone-candidates.md] | Update only at milestone close, after the readiness verdict is known. [VERIFIED: .planning/reference/milestone-candidates.md] |
 
 ### Alternatives Considered
 
@@ -266,14 +266,14 @@ assert_contains_all(@ci_workflow, [
 3. Update `.planning/STATE.md` with the readiness verdict, the papercuts actually closed, and the explicit next action: seek outside integration feedback or justify why not. [VERIFIED: .planning/STATE.md]
 4. Create the standard frozen archive trio: `.planning/milestones/v1.17-ROADMAP.md`, `.planning/milestones/v1.17-REQUIREMENTS.md`, and `.planning/milestones/v1.17-MILESTONE-AUDIT.md`. [VERIFIED: .planning/milestones/v1.16-ROADMAP.md] [VERIFIED: .planning/milestones/v1.16-REQUIREMENTS.md] [VERIFIED: .planning/milestones/v1.16-MILESTONE-AUDIT.md]
 5. In `v1.17-MILESTONE-AUDIT.md`, add an explicit subsection such as **Readiness verdict** with a binary answer to: “Is Scrypath ready to prioritize outside integration feedback over further in-repo polish?” [VERIFIED: .planning/REQUIREMENTS.md] [VERIFIED: .planning/PROJECT.md]
-6. Update `.planning/milestone-candidates.md` after the close with the checkpoint result, so future milestone selection reflects whether more breadth is still blocked by missing outside evidence. [VERIFIED: .planning/milestone-candidates.md]
+6. Update `.planning/reference/milestone-candidates.md` after the close with the checkpoint result, so future milestone selection reflects whether more breadth is still blocked by missing outside evidence. [VERIFIED: .planning/reference/milestone-candidates.md]
 
 ### Recommended readiness verdict format
 
 - **Verdict:** `ready_for_external_feedback` or `not_ready_for_external_feedback`. [ASSUMED]
 - **Why:** 2-4 evidence bullets naming the example proof, support contract, adopter verify path, and which papercuts were closed. [VERIFIED: .planning/PROJECT.md]
 - **Remaining known friction:** list deferred papercuts that did not make the top three. [VERIFIED: Candidate Papercuts section]
-- **Next milestone policy:** either “do not open another polish milestone until feedback arrives” or the narrow reason that an additional internal milestone is still justified. [VERIFIED: .planning/milestone-candidates.md] [VERIFIED: .planning/PROJECT.md]
+- **Next milestone policy:** either “do not open another polish milestone until feedback arrives” or the narrow reason that an additional internal milestone is still justified. [VERIFIED: .planning/reference/milestone-candidates.md] [VERIFIED: .planning/PROJECT.md]
 
 ## Risks
 
@@ -290,7 +290,7 @@ assert_contains_all(@ci_workflow, [
 - `lib/mix/tasks/verify.adopter.ex` — canonical maintainer verify task. [VERIFIED: lib/mix/tasks/verify.adopter.ex]
 - `test/scrypath/docs_contract_test.exs` — existing drift contract surface. [VERIFIED: test/scrypath/docs_contract_test.exs]
 - `.github/workflows/ci.yml` — current CI job mapping for fast/live adopter verification. [VERIFIED: .github/workflows/ci.yml]
-- `.planning/PROJECT.md`, `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/STATE.md`, `.planning/milestone-candidates.md` — rolling truth and checkpoint bookkeeping targets. [VERIFIED: listed files]
+- `.planning/PROJECT.md`, `.planning/ROADMAP.md`, `.planning/REQUIREMENTS.md`, `.planning/STATE.md`, `.planning/reference/milestone-candidates.md` — rolling truth and checkpoint bookkeeping targets. [VERIFIED: listed files]
 
 ## State of the Art
 
@@ -384,7 +384,7 @@ assert_contains_all(@ci_workflow, [
 
 ### Secondary (MEDIUM confidence)
 
-- `.planning/milestone-candidates.md` - current recommendation that further breadth should wait for outside adopter evidence. [VERIFIED: .planning/milestone-candidates.md]
+- `.planning/reference/milestone-candidates.md` - current recommendation that further breadth should wait for outside adopter evidence. [VERIFIED: .planning/reference/milestone-candidates.md]
 - `.planning/milestones/v1.16-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` - milestone-close archive pattern to reuse. [VERIFIED: .planning/milestones/v1.16-ROADMAP.md] [VERIFIED: .planning/milestones/v1.16-REQUIREMENTS.md] [VERIFIED: .planning/milestones/v1.16-MILESTONE-AUDIT.md]
 
 ### Tertiary (LOW confidence)

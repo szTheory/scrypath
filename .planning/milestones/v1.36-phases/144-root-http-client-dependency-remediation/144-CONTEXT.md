@@ -155,7 +155,7 @@ remediations remain graph-local.
 - `.planning/ROADMAP.md` — v1.36 order, guardrails, Phase 144 goal, and the delivery wording that must be reconciled before execution.
 - `.planning/REQUIREMENTS.md` — SEC-01, COMPAT-02, EVID-02, maintenance exclusions, and phase traceability.
 - `.planning/PROJECT.md` — maintenance-only milestone boundary, green-main posture, adopter contract, and public-scope exclusions.
-- `.planning/phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md` — authority preventing runtime/public API scope expansion.
+- `.planning/milestones/v1.27-phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md` — authority preventing runtime/public API scope expansion.
 - `.planning/todos/pending/2026-08-16-remediate-dependency-security-advisories.md` — ordered remediation intake, fixed versions, and gate expectations.
 - `.planning/quick/260816-tzr-triage-dependency-security-advisories-re/260816-tzr-RESEARCH.md` — authoritative reproduced advisory research, exposure analysis, fixed minima, and original batch proposal.
 - `.planning/quick/260816-tzr-triage-dependency-security-advisories-re/260816-tzr-ADVISORY-TRIAGE.md` — dated advisory ledger and unresolved reachability questions.

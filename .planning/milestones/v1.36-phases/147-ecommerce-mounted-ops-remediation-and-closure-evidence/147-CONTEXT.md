@@ -219,7 +219,7 @@ surface, not an implementation surface.
 - `.planning/PROJECT.md` — maintenance-only milestone boundary, green-main posture,
   adopter contract, and public-scope exclusions.
 - `.planning/STATE.md` — Phase 146 handoff and current Phase 147 position.
-- `.planning/phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md`
+- `.planning/milestones/v1.27-phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md`
   — authority preventing runtime/public capability expansion.
 - `.planning/todos/pending/2026-08-16-remediate-dependency-security-advisories.md`
   — original four-batch intake, fixed minima, gates, and todo closure condition.
