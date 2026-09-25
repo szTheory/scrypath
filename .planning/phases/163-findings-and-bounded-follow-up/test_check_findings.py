@@ -135,6 +135,32 @@ class FindingsContractTests(unittest.TestCase):
         with self.assertRaisesRegex(check_findings.ContractError, "missing baseline claim"):
             self.validate(fixture(), None, "complete")
 
+    def test_accepts_complete_zero_finding_and_candidate_inventory(self) -> None:
+        second = "| [C-22](162-BASELINE.md#c-22) | Maintainer docs | no-new-observation | [receipt](receipt.md) | No decision change | — | not-qualifying — no new observation |"
+        text = fixture().replace("\n\n## Material findings", "\n" + second + "\n\n## Material findings", 1)
+        text += """
+
+## Disposition summary
+- Claims: 2
+- Material findings: none
+- Closed: none
+- Accepted: none
+- Deferred: none
+- Rejected: none
+- Unresolved gate-rank findings: none
+- Candidates: none
+- Proof claims: none
+
+## Phase 164 handoff
+- Baseline: [canonical baseline](162-BASELINE.md)
+- Dispositions: [claim triage](findings.md#disposition-summary)
+- Residual gaps: none beyond the claim-level evidence limits
+- Candidate and nonqualification outcome: no candidates qualify
+- Unresolved owner decisions: none
+- Gate ownership: Phase 164 owns the six-condition readiness gate
+"""
+        self.validate(text, None, "complete")
+
     def test_claim_relationships_do_not_depend_on_row_order(self) -> None:
         second = "| [C-22](162-BASELINE.md#c-22) | Maintainer docs | no-new-observation | [receipt](receipt.md) | No decision change | — | not-qualifying — no new observation |"
         original = fixture().replace("\n\n## Material findings", "\n" + second + "\n\n## Material findings", 1)
