@@ -1,73 +1,75 @@
-# Stack Research
+# Technology Stack
 
-**Domain:** v1.36 dependency-security remediation across four independent Mix projects
-**Researched:** 2026-08-21
-**Confidence:** HIGH for the recorded advisory minima and local dependency graph; MEDIUM for migration impact; LOW only for the unresolved Postgrex publication discrepancy.
+**Project:** Scrypath — v1.39 Pre-Operator UI Quality Readiness Ratchet  
+**Researched:** 2026-09-25  
+**Confidence:** HIGH for the existing stack and proof inventory (dated project evidence); MEDIUM for current upstream documentation details.
 
 ## Recommendation
 
-Treat this as four isolated dependency-resolution batches, not a platform upgrade. Change direct constraints only where a current range can still select an advisory-affected release or cannot select the fixed line. Regenerate only the batch's own lockfile, resolve to the recorded fixed-compatible versions, run that batch's gates, then commit before proceeding.
+Do not add or replace technology for v1.39. This is a whole-product evidence assessment and bounded gap-closure program, not a new product capability. Keep the supported Elixir/Ecto/Phoenix/Oban/Meilisearch stack and the existing Mix, ExUnit, GitHub Actions, and package verification system. Start the baseline by assessing the evidence already recorded in v1.37 and v1.38, then add only the cheapest suitable proof for a confirmed gap.
 
-The sole unavoidable source-compatibility change is Req 0.5 to 0.6.1. Req 0.6 deliberately disables automatic response decompression and stops auto-decoding compressed/archive/CSV bodies; Scrypath's JSON Meilisearch requests remain supported, but any caller relying on automatic compressed/archive/CSV decoding must explicitly opt in. The legacy Phoenix example also needs a coordinated Ecto/Ecto SQL 3.14 and Decimal 3 transition; do not attempt a Decimal-only lockfile edit.
+The key stack decision is a verification policy: use focused tests and contract/seam checks first, then real-service, browser, or hosted exact-SHA evidence only where the claim requires it. Scrypath already has canonical capability-named `mix verify.*` commands, built-in coverage, selected property tests, required and advisory/scheduled CI lanes, and package-backed Phoenix proof. Do not introduce a new coverage, test, CI, or observability product without a specific demonstrated evidence gap and a cost/value case.
 
-## Exact Batch Plan
+## Recommended Stack
 
-| Batch / project | Manifest changes required | Resolve / lock to at least | Why this is the smallest complete change | Must remain unchanged |
-|---|---|---|---|---|
-| 1. Root `scrypath` | `req: "~> 0.5"` → `"~> 0.6.1"`; `plug: "~> 1.18"` → `"~> 1.19.5"` (test-only floor) | Req `0.6.1`, Mint `1.9.3`, hpax `1.0.4`, Plug `1.19.5` | Req 0.6.1 is the first release fixing both recorded Req advisories. The new direct floors prevent a later fresh resolution returning to an affected release; Mint/hpax are correctly transitive through Req → Finch → Mint. | Keep Ecto, Oban, public Scrypath APIs, transport choices, and the test-only scope of Plug unchanged. Do not move Req to 0.7/0.8 RC or Plug to 1.20. |
-| 2. `examples/phoenix_meilisearch` | `phoenix: "~> 1.8.5"` → `"~> 1.8.9"`; `ecto_sql: "~> 3.13"` → `"~> 3.14.0"`; `bandit: "~> 1.5"` → `"~> 1.12.1"`; `postgrex: ">= 0.0.0"` → a verified fixed `0.22.x` floor; no direct Req declaration is needed because root is a path dependency | Bandit `1.12.1`, Phoenix `1.8.9`, Plug `1.19.5`, Mint `1.9.3`, hpax `1.0.4`, Req `0.6.1+`, Ecto/Ecto SQL `3.14.x`, Decimal `3.0.0+`; Postgrex target needs publication verification (see below) | Ecto 3.13.5 requires Decimal `~> 2.0`; the checked-in root lock proves the Ecto 3.14 line accepts Decimal 3. Bandit 1.12.1 also covers the newer fragmented-WebSocket advisory, so it is the planned common server floor rather than the older 1.11.1-only remedy. | Keep Phoenix 1.8 (not 1.9), Oban 2.x, path dependency on root Scrypath, endpoint/router structure, and demo semantics. Do not add a direct Req merely to force a transitive package. |
-| 3. `scrypath_ops` | `req` → `"~> 0.6.1"`; `phoenix` → `"~> 1.8.9"`; `bandit` → `"~> 1.12.1"`; `phoenix_live_view` → `"~> 1.1.33"`; `swoosh` → `"~> 1.26.3"`; `postgrex` → a verified fixed `0.22.x` floor | Shared Req/Mint/hpax/Plug floors above; Bandit `1.12.1`; Phoenix `1.8.9`; LiveView `1.1.33`; Swoosh `1.26.3`; fixed Postgrex `0.22.x` | Each listed direct floor makes the independently resolved app durable. Its production Swoosh client is `Swoosh.ApiClient.Req`, so the Req transition is a deployed integration point, not a dev-only update. | Preserve `Bandit.PhoenixAdapter`, LiveView 1.1, the mountable Ops contract, local mailer/test adapters, assets, and UI behavior. Do not upgrade Phoenix 1.9, LiveView 1.2, Swoosh 1.27, or Bandit beyond the security floor. |
-| 4. `examples/scrypath_ecommerce` | Apply the same direct floors as Ops: Req `~> 0.6.1`, Phoenix `~> 1.8.9`, Bandit `~> 1.12.1`, LiveView `~> 1.1.33`, Swoosh `~> 1.26.3`, and verified fixed Postgrex `0.22.x` | Same Ops-compatible minima, resolved in this example's own lockfile | This project has its own graph and browser E2E surface; the path-mounted `scrypath_ops` does not make its lockfile equivalent to Ops's lockfile. | Preserve its `scrypath_ops` path dependency, E2E routes/tenant behavior, Phoenix 1.8 and LiveView 1.1 line. Do not combine this batch with Ops. |
+### Core Framework
 
-## Fixed-Compatible Version Matrix
+| Technology | Version / support | Purpose | Why |
+|---|---|---|---|
+| Elixir | Project declaration `~> 1.17`; CI currently exercises 1.19.0 | Library language and Mix task host | Matches the existing public support contract. The baseline should assess representative supported-version evidence; it should not raise the support floor as a side effect of readiness work. |
+| OTP | CI currently exercises 28.1; project context records floor 26 and test-through 28 | Runtime and BEAM platform | Retain the established BEAM target. Add matrix coverage only when the baseline finds a meaningful compatibility gap. |
+| Ecto | `~> 3.13` in root `mix.exs` | Schema and persistence integration | Core to Scrypath's Ecto-native contract and current runtime behavior. |
+| Phoenix / LiveView | Consumer and operator applications have separately resolved dependency graphs | Phoenix adoption and ScrypathOps | Preserve boundaries: Phoenix remains an integration/consumer surface, not a dependency of the root runtime. |
 
-| Package | Recorded advisory-clearing minimum | Constraint to declare where direct | Compatibility / release-note action |
-|---|---:|---|---|
-| Req | `0.6.1` | `~> 0.6.1` in root, Ops, ecommerce | **Verified:** 0.6.0 removed automatic archive/CSV decoding; 0.6.1 disables automatic decompression unless `compressed: true`. Audit `Req.new/1` and `Req.request/2` call sites for an intentional reliance on those old defaults. Current Scrypath calls are JSON Meilisearch requests. |
-| Mint | `1.9.3` | transitive; no direct declaration | Finch 0.21/0.22 accepts the Mint 1.x line. Verify the fresh solver selects 1.9.3+, not merely 1.9.0–1.9.2. |
-| hpax | `1.0.4` | transitive; no direct declaration | Pulled by Mint and Bandit. Verify all four lockfiles select 1.0.4+. |
-| Plug | `1.19.5` | Root: `~> 1.19.5`; web apps: transitive under Phoenix/Bandit/LiveView | Preserve Plug 1.19 within the maintenance scope. The root direct Plug dependency remains `only: :test`. |
-| Bandit | `1.12.1` | `~> 1.12.1` in three web projects | **Verified:** 1.12.1 fixes fragmented WebSocket-frame DoS. Its 1.12.0 release also changed timeout separation via Thousand Island 1.5; exercise endpoints, WebSocket/LiveView, and E2E lifecycle rather than changing Bandit options proactively. |
-| Phoenix | `1.8.9` | `~> 1.8.9` in three web projects | Remain on 1.8. Do not adopt 1.9; Phoenix's current changelog separately calls out rolling-deploy sequencing for 1.9, which is outside this remediation. |
-| Phoenix LiveView | `1.1.33` | `~> 1.1.33` in Ops and ecommerce | **Verified:** 1.1.33 fixes redirect validation around ASCII tab/LF/CR. Keep LiveView 1.1, and regression-test mounted redirects/navigation. |
-| Postgrex | triage states `0.22.4` | Do not write the constraint until Hex availability is confirmed | **Conflict:** the current official Hex API exposes `0.22.3` as the newest stable 0.22 release and returns no listed 0.22.4, while the authoritative local triage says `0.22.4` is the fixed minimum. This is a release-publication/advisory-feed mismatch, not permission to select 1.0.0-rc. Verify the EEF advisory record and Hex publication immediately before implementation; use the first published 0.22 release that the advisory marks fixed. |
-| Swoosh | `1.26.3` | `~> 1.26.3` in Ops and ecommerce | **Verified:** release notes identify a Microsoft Graph sender-path injection fix. Preserve the configured Req API client and current mailer adapter configuration. |
-| Ecto / Ecto SQL | `3.14.x` | Legacy example: `ecto_sql ~> 3.14.0`; resolver must select matching Ecto `3.14.x` | Ecto 3.14 requires Decimal `~> 3.0`; this is the intentional alignment that fixes the Decimal issue. Pin the minor line, not Ecto 3.15+. |
-| Decimal | `3.0.0` | transitive through Ecto 3.14 | **Verified:** Decimal 3 defaults to decimal128 bounds and rejects formerly unbounded parse/cast values. Existing ordinary Ecto data flows should work, but test any unusually large decimal literals/fixtures and do not restore unbounded parsing absent a demonstrated need.
+### Database and Search Integrations
 
-## Integration Points to Test
+| Technology | Version / support | Purpose | Why |
+|---|---|---|---|
+| PostgreSQL | Used in Phoenix adopter and mounted ecommerce service proof | Consumer persistence integration | Keep real database proof at the existing adopter seam; do not make PostgreSQL a root-library runtime dependency. |
+| Meilisearch | CI backend service currently uses `getmeili/meilisearch:v1.15` | Public v1 search backend | This is the declared v1 backend target. Reuse existing backend and package proof; do not broaden the public backend promise during a readiness audit. |
+| Oban | Optional dependency, root constraint `~> 2.21` | Production asynchronous synchronization | Preserve optional integration and use its existing adopter proof where relevant. |
 
-1. Root: `Scrypath.Meilisearch.Client` uses `Req.request/2` and `Req.new/1`; prove standard JSON request/response and error normalization after Req's changed decode/decompression defaults.
-2. Phoenix example: HTTP/2, ordinary request parsing, endpoint startup, Ecto Repo migrations/queries, and Meilisearch smoke tests. The example inherits Req through the local root path dependency.
-3. Ops: endpoint/LiveView WebSocket lifecycle, mounted redirects, Swoosh configured with `Swoosh.ApiClient.Req`, and `mix verify.opsui`.
-4. Ecommerce: preserve mounted Ops behavior, tenant-aware E2E preparation, and browser flow proof after its independent solver run.
+### Verification and Infrastructure
 
-## What NOT to Use
+| Technology | Version / support | Purpose | Why |
+|---|---|---|---|
+| Mix + ExUnit | Native project toolchain | Focused tests and canonical verification tasks | Existing `mix verify.core`, `verify.package`, `verify.backend`, `verify.phoenix_example`, `verify.deep_quality`, and other capability commands already map proof to adopter and maintainer capabilities. |
+| Erlang `:cover` via Mix | Built-in line coverage | Coverage inspection and gap discovery | Already wired with a zero threshold. Official Mix documentation cautions that line coverage misses some branch behavior and even 100% coverage does not prove assertions; do not use a percentage as a readiness verdict. |
+| StreamData | Existing test-only dependency | Property tests for selected high-risk invariants | Reuse for named input spaces where generated cases add meaningful evidence; avoid broad property-test adoption without a concrete invariant. |
+| GitHub Actions | Existing workflow, immutable action pins, exact-SHA evidence | Required merge gates and advisory/scheduled proof | Retain the current lean required lanes and proof classifications. Promote a lane only when recurring confidence justifies its runtime and maintenance cost. |
+| Docker-backed services and Playwright | Existing mounted ecommerce/browser proof | Boundary-level integration and browser claims | Use only for claims that cannot be established more cheaply. Existing hermetic setup/health/diagnostics/teardown patterns are the reference. |
 
-| Avoid | Why | Use Instead |
+## Existing Evidence Stack to Reuse
+
+| Evidence source | What it supports | Limit |
 |---|---|---|
-| Lockfile-only changes where a direct range admits the vulnerable line | A clean install can resolve back to the affected release. | Raise the direct lower bound listed above, then regenerate the batch lockfile. |
-| Package-head upgrades (Req 0.7+/0.8 RC, Phoenix 1.9, LiveView 1.2, Plug 1.20, Swoosh 1.27, Bandit newer than needed) | Expands behavioral and compatibility risk without serving the recorded advisories. | Recorded patched minima and their bounded minor-line constraints. |
-| A Decimal-only upgrade in the legacy example | Ecto 3.13 requires Decimal `~> 2.0`; it cannot provide the needed 3.x resolution. | Coordinated Ecto/Ecto SQL 3.14.x plus Decimal 3.x resolution. |
-| Postgrex 1.0.0 RC as a shortcut | It is a prerelease and is outside the recorded fixed-compatible maintenance plan. | The verified patched stable 0.22.x release once the 0.22.4 discrepancy is resolved. |
+| v1.37 Phase 159 evidence matrix | Capability-named verification, selected runtime safety and architecture claims, dependency/CI/release evidence, measured performance decisions, explicit provenance classes | Each row states its own source, date/SHA, evidence class, and limitation. It is not a whole-product adopter-readiness audit. |
+| v1.38 milestone audit and Phase 161 release evidence | Package-backed Phoenix inline, Oban, and related-data flows; exact-SHA CI; Hex/HexDocs; clean consumer compile; package/tag parity | Phoenix real-service lane is advisory; its final candidate success does not make future runs required. Release evidence proves the named package/release claims only. |
+| `.planning/reference/PRE-OPERATOR-UI-READINESS.md` | Baseline dimensions, evidence-ranking fields, exit gate, and automation-first policy | It requires explicit assessment of all dimensions; passing prior work must not be assumed to cover omitted dimensions. |
+| `CONTRIBUTING.md` and `.github/workflows/ci.yml` | Maintainer commands, current CI lane topology, current Elixir/OTP job environment | Workflow source proves configuration, not a hosted run; use exact-SHA hosted evidence for claims about a specific run. |
 
-## Version Compatibility
+## Alternatives Considered
 
-| Package A | Compatible With | Notes |
-|---|---|---|
-| Req `0.6.1` | Finch 0.21/0.22, Mint `1.9.3`, Plug `1.19.5` | Req's release notes require behavior review for decompression/decoder defaults; no API redesign is required for current JSON use. |
-| Ecto / Ecto SQL `3.14.x` | Decimal `3.x`, Postgrex `0.22.x`, Phoenix Ecto 4.7 | Root lock already demonstrates the Ecto 3.14 / Decimal 3 pairing; move the legacy example together. |
-| Phoenix `1.8.9` | LiveView `1.1.33`, Bandit `1.12.1`, Plug `1.19.5` | This is a contained 1.8/1.1 web-stack resolution; test behavior but do not cross major/minor framework lines. |
-| Swoosh `1.26.3` | Req `0.6.1` | Swoosh's declared Req compatibility includes 0.6; retain the configured `Swoosh.ApiClient.Req`. |
+| Category | Recommended | Alternative | Why Not |
+|---|---|---|---|
+| Test/coverage platform | Existing ExUnit and built-in Mix coverage | Add a third-party coverage suite or raise coverage threshold | No demonstrated coverage-tool gap. Coverage is diagnostic, not a sufficient readiness metric. |
+| CI orchestration | Existing GitHub Actions workflow and capability-named Mix tasks | Add another CI provider or duplicate verification in more jobs | Duplicated lanes add cost and competing evidence without demonstrated value. |
+| Integration proof | Existing prerequisite-bound service lanes and package-backed adopter verifier | Make every service/browser lane a required PR gate | Existing policy explicitly weighs repeat confidence against CI runtime and maintenance cost; v1.38's Phoenix service lane remains advisory despite passing final-SHA proof. |
+| Runtime or backend surface | Existing Ecto-first Elixir library and Meilisearch v1 backend target | Add public multi-backend support, Phoenix coupling, or a new runtime category | These are product-scope changes prohibited by current scope authority absent a separate owner-approved decision. |
+
+## Installation
+
+No installation or dependency changes are recommended for this milestone. Use the checked-in toolchain and project commands. If the baseline discovers a concrete capability gap, research that narrow addition during its bounded implementation plan before introducing a dependency or CI service.
 
 ## Sources
 
-- Local authoritative evidence: `.planning/quick/260816-tzr-triage-dependency-security-advisories-re/260816-tzr-ADVISORY-TRIAGE.md` and `260816-tzr-RESEARCH.md` — recorded affected graphs, advisory minima, and batch sequence. **HIGH**.
-- [Req 0.6.0 release](https://github.com/wojtekmach/req/releases/tag/v0.6.0) and [Req 0.6.1 release](https://github.com/wojtekmach/req/releases/tag/v0.6.1) — decoder and decompression migration behavior. **HIGH**.
-- [Bandit changelog](https://github.com/mtrudel/bandit/blob/main/CHANGELOG.md) — 1.12.0 timeout/Thousand Island change and 1.12.1 WebSocket DoS fix. **HIGH**.
-- [Phoenix LiveView 1.1.33 release](https://github.com/phoenixframework/phoenix_live_view/releases/tag/v1.1.33), [Swoosh 1.26.3 release](https://github.com/swoosh/swoosh/releases/tag/v1.26.3), and [Decimal 3.0.0 release](https://github.com/ericmj/decimal/releases/tag/v3.0.0) — security fixes and migration-sensitive changes. **HIGH**.
-- Official [Hex package metadata](https://hex.pm/) for published versions and dependency declarations, queried 2026-08-21. **HIGH**, except it exposes the unresolved Postgrex `0.22.4` discrepancy described above.
+- `.planning/reference/PRE-OPERATOR-UI-READINESS.md` — owner-approved program and exit-gate authority, reconciled 2026-09-25. **HIGH** for project policy.
+- `.planning/milestones/v1.37-phases/159-close-v1-37-audit-gaps-coverage-wiring-and-verification-prov/159-EVIDENCE-MATRIX.md` — canonical evidence classes, exact source/command/provenance and limitations for v1.37. **HIGH** for recorded v1.37 claims.
+- `.planning/milestones/v1.38-MILESTONE-AUDIT.md` and `.planning/milestones/v1.38-phases/161-release-and-tidy-closeout/161-RELEASE-EVIDENCE.md` — 8/8 requirement audit, exact-SHA runs, package/release evidence, and advisory-lane limitation, dated 2026-09-25. **HIGH** for the named v1.38 claims.
+- `mix.exs`, `.github/workflows/ci.yml`, and `CONTRIBUTING.md` — live source for project support declaration, dependencies, test coverage configuration, CI topology, and contributor commands; inspected 2026-09-25. **HIGH** for checked-in configuration; workflow source alone does not prove execution.
+- [Mix 1.19.5 `mix test.coverage` documentation](https://hexdocs.pm/mix/Mix.Tasks.Test.Coverage.html) — built-in line-coverage behavior and limitations; accessed 2026-09-25. **MEDIUM** for general tool behavior; project support floor begins at Elixir 1.17.
+- [GitHub Actions workflow syntax documentation](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax) — current scheduled-run semantics and token permission configuration; accessed 2026-09-25. **MEDIUM** for current platform behavior; use as context, not evidence that a particular repository run passed.
 
 ---
-*Stack research for: Scrypath v1.36 dependency security remediation*
-*Researched: 2026-08-21*
+*Stack research for: Scrypath v1.39 Pre-Operator UI Quality Readiness Ratchet*  
+*Researched: 2026-09-25*
