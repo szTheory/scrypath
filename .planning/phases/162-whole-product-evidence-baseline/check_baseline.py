@@ -7,7 +7,7 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 BASELINE = Path(__file__).with_name("162-BASELINE.md")
 HEADER = ["ID", "Dimension", "Role", "User job", "Stage", "Seam", "Claim", "Source", "Observed result", "Date", "Receipt/SHA", "Environment/versions", "Evidence layer/CI posture", "What it proves", "Proof boundary", "Limitation", "Assessment", "Freshness", "Invalidator/next question"]
 DIMENSIONS = set("1234567")
@@ -38,6 +38,12 @@ def main() -> int:
     header = [v.strip() for v in lines[header_ix].strip().strip("|").split("|")]
     if header != HEADER:
         fail("BASELINE", "header", f"expected {len(HEADER)} exact columns in the documented order")
+    separator_ix = header_ix + 1
+    if separator_ix >= len(lines):
+        fail("BASELINE", "header separator", "missing Markdown table separator")
+    separator = [v.strip() for v in lines[separator_ix].strip().strip("|").split("|")]
+    if len(separator) != len(HEADER) or any(not re.fullmatch(r":?-+:?", cell) for cell in separator):
+        fail("BASELINE", "header separator", f"expected {len(HEADER)} Markdown separator cells")
     rows: list[tuple[str, list[str]]] = []
     for line in lines[header_ix + 2:]:
         if not line.startswith("|"):
@@ -116,7 +122,13 @@ def main() -> int:
             if target.startswith(("http://", "https://", "mailto:")) or target.startswith("#"):
                 continue
             local = target.split("#", 1)[0]
+            if Path(local).is_absolute():
+                fail(cid, "Source", f"absolute local link is not portable: {target!r}")
             resolved = (BASELINE.parent / local).resolve()
+            try:
+                resolved.relative_to(ROOT)
+            except ValueError:
+                fail(cid, "Source", f"local link resolves outside repository: {target!r}")
             if not resolved.exists():
                 fail(cid, "Source", f"unresolved local link {target!r}")
     if orderable != sorted(orderable):
