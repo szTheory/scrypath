@@ -21,8 +21,8 @@ Requirements for the whole-product non-UI readiness assessment. This milestone e
 
 ### Bounded Follow-up and Automated Acceptance
 
-- [ ] **CLOSE-01**: A maintainer can identify which evidence-qualified findings warrant a separate bounded follow-up milestone with a clear user outcome, scope authority, and automated acceptance claims, or record why no finding qualifies; v1.39 does not invent implementation scope before the baseline establishes a need.
-- [ ] **CLOSE-02**: Each selected follow-up acceptance claim maps to the cheapest reliable automated evidence layer, with recurring CI promotion justified by confidence gained versus runtime and maintenance cost; routine human UAT is not used for software acceptance.
+- [x] **CLOSE-01**: A maintainer can identify which evidence-qualified findings warrant a separate bounded follow-up milestone with a clear user outcome, scope authority, and automated acceptance claims, or record why no finding qualifies; v1.39 does not invent implementation scope before the baseline establishes a need.
+- [x] **CLOSE-02**: Each selected follow-up acceptance claim maps to the cheapest reliable automated evidence layer, with recurring CI promotion justified by confidence gained versus runtime and maintenance cost; routine human UAT is not used for software acceptance.
 
 ### Readiness Gate and Closeout
 
@@ -56,8 +56,8 @@ Requirements for the whole-product non-UI readiness assessment. This milestone e
 | FIND-01 | Phase 163 | Complete |
 | FIND-02 | Phase 163 | Complete |
 | FIND-03 | Phase 163 | Complete |
-| CLOSE-01 | Phase 163 | Pending |
-| CLOSE-02 | Phase 163 | Pending |
+| CLOSE-01 | Phase 163 | Complete |
+| CLOSE-02 | Phase 163 | Complete |
 | GATE-01 | Phase 164 | Pending |
 | GATE-02 | Phase 164 | Pending |
 | GATE-03 | Phase 164 | Pending |
