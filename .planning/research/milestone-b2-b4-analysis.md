@@ -74,7 +74,7 @@ I recommend **executing Tier B2 first as a dedicated milestone (v1.25)**, follow
 
 **Rationale:**
 1.  **Risk Profile:** B2 addresses a "silent data-leak footgun". Tenant isolation is a critical security boundary. Mixing this with a feature addition (B4) risks muddying the review process, diluting testing focus, and complicating the documentation narrative.
-2.  **Milestone Integrity:** `.planning/milestone-candidates.md` strongly implies these are distinct steps. B2 is the "biggest remaining credibility gap for B2B Phoenix adopters." It requires deep focus on query AST merging and security testing.
+2.  **Milestone Integrity:** `.planning/reference/milestone-candidates.md` strongly implies these are distinct steps. B2 is the "biggest remaining credibility gap for B2B Phoenix adopters." It requires deep focus on query AST merging and security testing.
 3.  **Ship Cadence:** Shipping B2 alone delivers a massive, highly marketable credibility win for SaaS adopters. B4 is a fast follow-up "QoL/Delight" feature.
 
 ### Exact Proposed Architectural Design for B2 (Next Milestone)

@@ -30,8 +30,8 @@ The post-v1.26 done-ness assessment keeps this as the main planning-truth cleanu
 
 - `.planning/milestones/v1.20-ROADMAP.md`
 - `.planning/milestones/v1.20-REQUIREMENTS.md`
-- `.planning/MILESTONE-ARC.md`
-- `.planning/milestone-candidates.md`
+- `.planning/reference/MILESTONE-ARC.md`
+- `.planning/reference/milestone-candidates.md`
 - `lib/scrypath.ex`
 - `guides/overview.md`
 - `README.md`

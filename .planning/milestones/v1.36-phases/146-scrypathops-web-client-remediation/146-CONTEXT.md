@@ -213,7 +213,7 @@ the existing dependency commit.
   — shared Req 0.6 floor, Swoosh handoff, proof taxonomy, and compatibility-fix policy.
 - `.planning/phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-CONTEXT.md`
   — immediately preceding graph-local dependency/proof conventions and Phase 146 handoff.
-- `.planning/phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md`
+- `.planning/milestones/v1.27-phases/97-canonical-contract-freeze-and-scope-guard/97-SCOPE-GUARD.md`
   — authority preventing public/runtime capability expansion.
 - `.planning/todos/pending/2026-08-16-remediate-dependency-security-advisories.md`
   — four-batch intake, exact recorded fixed minima, required gates, and stop policy.

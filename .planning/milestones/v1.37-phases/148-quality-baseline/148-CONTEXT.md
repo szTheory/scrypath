@@ -156,7 +156,7 @@ or new adopter evidence is found.
 - `.planning/STATE.md` — current milestone completion state; Phase 148 must not be mistaken for unfinished implementation.
 
 ### Existing baseline and contributor contract
-- `.planning/QUALITY-LEDGER.md` — canonical ranked evidence ledger and current dispositions.
+- `.planning/reference/QUALITY-LEDGER.md` — canonical ranked evidence ledger and current dispositions.
 - `CONTRIBUTING.md` — contributor-facing verification commands, release train, and required/advisory proof vocabulary.
 - `mix.exs` — test discovery exception, zero-threshold built-in coverage configuration, optional dependency, and preferred Mix environments.
 - `lib/mix/tasks/verify.ex` — warning-fatal standard root verification behavior.
@@ -185,7 +185,7 @@ contains no visual or presentation work.
 ## Existing Code Insights
 
 ### Reusable Assets
-- `.planning/QUALITY-LEDGER.md`: already provides the canonical milestone-wide ranked view and final diminishing-return boundary.
+- `.planning/reference/QUALITY-LEDGER.md`: already provides the canonical milestone-wide ranked view and final diminishing-return boundary.
 - `Mix.Tasks.Verify`: already centralizes the fast repository gate and promotes test-source warnings to failures.
 - `Mix.Tasks.Verify.NoOptionalDeps`: already forces the exact child compile required to avoid a cached/no-op proof.
 - `Mix.Tasks.Verify.Coverage`: already provides the desired built-in, zero-threshold, service-free report.
@@ -198,7 +198,7 @@ contains no visual or presentation work.
 - Required merge gates stay lean; compatibility, deep analysis, and expensive browser/example paths may remain advisory when their signal/cost profile warrants it.
 
 ### Integration Points
-- Quality findings enter and close through `.planning/QUALITY-LEDGER.md` and the Git/PR evidence linked from each row.
+- Quality findings enter and close through `.planning/reference/QUALITY-LEDGER.md` and the Git/PR evidence linked from each row.
 - Refactor characterization belongs beside the affected tests and in reviewable test-only commit history.
 - Contributor entry points live in `CONTRIBUTING.md` and capability-named Mix tasks.
 - Workflow scheduling/artifact retention integrates through `.github/workflows/ci.yml` only in the phase that owns CI topology.

@@ -25,8 +25,8 @@ The core runtime is already explicit and stable. The next leverage move is to re
 
 ## Breadcrumbs
 
-- `.planning/MILESTONE-ARC.md`
-- `.planning/milestone-candidates.md`
+- `.planning/reference/MILESTONE-ARC.md`
+- `.planning/reference/milestone-candidates.md`
 - `guides/phoenix-contexts.md`
 - `guides/phoenix-liveview.md`
 - `guides/faceted-search-with-phoenix-liveview.md`

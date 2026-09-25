@@ -54,7 +54,7 @@ Last activity: 2026-09-25 — Milestone v1.38 archived after Scrypath 0.3.13 pub
 
 **Closeout evidence:** canonical core, package, repository-contract, compatibility,
 deep-quality, and live Meilisearch backend commands passed; actionlint and immutable
-action pins passed; runtime xref reports no cycles. See `.planning/QUALITY-LEDGER.md`.
+action pins passed; runtime xref reports no cycles. See `.planning/reference/QUALITY-LEDGER.md`.
 
 **Known disposition:** the sole canonical optional-app command is
 `mix verify.ops_ui`. Keeping the case-only historical `verify.opsui` spelling

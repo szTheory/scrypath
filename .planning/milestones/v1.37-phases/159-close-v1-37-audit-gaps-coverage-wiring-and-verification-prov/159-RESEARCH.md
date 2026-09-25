@@ -354,7 +354,7 @@ Record the fully resolved extraction and parent SHAs, test path/selector, comman
 
 | Pattern | STRIDE | Standard Mitigation |
 |---|---|---|
-| Mutable third-party action reference | Tampering | Reuse existing full-SHA action pin and executable pin/syntax checks. [VERIFIED: `.github/workflows/ci.yml`; VERIFIED: `.planning/QUALITY-LEDGER.md`] |
+| Mutable third-party action reference | Tampering | Reuse existing full-SHA action pin and executable pin/syntax checks. [VERIFIED: `.github/workflows/ci.yml`; VERIFIED: `.planning/reference/QUALITY-LEDGER.md`] |
 | Artifact presented as successful proof after producer failure | Repudiation / Tampering | Record job/step conclusion separately; `if: always()` guarantees collection, not success. [VERIFIED: `159-CONTEXT.md`] |
 | Historical claim unsupported by stored facts | Repudiation | Use explicit evidence classes, exact SHAs, and fail-closed waivers. [VERIFIED: `159-CONTEXT.md`] |
 | Workflow privilege creep | Elevation of Privilege | Retain read-only default permissions and avoid tokens/attestation/services. [VERIFIED: `.github/workflows/ci.yml`; VERIFIED: `159-CONTEXT.md`] |

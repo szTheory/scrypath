@@ -38,6 +38,6 @@ This thread records the launch-surface work that followed the v1.27 trust-harden
 - `README.md`
 - `guides/overview.md`
 - `guides/support-and-compatibility.md`
-- `.planning/milestone-candidates.md`
+- `.planning/reference/milestone-candidates.md`
 - `.planning/STATE.md`
 
