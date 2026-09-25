@@ -1,21 +1,16 @@
 ---
 gsd_state_version: "1.0"
-milestone: v1.38
-milestone_name: Packaged Adopter Proof
-current_phase: null
-status: Awaiting next milestone
-stopped_at: v1.38 archived after Scrypath 0.3.13 publication
-last_updated: "2026-09-25T02:16:52.338Z"
+milestone: v1.39
+milestone_name: Pre-Operator UI Quality Readiness Ratchet
+status: planning
+last_updated: "2026-09-25T15:55:00.691Z"
 last_activity: 2026-09-25
-last_activity_desc: Milestone v1.38 completed and archived
-state_head: 7e58a2d24075833f8fc13f912700b9cece5ec419
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 7
-  completed_plans: 7
-  percent: 100
-current_phase_name: null
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -27,10 +22,10 @@ current_phase_name: null
 
 ## Current Position
 
-Phase: Milestone v1.38 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-09-25 — Milestone v1.38 archived after Scrypath 0.3.13 publication
+Status: Defining requirements
+Last activity: 2026-09-25 — Milestone v1.39 started
 
 ## Completed Milestone: v1.38 Packaged Adopter Proof
 

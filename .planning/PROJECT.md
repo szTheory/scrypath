@@ -8,9 +8,18 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Mode: Pre-Operator UI Readiness Ratchet — Approved, Not Started
+## Current Mode: Pre-Operator UI Readiness Ratchet — v1.39 Planning
 
-Scrypath 0.3.13 is published. v1.38 Packaged Adopter Proof is complete and archived; no milestone is active. The owner has approved a whole-product non-UI readiness ratchet before further ScrypathOps work. Its formal GSD requirements and roadmap have not yet been initialized; the release train remains on routine maintenance until that milestone starts.
+Scrypath 0.3.13 is published. v1.38 Packaged Adopter Proof is complete and archived. The owner-approved v1.39 milestone will assess whole-product non-UI readiness before further ScrypathOps work. Its formal requirements and roadmap are being defined; the release train remains on routine maintenance while planning proceeds.
+
+## Current Milestone: v1.39 Pre-Operator UI Quality Readiness Ratchet
+
+**Goal:** Assess Scrypath's non-UI quality and adopter readiness, close evidence-backed critical, high, and medium-leverage gaps in bounded milestones, and establish an auditable gate for when ScrypathOps can become the next strategic focus.
+
+**Target features:**
+- Whole-product baseline across the readiness program's named dimensions, reusing current v1.37 and v1.38 evidence where relevant.
+- Evidence-ranked disposition and bounded closure of confirmed critical, high, and medium-leverage non-UI gaps.
+- Automated acceptance evidence and an auditable readiness decision; operator UI implementation stays out of scope.
 
 **Pre-UI quality readiness:** `.planning/reference/PRE-OPERATOR-UI-READINESS.md` is the durable program and exit-gate authority. The baseline must assess the full adopter lifecycle, reuse v1.37–v1.38 evidence without assuming complete coverage, and route worthwhile gaps into bounded milestones. The exit marker is **READY FOR OPERATOR UI** only when every area is assessed and no critical/high/medium-leverage non-UI gap remains unresolved. Evidence-backed API/runtime gaps may be planned only after explicit scope-guard review.
 
@@ -340,7 +349,7 @@ No active milestone. v1.38 Packaged Adopter Proof is complete and archived acros
 
 <!-- Current scope. Building toward these. -->
 
-- No active requirements. The next approved milestone creates a fresh `.planning/REQUIREMENTS.md`.
+- **v1.39 Pre-Operator UI Quality Readiness Ratchet:** Assess the seven approved non-UI readiness dimensions, trace claim-level evidence and its limits, rank and disposition findings, scope worthwhile follow-up work, and evaluate the six-condition readiness gate. See `.planning/REQUIREMENTS.md` and `.planning/reference/PRE-OPERATOR-UI-READINESS.md`.
 
 ### Out of Scope
 
