@@ -8,7 +8,7 @@ stopped_at: v1.38 archived after Scrypath 0.3.13 publication
 last_updated: "2026-09-25T02:16:52.338Z"
 last_activity: 2026-09-25
 last_activity_desc: Milestone v1.38 completed and archived
-state_head: 28d3877a05479f2cc104754fc24ab0c9d545c01b
+state_head: 7e58a2d24075833f8fc13f912700b9cece5ec419
 progress:
   total_phases: 2
   completed_phases: 2
