@@ -2,6 +2,43 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.38 — Packaged Adopter Proof
+
+**Shipped and archived:** 2026-09-25 (`scrypath 0.3.13`)
+**Phases:** 2 (160–161) | **Plans:** 7 | **Plan tasks:** 14 | **Requirements:** 8
+
+### What Was Built
+
+A package-backed Phoenix proof now builds the Hex artifact from the checkout, compiles a clean consumer against it, and runs the existing inline, Oban, and related-data integration flows against Postgres and Meilisearch. Maintainer docs and CI order have drift contracts. The 0.3.13 release passed exact-head and main CI, Hex publication, versioned HexDocs, consumer compile, and package-to-tag parity.
+
+### What Worked
+
+- Running the real package proof on an exact candidate SHA established artifact provenance and live adopter behavior before release.
+- Reusing the existing Phoenix service lane kept setup and teardown aligned with the normal path-backed example.
+- Reopening the generated Release Please PR triggered its suppressed pull-request CI, so the merge remained under branch protection.
+- Recording post-publish checks separately from pre-publish package proof made the shipped decision evidence-based.
+
+### What Was Inefficient
+
+- The archive helper reported five tasks although the seven plans declare fourteen; the milestone index was corrected from `phase-plan-index` evidence.
+- The open-artifact scanner treats `status: passed` as nonterminal for UAT files; setting completed, zero-pending records to `status: complete` resolved the false blocker without changing their evidence.
+- Release summaries preserve the accurate release-ready state from the moment they were written, so the final publication evidence had to supersede that state in current planning records.
+
+### Patterns Established
+
+- Post-implementation software acceptance defaults to automated evidence, with a goal of zero human UAT; only irreducible external actions or unresolved product decisions need handoff.
+- Shift checks left into unit, contract, and seam coverage first; add integration, smoke, or E2E where they prove real boundaries and automate recurring checks in CI when their value justifies the cost.
+- Keep expensive real-service checks advisory or scheduled unless repeated evidence warrants making them required; CI should own service health, isolation, diagnostics, timeouts, and teardown.
+- Tie release claims to exact-SHA CI, post-merge main, Hex/HexDocs, consumer, and package/tag parity evidence.
+
+### Key Lessons
+
+Automated confidence and merge policy are separate decisions: an advisory lane can give useful recurring proof without being a merge blocker, but the audit should state that residual clearly. Machine-generated closeout statistics should be checked against plan metadata before archival.
+
+### Cost Observations
+
+Hosted validation reused existing CI and release runs; no new local test runs were needed during archival. Model and session cost data were unavailable.
+
 ## Milestone: v1.37 — Code Quality Ratchet
 
 **Shipped and archived:** 2026-08-26
@@ -452,6 +489,7 @@ Local success is insufficient for a required zero-touch gate when the local buil
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|
+| v1.38 | 160-161 | Package-backed Phoenix adopter proof, automated release parity, and zero-human verification default |
 | v1.37 | 148-159 | Runtime/architecture quality ratchet, lean CI and release trust, exact-SHA zero-human closeout |
 | v1.36 | 144-147 | Four-graph dependency security remediation, behavior preservation, and required zero-touch mounted proof |
 | v1.30 | 109-112 | Release/package truth, support intake routing, advisory proof stability, and website/docs truth alignment |

@@ -8,20 +8,11 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Mode: Green-Main Release Train — v1.38 Packaged Adopter Proof
+## Current Mode: Green-Main Release Train — Idle
 
-**Goal:** Close the package-to-live-example verification gap with a bounded, deterministic adopter proof while preserving the shipped product and green-main release train.
+Scrypath 0.3.13 is published. v1.38 Packaged Adopter Proof is complete and archived; no milestone is active. Keep the release train idle until concrete maintenance, adopter, bug, proof-drift, or strategic evidence authorizes work.
 
-## Current Milestone: v1.38 Packaged Adopter Proof
-
-**Goal:** Prove that the built Scrypath package artifact supports the existing Phoenix/Ecto adopter example against real Postgres and Meilisearch services.
-
-**Target features:**
-- Run the existing Phoenix example’s selected integration flows against the built package artifact rather than only the repository path dependency.
-- Keep proof, setup, and cleanup deterministic, machine-verifiable, and reuse the current example and package gates.
-- Close with reviewed and triaged milestone PRs, green exact-SHA required checks and `main`, an actually verified Release Please/Hex/HexDocs release, and tidy milestone-owned work.
-
-**Last completed scope:** v1.37 raised runtime safety, internal architecture, verification, CI/CD, release proof, and performance evidence while preserving public behavior/APIs and excluding ScrypathOps presentation, UX, and visual review.
+**Last completed scope:** v1.38 proved package-backed Phoenix adoption against real services and closed with exact-SHA CI, green post-merge main, Hex/HexDocs publication, consumer compilation, and package-to-tag parity. It preserved the public API and advisory service-lane posture.
 
 **Automation-first verification policy:** Post-implementation acceptance must be
 machine-verifiable, with a standing goal of zero human verification or UAT. For GSD
@@ -48,6 +39,7 @@ Resolve subjective product decisions before implementation or keep them nonblock
 do not simulate approvals.
 
 **Recent closed outcomes:**
+- v1.38 package-backed Phoenix adopter proof and Scrypath 0.3.13 release: exact-SHA CI, path/package integration, green post-merge main, Hex publication, versioned HexDocs, clean consumer compile, and package/tag parity all passed. See `milestones/v1.38-MILESTONE-AUDIT.md`.
 - Phase 159 automated v1.37 audit/provenance closure: reconciled the 31-requirement audit, preserved the bounded TEST-01 chronology waiver, added a fail-closed candidate/final exact-SHA CI authority, and prohibited new post-implementation human verification or UAT debt.
 - Phase 147 ecommerce mounted-Ops remediation and closure: bounded the ecommerce web/client graph, added hermetic focused/full Docker E2E verification and an always-running focused CI gate, passed exact-SHA service/browser proof, and closed the four-graph audit ledger with no human UAT.
 - Phase 146 ScrypathOps web/client remediation: bounded Phoenix, LiveView, Bandit, Swoosh, Postgrex, and Req; proved the real Req-backed Swoosh client with a discriminating raw-JSON contract; passed standalone Ops and root release gates, detached fresh resolution, live Postgrex/Plug predicates, unsuppressed audit, and security verification.
@@ -92,7 +84,7 @@ Phase 97 through 99 banned capability classes:
 
 ## Current State
 
-**v1.37 Code Quality Ratchet** completed and was archived on **2026-08-26** across Phases **148-159**. All 31 requirements are complete with a bounded four-row TEST-01 chronology waiver; the milestone audit passed 12/12 phases, 10/10 integrations, and 8/8 flows. Candidate/final exact-SHA CI authority leaves no pending human verification or UAT. Closeout used an owner-approved artifact-shape override because Phases 148-158 were direct execution with retrospective evidence indexes rather than native plans.
+**v1.38 Packaged Adopter Proof** completed and was archived on **2026-09-25** across Phases **160–161**. All eight requirements passed, exact-SHA CI and post-merge main were green, and Scrypath 0.3.13 passed Hex publication, HexDocs, clean-consumer compilation, and package-to-tag parity. No human verification or UAT remains pending.
 
 **v1.36 Dependency Security Remediation** completed on **2026-08-25**. All four Mix graphs are independently audit-clean; the final ecommerce batch passed exact-SHA mounted-source, service, and focused browser proof. A reusable Docker-only verifier now owns focused/full E2E setup and teardown, the focused lane is an always-running merge check, the full Phase 105 lane stays advisory, and no separate human UAT is required when automated evidence is green.
 
@@ -216,10 +208,9 @@ Current planning files: **`.planning/{PROJECT,REQUIREMENTS,ROADMAP,STATE}.md`** 
 
 ## Release Train Posture
 
-- **Active milestone:** v1.38 Packaged Adopter Proof, explicitly authorized as a bounded verification wedge.
-- **Current phase:** Phase 160 — Package-Backed Phoenix Proof (ready to plan).
+- **Active milestone:** None. The release train is idle after shipped v1.38 / Scrypath 0.3.13.
 - **Policy:** Keep `main` green on the lean required gates and prefer PR-first execution for serious milestone or feature-depth work.
-- **Authorization:** v1.38 is the explicitly approved strategic proof wedge; do not reopen unrelated speculative work without concrete maintenance, adopter, production-bug, proof-drift, or explicit strategic evidence.
+- **Next milestone goals:** None approved. Start a fresh requirements cycle only when concrete maintenance, adopter, production-bug, proof-drift, or explicit strategic evidence authorizes work.
 - **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, and new UI surfaces remain out of scope.
 
 **v1.37 implementation outcome (2026-08-26):** runtime input and secret
@@ -230,6 +221,8 @@ Meilisearch, package, release, static-analysis, and compatibility proof passed;
 measured pure hot paths did not justify speculative optimization.
 
 ## Last shipped milestone
+
+**v1.38 — Packaged Adopter Proof** (shipped **2026-09-25** and archived). Added a package-artifact Phoenix proof across inline, Oban, and related-data flows; confirmed exact-SHA CI, post-merge main, Hex 0.3.13, versioned HexDocs, consumer compile, and package/tag parity. The milestone audit found no blockers; advisory Phoenix CI and the absence of GitHub review objects for explicitly authorized merges remain recorded process notes. See **`milestones/v1.38-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
 **v1.37 — Code Quality Ratchet** (shipped and archived **2026-08-26**). Runtime safety and architecture hardening, capability-named verification, lean CI and release trust, evidence-based performance, scheduled coverage, and candidate/final exact-SHA zero-human closeout — see **`milestones/v1.37-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
@@ -261,12 +254,13 @@ measured pure hot paths did not justify speculative optimization.
 
 ## Planning window
 
-**Active milestone:** v1.38 Packaged Adopter Proof. v1.37 is complete and archived across Phases 148-159 and all 31 requirements, with the narrow TEST-01 chronology waiver and artifact-shape override recorded. v1.38 is an explicitly authorized, bounded verification wedge; it does not reopen runtime feature breadth or treat historical phase directories as active work.
+No active milestone. v1.38 Packaged Adopter Proof is complete and archived across Phases 160–161; all eight requirements passed automated verification and Scrypath 0.3.13 is published. Historical phase directories are archived under `.planning/milestones/v1.38-phases/`.
 
 ## Requirements
 
 ### Validated
 
+- [x] **v1.38** (2026-09-25): **PKG-01**–**PKG-03**, **PROOF-01**, **DOC-01**, **HYGIENE-01**, **REL-01**, **CLOSE-01** — package-backed Phoenix integration proof, machine-checked documentation, exact-SHA CI, green main, Hex/HexDocs 0.3.13 publication, consumer compile, and package/tag parity.
 - [x] **Phase 147** (2026-08-25): **SEC-04**, **COMPAT-01**, **COMPAT-03**, **EVID-01**, **EVID-02** — ecommerce aligned to the fixed-compatible mounted web/client cohort; exact-SHA resolution, canonical path, deterministic/service, Docker-focused browser, cleanup, same-window four-graph audit, and ordered batch-topology verification passed with no human UAT.
 - [x] **Phase 146** (2026-08-24): **SEC-03**, **EVID-03** — ScrypathOps aligned to the approved fixed-compatible web/client/data cohort; real `Swoosh.ApiClient.Req` behavior, raw JSON precedence, standalone Ops, root release gates, detached fresh resolution, live Postgrex/Plug eligibility, unsuppressed audit, cleanup, code review, and threat verification passed.
 - [x] **Phase 145** (2026-08-22): **SEC-02** — legacy Phoenix example aligned to the bounded fixed-compatible Phoenix/Bandit/Ecto SQL/Postgrex/Plug cohort with transitive Ecto 3.14 and Decimal 3; deterministic compatibility checks, detached fresh resolution, unsuppressed Hex audit, root regression, and Docker-backed service proof passed.
@@ -361,7 +355,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has shipped planning milestones through **`v1.37`** (**`v1.0`**-**`v1.37`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and **`milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`** for shipped arcs.
+The repository has shipped planning milestones through **`v1.38`** (**`v1.0`**-**`v1.38`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and `milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` for shipped arcs.
 
 ## Evolution
 
@@ -374,4 +368,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-09-23 for v1.38 Packaged Adopter Proof*
+*Last updated: 2026-09-25 after v1.38 Packaged Adopter Proof and Scrypath 0.3.13 publication*
