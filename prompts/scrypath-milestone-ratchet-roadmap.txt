@@ -1,0 +1,191 @@
+Scrypath milestone ratchet and roadmap guide
+============================================
+
+Purpose
+-------
+
+Use this guide when reassessing Scrypath's direction or starting a new GSD
+milestone. Preserve the intent: build and maintain an exceptionally dependable,
+ergonomic Elixir search library while spending effort only where evidence says
+it will help adopters. Do not turn the existence of a roadmap into a reason to
+keep shipping work.
+
+This guide is a decision aid, not an active milestone, release commitment, or
+promise that every candidate will be built. The current milestone state,
+requirements, and approved scope remain authoritative in GSD planning.
+
+Product anchor
+--------------
+
+Scrypath is an Ecto-native, Phoenix-friendly, Meilisearch-first library for
+indexing and search orchestration. Its core value is to make indexing feel
+native to Ecto without hiding the operational realities of keeping search in
+sync. Preserve explicit sync, deletion, backfill, reindex, tenant, and failure
+semantics. Keep the runtime framework-agnostic, retain the internal adapter
+seam, and do not promise a public multi-backend abstraction without adoption
+evidence.
+
+Consider the people and workflows directly relevant to each proposed change:
+
+- Phoenix/Ecto application developers adopting, composing, and debugging search.
+- Operators diagnosing indexing, backend, queue, drift, and recovery states.
+- Library maintainers protecting compatibility, release trust, supportability,
+  security, and contributor flow.
+- Realistic adopter examples that exercise the shared integration boundaries.
+
+Use domain or industry variation when it changes a concrete workflow or failure
+mode. Do not multiply personas, industries, APIs, or fixtures just to make a
+matrix look comprehensive. Choose representative adopters and boundary cases
+that maximize useful coverage.
+
+Portfolio posture and horizons
+------------------------------
+
+Use evidence-gated horizons, not calendar commitments. Refresh these candidates
+after each milestone and remove stale or completed ideas rather than preserving
+an ever-growing backlog.
+
+NEAR TERM — maintenance and trust
+
+- Keep `main` green on the lean required checks; prefer PR-first execution for
+  serious changes and close each change with a clean worktree and truthful
+  planning/release records.
+- Release when a warranted change is ready. Do not create a release or milestone
+  merely to maintain activity.
+- Keep package, compatibility, support, docs, adopter proof, and CI truth aligned.
+- Act on concrete bugs, security issues, release compatibility, proof drift, or
+  reviewed adopter evidence. Otherwise say plainly that the release train is
+  idle.
+
+MID TERM — owner-approved, evidence-backed wedges
+
+- Scrypath's non-UI engineering quality ratchet reached its measured
+  diminishing-return boundary in v1.37: no confirmed compatible high- or
+  medium-leverage finding remained open. Do not schedule another broad cleanup
+  or optimization pass without new evidence.
+- ScrypathOps already received focused design-system, operator-flow, and
+  accessibility/theme work in v1.32–v1.34. Further operator UI work is a
+  deferred candidate for when maintainer time is available and a specific
+  operator job or quality opportunity justifies a bounded wedge. It is not the
+  next milestone by default.
+- Reopen product work when reviewed adopter evidence, a concrete production bug,
+  release compatibility pressure, or an explicit owner-approved strategic
+  decision identifies a material gap.
+
+LONG TERM — preserve options without promising breadth
+
+- Reassess larger capabilities only when multiple real workflows establish
+  demand and the cost of preserving the current product boundary exceeds the
+  cost and complexity of expansion.
+- Public backend broadening, autocomplete/suggestions, vector or hybrid search,
+  personalization, new public runtime API categories, and reusable UI/product
+  surfaces remain gated by the project's scope authority and strong evidence.
+- If no candidate clears those gates, remaining idle is a successful decision.
+
+How to choose a milestone
+------------------------
+
+Before writing requirements, state the evidence, the adopter/operator job that
+is blocked, why this is the right time, the smallest useful outcome, and what
+will explicitly remain out of scope. Compare plausible approaches across
+developer experience, operations/SRE, security/privacy, compatibility,
+maintenance, and product scope. Fan out research or specialist review only when
+independent perspectives can change the decision enough to justify their cost.
+
+Use the smallest vertical slice that proves the outcome. Prefer simple, idiomatic
+Elixir and Ecto patterns, clear module boundaries, explicit failure behavior,
+readable names, and self-documenting code. Avoid speculative abstractions,
+duplicate sources of truth, cleanup unrelated to the approved change, and code
+or tests whose maintenance cost exceeds their signal.
+
+Verification and CI
+-------------------
+
+Default to zero human verification or UAT for software behavior. Convert each
+acceptance claim into executable evidence before implementation: unit/property,
+contract, seam, integration, smoke, browser/accessibility, or exact-SHA hosted
+proof, selecting the cheapest reliable layer that exercises the relevant
+boundary. Include meaningful happy paths, error cases, and boundary conditions.
+
+Shift checks left while implementing. Put recurring checks in CI only when their
+repeat confidence and risk reduction justify their runtime and maintenance cost.
+Keep expensive or service-backed proof scheduled or advisory when that provides
+useful recurring confidence without burdening every change; promote it to a
+required gate only when evidence warrants it. Reuse harnesses and services,
+avoid duplicated test execution, use bounded representative compatibility
+matrices, and give failures useful diagnostics, isolation, timeouts, and cleanup.
+Use property-based testing for high-risk input spaces and invariants where it
+adds coverage that examples do not cheaply provide; avoid property suites without
+a named failure mode or decision value.
+
+Use a digital-twin adopter only to exercise realistic end-to-end boundaries that
+are not already proved more cheaply. Keep its scenarios deterministic and
+representative; do not mistake synthetic success for outside-adopter validation.
+Human input is reserved for irreducible product decisions, external credentials
+or permissions, or physical-world behavior that automation cannot observe.
+
+Release and repository hygiene
+------------------------------
+
+Ship when warranted and evidence is ready. For release-bound milestones, triage
+PRs, require the agreed checks on the exact candidate/final commit, confirm
+post-merge `main` is green, follow the documented package/docs publication
+sequence, and record package-to-source parity. If a release prerequisite blocks,
+report release-ready with the exact blocker and resume action; do not call it
+shipped. Remove task-owned branches, worktrees, service stacks, temporary files,
+and generated artifacts; preserve unrelated user changes. Keep docs accurate,
+planning artifacts discoverable, and historical evidence immutable unless an
+explicit correction is needed.
+
+Privacy and durable context
+---------------------------
+
+Never commit personal data, private credentials, environment dumps, or identifying
+machine paths. Keep secrets out of logs, fixtures, telemetry, and artifacts. If
+local comparisons need fingerprints, use non-reversible checksums only where
+appropriate and keep sensitive source material local. Follow twelve-factor
+configuration practices: configuration comes from the environment or explicit
+deployment configuration, not hard-coded machine-specific values.
+
+Record durable decisions, evidence, and provenance in the relevant `.planning`
+source of truth. Prefer updating or replacing stale guidance over accumulating
+competing copies. Before recommending a next GSD command, ensure the needed
+intent, decisions, evidence, and scope are saved in the artifact that command
+will read; never rely on conversational context surviving a reset.
+
+Pre-operator UI readiness
+------------------------
+
+Before treating non-UI quality work as complete, use the durable pre-operator UI
+readiness program in `.planning/reference/PRE-OPERATOR-UI-READINESS.md`. Reuse
+existing evidence, assess every named product-quality dimension, and close or
+explicitly disposition all critical, high, and medium-leverage findings. Only
+then recommend **READY FOR OPERATOR UI**. The ratchet is the owner-approved
+strategic initiative after v1.38; ScrypathOps is the intended next focus after
+the gate passes and maintainer time is available. This does not authorize
+capabilities prohibited by the current scope guard.
+
+Closeout and roadmap refresh
+----------------------------
+
+At each milestone close, reconcile requirements, roadmap, project state,
+candidate list, release truth, and retrospective lessons. Record what shipped,
+what evidence changed the strategy, which candidates were removed or deferred,
+and the next evidence gate. Do not manufacture a next milestone when none is
+approved. The owner-approved pre-UI readiness initiative is recorded in
+`.planning/MILESTONE-CONTEXT.md` and must be formally scoped through GSD before
+execution.
+
+Provenance
+----------
+
+Adapted on 2026-09-25 from the maintainer's Lattice Stripe milestone-ratchet
+prompt and reconciled with Scrypath's project constraints and v1.37–v1.38
+planning evidence. The adapted signal is durable guidance; the source prompt is
+not copied into the public repository.
+
+Primary Scrypath planning authority:
+- `.planning/PROJECT.md` for product scope and operating policy.
+- `.planning/reference/milestone-candidates.md` for candidate status and gates.
+- `.planning/reference/MILESTONE-ARC.md` for current horizons and posture.
+- `.planning/reference/QUALITY-LEDGER.md` and milestone archives for evidence.

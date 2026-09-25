@@ -16,7 +16,7 @@
 
 ## Current Posture
 
-No active milestone. Scrypath 0.3.13 is published and verified. Keep the green-main release train idle until concrete maintenance, adopter, bug, proof-drift, or strategic evidence authorizes new work. Routine software acceptance defaults to executable verification and exact-SHA CI evidence; human handoff is reserved for irreducible external actions or decisions.
+No active milestone. Scrypath 0.3.13 is published and verified. The owner has approved a pre-operator UI quality-readiness initiative; formal GSD requirements and roadmap remain to be initialized from `.planning/MILESTONE-CONTEXT.md`. Routine software acceptance defaults to executable verification and exact-SHA CI evidence; human handoff is reserved for irreducible external actions or decisions.
 
 Historical phase details and evidence live under `milestones/`.
 

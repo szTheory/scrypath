@@ -2,73 +2,53 @@
 
 ## Current arc: Release train idle
 
-**Status:** no active milestone
-**Current default pull:** keep `main` green, maintain release/support truth, and only reopen milestone work when concrete evidence or an explicit owner-approved wedge justifies it
+**Status:** no active milestone; v1.38 Packaged Adopter Proof is complete and archived.
+**Current release:** Scrypath 0.3.13, published and parity-verified.
+**Approved next strategic initiative:** establish whole-product non-UI quality readiness before further ScrypathOps work. No milestone is active; create its formal GSD requirements and roadmap from `.planning/MILESTONE-CONTEXT.md`.
+**Default:** keep `main` green, maintain support/package/proof truth, and release when warranted.
 
-## Why this is the active posture
+## Near, mid, and long horizons
 
-`v1.23` through `v1.35` closed the last planned high-leverage wedges from prior evidence and owner-approved polish:
+These are evidence gates, not dated commitments. Refresh them at each milestone boundary.
 
-- support-truth reconciliation and outside-adopter intake (`v1.23`)
-- related-data propagation (`v1.24`)
-- tenant-safe access (`v1.25`)
-- facet-value vocabulary search (`v1.26`)
-- adopter contract hardening (`v1.27`)
-- realistic demo app and admin UI proof (`v1.28`)
-- contract repair and proof hardening (`v1.29`)
-- release trust and evidence maintenance (`v1.30`)
-- adoption-evidence demo hardening (`v1.31`)
-- admin UI/UX design-system cleanup (`v1.32`)
-- admin UI insane polish (`v1.33`)
-- both-themes dark-signature and AA gate (`v1.34`)
-- brand system and logo identity (`v1.35`)
+- **Near — baseline and urgent gaps:** formally start the approved readiness milestone, inventory non-UI quality dimensions against existing evidence, and close worthwhile critical/high-impact gaps. Keep normal maintenance and release hygiene active.
+- **Mid — evidence-ranked ratchet:** group confirmed high/medium-leverage non-UI gaps into bounded milestones; allow evidence-backed runtime/API changes after explicit scope review. Defer lower-return work with rationale.
+- **Long — readiness transition and conditional expansion:** when the readiness gate passes, recommend ScrypathOps as next focus, subject to owner availability. Broader backend/API/search capabilities remain evidence-gated and require explicit scope decisions.
 
-Scrypath remains in a near-done band for its stated Meilisearch-first Phoenix/Ecto scope. Default planning should optimize for trust, maintenance, proof stability, and support truth rather than additional breadth.
+The current program and **READY FOR OPERATOR UI** gate are maintained in [`PRE-OPERATOR-UI-READINESS.md`](PRE-OPERATOR-UI-READINESS.md). Candidate entry gates are in [`milestone-candidates.md`](milestone-candidates.md); the adapted decision guide is [`../../prompts/scrypath-milestone-ratchet-roadmap.txt`](../../prompts/scrypath-milestone-ratchet-roadmap.txt).
+
+## Why the release train is idle
+
+- v1.37 completed an evidence-led, bounded non-UI engineering ratchet and found no confirmed compatible high- or medium-leverage finding within that scope. The broader readiness assessment is still outstanding.
+- v1.38 completed package-backed Phoenix adopter proof and published Scrypath 0.3.13 with exact-SHA CI, green post-merge `main`, Hex/HexDocs, consumer compile, and package-to-tag parity.
+- Prior product and operator-surface milestones closed the known planned wedges. More polishing is possible, but possibility alone is not evidence.
 
 ## Operating lanes
 
-- **Maintenance lane (default):** keep `main` green, finish release follow-through, maintain support/docs truth, and process outside-adopter evidence.
-- **Evidence lane:** maintain realistic demo, deterministic proof, Docker/dev DX, and maintainer UAT paths without changing Scrypath runtime scope.
-- **Feature lane (only when reopened):** use PR-scoped milestones with explicit wedge boundaries; merge only after green PR CI and scope review.
-- **Silence lane:** when no release, support, proof, bug, adopter, or explicit strategic signal exists, do not manufacture a milestone.
+- **Maintenance:** keep required checks lean and green; maintain release, support, docs, and adopter truth.
+- **Evidence:** use the existing realistic Phoenix adopter and service-backed proof where they cover meaningful boundaries; add recurring CI only when its confidence justifies cost.
+- **Feature:** start only for a concrete bug, reviewed adopter evidence, compatibility need, or bounded owner-approved strategic wedge. Use PR-first work and exact-commit proof.
+- **Silence:** when no qualifying signal exists, do not manufacture a milestone.
 
-## Planning-truth note
+## Reopen criteria
 
-`v1.35` shipped directly in commit `fcb8fc7`, not through GSD plan artifacts. Phases 137-143 are archived from direct evidence. Do not reopen them or synthesize missing phase directories for phases 138-143.
+Open a new milestone when at least one applies:
 
-`v1.20` SearchModule archive claims were reconciled on 2026-05-27 via archive-correction: branch tip does not ship `Scrypath.SearchModule`, and planning now treats those claims as historical milestone narrative only.
+1. Reviewed outside-adopter evidence identifies a concrete unmet flow.
+2. A production or security issue needs work beyond a focused patch.
+3. A release or dependency compatibility change requires bounded feature-depth adaptation.
+4. The owner explicitly approves a bounded strategic wedge. The pre-operator UI readiness ratchet is now owner-approved; its first milestone still needs formal GSD requirements and a roadmap.
 
-Decision record: `.planning/todos/search-module-archive-code-drift.md` (resolved)
-
-## Active milestone
-
-- None.
+Before recommending the next GSD command, put its required intent, scope, decisions, and evidence in durable planning artifacts. The readiness initiative remains inactive until the formal milestone cycle initializes it.
 
 ## Completed milestone sequence (latest)
 
-- **v1.35** - Brand System & Logo Identity (shipped: 2026-06-24; archived: 2026-07-11)
-- **v1.34** - Both-Themes Perfection - Dark Signature + AA Gate (shipped: 2026-06-29; archived: 2026-07-11)
-- **v1.33** - Admin UI Insane Polish (shipped: 2026-06-03)
-- **v1.32** - Admin UI/UX Design System Cleanup (shipped: 2026-06-01)
-- **v1.31** - Adoption Evidence Demo Hardening (UAT passed: 2026-06-01)
-- **v1.30** - Release Trust and Evidence Maintenance (shipped + archived: 2026-06-01)
-- **v1.29** - Contract Repair and Proof Hardening (shipped + archived: 2026-05-31)
-- **v1.28** - Realistic Demo App & Admin UI Proof (shipped + archived: 2026-05-31)
-- **v1.27** - Adopter Contract Hardening (shipped + archived: 2026-05-30)
-- **v1.26** - Facet Value Vocabulary Search (shipped + archived: 2026-05-26)
-- **v1.25** - Tenant-Safe Search Access (shipped + archived: 2026-05-26)
-- **v1.24** - Related-Data and Dependency Propagation (shipped + archived: 2026-05-25)
-- **v1.23** - Outside-Adopter Evidence and Support-Truth Reconciliation (shipped + archived: 2026-05-24)
+- **v1.38** — Packaged Adopter Proof (Phases 160–161; shipped 2026-09-25; Scrypath 0.3.13).
+- **v1.37** — Code Quality Ratchet (Phases 148–159; shipped 2026-08-26).
+- **v1.36** — Dependency Security Remediation (Phases 144–147; shipped 2026-08-25).
+- **v1.35** — Brand System & Logo Identity (Phases 137–143; shipped 2026-06-24; archived 2026-07-11).
+- **v1.34–v1.32** — ScrypathOps dual-theme quality, design-system, and operator-flow milestones (Phases 116–136).
 
-For earlier sequence detail, see `.planning/MILESTONES.md` and `.planning/milestones/`.
+Earlier milestone history and release details live in `.planning/MILESTONES.md` and `.planning/milestones/`.
 
-## Reopen criteria for a future feature milestone
-
-Open a new feature milestone only when at least one of the following is true:
-
-1. reviewed outside-adopter evidence shows a concrete unmet flow,
-2. a concrete production bug demands non-patch milestone work,
-3. release compatibility change requires bounded feature-depth adaptation,
-4. the owner explicitly approves a bounded strategic wedge.
-
-Without one of those signals, default posture is no new feature milestone.
+*Reviewed 2026-09-25. Provenance: v1.37 quality ledger/audit, v1.38 requirements/audit, current `.planning/PROJECT.md` and `.planning/STATE.md`, and the adapted milestone ratchet guide.*
