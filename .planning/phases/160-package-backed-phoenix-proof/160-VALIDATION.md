@@ -1,7 +1,7 @@
 ---
 phase: 160
 slug: package-backed-phoenix-proof
-status: complete
+status: validated
 nyquist_compliant: true
 wave_0_complete: true
 created: 2026-09-23
@@ -62,3 +62,17 @@ Commands were run with `ASDF_ERLANG_VERSION=28.5 ASDF_ELIXIR_VERSION=1.19.5-otp-
 ## Status
 
 No uncovered Phase 160 requirement needs a new test harness: focused executable contracts cover command dispatch, fail-closed behavior, cleanup/retention, and CI/documentation drift; the exact-SHA hosted package run now proves artifact build, staged dependency provenance, consumer compilation, and service-backed integration execution.
+
+## Manual-Only / Out-of-Scope Follow-Up
+
+- The Plan 01 cross-phase regression invocation (`test/mix/tasks/verify_adopter_test.exs` and related capability tests) was recorded with exit code 2 despite zero assertion failures. The isolated adopter test reproduced that exit code. This is not a Phase 160 requirement acceptance result, so it remains unresolved and is not counted as a passing check here.
+
+## Validation Audit 2026-09-24
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+
+All Phase 160 requirement rows map to existing automated contracts or exact-SHA hosted integration evidence. The phase map is now marked `validated`; the unrelated exit-code-2 result remains explicitly visible above and is not promoted to a pass.
