@@ -136,7 +136,7 @@ Phases with standard patterns (skip research-phase):
 
 ### Primary (HIGH confidence)
 - `.planning/reference/PRE-OPERATOR-UI-READINESS.md` — approved dimensions, operating rules, prioritization, and six-condition exit gate.
-- `.planning/MILESTONE-CONTEXT.md` and `.planning/PROJECT.md` — milestone scope and existing project boundaries.
+- `.planning/REQUIREMENTS.md`, `.planning/ROADMAP.md`, and `.planning/PROJECT.md` — active milestone scope and existing project boundaries.
 - `.planning/reference/QUALITY-LEDGER.md`, `.planning/milestones/v1.37-MILESTONE-AUDIT.md`, and Phase 159 evidence matrix/closure receipt — v1.37 findings, provenance classes, chronology limits, and dispositions.
 - `.planning/milestones/v1.38-MILESTONE-AUDIT.md`, Phase 160 coverage/verification, and Phase 161 release evidence — package/release claims, exact-SHA proof, exclusions, and advisory-lane limitation.
 - `.planning/reference/MILESTONE-ARC.md` and `.planning/reference/milestone-candidates.md` — evidence-gated sequencing and candidate selection/closeout posture.

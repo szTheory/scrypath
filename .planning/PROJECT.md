@@ -8,9 +8,9 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Mode: Pre-Operator UI Readiness Ratchet — v1.39 Planning
+## Current Mode: Pre-Operator UI Readiness Ratchet — v1.39 Active Planning
 
-Scrypath 0.3.13 is published. v1.38 Packaged Adopter Proof is complete and archived. The owner-approved v1.39 milestone will assess whole-product non-UI readiness before further ScrypathOps work. Its formal requirements and roadmap are being defined; the release train remains on routine maintenance while planning proceeds.
+Scrypath 0.3.13 is published. v1.38 Packaged Adopter Proof is complete and archived. The owner-approved v1.39 milestone is formally initialized with requirements and a three-phase roadmap; Phase 162 is ready to plan. The release train remains on routine maintenance while the whole-product non-UI readiness assessment proceeds.
 
 ## Current Milestone: v1.39 Pre-Operator UI Quality Readiness Ratchet
 
@@ -265,7 +265,7 @@ measured pure hot paths did not justify speculative optimization.
 
 ## Planning window
 
-No active milestone. v1.38 Packaged Adopter Proof is complete and archived across Phases 160–161; all eight requirements passed automated verification and Scrypath 0.3.13 is published. The pre-operator UI readiness initiative is approved but awaits formal GSD requirements and roadmap. Historical phase directories are archived under `.planning/milestones/v1.38-phases/`.
+v1.39 Pre-Operator UI Quality Readiness Ratchet is active in planning, beginning at Phase 162. v1.38 Packaged Adopter Proof is complete and archived across Phases 160–161; all eight requirements passed automated verification and Scrypath 0.3.13 is published. Historical phase directories are archived under `.planning/milestones/v1.38-phases/`.
 
 ## Requirements
 

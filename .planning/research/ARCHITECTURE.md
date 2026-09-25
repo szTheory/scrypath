@@ -103,7 +103,7 @@ The architecture should preserve three distinct states: **not assessed**, **asse
 ## Sources
 
 - [Pre-Operator UI Quality Readiness Program](../reference/PRE-OPERATOR-UI-READINESS.md) — dimensions, baseline shape, prioritization fields, exit gate, and operating rules.
-- [Milestone Context](../MILESTONE-CONTEXT.md) — approved scope and sequencing for the formal v1.39 milestone.
+- [v1.39 Requirements](../REQUIREMENTS.md) and [Roadmap](../ROADMAP.md) — approved scope and phase sequence for the active milestone.
 - [v1.37 Quality Evidence Ledger](../reference/QUALITY-LEDGER.md) — existing bounded findings, evidence, churn, verification, and dispositions.
 - [v1.37 Milestone Audit](../milestones/v1.37-MILESTONE-AUDIT.md) and [Phase 159 Evidence Matrix](../milestones/v1.37-phases/159-close-v1-37-audit-gaps-coverage-wiring-and-verification-prov/159-EVIDENCE-MATRIX.md) — evidence ownership, provenance classes, limitations, and integration coverage.
 - [v1.38 Milestone Audit](../milestones/v1.38-MILESTONE-AUDIT.md), [Phase 160 API Coverage](../milestones/v1.38-phases/160-package-backed-phoenix-proof/COVERAGE.md), [Phase 160 Verification](../milestones/v1.38-phases/160-package-backed-phoenix-proof/160-VERIFICATION.md), and [Phase 161 Release Evidence](../milestones/v1.38-phases/161-release-and-tidy-closeout/161-RELEASE-EVIDENCE.md) — package and release seams, exact-SHA evidence, test boundaries, and advisory lane caveats.
@@ -112,6 +112,6 @@ The architecture should preserve three distinct states: **not assessed**, **asse
 ## Caveats
 
 - This is architecture guidance for the readiness assessment and evidence flow; it does not establish that any particular quality dimension is already assessed or sufficient.
-- The readiness program is approved intent, and v1.39 is only now being formalized. Do not treat a research document as baseline evidence or change the program's `NOT READY` status from this analysis.
+- The readiness program remains `NOT READY` pending baseline evidence. Do not treat a research document as baseline evidence or change that status from this analysis.
 - The archive was inspected as planning evidence; this document does not independently rerun tests, re-query hosted workflows, review all source modules, or certify current runtime behavior.
 - Exact-SHA, dependency-version, and service-backed claims age. Recheck only when the baseline depends on them for a current readiness decision.
