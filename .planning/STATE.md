@@ -5,16 +5,16 @@ milestone_name: Pre-Operator UI Quality Readiness Ratchet
 current_phase: 163
 current_phase_name: Findings and Bounded Follow-up
 status: executing
-stopped_at: Completed 163-01-PLAN.md
-last_updated: "2026-09-25T21:49:31.343Z"
+stopped_at: Completed 163-02-PLAN.md
+last_updated: "2026-09-25T21:56:00.500Z"
 last_activity: 2026-09-25
 last_activity_desc: Phase 163 execution started
-state_head: 384a2556739d53be2aa81ec43cd1101842e34228
+state_head: c1ae7b103b162ac836ee87fe8f046fcc290060a1
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 6
-  completed_plans: 4
+  completed_plans: 5
   percent: 33
 ---
 
@@ -28,7 +28,7 @@ progress:
 ## Current Position
 
 Phase: 163 (Findings and Bounded Follow-up) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-09-25 — Phase 163 execution started
 
@@ -60,6 +60,8 @@ Progress: [███░░░░░░░] 33%
 - [Phase 163]: Treat C-21 as a reconciled evidence gap without claiming current broad audit or host security certification.
 - [Phase 163]: Use exact candidate run 36080380783 for bounded C-17 cutover happy-path evidence.
 - [Phase 163]: Keep C-15 diagnosis separate from C-16 repair; no decision-changing repair-to-visible-search scenario was established.
+- [Phase 163]: No observed or reproducible Scrypath-owned defect or specifically evidenced affected risk met the agreed materiality rule; do not invent owner treatment for unsubstantiated risks.
+- [Phase 163]: Carry residual claim evidence questions into Phase 164 without treating missing proof as a gate pass or product defect.
 
 ### Pending Todos
 
@@ -90,9 +92,10 @@ None for v1.39. Qualifying findings become bounded follow-up milestones during P
 | Phase 162 P01 | 18 min | 2 tasks | 2 files |
 | Phase 162 P02 | 2 min | 2 tasks | 1 files |
 | Phase 162 P3 | 4 | 2 tasks | 2 files |
+| Phase 163 P02 | 4 min | 2 tasks | 2 files |
 
 ## Session Continuity
 
-Last session: 2026-09-25T21:49:30.936Z
-Stopped at: Completed 163-01-PLAN.md
-Resume file: .planning/phases/163-findings-and-bounded-follow-up/163-02-PLAN.md
+Last session: 2026-09-25T21:56:00.199Z
+Stopped at: Completed 163-02-PLAN.md
+Resume file: .planning/phases/163-findings-and-bounded-follow-up/163-03-PLAN.md
