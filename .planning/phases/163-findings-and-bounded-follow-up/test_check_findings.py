@@ -47,6 +47,16 @@ def material_fixture(disposition: str = "deferred", decision: str = "unknown —
     return text.replace("## Material findings\nNone — see [claim triage](#claim-triage).", "## Material findings\n" + card("F-01", fields) + extra)
 
 
+def candidate_with_proof(proof: str) -> str:
+    fields = {
+        "Name": "synthetic", "Findings": "F-01", "Outcome": "bounded result", "Evidence": "[receipt](receipt.md)",
+        "Owner boundary": "team", "Scope authority": "approved", "Exclusions": "other cases", "Route": "focused-patch",
+        "Route rationale": "synthetic", "Work units": "one task", "Value/cost rationale": "synthetic",
+        "Acceptance claims": "P-01 claim-specific oracle",
+    }
+    return "## Follow-up candidates\n" + card("K-01", fields) + proof.replace("### P-01", "#### P-01")
+
+
 class FindingsContractTests(unittest.TestCase):
     def validate(self, text: str, claims: list[str] | None = None, stage: str = "triage") -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -88,8 +98,10 @@ class FindingsContractTests(unittest.TestCase):
 
     def test_rejects_proof_card_without_oracle(self) -> None:
         proof = card("P-01", {"User outcome": "visible result", "Layer": "browser"})
-        with self.assertRaisesRegex(check_findings.ContractError, "oracle"):
-            self.validate(material_fixture(extra=proof), ["C-21"])
+        text = material_fixture().replace("Route: deferred", "Route: K-01")
+        text = text.replace("## Follow-up candidates\nNone — see [claim triage](#claim-triage).", candidate_with_proof(proof))
+        with self.assertRaisesRegex(check_findings.ContractError, "Oracle|oracle"):
+            self.validate(text, ["C-21"])
 
     def test_accepts_material_finding_with_claim_specific_proof(self) -> None:
         proof_fields = {
@@ -102,7 +114,8 @@ class FindingsContractTests(unittest.TestCase):
         }
         text = material_fixture("closed", "[proof](receipt.md)", "source change")
         text = text.replace("Risk state: unresolved", "Risk state: resolved").replace("Evidence: [receipt](receipt.md)", "Evidence: P-01")
-        text += card("P-01", proof_fields)
+        text = text.replace("Route: deferred", "Route: K-01")
+        text = text.replace("## Follow-up candidates\nNone — see [claim triage](#claim-triage).", candidate_with_proof(card("P-01", proof_fields)))
         self.validate(text, ["C-21"])
 
     def test_rejects_orphan_followup_candidate(self) -> None:
@@ -114,6 +127,13 @@ class FindingsContractTests(unittest.TestCase):
         })
         text = material_fixture(extra="").replace("## Follow-up candidates\nNone — see [claim triage](#claim-triage).", "## Follow-up candidates\n" + candidate)
         with self.assertRaisesRegex(check_findings.ContractError, "orphan candidate"):
+            self.validate(text, ["C-21"])
+
+    def test_rejects_blank_candidate_field(self) -> None:
+        text = material_fixture().replace("Route: deferred", "Route: K-01")
+        candidate = candidate_with_proof("").replace("Scope authority: approved", "Scope authority:   ")
+        text = text.replace("## Follow-up candidates\nNone — see [claim triage](#claim-triage).", candidate)
+        with self.assertRaisesRegex(check_findings.ContractError, "Scope authority: blank"):
             self.validate(text, ["C-21"])
 
     def test_rejects_absolute_and_escaping_links(self) -> None:

@@ -74,6 +74,9 @@ def _cards(lines: list[str], heading: str, prefix: str) -> dict[str, dict[str, s
     cards: dict[str, dict[str, str]] = {}
     current = None
     for line in section:
+        if line.startswith("#### "):
+            current = None
+            continue
         match = re.fullmatch(r"#{3,4} (" + prefix + r"-\d{2})\b.*", line)
         if match:
             current = match.group(1)
@@ -104,6 +107,39 @@ def _nested_cards(lines: list[str], prefix: str) -> dict[str, dict[str, str]]:
                 _fail(current, key, "duplicate field")
             cards[current][key.strip()] = value.strip()
     return cards
+
+
+def _candidate_proofs(lines: list[str]) -> tuple[dict[str, dict[str, str]], dict[str, str]]:
+    """Read P cards only inside their owning K card and return ownership."""
+    cards: dict[str, dict[str, str]] = {}
+    owners: dict[str, str] = {}
+    start = next((i for i, line in enumerate(lines) if line == "## Follow-up candidates"), None)
+    if start is None:
+        _fail("FINDINGS", "Follow-up candidates", "section missing")
+    end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
+    owner = None
+    current = None
+    for line in lines[start + 1:end]:
+        match = re.fullmatch(r"### (K-\d{2})\b.*", line)
+        if match:
+            owner, current = match.group(1), None
+            continue
+        match = re.fullmatch(r"#### (P-\d{2})\b.*", line)
+        if match:
+            current = match.group(1)
+            if current in cards:
+                _fail(current, "ID", "duplicate card ID")
+            if owner is None:
+                _fail(current, "Owner", "proof card must be nested under a candidate")
+            cards[current] = {}
+            owners[current] = owner
+            continue
+        if current and line.startswith("- ") and ":" in line:
+            key, value = line[2:].split(":", 1)
+            if key.strip() in cards[current]:
+                _fail(current, key.strip(), "duplicate field")
+            cards[current][key.strip()] = value.strip()
+    return cards, owners
 
 
 def _section_fields(lines: list[str], heading: str) -> dict[str, str]:
@@ -174,7 +210,7 @@ def validate_document(path: Path, root: Path, claims: list[str] | None = None, s
         _fail(missing[0] if missing else "FINDINGS", "Claim triage", "missing baseline claim from full inventory")
     findings = _cards(lines, "## Material findings", "F")
     candidates = _cards(lines, "## Follow-up candidates", "K")
-    proofs = _nested_cards(lines, "P")
+    proofs, proof_owners = _candidate_proofs(lines)
     for section, cards in (("## Material findings", findings), ("## Follow-up candidates", candidates)):
         if not cards:
             start = lines.index(section)
@@ -249,6 +285,9 @@ def validate_document(path: Path, root: Path, claims: list[str] | None = None, s
     for kid, fields in candidates.items():
         if set(fields) < K_FIELDS:
             _fail(kid, "fields", "missing " + ", ".join(sorted(K_FIELDS - set(fields))))
+        for key in K_FIELDS:
+            if not fields[key].strip():
+                _fail(kid, key, "blank field")
         if kid not in referenced_k:
             _fail(kid, "Findings", "orphan candidate has no finding owner reference")
         if not re.findall(r"\bF-\d{2}\b", fields.get("Findings", "")):
@@ -264,11 +303,23 @@ def validate_document(path: Path, root: Path, claims: list[str] | None = None, s
             if pid not in proofs:
                 _fail(kid, "Evidence", f"orphan proof card {pid}")
             referenced_p.add(pid)
+        for pid in re.findall(r"\bP-\d{2}\b", fields["Acceptance claims"]):
+            if pid not in proofs:
+                _fail(kid, "Acceptance claims", f"unknown proof card {pid}")
+            if proof_owners[pid] != kid:
+                _fail(kid, "Acceptance claims", f"proof card {pid} belongs to {proof_owners[pid]}")
+            referenced_p.add(pid)
     for pid, fields in proofs.items():
         if not fields.get("Oracle", "").strip():
             _fail(pid, "Oracle", "proof card requires an oracle")
         if set(fields) < P_FIELDS:
             _fail(pid, "fields", "missing " + ", ".join(sorted(P_FIELDS - set(fields))))
+        for key in P_FIELDS:
+            if not fields[key].strip():
+                _fail(pid, key, "blank field")
+        owner = proof_owners[pid]
+        if pid not in re.findall(r"\bP-\d{2}\b", candidates[owner].get("Acceptance claims", "")):
+            _fail(pid, "Owner", f"candidate {owner} acceptance claims must reference this proof")
         if fields["Layer"] not in {"unit/property", "contract/seam", "integration", "package/service", "browser", "exact-SHA-hosted"}:
             _fail(pid, "Layer", "invalid proof layer")
         receipt = fields["Receipt"].lower()
@@ -307,11 +358,12 @@ def validate_document(path: Path, root: Path, claims: list[str] | None = None, s
             expected_lists["Candidates"] = set(candidates)
             expected_lists["Proof claims"] = set(proofs)
         for field, expected in expected_lists.items():
-            actual = set(re.findall(r"\bF-\d{2}\b", summary[field]))
+            prefix = "K" if field == "Candidates" else "P" if field == "Proof claims" else "F"
+            actual = set(re.findall(rf"\b{prefix}-\d{{2}}\b", summary[field]))
             if summary[field].strip().lower() in {"none", "0", "none — none"}:
                 actual = set()
             if actual != expected:
-                _fail("FINDINGS", f"Disposition summary.{field}", f"expected F-ID list {sorted(expected)}")
+                _fail("FINDINGS", f"Disposition summary.{field}", f"expected {prefix}-ID list {sorted(expected)}")
     if stage == "complete" and claims is None:
         handoff = _section_fields(lines, "## Phase 164 handoff")
         required_handoff = {"Baseline", "Dispositions", "Residual gaps", "Candidate and nonqualification outcome", "Unresolved owner decisions", "Gate ownership"}
