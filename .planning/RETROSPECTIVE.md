@@ -220,7 +220,7 @@ After **`audit-open`** is green and **`milestones/v*-MILESTONE-AUDIT.md`** is **
 
 ### What was built
 
-**B1** evidence discipline (**`.planning/EVID-01-b1-v1.14.md`**), **`Scrypath.Errors`**-shaped actionable failures, **`ScrypathOps.Playbook.V1`** JSON codec with **`SearchPlayground`** ceilings, portable playbook files, **`/ops/playbooks`** operator UX, and stub-backed LiveView proof of **save → list → load → run** plus **`search_many`** runs.
+**B1** evidence discipline (**`.planning/milestones/v1.14-EVID-01-b1.md`**), **`Scrypath.Errors`**-shaped actionable failures, **`ScrypathOps.Playbook.V1`** JSON codec with **`SearchPlayground`** ceilings, portable playbook files, **`/ops/playbooks`** operator UX, and stub-backed LiveView proof of **save → list → load → run** plus **`search_many`** runs.
 
 ### What worked
 

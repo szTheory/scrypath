@@ -116,8 +116,8 @@ Planned bookkeeping updates attached to this gameplan:
 - update rolling planning truth for the two-lane workflow in:
   - `.planning/PROJECT.md`
   - `.planning/STATE.md`
-  - `.planning/milestone-candidates.md`
-- reconcile stale arc language in `.planning/MILESTONE-ARC.md` to no-active-milestone maintenance mode.
+  - `.planning/reference/milestone-candidates.md`
+- reconcile stale arc language in `.planning/reference/MILESTONE-ARC.md` to no-active-milestone maintenance mode.
 - keep SearchModule drift explicitly tracked via `.planning/todos/search-module-archive-code-drift.md` and rolling references.
 - no active phase exists, so new lessons are recorded in rolling planning/thread documents now and should graduate into `NN-LEARNINGS.md` only when a new phase opens.
 

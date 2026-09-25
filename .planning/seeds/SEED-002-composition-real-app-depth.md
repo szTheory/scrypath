@@ -25,8 +25,8 @@ Scrypath already covers the core query path. The next layer of value is letting 
 
 ## Breadcrumbs
 
-- `.planning/MILESTONE-ARC.md`
-- `.planning/milestone-candidates.md`
+- `.planning/reference/MILESTONE-ARC.md`
+- `.planning/reference/milestone-candidates.md`
 - `README.md`
 - `guides/overview.md`
 - `guides/multi-index-search.md`

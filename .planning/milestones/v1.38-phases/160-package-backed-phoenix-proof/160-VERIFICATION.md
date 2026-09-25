@@ -26,7 +26,7 @@ covered_files:
   - test/mix/tasks/verify_capability_test.exs
   - test/mix/tasks/verify_phoenix_example_package_test.exs
   - test/scrypath/docs_contract_test.exs
-covered_digest: "v1:sha256:68de16e7b88fca5b07e8abf6e95e1b015878d565000958f13110c275fa07e3ab"
+covered_digest: "v1:sha256:07fc8bb6ac71d5cc4e6625a7819fef5dcf6bd4713da031710e8829da86f7d603"
 behavior_unverified: 0
 overrides_applied: 0
 re_verification:

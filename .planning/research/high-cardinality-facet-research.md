@@ -475,7 +475,7 @@ in a "catalog depth" milestone alongside autocomplete/suggestions (B5).
   - `guides/faceted-search-with-phoenix-liveview.md` — "deferred" note at line 181
   - `.planning/research/deep/FACETING.md` — prior deep research including algoliasearch-rails
     `search_for_facet_values` lesson
-  - `.planning/milestone-candidates.md` — B4 ranking
+  - `.planning/reference/milestone-candidates.md` — B4 ranking
   - `.planning/threads/scrypath-doneness-assessment-2026-05-24.md` — priority ordering
   - `.planning/phases/87-*/87-EVIDENCE-REVIEW.md` — adopter signal on high-cardinality facets
 

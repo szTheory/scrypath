@@ -1,5 +1,23 @@
 # Milestones
 
+## v1.19 archive: v1.19 — Production adoption proof and hardening (Backfilled: 2026-09-24)
+
+**Note:** Synthesized from archive snapshot by `$gsd-health --backfill`. Original completion date unknown.
+
+---
+
+## v1.1 : Scrypath (Backfilled: 2026-09-24)
+
+**Note:** Synthesized from archive snapshot by `$gsd-health --backfill`. Original completion date unknown.
+
+---
+
+## v1.0 : Scrypath (Backfilled: 2026-09-24)
+
+**Note:** Synthesized from archive snapshot by `$gsd-health --backfill`. Original completion date unknown.
+
+---
+
 ## v1.38 Packaged Adopter Proof (Shipped: 2026-09-25)
 
 **Phases completed:** 2 phases (160–161), 7 plans, 14 plan tasks

@@ -163,7 +163,7 @@ accessibility, theme, and brandbook decisions are not applicable.
 - `.planning/REQUIREMENTS.md` — the 31 original requirements and traceability, especially TEST-01 and TEST-05.
 - `.planning/PROJECT.md` — evidence-led quality-ratchet goal, public-behavior preservation, and green-main release-train posture.
 - `.planning/STATE.md` — milestone state and Phase 159 roadmap evolution.
-- `.planning/QUALITY-LEDGER.md` — canonical v1.37 implementation evidence and diminishing-return dispositions.
+- `.planning/reference/QUALITY-LEDGER.md` — canonical v1.37 implementation evidence and diminishing-return dispositions.
 - `.planning/phases/148-quality-baseline/148-CONTEXT.md` — locked characterization, diagnostic, coverage, evidence, and gate-policy decisions carried into Phase 159.
 
 ### Existing coverage and CI integration seams
@@ -175,9 +175,9 @@ accessibility, theme, and brandbook decisions are not applicable.
 - `lib/mix/tasks/verify/capability.ex` — capability-named verification composition used across CI.
 
 ### Provenance and closeout patterns
-- `.planning/phases/136-milestone-verification-uat-s-g/136-ARTIFACT-MANIFEST.json` — prior exact-SHA/path/checksum/generated-artifact provenance pattern; use as a field reference, not a mandate for JSON.
-- `.planning/phases/136-milestone-verification-uat-s-g/136-DUALVERIFY-REPORT.md` — prior canonical closeout-report organization and evidence classification.
-- `.planning/phases/136-milestone-verification-uat-s-g/136-VERIFICATION.md` — prior goal-backward verification reporting pattern.
+- `.planning/milestones/v1.34-phases/136-milestone-verification-uat-s-g/136-ARTIFACT-MANIFEST.json` — prior exact-SHA/path/checksum/generated-artifact provenance pattern; use as a field reference, not a mandate for JSON.
+- `.planning/milestones/v1.34-phases/136-milestone-verification-uat-s-g/136-DUALVERIFY-REPORT.md` — prior canonical closeout-report organization and evidence classification.
+- `.planning/milestones/v1.34-phases/136-milestone-verification-uat-s-g/136-VERIFICATION.md` — prior goal-backward verification reporting pattern.
 - `.planning/milestones/v1.36-phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-VERIFICATION.md` — compact exact-commit deterministic/supplemental evidence classification.
 - `.planning/milestones/v1.36-phases/146-scrypathops-web-client-remediation/146-VERIFICATION.md` — verification provenance across optional-app and root boundaries.
 - `.planning/milestones/v1.36-phases/147-ecommerce-mounted-ops-remediation-and-closure-evidence/147-03-SUMMARY.md` — strong exact-SHA closure summary and bounded evidence receipt.
@@ -201,7 +201,7 @@ no visual surface.
 - `Mix.Tasks.Verify.Coverage`: already produces the locked fast-suite HTML/console report with no threshold or new dependency.
 - `.github/workflows/ci.yml`: already owns daily schedule/manual dispatch, advisory job guards, SHA-pinned setup/cache/upload actions, and seven-day evidence retention.
 - `Mix.Tasks.Verify.WorkflowWiringTest`: already treats workflow topology and release ordering as executable repository contracts.
-- `.planning/QUALITY-LEDGER.md`: already provides the implementation/verification starting evidence for the 31-requirement matrix.
+- `.planning/reference/QUALITY-LEDGER.md`: already provides the implementation/verification starting evidence for the 31-requirement matrix.
 - Phase 136 and v1.36 evidence artifacts: already demonstrate compact exact-SHA provenance, deterministic-versus-supplemental classification, artifact hashes, and truthful unavailable-lane handling.
 
 ### Established Patterns

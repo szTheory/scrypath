@@ -110,7 +110,7 @@ Make this Phase 159 document the one canonical 31-row source. Each row must reta
 
 ### `159-CLOSURE-RECEIPT.md` (documentation, batch)
 
-**Analog:** `.planning/phases/136-milestone-verification-uat-s-g/136-DUALVERIFY-REPORT.md` (lines 14-36, 45-58) plus its exact source identity fields (lines 16-25).
+**Analog:** `.planning/milestones/v1.34-phases/136-milestone-verification-uat-s-g/136-DUALVERIFY-REPORT.md` (lines 14-36, 45-58) plus its exact source identity fields (lines 16-25).
 
 ```markdown
 | Field | Value |

@@ -23,7 +23,7 @@ covered_files:
   - lib/mix/tasks/verify/phoenix_example/package.ex
   - mix.lock
   - test/scrypath/docs_contract_test.exs
-covered_digest: "v1:sha256:57e1d1fb4411e5b4efe248920eb96b710384e589007e79882e2d478ca98bad07"
+covered_digest: "v1:sha256:4527b5bd6b6088e7e92852304352a02f004b1b79aa8059e707931bcf08d42395"
 behavior_unverified: 0
 overrides_applied: 0
 re_verification:
