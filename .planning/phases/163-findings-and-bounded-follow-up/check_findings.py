@@ -125,6 +125,8 @@ def validate_document(path: Path, root: Path, claims: list[str] | None = None, s
         _fail("INPUT", "stage", "expected triage, dispositions, or complete")
     if claims is not None and (not claims or any(not re.fullmatch(r"C-\d{2}[A-Z]?", c) for c in claims)):
         _fail("INPUT", "claims", "selection must contain one or more exact C-IDs")
+    if claims is not None and len(set(claims)) != len(claims):
+        _fail("INPUT", "claims", "duplicate selected claim ID")
     text = path.read_text(encoding="utf-8")
     lines = text.splitlines()
     _local_links(text, path, root, "FINDINGS")
