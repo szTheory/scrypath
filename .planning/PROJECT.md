@@ -8,9 +8,11 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Mode: Green-Main Release Train — Idle
+## Current Mode: Pre-Operator UI Readiness Ratchet — Approved, Not Started
 
-Scrypath 0.3.13 is published. v1.38 Packaged Adopter Proof is complete and archived; no milestone is active. Keep the release train idle until concrete maintenance, adopter, bug, proof-drift, or strategic evidence authorizes work.
+Scrypath 0.3.13 is published. v1.38 Packaged Adopter Proof is complete and archived; no milestone is active. The owner has approved a whole-product non-UI readiness ratchet before further ScrypathOps work. Its formal GSD requirements and roadmap have not yet been initialized; the release train remains on routine maintenance until that milestone starts.
+
+**Pre-UI quality readiness:** `.planning/reference/PRE-OPERATOR-UI-READINESS.md` is the durable program and exit-gate authority. The baseline must assess the full adopter lifecycle, reuse v1.37–v1.38 evidence without assuming complete coverage, and route worthwhile gaps into bounded milestones. The exit marker is **READY FOR OPERATOR UI** only when every area is assessed and no critical/high/medium-leverage non-UI gap remains unresolved. Evidence-backed API/runtime gaps may be planned only after explicit scope-guard review.
 
 **Last completed scope:** v1.38 proved package-backed Phoenix adoption against real services and closed with exact-SHA CI, green post-merge main, Hex/HexDocs publication, consumer compilation, and package-to-tag parity. It preserved the public API and advisory service-lane posture.
 
@@ -254,7 +256,7 @@ measured pure hot paths did not justify speculative optimization.
 
 ## Planning window
 
-No active milestone. v1.38 Packaged Adopter Proof is complete and archived across Phases 160–161; all eight requirements passed automated verification and Scrypath 0.3.13 is published. Historical phase directories are archived under `.planning/milestones/v1.38-phases/`.
+No active milestone. v1.38 Packaged Adopter Proof is complete and archived across Phases 160–161; all eight requirements passed automated verification and Scrypath 0.3.13 is published. The pre-operator UI readiness initiative is approved but awaits formal GSD requirements and roadmap. Historical phase directories are archived under `.planning/milestones/v1.38-phases/`.
 
 ## Requirements
 

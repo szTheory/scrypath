@@ -23,7 +23,7 @@ current_phase_name: null
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** No active milestone; green-main release train idle after Scrypath 0.3.13 publication
+**Current Focus:** No active milestone; owner-approved pre-operator UI readiness ratchet awaits formal GSD requirements and roadmap after Scrypath 0.3.13 publication
 
 ## Current Position
 
@@ -38,7 +38,7 @@ Last activity: 2026-09-25 — Milestone v1.38 archived after Scrypath 0.3.13 pub
 
 **Archive:** `.planning/milestones/v1.38-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and `.planning/milestones/v1.38-phases/`.
 
-**Next:** No active milestone. Keep the release train idle until concrete evidence authorizes more work.
+**Next:** Start the approved pre-operator UI quality-readiness milestone using `.planning/MILESTONE-CONTEXT.md` and `.planning/reference/PRE-OPERATOR-UI-READINESS.md`. No milestone is active until its formal GSD requirements and roadmap are initialized.
 
 ## Prior Completed Milestone: v1.37 Code Quality Ratchet
 
