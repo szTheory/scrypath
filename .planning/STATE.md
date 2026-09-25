@@ -5,16 +5,16 @@ milestone_name: Pre-Operator UI Quality Readiness Ratchet
 current_phase: 163
 current_phase_name: Findings and Bounded Follow-up
 status: executing
-stopped_at: Phase 163 planned; ready for verification and execution
-last_updated: "2026-09-25T21:05:05.335Z"
+stopped_at: Completed 163-01-PLAN.md
+last_updated: "2026-09-25T21:49:31.343Z"
 last_activity: 2026-09-25
-last_activity_desc: Phase 163 plans created and validated
-state_head: a7a0efe840abd9be3234f1722bac33fcaf7593a4
+last_activity_desc: Phase 163 execution started
+state_head: 384a2556739d53be2aa81ec43cd1101842e34228
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 6
-  completed_plans: 3
+  completed_plans: 4
   percent: 33
 ---
 
@@ -27,10 +27,10 @@ progress:
 
 ## Current Position
 
-Phase: 163 (Findings and Bounded Follow-up) — READY TO EXECUTE
-Plan: 0 of 3
+Phase: 163 (Findings and Bounded Follow-up) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-09-25 — Phase 163 plans created and validated
+Last activity: 2026-09-25 — Phase 163 execution started
 
 Progress: [███░░░░░░░] 33%
 
@@ -57,6 +57,9 @@ Progress: [███░░░░░░░] 33%
 - Use qualitative, evidence-backed dispositions and never allow implementation cost to average away severity.
 - Define automated acceptance before any separately scoped follow-up; promote CI only when recurring confidence justifies cost.
 - Preserve the green-main, PR-first release posture and the zero-routine-human-UAT policy.
+- [Phase 163]: Treat C-21 as a reconciled evidence gap without claiming current broad audit or host security certification.
+- [Phase 163]: Use exact candidate run 36080380783 for bounded C-17 cutover happy-path evidence.
+- [Phase 163]: Keep C-15 diagnosis separate from C-16 repair; no decision-changing repair-to-visible-search scenario was established.
 
 ### Pending Todos
 
@@ -90,6 +93,6 @@ None for v1.39. Qualifying findings become bounded follow-up milestones during P
 
 ## Session Continuity
 
-Last session: 2026-09-25T20:57:02.752Z
-Stopped at: Phase 163 planned; ready for verification and execution
-Resume file: .planning/phases/163-findings-and-bounded-follow-up/163-01-PLAN.md
+Last session: 2026-09-25T21:49:30.936Z
+Stopped at: Completed 163-01-PLAN.md
+Resume file: .planning/phases/163-findings-and-bounded-follow-up/163-02-PLAN.md
