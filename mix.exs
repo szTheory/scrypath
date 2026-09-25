@@ -109,7 +109,7 @@ defmodule Scrypath.MixProject do
       {:ecto, "~> 3.13"},
       {:nimble_options, "~> 1.1"},
       {:oban, "~> 2.21", optional: true},
-      {:req, "~> 0.6.1"},
+      {:req, "~> 0.7.4"},
       {:jason, "~> 1.4"},
       {:plug, "~> 1.19.5", only: :test},
       {:stream_data, "~> 1.3", only: :test},
