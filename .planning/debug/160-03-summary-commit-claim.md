@@ -1,8 +1,9 @@
 ---
-status: diagnosed
+status: resolved
 trigger: "Diagnose UAT gap G-160-9: 160-03-SUMMARY.md declares actuals.commits: 1 with plan_head_before 7931271abe53e83261d85a22077176f75898eb81, but its add commit precedes that base. Determine root cause and whether the blocker is warranted."
 created: 2026-09-24T19:58:39Z
-updated: 2026-09-24T20:02:35Z
+updated: 2026-09-25T02:15:00Z
+resolved_at: 2026-09-25T02:15:00Z
 ---
 
 ## Current Focus
@@ -11,7 +12,7 @@ updated: 2026-09-24T20:02:35Z
 hypothesis: Confirmed: commit 16082ca rewrote `plan_head_before` from the original d7b499b base to 7931271 without reconciling the summary's creation-boundary accounting; 7931271 descends from the summary's creation commit 3b2cd31.
 test: Compare the summary as created with its current form; inspect the complete ancestry and path presence at d7b499b, bc2bcc3, 3b2cd31, 7931271, and 16082ca.
 expecting: The original metadata will name d7b499b and `git log --diff-filter=A d7b499b..3b2cd31 -- SUMMARY` will produce exactly 3b2cd31, while 7931271 will contain the summary and 16082ca will be only a modification.
-next_action: Return the diagnosis: the gate is warranted for the current declared measurement, while the historical task-commit evidence is separately identifiable and must not be rewritten.
+next_action: Investigation complete; retain the diagnosis and historical evidence without rewriting the summary or commit history.
 bug_class: bohrbug
 candidate_causes:
   - "code/process: post-correction metadata refresh copied the corrected CI candidate into plan_head_before although that field must remain the plan execution baseline for summary-add accounting."
@@ -61,3 +62,7 @@ root_cause: "Commit 16082caf318cb99b45a4fb8571988bf169c548ae replaced 160-03-SUM
 fix: "Diagnose only. Preserve the history; a subsequent reconciliation should restore a metadata model whose stated base and claimed count refer to the same bounded interval, with a mechanically auditable boundary."
 verification: "Reproduced the required current-base add-only query: zero results. Independently established that 3b2cd31 is the unique add after the original recorded d7b499b base and that it precedes current base 7931271. The UAT blocker is warranted for the current declared truth, but it does not negate the separately recorded task commit bc2bcc3."
 files_changed: []
+
+## Session Closure
+
+The diagnosis is complete. No source fix is appropriate: this is a historical measurement-boundary mismatch, and rewriting the recorded task history would destroy evidence. Keep the existing finding as diagnosed evidence and close the investigation as resolved.

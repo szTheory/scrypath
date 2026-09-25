@@ -5,18 +5,18 @@ status: passed
 score: 4/4 must-haves verified
 covered_files:
   - .github/workflows/ci.yml
-  - .planning/REQUIREMENTS.md
-  - .planning/phases/160-package-backed-phoenix-proof/160-01-PLAN.md
-  - .planning/phases/160-package-backed-phoenix-proof/160-01-SUMMARY.md
-  - .planning/phases/160-package-backed-phoenix-proof/160-02-PLAN.md
-  - .planning/phases/160-package-backed-phoenix-proof/160-02-SUMMARY.md
-  - .planning/phases/160-package-backed-phoenix-proof/160-03-PLAN.md
-  - .planning/phases/160-package-backed-phoenix-proof/160-03-SUMMARY.md
-  - .planning/phases/160-package-backed-phoenix-proof/160-CONTEXT.md
-  - .planning/phases/160-package-backed-phoenix-proof/160-REVIEW.md
-  - .planning/phases/160-package-backed-phoenix-proof/160-UAT.md
-  - .planning/phases/160-package-backed-phoenix-proof/160-VALIDATION.md
-  - .planning/phases/160-package-backed-phoenix-proof/COVERAGE.md
+  - .planning/milestones/v1.38-REQUIREMENTS.md
+  - .planning/milestones/v1.38-phases/160-package-backed-phoenix-proof/160-01-PLAN.md
+  - .planning/milestones/v1.38-phases/160-package-backed-phoenix-proof/160-01-SUMMARY.md
+  - .planning/milestones/v1.38-phases/160-package-backed-phoenix-proof/160-02-PLAN.md
+  - .planning/milestones/v1.38-phases/160-package-backed-phoenix-proof/160-02-SUMMARY.md
+  - .planning/milestones/v1.38-phases/160-package-backed-phoenix-proof/160-03-PLAN.md
+  - .planning/milestones/v1.38-phases/160-package-backed-phoenix-proof/160-03-SUMMARY.md
+  - .planning/milestones/v1.38-phases/160-package-backed-phoenix-proof/160-CONTEXT.md
+  - .planning/milestones/v1.38-phases/160-package-backed-phoenix-proof/160-REVIEW.md
+  - .planning/milestones/v1.38-phases/160-package-backed-phoenix-proof/160-UAT.md
+  - .planning/milestones/v1.38-phases/160-package-backed-phoenix-proof/160-VALIDATION.md
+  - .planning/milestones/v1.38-phases/160-package-backed-phoenix-proof/COVERAGE.md
   - CONTRIBUTING.md
   - examples/phoenix_meilisearch/README.md
   - examples/phoenix_meilisearch/mix.exs
@@ -26,7 +26,7 @@ covered_files:
   - test/mix/tasks/verify_capability_test.exs
   - test/mix/tasks/verify_phoenix_example_package_test.exs
   - test/scrypath/docs_contract_test.exs
-covered_digest: "v1:sha256:3dc174521a704f5d0aa73891a1105466267b9d805df74de37f11b45053f00ac3"
+covered_digest: "v1:sha256:68de16e7b88fca5b07e8abf6e95e1b015878d565000958f13110c275fa07e3ab"
 behavior_unverified: 0
 overrides_applied: 0
 re_verification:

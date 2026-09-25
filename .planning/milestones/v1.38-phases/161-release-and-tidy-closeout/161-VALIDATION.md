@@ -1,11 +1,11 @@
 ---
 phase: "161"
 slug: "release-and-tidy-closeout"
-status: release-ready
+status: validated
 nyquist_compliant: true
 wave_0_complete: true
 created: "2026-09-24"
-updated: "2026-09-24"
+updated: "2026-09-25"
 ---
 
 # Phase 161 — Validation Strategy and Evidence
@@ -50,18 +50,34 @@ updated: "2026-09-24"
 - Refreshed closeout attestation artifact: ID `10826671760`, digest `sha256:8b1d6b82e4505916f3b584f17be0f2b637354c3f748e50a968b5956f000d21b2`, expires `2026-10-01T18:16:48Z`.
 - Refreshed run receipt is also retained outside tracked files at `/private/tmp/scrypath-161-closeout-3053efc.json`.
 
-## Release and PR gates
+## Release and PR gates — refreshed after publication
 
 | Gate | Evidence / status |
 |------|-------------------|
-| Current release truth | `mix.exs`, `.release-please-manifest.json`, and top `CHANGELOG.md` entry agree on version `0.3.12`; the current release tag is `scrypath-v0.3.12`. |
-| New milestone PR | [#77](https://github.com/szTheory/scrypath/pull/77), open; base `main`, head `gsd/v1.37-code-quality-ratchet`; created on `3053efcf06bf574d599e3969385dfd904d31ca53`; final evidence head and CI receipt are in `/private/tmp/scrypath-161-final-closeout.json`. |
-| Release Please PR | No open Release Please PR exists. Latest Release Please workflow run is successful on current `main` SHA `1ccf353eb6c6e315d57903166431ec63ef1a7fab`; it did not produce an open release PR. |
-| Publisher credential | `HEX_API_KEY` secret name is present in GitHub Actions; its value was not accessed. |
-| Publication | No new Phase 161 release has been published. Do not call this milestone shipped. |
-| Review / merge | PR #77 has no submitted review or review comments; all required checks pass and merge state is clean. It is not merged. Human review and merge authorization remain external. |
-| Final disposition | `release-ready`; Phase 161 is not shipped. Final-SHA closeout runs after the summary/evidence commit, with its receipt retained externally. |
+| Current release truth | `mix.exs`, `.release-please-manifest.json`, changelog, and tag agree on `0.3.13` / `scrypath-v0.3.13`. |
+| Phase 161 PR | [#77](https://github.com/szTheory/scrypath/pull/77), merged as `465aef9bc6c9c05fb021b5aa3d5b6b584aed568d`; exact-head CI and post-merge `main` CI passed. Maintainer authorized squash merge after checks; no GitHub review object was submitted. |
+| Release Please PR | [#78](https://github.com/szTheory/scrypath/pull/78), exact-head required CI passed; merged as `28d3877a05479f2cc104754fc24ab0c9d545c01b`. |
+| Release workflow | [Run 36083655678](https://github.com/szTheory/scrypath/actions/runs/36083655678) succeeded. Package job passed `mix verify.package`, dry-run, Hex publish, `mix verify.release_publish 0.3.13`, and `mix verify.release_parity 0.3.13`. |
+| Publisher credential | `HEX_API_KEY` was available to the scoped publish job; its value was not accessed. |
+| Publication | GitHub release and Hex `0.3.13` were published on 2026-09-25; versioned HexDocs, consumer compile, and tag/package parity passed. |
+| Final disposition | `shipped`; no human UAT or release blocker remains. |
 
-## Manual / external gates
+## Validation audit 2026-09-25
 
-A maintainer authorized submission of PR #77. A real review and merge decision, a subsequent Release Please version/tag, Hex publication, versioned HexDocs, consumer verification, and package-to-tag parity remain external gates. The already-published 0.3.12 release is historical baseline evidence, not Phase 161 publication evidence.
+| Metric | Count |
+|--------|-------|
+| Nyquist requirement behaviors mapped to automated unit, docs-contract, package, integration, or exact-SHA release evidence | 4 |
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated to manual-only | 0 |
+
+## Automated Evidence Map
+
+| Requirement | Automated verification | Result |
+|-------------|------------------------|--------|
+| DOC-01 | Docs contract tests in required package/core verification; Release Please publish job also ran the package gate | Pass |
+| HYGIENE-01 | Repository contracts, exact-SHA evidence and release workflow clean-workspace gate | Pass |
+| REL-01 | PR #78 exact-head CI, post-merge main CI, Release Please publish job, `verify.release_publish`, and `verify.release_parity` | Pass |
+| CLOSE-01 | Cleanup inventory and preservation record in `161-RELEASE-EVIDENCE.md`; post-merge verification | Pass |
+
+No human-facing UAT was needed. Maintainer merge authorization was the only external decision; all software acceptance and publication checks ran automatically.
