@@ -236,6 +236,8 @@ def validate_document(path: Path, root: Path, claims: list[str] | None = None, s
                 _fail(fid, "Disposition basis", "rejection must say whether the finding or remedy is rejected")
             if fields["Risk state"] not in {"unresolved", "not-substantiated"}:
                 _fail(fid, "Risk state", "rejected finding must retain unresolved risk or mark not-substantiated")
+            if "asserted finding" in basis and fields["Risk state"] != "not-substantiated":
+                _fail(fid, "Risk state", "rejected asserted finding must be not-substantiated")
         for kid in re.findall(r"\bK-\d{2}\b", fields["Route"]):
             if kid not in candidates:
                 _fail(fid, "Route", f"orphan candidate {kid}")
@@ -258,16 +260,37 @@ def validate_document(path: Path, root: Path, claims: list[str] | None = None, s
                 _fail(kid, "Findings", f"candidate owner {fid} is not material")
             if kid not in re.findall(r"\bK-\d{2}\b", findings[fid].get("Route", "")):
                 _fail(kid, "Findings", f"finding {fid} does not link back to candidate")
+        for pid in re.findall(r"\bP-\d{2}\b", fields["Evidence"]):
+            if pid not in proofs:
+                _fail(kid, "Evidence", f"orphan proof card {pid}")
+            referenced_p.add(pid)
     for pid, fields in proofs.items():
         if not fields.get("Oracle", "").strip():
             _fail(pid, "Oracle", "proof card requires an oracle")
         if set(fields) < P_FIELDS:
             _fail(pid, "fields", "missing " + ", ".join(sorted(P_FIELDS - set(fields))))
+        if fields["Layer"] not in {"unit/property", "contract/seam", "integration", "package/service", "browser", "exact-SHA-hosted"}:
+            _fail(pid, "Layer", "invalid proof layer")
+        receipt = fields["Receipt"].lower()
+        if "not executed" in receipt:
+            if "proposed follow-up" not in receipt or "—" not in fields["Receipt"]:
+                _fail(pid, "Receipt", "unexecuted proof must say proposed follow-up and give a reason")
+        elif not re.search(r"\[[^]]+\]\([^)]+\)", fields["Receipt"]):
+            _fail(pid, "Receipt", "executed proof requires a linked result")
+        if fields["CI posture"].lower().startswith("changed"):
+            economics = fields["CI economics"].lower()
+            for term in ("confidence", "recurrence", "runtime", "maintenance", "reliability", "isolation", "diagnostics"):
+                if term not in economics:
+                    _fail(pid, "CI economics", f"changed CI posture must compare {term}")
+        elif not fields["CI economics"].strip():
+            _fail(pid, "CI economics", "unchanged CI posture needs claim-local rationale")
         if pid not in referenced_p:
             _fail(pid, "Oracle", "orphan proof card has no finding owner reference")
     if stage in {"dispositions", "complete"} and claims is None:
         summary = _section_fields(lines, "## Disposition summary")
         required = {"Claims", "Material findings", "Closed", "Accepted", "Deferred", "Rejected", "Unresolved gate-rank findings"}
+        if stage == "complete":
+            required |= {"Candidates", "Proof claims"}
         if set(summary) < required:
             _fail("FINDINGS", "Disposition summary", "missing " + ", ".join(sorted(required - set(summary))))
         if summary["Claims"] != str(len(baseline)):
@@ -280,6 +303,9 @@ def validate_document(path: Path, root: Path, claims: list[str] | None = None, s
             "Rejected": {fid for fid, f in findings.items() if f.get("Disposition") == "rejected"},
             "Unresolved gate-rank findings": {fid for fid, f in findings.items() if f.get("Rank") in {"Critical", "High", "Medium-leverage"} and f.get("Risk state") == "unresolved"},
         }
+        if stage == "complete":
+            expected_lists["Candidates"] = set(candidates)
+            expected_lists["Proof claims"] = set(proofs)
         for field, expected in expected_lists.items():
             actual = set(re.findall(r"\bF-\d{2}\b", summary[field]))
             if summary[field].strip().lower() in {"none", "0", "none — none"}:
@@ -291,6 +317,12 @@ def validate_document(path: Path, root: Path, claims: list[str] | None = None, s
         required_handoff = {"Baseline", "Dispositions", "Residual gaps", "Candidate and nonqualification outcome", "Unresolved owner decisions", "Gate ownership"}
         if set(handoff) < required_handoff:
             _fail("FINDINGS", "Phase 164 handoff", "missing " + ", ".join(sorted(required_handoff - set(handoff))))
+        for field in ("Baseline", "Dispositions"):
+            if not re.search(r"\[[^]]+\]\([^)]+\)", handoff[field]):
+                _fail("FINDINGS", f"Phase 164 handoff.{field}", "must link to the canonical artifact")
+        for field, value in handoff.items():
+            if not value.strip():
+                _fail("FINDINGS", f"Phase 164 handoff.{field}", "must state an explicit outcome")
         if "Phase 164" not in handoff["Gate ownership"]:
             _fail("FINDINGS", "Phase 164 handoff.Gate ownership", "must state Phase 164 owns the readiness gate")
     return {"claims": sorted(selected), "findings": len(referenced_f), "candidates": len(candidates), "proofs": len(proofs)}
