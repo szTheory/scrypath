@@ -41,11 +41,27 @@ The checker validates document shape, references, enumerated vocabulary, and sel
 
 ## Material findings
 
-None — the C-21 advisory chronology is a reconciled evidence gap, not a newly substantiated product defect or current material risk. See [C-21](#c-21) and the [canonical baseline](../162-whole-product-evidence-baseline/162-BASELINE.md).
+None — review of all 24 linked baseline claims established no observed/reproducible Scrypath-owned defect or specifically substantiated affected risk meeting D-01. In particular, deletion, tenant authorization, settings/facets/multi-search, recovery, upgrade, and production performance questions remain evidence gaps with named decision conditions; they are not severity-ranked. See the [complete claim inventory](#claim-triage) and [canonical baseline](../162-whole-product-evidence-baseline/162-BASELINE.md). C-21 is a reconciled historical advisory gap, not a current broad audit or certification.
 
 ## Follow-up candidates
 
-None — no C-21 follow-up is justified after the named advisory remediation; broader dependency posture remains claim-bounded. See [C-21](#c-21).
+None — no material finding or decision-qualified candidate is established by this inventory. Package opt-outs, absent host policy receipts, generic upgrade uncertainty, and absent workload benchmarks do not independently justify a candidate. The linked claim rows state the concrete invalidator or next evidence source for each residual question; no speculative backlog is created. See the [claim inventory](#claim-triage) and [candidate rules](../../reference/milestone-candidates.md).
+
+## Disposition summary
+
+- Claims: 24
+- Material findings: None
+- Closed: None
+- Accepted: None
+- Deferred: None
+- Rejected: None
+- Unresolved gate-rank findings: None
+
+No owner decision was requested or inferred: there is no substantiated material risk to accept or defer. This is not a readiness recommendation. Phase 164 must evaluate the residual evidence gaps against all six conditions in the [readiness program](../../reference/PRE-OPERATOR-UI-READINESS.md); “no material finding established here” does not mean those gaps pass the gate.
+
+### Residual evidence questions for Phase 164
+
+The complete baseline retains bounded uncertainty, including public API/error coverage (C-02/C-22), first-hour adopter friction (C-06), delete visibility (C-09), host-specific tenant policy (C-10), selected settings/facet/multi-search package scenarios (C-11), live repair-to-visible-search (C-16), an actual prior-version upgrade transition (C-19), and workload-specific performance (C-23). Each row names the cheapest existing source to inspect and the decision-changing condition. The remaining supported claims also retain their receipt limits and invalidators. No broad product suite, benchmark, or new service run was commissioned by this plan.
 
 ## C-21 chronology and boundary
 
