@@ -48,28 +48,28 @@ These requirements close selected condition 3 evidence gaps and produce a new, s
 
 ## Traceability
 
-The roadmapper will map each v1 requirement to exactly one phase after this requirements set is approved.
+Every v1 requirement maps to exactly one phase in the approved v1.40 roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| API-01 | Pending roadmap | Pending |
-| API-02 | Pending roadmap | Pending |
-| HOST-01 | Pending roadmap | Pending |
-| HOST-02 | Pending roadmap | Pending |
-| PKG-04 | Pending roadmap | Pending |
-| REPAIR-01 | Pending roadmap | Pending |
-| REPAIR-02 | Pending roadmap | Pending |
-| DELETE-01 | Pending roadmap | Pending |
-| GATE-04 | Pending roadmap | Pending |
-| CLOSE-03 | Pending roadmap | Pending |
-| VERIFY-02 | Pending roadmap | Pending |
+| API-01 | Phase 165 | Pending |
+| API-02 | Phase 165 | Pending |
+| HOST-01 | Phase 166 | Pending |
+| HOST-02 | Phase 166 | Pending |
+| PKG-04 | Phase 166 | Pending |
+| REPAIR-01 | Phase 166 | Pending |
+| REPAIR-02 | Phase 166 | Pending |
+| DELETE-01 | Phase 166 | Pending |
+| GATE-04 | Phase 167 | Pending |
+| CLOSE-03 | Phase 167 | Pending |
+| VERIFY-02 | Phase 167 | Pending |
 
 **Coverage:**
 
 - v1 requirements: 11 total
-- Mapped to phases: 0
-- Unmapped: 11 (roadmap pending)
+- Mapped to phases: 11
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-09-26*
-*Last updated: 2026-09-26 after v1.40 requirements approval*
+*Last updated: 2026-09-26 after v1.40 roadmap creation*
