@@ -32,12 +32,12 @@ v1.40 is approved to close bounded condition-3 and condition-6 evidence gaps. It
   1. A consumer can use `tenant_scope:` through `search/3`, `search_many/2`, and `search_facet_values/4`; the declared tenant criterion combines with ordinary filters, while conflicting or undeclared tenant input fails before backend dispatch.
   2. A consumer can use documented public filter options, defaults, and keyword filtering with `search_facet_values/4` and receive an endpoint-valid Meilisearch v1.15 request; a reproduced supported-contract failure receives only a compatible correction and focused regression.
 
-**Plans**: 2 plans
+**Plans**: 1/2 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 165-01-PLAN.md — Public tenant composition and rejection through an independent recording backend.
+- [x] 165-01-PLAN.md — Public tenant composition and rejection through an independent recording backend.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -75,6 +75,6 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 165. Public Tenant and Facet Contracts | 0/2 | Planned | - |
+| 165. Public Tenant and Facet Contracts | 1/2 | In Progress|  |
 | 166. Host Tenant and Repair Evidence | 0/TBD | Not started | - |
 | 167. Dated Readiness and Closeout | 0/TBD | Not started | - |

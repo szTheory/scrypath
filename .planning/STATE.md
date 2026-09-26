@@ -4,17 +4,17 @@ milestone: v1.40
 milestone_name: Readiness Evidence Closure
 current_phase: 165
 current_phase_name: Public Tenant and Facet Contracts
-status: "Ready to execute Phase 165; next command: `$gsd-execute-phase 165`."
-stopped_at: Phase 165 planning complete
-last_updated: "2026-09-26T20:02:15.197Z"
+status: executing
+stopped_at: Completed 165-01-PLAN.md
+last_updated: "2026-09-26T22:19:11.284Z"
 last_activity: 2026-09-26
-last_activity_desc: Phase 165 planning complete — 2 plans ready
-state_head: e8c579e6c0229456da0ca9185e25c424ab4ba320
+last_activity_desc: Phase 165 execution started
+state_head: 493ca34024ae4909c771a99eb42e86f3392383e3
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 2
-  completed_plans: 0
+  completed_plans: 1
 ---
 
 # Project State
@@ -22,14 +22,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** v1.40 Readiness Evidence Closure is approved and roadmaped. Phase 165 will classify existing public tenant and facet contracts before the representative host and repair evidence phase.
+**Current Focus:** Phase 165 — Public Tenant and Facet Contracts
 
 ## Current Position
 
-Phase: 165 (Public Tenant and Facet Contracts) — READY TO EXECUTE
+Phase: 165 (Public Tenant and Facet Contracts) — EXECUTING
 Plans: 2 ready to execute
-Status: Ready to execute Phase 165; next command: `$gsd-execute-phase 165`.
-Last activity: 2026-09-26 — Phase 165 planning complete; 2 plans ready.
+Status: Executing Phase 165
+Last activity: 2026-09-26 — Phase 165 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -84,12 +84,17 @@ None yet.
 | 165. Public Tenant and Facet Contracts | TBD | - | - |
 | 166. Host Tenant and Repair Evidence | TBD | - | - |
 | 167. Dated Readiness and Closeout | TBD | - | - |
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 165 P01 | 9 min | 2 tasks | 4 files |
 
 ## Session Continuity
 
-Last session: 2026-09-26T19:04:16.512Z
-Stopped at: Phase 165 planning complete
-Resume file: .planning/phases/165-public-tenant-and-facet-contracts/165-CONTEXT.md
+Last session: 2026-09-26T22:19:11.274Z
+Stopped at: Completed 165-01-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 
