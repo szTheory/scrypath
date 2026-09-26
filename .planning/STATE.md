@@ -1,20 +1,16 @@
 ---
 gsd_state_version: "1.0"
-milestone: v1.39
-milestone_name: Pre-Operator UI Quality Readiness Ratchet
-status: Awaiting next milestone
-stopped_at: Phase 164 complete — all phases complete
-last_updated: "2026-09-26T16:34:47.304Z"
+milestone: v1.40
+milestone_name: Readiness Evidence Closure
+status: planning
+last_updated: "2026-09-26T18:37:48.964Z"
 last_activity: 2026-09-26
-last_activity_desc: Milestone v1.39 completed and archived
-state_head: 70891bd428465367bd24a64b2296f51bc87276ca
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
-  percent: 100
-current_phase: 164
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -22,22 +18,22 @@ current_phase: 164
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** No active milestone; v1.39 is archived. Readiness remains NOT READY pending a new dated review of condition 3 evidence and condition 6 using the later final-SHA closeout receipt.
+**Current Focus:** v1.40 Readiness Evidence Closure is being initialized. The historical v1.39 readiness decision remains NOT READY; this milestone will gather bounded new evidence and make a separate dated assessment.
 
 ## Current Position
 
-Phase: Milestone v1.39 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-09-26 — Milestone v1.39 completed and archived
+Status: Defining requirements
+Last activity: 2026-09-26 — Milestone v1.40 started
 
 ## Milestone Context
 
-**Goal:** Assess Scrypath's non-UI quality and adopter readiness, route confirmed worthwhile gaps into bounded follow-up milestones, and make an auditable readiness decision before more ScrypathOps work.
+**Goal:** Close decision-relevant adopter evidence gaps for tenant-safe search and bounded repair, reuse valid delete and release receipts, and make a fresh six-condition readiness decision without starting operator UI work.
 
-**Scope boundary:** v1.39 assesses, dispositions, and reconciles evidence. It does not implement unspecified runtime, public API, dependency, backend, operator UI, visual-audit, or design-system changes. A later evidence-backed change needs a separately scoped milestone and, where applicable, scope-guard review.
+**Scope boundary:** v1.40 verifies existing public tenant-scope and facet-value input contracts, fixes only confirmed compatible defects, proves one representative host-owned tenant search workflow and one bounded manual repair-to-visible-search workflow, and reconciles condition 3/6 evidence. Host authentication, membership policy, tenant selection, and database response scoping remain application-owned. No broad API/feature matrix, new auth framework, operator UI, or forced Hex release is included.
 
-**Gate:** Keep readiness **NOT READY** unless all six program exit conditions pass with linked evidence and no critical, high, or medium-leverage non-UI finding remains unresolved. A passing decision recommends ScrypathOps as the next strategic focus; it does not start UI work.
+**Gate:** Preserve the historical Phase 164 assessment unchanged. The new dated assessment evaluates all six conditions independently and may remain **NOT READY** if evidence is insufficient or a material finding remains open. A passing gate recommends ScrypathOps as a later strategic focus; it does not start UI work.
 
 ## Recent Evidence
 
@@ -69,11 +65,11 @@ Last activity: 2026-09-26 — Milestone v1.39 completed and archived
 
 ### Pending Todos
 
-None for v1.39. Qualifying findings become bounded follow-up milestones during Phase 163; unqualified opportunities receive a disposition and revisit trigger.
+No pending work remains for v1.39. v1.40 requirements and roadmap are being defined from the approved scope and `.planning/research/v1.40/SUMMARY.md`.
 
 ### Blockers/Concerns
 
-- Whole-product readiness remains NOT READY because conditions 3 and 6 are UNKNOWN in the dated assessment; condition 6 now has a later final-SHA closeout receipt, while both conditions still need a new decision-relevant assessment.
+- Whole-product readiness remains NOT READY because conditions 3 and 6 are UNKNOWN in the dated assessment; v1.40 will evaluate new evidence without rewriting that historical decision.
 - The exact-SHA closeout passed after the readiness cutoff; it does not change the historical readiness result by itself.
 
 ## Deferred Items

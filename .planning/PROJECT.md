@@ -12,9 +12,24 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 Scrypath 0.3.13 remains the published package. The v1.39 planning milestone shipped and was archived on 2026-09-26; it adds no runtime, public API, dependency, backend, or operator UI changes. Its dated readiness decision remains **NOT READY** because conditions 3 and 6 were unknown at assessment. The v1.39 audit's `tech_debt` status is accepted and recorded: all requirement checkboxes and phase verifications are complete, while three Phase 164 cross-references and Nyquist metadata for Phases 163–164 remain follow-up. Final exact-SHA closeout run [36257182675](https://github.com/szTheory/scrypath/actions/runs/36257182675) passed for `dc400b2b57aec0ca6b0ef16c9477d266fd41a433`; the remote annotated `v1.39` tag resolves to that commit. This later receipt can support a newly dated condition 6 assessment but does not change the historical readiness result.
 
+v1.40 Readiness Evidence Closure is now approved and in setup. It will assess new evidence for conditions 3 and 6 without presuming readiness or authorizing operator UI work.
+
 ## Next Milestone Goals
 
-No next milestone is approved. The possible near-term wedge is a targeted, automated reassessment of readiness conditions 3 and 6 after inspecting existing proof; it must be explicitly approved before GSD requirements are written. Keep operator UI deferred until the gate passes and maintainer time is available. See `.planning/reference/milestone-candidates.md` for the evidence-gated near/mid/long horizon and `prompts/scrypath-milestone-ratchet-roadmap.txt` for the reusable milestone decision guide. Start other work only when concrete maintenance, adopter, production-bug, proof-drift, or strategic evidence supports an owner-approved scope.
+The current approved milestone is v1.40, described below. Any milestone after v1.40 still requires concrete evidence and owner-approved scope. Keep operator UI deferred until the readiness gate passes and maintainer time is available. See `.planning/reference/milestone-candidates.md` for the evidence-gated near/mid/long horizon and `prompts/scrypath-milestone-ratchet-roadmap.txt` for the reusable milestone decision guide.
+
+## Current Milestone: v1.40 Readiness Evidence Closure
+
+**Goal:** Close decision-relevant adopter evidence gaps for tenant-safe search and bounded repair, reuse valid delete and release receipts, and make a fresh six-condition readiness decision without starting operator UI work.
+
+**Target features:**
+- Reproduce the existing public tenant-scope and facet-value input contracts; correct only confirmed compatible defects.
+- Prove one representative host-owned tenant authorization/search workflow and one bounded manual repair through terminal task success to visible search, reusing existing test and CI harnesses.
+- Reuse the exact-SHA delete and v1.39 closeout/publication receipts within their recorded limits; create a separately dated condition 3/6 assessment and reconcile task-owned cleanup and release-reference truth.
+
+**Boundaries:** Host applications retain ownership of authentication, membership policy, trusted tenant selection, and database response scoping. Do not add an auth framework, public backend abstraction, broad endpoint/version matrix, operator UI, or forced Hex release. A fresh readiness assessment may remain **NOT READY** if a condition is not evidenced.
+
+**Research:** `.planning/research/v1.40/SUMMARY.md` and its four claim-specific reports record the source evidence, tradeoffs, and proof limits that inform this scope.
 
 <details>
 <summary>Archived v1.39 planning context</summary>
@@ -231,9 +246,9 @@ Current planning files: **`.planning/{PROJECT,ROADMAP,STATE}.md`** plus mileston
 
 ## Release Train Posture
 
-- **Active milestone:** None. v1.39 is archived as a planning milestone; its dated readiness decision remains NOT READY. Final exact-SHA closeout passed and the `v1.39` tag is published.
+- **Active milestone:** v1.40 Readiness Evidence Closure is in setup. v1.39 remains archived; its dated readiness decision remains NOT READY. Final exact-SHA closeout passed for the archived v1.39 source SHA, and the `v1.39` planning tag resolves to that commit.
 - **Policy:** Keep `main` green on the lean required gates and prefer PR-first execution for serious milestone or feature-depth work.
-- **Next milestone goals:** None approved. Start a fresh requirements cycle only when concrete maintenance, adopter, production-bug, proof-drift, or explicit strategic evidence authorizes work.
+- **Next milestone goals:** None selected. Reassess after v1.40's dated readiness decision; passing the gate recommends ScrypathOps as a later focus but does not automatically start UI work.
 - **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, and new UI surfaces remain out of scope.
 
 **v1.37 implementation outcome (2026-08-26):** runtime input and secret
@@ -289,7 +304,7 @@ measured pure hot paths did not justify speculative optimization.
 
 ## Planning window
 
-No milestone is active. v1.39 is archived across Phases 162–164; the root roadmap is the shipped-milestone index. The readiness decision is NOT READY, and no next milestone is approved. Historical phase directories for v1.38 and v1.39 are archived under `.planning/milestones/`.
+v1.40 is active in setup and continues phase numbering after Phase 164. v1.39 is archived across Phases 162–164; its historical readiness decision remains NOT READY. Historical phase directories for v1.38 and v1.39 are archived under `.planning/milestones/`.
 
 ## Requirements
 
@@ -372,7 +387,7 @@ No milestone is active. v1.39 is archived across Phases 162–164; the root road
 
 ### Active
 
-No active requirements. Define the next set through `$gsd-new-milestone` only after a concrete, owner-approved scope exists.
+v1.40 requirements are being defined from the approved scope above and `.planning/research/v1.40/SUMMARY.md`.
 
 ### Out of Scope
 
@@ -402,4 +417,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-09-26 after v1.39 Pre-Operator UI Quality Readiness Ratchet*
+*Last updated: 2026-09-26 during v1.40 Readiness Evidence Closure setup*
