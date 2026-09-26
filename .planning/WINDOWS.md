@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 1
+open_count: 0
 waived_count: 0
-fixed_count: 0
+fixed_count: 1
 total_count: 1
-last_updated: 2026-09-26T03:12:54.942Z
+last_updated: 2026-09-26T14:19:23.250Z
 ---
 
 # Broken Windows Ledger
@@ -15,7 +15,7 @@ last_updated: 2026-09-26T03:12:54.942Z
 
 | id | phase | kind | file | line | description | status | reason | recorded_at | resolved_at |
 |----|-------|------|------|------|-------------|--------|--------|-------------|-------------|
-| 1 | 164 | unrun-verify | scripts/ci_monitor.cjs |  | Exact-SHA candidate and final closeout remain unrun because automatic approval review rejected the push and CI dispatch pending explicit authorization. | open |  | 2026-09-26T03:12:54.942Z |  |
+| 1 | 164 | unrun-verify | scripts/ci_monitor.cjs |  | Exact-SHA candidate and final closeout remain unrun because automatic approval review rejected the push and CI dispatch pending explicit authorization. | fixed |  | 2026-09-26T03:12:54.942Z | 2026-09-26T14:19:23.250Z |
 
 ````json
 [
@@ -26,10 +26,10 @@ last_updated: 2026-09-26T03:12:54.942Z
     "file": "scripts/ci_monitor.cjs",
     "line": null,
     "description": "Exact-SHA candidate and final closeout remain unrun because automatic approval review rejected the push and CI dispatch pending explicit authorization.",
-    "status": "open",
+    "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-26T03:12:54.942Z",
-    "resolved_at": null,
+    "resolved_at": "2026-09-26T14:19:23.250Z",
     "milestone": "v1.39"
   }
 ]

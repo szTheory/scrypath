@@ -1,5 +1,33 @@
 # Milestones
 
+## v1.39 Pre-Operator UI Quality Readiness Ratchet (Shipped: 2026-09-26)
+
+**Delivered:** An evidence-led non-UI readiness assessment with a 24-claim baseline, explicit findings dispositions, and a fail-closed readiness decision. The decision is **NOT READY** because conditions 3 and 6 remain unknown; no operator UI work is authorized.
+
+**Phases completed:** 3 phases (162–164), 7 plans, 14 plan tasks
+
+**Key accomplishments:**
+
+- Established a 24-claim readiness baseline with source, freshness, scope, and limitation details across adopter and operator work.
+- Added structural checkers and claim-by-claim triage that distinguish behavior defects, evidence gaps, and product opportunities.
+- Dispositioned all 24 claims; no material Scrypath-owned finding or qualifying follow-up candidate was established.
+- Recorded the six-condition **NOT READY** outcome with conditions 3 and 6 unknown; the assessment does not authorize operator UI work.
+- Reconciled release, package, support, CI, planning, and task-owned cleanup evidence.
+
+**Milestone audit:** `tech_debt` accepted for closeout. All 11 requirement checkboxes are complete and all 3 phase verifications pass. The audit cross-reference marks GATE-01/02/03 partial because Phase 164's summary omits `requirements-completed` frontmatter; Nyquist metadata follow-up remains for Phases 163 and 164. See `milestones/v1.39-MILESTONE-AUDIT.md`.
+
+**Closeout gate:** The exact-SHA hosted workflow must pass for the final tracking commit before creating tag `v1.39`.
+
+**Stats:** 53 files changed, 6,705 insertions, 57 deletions across 58 commits from 2026-09-25 to 2026-09-26 (milestone execution range; excludes closeout commits).
+
+**Git range:** `9a0f9164` → `70891bd`
+
+**Archives:** `milestones/v1.39-ROADMAP.md`, `milestones/v1.39-REQUIREMENTS.md`, `milestones/v1.39-MILESTONE-AUDIT.md`, `milestones/v1.39-phases/`
+
+**What's next:** No next milestone is approved. Keep the release train idle until concrete evidence and maintainer approval establish new scope; operator UI remains gated on a passing readiness assessment.
+
+---
+
 ## v1.19 archive: v1.19 — Production adoption proof and hardening (Backfilled: 2026-09-24)
 
 **Note:** Synthesized from archive snapshot by `$gsd-health --backfill`. Original completion date unknown.

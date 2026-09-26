@@ -2,19 +2,19 @@
 gsd_state_version: "1.0"
 milestone: v1.39
 milestone_name: Pre-Operator UI Quality Readiness Ratchet
-current_phase: 164
-status: completed
+status: Awaiting next milestone
 stopped_at: Phase 164 complete — all phases complete
-last_updated: "2026-09-26T13:30:16.496Z"
+last_updated: "2026-09-26T16:34:47.304Z"
 last_activity: 2026-09-26
-last_activity_desc: Phase 164 complete
-state_head: 0764f36a370274932997e5990f1d14e4fd873372
+last_activity_desc: Milestone v1.39 completed and archived
+state_head: 70891bd428465367bd24a64b2296f51bc87276ca
 progress:
   total_phases: 3
   completed_phases: 3
   total_plans: 7
   completed_plans: 7
   percent: 100
+current_phase: 164
 ---
 
 # Project State
@@ -22,16 +22,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** v1.39 phase work complete; readiness remains NOT READY pending new evidence for UNKNOWN conditions 3 and 6.
+**Current Focus:** No active milestone; v1.39 is archived. Readiness remains NOT READY pending new evidence for unknown conditions 3 and 6.
 
 ## Current Position
 
-Phase: 164
-Plan: Not started
-Status: All phases complete
-Last activity: 2026-09-26 — Phase 164 complete
-
-Progress: [██████████] 100%
+Phase: Milestone v1.39 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-09-26 — Milestone v1.39 completed and archived
 
 ## Milestone Context
 
@@ -43,6 +41,7 @@ Progress: [██████████] 100%
 
 ## Recent Evidence
 
+- v1.39 is archived across Phases 162–164. The audit's accepted `tech_debt` status records three Phase 164 requirement cross-reference gaps and Nyquist metadata follow-up for Phases 163–164; all 11 requirement checkboxes and all phase verifications are complete. The exact-SHA closeout is the final tracking-commit gate.
 - v1.38 / Scrypath 0.3.13 passed package-backed Phoenix proof, exact-SHA and post-merge CI, Hex/HexDocs, clean consumer compilation, and package-to-tag parity.
 - v1.37 closed its bounded quality ratchet with no confirmed compatible high- or medium-leverage finding, but did not assess the complete adopter-readiness program.
 - The readiness program at `.planning/reference/PRE-OPERATOR-UI-READINESS.md` remains the authority for dimensions, operating rules, and the six-condition gate.
@@ -75,7 +74,7 @@ None for v1.39. Qualifying findings become bounded follow-up milestones during P
 ### Blockers/Concerns
 
 - Whole-product readiness remains NOT READY because conditions 3 and 6 are UNKNOWN in the dated assessment; resolving those conditions requires additional decision-relevant evidence.
-- The final exact-SHA closeout is an authorized post-commit release-train gate; it does not change the readiness result by itself.
+- The exact-SHA closeout is the required post-commit release-train gate; it does not change the readiness result by itself.
 
 ## Deferred Items
 
@@ -110,3 +109,7 @@ None for v1.39. Qualifying findings become bounded follow-up milestones during P
 Last session: 2026-09-26T13:21:18Z
 Stopped at: Phase 164 complete — all phases complete
 Resume file: None
+
+## Operator Next Steps
+
+- Start the next milestone with $gsd-new-milestone
