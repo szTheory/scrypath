@@ -1,8 +1,8 @@
 # Pre-Operator UI Quality Readiness Program
 
 **Status:** ACTIVE — v1.39 PRE-OPERATOR UI QUALITY READINESS RATCHET
-**Readiness:** NOT READY — whole-product baseline not yet assessed
-**Last reconciled:** 2026-09-25, following v1.38 Packaged Adopter Proof
+**Readiness:** NOT READY — Phase 164 reconciliation is in progress; conditions 3 and 6 remain UNKNOWN
+**Last reconciled:** 2026-09-26, during v1.39 readiness reconciliation
 **Purpose:** Identify and close worthwhile non-UI gaps before ScrypathOps becomes the next strategic focus. Establish an evidence-backed, durable gate for saying the non-UI work has reached diminishing returns.
 
 This program is the scope and exit-gate authority for active milestone **v1.39 Pre-Operator UI Quality Readiness Ratchet**. Its formal requirements and roadmap are in `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md`; Phase 162 is next. The one-time `.planning/MILESTONE-CONTEXT.md` handoff has been consumed.
@@ -76,3 +76,26 @@ Owner direction captured 2026-09-25 from the adapted Scrypath milestone-ratchet 
 - `.planning/reference/MILESTONE-ARC.md` — near/mid/long posture.
 - `.planning/reference/QUALITY-LEDGER.md` and `.planning/milestones/v1.37-*`, `.planning/milestones/v1.38-*` — prior evidence.
 - `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md` — active v1.39 scope and phase sequence.
+
+## Phase 164 dated assessment — 2026-09-26
+
+This assessment applies the six conditions above without changing their meanings. Evidence dates identify the source receipt or assessment; the separate assessment date records this reconciliation. The structural checker validates record shape only and does not certify source truth, semantic finding judgment, owner approval, or readiness.
+
+| # | Approved condition | Status | Evidence date | Assessment date | Dated linked evidence / receipt + SHA | Boundary, freshness, or limitation |
+|---|---|---|---|---|---|---|
+| 1 | Every baseline dimension above has been assessed; evidence coverage and known limits are visible. | PASS | 2026-09-25 | 2026-09-26 | [Phase 162 baseline](../phases/162-whole-product-evidence-baseline/162-BASELINE.md) and [Phase 163 findings](../phases/163-findings-and-bounded-follow-up/163-FINDINGS.md) | The seven dimensions and 24 claims have dated evidence dispositions and visible limits. The baseline is reused within its recorded scope; the Phase 163 zero-finding result is not readiness proof. |
+| 2 | Every critical, high, or medium-leverage finding is closed with verification or explicitly accepted with rationale and an owner decision. There are no unresolved findings at those levels. | PASS | 2026-09-25 | 2026-09-26 | [Phase 163 findings and disposition summary](../phases/163-findings-and-bounded-follow-up/163-FINDINGS.md) | Phase 163 found no material qualifying findings or candidates under its stated method; no owner decision was requested or inferred. Flagged semantic coverage constraints remain limitations, not owner approval. |
+| 3 | Important adopter workflows have appropriate automated proof for the claims being made. The goal is zero routine human verification/UAT; external credentials, permissions, product decisions, or physical-world checks are the only expected handoffs. | UNKNOWN | 2026-09-25 | 2026-09-26 | [Phase 162 claim baseline](../phases/162-whole-product-evidence-baseline/162-BASELINE.md), [Phase 163 residual questions](../phases/163-findings-and-bounded-follow-up/163-FINDINGS.md), and [Phase 161 release evidence](../milestones/v1.38-phases/161-release-and-tidy-closeout/161-RELEASE-EVIDENCE.md) | Bounded package and exact-SHA scenarios are reusable for their recorded flows. The baseline retains no live delete-to-visibility receipt (C-09) and no complete repair-to-visible-search receipt (C-16); selected host authorization and settings scenarios also remain bounded. These gaps are not defects, but this record cannot claim all important workflows have adequate proof. |
+| 4 | Required CI remains green and lean. Recurring service/E2E proof runs in CI only where its repeat confidence justifies its runtime and maintenance cost; more expensive lower-frequency evidence may remain advisory or scheduled. | PASS | 2026-09-25 | 2026-09-26 | [Successful scheduled main CI run 36105198598](https://github.com/szTheory/scrypath/actions/runs/36105198598) on `325197681c8dea96b8ddb5a46c62cb0d9f85a68f`; [CI workflow](../../.github/workflows/ci.yml) | The current workflow source matches the recorded required/advisory split: core, package, repository contracts, backend, and ecommerce-mounted are required; compatibility, deep-quality, Phoenix example, and path-scoped operator UI are advisory/path-scoped. The cited scheduled run proves only its exact main SHA and workflow execution. |
+| 5 | Remaining non-UI opportunities are low-leverage, speculative, unsupported, or more costly than their likely benefit, each with a recorded disposition. | PASS | 2026-09-25 | 2026-09-26 | [Phase 163 claim triage, candidates, and residual questions](../phases/163-findings-and-bounded-follow-up/163-FINDINGS.md) | The 24-claim inventory records zero qualifying follow-up candidates and claim-local revisit triggers. This is the bounded Phase 163 disposition, not an assertion that every evidence gap is resolved. |
+| 6 | Release, package, support, and planning truth are current, with no task-owned cleanup or verification debt hidden at closeout. | UNKNOWN | 2026-09-25 | 2026-09-26 | [Phase 161 release evidence](../milestones/v1.38-phases/161-release-and-tidy-closeout/161-RELEASE-EVIDENCE.md), [support guide](../../guides/support-and-compatibility.md), [Phase 164 plan](../phases/164-readiness-gate-and-reconciliation/164-01-PLAN.md), and [Phase 164 cleanup inventory](#phase-164-cleanup-and-verification-inventory) | GitHub currently lists Scrypath 0.3.13 as latest; release and support evidence remain bounded to that version and stated tuples. Phase 164's owned cleanup, final verification artifacts, and possible task-owned debt inventory are not complete at this assessment and must be reconciled before this condition can pass. |
+
+**Unresolved Critical, High, or Medium-leverage findings:** None — Phase 163 records no findings at these ranks within its bounded method.
+
+**Decision:** NOT READY.
+
+The spec-less GATE-01 adjacency, empty-input, and ordering probes, and the unclassified GATE-02 and GATE-03 probes remain flagged assumptions from the plan. They do not redefine the six approved conditions. No explicit or backstop claim is made without checker evidence. P-01 remains descriptor-less and flagged-unverified; structural success is not semantic evidence.
+
+## Phase 164 cleanup and verification inventory
+
+**Task 1 snapshot:** The existing branch is `gsd/v1.38-cleanup-merged`; this phase did not create or switch branches or worktrees. Test fixture temporary directories self-cleaned, and the generated test `__pycache__` was removed after verification. No phase-owned service container was found; other visible project services and the existing `/private/tmp/scrypath-build-1.19.0` path were left untouched because they predate or have unestablished ownership. The only task-owned verification completed at this snapshot is the initial fixture RED check; the checker implementation, focused GREEN run, Phase 163 full structural check, phase tracking artifacts, and exact-SHA closeout remain pending. Unrelated pre-existing `.planning/config.json`, `.planning/state.json`, and `.planning/research/.cache/` are excluded from phase-owned debt and preserved.

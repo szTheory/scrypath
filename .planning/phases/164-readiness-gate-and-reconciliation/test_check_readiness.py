@@ -34,9 +34,12 @@ def record(
         "|---|---|---|---|---|---|---|",
     ]
     for number, (condition, status) in enumerate(zip(CONDITIONS, statuses), start=1):
+        evidence = f"[Evidence {number}](https://example.invalid/evidence/{number})"
+        if number == 6:
+            evidence += "; [cleanup inventory](#phase-164-cleanup-and-verification-inventory)"
         rows.append(
             f"| {number} | {condition} | {status} | 2026-09-25 | 2026-09-26 | "
-            f"[Evidence {number}](https://example.invalid/evidence/{number}) | Evidence is reused only within scope; synthetic structural fixture. |"
+            f"{evidence} | Evidence is reused only within scope; synthetic structural fixture. |"
         )
     out = [
         "## Phase 164 dated assessment — 2026-09-26",
@@ -45,10 +48,6 @@ def record(
         "",
         f"**Unresolved Critical, High, or Medium-leverage findings:** {unresolved}.",
         f"**Decision:** {decision}.",
-        "",
-        "## Phase 164 cleanup and verification inventory",
-        "",
-        "Checked phase-owned branch, generated outputs, temporary artifacts, services, and final verification receipts. No phase-owned debt remains; unrelated user state is excluded.",
     ]
     if recommendation:
         out.extend(
@@ -57,6 +56,14 @@ def record(
                 "**ScrypathOps recommendation:** ScrypathOps is the next strategic focus. This recommendation does not authorize or start operator UI work; maintainer availability is a separate constraint.",
             ]
         )
+    out.extend(
+        [
+            "",
+            "## Phase 164 cleanup and verification inventory",
+            "",
+            "Checked phase-owned branch, generated outputs, temporary artifacts, services, and final verification receipts. No phase-owned debt remains; unrelated user state is excluded.",
+        ]
+    )
     return "\n".join(out) + "\n"
 
 
@@ -64,6 +71,7 @@ class ReadinessContractTests(unittest.TestCase):
     def run_checker(self, text: str) -> subprocess.CompletedProcess[str]:
         with tempfile.TemporaryDirectory(dir=PHASE_DIR) as tmp:
             doc = Path(tmp) / "readiness.md"
+            (Path(tmp) / "evidence.md").write_text("synthetic local evidence\n", encoding="utf-8")
             doc.write_text(text, encoding="utf-8")
             return subprocess.run(
                 [sys.executable, str(CHECKER), str(doc), "--root", tmp],
@@ -104,7 +112,10 @@ class ReadinessContractTests(unittest.TestCase):
         self.assert_rejected(text)
 
     def test_duplicate_condition_row_is_rejected(self) -> None:
-        text = record() + "\n" + record().splitlines()[2] + "\n"
+        text = record().replace(
+            "\n\n**Unresolved Critical, High, or Medium-leverage findings:**",
+            "\n" + record().splitlines()[2] + "\n\n**Unresolved Critical, High, or Medium-leverage findings:**",
+        )
         self.assert_rejected(text)
 
     def test_invalid_status_is_rejected(self) -> None:
@@ -116,13 +127,24 @@ class ReadinessContractTests(unittest.TestCase):
     def test_out_of_root_local_evidence_link_is_rejected(self) -> None:
         self.assert_rejected(record().replace("https://example.invalid/evidence/1", "../../../../../../etc/passwd", 1))
 
+    def test_missing_local_evidence_link_is_rejected(self) -> None:
+        self.assert_rejected(record().replace("https://example.invalid/evidence/1", "missing.md", 1))
+
+    def test_in_root_local_evidence_link_is_accepted(self) -> None:
+        result = self.run_checker(record().replace("https://example.invalid/evidence/1", "evidence.md", 1))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_condition_six_must_link_the_cleanup_inventory(self) -> None:
+        self.assert_rejected(record().replace("#phase-164-cleanup-and-verification-inventory", "#missing-inventory", 1))
+
     def test_missing_cleanup_inventory_is_rejected(self) -> None:
         self.assert_rejected(record().replace("## Phase 164 cleanup and verification inventory", "## Cleanup"))
 
-    def test_nonready_record_must_not_recommend_scrypathops(self) -> None:
+    def test_nonready_record_without_recommendation_is_valid(self) -> None:
         statuses = ["PASS"] * 6
         statuses[4] = "UNKNOWN"
-        self.assert_rejected(record(statuses, decision="NOT READY", recommendation=False))
+        result = self.run_checker(record(statuses, decision="NOT READY", recommendation=False))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 if __name__ == "__main__":
