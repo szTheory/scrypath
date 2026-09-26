@@ -16,7 +16,7 @@ v1.40 is approved to close bounded condition-3 and condition-6 evidence gaps. It
 
 ## Phases
 
-- [ ] **Phase 165: Public Tenant and Facet Contracts** - Reproduce existing public inputs and correct only confirmed compatible failures.
+- [x] **Phase 165: Public Tenant and Facet Contracts** - Reproduce existing public inputs and correct only confirmed compatible failures. (completed 2026-09-26)
 - [ ] **Phase 166: Host Tenant and Repair Evidence** - Prove one host-owned tenant workflow, bounded repair visibility, and valid delete-receipt reuse.
 - [ ] **Phase 167: Dated Readiness and Closeout** - Reconcile evidence and make a fresh, source-bounded six-condition decision.
 
@@ -75,6 +75,6 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 165. Public Tenant and Facet Contracts | 2/2 | Verifying |  |
+| 165. Public Tenant and Facet Contracts | 2/2 | Complete    | 2026-09-26 |
 | 166. Host Tenant and Repair Evidence | 0/TBD | Not started | - |
 | 167. Dated Readiness and Closeout | 0/TBD | Not started | - |

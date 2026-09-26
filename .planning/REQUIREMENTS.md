@@ -9,8 +9,8 @@ These requirements close selected condition 3 evidence gaps and produce a new, s
 
 ### Public Search Contracts
 
-- [ ] **API-01**: A Scrypath consumer can use the documented `tenant_scope:` option through each supported public search path (`search/3`, `search_many/2`, and `search_facet_values/4`); the declared tenant criterion is combined with ordinary filters, and conflicting or undeclared tenant inputs fail before backend dispatch.
-- [ ] **API-02**: A Scrypath consumer can pass documented public filter options to `search_facet_values/4` and receive an endpoint-valid Meilisearch v1.15 request; defaults and keyword filters are checked at the public input boundary, with a compatible correction and focused regression if a defect is reproduced.
+- [x] **API-01**: A Scrypath consumer can use the documented `tenant_scope:` option through each supported public search path (`search/3`, `search_many/2`, and `search_facet_values/4`); the declared tenant criterion is combined with ordinary filters, and conflicting or undeclared tenant inputs fail before backend dispatch.
+- [x] **API-02**: A Scrypath consumer can pass documented public filter options to `search_facet_values/4` and receive an endpoint-valid Meilisearch v1.15 request; defaults and keyword filters are checked at the public input boundary, with a compatible correction and focused regression if a defect is reproduced.
 
 ### Host Tenant Search
 
@@ -52,8 +52,8 @@ Every v1 requirement maps to exactly one phase in the approved v1.40 roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| API-01 | Phase 165 | Pending |
-| API-02 | Phase 165 | Pending |
+| API-01 | Phase 165 | Complete |
+| API-02 | Phase 165 | Complete |
 | HOST-01 | Phase 166 | Pending |
 | HOST-02 | Phase 166 | Pending |
 | PKG-04 | Phase 166 | Pending |
