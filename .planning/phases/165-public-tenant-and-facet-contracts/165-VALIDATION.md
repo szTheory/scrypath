@@ -1,9 +1,9 @@
 ---
 phase: "165"
 slug: "public-tenant-and-facet-contracts"
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: complete
+nyquist_compliant: true
+wave_0_complete: true
 created: "2026-09-26"
 ---
 
@@ -43,10 +43,10 @@ Existing contributor tasks relevant to changes are `mix verify.phase94` and `mix
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 165-01-01 | 01 | 1 | API-01 | T-165-01 | Single public search retains tenant and ordinary filter | public contract / recording backend tracer | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 mix test test/scrypath/tenant_scope_contract_test.exs --only tenant_tracer` | ❌ created by task | ⬜ pending |
-| 165-01-02 | 01 | 1 | API-01 | T-165-01 | Shared multi-search/facet composition; invalid scope rejects before all dispatch | public contract / recording backend | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 mix test test/scrypath/tenant_scope_contract_test.exs` | depends on 165-01-01 | ⬜ pending |
-| 165-02-01 | 02 | 2 | API-02 | T-165-02 | Public defaults reach encoded HTTP with endpoint-compatible shape | public HTTP contract / Req.Test tracer | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 mix test test/scrypath/facet_values_contract_test.exs --only facet_defaults` | ❌ created by task | ⬜ pending |
-| 165-02-02 | 02 | 2 | API-02, API-01 | T-165-02, T-165-03 | Keyword/tenant predicates preserved; errors never broaden request | public HTTP contract / Req.Test | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 mix test test/scrypath/facet_values_contract_test.exs` | depends on 165-02-01 | ⬜ pending |
+| 165-01-01 | 01 | 1 | API-01 | T-165-01 | Single public search retains tenant and ordinary filter | public contract / recording backend tracer | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 mix test test/scrypath/tenant_scope_contract_test.exs --only tenant_tracer` | created by task | ✅ pass |
+| 165-01-02 | 01 | 1 | API-01 | T-165-01 | Shared multi-search/facet composition; invalid scope rejects before all dispatch | public contract / recording backend | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 mix test test/scrypath/tenant_scope_contract_test.exs` | depends on 165-01-01 | ✅ pass |
+| 165-02-01 | 02 | 2 | API-02 | T-165-02 | Public defaults reach encoded HTTP with endpoint-compatible shape | public HTTP contract / Req.Test tracer | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 mix test test/scrypath/facet_values_contract_test.exs --only facet_defaults` | created by task | ✅ pass |
+| 165-02-02 | 02 | 2 | API-02, API-01 | T-165-02, T-165-03 | Keyword/tenant predicates preserved; errors never broaden request | public HTTP contract / Req.Test | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 mix test test/scrypath/facet_values_contract_test.exs` | depends on 165-02-01 | ✅ pass |
 
 The tenant and facet commands are independent. The tenant recorder must cover `search/3`, `search_many/2`, and `search_facet_values/4`, including shared multi-search tenant options and path-specific errors. The Req.Test case must enter through `search_facet_values/4` and check defaults and a nonempty documented keyword filter separately. Neither test alone establishes live service behavior.
 
@@ -54,8 +54,8 @@ The tenant and facet commands are independent. The tenant recorder must cover `s
 
 ## Wave 0 Requirements
 
-- [ ] `test/scrypath/tenant_scope_contract_test.exs` — created and executed in tracer task 165-01-01 before expansion task 165-01-02.
-- [ ] `test/scrypath/facet_values_contract_test.exs` — created and executed in tracer task 165-02-01 before expansion task 165-02-02.
+- [x] `test/scrypath/tenant_scope_contract_test.exs` — created and executed in tracer task 165-01-01 before expansion task 165-01-02.
+- [x] `test/scrypath/facet_values_contract_test.exs` — created and executed in tracer task 165-02-01 before expansion task 165-02-02.
 - [ ] Reuse existing test helpers and fixtures; no framework install, live service, or new CI lane is required.
 
 ---
@@ -68,12 +68,12 @@ All phase behaviors have automated verification. No routine human UAT is require
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency recorded from focused runs
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency recorded from focused runs
+- [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
 

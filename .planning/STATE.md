@@ -5,17 +5,17 @@ milestone_name: Readiness Evidence Closure
 current_phase: 165
 current_phase_name: Public Tenant and Facet Contracts
 current_plan: 2
-status: executing
-stopped_at: Completed 165-01-PLAN.md
-last_updated: "2026-09-26T22:20:41.046Z"
+status: verifying
+stopped_at: Completed 165-02-PLAN.md; phase verification pending
+last_updated: "2026-09-26T22:34:04.574Z"
 last_activity: 2026-09-26
-last_activity_desc: Phase 165 execution started
-state_head: 56774517e8c02836063246718260e982cd4751b3
+last_activity_desc: Plan 165-02 contracts and local gates passed
+state_head: a883958c73d7f102a7404a317e0d13b7c15ccbd9
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -31,11 +31,11 @@ Phase: 165 (Public Tenant and Facet Contracts) — EXECUTING
 Current Plan: 2
 Total Plans in Phase: 2
 Plan: 165-02 — Public facet defaults, keyword requests, and error behavior
-Plans: 1/2 summarized
-Status: Executing Phase 165
-Last activity: 2026-09-26 — Phase 165 execution started
+Plans: 2/2 summarized
+Status: Phase plans complete — review and verification in progress
+Last activity: 2026-09-26 — Plan 165-02 contracts and local gates passed
 
-Progress: [█████░░░░░] 50%
+Progress: [██████████] 100% of plans
 
 ## Milestone Context
 
@@ -50,6 +50,7 @@ Progress: [█████░░░░░] 50%
 - v1.39's final exact-SHA closeout run `36257182675` passed on `dc400b2b57aec0ca6b0ef16c9477d266fd41a433`; annotated tag `v1.39` resolves to that commit. This receipt supports only its recorded claims and source.
 - Scrypath 0.3.13 has package-backed Phoenix, exact-SHA, post-merge, Hex/HexDocs, consumer-compilation, and parity receipts from v1.38. They do not broaden the selected v1.40 workflow claims.
 - v1.40 research identifies C10-R1 and C11-R1 as unexecuted public-entry hypotheses. No suspected flaw is a reproduced defect or a pass before Phase 165's independent probes.
+- Phase 165 Plan 02 at `a883958c73d7f102a7404a317e0d13b7c15ccbd9` reproduced raw keyword-filter tuple serialization failing before HTTP and corrected it through the existing filter renderer. Req.Test and local gates pass; live Meilisearch and package behavior for this exact scenario remain a Phase 166 handoff.
 - C-16 requires one representative ID-scoped manual repair through terminal task success to visible search. C-09 can be reused only after a relevant-path freshness comparison; otherwise its bounded claim needs targeted evidence or UNKNOWN.
 
 ## Accumulated Context
@@ -66,6 +67,7 @@ Progress: [█████░░░░░] 50%
 - Treat recorder evidence as library filter-composition proof; host identity, membership, trusted tenant selection, authorization, and database response scoping remain host-owned.
 - [Phase 165]: Keep tenant_scope in the validated filter and remove it from all three runtime configuration inputs. — Public recorder probes reproduced strict runtime-config rejection in Single, Many, and FacetValues after schema-aware validation had composed the declared tenant field into filter. Dropping only this search-only key preserves strict runtime validation and the public input shape.
 - [Phase 165]: Treat recording-backend tenant evidence as filter-composition proof only. — The tests prove supplied-scope composition and rejection before backend dispatch. Actor identity, membership, trusted tenant derivation, authorization, and database response scoping remain host-owned; this is not live-service or package evidence.
+- [Phase 165]: Keep defaults and keyword-filter outcomes separate; retain a targeted live/package follow-up for the reproduced facet serializer defect. — Defaults passed their encoded request probe without correction. The keyword probe failed in Jason before HTTP; the correction now emits the existing filter grammar. This local proof does not establish live parser behavior or package loading. It also does not claim interruption or parallel execution semantics (EA-02).
 
 ### Pending Todos
 
@@ -75,7 +77,7 @@ None yet.
 
 - The final readiness result is not predetermined. Any insufficient condition or unresolved gate-rank finding leaves the new assessment NOT READY.
 - Historical evidence can be reused only after source-identity and relevant-path comparisons; unavailable or invalidated evidence is recorded with its precise limit rather than inferred.
-- The approved roadmap and research reports govern Phase 165 planning. No implementation, test execution, CI dispatch, or release has occurred during milestone setup.
+- The Phase 165 local implementation and required local gates are complete. No live Meilisearch service variables were available; exact-SHA hosted candidate/final closeout and Phase 166's scenario-specific path/package service proof remain outstanding.
 
 ## Deferred Items
 
@@ -89,7 +91,7 @@ None yet.
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 165. Public Tenant and Facet Contracts | TBD | - | - |
+| 165. Public Tenant and Facet Contracts | 2/2 | 25 min | 12.5 min |
 | 166. Host Tenant and Repair Evidence | TBD | - | - |
 | 167. Dated Readiness and Closeout | TBD | - | - |
 **Per-Plan Metrics:**
@@ -97,13 +99,14 @@ None yet.
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 165 P01 | 9 min | 2 tasks | 4 files |
+| Phase 165 P02 | 16 min | 2 tasks | 3 files |
 
 ## Session Continuity
 
-Last session: 2026-09-26T22:19:11.274Z
-Stopped at: Completed 165-01-PLAN.md
+Last session: 2026-09-26T22:34:04.574Z
+Stopped at: Completed 165-02-PLAN.md; finishing phase review and verification
 Resume file: None
 
 ## Operator Next Steps
 
-- Run `$gsd-execute-phase 165` to execute the two approved Phase 165 plans.
+- Finish Phase 165 review, goal verification, and candidate/final exact-SHA closeout.
