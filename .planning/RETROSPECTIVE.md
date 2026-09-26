@@ -2,6 +2,45 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.39 — Pre-Operator UI Quality Readiness Ratchet
+
+**Shipped and archived:** 2026-09-26 (planning milestone; no package release)
+**Phases:** 3 (162–164) | **Plans:** 7 | **Plan tasks:** 14 | **Requirements:** 11
+
+### What Was Built
+
+- A 24-claim non-UI readiness baseline with source, freshness, scope, and limitation records.
+- Claim-by-claim triage and structural checkers; no material Scrypath-owned finding or qualifying follow-up candidate was established.
+- A dated six-condition gate that remains **NOT READY** because conditions 3 and 6 are unknown; it does not authorize operator UI work.
+
+### What Worked
+
+- Keeping evidence gaps separate from behavior defects prevented adjacent proof from being stretched beyond its scenario.
+- The baseline, findings checker, and readiness record handed off one canonical claim inventory through assessment, disposition, and the final gate.
+- Candidate exact-SHA closeout gave hosted evidence without converting the bounded readiness result into a broader product claim.
+
+### What Was Inefficient
+
+- The milestone archive helper reported 12 tasks although the seven plan summaries each record two; the archive count was corrected to 14 from plan evidence.
+- The audit found missing Phase 164 `requirements-completed` frontmatter and incomplete Nyquist metadata for Phases 163–164. These remain documented tech debt rather than silently being reported as full audit coverage.
+- Tracking edits after the prior exact-SHA receipt require another hosted closeout for the final archive commit.
+- The optional `ecommerce-e2e` lane failed the mounted-web startup-stability probe during candidate closeout. Required closeout jobs passed; the advisory failure is recorded without inferring a product defect from that run alone.
+
+### Patterns Established
+
+- Keep every readiness claim tied to its source, result, date, freshness, applicability, and limits.
+- Treat a checker pass as evidence for the structure it validates; keep source truth and semantic judgment bounded by linked evidence.
+- Require a passing readiness gate before starting operator UI work.
+
+### Key Lessons
+
+Use per-plan task metadata as the archival count source when generated milestone totals disagree. Include requirement completion frontmatter and validated Nyquist status before phase closeout so an otherwise passing phase does not leave avoidable audit debt.
+
+### Cost Observations
+
+- Model mix and session count were unavailable.
+- No local test reruns were needed during archival; the required final exact-SHA hosted closeout runs against the final tracking commit.
+
 ## Milestone: v1.38 — Packaged Adopter Proof
 
 **Shipped and archived:** 2026-09-25 (`scrypath 0.3.13`)
@@ -489,6 +528,7 @@ Local success is insufficient for a required zero-touch gate when the local buil
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|
+| v1.39 | 162-164 | Claim-level non-UI readiness baseline, evidence-led dispositions, and a fail-closed NOT READY decision |
 | v1.38 | 160-161 | Package-backed Phoenix adopter proof, automated release parity, and zero-human verification default |
 | v1.37 | 148-159 | Runtime/architecture quality ratchet, lean CI and release trust, exact-SHA zero-human closeout |
 | v1.36 | 144-147 | Four-graph dependency security remediation, behavior preservation, and required zero-touch mounted proof |

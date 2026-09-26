@@ -18,6 +18,8 @@
 
 **Closeout gate:** The exact-SHA hosted workflow must pass for the final tracking commit before creating tag `v1.39`.
 
+**Candidate closeout:** [CI run 36256740130](https://github.com/szTheory/scrypath/actions/runs/36256740130) passed on commit `03d5b884af75d4472447d7b8abd102e61d07d076` with all five required jobs, coverage, and closeout attestation. The optional `ecommerce-e2e` lane failed its mounted-web startup-stability check; it is not a required closeout job, and this run did not establish a product defect.
+
 **Stats:** 53 files changed, 6,705 insertions, 57 deletions across 58 commits from 2026-09-25 to 2026-09-26 (milestone execution range; excludes closeout commits).
 
 **Git range:** `9a0f9164` → `70891bd`

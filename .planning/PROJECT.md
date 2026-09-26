@@ -227,7 +227,7 @@ Phase 97 through 99 banned capability classes:
 
 The public website launch surface now exists under `website/` and is deployed to GitHub Pages as a companion front door, not a HexDocs replacement.
 
-Current planning files: **`.planning/{PROJECT,REQUIREMENTS,ROADMAP,STATE}.md`** plus archives under **`.planning/milestones/`**.
+Current planning files: **`.planning/{PROJECT,ROADMAP,STATE}.md`** plus milestone archives under **`.planning/milestones/`**. A fresh `.planning/REQUIREMENTS.md` is created when the next milestone starts.
 
 ## Release Train Posture
 
