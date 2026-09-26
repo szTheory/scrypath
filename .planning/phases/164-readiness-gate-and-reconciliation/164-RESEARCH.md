@@ -195,16 +195,12 @@ Final decision row must use the approved literal values `NOT READY` or `READY FO
 |---|-------|---------|---------------|
 | A1 | No custom final-record checker exists yet; a small contract check may be needed for six rows/statuses and final fail-closed linkage. | Validation Architecture | A checker could be unnecessary; use the cheapest deterministic validation and avoid a new required CI job. |
 
-## Open Questions
+## Execution-Time Criteria (Research Questions Closed)
 
-1. **Do current sources or release events invalidate any reused evidence since the Phase 162 assessment and 0.3.13 release?**
-   - What we know: baseline rows name individual invalidators; Phase 161 proves a bounded release outcome for 0.3.13. `[VERIFIED: .planning/phases/162-whole-product-evidence-baseline/162-BASELINE.md:11-13; .planning/milestones/v1.38-phases/161-release-and-tidy-closeout/161-RELEASE-EVIDENCE.md:1-26]`
-   - What's unclear: final branch/tree and current hosted release/CI evidence at execution time.
-   - Recommendation: compare only source paths and CI/release records relevant to a condition; if evidence cannot decide, record UNKNOWN rather than launching broad reruns.
-2. **Does task-owned cleanup inventory include any current phase worktree, branch, generated output, or service stack?**
-   - What we know: Phase 161 documented its own cleanup and preserved unrelated user state. `[VERIFIED: .planning/milestones/v1.38-phases/161-release-and-tidy-closeout/161-RELEASE-EVIDENCE.md:28-44]`
-   - What's unclear: state created during Phase 164 execution.
-   - Recommendation: inspect the actual execution workspace and state the result explicitly, including “none” only after checking.
+**Planning disposition:** These research questions are closed because their answers depend on mutable source and workspace state that must be measured during execution. They do not change the selected canonical record, gate semantics, scope, or implementation approach. Task 2 owns both measurements, and no factual outcome is assumed here.
+
+1. **Evidence freshness and invalidators (D-02, D-05):** For every reused receipt, compare the Phase 162 baseline's named invalidators with the current relevant source paths and release/package/CI records, including their dates and SHAs. Record whether the receipt remains within its stated scope and freshness. Repeat only a narrow check when an observed source change, release event, invalidator, or decision-relevant uncertainty makes the receipt insufficient; if the relevant state is unavailable or still cannot decide the condition, record UNKNOWN. Do not presume that an invalidator did or did not occur. The baseline records the invalidators and Phase 161 records the bounded 0.3.13 release outcome. `[VERIFIED: .planning/phases/162-whole-product-evidence-baseline/162-BASELINE.md:11-13; .planning/milestones/v1.38-phases/161-release-and-tidy-closeout/161-RELEASE-EVIDENCE.md:1-26]`
+2. **Phase-owned cleanup and verification debt:** Inspect the actual Phase 164 execution state, including its worktree and branch, generated outputs and temporary artifacts, service stacks, and final verification artifacts. Record which surfaces were checked and their observed state; distinguish items created or owned by this phase from unrelated pre-existing user state. State that no task-owned cleanup or verification debt remains only after the relevant inventory is complete; keep any remaining owned debt visible. Phase 161 records the precedent for tracking phase-owned cleanup while preserving unrelated user state. `[VERIFIED: .planning/milestones/v1.38-phases/161-release-and-tidy-closeout/161-RELEASE-EVIDENCE.md:28-44]`
 
 ## Environment Availability
 
