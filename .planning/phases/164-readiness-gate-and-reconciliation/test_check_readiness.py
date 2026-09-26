@@ -137,6 +137,13 @@ class ReadinessContractTests(unittest.TestCase):
     def test_condition_six_must_link_the_cleanup_inventory(self) -> None:
         self.assert_rejected(record().replace("#phase-164-cleanup-and-verification-inventory", "#missing-inventory", 1))
 
+    def test_condition_six_cannot_pass_with_pending_verification_debt(self) -> None:
+        text = record().replace(
+            "No phase-owned debt remains; unrelated user state is excluded.",
+            "No phase-owned debt remains; final SHA closeout pending; unrelated user state is excluded.",
+        )
+        self.assert_rejected(text)
+
     def test_missing_cleanup_inventory_is_rejected(self) -> None:
         self.assert_rejected(record().replace("## Phase 164 cleanup and verification inventory", "## Cleanup"))
 
