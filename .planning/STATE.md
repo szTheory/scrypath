@@ -3,17 +3,17 @@ gsd_state_version: "1.0"
 milestone: v1.40
 milestone_name: Readiness Evidence Closure
 current_phase: 165
-current_phase_name: 1 of 3, Public Tenant and Facet Contracts
-status: "Phase context gathered; next command: `$gsd-plan-phase 165`."
-stopped_at: Phase 165 context gathered
-last_updated: "2026-09-26T19:07:42.919Z"
+current_phase_name: Public Tenant and Facet Contracts
+status: "Ready to execute Phase 165; next command: `$gsd-execute-phase 165`."
+stopped_at: Phase 165 planning complete
+last_updated: "2026-09-26T20:02:15.197Z"
 last_activity: 2026-09-26
-last_activity_desc: Created the v1.40 three-phase roadmap and mapped all approved requirements.
-state_head: c04079ffa1508c1b9f2928c77fa5e441fa71284e
+last_activity_desc: Phase 165 planning complete — 2 plans ready
+state_head: e8c579e6c0229456da0ca9185e25c424ab4ba320
 progress:
   total_phases: 3
   completed_phases: 0
-  total_plans: 0
+  total_plans: 2
   completed_plans: 0
 ---
 
@@ -26,10 +26,10 @@ progress:
 
 ## Current Position
 
-Phase: 165 (1 of 3, Public Tenant and Facet Contracts)
-Plan: Not planned
-Status: Phase context gathered; next command: `$gsd-plan-phase 165`.
-Last activity: 2026-09-26 — Created the v1.40 three-phase roadmap and mapped all approved requirements.
+Phase: 165 (Public Tenant and Facet Contracts) — READY TO EXECUTE
+Plans: 2 ready to execute
+Status: Ready to execute Phase 165; next command: `$gsd-execute-phase 165`.
+Last activity: 2026-09-26 — Phase 165 planning complete; 2 plans ready.
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -88,9 +88,9 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-09-26T19:04:16.512Z
-Stopped at: Phase 165 context gathered
+Stopped at: Phase 165 planning complete
 Resume file: .planning/phases/165-public-tenant-and-facet-contracts/165-CONTEXT.md
 
 ## Operator Next Steps
 
-- Run `$gsd-plan-phase 165` to create the first implementation plan for Phase 165.
+- Run `$gsd-execute-phase 165` to execute the two approved Phase 165 plans.

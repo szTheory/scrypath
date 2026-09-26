@@ -259,12 +259,14 @@ Neither suspected defect is an assumption being locked into the plan: both are u
 
 ## Open Questions
 
-1. **Does each tenant path actually fail after injection?** Source shows the suspected extraction seam; execute the public recording-backend probes first. Classify each independently as a reproduced failure, successful contract, or insufficient evidence. No test was run by this researcher.
-2. **What exactly happens to a nonempty facet keyword filter?** The public validator and current client have been read, but encoded execution remains unobserved. Capture any exception before HTTP separately from a bad captured request. Do not call either a service rejection.
-3. **Do defaults need any production correction?** Extra fields alone do not establish a problem under the pinned parser's explicit behavior. Record defaults success if supported; do not add a whitelist-only test oracle as though the backend required it.
-4. **Does Phase 166 need the facet service case?** Decide from the reproduced result under D-05, and carry forward the exact fixed scenario, source identity, and limits. This research does not itself trigger service or package work.
+No unresolved planning questions remain. The four items below are **RESOLVED for planning** as task-owned execution observations; their runtime outcomes remain unobserved until the assigned public probes execute. This disposition asserts neither a defect nor a passing contract.
 
-Questions 1–4 follow the observed source seams and the locked evidence decisions; they are execution decisions, not reasons to block planning. [VERIFIED: lib/scrypath/search/single.ex:44-54; lib/scrypath/meilisearch/client.ex:104-123; .planning/phases/165-public-tenant-and-facet-contracts/165-CONTEXT.md:20-29] [CITED: https://raw.githubusercontent.com/meilisearch/meilisearch/v1.15.0/crates/meilisearch/src/routes/indexes/facet_search.rs]
+1. **RESOLVED for planning — tenant-path outcomes.** Tasks 165-01-01 and 165-01-02 execute the public recording-backend probes before any production correction and classify each path independently as a reproduced failure, successful contract, or insufficient evidence. The suspected extraction seam identifies where to investigate if a valid probe fails; it does not predetermine the outcome. No test was run by this researcher.
+2. **RESOLVED for planning — nonempty facet keyword-filter outcome.** Task 165-02-02 captures the public keyword-filter probe's actual outcome and records any exception before HTTP separately from a bad captured request. Neither observation alone is a service rejection; no encoded execution outcome is asserted here.
+3. **RESOLVED for planning — defaults correction disposition.** Task 165-02-01 determines from the independent public defaults probe whether the existing contract passes or a compatible correction is justified. Extra fields alone do not establish a problem under the pinned parser's explicit behavior, and no whitelist-only test oracle is authorized.
+4. **RESOLVED for planning — conditional Phase 166 handoff.** Task 165-02-02 derives the handoff from the actual defaults and keyword-probe results under D-05. A reproduced compatible facet defect carries forward the exact fixed scenario, source identity, and evidence limits; a passing probe does not itself require live/package work. This research triggers neither service nor package work.
+
+These dispositions assign the observed source seams and locked evidence decisions to execution tasks without reopening research or claiming execution results. [VERIFIED: lib/scrypath/search/single.ex:44-54; lib/scrypath/meilisearch/client.ex:104-123; .planning/phases/165-public-tenant-and-facet-contracts/165-CONTEXT.md:20-29] [CITED: https://raw.githubusercontent.com/meilisearch/meilisearch/v1.15.0/crates/meilisearch/src/routes/indexes/facet_search.rs]
 
 ## Environment Availability
 
