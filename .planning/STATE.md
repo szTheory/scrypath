@@ -3,19 +3,18 @@ gsd_state_version: "1.0"
 milestone: v1.39
 milestone_name: Pre-Operator UI Quality Readiness Ratchet
 current_phase: 164
-current_phase_name: awaiting exact-SHA closeout authorization
-status: Awaiting authorization for exact-SHA closeout
-stopped_at: Awaiting authorization for candidate exact-SHA closeout
-last_updated: "2026-09-26T03:14:32.813Z"
-last_activity: 2026-09-25
-last_activity_desc: Phase 163 complete, transitioned to Phase 164
-state_head: be9d667511fa37963c45eb0a0ed82f7737765db8
+status: completed
+stopped_at: Phase 164 complete — all phases complete
+last_updated: "2026-09-26T13:30:16.496Z"
+last_activity: 2026-09-26
+last_activity_desc: Phase 164 complete
+state_head: 0764f36a370274932997e5990f1d14e4fd873372
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 7
   completed_plans: 7
-  percent: 67
+  percent: 100
 ---
 
 # Project State
@@ -23,16 +22,16 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 164 — Readiness Gate and Reconciliation
+**Current Focus:** v1.39 phase work complete; readiness remains NOT READY pending new evidence for UNKNOWN conditions 3 and 6.
 
 ## Current Position
 
-Phase: 164 (Readiness Gate and Reconciliation) — awaiting exact-SHA closeout authorization
-Plan: 164-01 tasks complete; exact-SHA closeout pending
-Status: Awaiting authorization for exact-SHA closeout
-Last activity: 2026-09-25 — Phase 163 complete, transitioned to Phase 164
+Phase: 164
+Plan: Not started
+Status: All phases complete
+Last activity: 2026-09-26 — Phase 164 complete
 
-Progress: [███████░░░] 67%
+Progress: [██████████] 100%
 
 ## Milestone Context
 
@@ -65,8 +64,9 @@ Progress: [███████░░░] 67%
 - [Phase 163]: Carry residual claim evidence questions into Phase 164 without treating missing proof as a gate pass or product defect.
 - [Phase 163]: No follow-up candidate meets the evidence, outcome, authority, owner, and automated-acceptance criteria; retain an explicit zero-candidate disposition.
 - [Phase 163]: Phase 163 leaves readiness undecided; Phase 164 owns reconciliation and the six-condition gate.
-- [Phase 164]: Conditions 3 and 6 remain UNKNOWN because bounded workflow evidence and final exact-SHA closeout are not complete; the decision remains NOT READY.
+- [Phase 164]: The dated gate records conditions 3 and 6 as UNKNOWN and remains NOT READY; missing workflow evidence is not a defect or a pass.
 - [Phase 164]: The Phase 164 checker validates record structure only and does not certify source truth, semantic finding judgment, owner approval, or readiness.
+- [Phase 164]: The candidate exact-SHA closeout passed; the final tracking commit receives the final hosted closeout required by CONTRIBUTING.
 
 ### Pending Todos
 
@@ -74,8 +74,8 @@ None for v1.39. Qualifying findings become bounded follow-up milestones during P
 
 ### Blockers/Concerns
 
-- Whole-product readiness remains unknown until Phase 164; Phase 163 owns evidence-qualified findings and dispositions.
-- Candidate and final exact-SHA closeout require explicit authorization: automatic approval review rejected pushing the candidate commit to an unverified remote and dispatching external CI.
+- Whole-product readiness remains NOT READY because conditions 3 and 6 are UNKNOWN in the dated assessment; resolving those conditions requires additional decision-relevant evidence.
+- The final exact-SHA closeout is an authorized post-commit release-train gate; it does not change the readiness result by itself.
 
 ## Deferred Items
 
@@ -89,9 +89,10 @@ None for v1.39. Qualifying findings become bounded follow-up milestones during P
 |-------|-------|-------|----------|
 | 162. Whole-Product Evidence Baseline | 3 planned | — | — |
 | 163. Findings and Bounded Follow-up | 0 | — | — |
-| 164. Readiness Gate and Reconciliation | 0 | — | — |
+| 164. Readiness Gate and Reconciliation | 1 | 17 min | 17 min |
 | 162 | 3 | - | - |
 | 163 | 3 | - | - |
+| 164 | 1 | - | - |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -106,6 +107,6 @@ None for v1.39. Qualifying findings become bounded follow-up milestones during P
 
 ## Session Continuity
 
-Last session: 2026-09-26T03:12:54.837Z
-Stopped at: Awaiting authorization for candidate exact-SHA closeout
-Resume file: .planning/phases/164-readiness-gate-and-reconciliation/164-01-SUMMARY.md
+Last session: 2026-09-26T13:21:18Z
+Stopped at: Phase 164 complete — all phases complete
+Resume file: None
