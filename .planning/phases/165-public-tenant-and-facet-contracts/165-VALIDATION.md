@@ -1,7 +1,7 @@
 ---
 phase: "165"
 slug: "public-tenant-and-facet-contracts"
-status: complete
+status: validated
 nyquist_compliant: true
 wave_0_complete: true
 created: "2026-09-26"
@@ -74,6 +74,16 @@ All phase behaviors have automated verification. No routine human UAT is require
 - [x] No watch-mode flags
 - [x] Feedback latency recorded from focused runs
 - [x] `nyquist_compliant: true` set in frontmatter
+
+## Validation Audit 2026-09-26
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+
+All four tasks map to executed automated probes. The plan-specific unit, Req.Test contract, contributor, and consolidated core receipts are recorded in the corresponding plan summaries. No human-only behavior remains in this phase's acceptance contract.
 
 **Approval:** pending
 
