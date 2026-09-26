@@ -387,7 +387,7 @@ v1.40 is active in setup and continues phase numbering after Phase 164. v1.39 is
 
 ### Active
 
-v1.40 requirements are being defined from the approved scope above and `.planning/research/v1.40/SUMMARY.md`.
+- [ ] **v1.40**: **API-01**–**API-02**, **HOST-01**–**HOST-02**, **PKG-04**, **REPAIR-01**–**REPAIR-02**, **DELETE-01**, **GATE-04**, **CLOSE-03**, **VERIFY-02** — public search contract checks, host-owned tenant and bounded repair proof, and a new dated readiness/closeout assessment.
 
 ### Out of Scope
 
