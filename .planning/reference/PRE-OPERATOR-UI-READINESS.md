@@ -1,11 +1,11 @@
 # Pre-Operator UI Quality Readiness Program
 
 **Status:** ACTIVE — v1.39 PRE-OPERATOR UI QUALITY READINESS RATCHET
-**Readiness:** NOT READY — Phase 164 reconciliation is in progress; conditions 3 and 6 remain UNKNOWN
+**Readiness:** NOT READY — the 2026-09-26 assessment records conditions 3 and 6 as UNKNOWN
 **Last reconciled:** 2026-09-26, during v1.39 readiness reconciliation
 **Purpose:** Identify and close worthwhile non-UI gaps before ScrypathOps becomes the next strategic focus. Establish an evidence-backed, durable gate for saying the non-UI work has reached diminishing returns.
 
-This program is the scope and exit-gate authority for active milestone **v1.39 Pre-Operator UI Quality Readiness Ratchet**. Its formal requirements and roadmap are in `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md`; Phase 162 is next. The one-time `.planning/MILESTONE-CONTEXT.md` handoff has been consumed.
+This program is the scope and exit-gate authority for active milestone **v1.39 Pre-Operator UI Quality Readiness Ratchet**. Its formal requirements and roadmap are in `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md`. Phase 162 established the whole-product baseline, Phase 163 assessed findings and bounded follow-up, and Phase 164 reconciles readiness. The one-time `.planning/MILESTONE-CONTEXT.md` handoff has been consumed.
 
 ## Current evidence
 
@@ -98,8 +98,15 @@ The spec-less GATE-01 adjacency, empty-input, and ordering probes, and the uncla
 
 ## Phase 164 cleanup and verification inventory
 
-**Task 1 snapshot:** The existing branch is `gsd/v1.38-cleanup-merged`; this phase did not create or switch branches or worktrees. Test fixture temporary directories self-cleaned, and the generated test `__pycache__` was removed after verification. No phase-owned service container was found; other visible project services and the existing `/private/tmp/scrypath-build-1.19.0` path were left untouched because they predate or have unestablished ownership. The only task-owned verification completed at this snapshot is the initial fixture RED check; the checker implementation, focused GREEN run, Phase 163 full structural check, phase tracking artifacts, and exact-SHA closeout remain pending. Unrelated pre-existing `.planning/config.json`, `.planning/state.json`, and `.planning/research/.cache/` are excluded from phase-owned debt and preserved.
+The table records each inspected surface and its phase ownership or remaining debt. Unrelated local state is preserved and excluded from phase-owned debt.
+
+| Surface | Inspection/result | Ownership/debt disposition |
+|---|---|---|
+| branch/worktree | Existing branch `gsd/v1.38-cleanup-merged` preserved; origin/HEAD was unresolved, so execution degraded to the main checkout; no worktree was created. | None |
+| generated outputs | Fixture runs use temporary directories; generated Python cache output is removed after checks. | None |
+| temporary files | Fixture temporary directories self-clean; no phase-owned temporary file remains. | None |
+| services | No phase-owned service container was started; existing local services and `/private/tmp/scrypath-build-1.19.0` were left untouched because ownership is pre-existing or unestablished. | None |
+| verification | Focused fixtures, structural checks, review follow-up, prior-phase regression gate, phase verification, and final exact-SHA closeout are reconciled in phase artifacts. | Open: final verification and exact-SHA closeout |
+| unrelated state | Pre-existing `.planning/config.json`, `.planning/state.json`, and `.planning/research/.cache/` are preserved. | Unrelated; preserved |
 
 **Task 2 reconciliation:** GitHub lists Scrypath 0.3.13 as latest (published 2026-09-25); the latest observed scheduled main CI run, 36105198598, succeeded on `325197681c8dea96b8ddb5a46c62cb0d9f85a68f`. The Phase 162 source SHA is `f10a9ae0c12c436120d374774de3433ce92e668e`; no changes were found through the current green main SHA in `lib/`, `test/`, `examples/`, `guides/`, `.github/`, `docs/`, `mix.exs`, or `mix.lock`, so no named product/release/support/CI invalidator was observed. Workflow source still identifies five required gates and advisory compatibility/deep-quality/Phoenix lanes; support claims remain limited to Elixir `~> 1.17`, OTP 26–28, and Meilisearch v1.15. The full Phase 163 checker returned `PASS: findings structural contract; claims=24; material=0; candidates=0; proofs=0`; this validates document structure only and does not certify source truth, owner approval, semantic completeness, or readiness.
-
-At this inventory, the 15 focused Phase 164 fixtures pass, and the Phase 164 checker reports a structural contract pass only. Temporary fixture directories and generated `__pycache__` directories were removed after checks. No phase-owned branch, worktree, service stack, generated output, or temporary artifact remains. Visible Docker services and `/private/tmp/scrypath-build-1.19.0` are pre-existing or have unestablished ownership and were left untouched. Final tracking artifacts, state/roadmap/requirements updates, and the exact-final-SHA closeout remain visible verification debt; unrelated `.planning/config.json`, `.planning/state.json`, and `.planning/research/.cache/` remain preserved.
