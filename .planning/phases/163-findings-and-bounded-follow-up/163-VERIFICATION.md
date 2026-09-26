@@ -1,7 +1,7 @@
 ---
 phase: 163-findings-and-bounded-follow-up
-verified: 2026-09-25T22:12:12Z
-status: human_needed
+verified: 2026-09-26T01:17:23Z
+status: passed
 score: 15/15 must-haves verified
 covered_files:
   - .planning/REQUIREMENTS.md
@@ -23,19 +23,16 @@ covered_files:
 covered_digest: "v1:sha256:49c8ee87d8a453c5207354d1b7e761a77e3f69b6fe107d1e3b20a3e8e196db2c"
 behavior_unverified: 0
 overrides_applied: 0
-human_verification:
-  - test: "Review the source-linked 24-claim triage and the five unresolved semantic intent constraints P-01 through P-05; decide whether the zero-material-finding and zero-candidate conclusion is warranted."
-    expected: "Confirm the evidence and limits support no substantiated material finding or qualifying candidate, or identify a specific claim/classification/eligibility decision that needs revision. Keep the Phase 164 readiness decision separate."
-    why_human: "The checker proves structural completeness and links, not source-truth sufficiency, semantic materiality, scope authority, or the contextual choice of automated proof. The coverage audit explicitly retains two unresolved assumptions and five unverified intent constraints."
 ---
 
 # Phase 163: Findings and Bounded Follow-up Verification Report
 
 **Phase Goal:** Maintainers can make evidence-led decisions about material readiness observations and define only qualifying future work with automated acceptance.
 
-**Verified:** 2026-09-25T22:12:12Z  
-**Status:** human_needed  
-**Re-verification:** No — initial verification
+**Verified:** 2026-09-26T01:17:23Z
+
+**Status:** passed
+**Re-verification:** Yes — fresh automated checks and bounded independent source review
 
 ## Goal Achievement
 
@@ -63,15 +60,17 @@ human_verification:
 
 The five roadmap success criteria are covered by truths 4–7, 8–9, and 11–13 above. Truth 11 is satisfied vacuously because the complete inventory selects no acceptance claim; the artifacts do not demonstrate an actual nonempty production candidate/proof inventory.
 
-### Human Verification Required
+### Independent Source Review
 
-1. **Semantic review of the zero-finding / zero-candidate decision**
+The source/materiality review was completed by Codex as an independent agent review, not as simulated maintainer or owner approval. It is recorded here so the same semantic review is not handed back as routine UAT.
 
-   **Test:** Review each cited source and limitation in the 24-row inventory, with particular attention to the residual gap claims and the coverage audit's E-01/E-02 assumptions and P-01 through P-05 intent constraints.
-   **Expected:** Confirm the available evidence does not substantiate a material Scrypath-owned defect/risk or qualifying bounded work, or identify the exact triage/qualification row needing revision. Do not convert unresolved readiness evidence into a Phase 163 pass.
-   **Why human:** The structural checker does not establish that source evidence is sufficient, that materiality classification is sound, or that future scope authority/proof economics are valid. These are explicitly unresolved semantic judgments in the coverage audit, not software behavior that a test can settle.
+- Reviewed all 24 claim rows against their linked local sources and the stated Phase 160/161 receipt boundaries.
+- Confirmed that missing package, adopter, incident, workload, or host-policy evidence remains classified as an evidence gap; no row uses absence alone to assert a defect or risk.
+- Confirmed C-17 is limited to the named exact-SHA seeded happy-path cutover and does not claim rollback or failure recovery; C-21 reconciles only the named Mint advisories to the bounded Phase 161 remediation.
+- Confirmed no cited row presents a reproducible Scrypath-owned defect or specifically evidenced affected risk meeting the phase's materiality rule. The zero-candidate disposition follows the stated eligibility conditions and keeps concrete invalidators and residual questions visible.
+- Confirmed no owner decision is required or inferred because the inventory contains no substantiated risk to accept, defer, or reject. The result makes no readiness recommendation; Phase 164 retains that decision.
 
-No deferred plan `<human-check>` blocks were present. This is an irreducible decision review, not routine software UAT and not simulated owner approval.
+The machine checks establish document structure and linkage, not source truth. This agent review establishes only the bounded semantic conclusion above; it does not claim owner approval, a broad audit, a production certification, or readiness. No deferred plan `<human-check>` blocks were present.
 
 ## Required Artifacts
 
@@ -119,7 +118,7 @@ No phase-declared probe was found in PLAN/SUMMARY artifacts and no conventional 
 | Requirement | Source Plan | Description | Status | Evidence |
 |---|---|---|---|---|
 | FIND-01 | 163-01, 163-02 | Distinguish defects, evidence gaps, and opportunities with provenance/job context | ✓ SATISFIED | 24 linked classifications and bounded C-15–C-21 chronology; checker/tests validate structure. |
-| FIND-02 | 163-02 | Qualitative rank with independent impact, exposure, confidence, applicable risks, costs, and rationale | ✓ SATISFIED | No substantiated material item exists to rank; no gap is assigned a severity. Rule is in the contract; semantic materiality decision is routed to human review. |
+| FIND-02 | 163-02 | Qualitative rank with independent impact, exposure, confidence, applicable risks, costs, and rationale | ✓ SATISFIED | No substantiated material item exists to rank; no gap is assigned a severity. Independent source review confirmed the bounded zero-finding conclusion; no owner decision was needed or simulated. |
 | FIND-03 | 163-01, 163-02 | Explicit accountable treatment for every material finding | ✓ SATISFIED | Zero material findings; complete inventory provides reasoned routes. Fixtures cover owner-source and deferred-trigger constraints. |
 | CLOSE-01 | 163-03 | Separate bounded authorized work or explicit nonqualification | ✓ SATISFIED | All 24 qualifications final; explicit zero-candidate reasons; no speculative backlog/scope. |
 | CLOSE-02 | 163-03 | Cheapest reliable claim-specific automation and justified CI promotion without routine UAT | ✓ SATISFIED | No selected proof claim or changed CI posture exists; checker fixtures exercise proof contract. The zero-proof result is vacuous with respect to contextual layer/cost comparison. |
@@ -146,9 +145,10 @@ Disabled tests on requirements: 0. Circular patterns detected: 0. No nonempty co
 
 ## Gaps Summary
 
-No implementation or document-contract gap was found. The goal's allowed zero-material/zero-candidate outcome is explicit and internally consistent, and the source-linked record keeps important residual evidence gaps open for Phase 164. This verification remains **human_needed** because the coverage audit deliberately leaves E-01/E-02 and P-01 through P-05 as semantic judgments that structural tests cannot resolve. The zero-proof count is consistent with zero qualifying candidates; it does not provide a real acceptance receipt or demonstrate a nonempty complete candidate/proof inventory. Phase 164 must independently evaluate readiness and may not treat Phase 163 completion as a gate pass.
+No implementation or document-contract gap was found. Focused automated checks pass, and the independent source review found the zero-material/zero-candidate outcome supported within the documented evidence limits. E-01/E-02 and P-01 through P-05 remain contextual limitations in the handoff, not routine UAT gates: the review confirmed they are respected by this outcome. The zero-proof count is consistent with zero qualifying candidates; it does not provide a real acceptance receipt or demonstrate a nonempty complete candidate/proof inventory. Phase 164 must independently evaluate readiness and may not treat Phase 163 completion as a gate pass.
 
 ---
 
-_Verified: 2026-09-25T22:12:12Z_  
-_Verifier: the agent (gsd-verifier)_
+_Verified: 2026-09-26T01:17:23Z_
+
+_Verifier: Codex (GSD verification workflow; independent source review, not owner approval)_

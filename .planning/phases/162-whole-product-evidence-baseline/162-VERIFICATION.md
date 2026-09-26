@@ -1,6 +1,6 @@
 ---
 phase: 162-whole-product-evidence-baseline
-verified: 2026-09-25T18:57:15Z
+verified: 2026-09-26T01:17:23Z
 status: passed
 score: 18/18 observable truths verified
 covered_files:
@@ -18,7 +18,7 @@ covered_files:
   - .planning/phases/162-whole-product-evidence-baseline/162-SECURITY.md
   - .planning/phases/162-whole-product-evidence-baseline/162-VALIDATION.md
   - .planning/phases/162-whole-product-evidence-baseline/check_baseline.py
-covered_digest: "v1:sha256:c1fe305a04a13c66c2b24f120d05ef65d2eeaac749f6b1295fb6a5dfbc1b1556"
+covered_digest: "v1:sha256:07af8fd169991f5597c26a953317206ae3c644e6040cd42961d9950b37384370"
 behavior_unverified: 0
 overrides_applied: 0
 decision_coverage:
@@ -30,9 +30,9 @@ decision_coverage:
 # Phase 162: Whole-Product Evidence Baseline — Verification Report
 
 **Phase Goal:** Maintainers can evaluate the whole approved non-UI product surface through representative adopter and operator jobs, with claim-specific evidence and explicit limits.
-**Verified:** 2026-09-25T18:57:15Z
+**Verified:** 2026-09-26T01:17:23Z
 **Status:** passed
-**Re-verification:** No — initial verification
+**Re-verification:** Yes — refreshed after Phase 163 baseline amendments
 
 ## Goal Achievement
 
@@ -153,5 +153,10 @@ No phase-goal gaps remain. The baseline intentionally records missing evidence f
 
 ---
 
-_Verified: 2026-09-25T18:57:15Z_  
-_Verifier: the agent (gsd-verifier)_
+_Verified: 2026-09-26T01:17:23Z_
+_Verifier: Codex (GSD verification workflow)_
+
+
+## Re-verification — 2026-09-26
+
+Phase 163 updated bounded evidence in C-15 through C-17 and C-21. Refreshed this report's covered-input fingerprint using the GSD fingerprint command and reran the baseline checker at each cumulative stage (`--through 6`, `12`, `17`, `24`, and `--through 24 --full-coverage`); every command passed. Phase 163's independent source review separately checked the changed operational classifications and retained their scenario limits. The baseline requirements remain satisfied with bounded source evidence; no user UAT is required.
