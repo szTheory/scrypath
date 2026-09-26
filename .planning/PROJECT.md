@@ -8,9 +8,9 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Mode: Pre-Operator UI Readiness Ratchet — Phase 163 Complete, Phase 164 Ready to Plan
+## Current Mode: Pre-Operator UI Readiness Ratchet — Phases Complete, NOT READY Decision Recorded
 
-Scrypath 0.3.13 is published. v1.38 Packaged Adopter Proof is complete and archived. The owner-approved v1.39 milestone is formally initialized with requirements and a three-phase roadmap. Phase 162 established the whole-product evidence baseline and Phase 163 completed its source-linked triage with zero material findings or qualifying follow-up candidates. Phase 164 owns the readiness decision and is ready to plan. The release train remains on routine maintenance while the whole-product non-UI readiness assessment proceeds.
+Scrypath 0.3.13 is published. v1.38 Packaged Adopter Proof is complete and archived. All three v1.39 phases are complete. Phase 164 records an auditable **NOT READY** decision because conditions 3 and 6 remain UNKNOWN; this is the intended fail-closed outcome, not a phase gap. Candidate exact-SHA closeout passed; the final tracked commit receives the authorized exact-SHA closeout before v1.39 is archived. No next milestone is approved.
 
 ## Current Milestone: v1.39 Pre-Operator UI Quality Readiness Ratchet
 
@@ -50,6 +50,7 @@ Resolve subjective product decisions before implementation or keep them nonblock
 do not simulate approvals.
 
 **Recent closed outcomes:**
+- v1.39 Phase 164 readiness reconciliation: six dated conditions, explicit NOT READY outcome, bounded source reconciliation, 36 structural contract fixtures, clean code review, 8/8 goal verification, and successful candidate-SHA closeout. The final tracked commit receives the exact-SHA closeout required by `CONTRIBUTING.md`; see `.planning/phases/164-readiness-gate-and-reconciliation/164-01-SUMMARY.md`.
 - v1.38 package-backed Phoenix adopter proof and Scrypath 0.3.13 release: exact-SHA CI, path/package integration, green post-merge main, Hex publication, versioned HexDocs, clean consumer compile, and package/tag parity all passed. See `milestones/v1.38-MILESTONE-AUDIT.md`.
 - Phase 159 automated v1.37 audit/provenance closure: reconciled the 31-requirement audit, preserved the bounded TEST-01 chronology waiver, added a fail-closed candidate/final exact-SHA CI authority, and prohibited new post-implementation human verification or UAT debt.
 - Phase 147 ecommerce mounted-Ops remediation and closure: bounded the ecommerce web/client graph, added hermetic focused/full Docker E2E verification and an always-running focused CI gate, passed exact-SHA service/browser proof, and closed the four-graph audit ledger with no human UAT.
@@ -95,7 +96,9 @@ Phase 97 through 99 banned capability classes:
 
 ## Current State
 
-**v1.39 Phase 163 — Findings and Bounded Follow-up** completed on **2026-09-25**. All 24 baseline claims have bounded triage; no material Scrypath-owned finding or qualifying follow-up candidate was established. The structural fixture suite, full findings checker, and baseline full-coverage checker pass. An independent bounded source review confirmed the result without simulating owner approval; Phase 164 retains the readiness decision.
+**v1.39 Phase 164 — Readiness Gate and Reconciliation** completed on **2026-09-26**. The dated decision records conditions 1, 2, 4, and 5 as PASS and conditions 3 and 6 as UNKNOWN, leaving readiness NOT READY. The structural checker and 36 fixtures validate the record contract only; Phase 163's zero-finding result is not promoted to readiness proof. Candidate exact-SHA closeout passed, and the authorized final closeout runs after the final tracking commit.
+
+**v1.39 Phase 163 — Findings and Bounded Follow-up** completed on **2026-09-25**. All 24 baseline claims have bounded triage; no material Scrypath-owned finding or qualifying follow-up candidate was established. The structural fixture suite, full findings checker, and baseline full-coverage checker pass. An independent bounded source review confirmed the result without simulating owner approval; Phase 164 independently evaluated readiness.
 
 **v1.38 Packaged Adopter Proof** completed and was archived on **2026-09-25** across Phases **160–161**. All eight requirements passed, exact-SHA CI and post-merge main were green, and Scrypath 0.3.13 passed Hex publication, HexDocs, clean-consumer compilation, and package-to-tag parity. No human verification or UAT remains pending.
 
@@ -221,7 +224,7 @@ Current planning files: **`.planning/{PROJECT,REQUIREMENTS,ROADMAP,STATE}.md`** 
 
 ## Release Train Posture
 
-- **Active milestone:** None. The release train is idle after shipped v1.38 / Scrypath 0.3.13.
+- **Active milestone:** v1.39 phases are complete; archive after the final tracked commit passes exact-SHA closeout. The release train remains on routine maintenance after shipped v1.38 / Scrypath 0.3.13.
 - **Policy:** Keep `main` green on the lean required gates and prefer PR-first execution for serious milestone or feature-depth work.
 - **Next milestone goals:** None approved. Start a fresh requirements cycle only when concrete maintenance, adopter, production-bug, proof-drift, or explicit strategic evidence authorizes work.
 - **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, and new UI surfaces remain out of scope.
@@ -381,4 +384,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-09-26 after Phase 163 Findings and Bounded Follow-up*
+*Last updated: 2026-09-26 after Phase 164 Readiness Gate and Reconciliation*

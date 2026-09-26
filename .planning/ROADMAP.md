@@ -23,7 +23,7 @@ Readiness remains **NOT READY** until every approved dimension and exit conditio
 
 - [x] **Phase 162: Whole-Product Evidence Baseline** - Map the full non-UI adopter lifecycle to evidence, freshness, and claim limits. (completed 2026-09-25)
 - [x] **Phase 163: Findings and Bounded Follow-up** - Turn substantiated observations into explicit decisions and separately scoped, automation-backed follow-up candidates. (completed 2026-09-25)
-- [ ] **Phase 164: Readiness Gate and Reconciliation** - Reconcile readiness evidence and make the fail-closed strategic recommendation.
+- [x] **Phase 164: Readiness Gate and Reconciliation** - Reconcile readiness evidence and make the fail-closed strategic recommendation. (completed 2026-09-26)
 
 ## Phase Details
 
@@ -104,4 +104,4 @@ Plans:
 |-------|----------------|--------|-----------|
 | 162. Whole-Product Evidence Baseline | 3/3 | Complete   | 2026-09-25 |
 | 163. Findings and Bounded Follow-up | 3/3 | Complete    | 2026-09-25 |
-| 164. Readiness Gate and Reconciliation | 1/1 | In Progress|  |
+| 164. Readiness Gate and Reconciliation | 1/1 | Complete    | 2026-09-26 |
