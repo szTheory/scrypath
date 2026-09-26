@@ -2,15 +2,19 @@
 gsd_state_version: "1.0"
 milestone: v1.40
 milestone_name: Readiness Evidence Closure
+current_phase: 165
+current_phase_name: 1 of 3, Public Tenant and Facet Contracts
 status: planning
-last_updated: "2026-09-26T18:52:02Z"
+stopped_at: Phase 165 context gathered
+last_updated: "2026-09-26T19:04:16.523Z"
 last_activity: 2026-09-26
+last_activity_desc: Created the v1.40 three-phase roadmap and mapped all approved requirements.
+state_head: 8d095c08c1cf51ccfea02382faa1d1e250dede7d
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
-  percent: 0
 ---
 
 # Project State
@@ -83,9 +87,9 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-09-26
-Stopped at: v1.40 roadmap approved and committed; all 11 approved requirements map exactly once across Phases 165–167.
-Resume file: None
+Last session: 2026-09-26T19:04:16.512Z
+Stopped at: Phase 165 context gathered
+Resume file: .planning/phases/165-public-tenant-and-facet-contracts/165-CONTEXT.md
 
 ## Operator Next Steps
 
