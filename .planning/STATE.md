@@ -3,18 +3,18 @@ gsd_state_version: "1.0"
 milestone: v1.39
 milestone_name: Pre-Operator UI Quality Readiness Ratchet
 current_phase: 164
-current_phase_name: Readiness Gate and Reconciliation
-status: executing
-stopped_at: Phase 164 context gathered
-last_updated: "2026-09-26T02:36:19.902Z"
+current_phase_name: awaiting exact-SHA closeout authorization
+status: Awaiting authorization for exact-SHA closeout
+stopped_at: Awaiting authorization for candidate exact-SHA closeout
+last_updated: "2026-09-26T03:14:32.813Z"
 last_activity: 2026-09-25
 last_activity_desc: Phase 163 complete, transitioned to Phase 164
-state_head: aa2d4f21aa4b8421c723529d1c18c5021a4c0f69
+state_head: be9d667511fa37963c45eb0a0ed82f7737765db8
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 7
-  completed_plans: 6
+  completed_plans: 7
   percent: 67
 ---
 
@@ -27,9 +27,9 @@ progress:
 
 ## Current Position
 
-Phase: 164 (Readiness Gate and Reconciliation) — READY TO EXECUTE
-Plan: Not started
-Status: Ready to execute
+Phase: 164 (Readiness Gate and Reconciliation) — awaiting exact-SHA closeout authorization
+Plan: 164-01 tasks complete; exact-SHA closeout pending
+Status: Awaiting authorization for exact-SHA closeout
 Last activity: 2026-09-25 — Phase 163 complete, transitioned to Phase 164
 
 Progress: [███████░░░] 67%
@@ -65,6 +65,8 @@ Progress: [███████░░░] 67%
 - [Phase 163]: Carry residual claim evidence questions into Phase 164 without treating missing proof as a gate pass or product defect.
 - [Phase 163]: No follow-up candidate meets the evidence, outcome, authority, owner, and automated-acceptance criteria; retain an explicit zero-candidate disposition.
 - [Phase 163]: Phase 163 leaves readiness undecided; Phase 164 owns reconciliation and the six-condition gate.
+- [Phase 164]: Conditions 3 and 6 remain UNKNOWN because bounded workflow evidence and final exact-SHA closeout are not complete; the decision remains NOT READY.
+- [Phase 164]: The Phase 164 checker validates record structure only and does not certify source truth, semantic finding judgment, owner approval, or readiness.
 
 ### Pending Todos
 
@@ -73,6 +75,7 @@ None for v1.39. Qualifying findings become bounded follow-up milestones during P
 ### Blockers/Concerns
 
 - Whole-product readiness remains unknown until Phase 164; Phase 163 owns evidence-qualified findings and dispositions.
+- Candidate and final exact-SHA closeout require explicit authorization: automatic approval review rejected pushing the candidate commit to an unverified remote and dispatching external CI.
 
 ## Deferred Items
 
@@ -99,9 +102,10 @@ None for v1.39. Qualifying findings become bounded follow-up milestones during P
 | Phase 163 P02 | 4 min | 2 tasks | 2 files |
 | Phase 163 P03 | 3 min | 2 tasks | 3 files |
 | Phase 163 P01 | 40 min | 2 tasks | 4 files |
+| Phase 164 P01 | 17 min | 2 tasks | 3 files |
 
 ## Session Continuity
 
-Last session: 2026-09-26T01:50:54.796Z
-Stopped at: Phase 164 context gathered
-Resume file: .planning/phases/164-readiness-gate-and-reconciliation/164-CONTEXT.md
+Last session: 2026-09-26T03:12:54.837Z
+Stopped at: Awaiting authorization for candidate exact-SHA closeout
+Resume file: .planning/phases/164-readiness-gate-and-reconciliation/164-01-SUMMARY.md

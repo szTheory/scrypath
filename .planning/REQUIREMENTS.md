@@ -26,9 +26,9 @@ Requirements for the whole-product non-UI readiness assessment. This milestone e
 
 ### Readiness Gate and Closeout
 
-- [ ] **GATE-01**: A maintainer can evaluate each of the six approved readiness exit conditions as PASS, FAIL, or UNKNOWN with dated, linked evidence and visible limits; readiness remains NOT READY unless all six pass and no critical, high, or medium-leverage finding remains unresolved.
-- [ ] **GATE-02**: A maintainer can reconcile release, package, support, CI, planning, and task-owned cleanup truth at closeout, with no verification or cleanup debt hidden by the readiness decision.
-- [ ] **GATE-03**: A passing readiness decision recommends ScrypathOps as the next strategic focus without automatically authorizing or starting operator UI work.
+- [x] **GATE-01**: A maintainer can evaluate each of the six approved readiness exit conditions as PASS, FAIL, or UNKNOWN with dated, linked evidence and visible limits; readiness remains NOT READY unless all six pass and no critical, high, or medium-leverage finding remains unresolved.
+- [x] **GATE-02**: A maintainer can reconcile release, package, support, CI, planning, and task-owned cleanup truth at closeout, with no verification or cleanup debt hidden by the readiness decision.
+- [x] **GATE-03**: A passing readiness decision recommends ScrypathOps as the next strategic focus without automatically authorizing or starting operator UI work.
 
 ## Future Requirements
 
@@ -58,9 +58,9 @@ Requirements for the whole-product non-UI readiness assessment. This milestone e
 | FIND-03 | Phase 163 | Complete |
 | CLOSE-01 | Phase 163 | Complete |
 | CLOSE-02 | Phase 163 | Complete |
-| GATE-01 | Phase 164 | Pending |
-| GATE-02 | Phase 164 | Pending |
-| GATE-03 | Phase 164 | Pending |
+| GATE-01 | Phase 164 | Complete |
+| GATE-02 | Phase 164 | Complete |
+| GATE-03 | Phase 164 | Complete |
 
 **Coverage:**
 
