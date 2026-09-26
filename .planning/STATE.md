@@ -4,12 +4,13 @@ milestone: v1.40
 milestone_name: Readiness Evidence Closure
 current_phase: 165
 current_phase_name: Public Tenant and Facet Contracts
+current_plan: 2
 status: executing
 stopped_at: Completed 165-01-PLAN.md
-last_updated: "2026-09-26T22:19:11.284Z"
+last_updated: "2026-09-26T22:20:41.046Z"
 last_activity: 2026-09-26
 last_activity_desc: Phase 165 execution started
-state_head: 493ca34024ae4909c771a99eb42e86f3392383e3
+state_head: 56774517e8c02836063246718260e982cd4751b3
 progress:
   total_phases: 3
   completed_phases: 0
@@ -27,11 +28,14 @@ progress:
 ## Current Position
 
 Phase: 165 (Public Tenant and Facet Contracts) — EXECUTING
-Plans: 2 ready to execute
+Current Plan: 2
+Total Plans in Phase: 2
+Plan: 165-02 — Public facet defaults, keyword requests, and error behavior
+Plans: 1/2 summarized
 Status: Executing Phase 165
 Last activity: 2026-09-26 — Phase 165 execution started
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█████░░░░░] 50%
 
 ## Milestone Context
 
@@ -58,6 +62,10 @@ Progress: [░░░░░░░░░░] 0%
 - Bound manual repair by an Ecto ID predicate, never by a query limit, and await the returned backend task before claiming visible repair.
 - Keep release/package/support identities distinct from the v1.39 planning tag. Reconcile named metadata and release-reference debt explicitly without silently rewriting historical records or deleting unrelated local state.
 - Keep the current task's exact-final-SHA closeout separate from reused historical receipts, and do not edit tracked planning files merely to record that external final receipt.
+- Keep validated tenant_scope predicates in search options while excluding the search-only key from strict runtime configuration in Single, Many, and FacetValues.
+- Treat recorder evidence as library filter-composition proof; host identity, membership, trusted tenant selection, authorization, and database response scoping remain host-owned.
+- [Phase 165]: Keep tenant_scope in the validated filter and remove it from all three runtime configuration inputs. — Public recorder probes reproduced strict runtime-config rejection in Single, Many, and FacetValues after schema-aware validation had composed the declared tenant field into filter. Dropping only this search-only key preserves strict runtime validation and the public input shape.
+- [Phase 165]: Treat recording-backend tenant evidence as filter-composition proof only. — The tests prove supplied-scope composition and rejection before backend dispatch. Actor identity, membership, trusted tenant derivation, authorization, and database response scoping remain host-owned; this is not live-service or package evidence.
 
 ### Pending Todos
 
