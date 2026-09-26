@@ -16,9 +16,11 @@
 
 **Milestone audit:** `tech_debt` accepted for closeout. All 11 requirement checkboxes are complete and all 3 phase verifications pass. The audit cross-reference marks GATE-01/02/03 partial because Phase 164's summary omits `requirements-completed` frontmatter; Nyquist metadata follow-up remains for Phases 163 and 164. See `milestones/v1.39-MILESTONE-AUDIT.md`.
 
-**Closeout gate:** The exact-SHA hosted workflow must pass for the final tracking commit before creating tag `v1.39`.
+**Final closeout:** [CI run 36257182675](https://github.com/szTheory/scrypath/actions/runs/36257182675) passed on final commit `dc400b2b57aec0ca6b0ef16c9477d266fd41a433`, including required jobs and closeout attestation. The annotated remote tag `v1.39` resolves to that exact commit.
 
 **Candidate closeout:** [CI run 36256740130](https://github.com/szTheory/scrypath/actions/runs/36256740130) passed on commit `03d5b884af75d4472447d7b8abd102e61d07d076` with all five required jobs, coverage, and closeout attestation. The optional `ecommerce-e2e` lane failed its mounted-web startup-stability check; it is not a required closeout job, and this run did not establish a product defect.
+
+The successful final closeout supersedes the candidate run for release authorization. The dated readiness decision above remains NOT READY; successful closeout alone does not reassess its unknown conditions.
 
 **Stats:** 53 files changed, 6,705 insertions, 57 deletions across 58 commits from 2026-09-25 to 2026-09-26 (milestone execution range; excludes closeout commits).
 

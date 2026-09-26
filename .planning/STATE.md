@@ -22,7 +22,7 @@ current_phase: 164
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** No active milestone; v1.39 is archived. Readiness remains NOT READY pending new evidence for unknown conditions 3 and 6.
+**Current Focus:** No active milestone; v1.39 is archived. Readiness remains NOT READY pending a new dated review of condition 3 evidence and condition 6 using the later final-SHA closeout receipt.
 
 ## Current Position
 
@@ -41,7 +41,7 @@ Last activity: 2026-09-26 — Milestone v1.39 completed and archived
 
 ## Recent Evidence
 
-- v1.39 is archived across Phases 162–164. The audit's accepted `tech_debt` status records three Phase 164 requirement cross-reference gaps and Nyquist metadata follow-up for Phases 163–164; all 11 requirement checkboxes and all phase verifications are complete. The exact-SHA closeout is the final tracking-commit gate.
+- v1.39 is archived across Phases 162–164. The audit's accepted `tech_debt` status records three Phase 164 requirement cross-reference gaps and Nyquist metadata follow-up for Phases 163–164; all 11 requirement checkboxes and all phase verifications are complete. Final exact-SHA closeout run 36257182675 passed on `dc400b2b57aec0ca6b0ef16c9477d266fd41a433`, and remote tag `v1.39` resolves to that commit. The historical readiness result remains NOT READY until conditions 3 and 6 receive a new dated assessment.
 - v1.38 / Scrypath 0.3.13 passed package-backed Phoenix proof, exact-SHA and post-merge CI, Hex/HexDocs, clean consumer compilation, and package-to-tag parity.
 - v1.37 closed its bounded quality ratchet with no confirmed compatible high- or medium-leverage finding, but did not assess the complete adopter-readiness program.
 - The readiness program at `.planning/reference/PRE-OPERATOR-UI-READINESS.md` remains the authority for dimensions, operating rules, and the six-condition gate.
@@ -65,7 +65,7 @@ Last activity: 2026-09-26 — Milestone v1.39 completed and archived
 - [Phase 163]: Phase 163 leaves readiness undecided; Phase 164 owns reconciliation and the six-condition gate.
 - [Phase 164]: The dated gate records conditions 3 and 6 as UNKNOWN and remains NOT READY; missing workflow evidence is not a defect or a pass.
 - [Phase 164]: The Phase 164 checker validates record structure only and does not certify source truth, semantic finding judgment, owner approval, or readiness.
-- [Phase 164]: The candidate exact-SHA closeout passed; the final tracking commit receives the final hosted closeout required by CONTRIBUTING.
+- [Phase 164]: The final tracking commit passed the exact-SHA closeout required by CONTRIBUTING; remote tag `v1.39` points to that commit. Keep the dated readiness assessment immutable and use the later receipt only in a new assessment.
 
 ### Pending Todos
 
@@ -73,8 +73,8 @@ None for v1.39. Qualifying findings become bounded follow-up milestones during P
 
 ### Blockers/Concerns
 
-- Whole-product readiness remains NOT READY because conditions 3 and 6 are UNKNOWN in the dated assessment; resolving those conditions requires additional decision-relevant evidence.
-- The exact-SHA closeout is the required post-commit release-train gate; it does not change the readiness result by itself.
+- Whole-product readiness remains NOT READY because conditions 3 and 6 are UNKNOWN in the dated assessment; condition 6 now has a later final-SHA closeout receipt, while both conditions still need a new decision-relevant assessment.
+- The exact-SHA closeout passed after the readiness cutoff; it does not change the historical readiness result by itself.
 
 ## Deferred Items
 

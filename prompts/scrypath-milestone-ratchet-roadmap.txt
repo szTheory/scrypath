@@ -45,6 +45,14 @@ Use evidence-gated horizons, not calendar commitments. Refresh these candidates
 after each milestone and remove stale or completed ideas rather than preserving
 an ever-growing backlog.
 
+Current position (2026-09-26): v1.39 is complete and archived; its readiness
+decision is NOT READY because conditions 3 and 6 remain UNKNOWN. The dated
+assessment is preserved as historical evidence. The final exact-SHA closeout
+later passed and tag `v1.39` points to that final commit, so condition 6 can be
+reassessed with a new dated record. No next milestone is approved. See
+`.planning/reference/milestone-candidates.md` for the current evidence-gated
+near, mid, and long horizons.
+
 NEAR TERM — maintenance and trust
 
 - Keep `main` green on the lean required checks; prefer PR-first execution for
@@ -63,11 +71,15 @@ MID TERM — owner-approved, evidence-backed wedges
   diminishing-return boundary in v1.37: no confirmed compatible high- or
   medium-leverage finding remained open. Do not schedule another broad cleanup
   or optimization pass without new evidence.
+- The v1.39 readiness assessment is complete, but conditions 3 and 6 remain
+  UNKNOWN. A narrowly scoped, automated evidence follow-up is a candidate only
+  if the owner approves it; first inspect whether existing evidence can answer
+  the question without new product work or duplicated checks.
 - ScrypathOps already received focused design-system, operator-flow, and
-  accessibility/theme work in v1.32–v1.34. Further operator UI work is a
-  deferred candidate for when maintainer time is available and a specific
-  operator job or quality opportunity justifies a bounded wedge. It is not the
-  next milestone by default.
+  accessibility/theme work in v1.32–v1.34. The owner wants to return to
+  operator UI after the non-UI diminishing-return gate passes, but does not
+  currently have time for it. Treat it as a deferred candidate, not an
+  approved milestone.
 - Reopen product work when reviewed adopter evidence, a concrete production bug,
   release compatibility pressure, or an explicit owner-approved strategic
   decision identifies a material gap.
@@ -94,9 +106,16 @@ independent perspectives can change the decision enough to justify their cost.
 
 Use the smallest vertical slice that proves the outcome. Prefer simple, idiomatic
 Elixir and Ecto patterns, clear module boundaries, explicit failure behavior,
-readable names, and self-documenting code. Avoid speculative abstractions,
+readable names, acyclic dependencies, and self-documenting code. Write
+adopter-facing documentation in plain, task-focused language and keep it accurate
+to supported behavior. Avoid speculative abstractions,
 duplicate sources of truth, cleanup unrelated to the approved change, and code
 or tests whose maintenance cost exceeds their signal.
+
+Do not create a milestone solely to process routine Dependabot PRs or ordinary
+dependency churn. Handle routine updates through the normal maintenance/release
+flow. A security or compatibility event can justify a focused milestone when
+its impact, coupled work, and proof needs exceed a small maintenance change.
 
 Verification and CI
 -------------------
@@ -114,9 +133,20 @@ useful recurring confidence without burdening every change; promote it to a
 required gate only when evidence warrants it. Reuse harnesses and services,
 avoid duplicated test execution, use bounded representative compatibility
 matrices, and give failures useful diagnostics, isolation, timeouts, and cleanup.
+Optimize total CI feedback time and GitHub Actions minutes together: run cheap,
+deterministic checks before costly service-backed work where dependencies allow;
+name jobs for the capability they prove; make logs and failure summaries
+actionable; remove tautological, duplicate, or low-signal checks instead of
+keeping them for coverage optics.
 Use property-based testing for high-risk input spaces and invariants where it
 adds coverage that examples do not cheaply provide; avoid property suites without
 a named failure mode or decision value.
+
+Treat performance as a standing quality lens, not permission for speculative
+optimization. Reuse reproducible baselines, identify the largest adopter-visible
+or resource-cost bottlenecks, and optimize measured CPU, memory, network, and I/O
+costs when the expected gain exceeds implementation and maintenance cost. Record
+the before/after evidence and any tradeoff.
 
 Use a digital-twin adopter only to exercise realistic end-to-end boundaries that
 are not already proved more cheaply. Keep its scenarios deterministic and
@@ -136,6 +166,9 @@ shipped. Remove task-owned branches, worktrees, service stacks, temporary files,
 and generated artifacts; preserve unrelated user changes. Keep docs accurate,
 planning artifacts discoverable, and historical evidence immutable unless an
 explicit correction is needed.
+Keep implementation comments and public docs free of transient GSD plan chatter
+or task bookkeeping. Put durable decisions in planning records and remove only
+the artifacts owned by the completed work.
 
 Privacy and durable context
 ---------------------------
@@ -160,10 +193,13 @@ Before treating non-UI quality work as complete, use the durable pre-operator UI
 readiness program in `.planning/reference/PRE-OPERATOR-UI-READINESS.md`. Reuse
 existing evidence, assess every named product-quality dimension, and close or
 explicitly disposition all critical, high, and medium-leverage findings. Only
-then recommend **READY FOR OPERATOR UI**. The ratchet is the owner-approved
-strategic initiative after v1.38; ScrypathOps is the intended next focus after
-the gate passes and maintainer time is available. This does not authorize
-capabilities prohibited by the current scope guard.
+then recommend **READY FOR OPERATOR UI**. The v1.39 assessment is complete and
+NOT READY; its condition 3 evidence gaps still need a new, decision-relevant
+assessment. Condition 6's historical UNKNOWN is not rewritten, though the later
+final closeout evidence is available for a newly dated reassessment. ScrypathOps
+is a possible later focus only after the gate passes and maintainer time is
+available. This does not authorize capabilities prohibited by the current scope
+guard.
 
 Closeout and roadmap refresh
 ----------------------------
@@ -172,17 +208,21 @@ At each milestone close, reconcile requirements, roadmap, project state,
 candidate list, release truth, and retrospective lessons. Record what shipped,
 what evidence changed the strategy, which candidates were removed or deferred,
 and the next evidence gate. Do not manufacture a next milestone when none is
-approved. The owner-approved pre-UI readiness initiative is recorded in
-`.planning/MILESTONE-CONTEXT.md` and must be formally scoped through GSD before
-execution.
+approved. Refresh the machine-readable STATE and current roadmap summary without
+rewriting archived assessments. Before recommending a next GSD command, make
+sure the intent and relevant source evidence are durable so clearing context
+does not lose the thread.
 
 Provenance
 ----------
 
-Adapted on 2026-09-25 from the maintainer's Lattice Stripe milestone-ratchet
-prompt and reconciled with Scrypath's project constraints and v1.37–v1.38
-planning evidence. The adapted signal is durable guidance; the source prompt is
-not copied into the public repository.
+Adapted on 2026-09-25 from the maintainer's privately supplied Lattice Stripe
+milestone-ratchet prompt. Updated on 2026-09-26 with the maintainer's Scrypath
+direction on CI efficiency and DX, measured performance, avoiding dependency
+churn milestones, deferred operator UI timing, release hygiene, and durable
+context. Reconciled with Scrypath's project constraints, v1.37–v1.39 evidence,
+and current milestone state. The source prompt itself is not copied into the
+public repository.
 
 Primary Scrypath planning authority:
 - `.planning/PROJECT.md` for product scope and operating policy.

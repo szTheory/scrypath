@@ -10,11 +10,11 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 ## Current State
 
-Scrypath 0.3.13 remains the published package. The v1.39 planning milestone shipped and was archived on 2026-09-26; it adds no runtime, public API, dependency, backend, or operator UI changes. The readiness decision remains **NOT READY** because conditions 3 and 6 are unknown. The v1.39 audit's `tech_debt` status is accepted and recorded: all requirement checkboxes and phase verifications are complete, while three Phase 164 cross-references and Nyquist metadata for Phases 163–164 remain follow-up. The exact-SHA hosted closeout is required on the final tracking commit before creating the v1.39 tag.
+Scrypath 0.3.13 remains the published package. The v1.39 planning milestone shipped and was archived on 2026-09-26; it adds no runtime, public API, dependency, backend, or operator UI changes. Its dated readiness decision remains **NOT READY** because conditions 3 and 6 were unknown at assessment. The v1.39 audit's `tech_debt` status is accepted and recorded: all requirement checkboxes and phase verifications are complete, while three Phase 164 cross-references and Nyquist metadata for Phases 163–164 remain follow-up. Final exact-SHA closeout run [36257182675](https://github.com/szTheory/scrypath/actions/runs/36257182675) passed for `dc400b2b57aec0ca6b0ef16c9477d266fd41a433`; the remote annotated `v1.39` tag resolves to that commit. This later receipt can support a newly dated condition 6 assessment but does not change the historical readiness result.
 
 ## Next Milestone Goals
 
-No next milestone is approved. Start a fresh requirements cycle only when concrete maintenance, adopter, production-bug, proof-drift, or strategic evidence supports an owner-approved scope. A passing readiness gate is required before any operator UI milestone.
+No next milestone is approved. The possible near-term wedge is a targeted, automated reassessment of readiness conditions 3 and 6 after inspecting existing proof; it must be explicitly approved before GSD requirements are written. Keep operator UI deferred until the gate passes and maintainer time is available. See `.planning/reference/milestone-candidates.md` for the evidence-gated near/mid/long horizon and `prompts/scrypath-milestone-ratchet-roadmap.txt` for the reusable milestone decision guide. Start other work only when concrete maintenance, adopter, production-bug, proof-drift, or strategic evidence supports an owner-approved scope.
 
 <details>
 <summary>Archived v1.39 planning context</summary>
@@ -26,7 +26,7 @@ No next milestone is approved. Start a fresh requirements cycle only when concre
 - Evidence-ranked disposition and bounded closure of confirmed critical, high, and medium-leverage non-UI gaps.
 - Automated acceptance evidence and an auditable readiness decision; operator UI implementation stays out of scope.
 
-**Pre-UI quality readiness:** `.planning/reference/PRE-OPERATOR-UI-READINESS.md` remains the durable program and exit-gate authority. A **READY FOR OPERATOR UI** decision requires evidence for every area and no unresolved critical, high, or medium-leverage non-UI gap. Evidence-backed API/runtime gaps still require explicit scope-guard review.
+**Pre-UI quality readiness:** `.planning/reference/PRE-OPERATOR-UI-READINESS.md` remains the durable program and exit-gate authority. The v1.39 assessment is complete and NOT READY; the historical decision is preserved. A new **READY FOR OPERATOR UI** decision requires evidence for every area and no unresolved critical, high, or medium-leverage non-UI gap. Evidence-backed API/runtime gaps still require explicit scope-guard review.
 
 **Prior completed scope:** v1.38 proved package-backed Phoenix adoption against real services and closed with exact-SHA CI, green post-merge main, Hex/HexDocs publication, consumer compilation, and package-to-tag parity. It preserved the public API and advisory service-lane posture.
 
@@ -57,7 +57,7 @@ Resolve subjective product decisions before implementation or keep them nonblock
 do not simulate approvals.
 
 **Recent closed outcomes:**
-- v1.39 Phase 164 readiness reconciliation: six dated conditions, explicit NOT READY outcome, bounded source reconciliation, 36 structural contract fixtures, clean code review, 8/8 goal verification, and successful candidate-SHA closeout. The archive commit must pass the exact-SHA closeout required by `CONTRIBUTING.md` before the v1.39 tag; see `milestones/v1.39-phases/164-readiness-gate-and-reconciliation/164-01-SUMMARY.md`.
+- v1.39 Phase 164 readiness reconciliation: six dated conditions, explicit NOT READY outcome, bounded source reconciliation, 36 structural contract fixtures, clean code review, 8/8 goal verification, and successful exact-final-SHA closeout; tag `v1.39` points to the final commit. See `milestones/v1.39-phases/164-readiness-gate-and-reconciliation/164-01-SUMMARY.md`.
 - v1.38 package-backed Phoenix adopter proof and Scrypath 0.3.13 release: exact-SHA CI, path/package integration, green post-merge main, Hex publication, versioned HexDocs, clean consumer compile, and package/tag parity all passed. See `milestones/v1.38-MILESTONE-AUDIT.md`.
 - Phase 159 automated v1.37 audit/provenance closure: reconciled the 31-requirement audit, preserved the bounded TEST-01 chronology waiver, added a fail-closed candidate/final exact-SHA CI authority, and prohibited new post-implementation human verification or UAT debt.
 - Phase 147 ecommerce mounted-Ops remediation and closure: bounded the ecommerce web/client graph, added hermetic focused/full Docker E2E verification and an always-running focused CI gate, passed exact-SHA service/browser proof, and closed the four-graph audit ledger with no human UAT.
@@ -103,7 +103,7 @@ Phase 97 through 99 banned capability classes:
 
 ## Recent Milestone Outcomes
 
-**v1.39 Phase 164 — Readiness Gate and Reconciliation** completed on **2026-09-26**. The dated decision records conditions 1, 2, 4, and 5 as PASS and conditions 3 and 6 as UNKNOWN, leaving readiness NOT READY. The structural checker and 36 fixtures validate the record contract only; Phase 163's zero-finding result is not promoted to readiness proof. Candidate exact-SHA closeout passed; the final archive commit must pass the exact-SHA gate before the v1.39 tag.
+**v1.39 Phase 164 — Readiness Gate and Reconciliation** completed on **2026-09-26**. The dated decision records conditions 1, 2, 4, and 5 as PASS and conditions 3 and 6 as UNKNOWN, leaving readiness NOT READY. The structural checker and 36 fixtures validate the record contract only; Phase 163's zero-finding result is not promoted to readiness proof. Final exact-SHA closeout run [36257182675](https://github.com/szTheory/scrypath/actions/runs/36257182675) passed on the final archive commit, and tag `v1.39` resolves to that SHA.
 
 **v1.39 Phase 163 — Findings and Bounded Follow-up** completed on **2026-09-25**. All 24 baseline claims have bounded triage; no material Scrypath-owned finding or qualifying follow-up candidate was established. The structural fixture suite, full findings checker, and baseline full-coverage checker pass. An independent bounded source review confirmed the result without simulating owner approval; Phase 164 independently evaluated readiness.
 
@@ -231,7 +231,7 @@ Current planning files: **`.planning/{PROJECT,ROADMAP,STATE}.md`** plus mileston
 
 ## Release Train Posture
 
-- **Active milestone:** None. v1.39 is archived as a planning milestone; the readiness decision remains NOT READY and the exact-SHA gate must pass before its tag is created.
+- **Active milestone:** None. v1.39 is archived as a planning milestone; its dated readiness decision remains NOT READY. Final exact-SHA closeout passed and the `v1.39` tag is published.
 - **Policy:** Keep `main` green on the lean required gates and prefer PR-first execution for serious milestone or feature-depth work.
 - **Next milestone goals:** None approved. Start a fresh requirements cycle only when concrete maintenance, adopter, production-bug, proof-drift, or explicit strategic evidence authorizes work.
 - **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, and new UI surfaces remain out of scope.

@@ -1,16 +1,20 @@
 # Milestone candidates — Scrypath evidence-gated roadmap
 
 **Purpose:** Help `$gsd-new-milestone` select work that improves Scrypath adopters or protects release trust without creating roadmap work for its own sake.
-**Reviewed:** 2026-09-25 against v1.37 Code Quality Ratchet and v1.38 Packaged Adopter Proof.
-**Current posture:** v1.39 Pre-Operator UI Quality Readiness Ratchet is active in planning; Scrypath 0.3.13 is published and verified.
+**Reviewed:** 2026-09-26 against the completed v1.39 assessment and final closeout evidence.
+**Current posture:** v1.39 is complete and archived; Scrypath 0.3.13 remains the published package. Readiness is NOT READY because conditions 3 and 6 are UNKNOWN. No next milestone is approved, and the owner currently has no time for operator UI work.
 
 Use evidence-gated horizons, not calendar commitments. Reassess these candidates at each milestone boundary. See [`../../prompts/scrypath-milestone-ratchet-roadmap.txt`](../../prompts/scrypath-milestone-ratchet-roadmap.txt) for the durable decision guide.
 
-The governing program and explicit **READY FOR OPERATOR UI** exit criteria are in [`PRE-OPERATOR-UI-READINESS.md`](PRE-OPERATOR-UI-READINESS.md); active requirements and phases are in `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md`.
+The governing program and explicit **READY FOR OPERATOR UI** exit criteria are in [`PRE-OPERATOR-UI-READINESS.md`](PRE-OPERATOR-UI-READINESS.md); v1.39 requirements and phases are archived in `.planning/milestones/`, while the root `.planning/ROADMAP.md` indexes shipped milestones.
 
-## Near term — maintenance and trust
+## Near term — maintenance, evidence closure, and trust
 
-**Immediate next step:** assess the whole-product non-UI baseline in Phase 162, then rank findings and evaluate the gate through Phases 163–164. Keep `main` green, maintain package/support/docs truth, review incoming adopter evidence, and release when a warranted change is ready. Routine upkeep that fits a focused patch or quick task does not need a milestone.
+**Completed:** v1.39 assessed the whole-product baseline through Phases 162–164 and found no qualifying implementation candidate. Its dated readiness decision remains NOT READY.
+
+**Potential next scope (not approved):** a narrow, automation-first reassessment of conditions 3 and 6. Condition 3 needs a decision on whether existing or new evidence is sufficient for the bounded delete-to-visible-search (C-09), repair-to-visible-search (C-16), and selected host authorization/settings claims. Condition 6 was UNKNOWN at the assessment cutoff because final tracking artifacts and the final exact-SHA run were pending then; the exact final closeout later passed on `dc400b2b57aec0ca6b0ef16c9477d266fd41a433`, and tag `v1.39` points to that commit. Preserve the old decision; use those receipts in a new dated reassessment. Do not repeat passing checks or treat evidence gaps as product defects.
+
+Keep `main` green, maintain package/support/docs truth, review incoming adopter evidence, and release when a warranted change is ready. Routine upkeep that fits a focused patch or quick task does not need a milestone.
 
 Open work when there is a concrete production or security bug, compatibility change, release requirement, support/proof drift, or reviewed adopter report. Require a named outcome, smallest useful slice, and proof plan before adding scope.
 
@@ -22,7 +26,7 @@ Open work when there is a concrete production or security bug, compatibility cha
 | Adopter-driven product or documentation gap | Reproducible, reviewed outside-adopter evidence demonstrates a material unmet workflow | Address that workflow only; preserve Meilisearch-first and Ecto-native product boundaries. |
 | Proof or release-train repair | Repeated CI/proof drift, concrete release compatibility pressure, or operational failure | Fix the smallest shared cause; measure CI/runtime cost and do not duplicate existing proof. |
 
-**Operator UI timing:** ScrypathOps already received major operator-flow, design-system, and accessibility/theme work in v1.32–v1.34. v1.37 found no confirmed compatible high- or medium-leverage issue within its bounded engineering audit, but the whole-product pre-UI baseline has not run. Do not declare diminishing returns yet. Use the explicit gate in `PRE-OPERATOR-UI-READINESS.md`; once it passes, recommend ScrypathOps as the next strategic focus, subject to maintainer availability.
+**Operator UI timing:** ScrypathOps received major operator-flow, design-system, and accessibility/theme work in v1.32–v1.34. v1.39 completed the whole-product assessment, but readiness remains NOT READY because conditions 3 and 6 are UNKNOWN. The owner wants to revisit UI after the gate passes and has time; no UI milestone is approved now. Passing the gate would support a recommendation, not automatically start UI work.
 
 ## Long term — strategic expansion only with evidence
 
@@ -41,13 +45,15 @@ These are conditional possibilities, not commitments. Existing scope guards rema
 3. Prefer the smallest vertical slice with the least maintenance and CI cost that can prove the outcome.
 4. Automate software acceptance at the cheapest reliable layer; target zero human UAT. Put recurring checks in CI only when confidence justifies runtime and maintenance cost.
 5. Keep serious work PR-first, require exact-commit CI, verify post-merge `main`, and close release/worktree/artifact cleanup when warranted.
-6. Refresh this file and `MILESTONE-ARC.md` at milestone close: mark shipped candidates complete, remove stale ideas, record evidence and deferrals, and do not invent a next milestone.
+6. Do not create milestones solely for routine Dependabot/dependency churn; handle ordinary bumps through maintenance and reserve larger work for evidenced security, compatibility, or adopter outcomes.
+7. Refresh this file and `MILESTONE-ARC.md` at milestone close: mark shipped candidates complete, remove stale ideas, record evidence and deferrals, and do not invent a next milestone.
 
 ## Shipped context
 
+- **v1.39 Pre-Operator UI Quality Readiness Ratchet:** completed Phases 162–164 with a 24-claim whole-product baseline, zero qualifying implementation candidates, and a fail-closed NOT READY decision because conditions 3 and 6 remain UNKNOWN. Final exact-SHA closeout passed; later closeout evidence does not retroactively change the dated readiness result.
 - **v1.37 Code Quality Ratchet:** hardened runtime safety and architecture, introduced capability-named verification, reduced duplicated CI proof, secured release workflows, and established measured performance evidence. Its quality ledger reports no confirmed compatible high- or medium-leverage non-UI finding left open.
 - **v1.38 Packaged Adopter Proof:** Scrypath 0.3.13 passed package-backed Phoenix integration, exact-SHA and post-merge CI, Hex/HexDocs publication, clean consumer compilation, and package-to-tag parity. No human UAT remains pending.
 - **v1.32–v1.34:** ScrypathOps design system, operator flows, dual-theme polish, and accessibility proof received dedicated milestones. Additional UI work is deferred by owner time and target evidence.
 - Earlier product wedges through v1.36 are recorded in `.planning/MILESTONES.md` and `.planning/milestones/`.
 
-*Provenance: adapted 2026-09-25 from the maintainer's cross-project ratchet prompt; reconciled with `.planning/PROJECT.md`, `.planning/STATE.md`, `.planning/RETROSPECTIVE.md`, v1.37's quality ledger/audit, and v1.38's requirements/audit. Read together with `PRE-OPERATOR-UI-READINESS.md` and the companion guide in `prompts/`.*
+*Provenance: adapted 2026-09-25 from the maintainer's cross-project ratchet prompt and refreshed 2026-09-26 from the follow-up direction. Reconciled with `.planning/PROJECT.md`, `.planning/STATE.md`, `.planning/RETROSPECTIVE.md`, v1.37–v1.39 evidence, and the final closeout receipt. Read with `PRE-OPERATOR-UI-READINESS.md` and the companion guide in `prompts/`.*
