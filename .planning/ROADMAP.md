@@ -92,10 +92,11 @@ Plans:
   2. The final record reconciles release, package, support, CI, planning, and task-owned cleanup truth, leaving no hidden verification or cleanup debt behind the decision.
   3. Only a passing gate recommends ScrypathOps as the next strategic focus, and that recommendation does not start or authorize operator UI work.
 
-**Plans**: 1 plan
+**Plans**: 1/1 plans executed
 
 Plans:
-- [ ] 164-01-PLAN.md — Establish and reconcile the six-condition readiness decision
+
+- [x] 164-01-PLAN.md — Establish and reconcile the six-condition readiness decision
 
 ## Progress
 
@@ -103,4 +104,4 @@ Plans:
 |-------|----------------|--------|-----------|
 | 162. Whole-Product Evidence Baseline | 3/3 | Complete   | 2026-09-25 |
 | 163. Findings and Bounded Follow-up | 3/3 | Complete    | 2026-09-25 |
-| 164. Readiness Gate and Reconciliation | 0/TBD | Not started | - |
+| 164. Readiness Gate and Reconciliation | 1/1 | In Progress|  |
