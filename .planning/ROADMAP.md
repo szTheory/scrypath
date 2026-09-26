@@ -22,7 +22,7 @@ Readiness remains **NOT READY** until every approved dimension and exit conditio
 **Milestone Goal:** Assess Scrypath's non-UI quality and adopter readiness, close evidence-backed critical, high, and medium-leverage gaps in bounded milestones, and establish an auditable gate for when ScrypathOps can become the next strategic focus.
 
 - [x] **Phase 162: Whole-Product Evidence Baseline** - Map the full non-UI adopter lifecycle to evidence, freshness, and claim limits. (completed 2026-09-25)
-- [ ] **Phase 163: Findings and Bounded Follow-up** - Turn substantiated observations into explicit decisions and separately scoped, automation-backed follow-up candidates.
+- [x] **Phase 163: Findings and Bounded Follow-up** - Turn substantiated observations into explicit decisions and separately scoped, automation-backed follow-up candidates. (completed 2026-09-25)
 - [ ] **Phase 164: Readiness Gate and Reconciliation** - Reconcile readiness evidence and make the fail-closed strategic recommendation.
 
 ## Phase Details
@@ -99,5 +99,5 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 162. Whole-Product Evidence Baseline | 3/3 | Complete   | 2026-09-25 |
-| 163. Findings and Bounded Follow-up | 3/3 | In Progress|  |
+| 163. Findings and Bounded Follow-up | 3/3 | Complete    | 2026-09-25 |
 | 164. Readiness Gate and Reconciliation | 0/TBD | Not started | - |

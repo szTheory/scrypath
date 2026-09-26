@@ -8,9 +8,9 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Mode: Pre-Operator UI Readiness Ratchet — v1.39 Phase 162 Complete
+## Current Mode: Pre-Operator UI Readiness Ratchet — Phase 163 Complete, Phase 164 Ready to Plan
 
-Scrypath 0.3.13 is published. v1.38 Packaged Adopter Proof is complete and archived. The owner-approved v1.39 milestone is formally initialized with requirements and a three-phase roadmap. Phase 162 established and verified the whole-product evidence baseline; Phase 163 is ready to plan. The release train remains on routine maintenance while the whole-product non-UI readiness assessment proceeds.
+Scrypath 0.3.13 is published. v1.38 Packaged Adopter Proof is complete and archived. The owner-approved v1.39 milestone is formally initialized with requirements and a three-phase roadmap. Phase 162 established the whole-product evidence baseline and Phase 163 completed its source-linked triage with zero material findings or qualifying follow-up candidates. Phase 164 owns the readiness decision and is ready to plan. The release train remains on routine maintenance while the whole-product non-UI readiness assessment proceeds.
 
 ## Current Milestone: v1.39 Pre-Operator UI Quality Readiness Ratchet
 
@@ -94,6 +94,8 @@ Phase 97 through 99 banned capability classes:
 - new public runtime API categories
 
 ## Current State
+
+**v1.39 Phase 163 — Findings and Bounded Follow-up** completed on **2026-09-25**. All 24 baseline claims have bounded triage; no material Scrypath-owned finding or qualifying follow-up candidate was established. The structural fixture suite, full findings checker, and baseline full-coverage checker pass. An independent bounded source review confirmed the result without simulating owner approval; Phase 164 retains the readiness decision.
 
 **v1.38 Packaged Adopter Proof** completed and was archived on **2026-09-25** across Phases **160–161**. All eight requirements passed, exact-SHA CI and post-merge main were green, and Scrypath 0.3.13 passed Hex publication, HexDocs, clean-consumer compilation, and package-to-tag parity. No human verification or UAT remains pending.
 
@@ -265,7 +267,7 @@ measured pure hot paths did not justify speculative optimization.
 
 ## Planning window
 
-v1.39 Pre-Operator UI Quality Readiness Ratchet is active in planning at Phase 163. Phase 162 completed the whole-product evidence baseline; evidence-qualified findings and bounded follow-up are next, while the readiness decision remains Phase 164. v1.38 Packaged Adopter Proof is complete and archived across Phases 160–161; all eight requirements passed automated verification and Scrypath 0.3.13 is published. Historical phase directories are archived under `.planning/milestones/v1.38-phases/`.
+v1.39 Pre-Operator UI Quality Readiness Ratchet is active at Phase 164. Phases 162–163 completed the whole-product evidence baseline and bounded findings triage; Phase 164 reconciles residual evidence and owns the six-condition readiness decision. v1.38 Packaged Adopter Proof is complete and archived across Phases 160–161; all eight requirements passed automated verification and Scrypath 0.3.13 is published. Historical phase directories are archived under `.planning/milestones/v1.38-phases/`.
 
 ## Requirements
 
@@ -379,4 +381,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-09-25 after Phase 162 Whole-Product Evidence Baseline*
+*Last updated: 2026-09-26 after Phase 163 Findings and Bounded Follow-up*
