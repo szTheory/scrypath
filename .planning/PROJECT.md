@@ -12,7 +12,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 Scrypath 0.3.13 remains the published package. The v1.39 planning milestone shipped and was archived on 2026-09-26; it adds no runtime, public API, dependency, backend, or operator UI changes. Its dated readiness decision remains **NOT READY** because conditions 3 and 6 were unknown at assessment. The v1.39 audit's `tech_debt` status is accepted and recorded: all requirement checkboxes and phase verifications are complete, while three Phase 164 cross-references and Nyquist metadata for Phases 163–164 remain follow-up. Final exact-SHA closeout run [36257182675](https://github.com/szTheory/scrypath/actions/runs/36257182675) passed for `dc400b2b57aec0ca6b0ef16c9477d266fd41a433`; the remote annotated `v1.39` tag resolves to that commit. This later receipt can support a newly dated condition 6 assessment but does not change the historical readiness result.
 
-v1.40 Readiness Evidence Closure is now approved and in setup. It will assess new evidence for conditions 3 and 6 without presuming readiness or authorizing operator UI work.
+v1.40 Readiness Evidence Closure is approved and roadmaped across Phases 165–167. It will assess new evidence for conditions 3 and 6 without presuming readiness or authorizing operator UI work.
 
 ## Next Milestone Goals
 

@@ -18,13 +18,13 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** v1.40 Readiness Evidence Closure is ready for roadmap review. Phase 165 will classify existing public tenant and facet contracts before the representative host and repair evidence phase.
+**Current Focus:** v1.40 Readiness Evidence Closure is approved and roadmaped. Phase 165 will classify existing public tenant and facet contracts before the representative host and repair evidence phase.
 
 ## Current Position
 
 Phase: 165 (1 of 3, Public Tenant and Facet Contracts)
 Plan: Not planned
-Status: Roadmap ready for owner review
+Status: Roadmap approved; phase discussion is next
 Last activity: 2026-09-26 — Created the v1.40 three-phase roadmap and mapped all approved requirements.
 
 Progress: [░░░░░░░░░░] 0%
@@ -63,7 +63,7 @@ None yet.
 
 - The final readiness result is not predetermined. Any insufficient condition or unresolved gate-rank finding leaves the new assessment NOT READY.
 - Historical evidence can be reused only after source-identity and relevant-path comparisons; unavailable or invalidated evidence is recorded with its precise limit rather than inferred.
-- Current planning artifacts may be reviewed and revised before Phase 165 is planned; no implementation, test execution, CI dispatch, release, or commit has occurred in this roadmap step.
+- The approved roadmap and research reports govern Phase 165 planning. No implementation, test execution, CI dispatch, or release has occurred during milestone setup.
 
 ## Deferred Items
 
@@ -84,9 +84,9 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-09-26
-Stopped at: v1.40 roadmap created; all 11 approved requirements map exactly once across Phases 165–167.
+Stopped at: v1.40 roadmap approved and committed; all 11 approved requirements map exactly once across Phases 165–167.
 Resume file: None
 
 ## Operator Next Steps
 
-- Review the v1.40 roadmap. After approval, plan Phase 165.
+- Run `$gsd-discuss-phase 165` to resolve Phase 165 implementation context before planning.
