@@ -93,4 +93,4 @@ Resume file: .planning/phases/165-public-tenant-and-facet-contracts/165-CONTEXT.
 
 ## Operator Next Steps
 
-- Run `$gsd-discuss-phase 165` to resolve Phase 165 implementation context before planning.
+- Run `$gsd-plan-phase 165` to create the first implementation plan for Phase 165.
