@@ -1,0 +1,28 @@
+{
+  "contract": "1.0.0",
+  "flavor": "core",
+  "milestone": "v1.40 — Readiness Evidence Closure",
+  "phases": [
+    {
+      "number": "165",
+      "name": "Public Tenant and Facet Contracts",
+      "status": "pending"
+    },
+    {
+      "number": "166",
+      "name": "Host Tenant and Repair Evidence",
+      "status": "pending"
+    },
+    {
+      "number": "167",
+      "name": "Dated Readiness and Closeout",
+      "status": "pending"
+    }
+  ],
+  "next": {
+    "command": "/gsd:progress",
+    "label": "Show progress",
+    "reason": "Unsure of state — showing progress"
+  },
+  "updated_at": "2026-09-26T20:02:15.210Z"
+}
