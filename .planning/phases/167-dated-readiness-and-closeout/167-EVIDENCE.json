@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "assessment_source_sha": "8ed596a7ef2e6c63d175be3850db6fe3ad60ee66",
+  "assessment_source_sha": "7714b3a7d53086b992982c9c174712fbbc287f40",
   "historical_baseline_sha": "b944c049854e65b41352eebc59a13f1774431e3c",
   "observed_at_utc": "2026-09-27T18:36:15Z",
   "claims": [
@@ -239,7 +239,7 @@
     "canonical_receipt": ".planning/phases/166-host-tenant-and-repair-evidence/166-EVIDENCE.json#delete_receipt",
     "receipt_source_sha": "dc400b2b57aec0ca6b0ef16c9477d266fd41a433",
     "previous_assessment_source_sha": "50d5c12d36ec560525e245bcb992c40e5927854f",
-    "assessment_source_sha": "8ed596a7ef2e6c63d175be3850db6fe3ad60ee66",
+    "assessment_source_sha": "7714b3a7d53086b992982c9c174712fbbc287f40",
     "relevant_paths": ["lib", "examples", "config", "test/support", ".github/workflows", "mix.exs", "mix.lock"],
     "changed_paths": [
       "examples/phoenix_meilisearch/README.md",
@@ -266,9 +266,9 @@
       "No soft-delete, arbitrary schema, arbitrary host-policy, production scheduling latency, or universal delete guarantee."
     ],
     "freshness": {
-    "compared_source_sha": "8ed596a7ef2e6c63d175be3850db6fe3ad60ee66",
+    "compared_source_sha": "7714b3a7d53086b992982c9c174712fbbc287f40",
       "result": "reusable",
-      "reason": "The exact Git comparison has the same 16 relevant paths as the canonical prior assessment, and each has an explicit semantic non-invalidation reason in the canonical Phase 166 receipt."
+      "reason": "The exact Git comparison has the same 16 relevant paths as the canonical Phase 166 comparison; each has an explicit semantic disposition, and no relevant source paths changed between the Phase 166 receipt source and the selected Phase 167 source beyond those 16."
     }
   },
   "release_reference_mismatch": {
@@ -298,6 +298,39 @@
       "revisit_trigger": "If a future owner reconciles Phase 164 summary frontmatter, refresh its historical verification fingerprint."
     }
   ],
+  "dependency_review": {
+    "observed_at_utc": "2026-09-27T19:32:38Z",
+    "inspected_source_sha": "7714b3a7d53086b992982c9c174712fbbc287f40",
+    "root_lock": {
+      "path": "mix.lock",
+      "mint_version": "1.10.1",
+      "hex_package_checksum": "c53e70867cf74017716884d8d33e0742b08b32e9cdb0031cbc69a429dc5555e3",
+      "lock_checksum": "0ba2a904605ed8406393444fb8b3356dc58eb59ee6c7fb94ac3f015e1be129e8",
+      "advisory_disposition": "At or above the fixed version for all three named advisories; Phase 161 recorded a clean mix hex.audit and exact-source deep-quality proof on the remediated root graph."
+    },
+    "consumer_lock": {
+      "path": "examples/phoenix_meilisearch/mix.lock",
+      "mint_version": "1.9.3",
+      "hex_package_checksum": "3337184d69179695c7a9f1714d92c11e629d36c8c037a21cf490131d3d150554",
+      "lock_checksum": "5f7c9342480c069dbbc4eeac3490303c9e01870ff01a7f1d29b6107054fc1e74",
+      "observed_warning": "Phase 166 Plan 03 records that mix deps.get printed existing Mint 1.9.3 security advisory notices; raw console lines were not retained."
+    },
+    "advisories": [
+      {"id": "EEF-CVE-2026-82672", "severity": "Medium", "cvss": "6.3", "affected": "Mint before 1.10.1", "fixed": "1.10.1", "source": "https://osv.dev/vulnerability/EEF-CVE-2026-82672"},
+      {"id": "EEF-CVE-2026-82729", "severity": "Medium", "cvss": "6.3", "affected": "Mint 1.9.3 before 1.10.0", "fixed": "1.10.0", "source": "https://osv.dev/vulnerability/EEF-CVE-2026-82729"},
+      {"id": "EEF-CVE-2026-82728", "severity": "High", "cvss": "8.2", "affected": "Mint before 1.10.0", "fixed": "1.10.0", "source": "https://osv.dev/vulnerability/EEF-CVE-2026-82728"}
+    ],
+    "historical_root_audit": {
+      "source_sha": "3e895a6bf78edca487b17b8ffcc431b955bc4e8f",
+      "receipt": ".planning/milestones/v1.38-phases/161-release-and-tidy-closeout/161-02-SUMMARY.md",
+      "result": "Phase 161 recorded mix hex.audit clearing the three named advisories on the Mint 1.10.1 root graph; its exact-source hosted deep-quality run 36048572240 passed."
+    },
+    "current_audit_attempts": [
+      {"path": "mix.lock", "command": "mix hex.audit", "result": "not executed", "reason": "The repository .tool-versions selector reports no configured Mix version in this environment."},
+      {"path": "examples/phoenix_meilisearch/mix.lock", "command": "mix hex.audit", "result": "not executed", "reason": "The example .tool-versions selector reports no configured Mix version in this environment."}
+    ],
+    "disposition": "The root published-library graph is fixed; the tracked Phoenix example consumer lock remains on affected Mint 1.9.3. The High advisory is unresolved with no owner acceptance or dependency change in this phase. Example-path reachability in a production host is not inferred."
+  },
   "inherited_constraints": {
     "source": ".planning/phases/166-host-tenant-and-repair-evidence/166-SOURCE-AUDIT.md",
     "edge_probe_ids": [

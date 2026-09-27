@@ -1,7 +1,7 @@
 # Pre-Operator UI Quality Readiness Program
 
-**Status:** ACTIVE — a separate Phase 167 reassessment is in progress
-**Readiness:** NOT READY — the 2026-09-27 Phase 167 assessment records conditions 2, 4, 5, and 6 as UNKNOWN
+**Status:** ACTIVE — Phase 167 dated reassessment is underway
+**Readiness:** NOT READY — the 2026-09-27 Phase 167 assessment records condition 2 as FAIL and condition 6 as UNKNOWN
 **Last assessment:** 2026-09-27, Phase 167 dated readiness review
 **Purpose:** Identify and close worthwhile non-UI gaps before ScrypathOps becomes the next strategic focus. Establish an evidence-backed, durable gate for saying the non-UI work has reached diminishing returns.
 
@@ -9,7 +9,7 @@ This program remains the readiness and exit-gate authority after **v1.39 Pre-Ope
 
 ## Current evidence
 
-- **Current assessment:** [Phase 167 dated assessment](../phases/167-dated-readiness-and-closeout/167-ASSESSMENT.md) and [closeout inventory](../phases/167-dated-readiness-and-closeout/167-CLOSEOUT.md). This separately dated record retains UNKNOWN where review is incomplete and does not authorize operator UI work. Its pending exact-final-SHA attestation remains open.
+- **Current assessment:** [Phase 167 dated assessment](../phases/167-dated-readiness-and-closeout/167-ASSESSMENT.md) and [closeout inventory](../phases/167-dated-readiness-and-closeout/167-CLOSEOUT.md). The assessment records an unresolved High Mint advisory in the tracked Phoenix consumer lock (condition 2 FAIL) and pending final tracking/attestation (condition 6 UNKNOWN). It does not authorize operator UI work.
 
 - **v1.37 Code Quality Ratchet** covered runtime safety, internal architecture, test/verification commands, CI efficiency, supply chain/release proof, and measured performance. Its ledger found no confirmed compatible high- or medium-leverage issue in that bounded non-UI scope. It did not claim to audit every dimension of adopter or product readiness.
 - **v1.38 Packaged Adopter Proof** verified package-backed Phoenix flows, exact-SHA and post-merge CI, Hex/HexDocs, clean consumer compilation, and package-to-tag parity. Scrypath 0.3.13 is published; no human UAT is pending.
@@ -33,11 +33,11 @@ Review existing code, tests, documentation, planning archives, and hosted eviden
 
 Use a capability-by-evidence matrix. For every area, record relevant user job, existing proof/source, whether proof is sufficient/current, gaps or uncertainty, and disposition. Do not repeat passing tests or re-run service proof without a decision-relevant reason.
 
-### Potential next step: targeted evidence and a new dated gate review
+### Current approved scope: Phase 167 dated reassessment and final attestation
 
-This is a candidate only; no next milestone is approved. First inspect whether existing receipts or bounded scenarios can answer the remaining questions at lower cost than new test or product work. Condition 3 includes the missing live delete-to-visible-search receipt (C-09), the incomplete repair-to-visible-search receipt (C-16), and bounded host authorization/settings scenarios. Establish the smallest automated evidence that supports the claims, or keep a precise reasoned UNKNOWN where proof is not justified. For condition 6, evaluate the later exact-SHA closeout, pushed tag, current package/support truth, planning state, and cleanup inventory in a newly dated record. Do not rerun all passing CI or edit the historical v1.39 assessment.
+Phase 167 is completing the bounded reassessment and closeout work already authorized for this gate. Its current record retains the unresolved Mint finding without changing dependencies, reuses exact-source evidence only for its named scenarios, and keeps the release-reference mismatch separate from accepted archived planning debt. Final tracking, exact-final-SHA verification, and external attestation remain outstanding until the remaining Phase 167 work completes. Do not repeat passing checks, treat evidence gaps as product defects, or rewrite the historical v1.39 or Phase 164 decisions.
 
-If this evidence work is small and self-contained, use a focused maintenance task. Use a milestone only if the approved work has enough independent scope to warrant requirements and phases. A passing readiness result recommends ScrypathOps as a later strategic focus; it does not auto-start UI work.
+After Phase 167, no next milestone is approved. Keep `main` green, maintain package/support/docs truth, review incoming adopter evidence, and release when a warranted change is ready. Open new work only for a concrete production or security bug, compatibility change, release requirement, support/proof drift, or reviewed adopter report; require a named outcome, smallest useful slice, and proof plan before adding scope.
 
 ### Mid term: evidence-ranked gap closure
 

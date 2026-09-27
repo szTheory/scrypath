@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 import json
+import re
 from pathlib import Path
 
 from check_readiness import (
@@ -75,9 +76,11 @@ class EvidenceCliTests(unittest.TestCase):
 
     def test_assessment_rejects_bad_timestamp_source_or_ready_arithmetic(self) -> None:
         original = ASSESSMENT.read_text(encoding="utf-8")
+        timestamp = re.search(r"^assessed_at_utc: (\S+)\s*$", original, re.MULTILINE).group(1)
+        source = re.search(r"^assessment_source_sha: (\S+)\s*$", original, re.MULTILINE).group(1)
         mutations = (
-            ("non-UTC", original.replace("2026-09-27T19:22:00Z", "2026-09-27T19:22:00-05:00", 1)),
-            ("source mismatch", original.replace("8ed596a7ef2e6c63d175be3850db6fe3ad60ee66", "a" * 40, 1)),
+            ("non-UTC", original.replace(timestamp, timestamp.removesuffix("Z") + "-05:00", 1)),
+            ("source mismatch", original.replace(source, "a" * 40, 1)),
             ("unknown ready", original.replace("**Decision:** NOT READY.", "**Decision:** READY FOR OPERATOR UI.")),
             ("condition failed but ready", original.replace("| 1 |", "| 1 |").replace("| PASS |", "| FAIL |", 1).replace("**Decision:** NOT READY.", "**Decision:** READY FOR OPERATOR UI.")),
         )
@@ -87,13 +90,19 @@ class EvidenceCliTests(unittest.TestCase):
 
     def test_assessment_rejects_observation_after_cutoff(self) -> None:
         evidence = read_json(EVIDENCE, "test evidence")
-        evidence["claims"][0]["observed_at_utc"] = "2026-09-27T19:22:01Z"
+        evidence["claims"][0]["observed_at_utc"] = "2026-09-27T19:39:01Z"
         self.assert_assessment_rejected(ASSESSMENT.read_text(encoding="utf-8"), evidence=evidence)
 
     def test_closeout_rejects_missing_surface_and_concealed_final_verification(self) -> None:
         original = CLOSEOUT.read_text(encoding="utf-8")
-        missing = original.replace("| services | No Phase 167 service or container was started. | No service cleanup is owned by this plan. |\n", "")
-        concealed = original.replace("Open: Task 2 reassessment and final-source attestation", "None")
+        service_row = next(line for line in original.splitlines() if line.startswith("| services |"))
+        verification_row = next(line for line in original.splitlines() if line.startswith("| verification |"))
+        missing = original.replace(service_row + "\n", "", 1)
+        concealed = original.replace(
+            verification_row,
+            verification_row.replace("pending", "complete").replace("outstanding", "complete").replace("Open:", "None:"),
+            1,
+        )
         for name, text in (("missing surface", missing), ("concealed debt", concealed)):
             with self.subTest(name=name):
                 with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".md", dir=PHASE_DIR) as record:
