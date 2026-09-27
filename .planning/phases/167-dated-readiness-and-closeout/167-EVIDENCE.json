@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "assessment_source_sha": "6e6cf99a91b41ba7e9af872ea51e6907613d1727",
+  "historical_baseline_sha": "b944c049854e65b41352eebc59a13f1774431e3c",
+  "observed_at_utc": "2026-09-27T18:20:46Z",
+  "claims": [
+    {
+      "id": "HOST-01-path",
+      "requirement_ids": ["HOST-01", "HOST-02"],
+      "scenario": "authorized tenant search and facet values",
+      "oracle": "SCRYPATH_PHASE166_HOST",
+      "source_sha": "50d5c12d36ec560525e245bcb992c40e5927854f",
+      "canonical_receipt": ".planning/phases/166-host-tenant-and-repair-evidence/166-EVIDENCE.json#host-path",
+      "run_id": 36321613553,
+      "run_attempt": 1,
+      "job_id": 108626420623,
+      "result": "pass",
+      "skipped": false,
+      "observed_at_utc": "2026-09-27T18:20:46Z",
+      "dependency_mode": "GitHub Actions advisory phoenix-example job; workflow_dispatch exact-SHA run",
+      "bounded_claim": "At the recorded Phase 166 source, the named Phoenix/Ecto workflow completed 16 tests with 0 failures and logged tenant A and B raw permitted IDs, hydrated IDs, counts, category buckets, and facet-value buckets separately.",
+      "limits": "This proves only the synthetic host membership scenario and supplied-scope composition. Actor authentication, real host membership policy, trusted tenant derivation, authorization, response scoping, arbitrary schemas, and general production behavior remain host-owned or unproven.",
+      "log_reference": "https://github.com/szTheory/scrypath/actions/runs/36321613553/job/108626420623",
+      "source_verification": {
+        "method": "Inspected `gh run view` metadata and the named advisory job log for run 36321613553, attempt 1, job 108626420623; matched the canonical source SHA, test summary, and SCRYPATH_PHASE166_HOST marker.",
+        "observed_result": "The named host-path step concluded success and emitted the scenario marker followed by 16 tests, 0 failures; run metadata identifies the exact source SHA and attempt.",
+        "limitations": "This source verification is an inspected bounded receipt. Structural validation checks the recorded joins and marker presence; it does not re-fetch GitHub or establish host-owned authorization semantics."
+      }
+    }
+  ],
+  "release_identities": [],
+  "delete_receipt": null,
+  "inherited_constraints": {
+    "source": ".planning/phases/166-host-tenant-and-repair-evidence/166-SOURCE-AUDIT.md",
+    "edge_probe_ids": [],
+    "prohibition_ids": []
+  }
+}
