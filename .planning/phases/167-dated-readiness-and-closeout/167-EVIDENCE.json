@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "assessment_source_sha": "6e6cf99a91b41ba7e9af872ea51e6907613d1727",
+  "assessment_source_sha": "8ed596a7ef2e6c63d175be3850db6fe3ad60ee66",
   "historical_baseline_sha": "b944c049854e65b41352eebc59a13f1774431e3c",
   "observed_at_utc": "2026-09-27T18:36:15Z",
   "claims": [
@@ -239,7 +239,7 @@
     "canonical_receipt": ".planning/phases/166-host-tenant-and-repair-evidence/166-EVIDENCE.json#delete_receipt",
     "receipt_source_sha": "dc400b2b57aec0ca6b0ef16c9477d266fd41a433",
     "previous_assessment_source_sha": "50d5c12d36ec560525e245bcb992c40e5927854f",
-    "assessment_source_sha": "6e6cf99a91b41ba7e9af872ea51e6907613d1727",
+    "assessment_source_sha": "8ed596a7ef2e6c63d175be3850db6fe3ad60ee66",
     "relevant_paths": ["lib", "examples", "config", "test/support", ".github/workflows", "mix.exs", "mix.lock"],
     "changed_paths": [
       "examples/phoenix_meilisearch/README.md",
@@ -266,7 +266,7 @@
       "No soft-delete, arbitrary schema, arbitrary host-policy, production scheduling latency, or universal delete guarantee."
     ],
     "freshness": {
-      "compared_source_sha": "6e6cf99a91b41ba7e9af872ea51e6907613d1727",
+    "compared_source_sha": "8ed596a7ef2e6c63d175be3850db6fe3ad60ee66",
       "result": "reusable",
       "reason": "The exact Git comparison has the same 16 relevant paths as the canonical prior assessment, and each has an explicit semantic non-invalidation reason in the canonical Phase 166 receipt."
     }

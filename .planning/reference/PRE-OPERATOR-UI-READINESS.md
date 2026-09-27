@@ -1,18 +1,20 @@
 # Pre-Operator UI Quality Readiness Program
 
-**Status:** COMPLETE — assessed in v1.39, archived 2026-09-26
-**Readiness:** NOT READY — the 2026-09-26 assessment records conditions 3 and 6 as UNKNOWN
-**Last assessment:** 2026-09-26, during v1.39 readiness reconciliation
+**Status:** ACTIVE — a separate Phase 167 reassessment is in progress
+**Readiness:** NOT READY — the 2026-09-27 Phase 167 assessment records conditions 2, 4, 5, and 6 as UNKNOWN
+**Last assessment:** 2026-09-27, Phase 167 dated readiness review
 **Purpose:** Identify and close worthwhile non-UI gaps before ScrypathOps becomes the next strategic focus. Establish an evidence-backed, durable gate for saying the non-UI work has reached diminishing returns.
 
 This program remains the readiness and exit-gate authority after **v1.39 Pre-Operator UI Quality Readiness Ratchet** completed Phases 162–164. Its shipped requirements and roadmap are archived under `.planning/milestones/`. Any follow-up is a separate, owner-approved scope; the program does not itself authorize implementation or operator UI work.
 
 ## Current evidence
 
+- **Current assessment:** [Phase 167 dated assessment](../phases/167-dated-readiness-and-closeout/167-ASSESSMENT.md) and [closeout inventory](../phases/167-dated-readiness-and-closeout/167-CLOSEOUT.md). This separately dated record retains UNKNOWN where review is incomplete and does not authorize operator UI work. Its pending exact-final-SHA attestation remains open.
+
 - **v1.37 Code Quality Ratchet** covered runtime safety, internal architecture, test/verification commands, CI efficiency, supply chain/release proof, and measured performance. Its ledger found no confirmed compatible high- or medium-leverage issue in that bounded non-UI scope. It did not claim to audit every dimension of adopter or product readiness.
 - **v1.38 Packaged Adopter Proof** verified package-backed Phoenix flows, exact-SHA and post-merge CI, Hex/HexDocs, clean consumer compilation, and package-to-tag parity. Scrypath 0.3.13 is published; no human UAT is pending.
 - **v1.32–v1.34** provided substantial ScrypathOps operator-flow, design-system, dual-theme, and accessibility work. Additional operator UI work is intentionally sequenced after this program's exit gate and maintainer availability.
-- **v1.39** completed the whole-product assessment. Conditions 3 and 6 remain UNKNOWN in its dated decision. The exact final closeout later passed on `dc400b2b57aec0ca6b0ef16c9477d266fd41a433`; remote tag `v1.39` resolves to that commit. This newer evidence can inform a separately dated condition 6 reassessment, but does not rewrite the historical decision. Condition 3 still needs decision-relevant workflow evidence or an explicit reasoned limitation.
+- **v1.39 historical assessment** completed the whole-product review with conditions 3 and 6 UNKNOWN. The exact final closeout later passed on `dc400b2b57aec0ca6b0ef16c9477d266fd41a433`; remote tag `v1.39` resolves to that commit. Neither later evidence nor Phase 167 rewrites the historical decision.
 - Existing evidence is an input to the baseline, not a reason to rerun every gate or assume every area is complete.
 
 ## Program sequence and follow-up

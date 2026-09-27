@@ -8,7 +8,7 @@ import json
 import re
 import subprocess
 import sys
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -27,6 +27,25 @@ REQUIRED_CLAIMS = {
     "DELETE-01",
 }
 SHA = re.compile(r"^[0-9a-f]{40}$")
+CONDITIONS = (
+    "Every baseline dimension above has been assessed; evidence coverage and known limits are visible.",
+    "Every critical, high, or medium-leverage finding is closed with verification or explicitly accepted with rationale and an owner decision. There are no unresolved findings at those levels.",
+    "Important adopter workflows have appropriate automated proof for the claims being made. The goal is zero routine human verification/UAT; external credentials, permissions, product decisions, or physical-world checks are the only expected handoffs.",
+    "Required CI remains green and lean. Recurring service/E2E proof runs in CI only where its repeat confidence justifies its runtime and maintenance cost; more expensive lower-frequency evidence may remain advisory or scheduled.",
+    "Remaining non-UI opportunities are low-leverage, speculative, unsupported, or more costly than their likely benefit, each with a recorded disposition.",
+    "Release, package, support, and planning truth are current, with no task-owned cleanup or verification debt hidden at closeout.",
+)
+TABLE_HEADER = "| # | Approved condition | Status | Evidence date | Assessment date | Dated linked evidence / receipt + SHA | Boundary, freshness, or limitation |"
+CLEANUP_SURFACES = (
+    "branch/worktree",
+    "generated outputs",
+    "temporary files",
+    "services",
+    "verification",
+    "unrelated state",
+)
+CLEANUP_HEADER = "| Surface | Inspection/result | Ownership/debt disposition |"
+UTC_TIMESTAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 
 
 class ContractError(ValueError):
@@ -109,6 +128,129 @@ def parse_utc(value: object, label: str) -> datetime:
     except ValueError as error:
         raise ContractError(f"{label} is not an ISO-8601 timestamp") from error
     return parsed
+
+
+def visible_markdown(text: str) -> str:
+    """Remove comments and fenced examples before structural row inspection."""
+    text = re.sub(r"<!--.*?(?:-->|\Z)", "", text, flags=re.DOTALL)
+    visible: list[str] = []
+    fence_char = ""
+    fence_size = 0
+    for line in text.splitlines():
+        fence = re.match(r"^ {0,3}(`{3,}|~{3,})", line)
+        if not fence_char:
+            if fence:
+                marker = fence.group(1)
+                fence_char, fence_size = marker[0], len(marker)
+                visible.append("")
+            else:
+                visible.append(line)
+            continue
+        if fence:
+            marker = fence.group(1)
+            if marker[0] == fence_char and len(marker) >= fence_size and not line[len(marker):].strip():
+                fence_char, fence_size = "", 0
+        visible.append("")
+    return "\n".join(visible)
+
+
+def utc_datetime(value: object, label: str) -> datetime:
+    require(isinstance(value, str) and UTC_TIMESTAMP.fullmatch(value) is not None, f"{label} must be a second-precision UTC timestamp ending in Z")
+    try:
+        return datetime.fromisoformat(value[:-1] + "+00:00")
+    except ValueError as error:
+        raise ContractError(f"{label} is not a valid UTC timestamp") from error
+
+
+def markdown_links(root: Path, base_dir: Path, text: str, label: str) -> list[str]:
+    references = re.findall(r"\[[^]]+\]\(([^)]+)\)", text)
+    require(bool(references), f"{label} must contain linked evidence")
+    for reference in references:
+        path_part = reference.split("#", 1)[0]
+        target = Path(path_part)
+        require(path_part and not target.is_absolute(), f"{label} contains a non-local or empty evidence path")
+        resolved = (base_dir / target).resolve()
+        try:
+            resolved.relative_to(root.resolve())
+        except ValueError as error:
+            raise ContractError(f"{label} evidence link escapes the repository root") from error
+        require(resolved.is_file(), f"{label} evidence link does not resolve: {path_part}")
+    return references
+
+
+def section_until(text: str, heading: str, next_heading: str) -> str:
+    visible = visible_markdown(text)
+    start = visible.find(heading)
+    require(start >= 0 and visible.find(heading, start + len(heading)) < 0, f"expected exactly one {heading} section")
+    end = visible.find(next_heading, start + len(heading))
+    require(end >= 0, f"{next_heading} section is missing after {heading}")
+    return visible[start:end]
+
+
+def validate_assessment(root: Path, assessment_path: Path, evidence: dict) -> None:
+    text = assessment_path.read_text(encoding="utf-8")
+    source_sha = evidence.get("assessment_source_sha")
+    require(isinstance(source_sha, str) and SHA.fullmatch(source_sha), "evidence assessment_source_sha must be a full SHA")
+    section = section_until(text, "# Phase 167 dated assessment", "## Findings and decision")
+    assessed_at = re.search(r"^assessed_at_utc:\s*(\S+)\s*$", section, re.MULTILINE)
+    assessment_id = re.search(r"^assessment_id:\s*(\S+)\s*$", section, re.MULTILINE)
+    source = re.search(r"^assessment_source_sha:\s*(\S+)\s*$", section, re.MULTILINE)
+    require(assessed_at is not None, "assessment assessed_at_utc is required")
+    cutoff = utc_datetime(assessed_at.group(1), "assessment assessed_at_utc")
+    require(assessment_id is not None and assessment_id.group(1) == "Phase167-" + cutoff.strftime("%Y%m%dT%H%M%SZ"), "assessment_id must uniquely encode the UTC assessment timestamp")
+    require(source is not None and source.group(1) == source_sha, "assessment source SHA must match the evidence index source")
+    git_bytes(root, "cat-file", "-e", f"{source_sha}^{{commit}}")
+    observations = [utc_datetime(claim.get("observed_at_utc"), f"{claim.get('id', 'claim')}.observed_at_utc") for claim in evidence.get("claims", []) if isinstance(claim, dict)]
+    require(bool(observations) and all(value <= cutoff for value in observations), "an evidence observation occurs after the dated assessment cutoff")
+    lines = section.splitlines()
+    require(lines.count(TABLE_HEADER) == 1, "assessment must contain exactly one canonical six-condition table")
+    rows = [line for line in lines if re.match(r"^\|\s*\d+\s*\|", line)]
+    require(len(rows) == 6, "assessment must have exactly six visible condition rows")
+    statuses: list[str] = []
+    for number, (row, condition) in enumerate(zip(rows, CONDITIONS), start=1):
+        cells = [cell.strip() for cell in row.strip().strip("|").split("|")]
+        require(len(cells) == 7 and cells[0] == str(number), "condition rows must be complete, ordered, and unique")
+        require(cells[1] == condition, f"condition {number} wording differs from the approved authority")
+        require(cells[2] in {"PASS", "FAIL", "UNKNOWN"}, f"condition {number} status must be PASS, FAIL, or UNKNOWN")
+        require(re.fullmatch(r"\d{4}-\d{2}-\d{2}", cells[3]) is not None, f"condition {number} evidence date must be explicit")
+        try:
+            date.fromisoformat(cells[3])
+        except ValueError as error:
+            raise ContractError(f"condition {number} evidence date is invalid") from error
+        require(cells[4] == cutoff.date().isoformat(), f"condition {number} assessment date must match the UTC timestamp")
+        markdown_links(root, assessment_path.parent, cells[5], f"condition {number}")
+        require(cells[6].strip(), f"condition {number} must state its evidence boundary or limitation")
+        statuses.append(cells[2])
+    decision_section = section_until(text, "## Findings and decision", "## Probe ledgers")
+    finding = re.search(r"^\*\*Gate-rank findings:\*\*\s*(.+?)\s*$", decision_section, re.MULTILINE)
+    decision = re.search(r"^\*\*Decision:\*\*\s*(READY FOR OPERATOR UI|NOT READY)\.?\s*$", decision_section, re.MULTILINE)
+    require(finding is not None and finding.group(1).strip(), "explicit gate-rank finding disposition is required")
+    require(decision is not None, "an explicit readiness decision is required")
+    clear = finding.group(1).strip().casefold() in {"none within the reviewed scope", "none — none within the reviewed scope", "none — no unresolved critical, high, or medium-leverage findings"}
+    ready = all(status == "PASS" for status in statuses) and clear
+    expected = "READY FOR OPERATOR UI" if ready else "NOT READY"
+    require(decision.group(1) == expected, f"decision must be {expected} from condition statuses and gate-rank disposition")
+    require("structural" in section.casefold() and "does not establish source truth" in section.casefold(), "assessment must state the structural checker limitation")
+
+
+def validate_closeout(root: Path, closeout_path: Path, evidence: dict) -> None:
+    text = visible_markdown(closeout_path.read_text(encoding="utf-8"))
+    observed = re.search(r"^observed_at_utc:\s*(\S+)\s*$", text, re.MULTILINE)
+    source = re.search(r"^inspected_source_sha:\s*(\S+)\s*$", text, re.MULTILINE)
+    require(observed is not None, "closeout observed_at_utc is required")
+    utc_datetime(observed.group(1), "closeout observed_at_utc")
+    require(source is not None and source.group(1) == evidence.get("assessment_source_sha"), "closeout source SHA must match the evidence assessment source")
+    require(text.count(CLEANUP_HEADER) == 1, "closeout must contain one six-surface ownership inventory")
+    rows = [line for line in text.splitlines() if line.startswith("| ") and line.count("|") >= 4 and not line.startswith("| Surface ") and not line.startswith("|---")]
+    require(len(rows) == len(CLEANUP_SURFACES), "closeout must contain exactly six inventory rows")
+    observed_surfaces: list[str] = []
+    for row in rows:
+        cells = [cell.strip() for cell in row.strip().strip("|").split("|")]
+        require(len(cells) == 3 and all(cells[1:]), "every closeout surface needs an inspection and ownership disposition")
+        observed_surfaces.append(cells[0])
+    require(tuple(observed_surfaces) == CLEANUP_SURFACES, "closeout surfaces must be present exactly once in canonical order")
+    verification = next(row for row in rows if row.startswith("| verification |"))
+    require(any(word in verification.casefold() for word in ("open", "pending", "outstanding")), "pending final verification must remain explicit at this cutoff")
 
 
 def resolve_receipt(root: Path, reference: object) -> tuple[Path, str]:
@@ -398,8 +540,10 @@ def validate_evidence(root: Path, record_path: Path, *, require_all_claims: bool
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, required=True)
-    parser.add_argument("--scope", choices=("evidence",), required=True)
+    parser.add_argument("--scope", choices=("evidence", "complete"), required=True)
     parser.add_argument("--evidence", type=Path, required=True)
+    parser.add_argument("--assessment", type=Path)
+    parser.add_argument("--closeout", type=Path)
     parser.add_argument("--require-all-claims", action="store_true")
     parser.add_argument("--compare-source")
     args = parser.parse_args(argv)
@@ -412,7 +556,23 @@ def main(argv: list[str] | None = None) -> int:
         except ValueError as error:
             raise ContractError("evidence record escapes the repository root") from error
         validate_history(root)
-        validate_evidence(root, resolved_evidence, require_all_claims=args.require_all_claims, compare_source=args.compare_source)
+        evidence = validate_evidence(
+            root,
+            resolved_evidence,
+            require_all_claims=args.require_all_claims or args.scope == "complete",
+            compare_source=args.compare_source,
+        )
+        if args.scope == "complete":
+            require(args.assessment is not None and args.closeout is not None, "complete scope requires --assessment and --closeout")
+            assessment_path = args.assessment if args.assessment.is_absolute() else root / args.assessment
+            closeout_path = args.closeout if args.closeout.is_absolute() else root / args.closeout
+            for path, label in ((assessment_path, "assessment"), (closeout_path, "closeout")):
+                try:
+                    path.resolve().relative_to(root)
+                except ValueError as error:
+                    raise ContractError(f"{label} record escapes the repository root") from error
+            validate_assessment(root, assessment_path.resolve(), evidence)
+            validate_closeout(root, closeout_path.resolve(), evidence)
     except (OSError, ContractError) as error:
         print(f"STRUCTURAL CONTRACT FAIL: {error}", file=sys.stderr)
         return 1

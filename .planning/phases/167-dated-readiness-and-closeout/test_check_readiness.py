@@ -9,13 +9,24 @@ import unittest
 import json
 from pathlib import Path
 
-from check_readiness import ContractError, compare_delete_freshness, validate_evidence, validate_history
+from check_readiness import (
+    ContractError,
+    CONDITIONS,
+    compare_delete_freshness,
+    read_json,
+    validate_assessment,
+    validate_closeout,
+    validate_evidence,
+    validate_history,
+)
 
 
 ROOT = Path(__file__).resolve().parents[3]
 PHASE_DIR = Path(__file__).resolve().parent
 CHECKER = PHASE_DIR / "check_readiness.py"
 EVIDENCE = PHASE_DIR / "167-EVIDENCE.json"
+ASSESSMENT = PHASE_DIR / "167-ASSESSMENT.md"
+CLOSEOUT = PHASE_DIR / "167-CLOSEOUT.md"
 
 
 class EvidenceCliTests(unittest.TestCase):
@@ -31,6 +42,65 @@ class EvidenceCliTests(unittest.TestCase):
         self.assertIn("complete", result.stdout)
         self.assertIn("--assessment", result.stdout)
         self.assertIn("--closeout", result.stdout)
+
+    def mutate_assessment(self, mutation) -> str:
+        text = ASSESSMENT.read_text(encoding="utf-8")
+        return mutation(text)
+
+    def assert_assessment_rejected(self, text: str, *, evidence: dict | None = None) -> None:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".md", dir=PHASE_DIR) as record:
+            record.write(text)
+            record.flush()
+            with self.assertRaises(ContractError):
+                validate_assessment(ROOT, Path(record.name), evidence or read_json(EVIDENCE, "test evidence"))
+
+    def test_real_assessment_and_closeout_accept_same_calendar_day(self) -> None:
+        evidence = read_json(EVIDENCE, "test evidence")
+        validate_assessment(ROOT, ASSESSMENT, evidence)
+        validate_closeout(ROOT, CLOSEOUT, evidence)
+
+    def test_assessment_rejects_duplicate_missing_reordered_hidden_or_reworded_conditions(self) -> None:
+        lines = ASSESSMENT.read_text(encoding="utf-8").splitlines()
+        rows = [line for line in lines if line.startswith("| 1 |") or line.startswith("| 2 |")]
+        cases = (
+            ("duplicate", lambda text: text.replace(rows[1], rows[0] + "\n" + rows[1], 1)),
+            ("missing", lambda text: text.replace(rows[0] + "\n", "", 1)),
+            ("reordered", lambda text: text.replace(rows[0] + "\n" + rows[1], rows[1] + "\n" + rows[0], 1)),
+            ("hidden fenced", lambda text: text.replace(rows[0], "```markdown\n" + rows[0] + "\n```", 1)),
+            ("wording", lambda text: text.replace(CONDITIONS[0], "Every baseline is probably assessed.", 1)),
+        )
+        for name, mutate in cases:
+            with self.subTest(name=name):
+                self.assert_assessment_rejected(mutate("\n".join(lines) + "\n"))
+
+    def test_assessment_rejects_bad_timestamp_source_or_ready_arithmetic(self) -> None:
+        original = ASSESSMENT.read_text(encoding="utf-8")
+        mutations = (
+            ("non-UTC", original.replace("2026-09-27T19:22:00Z", "2026-09-27T19:22:00-05:00", 1)),
+            ("source mismatch", original.replace("8ed596a7ef2e6c63d175be3850db6fe3ad60ee66", "a" * 40, 1)),
+            ("unknown ready", original.replace("**Decision:** NOT READY.", "**Decision:** READY FOR OPERATOR UI.")),
+            ("condition failed but ready", original.replace("| 1 |", "| 1 |").replace("| PASS |", "| FAIL |", 1).replace("**Decision:** NOT READY.", "**Decision:** READY FOR OPERATOR UI.")),
+        )
+        for name, text in mutations:
+            with self.subTest(name=name):
+                self.assert_assessment_rejected(text)
+
+    def test_assessment_rejects_observation_after_cutoff(self) -> None:
+        evidence = read_json(EVIDENCE, "test evidence")
+        evidence["claims"][0]["observed_at_utc"] = "2026-09-27T19:22:01Z"
+        self.assert_assessment_rejected(ASSESSMENT.read_text(encoding="utf-8"), evidence=evidence)
+
+    def test_closeout_rejects_missing_surface_and_concealed_final_verification(self) -> None:
+        original = CLOSEOUT.read_text(encoding="utf-8")
+        missing = original.replace("| services | No Phase 167 service or container was started. | No service cleanup is owned by this plan. |\n", "")
+        concealed = original.replace("Open: Task 2 reassessment and final-source attestation", "None")
+        for name, text in (("missing surface", missing), ("concealed debt", concealed)):
+            with self.subTest(name=name):
+                with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".md", dir=PHASE_DIR) as record:
+                    record.write(text)
+                    record.flush()
+                    with self.assertRaises(ContractError):
+                        validate_closeout(ROOT, Path(record.name), read_json(EVIDENCE, "test evidence"))
 
     def test_real_host_path_receipt_is_traceable(self) -> None:
         result = subprocess.run(
