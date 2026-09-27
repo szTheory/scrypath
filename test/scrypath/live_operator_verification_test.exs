@@ -187,6 +187,7 @@ defmodule Scrypath.LiveOperatorVerificationTest do
     live_index: live_index,
     target_index: target_index
   } do
+    started_at = System.monotonic_time(:millisecond)
     token = unique_repair_token()
     [target, source_only, visible_control] = repair_records(token)
     source_rows = [target, source_only, visible_control]
@@ -320,7 +321,7 @@ defmodule Scrypath.LiveOperatorVerificationTest do
                meilisearch_url: MeilisearchIntegration.meilisearch_url!()
              )
 
-    assert_repair_task!(first_task, live_index, task_config)
+    first_terminal = assert_repair_task!(first_task, live_index, task_config)
 
     assert :ok =
              wait_for_raw_ids!(token, search_options, MapSet.new([target.id, visible_control.id]))
@@ -337,9 +338,117 @@ defmodule Scrypath.LiveOperatorVerificationTest do
 
     refute Enum.any?(repaired_hits, &(raw_id!(&1) == source_only.id))
 
+    assert {:ok,
+            %{
+              index: ^live_index,
+              documents: 1,
+              batches: 1,
+              mode: :manual,
+              batch_results: [%{index: ^live_index, documents: 1, task: repeat_task}]
+            }} =
+             Scrypath.backfill(QueryablePost,
+               backend: Scrypath.Meilisearch,
+               repo: IntegrationRepo,
+               query: selected_query,
+               batch_size: 1,
+               sync_mode: :manual,
+               index_prefix: prefix,
+               meilisearch_url: MeilisearchIntegration.meilisearch_url!()
+             )
+
+    refute repeat_task.uid == first_task.uid
+    repeat_terminal = assert_repair_task!(repeat_task, live_index, task_config)
+
+    assert :ok =
+             wait_for_raw_ids!(token, search_options, MapSet.new([target.id, visible_control.id]))
+
+    repeated_hits = search_raw_hits!(token, search_options)
+
+    assert MapSet.new(Enum.map(repeated_hits, &raw_id!/1)) ==
+             MapSet.new([target.id, visible_control.id])
+
+    assert raw_projection(repeated_hits, target.id) == expected_projection(target)
+
+    assert raw_projection(repeated_hits, visible_control.id) ==
+             expected_projection(visible_control)
+
+    refute Enum.any?(repeated_hits, &(raw_id!(&1) == source_only.id))
+
     assert IntegrationRepo.get!(QueryablePost, source_only.id) == source_only_before
     assert IntegrationRepo.get!(QueryablePost, visible_control.id) == visible_control_before
     assert IntegrationRepo.get!(QueryablePost, target.id) == target_source
+
+    receipt = %{
+      scenario: "bounded manual repair restores the selected raw document",
+      index: live_index,
+      selected_ids: selected_ids,
+      first_task: %{uid: first_task.uid, state: first_terminal.state},
+      repeat_task: %{uid: repeat_task.uid, state: repeat_terminal.state},
+      raw_target: %{id: target.id, projection: expected_projection(target)},
+      controls: %{source_only_id: source_only.id, visible_id: visible_control.id},
+      no_write_observation: %{
+        read_requests: Enum.count(report_events, &(&1.method == :get)),
+        mutation_requests: Enum.count(report_events, &mutation_request?/1)
+      },
+      elapsed_ms: System.monotonic_time(:millisecond) - started_at
+    }
+
+    IO.puts("SCRYPATH_PHASE166_REPAIR #{Jason.encode!(receipt)}")
+  end
+
+  @tag :bounded_repair_empty
+  test "empty selected-ID repair submits no task and preserves raw controls", %{
+    index_prefix: prefix,
+    live_index: live_index
+  } do
+    token = unique_repair_token()
+    [_target, source_only, visible_control] = repair_records(token)
+    MeilisearchIntegration.insert_posts!(Enum.map([source_only, visible_control], &post_row/1))
+
+    source_only_before = IntegrationRepo.get!(QueryablePost, source_only.id)
+    visible_control_before = IntegrationRepo.get!(QueryablePost, visible_control.id)
+    sync_options = sync_options(prefix)
+    search_options = search_options(prefix)
+
+    assert {:ok, %{task: setup_task}} =
+             Scrypath.sync_record(QueryablePost, visible_control_before, sync_options)
+
+    assert {:ok, setup_terminal} = Tasks.wait_for_task(setup_task, sync_options)
+    assert setup_terminal.state == :succeeded
+    assert setup_terminal.reference.index_uid == live_index
+    assert :ok = wait_for_raw_ids!(token, search_options, MapSet.new([visible_control.id]))
+
+    empty_selected_ids = []
+    empty_query = from(post in QueryablePost, where: post.id in ^empty_selected_ids)
+
+    {empty_result, empty_events} =
+      observe_meilisearch_requests(fn ->
+        Scrypath.backfill(QueryablePost,
+          backend: Scrypath.Meilisearch,
+          repo: IntegrationRepo,
+          query: empty_query,
+          batch_size: 1,
+          sync_mode: :manual,
+          index_prefix: prefix,
+          meilisearch_url: MeilisearchIntegration.meilisearch_url!()
+        )
+      end)
+
+    assert {:ok,
+            %{index: ^live_index, documents: 0, batches: 0, batch_results: [], mode: :manual}} =
+             empty_result
+
+    refute Enum.any?(empty_events, &mutation_request?/1)
+    assert empty_events == []
+
+    assert :ok = wait_for_raw_ids!(token, search_options, MapSet.new([visible_control.id]))
+    hits = search_raw_hits!(token, search_options)
+    assert MapSet.new(Enum.map(hits, &raw_id!/1)) == MapSet.new([visible_control.id])
+    assert raw_projection(hits, visible_control.id) == expected_projection(visible_control)
+    refute Enum.any?(hits, &(raw_id!(&1) == source_only.id))
+
+    assert IntegrationRepo.get!(QueryablePost, source_only.id) == source_only_before
+    assert IntegrationRepo.get!(QueryablePost, visible_control.id) == visible_control_before
   end
 
   defp sync_options(prefix) do
