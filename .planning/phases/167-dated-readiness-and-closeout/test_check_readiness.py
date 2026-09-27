@@ -44,6 +44,34 @@ class EvidenceCliTests(unittest.TestCase):
         )
         self.assertIn("structural validation does not establish", result.stdout.lower())
 
+    def test_complete_map_mode_requires_all_eight_claims_and_valid_comparison_sha(self) -> None:
+        base = [
+            sys.executable,
+            str(CHECKER),
+            "--root",
+            str(ROOT),
+            "--scope",
+            "evidence",
+            "--evidence",
+            str(EVIDENCE),
+        ]
+        all_claims = subprocess.run(
+            [*base, "--require-all-claims"], cwd=ROOT, capture_output=True, text=True, check=False
+        )
+        self.assertEqual(
+            all_claims.returncode,
+            0,
+            f"the completed evidence map should cover every required claim:\n{all_claims.stderr}",
+        )
+        malformed_comparison = subprocess.run(
+            [*base, "--compare-source", "not-a-commit-sha"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertNotEqual(malformed_comparison.returncode, 0, "malformed comparison identity must fail closed")
+
     def test_receipt_identity_mutations_fail_closed(self) -> None:
         original = json.loads(EVIDENCE.read_text(encoding="utf-8"))
         mutations = (
