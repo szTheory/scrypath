@@ -79,7 +79,19 @@ Plans:
   2. Archived v1.39 closeout, package/release, and support evidence are traceable to exact source identities; the release-reference mismatch, accepted planning metadata debt, and only current task-owned cleanup are explicitly dispositioned.
   3. Every v1.40 software acceptance claim has automated, scenario-specific evidence tied to its exact source SHA, with routine human UAT unnecessary; the relevant advisory-lane scenario must pass for its recorded source while remaining distinct from the existing required merge-gate topology, and no broad matrix or new required service lane is added.
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+**Wave 1**
+
+- [ ] 167-01-PLAN.md — Reconcile bounded scenario evidence, release identities and C-09 freshness.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 167-02-PLAN.md — Record the dated six-condition assessment and task-owned closeout truth.
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 167-03-PLAN.md — Complete candidate acceptance and the external final-SHA closeout.
 
 ## Progress
 
