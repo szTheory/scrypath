@@ -5,17 +5,17 @@ milestone_name: Readiness Evidence Closure
 current_phase: 166
 current_phase_name: Host Tenant and Repair Evidence
 current_plan: 3
-status: executing
-stopped_at: Completed 166-02-PLAN.md
-last_updated: "2026-09-27T13:00:47.777Z"
+status: complete
+stopped_at: Completed 166-03-PLAN.md
+last_updated: "2026-09-27T13:35:16.000Z"
 last_activity: 2026-09-27
-last_activity_desc: Phase 166 Plan 02 complete; Plan 03 ready to execute
-state_head: 27d28ab4482ef40abbeca7930cb89976cf2c3652
+last_activity_desc: Phase 166 exact-source receipts and C-09 disposition recorded
+state_head: 50d5c12d36ec560525e245bcb992c40e5927854f
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State
@@ -23,19 +23,19 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 166 — Host Tenant and Repair Evidence
+**Current Focus:** Phase 167 — Dated Readiness and Closeout
 
 ## Current Position
 
-Phase: 166 (Host Tenant and Repair Evidence) — IN PROGRESS
-Current Plan: 3
+Phase: 166 (Host Tenant and Repair Evidence) — COMPLETE
+Current Plan: 3 (complete)
 Total Plans in Phase: 3
 Plan: 03 — Exact-Source Host and Repair Evidence
-Plans: 2/3 summarized
-Status: Ready to execute
-Last activity: 2026-09-27 — Plan 02 complete; proceeding with Plan 03
+Plans: 3/3 summarized
+Status: Complete; Phase 167 is next
+Last activity: 2026-09-27 — exact-source receipts and C-09 disposition recorded
 
-Progress: [███░░░░░░░] 33% of milestone phases complete
+Progress: [██████░░░░] 67% of milestone phases complete
 
 ## Milestone Context
 
@@ -53,6 +53,8 @@ Progress: [███░░░░░░░] 33% of milestone phases complete
 - Phase 165 Plan 02 at `a883958c73d7f102a7404a317e0d13b7c15ccbd9` reproduced raw keyword-filter tuple serialization failing before HTTP and corrected it through the existing filter renderer. Req.Test and local gates pass; live Meilisearch and package behavior for this exact scenario remain a Phase 166 handoff.
 - Phase 165 candidate `384c8839db2f021db421d0dbeff096ee439fd721` passed exact-SHA hosted closeout run `36277023698`; the five required jobs, advisory coverage, and closeout attestation succeeded with immutable artifacts. The final tracking SHA still requires its own closeout.
 - C-16 requires one representative ID-scoped manual repair through terminal task success to visible search. C-09 can be reused only after a relevant-path freshness comparison; otherwise its bounded claim needs targeted evidence or UNKNOWN.
+- Phase 166 candidate `50d5c12d36ec560525e245bcb992c40e5927854f` passed exact-SHA workflow-dispatch closeout run `36321613553` at attempt 1. Required jobs, coverage, and closeout attestation succeeded; Phoenix advisory job `108626420623` and backend job `108626420717` both contain the named successful Phase 166 scenario receipts.
+- Phase 166's historical C-09 receipt is reusable only for its bounded ecommerce raw-hit hard-delete claim; the receipt-to-assessment comparison accounts for all 16 changed relevant paths.
 
 ## Accumulated Context
 
@@ -82,7 +84,7 @@ None yet.
 
 - The final readiness result is not predetermined. Any insufficient condition or unresolved gate-rank finding leaves the new assessment NOT READY.
 - Historical evidence can be reused only after source-identity and relevant-path comparisons; unavailable or invalidated evidence is recorded with its precise limit rather than inferred.
-- Phase 165 local implementation, goal verification, and candidate closeout are complete. No live Meilisearch service variables were available locally; final tracking-SHA closeout and Phase 166's scenario-specific path/package service proof remain outstanding.
+- Phase 166's service and candidate-source receipts are complete. Phase 167 owns the separate six-condition assessment; the 11 probe rows and six descriptor-less prohibitions remain unresolved.
 
 ## Deferred Items
 
@@ -97,7 +99,7 @@ None yet.
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 165. Public Tenant and Facet Contracts | 2/2 | 25 min | 12.5 min |
-| 166. Host Tenant and Repair Evidence | TBD | - | - |
+| 166. Host Tenant and Repair Evidence | 3/3 | Duration unmeasured | - |
 | 167. Dated Readiness and Closeout | TBD | - | - |
 **Per-Plan Metrics:**
 
@@ -107,6 +109,7 @@ None yet.
 | Phase 165 P02 | 16 min | 2 tasks | 3 files |
 | Phase 166 P01 | 24 min | 2 tasks | 6 files |
 | Phase 166 P02 | 14 min | 2 tasks | 1 files |
+| Phase 166 P03 | Unmeasured | 2 tasks | 11 files |
 
 ## Session Continuity
 
@@ -116,4 +119,4 @@ Resume file: None
 
 ## Operator Next Steps
 
-- Continue Phase 166 Plan 03: record exact-source host, package, and repair receipts and assess C-09 deletion-receipt freshness.
+- Begin Phase 167: prepare a separate dated six-condition readiness assessment using the exact-source receipts and their stated claim limits.

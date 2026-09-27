@@ -17,7 +17,7 @@ v1.40 is approved to close bounded condition-3 and condition-6 evidence gaps. It
 ## Phases
 
 - [x] **Phase 165: Public Tenant and Facet Contracts** - Reproduce existing public inputs and correct only confirmed compatible failures. (completed 2026-09-26)
-- [ ] **Phase 166: Host Tenant and Repair Evidence** - Prove one host-owned tenant workflow, bounded repair visibility, and valid delete-receipt reuse.
+- [x] **Phase 166: Host Tenant and Repair Evidence** - Prove one host-owned tenant workflow, bounded repair visibility, and valid delete-receipt reuse. (completed 2026-09-27)
 - [ ] **Phase 167: Dated Readiness and Closeout** - Reconcile evidence and make a fresh, source-bounded six-condition decision.
 
 ## Phase Details
@@ -56,7 +56,7 @@ Plans:
   4. An operator can inspect a known source/index mismatch without mutation, then choose a manual backfill constrained by an explicit Ecto ID predicate; records outside that selected set remain unchanged.
   5. The exact returned Meilisearch task reaches terminal success on the expected index, and the same Scrypath search returns the repaired raw ID and projected value while control records retain their expected visibility.
 
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans executed
 
 Plans:
 **Wave 1**
@@ -66,7 +66,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 166-03-PLAN.md — Record exact-source host and repair evidence and disposition C-09 freshness.
+- [x] 166-03-PLAN.md — Record exact-source host and repair evidence and disposition C-09 freshness.
 
 ### Phase 167: Dated Readiness and Closeout
 
@@ -86,5 +86,5 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 165. Public Tenant and Facet Contracts | 2/2 | Complete    | 2026-09-26 |
-| 166. Host Tenant and Repair Evidence | 2/3 | In Progress|  |
+| 166. Host Tenant and Repair Evidence | 3/3 | Complete | 2026-09-27 |
 | 167. Dated Readiness and Closeout | 0/TBD | Not started | - |
