@@ -1,12 +1,10 @@
 ---
 phase: 165-public-tenant-and-facet-contracts
-verified: 2026-09-26T22:56:05Z
+verified: 2026-09-27T14:17:58Z
 status: passed
 score: 12/12 truths verified
 covered_files:
   - .planning/REQUIREMENTS.md
-  - .planning/ROADMAP.md
-  - .planning/STATE.md
   - .planning/phases/165-public-tenant-and-facet-contracts/165-01-PLAN.md
   - .planning/phases/165-public-tenant-and-facet-contracts/165-01-SUMMARY.md
   - .planning/phases/165-public-tenant-and-facet-contracts/165-02-PLAN.md
@@ -16,7 +14,6 @@ covered_files:
   - .planning/phases/165-public-tenant-and-facet-contracts/165-REVIEW.md
   - .planning/phases/165-public-tenant-and-facet-contracts/165-SECURITY.md
   - .planning/phases/165-public-tenant-and-facet-contracts/165-VALIDATION.md
-  - .planning/state.json
   - AGENTS.md
   - lib/scrypath/meilisearch/client.ex
   - lib/scrypath/meilisearch/query.ex
@@ -25,17 +22,23 @@ covered_files:
   - lib/scrypath/search/single.ex
   - test/scrypath/facet_values_contract_test.exs
   - test/scrypath/tenant_scope_contract_test.exs
-covered_digest: "v1:sha256:7be9816aa5d4534005578c8fd2303e90840d2df485850e0807581b2e2dfdd003"
+covered_digest: "v1:sha256:9eacbec10518a9c8673aa51ebcb9a0bf6111648ca17031709226b335755e40ba"
 behavior_unverified: 0
 overrides_applied: 0
+re_verification:
+  previous_status: stale
+  previous_score: 12/12
+  gaps_closed: []
+  gaps_remaining: []
+  regressions: []
 ---
 
 # Phase 165: Public Tenant and Facet Contracts Verification Report
 
 **Phase Goal:** Consumers can rely on Scrypath's existing public tenant-scope and facet-value input contracts, with corrections only for reproduced compatible defects.
-**Verified:** 2026-09-26T22:56:05Z
+**Verified:** 2026-09-27T14:17:58Z
 **Status:** passed
-**Re-verification:** No — initial verification
+**Re-verification:** Yes — freshness refresh; original behavior claims unchanged
 
 ## Goal Achievement
 
@@ -146,5 +149,13 @@ No phase-goal gaps found. EA-02 remains explicit: the test evidence establishes 
 
 ---
 
-_Verified: 2026-09-26T22:56:05Z_  
+_Verified: 2026-09-27T14:17:58Z_
 _Verifier: the agent (gsd-verifier)_
+
+## Verification Freshness Refresh — 2026-09-27
+
+The prior report was stale because its fingerprint included shared lifecycle files (`ROADMAP.md`, `STATE.md`, and `state.json`) that Phase 166 legitimately changed. They record current workflow position rather than Phase 165 behavior, so the refreshed fingerprint covers the Phase 165 plans, summaries, requirements, validation/security/review artifacts, implementation files, and focused test files without those volatile lifecycle files.
+
+The Phase 165 implementation and both contract test files are unchanged since candidate commit `384c8839db2f021db421d0beff096ee439fd721`. Reverification ran the focused tenant and facet suites: 17 tests, 0 failures. The current root fast-suite regression gate also passed 591 tests with 0 failures (84 excluded). The original 12/12 goal result remains supported; no Phase 165 implementation plans were repeated.
+
+_Freshness refresh: Codex orchestrator, inline_

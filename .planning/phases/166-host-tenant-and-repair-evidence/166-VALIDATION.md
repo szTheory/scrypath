@@ -1,7 +1,7 @@
 ---
 phase: "166"
 slug: "host-tenant-and-repair-evidence"
-status: complete
+status: validated
 nyquist_compliant: true
 wave_0_complete: true
 created: "2026-09-26"
@@ -89,3 +89,13 @@ All 11 plan assumption rows retain unresolved status; examples and passing recei
 Six descriptor-less prohibitions also remain unresolved: `P-166-HOST-01`, `P-166-HOST-02`, `P-166-REPAIR-01`, `P-166-REPAIR-02`, `P-166-PKG-04`, and `P-166-DELETE-01`. Preserve these flags for Phase 167; the structured receipt check does not resolve them.
 
 **Validation status:** Automated validation and source-bound evidence complete. No post-implementation human UAT is used as a software acceptance gate.
+
+## Validation Audit 2026-09-27
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+
+All six plan tasks remain mapped to passing automated or exact-source evidence. The phase regression gate also passed the current root fast suite in 22.8 seconds: 591 tests, 0 failures (84 excluded).

@@ -11,7 +11,7 @@
     {
       "number": "166",
       "name": "Host Tenant and Repair Evidence",
-      "status": "in_progress"
+      "status": "complete"
     },
     {
       "number": "167",
@@ -21,8 +21,8 @@
   ],
   "next": {
     "command": "/gsd:progress --next",
-    "label": "Advance to the next step",
-    "reason": "Phase 166 of 3 · executing"
+    "label": "Advance to the next step (plan phase 167)",
+    "reason": "Phase 167 of 3 — needs a plan"
   },
-  "updated_at": "2026-09-27T12:59:57.794Z"
+  "updated_at": "2026-09-27T14:14:41.092Z"
 }

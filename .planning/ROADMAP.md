@@ -86,5 +86,5 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 165. Public Tenant and Facet Contracts | 2/2 | Complete    | 2026-09-26 |
-| 166. Host Tenant and Repair Evidence | 3/3 | Complete | 2026-09-27 |
+| 166. Host Tenant and Repair Evidence | 3/3 | Complete    | 2026-09-27 |
 | 167. Dated Readiness and Closeout | 0/TBD | Not started | - |
