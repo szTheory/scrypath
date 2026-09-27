@@ -1,6 +1,6 @@
 ---
 phase: 165-public-tenant-and-facet-contracts
-verified: 2026-09-27T14:17:58Z
+verified: 2026-09-27T23:27:13Z
 status: passed
 score: 12/12 truths verified
 covered_files:
@@ -17,16 +17,17 @@ covered_files:
   - AGENTS.md
   - lib/scrypath/meilisearch/client.ex
   - lib/scrypath/meilisearch/query.ex
+  - lib/scrypath/options/search.ex
   - lib/scrypath/search/facet_values.ex
   - lib/scrypath/search/many.ex
   - lib/scrypath/search/single.ex
   - test/scrypath/facet_values_contract_test.exs
   - test/scrypath/tenant_scope_contract_test.exs
-covered_digest: "v1:sha256:9eacbec10518a9c8673aa51ebcb9a0bf6111648ca17031709226b335755e40ba"
+covered_digest: "v1:sha256:634b1095fb929517c65789b79a385968e9237413b92909eb684357c3d4d88738"
 behavior_unverified: 0
 overrides_applied: 0
 re_verification:
-  previous_status: stale
+  previous_status: passed
   previous_score: 12/12
   gaps_closed: []
   gaps_remaining: []
@@ -36,9 +37,9 @@ re_verification:
 # Phase 165: Public Tenant and Facet Contracts Verification Report
 
 **Phase Goal:** Consumers can rely on Scrypath's existing public tenant-scope and facet-value input contracts, with corrections only for reproduced compatible defects.
-**Verified:** 2026-09-27T14:17:58Z
+**Verified:** 2026-09-27T23:27:13Z at source HEAD `03d8e63de5f0c60e5bd46d29ba375b1770b6b7cc`.
 **Status:** passed
-**Re-verification:** Yes — freshness refresh; original behavior claims unchanged
+**Verification mode:** Initial goal-backward pass. The prior report had no `gaps:` section; its canonical freshness was stale.
 
 ## Goal Achievement
 
@@ -46,116 +47,112 @@ re_verification:
 
 | # | Truth | Status | Evidence |
 |---|---|---|---|
-| 1 | Through `search/3`, `search_many/2`, and `search_facet_values/4`, declared tenant scope composes with ordinary filters; conflicting and undeclared tenant inputs fail before backend dispatch. | VERIFIED | `tenant_scope_contract_test.exs` actively exercises each public path, shared multi-search options, equal and conflicting collisions, undeclared schema, and valid-then-invalid multi-entry preflight. Current focused run: 9 tests, 0 failures. All three runtime option extractors drop `:tenant_scope` only after validation has composed it into the query filter. |
-| 2 | Public facet defaults and keyword filters reach a Meilisearch v1.15-compatible facet request; only a reproduced compatible defect receives a correction and regression. | VERIFIED | `facet_values_contract_test.exs` enters via public `search_facet_values/4`, observes the encoded POST body, checks defaults and a rendered keyword predicate, and checks quote/backslash escaping. Current focused run: 8 tests, 0 failures. `Client.facet_search/5` delegates keyword rendering to the existing common filter renderer. The pinned v1.15 parser evidence recorded in `165-RESEARCH.md` says unknown search keys are ignored; defaults alone were not misclassified as invalid. The live/package check for this reproduced keyword scenario is explicitly handed to Phase 166; Phase 165 claims request construction and pinned-parser compatibility, not live service acceptance. |
-| 3 | Declared tenant scope and an ordinary status filter reach the backend through all three paths. | VERIFIED | Recorder assertions inspect both predicates in single search, shared multi-search, and facet callback options; Req.Test also decodes both predicates in the facet request. |
-| 4 | Omitted and explicitly empty ordinary filters retain tenant scope, while the ordinary-filter example retains both predicates. | VERIFIED | The public-path loop exercises omitted and `filter: []` for all paths; normalized filters are compared by predicate meaning. |
-| 5 | Equal-valued and conflicting tenant collisions, plus tenant scope on a schema without a declared tenant field, fail before dispatch. | VERIFIED | Tests assert the collision/declaration error messages, path-specific error forms, and absence of recorder messages. |
-| 6 | Single/facet validation retains `ArgumentError`; multi-search returns the schema-associated `validation_failed` tuple and preflights every entry. | VERIFIED | Named active tests assert both return shapes and prove that a valid first entry is not dispatched when a later entry is invalid. |
-| 7 | C10-R1 is classified from executed public calls and production changes are limited to reproduced compatible failures. | VERIFIED | Plan 01 records pre-fix public failures at the runtime configuration seam and corrections in only the three runtime extractors; current source preserves the normalized filter and strict config validation. Regression probes pass. |
-| 8 | Facet defaults reach the expected endpoint with requested `facetName`, `facetQuery`, valid encoded defaults, and a decorated facet result. | VERIFIED | The default test checks POST path, decoded fields, `filter: []`, and the resulting bucket value/count and facet query. |
-| 9 | A nonempty documented keyword filter reaches the facet endpoint as a rendered expression through the real adapter. | VERIFIED | The public test sends `filter: [status: "published"]`; Req.Test captures decoded JSON with `status = "published"`. The recorded pre-fix baseline failed JSON encoding on the raw tuple; the focused regression passes after renderer reuse. |
-| 10 | Tenant scope plus an ordinary facet filter retains both predicates in the encoded request. | VERIFIED | Public Req.Test assertion checks both the status and tenant expressions in the encoded request filter. |
-| 11 | Invalid common filters fail before HTTP; HTTP/transport failures preserve error tuples and bang errors without unfiltered fallback. | VERIFIED | Active cases assert no request for invalid boolean composition, inspect the submitted filter on HTTP/timeout failures, assert one request, and retain the `Search.Error` reason for the bang wrapper. |
-| 12 | Defaults and keyword outcomes are classified separately; unknown default keys alone do not imply parser rejection. | VERIFIED | Defaults pass the encoded request probe without a source correction; the reproduced keyword serialization defect receives the narrow correction. Research cites the pinned Meilisearch 1.15 behavior, and the summaries avoid claiming live acceptance from Req.Test. |
+| 1 | `tenant_scope:` composes with ordinary filters through `search/3`, shared-option `search_many/2`, and `search_facet_values/4`; collision and undeclared-scope inputs fail before dispatch. | VERIFIED | `tenant_scope_contract_test.exs` exercises the three public paths, records dispatched filters, and asserts no dispatch on invalid calls. Included in the focused run below. |
+| 2 | Public facet defaults and keyword filters reach the facet endpoint in a Meilisearch-compatible request shape; only a reproduced compatible defect receives a correction and regression. | VERIFIED | The public Req.Test suite decodes the POST body for defaults, keyword filters, escaped values, and tenant composition. The independent baseline and narrow regression are documented in Plan 02's summary. This proves local request construction, not live service acceptance. |
+| 3 | Declared tenant scope and ordinary status reach the backend together through all three paths. | VERIFIED | Recorder assertions observe normalized filter predicates for single, multi, and facet search. |
+| 4 | Omitted and explicitly empty ordinary filters preserve tenant scope. | VERIFIED | Public-path loop covers omitted and `filter: []` for single, multi, and facet paths. |
+| 5 | Equal/conflicting collisions and tenant scope on a schema without a tenant field fail before backend dispatch. | VERIFIED | Active cases assert public error shapes and absence of recorder messages for both collision values and undeclared schema. |
+| 6 | Single/facet validation preserves `ArgumentError`; multi-search preserves its schema-associated validation tuple and preflights all entries. | VERIFIED | Named tests assert both error forms and show a valid first entry is not dispatched when a later entry is invalid. |
+| 7 | Tenant-scope correction is limited to the reproduced runtime-option defect. | VERIFIED | Current Single, Many, and FacetValues runtime option extractors exclude `:tenant_scope` only after validation; the validated filter reaches the backend. The phase's reproduction/regression test passes. |
+| 8 | Facet defaults use the expected endpoint and return a decorated facet result. | VERIFIED | Test asserts POST path, decoded `facetName`, `facetQuery`, and `filter: []`, then checks the returned bucket and query. |
+| 9 | A documented nonempty keyword filter reaches the endpoint as a rendered expression through the real adapter. | VERIFIED | Public call is handled by `Scrypath.Meilisearch`; Req.Test decodes `status = "published"` from the actual request body. |
+| 10 | Tenant scope and an ordinary facet filter both remain in the encoded request. | VERIFIED | Public Req.Test assertion finds both `status = "published"` and `tenant_id = 123`. |
+| 11 | Invalid filters fail before HTTP; HTTP/transport errors preserve public errors without unfiltered fallback. | VERIFIED | Active tests cover preflight, HTTP 400, timeout, and bang-wrapper 503 behavior; error requests preserve the filter and are observed once. |
+| 12 | Defaults and keyword inputs are classified separately, without treating unknown defaults alone as parser rejection. | VERIFIED | Defaults are accepted at the encoded-request boundary; keyword tuple serialization was independently reproduced and fixed by reusing the common filter renderer. Research and summaries distinguish Req.Test construction from live parser/service proof. |
 
-**Score:** 12/12 truths verified (0 present, behavior-unverified)
+**Score:** 12/12 truths verified (0 behavior-unverified).
 
 ### Required Artifacts
 
 | Artifact | Expected | Status | Details |
 |---|---|---|---|
-| `test/scrypath/tenant_scope_contract_test.exs` | Public tenant composition/rejection contract | VERIFIED | Exists, substantive, called through public API; 9 tests pass locally. |
-| `lib/scrypath/search/single.ex` | Single search separates validated search inputs from runtime config | VERIFIED | Runtime option extraction excludes `:tenant_scope`; public regression test exercises it. |
-| `lib/scrypath/search/many.ex` | Multi-search shared tenant config and complete preflight | VERIFIED | Drops `:tenant_scope` from runtime config; validates all entries before dispatch. |
-| `lib/scrypath/search/facet_values.ex` | Facet orchestration with validated options | VERIFIED | Excludes validated tenant option from runtime config; recorder sees composed filter. |
-| `test/scrypath/facet_values_contract_test.exs` | Public defaults, keyword rendering and error behavior | VERIFIED | Exists, substantive and reaches Req.Test through public API; 8 tests pass locally. |
-| `lib/scrypath/meilisearch/client.ex` | Facet HTTP request construction and normalization | VERIFIED | Builds facet endpoint request and renders keyword filters before JSON encoding. |
-| `lib/scrypath/meilisearch/query.ex` | Reusable common filter grammar and JSON literal encoding | VERIFIED | `render_common_filter/1` reuses the existing query renderer and JSON encoder. |
+| `test/scrypath/tenant_scope_contract_test.exs` | Independent public tenant contract | VERIFIED | Substantive recorder tests call the public API and inspect dispatched query/filter values. |
+| `lib/scrypath/search/single.ex` | Validated search data separated from runtime config | VERIFIED | Excludes `:tenant_scope` from runtime config after validation; public regression exercises the path. |
+| `lib/scrypath/search/many.ex` | Shared tenant config and complete preflight | VERIFIED | Excludes search-only options from runtime config and validates all entries before dispatch. |
+| `lib/scrypath/search/facet_values.ex` | Facet orchestration with validated inputs | VERIFIED | Excludes `:tenant_scope` from runtime config; recorder observes composed filter. |
+| `test/scrypath/facet_values_contract_test.exs` | Public defaults, keyword rendering, and error proof | VERIFIED | Substantive Req.Test suite enters through `search_facet_values/4` and decodes actual request bodies. |
+| `lib/scrypath/meilisearch/client.ex` | Facet HTTP request construction | VERIFIED | Builds the facet endpoint payload and routes keyword filter input through the common renderer. |
+| `lib/scrypath/meilisearch/query.ex` | Shared filter grammar and literal encoding | VERIFIED | Internal renderer reuses the existing query filter grammar and JSON literal encoding. |
 
-All listed PLAN artifacts passed `verify.artifacts` (7/7). No artifact is a stub or orphan.
+Both plan artifact checks passed: Plan 01 4/4; Plan 02 3/3. No artifact is missing, stubbed, or orphaned.
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 |---|---|---|---|---|
-| `tenant_scope_contract_test.exs` | `options/search.ex` | Public validation injects tenant into filter | WIRED | Pattern check passes; recorder confirms actual dispatch options. |
-| `search/many.ex` | `tenant_scope_contract_test.exs` | Shared tenant option traverses runtime extraction | WIRED | Pattern check passes; shared-option public test observes the filter. |
-| `search/facet_values.ex` | `tenant_scope_contract_test.exs` | Recorder observes validated facet callback options | WIRED | Pattern check passes; callback assertion checks both predicates. |
-| `facet_values_contract_test.exs` | `search/facet_values.ex` | Public API path | WIRED | Every facet contract case invokes `Scrypath.search_facet_values/4`. |
-| `meilisearch.ex` | `meilisearch/client.ex` | Adapter invokes `facet_search/5` | WIRED | Adapter's configured client call and endpoint are present. |
-| `meilisearch/client.ex` | `facet_values_contract_test.exs` | Req.Test observes encoded HTTP | WIRED | Test checks POST URL and decodes the request body. |
+| `tenant_scope_contract_test.exs` | `options/search.ex` | Public validation injects declared tenant scope | WIRED | Plan 01 key-link query verified; recorder observes dispatched predicates. |
+| `search/many.ex` | `tenant_scope_contract_test.exs` | Shared tenant option survives runtime extraction | WIRED | Plan 01 key-link query verified; shared-option test observes it. |
+| `search/facet_values.ex` | `tenant_scope_contract_test.exs` | Validated facet callback options reach recorder | WIRED | Plan 01 key-link query verified; callback assertion checks both predicates. |
+| `facet_values_contract_test.exs` | `search/facet_values.ex` | Public API path | WIRED | Plan 02 key-link query verified; cases invoke `Scrypath.search_facet_values/4`. |
+| `meilisearch.ex` | `meilisearch/client.ex` | Adapter invokes configured facet client | WIRED | Plan 02 key-link query verified; adapter call and endpoint are present. |
+| `meilisearch/client.ex` | `facet_values_contract_test.exs` | Req.Test observes encoded HTTP | WIRED | Plan 02 key-link query verified; tests decode request bodies. |
 
-Both plans' key-link checks passed (6/6).
+Both plans' key-link checks passed: 6/6.
 
 ### Data-Flow Trace (Level 4)
 
 | Artifact | Data variable | Source | Produces real data | Status |
 |---|---|---|---|---|
-| Tenant public search paths | `filter` | Caller options, validated against schema metadata; tenant criterion is inserted by `Options.Search.validate/4` | Yes; tests inspect recorder callback input | FLOWING |
-| Facet request | `filter` | Public options → schema validation → facet orchestration → Meilisearch client → Req JSON body | Yes; tests decode actual serialized body | FLOWING |
-| Facet result | facet hits/query | Req.Test response used by real adapter/result decorator | Deterministic test response, appropriate at this contract boundary | FLOWING |
+| Tenant public search paths | `filter` | Caller options validated against schema metadata; tenant criterion is injected before query dispatch | Yes; recorder observes callback/query arguments | FLOWING |
+| Facet request | `filter` | Public options → validation → orchestration → Meilisearch client → encoded Req body | Yes; test decodes actual serialized request | FLOWING |
+| Facet result | hits/query | HTTP response decoded and decorated by the real adapter path | Test response supplies deterministic boundary input | FLOWING |
 
-No value terminates in a static production return or hardcoded call-site prop. Test responses are local inputs at the external HTTP boundary, not substitutes for the production request path.
+The repository's scope boundaries remain explicit: tenant composition does not establish host identity, authorization, trusted tenant selection, or database response scoping. Req.Test does not establish live service or package acceptance.
 
 ### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
 |---|---|---|---|
-| Tenant public contracts across all paths | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 mix test test/scrypath/tenant_scope_contract_test.exs` | 9 tests, 0 failures | PASS |
-| Facet public HTTP contracts | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 mix test test/scrypath/facet_values_contract_test.exs` | 8 tests, 0 failures | PASS |
-
-The supplied exact-candidate hosted closeout is for SHA `384c8839db2f021db421d0dbeff096ee439fd721`, matching this checkout. Workflow run [36277023698](https://github.com/szTheory/scrypath/actions/runs/36277023698) reports five required jobs, advisory coverage, and closeout attestation succeeded; recorded immutable coverage and closeout artifact digests are `sha256:4f1133b5af6a9e61ea5ee7fa013aa49b96e5dd2a1abc7f24e8b8cd7f9c6f12ce` and `sha256:c50b60190690ae233dded02a9cbe1239eaf815b325129908359b4a1dcf9587a0`.
+| Tenant and facet public contracts | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 mix test test/scrypath/tenant_scope_contract_test.exs test/scrypath/facet_values_contract_test.exs` | 17 tests, 0 failures at `03d8e63de5f0c60e5bd46d29ba375b1770b6b7cc` | PASS |
 
 ### Probe Execution
 
-Not applicable. This is a library contract phase; its plans and roadmap criteria do not declare script probes.
+Not applicable. Neither roadmap criterion nor plan declares a script probe; this is a library API contract phase.
 
 ### Requirements Coverage
 
-| Requirement | Source plan | Description | Status | Evidence |
+| Requirement | Source Plan | Description | Status | Evidence |
 |---|---|---|---|---|
-| API-01 | `165-01-PLAN.md` | Tenant scope composes across public search paths; invalid scope rejects before dispatch. | SATISFIED | Tenant contract file passes 9 tests; source and recorder wiring verified. |
-| API-02 | `165-02-PLAN.md` | Public facet defaults/keyword filters produce compatible request construction and preserve errors. | SATISFIED | Facet contract file passes 8 tests; encoded request/body and error behavior verified. |
+| API-01 | `165-01-PLAN.md` | Tenant scope composes across public search paths; invalid scope rejects before dispatch. | SATISFIED | Public recorder tests cover each path, filter composition, rejection, and preflight; all pass. |
+| API-02 | `165-02-PLAN.md` | Public facet inputs produce compatible request construction and preserve established errors. | SATISFIED | Public Req.Test assertions decode defaults, keyword filters, tenant composition, and error paths; all pass. |
 
-No additional requirements map to Phase 165 in `REQUIREMENTS.md`; no orphaned requirements found.
+No other requirements map to Phase 165; no orphaned requirements found.
+
+### Prohibition Checks
+
+| Prohibition | Status | Evidence |
+|---|---|---|
+| Do not represent tenant filter composition as authentication, authorization, trusted tenant selection, or database response scoping. | VERIFIED | Plan 01 summary explicitly keeps identity/membership and authorization host-owned; tests assert only composition/rejection at the library boundary. |
+| Do not represent Req.Test or ignored default fields as live-service acceptance or broad compatibility. | VERIFIED | Plan 02 summary explicitly limits Req.Test to request construction/error propagation and hands the exact live/package scenario to Phase 166 conditionally. |
 
 ### Test Quality Audit
 
-| Test file | Linked requirement | Active | Skipped | Circular | Assertion level | Verdict |
-|---|---|---:|---:|---:|---|---|
+| Test File | Linked Req | Active | Skipped | Circular | Assertion Level | Verdict |
+|---|---|---:|---:|---|---|---|
 | `tenant_scope_contract_test.exs` | API-01 | 9 | 0 | No | Behavioral/value | PASS |
 | `facet_values_contract_test.exs` | API-01, API-02 | 8 | 0 | No | Behavioral/value | PASS |
 
-The tests use independent expected predicates and encoded request literals; they do not derive expected values by calling the implementation under test. Disabled-test scan found none.
+Disabled-test scan found none. Expected predicates and encoded literals are asserted independently of the production renderer; no circular fixture generation found. No test-quality blocker or insufficient assertion finding.
 
 ### Anti-Patterns Found
 
 | File | Line | Pattern | Severity | Impact |
 |---|---:|---|---|---|
-| — | — | None found in the phase implementation or contract tests | — | No unresolved debt markers, placeholders, or empty production implementations. |
+| — | — | No debt markers, placeholders, or empty production implementations found in phase implementation/test files. | — | None |
 
 ### Human Verification Required
 
-None. Automated tests resolve the phase's library boundary claims. The deferred live/package facet scenario is scoped to Phase 166; it is not routine UAT required to decide Phase 165's stated request-construction goal.
+N/A — infrastructure/library contract phase with no user-facing UX. The success criteria are resolved by focused executable tests and source wiring. Live Meilisearch/package acceptance is outside these criteria and is separately claim-bounded in the artifacts.
 
 ### Decision Coverage
 
-All trackable CONTEXT decisions honored (7/7). The decision-coverage check is non-blocking; no decisions were missing from shipped artifacts.
+All trackable CONTEXT decisions honored (7/7). `check.decision-coverage-verify` returned `blocking: false`, `not_honored: []`.
 
 ### Gaps Summary
 
-No phase-goal gaps found. EA-02 remains explicit: the test evidence establishes synchronous request construction and bounded error propagation, not interruption or parallel backend execution semantics. The Phase 166 handoff to run the corrected facet keyword scenario against its live Meilisearch/package workflow is consistent with this phase boundary: Phase 165 proves the public construction contract and a compatible narrow correction, while Phase 166 owns host/package service evidence. The code does not claim live service acceptance from Req.Test.
+No Phase 165 goal gaps found. The tests prove tenant filter composition/rejection and public facet request construction/error behavior. They do not claim tenant authorization or live-service acceptance. The Phase 166 service/package handoff remains explicit and conditional on the reproduced keyword correction.
 
 ---
 
-_Verified: 2026-09-27T14:17:58Z_
-_Verifier: the agent (gsd-verifier)_
-
-## Verification Freshness Refresh — 2026-09-27
-
-The prior report was stale because its fingerprint included shared lifecycle files (`ROADMAP.md`, `STATE.md`, and `state.json`) that Phase 166 legitimately changed. They record current workflow position rather than Phase 165 behavior, so the refreshed fingerprint covers the Phase 165 plans, summaries, requirements, validation/security/review artifacts, implementation files, and focused test files without those volatile lifecycle files.
-
-The Phase 165 implementation and both contract test files are unchanged since candidate commit `384c8839db2f021db421d0beff096ee439fd721`. Reverification ran the focused tenant and facet suites: 17 tests, 0 failures. The current root fast-suite regression gate also passed 591 tests with 0 failures (84 excluded). The original 12/12 goal result remains supported; no Phase 165 implementation plans were repeated.
-
-_Freshness refresh: Codex orchestrator, inline_
+_Verified: 2026-09-27T23:27:13Z_
+_Verifier: gsd-verifier_

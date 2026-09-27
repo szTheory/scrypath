@@ -1,10 +1,9 @@
 ---
 phase: 166-host-tenant-and-repair-evidence
-verified: 2026-09-27T14:12:19Z
+verified: 2026-09-27T23:53:07Z
 status: passed
-score: 5/5 must-haves verified
+score: 5/5 roadmap success criteria verified
 covered_files:
-
   - .planning/REQUIREMENTS.md
   - .planning/phases/166-host-tenant-and-repair-evidence/166-01-PLAN.md
   - .planning/phases/166-host-tenant-and-repair-evidence/166-01-SUMMARY.md
@@ -12,20 +11,22 @@ covered_files:
   - .planning/phases/166-host-tenant-and-repair-evidence/166-02-SUMMARY.md
   - .planning/phases/166-host-tenant-and-repair-evidence/166-03-PLAN.md
   - .planning/phases/166-host-tenant-and-repair-evidence/166-03-SUMMARY.md
+  - .planning/phases/166-host-tenant-and-repair-evidence/166-EVIDENCE.json
+  - .planning/phases/166-host-tenant-and-repair-evidence/166-EVIDENCE.md
+  - .planning/phases/166-host-tenant-and-repair-evidence/166-REVIEW.md
   - examples/phoenix_meilisearch/README.md
   - examples/phoenix_meilisearch/lib/scrypath_demo/blog.ex
   - examples/phoenix_meilisearch/lib/scrypath_demo/blog/post.ex
   - examples/phoenix_meilisearch/priv/repo/migrations/20260927000000_add_host_memberships_and_post_tenants.exs
   - examples/phoenix_meilisearch/test/scrypath_demo/blog_tenant_search_test.exs
+  - examples/phoenix_meilisearch/test/smoke/meilisearch_tenant_stack_test.exs
   - examples/phoenix_meilisearch/test/smoke/meilisearch_oban_stack_test.exs
   - examples/phoenix_meilisearch/test/smoke/meilisearch_related_inline_stack_test.exs
   - examples/phoenix_meilisearch/test/smoke/meilisearch_related_oban_stack_test.exs
   - examples/phoenix_meilisearch/test/smoke/meilisearch_stack_test.exs
-  - examples/phoenix_meilisearch/test/smoke/meilisearch_tenant_stack_test.exs
   - examples/phoenix_meilisearch/test/support/meilisearch_test_index.ex
   - test/scrypath/live_operator_verification_test.exs
-
-covered_digest: "v1:sha256:917ae3c28768ecf4963d358f7661621de8dbb11a783f906bf6be31c77fca3415"
+covered_digest: "v1:sha256:9af7ff511b087f039c4bd6939063a3c8df4adf9a970026266dab179e52fe19c2"
 behavior_unverified: 0
 overrides_applied: 0
 ---
@@ -33,81 +34,72 @@ overrides_applied: 0
 # Phase 166: Host Tenant and Repair Evidence Verification Report
 
 **Phase Goal:** A Phoenix host can demonstrate one authorized tenant-search workflow and one bounded repair through visible search without broadening product or CI scope.
-**Verified:** 2026-09-27T14:12:19Z
+**Verified:** 2026-09-27T23:53:07Z
 **Status:** passed
+**Re-verification:** No — initial-mode refresh; the prior report had no `gaps:` section.
 
 ## Goal Achievement
 
 ### Observable Truths
 
-| # | Truth | Status | Evidence |
-|---|-------|--------|----------|
-| 1 | The named Phoenix host derives tenant scope from persisted membership and rejects missing membership, unowned tenant selection, and caller-controlled scope/runtime input before dispatch. | ✓ VERIFIED | `blog.ex` derives scope through the persisted actor/membership join, validates allowlisted inputs, and hydrates by tenant plus returned IDs. Recorder cases prove rejected input produces no search/facet dispatch; the named live scenario passed. Authentication and trusted-principal creation remain host-owned. |
-| 2 | In the selected mixed-tenant scenario, both authorized tenants see their permitted raw IDs, separately scoped hydrated rows, counts, categories, and facet values without the other tenant's marker. | ✓ VERIFIED | `meilisearch_tenant_stack_test.exs` checks A and B symmetrically, including raw IDs, `totalHits`, hydration, categories, facet values, and marker exclusion. The named Postgres/Meilisearch path scenario passed in local and hosted execution. |
-| 3 | The same named host scenario succeeds through the path dependency and a fresh local package artifact, while C-09 is reused only for its bounded hard-delete claim after relevant-path review. | ✓ VERIFIED | `166-EVIDENCE.json` binds path, package, and root repair receipts to implementation SHA `50d5c12d36ec560525e245bcb992c40e5927854f`, run `36321613553`, and named jobs/markers. Package provenance is a freshly built locally tagged artifact, not Hex publication. The C-09 comparison accounts for all 16 relevant changed paths and preserves its raw-hit claim limits. |
-| 4 | The operator can observe the known mismatch without mutation and restrict manual repair to an explicit Ecto ID selection while controls remain unchanged. | ✓ VERIFIED | `live_operator_verification_test.exs` calibrates request observation, compares full task snapshots around report-only reconcile, applies `where id in selected_ids`, and preserves source-only and already-visible controls. The hosted backend job contains the named repair scenario. |
-| 5 | Each returned repair task reaches terminal success on the selected index, then the same Scrypath query returns the selected raw ID and projection; one repeat succeeds and an empty selection submits no task. | ✓ VERIFIED | The integration test asserts both task UIDs, success states and index IDs independently from the raw search result, repeats the fixed selection with a new task, and asserts empty selection makes no requests. `166-EVIDENCE.json` records the hosted task and raw-result observations. |
+| # | Roadmap truth | Status | Evidence |
+|---|---|---|---|
+| 1 | The named host derives scope from trusted actor membership and rejects missing membership, forged selection, and caller-controlled overrides before search. | ✓ VERIFIED | Current `Blog` context performs a persisted actor/membership join, validates allowlisted params, constructs tenant/filter options, and dispatches only afterward. Current recorder test exercises an authorized positive control and invalid principal, unowned tenant, string/atom override, and malformed-input rejection with no dispatch. Local run: 5 tests, 0 failures. The synthetic principal represents upstream authentication; no Scrypath authentication claim is made. |
+| 2 | The mixed-tenant workflow exposes only permitted IDs and metadata, with the second tenant as a positive control and no foreign marker in raw hits, hydration, counts, or facets. | ✓ VERIFIED | The live scenario independently asserts raw hits, total hits, host records, categories, facet values, and foreign/draft-marker absence for A and B. Exact hosted path receipt at source `50d5c12d36ec560525e245bcb992c40e5927854f`, run `36321613553`, Phoenix job `108626420623`, records 16 tests/0 failures and the named marker. Current local Meilisearch was unavailable, so this hosted receipt—not a local rerun—is the service evidence. |
+| 3 | The named flow passes through repository path and fresh package artifact; C-09 reuse is limited to a source-reviewed bounded claim or recorded unknown. | ✓ VERIFIED | Run `36321613553`, job `108626420623`, contains successful path and package executions at `50d5c12d36ec560525e245bcb992c40e5927854f`; package provenance is a freshly built local artifact resolved through a temporary tagged Git dependency, not Hex/public registry installation. The historical delete receipt remains tied to `dc400b2b57aec0ca6b0ef16c9477d266fd41a433`; its comparison source is `50d5c12d36ec560525e245bcb992c40e5927854f`. The 16-path ledger bounds reuse to the ecommerce hard-delete raw-hit claim. No receipt is reassigned to the later source. |
+| 4 | The operator observes a known mismatch without mutation and bounds manual backfill with an explicit Ecto ID predicate, preserving controls. | ✓ VERIFIED | Current repair test uses `where id in ^selected_ids`, observes reconcile requests and task snapshots, and checks source-only/already-visible controls. Exact-source hosted backend receipt in run `36321613553`, job `108626420717`, records 3 reads/0 mutations and the selected ID. |
+| 5 | The exact returned task succeeds on the expected index and the same search shows the repaired projection while controls remain correct. | ✓ VERIFIED | The live test correlates returned task UIDs to succeeded state and index, then checks the same raw query; it also tests one fixed-scope repeat and empty-selection no-op. Hosted receipt records task UIDs 31/32 succeeded on `scrypath-op-5154_queryable_post`, target ID `166000040`, and 4 tests/0 failures at source `50d5c12d36ec560525e245bcb992c40e5927854f`. |
 
-**Score:** 5/5 phase success criteria verified (0 behavior-unverified).
+**Score:** 5/5 roadmap truths verified (0 behavior-unverified).
 
-## Required Artifacts
+### Required Artifacts and Wiring
 
-| Artifact | Expected | Status | Evidence |
-|----------|----------|--------|----------|
-| `blog.ex`, Post schema, and additive migration | Membership-derived host scope, scoped hydration, projected tenant/category fields, persisted test membership | ✓ EXISTS + SUBSTANTIVE | Source paths and recorder/live tests listed in the plan and validation map. |
-| Host recorder and live integration scenarios | Pre-dispatch rejection plus A/B raw, hydration, count, and facet proof | ✓ EXISTS + SUBSTANTIVE | Recorder suite and named `authorized tenant search and facet values` scenario; path and package receipts recorded. |
-| Root repair integration scenario | Read-only report, ID-bounded repair, exact task and raw-search controls | ✓ EXISTS + SUBSTANTIVE | Named `bounded manual repair restores the selected raw document` scenario and empty-selection case. |
-| `166-EVIDENCE.md` and `.json` | Source-bound host/path/package/repair receipts and bounded C-09 disposition | ✓ EXISTS + SUBSTANTIVE | Schema-checked receipt record with run/job identities, safe scenario output, source comparison, and claim limits. |
-| `166-VALIDATION.md` and `166-SECURITY.md` | Task-level validation mapping and resolved ASVS L1 threat register | ✓ EXISTS + SUBSTANTIVE | Six task rows remain backed by pass evidence; all 16 planned threats have a documented disposition and `threats_open: 0`. |
+| Artifact/link | Status | Evidence |
+|---|---|---|
+| Persisted actors/memberships and additive tenant/category migration | ✓ VERIFIED | Migration defines non-null membership foreign key, tenant ID, unique actor/tenant index, and nullable post tenant/category columns; DataCase recorder tests insert and query the persisted rows. |
+| Host tenant search and facet context | ✓ VERIFIED | Public `Scrypath.search/3` and `search_facet_values/4` receive freshly assembled membership-derived options. Host hydration queries by tenant AND returned IDs and retains the original raw response. |
+| Mixed-tenant live scenario | ✓ VERIFIED | Test creates declared filter/facet settings, awaits setup and write tasks, queries B as a positive control, then asserts A/B raw, hydrated, count, ordinary-facet, and facet-value results. Success marker is emitted after assertions. |
+| Bounded repair scenario | ✓ VERIFIED | Public backfill consumes an explicit Ecto selection; each actual returned task is awaited and checked before the same public search is used as visibility oracle. Existing backend runner names this test module. |
+| Exact-source evidence record | ✓ VERIFIED | `166-EVIDENCE.json` ties every host/package/repair run and job to source `50d5c12d36ec560525e245bcb992c40e5927854f`, includes safe named output, and preserves runtime, service, and package provenance. |
 
-**Artifacts:** 5/5 verified.
+### Current-source identity check
 
-## Key Link Verification
+The receipts are not current-HEAD receipts. `50d5c12` is their measured implementation source; the final-source SHA is `03d8e63de5f0c60e5bd46d29ba375b1770b6b7cc`; current HEAD is `106e158b18f70eefd3a0b99a2620615a5e0670fb`. The relevant source-path diff from `50d5c12` to `03d8e63` contains no implementation changes (the added Phase 166 review report is documentation); `03d8e63..HEAD` adds no relevant source change. Thus the receipts remain applicable to the same implementation, while their source identity remains `50d5c12`. This report does not claim the hosted service scenarios ran at `03d8e63` or `106e158`.
 
-| From | To | Via | Status | Evidence |
-|------|----|-----|--------|----------|
-| Host membership context | Public Scrypath search/facet APIs | Trusted membership scope plus allowlisted inputs | ✓ WIRED | Recorder assertions inspect the composed tenant/status/category filters; live scenario runs the public functions. |
-| Host raw search results | Postgres hydration | Tenant and returned-ID predicates | ✓ WIRED | Source query and separate raw/hydrated assertions prove neither layer masks the other. |
-| Repair integration test | Public backfill and task waiter | Explicit selected-ID Ecto query and exact returned task references | ✓ WIRED | Test asserts document/batch counts, UIDs, terminal states, expected index, and same-query raw visibility. |
-| Evidence JSON | Named scenarios and historical C-09 source | Source/run/job metadata and full relevant-path comparison | ✓ WIRED | Validation and evidence records map every receipt and every changed relevant path. |
+### Focused Local Checks
 
-**Wiring:** 4/4 connections verified.
+| Behavior | Command/result | Status |
+|---|---|---|
+| Persisted-membership policy, rejection-before-dispatch, raw/hydration separation | `cd examples/phoenix_meilisearch && ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 mix test test/scrypath_demo/blog_tenant_search_test.exs --trace` — 5 tests, 0 failures | ✓ PASS |
+| Public tenant-scope and facet filter contracts | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 mix test test/scrypath/tenant_scope_contract_test.exs test/scrypath/facet_values_contract_test.exs` — 17 tests, 0 failures | ✓ PASS |
+| Local service-backed rerun | Existing service ports 55433 (Postgres 16) and 7700 (Meilisearch 1.15) were closed; no service was started. Hosted exact-source receipts above remain the service evidence. | ? NOT RUN |
 
-## Regression Gate
+### Requirements Coverage
 
-`ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 mix test --exclude integration --exclude docs_contract` passed in 22.8 seconds: 591 tests, 0 failures (84 excluded). The result includes Phase 165's tenant and facet contract suites. Phase 166's service-backed acceptance is supported by its recorded exact-source hosted receipts; this run does not claim to rerun the external service scenarios.
+| Requirement | Status | Evidence and claim boundary |
+|---|---|---|
+| HOST-01 | ✓ SATISFIED | Persisted membership-derived scope and pre-dispatch rejection in the named Phoenix host only; authentication remains upstream. |
+| HOST-02 | ✓ SATISFIED | Selected deterministic mixed-tenant corpus with independently asserted raw/hydrated/count/facet surfaces and positive control. |
+| PKG-04 | ✓ SATISFIED | Same named scenario passed against repository path and a fresh local package artifact at `50d5c12`; not public registry installation. |
+| REPAIR-01 | ✓ SATISFIED | Known mismatch is a fixture precondition; report path is read-only and selected-ID predicate bounds the one repair workflow. |
+| REPAIR-02 | ✓ SATISFIED | Exact tasks, terminal state, expected index, visible raw projection, bounded repeat, and empty-selection no-op are recorded. |
+| DELETE-01 | ✓ SATISFIED | Historical receipt reused only at its own SHA after the documented 16-path semantic comparison; claim remains limited to the specified ecommerce hard-delete workflow. |
 
-## Requirements Coverage
+No additional Phase 166 requirements are mapped in `.planning/REQUIREMENTS.md`.
 
-| Requirement | Status | Evidence |
-|-------------|--------|----------|
-| HOST-01 | ✓ SATISFIED | Persisted membership, trusted host scope, and pre-dispatch rejection tests; bounded synthetic-principal claim. |
-| HOST-02 | ✓ SATISFIED | Mixed-tenant raw hits, hydration, counts, categories, and facets for both positive-control tenants. |
-| PKG-04 | ✓ SATISFIED | Same named host scenario passed against the repository path and fresh local artifact at the recorded source. |
-| REPAIR-01 | ✓ SATISFIED | No-write mismatch observation followed by explicit ID-scoped manual repair with unchanged controls. |
-| REPAIR-02 | ✓ SATISFIED | Exact task success/index and same-query raw projection, successful repeat, and empty-query no-op. |
-| DELETE-01 | ✓ SATISFIED | Reused only the historical raw-hit hard-delete claim after all 16 relevant changes were semantically dispositioned. |
+### Anti-patterns and Probes
 
-**Coverage:** 6/6 Phase 166 requirements satisfied.
+No unreferenced `TBD`, `FIXME`, or `XXX` debt marker, placeholder, or empty implementation was found in the reviewed implementation/test files. Phase 166 declares no standalone `probe-*.sh`; no probe claim is substituted for the named integration receipts.
 
-## Scope Limits Preserved
+### Preserved Claim Limits
 
-The 11 unresolved assumption probes and six descriptor-less prohibitions remain explicit for Phase 167. This verification does not claim Scrypath authentication, generic adopter policy, public registry package installation, broad backfill boundaries, exactly-once/concurrent recovery, or deletion behavior beyond the recorded hard-delete workflow. The newly dated six-condition readiness decision remains Phase 167 work.
+The plans' 11 assumption probes and six descriptor-less prohibitions remain unresolved and are carried into Phase 167 as explicit limits; this report does not convert them into broad guarantees. In particular, the evidence does not establish general adopter authorization, public package publication, general repair boundaries, exactly-once/concurrent recovery, broad deletion semantics, or all service/version combinations. The clean `166-REVIEW.md` contains no findings. No post-implementation UAT is required by the project workflow, and no UAT artifact was created.
 
-## Human Verification Required
+### Gaps Summary
 
-None. Every Phase 166 software acceptance criterion has automated scenario evidence or an exact-source hosted receipt; no routine post-implementation UAT is required.
-
-## Gaps Summary
-
-**No phase-goal gaps found.** The implemented host workflow and bounded repair evidence meet Phase 166's success criteria. Explicitly unresolved broader probes remain out of scope and are carried forward without being reclassified as passes.
-
-## Verification Metadata
-
-**Verification approach:** Goal-backward against the roadmap success criteria and plan must-haves.
-**Automated checks:** Regression suite passed; named service scenarios passed at recorded exact implementation source.
-**Human checks required:** 0.
-**Verifier:** Codex orchestrator, inline execution.
+No Phase 166 roadmap success criterion or mapped requirement is contradicted by the current implementation or source-bound evidence. The local live-service rerun was unavailable; the exact-source hosted receipts and unchanged relevant implementation paths provide the bounded service evidence. Broader unresolved probes/prohibitions remain carry-forward limits, not claims of universal behavior.
 
 ---
-*Verified: 2026-09-27T14:12:19Z*
+
+_Verified: 2026-09-27T23:53:07Z_  
+_Verifier: gsd-verifier_
