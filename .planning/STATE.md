@@ -4,18 +4,18 @@ milestone: v1.40
 milestone_name: Readiness Evidence Closure
 current_phase: 166
 current_phase_name: Host Tenant and Repair Evidence
-current_plan: "02"
+current_plan: 3
 status: executing
-stopped_at: Completed 166-01-PLAN.md
-last_updated: "2026-09-27T12:44:34.226Z"
+stopped_at: Completed 166-02-PLAN.md
+last_updated: "2026-09-27T13:00:47.777Z"
 last_activity: 2026-09-27
-last_activity_desc: Phase 166 Plan 01 complete; Plan 02 in progress
-state_head: 7d5508d0c381d2b871ae70724a9467fe7fe0ef03
+last_activity_desc: Phase 166 Plan 02 complete; Plan 03 ready to execute
+state_head: 27d28ab4482ef40abbeca7930cb89976cf2c3652
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 5
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -28,12 +28,12 @@ progress:
 ## Current Position
 
 Phase: 166 (Host Tenant and Repair Evidence) — IN PROGRESS
-Current Plan: 2
+Current Plan: 3
 Total Plans in Phase: 3
-Plan: 02 — Bounded Manual Repair Evidence
-Plans: 1/3 summarized
-Status: Executing Phase 166
-Last activity: 2026-09-27 — Plan 01 complete; proceeding with Plan 02
+Plan: 03 — Exact-Source Host and Repair Evidence
+Plans: 2/3 summarized
+Status: Ready to execute
+Last activity: 2026-09-27 — Plan 02 complete; proceeding with Plan 03
 
 Progress: [███░░░░░░░] 33% of milestone phases complete
 
@@ -72,6 +72,7 @@ Progress: [███░░░░░░░] 33% of milestone phases complete
 - [Phase 166]: Derive tenant scope from the persisted host membership before search or facet dispatch. — A host-owned persisted authorization boundary prevents caller-supplied tenant selections from becoming trusted library scope.
 - [Phase 166]: Keep raw search output and host hydration distinct; constrain hydration by tenant and returned IDs. — Separate assertions make raw-hit privacy visible and prevent database filtering from concealing foreign search results.
 - [Phase 166]: Use a fixed paginated live query and explicit primary key for exact counts and deterministic Meilisearch setup. — The live evidence requires an exact count and tenant_id makes automatic Meilisearch primary-key inference ambiguous.
+- [Phase 166]: Treat the repair report's mismatch as a known fixture precondition. — reconcile_sync reports task and reindex visibility; request telemetry and complete task snapshots establish its read-only behavior without claiming source-row/index-row discovery.
 
 ### Pending Todos
 
@@ -105,13 +106,14 @@ None yet.
 | Phase 165 P01 | 9 min | 2 tasks | 4 files |
 | Phase 165 P02 | 16 min | 2 tasks | 3 files |
 | Phase 166 P01 | 24 min | 2 tasks | 6 files |
+| Phase 166 P02 | 14 min | 2 tasks | 1 files |
 
 ## Session Continuity
 
-Last session: 2026-09-27T12:42:55.547Z
-Stopped at: Completed 166-01-PLAN.md
+Last session: 2026-09-27T13:00:09.039Z
+Stopped at: Completed 166-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
 
-- Plan Phase 166 with the scenario-specific live/package facet filter proof included.
+- Continue Phase 166 Plan 03: record exact-source host, package, and repair receipts and assess C-09 deletion-receipt freshness.

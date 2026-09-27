@@ -56,13 +56,13 @@ Plans:
   4. An operator can inspect a known source/index mismatch without mutation, then choose a manual backfill constrained by an explicit Ecto ID predicate; records outside that selected set remain unchanged.
   5. The exact returned Meilisearch task reaches terminal success on the expected index, and the same Scrypath search returns the repaired raw ID and projected value while control records retain their expected visibility.
 
-**Plans**: 1/3 plans executed
+**Plans**: 2/3 plans executed
 
 Plans:
 **Wave 1**
 
 - [x] 166-01-PLAN.md — Prove host-owned membership authorization, tenant-safe search, hydration, and facets.
-- [ ] 166-02-PLAN.md — Prove read-only mismatch reporting and ID-bounded repair through visible search.
+- [x] 166-02-PLAN.md — Prove read-only mismatch reporting and ID-bounded repair through visible search.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -86,5 +86,5 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 165. Public Tenant and Facet Contracts | 2/2 | Complete    | 2026-09-26 |
-| 166. Host Tenant and Repair Evidence | 1/3 | In Progress|  |
+| 166. Host Tenant and Repair Evidence | 2/3 | In Progress|  |
 | 167. Dated Readiness and Closeout | 0/TBD | Not started | - |
