@@ -79,11 +79,11 @@ Plans:
   2. Archived v1.39 closeout, package/release, and support evidence are traceable to exact source identities; the release-reference mismatch, accepted planning metadata debt, and only current task-owned cleanup are explicitly dispositioned.
   3. Every v1.40 software acceptance claim has automated, scenario-specific evidence tied to its exact source SHA, with routine human UAT unnecessary; the relevant advisory-lane scenario must pass for its recorded source while remaining distinct from the existing required merge-gate topology, and no broad matrix or new required service lane is added.
 
-**Plans**: 3 plans
+**Plans**: 1/3 plans executed
 
 **Wave 1**
 
-- [ ] 167-01-PLAN.md — Reconcile bounded scenario evidence, release identities and C-09 freshness.
+- [x] 167-01-PLAN.md — Reconcile bounded scenario evidence, release identities and C-09 freshness.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -99,4 +99,4 @@ Plans:
 |-------|----------------|--------|-----------|
 | 165. Public Tenant and Facet Contracts | 2/2 | Complete    | 2026-09-26 |
 | 166. Host Tenant and Repair Evidence | 3/3 | Complete    | 2026-09-27 |
-| 167. Dated Readiness and Closeout | 0/TBD | Not started | - |
+| 167. Dated Readiness and Closeout | 1/3 | In Progress|  |

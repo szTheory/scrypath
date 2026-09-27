@@ -4,18 +4,18 @@ milestone: v1.40
 milestone_name: Readiness Evidence Closure
 current_phase: 167
 current_phase_name: Dated Readiness and Closeout
-current_plan: Not started
+current_plan: 2
 status: executing
-stopped_at: Phase 167 context gathered
-last_updated: "2026-09-27T17:45:17.216Z"
+stopped_at: Completed 167-01-PLAN.md
+last_updated: "2026-09-27T19:02:42.843Z"
 last_activity: 2026-09-27
-last_activity_desc: Phase 166 complete, transitioned to Phase 167
-state_head: 74c2b3277a045f254db1dadc11d1c2d06d4e106f
+last_activity_desc: Phase 167 execution started
+state_head: 35a13bd576f15d10b57526305916c10a8aa19a4a
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 8
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -27,14 +27,14 @@ progress:
 
 ## Current Position
 
-Phase: 167 (Dated Readiness and Closeout) — READY TO EXECUTE
-Current Plan: Not started
+Phase: 167 (Dated Readiness and Closeout) — EXECUTING
+Current Plan: 2
 Total Plans in Phase: 3
-Plan: —
+Plan: 2 of 3
 Plans: 0/3
 Status: Ready to execute
 Next command: `$gsd-execute-phase 167`
-Last activity: 2026-09-27 — Phase 166 complete, transitioned to Phase 167
+Last activity: 2026-09-27 — Phase 167 execution started
 
 Progress: [███████░░░] 67% of milestone phases complete
 
@@ -76,6 +76,9 @@ Progress: [███████░░░] 67% of milestone phases complete
 - [Phase 166]: Keep raw search output and host hydration distinct; constrain hydration by tenant and returned IDs. — Separate assertions make raw-hit privacy visible and prevent database filtering from concealing foreign search results.
 - [Phase 166]: Use a fixed paginated live query and explicit primary key for exact counts and deterministic Meilisearch setup. — The live evidence requires an exact count and tenant_id makes automatic Meilisearch primary-key inference ambiguous.
 - [Phase 166]: Treat the repair report's mismatch as a known fixture precondition. — reconcile_sync reports task and reindex visibility; request telemetry and complete task snapshots establish its read-only behavior without claiming source-row/index-row discovery.
+- [Phase 167]: Keep the eight milestone software claims separate by named scenario and measured source; workflow success is not blanket evidence.
+- [Phase 167]: Keep planning tag v1.39, closeout run, published release scrypath-v0.3.13, and the Phase 166 local artifact as distinct identities.
+- [Phase 167]: Reuse C-09 only for its bounded claim after every relevant changed path has a semantic disposition; the checker does not decide whether those reasons are true.
 
 ### Pending Todos
 
@@ -111,12 +114,13 @@ None yet.
 | Phase 166 P01 | 24 min | 2 tasks | 6 files |
 | Phase 166 P02 | 14 min | 2 tasks | 1 files |
 | Phase 166 P03 | Unmeasured | 2 tasks | 11 files |
+| Phase 167 P01 | 36min | 2 tasks | 4 files |
 
 ## Session Continuity
 
-Last session: 2026-09-27T16:26:09.561Z
-Stopped at: Phase 167 context gathered
-Resume file: .planning/phases/167-dated-readiness-and-closeout/167-CONTEXT.md
+Last session: 2026-09-27T19:02:42.810Z
+Stopped at: Completed 167-01-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 

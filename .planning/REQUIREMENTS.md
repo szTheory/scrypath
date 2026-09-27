@@ -27,8 +27,8 @@ These requirements close selected condition 3 evidence gaps and produce a new, s
 
 - [x] **DELETE-01**: A new condition 3 assessment can reuse the exact-SHA v1.39 hard-delete-to-visible-search receipt when a comparison finds no relevant source invalidator; otherwise it requires targeted fresh evidence or records the bounded claim as UNKNOWN.
 - [ ] **GATE-04**: A maintainer can make a separate, uniquely dated assessment of all six readiness conditions using linked evidence and explicit claim limits, while preserving Phase 164's historical condition 3/6 UNKNOWN statuses and overall NOT READY decision.
-- [ ] **CLOSE-03**: A maintainer can trace archived v1.39 closeout, package/release and support evidence to their exact source identities, explicitly disposition the observed release-reference mismatch and accepted planning metadata debt, and record current task-owned cleanup without treating unrelated state as debt.
-- [ ] **VERIFY-02**: Every v1.40 software acceptance claim has automated evidence tied to its scenario and exact source SHA, routine human UAT is not required, and verification reuses existing CI lanes without adding a new required service lane or broad compatibility matrix.
+- [x] **CLOSE-03**: A maintainer can trace archived v1.39 closeout, package/release and support evidence to their exact source identities, explicitly disposition the observed release-reference mismatch and accepted planning metadata debt, and record current task-owned cleanup without treating unrelated state as debt.
+- [x] **VERIFY-02**: Every v1.40 software acceptance claim has automated evidence tied to its scenario and exact source SHA, routine human UAT is not required, and verification reuses existing CI lanes without adding a new required service lane or broad compatibility matrix.
 
 ## Future Requirements
 
@@ -61,8 +61,8 @@ Every v1 requirement maps to exactly one phase in the approved v1.40 roadmap.
 | REPAIR-02 | Phase 166 | Complete |
 | DELETE-01 | Phase 166 | Complete |
 | GATE-04 | Phase 167 | Pending |
-| CLOSE-03 | Phase 167 | Pending |
-| VERIFY-02 | Phase 167 | Pending |
+| CLOSE-03 | Phase 167 | Complete |
+| VERIFY-02 | Phase 167 | Complete |
 
 **Coverage:**
 
