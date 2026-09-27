@@ -10,6 +10,7 @@ import json
 import re
 from pathlib import Path
 
+import check_readiness
 from check_readiness import (
     ContractError,
     CONDITIONS,
@@ -31,6 +32,56 @@ CLOSEOUT = PHASE_DIR / "167-CLOSEOUT.md"
 
 
 class EvidenceCliTests(unittest.TestCase):
+    def closeout_receipt(self) -> dict:
+        return {
+            "authority": "github-actions-exact-sha",
+            "repository": "szTheory/scrypath",
+            "workflow": "ci.yml",
+            "run_id": 36321613553,
+            "run_url": "https://github.com/szTheory/scrypath/actions/runs/36321613553",
+            "head_sha": "a" * 40,
+            "event": "workflow_dispatch",
+            "jobs": [
+                "core (required)",
+                "package (required)",
+                "repository-contracts (required)",
+                "backend (required)",
+                "ecommerce-mounted (required)",
+                "coverage (advisory)",
+                "closeout-attestation",
+            ],
+            "coverage_artifact": {
+                "id": 10931758825,
+                "digest": "sha256:" + "1" * 64,
+                "expires_at": "2099-10-04T13:13:31Z",
+            },
+            "closeout_artifact": {
+                "id": 10932638177,
+                "digest": "sha256:" + "2" * 64,
+                "expires_at": "2099-10-04T13:17:02Z",
+            },
+        }
+
+    def test_closeout_receipt_accepts_expected_exact_source_and_immutable_artifacts(self) -> None:
+        validator = getattr(check_readiness, "validate_closeout_receipt", None)
+        self.assertIsNotNone(validator, "the checker must validate exact-source closeout receipt metadata")
+        validator(self.closeout_receipt(), "a" * 40)
+
+    def test_closeout_receipt_rejects_wrong_source_event_jobs_and_artifacts(self) -> None:
+        cases = (
+            ("source", lambda receipt: receipt.update(head_sha="b" * 40)),
+            ("event", lambda receipt: receipt.update(event="push")),
+            ("missing job", lambda receipt: receipt.update(jobs=receipt["jobs"][:-1])),
+            ("missing digest", lambda receipt: receipt["coverage_artifact"].update(digest="")),
+            ("expired artifact", lambda receipt: receipt["closeout_artifact"].update(expires_at="2000-01-01T00:00:00Z")),
+        )
+        for name, mutate in cases:
+            with self.subTest(name=name):
+                receipt = self.closeout_receipt()
+                mutate(receipt)
+                with self.assertRaises(ContractError):
+                    check_readiness.validate_closeout_receipt(receipt, "a" * 40)
+
     def test_complete_scope_exposes_assessment_and_closeout_contract(self) -> None:
         result = subprocess.run(
             [sys.executable, str(CHECKER), "--help"],
