@@ -445,6 +445,69 @@ def validate_https(value: object, label: str) -> None:
     require(parsed.scheme == "https" and bool(host), f"{label} must be an HTTPS URL with a hostname")
 
 
+def validate_closeout_receipt(receipt: dict, expected_source: str) -> None:
+    """Validate exact-SHA monitor metadata without claiming job-log truth."""
+    require(SHA.fullmatch(expected_source) is not None, "expected source must be a full commit SHA")
+    require(receipt.get("authority") == "github-actions-exact-sha", "closeout receipt authority is unexpected")
+    require(receipt.get("repository") == "szTheory/scrypath", "closeout receipt repository is unexpected")
+    require(receipt.get("workflow") == "ci.yml", "closeout receipt workflow is unexpected")
+    require(receipt.get("head_sha") == expected_source, "closeout receipt source SHA does not match the expected source")
+    require(receipt.get("event") == "workflow_dispatch", "closeout receipt event must be workflow_dispatch")
+    run_id = receipt.get("run_id")
+    require(isinstance(run_id, int) and run_id > 0, "closeout receipt run_id must be a positive integer")
+    run_url = receipt.get("run_url")
+    validate_https(run_url, "closeout receipt run_url")
+    parsed_url = urlsplit(run_url)
+    require(
+        parsed_url.hostname == "github.com" and parsed_url.path == f"/szTheory/scrypath/actions/runs/{run_id}",
+        "closeout receipt run_url must identify its recorded run in the expected repository",
+    )
+    required_jobs = [
+        "core (required)",
+        "package (required)",
+        "repository-contracts (required)",
+        "backend (required)",
+        "ecommerce-mounted (required)",
+        "coverage (advisory)",
+        "closeout-attestation",
+    ]
+    require(receipt.get("jobs") == required_jobs, "closeout receipt job list is incomplete or substituted")
+    now = datetime.now().astimezone()
+    for field in ("coverage_artifact", "closeout_artifact"):
+        artifact = receipt.get(field)
+        require(isinstance(artifact, dict), f"{field} identity is missing")
+        require(isinstance(artifact.get("id"), int) and artifact["id"] > 0, f"{field} id is missing or invalid")
+        digest = artifact.get("digest")
+        require(isinstance(digest, str) and re.fullmatch(r"sha256:[0-9a-f]{64}", digest) is not None, f"{field} digest is missing or invalid")
+        expires = utc_datetime(artifact.get("expires_at"), f"{field}.expires_at")
+        require(expires > now, f"{field} is expired")
+
+
+def validate_candidate_advisory(evidence: dict) -> None:
+    """Require separately observed named Phoenix outcomes for a candidate claim."""
+    candidate = evidence.get("candidate_advisory")
+    if candidate is None:
+        return
+    require(isinstance(candidate, dict), "candidate_advisory must be an object")
+    source = candidate.get("source_sha")
+    require(isinstance(source, str) and SHA.fullmatch(source), "candidate_advisory.source_sha must be a full SHA")
+    for field in ("run_id", "run_attempt", "job_id"):
+        require(isinstance(candidate.get(field), int) and candidate[field] > 0, f"candidate_advisory.{field} must be a positive integer")
+    require(candidate.get("job_conclusion") == "success", "candidate Phoenix advisory job must conclude success")
+    scenarios = candidate.get("scenarios")
+    require(isinstance(scenarios, list), "candidate Phoenix named scenarios are required")
+    by_id = {item.get("id"): item for item in scenarios if isinstance(item, dict)}
+    require(len(by_id) == len(scenarios) and set(by_id) == {"host-path", "host-package"}, "candidate Phoenix path and package scenarios must be recorded exactly once")
+    expected_commands = {"host-path": "mix verify.phoenix_example", "host-package": "mix verify.phoenix_example --package"}
+    for identifier, scenario in by_id.items():
+        require(scenario.get("scenario") == "authorized tenant search and facet values", f"{identifier} is not the named Phoenix scenario")
+        require(scenario.get("command") == expected_commands[identifier], f"{identifier} command is not the named path/package execution")
+        require(scenario.get("source_sha") == source, f"{identifier} source SHA does not match candidate source")
+        for field in ("run_id", "run_attempt", "job_id"):
+            require(scenario.get(field) == candidate.get(field), f"{identifier}.{field} does not match the observed Phoenix job")
+        require(scenario.get("result") == "pass" and scenario.get("skipped") is False, f"{identifier} must be a non-skipped pass")
+
+
 def validate_evidence(root: Path, record_path: Path, *, require_all_claims: bool = False, compare_source: str | None = None) -> dict:
     record = read_json(record_path, "evidence record")
     require(record.get("schema") == 1, "evidence schema must be 1")
@@ -509,6 +572,7 @@ def validate_evidence(root: Path, record_path: Path, *, require_all_claims: bool
     delete = record.get("delete_receipt")
     require(isinstance(delete, dict), "delete_receipt must include the C-09 source comparison")
     compare_delete_freshness(root, delete, compare_source)
+    validate_candidate_advisory(record)
     constraints = record.get("inherited_constraints")
     require(isinstance(constraints, dict), "inherited_constraints must be an object")
     require(constraints.get("source") == ".planning/phases/166-host-tenant-and-repair-evidence/166-SOURCE-AUDIT.md", "inherited constraint source must remain canonical")
@@ -546,6 +610,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--closeout", type=Path)
     parser.add_argument("--require-all-claims", action="store_true")
     parser.add_argument("--compare-source")
+    parser.add_argument("--closeout-receipt", type=Path)
+    parser.add_argument("--expected-source")
     args = parser.parse_args(argv)
     root = args.root.resolve()
     evidence_path = args.evidence if args.evidence.is_absolute() else root / args.evidence
@@ -562,6 +628,12 @@ def main(argv: list[str] | None = None) -> int:
             require_all_claims=args.require_all_claims or args.scope == "complete",
             compare_source=args.compare_source,
         )
+        require(
+            (args.closeout_receipt is None) == (args.expected_source is None),
+            "--closeout-receipt and --expected-source must be supplied together",
+        )
+        if args.closeout_receipt is not None:
+            validate_closeout_receipt(read_json(args.closeout_receipt, "closeout receipt"), args.expected_source)
         if args.scope == "complete":
             require(args.assessment is not None and args.closeout is not None, "complete scope requires --assessment and --closeout")
             assessment_path = args.assessment if args.assessment.is_absolute() else root / args.assessment

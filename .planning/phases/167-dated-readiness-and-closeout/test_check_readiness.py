@@ -82,6 +82,40 @@ class EvidenceCliTests(unittest.TestCase):
                 with self.assertRaises(ContractError):
                     check_readiness.validate_closeout_receipt(receipt, "a" * 40)
 
+    def candidate_advisory(self) -> dict:
+        source = "a" * 40
+        return {
+            "source_sha": source,
+            "run_id": 12,
+            "run_attempt": 1,
+            "job_id": 34,
+            "job_conclusion": "success",
+            "scenarios": [
+                {"id": "host-path", "scenario": "authorized tenant search and facet values", "command": "mix verify.phoenix_example", "source_sha": source, "run_id": 12, "run_attempt": 1, "job_id": 34, "result": "pass", "skipped": False},
+                {"id": "host-package", "scenario": "authorized tenant search and facet values", "command": "mix verify.phoenix_example --package", "source_sha": source, "run_id": 12, "run_attempt": 1, "job_id": 34, "result": "pass", "skipped": False},
+            ],
+        }
+
+    def test_candidate_advisory_requires_independent_named_path_and_package_success(self) -> None:
+        candidate = self.candidate_advisory()
+        check_readiness.validate_candidate_advisory({"candidate_advisory": candidate})
+        candidate["scenarios"].pop()
+        with self.assertRaisesRegex(ContractError, "path and package"):
+            check_readiness.validate_candidate_advisory({"candidate_advisory": candidate})
+
+    def test_candidate_advisory_rejects_failed_skipped_or_wrong_source_scenario(self) -> None:
+        mutations = (
+            ("failed", lambda item: item.update(result="fail")),
+            ("skipped", lambda item: item.update(skipped=True)),
+            ("wrong source", lambda item: item.update(source_sha="b" * 40)),
+        )
+        for name, mutate in mutations:
+            with self.subTest(name=name):
+                candidate = self.candidate_advisory()
+                mutate(candidate["scenarios"][0])
+                with self.assertRaises(ContractError):
+                    check_readiness.validate_candidate_advisory({"candidate_advisory": candidate})
+
     def test_complete_scope_exposes_assessment_and_closeout_contract(self) -> None:
         result = subprocess.run(
             [sys.executable, str(CHECKER), "--help"],
