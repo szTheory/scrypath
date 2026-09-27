@@ -126,6 +126,173 @@ def resolve_receipt(root: Path, reference: object) -> tuple[Path, str]:
     return resolved, fragment
 
 
+def validate_local_claim(root: Path, claim: dict, receipt_path: Path, fragment: str) -> None:
+    require(receipt_path.suffix.casefold() == ".md", f"{claim['id']} local-test receipt must be Markdown")
+    receipt_text = receipt_path.read_text(encoding="utf-8")
+    require(claim["source_sha"] in receipt_text, f"{claim['id']} source SHA is absent from its canonical receipt")
+    require(claim["oracle"] in receipt_text, f"{claim['id']} oracle is absent from its canonical receipt")
+    headings = {
+        re.sub(r"[^a-z0-9 -]", "", match.group(1).strip().casefold()).replace(" ", "-")
+        for match in re.finditer(r"^#{1,6}\s+(.+?)\s*#*\s*$", receipt_text, re.MULTILINE)
+    }
+    require(fragment in headings, f"{claim['id']} canonical Markdown anchor is missing: #{fragment}")
+    require(claim["result"] == "pass" and claim["skipped"] is False, f"{claim['id']} local test evidence must be a non-skipped pass")
+
+
+def validate_markdown_reference(root: Path, reference: object, label: str) -> None:
+    require(isinstance(reference, str) and reference.strip(), f"{label} must be a local Markdown reference")
+    path_part, separator, fragment = reference.partition("#")
+    path = Path(path_part)
+    require(not path.is_absolute(), f"{label} must be repository-relative")
+    resolved = (root / path).resolve()
+    try:
+        resolved.relative_to(root.resolve())
+    except ValueError as error:
+        raise ContractError(f"{label} escapes the repository root") from error
+    require(resolved.is_file() and resolved.suffix.casefold() == ".md", f"{label} must resolve to a Markdown file")
+    if separator:
+        text = resolved.read_text(encoding="utf-8")
+        headings = {
+            re.sub(r"[^a-z0-9 -]", "", match.group(1).strip().casefold()).replace(" ", "-")
+            for match in re.finditer(r"^#{1,6}\s+(.+?)\s*#*\s*$", text, re.MULTILINE)
+        }
+        require(fragment in headings, f"{label} anchor does not exist: #{fragment}")
+
+
+def validate_hosted_claim(root: Path, claim: dict, receipt_path: Path, fragment: str) -> None:
+    canonical = read_json(receipt_path, f"canonical receipt for {claim['id']}")
+    if fragment == "delete_receipt":
+        delete = canonical.get("delete_receipt")
+        require(isinstance(delete, dict), f"{claim['id']} canonical delete receipt is missing")
+        historic = delete.get("historical_receipt")
+        require(isinstance(historic, dict), f"{claim['id']} historical receipt identity is missing")
+        expected = {
+            "source_sha": delete.get("receipt_source_sha"),
+            "scenario": historic.get("scenario"),
+            "run_id": historic.get("run_id"),
+            "job_id": historic.get("job_id"),
+            "result": "pass" if historic.get("result") == "passed" else historic.get("result"),
+            "skipped": False,
+        }
+        for field, actual in expected.items():
+            require(claim.get(field) == actual, f"{claim['id']}.{field} does not match the historical hosted receipt")
+        require(claim.get("run_attempt") == 1, f"{claim['id']} historical run attempt must be recorded as 1")
+        require(claim.get("oracle") == historic.get("scenario"), f"{claim['id']} oracle does not identify the historical scenario")
+        validate_https(claim.get("log_reference"), f"{claim['id']}.log_reference")
+        return
+
+    executions = canonical.get("executions")
+    require(isinstance(executions, list), f"canonical receipt for {claim['id']} has no executions array")
+    execution = next((item for item in executions if isinstance(item, dict) and item.get("id") == fragment), None)
+    require(execution is not None, f"canonical receipt execution not found: {fragment}")
+    for field, actual in (
+        ("scenario", execution.get("scenario")),
+        ("source_sha", execution.get("source_sha")),
+        ("run_id", execution.get("run_id")),
+        ("run_attempt", execution.get("run_attempt")),
+        ("job_id", execution.get("job_id")),
+        ("result", execution.get("result")),
+        ("skipped", execution.get("skipped")),
+    ):
+        require(claim.get(field) == actual, f"{claim['id']}.{field} does not match canonical execution {fragment}")
+    require(execution.get("job_conclusion") == "success", f"{claim['id']} canonical job did not conclude success")
+    log_id = execution.get("log_excerpt_id")
+    log_excerpt = canonical.get("log_excerpts", {}).get(log_id) if isinstance(log_id, str) else None
+    require(isinstance(log_excerpt, dict) and isinstance(log_excerpt.get("lines"), list), f"{claim['id']} canonical hosted log excerpt is missing")
+    require(any(claim.get("oracle") in line for line in log_excerpt["lines"]), f"{claim['id']} oracle marker is absent from canonical log excerpt")
+    validate_https(claim.get("log_reference"), f"{claim['id']}.log_reference")
+
+
+def compare_delete_freshness(root: Path, delete: dict, compare_source: str | None) -> None:
+    target_sha = compare_source or delete.get("assessment_source_sha")
+    require(isinstance(target_sha, str) and SHA.fullmatch(target_sha), "comparison source must be a full commit SHA")
+    git_bytes(root, "cat-file", "-e", f"{target_sha}^{{commit}}")
+    receipt_sha = delete.get("receipt_source_sha")
+    require(isinstance(receipt_sha, str) and SHA.fullmatch(receipt_sha), "delete receipt source must be a full commit SHA")
+    paths = delete.get("relevant_paths")
+    require(paths == ["lib", "examples", "config", "test/support", ".github/workflows", "mix.exs", "mix.lock"], "C-09 relevant path roots differ from the approved set")
+    changed = git_bytes(
+        root,
+        "diff",
+        "--name-only",
+        "--diff-filter=ACDMRTUXB",
+        receipt_sha,
+        target_sha,
+        "--",
+        *paths,
+    )
+    observed_paths = sorted(line.decode("utf-8") for line in changed.splitlines() if line)
+    recorded_paths = delete.get("changed_paths")
+    require(isinstance(recorded_paths, list) and all(isinstance(path, str) for path in recorded_paths), "C-09 changed_paths must be an explicit string array")
+    disposition_reference = delete.get("canonical_receipt")
+    receipt_path, fragment = resolve_receipt(root, disposition_reference)
+    require(fragment == "delete_receipt", "C-09 semantic dispositions must reference the canonical delete receipt")
+    canonical_delete = read_json(receipt_path, "canonical C-09 receipt").get("delete_receipt")
+    require(isinstance(canonical_delete, dict), "canonical C-09 receipt is missing")
+    dispositions = delete.get("changes", canonical_delete.get("changes"))
+    require(isinstance(dispositions, list), "C-09 changes must record a semantic disposition for every relevant path")
+    by_path: dict[str, dict] = {}
+    for row in dispositions:
+        require(isinstance(row, dict) and isinstance(row.get("path"), str), "C-09 path disposition has a missing path")
+        require(row["path"] not in by_path, f"duplicate C-09 path disposition: {row['path']}")
+        require(isinstance(row.get("invalidates"), bool), f"C-09 invalidates flag must be boolean for {row['path']}")
+        require(isinstance(row.get("reason"), str) and row["reason"].strip(), f"C-09 semantic reason is required for {row['path']}")
+        by_path[row["path"]] = row
+    require(sorted(recorded_paths) == observed_paths, "C-09 changed_paths do not match the Git comparison")
+    require(set(by_path) == set(observed_paths), "C-09 path dispositions do not cover the exact Git comparison")
+    for path in observed_paths:
+        reason = by_path[path]["reason"].casefold()
+        require(not any(token in reason for token in ("todo", "unknown", "tbd", "not reviewed")), f"C-09 semantic disposition is unresolved for {path}")
+    invalidates = any(row["invalidates"] for row in by_path.values())
+    status = delete.get("status")
+    require(status in {"reusable", "fresh", "unknown"}, "C-09 status must be reusable, fresh, or unknown")
+    if invalidates:
+        require(status != "reusable", "C-09 cannot be reused while a relevant path invalidates the bounded claim")
+    freshness = delete.get("freshness")
+    require(isinstance(freshness, dict), "C-09 freshness must state the comparison identity and outcome")
+    if compare_source is None:
+        require(freshness.get("compared_source_sha") == target_sha, "C-09 freshness does not name the checked assessment source")
+    require(freshness.get("result") in {"reusable", "fresh-proof-required", "unknown"}, "C-09 freshness result is invalid")
+    require(isinstance(freshness.get("reason"), str) and freshness["reason"].strip(), "C-09 freshness reason is required")
+    if invalidates:
+        require(freshness.get("result") != "reusable", "C-09 invalidator cannot be labeled reusable")
+
+
+def validate_release_identities(root: Path, identities: object) -> None:
+    require(isinstance(identities, list), "release_identities must be an array")
+    expected = {
+        "planning-tag": "dc400b2b57aec0ca6b0ef16c9477d266fd41a433",
+        "closeout-run": "dc400b2b57aec0ca6b0ef16c9477d266fd41a433",
+        "public-release": "28d3877a05479f2cc104754fc24ab0c9d545c01b",
+        "local-artifact": "50d5c12d36ec560525e245bcb992c40e5927854f",
+    }
+    by_kind = {item.get("kind"): item for item in identities if isinstance(item, dict)}
+    require(
+        len(by_kind) == len(identities) and set(by_kind) == set(expected),
+        "planning tag, closeout, public release, and local artifact identities must remain separate and unique",
+    )
+    for kind, sha in expected.items():
+        item = by_kind[kind]
+        require(item.get("source_sha") == sha, f"{kind} source SHA does not match its canonical identity")
+        for field in ("reference", "canonical_receipt", "observed_at_utc", "result", "limits"):
+            require(isinstance(item.get(field), str) and item[field].strip(), f"{kind}.{field} must be explicit")
+        parse_utc(item["observed_at_utc"], f"{kind}.observed_at_utc")
+        receipt_path, fragment = resolve_receipt(root, item["canonical_receipt"])
+        if receipt_path.suffix.lower() == ".json":
+            receipt = read_json(receipt_path, f"{kind} canonical receipt")
+            if fragment:
+                receipt = receipt.get(fragment)
+            require(isinstance(receipt, dict), f"{kind} canonical receipt fragment must be an object")
+            require(receipt.get("source_sha") == sha, f"{kind} canonical receipt source SHA does not match")
+        else:
+            validate_markdown_reference(root, item["canonical_receipt"], f"{kind}.canonical_receipt")
+            receipt_text = receipt_path.read_text(encoding="utf-8")
+            require(sha in receipt_text, f"{kind} canonical receipt does not name its source SHA")
+            require(item["reference"] in receipt_text, f"{kind} canonical receipt does not name its reference")
+    require(by_kind["planning-tag"].get("reference") == "v1.39", "planning tag reference must remain v1.39")
+    require(by_kind["public-release"].get("reference") == "scrypath-v0.3.13", "public package release tag must remain scrypath-v0.3.13")
+
+
 def validate_https(value: object, label: str) -> None:
     require(isinstance(value, str), f"{label} must be a URL")
     try:
@@ -136,7 +303,7 @@ def validate_https(value: object, label: str) -> None:
     require(parsed.scheme == "https" and bool(host), f"{label} must be an HTTPS URL with a hostname")
 
 
-def validate_evidence(root: Path, record_path: Path, *, require_all_claims: bool = False) -> dict:
+def validate_evidence(root: Path, record_path: Path, *, require_all_claims: bool = False, compare_source: str | None = None) -> dict:
     record = read_json(record_path, "evidence record")
     require(record.get("schema") == 1, "evidence schema must be 1")
     assessment_sha = record.get("assessment_source_sha")
@@ -164,35 +331,29 @@ def validate_evidence(root: Path, record_path: Path, *, require_all_claims: bool
         for field in ("scenario", "oracle", "dependency_mode", "bounded_claim", "limits"):
             require(isinstance(claim.get(field), str) and claim[field].strip(), f"{claim_id}.{field} must be a non-empty string")
         parse_utc(claim.get("observed_at_utc"), f"{claim_id}.observed_at_utc")
+        claim_freshness = claim.get("freshness")
+        require(isinstance(claim_freshness, dict), f"{claim_id}.freshness must state its source freshness")
+        require(claim_freshness.get("status") in {"exact-source", "reusable", "unknown"}, f"{claim_id}.freshness.status is invalid")
+        require(isinstance(claim_freshness.get("reason"), str) and claim_freshness["reason"].strip(), f"{claim_id}.freshness.reason is required")
         require(claim.get("result") in {"pass", "fail", "unknown"}, f"{claim_id}.result must be pass, fail, or unknown")
         require(isinstance(claim.get("skipped"), bool), f"{claim_id}.skipped must be a boolean")
         source_sha = claim.get("source_sha")
         require(isinstance(source_sha, str) and SHA.fullmatch(source_sha), f"{claim_id}.source_sha must be a full commit SHA")
-        require(isinstance(claim.get("run_id"), int) and claim["run_id"] > 0, f"{claim_id}.run_id must be a positive integer")
-        require(isinstance(claim.get("run_attempt"), int) and claim["run_attempt"] > 0, f"{claim_id}.run_attempt must be a positive integer")
-        require(isinstance(claim.get("job_id"), int) and claim["job_id"] > 0, f"{claim_id}.job_id must be a positive integer")
+        try:
+            git_bytes(root, "cat-file", "-e", f"{source_sha}^{{commit}}")
+        except ContractError as error:
+            raise ContractError(f"{claim_id}.source_sha cannot be resolved: {error}") from error
         receipt_path, fragment = resolve_receipt(root, claim.get("canonical_receipt"))
-        canonical = read_json(receipt_path, f"canonical receipt for {claim_id}")
-        executions = canonical.get("executions")
-        require(isinstance(executions, list), f"canonical receipt for {claim_id} has no executions array")
-        execution = next((item for item in executions if isinstance(item, dict) and item.get("id") == fragment), None)
-        require(execution is not None, f"canonical receipt execution not found: {fragment}")
-        for field, actual in (
-            ("scenario", execution.get("scenario")),
-            ("source_sha", execution.get("source_sha")),
-            ("run_id", execution.get("run_id")),
-            ("run_attempt", execution.get("run_attempt")),
-            ("job_id", execution.get("job_id")),
-            ("result", execution.get("result")),
-            ("skipped", execution.get("skipped")),
-        ):
-            require(claim.get(field) == actual, f"{claim_id}.{field} does not match canonical execution {fragment}")
-        require(execution.get("job_conclusion") == "success", f"{claim_id} canonical job did not conclude success")
-        log_id = execution.get("log_excerpt_id")
-        log_excerpt = canonical.get("log_excerpts", {}).get(log_id) if isinstance(log_id, str) else None
-        require(isinstance(log_excerpt, dict) and isinstance(log_excerpt.get("lines"), list), f"{claim_id} canonical hosted log excerpt is missing")
-        require(any(claim.get("oracle") in line for line in log_excerpt["lines"]), f"{claim_id} oracle marker is absent from canonical log excerpt")
-        validate_https(claim.get("log_reference"), f"{claim_id}.log_reference")
+        evidence_kind = claim.get("evidence_kind", "hosted")
+        if evidence_kind == "local-test":
+            validate_local_claim(root, claim, receipt_path, fragment)
+        elif evidence_kind in {"hosted", "historical-hosted"}:
+            if evidence_kind == "hosted" or fragment != "delete_receipt":
+                for field in ("run_id", "run_attempt", "job_id"):
+                    require(isinstance(claim.get(field), int) and claim[field] > 0, f"{claim_id}.{field} must be a positive integer")
+            validate_hosted_claim(root, claim, receipt_path, fragment)
+        else:
+            raise ContractError(f"{claim_id}.evidence_kind is unsupported")
         source_check = claim.get("source_verification")
         require(isinstance(source_check, dict), f"{claim_id}.source_verification must record the inspection method")
         for field in ("method", "observed_result", "limitations"):
@@ -202,12 +363,35 @@ def validate_evidence(root: Path, record_path: Path, *, require_all_claims: bool
         missing = REQUIRED_CLAIMS - covered
         require(not missing, f"required milestone software claims are missing: {', '.join(sorted(missing))}")
 
-    identities = record.get("release_identities")
-    require(isinstance(identities, list), "release_identities must be an array")
+    validate_release_identities(root, record.get("release_identities"))
+    delete = record.get("delete_receipt")
+    require(isinstance(delete, dict), "delete_receipt must include the C-09 source comparison")
+    compare_delete_freshness(root, delete, compare_source)
     constraints = record.get("inherited_constraints")
     require(isinstance(constraints, dict), "inherited_constraints must be an object")
-    for field in ("source", "edge_probe_ids", "prohibition_ids"):
-        require(field in constraints, f"inherited_constraints.{field} is required")
+    require(constraints.get("source") == ".planning/phases/166-host-tenant-and-repair-evidence/166-SOURCE-AUDIT.md", "inherited constraint source must remain canonical")
+    validate_markdown_reference(root, constraints["source"], "inherited_constraints.source")
+    expected_edges = {f"EA-166-{index:02d}" for index in range(1, 12)}
+    expected_prohibitions = {"P-166-HOST-01", "P-166-HOST-02", "P-166-PKG-04", "P-166-REPAIR-01", "P-166-REPAIR-02", "P-166-DELETE-01"}
+    for field, expected in (("edge_probe_ids", expected_edges), ("prohibition_ids", expected_prohibitions)):
+        rows = constraints.get(field)
+        require(isinstance(rows, list), f"inherited_constraints.{field} must be an array")
+        observed = {row.get("id") for row in rows if isinstance(row, dict)}
+        require(observed == expected, f"inherited_constraints.{field} must preserve every canonical ID")
+        require(all(row.get("status") == "unresolved" for row in rows if isinstance(row, dict)), f"inherited_constraints.{field} must remain unresolved")
+        require(all(row.get("descriptor") is None for row in rows if isinstance(row, dict)), f"inherited_constraints.{field} must retain descriptor-less status")
+    debt = record.get("accepted_metadata_debt")
+    require(isinstance(debt, list) and len(debt) == 3, "accepted Phase 163/164 planning metadata debt must remain explicit")
+    mismatch = record.get("release_reference_mismatch")
+    require(isinstance(mismatch, dict), "release_reference_mismatch disposition is required")
+    for field in ("affected_files", "impact", "disposition", "revisit_trigger"):
+        require(field in mismatch and mismatch[field], f"release_reference_mismatch.{field} is required")
+    require(set(mismatch["affected_files"]) == {"mix.exs", "docs/releasing.md"}, "release-reference mismatch must identify the exact source/docs files")
+    for row in debt:
+        require(isinstance(row, dict), "accepted metadata debt rows must be objects")
+        for field in ("source", "status", "disposition", "revisit_trigger"):
+            require(isinstance(row.get(field), str) and row[field].strip(), f"accepted metadata debt {field} must be explicit")
+        validate_markdown_reference(root, row["source"], "accepted_metadata_debt.source")
     return record
 
 
@@ -228,7 +412,7 @@ def main(argv: list[str] | None = None) -> int:
         except ValueError as error:
             raise ContractError("evidence record escapes the repository root") from error
         validate_history(root)
-        validate_evidence(root, resolved_evidence, require_all_claims=args.require_all_claims)
+        validate_evidence(root, resolved_evidence, require_all_claims=args.require_all_claims, compare_source=args.compare_source)
     except (OSError, ContractError) as error:
         print(f"STRUCTURAL CONTRACT FAIL: {error}", file=sys.stderr)
         return 1
