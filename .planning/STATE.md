@@ -4,13 +4,13 @@ milestone: v1.40
 milestone_name: Readiness Evidence Closure
 current_phase: 166
 current_phase_name: Host Tenant and Repair Evidence
-current_plan: Not started
-status: planning
+current_plan: "02"
+status: executing
 stopped_at: Completed 166-01-PLAN.md
-last_updated: "2026-09-27T12:42:55.563Z"
-last_activity: 2026-09-26
-last_activity_desc: Phase 165 complete, transitioned to Phase 166
-state_head: 6e7a1193c3b18f6f7b8c2a78b112ad8f05a43f9a
+last_updated: "2026-09-27T12:44:34.226Z"
+last_activity: 2026-09-27
+last_activity_desc: Phase 166 Plan 01 complete; Plan 02 in progress
+state_head: 7d5508d0c381d2b871ae70724a9467fe7fe0ef03
 progress:
   total_phases: 3
   completed_phases: 1
@@ -27,13 +27,13 @@ progress:
 
 ## Current Position
 
-Phase: 166 (Host Tenant and Repair Evidence) — READY TO EXECUTE
-Current Plan: Not started
+Phase: 166 (Host Tenant and Repair Evidence) — IN PROGRESS
+Current Plan: 2
 Total Plans in Phase: 3
-Plan: None — phase planning has not started
-Plans: 0/TBD summarized
-Status: Ready to plan Phase 166
-Last activity: 2026-09-26 — Phase 165 complete, transitioned to Phase 166
+Plan: 02 — Bounded Manual Repair Evidence
+Plans: 1/3 summarized
+Status: Executing Phase 166
+Last activity: 2026-09-27 — Plan 01 complete; proceeding with Plan 02
 
 Progress: [███░░░░░░░] 33% of milestone phases complete
 
@@ -69,6 +69,9 @@ Progress: [███░░░░░░░] 33% of milestone phases complete
 - [Phase 165]: Keep tenant_scope in the validated filter and remove it from all three runtime configuration inputs. — Public recorder probes reproduced strict runtime-config rejection in Single, Many, and FacetValues after schema-aware validation had composed the declared tenant field into filter. Dropping only this search-only key preserves strict runtime validation and the public input shape.
 - [Phase 165]: Treat recording-backend tenant evidence as filter-composition proof only. — The tests prove supplied-scope composition and rejection before backend dispatch. Actor identity, membership, trusted tenant derivation, authorization, and database response scoping remain host-owned; this is not live-service or package evidence.
 - [Phase 165]: Keep defaults and keyword-filter outcomes separate; retain a targeted live/package follow-up for the reproduced facet serializer defect. — Defaults passed their encoded request probe without correction. The keyword probe failed in Jason before HTTP; the correction now emits the existing filter grammar. This local proof does not establish live parser behavior or package loading. It also does not claim interruption or parallel execution semantics (EA-02).
+- [Phase 166]: Derive tenant scope from the persisted host membership before search or facet dispatch. — A host-owned persisted authorization boundary prevents caller-supplied tenant selections from becoming trusted library scope.
+- [Phase 166]: Keep raw search output and host hydration distinct; constrain hydration by tenant and returned IDs. — Separate assertions make raw-hit privacy visible and prevent database filtering from concealing foreign search results.
+- [Phase 166]: Use a fixed paginated live query and explicit primary key for exact counts and deterministic Meilisearch setup. — The live evidence requires an exact count and tenant_id makes automatic Meilisearch primary-key inference ambiguous.
 
 ### Pending Todos
 
