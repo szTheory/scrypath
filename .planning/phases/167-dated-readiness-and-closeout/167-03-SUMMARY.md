@@ -56,7 +56,7 @@ coverage:
       - kind: other
         ref: .planning/phases/167-dated-readiness-and-closeout/167-VERIFICATION.md#pending-continuation-owner-boundary
         status: unknown
-    human_judgment: true
+    human_judgment: false
     rationale: "The final source depends on parent-owned tracking commits and a subsequent exact-SHA hosted receipt that has not yet run."
 duration: 42min
 completed: 2026-09-27

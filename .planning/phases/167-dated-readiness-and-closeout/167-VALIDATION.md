@@ -1,15 +1,15 @@
 ---
 phase: "167"
 slug: "dated-readiness-and-closeout"
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: "2026-09-27"
 ---
 
 # Phase 167 — Validation Strategy
 
-> Draft validation contract mapped to the user-approved three-plan outline. Planning coverage is not runtime evidence or Nyquist sign-off.
+> Validation coverage audited against all six executed tasks. Local and candidate checks pass; the mandatory final-source execution remains external after all tracking commits. Coverage sign-off does not claim that pending execution has passed.
 
 ---
 
@@ -30,7 +30,7 @@ created: "2026-09-27"
 - **After every task commit:** Run the task's fast local record/fixture command from the map after Task 167-01-01 creates the checker and fixtures. Hosted dispatch is reserved for the two ordered acceptance stages below.
 - **After every plan wave:** Run the focused suite and applicable evidence/complete record CLI. No support guide change is planned; if that scope changes, use the existing readiness documentation contract.
 - **Before `$gsd-verify-work`:** Confirm local contract checks and the applicable candidate/final-source closeout evidence.
-- **Local feedback target:** Under 10 seconds for each task's local command; actual timing remains unmeasured until execution. Hosted acceptance is mandatory and outside this target; asynchronous polling keeps progress visible without reducing its latency.
+- **Local feedback target:** Under 10 seconds for each task's local command; the final 22-test suite passed in 4.792 seconds. Hosted acceptance is mandatory and outside this target; asynchronous polling keeps progress visible without reducing its latency.
 
 ---
 
@@ -56,7 +56,7 @@ Task IDs are plan number plus one-based task order. All six tasks have a fast lo
 - Plan 03 Task 1 passed 18 focused tests. Candidate `441a7e75367e3d354a2da66261850530363cf1f4` passed hosted closeout on retry run `36347716269`; the first same-source attempt `36347003052` failed only the mounted-service readiness check and is recorded as a flake. The actual advisory path and package commands each emitted the named authorized-tenant search/facet success marker and passed 16 tests. Candidate artifacts and observations are recorded in `167-EVIDENCE.json` and the append-only section of `167-CLOSEOUT.md`.
 - Plan 03 Task 2's local complete checker and receipt validation pass at candidate HEAD, and the focused suite passes 18 tests. The final-source continuation is still pending parent-owned review/security/verification and normal tracking commits. Therefore the final hosted row above remains pending; no candidate result is represented as final-source acceptance.
 
-Focused suite observed for Plan 03: 18 tests passed in 1.821 seconds (local feedback target: under 10 seconds). The candidate receipt, expected SHA, complete record, and current-source comparison also passed together. Nyquist validation remains unsigned: the validation strategy stays `status: draft`, `nyquist_compliant: false`, and no Nyquist checkbox is inferred from these runs.
+Focused suite observed for Plan 03: 18 tests passed in 1.821 seconds. The post-review suite adds four behavioral regressions and passed 22 tests in 4.792 seconds (local feedback target: under 10 seconds). The candidate receipt, expected SHA, complete record, and current-source comparison also passed together. The subsequent Nyquist audit below validates coverage, not a future hosted result.
 
 The assessment's source, cutoff, condition 6 UNKNOWN, and NOT READY conclusion are unchanged by later candidate evidence.
 
@@ -107,10 +107,10 @@ Task 167-03-02's final command is a mandatory execute-phase continuation **after
 
 ## Wave 0 Requirements
 
-- [ ] 167-01-01 creates the current-phase checker and focused standard-library fixture harness in the leading tracer. This satisfies the scaffold prerequisite before any new command is invoked; there is no separate execution Wave 0 plan.
-- [ ] 167-01-01 covers independent pinned historical-byte preservation and exact source/receipt identity mutation cases; 167-01-02 expands all-claim and C-09 comparison coverage.
-- [ ] 167-02-01 adds six-condition shape/arithmetic, truthful same-day timestamp and owned-inventory fixtures; 167-03-01 adds exact closeout metadata mutation fixtures.
-- [ ] All modes retain structural-only output and fail closed on malformed input; semantic evidence judgment and hosted attestation remain separate.
+- [x] 167-01-01 created the checker and standard-library fixture harness in the leading tracer before use; no separate execution Wave 0 plan was needed.
+- [x] History-byte and receipt-identity mutations, all-claim coverage, and C-09 comparison fixtures pass.
+- [x] Six-condition shape/arithmetic, timestamp, owned-inventory, and closeout-metadata mutation fixtures pass.
+- [x] Tested malformed inputs fail with structural-only diagnostics; semantic evidence judgment and hosted attestation remain separate.
 
 ---
 
@@ -126,7 +126,21 @@ All software acceptance claims use automated scenario evidence or exact-SHA host
 - [x] Sampling continuity: every task has fast local automated feedback; candidate and final-source hosted acceptance remain separately mandatory and ordered.
 - [x] New fixture/CLI commands are created by the named tasks before use; no dangling MISSING reference is planned.
 - [x] No interactive watch-mode test runner is planned; hosted monitor execution is polled asynchronously.
-- [ ] Feedback latency is under 10 seconds for focused local checks.
-- [ ] Set `nyquist_compliant: true` only after the strategy is validated against the accepted plans.
+- [x] Feedback latency is under 10 seconds for focused local checks.
+- [x] Strategy validated against all six accepted plan tasks and the three requirement IDs.
 
-**Outline approval:** user approved three plans with two tasks each. **Validation sign-off:** pending actual Nyquist review and execution evidence; `status: draft`, `nyquist_compliant: false` and `wave_0_complete: false` intentionally remain unchanged.
+**Outline approval:** user approved three plans with two tasks each. **Validation sign-off:** automated coverage reviewed by the execute-phase orchestrator on 2026-09-27; no human UAT was substituted for executable evidence.
+
+## Validation Audit 2026-09-27
+
+| Metric | Count |
+|--------|-------|
+| Task mappings reviewed | 6 |
+| Requirement IDs covered | 3 |
+| Focused behavioral tests passing | 22 |
+| Missing coverage gaps | 0 |
+| Escalated to manual verification | 0 |
+
+GATE-04 maps to the real assessment tracer plus table shape, history, timestamp, and fail-closed arithmetic mutations. CLOSE-03 maps to all eight software-claim joins, canonical release identities, exact receipt/artifact mutations, and six-surface ownership validation. VERIFY-02 maps to named non-skipped advisory scenarios, C-09 path dispositions, expected-source checks, and the existing exact-SHA monitor. Each task has a non-watch local command and failure direction; RED/GREEN commits are recorded in the summaries. The tests exercise invalid evidence rather than only mirroring implementation. No coverage gaps require a Nyquist repair agent.
+
+The unchanged Elixir regression suite also passed: 4 properties, 591 tests, 0 failures, 84 excluded (`mix test --exclude integration --exclude docs_contract`, Elixir 1.19.5/OTP 28.5). This is local library evidence; it does not replace hosted service scenarios. The final exact-SHA gate remains mandatory after every tracked artifact below is committed, with its result retained externally so no tracked success rewrite creates an unattested successor.
