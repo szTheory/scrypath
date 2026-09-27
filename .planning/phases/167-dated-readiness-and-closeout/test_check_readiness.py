@@ -32,6 +32,54 @@ CLOSEOUT = PHASE_DIR / "167-CLOSEOUT.md"
 
 
 class EvidenceCliTests(unittest.TestCase):
+    def test_boolean_hosted_identifiers_are_rejected(self) -> None:
+        for field in ("run_id", "coverage_artifact", "closeout_artifact"):
+            with self.subTest(field=field):
+                receipt = self.closeout_receipt()
+                if field == "run_id":
+                    receipt.update(run_id=True, run_url="https://github.com/szTheory/scrypath/actions/runs/True")
+                else:
+                    receipt[field]["id"] = True
+                with self.assertRaises(ContractError):
+                    check_readiness.validate_closeout_receipt(receipt, "a" * 40)
+        for field in ("run_id", "run_attempt", "job_id"):
+            with self.subTest(advisory_field=field):
+                candidate = self.candidate_advisory()
+                candidate[field] = True
+                for scenario in candidate["scenarios"]:
+                    scenario[field] = True
+                with self.assertRaises(ContractError):
+                    check_readiness.validate_candidate_advisory({"candidate_advisory": candidate})
+        candidate = self.candidate_advisory()
+        candidate["scenarios"][0]["run_attempt"] = True
+        with self.assertRaises(ContractError):
+            check_readiness.validate_candidate_advisory({"candidate_advisory": candidate})
+
+    def test_assessment_rejects_future_evidence_date(self) -> None:
+        text = ASSESSMENT.read_text(encoding="utf-8")
+        row = next(line for line in text.splitlines() if line.startswith("| 1 |"))
+        cells = row.split("|")
+        cells[4] = " 2099-01-01 "
+        self.assert_assessment_rejected(text.replace(row, "|".join(cells), 1))
+
+    def test_assessment_rejects_missing_markdown_and_json_fragments(self) -> None:
+        text = ASSESSMENT.read_text(encoding="utf-8")
+        self.assert_assessment_rejected(text.replace("162-BASELINE.md)", "162-BASELINE.md#missing-execution-anchor)", 1))
+        self.assert_assessment_rejected(text.replace("167-EVIDENCE.json#dependency_review", "167-EVIDENCE.json#missing_key", 1))
+
+    def test_release_identity_kind_malformed_types_use_contract_diagnostic(self) -> None:
+        for kind in ([], {}, None, 42, True, ""):
+            with self.subTest(kind=kind):
+                record = read_json(EVIDENCE, "test evidence")
+                record["release_identities"][0]["kind"] = kind
+                with tempfile.NamedTemporaryFile(mode="w", suffix=".json", dir=PHASE_DIR) as target:
+                    json.dump(record, target)
+                    target.flush()
+                    result = subprocess.run([sys.executable, str(CHECKER), "--root", str(ROOT), "--scope", "evidence", "--evidence", target.name], capture_output=True, text=True, check=False)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("STRUCTURAL CONTRACT FAIL", result.stderr)
+                self.assertNotIn("Traceback", result.stderr)
+
     def closeout_receipt(self) -> dict:
         return {
             "authority": "github-actions-exact-sha",

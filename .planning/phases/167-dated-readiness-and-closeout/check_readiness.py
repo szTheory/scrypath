@@ -166,7 +166,7 @@ def markdown_links(root: Path, base_dir: Path, text: str, label: str) -> list[st
     references = re.findall(r"\[[^]]+\]\(([^)]+)\)", text)
     require(bool(references), f"{label} must contain linked evidence")
     for reference in references:
-        path_part = reference.split("#", 1)[0]
+        path_part, separator, fragment = reference.partition("#")
         target = Path(path_part)
         require(path_part and not target.is_absolute(), f"{label} contains a non-local or empty evidence path")
         resolved = (base_dir / target).resolve()
@@ -175,6 +175,15 @@ def markdown_links(root: Path, base_dir: Path, text: str, label: str) -> list[st
         except ValueError as error:
             raise ContractError(f"{label} evidence link escapes the repository root") from error
         require(resolved.is_file(), f"{label} evidence link does not resolve: {path_part}")
+        if separator:
+            require(bool(fragment), f"{label} evidence fragment must not be empty")
+            if resolved.suffix.casefold() == ".md":
+                validate_markdown_reference(root, resolved.relative_to(root.resolve()).as_posix() + "#" + fragment, label)
+            elif resolved.suffix.casefold() == ".json":
+                document = read_json(resolved, label)
+                require(fragment in document, f"{label} JSON fragment does not exist: #{fragment}")
+            else:
+                raise ContractError(f"{label} evidence fragment target type is unsupported")
     return references
 
 
@@ -214,9 +223,10 @@ def validate_assessment(root: Path, assessment_path: Path, evidence: dict) -> No
         require(cells[2] in {"PASS", "FAIL", "UNKNOWN"}, f"condition {number} status must be PASS, FAIL, or UNKNOWN")
         require(re.fullmatch(r"\d{4}-\d{2}-\d{2}", cells[3]) is not None, f"condition {number} evidence date must be explicit")
         try:
-            date.fromisoformat(cells[3])
+            evidence_date = date.fromisoformat(cells[3])
         except ValueError as error:
             raise ContractError(f"condition {number} evidence date is invalid") from error
+        require(evidence_date <= cutoff.date(), f"condition {number} evidence date occurs after the assessment cutoff")
         require(cells[4] == cutoff.date().isoformat(), f"condition {number} assessment date must match the UTC timestamp")
         markdown_links(root, assessment_path.parent, cells[5], f"condition {number}")
         require(cells[6].strip(), f"condition {number} must state its evidence boundary or limitation")
@@ -408,7 +418,10 @@ def validate_release_identities(root: Path, identities: object) -> None:
         "public-release": "28d3877a05479f2cc104754fc24ab0c9d545c01b",
         "local-artifact": "50d5c12d36ec560525e245bcb992c40e5927854f",
     }
-    by_kind = {item.get("kind"): item for item in identities if isinstance(item, dict)}
+    for item in identities:
+        require(isinstance(item, dict), "release identity must be an object")
+        require(isinstance(item.get("kind"), str) and item["kind"].strip(), "release identity kind must be a non-empty string")
+    by_kind = {item["kind"]: item for item in identities}
     require(
         len(by_kind) == len(identities) and set(by_kind) == set(expected),
         "planning tag, closeout, public release, and local artifact identities must remain separate and unique",
@@ -454,7 +467,7 @@ def validate_closeout_receipt(receipt: dict, expected_source: str) -> None:
     require(receipt.get("head_sha") == expected_source, "closeout receipt source SHA does not match the expected source")
     require(receipt.get("event") == "workflow_dispatch", "closeout receipt event must be workflow_dispatch")
     run_id = receipt.get("run_id")
-    require(isinstance(run_id, int) and run_id > 0, "closeout receipt run_id must be a positive integer")
+    require(type(run_id) is int and run_id > 0, "closeout receipt run_id must be a positive integer")
     run_url = receipt.get("run_url")
     validate_https(run_url, "closeout receipt run_url")
     parsed_url = urlsplit(run_url)
@@ -476,7 +489,7 @@ def validate_closeout_receipt(receipt: dict, expected_source: str) -> None:
     for field in ("coverage_artifact", "closeout_artifact"):
         artifact = receipt.get(field)
         require(isinstance(artifact, dict), f"{field} identity is missing")
-        require(isinstance(artifact.get("id"), int) and artifact["id"] > 0, f"{field} id is missing or invalid")
+        require(type(artifact.get("id")) is int and artifact["id"] > 0, f"{field} id is missing or invalid")
         digest = artifact.get("digest")
         require(isinstance(digest, str) and re.fullmatch(r"sha256:[0-9a-f]{64}", digest) is not None, f"{field} digest is missing or invalid")
         expires = utc_datetime(artifact.get("expires_at"), f"{field}.expires_at")
@@ -492,7 +505,7 @@ def validate_candidate_advisory(evidence: dict) -> None:
     source = candidate.get("source_sha")
     require(isinstance(source, str) and SHA.fullmatch(source), "candidate_advisory.source_sha must be a full SHA")
     for field in ("run_id", "run_attempt", "job_id"):
-        require(isinstance(candidate.get(field), int) and candidate[field] > 0, f"candidate_advisory.{field} must be a positive integer")
+        require(type(candidate.get(field)) is int and candidate[field] > 0, f"candidate_advisory.{field} must be a positive integer")
     require(candidate.get("job_conclusion") == "success", "candidate Phoenix advisory job must conclude success")
     scenarios = candidate.get("scenarios")
     require(isinstance(scenarios, list), "candidate Phoenix named scenarios are required")
@@ -504,6 +517,7 @@ def validate_candidate_advisory(evidence: dict) -> None:
         require(scenario.get("command") == expected_commands[identifier], f"{identifier} command is not the named path/package execution")
         require(scenario.get("source_sha") == source, f"{identifier} source SHA does not match candidate source")
         for field in ("run_id", "run_attempt", "job_id"):
+            require(type(scenario.get(field)) is int and scenario[field] > 0, f"{identifier}.{field} must be a positive integer")
             require(scenario.get(field) == candidate.get(field), f"{identifier}.{field} does not match the observed Phoenix job")
         require(scenario.get("result") == "pass" and scenario.get("skipped") is False, f"{identifier} must be a non-skipped pass")
 
@@ -553,9 +567,8 @@ def validate_evidence(root: Path, record_path: Path, *, require_all_claims: bool
         if evidence_kind == "local-test":
             validate_local_claim(root, claim, receipt_path, fragment)
         elif evidence_kind in {"hosted", "historical-hosted"}:
-            if evidence_kind == "hosted" or fragment != "delete_receipt":
-                for field in ("run_id", "run_attempt", "job_id"):
-                    require(isinstance(claim.get(field), int) and claim[field] > 0, f"{claim_id}.{field} must be a positive integer")
+            for field in ("run_id", "run_attempt", "job_id"):
+                require(type(claim.get(field)) is int and claim[field] > 0, f"{claim_id}.{field} must be a positive integer")
             validate_hosted_claim(root, claim, receipt_path, fragment)
         else:
             raise ContractError(f"{claim_id}.evidence_kind is unsupported")
