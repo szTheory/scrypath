@@ -141,11 +141,17 @@ These are planning validation results observed on 2026-09-27. Runtime fixtures a
 | Structure advisory R6 in Plans 02/03 | Dispositioned: bare Git diff checks intentionally examine whitespace or uncommitted/index cleanliness; they are not source-freshness proof. C-09 uses an explicit historical-to-current range and the comparison checker. |
 | `check.decision-coverage-plan` | passed=true; 8/8 D-01…D-08 covered |
 | Independent requirement/task/wave/probe audit | All three required IDs covered; six tasks; three waves; no same-wave conflicts; all seven EA-167 IDs present exactly once in must_haves |
-| `check.verify-failure-directions 167` | status=ok; six commands; zero warnings/blockers |
+| `check.verify-failure-directions 167` | status=ok; eight commands (six local feedback entries and two external acceptance entries); zero warnings/blockers |
 | `check.verify-command-paths 167` | not_applicable for this Python/Node command set; zero warnings/blockers. Existing script/root paths were inspected, and each new CLI/fixture path is created before its first verification. |
 | API detector over `roadmap.get-phase 167` plus all three PLAN bodies | Nonempty payload, no skipped flag, detected=false, signals=[]; exit 1 is the documented negative result. No integration checkpoint or COVERAGE.md is needed. |
 | Scoped roadmap commands | `roadmap.update-plan-progress 167` inserted plan rows; `roadmap.annotate-dependencies 167` adds the wave ordering. The incidental Progress row edit is restored so only Phase 167's plan list/count changes. |
 
 Every task includes exact file paths, read_first, action, automated command, sibling fails_when, acceptance_criteria and done. All three plans include goal-backward must_haves, explicit ASVS L1 threat models and an artifact inventory. The existing CI monitor/freshness commands are reused; no test or hosted dispatch was executed by the planner.
+
+### Checker revision 2/3 — 2026-09-27
+
+Addressed both reported issues with the approved three sequential plans and two tasks per plan preserved. RESEARCH marks all four planning dispositions RESOLVED and names their existing implementing tasks: bounded condition-3 adjudication (167-01-02, 167-02-02), release-reference carry-forward (167-01-02, 167-02-02), exact lock/source Mint investigation (167-02-02), and execution-time owned cleanup with external final attestation (167-02-01/02, 167-03-01/02). Observed readiness/security/cleanup results remain open until supported by execution evidence; all seven current probes and the separate 11 inherited probes/six prohibitions remain unresolved.
+
+Plan 03 now exposes a focused local unittest command for each task, with separate ordered mandatory candidate/final-source hosted acceptance entries and an immediate fails_when sibling for each command. VALIDATION maps all six tasks to local feedback, records hosted acceptance separately and treats under-10-second latency as an unmeasured execution target. Candidate dispatch remains single-use for its committed source; final attestation still follows every tracked completion write. Static schema/structure, decision-coverage, failure-direction and whitespace checks pass; the previously dispositioned R6 structure advisories remain unchanged. No plan task command, test, hosted gate or evidence verdict was executed or asserted during this revision.
 
 Tool limitation: this runtime exposes `exec_command` and `apply_patch`, not literal Read/Write/Edit tools. Canonical files are created/edited with `apply_patch`; no heredoc writes are used.
