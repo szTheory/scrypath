@@ -12,7 +12,7 @@ Make search indexing feel native to Ecto and ergonomic for Phoenix teams without
 
 Scrypath 0.3.13 remains the published package. The v1.39 planning milestone shipped and was archived on 2026-09-26; it adds no runtime, public API, dependency, backend, or operator UI changes. Its dated readiness decision remains **NOT READY** because conditions 3 and 6 were unknown at assessment. The v1.39 audit's `tech_debt` status is accepted and recorded: all requirement checkboxes and phase verifications are complete, while three Phase 164 cross-references and Nyquist metadata for Phases 163–164 remain follow-up. Final exact-SHA closeout run [36257182675](https://github.com/szTheory/scrypath/actions/runs/36257182675) passed for `dc400b2b57aec0ca6b0ef16c9477d266fd41a433`; the remote annotated `v1.39` tag resolves to that commit. This later receipt can support a newly dated condition 6 assessment but does not change the historical readiness result.
 
-v1.40 Readiness Evidence Closure is approved and roadmaped across Phases 165–167. Phases 165 and 166 have completed implementation and goal verification; Phase 167 remains to assess conditions 3 and 6 without presuming readiness or authorizing operator UI work. The final v1.40 tracking SHA still needs its exact-source closeout receipt.
+v1.40 Readiness Evidence Closure has completed implementation and goal verification across Phases 165–167. Phase 167's separate assessment at `2026-09-27T19:39:00Z` remains **NOT READY**: conditions 1/3/4/5 PASS, condition 2 FAIL because the Phoenix consumer lock retains Mint 1.9.3 with an unresolved High advisory, and condition 6 UNKNOWN at that cutoff. Candidate closeout run [36347716269](https://github.com/szTheory/scrypath/actions/runs/36347716269) passed for `441a7e75367e3d354a2da66261850530363cf1f4`, including independently observed named advisory Phoenix path/package scenarios. All tracking records precede the required final exact-SHA closeout; its receipt is retained externally, with no subsequent tracked write. Milestone audit/archive is the next lifecycle step after that machine gate. Operator UI remains deferred.
 
 ## Next Milestone Goals
 
@@ -246,7 +246,7 @@ Current planning files: **`.planning/{PROJECT,ROADMAP,STATE}.md`** plus mileston
 
 ## Release Train Posture
 
-- **Active milestone:** v1.40 Readiness Evidence Closure is in progress; Phases 165 and 166 are complete and Phase 167 remains. v1.39 remains archived; its dated readiness decision remains NOT READY. Final exact-SHA closeout passed for the archived v1.39 source SHA, and the `v1.39` planning tag resolves to that commit.
+- **Active milestone:** v1.40 has 3/3 phases implemented and verified, with final tracking prepared for external exact-SHA attestation before milestone audit/archive. The Phase 167 dated decision is NOT READY; later CI success does not change its cutoff. v1.39 remains archived with its independent final receipt and planning tag.
 - **Policy:** Keep `main` green on the lean required gates and prefer PR-first execution for serious milestone or feature-depth work.
 - **Next milestone goals:** None selected. Reassess after v1.40's dated readiness decision; passing the gate recommends ScrypathOps as a later focus but does not automatically start UI work.
 - **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, and new UI surfaces remain out of scope.
@@ -305,16 +305,20 @@ measured pure hot paths did not justify speculative optimization.
 | Keep raw search output separate from database hydration and constrain hydration by tenant plus returned IDs. | ✓ Phase 166 — raw hits, counts, facets, and hydrated records are checked independently. |
 | Bound manual repair by an explicit Ecto ID predicate and require exact task success plus the same raw-search oracle. | ✓ Phase 166 — selected scope, task state/index, visible projection, and controls are separate assertions. |
 | Distinguish fresh local package-artifact use from Hex publication and keep historical deletion reuse source-bounded. | ✓ Phase 166 — package and C-09 claims retain their explicit limits. |
+| Preserve the dated assessment independently of later candidate/final acceptance. | ✓ Phase 167 — the consumer Mint High finding and condition 6 UNKNOWN remain visible at the original cutoff. |
+| Finish every tracked completion artifact before final-source attestation. | ✓ Phase 167 — final receipt is external; any later tracked edit requires a new exact-SHA run. |
+| Validate evidence structure without treating parser success as source truth or owner risk acceptance. | ✓ Phase 167 — 22 behavioral fixtures, resolved code review, and separate semantic evidence dispositions. |
 
 ## Planning window
 
-v1.40 is active and continues phase numbering after Phase 164. Phases 165 and 166 are complete; Phase 167 is the next phase. v1.39 is archived across Phases 162–164; its historical readiness decision remains NOT READY. Historical phase directories for v1.38 and v1.39 are archived under `.planning/milestones/`.
+v1.40 is active with all eight plans implemented across Phases 165–167. The final exact-SHA machine gate follows tracking; milestone audit/archive follows acceptance. No next milestone is selected. v1.39 is archived across Phases 162–164; its historical readiness decision remains NOT READY. Historical phase directories for v1.38 and v1.39 are archived under `.planning/milestones/`.
 
 ## Requirements
 
 ### Validated
 
-- [x] **v1.40 Phases 165–166** (2026-09-27): **API-01**–**API-02**, **HOST-01**–**HOST-02**, **PKG-04**, **REPAIR-01**–**REPAIR-02**, **DELETE-01** — public tenant/facet contracts, bounded host-owned tenant search and manual repair, path/local-artifact receipts, and source-bounded C-09 reuse. Phase 167 still owns the readiness and closeout decision.
+- [x] **v1.40 Phase 167** (2026-09-27): **GATE-04**, **CLOSE-03**, **VERIFY-02** — separately dated NOT READY assessment, eight bounded software-claim joins, release/debt reconciliation, and verified candidate closeout. Final-source attestation is the external post-tracking gate; no future receipt is claimed here.
+- [x] **v1.40 Phases 165–166** (2026-09-27): **API-01**–**API-02**, **HOST-01**–**HOST-02**, **PKG-04**, **REPAIR-01**–**REPAIR-02**, **DELETE-01** — public tenant/facet contracts, bounded host-owned tenant search and manual repair, path/local-artifact receipts, and source-bounded C-09 reuse.
 - [x] **v1.39** (2026-09-26): **BASE-01**–**BASE-03**, **FIND-01**–**FIND-03**, **CLOSE-01**–**CLOSE-02**, **GATE-01**–**GATE-03** — 24-claim non-UI readiness baseline, evidence-led triage with zero qualifying follow-up candidates, and a six-condition **NOT READY** assessment. The archive audit retains documented metadata/Nyquist tech debt; see `milestones/v1.39-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`.
 - [x] **v1.38** (2026-09-25): **PKG-01**–**PKG-03**, **PROOF-01**, **DOC-01**, **HYGIENE-01**, **REL-01**, **CLOSE-01** — package-backed Phoenix integration proof, machine-checked documentation, exact-SHA CI, green main, Hex/HexDocs 0.3.13 publication, consumer compile, and package/tag parity.
 - [x] **Phase 147** (2026-08-25): **SEC-04**, **COMPAT-01**, **COMPAT-03**, **EVID-01**, **EVID-02** — ecommerce aligned to the fixed-compatible mounted web/client cohort; exact-SHA resolution, canonical path, deterministic/service, Docker-focused browser, cleanup, same-window four-graph audit, and ordered batch-topology verification passed with no human UAT.
@@ -392,7 +396,7 @@ v1.40 is active and continues phase numbering after Phase 164. Phases 165 and 16
 
 ### Active
 
-- [ ] **v1.40 Phase 167**: **GATE-04**, **CLOSE-03**, **VERIFY-02** — a new dated readiness assessment and exact-source closeout with historical evidence limits preserved.
+No additional implementation phase is approved. Finish the external post-tracking source gate and audit v1.40 before selecting further work. The consumer Mint finding, release-reference mismatch, and inherited probe/metadata limits remain explicit; no remediation scope or owner acceptance is inferred.
 
 ### Out of Scope
 
@@ -422,4 +426,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-09-27 after Phase 166*
+*Last updated: 2026-09-27 after Phase 167 verification, before final-source attestation*

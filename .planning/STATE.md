@@ -3,19 +3,19 @@ gsd_state_version: "1.0"
 milestone: v1.40
 milestone_name: Readiness Evidence Closure
 current_phase: 167
-current_phase_name: Dated Readiness and Closeout
-current_plan: 3
-status: executing
-stopped_at: Completed 167-02-PLAN.md
-last_updated: "2026-09-27T19:51:29.561Z"
+current_plan: Complete
+status: completed
+stopped_at: Phase 167 tracking complete — external final-source gate before milestone audit
+last_updated: "2026-09-27T21:19:58Z"
 last_activity: 2026-09-27
-last_activity_desc: Phase 167 execution started
-state_head: 8fbea924216752fc7000e08a6e62cb839aba2c9a
+last_activity_desc: Phase 167 verified; final tracking prepared for external attestation
+state_head: cd83fe703a2a18d3a91ecdd3eacc6d78e367d2b6
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
+  percent: 100
 ---
 
 # Project State
@@ -23,20 +23,20 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** Phase 167 — Dated Readiness and Closeout
+**Current Focus:** v1.40 final-source acceptance, then milestone audit
 
 ## Current Position
 
-Phase: 167 (Dated Readiness and Closeout) — EXECUTING
-Current Plan: 3
+Phase: 167 (Dated Readiness and Closeout) — verified; final-source continuation follows tracking
+Current Plan: Complete
 Total Plans in Phase: 3
 Plan: 3 of 3
-Plans: 0/3
-Status: Ready to execute
-Next command: `$gsd-execute-phase 167`
-Last activity: 2026-09-27 — Phase 167 execution started
+Plans: 3/3
+Status: All phase implementation and tracking complete; external final-source acceptance required
+Next command: `$gsd-audit-milestone` after the external final-source gate succeeds
+Last activity: 2026-09-27 — Phase 167 verified and tracking finalized before exact-SHA attestation
 
-Progress: [███████░░░] 67% of milestone phases complete
+Progress: [██████████] 100% of milestone phases complete
 
 ## Milestone Context
 
@@ -48,10 +48,13 @@ Progress: [███████░░░] 67% of milestone phases complete
 
 ## Recent Evidence
 
+- Phase 167's dated assessment at `2026-09-27T19:39:00Z` is NOT READY: conditions 1/3/4/5 PASS, 2 FAIL, 6 UNKNOWN. The consumer Mint 1.9.3 High advisory is unresolved; later CI does not revise this cutoff.
+- Phase 167 candidate `441a7e75367e3d354a2da66261850530363cf1f4` passed run `36347716269`; named advisory Phoenix path/package scenarios each passed 16 tests. One earlier mounted-readiness failure remains recorded. Final exact-SHA acceptance must follow all tracking commits and be reported externally with no later tracked write.
+- Phase 167 verification passed all three roadmap criteria; 22 focused tests, complete structural checker, L1 mitigation audit, and Nyquist coverage pass. Local Elixir regression passed 4 properties/591 tests with 84 exclusions. These checks do not claim readiness or future final-source CI success.
 - v1.39's final exact-SHA closeout run `36257182675` passed on `dc400b2b57aec0ca6b0ef16c9477d266fd41a433`; annotated tag `v1.39` resolves to that commit. This receipt supports only its recorded claims and source.
 - Scrypath 0.3.13 has package-backed Phoenix, exact-SHA, post-merge, Hex/HexDocs, consumer-compilation, and parity receipts from v1.38. They do not broaden the selected v1.40 workflow claims.
-- v1.40 research identifies C10-R1 and C11-R1 as unexecuted public-entry hypotheses. No suspected flaw is a reproduced defect or a pass before Phase 165's independent probes.
-- Phase 165 Plan 02 at `a883958c73d7f102a7404a317e0d13b7c15ccbd9` reproduced raw keyword-filter tuple serialization failing before HTTP and corrected it through the existing filter renderer. Req.Test and local gates pass; live Meilisearch and package behavior for this exact scenario remain a Phase 166 handoff.
+- v1.40 research began with C10-R1 and C11-R1 as unexecuted hypotheses; Phase 165 independently reproduced the bounded tenant/runtime and facet-serialization defects and corrected them.
+- Phase 165 Plan 02 at `a883958c73d7f102a7404a317e0d13b7c15ccbd9` corrected raw keyword-filter tuple serialization through the existing renderer. Phase 166 subsequently proved the named live path/package scenario at its measured source.
 - Phase 165 candidate `384c8839db2f021db421d0dbeff096ee439fd721` passed exact-SHA hosted closeout run `36277023698`; the five required jobs, advisory coverage, and closeout attestation succeeded with immutable artifacts. The final tracking SHA still requires its own closeout.
 - C-16 requires one representative ID-scoped manual repair through terminal task success to visible search. C-09 can be reused only after a relevant-path freshness comparison; otherwise its bounded claim needs targeted evidence or UNKNOWN.
 - Phase 166 candidate `50d5c12d36ec560525e245bcb992c40e5927854f` passed exact-SHA workflow-dispatch closeout run `36321613553` at attempt 1. Required jobs, coverage, and closeout attestation succeeded; Phoenix advisory job `108626420623` and backend job `108626420717` both contain the named successful Phase 166 scenario receipts.
@@ -88,9 +91,10 @@ None yet.
 
 ### Blockers/Concerns
 
-- The final readiness result is not predetermined. Any insufficient condition or unresolved gate-rank finding leaves the new assessment NOT READY.
+- [Phase 167] The assessment is NOT READY: Phoenix consumer Mint 1.9.3 has an unresolved High advisory with no owner acceptance; condition 6 was UNKNOWN at the assessment cutoff.
 - Historical evidence can be reused only after source-identity and relevant-path comparisons; unavailable or invalidated evidence is recorded with its precise limit rather than inferred.
-- Phase 166's service and candidate-source receipts are complete. Phase 167 owns the separate six-condition assessment; the 11 probe rows and six descriptor-less prohibitions remain unresolved.
+- [Phase 167] Release-reference mismatch and three accepted archived planning debts remain bounded carry-forwards. Seven Phase 167 assumptions, eleven inherited Phase 166 probes, and six descriptor-less prohibitions remain unresolved constraints.
+- [Phase 167] Final-source receipt must be external and match unchanged clean HEAD after every tracking commit. This saved state is the pre-attestation snapshot by design; consult the external run before accepting final completion.
 
 ## Deferred Items
 
@@ -106,7 +110,8 @@ None yet.
 |-------|-------|-------|----------|
 | 165. Public Tenant and Facet Contracts | 2/2 | 25 min | 12.5 min |
 | 166. Host Tenant and Repair Evidence | 3/3 | Duration unmeasured | - |
-| 167. Dated Readiness and Closeout | TBD | - | - |
+| 167. Dated Readiness and Closeout | 3/3 | 125 min executor work; orchestrator/final CI separate | - |
+| 167 | 3 | - | - |
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -118,13 +123,15 @@ None yet.
 | Phase 166 P03 | Unmeasured | 2 tasks | 11 files |
 | Phase 167 P01 | 36min | 2 tasks | 4 files |
 | Phase 167 P02 | 47min | 2 tasks | 6 files |
+| Phase 167 P03 | 42min | 2 tasks | 7 files |
 
 ## Session Continuity
 
-Last session: 2026-09-27T19:51:29.537Z
-Stopped at: Completed 167-02-PLAN.md
+Last session: 2026-09-27T21:19:58Z
+Stopped at: Phase 167 tracking complete; external exact-SHA closeout, then milestone audit
 Resume file: None
 
 ## Operator Next Steps
 
-- Begin Phase 167: prepare a separate dated six-condition readiness assessment using the exact-source receipts and their stated claim limits.
+- Complete the already authorized external final-source continuation at the committed tracking HEAD. If it fails, repair only the observed cause and attest any new source; no routine human UAT is needed.
+- After acceptance, audit v1.40 with `$gsd-audit-milestone`, then choose archive/closure. Do not start operator UI or dependency remediation implicitly.

@@ -36,7 +36,9 @@ key-decisions:
 patterns-established:
   - "Validate receipt identity structurally while retaining semantic source review and hosted observations as separate evidence."
   - "Require independent named advisory scenario records rather than inferring success from required-job aggregate status."
-requirements-completed: []
+requirements-completed: [CLOSE-03, VERIFY-02, GATE-04]
+requirements_scope: implemented-and-candidate-verified; final acceptance requires the external post-tracking receipt
+final_attestation: external-after-tracking
 coverage:
   - id: D1
     description: "Candidate closeout is source-bound to immutable artifact identities, with independent named advisory observations."
@@ -54,13 +56,13 @@ coverage:
     requirement: VERIFY-02
     verification:
       - kind: other
-        ref: .planning/phases/167-dated-readiness-and-closeout/167-VERIFICATION.md#pending-continuation-owner-boundary
+        ref: .planning/phases/167-dated-readiness-and-closeout/167-VERIFICATION.md#final-source-continuation
         status: unknown
     human_judgment: false
     rationale: "The final source depends on parent-owned tracking commits and a subsequent exact-SHA hosted receipt that has not yet run."
 duration: 42min
 completed: 2026-09-27
-status: pending-final-gate
+status: tracked-work-complete-final-gate-external
 ---
 
 # Phase 167 Plan 03: Candidate Closeout and Final-Source Handoff Summary
@@ -135,3 +137,9 @@ Plan 03 is prepared for the parent continuation. Do not mark Phase 167 complete 
 ## Self-Check: PASSED
 
 The summary, validation, and verification files exist. Task commits `6252dc6`, `441a7e7`, `4278d53`, and `1aa147d` are present. The scan found no introduced stub; the empty digest in the test file is an intentional malformed-receipt mutation fixture.
+
+## Orchestrator verification and tracking
+
+The focused code review's four findings were reproduced and fixed in `74361b6`; the reviewer confirmed all resolved. The suite now has 22 passing tests. `cd83fe7` records L1 security mitigation verification (13 closed, no new accepted risks) and the actual Nyquist coverage audit. The goal verifier independently passed the focused suite and complete candidate receipt checks and verified all three roadmap criteria for the pre-final scope. UI review is not applicable; no UI files changed. The unchanged local library suite passed 4 properties and 591 tests, with 84 exclusions.
+
+Normal tracking, this addendum, and the refreshed verification fingerprint precede the final external gate. Requirement completion metadata describes implemented and candidate-verified scope, not an unobserved final receipt. The parent must now run Plan 03's exact-final-SHA continuation and report its receipt externally; no tracked success rewrite follows it. The original handoff chronology above remains intact.

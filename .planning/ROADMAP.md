@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- 🚧 **v1.40 Readiness Evidence Closure** — Phases 165–167 (approved, planning)
+- 🚧 **v1.40 Readiness Evidence Closure** — Phases 165–167 (3/3 phases verified; final-source gate then milestone audit)
 - ✅ **v1.39 Pre-Operator UI Quality Readiness Ratchet** — Phases 162–164 (shipped 2026-09-26) — [archive](milestones/v1.39-ROADMAP.md)
 - ✅ **v1.38 Packaged Adopter Proof** — Phases 160–161 (shipped 2026-09-25) — `scrypath 0.3.13`; audit: `milestones/v1.38-MILESTONE-AUDIT.md`
 - ✅ **v1.37 Code Quality Ratchet** — Phases 148–159 (shipped 2026-08-26) — see `milestones/v1.37-ROADMAP.md`
@@ -14,11 +14,13 @@
 
 v1.40 is approved to close bounded condition-3 and condition-6 evidence gaps. It reproduces existing public tenant and facet input contracts, proves one host-owned tenant workflow and one ID-scoped repair-to-visible-search outcome, then makes a separate dated six-condition decision. Phase 164's historical **NOT READY** result remains unchanged. The milestone introduces no authentication product, UI or brand work, public backend abstraction, broad endpoint/version matrix, forced release, or required CI lane.
 
+Phase 167's separately dated assessment is also **NOT READY** (condition 2 FAIL, condition 6 UNKNOWN at cutoff). Implementation and candidate verification are complete. Completion tracking below is prepared before the mandatory exact-final-SHA run; final acceptance is established by its external receipt and unchanged clean HEAD, never by a subsequent tracking commit. Audit/archive follows that gate; no next milestone or operator UI work is selected.
+
 ## Phases
 
 - [x] **Phase 165: Public Tenant and Facet Contracts** - Reproduce existing public inputs and correct only confirmed compatible failures. (completed 2026-09-26)
 - [x] **Phase 166: Host Tenant and Repair Evidence** - Prove one host-owned tenant workflow, bounded repair visibility, and valid delete-receipt reuse. (completed 2026-09-27)
-- [ ] **Phase 167: Dated Readiness and Closeout** - Reconcile evidence and make a fresh, source-bounded six-condition decision.
+- [x] **Phase 167: Dated Readiness and Closeout** - Reconcile evidence and make a fresh, source-bounded six-condition decision. (completed 2026-09-27)
 
 ## Phase Details
 
@@ -79,7 +81,7 @@ Plans:
   2. Archived v1.39 closeout, package/release, and support evidence are traceable to exact source identities; the release-reference mismatch, accepted planning metadata debt, and only current task-owned cleanup are explicitly dispositioned.
   3. Every v1.40 software acceptance claim has automated, scenario-specific evidence tied to its exact source SHA, with routine human UAT unnecessary; the relevant advisory-lane scenario must pass for its recorded source while remaining distinct from the existing required merge-gate topology, and no broad matrix or new required service lane is added.
 
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans executed; final-source receipt remains external after tracking
 
 **Wave 1**
 
@@ -91,7 +93,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 167-03-PLAN.md — Complete candidate acceptance and the external final-SHA closeout.
+- [x] 167-03-PLAN.md — Complete candidate acceptance and the external final-SHA closeout.
 
 ## Progress
 
@@ -99,4 +101,4 @@ Plans:
 |-------|----------------|--------|-----------|
 | 165. Public Tenant and Facet Contracts | 2/2 | Complete    | 2026-09-26 |
 | 166. Host Tenant and Repair Evidence | 3/3 | Complete    | 2026-09-27 |
-| 167. Dated Readiness and Closeout | 2/3 | In Progress|  |
+| 167. Dated Readiness and Closeout | 3/3 | Complete    | 2026-09-27 |

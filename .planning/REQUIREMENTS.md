@@ -72,4 +72,6 @@ Every v1 requirement maps to exactly one phase in the approved v1.40 roadmap.
 
 ---
 *Requirements defined: 2026-09-26*
-*Last updated: 2026-09-26 after v1.40 roadmap creation*
+Implementation and scenario evidence satisfy the checked requirements. Phase 167's final-source machine gate runs after all tracking commits; its receipt remains external. These checkboxes do not substitute the candidate for the final SHA or change the dated NOT READY assessment.
+
+*Last updated: 2026-09-27 after Phase 167 verification, before final-source attestation*
