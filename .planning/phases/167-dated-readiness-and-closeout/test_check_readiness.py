@@ -19,6 +19,19 @@ EVIDENCE = PHASE_DIR / "167-EVIDENCE.json"
 
 
 class EvidenceCliTests(unittest.TestCase):
+    def test_complete_scope_exposes_assessment_and_closeout_contract(self) -> None:
+        result = subprocess.run(
+            [sys.executable, str(CHECKER), "--help"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("complete", result.stdout)
+        self.assertIn("--assessment", result.stdout)
+        self.assertIn("--closeout", result.stdout)
+
     def test_real_host_path_receipt_is_traceable(self) -> None:
         result = subprocess.run(
             [
