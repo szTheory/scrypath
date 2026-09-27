@@ -197,6 +197,169 @@
       }
     }
   ],
+  "candidate_advisory": {
+    "source_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+    "run_id": 36347716269,
+    "run_attempt": 1,
+    "job_id": 108700229969,
+    "job_conclusion": "success",
+    "scenarios": [
+      {
+        "id": "host-path",
+        "scenario": "authorized tenant search and facet values",
+        "command": "mix verify.phoenix_example",
+        "source_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+        "run_id": 36347716269,
+        "run_attempt": 1,
+        "job_id": 108700229969,
+        "result": "pass",
+        "skipped": false
+      },
+      {
+        "id": "host-package",
+        "scenario": "authorized tenant search and facet values",
+        "command": "mix verify.phoenix_example --package",
+        "source_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+        "run_id": 36347716269,
+        "run_attempt": 1,
+        "job_id": 108700229969,
+        "result": "pass",
+        "skipped": false
+      }
+    ]
+  },
+  "candidate_closeout": {
+    "observed_at_utc": "2026-09-27T20:32:57Z",
+    "source_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+    "acceptance_run": {
+      "authority": "github-actions-exact-sha",
+      "repository": "szTheory/scrypath",
+      "workflow": "ci.yml",
+      "run_id": 36347716269,
+      "run_attempt": 1,
+      "run_url": "https://github.com/szTheory/scrypath/actions/runs/36347716269",
+      "head_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+      "event": "workflow_dispatch",
+      "jobs": [
+        "core (required)",
+        "package (required)",
+        "repository-contracts (required)",
+        "backend (required)",
+        "ecommerce-mounted (required)",
+        "coverage (advisory)",
+        "closeout-attestation"
+      ],
+      "coverage_artifact": {
+        "id": 10941550649,
+        "digest": "sha256:e307bb0eb9754d8ad8f51a5c411fe30d62c343a694fa7a37374d8613c5cbe0a3",
+        "expires_at": "2026-10-04T20:22:07Z"
+      },
+      "closeout_artifact": {
+        "id": 10941635486,
+        "digest": "sha256:4d42626b26a067d4a34cd3ebabd3c6fa5be230bfcb53be3b1cb0882423705ae7",
+        "expires_at": "2026-10-04T20:25:22Z"
+      }
+    },
+    "earlier_same_source_attempt": {
+      "run_id": 36347003052,
+      "run_attempt": 1,
+      "run_url": "https://github.com/szTheory/scrypath/actions/runs/36347003052",
+      "head_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+      "event": "workflow_dispatch",
+      "result": "failed",
+      "failed_job": "ecommerce-mounted (required)",
+      "diagnostic": "Browser startup reported the mounted web service was not stable for three consecutive checks (exit 70). The uploaded compose diagnostic showed no application assertion; the same relevant source passed that job at Phase 166 source 50d5c12d36ec560525e245bcb992c40e5927854f. The retry passed. Retain as a hosted readiness flake."
+    },
+    "phoenix_advisory": {
+      "run_id": 36347716269,
+      "run_attempt": 1,
+      "job_id": 108700229969,
+      "job_name": "phoenix-example (advisory)",
+      "job_conclusion": "success",
+      "source_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+      "scenarios": [
+        {
+          "id": "host-path",
+          "scenario": "authorized tenant search and facet values",
+          "command": "mix verify.phoenix_example",
+          "source_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+          "run_id": 36347716269,
+          "run_attempt": 1,
+          "job_id": 108700229969,
+          "result": "pass",
+          "skipped": false,
+          "marker": {
+            "index": "phx_tenant_183074_post",
+            "setup_task_ids": [14, 15],
+            "write_task_ids": [16, 17, 18],
+            "tenant_a_permitted_ids": ["8"],
+            "tenant_a_total_hits": 1,
+            "tenant_a_categories": [["phone-a", 1]],
+            "tenant_a_facet_values": [["phone-a", 1]],
+            "tenant_b_permitted_ids": ["10"],
+            "tenant_b_total_hits": 1,
+            "tenant_b_categories": [["phone-b-forbidden", 1]],
+            "tenant_b_facet_values": [["phone-b-forbidden", 1]],
+            "tenant_b_marker_ids": ["10"],
+            "test_suite": "16 tests, 0 failures"
+          }
+        },
+        {
+          "id": "host-package",
+          "scenario": "authorized tenant search and facet values",
+          "command": "mix verify.phoenix_example --package",
+          "source_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+          "run_id": 36347716269,
+          "run_attempt": 1,
+          "job_id": 108700229969,
+          "result": "pass",
+          "skipped": false,
+          "local_artifact": {
+            "build_source_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+            "version_tag": "v0.3.13",
+            "consumer_compiled": true,
+            "public_registry_installation_claimed": false
+          },
+          "marker": {
+            "index": "phx_tenant_1186_post",
+            "setup_task_ids": [34, 35],
+            "write_task_ids": [36, 37, 38],
+            "tenant_a_permitted_ids": ["16"],
+            "tenant_a_total_hits": 1,
+            "tenant_a_categories": [["phone-a", 1]],
+            "tenant_a_facet_values": [["phone-a", 1]],
+            "tenant_b_permitted_ids": ["18"],
+            "tenant_b_total_hits": 1,
+            "tenant_b_categories": [["phone-b-forbidden", 1]],
+            "tenant_b_facet_values": [["phone-b-forbidden", 1]],
+            "tenant_b_marker_ids": ["18"],
+            "test_suite": "16 tests, 0 failures"
+          }
+        }
+      ]
+    },
+    "repair_marker_observation_only": {
+      "run_id": 36347716269,
+      "run_attempt": 1,
+      "job_id": 108700229922,
+      "job_name": "backend (required)",
+      "job_conclusion": "success",
+      "source_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+      "scenario": "bounded manual repair restores the selected raw document",
+      "marker": {
+        "selected_ids": [166000020],
+        "first_task": {"state": "succeeded", "uid": 20},
+        "repeat_task": {"state": "succeeded", "uid": 21},
+        "raw_target_id": 166000020,
+        "source_only_control_id": 166000021,
+        "visible_control_id": 166000022,
+        "read_requests": 3,
+        "mutation_requests": 0,
+        "elapsed_ms": 445
+      },
+      "claim_status": "Observation is recorded for the candidate source; the existing bounded repair claim remains joined to its Phase 166 source."
+    }
+  },
   "release_identities": [
     {
       "kind": "planning-tag",
