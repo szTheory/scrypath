@@ -15,7 +15,7 @@ done
 cd /app/examples/scrypath_ecommerce
 
 echo "Preparing the deterministic database and search indexes..."
-mix e2e.prepare
+PHX_SERVER=false mix e2e.prepare
 
 echo "Building ecommerce assets..."
 mix esbuild.install --if-missing
@@ -31,7 +31,7 @@ echo "Building mounted ScrypathOps assets..."
 )
 
 echo "Seeding deterministic ecommerce/operator scenarios..."
-mix scrypath.demo.seed
+PHX_SERVER=false mix scrypath.demo.seed
 
 echo "Starting the persistent E2E server..."
 exec env SCRYPATH_E2E_NO_SANDBOX=1 mix phx.server
