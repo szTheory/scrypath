@@ -71,6 +71,39 @@ defmodule Scrypath.Repository.DependencyAuditTest do
     assert Enum.count(Process.get(calls_key), &match?({:audit, _}, &1)) == 3
   end
 
+  test "a child exception is captured and later graphs continue" do
+    root = fixture_repo()
+    path = "examples/phoenix_meilisearch"
+    calls_key = {__MODULE__, make_ref()}
+
+    runner =
+      command_runner(root, calls_key, fn
+        "mix", ["run" | _args], opts ->
+          if relative(opts[:cd], root) == path,
+            do: raise("simulated missing mix executable"),
+            else: :default
+
+        _, _, _ ->
+          :default
+      end)
+
+    result =
+      Audit.run(
+        root: root,
+        tracked_file_reader: tracked_reader(Audit.inventory()),
+        command_runner: runner,
+        clock: clock()
+      )
+
+    phoenix = Enum.find(result.graphs, &(&1.path == path))
+    assert result.status == :failed
+    assert phoenix.status == :incomplete
+    assert phoenix.audit.status == :unavailable
+    assert Enum.any?(phoenix.errors, &String.contains?(&1, "simulated missing mix executable"))
+    assert {:audit, "scrypath_ops"} in Process.get(calls_key)
+    assert Enum.count(Process.get(calls_key), &match?({:fetch, _}, &1)) == 4
+  end
+
   test "missing and unexpected tracked locks fail the exact inventory guard" do
     root = fixture_repo()
     calls_key = {__MODULE__, make_ref()}
@@ -81,7 +114,7 @@ defmodule Scrypath.Repository.DependencyAuditTest do
     result =
       Audit.run(
         root: root,
-        tracked_file_reader: tracked_reader(tracked),
+        tracked_file_reader: fn _root -> {:ok, tracked} end,
         command_runner: command_runner(root, calls_key),
         clock: clock()
       )
@@ -89,6 +122,24 @@ defmodule Scrypath.Repository.DependencyAuditTest do
     assert result.status == :failed
     assert Enum.any?(result.errors, &String.contains?(&1, missing))
     assert Enum.any?(result.errors, &String.contains?(&1, "new_app/mix.lock"))
+    assert Enum.count(Process.get(calls_key), &match?({:audit, _}, &1)) == 4
+  end
+
+  test "an unavailable tracked-file scan fails but still attempts every graph" do
+    root = fixture_repo()
+    calls_key = {__MODULE__, make_ref()}
+
+    result =
+      Audit.run(
+        root: root,
+        tracked_file_reader: fn _root -> {:error, :git_unavailable} end,
+        command_runner: command_runner(root, calls_key),
+        clock: clock()
+      )
+
+    assert result.status == :failed
+    assert Enum.any?(result.errors, &String.contains?(&1, "git_unavailable"))
+    assert Enum.count(Process.get(calls_key), &match?({:fetch, _}, &1)) == 4
     assert Enum.count(Process.get(calls_key), &match?({:audit, _}, &1)) == 4
   end
 
@@ -314,6 +365,21 @@ defmodule Scrypath.Repository.DependencyAuditTest do
     elixir = System.find_executable("elixir") || flunk("elixir executable is unavailable")
     script = Path.expand("scripts/ci/dependency_audit.exs")
     path = bin <> ":" <> System.get_env("PATH", "")
+    missing_bin = Path.join(root, "missing-mix-bin")
+    File.mkdir_p!(missing_bin)
+    write_executable(Path.join(missing_bin, "git"), fake_git(Audit.inventory()))
+
+    otp_bin =
+      Path.join([
+        System.user_home!(),
+        ".asdf",
+        "installs",
+        "erlang",
+        System.get_env("ASDF_ERLANG_VERSION", "28.1"),
+        "bin"
+      ])
+
+    missing_mix_path = Enum.join([missing_bin, otp_bin, "/usr/bin", "/bin"], ":")
 
     {success_output, success_status} =
       System.cmd(elixir, [script], cd: root, env: [{"PATH", path}])
@@ -330,6 +396,13 @@ defmodule Scrypath.Repository.DependencyAuditTest do
 
     assert failure_status != 0
     assert failure_output =~ "status=failed"
+
+    {missing_mix_output, missing_mix_status} =
+      System.cmd(elixir, [script], cd: root, env: [{"PATH", missing_mix_path}])
+
+    assert missing_mix_status != 0
+    assert missing_mix_output =~ "fetch_status=unavailable"
+    assert missing_mix_output =~ "status=failed"
   end
 
   test "the repository-only audit script is outside the Hex package whitelist" do
