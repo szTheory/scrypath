@@ -1,5 +1,29 @@
 # Milestones
 
+## v1.40 Readiness Evidence Closure (Shipped: 2026-09-27)
+
+**Phases completed:** 3 phases, 8 plans, 16 tasks
+
+**Key accomplishments:**
+
+- Reproduced and corrected tenant-scope leaks across single, multi, and facet search, and fixed Meilisearch facet keyword-filter encoding.
+- Proved the named Phoenix host's persisted-membership tenant isolation through repository-path and freshly built package runs.
+- Traced read-only mismatch inspection through ID-bounded repair to terminal task success and visible search; reused the delete receipt only after a 16-path freshness comparison.
+- Recorded a dated six-condition **NOT READY** assessment, preserving the Mint advisory, UNKNOWN cutoff, release-reference mismatch, and bounded evidence limits without starting operator UI work.
+- Closed final phase tracking at `343e20be66ab0c17f62b95138203c86e868bd1ee`; exact-SHA run [36361116862](https://github.com/szTheory/scrypath/actions/runs/36361116862) passed all five required jobs, coverage, and closeout attestation with immutable artifacts.
+
+**Milestone audit:** `tech_debt` accepted for closeout. Requirements, phases, integration paths, and end-to-end flows passed 11/11, 3/3, 11/11, and 5/5 respectively. Nyquist coverage is compliant for all three phases. The unresolved Mint advisory and condition 6 UNKNOWN remain in the dated **NOT READY** assessment; release-reference and inherited assumption limits remain explicit. See `milestones/v1.40-MILESTONE-AUDIT.md`.
+
+**Final tracking closeout:** [CI run 36361116862](https://github.com/szTheory/scrypath/actions/runs/36361116862) passed on `343e20be66ab0c17f62b95138203c86e868bd1ee` after Phase 165/166 verification refresh. Coverage artifact `10945688213` and closeout artifact `10946086040` have recorded immutable digests in the audit. Earlier same-SHA run 36360456437 hit a mounted-service startup timeout; the same-source retry passed. This milestone is a planning archive, not a Hex release.
+
+**Stats:** 77 files changed, 10,725 insertions, 75 deletions across 62 commits from 2026-09-26 to 2026-09-27 (range `512a3360` → `343e20be`, through final phase-tracking verification).
+
+**Archives:** `milestones/v1.40-ROADMAP.md`, `milestones/v1.40-REQUIREMENTS.md`, `milestones/v1.40-MILESTONE-AUDIT.md`, `milestones/v1.40-phases/`
+
+**What's next:** No next milestone is approved. Keep the release train idle until new concrete evidence and owner-approved scope exist; operator UI remains gated on a passing readiness assessment and maintainer availability.
+
+---
+
 ## v1.39 Pre-Operator UI Quality Readiness Ratchet (Shipped: 2026-09-26)
 
 **Delivered:** An evidence-led non-UI readiness assessment with a 24-claim baseline, explicit findings dispositions, and a fail-closed readiness decision. The decision is **NOT READY** because conditions 3 and 6 remain unknown; no operator UI work is authorized.

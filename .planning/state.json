@@ -1,7 +1,7 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v1.40 \u2014 Readiness Evidence Closure",
+  "milestone": "v1.40 — Readiness Evidence Closure",
   "phases": [
     {
       "number": "165",
@@ -20,9 +20,9 @@
     }
   ],
   "next": {
-    "command": "/gsd:audit-milestone",
-    "label": "Audit v1.40 after final-source acceptance",
-    "reason": "All phase work verified; external exact-SHA receipt follows tracking before milestone audit/archive"
+    "command": "/gsd:progress",
+    "label": "Show progress",
+    "reason": "Unsure of state — showing progress"
   },
-  "updated_at": "2026-09-27T21:19:58Z"
+  "updated_at": "2026-09-28T00:29:37.997Z"
 }
