@@ -74,10 +74,14 @@ defmodule Scrypath.Phase99ContractTest do
       assert ordered?(@example_readme, "cd examples/phoenix_meilisearch", "mix deps.get")
       assert ordered?(@example_readme, "mix deps.get", "mix test")
 
-      assert String.contains?(
-               @verify_adopter_source,
-               "cd examples/phoenix_meilisearch && mix deps.get && mix test"
-             )
+      adopter_live_docs =
+        @verify_adopter_source
+        |> String.split("Pass `--live`", parts: 2)
+        |> List.last()
+        |> String.split("Live mode requires", parts: 2)
+        |> hd()
+
+      assert ordered?(adopter_live_docs, "mix deps.get --check-locked", "mix test")
     end
   end
 

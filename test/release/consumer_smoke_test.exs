@@ -16,7 +16,7 @@ defmodule Scrypath.Release.ConsumerSmokeTest do
     mix_home = Path.join(tmp_root, "mix_home")
     File.mkdir_p!(hex_home)
     File.mkdir_p!(mix_home)
-    isolated_env = [{"HEX_HOME", hex_home}, {"MIX_HOME", mix_home}]
+    isolated_env = [{"HEX_HOME", hex_home}, {"MIX_HOME", mix_home}, {"MIX_ENV", "dev"}]
 
     on_exit(fn -> File.rm_rf(tmp_root) end)
 
