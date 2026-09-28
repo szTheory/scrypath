@@ -62,6 +62,48 @@ defmodule Mix.Tasks.Verify.PhoenixExample.PackageTest do
            )
   end
 
+  @tag :phase168_graph_guard
+  test "unexpected resolved graph drift stops before consumer compilation and tests" do
+    root_key = {__MODULE__, make_ref()}
+    calls_key = {__MODULE__, make_ref()}
+
+    runner = fn
+      "mix", ["hex.build", "--unpack", "--output", artifact], _opts ->
+        Process.put(root_key, Path.dirname(artifact))
+        Process.put(calls_key, [])
+        File.write!(Path.join(artifact, "README.md"), "synthetic package")
+        {"", 0}
+
+      "git", args, opts ->
+        System.cmd("git", args, opts)
+
+      "mix", ["deps.get"], opts ->
+        artifact = Path.join(Process.get(root_key), "artifact")
+        url = "file://#{Path.expand(artifact)}"
+        tag = "v#{Mix.Project.config()[:version]}"
+        File.write!(Path.join(opts[:cd], "mix.lock"), ~s|%{"scrypath" => {:git, "#{url}", "abc123", [tag: "#{tag}"]}}|)
+        {"", 0}
+
+      "mix", [stage], _opts when stage in ["compile", "test"] ->
+        Process.put(calls_key, [stage | Process.get(calls_key, [])])
+        {"", 0}
+    end
+
+    assert_raise Mix.Error, ~r/dependency stage:.*(graph|lock|mint|hpax)/i, fn ->
+      capture_io(fn ->
+        Mix.Tasks.Verify.PhoenixExample.Package.run(
+          service_check: fn -> :ok end,
+          command_runner: runner
+        )
+      end)
+    end
+
+    assert Process.get(calls_key) == []
+    root = Process.delete(root_key)
+    _calls = Process.delete(calls_key)
+    refute File.exists?(root)
+  end
+
   test "artifact command failure reports status and removes the owned workspace" do
     runner = fn "mix", ["hex.build", "--unpack", "--output", artifact], _opts ->
       Process.put(:package_test_root, Path.dirname(artifact))
