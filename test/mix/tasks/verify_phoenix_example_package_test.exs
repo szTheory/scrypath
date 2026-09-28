@@ -190,6 +190,9 @@ defmodule Mix.Tasks.Verify.PhoenixExample.PackageTest do
           assert output =~
                    ~r/source_sha=[0-9a-f]{40} mode=package source_lock_sha256=[0-9a-f]{64} resolved_lock_sha256=[0-9a-f]{64}/
 
+          assert output =~
+                   ~r/PASS package proof: artifact tag=v\d+\.\d+\.\d+ artifact_commit_sha=[0-9a-f]{40}/
+
           assert output =~ ~r/packages=.*hpax@1\.1\.0.*mint@1\.11\.0/
 
         stage ->

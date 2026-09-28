@@ -85,7 +85,18 @@ defmodule Mix.Tasks.Verify.PhoenixExample.Package do
     invoke!(runner, :artifact, "git", ["add", "."], cd: artifact)
     invoke!(runner, :artifact, "git", ["commit", "-qm", "package artifact"], cd: artifact)
     invoke!(runner, :artifact, "git", ["tag", tag], cd: artifact)
-    Mix.shell().info("PASS package proof: artifact created and tagged #{tag}")
+
+    artifact_commit =
+      runner
+      |> invoke!(:artifact, "git", ["rev-parse", "HEAD"], cd: artifact)
+      |> String.trim()
+
+    unless Regex.match?(~r/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/, artifact_commit),
+      do: fail!(:artifact, "local package artifact returned an invalid commit SHA")
+
+    Mix.shell().info(
+      "PASS package proof: artifact tag=#{tag} artifact_commit_sha=#{artifact_commit}"
+    )
 
     stage_example!(consumer)
     artifact_url = "file://#{Path.expand(artifact)}"
