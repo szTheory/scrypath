@@ -37,7 +37,7 @@ score: 1/1 requirement verified (COMP-01)
 
 **Dev stack booted: YES.** Meilisearch (:7700) + Postgres (:5432) already up; `mix do ecto.create, ecto.migrate, scrypath.demo.seed` (incident scenario) ran, then `mix phx.server` standalone on :4002 (followed the Phase 119 gotcha — seed separate from server; built scrypath_ops assets first). Admin UI served 200.
 
-**Matrix ran: YES.** `npm run test:e2e:admin-matrix` → 3/3 scenario tests passed, 40 PNGs into `/tmp/p122-screenshots`. Filenames match the baseline (`/Users/jon/projects/scrypath/.tmp/admin-screenshots/`) 40/40 exactly.
+**Matrix ran: YES.** `npm run test:e2e:admin-matrix` → 3/3 scenario tests passed, 40 PNGs into `/tmp/p122-screenshots`. Filenames match the baseline (`/Users/example/projects/scrypath/.tmp/admin-screenshots/`) 40/40 exactly.
 
 **Comparison vs baseline:**
 

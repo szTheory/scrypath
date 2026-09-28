@@ -153,9 +153,9 @@ Light pixel diff after recapture:
 
 ```console
 $ cd examples/scrypath_ecommerce && PIXEL_DIFF_FRESH_DIR=.tmp/pixel-diff-fresh node e2e/light-pixel-diff.mjs
-Baseline: /Users/jon/projects/scrypath/examples/scrypath_ecommerce/.tmp/admin-screenshots
+Baseline: /Users/example/projects/scrypath/examples/scrypath_ecommerce/.tmp/admin-screenshots
 Fresh:    .tmp/pixel-diff-fresh
-Diff out: /Users/jon/projects/scrypath/examples/scrypath_ecommerce/.tmp/pixel-diff-out
+Diff out: /Users/example/projects/scrypath/examples/scrypath_ecommerce/.tmp/pixel-diff-out
 Light PNGs to diff: 20
 
 OK:   00-control-room--light--desktop--incident.png
@@ -232,5 +232,5 @@ $ cd scrypath_ops && ELIXIR_ERL_OPTIONS='+S 2' mix assets.build && ELIXIR_ERL_OP
 
 The lower scheduler count only constrains local test database pool size; it does not
 change ScrypathOps code or contrast thresholds. It was needed because unrelated
-`/Users/jon/projects/scoria` BEAM test processes were holding many idle local Postgres
+`/Users/example/projects/scoria` BEAM test processes were holding many idle local Postgres
 connections.

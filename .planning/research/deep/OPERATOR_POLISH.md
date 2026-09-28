@@ -580,19 +580,19 @@ Five things Phase 22 MUST NOT do, even under plan pressure:
 
 ### Primary (HIGH confidence — direct reads at HEAD)
 
-- `/Users/jon/projects/scrypath/lib/scrypath/operator/failed_work.ex` — current struct + populators
-- `/Users/jon/projects/scrypath/lib/scrypath/operator/reconcile.ex` — current reconcile recommended-action logic
-- `/Users/jon/projects/scrypath/lib/scrypath/operator/recovery_action.ex` — recovery semantics
-- `/Users/jon/projects/scrypath/lib/scrypath/operator/status.ex` — status shape
-- `/Users/jon/projects/scrypath/lib/mix/tasks/scrypath.failed.ex` — Mix task voice
-- `/Users/jon/projects/scrypath/docs/operator-support.md` — current operator docs voice
-- `/Users/jon/projects/scrypath/guides/operator-mix-tasks.md` — existing guide structure
-- `/Users/jon/projects/scrypath/ARCHITECTURE.md` — operator-visibility contract + report-first discipline
-- `/Users/jon/projects/scrypath/.planning/PROJECT.md` — non-goals (operator polish narrow, no dashboard)
-- `/Users/jon/projects/scrypath/.planning/research/FEATURES.md` — operator-polish table stakes + anti-features
-- `/Users/jon/projects/scrypath/.planning/research/ARCHITECTURE.md` — FailedWork extension recommendation
-- `/Users/jon/projects/scrypath/.planning/research/PITFALLS.md` — P3 (struct break), P8 (VALIDATION.md), P9 (non-goal creep)
-- `/Users/jon/projects/scrypath/.planning/research/SUMMARY.md` — phase ordering + open-question posture
+- `/Users/example/projects/scrypath/lib/scrypath/operator/failed_work.ex` — current struct + populators
+- `/Users/example/projects/scrypath/lib/scrypath/operator/reconcile.ex` — current reconcile recommended-action logic
+- `/Users/example/projects/scrypath/lib/scrypath/operator/recovery_action.ex` — recovery semantics
+- `/Users/example/projects/scrypath/lib/scrypath/operator/status.ex` — status shape
+- `/Users/example/projects/scrypath/lib/mix/tasks/scrypath.failed.ex` — Mix task voice
+- `/Users/example/projects/scrypath/docs/operator-support.md` — current operator docs voice
+- `/Users/example/projects/scrypath/guides/operator-mix-tasks.md` — existing guide structure
+- `/Users/example/projects/scrypath/ARCHITECTURE.md` — operator-visibility contract + report-first discipline
+- `/Users/example/projects/scrypath/.planning/PROJECT.md` — non-goals (operator polish narrow, no dashboard)
+- `/Users/example/projects/scrypath/.planning/research/FEATURES.md` — operator-polish table stakes + anti-features
+- `/Users/example/projects/scrypath/.planning/research/ARCHITECTURE.md` — FailedWork extension recommendation
+- `/Users/example/projects/scrypath/.planning/research/PITFALLS.md` — P3 (struct break), P8 (VALIDATION.md), P9 (non-goal creep)
+- `/Users/example/projects/scrypath/.planning/research/SUMMARY.md` — phase ordering + open-question posture
 
 ### Secondary (HIGH confidence — verified against current docs 2026-04-17)
 

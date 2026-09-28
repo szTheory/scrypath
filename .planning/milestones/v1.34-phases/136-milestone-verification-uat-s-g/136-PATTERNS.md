@@ -284,7 +284,7 @@ Manifest should set `committed: false` for generated browser artifacts and `comm
 # v1.32 -> v1.33 - Admin UI before/after
 
 The v1.33 **after** captures (40-shot matrix: 6 screens x light/dark x mobile 390/desktop 1440 x
-scenarios) live in `/Users/jon/projects/scrypath/.tmp/admin-screenshots/`, names
+scenarios) live in `/Users/example/projects/scrypath/.tmp/admin-screenshots/`, names
 `NN-screen--theme--viewport--state.png`. The v1.32 **before** is regenerable from `main`
 (predates this milestone) - see the audit's tech-debt note for the recapture recipe.
 ```

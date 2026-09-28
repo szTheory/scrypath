@@ -22,7 +22,7 @@
 
 **Primary analog:** `lib/mix/tasks/verify.opsui.ex`
 
-**Task surface pattern** ([lib/mix/tasks/verify.opsui.ex](/Users/jon/projects/scrypath/lib/mix/tasks/verify.opsui.ex:1), lines 1-22):
+**Task surface pattern** ([lib/mix/tasks/verify.opsui.ex](/Users/example/projects/scrypath/lib/mix/tasks/verify.opsui.ex:1), lines 1-22):
 ```elixir
 defmodule Mix.Tasks.Verify.Opsui do
   use Mix.Task
@@ -37,7 +37,7 @@ defmodule Mix.Tasks.Verify.Opsui do
   """
 ```
 
-**Root orchestration pattern** ([lib/mix/tasks/verify.opsui.ex](/Users/jon/projects/scrypath/lib/mix/tasks/verify.opsui.ex:24), lines 24-49):
+**Root orchestration pattern** ([lib/mix/tasks/verify.opsui.ex](/Users/example/projects/scrypath/lib/mix/tasks/verify.opsui.ex:24), lines 24-49):
 ```elixir
 @impl true
 def run(args) do
@@ -65,7 +65,7 @@ def run(args) do
 end
 ```
 
-**No-arg guard pattern** ([lib/mix/tasks/verify.opsui.ex](/Users/jon/projects/scrypath/lib/mix/tasks/verify.opsui.ex:51), lines 51-55):
+**No-arg guard pattern** ([lib/mix/tasks/verify.opsui.ex](/Users/example/projects/scrypath/lib/mix/tasks/verify.opsui.ex:51), lines 51-55):
 ```elixir
 defp ensure_no_args!([]), do: :ok
 
@@ -76,7 +76,7 @@ end
 
 **Secondary analog for strict flag parsing and loud live-mode failure:** `lib/mix/tasks/verify.phase5.ex`
 
-**Strict option parsing** ([lib/mix/tasks/verify.phase5.ex](/Users/jon/projects/scrypath/lib/mix/tasks/verify.phase5.ex:19), lines 19-27):
+**Strict option parsing** ([lib/mix/tasks/verify.phase5.ex](/Users/example/projects/scrypath/lib/mix/tasks/verify.phase5.ex:19), lines 19-27):
 ```elixir
 @impl true
 def run(args) do
@@ -88,7 +88,7 @@ def run(args) do
     )
 ```
 
-**Loud env prerequisite pattern** ([lib/mix/tasks/verify.phase5.ex](/Users/jon/projects/scrypath/lib/mix/tasks/verify.phase5.ex:60), lines 60-71):
+**Loud env prerequisite pattern** ([lib/mix/tasks/verify.phase5.ex](/Users/example/projects/scrypath/lib/mix/tasks/verify.phase5.ex:60), lines 60-71):
 ```elixir
 defp ensure_integration_env! do
   unless System.get_env("SCRYPATH_MEILISEARCH_URL") do
@@ -106,7 +106,7 @@ end
 
 **Secondary analog for curated fast-mode test invocation:** `lib/mix/tasks/verify.phase43.ex`
 
-**Focused fast slice pattern** ([lib/mix/tasks/verify.phase43.ex](/Users/jon/projects/scrypath/lib/mix/tasks/verify.phase43.ex:7), lines 7-25):
+**Focused fast slice pattern** ([lib/mix/tasks/verify.phase43.ex](/Users/example/projects/scrypath/lib/mix/tasks/verify.phase43.ex:7), lines 7-25):
 ```elixir
 @focused_tests [
   "test/scrypath/docs_contract_test.exs",
@@ -135,7 +135,7 @@ end
 
 **Analog:** `mix.exs`
 
-**CLI preferred env registration pattern** ([mix.exs](/Users/jon/projects/scrypath/mix.exs:37), lines 37-67):
+**CLI preferred env registration pattern** ([mix.exs](/Users/example/projects/scrypath/mix.exs:37), lines 37-67):
 ```elixir
 def cli do
   [
@@ -163,7 +163,7 @@ end
 
 **Analog:** `test/scrypath/docs_contract_test.exs`
 
-**File-level fixture loading pattern** ([test/scrypath/docs_contract_test.exs](/Users/jon/projects/scrypath/test/scrypath/docs_contract_test.exs:4), lines 4-27):
+**File-level fixture loading pattern** ([test/scrypath/docs_contract_test.exs](/Users/example/projects/scrypath/test/scrypath/docs_contract_test.exs:4), lines 4-27):
 ```elixir
 @readme File.read!("README.md")
 @contributing File.read!("CONTRIBUTING.md")
@@ -175,7 +175,7 @@ end
 @verify_opsui File.read!("lib/mix/tasks/verify.opsui.ex")
 ```
 
-**Docs parity assertion pattern** ([test/scrypath/docs_contract_test.exs](/Users/jon/projects/scrypath/test/scrypath/docs_contract_test.exs:370), lines 370-384):
+**Docs parity assertion pattern** ([test/scrypath/docs_contract_test.exs](/Users/example/projects/scrypath/test/scrypath/docs_contract_test.exs:370), lines 370-384):
 ```elixir
 test "CONTRIBUTING documents default test path and live integration jobs (VRFY)" do
   assert_contains_all(@contributing, [
@@ -190,7 +190,7 @@ test "CONTRIBUTING documents default test path and live integration jobs (VRFY)"
 end
 ```
 
-**CI ordering contract pattern** ([test/scrypath/docs_contract_test.exs](/Users/jon/projects/scrypath/test/scrypath/docs_contract_test.exs:425), lines 425-441):
+**CI ordering contract pattern** ([test/scrypath/docs_contract_test.exs](/Users/example/projects/scrypath/test/scrypath/docs_contract_test.exs:425), lines 425-441):
 ```elixir
 test "CI workflow includes Phoenix example integration job wired to example path" do
   assert_contains_all(@ci_workflow, [
@@ -208,7 +208,7 @@ test "CI workflow includes Phoenix example integration job wired to example path
 end
 ```
 
-**Task marker assertion pattern** ([test/scrypath/docs_contract_test.exs](/Users/jon/projects/scrypath/test/scrypath/docs_contract_test.exs:548), lines 548-552):
+**Task marker assertion pattern** ([test/scrypath/docs_contract_test.exs](/Users/example/projects/scrypath/test/scrypath/docs_contract_test.exs:548), lines 548-552):
 ```elixir
 test "verify.opsui Mix task keeps orchestration markers (Phase 53)" do
   assert String.contains?(@verify_opsui, "cd: ops_dir")
@@ -232,14 +232,14 @@ end
 
 **Analog:** `README.md`
 
-**Maintainer-facing root command pattern** ([README.md](/Users/jon/projects/scrypath/README.md:27), lines 27-30):
+**Maintainer-facing root command pattern** ([README.md](/Users/example/projects/scrypath/README.md:27), lines 27-30):
 ```markdown
 **Operator UI (maintainers):** ... From the repository root, **`mix verify.opsui`** runs the same checks ...
 
 **Integration smoke (optional):** ... From the clone root, run **`cd examples/phoenix_meilisearch && ./scripts/smoke.sh`**
 ```
 
-**Adopter wayfinding spine pattern** ([README.md](/Users/jon/projects/scrypath/README.md:17), lines 17-25):
+**Adopter wayfinding spine pattern** ([README.md](/Users/example/projects/scrypath/README.md:17), lines 17-25):
 ```markdown
 **Start here:** ... [guides/golden-path.md](guides/golden-path.md).
 
@@ -259,7 +259,7 @@ end
 
 **Analog:** `CONTRIBUTING.md`
 
-**Verification section pattern** ([CONTRIBUTING.md](/Users/jon/projects/scrypath/CONTRIBUTING.md:18), lines 18-45):
+**Verification section pattern** ([CONTRIBUTING.md](/Users/example/projects/scrypath/CONTRIBUTING.md:18), lines 18-45):
 ```markdown
 ## Verification
 
@@ -272,7 +272,7 @@ mix test --exclude integration
 Run the full integration verification (`mix verify.phase5`) when you change ...
 ```
 
-**CI matrix row pattern** ([CONTRIBUTING.md](/Users/jon/projects/scrypath/CONTRIBUTING.md:62), lines 62-75):
+**CI matrix row pattern** ([CONTRIBUTING.md](/Users/example/projects/scrypath/CONTRIBUTING.md:62), lines 62-75):
 ```markdown
 | **`phoenix-example-integration`** | Services: Postgres 16 + Meilisearch v1.15. `SCRYPATH_EXAMPLE_INTEGRATION=1`, `PGPORT=5433`, `SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700`. **CI** runs **`cd examples/phoenix_meilisearch`**, then **`mix deps.get`**, then **`mix test`** ... |
 | **`scrypath-ops-path-check` / `scrypath-ops`** | ... Local contributors should use **`mix verify.opsui`** from the repo root ... |
@@ -289,7 +289,7 @@ Run the full integration verification (`mix verify.phase5`) when you change ...
 
 **Analog:** `.github/workflows/ci.yml`
 
-**Existing service-backed example job pattern** ([.github/workflows/ci.yml](/Users/jon/projects/scrypath/.github/workflows/ci.yml:273), lines 273-343):
+**Existing service-backed example job pattern** ([.github/workflows/ci.yml](/Users/example/projects/scrypath/.github/workflows/ci.yml:273), lines 273-343):
 ```yaml
 phoenix-example-integration:
   runs-on: ubuntu-latest
@@ -314,7 +314,7 @@ phoenix-example-integration:
         mix test
 ```
 
-**Existing “root task in CI” pattern** ([.github/workflows/ci.yml](/Users/jon/projects/scrypath/.github/workflows/ci.yml:120), lines 120-124):
+**Existing “root task in CI” pattern** ([.github/workflows/ci.yml](/Users/example/projects/scrypath/.github/workflows/ci.yml:120), lines 120-124):
 ```yaml
 - name: Federation docs gate (`mix verify.phase41`)
   run: mix verify.phase41
@@ -335,7 +335,7 @@ phoenix-example-integration:
 
 **Analog 1:** `test/mix/tasks/verify_workspace_clean_test.exs`
 
-**Arg-guard and output capture pattern** ([test/mix/tasks/verify_workspace_clean_test.exs](/Users/jon/projects/scrypath/test/mix/tasks/verify_workspace_clean_test.exs:26), lines 26-47):
+**Arg-guard and output capture pattern** ([test/mix/tasks/verify_workspace_clean_test.exs](/Users/example/projects/scrypath/test/mix/tasks/verify_workspace_clean_test.exs:26), lines 26-47):
 ```elixir
 describe "run/1 arg guard" do
   test "raises Mix.Error when argument is passed" do
@@ -349,7 +349,7 @@ end
 
 **Analog 2:** `test/mix/tasks/workflow_wiring_test.exs`
 
-**CLI registration / workflow wiring pattern** ([test/mix/tasks/workflow_wiring_test.exs](/Users/jon/projects/scrypath/test/mix/tasks/workflow_wiring_test.exs:120), lines 120-129):
+**CLI registration / workflow wiring pattern** ([test/mix/tasks/workflow_wiring_test.exs](/Users/example/projects/scrypath/test/mix/tasks/workflow_wiring_test.exs:120), lines 120-129):
 ```elixir
 describe "mix.exs cli.preferred_envs registrations" do
   test "verify.workspace_clean is registered as :test" do
@@ -368,7 +368,7 @@ end
 ## Shared Patterns
 
 ### Semantic Root Mix Tasks
-**Sources:** [lib/mix/tasks/verify.opsui.ex](/Users/jon/projects/scrypath/lib/mix/tasks/verify.opsui.ex:1), [mix.exs](/Users/jon/projects/scrypath/mix.exs:37)
+**Sources:** [lib/mix/tasks/verify.opsui.ex](/Users/example/projects/scrypath/lib/mix/tasks/verify.opsui.ex:1), [mix.exs](/Users/example/projects/scrypath/mix.exs:37)
 
 Apply to `lib/mix/tasks/verify.adopter.ex` and `mix.exs`.
 
@@ -388,7 +388,7 @@ preferred_envs: [
 ```
 
 ### Loud Live-Mode Prerequisites
-**Sources:** [lib/mix/tasks/verify.phase5.ex](/Users/jon/projects/scrypath/lib/mix/tasks/verify.phase5.ex:60), [lib/mix/tasks/verify.meilisearch_smoke.ex](/Users/jon/projects/scrypath/lib/mix/tasks/verify.meilisearch_smoke.ex:57)
+**Sources:** [lib/mix/tasks/verify.phase5.ex](/Users/example/projects/scrypath/lib/mix/tasks/verify.phase5.ex:60), [lib/mix/tasks/verify.meilisearch_smoke.ex](/Users/example/projects/scrypath/lib/mix/tasks/verify.meilisearch_smoke.ex:57)
 
 Apply to `verify.adopter --live`.
 
@@ -401,7 +401,7 @@ end
 ```
 
 ### Bounded Docs Contracts
-**Source:** [test/scrypath/docs_contract_test.exs](/Users/jon/projects/scrypath/test/scrypath/docs_contract_test.exs:425)
+**Source:** [test/scrypath/docs_contract_test.exs](/Users/example/projects/scrypath/test/scrypath/docs_contract_test.exs:425)
 
 Apply to `README.md`, `CONTRIBUTING.md`, `lib/mix/tasks/verify.adopter.ex`, `.github/workflows/ci.yml`, and the example README contract.
 
@@ -411,7 +411,7 @@ assert ordered?(job_head, "mix deps.get", "mix test")
 ```
 
 ### CI Owns Services; Mix Owns Orchestration
-**Sources:** [.github/workflows/ci.yml](/Users/jon/projects/scrypath/.github/workflows/ci.yml:276), [lib/mix/tasks/verify.opsui.ex](/Users/jon/projects/scrypath/lib/mix/tasks/verify.opsui.ex:37)
+**Sources:** [.github/workflows/ci.yml](/Users/example/projects/scrypath/.github/workflows/ci.yml:276), [lib/mix/tasks/verify.opsui.ex](/Users/example/projects/scrypath/lib/mix/tasks/verify.opsui.ex:37)
 
 Apply to `.github/workflows/ci.yml` and `lib/mix/tasks/verify.adopter.ex`.
 

@@ -258,5 +258,5 @@ Scrypath is at the same inflection point. The correct move is: stop internal roa
 - meilisearch-rails tenant token issue: [github.com/meilisearch/meilisearch-rails/issues/152](https://github.com/meilisearch/meilisearch-rails/issues/152)
 - ex_machina changelog: [github.com/beam-community/ex_machina/blob/main/CHANGELOG.md](https://github.com/beam-community/ex_machina/blob/main/CHANGELOG.md)
 - Django Haystack autocomplete: [django-haystack.readthedocs.io/en/latest/autocomplete.html](https://django-haystack.readthedocs.io/en/latest/autocomplete.html)
-- Scrypath planning: `/Users/jon/projects/scrypath/.planning/` (PROJECT.md, milestone-candidates.md, threads/)
-- Scrypath research prompt: `/Users/jon/projects/scrypath/prompts/search-lib-use-cases-deep-research.md`
+- Scrypath planning: `/Users/example/projects/scrypath/.planning/` (PROJECT.md, milestone-candidates.md, threads/)
+- Scrypath research prompt: `/Users/example/projects/scrypath/prompts/search-lib-use-cases-deep-research.md`

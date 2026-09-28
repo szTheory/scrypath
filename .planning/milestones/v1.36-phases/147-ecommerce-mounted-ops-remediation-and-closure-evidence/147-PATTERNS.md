@@ -27,9 +27,9 @@ or permanent proof subsystem.
 ### `examples/scrypath_ecommerce/mix.exs` (config, transform)
 
 **Analog:** `scrypath_ops/mix.exs`, as assigned in
-[`146-PATTERNS.md:22`](/Users/jon/projects/scrypath/.planning/phases/146-scrypathops-web-client-remediation/146-PATTERNS.md:22).
+[`146-PATTERNS.md:22`](/Users/example/projects/scrypath/.planning/phases/146-scrypathops-web-client-remediation/146-PATTERNS.md:22).
 
-**Existing dependency-list pattern** ([`examples/scrypath_ecommerce/mix.exs:34`](/Users/jon/projects/scrypath/examples/scrypath_ecommerce/mix.exs:34)):
+**Existing dependency-list pattern** ([`examples/scrypath_ecommerce/mix.exs:34`](/Users/example/projects/scrypath/examples/scrypath_ecommerce/mix.exs:34)):
 
 ```elixir
 defp deps do
@@ -53,9 +53,9 @@ Replace only Phoenix, LiveView, Bandit, Swoosh, and Postgrex requirement strings
 with `~> 1.8.9`, `~> 1.1.33`, `~> 1.12.1`, `~> 1.26.3`, and `~> 0.22.4`.
 Retain Req `~> 0.6.1`, both path dependencies, `phoenix_ecto`, Ecto SQL, Oban,
 and every unrelated dependency exactly as-is. This mirrors the completed cohort
-prescription in [`146-PATTERNS.md:49`](/Users/jon/projects/scrypath/.planning/phases/146-scrypathops-web-client-remediation/146-PATTERNS.md:49)-[`146-PATTERNS.md:60`](/Users/jon/projects/scrypath/.planning/phases/146-scrypathops-web-client-remediation/146-PATTERNS.md:60).
+prescription in [`146-PATTERNS.md:49`](/Users/example/projects/scrypath/.planning/phases/146-scrypathops-web-client-remediation/146-PATTERNS.md:49)-[`146-PATTERNS.md:60`](/Users/example/projects/scrypath/.planning/phases/146-scrypathops-web-client-remediation/146-PATTERNS.md:60).
 
-**Alias/mutation pattern** ([`examples/scrypath_ecommerce/mix.exs:60`](/Users/jon/projects/scrypath/examples/scrypath_ecommerce/mix.exs:60)):
+**Alias/mutation pattern** ([`examples/scrypath_ecommerce/mix.exs:60`](/Users/example/projects/scrypath/examples/scrypath_ecommerce/mix.exs:60)):
 
 ```elixir
 "e2e.prepare": ["ecto.create --quiet", "ecto.migrate --quiet", "e2e.prepare_search"],
@@ -71,9 +71,9 @@ format status, and dirty baseline to match the expected state.
 ### `examples/scrypath_ecommerce/mix.lock` (config, transform)
 
 **Analog:** `scrypath_ops/mix.lock` causal-closure assignment in
-[`146-PATTERNS.md:62`](/Users/jon/projects/scrypath/.planning/phases/146-scrypathops-web-client-remediation/146-PATTERNS.md:62).
+[`146-PATTERNS.md:62`](/Users/example/projects/scrypath/.planning/phases/146-scrypathops-web-client-remediation/146-PATTERNS.md:62).
 
-**Causal lock-review pattern** ([`146-PATTERNS.md:66`](/Users/jon/projects/scrypath/.planning/phases/146-scrypathops-web-client-remediation/146-PATTERNS.md:66)):
+**Causal lock-review pattern** ([`146-PATTERNS.md:66`](/Users/example/projects/scrypath/.planning/phases/146-scrypathops-web-client-remediation/146-PATTERNS.md:66)):
 
 ```markdown
 - Changed only the planned direct requirements.
@@ -88,7 +88,7 @@ lock with `mix deps.get --check-locked`. The primary lock must remain byte-ident
 through all proof commands; only the detached worktree’s disposable lock may be
 removed for lockless resolution.
 
-**Range-matrix pattern** ([`146-03-SUMMARY.md:54`](/Users/jon/projects/scrypath/.planning/phases/146-scrypathops-web-client-remediation/146-03-SUMMARY.md:54)):
+**Range-matrix pattern** ([`146-03-SUMMARY.md:54`](/Users/example/projects/scrypath/.planning/phases/146-scrypathops-web-client-remediation/146-03-SUMMARY.md:54)):
 
 ```elixir
 lock = Mix.Dep.Lock.read()
@@ -114,15 +114,15 @@ command, not a committed Mix task.
 
 ### Phase evidence receipts (config / evidence report, batch)
 
-**Analog:** [`145-02-SUMMARY.md:1`](/Users/jon/projects/scrypath/.planning/phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-02-SUMMARY.md:1) and
-[`146-03-SUMMARY.md:45`](/Users/jon/projects/scrypath/.planning/phases/146-scrypathops-web-client-remediation/146-03-SUMMARY.md:45).
+**Analog:** [`145-02-SUMMARY.md:1`](/Users/example/projects/scrypath/.planning/phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-02-SUMMARY.md:1) and
+[`146-03-SUMMARY.md:45`](/Users/example/projects/scrypath/.planning/phases/146-scrypathops-web-client-remediation/146-03-SUMMARY.md:45).
 
 Use compact front matter plus sections for environment, deterministic gates,
 exact-SHA fresh proof, cleanup/preservation, browser classification, and topology.
 Record commands and exit statuses—not raw command output, temporary paths, fresh
 locks, dependency trees, advisory snapshots, credentials, or browser/service state.
 
-**Evidence-table pattern** ([`145-02-SUMMARY.md:75`](/Users/jon/projects/scrypath/.planning/phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-02-SUMMARY.md:75)):
+**Evidence-table pattern** ([`145-02-SUMMARY.md:75`](/Users/example/projects/scrypath/.planning/phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-02-SUMMARY.md:75)):
 
 ```markdown
 ## Verification Evidence
@@ -149,7 +149,7 @@ historical fresh-proof references. Keep `required_deterministic`,
 `required_service_prepare`, and browser evidence separate; browser is only
 `passed`, `failed`, or `unavailable`, with `flake: true` for retry-only passes.
 
-**Detached-worktree cleanup pattern** ([`146-03-SUMMARY.md:67`](/Users/jon/projects/scrypath/.planning/phases/146-scrypathops-web-client-remediation/146-03-SUMMARY.md:67)):
+**Detached-worktree cleanup pattern** ([`146-03-SUMMARY.md:67`](/Users/example/projects/scrypath/.planning/phases/146-scrypathops-web-client-remediation/146-03-SUMMARY.md:67)):
 
 ```markdown
 - Raw receipt validation: PASS — owned, non-symlink parent and exact worktree child
@@ -169,7 +169,7 @@ stage, edit, or delete it.
 
 ### Mounted-source provenance
 
-**Sources:** [`examples/scrypath_ecommerce/mix.exs:34`](/Users/jon/projects/scrypath/examples/scrypath_ecommerce/mix.exs:34), [`147-RESEARCH.md:214`](/Users/jon/projects/scrypath/.planning/phases/147-ecommerce-mounted-ops-remediation-and-closure-evidence/147-RESEARCH.md:214)
+**Sources:** [`examples/scrypath_ecommerce/mix.exs:34`](/Users/example/projects/scrypath/examples/scrypath_ecommerce/mix.exs:34), [`147-RESEARCH.md:214`](/Users/example/projects/scrypath/.planning/phases/147-ecommerce-mounted-ops-remediation-and-closure-evidence/147-RESEARCH.md:214)
 
 ```sh
 MIX_DEPS_PATH="$proof_parent/deps" MIX_BUILD_PATH="$proof_parent/build" \
@@ -186,7 +186,7 @@ comparison; compilation alone is insufficient provenance proof.
 
 ### Focused mounted route/asset/link regression
 
-**Source:** [`page_controller_test.exs:9`](/Users/jon/projects/scrypath/examples/scrypath_ecommerce/test/scrypath_ecommerce_web/controllers/page_controller_test.exs:9)
+**Source:** [`page_controller_test.exs:9`](/Users/example/projects/scrypath/examples/scrypath_ecommerce/test/scrypath_ecommerce_web/controllers/page_controller_test.exs:9)
 
 ```elixir
 test "GET /admin/search/posture", %{conn: conn} do
@@ -201,11 +201,11 @@ end
 
 Run this existing test file as the D-11 focused deterministic contract. Its remaining
 tests also prove nested mount links and that the storefront does not receive the Ops
-stylesheet ([`page_controller_test.exs:22`](/Users/jon/projects/scrypath/examples/scrypath_ecommerce/test/scrypath_ecommerce_web/controllers/page_controller_test.exs:22)).
+stylesheet ([`page_controller_test.exs:22`](/Users/example/projects/scrypath/examples/scrypath_ecommerce/test/scrypath_ecommerce_web/controllers/page_controller_test.exs:22)).
 
 ### Focused browser classification
 
-**Sources:** [`harness.spec.ts:7`](/Users/jon/projects/scrypath/examples/scrypath_ecommerce/e2e/harness.spec.ts:7), [`operator.spec.ts:11`](/Users/jon/projects/scrypath/examples/scrypath_ecommerce/e2e/operator.spec.ts:11), [`playwright.config.ts:3`](/Users/jon/projects/scrypath/examples/scrypath_ecommerce/playwright.config.ts:3)
+**Sources:** [`harness.spec.ts:7`](/Users/example/projects/scrypath/examples/scrypath_ecommerce/e2e/harness.spec.ts:7), [`operator.spec.ts:11`](/Users/example/projects/scrypath/examples/scrypath_ecommerce/e2e/operator.spec.ts:11), [`playwright.config.ts:3`](/Users/example/projects/scrypath/examples/scrypath_ecommerce/playwright.config.ts:3)
 
 ```sh
 npx playwright test e2e/harness.spec.ts e2e/operator.spec.ts --workers=1
@@ -217,7 +217,7 @@ only as external diagnostic artifacts; do not commit them.
 
 ### Required root release train
 
-**Source:** [`CONTRIBUTING.md:85`](/Users/jon/projects/scrypath/CONTRIBUTING.md:85)
+**Source:** [`CONTRIBUTING.md:85`](/Users/example/projects/scrypath/CONTRIBUTING.md:85)
 
 After ecommerce-local gates pass, retain this exact root bundle:
 

@@ -797,12 +797,12 @@ Phase 19 VERIFICATION.md must grep the diff for these tokens and confirm zero or
 ## Sources
 
 ### Primary (HIGH confidence — direct reads)
-- `/Users/jon/projects/scrypath/lib/scrypath/options.ex` (schema option shape, current `validate_settings/1` permissiveness)
-- `/Users/jon/projects/scrypath/lib/scrypath/schema.ex` (reflection DSL pattern)
-- `/Users/jon/projects/scrypath/lib/scrypath/meilisearch/settings.ex` (current `resolve/2` merge semantics; `apply/3` flow)
-- `/Users/jon/projects/scrypath/lib/scrypath/reindex.ex` (managed reindex ordering)
-- `/Users/jon/projects/scrypath/.planning/research/{STACK,FEATURES,ARCHITECTURE,PITFALLS,SUMMARY}.md`
-- `/Users/jon/projects/scrypath/.planning/PROJECT.md` (non-goals, milestone scope)
+- `/Users/example/projects/scrypath/lib/scrypath/options.ex` (schema option shape, current `validate_settings/1` permissiveness)
+- `/Users/example/projects/scrypath/lib/scrypath/schema.ex` (reflection DSL pattern)
+- `/Users/example/projects/scrypath/lib/scrypath/meilisearch/settings.ex` (current `resolve/2` merge semantics; `apply/3` flow)
+- `/Users/example/projects/scrypath/lib/scrypath/reindex.ex` (managed reindex ordering)
+- `/Users/example/projects/scrypath/.planning/research/{STACK,FEATURES,ARCHITECTURE,PITFALLS,SUMMARY}.md`
+- `/Users/example/projects/scrypath/.planning/PROJECT.md` (non-goals, milestone scope)
 
 ### Reference libraries (HIGH for linked docs, MEDIUM for behavioral details)
 - [Searchkick README (ankane/searchkick)](https://github.com/ankane/searchkick) — `search_synonyms` declarative shape, reindex discipline

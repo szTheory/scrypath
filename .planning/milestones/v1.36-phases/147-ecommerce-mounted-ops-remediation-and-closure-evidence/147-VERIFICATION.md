@@ -55,7 +55,7 @@ overrides_applied: 0
 | From | To | Via | Status | Details |
 | --- | --- | --- | --- |
 | Ecommerce manifest | Ecommerce lock | Resolver/checked-lock proof | ✓ WIRED | Current `mix deps.get --check-locked` succeeds and lock selects compatible Phoenix 1.8.13. |
-| Ecommerce manifest | Root and ScrypathOps paths | `Mix.Project.deps_paths/0` + physical canonicalization | ✓ WIRED | Runtime dependency paths equal `/Users/jon/projects/scrypath` and `/Users/jon/projects/scrypath/scrypath_ops`. |
+| Ecommerce manifest | Root and ScrypathOps paths | `Mix.Project.deps_paths/0` + physical canonicalization | ✓ WIRED | Runtime dependency paths equal `/Users/example/projects/scrypath` and `/Users/example/projects/scrypath/scrypath_ops`. |
 | Make targets | Compose verifier | `verify-e2e.sh focused/full` | ✓ WIRED | Both targets invoke the same script; contract test passes. |
 | CI smoke job | Focused Make target | GitHub Actions run step | ✓ WIRED | Job block calls `make -C examples/scrypath_ecommerce verify-mounted`. |
 | Plan 147-01 receipt | Closure ledger | Exact candidate SHA | ✓ WIRED | Both identify `fca4c827a59596e2a66bc2d1ac3516b4c0c5681e`. |

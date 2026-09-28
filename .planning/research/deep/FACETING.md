@@ -694,12 +694,12 @@ Each REQ has 2–4 acceptance criteria (AC-N). Downstream plan researcher should
 - Meilisearch Discussion #187 — [Disjunctive Facets Distribution](https://github.com/orgs/meilisearch/discussions/187) — confirmed disjunctive counts require multi-query pattern, not a server primitive.
 - Meilisearch Issue #4677 — [distinctAttribute affects facetStats/facetDistribution](https://github.com/meilisearch/meilisearch/issues/4677) — confirmed interaction gotcha.
 - Meilisearch Faceting Settings API — [Faceting Setting API spec](https://specs.meilisearch.dev/specifications/text/157-faceting-setting-api.html) — confirmed `maxValuesPerFacet`, `sortFacetValuesBy` shape.
-- `/Users/jon/projects/scrypath/lib/scrypath/options.ex` — current `@schema_options`, `@search_options`, `validate_filter_entry!/2` narrow-filter contract.
-- `/Users/jon/projects/scrypath/lib/scrypath/schema.ex` — current `__scrypath__/1` reflection pattern.
-- `/Users/jon/projects/scrypath/lib/scrypath/search_result.ex` — current `@enforce_keys` and `page/1` helper pattern.
-- `/Users/jon/projects/scrypath/lib/scrypath/meilisearch/query.ex` — current `to_payload/1` / `translate_filter/1` extension point.
-- `/Users/jon/projects/scrypath/guides/phoenix-liveview.md` — current LiveView guide voice.
-- `/Users/jon/projects/scrypath/README.md` and `/Users/jon/projects/scrypath/ARCHITECTURE.md` — current public-surface contract.
+- `/Users/example/projects/scrypath/lib/scrypath/options.ex` — current `@schema_options`, `@search_options`, `validate_filter_entry!/2` narrow-filter contract.
+- `/Users/example/projects/scrypath/lib/scrypath/schema.ex` — current `__scrypath__/1` reflection pattern.
+- `/Users/example/projects/scrypath/lib/scrypath/search_result.ex` — current `@enforce_keys` and `page/1` helper pattern.
+- `/Users/example/projects/scrypath/lib/scrypath/meilisearch/query.ex` — current `to_payload/1` / `translate_filter/1` extension point.
+- `/Users/example/projects/scrypath/guides/phoenix-liveview.md` — current LiveView guide voice.
+- `/Users/example/projects/scrypath/README.md` and `/Users/example/projects/scrypath/ARCHITECTURE.md` — current public-surface contract.
 - `.planning/research/{STACK,FEATURES,ARCHITECTURE,PITFALLS,SUMMARY}.md` — v1.3 upstream research.
 - `.planning/PROJECT.md` — v1.3 non-goals and milestone scope.
 

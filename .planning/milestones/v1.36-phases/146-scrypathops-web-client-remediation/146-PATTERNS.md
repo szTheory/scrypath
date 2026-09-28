@@ -25,7 +25,7 @@ The planned implementation is limited to ScrypathOps dependency intent, its solv
 
 Use the established `defp deps/0` list layout and pin only the approved direct ownership boundary. The legacy remediation is the closest completed fixed-compatible cohort: its direct requirements are explicit while non-owned packages remain transitive.
 
-**Dependency declaration pattern** ([`examples/phoenix_meilisearch/mix.exs:40`](/Users/jon/projects/scrypath/examples/phoenix_meilisearch/mix.exs:40)-[`mix.exs:54`](/Users/jon/projects/scrypath/examples/phoenix_meilisearch/mix.exs:54)):
+**Dependency declaration pattern** ([`examples/phoenix_meilisearch/mix.exs:40`](/Users/example/projects/scrypath/examples/phoenix_meilisearch/mix.exs:40)-[`mix.exs:54`](/Users/example/projects/scrypath/examples/phoenix_meilisearch/mix.exs:54)):
 
 ```elixir
 defp deps do
@@ -46,7 +46,7 @@ defp deps do
 end
 ```
 
-**Apply to the existing Ops list** ([`scrypath_ops/mix.exs:41`](/Users/jon/projects/scrypath/scrypath_ops/mix.exs:41)-[`mix.exs:66`](/Users/jon/projects/scrypath/scrypath_ops/mix.exs:66)):
+**Apply to the existing Ops list** ([`scrypath_ops/mix.exs:41`](/Users/example/projects/scrypath/scrypath_ops/mix.exs:41)-[`mix.exs:66`](/Users/example/projects/scrypath/scrypath_ops/mix.exs:66)):
 
 ```elixir
 {:phoenix, "~> 1.8.5"}
@@ -61,7 +61,7 @@ Replace only those approved requirement strings with Phoenix `~> 1.8.9`, Postgre
 
 ### `scrypath_ops/mix.lock` (config, transform)
 
-**Analog:** `examples/phoenix_meilisearch/mix.lock`, with the Phase 145 causal-lock review recorded in [`145-01-SUMMARY.md:54`](/Users/jon/projects/scrypath/.planning/phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-01-SUMMARY.md:54)-[`145-01-SUMMARY.md:59`](/Users/jon/projects/scrypath/.planning/phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-01-SUMMARY.md:59).
+**Analog:** `examples/phoenix_meilisearch/mix.lock`, with the Phase 145 causal-lock review recorded in [`145-01-SUMMARY.md:54`](/Users/example/projects/scrypath/.planning/phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-01-SUMMARY.md:54)-[`145-01-SUMMARY.md:59`](/Users/example/projects/scrypath/.planning/phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-01-SUMMARY.md:59).
 
 **Causal closure review pattern**:
 
@@ -72,7 +72,7 @@ Replace only those approved requirement strings with Phoenix `~> 1.8.9`, Postgre
 - Retained the prior Req/Mint/hpax handoff unchanged when already compliant.
 ```
 
-**Existing Ops closure to inspect before and after solving** ([`scrypath_ops/mix.lock:4`](/Users/jon/projects/scrypath/scrypath_ops/mix.lock:4), [`mix.lock:26`](/Users/jon/projects/scrypath/scrypath_ops/mix.lock:26), [`mix.lock:31`](/Users/jon/projects/scrypath/scrypath_ops/mix.lock:31), [`mix.lock:35`](/Users/jon/projects/scrypath/scrypath_ops/mix.lock:35), [`mix.lock:40`](/Users/jon/projects/scrypath/scrypath_ops/mix.lock:40), [`mix.lock:43`](/Users/jon/projects/scrypath/scrypath_ops/mix.lock:43), [`mix.lock:45`](/Users/jon/projects/scrypath/scrypath_ops/mix.lock:45)-[`mix.lock:48`](/Users/jon/projects/scrypath/scrypath_ops/mix.lock:48)):
+**Existing Ops closure to inspect before and after solving** ([`scrypath_ops/mix.lock:4`](/Users/example/projects/scrypath/scrypath_ops/mix.lock:4), [`mix.lock:26`](/Users/example/projects/scrypath/scrypath_ops/mix.lock:26), [`mix.lock:31`](/Users/example/projects/scrypath/scrypath_ops/mix.lock:31), [`mix.lock:35`](/Users/example/projects/scrypath/scrypath_ops/mix.lock:35), [`mix.lock:40`](/Users/example/projects/scrypath/scrypath_ops/mix.lock:40), [`mix.lock:43`](/Users/example/projects/scrypath/scrypath_ops/mix.lock:43), [`mix.lock:45`](/Users/example/projects/scrypath/scrypath_ops/mix.lock:45)-[`mix.lock:48`](/Users/example/projects/scrypath/scrypath_ops/mix.lock:48)):
 
 ```elixir
 "bandit": {:hex, :bandit, "1.11.1", ...}
@@ -94,7 +94,7 @@ Do not hand-edit checksum or dependency tuple structures. Generate via the appro
 
 Use the root project’s focused, async ExUnit + `Req.Test` pattern. It already tests a real client over a local Req plug, not a fake production adapter.
 
-**Module/import pattern** ([`test/scrypath/meilisearch/client_test.exs:1`](/Users/jon/projects/scrypath/test/scrypath/meilisearch/client_test.exs:1)-[`client_test.exs:6`](/Users/jon/projects/scrypath/test/scrypath/meilisearch/client_test.exs:6)):
+**Module/import pattern** ([`test/scrypath/meilisearch/client_test.exs:1`](/Users/example/projects/scrypath/test/scrypath/meilisearch/client_test.exs:1)-[`client_test.exs:6`](/Users/example/projects/scrypath/test/scrypath/meilisearch/client_test.exs:6)):
 
 ```elixir
 defmodule Scrypath.Meilisearch.ClientTest do
@@ -105,9 +105,9 @@ defmodule Scrypath.Meilisearch.ClientTest do
   describe "get_settings/2 (TUNE-05 wire primitive)" do
 ```
 
-Adapt the module and call `Swoosh.ApiClient.Req.init/0` and `post/4` directly. Do not alter the global test client baseline, which intentionally remains `Swoosh.Adapters.Test` and `:api_client, false` ([`scrypath_ops/config/test.exs:24`](/Users/jon/projects/scrypath/scrypath_ops/config/test.exs:24)-[`test.exs:28`](/Users/jon/projects/scrypath/scrypath_ops/config/test.exs:28)). Production selection remains a reference-only invariant: `config :swoosh, api_client: Swoosh.ApiClient.Req` ([`scrypath_ops/config/prod.exs:23`](/Users/jon/projects/scrypath/scrypath_ops/config/prod.exs:23)-[`prod.exs:27`](/Users/jon/projects/scrypath/scrypath_ops/config/prod.exs:27)).
+Adapt the module and call `Swoosh.ApiClient.Req.init/0` and `post/4` directly. Do not alter the global test client baseline, which intentionally remains `Swoosh.Adapters.Test` and `:api_client, false` ([`scrypath_ops/config/test.exs:24`](/Users/example/projects/scrypath/scrypath_ops/config/test.exs:24)-[`test.exs:28`](/Users/example/projects/scrypath/scrypath_ops/config/test.exs:28)). Production selection remains a reference-only invariant: `config :swoosh, api_client: Swoosh.ApiClient.Req` ([`scrypath_ops/config/prod.exs:23`](/Users/example/projects/scrypath/scrypath_ops/config/prod.exs:23)-[`prod.exs:27`](/Users/example/projects/scrypath/scrypath_ops/config/prod.exs:27)).
 
-**Request assertion pattern** ([`test/scrypath/meilisearch/client_test.exs:107`](/Users/jon/projects/scrypath/test/scrypath/meilisearch/client_test.exs:107)-[`client_test.exs:130`](/Users/jon/projects/scrypath/test/scrypath/meilisearch/client_test.exs:130)):
+**Request assertion pattern** ([`test/scrypath/meilisearch/client_test.exs:107`](/Users/example/projects/scrypath/test/scrypath/meilisearch/client_test.exs:107)-[`client_test.exs:130`](/Users/example/projects/scrypath/test/scrypath/meilisearch/client_test.exs:130)):
 
 ```elixir
 stub = Module.concat(__MODULE__, FacetSearchOkStub)
@@ -125,7 +125,7 @@ end)
 
 Adapt it to inspect the Swoosh POST URL, raw request body, provider headers, Swoosh user-agent, and caller `email.private[:client_options]`. Include intentionally conflicting caller `headers`, `body`, and `decode_body` options to prove Swoosh’s values take precedence; assert raw response preservation and `{:ok, status, headers, body}` normalization.
 
-**Transport-error pattern** ([`test/scrypath/meilisearch/client_test.exs:39`](/Users/jon/projects/scrypath/test/scrypath/meilisearch/client_test.exs:39)-[`client_test.exs:50`](/Users/jon/projects/scrypath/test/scrypath/meilisearch/client_test.exs:50)):
+**Transport-error pattern** ([`test/scrypath/meilisearch/client_test.exs:39`](/Users/example/projects/scrypath/test/scrypath/meilisearch/client_test.exs:39)-[`client_test.exs:50`](/Users/example/projects/scrypath/test/scrypath/meilisearch/client_test.exs:50)):
 
 ```elixir
 stub = Module.concat(__MODULE__, GetSettingsTransportErrorStub)
@@ -141,7 +141,7 @@ assert {:error, {:transport_error, %Req.TransportError{reason: :timeout}}} =
          )
 ```
 
-For the Swoosh contract, keep `retry: false` inside that email’s `private[:client_options]` and assert the real `Swoosh.ApiClient.Req` propagates the `Req.TransportError` shape it returns. Never contact a provider or use credentials/network. If direct invocation cannot carry all needed test options, follow the async-false restore discipline from [`scrypath_ops/test/scrypath_ops/application_test.exs:4`](/Users/jon/projects/scrypath/scrypath_ops/test/scrypath_ops/application_test.exs:4)-[`application_test.exs:21`](/Users/jon/projects/scrypath/scrypath_ops/test/scrypath_ops/application_test.exs:21): capture prior env, restore/delete it in `on_exit/1`, and then restart the application.
+For the Swoosh contract, keep `retry: false` inside that email’s `private[:client_options]` and assert the real `Swoosh.ApiClient.Req` propagates the `Req.TransportError` shape it returns. Never contact a provider or use credentials/network. If direct invocation cannot carry all needed test options, follow the async-false restore discipline from [`scrypath_ops/test/scrypath_ops/application_test.exs:4`](/Users/example/projects/scrypath/scrypath_ops/test/scrypath_ops/application_test.exs:4)-[`application_test.exs:21`](/Users/example/projects/scrypath/scrypath_ops/test/scrypath_ops/application_test.exs:21): capture prior env, restore/delete it in `on_exit/1`, and then restart the application.
 
 ### `.planning/phases/146-scrypathops-web-client-remediation/146-SUMMARY.md` (config / evidence report, batch)
 
@@ -149,7 +149,7 @@ For the Swoosh contract, keep `retry: false` inside that email’s `private[:cli
 
 Use the completed remediation’s compact, structured evidence shape rather than raw command logs.
 
-**Front matter / evidence layout** ([`145-02-SUMMARY.md:1`](/Users/jon/projects/scrypath/.planning/phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-02-SUMMARY.md:1)-[`145-02-SUMMARY.md:44`](/Users/jon/projects/scrypath/.planning/phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-02-SUMMARY.md:44), [`145-02-SUMMARY.md:75`](/Users/jon/projects/scrypath/.planning/phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-02-SUMMARY.md:75)-[`145-02-SUMMARY.md:117`](/Users/jon/projects/scrypath/.planning/phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-02-SUMMARY.md:117)):
+**Front matter / evidence layout** ([`145-02-SUMMARY.md:1`](/Users/example/projects/scrypath/.planning/phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-02-SUMMARY.md:1)-[`145-02-SUMMARY.md:44`](/Users/example/projects/scrypath/.planning/phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-02-SUMMARY.md:44), [`145-02-SUMMARY.md:75`](/Users/example/projects/scrypath/.planning/phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-02-SUMMARY.md:75)-[`145-02-SUMMARY.md:117`](/Users/example/projects/scrypath/.planning/phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-02-SUMMARY.md:117)):
 
 ```markdown
 ---
@@ -182,19 +182,19 @@ Record only the candidate SHA, UTC window, environment/tool versions, commands w
 
 ### Dependency Ownership and Reproducibility
 
-**Sources:** [`scrypath_ops/mix.exs:41`](/Users/jon/projects/scrypath/scrypath_ops/mix.exs:41), [`examples/phoenix_meilisearch/mix.exs:40`](/Users/jon/projects/scrypath/examples/phoenix_meilisearch/mix.exs:40), [`145-01-SUMMARY.md:54`](/Users/jon/projects/scrypath/.planning/phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-01-SUMMARY.md:54)
+**Sources:** [`scrypath_ops/mix.exs:41`](/Users/example/projects/scrypath/scrypath_ops/mix.exs:41), [`examples/phoenix_meilisearch/mix.exs:40`](/Users/example/projects/scrypath/examples/phoenix_meilisearch/mix.exs:40), [`145-01-SUMMARY.md:54`](/Users/example/projects/scrypath/.planning/phases/145-legacy-phoenix-and-ecto-decimal-remediation/145-01-SUMMARY.md:54)
 
 Apply fixed-compatible three-part pessimistic bounds only at direct ownership points; retain the Phase 144 Req/Mint/hpax handoff and all designated transitive packages. Solver output is reviewed causal closure, not an opportunity for package-head cleanup.
 
 ### Test Isolation and Error Handling
 
-**Sources:** [`test/scrypath/meilisearch/client_test.exs:39`](/Users/jon/projects/scrypath/test/scrypath/meilisearch/client_test.exs:39), [`scrypath_ops/test/scrypath_ops/application_test.exs:8`](/Users/jon/projects/scrypath/scrypath_ops/test/scrypath_ops/application_test.exs:8)
+**Sources:** [`test/scrypath/meilisearch/client_test.exs:39`](/Users/example/projects/scrypath/test/scrypath/meilisearch/client_test.exs:39), [`scrypath_ops/test/scrypath_ops/application_test.exs:8`](/Users/example/projects/scrypath/scrypath_ops/test/scrypath_ops/application_test.exs:8)
 
 Use `Req.Test` with per-test module names and `retry: false` for deterministic error cases. Preserve the normal Swoosh test configuration; any temporary app config must restore the exact prior/unset state in `on_exit/1`. Assert returned tuples/errors rather than rescuing or hiding transport errors.
 
 ### Existing Regression Gate
 
-**Source:** [`lib/mix/tasks/verify.opsui.ex:24`](/Users/jon/projects/scrypath/lib/mix/tasks/verify.opsui.ex:24)-[`verify.opsui.ex:48`](/Users/jon/projects/scrypath/lib/mix/tasks/verify.opsui.ex:48)
+**Source:** [`lib/mix/tasks/verify.opsui.ex:24`](/Users/example/projects/scrypath/lib/mix/tasks/verify.opsui.ex:24)-[`verify.opsui.ex:48`](/Users/example/projects/scrypath/lib/mix/tasks/verify.opsui.ex:48)
 
 ```elixir
 def run(args) do

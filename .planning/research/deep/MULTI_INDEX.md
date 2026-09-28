@@ -776,16 +776,16 @@ These are the signals during Phase D planning / implementation that would indica
 ## Sources
 
 ### Primary (HIGH confidence)
-- `/Users/jon/projects/scrypath/lib/scrypath.ex` — current public API surface.
-- `/Users/jon/projects/scrypath/lib/scrypath/search.ex` — current single-schema search orchestration.
-- `/Users/jon/projects/scrypath/lib/scrypath/search_result.ex` — `SearchResult.t()` shape and helpers.
-- `/Users/jon/projects/scrypath/lib/scrypath/backend.ex` — behaviour (five required callbacks; `search_many/3` not yet present).
-- `/Users/jon/projects/scrypath/lib/scrypath/hydration.ex` — per-schema `Hydration.hydrate/3` contract.
-- `/Users/jon/projects/scrypath/lib/scrypath/meilisearch.ex` — backend impl including `index_name/2` used for `indexUid` mapping.
-- `/Users/jon/projects/scrypath/lib/scrypath/options.ex` — `@search_options`, `validate_search_options!/2`.
-- `/Users/jon/projects/scrypath/lib/scrypath/query.ex` — `%Query{}` struct shape.
-- `/Users/jon/projects/scrypath/.planning/research/{STACK,FEATURES,ARCHITECTURE,PITFALLS,SUMMARY}.md` — prior-round convergence.
-- `/Users/jon/projects/scrypath/.planning/PROJECT.md` — non-goals and scope boundaries.
+- `/Users/example/projects/scrypath/lib/scrypath.ex` — current public API surface.
+- `/Users/example/projects/scrypath/lib/scrypath/search.ex` — current single-schema search orchestration.
+- `/Users/example/projects/scrypath/lib/scrypath/search_result.ex` — `SearchResult.t()` shape and helpers.
+- `/Users/example/projects/scrypath/lib/scrypath/backend.ex` — behaviour (five required callbacks; `search_many/3` not yet present).
+- `/Users/example/projects/scrypath/lib/scrypath/hydration.ex` — per-schema `Hydration.hydrate/3` contract.
+- `/Users/example/projects/scrypath/lib/scrypath/meilisearch.ex` — backend impl including `index_name/2` used for `indexUid` mapping.
+- `/Users/example/projects/scrypath/lib/scrypath/options.ex` — `@search_options`, `validate_search_options!/2`.
+- `/Users/example/projects/scrypath/lib/scrypath/query.ex` — `%Query{}` struct shape.
+- `/Users/example/projects/scrypath/.planning/research/{STACK,FEATURES,ARCHITECTURE,PITFALLS,SUMMARY}.md` — prior-round convergence.
+- `/Users/example/projects/scrypath/.planning/PROJECT.md` — non-goals and scope boundaries.
 - [Meilisearch `/multi-search` API reference](https://www.meilisearch.com/docs/reference/api/multi_search) — request/response shapes, `federation` object, `facetsByIndex`, `remoteErrors`.
 - [Elasticsearch `_msearch` API reference](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-multi-search.html) — ND-JSON shape, `responses` array, `max_concurrent_searches`.
 - [Elixir `Task.async_stream/5`](https://hexdocs.pm/elixir/Task.html) — concurrency primitive for Decision 6.

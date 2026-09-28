@@ -1,7 +1,7 @@
 # Docker DX: Zero-Conflict Multi-Project Local Stacks (Elixir/Phoenix demos on macOS)
 
 Research date: 2026-06-04. Grounded in the real files under
-`/Users/jon/projects/scrypath/examples/scrypath_ecommerce/` and the live `docker ps`
+`/Users/example/projects/scrypath/examples/scrypath_ecommerce/` and the live `docker ps`
 on this machine (parapet_demo, rulestead_demo_jon_main, threadline-postgres,
 scrypath_ecommerce). Every recommendation is backed by either a cited source or a fact
 observed in this repo.
@@ -267,7 +267,7 @@ unless a host tool needs it.
 ## 4. Layer-caching findings (concrete issues in THIS repo)
 
 Build context is the **repo root** (`context: ../..`), so the **root `.dockerignore`**
-(`/Users/jon/projects/scrypath/.dockerignore`) is the one that governs `COPY . .`.
+(`/Users/example/projects/scrypath/.dockerignore`) is the one that governs `COPY . .`.
 
 ### What's already correct
 - **mix.exs/mix.lock copied before source** (Dockerfile lines 18–20), then `mix deps.get`

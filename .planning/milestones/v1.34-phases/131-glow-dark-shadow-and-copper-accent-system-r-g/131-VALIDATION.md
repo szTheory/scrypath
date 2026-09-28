@@ -106,9 +106,9 @@ EXIT_CODE: 1
 ### Gate 3: `node e2e/light-pixel-diff.mjs` — ✅ Failed pairs: 0 / 20
 
 ```
-Baseline: /Users/jon/projects/scrypath/examples/scrypath_ecommerce/.tmp/admin-screenshots
-Fresh:    /Users/jon/projects/scrypath/examples/scrypath_ecommerce/.tmp/pixel-diff-fresh
-Diff out: /Users/jon/projects/scrypath/examples/scrypath_ecommerce/.tmp/pixel-diff-out
+Baseline: /Users/example/projects/scrypath/examples/scrypath_ecommerce/.tmp/admin-screenshots
+Fresh:    /Users/example/projects/scrypath/examples/scrypath_ecommerce/.tmp/pixel-diff-fresh
+Diff out: /Users/example/projects/scrypath/examples/scrypath_ecommerce/.tmp/pixel-diff-out
 Light PNGs to diff: 20
 
 OK:   00-control-room--light--desktop--incident.png

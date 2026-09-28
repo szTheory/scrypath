@@ -428,7 +428,7 @@ defp run_result_summary(%MultiSearchResult{} = r),
 
 ### Tertiary (LOW confidence)
 
-- None beyond the single explicit assumption logged in the State of the Art section. [VERIFIED: /Users/jon/projects/scrypath/.planning/phases/67-verification-jtbd-examples-milestone-bookkeeping/67-RESEARCH.md]
+- None beyond the single explicit assumption logged in the State of the Art section. [VERIFIED: /Users/example/projects/scrypath/.planning/phases/67-verification-jtbd-examples-milestone-bookkeeping/67-RESEARCH.md]
 
 ## Metadata
 

@@ -342,7 +342,7 @@ All claims in this research were verified from repository files, lockfiles, loca
 | Property | Value |
 |----------|-------|
 | Framework | ExUnit on Elixir 1.19.5, plus Phoenix LiveViewTest in `scrypath_ops` [VERIFIED: local env][VERIFIED: scrypath_ops/test/scrypath_ops_web/live/playbook_live_test.exs] |
-| Config file | No `pytest`/Jest-style config; root uses [test/test_helper.exs](/Users/jon/projects/scrypath/test/test_helper.exs:1) and ops uses [scrypath_ops/test/test_helper.exs](/Users/jon/projects/scrypath/scrypath_ops/test/test_helper.exs:1) [VERIFIED: test/test_helper.exs][VERIFIED: scrypath_ops/test/test_helper.exs] |
+| Config file | No `pytest`/Jest-style config; root uses [test/test_helper.exs](/Users/example/projects/scrypath/test/test_helper.exs:1) and ops uses [scrypath_ops/test/test_helper.exs](/Users/example/projects/scrypath/scrypath_ops/test/test_helper.exs:1) [VERIFIED: test/test_helper.exs][VERIFIED: scrypath_ops/test/test_helper.exs] |
 | Quick run command | `mix test test/scrypath/search_test.exs test/scrypath/search_many_test.exs scrypath_ops/test/scrypath_ops/playbook/runner_test.exs scrypath_ops/test/scrypath_ops/playbook/run_failure_test.exs scrypath_ops/test/scrypath_ops_web/live/playbook_live_test.exs` [VERIFIED: targeted test run] |
 | Full suite command | `mix test && mix verify.opsui` [VERIFIED: mix.exs][VERIFIED: lib/mix/tasks/verify.opsui.ex] |
 
