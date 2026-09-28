@@ -118,7 +118,11 @@ defmodule Mix.Tasks.Verify.AdopterTest do
     test "reports the actual sorted graph and preserves the source lock" do
       {example_dir, source_lock} = example_workspace(@phoenix_lock)
       calls_key = {__MODULE__, make_ref()}
-      runner = command_runner(calls_key)
+      secret_url = "http://user:secret@example.test:7700"
+      original = System.get_env("SCRYPATH_MEILISEARCH_URL")
+      System.put_env("SCRYPATH_MEILISEARCH_URL", secret_url)
+      on_exit(restore_env("SCRYPATH_MEILISEARCH_URL", original))
+      runner = command_runner(calls_key, fetch_output: "service endpoint #{secret_url}")
 
       output =
         capture_io(fn ->
@@ -138,7 +142,8 @@ defmodule Mix.Tasks.Verify.AdopterTest do
                ~r/source_sha=#{@source_sha} mode=path source_lock_sha256=#{expected_hash} resolved_lock_sha256=#{expected_hash}/
 
       assert output =~ ~r/packages=.*hpax@1\.1\.0.*mint@1\.11\.0/
-      refute output =~ "authorization=secret"
+      assert output =~ "service endpoint [REDACTED]"
+      refute output =~ secret_url
     end
 
     test "lock mutation after dependency fetch prevents consumer tests" do
@@ -230,7 +235,7 @@ defmodule Mix.Tasks.Verify.AdopterTest do
     test "missing or malformed locks fail before resolver dispatch" do
       for lock <- [nil, "%{broken"] do
         {example_dir, _source_lock} = example_workspace(lock)
-        if is_nil(lock), do: File.rm!(Path.join(example_dir, "mix.lock"))
+        if is_nil(lock), do: File.rm(Path.join(example_dir, "mix.lock"))
         calls_key = {__MODULE__, make_ref()}
         runner = command_runner(calls_key)
 
