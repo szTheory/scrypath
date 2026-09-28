@@ -4,10 +4,10 @@ milestone: v1.40
 milestone_name: Readiness Evidence Closure
 status: Awaiting next milestone
 stopped_at: v1.40 archived; awaiting next milestone selection
-last_updated: "2026-09-28T00:29:37.980Z"
+last_updated: "2026-09-28T01:37:21.000Z"
 last_activity: 2026-09-27
-last_activity_desc: Milestone v1.40 archived; release train idle
-state_head: 343e20be66ab0c17f62b95138203c86e868bd1ee
+last_activity_desc: v1.40 archive and tag complete; handoff refreshed; release train idle
+state_head: 0c4d50e6423bb15865250ec3d9d2fc09c79de586
 progress:
   total_phases: 3
   completed_phases: 3
@@ -28,7 +28,7 @@ current_phase: 167
 Phase: None active — v1.40 archived
 Plan: —
 Status: Awaiting next milestone
-Next command: `$gsd-new-milestone` after owner-approved scope is established
+Next command: `$gsd-new-milestone` to start v1.41 scope discovery; no scope is approved yet
 Last activity: 2026-09-27 — Milestone v1.40 completed and archived
 
 ## Last Milestone Context — v1.40 (Archived)
@@ -121,10 +121,12 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-09-27T21:19:58Z
-Stopped at: Phase 167 tracking complete; external exact-SHA closeout, then milestone audit
+Last session: 2026-09-28T01:37:21Z
+Stopped at: v1.40 archived and tagged; milestone horizon refreshed; exact-SHA closeout passed for follow-up documentation
 Resume file: None
 
 ## Operator Next Steps
 
-- Start the next milestone with $gsd-new-milestone
+- After context reset, run `$gsd-new-milestone` with no name argument. It loads this archived project context and starts v1.41 scope discovery; no milestone scope is approved, so answer its questions before it writes scope artifacts.
+- v1.40 Phase 167 is the last completed phase; phases 165–167 are archived and must not be reopened or repeated. The next planned phase number should be 168 if the approved v1.41 roadmap continues sequential numbering; confirm the generated roadmap before running `$gsd-plan-phase 168`.
+- The Mint 1.9.3 High advisory and a fresh dated readiness assessment are possible follow-up scope, not approved work. See `reference/milestone-candidates.md` and `reference/MILESTONE-ARC.md` for the updated evidence and constraints.
