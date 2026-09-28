@@ -6,8 +6,11 @@ defmodule Mix.Tasks.Verify.PhoenixExample.LockGraphTest do
   @phoenix_lock File.read!("examples/phoenix_meilisearch/mix.lock")
 
   test "normalizes dependency keys and ignores map-entry ordering" do
-    string_keys = ~S|%{"mint" => {:hex, :mint, "1.11.0", "m", [:mix], [], "hexpm", "r"}, "hpax" => {:hex, :hpax, "1.1.0", "h", [:mix], [], "hexpm", "s"}}|
-    atom_keys = ~S|%{hpax: {:hex, :hpax, "1.1.0", "h", [:mix], [], "hexpm", "s"}, mint: {:hex, :mint, "1.11.0", "m", [:mix], [], "hexpm", "r"}}|
+    string_keys =
+      ~S|%{"mint" => {:hex, :mint, "1.11.0", "m", [:mix], [], "hexpm", "r"}, "hpax" => {:hex, :hpax, "1.1.0", "h", [:mix], [], "hexpm", "s"}}|
+
+    atom_keys =
+      ~S|%{hpax: {:hex, :hpax, "1.1.0", "h", [:mix], [], "hexpm", "s"}, mint: {:hex, :mint, "1.11.0", "m", [:mix], [], "hexpm", "r"}}|
 
     assert LockGraph.parse!(string_keys) == LockGraph.parse!(atom_keys)
   end
@@ -21,7 +24,9 @@ defmodule Mix.Tasks.Verify.PhoenixExample.LockGraphTest do
     end
 
     assert_raise ArgumentError, ~r/duplicate/i, fn ->
-      LockGraph.parse!(~S|%{"mint" => {:hex, :mint, "1.11.0", "m", [:mix], [], "hexpm", "r"}, mint: {:hex, :mint, "1.11.0", "m", [:mix], [], "hexpm", "r"}}|)
+      LockGraph.parse!(
+        ~S|%{"mint" => {:hex, :mint, "1.11.0", "m", [:mix], [], "hexpm", "r"}, mint: {:hex, :mint, "1.11.0", "m", [:mix], [], "hexpm", "r"}}|
+      )
     end
   end
 
@@ -46,13 +51,35 @@ defmodule Mix.Tasks.Verify.PhoenixExample.LockGraphTest do
     resolved = insert_scrypath(@phoenix_lock, artifact_url, tag)
 
     mutations = [
-      String.replace(resolved, "  \"heroicons\":", "  \"unexpected\": {:hex, :unexpected, \"1.0.0\", \"x\", [:mix], [], \"hexpm\", \"y\"},\n  \"heroicons\":", global: false),
-      String.replace(resolved, "\"1.1.0\", \"782931867cc23217c68fb5f68fe1a11f5e7544c7fda82c8a7019a5df5a4a1cdf\"", "\"1.1.0\", \"changed-checksum\"", global: false),
-      String.replace(resolved, "\"hpax\": {:hex, :hpax, \"1.1.0\"", "\"hpax\": {:hex, :hpax, \"1.0.4\"", global: false),
-      String.replace(resolved, "\"hpax\": {:hex, :hpax, \"1.1.0\"", "\"hpax\": {:git, :hpax, \"1.1.0\"", global: false)
+      String.replace(
+        resolved,
+        "  \"bandit\":",
+        "  \"unexpected\": {:hex, :unexpected, \"1.0.0\", \"x\", [:mix], [], \"hexpm\", \"y\"},\n  \"bandit\":",
+        global: false
+      ),
+      String.replace(
+        resolved,
+        "\"1.1.0\", \"782931867cc23217c68fb5f68fe1a11f5e7544c7fda82c8a7019a5df5a4a1cdf\"",
+        "\"1.1.0\", \"changed-checksum\"",
+        global: false
+      ),
+      String.replace(
+        resolved,
+        "\"hpax\": {:hex, :hpax, \"1.1.0\"",
+        "\"hpax\": {:hex, :hpax, \"1.0.4\"",
+        global: false
+      ),
+      String.replace(
+        resolved,
+        "\"hpax\": {:hex, :hpax, \"1.1.0\"",
+        "\"hpax\": {:git, :hpax, \"1.1.0\"",
+        global: false
+      )
     ]
 
-    Enum.each(mutations, fn mutated ->
+    Enum.each(Enum.with_index(mutations, 1), fn {mutated, index} ->
+      assert mutated != resolved, "mutation #{index} did not change the fixture"
+
       assert_raise ArgumentError, ~r/graph|lock/i, fn ->
         LockGraph.assert_package!(@phoenix_lock, mutated, artifact_url, tag)
       end
@@ -67,7 +94,12 @@ defmodule Mix.Tasks.Verify.PhoenixExample.LockGraphTest do
     end
 
     assert_raise ArgumentError, ~r/Scrypath|artifact/i, fn ->
-      LockGraph.assert_package!(@phoenix_lock, resolved, "file:///tmp/scrypath-artifact", "v9.9.9")
+      LockGraph.assert_package!(
+        @phoenix_lock,
+        resolved,
+        "file:///tmp/scrypath-artifact",
+        "v9.9.9"
+      )
     end
   end
 

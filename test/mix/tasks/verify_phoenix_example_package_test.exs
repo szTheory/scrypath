@@ -81,7 +81,12 @@ defmodule Mix.Tasks.Verify.PhoenixExample.PackageTest do
         artifact = Path.join(Process.get(root_key), "artifact")
         url = "file://#{Path.expand(artifact)}"
         tag = "v#{Mix.Project.config()[:version]}"
-        File.write!(Path.join(opts[:cd], "mix.lock"), ~s|%{"scrypath" => {:git, "#{url}", "abc123", [tag: "#{tag}"]}}|)
+
+        File.write!(
+          Path.join(opts[:cd], "mix.lock"),
+          ~s|%{"scrypath" => {:git, "#{url}", "abc123", [tag: "#{tag}"]}}|
+        )
+
         {"", 0}
 
       "mix", [stage], _opts when stage in ["compile", "test"] ->
@@ -105,9 +110,13 @@ defmodule Mix.Tasks.Verify.PhoenixExample.PackageTest do
   end
 
   test "artifact command failure reports status and removes the owned workspace" do
-    runner = fn "mix", ["hex.build", "--unpack", "--output", artifact], _opts ->
-      Process.put(:package_test_root, Path.dirname(artifact))
-      {"artifact failed", 17}
+    runner = fn
+      "git", ["rev-parse", "HEAD"], opts ->
+        System.cmd("git", ["rev-parse", "HEAD"], opts)
+
+      "mix", ["hex.build", "--unpack", "--output", artifact], _opts ->
+        Process.put(:package_test_root, Path.dirname(artifact))
+        {"artifact failed", 17}
     end
 
     assert_raise Mix.Error,
@@ -143,7 +152,16 @@ defmodule Mix.Tasks.Verify.PhoenixExample.PackageTest do
             artifact = Path.join(Process.get(root_key), "artifact")
             artifact_url = "file://#{Path.expand(artifact)}"
             tag = "v#{Mix.Project.config()[:version]}"
-            lock = ~s|%{"scrypath" => {:git, "#{artifact_url}", "abc123", [tag: "#{tag}"]}}|
+            source_lock = File.read!(Path.join(opts[:cd], "mix.lock"))
+
+            lock =
+              String.replace(
+                source_lock,
+                "%{\n",
+                "%{\n  \"scrypath\" => {:git, \"#{artifact_url}\", \"abc123\", [tag: \"#{tag}\"]},\n",
+                global: false
+              )
+
             File.write!(Path.join(opts[:cd], "mix.lock"), lock)
             {"", 0}
           end
@@ -167,7 +185,12 @@ defmodule Mix.Tasks.Verify.PhoenixExample.PackageTest do
 
       case failed_stage do
         nil ->
-          capture_io(fn -> assert :ok = run.() end)
+          output = capture_io(fn -> assert :ok = run.() end)
+
+          assert output =~
+                   ~r/source_sha=[0-9a-f]{40} mode=package source_lock_sha256=[0-9a-f]{64} resolved_lock_sha256=[0-9a-f]{64}/
+
+          assert output =~ ~r/packages=.*hpax@1\.1\.0.*mint@1\.11\.0/
 
         stage ->
           stage_name = Atom.to_string(stage)
@@ -184,9 +207,13 @@ defmodule Mix.Tasks.Verify.PhoenixExample.PackageTest do
   end
 
   test "failed workspace retention is opt in" do
-    runner = fn "mix", ["hex.build", "--unpack", "--output", artifact], _opts ->
-      Process.put(:package_test_root, Path.dirname(artifact))
-      {"synthetic build failure", 9}
+    runner = fn
+      "git", ["rev-parse", "HEAD"], opts ->
+        System.cmd("git", ["rev-parse", "HEAD"], opts)
+
+      "mix", ["hex.build", "--unpack", "--output", artifact], _opts ->
+        Process.put(:package_test_root, Path.dirname(artifact))
+        {"synthetic build failure", 9}
     end
 
     output =

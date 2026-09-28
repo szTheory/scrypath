@@ -54,6 +54,17 @@ defmodule Mix.Tasks.Verify.PhoenixExample.Package do
     Enum.each([artifact, consumer, hex_home, mix_home], &File.mkdir_p!/1)
     version = Mix.Project.config()[:version]
     tag = "v#{version}"
+    source_lock_path = Path.expand(Path.join([@example, "mix.lock"]), File.cwd!())
+    source_lock = read_lock!(source_lock_path, :setup)
+    source_identity = graph_identity!(source_lock, :setup)
+
+    source_sha =
+      runner
+      |> invoke!(:source, "git", ["rev-parse", "HEAD"], cd: File.cwd!())
+      |> String.trim()
+
+    unless Regex.match?(~r/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/, source_sha),
+      do: fail!(:source, "git rev-parse did not return a valid source checkout SHA")
 
     Mix.shell().info("==> package proof: building artifact")
 
@@ -87,14 +98,21 @@ defmodule Mix.Tasks.Verify.PhoenixExample.Package do
     isolated = [{"HEX_HOME", hex_home}, {"MIX_HOME", mix_home}]
     Mix.shell().info("==> package proof: resolving staged dependencies")
     invoke!(runner, :dependency, "mix", ["deps.get"], cd: consumer, env: isolated)
-    lock = File.read!(Path.join(consumer, "mix.lock"))
+    lock = read_lock!(Path.join(consumer, "mix.lock"), :dependency)
+    resolved_identity = graph_identity!(lock, :dependency)
 
-    unless lock_resolves_to_artifact?(lock, artifact_url, tag),
-      do:
-        fail!(
-          :dependency,
-          "staged lock does not resolve Scrypath from the tagged local artifact"
-        )
+    report_graph_identity!("package", source_sha, source_identity, resolved_identity)
+
+    try do
+      Mix.Tasks.Verify.PhoenixExample.LockGraph.assert_package!(
+        source_lock,
+        lock,
+        artifact_url,
+        tag
+      )
+    rescue
+      error in [ArgumentError] -> fail!(:dependency, error.message)
+    end
 
     Mix.shell().info(
       "PASS package proof: staged dependencies resolve to #{artifact_url} at #{tag}"
@@ -122,18 +140,41 @@ defmodule Mix.Tasks.Verify.PhoenixExample.Package do
 
   @doc false
   def lock_resolves_to_artifact?(lock, expected_url, expected_tag) do
-    with {:ok, {:%{}, _meta, entries}} <- Code.string_to_quoted(lock),
-         {:{}, _tuple_meta, [:git, ^expected_url, _revision, options | _rest]} <-
-           Enum.find_value(entries, fn
-             {"scrypath", value} -> value
-             {:scrypath, value} -> value
-             _ -> nil
-           end),
-         true <- Enum.any?(options, &match?({:tag, ^expected_tag}, &1)) do
-      true
-    else
-      _ -> false
+    case Mix.Tasks.Verify.PhoenixExample.LockGraph.parse!(lock)["scrypath"] do
+      {:git, ^expected_url, _revision, options} when is_list(options) ->
+        Enum.any?(options, &match?({:tag, ^expected_tag}, &1))
+
+      _ ->
+        false
     end
+  rescue
+    ArgumentError -> false
+  end
+
+  defp read_lock!(path, stage) do
+    File.read!(path)
+  rescue
+    error -> fail!(stage, "could not read the Phoenix lockfile (#{Exception.message(error)})")
+  end
+
+  defp graph_identity!(lock, stage) do
+    Mix.Tasks.Verify.PhoenixExample.LockGraph.identity!(lock)
+  rescue
+    error in [ArgumentError] -> fail!(stage, error.message)
+  end
+
+  defp report_graph_identity!(mode, source_sha, source_identity, resolved_identity) do
+    Mix.shell().info(
+      "Phoenix example proof source_sha=#{source_sha} mode=#{mode} " <>
+        "source_lock_sha256=#{source_identity.sha256} resolved_lock_sha256=#{resolved_identity.sha256}"
+    )
+
+    packages =
+      Enum.map_join(resolved_identity.packages, ", ", fn {name, version} ->
+        "#{name}@#{version}"
+      end)
+
+    Mix.shell().info("Phoenix example proof packages=#{packages}")
   end
 
   defp stage_example!(consumer) do
@@ -170,7 +211,7 @@ defmodule Mix.Tasks.Verify.PhoenixExample.Package do
     safe_output = redact(output)
     if safe_output != "", do: Mix.shell().info(safe_output)
     if status != 0, do: fail!(stage, "#{command} #{Enum.join(args, " ")} exited #{status}")
-    :ok
+    output
   rescue
     error in Mix.Error ->
       reraise(error, __STACKTRACE__)
