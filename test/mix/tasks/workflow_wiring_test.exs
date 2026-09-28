@@ -354,6 +354,27 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     end
   end
 
+  describe "MINT-03 dependency security inventory wiring" do
+    test "deep-quality owns one four-graph audit then runs the shared remaining checks" do
+      ci = File.read!(@ci_yml)
+      deep_quality = workflow_job_block(ci, "deep-quality")
+
+      assert deep_quality =~ "name: deep-quality (advisory)"
+      assert deep_quality =~ "continue-on-error: true"
+      assert deep_quality =~ "mix local.hex 2.5.1 --force"
+      assert deep_quality =~ "elixir scripts/ci/dependency_audit.exs"
+
+      assert deep_quality =~
+               "MIX_ENV=test mix run --no-start -e 'Mix.Tasks.Verify.Capability.run_deep_quality_without_audit()'"
+
+      assert length(Regex.scan(~r|elixir scripts/ci/dependency_audit\.exs|, deep_quality)) == 1
+      refute deep_quality =~ "mix deps.get"
+      refute deep_quality =~ "mix verify.deep_quality"
+      assert deep_quality =~ "priv/plts"
+      assert deep_quality =~ "hashFiles('mix.lock', 'mix.exs')"
+    end
+  end
+
   describe "STAB-01 advisory evidence wiring" do
     test "path-scoped ops-ui job provides its Postgres test dependency" do
       ops_ui = @ci_yml |> File.read!() |> workflow_job_block("ops-ui")
