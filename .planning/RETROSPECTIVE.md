@@ -2,6 +2,49 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.40 — Readiness Evidence Closure
+
+**Shipped and archived:** 2026-09-27 (planning milestone; no package release)
+**Phases:** 3 (165–167) | **Plans:** 8 | **Plan tasks:** 16 | **Requirements:** 11
+
+### What Was Built
+
+- Public tenant-scope and facet-filter contracts were verified; two compatible defects were corrected.
+- A Phoenix host proved persisted-membership tenant isolation through repository-path and freshly built package dependencies.
+- A read-only mismatch report led to ID-bounded manual repair, terminal task success, and visibility through the same search.
+- A separate six-condition assessment remains **NOT READY**, with the Mint advisory, condition 6 cutoff, release-reference mismatch, and evidence limits preserved.
+
+### What Worked
+
+- Separating public filter composition, host policy, package use, repair, and dated readiness into bounded claims kept evidence aligned to each layer.
+- Refreshing Phase 165/166 reports after their evidence aged restored canonical verification state before final source tracking.
+- The exact-SHA retry recorded both outcomes: run 36360456437 exposed a transient mounted-service readiness timeout; same-SHA run 36361116862 passed all required checks, coverage, and attestation.
+- Keeping the advisory E2E and Phoenix scenarios independent from required merge gates preserved evidence without broadening branch protection.
+
+### What Was Inefficient
+
+- The first final-source run at `03d8e63` became stale after Phase 165/166 verification and review reports were refreshed, requiring a new hosted run at `343e20b`.
+- A transient mounted web-service startup timeout caused one full same-SHA CI retry; it did not reproduce on retry and required no source change.
+- GSD's archive helper generated a candidate-only accomplishment line, so the milestone ledger needed reconciliation with final-source and audit outcomes.
+
+### Patterns Established
+
+- Recompute exact-SHA acceptance after tracked verification refreshes and archive commits; keep source-specific receipts distinct and make the last hosted receipt the final tracked source.
+- Preserve a failed hosted readiness attempt and its successful same-source retry instead of hiding either result or diagnosing a product defect without evidence.
+- Archive the dated readiness limits alongside passing implementation evidence; later CI must not rewrite an earlier assessment cutoff.
+
+### Key Lessons
+
+Finish verification refreshes and archive writes before the final source acceptance. Check generated milestone summaries against phase summaries and the accepted audit, then run exact-SHA CI on the completed archive commit and avoid tracked follow-up edits. Keep the dated readiness cutoff unchanged regardless of later CI results.
+
+### Cost Observations
+
+- The phase-tracking range contained 62 commits, 77 changed files, and 10,725 additions / 75 deletions across 2026-09-26–27.
+- Hosted closeout needed one same-SHA retry for the mounted-service startup timeout; both successful final receipts retained immutable artifacts.
+- Model mix and session-cost data were unavailable.
+
+---
+
 ## Milestone: v1.39 — Pre-Operator UI Quality Readiness Ratchet
 
 **Shipped and archived:** 2026-09-26 (planning milestone; no package release)
@@ -528,6 +571,7 @@ Local success is insufficient for a required zero-touch gate when the local buil
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|
+| v1.40 | 165-167 | Public tenant/facet contract fixes, host-owned tenant and repair evidence, and an honest dated NOT READY decision |
 | v1.39 | 162-164 | Claim-level non-UI readiness baseline, evidence-led dispositions, and a fail-closed NOT READY decision |
 | v1.38 | 160-161 | Package-backed Phoenix adopter proof, automated release parity, and zero-human verification default |
 | v1.37 | 148-159 | Runtime/architecture quality ratchet, lean CI and release trust, exact-SHA zero-human closeout |
