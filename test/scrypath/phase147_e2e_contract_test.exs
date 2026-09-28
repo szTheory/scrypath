@@ -7,6 +7,7 @@ defmodule Scrypath.Phase147E2EContractTest do
   @makefile File.read!(Path.join(@example, "Makefile"))
   @compose_base File.read!(Path.join(@example, "compose.yaml"))
   @compose File.read!(Path.join(@example, "compose.e2e.yaml"))
+  @entrypoint File.read!(Path.join(@example, "docker-e2e-entrypoint.sh"))
   @runner File.read!(Path.join(@example, "scripts/verify-e2e.sh"))
   @browser_runner File.read!(Path.join(@example, "docker-playwright.sh"))
   @runtime_config File.read!(Path.join(@example, "config/runtime.exs"))
@@ -45,6 +46,10 @@ defmodule Scrypath.Phase147E2EContractTest do
 
     assert @runtime_config =~ "SCRYPATH_OPS_PLAYBOOK_DIR"
     assert @runtime_config =~ "config :scrypath_ops, playbook_workspace_dir: Path.expand(path)"
+
+    assert @entrypoint =~ "PHX_SERVER=false mix e2e.prepare"
+    assert @entrypoint =~ "PHX_SERVER=false mix scrypath.demo.seed"
+    assert @entrypoint =~ "exec env SCRYPATH_E2E_NO_SANDBOX=1 mix phx.server"
   end
 
   test "Playwright image version matches the resolved package lock" do
