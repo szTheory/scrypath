@@ -365,7 +365,9 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert deep_quality =~ "elixir scripts/ci/dependency_audit.exs"
 
       assert deep_quality =~
-               "MIX_ENV=test mix run --no-start -e 'Mix.Tasks.Verify.Capability.run_deep_quality_without_audit()'"
+               "mix run --no-start -e 'Mix.Tasks.Verify.Capability.run_deep_quality_without_audit()'"
+
+      assert deep_quality =~ "MIX_ENV: test"
 
       assert length(Regex.scan(~r|elixir scripts/ci/dependency_audit\.exs|, deep_quality)) == 1
       refute deep_quality =~ "mix deps.get"

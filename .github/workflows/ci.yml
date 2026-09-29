@@ -148,7 +148,9 @@ jobs:
             priv/plts
           key: ${{ runner.os }}-test-elixir-1.19.0-otp-28.1-deep-${{ hashFiles('mix.lock', 'mix.exs') }}
       - run: elixir scripts/ci/dependency_audit.exs
-      - run: MIX_ENV=test mix run --no-start -e 'Mix.Tasks.Verify.Capability.run_deep_quality_without_audit()'
+      - run: mix run --no-start -e 'Mix.Tasks.Verify.Capability.run_deep_quality_without_audit()'
+        env:
+          MIX_ENV: test
 
   phoenix-example:
     name: phoenix-example (advisory)
