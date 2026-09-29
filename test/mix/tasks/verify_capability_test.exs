@@ -67,4 +67,38 @@ defmodule Mix.Tasks.Verify.CapabilityTest do
       assert preferred_envs[String.to_existing_atom(task)] == :test
     end
   end
+
+  test "standalone deep quality audits once and shares every other quality check" do
+    assert_deep_quality_sequence(&Mix.Tasks.Verify.Capability.run_deep_quality_with_audit/1, [
+      {:task, "verify.no_optional_deps", []},
+      {:task, "scrypath.namespace_fence", []},
+      {:command, "hex.audit", []},
+      {:command, "dialyzer", []}
+    ])
+  end
+
+  test "the internal no-audit path retains quality checks without auditing" do
+    assert_deep_quality_sequence(&Mix.Tasks.Verify.Capability.run_deep_quality_without_audit/1, [
+      {:task, "verify.no_optional_deps", []},
+      {:task, "scrypath.namespace_fence", []},
+      {:command, "dialyzer", []}
+    ])
+  end
+
+  defp assert_deep_quality_sequence(run, expected) do
+    calls_key = {__MODULE__, make_ref()}
+
+    task_runner = fn task, args ->
+      Process.put(calls_key, Process.get(calls_key, []) ++ [{:task, task, args}])
+      :ok
+    end
+
+    command_runner = fn command, args ->
+      Process.put(calls_key, Process.get(calls_key, []) ++ [{:command, command, args}])
+      :ok
+    end
+
+    assert :ok = run.(task_runner: task_runner, command_runner: command_runner)
+    assert Process.get(calls_key) == expected
+  end
 end

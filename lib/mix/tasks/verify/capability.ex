@@ -28,6 +28,18 @@ defmodule Mix.Tasks.Verify.Capability do
     do:
       command!(:ecommerce_e2e, args, "make", ["-C", "examples/scrypath_ecommerce", "verify-e2e"])
 
+  @doc false
+  @spec run_deep_quality_without_audit() :: :ok
+  @spec run_deep_quality_without_audit(keyword()) :: :ok
+  def run_deep_quality_without_audit(opts \\ []),
+    do: run_deep_quality_sequence(false, opts)
+
+  @doc false
+  @spec run_deep_quality_with_audit() :: :ok
+  @spec run_deep_quality_with_audit(keyword()) :: :ok
+  def run_deep_quality_with_audit(opts \\ []),
+    do: run_deep_quality_sequence(true, opts)
+
   defp no_args!(_capability, [], callback), do: callback.()
 
   defp no_args!(capability, args, _task) do
@@ -65,16 +77,30 @@ defmodule Mix.Tasks.Verify.Capability do
   end
 
   defp deep_quality!([]) do
-    run_task!("verify.no_optional_deps", [])
-    Mix.Task.run("scrypath.namespace_fence")
-    run_mix_command!("hex.audit", [])
-    run_mix_command!("dialyzer", [])
-    :ok
+    run_deep_quality_with_audit()
   end
 
   defp deep_quality!(args) do
     Mix.raise("verify.deep_quality does not accept arguments, got: #{Enum.join(args, " ")}")
   end
+
+  defp run_deep_quality_sequence(include_audit?, opts) do
+    task_runner = Keyword.get(opts, :task_runner, &run_deep_quality_task!/2)
+    command_runner = Keyword.get(opts, :command_runner, &run_mix_command!/2)
+
+    task_runner.("verify.no_optional_deps", [])
+    task_runner.("scrypath.namespace_fence", [])
+    if include_audit?, do: command_runner.("hex.audit", [])
+    command_runner.("dialyzer", [])
+    :ok
+  end
+
+  defp run_deep_quality_task!("scrypath.namespace_fence", []) do
+    Mix.Task.run("scrypath.namespace_fence")
+    :ok
+  end
+
+  defp run_deep_quality_task!(task, args), do: run_task!(task, args)
 
   defp compatibility!([]) do
     run_task!("compile", ["--warnings-as-errors"])

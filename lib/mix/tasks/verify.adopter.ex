@@ -1,6 +1,8 @@
 defmodule Mix.Tasks.Verify.Adopter do
   use Mix.Task
 
+  alias Mix.Tasks.Verify.PhoenixExample.LockGraph
+
   @shortdoc "Runs fast adopter contracts, or the live Phoenix example proof with --live"
 
   @moduledoc """
@@ -16,10 +18,11 @@ defmodule Mix.Tasks.Verify.Adopter do
   `examples/phoenix_meilisearch`:
 
   - `cd examples/phoenix_meilisearch`
-  - `mix deps.get`
+  - `mix deps.get --check-locked` and verify the resolved Mix lock graph
   - `mix test`
 
-  Equivalent shell chain: `cd examples/phoenix_meilisearch && mix deps.get && mix test`.
+  The path proof reports the source checkout SHA, lock hashes and sorted package/version
+  identities, then verifies the source lock remains byte-identical after fetching and tests.
 
   Live mode requires these environment variables before it will run:
 
@@ -71,29 +74,192 @@ defmodule Mix.Tasks.Verify.Adopter do
     run_test!(@fast_tests, "fast adopter contracts")
   end
 
-  defp run_live! do
-    example_dir = Path.expand("examples/phoenix_meilisearch", File.cwd!())
+  @doc false
+  def run_live!(opts \\ []) do
+    example_dir =
+      Keyword.get(opts, :example_dir, Path.expand("examples/phoenix_meilisearch", File.cwd!()))
+
+    command_runner = Keyword.get(opts, :command_runner, &System.cmd/3)
+    service_check = Keyword.get(opts, :service_check, &ensure_live_prerequisites!/0)
 
     unless File.dir?(example_dir) do
       Mix.raise("verify.adopter: expected #{example_dir} to exist")
     end
 
-    ensure_live_prerequisites!()
+    run_service_check!(service_check)
 
-    Mix.shell().info(
-      "==> verify.adopter: cd examples/phoenix_meilisearch && mix deps.get && mix test"
+    lock_path = Path.join(example_dir, "mix.lock")
+    source_lock = read_lock!(lock_path, :setup)
+    source_identity = graph_identity!(source_lock, :setup)
+    source_sha = source_checkout_sha!(command_runner, example_dir)
+
+    Mix.shell().info("==> verify.adopter: resolving the checked Phoenix path graph")
+
+    run_preserving_lock!(
+      command_runner,
+      :fetch,
+      ["deps.get", "--check-locked"],
+      example_dir,
+      lock_path,
+      source_lock
     )
 
-    script = "printf 'n\\n' | mix deps.get && mix test"
+    resolved_lock = read_lock!(lock_path, :fetch)
+    LockGraph.assert_unchanged!(source_lock, resolved_lock)
+    resolved_identity = graph_identity!(resolved_lock, :fetch)
+    report_graph_identity!("path", source_sha, source_identity, resolved_identity)
 
-    {out, status} =
-      System.cmd("bash", ["-lc", script], cd: example_dir, stderr_to_stdout: true)
+    Mix.shell().info("==> verify.adopter: running Phoenix consumer tests")
+    run_preserving_lock!(command_runner, :test, ["test"], example_dir, lock_path, source_lock)
 
-    Mix.shell().info(out)
+    Mix.shell().info(
+      "PASS verify.adopter: Phoenix path proof completed with source lock unchanged"
+    )
+
+    :ok
+  rescue
+    error in Mix.Error -> reraise(error, __STACKTRACE__)
+    error -> Mix.raise("verify.adopter --live failed: #{redact(Exception.message(error))}")
+  end
+
+  defp run_service_check!(service_check) do
+    service_check.()
+  rescue
+    error ->
+      Mix.raise(
+        "verify.adopter --live failed during service preflight: #{redact(Exception.message(error))}"
+      )
+  end
+
+  defp read_lock!(path, stage) do
+    File.read!(path)
+  rescue
+    error ->
+      Mix.raise(
+        "verify.adopter --live #{stage} stage could not read the Phoenix lockfile: #{redact(Exception.message(error))}"
+      )
+  end
+
+  defp graph_identity!(lock, stage) do
+    LockGraph.identity!(lock)
+  rescue
+    error in [ArgumentError] ->
+      Mix.raise(
+        "verify.adopter --live #{stage} stage has an invalid lock graph: #{error.message}"
+      )
+  end
+
+  defp source_checkout_sha!(runner, example_dir) do
+    {output, status} =
+      runner.("git", ["rev-parse", "HEAD"], cd: example_dir, stderr_to_stdout: true)
+
+    if output != "", do: Mix.shell().info(redact(output))
 
     if status != 0 do
-      Mix.raise("verify.adopter failed: `#{script}` (in #{example_dir}) exited #{status}")
+      Mix.raise("verify.adopter --live source stage: git rev-parse HEAD exited #{status}")
     end
+
+    source_sha = String.trim(output)
+
+    unless Regex.match?(~r/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/, source_sha) do
+      Mix.raise(
+        "verify.adopter --live source stage: git rev-parse did not return a valid source SHA"
+      )
+    end
+
+    source_sha
+  rescue
+    error in Mix.Error ->
+      reraise(error, __STACKTRACE__)
+
+    error ->
+      Mix.raise(
+        "verify.adopter --live source stage could not run git rev-parse (#{redact(Exception.message(error))})"
+      )
+  end
+
+  defp run_preserving_lock!(runner, stage, args, example_dir, lock_path, source_lock) do
+    command_result =
+      try do
+        invoke_live!(runner, stage, args, example_dir)
+        :ok
+      rescue
+        error -> {:error, error, __STACKTRACE__}
+      end
+
+    lock_result =
+      try do
+        LockGraph.assert_unchanged!(source_lock, File.read!(lock_path))
+        :unchanged
+      rescue
+        error -> {:changed, error}
+      end
+
+    case {command_result, lock_result} do
+      {:ok, :unchanged} ->
+        :ok
+
+      {{:error, command_error, stacktrace}, :unchanged} ->
+        reraise(command_error, stacktrace)
+
+      {:ok, {:changed, lock_error}} ->
+        Mix.raise(
+          "verify.adopter --live #{stage} stage failed: #{redact(Exception.message(lock_error))}"
+        )
+
+      {{:error, command_error, _stacktrace}, {:changed, lock_error}} ->
+        Mix.raise(
+          "verify.adopter --live #{stage} stage failed (#{redact(Exception.message(command_error))}); " <>
+            redact(Exception.message(lock_error))
+        )
+    end
+  end
+
+  defp invoke_live!(runner, stage, args, example_dir) do
+    Mix.shell().info("==> verify.adopter live [#{stage}]: mix #{Enum.join(args, " ")}")
+    {output, status} = runner.("mix", args, cd: example_dir, stderr_to_stdout: true)
+    safe_output = redact(output)
+    if safe_output != "", do: Mix.shell().info(safe_output)
+
+    if status != 0 do
+      Mix.raise(
+        "verify.adopter --live #{stage} stage: mix #{Enum.join(args, " ")} exited #{status}"
+      )
+    end
+
+    :ok
+  rescue
+    error in Mix.Error ->
+      reraise(error, __STACKTRACE__)
+
+    error ->
+      Mix.raise(
+        "verify.adopter --live #{stage} stage could not run mix #{Enum.join(args, " ")} (#{redact(Exception.message(error))})"
+      )
+  end
+
+  defp report_graph_identity!(mode, source_sha, source_identity, resolved_identity) do
+    Mix.shell().info(
+      "Phoenix example proof source_sha=#{source_sha} mode=#{mode} " <>
+        "source_lock_sha256=#{source_identity.sha256} resolved_lock_sha256=#{resolved_identity.sha256}"
+    )
+
+    packages =
+      Enum.map_join(resolved_identity.packages, ", ", fn {name, version} ->
+        "#{name}@#{version}"
+      end)
+
+    Mix.shell().info("Phoenix example proof packages=#{packages}")
+  end
+
+  defp redact(output) when is_binary(output) do
+    System.get_env()
+    |> Enum.filter(fn {name, value} ->
+      value != "" and
+        (String.match?(name, ~r/(TOKEN|PASSWORD|SECRET|KEY|URL)/i) or
+           name in ["SCRYPATH_MEILISEARCH_URL"])
+    end)
+    |> Enum.reduce(output, fn {_name, value}, acc -> String.replace(acc, value, "[REDACTED]") end)
   end
 
   @doc false

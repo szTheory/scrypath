@@ -45,7 +45,7 @@ mix verify.phoenix_example
 mix verify.phoenix_example --package
 ```
 
-For the path-backed command, the underlying example sequence remains `cd examples/phoenix_meilisearch && mix deps.get && mix test`. The first command validates service prerequisites, then runs **`mix deps.get`** and **`mix test`** inside `examples/phoenix_meilisearch`. The second validates the same prerequisites, proves staged dependency and lockfile resolution to the current checkout's package artifact, compiles the staged consumer, then runs **`mix test`** with the integration tag enabled. In CI, the advisory job runs these commands in this order against the same Postgres 16 and Meilisearch v1.15 service definitions. **`./scripts/smoke.sh`** is local orchestration (Docker Compose + the same env defaults); it is not the Actions entrypoint.
+For the path-backed command, the underlying example sequence remains `cd examples/phoenix_meilisearch && mix deps.get --check-locked && mix test`. The first command validates service prerequisites, then runs **`mix deps.get --check-locked`** and **`mix test`** inside `examples/phoenix_meilisearch`. The second validates the same prerequisites, proves staged dependency and lockfile resolution to the current checkout's package artifact, compiles the staged consumer, then runs **`mix test`** with the integration tag enabled. In CI, the advisory job runs these commands in this order against the same Postgres 16 and Meilisearch v1.15 service definitions. **`./scripts/smoke.sh`** is local orchestration (Docker Compose + the same env defaults); it is not the Actions entrypoint.
 
 ## End-to-end smoke
 
