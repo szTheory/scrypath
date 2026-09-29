@@ -12,6 +12,10 @@ defmodule Scrypath.Meilisearch.Query do
 
   alias Scrypath.Query
 
+  @doc false
+  @spec render_common_filter(keyword()) :: [String.t()] | nil
+  def render_common_filter(filters) when is_list(filters), do: translate_filter(filters)
+
   @spec to_payload(Query.t()) :: map()
   def to_payload(%Query{} = query) do
     %{q: query.text}

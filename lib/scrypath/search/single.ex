@@ -49,7 +49,8 @@ defmodule Scrypath.Search.Single do
       :facets,
       :facet_filter,
       :global_schemas,
-      :per_query
+      :per_query,
+      :tenant_scope
     ])
   end
 end

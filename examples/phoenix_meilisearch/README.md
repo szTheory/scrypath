@@ -4,9 +4,9 @@ Minimal API-only Phoenix app that depends on Scrypath via **`path: "../.."`** fr
 
 This README is the proof/runbook surface for the real-service path. The HexDocs guides teach the public request-edge boundary and API shape; this example proves the operational path, CI parity, env vars, and local smoke commands.
 
-From the repository root, `mix verify.phoenix_example` runs this live proof using the example's normal `path:` dependency. `mix verify.phoenix_example --package` builds and unpacks Scrypath from the current checkout, stages an isolated copy of the example, and runs the same integration scenarios against the locally built artifact. Both commands require `SCRYPATH_EXAMPLE_INTEGRATION=1`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL`, with reachable Postgres and reachable Meilisearch services. The package command does not change this example's normal `path:` workflow.
+From the repository root, `mix verify.phoenix_example` runs this live proof using the example's normal `path:` dependency. `mix verify.phoenix_example --package` builds and unpacks Scrypath from the current checkout, stages an isolated copy of the example, and runs the same integration scenarios against the locally built artifact. Both commands require `SCRYPATH_EXAMPLE_INTEGRATION=1`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL`, with reachable Postgres and reachable Meilisearch services. The package command does not change this example's normal `path:` workflow or publish to Hex; its graph guard checks the staged consumer resolves Scrypath from the fresh local artifact while preserving the other locked dependencies.
 
-The live proof covers four existing scenario classes: inline sync, Oban sync, related-data fan-out with inline sync, and related-data fan-out with Oban. Docs contracts and synthetic checks prove only the wiring and claims they assert; the live package proof exercises these scenarios against real services, but does not establish every adopter deployment or production reliability.
+The live proof covers inline sync, Oban sync, related-data fan-out with inline sync, related-data fan-out with Oban, and a named tenant-search and keyword-facet scenario. The tenant case derives scope from persisted synthetic host membership, asserts raw hits, counts, categories, and facet values separately from database hydration, and limits hydration to the tenant and returned search IDs. Both path and fresh local-package modes run this case. It demonstrates this example's host policy and the library's supplied-scope composition; it does not define authentication or authorization for adopting applications. Docs contracts and synthetic checks prove only the wiring and claims they assert; the live package proof exercises these scenarios against real services, but does not establish every adopter deployment or production reliability.
 
 ## Prerequisites
 
@@ -32,7 +32,7 @@ docker compose up -d
 |----------|---------|---------|
 | **`PGPORT`** | Postgres TCP port on `localhost` | **5433** (`config/dev.exs`, `config/test.exs`) |
 | **`SCRYPATH_MEILISEARCH_URL`** | Meilisearch base URL | **`http://127.0.0.1:7700`** |
-| **`SCRYPATH_EXAMPLE_INTEGRATION`** | When `1` / `true`, ExUnit runs **`@moduletag :integration`** smoke tests (inline + Oban paths, including fan-out smokes) | unset (those tests **excluded**) |
+| **`SCRYPATH_EXAMPLE_INTEGRATION`** | When `1` / `true`, ExUnit runs **`@moduletag :integration`** smoke tests (inline, Oban, related-data fan-out, and persisted-membership tenant search/facets) | unset (those tests **excluded**) |
 
 CI uses the same **Meilisearch v1.15** image tag as this `compose.yaml` (see root **`CONTRIBUTING.md`** for which GitHub Actions jobs run live Meilisearch). This README is the **single detailed** runbook for the example; the golden path links here instead of duplicating the table.
 
@@ -71,6 +71,7 @@ Integration coverage:
 - **Oban** — same shape with **`sync_mode: :oban`** and **`ScrypathDemo.Oban`**; tests use **`config :scrypath_demo, Oban, testing: :inline`** so jobs run in-process deterministically while still exercising enqueue metadata and **`Scrypath.Oban.UpsertWorker`** against live Meilisearch.
 - **Fan-out Inline** — insert Author + Post, rename the Author via **`ScrypathDemo.Blog.update_author/3`** with **`sync_mode: :inline`** (exercises `Scrypath.sync_related/3`), then assert the Post search document reflects the new `author_name`. Verifies the inline resolver-arity path (resolver receives Author structs).
 - **Fan-out Oban** — same Author rename via **`update_author/3`** with **`sync_mode: :oban`**, asserting **`{:ok, %{mode: :oban, status: :accepted}}`**. Under `testing: :inline`, the **`Scrypath.Sync.RelatedWorker`** runs in-process and `await_search` confirms the renamed `author_name` reaches the Post document. Verifies the oban resolver-arity path (resolver receives Author document IDs).
+- **Tenant search and keyword facets** — persisted synthetic membership gates the host search/facet entrypoints; the live consumer checks tenant-scoped raw hits, category distributions, and keyword facet values separately from database hydration constrained by tenant and returned search IDs.
 
 ## Tests without integration
 
