@@ -397,15 +397,8 @@ defmodule Scrypath.Repository.DependencyAuditTest do
     File.mkdir_p!(missing_bin)
     write_executable(Path.join(missing_bin, "git"), fake_git(Audit.inventory()))
 
-    otp_bin =
-      Path.join([
-        System.user_home!(),
-        ".asdf",
-        "installs",
-        "erlang",
-        System.get_env("ASDF_ERLANG_VERSION", "28.1"),
-        "bin"
-      ])
+    erl = System.find_executable("erl") || flunk("erl executable is unavailable")
+    otp_bin = Path.dirname(erl)
 
     missing_mix_path = Enum.join([missing_bin, otp_bin, "/usr/bin", "/bin"], ":")
 
