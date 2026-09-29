@@ -33,9 +33,7 @@ defmodule Scrypath.Repository.DependencyAudit do
 
     graphs =
       Enum.map(@inventory, fn path ->
-        progress.("dependency-audit starting graph=#{path}")
-
-        run_graph(
+        run_graph_safely(
           path,
           root,
           source_sha,
@@ -53,6 +51,51 @@ defmodule Scrypath.Repository.DependencyAudit do
       errors: errors,
       graphs: graphs
     }
+  end
+
+  defp run_graph_safely(
+         path,
+         root,
+         source_sha,
+         inventory_count,
+         runner,
+         clock,
+         script_path,
+         progress
+       ) do
+    progress.("dependency-audit starting graph=#{path}")
+
+    run_graph(
+      path,
+      root,
+      source_sha,
+      inventory_count,
+      runner,
+      clock,
+      script_path,
+      progress
+    )
+  rescue
+    error ->
+      %{
+        path: path,
+        source_sha: source_sha,
+        lock_sha_before: nil,
+        lock_sha_after: nil,
+        hex_version: nil,
+        fetch: %{status: :not_run, duration_ms: nil},
+        audit: %{status: :not_run, duration_ms: nil},
+        ignore_advisories: %{source: "unavailable", values: "unavailable"},
+        ignore_retirements: %{source: "unavailable", values: "unavailable"},
+        fetch_output: "",
+        audit_output: "",
+        status: :incomplete,
+        complete?: false,
+        ignored?: false,
+        errors:
+          inventory_row_errors(path, inventory_count) ++
+            ["graph processing failed: #{redact(Exception.message(error))}"]
+      }
   end
 
   def main(args \\ System.argv()) do
@@ -129,12 +172,7 @@ defmodule Scrypath.Repository.DependencyAudit do
       errors: []
     }
 
-    inventory_errors =
-      cond do
-        inventory_count == 0 -> ["missing inventory row: #{path}"]
-        inventory_count > 1 -> ["duplicate inventory row: #{path}"]
-        true -> []
-      end
+    inventory_errors = inventory_row_errors(path, inventory_count)
 
     cond do
       not File.dir?(graph_dir) ->
@@ -161,6 +199,10 @@ defmodule Scrypath.Repository.DependencyAudit do
         )
     end
   end
+
+  defp inventory_row_errors(path, 0), do: ["missing inventory row: #{path}"]
+  defp inventory_row_errors(path, count) when count > 1, do: ["duplicate inventory row: #{path}"]
+  defp inventory_row_errors(_path, _count), do: []
 
   defp execute_graph(
          base,

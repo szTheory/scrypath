@@ -119,7 +119,8 @@ defmodule Mix.Tasks.Verify.PhoenixExample.Package do
         source_lock,
         lock,
         artifact_url,
-        tag
+        tag,
+        artifact_commit
       )
     rescue
       error in [ArgumentError] -> fail!(:dependency, error.message)
@@ -150,9 +151,9 @@ defmodule Mix.Tasks.Verify.PhoenixExample.Package do
   end
 
   @doc false
-  def lock_resolves_to_artifact?(lock, expected_url, expected_tag) do
+  def lock_resolves_to_artifact?(lock, expected_url, expected_tag, expected_revision) do
     case Mix.Tasks.Verify.PhoenixExample.LockGraph.parse!(lock)["scrypath"] do
-      {:git, ^expected_url, _revision, options} when is_list(options) ->
+      {:git, ^expected_url, ^expected_revision, options} when is_list(options) ->
         Enum.any?(options, &match?({:tag, ^expected_tag}, &1))
 
       _ ->

@@ -104,6 +104,34 @@ defmodule Scrypath.Repository.DependencyAuditTest do
     assert Enum.count(Process.get(calls_key), &match?({:fetch, _}, &1)) == 4
   end
 
+  test "a graph processing exception is captured and later inventory rows continue" do
+    root = fixture_repo()
+    failed_path = "examples/phoenix_meilisearch"
+    calls_key = {__MODULE__, make_ref()}
+
+    result =
+      Audit.run(
+        root: root,
+        tracked_file_reader: tracked_reader(Audit.inventory()),
+        command_runner: command_runner(root, calls_key),
+        clock: clock(),
+        progress: fn message ->
+          if message == "dependency-audit starting graph=#{failed_path}",
+            do: raise("simulated graph setup failure")
+
+          :ok
+        end
+      )
+
+    failed = Enum.find(result.graphs, &(&1.path == failed_path))
+    assert result.status == :failed
+    assert failed.status == :incomplete
+    assert failed.source_sha == @source_sha
+    assert Enum.any?(failed.errors, &String.contains?(&1, "simulated graph setup failure"))
+    assert {:fetch, "scrypath_ops"} in Process.get(calls_key)
+    assert Enum.count(Process.get(calls_key), &match?({:fetch, _}, &1)) == 3
+  end
+
   test "missing and unexpected tracked locks fail the exact inventory guard" do
     root = fixture_repo()
     calls_key = {__MODULE__, make_ref()}

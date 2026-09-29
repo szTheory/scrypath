@@ -43,22 +43,25 @@ defmodule Mix.Tasks.Verify.PhoenixExample.PackageTest do
     assert source =~ "MIX_HOME"
   end
 
-  test "lock provenance requires the expected URL and tag on the Scrypath entry" do
-    valid = ~S|%{"scrypath" => {:git, "file:///artifact", "abc123", [tag: "v1.2.3"]}}|
+  test "lock provenance requires the expected URL, tag, and revision on the Scrypath entry" do
+    revision = String.duplicate("a", 40)
+    valid = ~s|%{"scrypath" => {:git, "file:///artifact", "#{revision}", [tag: "v1.2.3"]}}|
 
     mismatched_entry =
-      ~S|%{"scrypath" => {:git, "file:///artifact", "abc123", [tag: "v0.9.0"]}, "other" => {:git, "file:///other", "def456", [tag: "v1.2.3"]}}|
+      ~s|%{"scrypath" => {:git, "file:///artifact", "#{revision}", [tag: "v0.9.0"]}, "other" => {:git, "file:///other", "#{String.duplicate("b", 40)}", [tag: "v1.2.3"]}}|
 
     assert Mix.Tasks.Verify.PhoenixExample.Package.lock_resolves_to_artifact?(
              valid,
              "file:///artifact",
-             "v1.2.3"
+             "v1.2.3",
+             revision
            )
 
     refute Mix.Tasks.Verify.PhoenixExample.Package.lock_resolves_to_artifact?(
              mismatched_entry,
              "file:///artifact",
-             "v1.2.3"
+             "v1.2.3",
+             revision
            )
   end
 
@@ -152,13 +155,15 @@ defmodule Mix.Tasks.Verify.PhoenixExample.PackageTest do
             artifact = Path.join(Process.get(root_key), "artifact")
             artifact_url = "file://#{Path.expand(artifact)}"
             tag = "v#{Mix.Project.config()[:version]}"
+            {artifact_revision, 0} = System.cmd("git", ["rev-parse", "HEAD"], cd: artifact)
+            artifact_revision = String.trim(artifact_revision)
             source_lock = File.read!(Path.join(opts[:cd], "mix.lock"))
 
             lock =
               String.replace(
                 source_lock,
                 "%{\n",
-                "%{\n  \"scrypath\" => {:git, \"#{artifact_url}\", \"abc123\", [tag: \"#{tag}\"]},\n",
+                "%{\n  \"scrypath\" => {:git, \"#{artifact_url}\", \"#{artifact_revision}\", [tag: \"#{tag}\"]},\n",
                 global: false
               )
 

@@ -37,8 +37,8 @@ defmodule Mix.Tasks.Verify.PhoenixExample.LockGraph do
   end
 
   @doc false
-  def assert_package!(source_lock, resolved_lock, expected_url, expected_tag)
-      when is_binary(expected_url) and is_binary(expected_tag) do
+  def assert_package!(source_lock, resolved_lock, expected_url, expected_tag, expected_revision)
+      when is_binary(expected_url) and is_binary(expected_tag) and is_binary(expected_revision) do
     source = parse!(source_lock)
     resolved = parse!(resolved_lock)
 
@@ -49,7 +49,13 @@ defmodule Mix.Tasks.Verify.PhoenixExample.LockGraph do
       raise ArgumentError, "resolved Mix lock graph changed outside the Scrypath entry"
     end
 
-    assert_artifact_entry!(Map.get(resolved, "scrypath"), expected_url, expected_tag)
+    assert_artifact_entry!(
+      Map.get(resolved, "scrypath"),
+      expected_url,
+      expected_tag,
+      expected_revision
+    )
+
     :ok
   end
 
@@ -131,16 +137,28 @@ defmodule Mix.Tasks.Verify.PhoenixExample.LockGraph do
     raise ArgumentError, "Mix lock entry for #{name} is incomplete or has an unsupported source"
   end
 
-  defp assert_artifact_entry!({:git, url, _ref, options}, expected_url, expected_tag)
+  defp assert_artifact_entry!(
+         {:git, url, revision, options},
+         expected_url,
+         expected_tag,
+         expected_revision
+       )
        when url == expected_url and is_list(options) do
-    if Enum.any?(options, &match?({:tag, ^expected_tag}, &1)) do
-      :ok
-    else
-      raise ArgumentError, "resolved Scrypath lock entry does not have the expected artifact tag"
+    cond do
+      revision != expected_revision ->
+        raise ArgumentError,
+              "resolved Scrypath lock entry does not have the expected artifact revision"
+
+      Enum.any?(options, &match?({:tag, ^expected_tag}, &1)) ->
+        :ok
+
+      true ->
+        raise ArgumentError,
+              "resolved Scrypath lock entry does not have the expected artifact tag"
     end
   end
 
-  defp assert_artifact_entry!(_entry, _expected_url, _expected_tag) do
+  defp assert_artifact_entry!(_entry, _expected_url, _expected_tag, _expected_revision) do
     raise ArgumentError, "resolved Scrypath lock entry does not match the expected artifact"
   end
 end

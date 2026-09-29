@@ -39,16 +39,18 @@ defmodule Mix.Tasks.Verify.PhoenixExample.LockGraphTest do
   test "package comparison permits only the expected Scrypath artifact substitution" do
     artifact_url = "file:///tmp/scrypath-artifact"
     tag = "v0.3.13"
-    resolved = insert_scrypath(@phoenix_lock, artifact_url, tag)
+    revision = String.duplicate("a", 40)
+    resolved = insert_scrypath(@phoenix_lock, artifact_url, tag, revision)
 
-    assert :ok = LockGraph.assert_package!(@phoenix_lock, resolved, artifact_url, tag)
+    assert :ok = LockGraph.assert_package!(@phoenix_lock, resolved, artifact_url, tag, revision)
   end
 
   test "package comparison rejects key, checksum, version, and source drift" do
     artifact_url = "file:///tmp/scrypath-artifact"
     tag = "v0.3.13"
 
-    resolved = insert_scrypath(@phoenix_lock, artifact_url, tag)
+    revision = String.duplicate("a", 40)
+    resolved = insert_scrypath(@phoenix_lock, artifact_url, tag, revision)
 
     mutations = [
       String.replace(
@@ -81,16 +83,19 @@ defmodule Mix.Tasks.Verify.PhoenixExample.LockGraphTest do
       assert mutated != resolved, "mutation #{index} did not change the fixture"
 
       assert_raise ArgumentError, ~r/graph|lock/i, fn ->
-        LockGraph.assert_package!(@phoenix_lock, mutated, artifact_url, tag)
+        LockGraph.assert_package!(@phoenix_lock, mutated, artifact_url, tag, revision)
       end
     end)
   end
 
   test "rejects a wrong artifact tag or URL" do
-    resolved = insert_scrypath(@phoenix_lock, "file:///tmp/scrypath-artifact", "v0.3.13")
+    revision = String.duplicate("a", 40)
+
+    resolved =
+      insert_scrypath(@phoenix_lock, "file:///tmp/scrypath-artifact", "v0.3.13", revision)
 
     assert_raise ArgumentError, ~r/Scrypath|artifact/i, fn ->
-      LockGraph.assert_package!(@phoenix_lock, resolved, "file:///tmp/other", "v0.3.13")
+      LockGraph.assert_package!(@phoenix_lock, resolved, "file:///tmp/other", "v0.3.13", revision)
     end
 
     assert_raise ArgumentError, ~r/Scrypath|artifact/i, fn ->
@@ -98,7 +103,30 @@ defmodule Mix.Tasks.Verify.PhoenixExample.LockGraphTest do
         @phoenix_lock,
         resolved,
         "file:///tmp/scrypath-artifact",
-        "v9.9.9"
+        "v9.9.9",
+        revision
+      )
+    end
+  end
+
+  test "rejects a lock revision that differs from the reported artifact commit" do
+    expected_revision = String.duplicate("a", 40)
+
+    resolved =
+      insert_scrypath(
+        @phoenix_lock,
+        "file:///tmp/scrypath-artifact",
+        "v0.3.13",
+        String.duplicate("b", 40)
+      )
+
+    assert_raise ArgumentError, ~r/revision/i, fn ->
+      LockGraph.assert_package!(
+        @phoenix_lock,
+        resolved,
+        "file:///tmp/scrypath-artifact",
+        "v0.3.13",
+        expected_revision
       )
     end
   end
@@ -122,8 +150,8 @@ defmodule Mix.Tasks.Verify.PhoenixExample.LockGraphTest do
     end
   end
 
-  defp insert_scrypath(lock, url, tag) do
-    entry = ~s|  "scrypath" => {:git, "#{url}", "abc123", [tag: "#{tag}"]},\n|
+  defp insert_scrypath(lock, url, tag, revision) do
+    entry = ~s|  "scrypath" => {:git, "#{url}", "#{revision}", [tag: "#{tag}"]},\n|
     String.replace(lock, "%{\n", "%{\n" <> entry, global: false)
   end
 end
