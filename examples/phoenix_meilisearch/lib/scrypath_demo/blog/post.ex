@@ -28,7 +28,6 @@ defmodule ScrypathDemo.Blog.Post do
       :status,
       :author_id,
       :author_name,
-      :tenant_id,
       :category
     ])
     |> Ecto.Changeset.validate_required([:title, :body, :status])

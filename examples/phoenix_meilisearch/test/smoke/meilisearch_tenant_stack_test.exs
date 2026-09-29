@@ -42,6 +42,7 @@ defmodule ScrypathDemo.Smoke.MeilisearchTenantStackTest do
 
     post_a =
       insert_post(
+        actor_a,
         tenant_a,
         "Phase166 shared A published",
         "Phase166 shared token for A",
@@ -51,6 +52,7 @@ defmodule ScrypathDemo.Smoke.MeilisearchTenantStackTest do
 
     post_a_draft =
       insert_post(
+        actor_a,
         tenant_a,
         "Phase166 shared A draft",
         "Phase166 shared token for draft exclusion",
@@ -60,6 +62,7 @@ defmodule ScrypathDemo.Smoke.MeilisearchTenantStackTest do
 
     post_b =
       insert_post(
+        actor_b,
         tenant_b,
         "Phase166 shared B published",
         "Phase166 shared token and phase166-b-unique-marker",
@@ -78,29 +81,31 @@ defmodule ScrypathDemo.Smoke.MeilisearchTenantStackTest do
                )
     end
 
-    assert {:ok, %{search: result_b, records: records_b}} =
+    assert {:ok, %{records: records_b}} =
              Blog.search_posts(actor_b, tenant_b, %{"q" => "Phase166 shared"}, config)
 
+    result_b = library_search(tenant_b, "Phase166 shared", config)
     assert raw_hit_ids(result_b) == [to_string(post_b.id)]
     assert result_b.raw["totalHits"] == 1
     post_b_id = post_b.id
     assert [%Post{id: ^post_b_id, tenant_id: ^tenant_b}] = records_b
     assert distribution(result_b) == [{"phone-b-forbidden", 1}]
 
-    assert {:ok, %{search: marker_result, records: marker_records}} =
+    assert {:ok, %{records: marker_records}} =
              Blog.search_posts(actor_b, tenant_b, %{"q" => "phase166-b-unique-marker"}, config)
 
+    marker_result = library_search(tenant_b, "phase166-b-unique-marker", config)
     assert raw_hit_ids(marker_result) == [to_string(post_b.id)]
     assert [%Post{id: ^post_b_id}] = marker_records
 
-    assert {:ok, %{search: result_a, records: records_a}} =
+    assert {:ok, %{records: records_a}} =
              Blog.search_posts(actor_a, tenant_a, %{"q" => "Phase166 shared"}, config)
 
+    result_a = library_search(tenant_a, "Phase166 shared", config)
     assert raw_hit_ids(result_a) == [to_string(post_a.id)]
     assert result_a.raw["totalHits"] == 1
     post_a_id = post_a.id
     assert [%Post{id: ^post_a_id, tenant_id: ^tenant_a}] = records_a
-    assert result_a.records == []
     assert distribution(result_a) == [{"phone-a", 1}]
     refute Jason.encode!(result_a.raw) =~ "phone-b-forbidden"
     refute Jason.encode!(result_a.raw) =~ "phase166-b-unique-marker"
@@ -112,10 +117,13 @@ defmodule ScrypathDemo.Smoke.MeilisearchTenantStackTest do
     assert {:ok, facet_b} =
              Blog.search_post_categories(actor_b, tenant_b, %{"facet_query" => "pho"}, config)
 
+    raw_facet_a = library_facets(tenant_a, "pho", config)
+    raw_facet_b = library_facets(tenant_b, "pho", config)
     assert facet_pairs(facet_a) == [{"phone-a", 1}]
     assert facet_pairs(facet_b) == [{"phone-b-forbidden", 1}]
-    refute Jason.encode!(facet_a.raw) =~ "phone-b-forbidden"
-    refute Jason.encode!(facet_a.raw) =~ "phone-draft"
+    refute Map.has_key?(facet_a, :raw)
+    refute Jason.encode!(raw_facet_a.raw) =~ "phone-b-forbidden"
+    refute Jason.encode!(raw_facet_a.raw) =~ "phone-draft"
 
     assert {:ok, write_tasks} = Scrypath.Meilisearch.Tasks.list_sync_tasks(index, config)
     assert Enum.all?(write_tasks, &(&1.state == :succeeded and &1.reference.index_uid == index))
@@ -135,7 +143,7 @@ defmodule ScrypathDemo.Smoke.MeilisearchTenantStackTest do
           tenant_b_permitted_ids: raw_hit_ids(result_b),
           tenant_b_total_hits: result_b.raw["totalHits"],
           tenant_b_categories: Enum.map(distribution(result_b), &Tuple.to_list/1),
-          tenant_b_facet_values: Enum.map(facet_pairs(facet_b), &Tuple.to_list/1),
+          tenant_b_facet_values: Enum.map(facet_pairs(raw_facet_b), &Tuple.to_list/1),
           tenant_b_marker_ids: raw_hit_ids(marker_result),
           elapsed_ms: elapsed_ms
         })
@@ -159,19 +167,36 @@ defmodule ScrypathDemo.Smoke.MeilisearchTenantStackTest do
     %{id: actor_id}
   end
 
-  defp insert_post(tenant_id, title, body, status, category) do
+  defp insert_post(principal, tenant_id, title, body, status, category) do
     {:ok, post} =
-      %Post{}
-      |> Post.changeset(%{
+      Blog.create_post(principal, tenant_id, %{
         title: title,
         body: body,
         status: status,
-        tenant_id: tenant_id,
         category: category
       })
-      |> Repo.insert()
 
     post
+  end
+
+  defp library_search(tenant_id, query, config) do
+    options =
+      config
+      |> Keyword.merge(
+        tenant_scope: tenant_id,
+        filter: [status: "published"],
+        facets: [:category],
+        page: [number: 1, size: 20]
+      )
+
+    assert {:ok, result} = Scrypath.search(Post, query, options)
+    result
+  end
+
+  defp library_facets(tenant_id, facet_query, config) do
+    options = Keyword.merge(config, tenant_scope: tenant_id, filter: [status: "published"])
+    assert {:ok, result} = Scrypath.search_facet_values(Post, "category", facet_query, options)
+    result
   end
 
   defp await_task!(task, config) do

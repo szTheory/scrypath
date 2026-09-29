@@ -38,7 +38,12 @@ defmodule ScrypathDemo.BlogTenantSearchTest do
     @impl true
     def search_facet_values(schema_module, facet_name, facet_query, opts, _config) do
       send(self(), {:tenant_facet_search, schema_module, facet_name, facet_query, opts})
-      {:ok, %{"facetHits" => [], "facetQuery" => facet_query}}
+
+      {:ok,
+       Process.get({__MODULE__, :facet_response}, %{
+         "facetHits" => [],
+         "facetQuery" => facet_query
+       })}
     end
   end
 
@@ -61,7 +66,7 @@ defmodule ScrypathDemo.BlogTenantSearchTest do
   end
 
   test "authorized search and facet calls dispatch with membership-derived scope", context do
-    assert {:ok, %{search: %Scrypath.SearchResult{query: search_query, records: []}}} =
+    assert {:ok, %{records: []}} =
              Blog.search_posts(
                context.actor_a,
                context.tenant_a,
@@ -69,17 +74,17 @@ defmodule ScrypathDemo.BlogTenantSearchTest do
                context.runtime_opts
              )
 
+    assert_receive {:tenant_search, Post, %Scrypath.Query{filter: recorded_search_filter}}
+
     expected_search_filter = [
       tenant_id: context.tenant_a,
       status: "published",
       category: "phone-a"
     ]
 
-    assert MapSet.new(search_query.filter) == MapSet.new(expected_search_filter)
-    assert_receive {:tenant_search, Post, %Scrypath.Query{filter: recorded_search_filter}}
     assert MapSet.new(recorded_search_filter) == MapSet.new(expected_search_filter)
 
-    assert {:ok, %Scrypath.FacetSearchResult{facet_query: "pho"}} =
+    assert {:ok, %{facet_query: "pho", hits: []} = safe_facets} =
              Blog.search_post_categories(
                context.actor_a,
                context.tenant_a,
@@ -87,6 +92,7 @@ defmodule ScrypathDemo.BlogTenantSearchTest do
                context.runtime_opts
              )
 
+    assert Map.keys(safe_facets) |> Enum.sort() == [:facet_query, :hits]
     assert_receive {:tenant_facet_search, Post, "category", "pho", facet_opts}
 
     assert MapSet.new(Keyword.fetch!(facet_opts, :filter)) ==
@@ -191,22 +197,35 @@ defmodule ScrypathDemo.BlogTenantSearchTest do
     end
   end
 
-  test "host hydration restricts rows by tenant and hit IDs while retaining raw hits", context do
-    post_a = insert_post(context.tenant_a, "authorized A")
-    post_b = insert_post(context.tenant_b, "foreign B")
+  test "host search omits raw hits and metadata that contain foreign or stale IDs", context do
+    post_a = insert_post(context.actor_a, context.tenant_a, "authorized A")
+    post_b = insert_post(context.actor_b, context.tenant_b, "foreign B")
+
+    {:ok, draft} =
+      Blog.create_post(context.actor_a, context.tenant_a, %{
+        title: "stale unpublished hit",
+        body: "No longer searchable",
+        status: "draft",
+        category: "phone-draft"
+      })
+
+    stale_id = 9_999_999_998
 
     Process.put({RecordingBackend, :search_response}, %{
       "hits" => [
         %{"id" => post_a.id, "title" => "authorized A", "tenant_id" => context.tenant_a},
-        %{"id" => post_b.id, "title" => "foreign B", "tenant_id" => context.tenant_b}
+        %{"id" => post_b.id, "title" => "foreign B", "tenant_id" => context.tenant_b},
+        %{"id" => draft.id, "title" => "stale unpublished hit", "tenant_id" => context.tenant_a},
+        %{"id" => stale_id, "title" => "stale index hit", "tenant_id" => context.tenant_a}
       ],
       "page" => 1,
       "hitsPerPage" => 20,
-      "totalHits" => 2
+      "totalHits" => 4,
+      "facetDistribution" => %{"category" => %{"phone-a" => 1, "phone-b" => 1}}
     })
 
     try do
-      assert {:ok, %{search: result, records: [%Post{id: authorized_id, tenant_id: tenant_id}]}} =
+      assert {:ok, %{records: [%Post{id: authorized_id, tenant_id: tenant_id}]} = response} =
                Blog.search_posts(
                  context.actor_a,
                  context.tenant_a,
@@ -216,14 +235,80 @@ defmodule ScrypathDemo.BlogTenantSearchTest do
 
       assert authorized_id == post_a.id
       assert tenant_id == context.tenant_a
-
-      assert Enum.map(result.raw["hits"], &to_string(&1["id"])) ==
-               Enum.map([post_a, post_b], &to_string(&1.id))
-
-      assert result.records == []
+      assert Map.keys(response) == [:records]
+      refute Map.has_key?(response, :search)
+      refute Map.has_key?(response, :raw)
+      refute Map.has_key?(response, :facets)
+      assert_receive {:tenant_search, Post, %Scrypath.Query{}}
     after
       Process.delete({RecordingBackend, :search_response})
     end
+  end
+
+  test "host facet values discard stale and foreign values and recompute counts from published rows",
+       context do
+    _post_a = insert_post(context.actor_a, context.tenant_a, "authorized A")
+    _post_a_two = insert_post(context.actor_a, context.tenant_a, "authorized A duplicate")
+    _post_b = insert_post(context.actor_b, context.tenant_b, "foreign B")
+
+    {:ok, _draft} =
+      Blog.create_post(context.actor_a, context.tenant_a, %{
+        title: "draft category",
+        body: "Not public",
+        status: "draft",
+        category: "phone-draft"
+      })
+
+    Process.put({RecordingBackend, :facet_response}, %{
+      "facetQuery" => "pho",
+      "facetHits" => [
+        %{"value" => "phone-a", "count" => 99},
+        %{"value" => "phone-b", "count" => 77},
+        %{"value" => "phone-stale", "count" => 55},
+        %{"value" => "phone-draft", "count" => 33}
+      ],
+      "totalHits" => 264
+    })
+
+    try do
+      assert {:ok, %{facet_query: "pho", hits: [%{value: "phone-a", count: 2}]} = result} =
+               Blog.search_post_categories(
+                 context.actor_a,
+                 context.tenant_a,
+                 %{"facet_query" => "pho"},
+                 context.runtime_opts
+               )
+
+      assert Map.keys(result) |> Enum.sort() == [:facet_query, :hits]
+      refute Map.has_key?(result, :raw)
+      refute Map.has_key?(result, :total_hits)
+      assert_receive {:tenant_facet_search, Post, "category", "pho", _opts}
+    after
+      Process.delete({RecordingBackend, :facet_response})
+    end
+  end
+
+  test "post creation ignores caller tenant_id and requires persisted membership", context do
+    {:ok, created} =
+      Blog.create_post(context.actor_a, context.tenant_a, %{
+        title: "trusted tenant post",
+        body: "Caller attempts to transfer ownership",
+        status: "published",
+        category: "phone-a",
+        tenant_id: context.tenant_b
+      })
+
+    assert created.tenant_id == context.tenant_a
+
+    assert {:error, :unauthorized} =
+             Blog.create_post(context.actor_without_membership, context.tenant_a, %{
+               title: "unauthorized write",
+               body: "Must not persist",
+               status: "published",
+               tenant_id: context.tenant_a
+             })
+
+    refute Repo.get_by(Post, title: "unauthorized write")
   end
 
   defp insert_actor do
@@ -250,17 +335,14 @@ defmodule ScrypathDemo.BlogTenantSearchTest do
     actor
   end
 
-  defp insert_post(tenant_id, title) do
+  defp insert_post(principal, tenant_id, title) do
     {:ok, post} =
-      %Post{}
-      |> Post.changeset(%{
+      Blog.create_post(principal, tenant_id, %{
         title: title,
         body: "Recorder response fixture",
         status: "published",
-        tenant_id: tenant_id,
         category: "phone-a"
       })
-      |> Repo.insert()
 
     post
   end

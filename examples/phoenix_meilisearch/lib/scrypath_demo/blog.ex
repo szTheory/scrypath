@@ -54,7 +54,7 @@ defmodule ScrypathDemo.Blog do
         )
 
       with {:ok, result} <- Scrypath.search(Post, query, options) do
-        {:ok, %{search: result, records: hydrate_tenant_hits(result, tenant_id)}}
+        {:ok, %{records: hydrate_tenant_hits(result, tenant_id)}}
       end
     else
       false -> {:error, :invalid_search_input}
@@ -75,13 +75,32 @@ defmodule ScrypathDemo.Blog do
         |> Keyword.delete(:repo)
         |> Keyword.merge(tenant_scope: tenant_id, filter: [status: "published"])
 
-      Scrypath.search_facet_values(Post, "category", facet_query, options)
+      with {:ok, result} <- Scrypath.search_facet_values(Post, "category", facet_query, options) do
+        {:ok, safe_category_facets(result, tenant_id)}
+      end
     else
       false -> {:error, :invalid_search_input}
       {:error, _reason} = error -> error
       _ -> {:error, :invalid_search_input}
     end
   end
+
+  @doc """
+  Creates a post for a tenant the persisted principal belongs to.
+
+  `tenant_id` is selected by the trusted caller context and is never accepted
+  from the post attributes.
+  """
+  def create_post(principal, selected_tenant_id, attrs) when is_map(attrs) do
+    with {:ok, tenant_id} <- authorized_tenant(principal, selected_tenant_id) do
+      %Post{tenant_id: tenant_id}
+      |> Post.changeset(attrs)
+      |> Repo.insert()
+    end
+  end
+
+  def create_post(_principal, _selected_tenant_id, _attrs),
+    do: {:error, :invalid_post_input}
 
   defp authorized_tenant(%{id: actor_id}, tenant_id)
        when is_integer(actor_id) and actor_id > 0 and is_integer(tenant_id) and tenant_id > 0 do
@@ -131,7 +150,8 @@ defmodule ScrypathDemo.Blog do
     records_by_id =
       Repo.all(
         from(post in Post,
-          where: post.tenant_id == ^tenant_id and post.id in ^hit_ids
+          where:
+            post.tenant_id == ^tenant_id and post.status == "published" and post.id in ^hit_ids
         )
       )
       |> Map.new(&{to_string(&1.id), &1})
@@ -142,6 +162,32 @@ defmodule ScrypathDemo.Blog do
         :error -> []
       end
     end)
+  end
+
+  defp safe_category_facets(result, tenant_id) do
+    candidates = Enum.map(result.hits, & &1.value)
+
+    counts_by_category =
+      Repo.all(
+        from(post in Post,
+          where:
+            post.tenant_id == ^tenant_id and post.status == "published" and
+              post.category in ^candidates,
+          group_by: post.category,
+          select: {post.category, count(post.id)}
+        )
+      )
+      |> Map.new()
+
+    hits =
+      Enum.flat_map(result.hits, fn hit ->
+        case Map.fetch(counts_by_category, hit.value) do
+          {:ok, count} -> [%{value: hit.value, count: count}]
+          :error -> []
+        end
+      end)
+
+    %{facet_query: result.facet_query, hits: hits}
   end
 
   defp hit_id(%{} = hit), do: Map.get(hit, "id") || Map.get(hit, :id)
