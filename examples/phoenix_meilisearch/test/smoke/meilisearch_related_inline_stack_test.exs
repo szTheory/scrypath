@@ -24,6 +24,7 @@ defmodule ScrypathDemo.Smoke.MeilisearchRelatedInlineStackTest do
     ]
 
     live_index = Scrypath.Meilisearch.index_name(Post, config)
+    ScrypathDemo.MeilisearchTestIndex.create!(live_index, url)
 
     on_exit(fn -> delete_index(url, live_index) end)
 
