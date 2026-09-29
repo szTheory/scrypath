@@ -110,7 +110,20 @@ defmodule Scrypath.Meilisearch.Client do
     payload =
       opts
       |> Enum.into(%{})
-      |> Enum.map(fn {k, v} -> {camelize_filter(k), v} end)
+      |> Enum.map(fn
+        {:filter, filters} when is_list(filters) and filters != [] ->
+          rendered_filter =
+            if Keyword.keyword?(filters) do
+              MeilisearchQuery.render_common_filter(filters)
+            else
+              filters
+            end
+
+          {"filter", rendered_filter}
+
+        {key, value} ->
+          {camelize_filter(key), value}
+      end)
       |> Map.new()
       |> Map.merge(base_payload)
 
