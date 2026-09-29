@@ -22,6 +22,130 @@ defmodule ScrypathDemo.Blog do
   alias ScrypathDemo.Blog.Author
   alias ScrypathDemo.Blog.Post
 
+  @search_param_keys ["q", "category"]
+  @facet_param_keys ["facet_query"]
+
+  @doc """
+  Searches published posts for an already-authenticated synthetic host principal.
+
+  The principal's persisted membership is the only source of tenant scope. `params`
+  contains ordinary, allowlisted search inputs; `runtime_opts` is a separate
+  server-owned configuration argument.
+  """
+  def search_posts(principal, selected_tenant_id, params, runtime_opts) do
+    with {:ok, tenant_id} <- authorized_tenant(principal, selected_tenant_id),
+         {:ok, normalized} <- validate_params(params, @search_param_keys),
+         true <- valid_runtime_opts?(runtime_opts) do
+      query = Map.get(normalized, "q", "")
+      category = Map.get(normalized, "category")
+
+      filter =
+        [status: "published"]
+        |> maybe_add_filter(:category, category)
+
+      options =
+        runtime_opts
+        |> Keyword.delete(:repo)
+        |> Keyword.merge(
+          tenant_scope: tenant_id,
+          filter: filter,
+          facets: [:category],
+          page: [number: 1, size: 20]
+        )
+
+      with {:ok, result} <- Scrypath.search(Post, query, options) do
+        {:ok, %{search: result, records: hydrate_tenant_hits(result, tenant_id)}}
+      end
+    else
+      false -> {:error, :invalid_search_input}
+      {:error, _reason} = error -> error
+    end
+  end
+
+  @doc """
+  Looks up published category facet values for an authorized synthetic host principal.
+  """
+  def search_post_categories(principal, selected_tenant_id, params, runtime_opts) do
+    with {:ok, tenant_id} <- authorized_tenant(principal, selected_tenant_id),
+         {:ok, normalized} <- validate_params(params, @facet_param_keys),
+         true <- valid_runtime_opts?(runtime_opts),
+         facet_query when is_binary(facet_query) <- Map.get(normalized, "facet_query") do
+      options =
+        runtime_opts
+        |> Keyword.delete(:repo)
+        |> Keyword.merge(tenant_scope: tenant_id, filter: [status: "published"])
+
+      Scrypath.search_facet_values(Post, "category", facet_query, options)
+    else
+      false -> {:error, :invalid_search_input}
+      {:error, _reason} = error -> error
+      _ -> {:error, :invalid_search_input}
+    end
+  end
+
+  defp authorized_tenant(%{id: actor_id}, tenant_id)
+       when is_integer(actor_id) and actor_id > 0 and is_integer(tenant_id) and tenant_id > 0 do
+    membership_tenant =
+      Repo.one(
+        from(actor in "host_actors",
+          join: membership in "host_memberships",
+          on: field(membership, :actor_id) == field(actor, :id),
+          where:
+            field(actor, :id) == ^actor_id and
+              field(membership, :tenant_id) == ^tenant_id,
+          select: field(membership, :tenant_id)
+        )
+      )
+
+    case membership_tenant do
+      authorized when is_integer(authorized) -> {:ok, authorized}
+      _ -> {:error, :unauthorized}
+    end
+  end
+
+  defp authorized_tenant(_principal, _tenant_id), do: {:error, :unauthorized}
+
+  defp validate_params(params, allowed_keys) when is_map(params) do
+    allowed = MapSet.new(allowed_keys)
+
+    with true <-
+           Enum.all?(params, fn {key, value} ->
+             is_binary(key) and MapSet.member?(allowed, key) and is_binary(value)
+           end) do
+      {:ok, params}
+    else
+      _ -> {:error, :invalid_search_input}
+    end
+  end
+
+  defp validate_params(_params, _allowed_keys), do: {:error, :invalid_search_input}
+
+  defp valid_runtime_opts?(opts), do: Keyword.keyword?(opts)
+
+  defp maybe_add_filter(filters, _field, nil), do: filters
+  defp maybe_add_filter(filters, field, value), do: Keyword.put(filters, field, value)
+
+  defp hydrate_tenant_hits(result, tenant_id) do
+    hit_ids = Enum.map(result.hits, &hit_id/1)
+
+    records_by_id =
+      Repo.all(
+        from(post in Post,
+          where: post.tenant_id == ^tenant_id and post.id in ^hit_ids
+        )
+      )
+      |> Map.new(&{to_string(&1.id), &1})
+
+    Enum.flat_map(hit_ids, fn id ->
+      case Map.fetch(records_by_id, to_string(id)) do
+        {:ok, record} -> [record]
+        :error -> []
+      end
+    end)
+  end
+
+  defp hit_id(%{} = hit), do: Map.get(hit, "id") || Map.get(hit, :id)
+
   @doc """
   Persists an Author rename, syncs the denormalized `author_name` on related Posts,
   then fans out the Post re-sync via `Scrypath.sync_related/3`.
