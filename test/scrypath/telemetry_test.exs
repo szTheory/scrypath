@@ -297,7 +297,7 @@ defmodule Scrypath.TelemetryTest do
              "requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded"
 
     assert sync_guide =~
-             "| `:oban` | the enqueue is durable | the backend write has not happened yet |"
+             "| `:oban` | `:accepted` when the durable enqueue succeeds | the backend write has not happened yet |"
 
     assert sync_guide =~ "Accepted work is not the same thing as search visibility."
 
