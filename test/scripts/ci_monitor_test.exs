@@ -545,6 +545,24 @@ defmodule Scrypath.CIMonitorTest do
   end
 
   defp write_archive_fixture(ctx, layout) do
+    archive_dir = Path.join(ctx.root, "archive-fixture")
+    File.mkdir_p!(archive_dir)
+    archive = Path.join(ctx.root, "layout.zip")
+    File.rm(archive)
+
+    attestation = archive_fixture_attestation(layout)
+    member = if layout == :malformed_json, do: "{bad json", else: Jason.encode!(attestation)
+    File.write!(Path.join(archive_dir, "closeout-attestation.json"), member)
+    File.write!(Path.join(archive_dir, "extra.txt"), "extra\n")
+    write_archive!(archive_dir, archive, layout)
+
+    bytes = File.read!(archive)
+    File.write!(ctx.archive, bytes)
+    File.write!(ctx.attestation, Jason.encode!(attestation))
+    :crypto.hash(:sha256, bytes) |> Base.encode16(case: :lower)
+  end
+
+  defp archive_fixture_attestation(layout) do
     coverage_id =
       case layout do
         {:coverage_id, id} -> id
@@ -556,10 +574,7 @@ defmodule Scrypath.CIMonitorTest do
         do: "sha256:" <> String.duplicate("d", 64),
         else: "sha256:" <> String.duplicate("a", 64)
 
-    archive_dir = Path.join(ctx.root, "archive-fixture")
-    File.mkdir_p!(archive_dir)
-
-    attestation = %{
+    %{
       schema: 1,
       authority: "github-actions-exact-sha",
       repository: "szTheory/scrypath",
@@ -583,47 +598,40 @@ defmodule Scrypath.CIMonitorTest do
         artifact_digest: coverage_digest
       }
     }
+  end
 
-    member = if layout == :malformed_json, do: "{bad json", else: Jason.encode!(attestation)
-    File.write!(Path.join(archive_dir, "closeout-attestation.json"), member)
-    File.write!(Path.join(archive_dir, "extra.txt"), "extra\n")
-    archive = Path.join(ctx.root, "layout.zip")
-    File.rm(archive)
-
-    cond do
-      layout in [:extra_member, :traversal_member, :duplicate_member] ->
-        script =
-          "import sys, zipfile, warnings; warnings.filterwarnings('ignore', category=UserWarning); " <>
-            "z=zipfile.ZipFile(sys.argv[1], 'w'); z.write(sys.argv[2], 'closeout-attestation.json'); " <>
-            "z.write(sys.argv[3], 'extra.txt') if sys.argv[4] == 'extra' else None; " <>
-            "z.writestr('../outside.txt', 'bad') if sys.argv[4] == 'traversal' else None; " <>
-            "z.writestr('closeout-attestation.json', 'duplicate') if sys.argv[4] == 'duplicate' else None; z.close()"
-
-        mode =
-          case layout do
-            :extra_member -> "extra"
-            :traversal_member -> "traversal"
-            :duplicate_member -> "duplicate"
-          end
-
-        {_, 0} =
-          System.cmd("python3", [
-            "-c",
-            script,
-            archive,
-            Path.join(archive_dir, "closeout-attestation.json"),
-            Path.join(archive_dir, "extra.txt"),
-            mode
-          ])
-
-      true ->
-        {_, 0} = System.cmd("zip", ["-q", archive, "closeout-attestation.json"], cd: archive_dir)
+  defp write_archive!(archive_dir, archive, layout) do
+    if layout in [:extra_member, :traversal_member, :duplicate_member] do
+      write_multi_entry_archive!(archive_dir, archive, layout)
+    else
+      {_, 0} = System.cmd("zip", ["-q", archive, "closeout-attestation.json"], cd: archive_dir)
     end
+  end
 
-    bytes = File.read!(archive)
-    File.write!(ctx.archive, bytes)
-    File.write!(ctx.attestation, Jason.encode!(attestation))
-    :crypto.hash(:sha256, bytes) |> Base.encode16(case: :lower)
+  defp write_multi_entry_archive!(archive_dir, archive, layout) do
+    mode =
+      case layout do
+        :extra_member -> "extra"
+        :traversal_member -> "traversal"
+        :duplicate_member -> "duplicate"
+      end
+
+    script =
+      "import sys, zipfile, warnings; warnings.filterwarnings('ignore', category=UserWarning); " <>
+        "z=zipfile.ZipFile(sys.argv[1], 'w'); z.write(sys.argv[2], 'closeout-attestation.json'); " <>
+        "z.write(sys.argv[3], 'extra.txt') if sys.argv[4] == 'extra' else None; " <>
+        "z.writestr('../outside.txt', 'bad') if sys.argv[4] == 'traversal' else None; " <>
+        "z.writestr('closeout-attestation.json', 'duplicate') if sys.argv[4] == 'duplicate' else None; z.close()"
+
+    {_, 0} =
+      System.cmd("python3", [
+        "-c",
+        script,
+        archive,
+        Path.join(archive_dir, "closeout-attestation.json"),
+        Path.join(archive_dir, "extra.txt"),
+        mode
+      ])
   end
 
   defp run_validate_readiness(ctx, source_root, record, stage) do
@@ -796,8 +804,7 @@ defmodule Scrypath.CIMonitorTest do
 
     baseline =
       "# Phase 162 fixture\n\n## Claim matrix\n\n" <>
-        (Enum.map(claim_dimensions, fn {id, dimension} -> "| #{id} | #{dimension} |\n" end)
-         |> Enum.join())
+        Enum.map_join(claim_dimensions, fn {id, dimension} -> "| #{id} | #{dimension} |\n" end)
 
     File.write!(authority_path, authority)
     File.write!(archive_path, archive)
