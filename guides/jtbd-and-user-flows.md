@@ -301,27 +301,22 @@ Scrypath keeps making the same bets:
 - **One common runtime path** beats a pile of generated per-schema verbs.
 - **Operational honesty** beats pretending eventual consistency does not exist.
 - **Optional Phoenix glue** beats turning the core library into a Phoenix facade.
-- **Explicit recovery** beats treating drift as a support embarrassment.
+- **Explicit recovery** beats hiding drift or rerunning callbacks and hoping.
 
-## What is still intentionally not magic
+## What Scrypath deliberately leaves to your application
 
-Scrypath is not promising these things for you:
+Scrypath is not promising:
 
-- no hidden database-plus-search atomicity
-- no generated search subsystem from one macro
-- no automatic cross-record reindex story for every association shape
-- no fake cross-index score comparability
-- no public multi-backend abstraction in v1
+- hidden database-plus-search atomicity
+- a generated search subsystem from one macro
+- automatic cross-record reindexing for every association shape
+- universally comparable scores across indexes
+- a public multi-backend abstraction in v1
+- a Postgres full-text abstraction or a Phoenix-only framework
+- an admin dashboard that replaces your own auth and operational stack
+- immediate search visibility just because work was accepted
 
-Those constraints are part of the product, not missing polish.
-
-## What to read next
-
-- First hour: [Golden path](golden-path.md)
-- Phoenix request edge: [Request-edge search](request-edge-search.md)
-- Sync truth: [Sync modes and visibility](sync-modes-and-visibility.md)
-- Related-data correctness: [Related data and reindexing](related-data-and-reindexing.md)
-- Recovery: [Drift recovery](drift-recovery.md)
+These limits are part of the product boundary, not missing polish.
 
 ## How the flows usually mature
 
@@ -335,35 +330,12 @@ Most teams grow through Scrypath in roughly this order:
 
 That progression is healthy. You do not need every flow on day one.
 
-## What Scrypath is opinionated about
-
-Scrypath keeps making the same bets:
-
-- **Ecto-first** beats controller-first or callback-first integration.
-- **Contexts own orchestration** beats scattering search logic through the web layer.
-- **One common runtime path** beats a pile of generated per-schema verbs.
-- **Operational honesty** beats pretending eventual consistency does not exist.
-- **Explicit repair workflows** beat "maybe just rerun the callback and hope."
-
-Those bets are why the library feels small in some places and unusually blunt in others.
-
-## What it intentionally does not try to be
-
-Scrypath is not currently trying to be:
-
-- a Postgres full-text abstraction
-- a public multi-backend facade
-- a Phoenix-only framework
-- an admin dashboard that replaces your own auth and operational stack
-- a library that claims accepted work means immediate search visibility
-
-That restraint matters. A search library becomes confusing fast when it promises every shape of search, every backend, every UI pattern, and every operations workflow at once.
 
 ## Where to go next
 
-- Want the first implementation path: [Golden path](golden-path.md)
-- Want the app boundary: [Getting started](getting-started.md) and [Phoenix contexts](phoenix-contexts.md)
-- Want to choose sync semantics carefully: [Sync modes and visibility](sync-modes-and-visibility.md)
-- Want catalog UX: [Faceted search with Phoenix LiveView](faceted-search-with-phoenix-liveview.md)
-- Want cross-schema search: [Multi-index search](multi-index-search.md)
-- Want the operator playbook: [Drift recovery](drift-recovery.md)
+- First hour: [Golden path](golden-path.md)
+- App boundary and request handling: [Getting Started](getting-started.md), [Phoenix contexts](phoenix-contexts.md), [Phoenix walkthrough](phoenix-walkthrough.md), [Request-edge search](request-edge-search.md), and [Phoenix controllers and JSON](phoenix-controllers-and-json.md)
+- Phoenix UI: [Phoenix LiveView](phoenix-liveview.md) and [Faceted search with Phoenix LiveView](faceted-search-with-phoenix-liveview.md)
+- Sync and related-data behavior: [Sync modes and visibility](sync-modes-and-visibility.md) and [Related data and reindexing](related-data-and-reindexing.md)
+- Catalog and cross-schema search: [Multi-index search](multi-index-search.md)
+- Recovery and operations: [Drift recovery](drift-recovery.md) and [Operator Mix tasks](operator-mix-tasks.md)
