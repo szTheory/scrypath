@@ -75,14 +75,75 @@ defmodule Scrypath.CIMonitorTest do
     refute calls =~ "/protection/"
   end
 
+  test "collect-readiness refuses an output file inside the source checkout", ctx do
+    output_path = Path.join(File.cwd!(), ".ci-monitor-readiness-output-forbidden.json")
+    on_exit(fn -> File.rm(output_path) end)
+    {output, status} = System.cmd(System.find_executable("node") || "node", [
+      @script, "collect-readiness", "--repo", "szTheory/scrypath", "--sha", @sha,
+      "--run", "123", "--attempt", "2", "--output", output_path
+    ], env: [{"GH_BIN", ctx.gh}, {"GIT_BIN", ctx.git}, {"FAKE_SHA", @sha}], stderr_to_stdout: true)
+    assert status != 0
+    assert output =~ "--output must be outside the source checkout"
+    refute File.exists?(output_path)
+  end
+
   @tag readiness_tracer: true
   test "collect-readiness rejects source, attempt, and archive-byte mismatches", ctx do
+    archive_sha = write_archive_fixture(ctx, :valid)
+    bytes = File.read!(ctx.archive)
+    <<prefix::binary-size(byte_size(bytes) - 1), final>> = bytes
+    File.write!(ctx.changed_archive, prefix <> <<Bitwise.bxor(final, 1)>>)
+
     for {scenario, expected} <- [
           {"wrong_sha", "requested source SHA"},
           {"wrong_attempt", "requested run attempt"},
           {"changed_archive", "attestation archive digest"}
         ] do
+      {output, status} = run_collect_readiness(ctx, archive_sha, scenario)
+      assert status != 0
+      assert output =~ expected
+    end
+  end
+
+  test "collect-readiness exhausts attempt pages and rejects ambiguous or mismatched GitHub facts", ctx do
+    for {scenario, expected} <- [
+          {"wrong_repo", "requested repository"},
+          {"wrong_workflow", "CI workflow metadata"},
+          {"wrong_run", "different run or requested run attempt"},
+          {"malformed_attempt", "invalid JSON"},
+          {"duplicate_job", "exactly one successful job"},
+          {"missing_job", "exactly one successful job"},
+          {"failed_job", "exactly one successful job"},
+          {"duplicate_artifact", "exactly one live"},
+          {"expired_artifact", "exactly one live"},
+          {"retry_overlap", "exactly one live"}
+        ] do
       {output, status} = run_collect_readiness(ctx, String.duplicate("a", 64), scenario)
+      assert status != 0
+      assert output =~ expected
+    end
+  end
+
+  test "collect-readiness bounds failed and oversized downloads and rejects malformed archive layouts", ctx do
+    for {scenario, expected} <- [
+          {"download_failed", "failed"},
+          {"oversized_archive", "safe limit"}
+        ] do
+      {output, status} = run_collect_readiness(ctx, String.duplicate("a", 64), scenario)
+      assert status != 0
+      assert output =~ expected
+    end
+
+    for {layout, expected} <- [
+          {:extra_member, "must contain only one closeout-attestation.json member"},
+          {:traversal_member, "must contain only one closeout-attestation.json member"},
+          {:duplicate_member, "must contain only one closeout-attestation.json member"},
+          {:malformed_json, "invalid JSON"},
+          {{:coverage_id, "999"}, "coverage artifact identity/digest"},
+          {:coverage_digest, "coverage artifact identity/digest"}
+        ] do
+      archive_sha = write_archive_fixture(ctx, layout)
+      {output, status} = run_collect_readiness(ctx, archive_sha, "archive_fixture")
       assert status != 0
       assert output =~ expected
     end
@@ -143,6 +204,11 @@ defmodule Scrypath.CIMonitorTest do
     reordered = %{record | conditions: Enum.reverse(record.conditions), baseline: %{record.baseline | claims: Enum.reverse(record.baseline.claims)}}
     {reordered_output, 0} = run_validate_readiness(ctx, source.root, reordered, "terminal")
     assert Jason.decode!(reordered_output)["rendered_markdown"] == payload["rendered_markdown"]
+    assert payload["rendered_markdown"] =~ "Candidate source: #{@sha}; squash-main source: #{@sha}; local artifact: #{@sha}."
+
+    correction = Map.put(record, :correction, %{supersedes_assessment_id: "Readiness-20260929T120000Z", corrected_at_utc: "2026-09-30T12:00:00Z", reason: "Append-only correction with updated evidence attribution."})
+    {correction_output, 0} = run_validate_readiness(ctx, source.root, correction, "terminal")
+    assert Jason.decode!(correction_output)["rendered_markdown"] =~ "Correction: supersedes Readiness-20260929T120000Z"
 
     record = %{record | decision: "READY FOR OPERATOR UI"}
     [first | rest] = record.conditions
@@ -150,13 +216,22 @@ defmodule Scrypath.CIMonitorTest do
     {output, status} = run_validate_readiness(ctx, source.root, record, "terminal")
     assert status != 0
     assert output =~ "READY requires six supplied PASS judgments"
+
+    record = readiness_record(source, "terminal")
+    [condition | rest] = record.conditions
+    record = %{record | conditions: [%{condition | evidence: [%{url: "https://example.invalid/evidence", label: "untrusted"}]} | rest]}
+    {output, status} = run_validate_readiness(ctx, source.root, record, "terminal")
+    assert status != 0
+    assert output =~ "approved public evidence host"
   end
 
   test "verify-readiness-comment confirms explicit issue, author, body, and unique authority", ctx do
     source = readiness_source(ctx)
     record = readiness_record(source, "terminal")
+    record = Map.put(record, :correction, %{supersedes_assessment_id: "Readiness-20260929T120000Z", corrected_at_utc: "2026-09-30T12:00:00Z", reason: "Append-only correction with updated evidence attribution."})
     {validation, 0} = run_validate_readiness(ctx, source.root, record, "terminal")
     body = Jason.decode!(validation)["rendered_markdown"]
+    assert body =~ "Correction: supersedes Readiness-20260929T120000Z; 2026-09-30T12:00:00Z"
     comment = %{
       id: 999,
       issue_url: "https://api.github.com/repos/szTheory/scrypath/issues/123",
@@ -175,6 +250,18 @@ defmodule Scrypath.CIMonitorTest do
     {output, status} = run_verify_comment(ctx, source.root, comment_path, comments_path, record)
     assert status != 0
     assert output =~ "duplicate terminal authority comments"
+
+    for altered <- [
+          %{comment | body: comment.body <> "\nEdited after publication."},
+          %{comment | user: %{login: "someone-else"}},
+          %{comment | issue_url: "https://api.github.com/repos/other/project/issues/123"}
+        ] do
+      File.write!(comment_path, Jason.encode!(altered))
+      File.write!(comments_path, Jason.encode!([altered]))
+      {output, status} = run_verify_comment(ctx, source.root, comment_path, comments_path, record)
+      assert status != 0
+      assert output =~ "edited, duplicated, on another issue, or authored by another login"
+    end
   end
 
   setup do
@@ -187,6 +274,7 @@ defmodule Scrypath.CIMonitorTest do
     gh = Path.join(root, "gh")
     git = Path.join(root, "git")
     archive = Path.join(root, "attestation.zip")
+    changed_archive = Path.join(root, "changed-attestation.zip")
     attestation = Path.join(root, "attestation.json")
 
     File.write!(gh, fake_gh())
@@ -195,7 +283,7 @@ defmodule Scrypath.CIMonitorTest do
     File.chmod!(git, 0o755)
 
     on_exit(fn -> File.rm_rf!(root) end)
-    %{root: root, gh: gh, git: git, state: state, calls: calls, archive: archive, attestation: attestation}
+    %{root: root, gh: gh, git: git, state: state, calls: calls, archive: archive, changed_archive: changed_archive, attestation: attestation}
   end
 
   test "closeout accepts only the newly dispatched exact-SHA run and both artifacts", ctx do
@@ -301,6 +389,7 @@ defmodule Scrypath.CIMonitorTest do
         {"FAKE_SCENARIO", scenario},
         {"FAKE_SHA", @sha},
         {"FAKE_ARCHIVE", ctx.archive},
+        {"FAKE_CHANGED_ARCHIVE", ctx.changed_archive},
         {"FAKE_ATTESTATION", ctx.attestation},
         {"FAKE_ARCHIVE_SHA", archive_sha},
         {"FAKE_CALLS", ctx.calls}
@@ -309,16 +398,68 @@ defmodule Scrypath.CIMonitorTest do
     )
   end
 
+  defp write_archive_fixture(ctx, layout) do
+    coverage_id = case layout do {:coverage_id, id} -> id; _ -> "10" end
+    coverage_digest = if layout == :coverage_digest, do: "sha256:" <> String.duplicate("d", 64), else: "sha256:" <> String.duplicate("a", 64)
+    archive_dir = Path.join(ctx.root, "archive-fixture")
+    File.mkdir_p!(archive_dir)
+    attestation = %{
+      schema: 1, authority: "github-actions-exact-sha", repository: "szTheory/scrypath",
+      workflow: "CI", run_id: "123", run_attempt: "2",
+      run_url: "https://github.com/szTheory/scrypath/actions/runs/123",
+      event: "workflow_dispatch", head_sha: @sha,
+      required_jobs: ["core (required)", "package (required)", "repository-contracts (required)", "backend (required)", "ecommerce-mounted (required)"],
+      coverage: %{outcome: "success", artifact_id: coverage_id, artifact_url: "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/10", artifact_digest: coverage_digest}
+    }
+    member = if layout == :malformed_json, do: "{bad json", else: Jason.encode!(attestation)
+    File.write!(Path.join(archive_dir, "closeout-attestation.json"), member)
+    File.write!(Path.join(archive_dir, "extra.txt"), "extra\n")
+    archive = Path.join(ctx.root, "layout.zip")
+    File.rm(archive)
+    cond do
+      layout in [:extra_member, :traversal_member, :duplicate_member] ->
+        script = "import sys, zipfile, warnings; warnings.filterwarnings('ignore', category=UserWarning); " <>
+          "z=zipfile.ZipFile(sys.argv[1], 'w'); z.write(sys.argv[2], 'closeout-attestation.json'); " <>
+          "z.write(sys.argv[3], 'extra.txt') if sys.argv[4] == 'extra' else None; " <>
+          "z.writestr('../outside.txt', 'bad') if sys.argv[4] == 'traversal' else None; " <>
+          "z.writestr('closeout-attestation.json', 'duplicate') if sys.argv[4] == 'duplicate' else None; z.close()"
+        mode = case layout do :extra_member -> "extra"; :traversal_member -> "traversal"; :duplicate_member -> "duplicate" end
+        {_, 0} = System.cmd("python3", ["-c", script, archive, Path.join(archive_dir, "closeout-attestation.json"), Path.join(archive_dir, "extra.txt"), mode])
+      true ->
+        {_, 0} = System.cmd("zip", ["-q", archive, "closeout-attestation.json"], cd: archive_dir)
+    end
+    bytes = File.read!(archive)
+    File.write!(ctx.archive, bytes)
+    File.write!(ctx.attestation, Jason.encode!(attestation))
+    :crypto.hash(:sha256, bytes) |> Base.encode16(case: :lower)
+  end
+
   defp run_validate_readiness(ctx, source_root, record, stage) do
     path = Path.join(ctx.root, "#{stage}-record.json")
     File.write!(path, Jason.encode!(record))
-    run_validate_path(ctx, source_root, path, stage)
+    if stage == "terminal" do
+      common = ~w(schema cutoff baseline important_workflows invalidators findings opportunities preserved_history issue source_identities delivery cleanup tracked_inputs assumptions)a
+      inputs = record |> Map.take(common) |> Map.put(:conditions, Enum.map(record.conditions, fn condition -> Map.take(condition, [:id, :text]) end))
+      input_path = Path.join(ctx.root, "frozen-inputs.json")
+      receipt_path = Path.join(ctx.root, "collector-receipt.json")
+      File.write!(input_path, Jason.encode!(inputs))
+      File.write!(receipt_path, Jason.encode!(record.attestation))
+      args = [@script, "validate-readiness", "--stage", "terminal", "--inputs", input_path,
+        "--receipt", receipt_path, "--record", path, "--source-root", source_root]
+      run_readiness_cli(ctx, args)
+    else
+      run_validate_path(ctx, source_root, path, stage)
+    end
   end
 
   defp run_validate_path(ctx, source_root, path, stage) do
     args = [@script, "validate-readiness", "--stage", stage, "--source-root", source_root]
     args = if stage == "terminal", do: args ++ ["--record", path], else: args ++ ["--inputs", path]
 
+    run_readiness_cli(ctx, args)
+  end
+
+  defp run_readiness_cli(ctx, args) do
     System.cmd(System.find_executable("node") || "node", args,
       env: [
         {"GH_BIN", ctx.gh},
@@ -462,7 +603,7 @@ defmodule Scrypath.CIMonitorTest do
       "inputs" -> base
       "draft" -> %{base | issue: %{repository: "szTheory/scrypath", status: "pending", reason: "Issue creation remains a later explicit action."}, delivery: %{disposition: "pending", reason: "Delivery evidence has not been collected yet."}}
       "terminal" ->
-        judgments = Enum.map(base.conditions, fn condition -> Map.merge(condition, %{status: "PASS", rationale: "Maintainer supplied judgment.", evidence: ["Receipt 123"], evidence_date: "2026-09-30", assessment_date: "2026-09-30", limits: "Bounded to the supplied evidence."}) end)
+        judgments = Enum.map(base.conditions, fn condition -> Map.merge(condition, %{status: "PASS", rationale: "Maintainer supplied judgment.", evidence: [%{url: "https://github.com/szTheory/scrypath/actions/runs/123", label: "Exact-source receipt"}], evidence_date: "2026-09-30", assessment_date: "2026-09-30", limits: "Bounded to the supplied evidence."}) end)
         Map.merge(base, %{
           assessment_id: "Readiness-20260930T120000Z",
           assessed_at_utc: "2026-09-30T12:00:00Z",
@@ -470,12 +611,46 @@ defmodule Scrypath.CIMonitorTest do
           conditions: judgments,
           decision: "NOT READY",
           final_source: %{sha: @sha},
-          attestation: %{repository: "szTheory/scrypath", head_sha: @sha, run_id: "123", run_attempt: 2, event: "workflow_dispatch", authority: "github-actions-exact-sha", required_jobs: ["core (required)", "package (required)", "repository-contracts (required)", "backend (required)", "ecommerce-mounted (required)"], coverage_artifact: %{id: "10", digest: "sha256:" <> String.duplicate("a", 64)}, attestation_artifact: %{id: "11", digest: "sha256:" <> String.duplicate("b", 64)}},
+          attestation: fixture_collector_receipt(),
           delivery_identity: %{disposition: "deferred", release: "not-published", package: "not-published"},
           blockers: ["One baseline claim remains unresolved."],
           revisit_triggers: ["A new source invalidator or hosted receipt." ]
         })
     end
+  end
+
+  defp fixture_collector_receipt do
+    required_jobs = [
+      "core (required)", "package (required)", "repository-contracts (required)",
+      "backend (required)", "ecommerce-mounted (required)"
+    ]
+    coverage_digest = "sha256:" <> String.duplicate("a", 64)
+    archive_digest = String.duplicate("b", 64)
+    coverage_url = "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/10"
+
+    content = %{
+      schema: 1, authority: "github-actions-exact-sha", repository: "szTheory/scrypath",
+      workflow: "CI", run_id: "123", run_attempt: "2",
+      run_url: "https://github.com/szTheory/scrypath/actions/runs/123",
+      event: "workflow_dispatch", head_sha: @sha, required_jobs: required_jobs,
+      coverage: %{outcome: "success", artifact_id: "10", artifact_url: coverage_url, artifact_digest: coverage_digest}
+    }
+
+    jobs = Enum.with_index(required_jobs ++ ["coverage (advisory)", "closeout-attestation"], 201)
+      |> Enum.map(fn {name, id} -> %{id: id, name: name, status: "completed", conclusion: "success"} end)
+
+    %{
+      schema: 1, authority: "github-actions-exact-sha", repository: "szTheory/scrypath",
+      head_sha: @sha, source: %{head_sha: @sha}, workflow: %{id: "77", name: "CI", path: ".github/workflows/ci.yml"},
+      run_id: "123", run_attempt: 2, run_url: "https://github.com/szTheory/scrypath/actions/runs/123",
+      event: "workflow_dispatch", status: "completed", conclusion: "success",
+      created_at: "2026-09-30T00:00:00Z", updated_at: "2026-09-30T00:01:00Z", jobs: jobs,
+      coverage_artifact: %{id: "10", name: "coverage-report-#{@sha}", url: coverage_url, digest: coverage_digest, expires_at: "2026-10-07T00:00:00Z"},
+      attestation_artifact: %{id: "11", name: "closeout-attestation-#{@sha}", url: "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/11", digest: "sha256:" <> archive_digest, expires_at: "2026-10-07T00:00:00Z"},
+      attestation_archive: %{sha256: archive_digest},
+      attestation_member: %{name: "closeout-attestation.json", sha256: String.duplicate("c", 64), content: content},
+      collected_at_utc: "2026-09-30T12:00:00Z", limitations: ["Factual fixture only."]
+    }
   end
 
   defp fake_git do
@@ -541,27 +716,53 @@ defmodule Scrypath.CIMonitorTest do
       if [ -n "$FAKE_ARCHIVE" ]; then
       case "$*" in
         *'/actions/artifacts/2/zip'*)
-          if [ "$FAKE_SCENARIO" = "changed_archive" ]; then printf '%s' 'changed-bytes'; else cat "$FAKE_ARCHIVE"; fi
+          if [ "$FAKE_SCENARIO" = "changed_archive" ]; then cat "$FAKE_CHANGED_ARCHIVE"
+          elif [ "$FAKE_SCENARIO" = "download_failed" ]; then printf '%s\n' 'download failed' >&2; exit 1
+          elif [ "$FAKE_SCENARIO" = "oversized_archive" ]; then dd if=/dev/zero bs=1048576 count=9 2>/dev/null
+          else cat "$FAKE_ARCHIVE"; fi
           exit 0
           ;;
         *'/actions/workflows/77'*)
-          printf '%s\n' '{"id":77,"name":"CI","path":".github/workflows/ci.yml"}'
+          if [ "$FAKE_SCENARIO" = "wrong_workflow" ]; then
+            printf '%s\n' '{"id":77,"name":"CI","path":".github/workflows/release.yml"}'
+          else
+            printf '%s\n' '{"id":77,"name":"CI","path":".github/workflows/ci.yml"}'
+          fi
           exit 0
           ;;
         *'/attempts/2/jobs?'*)
-          printf '%s\n' '[{"jobs":[{"id":201,"name":"core (required)","status":"completed","conclusion":"success"},{"id":202,"name":"package (required)","status":"completed","conclusion":"success"},{"id":203,"name":"repository-contracts (required)","status":"completed","conclusion":"success"},{"id":204,"name":"backend (required)","status":"completed","conclusion":"success"},{"id":205,"name":"ecommerce-mounted (required)","status":"completed","conclusion":"success"},{"id":206,"name":"coverage (advisory)","status":"completed","conclusion":"success"},{"id":207,"name":"closeout-attestation","status":"completed","conclusion":"success"}]}]'
+          if [ "$FAKE_SCENARIO" = "duplicate_job" ]; then
+            printf '%s\n' '[{"jobs":[{"id":201,"name":"core (required)","status":"completed","conclusion":"success"},{"id":202,"name":"package (required)","status":"completed","conclusion":"success"},{"id":203,"name":"repository-contracts (required)","status":"completed","conclusion":"success"},{"id":204,"name":"backend (required)","status":"completed","conclusion":"success"},{"id":205,"name":"ecommerce-mounted (required)","status":"completed","conclusion":"success"},{"id":206,"name":"coverage (advisory)","status":"completed","conclusion":"success"},{"id":207,"name":"closeout-attestation","status":"completed","conclusion":"success"}]},{"jobs":[{"id":208,"name":"core (required)","status":"completed","conclusion":"success"}]}]'
+          elif [ "$FAKE_SCENARIO" = "missing_job" ]; then
+            printf '%s\n' '[{"jobs":[{"id":201,"name":"core (required)","status":"completed","conclusion":"success"},{"id":202,"name":"package (required)","status":"completed","conclusion":"success"},{"id":203,"name":"repository-contracts (required)","status":"completed","conclusion":"success"},{"id":204,"name":"backend (required)","status":"completed","conclusion":"success"},{"id":205,"name":"ecommerce-mounted (required)","status":"completed","conclusion":"success"},{"id":206,"name":"coverage (advisory)","status":"completed","conclusion":"success"}]}]'
+          else
+            backend=success
+            if [ "$FAKE_SCENARIO" = "failed_job" ]; then backend=failure; fi
+            printf '{"jobs":[{"id":201,"name":"core (required)","status":"completed","conclusion":"success"},{"id":202,"name":"package (required)","status":"completed","conclusion":"success"},{"id":203,"name":"repository-contracts (required)","status":"completed","conclusion":"success"},{"id":204,"name":"backend (required)","status":"completed","conclusion":"%s"},{"id":205,"name":"ecommerce-mounted (required)","status":"completed","conclusion":"success"},{"id":206,"name":"coverage (advisory)","status":"completed","conclusion":"success"},{"id":207,"name":"closeout-attestation","status":"completed","conclusion":"success"}]}\n' "$backend"
+          fi
           exit 0
           ;;
         *'/runs/123/artifacts?'*)
-          printf '[{"artifacts":[{"id":10,"name":"coverage-report-%s","url":"https://api.github.com/repos/szTheory/scrypath/actions/artifacts/10","expired":false,"digest":"sha256:%s","expires_at":"2026-10-07T00:00:00Z","workflow_run":{"id":123,"head_sha":"%s"}},{"id":2,"name":"closeout-attestation-%s","url":"https://api.github.com/repos/szTheory/scrypath/actions/artifacts/2","expired":false,"digest":"sha256:%s","expires_at":"2026-10-07T00:00:00Z","workflow_run":{"id":123,"head_sha":"%s"}}]}]\n' "$FAKE_SHA" "$(printf '%064d' 0 | tr '0' 'a')" "$FAKE_SHA" "$FAKE_SHA" "$FAKE_ARCHIVE_SHA" "$FAKE_SHA"
+          if [ "$FAKE_SCENARIO" = "duplicate_artifact" ] || [ "$FAKE_SCENARIO" = "retry_overlap" ]; then
+            printf '[{"artifacts":[{"id":10,"name":"coverage-report-%s","url":"https://api.github.com/repos/szTheory/scrypath/actions/artifacts/10","expired":false,"digest":"sha256:%s","expires_at":"2026-10-07T00:00:00Z","workflow_run":{"id":123,"head_sha":"%s"}},{"id":2,"name":"closeout-attestation-%s","url":"https://api.github.com/repos/szTheory/scrypath/actions/artifacts/2","expired":false,"digest":"sha256:%s","expires_at":"2026-10-07T00:00:00Z","workflow_run":{"id":123,"head_sha":"%s"}},{"id":3,"name":"closeout-attestation-%s","url":"https://api.github.com/repos/szTheory/scrypath/actions/artifacts/3","expired":false,"digest":"sha256:%s","expires_at":"2026-10-07T00:00:00Z","workflow_run":{"id":123,"head_sha":"%s"}}]}]\n' "$FAKE_SHA" "$(printf '%064d' 0 | tr '0' 'a')" "$FAKE_SHA" "$FAKE_SHA" "$FAKE_ARCHIVE_SHA" "$FAKE_SHA" "$FAKE_SHA" "$FAKE_ARCHIVE_SHA" "$FAKE_SHA"
+          else
+            expiration=false
+            if [ "$FAKE_SCENARIO" = "expired_artifact" ]; then expiration=true; fi
+            printf '[{"artifacts":[{"id":10,"name":"coverage-report-%s","url":"https://api.github.com/repos/szTheory/scrypath/actions/artifacts/10","expired":%s,"digest":"sha256:%s","expires_at":"2026-10-07T00:00:00Z","workflow_run":{"id":123,"head_sha":"%s"}},{"id":2,"name":"closeout-attestation-%s","url":"https://api.github.com/repos/szTheory/scrypath/actions/artifacts/2","expired":false,"digest":"sha256:%s","expires_at":"2026-10-07T00:00:00Z","workflow_run":{"id":123,"head_sha":"%s"}}]}]\n' "$FAKE_SHA" "$expiration" "$(printf '%064d' 0 | tr '0' 'a')" "$FAKE_SHA" "$FAKE_SHA" "$FAKE_ARCHIVE_SHA" "$FAKE_SHA"
+          fi
           exit 0
           ;;
         *'/runs/123/attempts/2'*)
           sha="$FAKE_SHA"
           attempt=2
+          run_id=123
+          repo=szTheory/scrypath
           if [ "$FAKE_SCENARIO" = "wrong_sha" ]; then sha=ffffffffffffffffffffffffffffffffffffffff; fi
           if [ "$FAKE_SCENARIO" = "wrong_attempt" ]; then attempt=3; fi
-          printf '{"id":123,"run_attempt":%s,"workflow_id":77,"head_sha":"%s","event":"workflow_dispatch","status":"completed","conclusion":"success","html_url":"https://github.com/szTheory/scrypath/actions/runs/123","created_at":"2026-09-30T00:00:00Z","updated_at":"2026-09-30T00:01:00Z","repository":{"full_name":"szTheory/scrypath"},"head_repository":{"full_name":"szTheory/scrypath"}}\n' "$attempt" "$sha"
+          if [ "$FAKE_SCENARIO" = "wrong_run" ]; then run_id=124; fi
+          if [ "$FAKE_SCENARIO" = "wrong_repo" ]; then repo=other/project; fi
+          if [ "$FAKE_SCENARIO" = "malformed_attempt" ]; then printf '%s\n' '{bad json'; exit 0; fi
+          printf '{"id":%s,"run_attempt":%s,"workflow_id":77,"head_sha":"%s","event":"workflow_dispatch","status":"completed","conclusion":"success","html_url":"https://github.com/szTheory/scrypath/actions/runs/123","created_at":"2026-09-30T00:00:00Z","updated_at":"2026-09-30T00:01:00Z","repository":{"full_name":"%s"},"head_repository":{"full_name":"%s"}}\n' "$run_id" "$attempt" "$sha" "$repo" "$repo"
           exit 0
           ;;
       esac

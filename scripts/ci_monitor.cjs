@@ -66,6 +66,9 @@ function run(bin, args, options = {}) {
   });
 
   if (result.error) {
+    if (result.error.code === "ENOBUFS") {
+      throw new Error(`${bin} output exceeded the configured safe limit (${options.maxBuffer || 20 * 1024 * 1024} bytes)`);
+    }
     throw new Error(`${bin} could not start: ${result.error.message}`);
   }
 
@@ -94,6 +97,7 @@ function json(bin, args) {
 function jsonValue(bin, args) {
   const text = output(bin, args);
   try {
+    assertNoDuplicateJsonKeys(text);
     return JSON.parse(text || "null");
   } catch (error) {
     throw new Error(`${bin} ${args.join(" ")} returned invalid JSON: ${error.message}`);
@@ -251,6 +255,7 @@ function readAttestationMember(archivePath) {
   }
   let content;
   try {
+    assertNoDuplicateJsonKeys(member.toString("utf8"));
     content = JSON.parse(member.toString("utf8"));
   } catch (error) {
     throw new Error(`closeout attestation member is invalid JSON: ${error.message}`);
@@ -429,6 +434,11 @@ function requireArray(value, label, { min = 1 } = {}) {
   return value;
 }
 
+function rejectUnknownKeys(value, allowed, label) {
+  const extra = Object.keys(requireObject(value, label)).filter((key) => !allowed.includes(key));
+  if (extra.length) throw new Error(`${label} contains unsupported field(s): ${extra.join(", ")}`);
+}
+
 function validIsoDate(value, label) {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value) || Number.isNaN(Date.parse(`${value}T00:00:00Z`))) {
     throw new Error(`${label} must be a valid YYYY-MM-DD date`);
@@ -472,6 +482,36 @@ function containedFile(sourceRoot, relative, label) {
   if (target !== root && !target.startsWith(`${root}${path.sep}`)) throw new Error(`${label} escapes the source root`);
   if (!fs.statSync(target).isFile()) throw new Error(`${label} must name a file`);
   return target;
+}
+
+function evidenceReference(value, sourceRoot, label) {
+  if (typeof value === "string") {
+    if (value.startsWith("https://")) return evidenceReference({ url: value }, sourceRoot, label);
+    const relative = safeRelativePath(value, label);
+    containedFile(sourceRoot, relative, label);
+    return relative;
+  }
+  const reference = requireObject(value, label);
+  rejectUnknownKeys(reference, ["url", "path", "label"], label);
+  if (reference.url !== undefined) {
+    const urlText = requireText(reference.url, `${label}.url`);
+    let parsed;
+    try { parsed = new URL(urlText); } catch { throw new Error(`${label}.url must be a public HTTPS evidence URL`); }
+    if (parsed.protocol !== "https:" || parsed.username || parsed.password ||
+        !["github.com", "api.github.com", "docs.github.com", "hex.pm", "hexdocs.pm"].includes(parsed.hostname) ||
+        parsed.pathname === "/") throw new Error(`${label}.url must use an approved public evidence host and non-empty path`);
+    if (reference.path !== undefined) throw new Error(`${label} cannot contain both path and url`);
+    if (reference.label !== undefined) requireText(reference.label, `${label}.label`);
+    return urlText;
+  }
+  const relative = safeRelativePath(reference.path, `${label}.path`);
+  containedFile(sourceRoot, relative, label);
+  if (reference.label !== undefined) requireText(reference.label, `${label}.label`);
+  return relative;
+}
+
+function markdownCell(value) {
+  return String(value).replace(/\|/g, "\\|").replace(/[\r\n]+/g, " ");
 }
 
 function historicalScope(bytes, scope, heading, label) {
@@ -568,6 +608,12 @@ function validatePinnedBaseline(record, sourceRoot) {
 
 function validateSharedRecord(record, sourceRoot, stage) {
   rejectPrivateAndSecretValues(record);
+  const commonKeys = [
+    "schema", "cutoff", "baseline", "important_workflows", "invalidators", "findings", "opportunities",
+    "preserved_history", "conditions", "issue", "source_identities", "delivery", "cleanup", "tracked_inputs", "assumptions",
+  ];
+  const terminalKeys = ["assessment_id", "assessed_at_utc", "maintainer", "decision", "final_source", "attestation", "delivery_identity", "blockers", "revisit_triggers", "correction"];
+  rejectUnknownKeys(record, stage === "terminal" ? [...commonKeys, ...terminalKeys] : commonKeys, "readiness record");
   if (record.schema !== 1) throw new Error("record schema must be version 1");
   validUtcTimestamp(record.cutoff, "cutoff");
   validatePinnedBaseline(record, sourceRoot);
@@ -600,6 +646,9 @@ function validateSharedRecord(record, sourceRoot, stage) {
   const conditionIds = new Set();
   conditionRows.forEach((rowValue) => {
     const row = requireObject(rowValue, "conditions[]");
+    rejectUnknownKeys(row, stage === "terminal"
+      ? ["id", "text", "status", "rationale", "evidence", "evidence_date", "assessment_date", "limits"]
+      : ["id", "text"], "conditions[]");
     if (!Number.isInteger(row.id) || row.id < 1 || row.id > 6 || conditionIds.has(row.id) || row.text !== CONDITION_TEXTS[row.id - 1]) {
       throw new Error("conditions IDs and texts must match the six approved conditions exactly once");
     }
@@ -630,6 +679,10 @@ function validateSharedRecord(record, sourceRoot, stage) {
     const sha = requireText(item.sha, `source_identities.${identity}.sha`);
     if (!/^[0-9a-f]{40}$/.test(sha) && !(identity === "published" && sha === "not-published")) {
       throw new Error(`source_identities.${identity}.sha must be a full SHA or explicit not-published identity`);
+    }
+    if (identity === "published") {
+      requireText(item.version, "source_identities.published.version");
+      requireText(item.tag, "source_identities.published.tag");
     }
   }
   const delivery = requireObject(record.delivery, "delivery");
@@ -663,7 +716,14 @@ function canonicalize(value) {
 function renderTerminal(record) {
   const checksum = crypto.createHash("sha256").update(JSON.stringify(canonicalize(record))).digest("hex");
   const judgments = [...record.conditions].sort((left, right) => left.id - right.id)
-    .map((condition) => `| ${condition.id} | ${condition.status} | ${condition.evidence_date} | ${condition.rationale} | ${condition.limits} |`);
+    .map((condition) => {
+      const evidence = condition.evidence.map((entry) => {
+        const url = typeof entry === "string" && entry.startsWith("https://") ? entry : (entry?.url || null);
+        const label = typeof entry === "string" ? entry : (entry?.label || entry?.path || entry?.url);
+        return url ? `[${markdownCell(label)}](${url})` : markdownCell(label);
+      }).join("; ");
+      return `| ${condition.id} | ${condition.status} | ${condition.evidence_date} | ${markdownCell(evidence)} | ${markdownCell(condition.rationale)} | ${markdownCell(condition.limits)} |`;
+    });
   const receipt = record.attestation;
   const lines = [
     `# ${record.assessment_id}`,
@@ -672,12 +732,15 @@ function renderTerminal(record) {
     `- Decision supplied by @${record.maintainer.login}: **${record.decision}**`,
     `- Decision provenance: ${record.maintainer.decision_provenance}`,
     `- Final planning source: ${record.final_source.sha}`,
-    `- Exact-source receipt: ${receipt.repository} run ${receipt.run_id}, attempt ${receipt.run_attempt}, source ${receipt.head_sha}.` ,
+    `- Candidate source: ${record.source_identities.candidate.sha}; squash-main source: ${record.source_identities.squash_main.sha}; local artifact: ${record.source_identities.local_artifact.sha}.`,
+    `- Published identity: ${record.source_identities.published.version} / ${record.source_identities.published.tag} / ${record.source_identities.published.sha}.`,
+    `- Exact-source receipt: ${receipt.repository} run ${receipt.run_id}, attempt ${receipt.run_attempt}, source ${receipt.head_sha}.`,
     `- Coverage artifact ${receipt.coverage_artifact.id} (${receipt.coverage_artifact.digest}); attestation artifact ${receipt.attestation_artifact.id} (${receipt.attestation_artifact.digest}).`,
     `- Delivery: ${record.delivery_identity.disposition}; release ${record.delivery_identity.release}; package ${record.delivery_identity.package}.`,
+    ...(record.correction ? [`- Correction: supersedes ${record.correction.supersedes_assessment_id}; ${record.correction.corrected_at_utc}. ${record.correction.reason}`] : []),
     "",
-    "| Condition | Supplied status | Evidence date | Rationale | Limits |",
-    "| --- | --- | --- | --- | --- |",
+    "| Condition | Supplied status | Evidence date | Evidence | Rationale | Limits |",
+    "| --- | --- | --- | --- | --- | --- |",
     ...judgments,
     "",
     "## Blockers",
@@ -685,6 +748,11 @@ function renderTerminal(record) {
     "",
     "## Revisit triggers",
     ...record.revisit_triggers.map((item) => `- ${item}`),
+    "",
+    "## Inherited unresolved assumptions",
+    ...[...record.assumptions].sort((left, right) => String(left.id).localeCompare(String(right.id), undefined, { numeric: true }))
+      .filter((assumption) => REQUIRED_ASSUMPTIONS.includes(assumption.id))
+      .map((assumption) => `- ${assumption.id} (unresolved): ${assumption.reason}`),
     "",
     `Record SHA-256: ${checksum}`,
   ];
@@ -709,7 +777,9 @@ function validateTerminal(record, sourceRoot) {
     judgmentIds.add(id);
     if (!["PASS", "FAIL", "UNKNOWN"].includes(row.status)) throw new Error(`condition ${id} status must be supplied as PASS, FAIL, or UNKNOWN`);
     requireText(row.rationale, `condition ${id}.rationale`);
-    requireArray(row.evidence, `condition ${id}.evidence`);
+    for (const [evidenceIndex, evidence] of requireArray(row.evidence, `condition ${id}.evidence`).entries()) {
+      evidenceReference(evidence, sourceRoot, `condition ${id}.evidence[${evidenceIndex}]`);
+    }
     const evidenceDate = validIsoDate(row.evidence_date, `condition ${id}.evidence_date`);
     const assessmentDate = validIsoDate(row.assessment_date, `condition ${id}.assessment_date`);
     if (evidenceDate > assessedAt.slice(0, 10) || assessmentDate !== assessedAt.slice(0, 10)) throw new Error(`condition ${id} evidence/assessment dates must align with the UTC cutoff`);
@@ -725,25 +795,85 @@ function validateTerminal(record, sourceRoot) {
   requireExactSha(finalSource.sha);
   if (finalSource.sha !== record.source_identities.final_planning_source.sha) throw new Error("final_source identity must match final_planning_source while remaining separately named");
   const attestation = requireObject(record.attestation, "attestation");
-  if (attestation.repository !== record.issue.repository || attestation.head_sha !== finalSource.sha ||
-      attestation.event !== "workflow_dispatch" || attestation.authority !== "github-actions-exact-sha") {
-    throw new Error("final attestation repository/source/event/authority does not join the supplied final source");
-  }
-  positiveInteger(attestation.run_id, "attestation.run_id");
-  positiveInteger(attestation.run_attempt, "attestation.run_attempt");
-  if (JSON.stringify(attestation.required_jobs) !== JSON.stringify(REQUIRED_CHECKS)) throw new Error("attestation must preserve the five required job names in producer order");
-  for (const artifactName of ["coverage_artifact", "attestation_artifact"]) {
-    const artifact = requireObject(attestation[artifactName], `attestation.${artifactName}`);
-    normalizeId(artifact.id, `attestation.${artifactName}.id`);
-    if (!/^sha256:[0-9a-f]{64}$/.test(artifact.digest || "")) throw new Error(`attestation.${artifactName}.digest must be a SHA-256 digest`);
-  }
+  validateCollectorReceipt(attestation, finalSource.sha, record.issue.repository);
   const deliveryIdentity = requireObject(record.delivery_identity, "delivery_identity");
   requireText(deliveryIdentity.disposition, "delivery_identity.disposition");
   requireText(deliveryIdentity.release, "delivery_identity.release");
   requireText(deliveryIdentity.package, "delivery_identity.package");
   requireArray(record.blockers, "blockers");
   requireArray(record.revisit_triggers, "revisit_triggers");
+  if (record.correction !== undefined) {
+    const correction = requireObject(record.correction, "correction");
+    requireText(correction.supersedes_assessment_id, "correction.supersedes_assessment_id");
+    if (correction.supersedes_assessment_id === record.assessment_id) throw new Error("correction must supersede a different prior assessment");
+    requireText(correction.reason, "correction.reason");
+    if (validUtcTimestamp(correction.corrected_at_utc, "correction.corrected_at_utc") !== assessedAt) {
+      throw new Error("correction date must match the separately dated correction assessment");
+    }
+  }
   return { rendered: renderTerminal(record), statuses };
+}
+
+function validateCollectorReceipt(receiptValue, sha, repo) {
+  const receipt = requireObject(receiptValue, "final attestation receipt");
+  if (receipt.schema !== 1 || receipt.authority !== "github-actions-exact-sha" ||
+      receipt.repository !== repo || receipt.head_sha !== sha || receipt.event !== "workflow_dispatch" ||
+      receipt.status !== "completed" || receipt.conclusion !== "success") {
+    throw new Error("final attestation receipt repository/source/event/outcome does not join the supplied final source");
+  }
+  const runId = normalizeId(receipt.run_id, "attestation.run_id");
+  const attempt = positiveInteger(receipt.run_attempt, "attestation.run_attempt");
+  const expectedRunUrl = `https://github.com/${repo}/actions/runs/${runId}`;
+  if (receipt.run_url !== expectedRunUrl) throw new Error("attestation receipt run URL does not match its repository and run ID");
+  const workflow = requireObject(receipt.workflow, "attestation.workflow");
+  if (!/^[1-9][0-9]*$/.test(String(workflow.id || "")) || !requireText(workflow.name, "attestation.workflow.name") ||
+      workflow.path !== ".github/workflows/ci.yml") throw new Error("attestation receipt must identify the existing CI workflow metadata");
+  const jobs = requireArray(receipt.jobs, "attestation.jobs");
+  const expectedJobs = READINESS_JOBS;
+  const jobIds = new Set();
+  for (const [index, jobValue] of jobs.entries()) {
+    const job = requireObject(jobValue, `attestation.jobs[${index}]`);
+    const id = normalizeId(job.id, `attestation.jobs[${index}].id`);
+    if (jobIds.has(id)) throw new Error("attestation receipt contains duplicate job IDs");
+    jobIds.add(id);
+  }
+  if (jobs.length !== expectedJobs.length || expectedJobs.some((name) => {
+    const matches = jobs.filter((job) => job.name === name);
+    return matches.length !== 1 || matches[0].status !== "completed" || matches[0].conclusion !== "success";
+  })) throw new Error("attestation receipt must retain each exact-attempt required, coverage, and attestation job");
+  const coverage = requireObject(receipt.coverage_artifact, "attestation.coverage_artifact");
+  const artifact = requireObject(receipt.attestation_artifact, "attestation.attestation_artifact");
+  const coverageId = normalizeId(coverage.id, "attestation.coverage_artifact.id");
+  normalizeId(artifact.id, "attestation.attestation_artifact.id");
+  for (const [label, item] of [["coverage", coverage], ["attestation", artifact]]) {
+    if (!/^sha256:[0-9a-f]{64}$/.test(item.digest || "")) throw new Error(`${label} artifact must retain its SHA-256 digest`);
+    if (typeof item.expires_at !== "string" || Number.isNaN(Date.parse(item.expires_at))) throw new Error(`${label} artifact must retain its expiry`);
+    if (typeof item.url !== "string" || !item.url.startsWith(`https://api.github.com/repos/${repo}/actions/artifacts/`)) throw new Error(`${label} artifact URL is not a public repository artifact URL`);
+  }
+  const archive = requireObject(receipt.attestation_archive, "attestation.attestation_archive");
+  if (!/^[0-9a-f]{64}$/.test(archive.sha256 || "") || artifact.digest !== `sha256:${archive.sha256}`) {
+    throw new Error("attestation archive checksum does not match its API artifact digest");
+  }
+  const member = requireObject(receipt.attestation_member, "attestation.attestation_member");
+  if (member.name !== "closeout-attestation.json" || !/^[0-9a-f]{64}$/.test(member.sha256 || "")) {
+    throw new Error("attestation member name/checksum is missing or malformed");
+  }
+  const content = requireObject(member.content, "attestation.attestation_member.content");
+  if (content.schema !== 1 || content.authority !== "github-actions-exact-sha" ||
+      content.repository !== repo || content.head_sha !== sha || normalizeId(content.run_id, "attested run id") !== runId ||
+      positiveInteger(content.run_attempt, "attested run attempt") !== attempt || content.event !== "workflow_dispatch" ||
+      content.run_url !== receipt.run_url || content.workflow !== workflow.name ||
+      JSON.stringify(content.required_jobs) !== JSON.stringify(REQUIRED_CHECKS)) {
+    throw new Error("attestation JSON member does not join the selected attempt and workflow metadata");
+  }
+  const coverageContent = requireObject(content.coverage, "attestation member coverage");
+  if (coverageContent.outcome !== "success" || normalizeId(coverageContent.artifact_id, "attested coverage artifact id") !== coverageId ||
+      coverageContent.artifact_digest !== coverage.digest || coverageContent.artifact_url !== coverage.url) {
+    throw new Error("attestation coverage identity/digest does not join the API artifact");
+  }
+  validUtcTimestamp(receipt.collected_at_utc, "attestation.collected_at_utc");
+  requireArray(receipt.limitations, "attestation.limitations");
+  return receipt;
 }
 
 function validateReadiness(flags) {
@@ -754,7 +884,36 @@ function validateReadiness(flags) {
   const file = stage === "terminal" ? flags.record : flags.inputs;
   const record = readRecordFile(requireText(file, stage === "terminal" ? "--record" : "--inputs"), `readiness ${stage} record`);
   if (stage === "terminal") {
+    const inputs = readRecordFile(requireText(flags.inputs, "--inputs"), "frozen readiness inputs");
+    validateSharedRecord(inputs, sourceRoot, "inputs");
     const result = validateTerminal(record, sourceRoot);
+    const collectorReceipt = readRecordFile(requireText(flags.receipt, "--receipt"), "exact-source collector receipt");
+    validateCollectorReceipt(collectorReceipt, record.final_source.sha, record.issue.repository);
+    if (JSON.stringify(canonicalize(collectorReceipt)) !== JSON.stringify(canonicalize(record.attestation))) {
+      throw new Error("terminal record's attestation content differs from the explicit collector receipt");
+    }
+    const inputProjection = {
+      schema: inputs.schema,
+      cutoff: inputs.cutoff,
+      baseline: inputs.baseline,
+      important_workflows: inputs.important_workflows,
+      invalidators: inputs.invalidators,
+      findings: inputs.findings,
+      opportunities: inputs.opportunities,
+      preserved_history: inputs.preserved_history,
+      conditions: inputs.conditions.map(({ id, text }) => ({ id, text })),
+      issue: inputs.issue,
+      source_identities: inputs.source_identities,
+      delivery: inputs.delivery,
+      cleanup: inputs.cleanup,
+      tracked_inputs: inputs.tracked_inputs,
+      assumptions: inputs.assumptions,
+    };
+    const recordProjection = { ...inputProjection, ...Object.fromEntries(Object.keys(inputProjection).map((key) => [key, record[key]])) };
+    recordProjection.conditions = record.conditions.map(({ id, text }) => ({ id, text }));
+    if (JSON.stringify(canonicalize(inputProjection)) !== JSON.stringify(canonicalize(recordProjection))) {
+      throw new Error("terminal record changes frozen inputs or historical assumptions");
+    }
     const receipt = {
       result: "FACTUAL_ONLY_VALID",
       stage,
@@ -789,8 +948,9 @@ function verifyReadinessComment(flags) {
   const commentUrl = `repos/${repo}/issues/comments/${commentId}`;
   const commentPages = apiJson(`repos/${repo}/issues/${issue}/comments?per_page=100`, { paginate: true });
   const comments = flattenArrayPages(commentPages, "comment");
+  const authorityChecksum = crypto.createHash("sha256").update(JSON.stringify(canonicalize(record))).digest("hex");
   const authorityMatches = comments.filter((entry) =>
-    typeof entry.body === "string" && entry.body.includes(record.assessment_id));
+    typeof entry.body === "string" && (entry.body.includes(record.assessment_id) || entry.body.includes(`Record SHA-256: ${authorityChecksum}`)));
   if (authorityMatches.length !== 1 || normalizeId(authorityMatches[0].id, "readiness comment id") !== commentId) {
     throw new Error("readiness issue contains missing or duplicate terminal authority comments");
   }
@@ -848,8 +1008,8 @@ function help() {
   process.stdout.write(`  closeout [--branch NAME] [--sha SHA] [--push]\n`);
   process.stdout.write(`                                                Dispatch and verify exact-SHA closeout\n`);
   process.stdout.write(`  collect-readiness --repo OWNER/REPO --sha SHA --run ID --attempt N --output PATH\n`);
-  process.stdout.write(`  validate-readiness --stage draft|inputs|terminal --inputs PATH --source-root PATH [--record PATH]\n`);
-  process.stdout.write(`  verify-readiness-comment --repo OWNER/REPO --issue NUMBER --comment ID --record PATH --maintainer LOGIN\n`);
+  process.stdout.write(`  validate-readiness --stage draft|inputs|terminal --inputs PATH --source-root PATH [--receipt PATH --record PATH]\n`);
+  process.stdout.write(`  verify-readiness-comment --repo OWNER/REPO --issue NUMBER --comment ID --record PATH --maintainer LOGIN [--source-root PATH]\n`);
   process.stdout.write(`  protect [--branch NAME] [--apply]            Audit or reconcile required checks\n`);
 }
 
