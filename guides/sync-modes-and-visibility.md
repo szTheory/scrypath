@@ -8,7 +8,7 @@ Meilisearch makes this unavoidable: document writes, settings updates, deletes, 
 
 | Mode | Return boundary | What it does not mean |
 |------|-----------------|------------------------|
-| `:inline` | `:completed` when an applicable Meilisearch task wait reaches terminal success; otherwise `:accepted` | database and search writes are not atomic |
+| `:inline` | `:completed` when the backend returns a task handle and its wait reaches terminal success; otherwise `:accepted` | database and search writes are not atomic |
 | `:manual` | `:accepted` when the backend accepts work | the document may not be searchable yet |
 | `:oban` | `:accepted` when the durable enqueue succeeds | the backend write has not happened yet |
 
