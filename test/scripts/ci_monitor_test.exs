@@ -31,7 +31,7 @@ defmodule Scrypath.CIMonitorTest do
         outcome: "success",
         artifact_id: "10",
         artifact_url: "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/10",
-        artifact_digest: "sha256:" <> String.duplicate("a", 64)
+        artifact_digest: String.duplicate("a", 64)
       }
     }
 
@@ -58,6 +58,9 @@ defmodule Scrypath.CIMonitorTest do
     assert receipt["run_attempt"] == 2
     assert receipt["attestation_member"]["content"]["run_attempt"] == "2"
     assert receipt["attestation_archive"]["sha256"] == archive_sha
+
+    assert receipt["attestation_member"]["content"]["coverage"]["artifact_digest"] ==
+             String.duplicate("a", 64)
 
     assert receipt["attestation_member"]["sha256"] ==
              :crypto.hash(:sha256, Jason.encode!(attestation)) |> Base.encode16(case: :lower)
@@ -571,8 +574,8 @@ defmodule Scrypath.CIMonitorTest do
 
     coverage_digest =
       if layout == :coverage_digest,
-        do: "sha256:" <> String.duplicate("d", 64),
-        else: "sha256:" <> String.duplicate("a", 64)
+        do: String.duplicate("d", 64),
+        else: String.duplicate("a", 64)
 
     %{
       schema: 1,
@@ -1048,7 +1051,7 @@ defmodule Scrypath.CIMonitorTest do
       "ecommerce-mounted (required)"
     ]
 
-    coverage_digest = "sha256:" <> String.duplicate("a", 64)
+    coverage_digest = String.duplicate("a", 64)
     archive_digest = String.duplicate("b", 64)
     coverage_url = "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/10"
 
@@ -1097,7 +1100,7 @@ defmodule Scrypath.CIMonitorTest do
         id: "10",
         name: "coverage-report-#{@sha}",
         url: coverage_url,
-        digest: coverage_digest,
+        digest: "sha256:" <> coverage_digest,
         expires_at: "2026-10-07T00:00:00Z"
       },
       attestation_artifact: %{
