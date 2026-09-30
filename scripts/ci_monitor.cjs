@@ -4,6 +4,9 @@
 
 const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
+const crypto = require("node:crypto");
 
 const GH = process.env.GH_BIN || "gh";
 const GIT = process.env.GIT_BIN || "git";
@@ -14,6 +17,9 @@ const REQUIRED_CHECKS = [
   "backend (required)",
   "ecommerce-mounted (required)",
 ];
+const READINESS_JOBS = [...REQUIRED_CHECKS, "coverage (advisory)", "closeout-attestation"];
+const MAX_ATTESTATION_ARCHIVE_BYTES = 8 * 1024 * 1024;
+const MAX_ATTESTATION_MEMBER_BYTES = 1024 * 1024;
 
 function fail(message) {
   process.stderr.write(`ERROR: ${message}\n`);
@@ -23,10 +29,10 @@ function fail(message) {
 function run(bin, args, options = {}) {
   const result = spawnSync(bin, args, {
     cwd: options.cwd || process.cwd(),
-    encoding: "utf8",
+    encoding: options.encoding === null ? null : "utf8",
     env: process.env,
     input: options.input,
-    maxBuffer: 20 * 1024 * 1024,
+    maxBuffer: options.maxBuffer || 20 * 1024 * 1024,
   });
 
   if (result.error) {
@@ -34,7 +40,8 @@ function run(bin, args, options = {}) {
   }
 
   if (result.status !== 0 && !options.allowFailure) {
-    const detail = (result.stderr || result.stdout || "").trim();
+    const rawDetail = result.stderr || result.stdout || "";
+    const detail = (Buffer.isBuffer(rawDetail) ? rawDetail.toString("utf8") : rawDetail).trim();
     throw new Error(`${bin} ${args.join(" ")} failed (${result.status})${detail ? `: ${detail}` : ""}`);
   }
 
@@ -51,6 +58,276 @@ function json(bin, args) {
     return JSON.parse(text || "null");
   } catch (error) {
     throw new Error(`${bin} ${args.join(" ")} returned invalid JSON: ${error.message}`);
+  }
+}
+
+function jsonValue(bin, args) {
+  const text = output(bin, args);
+  try {
+    return JSON.parse(text || "null");
+  } catch (error) {
+    throw new Error(`${bin} ${args.join(" ")} returned invalid JSON: ${error.message}`);
+  }
+}
+
+function positiveInteger(value, label) {
+  const text = String(value ?? "");
+  if (!/^[1-9][0-9]*$/.test(text) || !Number.isSafeInteger(Number(text))) {
+    throw new Error(`${label} must be a positive safe integer`);
+  }
+  return Number(text);
+}
+
+function normalizeId(value, label) {
+  return String(positiveInteger(value, label));
+}
+
+function flattenPages(payload, key, label) {
+  const pages = Array.isArray(payload) ? payload : [payload];
+  const results = [];
+  for (const page of pages) {
+    if (!page || !Array.isArray(page[key])) {
+      throw new Error(`${label} pagination returned malformed JSON`);
+    }
+    results.push(...page[key]);
+  }
+  return results;
+}
+
+function apiJson(endpoint, { paginate = false } = {}) {
+  const args = ["api"];
+  if (paginate) args.push("--paginate", "--slurp");
+  args.push(endpoint);
+  return jsonValue(GH, args);
+}
+
+function requireExternalOutput(outputPath) {
+  if (!outputPath || typeof outputPath !== "string") {
+    throw new Error("--output must name a receipt file outside the source checkout");
+  }
+  const absolute = path.resolve(outputPath);
+  let ancestor = absolute;
+  const suffix = [];
+  while (!fs.existsSync(ancestor)) {
+    suffix.unshift(path.basename(ancestor));
+    ancestor = path.dirname(ancestor);
+  }
+  const resolved = path.join(fs.realpathSync(ancestor), ...suffix);
+  const checkout = fs.realpathSync(process.cwd());
+  if (resolved === checkout || resolved.startsWith(`${checkout}${path.sep}`)) {
+    throw new Error("--output must be outside the source checkout");
+  }
+  return resolved;
+}
+
+function requireArtifact(artifacts, name, repo, sha, runId) {
+  const matchingName = artifacts.filter((artifact) => artifact.name === name);
+  const live = matchingName.filter((artifact) => artifact.expired === false);
+  if (live.length !== 1 || matchingName.length !== 1) {
+    throw new Error(`expected exactly one live ${name} artifact for the selected run, found ${live.length}`);
+  }
+  const artifact = live[0];
+  if (!artifact.digest || !/^sha256:[0-9a-f]{64}$/.test(artifact.digest)) {
+    throw new Error(`${name} is missing a valid SHA-256 archive digest`);
+  }
+  if (!artifact.id || artifact.workflow_run?.head_sha !== sha ||
+      normalizeId(artifact.workflow_run?.id, `${name} workflow run id`) !== runId) {
+    throw new Error(`${name} is not bound to repository ${repo}, run ${runId}, and source SHA ${sha}`);
+  }
+  return artifact;
+}
+
+function requireSuccessfulAttemptJobs(jobs) {
+  const selected = [];
+  for (const name of READINESS_JOBS) {
+    const matches = jobs.filter((job) => job.name === name);
+    if (matches.length !== 1 || matches[0].conclusion !== "success" || matches[0].status !== "completed") {
+      throw new Error(`${name} must have exactly one successful job in the selected attempt`);
+    }
+    selected.push({
+      id: normalizeId(matches[0].id, `${name} job id`),
+      name,
+      status: matches[0].status,
+      conclusion: matches[0].conclusion,
+      ...(matches[0].html_url ? { url: matches[0].html_url } : {}),
+    });
+  }
+  return selected;
+}
+
+function requireAttestation(attestation, expected) {
+  if (!attestation || typeof attestation !== "object" || Array.isArray(attestation)) {
+    throw new Error("closeout attestation member must contain a JSON object");
+  }
+  const fields = [
+    ["schema", 1],
+    ["authority", "github-actions-exact-sha"],
+    ["repository", expected.repo],
+    ["run_id", expected.runId],
+    ["run_attempt", String(expected.attempt)],
+    ["event", "workflow_dispatch"],
+    ["head_sha", expected.sha],
+  ];
+  for (const [field, wanted] of fields) {
+    if (String(attestation[field]) !== String(wanted)) {
+      throw new Error(`closeout attestation ${field} does not match the requested source/run/attempt`);
+    }
+  }
+  if (!Array.isArray(attestation.required_jobs) ||
+      JSON.stringify(attestation.required_jobs) !== JSON.stringify(REQUIRED_CHECKS)) {
+    throw new Error("closeout attestation required_jobs does not match the required workflow jobs");
+  }
+  if (!attestation.coverage || attestation.coverage.outcome !== "success") {
+    throw new Error("closeout attestation coverage outcome must be success");
+  }
+  return attestation;
+}
+
+function downloadArchive(repo, artifactId, destination) {
+  const bytes = run(GH, ["api", `repos/${repo}/actions/artifacts/${artifactId}/zip`], {
+    encoding: null,
+    maxBuffer: MAX_ATTESTATION_ARCHIVE_BYTES + 1,
+  }).stdout;
+  if (!Buffer.isBuffer(bytes) || bytes.length === 0 || bytes.length > MAX_ATTESTATION_ARCHIVE_BYTES) {
+    throw new Error(`attestation archive is empty or exceeds ${MAX_ATTESTATION_ARCHIVE_BYTES} bytes`);
+  }
+  fs.writeFileSync(destination, bytes, { flag: "wx" });
+  return bytes;
+}
+
+function readAttestationMember(archivePath) {
+  const listing = run("unzip", ["-Z1", archivePath], { maxBuffer: MAX_ATTESTATION_MEMBER_BYTES }).stdout;
+  const members = listing.split(/\r?\n/).filter(Boolean);
+  if (members.length !== 1 || members[0] !== "closeout-attestation.json") {
+    throw new Error("attestation archive must contain only one closeout-attestation.json member; traversal and duplicate entries are rejected");
+  }
+  const member = run("unzip", ["-p", archivePath, "closeout-attestation.json"], {
+    encoding: null,
+    maxBuffer: MAX_ATTESTATION_MEMBER_BYTES + 1,
+  }).stdout;
+  if (!Buffer.isBuffer(member) || member.length === 0 || member.length > MAX_ATTESTATION_MEMBER_BYTES) {
+    throw new Error(`attestation JSON member is empty or exceeds ${MAX_ATTESTATION_MEMBER_BYTES} bytes`);
+  }
+  let content;
+  try {
+    content = JSON.parse(member.toString("utf8"));
+  } catch (error) {
+    throw new Error(`closeout attestation member is invalid JSON: ${error.message}`);
+  }
+  return {
+    name: members[0],
+    bytes: member,
+    content,
+  };
+}
+
+function collectReadiness(flags) {
+  const repo = flags.repo;
+  if (!repo || !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo)) {
+    throw new Error("--repo must be an explicit OWNER/REPO value");
+  }
+  const sha = flags.sha;
+  requireExactSha(sha);
+  const runId = normalizeId(flags.run, "--run");
+  const attempt = positiveInteger(flags.attempt, "--attempt");
+  const outputPath = requireExternalOutput(flags.output);
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "scrypath-readiness-"));
+  const archivePath = path.join(tempDir, "attestation.zip");
+
+  try {
+    const endpoint = `repos/${repo}/actions/runs/${runId}/attempts/${attempt}`;
+    const runInfo = apiJson(endpoint);
+    if (normalizeId(runInfo.id, "API run id") !== runId ||
+        positiveInteger(runInfo.run_attempt, "API run attempt") !== attempt) {
+      throw new Error("GitHub returned a different run or requested run attempt");
+    }
+    if (runInfo.head_sha !== sha) throw new Error(`requested source SHA ${sha} does not match run attempt source ${runInfo.head_sha}`);
+    if (runInfo.event !== "workflow_dispatch" || runInfo.status !== "completed" || runInfo.conclusion !== "success") {
+      throw new Error("selected workflow run attempt must be a successful completed workflow_dispatch");
+    }
+    if (runInfo.repository?.full_name !== repo || runInfo.head_repository?.full_name !== repo) {
+      throw new Error(`selected run attempt is not owned by requested repository ${repo}`);
+    }
+    const expectedRunUrl = `https://github.com/${repo}/actions/runs/${runId}`;
+    if (runInfo.html_url !== expectedRunUrl) {
+      throw new Error("selected run attempt is missing the expected public GitHub run URL");
+    }
+    const workflowId = normalizeId(runInfo.workflow_id, "workflow id");
+    const workflowInfo = apiJson(`repos/${repo}/actions/workflows/${workflowId}`);
+    if (workflowInfo.path !== ".github/workflows/ci.yml" || !workflowInfo.name) {
+      throw new Error("selected attempt does not belong to the CI workflow metadata");
+    }
+
+    const jobPages = apiJson(`repos/${repo}/actions/runs/${runId}/attempts/${attempt}/jobs?per_page=100`, { paginate: true });
+    const jobs = requireSuccessfulAttemptJobs(flattenPages(jobPages, "jobs", "job"));
+    const artifactPages = apiJson(`repos/${repo}/actions/runs/${runId}/artifacts?per_page=100`, { paginate: true });
+    const artifacts = flattenPages(artifactPages, "artifacts", "artifact");
+    const coverage = requireArtifact(artifacts, `coverage-report-${sha}`, repo, sha, runId);
+    const attestationArtifact = requireArtifact(artifacts, `closeout-attestation-${sha}`, repo, sha, runId);
+    const coverageId = normalizeId(coverage.id, "coverage artifact id");
+    const archiveBytes = downloadArchive(repo, normalizeId(attestationArtifact.id, "attestation artifact id"), archivePath);
+    const actualArchiveSha = crypto.createHash("sha256").update(archiveBytes).digest("hex");
+    if (attestationArtifact.digest !== `sha256:${actualArchiveSha}`) {
+      throw new Error("attestation archive digest does not match the GitHub artifact API digest");
+    }
+    const member = readAttestationMember(archivePath);
+    const attestation = requireAttestation(member.content, { repo, runId, attempt, sha });
+    if (normalizeId(attestation.coverage.artifact_id, "attested coverage artifact id") !== coverageId ||
+        attestation.coverage.artifact_digest !== coverage.digest ||
+        attestation.coverage.artifact_url !== coverage.url) {
+      throw new Error("closeout attestation coverage artifact identity/digest does not match GitHub artifact metadata");
+    }
+    if (attestation.workflow !== workflowInfo.name || attestation.run_url !== runInfo.html_url) {
+      throw new Error("closeout attestation workflow/run URL does not match API metadata");
+    }
+
+    const receipt = {
+      schema: 1,
+      authority: "github-actions-exact-sha",
+      repository: repo,
+      head_sha: sha,
+      source: { head_sha: sha },
+      workflow: { id: workflowId, name: workflowInfo.name, path: workflowInfo.path },
+      run_id: runId,
+      run_attempt: attempt,
+      run_url: runInfo.html_url,
+      event: runInfo.event,
+      status: runInfo.status,
+      conclusion: runInfo.conclusion,
+      created_at: runInfo.created_at,
+      updated_at: runInfo.updated_at,
+      jobs,
+      coverage_artifact: {
+        id: coverageId,
+        name: coverage.name,
+        url: coverage.url,
+        digest: coverage.digest,
+        expires_at: coverage.expires_at,
+      },
+      attestation_artifact: {
+        id: normalizeId(attestationArtifact.id, "attestation artifact id"),
+        name: attestationArtifact.name,
+        url: attestationArtifact.url,
+        digest: attestationArtifact.digest,
+        expires_at: attestationArtifact.expires_at,
+      },
+      attestation_archive: { sha256: actualArchiveSha },
+      attestation_member: {
+        name: member.name,
+        sha256: crypto.createHash("sha256").update(member.bytes).digest("hex"),
+        content: attestation,
+      },
+      collected_at_utc: new Date().toISOString(),
+      limitations: [
+        "This receipt joins GitHub run, attempt, job, artifact, archive, and attestation facts; it does not decide semantic readiness or maintainer approval.",
+        "GitHub artifact availability and API facts can expire or change; retain this receipt with the dated assessment.",
+      ],
+    };
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    fs.writeFileSync(outputPath, `${JSON.stringify(receipt, null, 2)}\n`, { flag: "wx" });
+    process.stdout.write(`${JSON.stringify(receipt, null, 2)}\n`);
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
   }
 }
 
@@ -96,6 +373,7 @@ function help() {
   process.stdout.write(`  wait-for RUN_ID JOB --keyword TEXT         Wait for a job log marker\n`);
   process.stdout.write(`  closeout [--branch NAME] [--sha SHA] [--push]\n`);
   process.stdout.write(`                                                Dispatch and verify exact-SHA closeout\n`);
+  process.stdout.write(`  collect-readiness --repo OWNER/REPO --sha SHA --run ID --attempt N --output PATH\n`);
   process.stdout.write(`  protect [--branch NAME] [--apply]            Audit or reconcile required checks\n`);
 }
 
@@ -330,6 +608,9 @@ function main() {
       }
       case "closeout":
         closeout(flags);
+        break;
+      case "collect-readiness":
+        collectReadiness(flags);
         break;
       case "protect":
         protect(flags);

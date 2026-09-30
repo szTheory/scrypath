@@ -4,14 +4,101 @@ defmodule Scrypath.CIMonitorTest do
   @script "scripts/ci_monitor.cjs"
   @sha "0123456789abcdef0123456789abcdef01234567"
 
+  @tag readiness_tracer: true
+  test "collect-readiness joins one explicit successful attempt to its real hashed attestation archive", ctx do
+    archive_dir = Path.join(ctx.root, "archive")
+    File.mkdir_p!(archive_dir)
+
+    attestation = %{
+      schema: 1,
+      authority: "github-actions-exact-sha",
+      repository: "szTheory/scrypath",
+      workflow: "CI",
+      run_id: "123",
+      run_attempt: "2",
+      run_url: "https://github.com/szTheory/scrypath/actions/runs/123",
+      event: "workflow_dispatch",
+      head_sha: @sha,
+      required_jobs: [
+        "core (required)",
+        "package (required)",
+        "repository-contracts (required)",
+        "backend (required)",
+        "ecommerce-mounted (required)"
+      ],
+      coverage: %{
+        outcome: "success",
+        artifact_id: "10",
+        artifact_url: "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/10",
+        artifact_digest: "sha256:" <> String.duplicate("a", 64)
+      }
+    }
+
+    attestation_path = Path.join(archive_dir, "closeout-attestation.json")
+    File.write!(attestation_path, Jason.encode!(attestation))
+
+    archive_path = Path.join(ctx.root, "fixture.zip")
+    {zip_output, 0} = System.cmd("zip", ["-q", archive_path, "closeout-attestation.json"], cd: archive_dir)
+    _ = zip_output
+    archive_bytes = File.read!(archive_path)
+    archive_sha = :crypto.hash(:sha256, archive_bytes) |> Base.encode16(case: :lower)
+    File.write!(ctx.archive, archive_bytes)
+    File.write!(ctx.attestation, Jason.encode!(attestation))
+
+    {output, 0} = run_collect_readiness(ctx, archive_sha, "success")
+    receipt = Jason.decode!(output)
+
+    assert receipt["repository"] == "szTheory/scrypath"
+    assert receipt["head_sha"] == @sha
+    assert receipt["run_id"] == "123"
+    assert receipt["run_attempt"] == 2
+    assert receipt["attestation_member"]["content"]["run_attempt"] == "2"
+    assert receipt["attestation_archive"]["sha256"] == archive_sha
+    assert receipt["attestation_member"]["sha256"] ==
+             (:crypto.hash(:sha256, Jason.encode!(attestation)) |> Base.encode16(case: :lower))
+    assert receipt["jobs"] |> Enum.map(& &1["name"]) |> Enum.sort() ==
+             [
+               "core (required)",
+               "package (required)",
+               "repository-contracts (required)",
+               "backend (required)",
+               "ecommerce-mounted (required)",
+               "coverage (advisory)",
+               "closeout-attestation"
+             ]
+             |> Enum.sort()
+    assert receipt["coverage_artifact"]["id"] == "10"
+    assert receipt["limitations"] != []
+    calls = File.read!(ctx.calls)
+    refute calls =~ "workflow run"
+    refute calls =~ "--method"
+    refute calls =~ "/protection/"
+  end
+
+  @tag readiness_tracer: true
+  test "collect-readiness rejects source, attempt, and archive-byte mismatches", ctx do
+    for {scenario, expected} <- [
+          {"wrong_sha", "requested source SHA"},
+          {"wrong_attempt", "requested run attempt"},
+          {"changed_archive", "attestation archive digest"}
+        ] do
+      {output, status} = run_collect_readiness(ctx, String.duplicate("a", 64), scenario)
+      assert status != 0
+      assert output =~ expected
+    end
+  end
+
   setup do
     root =
       Path.join(System.tmp_dir!(), "scrypath-ci-monitor-#{System.unique_integer([:positive])}")
 
     File.mkdir_p!(root)
     state = Path.join(root, "state")
+    calls = Path.join(root, "calls")
     gh = Path.join(root, "gh")
     git = Path.join(root, "git")
+    archive = Path.join(root, "attestation.zip")
+    attestation = Path.join(root, "attestation.json")
 
     File.write!(gh, fake_gh())
     File.write!(git, fake_git())
@@ -19,7 +106,7 @@ defmodule Scrypath.CIMonitorTest do
     File.chmod!(git, 0o755)
 
     on_exit(fn -> File.rm_rf!(root) end)
-    %{gh: gh, git: git, state: state}
+    %{root: root, gh: gh, git: git, state: state, calls: calls, archive: archive, attestation: attestation}
   end
 
   test "closeout accepts only the newly dispatched exact-SHA run and both artifacts", ctx do
@@ -101,6 +188,38 @@ defmodule Scrypath.CIMonitorTest do
     )
   end
 
+  defp run_collect_readiness(ctx, archive_sha, scenario) do
+    System.cmd(
+      System.find_executable("node") || "node",
+      [
+        @script,
+        "collect-readiness",
+        "--repo",
+        "szTheory/scrypath",
+        "--sha",
+        @sha,
+        "--run",
+        "123",
+        "--attempt",
+        "2",
+        "--output",
+        Path.join(ctx.root, "receipt.json")
+      ],
+      env: [
+        {"GH_BIN", ctx.gh},
+        {"GIT_BIN", ctx.git},
+        {"FAKE_STATE", ctx.state},
+        {"FAKE_SCENARIO", scenario},
+        {"FAKE_SHA", @sha},
+        {"FAKE_ARCHIVE", ctx.archive},
+        {"FAKE_ATTESTATION", ctx.attestation},
+        {"FAKE_ARCHIVE_SHA", archive_sha},
+        {"FAKE_CALLS", ctx.calls}
+      ],
+      stderr_to_stdout: true
+    )
+  end
+
   defp fake_git do
     ~S"""
     #!/bin/sh
@@ -118,6 +237,7 @@ defmodule Scrypath.CIMonitorTest do
     ~S"""
     #!/bin/sh
     command="$1 $2"
+    if [ -n "$FAKE_CALLS" ]; then printf '%s\n' "$*" >> "$FAKE_CALLS"; fi
     if [ "$command" = "auth status" ]; then exit 0; fi
     if [ "$command" = "repo view" ]; then printf '%s\n' 'szTheory/scrypath'; exit 0; fi
     if [ "$command" = "workflow run" ]; then touch "$FAKE_STATE"; exit 0; fi
@@ -146,6 +266,34 @@ defmodule Scrypath.CIMonitorTest do
           exit 0
           ;;
       esac
+      if [ -n "$FAKE_ARCHIVE" ]; then
+      case "$*" in
+        *'/actions/artifacts/2/zip'*)
+          if [ "$FAKE_SCENARIO" = "changed_archive" ]; then printf '%s' 'changed-bytes'; else cat "$FAKE_ARCHIVE"; fi
+          exit 0
+          ;;
+        *'/actions/workflows/77'*)
+          printf '%s\n' '{"id":77,"name":"CI","path":".github/workflows/ci.yml"}'
+          exit 0
+          ;;
+        *'/attempts/2/jobs?'*)
+          printf '%s\n' '[{"jobs":[{"id":201,"name":"core (required)","status":"completed","conclusion":"success"},{"id":202,"name":"package (required)","status":"completed","conclusion":"success"},{"id":203,"name":"repository-contracts (required)","status":"completed","conclusion":"success"},{"id":204,"name":"backend (required)","status":"completed","conclusion":"success"},{"id":205,"name":"ecommerce-mounted (required)","status":"completed","conclusion":"success"},{"id":206,"name":"coverage (advisory)","status":"completed","conclusion":"success"},{"id":207,"name":"closeout-attestation","status":"completed","conclusion":"success"}]}]'
+          exit 0
+          ;;
+        *'/runs/123/artifacts?'*)
+          printf '[{"artifacts":[{"id":10,"name":"coverage-report-%s","url":"https://api.github.com/repos/szTheory/scrypath/actions/artifacts/10","expired":false,"digest":"sha256:%s","expires_at":"2026-10-07T00:00:00Z","workflow_run":{"id":123,"head_sha":"%s"}},{"id":2,"name":"closeout-attestation-%s","url":"https://api.github.com/repos/szTheory/scrypath/actions/artifacts/2","expired":false,"digest":"sha256:%s","expires_at":"2026-10-07T00:00:00Z","workflow_run":{"id":123,"head_sha":"%s"}}]}]\n' "$FAKE_SHA" "$(printf '%064d' 0 | tr '0' 'a')" "$FAKE_SHA" "$FAKE_SHA" "$FAKE_ARCHIVE_SHA" "$FAKE_SHA"
+          exit 0
+          ;;
+        *'/runs/123/attempts/2'*)
+          sha="$FAKE_SHA"
+          attempt=2
+          if [ "$FAKE_SCENARIO" = "wrong_sha" ]; then sha=ffffffffffffffffffffffffffffffffffffffff; fi
+          if [ "$FAKE_SCENARIO" = "wrong_attempt" ]; then attempt=3; fi
+          printf '{"id":123,"run_attempt":%s,"workflow_id":77,"head_sha":"%s","event":"workflow_dispatch","status":"completed","conclusion":"success","html_url":"https://github.com/szTheory/scrypath/actions/runs/123","created_at":"2026-09-30T00:00:00Z","updated_at":"2026-09-30T00:01:00Z","repository":{"full_name":"szTheory/scrypath"},"head_repository":{"full_name":"szTheory/scrypath"}}\n' "$attempt" "$sha"
+          exit 0
+          ;;
+      esac
+      fi
       case "$2" in
         *'/jobs?'*)
           backend=success
