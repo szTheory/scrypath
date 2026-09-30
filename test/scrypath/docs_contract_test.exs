@@ -270,6 +270,7 @@ defmodule Scrypath.DocsContractTest do
     assert length(Regex.scan(~r/^## What Scrypath is opinionated about$/m, public_jtbd)) == 1
     assert length(Regex.scan(~r/^## Where to go next$/m, public_jtbd)) == 1
     refute String.contains?(public_jtbd, "## What to read next")
+
     assert_contains_all(public_jtbd, [
       "golden-path.md",
       "getting-started.md",
@@ -844,11 +845,13 @@ defmodule Scrypath.DocsContractTest do
       "https://hexdocs.pm/scrypath/Scrypath.html#sync_record/3",
       "accepted work may not yet be visible in search"
     ])
+
     assert_contains_all(api, [
       "**`:status` `:accepted`**",
       "**`:status` `:completed`**",
       "when `sync_mode: :inline` and the backend returned a task handle"
     ])
+
     assert_contains_all(guide, [
       "| Mode | Return boundary |",
       "otherwise `:accepted`",

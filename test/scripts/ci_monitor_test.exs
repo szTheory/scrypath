@@ -237,6 +237,7 @@ defmodule Scrypath.CIMonitorTest do
     assert output =~ "24 unique baseline claim IDs"
 
     record = readiness_record(source, "inputs")
+
     record = %{
       record
       | preserved_history:
@@ -279,9 +280,15 @@ defmodule Scrypath.CIMonitorTest do
 
     [first_condition | remaining_conditions] = record.conditions
     malicious_url = "https://github.com/szTheory/scrypath/compare/main...candidate?note=)"
+
     malicious_condition = %{
       first_condition
-      | evidence: [%{url: malicious_url, label: "][click](https://evil.example) <img src=x onerror=alert(1)>"}],
+      | evidence: [
+          %{
+            url: malicious_url,
+            label: "][click](https://evil.example) <img src=x onerror=alert(1)>"
+          }
+        ],
         rationale: "[forged](https://evil.example) <script>alert(1)</script>\n| fake cell",
         limits: "`code` _emphasis_"
     }
@@ -938,10 +945,12 @@ defmodule Scrypath.CIMonitorTest do
         number: 123,
         url: "https://github.com/szTheory/scrypath/issues/123",
         proposed_title: "Test readiness issue",
-        proposed_body_sha256: :crypto.hash(:sha256, "Terminal decision fixture.") |> Base.encode16(case: :lower),
+        proposed_body_sha256:
+          :crypto.hash(:sha256, "Terminal decision fixture.") |> Base.encode16(case: :lower),
         title: "Test readiness issue",
         author_login: "maintainer",
-        published_body_sha256: :crypto.hash(:sha256, "Terminal decision fixture.") |> Base.encode16(case: :lower),
+        published_body_sha256:
+          :crypto.hash(:sha256, "Terminal decision fixture.") |> Base.encode16(case: :lower),
         created_at: "2026-09-30T12:00:00Z",
         approval_provenance: "Explicit fixture authorization."
       },
