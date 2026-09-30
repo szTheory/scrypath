@@ -10,7 +10,9 @@ Meilisearch makes this unavoidable: document writes, settings updates, deletes, 
 |------|-----------------|------------------------|
 | `:inline` | `:completed` when the backend returns a task handle and its wait reaches terminal success; otherwise `:accepted` | database and search writes are not atomic |
 | `:manual` | `:accepted` when the backend accepts work | the document may not be searchable yet |
-| `:oban` | `:accepted` when the durable enqueue succeeds | the backend write has not happened yet |
+| `:oban` | the enqueue is durable | the backend write has not happened yet |
+
+For `:oban`, the successful return status is `:accepted` when the durable enqueue succeeds; the backend write has not happened yet.
 
 The exact successful map fields and conditional `:accepted` / `:completed` contract are documented on [**`Scrypath.sync_record/3`**](https://hexdocs.pm/scrypath/Scrypath.html#sync_record/3).
 

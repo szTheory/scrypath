@@ -48,7 +48,10 @@ const BASELINE_CLAIM_DIMENSIONS = {
 };
 const REQUIRED_ASSUMPTIONS = Array.from({ length: 7 }, (_, index) => `EA-167-${String(index + 1).padStart(2, "0")}`);
 const BASELINE_PATH = ".planning/milestones/v1.39-phases/162-whole-product-evidence-baseline/162-BASELINE.md";
+const FINDINGS_PATH = ".planning/milestones/v1.39-phases/163-findings-and-bounded-follow-up/163-FINDINGS.md";
+const ASSESSMENT_PATH = ".planning/milestones/v1.40-phases/167-dated-readiness-and-closeout/167-ASSESSMENT.md";
 const AUTHORITY_PATH = ".planning/reference/PRE-OPERATOR-UI-READINESS.md";
+const AUTHORITY_HEADING = "## Phase 164 dated assessment";
 const HISTORICAL_ARCHIVE_PATH = ".planning/milestones/v1.39-phases/164-readiness-gate-and-reconciliation";
 
 function fail(message) {
@@ -511,7 +514,16 @@ function evidenceReference(value, sourceRoot, label) {
 }
 
 function markdownCell(value) {
-  return String(value).replace(/\|/g, "\\|").replace(/[\r\n]+/g, " ");
+  return String(value)
+    .replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, " ")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/[\\`*_{}\[\]()!|]/g, (character) => `\\${character}`);
+}
+
+function markdownLinkDestination(value) {
+  return new URL(value).href.replace(/[()]/g, (character) => character === "(" ? "%28" : "%29");
 }
 
 function historicalScope(bytes, scope, heading, label) {
@@ -545,11 +557,22 @@ function verifyPreservedHistory(record, sourceRoot) {
       throw new Error(`preserved historical bytes differ from Git source: ${relative}`);
     }
   }
-  if (!seen.has(AUTHORITY_PATH) || !seen.has(BASELINE_PATH)) {
-    throw new Error("preserved_history must pin the readiness authority and Phase 162 baseline bytes");
+  for (const requiredPath of [BASELINE_PATH, FINDINGS_PATH, ASSESSMENT_PATH]) {
+    const pin = entries.find((entry) => entry.path === requiredPath);
+    if (!pin || pin.scope !== "whole_file") {
+      throw new Error(`preserved_history must pin ${requiredPath} as original whole-file bytes`);
+    }
   }
-  const archiveSource = entries.find((entry) => entry.path.startsWith(`${HISTORICAL_ARCHIVE_PATH}/`))?.git_source;
+  const authorityPin = entries.find((entry) => entry.path === AUTHORITY_PATH);
+  if (!authorityPin || authorityPin.scope !== "named_suffix" || authorityPin.heading !== AUTHORITY_HEADING) {
+    throw new Error("preserved_history must pin the live readiness authority suffix at the Phase 164 assessment heading");
+  }
+  const archiveEntries = entries.filter((entry) => entry.path.startsWith(`${HISTORICAL_ARCHIVE_PATH}/`));
+  const archiveSource = archiveEntries[0]?.git_source;
   if (!archiveSource) throw new Error("preserved_history must include every archived Phase 164 file");
+  if (archiveEntries.some((entry) => entry.scope !== "whole_file" || entry.git_source !== archiveSource)) {
+    throw new Error("every Phase 164 archive pin must use whole-file bytes from the same source commit");
+  }
   const tracked = run("git", ["-C", sourceRoot, "ls-tree", "-r", "--name-only", archiveSource, "--", HISTORICAL_ARCHIVE_PATH]).stdout
     .split(/\r?\n/).filter(Boolean).sort();
   const pinned = [...seen].filter((relative) => relative.startsWith(`${HISTORICAL_ARCHIVE_PATH}/`)).sort();
@@ -570,9 +593,12 @@ function validatePinnedBaseline(record, sourceRoot) {
     throw new Error("Phase 162 baseline must contain the approved 24 unique C-ID/dimension pairs");
   }
   const baseline = requireObject(record.baseline, "baseline");
+  rejectUnknownKeys(baseline, ["dimensions", "claims"], "baseline");
   const dimensions = requireArray(baseline.dimensions, "baseline.dimensions");
-  if (dimensions.length !== 7 || dimensions.some((dimension, index) =>
-    dimension.id !== index + 1 || dimension.name !== BASELINE_DIMENSIONS[index])) {
+  if (dimensions.length !== 7 || dimensions.some((dimension, index) => {
+    rejectUnknownKeys(dimension, ["id", "name"], `baseline.dimensions[${index}]`);
+    return dimension.id !== index + 1 || dimension.name !== BASELINE_DIMENSIONS[index];
+  })) {
     throw new Error("baseline.dimensions must contain the seven unchanged dimension IDs and texts");
   }
   const claims = requireArray(baseline.claims, "baseline.claims");
@@ -582,8 +608,13 @@ function validatePinnedBaseline(record, sourceRoot) {
   }
   for (const [index, claimValue] of claims.entries()) {
     const claim = requireObject(claimValue, `baseline.claims[${index}]`);
+    rejectUnknownKeys(claim, [
+      "id", "dimension_id", "claim", "source", "evidence_date", "assessment_date", "relevant_paths",
+      "comparison", "disposition", "limits", "baseline_freshness", "named_invalidator",
+    ], `baseline.claims[${index}]`);
     const id = claim.id;
     if (claim.dimension_id !== observed[id]) throw new Error(`${id} dimension_id differs from the pinned Phase 162 baseline`);
+    requireText(claim.claim, `${id}.claim`);
     requireText(claim.source, `${id}.source`);
     const evidenceDate = validIsoDate(claim.evidence_date, `${id}.evidence_date`);
     const assessmentDate = validIsoDate(claim.assessment_date, `${id}.assessment_date`);
@@ -592,6 +623,7 @@ function validatePinnedBaseline(record, sourceRoot) {
     }
     for (const [pathIndex, pathEntryValue] of requireArray(claim.relevant_paths, `${id}.relevant_paths`).entries()) {
       const pathEntry = typeof pathEntryValue === "string" ? { path: pathEntryValue, disposition: "current" } : requireObject(pathEntryValue, `${id}.relevant_paths[${pathIndex}]`);
+      rejectUnknownKeys(pathEntry, ["path", "disposition"], `${id}.relevant_paths[${pathIndex}]`);
       const relative = safeRelativePath(pathEntry.path, `${id}.relevant_paths[${pathIndex}].path`);
       const disposition = requireText(pathEntry.disposition, `${id}.relevant_paths[${pathIndex}].disposition`);
       try {
@@ -603,6 +635,8 @@ function validatePinnedBaseline(record, sourceRoot) {
     requireText(claim.comparison, `${id}.comparison`);
     requireText(claim.disposition, `${id}.disposition`);
     requireText(claim.limits, `${id}.limits`);
+    requireText(claim.baseline_freshness, `${id}.baseline_freshness`);
+    requireText(claim.named_invalidator, `${id}.named_invalidator`);
   }
 }
 
@@ -618,22 +652,54 @@ function validateSharedRecord(record, sourceRoot, stage) {
   validUtcTimestamp(record.cutoff, "cutoff");
   validatePinnedBaseline(record, sourceRoot);
   const workflows = requireArray(record.important_workflows, "important_workflows");
+  const workflowIds = new Set();
+  const knownClaims = new Set(Object.keys(BASELINE_CLAIM_DIMENSIONS));
   for (const [index, workflowValue] of workflows.entries()) {
     const workflow = requireObject(workflowValue, `important_workflows[${index}]`);
-    requireText(workflow.id, `important_workflows[${index}].id`);
+    rejectUnknownKeys(workflow, ["id", "description", "claims", "evidence", "supports", "limits"], `important_workflows[${index}]`);
+    const id = requireText(workflow.id, `important_workflows[${index}].id`);
+    if (workflowIds.has(id)) throw new Error(`duplicate important workflow id ${id}`);
+    workflowIds.add(id);
     requireText(workflow.description, `important_workflows[${index}].description`);
     const claims = requireArray(workflow.claims, `important_workflows[${index}].claims`);
-    if (claims.some((id) => !Object.hasOwn(BASELINE_CLAIM_DIMENSIONS, id))) throw new Error(`important_workflows[${index}] references an unknown claim`);
+    if (new Set(claims).size !== claims.length || claims.some((claimId) => !knownClaims.has(claimId))) {
+      throw new Error(`important_workflows[${index}] must reference unique known claims`);
+    }
+    const evidence = requireArray(workflow.evidence, `important_workflows[${index}].evidence`);
+    evidence.forEach((item, itemIndex) => requireText(item, `important_workflows[${index}].evidence[${itemIndex}]`));
+    requireText(workflow.supports, `important_workflows[${index}].supports`);
+    requireText(workflow.limits, `important_workflows[${index}].limits`);
   }
   for (const field of ["invalidators", "findings", "opportunities", "tracked_inputs"]) {
     requireArray(record[field], field, { min: field === "findings" || field === "opportunities" ? 0 : 1 });
   }
+  const invalidatorIds = new Set();
   for (const [index, invalidatorValue] of record.invalidators.entries()) {
     const invalidator = requireObject(invalidatorValue, `invalidators[${index}]`);
-    requireText(invalidator.id, `invalidators[${index}].id`);
+    rejectUnknownKeys(invalidator, ["id", "path", "claims", "reason"], `invalidators[${index}]`);
+    const id = requireText(invalidator.id, `invalidators[${index}].id`);
+    if (invalidatorIds.has(id)) throw new Error(`duplicate invalidator id ${id}`);
+    invalidatorIds.add(id);
     safeRelativePath(invalidator.path, `invalidators[${index}].path`);
+    const claims = requireArray(invalidator.claims, `invalidators[${index}].claims`);
+    if (new Set(claims).size !== claims.length || claims.some((claimId) => !knownClaims.has(claimId))) {
+      throw new Error(`invalidators[${index}] must reference unique known claims`);
+    }
     requireText(invalidator.reason, `invalidators[${index}].reason`);
   }
+  const opportunityIds = new Set();
+  record.opportunities.forEach((opportunityValue, index) => {
+    const opportunity = requireObject(opportunityValue, `opportunities[${index}]`);
+    rejectUnknownKeys(opportunity, ["id", "claims", "disposition"], `opportunities[${index}]`);
+    const id = requireText(opportunity.id, `opportunities[${index}].id`);
+    if (opportunityIds.has(id)) throw new Error(`duplicate opportunity id ${id}`);
+    opportunityIds.add(id);
+    const claims = requireArray(opportunity.claims, `opportunities[${index}].claims`);
+    if (new Set(claims).size !== claims.length || claims.some((claimId) => !knownClaims.has(claimId))) {
+      throw new Error(`opportunities[${index}] must reference unique known claims`);
+    }
+    requireText(opportunity.disposition, `opportunities[${index}].disposition`);
+  });
   for (const [index, trackedValue] of record.tracked_inputs.entries()) {
     const tracked = requireObject(trackedValue, `tracked_inputs[${index}]`);
     const relative = safeRelativePath(tracked.path, `tracked_inputs[${index}].path`);
@@ -664,14 +730,34 @@ function validateSharedRecord(record, sourceRoot, stage) {
   }
   const issue = requireObject(record.issue, "issue");
   const issueRepo = requireText(issue.repository, "issue.repository");
+  if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(issueRepo)) throw new Error("issue.repository must be OWNER/REPO");
   if (stage === "draft" && issue.status === "pending") {
     requireText(issue.reason, "issue.reason");
   } else {
+    if (!['created', 'selected'].includes(issue.status)) throw new Error("inputs require an actually created or selected dedicated issue");
     const issueNumber = positiveInteger(issue.number, "issue.number");
     const expectedIssueUrl = `https://github.com/${issueRepo}/issues/${issueNumber}`;
     if (issue.url !== expectedIssueUrl) throw new Error("issue URL must be the public GitHub issue URL for its repository and number");
     const remote = apiJson(`repos/${issueRepo}/issues/${issueNumber}`);
     if (remote.number !== issueNumber || remote.html_url !== expectedIssueUrl) throw new Error("readiness issue pointer is not discoverable at the supplied GitHub URL");
+    const title = requireText(issue.title, "issue.title");
+    const author = requireText(issue.author_login, "issue.author_login");
+    const bodyHash = requireText(issue.published_body_sha256, "issue.published_body_sha256");
+    if (!/^[0-9a-f]{64}$/.test(bodyHash) || typeof remote.body !== "string" ||
+        remote.title !== title || remote.user?.login !== author ||
+        crypto.createHash("sha256").update(remote.body).digest("hex") !== bodyHash) {
+      throw new Error("readiness issue title, author, or published body does not match the pinned public identity");
+    }
+    if (issue.created_at !== undefined && remote.created_at !== issue.created_at) {
+      throw new Error("readiness issue creation timestamp differs from the public issue");
+    }
+    if (issue.proposed_title !== undefined && issue.status === "created" && issue.proposed_title !== title) {
+      throw new Error("created readiness issue title differs from the approved proposal");
+    }
+    if (issue.proposed_body_sha256 !== undefined && issue.status === "created" && issue.proposed_body_sha256 !== bodyHash) {
+      throw new Error("created readiness issue body differs from the approved proposal digest");
+    }
+    if (issue.status === "created") requireText(issue.approval_provenance, "issue.approval_provenance");
   }
   const identities = requireObject(record.source_identities, "source_identities");
   for (const identity of ["candidate", "squash_main", "final_planning_source", "local_artifact", "published"]) {
@@ -720,39 +806,39 @@ function renderTerminal(record) {
       const evidence = condition.evidence.map((entry) => {
         const url = typeof entry === "string" && entry.startsWith("https://") ? entry : (entry?.url || null);
         const label = typeof entry === "string" ? entry : (entry?.label || entry?.path || entry?.url);
-        return url ? `[${markdownCell(label)}](${url})` : markdownCell(label);
+        return url ? `[${markdownCell(label)}](${markdownLinkDestination(url)})` : markdownCell(label);
       }).join("; ");
-      return `| ${condition.id} | ${condition.status} | ${condition.evidence_date} | ${markdownCell(evidence)} | ${markdownCell(condition.rationale)} | ${markdownCell(condition.limits)} |`;
+      return `| ${condition.id} | ${condition.status} | ${condition.evidence_date} | ${evidence} | ${markdownCell(condition.rationale)} | ${markdownCell(condition.limits)} |`;
     });
   const receipt = record.attestation;
   const lines = [
-    `# ${record.assessment_id}`,
+    `# ${markdownCell(record.assessment_id)}`,
     "",
-    `- Assessment date: ${record.assessed_at_utc}`,
+    `- Assessment date: ${markdownCell(record.assessed_at_utc)}`,
     `- Decision supplied by @${record.maintainer.login}: **${record.decision}**`,
-    `- Decision provenance: ${record.maintainer.decision_provenance}`,
-    `- Final planning source: ${record.final_source.sha}`,
-    `- Candidate source: ${record.source_identities.candidate.sha}; squash-main source: ${record.source_identities.squash_main.sha}; local artifact: ${record.source_identities.local_artifact.sha}.`,
-    `- Published identity: ${record.source_identities.published.version} / ${record.source_identities.published.tag} / ${record.source_identities.published.sha}.`,
-    `- Exact-source receipt: ${receipt.repository} run ${receipt.run_id}, attempt ${receipt.run_attempt}, source ${receipt.head_sha}.`,
-    `- Coverage artifact ${receipt.coverage_artifact.id} (${receipt.coverage_artifact.digest}); attestation artifact ${receipt.attestation_artifact.id} (${receipt.attestation_artifact.digest}).`,
-    `- Delivery: ${record.delivery_identity.disposition}; release ${record.delivery_identity.release}; package ${record.delivery_identity.package}.`,
-    ...(record.correction ? [`- Correction: supersedes ${record.correction.supersedes_assessment_id}; ${record.correction.corrected_at_utc}. ${record.correction.reason}`] : []),
+    `- Decision provenance: ${markdownCell(record.maintainer.decision_provenance)}`,
+    `- Final planning source: ${markdownCell(record.final_source.sha)}`,
+    `- Candidate source: ${markdownCell(record.source_identities.candidate.sha)}; squash-main source: ${markdownCell(record.source_identities.squash_main.sha)}; local artifact: ${markdownCell(record.source_identities.local_artifact.sha)}.`,
+    `- Published identity: ${markdownCell(record.source_identities.published.version)} / ${markdownCell(record.source_identities.published.tag)} / ${markdownCell(record.source_identities.published.sha)}.`,
+    `- Exact-source receipt: ${markdownCell(receipt.repository)} run ${markdownCell(receipt.run_id)}, attempt ${markdownCell(receipt.run_attempt)}, source ${markdownCell(receipt.head_sha)}.`,
+    `- Coverage artifact ${markdownCell(receipt.coverage_artifact.id)} (${markdownCell(receipt.coverage_artifact.digest)}); attestation artifact ${markdownCell(receipt.attestation_artifact.id)} (${markdownCell(receipt.attestation_artifact.digest)}).`,
+    `- Delivery: ${markdownCell(record.delivery_identity.disposition)}; release ${markdownCell(record.delivery_identity.release)}; package ${markdownCell(record.delivery_identity.package)}.`,
+    ...(record.correction ? [`- Correction: supersedes ${markdownCell(record.correction.supersedes_assessment_id)}; ${markdownCell(record.correction.corrected_at_utc)}. ${markdownCell(record.correction.reason)}`] : []),
     "",
     "| Condition | Supplied status | Evidence date | Evidence | Rationale | Limits |",
     "| --- | --- | --- | --- | --- | --- |",
     ...judgments,
     "",
     "## Blockers",
-    ...record.blockers.map((item) => `- ${item}`),
+    ...record.blockers.map((item) => `- ${markdownCell(item)}`),
     "",
     "## Revisit triggers",
-    ...record.revisit_triggers.map((item) => `- ${item}`),
+    ...record.revisit_triggers.map((item) => `- ${markdownCell(item)}`),
     "",
     "## Inherited unresolved assumptions",
     ...[...record.assumptions].sort((left, right) => String(left.id).localeCompare(String(right.id), undefined, { numeric: true }))
       .filter((assumption) => REQUIRED_ASSUMPTIONS.includes(assumption.id))
-      .map((assumption) => `- ${assumption.id} (unresolved): ${assumption.reason}`),
+      .map((assumption) => `- ${assumption.id} (unresolved): ${markdownCell(assumption.reason)}`),
     "",
     `Record SHA-256: ${checksum}`,
   ];

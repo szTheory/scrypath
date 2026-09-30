@@ -852,6 +852,7 @@ defmodule Scrypath.DocsContractTest do
     assert_contains_all(guide, [
       "| Mode | Return boundary |",
       "otherwise `:accepted`",
+      "For `:oban`, the successful return status is `:accepted` when the durable enqueue succeeds",
       "exact successful map fields",
       "https://hexdocs.pm/scrypath/Scrypath.html#sync_record/3"
     ])

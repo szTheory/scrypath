@@ -187,6 +187,11 @@ defmodule Scrypath.CIMonitorTest do
     assert payload["stage"] == "inputs"
     assert payload["semantic_decision"] == nil
     assert File.read!(ctx.calls) =~ "repos/szTheory/scrypath/issues/123"
+
+    record = %{record | issue: %{record.issue | title: "Different issue"}}
+    {output, status} = run_validate_readiness(ctx, source.root, record, "inputs")
+    assert status != 0
+    assert output =~ "title, author, or published body"
   end
 
   test "validate-readiness accepts explicitly pending delivery with its next action", ctx do
@@ -232,6 +237,17 @@ defmodule Scrypath.CIMonitorTest do
     assert output =~ "24 unique baseline claim IDs"
 
     record = readiness_record(source, "inputs")
+    record = %{
+      record
+      | preserved_history:
+          Enum.reject(record.preserved_history, &(&1.path == source.assessment_path))
+    }
+
+    {output, status} = run_validate_readiness(ctx, source.root, record, "inputs")
+    assert status != 0
+    assert output =~ "167-dated-readiness-and-closeout/167-ASSESSMENT.md"
+
+    record = readiness_record(source, "inputs")
     File.write!(Path.join(source.root, source.archive_path), "changed historical bytes\n")
     {output, status} = run_validate_readiness(ctx, source.root, record, "inputs")
     assert status != 0
@@ -260,6 +276,35 @@ defmodule Scrypath.CIMonitorTest do
 
     assert payload["rendered_markdown"] =~
              "Candidate source: #{@sha}; squash-main source: #{@sha}; local artifact: #{@sha}."
+
+    [first_condition | remaining_conditions] = record.conditions
+    malicious_url = "https://github.com/szTheory/scrypath/compare/main...candidate?note=)"
+    malicious_condition = %{
+      first_condition
+      | evidence: [%{url: malicious_url, label: "][click](https://evil.example) <img src=x onerror=alert(1)>"}],
+        rationale: "[forged](https://evil.example) <script>alert(1)</script>\n| fake cell",
+        limits: "`code` _emphasis_"
+    }
+
+    malicious = %{
+      record
+      | conditions: [malicious_condition | remaining_conditions],
+        blockers: ["<iframe src=\"https://evil.example\">"],
+        revisit_triggers: ["![link](https://evil.example)"]
+    }
+
+    {malicious_output, 0} = run_validate_readiness(ctx, source.root, malicious, "terminal")
+    rendered = Jason.decode!(malicious_output)["rendered_markdown"]
+    assert rendered =~ "\\]\\[click\\]\\(https://evil.example\\) &lt;img"
+    assert rendered =~ "note=%29"
+    assert rendered =~ "\\[forged\\]\\(https://evil.example\\) &lt;script&gt;"
+    assert rendered =~ "\\| fake cell"
+    assert rendered =~ "\\`code\\` \\_emphasis\\_"
+    assert rendered =~ "&lt;iframe"
+    assert rendered =~ "!\\[link\\]\\(https://evil.example\\)"
+    refute rendered =~ "<script>"
+    refute rendered =~ "<img"
+    refute rendered =~ "<iframe"
 
     correction =
       Map.put(record, :correction, %{
@@ -690,14 +735,30 @@ defmodule Scrypath.CIMonitorTest do
         ".planning/milestones/v1.39-phases/162-whole-product-evidence-baseline/162-BASELINE.md"
       )
 
+    findings_path =
+      Path.join(
+        root,
+        ".planning/milestones/v1.39-phases/163-findings-and-bounded-follow-up/163-FINDINGS.md"
+      )
+
+    assessment_path =
+      Path.join(
+        root,
+        ".planning/milestones/v1.40-phases/167-dated-readiness-and-closeout/167-ASSESSMENT.md"
+      )
+
     File.mkdir_p!(Path.dirname(authority_path))
     File.mkdir_p!(Path.dirname(archive_path))
     File.mkdir_p!(Path.dirname(baseline_path))
+    File.mkdir_p!(Path.dirname(findings_path))
+    File.mkdir_p!(Path.dirname(assessment_path))
 
     authority =
       "# Current readiness\n\n## Phase 164 dated assessment\nHistorical authority bytes.\n"
 
     archive = "Pinned historical archive bytes.\n"
+    findings = "Pinned Phase 163 findings bytes.\n"
+    assessment = "Pinned Phase 167 assessment bytes.\n"
 
     claim_dimensions = %{
       "C-02" => 1,
@@ -734,6 +795,8 @@ defmodule Scrypath.CIMonitorTest do
     File.write!(authority_path, authority)
     File.write!(archive_path, archive)
     File.write!(baseline_path, baseline)
+    File.write!(findings_path, findings)
+    File.write!(assessment_path, assessment)
     File.write!(Path.join(root, "CONTRIBUTING.md"), "Contributor contract fixture.\n")
     {_, 0} = System.cmd("git", ["init", "--quiet"], cd: root)
     {_, 0} = System.cmd("git", ["config", "user.name", "Fixture"], cd: root)
@@ -754,6 +817,12 @@ defmodule Scrypath.CIMonitorTest do
       baseline_path:
         ".planning/milestones/v1.39-phases/162-whole-product-evidence-baseline/162-BASELINE.md",
       baseline_digest: :crypto.hash(:sha256, baseline) |> Base.encode16(case: :lower),
+      findings_path:
+        ".planning/milestones/v1.39-phases/163-findings-and-bounded-follow-up/163-FINDINGS.md",
+      findings_digest: :crypto.hash(:sha256, findings) |> Base.encode16(case: :lower),
+      assessment_path:
+        ".planning/milestones/v1.40-phases/167-dated-readiness-and-closeout/167-ASSESSMENT.md",
+      assessment_digest: :crypto.hash(:sha256, assessment) |> Base.encode16(case: :lower),
       claim_dimensions: claim_dimensions
     }
   end
@@ -786,13 +855,16 @@ defmodule Scrypath.CIMonitorTest do
         %{
           id: id,
           dimension_id: source.claim_dimensions[id],
+          claim: "A bounded claim #{id}.",
           source: "Phase 162 approved baseline",
           evidence_date: "2026-09-25",
           assessment_date: "2026-09-30",
           relevant_paths: [%{path: "CONTRIBUTING.md", disposition: "current"}],
           comparison: "Retained within the approved bounded claim.",
           disposition: "reusable within its stated boundary",
-          limits: "This structural test does not make a semantic readiness judgment."
+          limits: "This structural test does not make a semantic readiness judgment.",
+          baseline_freshness: "reusable within its stated boundary",
+          named_invalidator: "Revisit when the named workflow source changes."
         }
       end)
 
@@ -804,9 +876,23 @@ defmodule Scrypath.CIMonitorTest do
           Enum.with_index(dimensions, 1) |> Enum.map(fn {name, id} -> %{id: id, name: name} end),
         claims: claims
       },
-      important_workflows: [%{id: "WF-01", description: "A declared workflow", claims: ["C-02"]}],
+      important_workflows: [
+        %{
+          id: "WF-01",
+          description: "A declared workflow",
+          claims: ["C-02"],
+          evidence: ["A named source receipt supports the workflow."],
+          supports: "A bounded adopter workflow.",
+          limits: "One representative fixture only."
+        }
+      ],
       invalidators: [
-        %{id: "INV-01", path: "CONTRIBUTING.md", reason: "Recheck when source contracts change."}
+        %{
+          id: "INV-01",
+          path: "CONTRIBUTING.md",
+          claims: ["C-02"],
+          reason: "Recheck when source contracts change."
+        }
       ],
       findings: [],
       opportunities: [],
@@ -829,6 +915,18 @@ defmodule Scrypath.CIMonitorTest do
           git_source: source.git_sha,
           scope: "whole_file",
           sha256: source.baseline_digest
+        },
+        %{
+          path: source.findings_path,
+          git_source: source.git_sha,
+          scope: "whole_file",
+          sha256: source.findings_digest
+        },
+        %{
+          path: source.assessment_path,
+          git_source: source.git_sha,
+          scope: "whole_file",
+          sha256: source.assessment_digest
         }
       ],
       conditions:
@@ -836,8 +934,16 @@ defmodule Scrypath.CIMonitorTest do
         |> Enum.map(fn {text, id} -> %{id: id, text: text} end),
       issue: %{
         repository: "szTheory/scrypath",
+        status: "created",
         number: 123,
-        url: "https://github.com/szTheory/scrypath/issues/123"
+        url: "https://github.com/szTheory/scrypath/issues/123",
+        proposed_title: "Test readiness issue",
+        proposed_body_sha256: :crypto.hash(:sha256, "Terminal decision fixture.") |> Base.encode16(case: :lower),
+        title: "Test readiness issue",
+        author_login: "maintainer",
+        published_body_sha256: :crypto.hash(:sha256, "Terminal decision fixture.") |> Base.encode16(case: :lower),
+        created_at: "2026-09-30T12:00:00Z",
+        approval_provenance: "Explicit fixture authorization."
       },
       source_identities: %{
         candidate: %{sha: @sha},
@@ -1037,7 +1143,7 @@ defmodule Scrypath.CIMonitorTest do
           exit 0
           ;;
         *'/issues/123'*)
-          printf '%s\n' '{"number":123,"html_url":"https://github.com/szTheory/scrypath/issues/123","state":"open"}'
+          printf '%s\n' '{"number":123,"html_url":"https://github.com/szTheory/scrypath/issues/123","state":"open","title":"Test readiness issue","body":"Terminal decision fixture.","created_at":"2026-09-30T12:00:00Z","user":{"login":"maintainer"}}'
           exit 0
           ;;
       esac
