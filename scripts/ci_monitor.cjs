@@ -331,9 +331,10 @@ function collectReadiness(flags) {
     }
     const member = readAttestationMember(archivePath);
     const attestation = requireAttestation(member.content, { repo, runId, attempt, sha });
+    const expectedCoverageUrl = `${expectedRunUrl}/artifacts/${coverageId}`;
     if (normalizeId(attestation.coverage.artifact_id, "attested coverage artifact id") !== coverageId ||
         normalizeArtifactDigest(attestation.coverage.artifact_digest, "attested coverage artifact digest") !== coverage.digest ||
-        attestation.coverage.artifact_url !== coverage.url) {
+        attestation.coverage.artifact_url !== expectedCoverageUrl) {
       throw new Error("closeout attestation coverage artifact identity/digest does not match GitHub artifact metadata");
     }
     if (attestation.workflow !== workflowInfo.name || attestation.run_url !== runInfo.html_url) {
@@ -940,6 +941,7 @@ function validateCollectorReceipt(receiptValue, sha, repo) {
   const coverage = requireObject(receipt.coverage_artifact, "attestation.coverage_artifact");
   const artifact = requireObject(receipt.attestation_artifact, "attestation.attestation_artifact");
   const coverageId = normalizeId(coverage.id, "attestation.coverage_artifact.id");
+  const expectedCoverageUrl = `${expectedRunUrl}/artifacts/${coverageId}`;
   normalizeId(artifact.id, "attestation.attestation_artifact.id");
   for (const [label, item] of [["coverage", coverage], ["attestation", artifact]]) {
     if (!/^sha256:[0-9a-f]{64}$/.test(item.digest || "")) throw new Error(`${label} artifact must retain its SHA-256 digest`);
@@ -965,7 +967,7 @@ function validateCollectorReceipt(receiptValue, sha, repo) {
   const coverageContent = requireObject(content.coverage, "attestation member coverage");
   if (coverageContent.outcome !== "success" || normalizeId(coverageContent.artifact_id, "attested coverage artifact id") !== coverageId ||
       normalizeArtifactDigest(coverageContent.artifact_digest, "attestation member coverage artifact digest") !== coverage.digest ||
-      coverageContent.artifact_url !== coverage.url) {
+      coverageContent.artifact_url !== expectedCoverageUrl) {
     throw new Error("attestation coverage identity/digest does not join the API artifact");
   }
   validUtcTimestamp(receipt.collected_at_utc, "attestation.collected_at_utc");

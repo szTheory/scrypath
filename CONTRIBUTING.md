@@ -92,6 +92,8 @@ it exhausts the attempt's job and artifact pages, downloads only the attestation
 artifact, and checks the archive bytes against GitHub's artifact digest. It
 accepts one `closeout-attestation.json` ZIP member and stores both the archive
 SHA-256 and the JSON member SHA-256. Those hashes refer to different bytes.
+The action's run-page artifact URL differs from the artifact API URL; the
+collector joins them through the selected run ID and artifact ID.
 Temporary downloads are removed when collection finishes.
 
 ```sh

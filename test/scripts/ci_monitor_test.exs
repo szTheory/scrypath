@@ -30,7 +30,7 @@ defmodule Scrypath.CIMonitorTest do
       coverage: %{
         outcome: "success",
         artifact_id: "10",
-        artifact_url: "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/10",
+        artifact_url: "https://github.com/szTheory/scrypath/actions/runs/123/artifacts/10",
         artifact_digest: String.duplicate("a", 64)
       }
     }
@@ -170,7 +170,8 @@ defmodule Scrypath.CIMonitorTest do
           {:duplicate_member, "must contain only one closeout-attestation.json member"},
           {:malformed_json, "invalid JSON"},
           {{:coverage_id, "999"}, "coverage artifact identity/digest"},
-          {:coverage_digest, "coverage artifact identity/digest"}
+          {:coverage_digest, "coverage artifact identity/digest"},
+          {:coverage_url, "coverage artifact identity/digest"}
         ] do
       archive_sha = write_archive_fixture(ctx, layout)
       {output, status} = run_collect_readiness(ctx, archive_sha, "archive_fixture")
@@ -577,6 +578,11 @@ defmodule Scrypath.CIMonitorTest do
         do: String.duplicate("d", 64),
         else: String.duplicate("a", 64)
 
+    coverage_url =
+      if layout == :coverage_url,
+        do: "https://github.com/szTheory/scrypath/actions/runs/123/artifacts/999",
+        else: "https://github.com/szTheory/scrypath/actions/runs/123/artifacts/10"
+
     %{
       schema: 1,
       authority: "github-actions-exact-sha",
@@ -597,7 +603,7 @@ defmodule Scrypath.CIMonitorTest do
       coverage: %{
         outcome: "success",
         artifact_id: coverage_id,
-        artifact_url: "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/10",
+        artifact_url: coverage_url,
         artifact_digest: coverage_digest
       }
     }
@@ -1054,6 +1060,7 @@ defmodule Scrypath.CIMonitorTest do
     coverage_digest = String.duplicate("a", 64)
     archive_digest = String.duplicate("b", 64)
     coverage_url = "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/10"
+    coverage_action_url = "https://github.com/szTheory/scrypath/actions/runs/123/artifacts/10"
 
     content = %{
       schema: 1,
@@ -1069,7 +1076,7 @@ defmodule Scrypath.CIMonitorTest do
       coverage: %{
         outcome: "success",
         artifact_id: "10",
-        artifact_url: coverage_url,
+        artifact_url: coverage_action_url,
         artifact_digest: coverage_digest
       }
     }
