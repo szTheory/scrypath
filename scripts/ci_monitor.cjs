@@ -20,6 +20,36 @@ const REQUIRED_CHECKS = [
 const READINESS_JOBS = [...REQUIRED_CHECKS, "coverage (advisory)", "closeout-attestation"];
 const MAX_ATTESTATION_ARCHIVE_BYTES = 8 * 1024 * 1024;
 const MAX_ATTESTATION_MEMBER_BYTES = 1024 * 1024;
+const CONDITION_TEXTS = [
+  "Every baseline dimension above has been assessed; evidence coverage and known limits are visible.",
+  "Every critical, high, or medium-leverage finding is closed with verification or explicitly accepted with rationale and an owner decision. There are no unresolved findings at those levels.",
+  "Important adopter workflows have appropriate automated proof for the claims being made. The goal is zero routine human verification/UAT; external credentials, permissions, product decisions, or physical-world checks are the only expected handoffs.",
+  "Required CI remains green and lean. Recurring service/E2E proof runs in CI only where its repeat confidence justifies its runtime and maintenance cost; more expensive lower-frequency evidence may remain advisory or scheduled.",
+  "Remaining non-UI opportunities are low-leverage, speculative, unsupported, or more costly than their likely benefit, each with a recorded disposition.",
+  "Release, package, support, and planning truth are current, with no task-owned cleanup or verification debt hidden at closeout.",
+];
+const BASELINE_DIMENSIONS = [
+  "Public API consistency, ergonomics, compatibility, and error behavior",
+  "Core indexing and search correctness, including writes/deletes, inline/manual/Oban synchronization, related data, tenancy, search, facets, federation, settings, and recovery",
+  "Ecto, Oban, Meilisearch, Phoenix, and packaged-consumer seams, including representative supported version/runtime combinations",
+  "Operational honesty, observability, backfill/reindex safety, failure reporting, and supportability",
+  "First-hour and ongoing developer experience, documentation, examples, diagnostics, and adopter issue intake",
+  "Security, privacy, dependency health, configuration boundaries, and release/supply-chain integrity",
+  "Architecture, readability, maintainability, measured performance, and test/CI signal-to-cost",
+];
+const BASELINE_CLAIM_DIMENSIONS = {
+  "C-02": 1, "C-22": 1,
+  "C-03": 2, "C-07": 2, "C-08": 2, "C-09": 2, "C-04": 2, "C-11": 2,
+  "C-01": 3, "C-12": 3, "C-10": 3, "C-18": 3,
+  "C-13": 4, "C-14": 4, "C-15": 4, "C-16": 4, "C-17": 4,
+  "C-05": 5, "C-06": 5, "C-19": 5,
+  "C-21": 6, "C-20": 6,
+  "C-23": 7, "C-24": 7,
+};
+const REQUIRED_ASSUMPTIONS = Array.from({ length: 7 }, (_, index) => `EA-167-${String(index + 1).padStart(2, "0")}`);
+const BASELINE_PATH = ".planning/milestones/v1.39-phases/162-whole-product-evidence-baseline/162-BASELINE.md";
+const AUTHORITY_PATH = ".planning/reference/PRE-OPERATOR-UI-READINESS.md";
+const HISTORICAL_ARCHIVE_PATH = ".planning/milestones/v1.39-phases/164-readiness-gate-and-reconciliation";
 
 function fail(message) {
   process.stderr.write(`ERROR: ${message}\n`);
@@ -92,6 +122,17 @@ function flattenPages(payload, key, label) {
     results.push(...page[key]);
   }
   return results;
+}
+
+function flattenArrayPages(payload, label) {
+  const pages = Array.isArray(payload) ? payload : [payload];
+  const values = [];
+  for (const page of pages) {
+    if (Array.isArray(page)) values.push(...page);
+    else if (page && Array.isArray(page.comments)) values.push(...page.comments);
+    else throw new Error(`${label} pagination returned malformed JSON`);
+  }
+  return values;
 }
 
 function apiJson(endpoint, { paginate = false } = {}) {
@@ -331,6 +372,439 @@ function collectReadiness(flags) {
   }
 }
 
+function assertNoDuplicateJsonKeys(text) {
+  const stack = [];
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    if (char === '"') {
+      const start = index;
+      index += 1;
+      while (index < text.length) {
+        if (text[index] === "\\") index += 2;
+        else if (text[index] === '"') break;
+        else index += 1;
+      }
+      if (index >= text.length) break;
+      const token = text.slice(start, index + 1);
+      let lookahead = index + 1;
+      while (/\s/.test(text[lookahead] || " ")) lookahead += 1;
+      if (stack.at(-1)?.kind === "object" && text[lookahead] === ":") {
+        const key = JSON.parse(token);
+        if (stack.at(-1).keys.has(key)) throw new Error(`duplicate JSON field ${JSON.stringify(key)}`);
+        stack.at(-1).keys.add(key);
+      }
+      continue;
+    }
+    if (char === "{") stack.push({ kind: "object", keys: new Set() });
+    else if (char === "[") stack.push({ kind: "array" });
+    else if (char === "}" || char === "]") stack.pop();
+  }
+}
+
+function readRecordFile(file, label) {
+  let text;
+  try {
+    text = fs.readFileSync(file, "utf8");
+    assertNoDuplicateJsonKeys(text);
+    const value = JSON.parse(text);
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} must be a JSON object`);
+    return value;
+  } catch (error) {
+    throw new Error(`cannot read ${label}: ${error.message}`);
+  }
+}
+
+function requireObject(value, label) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} must be an object`);
+  return value;
+}
+
+function requireText(value, label) {
+  if (typeof value !== "string" || !value.trim()) throw new Error(`${label} must be a non-empty string`);
+  return value.trim();
+}
+
+function requireArray(value, label, { min = 1 } = {}) {
+  if (!Array.isArray(value) || value.length < min) throw new Error(`${label} must be an array with at least ${min} item(s)`);
+  return value;
+}
+
+function validIsoDate(value, label) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value) || Number.isNaN(Date.parse(`${value}T00:00:00Z`))) {
+    throw new Error(`${label} must be a valid YYYY-MM-DD date`);
+  }
+  return value;
+}
+
+function validUtcTimestamp(value, label) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(value) || Number.isNaN(Date.parse(value))) {
+    throw new Error(`${label} must be a second-precision UTC timestamp ending in Z`);
+  }
+  return value;
+}
+
+function safeRelativePath(value, label) {
+  const relative = requireText(value, label);
+  if (path.isAbsolute(relative) || relative.split(/[\\/]/).includes("..") || relative.includes("\\")) {
+    throw new Error(`${label} must be a repository-relative path`);
+  }
+  return relative;
+}
+
+function rejectPrivateAndSecretValues(value, pathLabel = "record") {
+  if (Array.isArray(value)) {
+    value.forEach((entry, index) => rejectPrivateAndSecretValues(entry, `${pathLabel}[${index}]`));
+  } else if (value && typeof value === "object") {
+    for (const [key, nested] of Object.entries(value)) {
+      if (/(?:secret|token|authorization|environment_dump|env_dump)/i.test(key)) {
+        throw new Error(`${pathLabel} contains forbidden field ${key}`);
+      }
+      rejectPrivateAndSecretValues(nested, `${pathLabel}.${key}`);
+    }
+  } else if (typeof value === "string" && /(?:^|\s|=)(?:\/Users\/|\/home\/|\/private\/tmp\/)/i.test(value)) {
+    throw new Error(`${pathLabel} contains a private machine path`);
+  }
+}
+
+function containedFile(sourceRoot, relative, label) {
+  const root = fs.realpathSync(sourceRoot);
+  const target = fs.realpathSync(path.join(root, safeRelativePath(relative, label)));
+  if (target !== root && !target.startsWith(`${root}${path.sep}`)) throw new Error(`${label} escapes the source root`);
+  if (!fs.statSync(target).isFile()) throw new Error(`${label} must name a file`);
+  return target;
+}
+
+function historicalScope(bytes, scope, heading, label) {
+  if (scope === "whole_file") return bytes;
+  if (scope !== "named_suffix") throw new Error(`${label} has unsupported historical scope`);
+  const marker = Buffer.from(requireText(heading, `${label}.heading`));
+  const first = bytes.indexOf(marker);
+  if (first < 0 || bytes.indexOf(marker, first + marker.length) >= 0) throw new Error(`${label} historical heading is missing or duplicated`);
+  return bytes.subarray(first);
+}
+
+function verifyPreservedHistory(record, sourceRoot) {
+  const entries = requireArray(record.preserved_history, "preserved_history", { min: 3 });
+  const seen = new Set();
+  for (const [index, entryValue] of entries.entries()) {
+    const entry = requireObject(entryValue, `preserved_history[${index}]`);
+    const relative = safeRelativePath(entry.path, `preserved_history[${index}].path`);
+    if (seen.has(relative)) throw new Error(`duplicate preserved_history path ${relative}`);
+    seen.add(relative);
+    const gitSource = requireText(entry.git_source, `preserved_history[${index}].git_source`);
+    if (!/^[0-9a-f]{40}$/.test(gitSource)) throw new Error(`preserved_history[${index}].git_source must be a full Git SHA`);
+    const currentPath = containedFile(sourceRoot, relative, `preserved_history[${index}].path`);
+    run("git", ["-C", sourceRoot, "cat-file", "-e", `${gitSource}^{commit}`]);
+    const original = run("git", ["-C", sourceRoot, "show", `${gitSource}:${relative}`], { encoding: null }).stdout;
+    const current = fs.readFileSync(currentPath);
+    const originalScope = historicalScope(original, entry.scope, entry.heading, `preserved_history[${index}]`);
+    const currentScope = historicalScope(current, entry.scope, entry.heading, `preserved_history[${index}]`);
+    const originalHash = crypto.createHash("sha256").update(originalScope).digest("hex");
+    const currentHash = crypto.createHash("sha256").update(currentScope).digest("hex");
+    if (!/^[0-9a-f]{64}$/.test(entry.sha256 || "") || entry.sha256 !== originalHash || currentHash !== originalHash) {
+      throw new Error(`preserved historical bytes differ from Git source: ${relative}`);
+    }
+  }
+  if (!seen.has(AUTHORITY_PATH) || !seen.has(BASELINE_PATH)) {
+    throw new Error("preserved_history must pin the readiness authority and Phase 162 baseline bytes");
+  }
+  const archiveSource = entries.find((entry) => entry.path.startsWith(`${HISTORICAL_ARCHIVE_PATH}/`))?.git_source;
+  if (!archiveSource) throw new Error("preserved_history must include every archived Phase 164 file");
+  const tracked = run("git", ["-C", sourceRoot, "ls-tree", "-r", "--name-only", archiveSource, "--", HISTORICAL_ARCHIVE_PATH]).stdout
+    .split(/\r?\n/).filter(Boolean).sort();
+  const pinned = [...seen].filter((relative) => relative.startsWith(`${HISTORICAL_ARCHIVE_PATH}/`)).sort();
+  if (!tracked.length || JSON.stringify(tracked) !== JSON.stringify(pinned)) {
+    throw new Error("preserved_history does not pin the complete Phase 164 archived file set");
+  }
+}
+
+function validatePinnedBaseline(record, sourceRoot) {
+  const baselinePath = containedFile(sourceRoot, BASELINE_PATH, "Phase 162 baseline");
+  const rows = fs.readFileSync(baselinePath, "utf8").split(/\r?\n/)
+    .map((line) => /^\|\s*(C-[0-9]{2})\s*\|\s*([1-7])\s*\|/.exec(line))
+    .filter(Boolean);
+  const observed = Object.fromEntries(rows.map((match) => [match[1], Number(match[2])]));
+  const expectedIds = Object.keys(BASELINE_CLAIM_DIMENSIONS).sort();
+  if (rows.length !== 24 || Object.keys(observed).length !== 24 ||
+      expectedIds.some((id) => observed[id] !== BASELINE_CLAIM_DIMENSIONS[id])) {
+    throw new Error("Phase 162 baseline must contain the approved 24 unique C-ID/dimension pairs");
+  }
+  const baseline = requireObject(record.baseline, "baseline");
+  const dimensions = requireArray(baseline.dimensions, "baseline.dimensions");
+  if (dimensions.length !== 7 || dimensions.some((dimension, index) =>
+    dimension.id !== index + 1 || dimension.name !== BASELINE_DIMENSIONS[index])) {
+    throw new Error("baseline.dimensions must contain the seven unchanged dimension IDs and texts");
+  }
+  const claims = requireArray(baseline.claims, "baseline.claims");
+  const ids = claims.map((claim) => requireText(claim.id, "baseline claim id"));
+  if (claims.length !== 24 || new Set(ids).size !== 24 || expectedIds.some((id) => !ids.includes(id))) {
+    throw new Error("baseline must contain exactly 24 unique baseline claim IDs");
+  }
+  for (const [index, claimValue] of claims.entries()) {
+    const claim = requireObject(claimValue, `baseline.claims[${index}]`);
+    const id = claim.id;
+    if (claim.dimension_id !== observed[id]) throw new Error(`${id} dimension_id differs from the pinned Phase 162 baseline`);
+    requireText(claim.source, `${id}.source`);
+    const evidenceDate = validIsoDate(claim.evidence_date, `${id}.evidence_date`);
+    const assessmentDate = validIsoDate(claim.assessment_date, `${id}.assessment_date`);
+    if (evidenceDate > record.cutoff.slice(0, 10) || assessmentDate > record.cutoff.slice(0, 10)) {
+      throw new Error(`${id} evidence and assessment dates must not exceed the record cutoff`);
+    }
+    for (const [pathIndex, pathEntryValue] of requireArray(claim.relevant_paths, `${id}.relevant_paths`).entries()) {
+      const pathEntry = typeof pathEntryValue === "string" ? { path: pathEntryValue, disposition: "current" } : requireObject(pathEntryValue, `${id}.relevant_paths[${pathIndex}]`);
+      const relative = safeRelativePath(pathEntry.path, `${id}.relevant_paths[${pathIndex}].path`);
+      const disposition = requireText(pathEntry.disposition, `${id}.relevant_paths[${pathIndex}].disposition`);
+      try {
+        containedFile(sourceRoot, relative, `${id} relevant path`);
+      } catch (error) {
+        if (!disposition.startsWith("archived-link:")) throw error;
+      }
+    }
+    requireText(claim.comparison, `${id}.comparison`);
+    requireText(claim.disposition, `${id}.disposition`);
+    requireText(claim.limits, `${id}.limits`);
+  }
+}
+
+function validateSharedRecord(record, sourceRoot, stage) {
+  rejectPrivateAndSecretValues(record);
+  if (record.schema !== 1) throw new Error("record schema must be version 1");
+  validUtcTimestamp(record.cutoff, "cutoff");
+  validatePinnedBaseline(record, sourceRoot);
+  const workflows = requireArray(record.important_workflows, "important_workflows");
+  for (const [index, workflowValue] of workflows.entries()) {
+    const workflow = requireObject(workflowValue, `important_workflows[${index}]`);
+    requireText(workflow.id, `important_workflows[${index}].id`);
+    requireText(workflow.description, `important_workflows[${index}].description`);
+    const claims = requireArray(workflow.claims, `important_workflows[${index}].claims`);
+    if (claims.some((id) => !Object.hasOwn(BASELINE_CLAIM_DIMENSIONS, id))) throw new Error(`important_workflows[${index}] references an unknown claim`);
+  }
+  for (const field of ["invalidators", "findings", "opportunities", "tracked_inputs"]) {
+    requireArray(record[field], field, { min: field === "findings" || field === "opportunities" ? 0 : 1 });
+  }
+  for (const [index, invalidatorValue] of record.invalidators.entries()) {
+    const invalidator = requireObject(invalidatorValue, `invalidators[${index}]`);
+    requireText(invalidator.id, `invalidators[${index}].id`);
+    safeRelativePath(invalidator.path, `invalidators[${index}].path`);
+    requireText(invalidator.reason, `invalidators[${index}].reason`);
+  }
+  for (const [index, trackedValue] of record.tracked_inputs.entries()) {
+    const tracked = requireObject(trackedValue, `tracked_inputs[${index}]`);
+    const relative = safeRelativePath(tracked.path, `tracked_inputs[${index}].path`);
+    const disposition = requireText(tracked.disposition, `tracked_inputs[${index}].disposition`);
+    try { containedFile(sourceRoot, relative, `tracked_inputs[${index}].path`); }
+    catch (error) { if (!disposition.startsWith("archived-link:")) throw error; }
+  }
+  const conditionRows = requireArray(record.conditions, "conditions");
+  if (conditionRows.length !== 6) throw new Error("conditions must contain exactly six unchanged condition texts");
+  const conditionIds = new Set();
+  conditionRows.forEach((rowValue) => {
+    const row = requireObject(rowValue, "conditions[]");
+    if (!Number.isInteger(row.id) || row.id < 1 || row.id > 6 || conditionIds.has(row.id) || row.text !== CONDITION_TEXTS[row.id - 1]) {
+      throw new Error("conditions IDs and texts must match the six approved conditions exactly once");
+    }
+    conditionIds.add(row.id);
+  });
+  verifyPreservedHistory(record, sourceRoot);
+  const assumptions = requireArray(record.assumptions, "assumptions");
+  const unresolved = new Set(assumptions.filter((item) => item && item.status === "unresolved").map((item) => item.id));
+  if (REQUIRED_ASSUMPTIONS.some((id) => !unresolved.has(id))) throw new Error("all seven inherited edge assumptions must remain explicitly unresolved");
+  for (const id of REQUIRED_ASSUMPTIONS) {
+    const assumption = assumptions.find((item) => item?.id === id);
+    requireText(assumption.reason, `${id}.reason`);
+  }
+  const issue = requireObject(record.issue, "issue");
+  const issueRepo = requireText(issue.repository, "issue.repository");
+  if (stage === "draft" && issue.status === "pending") {
+    requireText(issue.reason, "issue.reason");
+  } else {
+    const issueNumber = positiveInteger(issue.number, "issue.number");
+    const expectedIssueUrl = `https://github.com/${issueRepo}/issues/${issueNumber}`;
+    if (issue.url !== expectedIssueUrl) throw new Error("issue URL must be the public GitHub issue URL for its repository and number");
+    const remote = apiJson(`repos/${issueRepo}/issues/${issueNumber}`);
+    if (remote.number !== issueNumber || remote.html_url !== expectedIssueUrl) throw new Error("readiness issue pointer is not discoverable at the supplied GitHub URL");
+  }
+  const identities = requireObject(record.source_identities, "source_identities");
+  for (const identity of ["candidate", "squash_main", "final_planning_source", "local_artifact", "published"]) {
+    const item = requireObject(identities[identity], `source_identities.${identity}`);
+    const sha = requireText(item.sha, `source_identities.${identity}.sha`);
+    if (!/^[0-9a-f]{40}$/.test(sha) && !(identity === "published" && sha === "not-published")) {
+      throw new Error(`source_identities.${identity}.sha must be a full SHA or explicit not-published identity`);
+    }
+  }
+  const delivery = requireObject(record.delivery, "delivery");
+  const allowedDelivery = stage === "draft"
+    ? ["published", "deferred", "blocked", "not-applicable", "pending"]
+    : ["published", "deferred", "blocked", "not-applicable"];
+  if (!allowedDelivery.includes(delivery.disposition)) throw new Error("delivery.disposition must state a delivery outcome or an explicitly reasoned draft pending value");
+  requireText(delivery.reason, "delivery.reason");
+  const cleanup = requireObject(record.cleanup, "cleanup");
+  requireText(cleanup.status, "cleanup.status");
+  requireArray(cleanup.items, "cleanup.items", { min: 0 });
+}
+
+function canonicalize(value) {
+  if (Array.isArray(value)) {
+    const entries = value.map(canonicalize);
+    if (entries.every((entry) => entry && typeof entry === "object" && !Array.isArray(entry) && Object.hasOwn(entry, "id"))) {
+      return entries.sort((left, right) => String(left.id).localeCompare(String(right.id), undefined, { numeric: true }));
+    }
+    if (entries.every((entry) => ["string", "number"].includes(typeof entry)) && new Set(entries).size === entries.length) {
+      return entries.sort((left, right) => String(left).localeCompare(String(right), undefined, { numeric: true }));
+    }
+    return entries;
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonicalize(value[key])]));
+  }
+  return value;
+}
+
+function renderTerminal(record) {
+  const checksum = crypto.createHash("sha256").update(JSON.stringify(canonicalize(record))).digest("hex");
+  const judgments = [...record.conditions].sort((left, right) => left.id - right.id)
+    .map((condition) => `| ${condition.id} | ${condition.status} | ${condition.evidence_date} | ${condition.rationale} | ${condition.limits} |`);
+  const receipt = record.attestation;
+  const lines = [
+    `# ${record.assessment_id}`,
+    "",
+    `- Assessment date: ${record.assessed_at_utc}`,
+    `- Decision supplied by @${record.maintainer.login}: **${record.decision}**`,
+    `- Decision provenance: ${record.maintainer.decision_provenance}`,
+    `- Final planning source: ${record.final_source.sha}`,
+    `- Exact-source receipt: ${receipt.repository} run ${receipt.run_id}, attempt ${receipt.run_attempt}, source ${receipt.head_sha}.` ,
+    `- Coverage artifact ${receipt.coverage_artifact.id} (${receipt.coverage_artifact.digest}); attestation artifact ${receipt.attestation_artifact.id} (${receipt.attestation_artifact.digest}).`,
+    `- Delivery: ${record.delivery_identity.disposition}; release ${record.delivery_identity.release}; package ${record.delivery_identity.package}.`,
+    "",
+    "| Condition | Supplied status | Evidence date | Rationale | Limits |",
+    "| --- | --- | --- | --- | --- |",
+    ...judgments,
+    "",
+    "## Blockers",
+    ...record.blockers.map((item) => `- ${item}`),
+    "",
+    "## Revisit triggers",
+    ...record.revisit_triggers.map((item) => `- ${item}`),
+    "",
+    `Record SHA-256: ${checksum}`,
+  ];
+  return `${lines.join("\n")}\n`;
+}
+
+function validateTerminal(record, sourceRoot) {
+  validateSharedRecord(record, sourceRoot, "terminal");
+  const assessedAt = validUtcTimestamp(record.assessed_at_utc, "assessed_at_utc");
+  requireText(record.assessment_id, "assessment_id");
+  const maintainer = requireObject(record.maintainer, "maintainer");
+  const login = requireText(maintainer.login, "maintainer.login");
+  if (!/^[A-Za-z0-9-]{1,39}$/.test(login)) throw new Error("maintainer.login must be a GitHub login");
+  requireText(maintainer.decision_provenance, "maintainer.decision_provenance");
+  const judgments = requireArray(record.conditions, "conditions");
+  if (judgments.length !== 6) throw new Error("terminal conditions must include six supplied judgments");
+  const judgmentIds = new Set();
+  const statuses = judgments.map((rowValue) => {
+    const row = requireObject(rowValue, "conditions[]");
+    const id = row.id;
+    if (!Number.isInteger(id) || id < 1 || id > 6 || judgmentIds.has(id) || row.text !== CONDITION_TEXTS[id - 1]) throw new Error("terminal condition IDs and texts must match the approved conditions exactly once");
+    judgmentIds.add(id);
+    if (!["PASS", "FAIL", "UNKNOWN"].includes(row.status)) throw new Error(`condition ${id} status must be supplied as PASS, FAIL, or UNKNOWN`);
+    requireText(row.rationale, `condition ${id}.rationale`);
+    requireArray(row.evidence, `condition ${id}.evidence`);
+    const evidenceDate = validIsoDate(row.evidence_date, `condition ${id}.evidence_date`);
+    const assessmentDate = validIsoDate(row.assessment_date, `condition ${id}.assessment_date`);
+    if (evidenceDate > assessedAt.slice(0, 10) || assessmentDate !== assessedAt.slice(0, 10)) throw new Error(`condition ${id} evidence/assessment dates must align with the UTC cutoff`);
+    requireText(row.limits, `condition ${id}.limits`);
+    return row.status;
+  });
+  if (!Number.isFinite(Date.parse(assessedAt))) throw new Error("assessed_at_utc must be valid");
+  if (!["READY FOR OPERATOR UI", "NOT READY"].includes(record.decision)) throw new Error("decision must be explicitly supplied as READY FOR OPERATOR UI or NOT READY");
+  if (record.decision === "READY FOR OPERATOR UI" && statuses.some((status) => status !== "PASS")) {
+    throw new Error("READY requires six supplied PASS judgments");
+  }
+  const finalSource = requireObject(record.final_source, "final_source");
+  requireExactSha(finalSource.sha);
+  if (finalSource.sha !== record.source_identities.final_planning_source.sha) throw new Error("final_source identity must match final_planning_source while remaining separately named");
+  const attestation = requireObject(record.attestation, "attestation");
+  if (attestation.repository !== record.issue.repository || attestation.head_sha !== finalSource.sha ||
+      attestation.event !== "workflow_dispatch" || attestation.authority !== "github-actions-exact-sha") {
+    throw new Error("final attestation repository/source/event/authority does not join the supplied final source");
+  }
+  positiveInteger(attestation.run_id, "attestation.run_id");
+  positiveInteger(attestation.run_attempt, "attestation.run_attempt");
+  if (JSON.stringify(attestation.required_jobs) !== JSON.stringify(REQUIRED_CHECKS)) throw new Error("attestation must preserve the five required job names in producer order");
+  for (const artifactName of ["coverage_artifact", "attestation_artifact"]) {
+    const artifact = requireObject(attestation[artifactName], `attestation.${artifactName}`);
+    normalizeId(artifact.id, `attestation.${artifactName}.id`);
+    if (!/^sha256:[0-9a-f]{64}$/.test(artifact.digest || "")) throw new Error(`attestation.${artifactName}.digest must be a SHA-256 digest`);
+  }
+  const deliveryIdentity = requireObject(record.delivery_identity, "delivery_identity");
+  requireText(deliveryIdentity.disposition, "delivery_identity.disposition");
+  requireText(deliveryIdentity.release, "delivery_identity.release");
+  requireText(deliveryIdentity.package, "delivery_identity.package");
+  requireArray(record.blockers, "blockers");
+  requireArray(record.revisit_triggers, "revisit_triggers");
+  return { rendered: renderTerminal(record), statuses };
+}
+
+function validateReadiness(flags) {
+  const stage = flags.stage;
+  if (!["draft", "inputs", "terminal"].includes(stage)) throw new Error("--stage must be draft, inputs, or terminal");
+  const sourceRoot = path.resolve(requireText(flags["source-root"], "--source-root"));
+  if (!fs.statSync(sourceRoot).isDirectory()) throw new Error("--source-root must name a directory");
+  const file = stage === "terminal" ? flags.record : flags.inputs;
+  const record = readRecordFile(requireText(file, stage === "terminal" ? "--record" : "--inputs"), `readiness ${stage} record`);
+  if (stage === "terminal") {
+    const result = validateTerminal(record, sourceRoot);
+    const receipt = {
+      result: "FACTUAL_ONLY_VALID",
+      stage,
+      decision: record.decision,
+      approval: null,
+      record_sha256: crypto.createHash("sha256").update(JSON.stringify(canonicalize(record))).digest("hex"),
+      rendered_markdown: result.rendered,
+      limitations: ["Structural validation verifies supplied fields and joins; it does not assess evidence semantics, readiness, or maintainer approval."],
+    };
+    process.stdout.write(`${JSON.stringify(receipt, null, 2)}\n`);
+    return;
+  }
+  validateSharedRecord(record, sourceRoot, stage);
+  if (stage === "draft" && record.issue.status !== "pending") throw new Error("draft issue pointer must be explicitly pending with a reason");
+  if (stage === "inputs" && record.delivery.disposition === "pending") throw new Error("inputs require an explicit delivery disposition");
+  process.stdout.write(`${JSON.stringify({ result: "FACTUAL_ONLY_VALID", stage, semantic_decision: null, limitations: ["Structural validation checks inputs only; it does not judge conditions or authorize publication."] }, null, 2)}\n`);
+}
+
+function verifyReadinessComment(flags) {
+  const repo = requireText(flags.repo, "--repo");
+  if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo)) throw new Error("--repo must be OWNER/REPO");
+  const issue = positiveInteger(flags.issue, "--issue");
+  const commentId = normalizeId(flags.comment, "--comment");
+  const maintainer = requireText(flags.maintainer, "--maintainer");
+  const record = readRecordFile(requireText(flags.record, "--record"), "terminal readiness record");
+  const sourceRoot = path.resolve(flags["source-root"] || process.cwd());
+  const { rendered } = validateTerminal(record, sourceRoot);
+  if (record.issue.repository !== repo || record.issue.number !== issue || record.maintainer.login !== maintainer) {
+    throw new Error("record repository/issue/maintainer do not match the explicit comment verification target");
+  }
+  const issueUrl = `https://api.github.com/repos/${repo}/issues/${issue}`;
+  const commentUrl = `repos/${repo}/issues/comments/${commentId}`;
+  const commentPages = apiJson(`repos/${repo}/issues/${issue}/comments?per_page=100`, { paginate: true });
+  const comments = flattenArrayPages(commentPages, "comment");
+  const authorityMatches = comments.filter((entry) =>
+    typeof entry.body === "string" && entry.body.includes(record.assessment_id));
+  if (authorityMatches.length !== 1 || normalizeId(authorityMatches[0].id, "readiness comment id") !== commentId) {
+    throw new Error("readiness issue contains missing or duplicate terminal authority comments");
+  }
+  const comment = apiJson(commentUrl);
+  const renderedChecksum = rendered.match(/Record SHA-256: ([0-9a-f]{64})\n$/)?.[1];
+  const checksumCount = (comment.body?.match(/Record SHA-256:/g) || []).length;
+  if (comment.id === undefined || normalizeId(comment.id, "comment id") !== commentId ||
+      comment.issue_url !== issueUrl || comment.user?.login !== maintainer ||
+      comment.body !== rendered || checksumCount !== 1 || !renderedChecksum) {
+    throw new Error("readiness comment is edited, duplicated, on another issue, or authored by another login");
+  }
+  process.stdout.write(`${JSON.stringify({ result: "FACTUAL_ONLY_VALID", repository: repo, issue, comment_id: commentId, author: maintainer, record_sha256: renderedChecksum, limitations: ["Readback confirms exact public comment identity and body only; it does not certify the supplied judgments or authorize the decision."] }, null, 2)}\n`);
+}
+
 function sleep(ms) {
   if (ms <= 0) return;
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
@@ -374,6 +848,8 @@ function help() {
   process.stdout.write(`  closeout [--branch NAME] [--sha SHA] [--push]\n`);
   process.stdout.write(`                                                Dispatch and verify exact-SHA closeout\n`);
   process.stdout.write(`  collect-readiness --repo OWNER/REPO --sha SHA --run ID --attempt N --output PATH\n`);
+  process.stdout.write(`  validate-readiness --stage draft|inputs|terminal --inputs PATH --source-root PATH [--record PATH]\n`);
+  process.stdout.write(`  verify-readiness-comment --repo OWNER/REPO --issue NUMBER --comment ID --record PATH --maintainer LOGIN\n`);
   process.stdout.write(`  protect [--branch NAME] [--apply]            Audit or reconcile required checks\n`);
 }
 
@@ -611,6 +1087,12 @@ function main() {
         break;
       case "collect-readiness":
         collectReadiness(flags);
+        break;
+      case "validate-readiness":
+        validateReadiness(flags);
+        break;
+      case "verify-readiness-comment":
+        verifyReadinessComment(flags);
         break;
       case "protect":
         protect(flags);
