@@ -149,35 +149,9 @@ They do not create a second operator product surface.
 
 `use Scrypath` is metadata-only. It validates the declaration and exposes stable `__scrypath__/1` reflection keys without generating schema-specific runtime verbs.
 
-## Sync Modes
+## Sync modes
 
-Call sync after successful repo persistence. Scrypath is explicit about what each mode means:
-
-| Mode | What Scrypath does before returning | What it does not mean |
-|------|-------------------------------------|-----------------------|
-| `:inline` | waits for terminal backend task success before returning | database and search writes are not atomic |
-| `:manual` | returns accepted backend work immediately | the document may not be searchable yet |
-| `:oban` | returns durable enqueue acceptance only | the backend write has not happened yet, and the document may not be searchable |
-
-Successful `Scrypath.sync_record/3` (and related) calls return a map that includes **`:status` `:accepted`** when work was queued or accepted but may not be searchable yet, and **`:status` `:completed`** when the `:inline` Meilisearch wait path finished - see **`guides/sync-modes-and-visibility.md`** for the full contract.
-
-Accepted work is not the same thing as search visibility.
-
-`sync_mode: :oban` means durable enqueue accepted, not search visibility completed.
-
-**Choosing a mode:** **`:inline`** is enough for many local workflows and small apps when you want the caller to observe terminal backend success immediately. Move to **`:oban`** when durable enqueue and worker throughput matter more than immediate search visibility in the same process. Use **`:manual`** for migrations, bulk imports, or operator-controlled batched follow-up where you want an explicit next step instead of automatic queue progression.
-
-The full contract - lifecycle states, Phoenix implications, recovery language, and what "success" in a controller or LiveView really means - lives in **`guides/sync-modes-and-visibility.md`**. Treat that guide as the authority; keep README as the compact route map.
-
-If this README and the sync guide disagree, treat **`guides/sync-modes-and-visibility.md`** as the source of truth for semantics.
-
-The monospace lifecycle line below matches the **Operator lifecycle** section in that guide.
-
-All three modes share one operator-facing lifecycle:
-
-`requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded`
-
-In practice, retries, discarded jobs, stale deletes, and drift are normal operational realities. They are not edge cases to hide with optimistic wording.
+Call [**`Scrypath.sync_record/3`**](https://hexdocs.pm/scrypath/Scrypath.html#sync_record/3) after successful repo persistence. Choose **`:inline`** for the first-hour path and workflows that can wait on backend work, **`:oban`** when durable enqueue and worker throughput matter, or **`:manual`** for imports and operator-controlled follow-up. A successful return means work was accepted, or—when inline task waiting applies—completed; neither makes the database and search writes atomic, and accepted work may not yet be visible in search. See [sync modes and visibility](guides/sync-modes-and-visibility.md) for the exact return contract, lifecycle, and recovery guidance.
 
 ## Versioning and upgrades
 

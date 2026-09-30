@@ -388,9 +388,9 @@ defmodule Scrypath.DocsContractTest do
     assert String.contains?(File.read!("mix.exs"), "\"verify.phase91\": :test")
   end
 
-  test "README opens with installation, quick path, and phoenix wayfinding" do
+  test "README opens with installation and first-hour path before the route map" do
     assert String.contains?(@readme, "Scrypath, the Ecto-native search indexing library")
-    assert ordered?(@readme, "## Installation", "## When Scrypath Fits")
+    assert ordered?(@readme, "## Installation", "## Quick Path")
     assert ordered?(@readme, "## Quick Path", "## When Scrypath Fits")
     assert @readme =~ ~S|{:scrypath, "~> 0.3"}|
     refute @readme =~ ~S|{:req, "~> 0.5"}|
@@ -409,7 +409,7 @@ defmodule Scrypath.DocsContractTest do
     chain =
       "requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded"
 
-    assert String.contains?(@readme, chain)
+    refute String.contains?(@readme, chain)
     assert String.contains?(@guides["guides/sync-modes-and-visibility.md"], chain)
   end
 
@@ -457,11 +457,11 @@ defmodule Scrypath.DocsContractTest do
       "## Versioning and upgrades",
       "mix verify.phase11",
       "docs/releasing.md",
-      "**Choosing a mode:**",
+      "Choose **`:inline`**",
       "guides/sync-modes-and-visibility.md"
     ])
 
-    assert ordered?(@readme, "## Sync Modes", "## Search")
+    assert ordered?(@readme, "## Sync modes", "## Search")
     assert ordered?(@readme, "## Versioning and upgrades", "## Search")
   end
 
@@ -782,24 +782,29 @@ defmodule Scrypath.DocsContractTest do
     ])
   end
 
-  test "README sync authority ties sync-modes guide link to authority wording (Phase 51)" do
+  test "README routes sync semantics to the canonical guide" do
     assert @readme =~ ~S|](guides/sync-modes-and-visibility.md)|
-
-    assert Regex.match?(
-             ~r/sync-modes-and-visibility.{0,200}(authority|single source|single authority)/i,
-             @readme
-           ) or
-             Regex.match?(
-               ~r/(authority|single source|single authority).{0,200}sync-modes-and-visibility/i,
-               @readme
-             )
+    assert Regex.match?(~r/exact return contract, lifecycle, and recovery guidance/i, @readme)
   end
 
-  test "readme sync spine keeps :status :accepted wording tied to visibility guide (LIB-03)" do
+  test "sync return contract stays with the public API and canonical guide" do
+    api = File.read!("lib/scrypath.ex")
+    guide = @guides["guides/sync-modes-and-visibility.md"]
+
     assert_contains_all(@readme, [
-      "guides/sync-modes-and-visibility.md",
-      "`:status` `:accepted`",
-      "Accepted work is not the same thing as search visibility"
+      "https://hexdocs.pm/scrypath/Scrypath.html#sync_record/3",
+      "accepted work may not yet be visible in search"
+    ])
+    assert_contains_all(api, [
+      "**`:status` `:accepted`**",
+      "**`:status` `:completed`**",
+      "when `sync_mode: :inline` and the backend returned a task handle"
+    ])
+    assert_contains_all(guide, [
+      "| Mode | Return boundary |",
+      "otherwise `:accepted`",
+      "exact successful map fields",
+      "https://hexdocs.pm/scrypath/Scrypath.html#sync_record/3"
     ])
   end
 
