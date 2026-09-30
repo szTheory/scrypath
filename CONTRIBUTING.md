@@ -123,15 +123,16 @@ node scripts/ci_monitor.cjs verify-readiness-comment \
   --source-root "$PWD"
 ```
 
-`draft` validation also permits explicitly reasoned pending issue and delivery
-inputs. `inputs` requires a discoverable public issue and a stated delivery
-disposition; terminal execution may still be pending. Terminal validation
-requires all six supplied condition judgments, their dates, rationale, linked
-evidence and limits, maintainer provenance, final-source receipt, delivery
-identity, blockers, and revisit triggers. The schema is private JSON version 1
-for this closeout and is not a public Scrypath API. Candidate, squash-main,
-final planning source, local artifact, and published tag/package identities
-remain separate fields even when their SHA values match.
+`draft` validation permits explicitly reasoned pending issue and delivery
+inputs. `inputs` requires a discoverable public issue and permits a reasoned
+pending delivery disposition when its next planned action is stated. Terminal
+validation requires the actual delivery disposition and may not remain pending.
+It also requires all six supplied condition judgments, their dates, rationale,
+linked evidence and limits, maintainer provenance, final-source receipt,
+delivery identity, blockers, and revisit triggers. The schema is private JSON
+version 1 for this closeout and is not a public Scrypath API. Candidate,
+squash-main, final planning source, local artifact, and published tag/package
+identities remain separate fields even when their SHA values match.
 
 Validation returns `FACTUAL_ONLY_VALID` for structure and identity joins. It
 checks the unchanged seven-dimension/24-claim baseline, all six approved

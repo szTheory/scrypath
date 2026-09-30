@@ -686,10 +686,10 @@ function validateSharedRecord(record, sourceRoot, stage) {
     }
   }
   const delivery = requireObject(record.delivery, "delivery");
-  const allowedDelivery = stage === "draft"
-    ? ["published", "deferred", "blocked", "not-applicable", "pending"]
-    : ["published", "deferred", "blocked", "not-applicable"];
-  if (!allowedDelivery.includes(delivery.disposition)) throw new Error("delivery.disposition must state a delivery outcome or an explicitly reasoned draft pending value");
+  const allowedDelivery = stage === "terminal"
+    ? ["published", "deferred", "blocked", "not-applicable"]
+    : ["published", "deferred", "blocked", "not-applicable", "pending"];
+  if (!allowedDelivery.includes(delivery.disposition)) throw new Error("delivery.disposition must be explicit; pending is allowed only before terminal validation and requires a reason");
   requireText(delivery.reason, "delivery.reason");
   const cleanup = requireObject(record.cleanup, "cleanup");
   requireText(cleanup.status, "cleanup.status");
@@ -928,7 +928,6 @@ function validateReadiness(flags) {
   }
   validateSharedRecord(record, sourceRoot, stage);
   if (stage === "draft" && record.issue.status !== "pending") throw new Error("draft issue pointer must be explicitly pending with a reason");
-  if (stage === "inputs" && record.delivery.disposition === "pending") throw new Error("inputs require an explicit delivery disposition");
   process.stdout.write(`${JSON.stringify({ result: "FACTUAL_ONLY_VALID", stage, semantic_decision: null, limitations: ["Structural validation checks inputs only; it does not judge conditions or authorize publication."] }, null, 2)}\n`);
 }
 

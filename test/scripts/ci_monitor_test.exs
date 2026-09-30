@@ -5,7 +5,8 @@ defmodule Scrypath.CIMonitorTest do
   @sha "0123456789abcdef0123456789abcdef01234567"
 
   @tag readiness_tracer: true
-  test "collect-readiness joins one explicit successful attempt to its real hashed attestation archive", ctx do
+  test "collect-readiness joins one explicit successful attempt to its real hashed attestation archive",
+       ctx do
     archive_dir = Path.join(ctx.root, "archive")
     File.mkdir_p!(archive_dir)
 
@@ -38,7 +39,10 @@ defmodule Scrypath.CIMonitorTest do
     File.write!(attestation_path, Jason.encode!(attestation))
 
     archive_path = Path.join(ctx.root, "fixture.zip")
-    {zip_output, 0} = System.cmd("zip", ["-q", archive_path, "closeout-attestation.json"], cd: archive_dir)
+
+    {zip_output, 0} =
+      System.cmd("zip", ["-q", archive_path, "closeout-attestation.json"], cd: archive_dir)
+
     _ = zip_output
     archive_bytes = File.read!(archive_path)
     archive_sha = :crypto.hash(:sha256, archive_bytes) |> Base.encode16(case: :lower)
@@ -54,8 +58,10 @@ defmodule Scrypath.CIMonitorTest do
     assert receipt["run_attempt"] == 2
     assert receipt["attestation_member"]["content"]["run_attempt"] == "2"
     assert receipt["attestation_archive"]["sha256"] == archive_sha
+
     assert receipt["attestation_member"]["sha256"] ==
-             (:crypto.hash(:sha256, Jason.encode!(attestation)) |> Base.encode16(case: :lower))
+             :crypto.hash(:sha256, Jason.encode!(attestation)) |> Base.encode16(case: :lower)
+
     assert receipt["jobs"] |> Enum.map(& &1["name"]) |> Enum.sort() ==
              [
                "core (required)",
@@ -67,6 +73,7 @@ defmodule Scrypath.CIMonitorTest do
                "closeout-attestation"
              ]
              |> Enum.sort()
+
     assert receipt["coverage_artifact"]["id"] == "10"
     assert receipt["limitations"] != []
     calls = File.read!(ctx.calls)
@@ -78,10 +85,28 @@ defmodule Scrypath.CIMonitorTest do
   test "collect-readiness refuses an output file inside the source checkout", ctx do
     output_path = Path.join(File.cwd!(), ".ci-monitor-readiness-output-forbidden.json")
     on_exit(fn -> File.rm(output_path) end)
-    {output, status} = System.cmd(System.find_executable("node") || "node", [
-      @script, "collect-readiness", "--repo", "szTheory/scrypath", "--sha", @sha,
-      "--run", "123", "--attempt", "2", "--output", output_path
-    ], env: [{"GH_BIN", ctx.gh}, {"GIT_BIN", ctx.git}, {"FAKE_SHA", @sha}], stderr_to_stdout: true)
+
+    {output, status} =
+      System.cmd(
+        System.find_executable("node") || "node",
+        [
+          @script,
+          "collect-readiness",
+          "--repo",
+          "szTheory/scrypath",
+          "--sha",
+          @sha,
+          "--run",
+          "123",
+          "--attempt",
+          "2",
+          "--output",
+          output_path
+        ],
+        env: [{"GH_BIN", ctx.gh}, {"GIT_BIN", ctx.git}, {"FAKE_SHA", @sha}],
+        stderr_to_stdout: true
+      )
+
     assert status != 0
     assert output =~ "--output must be outside the source checkout"
     refute File.exists?(output_path)
@@ -105,7 +130,8 @@ defmodule Scrypath.CIMonitorTest do
     end
   end
 
-  test "collect-readiness exhausts attempt pages and rejects ambiguous or mismatched GitHub facts", ctx do
+  test "collect-readiness exhausts attempt pages and rejects ambiguous or mismatched GitHub facts",
+       ctx do
     for {scenario, expected} <- [
           {"wrong_repo", "requested repository"},
           {"wrong_workflow", "CI workflow metadata"},
@@ -124,7 +150,8 @@ defmodule Scrypath.CIMonitorTest do
     end
   end
 
-  test "collect-readiness bounds failed and oversized downloads and rejects malformed archive layouts", ctx do
+  test "collect-readiness bounds failed and oversized downloads and rejects malformed archive layouts",
+       ctx do
     for {scenario, expected} <- [
           {"download_failed", "failed"},
           {"oversized_archive", "safe limit"}
@@ -149,7 +176,8 @@ defmodule Scrypath.CIMonitorTest do
     end
   end
 
-  test "validate-readiness accepts frozen input shape without judgments and confirms discoverable issue", ctx do
+  test "validate-readiness accepts frozen input shape without judgments and confirms discoverable issue",
+       ctx do
     source = readiness_source(ctx)
     record = readiness_record(source, "inputs")
     {output, 0} = run_validate_readiness(ctx, source.root, record, "inputs")
@@ -161,6 +189,21 @@ defmodule Scrypath.CIMonitorTest do
     assert File.read!(ctx.calls) =~ "repos/szTheory/scrypath/issues/123"
   end
 
+  test "validate-readiness accepts explicitly pending delivery with its next action", ctx do
+    source = readiness_source(ctx)
+
+    record =
+      readiness_record(source, "inputs")
+      |> Map.put(:delivery, %{
+        disposition: "pending",
+        reason: "Plans 04/05 own candidate delivery and release disposition."
+      })
+
+    {output, 0} = run_validate_readiness(ctx, source.root, record, "inputs")
+
+    assert Jason.decode!(output)["stage"] == "inputs"
+  end
+
   test "draft validation permits only reasoned pending issue and delivery inputs", ctx do
     source = readiness_source(ctx)
     record = readiness_record(source, "draft")
@@ -169,7 +212,8 @@ defmodule Scrypath.CIMonitorTest do
     refute File.exists?(ctx.calls)
   end
 
-  test "validate-readiness rejects duplicate fields, missing claims, and mutated historical bytes", ctx do
+  test "validate-readiness rejects duplicate fields, missing claims, and mutated historical bytes",
+       ctx do
     source = readiness_source(ctx)
     record = readiness_record(source, "inputs")
     path = Path.join(ctx.root, "duplicate.json")
@@ -178,7 +222,11 @@ defmodule Scrypath.CIMonitorTest do
     assert status != 0
     assert output =~ "duplicate JSON field"
 
-    record = %{record | baseline: %{record.baseline | claims: Enum.drop(record.baseline.claims, 1)}}
+    record = %{
+      record
+      | baseline: %{record.baseline | claims: Enum.drop(record.baseline.claims, 1)}
+    }
+
     {output, status} = run_validate_readiness(ctx, source.root, record, "inputs")
     assert status != 0
     assert output =~ "24 unique baseline claim IDs"
@@ -201,14 +249,29 @@ defmodule Scrypath.CIMonitorTest do
     assert payload["approval"] == nil
     assert payload["rendered_markdown"] =~ "Record SHA-256:"
 
-    reordered = %{record | conditions: Enum.reverse(record.conditions), baseline: %{record.baseline | claims: Enum.reverse(record.baseline.claims)}}
+    reordered = %{
+      record
+      | conditions: Enum.reverse(record.conditions),
+        baseline: %{record.baseline | claims: Enum.reverse(record.baseline.claims)}
+    }
+
     {reordered_output, 0} = run_validate_readiness(ctx, source.root, reordered, "terminal")
     assert Jason.decode!(reordered_output)["rendered_markdown"] == payload["rendered_markdown"]
-    assert payload["rendered_markdown"] =~ "Candidate source: #{@sha}; squash-main source: #{@sha}; local artifact: #{@sha}."
 
-    correction = Map.put(record, :correction, %{supersedes_assessment_id: "Readiness-20260929T120000Z", corrected_at_utc: "2026-09-30T12:00:00Z", reason: "Append-only correction with updated evidence attribution."})
+    assert payload["rendered_markdown"] =~
+             "Candidate source: #{@sha}; squash-main source: #{@sha}; local artifact: #{@sha}."
+
+    correction =
+      Map.put(record, :correction, %{
+        supersedes_assessment_id: "Readiness-20260929T120000Z",
+        corrected_at_utc: "2026-09-30T12:00:00Z",
+        reason: "Append-only correction with updated evidence attribution."
+      })
+
     {correction_output, 0} = run_validate_readiness(ctx, source.root, correction, "terminal")
-    assert Jason.decode!(correction_output)["rendered_markdown"] =~ "Correction: supersedes Readiness-20260929T120000Z"
+
+    assert Jason.decode!(correction_output)["rendered_markdown"] =~
+             "Correction: supersedes Readiness-20260929T120000Z"
 
     record = %{record | decision: "READY FOR OPERATOR UI"}
     [first | rest] = record.conditions
@@ -219,19 +282,39 @@ defmodule Scrypath.CIMonitorTest do
 
     record = readiness_record(source, "terminal")
     [condition | rest] = record.conditions
-    record = %{record | conditions: [%{condition | evidence: [%{url: "https://example.invalid/evidence", label: "untrusted"}]} | rest]}
+
+    record = %{
+      record
+      | conditions: [
+          %{
+            condition
+            | evidence: [%{url: "https://example.invalid/evidence", label: "untrusted"}]
+          }
+          | rest
+        ]
+    }
+
     {output, status} = run_validate_readiness(ctx, source.root, record, "terminal")
     assert status != 0
     assert output =~ "approved public evidence host"
   end
 
-  test "verify-readiness-comment confirms explicit issue, author, body, and unique authority", ctx do
+  test "verify-readiness-comment confirms explicit issue, author, body, and unique authority",
+       ctx do
     source = readiness_source(ctx)
     record = readiness_record(source, "terminal")
-    record = Map.put(record, :correction, %{supersedes_assessment_id: "Readiness-20260929T120000Z", corrected_at_utc: "2026-09-30T12:00:00Z", reason: "Append-only correction with updated evidence attribution."})
+
+    record =
+      Map.put(record, :correction, %{
+        supersedes_assessment_id: "Readiness-20260929T120000Z",
+        corrected_at_utc: "2026-09-30T12:00:00Z",
+        reason: "Append-only correction with updated evidence attribution."
+      })
+
     {validation, 0} = run_validate_readiness(ctx, source.root, record, "terminal")
     body = Jason.decode!(validation)["rendered_markdown"]
     assert body =~ "Correction: supersedes Readiness-20260929T120000Z; 2026-09-30T12:00:00Z"
+
     comment = %{
       id: 999,
       issue_url: "https://api.github.com/repos/szTheory/scrypath/issues/123",
@@ -239,6 +322,7 @@ defmodule Scrypath.CIMonitorTest do
       user: %{login: "maintainer"},
       body: body
     }
+
     comment_path = Path.join(ctx.root, "comment.json")
     comments_path = Path.join(ctx.root, "comments.json")
     File.write!(comment_path, Jason.encode!(comment))
@@ -283,7 +367,17 @@ defmodule Scrypath.CIMonitorTest do
     File.chmod!(git, 0o755)
 
     on_exit(fn -> File.rm_rf!(root) end)
-    %{root: root, gh: gh, git: git, state: state, calls: calls, archive: archive, changed_archive: changed_archive, attestation: attestation}
+
+    %{
+      root: root,
+      gh: gh,
+      git: git,
+      state: state,
+      calls: calls,
+      archive: archive,
+      changed_archive: changed_archive,
+      attestation: attestation
+    }
   end
 
   test "closeout accepts only the newly dispatched exact-SHA run and both artifacts", ctx do
@@ -399,35 +493,81 @@ defmodule Scrypath.CIMonitorTest do
   end
 
   defp write_archive_fixture(ctx, layout) do
-    coverage_id = case layout do {:coverage_id, id} -> id; _ -> "10" end
-    coverage_digest = if layout == :coverage_digest, do: "sha256:" <> String.duplicate("d", 64), else: "sha256:" <> String.duplicate("a", 64)
+    coverage_id =
+      case layout do
+        {:coverage_id, id} -> id
+        _ -> "10"
+      end
+
+    coverage_digest =
+      if layout == :coverage_digest,
+        do: "sha256:" <> String.duplicate("d", 64),
+        else: "sha256:" <> String.duplicate("a", 64)
+
     archive_dir = Path.join(ctx.root, "archive-fixture")
     File.mkdir_p!(archive_dir)
+
     attestation = %{
-      schema: 1, authority: "github-actions-exact-sha", repository: "szTheory/scrypath",
-      workflow: "CI", run_id: "123", run_attempt: "2",
+      schema: 1,
+      authority: "github-actions-exact-sha",
+      repository: "szTheory/scrypath",
+      workflow: "CI",
+      run_id: "123",
+      run_attempt: "2",
       run_url: "https://github.com/szTheory/scrypath/actions/runs/123",
-      event: "workflow_dispatch", head_sha: @sha,
-      required_jobs: ["core (required)", "package (required)", "repository-contracts (required)", "backend (required)", "ecommerce-mounted (required)"],
-      coverage: %{outcome: "success", artifact_id: coverage_id, artifact_url: "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/10", artifact_digest: coverage_digest}
+      event: "workflow_dispatch",
+      head_sha: @sha,
+      required_jobs: [
+        "core (required)",
+        "package (required)",
+        "repository-contracts (required)",
+        "backend (required)",
+        "ecommerce-mounted (required)"
+      ],
+      coverage: %{
+        outcome: "success",
+        artifact_id: coverage_id,
+        artifact_url: "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/10",
+        artifact_digest: coverage_digest
+      }
     }
+
     member = if layout == :malformed_json, do: "{bad json", else: Jason.encode!(attestation)
     File.write!(Path.join(archive_dir, "closeout-attestation.json"), member)
     File.write!(Path.join(archive_dir, "extra.txt"), "extra\n")
     archive = Path.join(ctx.root, "layout.zip")
     File.rm(archive)
+
     cond do
       layout in [:extra_member, :traversal_member, :duplicate_member] ->
-        script = "import sys, zipfile, warnings; warnings.filterwarnings('ignore', category=UserWarning); " <>
-          "z=zipfile.ZipFile(sys.argv[1], 'w'); z.write(sys.argv[2], 'closeout-attestation.json'); " <>
-          "z.write(sys.argv[3], 'extra.txt') if sys.argv[4] == 'extra' else None; " <>
-          "z.writestr('../outside.txt', 'bad') if sys.argv[4] == 'traversal' else None; " <>
-          "z.writestr('closeout-attestation.json', 'duplicate') if sys.argv[4] == 'duplicate' else None; z.close()"
-        mode = case layout do :extra_member -> "extra"; :traversal_member -> "traversal"; :duplicate_member -> "duplicate" end
-        {_, 0} = System.cmd("python3", ["-c", script, archive, Path.join(archive_dir, "closeout-attestation.json"), Path.join(archive_dir, "extra.txt"), mode])
+        script =
+          "import sys, zipfile, warnings; warnings.filterwarnings('ignore', category=UserWarning); " <>
+            "z=zipfile.ZipFile(sys.argv[1], 'w'); z.write(sys.argv[2], 'closeout-attestation.json'); " <>
+            "z.write(sys.argv[3], 'extra.txt') if sys.argv[4] == 'extra' else None; " <>
+            "z.writestr('../outside.txt', 'bad') if sys.argv[4] == 'traversal' else None; " <>
+            "z.writestr('closeout-attestation.json', 'duplicate') if sys.argv[4] == 'duplicate' else None; z.close()"
+
+        mode =
+          case layout do
+            :extra_member -> "extra"
+            :traversal_member -> "traversal"
+            :duplicate_member -> "duplicate"
+          end
+
+        {_, 0} =
+          System.cmd("python3", [
+            "-c",
+            script,
+            archive,
+            Path.join(archive_dir, "closeout-attestation.json"),
+            Path.join(archive_dir, "extra.txt"),
+            mode
+          ])
+
       true ->
         {_, 0} = System.cmd("zip", ["-q", archive, "closeout-attestation.json"], cd: archive_dir)
     end
+
     bytes = File.read!(archive)
     File.write!(ctx.archive, bytes)
     File.write!(ctx.attestation, Jason.encode!(attestation))
@@ -437,15 +577,39 @@ defmodule Scrypath.CIMonitorTest do
   defp run_validate_readiness(ctx, source_root, record, stage) do
     path = Path.join(ctx.root, "#{stage}-record.json")
     File.write!(path, Jason.encode!(record))
+
     if stage == "terminal" do
-      common = ~w(schema cutoff baseline important_workflows invalidators findings opportunities preserved_history issue source_identities delivery cleanup tracked_inputs assumptions)a
-      inputs = record |> Map.take(common) |> Map.put(:conditions, Enum.map(record.conditions, fn condition -> Map.take(condition, [:id, :text]) end))
+      common =
+        ~w(schema cutoff baseline important_workflows invalidators findings opportunities preserved_history issue source_identities delivery cleanup tracked_inputs assumptions)a
+
+      inputs =
+        record
+        |> Map.take(common)
+        |> Map.put(
+          :conditions,
+          Enum.map(record.conditions, fn condition -> Map.take(condition, [:id, :text]) end)
+        )
+
       input_path = Path.join(ctx.root, "frozen-inputs.json")
       receipt_path = Path.join(ctx.root, "collector-receipt.json")
       File.write!(input_path, Jason.encode!(inputs))
       File.write!(receipt_path, Jason.encode!(record.attestation))
-      args = [@script, "validate-readiness", "--stage", "terminal", "--inputs", input_path,
-        "--receipt", receipt_path, "--record", path, "--source-root", source_root]
+
+      args = [
+        @script,
+        "validate-readiness",
+        "--stage",
+        "terminal",
+        "--inputs",
+        input_path,
+        "--receipt",
+        receipt_path,
+        "--record",
+        path,
+        "--source-root",
+        source_root
+      ]
+
       run_readiness_cli(ctx, args)
     else
       run_validate_path(ctx, source_root, path, stage)
@@ -454,7 +618,9 @@ defmodule Scrypath.CIMonitorTest do
 
   defp run_validate_path(ctx, source_root, path, stage) do
     args = [@script, "validate-readiness", "--stage", stage, "--source-root", source_root]
-    args = if stage == "terminal", do: args ++ ["--record", path], else: args ++ ["--inputs", path]
+
+    args =
+      if stage == "terminal", do: args ++ ["--record", path], else: args ++ ["--inputs", path]
 
     run_readiness_cli(ctx, args)
   end
@@ -475,38 +641,96 @@ defmodule Scrypath.CIMonitorTest do
 
   defp run_verify_comment(ctx, source_root, comment_path, comments_path, record) do
     File.write!(Path.join(ctx.root, "comment-record.json"), Jason.encode!(record))
-    System.cmd(System.find_executable("node") || "node", [
-      @script, "verify-readiness-comment", "--repo", "szTheory/scrypath", "--issue", "123",
-      "--comment", "999", "--record", Path.join(ctx.root, "comment-record.json"),
-      "--maintainer", "maintainer", "--source-root", source_root
-    ], env: [
-      {"GH_BIN", ctx.gh}, {"GIT_BIN", ctx.git}, {"FAKE_STATE", ctx.state},
-      {"FAKE_SCENARIO", "readiness_issue"}, {"FAKE_SHA", @sha}, {"FAKE_CALLS", ctx.calls},
-      {"FAKE_COMMENT_JSON", comment_path}, {"FAKE_COMMENTS_JSON", comments_path}
-    ], stderr_to_stdout: true)
+
+    System.cmd(
+      System.find_executable("node") || "node",
+      [
+        @script,
+        "verify-readiness-comment",
+        "--repo",
+        "szTheory/scrypath",
+        "--issue",
+        "123",
+        "--comment",
+        "999",
+        "--record",
+        Path.join(ctx.root, "comment-record.json"),
+        "--maintainer",
+        "maintainer",
+        "--source-root",
+        source_root
+      ],
+      env: [
+        {"GH_BIN", ctx.gh},
+        {"GIT_BIN", ctx.git},
+        {"FAKE_STATE", ctx.state},
+        {"FAKE_SCENARIO", "readiness_issue"},
+        {"FAKE_SHA", @sha},
+        {"FAKE_CALLS", ctx.calls},
+        {"FAKE_COMMENT_JSON", comment_path},
+        {"FAKE_COMMENTS_JSON", comments_path}
+      ],
+      stderr_to_stdout: true
+    )
   end
 
   defp readiness_source(ctx) do
     root = Path.join(ctx.root, "source")
     authority_path = Path.join(root, ".planning/reference/PRE-OPERATOR-UI-READINESS.md")
-    archive_path = Path.join(root, ".planning/milestones/v1.39-phases/164-readiness-gate-and-reconciliation/164-history.md")
-    baseline_path = Path.join(root, ".planning/milestones/v1.39-phases/162-whole-product-evidence-baseline/162-BASELINE.md")
+
+    archive_path =
+      Path.join(
+        root,
+        ".planning/milestones/v1.39-phases/164-readiness-gate-and-reconciliation/164-history.md"
+      )
+
+    baseline_path =
+      Path.join(
+        root,
+        ".planning/milestones/v1.39-phases/162-whole-product-evidence-baseline/162-BASELINE.md"
+      )
+
     File.mkdir_p!(Path.dirname(authority_path))
     File.mkdir_p!(Path.dirname(archive_path))
     File.mkdir_p!(Path.dirname(baseline_path))
-    authority = "# Current readiness\n\n## Phase 164 dated assessment\nHistorical authority bytes.\n"
+
+    authority =
+      "# Current readiness\n\n## Phase 164 dated assessment\nHistorical authority bytes.\n"
+
     archive = "Pinned historical archive bytes.\n"
+
     claim_dimensions = %{
-      "C-02" => 1, "C-22" => 1,
-      "C-03" => 2, "C-07" => 2, "C-08" => 2, "C-09" => 2, "C-04" => 2, "C-11" => 2,
-      "C-01" => 3, "C-12" => 3, "C-10" => 3, "C-18" => 3,
-      "C-13" => 4, "C-14" => 4, "C-15" => 4, "C-16" => 4, "C-17" => 4,
-      "C-05" => 5, "C-06" => 5, "C-19" => 5,
-      "C-21" => 6, "C-20" => 6,
-      "C-23" => 7, "C-24" => 7
+      "C-02" => 1,
+      "C-22" => 1,
+      "C-03" => 2,
+      "C-07" => 2,
+      "C-08" => 2,
+      "C-09" => 2,
+      "C-04" => 2,
+      "C-11" => 2,
+      "C-01" => 3,
+      "C-12" => 3,
+      "C-10" => 3,
+      "C-18" => 3,
+      "C-13" => 4,
+      "C-14" => 4,
+      "C-15" => 4,
+      "C-16" => 4,
+      "C-17" => 4,
+      "C-05" => 5,
+      "C-06" => 5,
+      "C-19" => 5,
+      "C-21" => 6,
+      "C-20" => 6,
+      "C-23" => 7,
+      "C-24" => 7
     }
-    baseline = "# Phase 162 fixture\n\n## Claim matrix\n\n" <>
-      (Enum.map(claim_dimensions, fn {id, dimension} -> "| #{id} | #{dimension} |\n" end) |> Enum.join())
+
+    baseline =
+      "# Phase 162 fixture\n\n## Claim matrix\n\n" <>
+        (Enum.map(claim_dimensions, fn {id, dimension} -> "| #{id} | #{dimension} |\n" end)
+         |> Enum.join())
+
     File.write!(authority_path, authority)
     File.write!(archive_path, archive)
     File.write!(baseline_path, baseline)
@@ -524,9 +748,11 @@ defmodule Scrypath.CIMonitorTest do
       git_sha: String.trim(sha),
       authority_path: ".planning/reference/PRE-OPERATOR-UI-READINESS.md",
       authority_digest: :crypto.hash(:sha256, suffix) |> Base.encode16(case: :lower),
-      archive_path: ".planning/milestones/v1.39-phases/164-readiness-gate-and-reconciliation/164-history.md",
+      archive_path:
+        ".planning/milestones/v1.39-phases/164-readiness-gate-and-reconciliation/164-history.md",
       archive_digest: :crypto.hash(:sha256, archive) |> Base.encode16(case: :lower),
-      baseline_path: ".planning/milestones/v1.39-phases/162-whole-product-evidence-baseline/162-BASELINE.md",
+      baseline_path:
+        ".planning/milestones/v1.39-phases/162-whole-product-evidence-baseline/162-BASELINE.md",
       baseline_digest: :crypto.hash(:sha256, baseline) |> Base.encode16(case: :lower),
       claim_dimensions: claim_dimensions
     }
@@ -552,7 +778,9 @@ defmodule Scrypath.CIMonitorTest do
       "Release, package, support, and planning truth are current, with no task-owned cleanup or verification debt hidden at closeout."
     ]
 
-    claim_ids = ~w(C-02 C-22 C-03 C-07 C-08 C-09 C-04 C-11 C-01 C-12 C-10 C-18 C-13 C-14 C-15 C-16 C-17 C-05 C-06 C-19 C-21 C-20 C-23 C-24)
+    claim_ids =
+      ~w(C-02 C-22 C-03 C-07 C-08 C-09 C-04 C-11 C-01 C-12 C-10 C-18 C-13 C-14 C-15 C-16 C-17 C-05 C-06 C-19 C-21 C-20 C-23 C-24)
+
     claims =
       Enum.map(claim_ids, fn id ->
         %{
@@ -572,20 +800,45 @@ defmodule Scrypath.CIMonitorTest do
       schema: 1,
       cutoff: "2026-09-30T12:00:00Z",
       baseline: %{
-        dimensions: Enum.with_index(dimensions, 1) |> Enum.map(fn {name, id} -> %{id: id, name: name} end),
+        dimensions:
+          Enum.with_index(dimensions, 1) |> Enum.map(fn {name, id} -> %{id: id, name: name} end),
         claims: claims
       },
       important_workflows: [%{id: "WF-01", description: "A declared workflow", claims: ["C-02"]}],
-      invalidators: [%{id: "INV-01", path: "CONTRIBUTING.md", reason: "Recheck when source contracts change."}],
+      invalidators: [
+        %{id: "INV-01", path: "CONTRIBUTING.md", reason: "Recheck when source contracts change."}
+      ],
       findings: [],
       opportunities: [],
       preserved_history: [
-        %{path: source.authority_path, git_source: source.git_sha, scope: "named_suffix", heading: "## Phase 164 dated assessment", sha256: source.authority_digest},
-        %{path: source.archive_path, git_source: source.git_sha, scope: "whole_file", sha256: source.archive_digest},
-        %{path: source.baseline_path, git_source: source.git_sha, scope: "whole_file", sha256: source.baseline_digest}
+        %{
+          path: source.authority_path,
+          git_source: source.git_sha,
+          scope: "named_suffix",
+          heading: "## Phase 164 dated assessment",
+          sha256: source.authority_digest
+        },
+        %{
+          path: source.archive_path,
+          git_source: source.git_sha,
+          scope: "whole_file",
+          sha256: source.archive_digest
+        },
+        %{
+          path: source.baseline_path,
+          git_source: source.git_sha,
+          scope: "whole_file",
+          sha256: source.baseline_digest
+        }
       ],
-      conditions: Enum.with_index(condition_texts, 1) |> Enum.map(fn {text, id} -> %{id: id, text: text} end),
-      issue: %{repository: "szTheory/scrypath", number: 123, url: "https://github.com/szTheory/scrypath/issues/123"},
+      conditions:
+        Enum.with_index(condition_texts, 1)
+        |> Enum.map(fn {text, id} -> %{id: id, text: text} end),
+      issue: %{
+        repository: "szTheory/scrypath",
+        number: 123,
+        url: "https://github.com/szTheory/scrypath/issues/123"
+      },
       source_identities: %{
         candidate: %{sha: @sha},
         squash_main: %{sha: @sha},
@@ -596,60 +849,150 @@ defmodule Scrypath.CIMonitorTest do
       delivery: %{disposition: "deferred", reason: "Publication is not part of this record."},
       cleanup: %{status: "complete", items: []},
       tracked_inputs: [%{path: "CONTRIBUTING.md", disposition: "present"}],
-      assumptions: Enum.map(1..7, fn index -> %{id: "EA-167-#{String.pad_leading(Integer.to_string(index), 2, "0")}", status: "unresolved", reason: "Inherited edge semantics remain author-unresolved."} end)
+      assumptions:
+        Enum.map(1..7, fn index ->
+          %{
+            id: "EA-167-#{String.pad_leading(Integer.to_string(index), 2, "0")}",
+            status: "unresolved",
+            reason: "Inherited edge semantics remain author-unresolved."
+          }
+        end)
     }
 
     case stage do
-      "inputs" -> base
-      "draft" -> %{base | issue: %{repository: "szTheory/scrypath", status: "pending", reason: "Issue creation remains a later explicit action."}, delivery: %{disposition: "pending", reason: "Delivery evidence has not been collected yet."}}
+      "inputs" ->
+        base
+
+      "draft" ->
+        %{
+          base
+          | issue: %{
+              repository: "szTheory/scrypath",
+              status: "pending",
+              reason: "Issue creation remains a later explicit action."
+            },
+            delivery: %{
+              disposition: "pending",
+              reason: "Delivery evidence has not been collected yet."
+            }
+        }
+
       "terminal" ->
-        judgments = Enum.map(base.conditions, fn condition -> Map.merge(condition, %{status: "PASS", rationale: "Maintainer supplied judgment.", evidence: [%{url: "https://github.com/szTheory/scrypath/actions/runs/123", label: "Exact-source receipt"}], evidence_date: "2026-09-30", assessment_date: "2026-09-30", limits: "Bounded to the supplied evidence."}) end)
+        judgments =
+          Enum.map(base.conditions, fn condition ->
+            Map.merge(condition, %{
+              status: "PASS",
+              rationale: "Maintainer supplied judgment.",
+              evidence: [
+                %{
+                  url: "https://github.com/szTheory/scrypath/actions/runs/123",
+                  label: "Exact-source receipt"
+                }
+              ],
+              evidence_date: "2026-09-30",
+              assessment_date: "2026-09-30",
+              limits: "Bounded to the supplied evidence."
+            })
+          end)
+
         Map.merge(base, %{
           assessment_id: "Readiness-20260930T120000Z",
           assessed_at_utc: "2026-09-30T12:00:00Z",
-          maintainer: %{login: "maintainer", decision_provenance: "Explicit maintainer assessment."},
+          maintainer: %{
+            login: "maintainer",
+            decision_provenance: "Explicit maintainer assessment."
+          },
           conditions: judgments,
           decision: "NOT READY",
           final_source: %{sha: @sha},
           attestation: fixture_collector_receipt(),
-          delivery_identity: %{disposition: "deferred", release: "not-published", package: "not-published"},
+          delivery_identity: %{
+            disposition: "deferred",
+            release: "not-published",
+            package: "not-published"
+          },
           blockers: ["One baseline claim remains unresolved."],
-          revisit_triggers: ["A new source invalidator or hosted receipt." ]
+          revisit_triggers: ["A new source invalidator or hosted receipt."]
         })
     end
   end
 
   defp fixture_collector_receipt do
     required_jobs = [
-      "core (required)", "package (required)", "repository-contracts (required)",
-      "backend (required)", "ecommerce-mounted (required)"
+      "core (required)",
+      "package (required)",
+      "repository-contracts (required)",
+      "backend (required)",
+      "ecommerce-mounted (required)"
     ]
+
     coverage_digest = "sha256:" <> String.duplicate("a", 64)
     archive_digest = String.duplicate("b", 64)
     coverage_url = "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/10"
 
     content = %{
-      schema: 1, authority: "github-actions-exact-sha", repository: "szTheory/scrypath",
-      workflow: "CI", run_id: "123", run_attempt: "2",
+      schema: 1,
+      authority: "github-actions-exact-sha",
+      repository: "szTheory/scrypath",
+      workflow: "CI",
+      run_id: "123",
+      run_attempt: "2",
       run_url: "https://github.com/szTheory/scrypath/actions/runs/123",
-      event: "workflow_dispatch", head_sha: @sha, required_jobs: required_jobs,
-      coverage: %{outcome: "success", artifact_id: "10", artifact_url: coverage_url, artifact_digest: coverage_digest}
+      event: "workflow_dispatch",
+      head_sha: @sha,
+      required_jobs: required_jobs,
+      coverage: %{
+        outcome: "success",
+        artifact_id: "10",
+        artifact_url: coverage_url,
+        artifact_digest: coverage_digest
+      }
     }
 
-    jobs = Enum.with_index(required_jobs ++ ["coverage (advisory)", "closeout-attestation"], 201)
-      |> Enum.map(fn {name, id} -> %{id: id, name: name, status: "completed", conclusion: "success"} end)
+    jobs =
+      Enum.with_index(required_jobs ++ ["coverage (advisory)", "closeout-attestation"], 201)
+      |> Enum.map(fn {name, id} ->
+        %{id: id, name: name, status: "completed", conclusion: "success"}
+      end)
 
     %{
-      schema: 1, authority: "github-actions-exact-sha", repository: "szTheory/scrypath",
-      head_sha: @sha, source: %{head_sha: @sha}, workflow: %{id: "77", name: "CI", path: ".github/workflows/ci.yml"},
-      run_id: "123", run_attempt: 2, run_url: "https://github.com/szTheory/scrypath/actions/runs/123",
-      event: "workflow_dispatch", status: "completed", conclusion: "success",
-      created_at: "2026-09-30T00:00:00Z", updated_at: "2026-09-30T00:01:00Z", jobs: jobs,
-      coverage_artifact: %{id: "10", name: "coverage-report-#{@sha}", url: coverage_url, digest: coverage_digest, expires_at: "2026-10-07T00:00:00Z"},
-      attestation_artifact: %{id: "11", name: "closeout-attestation-#{@sha}", url: "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/11", digest: "sha256:" <> archive_digest, expires_at: "2026-10-07T00:00:00Z"},
+      schema: 1,
+      authority: "github-actions-exact-sha",
+      repository: "szTheory/scrypath",
+      head_sha: @sha,
+      source: %{head_sha: @sha},
+      workflow: %{id: "77", name: "CI", path: ".github/workflows/ci.yml"},
+      run_id: "123",
+      run_attempt: 2,
+      run_url: "https://github.com/szTheory/scrypath/actions/runs/123",
+      event: "workflow_dispatch",
+      status: "completed",
+      conclusion: "success",
+      created_at: "2026-09-30T00:00:00Z",
+      updated_at: "2026-09-30T00:01:00Z",
+      jobs: jobs,
+      coverage_artifact: %{
+        id: "10",
+        name: "coverage-report-#{@sha}",
+        url: coverage_url,
+        digest: coverage_digest,
+        expires_at: "2026-10-07T00:00:00Z"
+      },
+      attestation_artifact: %{
+        id: "11",
+        name: "closeout-attestation-#{@sha}",
+        url: "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/11",
+        digest: "sha256:" <> archive_digest,
+        expires_at: "2026-10-07T00:00:00Z"
+      },
       attestation_archive: %{sha256: archive_digest},
-      attestation_member: %{name: "closeout-attestation.json", sha256: String.duplicate("c", 64), content: content},
-      collected_at_utc: "2026-09-30T12:00:00Z", limitations: ["Factual fixture only."]
+      attestation_member: %{
+        name: "closeout-attestation.json",
+        sha256: String.duplicate("c", 64),
+        content: content
+      },
+      collected_at_utc: "2026-09-30T12:00:00Z",
+      limitations: ["Factual fixture only."]
     }
   end
 
