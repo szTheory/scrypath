@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 Release Please manages versioned entries after this baseline.
 
+## [0.3.14](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.13...scrypath-v0.3.14) (2026-10-01)
+
+
+### Bug Fixes
+
+* add cmake for ecommerce native fallback ([#88](https://github.com/szTheory/scrypath/issues/88)) ([9c785d9](https://github.com/szTheory/scrypath/commit/9c785d9cd179b6b2f1594987a2940ea7b7609e2a))
+* **ecommerce:** keep setup processes from advertising server readiness ([#82](https://github.com/szTheory/scrypath/issues/82)) ([ad73b92](https://github.com/szTheory/scrypath/commit/ad73b92d5883b4136fa961e134c987a95939fac2))
+* restore tenant-scoped search and facets ([#85](https://github.com/szTheory/scrypath/issues/85)) ([933ad30](https://github.com/szTheory/scrypath/commit/933ad30645c41df9f21dd4ddfd2d5b93fbd48620))
+* secure and verify maintained dependency graphs ([#84](https://github.com/szTheory/scrypath/issues/84)) ([2832e91](https://github.com/szTheory/scrypath/commit/2832e91d725d70eff9ba11d08052260ba17e2747))
+
 ## [0.3.13](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.12...scrypath-v0.3.13) (2026-09-25)
 
 
