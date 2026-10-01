@@ -8,6 +8,7 @@ defmodule Scrypath.Phase147E2EContractTest do
   @compose_base File.read!(Path.join(@example, "compose.yaml"))
   @compose File.read!(Path.join(@example, "compose.e2e.yaml"))
   @entrypoint File.read!(Path.join(@example, "docker-e2e-entrypoint.sh"))
+  @web_dockerfile File.read!(Path.join(@example, "Dockerfile"))
   @runner File.read!(Path.join(@example, "scripts/verify-e2e.sh"))
   @browser_runner File.read!(Path.join(@example, "docker-playwright.sh"))
   @runtime_config File.read!(Path.join(@example, "config/runtime.exs"))
@@ -60,6 +61,10 @@ defmodule Scrypath.Phase147E2EContractTest do
     assert resolved == "1.60.0"
     assert dockerfile =~ "ARG PLAYWRIGHT_VERSION=#{resolved}"
     assert dockerfile =~ "mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble"
+  end
+
+  test "web image includes native build tools for dependency fallback" do
+    assert @web_dockerfile =~ "apt-get install -y --no-install-recommends build-essential cmake"
   end
 
   test "focused job is uniquely required while full E2E remains advisory" do

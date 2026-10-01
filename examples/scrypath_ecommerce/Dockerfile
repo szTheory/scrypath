@@ -2,7 +2,7 @@
 FROM hexpm/elixir:1.19.0-erlang-28.1-debian-bookworm-20260518
 
 RUN apt-get update -qq \
-  && apt-get install -y --no-install-recommends build-essential git curl postgresql-client npm \
+  && apt-get install -y --no-install-recommends build-essential cmake git curl postgresql-client npm \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
