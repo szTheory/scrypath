@@ -3,6 +3,7 @@ defmodule Scrypath.CIMonitorTest do
 
   @script "scripts/ci_monitor.cjs"
   @sha "0123456789abcdef0123456789abcdef01234567"
+  @final_sha "fedcba9876543210fedcba9876543210fedcba98"
 
   @tag readiness_tracer: true
   test "collect-readiness joins one explicit successful attempt to its real hashed attestation archive",
@@ -353,6 +354,67 @@ defmodule Scrypath.CIMonitorTest do
     {output, status} = run_validate_readiness(ctx, source.root, record, "terminal")
     assert status != 0
     assert output =~ "approved public evidence host"
+  end
+
+  test "terminal validation allows the final attested source to differ from its planning parent",
+       ctx do
+    source = readiness_source(ctx)
+    record = readiness_record(source, "terminal")
+
+    record = %{
+      record
+      | final_source: %{sha: @final_sha},
+        attestation: fixture_collector_receipt(@final_sha)
+    }
+
+    assert record.source_identities.final_planning_source.sha == @sha
+    assert record.final_source.sha == @final_sha
+
+    {output, 0} = run_validate_readiness(ctx, source.root, record, "terminal")
+    payload = Jason.decode!(output)
+    assert payload["result"] == "FACTUAL_ONLY_VALID"
+    assert payload["rendered_markdown"] =~ "Final planning parent: #{@sha}"
+    assert payload["rendered_markdown"] =~ "Final attested source: #{@final_sha}"
+
+    mismatched_receipt = %{record | attestation: fixture_collector_receipt(@sha)}
+
+    {invalid_output, status} =
+      run_validate_readiness(ctx, source.root, mismatched_receipt, "terminal")
+
+    assert status != 0
+
+    assert invalid_output =~
+             "final attestation receipt repository/source/event/outcome does not join the supplied final source"
+  end
+
+  test "terminal validation accepts collector UTC timestamps with millisecond precision", ctx do
+    source = readiness_source(ctx)
+    record = readiness_record(source, "terminal")
+    assessed_at = "2026-09-30T12:00:00.123Z"
+
+    record = %{
+      record
+      | cutoff: "2026-09-30T11:59:59.456Z",
+        assessed_at_utc: assessed_at,
+        attestation: %{record.attestation | collected_at_utc: "2026-09-30T12:00:00.789Z"}
+    }
+
+    record =
+      Map.put(record, :correction, %{
+        supersedes_assessment_id: "Readiness-20260929T120000Z",
+        corrected_at_utc: assessed_at,
+        reason: "Collector-native millisecond timestamp precision."
+      })
+
+    {output, 0} = run_validate_readiness(ctx, source.root, record, "terminal")
+    assert Jason.decode!(output)["result"] == "FACTUAL_ONLY_VALID"
+
+    for timestamp <- ["2026-09-30T12:00:00.12Z", "2026-09-30T12:00:00.1234Z"] do
+      invalid = %{record | attestation: %{record.attestation | collected_at_utc: timestamp}}
+      {invalid_output, status} = run_validate_readiness(ctx, source.root, invalid, "terminal")
+      assert status != 0
+      assert invalid_output =~ "second- or millisecond-precision UTC timestamp ending in Z"
+    end
   end
 
   test "verify-readiness-comment confirms explicit issue, author, body, and unique authority",
@@ -1048,7 +1110,7 @@ defmodule Scrypath.CIMonitorTest do
     end
   end
 
-  defp fixture_collector_receipt do
+  defp fixture_collector_receipt(sha \\ @sha) do
     required_jobs = [
       "core (required)",
       "package (required)",
@@ -1071,7 +1133,7 @@ defmodule Scrypath.CIMonitorTest do
       run_attempt: "2",
       run_url: "https://github.com/szTheory/scrypath/actions/runs/123",
       event: "workflow_dispatch",
-      head_sha: @sha,
+      head_sha: sha,
       required_jobs: required_jobs,
       coverage: %{
         outcome: "success",
@@ -1091,8 +1153,8 @@ defmodule Scrypath.CIMonitorTest do
       schema: 1,
       authority: "github-actions-exact-sha",
       repository: "szTheory/scrypath",
-      head_sha: @sha,
-      source: %{head_sha: @sha},
+      head_sha: sha,
+      source: %{head_sha: sha},
       workflow: %{id: "77", name: "CI", path: ".github/workflows/ci.yml"},
       run_id: "123",
       run_attempt: 2,
@@ -1105,14 +1167,14 @@ defmodule Scrypath.CIMonitorTest do
       jobs: jobs,
       coverage_artifact: %{
         id: "10",
-        name: "coverage-report-#{@sha}",
+        name: "coverage-report-#{sha}",
         url: coverage_url,
         digest: "sha256:" <> coverage_digest,
         expires_at: "2026-10-07T00:00:00Z"
       },
       attestation_artifact: %{
         id: "11",
-        name: "closeout-attestation-#{@sha}",
+        name: "closeout-attestation-#{sha}",
         url: "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/11",
         digest: "sha256:" <> archive_digest,
         expires_at: "2026-10-07T00:00:00Z"

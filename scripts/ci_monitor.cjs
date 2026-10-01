@@ -461,8 +461,8 @@ function validIsoDate(value, label) {
 }
 
 function validUtcTimestamp(value, label) {
-  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(value) || Number.isNaN(Date.parse(value))) {
-    throw new Error(`${label} must be a second-precision UTC timestamp ending in Z`);
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(value) || Number.isNaN(Date.parse(value))) {
+    throw new Error(`${label} must be a second- or millisecond-precision UTC timestamp ending in Z`);
   }
   return value;
 }
@@ -828,7 +828,8 @@ function renderTerminal(record) {
     `- Assessment date: ${markdownCell(record.assessed_at_utc)}`,
     `- Decision supplied by @${record.maintainer.login}: **${record.decision}**`,
     `- Decision provenance: ${markdownCell(record.maintainer.decision_provenance)}`,
-    `- Final planning source: ${markdownCell(record.final_source.sha)}`,
+    `- Final planning parent: ${markdownCell(record.source_identities.final_planning_source.sha)}`,
+    `- Final attested source: ${markdownCell(record.final_source.sha)}`,
     `- Candidate source: ${markdownCell(record.source_identities.candidate.sha)}; squash-main source: ${markdownCell(record.source_identities.squash_main.sha)}; local artifact: ${markdownCell(record.source_identities.local_artifact.sha)}.`,
     `- Published identity: ${markdownCell(record.source_identities.published.version)} / ${markdownCell(record.source_identities.published.tag)} / ${markdownCell(record.source_identities.published.sha)}.`,
     `- Exact-source receipt: ${markdownCell(receipt.repository)} run ${markdownCell(receipt.run_id)}, attempt ${markdownCell(receipt.run_attempt)}, source ${markdownCell(receipt.head_sha)}.`,
@@ -890,7 +891,8 @@ function validateTerminal(record, sourceRoot) {
   }
   const finalSource = requireObject(record.final_source, "final_source");
   requireExactSha(finalSource.sha);
-  if (finalSource.sha !== record.source_identities.final_planning_source.sha) throw new Error("final_source identity must match final_planning_source while remaining separately named");
+  // The planning parent and final attested snapshot are separate identities.
+  // validateCollectorReceipt below binds the receipt to the final snapshot.
   const attestation = requireObject(record.attestation, "attestation");
   validateCollectorReceipt(attestation, finalSource.sha, record.issue.repository);
   const deliveryIdentity = requireObject(record.delivery_identity, "delivery_identity");
