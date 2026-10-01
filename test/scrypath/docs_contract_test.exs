@@ -131,7 +131,7 @@ defmodule Scrypath.DocsContractTest do
   test "README and overview expose the jtbd guide as a first-class entry point" do
     assert_contains_all(@readme, [
       "guides/jtbd-and-user-flows.md",
-      "jobs-to-be-done map"
+      "jobs and adoption path"
     ])
 
     overview = @guides["guides/overview.md"]
@@ -160,7 +160,7 @@ defmodule Scrypath.DocsContractTest do
 
     assert_contains_all(@readme, [
       "guides/request-edge-search.md",
-      "Request-edge contract"
+      "Request-edge search"
     ])
 
     assert_contains_all(File.read!("lib/scrypath.ex"), [
@@ -194,7 +194,7 @@ defmodule Scrypath.DocsContractTest do
 
     assert_contains_all(@readme, [
       "guides/composing-real-app-search.md",
-      "Real-app composition and metadata"
+      "real-app composition"
     ])
 
     assert_contains_all(scrypath_doc, [
@@ -236,6 +236,56 @@ defmodule Scrypath.DocsContractTest do
 
     refute String.contains?(composition_doc, "def search(")
     refute String.contains?(composition_doc, "schema-generated")
+  end
+
+  test "readme route map and jtbd next-reading retain unique useful destinations" do
+    public_jtbd = @guides["guides/jtbd-and-user-flows.md"]
+
+    assert_contains_all(@readme, [
+      "## Choose a route",
+      "guides/overview.md",
+      "guides/golden-path.md",
+      "guides/support-and-compatibility.md",
+      "guides/outside-adopter-intake.md",
+      "guides/scope-and-reopen-policy.md",
+      "guides/request-edge-search.md",
+      "guides/composing-real-app-search.md",
+      "guides/related-data-and-reindexing.md",
+      "guides/meilisearch-concepts.md",
+      "guides/meilisearch-operations.md",
+      "guides/common-mistakes.md",
+      "guides/phoenix-contexts.md",
+      "guides/phoenix-controllers-and-json.md",
+      "guides/phoenix-liveview.md",
+      "guides/faceted-search-with-phoenix-liveview.md",
+      "guides/multi-index-search.md",
+      "guides/per-query-tuning-pipeline.md",
+      "guides/operator-mix-tasks.md",
+      "examples/phoenix_meilisearch/README.md",
+      "examples/scrypath_ecommerce/README.md",
+      "scrypath_ops/README.md"
+    ])
+
+    assert length(Regex.scan(~r/^## Flow [1-6]:/m, public_jtbd)) == 6
+    assert length(Regex.scan(~r/^## What Scrypath is opinionated about$/m, public_jtbd)) == 1
+    assert length(Regex.scan(~r/^## Where to go next$/m, public_jtbd)) == 1
+    refute String.contains?(public_jtbd, "## What to read next")
+
+    assert_contains_all(public_jtbd, [
+      "golden-path.md",
+      "getting-started.md",
+      "phoenix-contexts.md",
+      "phoenix-walkthrough.md",
+      "request-edge-search.md",
+      "phoenix-controllers-and-json.md",
+      "phoenix-liveview.md",
+      "faceted-search-with-phoenix-liveview.md",
+      "sync-modes-and-visibility.md",
+      "related-data-and-reindexing.md",
+      "multi-index-search.md",
+      "drift-recovery.md",
+      "operator-mix-tasks.md"
+    ])
   end
 
   test "jtbd docs stay grounded in the checked-out surface" do
@@ -388,18 +438,18 @@ defmodule Scrypath.DocsContractTest do
     assert String.contains?(File.read!("mix.exs"), "\"verify.phase91\": :test")
   end
 
-  test "README opens with installation, quick path, and phoenix wayfinding" do
+  test "README opens with installation and first-hour path before the route map" do
     assert String.contains?(@readme, "Scrypath, the Ecto-native search indexing library")
-    assert ordered?(@readme, "## Installation", "## When Scrypath Fits")
-    assert ordered?(@readme, "## Quick Path", "## When Scrypath Fits")
+    assert ordered?(@readme, "## Installation", "## Choose a route")
+    assert ordered?(@readme, "## Choose a route", "## Quick Path")
     assert @readme =~ ~S|{:scrypath, "~> 0.3"}|
     refute @readme =~ ~S|{:req, "~> 0.5"}|
     refute @readme =~ ~S|{:scrypath, path: "../scrypath"}|
 
     assert_contains_all(@readme, [
       "## Quick Path",
-      "Scrypath owns its internal transport dependency.",
-      "If you want queued sync, add Oban as an optional production integration",
+      "Scrypath owns its internal transport dependency",
+      "Add Oban only when you choose",
       "field :status, :string",
       "guides/golden-path.md"
     ])
@@ -409,7 +459,7 @@ defmodule Scrypath.DocsContractTest do
     chain =
       "requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded"
 
-    assert String.contains?(@readme, chain)
+    refute String.contains?(@readme, chain)
     assert String.contains?(@guides["guides/sync-modes-and-visibility.md"], chain)
   end
 
@@ -457,11 +507,11 @@ defmodule Scrypath.DocsContractTest do
       "## Versioning and upgrades",
       "mix verify.phase11",
       "docs/releasing.md",
-      "**Choosing a mode:**",
+      "Choose **`:inline`**",
       "guides/sync-modes-and-visibility.md"
     ])
 
-    assert ordered?(@readme, "## Sync Modes", "## Search")
+    assert ordered?(@readme, "## Sync modes", "## Search")
     assert ordered?(@readme, "## Versioning and upgrades", "## Search")
   end
 
@@ -782,24 +832,32 @@ defmodule Scrypath.DocsContractTest do
     ])
   end
 
-  test "README sync authority ties sync-modes guide link to authority wording (Phase 51)" do
+  test "README routes sync semantics to the canonical guide" do
     assert @readme =~ ~S|](guides/sync-modes-and-visibility.md)|
-
-    assert Regex.match?(
-             ~r/sync-modes-and-visibility.{0,200}(authority|single source|single authority)/i,
-             @readme
-           ) or
-             Regex.match?(
-               ~r/(authority|single source|single authority).{0,200}sync-modes-and-visibility/i,
-               @readme
-             )
+    assert Regex.match?(~r/exact return contract, lifecycle, and recovery guidance/i, @readme)
   end
 
-  test "readme sync spine keeps :status :accepted wording tied to visibility guide (LIB-03)" do
+  test "sync return contract stays with the public API and canonical guide" do
+    api = File.read!("lib/scrypath.ex")
+    guide = @guides["guides/sync-modes-and-visibility.md"]
+
     assert_contains_all(@readme, [
-      "guides/sync-modes-and-visibility.md",
-      "`:status` `:accepted`",
-      "Accepted work is not the same thing as search visibility"
+      "https://hexdocs.pm/scrypath/Scrypath.html#sync_record/3",
+      "accepted work may not yet be visible in search"
+    ])
+
+    assert_contains_all(api, [
+      "**`:status` `:accepted`**",
+      "**`:status` `:completed`**",
+      "when `sync_mode: :inline` and the backend returned a task handle"
+    ])
+
+    assert_contains_all(guide, [
+      "| Mode | Return boundary |",
+      "otherwise `:accepted`",
+      "For `:oban`, the successful return status is `:accepted` when the durable enqueue succeeds",
+      "exact successful map fields",
+      "https://hexdocs.pm/scrypath/Scrypath.html#sync_record/3"
     ])
   end
 

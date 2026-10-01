@@ -82,6 +82,69 @@ write tracked files after the final successful run. Authentication or product
 decisions may still stop work before implementation; they are not acceptance
 tests and must never be represented as simulated approval.
 
+### Readiness receipt and terminal record checks
+
+The same maintenance script provides read-only factual collection and record
+checks for the Phase 170 closeout. Keep every JSON input and output outside the
+source checkout (for example, in a dedicated directory under `/tmp`). The
+collector fetches one explicit repository, full source SHA, run ID, and attempt;
+it exhausts the attempt's job and artifact pages, downloads only the attestation
+artifact, and checks the archive bytes against GitHub's artifact digest. It
+accepts one `closeout-attestation.json` ZIP member and stores both the archive
+SHA-256 and the JSON member SHA-256. Those hashes refer to different bytes.
+The action's run-page artifact URL differs from the artifact API URL; the
+collector joins them through the selected run ID and artifact ID.
+Temporary downloads are removed when collection finishes.
+
+```sh
+node scripts/ci_monitor.cjs collect-readiness \
+  --repo OWNER/REPO \
+  --sha FULL_40_CHARACTER_SHA \
+  --run RUN_ID \
+  --attempt RUN_ATTEMPT \
+  --output /tmp/scrypath-readiness/receipt.json
+
+node scripts/ci_monitor.cjs validate-readiness \
+  --stage inputs \
+  --inputs /tmp/scrypath-readiness/inputs.json \
+  --source-root "$PWD"
+
+node scripts/ci_monitor.cjs validate-readiness \
+  --stage terminal \
+  --inputs /tmp/scrypath-readiness/inputs.json \
+  --receipt /tmp/scrypath-readiness/receipt.json \
+  --record /tmp/scrypath-readiness/terminal.json \
+  --source-root "$PWD"
+
+node scripts/ci_monitor.cjs verify-readiness-comment \
+  --repo OWNER/REPO \
+  --issue ISSUE_NUMBER \
+  --comment COMMENT_ID \
+  --record /tmp/scrypath-readiness/terminal.json \
+  --maintainer LOGIN \
+  --source-root "$PWD"
+```
+
+`draft` validation permits explicitly reasoned pending issue and delivery
+inputs. `inputs` requires a discoverable public issue and permits a reasoned
+pending delivery disposition when its next planned action is stated. Terminal
+validation requires the actual delivery disposition and may not remain pending.
+It also requires all six supplied condition judgments, their dates, rationale,
+linked evidence and limits, maintainer provenance, final-source receipt,
+delivery identity, blockers, and revisit triggers. The schema is private JSON
+version 1 for this closeout and is not a public Scrypath API. Candidate,
+squash-main, final planning source, local artifact, and published tag/package
+identities remain separate fields even when their SHA values match.
+
+Validation returns `FACTUAL_ONLY_VALID` for structure and identity joins. It
+checks the unchanged seven-dimension/24-claim baseline, all six approved
+condition texts, pinned historical bytes, supplied exact-SHA receipt, and
+comment author/body/issue identity. It does not assess evidence meaning, assign
+condition statuses, infer READY, accept risk, or authorize a comment. A
+terminal decision and any approval provenance must be supplied by the
+maintainer. Corrections are new dated records that identify the assessment they
+supersede. No CI lane or workflow topology is added for these checks.
+
 Run test files with warnings promoted to failures when changing test support or
 test infrastructure:
 

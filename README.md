@@ -23,42 +23,21 @@ def deps do
 end
 ```
 
-**Start here:** for the canonical first-hour path from dependencies through a working `Scrypath.search/3` with inline sync, follow [guides/golden-path.md](guides/golden-path.md).
+**Start here:** follow the [Golden path](guides/golden-path.md) from installation through your first inline `Scrypath.search/3`.
 
-**Support and readiness:** for supported Elixir, OTP, Meilisearch, sync modes, and the verification commands behind those claims, use [guides/support-and-compatibility.md](guides/support-and-compatibility.md).
-The fast local support check is <code>mix verify.adopter</code>; the live Phoenix + Meilisearch check is <code>mix verify.adopter --live</code>.
-That guide is the release-backed guidance authority; main may contain unreleased changes.
-This README stays route-first and does not duplicate compatibility tuple values.
+## Choose a route
 
-**Outside integrations and evidence:** if you are trying Scrypath in a real app and something fails or feels unclear, read [guides/outside-adopter-intake.md](guides/outside-adopter-intake.md).
+- **Learn the product:** [JTBD and user flows](guides/jtbd-and-user-flows.md) explains the jobs and adoption path; the [guides overview](guides/overview.md) indexes every guide.
+- **Check support or product boundaries:** [support and compatibility](guides/support-and-compatibility.md) is the route for release-backed guidance and supported versions. Run `mix verify.adopter` locally or `mix verify.adopter --live` with its services; main may contain unreleased changes. [Outside-adopter intake](guides/outside-adopter-intake.md) routes real-app evidence. Scope reopens only for a concrete production bug, reviewed outside-adopter evidence, or a deliberate strategic product decision, as described in the [scope and reopen policy](guides/scope-and-reopen-policy.md).
+- **Wire a Phoenix or Ecto app:** [Getting Started](guides/getting-started.md), [Phoenix contexts](guides/phoenix-contexts.md), [the Phoenix walkthrough](guides/phoenix-walkthrough.md), [controllers and JSON](guides/phoenix-controllers-and-json.md), and [LiveView](guides/phoenix-liveview.md) show the app boundary. [Request-edge search](guides/request-edge-search.md) covers browser params and optional Phoenix glue; [real-app composition](guides/composing-real-app-search.md) covers reusable policy and metadata.
+- **Build a search experience:** [Meilisearch concepts](guides/meilisearch-concepts.md) introduces the backend model; [related data and reindexing](guides/related-data-and-reindexing.md), [faceted search with Phoenix LiveView](guides/faceted-search-with-phoenix-liveview.md) covers `Scrypath.search_within_facet/4`; [multi-index search](guides/multi-index-search.md) covers `Scrypath.search_many/2`, `:all` expansion, and `federation_weight:`; [per-query tuning](guides/per-query-tuning-pipeline.md) distinguishes request-time parameters from index-time settings.
+- **Choose sync and recover:** [sync modes and visibility](guides/sync-modes-and-visibility.md), [Meilisearch operations](guides/meilisearch-operations.md), [operator Mix tasks](guides/operator-mix-tasks.md), [drift recovery](guides/drift-recovery.md), and [common mistakes](guides/common-mistakes.md) explain lifecycle, visibility, and repair.
+- **Try the examples:** [Phoenix + Meilisearch](examples/phoenix_meilisearch/README.md) is the integration walkthrough; the [e-commerce demo](examples/scrypath_ecommerce/README.md) shows tenant-scoped search, facets, related-data propagation, and operator workflows.
+- **Maintainer tools:** the optional [operator UI](scrypath_ops/README.md) is available in the checkout and is not part of the Hex package; `mix verify.ops_ui` checks it. See [CONTRIBUTING](CONTRIBUTING.md) for the CI and `mix verify.*` map.
 
-**Scope and reopen policy:** scope reopens only for a **concrete production bug**, **reviewed outside-adopter evidence**, or a **deliberate strategic product decision**. The canonical policy owner is [guides/scope-and-reopen-policy.md](guides/scope-and-reopen-policy.md).
+**Integration smoke (optional):** the [Phoenix + Meilisearch example](examples/phoenix_meilisearch/README.md) documents its Docker services and env vars. From the repository root, run `cd examples/phoenix_meilisearch && ./scripts/smoke.sh`; that script lives inside the example.
 
-**Request-edge contract:** for browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix` glue, and context-owned `Scrypath.search/3`, read [guides/request-edge-search.md](guides/request-edge-search.md).
-
-**Real-app composition and metadata:** for reusable `defaults` / `fixed` search policy, host-owned metadata rendering, and `compose_many/2` lowering into the existing runtime, read [guides/composing-real-app-search.md](guides/composing-real-app-search.md).
-
-If you want the user-flow and jobs-to-be-done map before wiring code, read [guides/jtbd-and-user-flows.md](guides/jtbd-and-user-flows.md).
-
-If you need the real-app story for related rows, fan-out, and when to choose direct sync versus backfill or reindex, read [guides/related-data-and-reindexing.md](guides/related-data-and-reindexing.md).
-
-If you want the architecture and JTBD crash course before reading the full guides, start with [guides/overview.md](guides/overview.md).
-
-If you need the Meilisearch mental model behind Scrypath's choices, read [guides/meilisearch-concepts.md](guides/meilisearch-concepts.md) before the operations guide.
-
-For symptom-style "why is search wrong?" debugging, see [guides/common-mistakes.md](guides/common-mistakes.md).
-
-**Sync authority:** sync semantics, sync modes (`:inline`, `:oban`, `:manual`), eventual consistency, and operator lifecycle recovery language are defined in [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md). Support/readiness posture and verification commands live in [guides/support-and-compatibility.md](guides/support-and-compatibility.md); this README does not restate either guide body.
-
-**Operator UI (maintainers):** the optional Phoenix shell lives under [scrypath_ops/README.md](scrypath_ops/README.md) in the repository checkout and is not part of the Hex package. From the repository root, **`mix verify.ops_ui`** runs the same checks against **`scrypath_ops/`** that the path-scoped **`ops-ui`** CI job exercises; see [`CONTRIBUTING.md`](CONTRIBUTING.md) for the CI ↔ **`mix verify.*`** matrix and job names.
-
-**Realistic e-commerce/admin demo:** if you want to see Scrypath in action before wiring your own app, run [examples/scrypath_ecommerce](examples/scrypath_ecommerce/README.md). It mounts the optional operator UI beside a multi-tenant catalog storefront so you can click through tenant-scoped search, category facets, related-data propagation, failed sync triage, and swap posture. The demo is also the advisory browser evidence surface behind `ecommerce-e2e`.
-
-**Integration smoke (optional):** the repo ships **`examples/phoenix_meilisearch`** with Docker Compose and env vars documented there (including how it relates to CI - see [`CONTRIBUTING.md`](CONTRIBUTING.md) for GitHub job names ↔ `mix verify.*` tasks). From the clone root, run **`cd examples/phoenix_meilisearch && ./scripts/smoke.sh`** (the example's **`./scripts/smoke.sh`** exists only under that directory, not at the repository root).
-
-Scrypath is Meilisearch-first in v1. The backend seam is internal, not a promised public abstraction, and v1 does not promise public multi-backend parity.
-Scrypath owns its internal transport dependency. Configure backend and sync behavior in your app code instead of pinning `Req` directly in the base install path.
-If you want queued sync, add Oban as an optional production integration when you choose `sync_mode: :oban`.
+Scrypath is Meilisearch-first in v1. Its backend seam is internal, not a promised public abstraction, and v1 does not promise public multi-backend parity. Scrypath owns its internal transport dependency; configure backend and sync behavior in your app instead of pinning `Req` in the base install path. Add Oban only when you choose `sync_mode: :oban`.
 
 ## Quick Path
 
@@ -102,29 +81,6 @@ Scrypath is not trying to be:
 
 If you want hidden model hooks, implicit repo access, or a library that pretends accepted work means immediate search visibility, this is the wrong tool.
 
-## Phoenix Wayfinding
-
-If you are wiring Scrypath into a Phoenix app, read these next:
-
-- [Guides overview](guides/overview.md) (table of contents for all guides)
-- [JTBD and user flows](guides/jtbd-and-user-flows.md) (mental model and flow map before the implementation guides)
-- [Meilisearch concepts](guides/meilisearch-concepts.md) (search projection, task, settings, and backup vocabulary)
-- [Request-edge search](guides/request-edge-search.md) (canonical shared story for `QueryParams`, optional `Scrypath.Phoenix`, and context-owned runtime calls)
-- [Composing real-app search](guides/composing-real-app-search.md) (canonical guide for `Scrypath.Composition`, `Scrypath.Metadata`, and the worked catalog/global-search flows)
-- [Related data and reindexing](guides/related-data-and-reindexing.md) (what to do when associated data changes many documents)
-- [Getting Started](guides/getting-started.md)
-- [Phoenix Walkthrough](guides/phoenix-walkthrough.md)
-- [Phoenix Contexts](guides/phoenix-contexts.md)
-- [Phoenix Controllers and JSON](guides/phoenix-controllers-and-json.md)
-- [Phoenix LiveView](guides/phoenix-liveview.md)
-- **`Scrypath.search_within_facet/4`** - facet-scoped full-text search from LiveView-style catalogs ([Faceted search with Phoenix LiveView](guides/faceted-search-with-phoenix-liveview.md))
-- [Multi-index search](guides/multi-index-search.md) - for **`Scrypath.search_many/2`**, **`:all` expansion**, **`federation_weight:`**, and merged ordering semantics, treat that guide as canonical beyond this bullet list.
-- For **request-time** Meilisearch search parameters (filters, ranking score knobs, pagination, and related call options) versus **index-time** settings declared on the schema, read the canonical [Per-query tuning pipeline](guides/per-query-tuning-pipeline.md) spec next to the index-focused relevance guide.
-- [Sync Modes and Visibility](guides/sync-modes-and-visibility.md)
-- [Operator Mix Tasks](guides/operator-mix-tasks.md)
-
-The walkthrough uses one context-owned search flow and carries that same boundary through controllers and LiveView.
-
 ## Public Surface
 
 Scrypath keeps one common runtime surface and one explicit backend-specific escape hatch:
@@ -149,35 +105,9 @@ They do not create a second operator product surface.
 
 `use Scrypath` is metadata-only. It validates the declaration and exposes stable `__scrypath__/1` reflection keys without generating schema-specific runtime verbs.
 
-## Sync Modes
+## Sync modes
 
-Call sync after successful repo persistence. Scrypath is explicit about what each mode means:
-
-| Mode | What Scrypath does before returning | What it does not mean |
-|------|-------------------------------------|-----------------------|
-| `:inline` | waits for terminal backend task success before returning | database and search writes are not atomic |
-| `:manual` | returns accepted backend work immediately | the document may not be searchable yet |
-| `:oban` | returns durable enqueue acceptance only | the backend write has not happened yet, and the document may not be searchable |
-
-Successful `Scrypath.sync_record/3` (and related) calls return a map that includes **`:status` `:accepted`** when work was queued or accepted but may not be searchable yet, and **`:status` `:completed`** when the `:inline` Meilisearch wait path finished - see **`guides/sync-modes-and-visibility.md`** for the full contract.
-
-Accepted work is not the same thing as search visibility.
-
-`sync_mode: :oban` means durable enqueue accepted, not search visibility completed.
-
-**Choosing a mode:** **`:inline`** is enough for many local workflows and small apps when you want the caller to observe terminal backend success immediately. Move to **`:oban`** when durable enqueue and worker throughput matter more than immediate search visibility in the same process. Use **`:manual`** for migrations, bulk imports, or operator-controlled batched follow-up where you want an explicit next step instead of automatic queue progression.
-
-The full contract - lifecycle states, Phoenix implications, recovery language, and what "success" in a controller or LiveView really means - lives in **`guides/sync-modes-and-visibility.md`**. Treat that guide as the authority; keep README as the compact route map.
-
-If this README and the sync guide disagree, treat **`guides/sync-modes-and-visibility.md`** as the source of truth for semantics.
-
-The monospace lifecycle line below matches the **Operator lifecycle** section in that guide.
-
-All three modes share one operator-facing lifecycle:
-
-`requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded`
-
-In practice, retries, discarded jobs, stale deletes, and drift are normal operational realities. They are not edge cases to hide with optimistic wording.
+Call [**`Scrypath.sync_record/3`**](https://hexdocs.pm/scrypath/Scrypath.html#sync_record/3) after successful repo persistence. Choose **`:inline`** for the first-hour path and workflows that can wait on backend work, **`:oban`** when durable enqueue and worker throughput matter, or **`:manual`** for imports and operator-controlled follow-up. A successful return means work was accepted, or—when inline task waiting applies—completed; neither makes the database and search writes atomic, and accepted work may not yet be visible in search. See [sync modes and visibility](guides/sync-modes-and-visibility.md) for the exact return contract, lifecycle, and recovery guidance.
 
 ## Versioning and upgrades
 
