@@ -1,0 +1,67 @@
+# Requirements: Scrypath — v1.41 Readiness Gate Follow-Through
+
+**Defined:** 2026-09-28
+**Revision:** Nine requirements and their three-phase mapping approved 2026-09-28 after requested upstream review.
+**Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
+
+## v1 Requirements
+
+Deliver the evidenced dependency and existing public-contract fixes, make verification cover the actual maintained graphs, consolidate confirmed documentation drift, and finish a bounded readiness decision. Preserve historical assessments. This adds no new public capability or UI work. The review's rationale, alternatives and provenance are in `research/v1.41/SUMMARY.md`.
+
+### Dependency Security and Verification
+
+- [x] **MINT-01**: All four maintained Mix graphs (root, Phoenix example, ecommerce example, standalone Ops) resolve Mint to 1.11.0 or a later available release verified against current primary advisories, including necessary compatible HPAX/subtree updates, and the correction reaches public `main`. Advisory ignores or inferred risk acceptance cannot substitute for remediation. This establishes repository graph security, not an automatic upgrade of adopter locks.
+- [x] **MINT-02**: Existing root/backend, Phoenix path/package, mounted ecommerce and standalone Ops proof passes for the relevant changed source. Phoenix proof identifies the actual resolved dependency graph and rejects unexpected Hex-lock drift after package staging; the intended Scrypath provenance substitution is allowed. Evidence names its source, graph and claim limits, including advisory/path-selected jobs absent from manual closeout runs.
+- [x] **MINT-03**: The existing advisory dependency-audit path checks the explicit inventory of all four maintained graphs, preserves their locks, reports each result and any ignored findings, and fails on an affected graph or incomplete audit. A cheap inventory guard prevents silently omitting a maintained graph. Reuse the existing lane, avoid duplicate root audits, and record incremental dependency-fetch/runtime cost without adding a required job or service matrix.
+
+### Selected Fix Delivery and PR Triage
+
+- [x] **DELIV-01**: The local mounted-readiness correction reaches public `main` through a coherent PR with focused regression and mounted behavior proof, passing required candidate checks and post-merge evidence; unrelated worktree changes remain excluded.
+- [x] **DELIV-02**: The unpublished v1.39/v1.40 delta is inventoried against refreshed public `main`; the confirmed tenant-option and facet-filter corrections and their coherent regression/adopter proof are merged and verified there. Every remaining owned change has a reviewable delivery path or evidence-backed disposition. A selected fix may be deferred only by an explicit maintainer scope decision; a prepared PR is not completed delivery.
+- [x] **TRIAGE-01**: Each Dependabot PR in a dated cohort frozen at Phase 169 start has an evidence-based keep, update, close or defer disposition and revisit trigger where relevant. Refresh head/base and check evidence before action. Newly arriving routine PRs enter maintenance; material security/compatibility evidence can reopen scope. An empty inbox is not required.
+
+### Adopter Documentation
+
+- [x] **DOC-03**: README retains a concise first-result route and acceptance-versus-visibility caveat while detailed sync/return contracts route to their canonical guide/API owners. Repeated JTBD positioning/navigation is consolidated without losing unique useful routes. Correct directly related canonical wording and superseded copy assertions as needed; applicable existing documentation checks pass without restoring a broad required docs-contract suite.
+
+### Readiness and Closeout
+
+- [ ] **GATE-05**: A new dated assessment evaluates the unchanged six readiness conditions against the existing finite baseline, explicitly named important workflows, current source invalidators and linked evidence limits. Live authority/navigation is reconciled while historical assessment bodies remain unchanged. The authoritative terminal decision joins those judgments to final source/attestation and delivery receipts outside the tested tree; READY requires all six to pass, otherwise record NOT READY with the specific blocker and revisit trigger. **Pending:** final-source attestation and the actual maintainer's six judgments and durable issue comment.
+- [ ] **CLOSE-04**: Final selected code/docs changes have exact-source and green post-merge evidence, and the warranted patch follows the existing Release Please, publication and parity process. A blocked publication remains release-ready/blocked until completed or explicitly deferred by the maintainer. Task-owned branches, worktrees, services, artifacts and verification debt are cleaned or explicitly dispositioned. Freeze all tracked inputs before final attestation; retain a discoverable terminal record beyond expiring CI artifacts, with no tracked write solely to record its success. **Pending:** PR #83 remains blocked by its required approving review; Plan 08 must attest the frozen source and publish the actual maintainer's terminal record.
+
+## Future Requirements
+
+- **OPUI-01**: Begin a separate ScrypathOps UI milestone only after a fresh assessment passes all six readiness conditions, maintainer availability supports the work, and a separate scope decision approves it. A passing gate recommends that focus without starting it.
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Operator/admin UI implementation, visual audit, brand work | Dependency maintenance in Ops does not reopen UI scope; time and separate approval still govern it. |
+| New public capabilities, API/backend breadth, authentication or compatibility promises | Deliver confirmed compatible repairs; there is no evidence for a new capability. |
+| New direct Mint constraint or guarantee about existing adopter locks | Host lock resolution is application-owned; a published minimum is a separate dependency-policy choice. |
+| Blanket upgrades, clearing the PR count, one PR per historic commit | Scope changes and review cost must follow evidence and coherent outcomes. |
+| New required CI lane, broad matrix or upstream exploit suite | Reuse existing proof and add only the observed cheap graph/audit protection. |
+| Forced release for planning/docs changes alone or manual retagging | Existing library bug fixes justify normal patch evaluation; the release train owns version/tag/changelog. |
+| Rewriting old readiness outcomes or reopening every historical probe | Preserve immutable assessments and inspect only named claim invalidators/new material evidence. |
+
+## Traceability
+
+Every requirement maps once to the approved roadmap. Revised IDs continue existing categories: draft DOC-01 → DOC-03, GATE-01 → GATE-05, CLOSE-01 → CLOSE-04. MINT-03 adds the requested prevention of repeated graph-audit omissions. Full rationale is in the research change ledger.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| MINT-01 | Phase 168 | Complete |
+| MINT-02 | Phase 168 | Complete |
+| MINT-03 | Phase 168 | Complete |
+| DELIV-01 | Phase 168 | Complete |
+| DELIV-02 | Phase 169 | Complete |
+| TRIAGE-01 | Phase 169 | Complete |
+| DOC-03 | Phase 170 | Complete |
+| GATE-05 | Phase 170 | Pending external terminal decision |
+| CLOSE-04 | Phase 170 | Pending release gate and terminal record |
+
+**Coverage:** 9 requirements; 9 mapped to approved phases; 0 unmapped.
+
+---
+*Initial eight-requirement scope and revised nine-requirement roadmap both approved 2026-09-28; revisions follow requested specialist due diligence. Phase 169 requirements are complete. Phase 170 DOC-03 is complete; GATE-05 and CLOSE-04 remain pending final-source evidence and the actual maintainer's terminal decision.*

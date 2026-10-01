@@ -1,155 +1,67 @@
-# Milestone candidates — developer-first roadmap stack
+# Milestone candidates — Scrypath evidence-gated roadmap
 
-**Purpose:** Prioritized themes for **`/gsd-new-milestone`** — **onboarding + QoL** for people using and contributing to Scrypath; **avoid busywork** and maintainer-only work masquerading as product.  
-**Last reviewed:** 2026-05-31 — **v1.29** shipped (contract repair and proof hardening). Repo-grounded reassessment keeps Scrypath at **~96–98% done** for its stated Meilisearch-first, Ecto-native, Phoenix-friendly scope. The last planned product wedges — related-data propagation, tenant-safe search, facet value search, adopter contract hardening, realistic E2E proof, and bounded contract repair — are shipped. Default posture is **release, maintenance, support truth, proof stability, outside-adopter evidence, and otherwise stop**. If feature work reopens, it should require a concrete production bug, reviewed outside-adopter evidence, or an explicit strategic wedge.
+**Purpose:** Help `$gsd-new-milestone` select work that improves Scrypath adopters or protects release trust without creating roadmap work for its own sake.
+**Reviewed:** 2026-10-01 against v1.40 closeout, public PR #87/main and the refreshed Release Please PR #83 state.
+**Current posture:** v1.41 scope and roadmap were approved on 2026-09-28 after requested upstream review: nine requirements across Phases 168–170. Phase 168 delivered the four-graph security fix, Phase 169 delivered the tenant/facet correction and cohort disposition, and Phase 170 docs/tooling reached public `main` at `87d74259a9f569c6b11c8d9481f5465a172c70ba` through PR #87. Read [current synthesis](../research/v1.41/SUMMARY.md). Hex 0.3.13 remains the published package. Release Please PR #83 proposes 0.3.14; the maintainer authorized the normal path, but it is blocked by the required approving review and remains unpublished. The latest main push run 36795877117 passed all five required checks and its deep-quality advisory. The four graph audit remains clean with Mint 1.11.0; PR #87 changed no lockfiles or runtime paths. v1.40's dated readiness assessment remains **NOT READY** (condition 2 FAIL; condition 6 UNKNOWN at its cutoff). Operator UI remains gated on a fresh READY assessment, maintainer availability, and a separate scope decision.
 
-**Reconciliation note:** the `v1.20` archive says `Scrypath.SearchModule` shipped, but the current checkout does not expose that layer or its guide. This was resolved as archive-correction on 2026-05-27 and must not drive future feature selection.
+Use evidence-gated horizons, not calendar commitments. Reassess these candidates at each milestone boundary. See [`../../prompts/scrypath-milestone-ratchet-roadmap.txt`](../../prompts/scrypath-milestone-ratchet-roadmap.txt) for the durable decision guide.
 
-**Post-v1.29 closeout note:** related-data fan-out shipped in v1.24, and v1.29 repaired normal `use Scrypath, fan_outs:` reflection, hardened the v1.28 tenant/category E2E readiness proof, and refreshed roadmap/JTBD truth. Default posture is now maintenance-and-evidence mode. New milestones should be silent by default unless there is release work, support/proof drift, outside-adopter evidence, a concrete bug, or a deliberate strategic build decision.
+The governing program and explicit **READY FOR OPERATOR UI** exit criteria are in [`PRE-OPERATOR-UI-READINESS.md`](PRE-OPERATOR-UI-READINESS.md); v1.40 requirements, audit, and phases are archived in `.planning/milestones/`, while the root `.planning/ROADMAP.md` tracks v1.41 and indexes recent shipped milestones.
 
----
+## Near term — v1.41 readiness gate follow-through
 
-## Where things stand
+**Completed:** v1.40 completed Phases 165–167: tenant/facet contract fixes, bounded host and repair proof, and a dated readiness decision. Its audit accepts bounded tech debt; the immutable decision remains NOT READY because condition 2 failed and condition 6 was UNKNOWN at its cutoff.
 
-### Admin / operator UI
+**Approved v1.41 scope:** Phase 168 closed Mint findings across all four maintained graphs, delivered the startup-readiness fix and recurring graph-audit coverage. Phase 169 delivered the known tenant/facet corrections and coherent proof, then dispositioned a frozen bot cohort. Phase 170 consolidated docs through PR #87, is reconciling the authorized-but-blocked 0.3.14 candidate, and will make the terminal six-condition decision after final-source evidence. See [roadmap](../ROADMAP.md) and [review synthesis](../research/v1.41/SUMMARY.md).
 
-**Shipped:** optional in-repo **`scrypath_ops`** (LiveView), outside the core Hex package — **v1.10** (**OPSUI-01..10**), **v1.11** operator shell polish (**OPSUI-01..07** sense in **`milestones/v1.11-{REQUIREMENTS,ROADMAP}.md`**). **v1.10** archive: **`milestones/v1.10-{REQUIREMENTS,ROADMAP}.md`**.
+**Delivery boundary:** selected fixes and docs must be merged and verified on public main; a prepared PR remains blocked delivery until the actual repository gates pass. PR #87 is merged with exact-main evidence. PR #83 remains blocked by one required review after the exact candidate package and required check runs passed. Preserve unrelated worktree changes and use the [dated source inventory](../research/v1.41/DELIVERY-REVIEW.md) instead of a mutable commit-count target.
 
-**Intentionally not in v1.10 / still future:**
+**Dependency PR boundary:** freeze the cohort at Phase 169 start, record rationale/revisit triggers once, and refresh checks before acting. New routine PRs enter maintenance; material security/compatibility evidence can reopen scope. An empty inbox is not required.
 
-- **OPSUI-FUT-01** — editable saved queries / team playbooks (`milestones/v1.10-REQUIREMENTS.md` § v2+).
-- **OPSUI-FUT-02** — Meilisearch “vendor dashboard” parity (same section).
-- **Phase 47 deferred ideas** — full browser E2E everywhere, visual regression as default CI gate, real Meilisearch inside **`scrypath_ops`** CI, exhaustive table matrices (`phases/47-verification-hardening/47-CONTEXT.md` `<deferred>`).
+**Docs boundary:** retain the short first-result route and acceptance/visibility caveat; consolidate detailed canonical contracts and unique JTBD routes. Adjust directly related stale guide wording and obsolete copy assertions without a broad redesign.
 
-So: **honest operator visibility over library APIs — done for v1.** Deeper productized admin (saved playbooks, cluster observability, heavy E2E) remains **future**.
+**Readiness stop point:** preserve the v1.40 cutoff. Use finite baseline/workflow claims, current invalidators and final delivery/attestation receipts. The terminal decision is durable outside the tested tree to avoid another tracked-write loop. NOT READY must name blockers and revisit triggers; it does not automatically start another milestone. READY recommends ScrypathOps only when maintainer time and a separate scope decision support it.
 
-### QoL / DX vs “Searchkick-level” expectations
+**Release posture:** 0.3.13 remains published. Release Please PR #83 proposes 0.3.14 for the integrated fixes/docs; the user authorized the normal release path for its exact head, conditional on current policy. One actual approving review is still required. Do not report 0.3.14 as published until the existing Release Please, Hex/consumer, and parity chain passes. Keep blocked publication distinct from explicit owner deferral.
 
-The library has strong **Ecto-native indexing + Meilisearch sync modes**, **search / facets / federation**, **per-query tuning pipeline + runtime**, **operator Mix tasks + drift tooling**, **adoption guides + doc contracts**, and **OPSUI** for triage and inspection.
+## Mid term — bounded, owner-approved wedges
 
-The preserved branch **`salvage/20260508-151407-main-reconcile`** is intentionally not part of this roadmap. It is a quarantine snapshot from the `main` reconciliation, not an implied upcoming milestone.
+| Candidate | Entry evidence | Boundary |
+|---|---|---|
+| ScrypathOps operator UX/design polish | Maintainer time is available and a specific operator JTBD, usability/accessibility issue, or repeated workflow friction is identified | Improve the existing optional operator surface; keep runtime/API behavior unchanged unless separately justified. Automate accessibility and behavioral acceptance where reliable; reserve visual judgment for irreducible design choices. |
+| Adopter-driven product or documentation gap | Reproducible, reviewed outside-adopter evidence demonstrates a material unmet workflow | Address that workflow only; preserve Meilisearch-first and Ecto-native product boundaries. |
+| Proof or release-train repair | Repeated CI/proof drift, concrete release compatibility pressure, or operational failure | Fix the smallest shared cause; measure CI/runtime cost and do not duplicate existing proof. |
 
-**Gaps people still reasonably expect** (none implied “done” by **v1.11**):
+**Operator UI timing:** ScrypathOps received major operator-flow, design-system, and accessibility/theme work in v1.32–v1.34. v1.40 completed a fresh whole-product assessment, which remains NOT READY because condition 2 FAILs and condition 6 was UNKNOWN at cutoff. Revisit UI only after a fresh assessment passes and maintainer time is available; no UI milestone is approved now. Passing the gate would support a recommendation, not automatically start UI work.
 
-| Theme | Why it still matters | Where it shows up in notes |
-|--------|----------------------|----------------------------|
-| **Consumer “first hour” + ongoing DX** | Golden path exists; remaining leverage is **example parity**, **support-contract clarity**, **verify discoverability**, and a few evidence-backed papercuts | **v1.6** arc + **`.planning/PROJECT.md`** adoption narrative |
-| **One contributor verify spine for OPSUI** | Contributors should not hunt five docs for the right **`mix verify.*`** subset | **47-CONTEXT** D-04 sense |
-| **OPSUI + real backend in CI** | Deferred on purpose; library integration jobs carry Meilisearch truth | **47-CONTEXT** `<deferred>` |
-| **Planning / maintainer tooling friction** | Milestone archival pain — **helps maintainers**, not Hex consumers | **`.planning/RETROSPECTIVE.md`** |
-| **Audit-open hygiene** | Stub **`quick_task`** rows + UAT noise — **morale / noise**, low product leverage unless it misleads | **`.planning/STATE.md`** § Deferred Items; **`.planning/MILESTONES.md`** “Known deferred” |
-| **Product boundaries still explicit** | Multi-backend, vectors/hybrid/personalization stay **out of scope** until pressure | **`.planning/PROJECT.md`** Out of Scope |
+## Long term — strategic expansion only with evidence
 
----
+| Candidate | Reopen only when |
+|---|---|
+| Public backend broadening | Multiple real adopters establish a stable common contract and the value outweighs abstraction and support costs. |
+| Autocomplete, suggestions, vector/hybrid retrieval, personalization, or analytics | Reviewed adopter demand establishes a material gap and an explicit scope decision authorizes the capability. |
+| New public runtime or reusable UI surfaces | A recurring cross-adopter job cannot be served cleanly by existing APIs and the addition preserves operational honesty and Ecto-first composition. |
 
-## Ranked backlog (developer PoV — pick off in order)
+These are conditional possibilities, not commitments. Existing scope guards remain authoritative until formally changed.
 
-Order = **default** pull sequence for **`/gsd-new-milestone`**. Merge adjacent tiers only when one milestone naturally covers both.
+## Selection and closeout rules
 
-### Tier A — Highest leverage (“library great” for devs) — shipped **v1.12**
+1. Start with the evidence and the affected adopter/operator job. If neither is concrete, stay idle.
+2. Check prior requirements, milestone archives, support reports, and existing proof before proposing new runtime/API scope.
+3. Prefer the smallest vertical slice with the least maintenance and CI cost that can prove the outcome.
+4. Automate software acceptance at the cheapest reliable layer; target zero human UAT. Put recurring checks in CI only when confidence justifies runtime and maintenance cost.
+5. Keep serious work PR-first, require exact-commit CI, verify post-merge `main`, and close release/worktree/artifact cleanup when warranted. Reconcile local branch state against public `main`; a local milestone archive is not proof of a public merge.
+6. Do not create milestones solely for routine Dependabot/dependency churn; handle ordinary bumps through maintenance and reserve larger work for evidenced security, compatibility, or adopter outcomes.
+7. Refresh this file and `MILESTONE-ARC.md` at milestone close: mark shipped candidates complete, remove stale ideas, record evidence and deferrals, and do not invent a next milestone.
 
-| # | Theme | Notes |
-|---|--------|--------|
-| **A1** | **Consumer onboarding + day-to-day QoL** | **Done (v1.12)** — golden path ↔ README contracts, pitfalls, actionable errors |
-| **A2** | **Single contributor entry for optional OPSUI** | **Done (v1.12)** — root **`mix verify.opsui`** + docs/CI locks |
+## Shipped context
 
-### Tier B — Highest-leverage product gaps if feature work reopens
+- **v1.39 Pre-Operator UI Quality Readiness Ratchet:** completed Phases 162–164 with a 24-claim whole-product baseline, zero qualifying implementation candidates, and a fail-closed NOT READY decision because conditions 3 and 6 remain UNKNOWN. Final exact-SHA closeout passed; later closeout evidence does not retroactively change the dated readiness result.
+- **v1.40 Readiness Evidence Closure:** completed Phases 165–167. Tenant/facet contracts and two compatible defects were verified, one persisted-membership Phoenix workflow and one bounded repair-to-visible-search workflow passed, and a separate dated decision remains NOT READY (condition 2 FAIL; condition 6 UNKNOWN at cutoff). Final phase-tracking and archive exact-SHA closeout runs passed; neither revises the cutoff.
+- **v1.37 Code Quality Ratchet:** hardened runtime safety and architecture, introduced capability-named verification, reduced duplicated CI proof, secured release workflows, and established measured performance evidence. Its quality ledger reports no confirmed compatible high- or medium-leverage non-UI finding left open.
+- **v1.38 Packaged Adopter Proof:** Scrypath 0.3.13 passed package-backed Phoenix integration, exact-SHA and post-merge CI, Hex/HexDocs publication, clean consumer compilation, and package-to-tag parity. No human UAT remains pending.
+- **v1.41 Phase 170 docs delivery:** selected README/JTBD/sync guidance and factual closeout tooling are on public `main` through PR #87; exact-source required CI passed. This does not complete the readiness decision or publish 0.3.14.
+- **v1.32–v1.34:** ScrypathOps design system, operator flows, dual-theme polish, and accessibility proof received dedicated milestones. Additional UI work is deferred by owner time and target evidence.
+- Earlier product wedges through v1.36 are recorded in `.planning/MILESTONES.md` and `.planning/milestones/`.
 
-| # | Theme | Notes |
-|---|--------|--------|
-| **B1** | **Related-data and dependency propagation** | **Done in v1.24** — `Scrypath.sync_related/3`, `RelatedWorker`, canonical guide rewrite, Phoenix example fan-out. Keep here as historical context. |
-| **B2** | **Tenant-safe search access story** | **Done in v1.25** — `guides/multitenancy.md`, `tenant_field:`, `schema_capabilities/1` reflection, and `tenant_scope:` hard-injection. Keep here as historical context. |
-| **B3** | **Composition and real-app depth over the query toolkit** | **Done in v1.22** — keep here only as historical context so future planning does not reopen the same wedge accidentally |
-| **B4** | **Facet value vocabulary search (`search_facet_values/4`)** | **Done in v1.26** — first-class facade API, `FacetSearchResult`, Meilisearch `/facet-search` routing, LiveView examples, and `mix verify.phase96`. Keep here as historical context. |
-| **B5** | **Autocomplete / suggestion flows** | Only with outside-adopter evidence. Otherwise stop after the v1.26/v0.3.8 release train lands. |
-
-### Tier C — Defer until a failure mode is proven
-
-| # | Theme | Notes |
-|---|--------|--------|
-| **C1** | **Meilisearch inside `scrypath_ops` CI** | Only if stub + LiveView + contracts **miss** wire/regression you actually hit |
-| **C2** | **Playwright (or similar) on 1–2 flows** | Only if the above still misses **user-visible** breakage |
-
-### Tier D — Maintainer / planning hygiene (not “product”)
-
-| # | Theme | Notes |
-|---|--------|--------|
-| **D1** | **GSD milestone archive / phases path reliability** | Reduces **your** planning friction; **near-zero** Hex consumer onboarding impact — separate track or tiny slice when it blocks weekly |
-| **D2** | **Retire `quick_task` stub rows / quiet `audit-open`** | **Busywork** unless CI or new contributors are misled |
-| **D3** | **Release-only credential / live-proof follow-through** | Keep the **v1.1** carry-forward visible as maintainer ops work: rerun live verification when `SCRYPATH_MEILISEARCH_URL` is reachable and rerun Hex dry-run when a publisher-scoped `HEX_API_KEY` exists; do not promote this into a consumer milestone by default |
-
-### Tier E — Current default pull before any new feature milestone
-
-| # | Theme | Notes |
-|---|--------|--------|
-| **E1** | **Outside-adopter evidence and support-truth reconciliation** | **Done in v1.23; continue as maintenance evidence loop** — no new feature milestone should open unless outside-adopter evidence shows a concrete gap. |
-| **E2** | **Adopter Contract Hardening (docs/support/install/proof coherence)** | **Done in v1.27** — canonical contract freeze, support/proof boundary reconciliation, and trust gates shipped. Keep as historical context only. |
-| **E3** | **Contract Repair and Proof Hardening** | **Done in v1.29** — repaired `use Scrypath, fan_outs:` reflection, hardened the tenant/category E2E readiness proof, refreshed roadmap/JTBD truth, and avoided new runtime breadth. |
-
-### Tier F — Current maintenance pull
-
-| # | Theme | Notes |
-|---|--------|--------|
-| **F1** | **Release + adoption evidence + planning truth** | Current default after the bounded repair pass. Keep main green, keep release truth coherent, and capture outside-adopter evidence before opening new product work. This is maintenance posture, not an endless roadmap. |
-
-### Tier G — Companion surface
-
-| # | Theme | Notes |
-|---|--------|--------|
-| **G1** | **Public website launch surface** | Shipped as a GitHub Pages companion to HexDocs. Keep release truth, screenshots, and persona routes in sync with the package; do not expand it into a second docs site. |
-
-## Unified operating lanes (post-v1.26)
-
-Use these lanes to avoid reopening feature breadth by habit:
-
-- **Maintenance lane (default):** patch train, docs/support truth, outside-adopter evidence loop, and planning-truth reconciliation while `main` stays green.
-- **Silence lane:** when there is no release follow-through, support/proof drift, production bug, or outside-adopter evidence, do not manufacture a milestone. Say the release train is idle.
-- **Feature lane (evidence-gated):** open only via approved PR-scoped milestone when a concrete bug, reviewed outside-adopter evidence, or explicit strategic wedge justifies it.
-- **Merge contract for feature lane:** serious milestone work merges only after PR CI is green; avoid direct-`main` depth work.
-
-### Still explicit strategy (unchanged)
-
-| # | Theme | Notes |
-|---|--------|--------|
-| **—** | **`.planning/PROJECT.md` Out of Scope** | Multi-backend, hybrid/personalization, etc. — only with **adoption evidence** |
-
----
-
-## Suggested sequencing (one coherent thread)
-
-| Step | Pull from | Rationale |
-|------|------------|-----------|
-| 1 | **A1** | **Shipped v1.12** |
-| 2 | **A2** | **Shipped v1.12** |
-| 3 | **v1.13** (**POLISH-***) | **Shipped v1.13** |
-| 4 | **E1** | **Shipped v1.23** — adopter evidence + support-truth reconciliation |
-| 5 | **B1** | **Shipped v1.24** — `sync_related/3`, fan-out, canonical guide |
-| 6 | **B2** | **Shipped v1.25** — tenant guide, declaration, reflection, and runtime enforcement. |
-| 7 | **B4** | **Shipped v1.26** — `search_facet_values/4` wrapping `/facet-search`. |
-| 8 | **E2** | **Shipped v1.27** — Adopter Contract Hardening. |
-| 9 | **G1 / v1.28** | **Shipped v1.28** — realistic demo app, mountable admin UI proof, and advisory browser E2E lane. |
-| 10 | **E3** | **Shipped v1.29** — contract repair and proof hardening. |
-| 11 | **F1** | Current maintenance pull: release truth, outside-adopter evidence, and planning-truth refresh. |
-| 12 | **B5** | Only with adopter evidence. Otherwise stop after contract repair / proof hardening. |
-| Parallel | **D*** | When annoyance cost exceeds fix cost — do not headline a consumer milestone here |
-
----
-
-## How to use this file
-
-1. Before **`/gsd-new-milestone`**, ask six questions before picking a theme:
-   - Which adopter flow gets better?
-   - What truth can the app honestly say after a write returns?
-   - What is the tenant boundary?
-   - How do related-data changes trigger reindex or fan-out?
-   - What operator recovery path proves this flow is honest?
-   - Is this still above the post-`v1.19` diminishing-returns line?
-2. Optionally split strong themes into **`.planning/seeds/SEED-*.md`** so **`/gsd-new-milestone`** auto-offers matching seeds (see **`gsd-plant-seed`**).
-3. After each shipped milestone, **update this file** — what landed, what moved, and whether the repo is now actually near “stop soon” territory.
-4. After v1.29, the default answer to generic “what next?” prompts is **no feature milestone** unless there is release work, support/proof drift, outside-adopter evidence, a concrete bug, or an explicit strategic build decision.
-5. If feature work reopens, treat this file as PR-lane input: define the wedge first, run it on a PR branch, and do not merge until PR CI is green.
-6. Do not keep asking whether Scrypath is done at every milestone boundary. Treat the durable answer as: **the stated v1 library scope is effectively done; maintain by default; build strategically only when evidence changes the decision.**
-
----
-
-*Sources: **PROJECT.md**, **STATE.md**, **MILESTONES.md**, **RETROSPECTIVE.md**, **ROADMAP.md**, **CONTRIBUTING.md**, **README.md**, **examples/phoenix_meilisearch/README.md**.*
+*Provenance: adapted 2026-09-25 from the maintainer's cross-project ratchet prompt and refreshed 2026-09-28 from v1.40 closeout, public release/main evidence, privacy review, and the maintainer's documentation direction. Reconciled with `.planning/PROJECT.md`, `.planning/STATE.md`, `.planning/RETROSPECTIVE.md`, v1.37–v1.40 evidence, and exact-SHA closeout receipts. Read with `PRE-OPERATOR-UI-READINESS.md` and the companion guide in `prompts/`.*

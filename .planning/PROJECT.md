@@ -8,11 +8,59 @@ Scrypath is an open-source Elixir library for declarative, Ecto-native search in
 
 Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Current Mode: Green-Main Release Train — Idle
+## Current State
 
-Scrypath 0.3.13 is published. v1.38 Packaged Adopter Proof is complete and archived; no milestone is active. Keep the release train idle until concrete maintenance, adopter, bug, proof-drift, or strategic evidence authorizes work.
+Scrypath 0.3.13 remains the published package; v1.40 was a planning milestone and made no package release. The tenant-option and facet-filter corrections identified in v1.40 have since been merged to public `main` through PR #85 and verified at exact merge SHA `933ad30645c41df9f21dd4ddfd2d5b93fbd48620` (CI run [36644133759](https://github.com/szTheory/scrypath/actions/runs/36644133759)); this is source delivery, not a Hex release. v1.40 Readiness Evidence Closure is archived locally across Phases 165–167. Its audit records all 11 requirements, three phase verifications, 11 integration paths, and five end-to-end flows as passing, with bounded `tech_debt` carried forward. The separate assessment at `2026-09-27T19:39:00Z` remains **NOT READY**: conditions 1/3/4/5 PASS, condition 2 FAIL because the Phoenix consumer lock retains Mint 1.9.3 with an unresolved High advisory, and condition 6 UNKNOWN at that cutoff. The final phase-tracking source `343e20be66ab0c17f62b95138203c86e868bd1ee` passed exact-SHA run [36361116862](https://github.com/szTheory/scrypath/actions/runs/36361116862), and archive closeout later passed on the v1.40 tag; neither changes the dated assessment. v1.41 begins a fresh evidence-backed follow-through while preserving that historical result. See `milestones/v1.40-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`.
 
-**Last completed scope:** v1.38 proved package-backed Phoenix adoption against real services and closed with exact-SHA CI, green post-merge main, Hex/HexDocs publication, consumer compilation, and package-to-tag parity. It preserved the public API and advisory service-lane posture.
+The prior v1.39 planning milestone shipped and was archived on 2026-09-26; it added no runtime, public API, dependency, backend, or operator UI changes. Its dated readiness decision remains **NOT READY** because conditions 3 and 6 were unknown at assessment. Its accepted audit debt records three Phase 164 cross-references and Nyquist metadata follow-up for Phases 163–164. Final exact-SHA run [36257182675](https://github.com/szTheory/scrypath/actions/runs/36257182675) passed for `dc400b2b57aec0ca6b0ef16c9477d266fd41a433`; the annotated `v1.39` tag resolves to that commit. This receipt can support a newly dated condition 6 assessment but does not change the historical result.
+
+## Next Milestone Goals
+
+The **v1.41 Readiness Gate Follow-Through** scope and three-phase roadmap were approved on 2026-09-28 after the requested upstream review: remediate Mint across four maintained graphs, prevent repeat audit/proof omissions, deliver the mounted-readiness and known tenant/facet fixes, disposition a finite bot PR cohort, consolidate confirmed docs drift, and finish a terminal six-condition decision. Nine requirements map to Phases 168–170; Phase 168 is complete, Phase 169 execution and goal verification are complete, and Phase 170 owns the remaining docs/release/readiness work. Read `research/v1.41/SUMMARY.md` for decisions, alternatives, evidence and downstream planning discretion.
+
+## Current Milestone: v1.41 Readiness Gate Follow-Through
+
+**Goal:** Deliver evidenced security and existing contract corrections, improve economical recurring verification and adopter guidance, and reach a current, source-bounded non-UI readiness decision.
+
+**Approved outcomes after review:**
+- Mint 1.11.0+ (rechecked against current advisories) in root, Phoenix, ecommerce and standalone Ops graphs, including necessary HPAX updates; audit every maintained graph in the existing advisory lane and prove effective path/package dependency identities.
+- Deliver the mounted-readiness correction early with security verification, then merge the known tenant-option/facet-filter corrections with their coherent regression/adopter evidence on clean public-main PR bases.
+- Freeze and disposition the Phase 169 bot cohort by value; account for remaining owned local work without importing every historical planning commit or silently deferring selected fixes.
+- Preserve first-hour context and operational caveats while consolidating README/JTBD detail/routes and directly related stale canonical wording/assertions.
+- Complete the warranted Release Please patch after final docs delivery, then join the six condition judgments to final source/attestation and delivery evidence in one durable terminal record outside the tested tree.
+
+**Boundaries:** No new public API/backend capability, operator UI implementation, direct dependency-policy expansion, blanket upgrades, required CI job or broad matrix. Ops dependency maintenance is in scope. Selected delivery/release blocked by external prerequisites remains explicit; an owner deferral is never inferred. Preserve unrelated worktree state and historical assessments. Read `.planning/REQUIREMENTS.md`, `.planning/ROADMAP.md`, and the current research entrypoint before downstream GSD planning.
+
+## Archived Milestone: v1.40 Readiness Evidence Closure
+
+**Archived:** 2026-09-27 as a planning milestone, with no Hex release. The full roadmap, requirement outcomes, audit, and phase records are in `milestones/v1.40-*`. Its audit accepts bounded tech debt; the dated assessment remains NOT READY.
+
+**Goal:** Close decision-relevant adopter evidence gaps for tenant-safe search and bounded repair, reuse valid delete and release receipts, and make a fresh six-condition readiness decision without starting operator UI work.
+
+**Target features:**
+- Reproduce the existing public tenant-scope and facet-value input contracts; correct only confirmed compatible defects.
+- Prove one representative host-owned tenant authorization/search workflow and one bounded manual repair through terminal task success to visible search, reusing existing test and CI harnesses.
+- Reuse the exact-SHA delete and v1.39 closeout/publication receipts within their recorded limits; create a separately dated condition 3/6 assessment and reconcile task-owned cleanup and release-reference truth.
+
+**Boundaries:** Host applications retain ownership of authentication, membership policy, trusted tenant selection, and database response scoping. Do not add an auth framework, public backend abstraction, broad endpoint/version matrix, operator UI, or forced Hex release. A fresh readiness assessment may remain **NOT READY** if a condition is not evidenced.
+
+**Research:** `.planning/research/v1.40/SUMMARY.md` and its four claim-specific reports record the source evidence, tradeoffs, and proof limits that inform this scope.
+
+<details>
+<summary>Archived v1.39 planning context</summary>
+
+**Goal:** Assess Scrypath's non-UI quality and adopter readiness, close evidence-backed critical, high, and medium-leverage gaps in bounded milestones, and establish an auditable gate for when ScrypathOps can become the next strategic focus.
+
+**Target features:**
+- Whole-product baseline across the readiness program's named dimensions, reusing current v1.37 and v1.38 evidence where relevant.
+- Evidence-ranked disposition and bounded closure of confirmed critical, high, and medium-leverage non-UI gaps.
+- Automated acceptance evidence and an auditable readiness decision; operator UI implementation stays out of scope.
+
+**Pre-UI quality readiness:** `.planning/reference/PRE-OPERATOR-UI-READINESS.md` remains the durable program and exit-gate authority. The v1.39 assessment is complete and NOT READY; the historical decision is preserved. A new **READY FOR OPERATOR UI** decision requires evidence for every area and no unresolved critical, high, or medium-leverage non-UI gap. Evidence-backed API/runtime gaps still require explicit scope-guard review.
+
+**Prior completed scope:** v1.38 proved package-backed Phoenix adoption against real services and closed with exact-SHA CI, green post-merge main, Hex/HexDocs publication, consumer compilation, and package-to-tag parity. It preserved the public API and advisory service-lane posture.
+
+</details>
 
 **Automation-first verification policy:** Post-implementation acceptance must be
 machine-verifiable, with a standing goal of zero human verification or UAT. For GSD
@@ -39,6 +87,7 @@ Resolve subjective product decisions before implementation or keep them nonblock
 do not simulate approvals.
 
 **Recent closed outcomes:**
+- v1.39 Phase 164 readiness reconciliation: six dated conditions, explicit NOT READY outcome, bounded source reconciliation, 36 structural contract fixtures, clean code review, 8/8 goal verification, and successful exact-final-SHA closeout; tag `v1.39` points to the final commit. See `milestones/v1.39-phases/164-readiness-gate-and-reconciliation/164-01-SUMMARY.md`.
 - v1.38 package-backed Phoenix adopter proof and Scrypath 0.3.13 release: exact-SHA CI, path/package integration, green post-merge main, Hex publication, versioned HexDocs, clean consumer compile, and package/tag parity all passed. See `milestones/v1.38-MILESTONE-AUDIT.md`.
 - Phase 159 automated v1.37 audit/provenance closure: reconciled the 31-requirement audit, preserved the bounded TEST-01 chronology waiver, added a fail-closed candidate/final exact-SHA CI authority, and prohibited new post-implementation human verification or UAT debt.
 - Phase 147 ecommerce mounted-Ops remediation and closure: bounded the ecommerce web/client graph, added hermetic focused/full Docker E2E verification and an always-running focused CI gate, passed exact-SHA service/browser proof, and closed the four-graph audit ledger with no human UAT.
@@ -82,7 +131,13 @@ Phase 97 through 99 banned capability classes:
 - public backend broadening
 - new public runtime API categories
 
-## Current State
+## Recent Milestone Outcomes
+
+**v1.40 — Readiness Evidence Closure** completed and archived on **2026-09-27** across Phases **165–167**. Public tenant and facet contracts were verified and two compatible defects were corrected; a named Phoenix host proved persisted-membership isolation through path and fresh-package dependencies; an ID-bounded repair reached terminal Meilisearch success and became visible through the same search. The dated assessment remains **NOT READY** (condition 2 FAIL, condition 6 UNKNOWN at its original cutoff). The audit accepts bounded tech debt with all requirements, integration paths, end-to-end flows, phase verifications, and Nyquist checks accounted for. Exact-SHA phase-tracking run [36361116862](https://github.com/szTheory/scrypath/actions/runs/36361116862) passed on `343e20be66ab0c17f62b95138203c86e868bd1ee`; this was a planning close, not a package release. See `milestones/v1.40-MILESTONE-AUDIT.md`.
+
+**v1.39 Phase 164 — Readiness Gate and Reconciliation** completed on **2026-09-26**. The dated decision records conditions 1, 2, 4, and 5 as PASS and conditions 3 and 6 as UNKNOWN, leaving readiness NOT READY. The structural checker and 36 fixtures validate the record contract only; Phase 163's zero-finding result is not promoted to readiness proof. Final exact-SHA closeout run [36257182675](https://github.com/szTheory/scrypath/actions/runs/36257182675) passed on the final archive commit, and tag `v1.39` resolves to that SHA.
+
+**v1.39 Phase 163 — Findings and Bounded Follow-up** completed on **2026-09-25**. All 24 baseline claims have bounded triage; no material Scrypath-owned finding or qualifying follow-up candidate was established. The structural fixture suite, full findings checker, and baseline full-coverage checker pass. An independent bounded source review confirmed the result without simulating owner approval; Phase 164 independently evaluated readiness.
 
 **v1.38 Packaged Adopter Proof** completed and was archived on **2026-09-25** across Phases **160–161**. All eight requirements passed, exact-SHA CI and post-merge main were green, and Scrypath 0.3.13 passed Hex publication, HexDocs, clean-consumer compilation, and package-to-tag parity. No human verification or UAT remains pending.
 
@@ -204,13 +259,13 @@ Phase 97 through 99 banned capability classes:
 
 The public website launch surface now exists under `website/` and is deployed to GitHub Pages as a companion front door, not a HexDocs replacement.
 
-Current planning files: **`.planning/{PROJECT,REQUIREMENTS,ROADMAP,STATE}.md`** plus archives under **`.planning/milestones/`**.
+Current planning files: **`.planning/{PROJECT,REQUIREMENTS,ROADMAP,STATE}.md`** plus milestone archives under **`.planning/milestones/`**. Current research is routed from **`.planning/research/SUMMARY.md`**.
 
 ## Release Train Posture
 
-- **Active milestone:** None. The release train is idle after shipped v1.38 / Scrypath 0.3.13.
+- **Active milestone:** v1.41 Readiness Gate Follow-Through, approved for Phases 168–170. v1.40 remains archived with bounded `tech_debt`; its Phase 167 dated decision remains NOT READY, and later CI success does not change the assessment cutoff.
 - **Policy:** Keep `main` green on the lean required gates and prefer PR-first execution for serious milestone or feature-depth work.
-- **Next milestone goals:** None approved. Start a fresh requirements cycle only when concrete maintenance, adopter, production-bug, proof-drift, or explicit strategic evidence authorizes work.
+- **Current goals:** Phase 168 delivered four-graph dependency security; Phase 169's tenant/facet corrections are on public `main` and finite PR/path accounting is recorded. Phase 170's selected docs and factual tooling reached public `main` through PR #87; its 0.3.14 Release Please candidate PR #83 is authorized but blocked by the required approving review. Phase 170 continues with current readiness-input reconciliation and the terminal decision. A passing assessment may recommend ScrypathOps but does not automatically start UI work.
 - **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, and new UI surfaces remain out of scope.
 
 **v1.37 implementation outcome (2026-08-26):** runtime input and secret
@@ -221,6 +276,10 @@ Meilisearch, package, release, static-analysis, and compatibility proof passed;
 measured pure hot paths did not justify speculative optimization.
 
 ## Last shipped milestone
+
+**v1.40 — Readiness Evidence Closure** (planning milestone shipped and archived **2026-09-27**; no package release). Reproduced and corrected tenant/facet contract defects, proved one persisted-membership Phoenix workflow through path and fresh-package dependencies, and demonstrated bounded repair to visible search. Its audit records 11/11 requirements, 3/3 phase verifications, 11/11 integration paths, and 5/5 flows; `tech_debt` remains explicit. The assessment is **NOT READY** because the consumer lock's Mint 1.9.3 advisory is unresolved and condition 6 was UNKNOWN at its cutoff. Final tracked phase source `343e20be66ab0c17f62b95138203c86e868bd1ee` passed exact-SHA run [36361116862](https://github.com/szTheory/scrypath/actions/runs/36361116862). See `milestones/v1.40-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`.
+
+**v1.39 — Pre-Operator UI Quality Readiness Ratchet** (planning milestone shipped and archived **2026-09-26**). Established a 24-claim non-UI evidence baseline, dispositioned all claims without inventing a product defect or follow-up candidate, and recorded a six-condition **NOT READY** decision because conditions 3 and 6 remain unknown. The accepted audit debt is documented in `milestones/v1.39-MILESTONE-AUDIT.md`; no library package version changed.
 
 **v1.38 — Packaged Adopter Proof** (shipped **2026-09-25** and archived). Added a package-artifact Phoenix proof across inline, Oban, and related-data flows; confirmed exact-SHA CI, post-merge main, Hex 0.3.13, versioned HexDocs, consumer compile, and package/tag parity. The milestone audit found no blockers; advisory Phoenix CI and the absence of GitHub review objects for explicitly authorized merges remain recorded process notes. See **`milestones/v1.38-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
@@ -252,14 +311,35 @@ measured pure hot paths did not justify speculative optimization.
 
 **Prior:** **v1.24 — Related-Data and Dependency Propagation** (shipped + archived in-repo **2026-05-25**) — **`milestones/v1.24-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`**.
 
+## Key Decisions
+
+| Decision | Outcome |
+|----------|---------|
+| Keep evidence claims bounded by source, result, freshness, environment, and limitations; missing proof stays unknown. | ✓ Good — prevents unsupported pass or defect claims. |
+| Distinguish behavior defects, evidence gaps, and product opportunities; severity is not averaged with cost. | ✓ Good — all 24 claims received an explicit triage outcome. |
+| Require evidence, scope authority, and automated acceptance before creating follow-up work. | ✓ Good — no candidate met the qualification criteria. |
+| Keep readiness fail-closed; unknown conditions 3 and 6 leave the milestone NOT READY. | ✓ Good — no operator UI work was authorized. |
+| Treat structural checker results as artifact-shape evidence only. | ✓ Good — source truth and semantic readiness remain bounded by linked evidence. |
+| Derive host tenant scope from persisted membership and keep authentication and policy host-owned. | ✓ Phase 166 — the example proves its named membership path without claiming generic Scrypath authentication. |
+| Keep raw search output separate from database hydration and constrain hydration by tenant plus returned IDs. | ✓ Phase 166 — raw hits, counts, facets, and hydrated records are checked independently. |
+| Bound manual repair by an explicit Ecto ID predicate and require exact task success plus the same raw-search oracle. | ✓ Phase 166 — selected scope, task state/index, visible projection, and controls are separate assertions. |
+| Distinguish fresh local package-artifact use from Hex publication and keep historical deletion reuse source-bounded. | ✓ Phase 166 — package and C-09 claims retain their explicit limits. |
+| Preserve the dated assessment independently of later candidate/final acceptance. | ✓ Phase 167 — the consumer Mint High finding and condition 6 UNKNOWN remain visible at the original cutoff. |
+| Finish every tracked completion artifact before final-source attestation. | ✓ Phase 167 — final receipt is external; any later tracked edit requires a new exact-SHA run. |
+| Keep upstream scoping distinct from phase implementation plans. | v1.41 requested review: current requirements/roadmap and linked research hold outcomes; downstream GSD owns PR partition, tests and final-record implementation. |
+| Validate evidence structure without treating parser success as source truth or owner risk acceptance. | ✓ Phase 167 — 22 behavioral fixtures, resolved code review, and separate semantic evidence dispositions. |
+
 ## Planning window
 
-No active milestone. v1.38 Packaged Adopter Proof is complete and archived across Phases 160–161; all eight requirements passed automated verification and Scrypath 0.3.13 is published. Historical phase directories are archived under `.planning/milestones/v1.38-phases/`.
+v1.41 implementation is in progress after v1.40's Phases 165–167 were archived. Phase 168 delivered four-graph security and proof; Phase 169 merged the tenant/facet fixes and completed plan-level delivery/triage accounting and goal verification. Phase 170's docs/tooling delivery is on public `main` through PR #87. Its exact 0.3.14 Release Please PR #83 remains unpublished and authorized-but-blocked by a required GitHub review; current planning continues with input/report reconciliation before freeze. The maintainer approved the scope on 2026-09-28; `research/v1.41/SUMMARY.md` owns its rationale. v1.40's dated NOT READY result and v1.39's independent historical assessment remain unchanged. Historical phase directories for shipped milestones are archived under `.planning/milestones/`.
 
 ## Requirements
 
 ### Validated
 
+- [x] **v1.40 Phase 167** (2026-09-27): **GATE-04**, **CLOSE-03**, **VERIFY-02** — separately dated NOT READY assessment, eight bounded software-claim joins, release/debt reconciliation, and final exact-SHA closeout at `343e20be66ab0c17f62b95138203c86e868bd1ee`.
+- [x] **v1.40 Phases 165–166** (2026-09-27): **API-01**–**API-02**, **HOST-01**–**HOST-02**, **PKG-04**, **REPAIR-01**–**REPAIR-02**, **DELETE-01** — public tenant/facet contracts, bounded host-owned tenant search and manual repair, path/local-artifact receipts, and source-bounded C-09 reuse.
+- [x] **v1.39** (2026-09-26): **BASE-01**–**BASE-03**, **FIND-01**–**FIND-03**, **CLOSE-01**–**CLOSE-02**, **GATE-01**–**GATE-03** — 24-claim non-UI readiness baseline, evidence-led triage with zero qualifying follow-up candidates, and a six-condition **NOT READY** assessment. The archive audit retains documented metadata/Nyquist tech debt; see `milestones/v1.39-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`.
 - [x] **v1.38** (2026-09-25): **PKG-01**–**PKG-03**, **PROOF-01**, **DOC-01**, **HYGIENE-01**, **REL-01**, **CLOSE-01** — package-backed Phoenix integration proof, machine-checked documentation, exact-SHA CI, green main, Hex/HexDocs 0.3.13 publication, consumer compile, and package/tag parity.
 - [x] **Phase 147** (2026-08-25): **SEC-04**, **COMPAT-01**, **COMPAT-03**, **EVID-01**, **EVID-02** — ecommerce aligned to the fixed-compatible mounted web/client cohort; exact-SHA resolution, canonical path, deterministic/service, Docker-focused browser, cleanup, same-window four-graph audit, and ordered batch-topology verification passed with no human UAT.
 - [x] **Phase 146** (2026-08-24): **SEC-03**, **EVID-03** — ScrypathOps aligned to the approved fixed-compatible web/client/data cohort; real `Swoosh.ApiClient.Req` behavior, raw JSON precedence, standalone Ops, root release gates, detached fresh resolution, live Postgrex/Plug eligibility, unsuppressed audit, cleanup, code review, and threat verification passed.
@@ -336,9 +416,12 @@ No active milestone. v1.38 Packaged Adopter Proof is complete and archived acros
 
 ### Active
 
-<!-- Current scope. Building toward these. -->
-
-- No active requirements. The next approved milestone creates a fresh `.planning/REQUIREMENTS.md`.
+- [ ] Deliver the verified Mint/HPAX correction across all maintained graphs and prevent omitted graph audits through the existing advisory lane.
+- [ ] Prove the actual dependency graph in both Phoenix modes and the relevant root/ecommerce/Ops behavior; retain source-specific limits and economical checks.
+- [ ] Merge the mounted-readiness and known tenant/facet corrections with coherent automated evidence and green post-merge main; inventory/disposition remaining owned work.
+- [ ] Triage a finite bot PR cohort by actual security, compatibility and maintenance value.
+- [ ] Consolidate confirmed README/JTBD drift while preserving first-hour context and canonical contracts.
+- [ ] Complete warranted package delivery and a durable terminal readiness decision after final attestation; preserve historical NOT READY assessments and separate later UI authorization.
 
 ### Out of Scope
 
@@ -355,7 +438,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has shipped planning milestones through **`v1.38`** (**`v1.0`**-**`v1.38`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and `milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` for shipped arcs.
+The repository has shipped planning milestones through **`v1.40`** (**`v1.0`**-**`v1.40`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and `milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` for shipped arcs.
 
 ## Evolution
 
@@ -368,4 +451,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-09-25 after v1.38 Packaged Adopter Proof and Scrypath 0.3.13 publication*
+*Last updated: 2026-10-01 after PR #87 delivery and the Plan 05 release-gate refresh; no readiness judgment changed.*

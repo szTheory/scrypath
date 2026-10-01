@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "samples": [
+    {
+      "estimateTokens": 27000,
+      "actualTokens": 2485
+    },
+    {
+      "estimateTokens": 17000,
+      "actualTokens": 4494
+    },
+    {
+      "estimateTokens": 29000,
+      "actualTokens": 18758
+    },
+    {
+      "estimateTokens": 38000,
+      "actualTokens": 11149
+    },
+    {
+      "estimateTokens": 22000,
+      "actualTokens": 6954
+    },
+    {
+      "estimateTokens": 34000,
+      "actualTokens": 24213
+    },
+    {
+      "estimateTokens": 23000,
+      "actualTokens": 732
+    },
+    {
+      "estimateTokens": 20000,
+      "actualTokens": 1829
+    },
+    {
+      "estimateTokens": 16000,
+      "actualTokens": 11000
+    }
+  ]
+}
