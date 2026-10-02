@@ -2,6 +2,128 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.41 — Readiness Gate Follow-Through
+
+**Archived:** 2026-10-02 (planning milestone; Scrypath 0.3.14 was published during the milestone)
+**Phases:** 4 (168–171) | **Plans:** 19 | **Plan tasks:** 30 | **Requirements:** 9
+
+### What Was Built
+
+- Four-graph dependency remediation and recurring graph-proof safeguards; tenant/facet contract corrections; updated adopter guidance; and supplemental requirement traceability.
+- Scrypath 0.3.14 publication/parity and exact-main closeout evidence, followed by the actual maintainer's dated six-condition **NOT READY** decision.
+- A durable verification default: shift recurring integration, seam, smoke, and failure checks left into executable proof and CI when their recurring value justifies the cost; keep routine UAT at zero and hand off only irreducible judgments or external actions.
+
+### What Worked
+
+- Source-bounded receipts allowed publication, exact-main, and dated readiness evidence to be reused without repeating passing workflows.
+- The independent integration and flow audit found all six integration paths and three end-to-end flows wired with no requirement gaps.
+- Preserving the original preterminal Plan 08 bytes before the explicitly authorized planning-side tracker replacement retained both historical truth and a complete current GSD index.
+
+### What Was Inefficient
+
+- Phase 170's external terminal freeze had no predeclared GSD path for recording the later summary and verifier. This left GSD at 7/8 plans although the frozen snapshot and external receipts were complete.
+- The audit found three nonblocking Nyquist validation-record items in Phases 168–170. They remain explicit planning debt; no product tests or UAT were repeated to settle them during archival.
+
+### Patterns Established
+
+- Before a terminal freeze, define the separate planning record path and freeze boundary. If tracker bytes cannot represent the final outcome, preserve them byte-for-byte and use an explicitly authorized, dated planning-side replacement without altering source identity.
+- Run GSD milestone audit before archive; distinguish accepted validation-document debt from product gaps and pending human verification.
+- Reuse passing evidence within its source and scenario limits. Rerun only when a named invalidator changes; do not replay a completed release or readiness decision to satisfy bookkeeping.
+- Keep the dated readiness decision at its original cutoff. A successful release or closeout does not revise a NOT READY assessment or authorize the next product scope.
+
+### Key Lessons
+
+Set up CI and executable acceptance early enough that recurring human checks disappear, but reserve human handoff for semantic product or risk decisions, external credentials/permissions, or physical-world checks. Write freeze/tracker ownership into the plan before attestation so completion metadata does not create a second closeout cycle.
+
+### Cost Observations
+
+- The post-freeze reconciliation, summary/verifier replacement, audit, and archive used existing evidence only. No tests, product/release workflows, or routine UAT were rerun for these bookkeeping steps.
+- Session/model cost data were not available.
+
+---
+
+## Milestone: v1.40 — Readiness Evidence Closure
+
+**Shipped and archived:** 2026-09-27 (planning milestone; no package release)
+**Phases:** 3 (165–167) | **Plans:** 8 | **Plan tasks:** 16 | **Requirements:** 11
+
+### What Was Built
+
+- Public tenant-scope and facet-filter contracts were verified; two compatible defects were corrected.
+- A Phoenix host proved persisted-membership tenant isolation through repository-path and freshly built package dependencies.
+- A read-only mismatch report led to ID-bounded manual repair, terminal task success, and visibility through the same search.
+- A separate six-condition assessment remains **NOT READY**, with the Mint advisory, condition 6 cutoff, release-reference mismatch, and evidence limits preserved.
+
+### What Worked
+
+- Separating public filter composition, host policy, package use, repair, and dated readiness into bounded claims kept evidence aligned to each layer.
+- Refreshing Phase 165/166 reports after their evidence aged restored canonical verification state before final source tracking.
+- The exact-SHA retry recorded both outcomes: run 36360456437 exposed a transient mounted-service readiness timeout; same-SHA run 36361116862 passed all required checks, coverage, and attestation.
+- Keeping the advisory E2E and Phoenix scenarios independent from required merge gates preserved evidence without broadening branch protection.
+
+### What Was Inefficient
+
+- The first final-source run at `03d8e63` became stale after Phase 165/166 verification and review reports were refreshed, requiring a new hosted run at `343e20b`.
+- A transient mounted web-service startup timeout caused one full same-SHA CI retry; it did not reproduce on retry and required no source change.
+- GSD's archive helper generated a candidate-only accomplishment line, so the milestone ledger needed reconciliation with final-source and audit outcomes.
+
+### Patterns Established
+
+- Recompute exact-SHA acceptance after tracked verification refreshes and archive commits; keep source-specific receipts distinct and make the last hosted receipt the final tracked source.
+- Preserve a failed hosted readiness attempt and its successful same-source retry instead of hiding either result or diagnosing a product defect without evidence.
+- Archive the dated readiness limits alongside passing implementation evidence; later CI must not rewrite an earlier assessment cutoff.
+
+### Key Lessons
+
+Finish verification refreshes and archive writes before the final source acceptance. Check generated milestone summaries against phase summaries and the accepted audit, then run exact-SHA CI on the completed archive commit and avoid tracked follow-up edits. Keep the dated readiness cutoff unchanged regardless of later CI results.
+
+### Cost Observations
+
+- The phase-tracking range contained 62 commits, 77 changed files, and 10,725 additions / 75 deletions across 2026-09-26–27.
+- Hosted closeout needed one same-SHA retry for the mounted-service startup timeout; both successful final receipts retained immutable artifacts.
+- Model mix and session-cost data were unavailable.
+
+---
+
+## Milestone: v1.39 — Pre-Operator UI Quality Readiness Ratchet
+
+**Shipped and archived:** 2026-09-26 (planning milestone; no package release)
+**Phases:** 3 (162–164) | **Plans:** 7 | **Plan tasks:** 14 | **Requirements:** 11
+
+### What Was Built
+
+- A 24-claim non-UI readiness baseline with source, freshness, scope, and limitation records.
+- Claim-by-claim triage and structural checkers; no material Scrypath-owned finding or qualifying follow-up candidate was established.
+- A dated six-condition gate that remains **NOT READY** because conditions 3 and 6 are unknown; it does not authorize operator UI work.
+
+### What Worked
+
+- Keeping evidence gaps separate from behavior defects prevented adjacent proof from being stretched beyond its scenario.
+- The baseline, findings checker, and readiness record handed off one canonical claim inventory through assessment, disposition, and the final gate.
+- Candidate exact-SHA closeout gave hosted evidence without converting the bounded readiness result into a broader product claim.
+
+### What Was Inefficient
+
+- The milestone archive helper reported 12 tasks although the seven plan summaries each record two; the archive count was corrected to 14 from plan evidence.
+- The audit found missing Phase 164 `requirements-completed` frontmatter and incomplete Nyquist metadata for Phases 163–164. These remain documented tech debt rather than silently being reported as full audit coverage.
+- Tracking edits after the prior exact-SHA receipt require another hosted closeout for the final archive commit.
+- The optional `ecommerce-e2e` lane failed the mounted-web startup-stability probe during candidate closeout. Required closeout jobs passed; the advisory failure is recorded without inferring a product defect from that run alone.
+
+### Patterns Established
+
+- Keep every readiness claim tied to its source, result, date, freshness, applicability, and limits.
+- Treat a checker pass as evidence for the structure it validates; keep source truth and semantic judgment bounded by linked evidence.
+- Require a passing readiness gate before starting operator UI work.
+
+### Key Lessons
+
+Use per-plan task metadata as the archival count source when generated milestone totals disagree. Include requirement completion frontmatter and validated Nyquist status before phase closeout so an otherwise passing phase does not leave avoidable audit debt.
+
+### Cost Observations
+
+- Model mix and session count were unavailable.
+- No local test reruns were needed during archival; the required final exact-SHA hosted closeout runs against the final tracking commit.
+
 ## Milestone: v1.38 — Packaged Adopter Proof
 
 **Shipped and archived:** 2026-09-25 (`scrypath 0.3.13`)
@@ -489,6 +611,8 @@ Local success is insufficient for a required zero-touch gate when the local buil
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|
+| v1.40 | 165-167 | Public tenant/facet contract fixes, host-owned tenant and repair evidence, and an honest dated NOT READY decision |
+| v1.39 | 162-164 | Claim-level non-UI readiness baseline, evidence-led dispositions, and a fail-closed NOT READY decision |
 | v1.38 | 160-161 | Package-backed Phoenix adopter proof, automated release parity, and zero-human verification default |
 | v1.37 | 148-159 | Runtime/architecture quality ratchet, lean CI and release trust, exact-SHA zero-human closeout |
 | v1.36 | 144-147 | Four-graph dependency security remediation, behavior preservation, and required zero-touch mounted proof |

@@ -1,125 +1,87 @@
-# Feature Research
+# Feature Landscape
 
-**Domain:** Dependency-security remediation for four independently resolved Elixir/Mix projects
-**Researched:** 2026-08-21
-**Confidence:** HIGH for required behavior and repository gates; LOW for external advisory-service corroboration
+**Domain:** Whole-product non-UI quality and adopter-readiness assessment for an established Ecto-native Elixir search library
+**Researched:** 2026-09-25
+**Confidence:** HIGH for the audit scope and gate (owner-approved program); MEDIUM for individual evidence sufficiency until the baseline inspects the linked artifacts and current code.
 
-## Feature Landscape
+> This research informs audit scope only. It does not add product capabilities or requirements. The formal milestone requirements must be derived from the approved readiness program and concrete findings, not from this feature inventory.
 
-This maintenance milestone has no user-facing product feature to add. Its observable contract is a trustworthy, reviewable security remediation: all four Mix graphs resolve beyond the recorded advisory set, existing behavior remains covered by the established project gates, and the PR leaves an auditable record of exactly what was proven. The 2026-08-16 triage ledger is the fixed scope authority; its fixed minima clear the recorded advisory set, not every newly published package version.
+## Table Stakes
 
-### Table Stakes (Users Expect These)
+For this readiness assessment, “table stakes” means capability areas and evidence needed to make a credible whole-product readiness decision. These are dimensions to assess, not assertions that gaps exist.
 
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Four independent clean dependency resolutions | Each directory has its own manifest/lock graph; fixing root Scrypath cannot establish the state of the Phoenix example, ScrypathOps, or ecommerce. | MEDIUM | Run `mix deps.get` in root, `examples/phoenix_meilisearch`, `scrypath_ops` (via `mix verify.opsui`), and `examples/scrypath_ecommerce`. Resolver output must no longer report any advisory recorded in the triage ledger. Do not claim a general absence of all future advisories. |
-| Fixed-compatible, bounded upgrades | A remediation must patch the reproduced vulnerable versions without silently converting a maintenance fix into an ecosystem migration. | MEDIUM | Resolve at least: `hpax 1.0.4`, `mint 1.9.3`, `req 0.6.1`, `plug 1.19.5`; web graphs also use the ledger’s `bandit 1.12.1`, `phoenix 1.8.9`, `phoenix_live_view 1.1.33`, `postgrex 0.22.4`, and `swoosh 1.26.3` minima as applicable. The legacy example must align Ecto/Ecto SQL `3.14.x` so `decimal 3.0.0+` can resolve. |
-| Preserved core-library behavior | Consumers need evidence that the Req/HTTP dependency change did not regress library compilation, fast behavior, package truth, or trust contracts. | MEDIUM | Root batch passes: `mix compile --warnings-as-errors`; `mix test --exclude integration --exclude docs_contract`; `mix verify --exclude integration`; `mix verify.phase11`; and `mix verify.phase99`. These are the current required-merge equivalents documented in `CONTRIBUTING.md`. |
-| Preserved legacy Phoenix example behavior | The example is an adopter-facing integration surface; the Ecto/Decimal constraint crossing has the highest regression risk. | HIGH | In `examples/phoenix_meilisearch`, pass `mix deps.get && mix test`, then rerun the root fast test command. Live Phoenix/Postgres/Meilisearch proof remains separately prerequisite-bound rather than being fabricated when services are unavailable. |
-| Preserved ScrypathOps behavior | The optional Ops app is a separately locked Phoenix client and must retain its Postgres-backed test contract after web-stack upgrades. | MEDIUM | From root, `mix verify.opsui` must pass; it runs `cd scrypath_ops && mix deps.get && mix test`. Then run the root batch’s required gates. |
-| Preserved ecommerce preparation and browser proof | Ecommerce is separately locked and path-mounts ScrypathOps; its upgrade must demonstrate the existing E2E environment can still prepare. | HIGH | Pass root `mix deps.get`, then `cd examples/scrypath_ecommerce && mix deps.get && mix e2e.prepare`. When Postgres, Meilisearch, browser dependencies, and the CI lane are available, run the documented `phase105-e2e` browser checks and retain their standard failure artifacts. |
-| Isolated, reviewable evidence | Security changes must be bisectable and must not make a reviewer infer which graph or gate a lockfile change belongs to. | LOW | Deliver exactly four ordered commits: root, legacy Phoenix example, ScrypathOps, ecommerce. Each commit records its command outcomes before the next batch begins. PR dependency review is useful corroboration but does not replace local Mix evidence for all four graphs. |
+| Capability / evidence area | Why expected | Assessment complexity | Notes |
+|---|---|---:|---|
+| Public API contract and developer ergonomics | An Ecto-native library must make its supported APIs, compatibility expectations, and errors understandable and stable for adopters. | Medium | Inspect public docs, API tests, compatibility evidence, and error behavior. Do not expose internal structs or invent new public surface. |
+| Indexing and search lifecycle correctness | The core promise depends on correct writes, deletes, search, and lifecycle operations across supported flows. | High | Assess declared schemas/projections, inline/manual/Oban synchronization, related data, tenancy, search/facets/federation, settings, and recovery against existing tests and integration evidence. Reuse proof where it covers the claim. |
+| Supported ecosystem and packaged-consumer seams | Ecto/Phoenix teams need the library to compose with supported Ecto, Oban, Meilisearch, runtime, and published-package environments. | High | v1.38 covers package-backed Phoenix scenarios and release parity, but the program requires checking representative supported combinations and seams beyond that package proof. |
+| Operational honesty and recoverability | Eventual consistency and failed work must be visible, bounded, and recoverable without misleading operators or adopters. | Medium | Assess observability, failure reporting, backfill/reindex safety, recovery guidance, and supportability; rely on executable evidence or documented contracts as appropriate. |
+| First-hour and ongoing adopter experience | Minimal setup and Phoenix-friendly adoption are central product values; examples and intake must help users diagnose real issues. | Medium | Assess setup path, documentation/examples, diagnostics, support and issue intake, and whether published instructions match executable behavior. |
+| Security, privacy, dependency and release integrity | Search data, credentials, dependency graphs, and release artifacts cross trust boundaries and need explicit evidence. | High | Review configuration boundaries, secret handling, dependency health, workflow permissions, package provenance, and release/source parity. Reconcile prior audits before commissioning repeated checks. |
+| Architecture, maintainability, measured performance, and verification signal | Long-term reliability depends on understandable boundaries, evidence-led optimization, and CI whose recurring cost buys meaningful confidence. | High | Assess architecture/readability, relevant performance measurements, test coverage and signal quality, CI runtime/maintenance cost, and existing required/advisory lane boundaries. Do not promote speculative benchmarks or duplicate proof. |
+| Capability-by-evidence ledger and decision record | Readiness is not auditable unless each area records the adopter job, source/proof, freshness/sufficiency, uncertainty, and disposition. | Medium | This is the baseline artifact pattern required by the program; it allows reuse without treating prior evidence as universal coverage. |
+| Evidence-ranked bounded gap closure and automated acceptance | Closing worthwhile gaps requires prioritization and deterministic proof tied to each acceptance claim. | High | For confirmed findings, record provenance, affected job, impact/frequency, confidence, compatibility/security/data risk, implementation/regression cost, CI cost, and recommendation. Prioritize critical/high risks, then evidence-supported medium-leverage work. |
+| Explicit diminishing-return gate | The strategic transition must be based on assessed dimensions, resolved or explicitly accepted material findings, suitable automated workflow proof, lean green CI, dispositioned remaining opportunities, and clean release/support/planning truth. | Medium | Keep status NOT READY until every gate condition is evidenced. Passing recommends ScrypathOps as the next focus; it does not automatically start UI work. |
 
-### Differentiators (Competitive Advantage)
+## Differentiators
 
-For this maintenance-only milestone, differentiation means unusually clear operational proof rather than new capability.
+| Capability / evidence practice | Value proposition | Assessment complexity | Notes |
+|---|---|---:|---|
+| Reuse v1.37 and v1.38 evidence selectively | Avoids redundant proof while expanding from bounded engineering/package audits to whole-product adopter readiness. | Medium | v1.37 addressed runtime safety, architecture, test/verification commands, CI efficiency, supply-chain/release proof, and measured performance. v1.38 established package-backed Phoenix proof and publication/parity evidence. Verify claim-level coverage and currency before reuse. |
+| Lifecycle-oriented capability matrix | Connects code/tests/docs/hosted evidence to actual adopter jobs and failure boundaries rather than producing an abstract quality score. | Medium | Build the matrix from the seven named program dimensions; show limits and unknowns. |
+| Evidence-weighted dispositions | Prevents speculative polish from becoming roadmap debt while preserving a route for proven adopter/API gaps. | Medium | Close, accept with explicit rationale/owner decision, defer with reason and revisit trigger, or reject as unsupported/out of scope. Scope-guarded capability classes require explicit owner-approved scope change before implementation planning. |
+| Verification matched to claim and cost | Gives maintainers recurring confidence without burdening every change with expensive duplicate lanes. | Medium | Map claims to the cheapest reliable layer; use CI for recurring checks when confidence justifies runtime and maintenance cost; keep costly lower-frequency proof advisory or scheduled when appropriate. |
 
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Explicit proof-boundary report | Maintainers can distinguish deterministic service-free gates from service-dependent browser/live evidence, avoiding false “all green” claims. | LOW | Report required gate status, environment prerequisites, advisory-service output date/source, and whether `phase105-e2e` ran, skipped because prerequisites were absent, or failed. A skipped advisory lane is not a pass. |
-| Advisory-to-lockfile traceability | A reviewer can connect every recorded advisory family to its resolved version and introducing graph. | MEDIUM | Preserve the ledger’s ten package families and affected-project matrix; include a before/after `mix deps.get` capture or equivalently exact resolver output per graph. |
-| Stop-on-failure sequencing | A compatibility failure is localized to one graph instead of compounded by later upgrades. | LOW | Do not begin the next batch until the previous batch’s required gates pass. Consult upstream release/migration notes before a direct constraint change, especially the Ecto/Decimal alignment. |
+## Anti-Features
 
-### Anti-Features (Commonly Requested, Often Problematic)
-
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| Upgrade every dependency to package head | It appears to maximize security freshness in one PR. | It expands regression surface, loses attribution for the recorded remediation, and violates the fixed-compatible/minimal-upgrade decision. | Use the recorded patched minima; open separately justified follow-up work for broader upgrades. |
-| A single root-only audit or test run | It is fast and familiar. | The four projects resolve dependencies independently; it cannot prove the other three lockfiles or their runtime contracts. | Resolve and verify each project using its named commands. |
-| `ignore_advisories`/environment suppression as “resolution” | It makes `mix deps.get` or `mix hex.audit` quiet. | Hex documents that ignores silence known findings; they are acknowledgments, not patched dependency evidence. | Update to fixed-compatible versions; if an exception becomes necessary, stop and obtain an explicit security decision with rationale and expiry. |
-| New permanent CI lanes, scanners, or required checks | It promises stronger ongoing security posture. | It is scope expansion and could destabilize the green-main release train without a separately approved design. | Use existing required gates plus existing advisory/dependency-review evidence; propose new automation only as deferred work. |
-| Mandatory live services or manual UAT for every batch | It can sound more thorough. | It confuses reproducible required proof with environment-dependent evidence and conflicts with current advisory `phase105-e2e` posture. | Require service-free gates; run documented live/browser evidence only when prerequisites exist and state the result precisely. |
-| Runtime/API, Phoenix UI, or search-backend changes | Upgrades can invite opportunistic cleanup. | These change product scope, invalidate the maintenance premise, and breach the established scope guard. | Keep source changes limited to constraints/lockfiles and minimal compatibility fixes demanded by an upstream upgrade, with any broader change deferred. |
+| Anti-feature | Why avoid | What to do instead |
+|---|---|---|
+| Treat the readiness assessment as a new product-feature roadmap | The approved intent is a baseline, evidence-ranked closure, and a decision gate; no new customer-facing capability is named. | Derive implementation slices only from confirmed findings and the accepted program requirements. |
+| Assume v1.37/v1.38 imply all whole-product dimensions are ready | Both are bounded efforts; neither claims full adopter-readiness coverage. | Reuse evidence per claim, record uncovered boundaries, freshness, and limits. |
+| Re-run every passing test or service lane by default | Repeated proof without a decision-relevant question adds time and CI cost without necessarily increasing confidence. | Identify the precise uncovered claim first, then select the smallest proof that resolves it. |
+| Add speculative API/runtime breadth or prohibited retrieval/backend categories | This would exceed the approved audit and collide with existing scope authority. | Keep public behavior stable by default; consider runtime/API gaps only when supported by reviewed evidence and explicit scope-guard review. |
+| Turn every observation into a milestone or required CI job | Possibility and local polish are not evidence of adopter value; excess gates can weaken signal and slow the release train. | Rank by impact, likelihood/confidence, risk, implementation/regression cost, and CI lifecycle cost; defer or reject low-value items with rationale. |
+| Declare READY based on subjective sign-off or pending routine UAT | The repository policy requires machine-verifiable acceptance and no routine human UAT. | Automate software acceptance; hand off only irreducible credentials, permissions, product decisions, or physical-world checks. |
+| Treat readiness approval as automatic authorization to begin operator UI work | The exit gate is a recommendation; maintainer availability still governs timing. | Record the readiness decision and recommendation; schedule operator UI separately when appropriate. |
 
 ## Feature Dependencies
 
 ```text
-Recorded advisory ledger + fixed minima
-    └──requires──> root resolution and required root gates
-                           └──requires──> legacy Phoenix example resolution + tests
-                                                        └──requires──> ScrypathOps resolution + tests
-                                                                                     └──requires──> ecommerce resolution + E2E preparation
-
-Each batch's passing evidence
-    └──requires──> its isolated commit
-
-Service availability ──enables──> live example / advisory phase105-e2e proof
-Service availability ──does not replace──> deterministic required gates
-
-Package-head upgrades ──conflicts with──> bounded fixed-minimum remediation
-Advisory suppression ──conflicts with──> advisory-cleared acceptance claim
+Evidence inventory and capability-by-evidence matrix
+  → sufficiency/freshness assessment and visible uncertainty
+  → evidence-ranked finding ledger and explicit dispositions
+  → bounded remediation slices (only where evidence supports action)
+  → automated acceptance evidence and clean closeout
+  → all six exit-gate conditions evidenced
+  → READY FOR OPERATOR UI recommendation (not automatic UI execution)
 ```
 
-### Dependency Notes
+Prior milestone evidence is an input to the inventory, not a prerequisite for accepting every readiness claim:
 
-- **All four resolution checks require the ledger:** an advisory claim is only meaningful against the recorded affected package/version set and the relevant project’s actual resolver result.
-- **Legacy Ecto/Decimal alignment requires its own batch:** Decimal `3.0.0+` cannot be treated as an isolated lockfile bump under the documented Ecto range; migration/release-note review precedes the constraint change.
-- **Ecommerce requires ScrypathOps-compatible resolution:** it mounts ScrypathOps through a path dependency, so its own lock graph and browser environment remain distinct verification targets.
-- **Evidence requires batch isolation:** reviewers need a clean causal link from a lockfile/manifest diff to the commands that passed for that graph.
+```text
+v1.37 quality ledger / audit ─┐
+                              ├→ claim-level reuse, gap identification, and freshness check
+v1.38 package/release proof ──┘
+```
 
-## MVP Definition
+## MVP Recommendation
 
-### Launch With (v1.36)
+Prioritize:
 
-- [ ] Root batch resolved at the prescribed compatible minima, with all six root commands passing and resolver output free of its recorded advisories.
-- [ ] Legacy Phoenix batch resolves its prescribed web/Ecto/Decimal floor and passes its example plus root-fast gates.
-- [ ] ScrypathOps batch resolves the prescribed web/client floor, passes `mix verify.opsui`, and passes the root required gates.
-- [ ] Ecommerce batch resolves separately, passes `mix e2e.prepare`, and has documented `phase105-e2e`/browser evidence when the required services are available.
-- [ ] Four commits, in the authoritative order, contain machine-readable command evidence and no unrelated product, UX, or CI-topology work.
+1. Build the whole-product capability-by-evidence baseline across the seven named non-UI dimensions, using existing v1.37/v1.38 proof only where it directly supports a current claim.
+2. Create an auditable findings ledger that distinguishes confirmed gaps, uncertainty, accepted risk, defer/reject rationale, and scope-guard review needs.
+3. Close only evidence-backed critical/high and worthwhile medium-leverage gaps in bounded slices, with acceptance claims mapped to automated proof before implementation.
+4. Evaluate the six explicit program exit conditions and preserve NOT READY until each condition has linked evidence and no unresolved critical/high/medium-leverage finding remains.
 
-### Add After Validation (v1.36.x)
-
-- [ ] Broader dependency modernization — only after a separate compatibility review identifies a reason beyond these reproduced advisories.
-- [ ] Security automation/ruleset changes — only after an approved proposal evaluates false positives, required-check policy, and all four project graphs.
-
-### Future Consideration (v2+)
-
-- [ ] Cross-project dependency-policy tooling — defer until multiple maintenance cycles demonstrate that existing Mix/CI evidence cannot keep all four graphs trustworthy.
-
-## Feature Prioritization Matrix
-
-| Feature | User Value | Implementation Cost | Priority |
-|---------|------------|---------------------|----------|
-| Four clean recorded-advisory resolutions | HIGH | MEDIUM | P1 |
-| Per-batch behavior and required-gate proof | HIGH | MEDIUM | P1 |
-| Four isolated commits and evidence capture | HIGH | LOW | P1 |
-| Service-dependent example/E2E evidence | HIGH | HIGH | P1 when prerequisites exist; otherwise transparently recorded as unavailable |
-| Broader upgrades or CI changes | LOW | HIGH | P3 / deferred |
-
-**Priority key:**
-- P1: Must have for milestone closure
-- P2: Should have, add when possible
-- P3: Deferred; not part of this maintenance milestone
-
-## Verification Evidence Model
-
-| Evidence class | Required proof | Pass condition | Boundary |
-|---------------|----------------|----------------|----------|
-| Resolver/advisory proof | `mix deps.get` in each of the four projects | No warning/report for the advisories recorded in the 2026-08-16 ledger; resolved versions meet the applicable fixed minima | Time-bound to the advisory data and package registry response. Capture command output/date; do not restate it as a timeless “secure” guarantee. |
-| Root deterministic proof | Root compile, fast tests, `mix verify`, `phase11`, and `phase99` commands | Every named command exits zero | Required merge-gate confidence; no external service prerequisite. |
-| Phoenix example proof | Example `mix deps.get && mix test`, then root fast tests | All commands exit zero | Required for the legacy batch. The separate live integration path needs Postgres/Meilisearch environment variables and reachable services. |
-| Ops proof | `mix verify.opsui`, then root required gates | All commands exit zero | Required for the Ops batch; its task exercises the path app with Postgres-backed Ecto setup, no Meilisearch. |
-| Ecommerce deterministic proof | ecommerce `mix deps.get && mix e2e.prepare` | Both exit zero | Required preparation proof, not browser functional proof. |
-| Ecommerce live/browser proof | Existing `phase105-e2e` CI lane or documented browser commands | Lane/checks complete with actionable artifacts; retries are recorded as flaky rather than clean | Advisory evidence, service- and browser-prerequisite dependent; never substitute a skip for a pass. |
-| PR review corroboration | Dependency review of manifest/lockfile diff, when available | No newly introduced vulnerable dependency finding | Helpful external service proof only; it supplements rather than replaces the four resolver outputs and repository gates. |
+Defer: new public APIs, backend/search breadth, reusable UI surfaces, broad CI promotion, and additional ScrypathOps UI implementation. These are not readiness capabilities established by the program and remain subject to existing scope guards, adopter evidence, and separate decisions.
 
 ## Sources
 
-- Repository primary authority: [advisory triage ledger](../quick/260816-tzr-triage-dependency-security-advisories-re/260816-tzr-ADVISORY-TRIAGE.md), [triage verification](../quick/260816-tzr-triage-dependency-security-advisories-re/260816-tzr-VERIFICATION.md), [pending remediation todo](../todos/pending/2026-08-16-remediate-dependency-security-advisories.md), and [contributor/CI contract](../../CONTRIBUTING.md). Confidence: HIGH for this milestone’s scope and commands.
-- [Hex `mix hex.audit` documentation](https://hex.hexdocs.pm/Mix.Tasks.Hex.Audit.html) — advisories/retirements yield nonzero status; ignore configuration silences findings. Confidence: LOW from the configured websearch confidence seam; used only to support the anti-feature boundary.
-- [Mix `mix test` documentation](https://mix.hexdocs.pm/main/Mix.Tasks.Test.html) — warning-as-error behavior. Confidence: LOW from the configured websearch confidence seam; repository commands remain authoritative here.
-- [GitHub dependency review documentation](https://docs.github.com/en/code-security/concepts/supply-chain-security/dependency-review) — PR dependency diffs include indirect lockfile changes and vulnerability data. Confidence: LOW from the configured websearch confidence seam; corroborative only.
+- `.planning/reference/PRE-OPERATOR-UI-READINESS.md` — approved program dimensions, evidence-ranked closure, operating rules, and six-condition exit gate (primary authority).
+- `.planning/PROJECT.md` — milestone target features, product boundaries, automation-first verification policy, current status, and v1.37/v1.38 summaries.
+- `.planning/reference/QUALITY-LEDGER.md` — v1.37 findings, evidence and dispositions, final proof, and explicit excluded UI judgment.
+- `.planning/milestones/v1.38-REQUIREMENTS.md` — package-backed adopter proof scope and completed requirements.
+- `.planning/reference/MILESTONE-ARC.md` — near/mid/long horizons and readiness transition posture.
+- `.planning/reference/milestone-candidates.md` — evidence gates, conditional candidates, and selection/closeout rules.
 
----
-*Feature research for: Scrypath v1.36 Dependency Security Remediation*
-*Researched: 2026-08-21*
+*Research boundary: local planning sources were used because this work defines an internal audit scope from owner-approved project evidence, not an external product/ecosystem comparison. No new requirements are implied by this landscape.*

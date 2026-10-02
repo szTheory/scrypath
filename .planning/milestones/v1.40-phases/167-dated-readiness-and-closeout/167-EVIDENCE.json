@@ -1,0 +1,514 @@
+{
+  "schema": 1,
+  "assessment_source_sha": "7714b3a7d53086b992982c9c174712fbbc287f40",
+  "historical_baseline_sha": "b944c049854e65b41352eebc59a13f1774431e3c",
+  "observed_at_utc": "2026-09-27T18:36:15Z",
+  "claims": [
+    {
+      "id": "API-01-public-tenant",
+      "evidence_kind": "local-test",
+      "requirement_ids": ["API-01"],
+      "scenario": "Declared tenant scope composes across search, multi-search, and facet-values public paths; conflicting or undeclared scope rejects before dispatch.",
+      "oracle": "test/scrypath/tenant_scope_contract_test.exs",
+      "source_sha": "493ca34024ae4909c771a99eb42e86f3392383e3",
+      "canonical_receipt": ".planning/phases/165-public-tenant-and-facet-contracts/165-01-SUMMARY.md#baseline-and-corrected-evidence",
+      "result": "pass",
+      "skipped": false,
+      "observed_at_utc": "2026-09-27T18:36:15Z",
+      "dependency_mode": "Local ExUnit recorder contract; process-local backend recording, no live service claim.",
+      "bounded_claim": "At the recorded corrected source, the named suite passed 9 tests with 0 failures and observed composed filters and pre-dispatch rejection through the public paths.",
+      "limits": "This proves the named library input and filter-composition contracts only. It does not establish host authentication, membership policy, trusted tenant derivation, response scoping, live Meilisearch parsing, or package behavior.",
+      "freshness": {"status": "exact-source", "reason": "The Phase 165 summary names the corrected source SHA and records the focused suite result at that source."},
+      "source_verification": {
+        "method": "Inspected Phase 165 Plan 01 summary and verification report against the canonical test path and full corrected source SHA.",
+        "observed_result": "The corrected source ran test/scrypath/tenant_scope_contract_test.exs: 9 tests, 0 failures; the verifier reports recorder assertions across public paths.",
+        "limitations": "This is local ExUnit and recorder evidence, not live backend or host-authorization evidence."
+      }
+    },
+    {
+      "id": "API-02-public-facets",
+      "evidence_kind": "local-test",
+      "requirement_ids": ["API-02"],
+      "scenario": "Public facet defaults, keyword-filter rendering, encoded HTTP shape, escaping, and error preservation.",
+      "oracle": "test/scrypath/facet_values_contract_test.exs",
+      "source_sha": "a883958c73d7f102a7404a317e0d13b7c15ccbd9",
+      "canonical_receipt": ".planning/phases/165-public-tenant-and-facet-contracts/165-02-SUMMARY.md#baseline-and-corrected-evidence",
+      "result": "pass",
+      "skipped": false,
+      "observed_at_utc": "2026-09-27T18:36:15Z",
+      "dependency_mode": "Local ExUnit through the public API, real adapter, and Req.Test encoded-request boundary.",
+      "bounded_claim": "At source a883958c73d7f102a7404a317e0d13b7c15ccbd9, the facet suite passed 8 tests with 0 failures and covered defaults, rendered keyword filters, escaping, and bounded errors.",
+      "limits": "The Phase 165 receipt proves request construction and error behavior. It does not by itself prove live Meilisearch acceptance; the named live/package follow-up is represented separately by PKG-04.",
+      "freshness": {"status": "exact-source", "reason": "The Phase 165 summary records the corrected source SHA and focused 8-test result."},
+      "source_verification": {
+        "method": "Inspected Phase 165 Plan 02 summary and verification report for the named facet test file, source SHA, and test outcome.",
+        "observed_result": "The corrected source ran test/scrypath/facet_values_contract_test.exs: 8 tests, 0 failures; Req.Test observed the encoded request body.",
+        "limitations": "This is local construction evidence, distinct from the exact-source Phase 166 service/package receipt."
+      }
+    },
+    {
+      "id": "HOST-01-synthetic-membership-path",
+      "evidence_kind": "hosted",
+      "requirement_ids": ["HOST-01"],
+      "scenario": "authorized tenant search and facet values",
+      "oracle": "SCRYPATH_PHASE166_HOST",
+      "source_sha": "50d5c12d36ec560525e245bcb992c40e5927854f",
+      "canonical_receipt": ".planning/phases/166-host-tenant-and-repair-evidence/166-EVIDENCE.json#host-path",
+      "run_id": 36321613553,
+      "run_attempt": 1,
+      "job_id": 108626420623,
+      "result": "pass",
+      "skipped": false,
+      "observed_at_utc": "2026-09-27T18:20:46Z",
+      "dependency_mode": "GitHub Actions advisory phoenix-example job; exact-SHA workflow_dispatch run.",
+      "bounded_claim": "The named synthetic Phoenix host workflow logged tenant A and B permitted raw IDs separately from hydrated IDs and completed 16 tests with 0 failures.",
+      "limits": "This proves supplied-scope composition in one synthetic host workflow only. Host authentication, real membership policy, trusted tenant derivation, authorization, and response scoping remain host-owned and unproven.",
+      "log_reference": "https://github.com/szTheory/scrypath/actions/runs/36321613553/job/108626420623",
+      "freshness": {"status": "exact-source", "reason": "Canonical job and marker bind this observation to source 50d5c12d36ec560525e245bcb992c40e5927854f and run attempt 1."},
+      "source_verification": {
+        "method": "Inspected gh run metadata and the named advisory job log; matched source SHA, run attempt, job ID, scenario marker, and test summary.",
+        "observed_result": "Job 108626420623 concluded success and emitted SCRYPATH_PHASE166_HOST followed by 16 tests, 0 failures.",
+        "limitations": "Structural joins verify the canonical record and marker presence; they do not make synthetic policy a general host authorization guarantee."
+      }
+    },
+    {
+      "id": "HOST-02-tenant-raw-and-facet-observations",
+      "evidence_kind": "hosted",
+      "requirement_ids": ["HOST-02"],
+      "scenario": "authorized tenant search and facet values",
+      "oracle": "SCRYPATH_PHASE166_HOST",
+      "source_sha": "50d5c12d36ec560525e245bcb992c40e5927854f",
+      "canonical_receipt": ".planning/phases/166-host-tenant-and-repair-evidence/166-EVIDENCE.json#host-path",
+      "run_id": 36321613553,
+      "run_attempt": 1,
+      "job_id": 108626420623,
+      "result": "pass",
+      "skipped": false,
+      "observed_at_utc": "2026-09-27T18:20:46Z",
+      "dependency_mode": "GitHub Actions advisory phoenix-example job with Postgres 16 and Meilisearch v1.15.",
+      "bounded_claim": "The marker separately records raw permitted IDs, hydrated IDs, total hits, category buckets, facet-value buckets, and the tenant-B positive-control marker for this fixture.",
+      "limits": "Fixture counts and synthetic tenant policy do not establish all-tenant isolation, arbitrary host behavior, sorting guarantees, or general access-control certification.",
+      "log_reference": "https://github.com/szTheory/scrypath/actions/runs/36321613553/job/108626420623",
+      "freshness": {"status": "exact-source", "reason": "Canonical scenario marker and job identity are tied to the recorded exact source and attempt."},
+      "source_verification": {
+        "method": "Inspected the named advisory job log marker and canonical Phase 166 JSON observations.",
+        "observed_result": "Both tenant raw/hydrated identifiers and separate count/category/facet observations are present in the successful job receipt.",
+        "limitations": "This narrow fixture does not prove arbitrary tenant isolation."
+      }
+    },
+    {
+      "id": "PKG-04-local-artifact-consumer",
+      "evidence_kind": "hosted",
+      "requirement_ids": ["PKG-04"],
+      "scenario": "authorized tenant search and facet values",
+      "oracle": "PASS package proof: integration scenarios completed",
+      "source_sha": "50d5c12d36ec560525e245bcb992c40e5927854f",
+      "canonical_receipt": ".planning/phases/166-host-tenant-and-repair-evidence/166-EVIDENCE.json#host-package",
+      "run_id": 36321613553,
+      "run_attempt": 1,
+      "job_id": 108626420623,
+      "result": "pass",
+      "skipped": false,
+      "observed_at_utc": "2026-09-27T18:20:46Z",
+      "dependency_mode": "GitHub Actions advisory Phoenix consumer; fresh local unpacked Hex artifact tagged v0.3.13 and consumed through a temporary tagged Git dependency.",
+      "bounded_claim": "The package-mode job recorded local artifact creation, staged dependency resolution, consumer compilation, integration completion, and 16 tests with 0 failures.",
+      "limits": "The artifact was built from Phase 166 source 50d5c12d36ec560525e245bcb992c40e5927854f and is not the public Hex artifact. This does not prove public registry installation or package-backed deletion.",
+      "log_reference": "https://github.com/szTheory/scrypath/actions/runs/36321613553/job/108626420623",
+      "freshness": {"status": "exact-source", "reason": "The package execution and hosted log excerpt are bound to the Phase 166 source, run attempt, and advisory job."},
+      "source_verification": {
+        "method": "Inspected the canonical host-package entry and hosted Phoenix advisory log stages for artifact tagging, local dependency resolution, consumer compile, and integration completion.",
+        "observed_result": "The local v0.3.13 artifact resolved, the consumer compiled, the named scenario completed, and 16 tests passed with 0 failures.",
+        "limitations": "Hosted metadata and sanitized log excerpts were inspected; artifact bytes were not rehashed, and no Hex publication claim is made."
+      }
+    },
+    {
+      "id": "REPAIR-01-selected-id-no-write-report",
+      "evidence_kind": "hosted",
+      "requirement_ids": ["REPAIR-01"],
+      "scenario": "bounded manual repair restores the selected raw document",
+      "oracle": "SCRYPATH_PHASE166_REPAIR",
+      "source_sha": "50d5c12d36ec560525e245bcb992c40e5927854f",
+      "canonical_receipt": ".planning/phases/166-host-tenant-and-repair-evidence/166-EVIDENCE.json#root-repair",
+      "run_id": 36321613553,
+      "run_attempt": 1,
+      "job_id": 108626420717,
+      "result": "pass",
+      "skipped": false,
+      "observed_at_utc": "2026-09-27T18:20:46Z",
+      "dependency_mode": "GitHub Actions advisory backend job using the existing SQLite IntegrationRepo and Meilisearch v1.15.",
+      "bounded_claim": "Selected ID 166000040 is distinct from source-only and visible controls; the report-only observation recorded 3 reads and 0 mutations.",
+      "limits": "This proves one explicit-ID repair fixture and a read-only report observation. It does not prove query-limit scoping, all boundary inputs, retries, concurrency, or generic diagnosis behavior.",
+      "log_reference": "https://github.com/szTheory/scrypath/actions/runs/36321613553/job/108626420717",
+      "freshness": {"status": "exact-source", "reason": "The backend job and repair marker are linked to the exact recorded source and attempt."},
+      "source_verification": {
+        "method": "Inspected the canonical root-repair execution and backend job log marker for selected ID, controls, and request counters.",
+        "observed_result": "The hosted receipt names the selected ID, source-only and visible controls, 3 reads, and 0 mutation requests.",
+        "limitations": "This is a single named repair workflow; no broad operator safety or concurrency claim follows."
+      }
+    },
+    {
+      "id": "REPAIR-02-task-terminal-and-visible-result",
+      "evidence_kind": "hosted",
+      "requirement_ids": ["REPAIR-02"],
+      "scenario": "bounded manual repair restores the selected raw document",
+      "oracle": "SCRYPATH_PHASE166_REPAIR",
+      "source_sha": "50d5c12d36ec560525e245bcb992c40e5927854f",
+      "canonical_receipt": ".planning/phases/166-host-tenant-and-repair-evidence/166-EVIDENCE.json#root-repair",
+      "run_id": 36321613553,
+      "run_attempt": 1,
+      "job_id": 108626420717,
+      "result": "pass",
+      "skipped": false,
+      "observed_at_utc": "2026-09-27T18:20:46Z",
+      "dependency_mode": "GitHub Actions advisory backend job using the existing SQLite IntegrationRepo and Meilisearch v1.15.",
+      "bounded_claim": "The returned first and repeated backend tasks reached succeeded; the selected raw document and projection were visible after repair in the named index.",
+      "limits": "This proves one selected-ID task-to-visible-search path. It does not establish exactly-once execution, retries, failure recovery, arbitrary IDs, or concurrent ordering.",
+      "log_reference": "https://github.com/szTheory/scrypath/actions/runs/36321613553/job/108626420717",
+      "freshness": {"status": "exact-source", "reason": "The backend task, raw result, and index are recorded in the canonical exact-source job marker."},
+      "source_verification": {
+        "method": "Inspected the Phase 166 canonical execution and hosted repair marker for task states, UIDs, index, and raw target projection.",
+        "observed_result": "First and repeat tasks succeeded with UIDs 31 and 32; raw target ID 166000040 and its projection were present in the named index.",
+        "limitations": "Task success and one visible result do not imply exactly-once or general recovery semantics."
+      }
+    },
+    {
+      "id": "DELETE-01-bounded-hard-delete-reuse",
+      "evidence_kind": "historical-hosted",
+      "requirement_ids": ["DELETE-01"],
+      "scenario": "deleted products leave the visible search index",
+      "oracle": "deleted products leave the visible search index",
+      "source_sha": "dc400b2b57aec0ca6b0ef16c9477d266fd41a433",
+      "canonical_receipt": ".planning/phases/166-host-tenant-and-repair-evidence/166-EVIDENCE.json#delete_receipt",
+      "run_id": 36257182675,
+      "run_attempt": 1,
+      "job_id": 108446076619,
+      "result": "pass",
+      "skipped": false,
+      "observed_at_utc": "2026-09-27T18:36:15Z",
+      "dependency_mode": "Historical advisory ecommerce Playwright E2E run; exact source dc400b2b57aec0ca6b0ef16c9477d266fd41a433.",
+      "bounded_claim": "In the source-backed ecommerce hard-delete Oban workflow, the known-present target is absent from raw search hits after controlled persisted work drains while the sibling remains visible.",
+      "limits": "Excludes package deletion, inline/manual deletion, transaction atomicity, task-UID correlation, duplicate delivery, retries, restart recovery, concurrency/recreation ordering, soft deletes, production latency, and arbitrary hosts.",
+      "log_reference": "https://github.com/szTheory/scrypath/actions/runs/36257182675/job/108446076619",
+      "freshness": {"status": "reusable", "reason": "The complete 16-path C-09 comparison is unchanged at the Phase 167 assessment source; path reasons remain linked to the canonical Phase 166 evidence."},
+      "source_verification": {
+        "method": "Re-read GitHub run 36257182675 attempt 1 and advisory job 108446076619 metadata; inspected the named Playwright test result and canonical artifact identity metadata.",
+        "observed_result": "The exact-source advisory job concluded success; its log reports the named deleted-products test passing. The canonical receipt records artifact 10910932671, its digest, and the bounded raw-hit oracle.",
+        "limitations": "Artifact metadata was inspected, but the artifact was not downloaded again or rehashed. Reuse is conditional on the C-09 relevant-path comparison."
+      }
+    }
+  ],
+  "candidate_advisory": {
+    "source_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+    "run_id": 36347716269,
+    "run_attempt": 1,
+    "job_id": 108700229969,
+    "job_conclusion": "success",
+    "scenarios": [
+      {
+        "id": "host-path",
+        "scenario": "authorized tenant search and facet values",
+        "command": "mix verify.phoenix_example",
+        "source_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+        "run_id": 36347716269,
+        "run_attempt": 1,
+        "job_id": 108700229969,
+        "result": "pass",
+        "skipped": false
+      },
+      {
+        "id": "host-package",
+        "scenario": "authorized tenant search and facet values",
+        "command": "mix verify.phoenix_example --package",
+        "source_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+        "run_id": 36347716269,
+        "run_attempt": 1,
+        "job_id": 108700229969,
+        "result": "pass",
+        "skipped": false
+      }
+    ]
+  },
+  "candidate_closeout": {
+    "observed_at_utc": "2026-09-27T20:32:57Z",
+    "source_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+    "acceptance_run": {
+      "authority": "github-actions-exact-sha",
+      "repository": "szTheory/scrypath",
+      "workflow": "ci.yml",
+      "run_id": 36347716269,
+      "run_attempt": 1,
+      "run_url": "https://github.com/szTheory/scrypath/actions/runs/36347716269",
+      "head_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+      "event": "workflow_dispatch",
+      "jobs": [
+        "core (required)",
+        "package (required)",
+        "repository-contracts (required)",
+        "backend (required)",
+        "ecommerce-mounted (required)",
+        "coverage (advisory)",
+        "closeout-attestation"
+      ],
+      "coverage_artifact": {
+        "id": 10941550649,
+        "digest": "sha256:e307bb0eb9754d8ad8f51a5c411fe30d62c343a694fa7a37374d8613c5cbe0a3",
+        "expires_at": "2026-10-04T20:22:07Z"
+      },
+      "closeout_artifact": {
+        "id": 10941635486,
+        "digest": "sha256:4d42626b26a067d4a34cd3ebabd3c6fa5be230bfcb53be3b1cb0882423705ae7",
+        "expires_at": "2026-10-04T20:25:22Z"
+      }
+    },
+    "earlier_same_source_attempt": {
+      "run_id": 36347003052,
+      "run_attempt": 1,
+      "run_url": "https://github.com/szTheory/scrypath/actions/runs/36347003052",
+      "head_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+      "event": "workflow_dispatch",
+      "result": "failed",
+      "failed_job": "ecommerce-mounted (required)",
+      "diagnostic": "Browser startup reported the mounted web service was not stable for three consecutive checks (exit 70). The uploaded compose diagnostic showed no application assertion; the same relevant source passed that job at Phase 166 source 50d5c12d36ec560525e245bcb992c40e5927854f. The retry passed. Retain as a hosted readiness flake."
+    },
+    "phoenix_advisory": {
+      "run_id": 36347716269,
+      "run_attempt": 1,
+      "job_id": 108700229969,
+      "job_name": "phoenix-example (advisory)",
+      "job_conclusion": "success",
+      "source_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+      "scenarios": [
+        {
+          "id": "host-path",
+          "scenario": "authorized tenant search and facet values",
+          "command": "mix verify.phoenix_example",
+          "source_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+          "run_id": 36347716269,
+          "run_attempt": 1,
+          "job_id": 108700229969,
+          "result": "pass",
+          "skipped": false,
+          "marker": {
+            "index": "phx_tenant_183074_post",
+            "setup_task_ids": [14, 15],
+            "write_task_ids": [16, 17, 18],
+            "tenant_a_permitted_ids": ["8"],
+            "tenant_a_total_hits": 1,
+            "tenant_a_categories": [["phone-a", 1]],
+            "tenant_a_facet_values": [["phone-a", 1]],
+            "tenant_b_permitted_ids": ["10"],
+            "tenant_b_total_hits": 1,
+            "tenant_b_categories": [["phone-b-forbidden", 1]],
+            "tenant_b_facet_values": [["phone-b-forbidden", 1]],
+            "tenant_b_marker_ids": ["10"],
+            "test_suite": "16 tests, 0 failures"
+          }
+        },
+        {
+          "id": "host-package",
+          "scenario": "authorized tenant search and facet values",
+          "command": "mix verify.phoenix_example --package",
+          "source_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+          "run_id": 36347716269,
+          "run_attempt": 1,
+          "job_id": 108700229969,
+          "result": "pass",
+          "skipped": false,
+          "local_artifact": {
+            "build_source_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+            "version_tag": "v0.3.13",
+            "consumer_compiled": true,
+            "public_registry_installation_claimed": false
+          },
+          "marker": {
+            "index": "phx_tenant_1186_post",
+            "setup_task_ids": [34, 35],
+            "write_task_ids": [36, 37, 38],
+            "tenant_a_permitted_ids": ["16"],
+            "tenant_a_total_hits": 1,
+            "tenant_a_categories": [["phone-a", 1]],
+            "tenant_a_facet_values": [["phone-a", 1]],
+            "tenant_b_permitted_ids": ["18"],
+            "tenant_b_total_hits": 1,
+            "tenant_b_categories": [["phone-b-forbidden", 1]],
+            "tenant_b_facet_values": [["phone-b-forbidden", 1]],
+            "tenant_b_marker_ids": ["18"],
+            "test_suite": "16 tests, 0 failures"
+          }
+        }
+      ]
+    },
+    "repair_marker_observation_only": {
+      "run_id": 36347716269,
+      "run_attempt": 1,
+      "job_id": 108700229922,
+      "job_name": "backend (required)",
+      "job_conclusion": "success",
+      "source_sha": "441a7e75367e3d354a2da66261850530363cf1f4",
+      "scenario": "bounded manual repair restores the selected raw document",
+      "marker": {
+        "selected_ids": [166000020],
+        "first_task": {"state": "succeeded", "uid": 20},
+        "repeat_task": {"state": "succeeded", "uid": 21},
+        "raw_target_id": 166000020,
+        "source_only_control_id": 166000021,
+        "visible_control_id": 166000022,
+        "read_requests": 3,
+        "mutation_requests": 0,
+        "elapsed_ms": 445
+      },
+      "claim_status": "Observation is recorded for the candidate source; the existing bounded repair claim remains joined to its Phase 166 source."
+    }
+  },
+  "release_identities": [
+    {
+      "kind": "planning-tag",
+      "reference": "v1.39",
+      "canonical_receipt": ".planning/phases/167-dated-readiness-and-closeout/167-RESEARCH.md#closeout-and-source-reconciliation",
+      "source_sha": "dc400b2b57aec0ca6b0ef16c9477d266fd41a433",
+      "observed_at_utc": "2026-09-27T18:36:15Z",
+      "result": "Annotated local planning tag peels to the recorded v1.39 milestone source.",
+      "limits": "This is a planning/milestone tag, not a Hex version tag or the Phase 167 source."
+    },
+    {
+      "kind": "closeout-run",
+      "reference": "36257182675",
+      "canonical_receipt": ".planning/phases/167-dated-readiness-and-closeout/167-RESEARCH.md#closeout-and-source-reconciliation",
+      "source_sha": "dc400b2b57aec0ca6b0ef16c9477d266fd41a433",
+      "observed_at_utc": "2026-09-27T18:36:15Z",
+      "result": "GitHub metadata reports exact head SHA and successful required jobs, advisory jobs, and closeout attestation.",
+      "limits": "This receipt is exact to its recorded source; it is not a final Phase 167 attestation."
+    },
+    {
+      "kind": "public-release",
+      "reference": "scrypath-v0.3.13",
+      "canonical_receipt": ".planning/milestones/v1.38-phases/161-release-and-tidy-closeout/161-RELEASE-EVIDENCE.md#publication-and-parity",
+      "source_sha": "28d3877a05479f2cc104754fc24ab0c9d545c01b",
+      "observed_at_utc": "2026-09-27T18:36:15Z",
+      "result": "GitHub release metadata and Phase 161 publication/parity receipt identify the published 0.3.13 release at the tagged source.",
+      "limits": "This proves the historical package release identity; it does not make the Phase 166 local artifact a public registry install."
+    },
+    {
+      "kind": "local-artifact",
+      "reference": "v0.3.13",
+      "canonical_receipt": ".planning/phases/166-host-tenant-and-repair-evidence/166-EVIDENCE.md#sanitized-hosted-scenario-excerpts",
+      "source_sha": "50d5c12d36ec560525e245bcb992c40e5927854f",
+      "observed_at_utc": "2026-09-27T18:36:15Z",
+      "result": "Hosted advisory package proof resolved, compiled, and exercised a freshly built local artifact.",
+      "limits": "Version label v0.3.13 does not change the artifact build source or make it the public Hex artifact."
+    }
+  ],
+  "delete_receipt": {
+    "canonical_receipt": ".planning/phases/166-host-tenant-and-repair-evidence/166-EVIDENCE.json#delete_receipt",
+    "receipt_source_sha": "dc400b2b57aec0ca6b0ef16c9477d266fd41a433",
+    "previous_assessment_source_sha": "50d5c12d36ec560525e245bcb992c40e5927854f",
+    "assessment_source_sha": "7714b3a7d53086b992982c9c174712fbbc287f40",
+    "relevant_paths": ["lib", "examples", "config", "test/support", ".github/workflows", "mix.exs", "mix.lock"],
+    "changed_paths": [
+      "examples/phoenix_meilisearch/README.md",
+      "examples/phoenix_meilisearch/lib/scrypath_demo/blog.ex",
+      "examples/phoenix_meilisearch/lib/scrypath_demo/blog/post.ex",
+      "examples/phoenix_meilisearch/priv/repo/migrations/20260927000000_add_host_memberships_and_post_tenants.exs",
+      "examples/phoenix_meilisearch/test/scrypath_demo/blog_tenant_search_test.exs",
+      "examples/phoenix_meilisearch/test/smoke/meilisearch_oban_stack_test.exs",
+      "examples/phoenix_meilisearch/test/smoke/meilisearch_related_inline_stack_test.exs",
+      "examples/phoenix_meilisearch/test/smoke/meilisearch_related_oban_stack_test.exs",
+      "examples/phoenix_meilisearch/test/smoke/meilisearch_stack_test.exs",
+      "examples/phoenix_meilisearch/test/smoke/meilisearch_tenant_stack_test.exs",
+      "examples/phoenix_meilisearch/test/support/meilisearch_test_index.ex",
+      "lib/scrypath/meilisearch/client.ex",
+      "lib/scrypath/meilisearch/query.ex",
+      "lib/scrypath/search/facet_values.ex",
+      "lib/scrypath/search/many.ex",
+      "lib/scrypath/search/single.ex"
+    ],
+    "status": "reusable",
+    "bounded_claim": "Reuse only the named source-backed ecommerce hard-delete Oban raw-hit visibility result after known presence; the target disappears while its sibling remains visible.",
+    "limits": [
+      "No package-backed deletion, other sync mode, atomic source-delete/job-enqueue, delete-task UID correlation, retries, restart recovery, concurrency, or recreation-order guarantee.",
+      "No soft-delete, arbitrary schema, arbitrary host-policy, production scheduling latency, or universal delete guarantee."
+    ],
+    "freshness": {
+    "compared_source_sha": "7714b3a7d53086b992982c9c174712fbbc287f40",
+      "result": "reusable",
+      "reason": "The exact Git comparison has the same 16 relevant paths as the canonical Phase 166 comparison; each has an explicit semantic disposition, and no relevant source paths changed between the Phase 166 receipt source and the selected Phase 167 source beyond those 16."
+    }
+  },
+  "release_reference_mismatch": {
+    "affected_files": ["mix.exs", "docs/releasing.md"],
+    "observed_refs": {"configured_source_ref": "v0.3.13", "published_release_tag": "scrypath-v0.3.13"},
+    "impact": "ExDoc source/changelog links and generic recovery examples refer to a v-prefixed ref while the published GitHub release uses the scrypath-prefixed tag; publication success and package parity remain separately evidenced.",
+    "disposition": "Bounded carry-forward for evidence reconciliation. No source correction, retag, republish, or maintainer risk acceptance is recorded; the mismatch alone does not establish publication failure.",
+    "revisit_trigger": "Revisit with a later release metadata/docs contract change or if maintainers choose to repair the source-link and recovery-reference mismatch before publication."
+  },
+  "accepted_metadata_debt": [
+    {
+      "source": ".planning/milestones/v1.39-MILESTONE-AUDIT.md#tech-debt-and-next-action",
+      "status": "retained nonblocking planning debt",
+      "disposition": "Phase 163 validation retains legacy status complete; the archive audit classifies it NOT-VALIDATED under the current Nyquist contract, not a software compliance failure.",
+      "revisit_trigger": "A separately scoped Nyquist validation reconciliation for Phase 163."
+    },
+    {
+      "source": ".planning/milestones/v1.39-MILESTONE-AUDIT.md#tech-debt-and-next-action",
+      "status": "retained nonblocking planning debt",
+      "disposition": "Phase 164 validation remains draft with nyquist_compliant false and wave_0_complete false; no historical validation metadata is rewritten here.",
+      "revisit_trigger": "A separately scoped Nyquist validation reconciliation for Phase 164."
+    },
+    {
+      "source": ".planning/milestones/v1.39-MILESTONE-AUDIT.md#requirements-coverage",
+      "status": "retained partial cross-reference debt",
+      "disposition": "The Phase 164 summary omits requirements-completed for GATE-01/02/03 although verification and traceability record them satisfied; this remains archived metadata debt.",
+      "revisit_trigger": "If a future owner reconciles Phase 164 summary frontmatter, refresh its historical verification fingerprint."
+    }
+  ],
+  "dependency_review": {
+    "observed_at_utc": "2026-09-27T19:32:38Z",
+    "inspected_source_sha": "7714b3a7d53086b992982c9c174712fbbc287f40",
+    "root_lock": {
+      "path": "mix.lock",
+      "mint_version": "1.10.1",
+      "hex_package_checksum": "c53e70867cf74017716884d8d33e0742b08b32e9cdb0031cbc69a429dc5555e3",
+      "lock_checksum": "0ba2a904605ed8406393444fb8b3356dc58eb59ee6c7fb94ac3f015e1be129e8",
+      "advisory_disposition": "At or above the fixed version for all three named advisories; Phase 161 recorded a clean mix hex.audit and exact-source deep-quality proof on the remediated root graph."
+    },
+    "consumer_lock": {
+      "path": "examples/phoenix_meilisearch/mix.lock",
+      "mint_version": "1.9.3",
+      "hex_package_checksum": "3337184d69179695c7a9f1714d92c11e629d36c8c037a21cf490131d3d150554",
+      "lock_checksum": "5f7c9342480c069dbbc4eeac3490303c9e01870ff01a7f1d29b6107054fc1e74",
+      "observed_warning": "Phase 166 Plan 03 records that mix deps.get printed existing Mint 1.9.3 security advisory notices; raw console lines were not retained."
+    },
+    "advisories": [
+      {"id": "EEF-CVE-2026-82672", "severity": "Medium", "cvss": "6.3", "affected": "Mint before 1.10.1", "fixed": "1.10.1", "source": "https://osv.dev/vulnerability/EEF-CVE-2026-82672"},
+      {"id": "EEF-CVE-2026-82729", "severity": "Medium", "cvss": "6.3", "affected": "Mint 1.9.3 before 1.10.0", "fixed": "1.10.0", "source": "https://osv.dev/vulnerability/EEF-CVE-2026-82729"},
+      {"id": "EEF-CVE-2026-82728", "severity": "High", "cvss": "8.2", "affected": "Mint before 1.10.0", "fixed": "1.10.0", "source": "https://osv.dev/vulnerability/EEF-CVE-2026-82728"}
+    ],
+    "historical_root_audit": {
+      "source_sha": "3e895a6bf78edca487b17b8ffcc431b955bc4e8f",
+      "receipt": ".planning/milestones/v1.38-phases/161-release-and-tidy-closeout/161-02-SUMMARY.md",
+      "result": "Phase 161 recorded mix hex.audit clearing the three named advisories on the Mint 1.10.1 root graph; its exact-source hosted deep-quality run 36048572240 passed."
+    },
+    "current_audit_attempts": [
+      {"path": "mix.lock", "command": "mix hex.audit", "result": "not executed", "reason": "The repository .tool-versions selector reports no configured Mix version in this environment."},
+      {"path": "examples/phoenix_meilisearch/mix.lock", "command": "mix hex.audit", "result": "not executed", "reason": "The example .tool-versions selector reports no configured Mix version in this environment."}
+    ],
+    "disposition": "The root published-library graph is fixed; the tracked Phoenix example consumer lock remains on affected Mint 1.9.3. The High advisory is unresolved with no owner acceptance or dependency change in this phase. Example-path reachability in a production host is not inferred."
+  },
+  "inherited_constraints": {
+    "source": ".planning/phases/166-host-tenant-and-repair-evidence/166-SOURCE-AUDIT.md",
+    "edge_probe_ids": [
+      {"id": "EA-166-01", "status": "unresolved", "descriptor": null}, {"id": "EA-166-02", "status": "unresolved", "descriptor": null},
+      {"id": "EA-166-03", "status": "unresolved", "descriptor": null}, {"id": "EA-166-04", "status": "unresolved", "descriptor": null},
+      {"id": "EA-166-05", "status": "unresolved", "descriptor": null}, {"id": "EA-166-06", "status": "unresolved", "descriptor": null},
+      {"id": "EA-166-07", "status": "unresolved", "descriptor": null}, {"id": "EA-166-08", "status": "unresolved", "descriptor": null},
+      {"id": "EA-166-09", "status": "unresolved", "descriptor": null}, {"id": "EA-166-10", "status": "unresolved", "descriptor": null},
+      {"id": "EA-166-11", "status": "unresolved", "descriptor": null}
+    ],
+    "prohibition_ids": [
+      {"id": "P-166-HOST-01", "status": "unresolved", "descriptor": null}, {"id": "P-166-HOST-02", "status": "unresolved", "descriptor": null},
+      {"id": "P-166-PKG-04", "status": "unresolved", "descriptor": null}, {"id": "P-166-REPAIR-01", "status": "unresolved", "descriptor": null},
+      {"id": "P-166-REPAIR-02", "status": "unresolved", "descriptor": null}, {"id": "P-166-DELETE-01", "status": "unresolved", "descriptor": null}
+    ],
+    "interpretation": "These 17 inherited constraints remain unresolved and descriptor-less; they are not new gate conditions and are not promoted to passes or defects by this index."
+  }
+}

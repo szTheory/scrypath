@@ -1,5 +1,80 @@
 # Milestones
 
+## v1.41 Readiness Gate Follow-Through (Archived: 2026-10-02; planning record, with Scrypath 0.3.14 published during the milestone)
+
+**Phases completed:** 4 phases (168–171), 19 plans, 30 plan tasks, 9 requirements
+
+**Key accomplishments:**
+
+- Completed four-graph dependency remediation and automated graph-proof safeguards, delivered tenant/facet corrections, and published Scrypath 0.3.14 with verified tag/Hex parity.
+- Completed exact-main closeout and recorded the actual maintainer's six-condition **NOT READY** decision at issue #86 comment 5940381507. The dated decision and its cutoff are unchanged.
+- Added supplemental DOC-03/GATE-05/CLOSE-04 traceability and made shift-left verification plus freeze/tracker separation a durable project default.
+- Resolved the Phase 170 tracker conflict through the explicitly authorized planning-side replacement, preserving both preterminal files byte-for-byte and keeping the frozen `8c271…` attested snapshot's historical 17/18 state distinct from current 8/8 GSD tracking.
+
+**Milestone audit:** `tech_debt` accepted for closeout — 9/9 requirements, 4/4 phases, 6/6 integration paths, and 3/3 end-to-end flows; no requirement or product integration gaps. Nyquist validation records for Phases 168–170 remain nonblocking planning debt; Phase 171 is validated. No tests, product/release workflows, or routine UAT were rerun for the tracker repair or archive. See `milestones/v1.41-MILESTONE-AUDIT.md`.
+
+**Archives:** `milestones/v1.41-ROADMAP.md`, `milestones/v1.41-REQUIREMENTS.md`, `milestones/v1.41-MILESTONE-AUDIT.md`, `milestones/v1.41-phases/`
+
+**What's next:** No successor milestone is approved. Keep the release train idle until concrete maintenance, adopter, bug, proof-drift, or strategic evidence supports owner-approved scope.
+
+---
+
+## v1.40 Readiness Evidence Closure (Shipped: 2026-09-27)
+
+**Phases completed:** 3 phases, 8 plans, 16 tasks
+
+**Key accomplishments:**
+
+- Reproduced and corrected tenant-scope leaks across single, multi, and facet search, and fixed Meilisearch facet keyword-filter encoding.
+- Proved the named Phoenix host's persisted-membership tenant isolation through repository-path and freshly built package runs.
+- Traced read-only mismatch inspection through ID-bounded repair to terminal task success and visible search; reused the delete receipt only after a 16-path freshness comparison.
+- Recorded a dated six-condition **NOT READY** assessment, preserving the Mint advisory, UNKNOWN cutoff, release-reference mismatch, and bounded evidence limits without starting operator UI work.
+- Closed final phase tracking at `343e20be66ab0c17f62b95138203c86e868bd1ee`; exact-SHA run [36361116862](https://github.com/szTheory/scrypath/actions/runs/36361116862) passed all five required jobs, coverage, and closeout attestation with immutable artifacts.
+
+**Milestone audit:** `tech_debt` accepted for closeout. Requirements, phases, integration paths, and end-to-end flows passed 11/11, 3/3, 11/11, and 5/5 respectively. Nyquist coverage is compliant for all three phases. The unresolved Mint advisory and condition 6 UNKNOWN remain in the dated **NOT READY** assessment; release-reference and inherited assumption limits remain explicit. See `milestones/v1.40-MILESTONE-AUDIT.md`.
+
+**Final tracking closeout:** [CI run 36361116862](https://github.com/szTheory/scrypath/actions/runs/36361116862) passed on `343e20be66ab0c17f62b95138203c86e868bd1ee` after Phase 165/166 verification refresh. Coverage artifact `10945688213` and closeout artifact `10946086040` have recorded immutable digests in the audit. Earlier same-SHA run 36360456437 hit a mounted-service startup timeout; the same-source retry passed. This milestone is a planning archive, not a Hex release.
+
+**Stats:** 77 files changed, 10,725 insertions, 75 deletions across 62 commits from 2026-09-26 to 2026-09-27 (range `512a3360` → `343e20be`, through final phase-tracking verification).
+
+**Archives:** `milestones/v1.40-ROADMAP.md`, `milestones/v1.40-REQUIREMENTS.md`, `milestones/v1.40-MILESTONE-AUDIT.md`, `milestones/v1.40-phases/`
+
+**What's next:** No next milestone is approved. Keep the release train idle until new concrete evidence and owner-approved scope exist; operator UI remains gated on a passing readiness assessment and maintainer availability.
+
+---
+
+## v1.39 Pre-Operator UI Quality Readiness Ratchet (Shipped: 2026-09-26)
+
+**Delivered:** An evidence-led non-UI readiness assessment with a 24-claim baseline, explicit findings dispositions, and a fail-closed readiness decision. The decision is **NOT READY** because conditions 3 and 6 remain unknown; no operator UI work is authorized.
+
+**Phases completed:** 3 phases (162–164), 7 plans, 14 plan tasks
+
+**Key accomplishments:**
+
+- Established a 24-claim readiness baseline with source, freshness, scope, and limitation details across adopter and operator work.
+- Added structural checkers and claim-by-claim triage that distinguish behavior defects, evidence gaps, and product opportunities.
+- Dispositioned all 24 claims; no material Scrypath-owned finding or qualifying follow-up candidate was established.
+- Recorded the six-condition **NOT READY** outcome with conditions 3 and 6 unknown; the assessment does not authorize operator UI work.
+- Reconciled release, package, support, CI, planning, and task-owned cleanup evidence.
+
+**Milestone audit:** `tech_debt` accepted for closeout. All 11 requirement checkboxes are complete and all 3 phase verifications pass. The audit cross-reference marks GATE-01/02/03 partial because Phase 164's summary omits `requirements-completed` frontmatter; Nyquist metadata follow-up remains for Phases 163 and 164. See `milestones/v1.39-MILESTONE-AUDIT.md`.
+
+**Final closeout:** [CI run 36257182675](https://github.com/szTheory/scrypath/actions/runs/36257182675) passed on final commit `dc400b2b57aec0ca6b0ef16c9477d266fd41a433`, including required jobs and closeout attestation. The annotated remote tag `v1.39` resolves to that exact commit.
+
+**Candidate closeout:** [CI run 36256740130](https://github.com/szTheory/scrypath/actions/runs/36256740130) passed on commit `03d5b884af75d4472447d7b8abd102e61d07d076` with all five required jobs, coverage, and closeout attestation. The optional `ecommerce-e2e` lane failed its mounted-web startup-stability check; it is not a required closeout job, and this run did not establish a product defect.
+
+The successful final closeout supersedes the candidate run for release authorization. The dated readiness decision above remains NOT READY; successful closeout alone does not reassess its unknown conditions.
+
+**Stats:** 53 files changed, 6,705 insertions, 57 deletions across 58 commits from 2026-09-25 to 2026-09-26 (milestone execution range; excludes closeout commits).
+
+**Git range:** `9a0f9164` → `70891bd`
+
+**Archives:** `milestones/v1.39-ROADMAP.md`, `milestones/v1.39-REQUIREMENTS.md`, `milestones/v1.39-MILESTONE-AUDIT.md`, `milestones/v1.39-phases/`
+
+**What's next:** No next milestone is approved. Keep the release train idle until concrete evidence and maintainer approval establish new scope; operator UI remains gated on a passing readiness assessment.
+
+---
+
 ## v1.19 archive: v1.19 — Production adoption proof and hardening (Backfilled: 2026-09-24)
 
 **Note:** Synthesized from archive snapshot by `$gsd-health --backfill`. Original completion date unknown.
