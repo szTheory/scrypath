@@ -16,7 +16,7 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 
 ## Current State
 
-**Current as of 2026-10-02:** Scrypath 0.3.14 is published as `scrypath-v0.3.14` at `9909756f25f3891548690c6b26d74e2b2f3bcb13`. Post-merge required CI and deep-quality passed, and published-release verification confirmed Hex/tag parity in run [36915979826](https://github.com/szTheory/scrypath/actions/runs/36915979826). The latest dated Phase 170 decision remains **NOT READY** (conditions 1–5 PASS, condition 6 FAIL at its cutoff) at [issue #86 comment 5940381507](https://github.com/szTheory/scrypath/issues/86#issuecomment-5940381507); the tracking replacement does not revise those judgments. Validator fix PR [#89](https://github.com/szTheory/scrypath/pull/89) merged as `eb9233cfc60fa027f2fab5bccff00e46f9c7a69f`, and exact-main closeout run [36930660896](https://github.com/szTheory/scrypath/actions/runs/36930660896) passed. All four v1.41 phases and 19 plans now have complete tracker records and passing verification. The frozen `8c271…` source snapshot remains a historical 17/18 snapshot; the separate planning checkout records Plan 08 complete with the original preterminal bytes preserved and the replacement authorized. The v1.41 audit accepts nonblocking Nyquist validation-record debt; the milestone archive is recorded locally and no successor milestone is approved. See `milestones/v1.41-phases/170-documentation-and-readiness-closeout/170-08-TRACKING-REPLACEMENT.md` and `milestones/v1.41-phases/170-documentation-and-readiness-closeout/170-POST-FREEZE-RECONCILIATION.md`.
+**Current as of 2026-10-02:** Scrypath 0.3.14 is published as `scrypath-v0.3.14` at `9909756f25f3891548690c6b26d74e2b2f3bcb13`; [run 36915979826](https://github.com/szTheory/scrypath/actions/runs/36915979826) verified Hex/tag parity. The original Phase 170 decision remains **NOT READY** at its 2026-10-01 cutoff ([issue #86 comment 5940381507](https://github.com/szTheory/scrypath/issues/86#issuecomment-5940381507)); a fresh maintainer assessment is **READY** at [issue #86 comment 5955742805](https://github.com/szTheory/scrypath/issues/86#issuecomment-5955742805). Conditions 1–5 were carried forward within their recorded limits; condition 6 passed on the post-freeze tracker reconciliation, validator correction, release/package parity, and current source evidence. Inherited assumptions EA-167-01 through EA-167-07 remain unresolved, so this is not a blanket adopter or deployment guarantee. Validator fix PR [#89](https://github.com/szTheory/scrypath/pull/89) merged as `eb9233cfc60fa027f2fab5bccff00e46f9c7a69f`; exact-main closeout run [36930660896](https://github.com/szTheory/scrypath/actions/runs/36930660896) passed required jobs, coverage, E2E, and closeout attestation. Planning-only PR [#90](https://github.com/szTheory/scrypath/pull/90) merged at `161d5bd0a360fd1951aa3a0e66f5c6297857ce01`; its exact-tree PR run [37023495862](https://github.com/szTheory/scrypath/actions/runs/37023495862) passed all five required jobs. v1.41 is complete across Phases 168–171 and 19 plans. The frozen `8c271…` source snapshot remains a historical 17/18 snapshot; the separate authorized tracking replacement records Plan 08 complete without changing those frozen bytes or rerunning Phase 170. The v1.41 audit accepts visible, nonblocking Nyquist validation-record debt. See `milestones/v1.41-phases/170-documentation-and-readiness-closeout/170-08-TRACKING-REPLACEMENT.md` and `milestones/v1.41-phases/170-documentation-and-readiness-closeout/170-POST-FREEZE-RECONCILIATION.md`.
 
 The paragraph below preserves the prior dated baseline; later v1.41 evidence and the current release facts above supersede its then-current release and readiness claims.
 
@@ -24,9 +24,20 @@ Scrypath 0.3.13 remains the published package; v1.40 was a planning milestone an
 
 The prior v1.39 planning milestone shipped and was archived on 2026-09-26; it added no runtime, public API, dependency, backend, or operator UI changes. Its dated readiness decision remains **NOT READY** because conditions 3 and 6 were unknown at assessment. Its accepted audit debt records three Phase 164 cross-references and Nyquist metadata follow-up for Phases 163–164. Final exact-SHA run [36257182675](https://github.com/szTheory/scrypath/actions/runs/36257182675) passed for `dc400b2b57aec0ca6b0ef16c9477d266fd41a433`; the annotated `v1.39` tag resolves to that commit. This receipt can support a newly dated condition 6 assessment but does not change the historical result.
 
+## Current Milestone: v1.42 ScrypathOps operator/admin UI
+
+**Goal:** Make an operator incident recoverable through one clear, safe path across Control Room, Posture, Failed Sync, and Sync/Drift, with recovery verified from authoritative task/index state.
+
+**Target features:**
+- Deterministic browser proof for the cross-screen incident-recovery journey, including the resulting task/index state.
+- Fix only usability or accessibility friction demonstrated by that journey; preserve the established brand, per-screen polish, and host-owned authorization contract.
+- Keep recurring proof in CI where its confidence justifies the runtime and maintenance cost, with zero routine human UAT.
+
+**Context:** Existing individual recovery screens and design-system work from v1.32–v1.34 remain the baseline. Current Playwright coverage exercises failed-sync triage and sync/drift promotion separately; this milestone targets the end-to-end journey between them. No new Scrypath core API, backend capability, auth model, or unrelated UI surface is in scope.
+
 ## Future Work
 
-No successor milestone is approved. Keep the green-main release train idle until new concrete evidence and owner-approved scope exist. Operator UI remains gated on a future passing readiness assessment, maintainer availability, and a separate scope decision. The completed v1.41 evidence and its freeze/tracker repeat-prevention rule are recorded in `milestones/v1.41-ROADMAP.md`, `milestones/v1.41-MILESTONE-AUDIT.md`, and `milestones/v1.41-phases/170-documentation-and-readiness-closeout/170-08-TRACKING-REPLACEMENT.md`.
+Keep `main` green and release only when a package change warrants it. v1.42 is an owner-approved, bounded ScrypathOps UI and verification wedge; follow-on UI, runtime, backend, or authentication scope still needs concrete evidence and a separate decision. Retain the Phase 170 freeze/tracker rule and historical record as archived.
 
 ## Archived Milestone: v1.41 Readiness Gate Follow-Through (2026-10-02)
 
@@ -273,10 +284,10 @@ Current planning files: **`.planning/{PROJECT,REQUIREMENTS,ROADMAP,STATE}.md`** 
 
 ## Release Train Posture
 
-- **Active milestone:** None. v1.41 is complete and archived; its latest dated readiness decision remains NOT READY at its original cutoff. v1.40 remains archived with bounded `tech_debt`; its Phase 167 dated decision remains NOT READY at its historical cutoff.
+- **Active milestone:** v1.42 ScrypathOps operator/admin UI, beginning at Phase 172. v1.41 is complete and archived. Its original Phase 170 NOT READY decision is preserved at its historical cutoff; the fresh 2026-10-02 issue #86 decision is READY within its recorded limits.
 - **Policy:** Keep `main` green on the lean required gates and prefer PR-first execution for serious milestone or feature-depth work.
-- **Current goals:** No product delivery goal is active. The validator regression fix, exact-main evidence, and external decision are complete. The milestone audit found no requirement, integration, or flow gaps. Preserve the attested source and do not restart Phase 170. The explicitly authorized post-freeze tracking replacement preserves original bytes and is kept separate from attested source identity; a readiness decision does not start UI work by itself.
-- **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, and new UI surfaces remain out of scope.
+- **Current goals:** Prove the incident-recovery loop end to end, then fix only observed UX friction. Preserve the attested Phase 170 source and do not restart it. The authorized tracking replacement is separate from the frozen source identity.
+- **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, new core APIs, new auth models, and UI surfaces outside the approved incident-recovery journey remain out of scope.
 
 **v1.37 implementation outcome (2026-08-26):** runtime input and secret
 boundaries hardened; runtime xref cycles reduced to zero; write/search/settings/
@@ -286,6 +297,8 @@ Meilisearch, package, release, static-analysis, and compatibility proof passed;
 measured pure hot paths did not justify speculative optimization.
 
 ## Last shipped milestone
+
+**v1.41 — Readiness Gate Follow-Through** (archived **2026-10-02**; Scrypath 0.3.14 published during the milestone). Completed Phases 168–171 with 9/9 requirements, 19/19 plans, 6/6 integration paths, and 3/3 end-to-end flows. Its audit accepts visible, nonblocking Nyquist validation-record debt in Phases 168–170. Phase 170's original dated NOT READY decision remains historical; the fresh current READY assessment is at [issue #86 comment 5955742805](https://github.com/szTheory/scrypath/issues/86#issuecomment-5955742805). The post-freeze tracker replacement preserves the attested historical snapshot. See `milestones/v1.41-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`.
 
 **v1.40 — Readiness Evidence Closure** (planning milestone shipped and archived **2026-09-27**; no package release). Reproduced and corrected tenant/facet contract defects, proved one persisted-membership Phoenix workflow through path and fresh-package dependencies, and demonstrated bounded repair to visible search. Its audit records 11/11 requirements, 3/3 phase verifications, 11/11 integration paths, and 5/5 flows; `tech_debt` remains explicit. The assessment is **NOT READY** because the consumer lock's Mint 1.9.3 advisory is unresolved and condition 6 was UNKNOWN at its cutoff. Final tracked phase source `343e20be66ab0c17f62b95138203c86e868bd1ee` passed exact-SHA run [36361116862](https://github.com/szTheory/scrypath/actions/runs/36361116862). See `milestones/v1.40-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`.
 
@@ -328,7 +341,7 @@ measured pure hot paths did not justify speculative optimization.
 | Keep evidence claims bounded by source, result, freshness, environment, and limitations; missing proof stays unknown. | ✓ Good — prevents unsupported pass or defect claims. |
 | Distinguish behavior defects, evidence gaps, and product opportunities; severity is not averaged with cost. | ✓ Good — all 24 claims received an explicit triage outcome. |
 | Require evidence, scope authority, and automated acceptance before creating follow-up work. | ✓ Good — no candidate met the qualification criteria. |
-| Keep readiness fail-closed; unknown conditions 3 and 6 leave the milestone NOT READY. | ✓ Good — no operator UI work was authorized. |
+| Keep dated readiness decisions source-bounded and append-only. | ✓ Good — the original Phase 170 NOT READY cutoff remains intact; the fresh 2026-10-02 READY decision supports only its stated claims and authorized the bounded v1.42 UI wedge. |
 | Treat structural checker results as artifact-shape evidence only. | ✓ Good — source truth and semantic readiness remain bounded by linked evidence. |
 | Derive host tenant scope from persisted membership and keep authentication and policy host-owned. | ✓ Phase 166 — the example proves its named membership path without claiming generic Scrypath authentication. |
 | Keep raw search output separate from database hydration and constrain hydration by tenant plus returned IDs. | ✓ Phase 166 — raw hits, counts, facets, and hydrated records are checked independently. |
@@ -341,7 +354,7 @@ measured pure hot paths did not justify speculative optimization.
 
 ## Planning window
 
-v1.41 delivered Phase 168 four-graph security and proof, Phase 169 tenant/facet fixes and finite PR/path accounting, and Phase 170 docs/tooling plus published 0.3.14. Phase 171 closed the DOC-03/GATE-05/CLOSE-04 verification traceability gaps. The dated issue #86 decision remains NOT READY at its original cutoff. The audit accepts nonblocking Nyquist validation-record debt in Phases 168–170; all nine requirements, four phases, six integration paths, and three end-to-end flows pass with no gaps. Current GSD tracking records Phase 170 at 8/8 after its explicitly authorized post-freeze replacement; original bytes and the attested 17/18 snapshot remain preserved. v1.41 is archived locally. The 2026-09-28 scope approval and alternatives remain in `research/v1.41/SUMMARY.md`. v1.40 and v1.39 assessments remain immutable historical results.
+v1.41 delivered Phase 168 four-graph security and proof, Phase 169 tenant/facet fixes and finite PR/path accounting, and Phase 170 docs/tooling plus published 0.3.14. Phase 171 closed the DOC-03/GATE-05/CLOSE-04 verification traceability gaps. The original issue #86 NOT READY assessment remains unchanged at its cutoff; the fresh 2026-10-02 READY assessment is separately recorded at comment 5955742805. The audit accepts visible, nonblocking Nyquist validation-record debt in Phases 168–170; all nine requirements, four phases, six integration paths, and three end-to-end flows passed. Current tracking records Phase 170 at 8/8 after its authorized post-freeze replacement; original bytes and the attested 17/18 snapshot remain preserved. v1.41 is archived locally. v1.42 now targets an automated cross-screen ScrypathOps incident-recovery journey, continuing phase numbering at 172. v1.40 and v1.39 assessments remain immutable historical results.
 
 ## Requirements
 
@@ -426,7 +439,7 @@ v1.41 delivered Phase 168 four-graph security and proof, Phase 169 tenant/facet 
 
 ### Active
 
-- [ ] Focused post-freeze closeout only: correct and regression-test the terminal validator's source identity/timestamp contract, then reconcile GSD state using `170-POST-FREEZE-RECONCILIATION.md`. Do not rerun Phase 170 or repeat passing adopter evidence without a named invalidator.
+- [ ] **v1.42 incident-recovery journey:** define and automate one deterministic browser path across Control Room, Posture, Failed Sync, and Sync/Drift; verify task/index outcomes; make only evidence-backed usability fixes; select CI placement by recurring value. No routine human UAT.
 
 ### Out of Scope
 
@@ -443,7 +456,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has shipped planning milestones through **`v1.40`** (**`v1.0`**-**`v1.40`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and `milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` for shipped arcs.
+The repository has shipped planning milestones through **`v1.41`** (**`v1.0`**-**`v1.41`**); **v1.42 ScrypathOps operator/admin UI** is the active scope beginning at Phase 172. Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and `milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` for shipped arcs.
 
 ## Evolution
 
@@ -456,4 +469,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-01 after PR #87 delivery and the Plan 05 release-gate refresh; no readiness judgment changed.*
+*Last updated: 2026-10-02 after v1.41 archival, the fresh issue #86 READY assessment, and approval of the bounded v1.42 ScrypathOps recovery-flow milestone.*

@@ -1,19 +1,16 @@
 ---
 gsd_state_version: "1.0"
-milestone: v1.41
-milestone_name: Readiness Gate Follow-Through
-status: Awaiting next milestone
-stopped_at: All 4 phases and 19 plans complete; audit tech_debt accepted for closeout; archive v1.41
-last_updated: "2026-10-02T13:52:04.159Z"
+milestone: v1.42
+milestone_name: ScrypathOps operator/admin UI
+status: planning
+last_updated: "2026-10-02T16:40:10.034Z"
 last_activity: 2026-10-02
-last_activity_desc: Milestone v1.41 completed and archived
-state_head: c8e0d7df86f691534077146a18179ed663754840
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 19
-  completed_plans: 19
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,22 +18,22 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** No successor milestone is approved. Keep the release train idle, preserve the dated NOT READY decision, and retain the accepted Nyquist validation-record debt.
+**Current Focus:** v1.42 ScrypathOps operator/admin UI is approved and active. Define testable requirements for the cross-screen incident-recovery journey before phase planning. Preserve the original Phase 170 NOT READY cutoff and its later separately dated READY assessment; do not rerun Phase 170.
 
 ## Current Position
 
-Phase: Milestone v1.41 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-10-02 — Milestone v1.41 completed and archived
+Status: Defining requirements
+Last activity: 2026-10-02 — Milestone v1.42 started
 
 ## v1.41 Upstream Review
 
 - Current input: `research/v1.41/SUMMARY.md` (also routed from `research/SUMMARY.md`). Three requested GPT-6 Astra xhigh reviews found material security, proof, delivery and closeout scope corrections; this is research, not software verification.
 - Phase 168 is complete: the mounted-readiness correction shipped in PR #82 and the four-graph security/proof work shipped in PR #84. All five plans and four mapped requirements have passing verification. No candidate package was published to Hex.
 - Phase 169: PR #85's tenant/facet corrections and coherent proof are merged and verified; Plan 05 records the complete owned delta and finite frozen-cohort decisions. No cohort PR mutation was authorized or performed.
-- Phase 170 external outcomes are complete: docs delivery, 0.3.14 publication/parity, exact-main closeout, and the dated NOT READY decision are recorded. The maintainer authorized a planning-side summary/verifier replacement on 2026-10-02 after byte-identical preservation of the original preterminal files. Current GSD indexing reports 8/8 plans complete; the attested `8c271…` snapshot remains historical 17/18, and the issue decision remains unchanged. Do not rerun Phase 170.
-- The maintainer approved the revised scope and phase mapping on 2026-09-28. Phase 171 adds traceability rows for DOC-03, GATE-05, and CLOSE-04; its original preservation check remains represented by the retained sidecars and its report was updated to time-bound that check. Phases 168–171 and all 19 plans are complete. The v1.41 audit accepts nonblocking Nyquist validation-record debt; no product gap or pending UAT remains. The milestone is archived locally; no successor scope is approved.
+- Phase 170 external outcomes are complete: docs delivery, 0.3.14 publication/parity, exact-main closeout, and its original dated NOT READY decision are recorded. The maintainer authorized a planning-side summary/verifier replacement on 2026-10-02 after byte-identical preservation of the original preterminal files. Current GSD indexing reports 8/8 plans complete; the attested `8c271…` snapshot remains historical 17/18. A separate fresh READY assessment was later posted at issue #86 comment 5955742805 within its stated limits. Do not rerun Phase 170.
+- The maintainer approved the revised scope and phase mapping on 2026-09-28. Phase 171 adds traceability rows for DOC-03, GATE-05, and CLOSE-04; its original preservation check remains represented by the retained sidecars and its report was updated to time-bound that check. Phases 168–171 and all 19 plans are complete. The v1.41 audit accepts nonblocking Nyquist validation-record debt; no product gap or pending UAT remains. The milestone is archived locally; the fresh readiness decision and separate maintainer scope approval now authorize bounded v1.42 work, beginning at Phase 172.
 
 ## Preceding Milestone Context — v1.40 (Archived)
 
@@ -111,13 +108,13 @@ None yet.
 - [Phase 167, historical] The assessment was NOT READY: Phoenix consumer Mint 1.9.3 had an unresolved High advisory and condition 6 was UNKNOWN at its cutoff. This remains historical and is not a current v1.41 blocker.
 - Historical evidence can be reused only after source-identity and relevant-path comparisons; unavailable or invalidated evidence is recorded with its precise limit rather than inferred.
 - [Phase 167, historical] Release-reference mismatch and accepted archived planning debts remain bounded carry-forwards; they do not change the current v1.41 record.
-- Phase 170's exact-source closeout and six-condition judgment are recorded on issue #86. The dated result is NOT READY (conditions 1–5 PASS, condition 6 FAIL); no new decision is inferred. GSD Plan 08 tracking is now complete through the explicitly authorized replacement recorded in `170-08-TRACKING-REPLACEMENT.md`.
+- Phase 170's exact-source closeout and original six-condition judgment are recorded on issue #86. That dated result remains NOT READY (conditions 1–5 PASS, condition 6 FAIL) at its original cutoff. A fresh, separately dated READY assessment is recorded at [issue #86 comment 5955742805](https://github.com/szTheory/scrypath/issues/86#issuecomment-5955742805), within its stated assumptions and evidence limits. GSD Plan 08 tracking is complete through the explicitly authorized replacement recorded in `170-08-TRACKING-REPLACEMENT.md`; neither record authorizes replaying Phase 170.
 
 ### Maintainer Direction and Repository Check — 2026-09-28
 
 - The maintainer wants evidence-gated near/mid/long horizons refreshed at each milestone; no calendar-driven or Dependabot-only milestones; releases when warranted; PR-first work, green post-merge `main`, exact-SHA evidence, and tidy task-owned branches/worktrees/artifacts.
 - Default to zero human UAT: automate acceptance at the cheapest reliable layer and add recurring CI only when its confidence justifies GitHub Actions time and maintenance. Keep tests high-signal across happy paths, errors, and boundaries; use property testing and digital-twin adopters only for named risks that benefit from them. Measure performance before optimizing. Keep APIs, architecture, and docs readable, maintainable, user-job-focused, privacy-safe, and grounded in 12-factor configuration.
-- Durable guide: `prompts/scrypath-milestone-ratchet-roadmap.txt`. Candidate horizons: `reference/milestone-candidates.md` and `reference/MILESTONE-ARC.md`. v1.41 scope is approved; its README/JTBD consolidation is narrow and evidence-backed. ScrypathOps remains gated on a fresh READY assessment, maintainer availability, and a separate scope decision.
+- Durable guide: `prompts/scrypath-milestone-ratchet-roadmap.txt`. Candidate horizons: `reference/milestone-candidates.md` and `reference/MILESTONE-ARC.md`. v1.41 scope is archived. The fresh READY assessment, maintainer availability, and separate scope approval were recorded on 2026-10-02; v1.42 is limited to the approved ScrypathOps incident-recovery journey.
 - Hex 0.3.13 was published 2026-09-25. Privacy PR [#81](https://github.com/szTheory/scrypath/pull/81) merged the current-tree cleanup; a later authorized history rewrite moved all 12 public branch refs and 28 tags to sanitized history. Public `main` is now `40c9978c975dbfb42db75511f44ff0369c8d7d88`. A fresh mirror scan found no personal home-directory value in branch or tag history. Tree comparisons across 128 fetched refs preserved file paths and modes; the only file-content edits were path substitutions in planning documents, with no source-code changes. First changed commit: `0dcc97790c00fa360e72555ddf08609cc9203794` → `bec129bc8494d54a0cd4c598d4c44202290050cf`.
 - GitHub's separate PR refs still expose the old path: 68 affected PRs across 88 fetched PR refs. The owner declined a Support request and accepts this residual because the exposure is a personal name/path. Public branch and tag refs and this local repository's refs are clean. Do not repeat the personal path in artifacts.
 - Branch protection was restored after the rewrite: force pushes are disabled, linear-history protection remains enabled, and the same five required checks are configured. GitHub reported that an existing merge commit violates the linear-history rule; commit topology was preserved. Run `36419998362` failed twice on required `ecommerce-mounted`, while the earlier `36390328588` passed before the path-only rewrite. Investigation found no relevant source differences and identified an application startup-readiness race. Newer exact-SHA run `36439562644` passed all five required jobs, coverage, and attestation on the rewritten public SHA; advisory `deep-quality` still failed on Mint advisories. A narrow local fix is verified but uncommitted. Do not push the current 137-commit-ahead branch.
@@ -131,7 +128,7 @@ None yet.
 
 | Category | Item | Status |
 |----------|------|--------|
-| product scope | Operator UI, brand/design work, authentication product, public backend abstraction, and broad compatibility matrices | Deferred; requires a separate evidence-backed scope decision |
+| product scope | Follow-on operator UI, authentication product, public backend abstraction, and broad compatibility matrices | Deferred; requires concrete evidence and separate scope approval |
 | release | Hex publication, retagging, and version bump | Only if a confirmed compatible code fix warrants the existing release train |
 | verification topology | New required service lane | Deferred; retain the existing required/advisory split |
 
@@ -168,13 +165,13 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-10-02T13:52:04Z
-Stopped at: v1.41 archived locally; all 4 phases and 19 plans complete; audit tech_debt accepted
-Resume file: .planning/milestones/v1.41-MILESTONE-AUDIT.md
-Next command: None. No successor milestone or maintenance item is approved; keep the release train idle until new evidence and owner-approved scope exist. Do not rerun Phase 170 or its passing release/adopter checks.
+Last session: 2026-10-02 — v1.42 milestone setup
+Stopped at: v1.42 started; approved scope captured in PROJECT.md; waiting for maintainer review of the proposed testable requirements before writing the requirements artifact or planning Phase 172
+Resume file: .planning/PROJECT.md and this section
+Next action: Review the v1.42 requirement candidates presented by the maintainer. Do not run Phase 170 or repeat its passing release/adopter checks.
 
 ## Operator Next Steps
 
 - v1.41 is archived locally with 9/9 requirements, 4/4 phases, 6/6 integration paths, and 3/3 end-to-end flows complete. Three Nyquist validation records from Phases 168–170 remain disclosed nonblocking planning debt.
-- The latest dated readiness decision remains **NOT READY** at its original cutoff. It does not authorize operator UI work or a successor milestone.
-- No routine human UAT, product tests, or release checks remain to be run for closeout. Reuse existing source-bounded evidence unless a named invalidator changes.
+- The original Phase 170 decision remains **NOT READY** at its historical cutoff; the later fresh decision is **READY** within its stated limits and, together with the maintainer's approval, authorizes the bounded v1.42 scope.
+- The v1.41 closeout requires no routine human UAT, product tests, or release checks. v1.42 aims to replace routine UAT with a deterministic browser journey and authoritative state assertions, placing recurring proof in CI when its value justifies its cost.
