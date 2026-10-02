@@ -1,0 +1,1914 @@
+{
+  "schema": 1,
+  "cutoff": "2026-10-01T02:05:46Z",
+  "baseline": {
+    "dimensions": [
+      {
+        "id": 1,
+        "name": "Public API consistency, ergonomics, compatibility, and error behavior"
+      },
+      {
+        "id": 2,
+        "name": "Core indexing and search correctness, including writes/deletes, inline/manual/Oban synchronization, related data, tenancy, search, facets, federation, settings, and recovery"
+      },
+      {
+        "id": 3,
+        "name": "Ecto, Oban, Meilisearch, Phoenix, and packaged-consumer seams, including representative supported version/runtime combinations"
+      },
+      {
+        "id": 4,
+        "name": "Operational honesty, observability, backfill/reindex safety, failure reporting, and supportability"
+      },
+      {
+        "id": 5,
+        "name": "First-hour and ongoing developer experience, documentation, examples, diagnostics, and adopter issue intake"
+      },
+      {
+        "id": 6,
+        "name": "Security, privacy, dependency health, configuration boundaries, and release/supply-chain integrity"
+      },
+      {
+        "id": 7,
+        "name": "Architecture, readability, maintainability, measured performance, and test/CI signal-to-cost"
+      }
+    ],
+    "claims": [
+      {
+        "id": "C-01",
+        "dimension_id": 3,
+        "claim": "The package-backed Phoenix example compiles from an unpacked artifact and completes its existing inline, Oban, and related-data search scenarios against Postgres and Meilisearch.",
+        "source": "Phase162 baseline; Current package and release-verification jobs pass; Phase169 local-package consumer reports 18 tests, but this is not a Hex install. Published 0.3.13 predates the merged tenant/facet corrections; source, local artifact and tag remain separate.",
+        "evidence_date": "2026-09-30",
+        "assessment_date": "2026-09-30",
+        "relevant_paths": [
+          {
+            "path": "examples/phoenix_meilisearch/README.md",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "test/release/consumer_smoke_test.exs",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          }
+        ],
+        "comparison": "Current package and release-verification jobs pass; Phase169 local-package consumer reports 18 tests, but this is not a Hex install. Published 0.3.13 predates the merged tenant/facet corrections; source, local artifact and tag remain separate.",
+        "disposition": "supported. Current disposition: Current package and release-verification jobs pass; Phase169 local-package consumer reports 18 tests, but this is not a Hex install. Published 0.3.13 predates the merged tenant/facet corrections; source, local artifact and tag remain separate.",
+        "limits": "Does not establish deletion, every version tuple, arbitrary host hydration, or authorization/policy. Phase 160's Phoenix lane does not block merge. bounded named artifact/setup flows only; no post-Phase169 Hex installation or universal host setup.",
+        "baseline_freshness": "reusable within its stated boundary",
+        "named_invalidator": "Candidate-SHA source changes affecting package staging or those scenarios require a focused package proof; current HEAD is a later planning-only descendant."
+      },
+      {
+        "id": "C-02",
+        "dimension_id": 1,
+        "claim": "Public functions expose explicit result/error behavior for index, sync, and search operations documented for consumers.",
+        "source": "Phase162 baseline; Candidate docs/API ownership contracts passed; no exhaustive API/error compatibility matrix or runtime API change was made. Current source comparison is through public-main 87d74259a9f569c6b11c8d9481f5465a172c70ba; PR #87 changed only the delivered documentation/factual-tool paths.",
+        "evidence_date": "2026-10-01",
+        "assessment_date": "2026-10-01",
+        "relevant_paths": [
+          {
+            "path": "lib/scrypath.ex",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "test/scrypath/docs_contract_test.exs",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path changed in the delivered documentation/tooling candidate."
+          }
+        ],
+        "comparison": "Candidate docs/API ownership contracts passed; no exhaustive API/error compatibility matrix or runtime API change was made. The exact 933ad30645c41df9f21dd4ddfd2d5b93fbd48620..87d74259a9f569c6b11c8d9481f5465a172c70ba compare identifies the documentation/tooling changes; no runtime code or lockfile changed.",
+        "disposition": "insufficiently supported. Current disposition: Candidate docs/API ownership contracts passed; no exhaustive API/error compatibility matrix or runtime API change was made.",
+        "limits": "No new full public-API compatibility run was performed; exception behavior across every backend response remains unclaimed. No full public API diff, every response class, or every supported tuple.",
+        "baseline_freshness": "current",
+        "named_invalidator": "Public function/error-shape, dependency, or supported-version changes warrant focused contract review; which response classes lack direct assertions?"
+      },
+      {
+        "id": "C-03",
+        "dimension_id": 2,
+        "claim": "Inline and manual sync paths expose explicit projection and synchronization operations; DB writes and search visibility are not atomic.",
+        "source": "Phase162 baseline; Current sync docs clarify accepted, terminal task and visible-search states; runtime source retains the Ecto/search non-atomic boundary.",
+        "evidence_date": "2026-09-30",
+        "assessment_date": "2026-09-30",
+        "relevant_paths": [
+          {
+            "path": "lib/scrypath/sync.ex",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "test/scrypath/sync_test.exs",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          }
+        ],
+        "comparison": "Current sync docs clarify accepted, terminal task and visible-search states; runtime source retains the Ecto/search non-atomic boundary.",
+        "disposition": "supported. Current disposition: Current sync docs clarify accepted, terminal task and visible-search states; runtime source retains the Ecto/search non-atomic boundary.",
+        "limits": "No single receipt proves all Repo transaction shapes and eventual visibility timing. No host transaction-wide atomicity, alternate backend/queue, or latency guarantee.",
+        "baseline_freshness": "current",
+        "named_invalidator": "Changes to sync orchestration or task wait semantics trigger focused tests; what host transaction combinations matter to adopters?"
+      },
+      {
+        "id": "C-04",
+        "dimension_id": 2,
+        "claim": "Search returns backend matches for host-owned hydration, while host policy and presentation remain outside Scrypath.",
+        "source": "Phase162 baseline; Phase169 tenant/facet correction merged on main; current path/package scenario validates the named persisted-membership example only.",
+        "evidence_date": "2026-09-30",
+        "assessment_date": "2026-09-30",
+        "relevant_paths": [
+          {
+            "path": "lib/scrypath/search/single.ex",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "guides/request-edge-search.md",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          }
+        ],
+        "comparison": "Phase169 tenant/facet correction merged on main; current path/package scenario validates the named persisted-membership example only.",
+        "disposition": "supported. Current disposition: Phase169 tenant/facet correction merged on main; current path/package scenario validates the named persisted-membership example only.",
+        "limits": "This claim is limited to search behavior, not correct app-specific access control. Host hydration and authorization remain app-owned; no generalized tenant isolation claim.",
+        "baseline_freshness": "current",
+        "named_invalidator": "Search result shape or query changes trigger focused tests; host authorization is not a Scrypath claim."
+      },
+      {
+        "id": "C-05",
+        "dimension_id": 5,
+        "claim": "The optional Phoenix request-edge helper parses/normalizes request data but leaves search execution and policy to the host context.",
+        "source": "Phase162 baseline; Candidate route/docs tests passed and retain the request-edge owner; no request parser API change. Current source comparison is through public-main 87d74259a9f569c6b11c8d9481f5465a172c70ba; PR #87 changed only the delivered documentation/factual-tool paths.",
+        "evidence_date": "2026-10-01",
+        "assessment_date": "2026-10-01",
+        "relevant_paths": [
+          {
+            "path": "guides/request-edge-search.md",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "test/scrypath/docs_contract_test.exs",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path changed in the delivered documentation/tooling candidate."
+          }
+        ],
+        "comparison": "Candidate route/docs tests passed and retain the request-edge owner; no request parser API change. The exact 933ad30645c41df9f21dd4ddfd2d5b93fbd48620..87d74259a9f569c6b11c8d9481f5465a172c70ba compare identifies the documentation/tooling changes; no runtime code or lockfile changed.",
+        "disposition": "insufficiently supported. Current disposition: Candidate route/docs tests passed and retain the request-edge owner; no request parser API change.",
+        "limits": "No package-backed request-edge scenario is recorded in Phase 160. No proof for every URL shape or framework integration.",
+        "baseline_freshness": "current",
+        "named_invalidator": "Helper API or Phoenix support-range changes warrant targeted request-edge verification; which adopter request shapes need a consumer receipt?"
+      },
+      {
+        "id": "C-06",
+        "dimension_id": 5,
+        "claim": "The golden-path and request-edge guides explain first setup, basic indexing/search, and host-owned context integration.",
+        "source": "Phase162 baseline; Candidate navigation contracts/build pass; no outside-adopter friction or time-to-first-search measure exists. Current source comparison is through public-main 87d74259a9f569c6b11c8d9481f5465a172c70ba; PR #87 changed only the delivered documentation/factual-tool paths.",
+        "evidence_date": "2026-10-01",
+        "assessment_date": "2026-10-01",
+        "relevant_paths": [
+          {
+            "path": "README.md",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path changed in the delivered documentation/tooling candidate."
+          },
+          {
+            "path": "guides/golden-path.md",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          }
+        ],
+        "comparison": "Candidate navigation contracts/build pass; no outside-adopter friction or time-to-first-search measure exists. The exact 933ad30645c41df9f21dd4ddfd2d5b93fbd48620..87d74259a9f569c6b11c8d9481f5465a172c70ba compare identifies the documentation/tooling changes; no runtime code or lockfile changed.",
+        "disposition": "insufficiently supported. Current disposition: Candidate navigation contracts/build pass; no outside-adopter friction or time-to-first-search measure exists.",
+        "limits": "No adopter intake or usability study result is recorded. Structural routes do not settle semantic doc quality or usability.",
+        "baseline_freshness": "current",
+        "named_invalidator": "API/docs/package drift triggers docs-contract and consumer checks; is there direct adopter feedback on first-hour friction?"
+      },
+      {
+        "id": "C-07",
+        "dimension_id": 2,
+        "claim": "The library documents three sync modes and the optional Oban path, with distinct queue acceptance, task completion, and visibility states.",
+        "source": "Phase162 baseline; Reuse named inline/Oban and related-data cases; current Phoenix/E2E jobs pass; candidate docs specify distinct enqueue/task/visibility states.",
+        "evidence_date": "2026-09-30",
+        "assessment_date": "2026-09-30",
+        "relevant_paths": [
+          {
+            "path": "lib/scrypath/oban/enqueue.ex",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "examples/phoenix_meilisearch/test/smoke/meilisearch_oban_stack_test.exs",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          }
+        ],
+        "comparison": "Reuse named inline/Oban and related-data cases; current Phoenix/E2E jobs pass; candidate docs specify distinct enqueue/task/visibility states.",
+        "disposition": "supported. Current disposition: Reuse named inline/Oban and related-data cases; current Phoenix/E2E jobs pass; candidate docs specify distinct enqueue/task/visibility states.",
+        "limits": "Queue insert or accepted backend task is not proof of searchable state in every host workload. No alternate queue, every retry/transaction, or universal visibility timing.",
+        "baseline_freshness": "reusable within its stated boundary",
+        "named_invalidator": "Changes to queue payload, workers, task wait, or package scenarios require a focused rerun; no evidence for other queue adapters is claimed."
+      },
+      {
+        "id": "C-08",
+        "dimension_id": 2,
+        "claim": "Related-data projection is supported in the named inline and Oban package scenarios, while arbitrary association propagation policies remain host-defined.",
+        "source": "Phase162 baseline; Named related inline and Oban example flows remain supported by Phase160 and current scheduled example proof.",
+        "evidence_date": "2026-09-30",
+        "assessment_date": "2026-09-30",
+        "relevant_paths": [
+          {
+            "path": "lib/scrypath/sync/related_worker.ex",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "examples/phoenix_meilisearch/test/smoke/meilisearch_related_inline_stack_test.exs",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          }
+        ],
+        "comparison": "Named related inline and Oban example flows remain supported by Phase160 and current scheduled example proof.",
+        "disposition": "supported. Current disposition: Named related inline and Oban example flows remain supported by Phase160 and current scheduled example proof.",
+        "limits": "Does not establish automatic propagation for arbitrary host associations or all delete paths. No arbitrary association propagation or all delete combinations.",
+        "baseline_freshness": "reusable within its stated boundary",
+        "named_invalidator": "Changes to related projection/job handling trigger the package scenario; which association/delete combinations are not represented?"
+      },
+      {
+        "id": "C-09",
+        "dimension_id": 2,
+        "claim": "Document-level deletion is not exercised by the Phase 160 package scenarios, so package proof does not establish the deletion lifecycle.",
+        "source": "Phase162 baseline; bounded deletion visibility result from scheduled run 36681173632 at 933ad30645c41df9f21dd4ddfd2d5b93fbd48620; exact PR #87 path comparison confirms the named ecommerce paths are unchanged on current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba.",
+        "evidence_date": "2026-09-30",
+        "assessment_date": "2026-10-01",
+        "relevant_paths": [
+          {
+            "path": "examples/scrypath_ecommerce/e2e/storefront.spec.ts",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "examples/scrypath_ecommerce/docker-e2e-entrypoint.sh",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          }
+        ],
+        "comparison": "Last named scheduled full E2E evidence is run 36681173632, job 109776739566, on source SHA 933ad30645c41df9f21dd4ddfd2d5b93fbd48620: storefront deletion test passed. PR #87 changed none of the relevant ecommerce test or harness paths, confirmed by the exact 933ad30645c41df9f21dd4ddfd2d5b93fbd48620..87d74259a9f569c6b11c8d9481f5465a172c70ba comparison. The newer exact-main push run 36795877117 skipped the path-scoped E2E job, so there is no fresh E2E execution on 87d74259a9f569c6b11c8d9481f5465a172c70ba.",
+        "disposition": "insufficiently supported. Current disposition: Last named scheduled full E2E evidence is run 36681173632, job 109776739566, on source SHA 933ad30645c41df9f21dd4ddfd2d5b93fbd48620: storefront deletion test passed. PR #87 changed none of the relevant ecommerce test or harness paths, confirmed by the exact 933ad30645c41df9f21dd4ddfd2d5b93fbd48620..87d74259a9f569c6b11c8d9481f5465a172c70ba comparison. The newer exact-main push run 36795877117 skipped the path-scoped E2E job, so there is no fresh E2E execution on 87d74259a9f569c6b11c8d9481f5465a172c70ba.",
+        "limits": "Delete-after-DB-removal behavior and visibility are not proven by the adjacent upsert receipt. One known-present hard-delete to raw-hit absence with sibling visible; no package deletion, retries, restart, concurrency, UID correlation, or universal semantics.",
+        "baseline_freshness": "unknown",
+        "named_invalidator": "Deletion source or job changes, or a release claim requiring delete semantics, warrant a claim-specific live scenario; what exact delete/visibility case is required?"
+      },
+      {
+        "id": "C-10",
+        "dimension_id": 3,
+        "claim": "Index filtering can express tenant criteria, but authorization and tenant isolation policy are owned by the host application.",
+        "source": "Phase162 baseline; Phase169 tenant option and persisted-membership correction is merged; exact candidate/main host path and local-package proofs passed 18 tests each.",
+        "evidence_date": "2026-09-30",
+        "assessment_date": "2026-09-30",
+        "relevant_paths": [
+          {
+            "path": "lib/scrypath/search/single.ex",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "examples/phoenix_meilisearch/lib/scrypath_demo/blog.ex",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          }
+        ],
+        "comparison": "Phase169 tenant option and persisted-membership correction is merged; exact candidate/main host path and local-package proofs passed 18 tests each.",
+        "disposition": "insufficiently supported. Current disposition: Phase169 tenant option and persisted-membership correction is merged; exact candidate/main host path and local-package proofs passed 18 tests each.",
+        "limits": "Filter availability is not an authorization guarantee. Synthetic membership scenario only; host auth remains application-owned.",
+        "baseline_freshness": "unknown",
+        "named_invalidator": "Any claim about cross-tenant safety requires a named host policy model and direct consumer evidence; what representative threat model is in scope?"
+      },
+      {
+        "id": "C-11",
+        "dimension_id": 2,
+        "claim": "Some search/settings APIs exist, but the Phase 160 package scenario opts out of settings readback, facet search, and multi-search; those package results cannot support those operations.",
+        "source": "Phase162 baseline; Phase169 path/local-package proofs (18 tests each) show named keyword facets separated tenant A phone-a:1 from tenant B phone-b-forbidden:1.",
+        "evidence_date": "2026-09-30",
+        "assessment_date": "2026-09-30",
+        "relevant_paths": [
+          {
+            "path": "lib/scrypath/search/facet_values.ex",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "test/scrypath/facet_values_contract_test.exs",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          }
+        ],
+        "comparison": "Phase169 path/local-package proofs (18 tests each) show named keyword facets separated tenant A phone-a:1 from tenant B phone-b-forbidden:1.",
+        "disposition": "insufficiently supported. Current disposition: Phase169 path/local-package proofs (18 tests each) show named keyword facets separated tenant A phone-a:1 from tenant B phone-b-forbidden:1.",
+        "limits": "Adjacent search/upsert proof is not proof of these distinct backend operations. No broad settings readback, federation/multi-search or all facet/filter shapes; overall claim remains bounded.",
+        "baseline_freshness": "unknown",
+        "named_invalidator": "A supported release claim for any opt-out needs its own focused result; which operation is required by a representative job?"
+      },
+      {
+        "id": "C-12",
+        "dimension_id": 3,
+        "claim": "Successful enqueue or task acceptance does not by itself establish visible search; Phase 160 observed visibility only in its completed named scenarios.",
+        "source": "Phase162 baseline; Candidate guide states enqueue, backend task completion and visible search are distinct; named Phase160 flows observed visibility. Current source comparison is through public-main 87d74259a9f569c6b11c8d9481f5465a172c70ba; PR #87 changed only the delivered documentation/factual-tool paths.",
+        "evidence_date": "2026-10-01",
+        "assessment_date": "2026-10-01",
+        "relevant_paths": [
+          {
+            "path": "lib/scrypath/oban/indexing_ack.ex",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "guides/sync-modes-and-visibility.md",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path changed in the delivered documentation/tooling candidate."
+          }
+        ],
+        "comparison": "Candidate guide states enqueue, backend task completion and visible search are distinct; named Phase160 flows observed visibility. The exact 933ad30645c41df9f21dd4ddfd2d5b93fbd48620..87d74259a9f569c6b11c8d9481f5465a172c70ba compare identifies the documentation/tooling changes; no runtime code or lockfile changed.",
+        "disposition": "supported. Current disposition: Candidate guide states enqueue, backend task completion and visible search are distinct; named Phase160 flows observed visibility.",
+        "limits": "No general queue-to-visibility timing distribution is recorded. No universal latency/SLO, outage/retry, or exactly-once guarantee.",
+        "baseline_freshness": "reusable within its stated boundary",
+        "named_invalidator": "Worker/task-wait changes invalidate the matching scenario; what visibility contract should consumers rely on during backend failure?"
+      },
+      {
+        "id": "C-13",
+        "dimension_id": 4,
+        "claim": "Scrypath resolves API keys at execution and rejects unsafe ephemeral-only enqueueing; the prior quality ledger records focused secret-boundary evidence.",
+        "source": "Phase162 baseline; No claim-specific relevant-path change was observed for this bounded row; retain the Phase162 source and evidence boundary.",
+        "evidence_date": "2026-08-26",
+        "assessment_date": "2026-09-30",
+        "relevant_paths": [
+          {
+            "path": "lib/scrypath/oban/enqueue.ex",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "test/scrypath/oban/payload_test.exs",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          }
+        ],
+        "comparison": "No claim-specific relevant-path change was observed for this bounded row; retain the Phase162 source and evidence boundary.",
+        "disposition": "supported. Current disposition: No claim-specific relevant-path change was observed for this bounded row; retain the Phase162 source and evidence boundary.",
+        "limits": "Does not assess deployment secret stores, host logs, or credentials in arbitrary job arguments.",
+        "baseline_freshness": "reusable within its stated boundary",
+        "named_invalidator": "Enqueue/client config changes or a secret-handling incident require a focused boundary review; are new payload fields introduced?"
+      },
+      {
+        "id": "C-14",
+        "dimension_id": 4,
+        "claim": "Scrypath records bounded/sanitized telemetry and task retrieval limits in prior focused evidence; it does not establish complete observability of every host failure.",
+        "source": "Phase162 baseline; No claim-specific relevant-path change was observed for this bounded row; retain the Phase162 source and evidence boundary.",
+        "evidence_date": "2026-08-26",
+        "assessment_date": "2026-09-30",
+        "relevant_paths": [
+          {
+            "path": "lib/scrypath/telemetry.ex",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "docs/search-backend-sre.md",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          }
+        ],
+        "comparison": "No claim-specific relevant-path change was observed for this bounded row; retain the Phase162 source and evidence boundary.",
+        "disposition": "supported. Current disposition: No claim-specific relevant-path change was observed for this bounded row; retain the Phase162 source and evidence boundary.",
+        "limits": "Operator experience depends on host instrumentation and service access.",
+        "baseline_freshness": "reusable within its stated boundary",
+        "named_invalidator": "Telemetry/task source, metadata, or service protocol changes trigger focused review; which alerting gaps are Scrypath-owned?"
+      },
+      {
+        "id": "C-15",
+        "dimension_id": 4,
+        "claim": "The recovery guide describes report-first inspection and distinguishes diagnostic output from mutation; one synthetic mounted failed-sync scenario exercises the diagnosis affordance.",
+        "source": "Last named scheduled full E2E evidence is run 36681173632, job 109776739566, on 933ad30645c41df9f21dd4ddfd2d5b93fbd48620: the seeded failed-sync triage test passed. The relevant operator path was unchanged by PR #87 on current main 87d74259a9f569c6b11c8d9481f5465a172c70ba. The newer exact-main push run 36795877117 passed ecommerce-mounted but skipped path-scoped E2E; no fresh full E2E result is claimed.",
+        "evidence_date": "2026-09-30",
+        "assessment_date": "2026-10-01",
+        "relevant_paths": [
+          {
+            "path": "examples/scrypath_ecommerce/e2e/operator.spec.ts",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "lib/scrypath/operator/failed_work/retrieval.ex",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          }
+        ],
+        "comparison": "Last named scheduled full E2E evidence is run 36681173632, job 109776739566, on 933ad30645c41df9f21dd4ddfd2d5b93fbd48620: the seeded failed-sync triage test passed. The relevant operator path was unchanged by PR #87 on current main 87d74259a9f569c6b11c8d9481f5465a172c70ba. The newer exact-main push run 36795877117 passed ecommerce-mounted but skipped path-scoped E2E; no fresh full E2E result is claimed.",
+        "disposition": "insufficiently supported. Current disposition: Last named scheduled full E2E evidence is run 36681173632, job 109776739566, on 933ad30645c41df9f21dd4ddfd2d5b93fbd48620: the seeded failed-sync triage test passed. The relevant operator path was unchanged by PR #87 on current main 87d74259a9f569c6b11c8d9481f5465a172c70ba. The newer exact-main push run 36795877117 passed ecommerce-mounted but skipped path-scoped E2E; no fresh full E2E result is claimed.",
+        "limits": "The evidence is bounded to a single seeded scenario and UI affordance. Synthetic diagnosis interaction; no production incident or operator safety/usability study.",
+        "baseline_freshness": "reusable within its stated boundary",
+        "named_invalidator": "A concrete diagnosis failure/adopter report or source/fixture changes warrant focused review; what incident decision would this test change?"
+      },
+      {
+        "id": "C-16",
+        "dimension_id": 4,
+        "claim": "Retry/reconcile/backfill entry points and bounded safety contracts exist, but no single recorded live receipt spans selected repair through visible recovery.",
+        "source": "Phase162 baseline; Phase169 run 36629280522 records selected ID 166000040, tasks 75 and 76 terminal-success, report-only 3 reads/0 mutations, and empty-scope no-op; corrected tree equals squash-main and main backend passed.",
+        "evidence_date": "2026-09-30",
+        "assessment_date": "2026-09-30",
+        "relevant_paths": [
+          {
+            "path": "lib/scrypath/backfill.ex",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "test/scrypath/live_operator_verification_test.exs",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          }
+        ],
+        "comparison": "Phase169 run 36629280522 records selected ID 166000040, tasks 75 and 76 terminal-success, report-only 3 reads/0 mutations, and empty-scope no-op; corrected tree equals squash-main and main backend passed.",
+        "disposition": "insufficiently supported. Current disposition: Phase169 run 36629280522 records selected ID 166000040, tasks 75 and 76 terminal-success, report-only 3 reads/0 mutations, and empty-scope no-op; corrected tree equals squash-main and main backend passed.",
+        "limits": "Command existence/probe success does not prove a repair succeeded or became searchable. One fixed selected-ID repair-to-visible-raw-search path; not retries, concurrency, exactly-once, arbitrary IDs, or general recovery.",
+        "baseline_freshness": "unknown",
+        "named_invalidator": "Which representative drift case should Phase 163 prioritize for a bounded report\u2192mutation\u2192visible-result receipt?"
+      },
+      {
+        "id": "C-17",
+        "dimension_id": 4,
+        "claim": "Named mounted scenarios prove one seeded zero-downtime swap reaches terminal success and a tenant-filtered active-index result; they do not cover failure, rollback, or generic deployments.",
+        "source": "Last named scheduled full E2E evidence is run 36681173632, job 109776739566, on 933ad30645c41df9f21dd4ddfd2d5b93fbd48620: the seeded zero-downtime swap/active-index visibility test passed. The relevant operator paths were unchanged by PR #87 on current main 87d74259a9f569c6b11c8d9481f5465a172c70ba. Exact-main push run 36795877117 passed ecommerce-mounted but skipped path-scoped E2E; no fresh full E2E result is claimed.",
+        "evidence_date": "2026-09-30",
+        "assessment_date": "2026-10-01",
+        "relevant_paths": [
+          {
+            "path": "examples/scrypath_ecommerce/e2e/operator.spec.ts",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "test/scrypath/phase147_e2e_contract_test.exs",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          }
+        ],
+        "comparison": "Last named scheduled full E2E evidence is run 36681173632, job 109776739566, on 933ad30645c41df9f21dd4ddfd2d5b93fbd48620: the seeded zero-downtime swap/active-index visibility test passed. The relevant operator paths were unchanged by PR #87 on current main 87d74259a9f569c6b11c8d9481f5465a172c70ba. Exact-main push run 36795877117 passed ecommerce-mounted but skipped path-scoped E2E; no fresh full E2E result is claimed.",
+        "disposition": "supported. Current disposition: Last named scheduled full E2E evidence is run 36681173632, job 109776739566, on 933ad30645c41df9f21dd4ddfd2d5b93fbd48620: the seeded zero-downtime swap/active-index visibility test passed. The relevant operator paths were unchanged by PR #87 on current main 87d74259a9f569c6b11c8d9481f5465a172c70ba. Exact-main push run 36795877117 passed ecommerce-mounted but skipped path-scoped E2E; no fresh full E2E result is claimed.",
+        "limits": "Receipts support only the named happy path; the Phase 160 opt-out remains historically true. Happy path only; no rollback/failure recovery or broad UI quality.",
+        "baseline_freshness": "reusable within its stated boundary",
+        "named_invalidator": "Reindex/swap source, fixture, Meilisearch version, or search visibility oracle changes require focused revalidation; what failure/rollback case is materially decision-changing?"
+      },
+      {
+        "id": "C-18",
+        "dimension_id": 3,
+        "claim": "CI and compatibility documentation exercise selected declared tuples, not every Elixir/Ecto/OTP cross-product.",
+        "source": "Phase162 baseline; current workflow declares explicit tuples and five required gates. Exact-main push run 36795877117 at 87d74259a9f569c6b11c8d9481f5465a172c70ba passed all five required jobs; compatibility remains advisory and is not a Cartesian matrix.",
+        "evidence_date": "2026-10-01",
+        "assessment_date": "2026-10-01",
+        "relevant_paths": [
+          {
+            "path": "mix.exs",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": ".github/workflows/ci.yml",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          }
+        ],
+        "comparison": "Exact-main push run 36795877117 on 87d74259a9f569c6b11c8d9481f5465a172c70ba passed backend, core, ecommerce-mounted, package, and repository-contracts. No compatibility Cartesian matrix is claimed.",
+        "disposition": "supported. Current disposition: Exact-main push run 36795877117 on 87d74259a9f569c6b11c8d9481f5465a172c70ba passed backend, core, ecommerce-mounted, package, and repository-contracts. No compatibility Cartesian matrix is claimed.",
+        "limits": "Current full set of tuples must be read from workflow; no expanded release matrix is evidenced. No every-version pairing claim.",
+        "baseline_freshness": "current",
+        "named_invalidator": "Version-bound, dependency, or workflow edits trigger inspection of affected tuples; is another adopter-relevant tuple missing?"
+      },
+      {
+        "id": "C-19",
+        "dimension_id": 5,
+        "claim": "Current guides and changelog provide documented sync/recovery concepts and release history; no separate clean-consumer upgrade-from-prior-version scenario is recorded here.",
+        "source": "Phase162 baseline; Latest-release verification passed; no in-place upgrade from a named earlier consumer/configuration is recorded. PR #83 proposes 0.3.14 and remains open.",
+        "evidence_date": "2026-09-30",
+        "assessment_date": "2026-09-30",
+        "relevant_paths": [
+          {
+            "path": "CHANGELOG.md",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "docs/releasing.md",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          }
+        ],
+        "comparison": "Latest-release verification passed; no in-place upgrade from a named earlier consumer/configuration is recorded. PR #83 proposes 0.3.14 and remains open.",
+        "disposition": "insufficiently supported. Current disposition: Latest-release verification passed; no in-place upgrade from a named earlier consumer/configuration is recorded. PR #83 proposes 0.3.14 and remains open.",
+        "limits": "Publishability is not an upgrade path test. No migration/upgrade compatibility matrix and no claim PR #83 shipped.",
+        "baseline_freshness": "reusable within its stated boundary",
+        "named_invalidator": "Public config/API deprecation or dependency-bound changes warrant a focused upgrade fixture; which prior version transition matters?"
+      },
+      {
+        "id": "C-20",
+        "dimension_id": 6,
+        "claim": "Scrypath 0.3.13 was published and verified with package-to-tag parity and versioned docs visibility.",
+        "source": "Phase162 baseline; latest published release remains 0.3.13 at tag scrypath-v0.3.13, target 28d3877a05479f2cc104754fc24ab0c9d545c01b; latest named release verification run 36680015047 passed; PR #83 proposes 0.3.14 and remains blocked before merge.",
+        "evidence_date": "2026-10-01",
+        "assessment_date": "2026-10-01",
+        "relevant_paths": [
+          {
+            "path": "docs/releasing.md",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "release-please-config.json",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          }
+        ],
+        "comparison": "As of 2026-10-01, 0.3.13/tag scrypath-v0.3.13 remains the latest published package. PR #83 head 64963c7042c451f9d4932fee7850d8bf7ca93684 passed exact-source package verification but has not merged or published; no 0.3.14 tag, release, or Hex package exists.",
+        "disposition": "supported. Current disposition: As of 2026-10-01, 0.3.13/tag scrypath-v0.3.13 remains the latest published package. PR #83 head 64963c7042c451f9d4932fee7850d8bf7ca93684 passed exact-source package verification but has not merged or published; no 0.3.14 tag, release, or Hex package exists.",
+        "limits": "Does not guarantee later workflow behavior or every consumer deployment. Phase169/170 source publication and package parity remain pending.",
+        "baseline_freshness": "reusable within its stated boundary",
+        "named_invalidator": "Publish credentials, workflow, package metadata, or tag changes require a new exact-SHA release receipt; no broader release claim follows."
+      },
+      {
+        "id": "C-21",
+        "dimension_id": 6,
+        "claim": "The three Mint advisories reported on the earlier graph were cleared by Phase 161's bounded resolver update and audit; this does not certify the current full graph or host deployment.",
+        "source": "Phase162 baseline and Phase168-DELIVERY; primary OSV advisory records; Phase168 four-graph audit (Mint 1.11.0 clean for the three named advisories); current-main deep-quality run 36795877117 on 87d74259a9f569c6b11c8d9481f5465a172c70ba. PR #87 changed no lockfiles, confirmed by exact comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620.",
+        "evidence_date": "2026-10-01",
+        "assessment_date": "2026-10-01",
+        "relevant_paths": [
+          {
+            "path": "mix.lock",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "scripts/ci/dependency_audit.exs",
+            "disposition": "archived-link: current public-main source path; maintainer planning checkout predates this merged source file"
+          }
+        ],
+        "comparison": "Phase168 refreshed four lock graphs and found the three named Mint advisories fixed by Mint 1.11.0; that bounded audit is not a full current graph certification. Current-main deep-quality in run 36795877117 on 87d74259a9f569c6b11c8d9481f5465a172c70ba completed successfully and reported no retired or security-advisory packages. PR #87 changed no lockfiles; no adopter graph changed.",
+        "disposition": "insufficiently supported. Current disposition: Phase168 refreshed four lock graphs and found the three named Mint advisories fixed by Mint 1.11.0; that bounded audit is not a full current graph certification. Current-main deep-quality in run 36795877117 on 87d74259a9f569c6b11c8d9481f5465a172c70ba completed successfully and reported no retired or security-advisory packages. PR #87 changed no lockfiles; no adopter graph changed.",
+        "limits": "The named advisory decision is reconciled; current graph/security posture still requires claim-specific review on a relevant invalidator. Four graphs/time/source only; no deployment reachability or vulnerability-free certification.",
+        "baseline_freshness": "reusable within its stated boundary",
+        "named_invalidator": "A new Mint advisory, lock/resolver or audit-workflow change, or concrete host deployment report invalidates this disposition; what claim-specific current check would it change?"
+      },
+      {
+        "id": "C-22",
+        "dimension_id": 1,
+        "claim": "Contract tests assert selected public naming/documentation expectations, but no complete API compatibility diff or exhaustive error matrix is recorded.",
+        "source": "Phase162 baseline; Candidate docs/API ownership contracts passed; public API behavior is unchanged and no adopter incompatibility is reported. Current source comparison is through public-main 87d74259a9f569c6b11c8d9481f5465a172c70ba; PR #87 changed only the delivered documentation/factual-tool paths.",
+        "evidence_date": "2026-10-01",
+        "assessment_date": "2026-10-01",
+        "relevant_paths": [
+          {
+            "path": "lib/scrypath.ex",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "CONTRIBUTING.md",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path changed in the delivered documentation/tooling candidate."
+          }
+        ],
+        "comparison": "Candidate docs/API ownership contracts passed; public API behavior is unchanged and no adopter incompatibility is reported. The exact 933ad30645c41df9f21dd4ddfd2d5b93fbd48620..87d74259a9f569c6b11c8d9481f5465a172c70ba compare identifies the documentation/tooling changes; no runtime code or lockfile changed.",
+        "disposition": "insufficiently supported. Current disposition: Candidate docs/API ownership contracts passed; public API behavior is unchanged and no adopter incompatibility is reported.",
+        "limits": "Complete backward compatibility across all public functions and upgrade paths is not assessed. No exhaustive backwards-compatibility diff or error matrix.",
+        "baseline_freshness": "reusable within its stated boundary",
+        "named_invalidator": "Public signature/error changes warrant focused compatibility review; what untested error classes affect an adopter decision?"
+      },
+      {
+        "id": "C-23",
+        "dimension_id": 7,
+        "claim": "The prior quality ledger records zero xref cycles and measured sub-microsecond pure paths with no optimization justified; it does not establish current whole-library performance.",
+        "source": "Phase162 baseline; No claim-specific relevant-path change was observed for this bounded row; retain the Phase162 source and evidence boundary.",
+        "evidence_date": "2026-08-26",
+        "assessment_date": "2026-09-30",
+        "relevant_paths": [
+          {
+            "path": "lib/scrypath/search/single.ex",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "test/scrypath/search_test.exs",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          }
+        ],
+        "comparison": "No claim-specific relevant-path change was observed for this bounded row; retain the Phase162 source and evidence boundary.",
+        "disposition": "insufficiently supported. Current disposition: No claim-specific relevant-path change was observed for this bounded row; retain the Phase162 source and evidence boundary.",
+        "limits": "No current end-to-end throughput, latency, capacity, or all-module readability measurement.",
+        "baseline_freshness": "reusable within its stated boundary",
+        "named_invalidator": "Architecture/performance source changes or an observed bottleneck warrant a focused profile; what workload would change an optimization decision?"
+      },
+      {
+        "id": "C-24",
+        "dimension_id": 7,
+        "claim": "Required CI gates and advisory deeper/service evidence have distinct roles, with exact-SHA release and post-merge receipts for 0.3.13.",
+        "source": "Phase162 baseline; exact-main required workflow run 36795877117 at 87d74259a9f569c6b11c8d9481f5465a172c70ba passed all five required gates and deep-quality advisory. Earlier scheduled run 36681173632 at 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 provides named Phoenix/E2E advisory evidence; PR #87 path comparison confirms the relevant example paths were unchanged. Phase170 adds no CI lane.",
+        "evidence_date": "2026-10-01",
+        "assessment_date": "2026-10-01",
+        "relevant_paths": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path unchanged."
+          },
+          {
+            "path": "CONTRIBUTING.md",
+            "disposition": "Compared against current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 shows this path changed in the delivered documentation/tooling candidate."
+          }
+        ],
+        "comparison": "Current exact-main push run 36795877117 on 87d74259a9f569c6b11c8d9481f5465a172c70ba passed all five required jobs and deep-quality. Its path-scoped ecommerce E2E job was skipped. The last named scheduled full E2E/Phoenix evidence is run 36681173632 on 933ad30645c41df9f21dd4ddfd2d5b93fbd48620; exact PR #87 comparison confirms relevant E2E paths were unchanged. Phase170 adds no CI lane.",
+        "disposition": "supported. Current disposition: Current exact-main push run 36795877117 on 87d74259a9f569c6b11c8d9481f5465a172c70ba passed all five required jobs and deep-quality. Its path-scoped ecommerce E2E job was skipped. The last named scheduled full E2E/Phoenix evidence is run 36681173632 on 933ad30645c41df9f21dd4ddfd2d5b93fbd48620; exact PR #87 comparison confirms relevant E2E paths were unchanged. Phase170 adds no CI lane.",
+        "limits": "Advisory evidence does not block merge; no claim that every non-UI user job has automated proof. Exact run/SHA only; candidate/final source require their own receipts.",
+        "baseline_freshness": "reusable within its stated boundary",
+        "named_invalidator": "CI topology or workflow permission changes require review; does recurring proof justify any changed lane cost?"
+      }
+    ]
+  },
+  "important_workflows": [
+    {
+      "id": "WF-01",
+      "description": "First indexed/hydrated result.",
+      "claims": [
+        "C-01",
+        "C-02",
+        "C-04",
+        "C-05",
+        "C-06",
+        "C-12"
+      ],
+      "evidence": [
+        "Phase160 exact-source package run 36000999039; Phase169 local-package proof (18 tests); Plan170 docs contract (74 tests); PR #87 exact-main CI run 36795877117 at 87d74259a9f569c6b11c8d9481f5465a172c70ba passed all five required jobs."
+      ],
+      "supports": "Named first-result, task-to-visible-search and route/API ownership examples.",
+      "limits": "One example/tuple; Phase169 local artifact is not Hex; no universal hydration, auth or outside-adopter claim."
+    },
+    {
+      "id": "WF-02",
+      "description": "Inline/manual/Oban synchronization and configured related-data changes.",
+      "claims": [
+        "C-03",
+        "C-07",
+        "C-08",
+        "C-12"
+      ],
+      "evidence": [
+        "Phase160 package scenarios; last named scheduled Phoenix/E2E advisory run 36681173632 at 933ad30645c41df9f21dd4ddfd2d5b93fbd48620; exact PR #87 comparison confirms relevant sync runtime and lock paths unchanged on 87d74259a9f569c6b11c8d9481f5465a172c70ba. Plan170 sync documentation contracts and exact-main required run 36795877117 passed; no sync runtime or lockfile path changed."
+      ],
+      "supports": "Named inline/Oban related projection and distinct task visibility states.",
+      "limits": "No alternate queue, arbitrary host transaction, all association/delete combinations or visibility SLO."
+    },
+    {
+      "id": "WF-03",
+      "description": "Supplied tenant/filter composition and persisted host-membership path/package scenario.",
+      "claims": [
+        "C-01",
+        "C-04",
+        "C-10",
+        "C-11",
+        "C-18"
+      ],
+      "evidence": [
+        "Phase169 candidate run 36629280522 at 46331b89035174ee8383b32630621555f1fef619; post-merge run 36644133759 at 933ad30645c41df9f21dd4ddfd2d5b93fbd48620; 18 path and 18 local-package tests; PR #87 exact path comparison confirms its tenant example/runtime paths were unchanged on current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba."
+      ],
+      "supports": "Synthetic persisted membership, selected filter composition, host Ecto hydration and local artifact mode.",
+      "limits": "Host policy remains application-owned; local package is not Hex; no arbitrary tenant threat model."
+    },
+    {
+      "id": "WF-04",
+      "description": "Keyword facet values reflect current records inside the named membership example.",
+      "claims": [
+        "C-04",
+        "C-10",
+        "C-11"
+      ],
+      "evidence": [
+        "Phase169 receipts: tenant A phone-a:1 and tenant B phone-b-forbidden:1; test/scrypath/facet_values_contract_test.exs; current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba leaves the named host/facet paths unchanged."
+      ],
+      "supports": "Selected keyword facet output/count and tenant membership result.",
+      "limits": "No general settings, federation/multi-search or all facet query shapes."
+    },
+    {
+      "id": "WF-05",
+      "description": "Bounded C-09 hard delete: known raw-hit presence, host delete, persisted Oban drain, target absent and sibling visible.",
+      "claims": [
+        "C-03",
+        "C-07",
+        "C-09",
+        "C-12"
+      ],
+      "evidence": [
+        "Last named scheduled full E2E proof: run 36681173632, job 109776739566, at 933ad30645c41df9f21dd4ddfd2d5b93fbd48620; the bounded deletion test passed there. Exact PR #87 compare confirms ecommerce E2E/harness paths unchanged on current main 87d74259a9f569c6b11c8d9481f5465a172c70ba. Current push run 36795877117 skipped path-scoped E2E; no fresh full E2E run on current main is claimed."
+      ],
+      "supports": "Current-source named raw-hit deletion/visibility result; refreshes changed ecommerce harness/lock transfer.",
+      "limits": "No package deletion, task UID correlation, retries, restart, concurrency, soft delete or universal guarantee."
+    },
+    {
+      "id": "WF-06",
+      "description": "Selected-ID manual repair through terminal task success and visible raw search.",
+      "claims": [
+        "C-13",
+        "C-14",
+        "C-15",
+        "C-16"
+      ],
+      "evidence": [
+        "Phase169 run 36629280522: selected ID 166000040, task IDs 75/76 succeeded, report-only 3 reads/0 mutations, empty scope no-op; tree equals merged main; PR #87 did not change repair implementation/test paths; current public main is 87d74259a9f569c6b11c8d9481f5465a172c70ba."
+      ],
+      "supports": "One fixed selected-ID, manual task-to-visible raw projection and bounded no-write report.",
+      "limits": "No retry, concurrency, exactly-once, arbitrary ID or generalized recovery assurance."
+    },
+    {
+      "id": "WF-07",
+      "description": "Existing mounted diagnosis and index-swap scenarios.",
+      "claims": [
+        "C-15",
+        "C-17"
+      ],
+      "evidence": [
+        "Last named scheduled mounted diagnosis/swap proof: run 36681173632, job 109776739566, at 933ad30645c41df9f21dd4ddfd2d5b93fbd48620; relevant operator paths were unchanged by PR #87 on current main 87d74259a9f569c6b11c8d9481f5465a172c70ba. Push run 36795877117 passed ecommerce-mounted on exact main and skipped path-scoped E2E; retain the distinct workflow boundaries."
+      ],
+      "supports": "Seeded diagnosis interaction and successful swap/active-index visibility.",
+      "limits": "No real incident study, rollback/failure handling or general UI-quality conclusion."
+    },
+    {
+      "id": "WF-08",
+      "description": "Package installation, release consumer and parity.",
+      "claims": [
+        "C-01",
+        "C-18",
+        "C-19",
+        "C-20",
+        "C-22",
+        "C-24"
+      ],
+      "evidence": [
+        "Published 0.3.13/tag scrypath-v0.3.13 remains latest; HexDocs and package verification run 36680015047 passed. Public main 87d74259a9f569c6b11c8d9481f5465a172c70ba passed all five required jobs in run 36795877117; Release Please run 36795877136 skipped publish-hex. PR #83 head 64963c7042c451f9d4932fee7850d8bf7ca93684 passed isolated mix verify.package, but remains OPEN and unpublished as of the 2026-10-01 02:05 UTC refresh; review list and statusCheckRollup are empty and mergeStateStatus is BLOCKED by the required approving review."
+      ],
+      "supports": "Current published 0.3.13 identity and named verification; separate local artifact proof and selected CI contracts.",
+      "limits": "PR #83 not published; local artifact is not Hex; no in-place upgrade from prior version."
+    }
+  ],
+  "invalidators": [
+    {
+      "id": "SRC-167-MAIN-01",
+      "path": ".github/workflows/ci.yml",
+      "claims": [
+        "C-18",
+        "C-21",
+        "C-24"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Five required checks and advisory dependency/Phoenix/E2E topology; current exact-main run passed the required set. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-02",
+      "path": "examples/phoenix_meilisearch/README.md",
+      "claims": [
+        "C-01",
+        "C-06",
+        "C-10",
+        "C-11"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Host membership and local-package boundary docs; no general setup/auth claim. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-03",
+      "path": "examples/phoenix_meilisearch/lib/scrypath_demo/blog.ex",
+      "claims": [
+        "C-04",
+        "C-10",
+        "C-11"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Persisted membership query/hydration behavior; Phase169 named host proof. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-04",
+      "path": "examples/phoenix_meilisearch/lib/scrypath_demo/blog/post.ex",
+      "claims": [
+        "C-10"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Tenant mass-assignment boundary; membership-derived assignment. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-05",
+      "path": "examples/phoenix_meilisearch/mix.lock",
+      "claims": [
+        "C-01",
+        "C-10",
+        "C-11",
+        "C-18",
+        "C-21"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Consumer graph changed; named path/package proof and four-graph audit. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-06",
+      "path": "examples/phoenix_meilisearch/test/scrypath_demo/blog_tenant_search_test.exs",
+      "claims": [
+        "C-04",
+        "C-10"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Host membership and scoped hydration assertions. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-07",
+      "path": "examples/phoenix_meilisearch/test/smoke/meilisearch_tenant_stack_test.exs",
+      "claims": [
+        "C-10",
+        "C-11"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Named live tenant and keyword facet host flow. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-08",
+      "path": "examples/scrypath_ecommerce/docker-e2e-entrypoint.sh",
+      "claims": [
+        "C-09",
+        "C-15",
+        "C-17"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Setup/seed now run with PHX_SERVER=false; exact-main full E2E log passes named delete, diagnosis and swap tests. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-09",
+      "path": "examples/scrypath_ecommerce/mix.lock",
+      "claims": [
+        "C-01",
+        "C-07",
+        "C-08",
+        "C-09",
+        "C-15",
+        "C-17",
+        "C-21"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Ecommerce graph changed; current-main deep-quality result plus last named scheduled E2E on the prior SHA; exact path comparison confirms no PR #87 changes, but no fresh full current-main E2E run. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-10",
+      "path": "lib/mix/tasks/verify.adopter.ex",
+      "claims": [
+        "C-01",
+        "C-06",
+        "C-19"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Adopter checks include selected current package/docs contracts. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-11",
+      "path": "lib/mix/tasks/verify.capability.ex",
+      "claims": [
+        "C-21",
+        "C-24"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Deep-quality task calls shared dependency audit. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-12",
+      "path": "lib/mix/tasks/verify/phoenix_example/lock_graph.ex",
+      "claims": [
+        "C-18",
+        "C-21"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: New selected lock graph validation; not full compatibility. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-13",
+      "path": "lib/mix/tasks/verify/phoenix_example/package.ex",
+      "claims": [
+        "C-01",
+        "C-10",
+        "C-11",
+        "C-18"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Local artifact example mode; not Hex installation. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-14",
+      "path": "mix.lock",
+      "claims": [
+        "C-18",
+        "C-21",
+        "C-24"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Root graph changed; current four-graph audit clean. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-15",
+      "path": "scripts/ci/dependency_audit.ex",
+      "claims": [
+        "C-21"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: New bounded graph audit semantics. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-16",
+      "path": "scripts/ci/dependency_audit.exs",
+      "claims": [
+        "C-21"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: New audit entrypoint, observed clean on all four graphs. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-17",
+      "path": "test/mix/tasks/dependency_audit_test.exs",
+      "claims": [
+        "C-21",
+        "C-24"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Added audit wiring tests; no deployment certification. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-18",
+      "path": "test/mix/tasks/verify_adopter_test.exs",
+      "claims": [
+        "C-01",
+        "C-06",
+        "C-19"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Adopter verifier contracts, not outside usability. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-19",
+      "path": "test/mix/tasks/verify_capability_test.exs",
+      "claims": [
+        "C-21",
+        "C-24"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Bounded shared audit wiring. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-20",
+      "path": "test/mix/tasks/verify_lock_graph_test.exs",
+      "claims": [
+        "C-18",
+        "C-21"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Named graph match tests, not all runtime combinations. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-21",
+      "path": "test/mix/tasks/verify_phoenix_example_package_test.exs",
+      "claims": [
+        "C-01",
+        "C-10",
+        "C-11",
+        "C-18"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Local artifact package mode tests; no Hex parity. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-22",
+      "path": "test/mix/tasks/workflow_wiring_test.exs",
+      "claims": [
+        "C-24"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Required/advisory topology contract. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-23",
+      "path": "test/release/consumer_smoke_test.exs",
+      "claims": [
+        "C-01",
+        "C-19",
+        "C-20",
+        "C-22"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Current declared consumer smoke, not in-place upgrade. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-24",
+      "path": "test/scrypath/facet_values_contract_test.exs",
+      "claims": [
+        "C-10",
+        "C-11"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Tenant keyword facet contract. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-25",
+      "path": "test/scrypath/phase147_e2e_contract_test.exs",
+      "claims": [
+        "C-09",
+        "C-15",
+        "C-17"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Ecommerce harness wiring; exact-main named test log refresh. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-167-MAIN-26",
+      "path": "test/scrypath/phase99_contract_test.exs",
+      "claims": [
+        "C-15",
+        "C-17"
+      ],
+      "reason": "Phase167 SHA 7714b3a7d53086b992982c9c174712fbbc287f40 -> current public main 87d74259a9f569c6b11c8d9481f5465a172c70ba: Repository lifecycle contracts, no broader mounted-runtime claim. Exact PR #87 comparison from 933ad30645c41df9f21dd4ddfd2d5b93fbd48620 to 87d74259a9f569c6b11c8d9481f5465a172c70ba confirms this path was unchanged; the delivered diff is confined to README/guides, CONTRIBUTING, ci_monitor and docs/validator tests."
+    },
+    {
+      "id": "SRC-CANDIDATE-01",
+      "path": "README.md",
+      "claims": [
+        "C-02",
+        "C-03",
+        "C-05",
+        "C-06",
+        "C-07",
+        "C-12",
+        "C-22",
+        "C-24"
+      ],
+      "reason": "Final PR #87 candidate 00f8ea1655d189c99a8eb236c2caaadf2633c169 merged to main 87d74259a9f569c6b11c8d9481f5465a172c70ba: first-hour navigation consolidated; route assertions are structural."
+    },
+    {
+      "id": "SRC-CANDIDATE-02",
+      "path": "CONTRIBUTING.md",
+      "claims": [
+        "C-02",
+        "C-03",
+        "C-05",
+        "C-06",
+        "C-07",
+        "C-12",
+        "C-22",
+        "C-24"
+      ],
+      "reason": "Final PR #87 candidate 00f8ea1655d189c99a8eb236c2caaadf2633c169 merged to main 87d74259a9f569c6b11c8d9481f5465a172c70ba: documents read-only closeout commands and their limits."
+    },
+    {
+      "id": "SRC-CANDIDATE-03",
+      "path": "guides/jtbd-and-user-flows.md",
+      "claims": [
+        "C-02",
+        "C-03",
+        "C-05",
+        "C-06",
+        "C-07",
+        "C-12",
+        "C-22",
+        "C-24"
+      ],
+      "reason": "Final PR #87 candidate 00f8ea1655d189c99a8eb236c2caaadf2633c169 merged to main 87d74259a9f569c6b11c8d9481f5465a172c70ba: navigation consolidated; unique routes retained."
+    },
+    {
+      "id": "SRC-CANDIDATE-04",
+      "path": "guides/sync-modes-and-visibility.md",
+      "claims": [
+        "C-02",
+        "C-03",
+        "C-05",
+        "C-06",
+        "C-07",
+        "C-12",
+        "C-22",
+        "C-24"
+      ],
+      "reason": "Final PR #87 candidate 00f8ea1655d189c99a8eb236c2caaadf2633c169 merged to main 87d74259a9f569c6b11c8d9481f5465a172c70ba: documents conditional task wait and visibility boundaries."
+    },
+    {
+      "id": "SRC-CANDIDATE-05",
+      "path": "scripts/ci_monitor.cjs",
+      "claims": [
+        "C-02",
+        "C-03",
+        "C-05",
+        "C-06",
+        "C-07",
+        "C-12",
+        "C-22",
+        "C-24"
+      ],
+      "reason": "Final PR #87 candidate 00f8ea1655d189c99a8eb236c2caaadf2633c169 merged to main 87d74259a9f569c6b11c8d9481f5465a172c70ba: factual attempt collector, validator and renderer; no semantic approval."
+    },
+    {
+      "id": "SRC-CANDIDATE-06",
+      "path": "test/scripts/ci_monitor_test.exs",
+      "claims": [
+        "C-02",
+        "C-03",
+        "C-05",
+        "C-06",
+        "C-07",
+        "C-12",
+        "C-22",
+        "C-24"
+      ],
+      "reason": "Final PR #87 candidate 00f8ea1655d189c99a8eb236c2caaadf2633c169 merged to main 87d74259a9f569c6b11c8d9481f5465a172c70ba: fake CLI identity/archive/schema fixtures; probes remain open."
+    },
+    {
+      "id": "SRC-CANDIDATE-07",
+      "path": "test/scrypath/docs_contract_test.exs",
+      "claims": [
+        "C-02",
+        "C-03",
+        "C-05",
+        "C-06",
+        "C-07",
+        "C-12",
+        "C-22",
+        "C-24"
+      ],
+      "reason": "Final PR #87 candidate 00f8ea1655d189c99a8eb236c2caaadf2633c169 merged to main 87d74259a9f569c6b11c8d9481f5465a172c70ba: route/ownership contracts only."
+    },
+    {
+      "id": "SRC-CANDIDATE-08",
+      "path": "test/scrypath/telemetry_test.exs",
+      "claims": [
+        "C-02",
+        "C-03",
+        "C-05",
+        "C-06",
+        "C-07",
+        "C-12",
+        "C-22",
+        "C-24"
+      ],
+      "reason": "Interim Plan01-02 candidate db3948faaa681c8eb1c3ad7feb3333bc82191753 changed this assertion, but test/scrypath/telemetry_test.exs was excluded from the final PR #87 allowlist and is unchanged on public main 87d74259a9f569c6b11c8d9481f5465a172c70ba; no runtime behavior change is claimed."
+    },
+    {
+      "id": "BASELINE-C-01",
+      "path": "examples/phoenix_meilisearch/README.md",
+      "claims": [
+        "C-01"
+      ],
+      "reason": "Candidate-SHA source changes affecting package staging or those scenarios require a focused package proof; current HEAD is a later planning-only descendant."
+    },
+    {
+      "id": "BASELINE-C-02",
+      "path": "lib/scrypath.ex",
+      "claims": [
+        "C-02"
+      ],
+      "reason": "Public function/error-shape, dependency, or supported-version changes warrant focused contract review; which response classes lack direct assertions?"
+    },
+    {
+      "id": "BASELINE-C-03",
+      "path": "lib/scrypath/sync.ex",
+      "claims": [
+        "C-03"
+      ],
+      "reason": "Changes to sync orchestration or task wait semantics trigger focused tests; what host transaction combinations matter to adopters?"
+    },
+    {
+      "id": "BASELINE-C-04",
+      "path": "lib/scrypath/search/single.ex",
+      "claims": [
+        "C-04"
+      ],
+      "reason": "Search result shape or query changes trigger focused tests; host authorization is not a Scrypath claim."
+    },
+    {
+      "id": "BASELINE-C-05",
+      "path": "guides/request-edge-search.md",
+      "claims": [
+        "C-05"
+      ],
+      "reason": "Helper API or Phoenix support-range changes warrant targeted request-edge verification; which adopter request shapes need a consumer receipt?"
+    },
+    {
+      "id": "BASELINE-C-06",
+      "path": "README.md",
+      "claims": [
+        "C-06"
+      ],
+      "reason": "API/docs/package drift triggers docs-contract and consumer checks; is there direct adopter feedback on first-hour friction?"
+    },
+    {
+      "id": "BASELINE-C-07",
+      "path": "lib/scrypath/oban/enqueue.ex",
+      "claims": [
+        "C-07"
+      ],
+      "reason": "Changes to queue payload, workers, task wait, or package scenarios require a focused rerun; no evidence for other queue adapters is claimed."
+    },
+    {
+      "id": "BASELINE-C-08",
+      "path": "lib/scrypath/sync/related_worker.ex",
+      "claims": [
+        "C-08"
+      ],
+      "reason": "Changes to related projection/job handling trigger the package scenario; which association/delete combinations are not represented?"
+    },
+    {
+      "id": "BASELINE-C-09",
+      "path": "examples/scrypath_ecommerce/e2e/storefront.spec.ts",
+      "claims": [
+        "C-09"
+      ],
+      "reason": "Deletion source or job changes, or a release claim requiring delete semantics, warrant a claim-specific live scenario; what exact delete/visibility case is required?"
+    },
+    {
+      "id": "BASELINE-C-10",
+      "path": "lib/scrypath/search/single.ex",
+      "claims": [
+        "C-10"
+      ],
+      "reason": "Any claim about cross-tenant safety requires a named host policy model and direct consumer evidence; what representative threat model is in scope?"
+    },
+    {
+      "id": "BASELINE-C-11",
+      "path": "lib/scrypath/search/facet_values.ex",
+      "claims": [
+        "C-11"
+      ],
+      "reason": "A supported release claim for any opt-out needs its own focused result; which operation is required by a representative job?"
+    },
+    {
+      "id": "BASELINE-C-12",
+      "path": "lib/scrypath/oban/indexing_ack.ex",
+      "claims": [
+        "C-12"
+      ],
+      "reason": "Worker/task-wait changes invalidate the matching scenario; what visibility contract should consumers rely on during backend failure?"
+    },
+    {
+      "id": "BASELINE-C-13",
+      "path": "lib/scrypath/oban/enqueue.ex",
+      "claims": [
+        "C-13"
+      ],
+      "reason": "Enqueue/client config changes or a secret-handling incident require a focused boundary review; are new payload fields introduced?"
+    },
+    {
+      "id": "BASELINE-C-14",
+      "path": "lib/scrypath/telemetry.ex",
+      "claims": [
+        "C-14"
+      ],
+      "reason": "Telemetry/task source, metadata, or service protocol changes trigger focused review; which alerting gaps are Scrypath-owned?"
+    },
+    {
+      "id": "BASELINE-C-15",
+      "path": "examples/scrypath_ecommerce/e2e/operator.spec.ts",
+      "claims": [
+        "C-15"
+      ],
+      "reason": "A concrete diagnosis failure/adopter report or source/fixture changes warrant focused review; what incident decision would this test change?"
+    },
+    {
+      "id": "BASELINE-C-16",
+      "path": "lib/scrypath/backfill.ex",
+      "claims": [
+        "C-16"
+      ],
+      "reason": "Which representative drift case should Phase 163 prioritize for a bounded report\u2192mutation\u2192visible-result receipt?"
+    },
+    {
+      "id": "BASELINE-C-17",
+      "path": "examples/scrypath_ecommerce/e2e/operator.spec.ts",
+      "claims": [
+        "C-17"
+      ],
+      "reason": "Reindex/swap source, fixture, Meilisearch version, or search visibility oracle changes require focused revalidation; what failure/rollback case is materially decision-changing?"
+    },
+    {
+      "id": "BASELINE-C-18",
+      "path": "mix.exs",
+      "claims": [
+        "C-18"
+      ],
+      "reason": "Version-bound, dependency, or workflow edits trigger inspection of affected tuples; is another adopter-relevant tuple missing?"
+    },
+    {
+      "id": "BASELINE-C-19",
+      "path": "CHANGELOG.md",
+      "claims": [
+        "C-19"
+      ],
+      "reason": "Public config/API deprecation or dependency-bound changes warrant a focused upgrade fixture; which prior version transition matters?"
+    },
+    {
+      "id": "BASELINE-C-20",
+      "path": "docs/releasing.md",
+      "claims": [
+        "C-20"
+      ],
+      "reason": "Publish credentials, workflow, package metadata, or tag changes require a new exact-SHA release receipt; no broader release claim follows."
+    },
+    {
+      "id": "BASELINE-C-21",
+      "path": "mix.lock",
+      "claims": [
+        "C-21"
+      ],
+      "reason": "A new Mint advisory, lock/resolver or audit-workflow change, or concrete host deployment report invalidates this disposition; what claim-specific current check would it change?"
+    },
+    {
+      "id": "BASELINE-C-22",
+      "path": "lib/scrypath.ex",
+      "claims": [
+        "C-22"
+      ],
+      "reason": "Public signature/error changes warrant focused compatibility review; what untested error classes affect an adopter decision?"
+    },
+    {
+      "id": "BASELINE-C-23",
+      "path": "lib/scrypath/search/single.ex",
+      "claims": [
+        "C-23"
+      ],
+      "reason": "Architecture/performance source changes or an observed bottleneck warrant a focused profile; what workload would change an optimization decision?"
+    },
+    {
+      "id": "BASELINE-C-24",
+      "path": ".github/workflows/ci.yml",
+      "claims": [
+        "C-24"
+      ],
+      "reason": "CI topology or workflow permission changes require review; does recurring proof justify any changed lane cost?"
+    }
+  ],
+  "findings": [],
+  "opportunities": [
+    {
+      "id": "OP-C02-C22",
+      "claims": [
+        "C-02",
+        "C-22"
+      ],
+      "disposition": "Retain bounded API/error evidence gap; no material finding or adopter breakage evidenced. Revisit on public signature/error change or concrete compatibility report."
+    },
+    {
+      "id": "OP-C06",
+      "claims": [
+        "C-06"
+      ],
+      "disposition": "No outside-adopter friction or timing measure; do not promote without evidence that would change a decision."
+    },
+    {
+      "id": "OP-C10",
+      "claims": [
+        "C-10"
+      ],
+      "disposition": "Host authorization remains app-owned; no general promise or follow-up without a named host threat model."
+    },
+    {
+      "id": "OP-C11",
+      "claims": [
+        "C-11"
+      ],
+      "disposition": "Retain general settings/multi-search/facet limits; the named keyword-facet case is bounded evidence, not a broad replay trigger."
+    },
+    {
+      "id": "OP-C19",
+      "claims": [
+        "C-19"
+      ],
+      "disposition": "No in-place upgrade candidate without a concrete prior-version transition."
+    },
+    {
+      "id": "OP-C23",
+      "claims": [
+        "C-23"
+      ],
+      "disposition": "No optimization candidate without a representative measured workload and decision-changing bottleneck."
+    }
+  ],
+  "preserved_history": [
+    {
+      "path": ".planning/milestones/v1.39-phases/162-whole-product-evidence-baseline/162-BASELINE.md",
+      "git_source": "39eb10ba70ec585182612f5e922b090864e1f40e",
+      "scope": "whole_file",
+      "sha256": "e41520a36d85f2fcbb29f9ff38634b774fc313240c98dce417a01dbb59b18fb0"
+    },
+    {
+      "path": ".planning/milestones/v1.39-phases/163-findings-and-bounded-follow-up/163-FINDINGS.md",
+      "git_source": "39eb10ba70ec585182612f5e922b090864e1f40e",
+      "scope": "whole_file",
+      "sha256": "f4e66547749560f98e5a88216cd8811a7e0754770d0c954d34911cb6ead03127"
+    },
+    {
+      "path": ".planning/milestones/v1.40-phases/167-dated-readiness-and-closeout/167-ASSESSMENT.md",
+      "git_source": "39eb10ba70ec585182612f5e922b090864e1f40e",
+      "scope": "whole_file",
+      "sha256": "21c6f1994356970319f291f0ac2ad530714ffe09c166c7c97b88a6c2a87851da"
+    },
+    {
+      "path": ".planning/reference/PRE-OPERATOR-UI-READINESS.md",
+      "git_source": "39eb10ba70ec585182612f5e922b090864e1f40e",
+      "scope": "named_suffix",
+      "sha256": "258bdf42c25c24d53d918caf291222a26f793c65ee1df980cd714e4972a7a333",
+      "heading": "## Phase 164 dated assessment"
+    },
+    {
+      "path": ".planning/milestones/v1.39-phases/164-readiness-gate-and-reconciliation/164-01-PLAN.md",
+      "git_source": "39eb10ba70ec585182612f5e922b090864e1f40e",
+      "scope": "whole_file",
+      "sha256": "6b8188949efb57145f178d18ee6c185d85771c3ccf6d5dd4366a6cd62ae27dd5"
+    },
+    {
+      "path": ".planning/milestones/v1.39-phases/164-readiness-gate-and-reconciliation/164-01-SUMMARY.md",
+      "git_source": "39eb10ba70ec585182612f5e922b090864e1f40e",
+      "scope": "whole_file",
+      "sha256": "8ff6602bc1048d5b106c10611e08599b1f0ae6e8ef420ad8c8ac6afe6dd21cf1"
+    },
+    {
+      "path": ".planning/milestones/v1.39-phases/164-readiness-gate-and-reconciliation/164-CONTEXT.md",
+      "git_source": "39eb10ba70ec585182612f5e922b090864e1f40e",
+      "scope": "whole_file",
+      "sha256": "ab4df6f6eeb7adcbafe2aee60c09216eb05fc56b37100523f7e2cb6c0fd0b983"
+    },
+    {
+      "path": ".planning/milestones/v1.39-phases/164-readiness-gate-and-reconciliation/164-DISCUSSION-LOG.md",
+      "git_source": "39eb10ba70ec585182612f5e922b090864e1f40e",
+      "scope": "whole_file",
+      "sha256": "3464b9855347007fa5fc489aed7e8446c90d204398262e16191e576750d4217c"
+    },
+    {
+      "path": ".planning/milestones/v1.39-phases/164-readiness-gate-and-reconciliation/164-PATTERNS.md",
+      "git_source": "39eb10ba70ec585182612f5e922b090864e1f40e",
+      "scope": "whole_file",
+      "sha256": "9388ade59f5039c7a7843ebd471fde54eb6fd7645387409f4d7bb66465948c0a"
+    },
+    {
+      "path": ".planning/milestones/v1.39-phases/164-readiness-gate-and-reconciliation/164-RESEARCH.md",
+      "git_source": "39eb10ba70ec585182612f5e922b090864e1f40e",
+      "scope": "whole_file",
+      "sha256": "2fa2c0c9af77bfc7052096da76334162b108a8a04894d48b5a7917b20a1b0a44"
+    },
+    {
+      "path": ".planning/milestones/v1.39-phases/164-readiness-gate-and-reconciliation/164-REVIEW.md",
+      "git_source": "39eb10ba70ec585182612f5e922b090864e1f40e",
+      "scope": "whole_file",
+      "sha256": "837f89f2fd237517b969b46f3582995c1f9a603679643806d7a6ab5ed14dfe9d"
+    },
+    {
+      "path": ".planning/milestones/v1.39-phases/164-readiness-gate-and-reconciliation/164-VALIDATION.md",
+      "git_source": "39eb10ba70ec585182612f5e922b090864e1f40e",
+      "scope": "whole_file",
+      "sha256": "e8c86616370e2e6ef68a3c926b6c6342fe8f3d38047d155ae7f17cb45ed65f25"
+    },
+    {
+      "path": ".planning/milestones/v1.39-phases/164-readiness-gate-and-reconciliation/164-VERIFICATION.md",
+      "git_source": "39eb10ba70ec585182612f5e922b090864e1f40e",
+      "scope": "whole_file",
+      "sha256": "d356f2a0044b460a05615393e34966d0025e0c9ef50a911c6bd6d8ddc3f13dae"
+    },
+    {
+      "path": ".planning/milestones/v1.39-phases/164-readiness-gate-and-reconciliation/check_readiness.py",
+      "git_source": "39eb10ba70ec585182612f5e922b090864e1f40e",
+      "scope": "whole_file",
+      "sha256": "fc0131e321b96cf0bd8efff8494a57abee2f8e514371d90cac173a85ac2e87b0"
+    },
+    {
+      "path": ".planning/milestones/v1.39-phases/164-readiness-gate-and-reconciliation/test_check_readiness.py",
+      "git_source": "39eb10ba70ec585182612f5e922b090864e1f40e",
+      "scope": "whole_file",
+      "sha256": "c0ca3a2d4528cfddc6690664223b93f0d75b18e123671fd900227f67331bfa6b"
+    }
+  ],
+  "conditions": [
+    {
+      "id": 1,
+      "text": "Every baseline dimension above has been assessed; evidence coverage and known limits are visible."
+    },
+    {
+      "id": 2,
+      "text": "Every critical, high, or medium-leverage finding is closed with verification or explicitly accepted with rationale and an owner decision. There are no unresolved findings at those levels."
+    },
+    {
+      "id": 3,
+      "text": "Important adopter workflows have appropriate automated proof for the claims being made. The goal is zero routine human verification/UAT; external credentials, permissions, product decisions, or physical-world checks are the only expected handoffs."
+    },
+    {
+      "id": 4,
+      "text": "Required CI remains green and lean. Recurring service/E2E proof runs in CI only where its repeat confidence justifies its runtime and maintenance cost; more expensive lower-frequency evidence may remain advisory or scheduled."
+    },
+    {
+      "id": 5,
+      "text": "Remaining non-UI opportunities are low-leverage, speculative, unsupported, or more costly than their likely benefit, each with a recorded disposition."
+    },
+    {
+      "id": 6,
+      "text": "Release, package, support, and planning truth are current, with no task-owned cleanup or verification debt hidden at closeout."
+    }
+  ],
+  "issue": {
+    "repository": "szTheory/scrypath",
+    "status": "created",
+    "reason": "No dedicated issue was found in title/body searches; unrelated issue #37 was inspected. The explicitly authorized issue #86 was created and read back with the approved title/body and maintainer author szTheory.",
+    "proposed_title": "Pre-Operator UI readiness terminal decision log",
+    "proposed_body_sha256": "d3d77cdb4a0f171af9ceef8c653315e04c920dbbe97abc38eed2c5d6b157f141",
+    "number": 86,
+    "url": "https://github.com/szTheory/scrypath/issues/86",
+    "title": "Pre-Operator UI readiness terminal decision log",
+    "author_login": "szTheory",
+    "published_body_sha256": "d3d77cdb4a0f171af9ceef8c653315e04c920dbbe97abc38eed2c5d6b157f141",
+    "created_at": "2026-09-30T20:05:31Z",
+    "approval_provenance": "User explicitly replied \u201cauthorize\u201d after reviewing the exact repository, title and public body; issue created through the authenticated maintainer account szTheory."
+  },
+  "source_identities": {
+    "candidate": {
+      "sha": "00f8ea1655d189c99a8eb236c2caaadf2633c169",
+      "label": "Phase170 documentation and factual-tool candidate merged by PR #87"
+    },
+    "squash_main": {
+      "sha": "87d74259a9f569c6b11c8d9481f5465a172c70ba",
+      "label": "Current public main after Phase170 PR #87 documentation/tooling merge"
+    },
+    "final_planning_source": {
+      "sha": "32759b2de7c86e867a6146693a49b1d623b042ed",
+      "label": "Planning parent SHA after Plan05 disposition and before Plan06 reconciliation; Plans06-08 and final freeze remain."
+    },
+    "local_artifact": {
+      "sha": "c8dfbfc9a9cf472c3912ed6d5f08cb3030b633b7",
+      "label": "Phase169 local v0.3.13-tagged consumer artifact, not Hex"
+    },
+    "published": {
+      "sha": "28d3877a05479f2cc104754fc24ab0c9d545c01b",
+      "version": "0.3.13",
+      "tag": "scrypath-v0.3.13"
+    }
+  },
+  "delivery": {
+    "disposition": "blocked",
+    "reason": "Maintainer authorization in this session on 2026-10-01 covers the normal protected squash merge and existing Release Please/publish-hex chain for szTheory/scrypath PR #83 at head 64963c7042c451f9d4932fee7850d8bf7ca93684, conditional on repository gates. The exact-source required CI checks pass, but the live branch policy also requires one approving GitHub review. Refreshed 2026-10-01 02:05 UTC: PR #83 remains OPEN on unchanged head/base, has no submitted reviews, blank reviewDecision, empty statusCheckRollup, and mergeStateStatus BLOCKED. The authorized gate owner is an authorized Scrypath GitHub reviewer/maintainer. Resume after an actual approving review on the unchanged head, then refresh check recognition. No review was synthesized or protection bypassed; no v0.3.14 tag, GitHub release, or Hex package exists (latest stable Hex version remains 0.3.13)."
+  },
+  "cleanup": {
+    "status": "in progress; Plan06 reconciliation is complete; Plan07 owns final tracking, delivery-worktree cleanup, path inventory and freeze; Plan08 owns external attestation and terminal outcome.",
+    "items": [
+      "Plan01-04 delivery worktree/branch retained through Plan06; its public PR #87 merge receipts and Plan05 release disposition are recorded. Plan07 owns cleanup after remaining receipt joins.",
+      "Unrelated maintainer worktree state preserved: deleted debug claim, edited Phase160 UAT, edited ecommerce entrypoint, edited Phase147 contract test, untracked resolved debug material and research cache.",
+      "Release Please PR #83 remains authorized for the normal release path but blocked by the required approving review. Resume after a real review on unchanged candidate head; Plan06 preserves this disposition and Plan07 must recheck before freeze.",
+      "Dependabot PRs #65 and #68-#76 are unrelated frozen cohort and remain unchanged.",
+      "PR #87 candidate files are on public main; the owned delivery branch/worktree is retained for Plan07 cleanup after all required receipts are preserved.",
+      "Public issue #86 was created under szTheory/scrypath from the explicitly authorized exact title/body and read back with matching author/body."
+    ]
+  },
+  "tracked_inputs": [
+    {
+      "path": ".planning/phases/170-documentation-and-readiness-closeout/170-READINESS-INPUTS.json",
+      "disposition": "owned factual ledger reconciled through cutoff 2026-10-01T02:05:46Z; live PR #83 facts were refreshed at 02:05 UTC, release remains authorized but blocked by the actual review gate, and all six semantic judgments remain unfilled."
+    },
+    {
+      "path": ".planning/phases/170-documentation-and-readiness-closeout/170-01-SUMMARY.md",
+      "disposition": "candidate docs/sync evidence; P-170-DOC remains semantic."
+    },
+    {
+      "path": ".planning/phases/170-documentation-and-readiness-closeout/170-02-SUMMARY.md",
+      "disposition": "readiness tooling/tests; factual validation cannot decide or authorize."
+    },
+    {
+      "path": ".planning/phases/170-documentation-and-readiness-closeout/170-04-SUMMARY.md",
+      "disposition": "exact PR #87 candidate, merge-ref, squash-main and required-CI receipts; documentation/tooling source only, no release or readiness decision."
+    },
+    {
+      "path": ".planning/milestones/v1.39-phases/162-whole-product-evidence-baseline/162-BASELINE.md",
+      "disposition": "canonical finite baseline; whole-file bytes pinned."
+    },
+    {
+      "path": ".planning/milestones/v1.39-phases/163-findings-and-bounded-follow-up/163-FINDINGS.md",
+      "disposition": "bounded findings source; whole-file bytes pinned."
+    },
+    {
+      "path": ".planning/milestones/v1.40-phases/167-dated-readiness-and-closeout/167-ASSESSMENT.md",
+      "disposition": "latest prior NOT READY source; whole-file bytes pinned."
+    },
+    {
+      "path": ".planning/reference/PRE-OPERATOR-UI-READINESS.md",
+      "disposition": "Live authority updated with issue #86 pointer above the byte-preserved Phase164 suffix."
+    },
+    {
+      "path": ".planning/phases/168-dependency-security-and-reliable-verification/168-DELIVERY.md",
+      "disposition": "four-graph history, refreshed against current advisories/source."
+    },
+    {
+      "path": ".planning/phases/169-library-fix-delivery-and-pr-triage/169-04-SUMMARY.md",
+      "disposition": "tenant/facet, local package and repair receipt source."
+    },
+    {
+      "path": ".planning/phases/169-library-fix-delivery-and-pr-triage/169-05-SUMMARY.md",
+      "disposition": "public-main integration and PR disposition source."
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "disposition": "current required/advisory workflow comparison."
+    },
+    {
+      "path": "scripts/ci/dependency_audit.exs",
+      "disposition": "archived-link: current public-main or Phase170 delivery-branch evidence path; not present in this planning-source checkout"
+    },
+    {
+      "path": "examples/scrypath_ecommerce/e2e/storefront.spec.ts",
+      "disposition": "current-main C-09 named test and run log."
+    },
+    {
+      "path": "examples/scrypath_ecommerce/e2e/operator.spec.ts",
+      "disposition": "current-main mounted diagnosis/swap tests and run log."
+    },
+    {
+      "path": "test/scrypath/live_operator_verification_test.exs",
+      "disposition": "bounded selected-ID repair source and oracle."
+    },
+    {
+      "path": "test/scripts/ci_monitor_test.exs",
+      "disposition": "archived-link: Plan02-owned candidate fixture file; not present in maintainer source root before delivery join."
+    },
+    {
+      "path": ".planning/phases/170-documentation-and-readiness-closeout/170-05-SUMMARY.md",
+      "disposition": "exact 0.3.14 Release Please candidate, user authorization and protected review blocker; publication remains blocked."
+    }
+  ],
+  "assumptions": [
+    {
+      "id": "EA-170-01",
+      "requirement": "DOC-03",
+      "category": "concurrency",
+      "probe": "Do serialized plan ownership and interruption detection define what happens to concurrent edits?",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Supplied spec-less assumption retained; deterministic shape tests do not resolve its semantic meaning."
+    },
+    {
+      "id": "EA-170-02",
+      "requirement": "GATE-05",
+      "category": "adjacency",
+      "probe": "When evidence boundaries are equal or just touch, how is adjacency treated?",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Supplied spec-less assumption retained; deterministic shape tests do not resolve its semantic meaning."
+    },
+    {
+      "id": "EA-170-03",
+      "requirement": "GATE-05",
+      "category": "empty",
+      "probe": "What is the result for empty, single-element, or null evidence input?",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Supplied spec-less assumption retained; deterministic shape tests do not resolve its semantic meaning."
+    },
+    {
+      "id": "EA-170-04",
+      "requirement": "GATE-05",
+      "category": "ordering",
+      "probe": "When evidence items compare equal, is output order specified and stable?",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Supplied spec-less assumption retained; deterministic shape tests do not resolve its semantic meaning."
+    },
+    {
+      "id": "EA-170-05",
+      "requirement": "CLOSE-04",
+      "category": "adjacency",
+      "probe": "When source/run/attempt/artifact identity boundaries are equal or just touch, how are they joined?",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Supplied spec-less assumption retained; deterministic shape tests do not resolve its semantic meaning."
+    },
+    {
+      "id": "EA-170-06",
+      "requirement": "CLOSE-04",
+      "category": "empty",
+      "probe": "What is the result for missing, empty, single-element, or null closeout identity input?",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Supplied spec-less assumption retained; deterministic shape tests do not resolve its semantic meaning."
+    },
+    {
+      "id": "EA-170-07",
+      "requirement": "CLOSE-04",
+      "category": "ordering",
+      "probe": "When multiple source/run/attempt/artifact records compare equal, is output order specified and stable?",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Supplied spec-less assumption retained; deterministic shape tests do not resolve its semantic meaning."
+    },
+    {
+      "id": "EA-167-01",
+      "requirement": "GATE-04",
+      "category": "adjacency",
+      "probe": "When two things are exactly equal or just touch, do they merge, collide, or separate?",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Carried forward unchanged from Phase167 source audit; not reopened or resolved."
+    },
+    {
+      "id": "EA-167-02",
+      "requirement": "GATE-04",
+      "category": "empty",
+      "probe": "What is the result for empty, single-element, or null input?",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Carried forward unchanged from Phase167 source audit; not reopened or resolved."
+    },
+    {
+      "id": "EA-167-03",
+      "requirement": "GATE-04",
+      "category": "ordering",
+      "probe": "When elements compare equal, is output order specified and stable?",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Carried forward unchanged from Phase167 source audit; not reopened or resolved."
+    },
+    {
+      "id": "EA-167-04",
+      "requirement": "CLOSE-03",
+      "category": "unclassified",
+      "probe": "unclassified \u2014 review manually",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Carried forward unchanged from Phase167 source audit; not reopened or resolved."
+    },
+    {
+      "id": "EA-167-05",
+      "requirement": "VERIFY-02",
+      "category": "adjacency",
+      "probe": "When two things are exactly equal or just touch, do they merge, collide, or separate?",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Carried forward unchanged from Phase167 source audit; not reopened or resolved."
+    },
+    {
+      "id": "EA-167-06",
+      "requirement": "VERIFY-02",
+      "category": "empty",
+      "probe": "What is the result for empty, single-element, or null input?",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Carried forward unchanged from Phase167 source audit; not reopened or resolved."
+    },
+    {
+      "id": "EA-167-07",
+      "requirement": "VERIFY-02",
+      "category": "ordering",
+      "probe": "When elements compare equal, is output order specified and stable?",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Carried forward unchanged from Phase167 source audit; not reopened or resolved."
+    },
+    {
+      "id": "EA-166-01",
+      "requirement": "HOST-01",
+      "category": "unclassified",
+      "probe": "HOST-01 unclassified probe from Phase166 source audit",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Descriptor-less Phase166 probe remains unresolved; bounded example proof does not define its general semantics."
+    },
+    {
+      "id": "EA-166-02",
+      "requirement": "HOST-02",
+      "category": "unclassified",
+      "probe": "HOST-02 unclassified probe from Phase166 source audit",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Descriptor-less Phase166 probe remains unresolved; bounded example proof does not define its general semantics."
+    },
+    {
+      "id": "EA-166-03",
+      "requirement": "PKG-04",
+      "category": "unclassified",
+      "probe": "PKG-04 unclassified probe from Phase166 source audit",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Descriptor-less Phase166 probe remains unresolved; bounded example proof does not define its general semantics."
+    },
+    {
+      "id": "EA-166-04",
+      "requirement": "REPAIR-01",
+      "category": "boundary",
+      "probe": "REPAIR-01 boundary probe from Phase166 source audit",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Descriptor-less Phase166 probe remains unresolved; bounded example proof does not define its general semantics."
+    },
+    {
+      "id": "EA-166-05",
+      "requirement": "REPAIR-01",
+      "category": "adjacency",
+      "probe": "REPAIR-01 adjacency probe from Phase166 source audit",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Descriptor-less Phase166 probe remains unresolved; bounded example proof does not define its general semantics."
+    },
+    {
+      "id": "EA-166-06",
+      "requirement": "REPAIR-01",
+      "category": "empty",
+      "probe": "REPAIR-01 empty probe from Phase166 source audit",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Descriptor-less Phase166 probe remains unresolved; bounded example proof does not define its general semantics."
+    },
+    {
+      "id": "EA-166-07",
+      "requirement": "REPAIR-01",
+      "category": "ordering",
+      "probe": "REPAIR-01 ordering probe from Phase166 source audit",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Descriptor-less Phase166 probe remains unresolved; bounded example proof does not define its general semantics."
+    },
+    {
+      "id": "EA-166-08",
+      "requirement": "REPAIR-01",
+      "category": "precision",
+      "probe": "REPAIR-01 precision probe from Phase166 source audit",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Descriptor-less Phase166 probe remains unresolved; bounded example proof does not define its general semantics."
+    },
+    {
+      "id": "EA-166-09",
+      "requirement": "REPAIR-02",
+      "category": "unclassified",
+      "probe": "REPAIR-02 unclassified probe from Phase166 source audit",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Descriptor-less Phase166 probe remains unresolved; bounded example proof does not define its general semantics."
+    },
+    {
+      "id": "EA-166-10",
+      "requirement": "DELETE-01",
+      "category": "idempotency",
+      "probe": "DELETE-01 idempotency probe from Phase166 source audit",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Descriptor-less Phase166 probe remains unresolved; bounded example proof does not define its general semantics."
+    },
+    {
+      "id": "EA-166-11",
+      "requirement": "DELETE-01",
+      "category": "concurrency",
+      "probe": "DELETE-01 concurrency probe from Phase166 source audit",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Descriptor-less Phase166 probe remains unresolved; bounded example proof does not define its general semantics."
+    },
+    {
+      "id": "P-166-HOST-01",
+      "type": "prohibition",
+      "text": "Descriptor-less Phase166 prohibition; retained as recorded in the source audit.",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "No Phase170 evidence silently resolves or redefines this inherited prohibition."
+    },
+    {
+      "id": "P-166-HOST-02",
+      "type": "prohibition",
+      "text": "Descriptor-less Phase166 prohibition; retained as recorded in the source audit.",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "No Phase170 evidence silently resolves or redefines this inherited prohibition."
+    },
+    {
+      "id": "P-166-PKG-04",
+      "type": "prohibition",
+      "text": "Descriptor-less Phase166 prohibition; retained as recorded in the source audit.",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "No Phase170 evidence silently resolves or redefines this inherited prohibition."
+    },
+    {
+      "id": "P-166-REPAIR-01",
+      "type": "prohibition",
+      "text": "Descriptor-less Phase166 prohibition; retained as recorded in the source audit.",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "No Phase170 evidence silently resolves or redefines this inherited prohibition."
+    },
+    {
+      "id": "P-166-REPAIR-02",
+      "type": "prohibition",
+      "text": "Descriptor-less Phase166 prohibition; retained as recorded in the source audit.",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "No Phase170 evidence silently resolves or redefines this inherited prohibition."
+    },
+    {
+      "id": "P-166-DELETE-01",
+      "type": "prohibition",
+      "text": "Descriptor-less Phase166 prohibition; retained as recorded in the source audit.",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "No Phase170 evidence silently resolves or redefines this inherited prohibition."
+    },
+    {
+      "id": "P-170-DOC",
+      "type": "prohibition",
+      "text": "Consolidation must not erase first-hour context, meaningful operational caveats, or unique useful routes.",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Retained as an explicit Phase170 semantic constraint; structural validation does not resolve it."
+    },
+    {
+      "id": "P-170-AUTHORITY",
+      "type": "prohibition",
+      "text": "Green automation must not become semantic readiness, invented maintainer approval, or a second terminal authority.",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Retained as an explicit Phase170 semantic constraint; structural validation does not resolve it."
+    },
+    {
+      "id": "P-170-HISTORY",
+      "type": "prohibition",
+      "text": "A new assessment must not rewrite historical outcomes, silently expand the baseline, or turn READY into authorization for UI work.",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Retained as an explicit Phase170 semantic constraint; structural validation does not resolve it."
+    },
+    {
+      "id": "P-170-FINALITY",
+      "type": "prohibition",
+      "text": "Terminal success must not cause another tracked summary, state, audit or archive write after final attestation.",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Retained as an explicit Phase170 semantic constraint; structural validation does not resolve it."
+    }
+  ]
+}

@@ -1,0 +1,327 @@
+{
+  "schema": 1,
+  "source_sha": "50d5c12d36ec560525e245bcb992c40e5927854f",
+  "observed_at_utc": "2026-09-27T13:31:54Z",
+  "candidate_closeout": {
+    "authority": "github-actions-exact-sha",
+    "repository": "szTheory/scrypath",
+    "workflow": "ci.yml",
+    "run_id": 36321613553,
+    "run_attempt": 1,
+    "event": "workflow_dispatch",
+    "head_sha": "50d5c12d36ec560525e245bcb992c40e5927854f",
+    "run_url": "https://github.com/szTheory/scrypath/actions/runs/36321613553",
+    "required_jobs_and_closeout": "The five required jobs, coverage (advisory), and closeout-attestation concluded success.",
+    "coverage_artifact": {
+      "id": 10931758825,
+      "digest": "sha256:1c58c41b3d4458e81e407575f5ceb674eef8faa3975e8ca1790d530a36defabd",
+      "expires_at": "2026-10-04T13:13:31Z"
+    },
+    "closeout_artifact": {
+      "id": 10932638177,
+      "digest": "sha256:df7a338660709c8acd9d11365a7f69dc95a74549b34b52ccbc4c71c71f60a132",
+      "expires_at": "2026-10-04T13:17:02Z"
+    }
+  },
+  "executions": [
+    {
+      "id": "host-path",
+      "scenario": "authorized tenant search and facet values",
+      "command": "ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 PGPORT=55433 SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700 SCRYPATH_EXAMPLE_INTEGRATION=1 HEX_HOME=/private/tmp/scrypath-phase166-hex MIX_HOME=/private/tmp/scrypath-phase166-mix mix verify.phoenix_example",
+      "result": "pass",
+      "skipped": false,
+      "source_sha": "50d5c12d36ec560525e245bcb992c40e5927854f",
+      "run_id": 36321613553,
+      "job_id": 108626420623,
+      "run_attempt": 1,
+      "job_conclusion": "success",
+      "service_tuple": {
+        "hosted": {
+          "postgres_image": "postgres:16-alpine",
+          "meilisearch_image": "getmeili/meilisearch:v1.15"
+        },
+        "local": {
+          "postgres_image": "postgres:16-alpine",
+          "meilisearch_image": "getmeili/meilisearch:v1.15",
+          "meilisearch_pkg_version": "1.15.2"
+        }
+      },
+      "runtime_versions": {
+        "hosted": "Elixir 1.19.0 / OTP 28.1",
+        "local": "Elixir 1.19.5 / OTP 28.5"
+      },
+      "lock_sha256": "3bd129e6b7128a34dae48c5ca3691f71a0166cb41a7d09919765d9c4487095d6",
+      "elapsed_ms": 505,
+      "log_reference": "https://github.com/szTheory/scrypath/actions/runs/36321613553/job/108626420623",
+      "log_excerpt_id": "phoenix-hosted-job",
+      "observed": {
+        "index": "phx_tenant_121603_post",
+        "setup_task_ids": [14, 15],
+        "write_task_ids": [16, 17, 18],
+        "tenant_a": {
+          "raw_permitted_ids": ["6"],
+          "hydrated_record_ids": ["6"],
+          "total_hits": 1,
+          "category_buckets": [["phone-a", 1]],
+          "facet_value_buckets": [["phone-a", 1]]
+        },
+        "tenant_b": {
+          "raw_permitted_ids": ["8"],
+          "hydrated_record_ids": ["8"],
+          "total_hits": 1,
+          "category_buckets": [["phone-b-forbidden", 1]],
+          "facet_value_buckets": [["phone-b-forbidden", 1]],
+          "unique_marker_ids": ["8"]
+        },
+        "test_suite": "16 tests, 0 failures"
+      },
+      "local_execution": {
+        "result": "pass",
+        "index": "phx_tenant_328_post",
+        "elapsed_ms": 491,
+        "setup_task_ids": [172, 173],
+        "write_task_ids": [174, 175, 176],
+        "tenant_a_raw_and_hydrated_ids": ["51"],
+        "tenant_b_raw_and_hydrated_ids": ["53"],
+        "test_suite": "16 tests, 0 failures"
+      }
+    },
+    {
+      "id": "host-package",
+      "scenario": "authorized tenant search and facet values",
+      "command": "ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 PGPORT=55433 SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700 SCRYPATH_EXAMPLE_INTEGRATION=1 HEX_HOME=/private/tmp/scrypath-phase166-hex MIX_HOME=/private/tmp/scrypath-phase166-mix mix verify.phoenix_example --package",
+      "result": "pass",
+      "skipped": false,
+      "source_sha": "50d5c12d36ec560525e245bcb992c40e5927854f",
+      "run_id": 36321613553,
+      "job_id": 108626420623,
+      "run_attempt": 1,
+      "job_conclusion": "success",
+      "service_tuple": {
+        "hosted": {
+          "postgres_image": "postgres:16-alpine",
+          "meilisearch_image": "getmeili/meilisearch:v1.15"
+        },
+        "local": {
+          "postgres_image": "postgres:16-alpine",
+          "meilisearch_image": "getmeili/meilisearch:v1.15",
+          "meilisearch_pkg_version": "1.15.2"
+        }
+      },
+      "runtime_versions": {
+        "hosted": "Elixir 1.19.0 / OTP 28.1",
+        "local": "Elixir 1.19.5 / OTP 28.5"
+      },
+      "lock_sha256": "eb1f10ec522ec3d79f9e78ef625103840ac11c3e81582fd63db6d0eda3523991",
+      "elapsed_ms": 515,
+      "log_reference": "https://github.com/szTheory/scrypath/actions/runs/36321613553/job/108626420623",
+      "log_excerpt_id": "phoenix-hosted-job",
+      "package_provenance": {
+        "kind": "freshly built local unpacked Hex artifact consumed through a temporary tagged Git dependency",
+        "version_tag": "v0.3.13",
+        "local_artifact_dependency_url": "file:///var/folders/f3/f0clj9rd2zb85n2c849wcsrc0000gn/T/scrypath-phoenix-package-1/artifact",
+        "local_staged_lock_sha256": "eb1f10ec522ec3d79f9e78ef625103840ac11c3e81582fd63db6d0eda3523991",
+        "local_staged_git_revision": "206b9abe64732d80e99c9fe8b128ca27a453cb4c",
+        "build_source_sha": "50d5c12d36ec560525e245bcb992c40e5927854f",
+        "hosted_log_confirms_artifact_tag_resolution_compile_and_integration_completion": true,
+        "public_registry_installation_claimed": false
+      },
+      "observed": {
+        "index": "phx_tenant_4995_post",
+        "setup_task_ids": [34, 35],
+        "write_task_ids": [36, 37, 38],
+        "tenant_a": {
+          "raw_permitted_ids": ["16"],
+          "hydrated_record_ids": ["16"],
+          "total_hits": 1,
+          "category_buckets": [["phone-a", 1]],
+          "facet_value_buckets": [["phone-a", 1]]
+        },
+        "tenant_b": {
+          "raw_permitted_ids": ["18"],
+          "hydrated_record_ids": ["18"],
+          "total_hits": 1,
+          "category_buckets": [["phone-b-forbidden", 1]],
+          "facet_value_buckets": [["phone-b-forbidden", 1]],
+          "unique_marker_ids": ["18"]
+        },
+        "test_suite": "16 tests, 0 failures"
+      },
+      "local_execution": {
+        "result": "pass",
+        "index": "phx_tenant_583_post",
+        "elapsed_ms": 487,
+        "setup_task_ids": [277, 278],
+        "write_task_ids": [279, 280, 281],
+        "tenant_a_raw_and_hydrated_ids": ["81"],
+        "tenant_b_raw_and_hydrated_ids": ["83"],
+        "test_suite": "16 tests, 0 failures"
+      }
+    },
+    {
+      "id": "root-repair",
+      "scenario": "bounded manual repair restores the selected raw document",
+      "command": "ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 SCRYPATH_INTEGRATION=1 SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700 HEX_HOME=/private/tmp/scrypath-phase166-hex MIX_HOME=/private/tmp/scrypath-phase166-mix mix verify.backend",
+      "result": "pass",
+      "skipped": false,
+      "source_sha": "50d5c12d36ec560525e245bcb992c40e5927854f",
+      "run_id": 36321613553,
+      "job_id": 108626420717,
+      "run_attempt": 1,
+      "job_conclusion": "success",
+      "service_tuple": {
+        "hosted_meilisearch_image": "getmeili/meilisearch:v1.15",
+        "hosted_repository": "SQLite IntegrationRepo",
+        "local_meilisearch_image": "getmeili/meilisearch:v1.15",
+        "local_meilisearch_pkg_version": "1.15.2",
+        "local_repository": "SQLite IntegrationRepo"
+      },
+      "runtime_versions": {
+        "hosted": "Elixir 1.19.0 / OTP 28.1",
+        "local": "Elixir 1.19.5 / OTP 28.5"
+      },
+      "lock_sha256": "d46dde70f5b5433a53c9456d86b18ea6225f178ec6d5bd35cfb4ccdd45e4bf10",
+      "elapsed_ms": 432,
+      "log_reference": "https://github.com/szTheory/scrypath/actions/runs/36321613553/job/108626420717",
+      "log_excerpt_id": "backend-hosted-job",
+      "observed": {
+        "index": "scrypath-op-5154_queryable_post",
+        "selected_ids": [166000040],
+        "first_task": {"state": "succeeded", "uid": 31, "index": "scrypath-op-5154_queryable_post"},
+        "repeat_task": {"state": "succeeded", "uid": 32, "index": "scrypath-op-5154_queryable_post"},
+        "raw_target": {
+          "id": 166000040,
+          "projection": {
+            "body": "target projection for phase166repair3",
+            "id": 166000040,
+            "title": "Phase 166 phase166repair3 target"
+          }
+        },
+        "controls": {"source_only_id": 166000041, "visible_id": 166000042},
+        "no_write_observation": {"read_requests": 3, "mutation_requests": 0},
+        "test_suite": "4 tests, 0 failures"
+      },
+      "local_execution": {
+        "result": "pass",
+        "index": "scrypath-op-198_queryable_post",
+        "elapsed_ms": 643,
+        "selected_ids": [166000020],
+        "first_task": {"state": "succeeded", "uid": 229},
+        "repeat_task": {"state": "succeeded", "uid": 230},
+        "raw_target": {
+          "id": 166000020,
+          "projection": {
+            "body": "target projection for phase166repair1",
+            "id": 166000020,
+            "title": "Phase 166 phase166repair1 target"
+          }
+        },
+        "controls": {"source_only_id": 166000021, "visible_id": 166000022},
+        "no_write_observation": {"read_requests": 3, "mutation_requests": 0},
+        "test_suite": "4 tests, 0 failures"
+      }
+    }
+  ],
+  "log_excerpts": {
+    "phoenix-hosted-job": {
+      "sha256": "1a75b02280ad5e1dc8806d9f33ccb671f8ab20ddcda0bdfdde28c206024e6600",
+      "selection": "ANSI-stripped hosted job log lines containing the host marker, test counts, and each package proof PASS stage",
+      "lines": [
+        "2026-09-27T13:14:02.0559452Z ..........SCRYPATH_PHASE166_HOST {\"index\":\"phx_tenant_121603_post\",\"elapsed_ms\":505,\"scenario\":\"authorized tenant search and facet values\",\"setup_task_ids\":[14,15],\"write_task_ids\":[16,17,18],\"tenant_a_permitted_ids\":[\"6\"],\"tenant_a_total_hits\":1,\"tenant_a_categories\":[[\"phone-a\",1]],\"tenant_a_facet_values\":[[\"phone-a\",1]],\"tenant_b_permitted_ids\":[\"8\"],\"tenant_b_total_hits\":1,\"tenant_b_categories\":[[\"phone-b-forbidden\",1]],\"tenant_b_facet_values\":[[\"phone-b-forbidden\",1]],\"tenant_b_marker_ids\":[\"8\"]}",
+        "2026-09-27T13:14:02.0562377Z 16 tests, 0 failures",
+        "2026-09-27T13:14:02.5799594Z PASS package proof: service preflight",
+        "2026-09-27T13:14:03.1856004Z PASS package proof: artifact created and tagged v0.3.13",
+        "2026-09-27T13:14:05.4700391Z PASS package proof: staged dependencies resolve to file:///tmp/scrypath-phoenix-package-1/artifact at v0.3.13",
+        "2026-09-27T13:14:27.5518921Z PASS package proof: consumer compiled",
+        "2026-09-27T13:14:37.1583578Z ..........SCRYPATH_PHASE166_HOST {\"index\":\"phx_tenant_4995_post\",\"elapsed_ms\":515,\"scenario\":\"authorized tenant search and facet values\",\"setup_task_ids\":[34,35],\"write_task_ids\":[36,37,38],\"tenant_a_permitted_ids\":[\"16\"],\"tenant_a_total_hits\":1,\"tenant_a_categories\":[[\"phone-a\",1]],\"tenant_a_facet_values\":[[\"phone-a\",1]],\"tenant_b_permitted_ids\":[\"18\"],\"tenant_b_total_hits\":1,\"tenant_b_categories\":[[\"phone-b-forbidden\",1]],\"tenant_b_facet_values\":[[\"phone-b-forbidden\",1]],\"tenant_b_marker_ids\":[\"18\"]}",
+        "2026-09-27T13:14:37.1585551Z 16 tests, 0 failures",
+        "2026-09-27T13:14:37.1585840Z PASS package proof: integration scenarios completed"
+      ]
+    },
+    "backend-hosted-job": {
+      "sha256": "6b0945f9947460efa66ea186c92d77d0b9a62beab161c67383a0a7a2c88aa9a8",
+      "selection": "ANSI-stripped hosted job log lines containing the repair marker and completed integration test counts",
+      "lines": [
+        "2026-09-27T13:13:08.8024644Z 3 tests, 0 failures",
+        "2026-09-27T13:13:10.3630777Z SCRYPATH_PHASE166_REPAIR {\"index\":\"scrypath-op-5154_queryable_post\",\"selected_ids\":[166000040],\"first_task\":{\"state\":\"succeeded\",\"uid\":31},\"repeat_task\":{\"state\":\"succeeded\",\"uid\":32},\"scenario\":\"bounded manual repair restores the selected raw document\",\"raw_target\":{\"id\":166000040,\"projection\":{\"body\":\"target projection for phase166repair3\",\"id\":166000040,\"title\":\"Phase 166 phase166repair3 target\"}},\"controls\":{\"source_only_id\":166000041,\"visible_id\":166000042},\"no_write_observation\":{\"read_requests\":3,\"mutation_requests\":0},\"elapsed_ms\":432}",
+        "2026-09-27T13:13:10.4770497Z 4 tests, 0 failures"
+      ]
+    }
+  },
+  "delete_receipt": {
+    "receipt_source_sha": "dc400b2b57aec0ca6b0ef16c9477d266fd41a433",
+    "assessment_source_sha": "50d5c12d36ec560525e245bcb992c40e5927854f",
+    "relevant_paths": ["lib", "examples", "config", "test/support", ".github/workflows", "mix.exs", "mix.lock"],
+    "changed_paths": [
+      "examples/phoenix_meilisearch/README.md",
+      "examples/phoenix_meilisearch/lib/scrypath_demo/blog.ex",
+      "examples/phoenix_meilisearch/lib/scrypath_demo/blog/post.ex",
+      "examples/phoenix_meilisearch/priv/repo/migrations/20260927000000_add_host_memberships_and_post_tenants.exs",
+      "examples/phoenix_meilisearch/test/scrypath_demo/blog_tenant_search_test.exs",
+      "examples/phoenix_meilisearch/test/smoke/meilisearch_oban_stack_test.exs",
+      "examples/phoenix_meilisearch/test/smoke/meilisearch_related_inline_stack_test.exs",
+      "examples/phoenix_meilisearch/test/smoke/meilisearch_related_oban_stack_test.exs",
+      "examples/phoenix_meilisearch/test/smoke/meilisearch_stack_test.exs",
+      "examples/phoenix_meilisearch/test/smoke/meilisearch_tenant_stack_test.exs",
+      "examples/phoenix_meilisearch/test/support/meilisearch_test_index.ex",
+      "lib/scrypath/meilisearch/client.ex",
+      "lib/scrypath/meilisearch/query.ex",
+      "lib/scrypath/search/facet_values.ex",
+      "lib/scrypath/search/many.ex",
+      "lib/scrypath/search/single.ex"
+    ],
+    "changes": [
+      {"path": "examples/phoenix_meilisearch/README.md", "invalidates": false, "reason": "Documents only the separate Phoenix tenant example; it does not change the ecommerce host delete flow or search oracle."},
+      {"path": "examples/phoenix_meilisearch/lib/scrypath_demo/blog.ex", "invalidates": false, "reason": "Adds the isolated Phoenix demo's membership-backed search and hydration context; the C-09 receipt uses examples/scrypath_ecommerce."},
+      {"path": "examples/phoenix_meilisearch/lib/scrypath_demo/blog/post.ex", "invalidates": false, "reason": "Adds tenant/category projection declarations only to the independent Phoenix demo Post schema."},
+      {"path": "examples/phoenix_meilisearch/priv/repo/migrations/20260927000000_add_host_memberships_and_post_tenants.exs", "invalidates": false, "reason": "Adds tables and columns to the separate Phoenix demo database; it is not consumed by the ecommerce receipt."},
+      {"path": "examples/phoenix_meilisearch/test/scrypath_demo/blog_tenant_search_test.exs", "invalidates": false, "reason": "Tests synthetic membership policy in the separate Phoenix demo and is outside the ecommerce delete scenario."},
+      {"path": "examples/phoenix_meilisearch/test/smoke/meilisearch_oban_stack_test.exs", "invalidates": false, "reason": "Makes that demo smoke fixture create its index with primary key id explicitly; it does not alter ecommerce indexing or deletion."},
+      {"path": "examples/phoenix_meilisearch/test/smoke/meilisearch_related_inline_stack_test.exs", "invalidates": false, "reason": "Makes that demo related-data fixture declare primary key id explicitly; no ecommerce receipt dependency."},
+      {"path": "examples/phoenix_meilisearch/test/smoke/meilisearch_related_oban_stack_test.exs", "invalidates": false, "reason": "Makes that demo related Oban fixture declare primary key id explicitly; no ecommerce receipt dependency."},
+      {"path": "examples/phoenix_meilisearch/test/smoke/meilisearch_stack_test.exs", "invalidates": false, "reason": "Makes that demo smoke fixture declare primary key id explicitly; the change is test setup only."},
+      {"path": "examples/phoenix_meilisearch/test/smoke/meilisearch_tenant_stack_test.exs", "invalidates": false, "reason": "Adds the host tenant scenario in the independent Phoenix demo; it neither supplies nor changes the ecommerce hard-delete receipt."},
+      {"path": "examples/phoenix_meilisearch/test/support/meilisearch_test_index.ex", "invalidates": false, "reason": "Adds a test-only explicit-index-creation helper scoped to the Phoenix demo suite."},
+      {"path": "lib/scrypath/meilisearch/client.ex", "invalidates": false, "reason": "Changes filter rendering for the /facet-search client operation; the C-09 storefront oracle calls Scrypath.search and reads ordinary /search hits."},
+      {"path": "lib/scrypath/meilisearch/query.ex", "invalidates": false, "reason": "Adds a helper used by facet-search rendering; Query.to_payload for ordinary search is unchanged."},
+      {"path": "lib/scrypath/search/facet_values.ex", "invalidates": false, "reason": "Drops reserved tenant_scope from facet-value query options; the ecommerce delete scenario calls ordinary search and does not pass tenant_scope."},
+      {"path": "lib/scrypath/search/many.ex", "invalidates": false, "reason": "Drops reserved tenant_scope while building multi-search queries; the C-09 workflow is a single ordinary product search without that option."},
+      {"path": "lib/scrypath/search/single.ex", "invalidates": false, "reason": "Drops reserved tenant_scope while building single-search queries; the receipt passes an explicit filter and does not set tenant_scope."}
+    ],
+    "status": "reusable",
+    "bounded_claim": "In the source-backed ecommerce Phoenix/Ecto example, a previously searchable hard-deleted product is absent from raw tenant-scoped search hits after the explicit host delete and controlled persisted Oban work drain, while its sibling remains visible.",
+    "scenario_path": [
+      "Seed the known product and drain prior indexing work.",
+      "Require the unique fixture name to appear in tenant-scoped search before deletion.",
+      "Call the explicit host deletion endpoint, which deletes the source row and invokes Scrypath deletion configured for persisted Oban work.",
+      "Drain the queued delete work, then poll the same endpoint's raw result.hits until the target name is absent.",
+      "Load the storefront and require the sibling product to remain visible while the target is absent."
+    ],
+    "limits": [
+      "The claim is limited to the named ecommerce hard-delete Oban workflow and the exact historical source receipt.",
+      "The oracle uses a unique fixture name and raw result.hits after known presence; it has no separate source-row readback assertion and does not assert delete task UID correlation.",
+      "It does not prove package-backed deletion, inline/manual deletion, atomic source-delete/job-enqueue behavior, duplicate delivery idempotency, concurrency or recreation ordering, retries, restart recovery, production scheduling latency, soft deletes, arbitrary host policies, or all host applications."
+    ],
+    "historical_receipt": {
+      "run_id": 36257182675,
+      "job_id": 108446076619,
+      "artifact_id": 10910932671,
+      "artifact_digest": "sha256:7ee2a3ada62293f7c1ded409b426d0b739329fd863bbe6996d1986e5926ee49e",
+      "report_sha256": "e53352b3e15a70b861118041024ecf4b60f11eb2627ad0ddcbd76afc143439bf",
+      "scenario": "deleted products leave the visible search index",
+      "result": "passed",
+      "retry": 0,
+      "duration_ms": 1222,
+      "artifact_observations_inherited_from": ".planning/research/v1.40/C09-DELETE-VISIBILITY.md",
+      "artifact_downloaded_again_for_phase_166": false
+    },
+    "final_source_handoff": "This path comparison is against assessment_source_sha, not a future final tracking commit. Re-run the relevant-path comparison at the exact final phase SHA after the evidence/tracking commit; do not edit records solely to add that external closeout result. Phase 167 must reassess freshness at its own final assessment source."
+  },
+  "claim_limits": [
+    "Host evidence covers the named synthetic persisted-membership policy and deterministic tenant corpus in the Phoenix demo only.",
+    "Package evidence consumes a fresh local artifact; it is not a Hex publication or public-registry installation claim.",
+    "Root repair evidence covers the selected-ID manual repair with one fixed-source repeat and an empty-scope no-op; it does not establish general boundaries, concurrency, retries, or exactly-once behavior.",
+    "Postgres 16 and Meilisearch v1.15 are the host-example service tuple. The independent root repair fixture uses SQLite IntegrationRepo with live Meilisearch.",
+    "The evidence does not make a milestone readiness decision or change advisory CI policy."
+  ]
+}
