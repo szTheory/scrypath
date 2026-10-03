@@ -92,6 +92,65 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert html =~ ~s(href="#playbook-import")
   end
 
+  test "upload and paste controls have persistent labels and format help", %{conn: conn} do
+    {:ok, _view, html} = live(conn, ~p"/ops/playbooks")
+
+    assert html =~ "Import playbook file"
+    assert html =~ ~s(for="playbook-upload-file")
+    assert html =~ ~s(accept=".json")
+    assert html =~ ~s(max-file-size="256000") || html =~ "256,000 bytes"
+    assert html =~ ~s(for="playbook-paste-json")
+    assert html =~ "Playbook JSON"
+    assert html =~ "JSON only"
+  end
+
+  test "file dialogs expose unique names, contextual Cancel, and a successor target", %{conn: conn} do
+    dir =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath_ops_playbooks_dialog_#{:erlang.unique_integer([:positive])}"
+      )
+
+    :ok = File.mkdir_p!(dir)
+    :ok = File.write!(Path.join(dir, "one.json"), "{}\n")
+    :ok = File.write!(Path.join(dir, "two.json"), "{}\n")
+    previous = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
+
+    on_exit(fn ->
+      File.rm_rf(dir)
+
+      if previous == nil,
+        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
+        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, previous)
+    end)
+
+    {:ok, view, html} = live(conn, ~p"/ops/playbooks")
+    assert html =~ "one.json"
+    assert html =~ "two.json"
+
+    view
+    |> element("button[phx-click='rename_open'][phx-value-name='one.json']")
+    |> render_click()
+    html = render(view)
+    assert html =~ ~s(role="dialog")
+    assert html =~ ~s(aria-labelledby="rename-playbook-modal-title")
+    assert html =~ ~s(aria-describedby="rename-playbook-modal-description")
+    assert html =~ ~s(aria-label="Cancel rename")
+    assert html =~ ~s(for="rename-new-name-input")
+    assert html =~ ~s(data-ops-modal-initial-focus="#rename-new-name-input")
+
+    render_click(view, "rename_cancel", %{})
+    view
+    |> element("button[phx-click='request_delete'][phx-value-name='one.json']")
+    |> render_click()
+    html = render(view)
+    assert html =~ "This cannot be undone."
+    assert html =~ ~s(data-ops-modal-initial-focus="[data-ops-modal-cancel]")
+    assert html =~ ~s(data-ops-modal-successor="#playbook-primary-1")
+    assert html =~ ~s(aria-label="Cancel delete")
+  end
+
   test "paste import validates and shows preview marker", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
 
