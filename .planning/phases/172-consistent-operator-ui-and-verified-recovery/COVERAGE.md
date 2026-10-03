@@ -1,0 +1,1 @@
+No external API integration: Phase172 repairs the existing Phoenix operator UI and reuses the already-integrated Meilisearch/Oban deployment; its private read-only document observation completes that existing recovery proof without introducing a new integration product, SDK, public core API, backend or service.
