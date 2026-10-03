@@ -342,6 +342,7 @@
       if (this.timeoutTimer) {
         this.cancelTimeout();
       }
+      this.cancelRefEvent();
       this.ref = this.channel.socket.makeRef();
       this.refEvent = this.channel.replyEventName(this.ref);
       this.channel.on(this.refEvent, (payload) => {
@@ -923,7 +924,7 @@
       this.awaitingBatchAck = true;
       const next = offset + MAX_LONGPOLL_BATCH_SIZE;
       const batch = messages.slice(offset, next);
-      this.ajax("POST", { "Content-Type": "application/x-ndjson" }, batch.join("\n"), () => this.onerror("timeout"), (resp) => {
+      this.ajax("POST", { "Content-Type": "application/x-ndjson" }, batch.join("\n"), () => this.ontimeout(), (resp) => {
         if (!resp || resp.status !== 200) {
           this.awaitingBatchAck = false;
           this.onerror(resp && resp.status);
@@ -945,6 +946,7 @@
       this.readyState = SOCKET_STATES.closed;
       let opts = Object.assign({ code: 1e3, reason: void 0, wasClean: true }, { code, reason, wasClean });
       this.batchBuffer = [];
+      this.awaitingBatchAck = false;
       clearTimeout(this.currentBatchTimer);
       this.currentBatchTimer = null;
       if (typeof CloseEvent !== "undefined") {
@@ -1174,7 +1176,7 @@
         }
         this.teardown(() => this.connect());
       }, this.reconnectAfterMs);
-      this.authToken = opts.authToken;
+      this.authToken = opts.authToken && closure(opts.authToken);
     }
     /**
      * Returns the LongPoll transport reference
@@ -1365,7 +1367,7 @@
       this.closeWasClean = false;
       let protocols = void 0;
       if (this.authToken) {
-        protocols = ["phoenix", `${AUTH_TOKEN_PREFIX}${btoa(this.authToken).replace(/=/g, "")}`];
+        protocols = ["phoenix", `${AUTH_TOKEN_PREFIX}${btoa(this.authToken()).replace(/=/g, "")}`];
       }
       this.conn = new this.transport(this.endPointURL(), protocols);
       this.conn.binaryType = this.binaryType;
@@ -1450,7 +1452,7 @@
         if (this.hasLogger()) {
           this.log("transport", "heartbeat timeout. Attempting to re-establish connection");
         }
-        this.triggerChanError();
+        this.triggerChanError("heartbeat_timeout");
         this.closeWasClean = false;
         this.teardown(() => this.reconnectTimer.scheduleTimeout(), WS_CLOSE_NORMAL, "heartbeat timeout");
       }
@@ -1513,7 +1515,7 @@
       };
       let closeCode = event && event.code;
       if (this.hasLogger()) this.log("transport", "close", event);
-      this.triggerChanError();
+      this.triggerChanError("connection_closed");
       this.clearHeartbeats();
       if (!this.closeWasClean && closeCode !== 1e3) {
         this.reconnectTimer.scheduleTimeout();
@@ -1531,16 +1533,16 @@
         callback(error, transportBefore, establishedBefore);
       });
       if (transportBefore === this.transport || establishedBefore > 0) {
-        this.triggerChanError();
+        this.triggerChanError("connection_error");
       }
     }
     /**
      * @private
      */
-    triggerChanError() {
+    triggerChanError(reason) {
       this.channels.forEach((channel) => {
         if (!(channel.isErrored() || channel.isLeaving() || channel.isClosed())) {
-          channel.trigger(CHANNEL_EVENTS.error);
+          channel.trigger(CHANNEL_EVENTS.error, { source: "transport", reason });
         }
       });
     }
@@ -2287,7 +2289,9 @@
           if (this.once(el, "bind-debounce")) {
             el.addEventListener("blur", () => {
               clearTimeout(this.private(el, THROTTLED));
-              this.triggerCycle(el, DEBOUNCE_TRIGGER);
+              if (asyncFilter()) {
+                this.triggerCycle(el, DEBOUNCE_TRIGGER);
+              }
             });
           }
       }
@@ -4377,7 +4381,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
     transitionPendingRemoves() {
       const { pendingRemoves, liveSocket: liveSocket2 } = this;
       if (pendingRemoves.length > 0) {
-        liveSocket2.transitionRemoves(pendingRemoves, () => {
+        liveSocket2.transitionRemoves(pendingRemoves, this.view, () => {
           pendingRemoves.forEach((el) => {
             const child = dom_default.firstPhxChild(el);
             if (child) {
@@ -6059,6 +6063,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       if (container) {
         const [tag, attrs] = container;
         this.el = dom_default.replaceRootContainer(this.el, tag, attrs);
+        dom_default.putPrivate(this.el, "view", this);
       }
       this.childJoins = 0;
       this.joinPending = true;
@@ -6141,6 +6146,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
     }
     attachTrueDocEl() {
       this.el = dom_default.byId(this.id);
+      dom_default.putPrivate(this.el, "view", this);
       this.el.setAttribute(PHX_ROOT_ID, this.root.id);
     }
     // this is invoked for dead and live views, so we must filter by
@@ -6324,6 +6330,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       rootEl.setAttribute(PHX_SESSION, this.getSession());
       rootEl.setAttribute(PHX_STATIC, this.getStatic());
       rootEl.setAttribute(PHX_PARENT_ID, this.parent ? this.parent.id : null);
+      dom_default.putPrivate(rootEl, "view", this);
       const formsToRecover = (
         // we go over all forms in the new DOM; because this is only the HTML for the current
         // view, we can be sure that all forms are owned by this view:
@@ -7601,7 +7608,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
     }
     // public
     version() {
-      return "1.1.31";
+      return "1.1.33";
     }
     isProfileEnabled() {
       return this.sessionStorage.getItem(PHX_LV_PROFILE) === "true";
@@ -7880,11 +7887,12 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
         `[${this.binding("remove")}]`
       ).filter((el) => !dom_default.isChildOfAny(el, stickies));
       const newMainEl = dom_default.cloneNode(this.outgoingMainEl, "");
-      this.main.showLoader(this.loaderTimeout);
-      this.main.destroy();
+      const oldMainView = this.main;
+      oldMainView.showLoader(this.loaderTimeout);
+      oldMainView.destroy();
       this.main = this.newRootView(newMainEl, flash, liveReferer);
       this.main.setRedirect(href);
-      this.transitionRemoves(removeEls);
+      this.transitionRemoves(removeEls, oldMainView);
       this.main.join((joinCount, onDone) => {
         if (joinCount === 1 && this.commitPendingLink(linkRef)) {
           this.requestDOMUpdate(() => {
@@ -7898,7 +7906,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
         }
       });
     }
-    transitionRemoves(elements, callback) {
+    transitionRemoves(elements, view, callback) {
       const removeAttr = this.binding("remove");
       const silenceEvents = (e) => {
         e.preventDefault();
@@ -7908,7 +7916,8 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
         for (const event of this.boundEventNames) {
           el.addEventListener(event, silenceEvents, true);
         }
-        this.execJS(el, el.getAttribute(removeAttr), "remove");
+        const e = new CustomEvent("phx:exec", { detail: { sourceElement: el } });
+        js_default.exec(e, "remove", el.getAttribute(removeAttr), view, el);
       });
       this.requestDOMUpdate(() => {
         elements.forEach((el) => {
@@ -7931,7 +7940,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       let view;
       const viewEl = dom_default.closestViewEl(childEl);
       if (viewEl) {
-        view = this.getViewByEl(viewEl);
+        view = dom_default.private(viewEl, "view");
       } else {
         if (!childEl.isConnected) {
           return null;
@@ -8642,6 +8651,12 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
   // js/app.js
   var import_topbar = __toESM(require_topbar());
   var csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
+  var opsModalPendingTrigger = null;
+  var activeOpsModal = null;
+  document.addEventListener("click", (e) => {
+    const trigger = e.target instanceof Element ? e.target.closest("[data-ops-modal-trigger]") : null;
+    if (trigger) opsModalPendingTrigger = trigger;
+  }, true);
   var CommandPalette = {
     mounted() {
       this.cmdk = this.el.querySelector("#ops-cmdk");
@@ -8653,6 +8668,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       this.activeIndex = -1;
       this.previousFocus = null;
       this.onKeydown = (e) => this.handleKeydown(e);
+      this.onModalOverlayOpen = () => this.closeForModal();
       this.onCmdkKeydown = (e) => this.overlayKeydown(e, this.cmdk);
       this.onSheetKeydown = (e) => this.overlayKeydown(e, this.sheet);
       this.onCommandOpenClick = (e) => {
@@ -8662,6 +8678,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
         this.open();
       };
       window.addEventListener("keydown", this.onKeydown);
+      document.addEventListener("ops:modal-overlay-open", this.onModalOverlayOpen);
       document.addEventListener("click", this.onCommandOpenClick);
       this.cmdk.addEventListener("keydown", this.onCmdkKeydown);
       this.sheet.addEventListener("keydown", this.onSheetKeydown);
@@ -8672,6 +8689,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
     },
     destroyed() {
       window.removeEventListener("keydown", this.onKeydown);
+      document.removeEventListener("ops:modal-overlay-open", this.onModalOverlayOpen);
       document.removeEventListener("click", this.onCommandOpenClick);
       this.cmdk.removeEventListener("keydown", this.onCmdkKeydown);
       this.sheet.removeEventListener("keydown", this.onSheetKeydown);
@@ -8739,6 +8757,13 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       if (!this.sheetOpen()) return;
       this.dismiss(this.sheet);
       if (restoreFocus) this.restoreFocus();
+    },
+    closeForModal() {
+      this.cancelDismiss(this.cmdk);
+      this.cancelDismiss(this.sheet);
+      this.cmdk.setAttribute("hidden", "");
+      this.sheet.setAttribute("hidden", "");
+      this.setActive(-1);
     },
     // A1 exit beat: play the crisp --ease-ops-exit dismissal (`.ops-cmdk--closing`, ~120ms)
     // before hiding, so close feels as intentional as open. Behavior is unchanged — the panel
@@ -8872,6 +8897,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       this.closeTimer = null;
       this.desktopQuery = window.matchMedia("(min-width: 1280px)");
       this.onKeydown = (e) => this.handleKeydown(e);
+      this.onModalOverlayOpen = () => this.closeForModal();
       this.onDesktopChange = () => {
         if (this.desktopQuery.matches) this.close({ restoreFocus: false });
       };
@@ -8879,10 +8905,12 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       this.closers.forEach((el) => el.addEventListener("click", () => this.close()));
       this.links.forEach((el) => el.addEventListener("click", () => this.close({ restoreFocus: false })));
       window.addEventListener("keydown", this.onKeydown);
+      document.addEventListener("ops:modal-overlay-open", this.onModalOverlayOpen);
       this.desktopQuery.addEventListener("change", this.onDesktopChange);
     },
     destroyed() {
       window.removeEventListener("keydown", this.onKeydown);
+      document.removeEventListener("ops:modal-overlay-open", this.onModalOverlayOpen);
       this.desktopQuery.removeEventListener("change", this.onDesktopChange);
       document.body.classList.remove("ops-nav-drawer-open");
     },
@@ -8915,6 +8943,15 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
         this.closeTimer = null;
         if (restoreFocus) this.restoreFocus();
       }, 180);
+    },
+    closeForModal() {
+      if (this.closeTimer) {
+        window.clearTimeout(this.closeTimer);
+        this.closeTimer = null;
+      }
+      if (this.drawer) this.drawer.setAttribute("hidden", "");
+      document.body.classList.remove("ops-nav-drawer-open");
+      this.openers.forEach((el) => el.setAttribute("aria-expanded", "false"));
     },
     handleKeydown(e) {
       if (!this.isOpen()) return;
@@ -8970,10 +9007,138 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       }
     }
   };
+  var OpsModal = {
+    mounted() {
+      const pending = opsModalPendingTrigger;
+      this.returnTarget = pending && pending.isConnected ? pending : document.activeElement;
+      opsModalPendingTrigger = null;
+      this.inerted = [];
+      this.onKeydown = (e) => this.handleKeydown(e);
+      this.onModalOverlayOpen = () => {
+        if (activeOpsModal && activeOpsModal !== this) activeOpsModal.closeImmediately();
+        activeOpsModal = this;
+      };
+      document.addEventListener("ops:modal-overlay-open", this.onModalOverlayOpen);
+      document.dispatchEvent(new CustomEvent("ops:modal-overlay-open"));
+      document.addEventListener("keydown", this.onKeydown, true);
+      this.inertBackground();
+      this.focusInitial();
+    },
+    updated() {
+      if (!this.el.contains(document.activeElement)) this.focusInitial();
+    },
+    destroyed() {
+      document.removeEventListener("keydown", this.onKeydown, true);
+      document.removeEventListener("ops:modal-overlay-open", this.onModalOverlayOpen);
+      this.restoreBackground();
+      if (activeOpsModal === this) activeOpsModal = null;
+      this.restoreFocus();
+    },
+    focusableElements() {
+      const selector = [
+        "a[href]:not([tabindex='-1'])",
+        "button:not([disabled]):not([tabindex='-1'])",
+        "input:not([disabled]):not([type='hidden']):not([tabindex='-1'])",
+        "select:not([disabled]):not([tabindex='-1'])",
+        "textarea:not([disabled]):not([tabindex='-1'])",
+        "[tabindex]:not([tabindex='-1'])"
+      ].join(",");
+      return Array.from(this.el.querySelectorAll(selector)).filter((el) => {
+        return !el.closest("[hidden]") && el.getAttribute("aria-hidden") !== "true" && !el.matches(":disabled") && el.getClientRects().length > 0;
+      });
+    },
+    focusInitial() {
+      const selector = this.el.dataset.opsModalInitialFocus;
+      let target = null;
+      try {
+        target = selector ? this.el.querySelector(selector) : null;
+      } catch (_error) {
+        target = null;
+      }
+      target = target && !target.matches(":disabled") ? target : null;
+      target = target || this.focusableElements()[0] || this.el.querySelector(".modal-box") || this.el;
+      target.focus({ preventScroll: true });
+    },
+    handleKeydown(e) {
+      if (activeOpsModal !== this) return;
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        this.close();
+        return;
+      }
+      if (e.key === "Tab") {
+        this.trapFocus(e);
+      }
+      e.stopImmediatePropagation();
+    },
+    trapFocus(e) {
+      const focusables = this.focusableElements();
+      if (!focusables.length) {
+        e.preventDefault();
+        this.focusInitial();
+        return;
+      }
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (!this.el.contains(document.activeElement)) {
+        e.preventDefault();
+        first.focus({ preventScroll: true });
+      } else if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus({ preventScroll: true });
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus({ preventScroll: true });
+      }
+    },
+    close() {
+      const event = this.el.dataset.opsModalCancelEvent;
+      if (event) this.pushEvent(event, {});
+    },
+    restoreFocus() {
+      const target = this.returnTarget && this.returnTarget.isConnected ? this.returnTarget : this.querySuccessor();
+      if (target && typeof target.focus === "function") target.focus({ preventScroll: true });
+      this.returnTarget = null;
+    },
+    inertBackground() {
+      let branch = this.el;
+      while (branch.parentElement) {
+        const parent = branch.parentElement;
+        for (const sibling of parent.children) {
+          if (sibling === branch) continue;
+          this.inerted.push({ element: sibling, inert: sibling.inert });
+          sibling.inert = true;
+        }
+        if (parent === document.body) break;
+        branch = parent;
+      }
+    },
+    restoreBackground() {
+      this.inerted.forEach(({ element, inert }) => {
+        if (element.isConnected) element.inert = inert;
+      });
+      this.inerted = [];
+    },
+    querySuccessor() {
+      const selector = this.el.dataset.opsModalSuccessor;
+      if (!selector) return null;
+      try {
+        return document.querySelector(selector);
+      } catch (_error) {
+        return null;
+      }
+    },
+    closeImmediately() {
+      this.el.setAttribute("hidden", "");
+      document.removeEventListener("keydown", this.onKeydown, true);
+      this.restoreBackground();
+    }
+  };
   var liveSocket = new LiveSocket2("/live", Socket, {
     longPollFallbackMs: 2500,
     params: { _csrf_token: csrfToken },
-    hooks: { ...hooks, CommandPalette, OpsNavDrawer }
+    hooks: { ...hooks, CommandPalette, OpsNavDrawer, OpsModal }
   });
   import_topbar.default.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" });
   window.addEventListener("phx:page-loading-start", (_info) => import_topbar.default.show(300));

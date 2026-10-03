@@ -27,6 +27,16 @@ import topbar from "../vendor/topbar"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 
+let opsModalPendingTrigger = null
+let activeOpsModal = null
+
+document.addEventListener("click", e => {
+  const trigger = e.target instanceof Element
+    ? e.target.closest("[data-ops-modal-trigger]")
+    : null
+  if (trigger) opsModalPendingTrigger = trigger
+}, true)
+
 // Operator command palette (⌘K), cheat-sheet (?), and `r`-to-refresh. Pure
 // client-side: items are live-navigation links, so no server event is needed.
 const CommandPalette = {
@@ -41,6 +51,7 @@ const CommandPalette = {
     this.previousFocus = null
 
     this.onKeydown = e => this.handleKeydown(e)
+    this.onModalOverlayOpen = () => this.closeForModal()
     this.onCmdkKeydown = e => this.overlayKeydown(e, this.cmdk)
     this.onSheetKeydown = e => this.overlayKeydown(e, this.sheet)
     this.onCommandOpenClick = e => {
@@ -53,6 +64,7 @@ const CommandPalette = {
       this.open()
     }
     window.addEventListener("keydown", this.onKeydown)
+    document.addEventListener("ops:modal-overlay-open", this.onModalOverlayOpen)
     document.addEventListener("click", this.onCommandOpenClick)
     this.cmdk.addEventListener("keydown", this.onCmdkKeydown)
     this.sheet.addEventListener("keydown", this.onSheetKeydown)
@@ -66,6 +78,7 @@ const CommandPalette = {
   },
   destroyed() {
     window.removeEventListener("keydown", this.onKeydown)
+    document.removeEventListener("ops:modal-overlay-open", this.onModalOverlayOpen)
     document.removeEventListener("click", this.onCommandOpenClick)
     this.cmdk.removeEventListener("keydown", this.onCmdkKeydown)
     this.sheet.removeEventListener("keydown", this.onSheetKeydown)
@@ -120,6 +133,13 @@ const CommandPalette = {
     if (!this.sheetOpen()) return
     this.dismiss(this.sheet)
     if (restoreFocus) this.restoreFocus()
+  },
+  closeForModal() {
+    this.cancelDismiss(this.cmdk)
+    this.cancelDismiss(this.sheet)
+    this.cmdk.setAttribute("hidden", "")
+    this.sheet.setAttribute("hidden", "")
+    this.setActive(-1)
   },
   // A1 exit beat: play the crisp --ease-ops-exit dismissal (`.ops-cmdk--closing`, ~120ms)
   // before hiding, so close feels as intentional as open. Behavior is unchanged — the panel
@@ -259,6 +279,7 @@ const OpsNavDrawer = {
     this.desktopQuery = window.matchMedia("(min-width: 1280px)")
 
     this.onKeydown = e => this.handleKeydown(e)
+    this.onModalOverlayOpen = () => this.closeForModal()
     this.onDesktopChange = () => {
       if (this.desktopQuery.matches) this.close({restoreFocus: false})
     }
@@ -267,10 +288,12 @@ const OpsNavDrawer = {
     this.closers.forEach(el => el.addEventListener("click", () => this.close()))
     this.links.forEach(el => el.addEventListener("click", () => this.close({restoreFocus: false})))
     window.addEventListener("keydown", this.onKeydown)
+    document.addEventListener("ops:modal-overlay-open", this.onModalOverlayOpen)
     this.desktopQuery.addEventListener("change", this.onDesktopChange)
   },
   destroyed() {
     window.removeEventListener("keydown", this.onKeydown)
+    document.removeEventListener("ops:modal-overlay-open", this.onModalOverlayOpen)
     this.desktopQuery.removeEventListener("change", this.onDesktopChange)
     document.body.classList.remove("ops-nav-drawer-open")
   },
@@ -307,6 +330,15 @@ const OpsNavDrawer = {
       this.closeTimer = null
       if (restoreFocus) this.restoreFocus()
     }, 180)
+  },
+  closeForModal() {
+    if (this.closeTimer) {
+      window.clearTimeout(this.closeTimer)
+      this.closeTimer = null
+    }
+    if (this.drawer) this.drawer.setAttribute("hidden", "")
+    document.body.classList.remove("ops-nav-drawer-open")
+    this.openers.forEach(el => el.setAttribute("aria-expanded", "false"))
   },
   handleKeydown(e) {
     if (!this.isOpen()) return
@@ -368,10 +400,150 @@ const OpsNavDrawer = {
   },
 }
 
+const OpsModal = {
+  mounted() {
+    const pending = opsModalPendingTrigger
+    this.returnTarget = pending && pending.isConnected ? pending : document.activeElement
+    opsModalPendingTrigger = null
+    this.inerted = []
+    this.onKeydown = e => this.handleKeydown(e)
+    this.onModalOverlayOpen = () => {
+      if (activeOpsModal && activeOpsModal !== this) activeOpsModal.closeImmediately()
+      activeOpsModal = this
+    }
+
+    document.addEventListener("ops:modal-overlay-open", this.onModalOverlayOpen)
+    document.dispatchEvent(new CustomEvent("ops:modal-overlay-open"))
+    document.addEventListener("keydown", this.onKeydown, true)
+    this.inertBackground()
+    this.focusInitial()
+  },
+  updated() {
+    if (!this.el.contains(document.activeElement)) this.focusInitial()
+  },
+  destroyed() {
+    document.removeEventListener("keydown", this.onKeydown, true)
+    document.removeEventListener("ops:modal-overlay-open", this.onModalOverlayOpen)
+    this.restoreBackground()
+    if (activeOpsModal === this) activeOpsModal = null
+
+    this.restoreFocus()
+  },
+  focusableElements() {
+    const selector = [
+      "a[href]:not([tabindex='-1'])",
+      "button:not([disabled]):not([tabindex='-1'])",
+      "input:not([disabled]):not([type='hidden']):not([tabindex='-1'])",
+      "select:not([disabled]):not([tabindex='-1'])",
+      "textarea:not([disabled]):not([tabindex='-1'])",
+      "[tabindex]:not([tabindex='-1'])"
+    ].join(",")
+
+    return Array.from(this.el.querySelectorAll(selector)).filter(el => {
+      return !el.closest("[hidden]") && el.getAttribute("aria-hidden") !== "true" &&
+        !el.matches(":disabled") && el.getClientRects().length > 0
+    })
+  },
+  focusInitial() {
+    const selector = this.el.dataset.opsModalInitialFocus
+    let target = null
+    try {
+      target = selector ? this.el.querySelector(selector) : null
+    } catch (_error) {
+      target = null
+    }
+    target = target && !target.matches(":disabled") ? target : null
+    target = target || this.focusableElements()[0] || this.el.querySelector(".modal-box") || this.el
+    target.focus({preventScroll: true})
+  },
+  handleKeydown(e) {
+    if (activeOpsModal !== this) return
+
+    if (e.key === "Escape") {
+      e.preventDefault()
+      e.stopImmediatePropagation()
+      this.close()
+      return
+    }
+
+    if (e.key === "Tab") {
+      this.trapFocus(e)
+    }
+
+    // Keep shell shortcuts and other overlay handlers from taking ownership.
+    e.stopImmediatePropagation()
+  },
+  trapFocus(e) {
+    const focusables = this.focusableElements()
+    if (!focusables.length) {
+      e.preventDefault()
+      this.focusInitial()
+      return
+    }
+
+    const first = focusables[0]
+    const last = focusables[focusables.length - 1]
+    if (!this.el.contains(document.activeElement)) {
+      e.preventDefault()
+      first.focus({preventScroll: true})
+    } else if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault()
+      last.focus({preventScroll: true})
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault()
+      first.focus({preventScroll: true})
+    }
+  },
+  close() {
+    const event = this.el.dataset.opsModalCancelEvent
+    if (event) this.pushEvent(event, {})
+  },
+  restoreFocus() {
+    const target = this.returnTarget && this.returnTarget.isConnected
+      ? this.returnTarget
+      : this.querySuccessor()
+    if (target && typeof target.focus === "function") target.focus({preventScroll: true})
+    this.returnTarget = null
+  },
+  inertBackground() {
+    let branch = this.el
+    while (branch.parentElement) {
+      const parent = branch.parentElement
+      for (const sibling of parent.children) {
+        if (sibling === branch) continue
+        this.inerted.push({element: sibling, inert: sibling.inert})
+        sibling.inert = true
+      }
+      if (parent === document.body) break
+      branch = parent
+    }
+  },
+  restoreBackground() {
+    this.inerted.forEach(({element, inert}) => {
+      if (element.isConnected) element.inert = inert
+    })
+    this.inerted = []
+  },
+  querySuccessor() {
+    const selector = this.el.dataset.opsModalSuccessor
+    if (!selector) return null
+    try {
+      return document.querySelector(selector)
+    } catch (_error) {
+      return null
+    }
+  },
+  closeImmediately() {
+    this.el.setAttribute("hidden", "")
+    document.removeEventListener("keydown", this.onKeydown, true)
+    this.restoreBackground()
+  }
+}
+
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks, CommandPalette, OpsNavDrawer},
+  hooks: {...colocatedHooks, CommandPalette, OpsNavDrawer, OpsModal},
 })
 
 // Show progress bar on live navigation and form submits

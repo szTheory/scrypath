@@ -67,6 +67,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   """
   attr(:level, :integer, default: 2, values: [2, 3])
   attr(:id, :string, default: nil)
+  attr(:tabindex, :integer, default: nil)
   attr(:class, :any, default: nil)
   slot(:inner_block, required: true)
 
@@ -75,6 +76,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     <h2
       :if={@level == 2}
       id={@id}
+      tabindex={@tabindex}
       class={["text-ops-h2 font-semibold leading-ops-tight text-base-content", @class]}
     >
       {render_slot(@inner_block)}
@@ -82,6 +84,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     <h3
       :if={@level == 3}
       id={@id}
+      tabindex={@tabindex}
       class={["text-ops-h3 font-semibold leading-ops-tight text-base-content", @class]}
     >
       {render_slot(@inner_block)}
@@ -175,18 +178,19 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:size, :atom, default: :sm, values: [:xs, :sm, :md])
   attr(:type, :string, default: "button")
+  attr(:id, :string, default: nil)
   attr(:class, :any, default: nil)
 
   attr(:rest, :global,
     include:
-      ~w(phx-click phx-value-id phx-value-mode phx-value-name phx-value-schema phx-disable-with disabled form data-testid data-ops-refresh aria-label aria-controls)
+      ~w(phx-click phx-value-id phx-value-mode phx-value-name phx-value-schema phx-disable-with disabled form data-testid data-ops-refresh data-ops-modal-trigger aria-label aria-controls)
   )
 
   slot(:inner_block, required: true)
 
   def ops_button(assigns) do
     ~H"""
-    <button type={@type} class={[button_classes(@variant, @size), @class]} {@rest}>
+    <button id={@id} type={@type} class={[button_classes(@variant, @size), @class]} {@rest}>
       {render_slot(@inner_block)}
     </button>
     """
@@ -694,6 +698,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   @doc "Shared shell for file-upload controls."
   attr(:label, :string, required: true)
+  attr(:control_id, :string, default: nil)
   attr(:hint, :string, default: nil)
   attr(:class, :any, default: nil)
   slot(:inner_block, required: true)
@@ -701,8 +706,21 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_upload_box(assigns) do
     ~H"""
     <div class={["ops-surface-flat p-ops-3", @class]}>
-      <p class="text-ops-body font-semibold text-base-content">{@label}</p>
-      <p :if={@hint} class="mt-ops-1 text-ops-sm leading-5 text-base-content/65">{@hint}</p>
+      <label
+        :if={@control_id}
+        for={@control_id}
+        class="block text-ops-body font-semibold text-base-content"
+      >
+        {@label}
+      </label>
+      <p :if={!@control_id} class="text-ops-body font-semibold text-base-content">{@label}</p>
+      <p
+        :if={@hint}
+        id={@control_id && "#{@control_id}-hint"}
+        class="mt-ops-1 text-ops-sm leading-5 text-base-content/65"
+      >
+        {@hint}
+      </p>
       <div class="mt-ops-3">{render_slot(@inner_block)}</div>
     </div>
     """
@@ -994,7 +1012,11 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <div class={["space-y-2", @class]}>
       <p id="search-mode-label" class="text-ops-body font-semibold text-base-content">{@label}</p>
-      <div role="group" aria-label={@label} class="inline-flex flex-wrap gap-1 rounded-ops-control border border-base-300 bg-base-200/70 p-1">
+      <div
+        role="group"
+        aria-label={@label}
+        class="inline-flex flex-wrap gap-1 rounded-ops-control border border-base-300 bg-base-200/70 p-1"
+      >
         <button
           :for={{label, value} <- @items}
           type="button"
@@ -1202,13 +1224,14 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   @doc "Object-list row with consistent action alignment."
   attr(:active, :boolean, default: false)
+  attr(:id, :string, default: nil)
   attr(:class, :any, default: nil)
   slot(:actions)
   slot(:inner_block, required: true)
 
   def ops_object_item(assigns) do
     ~H"""
-    <div class={["ops-object-item", @active && "ops-object-item-active", @class]}>
+    <div id={@id} class={["ops-object-item", @active && "ops-object-item-active", @class]}>
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="min-w-0 flex-1">{render_slot(@inner_block)}</div>
         <div :if={@actions != []} class="flex flex-wrap justify-end gap-2">
@@ -1302,6 +1325,10 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:title, :string, required: true)
   attr(:id, :string, required: true)
   attr(:cancel_event, :string, default: nil)
+  attr(:description, :string, default: nil)
+  attr(:action_label, :string, default: "action")
+  attr(:initial_focus, :string, default: "[data-ops-modal-cancel]")
+  attr(:successor, :string, default: nil)
   attr(:class, :any, default: nil)
   slot(:inner_block, required: true)
 
@@ -1309,35 +1336,46 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <div
       id={@id}
-      class="modal modal-open"
       role="dialog"
       aria-modal="true"
       aria-labelledby={"#{@id}-title"}
-      phx-window-keydown={@cancel_event}
-      phx-key={if @cancel_event, do: "escape", else: nil}
+      aria-describedby={@description && "#{@id}-description"}
+      phx-hook="OpsModal"
+      data-ops-modal-action={@action_label}
+      data-ops-modal-cancel-event={@cancel_event}
+      data-ops-modal-initial-focus={@initial_focus}
+      data-ops-modal-successor={@successor}
+      class="modal modal-open z-ops-modal"
+      phx-remove={
+        JS.transition(
+          {"transition-opacity duration-100 ease-ops-exit", "opacity-100", "opacity-0"},
+          time: 120
+        )
+      }
     >
       <div
         class={["modal-box relative rounded-ops-overlay", @class]}
         tabindex="-1"
-        phx-remove={
-          Phoenix.LiveView.JS.transition(
-            {"transition-all ease-ops-exit duration-200", "opacity-100 translate-y-0 scale-100",
-             "opacity-0 translate-y-1 scale-[0.98]"},
-            time: 120
-          )
-        }
       >
         <button
           :if={@cancel_event}
           type="button"
           class="btn ops-icon-btn btn-circle btn-ghost btn-sm absolute right-ops-3 top-ops-3"
           phx-click={@cancel_event}
-          aria-label="Close dialog"
-          autofocus
+          aria-label={"Cancel #{@action_label}"}
+          data-ops-modal-cancel
         >
+          <span class="sr-only">Cancel</span>
           <span aria-hidden="true">×</span>
         </button>
         <h3 id={"#{@id}-title"} class="text-ops-h2 font-semibold leading-ops-tight">{@title}</h3>
+        <p
+          :if={@description}
+          id={"#{@id}-description"}
+          class="mt-2 max-w-2xl text-ops-body text-base-content/80"
+        >
+          {@description}
+        </p>
         <div class="mt-3">{render_slot(@inner_block)}</div>
       </div>
     </div>

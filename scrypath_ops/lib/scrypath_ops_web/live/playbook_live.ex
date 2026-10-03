@@ -288,11 +288,23 @@ defmodule ScrypathOpsWeb.PlaybookLive do
     name = to_string(name)
 
     if Store.safe_basename?(name) do
-      {:noreply, assign(socket, :rename_modal, %{from: name})}
+      {:noreply, assign(socket, :rename_modal, %{from: name, new_name: ""})}
     else
       {:noreply, put_flash(socket, :error, "Invalid playbook file name.")}
     end
   end
+
+  def handle_event("rename_change", %{"new_name" => new_name}, socket) do
+    case socket.assigns.rename_modal do
+      modal when is_map(modal) ->
+        {:noreply, assign(socket, :rename_modal, Map.put(modal, :new_name, to_string(new_name)))}
+
+      _ ->
+        {:noreply, socket}
+    end
+  end
+
+  def handle_event("rename_change", _, socket), do: {:noreply, socket}
 
   def handle_event("rename_cancel", _, socket) do
     {:noreply, assign(socket, :rename_modal, nil)}
@@ -304,6 +316,11 @@ defmodule ScrypathOpsWeb.PlaybookLive do
         {:noreply, socket}
 
       %{from: from} ->
+        socket =
+          update(socket, :rename_modal, fn modal ->
+            Map.put(modal, :new_name, to_string(new_name))
+          end)
+
         rename_submit_impl(socket, from, new_name)
     end
   end
@@ -322,7 +339,8 @@ defmodule ScrypathOpsWeb.PlaybookLive do
       true ->
         case Store.suggest_duplicate_basename(root, name) do
           {:ok, suggested} ->
-            {:noreply, assign(socket, :duplicate_modal, %{from: name, to: suggested})}
+            {:noreply,
+             assign(socket, :duplicate_modal, %{from: name, to: suggested, new_name: suggested})}
 
           {:error, _} ->
             {:noreply, put_flash(socket, :error, "Could not suggest a duplicate filename.")}
@@ -334,12 +352,30 @@ defmodule ScrypathOpsWeb.PlaybookLive do
     {:noreply, assign(socket, :duplicate_modal, nil)}
   end
 
+  def handle_event("dup_change", %{"to_name" => to_name}, socket) do
+    case socket.assigns.duplicate_modal do
+      modal when is_map(modal) ->
+        {:noreply,
+         assign(socket, :duplicate_modal, Map.put(modal, :new_name, to_string(to_name)))}
+
+      _ ->
+        {:noreply, socket}
+    end
+  end
+
+  def handle_event("dup_change", _, socket), do: {:noreply, socket}
+
   def handle_event("dup_submit", %{"to_name" => to_name}, socket) do
     case socket.assigns.duplicate_modal do
       nil ->
         {:noreply, socket}
 
       %{from: from} ->
+        socket =
+          update(socket, :duplicate_modal, fn modal ->
+            Map.put(modal, :new_name, to_string(to_name))
+          end)
+
         dup_submit_impl(socket, from, to_name)
     end
   end
@@ -895,7 +931,9 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
         <.ops_panel class="space-y-6">
           <.ops_toolbar>
-            <.ops_heading level={2}>Workspace files</.ops_heading>
+            <.ops_heading level={2} id="playbook-catalog-heading" tabindex={-1}>
+              Workspace files
+            </.ops_heading>
             <.ops_button phx-click="refresh_list" variant={:ghost}>
               Reload playbooks
             </.ops_button>
@@ -930,7 +968,8 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
           <.ops_object_list :if={@catalog_entries != []} class="max-w-3xl">
             <.ops_object_item
-              :for={row <- @catalog_entries}
+              :for={{row, row_index} <- Enum.with_index(@catalog_entries)}
+              id={"playbook-row-#{row_index}"}
               active={row.name == @selected_basename}
             >
               <div class="flex min-w-0 flex-col gap-0.5">
@@ -946,6 +985,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               <:actions>
                 <.ops_action_group>
                   <.ops_button
+                    id={"playbook-primary-#{row_index}"}
                     phx-click="load"
                     phx-value-name={row.name}
                     variant={:default}
@@ -973,6 +1013,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   <.ops_button
                     phx-click="dup_open"
                     phx-value-name={row.name}
+                    data-ops-modal-trigger="duplicate"
                     variant={:default}
                     size={:xs}
                   >
@@ -981,6 +1022,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   <.ops_button
                     phx-click="rename_open"
                     phx-value-name={row.name}
+                    data-ops-modal-trigger="rename"
                     variant={:default}
                     size={:xs}
                   >
@@ -991,6 +1033,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   <.ops_button
                     phx-click="request_delete"
                     phx-value-name={row.name}
+                    data-ops-modal-trigger="delete"
                     variant={:danger}
                     size={:xs}
                   >
@@ -1006,13 +1049,16 @@ defmodule ScrypathOpsWeb.PlaybookLive do
           <section id="playbook-import" aria-labelledby="playbook-import-heading" class="space-y-4">
             <.ops_heading level={2} id="playbook-import-heading">Import playbook JSON</.ops_heading>
             <.ops_upload_box
-              label="Upload playbook file"
-              hint={"JSON only, max #{@max_import_bytes} bytes. Preview it before running."}
+              label="Import playbook file"
+              control_id="playbook-upload-file"
+              hint={"JSON only, max #{@max_import_bytes} bytes. Preview before running."}
               class="max-w-xl"
             >
               <.form for={%{}} phx-submit="import_upload" class="space-y-3">
                 <.live_file_input
+                  id="playbook-upload-file"
                   upload={@uploads.playbook_file}
+                  aria-describedby="playbook-upload-file-hint"
                   class="file-input file-input-bordered w-full max-w-md"
                 />
                 <.ops_button type="submit" variant={:primary}>
@@ -1024,12 +1070,19 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             <details class="max-w-xl">
               <summary class="cursor-pointer text-ops-body link link-hover">Or paste JSON</summary>
               <.form for={%{}} phx-submit="import_paste" class="mt-2 space-y-2">
-                <.ops_textarea
+                <.ops_field
                   id="playbook-paste-json"
-                  name="json"
-                  class="font-mono text-ops-sm"
-                  placeholder="Paste playbook JSON"
-                />
+                  label="Playbook JSON"
+                  hint={"Paste a valid playbook JSON document (max #{@max_import_bytes} bytes)."}
+                >
+                  <.ops_textarea
+                    id="playbook-paste-json"
+                    name="json"
+                    hint={"Paste a valid playbook JSON document (max #{@max_import_bytes} bytes)."}
+                    class="font-mono text-ops-sm"
+                    placeholder="Paste playbook JSON"
+                  />
+                </.ops_field>
                 <.ops_button type="submit" variant={:ghost}>Import from paste</.ops_button>
               </.form>
             </details>
@@ -1169,23 +1222,28 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             :if={@delete_pending}
             id="delete-playbook-modal"
             title="Delete playbook file"
+            description={delete_description(@delete_pending)}
+            action_label="delete"
+            initial_focus="[data-ops-modal-cancel]"
+            successor={delete_successor(@catalog_entries, @delete_pending)}
             cancel_event="cancel_delete"
           >
-            <p class="py-4 text-ops-body">
-              This permanently deletes <code class="font-mono text-ops-sm">{@delete_pending}</code>
-              from the playbook directory. This cannot be undone.
-            </p>
             <.form for={%{}} phx-submit="confirm_delete" class="space-y-3">
-              <.ops_field id="delete-confirm-input" label="Type the filename to confirm">
+              <.ops_field
+                id="delete-confirm-input"
+                label="Type Filename to confirm"
+                hint="Enter the exact filename shown above to confirm this irreversible deletion."
+              >
                 <.ops_text_input
                   id="delete-confirm-input"
                   name="confirm"
+                  hint="Enter the exact filename shown above to confirm this irreversible deletion."
                   class="font-mono text-ops-body"
                   autocomplete="off"
                 />
               </.ops_field>
               <div class="flex justify-between gap-2">
-                <.ops_button phx-click="cancel_delete" variant={:ghost}>Cancel</.ops_button>
+                <.ops_button phx-click="cancel_delete" variant={:ghost}>Cancel delete</.ops_button>
                 <.ops_button type="submit" variant={:danger}>Confirm delete</.ops_button>
               </div>
             </.form>
@@ -1195,22 +1253,28 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             :if={@rename_modal}
             id="rename-playbook-modal"
             title="Rename playbook"
+            description={"Rename #{@rename_modal.from}. Choose a valid workspace filename ending in .json."}
+            action_label="rename"
+            initial_focus="#rename-new-name-input"
             cancel_event="rename_cancel"
           >
-            <p class="py-2 text-ops-body">
-              Renaming <code class="font-mono text-ops-sm">{@rename_modal.from}</code>
-            </p>
-            <.form for={%{}} phx-submit="rename_submit" class="space-y-3">
-              <.ops_field id="rename-new-name-input" label="New basename (.json)">
+            <.form for={%{}} phx-change="rename_change" phx-submit="rename_submit" class="space-y-3">
+              <.ops_field
+                id="rename-new-name-input"
+                label="Filename"
+                hint="Use a valid *.json workspace filename."
+              >
                 <.ops_text_input
                   id="rename-new-name-input"
                   name="new_name"
+                  value={@rename_modal.new_name}
+                  hint="Use a valid *.json workspace filename."
                   class="font-mono text-ops-body"
                   placeholder="new-name.json"
                 />
               </.ops_field>
               <div class="flex justify-between gap-2">
-                <.ops_button phx-click="rename_cancel" variant={:ghost}>Cancel</.ops_button>
+                <.ops_button phx-click="rename_cancel" variant={:ghost}>Cancel rename</.ops_button>
                 <.ops_button type="submit" variant={:primary}>Rename</.ops_button>
               </div>
             </.form>
@@ -1220,22 +1284,27 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             :if={@duplicate_modal}
             id="duplicate-playbook-modal"
             title="Duplicate playbook"
+            description={"Create a copy of #{@duplicate_modal.from} with a new workspace filename."}
+            action_label="duplicate"
+            initial_focus="#dup-to-name-input"
             cancel_event="dup_cancel"
           >
-            <p class="py-2 text-ops-body">
-              Copying <code class="font-mono text-ops-sm">{@duplicate_modal.from}</code>
-            </p>
-            <.form for={%{}} phx-submit="dup_submit" class="space-y-3">
-              <.ops_field id="dup-to-name-input" label="New basename (.json)">
+            <.form for={%{}} phx-change="dup_change" phx-submit="dup_submit" class="space-y-3">
+              <.ops_field
+                id="dup-to-name-input"
+                label="Filename"
+                hint="Use a valid *.json workspace filename."
+              >
                 <.ops_text_input
                   id="dup-to-name-input"
                   name="to_name"
-                  value={@duplicate_modal.to}
+                  value={@duplicate_modal.new_name}
+                  hint="Use a valid *.json workspace filename."
                   class="font-mono text-ops-body"
                 />
               </.ops_field>
               <div class="flex justify-between gap-2">
-                <.ops_button phx-click="dup_cancel" variant={:ghost}>Cancel</.ops_button>
+                <.ops_button phx-click="dup_cancel" variant={:ghost}>Cancel duplicate</.ops_button>
                 <.ops_button type="submit" variant={:primary}>Duplicate</.ops_button>
               </div>
             </.form>
@@ -1287,6 +1356,20 @@ defmodule ScrypathOpsWeb.PlaybookLive do
           {:error, _} ->
             put_flash(socket, :error, "Delete failed — check permissions.")
         end
+    end
+  end
+
+  defp delete_description(name) do
+    "This permanently deletes #{name} from the playbook workspace. This cannot be undone."
+  end
+
+  defp delete_successor(entries, pending) do
+    index = Enum.find_index(entries, &(&1.name == pending))
+
+    if is_integer(index) and index < length(entries) - 1 do
+      "#playbook-primary-#{index}"
+    else
+      "#playbook-catalog-heading"
     end
   end
 
