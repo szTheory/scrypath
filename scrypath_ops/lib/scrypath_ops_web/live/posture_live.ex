@@ -9,6 +9,7 @@ defmodule ScrypathOpsWeb.PostureLive do
   use ScrypathOpsWeb, :live_view
 
   alias ScrypathOps.Integrations.Sigra.Gating
+  alias ScrypathOps.OperatorSelection
   alias Scrypath.Meilisearch.Tasks
 
   @impl true
@@ -323,6 +324,13 @@ defmodule ScrypathOpsWeb.PostureLive do
                         </dl>
                       </section>
                     </div>
+                    <.link
+                      navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
+                      class="link link-primary mt-3 inline-flex"
+                      data-testid="posture-failed-sync-link"
+                    >
+                      Inspect failed work for {module_flat_name(mod)}
+                    </.link>
                   <% {:error, reason} -> %>
                     <div class="ops-schema-signal-card__header">
                       <div class="min-w-0">
@@ -335,6 +343,13 @@ defmodule ScrypathOpsWeb.PostureLive do
                         <.ops_badge kind={:error}>fetch error</.ops_badge>
                       </div>
                     </div>
+                    <.link
+                      navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
+                      class="link link-primary mt-3 inline-flex"
+                      data-testid="posture-failed-sync-link"
+                    >
+                      Inspect failed work for {module_flat_name(mod)}
+                    </.link>
                 <% end %>
               </article>
             <% end %>

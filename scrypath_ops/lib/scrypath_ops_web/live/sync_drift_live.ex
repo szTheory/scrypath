@@ -10,24 +10,21 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   use ScrypathOpsWeb, :live_view
 
   alias ScrypathOps.Integrations.Sigra.Gating
+  alias ScrypathOps.OperatorSelection
 
   @impl true
   def mount(_params, _session, socket) do
     allowlist = ScrypathOps.Schemas.allowlist()
     scrypath_opts = ScrypathOps.Schemas.scrypath_opts()
 
-    selected =
-      case allowlist do
-        [first | _] -> first
-        [] -> nil
-      end
-
     socket =
       socket
       |> assign(:page_title, "Sync / drift")
       |> assign(:schema_allowlist, allowlist)
       |> assign(:scrypath_opts, scrypath_opts)
-      |> assign(:selected_schema, selected)
+      |> assign(:selected_schema, nil)
+      |> assign(:selection_error, nil)
+      |> assign(:context_generation, 0)
       |> assign(:reconcile_result, nil)
       |> assign(:reconcile_loaded_at, nil)
       |> assign(:drift_result, nil)
@@ -35,7 +32,34 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       |> assign(:drift_error, nil)
       |> assign(:drift_loading, false)
 
-    {:ok, load_reconcile_on_mount(socket)}
+    {:ok, socket}
+  end
+
+  @impl true
+  def handle_params(params, _uri, socket) do
+    allowlist = ScrypathOps.Schemas.allowlist()
+    resolution = OperatorSelection.resolve(params, allowlist)
+    selected = case resolution do {:ok, module} -> module; _ -> nil end
+    error = case resolution do :setup -> :no_schemas; :unavailable -> :unavailable; _ -> nil end
+    changed? = selected != socket.assigns.selected_schema or error != socket.assigns.selection_error
+
+    socket =
+      socket
+      |> assign(:schema_allowlist, allowlist)
+      |> assign(:selected_schema, selected)
+      |> assign(:selection_error, error)
+      |> maybe_advance_generation(changed?)
+
+    socket =
+      if selected do
+        load_reconcile_on_mount(socket)
+      else
+        socket
+        |> clear_context_results()
+        |> assign(:drift_error, error)
+      end
+
+    {:noreply, socket}
   end
 
   defp load_reconcile_on_mount(socket) do
@@ -64,58 +88,81 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   @impl true
   def handle_event("refresh_reconcile", _params, socket) do
-    {:noreply, refresh_reconcile(socket)}
+    {:noreply, if(current_selection?(socket), do: refresh_reconcile(socket), else: unavailable(socket))}
   end
 
   def handle_event("load_drift", _params, socket) do
     # Two-step so the loading skeleton paints before the bounded backend read runs.
     # The contract-drift call is fast but synchronous; deferring it to handle_info/2
     # lets LiveView push the `:drift_loading` frame first. Event name unchanged.
-    send(self(), :run_drift)
-    {:noreply, assign(socket, :drift_loading, true)}
+    if current_selection?(socket) do
+      send(self(), {:run_drift, socket.assigns.context_generation})
+      {:noreply, assign(socket, :drift_loading, true)}
+    else
+      {:noreply, unavailable(socket)}
+    end
   end
 
   def handle_event("select_schema", %{"schema" => mod_str}, socket) do
-    case mod_from_allowlist(mod_str, socket.assigns.schema_allowlist) do
+    case OperatorSelection.resolve(%{"schema" => mod_str}, ScrypathOps.Schemas.allowlist()) do
       {:ok, mod} ->
-        socket =
-          socket
-          |> assign(:selected_schema, mod)
-          |> assign(:reconcile_result, nil)
-          |> assign(:reconcile_loaded_at, nil)
-          |> assign(:drift_result, nil)
-          |> assign(:drift_loaded_at, nil)
-          |> assign(:drift_error, nil)
-          |> assign(:drift_loading, false)
-          |> load_reconcile_on_mount()
+        {:noreply, push_patch(socket, to: OperatorSelection.path(socket.assigns.mount_path, "sync-drift", mod))}
 
-        {:noreply, socket}
-
-      :error ->
-        {:noreply, put_flash(socket, :error, "Select an allowlisted schema.")}
+      _ ->
+        {:noreply, unavailable(socket)}
     end
   end
 
   def handle_event("swap_live", _params, socket) do
-    {:noreply, swap_live(socket)}
+    {:noreply, if(current_selection?(socket), do: swap_live(socket), else: unavailable(socket))}
   end
 
   @impl true
-  def handle_info(:run_drift, socket) do
-    {:noreply, refresh_drift(socket)}
-  end
-
-  defp module_flat_name(mod) when is_atom(mod) do
-    mod |> Atom.to_string() |> String.replace_prefix("Elixir.", "")
-  end
-
-  defp mod_from_allowlist(str, allowlist) when is_binary(str) do
-    name = String.trim(str)
-
-    case Enum.find(allowlist, &(module_flat_name(&1) == name)) do
-      nil -> :error
-      mod -> {:ok, mod}
+  def handle_info({:run_drift, generation}, socket) do
+    if generation == socket.assigns.context_generation and current_selection?(socket) do
+      {:noreply, refresh_drift(socket)}
+    else
+      {:noreply, assign(socket, :drift_loading, false)}
     end
+  end
+
+  defp module_flat_name(mod) when is_atom(mod), do: OperatorSelection.canonical(mod)
+
+  defp maybe_advance_generation(socket, true) do
+    socket
+    |> update(:context_generation, &(&1 + 1))
+    |> clear_context_results()
+  end
+
+  defp maybe_advance_generation(socket, false), do: socket
+
+  defp clear_context_results(socket) do
+    socket
+    |> assign(:reconcile_result, nil)
+    |> assign(:reconcile_loaded_at, nil)
+    |> assign(:drift_result, nil)
+    |> assign(:drift_loaded_at, nil)
+    |> assign(:drift_error, nil)
+    |> assign(:drift_loading, false)
+  end
+
+  defp current_selection?(socket) do
+    case OperatorSelection.resolve(
+           %{"schema" => OperatorSelection.canonical(socket.assigns.selected_schema)},
+           ScrypathOps.Schemas.allowlist()
+         ) do
+      {:ok, selected} -> selected == socket.assigns.selected_schema
+      _ -> false
+    end
+  end
+
+  defp unavailable(socket) do
+    socket
+    |> assign(:selected_schema, nil)
+    |> assign(:selection_error, :unavailable)
+    |> update(:context_generation, &(&1 + 1))
+    |> clear_context_results()
+    |> assign(:drift_error, :unavailable)
   end
 
   defp refresh_reconcile(socket) do
@@ -309,6 +356,19 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         />
       </.ops_panel>
 
+      <.ops_empty_state :if={@selection_error == :no_schemas} title="No schemas configured">
+        Add allowlisted schemas before loading sync or drift observations.
+      </.ops_empty_state>
+
+      <.ops_status
+        :if={@selection_error == :unavailable}
+        kind={:error}
+        title="That schema is unavailable"
+        role="alert"
+      >
+        Select an allowlisted schema to continue.
+      </.ops_status>
+
       <.ops_notice kind={:info} title="Read-only checks first" class="mt-4">
         Use <.ops_inline_code>mix scrypath.reconcile</.ops_inline_code>, <.ops_inline_code>mix scrypath.index.contract_drift</.ops_inline_code>, <.ops_inline_code>guides/drift-recovery.md</.ops_inline_code>,
         <.ops_inline_code>guides/sync-modes-and-visibility.md</.ops_inline_code>
@@ -354,7 +414,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           meta={if @reconcile_loaded_at, do: "last loaded #{format_dt(@reconcile_loaded_at)}"}
         >
           <:actions>
-            <.ops_button phx-click="refresh_reconcile" variant={:primary} data-ops-refresh>
+            <.ops_button phx-click="refresh_reconcile" variant={:primary} data-ops-refresh disabled={!@selected_schema}>
               Refresh reconcile
             </.ops_button>
           </:actions>
@@ -413,7 +473,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             <.ops_button
               phx-click="load_drift"
               phx-disable-with="Loading…"
-              disabled={@drift_loading}
+              disabled={@drift_loading || !@selected_schema}
             >
               Load / refresh contract drift
             </.ops_button>
@@ -515,7 +575,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       </.ops_panel>
 
       <.ops_handoff>
-        <:step navigate={"#{@mount_path}/posture"} hint="After promoting —">
+        <:step navigate={OperatorSelection.path(@mount_path, "posture", @selected_schema)} hint="After promoting —">
           Re-check fleet posture
         </:step>
       </.ops_handoff>

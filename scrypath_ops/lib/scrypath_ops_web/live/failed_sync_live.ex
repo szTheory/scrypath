@@ -9,54 +9,57 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   alias Scrypath.Operator.FailedWork
   alias Scrypath.Operator.FailedSyncWorkInspection
   alias ScrypathOps.Integrations.Sigra.Gating
+  alias ScrypathOps.OperatorSelection
 
   @impl true
   def mount(_params, _session, socket) do
     allowlist = ScrypathOps.Schemas.allowlist()
     scrypath_opts = ScrypathOps.Schemas.scrypath_opts()
 
-    selected =
-      case allowlist do
-        [first | _] -> first
-        [] -> nil
-      end
-
     socket =
       socket
       |> assign(:page_title, "Failed sync work")
       |> assign(:schema_allowlist, allowlist)
       |> assign(:scrypath_opts, scrypath_opts)
-      |> assign(:selected_schema, selected)
+      |> assign(:selected_schema, nil)
+      |> assign(:selection_error, nil)
+      |> assign(:context_generation, 0)
       |> assign(:inspection, nil)
       |> assign(:load_error, nil)
       |> assign(:compact_mode, false)
       |> assign(:last_refresh_at, nil)
 
-    {:ok, refresh_inspection(socket)}
+    {:ok, socket}
   end
 
   @impl true
-  def handle_event("refresh", _params, socket), do: {:noreply, refresh_inspection(socket)}
+  def handle_params(params, _uri, socket), do: {:noreply, resolve_selection(socket, params)}
+
+  @impl true
+  def handle_event("refresh", _params, socket) do
+    {:noreply, if(current_selection?(socket), do: refresh_inspection(socket), else: unavailable(socket))}
+  end
 
   def handle_event("retry", %{"id" => id}, socket) do
     socket =
-      Gating.gate_sensitive_action(socket, :failed_work_retry, fn ->
-        retry_failed_work(socket, id)
-      end)
+      if current_selection?(socket) do
+        Gating.gate_sensitive_action(socket, :failed_work_retry, fn ->
+          retry_failed_work(socket, id)
+        end)
+      else
+        unavailable(socket)
+      end
 
     {:noreply, normalize_live_reply(socket)}
   end
 
   def handle_event("select_schema", %{"schema" => mod_str}, socket) do
-    case mod_from_allowlist(mod_str, socket.assigns.schema_allowlist) do
+    case OperatorSelection.resolve(%{"schema" => mod_str}, ScrypathOps.Schemas.allowlist()) do
       {:ok, mod} ->
-        {:noreply,
-         socket
-         |> assign(:selected_schema, mod)
-         |> refresh_inspection()}
+        {:noreply, push_patch(socket, to: OperatorSelection.path(socket.assigns.mount_path, "failed-sync", mod))}
 
-      :error ->
-        {:noreply, put_flash(socket, :error, "Select an allowlisted schema.")}
+      _ ->
+        {:noreply, unavailable(socket)}
     end
   end
 
@@ -64,11 +67,67 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     {:noreply, assign(socket, :compact_mode, not socket.assigns.compact_mode)}
   end
 
+  defp resolve_selection(socket, params) do
+    allowlist = ScrypathOps.Schemas.allowlist()
+    resolution = OperatorSelection.resolve(params, allowlist)
+    selected = case resolution do {:ok, module} -> module; _ -> nil end
+    error = case resolution do :setup -> :no_schemas; :unavailable -> :unavailable; _ -> nil end
+    changed? = selected != socket.assigns.selected_schema or error != socket.assigns.selection_error
+
+    socket =
+      socket
+      |> assign(:schema_allowlist, allowlist)
+      |> assign(:selected_schema, selected)
+      |> assign(:selection_error, error)
+      |> maybe_advance_generation(changed?)
+
+    if selected do
+      refresh_inspection(socket)
+    else
+      socket
+      |> assign(:inspection, nil)
+      |> assign(:load_error, error)
+      |> assign(:last_refresh_at, nil)
+    end
+  end
+
+  defp maybe_advance_generation(socket, true) do
+    socket
+    |> update(:context_generation, &(&1 + 1))
+    |> assign(:inspection, nil)
+    |> assign(:load_error, nil)
+    |> assign(:last_refresh_at, nil)
+  end
+
+  defp maybe_advance_generation(socket, false), do: socket
+
+  defp current_selection?(socket) do
+    case OperatorSelection.resolve(
+           %{"schema" => OperatorSelection.canonical(socket.assigns.selected_schema)},
+           ScrypathOps.Schemas.allowlist()
+         ) do
+      {:ok, selected} -> selected == socket.assigns.selected_schema
+      _ -> false
+    end
+  end
+
+  defp unavailable(socket) do
+    socket
+    |> assign(:selected_schema, nil)
+    |> assign(:selection_error, :unavailable)
+    |> update(:context_generation, &(&1 + 1))
+    |> assign(:inspection, nil)
+    |> assign(:load_error, :unavailable)
+    |> assign(:last_refresh_at, nil)
+  end
+
   defp refresh_inspection(socket) do
     mod = socket.assigns.selected_schema
     opts = Keyword.put(socket.assigns.scrypath_opts, :reason_class_counts, true)
 
     cond do
+      not current_selection?(socket) -> unavailable(socket)
+
       is_nil(mod) ->
         socket
         |> assign(:inspection, nil)
@@ -147,18 +206,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     Scrypath.Operator.FailedWork.reason_class_counts(rows)
   end
 
-  defp module_flat_name(mod) when is_atom(mod) do
-    mod |> Atom.to_string() |> String.replace_prefix("Elixir.", "")
-  end
-
-  defp mod_from_allowlist(str, allowlist) when is_binary(str) do
-    name = String.trim(str)
-
-    case Enum.find(allowlist, &(module_flat_name(&1) == name)) do
-      nil -> :error
-      mod -> {:ok, mod}
-    end
-  end
+  defp module_flat_name(mod) when is_atom(mod), do: OperatorSelection.canonical(mod)
 
   defp sorted_entries(%FailedSyncWorkInspection{entries: entries}) do
     Enum.sort_by(
@@ -249,6 +297,15 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         in <.ops_inline_code>:scrypath_ops</.ops_inline_code>, then refresh failed sync jobs.
       </.ops_empty_state>
 
+      <.ops_status
+        :if={@load_error == :unavailable}
+        kind={:error}
+        title="That schema is unavailable"
+        role="alert"
+      >
+        Select an allowlisted schema to continue.
+      </.ops_status>
+
       <.ops_empty_state
         :if={@load_error == :missing_backend}
         title="Runtime not configured"
@@ -259,7 +316,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       </.ops_empty_state>
 
       <.ops_status
-        :if={@inspection == nil && @load_error && @load_error not in [:no_schemas, :missing_backend]}
+        :if={@inspection == nil && @load_error && @load_error not in [:no_schemas, :missing_backend, :unavailable]}
         kind={:error}
         title="Failed sync work could not load"
         role="alert"
@@ -424,7 +481,10 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       </.ops_panel>
 
       <.ops_handoff :if={@inspection}>
-        <:step navigate={"#{@mount_path}/sync-drift"} hint="When the queue's clear —">
+        <:step
+          navigate={OperatorSelection.path(@mount_path, "sync-drift", @selected_schema)}
+          hint="When the queue's clear —"
+        >
           Verify sync drift
         </:step>
       </.ops_handoff>
