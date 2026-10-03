@@ -748,12 +748,13 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Fieldset wrapper for consistent operator form rhythm."
   attr(:legend, :string, required: true)
   attr(:hint, :string, default: nil)
+  attr(:disabled, :boolean, default: false)
   attr(:class, :any, default: nil)
   slot(:inner_block, required: true)
 
   def ops_fieldset(assigns) do
     ~H"""
-    <fieldset class={["ops-fieldset", @class]}>
+    <fieldset class={["ops-fieldset", @class]} disabled={@disabled}>
       <legend class="ops-fieldset__legend">{@legend}</legend>
       <p :if={@hint} class="ops-fieldset__hint">{@hint}</p>
       <div class="ops-fieldset__body">
@@ -767,6 +768,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:id, :string, required: true)
   attr(:label, :string, required: true)
   attr(:hint, :string, default: nil)
+  attr(:error, :string, default: nil)
   attr(:class, :any, default: nil)
   slot(:inner_block, required: true)
 
@@ -775,7 +777,12 @@ defmodule ScrypathOpsWeb.OpsUi do
     <div class={["space-y-ops-field", @class]}>
       <label class="block text-ops-body font-semibold text-base-content/75" for={@id}>{@label}</label>
       {render_slot(@inner_block)}
-      <p :if={@hint} class="text-ops-sm leading-5 text-base-content/65">{@hint}</p>
+      <p :if={@hint} id={"#{@id}-hint"} class="text-ops-sm leading-5 text-base-content/65">
+        {@hint}
+      </p>
+      <p :if={@error} id={"#{@id}-error"} class="text-ops-sm leading-5 text-error" role="alert">
+        {@error}
+      </p>
     </div>
     """
   end
@@ -785,10 +792,14 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:name, :string, required: true)
   attr(:value, :any, default: nil)
   attr(:placeholder, :string, default: nil)
+  attr(:hint, :string, default: nil)
+  attr(:error, :string, default: nil)
   attr(:class, :any, default: nil)
   attr(:rest, :global, include: ~w(aria-describedby required disabled autocomplete))
 
   def ops_text_input(assigns) do
+    assigns = assign(assigns, :describedby, field_descriptions(assigns))
+
     ~H"""
     <input
       id={@id}
@@ -796,6 +807,8 @@ defmodule ScrypathOpsWeb.OpsUi do
       type="text"
       value={@value}
       placeholder={@placeholder}
+      aria-describedby={@describedby}
+      aria-invalid={@error && "true"}
       class={["input input-bordered ops-form-control w-full", @class]}
       {@rest}
     />
@@ -808,10 +821,14 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:value, :any, default: nil)
   attr(:min, :any, default: nil)
   attr(:max, :any, default: nil)
+  attr(:hint, :string, default: nil)
+  attr(:error, :string, default: nil)
   attr(:class, :any, default: nil)
   attr(:rest, :global, include: ~w(aria-describedby required disabled))
 
   def ops_number_input(assigns) do
+    assigns = assign(assigns, :describedby, field_descriptions(assigns))
+
     ~H"""
     <input
       id={@id}
@@ -820,6 +837,8 @@ defmodule ScrypathOpsWeb.OpsUi do
       value={@value}
       min={@min}
       max={@max}
+      aria-describedby={@describedby}
+      aria-invalid={@error && "true"}
       class={["input input-bordered ops-form-control w-full", @class]}
       {@rest}
     />
@@ -831,15 +850,21 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:name, :string, required: true)
   attr(:value, :any, default: nil)
   attr(:placeholder, :string, default: nil)
+  attr(:hint, :string, default: nil)
+  attr(:error, :string, default: nil)
   attr(:class, :any, default: nil)
   attr(:rest, :global, include: ~w(aria-describedby required disabled))
 
   def ops_textarea(assigns) do
+    assigns = assign(assigns, :describedby, field_descriptions(assigns))
+
     ~H"""
     <textarea
       id={@id}
       name={@name}
       placeholder={@placeholder}
+      aria-describedby={@describedby}
+      aria-invalid={@error && "true"}
       class={[
         "textarea textarea-bordered min-h-[var(--control-h-textarea)] w-full text-ops-body",
         @class
@@ -854,14 +879,20 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:name, :string, default: "schema")
   attr(:options, :list, required: true)
   attr(:selected, :any, default: nil)
+  attr(:hint, :string, default: nil)
+  attr(:error, :string, default: nil)
   attr(:class, :any, default: nil)
   attr(:rest, :global, include: ~w(aria-describedby required disabled))
 
   def ops_select(assigns) do
+    assigns = assign(assigns, :describedby, field_descriptions(assigns))
+
     ~H"""
     <select
       id={@id}
       name={@name}
+      aria-describedby={@describedby}
+      aria-invalid={@error && "true"}
       class={["select select-bordered ops-form-control w-full", @class]}
       {@rest}
     >
@@ -880,6 +911,9 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:id, :string, required: true)
   attr(:label, :string, default: "Schema")
   attr(:hint, :string, default: nil)
+  attr(:name, :string, default: "schema")
+  attr(:error, :string, default: nil)
+  attr(:disabled, :boolean, default: false)
   attr(:schemas, :list, required: true)
   attr(:selected, :any, default: nil)
   attr(:class, :any, default: nil)
@@ -890,17 +924,21 @@ defmodule ScrypathOpsWeb.OpsUi do
       assigns
       |> assign(:schema_items, schema_picker_items(assigns.schemas, assigns.selected))
       |> assign(:compact_schema_picker?, length(assigns.schemas) <= 4)
+      |> assign(:description_ids, schema_descriptions(assigns))
       |> assign(
         :options,
         Enum.map(assigns.schemas, &{module_flat_name(&1), module_flat_name(&1)})
       )
 
     ~H"""
-    <form :if={@schemas != []} class={["ops-schema-picker", @class]} {@rest}>
-      <fieldset class="space-y-ops-field">
+    <div :if={@schemas != []} class={["ops-schema-picker", @class]} {@rest}>
+      <fieldset class="space-y-ops-field" disabled={@disabled}>
         <legend class="block text-ops-body font-semibold text-base-content/75">{@label}</legend>
         <p :if={@hint} id={"#{@id}-hint"} class="max-w-3xl text-ops-sm leading-5 text-base-content/65">
           {@hint}
+        </p>
+        <p :if={@error} id={"#{@id}-error"} class="text-ops-sm text-error" role="alert">
+          {@error}
         </p>
 
         <div :if={@compact_schema_picker?} class="ops-schema-picker__cards">
@@ -915,11 +953,12 @@ defmodule ScrypathOpsWeb.OpsUi do
             <input
               id={"#{@id}-#{item.dom_id}"}
               type="radio"
-              name="schema"
+              name={@name}
               value={item.name}
               checked={item.selected}
               class="sr-only"
-              aria-describedby={@hint && "#{@id}-hint"}
+              aria-describedby={@description_ids}
+              aria-invalid={@error && "true"}
             />
             <span class="ops-schema-option__main">{item.short_name}</span>
             <span class="ops-schema-option__meta">{item.namespace}</span>
@@ -929,15 +968,17 @@ defmodule ScrypathOpsWeb.OpsUi do
         <div :if={!@compact_schema_picker?} class="max-w-xl">
           <.ops_select
             id={@id}
-            name="schema"
+            name={@name}
             options={@options}
             selected={module_flat_name(@selected)}
             class="font-mono text-ops-sm"
-            aria-describedby={@hint && "#{@id}-hint"}
+            aria-describedby={@description_ids}
+            aria-invalid={@error && "true"}
+            disabled={@disabled}
           />
         </div>
       </fieldset>
-    </form>
+    </div>
     """
   end
 
@@ -947,17 +988,20 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:event, :string, required: true)
   attr(:items, :list, required: true)
   attr(:class, :any, default: nil)
+  attr(:disabled, :boolean, default: false)
 
   def ops_segmented_control(assigns) do
     ~H"""
     <div class={["space-y-2", @class]}>
-      <p class="text-ops-body font-semibold text-base-content">{@label}</p>
-      <div class="inline-flex flex-wrap gap-1 rounded-ops-control border border-base-300 bg-base-200/70 p-1">
+      <p id="search-mode-label" class="text-ops-body font-semibold text-base-content">{@label}</p>
+      <div role="group" aria-label={@label} class="inline-flex flex-wrap gap-1 rounded-ops-control border border-base-300 bg-base-200/70 p-1">
         <button
           :for={{label, value} <- @items}
           type="button"
           phx-click={@event}
           phx-value-mode={value}
+          aria-pressed={if(value == @selected, do: "true", else: "false")}
+          disabled={@disabled}
           data-testid={if value == "multi", do: "search-mode-multi"}
           class={[
             "ops-segmented-btn ops-transition-status px-3 text-ops-body font-semibold",
@@ -970,6 +1014,30 @@ defmodule ScrypathOpsWeb.OpsUi do
       </div>
     </div>
     """
+  end
+
+  defp field_descriptions(assigns) do
+    rest = Map.get(assigns, :rest, %{})
+    existing = Map.get(rest, :"aria-describedby") || Map.get(rest, :aria_describedby)
+
+    [existing, assigns.hint && "#{assigns.id}-hint", assigns.error && "#{assigns.id}-error"]
+    |> Enum.reject(&(&1 in [nil, ""]))
+    |> Enum.flat_map(&String.split(to_string(&1)))
+    |> Enum.uniq()
+    |> case do
+      [] -> nil
+      ids -> Enum.join(ids, " ")
+    end
+  end
+
+  defp schema_descriptions(assigns) do
+    [assigns.hint && "#{assigns.id}-hint", assigns.error && "#{assigns.id}-error"]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(" ")
+    |> case do
+      "" -> nil
+      ids -> ids
+    end
   end
 
   @doc "Checkbox list with consistent schema/object selection spacing."

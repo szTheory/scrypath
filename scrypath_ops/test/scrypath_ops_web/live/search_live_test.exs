@@ -58,6 +58,8 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert html =~ "Run search"
     assert html =~ "ops-form-stack"
     assert html =~ "ops-fieldset__legend"
+    assert html =~ ~s(for="search_q")
+    assert html =~ ~s(aria-describedby="search-honesty-panel search_q-hint")
     assert html =~ ~s(data-testid="search-empty-hero")
     assert html =~ "Run a search to see results"
     assert html =~ "Choose an index, enter a query, inspect the answer, then save a useful check."
@@ -97,6 +99,18 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
         end
       end
     end
+
+    unicode_schema = Module.concat(["Catalog", "Café東京"])
+
+    html =
+      render_component(&OpsUi.ops_schema_select/1, %{
+        id: "unicode-picker",
+        schemas: [unicode_schema],
+        selected: unicode_schema
+      })
+
+    assert html =~ "Café東京"
+    assert html =~ ~s(value="Catalog.Café東京")
   end
 
   test "search controls are natively disabled without a configured backend", %{conn: conn} do
