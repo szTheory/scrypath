@@ -111,6 +111,31 @@ compact config guards, errors, and small no-result messages.
 | `--control-h-lg` | 2.75rem | prominent / touch |
 | `--control-pad-x-sm/md` | 0.625 / 0.75rem | control inline padding |
 
+## Component roles and consumers
+
+`OpsUi` in `lib/scrypath_ops_web/components/ops_ui.ex` is the component authority. This
+inventory names every current export; add new exports here with their role consumers.
+
+| Component exports | Consumed roles |
+| --- | --- |
+| `ops_page_header`, `ops_heading` | Page h1 24px, section h2 18px, subsection h3 16px; 600 weight and tight heading leading |
+| `ops_panel`, `ops_section`, `ops_scaffold`, `ops_toolbar`, `ops_table` | Body 14px; named spacing and 24px page gap; panel padding 16px below 640px and 20px from 640px |
+| `ops_command_hint`, `ops_button`, `ops_link_button`, `ops_refresh_button`, `ops_action_group` | Action labels 14px/600; standard targets 40px; prominent and icon-only targets 44px; compact actions retain compact horizontal padding |
+| `ops_fieldset`, `ops_field`, `ops_text_input`, `ops_number_input`, `ops_textarea`, `ops_select`, `ops_schema_select`, `ops_segmented_control`, `ops_checkbox_list`, `ops_upload_box` | Form labels, help, and values use 14px; standard controls are 40px, multiline controls are at least 96px |
+| `ops_notice`, `ops_status`, `ops_verdict`, `ops_tone_chip`, `ops_badge`, `ops_metric`, `ops_metric_grid` | Decision copy and status use body 14px/400; keep named semantic surface/text contrast pairs |
+| `ops_intent_card`, `ops_handoff`, `ops_trail` | Body and next action use 14px; recovery CTA has a 44px target; retain named color and motion roles |
+| `ops_empty_state`, `ops_empty_hero`, `ops_loading`, `ops_config_empty` | Required instructions and error copy use body 14px; optional metadata may use the small exception |
+| `ops_data_card`, `ops_result_row`, `ops_object_list`, `ops_object_item`, `ops_signal_table` | Record headings use h3 16px; body uses 14px; spacing, radius, shadow, and responsive layout stay token-backed |
+| `ops_time`, `ops_disclosure`, `ops_code_block`, `ops_inline_code` | Required copy uses 14px; exact technical evidence may use monospace; optional timestamps and metadata retain 11px/12px exceptions |
+| `ops_modal`, `ops_command_palette` | Body/actions use 14px; dialog icon target is 44px; consume named overlay layer, radius, shadow, and motion roles |
+| `ops_workspace_mode_indicator` | State remains accompanied by text; workspace path is optional technical metadata |
+
+Primary task weights are 400 for body/value text and 600 for actions, labels, and headings.
+The existing 11px/12px scale remains reserved for short timestamps, badges, eyebrows, and
+optional technical metadata; never use it for an action, form label, failure reason, or
+the only copy needed to choose what to do. Existing radius, shadow, motion, and z-index
+tokens remain the sole authorities for those dimensions.
+
 ## Radius — `--radius-ops-*` → `rounded-ops-*`
 
 `sm` 0.25 · `md` 0.375 · `lg` 0.5 · `control` 0.375 (buttons/inputs) · `surface` 0.5 (panels/cards) · `overlay` 0.75rem (modals/tooltips).

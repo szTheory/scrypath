@@ -44,17 +44,7 @@ export const MUTED_PAIRS = [
     role: "text",
     note: "header utility override"
   },
-  // app.css line 292 — sidebar footer text
-  {
-    selector: ".ops-sidebar__footer",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "sidebar footer text"
-  },
-  // app.css line 306 — command hint pill text
+  // app.css — shell action label and platform keycap
   {
     selector: ".ops-command-hint",
     css_var: "ops-text-muted",
@@ -62,7 +52,7 @@ export const MUTED_PAIRS = [
     fg_token: "base-content",
     bg_token: "base-100",
     role: "text",
-    note: "command hint pill text"
+    note: "Jump to surface action label"
   },
   // app.css line 256 — shell utility override
   {

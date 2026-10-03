@@ -13,12 +13,21 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
 
   @app_css Path.join(__DIR__, "../../assets/css/app.css") |> Path.expand()
   @web_root Path.join(__DIR__, "../../lib/scrypath_ops_web") |> Path.expand()
+  @ops_ui Path.join(@web_root, "components/ops_ui.ex")
+  @token_catalog Path.join(__DIR__, "../../assets/css/DESIGN-TOKENS.md") |> Path.expand()
 
   # Utility prefix → the `@theme` namespace whose tail it consumes. Longer prefixes
   # first so the regex alternation prefers `px-ops-` over `p-ops-`.
   @spacing_prefixes ~w(px py pt pb pl pr mx my mt mb ml mr gap-x gap-y space-x space-y gap p m)
 
   defp css, do: File.read!(@app_css)
+
+  defp ops_ui, do: File.read!(@ops_ui)
+
+  defp rule(selector) do
+    [_, body] = Regex.run(~r/#{Regex.escape(selector)}\s*\{([^}]*)\}/s, css())
+    body
+  end
 
   defp defined_tokens do
     Regex.scan(~r/--([a-z0-9-]+)\s*:/, css())
@@ -99,5 +108,39 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
     assert orphans == [],
            "Found var(--…) references with no matching custom property in app.css.\n" <>
              Enum.map_join(orphans, "\n", fn {file, name} -> "  --#{name}  (#{file})" end)
+  end
+
+  test "the token catalog lists all current OpsUi exports with component roles" do
+    exports =
+      Regex.scan(~r/^\s*def (ops_\w+)\(/m, ops_ui())
+      |> Enum.map(fn [_, name] -> name end)
+
+    catalog = File.read!(@token_catalog)
+
+    assert length(exports) == 48
+
+    missing = Enum.reject(exports, &String.contains?(catalog, "`#{&1}`"))
+    assert missing == [], "Add these OpsUi exports to DESIGN-TOKENS.md: #{inspect(missing)}"
+
+    assert catalog =~ "Primary task weights are 400 for body/value text and 600"
+    assert catalog =~ "The existing 11px/12px scale remains reserved"
+  end
+
+  test "shared actions and responsive panels consume the named roles" do
+    assert rule(".ops-command-hint") =~ "font-size: var(--text-ops-body)"
+    assert ops_ui() =~ "text-ops-body font-semibold"
+    assert ops_ui() =~ "p-ops-4 sm:p-ops-panel"
+
+    cta = rule(".ops-intent-card__cta")
+    assert cta =~ "min-height: var(--control-h-lg)"
+    assert cta =~ "font-size: var(--text-ops-body)"
+
+    nav_targets = rule(".ops-nav-trigger,\n  .ops-nav-close")
+    assert nav_targets =~ "min-width: var(--control-h-lg)"
+    assert nav_targets =~ "min-height: var(--control-h-lg)"
+
+    dialog_target = rule(".btn.ops-icon-btn")
+    assert dialog_target =~ "min-width: var(--control-h-lg)"
+    assert dialog_target =~ "min-height: var(--control-h-lg)"
   end
 end
