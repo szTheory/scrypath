@@ -285,14 +285,6 @@
     padding: var(--spacing-ops-4) var(--spacing-ops-4) var(--spacing-ops-3);
   }
 
-  .ops-sidebar__footer {
-    margin-top: auto;
-    border-top: 1px solid color-mix(in oklch, var(--color-base-content) 8%, transparent);
-    padding: var(--spacing-ops-3) var(--spacing-ops-4) var(--spacing-ops-4);
-    color: var(--ops-text-muted);
-    font-size: var(--text-ops-sm);
-  }
-
   .ops-command-hint {
     display: inline-flex;
     min-height: var(--control-h-md);
@@ -305,7 +297,8 @@
     padding: 0.25rem 0.625rem;
     color: var(--ops-text-muted);
     font: inherit;
-    font-size: var(--text-ops-sm);
+    font-size: var(--text-ops-body);
+    font-weight: 600;
     line-height: var(--leading-ops-body);
     white-space: nowrap;
     cursor: pointer;
@@ -329,16 +322,11 @@
     outline-offset: 2px;
   }
 
-  .ops-sidebar__footer .ops-command-hint {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
   .ops-nav-trigger,
   .ops-nav-close {
     display: inline-flex;
-    min-width: var(--control-h-md);
-    min-height: var(--control-h-md);
+    min-width: var(--control-h-lg);
+    min-height: var(--control-h-lg);
     align-items: center;
     justify-content: center;
     border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
@@ -777,6 +765,11 @@
   .ops-btn {
     min-height: var(--control-h-md);
     transition: transform var(--duration-ops-instant) var(--ease-ops-standard);
+  }
+
+  .btn.ops-icon-btn {
+    min-width: var(--control-h-lg);
+    min-height: var(--control-h-lg);
   }
 
   .ops-btn:active {
@@ -1406,8 +1399,11 @@
   }
 
   .ops-intent-card__cta {
-    font-size: var(--text-ops-sm);
-    font-weight: 650;
+    display: flex;
+    min-height: var(--control-h-lg);
+    align-items: center;
+    font-size: var(--text-ops-body);
+    font-weight: 600;
     color: var(--color-primary);
   }
 

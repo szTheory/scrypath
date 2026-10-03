@@ -47,97 +47,95 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
       page_title={@page_title}
       ops_main_width={:wide}
     >
-      <.ops_toolbar class="items-end gap-4">
-        <.ops_page_header
-          title="Control Room"
-          subtitle="Recover search, verify a change before promotion, or inspect and save a useful search check."
-        />
-      </.ops_toolbar>
+      <div class="space-y-ops-page-gap">
+        <.ops_toolbar class="items-end gap-4">
+          <.ops_page_header
+            title="Control Room"
+            subtitle="Recover search, verify a change before promotion, or inspect and save a useful search check."
+          />
+        </.ops_toolbar>
 
-      <section aria-labelledby="control-room-posture-heading" class="space-y-4">
-        <h2 id="control-room-posture-heading" class="sr-only">Fleet posture</h2>
+        <section aria-labelledby="control-room-posture-heading" class="space-y-4">
+          <h2 id="control-room-posture-heading" class="sr-only">Fleet posture</h2>
 
-        <.ops_config_empty :if={@posture.state == :unconfigured} kind={:no_schemas}>
-          <:actions>
-            <.ops_refresh_button phx-click="refresh" aria_label="Refresh search trust status" />
-          </:actions>
-        </.ops_config_empty>
-        <.ops_config_empty :if={@posture.state == :missing_backend} kind={:missing_backend}>
-          <:actions>
-            <.ops_refresh_button phx-click="refresh" aria_label="Refresh search trust status" />
-          </:actions>
-        </.ops_config_empty>
+          <.ops_config_empty :if={@posture.state == :unconfigured} kind={:no_schemas}>
+            <:actions>
+              <.ops_refresh_button phx-click="refresh" aria_label="Refresh search trust status" />
+            </:actions>
+          </.ops_config_empty>
+          <.ops_config_empty :if={@posture.state == :missing_backend} kind={:missing_backend}>
+            <:actions>
+              <.ops_refresh_button phx-click="refresh" aria_label="Refresh search trust status" />
+            </:actions>
+          </.ops_config_empty>
 
-        <.ops_verdict
-          :if={@posture.state in [:ok, :degraded]}
-          kind={Posture.badge_kind(@posture.state)}
-          label="Can I trust search right now?"
-          headline={@posture.headline}
-          class="ops-verdict--hero"
-        >
-          <:actions>
-            <.ops_refresh_button phx-click="refresh" aria_label="Refresh search trust status" />
-            <.ops_link_button navigate={"#{@mount_path}/posture"} variant={:ghost} size={:sm}>
-              Open full posture <span aria-hidden="true">→</span>
-            </.ops_link_button>
-          </:actions>
-          <p>{@posture.evidence}</p>
-          <p class="mt-2 text-ops-sm text-base-content/60">
-            {schema_health_label(@posture.schema_count)} · {fetch_health_label(@posture.error_count)} · {backend_health_label(
-              @posture.backend_failed_count
-            )} · <.ops_time label="Checked" dt={@posture.refreshed_at} />
-          </p>
-        </.ops_verdict>
-      </section>
-
-      <section aria-labelledby="control-room-intents-heading" class="space-y-3">
-        <.ops_heading level={2} id="control-room-intents-heading">
-          What do you need to do?
-        </.ops_heading>
-        <div class="grid gap-4 md:grid-cols-3">
-          <.ops_intent_card
-            icon="hero-wrench-screwdriver"
-            kind={intent_tone(@posture)}
-            recommended={@posture.state in [:degraded, :missing_backend]}
-            title="Recover search"
-            summary="Recover search when something looks wrong. Check posture, work failed syncs, then confirm drift."
-            route_label="Start recovery"
-            navigate={"#{@mount_path}/posture"}
-            data-testid="intent-incident"
+          <.ops_verdict
+            :if={@posture.state in [:ok, :degraded]}
+            kind={Posture.badge_kind(@posture.state)}
+            label="Can I trust search right now?"
+            headline={@posture.headline}
+            class="ops-verdict--hero"
           >
-            <:badge :if={@posture.state == :degraded}>
-              <span class="ops-badge ops-copper-badge">Federated</span>
-            </:badge>
-          </.ops_intent_card>
-          <.ops_intent_card
-            icon="hero-arrow-up-tray"
-            title="Verify a change"
-            summary="Verify a change before promotion. Reconcile, compare contract drift, then use the gated swap."
-            route_label="Pre-flight sync drift"
-            navigate={"#{@mount_path}/sync-drift"}
-            data-testid="intent-change"
-          />
-          <.ops_intent_card
-            icon="hero-map"
-            title="Inspect and save a search check"
-            summary="Inspect a search result, then save a useful check. Queries stay bounded and read-only."
-            route_label="Explore search"
-            navigate={"#{@mount_path}/search"}
-            data-testid="intent-explore"
-          />
-        </div>
-      </section>
+            <:actions>
+              <.ops_refresh_button phx-click="refresh" aria_label="Refresh search trust status" />
+              <.ops_link_button navigate={"#{@mount_path}/posture"} variant={:ghost} size={:sm}>
+                Open full posture <span aria-hidden="true">→</span>
+              </.ops_link_button>
+            </:actions>
+            <p>{@posture.evidence}</p>
+            <p class="mt-2 text-ops-sm text-base-content/60">
+              {schema_health_label(@posture.schema_count)} · {fetch_health_label(@posture.error_count)} · {backend_health_label(
+                @posture.backend_failed_count
+              )} · <.ops_time label="Checked" dt={@posture.refreshed_at} />
+            </p>
+          </.ops_verdict>
+        </section>
 
-      <section
-        aria-labelledby="control-room-orient-heading"
-        class="flex flex-wrap items-center justify-between gap-3 pt-ops-2 text-ops-sm text-base-content/55"
-      >
-        <h2 id="control-room-orient-heading" class="sr-only">Getting around</h2>
-        <.ops_command_hint />
-        <a href={@orientation_href} class="link link-hover">
-          New here? See what each surface does <span aria-hidden="true">→</span>
-        </a>
-      </section>
+        <section aria-labelledby="control-room-intents-heading" class="space-y-3">
+          <.ops_heading level={2} id="control-room-intents-heading">
+            What do you need to do?
+          </.ops_heading>
+          <div class="grid gap-4 md:grid-cols-3">
+            <.ops_intent_card
+              icon="hero-wrench-screwdriver"
+              kind={intent_tone(@posture)}
+              recommended={@posture.state in [:degraded, :missing_backend]}
+              title="Recover search"
+              summary="Recover search when something looks wrong. Check posture, work failed syncs, then confirm drift."
+              route_label="Start recovery"
+              navigate={"#{@mount_path}/posture"}
+              data-testid="intent-incident"
+            >
+            </.ops_intent_card>
+            <.ops_intent_card
+              icon="hero-arrow-up-tray"
+              title="Verify a change"
+              summary="Verify a change before promotion. Reconcile, compare contract drift, then use the gated swap."
+              route_label="Pre-flight sync drift"
+              navigate={"#{@mount_path}/sync-drift"}
+              data-testid="intent-change"
+            />
+            <.ops_intent_card
+              icon="hero-map"
+              title="Inspect and save a search check"
+              summary="Inspect a search result, then save a useful check. Queries stay bounded and read-only."
+              route_label="Explore search"
+              navigate={"#{@mount_path}/search"}
+              data-testid="intent-explore"
+            />
+          </div>
+        </section>
+
+        <section
+          aria-labelledby="control-room-orient-heading"
+          class="flex flex-wrap items-center justify-end gap-3 pt-ops-2 text-ops-body text-base-content/55"
+        >
+          <h2 id="control-room-orient-heading" class="sr-only">Operator guide</h2>
+          <a href={@orientation_href} class="link link-hover">
+            Read the operator guide <span aria-hidden="true">→</span>
+          </a>
+        </section>
+      </div>
     </Layouts.app>
     """
   end

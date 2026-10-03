@@ -69,6 +69,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     {:ok, lv, html} = live(conn, ~p"/ops")
 
     assert has_element?(lv, "[data-testid='intent-incident'][href$='/ops/posture']")
+    assert has_element?(lv, "[data-testid='intent-incident']", "Start recovery")
     assert has_element?(lv, "[data-testid='intent-change'][href$='/ops/sync-drift']")
     assert has_element?(lv, "[data-testid='intent-explore'][href$='/ops/search']")
     assert html =~ "Recover search when something looks wrong."

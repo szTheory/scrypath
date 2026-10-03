@@ -42,8 +42,6 @@ defmodule ScrypathOpsWeb.OpsUi do
   The CommandPalette hook owns the behavior via `data-ops-command-open`; this component
   keeps visible shortcut hints from reading like inert text.
   """
-  attr(:prefix, :string, default: "Press")
-  attr(:suffix, :string, default: "to jump to any surface.")
   attr(:class, :any, default: nil)
 
   def ops_command_hint(assigns) do
@@ -55,9 +53,8 @@ defmodule ScrypathOpsWeb.OpsUi do
       aria-label="Open command palette"
       aria-keyshortcuts="Meta+K Control+K"
     >
-      <span>{@prefix}</span>
+      <span>Jump to surface</span>
       <kbd class="ops-kbd">⌘K</kbd>
-      <span :if={@suffix != ""}>{@suffix}</span>
     </button>
     """
   end
@@ -101,7 +98,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_panel(assigns) do
     ~H"""
-    <div class={["ops-panel p-ops-panel", @class]} {@rest}>
+    <div class={["ops-panel p-ops-4 sm:p-ops-panel", @class]} {@rest}>
       {render_slot(@inner_block)}
     </div>
     """
@@ -1265,7 +1262,7 @@ defmodule ScrypathOpsWeb.OpsUi do
         <button
           :if={@cancel_event}
           type="button"
-          class="btn btn-circle btn-ghost btn-sm absolute right-ops-3 top-ops-3"
+          class="btn ops-icon-btn btn-circle btn-ghost btn-sm absolute right-ops-3 top-ops-3"
           phx-click={@cancel_event}
           aria-label="Close dialog"
           autofocus
@@ -1439,6 +1436,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp button_classes(variant, size) do
     [
       "btn ops-btn rounded-ops-control",
+      "text-ops-body font-semibold",
       size == :xs && "btn-xs",
       size == :sm && "btn-sm",
       size == :md && "btn-md",
