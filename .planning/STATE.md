@@ -18,14 +18,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** v1.42 ScrypathOps operator/admin UI is approved and active. Define testable requirements for the cross-screen incident-recovery journey before phase planning. Preserve the original Phase 170 NOT READY cutoff and its later separately dated READY assessment; do not rerun Phase 170.
+**Current Focus:** v1.42 is active. The maintainer's 2026-10-03 direction authorizes automated UI inventory, conventional shared-system cleanup, coherent domain copy, and verified incident recovery while a live preview is available for feedback. OPUX-01–OPUX-08 supersede the earlier four proposed requirements. Preserve the original Phase 170 NOT READY cutoff and its later READY assessment; do not rerun Phase 170.
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Not started (creating roadmap beginning at 172)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-10-02 — Milestone v1.42 started
+Status: Creating roadmap
+Last activity: 2026-10-03 — Current UI preview, three specialist reviews, and revised v1.42 requirements recorded
 
 ## v1.41 Upstream Review
 
@@ -165,10 +165,10 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-10-02 — v1.42 milestone setup
-Stopped at: v1.42 started; approved scope captured in PROJECT.md; waiting for maintainer review of the proposed testable requirements before writing the requirements artifact or planning Phase 172
-Resume file: .planning/PROJECT.md and this section
-Next action: Review the v1.42 requirement candidates presented by the maintainer. Do not run Phase 170 or repeat its passing release/adopter checks.
+Last session: 2026-10-03 — v1.42 UI baseline and direction
+Stopped at: Revised requirements and three specialist findings recorded; creating the roadmap and UI design contract under the maintainer's instruction to automate this cleanup
+Resume file: .planning/research/v1.42/SUMMARY.md
+Next action: Create the focused roadmap beginning at Phase 172, then a checked UI contract and implementation plans. Preview remains at http://127.0.0.1:4012/admin/search in Compose project scrypath-ui-v142. Keep automated seed/reset tests isolated from that preview. Do not rerun Phase 170 or its passing release/adopter checks.
 
 ## Operator Next Steps
 

@@ -14,6 +14,8 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 
 **Freeze and GSD tracking:** Before a terminal source freeze, define where GSD will record the later plan summary, phase verification, and milestone audit. Keep the attested source ref immutable. If the external terminal workflow is complete but its frozen planning bytes cannot represent that outcome, preserve those original bytes and create an explicitly authorized, dated tracking replacement in the separate planning checkout. The current tracker must distinguish its later bookkeeping from the attested source identity. Do not replay completed terminal work to satisfy an index, infer semantic completion from an addendum, or use a verification override without maintainer authorization. This workflow was applied to Phase 170 on 2026-10-02; see its `170-08-TRACKING-REPLACEMENT.md` record.
 
+**Operator UI default:** Use the existing design system and established interaction patterns; maintain a coherent token/component vocabulary and concise user-facing domain language. Keep a live preview available for optional feedback, inspect before/after screenshots, and automate meaningful layout, keyboard, state and service checks without recurring paid AI review. Record inventories, decisions and revisit triggers to avoid redesign churn. See `reference/OPERATOR-UI-QUALITY.md` (maintainer direction, 2026-10-03).
+
 ## Current State
 
 **Current as of 2026-10-02:** Scrypath 0.3.14 is published as `scrypath-v0.3.14` at `9909756f25f3891548690c6b26d74e2b2f3bcb13`; [run 36915979826](https://github.com/szTheory/scrypath/actions/runs/36915979826) verified Hex/tag parity. The original Phase 170 decision remains **NOT READY** at its 2026-10-01 cutoff ([issue #86 comment 5940381507](https://github.com/szTheory/scrypath/issues/86#issuecomment-5940381507)); a fresh maintainer assessment is **READY** at [issue #86 comment 5955742805](https://github.com/szTheory/scrypath/issues/86#issuecomment-5955742805). Conditions 1–5 were carried forward within their recorded limits; condition 6 passed on the post-freeze tracker reconciliation, validator correction, release/package parity, and current source evidence. Inherited assumptions EA-167-01 through EA-167-07 remain unresolved, so this is not a blanket adopter or deployment guarantee. Validator fix PR [#89](https://github.com/szTheory/scrypath/pull/89) merged as `eb9233cfc60fa027f2fab5bccff00e46f9c7a69f`; exact-main closeout run [36930660896](https://github.com/szTheory/scrypath/actions/runs/36930660896) passed required jobs, coverage, E2E, and closeout attestation. Planning-only PR [#90](https://github.com/szTheory/scrypath/pull/90) merged at `161d5bd0a360fd1951aa3a0e66f5c6297857ce01`; its exact-tree PR run [37023495862](https://github.com/szTheory/scrypath/actions/runs/37023495862) passed all five required jobs. v1.41 is complete across Phases 168–171 and 19 plans. The frozen `8c271…` source snapshot remains a historical 17/18 snapshot; the separate authorized tracking replacement records Plan 08 complete without changing those frozen bytes or rerunning Phase 170. The v1.41 audit accepts visible, nonblocking Nyquist validation-record debt. See `milestones/v1.41-phases/170-documentation-and-readiness-closeout/170-08-TRACKING-REPLACEMENT.md` and `milestones/v1.41-phases/170-documentation-and-readiness-closeout/170-POST-FREEZE-RECONCILIATION.md`.
@@ -26,14 +28,15 @@ The prior v1.39 planning milestone shipped and was archived on 2026-09-26; it ad
 
 ## Current Milestone: v1.42 ScrypathOps operator/admin UI
 
-**Goal:** Make an operator incident recoverable through one clear, safe path across Control Room, Posture, Failed Sync, and Sync/Drift, with recovery verified from authoritative task/index state.
+**Goal:** Make the existing operator UI consistent, legible, and conventional, anchored by a clear incident-recovery path across Control Room, Posture, Failed Sync, and Sync/Drift with recovery verified from authoritative task/index state.
 
 **Target features:**
-- Deterministic browser proof for the cross-screen incident-recovery journey, including the resulting task/index state.
-- Fix only usability or accessibility friction demonstrated by that journey; preserve the established brand, per-screen polish, and host-owned authorization contract.
-- Keep recurring proof in CI where its confidence justifies the runtime and maintenance cost, with zero routine human UAT.
+- Inventory existing flows, states, and shared components across all six operator surfaces; repair demonstrated typography, layout, keyboard, and content-hierarchy gaps through the existing token/component system.
+- Use coherent domain copy, visible common actions, and an incident path that retains schema context and distinguishes accepted work, terminal outcomes, and retained failure history.
+- Add deterministic browser proof for the cross-screen recovery journey, correlated to new work and the expected indexed document; retain truthful status instead of requiring a universally green dashboard.
+- Keep recurring proof in existing CI lanes where its confidence justifies the runtime and maintenance cost, with direct screenshot inspection, zero routine human UAT, and no paid visual-judge API by default.
 
-**Context:** Existing individual recovery screens and design-system work from v1.32–v1.34 remain the baseline. Current Playwright coverage exercises failed-sync triage and sync/drift promotion separately; this milestone targets the end-to-end journey between them. No new Scrypath core API, backend capability, auth model, or unrelated UI surface is in scope.
+**Context:** The maintainer's 2026-10-03 UI cleanup direction expands the earlier incident-only proposal to evidence-backed consistency repairs across the six existing surfaces. Existing design-system work from v1.32–v1.34 remains the baseline. Current Playwright coverage exercises failed-sync triage and sync/drift promotion separately; its fixtures/oracles need correction before they prove recovery. No new Scrypath core API, backend capability, auth model, component framework, or unrelated UI surface is in scope. Existing-project research and captured baseline findings are in `research/v1.42/SUMMARY.md`; requirements are in `REQUIREMENTS.md`.
 
 ## Future Work
 
@@ -286,8 +289,8 @@ Current planning files: **`.planning/{PROJECT,REQUIREMENTS,ROADMAP,STATE}.md`** 
 
 - **Active milestone:** v1.42 ScrypathOps operator/admin UI, beginning at Phase 172. v1.41 is complete and archived. Its original Phase 170 NOT READY decision is preserved at its historical cutoff; the fresh 2026-10-02 issue #86 decision is READY within its recorded limits.
 - **Policy:** Keep `main` green on the lean required gates and prefer PR-first execution for serious milestone or feature-depth work.
-- **Current goals:** Prove the incident-recovery loop end to end, then fix only observed UX friction. Preserve the attested Phase 170 source and do not restart it. The authorized tracking replacement is separate from the frozen source identity.
-- **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, new core APIs, new auth models, and UI surfaces outside the approved incident-recovery journey remain out of scope.
+- **Current goals:** Improve demonstrated UI consistency/accessibility gaps and prove the incident-recovery loop end to end, using the existing system and economical automated acceptance. Preserve the attested Phase 170 source and do not restart it. The authorized tracking replacement is separate from the frozen source identity.
+- **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, new core APIs, new auth models, new UI surfaces, and unrelated workflow expansion remain out of scope.
 
 **v1.37 implementation outcome (2026-08-26):** runtime input and secret
 boundaries hardened; runtime xref cycles reduced to zero; write/search/settings/
@@ -439,7 +442,7 @@ v1.41 delivered Phase 168 four-graph security and proof, Phase 169 tenant/facet 
 
 ### Active
 
-- [ ] **v1.42 incident-recovery journey:** define and automate one deterministic browser path across Control Room, Posture, Failed Sync, and Sync/Drift; verify task/index outcomes; make only evidence-backed usability fixes; select CI placement by recurring value. No routine human UAT.
+- [ ] **v1.42 operator UI quality and incident recovery:** OPUX-01–OPUX-08 cover shared readability/accessibility and domain language, schema-preserving recovery, authoritative outcome proof, economical automated regression checks, and a clean closeout. No routine human UAT or paid visual judge.
 
 ### Out of Scope
 
@@ -469,4 +472,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-02 after v1.41 archival, the fresh issue #86 READY assessment, and approval of the bounded v1.42 ScrypathOps recovery-flow milestone.*
+*Last updated: 2026-10-03 after the maintainer's UI cleanup direction, current live baseline capture, and three evidence-based UI reviews refined v1.42 scope.*
