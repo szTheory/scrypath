@@ -20,7 +20,7 @@ import {
   type Locator,
   type Page
 } from "@playwright/test";
-import { existsSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import {
@@ -369,6 +369,7 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
 
   test("[shell-chrome] playbook modal focus lifecycle and overlay isolation", async ({ page }) => {
     const basename = `${SHELL_PLAYBOOK_PREFIX}modal-${Date.now()}.json`;
+    mkdirSync(PLAYBOOK_WORKSPACE_DIR, { recursive: true });
     writeFileSync(join(PLAYBOOK_WORKSPACE_DIR, basename), "{}\n");
     await gotoPlaybooks(page);
 
