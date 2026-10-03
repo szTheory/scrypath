@@ -58,6 +58,9 @@ defmodule ScrypathOps.PromotionEligibility do
       failed_work?(context) ->
         {:blocked, :failed_work}
 
+      not cutover_observed?(context) ->
+        {:blocked, :reconcile_not_current}
+
       contract_mismatch?(context) ->
         {:blocked, :contract_mismatch}
 
@@ -106,15 +109,25 @@ defmodule ScrypathOps.PromotionEligibility do
 
   defp indexes_distinct?(context) do
     reindex = field(context, :reconcile, :reindex)
-    live = Map.get(reindex, :live_index)
-    target = Map.get(reindex, :target_index)
+    live = field(reindex, :live_index)
+    target = field(reindex, :target_index)
     is_binary(live) and live != "" and is_binary(target) and target != "" and live != target
   end
 
   defp target_observed?(context) do
     reindex = field(context, :reconcile, :reindex)
-    Map.get(reindex, :observed?) == true and not is_nil(Map.get(reindex, :task_state))
+
+    field(reindex, :observed?) == true and
+      field(reindex, :task_state) in [:pending, :completed, :failed, :idle]
   end
+
+  defp cutover_observed?(context),
+    do:
+      field(field(context, :reconcile, :reindex), :cutover) in [
+        :not_started,
+        :pending,
+        :completed
+      ]
 
   defp backend_pending?(context),
     do: section_has?(field(context, :reconcile, :status), :backend, :pending)
@@ -146,7 +159,9 @@ defmodule ScrypathOps.PromotionEligibility do
     dimensions = field(context, :drift, :dimensions)
 
     not (is_map(dimensions) and map_size(dimensions) > 0 and
-           Enum.all?(dimensions, fn {_name, dimension} -> Map.get(dimension, :match) == true end))
+           Enum.all?(Map.to_list(dimensions), fn {_name, dimension} ->
+             field(dimension, :match) == true
+           end))
   end
 
   defp section_has?(status, section, key) do
@@ -154,8 +169,8 @@ defmodule ScrypathOps.PromotionEligibility do
     not (is_list(values) and values == [])
   end
 
-  defp field(nil, _key), do: nil
   defp field(map, key) when is_map(map), do: Map.get(map, key)
+  defp field(_, _key), do: nil
   defp field(map, outer, inner) when is_map(map), do: map |> Map.get(outer, %{}) |> field(inner)
   defp field(_, _, _), do: nil
 end

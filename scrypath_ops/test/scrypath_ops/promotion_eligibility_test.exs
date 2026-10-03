@@ -45,6 +45,143 @@ defmodule ScrypathOps.PromotionEligibilityTest do
     assert :eligible = PromotionEligibility.evaluate(ready_context())
   end
 
+  test "canonical ready report structs remain eligible" do
+    context = ready_context()
+
+    reconcile =
+      context.reconcile
+      |> Map.merge(%{mode: :manual, actions: []})
+      |> Map.update!(:reindex, &struct!(Scrypath.Operator.Reconcile.ReindexVisibility, &1))
+      |> Map.update!(:status, fn status ->
+        struct!(
+          Scrypath.Operator.Status,
+          Map.merge(status, %{schema: OpsPostA, mode: :manual, index: "posts_live"})
+        )
+      end)
+      |> then(&struct!(Scrypath.Operator.Reconcile, &1))
+
+    drift =
+      context.drift
+      |> Map.put(:version, 1)
+      |> Map.update!(:dimensions, fn dimensions ->
+        Map.new(dimensions, fn {name, dimension} ->
+          {name, struct!(Scrypath.Operator.IndexContractDrift.Report.Dimension, dimension)}
+        end)
+      end)
+      |> then(&struct!(Scrypath.Operator.IndexContractDrift.Report, &1))
+
+    assert :eligible =
+             PromotionEligibility.evaluate(%{context | reconcile: reconcile, drift: drift})
+  end
+
+  test "missing, nil, and malformed reports deny without raising" do
+    for {key, reason} <- [reconcile: :reconcile_not_current, drift: :contract_not_current] do
+      assert {:blocked, ^reason} =
+               ready_context() |> Map.delete(key) |> PromotionEligibility.evaluate()
+
+      for value <- [nil, :unknown, "unavailable", [], 123] do
+        assert {:blocked, ^reason} =
+                 ready_context() |> Map.put(key, value) |> PromotionEligibility.evaluate()
+      end
+    end
+  end
+
+  for {path, reason} <- [
+        {[:reconcile, :reindex], :indexes_not_distinct},
+        {[:reconcile, :status], :backend_work_pending},
+        {[:reconcile, :status, :backend], :backend_work_pending},
+        {[:reconcile, :status, :queue], :queue_work_pending},
+        {[:reconcile, :failed_work], :failed_work},
+        {[:reconcile, :drift_signals], :failed_work},
+        {[:drift, :dimensions], :contract_mismatch}
+      ] do
+    test "missing, nil, and malformed #{inspect(path)} deny by name" do
+      path = unquote(path)
+      reason = unquote(reason)
+      {_removed, missing} = pop_in(ready_context(), path)
+
+      assert {:blocked, ^reason} = PromotionEligibility.evaluate(missing)
+
+      for value <- [nil, :unknown, "unavailable", 123, %URI{}] do
+        context = put_in(ready_context(), path, value)
+        assert {:blocked, ^reason} = PromotionEligibility.evaluate(context)
+      end
+    end
+  end
+
+  test "unknown pending and failure lists remain unavailable instead of reading as empty" do
+    for {path, reason} <- [
+          {[:reconcile, :status, :backend, :pending], :backend_work_pending},
+          {[:reconcile, :status, :backend, :failed], :failed_work},
+          {[:reconcile, :status, :queue, :pending], :queue_work_pending},
+          {[:reconcile, :status, :queue, :retrying], :queue_work_pending},
+          {[:reconcile, :status, :queue, :failed], :failed_work}
+        ] do
+      {_removed, missing} = pop_in(ready_context(), path)
+      assert {:blocked, ^reason} = PromotionEligibility.evaluate(missing)
+
+      for value <- [nil, :unknown, %{}, "unavailable"] do
+        context = put_in(ready_context(), path, value)
+        assert {:blocked, ^reason} = PromotionEligibility.evaluate(context)
+      end
+    end
+  end
+
+  test "missing and unknown target task states are unobserved" do
+    {_removed, missing} = pop_in(ready_context(), [:reconcile, :reindex, :task_state])
+    assert {:blocked, :target_unobserved} = PromotionEligibility.evaluate(missing)
+
+    for value <- [nil, :unknown, "completed", [], %{}, 123] do
+      context = put_in(ready_context().reconcile.reindex.task_state, value)
+      assert {:blocked, :target_unobserved} = PromotionEligibility.evaluate(context)
+    end
+  end
+
+  test "missing and unknown cutover states require a current reconcile report" do
+    {_removed, missing} = pop_in(ready_context(), [:reconcile, :reindex, :cutover])
+    assert {:blocked, :reconcile_not_current} = PromotionEligibility.evaluate(missing)
+
+    for value <- [nil, :unknown, "not_started", [], %{}, 123] do
+      context = put_in(ready_context().reconcile.reindex.cutover, value)
+      assert {:blocked, :reconcile_not_current} = PromotionEligibility.evaluate(context)
+    end
+  end
+
+  test "known task and cutover enums keep their existing outcomes" do
+    for {state, expected} <- [
+          {:idle, :eligible},
+          {:completed, :eligible},
+          {:pending, {:blocked, :reindex_pending}},
+          {:failed, {:blocked, :failed_work}}
+        ] do
+      context = put_in(ready_context().reconcile.reindex.task_state, state)
+      assert ^expected = PromotionEligibility.evaluate(context)
+    end
+
+    for {state, expected} <- [
+          {:not_started, :eligible},
+          {:completed, :eligible},
+          {:pending, {:blocked, :cutover_pending}}
+        ] do
+      context = put_in(ready_context().reconcile.reindex.cutover, state)
+      assert ^expected = PromotionEligibility.evaluate(context)
+    end
+
+    unobserved =
+      ready_context()
+      |> put_in([:reconcile, :reindex, :task_state], :idle)
+      |> put_in([:reconcile, :reindex, :observed?], false)
+
+    assert {:blocked, :target_unobserved} = PromotionEligibility.evaluate(unobserved)
+  end
+
+  test "malformed dimension entries remain contract mismatches" do
+    for value <- [nil, :unknown, "matching", [], 123, %{}, %{match: "true"}] do
+      context = put_in(ready_context().drift.dimensions.fields, value)
+      assert {:blocked, :contract_mismatch} = PromotionEligibility.evaluate(context)
+    end
+  end
+
   test "missing, failed, pending, wrong-context, unsupported, or unresolved signals deny by name" do
     cases = [
       {%{reconcile: nil}, :reconcile_not_current},
