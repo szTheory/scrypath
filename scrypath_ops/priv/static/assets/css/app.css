@@ -2589,6 +2589,9 @@
   .pt-ops-4 {
     padding-top: var(--spacing-ops-4);
   }
+  .pb-4 {
+    padding-bottom: calc(var(--spacing) * 4);
+  }
   .pb-ops-6 {
     padding-bottom: var(--spacing-ops-6);
   }

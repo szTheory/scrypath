@@ -155,7 +155,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert length(li_opens) <= 5
   end
 
-  test "swap live fresh sudo refreshes posture in place and keeps local assigns" do
+  test "posture promotion handoff keeps the selected schema and does not swap directly" do
     socket =
       posture_socket(%{
         local_ui_state: %{expanded: [:details]}
@@ -168,15 +168,16 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
                socket
              )
 
-    assert Agent.get(:posture_live_test_state, & &1.swap_called) == true
-    assert Agent.get(:posture_live_test_state, & &1.tasks_calls) == 2
+    assert inspect(updated_socket.redirected) =~
+             "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA"
+
+    refute Agent.get(:posture_live_test_state, & &1.swap_called)
+    assert Agent.get(:posture_live_test_state, & &1.tasks_calls) == 0
     assert updated_socket.assigns.local_ui_state == %{expanded: [:details]}
-    assert match?({:ok, _}, updated_socket.assigns.posture_rows)
-    assert updated_socket.assigns.last_refresh_at != nil
-    assert flash_value(updated_socket, "info") =~ "Swap live index completed"
+    assert updated_socket.assigns.posture_rows == []
   end
 
-  test "swap live blocks impersonation before refresh" do
+  test "posture promotion handoff performs no mutation while impersonating" do
     socket =
       posture_socket(%{
         operator_context: operator_context(impersonator: "impersonator_789"),
@@ -190,14 +191,16 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
                socket
              )
 
-    assert flash_value(updated_socket, "error") =~ "Impersonation must be cleared"
+    assert inspect(updated_socket.redirected) =~
+             "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA"
+
     assert Agent.get(:posture_live_test_state, & &1.swap_called) != true
     assert Agent.get(:posture_live_test_state, & &1.tasks_calls) == 0
     assert updated_socket.assigns.local_ui_state == :keep
     assert updated_socket.assigns.posture_rows == []
   end
 
-  test "swap live stale sudo redirects with return_to only" do
+  test "posture promotion handoff performs no mutation before sudo confirmation" do
     socket =
       posture_socket(%{
         operator_context:
@@ -212,8 +215,9 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
                socket
              )
 
-    assert inspect(updated_socket.redirected) =~ "/sudo/confirm"
-    assert inspect(updated_socket.redirected) =~ "return_to=%2Fops%2Fposture"
+    assert inspect(updated_socket.redirected) =~
+             "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA"
+
     assert Agent.get(:posture_live_test_state, & &1.swap_called) != true
     assert Agent.get(:posture_live_test_state, & &1.tasks_calls) == 0
     assert updated_socket.assigns.local_ui_state == :keep
