@@ -192,6 +192,35 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert final_socket.assigns.drift_result == nil
   end
 
+  test "recovery refresh discards prior verification and stale results cannot restore it" do
+    socket =
+      sync_drift_socket(%{
+        selected_schema: OpsPostA,
+        context_generation: 8,
+        recovery_handle: "opaque-handle",
+        recovery_status: :verified,
+        recovery_checked_at: DateTime.utc_now(),
+        recovery_loading: false
+      })
+
+    {:noreply, refreshing} = SyncDriftLive.handle_event("refresh_recovery_status", %{}, socket)
+
+    assert refreshing.assigns.recovery_status == :unknown
+    assert refreshing.assigns.recovery_loading
+    assert Agent.get(:sync_drift_live_test_state, & &1.tasks_calls) == 0
+    assert Agent.get(:sync_drift_live_test_state, & &1.settings_calls) == 0
+
+    {:noreply, stale} =
+      SyncDriftLive.handle_async(
+        :recovery_observation,
+        {:ok, {7, "opaque-handle", :verified}},
+        refreshing
+      )
+
+    assert stale.assigns.recovery_status == :unknown
+    assert stale.assigns.recovery_loading
+  end
+
   test "rendered sync drift links preserve the selected schema", %{conn: conn} do
     {:ok, lv, html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
 
@@ -260,6 +289,10 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       drift_loaded_at: nil,
       drift_error: nil,
       drift_loading: false,
+      recovery_handle: nil,
+      recovery_status: nil,
+      recovery_checked_at: nil,
+      recovery_loading: false,
       current_scope: scope,
       operator_context: operator_context,
       local_ui_state: nil

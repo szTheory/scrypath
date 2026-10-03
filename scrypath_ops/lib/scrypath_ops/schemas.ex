@@ -9,7 +9,7 @@ defmodule ScrypathOps.Schemas do
   @allowlist_key :schema_allowlist
 
   @scrypath_opt_keys ~w(
-    backend meilisearch_url index_prefix sync_mode oban oban_queue
+    backend repo meilisearch_url index_prefix sync_mode oban oban_queue
     meilisearch_api_key meilisearch_client oban_inspector meilisearch_tasks oban_jobs
   )a
 

@@ -11,6 +11,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   alias ScrypathOps.Integrations.Sigra.Gating
   alias ScrypathOps.OperatorSelection
+  alias ScrypathOps.RecoveryObservation
 
   @impl true
   def mount(_params, _session, socket) do
@@ -31,6 +32,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       |> assign(:drift_loaded_at, nil)
       |> assign(:drift_error, nil)
       |> assign(:drift_loading, false)
+      |> assign(:recovery_handle, nil)
+      |> assign(:recovery_status, nil)
+      |> assign(:recovery_checked_at, nil)
+      |> assign(:recovery_loading, false)
 
     {:ok, socket}
   end
@@ -65,7 +70,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
     socket =
       if selected do
-        load_reconcile_on_mount(socket)
+        socket
+        |> load_reconcile_on_mount()
+        |> maybe_start_recovery(Map.get(params, "recovery"))
       else
         socket
         |> clear_context_results()
@@ -103,6 +110,21 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   def handle_event("refresh_reconcile", _params, socket) do
     {:noreply,
      if(current_selection?(socket), do: refresh_reconcile(socket), else: unavailable(socket))}
+  end
+
+  def handle_event("refresh_recovery_status", _params, socket) do
+    case Map.get(socket.assigns, :recovery_handle) do
+      handle when is_binary(handle) ->
+        if current_selection?(socket) do
+          {:noreply, start_recovery_observation(socket, handle)}
+        else
+          {:noreply, unavailable(socket)}
+        end
+
+      _ ->
+        {:noreply,
+         socket |> assign(:recovery_status, :unknown) |> assign(:recovery_loading, false)}
+    end
   end
 
   def handle_event("load_drift", _params, socket) do
@@ -143,7 +165,48 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     end
   end
 
+  @impl true
+  def handle_async(:recovery_observation, {:ok, {generation, handle, result}}, socket) do
+    if generation == socket.assigns.context_generation and
+         handle == socket.assigns.recovery_handle do
+      {:noreply,
+       socket
+       |> assign(:recovery_status, result)
+       |> assign(:recovery_checked_at, DateTime.utc_now())
+       |> assign(:recovery_loading, false)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_async(:recovery_observation, {:exit, _reason}, socket) do
+    {:noreply,
+     socket
+     |> assign(:recovery_status, :unknown)
+     |> assign(:recovery_checked_at, DateTime.utc_now())
+     |> assign(:recovery_loading, false)}
+  end
+
   defp module_flat_name(mod) when is_atom(mod), do: OperatorSelection.canonical(mod)
+
+  defp recovery_status_label(:accepted), do: "Retry accepted"
+  defp recovery_status_label(:running), do: "Retry running"
+
+  defp recovery_status_label(:queue_only_completed),
+    do: "Queue job completed; backend evidence pending"
+
+  defp recovery_status_label(:verified), do: "Recovery verified"
+  defp recovery_status_label(:failed), do: "Recovery failed"
+  defp recovery_status_label(:timed_out), do: "Recovery check timed out"
+  defp recovery_status_label(_), do: "Recovery unknown"
+
+  defp recovery_status_kind(:verified), do: :success
+  defp recovery_status_kind(:failed), do: :error
+
+  defp recovery_status_kind(status) when status in [:accepted, :running, :queue_only_completed],
+    do: :warning
+
+  defp recovery_status_kind(_), do: :neutral
 
   defp maybe_advance_generation(socket, true) do
     socket
@@ -161,7 +224,302 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> assign(:drift_loaded_at, nil)
     |> assign(:drift_error, nil)
     |> assign(:drift_loading, false)
+    |> assign(:recovery_handle, nil)
+    |> assign(:recovery_status, nil)
+    |> assign(:recovery_checked_at, nil)
+    |> assign(:recovery_loading, false)
   end
+
+  defp maybe_start_recovery(socket, handle) when is_binary(handle) and byte_size(handle) <= 128 do
+    start_recovery_observation(socket, handle)
+  end
+
+  defp maybe_start_recovery(socket, _), do: socket
+
+  defp start_recovery_observation(socket, handle) do
+    generation = socket.assigns.context_generation
+    schema = socket.assigns.selected_schema
+    opts = ScrypathOps.Schemas.runtime_opts(socket.assigns.scrypath_opts)
+    context = recovery_host_context(socket, schema)
+
+    socket =
+      socket
+      |> assign(:recovery_handle, handle)
+      |> assign(:recovery_status, :unknown)
+      |> assign(:recovery_loading, true)
+
+    start_async(socket, :recovery_observation, fn ->
+      result = observe_recovery(context, handle, schema, opts)
+      {generation, handle, result}
+    end)
+  end
+
+  defp observe_recovery(context, handle, schema, opts) do
+    task = Task.async(fn -> observe_recovery_now(context, handle, schema, opts) end)
+
+    case Task.yield(task, 10_000) do
+      {:ok, result} ->
+        result
+
+      nil ->
+        Task.shutdown(task, :brutal_kill)
+        :timed_out
+    end
+  rescue
+    _ -> :unknown
+  end
+
+  defp observe_recovery_now(context, handle, schema, opts) do
+    with true <- schema in ScrypathOps.Schemas.allowlist(),
+         receipt when is_map(receipt) <- RecoveryObservation.observe(context, handle),
+         true <- receipt.generation == context.generation,
+         true <- current_runtime_matches?(receipt, opts),
+         {:ok, expected_index} <- active_index(schema, opts),
+         true <- receipt.index == expected_index,
+         {:ok, job} <- read_recovery_job(receipt, opts),
+         {:ok, queue_state} <- validate_recovery_job(job, receipt) do
+      case receipt.task_uid do
+        task_uid when is_integer(task_uid) ->
+          verify_task_and_documents(task_uid, receipt, schema, opts)
+
+        _ when queue_state == :completed ->
+          :queue_only_completed
+
+        _ when queue_state == :running ->
+          :running
+
+        _ ->
+          :accepted
+      end
+    else
+      false -> :unknown
+      :unknown -> :unknown
+      {:error, :job_running} -> :running
+      {:error, :queue_only_completed} -> :queue_only_completed
+      {:error, :job_failed} -> :failed
+      {:error, _} -> :unknown
+      _ -> :unknown
+    end
+  end
+
+  defp current_runtime_matches?(receipt, opts) do
+    config = Scrypath.Config.resolve!(opts)
+    instance = Keyword.get(config, :oban)
+
+    with true <- is_atom(instance),
+         true <- receipt.instance == instance,
+         true <- receipt.node == node(),
+         {:ok, oban_config} <- oban_config(instance),
+         true <- receipt.repo == Map.get(oban_config, :repo),
+         true <- receipt.prefix == Map.get(oban_config, :prefix),
+         true <- receipt.endpoint == endpoint_identity(Keyword.get(config, :meilisearch_url)) do
+      true
+    else
+      _ -> false
+    end
+  rescue
+    _ -> false
+  end
+
+  defp oban_config(instance) do
+    cond do
+      function_exported?(instance, :config, 0) and Code.ensure_loaded?(instance) ->
+        config = apply(instance, :config, [])
+        if is_map(config), do: {:ok, config}, else: {:error, :invalid_oban_config}
+
+      Code.ensure_loaded?(Oban) and function_exported?(Oban, :config, 1) ->
+        config = apply(Oban, :config, [instance])
+        if is_map(config), do: {:ok, config}, else: {:error, :invalid_oban_config}
+
+      true ->
+        {:error, :oban_unavailable}
+    end
+  rescue
+    _ -> {:error, :oban_unavailable}
+  end
+
+  defp endpoint_identity(url) when is_binary(url) do
+    case URI.parse(url) do
+      %URI{scheme: scheme, host: host, port: port, path: path} when is_binary(host) ->
+        %{
+          scheme: scheme,
+          host: String.downcase(host),
+          port: port,
+          path: String.trim_trailing(path || "", "/")
+        }
+
+      _ ->
+        nil
+    end
+  end
+
+  defp endpoint_identity(_), do: nil
+
+  defp verify_task_and_documents(task_uid, receipt, schema, opts) do
+    with {:ok, task} <- read_recovery_task(task_uid, opts),
+         :ok <- validate_recovery_task(task, receipt, task_uid),
+         {:ok, expected} <- read_expected_effects(schema, receipt, opts),
+         {:ok, observation} <-
+           ScrypathOps.DocumentObservation.check(
+             Map.merge(receipt, expected),
+             task,
+             Keyword.put(opts, :document_id_field, Scrypath.Schema.Metadata.document_id(schema))
+           ) do
+      observation.state
+    else
+      {:error, :job_running} -> :running
+      {:error, :queue_only_completed} -> :queue_only_completed
+      {:error, :job_failed} -> :failed
+      _ -> :unknown
+    end
+  rescue
+    _ -> :unknown
+  end
+
+  defp recovery_host_context(socket, schema) do
+    operator_context = Map.get(socket.assigns, :operator_context)
+    scope = Map.get(socket.assigns, :current_scope, %{})
+    org = field(operator_context, :active_org_id) || get_in(scope, [:active_organization, :id])
+
+    %{
+      host: (socket.host_uri && socket.host_uri.host) || "unknown",
+      org: org && to_string(org),
+      schema: OperatorSelection.canonical(schema),
+      generation: socket.assigns.context_generation
+    }
+  end
+
+  defp active_index(schema, opts) do
+    try do
+      {:ok, Scrypath.Meilisearch.index_name(schema, opts)}
+    rescue
+      _ -> {:error, :index_unavailable}
+    end
+  end
+
+  defp read_recovery_job(receipt, opts) do
+    repo = Keyword.get(opts, :repo)
+    job_id = receipt.replacement_job
+
+    if is_atom(repo) and is_integer(job_id) and Code.ensure_loaded?(Oban.Job) and
+         Code.ensure_loaded?(repo) and
+         function_exported?(repo, :get, 2) do
+      case apply(repo, :get, [Oban.Job, job_id]) do
+        job when is_map(job) and is_struct(job, Oban.Job) -> {:ok, job}
+        _ -> {:error, :job_unavailable}
+      end
+    else
+      {:error, :job_unavailable}
+    end
+  end
+
+  defp validate_recovery_job(job, receipt) do
+    args = job.args || %{}
+    schema = Map.get(args, "schema") || Map.get(args, :schema)
+    index = Map.get(args, "index") || Map.get(args, :index)
+    backend = Map.get(args, "backend") || Map.get(args, :backend)
+
+    expected_worker =
+      if receipt.operation == :delete,
+        do: "Scrypath.Oban.DeleteWorker",
+        else: "Scrypath.Oban.UpsertWorker"
+
+    state = to_string(job.state)
+
+    cond do
+      job.id != receipt.replacement_job ->
+        {:error, :job_id_mismatch}
+
+      job.attempt != receipt.attempt ->
+        {:error, :attempt_mismatch}
+
+      job.worker not in [expected_worker, "Elixir." <> expected_worker] ->
+        {:error, :worker_mismatch}
+
+      schema != receipt.schema ->
+        {:error, :schema_mismatch}
+
+      index != receipt.index ->
+        {:error, :index_mismatch}
+
+      backend not in ["Elixir.Scrypath.Meilisearch", "Scrypath.Meilisearch"] ->
+        {:error, :backend_mismatch}
+
+      state in ["available", "scheduled", "retryable"] ->
+        {:ok, :accepted}
+
+      state == "executing" ->
+        {:ok, :running}
+
+      state == "completed" ->
+        {:ok, :completed}
+
+      state in ["discarded", "cancelled", "canceled"] ->
+        {:error, :job_failed}
+
+      true ->
+        {:error, :job_not_verifiable}
+    end
+  end
+
+  defp read_recovery_task(uid, opts) do
+    client = Keyword.get(opts, :meilisearch_client) || Scrypath.Meilisearch.Client
+
+    if function_exported?(client, :task, 2) do
+      case apply(client, :task, [uid, opts]) do
+        {:ok, task} when is_map(task) -> {:ok, task}
+        _ -> {:error, :task_unavailable}
+      end
+    else
+      {:error, :task_unavailable}
+    end
+  end
+
+  defp validate_recovery_task(task, receipt, uid) do
+    task_uid = Map.get(task, "uid") || Map.get(task, :uid) || Map.get(task, "taskUid")
+    index = Map.get(task, "indexUid") || Map.get(task, :indexUid)
+    type = Map.get(task, "type") || Map.get(task, :type)
+
+    expected_type =
+      if receipt.operation == :delete, do: "documentDeletion", else: "documentAdditionOrUpdate"
+
+    cond do
+      to_string(task_uid) != to_string(uid) -> {:error, :task_uid_mismatch}
+      index != receipt.index -> {:error, :task_index_mismatch}
+      type != expected_type -> {:error, :task_type_mismatch}
+      true -> :ok
+    end
+  end
+
+  defp read_expected_effects(schema, receipt, opts) do
+    source_id = get_in(receipt, [:source_failure, :id])
+
+    with {:ok, rows} when is_list(rows) <- Scrypath.failed_sync_work(schema, opts),
+         row when not is_nil(row) <- Enum.find(rows, &(to_string(&1.id) == to_string(source_id))),
+         recovery when not is_nil(recovery) <- Scrypath.Operator.FailedWork.recovery_action(row),
+         payload when is_map(payload) <- get_in(recovery.reference, [:payload]) do
+      if receipt.operation == :delete do
+        ids = Map.get(payload, "document_ids") || Map.get(payload, :document_ids)
+
+        if is_list(ids),
+          do: {:ok, %{operation: :delete, expected: ids}},
+          else: {:error, :missing_ids}
+      else
+        docs = Map.get(payload, "documents") || Map.get(payload, :documents)
+
+        if is_list(docs),
+          do: {:ok, %{operation: :upsert, expected: docs}},
+          else: {:error, :missing_documents}
+      end
+    else
+      _ -> {:error, :source_unavailable}
+    end
+  rescue
+    _ -> {:error, :source_unavailable}
+  end
+
+  defp field(map, key) when is_map(map), do: Map.get(map, key)
+  defp field(_, _), do: nil
 
   defp current_selection?(socket) do
     case OperatorSelection.resolve(
@@ -233,6 +591,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         case Scrypath.Meilisearch.swap_indexes(mod, opts) do
           {:ok, _result} ->
             socket
+            |> invalidate_recovery_claim()
             |> refresh_reconcile()
             |> maybe_refresh_drift()
             |> put_flash(:info, "Swap live index completed for #{module_flat_name(mod)}")
@@ -244,6 +603,13 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         put_flash(socket, :error, "Select a schema and configure Scrypath runtime.")
       end
     end)
+  end
+
+  defp invalidate_recovery_claim(socket) do
+    socket
+    |> assign(:recovery_status, :unknown)
+    |> assign(:recovery_checked_at, nil)
+    |> assign(:recovery_loading, false)
   end
 
   defp maybe_refresh_drift(socket) do
@@ -371,6 +737,30 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           selected={@selected_schema}
           phx-change="select_schema"
         />
+      </.ops_panel>
+
+      <.ops_panel :if={@recovery_handle} class="mt-4" id="recovery-observation">
+        <.ops_section
+          title="Retry observation"
+          subtitle="This read checks the accepted queue job, its exact Meilisearch task, and the active index documents."
+          meta={if @recovery_checked_at, do: "checked #{format_dt(@recovery_checked_at)}"}
+        >
+          <:actions>
+            <.ops_button
+              phx-click="refresh_recovery_status"
+              phx-disable-with="Checking…"
+              disabled={@recovery_loading || !@selected_schema}
+            >
+              Refresh recovery status
+            </.ops_button>
+          </:actions>
+          <.ops_status
+            kind={recovery_status_kind(@recovery_status)}
+            title={recovery_status_label(@recovery_status)}
+          >
+            A refresh observes this retry and never submits work.
+          </.ops_status>
+        </.ops_section>
       </.ops_panel>
 
       <.ops_empty_state :if={@selection_error == :no_schemas} title="No schemas configured">

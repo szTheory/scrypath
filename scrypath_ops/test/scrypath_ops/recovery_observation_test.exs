@@ -92,6 +92,20 @@ defmodule ScrypathOps.RecoveryObservationTest do
     assert RecoveryObservation.observe(server, host, old_handle).task_uid == nil
   end
 
+  test "a newer retry receipt for the same source failure supersedes its prior handle", %{
+    server: server
+  } do
+    host = %{schema: "Scrypath.Test.Post", host: "ops.example", org: "org-1"}
+    source = %{id: 950, operation: :upsert}
+    first = Map.put(receipt(54, 1, "http://search:7700", :upsert), :source_failure, source)
+    second = Map.put(receipt(55, 1, "http://search:7700", :upsert), :source_failure, source)
+
+    {:ok, first_handle} = RecoveryObservation.register(server, host, first)
+    {:ok, _second_handle} = RecoveryObservation.register(server, host, second)
+
+    assert RecoveryObservation.lookup(server, host, first_handle) == :unknown
+  end
+
   test "wrong handle host and allowlist context cannot read a receipt", %{server: server} do
     host = %{schema: "Scrypath.Test.Post", host: "ops.example", org: "org-1"}
 
@@ -171,8 +185,8 @@ defmodule ScrypathOps.RecoveryObservationTest do
   defp worker(server, metadata, callback) do
     parent = self()
 
-    pid =
-      spawn(fn ->
+    {pid, ref} =
+      spawn_monitor(fn ->
         RecoveryObservation.handle_event(
           [:oban, :job, :start],
           %{},
@@ -184,7 +198,6 @@ defmodule ScrypathOps.RecoveryObservationTest do
         send(parent, :worker_done)
       end)
 
-    ref = Process.monitor(pid)
     assert_receive :worker_done
     assert_receive {:DOWN, ^ref, :process, ^pid, :normal}
     _ = :sys.get_state(server)

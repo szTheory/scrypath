@@ -163,7 +163,11 @@ defmodule ScrypathOps.RecoveryObservation do
       inserted_at: now
     }
 
-    observations = Map.put(observations, handle, entry) |> trim(state.max_entries)
+    observations =
+      observations
+      |> supersede_source_failure(sanitized.source_failure, context_digest(host_context))
+      |> Map.put(handle, entry)
+      |> trim(state.max_entries)
 
     {:reply, {:ok, handle}, %{state | observations: observations, recent: recent}}
   end
@@ -469,6 +473,18 @@ defmodule ScrypathOps.RecoveryObservation do
     Map.reject(recent, fn {prior, _evidence} ->
       same_job?(prior, identity) and prior.attempt < identity.attempt
     end)
+  end
+
+  defp supersede_source_failure(observations, source_failure, context) do
+    source_id = field(source_failure, :id)
+
+    if is_nil(source_id) do
+      observations
+    else
+      Map.reject(observations, fn {_handle, entry} ->
+        entry.context == context and field(entry.receipt.source_failure, :id) == source_id
+      end)
+    end
   end
 
   defp failure_reference(%{} = source) do

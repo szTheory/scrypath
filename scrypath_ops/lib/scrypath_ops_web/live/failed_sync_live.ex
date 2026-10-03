@@ -308,8 +308,8 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       accepted_result: %{job_id: job_id},
       endpoint: Keyword.get(config, :meilisearch_url),
       instance: Keyword.get(config, :oban),
-      repo: Keyword.get(config, :repo),
-      prefix: Keyword.get(config, :prefix),
+      repo: oban_repo(Keyword.get(config, :oban)) || Keyword.get(config, :repo),
+      prefix: oban_prefix(Keyword.get(config, :oban)),
       node: node(),
       generation: socket.assigns.context_generation,
       created_at: DateTime.utc_now()
@@ -341,6 +341,36 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       generation: socket.assigns.context_generation
     }
   end
+
+  defp oban_prefix(instance) when is_atom(instance) do
+    if Code.ensure_loaded?(Oban) and function_exported?(Oban, :config, 1) do
+      case apply(Oban, :config, [instance]) do
+        %{prefix: prefix} -> prefix
+        _ -> nil
+      end
+    else
+      nil
+    end
+  rescue
+    _ -> nil
+  end
+
+  defp oban_prefix(_), do: nil
+
+  defp oban_repo(instance) when is_atom(instance) do
+    if Code.ensure_loaded?(Oban) and function_exported?(Oban, :config, 1) do
+      case apply(Oban, :config, [instance]) do
+        %{repo: repo} -> repo
+        _ -> nil
+      end
+    else
+      nil
+    end
+  rescue
+    _ -> nil
+  end
+
+  defp oban_repo(_), do: nil
 
   defp field(map, key) when is_map(map), do: Map.get(map, key)
   defp field(_, _), do: nil
@@ -626,7 +656,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                 <.link
                   :if={receipt.handle}
                   navigate={recovery_handoff_path(@mount_path, @selected_schema, receipt.handle)}
-                  class="ml-2 min-h-ops-control text-ops-link underline underline-offset-2"
+                  class="ml-2 min-h-ops-control link link-primary underline underline-offset-2"
                 >
                   Check sync status
                 </.link>

@@ -2363,13 +2363,6 @@
       margin-block-end: calc(calc(var(--spacing) * 6) * calc(1 - var(--tw-space-y-reverse)));
     }
   }
-  .space-y-ops-2 {
-    :where(& > :not(:last-child)) {
-      --tw-space-y-reverse: 0;
-      margin-block-start: calc(var(--spacing-ops-2) * var(--tw-space-y-reverse));
-      margin-block-end: calc(var(--spacing-ops-2) * calc(1 - var(--tw-space-y-reverse)));
-    }
-  }
   .space-y-ops-field {
     :where(& > :not(:last-child)) {
       --tw-space-y-reverse: 0;
@@ -2694,6 +2687,9 @@
   .break-words {
     overflow-wrap: break-word;
   }
+  .break-all {
+    word-break: break-all;
+  }
   .whitespace-pre-wrap {
     white-space: pre-wrap;
   }
@@ -2789,6 +2785,9 @@
   }
   .underline {
     text-decoration-line: underline;
+  }
+  .underline-offset-2 {
+    text-underline-offset: 2px;
   }
   .opacity-0 {
     opacity: 0%;
@@ -3182,11 +3181,6 @@
   .lg\:grid-cols-6 {
     @media (width >= 64rem) {
       grid-template-columns: repeat(6, minmax(0, 1fr));
-    }
-  }
-  .lg\:grid-cols-\[minmax\(0\,1fr\)_18rem\] {
-    @media (width >= 64rem) {
-      grid-template-columns: minmax(0,1fr) 18rem;
     }
   }
   .lg\:px-8 {
