@@ -5,17 +5,17 @@ milestone_name: ScrypathOps operator/admin UI
 current_phase: 172
 current_phase_name: Consistent Operator UI and Verified Recovery
 status: executing
-stopped_at: Phase 172 Plans 01-04 complete; Plan 05 truthful index promotion next
-last_updated: "2026-10-03T21:02:34.518Z"
+stopped_at: Phase 172 Plans 01-05 complete; Plan 06 mounted recovery proof next
+last_updated: "2026-10-03T21:34:01.121Z"
 last_activity: 2026-10-03
-last_activity_desc: Plans 01–04 complete; exact retry task/document observation implemented and tested
-state_head: cbdbd302013db5fdebba26d1532adc78a1ff2fc8
+last_activity_desc: Plans 01–05 complete; guarded promotion and exact task status implemented
+state_head: 8710a17807ce98c9c545e84d9dda4ffa0e2d47bf
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 8
-  completed_plans: 4
-  percent: 50
+  completed_plans: 5
+  percent: 63
 ---
 
 # Project State
@@ -30,15 +30,15 @@ See: .planning/PROJECT.md (updated 2026-10-03)
 ## Current Position
 
 Phase: 172 (1 of 1 in v1.42) — Consistent Operator UI and Verified Recovery
-Plan: 4 of 8 complete; Plan 05 next
+Plan: 5 of 8 complete; Plan 06 next
 Status: Executing
-Last activity: 2026-10-03 — Plan 04 committed; 203 tests and 2 doctests passed; real mounted recovery acceptance remains Plan 06
+Last activity: 2026-10-03 — Plan 05 committed; 208 tests and 2 doctests passed; mounted recovery acceptance remains Plan 06
 
-Progress: [█████░░░░░] 50% (4/8 plans)
+Progress: [██████░░░░] 63% (5/8 plans)
 
 ## Performance Metrics
 
-- Current milestone: 4/8 plans executed. Plans 01–04 source and summaries are committed; wider OPUX requirements remain open pending later plans.
+- Current milestone: 5/8 plans executed. Plans 01–05 source and summaries are committed; wider OPUX requirements remain open pending later plans.
 - Previous milestone v1.41: 4 phases (168–171), 19 plans, 9 requirements complete.
 - Historical plan timings and evidence remain in the milestone archives; Plan 01 has focused test and browser evidence; milestone acceptance remains pending.
 
@@ -80,10 +80,10 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-10-03T21:02:34.503Z
-Stopped at: Phase 172 Plans 01-04 complete; Plan 05 truthful index promotion next
-Resume file: .planning/phases/172-consistent-operator-ui-and-verified-recovery/172-05-PLAN.md
-Next action: Continue `$gsd-execute-phase 172` at Plan 05, then remaining checked plans. UI-SPEC and all eight plans passed independent review. Plans 01–04 are complete and must not be replayed. Use existing task-local locked dependencies, installed Elixir/OTP and ERL_FLAGS='+S 4:4' to bound the local test database pool; see its summary for test commands and tool limitations.
+Last session: 2026-10-03T21:34:01.104Z
+Stopped at: Phase 172 Plans 01-05 complete; Plan 06 mounted recovery proof next
+Resume file: .planning/phases/172-consistent-operator-ui-and-verified-recovery/172-06-PLAN.md
+Next action: Continue `$gsd-execute-phase 172` at Plan 06, then remaining checked plans. UI-SPEC and all eight plans passed independent review. Plans 01–05 are complete and must not be replayed. Use task-local locked dependencies, pinned Elixir/OTP and ERL_FLAGS='+S 1:1' for local tests to bound the database pool. Disposable Compose verification must not reset preview4012.
 
 ## Preview and Cleanup
 
