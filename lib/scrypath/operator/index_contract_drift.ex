@@ -49,7 +49,7 @@ defmodule Scrypath.Operator.IndexContractDrift do
       schema: schema_module,
       index: index,
       dimensions: %{
-        fields: compare_fields(schema_module, applied_wire),
+        fields: compare_fields(schema_module, declared_wire, applied_wire),
         filterable_attributes: compare_filterable(schema_module, applied_wire),
         sortable_attributes: compare_sortable(schema_module, applied_wire),
         faceting: compare_faceting(schema_module, applied_wire),
@@ -58,11 +58,12 @@ defmodule Scrypath.Operator.IndexContractDrift do
     }
   end
 
-  defp compare_fields(schema_module, applied_wire) do
+  defp compare_fields(schema_module, declared_wire, applied_wire) do
+    searchable = Map.get(declared_wire, "searchableAttributes")
+
     declared =
-      schema_module
-      |> Scrypath.Schema.Metadata.fields()
-      |> Enum.map(&Atom.to_string/1)
+      (searchable || Scrypath.Schema.Metadata.fields(schema_module))
+      |> Enum.map(&to_string/1)
       |> MapSet.new()
 
     applied =
@@ -72,7 +73,13 @@ defmodule Scrypath.Operator.IndexContractDrift do
       |> Enum.map(&to_string/1)
       |> MapSet.new()
 
-    set_dimension(declared, applied)
+    # The backend default searches every projected field. Explicit restrictions
+    # still compare literally; their ranking order is checked by the settings axis.
+    if is_nil(searchable) and MapSet.equal?(applied, MapSet.new(["*"])) do
+      Dimension.new(true, [])
+    else
+      set_dimension(declared, applied)
+    end
   end
 
   defp compare_filterable(schema_module, applied_wire) do
@@ -113,7 +120,23 @@ defmodule Scrypath.Operator.IndexContractDrift do
 
   defp compare_faceting(schema_module, applied_wire) do
     declared = faceting_declared_wire(Scrypath.Schema.Metadata.faceting(schema_module))
-    applied = faceting_applied_wire(Map.get(applied_wire, "faceting"))
+
+    # Facet membership is part of filterableAttributes, not the faceting object.
+    # Other filterables (for example tenant IDs) need not be declared facets.
+    applied_attributes =
+      applied_wire
+      |> Map.get("filterableAttributes", [])
+      |> List.wrap()
+      |> filterable_applied_names()
+      |> Enum.filter(&(&1 in declared["attributes"]))
+      |> Enum.uniq()
+      |> Enum.sort()
+
+    applied =
+      applied_wire
+      |> Map.get("faceting")
+      |> faceting_applied_wire()
+      |> Map.put("attributes", applied_attributes)
 
     if declared == applied do
       Dimension.new(true, [])
@@ -179,66 +202,36 @@ defmodule Scrypath.Operator.IndexContractDrift do
     end)
   end
 
-  defp faceting_declared_wire([]), do: %{}
-
-  defp faceting_declared_wire(kw) when is_list(kw) and kw != [] do
+  defp faceting_declared_wire(kw) when is_list(kw) do
     attrs =
       kw
-      |> Keyword.fetch!(:attributes)
+      |> Keyword.get(:attributes, [])
       |> Enum.map(&Atom.to_string/1)
       |> Enum.sort()
 
     maxv = Keyword.get(kw, :max_values_per_facet, 100)
     sort_by = Keyword.get(kw, :sort_facet_values_by, %{})
 
-    sort_wired =
-      sort_by
-      |> Enum.map(fn {k, v} -> {Atom.to_string(k), facet_sort_wire(v)} end)
-      |> Enum.sort_by(fn {k, _} -> k end)
-      |> Map.new()
-
     %{
       "attributes" => attrs,
       "maxValuesPerFacet" => maxv,
-      "sortFacetValuesBy" => sort_wired
+      "sortFacetValuesBy" => normalize_facet_sort(sort_by)
     }
   end
 
-  defp facet_sort_wire(:alpha), do: "alpha"
-  defp facet_sort_wire(:count), do: "count"
-
-  defp faceting_applied_wire(nil), do: %{}
-
-  defp faceting_applied_wire(%{} = m) when map_size(m) == 0, do: %{}
+  defp faceting_applied_wire(nil), do: faceting_applied_wire(%{})
 
   defp faceting_applied_wire(%{} = m) do
-    attrs =
-      case Map.get(m, "attributes") do
-        nil -> []
-        list when is_list(list) -> list |> Enum.map(&to_string/1) |> Enum.sort()
-      end
+    %{
+      "maxValuesPerFacet" => Map.get(m, "maxValuesPerFacet", 100),
+      "sortFacetValuesBy" => normalize_facet_sort(Map.get(m, "sortFacetValuesBy") || %{})
+    }
+  end
 
-    maxv = Map.get(m, "maxValuesPerFacet")
-
-    sort_wired =
-      case Map.get(m, "sortFacetValuesBy") do
-        nil ->
-          %{}
-
-        sm when is_map(sm) ->
-          sm
-          |> Enum.map(fn {k, v} -> {to_string(k), facet_sort_applied(v)} end)
-          |> Enum.sort_by(fn {k, _} -> k end)
-          |> Map.new()
-      end
-
-    base = %{"attributes" => attrs, "sortFacetValuesBy" => sort_wired}
-
-    if is_nil(maxv) do
-      base
-    else
-      Map.put(base, "maxValuesPerFacet", maxv)
-    end
+  defp normalize_facet_sort(sort_by) do
+    sort_by
+    |> Map.new(fn {k, v} -> {to_string(k), facet_sort_applied(v)} end)
+    |> Map.put_new("*", "alpha")
   end
 
   defp facet_sort_applied(v) when v in ["alpha", "count"], do: v
