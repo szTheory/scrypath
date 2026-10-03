@@ -11,7 +11,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   alias ScrypathOps.Integrations.Sigra.Gating
   alias ScrypathOps.OperatorSelection
+  alias ScrypathOps.PromotionEligibility
   alias ScrypathOps.RecoveryObservation
+  alias Scrypath.Meilisearch.Tasks
 
   @impl true
   def mount(_params, _session, socket) do
@@ -28,14 +30,22 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       |> assign(:context_generation, 0)
       |> assign(:reconcile_result, nil)
       |> assign(:reconcile_loaded_at, nil)
+      |> assign(:reconcile_generation, nil)
+      |> assign(:reconcile_error, nil)
       |> assign(:drift_result, nil)
       |> assign(:drift_loaded_at, nil)
+      |> assign(:drift_generation, nil)
       |> assign(:drift_error, nil)
       |> assign(:drift_loading, false)
       |> assign(:recovery_handle, nil)
       |> assign(:recovery_status, nil)
       |> assign(:recovery_checked_at, nil)
       |> assign(:recovery_loading, false)
+      |> assign(:promotion_task_id, nil)
+      |> assign(:promotion_status, nil)
+      |> assign(:promotion_loading, false)
+      |> assign(:confirm_swap?, false)
+      |> assign(:promotion_eligibility, {:blocked, :reconcile_not_current})
 
     {:ok, socket}
   end
@@ -99,9 +109,18 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             socket
             |> assign(:reconcile_result, rep)
             |> assign(:reconcile_loaded_at, DateTime.utc_now())
+            |> assign(:reconcile_generation, socket.assigns.context_generation)
+            |> assign(:reconcile_error, nil)
+            |> refresh_promotion_eligibility()
 
           {:error, reason} ->
-            put_flash(socket, :error, "Reconcile failed: #{inspect(reason)}")
+            socket
+            |> assign(:reconcile_result, nil)
+            |> assign(:reconcile_loaded_at, nil)
+            |> assign(:reconcile_generation, nil)
+            |> assign(:reconcile_error, reason)
+            |> refresh_promotion_eligibility()
+            |> put_flash(:error, "Reconcile failed: #{inspect(reason)}")
         end
     end
   end
@@ -110,6 +129,15 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   def handle_event("refresh_reconcile", _params, socket) do
     {:noreply,
      if(current_selection?(socket), do: refresh_reconcile(socket), else: unavailable(socket))}
+  end
+
+  def handle_event("refresh_promotion_checks", _params, socket) do
+    if current_selection?(socket) do
+      socket = socket |> refresh_reconcile() |> refresh_drift() |> refresh_promotion_eligibility()
+      {:noreply, socket}
+    else
+      {:noreply, unavailable(socket)}
+    end
   end
 
   def handle_event("refresh_recovery_status", _params, socket) do
@@ -133,7 +161,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     # lets LiveView push the `:drift_loading` frame first. Event name unchanged.
     if current_selection?(socket) do
       send(self(), {:run_drift, socket.assigns.context_generation})
-      {:noreply, assign(socket, :drift_loading, true)}
+
+      {:noreply,
+       socket
+       |> assign(:drift_loading, true)
+       |> assign(:promotion_eligibility, {:blocked, :check_in_progress})}
     else
       {:noreply, unavailable(socket)}
     end
@@ -153,7 +185,25 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   end
 
   def handle_event("swap_live", _params, socket) do
+    socket = assign(socket, :confirm_swap?, false)
     {:noreply, if(current_selection?(socket), do: swap_live(socket), else: unavailable(socket))}
+  end
+
+  def handle_event("confirm_swap_live", _params, socket) do
+    if socket.assigns.promotion_eligibility == :eligible and current_selection?(socket) do
+      {:noreply, assign(socket, :confirm_swap?, true)}
+    else
+      {:noreply,
+       put_flash(
+         socket,
+         :error,
+         "Index promotion blocked: #{promotion_eligibility_copy(socket.assigns.promotion_eligibility)}"
+       )}
+    end
+  end
+
+  def handle_event("cancel_swap_live", _params, socket) do
+    {:noreply, assign(socket, :confirm_swap?, false)}
   end
 
   @impl true
@@ -185,6 +235,43 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
      |> assign(:recovery_status, :unknown)
      |> assign(:recovery_checked_at, DateTime.utc_now())
      |> assign(:recovery_loading, false)}
+  end
+
+  def handle_async(:promotion_swap, {:ok, {generation, task_id, result}}, socket) do
+    if generation == socket.assigns.context_generation and
+         task_id == socket.assigns.promotion_task_id do
+      socket = assign(socket, :promotion_loading, false)
+
+      case result do
+        {:ok, %{id: ^task_id, state: :succeeded}} ->
+          socket
+          |> assign(:promotion_status, :completed)
+          |> load_reconcile_on_mount()
+          |> refresh_drift()
+
+        {:ok, _unexpected_task} ->
+          assign(socket, :promotion_status, {:failed, :unexpected_task_result})
+
+        {:error, {:timeout, _task}} ->
+          assign(socket, :promotion_status, :timed_out)
+
+        {:error, reason} ->
+          socket
+          |> assign(:promotion_status, {:failed, reason})
+      end
+      |> invalidate_recovery_claim()
+      |> refresh_promotion_eligibility()
+      |> then(&{:noreply, &1})
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_async(:promotion_swap, {:exit, reason}, socket) do
+    {:noreply,
+     socket
+     |> assign(:promotion_loading, false)
+     |> assign(:promotion_status, {:failed, reason})}
   end
 
   defp module_flat_name(mod) when is_atom(mod), do: OperatorSelection.canonical(mod)
@@ -220,14 +307,22 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     socket
     |> assign(:reconcile_result, nil)
     |> assign(:reconcile_loaded_at, nil)
+    |> assign(:reconcile_generation, nil)
+    |> assign(:reconcile_error, nil)
     |> assign(:drift_result, nil)
     |> assign(:drift_loaded_at, nil)
+    |> assign(:drift_generation, nil)
     |> assign(:drift_error, nil)
     |> assign(:drift_loading, false)
     |> assign(:recovery_handle, nil)
     |> assign(:recovery_status, nil)
     |> assign(:recovery_checked_at, nil)
     |> assign(:recovery_loading, false)
+    |> assign(:promotion_task_id, nil)
+    |> assign(:promotion_status, nil)
+    |> assign(:promotion_loading, false)
+    |> assign(:confirm_swap?, false)
+    |> assign(:promotion_eligibility, {:blocked, :reconcile_not_current})
   end
 
   defp maybe_start_recovery(socket, handle) when is_binary(handle) and byte_size(handle) <= 128 do
@@ -550,12 +645,27 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           socket
           |> assign(:reconcile_result, rep)
           |> assign(:reconcile_loaded_at, DateTime.utc_now())
+          |> assign(:reconcile_generation, socket.assigns.context_generation)
+          |> assign(:reconcile_error, nil)
+          |> refresh_promotion_eligibility()
 
         {:error, reason} ->
-          put_flash(socket, :error, "Reconcile failed: #{inspect(reason)}")
+          socket
+          |> assign(:reconcile_result, nil)
+          |> assign(:reconcile_loaded_at, nil)
+          |> assign(:reconcile_generation, nil)
+          |> assign(:reconcile_error, reason)
+          |> refresh_promotion_eligibility()
+          |> put_flash(:error, "Reconcile failed: #{inspect(reason)}")
       end
     else
-      put_flash(socket, :error, "Select a schema and configure Scrypath runtime.")
+      socket
+      |> assign(:reconcile_result, nil)
+      |> assign(:reconcile_loaded_at, nil)
+      |> assign(:reconcile_generation, nil)
+      |> assign(:reconcile_error, :missing_backend)
+      |> refresh_promotion_eligibility()
+      |> put_flash(:error, "Select a schema and configure Scrypath runtime.")
     end
   end
 
@@ -571,38 +681,180 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           socket
           |> assign(:drift_result, rep)
           |> assign(:drift_loaded_at, DateTime.utc_now())
+          |> assign(:drift_generation, socket.assigns.context_generation)
           |> assign(:drift_error, nil)
+          |> refresh_promotion_eligibility()
 
         {:error, reason} ->
           socket
+          |> assign(:drift_result, nil)
+          |> assign(:drift_loaded_at, nil)
+          |> assign(:drift_generation, nil)
           |> assign(:drift_error, reason)
+          |> refresh_promotion_eligibility()
       end
     else
-      assign(socket, :drift_error, :missing_backend)
+      socket
+      |> assign(:drift_result, nil)
+      |> assign(:drift_generation, nil)
+      |> assign(:drift_error, :missing_backend)
+      |> refresh_promotion_eligibility()
     end
   end
 
   defp swap_live(socket) do
     Gating.gate_sensitive_action(socket, :swap_live, fn ->
-      mod = socket.assigns.selected_schema
-      opts = socket.assigns.scrypath_opts
+      socket = fetch_promotion_prerequisites(socket)
 
-      if mod && Keyword.has_key?(opts, :backend) do
-        case Scrypath.Meilisearch.swap_indexes(mod, opts) do
-          {:ok, _result} ->
-            socket
-            |> invalidate_recovery_claim()
-            |> refresh_reconcile()
-            |> maybe_refresh_drift()
-            |> put_flash(:info, "Swap live index completed for #{module_flat_name(mod)}")
+      case socket.assigns.promotion_eligibility do
+        :eligible ->
+          mod = socket.assigns.selected_schema
+          opts = ScrypathOps.Schemas.runtime_opts(socket.assigns.scrypath_opts)
 
-          {:error, reason} ->
-            put_flash(socket, :error, "Swap live failed: #{inspect(reason)}")
-        end
-      else
-        put_flash(socket, :error, "Select a schema and configure Scrypath runtime.")
+          case Scrypath.Meilisearch.swap_indexes(mod, opts) do
+            {:ok, %{task: task}} ->
+              task_id = Map.get(task, :id)
+              generation = socket.assigns.context_generation
+
+              socket
+              |> assign(:promotion_task_id, task_id)
+              |> assign(:promotion_status, :accepted)
+              |> assign(:promotion_loading, true)
+              |> start_async(:promotion_swap, fn ->
+                result = Tasks.wait_for_task(task, task_wait_opts(opts))
+                {generation, task_id, result}
+              end)
+
+            {:error, reason} ->
+              put_flash(socket, :error, "Index swap was not accepted: #{inspect(reason)}")
+          end
+
+        {:blocked, reason} ->
+          put_flash(socket, :error, "Index promotion blocked: #{promotion_reason(reason)}")
       end
     end)
+  end
+
+  defp fetch_promotion_prerequisites(socket) do
+    mod = socket.assigns.selected_schema
+    opts = ScrypathOps.Schemas.runtime_opts(socket.assigns.scrypath_opts)
+
+    if (mod && mod in ScrypathOps.Schemas.allowlist()) and
+         Keyword.get(opts, :backend) == Scrypath.Meilisearch do
+      reconcile = Scrypath.reconcile_sync(mod, opts)
+      drift = Scrypath.index_contract_drift(mod, opts)
+
+      socket =
+        case reconcile do
+          {:ok, rep} ->
+            socket
+            |> assign(:reconcile_result, rep)
+            |> assign(:reconcile_generation, socket.assigns.context_generation)
+            |> assign(:reconcile_error, nil)
+
+          {:error, reason} ->
+            socket
+            |> assign(:reconcile_result, nil)
+            |> assign(:reconcile_generation, nil)
+            |> assign(:reconcile_error, reason)
+        end
+
+      socket =
+        case drift do
+          {:ok, rep} ->
+            socket
+            |> assign(:drift_result, rep)
+            |> assign(:drift_generation, socket.assigns.context_generation)
+            |> assign(:drift_error, nil)
+
+          {:error, reason} ->
+            socket
+            |> assign(:drift_result, nil)
+            |> assign(:drift_generation, nil)
+            |> assign(:drift_error, reason)
+        end
+
+      refresh_promotion_eligibility(socket)
+    else
+      socket
+      |> assign(:promotion_eligibility, {:blocked, :schema_not_allowed})
+    end
+  end
+
+  defp refresh_promotion_eligibility(socket) do
+    result = PromotionEligibility.evaluate(promotion_context(socket))
+    assign(socket, :promotion_eligibility, result)
+  end
+
+  defp promotion_context(socket) do
+    %{
+      schema: socket.assigns.selected_schema,
+      allowlist: ScrypathOps.Schemas.allowlist(),
+      backend: Keyword.get(socket.assigns.scrypath_opts, :backend),
+      opts: ScrypathOps.Schemas.runtime_opts(socket.assigns.scrypath_opts),
+      generation: socket.assigns.context_generation,
+      reconcile_generation: socket.assigns.reconcile_generation,
+      drift_generation: socket.assigns.drift_generation,
+      reconcile_loading: false,
+      drift_loading: socket.assigns.drift_loading,
+      reconcile_error: socket.assigns.reconcile_error,
+      drift_error: socket.assigns.drift_error,
+      reconcile: socket.assigns.reconcile_result,
+      drift: socket.assigns.drift_result
+    }
+  end
+
+  defp promotion_reason(:schema_not_allowed), do: "select an available schema"
+  defp promotion_reason(:unsupported_backend), do: "Meilisearch is unavailable"
+  defp promotion_reason(:reconcile_failed), do: "refresh sync and queue posture"
+  defp promotion_reason(:contract_failed), do: "refresh the index contract check"
+  defp promotion_reason(:reconcile_not_current), do: "refresh sync and queue posture"
+  defp promotion_reason(:contract_not_current), do: "run the index contract check"
+  defp promotion_reason(:check_in_progress), do: "wait for the current check"
+  defp promotion_reason(:context_mismatch), do: "refresh checks for this schema and index"
+  defp promotion_reason(:indexes_not_distinct), do: "confirm live and target indexes differ"
+  defp promotion_reason(:target_unobserved), do: "observe the prepared target index first"
+  defp promotion_reason(:backend_work_pending), do: "wait for backend tasks to finish"
+  defp promotion_reason(:queue_work_pending), do: "wait for queued work to finish"
+  defp promotion_reason(:reindex_pending), do: "wait for reindex work to finish"
+  defp promotion_reason(:cutover_pending), do: "wait for the current cutover to finish"
+  defp promotion_reason(:failed_work), do: "resolve failed sync work first"
+  defp promotion_reason(:contract_mismatch), do: "resolve contract differences first"
+  defp promotion_reason(_), do: "refresh current checks"
+
+  defp promotion_eligibility_title(:eligible), do: "Ready for promotion"
+  defp promotion_eligibility_title({:blocked, _}), do: "Promotion unavailable"
+  defp promotion_eligibility_title(_), do: "Promotion unavailable"
+
+  defp promotion_eligibility_copy(:eligible),
+    do: "Current checks are clear for this schema and index pair."
+
+  defp promotion_eligibility_copy({:blocked, reason}),
+    do: "Promotion is blocked: #{promotion_reason(reason)}."
+
+  defp promotion_eligibility_copy(_), do: "Refresh current checks before promotion."
+
+  defp promotion_index(nil, _key), do: "unknown"
+
+  defp promotion_index(reconcile, key),
+    do: inspect(reconcile |> Map.get(:reindex, %{}) |> Map.get(key) || "unknown")
+
+  defp promotion_status_kind(:accepted), do: :warning
+  defp promotion_status_kind(:completed), do: :success
+  defp promotion_status_kind({:failed, _}), do: :error
+  defp promotion_status_kind(:timed_out), do: :warning
+  defp promotion_status_kind(_), do: :neutral
+
+  defp promotion_status_title(:accepted), do: "Index swap accepted"
+  defp promotion_status_title(:completed), do: "Index swap completed"
+  defp promotion_status_title({:failed, _}), do: "Index swap failed"
+  defp promotion_status_title(:timed_out), do: "Index swap outcome unconfirmed"
+  defp promotion_status_title(_), do: "Index swap status"
+
+  defp task_wait_opts(opts) do
+    opts
+    |> Keyword.put_new(:inline_poll_interval, 50)
+    |> Keyword.put_new(:inline_timeout, 15_000)
   end
 
   defp invalidate_recovery_claim(socket) do
@@ -610,14 +862,6 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> assign(:recovery_status, :unknown)
     |> assign(:recovery_checked_at, nil)
     |> assign(:recovery_loading, false)
-  end
-
-  defp maybe_refresh_drift(socket) do
-    if socket.assigns.drift_loaded_at || socket.assigns.drift_result || socket.assigns.drift_error do
-      refresh_drift(socket)
-    else
-      socket
-    end
   end
 
   defp reconcile_signal_label(signal) do
@@ -643,76 +887,6 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp drift_dimension_rows(_), do: []
 
-  # Sequential promotion preflight. Each step's `locked?` gates the next so the
-  # checklist reads as a wizard: contract drift waits on reconcile, mismatches wait
-  # on drift, and promote lights up only when checks 1–3 are green.
-  defp preflight_steps(reconcile, drift, drift_error) do
-    recon_done? = not is_nil(reconcile)
-    drift_done? = not is_nil(drift)
-    mismatches = if drift_done?, do: drift_mismatch_count(drift), else: nil
-    clean? = drift_done? and mismatches == 0
-
-    [
-      %{
-        num: 1,
-        title: "Reconcile",
-        badge_kind: if(recon_done?, do: :success, else: :warning),
-        badge: if(recon_done?, do: "loaded", else: "needed"),
-        locked?: false,
-        hint:
-          if(recon_done?,
-            do: "Queue & backend posture loaded.",
-            else: "Run the reconcile check below to begin."
-          )
-      },
-      %{
-        num: 2,
-        title: "Contract drift",
-        badge_kind: drift_status_kind(drift, drift_error),
-        badge: drift_status_title(drift, drift_error),
-        locked?: not recon_done?,
-        hint:
-          cond do
-            not recon_done? -> "Locked — load reconcile first."
-            drift_done? -> "Declared vs live contract loaded."
-            true -> "Load the contract-drift check below."
-          end
-      },
-      %{
-        num: 3,
-        title: "Mismatches",
-        badge_kind:
-          cond do
-            clean? -> :success
-            drift_done? -> :warning
-            true -> :neutral
-          end,
-        badge: if(drift_done?, do: "#{mismatches} mismatch(es)", else: "unknown"),
-        locked?: not drift_done?,
-        hint:
-          cond do
-            not drift_done? -> "Locked — run contract drift first."
-            clean? -> "No dimension mismatches."
-            true -> "Resolve drift before promoting."
-          end
-      },
-      %{
-        num: 4,
-        title: "Promote",
-        badge_kind: promotion_readiness_kind(reconcile, drift),
-        badge: promotion_readiness_label(reconcile, drift),
-        locked?: not (recon_done? and clean?),
-        hint:
-          cond do
-            recon_done? and clean? -> "Ready for the gated swap below."
-            not recon_done? -> "Locked — checks 1–3 must pass."
-            not drift_done? -> "Locked — run contract drift."
-            true -> "Locked — resolve mismatches first."
-          end
-      }
-    ]
-  end
-
   @impl true
   def render(assigns) do
     ~H"""
@@ -725,7 +899,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     >
       <.ops_page_header
         title="Sync and drift"
-        subtitle="Prepare a schema for promotion: reconcile its state, compare declared and live contracts, then use the gated swap."
+        subtitle="Check sync status and compare the schema contract with its live index."
       />
 
       <.ops_trail mount_path={@mount_path} current={:sync_drift} class="mt-4" />
@@ -776,48 +950,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         Select an allowlisted schema to continue.
       </.ops_status>
 
-      <.ops_notice kind={:info} title="Read-only checks first" class="mt-4">
-        Use <.ops_inline_code>mix scrypath.reconcile</.ops_inline_code>, <.ops_inline_code>mix scrypath.index.contract_drift</.ops_inline_code>, <.ops_inline_code>guides/drift-recovery.md</.ops_inline_code>,
-        <.ops_inline_code>guides/sync-modes-and-visibility.md</.ops_inline_code>
-        for canonical workflows. The primary checks below stay read-only over
-        <.ops_inline_code>Scrypath.reconcile_sync/2</.ops_inline_code>
-        and <.ops_inline_code>Scrypath.index_contract_drift/2</.ops_inline_code>.
-      </.ops_notice>
-
-      <.ops_panel>
-        <section aria-labelledby="sync-preflight-heading" class="space-y-3">
-          <h2
-            id="sync-preflight-heading"
-            class="text-ops-h2 font-semibold leading-ops-tight text-base-content"
-          >
-            Promotion preflight
-          </h2>
-          <p class="text-ops-body text-base-content/70">
-            Work the checks in order — each unlocks the next, and promotion lights up only
-            when all are green.
-          </p>
-          <ol class="ops-preflight">
-            <li
-              :for={step <- preflight_steps(@reconcile_result, @drift_result, @drift_error)}
-              class={["ops-preflight__card", step.locked? && "ops-preflight__card--locked"]}
-              aria-disabled={to_string(step.locked?)}
-            >
-              <div class="ops-preflight__head">
-                <span class="ops-preflight__num" aria-hidden="true">{step.num}</span>
-                <span class="ops-preflight__title">{step.title}</span>
-              </div>
-              <.ops_badge kind={step.badge_kind}>{step.badge}</.ops_badge>
-              <p class="ops-preflight__hint">{step.hint}</p>
-            </li>
-          </ol>
-        </section>
-      </.ops_panel>
-
       <.ops_panel>
         <.ops_section
           id="sync-reconcile-heading"
-          title="Sync & queue posture"
-          subtitle="Confirm the current sync and queue state for this schema."
+          title="Sync and queue posture"
+          subtitle="Check current backend tasks and queued work for this schema."
           meta={if @reconcile_loaded_at, do: "last loaded #{format_dt(@reconcile_loaded_at)}"}
         >
           <:actions>
@@ -827,7 +964,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               data-ops-refresh
               disabled={!@selected_schema}
             >
-              Refresh reconcile
+              Refresh sync status
             </.ops_button>
           </:actions>
 
@@ -877,17 +1014,17 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       <.ops_panel>
         <.ops_section
           id="sync-drift-heading"
-          title="Index contract (declared vs live)"
-          subtitle="Compare the declared schema contract with the live Meilisearch index before promoting."
+          title="Index contract"
+          subtitle="Compare the selected schema contract with its live index."
           meta={if @drift_loaded_at, do: "last loaded #{format_dt(@drift_loaded_at)}"}
         >
           <:actions>
             <.ops_button
               phx-click="load_drift"
-              phx-disable-with="Loading…"
+              phx-disable-with="Checking…"
               disabled={@drift_loading || !@selected_schema}
             >
-              Load / refresh contract drift
+              Check index contract
             </.ops_button>
           </:actions>
 
@@ -910,11 +1047,6 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             role={if @drift_error, do: "alert"}
           >
             {drift_status_copy(@drift_result, @drift_error)}
-            <div :if={is_nil(@drift_result) && is_nil(@drift_error)} class="mt-3">
-              <.ops_button phx-click="load_drift" variant={:primary} size={:sm}>
-                Run contract drift now
-              </.ops_button>
-            </div>
           </.ops_status>
 
           <.ops_signal_table :if={@drift_result && !@drift_loading}>
@@ -960,31 +1092,53 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         </.ops_section>
       </.ops_panel>
 
-      <.ops_panel :if={@selected_schema}>
-        <.ops_section
-          id="sync-advanced-recovery-heading"
-          title="Advanced recovery"
-          subtitle="Promote only after the read-only checks, posture, and failed-sync signals are clear."
-        >
-          <.ops_verdict
-            kind={promotion_readiness_kind(@reconcile_result, @drift_result)}
-            label="Promotion readiness"
-            headline={promotion_readiness_headline(@reconcile_result, @drift_result)}
-            class="mb-3"
+      <details :if={@selected_schema} class="ops-panel mt-4">
+        <summary class="cursor-pointer p-4 font-semibold">Advanced: index promotion</summary>
+        <div class="space-y-3 px-4 pb-4">
+          <p class="text-ops-body text-base-content/75">
+            Promotion changes the live alias for <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>.
+          </p>
+          <.ops_status
+            kind={if @promotion_eligibility == :eligible, do: :success, else: :warning}
+            title={promotion_eligibility_title(@promotion_eligibility)}
           >
-            Reconcile must be loaded and contract drift must be clean before the gated swap is safe.
-          </.ops_verdict>
-          <.ops_action_group tone={:advanced}>
-            <p class="max-w-xl text-ops-body text-base-content/75">
-              Promote the prepared target index to the live alias for <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>. This gated,
-              irreversible step refreshes the loaded checks afterward.
-            </p>
-            <.ops_button phx-click="swap_live" phx-disable-with="Swapping...">
-              Swap live index
+            {promotion_eligibility_copy(@promotion_eligibility)}
+          </.ops_status>
+          <.ops_button
+            phx-click="confirm_swap_live"
+            disabled={@promotion_eligibility != :eligible || @promotion_loading}
+          >
+            Promote target index
+          </.ops_button>
+          <.ops_status
+            :if={@promotion_status}
+            kind={promotion_status_kind(@promotion_status)}
+            title={promotion_status_title(@promotion_status)}
+          >
+            <span :if={@promotion_task_id}>
+              Task
+              <.ops_inline_code>{@promotion_task_id}</.ops_inline_code>
+            </span>
+            <span :if={@promotion_status == :accepted}>
+              The backend accepted this swap. Waiting for its terminal result.
+            </span>
+            <span :if={@promotion_status == :completed}>Index swap completed.</span>
+            <span :if={@promotion_status == :timed_out}>
+              The task is still unconfirmed. Refresh checks to inspect current index state.
+            </span>
+            <span :if={match?({:failed, _}, @promotion_status)}>
+              The swap task failed. Refresh checks to inspect current index state.
+            </span>
+            <.ops_button
+              :if={@promotion_status != :accepted}
+              phx-click="refresh_promotion_checks"
+              size={:sm}
+            >
+              Refresh checks
             </.ops_button>
-          </.ops_action_group>
-        </.ops_section>
-      </.ops_panel>
+          </.ops_status>
+        </div>
+      </details>
 
       <.ops_handoff>
         <:step
@@ -994,6 +1148,42 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           Re-check fleet posture
         </:step>
       </.ops_handoff>
+
+      <.ops_modal
+        :if={@confirm_swap? && @selected_schema}
+        id="confirm-index-promotion"
+        title="Confirm index promotion"
+        description="Meilisearch will change the live alias after its swap task completes."
+        action_label="promote index"
+        cancel_event="cancel_swap_live"
+      >
+        <.form for={%{}} phx-submit="swap_live" class="space-y-3">
+          <p>
+            Schema:
+            <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>
+          </p>
+          <p>
+            Live index:
+            <.ops_inline_code>{promotion_index(@reconcile_result, :live_index)}</.ops_inline_code>
+          </p>
+          <p>
+            Target index:
+            <.ops_inline_code>{promotion_index(@reconcile_result, :target_index)}</.ops_inline_code>
+          </p>
+          <p>Effect: replace the live alias with the prepared target index.</p>
+          <div class="flex justify-between gap-2">
+            <.ops_button
+              type="button"
+              phx-click="cancel_swap_live"
+              variant={:ghost}
+              data-ops-modal-cancel
+            >
+              Cancel index swap
+            </.ops_button>
+            <.ops_button type="submit" variant={:danger}>Promote target index</.ops_button>
+          </div>
+        </.form>
+      </.ops_modal>
     </Layouts.app>
     """
   end
@@ -1033,33 +1223,6 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp drift_mismatch_count(%{dimensions: dimensions}) when is_map(dimensions) do
     Enum.count(dimensions, fn {_key, dimension} -> not Map.get(dimension, :match, false) end)
-  end
-
-  defp promotion_readiness_kind(reconcile_result, drift_result) do
-    if reconcile_result && drift_result && drift_mismatch_count(drift_result) == 0 do
-      :success
-    else
-      :warning
-    end
-  end
-
-  defp promotion_readiness_label(reconcile_result, drift_result) do
-    cond do
-      is_nil(reconcile_result) -> "load reconcile first"
-      is_nil(drift_result) -> "load drift first"
-      drift_mismatch_count(drift_result) == 0 -> "ready for gated swap"
-      true -> "resolve drift first"
-    end
-  end
-
-  # Sentence-cased verdict headline for the Advanced-recovery promotion hero.
-  defp promotion_readiness_headline(reconcile_result, drift_result) do
-    cond do
-      is_nil(reconcile_result) -> "Load reconcile to begin"
-      is_nil(drift_result) -> "Load contract drift to continue"
-      drift_mismatch_count(drift_result) == 0 -> "Ready for the gated swap"
-      true -> "Resolve drift before promoting"
-    end
   end
 
   defp format_dt(nil), do: "—"

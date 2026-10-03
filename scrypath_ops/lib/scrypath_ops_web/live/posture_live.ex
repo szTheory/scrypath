@@ -8,9 +8,7 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   use ScrypathOpsWeb, :live_view
 
-  alias ScrypathOps.Integrations.Sigra.Gating
   alias ScrypathOps.OperatorSelection
-  alias Scrypath.Meilisearch.Tasks
 
   @impl true
   def mount(_params, _session, socket) do
@@ -53,7 +51,10 @@ defmodule ScrypathOpsWeb.PostureLive do
   def handle_event("swap_live", %{"schema" => mod_str}, socket) do
     case mod_from_allowlist(mod_str, socket.assigns.schema_allowlist) do
       {:ok, mod} ->
-        {:noreply, swap_live(socket, mod)}
+        {:noreply,
+         push_navigate(socket,
+           to: OperatorSelection.path(socket.assigns.mount_path, "sync-drift", mod)
+         )}
 
       :error ->
         {:noreply, put_flash(socket, :error, "Select an allowlisted schema.")}
@@ -99,35 +100,6 @@ defmodule ScrypathOpsWeb.PostureLive do
   defp posture_rows_assign(%ScrypathOps.Posture{state: :unconfigured}), do: :empty_allowlist
   defp posture_rows_assign(%ScrypathOps.Posture{state: :missing_backend}), do: :missing_backend
   defp posture_rows_assign(%ScrypathOps.Posture{rows: rows}), do: {:ok, rows}
-
-  defp swap_live(socket, mod) do
-    Gating.gate_sensitive_action(socket, :swap_live, fn ->
-      scrypath_opts = socket.assigns.scrypath_opts
-      wait_opts = task_wait_opts(scrypath_opts)
-
-      case Scrypath.Meilisearch.swap_indexes(mod, scrypath_opts) do
-        {:ok, %{task: task}} ->
-          case Tasks.wait_for_task(task, wait_opts) do
-            {:ok, _waited} ->
-              socket
-              |> load_posture()
-              |> put_flash(:info, "Swap live index completed for #{module_flat_name(mod)}")
-
-            {:error, reason} ->
-              put_flash(socket, :error, "Swap live failed: #{inspect(reason)}")
-          end
-
-        {:error, reason} ->
-          put_flash(socket, :error, "Swap live failed: #{inspect(reason)}")
-      end
-    end)
-  end
-
-  defp task_wait_opts(opts) do
-    opts
-    |> Keyword.put_new(:inline_poll_interval, 50)
-    |> Keyword.put_new(:inline_timeout, 15_000)
-  end
 
   defp module_flat_name(mod) when is_atom(mod) do
     mod |> Atom.to_string() |> String.replace_prefix("Elixir.", "")

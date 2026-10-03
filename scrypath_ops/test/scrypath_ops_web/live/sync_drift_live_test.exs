@@ -98,10 +98,10 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert html =~ "queue posture"
 
     assert html =~
-             "Prepare a schema for promotion: reconcile its state, compare declared and live contracts, then use the gated swap."
+             "Check sync status and compare the schema contract with its live index."
 
-    assert html =~ "Confirm the current sync and queue state for this schema."
-    assert html =~ "Index contract (declared vs live)"
+    assert html =~ "Check current backend tasks and queued work for this schema."
+    assert html =~ "Index contract"
     assert html =~ "sdv_ops_post_a"
     refute html =~ ":settings"
 
@@ -110,7 +110,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     # again flushes the deferred read and surfaces the drift result.
     loading_html =
       lv
-      |> element("button", "Load / refresh contract drift")
+      |> element("button", "Check index contract")
       |> render_click()
 
     assert loading_html =~ "Loading contract drift"
@@ -121,7 +121,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert html2 =~ "sdv_ops_post_a"
   end
 
-  test "swap live fresh sudo refreshes reconcile and drift in place" do
+  test "swap live rechecks current prerequisites and refuses a stale contract read" do
     socket =
       sync_drift_socket(%{
         selected_schema: OpsPostB,
@@ -142,12 +142,12 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     assert {:noreply, updated_socket} = SyncDriftLive.handle_event("swap_live", %{}, socket)
 
-    assert Agent.get(:sync_drift_live_test_state, & &1.swap_called) == true
+    refute Agent.get(:sync_drift_live_test_state, & &1.swap_called)
     assert Agent.get(:sync_drift_live_test_state, & &1.tasks_calls) > 0
     assert Agent.get(:sync_drift_live_test_state, & &1.settings_calls) == 2
     assert updated_socket.assigns.selected_schema == OpsPostB
     assert updated_socket.assigns.local_ui_state == %{compact?: true}
-    assert updated_socket.assigns.reconcile_loaded_at != nil
+    assert flash_value(updated_socket, "error") =~ "Index promotion blocked"
     assert updated_socket.assigns.drift_error == :settings
   end
 
@@ -221,6 +221,81 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert stale.assigns.recovery_loading
   end
 
+  test "swap observer preserves the exact accepted task across terminal, failure, timeout, and stale results" do
+    socket =
+      sync_drift_socket(%{
+        context_generation: 9,
+        promotion_task_id: 991,
+        promotion_status: :accepted,
+        promotion_loading: true
+      })
+
+    {:noreply, completed} =
+      SyncDriftLive.handle_async(
+        :promotion_swap,
+        {:ok, {9, 991, {:ok, %{id: 991, state: :succeeded}}}},
+        socket
+      )
+
+    assert completed.assigns.promotion_status == :completed
+    assert completed.assigns.promotion_task_id == 991
+
+    {:noreply, wrong_task} =
+      SyncDriftLive.handle_async(
+        :promotion_swap,
+        {:ok, {9, 991, {:ok, %{id: 992, state: :succeeded}}}},
+        socket
+      )
+
+    assert wrong_task.assigns.promotion_status == {:failed, :unexpected_task_result}
+    assert wrong_task.assigns.promotion_task_id == 991
+
+    {:noreply, failed} =
+      SyncDriftLive.handle_async(
+        :promotion_swap,
+        {:ok, {9, 991, {:error, {:task_failed, %{id: 991}}}}},
+        socket
+      )
+
+    assert failed.assigns.promotion_status == {:failed, {:task_failed, %{id: 991}}}
+    assert failed.assigns.promotion_task_id == 991
+
+    {:noreply, timed_out} =
+      SyncDriftLive.handle_async(
+        :promotion_swap,
+        {:ok, {9, 991, {:error, {:timeout, %{id: 991}}}}},
+        socket
+      )
+
+    assert timed_out.assigns.promotion_status == :timed_out
+    assert timed_out.assigns.promotion_task_id == 991
+
+    {:noreply, stale} =
+      SyncDriftLive.handle_async(
+        :promotion_swap,
+        {:ok, {8, 991, {:ok, %{id: 991, state: :succeeded}}}},
+        socket
+      )
+
+    assert stale.assigns.promotion_status == :accepted
+    assert stale.assigns.promotion_loading
+  end
+
+  test "refresh after an unconfirmed promotion checks state without submitting another swap" do
+    socket =
+      sync_drift_socket(%{
+        promotion_task_id: 991,
+        promotion_status: :timed_out,
+        promotion_loading: false
+      })
+
+    {:noreply, refreshed} = SyncDriftLive.handle_event("refresh_promotion_checks", %{}, socket)
+
+    assert refreshed.assigns.promotion_task_id == 991
+    assert refreshed.assigns.promotion_status == :timed_out
+    refute Agent.get(:sync_drift_live_test_state, & &1.swap_called)
+  end
+
   test "rendered sync drift links preserve the selected schema", %{conn: conn} do
     {:ok, lv, html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
 
@@ -285,8 +360,11 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       mount_path: "/ops",
       reconcile_result: nil,
       reconcile_loaded_at: nil,
+      reconcile_generation: nil,
+      reconcile_error: nil,
       drift_result: nil,
       drift_loaded_at: nil,
+      drift_generation: nil,
       drift_error: nil,
       drift_loading: false,
       recovery_handle: nil,
