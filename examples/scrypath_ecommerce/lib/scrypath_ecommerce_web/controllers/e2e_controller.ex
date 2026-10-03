@@ -503,7 +503,7 @@ defmodule ScrypathEcommerceWeb.E2EController do
   end
 
   defp clear_index_docs!(backend, ids, config) do
-    index = backend.index_name(Product, config)
+    index = Keyword.get(config, :index_name) || backend.index_name(Product, config)
 
     case Client.get_settings(index, config) do
       {:ok, _settings} ->
