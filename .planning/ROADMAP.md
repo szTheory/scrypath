@@ -45,10 +45,10 @@ v1.41 completed all nine requirements across Phases 168–171 and is archived at
 4. Operators can recover a known replayable failure by following rendered controls from Control Room through the recovery screens, with new work correlated to terminal backend success and the expected document in the active index. They can distinguish accepted/running work, success, failure, timeout, stale/unknown checks, and retained failure history. Recovery does not require promotion; advanced promotion uses the same current eligibility rules in its UI and server handler and never claims completion on task acceptance.
 5. Maintainers can reproduce the changed behavior and meaningful responsive, keyboard, layout, and both-theme contrast checks through existing test/CI lanes, inspect before/after screenshots and retained failure diagnostics, and trace all eight requirements to actual evidence. Reviewed PR-first delivery has current required CI and exact-final-source closeout evidence, an explicit release/no-release decision, committed task-owned work, and recorded preview cleanup or intentional retention, with no pending routine human UAT or paid AI judge.
 
-**Plans**: 8 plans
+**Plans**: 1/8 plans executed
 
 **Wave 1**
-- [ ] 172-01-PLAN.md — Readable shared controls and one shell shortcut tracer.
+- [x] 172-01-PLAN.md — Readable shared controls and one shell shortcut tracer.
 
 **Wave 2 (after Wave 1; disjoint ownership)**
 - [ ] 172-02-PLAN.md — Semantic forms and complete file-dialog interaction.
@@ -94,7 +94,7 @@ v1.41 completed all nine requirements across Phases 168–171 and is archived at
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 172. Consistent Operator UI and Verified Recovery | v1.42 | 0/8 | Planned | - |
+| 172. Consistent Operator UI and Verified Recovery | v1.42 | 1/8 | In Progress|  |
 
 **Coverage:** 8/8 current requirements mapped exactly once; no orphaned or duplicate assignments. Criteria 1–5 cover OPUX-01/03, OPUX-02, OPUX-04, OPUX-05/06, and OPUX-07/08 respectively.
 

@@ -25,7 +25,8 @@ key-decisions:
 patterns-established:
   - Action labels are 14px; standard targets are 40px and prominent/icon targets are 44px.
   - Panels use 16/20px responsive padding; Control Room sections use the named 24px gap.
-requirements-completed: [OPUX-01, OPUX-03, OPUX-07]
+requirements-completed: []
+requirements-addressed: [OPUX-01, OPUX-03, OPUX-07]
 coverage:
   - id: D1
     description: One shortcut, Posture recovery handoff, and cause-specific degraded status render in Control Room.
@@ -88,6 +89,8 @@ plan_head_after: ecfb2e23983b9f6fcf1fc254648252523fc48ce1
 
 The Control Room/shared-control slice is committed. Browser-computed sizing remains in the later Phase 172 sizing verification plan.
 
+These requirements span later plans and remain open in REQUIREMENTS.md; Plan 01 completes only its stated contribution.
+
 ## Self-Check: PASSED
 
 - Summary exists at the expected phase path; task commits `01f79f7`, `0778769`, and `ecfb2e2` are present.
@@ -96,3 +99,7 @@ The Control Room/shared-control slice is committed. Browser-computed sizing rema
 ---
 *Phase: 172-consistent-operator-ui-and-verified-recovery*
 *Completed: 2026-10-03*
+
+## Browser follow-up
+
+A fresh private browser context at 1440×1000 confirms one shortcut hint, 14px control text and 24px section spacing. Capture: `/private/tmp/scrypath-v142-review/control-room-after-plan01-light-desktop.png`. The existing user tab retained old CSS because mounted `AssetPlug` serves unversioned asset URLs with a one-year cache lifetime. This observed deployment defect is a bounded Plan 02 deviation: give CSS/JS content-sensitive URLs and safe revalidation for unversioned requests, with focused request tests. Do not reseed the feedback preview.

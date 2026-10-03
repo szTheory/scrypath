@@ -1,18 +1,18 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v1.42 — ScrypathOps operator/admin UI",
+  "milestone": "v1.42 \u2014 ScrypathOps operator/admin UI",
   "phases": [
     {
       "number": "172",
       "name": "Consistent Operator UI and Verified Recovery",
-      "status": "pending"
+      "status": "in_progress"
     }
   ],
   "next": {
-    "command": "/gsd:progress --next",
-    "label": "Advance to the next step (plan phase 172)",
-    "reason": "Phase 172 of 1 — needs a plan"
+    "command": "/gsd:execute-phase 172",
+    "label": "Continue Phase 172 at Plan 02 (1/8 complete)",
+    "reason": "Checked plans exist; Plan 01 is complete and must not be replayed."
   },
-  "updated_at": "2026-10-03T15:00:44.391Z"
+  "updated_at": "2026-10-03T16:56:36.719160+00:00"
 }
