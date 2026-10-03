@@ -39,6 +39,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       |> assign(:drift_loading, false)
       |> assign(:recovery_handle, nil)
       |> assign(:recovery_status, nil)
+      |> assign(:recovery_evidence, nil)
       |> assign(:recovery_checked_at, nil)
       |> assign(:recovery_loading, false)
       |> assign(:promotion_task_id, nil)
@@ -151,7 +152,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
       _ ->
         {:noreply,
-         socket |> assign(:recovery_status, :unknown) |> assign(:recovery_loading, false)}
+         socket
+         |> assign(:recovery_status, :unknown)
+         |> assign(:recovery_evidence, nil)
+         |> assign(:recovery_loading, false)}
     end
   end
 
@@ -219,9 +223,16 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   def handle_async(:recovery_observation, {:ok, {generation, handle, result}}, socket) do
     if generation == socket.assigns.context_generation and
          handle == socket.assigns.recovery_handle do
+      {status, evidence} =
+        case result do
+          {status, %{} = evidence} -> {status, evidence}
+          status -> {status, nil}
+        end
+
       {:noreply,
        socket
-       |> assign(:recovery_status, result)
+       |> assign(:recovery_status, status)
+       |> assign(:recovery_evidence, evidence)
        |> assign(:recovery_checked_at, DateTime.utc_now())
        |> assign(:recovery_loading, false)}
     else
@@ -233,6 +244,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     {:noreply,
      socket
      |> assign(:recovery_status, :unknown)
+     |> assign(:recovery_evidence, nil)
      |> assign(:recovery_checked_at, DateTime.utc_now())
      |> assign(:recovery_loading, false)}
   end
@@ -316,6 +328,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> assign(:drift_loading, false)
     |> assign(:recovery_handle, nil)
     |> assign(:recovery_status, nil)
+    |> assign(:recovery_evidence, nil)
     |> assign(:recovery_checked_at, nil)
     |> assign(:recovery_loading, false)
     |> assign(:promotion_task_id, nil)
@@ -341,6 +354,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       socket
       |> assign(:recovery_handle, handle)
       |> assign(:recovery_status, :unknown)
+      |> assign(:recovery_evidence, nil)
       |> assign(:recovery_loading, true)
 
     start_async(socket, :recovery_observation, fn ->
@@ -373,19 +387,22 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
          true <- receipt.index == expected_index,
          {:ok, job} <- read_recovery_job(receipt, opts),
          {:ok, queue_state} <- validate_recovery_job(job, receipt) do
-      case receipt.task_uid do
-        task_uid when is_integer(task_uid) ->
-          verify_task_and_documents(task_uid, receipt, schema, opts)
+      status =
+        case receipt.task_uid do
+          task_uid when is_integer(task_uid) ->
+            verify_task_and_documents(task_uid, receipt, schema, opts)
 
-        _ when queue_state == :completed ->
-          :queue_only_completed
+          _ when queue_state == :completed ->
+            :queue_only_completed
 
-        _ when queue_state == :running ->
-          :running
+          _ when queue_state == :running ->
+            :running
 
-        _ ->
-          :accepted
-      end
+          _ ->
+            :accepted
+        end
+
+      {status, Map.take(receipt, [:replacement_job, :attempt, :task_uid, :index])}
     else
       false -> :unknown
       :unknown -> :unknown
@@ -860,6 +877,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp invalidate_recovery_claim(socket) do
     socket
     |> assign(:recovery_status, :unknown)
+    |> assign(:recovery_evidence, nil)
     |> assign(:recovery_checked_at, nil)
     |> assign(:recovery_loading, false)
   end
@@ -934,6 +952,14 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           >
             A refresh observes this retry and never submits work.
           </.ops_status>
+          <p :if={@recovery_evidence} class="mt-2 text-ops-body" data-testid="recovery-evidence">
+            Queue job {@recovery_evidence.replacement_job} · attempt {@recovery_evidence.attempt}
+            <span :if={@recovery_evidence.task_uid}>
+              · Meilisearch task {@recovery_evidence.task_uid}
+            </span>
+            ·
+            <.ops_inline_code>{@recovery_evidence.index}</.ops_inline_code>
+          </p>
         </.ops_section>
       </.ops_panel>
 

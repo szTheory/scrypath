@@ -10,7 +10,7 @@ defmodule ScrypathOps.RecoveryObservation do
   use GenServer
 
   @handler_id {__MODULE__, :telemetry}
-  @worker_names ["Elixir.Scrypath.Oban.UpsertWorker", "Elixir.Scrypath.Oban.DeleteWorker"]
+  @worker_names ["Scrypath.Oban.UpsertWorker", "Scrypath.Oban.DeleteWorker"]
   @max_entries 1_024
   @ttl_ms :timer.minutes(10)
   @process_key {__MODULE__, :worker_context}
@@ -141,6 +141,7 @@ defmodule ScrypathOps.RecoveryObservation do
         :instance,
         :repo,
         :prefix,
+        :node,
         :generation,
         :document_digest,
         :created_at
@@ -248,13 +249,14 @@ defmodule ScrypathOps.RecoveryObservation do
 
   defp capture_job_start(metadata, server) do
     job = Map.get(metadata, :job, metadata)
-    worker = field(job, :worker)
+    worker = normalize_worker(field(job, :worker))
 
     if worker in @worker_names do
       args = field(job, :args) || %{}
       backend = arg(args, "backend")
       operation = operation_for(worker)
-      endpoint = endpoint_identity(args, field(job, :conf))
+      conf = field(metadata, :conf) || field(job, :conf)
+      endpoint = endpoint_identity(args, conf)
 
       if backend == "Elixir.Scrypath.Meilisearch" and operation do
         identity = %{
@@ -264,9 +266,9 @@ defmodule ScrypathOps.RecoveryObservation do
           schema: arg(args, "schema"),
           index: arg(args, "index"),
           endpoint: endpoint,
-          instance: conf_field(field(job, :conf), :name),
-          repo: conf_field(field(job, :conf), :repo),
-          prefix: field(metadata, :prefix) || field(job, :prefix),
+          instance: conf_field(conf, :name),
+          repo: conf_field(conf, :repo),
+          prefix: conf_field(conf, :prefix) || field(metadata, :prefix) || field(job, :prefix),
           node: node()
         }
 
@@ -518,8 +520,11 @@ defmodule ScrypathOps.RecoveryObservation do
 
   defp arg(_, _), do: nil
 
-  defp operation_for("Elixir.Scrypath.Oban.UpsertWorker"), do: :upsert
-  defp operation_for("Elixir.Scrypath.Oban.DeleteWorker"), do: :delete
+  defp normalize_worker(worker) when is_binary(worker), do: String.trim_leading(worker, "Elixir.")
+  defp normalize_worker(_), do: nil
+
+  defp operation_for("Scrypath.Oban.UpsertWorker"), do: :upsert
+  defp operation_for("Scrypath.Oban.DeleteWorker"), do: :delete
   defp operation_for(_), do: nil
 
   defp now_ms, do: System.monotonic_time(:millisecond)

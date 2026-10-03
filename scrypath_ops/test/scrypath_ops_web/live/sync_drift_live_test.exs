@@ -221,6 +221,23 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert stale.assigns.recovery_loading
   end
 
+  test "recovery results retain exact observed evidence and refresh clears it" do
+    evidence = %{replacement_job: 45, attempt: 1, task_uid: 780, index: "posts"}
+    socket = sync_drift_socket(%{context_generation: 3, recovery_handle: "receipt"})
+
+    {:noreply, checked} =
+      SyncDriftLive.handle_async(
+        :recovery_observation,
+        {:ok, {3, "receipt", {:verified, evidence}}},
+        socket
+      )
+
+    assert checked.assigns.recovery_status == :verified
+    assert checked.assigns.recovery_evidence == evidence
+    {:noreply, refreshing} = SyncDriftLive.handle_event("refresh_recovery_status", %{}, checked)
+    assert refreshing.assigns.recovery_evidence == nil
+  end
+
   test "swap observer preserves the exact accepted task across terminal, failure, timeout, and stale results" do
     socket =
       sync_drift_socket(%{
@@ -369,6 +386,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       drift_loading: false,
       recovery_handle: nil,
       recovery_status: nil,
+      recovery_evidence: nil,
       recovery_checked_at: nil,
       recovery_loading: false,
       current_scope: scope,

@@ -25,6 +25,43 @@ defmodule ScrypathOps.RecoveryObservationTest do
     assert observed.state == :accepted
   end
 
+  test "preserves node identity and correlates persisted Oban worker names and config prefix", %{
+    server: server
+  } do
+    host = %{schema: "ScrypathOps.Test.Post", host: "ops.example", org: "org-1"}
+    receipt = receipt(47, 1, "http://search-a:7700", :upsert) |> Map.put(:node, node())
+    {:ok, handle} = RecoveryObservation.register(server, host, receipt)
+    metadata = runtime_job_metadata(47, 1, "http://search-a:7700", :upsert, Oban.Search)
+
+    metadata =
+      %{
+        metadata
+        | job:
+            metadata.job |> Map.put(:worker, "Scrypath.Oban.UpsertWorker") |> Map.delete(:prefix),
+          conf: Map.put(metadata.conf, :prefix, "public")
+      }
+      |> Map.delete(:prefix)
+
+    worker(server, metadata, fn -> task_wait(server, 707, :succeeded) end)
+    observed = RecoveryObservation.observe(server, host, handle)
+    assert Map.get(observed, :node) == node()
+    assert observed.task_uid == 707
+  end
+
+  test "reads Oban runtime configuration from telemetry metadata", %{server: server} do
+    host = %{schema: "ScrypathOps.Test.Post", host: "ops.example", org: "org-1"}
+    metadata = runtime_job_metadata(46, 1, "http://search-a:7700", :upsert, Oban.Search)
+
+    {:ok, handle} =
+      RecoveryObservation.register(server, host, receipt(46, 1, "http://search-a:7700", :upsert))
+
+    worker(server, metadata, fn -> task_wait(server, 706, :succeeded) end)
+
+    observed = RecoveryObservation.observe(server, host, handle)
+    assert observed.task_uid == 706
+    assert observed.telemetry_status == :succeeded
+  end
+
   test "retains fast task completion before the LiveView registers the accepted receipt", %{
     server: server
   } do
@@ -251,6 +288,12 @@ defmodule ScrypathOps.RecoveryObservationTest do
       prefix: "public"
     }
     |> then(&Map.put(&1, :job, job(id, attempt, endpoint, operation, instance)))
+  end
+
+  defp runtime_job_metadata(id, attempt, endpoint, operation, instance) do
+    job = job(id, attempt, endpoint, operation, instance) |> Map.delete(:conf)
+
+    %{job: job, conf: %{name: instance, repo: ScrypathOps.Repo}, prefix: "public"}
   end
 
   defp job(id, attempt, endpoint, operation, instance) do
