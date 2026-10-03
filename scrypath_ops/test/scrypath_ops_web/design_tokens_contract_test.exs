@@ -110,6 +110,14 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
              Enum.map_join(orphans, "\n", fn {file, name} -> "  --#{name}  (#{file})" end)
   end
 
+  test "operator modal visibility and layering support focus at mount" do
+    assert ops_ui() =~ "modal modal-open ops-modal z-ops-modal"
+    assert rule(".ops-modal") =~ "z-index: var(--z-index-ops-modal)"
+    assert rule(".ops-modal") =~ "transition: opacity var(--duration-ops-fast)"
+    assert css() =~ ~r/@starting-style\s*\{\s*\.ops-modal\.modal-open\s*\{\s*visibility: visible;/
+    assert css() =~ "--z-index-ops-modal: 90;"
+  end
+
   test "the token catalog lists all current OpsUi exports with component roles" do
     exports =
       Regex.scan(~r/^\s*def (ops_\w+)\(/m, ops_ui())

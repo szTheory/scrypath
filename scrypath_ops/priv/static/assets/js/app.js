@@ -8650,7 +8650,8 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
 
   // js/app.js
   var import_topbar = __toESM(require_topbar());
-  var csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
+
+  // js/ops_hooks.js
   var opsModalPendingTrigger = null;
   var activeOpsModal = null;
   document.addEventListener("click", (e) => {
@@ -9022,12 +9023,13 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       document.dispatchEvent(new CustomEvent("ops:modal-overlay-open"));
       document.addEventListener("keydown", this.onKeydown, true);
       this.inertBackground();
-      this.focusInitial();
+      this.queueInitialFocus();
     },
     updated() {
-      if (!this.el.contains(document.activeElement)) this.focusInitial();
+      if (!this.el.contains(document.activeElement)) this.queueInitialFocus();
     },
     destroyed() {
+      window.cancelAnimationFrame(this.focusFrame);
       document.removeEventListener("keydown", this.onKeydown, true);
       document.removeEventListener("ops:modal-overlay-open", this.onModalOverlayOpen);
       this.restoreBackground();
@@ -9045,6 +9047,12 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       ].join(",");
       return Array.from(this.el.querySelectorAll(selector)).filter((el) => {
         return !el.closest("[hidden]") && el.getAttribute("aria-hidden") !== "true" && !el.matches(":disabled") && el.getClientRects().length > 0;
+      });
+    },
+    queueInitialFocus() {
+      window.cancelAnimationFrame(this.focusFrame);
+      this.focusFrame = window.requestAnimationFrame(() => {
+        if (this.el.isConnected && activeOpsModal === this) this.focusInitial();
       });
     },
     focusInitial() {
@@ -9070,6 +9078,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       if (e.key === "Tab") {
         this.trapFocus(e);
       }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") e.preventDefault();
       e.stopImmediatePropagation();
     },
     trapFocus(e) {
@@ -9135,6 +9144,9 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       this.restoreBackground();
     }
   };
+
+  // js/app.js
+  var csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
   var liveSocket = new LiveSocket2("/live", Socket, {
     longPollFallbackMs: 2500,
     params: { _csrf_token: csrfToken },

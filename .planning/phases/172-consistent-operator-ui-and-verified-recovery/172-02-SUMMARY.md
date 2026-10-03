@@ -58,3 +58,13 @@ The new browser focus cases are **written, not yet executed**. Plan 07 must run 
 ## Self-check
 
 The listed task commits and both principal source artifacts exist. Git status was clean before this summary. Continue Plan 03; do not repeat Plans 01–02.
+
+## Mounted-host follow-up
+
+Parent browser inspection found the ecommerce host duplicated the old command palette/drawer code and never registered OpsModal. Extracted `scrypath_ops/assets/js/ops_hooks.js` and imported its three hooks into both LiveSockets, removing the duplicated implementation. The host layout now also versions its mounted operator stylesheet. Added a shared-hook regression contract and updated the host controller asset assertion (host test execution belongs to the disposable mounted lane).
+
+The live modal initially left focus on body: the vendor visibility transition made the field unfocusable when the hook ran. Added the scoped `ops-modal` visibility rule, post-patch focus scheduling and layer 90. These bounded Plan 07 CSS items are already implemented; do not repeat them. Removed temporary debug attributes after diagnosis. Simplified repeated filename guidance; Close and Cancel now have distinct names. The browser case now contains full forward/backward Tab cycles.
+
+- Shared-hook RED: 9 tests, 2 failures; focused GREEN: 12 tests, zero failures.
+- Final `mix assets.build` and `MIX_ENV=test mix precommit`: successful, 167 tests and 2 doctests, zero failures. Logs: `/private/tmp/phase172-02-host-{red,green,assets,precommit}.log`.
+- Mounted preview confirms content-versioned CSS and a functioning visible Jump control. Initial Filename focus is observed in the real mounted browser. Full replayable browser acceptance remains Plan 07.

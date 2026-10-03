@@ -270,7 +270,7 @@ schema is amber, not red.
 
 ## Z-index — `--z-index-ops-*` → `z-ops-*`
 
-`skip-link` 50 < `flash` 60 < `modal` 70.
+`skip-link` 50 < `flash` 60 < `modal` 90.
 
 ## Motion — `--duration-ops-*` (component-only) + `--ease-ops-*` → `ease-ops-*`
 

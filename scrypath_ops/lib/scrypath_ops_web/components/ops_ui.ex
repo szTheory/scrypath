@@ -1345,7 +1345,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       data-ops-modal-cancel-event={@cancel_event}
       data-ops-modal-initial-focus={@initial_focus}
       data-ops-modal-successor={@successor}
-      class="modal modal-open z-ops-modal"
+      class="modal modal-open ops-modal z-ops-modal"
       phx-remove={
         JS.transition(
           {"transition-opacity duration-100 ease-ops-exit", "opacity-100", "opacity-0"},
@@ -1362,10 +1362,9 @@ defmodule ScrypathOpsWeb.OpsUi do
           type="button"
           class="btn ops-icon-btn btn-circle btn-ghost btn-sm absolute right-ops-3 top-ops-3"
           phx-click={@cancel_event}
-          aria-label={"Cancel #{@action_label}"}
-          data-ops-modal-cancel
+          aria-label={"Close #{@title} dialog"}
         >
-          <span class="sr-only">Cancel</span>
+          <span class="sr-only">Close</span>
           <span aria-hidden="true">×</span>
         </button>
         <h3 id={"#{@id}-title"} class="text-ops-h2 font-semibold leading-ops-tight">{@title}</h3>

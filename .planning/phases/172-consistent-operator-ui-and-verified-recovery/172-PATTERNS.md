@@ -262,3 +262,7 @@ Do not use pass-with-no-tests, ignored failures, or a retry pass as clean proof.
 **Project context:** Root and Ops AGENTS read; no project skill directories discovered. Relevant local LiveView best-practices guidance consulted for URL ownership, service boundaries, async identity, and observable tests.
 **Upstream:** 172-CONTEXT, 172-RESEARCH, 172-UI-SPEC and v1.42 UI-STRUCTURE/UI-SYSTEM/UI-AUTOMATION. UI-SPEC overrides defective historical behavior.
 **Provenance:** Existing analogs verified tracked in the task worktree. Proposed helper names are explicitly marked new. Only this PATTERNS artifact was written.
+
+## Execution update after Plan 02
+
+Operator hooks now live in `scrypath_ops/assets/js/ops_hooks.js`, imported by both standalone `app.js` and the ecommerce host `assets/js/app.js`. Use this shared module for further lifecycle repairs; do not recreate a host copy. The modal layer is now 90 and the scoped `ops-modal` opening rule keeps the dialog focusable throughout its visibility transition. Earlier line-number analogs above describe the preimplementation source.

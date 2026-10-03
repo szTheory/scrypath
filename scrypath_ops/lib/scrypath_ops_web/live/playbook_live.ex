@@ -1243,7 +1243,14 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                 />
               </.ops_field>
               <div class="flex justify-between gap-2">
-                <.ops_button phx-click="cancel_delete" variant={:ghost}>Cancel delete</.ops_button>
+                <.ops_button
+                  phx-click="cancel_delete"
+                  variant={:ghost}
+                  aria-label="Cancel delete"
+                  data-ops-modal-cancel
+                >
+                  Cancel
+                </.ops_button>
                 <.ops_button type="submit" variant={:danger}>Confirm delete</.ops_button>
               </div>
             </.form>
@@ -1253,7 +1260,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             :if={@rename_modal}
             id="rename-playbook-modal"
             title="Rename playbook"
-            description={"Rename #{@rename_modal.from}. Choose a valid workspace filename ending in .json."}
+            description={"Rename #{@rename_modal.from}."}
             action_label="rename"
             initial_focus="#rename-new-name-input"
             cancel_event="rename_cancel"
@@ -1262,19 +1269,26 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               <.ops_field
                 id="rename-new-name-input"
                 label="Filename"
-                hint="Use a valid *.json workspace filename."
+                hint="End the filename with .json."
               >
                 <.ops_text_input
                   id="rename-new-name-input"
                   name="new_name"
                   value={@rename_modal.new_name}
-                  hint="Use a valid *.json workspace filename."
+                  hint="End the filename with .json."
                   class="font-mono text-ops-body"
                   placeholder="new-name.json"
                 />
               </.ops_field>
               <div class="flex justify-between gap-2">
-                <.ops_button phx-click="rename_cancel" variant={:ghost}>Cancel rename</.ops_button>
+                <.ops_button
+                  phx-click="rename_cancel"
+                  variant={:ghost}
+                  aria-label="Cancel rename"
+                  data-ops-modal-cancel
+                >
+                  Cancel
+                </.ops_button>
                 <.ops_button type="submit" variant={:primary}>Rename</.ops_button>
               </div>
             </.form>
@@ -1284,7 +1298,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             :if={@duplicate_modal}
             id="duplicate-playbook-modal"
             title="Duplicate playbook"
-            description={"Create a copy of #{@duplicate_modal.from} with a new workspace filename."}
+            description={"Create a copy of #{@duplicate_modal.from}."}
             action_label="duplicate"
             initial_focus="#dup-to-name-input"
             cancel_event="dup_cancel"
@@ -1293,18 +1307,25 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               <.ops_field
                 id="dup-to-name-input"
                 label="Filename"
-                hint="Use a valid *.json workspace filename."
+                hint="End the filename with .json."
               >
                 <.ops_text_input
                   id="dup-to-name-input"
                   name="to_name"
                   value={@duplicate_modal.new_name}
-                  hint="Use a valid *.json workspace filename."
+                  hint="End the filename with .json."
                   class="font-mono text-ops-body"
                 />
               </.ops_field>
               <div class="flex justify-between gap-2">
-                <.ops_button phx-click="dup_cancel" variant={:ghost}>Cancel duplicate</.ops_button>
+                <.ops_button
+                  phx-click="dup_cancel"
+                  variant={:ghost}
+                  aria-label="Cancel duplicate"
+                  data-ops-modal-cancel
+                >
+                  Cancel
+                </.ops_button>
                 <.ops_button type="submit" variant={:primary}>Duplicate</.ops_button>
               </div>
             </.form>

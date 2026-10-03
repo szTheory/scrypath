@@ -167,7 +167,7 @@
   /* Z-index. `--z-index-*` is the Tailwind v4 namespace that generates `z-ops-*`. */
   --z-index-ops-skip-link: 50;
   --z-index-ops-flash: 60;
-  --z-index-ops-modal: 70;
+  --z-index-ops-modal: 90;
   --z-index-ops-nav: 75;
   --z-index-ops-command: 80;
 
@@ -1922,6 +1922,23 @@
    height can't transition and would reflow). Neutralized by reduced-motion below. */
 .ops-disclosure[open] > .ops-disclosure-body {
   animation: ops-fade-in var(--duration-ops-standard) var(--ease-ops-standard);
+}
+
+/* Operator dialogs are focusable as soon as LiveView mounts them. The vendor
+   visibility transition otherwise delays focus until after the hook runs. */
+.ops-modal {
+  z-index: var(--z-index-ops-modal);
+  transition: opacity var(--duration-ops-fast) var(--ease-ops-exit);
+}
+
+.ops-modal.modal-open {
+  visibility: visible;
+}
+
+@starting-style {
+  .ops-modal.modal-open {
+    visibility: visible;
+  }
 }
 
 .modal-open > .modal-box {

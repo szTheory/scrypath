@@ -17,6 +17,9 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
                  |> Path.expand()
 
   @app_js Path.join(__DIR__, "../../assets/js/app.js") |> Path.expand()
+  @ops_hooks Path.join(__DIR__, "../../assets/js/ops_hooks.js") |> Path.expand()
+  @host_js Path.join(__DIR__, "../../../examples/scrypath_ecommerce/assets/js/app.js")
+           |> Path.expand()
 
   defmodule OpsShellContractMeili do
     @moduledoc false
@@ -227,12 +230,23 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
   end
 
   test "command palette hook opens from visible shortcut affordances" do
-    source = File.read!(@app_js)
+    source = File.read!(@ops_hooks)
 
     assert source =~ ~S|closest("[data-ops-command-open]")|
     assert source =~ ~S|document.addEventListener("click", this.onCommandOpenClick)|
     assert source =~ ~S|document.removeEventListener("click", this.onCommandOpenClick)|
     assert source =~ "this.open()"
+  end
+
+  test "standalone and mounted LiveSockets share all operator hooks" do
+    assert File.read!(@app_js) =~
+             ~S|import {CommandPalette, OpsNavDrawer, OpsModal} from "./ops_hooks"|
+
+    assert File.read!(@host_js) =~
+             ~S|import {CommandPalette, OpsNavDrawer, OpsModal} from "../../../../scrypath_ops/assets/js/ops_hooks"|
+
+    assert File.read!(@host_js) =~ "hooks: { CommandPalette, OpsNavDrawer, OpsModal }"
+    refute File.read!(@host_js) =~ "const CommandPalette ="
   end
 
   test "flash component exposes durable passive alert chrome" do

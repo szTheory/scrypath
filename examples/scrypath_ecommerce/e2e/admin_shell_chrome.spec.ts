@@ -392,11 +392,16 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
     await page.keyboard.press("Control+K");
     await expect(page.locator("#ops-cmdk")).toBeHidden();
 
-    await cancel.focus();
-    await page.keyboard.press("Shift+Tab");
-    await expect(submit).toBeFocused();
-    await page.keyboard.press("Tab");
-    await expect(cancel).toBeFocused();
+    const close = modal.getByRole("button", { name: "Close Rename playbook dialog" });
+    await close.focus();
+    for (const target of [input, cancel, submit, close]) {
+      await page.keyboard.press("Tab");
+      await expect(target).toBeFocused();
+    }
+    for (const target of [submit, cancel, input, close]) {
+      await page.keyboard.press("Shift+Tab");
+      await expect(target).toBeFocused();
+    }
 
     await input.fill("invalid/name.json");
     await expect(input).toHaveValue("invalid/name.json");
