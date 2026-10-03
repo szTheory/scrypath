@@ -5,17 +5,17 @@ milestone_name: ScrypathOps operator/admin UI
 current_phase: 172
 current_phase_name: Consistent Operator UI and Verified Recovery
 status: executing
-stopped_at: Phase 172 Plans 01-02 complete; Plan 03 schema continuity next
-last_updated: "2026-10-03T19:00:03.663Z"
+stopped_at: Phase 172 Plans 01-03 complete; Plan 04 correlated recovery next
+last_updated: "2026-10-03T20:12:25.679Z"
 last_activity: 2026-10-03
-last_activity_desc: Plans 01–02 complete; semantic forms, dialogs and mounted asset cache repair committed
-state_head: 1459ee7ac04c050023b8a14b1e29a6dd5d2edb8f
+last_activity_desc: Plans 01–03 complete; exact schema context and compact triage verified
+state_head: 6cf3ca33f7018b8fa157f2ebbdbe56ebcf67d02e
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 8
-  completed_plans: 2
-  percent: 25
+  completed_plans: 3
+  percent: 38
 ---
 
 # Project State
@@ -30,15 +30,15 @@ See: .planning/PROJECT.md (updated 2026-10-03)
 ## Current Position
 
 Phase: 172 (1 of 1 in v1.42) — Consistent Operator UI and Verified Recovery
-Plan: 2 of 8 complete; Plan 03 next
+Plan: 3 of 8 complete; Plan 04 next
 Status: Executing
-Last activity: 2026-10-03 — Plan 02 committed; 165 tests and 2 doctests passed; browser focus cases pending Plan 07
+Last activity: 2026-10-03 — Plan 03 committed; 179 tests and 2 doctests passed; mounted browser acceptance remains in Plans 06–07
 
-Progress: [██░░░░░░░░] 25%
+Progress: [████░░░░░░] 38% (3/8 plans)
 
 ## Performance Metrics
 
-- Current milestone: 2/8 plans executed. Plans 01–02 source and summaries are committed; wider OPUX requirements remain open pending later plans.
+- Current milestone: 3/8 plans executed. Plans 01–03 source and summaries are committed; wider OPUX requirements remain open pending later plans.
 - Previous milestone v1.41: 4 phases (168–171), 19 plans, 9 requirements complete.
 - Historical plan timings and evidence remain in the milestone archives; Plan 01 has focused test and browser evidence; milestone acceptance remains pending.
 
@@ -80,10 +80,10 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-10-03T19:00:03.650Z
-Stopped at: Phase 172 Plans 01-02 complete; Plan 03 schema continuity next
-Resume file: .planning/phases/172-consistent-operator-ui-and-verified-recovery/172-03-PLAN.md
-Next action: Continue `$gsd-execute-phase 172` at Plan 03, then remaining checked plans. UI-SPEC and all eight plans passed independent review. Plans 01–02 are complete and must not be replayed. Use existing task-local locked dependencies and installed Elixir/OTP; see its summary for test commands and tool limitations.
+Last session: 2026-10-03T20:12:25.664Z
+Stopped at: Phase 172 Plans 01-03 complete; Plan 04 correlated recovery next
+Resume file: .planning/phases/172-consistent-operator-ui-and-verified-recovery/172-04-PLAN.md
+Next action: Continue `$gsd-execute-phase 172` at Plan 04, then remaining checked plans. UI-SPEC and all eight plans passed independent review. Plans 01–03 are complete and must not be replayed. Use existing task-local locked dependencies and installed Elixir/OTP; see its summary for test commands and tool limitations.
 
 ## Preview and Cleanup
 
