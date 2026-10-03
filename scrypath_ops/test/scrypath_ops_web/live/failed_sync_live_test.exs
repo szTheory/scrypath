@@ -26,6 +26,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
   defmodule RecordingOban do
     def insert(changeset) do
+      Agent.update(:failed_sync_insert_counter, &(&1 + 1))
       job = Ecto.Changeset.apply_changes(changeset)
       {:ok, %{job | id: 991, state: "available"}}
     end
@@ -55,6 +56,11 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
   end
 
   setup do
+    start_supervised!(%{
+      id: :failed_sync_insert_counter,
+      start: {Agent, :start_link, [fn -> 0 end, [name: :failed_sync_insert_counter]]}
+    })
+
     keys = ~w(
       schema_allowlist backend sync_mode index_prefix meilisearch_url meilisearch_client
       meilisearch_tasks oban oban_queue oban_inspector oban_jobs
@@ -266,7 +272,10 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     html = render_click(view, "retry", %{"id" => "501"})
 
-    assert html =~ "Retried 501"
+    assert html =~ "Retry accepted"
+    assert html =~ "Queue job 991"
+    assert html =~ "Original failure #501 retained"
+    refute html =~ "Recovery verified"
 
     assigns = :sys.get_state(view.pid).socket.assigns
     assert assigns.selected_schema == OpsPostA
@@ -274,6 +283,45 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert assigns.last_refresh_at != nil
     assert assigns.load_error == nil
     assert assigns.inspection != nil
+    assert assigns.recovery_receipts["501"].replacement_job == 991
+    assert Agent.get(:failed_sync_insert_counter, & &1) == 1
+
+    repeated = render_click(view, "retry", %{"id" => "501"})
+    assert repeated =~ "A retry for job 501 is already accepted"
+    assert Agent.get(:failed_sync_insert_counter, & &1) == 1
+  end
+
+  test "delete retry requires confirmation and Cancel keeps the failed row", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :oban_jobs, [
+      %{
+        id: 502,
+        state: "discarded",
+        worker: "Scrypath.Oban.DeleteWorker",
+        queue: "search_sync",
+        args: %{
+          "operation" => "delete",
+          "schema" => "Elixir.ScrypathOps.Test.OpsPostA",
+          "backend" => "Elixir.Scrypath.Meilisearch",
+          "index" => "fsv_ops_post_a",
+          "document_count" => 2,
+          "document_ids" => ["doc-1", "doc-2"]
+        }
+      }
+    ])
+
+    {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+    html = render_click(view, "retry", %{"id" => "502"})
+
+    assert html =~ "Confirm delete sync work"
+    assert html =~ "fsv_ops_post_a"
+    assert html =~ "doc-1"
+    assert html =~ "doc-2"
+    assert html =~ "Cancel"
+
+    html = render_click(view, "cancel_retry_delete", %{})
+    refute html =~ "Confirm delete sync work"
+    assert html =~ "Failed job 502"
+    refute html =~ "Retry accepted"
   end
 
   test "schema selector rejects non-allowlisted module strings without crashing", %{conn: conn} do
