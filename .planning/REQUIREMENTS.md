@@ -41,13 +41,13 @@ New workflows, visual directions, public core APIs, authorization products, or b
 
 | Requirement | Phase | Status |
 | --- | --- | --- |
-| OPUX-01 | Pending roadmap | Not started |
-| OPUX-02 | Pending roadmap | Not started |
-| OPUX-03 | Pending roadmap | Not started |
-| OPUX-04 | Pending roadmap | Not started |
-| OPUX-05 | Pending roadmap | Not started |
-| OPUX-06 | Pending roadmap | Not started |
-| OPUX-07 | Pending roadmap | Not started |
-| OPUX-08 | Pending roadmap | Not started |
+| OPUX-01 | Phase 172 | Not started |
+| OPUX-02 | Phase 172 | Not started |
+| OPUX-03 | Phase 172 | Not started |
+| OPUX-04 | Phase 172 | Not started |
+| OPUX-05 | Phase 172 | Not started |
+| OPUX-06 | Phase 172 | Not started |
+| OPUX-07 | Phase 172 | Not started |
+| OPUX-08 | Phase 172 | Not started |
 
-**Coverage:** 8 requirements, mapping pending.
+**Coverage:** 8/8 requirements mapped exactly once to Phase 172; no orphaned or duplicate assignments.
