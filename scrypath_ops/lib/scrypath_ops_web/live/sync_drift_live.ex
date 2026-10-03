@@ -39,9 +39,22 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   def handle_params(params, _uri, socket) do
     allowlist = ScrypathOps.Schemas.allowlist()
     resolution = OperatorSelection.resolve(params, allowlist)
-    selected = case resolution do {:ok, module} -> module; _ -> nil end
-    error = case resolution do :setup -> :no_schemas; :unavailable -> :unavailable; _ -> nil end
-    changed? = selected != socket.assigns.selected_schema or error != socket.assigns.selection_error
+
+    selected =
+      case resolution do
+        {:ok, module} -> module
+        _ -> nil
+      end
+
+    error =
+      case resolution do
+        :setup -> :no_schemas
+        :unavailable -> :unavailable
+        _ -> nil
+      end
+
+    changed? =
+      selected != socket.assigns.selected_schema or error != socket.assigns.selection_error
 
     socket =
       socket
@@ -88,7 +101,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   @impl true
   def handle_event("refresh_reconcile", _params, socket) do
-    {:noreply, if(current_selection?(socket), do: refresh_reconcile(socket), else: unavailable(socket))}
+    {:noreply,
+     if(current_selection?(socket), do: refresh_reconcile(socket), else: unavailable(socket))}
   end
 
   def handle_event("load_drift", _params, socket) do
@@ -106,7 +120,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   def handle_event("select_schema", %{"schema" => mod_str}, socket) do
     case OperatorSelection.resolve(%{"schema" => mod_str}, ScrypathOps.Schemas.allowlist()) do
       {:ok, mod} ->
-        {:noreply, push_patch(socket, to: OperatorSelection.path(socket.assigns.mount_path, "sync-drift", mod))}
+        {:noreply,
+         push_patch(socket,
+           to: OperatorSelection.path(socket.assigns.mount_path, "sync-drift", mod)
+         )}
 
       _ ->
         {:noreply, unavailable(socket)}
@@ -414,7 +431,12 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           meta={if @reconcile_loaded_at, do: "last loaded #{format_dt(@reconcile_loaded_at)}"}
         >
           <:actions>
-            <.ops_button phx-click="refresh_reconcile" variant={:primary} data-ops-refresh disabled={!@selected_schema}>
+            <.ops_button
+              phx-click="refresh_reconcile"
+              variant={:primary}
+              data-ops-refresh
+              disabled={!@selected_schema}
+            >
               Refresh reconcile
             </.ops_button>
           </:actions>
@@ -575,7 +597,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       </.ops_panel>
 
       <.ops_handoff>
-        <:step navigate={OperatorSelection.path(@mount_path, "posture", @selected_schema)} hint="After promoting —">
+        <:step
+          navigate={OperatorSelection.path(@mount_path, "posture", @selected_schema)}
+          hint="After promoting —"
+        >
           Re-check fleet posture
         </:step>
       </.ops_handoff>

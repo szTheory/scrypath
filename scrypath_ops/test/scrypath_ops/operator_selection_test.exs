@@ -12,15 +12,21 @@ defmodule ScrypathOps.OperatorSelectionTest do
 
   test "distinguishes empty setup from an unavailable explicit selection" do
     assert OperatorSelection.resolve(%{}, []) == :setup
+
     assert OperatorSelection.resolve(%{"schema" => "ScrypathOps.Test.Removed"}, [OpsPostA]) ==
              :unavailable
+
     assert OperatorSelection.resolve(%{"schema" => " ScrypathOps.Test.OpsPostA"}, [OpsPostA]) ==
              :unavailable
   end
 
   test "canonical names and paths preserve exact UTF-8 identity and mounted paths" do
     assert OperatorSelection.canonical(OpsPostB) == "ScrypathOps.Test.OpsPostB"
-    assert OperatorSelection.resolve(%{"schema" => OperatorSelection.canonical(OpsPostB)}, [OpsPostA, OpsPostB]) ==
+
+    assert OperatorSelection.resolve(%{"schema" => OperatorSelection.canonical(OpsPostB)}, [
+             OpsPostA,
+             OpsPostB
+           ]) ==
              {:ok, OpsPostB}
 
     assert OperatorSelection.path("/mounted/ops", "failed-sync", OpsPostB) ==
@@ -32,8 +38,13 @@ defmodule ScrypathOps.OperatorSelectionTest do
     unicode = :"Elixir.ScrypathOps.Test.Éclair"
     encoded = OperatorSelection.path("/ops", "failed-sync", unicode)
     assert encoded == "/ops/failed-sync?schema=ScrypathOps.Test.%C3%89clair"
-    assert URI.decode_query(URI.parse(encoded).query)["schema"] == OperatorSelection.canonical(unicode)
-    assert OperatorSelection.resolve(%{"schema" => OperatorSelection.canonical(unicode)}, [unicode]) ==
+
+    assert URI.decode_query(URI.parse(encoded).query)["schema"] ==
+             OperatorSelection.canonical(unicode)
+
+    assert OperatorSelection.resolve(%{"schema" => OperatorSelection.canonical(unicode)}, [
+             unicode
+           ]) ==
              {:ok, unicode}
   end
 
@@ -41,6 +52,7 @@ defmodule ScrypathOps.OperatorSelectionTest do
     hostile = "Elixir.ScrypathOps.Test.OpsPostA&schema=Elixir.Evil"
 
     assert OperatorSelection.resolve(%{"schema" => hostile}, [OpsPostA]) == :unavailable
+
     refute OperatorSelection.resolve(%{"schema" => "Elixir.ScrypathOps.Test.OpsPostA"}, [OpsPostA]) ==
              {:ok, OpsPostA}
   end

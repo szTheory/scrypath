@@ -279,10 +279,10 @@ defmodule ScrypathOpsWeb.PostureLive do
 
                     <div class="ops-schema-signal-card__groups">
                       <section
-                        aria-label={"Backend signals for #{inspect(mod)}"}
+                        aria-label={"Backend task signals for #{inspect(mod)}"}
                         class="ops-signal-group"
                       >
-                        <p class="ops-signal-group__title">Backend</p>
+                        <p class="ops-signal-group__title">Backend tasks</p>
                         <dl class="ops-signal-metrics">
                           <div>
                             <dt>Pending</dt>
@@ -293,18 +293,18 @@ defmodule ScrypathOpsWeb.PostureLive do
                             <dd>{length(status.backend.failed)}</dd>
                           </div>
                           <div class="ops-signal-metrics__wide">
-                            <dt>Last OK</dt>
+                            <dt>Last success</dt>
                             <dd>{format_state_ts(status.backend.last_succeeded)}</dd>
                           </div>
                         </dl>
                       </section>
 
                       <section
-                        aria-label={"Queue signals for #{inspect(mod)}"}
+                        aria-label={"Queue job signals for #{inspect(mod)}"}
                         class="ops-signal-group"
                       >
-                        <p class="ops-signal-group__title">Queue</p>
-                        <dl class="ops-signal-metrics">
+                        <p class="ops-signal-group__title">Queue jobs</p>
+                        <dl :if={status.queue.observed?} class="ops-signal-metrics">
                           <div>
                             <dt>Pending</dt>
                             <dd>{length(status.queue.pending)}</dd>
@@ -318,10 +318,13 @@ defmodule ScrypathOpsWeb.PostureLive do
                             <dd>{length(status.queue.failed)}</dd>
                           </div>
                           <div class="ops-signal-metrics__wide">
-                            <dt>Last OK</dt>
+                            <dt>Last success</dt>
                             <dd>{format_state_ts(status.queue.last_succeeded)}</dd>
                           </div>
                         </dl>
+                        <p :if={!status.queue.observed?} class="text-ops-sm text-base-content/75">
+                          {queue_unobserved_copy(status)}
+                        </p>
                       </section>
                     </div>
                     <.link
@@ -458,10 +461,21 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   defp queue_badge_label(status) do
     cond do
-      not status.queue.observed? -> "queue not observed"
+      not status.queue.observed? and queue_unused_mode?(status.mode) -> "Queue not used"
+      not status.queue.observed? -> "Queue observations unavailable"
       length(status.queue.failed) > 0 -> "queue failed"
       length(status.queue.retrying) > 0 -> "queue retrying"
       true -> "queue observed"
+    end
+  end
+
+  defp queue_unused_mode?(mode), do: mode in [:inline, :manual, "inline", "manual"]
+
+  defp queue_unobserved_copy(status) do
+    if queue_unused_mode?(status.mode) do
+      "Queue not used in #{status.mode} sync mode."
+    else
+      "Queue observations unavailable; no queue counts are reported as zero."
     end
   end
 end

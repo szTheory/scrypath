@@ -130,7 +130,10 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
 
     assert html =~ "data-testid=\"posture-row\""
     assert html =~ "fetch error: :boom"
-    assert html =~ "queue not observed"
+    assert html =~ "Queue not used"
+    assert html =~ "Backend tasks"
+    assert html =~ "Queue jobs"
+    assert html =~ "Last success"
     refute html =~ ~r/>\s*Refresh posture\s*</
     assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh posture checks']")
   end
@@ -144,6 +147,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert html =~ "Degraded"
     assert html =~ "/ops/failed-sync"
     assert html =~ "/ops/sync-drift"
+    assert has_element?(lv, "a[href='/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB']")
 
     [_before, rest] = String.split(html, ~s(data-testid="posture-next-checks"), parts: 2)
     [section | _] = String.split(rest, "</section>", parts: 2)

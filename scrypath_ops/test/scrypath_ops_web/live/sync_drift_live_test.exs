@@ -57,7 +57,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     previous = Map.new(keys, &{&1, Application.get_env(:scrypath_ops, &1)})
 
-    Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA])
+    Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA, OpsPostB])
     Application.put_env(:scrypath_ops, :backend, Scrypath.Meilisearch)
     Application.put_env(:scrypath_ops, :sync_mode, :manual)
     Application.put_env(:scrypath_ops, :index_prefix, "sdv")
@@ -132,7 +132,9 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     # load_drift now defers the read; it sets the loading flag and the actual
     # contract-drift read happens in the :run_drift message handler (S3).
     assert socket.assigns.drift_loading == true
-    {:noreply, socket} = SyncDriftLive.handle_info(:run_drift, socket)
+
+    {:noreply, socket} =
+      SyncDriftLive.handle_info({:run_drift, socket.assigns.context_generation}, socket)
 
     assert Agent.get(:sync_drift_live_test_state, & &1.settings_calls) == 1
     assert socket.assigns.drift_error == :settings
@@ -161,12 +163,41 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert {:noreply, updated_socket} =
              SyncDriftLive.handle_event("select_schema", %{"schema" => mod_str}, socket)
 
-    assert updated_socket.assigns.selected_schema == OpsPostA
-    assert flash_value(updated_socket, "error") =~ "allowlisted"
+    assert updated_socket.assigns.selected_schema == nil
+    assert updated_socket.assigns.selection_error == :unavailable
 
     assert_raise ArgumentError, fn ->
       String.to_existing_atom(mod_str)
     end
+  end
+
+  test "a stale queued drift check cannot overwrite a newly selected schema" do
+    socket = sync_drift_socket(%{selected_schema: OpsPostA, context_generation: 4})
+    {:noreply, loading_socket} = SyncDriftLive.handle_event("load_drift", %{}, socket)
+    assert loading_socket.assigns.drift_loading
+
+    {:noreply, switched_socket} =
+      SyncDriftLive.handle_params(
+        %{"schema" => "ScrypathOps.Test.OpsPostB"},
+        "https://scrypath.example/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB",
+        loading_socket
+      )
+
+    assert switched_socket.assigns.selected_schema == OpsPostB
+    assert switched_socket.assigns.context_generation == 5
+
+    {:noreply, final_socket} = SyncDriftLive.handle_info({:run_drift, 4}, switched_socket)
+    assert Agent.get(:sync_drift_live_test_state, & &1.settings_calls) == 0
+    assert final_socket.assigns.selected_schema == OpsPostB
+    assert final_socket.assigns.drift_result == nil
+  end
+
+  test "rendered sync drift links preserve the selected schema", %{conn: conn} do
+    {:ok, lv, html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
+
+    assert html =~ "OpsPostB"
+    assert has_element?(lv, "a[href='/ops/posture?schema=ScrypathOps.Test.OpsPostB']")
+    assert :sys.get_state(lv.pid).socket.assigns.selected_schema == OpsPostB
   end
 
   test "swap live blocks impersonation before any refresh" do
@@ -220,6 +251,9 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       schema_allowlist: [OpsPostA, OpsPostB],
       scrypath_opts: sync_drift_scrypath_opts(),
       selected_schema: OpsPostA,
+      context_generation: 0,
+      selection_error: nil,
+      mount_path: "/ops",
       reconcile_result: nil,
       reconcile_loaded_at: nil,
       drift_result: nil,
