@@ -67,7 +67,7 @@ defmodule ScrypathOps.DocumentObservationTest do
              )
 
     missing_stub = stub_name("Missing")
-    Req.Test.stub(missing_stub, fn conn -> json(conn, 404, %{"code" => "not_found"}) end)
+    Req.Test.stub(missing_stub, fn conn -> json(conn, 404, %{"code" => "document_not_found"}) end)
 
     assert {:ok, %{state: :failed, reason: :document_not_found}} =
              DocumentObservation.check(
@@ -112,7 +112,7 @@ defmodule ScrypathOps.DocumentObservationTest do
     Req.Test.stub(missing_document, fn conn ->
       case conn.request_path do
         "/indexes/articles" -> json(conn, 200, %{"uid" => "articles"})
-        "/indexes/articles/documents/gone" -> json(conn, 404, %{"code" => "not_found"})
+        "/indexes/articles/documents/gone" -> json(conn, 404, %{"code" => "document_not_found"})
       end
     end)
 
@@ -133,7 +133,7 @@ defmodule ScrypathOps.DocumentObservationTest do
           json(conn, 200, %{"uid" => "catalog/legacy ?"})
 
         "/indexes/catalog%2Flegacy%20%3F/documents/a%2Fb" ->
-          json(conn, 404, %{"code" => "not_found"})
+          json(conn, 404, %{"code" => "document_not_found"})
       end
     end)
 

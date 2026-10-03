@@ -347,7 +347,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp start_recovery_observation(socket, handle) do
     generation = socket.assigns.context_generation
     schema = socket.assigns.selected_schema
-    opts = ScrypathOps.Schemas.runtime_opts(socket.assigns.scrypath_opts)
+    operator_opts = socket.assigns.scrypath_opts
+    opts = ScrypathOps.Schemas.runtime_opts(operator_opts)
     context = recovery_host_context(socket, schema)
 
     socket =
@@ -358,13 +359,14 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       |> assign(:recovery_loading, true)
 
     start_async(socket, :recovery_observation, fn ->
-      result = observe_recovery(context, handle, schema, opts)
+      result = observe_recovery(context, handle, schema, opts, operator_opts)
       {generation, handle, result}
     end)
   end
 
-  defp observe_recovery(context, handle, schema, opts) do
-    task = Task.async(fn -> observe_recovery_now(context, handle, schema, opts) end)
+  defp observe_recovery(context, handle, schema, opts, operator_opts) do
+    task =
+      Task.async(fn -> observe_recovery_now(context, handle, schema, opts, operator_opts) end)
 
     case Task.yield(task, 10_000) do
       {:ok, result} ->
@@ -378,19 +380,19 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     _ -> :unknown
   end
 
-  defp observe_recovery_now(context, handle, schema, opts) do
+  defp observe_recovery_now(context, handle, schema, opts, operator_opts) do
     with true <- schema in ScrypathOps.Schemas.allowlist(),
          receipt when is_map(receipt) <- RecoveryObservation.observe(context, handle),
          true <- receipt.generation == context.generation,
          true <- current_runtime_matches?(receipt, opts),
          {:ok, expected_index} <- active_index(schema, opts),
          true <- receipt.index == expected_index,
-         {:ok, job} <- read_recovery_job(receipt, opts),
+         {:ok, job} <- read_recovery_job(receipt),
          {:ok, queue_state} <- validate_recovery_job(job, receipt) do
       status =
         case receipt.task_uid do
           task_uid when is_integer(task_uid) ->
-            verify_task_and_documents(task_uid, receipt, schema, opts)
+            verify_task_and_documents(task_uid, receipt, schema, opts, operator_opts)
 
           _ when queue_state == :completed ->
             :queue_only_completed
@@ -467,10 +469,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp endpoint_identity(_), do: nil
 
-  defp verify_task_and_documents(task_uid, receipt, schema, opts) do
+  defp verify_task_and_documents(task_uid, receipt, schema, opts, operator_opts) do
     with {:ok, task} <- read_recovery_task(task_uid, opts),
          :ok <- validate_recovery_task(task, receipt, task_uid),
-         {:ok, expected} <- read_expected_effects(schema, receipt, opts),
+         {:ok, expected} <- read_expected_effects(schema, receipt, operator_opts),
          {:ok, observation} <-
            ScrypathOps.DocumentObservation.check(
              Map.merge(receipt, expected),
@@ -509,14 +511,15 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     end
   end
 
-  defp read_recovery_job(receipt, opts) do
-    repo = Keyword.get(opts, :repo)
+  defp read_recovery_job(receipt) do
+    # The runtime identity check binds this repo and prefix to the current Oban instance.
+    repo = receipt.repo
     job_id = receipt.replacement_job
 
     if is_atom(repo) and is_integer(job_id) and Code.ensure_loaded?(Oban.Job) and
          Code.ensure_loaded?(repo) and
-         function_exported?(repo, :get, 2) do
-      case apply(repo, :get, [Oban.Job, job_id]) do
+         function_exported?(repo, :get, 3) do
+      case apply(repo, :get, [Oban.Job, job_id, [prefix: receipt.prefix]]) do
         job when is_map(job) and is_struct(job, Oban.Job) -> {:ok, job}
         _ -> {:error, :job_unavailable}
       end
@@ -730,7 +733,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
           case Scrypath.Meilisearch.swap_indexes(mod, opts) do
             {:ok, %{task: task}} ->
-              task_id = Map.get(task, :id)
+              task_id = Map.fetch!(task, :uid)
               generation = socket.assigns.context_generation
 
               socket
@@ -754,11 +757,12 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp fetch_promotion_prerequisites(socket) do
     mod = socket.assigns.selected_schema
-    opts = ScrypathOps.Schemas.runtime_opts(socket.assigns.scrypath_opts)
+    operator_opts = socket.assigns.scrypath_opts
+    opts = ScrypathOps.Schemas.runtime_opts(operator_opts)
 
     if (mod && mod in ScrypathOps.Schemas.allowlist()) and
          Keyword.get(opts, :backend) == Scrypath.Meilisearch do
-      reconcile = Scrypath.reconcile_sync(mod, opts)
+      reconcile = Scrypath.reconcile_sync(mod, operator_opts)
       drift = Scrypath.index_contract_drift(mod, opts)
 
       socket =

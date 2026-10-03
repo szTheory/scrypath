@@ -107,7 +107,8 @@ defmodule ScrypathOps.DocumentObservation do
   defp check_deletes(request, index, ids) do
     Enum.reduce_while(ids, :ok, fn id, :ok ->
       case get(request, document_path(index, id)) do
-        {:ok, %{status: 404, body: %{"code" => "not_found"}}} ->
+        {:ok, %{status: 404, body: %{"code" => code}}}
+        when code in ["document_not_found", "not_found"] ->
           {:cont, :ok}
 
         {:ok, %{status: 200}} ->
@@ -139,7 +140,8 @@ defmodule ScrypathOps.DocumentObservation do
       {:ok, %{status: status, body: body}} when status in 200..299 and is_map(body) ->
         {:ok, body}
 
-      {:ok, %{status: 404, body: %{"code" => "not_found"}}} ->
+      {:ok, %{status: 404, body: %{"code" => code}}}
+      when code in ["document_not_found", "not_found"] ->
         {:error, :document_not_found}
 
       {:ok, %{status: 404, body: %{"code" => "index_not_found"}}} ->

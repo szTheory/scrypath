@@ -12,12 +12,27 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   alias ScrypathOpsWeb.SyncDriftLive
 
   defmodule SyncDriftClient do
-    def tasks(_filters, config) do
+    def tasks(filters, config) do
       Agent.update(:sync_drift_live_test_state, fn state ->
         Map.update!(state, :tasks_calls, &(&1 + 1))
       end)
 
-      {:ok, %{results: Keyword.get(config, :meilisearch_tasks, [])}}
+      tasks =
+        if Agent.get(:sync_drift_live_test_state, &Map.get(&1, :ready, false)) and
+             Keyword.get(filters, :index_uids) == ["sdv_ops_post_a__reindex"] do
+          [
+            %{
+              "uid" => 100,
+              "status" => "succeeded",
+              "type" => "indexCreation",
+              "indexUid" => "sdv_ops_post_a__reindex"
+            }
+          ]
+        else
+          Keyword.get(config, :meilisearch_tasks, [])
+        end
+
+      {:ok, %{results: tasks}}
     end
 
     def get_settings(_index, _config) do
@@ -25,7 +40,16 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
         Map.update!(state, :settings_calls, &(&1 + 1))
       end)
 
-      {:error, :settings}
+      if Agent.get(:sync_drift_live_test_state, &Map.get(&1, :ready, false)) do
+        {:ok,
+         %{
+           "searchableAttributes" => ["*"],
+           "filterableAttributes" => [],
+           "sortableAttributes" => []
+         }}
+      else
+        {:error, :settings}
+      end
     end
 
     def swap_indexes(_indexes, _config) do
@@ -149,6 +173,34 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert updated_socket.assigns.local_ui_state == %{compact?: true}
     assert flash_value(updated_socket, "error") =~ "Index promotion blocked"
     assert updated_socket.assigns.drift_error == :settings
+  end
+
+  test "promotion retains the backend task UID returned by the real normalization boundary" do
+    Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
+    socket = sync_drift_socket(%{})
+
+    assert {:noreply, accepted} = SyncDriftLive.handle_event("swap_live", %{}, socket)
+    assert Agent.get(:sync_drift_live_test_state, & &1.swap_called)
+    assert accepted.assigns.promotion_status == :accepted
+    assert accepted.assigns.promotion_task_id == 201
+  end
+
+  test "guarded promotion preserves the queue inspector and refuses newly pending work" do
+    Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
+
+    opts =
+      sync_drift_scrypath_opts()
+      |> Keyword.put(:sync_mode, :oban)
+      |> Keyword.put(:oban, Oban)
+      |> Keyword.put(:oban_queue, :scrypath_sync)
+      |> Keyword.put(:oban_jobs, [
+        %{id: 12, state: "available", worker: "Scrypath.Oban.UpsertWorker", args: %{}}
+      ])
+
+    socket = sync_drift_socket(%{scrypath_opts: opts})
+    assert {:noreply, blocked} = SyncDriftLive.handle_event("swap_live", %{}, socket)
+    refute Agent.get(:sync_drift_live_test_state, & &1.swap_called)
+    assert blocked.assigns.promotion_eligibility == {:blocked, :queue_work_pending}
   end
 
   test "schema selector rejects non-allowlisted module strings without creating atoms" do
