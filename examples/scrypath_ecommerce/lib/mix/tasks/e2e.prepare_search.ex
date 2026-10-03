@@ -10,6 +10,8 @@ defmodule Mix.Tasks.E2e.PrepareSearch do
 
   use Mix.Task
 
+  alias Scrypath.Meilisearch.Client
+  alias Scrypath.Meilisearch.TaskPayload
   alias Scrypath.Meilisearch.Tasks
   alias ScrypathEcommerce.Catalog.Product
   alias ScrypathEcommerce.Catalog.Variant
@@ -29,9 +31,7 @@ defmodule Mix.Tasks.E2e.PrepareSearch do
     for schema <- @schemas do
       index = backend.index_name(schema, config)
 
-      schema
-      |> backend.create_index(:id, Keyword.put(config, :target_index, index))
-      |> wait_or_ignore_existing(config)
+      ensure_index!(index, config)
 
       schema
       |> backend.apply_settings(index, config)
@@ -41,37 +41,34 @@ defmodule Mix.Tasks.E2e.PrepareSearch do
     end
   end
 
-  defp wait_or_ignore_existing({:ok, %{task: task}}, config) do
-    case Tasks.wait_for_task(task, config) do
-      {:ok, _task} -> :ok
-      {:error, {:task_failed, %{raw: %{"error" => %{"code" => "index_already_exists"}}}}} -> :ok
-      {:error, reason} -> Mix.raise("create Product index failed: #{inspect(reason)}")
+  defp ensure_index!(index, config) do
+    case Client.get_settings(index, config) do
+      {:ok, _settings} ->
+        :ok
+
+      {:error, {:http_error, 404, _}} ->
+        result =
+          with {:ok, response} <- Client.create_index(index, :id, config),
+               {:ok, task} <- TaskPayload.normalize(response) do
+            {:ok, %{task: task}}
+          end
+
+        wait!(result, config, "create #{index}")
+
+      {:error, reason} ->
+        Mix.raise("inspect #{index} failed: #{inspect(reason)}")
     end
   end
 
-  defp wait_or_ignore_existing(
-         {:error, {:http_error, 400, %{"code" => "index_already_exists"}}},
-         _config
-       ),
-       do: :ok
-
-  defp wait_or_ignore_existing(
-         {:error, {:task_failed, %{raw: %{"error" => %{"code" => "index_already_exists"}}}}},
-         _config
-       ),
-       do: :ok
-
-  defp wait_or_ignore_existing({:error, {:http_error, 409, _payload}}, _config), do: :ok
-
-  defp wait_or_ignore_existing({:error, reason}, _config),
-    do: Mix.raise("create Product index failed: #{inspect(reason)}")
-
-  defp wait!({:ok, %{task: task}}, config, action) do
+  defp wait!({:ok, %{task: task}}, config, action) when is_map(task) do
     case Tasks.wait_for_task(task, config) do
       {:ok, _task} -> :ok
       {:error, reason} -> Mix.raise("#{action} failed: #{inspect(reason)}")
     end
   end
+
+  defp wait!({:ok, result}, _config, action),
+    do: Mix.raise("#{action} returned no task: #{inspect(result)}")
 
   defp wait!({:error, reason}, _config, action),
     do: Mix.raise("#{action} failed: #{inspect(reason)}")

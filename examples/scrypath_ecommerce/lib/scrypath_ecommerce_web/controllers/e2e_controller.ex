@@ -38,13 +38,16 @@ defmodule ScrypathEcommerceWeb.E2EController do
   import Ecto.Query
 
   alias ScrypathEcommerce.Catalog
+  alias ScrypathEcommerce.E2ERecovery
   alias ScrypathEcommerce.CatalogFixtures
   alias ScrypathEcommerce.Catalog.Category
   alias ScrypathEcommerce.Catalog.Product
   alias ScrypathEcommerce.Catalog.Tenant
   alias ScrypathEcommerce.Catalog.Variant
   alias ScrypathEcommerce.Repo
+  alias Scrypath.Meilisearch.Client
   alias Scrypath.Meilisearch.IndexManagement
+  alias Scrypath.Meilisearch.TaskPayload
   alias Scrypath.Meilisearch.Tasks
   alias Oban.Job
 
@@ -193,6 +196,84 @@ defmodule ScrypathEcommerceWeb.E2EController do
   def drain(conn, _params) do
     result = drain_queue_until_idle(5, %{success: 0, failure: 0})
     json(conn, result)
+  end
+
+  def recovery_fixture(conn, %{"tenant_id" => tenant_id, "marker" => marker}) do
+    with {:ok, tenant_id} <- parse_integer(tenant_id) do
+      json(conn, E2ERecovery.prepare(tenant_id, marker))
+    else
+      {:error, :invalid_integer} -> invalid_integer(conn)
+    end
+  end
+
+  def recovery_probe(conn, %{
+        "marker" => marker,
+        "accepted_job_id" => job_id,
+        "handle" => handle,
+        "generation" => generation,
+        "task_uid" => task_uid,
+        "document_id" => document_id
+      }) do
+    with {:ok, job_id} <- parse_integer(job_id),
+         {:ok, generation} <- parse_integer(generation),
+         {:ok, task_uid} <- parse_integer(task_uid),
+         {:ok, document_id} <- parse_integer(document_id) do
+      json(
+        conn,
+        E2ERecovery.probe_recovery(
+          marker,
+          job_id,
+          handle,
+          conn.host,
+          generation,
+          task_uid,
+          document_id
+        )
+      )
+    else
+      {:error, :invalid_integer} -> invalid_integer(conn)
+    end
+  rescue
+    error in [MatchError, ArgumentError, Ecto.NoResultsError] ->
+      probe_mismatch(conn, "recovery_probe_mismatch", error)
+  end
+
+  def swap_fixture(conn, %{"tenant_id" => tenant_id, "marker" => marker}) do
+    with {:ok, tenant_id} <- parse_integer(tenant_id) do
+      json(conn, E2ERecovery.prepare_swap(tenant_id, marker))
+    else
+      {:error, :invalid_integer} -> invalid_integer(conn)
+    end
+  end
+
+  def swap_probe(conn, %{
+        "marker" => marker,
+        "task_uid" => task_uid,
+        "live_index" => live_index,
+        "target_index" => target_index,
+        "task_baseline" => task_baseline,
+        "document_id" => document_id
+      }) do
+    with {:ok, task_uid} <- parse_integer(task_uid),
+         {:ok, task_baseline} <- parse_integer(task_baseline),
+         {:ok, document_id} <- parse_integer(document_id) do
+      json(
+        conn,
+        E2ERecovery.probe_swap(
+          marker,
+          task_uid,
+          live_index,
+          target_index,
+          task_baseline,
+          document_id
+        )
+      )
+    else
+      {:error, :invalid_integer} -> invalid_integer(conn)
+    end
+  rescue
+    error in [MatchError, ArgumentError, Ecto.NoResultsError] ->
+      probe_mismatch(conn, "swap_probe_mismatch", error)
   end
 
   def search_visible(conn, %{"tenant_id" => tenant_id, "query" => query} = params) do
@@ -354,10 +435,7 @@ defmodule ScrypathEcommerceWeb.E2EController do
   end
 
   def operator_state(conn, %{"tenant_id" => tenant_id}) do
-    with {:ok, tenant} <- parse_integer(tenant_id) do
-      {swap_terminal_success, swap_terminal_state, active_index, swap_error} = swap_probe(Product)
-      active_index_visible = active_index_visible?(tenant)
-
+    with {:ok, _tenant} <- parse_integer(tenant_id) do
       with {:ok, failed_work} <-
              Scrypath.failed_sync_work(Product,
                sync_mode: :oban,
@@ -371,12 +449,7 @@ defmodule ScrypathEcommerceWeb.E2EController do
           failed_count: length(failed_work),
           first_failed_work_id: if(first, do: first.id, else: nil),
           reason_class_counts: reason_class_counts.by_class,
-          retryable: Enum.any?(failed_work, & &1.retryable?),
-          swap_terminal_success: swap_terminal_success,
-          swap_terminal_state: swap_terminal_state,
-          active_index: active_index,
-          active_index_visible: active_index_visible,
-          swap_error_class: swap_error
+          retryable: Enum.any?(failed_work, & &1.retryable?)
         })
       else
         {:error, reason} ->
@@ -430,16 +503,20 @@ defmodule ScrypathEcommerceWeb.E2EController do
   end
 
   defp clear_index_docs!(backend, ids, config) do
-    case backend.delete_documents(Product, ids, config) do
-      {:ok, %{task: %{uid: uid} = task}} when is_integer(uid) ->
-        _ = Tasks.wait_for_task(task, config)
+    index = backend.index_name(Product, config)
+
+    case Client.get_settings(index, config) do
+      {:ok, _settings} ->
+        Product
+        |> backend.delete_documents(ids, config)
+        |> wait_sync!(config, "clear documents from #{index}")
+
+      {:error, {:http_error, 404, _}} ->
         :ok
 
-      _ ->
-        :ok
+      {:error, reason} ->
+        raise ArgumentError, "inspect #{index} before cleanup failed: #{inspect(reason)}"
     end
-  rescue
-    _ -> :ok
   end
 
   defp prepare_swap_target!(products) do
@@ -448,9 +525,7 @@ defmodule ScrypathEcommerceWeb.E2EController do
     target_index = Scrypath.Meilisearch.IndexManagement.target_index_name(Product, config)
     target_config = Keyword.put(config, :index_name, target_index)
 
-    Product
-    |> backend.create_index(:id, target_config)
-    |> wait_or_ignore_existing!(config, "create swap target")
+    ensure_index!(target_index, target_config)
 
     Product
     |> backend.apply_settings(target_index, config)
@@ -463,35 +538,36 @@ defmodule ScrypathEcommerceWeb.E2EController do
     |> wait_sync!(config, "seed swap target documents")
   end
 
-  defp wait_or_ignore_existing!({:ok, %{task: task}}, config, action) do
+  # Avoid manufacturing failed tasks when replaying a fixture. Existing failed
+  # history remains intact and still blocks production promotion eligibility.
+  defp ensure_index!(index, config) do
+    case Client.get_settings(index, config) do
+      {:ok, _settings} ->
+        :ok
+
+      {:error, {:http_error, 404, _}} ->
+        result =
+          with {:ok, response} <- Client.create_index(index, :id, config),
+               {:ok, task} <- TaskPayload.normalize(response) do
+            {:ok, %{task: task}}
+          end
+
+        wait_task!(result, config, "create #{index}")
+
+      {:error, reason} ->
+        raise "inspect #{index} failed: #{inspect(reason)}"
+    end
+  end
+
+  defp wait_task!({:ok, %{task: task}}, config, action) when is_map(task) do
     case Tasks.wait_for_task(task, config) do
       {:ok, _task} -> :ok
-      {:error, {:task_failed, %{raw: %{"error" => %{"code" => "index_already_exists"}}}}} -> :ok
       {:error, reason} -> raise ArgumentError, "#{action} failed: #{inspect(reason)}"
     end
   end
 
-  defp wait_or_ignore_existing!({:ok, _result}, _config, _action), do: :ok
-
-  defp wait_or_ignore_existing!(
-         {:error, {:http_error, status, %{"code" => "index_already_exists"}}},
-         _config,
-         _action
-       )
-       when status in [400, 409],
-       do: :ok
-
-  defp wait_or_ignore_existing!({:error, reason}, _config, action),
-    do: raise(ArgumentError, "#{action} failed: #{inspect(reason)}")
-
-  defp wait_task!({:ok, %{task: task}}, config, action) do
-    case Tasks.wait_for_task(task, config) do
-      {:ok, _task} -> :ok
-      {:error, reason} -> raise ArgumentError, "#{action} failed: #{inspect(reason)}"
-    end
-  end
-
-  defp wait_task!({:ok, _result}, _config, _action), do: :ok
+  defp wait_task!({:ok, result}, _config, action),
+    do: raise(ArgumentError, "#{action} returned no task: #{inspect(result)}")
 
   defp wait_task!({:error, reason}, _config, action),
     do: raise(ArgumentError, "#{action} failed: #{inspect(reason)}")
@@ -503,7 +579,8 @@ defmodule ScrypathEcommerceWeb.E2EController do
     end
   end
 
-  defp wait_sync!({:ok, _result}, _config, _action), do: :ok
+  defp wait_sync!({:ok, result}, _config, action),
+    do: raise(ArgumentError, "#{action} returned no task UID: #{inspect(result)}")
 
   defp wait_sync!({:error, reason}, _config, action),
     do: raise(ArgumentError, "#{action} failed: #{inspect(reason)}")
@@ -542,68 +619,10 @@ defmodule ScrypathEcommerceWeb.E2EController do
     |> json(%{error: "invalid integer parameter"})
   end
 
-  defp swap_probe(schema_module) do
-    config = Scrypath.Config.resolve!(sync_mode: :manual)
-
-    case Scrypath.reconcile_sync(schema_module, sync_mode: :manual) do
-      {:ok, reconcile} ->
-        terminal_state =
-          cond do
-            reconcile.reindex.cutover == :completed -> "completed"
-            recent_index_swap_succeeded?(config) -> "completed"
-            reconcile.reindex.cutover == :pending -> "pending"
-            true -> "not_started"
-          end
-
-        {terminal_state == "completed", terminal_state, reconcile.index, nil}
-
-      {:error, reason} ->
-        {false, "unknown", fallback_index(schema_module), classify_swap_error(reason)}
-    end
-  end
-
-  defp recent_index_swap_succeeded?(config) do
-    client = Keyword.get(config, :meilisearch_client) || Scrypath.Meilisearch.Client
-
-    case client.tasks([types: ["indexSwap"]], config) do
-      {:ok, %{"results" => results}} when is_list(results) ->
-        Enum.any?(results, &task_succeeded?/1)
-
-      {:ok, %{results: results}} when is_list(results) ->
-        Enum.any?(results, &task_succeeded?/1)
-
-      _ ->
-        false
-    end
-  end
-
-  defp task_succeeded?(task) when is_map(task) do
-    (Map.get(task, "type") || Map.get(task, :type)) == "indexSwap" and
-      (Map.get(task, "status") || Map.get(task, :status)) in ["succeeded", :succeeded]
-  end
-
-  defp fallback_index(schema_module) do
-    Scrypath.Config.resolve!(sync_mode: :manual)
-    |> Scrypath.Config.fetch_backend!()
-    |> then(& &1.index_name(schema_module, sync_mode: :manual))
-  end
-
-  defp classify_swap_error({:transport_failed, _}), do: "transport"
-  defp classify_swap_error({:http_error, _}), do: "backend"
-  defp classify_swap_error({:unsupported_operator_backend, _}), do: "unsupported_backend"
-  defp classify_swap_error(_), do: "unknown"
-
-  defp active_index_visible?(tenant_id) do
-    case Scrypath.search(Product, "CyberPhone", filter: [tenant_id: tenant_id]) do
-      {:ok, result} ->
-        Enum.any?(result.hits, fn hit ->
-          value = Map.get(hit, "name") || Map.get(hit, :name)
-          is_binary(value) and String.contains?(value, "CyberPhone")
-        end)
-
-      {:error, _reason} ->
-        false
-    end
+  defp probe_mismatch(conn, error, exception) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{error: error, reason: Exception.message(exception)})
   end
 
   # ── Operational-scenario helpers (SEED-01) ───────────────────────────────────
@@ -618,9 +637,7 @@ defmodule ScrypathEcommerceWeb.E2EController do
     for schema <- [Product, Variant] do
       index = backend.index_name(schema, config)
 
-      schema
-      |> backend.create_index(:id, Keyword.put(config, :target_index, index))
-      |> wait_or_ignore_existing!(config, "create #{inspect(schema)} index")
+      ensure_index!(index, config)
 
       schema
       |> backend.apply_settings(index, config)
@@ -628,8 +645,6 @@ defmodule ScrypathEcommerceWeb.E2EController do
     end
 
     :ok
-  rescue
-    _ -> :ok
   end
 
   defp sync_products!(products) do
