@@ -30,15 +30,29 @@ defmodule ScrypathOpsWeb.AssetPlugTest do
 
     unversioned = AssetPlug.call(asset_conn(""), AssetPlug.init(path_prefix: "assets"))
     assert unversioned.status == 200
-    assert Plug.Conn.get_resp_header(unversioned, "cache-control") == ["public, max-age=0, must-revalidate"]
+
+    assert Plug.Conn.get_resp_header(unversioned, "cache-control") == [
+             "public, max-age=0, must-revalidate"
+           ]
+
     assert Plug.Conn.get_resp_header(unversioned, "etag") == ["\"#{current_digest}\""]
 
-    mismatched = AssetPlug.call(asset_conn("?v=old-content"), AssetPlug.init(path_prefix: "assets"))
-    assert Plug.Conn.get_resp_header(mismatched, "cache-control") == ["public, max-age=0, must-revalidate"]
+    mismatched =
+      AssetPlug.call(asset_conn("?v=old-content"), AssetPlug.init(path_prefix: "assets"))
+
+    assert Plug.Conn.get_resp_header(mismatched, "cache-control") == [
+             "public, max-age=0, must-revalidate"
+           ]
+
     assert mismatched.resp_body == unversioned.resp_body
 
-    versioned = AssetPlug.call(asset_conn("?v=#{current_digest}"), AssetPlug.init(path_prefix: "assets"))
-    assert Plug.Conn.get_resp_header(versioned, "cache-control") == ["public, max-age=31536000, immutable"]
+    versioned =
+      AssetPlug.call(asset_conn("?v=#{current_digest}"), AssetPlug.init(path_prefix: "assets"))
+
+    assert Plug.Conn.get_resp_header(versioned, "cache-control") == [
+             "public, max-age=31536000, immutable"
+           ]
+
     assert versioned.resp_body == unversioned.resp_body
   end
 

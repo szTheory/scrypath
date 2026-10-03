@@ -123,13 +123,19 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     view
     |> element("#ops-search-playground-form")
-    |> render_submit(%{"q" => "still visible", "page_size" => "10", "schema" => inspect(OpsPostA)})
+    |> render_submit(%{
+      "q" => "still visible",
+      "page_size" => "10",
+      "schema" => inspect(OpsPostA)
+    })
 
     assert render(view) =~ "Search could not run"
     assert render(view) =~ "runtime is not configured"
   end
 
-  test "mode buttons expose the selected mode and invalid entries retain query values", %{conn: conn} do
+  test "mode buttons expose the selected mode and invalid entries retain query values", %{
+    conn: conn
+  } do
     {:ok, view, html} = live(conn, ~p"/ops/search")
     assert html =~ ~s(aria-label="Search mode")
     assert html =~ ~s(aria-pressed="true")

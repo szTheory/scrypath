@@ -158,7 +158,13 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert html =~ ~s(aria-label="Use system theme")
     assert html =~ ~s(aria-label="Use light theme")
     assert html =~ ~s(aria-label="Use dark theme")
-    assert Regex.scan(~r/aria-pressed=\"false\"/, html) |> length() == 3
+
+    assert Regex.scan(
+             ~r/class=\"[^\"]*ops-theme-toggle__button[^\"]*\"[^>]*aria-pressed=\"false\"/,
+             html
+           )
+           |> length() == 3
+
     assert Regex.scan(~r/data-theme-selected=\"false\"/, html) |> length() == 3
     assert html =~ ~s(id="ops-command-palette")
     assert html =~ ~s(phx-hook="CommandPalette")

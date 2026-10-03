@@ -20,7 +20,7 @@ import {
   type Locator,
   type Page
 } from "@playwright/test";
-import { existsSync, readdirSync, unlinkSync } from "node:fs";
+import { existsSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import {
@@ -366,6 +366,57 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
   test.describe.configure({ timeout: 120_000 });
   test.beforeEach(() => cleanupShellChromePlaybooks());
   test.afterEach(() => cleanupShellChromePlaybooks());
+
+  test("[shell-chrome] playbook modal focus lifecycle and overlay isolation", async ({ page }) => {
+    const basename = `${SHELL_PLAYBOOK_PREFIX}modal-${Date.now()}.json`;
+    writeFileSync(join(PLAYBOOK_WORKSPACE_DIR, basename), "{}\n");
+    await gotoPlaybooks(page);
+
+    const row = page.locator(".ops-object-item").filter({ hasText: basename });
+    await expect(row).toHaveCount(1);
+    const renameTrigger = row.getByRole("button", { name: "Rename" });
+
+    await pressCommandPaletteShortcut(page);
+    await expect(page.locator("#ops-cmdk")).toBeVisible();
+    await renameTrigger.click({ force: true });
+
+    const modal = page.locator("#rename-playbook-modal");
+    const cancel = modal.locator("[data-ops-modal-cancel]");
+    const input = page.locator("#rename-new-name-input");
+    const submit = modal.getByRole("button", { name: "Rename", exact: true });
+
+    await expect(modal).toBeVisible();
+    await expect(page.locator("#ops-cmdk")).toBeHidden();
+    await expect(input).toBeFocused();
+    await page.keyboard.press("Control+K");
+    await expect(page.locator("#ops-cmdk")).toBeHidden();
+
+    await cancel.focus();
+    await page.keyboard.press("Shift+Tab");
+    await expect(submit).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(cancel).toBeFocused();
+
+    await input.fill("invalid/name.json");
+    await expect(input).toHaveValue("invalid/name.json");
+    await expect(modal).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(modal).toBeHidden();
+    await expect(renameTrigger).toBeFocused();
+
+    const deleteTrigger = row.getByRole("button", { name: "Delete" });
+    await deleteTrigger.click();
+    const deleteModal = page.locator("#delete-playbook-modal");
+    await expect(deleteModal).toBeVisible();
+    const successorSelector = await deleteModal.getAttribute("data-ops-modal-successor");
+    expect(successorSelector).toBeTruthy();
+
+    await deleteTrigger.evaluate((el) => el.remove());
+    await deleteModal.getByRole("button", { name: "Cancel delete" }).click();
+    await expect(deleteModal).toBeHidden();
+    const successor = page.locator(successorSelector as string);
+    await expect(successor).toBeFocused();
+  });
 
   for (const mode of THEME_MODES) {
     for (const viewport of VIEWPORT_NAMES) {
