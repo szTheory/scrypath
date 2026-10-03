@@ -117,3 +117,7 @@ Precision pass retains two values constraints in Plan08 must_haves.prohibitions:
 
 No new AI feature, ORM schema/migration or external-integration product is introduced. Private read-only Meilisearch document observation serves the already-approved existing backend flow. COVERAGE.md records the existing-integration declaration; no speculative full API-capability expansion is planned. Primary noun remains the selected allowed schema plus exact operation context; assumption-delta decision is no-change, because the existing product already supports multiple schemas and modes.
 
+
+## Plan 03 narrow-preview observations (2026-10-03)
+
+`/private/tmp/scrypath-v142-review/failed-sync-after-plan03-light-mobile.png` (390px viewport) shows the compact reason counts and visible retry controls. It is not final geometry acceptance. Remaining visible defects: shared header jump/theme controls crowd/overlap; FailedSync schema help mentions internal allowlists and layout rationale; top triage notice and reason summary repeat total/retryable counts; the page introduction and row description contain unnecessary procedural filler. Plan 04 may simplify this FailedSync copy while adding truthful recovery states. Plan 07 must verify/fix header fit, summary height and relevant cross-surface copy at320/390/intermediate/wide widths. Preserve exact diagnostic facts, put layout implementation language only in contributor docs, and show each operational fact once near its action.
