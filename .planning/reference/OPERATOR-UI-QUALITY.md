@@ -33,6 +33,10 @@ Personas: on-call engineer recovering search; search owner checking an index cha
 6. Record completed findings, evidence, source identity, remaining limits, and explicit revisit triggers. Later milestones reopen only changed or invalidated claims.
 7. During integration debugging, retain only the task-owned disposable stack and reload changed source without reseeding the feedback preview. Preserve first failures, use bounded action timeouts, and rerun the focused cases. Finish with the canonical fresh-stack command at committed source; repeated full image rebuilds are not the inner feedback loop.
 
+8. Measure the generated CSS rather than assuming a token-like class exists. Check CSS layer precedence when a repair has no effect.
+9. Modal focus must survive real LiveView patches and object rename/delete; use stable object IDs and a reachable successor. Keep validation errors inside the active dialog's accessibility tree.
+10. Distinguish observation failure from remote operation failure. Only exact terminal evidence supports completed/failed copy; unknown outcomes retain accepted task identity.
+
 ## Clean finish
 
 Use PR-first delivery and the existing required checks. Keep planning records and source evidence distinct without freezing completion bookkeeping. Leave task-owned files committed, generated artifacts outside tracked source, and temporary verification services removed. A preview intentionally retained for maintainer feedback has a documented URL, owner, and stop command. Preserve unrelated worktrees and stashes. Decide whether a release is warranted from the delivered package changes; never bump a version merely to close a planning milestone.

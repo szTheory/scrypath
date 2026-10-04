@@ -16,7 +16,7 @@
 
 v1.41 completed all nine requirements across Phases 168–171 and is archived at [the v1.41 audit](milestones/v1.41-MILESTONE-AUDIT.md). The audit records 9/9 requirements, 4/4 phases, 6/6 integration paths, and 3/3 end-to-end flows with no gaps. It accepts nonblocking Nyquist validation-record debt in Phases 168–170. Phase 170 Plan 08 is complete in current GSD tracking (8/8); the attested `8c271…` source snapshot remains historical 17/18 with its original planning bytes preserved separately. The original dated maintainer decision remains **NOT READY** at [issue #86 comment 5940381507](https://github.com/szTheory/scrypath/issues/86#issuecomment-5940381507); a later, separate READY assessment is recorded at [issue #86 comment 5955742805](https://github.com/szTheory/scrypath/issues/86#issuecomment-5955742805), within its stated limits. Scrypath 0.3.14 publication, tag/Hex parity, and exact-main closeout passed in runs [36915979826](https://github.com/szTheory/scrypath/actions/runs/36915979826) and [36930660896](https://github.com/szTheory/scrypath/actions/runs/36930660896).
 
-**Active milestone:** v1.42 is authorized by the maintainer's 2026-10-03 direction. Its eight requirements supersede the earlier four proposed incident-only requirements and cover demonstrated shared UI repairs plus verified incident recovery. Phase 172 is ready for its UI contract and implementation plans; another approval of the established direction is unnecessary. Keep `main` green and release only when a package change warrants it. Do not rerun Phase 170 or treat its frozen NOT READY assessment as the later readiness result. Historical “What's next” statements in the milestone index describe their archive cutoffs; this active posture controls current work.
+**Active milestone:** v1.42 is authorized by the maintainer's 2026-10-03 direction. Its eight requirements supersede the earlier four proposed incident-only requirements and cover demonstrated shared UI repairs plus verified incident recovery. Phase172 Plans01–07 are complete; Plan08 owns reviewed PR delivery, current CI, release disposition and final tracking/attestation. No implementation plan replay or additional scope approval is needed. Keep `main` green and release only when a package change warrants it. Do not rerun Phase 170 or treat its frozen NOT READY assessment as the later readiness result. Historical “What's next” statements in the milestone index describe their archive cutoffs; this active posture controls current work.
 
 ## v1.42 — ScrypathOps operator/admin UI
 
@@ -45,7 +45,7 @@ v1.41 completed all nine requirements across Phases 168–171 and is archived at
 4. Operators can recover a known replayable failure by following rendered controls from Control Room through the recovery screens, with new work correlated to terminal backend success and the expected document in the active index. They can distinguish accepted/running work, success, failure, timeout, stale/unknown checks, and retained failure history. Recovery does not require promotion; advanced promotion uses the same current eligibility rules in its UI and server handler and never claims completion on task acceptance.
 5. Maintainers can reproduce the changed behavior and meaningful responsive, keyboard, layout, and both-theme contrast checks through existing test/CI lanes, inspect before/after screenshots and retained failure diagnostics, and trace all eight requirements to actual evidence. Reviewed PR-first delivery has current required CI and exact-final-source closeout evidence, an explicit release/no-release decision, committed task-owned work, and recorded preview cleanup or intentional retention, with no pending routine human UAT or paid AI judge.
 
-**Plans**: 6/8 plans executed
+**Plans**: 7/8 plans executed
 
 **Wave 1**
 - [x] 172-01-PLAN.md — Readable shared controls and one shell shortcut tracer.
@@ -64,7 +64,7 @@ v1.41 completed all nine requirements across Phases 168–171 and is archived at
 - [x] 172-06-PLAN.md — Deterministic real mounted recovery and strict swap oracles.
 
 **Wave 6 (after mounted identity proof)**
-- [ ] 172-07-PLAN.md — Representative layout, keyboard, theme and screenshot evidence.
+- [x] 172-07-PLAN.md — Representative layout, keyboard, theme and screenshot evidence.
 
 **Wave 7 (after all implementation evidence)**
 - [ ] 172-08-PLAN.md — Review, PR delivery, release decision, completion tracking and final attestation.
@@ -94,7 +94,7 @@ v1.41 completed all nine requirements across Phases 168–171 and is archived at
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 172. Consistent Operator UI and Verified Recovery | v1.42 | 6/8 | In Progress|  |
+| 172. Consistent Operator UI and Verified Recovery | v1.42 | 7/8 | In Progress|  |
 
 **Coverage:** 8/8 current requirements mapped exactly once; no orphaned or duplicate assignments. Criteria 1–5 cover OPUX-01/03, OPUX-02, OPUX-04, OPUX-05/06, and OPUX-07/08 respectively.
 

@@ -5,17 +5,17 @@ milestone_name: ScrypathOps operator/admin UI
 current_phase: 172
 current_phase_name: Consistent Operator UI and Verified Recovery
 status: executing
-stopped_at: Phase 172 Plans 01-06 complete; Plan 07 layout and keyboard acceptance next
-last_updated: "2026-10-04T00:19:10.620Z"
+stopped_at: Phase 172 Plans 01-07 complete; Plan 08 reviewed delivery and exact-source CI next
+last_updated: "2026-10-04T04:32:21.790107+00:00"
 last_activity: 2026-10-03
-last_activity_desc: Plans 01–06 complete; exact mounted recovery and promotion verified
-state_head: 99f06c1b9a97c333061627924ab87278d564e790
+last_activity_desc: Plans 01–07 complete; local UI acceptance fixes verified, hosted delivery pending
+state_head: b454387abfde7db95f25d29706c2276cdedefafc
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 8
-  completed_plans: 6
-  percent: 75
+  completed_plans: 7
+  percent: 88
 ---
 
 # Project State
@@ -30,15 +30,15 @@ See: .planning/PROJECT.md (updated 2026-10-03)
 ## Current Position
 
 Phase: 172 (1 of 1 in v1.42) — Consistent Operator UI and Verified Recovery
-Plan: 6 of 8 complete; Plan 07 next
+Plan: 7 of 8 complete; Plan 08 in progress
 Status: Executing
-Last activity: 2026-10-03 — Plan 06 committed; 232 tests and 2 doctests plus four canonical mounted scenarios passed with zero retries
+Last activity: 2026-10-04 — local UI acceptance and independent review fixes complete; PR/hosted delivery remains
 
-Progress: [░░░░░░░░░░] 0% (5/8 plans)
+Progress: [█████████░] 88% (7/8 plans)
 
 ## Performance Metrics
 
-- Current milestone: 6/8 plans executed. Plans 01–06 source and summaries are committed; wider OPUX requirements remain open pending later plans.
+- Current milestone: 7/8 plans executed. Plans 01–07 source and summaries are recorded; wider OPUX requirements remain open pending later plans.
 - Previous milestone v1.41: 4 phases (168–171), 19 plans, 9 requirements complete.
 - Historical plan timings and evidence remain in the milestone archives; Plan 01 has focused test and browser evidence; milestone acceptance remains pending.
 
@@ -81,12 +81,17 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-10-04T00:19:10.605Z
-Stopped at: Phase 172 Plans 01-06 complete; Plan 07 layout and keyboard acceptance next
-Resume file: .planning/phases/172-consistent-operator-ui-and-verified-recovery/172-07-PLAN.md
-Next action: Continue `$gsd-execute-phase 172` at Plan 07, then remaining checked plans. UI-SPEC and all eight plans passed independent review. Plans 01–06 are complete and must not be replayed. Use task-local locked dependencies, pinned Elixir/OTP and ERL_FLAGS='+S 1:1' for local tests to bound the database pool. Disposable Compose verification must not reset preview4012.
+Stopped at: Phase 172 Plans 01-07 complete; Plan 08 reviewed delivery and exact-source CI next
+Resume file: .planning/phases/172-consistent-operator-ui-and-verified-recovery/172-08-PLAN.md
+Next action: Continue the already active Phase172 Plan08 delivery. Do not replay Plans01–07. UI-SPEC and all eight plans passed independent review. Plans 01–07 are complete and must not be replayed. Use task-local locked dependencies, pinned Elixir/OTP and ERL_FLAGS='+S 1:1' for local tests to bound the database pool. Disposable Compose verification must not reset preview4012.
 
 ## Preview and Cleanup
 
 - Optional feedback preview: `http://127.0.0.1:4012/admin/search`, Compose project `scrypath-ui-v142`, owned by the v1.42 task and bind-mounted from its isolated worktree. Captures are outside tracked source at `/private/tmp/scrypath-v142-review/`.
 - Run destructive seed/reset verification in a separate disposable Compose project; never reset the feedback preview. Preserve unrelated services, worktrees, and stashes.
 - At closeout, clean disposable task-owned verification state and document preview retention or shutdown. Stop only this preview from `examples/scrypath_ecommerce` with `COMPOSE_PROJECT_NAME=scrypath-ui-v142 WEB_PORT=4012 docker compose -f compose.yaml -f compose.dev.yaml down`; retain preview volumes while feedback still needs the demo state.
+
+## Current delivery evidence
+
+- Product source1b2287e: Ops233 tests+2doctests passed; full local advisory95/104 passed, nine obsolete assertions corrected in b454387 and all9 targeted cases passed with retries0. Canonical all-green hosted run remains pending. See172-07-SUMMARY.
+- Independent source review resolved2HIGH and3MEDIUM findings; no open concrete finding in its39-file scope. Preview4012 refreshed without reseeding and returnsHTTP200.
