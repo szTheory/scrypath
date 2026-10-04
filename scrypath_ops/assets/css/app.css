@@ -1779,7 +1779,6 @@
     cursor: pointer;
   }
 
-  .ops-cmdk__item:hover,
   .ops-cmdk__item.is-active {
     background: color-mix(in oklch, var(--color-primary) 14%, transparent);
   }

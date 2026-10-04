@@ -16,6 +16,7 @@ const CommandPalette = {
     this.cmdk = this.el.querySelector("#ops-cmdk")
     this.sheet = document.getElementById(this.el.dataset.cheatsheet)
     this.input = this.cmdk.querySelector("[data-cmdk-input]")
+    this.list = this.cmdk.querySelector("#ops-cmdk-list")
     this.empty = this.cmdk.querySelector("[data-cmdk-empty]")
     this.items = Array.from(this.cmdk.querySelectorAll("[data-cmdk-item]"))
     this.visible = this.items.slice()
@@ -26,6 +27,13 @@ const CommandPalette = {
     this.onModalOverlayOpen = () => this.closeForModal()
     this.onCmdkKeydown = e => this.overlayKeydown(e, this.cmdk)
     this.onSheetKeydown = e => this.overlayKeydown(e, this.sheet)
+    this.onCmdkPointerOver = e => {
+      const item = e.target instanceof Element
+        ? e.target.closest("[data-cmdk-item]")
+        : null
+      const index = this.visible.indexOf(item)
+      if (index >= 0 && index !== this.activeIndex) this.setActive(index)
+    }
     this.onCommandOpenClick = e => {
       const opener = e.target instanceof Element
         ? e.target.closest("[data-ops-command-open]")
@@ -39,6 +47,7 @@ const CommandPalette = {
     document.addEventListener("ops:modal-overlay-open", this.onModalOverlayOpen)
     document.addEventListener("click", this.onCommandOpenClick)
     this.cmdk.addEventListener("keydown", this.onCmdkKeydown)
+    this.list.addEventListener("pointerover", this.onCmdkPointerOver)
     this.sheet.addEventListener("keydown", this.onSheetKeydown)
 
     this.cmdk.querySelectorAll("[data-cmdk-close]").forEach(el =>
@@ -53,6 +62,7 @@ const CommandPalette = {
     document.removeEventListener("ops:modal-overlay-open", this.onModalOverlayOpen)
     document.removeEventListener("click", this.onCommandOpenClick)
     this.cmdk.removeEventListener("keydown", this.onCmdkKeydown)
+    this.list.removeEventListener("pointerover", this.onCmdkPointerOver)
     this.sheet.removeEventListener("keydown", this.onSheetKeydown)
   },
   isTyping() {

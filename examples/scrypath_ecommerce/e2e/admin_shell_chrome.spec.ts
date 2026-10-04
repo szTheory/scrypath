@@ -690,6 +690,25 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
           const nextActiveId = await expectOneSelectedCommandItem(page);
           expect(nextActiveId, "ArrowDown moves the active command option").not.toBe(initialActiveId);
 
+          const hoveredOption = page.locator("#ops-cmdk-item-2");
+          await hoveredOption.hover();
+          await expect(hoveredOption).toHaveAttribute("aria-selected", "true");
+          await expectOneSelectedCommandItem(page);
+
+          await page.keyboard.press("ArrowDown");
+          await expect(page.locator("#ops-cmdk-item-3")).toHaveAttribute("aria-selected", "true");
+          const hoveredBackground = await hoveredOption.evaluate(
+            el => getComputedStyle(el).backgroundColor
+          );
+          const inactiveBackground = await page
+            .locator("#ops-cmdk-item-0")
+            .evaluate(el => getComputedStyle(el).backgroundColor);
+          expect(
+            hoveredBackground,
+            "the pointer does not keep a second option highlighted during keyboard navigation"
+          ).toBe(inactiveBackground);
+          await expectOneSelectedCommandItem(page);
+
           await input.fill("zzzz-no-match");
           await expect(page.locator("[data-cmdk-empty]")).toBeVisible();
           await expect(page.locator("#ops-cmdk [data-cmdk-item][aria-selected='true']")).toHaveCount(0);

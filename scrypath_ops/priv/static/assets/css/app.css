@@ -4839,7 +4839,7 @@
     color: var(--color-base-content);
     cursor: pointer;
   }
-  .ops-cmdk__item:hover, .ops-cmdk__item.is-active {
+  .ops-cmdk__item.is-active {
     background: var(--color-primary);
     @supports (color: color-mix(in lab, red, red)) {
       background: color-mix(in oklch, var(--color-primary) 14%, transparent);
