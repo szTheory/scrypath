@@ -26,11 +26,12 @@ Personas: on-call engineer recovering search; search owner checking an index cha
 ## Efficient verification and change control
 
 1. Capture current rendering and establish a named user problem before changing a pattern. Preserve useful existing behavior and tests; do not repeat completed palette/brand work without an invalidator.
-2. Use existing LiveView checks for state boundaries, fast token/contrast checks for shared styles, and browser tests for actual navigation, focus, geometry, and real service seams.
+2. Use existing LiveView checks for state boundaries, fast token/contrast checks for shared styles, and browser tests for actual navigation, focus, geometry, and real service seams. Exercise changed inputs through rendered forms or controls in the same plan; direct handler calls alone cannot prove event wiring. Cross-screen tests must change the selected schema before handing off, not only enter a non-first schema directly.
 3. Use a small representative matrix in the existing CI lanes. Keep the full screenshot/contrast matrix advisory. Report actual coverage rather than treating screenshot existence or a filename check as visual parity.
 4. Inspect before/after screenshots in the active agent session. No paid visual-judge API calls, new AI service, or recurring model gate by default. Never auto-update a pixel baseline merely to clear a failure.
 5. User feedback is design direction, not a substitute for acceptance tests. Escalate only an actual unresolved product/risk choice or external permission; record the reason.
 6. Record completed findings, evidence, source identity, remaining limits, and explicit revisit triggers. Later milestones reopen only changed or invalidated claims.
+7. During integration debugging, retain only the task-owned disposable stack and reload changed source without reseeding the feedback preview. Preserve first failures, use bounded action timeouts, and rerun the focused cases. Finish with the canonical fresh-stack command at committed source; repeated full image rebuilds are not the inner feedback loop.
 
 ## Clean finish
 
