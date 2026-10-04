@@ -923,7 +923,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
           </div>
         </.ops_toolbar>
 
-        <.ops_trail mount_path={@mount_path} current={:playbooks} />
+        <.ops_trail current={:playbooks} />
 
         <.ops_notice
           id="playbook-honesty-panel"

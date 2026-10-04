@@ -1188,7 +1188,7 @@
     box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-primary) 20%, transparent);
   }
 
-  /* Contextual breadcrumb trail (ops_trail): Control Room › group › page. Quiet
+  /* Contextual breadcrumb trail (ops_trail): group › page. Quiet
      by design — it orients, it doesn't compete with the header nav or the verdict. */
   .ops-trail__list {
     display: flex;
@@ -1203,17 +1203,6 @@
 
   .ops-trail__crumb {
     color: var(--ops-text-muted);
-  }
-
-  .ops-trail__link {
-    border-radius: var(--radius-ops-sm);
-    transition: color var(--duration-ops-fast) var(--ease-ops-standard);
-  }
-
-  .ops-trail__link:hover {
-    color: var(--color-primary);
-    text-decoration: underline;
-    text-underline-offset: 2px;
   }
 
   .ops-trail__current {

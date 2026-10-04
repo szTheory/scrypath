@@ -7,11 +7,17 @@ const csrfToken = document
   ?.getAttribute("content");
 
 // Use the same operator hooks as the standalone app.
-import {CommandPalette, OpsNavDrawer, OpsModal} from "../../../../scrypath_ops/assets/js/ops_hooks";
+import {
+  CommandPalette,
+  OpsNavDrawer,
+  OpsModal,
+  OpsRefreshButton,
+  OpsToast
+} from "../../../../scrypath_ops/assets/js/ops_hooks";
 
 const liveSocket = new LiveSocket("/live", Socket, {
   params: { _csrf_token: csrfToken },
-  hooks: { CommandPalette, OpsNavDrawer, OpsModal }
+  hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast }
 });
 
 const effectiveTheme = () => {

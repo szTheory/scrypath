@@ -511,7 +511,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         </div>
       </.ops_toolbar>
 
-      <.ops_trail mount_path={@mount_path} current={:failed_sync} />
+      <.ops_trail current={:failed_sync} />
 
       <.ops_panel>
         <.form for={%{}} id="failed-sync-schema-form" phx-change="select_schema">

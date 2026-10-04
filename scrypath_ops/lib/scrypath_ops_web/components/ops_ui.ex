@@ -197,6 +197,11 @@ defmodule ScrypathOpsWeb.OpsUi do
   end
 
   @doc "Contextual refresh action for operator status surfaces."
+  attr(:id, :string,
+    required: true,
+    doc: "Unique DOM id required by the LiveView refresh hook."
+  )
+
   attr(:label, :string, default: "Refresh")
   attr(:aria_label, :string, required: true)
 
@@ -216,6 +221,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_refresh_button(assigns) do
     ~H"""
     <.ops_button
+      id={@id}
       variant={@variant}
       size={@size}
       class={["gap-1.5 ops-refresh-button", @class]}
@@ -456,17 +462,16 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc """
   Contextual breadcrumb trail for ScrypathOps surfaces.
 
-  A short "where am I" trail — `Control Room › <group> › <page>` — not a map of the
-  whole product (that's the primary shell nav's job). Siblings are deliberately omitted; the
-  group label (Triage / Explore) is context, not a link. Renders nothing on the
-  Control Room landing (a breadcrumb that says "you are at the top" is noise).
+  A short context trail — `<group> › <page>` — not a map of the whole product (that's
+  the primary shell nav's job). Siblings are deliberately omitted; the group label
+  (Recover / Explore) is context, not a link. Renders nothing on the Control Room
+  landing (a breadcrumb that says "you are at the top" is noise).
   """
   attr(:current, :atom,
     required: true,
     values: [:control_room, :posture, :failed_sync, :sync_drift, :search, :playbooks]
   )
 
-  attr(:mount_path, :string, required: true)
   attr(:class, :any, default: nil)
 
   def ops_trail(assigns) do
@@ -475,12 +480,6 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <nav :if={@trail} aria-label="Breadcrumb" class={["ops-trail", @class]}>
       <ol class="ops-trail__list">
-        <li>
-          <.link navigate={@mount_path} class="ops-trail__crumb ops-trail__link">
-            Control Room
-          </.link>
-        </li>
-        <li class="ops-trail__sep" aria-hidden="true">›</li>
         <li><span class="ops-trail__crumb ops-trail__group">{elem(@trail, 0)}</span></li>
         <li class="ops-trail__sep" aria-hidden="true">›</li>
         <li>

@@ -130,13 +130,14 @@ defmodule ScrypathOpsWeb.PostureLive do
           subtitle="The fleet's sync health, schema by schema. Start here when something looks wrong."
         />
         <.ops_refresh_button
+          id="posture-refresh"
           phx-click="refresh"
           variant={:primary}
           aria_label="Refresh posture checks"
         />
       </.ops_toolbar>
 
-      <.ops_trail mount_path={@mount_path} current={:posture} />
+      <.ops_trail current={:posture} />
 
       <.ops_panel :if={match?({:ok, _}, @posture_rows)}>
         <section aria-labelledby="posture-summary-heading" class="space-y-4">

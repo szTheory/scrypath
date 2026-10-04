@@ -23,6 +23,11 @@ Elixir/Phoenix library demos on the same machine.
 stores generated `deps` / `_build` directories in Docker volumes, so HEEx, CSS,
 and LiveView edits do not rebuild dependency layers.
 
+In that dev stack, the browser reloads after changes to the demo, Scrypath, or
+ScrypathOps LiveViews and templates. The demo's esbuild watcher bundles the shared
+operator hooks, and a second Tailwind watcher rebuilds ScrypathOps styles. The
+image-only `make up` stack is for browser checks and does not provide this loop.
+
 ## Ports
 
 The default Docker dev stack publishes only the web UI:

@@ -22,6 +22,21 @@ const OpsRefreshButton = {
   }
 }
 
+// Info flashes are brief confirmations; errors stay visible until dismissed.
+const OpsToast = {
+  mounted() { this.scheduleDismiss() },
+  updated() { this.scheduleDismiss() },
+  destroyed() { window.clearTimeout(this.dismissTimer) },
+  scheduleDismiss() {
+    window.clearTimeout(this.dismissTimer)
+    if (!this.el.classList.contains("ops-flash--info")) return
+
+    this.dismissTimer = window.setTimeout(() => {
+      this.el.querySelector('button[aria-label="Close notification"]')?.click()
+    }, 4000)
+  }
+}
+
 document.addEventListener("click", e => {
   const trigger = e.target instanceof Element
     ? e.target.closest("[data-ops-modal-trigger]")
@@ -561,4 +576,4 @@ const OpsModal = {
   }
 }
 
-export {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton}
+export {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast}

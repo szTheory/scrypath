@@ -8671,6 +8671,24 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       this.loadingObserver.disconnect();
     }
   };
+  var OpsToast = {
+    mounted() {
+      this.scheduleDismiss();
+    },
+    updated() {
+      this.scheduleDismiss();
+    },
+    destroyed() {
+      window.clearTimeout(this.dismissTimer);
+    },
+    scheduleDismiss() {
+      window.clearTimeout(this.dismissTimer);
+      if (!this.el.classList.contains("ops-flash--info")) return;
+      this.dismissTimer = window.setTimeout(() => {
+        this.el.querySelector('button[aria-label="Close notification"]')?.click();
+      }, 4e3);
+    }
+  };
   document.addEventListener("click", (e) => {
     const trigger = e.target instanceof Element ? e.target.closest("[data-ops-modal-trigger]") : null;
     if (trigger) opsModalPendingTrigger = trigger;
@@ -9179,7 +9197,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
   var liveSocket = new LiveSocket2("/live", Socket, {
     longPollFallbackMs: 2500,
     params: { _csrf_token: csrfToken },
-    hooks: { ...hooks, CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton }
+    hooks: { ...hooks, CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast }
   });
   import_topbar.default.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" });
   window.addEventListener("phx:page-loading-start", (_info) => import_topbar.default.show(300));

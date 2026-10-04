@@ -54,7 +54,7 @@ The surfaces thread into two task groups — **Recover** (posture → failed syn
 
 Two shared components carry this structure so it stays consistent (principle of least surprise):
 
-- **`ops_trail`** — a contextual breadcrumb (`Control Room › <group> › <page>`), not a map of the whole product. Siblings live in the primary shell nav; the landing shows no trail.
+- **`ops_trail`** — a contextual breadcrumb (`<group> › <page>`), not a map of the whole product. Siblings live in the primary shell nav; the landing shows no trail.
 - **`ops_handoff`** — the unified "Next step" page footer. One eyebrow + imperative grammar on every triage/explore surface so the bottom of each page reliably tells the operator where to go next, and the loops visibly close.
 
 ### Sync recovery and index promotion

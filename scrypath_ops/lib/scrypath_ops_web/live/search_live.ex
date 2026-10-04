@@ -773,7 +773,7 @@ defmodule ScrypathOpsWeb.SearchLive do
           />
         </.ops_toolbar>
 
-        <.ops_trail mount_path={@mount_path} current={:search} />
+        <.ops_trail current={:search} />
 
         <.ops_notice
           id="search-honesty-panel"

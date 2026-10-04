@@ -49,7 +49,8 @@ defmodule ScrypathOpsWeb.CoreComponents do
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
-      role="alert"
+      phx-hook={if(@kind == :info, do: "OpsToast", else: nil)}
+      role={if(@kind == :info, do: "status", else: "alert")}
       class={[
         "ops-flash z-50",
         @kind == :info && "ops-flash--info",

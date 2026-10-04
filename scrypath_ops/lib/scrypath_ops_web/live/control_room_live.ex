@@ -29,7 +29,12 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
 
   @impl true
   def handle_event("refresh", _params, socket) do
-    {:noreply, load_summary(socket)}
+    socket =
+      socket
+      |> load_summary()
+      |> put_flash(:info, "Search status refreshed.")
+
+    {:noreply, socket}
   end
 
   defp load_summary(socket) do
@@ -60,12 +65,20 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
 
           <.ops_config_empty :if={@posture.state == :unconfigured} kind={:no_schemas}>
             <:actions>
-              <.ops_refresh_button phx-click="refresh" aria_label="Refresh search trust status" />
+              <.ops_refresh_button
+                id="control-room-refresh"
+                phx-click="refresh"
+                aria_label="Refresh search trust status"
+              />
             </:actions>
           </.ops_config_empty>
           <.ops_config_empty :if={@posture.state == :missing_backend} kind={:missing_backend}>
             <:actions>
-              <.ops_refresh_button phx-click="refresh" aria_label="Refresh search trust status" />
+              <.ops_refresh_button
+                id="control-room-refresh"
+                phx-click="refresh"
+                aria_label="Refresh search trust status"
+              />
             </:actions>
           </.ops_config_empty>
 
@@ -77,7 +90,11 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
             class="ops-verdict--hero"
           >
             <:actions>
-              <.ops_refresh_button phx-click="refresh" aria_label="Refresh search trust status" />
+              <.ops_refresh_button
+                id="control-room-refresh"
+                phx-click="refresh"
+                aria_label="Refresh search trust status"
+              />
               <.ops_link_button navigate={"#{@mount_path}/posture"} variant={:ghost} size={:sm}>
                 Open full posture <span aria-hidden="true">→</span>
               </.ops_link_button>
@@ -86,7 +103,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
             <p class="mt-2 text-ops-sm text-base-content/60">
               {schema_health_label(@posture.schema_count)} · {fetch_health_label(@posture.error_count)} · {backend_health_label(
                 @posture.backend_failed_count
-              )} · <.ops_time label="Checked" dt={@posture.refreshed_at} />
+              )} · <.ops_time label="Checked" dt={@posture.refreshed_at} copy={false} />
             </p>
           </.ops_verdict>
         </section>

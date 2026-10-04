@@ -539,6 +539,53 @@
       }
     }
   }
+  .toast {
+    position: fixed;
+    inset-inline-start: auto;
+    inset-inline-end: calc(0.25rem * 4);
+    top: auto;
+    bottom: calc(0.25rem * 4);
+    display: flex;
+    flex-direction: column;
+    gap: calc(0.25rem * 2);
+    background-color: transparent;
+    translate: var(--toast-x, 0) var(--toast-y, 0);
+    width: max-content;
+    max-width: calc(100vw - 2rem);
+    & > * {
+      animation: toast 0.25s ease-out;
+    }
+    &:where(.toast-start) {
+      inset-inline-start: calc(0.25rem * 4);
+      inset-inline-end: auto;
+      --toast-x: 0;
+    }
+    &:where(.toast-center) {
+      inset-inline-start: calc(1/2 * 100%);
+      inset-inline-end: calc(1/2 * 100%);
+      --toast-x: -50%;
+    }
+    &:where(.toast-end) {
+      inset-inline-start: auto;
+      inset-inline-end: calc(0.25rem * 4);
+      --toast-x: 0;
+    }
+    &:where(.toast-bottom) {
+      top: auto;
+      bottom: calc(0.25rem * 4);
+      --toast-y: 0;
+    }
+    &:where(.toast-middle) {
+      top: calc(1/2 * 100%);
+      bottom: auto;
+      --toast-y: -50%;
+    }
+    &:where(.toast-top) {
+      top: calc(0.25rem * 4);
+      bottom: auto;
+      --toast-y: 0;
+    }
+  }
   .toggle {
     border: var(--border) solid currentColor;
     color: var(--input-color);
@@ -4276,15 +4323,6 @@
   }
   .ops-trail__crumb {
     color: var(--ops-text-muted);
-  }
-  .ops-trail__link {
-    border-radius: var(--radius-ops-sm);
-    transition: color var(--duration-ops-fast) var(--ease-ops-standard);
-  }
-  .ops-trail__link:hover {
-    color: var(--color-primary);
-    text-decoration: underline;
-    text-underline-offset: 2px;
   }
   .ops-trail__current {
     color: var(--color-base-content);

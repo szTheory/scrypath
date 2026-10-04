@@ -982,7 +982,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         subtitle="Check sync status and compare the schema contract with its live index."
       />
 
-      <.ops_trail mount_path={@mount_path} current={:sync_drift} class="mt-4" />
+      <.ops_trail current={:sync_drift} class="mt-4" />
 
       <.ops_panel class="mt-4">
         <.form for={%{}} id="sync-drift-schema-form" phx-change="select_schema">
