@@ -1670,12 +1670,6 @@
     border-color: color-mix(in oklch, var(--color-error) 35%, var(--color-base-content) 14%);
   }
 
-  .ops-flash > .alert {
-    border: 0;
-    border-radius: calc(var(--radius-ops-overlay) - 1px);
-    box-shadow: none;
-  }
-
   @media (max-width: 640px) {
     #flash-group {
       top: auto;
@@ -2354,4 +2348,20 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
   color: var(--color-base-content);
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+/* Alert utilities outrank the component layer; these semantic toast surfaces must win in both themes. */
+.ops-flash > .alert {
+  border: 0;
+  border-radius: calc(var(--radius-ops-overlay) - 1px);
+  color: var(--color-base-content);
+  box-shadow: none;
+}
+
+.ops-flash--info > .alert {
+  background: color-mix(in oklch, var(--color-base-100) 90%, var(--color-info) 10%);
+}
+
+.ops-flash--error > .alert {
+  background: color-mix(in oklch, var(--color-base-100) 90%, var(--color-error) 10%);
 }

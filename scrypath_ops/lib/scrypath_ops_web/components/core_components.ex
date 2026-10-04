@@ -58,11 +58,7 @@ defmodule ScrypathOpsWeb.CoreComponents do
       ]}
       {@rest}
     >
-      <div class={[
-        "alert w-full max-w-full text-wrap",
-        @kind == :info && "alert-info",
-        @kind == :error && "alert-error"
-      ]}>
+      <div class="alert w-full max-w-full text-wrap">
         <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
         <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
         <div>

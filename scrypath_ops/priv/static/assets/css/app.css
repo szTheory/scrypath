@@ -2496,16 +2496,6 @@
     border-style: var(--tw-border-style);
     border-width: 1px;
   }
-  .alert-error {
-    border-color: var(--color-error);
-    color: var(--color-error-content);
-    --alert-color: var(--color-error);
-  }
-  .alert-info {
-    border-color: var(--color-info);
-    color: var(--color-info-content);
-    --alert-color: var(--color-info);
-  }
   .border-accent {
     border-color: var(--color-accent);
   }
@@ -4785,11 +4775,6 @@
       border-color: color-mix(in oklch, var(--color-error) 35%, var(--color-base-content) 14%);
     }
   }
-  .ops-flash > .alert {
-    border: 0;
-    border-radius: calc(var(--radius-ops-overlay) - 1px);
-    box-shadow: none;
-  }
   @media (max-width: 640px) {
     #flash-group {
       top: auto;
@@ -5513,6 +5498,24 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
   color: var(--color-base-content);
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+.ops-flash > .alert {
+  border: 0;
+  border-radius: calc(var(--radius-ops-overlay) - 1px);
+  color: var(--color-base-content);
+  box-shadow: none;
+}
+.ops-flash--info > .alert {
+  background: var(--color-base-100);
+  @supports (color: color-mix(in lab, red, red)) {
+    background: color-mix(in oklch, var(--color-base-100) 90%, var(--color-info) 10%);
+  }
+}
+.ops-flash--error > .alert {
+  background: var(--color-base-100);
+  @supports (color: color-mix(in lab, red, red)) {
+    background: color-mix(in oklch, var(--color-base-100) 90%, var(--color-error) 10%);
+  }
 }
 @layer base {
   :root:has( .modal-open, .modal[open], .modal:target, .modal-toggle:checked, .drawer:not([class*="drawer-open"]) > .drawer-toggle:checked ) {
