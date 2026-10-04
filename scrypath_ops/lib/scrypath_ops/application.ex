@@ -21,6 +21,7 @@ defmodule ScrypathOps.Application do
   defp start_supervisor(standalone?) do
     base_children = [
       ScrypathOpsWeb.Telemetry,
+      ScrypathOps.RecoveryObservation,
       {Phoenix.PubSub, name: ScrypathOps.PubSub}
     ]
 

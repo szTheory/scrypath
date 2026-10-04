@@ -34,7 +34,7 @@ fi
 case "$scope" in
   focused)
     echo "Running focused mounted integration/browser proof..."
-    exec npx playwright test e2e/harness.spec.ts e2e/operator.spec.ts --workers=1 --retries=1
+    exec npx playwright test e2e/harness.spec.ts e2e/operator.spec.ts --workers=1 --retries=0
     ;;
   full)
     echo "Running the full advisory ecommerce browser and deterministic visual lane..."

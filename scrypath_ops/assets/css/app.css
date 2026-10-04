@@ -165,11 +165,13 @@
   --ops-sidebar-width: 17rem;
 
   /* Z-index. `--z-index-*` is the Tailwind v4 namespace that generates `z-ops-*`. */
+  --z-index-ops-header: 30;
+  --z-index-ops-sidebar: 35;
   --z-index-ops-skip-link: 50;
   --z-index-ops-flash: 60;
-  --z-index-ops-modal: 70;
-  --z-index-ops-nav: 75;
-  --z-index-ops-command: 80;
+  --z-index-ops-drawer: 75;
+  --z-index-ops-palette: 80;
+  --z-index-ops-modal: 90;
 
   /* Motion. Durations stay component-only (no `--duration-*` utility namespace in v4);
      `--ease-*` generates `ease-ops-*` utilities. Keep restrained — animate state, not layout. */
@@ -255,7 +257,7 @@
   .ops-header {
     position: sticky;
     top: 0;
-    z-index: 30;
+    z-index: var(--z-index-ops-header);
     min-height: 4rem;
     border-bottom: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
     background: color-mix(in oklch, var(--color-base-100) 96%, transparent);
@@ -263,10 +265,39 @@
     backdrop-filter: blur(16px);
   }
 
+  .ops-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-ops-4);
+  }
+
+  @media (max-width: 640px) {
+    .ops-header__inner {
+      display: grid;
+      grid-template-areas: "brand brand" "action theme";
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      justify-content: normal;
+      gap: var(--spacing-ops-2) var(--spacing-ops-4);
+    }
+
+    .ops-header__inner > :first-child { grid-area: brand; }
+    .ops-header__inner > :nth-child(2) { grid-area: action; min-width: 0; }
+    .ops-header__inner > :nth-child(3) { grid-area: theme; justify-self: end; }
+
+    .ops-header .ops-command-hint {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .ops-header .ops-command-hint .ops-kbd { display: none; }
+  }
+
   .ops-sidebar {
     position: fixed;
     inset: 0 auto 0 0;
-    z-index: 35;
+    z-index: var(--z-index-ops-sidebar);
     display: none;
     width: var(--ops-sidebar-width);
     flex-direction: column;
@@ -285,14 +316,6 @@
     padding: var(--spacing-ops-4) var(--spacing-ops-4) var(--spacing-ops-3);
   }
 
-  .ops-sidebar__footer {
-    margin-top: auto;
-    border-top: 1px solid color-mix(in oklch, var(--color-base-content) 8%, transparent);
-    padding: var(--spacing-ops-3) var(--spacing-ops-4) var(--spacing-ops-4);
-    color: var(--ops-text-muted);
-    font-size: var(--text-ops-sm);
-  }
-
   .ops-command-hint {
     display: inline-flex;
     min-height: var(--control-h-md);
@@ -305,7 +328,8 @@
     padding: 0.25rem 0.625rem;
     color: var(--ops-text-muted);
     font: inherit;
-    font-size: var(--text-ops-sm);
+    font-size: var(--text-ops-body);
+    font-weight: 600;
     line-height: var(--leading-ops-body);
     white-space: nowrap;
     cursor: pointer;
@@ -329,16 +353,11 @@
     outline-offset: 2px;
   }
 
-  .ops-sidebar__footer .ops-command-hint {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
   .ops-nav-trigger,
   .ops-nav-close {
     display: inline-flex;
-    min-width: var(--control-h-md);
-    min-height: var(--control-h-md);
+    min-width: var(--control-h-lg);
+    min-height: var(--control-h-lg);
     align-items: center;
     justify-content: center;
     border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
@@ -365,7 +384,7 @@
   .ops-mobile-nav {
     position: fixed;
     inset: 0;
-    z-index: var(--z-index-ops-nav);
+    z-index: var(--z-index-ops-drawer);
   }
 
   .ops-mobile-nav[hidden] {
@@ -760,16 +779,16 @@
   }
 
   .ops-tone-chip.ops-tone-success .ops-tone-chip__value {
-    color: var(--color-success);
+    color: var(--color-base-content);
   }
 
   .ops-tone-chip.ops-tone-warning .ops-tone-chip__value,
   .ops-tone-chip.ops-tone-partial .ops-tone-chip__value {
-    color: var(--color-warning);
+    color: var(--color-base-content);
   }
 
   .ops-tone-chip.ops-tone-error .ops-tone-chip__value {
-    color: var(--color-error);
+    color: var(--color-base-content);
   }
 
   /* Shared button height + press feel. Radius is applied as the `rounded-ops-control`
@@ -777,6 +796,11 @@
   .ops-btn {
     min-height: var(--control-h-md);
     transition: transform var(--duration-ops-instant) var(--ease-ops-standard);
+  }
+
+  .btn.ops-icon-btn {
+    min-width: var(--control-h-lg);
+    min-height: var(--control-h-lg);
   }
 
   .ops-btn:active {
@@ -1229,7 +1253,9 @@
   .ops-handoff__link {
     font-size: var(--text-ops-body);
     font-weight: 600;
-    color: var(--color-primary);
+    color: var(--color-base-content);
+    text-decoration: underline;
+    text-underline-offset: 2px;
     border-radius: var(--radius-ops-sm);
     transition: color var(--duration-ops-fast) var(--ease-ops-standard);
   }
@@ -1406,8 +1432,11 @@
   }
 
   .ops-intent-card__cta {
-    font-size: var(--text-ops-sm);
-    font-weight: 650;
+    display: flex;
+    min-height: var(--control-h-lg);
+    align-items: center;
+    font-size: var(--text-ops-body);
+    font-weight: 600;
     color: var(--color-primary);
   }
 
@@ -1498,6 +1527,8 @@
   }
 
   .ops-schema-signal-card {
+    min-width: 0;
+    overflow-wrap: anywhere;
     display: grid;
     gap: var(--spacing-ops-3);
     border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
@@ -1666,7 +1697,7 @@
   .ops-cmdk {
     position: fixed;
     inset: 0;
-    z-index: var(--z-index-ops-command);
+    z-index: var(--z-index-ops-palette);
     display: flex;
     align-items: flex-start;
     justify-content: center;
@@ -1905,6 +1936,8 @@
 .ops-theme-toggle__button {
   position: relative;
   z-index: 1;
+  min-width: var(--control-h-lg);
+  min-height: var(--control-h-lg);
   border-radius: 999px;
   transition-property: background-color, color, box-shadow;
   transition-duration: var(--duration-ops-fast);
@@ -1926,6 +1959,23 @@
    height can't transition and would reflow). Neutralized by reduced-motion below. */
 .ops-disclosure[open] > .ops-disclosure-body {
   animation: ops-fade-in var(--duration-ops-standard) var(--ease-ops-standard);
+}
+
+/* Operator dialogs are focusable as soon as LiveView mounts them. The vendor
+   visibility transition otherwise delays focus until after the hook runs. */
+.ops-modal {
+  z-index: var(--z-index-ops-modal);
+  transition: opacity var(--duration-ops-fast) var(--ease-ops-exit);
+}
+
+.ops-modal.modal-open {
+  visibility: visible;
+}
+
+@starting-style {
+  .ops-modal.modal-open {
+    visibility: visible;
+  }
 }
 
 .modal-open > .modal-box {
@@ -2299,4 +2349,11 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
     --shadow-ops-glow:        0 0 8px 2px rgba(108,92,231,0.30);
     --shadow-ops-glow-copper: 0 0 6px 1px rgba(193,122,62,0.25);
   }
+}
+
+/* Text links must remain readable above daisyUI's utility-layer primary color. */
+.ops-shell a.link-primary {
+  color: var(--color-base-content);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }

@@ -11,7 +11,7 @@ defmodule ScrypathEcommerceWeb.PageControllerTest do
     html = html_response(conn, 200)
 
     assert html =~ "Posture / health"
-    assert html =~ ~s(href="/admin/search/assets/css/app.css")
+    assert html =~ ~r|href="/admin/search/assets/css/app\.css\?v=[a-f0-9]{64}"|
     assert html =~ ~r/src="\/assets\/js\/app(?:-[^"]+)?\.js(?:\?[^"]*)?"/
     assert html =~ ~s(href="/admin/search/failed-sync")
     assert html =~ ~s(href="/admin/search/sync-drift")
@@ -52,6 +52,6 @@ defmodule ScrypathEcommerceWeb.PageControllerTest do
     conn = get(conn, ~p"/")
     html = html_response(conn, 200)
 
-    refute html =~ ~s(href="/admin/search/assets/css/app.css")
+    refute html =~ "/admin/search/assets/css/app.css"
   end
 end

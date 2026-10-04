@@ -20,6 +20,7 @@ services:
     environment:
       CI: "1"
       E2E_SCOPE: ${E2E_SCOPE:-focused}
+      SCRYPATH_SOURCE_SHA: ${SCRYPATH_SOURCE_SHA:-unknown}
       PLAYWRIGHT_BASE_URL: http://web:4002
       OPS_UI_LLM_JUDGE: ${OPS_UI_LLM_JUDGE:-0}
       OPS_UI_LLM_JUDGE_REQUIRED: ${OPS_UI_LLM_JUDGE_REQUIRED:-0}

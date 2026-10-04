@@ -6,6 +6,36 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
   # Paths from this file: test/scrypath_ops_web → app root.
   @operator_ia Path.join([__DIR__, "..", "..", "docs", "operator-ia.md"]) |> File.read!()
   @router Path.join([__DIR__, "..", "..", "lib", "scrypath_ops_web", "router.ex"]) |> File.read!()
+  @posture_live Path.join([
+                  __DIR__,
+                  "..",
+                  "..",
+                  "lib",
+                  "scrypath_ops_web",
+                  "live",
+                  "posture_live.ex"
+                ])
+                |> File.read!()
+  @failed_sync_live Path.join([
+                      __DIR__,
+                      "..",
+                      "..",
+                      "lib",
+                      "scrypath_ops_web",
+                      "live",
+                      "failed_sync_live.ex"
+                    ])
+                    |> File.read!()
+  @sync_drift_live Path.join([
+                     __DIR__,
+                     "..",
+                     "..",
+                     "lib",
+                     "scrypath_ops_web",
+                     "live",
+                     "sync_drift_live.ex"
+                   ])
+                   |> File.read!()
 
   defp ops_live_session_inner(router_source) do
     [_before, after_ops] = String.split(router_source, "live_session :ops", parts: 2)
@@ -98,5 +128,21 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
       assert MapSet.member?(nav_path_strings, ops_path),
              "expected Nav.primary/0 to include #{inspect(ops_path)} for router :ops parity"
     end
+  end
+
+  test "incident handoffs use exact allowlisted schema identity and expose triage first" do
+    assert @posture_live =~ "OperatorSelection.path(@mount_path, \"failed-sync\", mod)"
+    assert @failed_sync_live =~ "def handle_params(params, _uri, socket)"
+
+    assert @failed_sync_live =~
+             "OperatorSelection.path(@mount_path, \"sync-drift\", @selected_schema)"
+
+    assert @sync_drift_live =~ "def handle_params(params, _uri, socket)"
+
+    assert @sync_drift_live =~
+             "OperatorSelection.path(@mount_path, \"posture\", @selected_schema)"
+
+    assert @failed_sync_live =~ "Retry sync work"
+    assert @failed_sync_live =~ "summary=\"Diagnostics\""
   end
 end

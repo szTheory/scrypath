@@ -111,10 +111,16 @@ defmodule Scrypath.Meilisearch.TasksTest do
         "status" => "succeeded",
         "type" => "settingsUpdate",
         "indexUid" => "tenant_posts__reindex"
+      },
+      %{
+        "uid" => 503,
+        "status" => "failed",
+        "type" => "documentDeletion",
+        "indexUid" => "tenant_posts__reindex"
       }
     ]
 
-    assert {:ok, [%OperationTask{} = first, %OperationTask{} = second]} =
+    assert {:ok, [%OperationTask{} = first, %OperationTask{} = second, %OperationTask{} = third]} =
              Tasks.list_index_tasks("tenant_posts__reindex",
                meilisearch_client: SequencedClient,
                task_history: task_history
@@ -122,10 +128,14 @@ defmodule Scrypath.Meilisearch.TasksTest do
 
     assert first.metadata.type == "indexCreation"
     assert second.metadata.type == "settingsUpdate"
+    assert third.id == 503
+    assert third.state == :failed
+    assert third.metadata.type == "documentDeletion"
 
     assert_received {:client_tasks, filters, _config}
     assert filters[:index_uids] == ["tenant_posts__reindex"]
     assert "indexSwap" in filters[:types]
+    assert "documentDeletion" in filters[:types]
   end
 
   test "task history paginates until the configured cap" do

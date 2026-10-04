@@ -31,7 +31,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     prev_auth_mode = System.get_env("OPSUI_AUTH_MODE")
 
     # Empty allowlist keeps this test free of a live backend while still exercising
-    # the full Control Room chrome (strip + intent cards + ⌘K/orientation footer).
+    # the full Control Room chrome (strip + intent cards + shell shortcut).
     Application.put_env(:scrypath_ops, :schema_allowlist, [])
     Application.delete_env(:scrypath_ops, :backend)
     System.put_env("OPSUI_AUTH_MODE", "sigra")
@@ -69,6 +69,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     {:ok, lv, html} = live(conn, ~p"/ops")
 
     assert has_element?(lv, "[data-testid='intent-incident'][href$='/ops/posture']")
+    assert has_element?(lv, "[data-testid='intent-incident']", "Start recovery")
     assert has_element?(lv, "[data-testid='intent-change'][href$='/ops/sync-drift']")
     assert has_element?(lv, "[data-testid='intent-explore'][href$='/ops/search']")
     assert html =~ "Recover search when something looks wrong."
@@ -91,17 +92,23 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     assert html =~ "Inspect and save a search check"
   end
 
-  test "degraded fleet marks the recommended recovery card with one earned copper badge", %{
+  test "Control Room offers one shortcut hint at the surface jump control", %{conn: conn} do
+    {:ok, lv, html} = live(conn, ~p"/ops")
+
+    assert length(:binary.matches(html, "data-ops-command-open")) == 1
+    assert has_element?(lv, "[data-ops-command-open]", "Jump to surface")
+    assert has_element?(lv, "[data-ops-command-open] .ops-kbd", "⌘K")
+  end
+
+  test "degraded fleet names the observed cause without claiming federation", %{
     conn: conn
   } do
     put_degraded_posture_config!()
 
     {:ok, _lv, html} = live(conn, ~p"/ops")
-    incident_card = card_fragment(html, "intent-incident")
 
-    assert incident_card =~ "ops-copper-badge"
-    assert incident_card =~ "Federated"
-    assert length(:binary.matches(html, "ops-copper-badge")) == 1
+    assert html =~ "1 sync job(s) failed to apply"
+    refute html =~ "Federated"
   end
 
   test "healthy fleet summary uses positive health language", %{conn: conn} do

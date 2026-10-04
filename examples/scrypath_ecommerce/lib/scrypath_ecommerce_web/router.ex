@@ -28,10 +28,22 @@ defmodule ScrypathEcommerceWeb.Router do
   end
 
   if Mix.env() in [:dev, :test] do
+    scope "/admin/search", ScrypathEcommerceWeb do
+      pipe_through(:browser)
+
+      live_session :ops_e2e_fixtures do
+        live("/ui-fixtures", E2EUIFixtureLive)
+      end
+    end
+
     scope "/dev/e2e", ScrypathEcommerceWeb do
       pipe_through(:api)
       post("/seed", E2EController, :seed)
       post("/drain", E2EController, :drain)
+      post("/recovery-fixture", E2EController, :recovery_fixture)
+      get("/recovery-probe", E2EController, :recovery_probe)
+      post("/swap-fixture", E2EController, :swap_fixture)
+      get("/swap-probe", E2EController, :swap_probe)
       get("/search-visible", E2EController, :search_visible)
       post("/category-name", E2EController, :category_name)
       post("/product-delete", E2EController, :product_delete)

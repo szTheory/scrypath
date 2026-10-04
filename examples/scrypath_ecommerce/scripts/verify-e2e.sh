@@ -27,6 +27,7 @@ artifact_dir="$example_dir/test-results/docker-${scope}"
 compose=(docker compose -p "$project" -f compose.yaml -f compose.e2e.yaml)
 
 export E2E_SCOPE="$scope"
+export SCRYPATH_SOURCE_SHA="$(git rev-parse HEAD)"
 export PLAYWRIGHT_VERSION="${PLAYWRIGHT_VERSION:-1.60.0}"
 
 run_status=0

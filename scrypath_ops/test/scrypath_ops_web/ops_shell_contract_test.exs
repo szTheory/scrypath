@@ -17,6 +17,9 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
                  |> Path.expand()
 
   @app_js Path.join(__DIR__, "../../assets/js/app.js") |> Path.expand()
+  @ops_hooks Path.join(__DIR__, "../../assets/js/ops_hooks.js") |> Path.expand()
+  @host_js Path.join(__DIR__, "../../../examples/scrypath_ecommerce/assets/js/app.js")
+           |> Path.expand()
 
   defmodule OpsShellContractMeili do
     @moduledoc false
@@ -158,13 +161,19 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert html =~ ~s(aria-label="Use system theme")
     assert html =~ ~s(aria-label="Use light theme")
     assert html =~ ~s(aria-label="Use dark theme")
-    assert Regex.scan(~r/aria-pressed=\"false\"/, html) |> length() == 3
+
+    assert Regex.scan(
+             ~r/class=\"[^\"]*ops-theme-toggle__button[^\"]*\"[^>]*aria-pressed=\"false\"/,
+             html
+           )
+           |> length() == 3
+
     assert Regex.scan(~r/data-theme-selected=\"false\"/, html) |> length() == 3
     assert html =~ ~s(id="ops-command-palette")
     assert html =~ ~s(phx-hook="CommandPalette")
     assert html =~ ~s(data-cheatsheet="ops-cheatsheet")
-    assert Regex.scan(~r/data-ops-command-open/, html) |> length() >= 2
-    assert Regex.scan(~r/aria-label=\"Open command palette\"/, html) |> length() >= 2
+    assert Regex.scan(~r/data-ops-command-open/, html) |> length() == 1
+    assert Regex.scan(~r/aria-label=\"Jump to surface\"/, html) |> length() == 1
     assert html =~ ~s(aria-keyshortcuts="Meta+K Control+K")
     assert html =~ ~s(id="ops-cmdk")
     assert html =~ ~s(id="ops-cheatsheet")
@@ -221,12 +230,23 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
   end
 
   test "command palette hook opens from visible shortcut affordances" do
-    source = File.read!(@app_js)
+    source = File.read!(@ops_hooks)
 
     assert source =~ ~S|closest("[data-ops-command-open]")|
     assert source =~ ~S|document.addEventListener("click", this.onCommandOpenClick)|
     assert source =~ ~S|document.removeEventListener("click", this.onCommandOpenClick)|
     assert source =~ "this.open()"
+  end
+
+  test "standalone and mounted LiveSockets share all operator hooks" do
+    assert File.read!(@app_js) =~
+             ~S|import {CommandPalette, OpsNavDrawer, OpsModal} from "./ops_hooks"|
+
+    assert File.read!(@host_js) =~
+             ~S|import {CommandPalette, OpsNavDrawer, OpsModal} from "../../../../scrypath_ops/assets/js/ops_hooks"|
+
+    assert File.read!(@host_js) =~ "hooks: { CommandPalette, OpsNavDrawer, OpsModal }"
+    refute File.read!(@host_js) =~ "const CommandPalette ="
   end
 
   test "flash component exposes durable passive alert chrome" do

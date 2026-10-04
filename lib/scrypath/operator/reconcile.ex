@@ -38,7 +38,7 @@ defmodule Scrypath.Operator.Reconcile do
             live_index: String.t(),
             target_index: String.t(),
             observed?: boolean(),
-            task_state: :pending | :completed | :failed | :idle,
+            task_state: :pending | :completed | :failed | :idle | :unknown,
             cutover: :not_started | :pending | :completed,
             last_task: map() | nil
           }
@@ -175,8 +175,10 @@ defmodule Scrypath.Operator.Reconcile do
     cond do
       Enum.any?(tasks, &(&1.state in [:enqueued, :processing])) -> :pending
       Enum.any?(tasks, &(&1.state == :failed)) -> :failed
+      Enum.any?(tasks, &(&1.state in [:cancelled, :unknown])) -> :unknown
       tasks == [] -> :idle
-      true -> :completed
+      Enum.all?(tasks, &(&1.state == :succeeded)) -> :completed
+      true -> :unknown
     end
   end
 

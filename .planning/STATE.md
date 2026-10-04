@@ -1,106 +1,63 @@
 ---
 gsd_state_version: "1.0"
-milestone: v1.41
-milestone_name: Readiness Gate Follow-Through
-status: Awaiting next milestone
-stopped_at: All 4 phases and 19 plans complete; audit tech_debt accepted for closeout; archive v1.41
-last_updated: "2026-10-02T13:52:04.159Z"
-last_activity: 2026-10-02
-last_activity_desc: Milestone v1.41 completed and archived
-state_head: c8e0d7df86f691534077146a18179ed663754840
+milestone: v1.42
+milestone_name: ScrypathOps operator/admin UI
+current_phase: 172
+current_phase_name: Consistent Operator UI and Verified Recovery
+status: executing
+stopped_at: Phase 172 Plans 01-07 complete; Plan 08 reviewed delivery and exact-source CI next
+last_updated: "2026-10-04T04:32:21.790107+00:00"
+last_activity: 2026-10-03
+last_activity_desc: Plans 01–07 complete; local UI acceptance fixes verified, hosted delivery pending
+state_head: b454387abfde7db95f25d29706c2276cdedefafc
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 19
-  completed_plans: 19
-  percent: 100
+  total_phases: 1
+  completed_phases: 0
+  total_plans: 8
+  completed_plans: 7
+  percent: 88
 ---
 
 # Project State
 
 ## Project Reference
 
+See: .planning/PROJECT.md (updated 2026-10-03)
+
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** No successor milestone is approved. Keep the release train idle, preserve the dated NOT READY decision, and retain the accepted Nyquist validation-record debt.
+**Current Focus:** v1.42 Phase 172 — consistent, accessible operator UI and a schema-preserving incident journey with verified recovery. The maintainer's 2026-10-03 direction authorizes OPUX-01–OPUX-08 and supersedes the earlier four proposed requirements; no repeated scope approval is pending.
 
 ## Current Position
 
-Phase: Milestone v1.41 complete
-Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-10-02 — Milestone v1.41 completed and archived
+Phase: 172 (1 of 1 in v1.42) — Consistent Operator UI and Verified Recovery
+Plan: 7 of 8 complete; Plan 08 in progress
+Status: Executing
+Last activity: 2026-10-04 — local UI acceptance and independent review fixes complete; PR/hosted delivery remains
 
-## v1.41 Upstream Review
+Progress: [█████████░] 88% (7/8 plans)
 
-- Current input: `research/v1.41/SUMMARY.md` (also routed from `research/SUMMARY.md`). Three requested GPT-6 Astra xhigh reviews found material security, proof, delivery and closeout scope corrections; this is research, not software verification.
-- Phase 168 is complete: the mounted-readiness correction shipped in PR #82 and the four-graph security/proof work shipped in PR #84. All five plans and four mapped requirements have passing verification. No candidate package was published to Hex.
-- Phase 169: PR #85's tenant/facet corrections and coherent proof are merged and verified; Plan 05 records the complete owned delta and finite frozen-cohort decisions. No cohort PR mutation was authorized or performed.
-- Phase 170 external outcomes are complete: docs delivery, 0.3.14 publication/parity, exact-main closeout, and the dated NOT READY decision are recorded. The maintainer authorized a planning-side summary/verifier replacement on 2026-10-02 after byte-identical preservation of the original preterminal files. Current GSD indexing reports 8/8 plans complete; the attested `8c271…` snapshot remains historical 17/18, and the issue decision remains unchanged. Do not rerun Phase 170.
-- The maintainer approved the revised scope and phase mapping on 2026-09-28. Phase 171 adds traceability rows for DOC-03, GATE-05, and CLOSE-04; its original preservation check remains represented by the retained sidecars and its report was updated to time-bound that check. Phases 168–171 and all 19 plans are complete. The v1.41 audit accepts nonblocking Nyquist validation-record debt; no product gap or pending UAT remains. The milestone is archived locally; no successor scope is approved.
+## Performance Metrics
 
-## Preceding Milestone Context — v1.40 (Archived)
-
-**Goal:** Close decision-relevant adopter evidence gaps for tenant-safe search and bounded repair, reuse valid delete and release receipts, and make a fresh six-condition readiness decision without starting operator UI work.
-
-**Scope boundary:** Verify existing public tenant-scope and facet-value input contracts, correct only confirmed compatible defects, prove one representative host-owned tenant search workflow and one bounded manual repair-to-visible-search workflow, and reconcile condition 3/6 evidence. Host authentication, membership policy, trusted tenant selection, and database response scoping remain application-owned. No public backend abstraction, broad endpoint/version matrix, operator UI, new required CI lane, or forced Hex release is included.
-
-**Gate:** Preserve the Phase 164 assessment unchanged: it records conditions 3 and 6 as UNKNOWN and readiness as **NOT READY**. The new assessment is separately dated, evaluates all six conditions independently, and may truthfully remain **NOT READY**. A passing assessment only recommends a later ScrypathOps focus.
-
-## Recent Evidence
-
-Entries in this section predate the Phase 170 release and terminal decision. Treat the current Phase 170 state in the header and [post-freeze reconciliation](milestones/v1.41-phases/170-documentation-and-readiness-closeout/170-POST-FREEZE-RECONCILIATION.md) as authoritative; the historical receipts below remain scoped to their recorded sources.
-
-- Phase 167's dated assessment at `2026-09-27T19:39:00Z` is NOT READY: conditions 1/3/4/5 PASS, 2 FAIL, 6 UNKNOWN. The consumer Mint 1.9.3 High advisory is unresolved; later CI does not revise this cutoff.
-- Phase 167 candidate `441a7e75367e3d354a2da66261850530363cf1f4` passed run `36347716269`; named advisory Phoenix path/package scenarios each passed 16 tests. One earlier mounted-readiness failure remains recorded.
-- Final phase-tracking SHA `343e20be66ab0c17f62b95138203c86e868bd1ee` passed exact-SHA run `36361116862`; all required jobs, coverage, closeout attestation, and the advisory suites passed. Same-SHA run `36360456437` failed only the mounted-service consecutive-readiness check and was followed by the successful retry without source changes.
-- Phase 167 verification passed all three roadmap criteria; 22 focused tests, complete structural checker, L1 mitigation audit, and Nyquist coverage pass. Local Elixir regression passed 4 properties/591 tests with 84 exclusions. These checks do not claim readiness; final-source CI passed separately as recorded above.
-- v1.39's final exact-SHA closeout run `36257182675` passed on `dc400b2b57aec0ca6b0ef16c9477d266fd41a433`; annotated tag `v1.39` resolves to that commit. This receipt supports only its recorded claims and source.
-- Scrypath 0.3.13 has package-backed Phoenix, exact-SHA, post-merge, Hex/HexDocs, consumer-compilation, and parity receipts from v1.38. They do not broaden the selected v1.40 workflow claims.
-- v1.40 research began with C10-R1 and C11-R1 as unexecuted hypotheses; Phase 165 independently reproduced the bounded tenant/runtime and facet-serialization defects and corrected them.
-- Phase 165 Plan 02 at `a883958c73d7f102a7404a317e0d13b7c15ccbd9` corrected raw keyword-filter tuple serialization through the existing renderer. Phase 166 subsequently proved the named live path/package scenario at its measured source.
-- Phase 165 candidate `384c8839db2f021db421d0dbeff096ee439fd721` passed exact-SHA hosted closeout run `36277023698`; the five required jobs, advisory coverage, and closeout attestation succeeded with immutable artifacts. The later refreshed final phase-tracking SHA and its successful exact-source closeout are recorded above.
-- C-16 requires one representative ID-scoped manual repair through terminal task success to visible search. C-09 can be reused only after a relevant-path freshness comparison; otherwise its bounded claim needs targeted evidence or UNKNOWN.
-- Phase 166 candidate `50d5c12d36ec560525e245bcb992c40e5927854f` passed exact-SHA workflow-dispatch closeout run `36321613553` at attempt 1. Required jobs, coverage, and closeout attestation succeeded; Phoenix advisory job `108626420623` and backend job `108626420717` both contain the named successful Phase 166 scenario receipts.
-- Phase 166's historical C-09 receipt is reusable only for its bounded ecommerce raw-hit hard-delete claim; the receipt-to-assessment comparison accounts for all 16 changed relevant paths.
-- Phase 170 Plan 07 refreshed public `main` at `87d74259a9f569c6b11c8d9481f5465a172c70ba`. PR #87 is merged and exact-main run `36795877117` succeeded; its path-scoped workflow skipped ecommerce E2E, so no fresh full E2E pass is claimed. PR #83 remains open on unchanged head `64963c7042c451f9d4932fee7850d8bf7ca93684`, with no reviews and `BLOCKED` merge state. GitHub Releases and Hex still show 0.3.13 as latest; 0.3.14 is unpublished. Issue #86 has no terminal decision comment as of 2026-10-01 11:08 UTC.
-- Phase 170 Plan 07 created and retained a clean final evidence worktree from refreshed public `main`, removed the merged PR #87 delivery worktree and local branch after confirming its tree matched `main`, and preserved all unrelated dirty files, cache and existing services. The exact snapshot inventory and external digest protocol are recorded in `170-CLOSEOUT.md`; Plan 07 Task 2 will finish tracking and freeze it.
-- Debug follow-up: no newer run superseded the two failures in `36419998362` before investigation. The older passing run `36390328588` and failing SHA `40c9978c975dbfb42db75511f44ff0369c8d7d88` had identical relevant source/configuration/dependency blobs, so the history-only rewrite was not a source regression. The confirmed cause was `PHX_SERVER=true` leaking into finite setup processes: Compose could mark the temporary endpoint healthy, then the endpoint exited before the persistent server was ready. Exact-SHA closeout `36439562644` restored all five required jobs, coverage, and attestation to green on the unchanged public SHA; advisory `deep-quality` still reports the known Mint advisories. A local two-file readiness fix passes the focused mounted verifier (four browser checks) and its contract test (3 tests), but is uncommitted and was not part of that hosted run. See `.planning/debug/resolved/ecommerce-mounted-readiness.md`.
+- Current milestone: 7/8 plans executed. Plans 01–07 source and summaries are recorded; wider OPUX requirements remain open pending later plans.
+- Previous milestone v1.41: 4 phases (168–171), 19 plans, 9 requirements complete.
+- Historical plan timings and evidence remain in the milestone archives; Plan 01 has focused test and browser evidence; milestone acceptance remains pending.
 
 ## Accumulated Context
 
 ### Decisions
 
-- Keep missing evidence, a confirmed defect, and a successful contract reproduction distinct.
-- Preserve host ownership of actor authentication, membership policy, trusted tenant derivation, and response scoping; Scrypath evidence proves supplied-scope composition within the named workflow only.
-- Use the existing Phoenix path/package harness and current advisory scenario posture. A required advisory scenario pass is acceptance evidence for its exact SHA; it does not become a required merge gate.
-- Bound manual repair by an Ecto ID predicate, never by a query limit, and await the returned backend task before claiming visible repair.
-- Keep release/package/support identities distinct from the v1.39 planning tag. Reconcile named metadata and release-reference debt explicitly without silently rewriting historical records or deleting unrelated local state.
-- Keep the current task's exact-final-SHA closeout separate from reused historical receipts, and do not edit tracked planning files merely to record that external final receipt.
-- Keep validated tenant_scope predicates in search options while excluding the search-only key from strict runtime configuration in Single, Many, and FacetValues.
-- Treat recorder evidence as library filter-composition proof; host identity, membership, trusted tenant selection, authorization, and database response scoping remain host-owned.
-- [Phase 165]: Keep tenant_scope in the validated filter and remove it from all three runtime configuration inputs. — Public recorder probes reproduced strict runtime-config rejection in Single, Many, and FacetValues after schema-aware validation had composed the declared tenant field into filter. Dropping only this search-only key preserves strict runtime validation and the public input shape.
-- [Phase 165]: Treat recording-backend tenant evidence as filter-composition proof only. — The tests prove supplied-scope composition and rejection before backend dispatch. Actor identity, membership, trusted tenant derivation, authorization, and database response scoping remain host-owned; this is not live-service or package evidence.
-- [Phase 165]: Keep defaults and keyword-filter outcomes separate; retain a targeted live/package follow-up for the reproduced facet serializer defect. — Defaults passed their encoded request probe without correction. The keyword probe failed in Jason before HTTP; the correction now emits the existing filter grammar. This local proof does not establish live parser behavior or package loading. It also does not claim interruption or parallel execution semantics (EA-02).
-- [Phase 166]: Derive tenant scope from the persisted host membership before search or facet dispatch. — A host-owned persisted authorization boundary prevents caller-supplied tenant selections from becoming trusted library scope.
-- [Phase 166]: Keep raw search output and host hydration distinct; constrain hydration by tenant and returned IDs. — Separate assertions make raw-hit privacy visible and prevent database filtering from concealing foreign search results.
-- [Phase 166]: Use a fixed paginated live query and explicit primary key for exact counts and deterministic Meilisearch setup. — The live evidence requires an exact count and tenant_id makes automatic Meilisearch primary-key inference ambiguous.
-- [Phase 166]: Treat the repair report's mismatch as a known fixture precondition. — reconcile_sync reports task and reindex visibility; request telemetry and complete task snapshots establish its read-only behavior without claiming source-row/index-row discovery.
-- [Phase 167]: Keep the eight milestone software claims separate by named scenario and measured source; workflow success is not blanket evidence.
-- [Phase 167]: Keep planning tag v1.39, closeout run, published release scrypath-v0.3.13, and the Phase 166 local artifact as distinct identities.
-- [Phase 167]: Reuse C-09 only for its bounded claim after every relevant changed path has a semantic disposition; the checker does not decide whether those reasons are true.
-- [Phase 167]: Phase 167 Plan 02: keep readiness NOT READY because the Phoenix consumer lock has an unresolved High Mint advisory; no owner acceptance or dependency change is inferred.
-- [Phase 167]: Phase 167 Plan 02: preserve unresolved inherited probes and keep final tracking/attestation pending at the dated cutoff.
-- [Phase 169]: PR #85 was normally squash-merged only after the user's explicit authorization and passing required CI; GitHub records no review.
-- [Phase 169]: Phase 169's frozen PR cohort decisions are record-first; no PR #65 or #68–#76 mutation was authorized or performed.
-- [Phase 170]: Phase 170-01: Keep first-hour inline guidance prominent; canonical sync return semantics remain owned by Scrypath.sync_record/3 and the sync guide.
-- [Phase 170]: Phase 170-01: Consolidate README and JTBD navigation while retaining every useful original route, six numbered jobs, the adoption progression, and explicit product limits.
-- [Phase 170]: Phase 170-01: Route assertions establish structure only; P-170-DOC and EA-170-01 remain unresolved for bounded semantic review and interruption guarantees.
-- [Phase 170]: Phase 170 Plan 02: Reuse the existing command surface and add no dependency, lane, or dispatch contract.
-- [Phase 170]: Phase 170 Plan 02: Keep collection read-only, attempt-specific, bounded, and explicit about archive versus member hashes.
-- [Phase 170]: Phase 170 Plan 02: Require supplied judgments and provenance; factual validation cannot authorize posting or semantic approval.
-- [Phase 170]: Phase 170 Plan 02: Preserve the seven inherited edge probes as unresolved user-level assumptions.
-- [Phase 170, historical delivery authorization]: The maintainer authorized the normal Release Please/Hex path for the candidate subject to then-current gates. Later live policy review and merge facts are recorded in the dated issue updates; PR #83 merged and 0.3.14 parity passed.
-- [Phase 170, preterminal gate contract; superseded for GATE-05/CLOSE-04]: The frozen source receipt and NOT READY decision are published at issue #86 comment 5940381507. Later validator and release/closeout receipts are separate post-freeze evidence; they do not change the frozen Plan 08 summary or the original decision.
+- Preserve the six existing surfaces, shell, palette, and 48 shared `OpsUi` components. Repair demonstrated semantics, typography, hierarchy, and domain-language issues; use the existing token/component authority. The three current UI reports and `reference/OPERATOR-UI-QUALITY.md` guide implementation.
+- Keep the complete user outcome in Phase 172: shared controls/layout/copy, schema context, truthful recovery, meaningful regression proof, and reviewed delivery. Establish the UI contract before checked plans; add focused checks alongside changes.
+- Correlate a known replayable failure with newly accepted work, terminal backend success, and the expected active-index document. Retained failure history may remain; accepted work and old successful tasks do not prove recovery. Advanced promotion remains a separate action with consistent UI/server eligibility.
+- Reuse LiveView, token/contrast, and existing mounted/full-browser lanes. Inspect before/after screenshots directly, cover representative keyboard/reflow/theme boundaries, and retain diagnosable evidence. No routine human UAT, paid AI judge, new required job, or repeated full-matrix run by default.
+- Use PR-first delivery and the existing two-stage candidate/final exact-SHA closeout. Commit final requirement/phase/milestone tracking before final attestation, then leave that tracked source unchanged. Decide release/no-release from delivered package changes.
+
+### Historical Boundaries
+
+- v1.41 is archived with 9/9 requirements, 4/4 phases, 6/6 integration paths, and 3/3 end-to-end flows complete. Its audit accepts nonblocking Nyquist validation-record debt for Phases 168–170; Phase 171 is validated.
+- The original Phase 170 decision remains **NOT READY** at [issue #86 comment 5940381507](https://github.com/szTheory/scrypath/issues/86#issuecomment-5940381507). The later separate assessment is **READY** at [comment 5955742805](https://github.com/szTheory/scrypath/issues/86#issuecomment-5955742805), within its stated limits; inherited assumptions EA-167-01–EA-167-07 remain unresolved.
+- Current GSD tracking records Phase 170 at 8/8 through its authorized planning-side replacement. The frozen `8c271…` snapshot remains historical 17/18 with original bytes preserved. See `milestones/v1.41-phases/170-documentation-and-readiness-closeout/170-08-TRACKING-REPLACEMENT.md` and `170-POST-FREEZE-RECONCILIATION.md`. Do not rerun Phase 170.
+- Scrypath 0.3.14 publication/parity and exact-main closeout are recorded in PROJECT.md and the v1.41 archive. Those receipts and older readiness cutoffs remain source-bounded; they do not verify changed v1.42 UI behavior. Historical “What's next” statements describe archive-time posture.
 
 ### Pending Todos
 
@@ -108,73 +65,33 @@ None yet.
 
 ### Blockers/Concerns
 
-- [Phase 167, historical] The assessment was NOT READY: Phoenix consumer Mint 1.9.3 had an unresolved High advisory and condition 6 was UNKNOWN at its cutoff. This remains historical and is not a current v1.41 blocker.
-- Historical evidence can be reused only after source-identity and relevant-path comparisons; unavailable or invalidated evidence is recorded with its precise limit rather than inferred.
-- [Phase 167, historical] Release-reference mismatch and accepted archived planning debts remain bounded carry-forwards; they do not change the current v1.41 record.
-- Phase 170's exact-source closeout and six-condition judgment are recorded on issue #86. The dated result is NOT READY (conditions 1–5 PASS, condition 6 FAIL); no new decision is inferred. GSD Plan 08 tracking is now complete through the explicitly authorized replacement recorded in `170-08-TRACKING-REPLACEMENT.md`.
-
-### Maintainer Direction and Repository Check — 2026-09-28
-
-- The maintainer wants evidence-gated near/mid/long horizons refreshed at each milestone; no calendar-driven or Dependabot-only milestones; releases when warranted; PR-first work, green post-merge `main`, exact-SHA evidence, and tidy task-owned branches/worktrees/artifacts.
-- Default to zero human UAT: automate acceptance at the cheapest reliable layer and add recurring CI only when its confidence justifies GitHub Actions time and maintenance. Keep tests high-signal across happy paths, errors, and boundaries; use property testing and digital-twin adopters only for named risks that benefit from them. Measure performance before optimizing. Keep APIs, architecture, and docs readable, maintainable, user-job-focused, privacy-safe, and grounded in 12-factor configuration.
-- Durable guide: `prompts/scrypath-milestone-ratchet-roadmap.txt`. Candidate horizons: `reference/milestone-candidates.md` and `reference/MILESTONE-ARC.md`. v1.41 scope is approved; its README/JTBD consolidation is narrow and evidence-backed. ScrypathOps remains gated on a fresh READY assessment, maintainer availability, and a separate scope decision.
-- Hex 0.3.13 was published 2026-09-25. Privacy PR [#81](https://github.com/szTheory/scrypath/pull/81) merged the current-tree cleanup; a later authorized history rewrite moved all 12 public branch refs and 28 tags to sanitized history. Public `main` is now `40c9978c975dbfb42db75511f44ff0369c8d7d88`. A fresh mirror scan found no personal home-directory value in branch or tag history. Tree comparisons across 128 fetched refs preserved file paths and modes; the only file-content edits were path substitutions in planning documents, with no source-code changes. First changed commit: `0dcc97790c00fa360e72555ddf08609cc9203794` → `bec129bc8494d54a0cd4c598d4c44202290050cf`.
-- GitHub's separate PR refs still expose the old path: 68 affected PRs across 88 fetched PR refs. The owner declined a Support request and accepts this residual because the exposure is a personal name/path. Public branch and tag refs and this local repository's refs are clean. Do not repeat the personal path in artifacts.
-- Branch protection was restored after the rewrite: force pushes are disabled, linear-history protection remains enabled, and the same five required checks are configured. GitHub reported that an existing merge commit violates the linear-history rule; commit topology was preserved. Run `36419998362` failed twice on required `ecommerce-mounted`, while the earlier `36390328588` passed before the path-only rewrite. Investigation found no relevant source differences and identified an application startup-readiness race. Newer exact-SHA run `36439562644` passed all five required jobs, coverage, and attestation on the rewritten public SHA; advisory `deep-quality` still failed on Mint advisories. A narrow local fix is verified but uncommitted. Do not push the current 137-commit-ahead branch.
-- This workspace is on `gsd/v1.38-cleanup-merged` at rewritten commit `830aacf383457c6e4a74eda0141235f1ab85c102`, 137 commits ahead of sanitized public `main` (`40c9978c975dbfb42db75511f44ff0369c8d7d88`) and not behind. All local branches and tags were rewritten; verification retained 1,884 commits, their parent links, and every historical file version, with no source-code changes. The local v1.39/v1.40 work remains unpublished; scope it into reviewed PRs before release claims. Current uncommitted planning edits and the untracked cache were preserved.
-
-### Roadmap Evolution
-
-- Phase 171 added: Create a focused closure phase for the Phase 170 verification coverage gaps identified by the v1.41 milestone audit.
+- No unresolved approval blocks the established scope. Current research is source/screenshot evidence, not a runtime acceptance pass.
+- Plan06 now has a replayable Variant fixture and strict exact-job/task/document oracle. Canonical source 3fd8972 passed all four mounted scenarios; its disposable project scrypath_ecommerce_verify_focused_3fd8972c_77955 is retained for Plan07. Do not weaken history preservation or rerun completed plans.
+- Reuse historical proof only after checking relevant source/scenario changes. Runtime, focus, responsive, and contrast claims need evidence for the changed behavior; screenshot inventory or a contrast-only scan cannot prove them all.
 
 ## Deferred Items
 
-| Category | Item | Status |
-|----------|------|--------|
-| product scope | Operator UI, brand/design work, authentication product, public backend abstraction, and broad compatibility matrices | Deferred; requires a separate evidence-backed scope decision |
-| release | Hex publication, retagging, and version bump | Only if a confirmed compatible code fix warrants the existing release train |
-| verification topology | New required service lane | Deferred; retain the existing required/advisory split |
-
-## Performance Metrics
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 165. Public Tenant and Facet Contracts | 2/2 | 25 min | 12.5 min |
-| 166. Host Tenant and Repair Evidence | 3/3 | Duration unmeasured | - |
-| 167. Dated Readiness and Closeout | 3/3 | 125 min executor work; orchestrator/final CI separate | - |
-| 167 | 3 | - | - |
-| 168 | 5 | - | - |
-| 169 | 5 | - | - |
-| 171 | 1 | - | - |
-| 170 | 8 | - | - |
-**Per-Plan Metrics:**
-
-| Plan | Duration | Tasks | Files |
-|------|----------|-------|-------|
-| Phase 165 P01 | 9 min | 2 tasks | 4 files |
-| Phase 165 P02 | 16 min | 2 tasks | 3 files |
-| Phase 166 P01 | 24 min | 2 tasks | 6 files |
-| Phase 166 P02 | 14 min | 2 tasks | 1 files |
-| Phase 166 P03 | Unmeasured | 2 tasks | 11 files |
-| Phase 167 P01 | 36min | 2 tasks | 4 files |
-| Phase 167 P02 | 47min | 2 tasks | 6 files |
-| Phase 167 P03 | 42min | 2 tasks | 7 files |
-| Phase 169 P05 | Unmeasured | 3 tasks | 5 files |
-| Phase 170-documentation-and-readiness-closeout P01 | 29 min | 2 tasks | 4 files |
-| Phase 170 P02 | 37m | 3 tasks | 3 files |
-| Phase 170 P04 | not measured | 3 tasks | 1 files |
-| Phase 170 P5 | not measured | 3 tasks | 2 files |
-| Phase 170 P6 | unmeasured | 2 tasks | 12 files |
+| Category | Item | Status | Deferred At | Milestone |
+|----------|------|--------|-------------|-----------|
+| Product scope | New workflows, core APIs, backend abstraction, host authorization product, broader matrices | Separate concrete evidence and scope required | 2026-10-03 | v1.42 |
+| Visual scope | Palette/framework replacement, wholesale CSS rewrite, incidental issues without material user impact | Retain the existing system; reopen only with a named invalidator | 2026-10-03 | v1.42 |
+| Verification topology | New required CI job or paid visual-judge service | Existing economical lanes are the default | 2026-10-03 | v1.42 |
+| Historical planning | Nyquist validation records for Phases 168–170 | Accepted nonblocking v1.41 audit debt; no phase replay | 2026-10-02 | v1.41 |
 
 ## Session Continuity
 
-Last session: 2026-10-02T13:52:04Z
-Stopped at: v1.41 archived locally; all 4 phases and 19 plans complete; audit tech_debt accepted
-Resume file: .planning/milestones/v1.41-MILESTONE-AUDIT.md
-Next command: None. No successor milestone or maintenance item is approved; keep the release train idle until new evidence and owner-approved scope exist. Do not rerun Phase 170 or its passing release/adopter checks.
+Last session: 2026-10-04T00:19:10.605Z
+Stopped at: Phase 172 Plans 01-07 complete; Plan 08 reviewed delivery and exact-source CI next
+Resume file: .planning/phases/172-consistent-operator-ui-and-verified-recovery/172-08-PLAN.md
+Next action: Continue the already active Phase172 Plan08 delivery. Do not replay Plans01–07. UI-SPEC and all eight plans passed independent review. Plans 01–07 are complete and must not be replayed. Use task-local locked dependencies, pinned Elixir/OTP and ERL_FLAGS='+S 1:1' for local tests to bound the database pool. Disposable Compose verification must not reset preview4012.
 
-## Operator Next Steps
+## Preview and Cleanup
 
-- v1.41 is archived locally with 9/9 requirements, 4/4 phases, 6/6 integration paths, and 3/3 end-to-end flows complete. Three Nyquist validation records from Phases 168–170 remain disclosed nonblocking planning debt.
-- The latest dated readiness decision remains **NOT READY** at its original cutoff. It does not authorize operator UI work or a successor milestone.
-- No routine human UAT, product tests, or release checks remain to be run for closeout. Reuse existing source-bounded evidence unless a named invalidator changes.
+- Optional feedback preview: `http://127.0.0.1:4012/admin/search`, Compose project `scrypath-ui-v142`, owned by the v1.42 task and bind-mounted from its isolated worktree. Captures are outside tracked source at `/private/tmp/scrypath-v142-review/`.
+- Run destructive seed/reset verification in a separate disposable Compose project; never reset the feedback preview. Preserve unrelated services, worktrees, and stashes.
+- At closeout, clean disposable task-owned verification state and document preview retention or shutdown. Stop only this preview from `examples/scrypath_ecommerce` with `COMPOSE_PROJECT_NAME=scrypath-ui-v142 WEB_PORT=4012 docker compose -f compose.yaml -f compose.dev.yaml down`; retain preview volumes while feedback still needs the demo state.
+
+## Current delivery evidence
+
+- Product source1b2287e: Ops233 tests+2doctests passed; full local advisory95/104 passed, nine obsolete assertions corrected in b454387 and all9 targeted cases passed with retries0. Canonical all-green hosted run remains pending. See172-07-SUMMARY.
+- Independent source review resolved2HIGH and3MEDIUM findings; no open concrete finding in its39-file scope. Preview4012 refreshed without reseeding and returnsHTTP200.

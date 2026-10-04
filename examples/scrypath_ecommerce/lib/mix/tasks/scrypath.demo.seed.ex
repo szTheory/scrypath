@@ -209,11 +209,10 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
 
   # Sync the SKU/Variant index so the allowlist holds >1 schema: Posture shows a second
   # row, Search multi-index/federation lights up, and the federated playbook can run.
+  # e2e.prepare_search already prepared both Product and Variant indexes before seeding.
   # Variants are read back from the DB (the fixtures already persisted them) and synced
   # with `:product` preloaded so the denormalized product_name is searchable.
   defp sync_variants! do
-    prepare_variant_index!()
-
     variants =
       Variant
       |> Repo.all(skip_tenant_id: true)
@@ -224,37 +223,6 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
       {:error, reason} -> Mix.raise("demo variant sync failed: #{inspect(reason)}")
     end
   end
-
-  # Create + apply settings for the Variant index (mirrors `e2e.prepare_search` for
-  # Product, kept here so the deterministic E2E lane stays Product-only). Tolerant:
-  # an already-existing index or a missing backend must not abort seeding.
-  defp prepare_variant_index! do
-    config = Scrypath.Config.resolve!(sync_mode: :manual)
-    backend = Scrypath.Config.fetch_backend!(config)
-    index = backend.index_name(Variant, config)
-
-    _ =
-      Variant
-      |> backend.create_index(:id, Keyword.put(config, :target_index, index))
-      |> wait_variant_task(config)
-
-    _ =
-      Variant
-      |> backend.apply_settings(index, config)
-      |> wait_variant_task(config)
-
-    :ok
-  rescue
-    error ->
-      Mix.shell().info("Variant index prep skipped (#{Exception.message(error)})")
-      :ok
-  end
-
-  defp wait_variant_task({:ok, %{task: task}}, config) do
-    Scrypath.Meilisearch.Tasks.wait_for_task(task, config)
-  end
-
-  defp wait_variant_task(other, _config), do: other
 
   # ── Failed sync work injection ───────────────────────────────────────────────
   #

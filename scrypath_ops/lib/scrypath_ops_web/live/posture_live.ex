@@ -8,8 +8,7 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   use ScrypathOpsWeb, :live_view
 
-  alias ScrypathOps.Integrations.Sigra.Gating
-  alias Scrypath.Meilisearch.Tasks
+  alias ScrypathOps.OperatorSelection
 
   @impl true
   def mount(_params, _session, socket) do
@@ -52,7 +51,10 @@ defmodule ScrypathOpsWeb.PostureLive do
   def handle_event("swap_live", %{"schema" => mod_str}, socket) do
     case mod_from_allowlist(mod_str, socket.assigns.schema_allowlist) do
       {:ok, mod} ->
-        {:noreply, swap_live(socket, mod)}
+        {:noreply,
+         push_navigate(socket,
+           to: OperatorSelection.path(socket.assigns.mount_path, "sync-drift", mod)
+         )}
 
       :error ->
         {:noreply, put_flash(socket, :error, "Select an allowlisted schema.")}
@@ -98,35 +100,6 @@ defmodule ScrypathOpsWeb.PostureLive do
   defp posture_rows_assign(%ScrypathOps.Posture{state: :unconfigured}), do: :empty_allowlist
   defp posture_rows_assign(%ScrypathOps.Posture{state: :missing_backend}), do: :missing_backend
   defp posture_rows_assign(%ScrypathOps.Posture{rows: rows}), do: {:ok, rows}
-
-  defp swap_live(socket, mod) do
-    Gating.gate_sensitive_action(socket, :swap_live, fn ->
-      scrypath_opts = socket.assigns.scrypath_opts
-      wait_opts = task_wait_opts(scrypath_opts)
-
-      case Scrypath.Meilisearch.swap_indexes(mod, scrypath_opts) do
-        {:ok, %{task: task}} ->
-          case Tasks.wait_for_task(task, wait_opts) do
-            {:ok, _waited} ->
-              socket
-              |> load_posture()
-              |> put_flash(:info, "Swap live index completed for #{module_flat_name(mod)}")
-
-            {:error, reason} ->
-              put_flash(socket, :error, "Swap live failed: #{inspect(reason)}")
-          end
-
-        {:error, reason} ->
-          put_flash(socket, :error, "Swap live failed: #{inspect(reason)}")
-      end
-    end)
-  end
-
-  defp task_wait_opts(opts) do
-    opts
-    |> Keyword.put_new(:inline_poll_interval, 50)
-    |> Keyword.put_new(:inline_timeout, 15_000)
-  end
 
   defp module_flat_name(mod) when is_atom(mod) do
     mod |> Atom.to_string() |> String.replace_prefix("Elixir.", "")
@@ -257,7 +230,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                   <% {:ok, status} -> %>
                     <div class="ops-schema-signal-card__header">
                       <div class="min-w-0">
-                        <h3 class="font-mono text-ops-body font-semibold text-base-content">
+                        <h3 class="font-mono text-ops-h3 font-semibold text-base-content">
                           {inspect(mod)}
                         </h3>
                         <p class="mt-1 text-ops-sm text-base-content/65">
@@ -278,10 +251,10 @@ defmodule ScrypathOpsWeb.PostureLive do
 
                     <div class="ops-schema-signal-card__groups">
                       <section
-                        aria-label={"Backend signals for #{inspect(mod)}"}
+                        aria-label={"Backend task signals for #{inspect(mod)}"}
                         class="ops-signal-group"
                       >
-                        <p class="ops-signal-group__title">Backend</p>
+                        <p class="ops-signal-group__title">Backend tasks</p>
                         <dl class="ops-signal-metrics">
                           <div>
                             <dt>Pending</dt>
@@ -292,18 +265,18 @@ defmodule ScrypathOpsWeb.PostureLive do
                             <dd>{length(status.backend.failed)}</dd>
                           </div>
                           <div class="ops-signal-metrics__wide">
-                            <dt>Last OK</dt>
+                            <dt>Last success</dt>
                             <dd>{format_state_ts(status.backend.last_succeeded)}</dd>
                           </div>
                         </dl>
                       </section>
 
                       <section
-                        aria-label={"Queue signals for #{inspect(mod)}"}
+                        aria-label={"Queue job signals for #{inspect(mod)}"}
                         class="ops-signal-group"
                       >
-                        <p class="ops-signal-group__title">Queue</p>
-                        <dl class="ops-signal-metrics">
+                        <p class="ops-signal-group__title">Queue jobs</p>
+                        <dl :if={status.queue.observed?} class="ops-signal-metrics">
                           <div>
                             <dt>Pending</dt>
                             <dd>{length(status.queue.pending)}</dd>
@@ -317,16 +290,26 @@ defmodule ScrypathOpsWeb.PostureLive do
                             <dd>{length(status.queue.failed)}</dd>
                           </div>
                           <div class="ops-signal-metrics__wide">
-                            <dt>Last OK</dt>
+                            <dt>Last success</dt>
                             <dd>{format_state_ts(status.queue.last_succeeded)}</dd>
                           </div>
                         </dl>
+                        <p :if={!status.queue.observed?} class="text-ops-sm text-base-content/75">
+                          {queue_unobserved_copy(status)}
+                        </p>
                       </section>
                     </div>
+                    <.link
+                      navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
+                      class="link link-primary mt-3 inline-flex min-h-[var(--control-h-md)] items-center"
+                      data-testid="posture-failed-sync-link"
+                    >
+                      Inspect failed work for {module_flat_name(mod)}
+                    </.link>
                   <% {:error, reason} -> %>
                     <div class="ops-schema-signal-card__header">
                       <div class="min-w-0">
-                        <h3 class="font-mono text-ops-body font-semibold text-base-content">
+                        <h3 class="font-mono text-ops-h3 font-semibold text-base-content">
                           {inspect(mod)}
                         </h3>
                         <p class="mt-1 text-ops-sm text-error">fetch error: {inspect(reason)}</p>
@@ -335,6 +318,13 @@ defmodule ScrypathOpsWeb.PostureLive do
                         <.ops_badge kind={:error}>fetch error</.ops_badge>
                       </div>
                     </div>
+                    <.link
+                      navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
+                      class="link link-primary mt-3 inline-flex min-h-[var(--control-h-md)] items-center"
+                      data-testid="posture-failed-sync-link"
+                    >
+                      Inspect failed work for {module_flat_name(mod)}
+                    </.link>
                 <% end %>
               </article>
             <% end %>
@@ -443,10 +433,21 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   defp queue_badge_label(status) do
     cond do
-      not status.queue.observed? -> "queue not observed"
+      not status.queue.observed? and queue_unused_mode?(status.mode) -> "Queue not used"
+      not status.queue.observed? -> "Queue observations unavailable"
       length(status.queue.failed) > 0 -> "queue failed"
       length(status.queue.retrying) > 0 -> "queue retrying"
       true -> "queue observed"
+    end
+  end
+
+  defp queue_unused_mode?(mode), do: mode in [:inline, :manual, "inline", "manual"]
+
+  defp queue_unobserved_copy(status) do
+    if queue_unused_mode?(status.mode) do
+      "Queue not used in #{status.mode} sync mode."
+    else
+      "Queue observations unavailable; no queue counts are reported as zero."
     end
   end
 end

@@ -1,29 +1,18 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v1.41 \u2014 Readiness Gate Follow-Through",
+  "milestone": "v1.42 \u2014 ScrypathOps operator/admin UI",
   "phases": [
     {
-      "number": "168",
-      "name": "Dependency Security and Reliable Verification",
-      "status": "complete"
-    },
-    {
-      "number": "169",
-      "name": "Library Fix Delivery and PR Triage",
-      "status": "complete"
-    },
-    {
-      "number": "170",
-      "name": "Documentation and Readiness Closeout",
-      "status": "complete"
-    },
-    {
-      "number": "171",
-      "name": "Supplemental Phase 170 Verification Coverage",
-      "status": "complete"
+      "number": "172",
+      "name": "Consistent Operator UI and Verified Recovery",
+      "status": "in_progress"
     }
   ],
-  "next": null,
-  "updated_at": "2026-10-02T13:52:04.159Z"
+  "next": {
+    "command": "/gsd:execute-phase 172",
+    "label": "Continue Phase 172 at Plan 07 (6/8 complete)",
+    "reason": "Plan06 canonical mounted proof passed; Plans01\u201306 are complete and must not be replayed."
+  },
+  "updated_at": "2026-10-04T00:19:59.198016+00:00"
 }

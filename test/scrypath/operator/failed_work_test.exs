@@ -229,7 +229,7 @@ defmodule Scrypath.Operator.FailedWorkTest do
   end
 
   test "discarded Oban job without classifiable error is queue_exhausted" do
-    assert {:ok, [%FailedWork{reason_class: :queue_exhausted} = row]} =
+    assert {:ok, [%FailedWork{reason_class: :queue_exhausted, reason: "queue job failed"} = row]} =
              Scrypath.failed_sync_work(SearchablePost,
                backend: Scrypath.Meilisearch,
                sync_mode: :oban,
@@ -263,7 +263,9 @@ defmodule Scrypath.Operator.FailedWorkTest do
   end
 
   test "discarded job with validation-shaped error prefers validation over queue_exhausted" do
-    assert {:ok, [%FailedWork{reason_class: :validation}]} =
+    legacy_error = "** (Ecto.CastError) cast failed"
+
+    assert {:ok, [%FailedWork{reason_class: :validation, reason: ^legacy_error}]} =
              Scrypath.failed_sync_work(SearchablePost,
                backend: Scrypath.Meilisearch,
                sync_mode: :oban,
@@ -280,7 +282,7 @@ defmodule Scrypath.Operator.FailedWorkTest do
                    state: "discarded",
                    worker: "Scrypath.Oban.UpsertWorker",
                    queue: "search_sync",
-                   errors: ["** (Ecto.CastError) cast failed"],
+                   errors: [legacy_error],
                    args: %{
                      "operation" => "upsert",
                      "schema" => "Elixir.SearchablePost",
@@ -295,6 +297,82 @@ defmodule Scrypath.Operator.FailedWorkTest do
                  }
                ]
              )
+  end
+
+  test "Oban map-shaped errors surface the latest actionable cause" do
+    latest = "HTTP 503 from Meilisearch: search index is temporarily unavailable"
+
+    assert {:ok, [%FailedWork{reason: ^latest, reason_class: :transport}]} =
+             Scrypath.failed_sync_work(SearchablePost,
+               backend: Scrypath.Meilisearch,
+               sync_mode: :oban,
+               index_prefix: "tenant",
+               meilisearch_url: "http://localhost:7700",
+               meilisearch_client: FailedWorkMeilisearchClient,
+               meilisearch_tasks: [],
+               oban: RecordingOban,
+               oban_queue: :search_sync,
+               oban_inspector: FailedWorkObanInspector,
+               oban_jobs: [
+                 %{
+                   id: 904,
+                   state: "discarded",
+                   worker: "Scrypath.Oban.UpsertWorker",
+                   queue: "search_sync",
+                   errors: [
+                     %{attempt: 1, error: "** (Ecto.CastError) old validation failure"},
+                     %{attempt: 2, error: latest}
+                   ],
+                   args: %{
+                     "operation" => "upsert",
+                     "schema" => "Elixir.SearchablePost",
+                     "backend" => "Elixir.Scrypath.Meilisearch",
+                     "index" => "tenant_searchable_post",
+                     "document_count" => 1,
+                     "document_ids" => [1],
+                     "documents" => [%{"id" => 1, "data" => %{"title" => "One"}}]
+                   }
+                 }
+               ]
+             )
+  end
+
+  test "Oban queue reason bounds an oversized map-shaped error" do
+    long_message = String.duplicate("backend unavailable ", 40)
+
+    assert {:ok, [%FailedWork{reason: reason}]} =
+             Scrypath.failed_sync_work(SearchablePost,
+               backend: Scrypath.Meilisearch,
+               sync_mode: :oban,
+               index_prefix: "tenant",
+               meilisearch_url: "http://localhost:7700",
+               meilisearch_client: FailedWorkMeilisearchClient,
+               meilisearch_tasks: [],
+               oban: RecordingOban,
+               oban_queue: :search_sync,
+               oban_inspector: FailedWorkObanInspector,
+               oban_jobs: [
+                 %{
+                   id: 905,
+                   state: "discarded",
+                   worker: "Scrypath.Oban.UpsertWorker",
+                   queue: "search_sync",
+                   errors: [%{attempt: 2, error: long_message}],
+                   args: %{
+                     "operation" => "upsert",
+                     "schema" => "Elixir.SearchablePost",
+                     "backend" => "Elixir.Scrypath.Meilisearch",
+                     "index" => "tenant_searchable_post",
+                     "document_count" => 1,
+                     "document_ids" => [1],
+                     "documents" => [%{"id" => 1, "data" => %{"title" => "One"}}]
+                   }
+                 }
+               ]
+             )
+
+    assert String.length(reason) <= 500
+    assert String.starts_with?(reason, "backend unavailable")
   end
 
   test "Oban rows populate attempt and max_attempts when present" do

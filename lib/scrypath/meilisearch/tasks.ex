@@ -20,7 +20,13 @@ defmodule Scrypath.Meilisearch.Tasks do
   def list_index_tasks(index_uid, config) when is_binary(index_uid) do
     list_tasks(
       index_uid,
-      ["indexCreation", "settingsUpdate", "indexSwap", "documentAdditionOrUpdate"],
+      [
+        "indexCreation",
+        "settingsUpdate",
+        "indexSwap",
+        "documentAdditionOrUpdate",
+        "documentDeletion"
+      ],
       config
     )
   end
