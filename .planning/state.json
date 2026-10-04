@@ -6,13 +6,13 @@
     {
       "number": "172",
       "name": "Consistent Operator UI and Verified Recovery",
-      "status": "in_progress"
+      "status": "complete"
     }
   ],
   "next": {
-    "command": "/gsd:execute-phase 172",
-    "label": "Continue Phase 172 at Plan 07 (6/8 complete)",
-    "reason": "Plan06 canonical mounted proof passed; Plans01\u201306 are complete and must not be replayed."
+    "command": "$gsd-new-milestone",
+    "label": "Start a separately scoped milestone when wanted",
+    "reason": "v1.42 archived; no active phase or approved next work"
   },
-  "updated_at": "2026-10-04T00:19:59.198016+00:00"
+  "updated_at": "2026-10-04T06:20:38.793Z"
 }

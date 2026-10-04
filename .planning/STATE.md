@@ -2,55 +2,46 @@
 gsd_state_version: "1.0"
 milestone: v1.42
 milestone_name: ScrypathOps operator/admin UI
-current_phase: 172
-current_phase_name: Consistent Operator UI and Verified Recovery
-status: executing
-stopped_at: Phase 172 Plans 01-07 complete; Plan 08 reviewed delivery and exact-source CI next
-last_updated: "2026-10-04T04:32:21.790107+00:00"
-last_activity: 2026-10-03
-last_activity_desc: Plans 01–07 complete; local UI acceptance fixes verified, hosted delivery pending
-state_head: b454387abfde7db95f25d29706c2276cdedefafc
+current_phase: null
+current_phase_name: null
+status: Awaiting next milestone
+stopped_at: v1.42 complete and archived; final exact-source receipt external
+last_updated: "2026-10-04T06:21:00Z"
+last_activity: 2026-10-04
+last_activity_desc: Phase172 complete, Scrypath0.3.15 published, archive prepared before final attestation
+state_head: 8dd20e8966acd17a4ef5acec653c00dc31faab49
 progress:
   total_phases: 1
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 8
-  completed_plans: 7
-  percent: 88
+  completed_plans: 8
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-10-03)
-
-**Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current Focus:** v1.42 Phase 172 — consistent, accessible operator UI and a schema-preserving incident journey with verified recovery. The maintainer's 2026-10-03 direction authorizes OPUX-01–OPUX-08 and supersedes the earlier four proposed requirements; no repeated scope approval is pending.
+See PROJECT.md (updated2026-10-04). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality.
 
 ## Current Position
 
-Phase: 172 (1 of 1 in v1.42) — Consistent Operator UI and Verified Recovery
-Plan: 7 of 8 complete; Plan 08 in progress
-Status: Executing
-Last activity: 2026-10-04 — local UI acceptance and independent review fixes complete; PR/hosted delivery remains
+Phase: None active. Last completed:172 — Consistent Operator UI and Verified Recovery.
+Plan:8/8 complete. Milestone:v1.42 archived. Status: Awaiting next milestone.
+Progress:[██████████]100%.
 
-Progress: [█████████░] 88% (7/8 plans)
+No next phase or milestone is approved. Do not replay Phase172, earlier plans or Phase170. The next lifecycle command is `$gsd-new-milestone` only when the maintainer chooses new scope. Optional UI feedback is new evidence, not a reason to rerun completed work.
 
-## Performance Metrics
+## Delivered Evidence
 
-- Current milestone: 7/8 plans executed. Plans 01–07 source and summaries are recorded; wider OPUX requirements remain open pending later plans.
-- Previous milestone v1.41: 4 phases (168–171), 19 plans, 9 requirements complete.
-- Historical plan timings and evidence remain in the milestone archives; Plan 01 has focused test and browser evidence; milestone acceptance remains pending.
+- Phase172:8/8 requirements and plans; independent verification38/38 truths; audit6/6 connections and5/5 flows. Archive: `milestones/v1.42-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and `milestones/v1.42-phases/`.
+- PR91 merged3ad154a33f99cb200b791577aadc5970adc70ca2. Candidate135517b/run37178388184 passed104 browser,4 mounted, required gates, coverage and attestation. Scoped Ops also passed PR37178390800 and main37180290165. Root657tests+4properties0; Ops233+2doctests0.
+- ReleasePR92 merged8dd20e8966acd17a4ef5acec653c00dc31faab49; `scrypath-v0.3.15` published. Run37181522723 passed publish/live Hex/consumer/HexDocs/tag parity; release-mainCI37181522706 passed required and scopedOps.
+- All completion/audit/archive records are prepared before final exact-source attestation. The enclosing operation must pass final CI before overall completion; its receipt remains external in CI/task output. No later tracked write belongs in that attested source. `state_head` above is the released input to this planning successor, not a self-referential final SHA.
 
-## Accumulated Context
+## Durable Defaults
 
-### Decisions
-
-- Preserve the six existing surfaces, shell, palette, and 48 shared `OpsUi` components. Repair demonstrated semantics, typography, hierarchy, and domain-language issues; use the existing token/component authority. The three current UI reports and `reference/OPERATOR-UI-QUALITY.md` guide implementation.
-- Keep the complete user outcome in Phase 172: shared controls/layout/copy, schema context, truthful recovery, meaningful regression proof, and reviewed delivery. Establish the UI contract before checked plans; add focused checks alongside changes.
-- Correlate a known replayable failure with newly accepted work, terminal backend success, and the expected active-index document. Retained failure history may remain; accepted work and old successful tasks do not prove recovery. Advanced promotion remains a separate action with consistent UI/server eligibility.
-- Reuse LiveView, token/contrast, and existing mounted/full-browser lanes. Inspect before/after screenshots directly, cover representative keyboard/reflow/theme boundaries, and retain diagnosable evidence. No routine human UAT, paid AI judge, new required job, or repeated full-matrix run by default.
-- Use PR-first delivery and the existing two-stage candidate/final exact-SHA closeout. Commit final requirement/phase/milestone tracking before final attestation, then leave that tracked source unchanged. Decide release/no-release from delivered package changes.
+Use shared tokens/components and concise domain terms; preserve schema context and distinguish accepted work from exact task/document evidence. Keep inaccessible/missing/remote/expired evidence unknown and retain failure history. Automate recurring checks in existing economical CI lanes. Direct screenshot review supplements executable layout/focus/contrast checks; no paid judge or routine human UAT. Reopen only for named new evidence. See `reference/OPERATOR-UI-QUALITY.md` and PROJECT.md.
 
 ### Historical Boundaries
 
@@ -59,15 +50,6 @@ Progress: [█████████░] 88% (7/8 plans)
 - Current GSD tracking records Phase 170 at 8/8 through its authorized planning-side replacement. The frozen `8c271…` snapshot remains historical 17/18 with original bytes preserved. See `milestones/v1.41-phases/170-documentation-and-readiness-closeout/170-08-TRACKING-REPLACEMENT.md` and `170-POST-FREEZE-RECONCILIATION.md`. Do not rerun Phase 170.
 - Scrypath 0.3.14 publication/parity and exact-main closeout are recorded in PROJECT.md and the v1.41 archive. Those receipts and older readiness cutoffs remain source-bounded; they do not verify changed v1.42 UI behavior. Historical “What's next” statements describe archive-time posture.
 
-### Pending Todos
-
-None yet.
-
-### Blockers/Concerns
-
-- No unresolved approval blocks the established scope. Current research is source/screenshot evidence, not a runtime acceptance pass.
-- Plan06 now has a replayable Variant fixture and strict exact-job/task/document oracle. Canonical source 3fd8972 passed all four mounted scenarios; its disposable project scrypath_ecommerce_verify_focused_3fd8972c_77955 is retained for Plan07. Do not weaken history preservation or rerun completed plans.
-- Reuse historical proof only after checking relevant source/scenario changes. Runtime, focus, responsive, and contrast claims need evidence for the changed behavior; screenshot inventory or a contrast-only scan cannot prove them all.
 
 ## Deferred Items
 
@@ -78,20 +60,13 @@ None yet.
 | Verification topology | New required CI job or paid visual-judge service | Existing economical lanes are the default | 2026-10-03 | v1.42 |
 | Historical planning | Nyquist validation records for Phases 168–170 | Accepted nonblocking v1.41 audit debt; no phase replay | 2026-10-02 | v1.41 |
 
-## Session Continuity
-
-Last session: 2026-10-04T00:19:10.605Z
-Stopped at: Phase 172 Plans 01-07 complete; Plan 08 reviewed delivery and exact-source CI next
-Resume file: .planning/phases/172-consistent-operator-ui-and-verified-recovery/172-08-PLAN.md
-Next action: Continue the already active Phase172 Plan08 delivery. Do not replay Plans01–07. UI-SPEC and all eight plans passed independent review. Plans 01–07 are complete and must not be replayed. Use task-local locked dependencies, pinned Elixir/OTP and ERL_FLAGS='+S 1:1' for local tests to bound the database pool. Disposable Compose verification must not reset preview4012.
 
 ## Preview and Cleanup
 
-- Optional feedback preview: `http://127.0.0.1:4012/admin/search`, Compose project `scrypath-ui-v142`, owned by the v1.42 task and bind-mounted from its isolated worktree. Captures are outside tracked source at `/private/tmp/scrypath-v142-review/`.
-- Run destructive seed/reset verification in a separate disposable Compose project; never reset the feedback preview. Preserve unrelated services, worktrees, and stashes.
-- At closeout, clean disposable task-owned verification state and document preview retention or shutdown. Stop only this preview from `examples/scrypath_ecommerce` with `COMPOSE_PROJECT_NAME=scrypath-ui-v142 WEB_PORT=4012 docker compose -f compose.yaml -f compose.dev.yaml down`; retain preview volumes while feedback still needs the demo state.
+Preview http://127.0.0.1:4012/admin/search remains healthy under Compose `scrypath-ui-v142`, without reseeding. Its bind-mounted `/private/tmp/scrypath-admin-ui` worktree is intentionally retained. Stop from `examples/scrypath_ecommerce` with `COMPOSE_PROJECT_NAME=scrypath-ui-v142 WEB_PORT=4012 docker compose -f compose.yaml -f compose.dev.yaml down`; preserve volumes.
 
-## Current delivery evidence
+Both disposable verification projects and their owned networks/volumes were removed after artifact collection. Unrelated services, original `/Users/jon/projects/scrypath` checkout at11ab1c9 and its existing2026-10-02 stash are preserved.
 
-- Product source1b2287e: Ops233 tests+2doctests passed; full local advisory95/104 passed, nine obsolete assertions corrected in b454387 and all9 targeted cases passed with retries0. Canonical all-green hosted run remains pending. See172-07-SUMMARY.
-- Independent source review resolved2HIGH and3MEDIUM findings; no open concrete finding in its39-file scope. Preview4012 refreshed without reseeding and returnsHTTP200.
+## Session Continuity
+
+Clear context safely after the enclosing final receipt is reported. This archive records the scope, evidence, release, cleanup and no-replay decisions. No active resume file or routine UAT remains. Historical milestone-index entries are archives, not executable next work.

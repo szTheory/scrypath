@@ -66,3 +66,7 @@ The frozen failure taxonomy has five reason classes: the old six-card wording me
 Use actual generated CSS and rendered LiveView IDs as authority. Utility classes without a declared token emit nothing. Focus restoration must wait for patch completion and preserve object identity, with a successor when rename/delete removes the trigger. Validation errors must live inside an inert modal boundary. Polling failure is an unknown remote outcome, not a failed remote operation.
 
 Preview4012 was refreshed without seeding/resetting and returnsHTTP200. Both named disposable stacks remain for artifact collection and must be removed during Plan08. Requirements remain open until reviewed hosted delivery; no routine human UAT is pending.
+
+## Hosted acceptance established by Plan 08
+
+Corrected candidate `135517b2aa7d1515a4be71c4f9d53aa8dd60c341` passed full advisory **104/104** and mounted **4/4**, with retries disabled, in run [37178388184](https://github.com/szTheory/scrypath/actions/runs/37178388184). Static AA failures: 0; light capture inventory: 20/20. This succeeds the failed local broad run without rewriting its result. The candidate receipt and directly inspected image dispositions are in `172-EVIDENCE.md`. Both disposable verifier stacks were removed after artifact collection; preview 4012 remains available without reseeding.

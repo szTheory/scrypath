@@ -1,5 +1,31 @@
 # Milestones
 
+## v1.42 ScrypathOps operator/admin UI (Shipped:2026-10-04)
+
+**Delivered:** Consistent, accessible six-surface operator UI and schema-preserving incident recovery verified against newly accepted work, exact backend task and active-index document.
+
+**Phases completed:** Phase172;1 phase,8 plans,17 plan tasks,8 requirements. The CLI initially counted only the first summary's task field;17 is the actual count of task blocks in the eight plans.
+
+**Key accomplishments:**
+
+- Shared48-component token authority, readable controls, responsive layout, coherent copy and one shortcut hint.
+- Semantic schema/mode controls and complete file-dialog keyboard, validation and stable focus lifecycle.
+- Exact allowed-schema handoffs; honest accepted/unknown/terminal recovery outcomes and independent guarded promotion.
+- Existing CI lanes prove104 browser and4 mounted cases, AA contrast, geometry/focus and root/Ops behavior; direct image review is source/state-bounded, with no paid judge or routine UAT.
+- PR91 and ReleasePleasePR92 delivered the warranted Scrypath0.3.15 patch; run37181522723 passed publication and tag parity. Disposable verification state cleaned; preview4012 retained.
+
+**Audit:** passed —8/8 requirements,1/1 phase,6/6 connections,5/5 flows; independent phase verification38/38 truths. Zero new or carried-forward artifact acknowledgments. Classifier/prohibition limits are prominently retained, without fabricated approvals. Earlier v1.41 historical debt remains in its archive.
+
+**Stats:** implementation/review range3c83a58→135517b:104 files,11104 insertions,2151 deletions (includes planning). Delivered main3ad154a; release8dd20e8. Work2026-10-03→2026-10-04.
+
+**Archives:** `milestones/v1.42-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`, `milestones/v1.42-phases/`.
+
+**Finalization:** completion/archive records are committed before final exact-source attestation. The final SHA/receipt stays external; no future successful run is preclaimed here.
+
+**What's next:** Awaiting new maintainer-selected scope. `$gsd-new-milestone` starts that next cycle; no phase replay is appropriate.
+
+---
+
 ## v1.41 Readiness Gate Follow-Through (Archived: 2026-10-02; planning record, with Scrypath 0.3.14 published during the milestone)
 
 **Phases completed:** 4 phases (168–171), 19 plans, 30 plan tasks, 9 requirements

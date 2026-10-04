@@ -1,13 +1,13 @@
 ---
 phase: 172
-status: implementation_reviewed_delivery_pending
+status: passed
 source: 1b2287ed598ef6e9025e95f2db1b727e70eeb17f
 unmitigated_high_critical_implementation: 0
 ---
 
 # Phase 172 security review
 
-Implementation review uses the independent core/UI review and executed focused/Ops tests. Hosted delivery and final-source attestation are still pending; this is not a completed milestone claim.
+Implementation review uses the independent core/UI review and executed focused/Ops tests. Candidate hosted verification and PR #91 delivery have passed. Release publication and tag parity passed in run37181522723. The final exact-source attestation is the enclosing post-commit transaction and its receipt will remain external.
 
 | Threat | Mitigation and executed evidence | Disposition |
 | --- | --- | --- |
@@ -25,11 +25,11 @@ Implementation review uses the independent core/UI review and executed focused/O
 | T-172-12 | Recovery/reset and UI fixture routes remain compile-time dev/test only. Verification owns isolated Compose state; preview4012 has not been seeded/reset. Fixture selection uses five fixed modules, no arbitrary atoms. | Mitigated |
 | T-172-13 | Real browser oracles correlate replacement job/attempt/task/index/document and exact swap pair/target-only content. Zero retries; empty selected test runs do not qualify. | Mitigated |
 | T-172-14 | Diagnostic attachments contain disposable fixture IDs, statuses, unique synthetic markers and screenshots, not production credentials/payloads. | Mitigated for this fixture |
-| T-172-15 | Computed layout/focus/axe/contrast results and screenshot/source identities recorded separately. Incomplete axe results and static AAA advisories remain visible. Full canonical advisory pending. | Verification in progress |
-| T-172-16 | Five width boundaries, 320px long-content fixture, labeled keyboard-scrollable diagnostics and full modal lifecycle protect operator access. | Focused evidence passed |
-| T-172-17 | Explicit requirement evidence map; candidate, PR merge, release and final source identities must remain separate. | Hosted delivery pending |
-| T-172-18 | Completion/audit/archive records must be committed before final attestation; later receipts stay external. | Final attestation pending |
-| T-172-19 | Only named task-owned disposable Compose projects are eligible for cleanup. Preview, original checkout and existing stash are retained. | Final cleanup pending |
+| T-172-15 | Computed layout/focus/axe/contrast results and screenshot/source identities recorded separately. Incomplete axe results and static AAA advisories remain visible. Full canonical advisory passed 104/104 at candidate 135517b; direct image review is recorded in EVIDENCE. | Mitigated |
+| T-172-16 | Five width boundaries, 320px long-content fixture, labeled keyboard-scrollable diagnostics and full modal lifecycle protect operator access. | Mitigated; full hosted browser evidence passed |
+| T-172-17 | Explicit requirement evidence map; candidate 135517b, run37178388184 and PR #91 merge3ad154a recorded separately. Collector verified artifact/archive/member SHA identity. Release/final source follow separately. | Mitigated; candidate, PR and published tag recorded separately |
+| T-172-18 | Completion/audit/archive records must be committed before final attestation; later receipts stay external. | Mitigated by completion-before-attestation ordering; final receipt external |
+| T-172-19 | Both named disposable Compose projects and owned volumes/networks removed after artifact collection; final Docker inventory confirms no remaining task verifier containers. Preview, original checkout and existing stash are retained. | Mitigated |
 | T-172-SC | No dependency manifests/locks changed by this phase. Existing locked tools are reused; no new package dependency or paid visual judge. | Mitigated |
 
 ## Limits retained

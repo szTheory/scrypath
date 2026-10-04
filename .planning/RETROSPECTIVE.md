@@ -607,10 +607,35 @@ Local success is insufficient for a required zero-touch gate when the local buil
 
 ---
 
+## Milestone:v1.42 — ScrypathOps operator/admin UI
+
+**Shipped:**2026-10-04 | **Phases:**1 | **Plans:**8 | **Tasks:**17
+
+### What Was Built
+
+Existing six-surface UI consistency, accessible controls/dialogs, exact-schema recovery and guarded promotion; deterministic browser evidence and Scrypath0.3.15 publication.
+
+### What Worked
+
+Use existing tokens/components, fixture isolation, exact job/task/document joins, direct image inspection and meaningful keyboard/geometry assertions. Independent review found real readiness/observation/focus defects before merge. Existing CI and ReleasePlease provided live proof without new recurring lanes or paid visual APIs.
+
+### What Was Inefficient
+
+Old screenshot/depth assertions and the retry-policy wiring test lagged intentional UI/configuration changes. Correct the nearest contract with its owning change. Bot PR checks needed a normal PR event. Final source/evidence reviews took longer than implementation checks; keep future review scopes explicit and reuse valid reports.
+
+### Patterns Established
+
+Unknown observation stays unknown; original failure history remains evidence. Canonical no-retry hosted proof follows focused iteration. Complete all GSD bookkeeping/archive writes before final attestation, with later receipt external.
+
+### Cost Observations
+
+No paid visual judge or added CI lane. Focused local runs invalidated only affected checks; hosted full browser104/104 took5.9 minutes. Model/session spend was not measured and is not estimated here.
+
 ## Cross-Milestone Trends
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|
+| v1.42 | 172 | Existing-system UI repairs, exact recovery proof, automated acceptance and completion-before-attestation |
 | v1.40 | 165-167 | Public tenant/facet contract fixes, host-owned tenant and repair evidence, and an honest dated NOT READY decision |
 | v1.39 | 162-164 | Claim-level non-UI readiness baseline, evidence-led dispositions, and a fail-closed NOT READY decision |
 | v1.38 | 160-161 | Package-backed Phoenix adopter proof, automated release parity, and zero-human verification default |
