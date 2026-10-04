@@ -288,43 +288,6 @@ async function expectPrimaryHover55(page: Page, selector: string, label: string)
   }
 }
 
-async function expectCopperBadge(page: Page): Promise<void> {
-  const badge = page.locator('[data-testid="intent-incident"] .ops-copper-badge');
-  await expect(badge).toHaveCount(1);
-
-  const expectedBorder = await resolveCssColor(
-    page,
-    "border-color: color-mix(in oklch, var(--color-secondary) 44%, transparent)"
-  );
-  const expectedBg = await resolveCssColor(
-    page,
-    "background: color-mix(in oklch, var(--color-secondary) 12%, transparent)",
-    "backgroundColor"
-  );
-  const baseContent = await resolveCssColor(page, "border-color: var(--color-base-content)");
-
-  for (const [property, expected, label] of [
-    ["borderColor", expectedBorder, "copper badge border resolves to secondary tint"],
-    ["backgroundColor", expectedBg, "copper badge background resolves to secondary tint"],
-    ["color", baseContent, "copper badge text stays base-content"]
-  ] as const) {
-    await expect
-      .poll(
-        async () =>
-          colorsEquivalent(
-            await readComputedStyle(
-              page,
-              '[data-testid="intent-incident"] .ops-copper-badge',
-              property
-            ),
-            expected
-          ),
-        { message: label }
-      )
-      .toBe(true);
-  }
-}
-
 async function expectNoStatusCopper(page: Page): Promise<void> {
   const copperBorder = await resolveCssColor(
     page,
@@ -438,7 +401,7 @@ const DEPTH_TARGETS: DepthTarget[] = [
     id: "control-room-recommended",
     scenario: "incident",
     captureIndex: "00",
-    selectors: ['[data-testid="intent-incident"]', ".ops-copper-badge"],
+    selectors: ['[data-testid="intent-incident"]', ".ops-intent-card__flag"],
     prepare: gotoControlRoom
   },
   {
@@ -459,7 +422,7 @@ const DEPTH_TARGETS: DepthTarget[] = [
     id: "sync-drift",
     scenario: "incident",
     captureIndex: "03",
-    selectors: [".ops-panel", ".ops-preflight__card"]
+    selectors: [".ops-panel", "#index-promotion"]
   },
   {
     id: "playbooks-workspace",
@@ -512,7 +475,8 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
                 await expectRaisedAboveFloor(page, ".ops-muted-panel", "search zero-results muted panel");
                 break;
               case "control-room-recommended":
-                await expectCopperBadge(page);
+                await expect(page.getByTestId("intent-incident")).toHaveClass(/ops-intent-card--recommended/);
+                await expect(page.getByTestId("intent-incident").locator(".ops-intent-card__flag")).toHaveText("Start here");
                 await expectNoStatusCopper(page);
                 {
                   const heroShadow = await readComputedStyle(page, ".ops-verdict--hero", "boxShadow");
@@ -529,13 +493,12 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
                 break;
               case "sync-drift": {
                 await expectRaisedAboveFloor(page, ".ops-panel", "sync-drift section panel");
-                const baseCard = await readComputedStyle(page, ".ops-preflight__card:not(.ops-preflight__card--locked)", "backgroundColor");
-                const lockedCard = await readComputedStyle(page, ".ops-preflight__card--locked", "backgroundColor");
-                const floor = await darkBgFloor(page);
-                expect(
-                  relativeLuminance(lockedCard, floor),
-                  "locked preflight card must step above base preflight card"
-                ).toBeGreaterThan(relativeLuminance(baseCard, floor));
+                const promotion = page.locator("#index-promotion");
+                await expect(promotion).not.toHaveAttribute("open", "");
+                await promotion.getByText("Advanced: index promotion", { exact: true }).click();
+                await expect(promotion).toHaveAttribute("open", "");
+                await expect(promotion.getByRole("button", { name: "Promote target index", exact: true })).toBeDisabled();
+                await expectRaisedAboveFloor(page, "#index-promotion .ops-notice-surface", "promotion eligibility notice");
                 break;
               }
               case "playbooks-workspace":

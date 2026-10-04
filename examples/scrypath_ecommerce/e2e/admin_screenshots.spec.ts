@@ -15,12 +15,13 @@ const screenshotDir = process.env.ADMIN_SCREENSHOT_DIR || "test-results/admin-sc
 async function capture(page: Page, testInfo: TestInfo, name: string): Promise<void> {
   await mkdir(screenshotDir, { recursive: true });
   const filePath = path.join(screenshotDir, `${name}.png`);
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: filePath, fullPage: true });
   await testInfo.attach(name, { path: filePath, contentType: "image/png" });
 }
 
 test("captures canonical ScrypathOps admin UI states", async ({ page, request }, testInfo) => {
-  const seed = await seedScenario(request, "e2e_search_catalog");
+  const seed = await seedScenario(request, "all_green");
   await drainSearchQueue(request);
   await waitForSearchVisible(request, {
     tenantId: seed.tenant_id,
@@ -49,11 +50,10 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   await expect(page.getByRole("heading", { name: "Failed sync work", exact: true })).toBeVisible();
   const failedRow = page.getByTestId("failed-sync-row").first();
   await expect(failedRow).toBeVisible();
-  await failedRow.locator("summary").click();
+  await expect(failedRow.getByText(/unknown_module.*NotARealBackend/)).toBeVisible();
+  await failedRow.getByText("Diagnostics", { exact: true }).click();
   await expect(failedRow.locator("details")).toHaveAttribute("open", "");
-  await expect(failedRow.getByText("queue job failed")).toBeVisible();
-  await failedRow.locator("details").evaluate((el) => el.setAttribute("open", ""));
-  await page.waitForTimeout(200);
+  await expect(failedRow.getByRole("region", { name: "Technical details" })).toBeVisible();
   await capture(page, testInfo, "02-failed-sync-expanded");
 
   await page.getByRole("button", { name: "Hide reason rollups" }).click();
