@@ -58,11 +58,57 @@ type OperatorState = {
   first_failed_work_id: number | null;
   reason_class_counts: Record<string, number>;
   retryable: boolean;
-  swap_terminal_success: boolean;
-  swap_terminal_state: "completed" | "pending" | "not_started" | "unknown";
-  active_index: string;
-  active_index_visible: boolean;
-  swap_error_class: string | null;
+};
+
+export type RecoveryFixture = {
+  marker: string;
+  schema: string;
+  index: string;
+  original_job_id: number;
+  original_attempt: number;
+  document_id: number;
+  expected_sku: string;
+  task_baseline: number;
+};
+
+export type RecoveryEvidence = {
+  marker: string;
+  schema: string;
+  index: string;
+  original_job_id: number;
+  original_attempt: number;
+  accepted_job_id: number;
+  accepted_attempt: number;
+  task_uid: number;
+  task_status: string;
+  task_type: string;
+  task_index: string;
+  document_id: number;
+  expected_sku: string;
+  active_document: boolean;
+};
+
+export type SwapFixture = {
+  marker: string;
+  schema: string;
+  live_index: string;
+  target_index: string;
+  document_id: number;
+  expected_name: string;
+  task_baseline: number;
+};
+
+export type SwapEvidence = {
+  marker: string;
+  task_uid: number;
+  task_status: string;
+  task_type: string;
+  live_index: string;
+  target_index: string;
+  swapped_pair: string[];
+  document_id: number;
+  expected_name: string;
+  active_document: boolean;
 };
 
 type EvidencePayload = Record<string, unknown>;
@@ -354,53 +400,76 @@ export async function operatorState(
     min_failed_sync_count: args.minFailedSyncCount ?? null,
     failed_count: result.failed_count,
     first_failed_work_id: result.first_failed_work_id,
-    retryable: result.retryable,
-    swap_terminal_success: result.swap_terminal_success,
-    swap_terminal_state: result.swap_terminal_state,
-    active_index_visible: result.active_index_visible,
-    swap_error_class: result.swap_error_class
+    retryable: result.retryable
   });
 
   return result;
 }
 
-export async function waitForSwapOutcome(
+export async function prepareRecoveryFixture(
   request: APIRequestContext,
-  args: { tenantId: number; timeoutMs?: number }
-): Promise<OperatorState> {
-  const timeoutMs = args.timeoutMs ?? 20_000;
+  args: { tenantId: number; marker: string }
+): Promise<RecoveryFixture> {
+  return requestJson<RecoveryFixture>(request, "/dev/e2e/recovery-fixture", {
+    method: "POST",
+    data: { tenant_id: args.tenantId, marker: args.marker }
+  });
+}
 
-  await expect
-    .poll(
-      async () => {
-        return await requestJson<OperatorState>(request, "/dev/e2e/operator-state", {
-          params: { tenant_id: String(args.tenantId) }
-        });
-      },
-      {
-        timeout: timeoutMs,
-        message: "Timed out waiting for operator swap outcome to become terminal and visible"
+export async function waitForRecoveryEvidence(
+  request: APIRequestContext,
+  args: {
+    marker: string;
+    acceptedJobId: number;
+    handle: string;
+    generation: number;
+    taskUid: number;
+    documentId: number;
+    timeoutMs?: number;
+  }
+): Promise<RecoveryEvidence> {
+  let evidence: RecoveryEvidence | undefined;
+  await expect.poll(async () => {
+    const response = await request.fetch("/dev/e2e/recovery-probe", {
+      params: {
+        marker: args.marker,
+        accepted_job_id: String(args.acceptedJobId),
+        handle: args.handle,
+        generation: String(args.generation),
+        task_uid: String(args.taskUid),
+        document_id: String(args.documentId)
       }
-    )
-    .toMatchObject({
-      swap_terminal_success: true,
-      active_index_visible: true
     });
+    if (!response.ok()) return false;
+    evidence = (await response.json()) as RecoveryEvidence;
+    return evidence.active_document && evidence.task_status === "succeeded";
+  }, { timeout: args.timeoutMs ?? 30_000, message: "Timed out waiting for exact recovery task and active document evidence" }).toBeTruthy();
+  if (!evidence) throw new Error("[e2e] recovery probe returned no evidence");
+  return evidence;
+}
 
-  const result = await requestJson<OperatorState>(request, "/dev/e2e/operator-state", {
-    params: { tenant_id: String(args.tenantId) }
+export async function prepareSwapFixture(
+  request: APIRequestContext,
+  args: { tenantId: number; marker: string }
+): Promise<SwapFixture> {
+  return requestJson<SwapFixture>(request, "/dev/e2e/swap-fixture", {
+    method: "POST",
+    data: { tenant_id: args.tenantId, marker: args.marker }
   });
+}
 
-  await emitEvidence("swap_outcome", {
-    tenant_id: args.tenantId,
-    failed_count: result.failed_count,
-    retryable: result.retryable,
-    swap_terminal_success: result.swap_terminal_success,
-    swap_terminal_state: result.swap_terminal_state,
-    active_index: result.active_index,
-    active_index_visible: result.active_index_visible,
-    swap_error_class: result.swap_error_class
+export async function probeSwapEvidence(
+  request: APIRequestContext,
+  args: { marker: string; taskUid: number; liveIndex: string; targetIndex: string; taskBaseline: number; documentId: number }
+): Promise<SwapEvidence> {
+  return requestJson<SwapEvidence>(request, "/dev/e2e/swap-probe", {
+    params: {
+      marker: args.marker,
+      task_uid: String(args.taskUid),
+      live_index: args.liveIndex,
+      target_index: args.targetIndex,
+      task_baseline: String(args.taskBaseline),
+      document_id: String(args.documentId)
+    }
   });
-
-  return result;
 }

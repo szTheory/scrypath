@@ -92,6 +92,106 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert html =~ ~s(href="#playbook-import")
   end
 
+  test "upload and paste controls have persistent labels and format help", %{conn: conn} do
+    {:ok, _view, html} = live(conn, ~p"/ops/playbooks")
+
+    assert html =~ "Import playbook file"
+
+    [upload_id] =
+      html
+      |> LazyHTML.from_document()
+      |> LazyHTML.query("input[type=file]")
+      |> LazyHTML.attribute("id")
+
+    assert html =~ ~s(for="#{upload_id}")
+    assert html =~ ~s(id="#{upload_id}-hint")
+    assert html =~ ~s(aria-describedby="#{upload_id}-hint")
+    assert html =~ ~s(accept=".json")
+    assert html =~ ~s(max-file-size="256000") || html =~ "256000 bytes"
+    assert html =~ ~s(for="playbook-paste-json")
+    assert html =~ "Playbook JSON"
+    assert html =~ "JSON only"
+  end
+
+  test "file dialogs expose unique names, contextual Cancel, and a successor target", %{
+    conn: conn
+  } do
+    dir =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath_ops_playbooks_dialog_#{:erlang.unique_integer([:positive])}"
+      )
+
+    :ok = File.mkdir_p!(dir)
+    :ok = File.write!(Path.join(dir, "one.json"), "{}\n")
+    :ok = File.write!(Path.join(dir, "two.json"), "{}\n")
+    previous = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
+
+    on_exit(fn ->
+      File.rm_rf(dir)
+
+      if previous == nil,
+        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
+        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, previous)
+    end)
+
+    {:ok, view, html} = live(conn, ~p"/ops/playbooks")
+    assert html =~ "one.json"
+    assert html =~ "two.json"
+
+    view
+    |> element("button[phx-click='rename_open'][phx-value-name='one.json']")
+    |> render_click()
+
+    html = render(view)
+    assert html =~ ~s(role="dialog")
+    assert html =~ ~s(aria-labelledby="rename-playbook-modal-title")
+    assert html =~ ~s(aria-describedby="rename-playbook-modal-description")
+    assert html =~ ~s(aria-label="Cancel rename")
+    assert html =~ ~s(for="rename-new-name-input")
+    assert html =~ ~s(data-ops-modal-initial-focus="#rename-new-name-input")
+
+    view
+    |> form("form[phx-change='rename_change']", %{"new_name" => "invalid/name.json"})
+    |> render_change()
+
+    assert render(view) =~ ~s(value="invalid/name.json")
+
+    view
+    |> form("form[phx-submit='rename_submit']", %{"new_name" => "invalid/name.json"})
+    |> render_submit()
+
+    assert has_element?(view, "#rename-playbook-modal [role='alert']", "Filename")
+    assert has_element?(view, "#rename-new-name-input[aria-invalid='true']")
+
+    assert has_element?(
+             view,
+             "#rename-new-name-input[aria-describedby*='rename-new-name-input-error']"
+           )
+
+    render_click(view, "rename_cancel", %{})
+    render_click(view, "dup_open", %{"name" => "one.json"})
+    refute has_element?(view, "#duplicate-playbook-modal [role='alert']")
+    view |> form("form[phx-submit='dup_submit']", %{"to_name" => "two.json"}) |> render_submit()
+    assert has_element?(view, "#duplicate-playbook-modal [role='alert']", "already in use")
+    assert has_element?(view, "#dup-to-name-input[aria-invalid='true']")
+    render_click(view, "dup_cancel", %{})
+
+    view
+    |> element("button[phx-click='request_delete'][phx-value-name='one.json']")
+    |> render_click()
+
+    html = render(view)
+    assert html =~ "This cannot be undone."
+    assert html =~ ~s(data-ops-modal-initial-focus="[data-ops-modal-cancel]")
+
+    assert html =~
+             ~s(data-ops-modal-successor="#playbook-primary-#{Base.url_encode64("two.json", padding: false)}")
+
+    assert html =~ ~s(aria-label="Cancel delete")
+  end
+
   test "paste import validates and shows preview marker", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
 
@@ -653,6 +753,8 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
       |> render_submit()
 
     assert html =~ "Confirmation must match the filename exactly."
+    assert has_element?(view, "#delete-playbook-modal [role='alert']", "Confirmation must match")
+    assert has_element?(view, "#delete-confirm-input[aria-invalid='true']")
     assert File.exists?(path)
   end
 

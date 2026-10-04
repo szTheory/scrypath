@@ -42,8 +42,6 @@ defmodule ScrypathOpsWeb.OpsUi do
   The CommandPalette hook owns the behavior via `data-ops-command-open`; this component
   keeps visible shortcut hints from reading like inert text.
   """
-  attr(:prefix, :string, default: "Press")
-  attr(:suffix, :string, default: "to jump to any surface.")
   attr(:class, :any, default: nil)
 
   def ops_command_hint(assigns) do
@@ -52,12 +50,11 @@ defmodule ScrypathOpsWeb.OpsUi do
       type="button"
       class={["ops-command-hint", @class]}
       data-ops-command-open
-      aria-label="Open command palette"
+      aria-label="Jump to surface"
       aria-keyshortcuts="Meta+K Control+K"
     >
-      <span>{@prefix}</span>
+      <span>Jump to surface</span>
       <kbd class="ops-kbd">⌘K</kbd>
-      <span :if={@suffix != ""}>{@suffix}</span>
     </button>
     """
   end
@@ -70,6 +67,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   """
   attr(:level, :integer, default: 2, values: [2, 3])
   attr(:id, :string, default: nil)
+  attr(:tabindex, :integer, default: nil)
   attr(:class, :any, default: nil)
   slot(:inner_block, required: true)
 
@@ -78,6 +76,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     <h2
       :if={@level == 2}
       id={@id}
+      tabindex={@tabindex}
       class={["text-ops-h2 font-semibold leading-ops-tight text-base-content", @class]}
     >
       {render_slot(@inner_block)}
@@ -85,6 +84,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     <h3
       :if={@level == 3}
       id={@id}
+      tabindex={@tabindex}
       class={["text-ops-h3 font-semibold leading-ops-tight text-base-content", @class]}
     >
       {render_slot(@inner_block)}
@@ -101,7 +101,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_panel(assigns) do
     ~H"""
-    <div class={["ops-panel p-ops-panel", @class]} {@rest}>
+    <div class={["ops-panel p-ops-4 sm:p-ops-panel", @class]} {@rest}>
       {render_slot(@inner_block)}
     </div>
     """
@@ -178,18 +178,19 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:size, :atom, default: :sm, values: [:xs, :sm, :md])
   attr(:type, :string, default: "button")
+  attr(:id, :string, default: nil)
   attr(:class, :any, default: nil)
 
   attr(:rest, :global,
     include:
-      ~w(phx-click phx-value-id phx-value-mode phx-value-name phx-value-schema phx-disable-with disabled form data-testid data-ops-refresh aria-label aria-controls)
+      ~w(phx-click phx-value-id phx-value-mode phx-value-name phx-value-schema phx-disable-with disabled form data-testid data-ops-refresh data-ops-modal-trigger aria-label aria-controls)
   )
 
   slot(:inner_block, required: true)
 
   def ops_button(assigns) do
     ~H"""
-    <button type={@type} class={[button_classes(@variant, @size), @class]} {@rest}>
+    <button id={@id} type={@type} class={[button_classes(@variant, @size), @class]} {@rest}>
       {render_slot(@inner_block)}
     </button>
     """
@@ -697,6 +698,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   @doc "Shared shell for file-upload controls."
   attr(:label, :string, required: true)
+  attr(:control_id, :string, default: nil)
   attr(:hint, :string, default: nil)
   attr(:class, :any, default: nil)
   slot(:inner_block, required: true)
@@ -704,8 +706,21 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_upload_box(assigns) do
     ~H"""
     <div class={["ops-surface-flat p-ops-3", @class]}>
-      <p class="text-ops-body font-semibold text-base-content">{@label}</p>
-      <p :if={@hint} class="mt-ops-1 text-ops-sm leading-5 text-base-content/65">{@hint}</p>
+      <label
+        :if={@control_id}
+        for={@control_id}
+        class="block text-ops-body font-semibold text-base-content"
+      >
+        {@label}
+      </label>
+      <p :if={!@control_id} class="text-ops-body font-semibold text-base-content">{@label}</p>
+      <p
+        :if={@hint}
+        id={@control_id && "#{@control_id}-hint"}
+        class="mt-ops-1 text-ops-sm leading-5 text-base-content/65"
+      >
+        {@hint}
+      </p>
       <div class="mt-ops-3">{render_slot(@inner_block)}</div>
     </div>
     """
@@ -751,12 +766,13 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Fieldset wrapper for consistent operator form rhythm."
   attr(:legend, :string, required: true)
   attr(:hint, :string, default: nil)
+  attr(:disabled, :boolean, default: false)
   attr(:class, :any, default: nil)
   slot(:inner_block, required: true)
 
   def ops_fieldset(assigns) do
     ~H"""
-    <fieldset class={["ops-fieldset", @class]}>
+    <fieldset class={["ops-fieldset", @class]} disabled={@disabled}>
       <legend class="ops-fieldset__legend">{@legend}</legend>
       <p :if={@hint} class="ops-fieldset__hint">{@hint}</p>
       <div class="ops-fieldset__body">
@@ -770,6 +786,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:id, :string, required: true)
   attr(:label, :string, required: true)
   attr(:hint, :string, default: nil)
+  attr(:error, :string, default: nil)
   attr(:class, :any, default: nil)
   slot(:inner_block, required: true)
 
@@ -778,7 +795,12 @@ defmodule ScrypathOpsWeb.OpsUi do
     <div class={["space-y-ops-field", @class]}>
       <label class="block text-ops-body font-semibold text-base-content/75" for={@id}>{@label}</label>
       {render_slot(@inner_block)}
-      <p :if={@hint} class="text-ops-sm leading-5 text-base-content/65">{@hint}</p>
+      <p :if={@hint} id={"#{@id}-hint"} class="text-ops-sm leading-5 text-base-content/65">
+        {@hint}
+      </p>
+      <p :if={@error} id={"#{@id}-error"} class="text-ops-sm leading-5 text-error" role="alert">
+        {@error}
+      </p>
     </div>
     """
   end
@@ -788,10 +810,14 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:name, :string, required: true)
   attr(:value, :any, default: nil)
   attr(:placeholder, :string, default: nil)
+  attr(:hint, :string, default: nil)
+  attr(:error, :string, default: nil)
   attr(:class, :any, default: nil)
   attr(:rest, :global, include: ~w(aria-describedby required disabled autocomplete))
 
   def ops_text_input(assigns) do
+    assigns = assign(assigns, :describedby, field_descriptions(assigns))
+
     ~H"""
     <input
       id={@id}
@@ -799,6 +825,8 @@ defmodule ScrypathOpsWeb.OpsUi do
       type="text"
       value={@value}
       placeholder={@placeholder}
+      aria-describedby={@describedby}
+      aria-invalid={@error && "true"}
       class={["input input-bordered ops-form-control w-full", @class]}
       {@rest}
     />
@@ -811,10 +839,14 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:value, :any, default: nil)
   attr(:min, :any, default: nil)
   attr(:max, :any, default: nil)
+  attr(:hint, :string, default: nil)
+  attr(:error, :string, default: nil)
   attr(:class, :any, default: nil)
   attr(:rest, :global, include: ~w(aria-describedby required disabled))
 
   def ops_number_input(assigns) do
+    assigns = assign(assigns, :describedby, field_descriptions(assigns))
+
     ~H"""
     <input
       id={@id}
@@ -823,6 +855,8 @@ defmodule ScrypathOpsWeb.OpsUi do
       value={@value}
       min={@min}
       max={@max}
+      aria-describedby={@describedby}
+      aria-invalid={@error && "true"}
       class={["input input-bordered ops-form-control w-full", @class]}
       {@rest}
     />
@@ -834,15 +868,21 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:name, :string, required: true)
   attr(:value, :any, default: nil)
   attr(:placeholder, :string, default: nil)
+  attr(:hint, :string, default: nil)
+  attr(:error, :string, default: nil)
   attr(:class, :any, default: nil)
   attr(:rest, :global, include: ~w(aria-describedby required disabled))
 
   def ops_textarea(assigns) do
+    assigns = assign(assigns, :describedby, field_descriptions(assigns))
+
     ~H"""
     <textarea
       id={@id}
       name={@name}
       placeholder={@placeholder}
+      aria-describedby={@describedby}
+      aria-invalid={@error && "true"}
       class={[
         "textarea textarea-bordered min-h-[var(--control-h-textarea)] w-full text-ops-body",
         @class
@@ -857,14 +897,20 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:name, :string, default: "schema")
   attr(:options, :list, required: true)
   attr(:selected, :any, default: nil)
+  attr(:hint, :string, default: nil)
+  attr(:error, :string, default: nil)
   attr(:class, :any, default: nil)
   attr(:rest, :global, include: ~w(aria-describedby required disabled))
 
   def ops_select(assigns) do
+    assigns = assign(assigns, :describedby, field_descriptions(assigns))
+
     ~H"""
     <select
       id={@id}
       name={@name}
+      aria-describedby={@describedby}
+      aria-invalid={@error && "true"}
       class={["select select-bordered ops-form-control w-full", @class]}
       {@rest}
     >
@@ -883,6 +929,9 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:id, :string, required: true)
   attr(:label, :string, default: "Schema")
   attr(:hint, :string, default: nil)
+  attr(:name, :string, default: "schema")
+  attr(:error, :string, default: nil)
+  attr(:disabled, :boolean, default: false)
   attr(:schemas, :list, required: true)
   attr(:selected, :any, default: nil)
   attr(:class, :any, default: nil)
@@ -893,17 +942,21 @@ defmodule ScrypathOpsWeb.OpsUi do
       assigns
       |> assign(:schema_items, schema_picker_items(assigns.schemas, assigns.selected))
       |> assign(:compact_schema_picker?, length(assigns.schemas) <= 4)
+      |> assign(:description_ids, schema_descriptions(assigns))
       |> assign(
         :options,
         Enum.map(assigns.schemas, &{module_flat_name(&1), module_flat_name(&1)})
       )
 
     ~H"""
-    <form :if={@schemas != []} class={["ops-schema-picker", @class]} {@rest}>
-      <fieldset class="space-y-ops-field">
+    <div :if={@schemas != []} class={["ops-schema-picker", @class]} {@rest}>
+      <fieldset class="space-y-ops-field" disabled={@disabled}>
         <legend class="block text-ops-body font-semibold text-base-content/75">{@label}</legend>
         <p :if={@hint} id={"#{@id}-hint"} class="max-w-3xl text-ops-sm leading-5 text-base-content/65">
           {@hint}
+        </p>
+        <p :if={@error} id={"#{@id}-error"} class="text-ops-sm text-error" role="alert">
+          {@error}
         </p>
 
         <div :if={@compact_schema_picker?} class="ops-schema-picker__cards">
@@ -918,11 +971,12 @@ defmodule ScrypathOpsWeb.OpsUi do
             <input
               id={"#{@id}-#{item.dom_id}"}
               type="radio"
-              name="schema"
+              name={@name}
               value={item.name}
               checked={item.selected}
               class="sr-only"
-              aria-describedby={@hint && "#{@id}-hint"}
+              aria-describedby={@description_ids}
+              aria-invalid={@error && "true"}
             />
             <span class="ops-schema-option__main">{item.short_name}</span>
             <span class="ops-schema-option__meta">{item.namespace}</span>
@@ -932,15 +986,18 @@ defmodule ScrypathOpsWeb.OpsUi do
         <div :if={!@compact_schema_picker?} class="max-w-xl">
           <.ops_select
             id={@id}
-            name="schema"
+            name={@name}
             options={@options}
             selected={module_flat_name(@selected)}
-            class="font-mono text-ops-sm"
-            aria-describedby={@hint && "#{@id}-hint"}
+            class="font-mono text-ops-body"
+            aria-label={@label}
+            aria-describedby={@description_ids}
+            aria-invalid={@error && "true"}
+            disabled={@disabled}
           />
         </div>
       </fieldset>
-    </form>
+    </div>
     """
   end
 
@@ -950,17 +1007,24 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:event, :string, required: true)
   attr(:items, :list, required: true)
   attr(:class, :any, default: nil)
+  attr(:disabled, :boolean, default: false)
 
   def ops_segmented_control(assigns) do
     ~H"""
     <div class={["space-y-2", @class]}>
-      <p class="text-ops-body font-semibold text-base-content">{@label}</p>
-      <div class="inline-flex flex-wrap gap-1 rounded-ops-control border border-base-300 bg-base-200/70 p-1">
+      <p id="search-mode-label" class="text-ops-body font-semibold text-base-content">{@label}</p>
+      <div
+        role="group"
+        aria-label={@label}
+        class="inline-flex flex-wrap gap-1 rounded-ops-control border border-base-300 bg-base-200/70 p-1"
+      >
         <button
           :for={{label, value} <- @items}
           type="button"
           phx-click={@event}
           phx-value-mode={value}
+          aria-pressed={if(value == @selected, do: "true", else: "false")}
+          disabled={@disabled}
           data-testid={if value == "multi", do: "search-mode-multi"}
           class={[
             "ops-segmented-btn ops-transition-status px-3 text-ops-body font-semibold",
@@ -973,6 +1037,30 @@ defmodule ScrypathOpsWeb.OpsUi do
       </div>
     </div>
     """
+  end
+
+  defp field_descriptions(assigns) do
+    rest = Map.get(assigns, :rest, %{})
+    existing = Map.get(rest, :"aria-describedby") || Map.get(rest, :aria_describedby)
+
+    [existing, assigns.hint && "#{assigns.id}-hint", assigns.error && "#{assigns.id}-error"]
+    |> Enum.reject(&(&1 in [nil, ""]))
+    |> Enum.flat_map(&String.split(to_string(&1)))
+    |> Enum.uniq()
+    |> case do
+      [] -> nil
+      ids -> Enum.join(ids, " ")
+    end
+  end
+
+  defp schema_descriptions(assigns) do
+    [assigns.hint && "#{assigns.id}-hint", assigns.error && "#{assigns.id}-error"]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(" ")
+    |> case do
+      "" -> nil
+      ids -> ids
+    end
   end
 
   @doc "Checkbox list with consistent schema/object selection spacing."
@@ -1062,7 +1150,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <article class={["ops-result-row text-ops-body", @class]} {@rest}>
       <div class="min-w-0">
-        <h3 class="font-semibold text-base-content">{@title}</h3>
+        <h3 class="text-ops-h3 font-semibold text-base-content">{@title}</h3>
         <p :if={@subtitle} class="mt-1 text-ops-sm leading-5 text-base-content/70">{@subtitle}</p>
         <div :if={@meta != []} class="mt-2 flex flex-wrap gap-2">
           {render_slot(@meta)}
@@ -1137,13 +1225,14 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   @doc "Object-list row with consistent action alignment."
   attr(:active, :boolean, default: false)
+  attr(:id, :string, default: nil)
   attr(:class, :any, default: nil)
   slot(:actions)
   slot(:inner_block, required: true)
 
   def ops_object_item(assigns) do
     ~H"""
-    <div class={["ops-object-item", @active && "ops-object-item-active", @class]}>
+    <div id={@id} class={["ops-object-item", @active && "ops-object-item-active", @class]}>
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="min-w-0 flex-1">{render_slot(@inner_block)}</div>
         <div :if={@actions != []} class="flex flex-wrap justify-end gap-2">
@@ -1199,6 +1288,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   end
 
   @doc "Scrollable code/data block."
+  attr(:label, :string, default: "Technical details")
   attr(:variant, :atom, default: :default, values: [:default, :compact, :embedded])
   # Phase 133 (DARKMOTION-01): opt-in hover glint. Default false is load-bearing —
   # evidence code blocks (Failed Sync, search/merge payloads) must stay calm (D-04a/c).
@@ -1210,6 +1300,9 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_code_block(assigns) do
     ~H"""
     <pre
+      tabindex="0"
+      role="region"
+      aria-label={@label}
       class={[
         "overflow-auto rounded-ops-md font-mono text-ops-sm whitespace-pre-wrap break-words",
         @variant == :default && "max-h-96 bg-ops-surface-2 p-ops-3",
@@ -1229,7 +1322,9 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_inline_code(assigns) do
     ~H"""
-    <code class={["font-mono text-ops-sm tabular-nums", @class]}>{render_slot(@inner_block)}</code>
+    <code class={["font-mono text-ops-body tabular-nums break-all", @class]}>
+      {render_slot(@inner_block)}
+    </code>
     """
   end
 
@@ -1237,6 +1332,10 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:title, :string, required: true)
   attr(:id, :string, required: true)
   attr(:cancel_event, :string, default: nil)
+  attr(:description, :string, default: nil)
+  attr(:action_label, :string, default: "action")
+  attr(:initial_focus, :string, default: "[data-ops-modal-cancel]")
+  attr(:successor, :string, default: nil)
   attr(:class, :any, default: nil)
   slot(:inner_block, required: true)
 
@@ -1244,35 +1343,45 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <div
       id={@id}
-      class="modal modal-open"
       role="dialog"
       aria-modal="true"
       aria-labelledby={"#{@id}-title"}
-      phx-window-keydown={@cancel_event}
-      phx-key={if @cancel_event, do: "escape", else: nil}
+      aria-describedby={@description && "#{@id}-description"}
+      phx-hook="OpsModal"
+      data-ops-modal-action={@action_label}
+      data-ops-modal-cancel-event={@cancel_event}
+      data-ops-modal-initial-focus={@initial_focus}
+      data-ops-modal-successor={@successor}
+      class="modal modal-open ops-modal z-ops-modal"
+      phx-remove={
+        JS.transition(
+          {"transition-opacity duration-100 ease-ops-exit", "opacity-100", "opacity-0"},
+          time: 120
+        )
+      }
     >
       <div
         class={["modal-box relative rounded-ops-overlay", @class]}
         tabindex="-1"
-        phx-remove={
-          Phoenix.LiveView.JS.transition(
-            {"transition-all ease-ops-exit duration-200", "opacity-100 translate-y-0 scale-100",
-             "opacity-0 translate-y-1 scale-[0.98]"},
-            time: 120
-          )
-        }
       >
         <button
           :if={@cancel_event}
           type="button"
-          class="btn btn-circle btn-ghost btn-sm absolute right-ops-3 top-ops-3"
+          class="btn ops-icon-btn btn-circle btn-ghost btn-sm absolute right-ops-3 top-ops-3"
           phx-click={@cancel_event}
-          aria-label="Close dialog"
-          autofocus
+          aria-label={"Close #{@title} dialog"}
         >
+          <span class="sr-only">Close</span>
           <span aria-hidden="true">×</span>
         </button>
         <h3 id={"#{@id}-title"} class="text-ops-h2 font-semibold leading-ops-tight">{@title}</h3>
+        <p
+          :if={@description}
+          id={"#{@id}-description"}
+          class="mt-2 max-w-2xl text-ops-body text-base-content/80"
+        >
+          {@description}
+        </p>
         <div class="mt-3">{render_slot(@inner_block)}</div>
       </div>
     </div>
@@ -1419,13 +1528,13 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_workspace_mode_indicator(assigns) do
     ~H"""
-    <span class={["inline-flex flex-wrap items-center gap-1.5 text-ops-sm", @class]}>
+    <span class={["inline-flex max-w-full flex-wrap items-center gap-1.5 text-ops-sm", @class]}>
       <.ops_badge kind={if @mode == :examples, do: :warning, else: :neutral}>
         {if @mode == :examples, do: "Examples (read-only)", else: "Workspace"}
       </.ops_badge>
       <span
         :if={@path && @mode == :workspace}
-        class="max-w-xs truncate font-mono text-ops-sm text-base-content/55"
+        class="max-w-full break-all font-mono text-ops-body text-base-content/70"
       >
         {@path}
       </span>
@@ -1439,6 +1548,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp button_classes(variant, size) do
     [
       "btn ops-btn rounded-ops-control",
+      "text-ops-body font-semibold",
       size == :xs && "btn-xs",
       size == :sm && "btn-sm",
       size == :md && "btn-md",

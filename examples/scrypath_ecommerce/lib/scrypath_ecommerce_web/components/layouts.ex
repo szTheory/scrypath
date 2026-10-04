@@ -21,7 +21,7 @@ defmodule ScrypathEcommerceWeb.Layouts do
           :if={ops_admin_path?(@conn)}
           phx-track-static
           rel="stylesheet"
-          href="/admin/search/assets/css/app.css"
+          href={"/admin/search/assets/css/app.css?v=#{ScrypathOpsWeb.AssetPlug.asset_version("assets/css/app.css")}"}
         />
         <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
         </script>

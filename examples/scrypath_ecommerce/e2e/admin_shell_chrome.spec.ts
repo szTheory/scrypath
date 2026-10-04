@@ -20,12 +20,13 @@ import {
   type Locator,
   type Page
 } from "@playwright/test";
-import { existsSync, readdirSync, unlinkSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import {
   drainSearchQueue,
   seedScenario,
+  waitForLiveConnected,
   waitForSearchVisible
 } from "./helpers/e2e";
 import {
@@ -44,6 +45,8 @@ import {
   type ThemeMode,
   type ViewportName
 } from "./helpers/theme-grid";
+
+import { assertDialogCycle, assertOperatorGeometry, assertReadableControl, scanNonContrastA11y } from "./helpers/operator-ui";
 
 const PLAYBOOK_WORKSPACE_DIR = join(process.cwd(), "priv/playbooks");
 const SHELL_PLAYBOOK_PREFIX = "shell-chrome-";
@@ -242,7 +245,7 @@ async function expectHeaderChrome(page: Page, viewport: ViewportName): Promise<v
   expect(headerBox, ".ops-header must be measurable").not.toBeNull();
   if (!headerBox) return;
 
-  const maxHeight = viewport === "desktop" ? 96 : 80;
+  const maxHeight = viewport === "desktop" ? 96 : 120;
   expect(
     headerBox.height,
     ".ops-header should stay compact as utility chrome"
@@ -362,10 +365,213 @@ async function triggerSearchSaveFlash(page: Page): Promise<void> {
   );
 }
 
+test.use({ actionTimeout: 10_000 });
+
 test.describe("admin shell chrome -- SHELL-DARK-01", () => {
   test.describe.configure({ timeout: 120_000 });
   test.beforeEach(() => cleanupShellChromePlaybooks());
-  test.afterEach(() => cleanupShellChromePlaybooks());
+  test.afterEach(async ({ page }, testInfo) => {
+    cleanupShellChromePlaybooks();
+    if (testInfo.status !== testInfo.expectedStatus) {
+      await testInfo.attach("shell-first-failure.png", { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
+    }
+  });
+
+  test("[layout] narrow operator header controls do not overlap", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await gotoControlRoom(page);
+
+    await assertOperatorGeometry(page, "390px header", [
+      ".ops-header .ops-nav-trigger", ".ops-header .ops-command-hint", ".ops-header #theme-toggle"
+    ]);
+    await page.getByRole("button", { name: "Jump to surface", exact: true }).click();
+    await expect(page.locator("#ops-cmdk")).toBeVisible();
+  });
+
+  test("[shell-chrome] playbook modal focus lifecycle and overlay isolation", async ({ page }) => {
+    const basename = `${SHELL_PLAYBOOK_PREFIX}modal-${Date.now()}.json`;
+    await page.setViewportSize({ width: 390, height: 844 });
+    mkdirSync(PLAYBOOK_WORKSPACE_DIR, { recursive: true });
+    writeFileSync(join(PLAYBOOK_WORKSPACE_DIR, basename), "{}\n");
+    await gotoPlaybooks(page);
+
+    const row = page.locator(".ops-object-item").filter({ hasText: basename });
+    await expect(row).toHaveCount(1);
+    const renameTrigger = row.getByRole("button", { name: "Rename" });
+
+    await pressCommandPaletteShortcut(page);
+    await expect(page.locator("#ops-cmdk")).toBeVisible();
+    // Model a modal-opening event arriving while the palette has made the page inert.
+    await renameTrigger.evaluate((element: HTMLButtonElement) => element.click());
+
+    const modal = page.locator("#rename-playbook-modal");
+    const cancel = modal.locator("[data-ops-modal-cancel]");
+    const input = page.locator("#rename-new-name-input");
+    const submit = modal.getByRole("button", { name: "Rename", exact: true });
+
+    await expect(modal).toBeVisible();
+    await expect(page.locator("#ops-cmdk")).toBeHidden();
+    await expect(input).toBeFocused();
+    await page.keyboard.press("Control+K");
+    await expect(page.locator("#ops-cmdk")).toBeHidden();
+
+    const close = modal.getByRole("button", { name: "Close Rename playbook dialog" });
+    await assertDialogCycle(page, [close, input, cancel, submit], "rename");
+    await expect(page.locator(".ops-header")).toHaveAttribute("inert", "");
+    await input.focus();
+    await input.fill("invalid/name.json");
+    await expect(input).toHaveValue("invalid/name.json");
+    await expect(input).toHaveAttribute("value", "invalid/name.json");
+    // phx-change sends a real server patch; focus must remain on the edited input.
+    await expect(input).toBeFocused();
+    await expect(modal).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(modal).toBeHidden();
+    await expect(renameTrigger).toBeFocused();
+
+    await expect(page.locator(".ops-header")).not.toHaveAttribute("inert", "");
+    await page.getByRole("button", { name: "Open navigation" }).click();
+    await expect(page.locator("#ops-mobile-nav")).toBeVisible();
+    await row.getByRole("button", { name: "Duplicate" }).evaluate((element: HTMLButtonElement) => element.click());
+    const duplicate = page.locator("#duplicate-playbook-modal");
+    const duplicateInput = page.locator("#dup-to-name-input");
+    await expect(duplicateInput).toBeFocused();
+    await expect(page.locator("#ops-mobile-nav")).toBeHidden();
+    await page.keyboard.press("Shift+/");
+    await expect(page.locator("#ops-cheatsheet")).toBeHidden();
+    await assertDialogCycle(page, [
+      duplicate.getByRole("button", { name: "Close Duplicate playbook dialog" }),
+      duplicateInput, duplicate.getByRole("button", { name: "Cancel duplicate" }),
+      duplicate.getByRole("button", { name: "Duplicate", exact: true })
+    ], "duplicate");
+    await duplicateInput.fill(`${SHELL_PLAYBOOK_PREFIX}duplicate.json`);
+    await expect(duplicateInput).toHaveAttribute("value", `${SHELL_PLAYBOOK_PREFIX}duplicate.json`);
+    await expect(duplicateInput).toBeFocused();
+    await duplicate.getByRole("button", { name: "Cancel duplicate" }).click();
+    await expect(duplicate).toBeHidden();
+    await expect(row.getByRole("button", { name: "Duplicate" })).toBeFocused();
+
+    const deleteTrigger = row.getByRole("button", { name: "Delete" });
+    await openShortcutSheet(page);
+    await deleteTrigger.evaluate((element: HTMLButtonElement) => element.click());
+    await expect(page.locator("#ops-cheatsheet")).toBeHidden();
+    const deleteModal = page.locator("#delete-playbook-modal");
+    await expect(deleteModal).toBeVisible();
+    await expect(deleteModal.getByRole("button", { name: "Cancel delete" })).toBeFocused();
+    await assertDialogCycle(page, [
+      deleteModal.getByRole("button", { name: "Close Delete playbook file dialog" }),
+      page.locator("#delete-confirm-input"),
+      deleteModal.getByRole("button", { name: "Cancel delete" }),
+      deleteModal.getByRole("button", { name: "Confirm delete" })
+    ], "delete");
+    const successorSelector = await deleteModal.getAttribute("data-ops-modal-successor");
+    expect(successorSelector).toBeTruthy();
+
+    await deleteTrigger.evaluate((el) => el.remove());
+    await deleteModal.getByRole("button", { name: "Cancel delete" }).click();
+    await expect(deleteModal).toBeHidden();
+    const successor = page.locator(successorSelector as string);
+    await expect(successor).toBeFocused();
+    await page.reload();
+    await expect(row).toBeVisible();
+    await row.getByRole("button", { name: "Delete" }).click();
+    await expect(deleteModal.getByRole("button", { name: "Cancel delete" })).toBeFocused();
+    const afterDelete = await deleteModal.getAttribute("data-ops-modal-successor");
+    await page.locator("#delete-confirm-input").fill(basename);
+    await deleteModal.getByRole("button", { name: "Confirm delete" }).click();
+    await expect(deleteModal).toBeHidden();
+    await expect(row).toHaveCount(0);
+    await expect(page.locator(afterDelete!)).toBeFocused();
+    await expect(page.locator(".ops-header")).not.toHaveAttribute("inert", "");
+  });
+
+  test("[shell-chrome] successful rename returns focus to the catalog", async ({ page }) => {
+    const basename = `${SHELL_PLAYBOOK_PREFIX}rename-${Date.now()}.json`;
+    const renamed = basename.replace("rename-", "renamed-");
+    mkdirSync(PLAYBOOK_WORKSPACE_DIR, { recursive: true });
+    writeFileSync(join(PLAYBOOK_WORKSPACE_DIR, basename), "{}\n");
+    await gotoPlaybooks(page);
+    const row = page.locator(".ops-object-item").filter({ hasText: basename });
+    await row.getByRole("button", { name: "Rename", exact: true }).click();
+    const modal = page.locator("#rename-playbook-modal");
+    const input = page.locator("#rename-new-name-input");
+    await input.fill("invalid/name.json");
+    await modal.getByRole("button", { name: "Rename", exact: true }).click();
+    const error = modal.getByRole("alert");
+    await expect(error).toContainText("Filename");
+    await expect(input).toHaveAttribute("aria-invalid", "true");
+    await expect(error).not.toHaveAttribute("inert", "");
+    expect(await error.evaluate(el => el.closest("[inert]") === null)).toBe(true);
+    expect(await modal.evaluate(el => el.contains(document.activeElement))).toBe(true);
+    await input.fill(renamed);
+    await modal.getByRole("button", { name: "Rename", exact: true }).click();
+    await expect(modal).toBeHidden();
+    await expect(row).toHaveCount(0);
+    await expect(page.locator(".ops-object-item").filter({ hasText: renamed })).toHaveCount(1);
+    await expect(page.locator("#playbook-catalog-heading")).toBeFocused();
+    await expect(page.locator(".ops-header")).not.toHaveAttribute("inert", "");
+  });
+
+  test("[layout] representative operator boundaries and non-contrast accessibility", async ({ page, request }, testInfo) => {
+    test.setTimeout(180_000);
+    await seedScenario(request, "incident");
+    await page.addInitScript(() => localStorage.setItem("phx:theme", "light"));
+    for (const width of [320, 390, 1279, 1280, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      for (const surface of SHELL_SURFACES) {
+        await surface.prepare(page);
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await assertOperatorGeometry(page, `${surface.name} ${width}px`, [
+          ...(width < 1280 ? [".ops-header .ops-nav-trigger"] : []),
+          ".ops-header .ops-command-hint", ".ops-header #theme-toggle"
+        ]);
+        await assertReadableControl(page.locator(".ops-command-hint"), "command action", 14, 40);
+        await assertReadableControl(page.locator("#theme-toggle button").first(), "theme target", 0, 44);
+        const heading = page.locator("#ops-main h3:visible").first();
+        if (await heading.count()) await assertReadableControl(heading, `${surface.name} record heading`, 16);
+        const primary = {
+          "Control Room": page.getByTestId("intent-incident"),
+          "Posture": page.getByTestId("posture-failed-sync-link").first(),
+          "Failed Sync": page.getByTestId("failed-sync-retry").first(),
+          "Sync/Drift": page.getByRole("button", { name: "Refresh sync status", exact: true }),
+          "Search": page.getByRole("button", { name: "Run search", exact: true }),
+          "Playbooks": page.getByRole("button", { name: "Load preview", exact: true }).first()
+        }[surface.name]!;
+        await primary.click({ trial: true });
+        await assertReadableControl(primary, `${surface.name} common action`, 14, 40);
+        await page.evaluate(() => window.scrollTo(0, 0));
+        if (width === 390 && surface.name === "Failed Sync") {
+          const summary = page.locator("#failed-sync-rollups-heading").locator("..");
+          await expect(summary.locator("span.rounded-full")).toHaveCount(5);
+          await expect(summary).toContainText("5 failed sync jobs");
+          expect((await summary.boundingBox())!.height, "total plus five reason counts remain compact").toBeLessThanOrEqual(160);
+          await expect(page.getByRole("radio")).toHaveCount(2);
+        }
+        if (width === 390) {
+          await scanNonContrastA11y(page, testInfo, `${surface.name}-incident-light-390`);
+          await testInfo.attach(`${surface.name}-light-390.png`, { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
+        }
+      }
+    }
+  });
+
+  test("[layout] long content and five-schema native select", async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: 320, height: 900 });
+    await page.goto("/admin/search/ui-fixtures");
+    await waitForLiveConnected(page);
+    const select = page.getByRole("combobox", { name: "Schema" });
+    await expect(select.locator("option")).toHaveCount(5);
+    await select.focus();
+    await select.selectOption("ScrypathEcommerce.Catalog.Inventory.Warehouse.StockKeepingUnitWithAnIntentionallyLongName");
+    await expect(page.locator("#selected-schema")).toContainText("StockKeepingUnitWithAnIntentionallyLongName");
+    await expect(select).toBeFocused();
+    await assertReadableControl(select, "schema select", 14, 40);
+    await page.getByText("Diagnostics", { exact: true }).click();
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await assertOperatorGeometry(page, "long identifiers 320px", [".ops-command-hint", "#theme-toggle"]);
+    await scanNonContrastA11y(page, testInfo, "long-content-select-partial-320");
+    await testInfo.attach("long-content-select-320.png", { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
+  });
 
   for (const mode of THEME_MODES) {
     for (const viewport of VIEWPORT_NAMES) {

@@ -4,6 +4,8 @@ defmodule Scrypath.Operator.FailedWork.Translation do
   alias Scrypath.Config
   alias Scrypath.Operator.RecoveryAction
 
+  @max_queue_reason_length 500
+
   @spec backend_attrs(module(), keyword(), map()) :: map()
   def backend_attrs(schema_module, config, task) do
     operation = operation_from_task_type(Map.get(task.metadata, :type))
@@ -118,15 +120,23 @@ defmodule Scrypath.Operator.FailedWork.Translation do
   defp backend_reason(_), do: "backend task failed"
 
   defp queue_reason(job) do
-    case value(job, :errors) do
-      [first | _] when is_binary(first) ->
-        first
+    case queue_error_signal_text(job) do
+      reason when is_binary(reason) and reason != "" ->
+        bound_queue_reason(reason)
 
       _ ->
         if(value(job, :state) in ["retryable", :retryable],
           do: "queue job is retryable",
           else: "queue job failed"
         )
+    end
+  end
+
+  defp bound_queue_reason(reason) do
+    if String.length(reason) <= @max_queue_reason_length do
+      reason
+    else
+      String.slice(reason, 0, @max_queue_reason_length - 3) <> "..."
     end
   end
 

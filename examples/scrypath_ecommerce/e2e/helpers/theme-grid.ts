@@ -57,16 +57,16 @@ export async function gotoPosture(page: Page): Promise<void> {
 export async function gotoFailedSync(page: Page): Promise<void> {
   await page.goto("/admin/search/failed-sync");
   await waitForLiveConnected(page);
-  await page.getByRole("button", { name: "Refresh failed sync jobs" }).click();
-  await expect(page.getByRole("heading", { name: "Failed sync jobs", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Refresh failed sync work" }).click();
+  await expect(page.getByRole("heading", { name: "Failed sync work", exact: true })).toBeVisible();
 }
 
 export async function gotoSyncDrift(page: Page): Promise<void> {
   await page.goto("/admin/search/sync-drift");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
-  await page.getByRole("button", { name: "Load / refresh contract drift" }).click();
-  await expect(page.getByText("Contract dimensions")).toBeVisible();
+  await page.getByRole("button", { name: "Check index contract" }).click();
+  await expect(page.getByText("Contract dimensions", { exact: true })).toBeVisible();
 }
 
 export async function gotoSearch(page: Page): Promise<void> {

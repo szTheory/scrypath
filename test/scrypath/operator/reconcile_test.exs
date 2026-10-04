@@ -121,6 +121,54 @@ defmodule Scrypath.Operator.ReconcileTest do
     refute_received {:oban_insert, _}
   end
 
+  test "reconcile target readiness stays unknown for cancelled and unknown tasks and sees deletions" do
+    cases = [
+      {"canceled", "indexCreation", :unknown},
+      {"enqueued", "documentDeletion", :pending},
+      {"failed", "documentDeletion", :failed}
+    ]
+
+    for {status, type, expected} <- cases do
+      task = %{
+        "uid" => 980,
+        "status" => status,
+        "type" => type,
+        "indexUid" => "tenant_searchable_post__reindex"
+      }
+
+      assert {:ok, report} =
+               Scrypath.reconcile_sync(SearchablePost,
+                 backend: Scrypath.Meilisearch,
+                 sync_mode: :manual,
+                 index_prefix: "tenant",
+                 target_index: "tenant_searchable_post__reindex",
+                 meilisearch_url: "http://localhost:7700",
+                 meilisearch_client: ReconcileMeilisearchClient,
+                 meilisearch_tasks: [task]
+               )
+
+      assert report.reindex.task_state == expected
+    end
+
+    assert {:error, {:invalid_task_payload, %{problems: [status: :unknown]}}} =
+             Scrypath.reconcile_sync(SearchablePost,
+               backend: Scrypath.Meilisearch,
+               sync_mode: :manual,
+               index_prefix: "tenant",
+               target_index: "tenant_searchable_post__reindex",
+               meilisearch_url: "http://localhost:7700",
+               meilisearch_client: ReconcileMeilisearchClient,
+               meilisearch_tasks: [
+                 %{
+                   "uid" => 981,
+                   "status" => "unrecognized-status",
+                   "type" => "settingsUpdate",
+                   "indexUid" => "tenant_searchable_post__reindex"
+                 }
+               ]
+             )
+  end
+
   test "reconcile_sync/2 only mutates when an explicit action is provided" do
     action =
       RecoveryAction.new(

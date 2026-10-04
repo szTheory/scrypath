@@ -62,7 +62,7 @@ defmodule ScrypathOpsWeb.Layouts do
 
       <div class="ops-shell-content">
         <header class="ops-header px-4 py-2 sm:px-6 lg:px-8">
-          <div class="flex items-center justify-between gap-4">
+          <div class="ops-header__inner">
             <div class="flex min-w-0 items-center gap-3 xl:hidden">
               <button
                 type="button"
@@ -85,7 +85,7 @@ defmodule ScrypathOpsWeb.Layouts do
               </.link>
             </div>
 
-            <div class="hidden min-w-0 xl:flex">
+            <div class="min-w-0 flex-1 xl:flex-none">
               <.ops_command_hint />
             </div>
 
@@ -170,10 +170,6 @@ defmodule ScrypathOpsWeb.Layouts do
       </div>
 
       <.ops_primary_nav mount_path={@mount_path} page_title={@page_title} />
-
-      <div class="ops-sidebar__footer">
-        <.ops_command_hint prefix="Jump fast with" suffix="" />
-      </div>
     </aside>
     """
   end

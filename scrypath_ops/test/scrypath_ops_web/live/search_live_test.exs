@@ -9,6 +9,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
   alias ScrypathOps.Test.OpsPostA
   alias ScrypathOps.Test.OpsPostB
   alias ScrypathOps.Test.SearchPlaygroundStubAdapter
+  alias ScrypathOpsWeb.OpsUi
 
   setup do
     prev_allow = Application.get_env(:scrypath_ops, :schema_allowlist)
@@ -57,6 +58,8 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert html =~ "Run search"
     assert html =~ "ops-form-stack"
     assert html =~ "ops-fieldset__legend"
+    assert html =~ ~s(for="search_q")
+    assert html =~ ~s(aria-describedby="search-honesty-panel search_q-hint")
     assert html =~ ~s(data-testid="search-empty-hero")
     assert html =~ "Run a search to see results"
     assert html =~ "Choose an index, enter a query, inspect the answer, then save a useful check."
@@ -71,7 +74,80 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     {:ok, _lv, html} = live(conn, ~p"/ops/search")
 
     assert html =~ "No schemas configured"
-    assert html =~ "pointer-events-none"
+    assert html =~ ~r/<fieldset[^>]*disabled/
+    assert html =~ ~r/<button[^>]*disabled/
+  end
+
+  test "schema picker keeps labels, names, and control semantics across empty and populated counts" do
+    for count <- [0, 1, 4, 5] do
+      schemas = for index <- 1..count//1, do: Module.concat(["PickerSchema#{index}"])
+      html = render_component(&OpsUi.ops_schema_select/1, %{id: "picker", schemas: schemas})
+
+      if count == 0 do
+        assert html == ""
+      else
+        assert html =~ ~s(<legend)
+        assert html =~ "Schema"
+        assert html =~ ~s(name="schema")
+
+        if count <= 4 do
+          assert html =~ ~s(type="radio")
+          assert html =~ ~r/for="picker-[^"]+"/
+        else
+          assert html =~ ~s(<select)
+          assert html =~ ~s(id="picker")
+        end
+      end
+    end
+
+    unicode_schema = Module.concat(["Catalog", "Café東京"])
+
+    html =
+      render_component(&OpsUi.ops_schema_select/1, %{
+        id: "unicode-picker",
+        schemas: [unicode_schema],
+        selected: unicode_schema
+      })
+
+    assert html =~ "Café東京"
+    assert html =~ ~s(value="Catalog.Café東京")
+  end
+
+  test "search controls are natively disabled without a configured backend", %{conn: conn} do
+    Application.delete_env(:scrypath_ops, :backend)
+
+    {:ok, view, html} = live(conn, ~p"/ops/search")
+
+    assert html =~ ~r/<fieldset[^>]*disabled/
+    assert html =~ ~r/<button[^>]*disabled/
+
+    view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{
+      "q" => "still visible",
+      "page_size" => "10",
+      "schema" => inspect(OpsPostA)
+    })
+
+    assert render(view) =~ "Search could not run"
+    assert render(view) =~ "runtime is not configured"
+  end
+
+  test "mode buttons expose the selected mode and invalid entries retain query values", %{
+    conn: conn
+  } do
+    {:ok, view, html} = live(conn, ~p"/ops/search")
+    assert html =~ ~s(aria-label="Search mode")
+    assert html =~ ~s(aria-pressed="true")
+    assert html =~ ~s(aria-pressed="false")
+
+    view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{"q" => "café 東京", "page_size" => "999", "schema" => inspect(OpsPostA)})
+
+    html = render(view)
+    assert html =~ ~s(value="café 東京")
+    assert html =~ "999"
   end
 
   test "mode=multi renders multi toggle test id", %{conn: conn} do

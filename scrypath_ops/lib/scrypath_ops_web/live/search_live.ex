@@ -21,9 +21,9 @@ defmodule ScrypathOpsWeb.SearchLive do
   def empty_or_hits_single(assigns) do
     ~H"""
     <%= if @result.hits == [] do %>
-      <.ops_empty_state title="No hits for this query">
-        Next: widen or simplify the query, raise the page size, or pick another index, then run
-        search again. The honesty panel above explains merge ceilings and backend limits
+      <.ops_empty_state title="No matching documents">
+        Widen or simplify the query, raise the page size, or pick another index, then run
+        search again. The panel above explains merge ceilings and backend limits
         (<a class="link link-primary" href={@guide_href}>guides/multi-index-search.md</a>).
       </.ops_empty_state>
     <% else %>
@@ -801,34 +801,23 @@ defmodule ScrypathOpsWeb.SearchLive do
             options under <code class="text-ops-body">:scrypath_ops</code>). See <code class="text-ops-body">scrypath_ops/README.md</code>.
           </.ops_empty_state>
 
-          <.ops_status
-            :if={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
-            kind={:warning}
-            title="Search controls are disabled until OPSUI is configured"
-          >
-            The form remains visible so operators can see the expected workflow, but it will not
-            run until schemas and backend runtime options are configured.
-          </.ops_status>
-
           <div class="space-y-6">
             <.form
               for={%{}}
               as={:search}
               phx-submit="search"
               id="ops-search-playground-form"
-              class={[
-                "ops-form-stack",
-                if(@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend),
-                  do: "opacity-50 pointer-events-none",
-                  else: nil
-                )
-              ]}
+              class="ops-form-stack"
             >
-              <.ops_fieldset legend="Search target">
+              <.ops_fieldset
+                legend="Search target"
+                disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
+              >
                 <.ops_segmented_control
-                  label="Mode"
+                  label="Search mode"
                   event="set_mode"
                   selected={to_string(@mode)}
+                  disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
                   items={[{"Single index", "single"}, {"Multi index", "multi"}]}
                 />
                 <p :if={@mode == :single} class="text-ops-body text-base-content/80">
@@ -841,20 +830,17 @@ defmodule ScrypathOpsWeb.SearchLive do
                   >Read semantics</a>.
                 </p>
 
-                <.ops_field
-                  :if={@mode == :single}
+                <.ops_schema_select
+                  :if={@mode == :single && @schema_allowlist != []}
                   id="search_schema"
+                  name="schema"
                   label="Index"
                   hint="Choose the index for this run."
-                >
-                  <.ops_select
-                    id="search_schema"
-                    name="schema"
-                    options={schema_options(@schema_allowlist)}
-                    selected={inspect(@selected_schema)}
-                    class="font-mono text-ops-sm"
-                  />
-                </.ops_field>
+                  schemas={@schema_allowlist}
+                  selected={@selected_schema}
+                  disabled={!Keyword.has_key?(@scrypath_opts, :backend)}
+                  class="font-mono text-ops-sm"
+                />
 
                 <div :if={@mode == :multi} class="space-y-2">
                   <p id="search-schemas-hint" class="text-ops-sm leading-5 text-base-content/70">
@@ -868,19 +854,30 @@ defmodule ScrypathOpsWeb.SearchLive do
                 </div>
               </.ops_fieldset>
 
-              <.ops_fieldset legend="Query">
-                <.ops_field id="search_q" label="Search text">
+              <.ops_fieldset
+                legend="Query"
+                disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
+              >
+                <.ops_field
+                  id="search_q"
+                  label="Search text"
+                  hint="Search text is sent to the selected index or indexes."
+                >
                   <.ops_text_input
                     id="search_q"
                     name="q"
                     value={@q}
                     placeholder="Try a product or operator probe"
+                    hint="Search text is sent to the selected index or indexes."
                     aria-describedby="search-honesty-panel"
                   />
                 </.ops_field>
               </.ops_fieldset>
 
-              <.ops_fieldset legend="Limits / safety">
+              <.ops_fieldset
+                legend="Limits / safety"
+                disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
+              >
                 <p id="search-limits-copy" class="text-ops-sm leading-5 text-base-content/70">
                   Page size is capped at {SearchPlayground.max_page_size_allowed()} hits per request.
                 </p>
@@ -901,6 +898,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                 variant={:primary}
                 size={:md}
                 phx-disable-with="Running…"
+                disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
               >
                 Run search
               </.ops_button>

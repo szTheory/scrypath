@@ -433,12 +433,13 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert verifier =~ "playwright-report/."
     end
 
-    test "playwright config emits structured phase105 report and keeps retry-based flake visibility" do
+    test "playwright config emits structured phase105 report and forbids acceptance retries" do
       config = File.read!("examples/scrypath_ecommerce/playwright.config.ts")
 
-      assert config =~ "retries: process.env.CI ? 1 : 0"
-      assert config =~ "workers: process.env.CI ? 1 : undefined"
-      assert config =~ "trace: \"on-first-retry\""
+      assert config =~ "retries: 0"
+      refute config =~ "retries: process.env.CI"
+      assert config =~ "workers: 1"
+      assert config =~ "trace: \"retain-on-failure\""
       assert config =~ "phase105-playwright.json"
     end
 

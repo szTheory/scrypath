@@ -4,6 +4,40 @@ defmodule Scrypath.Operator.IndexContractDriftTest do
   alias Scrypath.Meilisearch.Settings
   alias Scrypath.Operator.IndexContractDrift.Report
 
+  defmodule Product do
+    use Ecto.Schema
+
+    use Scrypath,
+      fields: [:name, :description, :tenant_id, :category_id],
+      filterable: [:category_id, :tenant_id],
+      faceting: [attributes: [:category_id]]
+
+    embedded_schema do
+      field(:name, :string)
+      field(:description, :string)
+      field(:tenant_id, :integer)
+      field(:category_id, :integer)
+    end
+  end
+
+  defmodule CustomFaceting do
+    use Ecto.Schema
+
+    use Scrypath,
+      fields: [:name, :category],
+      filterable: [:category],
+      faceting: [
+        attributes: [:category],
+        max_values_per_facet: 25,
+        sort_facet_values_by: [category: :count]
+      ]
+
+    embedded_schema do
+      field(:name, :string)
+      field(:category, :string)
+    end
+  end
+
   defmodule StubClient do
     @moduledoc false
     def get_settings(_index, _config) do
@@ -32,26 +66,30 @@ defmodule Scrypath.Operator.IndexContractDriftTest do
     end)
   end
 
+  defp applied_settings(schema_module) do
+    declared =
+      schema_module
+      |> Settings.resolve(Scrypath.Config.resolve!(base_opts()))
+      |> Settings.translate_settings()
+
+    Map.merge(
+      %{
+        "searchableAttributes" => ["*"],
+        "filterableAttributes" => [],
+        "sortableAttributes" =>
+          schema_module.__scrypath__(:sortable) |> Enum.map(&Atom.to_string/1),
+        "faceting" => %{
+          "maxValuesPerFacet" => 100,
+          "sortFacetValuesBy" => %{"*" => "alpha"}
+        }
+      },
+      declared
+    )
+  end
+
   describe "index_contract_drift/2 (DRIFT15, OPS15-01)" do
-    test "parity: dimensions and settings match when live mirrors declared projection" do
-      config = Scrypath.Config.resolve!(base_opts())
-
-      declared_wire =
-        Settings.resolve(SearchablePost, config)
-        |> Settings.translate_settings()
-
-      applied =
-        Map.merge(declared_wire, %{
-          "searchableAttributes" =>
-            SearchablePost |> Scrypath.schema_fields() |> Enum.map(&Atom.to_string/1),
-          "filterableAttributes" =>
-            SearchablePost.__scrypath__(:filterable) |> Enum.map(&Atom.to_string/1),
-          "sortableAttributes" =>
-            SearchablePost.__scrypath__(:sortable) |> Enum.map(&Atom.to_string/1),
-          "faceting" => %{}
-        })
-
-      put_stub({:ok, applied})
+    test "parity: backend defaults satisfy projected fields and undeclared faceting" do
+      put_stub({:ok, applied_settings(SearchablePost)})
 
       assert {:ok, %Report{version: 1, schema: SearchablePost, dimensions: dims}} =
                Scrypath.index_contract_drift(SearchablePost, base_opts())
@@ -61,6 +99,102 @@ defmodule Scrypath.Operator.IndexContractDriftTest do
       assert dims.sortable_attributes.match
       assert dims.faceting.match
       assert dims.settings.match
+    end
+
+    test "an explicit applied field list still matches the projected fields" do
+      applied =
+        applied_settings(SearchablePost)
+        |> Map.put("searchableAttributes", ["title", "body"])
+
+      put_stub({:ok, applied})
+
+      assert {:ok, %Report{dimensions: dims}} =
+               Scrypath.index_contract_drift(SearchablePost, base_opts())
+
+      assert dims.fields.match
+    end
+
+    test "a restricted applied field list still reports missing projected fields" do
+      applied =
+        applied_settings(SearchablePost)
+        |> Map.put("searchableAttributes", ["title"])
+
+      put_stub({:ok, applied})
+
+      assert {:ok, %Report{dimensions: dims}} =
+               Scrypath.index_contract_drift(SearchablePost, base_opts())
+
+      refute dims.fields.match
+      assert {:only_declared, "body"} in dims.fields.details
+    end
+
+    test "fields use the resolved explicit restriction including config overrides" do
+      config =
+        base_opts()
+        |> Scrypath.Config.resolve!()
+        |> Keyword.put(:settings, %{searchable_attributes: ["title"]})
+
+      applied =
+        applied_settings(ConfiguredSearchablePost)
+        |> Map.put("searchableAttributes", ["title"])
+
+      put_stub({:ok, applied})
+
+      assert {:ok, %Report{dimensions: dims}} =
+               Scrypath.Operator.IndexContractDrift.build(ConfiguredSearchablePost, config)
+
+      assert dims.fields.match
+      assert dims.settings.match
+    end
+
+    test "an explicit empty searchable list can disable searching every projected field" do
+      config =
+        base_opts()
+        |> Scrypath.Config.resolve!()
+        |> Keyword.put(:settings, %{searchable_attributes: []})
+
+      applied = applied_settings(SearchablePost) |> Map.put("searchableAttributes", [])
+      put_stub({:ok, applied})
+
+      assert {:ok, %Report{dimensions: dims}} =
+               Scrypath.Operator.IndexContractDrift.build(SearchablePost, config)
+
+      assert dims.fields.match
+      assert dims.settings.match
+    end
+
+    test "wildcard does not hide a mismatched explicit searchable restriction" do
+      applied =
+        applied_settings(ConfiguredSearchablePost)
+        |> Map.put("searchableAttributes", ["*"])
+
+      put_stub({:ok, applied})
+
+      assert {:ok, %Report{dimensions: dims}} =
+               Scrypath.index_contract_drift(ConfiguredSearchablePost, base_opts())
+
+      refute dims.fields.match
+      refute dims.settings.match
+    end
+
+    test "settings preserve the ranking order of explicitly searchable fields" do
+      applied =
+        applied_settings(ConfiguredSearchablePost)
+        |> Map.put("searchableAttributes", ["body", "title"])
+
+      put_stub({:ok, applied})
+
+      assert {:ok, %Report{dimensions: dims}} =
+               Scrypath.index_contract_drift(ConfiguredSearchablePost, base_opts())
+
+      assert dims.fields.match
+      refute dims.settings.match
+
+      assert %{
+               key: "searchableAttributes",
+               declared: ["title", "body"],
+               applied: ["body", "title"]
+             } in dims.settings.details
     end
 
     test "settings drift surfaces structured details" do
@@ -88,55 +222,102 @@ defmodule Scrypath.Operator.IndexContractDriftTest do
     end
 
     test "faceting dimension matches for hierarchical dotted facet attributes" do
-      config = Scrypath.Config.resolve!(base_opts())
-
-      declared_wire =
-        Settings.resolve(FacetableHierarchy, config)
-        |> Settings.translate_settings()
-
-      hierarchical_faceting = %{
-        "attributes" => ["categories.lvl0", "categories.lvl1"],
-        "maxValuesPerFacet" => 100,
-        "sortFacetValuesBy" => %{}
-      }
-
-      applied =
-        Map.merge(declared_wire, %{
-          "searchableAttributes" =>
-            FacetableHierarchy |> Scrypath.schema_fields() |> Enum.map(&Atom.to_string/1),
-          "filterableAttributes" =>
-            FacetableHierarchy.__scrypath__(:filterable) |> Enum.map(&Atom.to_string/1),
-          "sortableAttributes" => [],
-          "faceting" => hierarchical_faceting
-        })
-
-      put_stub({:ok, applied})
+      put_stub({:ok, applied_settings(FacetableHierarchy)})
 
       assert {:ok, %Report{dimensions: dims}} =
                Scrypath.index_contract_drift(FacetableHierarchy, base_opts())
 
       assert dims.faceting.match
+      assert dims.settings.match
     end
 
-    test "JSON round-trip preserves top-level keys" do
-      config = Scrypath.Config.resolve!(base_opts())
+    test "facet membership uses filterables while allowing a tenant-only filterable" do
+      put_stub({:ok, applied_settings(Product)})
 
-      declared_wire =
-        Settings.resolve(SearchablePost, config)
-        |> Settings.translate_settings()
+      assert {:ok, %Report{dimensions: dims}} =
+               Scrypath.index_contract_drift(Product, base_opts())
 
+      assert Enum.all?(dims, fn {_name, dimension} -> dimension.match end)
+    end
+
+    test "a missing declared facet remains drift even when faceting defaults match" do
+      applied = applied_settings(Product) |> Map.put("filterableAttributes", ["tenant_id"])
+      put_stub({:ok, applied})
+
+      assert {:ok, %Report{dimensions: dims}} =
+               Scrypath.index_contract_drift(Product, base_opts())
+
+      refute dims.faceting.match
+      refute dims.filterable_attributes.match
+      refute dims.settings.match
+
+      assert [%{declared: %{"attributes" => ["category_id"]}, applied: %{"attributes" => []}}] =
+               dims.faceting.details
+    end
+
+    test "filterable feature differences remain settings drift" do
       applied =
-        Map.merge(declared_wire, %{
-          "searchableAttributes" =>
-            SearchablePost |> Scrypath.schema_fields() |> Enum.map(&Atom.to_string/1),
-          "filterableAttributes" =>
-            SearchablePost.__scrypath__(:filterable) |> Enum.map(&Atom.to_string/1),
-          "sortableAttributes" =>
-            SearchablePost.__scrypath__(:sortable) |> Enum.map(&Atom.to_string/1),
-          "faceting" => %{}
+        applied_settings(Product)
+        |> update_in(["filterableAttributes"], fn entries ->
+          Enum.map(entries, fn
+            %{} = entry -> put_in(entry, ["features", "facetSearch"], false)
+            entry -> entry
+          end)
+        end)
+
+      put_stub({:ok, applied})
+
+      assert {:ok, %Report{dimensions: dims}} =
+               Scrypath.index_contract_drift(Product, base_opts())
+
+      assert dims.filterable_attributes.match
+      refute dims.settings.match
+      assert [%{key: "filterableAttributes"}] = dims.settings.details
+    end
+
+    test "nondefault faceting limits and ordering remain drift" do
+      for {key, value} <- [
+            {"maxValuesPerFacet", 25},
+            {"sortFacetValuesBy", %{"*" => "count"}}
+          ] do
+        applied = applied_settings(Product) |> put_in(["faceting", key], value)
+        put_stub({:ok, applied})
+
+        assert {:ok, %Report{dimensions: dims}} =
+                 Scrypath.index_contract_drift(Product, base_opts())
+
+        refute dims.faceting.match
+      end
+    end
+
+    test "nondefault faceting also remains visible without a facet declaration" do
+      applied = applied_settings(SearchablePost) |> put_in(["faceting", "maxValuesPerFacet"], 25)
+      put_stub({:ok, applied})
+
+      assert {:ok, %Report{dimensions: dims}} =
+               Scrypath.index_contract_drift(SearchablePost, base_opts())
+
+      refute dims.faceting.match
+    end
+
+    test "custom declared faceting matches with the backend default wildcard ordering" do
+      applied =
+        applied_settings(CustomFaceting)
+        |> Map.put("faceting", %{
+          "maxValuesPerFacet" => 25,
+          "sortFacetValuesBy" => %{"*" => "alpha", "category" => "count"}
         })
 
       put_stub({:ok, applied})
+
+      assert {:ok, %Report{dimensions: dims}} =
+               Scrypath.index_contract_drift(CustomFaceting, base_opts())
+
+      assert dims.faceting.match
+    end
+
+    test "JSON round-trip preserves top-level keys" do
+      put_stub({:ok, applied_settings(SearchablePost)})
 
       assert {:ok, report} = Scrypath.index_contract_drift(SearchablePost, base_opts())
       json = Jason.encode!(report)

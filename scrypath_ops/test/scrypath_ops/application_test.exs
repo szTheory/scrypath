@@ -34,6 +34,7 @@ defmodule ScrypathOps.ApplicationTest do
       |> Enum.reject(&is_nil/1)
 
     assert ScrypathOpsWeb.Telemetry in modules
+    assert ScrypathOps.RecoveryObservation in modules
     assert Phoenix.PubSub.Supervisor in modules
     refute ScrypathOpsWeb.Endpoint in modules
     refute ScrypathOps.Repo in modules
