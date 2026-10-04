@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 Release Please manages versioned entries after this baseline.
 
+## [0.3.15](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.14...scrypath-v0.3.15) (2026-10-04)
+
+
+### Bug Fixes
+
+* make operator recovery trustworthy and accessible ([#91](https://github.com/szTheory/scrypath/issues/91)) ([3ad154a](https://github.com/szTheory/scrypath/commit/3ad154a33f99cb200b791577aadc5970adc70ca2))
+
 ## [0.3.14](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.13...scrypath-v0.3.14) (2026-10-01)
 
 
