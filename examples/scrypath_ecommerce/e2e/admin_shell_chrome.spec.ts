@@ -367,6 +367,32 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
   test.beforeEach(() => cleanupShellChromePlaybooks());
   test.afterEach(() => cleanupShellChromePlaybooks());
 
+  test("[layout] narrow operator header controls do not overlap", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await gotoControlRoom(page);
+
+    const controls = await page.locator(
+      ".ops-header .ops-nav-trigger, .ops-header .ops-command-hint, .ops-header #theme-toggle"
+    ).evaluateAll((elements) => elements.map((element) => {
+      const rect = element.getBoundingClientRect();
+      return { name: element.getAttribute("aria-label") || element.id || element.className, left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom };
+    }));
+    const overlaps: string[] = [];
+
+    for (let index = 0; index < controls.length; index += 1) {
+      for (let other = index + 1; other < controls.length; other += 1) {
+        const first = controls[index];
+        const second = controls[other];
+        if (first && second && first.left < second.right && second.left < first.right && first.top < second.bottom && second.top < first.bottom) {
+          overlaps.push(`${first.name} overlaps ${second.name}`);
+        }
+      }
+    }
+
+    expect(overlaps, `390px header geometry: ${JSON.stringify(controls)}`).toEqual([]);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(391);
+  });
+
   test("[shell-chrome] playbook modal focus lifecycle and overlay isolation", async ({ page }) => {
     const basename = `${SHELL_PLAYBOOK_PREFIX}modal-${Date.now()}.json`;
     mkdirSync(PLAYBOOK_WORKSPACE_DIR, { recursive: true });
