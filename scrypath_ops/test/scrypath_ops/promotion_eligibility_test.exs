@@ -131,7 +131,7 @@ defmodule ScrypathOps.PromotionEligibilityTest do
     {_removed, missing} = pop_in(ready_context(), [:reconcile, :reindex, :task_state])
     assert {:blocked, :target_unobserved} = PromotionEligibility.evaluate(missing)
 
-    for value <- [nil, :unknown, "completed", [], %{}, 123] do
+    for value <- [nil, :unknown, :cancelled, "completed", [], %{}, 123] do
       context = put_in(ready_context().reconcile.reindex.task_state, value)
       assert {:blocked, :target_unobserved} = PromotionEligibility.evaluate(context)
     end
