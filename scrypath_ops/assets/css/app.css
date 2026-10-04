@@ -807,6 +807,16 @@
     transform: scale(0.97);
   }
 
+  .ops-refresh-button.phx-click-loading {
+    cursor: progress;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ops-refresh-button.phx-click-loading svg {
+      animation: spin 1s linear infinite;
+    }
+  }
+
   .ops-save-playbook {
     border-top: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
     padding-top: var(--spacing-ops-4);

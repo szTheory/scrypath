@@ -183,7 +183,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:rest, :global,
     include:
-      ~w(phx-click phx-value-id phx-value-mode phx-value-name phx-value-schema phx-disable-with disabled form data-testid data-ops-refresh data-ops-modal-trigger aria-label aria-controls)
+      ~w(phx-click phx-hook phx-value-id phx-value-mode phx-value-name phx-value-schema phx-disable-with disabled form data-testid data-ops-refresh data-ops-modal-trigger aria-label aria-controls)
   )
 
   slot(:inner_block, required: true)
@@ -210,7 +210,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:rest, :global,
     include:
-      ~w(phx-click phx-disable-with disabled data-testid title phx-value-id phx-value-mode phx-value-name phx-value-schema)
+      ~w(phx-click disabled data-testid title phx-value-id phx-value-mode phx-value-name phx-value-schema)
   )
 
   def ops_refresh_button(assigns) do
@@ -218,10 +218,10 @@ defmodule ScrypathOpsWeb.OpsUi do
     <.ops_button
       variant={@variant}
       size={@size}
-      class={["gap-1.5", @class]}
+      class={["gap-1.5 ops-refresh-button", @class]}
       data-ops-refresh
+      phx-hook="OpsRefreshButton"
       aria-label={@aria_label}
-      phx-disable-with="Refreshing..."
       {@rest}
     >
       <ScrypathOpsWeb.CoreComponents.icon name="hero-arrow-path" class="size-3.5" />

@@ -2,6 +2,26 @@
 let opsModalPendingTrigger = null
 let activeOpsModal = null
 
+// Keep rich refresh buttons intact while LiveView marks their click as loading.
+// `phx-disable-with` rewrites textContent, which permanently drops nested icons.
+const OpsRefreshButton = {
+  mounted() {
+    this.initiallyDisabled = this.el.disabled
+    this.syncLoadingState = () => {
+      const loading = this.el.classList.contains("phx-click-loading")
+      this.el.disabled = this.initiallyDisabled || loading
+      if (loading) this.el.setAttribute("aria-busy", "true")
+      else this.el.removeAttribute("aria-busy")
+    }
+    this.loadingObserver = new MutationObserver(this.syncLoadingState)
+    this.loadingObserver.observe(this.el, {attributes: true, attributeFilter: ["class"]})
+    this.syncLoadingState()
+  },
+  destroyed() {
+    this.loadingObserver.disconnect()
+  }
+}
+
 document.addEventListener("click", e => {
   const trigger = e.target instanceof Element
     ? e.target.closest("[data-ops-modal-trigger]")
@@ -541,4 +561,4 @@ const OpsModal = {
   }
 }
 
-export {CommandPalette, OpsNavDrawer, OpsModal}
+export {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton}

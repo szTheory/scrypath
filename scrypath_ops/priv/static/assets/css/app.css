@@ -3882,6 +3882,14 @@
   .ops-btn:active {
     transform: scale(0.97);
   }
+  .ops-refresh-button.phx-click-loading {
+    cursor: progress;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .ops-refresh-button.phx-click-loading svg {
+      animation: spin 1s linear infinite;
+    }
+  }
   .ops-save-playbook {
     border-top: 1px solid var(--color-base-content);
     @supports (color: color-mix(in lab, red, red)) {
