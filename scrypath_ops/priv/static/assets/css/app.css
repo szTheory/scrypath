@@ -78,11 +78,13 @@
     --control-pad-x-sm: 0.625rem;
     --control-pad-x-md: 0.75rem;
     --ops-sidebar-width: 17rem;
+    --z-index-ops-header: 30;
+    --z-index-ops-sidebar: 35;
     --z-index-ops-skip-link: 50;
     --z-index-ops-flash: 60;
+    --z-index-ops-drawer: 75;
+    --z-index-ops-palette: 80;
     --z-index-ops-modal: 90;
-    --z-index-ops-nav: 75;
-    --z-index-ops-command: 80;
     --duration-ops-instant: 90ms;
     --duration-ops-fast: 120ms;
     --duration-ops-standard: 180ms;
@@ -1443,6 +1445,9 @@
   }
   .static {
     position: static;
+  }
+  .sticky {
+    position: sticky;
   }
   .inset-0 {
     inset: calc(var(--spacing) * 0);
@@ -3258,7 +3263,7 @@
   .ops-header {
     position: sticky;
     top: 0;
-    z-index: 30;
+    z-index: var(--z-index-ops-header);
     min-height: 4rem;
     border-bottom: 1px solid var(--color-base-content);
     @supports (color: color-mix(in lab, red, red)) {
@@ -3274,7 +3279,7 @@
   .ops-sidebar {
     position: fixed;
     inset: 0 auto 0 0;
-    z-index: 35;
+    z-index: var(--z-index-ops-sidebar);
     display: none;
     width: var(--ops-sidebar-width);
     flex-direction: column;
@@ -3378,7 +3383,7 @@
   .ops-mobile-nav {
     position: fixed;
     inset: 0;
-    z-index: var(--z-index-ops-nav);
+    z-index: var(--z-index-ops-drawer);
   }
   .ops-mobile-nav[hidden] {
     display: none;
@@ -4717,7 +4722,7 @@
   .ops-cmdk {
     position: fixed;
     inset: 0;
-    z-index: var(--z-index-ops-command);
+    z-index: var(--z-index-ops-palette);
     display: flex;
     align-items: flex-start;
     justify-content: center;

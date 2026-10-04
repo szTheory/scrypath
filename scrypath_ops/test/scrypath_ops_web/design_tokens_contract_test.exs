@@ -118,6 +118,21 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
     assert css() =~ "--z-index-ops-modal: 90;"
   end
 
+  test "shell and overlay layers consume the named stacking roles" do
+    assert css() =~ "--z-index-ops-header: 30;"
+    assert css() =~ "--z-index-ops-sidebar: 35;"
+    assert css() =~ "--z-index-ops-skip-link: 50;"
+    assert css() =~ "--z-index-ops-flash: 60;"
+    assert css() =~ "--z-index-ops-drawer: 75;"
+    assert css() =~ "--z-index-ops-palette: 80;"
+    assert rule(".ops-header") =~ "z-index: var(--z-index-ops-header)"
+    assert rule(".ops-sidebar") =~ "z-index: var(--z-index-ops-sidebar)"
+    assert rule(".ops-mobile-nav") =~ "z-index: var(--z-index-ops-drawer)"
+    assert rule(".ops-cmdk") =~ "z-index: var(--z-index-ops-palette)"
+    assert rule(".ops-modal") =~ "transition: opacity var(--duration-ops-fast)"
+    assert css() =~ "--duration-ops-fast: 120ms;"
+  end
+
   test "the token catalog lists all current OpsUi exports with component roles" do
     exports =
       Regex.scan(~r/^\s*def (ops_\w+)\(/m, ops_ui())

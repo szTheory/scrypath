@@ -270,14 +270,26 @@ schema is amber, not red.
 
 ## Z-index — `--z-index-ops-*` → `z-ops-*`
 
-`skip-link` 50 < `flash` 60 < `modal` 90.
+| Token | Value | Consumer |
+| --- | ---: | --- |
+| `--z-index-ops-header` | 30 | sticky `.ops-header` |
+| `--z-index-ops-sidebar` | 35 | fixed `.ops-sidebar` |
+| `--z-index-ops-skip-link` | 50 | keyboard skip link |
+| `--z-index-ops-flash` | 60 | live notification region |
+| `--z-index-ops-drawer` | 75 | mobile navigation drawer |
+| `--z-index-ops-palette` | 80 | command palette and shortcut sheet |
+| `--z-index-ops-modal` | 90 | operator dialogs, above vendor modal defaults |
+
+The order is deliberate: header < sidebar < skip link < flash < drawer < palette < modal.
+Every layer has a named token and a concrete consumer; component CSS does not repeat the
+numeric values.
 
 ## Motion — `--duration-ops-*` (component-only) + `--ease-ops-*` → `ease-ops-*`
 
 | Token | Value | Use |
 | --- | --- | --- |
 | `--duration-ops-instant` | 90ms | tap/press feedback (`.ops-btn:active`) |
-| `--duration-ops-fast` | 120ms | hover, nav/badge color shifts |
+| `--duration-ops-fast` | 120ms | hover, nav/badge color shifts, modal dismissal |
 | `--duration-ops-standard` | 180ms | disclosure content fade, larger surfaces |
 | `--duration-ops-status` | 200ms | status/verdict tone settle (metric + `ops_verdict`) |
 | `--duration-ops-slow` | 240ms | overlay/modal entrance only |

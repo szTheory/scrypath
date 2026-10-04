@@ -165,11 +165,13 @@
   --ops-sidebar-width: 17rem;
 
   /* Z-index. `--z-index-*` is the Tailwind v4 namespace that generates `z-ops-*`. */
+  --z-index-ops-header: 30;
+  --z-index-ops-sidebar: 35;
   --z-index-ops-skip-link: 50;
   --z-index-ops-flash: 60;
+  --z-index-ops-drawer: 75;
+  --z-index-ops-palette: 80;
   --z-index-ops-modal: 90;
-  --z-index-ops-nav: 75;
-  --z-index-ops-command: 80;
 
   /* Motion. Durations stay component-only (no `--duration-*` utility namespace in v4);
      `--ease-*` generates `ease-ops-*` utilities. Keep restrained — animate state, not layout. */
@@ -255,7 +257,7 @@
   .ops-header {
     position: sticky;
     top: 0;
-    z-index: 30;
+    z-index: var(--z-index-ops-header);
     min-height: 4rem;
     border-bottom: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
     background: color-mix(in oklch, var(--color-base-100) 96%, transparent);
@@ -266,7 +268,7 @@
   .ops-sidebar {
     position: fixed;
     inset: 0 auto 0 0;
-    z-index: 35;
+    z-index: var(--z-index-ops-sidebar);
     display: none;
     width: var(--ops-sidebar-width);
     flex-direction: column;
@@ -353,7 +355,7 @@
   .ops-mobile-nav {
     position: fixed;
     inset: 0;
-    z-index: var(--z-index-ops-nav);
+    z-index: var(--z-index-ops-drawer);
   }
 
   .ops-mobile-nav[hidden] {
@@ -1662,7 +1664,7 @@
   .ops-cmdk {
     position: fixed;
     inset: 0;
-    z-index: var(--z-index-ops-command);
+    z-index: var(--z-index-ops-palette);
     display: flex;
     align-items: flex-start;
     justify-content: center;
