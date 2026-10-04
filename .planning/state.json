@@ -11,8 +11,8 @@
   ],
   "next": {
     "command": "/gsd:execute-phase 172",
-    "label": "Continue Phase 172 at Plan 06 (5/8 complete)",
-    "reason": "Checked plans exist; completed Plans 01\u201305 must not be replayed."
+    "label": "Continue Phase 172 at Plan 07 (6/8 complete)",
+    "reason": "Plan06 canonical mounted proof passed; Plans01\u201306 are complete and must not be replayed."
   },
-  "updated_at": "2026-10-03T21:34:01.228226+00:00"
+  "updated_at": "2026-10-04T00:19:59.198016+00:00"
 }

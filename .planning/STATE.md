@@ -5,17 +5,17 @@ milestone_name: ScrypathOps operator/admin UI
 current_phase: 172
 current_phase_name: Consistent Operator UI and Verified Recovery
 status: executing
-stopped_at: Phase 172 Plans 01-05 complete; Plan 06 mounted recovery proof next
-last_updated: "2026-10-03T21:34:01.121Z"
+stopped_at: Phase 172 Plans 01-06 complete; Plan 07 layout and keyboard acceptance next
+last_updated: "2026-10-04T00:19:10.620Z"
 last_activity: 2026-10-03
-last_activity_desc: Plans 01–05 complete; guarded promotion and exact task status implemented
-state_head: 8710a17807ce98c9c545e84d9dda4ffa0e2d47bf
+last_activity_desc: Plans 01–06 complete; exact mounted recovery and promotion verified
+state_head: 99f06c1b9a97c333061627924ab87278d564e790
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 8
-  completed_plans: 5
-  percent: 63
+  completed_plans: 6
+  percent: 75
 ---
 
 # Project State
@@ -30,15 +30,15 @@ See: .planning/PROJECT.md (updated 2026-10-03)
 ## Current Position
 
 Phase: 172 (1 of 1 in v1.42) — Consistent Operator UI and Verified Recovery
-Plan: 5 of 8 complete; Plan 06 next
+Plan: 6 of 8 complete; Plan 07 next
 Status: Executing
-Last activity: 2026-10-03 — Plan 05 committed; 208 tests and 2 doctests passed; mounted recovery acceptance remains Plan 06
+Last activity: 2026-10-03 — Plan 06 committed; 232 tests and 2 doctests plus four canonical mounted scenarios passed with zero retries
 
-Progress: [██████░░░░] 63% (5/8 plans)
+Progress: [░░░░░░░░░░] 0% (5/8 plans)
 
 ## Performance Metrics
 
-- Current milestone: 5/8 plans executed. Plans 01–05 source and summaries are committed; wider OPUX requirements remain open pending later plans.
+- Current milestone: 6/8 plans executed. Plans 01–06 source and summaries are committed; wider OPUX requirements remain open pending later plans.
 - Previous milestone v1.41: 4 phases (168–171), 19 plans, 9 requirements complete.
 - Historical plan timings and evidence remain in the milestone archives; Plan 01 has focused test and browser evidence; milestone acceptance remains pending.
 
@@ -66,7 +66,7 @@ None yet.
 ### Blockers/Concerns
 
 - No unresolved approval blocks the established scope. Current research is source/screenshot evidence, not a runtime acceptance pass.
-- The existing failed-sync display fixture is intentionally unrecoverable and old task/document probes can false-pass. Phase 172 must establish a correlated recovery oracle and preserve historical failures rather than manufacture universal green health.
+- Plan06 now has a replayable Variant fixture and strict exact-job/task/document oracle. Canonical source 3fd8972 passed all four mounted scenarios; its disposable project scrypath_ecommerce_verify_focused_3fd8972c_77955 is retained for Plan07. Do not weaken history preservation or rerun completed plans.
 - Reuse historical proof only after checking relevant source/scenario changes. Runtime, focus, responsive, and contrast claims need evidence for the changed behavior; screenshot inventory or a contrast-only scan cannot prove them all.
 
 ## Deferred Items
@@ -80,10 +80,10 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-10-03T21:34:01.104Z
-Stopped at: Phase 172 Plans 01-05 complete; Plan 06 mounted recovery proof next
-Resume file: .planning/phases/172-consistent-operator-ui-and-verified-recovery/172-06-PLAN.md
-Next action: Continue `$gsd-execute-phase 172` at Plan 06, then remaining checked plans. UI-SPEC and all eight plans passed independent review. Plans 01–05 are complete and must not be replayed. Use task-local locked dependencies, pinned Elixir/OTP and ERL_FLAGS='+S 1:1' for local tests to bound the database pool. Disposable Compose verification must not reset preview4012.
+Last session: 2026-10-04T00:19:10.605Z
+Stopped at: Phase 172 Plans 01-06 complete; Plan 07 layout and keyboard acceptance next
+Resume file: .planning/phases/172-consistent-operator-ui-and-verified-recovery/172-07-PLAN.md
+Next action: Continue `$gsd-execute-phase 172` at Plan 07, then remaining checked plans. UI-SPEC and all eight plans passed independent review. Plans 01–06 are complete and must not be replayed. Use task-local locked dependencies, pinned Elixir/OTP and ERL_FLAGS='+S 1:1' for local tests to bound the database pool. Disposable Compose verification must not reset preview4012.
 
 ## Preview and Cleanup
 
