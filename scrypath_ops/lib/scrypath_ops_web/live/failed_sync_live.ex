@@ -377,11 +377,15 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
 
   defp recovery_receipt(receipts, id), do: Map.get(receipts, to_string(id))
 
-  defp recovery_handoff_path(mount_path, schema, handle) do
+  defp recovery_handoff_path(mount_path, schema, receipt) do
     base = String.trim_trailing(mount_path, "/")
 
     query =
-      URI.encode_query(%{"schema" => OperatorSelection.canonical(schema), "recovery" => handle})
+      URI.encode_query(%{
+        "schema" => OperatorSelection.canonical(schema),
+        "recovery" => receipt.handle,
+        "recovery_generation" => receipt.generation
+      })
 
     "#{base}/sync-drift?#{query}"
   end
@@ -510,13 +514,14 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       <.ops_trail mount_path={@mount_path} current={:failed_sync} />
 
       <.ops_panel>
-        <.ops_schema_select
-          id="schema-select"
-          schemas={@schema_allowlist}
-          selected={@selected_schema}
-          phx-change="select_schema"
-          hint="Choose the allowlisted schema whose failed queue/backend work you want to inspect. Small allowlists stay visible so failures are easy to compare."
-        />
+        <.form for={%{}} id="failed-sync-schema-form" phx-change="select_schema">
+          <.ops_schema_select
+            id="schema-select"
+            schemas={@schema_allowlist}
+            selected={@selected_schema}
+            hint="Choose the allowlisted schema whose failed queue/backend work you want to inspect. Small allowlists stay visible so failures are easy to compare."
+          />
+        </.form>
       </.ops_panel>
 
       <.ops_empty_state :if={@load_error == :no_schemas} title="No schemas configured">
@@ -655,7 +660,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                 Original failure #{row.id} retained.
                 <.link
                   :if={receipt.handle}
-                  navigate={recovery_handoff_path(@mount_path, @selected_schema, receipt.handle)}
+                  navigate={recovery_handoff_path(@mount_path, @selected_schema, receipt)}
                   class="ml-2 min-h-ops-control link link-primary underline underline-offset-2"
                 >
                   Check sync status

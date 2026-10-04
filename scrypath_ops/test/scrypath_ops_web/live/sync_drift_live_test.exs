@@ -116,6 +116,17 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     :ok
   end
 
+  test "rendered schema form changes the selected target", %{conn: conn} do
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+
+    lv
+    |> form("#sync-drift-schema-form", %{"schema" => "ScrypathOps.Test.OpsPostB"})
+    |> render_change()
+
+    assert_patch(lv, "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
+    assert :sys.get_state(lv.pid).socket.assigns.selected_schema == OpsPostB
+  end
+
   test "loads reconcile on mount and scopes drift errors separately", %{conn: conn} do
     {:ok, lv, html} = live(conn, ~p"/ops/sync-drift")
 
@@ -149,6 +160,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     socket =
       sync_drift_socket(%{
         selected_schema: OpsPostB,
+        confirm_swap?: true,
         local_ui_state: %{compact?: true}
       })
 
@@ -177,7 +189,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
   test "promotion retains the backend task UID returned by the real normalization boundary" do
     Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
-    socket = sync_drift_socket(%{})
+    socket = sync_drift_socket(%{confirm_swap?: true})
 
     assert {:noreply, accepted} = SyncDriftLive.handle_event("swap_live", %{}, socket)
     assert Agent.get(:sync_drift_live_test_state, & &1.swap_called)
@@ -197,10 +209,79 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
         %{id: 12, state: "available", worker: "Scrypath.Oban.UpsertWorker", args: %{}}
       ])
 
-    socket = sync_drift_socket(%{scrypath_opts: opts})
+    socket = sync_drift_socket(%{scrypath_opts: opts, confirm_swap?: true})
     assert {:noreply, blocked} = SyncDriftLive.handle_event("swap_live", %{}, socket)
     refute Agent.get(:sync_drift_live_test_state, & &1.swap_called)
     assert blocked.assigns.promotion_eligibility == {:blocked, :queue_work_pending}
+  end
+
+  test "promotion consumes confirmation and refuses duplicate in-flight or replayed events" do
+    Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
+
+    for overrides <- [
+          %{confirm_swap?: true, promotion_loading: true, promotion_task_id: 201},
+          %{
+            confirm_swap?: false,
+            promotion_loading: false,
+            promotion_task_id: 201,
+            promotion_status: :completed
+          }
+        ] do
+      socket = sync_drift_socket(overrides)
+      assert {:noreply, unchanged} = SyncDriftLive.handle_event("swap_live", %{}, socket)
+      refute Agent.get(:sync_drift_live_test_state, & &1.swap_called)
+      assert unchanged.assigns.promotion_task_id == 201
+    end
+  end
+
+  test "handoff keeps the origin generation separate from this page's async generation" do
+    socket = sync_drift_socket(%{selected_schema: nil})
+
+    params = %{
+      "schema" => "ScrypathOps.Test.OpsPostB",
+      "recovery" => "opaque-receipt",
+      "recovery_generation" => "7"
+    }
+
+    assert {:noreply, entered} =
+             SyncDriftLive.handle_params(
+               params,
+               "https://scrypath.example/ops/sync-drift",
+               socket
+             )
+
+    assert entered.assigns.context_generation == 1
+    assert entered.assigns.recovery_origin_generation == 7
+    assert entered.assigns.recovery_handle == "opaque-receipt"
+
+    assert {:noreply, invalid} =
+             SyncDriftLive.handle_params(
+               %{params | "recovery_generation" => "oops"},
+               "https://scrypath.example/ops/sync-drift",
+               entered
+             )
+
+    assert invalid.assigns.recovery_handle == nil
+    refute invalid.assigns.recovery_loading
+  end
+
+  test "observer exits from a previous schema cannot change the current screen" do
+    socket =
+      sync_drift_socket(%{context_generation: 4, recovery_handle: nil, promotion_task_id: nil})
+
+    assert {:noreply, unchanged} =
+             SyncDriftLive.handle_async({:promotion_swap, 3, 201}, {:exit, :shutdown}, socket)
+
+    assert unchanged.assigns == socket.assigns
+
+    assert {:noreply, unchanged} =
+             SyncDriftLive.handle_async(
+               {:recovery_observation, 3, "old"},
+               {:exit, :shutdown},
+               socket
+             )
+
+    assert unchanged.assigns == socket.assigns
   end
 
   test "schema selector rejects non-allowlisted module strings without creating atoms" do
@@ -264,7 +345,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     {:noreply, stale} =
       SyncDriftLive.handle_async(
-        :recovery_observation,
+        {:recovery_observation, 7, "opaque-handle"},
         {:ok, {7, "opaque-handle", :verified}},
         refreshing
       )
@@ -279,7 +360,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     {:noreply, checked} =
       SyncDriftLive.handle_async(
-        :recovery_observation,
+        {:recovery_observation, 3, "receipt"},
         {:ok, {3, "receipt", {:verified, evidence}}},
         socket
       )
@@ -301,7 +382,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     {:noreply, completed} =
       SyncDriftLive.handle_async(
-        :promotion_swap,
+        {:promotion_swap, 9, 991},
         {:ok, {9, 991, {:ok, %{id: 991, state: :succeeded}}}},
         socket
       )
@@ -311,7 +392,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     {:noreply, wrong_task} =
       SyncDriftLive.handle_async(
-        :promotion_swap,
+        {:promotion_swap, 9, 991},
         {:ok, {9, 991, {:ok, %{id: 992, state: :succeeded}}}},
         socket
       )
@@ -321,7 +402,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     {:noreply, failed} =
       SyncDriftLive.handle_async(
-        :promotion_swap,
+        {:promotion_swap, 9, 991},
         {:ok, {9, 991, {:error, {:task_failed, %{id: 991}}}}},
         socket
       )
@@ -331,7 +412,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     {:noreply, timed_out} =
       SyncDriftLive.handle_async(
-        :promotion_swap,
+        {:promotion_swap, 9, 991},
         {:ok, {9, 991, {:error, {:timeout, %{id: 991}}}}},
         socket
       )
@@ -341,7 +422,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     {:noreply, stale} =
       SyncDriftLive.handle_async(
-        :promotion_swap,
+        {:promotion_swap, 8, 991},
         {:ok, {8, 991, {:ok, %{id: 991, state: :succeeded}}}},
         socket
       )
@@ -376,6 +457,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   test "swap live blocks impersonation before any refresh" do
     socket =
       sync_drift_socket(%{
+        confirm_swap?: true,
         operator_context: operator_context(impersonator: "impersonator_789"),
         local_ui_state: :keep
       })
@@ -393,6 +475,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   test "swap live stale sudo redirects with return_to only" do
     socket =
       sync_drift_socket(%{
+        confirm_swap?: true,
         operator_context:
           operator_context(sudo_at: DateTime.add(DateTime.utc_now(), -600, :second)),
         local_ui_state: :keep
@@ -437,6 +520,11 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       drift_error: nil,
       drift_loading: false,
       recovery_handle: nil,
+      recovery_origin_generation: nil,
+      promotion_loading: false,
+      promotion_task_id: nil,
+      promotion_status: nil,
+      confirm_swap?: false,
       recovery_status: nil,
       recovery_evidence: nil,
       recovery_checked_at: nil,

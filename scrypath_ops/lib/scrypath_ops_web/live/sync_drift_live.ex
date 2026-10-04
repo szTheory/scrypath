@@ -38,6 +38,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       |> assign(:drift_error, nil)
       |> assign(:drift_loading, false)
       |> assign(:recovery_handle, nil)
+      |> assign(:recovery_origin_generation, nil)
       |> assign(:recovery_status, nil)
       |> assign(:recovery_evidence, nil)
       |> assign(:recovery_checked_at, nil)
@@ -83,7 +84,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       if selected do
         socket
         |> load_reconcile_on_mount()
-        |> maybe_start_recovery(Map.get(params, "recovery"))
+        |> maybe_start_recovery(
+          Map.get(params, "recovery"),
+          Map.get(params, "recovery_generation")
+        )
       else
         socket
         |> clear_context_results()
@@ -188,13 +192,20 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     end
   end
 
-  def handle_event("swap_live", _params, socket) do
+  def handle_event(
+        "swap_live",
+        _params,
+        %{assigns: %{confirm_swap?: true, promotion_loading: false}} = socket
+      ) do
     socket = assign(socket, :confirm_swap?, false)
     {:noreply, if(current_selection?(socket), do: swap_live(socket), else: unavailable(socket))}
   end
 
+  def handle_event("swap_live", _params, socket), do: {:noreply, socket}
+
   def handle_event("confirm_swap_live", _params, socket) do
-    if socket.assigns.promotion_eligibility == :eligible and current_selection?(socket) do
+    if not socket.assigns.promotion_loading and socket.assigns.promotion_eligibility == :eligible and
+         current_selection?(socket) do
       {:noreply, assign(socket, :confirm_swap?, true)}
     else
       {:noreply,
@@ -220,7 +231,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   end
 
   @impl true
-  def handle_async(:recovery_observation, {:ok, {generation, handle, result}}, socket) do
+  def handle_async(
+        {:recovery_observation, _generation, _handle},
+        {:ok, {generation, handle, result}},
+        socket
+      ) do
     if generation == socket.assigns.context_generation and
          handle == socket.assigns.recovery_handle do
       {status, evidence} =
@@ -240,16 +255,25 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     end
   end
 
-  def handle_async(:recovery_observation, {:exit, _reason}, socket) do
-    {:noreply,
-     socket
-     |> assign(:recovery_status, :unknown)
-     |> assign(:recovery_evidence, nil)
-     |> assign(:recovery_checked_at, DateTime.utc_now())
-     |> assign(:recovery_loading, false)}
+  def handle_async({:recovery_observation, generation, handle}, {:exit, _reason}, socket) do
+    if generation == socket.assigns.context_generation and
+         handle == socket.assigns.recovery_handle do
+      {:noreply,
+       socket
+       |> assign(:recovery_status, :unknown)
+       |> assign(:recovery_evidence, nil)
+       |> assign(:recovery_checked_at, DateTime.utc_now())
+       |> assign(:recovery_loading, false)}
+    else
+      {:noreply, socket}
+    end
   end
 
-  def handle_async(:promotion_swap, {:ok, {generation, task_id, result}}, socket) do
+  def handle_async(
+        {:promotion_swap, _generation, _task_id},
+        {:ok, {generation, task_id, result}},
+        socket
+      ) do
     if generation == socket.assigns.context_generation and
          task_id == socket.assigns.promotion_task_id do
       socket = assign(socket, :promotion_loading, false)
@@ -279,11 +303,16 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     end
   end
 
-  def handle_async(:promotion_swap, {:exit, reason}, socket) do
-    {:noreply,
-     socket
-     |> assign(:promotion_loading, false)
-     |> assign(:promotion_status, {:failed, reason})}
+  def handle_async({:promotion_swap, generation, task_id}, {:exit, reason}, socket) do
+    if generation == socket.assigns.context_generation and
+         task_id == socket.assigns.promotion_task_id do
+      {:noreply,
+       socket
+       |> assign(:promotion_loading, false)
+       |> assign(:promotion_status, {:failed, reason})}
+    else
+      {:noreply, socket}
+    end
   end
 
   defp module_flat_name(mod) when is_atom(mod), do: OperatorSelection.canonical(mod)
@@ -327,6 +356,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> assign(:drift_error, nil)
     |> assign(:drift_loading, false)
     |> assign(:recovery_handle, nil)
+    |> assign(:recovery_origin_generation, nil)
     |> assign(:recovery_status, nil)
     |> assign(:recovery_evidence, nil)
     |> assign(:recovery_checked_at, nil)
@@ -338,11 +368,31 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> assign(:promotion_eligibility, {:blocked, :reconcile_not_current})
   end
 
-  defp maybe_start_recovery(socket, handle) when is_binary(handle) and byte_size(handle) <= 128 do
-    start_recovery_observation(socket, handle)
+  defp maybe_start_recovery(socket, handle, origin)
+       when is_binary(handle) and byte_size(handle) in 1..128 and is_binary(origin) and
+              byte_size(origin) <= 20 do
+    case Integer.parse(origin) do
+      {generation, ""} when generation >= 0 ->
+        socket
+        |> assign(:recovery_origin_generation, generation)
+        |> start_recovery_observation(handle)
+
+      _ ->
+        clear_recovery_handoff(socket)
+    end
   end
 
-  defp maybe_start_recovery(socket, _), do: socket
+  defp maybe_start_recovery(socket, _, _), do: clear_recovery_handoff(socket)
+
+  defp clear_recovery_handoff(socket) do
+    socket
+    |> assign(:recovery_handle, nil)
+    |> assign(:recovery_origin_generation, nil)
+    |> assign(:recovery_status, nil)
+    |> assign(:recovery_evidence, nil)
+    |> assign(:recovery_checked_at, nil)
+    |> assign(:recovery_loading, false)
+  end
 
   defp start_recovery_observation(socket, handle) do
     generation = socket.assigns.context_generation
@@ -358,7 +408,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       |> assign(:recovery_evidence, nil)
       |> assign(:recovery_loading, true)
 
-    start_async(socket, :recovery_observation, fn ->
+    start_async(socket, {:recovery_observation, generation, handle}, fn ->
       result = observe_recovery(context, handle, schema, opts, operator_opts)
       {generation, handle, result}
     end)
@@ -499,7 +549,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       host: (socket.host_uri && socket.host_uri.host) || "unknown",
       org: org && to_string(org),
       schema: OperatorSelection.canonical(schema),
-      generation: socket.assigns.context_generation
+      generation: socket.assigns.recovery_origin_generation
     }
   end
 
@@ -740,7 +790,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               |> assign(:promotion_task_id, task_id)
               |> assign(:promotion_status, :accepted)
               |> assign(:promotion_loading, true)
-              |> start_async(:promotion_swap, fn ->
+              |> start_async({:promotion_swap, generation, task_id}, fn ->
                 result = Tasks.wait_for_task(task, task_wait_opts(opts))
                 {generation, task_id, result}
               end)
@@ -927,12 +977,13 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       <.ops_trail mount_path={@mount_path} current={:sync_drift} class="mt-4" />
 
       <.ops_panel class="mt-4">
-        <.ops_schema_select
-          id="sync-schema-select"
-          schemas={@schema_allowlist}
-          selected={@selected_schema}
-          phx-change="select_schema"
-        />
+        <.form for={%{}} id="sync-drift-schema-form" phx-change="select_schema">
+          <.ops_schema_select
+            id="sync-schema-select"
+            schemas={@schema_allowlist}
+            selected={@selected_schema}
+          />
+        </.form>
       </.ops_panel>
 
       <.ops_panel :if={@recovery_handle} class="mt-4" id="recovery-observation">
@@ -1122,7 +1173,12 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         </.ops_section>
       </.ops_panel>
 
-      <details :if={@selected_schema} class="ops-panel mt-4">
+      <details
+        :if={@selected_schema}
+        id="index-promotion"
+        class="ops-panel mt-4"
+        open={@promotion_status != nil}
+      >
         <summary class="cursor-pointer p-4 font-semibold">Advanced: index promotion</summary>
         <div class="space-y-3 px-4 pb-4">
           <p class="text-ops-body text-base-content/75">

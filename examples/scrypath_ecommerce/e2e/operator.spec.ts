@@ -11,6 +11,8 @@ import {
   type RecoveryEvidence
 } from "./helpers/e2e";
 
+test.use({ actionTimeout: 10_000 });
+
 const marker = () => `phase172-${crypto.randomUUID().replaceAll("-", "")}`;
 
 function recordEvidence(testInfo: TestInfo, evidence: Record<string, unknown>) {
@@ -64,6 +66,12 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
   await waitForLiveConnected(page);
 
+  // A real selection change advances this page's generation independently of the destination.
+  await page.locator(".ops-schema-option").filter({ has: page.getByRole("radio", { name: /Product/ }) }).click();
+  await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Product/);
+  await page.locator(".ops-schema-option").filter({ has: page.getByRole("radio", { name: /Variant/ }) }).click();
+  await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
+
   const failedRow = page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Failed job ${fixture.original_job_id}` }) });
   await expect(failedRow).toBeVisible();
   const retry = failedRow.getByRole("button", { name: "Retry sync work" });
@@ -88,6 +96,8 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   const handoffUrl = new URL(handoffHref!, page.url());
   const handle = handoffUrl.searchParams.get("recovery");
   expect(handle).toBeTruthy();
+  const originGeneration = Number(handoffUrl.searchParams.get("recovery_generation"));
+  expect(originGeneration).toBeGreaterThan(1);
   await handoff.click();
   await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
@@ -101,7 +111,7 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await expect(recoveryStatus).toContainText(`Queue job ${acceptedJobId}`);
 
   const evidence = await waitForRecoveryEvidence(request, {
-    marker: fixture.marker, acceptedJobId, handle: handle!, generation: 1,
+    marker: fixture.marker, acceptedJobId, handle: handle!, generation: originGeneration,
     taskUid: Number(observedTask![1]), documentId: fixture.document_id, timeoutMs: 30_000
   });
   expect(evidence).toMatchObject({
@@ -120,7 +130,7 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   recordEvidence(testInfo, { ...evidence, checked_outcome: "Recovery verified", elapsed_ms: Date.now() - startedAt });
   const probeParams = {
     marker: fixture.marker, accepted_job_id: String(acceptedJobId), handle: handle!,
-    generation: "1", task_uid: String(evidence.task_uid), document_id: String(fixture.document_id)
+    generation: String(originGeneration), task_uid: String(evidence.task_uid), document_id: String(fixture.document_id)
   };
   const oldTask = await request.get("/dev/e2e/recovery-probe", {
     params: { ...probeParams, task_uid: String(fixture.task_baseline) }
@@ -175,7 +185,7 @@ test("operator promotes only this returned task pair and unique target document"
   await page.getByRole("dialog", { name: "Confirm index promotion" }).getByRole("button", { name: "Promote target index", exact: true }).click();
 
   const promotionStatus = page.locator("details").filter({ hasText: "Advanced: index promotion" });
-  await expect(promotionStatus).toContainText("Index swap completed", { timeout: 30_000 });
+  await expect(promotionStatus.getByText("Index swap completed", { exact: true })).toBeVisible({ timeout: 30_000 });
   const taskText = await promotionStatus.innerText();
   const taskMatch = taskText.match(/Task\s+(\d+)/);
   expect(taskMatch, "completed promotion must retain its returned task UID").not.toBeNull();

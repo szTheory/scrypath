@@ -138,6 +138,17 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     :ok
   end
 
+  test "rendered schema form changes the selected target", %{conn: conn} do
+    {:ok, lv, _html} = live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.OpsPostA")
+
+    lv
+    |> form("#failed-sync-schema-form", %{"schema" => "ScrypathOps.Test.OpsPostB"})
+    |> render_change()
+
+    assert_patch(lv, "/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB")
+    assert :sys.get_state(lv.pid).socket.assigns.selected_schema == OpsPostB
+  end
+
   test "renders triage summary, rollups, and human reason-class columns", %{conn: conn} do
     {:ok, lv, html} = live(conn, ~p"/ops/failed-sync")
 
