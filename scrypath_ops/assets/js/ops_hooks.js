@@ -377,6 +377,7 @@ const OpsModal = {
     const pending = opsModalPendingTrigger
     this.returnTarget = pending && pending.isConnected ? pending : document.activeElement
     opsModalPendingTrigger = null
+    this.returnTargetName = this.returnTarget?.getAttribute("phx-value-name")
     this.inerted = []
     this.onKeydown = e => this.handleKeydown(e)
     this.onModalOverlayOpen = () => {
@@ -400,7 +401,11 @@ const OpsModal = {
     this.restoreBackground()
     if (activeOpsModal === this) activeOpsModal = null
 
-    this.restoreFocus()
+    // The destroyed hook runs during a LiveView patch. Wait until deleted rows
+    // and replacement controls have settled before choosing the return target.
+    window.requestAnimationFrame(() => {
+      if (!activeOpsModal) this.restoreFocus()
+    })
   },
   focusableElements() {
     const selector = [
@@ -483,7 +488,9 @@ const OpsModal = {
     if (event) this.pushEvent(event, {})
   },
   restoreFocus() {
-    const target = this.returnTarget && this.returnTarget.isConnected
+    // LiveView can reuse a connected button for the next record after deletion.
+    const sameRecord = this.returnTarget?.getAttribute("phx-value-name") === this.returnTargetName
+    const target = this.returnTarget && this.returnTarget.isConnected && sameRecord
       ? this.returnTarget
       : this.querySuccessor()
     if (target && typeof target.focus === "function") target.focus({preventScroll: true})

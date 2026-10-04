@@ -69,6 +69,7 @@ async function shoot(
     await capture.prepare(page);
     await mkdir(screenshotDir, { recursive: true });
     const name = `${capture.index}-${capture.screen}--${theme}--${viewport}--${capture.state}`;
+    await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({ path: path.join(screenshotDir, `${name}.png`), fullPage: true });
   } finally {
     await context.close();
@@ -124,18 +125,18 @@ async function gotoPosture(page: Page): Promise<void> {
 async function gotoFailedSync(page: Page): Promise<void> {
   await page.goto("/admin/search/failed-sync");
   await waitForLiveConnected(page);
-  await page.getByRole("button", { name: "Refresh failed sync jobs" }).click();
-  await expect(page.getByRole("heading", { name: "Failed sync jobs", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Refresh failed sync work" }).click();
+  await expect(page.getByRole("heading", { name: "Failed sync work", exact: true })).toBeVisible();
 }
 
 async function gotoSyncDrift(page: Page): Promise<void> {
   await page.goto("/admin/search/sync-drift");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
-  await page.getByRole("button", { name: "Load / refresh contract drift" }).click();
+  await page.getByRole("button", { name: "Check index contract" }).click();
   // load_drift defers the bounded backend read to a :run_drift message (S3 loading
   // state), so the dimensions panel appears a render after the click — toBeVisible polls.
-  await expect(page.getByText("Contract dimensions")).toBeVisible();
+  await expect(page.getByText("Contract dimensions", { exact: true })).toBeVisible();
 }
 
 async function gotoSearch(page: Page): Promise<void> {

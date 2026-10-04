@@ -230,7 +230,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                   <% {:ok, status} -> %>
                     <div class="ops-schema-signal-card__header">
                       <div class="min-w-0">
-                        <h3 class="font-mono text-ops-body font-semibold text-base-content">
+                        <h3 class="font-mono text-ops-h3 font-semibold text-base-content">
                           {inspect(mod)}
                         </h3>
                         <p class="mt-1 text-ops-sm text-base-content/65">
@@ -301,7 +301,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                     </div>
                     <.link
                       navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
-                      class="link link-primary mt-3 inline-flex"
+                      class="link link-primary mt-3 inline-flex min-h-[var(--control-h-md)] items-center"
                       data-testid="posture-failed-sync-link"
                     >
                       Inspect failed work for {module_flat_name(mod)}
@@ -309,7 +309,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                   <% {:error, reason} -> %>
                     <div class="ops-schema-signal-card__header">
                       <div class="min-w-0">
-                        <h3 class="font-mono text-ops-body font-semibold text-base-content">
+                        <h3 class="font-mono text-ops-h3 font-semibold text-base-content">
                           {inspect(mod)}
                         </h3>
                         <p class="mt-1 text-ops-sm text-error">fetch error: {inspect(reason)}</p>
@@ -320,7 +320,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                     </div>
                     <.link
                       navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
-                      class="link link-primary mt-3 inline-flex"
+                      class="link link-primary mt-3 inline-flex min-h-[var(--control-h-md)] items-center"
                       data-testid="posture-failed-sync-link"
                     >
                       Inspect failed work for {module_flat_name(mod)}

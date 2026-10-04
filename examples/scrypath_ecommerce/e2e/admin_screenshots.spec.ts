@@ -45,8 +45,8 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
 
   await page.goto("/admin/search/failed-sync");
   await waitForLiveConnected(page);
-  await page.getByRole("button", { name: "Refresh failed sync jobs" }).click();
-  await expect(page.getByRole("heading", { name: "Failed sync jobs" })).toBeVisible();
+  await page.getByRole("button", { name: "Refresh failed sync work" }).click();
+  await expect(page.getByRole("heading", { name: "Failed sync work", exact: true })).toBeVisible();
   const failedRow = page.getByTestId("failed-sync-row").first();
   await expect(failedRow).toBeVisible();
   await failedRow.locator("summary").click();
@@ -62,8 +62,8 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   await page.goto("/admin/search/sync-drift");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
-  await page.getByRole("button", { name: "Load / refresh contract drift" }).click();
-  await expect(page.getByText("Contract dimensions")).toBeVisible();
+  await page.getByRole("button", { name: "Check index contract" }).click();
+  await expect(page.getByText("Contract dimensions", { exact: true })).toBeVisible();
   await capture(page, testInfo, "04-sync-drift-loaded");
 
   await page.goto("/admin/search/search");

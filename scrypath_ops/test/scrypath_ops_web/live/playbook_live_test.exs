@@ -96,7 +96,16 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     {:ok, _view, html} = live(conn, ~p"/ops/playbooks")
 
     assert html =~ "Import playbook file"
-    assert html =~ ~s(for="playbook-upload-file")
+
+    [upload_id] =
+      html
+      |> LazyHTML.from_document()
+      |> LazyHTML.query("input[type=file]")
+      |> LazyHTML.attribute("id")
+
+    assert html =~ ~s(for="#{upload_id}")
+    assert html =~ ~s(id="#{upload_id}-hint")
+    assert html =~ ~s(aria-describedby="#{upload_id}-hint")
     assert html =~ ~s(accept=".json")
     assert html =~ ~s(max-file-size="256000") || html =~ "256000 bytes"
     assert html =~ ~s(for="playbook-paste-json")
@@ -149,7 +158,25 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
 
     assert render(view) =~ ~s(value="invalid/name.json")
 
+    view
+    |> form("form[phx-submit='rename_submit']", %{"new_name" => "invalid/name.json"})
+    |> render_submit()
+
+    assert has_element?(view, "#rename-playbook-modal [role='alert']", "Filename")
+    assert has_element?(view, "#rename-new-name-input[aria-invalid='true']")
+
+    assert has_element?(
+             view,
+             "#rename-new-name-input[aria-describedby*='rename-new-name-input-error']"
+           )
+
     render_click(view, "rename_cancel", %{})
+    render_click(view, "dup_open", %{"name" => "one.json"})
+    refute has_element?(view, "#duplicate-playbook-modal [role='alert']")
+    view |> form("form[phx-submit='dup_submit']", %{"to_name" => "two.json"}) |> render_submit()
+    assert has_element?(view, "#duplicate-playbook-modal [role='alert']", "already in use")
+    assert has_element?(view, "#dup-to-name-input[aria-invalid='true']")
+    render_click(view, "dup_cancel", %{})
 
     view
     |> element("button[phx-click='request_delete'][phx-value-name='one.json']")
@@ -158,7 +185,10 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     html = render(view)
     assert html =~ "This cannot be undone."
     assert html =~ ~s(data-ops-modal-initial-focus="[data-ops-modal-cancel]")
-    assert html =~ ~s(data-ops-modal-successor="#playbook-primary-0")
+
+    assert html =~
+             ~s(data-ops-modal-successor="#playbook-primary-#{Base.url_encode64("two.json", padding: false)}")
+
     assert html =~ ~s(aria-label="Cancel delete")
   end
 
@@ -723,6 +753,8 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
       |> render_submit()
 
     assert html =~ "Confirmation must match the filename exactly."
+    assert has_element?(view, "#delete-playbook-modal [role='alert']", "Confirmation must match")
+    assert has_element?(view, "#delete-confirm-input[aria-invalid='true']")
     assert File.exists?(path)
   end
 

@@ -11,6 +11,8 @@ import {
   type RecoveryEvidence
 } from "./helpers/e2e";
 
+import { assertOperatorGeometry, scanNonContrastA11y } from "./helpers/operator-ui";
+
 test.use({ actionTimeout: 10_000 });
 
 const marker = () => `phase172-${crypto.randomUUID().replaceAll("-", "")}`;
@@ -41,6 +43,8 @@ test.afterEach(async ({ page }, testInfo) => {
 test("operator verifies a rendered recovery for the non-first Variant schema", async ({ page, request }, testInfo) => {
   test.setTimeout(90_000);
   const startedAt = Date.now();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.addInitScript(() => localStorage.setItem("phx:theme", "dark"));
   const seed = await seedScenario(request, "e2e_search_catalog");
   const runMarker = marker();
   recordEvidence(testInfo, { fixture_marker: runMarker, schema: "Elixir.ScrypathEcommerce.Catalog.Variant", checked_outcome: "fixture setup started" });
@@ -80,6 +84,7 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
 
   const receipt = failedRow.getByTestId("recovery-receipt");
   await expect(receipt).toBeVisible();
+  await scanNonContrastA11y(page, testInfo, "retry-accepted-dark-desktop");
   await expect(receipt).toContainText(`Original failure #${fixture.original_job_id} retained`);
   const receiptText = await receipt.innerText();
   const acceptedMatch = receiptText.match(/Queue job (\d+)/);
@@ -105,6 +110,10 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   const recoveryStatus = page.locator("#recovery-observation");
   await page.getByRole("button", { name: "Refresh recovery status" }).click();
   await expect(recoveryStatus).toContainText("Recovery verified", { timeout: 30_000 });
+  await scanNonContrastA11y(page, testInfo, "recovery-verified-dark-desktop");
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await assertOperatorGeometry(page, "verified recovery", [".ops-command-hint", "#theme-toggle"]);
+  await testInfo.attach("recovery-verified-dark-1440.png", { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
   const observedText = await recoveryStatus.getByTestId("recovery-evidence").innerText();
   const observedTask = observedText.match(/Meilisearch task (\d+)/);
   expect(observedTask, "verified recovery must expose its exact backend task").not.toBeNull();
@@ -176,7 +185,7 @@ test("operator promotes only this returned task pair and unique target document"
   await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
   await waitForLiveConnected(page);
   await page.getByRole("button", { name: "Check index contract" }).click();
-  await expect(page.getByText("Contract dimensions")).toBeVisible();
+  await expect(page.getByText("Contract dimensions", { exact: true })).toBeVisible();
   const advanced = page.locator("details").filter({ has: page.locator("summary", { hasText: "Advanced: index promotion" }) });
   await advanced.locator("summary").click();
   await expect(advanced.getByRole("button", { name: "Promote target index" })).toBeEnabled();

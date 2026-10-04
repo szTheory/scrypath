@@ -159,7 +159,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert html =~ "data-testid=\"failed-sync-row\""
     assert html =~ "data-testid=\"failed-sync-retry\""
     assert html =~ "Failed sync jobs"
-    assert html =~ "Refresh failed sync jobs"
+    assert html =~ "Refresh failed sync work"
     assert html =~ "Retry sync work"
     assert html =~ "index missing"
     assert html =~ "upsert · oban"

@@ -50,7 +50,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       type="button"
       class={["ops-command-hint", @class]}
       data-ops-command-open
-      aria-label="Open command palette"
+      aria-label="Jump to surface"
       aria-keyshortcuts="Meta+K Control+K"
     >
       <span>Jump to surface</span>
@@ -989,7 +989,8 @@ defmodule ScrypathOpsWeb.OpsUi do
             name={@name}
             options={@options}
             selected={module_flat_name(@selected)}
-            class="font-mono text-ops-sm"
+            class="font-mono text-ops-body"
+            aria-label={@label}
             aria-describedby={@description_ids}
             aria-invalid={@error && "true"}
             disabled={@disabled}
@@ -1149,7 +1150,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <article class={["ops-result-row text-ops-body", @class]} {@rest}>
       <div class="min-w-0">
-        <h3 class="font-semibold text-base-content">{@title}</h3>
+        <h3 class="text-ops-h3 font-semibold text-base-content">{@title}</h3>
         <p :if={@subtitle} class="mt-1 text-ops-sm leading-5 text-base-content/70">{@subtitle}</p>
         <div :if={@meta != []} class="mt-2 flex flex-wrap gap-2">
           {render_slot(@meta)}
@@ -1287,6 +1288,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   end
 
   @doc "Scrollable code/data block."
+  attr(:label, :string, default: "Technical details")
   attr(:variant, :atom, default: :default, values: [:default, :compact, :embedded])
   # Phase 133 (DARKMOTION-01): opt-in hover glint. Default false is load-bearing —
   # evidence code blocks (Failed Sync, search/merge payloads) must stay calm (D-04a/c).
@@ -1298,6 +1300,9 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_code_block(assigns) do
     ~H"""
     <pre
+      tabindex="0"
+      role="region"
+      aria-label={@label}
       class={[
         "overflow-auto rounded-ops-md font-mono text-ops-sm whitespace-pre-wrap break-words",
         @variant == :default && "max-h-96 bg-ops-surface-2 p-ops-3",
@@ -1317,7 +1322,9 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_inline_code(assigns) do
     ~H"""
-    <code class={["font-mono text-ops-sm tabular-nums", @class]}>{render_slot(@inner_block)}</code>
+    <code class={["font-mono text-ops-body tabular-nums break-all", @class]}>
+      {render_slot(@inner_block)}
+    </code>
     """
   end
 
@@ -1521,13 +1528,13 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_workspace_mode_indicator(assigns) do
     ~H"""
-    <span class={["inline-flex flex-wrap items-center gap-1.5 text-ops-sm", @class]}>
+    <span class={["inline-flex max-w-full flex-wrap items-center gap-1.5 text-ops-sm", @class]}>
       <.ops_badge kind={if @mode == :examples, do: :warning, else: :neutral}>
         {if @mode == :examples, do: "Examples (read-only)", else: "Workspace"}
       </.ops_badge>
       <span
         :if={@path && @mode == :workspace}
-        class="max-w-xs truncate font-mono text-ops-sm text-base-content/55"
+        class="max-w-full break-all font-mono text-ops-body text-base-content/70"
       >
         {@path}
       </span>

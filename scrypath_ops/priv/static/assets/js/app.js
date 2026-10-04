@@ -9013,6 +9013,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       const pending = opsModalPendingTrigger;
       this.returnTarget = pending && pending.isConnected ? pending : document.activeElement;
       opsModalPendingTrigger = null;
+      this.returnTargetName = this.returnTarget?.getAttribute("phx-value-name");
       this.inerted = [];
       this.onKeydown = (e) => this.handleKeydown(e);
       this.onModalOverlayOpen = () => {
@@ -9034,7 +9035,9 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       document.removeEventListener("ops:modal-overlay-open", this.onModalOverlayOpen);
       this.restoreBackground();
       if (activeOpsModal === this) activeOpsModal = null;
-      this.restoreFocus();
+      window.requestAnimationFrame(() => {
+        if (!activeOpsModal) this.restoreFocus();
+      });
     },
     focusableElements() {
       const selector = [
@@ -9106,7 +9109,8 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       if (event) this.pushEvent(event, {});
     },
     restoreFocus() {
-      const target = this.returnTarget && this.returnTarget.isConnected ? this.returnTarget : this.querySuccessor();
+      const sameRecord = this.returnTarget?.getAttribute("phx-value-name") === this.returnTargetName;
+      const target = this.returnTarget && this.returnTarget.isConnected && sameRecord ? this.returnTarget : this.querySuccessor();
       if (target && typeof target.focus === "function") target.focus({ preventScroll: true });
       this.returnTarget = null;
     },

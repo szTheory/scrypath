@@ -3276,6 +3276,40 @@
     box-shadow: var(--shadow-ops-surface);
     backdrop-filter: blur(16px);
   }
+  .ops-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-ops-4);
+  }
+  @media (max-width: 640px) {
+    .ops-header__inner {
+      display: grid;
+      grid-template-areas: "brand brand" "action theme";
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      justify-content: normal;
+      gap: var(--spacing-ops-2) var(--spacing-ops-4);
+    }
+    .ops-header__inner > :first-child {
+      grid-area: brand;
+    }
+    .ops-header__inner > :nth-child(2) {
+      grid-area: action;
+      min-width: 0;
+    }
+    .ops-header__inner > :nth-child(3) {
+      grid-area: theme;
+      justify-self: end;
+    }
+    .ops-header .ops-command-hint {
+      width: 100%;
+      justify-content: center;
+    }
+    .ops-header .ops-command-hint .ops-kbd {
+      display: none;
+    }
+  }
   .ops-sidebar {
     position: fixed;
     inset: 0 auto 0 0;
@@ -3829,13 +3863,13 @@
     }
   }
   .ops-tone-chip.ops-tone-success .ops-tone-chip__value {
-    color: var(--color-success);
+    color: var(--color-base-content);
   }
   .ops-tone-chip.ops-tone-warning .ops-tone-chip__value, .ops-tone-chip.ops-tone-partial .ops-tone-chip__value {
-    color: var(--color-warning);
+    color: var(--color-base-content);
   }
   .ops-tone-chip.ops-tone-error .ops-tone-chip__value {
-    color: var(--color-error);
+    color: var(--color-base-content);
   }
   .ops-btn {
     min-height: var(--control-h-md);
@@ -4288,7 +4322,9 @@
   .ops-handoff__link {
     font-size: var(--text-ops-body);
     font-weight: 600;
-    color: var(--color-primary);
+    color: var(--color-base-content);
+    text-decoration: underline;
+    text-underline-offset: 2px;
     border-radius: var(--radius-ops-sm);
     transition: color var(--duration-ops-fast) var(--ease-ops-standard);
   }
@@ -4544,6 +4580,8 @@
     gap: var(--spacing-ops-3);
   }
   .ops-schema-signal-card {
+    min-width: 0;
+    overflow-wrap: anywhere;
     display: grid;
     gap: var(--spacing-ops-3);
     border: 1px solid var(--color-base-content);
@@ -5029,6 +5067,8 @@
 .ops-theme-toggle__button {
   position: relative;
   z-index: 1;
+  min-width: var(--control-h-lg);
+  min-height: var(--control-h-lg);
   border-radius: 999px;
   transition-property: background-color, color, box-shadow;
   transition-duration: var(--duration-ops-fast);
@@ -5422,6 +5462,11 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
     --shadow-ops-glow: 0 0 8px 2px rgba(108,92,231,0.30);
     --shadow-ops-glow-copper: 0 0 6px 1px rgba(193,122,62,0.25);
   }
+}
+.ops-shell a.link-primary {
+  color: var(--color-base-content);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 @layer base {
   :root:has( .modal-open, .modal[open], .modal:target, .modal-toggle:checked, .drawer:not([class*="drawer-open"]) > .drawer-toggle:checked ) {

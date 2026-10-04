@@ -173,7 +173,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert html =~ ~s(phx-hook="CommandPalette")
     assert html =~ ~s(data-cheatsheet="ops-cheatsheet")
     assert Regex.scan(~r/data-ops-command-open/, html) |> length() == 1
-    assert Regex.scan(~r/aria-label=\"Open command palette\"/, html) |> length() == 1
+    assert Regex.scan(~r/aria-label=\"Jump to surface\"/, html) |> length() == 1
     assert html =~ ~s(aria-keyshortcuts="Meta+K Control+K")
     assert html =~ ~s(id="ops-cmdk")
     assert html =~ ~s(id="ops-cheatsheet")

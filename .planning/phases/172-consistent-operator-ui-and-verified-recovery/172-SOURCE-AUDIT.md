@@ -87,7 +87,7 @@ Plan07 must_haves.truths contains all eight consolidated truths, with every appl
 | populated | E2,E3,E4,E5,E6 |5|02/03/05 visible state/object/action cases;06/07 |
 | partial | E2,E3,E4,E5,E6,E7 |6|02/03/04 partial/correlation/queue cases;07 |
 | overflow | E1,E2,E3,E4,E5,E6,E7 |7|07 assertOperatorGeometry at320/390 and bounded technical regions |
-| zero-one-many | E2,E3,E4,E5,E6 |5|02/03 radio/select/count cases;07 six-reason≤160px |
+| zero-one-many | E2,E3,E4,E5,E6 |5|02/03 radio/select/count cases;07 total + five classes ≤160px |
 | long-text | E1,E2,E3,E4,E5,E6,E7 |7|02/03 exact identity;07 readable long labels/filename/error geometry |
 
 ## Edge fallback disposition

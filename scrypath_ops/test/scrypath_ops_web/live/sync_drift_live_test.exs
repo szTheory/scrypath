@@ -10,6 +10,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   alias ScrypathOps.Test.OpsPostB
   alias ScrypathOps.Integrations.Sigra.OperatorContext
   alias ScrypathOpsWeb.SyncDriftLive
+  alias Scrypath.Operations.Task, as: OperationTask
 
   defmodule SyncDriftClient do
     def tasks(filters, config) do
@@ -371,7 +372,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert refreshing.assigns.recovery_evidence == nil
   end
 
-  test "swap observer preserves the exact accepted task across terminal, failure, timeout, and stale results" do
+  test "swap observer distinguishes terminal outcomes from unconfirmed observations and keeps task identity" do
     socket =
       sync_drift_socket(%{
         context_generation: 9,
@@ -397,18 +398,92 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
         socket
       )
 
-    assert wrong_task.assigns.promotion_status == {:failed, :unexpected_task_result}
+    assert wrong_task.assigns.promotion_status == :unknown
     assert wrong_task.assigns.promotion_task_id == 991
 
     {:noreply, failed} =
       SyncDriftLive.handle_async(
         {:promotion_swap, 9, 991},
-        {:ok, {9, 991, {:error, {:task_failed, %{id: 991}}}}},
+        {:ok,
+         {9, 991,
+          {:error,
+           {:task_failed,
+            %OperationTask{source: :meilisearch, kind: :index_swap, id: 991, state: :failed}}}}},
         socket
       )
 
-    assert failed.assigns.promotion_status == {:failed, {:task_failed, %{id: 991}}}
+    assert failed.assigns.promotion_status ==
+             {:failed,
+              {:task_failed,
+               %OperationTask{source: :meilisearch, kind: :index_swap, id: 991, state: :failed}}}
+
     assert failed.assigns.promotion_task_id == 991
+
+    {:noreply, cancelled} =
+      SyncDriftLive.handle_async(
+        {:promotion_swap, 9, 991},
+        {:ok,
+         {9, 991,
+          {:error,
+           {:cancelled,
+            %OperationTask{source: :meilisearch, kind: :index_swap, id: 991, state: :cancelled}}}}},
+        socket
+      )
+
+    assert cancelled.assigns.promotion_status ==
+             {:failed,
+              {:cancelled,
+               %OperationTask{source: :meilisearch, kind: :index_swap, id: 991, state: :cancelled}}}
+
+    assert cancelled.assigns.promotion_task_id == 991
+
+    {:noreply, wrong_terminal_task} =
+      SyncDriftLive.handle_async(
+        {:promotion_swap, 9, 991},
+        {:ok,
+         {9, 991,
+          {:error,
+           {:task_failed,
+            %OperationTask{source: :meilisearch, kind: :index_swap, id: 992, state: :failed}}}}},
+        socket
+      )
+
+    assert wrong_terminal_task.assigns.promotion_status == :unknown
+    assert wrong_terminal_task.assigns.promotion_task_id == 991
+
+    {:noreply, nonterminal_error} =
+      SyncDriftLive.handle_async(
+        {:promotion_swap, 9, 991},
+        {:ok,
+         {9, 991,
+          {:error,
+           {:task_failed,
+            %OperationTask{source: :meilisearch, kind: :index_swap, id: 991, state: :processing}}}}},
+        socket
+      )
+
+    assert nonterminal_error.assigns.promotion_status == :unknown
+    assert nonterminal_error.assigns.promotion_task_id == 991
+
+    {:noreply, transport_error} =
+      SyncDriftLive.handle_async(
+        {:promotion_swap, 9, 991},
+        {:ok, {9, 991, {:error, {:transport_error, :econnrefused}}}},
+        socket
+      )
+
+    assert transport_error.assigns.promotion_status == :unknown
+    assert transport_error.assigns.promotion_task_id == 991
+
+    {:noreply, invalid_payload} =
+      SyncDriftLive.handle_async(
+        {:promotion_swap, 9, 991},
+        {:ok, {9, 991, {:error, {:invalid_task_payload, %{task_uid: 991}}}}},
+        socket
+      )
+
+    assert invalid_payload.assigns.promotion_status == :unknown
+    assert invalid_payload.assigns.promotion_task_id == 991
 
     {:noreply, timed_out} =
       SyncDriftLive.handle_async(
@@ -419,6 +494,12 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     assert timed_out.assigns.promotion_status == :timed_out
     assert timed_out.assigns.promotion_task_id == 991
+
+    {:noreply, observer_exit} =
+      SyncDriftLive.handle_async({:promotion_swap, 9, 991}, {:exit, :noproc}, socket)
+
+    assert observer_exit.assigns.promotion_status == :unknown
+    assert observer_exit.assigns.promotion_task_id == 991
 
     {:noreply, stale} =
       SyncDriftLive.handle_async(
@@ -432,24 +513,27 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   end
 
   test "refresh after an unconfirmed promotion checks state without submitting another swap" do
-    socket =
-      sync_drift_socket(%{
-        promotion_task_id: 991,
-        promotion_status: :timed_out,
-        promotion_loading: false
-      })
+    for status <- [:timed_out, :unknown] do
+      socket =
+        sync_drift_socket(%{
+          promotion_task_id: 991,
+          promotion_status: status,
+          promotion_loading: false
+        })
 
-    {:noreply, refreshed} = SyncDriftLive.handle_event("refresh_promotion_checks", %{}, socket)
+      {:noreply, refreshed} = SyncDriftLive.handle_event("refresh_promotion_checks", %{}, socket)
 
-    assert refreshed.assigns.promotion_task_id == 991
-    assert refreshed.assigns.promotion_status == :timed_out
-    refute Agent.get(:sync_drift_live_test_state, & &1.swap_called)
+      assert refreshed.assigns.promotion_task_id == 991
+      assert refreshed.assigns.promotion_status == status
+      refute Agent.get(:sync_drift_live_test_state, & &1.swap_called)
+    end
   end
 
   test "rendered sync drift links preserve the selected schema", %{conn: conn} do
     {:ok, lv, html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
 
     assert html =~ "OpsPostB"
+    assert has_element?(lv, "a[href='/ops']", "Recheck search health")
     assert has_element?(lv, "a[href='/ops/posture?schema=ScrypathOps.Test.OpsPostB']")
     assert :sys.get_state(lv.pid).socket.assigns.selected_schema == OpsPostB
   end

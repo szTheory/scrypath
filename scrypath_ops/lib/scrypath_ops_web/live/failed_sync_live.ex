@@ -503,7 +503,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         />
         <div class="flex flex-wrap gap-2">
           <.ops_button phx-click="refresh" variant={:primary} data-ops-refresh>
-            Refresh failed sync jobs
+            Refresh failed sync work
           </.ops_button>
           <.ops_button phx-click="toggle_compact" variant={:ghost}>
             {if @compact_mode, do: "Show reason rollups", else: "Hide reason rollups"}
@@ -519,7 +519,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             id="schema-select"
             schemas={@schema_allowlist}
             selected={@selected_schema}
-            hint="Choose the allowlisted schema whose failed queue/backend work you want to inspect. Small allowlists stay visible so failures are easy to compare."
+            hint="Choose a schema to inspect its failed sync work."
           />
         </.form>
       </.ops_panel>

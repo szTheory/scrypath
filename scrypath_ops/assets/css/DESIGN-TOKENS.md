@@ -415,3 +415,10 @@ Thresholds per D-14:
 
 The `contrast-checker.mjs` gate exits non-zero iff AA failures exist; AAA is reported as advisory
 only and never affects the exit code.
+
+### Phase 172 rendered boundary corrections
+
+- The header uses one named layout authority. At 640px and below, the brand occupies the first row and Jump/theme controls share the second; the keyboard badge is omitted on this touch-sized layout. Desktop retains the shortcut beside the Jump control. Theme icon targets are 44px.
+- Schema cards and workspace paths wrap long identifiers without expanding the page. Record headings use the 16px h3 role.
+- Code regions expose a name and keyboard focus for contained scrolling. The native schema select has an explicit accessible name. Phoenix upload labels use the generated upload reference.
+- Playbook rows and successor controls have filename-derived identities. Modal return focus waits for the LiveView patch and rejects a connected trigger that has been reused for a different file.

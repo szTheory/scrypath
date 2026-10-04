@@ -62,7 +62,7 @@ defmodule ScrypathOpsWeb.Layouts do
 
       <div class="ops-shell-content">
         <header class="ops-header px-4 py-2 sm:px-6 lg:px-8">
-          <div class="flex items-center justify-between gap-4">
+          <div class="ops-header__inner">
             <div class="flex min-w-0 items-center gap-3 xl:hidden">
               <button
                 type="button"

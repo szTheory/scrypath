@@ -14,6 +14,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   alias ScrypathOps.PromotionEligibility
   alias ScrypathOps.RecoveryObservation
   alias Scrypath.Meilisearch.Tasks
+  alias Scrypath.Operations.Task, as: OperationTask
 
   @impl true
   def mount(_params, _session, socket) do
@@ -286,14 +287,19 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           |> refresh_drift()
 
         {:ok, _unexpected_task} ->
-          assign(socket, :promotion_status, {:failed, :unexpected_task_result})
+          assign(socket, :promotion_status, :unknown)
 
         {:error, {:timeout, _task}} ->
           assign(socket, :promotion_status, :timed_out)
 
-        {:error, reason} ->
-          socket
-          |> assign(:promotion_status, {:failed, reason})
+        {:error, {:task_failed, %OperationTask{id: ^task_id, state: :failed} = task}} ->
+          assign(socket, :promotion_status, {:failed, {:task_failed, task}})
+
+        {:error, {:cancelled, %OperationTask{id: ^task_id, state: :cancelled} = task}} ->
+          assign(socket, :promotion_status, {:failed, {:cancelled, task}})
+
+        {:error, _observation_error} ->
+          assign(socket, :promotion_status, :unknown)
       end
       |> invalidate_recovery_claim()
       |> refresh_promotion_eligibility()
@@ -303,13 +309,13 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     end
   end
 
-  def handle_async({:promotion_swap, generation, task_id}, {:exit, reason}, socket) do
+  def handle_async({:promotion_swap, generation, task_id}, {:exit, _reason}, socket) do
     if generation == socket.assigns.context_generation and
          task_id == socket.assigns.promotion_task_id do
       {:noreply,
        socket
        |> assign(:promotion_loading, false)
-       |> assign(:promotion_status, {:failed, reason})}
+       |> assign(:promotion_status, :unknown)}
     else
       {:noreply, socket}
     end
@@ -914,12 +920,14 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp promotion_status_kind(:completed), do: :success
   defp promotion_status_kind({:failed, _}), do: :error
   defp promotion_status_kind(:timed_out), do: :warning
+  defp promotion_status_kind(:unknown), do: :warning
   defp promotion_status_kind(_), do: :neutral
 
   defp promotion_status_title(:accepted), do: "Index swap accepted"
   defp promotion_status_title(:completed), do: "Index swap completed"
   defp promotion_status_title({:failed, _}), do: "Index swap failed"
   defp promotion_status_title(:timed_out), do: "Index swap outcome unconfirmed"
+  defp promotion_status_title(:unknown), do: "Index swap outcome unconfirmed"
   defp promotion_status_title(_), do: "Index swap status"
 
   defp task_wait_opts(opts) do
@@ -1087,7 +1095,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             :if={@reconcile_result == nil && @selected_schema}
             class="text-ops-body text-base-content/70"
           >
-            Reconcile not loaded yet — choose a schema or tap “Refresh reconcile”.
+            Sync status is not available yet. Refresh sync status to check again.
           </p>
         </.ops_section>
       </.ops_panel>
@@ -1105,7 +1113,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               phx-disable-with="Checking…"
               disabled={@drift_loading || !@selected_schema}
             >
-              Check index contract
+              {if @drift_result, do: "Refresh contract check", else: "Check index contract"}
             </.ops_button>
           </:actions>
 
@@ -1209,8 +1217,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               The backend accepted this swap. Waiting for its terminal result.
             </span>
             <span :if={@promotion_status == :completed}>Index swap completed.</span>
-            <span :if={@promotion_status == :timed_out}>
-              The task is still unconfirmed. Refresh checks to inspect current index state.
+            <span :if={@promotion_status in [:timed_out, :unknown]}>
+              The task result could not be confirmed. Refresh checks to inspect current index state.
             </span>
             <span :if={match?({:failed, _}, @promotion_status)}>
               The swap task failed. Refresh checks to inspect current index state.
@@ -1228,10 +1236,17 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
       <.ops_handoff>
         <:step
-          navigate={OperatorSelection.path(@mount_path, "posture", @selected_schema)}
-          hint="After promoting —"
+          navigate={@mount_path}
+          hint="After checking sync —"
         >
-          Re-check fleet posture
+          Recheck search health
+        </:step>
+        <:step
+          :if={@selected_schema}
+          navigate={OperatorSelection.path(@mount_path, "posture", @selected_schema)}
+          hint="For the selected schema —"
+        >
+          Inspect schema posture
         </:step>
       </.ops_handoff>
 
@@ -1294,7 +1309,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   end
 
   defp drift_status_copy(nil, nil) do
-    "Contract drift runs only after the explicit control so this screen does not hide a backend read behind page load."
+    "This check compares declared fields and settings. It does not verify document freshness."
   end
 
   defp drift_status_copy(result, nil) do
@@ -1303,7 +1318,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     if mismatches == 0 do
       "Declared fields, filterable attributes, sortable attributes, faceting, and settings match this snapshot."
     else
-      "#{mismatches} contract dimension(s) differ from the live index. Use the operator guides before changing aliases."
+      "#{mismatches} contract #{if mismatches == 1, do: "dimension differs", else: "dimensions differ"} from the live index. Review the differences before promoting a target index."
     end
   end
 

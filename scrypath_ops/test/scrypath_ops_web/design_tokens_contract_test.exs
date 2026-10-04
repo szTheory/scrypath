@@ -25,7 +25,7 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
   defp ops_ui, do: File.read!(@ops_ui)
 
   defp rule(selector) do
-    [_, body] = Regex.run(~r/#{Regex.escape(selector)}\s*\{([^}]*)\}/s, css())
+    [_, body] = Regex.run(~r/^\s*#{Regex.escape(selector)}\s*\{([^}]*)\}/ms, css())
     body
   end
 
