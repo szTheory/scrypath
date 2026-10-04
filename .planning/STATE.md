@@ -5,11 +5,11 @@ milestone_name: ScrypathOps operator/admin UI
 current_phase: null
 current_phase_name: null
 status: Awaiting next milestone
-stopped_at: v1.42 complete and archived; final exact-source receipt external
-last_updated: "2026-10-04T06:21:00Z"
+stopped_at: v1.42 complete; separate planning successor ready for new milestone scoping
+last_updated: "2026-10-04T15:15:12Z"
 last_activity: 2026-10-04
-last_activity_desc: Phase172 complete, Scrypath0.3.15 published, archive prepared before final attestation
-state_head: 8dd20e8966acd17a4ef5acec653c00dc31faab49
+last_activity_desc: Final v1.42 receipt retained; normal project checkout prepared with durable next-command preference
+state_head: 5ed440954ba70d2b94d8b480d625530e26a809ac
 progress:
   total_phases: 1
   completed_phases: 1
@@ -37,11 +37,14 @@ No next phase or milestone is approved. Do not replay Phase172, earlier plans or
 - Phase172:8/8 requirements and plans; independent verification38/38 truths; audit6/6 connections and5/5 flows. Archive: `milestones/v1.42-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and `milestones/v1.42-phases/`.
 - PR91 merged3ad154a33f99cb200b791577aadc5970adc70ca2. Candidate135517b/run37178388184 passed104 browser,4 mounted, required gates, coverage and attestation. Scoped Ops also passed PR37178390800 and main37180290165. Root657tests+4properties0; Ops233+2doctests0.
 - ReleasePR92 merged8dd20e8966acd17a4ef5acec653c00dc31faab49; `scrypath-v0.3.15` published. Run37181522723 passed publish/live Hex/consumer/HexDocs/tag parity; release-mainCI37181522706 passed required and scopedOps.
-- All completion/audit/archive records are prepared before final exact-source attestation. The enclosing operation must pass final CI before overall completion; its receipt remains external in CI/task output. No later tracked write belongs in that attested source. `state_head` above is the released input to this planning successor, not a self-referential final SHA.
+- Final exact-source closeout [run37183050686](https://github.com/szTheory/scrypath/actions/runs/37183050686) passed at `5ed440954ba70d2b94d8b480d625530e26a809ac`, including required gates, coverage and closeout attestation; the full browser lane passed104 tests and mounted lane4. Planning tag `v1.42` points to this source. PR93 merged the completed archive before this final run.
+- All completion/audit/archive records preceded that attestation. Its source and retained preview worktree remain unchanged. This dated handoff is a separate planning-only successor authorized by the maintainer's request to tidy and persist context; it changes no delivered product code and claims no hosted CI for the successor. `state_head` identifies the attested input, not this successor's own SHA. The collected receipt is retained at `reference/v1.42-final-receipt.json`; its immutable artifact IDs/digests remain useful after the hosted artifacts expire.
 
 ## Durable Defaults
 
 Use shared tokens/components and concise domain terms; preserve schema context and distinguish accepted work from exact task/document evidence. Keep inaccessible/missing/remote/expired evidence unknown and retain failure history. Automate recurring checks in existing economical CI lanes. Direct screenshot review supplements executable layout/focus/contrast checks; no paid judge or routine human UAT. Reopen only for named new evidence. See `reference/OPERATOR-UI-QUALITY.md` and PROJECT.md.
+
+Always finish a phase/milestone handoff with the completed phase, the exact next GSD command, why it advances work, and whether context can be cleared. The persistent policy is PROJECT.md's **GSD handoff default**.
 
 ### Historical Boundaries
 
@@ -65,8 +68,10 @@ Use shared tokens/components and concise domain terms; preserve schema context a
 
 Preview http://127.0.0.1:4012/admin/search remains healthy under Compose `scrypath-ui-v142`, without reseeding. Its bind-mounted `/private/tmp/scrypath-admin-ui` worktree is intentionally retained. Stop from `examples/scrypath_ecommerce` with `COMPOSE_PROJECT_NAME=scrypath-ui-v142 WEB_PORT=4012 docker compose -f compose.yaml -f compose.dev.yaml down`; preserve volumes.
 
-Both disposable verification projects and their owned networks/volumes were removed after artifact collection. Unrelated services, original `/Users/jon/projects/scrypath` checkout at11ab1c9 and its existing2026-10-02 stash are preserved.
+Both disposable verification projects and their owned networks/volumes were removed after artifact collection. Unrelated services remain untouched. The previous normal-checkout state at11ab1c9 is preserved on `gsd/v1.38-cleanup-merged`, with its existing2026-10-02 stash. On2026-10-04 the clean normal checkout was safely switched to a new branch from final main for this planning-only handoff; the old branch and stash were not reset or applied.
 
 ## Session Continuity
 
-Clear context safely after the enclosing final receipt is reported. This archive records the scope, evidence, release, cleanup and no-replay decisions. No active resume file or routine UAT remains. Historical milestone-index entries are archives, not executable next work.
+Clear context and run `$gsd-new-milestone` from `/Users/jon/projects/scrypath` on `planning/next-milestone-handoff`. This successor is committed locally for continuity; carry it into the next planning PR rather than resetting it away. No directory switch to the preview worktree is needed. Read PROJECT.md, this STATE.md, ROADMAP.md, and `reference/OPERATOR-UI-QUALITY.md` first.
+
+The command gathers and agrees the next scope. The next unused phase number is173, but no Phase173 or new milestone scope is approved yet. Present the proposed scope before implementation. Do not run execute/verify/complete for Phase172 or Phase170 again. No active resume file or routine UAT remains; historical milestone-index entries are archives, not executable next work. The milestone archive and retained receipt carry the completed scope, evidence, release, cleanup and no-replay decisions across context resets.
