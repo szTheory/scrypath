@@ -127,14 +127,14 @@ defmodule ScrypathOpsWeb.Layouts do
             <a href="https://github.com/szTheory/scrypath" class="btn btn-ghost">GitHub</a>
           </li>
           <li>
-            <a href={"#{@mount_path}/posture"} class="btn btn-ghost">Operator UI</a>
+            <a href={"#{@mount_path}/health"} class="btn btn-ghost">Operator UI</a>
           </li>
           <li>
             <.theme_toggle />
           </li>
           <li>
-            <a href={"#{@mount_path}/posture"} class="btn btn-primary">
-              Open Posture <span aria-hidden="true">&rarr;</span>
+            <a href={"#{@mount_path}/health"} class="btn btn-primary">
+              Open Search health <span aria-hidden="true">&rarr;</span>
             </a>
           </li>
         </ul>
@@ -323,7 +323,7 @@ defmodule ScrypathOpsWeb.Layouts do
   defp nav_group_label(:explore), do: "Explore"
   defp nav_group_label(group), do: group |> to_string() |> String.capitalize()
 
-  defp nav_item_icon(%{label: "Posture"}), do: "hero-shield-check"
+  defp nav_item_icon(%{label: "Search health"}), do: "hero-shield-check"
   defp nav_item_icon(%{label: "Failed Sync"}), do: "hero-exclamation-triangle"
   defp nav_item_icon(%{label: "Sync Drift"}), do: "hero-arrows-right-left"
   defp nav_item_icon(%{label: "Search"}), do: "hero-magnifying-glass"

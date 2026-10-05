@@ -14,9 +14,9 @@ defmodule ScrypathOpsWeb.Nav do
   def primary(mount_path \\ "/ops") do
     [
       %{
-        path: "#{mount_path}/posture",
-        label: "Posture",
-        title: "Posture / health",
+        path: "#{mount_path}/health",
+        label: "Search health",
+        title: "Search health",
         group: :recover
       },
       %{

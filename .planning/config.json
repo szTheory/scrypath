@@ -1,5 +1,5 @@
 {
-  "model_profile": "balanced",
+  "model_profile": "adaptive",
   "commit_docs": true,
   "parallelization": true,
   "search_gitignored": false,
@@ -45,19 +45,16 @@
   "project_code": null,
   "phase_naming": "sequential",
   "agent_skills": {},
-  "resolve_model_ids": "omit",
-  "runtime": "codex",
-  "model_overrides": {
-    "gsd-planner": "gpt-6-astra",
-    "gsd-phase-researcher": "gpt-6-astra",
-    "gsd-project-researcher": "gpt-6-astra",
-    "gsd-plan-checker": "gpt-6-astra",
-    "gsd-domain-researcher": "gpt-6-astra",
-    "gsd-executor": "gpt-6-luna",
-    "gsd-verifier": "gpt-6-luna",
-    "gsd-code-reviewer": "gpt-6-luna",
-    "gsd-nyquist-auditor": "gpt-6-luna",
-    "gsd-integration-checker": "gpt-6-luna",
-    "gsd-security-auditor": "gpt-6-sol"
+  "model_profile_overrides": {
+    "codex": {
+      "opus": "gpt-6-sol",
+      "sonnet": "gpt-6-luna",
+      "haiku": "gpt-6-luna"
+    },
+    "claude": {
+      "opus": "claude-opus-5-5",
+      "sonnet": "claude-opus-5-5",
+      "haiku": "claude-sonnet-5-5"
+    }
   }
 }

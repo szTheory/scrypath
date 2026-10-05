@@ -25,7 +25,7 @@ import {
   gotoControlRoom,
   gotoFailedSync,
   gotoPlaybooks,
-  gotoPosture,
+  gotoSearchHealth,
   gotoSearch,
   SCENARIO_CAPTURES,
   THEME_MODES,
@@ -328,23 +328,23 @@ async function expectNoStatusCopper(page: Page): Promise<void> {
   expect(matches, "status tone/badge classes must never compute to copper").toEqual([]);
 }
 
-async function expectPostureSignalCardsMeasured(page: Page): Promise<void> {
+async function expectSearchHealthSignalCardsMeasured(page: Page): Promise<void> {
   const card = ".ops-schema-signal-card";
   await expect(page.locator(card).first()).toBeVisible();
 
   const bg = await readComputedStyle(page, card, "backgroundColor");
   const shadow = await readComputedStyle(page, card, "boxShadow");
-  expect(bg, "posture signal cards use the dark surface-2 depth token").toBe(DARK_SURFACE_2_RGB);
-  expect(shadow, "posture signal cards must keep seated dark-panel depth").not.toBe("none");
+  expect(bg, "search health signal cards use the dark surface-2 depth token").toBe(DARK_SURFACE_2_RGB);
+  expect(shadow, "search health signal cards must keep seated dark-panel depth").not.toBe("none");
 
   const signalGroup = ".ops-signal-group";
   await expect(page.locator(signalGroup).first()).toBeVisible();
   const border = await readComputedStyle(page, signalGroup, "borderColor");
   const ratio = contrastRatio(border, DARK_SURFACE_2_RGB);
-  console.info(`posture signal-group border contrast ratio: ${ratio.toFixed(3)}:1`);
+  console.info(`search health signal-group border contrast ratio: ${ratio.toFixed(3)}:1`);
   expect(
     ratio,
-    `posture signal-group border ratio must stay at or above ${DK13_ROW_BORDER_TRIGGER}:1`
+    `search health signal-group border ratio must stay at or above ${DK13_ROW_BORDER_TRIGGER}:1`
   ).toBeGreaterThanOrEqual(DK13_ROW_BORDER_TRIGGER);
 
   await expect(page.locator(".ops-signal-metrics dd").first()).toBeVisible();
@@ -405,11 +405,11 @@ const DEPTH_TARGETS: DepthTarget[] = [
     prepare: gotoControlRoom
   },
   {
-    id: "posture-signal-cards",
+    id: "search-health-signal-cards",
     scenario: "incident",
     captureIndex: "01",
     selectors: [".ops-schema-signal-card", ".ops-signal-group", ".ops-signal-metrics"],
-    prepare: gotoPosture
+    prepare: gotoSearchHealth
   },
   {
     id: "failed-sync-notice",
@@ -484,8 +484,8 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
                   expect(heroShadow, "control-room verdict hero should not carry a copper warm halo").not.toContain(COPPER_RGB);
                 }
                 break;
-              case "posture-signal-cards": {
-                await expectPostureSignalCardsMeasured(page);
+              case "search-health-signal-cards": {
+                await expectSearchHealthSignalCardsMeasured(page);
                 break;
               }
               case "failed-sync-notice":

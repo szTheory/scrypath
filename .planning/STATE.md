@@ -6,9 +6,9 @@ current_phase: null
 current_phase_name: null
 status: Awaiting next milestone
 stopped_at: v1.42 complete; separate planning successor ready for new milestone scoping
-last_updated: "2026-10-04T15:15:12Z"
-last_activity: 2026-10-04
-last_activity_desc: Final v1.42 receipt retained; normal project checkout prepared with durable next-command preference
+last_updated: "2026-10-05T16:25:47Z"
+last_activity: 2026-10-05
+last_activity_desc: Operator refresh status and actions grouped into one shared control; v1.42 remains archived
 state_head: 5ed440954ba70d2b94d8b480d625530e26a809ac
 progress:
   total_phases: 1
@@ -38,7 +38,13 @@ No next phase or milestone is approved. Do not replay Phase172, earlier plans or
 - PR91 merged3ad154a33f99cb200b791577aadc5970adc70ca2. Candidate135517b/run37178388184 passed104 browser,4 mounted, required gates, coverage and attestation. Scoped Ops also passed PR37178390800 and main37180290165. Root657tests+4properties0; Ops233+2doctests0.
 - ReleasePR92 merged8dd20e8966acd17a4ef5acec653c00dc31faab49; `scrypath-v0.3.15` published. Run37181522723 passed publish/live Hex/consumer/HexDocs/tag parity; release-mainCI37181522706 passed required and scopedOps.
 - Final exact-source closeout [run37183050686](https://github.com/szTheory/scrypath/actions/runs/37183050686) passed at `5ed440954ba70d2b94d8b480d625530e26a809ac`, including required gates, coverage and closeout attestation; the full browser lane passed104 tests and mounted lane4. Planning tag `v1.42` points to this source. PR93 merged the completed archive before this final run.
-- All completion/audit/archive records preceded that attestation. Its source and retained preview worktree remain unchanged. This dated handoff is a separate planning-only successor authorized by the maintainer's request to tidy and persist context; it changes no delivered product code and claims no hosted CI for the successor. `state_head` identifies the attested input, not this successor's own SHA. The collected receipt is retained at `reference/v1.42-final-receipt.json`; its immutable artifact IDs/digests remain useful after the hosted artifacts expire.
+- All completion/audit/archive records preceded that attestation. Its source and retained preview worktree remain unchanged. The original dated handoff commit was planning-only. Later user-directed local UI follow-ups are recorded separately below; they are not part of the archived Phase172 plans, verification, or exact-source receipt. `state_head` identifies the attested input, not this successor's own SHA. The collected receipt is retained at `reference/v1.42-final-receipt.json`; its immutable artifact IDs/digests remain useful after the hosted artifacts expire.
+
+## Post-Archive Follow-Up
+
+- After the v1.42 receipt, commits `698013c`, `b10ba7d`, `7abb4c9`, and `961ecf4` addressed small operator UI issues: command-palette selection, refresh icon persistence, refresh feedback and breadcrumb cleanup, local hot reload, and theme-aware shared toast colors. These are committed on `planning/next-milestone-handoff`; they do not reopen Phase172.
+- The preview at `http://127.0.0.1:4012/admin/search` was used for local browser review. The final toast styling was checked in light and dark themes and assets rebuilt. No hosted CI or milestone-level verification is claimed for these follow-ups.
+- This user-requested local follow-up uses `/health` and “Search health” while retaining `/posture` as a compatibility redirect, standardizes refresh buttons, checked-time placement, and success feedback through one shared control, keeps failed-reason counts visible, and removes routine timestamp-copy controls. It also removes the unnecessary summary wrapper panel. The mounted preview rendered the Control Room, Search health, Failed Sync, and Sync Drift refresh controls and their action-specific feedback; the legacy path reached `/admin/search/health`. No automated tests or milestone-level verification were run or claimed for this follow-up.
 
 ## Durable Defaults
 
@@ -66,12 +72,14 @@ Always finish a phase/milestone handoff with the completed phase, the exact next
 
 ## Preview and Cleanup
 
-Preview http://127.0.0.1:4012/admin/search remains healthy under Compose `scrypath-ui-v142`, without reseeding. Its bind-mounted `/private/tmp/scrypath-admin-ui` worktree is intentionally retained. Stop from `examples/scrypath_ecommerce` with `COMPOSE_PROJECT_NAME=scrypath-ui-v142 WEB_PORT=4012 docker compose -f compose.yaml -f compose.dev.yaml down`; preserve volumes.
+Preview http://127.0.0.1:4012/admin/search remains healthy under Compose `scrypath-ui-v142`, without reseeding. Container `scrypath-ui-v142-web-1` bind-mounts this checkout (`/Users/jon/projects/scrypath` → `/app`), so `:4012` is the correct hot-reloading preview for current source. Stop from `examples/scrypath_ecommerce` with `COMPOSE_PROJECT_NAME=scrypath-ui-v142 WEB_PORT=4012 docker compose -f compose.yaml -f compose.dev.yaml down`; preserve volumes.
 
 Both disposable verification projects and their owned networks/volumes were removed after artifact collection. Unrelated services remain untouched. The previous normal-checkout state at11ab1c9 is preserved on `gsd/v1.38-cleanup-merged`, with its existing2026-10-02 stash. On2026-10-04 the clean normal checkout was safely switched to a new branch from final main for this planning-only handoff; the old branch and stash were not reset or applied.
 
 ## Session Continuity
 
-Clear context and run `$gsd-new-milestone` from `/Users/jon/projects/scrypath` on `planning/next-milestone-handoff`. This successor is committed locally for continuity; carry it into the next planning PR rather than resetting it away. No directory switch to the preview worktree is needed. Read PROJECT.md, this STATE.md, ROADMAP.md, and `reference/OPERATOR-UI-QUALITY.md` first.
+Clear context and run `$gsd-new-milestone` from `/Users/jon/projects/scrypath` on `planning/next-milestone-handoff` when ready. The planning handoff and operator UI/local-preview follow-ups are committed locally. The latest Control Room adjustment places its refresh in the page toolbar, outside the health verdict; no automated test suite was run for this follow-up. Preserve `.planning/config.json`'s intentional adaptive routing. No directory switch to the preview worktree is needed. Read PROJECT.md, this STATE.md, ROADMAP.md, and `reference/OPERATOR-UI-QUALITY.md` first.
 
-The command gathers and agrees the next scope. The next unused phase number is173, but no Phase173 or new milestone scope is approved yet. Present the proposed scope before implementation. Do not run execute/verify/complete for Phase172 or Phase170 again. No active resume file or routine UAT remains; historical milestone-index entries are archives, not executable next work. The milestone archive and retained receipt carry the completed scope, evidence, release, cleanup and no-replay decisions across context resets.
+The command gathers and agrees the next scope. The next unused phase number is173, but no Phase173 or new milestone scope is approved yet. After the new milestone workflow creates and approves its roadmap, the next command is `$gsd-discuss-phase 173` to clarify the first phase; `$gsd-plan-phase 173` is the documented option when discussion should be skipped. Do not run execute/verify/complete for Phase172 or Phase170 again. No active resume file or routine UAT remains; historical milestone-index entries are archives, not executable next work. The milestone archive and retained receipt carry the completed scope, evidence, release, cleanup and no-replay decisions across context resets.
+
+The `.planning/config.json` model-routing change (`model_profile: adaptive`) is intentional; the maintainer confirmed this on 2026-10-05. Current GSD resolution is `gsd-planner: gpt-6-sol / xhigh` and `gsd-project-researcher: gpt-6-luna / high`. Preserve this routing in future milestone work; do not restore the legacy per-agent overrides.

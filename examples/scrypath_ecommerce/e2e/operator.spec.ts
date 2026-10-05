@@ -61,7 +61,7 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Control Room" })).toBeVisible();
   await page.getByRole("link", { name: "Start recovery" }).click();
-  await expect(page.getByRole("heading", { name: "Posture", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Search health", exact: true })).toBeVisible();
   await waitForLiveConnected(page);
   const variantHandoff = page.getByTestId("posture-failed-sync-link").filter({ hasText: "Variant" });
   await expect(variantHandoff).toBeVisible();

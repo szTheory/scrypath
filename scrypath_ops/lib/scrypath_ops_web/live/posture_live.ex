@@ -17,7 +17,7 @@ defmodule ScrypathOpsWeb.PostureLive do
 
     socket =
       socket
-      |> assign(:page_title, "Posture / health")
+      |> assign(:page_title, "Search health")
       |> assign(:schema_allowlist, allowlist)
       |> assign(:scrypath_opts, scrypath_opts)
       |> assign(:auto_refresh, false)
@@ -45,7 +45,7 @@ defmodule ScrypathOpsWeb.PostureLive do
       %{outcome: if(socket.assigns.aggregate_error_count > 0, do: :degraded, else: :ok)}
     )
 
-    {:noreply, socket}
+    {:noreply, put_flash(socket, :info, "Search health refreshed.")}
   end
 
   def handle_event("swap_live", %{"schema" => mod_str}, socket) do
@@ -62,6 +62,23 @@ defmodule ScrypathOpsWeb.PostureLive do
   end
 
   @impl true
+  def handle_params(_params, uri, %{assigns: %{live_action: :legacy}} = socket) do
+    query_suffix =
+      case URI.parse(uri).query do
+        nil -> ""
+        query -> "?" <> query
+      end
+
+    mount_path =
+      uri
+      |> URI.parse()
+      |> Map.fetch!(:path)
+      |> String.replace_suffix("/posture", "")
+      |> String.trim_trailing("/")
+
+    {:noreply, push_navigate(socket, to: "#{mount_path}/health#{query_suffix}")}
+  end
+
   def handle_params(_params, _uri, socket) do
     {:noreply, refresh_next_checks(socket)}
   end
@@ -126,54 +143,55 @@ defmodule ScrypathOpsWeb.PostureLive do
     >
       <.ops_toolbar class="items-end gap-4">
         <.ops_page_header
-          title="Posture"
-          subtitle="The fleet's sync health, schema by schema. Start here when something looks wrong."
+          title="Search health"
+          subtitle="Check sync and backend health for every configured schema. Start here when something looks wrong."
         />
-        <.ops_refresh_button
-          id="posture-refresh"
+        <.ops_refresh_control
+          id="search-health-refresh"
+          checked_at={@last_refresh_at}
           phx-click="refresh"
-          variant={:primary}
-          aria_label="Refresh posture checks"
+          aria_label="Refresh search health"
         />
       </.ops_toolbar>
 
       <.ops_trail current={:posture} />
 
-      <.ops_panel :if={match?({:ok, _}, @posture_rows)}>
-        <section aria-labelledby="posture-summary-heading" class="space-y-4">
-          <h2 id="posture-summary-heading" class="sr-only">Fleet posture</h2>
-          <.ops_verdict
-            kind={ScrypathOps.Posture.badge_kind(@posture_state)}
-            label="Can I trust search right now?"
-            headline={@posture_headline}
-          >
-            {@posture_evidence}
-          </.ops_verdict>
-          <.ops_metric_grid cols={4}>
-            <.ops_metric
-              label="Schemas"
-              value={posture_schema_count(@posture_rows)}
-              kind={:neutral}
-            />
-            <.ops_metric
-              label="Fetch errors"
-              value={@aggregate_error_count}
-              kind={metric_tone(@aggregate_error_count)}
-            />
-            <.ops_metric
-              label="Failed backend"
-              value={posture_backend_failed_count(@posture_rows)}
-              kind={metric_tone(posture_backend_failed_count(@posture_rows))}
-            />
-            <.ops_metric
-              label="Queue observed"
-              value={posture_queue_observed_count(@posture_rows)}
-              kind={:neutral}
-            />
-          </.ops_metric_grid>
-          <.ops_time label="Checked" dt={@last_refresh_at} class="mt-3 flex" />
-        </section>
-      </.ops_panel>
+      <section
+        :if={match?({:ok, _}, @posture_rows)}
+        aria-labelledby="posture-summary-heading"
+        class="space-y-4"
+      >
+        <h2 id="posture-summary-heading" class="sr-only">Search health summary</h2>
+        <.ops_verdict
+          kind={ScrypathOps.Posture.badge_kind(@posture_state)}
+          label="Can I trust search right now?"
+          headline={@posture_headline}
+        >
+          {@posture_evidence}
+        </.ops_verdict>
+        <.ops_metric_grid cols={4}>
+          <.ops_metric
+            label="Schemas"
+            value={posture_schema_count(@posture_rows)}
+            kind={:neutral}
+          />
+          <.ops_metric
+            label="Schema check errors"
+            value={@aggregate_error_count}
+            kind={metric_tone(@aggregate_error_count)}
+          />
+          <.ops_metric
+            label="Failed backend tasks"
+            value={posture_backend_failed_count(@posture_rows)}
+            kind={metric_tone(posture_backend_failed_count(@posture_rows))}
+          />
+          <.ops_metric
+            label="Queues observed"
+            value={posture_queue_observed_count(@posture_rows)}
+            kind={:neutral}
+          />
+        </.ops_metric_grid>
+      </section>
 
       <.ops_panel :if={@next_checks != []}>
         <section
@@ -211,12 +229,8 @@ defmodule ScrypathOpsWeb.PostureLive do
         <.ops_section
           id="posture-fleet-heading"
           title="Per-schema signals"
-          subtitle="Worst-first schema health. Scan backend work, queue posture, and last successful sync without opening row details."
+          subtitle="Schemas with the most issues appear first. Review backend tasks, queue status, and each schema's last successful sync."
         >
-          <:actions>
-            <.ops_time label="Checked" dt={@last_refresh_at} />
-          </:actions>
-
           <div class="ops-schema-signal-list">
             <%= for {mod, row} <- posture_rows_worst_first(elem(@posture_rows, 1)) do %>
               <article

@@ -131,7 +131,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   test "loads reconcile on mount and scopes drift errors separately", %{conn: conn} do
     {:ok, lv, html} = live(conn, ~p"/ops/sync-drift")
 
-    assert html =~ "queue posture"
+    assert html =~ "queue status"
 
     assert html =~
              "Check sync status and compare the schema contract with its live index."
@@ -534,7 +534,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     assert html =~ "OpsPostB"
     assert has_element?(lv, "a[href='/ops']", "Recheck search health")
-    assert has_element?(lv, "a[href='/ops/posture?schema=ScrypathOps.Test.OpsPostB']")
+    assert has_element?(lv, "a[href='/ops/health?schema=ScrypathOps.Test.OpsPostB']")
     assert :sys.get_state(lv.pid).socket.assigns.selected_schema == OpsPostB
   end
 

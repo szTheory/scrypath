@@ -236,6 +236,39 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
+  @doc "Refresh action paired with the time of the latest check."
+  attr(:id, :string, required: true)
+  attr(:checked_at, :any, default: nil)
+  attr(:aria_label, :string, required: true)
+
+  attr(:variant, :atom,
+    default: :ghost,
+    values: [:default, :primary, :secondary, :danger, :ghost]
+  )
+
+  attr(:size, :atom, default: :sm, values: [:xs, :sm, :md])
+  attr(:class, :any, default: nil)
+
+  attr(:rest, :global,
+    include:
+      ~w(phx-click disabled data-testid title phx-value-id phx-value-mode phx-value-name phx-value-schema)
+  )
+
+  def ops_refresh_control(assigns) do
+    ~H"""
+    <div class={["flex flex-wrap items-center gap-x-3 gap-y-1", @class]}>
+      <.ops_time :if={@checked_at} label="Checked" dt={@checked_at} />
+      <.ops_refresh_button
+        id={@id}
+        aria_label={@aria_label}
+        variant={@variant}
+        size={@size}
+        {@rest}
+      />
+    </div>
+    """
+  end
+
   @doc "Link with the same visual contract as `ops_button/1`."
   attr(:navigate, :string, default: nil)
   attr(:href, :string, default: nil)
@@ -407,7 +440,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   Trust-verdict hero — the branded answer to "can I trust search right now?".
 
   A large status headline + one-line evidence, tone routed through `kind`. The anchor of
-  the Control Room landing; also used for the Posture summary and Sync Drift promotion
+  the Control Room landing; also used for the Search health summary and Sync Drift promotion
   readiness. Keep the headline short and honest (don't upgrade green past the evidence).
   """
   attr(:kind, :atom,
@@ -492,7 +525,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
-  defp trail_for(:posture), do: {"Recover", "Posture"}
+  defp trail_for(:posture), do: {"Recover", "Search health"}
   defp trail_for(:failed_sync), do: {"Recover", "Failed Sync"}
   defp trail_for(:sync_drift), do: {"Recover", "Sync Drift"}
   defp trail_for(:search), do: {"Explore", "Search"}
@@ -1165,10 +1198,10 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
-  @doc "Compact timestamp that shows a human scan value, exact ISO on hover, and copy affordance."
+  @doc "Compact timestamp with a human scan value, exact ISO on hover, and optional evidence-copy action."
   attr(:dt, :any, required: true)
   attr(:label, :string, default: nil)
-  attr(:copy, :boolean, default: true)
+  attr(:copy, :boolean, default: false)
   attr(:class, :any, default: nil)
 
   def ops_time(assigns) do

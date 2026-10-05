@@ -126,7 +126,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
   end
 
   test "renders posture rows with sync_status and surfaces errors first", %{conn: conn} do
-    {:ok, lv, html} = live(conn, ~p"/ops/posture")
+    {:ok, lv, html} = live(conn, ~p"/ops/health")
 
     assert html =~ "data-testid=\"posture-row\""
     assert html =~ "fetch error: :boom"
@@ -134,12 +134,12 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert html =~ "Backend tasks"
     assert html =~ "Queue jobs"
     assert html =~ "Last success"
-    refute html =~ ~r/>\s*Refresh posture\s*</
-    assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh posture checks']")
+    refute html =~ "Posture"
+    assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search health']")
   end
 
   test "posture shows next checks block with ordered items and failed-sync egress", %{conn: conn} do
-    {:ok, lv, _html} = live(conn, ~p"/ops/posture")
+    {:ok, lv, _html} = live(conn, ~p"/ops/health")
 
     assert has_element?(lv, "[data-testid='posture-next-checks']")
 
@@ -251,7 +251,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     base_assigns = %{
       __changed__: %{},
       flash: %{},
-      page_title: "Posture / health",
+      page_title: "Search health",
       schema_allowlist: [OpsPostA, OpsPostB],
       scrypath_opts: posture_scrypath_opts(),
       auto_refresh: false,
@@ -269,7 +269,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
 
     %Phoenix.LiveView.Socket{
       assigns: Map.merge(base_assigns, overrides),
-      host_uri: URI.parse("https://scrypath.example/ops/posture")
+      host_uri: URI.parse("https://scrypath.example/ops/health")
     }
   end
 

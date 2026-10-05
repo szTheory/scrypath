@@ -25,11 +25,11 @@ test("control room", async ({ page }, testInfo) => {
   await capture(page, testInfo, "01-control-room");
 });
 
-test("posture", async ({ page }, testInfo) => {
-  await page.goto("/admin/search/posture");
-  await page.getByRole("heading", { name: "Posture", exact: true }).waitFor();
+test("search health", async ({ page }, testInfo) => {
+  await page.goto("/admin/search/health");
+  await page.getByRole("heading", { name: "Search health", exact: true }).waitFor();
   await page.waitForTimeout(300);
-  await capture(page, testInfo, "02-posture");
+  await capture(page, testInfo, "02-search-health");
 });
 
 test("failed sync (collapsed + expanded evidence)", async ({ page }, testInfo) => {

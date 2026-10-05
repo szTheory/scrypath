@@ -47,11 +47,11 @@ export async function gotoControlRoom(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: "Control Room" })).toBeVisible();
 }
 
-export async function gotoPosture(page: Page): Promise<void> {
-  await page.goto("/admin/search/posture");
+export async function gotoSearchHealth(page: Page): Promise<void> {
+  await page.goto("/admin/search/health");
   await waitForLiveConnected(page);
   await page.locator("[data-ops-refresh]").click();
-  await expect(page.getByRole("heading", { name: "Posture", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Search health", exact: true })).toBeVisible();
 }
 
 export async function gotoFailedSync(page: Page): Promise<void> {
@@ -89,7 +89,7 @@ export async function runSearch(page: Page, query: string): Promise<void> {
 export const SCENARIO_CAPTURES: Record<SeedScenario, ScreenCapture[]> = {
   incident: [
     { index: "00", screen: "control-room", state: "incident", prepare: gotoControlRoom },
-    { index: "01", screen: "posture", state: "incident", prepare: gotoPosture },
+    { index: "01", screen: "search-health", state: "incident", prepare: gotoSearchHealth },
     {
       index: "02",
       screen: "failed-sync",
@@ -110,7 +110,7 @@ export const SCENARIO_CAPTURES: Record<SeedScenario, ScreenCapture[]> = {
   ],
   all_green: [
     { index: "04", screen: "control-room", state: "all-green", prepare: gotoControlRoom },
-    { index: "05", screen: "posture", state: "all-green", prepare: gotoPosture },
+    { index: "05", screen: "search-health", state: "all-green", prepare: gotoSearchHealth },
     {
       index: "06",
       screen: "search",
@@ -123,9 +123,9 @@ export const SCENARIO_CAPTURES: Record<SeedScenario, ScreenCapture[]> = {
     },
     {
       index: "11",
-      screen: "posture",
+      screen: "search-health",
       state: "healthy-detail",
-      prepare: gotoPosture
+      prepare: gotoSearchHealth
     },
     {
       index: "13",

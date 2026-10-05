@@ -133,7 +133,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
            )
            |> length() == 2
 
-    assert html =~ ~s(href="/ops/posture")
+    assert html =~ ~s(href="/ops/health")
     assert html =~ ~s(id="ops-shell-frame")
     assert html =~ ~s(phx-hook="OpsNavDrawer")
     assert html =~ ~s(class="ops-sidebar")
@@ -187,9 +187,9 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
   end
 
   describe "ops shell markers" do
-    test "/ops/posture", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/ops/posture")
-      assert_ops_shell!(html, "Posture / health")
+    test "/ops/health", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, ~p"/ops/health")
+      assert_ops_shell!(html, "Search health")
     end
 
     test "/ops/failed-sync", %{conn: conn} do
@@ -222,7 +222,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
   end
 
   test "shortcut sheet advertises command palette shortcut across platforms", %{conn: conn} do
-    {:ok, _lv, html} = live(conn, ~p"/ops/posture")
+    {:ok, _lv, html} = live(conn, ~p"/ops/health")
 
     assert html =~ "Command or Control K"
     assert html =~ "<kbd"

@@ -70,17 +70,19 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
 
   test "operator-ia.md navigation table keeps a Route column for ops surfaces" do
     assert @operator_ia =~ "| Route |"
-    assert @operator_ia =~ "/ops/posture"
+    assert @operator_ia =~ "/ops/health"
+    assert @operator_ia =~ "redirects to `/ops/health`"
   end
 
   test "every live /ops route in router.ex is documented in operator-ia.md" do
-    assert @router =~ ~s(live("/posture")
+    assert @router =~ ~s(live("/health")
+    assert @router =~ "live(\"/posture\", ScrypathOpsWeb.PostureLive, :legacy)"
     assert @router =~ ~s(live("/failed-sync")
     assert @router =~ ~s(live("/sync-drift")
     assert @router =~ ~s(live("/search")
     assert @router =~ ~s(live("/playbooks")
 
-    for path <- ~w(/ops/posture /ops/failed-sync /ops/sync-drift /ops/search /ops/playbooks) do
+    for path <- ~w(/ops/health /ops/failed-sync /ops/sync-drift /ops/search /ops/playbooks) do
       assert String.contains?(@operator_ia, path),
              "expected operator-ia.md to mention #{path} for router parity (phase 47 D-07 / D-17)"
     end
@@ -91,7 +93,7 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
     assert length(items) == 5
 
     expected_path_strings = [
-      "/ops/posture",
+      "/ops/health",
       "/ops/failed-sync",
       "/ops/sync-drift",
       "/ops/search",
@@ -99,7 +101,7 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
     ]
 
     expected_labels = [
-      "Posture",
+      "Search health",
       "Failed Sync",
       "Sync Drift",
       "Search",
@@ -110,7 +112,7 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
     assert Enum.map(items, & &1.label) == expected_labels
 
     assert Enum.map(items, & &1.title) == [
-             "Posture / health",
+             "Search health",
              "Failed sync work",
              "Sync / drift",
              "Search & federation",
@@ -124,7 +126,7 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
       |> Enum.map(fn %{path: p} -> p |> to_string() end)
       |> MapSet.new()
 
-    for ops_path <- ops_live_paths(@router), ops_path != "/ops/" do
+    for ops_path <- ops_live_paths(@router), ops_path not in ["/ops/", "/ops/posture"] do
       assert MapSet.member?(nav_path_strings, ops_path),
              "expected Nav.primary/0 to include #{inspect(ops_path)} for router :ops parity"
     end
@@ -140,7 +142,7 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
     assert @sync_drift_live =~ "def handle_params(params, _uri, socket)"
 
     assert @sync_drift_live =~
-             "OperatorSelection.path(@mount_path, \"posture\", @selected_schema)"
+             "OperatorSelection.path(@mount_path, \"health\", @selected_schema)"
 
     assert @failed_sync_live =~ "Retry sync work"
     assert @failed_sync_live =~ "summary=\"Diagnostics\""

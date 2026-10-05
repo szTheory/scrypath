@@ -128,7 +128,7 @@ defmodule ScrypathOps.Posture do
   def next_checks(:ok, mount_path) do
     [
       %{
-        text: "Scan failed sync work periodically even when posture is green.",
+        text: "Scan failed sync work periodically, even when search health is green.",
         navigate: "#{mount_path}/failed-sync"
       },
       %{
@@ -205,7 +205,7 @@ defmodule ScrypathOps.Posture do
       summary
       | headline: "Not configured",
         evidence:
-          "No schemas are allowlisted for posture — configure schema_allowlist or SCRYPATH_OPS_SCHEMAS (see scrypath_ops README)."
+          "No schemas are configured for search health. Add them to the :scrypath_ops allowlist or set SCRYPATH_OPS_SCHEMAS (see the README)."
     }
   end
 
@@ -214,7 +214,7 @@ defmodule ScrypathOps.Posture do
       summary
       | headline: "Broken",
         evidence:
-          "Scrypath runtime is missing :backend under :scrypath_ops — posture cannot query sync status."
+          "The :scrypath_ops configuration is missing :backend, so sync status cannot be checked."
     }
   end
 

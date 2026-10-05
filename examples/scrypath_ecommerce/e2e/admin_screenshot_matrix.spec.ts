@@ -41,7 +41,7 @@ const VIEWPORTS: Record<ViewportName, { width: number; height: number }> = {
 const THEMES: Theme[] = ["light", "dark"];
 const VIEWPORT_NAMES: ViewportName[] = ["mobile", "desktop"];
 
-// A single capture target: which screen, what posture state label, and the per-page
+// A single capture target: which screen, what health state label, and the per-page
 // preparation (navigate + trigger + wait for the load-bearing content) before the shot.
 type ScreenCapture = {
   index: string;
@@ -115,11 +115,11 @@ async function gotoControlRoom(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: "Control Room" })).toBeVisible();
 }
 
-async function gotoPosture(page: Page): Promise<void> {
-  await page.goto("/admin/search/posture");
+async function gotoSearchHealth(page: Page): Promise<void> {
+  await page.goto("/admin/search/health");
   await waitForLiveConnected(page);
   await page.locator("[data-ops-refresh]").click();
-  await expect(page.getByRole("heading", { name: "Posture", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Search health", exact: true })).toBeVisible();
 }
 
 async function gotoFailedSync(page: Page): Promise<void> {
@@ -158,10 +158,10 @@ async function runSearch(page: Page, query: string): Promise<void> {
 
 // ── Scenario groups ──────────────────────────────────────────────────────────
 
-// incident: red posture, populated failed sync, contract drift, can't-fully-trust verdict.
+// incident: unhealthy search, populated failed sync, contract drift, can't-fully-trust verdict.
 describeScenario("incident", [
   { index: "00", screen: "control-room", state: "incident", prepare: gotoControlRoom },
-  { index: "01", screen: "posture", state: "incident", prepare: gotoPosture },
+  { index: "01", screen: "search-health", state: "incident", prepare: gotoSearchHealth },
   {
     index: "02",
     screen: "failed-sync",
@@ -175,10 +175,10 @@ describeScenario("incident", [
   { index: "03", screen: "sync-drift", state: "drift", prepare: gotoSyncDrift }
 ]);
 
-// all_green: healthy posture, trusted verdict, search returns results.
+// all_green: healthy search, trusted verdict, search returns results.
 describeScenario("all_green", [
   { index: "04", screen: "control-room", state: "all-green", prepare: gotoControlRoom },
-  { index: "05", screen: "posture", state: "all-green", prepare: gotoPosture },
+  { index: "05", screen: "search-health", state: "all-green", prepare: gotoSearchHealth },
   {
     index: "06",
     screen: "search",

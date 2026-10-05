@@ -8,7 +8,7 @@ defmodule ScrypathOpsWeb.Router do
 
   ## Options
 
-    * `:repo` - (Required) The Ecto Repo to use for posture and telemetry.
+    * `:repo` - (Required) The Ecto Repo to use for search health checks and telemetry.
   """
   defmacro scrypath_ops_routes(path, opts \\ []) do
     quote bind_quoted: [path: path, opts: opts] do
@@ -28,7 +28,8 @@ defmodule ScrypathOpsWeb.Router do
           on_mount: [{ScrypathOpsWeb.Live.OnMount, :default}],
           session: %{"scrypath_ops_opts" => validated_opts} do
           live("/", ScrypathOpsWeb.ControlRoomLive)
-          live("/posture", ScrypathOpsWeb.PostureLive)
+          live("/health", ScrypathOpsWeb.PostureLive)
+          live("/posture", ScrypathOpsWeb.PostureLive, :legacy)
           live("/failed-sync", ScrypathOpsWeb.FailedSyncLive)
           live("/sync-drift", ScrypathOpsWeb.SyncDriftLive)
           live("/search", ScrypathOpsWeb.SearchLive)
