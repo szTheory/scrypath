@@ -6,9 +6,9 @@ current_phase: null
 current_phase_name: null
 status: Awaiting next milestone
 stopped_at: v1.42 complete; separate planning successor ready for new milestone scoping
-last_updated: "2026-10-05T16:25:47Z"
+last_updated: "2026-10-05T16:52:05Z"
 last_activity: 2026-10-05
-last_activity_desc: Operator refresh status and actions grouped into one shared control; v1.42 remains archived
+last_activity_desc: Standardized visible operator names and Scrypath branding; v1.42 remains archived
 state_head: 5ed440954ba70d2b94d8b480d625530e26a809ac
 progress:
   total_phases: 1
@@ -44,7 +44,8 @@ No next phase or milestone is approved. Do not replay Phase172, earlier plans or
 
 - After the v1.42 receipt, commits `698013c`, `b10ba7d`, `7abb4c9`, and `961ecf4` addressed small operator UI issues: command-palette selection, refresh icon persistence, refresh feedback and breadcrumb cleanup, local hot reload, and theme-aware shared toast colors. These are committed on `planning/next-milestone-handoff`; they do not reopen Phase172.
 - The preview at `http://127.0.0.1:4012/admin/search` was used for local browser review. The final toast styling was checked in light and dark themes and assets rebuilt. No hosted CI or milestone-level verification is claimed for these follow-ups.
-- This user-requested local follow-up uses `/health` and “Search health” while retaining `/posture` as a compatibility redirect, standardizes refresh buttons, checked-time placement, and success feedback through one shared control, keeps failed-reason counts visible, and removes routine timestamp-copy controls. It also removes the unnecessary summary wrapper panel. The mounted preview rendered the Control Room, Search health, Failed Sync, and Sync Drift refresh controls and their action-specific feedback; the legacy path reached `/admin/search/health`. No automated tests or milestone-level verification were run or claimed for this follow-up.
+- This user-requested local follow-up uses `/health` and “Search health” while retaining `/posture` as a compatibility redirect, standardizes refresh buttons, checked-time placement, and success feedback through one shared control, keeps failed-reason counts visible, and removes routine timestamp-copy controls. It also removes the unnecessary summary wrapper panel. The mounted preview rendered the Control Room, Search health, Failed sync work, and Sync and drift refresh controls and their action-specific feedback; the legacy path reached `/admin/search/health`. No automated tests or milestone-level verification were run or claimed for this follow-up.
+- The current copy pass uses the Scrypath logo alone in the operator shell, aligns navigation, breadcrumbs, and page titles to “Search health,” “Failed sync work,” “Sync and drift,” and “Search,” and makes links name their actual destinations. The refreshed local preview was reviewed; no automated tests were run.
 
 ## Durable Defaults
 
@@ -78,7 +79,7 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Clear context and run `$gsd-new-milestone` from `/Users/jon/projects/scrypath` on `planning/next-milestone-handoff` when ready. The planning handoff and operator UI/local-preview follow-ups are committed locally. The latest Control Room adjustment places its refresh in the page toolbar, outside the health verdict; no automated test suite was run for this follow-up. Preserve `.planning/config.json`'s intentional adaptive routing. No directory switch to the preview worktree is needed. Read PROJECT.md, this STATE.md, ROADMAP.md, and `reference/OPERATOR-UI-QUALITY.md` first.
+Clear context and run `$gsd-new-milestone` from `/Users/jon/projects/scrypath` on `planning/next-milestone-handoff` when ready. The planning handoff and earlier operator UI/local-preview follow-ups are committed locally; the current naming and logo pass is uncommitted. The Control Room refresh remains in the page toolbar, outside the health verdict. Preserve `.planning/config.json`'s intentional adaptive routing. No directory switch to the preview worktree is needed. Read PROJECT.md, this STATE.md, ROADMAP.md, and `reference/OPERATOR-UI-QUALITY.md` first.
 
 The command gathers and agrees the next scope. The next unused phase number is173, but no Phase173 or new milestone scope is approved yet. After the new milestone workflow creates and approves its roadmap, the next command is `$gsd-discuss-phase 173` to clarify the first phase; `$gsd-plan-phase 173` is the documented option when discussion should be skipped. Do not run execute/verify/complete for Phase172 or Phase170 again. No active resume file or routine UAT remains; historical milestone-index entries are archives, not executable next work. The milestone archive and retained receipt carry the completed scope, evidence, release, cleanup and no-replay decisions across context resets.
 

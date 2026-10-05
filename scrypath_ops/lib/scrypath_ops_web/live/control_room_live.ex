@@ -81,7 +81,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
           >
             <:actions>
               <.ops_link_button navigate={"#{@mount_path}/health"} variant={:ghost} size={:sm}>
-                View schema health <span aria-hidden="true">→</span>
+                View search health <span aria-hidden="true">→</span>
               </.ops_link_button>
             </:actions>
             <p>{@posture.evidence}</p>

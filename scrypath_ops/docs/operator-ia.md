@@ -50,8 +50,8 @@ Primary shell navigation under `/ops` is grouped by the job the operator brought
 
 The surfaces thread into two task groups — **Recover** (health → failed sync → sync drift) and **Explore** (search → playbooks) — and three named loops, each a hub-and-spoke trip from the Control Room. Within a group the steps are sequential; the primary shell nav stays free so a power user is never trapped.
 
-- **Incident-response loop** (on-call): Control Room verdict (degraded) → Search health (which schemas?) → Failed Sync (why? retry) → Sync Drift (did it stick?) → Control Room (verdict green). The loop closes on the verdict flipping green — that round-trip is the success signal.
-- **Ship-a-change preflight loop** (search owner / maintainer): Control Room ("shipping a change") → Sync Drift (refresh sync status → check the index contract) → optionally open **Advanced: index promotion** → re-check Search health.
+- **Incident-response loop** (on-call): Control Room verdict (degraded) → Search health (which schemas?) → Failed sync work (why? retry) → Sync and drift (did it stick?) → Control Room (verdict green). The loop closes on the verdict flipping green — that round-trip is the success signal.
+- **Ship-a-change preflight loop** (search owner / maintainer): Control Room ("shipping a change") → Sync and drift (refresh sync status → check the index contract) → optionally open **Advanced: index promotion** → re-check Search health.
 - **Explore → capture loop** (search owner): Control Room ("explore") → Search (probe) → capture → Playbooks (save/run) → back to Search.
 
 Two shared components carry this structure so it stays consistent (principle of least surprise):
@@ -61,7 +61,7 @@ Two shared components carry this structure so it stays consistent (principle of 
 
 ### Sync recovery and index promotion
 
-Sync Drift keeps the ordinary recovery checks usable on their own: refresh sync and queue status, then run the index contract check. A prior failed-sync event remains useful incident history and continues to block index promotion until it is resolved; it does not prevent the operator from checking whether newly accepted recovery work reached the backend and active index.
+Sync and drift keeps the ordinary recovery checks usable on their own: refresh sync and queue status, then run the index contract check. A prior failed-sync event remains useful incident history and continues to block index promotion until it is resolved; it does not prevent the operator from checking whether newly accepted recovery work reached the backend and active index.
 
 Index promotion is a separate advanced action. Its readiness and server-side guard use the same current, schema-and-index scoped checks. A confirmation names the schema, live index, target index, and alias change. Backend task acceptance is shown as **accepted** with its exact task ID; only that task's terminal success is shown as **Index swap completed**. Timeout or failure keeps the task identity visible and offers check refresh without submitting another swap.
 
@@ -70,13 +70,13 @@ Use **backend task** for Meilisearch work and **queue job** for Oban work. A cle
 | Job | Primary persona | Nav label | Route | Scrypath / doc / Mix follow-up |
 | --- | --- | --- | --- | --- |
 | 1 | On-call engineer | Search health | /ops/health | Phase 45 — health dashboards; until then see [guides/meilisearch-operations.md](../../guides/meilisearch-operations.md) |
-| 2 | On-call engineer | Failed Sync | /ops/failed-sync | Phase 45 — failed work UI; today use `mix scrypath.failed` from [guides/operator-mix-tasks.md](../../guides/operator-mix-tasks.md) |
-| 3 | Search owner | Sync Drift | /ops/sync-drift | Shipped **phase 45** — read-only reconcile + lazy index contract drift in OPSUI; still use `mix scrypath.status`, [guides/drift-recovery.md](../../guides/drift-recovery.md), [guides/sync-modes-and-visibility.md](../../guides/sync-modes-and-visibility.md) |
+| 2 | On-call engineer | Failed sync work | /ops/failed-sync | Phase 45 — failed work UI; today use `mix scrypath.failed` from [guides/operator-mix-tasks.md](../../guides/operator-mix-tasks.md) |
+| 3 | Search owner | Sync and drift | /ops/sync-drift | Shipped **phase 45** — read-only reconcile + lazy index contract drift in OPSUI; still use `mix scrypath.status`, [guides/drift-recovery.md](../../guides/drift-recovery.md), [guides/sync-modes-and-visibility.md](../../guides/sync-modes-and-visibility.md) |
 | 4 | Search owner | Search | /ops/search | Shipped in phase 46 — bounded single/multi playground with federation-honest inspector; semantics in [guides/multi-index-search.md](../../guides/multi-index-search.md) |
 | 4b | Search owner | Playbooks | /ops/playbooks | JSON format and caps in [playbook-schema-v1.md](playbook-schema-v1.md); persistence and workspace authority in [team-playbook-persistence.md](team-playbook-persistence.md); runs use the same `SearchPlayground` dispatch path as `/ops/search` |
 <!-- scrypath:nav-contract-begin -->
-[{"route":"/ops/health","label":"Search health"},{"route":"/ops/failed-sync","label":"Failed Sync"},{"route":"/ops/sync-drift","label":"Sync Drift"},{"route":"/ops/search","label":"Search"},{"route":"/ops/playbooks","label":"Playbooks"}]
+[{"route":"/ops/health","label":"Search health"},{"route":"/ops/failed-sync","label":"Failed sync work"},{"route":"/ops/sync-drift","label":"Sync and drift"},{"route":"/ops/search","label":"Search"},{"route":"/ops/playbooks","label":"Playbooks"}]
 <!-- scrypath:nav-contract-end -->
-| 5 | Library maintainer | Sync Drift | /ops/sync-drift | Mix tasks index: [guides/operator-mix-tasks.md](../../guides/operator-mix-tasks.md) |
+| 5 | Library maintainer | Sync and drift | /ops/sync-drift | Mix tasks index: [guides/operator-mix-tasks.md](../../guides/operator-mix-tasks.md) |
 | 6 | Library maintainer | Search health | /ops/health | Library verification: [CONTRIBUTING.md](../../CONTRIBUTING.md) |
-| 7 | On-call engineer | Failed Sync | /ops/failed-sync | SRE-style expectations: [docs/search-backend-sre.md](../../docs/search-backend-sre.md) |
+| 7 | On-call engineer | Failed sync work | /ops/failed-sync | SRE-style expectations: [docs/search-backend-sre.md](../../docs/search-backend-sre.md) |

@@ -102,7 +102,7 @@ async function gotoControlRoom(page: Page): Promise<void> {
 async function gotoSearch(page: Page): Promise<void> {
   await page.goto("/admin/search/search");
   await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Search & federation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Search" })).toBeVisible();
 }
 
 async function gotoPlaybooks(page: Page): Promise<void> {

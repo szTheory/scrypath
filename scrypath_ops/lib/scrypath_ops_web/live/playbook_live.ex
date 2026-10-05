@@ -947,7 +947,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             Examples (read-only) — set <code class="text-ops-body">SCRYPATH_OPS_PLAYBOOK_DIR</code>
             to enable saving and deleting under a dedicated directory. See
             <.link class="link link-hover" navigate={"#{@mount_path}/search"}>
-              Search & federation
+              Search
             </.link>
             to export a playbook JSON, then use <strong>Import playbook JSON</strong>
             below.

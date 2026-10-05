@@ -23,7 +23,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
     socket =
       socket
-      |> assign(:page_title, "Sync / drift")
+      |> assign(:page_title, "Sync and drift")
       |> assign(:schema_allowlist, allowlist)
       |> assign(:scrypath_opts, scrypath_opts)
       |> assign(:selected_schema, nil)
@@ -1247,7 +1247,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           navigate={@mount_path}
           hint="After checking sync —"
         >
-          Recheck search health
+          Return to Control Room
         </:step>
         <:step
           :if={@selected_schema}

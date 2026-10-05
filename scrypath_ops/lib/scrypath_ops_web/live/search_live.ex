@@ -48,7 +48,7 @@ defmodule ScrypathOpsWeb.SearchLive do
     socket =
       socket
       |> assign(:guide_href, @guide_href)
-      |> assign(:page_title, "Search & federation")
+      |> assign(:page_title, "Search")
       |> assign(:mode, :single)
       |> assign(:q, "")
       |> assign(:page_size, SearchPlayground.default_page_size())

@@ -146,12 +146,12 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert html =~ ~s(aria-expanded="false")
     assert html =~ ~s(aria-label="Close navigation")
     assert html =~ ~s(data-ops-nav-link)
-    # v1.5 brand: the shell header renders the inline-SVG brand mark (decorative,
-    # aria-hidden) with the copper "/" accent — no more <img src="/ops/images/logo.svg">.
-    # "ScrypathOps" below is its accessible name.
-    assert html =~ ~s(ops-brand-mark)
-    assert html =~ ~s(fill="#C17A3E")
-    assert html =~ "ScrypathOps"
+    # The shell renders the canonical horizontal wordmark in both themes; the
+    # enclosing logo-only home link retains its accessible name.
+    assert html =~ ~s(ops-wordmark)
+    assert html =~ ~s(src="/ops/images/scrypath-wordmark.svg")
+    assert html =~ ~s(src="/ops/images/scrypath-wordmark-inverse.svg")
+    assert html =~ ~s(aria-label="Scrypath home")
     assert html =~ ~s(class="ops-theme-toggle)
     assert html =~ ~s(id="theme-toggle-pill")
     assert html =~ ~s(ops-theme-toggle__pill)
@@ -199,12 +199,12 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
 
     test "/ops/sync-drift", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"/ops/sync-drift")
-      assert_ops_shell!(html, "Sync / drift")
+      assert_ops_shell!(html, "Sync and drift")
     end
 
     test "/ops/search", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"/ops/search")
-      assert_ops_shell!(html, "Search &amp; federation")
+      assert_ops_shell!(html, "Search")
     end
   end
 

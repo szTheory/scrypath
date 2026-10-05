@@ -102,8 +102,8 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
 
     expected_labels = [
       "Search health",
-      "Failed Sync",
-      "Sync Drift",
+      "Failed sync work",
+      "Sync and drift",
       "Search",
       "Playbooks"
     ]
@@ -114,8 +114,8 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
     assert Enum.map(items, & &1.title) == [
              "Search health",
              "Failed sync work",
-             "Sync / drift",
-             "Search & federation",
+             "Sync and drift",
+             "Search",
              "Saved playbooks"
            ]
   end

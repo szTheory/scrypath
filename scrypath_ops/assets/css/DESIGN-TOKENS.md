@@ -223,7 +223,7 @@ box-shadow ring is, and double-drawing outline + ring reads as muddy.
 
 ## Shell chrome — Phase 135
 
-Shell chrome is the shared operator frame: `.ops-header`, `.ops-shell`, `.ops-brand-mark`,
+Shell chrome is the shared operator frame: `.ops-header`, `.ops-shell`, `.ops-wordmark`,
 `.ops-nav-list`, `.ops-nav-item-active`, `.ops-theme-toggle*`, `.ops-cmdk__panel`, and
 `.ops-flash`. Light remains on the base recipes by default; custom shell depth is dark-only
 and must be authored in both explicit `[data-theme="dark"]` and system-dark
@@ -233,7 +233,7 @@ and must be authored in both explicit `[data-theme="dark"]` and system-dark
 | --- | --- |
 | `.ops-header` | In dark, composes `--shadow-ops-surface` with `--shadow-ops-panel-dark` plus a 14% base-content divider so the header reads as a seated operator surface. Light keeps the base `--shadow-ops-surface` lift. |
 | `.ops-shell` | Exactly one top-left `radial-gradient(...)` wash plus one `linear-gradient(...)` page floor per rule. Base/light stays 14% / 34rem; dark is bounded to 10% / 30rem and dark mobile to 8% / 24rem. No extra gradient layers, orbs, bokeh, texture, or loops. |
-| `.ops-brand-mark` | Stable class on the live inline SVG brand mark. Dark paths apply only a quiet primary drop-shadow; proof must not rely only on stale `.ops-route-mark`. |
+| `.ops-wordmark` | Displays the canonical horizontal Scrypath wordmark. Light and inverse SVG assets switch with explicit and system theme; keep the artwork and copper slash unfiltered. |
 | `.ops-nav-item-active` | Text-bearing selected fill stays `--color-primary-strong`; dark paths compose `--shadow-ops-surface` with `--shadow-ops-glow`. |
 | `.ops-theme-toggle`, `.ops-theme-toggle__pill`, `.ops-theme-toggle__button` | Class selectors mirror the existing IDs. Selected state is exposed through `aria-pressed` and `data-theme-selected`; dark paths use `--shadow-ops-panel-dark`, `--shadow-ops-glow`, and `--color-primary-strong`. |
 | `.ops-cmdk__panel`, `.ops-flash` | Overlay chrome uses `--shadow-ops-overlay` in light. In explicit dark and system dark, compose overlay first (`--shadow-ops-overlay`) and panel-dark second (`--shadow-ops-panel-dark`) so transient shell surfaces keep depth without glow. |

@@ -60,7 +60,7 @@ test("sync drift (loaded)", async ({ page }, testInfo) => {
 
 test("search", async ({ page }, testInfo) => {
   await page.goto("/admin/search/search");
-  await page.getByRole("heading", { name: "Search & federation" }).waitFor();
+  await page.getByRole("heading", { name: "Search" }).waitFor();
   await page.waitForTimeout(300);
   await capture(page, testInfo, "06-search");
 });

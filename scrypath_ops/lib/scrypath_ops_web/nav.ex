@@ -21,20 +21,20 @@ defmodule ScrypathOpsWeb.Nav do
       },
       %{
         path: "#{mount_path}/failed-sync",
-        label: "Failed Sync",
+        label: "Failed sync work",
         title: "Failed sync work",
         group: :recover
       },
       %{
         path: "#{mount_path}/sync-drift",
-        label: "Sync Drift",
-        title: "Sync / drift",
+        label: "Sync and drift",
+        title: "Sync and drift",
         group: :recover
       },
       %{
         path: "#{mount_path}/search",
         label: "Search",
-        title: "Search & federation",
+        title: "Search",
         group: :explore
       },
       %{

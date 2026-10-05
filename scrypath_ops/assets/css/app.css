@@ -1634,9 +1634,21 @@
     box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-primary-content) 30%, transparent) inset;
   }
 
-  .ops-brand-mark {
+  .ops-wordmark {
     flex: none;
-    color: var(--color-base-content);
+    display: block;
+    width: 7.5rem;
+    line-height: 0;
+  }
+
+  .ops-wordmark img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .ops-wordmark .ops-wordmark__dark {
+    display: none;
   }
 
   #flash-group {
@@ -2136,12 +2148,18 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
   }
 }
 
-[data-theme="dark"] .ops-brand-mark {
-  filter: drop-shadow(0 0 0.45rem color-mix(in oklch, var(--color-primary) 45%, transparent));
+[data-theme="dark"] .ops-wordmark .ops-wordmark__light {
+  display: none;
+}
+[data-theme="dark"] .ops-wordmark .ops-wordmark__dark {
+  display: block;
 }
 @media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .ops-brand-mark {
-    filter: drop-shadow(0 0 0.45rem color-mix(in oklch, var(--color-primary) 45%, transparent));
+  html:not([data-theme="light"]) .ops-wordmark .ops-wordmark__light {
+    display: none;
+  }
+  html:not([data-theme="light"]) .ops-wordmark .ops-wordmark__dark {
+    display: block;
   }
 }
 

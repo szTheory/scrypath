@@ -533,7 +533,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     {:ok, lv, html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
 
     assert html =~ "OpsPostB"
-    assert has_element?(lv, "a[href='/ops']", "Recheck search health")
+    assert has_element?(lv, "a[href='/ops']", "Return to Control Room")
     assert has_element?(lv, "a[href='/ops/health?schema=ScrypathOps.Test.OpsPostB']")
     assert :sys.get_state(lv.pid).socket.assigns.selected_schema == OpsPostB
   end
@@ -587,7 +587,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     base_assigns = %{
       __changed__: %{},
       flash: %{},
-      page_title: "Sync / drift",
+      page_title: "Sync and drift",
       schema_allowlist: [OpsPostA, OpsPostB],
       scrypath_opts: sync_drift_scrypath_opts(),
       selected_schema: OpsPostA,

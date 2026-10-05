@@ -93,23 +93,23 @@ defmodule ScrypathOpsWeb.ShellChromeTokenContractTest do
            ".ops-nav-item-active system-dark glow must mirror explicit dark."
   end
 
-  test "live brand mark selector is the shell proof target, not only the stale route mark" do
+  test "horizontal wordmark variants switch for explicit and system dark themes" do
     source = css()
 
-    assert source =~ ".ops-brand-mark",
-           "The live inline SVG brand mark needs a CSS/proof selector."
+    assert source =~ ".ops-wordmark",
+           "The live horizontal wordmark needs a CSS selector."
 
     assert Regex.match?(
-             ~r/\[data-theme="dark"\]\s+\.ops-brand-mark\s*\{/,
+             ~r/\[data-theme="dark"\]\s+\.ops-wordmark\s+\.ops-wordmark__dark\s*\{/,
              source
            ),
-           ".ops-brand-mark explicit-dark treatment must exist."
+           "The inverse wordmark must be shown for explicit dark theme."
 
     assert Regex.match?(
-             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-brand-mark\s*\{/,
+             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-wordmark\s+\.ops-wordmark__dark\s*\{/,
              source
            ),
-           ".ops-brand-mark system-dark treatment must mirror explicit dark."
+           "The inverse wordmark must be shown for system dark theme."
   end
 
   test "palette and flash overlay shadows are mirrored in both dark paths" do

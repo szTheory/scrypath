@@ -690,7 +690,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
           navigate={OperatorSelection.path(@mount_path, "sync-drift", @selected_schema)}
           hint="When the queue's clear —"
         >
-          Verify sync drift
+          Check sync and drift
         </:step>
       </.ops_handoff>
 

@@ -65,7 +65,7 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
 
   await page.goto("/admin/search/search");
   await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Search & federation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Search" })).toBeVisible();
   await page.getByLabel("Search text").fill("quantum");
   await page.getByRole("button", { name: "Run search" }).click();
   await expect(page.getByRole("heading", { name: "Results", exact: true })).toBeVisible();

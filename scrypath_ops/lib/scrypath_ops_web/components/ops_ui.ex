@@ -440,7 +440,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   Trust-verdict hero — the branded answer to "can I trust search right now?".
 
   A large status headline + one-line evidence, tone routed through `kind`. The anchor of
-  the Control Room landing; also used for the Search health summary and Sync Drift promotion
+  the Control Room landing; also used for the Search health summary and Sync and drift promotion
   readiness. Keep the headline short and honest (don't upgrade green past the evidence).
   """
   attr(:kind, :atom,
@@ -526,8 +526,8 @@ defmodule ScrypathOpsWeb.OpsUi do
   end
 
   defp trail_for(:posture), do: {"Recover", "Search health"}
-  defp trail_for(:failed_sync), do: {"Recover", "Failed Sync"}
-  defp trail_for(:sync_drift), do: {"Recover", "Sync Drift"}
+  defp trail_for(:failed_sync), do: {"Recover", "Failed sync work"}
+  defp trail_for(:sync_drift), do: {"Recover", "Sync and drift"}
   defp trail_for(:search), do: {"Explore", "Search"}
   defp trail_for(:playbooks), do: {"Explore", "Playbooks"}
   defp trail_for(_), do: nil
@@ -1323,7 +1323,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:label, :string, default: "Technical details")
   attr(:variant, :atom, default: :default, values: [:default, :compact, :embedded])
   # Phase 133 (DARKMOTION-01): opt-in hover glint. Default false is load-bearing —
-  # evidence code blocks (Failed Sync, search/merge payloads) must stay calm (D-04a/c).
+  # evidence code blocks (Failed sync work, search/merge payloads) must stay calm (D-04a/c).
   attr(:shimmer, :boolean, default: false)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
