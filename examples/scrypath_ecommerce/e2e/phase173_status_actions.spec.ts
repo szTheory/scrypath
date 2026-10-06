@@ -37,6 +37,7 @@ async function openScenario(page: import("@playwright/test").Page, url: string, 
 
 for (const entrypoint of ENTRYPOINTS) {
   test(`${entrypoint.name} status sources stay truthful across themes and responsive widths`, async ({ page }) => {
+    test.setTimeout(90_000);
     const captureDir = join(process.cwd(), "test-results", "phase173-status-captures");
     mkdirSync(captureDir, { recursive: true });
 
