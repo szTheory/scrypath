@@ -142,6 +142,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert html =~ "data-testid=\"posture-row\""
     assert html =~ "fetch error: :boom"
     assert html =~ "Queue not used"
+    assert html =~ "Not observed"
     assert html =~ "Backend tasks"
     assert html =~ "Queue jobs"
     assert html =~ "Last success"

@@ -13,9 +13,10 @@ defmodule ScrypathOps.Test.TapFormatter do
     {:noreply, %{state | count: count}}
   end
 
-  def handle_cast({:test_finished, %{state: {:failed, _failures}, name: name}}, state) do
+  def handle_cast({:test_finished, %{state: {:failed, failures}, name: name}}, state) do
     count = state.count + 1
     IO.puts("not ok #{count} - #{tap_name(name)}")
+    failures |> inspect(limit: :infinity, printable_limit: :infinity) |> String.split("\n") |> Enum.each(&IO.puts("# #{&1}"))
     {:noreply, %{state | count: count}}
   end
 
