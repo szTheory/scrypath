@@ -25,11 +25,9 @@ async function openScenario(page: import("@playwright/test").Page, url: string, 
   await page.goto(`${url}${separator}scenario=${scenario}`);
   const live = page.locator("[data-phx-main]");
   await expect(live).toHaveClass(/phx-connected/);
-  if (theme !== "system") {
-    const preference = page.locator(`#theme-toggle [data-phx-theme="${theme}"]`);
-    await preference.click();
-    await expect(preference).toHaveAttribute("aria-pressed", "true");
-  }
+  const preference = page.locator(`#theme-toggle [data-phx-theme="${theme}"]`);
+  await preference.click();
+  await expect(preference).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("heading", { name: "Search health", exact: true })).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("data-theme-effective", theme === "system" ? "dark" : theme);
   await expect(page.locator("html")).toHaveAttribute("data-theme-preference", theme);
