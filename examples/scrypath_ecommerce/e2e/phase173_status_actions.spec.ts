@@ -45,6 +45,8 @@ for (const entrypoint of ENTRYPOINTS) {
         let neutralReference: { verdictBackground: string; verdictBorder: string; rowBackground: string; rowBorder: string } | undefined;
         for (const scenario of scenarios) {
           await openScenario(page, entrypoint.url, scenario, theme, width);
+          // State surfaces settle together after route/theme patches.
+          await page.waitForTimeout(250);
           const rows = page.locator('[data-testid="posture-row"]');
 
           if (scenario === "empty") {
@@ -156,6 +158,10 @@ for (const entrypoint of ENTRYPOINTS) {
     await openScenario(page, entrypoint.url, "default", "light", 1440);
     const refresh = page.getByRole("button", { name: "Refresh search health" });
     await refresh.focus();
+    // Enter keyboard modality, then return focus to the action to exercise
+    // :focus-visible rather than the browser's programmatic-focus styling.
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Shift+Tab");
     await expect(refresh).toBeFocused();
     const focus = await refresh.evaluate((button) => ({
       width: getComputedStyle(button).outlineWidth,
