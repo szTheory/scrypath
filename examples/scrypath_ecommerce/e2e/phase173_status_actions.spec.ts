@@ -41,7 +41,7 @@ for (const entrypoint of ENTRYPOINTS) {
           const rows = page.locator('[data-testid="posture-row"]');
 
           if (scenario === "empty") {
-            await expect(page.getByText(/No schemas are configured for search health/)).toBeVisible();
+            await expect(page.getByText("No schemas configured", { exact: true })).toBeVisible();
             await expect(rows).toHaveCount(0);
             await expect(page.locator(".ops-metric")).toHaveCount(0);
           } else {
