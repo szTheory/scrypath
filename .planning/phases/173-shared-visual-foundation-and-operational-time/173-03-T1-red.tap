@@ -1,0 +1,4 @@
+TAP version 13
+not ok 1 - test phase 173 degraded health keeps zero metrics neutral and localizes failure cues
+# [{:error, %ExUnit.AssertionError{left: :ex_unit_no_meaningful_value, right: :ex_unit_no_meaningful_value, message: "Expected false or nil, got true", expr: {:refute, [], [{:has_element?, [line: 173], [{:lv, [line: 173], nil}, ".ops-metric-success"]}]}, args: [#Phoenix.LiveViewTest.View<id: "phx-GNwUHybstRYcLiYB", module: ScrypathOpsWeb.PostureLive, pid: #PID<0.486.0>, endpoint: ScrypathOpsWeb.Endpoint, ...>, ".ops-metric-success"], doctest: :ex_unit_no_meaningful_value, context: :==}, [{ScrypathOpsWeb.PostureLiveTest, :"test phase 173 degraded health keeps zero metrics neutral and localizes failure cues", 1, [file: ~c"test/scrypath_ops_web/live/posture_live_test.exs", line: 173]}]}]
+1..1

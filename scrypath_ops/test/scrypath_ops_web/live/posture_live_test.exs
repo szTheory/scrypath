@@ -161,6 +161,21 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert refreshed =~ "2026-10-04T13:02:05.123456-04:00"
   end
 
+  test "phase 173 degraded health keeps zero metrics neutral and localizes failure cues", %{
+    conn: conn
+  } do
+    {:ok, lv, html} = live(conn, ~p"/ops/phase173/health?scenario=failed")
+
+    assert html =~ "Degraded"
+    assert html =~ "backend failed"
+    assert html =~ "failed"
+    refute html =~ "document freshness"
+    refute has_element?(lv, ".ops-metric-success")
+    assert has_element?(lv, ".ops-metric-warning")
+    assert has_element?(lv, ".ops-schema-signal-card--warning")
+    assert has_element?(lv, "a[data-testid='posture-failed-sync-link']")
+  end
+
   test "renders backend success age from the observation snapshot with exact source evidence", %{
     conn: conn
   } do

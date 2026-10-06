@@ -1,0 +1,10 @@
+{
+  "command": "SCRYPATH_TAP=1 mix test --no-compile --no-deps-check test/scrypath_ops_web/live/posture_live_test.exs:172 --no-color",
+  "exitCode": 2,
+  "output": "TAP version 13\nnot ok 1 - test phase 173 degraded health keeps zero metrics neutral and localizes failure cues\n# [{:error, %ExUnit.AssertionError{left: :ex_unit_no_meaningful_value, right: :ex_unit_no_meaningful_value, message: \"Expected false or nil, got true\", expr: {:refute, [], [{:has_element?, [line: 173], [{:lv, [line: 173], nil}, \".ops-metric-success\"]}]}, args: [#Phoenix.LiveViewTest.View<id: \"phx-GNwUHybstRYcLiYB\", module: ScrypathOpsWeb.PostureLive, pid: #PID<0.486.0>, endpoint: ScrypathOpsWeb.Endpoint, ...>, \".ops-metric-success\"], doctest: :ex_unit_no_meaningful_value, context: :==}, [{ScrypathOpsWeb.PostureLiveTest, :\"test phase 173 degraded health keeps zero metrics neutral and localizes failure cues\", 1, [file: ~c\"test/scrypath_ops_web/live/posture_live_test.exs\", line: 173]}]}]\n1..1\n",
+  "targetTest": "test phase 173 degraded health keeps zero metrics neutral and localizes failure cues",
+  "targetFile": "scrypath_ops/test/scrypath_ops_web/live/posture_live_test.exs",
+  "expected": "Degraded production posture retains local failure cues and failed-work link while zero error metrics have no success tone",
+  "actual": "The failed-scenario LiveView renders one or more .ops-metric-success elements for zero-valued health metrics",
+  "semanticAssessment": "The named PostureLive test executed and failed at its planned refute assertion for success-colored zero metrics; the failure is an ExUnit behavior assertion, with fixture setup and rendered degraded state succeeding."
+}
