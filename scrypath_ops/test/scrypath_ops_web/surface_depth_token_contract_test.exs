@@ -12,9 +12,9 @@ defmodule ScrypathOpsWeb.SurfaceDepthTokenContractTest do
 
   defp css, do: File.read!(@app_css)
 
-  test "--ops-surface-2 stays #1b2230 for dark raised surfaces" do
-    assert Regex.match?(~r/--ops-surface-2:\s*#1b2230;/, css()),
-           "Dark --ops-surface-2 drifted from the locked #1b2230 elevation token."
+  test "--ops-surface-2 stays #222831 for approved neutral dark raised surfaces" do
+    assert Regex.match?(~r/--ops-surface-2:\s*#222831;/, css()),
+           "Dark --ops-surface-2 drifted from the Phase 173 neutral elevation token."
   end
 
   test ".ops-data-card dark fill references --ops-surface-2" do

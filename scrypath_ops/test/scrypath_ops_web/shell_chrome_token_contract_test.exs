@@ -1,6 +1,6 @@
 defmodule ScrypathOpsWeb.ShellChromeTokenContractTest do
   @moduledoc """
-  Locks SHELL-DARK-01 shell chrome CSS invariants as static source assertions.
+  Locks the approved neutral shell chrome CSS invariants as static source assertions.
 
   This is a pure file-read contract over `assets/css/app.css`, modeled on the
   existing surface-depth and motion token contracts.
@@ -13,7 +13,7 @@ defmodule ScrypathOpsWeb.ShellChromeTokenContractTest do
   defp css, do: File.read!(@app_css)
   defp design_tokens, do: File.read!(@design_tokens)
 
-  test ".ops-shell wash keeps exactly one radial layer plus one linear floor per rule" do
+  test ".ops-shell uses a flat token surface without decorative background layers" do
     blocks =
       Regex.scan(
         ~r/(?:^|\n)\s*(?:\[data-theme="dark"\]\s+|html:not\(\[data-theme="light"\]\)\s+)?\.ops-shell\s*\{([^{}]*)\}/,
@@ -24,14 +24,10 @@ defmodule ScrypathOpsWeb.ShellChromeTokenContractTest do
     assert blocks != [], "Expected at least one .ops-shell background rule."
 
     for body <- blocks do
-      assert Regex.scan(~r/radial-gradient/, body) |> length() == 1,
-             ".ops-shell must keep exactly one quiet radial wash per rule."
+      assert body =~ "background: var(--ops-bg)",
+             ".ops-shell must use the approved flat page token."
 
-      assert Regex.scan(~r/linear-gradient/, body) |> length() == 1,
-             ".ops-shell must keep exactly one linear page-floor gradient per rule."
-
-      assert body =~ "circle at top left",
-             ".ops-shell radial wash must stay anchored at the top-left brand corner."
+      refute body =~ "gradient(", ".ops-shell must not restore a decorative wash."
     end
   end
 
@@ -54,9 +50,12 @@ defmodule ScrypathOpsWeb.ShellChromeTokenContractTest do
   test "theme toggle shell selectors and dark mirrors are present" do
     source = css()
 
-    for selector <- [".ops-theme-toggle", ".ops-theme-toggle__pill", ".ops-theme-toggle__button"] do
+    for selector <- [".ops-theme-toggle", ".ops-theme-toggle__button"] do
       assert source =~ selector, "Expected #{selector} to have a CSS contract."
     end
+
+    refute source =~ ".ops-theme-toggle__pill",
+           "Preference selection must not depend on the removed independent pill."
 
     assert Regex.match?(
              ~r/\[data-theme="dark"\]\s+\.ops-theme-toggle\s*\{[^{}]*box-shadow:[^{}]*var\(--shadow-ops-panel-dark\)/,
