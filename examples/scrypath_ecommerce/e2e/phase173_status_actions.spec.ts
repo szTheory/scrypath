@@ -25,8 +25,14 @@ async function openScenario(page: import("@playwright/test").Page, url: string, 
   await page.goto(`${url}${separator}scenario=${scenario}`);
   const live = page.locator("[data-phx-main]");
   await expect(live).toHaveClass(/phx-connected/);
+  if (theme !== "system") {
+    const preference = page.locator(`#theme-toggle [data-phx-theme="${theme}"]`);
+    await preference.click();
+    await expect(preference).toHaveAttribute("aria-pressed", "true");
+  }
   await expect(page.getByRole("heading", { name: "Search health", exact: true })).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("data-theme-effective", theme === "system" ? "dark" : theme);
+  await expect(page.locator("html")).toHaveAttribute("data-theme-preference", theme);
 }
 
 for (const entrypoint of ENTRYPOINTS) {
@@ -114,6 +120,11 @@ for (const entrypoint of ENTRYPOINTS) {
           const refreshBox = await refresh.boundingBox();
           expect(refreshBox).not.toBeNull();
           expect(refreshBox!.height).toBeGreaterThanOrEqual(40);
+          const checked = refresh.locator("..").locator("time");
+          await expect(checked).toBeVisible();
+          await expect(checked).toHaveCSS("font-size", "14px");
+          expect(await checked.evaluate((time) => getComputedStyle(time).fontFamily))
+            .toBe(await page.locator("body").evaluate((body) => getComputedStyle(body).fontFamily));
           if ([390, 1440].includes(width) && ["default", "failed"].includes(scenario)) {
             await page.evaluate(() => window.scrollTo(0, 0));
             await page.screenshot({ path: join(captureDir, `phase173-${entrypoint.name}-${scenario}-${theme}-${width}.png`), fullPage: true });
