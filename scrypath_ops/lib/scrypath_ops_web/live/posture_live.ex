@@ -539,7 +539,7 @@ defmodule ScrypathOpsWeb.PostureLive do
     end
   end
 
-  defp metric_tone(0), do: :success
+  defp metric_tone(0), do: :neutral
   defp metric_tone(_), do: :warning
 
   defp posture_card_tone({:error, _reason}), do: "ops-schema-signal-card--error"

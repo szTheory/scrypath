@@ -573,33 +573,34 @@
      color settles over --duration-ops-status so a count flipping on Refresh catches the
      eye without a snap (state, not layout). */
   .ops-metric {
+    border-color: color-mix(in oklch, var(--color-base-content) 12%, transparent);
     transition: border-color var(--duration-ops-status) var(--ease-ops-standard);
   }
 
-  .ops-metric-success {
-    border-color: color-mix(in oklch, var(--color-success) 45%, transparent);
-  }
-
+  .ops-metric-success,
   .ops-metric-warning {
-    border-color: color-mix(in oklch, var(--color-warning) 50%, transparent);
+    border-color: color-mix(in oklch, var(--color-base-content) 12%, transparent);
   }
 
-  .ops-metric-error {
-    border-color: color-mix(in oklch, var(--color-error) 50%, transparent);
-  }
-
-  .ops-metric-info {
-    border-color: color-mix(in oklch, var(--color-info) 48%, transparent);
-  }
-
-  /* :partial settles like :warning (shared tone family); :running uses the brand
-     primary so an in-flight count reads as "working", not as a problem. */
-  .ops-metric-partial {
-    border-color: color-mix(in oklch, var(--color-warning) 50%, transparent);
-  }
-
+  .ops-metric-error,
+  .ops-metric-info,
+  .ops-metric-partial,
   .ops-metric-running {
-    border-color: color-mix(in oklch, var(--color-primary) 48%, transparent);
+    border-color: color-mix(in oklch, var(--color-base-content) 12%, transparent);
+  }
+
+  .ops-metric__value {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-ops-2);
+  }
+
+  .ops-metric__cue {
+    color: var(--color-warning);
+  }
+
+  .ops-metric-error .ops-metric__cue {
+    color: var(--color-error);
   }
 
   /* Trust-verdict hero. Tone surface comes from `.ops-tone-*` (or `.ops-verdict-neutral`);
@@ -618,6 +619,17 @@
   .ops-verdict-neutral {
     border-color: color-mix(in oklch, var(--color-base-content) 14%, transparent);
     background: color-mix(in oklch, var(--ops-surface-2) 64%, transparent);
+  }
+
+  /* Search health keeps tone in the status dot/text; its shared answer surface stays neutral. */
+  .ops-verdict.ops-tone-success,
+  .ops-verdict.ops-tone-warning,
+  .ops-verdict.ops-tone-error,
+  .ops-verdict.ops-tone-info,
+  .ops-verdict.ops-tone-partial,
+  .ops-verdict.ops-tone-running {
+    border-color: color-mix(in oklch, var(--color-base-content) 14%, transparent);
+    background: var(--color-base-100);
   }
 
   /* Landing hero: the verdict is the single most important answer on the page, so it
@@ -1606,16 +1618,10 @@
       box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
   }
 
-  .ops-schema-signal-card--success {
-    border-color: color-mix(in oklch, var(--color-success) 28%, var(--color-base-content) 10%);
-  }
-
-  .ops-schema-signal-card--warning {
-    border-color: color-mix(in oklch, var(--color-warning) 42%, var(--color-base-content) 10%);
-  }
-
+  .ops-schema-signal-card--success,
+  .ops-schema-signal-card--warning,
   .ops-schema-signal-card--error {
-    border-color: color-mix(in oklch, var(--color-error) 48%, var(--color-base-content) 10%);
+    border-color: color-mix(in oklch, var(--color-base-content) 12%, transparent);
   }
 
   .ops-schema-signal-card__header {

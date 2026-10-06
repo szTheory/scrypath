@@ -172,6 +172,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     refute html =~ "document freshness"
     refute has_element?(lv, ".ops-metric-success")
     assert has_element?(lv, ".ops-metric-warning")
+    assert has_element?(lv, ".ops-metric__cue[aria-hidden='true']")
     assert has_element?(lv, ".ops-schema-signal-card--warning")
     assert has_element?(lv, "a[data-testid='posture-failed-sync-link']")
   end
