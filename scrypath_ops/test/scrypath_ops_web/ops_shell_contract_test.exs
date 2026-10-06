@@ -251,8 +251,9 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert source =~ "this.serverDisabled = this.el.disabled"
     assert source =~ "this.el.disabled = this.serverDisabled || loading"
     assert source =~ "updated()"
-    assert source =~ "this.el.querySelector('svg')"
-    assert source =~ "this.el.querySelector('span')"
+    [_, hook] = Regex.run(~r/const OpsRefreshButton = \{([\s\S]*?)\n\}/, source)
+    refute hook =~ "textContent"
+    refute hook =~ "innerHTML"
   end
 
   test "standalone and mounted LiveSockets share all operator hooks" do

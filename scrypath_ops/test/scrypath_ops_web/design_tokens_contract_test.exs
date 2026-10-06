@@ -139,7 +139,7 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
     assert css() =~ ~r/\.ops-btn:focus-visible\s*\{[^}]*outline:\s*2px[^}]*outline-offset:\s*2px/s
     assert css() =~ ~r/\.ops-btn\[aria-pressed="true"\]/
     assert css() =~ ~r/\.ops-btn:disabled/
-    assert css() =~ ~r/\.ops-btn\.phx-click-loading/
+    assert css() =~ ~r/\.ops-refresh-button\.phx-click-loading/
   end
 
   test "the token catalog lists all current OpsUi exports with component roles" do
