@@ -5,16 +5,16 @@ milestone_name: ScrypathOps UI refinement
 current_phase: 173
 current_phase_name: Shared Visual Foundation and Operational Time
 status: executing
-stopped_at: "Phase 173 planning verified; next: $gsd-execute-phase 173 to implement four sequential slices"
-last_updated: "2026-10-06T19:58:09.447Z"
+stopped_at: Phase 173 wave 1 complete; executing 173-02 next in isolated execution branch
+last_updated: "2026-10-06T21:59:00.037Z"
 last_activity: 2026-10-06
 last_activity_desc: Phase 173 execution started
-state_head: 180992439563fe788c8794cbba1a9f6cedc081cc
+state_head: 8470672da54f99102859760a81808c70e79a0b81
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 4
-  completed_plans: 0
+  completed_plans: 1
   percent: 0
 ---
 
@@ -27,8 +27,8 @@ See PROJECT.md (updated 2026-10-06). Core value: make search indexing feel nativ
 ## Current Position
 
 Phase: 173 (Shared Visual Foundation and Operational Time) — EXECUTING
-Plan: 1 of 4
-Status: Executing Phase 173
+Plan: 2 of 4
+Status: Ready to execute
 Last activity: 2026-10-06 — Phase 173 execution started
 Progress: [░░░░░░░░░░] 0% (0/5 phases; 0/4 plans complete)
 
@@ -80,11 +80,15 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-06T19:36:08.822Z
-Stopped at: Phase 173 planning verified; next: $gsd-execute-phase 173 to implement four sequential slices
-Resume file: .planning/phases/173-shared-visual-foundation-and-operational-time/173-01-PLAN.md
+Last session: 2026-10-06T21:59:00.017Z
+Stopped at: Phase 173 wave 1 complete; executing 173-02 next in isolated execution branch
+Resume file: .planning/phases/173-shared-visual-foundation-and-operational-time/173-02-PLAN.md
 
-Run `$gsd-execute-phase 173` from `/Users/jon/projects/scrypath` on `planning/next-milestone-handoff`. Phase 173 discussion, approved UI contract, research, pattern mapping, and implementation planning are complete. Four sequential waves deliver (01) neutral shell/theme and a disposable dual-entrypoint browser runner, (02) lossless snapshot-stable operational time, (03) local status/neutral metrics/quiet actions, and (04) truthful timestamp copying. Independent plan review passed after one revision resolved production standalone browser wiring and the missing root core gate. Final deterministic checks passed four frontmatters/structures, 7/7 requirements, 22/22 decisions, 26/26 UI considerations and 11/11 automated failure directions; the post-planning gate covered all 29 requirement/decision items. See 173-PLAN-CHECK.md and 173-VALIDATION.md. Product tests and new browser harness execution remain pending; no Phase 173 implementation or hosted source receipt is claimed. OPUX-09–OPUX-15 remain pending. The last completed implementation phase remains 172 in archived v1.42. Research/validation commit is 7fed9db; the final planning commit follows it.
+Phase 173 execution is active in `/private/tmp/scrypath-phase173-20261006-155750/execution` on `gsd/phase-173-shared-visual-foundation`. The original `/Users/jon/projects/scrypath` checkout, its uncommitted source/design baseline, and preview :4012 remain preserved. A clean baseline snapshot is commit `1809924`; execution uses the negotiated GSD process/worktree adapter, with per-wave merge and cleanup.
+
+Wave 1 (173-01) is complete: neutral shell/theme controls, production PostureLive fixture routes for mounted and standalone entrypoints, and disposable shell browser proof. Three task commits and the committed summary were reconciled. Final browser checks passed 4/4; post-merge `mix verify.ops_ui` and Ops `mix precommit` passed 2 doctests/233 tests after correcting three obsolete static contracts. UI/schema gates passed. Captures and recovered mounted baseline images are preserved under `/private/tmp/scrypath-phase173-20261006-155750/evidence/173-01/`. Standalone baseline images and intentional TDD RED records remain documented limits. No final Phase 173 verification or exact-SHA hosted closeout is claimed.
+
+Continue `$gsd-execute-phase 173` in the execution checkout to finish 173-02, 173-03, and 173-04, then independent verification and hosted closeout. Do not redispatch 173-01 or replay Phase 172/170. Phase 173 approved contract/plans and baseline claims remain the authority; no public release is claimed.
 
 Current product/design context, schema-picker, naming/logo, and Search health layout follow-ups remain uncommitted and preserved. The Control Room refresh remains in the page toolbar outside the health verdict. Preserve adaptive routing, the existing UI phase/safety gates, and feedback preview data. Plan from this checkout; execution must preserve the dirty baseline when preparing clean source for the root workspace-clean gate through the authorized GSD isolation workflow.
 

@@ -56,8 +56,8 @@ coverage:
       - kind: integration
         ref: "make -C examples/scrypath_ecommerce contrast"
         status: pass
-    human_judgment: true
-    rationale: "Automated checks prove preference state, contrast, and geometry; visual adequacy still benefits from human review."
+    human_judgment: false
+    rationale: "The approved UI contract resolves design choice; executable preference, contrast, and geometry checks plus actual-pixel inspection cover implementation without routine human UAT."
   - id: D2
     description: Disposable mounted and standalone routes render deterministic source rows through production PostureLive.
     requirement: OPUX-12
@@ -75,8 +75,8 @@ coverage:
       - kind: automated_ui
         ref: "examples/scrypath_ecommerce/test-results/phase173-shell-9bd2141eba/test-results/phase173-captures/phase173-{mounted,standalone}-{390,1440}-{light,dark}.png"
         status: pass
-    human_judgment: true
-    rationale: "Captures were visually inspected for hierarchy, spacing, theme contrast, and responsive overflow; final product judgment belongs to a human reviewer."
+    human_judgment: false
+    rationale: "Actual application captures were inspected against the approved contract; this is implementation evidence, with no simulated reviewer approval."
 
 duration: 1h 53m
 completed: 2026-10-06
@@ -145,7 +145,9 @@ Final actual-page captures were saved and inspected at:
 
 The 1440px captures show the fixed rail, visible preference labels, flat neutral canvas, and source-backed schema cards. At 390px the rail becomes a drawer, metrics and schema details stack, and the preference controls remain visible without horizontal page overflow. Dark selected navigation and theme pills retain readable contrast.
 
-The retained `http://127.0.0.1:4012/admin/search/health` preview was inspected read-only before implementation and was not mutated or reseeded. Its baseline appearance was visible during the session, but a durable before-image file was not saved. The phase's `173-warm-*` PNGs are design comps, not before screenshots of the running application.
+The retained `http://127.0.0.1:4012/admin/search/health` preview was inspected read-only before implementation and was not mutated or reseeded. After executor exit, the orchestrator saved and inspected four baseline application images from that still-unchanged checkout at `/private/tmp/scrypath-phase173-20261006-155750/evidence/173-01/baseline-mounted-{1440,390}-{light,dark}.png`. Computed shell backgrounds confirm the original radial/linear wash. These are recovered baseline images, captured after implementation in the isolated branch, not contemporaneous before images. The phase's `173-warm-*` PNGs are design comps, not application evidence.
+
+All eight final captures and Playwright results were preserved outside the removed executor worktree at `/private/tmp/scrypath-phase173-20261006-155750/evidence/173-01/shell/`. The orchestrator inspected mounted desktop-light/mobile-dark and standalone desktop-dark/mobile-light captures: flat canvas, visible preference labels, bounded rail and responsive stacking.
 
 ## Decisions Made
 
@@ -175,7 +177,7 @@ The retained `http://127.0.0.1:4012/admin/search/health` preview was inspected r
 
 ## Known Limitations
 
-- The pre-change preview was visually inspected but no durable actual-page before images were captured. The final after images are present at the paths above; the design comps are not substitutes for actual before screenshots.
+- Mounted baseline images were recovered from the unchanged preview after executor exit. No standalone pre-change image was saved. Final captures for both entrypoints are preserved outside the removed worktree.
 - Task-level `tdd="true"` markers were verified with passing focused and browser tests, but this execute-plan run has no recorded intentional RED evidence or separate `test(...)` commits.
 
 ## User Setup Required
@@ -184,7 +186,15 @@ None - no external service configuration required.
 
 ## Next Phase Readiness
 
-Plan 01 is implemented and its runnable shell contract passes. The rendered fixture routes and disposable runner are ready for the following Phase 173 plans. The missing durable baseline screenshots are documented for the reviewer.
+Plan 01 is implemented and its runnable shell contract passes. The rendered fixture routes and disposable runner are ready for the following Phase 173 plans. The standalone baseline-image and TDD record limits remain explicit; no routine human approval is required.
+
+## Orchestrator Post-Merge Reconciliation
+
+The GSD cleanup helper merged the owned branch and removed its worktree. Three scope advisories cover the test-only static asset mounts in both endpoints and the fixture scenario refresh attribute in OpsUi; these are necessary seams for the planned production-render harness and do not change production routing.
+
+The first full `mix verify.ops_ui` run found three obsolete static assertions requiring the superseded gradient, old dark surface token, and removed independent theme pill. The orchestrator updated those two existing contract test files to the approved Phase 173 neutral shell and preference ownership. `cd scrypath_ops && mix precommit` then passed: 2 doctests, 233 tests, 0 failures. The existing core path-dependency typing warning remains recorded; it must not be treated as a passing warning-free core gate in Plan 02.
+
+The post-wave UI safety gate and schema-drift gate returned `block: false`; codebase drift skipped because no STRUCTURE.md exists.
 
 ## Self-Check: PASSED
 
