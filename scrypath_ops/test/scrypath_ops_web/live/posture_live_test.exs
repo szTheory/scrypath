@@ -24,7 +24,11 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
       if boom_index in uids and Agent.get(:posture_live_test_state, & &1.fail_a?) do
         {:error, :boom}
       else
-        {:ok, %{results: Keyword.get(config, :meilisearch_tasks, [])}}
+        results =
+          Keyword.get(config, :meilisearch_tasks, [])
+          |> Enum.filter(&(&1["indexUid"] in uids))
+
+        {:ok, %{results: results}}
       end
     end
 
@@ -168,16 +172,18 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
 
   test "retains the source-local last success when a later fetch fails", %{conn: conn} do
     Agent.update(:posture_live_test_state, &Map.put(&1, :fail_a?, false))
-    {:ok, lv, html} = live(conn, ~p"/ops/health")
+    {:ok, lv, _html} = live(conn, ~p"/ops/health")
 
-    assert html =~ "Apr 16, 2026 at 17:59 UTC"
+    row = lv |> element("[id='posture-ScrypathOps.Test.OpsPostA']") |> render()
+    assert row =~ "Apr 16, 2026 at 17:59 UTC"
 
     Agent.update(:posture_live_test_state, &Map.put(&1, :fail_a?, true))
-    html = render_click(lv, "refresh")
+    lv |> element("#search-health-refresh") |> render_click()
+    row = lv |> element("[id='posture-ScrypathOps.Test.OpsPostA']") |> render()
 
-    assert html =~ "Backend observation unavailable"
-    assert html =~ "Last success retained from the previous check"
-    assert html =~ "2026-04-16T17:59:00Z"
+    assert row =~ "Backend observation unavailable"
+    assert row =~ "last success retained from the previous check"
+    assert row =~ "2026-04-16T17:59:00Z"
   end
 
   test "posture shows next checks block with ordered items and failed-sync egress", %{conn: conn} do

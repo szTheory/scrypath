@@ -27,6 +27,7 @@ defmodule ScrypathOps.Posture do
           backend_failed_count: non_neg_integer(),
           queue_failed_count: non_neg_integer(),
           queue_observed_count: non_neg_integer(),
+          last_success_refs: map(),
           refreshed_at: DateTime.t() | nil,
           headline: String.t(),
           evidence: String.t()
@@ -39,6 +40,7 @@ defmodule ScrypathOps.Posture do
             backend_failed_count: 0,
             queue_failed_count: 0,
             queue_observed_count: 0,
+            last_success_refs: %{},
             refreshed_at: nil,
             headline: "—",
             evidence: ""
@@ -50,11 +52,15 @@ defmodule ScrypathOps.Posture do
   with a coarse `:state`, fleet counts, and a human headline/evidence pair.
   """
   @spec summary([module()], keyword()) :: t()
-  def summary(allowlist, opts), do: summary(allowlist, opts, DateTime.utc_now())
+  def summary(allowlist, opts), do: summary(allowlist, opts, DateTime.utc_now(), nil)
 
   @doc false
   @spec summary([module()], keyword(), DateTime.t()) :: t()
-  def summary(allowlist, opts, observed_at) do
+  def summary(allowlist, opts, observed_at), do: summary(allowlist, opts, observed_at, nil)
+
+  @doc false
+  @spec summary([module()], keyword(), DateTime.t(), t() | nil) :: t()
+  def summary(allowlist, opts, observed_at, previous) do
     cond do
       allowlist == [] ->
         classify(%Posture{state: :unconfigured, refreshed_at: observed_at})
@@ -83,9 +89,15 @@ defmodule ScrypathOps.Posture do
           backend_failed_count: backend_failed,
           queue_failed_count: queue_failed,
           queue_observed_count: queue_observed_count(rows),
+          last_success_refs: last_success_refs(rows, previous, observed_at),
           refreshed_at: observed_at
         })
     end
+  end
+
+  @doc false
+  def last_success_ref(%Posture{last_success_refs: refs}, schema, source) do
+    get_in(refs, [schema, source])
   end
 
   @doc "Ordered operator next-checks for a summary, given the mount path. Caller decides how many to show."
@@ -210,6 +222,47 @@ defmodule ScrypathOps.Posture do
       {_mod, {:ok, status}} -> status.queue.observed?
       _row -> false
     end)
+  end
+
+  defp last_success_refs(rows, previous, observed_at) do
+    previous_refs = if match?(%Posture{}, previous), do: previous.last_success_refs, else: %{}
+
+    Enum.reduce(rows, %{}, fn
+      {schema, {:ok, status}}, acc ->
+        Map.put(acc, schema, %{
+          backend: source_reference(status.backend.last_succeeded, observed_at),
+          queue:
+            if(status.mode == :oban,
+              do: source_reference(status.queue.last_succeeded, observed_at),
+              else: %{
+                state: nil,
+                observed_at: observed_at,
+                retained?: false,
+                unavailable_reason: nil
+              }
+            )
+        })
+
+      {schema, {:error, reason}}, acc ->
+        prior = Map.get(previous_refs, schema, %{})
+
+        retained =
+          Map.new([:backend, :queue], fn source ->
+            reference = Map.get(prior, source, %{state: nil, observed_at: nil})
+
+            {source,
+             Map.merge(reference, %{
+               retained?: not is_nil(Map.get(reference, :state)),
+               unavailable_reason: reason
+             })}
+          end)
+
+        Map.put(acc, schema, retained)
+    end)
+  end
+
+  defp source_reference(state, observed_at) do
+    %{state: state, observed_at: observed_at, retained?: false, unavailable_reason: nil}
   end
 
   defp classify(%Posture{state: :unconfigured} = summary) do

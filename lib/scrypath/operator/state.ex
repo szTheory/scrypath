@@ -39,7 +39,10 @@ defmodule Scrypath.Operator.State do
       id: task.id,
       state: normalize_backend_state(task.state),
       reference: task.reference,
-      metadata: Map.take(task.metadata, [:type]),
+      metadata:
+        task.metadata
+        |> Map.take([:type])
+        |> maybe_put(:source_iso, source_iso(task.raw, task_time(task.raw))),
       at: task_time(task.raw)
     )
   end
@@ -122,6 +125,24 @@ defmodule Scrypath.Operator.State do
   end
 
   defp parse_datetime(_value), do: nil
+
+  defp source_iso(raw, %DateTime{} = at) when is_map(raw) do
+    case Map.get(raw, "finishedAt") do
+      value when is_binary(value) ->
+        case DateTime.from_iso8601(value) do
+          {:ok, source_time, _offset} ->
+            if DateTime.compare(source_time, at) == :eq, do: value
+
+          _other ->
+            nil
+        end
+
+      _other ->
+        nil
+    end
+  end
+
+  defp source_iso(_raw, _at), do: nil
 
   defp maybe_put(map, _key, nil), do: map
   defp maybe_put(map, key, value), do: Map.put(map, key, value)

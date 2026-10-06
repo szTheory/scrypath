@@ -104,13 +104,16 @@ defmodule ScrypathOpsWeb.PostureLive do
           ScrypathOps.Posture.summary(
             socket.assigns.schema_allowlist,
             socket.assigns.scrypath_opts,
-            observed_at
+            observed_at,
+            Map.get(socket.assigns, :posture_summary)
           )
 
         nil ->
           ScrypathOps.Posture.summary(
             socket.assigns.schema_allowlist,
-            socket.assigns.scrypath_opts
+            socket.assigns.scrypath_opts,
+            DateTime.utc_now(),
+            Map.get(socket.assigns, :posture_summary)
           )
       end
 
@@ -357,7 +360,15 @@ defmodule ScrypathOpsWeb.PostureLive do
                           </div>
                           <div class="ops-signal-metrics__wide">
                             <dt>Last success</dt>
-                            <dd>{format_state_ts(status.backend.last_succeeded)}</dd>
+                            <dd>
+                              <.ops_time
+                                dt={status.backend.last_succeeded && status.backend.last_succeeded.at}
+                                source_iso={state_source_iso(status.backend.last_succeeded)}
+                                reference={success_reference(@posture_summary, mod, :backend)}
+                                label="Last success"
+                                empty="No success observed"
+                              />
+                            </dd>
                           </div>
                         </dl>
                       </section>
@@ -382,7 +393,15 @@ defmodule ScrypathOpsWeb.PostureLive do
                           </div>
                           <div class="ops-signal-metrics__wide">
                             <dt>Last success</dt>
-                            <dd>{format_state_ts(status.queue.last_succeeded)}</dd>
+                            <dd>
+                              <.ops_time
+                                dt={status.queue.last_succeeded && status.queue.last_succeeded.at}
+                                source_iso={state_source_iso(status.queue.last_succeeded)}
+                                reference={success_reference(@posture_summary, mod, :queue)}
+                                label="Last success"
+                                empty="No success observed"
+                              />
+                            </dd>
                           </div>
                         </dl>
                         <p :if={!status.queue.observed?} class="text-ops-sm text-base-content/75">
@@ -410,6 +429,17 @@ defmodule ScrypathOpsWeb.PostureLive do
                       <div class="ops-schema-signal-card__badges">
                         <.ops_badge kind={:error}>fetch error</.ops_badge>
                       </div>
+                    </div>
+                    <div :if={retained_state(@posture_summary, mod, :backend)} class="mt-3">
+                      <p class="text-ops-sm text-base-content/75">
+                        Backend observation unavailable; last success retained from the previous check.
+                      </p>
+                      <.ops_time
+                        dt={retained_state(@posture_summary, mod, :backend).at}
+                        source_iso={state_source_iso(retained_state(@posture_summary, mod, :backend))}
+                        reference={success_reference(@posture_summary, mod, :backend)}
+                        label="Last success retained"
+                      />
                     </div>
                     <.ops_link_button
                       navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
@@ -483,14 +513,20 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   defp posture_queue_observed_count(_), do: 0
 
-  defp format_dt(nil), do: "—"
+  defp state_source_iso(%Scrypath.Operator.State{metadata: metadata}),
+    do: Map.get(metadata, :source_iso)
 
-  defp format_dt(%DateTime{} = dt) do
-    Calendar.strftime(dt, "%b %d, %Y at %H:%M UTC")
+  defp state_source_iso(_state), do: nil
+
+  defp success_reference(summary, schema, source),
+    do: ScrypathOps.Posture.last_success_ref(summary, schema, source)
+
+  defp retained_state(summary, schema, source) do
+    case success_reference(summary, schema, source) do
+      %{retained?: true, state: %Scrypath.Operator.State{} = state} -> state
+      _other -> nil
+    end
   end
-
-  defp format_state_ts(nil), do: "—"
-  defp format_state_ts(%Scrypath.Operator.State{} = s), do: format_dt(s.at)
 
   defp metric_tone(0), do: :success
   defp metric_tone(_), do: :warning
