@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-06
 **Milestone:** v1.43 — ScrypathOps UI refinement
-**Agreement:** The maintainer accepted the proposed scope/version and recommended reuse of existing UI inventories. Detailed requirements and phase boundaries remain subject to the new-milestone review gate.
+**Agreement:** The maintainer accepted the proposed scope/version and recommended reuse of existing UI inventories. The maintainer explicitly approved all 20 requirements and Phases 173–177 at the final review gate on 2026-10-06.
 
 ## Job and boundaries
 
@@ -27,7 +27,7 @@ This choice does not modify `workflow.research`, adaptive model routing, UI gene
 
 ## Design lifecycle
 
-1. After roadmap approval, discuss Phase 173. Use the installed Impeccable skill in Operate mode with existing PRODUCT/DESIGN context and `buildPath: comp`; initialization is already complete.
+1. Discuss approved Phase 173 next. Use the installed Impeccable skill in Operate mode with existing PRODUCT/DESIGN context and `buildPath: comp`; initialization is already complete.
 2. Before broad visual implementation, compare realistic light/dark Search health comps showing degraded state, zero/error/unknown metrics, a schema with queue failures, long diagnostic values, operational times, quiet-action states, and the theme selector. Resolve the visual direction early; do not defer it to routine UAT.
 3. Run `$gsd-ui-phase 173` before `$gsd-plan-phase 173`. The UI contract records palette/surfaces, hierarchy, component/state rules, and responsive/keyboard behavior. Plans reference it and the feedback requirements. Subsequent frontend phases refine their UI contracts within the selected visual world.
 4. Each delivery slice includes representative before/after render inspection and executable proof. Consolidation does not postpone acceptance from earlier slices. Update DESIGN.md and the implemented token/component catalog with delivered decisions; remove superseded rules rather than piling on overrides.
@@ -49,5 +49,5 @@ Impeccable context loaded successfully on 2026-10-06. It reported that `.impecca
 
 Work from `/Users/jon/projects/scrypath` on `planning/next-milestone-handoff`. Preserve pre-existing uncommitted UI/design changes; milestone setup owns planning files only. Inventory and source evidence for local follow-ups are in STATE.md, distinct from the archived v1.42 receipt. The mounted preview bind-mounts this checkout; its state is intentionally retained. Implementation plans must account for the current local baseline rather than resetting to the archive.
 
-The final new-milestone gate reviews the complete requirements and proposed roadmap together. Pending status is explicit until that gate is answered; no phase execution or semantic approval is inferred from this note.
+The complete requirements and five-phase roadmap were presented together at the final new-milestone gate. The maintainer selected “1” (Approve) on 2026-10-06, explicitly approving both. Milestone setup is complete; Phase 173 is ready for discussion, with no execution started.
 

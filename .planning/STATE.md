@@ -2,11 +2,16 @@
 gsd_state_version: "1.0"
 milestone: v1.43
 milestone_name: ScrypathOps UI refinement
-status: planning
-last_updated: "2026-10-06T16:07:34.646Z"
+current_phase: 173
+current_phase_name: Shared Visual Foundation and Operational Time
+status: Ready to discuss
+stopped_at: v1.43 milestone setup complete; Phase 173 ready for discussion
+last_updated: "2026-10-06T16:22:14.838Z"
 last_activity: 2026-10-06
+last_activity_desc: Approved v1.43 requirements and Phases 173–177; milestone setup complete
+state_head: f09da66aad10a82180a73f2128a447acea16e80b
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,14 +22,15 @@ progress:
 
 ## Project Reference
 
-See PROJECT.md (updated 2026-10-06). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: v1.43 ScrypathOps UI refinement requirements and roadmap definition.
+See PROJECT.md (updated 2026-10-06). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: approved v1.43 ScrypathOps UI refinement; Phase 173 discussion and comp-first UI contract.
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 173 of 5 (Shared Visual Foundation and Operational Time)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-10-06 — Milestone v1.43 started
+Status: Ready to discuss
+Last activity: 2026-10-06 — Approved v1.43 requirements and Phases 173–177; milestone setup complete
+Progress: [░░░░░░░░░░] 0% (0/5 phases; 0 plans)
 
 ## Delivered Evidence
 
@@ -32,7 +38,7 @@ Last activity: 2026-10-06 — Milestone v1.43 started
 - PR91 merged3ad154a33f99cb200b791577aadc5970adc70ca2. Candidate135517b/run37178388184 passed104 browser,4 mounted, required gates, coverage and attestation. Scoped Ops also passed PR37178390800 and main37180290165. Root657tests+4properties0; Ops233+2doctests0.
 - ReleasePR92 merged8dd20e8966acd17a4ef5acec653c00dc31faab49; `scrypath-v0.3.15` published. Run37181522723 passed publish/live Hex/consumer/HexDocs/tag parity; release-mainCI37181522706 passed required and scopedOps.
 - Final exact-source closeout [run37183050686](https://github.com/szTheory/scrypath/actions/runs/37183050686) passed at `5ed440954ba70d2b94d8b480d625530e26a809ac`, including required gates, coverage and closeout attestation; the full browser lane passed104 tests and mounted lane4. Planning tag `v1.42` points to this source. PR93 merged the completed archive before this final run.
-- All completion/audit/archive records preceded that attestation. Its source and retained preview worktree remain unchanged. The original dated handoff commit was planning-only. Later user-directed local UI follow-ups are recorded separately below; they are not part of the archived Phase172 plans, verification, or exact-source receipt. `state_head` identifies the attested input, not this successor's own SHA. The collected receipt is retained at `reference/v1.42-final-receipt.json`; its immutable artifact IDs/digests remain useful after the hosted artifacts expire.
+- All completion/audit/archive records preceded that attestation. Its source and retained preview worktree remain unchanged. The original dated handoff commit was planning-only. Later user-directed local UI follow-ups are recorded separately below; they are not part of the archived Phase172 plans, verification, or exact-source receipt. The archived v1.42 tracker's `state_head` identifies that attested input; the current v1.43 header serves GSD freshness tracking and does not extend the v1.42 receipt. The collected receipt is retained at `reference/v1.42-final-receipt.json`; its immutable artifact IDs/digests remain useful after the hosted artifacts expire.
 
 ## Post-Archive Follow-Up
 
@@ -74,10 +80,16 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Continue `$gsd-new-milestone ScrypathOps UI refinement` from `/Users/jon/projects/scrypath` on `planning/next-milestone-handoff`. On 2026-10-06 the maintainer accepted the recommended v1.43 scope and reuse of existing inventories. The complete requirements and roadmap still require the explicit review gate; do not infer phase approval or begin implementation. Current product/design context, schema-picker, naming/logo, and Search health layout follow-ups remain uncommitted and preserved. The Control Room refresh remains in the page toolbar outside the health verdict. Preserve adaptive routing and the retained preview data; no checkout/directory switch is needed.
+Last session: 2026-10-06
+Stopped at: v1.43 milestone setup complete; Phase 173 ready for discussion
+Resume file: None
 
-The root MILESTONE-CONTEXT.md was consumed; its original input is preserved in `research/v1.43/MILESTONE-CONTEXT.md`. Read PROJECT.md, this STATE.md, ROADMAP.md, REQUIREMENTS.md, `research/v1.43/SCOPE.md`, root PRODUCT.md / DESIGN.md, and both operator quality/refinement references. The installed Impeccable skill supplies comp-first Operate guidance; selected decisions enter GSD UI contracts and plans. Its stale design sidecar finding is nonblocking and was not repaired during setup.
+Run `$gsd-discuss-phase 173` from `/Users/jon/projects/scrypath` on `planning/next-milestone-handoff`. The maintainer explicitly approved all 20 requirements and the five-phase roadmap on 2026-10-06 after accepting scope/version and inventory reuse. OPUX-09–OPUX-28 map exactly once to Phases 173–177. Setup and its planning checks are complete; no implementation, product test run, or new hosted source receipt is claimed. The last completed implementation phase remains 172 in archived v1.42.
 
-After explicit requirements/roadmap approval and commits, the next command is `$gsd-discuss-phase 173`. Follow with `$gsd-ui-phase 173` to settle and capture Impeccable-assisted light/dark comps and shared state decisions, then `$gsd-plan-phase 173`; both UI generation and the planning safety gate are enabled. No implementation has started. Do not run execute/verify/complete for Phase 172 or Phase 170. Preserve archived receipts and reuse only their bounded evidence; no routine UAT remains from those milestones.
+Current product/design context, schema-picker, naming/logo, and Search health layout follow-ups remain uncommitted and preserved. The Control Room refresh remains in the page toolbar outside the health verdict. Preserve adaptive routing, the existing UI phase/safety gates, and feedback preview data; no checkout/directory switch is needed.
+
+The root MILESTONE-CONTEXT.md was consumed; its original input is preserved in `research/v1.43/MILESTONE-CONTEXT.md`. Read PROJECT.md, this STATE.md, ROADMAP.md, REQUIREMENTS.md, `research/v1.43/SCOPE.md`, root PRODUCT.md / DESIGN.md, and both operator quality/refinement references. The installed Impeccable skill supplies comp-first Operate guidance; selected decisions enter GSD UI contracts and plans. Its stale design sidecar finding is nonblocking and was not repaired during setup. No palette/composition decision has been made yet.
+
+After `$gsd-discuss-phase 173`, use `$gsd-ui-phase 173` to settle realistic light/dark comps and capture shared visual/state decisions, then `$gsd-plan-phase 173`. Both UI generation and the planning safety gate are enabled. Do not replay Phase 172 or Phase 170. Preserve archived receipts and reuse only their bounded evidence. Context can be cleared after setup commits; these files carry the approved scope, current baseline, limits, and exact next action.
 
 The `.planning/config.json` model-routing change (`model_profile: adaptive`) is intentional; the maintainer confirmed this on 2026-10-05. Current GSD resolution is `gsd-planner: gpt-6-sol / xhigh` and `gsd-project-researcher: gpt-6-luna / high`. Preserve this routing in future milestone work; do not restore the legacy per-agent overrides.

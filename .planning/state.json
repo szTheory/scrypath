@@ -1,18 +1,38 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v1.42 \u2014 ScrypathOps operator/admin UI",
+  "milestone": "v1.43 — ScrypathOps UI refinement",
   "phases": [
     {
-      "number": "172",
-      "name": "Consistent Operator UI and Verified Recovery",
-      "status": "complete"
+      "number": "173",
+      "name": "Shared Visual Foundation and Operational Time",
+      "status": "pending"
+    },
+    {
+      "number": "174",
+      "name": "Recovery Entry and Diagnosis",
+      "status": "pending"
+    },
+    {
+      "number": "175",
+      "name": "Repair and Verification",
+      "status": "pending"
+    },
+    {
+      "number": "176",
+      "name": "Search and Playbooks",
+      "status": "pending"
+    },
+    {
+      "number": "177",
+      "name": "Shared Patterns and Delivery Proof",
+      "status": "pending"
     }
   ],
   "next": {
-    "command": "$gsd-new-milestone",
-    "label": "Start a separately scoped milestone when wanted",
-    "reason": "v1.42 archived; no active phase or approved next work"
+    "command": "/gsd:progress",
+    "label": "Show progress",
+    "reason": "Unsure of state — showing progress"
   },
-  "updated_at": "2026-10-04T06:20:38.793Z"
+  "updated_at": "2026-10-06T16:23:00.871Z"
 }

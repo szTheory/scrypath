@@ -16,7 +16,7 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 
 **Operator UI default:** Use the existing design system and established interaction patterns; maintain a coherent token/component vocabulary and concise user-facing domain language. Keep a live preview available for optional feedback, inspect before/after screenshots, and automate meaningful layout, keyboard, state and service checks without recurring paid AI review. Record inventories, decisions and revisit triggers to avoid redesign churn. See `reference/OPERATOR-UI-QUALITY.md` (maintainer direction, 2026-10-03).
 
-**Operator visual revision evidence (2026-10-06):** The maintainer's concrete feedback opens the shared page background, warning/metric/schema coloration, theme selection, quiet-action states, and operational timestamp/copy patterns for revision. Begin the proposed UI refinement milestone with representative light/dark comps and shared token work, then propagate the chosen patterns across the six operator surfaces. Preserve product truth and the Scrypath identity; the exploratory brand book is not a binding color contract. See `reference/OPERATOR-UI-REFINEMENT.md`. This records next-work direction, not a shipped improvement or an approved phase roadmap.
+**Operator visual revision evidence (2026-10-06):** The maintainer's concrete feedback opens the shared page background, warning/metric/schema coloration, theme selection, quiet-action states, and operational timestamp/copy patterns for revision. Begin the approved v1.43 UI refinement milestone with representative light/dark comps and shared token work, then propagate the chosen patterns across the six operator surfaces. Preserve product truth and the Scrypath identity; the exploratory brand book is not a binding color contract. See `reference/OPERATOR-UI-REFINEMENT.md`. The v1.43 requirements and Phases 173–177 are approved; no shipped improvement is claimed by milestone setup.
 
 **UI refinement workflow:** The v1.43 milestone consumes `MILESTONE-CONTEXT.md`; its original input and scope decisions are preserved in `research/v1.43/MILESTONE-CONTEXT.md` and `research/v1.43/SCOPE.md`. Use the installed Impeccable skill with the existing root `PRODUCT.md`, `DESIGN.md`, and comp-first configuration for scoped visual work. Carry selected decisions into the frontend phase's GSD `UI-SPEC.md` before planning and into delivered token/component documentation. GSD lifecycle bookkeeping and Impeccable design guidance must share the same decisions; do not repeat initialization or assume Impeccable is invoked automatically.
 
@@ -26,7 +26,7 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 
 ## Current State
 
-**Current as of 2026-10-06:** v1.43 **ScrypathOps UI refinement** is in requirements and roadmap definition. The maintainer approved the saved scope and the recommendation to reuse existing UI inventories rather than run fresh ecosystem research. Requirements and phase boundaries remain proposed until their review gate. The next unused phase is 173; no implementation phase has started. Current uncommitted UI/design work and the feedback preview remain preserved. v1.42 and its exact-source receipts remain archived and source-bounded.
+**Current as of 2026-10-06:** v1.43 **ScrypathOps UI refinement** has an approved 20-requirement roadmap across Phases 173–177 and is ready for Phase 173 discussion. The maintainer approved the saved scope and the recommendation to reuse existing UI inventories rather than run fresh ecosystem research. The maintainer explicitly approved the detailed requirements and phase boundaries on 2026-10-06. The first phase is 173; no implementation phase has started. Current uncommitted UI/design work and the feedback preview remain preserved. v1.42 and its exact-source receipts remain archived and source-bounded.
 
 **Current as of 2026-10-04:** v1.42 ScrypathOps operator/admin UI is complete: Phase172, eight plans and all eight OPUX requirements. PR [#91](https://github.com/szTheory/scrypath/pull/91) delivered the UI and core correctness fixes as `3ad154a33f99cb200b791577aadc5970adc70ca2`; main CI37180290165 passed. Scrypath **0.3.15** is published as `scrypath-v0.3.15` at `8dd20e8966acd17a4ef5acec653c00dc31faab49` through Release Please PR [#92](https://github.com/szTheory/scrypath/pull/92). [Publish run 37181522723](https://github.com/szTheory/scrypath/actions/runs/37181522723) passed publication, live Hex/HexDocs/consumer verification and tag parity. Candidate CI37178388184 passed104 browser tests and4 mounted tests with retries disabled; PR CI37178390800 also passed scoped Ops. The GSD archive preserves requirement, visual, review/security and delivery evidence. Completion records precede final exact-source attestation, whose receipt is external to the frozen final source. No active phase or additional approved work remains; preview4012 is retained for optional feedback.
 
@@ -51,7 +51,7 @@ The prior v1.39 planning milestone shipped and was archived on 2026-09-26; it ad
 - Refine Search and Playbooks form/result structure, preview versus execution, and common versus occasional action priority.
 - Consolidate demonstrated shared patterns, delivered design documentation, and economical automated/visual evidence through PR-first delivery.
 
-**Scope agreement:** 2026-10-06 — maintainer accepted the recommended scope/version and inventory reuse. The proposed requirements and roadmap require their explicit review gate. Numbering continues after archived Phase 172; GSD milestone numbering is separate from Hex package versions.
+**Scope agreement:** 2026-10-06 — maintainer accepted the recommended scope/version and inventory reuse. The maintainer explicitly approved all 20 requirements and the five-phase roadmap on 2026-10-06. Numbering continues after archived Phase 172; GSD milestone numbering is separate from Hex package versions.
 
 **Design lifecycle:** Discuss the first frontend phase, use Impeccable Operate guidance and representative light/dark comps to settle visual direction, capture it in `UI-SPEC.md` via `$gsd-ui-phase`, then plan. Keep comp selection before broad visual implementation; phase closeout uses executable proof and direct agent image inspection without pending routine UAT.
 
@@ -71,7 +71,7 @@ The prior v1.39 planning milestone shipped and was archived on 2026-09-26; it ad
 
 ## Future Work
 
-Keep `main` green and release only when a package change warrants it. v1.42 is complete; v1.43 is defining the maintainer-selected UI refinement scope above. Runtime, backend, authentication, infrastructure automation, and new workflow/surface scope still require separate evidence and decisions. Retain the Phase 170 freeze/tracker rule and historical record as archived.
+Keep `main` green and release only when a package change warrants it. v1.42 is complete; v1.43 has an approved roadmap for the maintainer-selected UI refinement scope above. Runtime, backend, authentication, infrastructure automation, and new workflow/surface scope still require separate evidence and decisions. Retain the Phase 170 freeze/tracker rule and historical record as archived.
 
 ## Archived Milestone: v1.41 Readiness Gate Follow-Through (2026-10-02)
 
@@ -318,7 +318,7 @@ Current planning files: **`.planning/{PROJECT,REQUIREMENTS,ROADMAP,STATE}.md`** 
 
 ## Release Train Posture
 
-- **Active milestone:** v1.43 ScrypathOps UI refinement, defining requirements and roadmap; no implementation phase has started. v1.42 ScrypathOps operator/admin UI (Phase172) and v1.41 are complete and archived. The original Phase 170 NOT READY decision is preserved at its historical cutoff; the fresh 2026-10-02 issue #86 decision is READY within its recorded limits.
+- **Active milestone:** v1.43 ScrypathOps UI refinement, requirements and roadmap approved; Phase 173 is ready for discussion and no implementation has started. v1.42 ScrypathOps operator/admin UI (Phase172) and v1.41 are complete and archived. The original Phase 170 NOT READY decision is preserved at its historical cutoff; the fresh 2026-10-02 issue #86 decision is READY within its recorded limits.
 - **Policy:** Keep `main` green on the lean required gates and prefer PR-first execution for serious milestone or feature-depth work.
 - **Current goals:** Refine the existing six operator surfaces from the concrete 2026-10-06 visual feedback while maintaining green main and the completed recovery contract. Preserve the attested Phase 170 source and do not restart it. The authorized tracking replacement is separate from the frozen source identity.
 - **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, new core APIs, new auth models, new UI surfaces, and unrelated workflow expansion remain out of scope.
@@ -374,7 +374,7 @@ measured pure hot paths did not justify speculative optimization.
 
 | Decision | Outcome |
 |----------|---------|
-| Scope v1.43 around the saved UI refinement brief and reuse existing UI inventories; keep research defaults and adaptive model routing intact. | Scope agreed 2026-10-06; detailed requirements and roadmap pending review. |
+| Scope v1.43 around the saved UI refinement brief and reuse existing UI inventories; keep research defaults and adaptive model routing intact. | Scope, inventory reuse, all 20 requirements, and Phases 173–177 approved 2026-10-06. |
 | Settle shared light/dark visual direction in Impeccable comps and GSD UI contracts before broad implementation. | v1.43 design constraint; implementation pending. |
 | Reuse shared tokens/components and explicit domain vocabulary; fix demonstrated friction. | ✓ v1.42 — six surfaces, narrow reflow and accessible modal controls covered by existing lanes. |
 | Join recovery to new work, exact terminal task and expected active-index document. | ✓ v1.42 — deterministic rendered journey retains original failure history and reports unknown observation honestly. |
@@ -395,7 +395,7 @@ measured pure hot paths did not justify speculative optimization.
 
 ## Planning window
 
-v1.41 delivered Phase 168 four-graph security and proof, Phase 169 tenant/facet fixes and finite PR/path accounting, and Phase 170 docs/tooling plus published 0.3.14. Phase 171 closed the DOC-03/GATE-05/CLOSE-04 verification traceability gaps. The original issue #86 NOT READY assessment remains unchanged at its cutoff; the fresh 2026-10-02 READY assessment is separately recorded at comment 5955742805. The audit accepts visible, nonblocking Nyquist validation-record debt in Phases 168–170; all nine requirements, four phases, six integration paths, and three end-to-end flows passed. Current tracking records Phase 170 at 8/8 after its authorized post-freeze replacement; original bytes and the attested 17/18 snapshot remain preserved. v1.41 is archived locally. v1.42 completed the cross-screen ScrypathOps recovery journey and shared UI repairs in Phase172. v1.43 is now defining UI refinement requirements and roadmap. v1.40 and v1.39 assessments remain immutable historical results.
+v1.41 delivered Phase 168 four-graph security and proof, Phase 169 tenant/facet fixes and finite PR/path accounting, and Phase 170 docs/tooling plus published 0.3.14. Phase 171 closed the DOC-03/GATE-05/CLOSE-04 verification traceability gaps. The original issue #86 NOT READY assessment remains unchanged at its cutoff; the fresh 2026-10-02 READY assessment is separately recorded at comment 5955742805. The audit accepts visible, nonblocking Nyquist validation-record debt in Phases 168–170; all nine requirements, four phases, six integration paths, and three end-to-end flows passed. Current tracking records Phase 170 at 8/8 after its authorized post-freeze replacement; original bytes and the attested 17/18 snapshot remain preserved. v1.41 is archived locally. v1.42 completed the cross-screen ScrypathOps recovery journey and shared UI repairs in Phase172. v1.43 now has an approved UI refinement roadmap; Phase 173 is ready for discussion. v1.40 and v1.39 assessments remain immutable historical results.
 
 ## Requirements
 
@@ -482,13 +482,13 @@ v1.41 delivered Phase 168 four-graph security and proof, Phase 169 tenant/facet 
 
 ### Active
 
-- [ ] Shared visual foundations and operational time/copy behavior from the explicit 2026-10-06 feedback (proposed OPUX-09–OPUX-15).
-- [ ] Recovery entry, diagnosis, failed-work action hierarchy, and preserved schema context (proposed OPUX-16–OPUX-19).
-- [ ] Clear observation, drift, repair/promotion, and evidence/outcome boundaries (proposed OPUX-20–OPUX-22).
-- [ ] Search and Playbooks form/result and action hierarchy (proposed OPUX-23–OPUX-25).
-- [ ] Consolidated shared patterns, representative proof, and reviewed/source-bounded delivery (proposed OPUX-26–OPUX-28).
+- [ ] Shared visual foundations and operational time/copy behavior from the explicit 2026-10-06 feedback (OPUX-09–OPUX-15).
+- [ ] Recovery entry, diagnosis, failed-work action hierarchy, and preserved schema context (OPUX-16–OPUX-19).
+- [ ] Clear observation, drift, repair/promotion, and evidence/outcome boundaries (OPUX-20–OPUX-22).
+- [ ] Search and Playbooks form/result and action hierarchy (OPUX-23–OPUX-25).
+- [ ] Consolidated shared patterns, representative proof, and reviewed/source-bounded delivery (OPUX-26–OPUX-28).
 
-These are the scope decomposition for v1.43; requirements and roadmap remain proposed pending the review gate. No requirement is implemented or verified by this milestone initialization.
+These are the approved requirements for v1.43, mapped exactly once across Phases 173–177 in REQUIREMENTS.md and ROADMAP.md. No requirement is implemented or verified by this milestone initialization.
 
 ### Out of Scope
 
@@ -505,7 +505,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has shipped planning milestones through **`v1.42`** (**`v1.0`**-**`v1.42`**); **`v1.43`** is in requirements and roadmap definition, with no implementation phase started. Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and `milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` for shipped arcs.
+The repository has shipped planning milestones through **`v1.42`** (**`v1.0`**-**`v1.42`**); **`v1.43`** has an approved 20-requirement, five-phase roadmap and is ready for Phase 173 discussion; no implementation has started. Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and `milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` for shipped arcs.
 
 ## Evolution
 
@@ -518,4 +518,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-06 after v1.43 UI refinement scope agreement and milestone initialization; detailed requirements and roadmap remain proposed. v1.42 completion and source receipts remain historical.*
+*Last updated: 2026-10-06 after explicit approval of the v1.43 UI refinement requirements and five-phase roadmap; milestone setup is complete. v1.42 completion and source receipts remain historical.*
