@@ -36,6 +36,7 @@ for (const entrypoint of ENTRYPOINTS) {
 
     for (const theme of ["light", "dark", "system"] as const) {
       for (const width of [390, 1279, 1280, 1440]) {
+        let neutralReference: { verdictBackground: string; verdictBorder: string; rowBackground: string; rowBorder: string } | undefined;
         for (const scenario of scenarios) {
           await openScenario(page, entrypoint.url, scenario, theme, width);
           const rows = page.locator('[data-testid="posture-row"]');
@@ -81,6 +82,23 @@ for (const entrypoint of ENTRYPOINTS) {
             await expect(page.locator(".ops-metric").first()).toContainText("1");
           }
 
+          if (["default", "failed"].includes(scenario)) {
+            const surfaces = await page.evaluate(() => {
+              const verdict = document.querySelector<HTMLElement>(".ops-verdict")!;
+              const row = document.querySelector<HTMLElement>(".ops-schema-signal-card")!;
+              const verdictStyle = getComputedStyle(verdict);
+              const rowStyle = getComputedStyle(row);
+              return {
+                verdictBackground: verdictStyle.backgroundColor,
+                verdictBorder: verdictStyle.borderColor,
+                rowBackground: rowStyle.backgroundColor,
+                rowBorder: rowStyle.borderColor
+              };
+            });
+            if (scenario === "default") neutralReference = surfaces;
+            if (scenario === "failed") expect(surfaces).toEqual(neutralReference);
+          }
+
           const dimensions = await page.evaluate(() => ({
             viewport: document.documentElement.clientWidth,
             document: document.documentElement.scrollWidth,
@@ -96,7 +114,7 @@ for (const entrypoint of ENTRYPOINTS) {
           const refreshBox = await refresh.boundingBox();
           expect(refreshBox).not.toBeNull();
           expect(refreshBox!.height).toBeGreaterThanOrEqual(40);
-          if (theme === "light" && width === 390 && ["default", "failed"].includes(scenario)) {
+          if ([390, 1440].includes(width) && ["default", "failed"].includes(scenario)) {
             await page.evaluate(() => window.scrollTo(0, 0));
             await page.screenshot({ path: join(captureDir, `phase173-${entrypoint.name}-${scenario}-${theme}-${width}.png`), fullPage: true });
           }
