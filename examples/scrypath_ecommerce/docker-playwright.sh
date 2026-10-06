@@ -36,6 +36,10 @@ case "$scope" in
     echo "Running focused mounted integration/browser proof..."
     exec npx playwright test e2e/harness.spec.ts e2e/operator.spec.ts --workers=1 --retries=0
     ;;
+  phase173-shell)
+    echo "Running the shared-shell production LiveView and preference contract proof..."
+    exec npx playwright test e2e/phase173_shell.spec.ts --workers=1 --retries=0
+    ;;
   full)
     echo "Running the full advisory ecommerce browser and deterministic visual lane..."
     browser_status=0
@@ -60,7 +64,7 @@ case "$scope" in
     exit 1
     ;;
   *)
-    echo "Unsupported E2E_SCOPE '$scope' (expected focused or full)." >&2
+    echo "Unsupported E2E_SCOPE '$scope' (expected focused, phase173-shell, or full)." >&2
     exit 64
     ;;
 esac

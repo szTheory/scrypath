@@ -26,19 +26,23 @@ file consume them. This doc is the catalog — change a value here only by chang
 
 ## Brand colors
 
-daisyUI semantic tokens, two themes (light default, dark via `prefers-dark` / explicit
-`data-theme="dark"`). Generate utilities like `bg-primary`, `text-base-content`, `border-base-300`.
+daisyUI semantic tokens, two appearances with three user preferences: System (the default,
+follows `prefers-color-scheme`), Light, and Dark. Explicit preferences use
+`data-theme="light|dark"`; System removes that attribute and lets the OS theme plugin select
+semantic tokens. The selected preference is shown independently from effective appearance
+and keyboard focus. Generate utilities like `bg-primary`, `text-base-content`,
+`border-base-300`.
 
 | Token | Light | Dark | Use |
 | --- | --- | --- | --- |
 | `primary` | `#5b4ad1` | `#6c5ce7` | brand/accent, active nav, primary actions |
-| `--color-primary-strong` | `#5b4ad1` | `#5b4ad1` | text-bearing selected fills only; see Phase 132 floor |
+| `--color-primary-strong` | `#5b4ad1` | `#aaa0ff` | text-bearing selected fills only; see Phase 132 floor |
 | `secondary` | `#a85d2e` | `#c17a3e` | warm accent, eyebrow labels |
 | `accent` | `#6c5ce7` | `#5b4ad1` | gradient partner (route mark) |
-| `base-100` | `#fffdf8` | `#141923` | surfaces |
-| `base-200` | `#faf7f2` | `#0c0f14` | app background, muted panels |
-| `base-300` | `#ded8ce` | `#2a3446` | borders, dividers |
-| `base-content` | `#141923` | `#f4f1ea` | text |
+| `base-100` | `#ffffff` | `#191e25` | surfaces |
+| `base-200` | `#f7f6f3` | `#111419` | app background, muted panels |
+| `base-300` | `#d9d8d2` | `#353d48` | borders, dividers |
+| `base-content` | `#202124` | `#f1f2f4` | text |
 | `info` / `success` / `warning` / `error` | `#5ca9e6` / `#4fae74` / `#d9a441` / `#d96262` | (same hues) | status semantics |
 
 ## A11y contrast floors -- Phase 132
@@ -71,12 +75,17 @@ free. Ramp direction in dark: bg (floor) → surface-1 (resting panel) → surfa
 
 | Token | Light value | Dark value | Use |
 | --- | --- | --- | --- |
-| `--ops-bg` | `#faf7f2` | `#0c0f14` | Page floor / Night — app background |
-| `--ops-surface-1` | `#fffdf8` | `#141923` | Resting panel / Ink — `.ops-panel`, `.ops-surface-flat`, `.ops-preflight__card` |
-| `--ops-surface-2` | `#faf7f2` | `#1b2230` | Raised / muted step — `.ops-muted-panel`, `.ops-disclosure`, `.ops-nav-list`, `.ops-kbd`, `.ops-verdict-neutral`, `.ops-preflight__card--locked` |
+| `--ops-bg` | `#f7f6f3` | `#111419` | Page floor / Night — app background |
+| `--ops-surface-1` | `#ffffff` | `#191e25` | Resting panel / Ink — `.ops-panel`, `.ops-surface-flat`, `.ops-preflight__card` |
+| `--ops-surface-2` | `#efeee9` | `#222831` | Raised / muted step — `.ops-muted-panel`, `.ops-disclosure`, `.ops-nav-list`, `.ops-kbd`, `.ops-verdict-neutral`, `.ops-preflight__card--locked` |
 
-Dark 4-step midnight ramp: `#0C0F14` (bg) → `#141923` (surface-1) → `#1B2230` (surface-2) → `#2A3446` (base-300 / borders).
-Light values are byte-identical to the prior `base-200`/`base-100` references — zero light regression.
+Dark surface ramp: `#111419` (bg) → `#191e25` (surface-1) → `#222831` (surface-2) → `#353d48` (base-300 / borders).
+Light surface ramp: `#f7f6f3` (bg) → `#ffffff` (surface-1) → `#efeee9` (surface-2) → `#d9d8d2` (base-300 / borders).
+
+The three visible System / Light / Dark targets each have a minimum 44px hit area. Exactly
+one target exposes `aria-pressed="true"` and `data-theme-selected="true"`. A System choice
+remains selected when the OS is dark; appearance does not impersonate the saved preference.
+If browser storage is unavailable, the current page still applies a theme choice in memory.
 
 ## Spacing — `--spacing-ops-*` → `p-ops-*` / `gap-ops-*` / `space-y-ops-*`
 
@@ -222,12 +231,12 @@ is AA-safe in both themes. Do NOT use `var(--color-secondary)` as badge label te
 
 | Pairing | Theme | Ratio | AA verdict |
 | --- | --- | --- | --- |
-| `base-content` (`#f4f1ea`) text on `.ops-copper-badge` tinted bg | Dark | 12.07:1 | PASS |
-| `base-content` (`#141923`) text on `.ops-copper-badge` tinted bg | Light | 14.86:1 | PASS |
-| `.ops-copper-eyebrow` (`--color-secondary` `#c17a3e`) on `--ops-surface-1` `#141923` | Dark | 5.13:1 | PASS |
-| `.ops-copper-eyebrow` (`--color-secondary` `#a85d2e`) on `--ops-surface-1` `#fffdf8` | Light | 4.84:1 | PASS |
-| `--color-secondary-content` (`#0c0f14`) on solid copper `#c17a3e` | Dark | 5.59:1 | PASS |
-| Copper text `#c17a3e` on `--ops-surface-2` `#1b2230` | Dark | 4.64:1 | PASS |
+| `base-content` text on `.ops-copper-badge` tinted bg | Dark | 12.07:1 | PASS |
+| `base-content` text on `.ops-copper-badge` tinted bg | Light | 14.86:1 | PASS |
+| `.ops-copper-eyebrow` (`--color-secondary` `#c17a3e`) on `--ops-surface-1` `#191e25` | Dark | 5.13:1 | PASS |
+| `.ops-copper-eyebrow` (`--color-secondary` `#a85d2e`) on `--ops-surface-1` `#ffffff` | Light | 4.84:1 | PASS |
+| `--color-secondary-content` (`#111419`) on solid copper `#c17a3e` | Dark | 5.59:1 | PASS |
+| Copper text `#c17a3e` on `--ops-surface-2` `#222831` | Dark | 4.64:1 | PASS |
 
 All ratios computed with sRGB relative luminance (D-12 compliant, matching axe-core).
 
@@ -249,10 +258,10 @@ and must be authored in both explicit `[data-theme="dark"]` and system-dark
 | Selector | Contract |
 | --- | --- |
 | `.ops-header` | In dark, composes `--shadow-ops-surface` with `--shadow-ops-panel-dark` plus a 14% base-content divider so the header reads as a seated operator surface. Light keeps the base `--shadow-ops-surface` lift. |
-| `.ops-shell` | Exactly one top-left `radial-gradient(...)` wash plus one `linear-gradient(...)` page floor per rule. Base/light stays 14% / 34rem; dark is bounded to 10% / 30rem and dark mobile to 8% / 24rem. No extra gradient layers, orbs, bokeh, texture, or loops. |
+| `.ops-shell` | A flat semantic background matching the selected appearance. No decorative background gradients, washes, or texture. Scroll-edge cues may use a small gradient to communicate overflow. |
 | `.ops-wordmark` | Displays the canonical horizontal Scrypath wordmark. Light and inverse SVG assets switch with explicit and system theme; keep the artwork and copper slash unfiltered. |
 | `.ops-nav-item-active` | Text-bearing selected fill stays `--color-primary-strong`; dark paths compose `--shadow-ops-surface` with `--shadow-ops-glow`. |
-| `.ops-theme-toggle`, `.ops-theme-toggle__pill`, `.ops-theme-toggle__button` | Class selectors mirror the existing IDs. Selected state is exposed through `aria-pressed` and `data-theme-selected`; dark paths use `--shadow-ops-panel-dark`, `--shadow-ops-glow`, and `--color-primary-strong`. |
+| `.ops-theme-toggle`, `.ops-theme-toggle__button` | Three visible, minimum 44px System / Light / Dark targets. Exactly one selected preference is exposed through `aria-pressed` and `data-theme-selected`; the indicator is separate from keyboard focus and effective OS appearance. |
 | `.ops-cmdk__panel`, `.ops-flash` | Overlay chrome uses `--shadow-ops-overlay` in light. In explicit dark and system dark, compose overlay first (`--shadow-ops-overlay`) and panel-dark second (`--shadow-ops-panel-dark`) so transient shell surfaces keep depth without glow. |
 | `.ops-flash`, `.ops-flash--info`, `.ops-flash--error` | Info confirmations use a polite `role="status"` toast and dismiss after 4 seconds; errors use `role="alert"` and stay until dismissed. Status colors tint the active theme's base surface and mark the outer border; text stays on `base-content` for contrast. |
 

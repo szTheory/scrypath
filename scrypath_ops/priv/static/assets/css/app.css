@@ -5584,11 +5584,11 @@
       --color-base-300: #353d48;
       --color-base-content: #f1f2f4;
       --color-primary: #aaa0ff;
-      --color-primary-content: #f4f1ea;
+      --color-primary-content: #111419;
       --color-secondary: #c17a3e;
       --color-secondary-content: #111419;
       --color-accent: #aaa0ff;
-      --color-accent-content: #f4f1ea;
+      --color-accent-content: #111419;
       --color-neutral: #353d48;
       --color-neutral-content: #f1f2f4;
       --color-info: #5ca9e6;
@@ -5607,11 +5607,14 @@
       --border: 1.5px;
       --depth: 1;
       --noise: 0;
-      --color-primary-strong: #5b4ad1;
+      --color-primary-strong: #aaa0ff;
       --ops-bg: #111419;
       --ops-surface-1: #191e25;
       --ops-surface-2: #222831;
-      --ops-text-muted: #bec3ca;
+      --ops-text-muted: var(--color-base-content);
+      @supports (color: color-mix(in lab, red, red)) {
+        --ops-text-muted: color-mix(in oklch, var(--color-base-content) 64%, transparent);
+      }
     }
   }
 }
@@ -5623,11 +5626,11 @@
     --color-base-300: #353d48;
     --color-base-content: #f1f2f4;
     --color-primary: #aaa0ff;
-    --color-primary-content: #f4f1ea;
+    --color-primary-content: #111419;
     --color-secondary: #c17a3e;
     --color-secondary-content: #111419;
     --color-accent: #aaa0ff;
-    --color-accent-content: #f4f1ea;
+    --color-accent-content: #111419;
     --color-neutral: #353d48;
     --color-neutral-content: #f1f2f4;
     --color-info: #5ca9e6;
@@ -5646,11 +5649,14 @@
     --border: 1.5px;
     --depth: 1;
     --noise: 0;
-    --color-primary-strong: #5b4ad1;
+    --color-primary-strong: #aaa0ff;
     --ops-bg: #111419;
     --ops-surface-1: #191e25;
     --ops-surface-2: #222831;
-    --ops-text-muted: #bec3ca;
+    --ops-text-muted: var(--color-base-content);
+    @supports (color: color-mix(in lab, red, red)) {
+      --ops-text-muted: color-mix(in oklch, var(--color-base-content) 64%, transparent);
+    }
   }
 }
 @layer base {
@@ -5688,7 +5694,10 @@
     --ops-bg: #f7f6f3;
     --ops-surface-1: #ffffff;
     --ops-surface-2: #efeee9;
-    --ops-text-muted: #55585e;
+    --ops-text-muted: var(--color-base-content);
+    @supports (color: color-mix(in lab, red, red)) {
+      --ops-text-muted: color-mix(in oklch, var(--color-base-content) 64%, transparent);
+    }
   }
 }
 @property --tw-translate-x {
