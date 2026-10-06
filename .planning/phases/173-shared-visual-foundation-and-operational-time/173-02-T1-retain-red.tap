@@ -1,0 +1,3 @@
+TAP version 13
+not ok 1 - test retains the source-local last success when a later fetch fails
+1..1

@@ -21,7 +21,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
       uids = filters[:index_uids] || []
       boom_index = "postlv_ops_post_a"
 
-      if boom_index in uids do
+      if boom_index in uids and Agent.get(:posture_live_test_state, & &1.fail_a?) do
         {:error, :boom}
       else
         {:ok, %{results: Keyword.get(config, :meilisearch_tasks, [])}}
@@ -79,11 +79,18 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     # Keep the fixture alive until on_exit/1 performs deterministic cleanup.
     # A linked Agent can exit with the test process before the callback runs.
     {:ok, _pid} =
-      Agent.start(fn -> %{tasks_calls: 0, swap_called: false} end,
+      Agent.start(fn -> %{tasks_calls: 0, swap_called: false, fail_a?: true} end,
         name: :posture_live_test_state
       )
 
     Application.put_env(:scrypath_ops, :meilisearch_tasks, [
+      %{
+        "uid" => 2,
+        "status" => "succeeded",
+        "type" => "documentAdditionOrUpdate",
+        "indexUid" => "postlv_ops_post_a",
+        "finishedAt" => "2026-04-16T17:59:00Z"
+      },
       %{
         "uid" => 1,
         "status" => "succeeded",
@@ -138,7 +145,9 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search health']")
   end
 
-  test "renders backend success age from the observation snapshot with exact source evidence", %{conn: conn} do
+  test "renders backend success age from the observation snapshot with exact source evidence", %{
+    conn: conn
+  } do
     {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health")
 
     time =
@@ -155,6 +164,20 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     html = render_patch(lv, ~p"/ops/phase173/health?scenario=default")
     assert html =~ "2 days ago"
     assert html =~ "2026-10-04T13:02:05.123456-04:00"
+  end
+
+  test "retains the source-local last success when a later fetch fails", %{conn: conn} do
+    Agent.update(:posture_live_test_state, &Map.put(&1, :fail_a?, false))
+    {:ok, lv, html} = live(conn, ~p"/ops/health")
+
+    assert html =~ "Apr 16, 2026 at 17:59 UTC"
+
+    Agent.update(:posture_live_test_state, &Map.put(&1, :fail_a?, true))
+    html = render_click(lv, "refresh")
+
+    assert html =~ "Backend observation unavailable"
+    assert html =~ "Last success retained from the previous check"
+    assert html =~ "2026-04-16T17:59:00Z"
   end
 
   test "posture shows next checks block with ordered items and failed-sync egress", %{conn: conn} do
