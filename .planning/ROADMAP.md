@@ -57,6 +57,7 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
   5. In standalone and mounted Ops, operators can copy the full ISO last-success timestamp by keyboard or pointer and receive brief confirmation only after success; denied/unavailable clipboard access is explained, and routine Checked metadata offers no copy action.
 **Plans**: TBD
 **UI hint**: yes
+**Canonical refs**: `.planning/research/v1.43/SCOPE.md`, `.planning/reference/OPERATOR-UI-REFINEMENT.md`, `.planning/reference/OPERATOR-UI-QUALITY.md`, `PRODUCT.md`, `DESIGN.md`, `.impeccable/config.json`, `.planning/research/v1.42/UI-SYSTEM.md`, `.planning/research/v1.42/UI-AUTOMATION.md`, `scrypath_ops/assets/css/DESIGN-TOKENS.md`
 **Acceptance**: Compare realistic degraded Search health light/dark comps before planning; inspect representative before/after desktop/mobile renders and use existing theme, accessibility, contrast, component, and focused browser checks for changed controls and states.
 
 ### Phase 174: Recovery Entry and Diagnosis

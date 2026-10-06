@@ -1,7 +1,7 @@
 # ScrypathOps UI refinement
 
 **Captured:** 2026-10-06
-**Status:** Maintainer feedback and proposed next-milestone brief. No active phase or approved roadmap is created by this document.
+**Status:** Durable maintainer feedback for approved v1.43 ScrypathOps UI refinement. All 20 requirements and Phases 173–177 were explicitly approved on 2026-10-06; current scope and status are in `../REQUIREMENTS.md`, `../ROADMAP.md`, and `../STATE.md`. No implementation has started. The original pre-milestone input is preserved in `../research/v1.43/MILESTONE-CONTEXT.md`.
 
 ## Intent
 
@@ -17,7 +17,7 @@ The maintainer's direct visual feedback is the evidence for reopening layout and
 - Update browser style contracts that previously required the redundant inner borders. The existing token catalog must cover every exported component without pinning an arbitrary component count. Earlier shared refresh/toast changes also require current hook and notification-role assertions.
 - These are post-archive changes. They do not alter archived Phase 172 or its verified source receipts. Local validation is recorded separately in STATE.md.
 
-## Proposed delivery sequence
+## Delivery sequence
 
 | Slice | Surfaces | Concrete outcome |
 | --- | --- | --- |
@@ -27,7 +27,7 @@ The maintainer's direct visual feedback is the evidence for reopening layout and
 | Search and saved checks | Search, Playbooks | Review duplicated run actions, form/result hierarchy, preview versus execution, and the prominence of rename/duplicate/delete actions. Keep common actions discoverable without making rare actions compete. |
 | Shared pattern consolidation | Patterns demonstrated by the slices above | Consolidate page rhythm, section/object grouping, navigation actions, state presentation, and feedback in the existing component/token system. Update its documentation and remove superseded styling. |
 
-These are proposed work slices, not assigned GSD phase numbers. Requirements and phase boundaries are agreed by the new-milestone workflow.
+The approved roadmap maps these slices to Phases 173, 174, 175, 176, and 177 respectively. Use its goals, requirement assignments, and success criteria as the current phase boundaries.
 
 ## Explicit visual and interaction feedback — 2026-10-06
 
@@ -70,19 +70,19 @@ The first comp must show realistic degraded Search health data, zero/error/unkno
 
 ### GSD and Impeccable
 
-GSD's canonical `MILESTONE-CONTEXT.md` points to this brief and explicitly requires the installed Impeccable skill for UI design work. GSD owns the lifecycle and acceptance requirements; Impeccable supplies representative comps and applicable Operate/design guidance. Existing `PRODUCT.md` and `DESIGN.md` remain the starting context; initialization is complete. `.impeccable/config.json` records the maintainer's comp-first preference.
+The consumed canonical milestone input is preserved in `../research/v1.43/MILESTONE-CONTEXT.md`; current decisions are in `../research/v1.43/SCOPE.md`. Use the installed Impeccable skill for UI design work. GSD owns the lifecycle and acceptance requirements; Impeccable supplies representative comps and applicable Operate/design guidance. Existing root `PRODUCT.md` and `DESIGN.md` remain the starting context; initialization is complete. `.impeccable/config.json` records the maintainer's comp-first preference.
 
 Carry chosen visual/component/state decisions into each frontend phase's `UI-SPEC.md`, then its implementation plans and delivered token/component documentation. The new-milestone command does not automatically invoke Impeccable. With both GSD UI settings enabled, the frontend lifecycle is discuss → UI contract → plan → execute/verify. Include Impeccable context and the relevant brief/spec as required reading when delegating UI work; do not assume a child inherits every chat detail.
 
-Last completed phase: **172 — Consistent Operator UI and Verified Recovery**, archived in v1.42. No active phase exists. The next unused phase number is 173; do not replay 172.
+Last completed implementation phase: **172 — Consistent Operator UI and Verified Recovery**, archived in v1.42. Approved **Phase 173 — Shared Visual Foundation and Operational Time** is ready for discussion; no implementation has started. Do not replay 172.
 
 Next lifecycle command:
 
 ```text
-$gsd-new-milestone ScrypathOps UI refinement
+$gsd-discuss-phase 173
 ```
 
-Read `MILESTONE-CONTEXT.md`, this brief, `PRODUCT.md`, `DESIGN.md`, `STATE.md`, and `OPERATOR-UI-QUALITY.md` when scoping. Carry the maintainer's purposeful adaptive model routing forward. After the workflow agrees a roadmap, route to its first phase's discussion, then UI contract and planning commands.
+Read the current SCOPE note, this brief, root `PRODUCT.md` / `DESIGN.md`, STATE.md, REQUIREMENTS.md, ROADMAP.md, and OPERATOR-UI-QUALITY.md before discussing Phase 173. Carry the maintainer's purposeful adaptive model routing forward. After discussion, use `$gsd-ui-phase 173` for the comp-first visual decisions and UI contract, then `$gsd-plan-phase 173`. Scope and requirements are already agreed; discuss the remaining visual/interaction choices without repeating product initialization or milestone approval.
 
 ## Supporting context
 
