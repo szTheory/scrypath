@@ -25,13 +25,6 @@ async function openPage(browser: Browser, width: number, theme: "light" | "dark"
   return { context, page };
 }
 
-async function refreshScenario(page: Page, scenario: string) {
-  await page.locator("#search-health-refresh").evaluate((button, value) => {
-    button.setAttribute("phx-value-scenario", value);
-  }, scenario);
-  await page.getByRole("button", { name: "Refresh search health" }).click();
-}
-
 for (const entrypoint of ENTRYPOINTS) {
   test(`${entrypoint.name} renders stable exact operational time without overflow`, async ({ browser }) => {
     const captureDir = join(process.cwd(), "test-results", "phase173-time-captures");
@@ -45,6 +38,12 @@ for (const entrypoint of ENTRYPOINTS) {
         await expect(row).toBeVisible();
 
         const time = row.locator(".ops-signal-group").first().locator(".ops-time");
+        await expect(time).toContainText("2 days ago");
+        await page.locator(`#theme-toggle [data-phx-theme="${theme === "light" ? "dark" : "light"}"]`).click();
+        await expect(time).toContainText("2 days ago");
+        await page.locator(`#theme-toggle [data-phx-theme="${theme}"]`).click();
+        await expect(page.locator("html")).toHaveAttribute("data-theme-effective", theme);
+        await page.getByRole("button", { name: "Refresh search health" }).click();
         await expect(time).toContainText("2 days ago");
         const details = time.locator("details.ops-time__disclosure");
         const summary = details.locator("summary");
@@ -68,29 +67,36 @@ for (const entrypoint of ENTRYPOINTS) {
         expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
         expect(dimensions.exactWidth).toBeGreaterThan(0);
 
-        if (width === 390 || width === 1440) {
-          await page.screenshot({
-            path: join(captureDir, `phase173-${entrypoint.name}-${width}-${theme}.png`),
-            fullPage: true
-          });
-        }
+        await page.screenshot({
+          path: join(captureDir, `phase173-${entrypoint.name}-${width}-${theme}.png`),
+          fullPage: true
+        });
 
-        // A failed recheck retains the earlier source-local success and its observation age.
-        await refreshScenario(page, "source-error");
-        const retained = row.locator(".ops-time").last();
-        await expect(row).toContainText("last success retained from the previous check");
-        await expect(retained).toContainText("2 days ago");
-        await expect(retained).toContainText(SOURCE_ISO);
-
-        // Absence and manual-mode queue states remain distinct from a failed source.
-        await refreshScenario(page, "unknown");
-        await expect(row).toContainText("No success observed");
-        await refreshScenario(page, "missing-time");
-        await expect(row).toContainText("Success time not observed");
-        await refreshScenario(page, "manual");
-        await expect(row).toContainText("Queue not used in manual sync mode.");
         await context.close();
       }
+    }
+
+    for (const scenario of ["source-error", "no-success", "missing-time", "manual"] as const) {
+      const { context, page } = await openPage(browser, 390, "light");
+      const separator = entrypoint.url.includes("?") ? "&" : "?";
+      await page.goto(`${entrypoint.url}${separator}scenario=${scenario}`);
+      const row = page.locator(`[id="${entrypoint.row}"]`);
+      await expect(row).toBeVisible();
+
+      if (scenario === "source-error") {
+        await expect(row).toContainText("fetch error: :fixture_unavailable");
+        await expect(row.locator(".ops-time__reason")).toHaveText(":fixture_unavailable");
+        await expect(row).toContainText("Not observed");
+        await expect(row.locator("details.ops-time__disclosure")).toHaveCount(0);
+      } else if (scenario === "no-success") {
+        await expect(row.locator(".ops-signal-group").first().locator(".ops-time")).toContainText("No success observed");
+      } else if (scenario === "missing-time") {
+        await expect(row.locator(".ops-signal-group").first().locator(".ops-time")).toContainText("Success time not observed");
+      } else {
+        await expect(row).toContainText("Queue not used in manual sync mode.");
+      }
+
+      await context.close();
     }
   });
 }

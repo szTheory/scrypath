@@ -6,19 +6,30 @@ defmodule ScrypathEcommerceWeb.Phase173FixtureSource do
   @schemas [ScrypathEcommerce.Catalog.Product, ScrypathEcommerce.Catalog.Variant]
 
   def scenario(name)
-      when name in ["default", "failed", "unknown", "empty", "partial", "long-value"] do
+      when name in [
+             "default",
+             "failed",
+             "unknown",
+             "empty",
+             "partial",
+             "long-value",
+             "source-error",
+             "missing-time",
+             "manual",
+             "no-success"
+           ] do
     allowlist =
       if name == "empty", do: [], else: if(name == "partial", do: [hd(@schemas)], else: @schemas)
 
     tasks =
-      if name in ["empty", "partial"] do
+      if name in ["empty", "partial", "source-error"] do
         []
       else
         Enum.map(allowlist, fn schema -> task(schema, name) end)
       end
 
     jobs =
-      if name in ["empty", "partial"] do
+      if name in ["empty", "partial", "manual"] do
         []
       else
         Enum.map(allowlist, fn schema -> job(schema, name) end)
@@ -29,12 +40,12 @@ defmodule ScrypathEcommerceWeb.Phase173FixtureSource do
       observed_at: @observed_at,
       opts: [
         backend: Scrypath.Meilisearch,
-        sync_mode: :oban,
+        sync_mode: if(name == "manual", do: :manual, else: :oban),
         oban_queue: :scrypath_sync,
         index_prefix: "ecommerce_",
         meilisearch_url: "http://fixture.invalid",
         meilisearch_client: __MODULE__,
-        meilisearch_tasks: tasks,
+        meilisearch_tasks: if(name == "source-error", do: [:fixture_source_error], else: tasks),
         oban_jobs: jobs
       ]
     }
@@ -43,19 +54,29 @@ defmodule ScrypathEcommerceWeb.Phase173FixtureSource do
   def scenario(_invalid), do: scenario("default")
 
   def tasks(filters, opts) do
-    index_uids = Keyword.get(filters, :index_uids, [])
+    if :fixture_source_error in Keyword.get(opts, :meilisearch_tasks, []) do
+      {:error, :fixture_unavailable}
+    else
+      index_uids = Keyword.get(filters, :index_uids, [])
 
-    results =
-      Enum.filter(Keyword.get(opts, :meilisearch_tasks, []), &(&1["indexUid"] in index_uids))
+      results =
+        opts
+        |> Keyword.get(:meilisearch_tasks, [])
+        |> Enum.filter(&is_map/1)
+        |> Enum.filter(&(&1["indexUid"] in index_uids))
 
-    {:ok, %{results: results, next: nil}}
+      {:ok, %{results: results, next: nil}}
+    end
   end
 
   defp task(schema, scenario) do
     status =
-      if scenario == "failed",
-        do: "failed",
-        else: if(scenario == "unknown", do: "mystery", else: "succeeded")
+      cond do
+        scenario == "failed" -> "failed"
+        scenario == "unknown" -> "mystery"
+        scenario == "no-success" -> "processing"
+        true -> "succeeded"
+      end
 
     title =
       if scenario == "long-value",
@@ -67,7 +88,7 @@ defmodule ScrypathEcommerceWeb.Phase173FixtureSource do
       "status" => status,
       "type" => "documentAdditionOrUpdate",
       "indexUid" => Scrypath.Meilisearch.index_name(schema, index_prefix: "ecommerce_"),
-      "finishedAt" => @task_time,
+      "finishedAt" => if(scenario == "missing-time", do: "not-a-time", else: @task_time),
       "details" => %{"title" => title}
     }
   end

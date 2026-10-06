@@ -892,7 +892,9 @@
 
   .ops-time {
     display: inline-flex;
+    max-width: 100%;
     min-width: 0;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.375rem;
     color: var(--ops-text-muted);
@@ -907,6 +909,25 @@
 
   .ops-time__value {
     font-variant-numeric: tabular-nums;
+  }
+
+  .ops-time__disclosure {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .ops-time__disclosure > summary {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .ops-time__disclosure code {
+    display: inline-block;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    user-select: text;
   }
 
   .ops-time__copy {

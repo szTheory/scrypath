@@ -150,6 +150,17 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search health']")
   end
 
+  test "phase 173 source-error refresh retains the prior completion", %{conn: conn} do
+    {:ok, lv, html} = live(conn, ~p"/ops/phase173/health")
+    assert html =~ "2026-10-04T13:02:05.123456-04:00"
+
+    refreshed = render_click(lv, "refresh", %{"scenario" => "source-error"})
+
+    assert refreshed =~ "Backend observation unavailable"
+    assert refreshed =~ "last success retained from the previous check"
+    assert refreshed =~ "2026-10-04T13:02:05.123456-04:00"
+  end
+
   test "renders backend success age from the observation snapshot with exact source evidence", %{
     conn: conn
   } do
