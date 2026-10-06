@@ -366,7 +366,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                                 source_iso={state_source_iso(status.backend.last_succeeded)}
                                 reference={success_reference(@posture_summary, mod, :backend)}
                                 label="Last success"
-                                empty="No success observed"
+                                empty={success_time_empty(status.backend.last_succeeded)}
                               />
                             </dd>
                           </div>
@@ -399,7 +399,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                                 source_iso={state_source_iso(status.queue.last_succeeded)}
                                 reference={success_reference(@posture_summary, mod, :queue)}
                                 label="Last success"
-                                empty="No success observed"
+                                empty={success_time_empty(status.queue.last_succeeded)}
                               />
                             </dd>
                           </div>
@@ -430,15 +430,20 @@ defmodule ScrypathOpsWeb.PostureLive do
                         <.ops_badge kind={:error}>fetch error</.ops_badge>
                       </div>
                     </div>
-                    <div :if={retained_state(@posture_summary, mod, :backend)} class="mt-3">
-                      <p class="text-ops-sm text-base-content/75">
+                    <div class="mt-3">
+                      <p
+                        :if={retained_state(@posture_summary, mod, :backend)}
+                        class="text-ops-sm text-base-content/75"
+                      >
                         Backend observation unavailable; last success retained from the previous check.
                       </p>
                       <.ops_time
-                        dt={retained_state(@posture_summary, mod, :backend).at}
+                        dt={retained_time(retained_state(@posture_summary, mod, :backend))}
                         source_iso={state_source_iso(retained_state(@posture_summary, mod, :backend))}
                         reference={success_reference(@posture_summary, mod, :backend)}
                         label="Last success retained"
+                        empty="Not observed"
+                        unavailable_reason={inspect(reason)}
                       />
                     </div>
                     <.ops_link_button
@@ -517,6 +522,14 @@ defmodule ScrypathOpsWeb.PostureLive do
     do: Map.get(metadata, :source_iso)
 
   defp state_source_iso(_state), do: nil
+
+  defp success_time_empty(%Scrypath.Operator.State{state: :completed, at: nil}),
+    do: "Success time not observed"
+
+  defp success_time_empty(_state), do: "No success observed"
+
+  defp retained_time(%Scrypath.Operator.State{at: at}), do: at
+  defp retained_time(_state), do: nil
 
   defp success_reference(summary, schema, source),
     do: ScrypathOps.Posture.last_success_ref(summary, schema, source)
