@@ -257,7 +257,12 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_refresh_control(assigns) do
     ~H"""
     <div class={["flex flex-wrap items-center gap-x-3 gap-y-1", @class]}>
-      <.ops_time :if={@checked_at} label="Checked" dt={@checked_at} />
+      <span :if={@checked_at} class="ops-text-meta">
+        Checked
+        <time datetime={DateTime.to_iso8601(@checked_at)} title={utc_display(@checked_at)}>
+          {human_dt(@checked_at, DateTime.utc_now())}
+        </time>
+      </span>
       <.ops_refresh_button
         id={@id}
         aria_label={@aria_label}

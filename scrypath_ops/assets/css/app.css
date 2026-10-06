@@ -908,6 +908,10 @@
   }
 
   .ops-time__value {
+    font-family: var(--font-sans);
+    font-size: var(--text-ops-body);
+    font-weight: 400;
+    color: var(--color-base-content);
     font-variant-numeric: tabular-nums;
   }
 

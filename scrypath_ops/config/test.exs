@@ -17,6 +17,10 @@ config :scrypath_ops, ScrypathOps.Repo,
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :scrypath_ops, ScrypathOpsWeb.Endpoint,
+  url: [
+    host: System.get_env("SCRYPATH_OPS_TEST_HOST", "localhost"),
+    port: String.to_integer(System.get_env("SCRYPATH_OPS_PORT", "4003"))
+  ],
   http: [
     ip: if(System.get_env("PHX_SERVER") == "true", do: {0, 0, 0, 0}, else: {127, 0, 0, 1}),
     port: String.to_integer(System.get_env("SCRYPATH_OPS_PORT", "4003"))

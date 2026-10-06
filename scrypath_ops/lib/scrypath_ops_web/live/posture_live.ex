@@ -365,7 +365,6 @@ defmodule ScrypathOpsWeb.PostureLive do
                                 dt={status.backend.last_succeeded && status.backend.last_succeeded.at}
                                 source_iso={state_source_iso(status.backend.last_succeeded)}
                                 reference={success_reference(@posture_summary, mod, :backend)}
-                                label="Last success"
                                 empty={success_time_empty(status.backend.last_succeeded)}
                               />
                             </dd>
@@ -398,7 +397,6 @@ defmodule ScrypathOpsWeb.PostureLive do
                                 dt={status.queue.last_succeeded && status.queue.last_succeeded.at}
                                 source_iso={state_source_iso(status.queue.last_succeeded)}
                                 reference={success_reference(@posture_summary, mod, :queue)}
-                                label="Last success"
                                 empty={success_time_empty(status.queue.last_succeeded)}
                               />
                             </dd>

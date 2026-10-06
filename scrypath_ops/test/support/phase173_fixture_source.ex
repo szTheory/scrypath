@@ -37,7 +37,8 @@ defmodule ScrypathOps.Test.Phase173FixtureSource do
 
     %{
       allowlist: allowlist,
-      observed_at: @observed_at,
+      observed_at:
+        if(name == "source-error", do: DateTime.add(@observed_at, 86_400), else: @observed_at),
       opts: [
         backend: Scrypath.Meilisearch,
         sync_mode: if(name == "manual", do: :manual, else: :oban),

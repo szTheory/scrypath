@@ -18,6 +18,7 @@ services:
       PHX_SERVER: "true"
       PORT: "4003"
       SCRYPATH_OPS_PORT: "4003"
+      SCRYPATH_OPS_TEST_HOST: "ops"
       PGHOST: postgres
       PGPORT: "5432"
     depends_on:
