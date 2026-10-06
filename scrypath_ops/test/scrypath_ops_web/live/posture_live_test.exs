@@ -138,6 +138,25 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search health']")
   end
 
+  test "renders backend success age from the observation snapshot with exact source evidence", %{conn: conn} do
+    {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health")
+
+    time =
+      lv
+      |> element(
+        "[id='posture-ScrypathOps.Test.OpsPostA'] .ops-signal-group[aria-label^='Backend task signals']"
+      )
+      |> render()
+
+    assert time =~ "2 days ago"
+    assert time =~ "2026-10-04T13:02:05.123456-04:00"
+    assert time =~ "UTC equivalent"
+
+    html = render_patch(lv, ~p"/ops/phase173/health?scenario=default")
+    assert html =~ "2 days ago"
+    assert html =~ "2026-10-04T13:02:05.123456-04:00"
+  end
+
   test "posture shows next checks block with ordered items and failed-sync egress", %{conn: conn} do
     {:ok, lv, _html} = live(conn, ~p"/ops/health")
 
