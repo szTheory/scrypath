@@ -61,7 +61,7 @@ for (const entrypoint of ENTRYPOINTS) {
             await expect(page.locator(".ops-verdict")).toContainText("Degraded");
             await expect(page.locator(".ops-verdict")).toContainText("will not self-heal");
             await expect(page.getByTestId("posture-failed-sync-link").first()).toBeVisible();
-            await expect(page.locator(".ops-metric-error").first()).toBeVisible();
+            await expect(page.locator(".ops-metric-warning").first()).toBeVisible();
           } else if (scenario === "unknown") {
             await expect(rows.first().locator("[aria-label^='Backend task signals']")).toContainText("Pending");
             await expect(rows.first().locator("[aria-label^='Backend task signals']")).not.toContainText("Failed\n1");
