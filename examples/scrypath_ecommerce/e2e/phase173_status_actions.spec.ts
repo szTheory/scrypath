@@ -84,10 +84,13 @@ for (const entrypoint of ENTRYPOINTS) {
           const dimensions = await page.evaluate(() => ({
             viewport: document.documentElement.clientWidth,
             document: document.documentElement.scrollWidth,
-            rowGap: getComputedStyle(document.querySelector(".ops-schema-signal-list")!).rowGap
+            rowGap: (() => {
+              const list = document.querySelector(".ops-schema-signal-list");
+              return list ? getComputedStyle(list).rowGap : null;
+            })()
           }));
           expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
-          if (scenario !== "empty") expect(Number.parseFloat(dimensions.rowGap)).toBeGreaterThanOrEqual(24);
+          if (scenario !== "empty") expect(Number.parseFloat(dimensions.rowGap ?? "0")).toBeGreaterThanOrEqual(24);
 
           const refresh = page.getByRole("button", { name: "Refresh search health" });
           const refreshBox = await refresh.boundingBox();
