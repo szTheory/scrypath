@@ -27,6 +27,25 @@ defmodule ScrypathEcommerceWeb.Router do
     scrypath_ops_routes("/search", repo: ScrypathEcommerce.Repo)
   end
 
+  if Mix.env() == :test do
+    scope "/admin/search/phase173", alias: false do
+      pipe_through(:browser)
+      forward("/assets", ScrypathOpsWeb.AssetPlug, path_prefix: "assets")
+      forward("/images", ScrypathOpsWeb.AssetPlug, path_prefix: "images")
+
+      live_session :phase173_ecommerce_fixture,
+        on_mount: [{ScrypathOpsWeb.Live.OnMount, :default}],
+        session: %{
+          "scrypath_ops_opts" => [
+            repo: ScrypathEcommerce.Repo,
+            mount_path: "/admin/search/phase173"
+          ]
+        } do
+        live("/health", ScrypathOpsWeb.PostureLive, :phase173)
+      end
+    end
+  end
+
   if Mix.env() in [:dev, :test] do
     scope "/admin/search", ScrypathEcommerceWeb do
       pipe_through(:browser)

@@ -17,6 +17,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
                  |> Path.expand()
 
   @app_js Path.join(__DIR__, "../../assets/js/app.js") |> Path.expand()
+  @app_css Path.join(__DIR__, "../../assets/css/app.css") |> Path.expand()
   @ops_hooks Path.join(__DIR__, "../../assets/js/ops_hooks.js") |> Path.expand()
   @host_js Path.join(__DIR__, "../../../examples/scrypath_ecommerce/assets/js/app.js")
            |> Path.expand()
@@ -153,14 +154,16 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert html =~ ~s(src="/ops/images/scrypath-wordmark-inverse.svg")
     assert html =~ ~s(aria-label="Scrypath home")
     assert html =~ ~s(class="ops-theme-toggle)
-    assert html =~ ~s(id="theme-toggle-pill")
-    assert html =~ ~s(ops-theme-toggle__pill)
     assert Regex.scan(~r/class=\"[^\"]*ops-theme-toggle__button/, html) |> length() == 3
     assert Regex.scan(~r/data-phx-theme=\"(?:system|light|dark)\"/, html) |> length() == 3
     assert html =~ ~s(aria-label="Theme preference")
     assert html =~ ~s(aria-label="Use system theme")
     assert html =~ ~s(aria-label="Use light theme")
     assert html =~ ~s(aria-label="Use dark theme")
+    assert html =~ "System"
+    assert html =~ "Light"
+    assert html =~ "Dark"
+    assert File.read!(@app_css) =~ "min-height: 44px;"
 
     assert Regex.scan(
              ~r/class=\"[^\"]*ops-theme-toggle__button[^\"]*\"[^>]*aria-pressed=\"false\"/,
@@ -219,6 +222,10 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert source =~ "DOMContentLoaded"
     assert source =~ "closest(\"[data-phx-theme]\")"
     assert source =~ "phx:page-loading-stop"
+    assert source =~ "safeThemePreference"
+    assert source =~ "try {"
+    assert source =~ "catch (_) {}"
+    refute source =~ "localStorage.getItem(\"phx:theme\");\n          if"
   end
 
   test "shortcut sheet advertises command palette shortcut across platforms", %{conn: conn} do
