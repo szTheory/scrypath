@@ -1,36 +1,30 @@
 ---
 gsd_state_version: "1.0"
-milestone: v1.42
-milestone_name: ScrypathOps operator/admin UI
-current_phase: null
-current_phase_name: null
-status: Awaiting next milestone
-stopped_at: v1.42 complete; separate planning successor ready for new milestone scoping
-last_updated: "2026-10-05T16:52:05Z"
-last_activity: 2026-10-05
-last_activity_desc: Standardized visible operator names and Scrypath branding; v1.42 remains archived
-state_head: 5ed440954ba70d2b94d8b480d625530e26a809ac
+milestone: v1.43
+milestone_name: ScrypathOps UI refinement
+status: planning
+last_updated: "2026-10-06T16:07:34.646Z"
+last_activity: 2026-10-06
 progress:
-  total_phases: 1
-  completed_phases: 1
-  total_plans: 8
-  completed_plans: 8
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See PROJECT.md (updated2026-10-04). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality.
+See PROJECT.md (updated 2026-10-06). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: v1.43 ScrypathOps UI refinement requirements and roadmap definition.
 
 ## Current Position
 
-Phase: None active. Last completed:172 — Consistent Operator UI and Verified Recovery.
-Plan:8/8 complete. Milestone:v1.42 archived. Status: Awaiting next milestone.
-Progress:[██████████]100%.
-
-No next phase or milestone is approved. Do not replay Phase172, earlier plans or Phase170. The next lifecycle command is `$gsd-new-milestone` only when the maintainer chooses new scope. Optional UI feedback is new evidence, not a reason to rerun completed work.
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-10-06 — Milestone v1.43 started
 
 ## Delivered Evidence
 
@@ -46,6 +40,9 @@ No next phase or milestone is approved. Do not replay Phase172, earlier plans or
 - The preview at `http://127.0.0.1:4012/admin/search` was used for local browser review. The final toast styling was checked in light and dark themes and assets rebuilt. No hosted CI or milestone-level verification is claimed for these follow-ups.
 - This user-requested local follow-up uses `/health` and “Search health” while retaining `/posture` as a compatibility redirect, standardizes refresh buttons, checked-time placement, and success feedback through one shared control, keeps failed-reason counts visible, and removes routine timestamp-copy controls. It also removes the unnecessary summary wrapper panel. The mounted preview rendered the Control Room, Search health, Failed sync work, and Sync and drift refresh controls and their action-specific feedback; the legacy path reached `/admin/search/health`. No automated tests or milestone-level verification were run or claimed for this follow-up.
 - The current copy pass uses the Scrypath logo alone in the operator shell, aligns navigation, breadcrumbs, and page titles to “Search health,” “Failed sync work,” “Sync and drift,” and “Search,” and makes links name their actual destinations. The refreshed local preview was reviewed; no automated tests were run.
+- On 2026-10-06, direct Search health feedback prompted a local layout correction: removed duplicate Impeccable preview wrappers from the shared panel, restored 24px section spacing, replaced sentence-length action links with concise shared controls and supporting prose, removed redundant section/diagnostic panels, and preserved full module names and readable timestamps. The broader recovery → verification → saved-check refinement sequence is captured in `reference/OPERATOR-UI-REFINEMENT.md`; no active phase was created.
+- Local verification for the current changes: Ops `mix precommit` passed 233 tests and 2 doctests with zero failures; token contrast passed with zero AA failures (34 AAA advisory findings). Live desktop and 390px mobile review covered light and dark themes, measured 24px section gaps and 40px action controls, and found no horizontal overflow. Diagnostic subgroups are transparent and full identifiers/timestamps remain readable. The revised browser depth spec parsed/listed 33 tests; the full browser matrix was not executed or the feedback preview reseeded. These local results are not hosted exact-SHA evidence and do not extend the archived Phase172 receipt. The temporary test database was removed after validation; preview data remains intact.
+- Later on 2026-10-06, the maintainer identified shared visual defects: shell gradients, broad yellow warning fills/outlines, green zero-error metrics, double theme selection, quiet-action hover colors, and dense last-success timestamps. The refinement brief now puts shared visual foundations first and records concrete acceptance criteria, including human-readable operational times and truthful clipboard/toast feedback. This follow-up edits planning/design context only; no UI implementation, new test run, commit, or milestone activation is claimed.
 
 ## Durable Defaults
 
@@ -60,16 +57,14 @@ Always finish a phase/milestone handoff with the completed phase, the exact next
 - Current GSD tracking records Phase 170 at 8/8 through its authorized planning-side replacement. The frozen `8c271…` snapshot remains historical 17/18 with original bytes preserved. See `milestones/v1.41-phases/170-documentation-and-readiness-closeout/170-08-TRACKING-REPLACEMENT.md` and `170-POST-FREEZE-RECONCILIATION.md`. Do not rerun Phase 170.
 - Scrypath 0.3.14 publication/parity and exact-main closeout are recorded in PROJECT.md and the v1.41 archive. Those receipts and older readiness cutoffs remain source-bounded; they do not verify changed v1.42 UI behavior. Historical “What's next” statements describe archive-time posture.
 
-
 ## Deferred Items
 
 | Category | Item | Status | Deferred At | Milestone |
 |----------|------|--------|-------------|-----------|
 | Product scope | New workflows, core APIs, backend abstraction, host authorization product, broader matrices | Separate concrete evidence and scope required | 2026-10-03 | v1.42 |
-| Visual scope | Palette/framework replacement, wholesale CSS rewrite, incidental issues without material user impact | Retain the existing system; reopen only with a named invalidator | 2026-10-03 | v1.42 |
+| Visual scope | Shared color/surface token revision versus framework replacement/wholesale CSS rewrite | Concrete 2026-10-06 feedback reopens shared visual tokens; framework replacement and unrelated rewrites remain deferred. See the refinement brief. | 2026-10-06 | Post-v1.42 |
 | Verification topology | New required CI job or paid visual-judge service | Existing economical lanes are the default | 2026-10-03 | v1.42 |
 | Historical planning | Nyquist validation records for Phases 168–170 | Accepted nonblocking v1.41 audit debt; no phase replay | 2026-10-02 | v1.41 |
-
 
 ## Preview and Cleanup
 
@@ -79,8 +74,10 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Clear context and run `$gsd-new-milestone` from `/Users/jon/projects/scrypath` on `planning/next-milestone-handoff` when ready. The planning handoff and earlier operator UI/local-preview follow-ups are committed locally; the current naming and logo pass is uncommitted. The Control Room refresh remains in the page toolbar, outside the health verdict. Preserve `.planning/config.json`'s intentional adaptive routing. No directory switch to the preview worktree is needed. Read PROJECT.md, this STATE.md, ROADMAP.md, and `reference/OPERATOR-UI-QUALITY.md` first.
+Continue `$gsd-new-milestone ScrypathOps UI refinement` from `/Users/jon/projects/scrypath` on `planning/next-milestone-handoff`. On 2026-10-06 the maintainer accepted the recommended v1.43 scope and reuse of existing inventories. The complete requirements and roadmap still require the explicit review gate; do not infer phase approval or begin implementation. Current product/design context, schema-picker, naming/logo, and Search health layout follow-ups remain uncommitted and preserved. The Control Room refresh remains in the page toolbar outside the health verdict. Preserve adaptive routing and the retained preview data; no checkout/directory switch is needed.
 
-The command gathers and agrees the next scope. The next unused phase number is173, but no Phase173 or new milestone scope is approved yet. After the new milestone workflow creates and approves its roadmap, the next command is `$gsd-discuss-phase 173` to clarify the first phase; `$gsd-plan-phase 173` is the documented option when discussion should be skipped. Do not run execute/verify/complete for Phase172 or Phase170 again. No active resume file or routine UAT remains; historical milestone-index entries are archives, not executable next work. The milestone archive and retained receipt carry the completed scope, evidence, release, cleanup and no-replay decisions across context resets.
+The root MILESTONE-CONTEXT.md was consumed; its original input is preserved in `research/v1.43/MILESTONE-CONTEXT.md`. Read PROJECT.md, this STATE.md, ROADMAP.md, REQUIREMENTS.md, `research/v1.43/SCOPE.md`, root PRODUCT.md / DESIGN.md, and both operator quality/refinement references. The installed Impeccable skill supplies comp-first Operate guidance; selected decisions enter GSD UI contracts and plans. Its stale design sidecar finding is nonblocking and was not repaired during setup.
+
+After explicit requirements/roadmap approval and commits, the next command is `$gsd-discuss-phase 173`. Follow with `$gsd-ui-phase 173` to settle and capture Impeccable-assisted light/dark comps and shared state decisions, then `$gsd-plan-phase 173`; both UI generation and the planning safety gate are enabled. No implementation has started. Do not run execute/verify/complete for Phase 172 or Phase 170. Preserve archived receipts and reuse only their bounded evidence; no routine UAT remains from those milestones.
 
 The `.planning/config.json` model-routing change (`model_profile: adaptive`) is intentional; the maintainer confirmed this on 2026-10-05. Current GSD resolution is `gsd-planner: gpt-6-sol / xhigh` and `gsd-project-researcher: gpt-6-luna / high`. Preserve this routing in future milestone work; do not restore the legacy per-agent overrides.
