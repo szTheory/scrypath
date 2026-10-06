@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- 📋 **v1.43 ScrypathOps UI refinement** — Phases 173–177 (5 approved phases, 0 plans; ready for Phase 173 discussion)
+- 📋 **v1.43 ScrypathOps UI refinement** — Phases 173–177 (5 approved phases, 4 checked plans; Phase 173 ready to execute)
 - ✅ **v1.42 ScrypathOps operator/admin UI** — Phase172 (1 phase, 8 plans; archived2026-10-04) — [archive](milestones/v1.42-ROADMAP.md)
 - ✅ **v1.41 Readiness Gate Follow-Through** — Phases 168–171 (4 phases, 19 plans; archived 2026-10-02; `tech_debt` accepted; original Phase 170 decision remains NOT READY at its cutoff; later separate readiness assessment is READY) — [archive](milestones/v1.41-ROADMAP.md)
 - ✅ **v1.40 Readiness Evidence Closure** — Phases 165–167 (archived locally 2026-09-27; no Hex release; assessment remains NOT READY) — [archive](milestones/v1.40-ROADMAP.md)
@@ -15,11 +15,11 @@
 
 ## Current Posture
 
-**v1.43 scope/version, inventory reuse, all 20 requirements, and this five-phase roadmap were explicitly approved on 2026-10-06. Phase 173 is ready for discussion; no implementation has started.** Numbering continues at Phase 173. v1.42 completed Phase172:8 plans,8 requirements, independent verification38/38 truths,6/6 integration connections and5/5 flows. See the [milestone audit](milestones/v1.42-MILESTONE-AUDIT.md).
+**v1.43 scope/version, inventory reuse, all 20 requirements, and this five-phase roadmap were explicitly approved on 2026-10-06. Phase 173 has an approved UI contract and four independently checked implementation plans; no implementation has started.** Numbering continues at Phase 173. v1.42 completed Phase172:8 plans,8 requirements, independent verification38/38 truths,6/6 integration connections and5/5 flows. See the [milestone audit](milestones/v1.42-MILESTONE-AUDIT.md).
 
 PR91 delivered the operator UI and recovery corrections; ReleasePleasePR92 published Scrypath0.3.15 at `8dd20e8966acd17a4ef5acec653c00dc31faab49`. [Publish run37181522723](https://github.com/szTheory/scrypath/actions/runs/37181522723) passed live Hex/consumer/HexDocs and package/tag parity. Both task-owned verifier stacks are removed; preview4012 is intentionally retained for optional feedback.
 
-All completion and archive records precede the enclosing final exact-source attestation. Its receipt is external to the final source. No completed phase should be replayed. The v1.43 requirements and roadmap are approved; the next lifecycle command is `$gsd-discuss-phase 173`, followed by `$gsd-ui-phase 173` for the comp-first UI contract and `$gsd-plan-phase 173`. Discussion and the UI contract settle the visual approach before implementation planning; no phase execution has begun.
+All completion and archive records precede the enclosing final exact-source attestation. Its receipt is external to the final source. No completed phase should be replayed. The v1.43 requirements and roadmap are approved. Phase 173 discussion, the comp-first UI contract and checked implementation planning are complete; the next lifecycle command is `$gsd-execute-phase 173`. No phase execution has begun.
 
 The original Phase170 NOT READY decision and frozen17/18 snapshot remain historical; its separately authorized tracking replacement and later READY assessment remain distinct in the v1.41 archive. Nothing in v1.42 rewrites those decisions or resolves inherited assumptions beyond their stated limits.
 
@@ -27,11 +27,11 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
 
 **Milestone goal:** Operators can inspect, recover, and verify search across the six existing surfaces with a calmer shared visual language, clear safe actions, and truthful task/index/document evidence.
 
-**Status:** Requirements and roadmap explicitly approved on 2026-10-06. Phase 173 is ready for discussion. Phases 173–177 have no implementation plans, execution, or verification yet.
+**Status:** Requirements and roadmap explicitly approved on 2026-10-06. Phase 173 has four plans verified by the independent checker. Phases 174–177 remain unplanned; no implementation or product verification has started.
 
 **Overview:** Establish the shared light/dark visual treatment and operational time behavior first, then refine the recovery entry, diagnosis, repair, and verification journey. Clarify Search and Playbooks within that visual world, and finish by consolidating patterns demonstrated on all six surfaces with source-bounded delivery evidence. Each phase proves its own changed behavior with relevant executable checks and direct before/after visual inspection; Phase 177 does not defer earlier acceptance. Reuse the v1.42 inventories as orientation and recheck touched source, without replaying completed fixes.
 
-**Design sequence:** Discuss Phase 173 next. Use the installed Impeccable Operate guidance with root `PRODUCT.md` and `DESIGN.md` to compare realistic degraded Search health comps in light and dark before broad visual implementation. The comps include zero/error/unknown metrics, queue failures, long identifiers and times, quiet-action states, and the theme selector. Capture the selected treatment in Phase 173 `UI-SPEC.md` through `$gsd-ui-phase 173` before `$gsd-plan-phase 173`. Later frontend phases refine their UI contracts within that treatment. Preserve the existing UI phase and safety gates.
+**Design sequence:** Phase 173 discussion and the Impeccable-informed comp-first UI contract are complete. Its approved warm-neutral light/neutral-dark treatment governs all four implementation plans, with incumbent typography/spacing preserved. Later frontend phases refine their UI contracts within that treatment. Preserve the existing UI phase and safety gates. Static comp evidence establishes design selection; each implementation slice supplies its own application evidence.
 
 **Boundaries:** Retain host-owned authorization and mutation confirmation/eligibility, selected allowed-schema handoffs, full schema/index/task IDs, retained failure history, and accepted/running/terminal/unknown distinctions. Confirm completion from authoritative task/index/document evidence. Preserve light/dark/System, keyboard/focus, reduced motion, and standalone/mounted behavior. This milestone adds no core API, backend or auth product, infrastructure automation, UI surface, framework, new required CI service, or paid visual judge. Use disposable stacks for mutating browser proof; retain the feedback preview at `http://127.0.0.1:4012/admin/search` and unrelated working-tree changes.
 
@@ -46,6 +46,7 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
 ## Phase Details
 
 ### Phase 173: Shared Visual Foundation and Operational Time
+
 **Goal**: Operators can read state and act on it through a coherent neutral visual foundation, one theme preference, and trustworthy operational time feedback.
 **Depends on**: Nothing in v1.43; Phase 172 is complete and archived.
 **Requirements**: OPUX-09, OPUX-10, OPUX-11, OPUX-12, OPUX-13, OPUX-14, OPUX-15
@@ -55,7 +56,26 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
   3. Shared quiet actions remain recognizable and usable in both themes through hover, focus, pressed, selected, disabled, and busy states; a busy action keeps its meaningful icon and label.
   4. Operators can read stable human-readable last-success times, inspect the exact timestamp and timezone, and distinguish absent or unobserved success from observed success.
   5. In standalone and mounted Ops, operators can copy the full ISO last-success timestamp by keyboard or pointer and receive brief confirmation only after success; denied/unavailable clipboard access is explained, and routine Checked metadata offers no copy action.
-**Plans**: TBD
+
+**Plans**: 4 plans
+Plans:
+
+**Wave 1**
+
+- [ ] 173-01-PLAN.md — Neutral shell, one theme preference, and isolated dual-entrypoint browser runner
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 173-02-PLAN.md — Lossless operational timestamps and snapshot-stable exact evidence
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 173-03-PLAN.md — Local status cues, neutral metrics, and coherent quiet actions
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 173-04-PLAN.md — Truthful timestamp copying and feedback in standalone and mounted Ops
+
 **UI hint**: yes
 **Canonical refs**: `.planning/research/v1.43/SCOPE.md`, `.planning/reference/OPERATOR-UI-REFINEMENT.md`, `.planning/reference/OPERATOR-UI-QUALITY.md`, `PRODUCT.md`, `DESIGN.md`, `.impeccable/config.json`, `.planning/research/v1.42/UI-SYSTEM.md`, `.planning/research/v1.42/UI-AUTOMATION.md`, `scrypath_ops/assets/css/DESIGN-TOKENS.md`
 **Acceptance**: Compare realistic degraded Search health light/dark comps before planning; inspect representative before/after desktop/mobile renders and use existing theme, accessibility, contrast, component, and focused browser checks for changed controls and states.
@@ -111,11 +131,11 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
 
 ## Progress
 
-**Execution order:** 173 → 174 → 175 → 176 → 177. Phase 173 is ready for discussion; execution has not started.
+**Execution order:** 173 → 174 → 175 → 176 → 177. Phase 173 is ready to execute four checked plans; execution has not started.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 173. Shared Visual Foundation and Operational Time | 0/TBD | Ready to discuss | - |
+| 173. Shared Visual Foundation and Operational Time | 0/4 | Planned — ready to execute | - |
 | 174. Recovery Entry and Diagnosis | 0/TBD | Not started | - |
 | 175. Repair and Verification | 0/TBD | Not started | - |
 | 176. Search and Playbooks | 0/TBD | Not started | - |

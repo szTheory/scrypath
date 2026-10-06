@@ -4,16 +4,16 @@ milestone: v1.43
 milestone_name: ScrypathOps UI refinement
 current_phase: 173
 current_phase_name: Shared Visual Foundation and Operational Time
-status: Ready for planning
-stopped_at: "Phase 173 UI-SPEC approved; next: $gsd-plan-phase 173 to create implementation slices from the verified contract"
-last_updated: "2026-10-06T18:18:57.110Z"
+status: Ready to execute
+stopped_at: "Phase 173 planning verified; next: $gsd-execute-phase 173 to implement four sequential slices"
+last_updated: "2026-10-06T19:36:08.838Z"
 last_activity: 2026-10-06
-last_activity_desc: Phase 173 UI contract approved; rendered palette comparison and explicit state coverage recorded
-state_head: e5b52f2bc94f6fc18da9b37d6d2df14325e67497
+last_activity_desc: Phase 173 plans verified after one revision; four sequential waves ready to execute
+state_head: 7fed9dbd07ea207cc9d70bface62784c4d805786
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
+  total_plans: 4
   completed_plans: 0
   percent: 0
 ---
@@ -22,15 +22,15 @@ progress:
 
 ## Project Reference
 
-See PROJECT.md (updated 2026-10-06). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: approved v1.43 ScrypathOps UI refinement; Phase 173 implementation planning using its approved UI contract.
+See PROJECT.md (updated 2026-10-06). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: approved v1.43 ScrypathOps UI refinement; Phase 173 execution of four independently checked implementation slices using its approved UI contract.
 
 ## Current Position
 
-Phase: 173 of 5 (Shared Visual Foundation and Operational Time)
-Plan: —
-Status: Ready for planning
-Last activity: 2026-10-06 — Phase 173 UI contract approved; rendered palette comparison and explicit state coverage recorded
-Progress: [░░░░░░░░░░] 0% (0/5 phases; 0 plans)
+Phase: 173 (Shared Visual Foundation and Operational Time) — READY TO EXECUTE
+Plan: 0 of 4 complete
+Status: Ready to execute
+Last activity: 2026-10-06 — Phase 173 planning verified after one revision; four sequential waves ready to execute
+Progress: [░░░░░░░░░░] 0% (0/5 phases; 0/4 plans complete)
 
 ## Delivered Evidence
 
@@ -80,16 +80,16 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-06T18:18:57.073Z
-Stopped at: Phase 173 UI-SPEC approved; next: $gsd-plan-phase 173 to create implementation slices from the verified contract
-Resume file: .planning/phases/173-shared-visual-foundation-and-operational-time/173-UI-SPEC.md
+Last session: 2026-10-06T19:36:08.822Z
+Stopped at: Phase 173 planning verified; next: $gsd-execute-phase 173 to implement four sequential slices
+Resume file: .planning/phases/173-shared-visual-foundation-and-operational-time/173-01-PLAN.md
 
-Run `$gsd-plan-phase 173` from `/Users/jon/projects/scrypath` on `planning/next-milestone-handoff`. Phase 173 discussion and UI contract are complete. The contract selects warm-neutral light and neutral dark after inspected warm/cool rendered comparisons; the typed checker passes all seven dimensions, respecting D-06's locked incumbent typography/spacing exceptions. The user confirmed the five element classifications and explicit state rules; compiled coverage is 26/26 explicitly resolved with no unresolved/backstop items. Design artifacts are committed in e5b52f2. Planning must include lossless source timestamp precision/offset at the existing normalization seam and all per-requirement executable obligations. No Phase 173 implementation, product test run, or hosted source receipt is claimed; OPUX-09–OPUX-15 remain pending. The last completed implementation phase remains 172 in archived v1.42.
+Run `$gsd-execute-phase 173` from `/Users/jon/projects/scrypath` on `planning/next-milestone-handoff`. Phase 173 discussion, approved UI contract, research, pattern mapping, and implementation planning are complete. Four sequential waves deliver (01) neutral shell/theme and a disposable dual-entrypoint browser runner, (02) lossless snapshot-stable operational time, (03) local status/neutral metrics/quiet actions, and (04) truthful timestamp copying. Independent plan review passed after one revision resolved production standalone browser wiring and the missing root core gate. Final deterministic checks passed four frontmatters/structures, 7/7 requirements, 22/22 decisions, 26/26 UI considerations and 11/11 automated failure directions; the post-planning gate covered all 29 requirement/decision items. See 173-PLAN-CHECK.md and 173-VALIDATION.md. Product tests and new browser harness execution remain pending; no Phase 173 implementation or hosted source receipt is claimed. OPUX-09–OPUX-15 remain pending. The last completed implementation phase remains 172 in archived v1.42. Research/validation commit is 7fed9db; the final planning commit follows it.
 
-Current product/design context, schema-picker, naming/logo, and Search health layout follow-ups remain uncommitted and preserved. The Control Room refresh remains in the page toolbar outside the health verdict. Preserve adaptive routing, the existing UI phase/safety gates, and feedback preview data; no checkout/directory switch is needed.
+Current product/design context, schema-picker, naming/logo, and Search health layout follow-ups remain uncommitted and preserved. The Control Room refresh remains in the page toolbar outside the health verdict. Preserve adaptive routing, the existing UI phase/safety gates, and feedback preview data. Plan from this checkout; execution must preserve the dirty baseline when preparing clean source for the root workspace-clean gate through the authorized GSD isolation workflow.
 
 The root MILESTONE-CONTEXT.md was consumed; its original input is preserved in `research/v1.43/MILESTONE-CONTEXT.md`. Read PROJECT.md, this STATE.md, ROADMAP.md, REQUIREMENTS.md, `research/v1.43/SCOPE.md`, root PRODUCT.md / DESIGN.md, both operator quality/refinement references, and Phase 173 CONTEXT/UI-SPEC/UI-CHECK. Impeccable Operate informed the selected contract. Its stale design sidecar remains a separate nonblocking maintenance item. Static comp evidence has 12 captures across two palettes/themes, desktop/mobile and the 1279/1280 rail breakpoint: no horizontal overflow, broken logos or AA failures in the sampled pairs. These measurements do not prove application theme/clipboard/LiveView behavior. The original renderer failure was a macOS sandbox bootstrap denial; the user explicitly authorized a scoped launch approval, which succeeded without contacting or mutating the retained preview.
 
-Next is `$gsd-plan-phase 173`, which turns the approved design/state contract into scoped implementation slices with executable evidence. Both UI generation and the planning safety gate remain enabled. Do not automatically chain into implementation, replay Phase 172/170, or reuse archived receipts for changed source. Preserve local app/design edits and preview :4012; mutation fixtures belong in disposable stacks. Context can be cleared after the contract and this handoff are committed; the phase artifacts preserve scope, decisions, evidence limits and the exact next action.
+Next is `$gsd-execute-phase 173`, which implements the four checked slices and their executable acceptance gates. Both UI generation and the planning safety gate remain enabled; automatic execution chaining remains disabled. Do not replay Phase 172/170 or reuse archived receipts for changed source. Byte checks confirmed all 15 preserved modified source/design files were unchanged by planning. Preserve local app/design edits and preview :4012; mutating fixtures belong in disposable stacks. Context can be cleared after this planning handoff is committed: the plans, research, validation, checker record and STATE preserve scope, decisions, evidence limits, working directory/branch and exact next action.
 
 The `.planning/config.json` model-routing change (`model_profile: adaptive`) is intentional; the maintainer confirmed this on 2026-10-05. Current GSD resolution is `gsd-planner: gpt-6-sol / xhigh` and `gsd-project-researcher: gpt-6-luna / high`. Preserve this routing in future milestone work; do not restore the legacy per-agent overrides.
