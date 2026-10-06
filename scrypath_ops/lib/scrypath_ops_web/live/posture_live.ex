@@ -11,9 +11,20 @@ defmodule ScrypathOpsWeb.PostureLive do
   alias ScrypathOps.OperatorSelection
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
     allowlist = ScrypathOps.Schemas.allowlist()
     scrypath_opts = ScrypathOps.Schemas.scrypath_opts()
+    phase173? = socket.assigns.live_action == :phase173
+    fixture_source = Application.get_env(:scrypath_ops, :phase173_fixture_source)
+
+    {allowlist, scrypath_opts, observed_at, fixture_scenario} =
+      if phase173? and fixture_source?(fixture_source) do
+        scenario = Map.get(params, "scenario", "default")
+        fixture = fixture_source.scenario(scenario)
+        {fixture.allowlist, fixture.opts, fixture.observed_at, scenario}
+      else
+        {allowlist, scrypath_opts, nil, nil}
+      end
 
     socket =
       socket
@@ -28,13 +39,16 @@ defmodule ScrypathOpsWeb.PostureLive do
       |> assign(:posture_headline, "—")
       |> assign(:posture_evidence, "")
       |> assign(:next_checks, [])
+      |> assign(:phase173_observed_at, observed_at)
+      |> assign(:phase173_fixture_scenario, fixture_scenario)
 
     {:ok, load_posture(socket)}
   end
 
   @impl true
-  def handle_event("refresh", _params, socket) do
+  def handle_event("refresh", params, socket) do
     start_ms = System.monotonic_time(:millisecond)
+    socket = maybe_select_phase173_scenario(socket, params)
     socket = load_posture(socket)
     duration_ms = System.monotonic_time(:millisecond) - start_ms
 
@@ -85,10 +99,20 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   defp load_posture(socket) do
     summary =
-      ScrypathOps.Posture.summary(
-        socket.assigns.schema_allowlist,
-        socket.assigns.scrypath_opts
-      )
+      case socket.assigns.phase173_observed_at do
+        %DateTime{} = observed_at ->
+          ScrypathOps.Posture.summary(
+            socket.assigns.schema_allowlist,
+            socket.assigns.scrypath_opts,
+            observed_at
+          )
+
+        nil ->
+          ScrypathOps.Posture.summary(
+            socket.assigns.schema_allowlist,
+            socket.assigns.scrypath_opts
+          )
+      end
 
     socket
     |> assign(:posture_rows, posture_rows_assign(summary))
@@ -100,6 +124,33 @@ defmodule ScrypathOpsWeb.PostureLive do
     |> assign(:posture_summary, summary)
     |> refresh_next_checks()
   end
+
+  defp maybe_select_phase173_scenario(
+         %{assigns: %{live_action: :phase173}} = socket,
+         %{"scenario" => scenario}
+       ) do
+    source = Application.get_env(:scrypath_ops, :phase173_fixture_source)
+
+    if fixture_source?(source) do
+      fixture = source.scenario(scenario)
+
+      socket
+      |> assign(:schema_allowlist, fixture.allowlist)
+      |> assign(:scrypath_opts, fixture.opts)
+      |> assign(:phase173_observed_at, fixture.observed_at)
+      |> assign(:phase173_fixture_scenario, scenario)
+    else
+      socket
+    end
+  end
+
+  defp maybe_select_phase173_scenario(socket, _params), do: socket
+
+  defp fixture_source?(source) when is_atom(source) do
+    Code.ensure_loaded?(source) and function_exported?(source, :scenario, 1)
+  end
+
+  defp fixture_source?(_source), do: false
 
   defp refresh_next_checks(%{assigns: %{posture_summary: summary}} = socket)
        when is_struct(summary, ScrypathOps.Posture) do
@@ -157,6 +208,7 @@ defmodule ScrypathOpsWeb.PostureLive do
           id="search-health-refresh"
           checked_at={@last_refresh_at}
           phx-click="refresh"
+          phx-value-scenario={@phase173_fixture_scenario}
           aria_label="Refresh search health"
         />
       </.ops_toolbar>

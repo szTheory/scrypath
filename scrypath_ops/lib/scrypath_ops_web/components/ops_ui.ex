@@ -215,7 +215,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:rest, :global,
     include:
-      ~w(phx-click disabled data-testid title phx-value-id phx-value-mode phx-value-name phx-value-schema)
+      ~w(phx-click disabled data-testid title phx-value-id phx-value-mode phx-value-name phx-value-schema phx-value-scenario)
   )
 
   def ops_refresh_button(assigns) do

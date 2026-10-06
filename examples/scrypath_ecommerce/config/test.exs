@@ -15,6 +15,7 @@ config :scrypath_ecommerce, ScrypathEcommerce.Repo,
   pool_size: System.schedulers_online() * 2
 
 config :scrypath_ecommerce, sandbox: true
+config :scrypath_ops, :phase173_fixture_source, ScrypathEcommerceWeb.Phase173FixtureSource
 
 config :scrypath_ecommerce, Oban, testing: :manual
 
