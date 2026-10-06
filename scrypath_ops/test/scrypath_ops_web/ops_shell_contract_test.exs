@@ -245,6 +245,16 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert source =~ "this.open()"
   end
 
+  test "refresh hook overlays loading on server-rendered disabled eligibility" do
+    source = File.read!(@ops_hooks)
+
+    assert source =~ "this.serverDisabled = this.el.disabled"
+    assert source =~ "this.el.disabled = this.serverDisabled || loading"
+    assert source =~ "updated()"
+    assert source =~ "this.el.querySelector('svg')"
+    assert source =~ "this.el.querySelector('span')"
+  end
+
   test "standalone and mounted LiveSockets share all operator hooks" do
     for path <- [@app_js, @host_js] do
       source = File.read!(path)
