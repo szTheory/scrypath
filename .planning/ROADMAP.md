@@ -57,7 +57,7 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
   4. Operators can read stable human-readable last-success times, inspect the exact timestamp and timezone, and distinguish absent or unobserved success from observed success.
   5. In standalone and mounted Ops, operators can copy the full ISO last-success timestamp by keyboard or pointer and receive brief confirmation only after success; denied/unavailable clipboard access is explained, and routine Checked metadata offers no copy action.
 
-**Plans**: 1/4 plans executed
+**Plans**: 2/4 plans executed
 Plans:
 
 **Wave 1**
@@ -66,7 +66,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 173-02-PLAN.md — Lossless operational timestamps and snapshot-stable exact evidence
+- [x] 173-02-PLAN.md — Lossless operational timestamps and snapshot-stable exact evidence
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -143,7 +143,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 173. Shared Visual Foundation and Operational Time | 1/4 | In Progress — ready to execute | - |
+| 173. Shared Visual Foundation and Operational Time | 2/4 | In Progress — ready to execute | - |
 | 174. Recovery Entry and Diagnosis | 0/TBD | Not started | - |
 | 175. Repair and Verification | 0/TBD | Not started | - |
 | 176. Search and Playbooks | 0/TBD | Not started | - |

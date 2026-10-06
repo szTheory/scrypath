@@ -76,7 +76,7 @@ coverage:
     requirement: OPUX-14
     verification:
       - kind: e2e
-        ref: "bash examples/scrypath_ecommerce/scripts/verify-phase173.sh time (2 Playwright tests; 16 screenshots; source 48fa8419ecd13d42fd8687e1000c9d09a76038b3)"
+        ref: "bash examples/scrypath_ecommerce/scripts/verify-phase173.sh time (2 Playwright tests; 16 screenshots; final post-merge source 236443e2f67fc5a3f8487ec431557baa9520e2b3)"
         status: pass
       - kind: automated_ui
         ref: "/private/tmp/scrypath-phase173-20261006-155750/evidence/173-02/after/phase173-time-captures/"
@@ -84,8 +84,8 @@ coverage:
       - kind: other
         ref: "make -C examples/scrypath_ecommerce contrast (0 AA failures)"
         status: pass
-    human_judgment: true
-    rationale: Screenshot inspection supports the layout checks, while overall visual quality remains a human judgment.
+    human_judgment: false
+    rationale: The approved UI contract resolves the design; executable layout/connection/patch assertions and actual-pixel inspection cover implementation without routine human UAT.
 
 # Metrics
 duration: 55min
@@ -177,6 +177,16 @@ None — no external service configuration required.
 ## Next Phase Readiness
 
 OPUX-14 source, display, threshold, unknown-state, refresh-retention, and responsive disclosure behavior is implemented and verified. Plan 04 can add the planned copy outcome feedback. All disposable browser resources were removed; the captured image/report evidence remains under `/private/tmp/scrypath-phase173-20261006-155750/evidence/173-02/` outside the worktree.
+
+## Orchestrator Post-Merge Reconciliation
+
+The GSD helper merged and removed the completed worktree. Its scope advisories cover the required test-only fixture providers, component tests, TAP helper, and RED artifacts. No core health classification or production authorization change was made.
+
+Reconciliation caught gaps in the initial browser proof: standalone origin rejection left the LiveView disconnected, the retained-refresh browser assertion had been removed, routine Checked metadata gained a disclosure, and ages inherited dense monospace styling. Regression tests first failed on the disconnected standalone page and the unwanted Checked disclosure. Commits `7af89c4` and `236443e` add connected-state/failed-refresh checks, a test-only standalone URL hostname selected by the disposable Compose environment, a later failed-check fixture clock, plain Checked metadata, and 14px body-family ages with no duplicate Last success label.
+
+Final `verify-phase173.sh time` passed on source `236443e2f67fc5a3f8487ec431557baa9520e2b3`: native JUnit records 2 tests, 0 failures, 0 errors, 0 skipped. Both real LiveViews connect; a failed source refresh advances Checked by a day while retaining the prior exact ISO and 2-day success age. Both themes and all four widths assert readable age typography and no unwanted Checked disclosure/copy. All 16 new captures, JUnit, Compose log, and source SHA are preserved at `/private/tmp/scrypath-phase173-20261006-155750/evidence/173-02/post-merge/`. Mounted mobile-dark and standalone desktop-light captures were inspected after resetting scroll: chrome is at the top, ages are readable, and open exact evidence stays below the age.
+
+The post-merge full `mix verify.ops_ui` passed 2 doctests and 240 tests. Ops asset build and contrast passed, with 0 AA failures. The required core gate's recorded 659-test pass remains source-bounded to `48fa8419`; final phase closeout will check the later exact SHA. UI and schema safety gates return `block: false`; codebase drift skips because STRUCTURE.md is absent. Disposable containers/network/volume were removed. No final phase or hosted closeout is claimed here.
 
 ## Self-Check: PASSED
 
