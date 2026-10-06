@@ -3925,6 +3925,37 @@
     min-height: var(--control-h-md);
     transition: transform var(--duration-ops-instant) var(--ease-ops-standard);
   }
+  .ops-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+  @media (hover: hover) {
+    .ops-btn.btn-ghost:hover {
+      background: var(--ops-surface-2);
+      color: var(--color-base-content);
+    }
+  }
+  .ops-btn.btn-ghost:active {
+    background: var(--ops-surface-2);
+    @supports (color: color-mix(in lab, red, red)) {
+      background: color-mix(in oklch, var(--ops-surface-2) 72%, var(--color-base-content) 8%);
+    }
+  }
+  .ops-btn[aria-pressed="true"], .ops-btn[aria-selected="true"] {
+    border-color: var(--color-primary);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklch, var(--color-primary) 42%, transparent);
+    }
+    background: var(--ops-surface-2);
+    @supports (color: color-mix(in lab, red, red)) {
+      background: color-mix(in oklch, var(--ops-surface-2) 78%, var(--color-primary) 12%);
+    }
+  }
+  .ops-btn:disabled, .ops-btn[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.62;
+    transform: none;
+  }
   .btn.ops-icon-btn {
     min-width: var(--control-h-lg);
     min-height: var(--control-h-lg);
@@ -3934,6 +3965,7 @@
   }
   .ops-refresh-button.phx-click-loading {
     cursor: progress;
+    background: var(--ops-surface-2);
   }
   @media (prefers-reduced-motion: no-preference) {
     .ops-refresh-button.phx-click-loading svg {

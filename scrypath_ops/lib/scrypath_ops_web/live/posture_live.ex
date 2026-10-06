@@ -17,13 +17,14 @@ defmodule ScrypathOpsWeb.PostureLive do
     phase173? = socket.assigns.live_action == :phase173
     fixture_source = Application.get_env(:scrypath_ops, :phase173_fixture_source)
 
-    {allowlist, scrypath_opts, observed_at, fixture_scenario} =
+    {allowlist, scrypath_opts, observed_at, fixture_scenario, refresh_disabled?} =
       if phase173? and fixture_source?(fixture_source) do
         scenario = Map.get(params, "scenario", "default")
         fixture = fixture_source.scenario(scenario)
-        {fixture.allowlist, fixture.opts, fixture.observed_at, scenario}
+        {fixture.allowlist, fixture.opts, fixture.observed_at, scenario,
+         Map.get(fixture, :refresh_disabled?, false)}
       else
-        {allowlist, scrypath_opts, nil, nil}
+        {allowlist, scrypath_opts, nil, nil, false}
       end
 
     socket =
@@ -41,6 +42,7 @@ defmodule ScrypathOpsWeb.PostureLive do
       |> assign(:next_checks, [])
       |> assign(:phase173_observed_at, observed_at)
       |> assign(:phase173_fixture_scenario, fixture_scenario)
+      |> assign(:phase173_refresh_disabled?, refresh_disabled?)
 
     {:ok, load_posture(socket)}
   end
@@ -142,6 +144,7 @@ defmodule ScrypathOpsWeb.PostureLive do
       |> assign(:scrypath_opts, fixture.opts)
       |> assign(:phase173_observed_at, fixture.observed_at)
       |> assign(:phase173_fixture_scenario, scenario)
+      |> assign(:phase173_refresh_disabled?, Map.get(fixture, :refresh_disabled?, false))
     else
       socket
     end
@@ -212,8 +215,12 @@ defmodule ScrypathOpsWeb.PostureLive do
           checked_at={@last_refresh_at}
           phx-click="refresh"
           phx-value-scenario={@phase173_fixture_scenario}
+          disabled={@phase173_refresh_disabled?}
           aria_label="Refresh search health"
         />
+        <p :if={@phase173_refresh_disabled?} class="ops-text-meta" role="status">
+          Refresh is disabled by the phase 173 eligibility fixture.
+        </p>
       </.ops_toolbar>
 
       <.ops_trail current={:posture} />

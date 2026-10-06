@@ -147,6 +147,14 @@ labels with supporting prose; explanatory sentences retain normal body styling.
 Ordinary prose links keep their text-link styling. Full module names and last-success
 timestamps must remain readable when the layout narrows.
 
+Search health verdict, metric, and schema containers keep neutral surfaces in every
+status. Severity is carried by explicit state text and a local icon or badge; a zero
+error count stays neutral, while unavailable source observations keep their reason and
+must not be presented as zero. Quiet actions use a neutral hover surface, stronger
+transient pressed surface, separate 2px focus outline with 2px offset, and distinct
+selected, disabled, and busy states. Refresh loading retains its icon and label, then
+reapplies the latest server-rendered disabled eligibility after each LiveView patch.
+
 Primary task weights are 400 for body/value text and 600 for actions, labels, and headings.
 The existing 11px/12px scale remains reserved for short timestamps, badges, eyebrows, and
 optional technical metadata; never use it for an action, form label, failure reason, or
