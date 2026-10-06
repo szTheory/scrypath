@@ -63,8 +63,11 @@ for (const entrypoint of ENTRYPOINTS) {
             await expect(page.getByTestId("posture-failed-sync-link").first()).toBeVisible();
             await expect(page.locator(".ops-metric-warning").first()).toBeVisible();
           } else if (scenario === "unknown") {
-            await expect(rows.first().locator("[aria-label^='Backend task signals']")).toContainText("Pending");
-            await expect(rows.first().locator("[aria-label^='Backend task signals']")).not.toContainText("Failed\n1");
+            // The unknown Meilisearch status fails source decoding explicitly;
+            // it must not be represented as zero or as remote terminal failure.
+            await expect(rows.first()).toContainText("fetch error:");
+            await expect(rows.first()).not.toContainText("backend failed");
+            await expect(page.locator(".ops-metric").nth(2)).toContainText("0");
           } else if (scenario === "source-error") {
             await expect(rows.first()).toContainText("fetch error: :fixture_unavailable");
             await expect(rows.first()).toContainText("Not observed");
@@ -72,7 +75,7 @@ for (const entrypoint of ENTRYPOINTS) {
           } else if (scenario === "manual") {
             await expect(rows.first()).toContainText("Queue not used in manual sync mode.");
           } else if (scenario === "no-success") {
-            await expect(rows.first().locator("[aria-label^='Backend task signals']")).toContainText("No successful task observed");
+            await expect(rows.first().locator("[aria-label^='Backend task signals']")).toContainText("No success observed");
           } else if (scenario === "partial") {
             await expect(rows).toHaveCount(1);
             await expect(page.locator(".ops-metric").first()).toContainText("1");
