@@ -34,11 +34,18 @@ for (const entrypoint of ENTRYPOINTS) {
       for (const theme of ["light", "dark"] as const) {
         const { context, page } = await openPage(browser, width, theme);
         await page.goto(entrypoint.url);
+        await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
         const row = page.locator(`[id="${entrypoint.row}"]`);
         await expect(row).toBeVisible();
 
         const time = row.locator(".ops-signal-group").first().locator(".ops-time");
         await expect(time).toContainText("2 days ago");
+        await expect(time.locator("time.ops-time__value")).toHaveCSS("font-size", "14px");
+        expect(await time.locator("time").evaluate((element) => getComputedStyle(element).fontFamily))
+          .toBe(await page.locator("body").evaluate((element) => getComputedStyle(element).fontFamily));
+        const checked = page.locator("#search-health-refresh").locator("..");
+        await expect(checked.locator("details")).toHaveCount(0);
+        await expect(checked.locator(".ops-time__copy")).toHaveCount(0);
         await page.locator(`#theme-toggle [data-phx-theme="${theme === "light" ? "dark" : "light"}"]`).click();
         await expect(time).toContainText("2 days ago");
         await page.locator(`#theme-toggle [data-phx-theme="${theme}"]`).click();
@@ -72,6 +79,7 @@ for (const entrypoint of ENTRYPOINTS) {
         expect(exactBox).not.toBeNull();
         expect(exactBox!.y).toBeGreaterThanOrEqual(ageBox!.y + ageBox!.height - 1);
 
+        await page.evaluate(() => window.scrollTo(0, 0));
         await page.screenshot({
           path: join(captureDir, `phase173-${entrypoint.name}-${width}-${theme}.png`),
           fullPage: true
@@ -79,6 +87,16 @@ for (const entrypoint of ENTRYPOINTS) {
 
         await page.getByRole("button", { name: "Refresh search health" }).click();
         await expect(time).toContainText("2 days ago");
+
+        const refresh = page.getByRole("button", { name: "Refresh search health" });
+        await refresh.evaluate((button) => button.setAttribute("phx-value-scenario", "source-error"));
+        await refresh.click();
+        await expect(row).toContainText("fetch error: :fixture_unavailable");
+        await expect(row).toContainText("last success retained from the previous check");
+        const retainedTime = row.locator(".ops-time").first();
+        await expect(retainedTime).toContainText("2 days ago");
+        await expect(retainedTime.locator("code.ops-time__exact")).toHaveText(SOURCE_ISO);
+        await expect(checked.locator("time")).toHaveAttribute("datetime", "2026-10-07T17:18:42.318Z");
 
         await context.close();
       }
@@ -88,6 +106,7 @@ for (const entrypoint of ENTRYPOINTS) {
       const { context, page } = await openPage(browser, 390, "light");
       const separator = entrypoint.url.includes("?") ? "&" : "?";
       await page.goto(`${entrypoint.url}${separator}scenario=${scenario}`);
+      await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
       const row = page.locator(`[id="${entrypoint.row}"]`);
       await expect(row).toBeVisible();
 

@@ -5,6 +5,24 @@ defmodule ScrypathOpsWeb.OpsUiTest do
 
   alias ScrypathOpsWeb.OpsUi
 
+  test "routine check metadata has no operational disclosure or copy action" do
+    html =
+      render_component(&OpsUi.ops_refresh_control/1, %{
+        id: "checked-test",
+        checked_at: ~U[2026-10-06 17:18:42.318Z],
+        aria_label: "Refresh search health",
+        variant: :ghost,
+        size: :sm,
+        class: nil,
+        rest: %{}
+      })
+
+    assert html =~ "Checked"
+    assert html =~ "datetime=\"2026-10-06T17:18:42.318Z\""
+    refute html =~ "<details"
+    refute html =~ "ops-time__copy"
+  end
+
   test "uses full-precision boundaries for relative age and absolute UTC" do
     reference = ~U[2026-10-06 12:00:00Z]
 
