@@ -4023,7 +4023,7 @@
     font-size: var(--text-ops-sm);
   }
   .ops-time {
-    display: inline-flex;
+    display: flex;
     max-width: 100%;
     min-width: 0;
     flex-wrap: wrap;
@@ -4047,6 +4047,9 @@
     flex: 1 1 auto;
     min-width: 0;
     max-width: 100%;
+  }
+  .ops-time__disclosure[open] {
+    flex-basis: 100%;
   }
   .ops-time__disclosure > summary {
     cursor: pointer;

@@ -43,8 +43,6 @@ for (const entrypoint of ENTRYPOINTS) {
         await expect(time).toContainText("2 days ago");
         await page.locator(`#theme-toggle [data-phx-theme="${theme}"]`).click();
         await expect(page.locator("html")).toHaveAttribute("data-theme-effective", theme);
-        await page.getByRole("button", { name: "Refresh search health" }).click();
-        await expect(time).toContainText("2 days ago");
         const details = time.locator("details.ops-time__disclosure");
         const summary = details.locator("summary");
         await summary.click();
@@ -58,6 +56,7 @@ for (const entrypoint of ENTRYPOINTS) {
         await expect(details).not.toHaveAttribute("open", "");
         await page.touchscreen.tap((await summary.boundingBox())!.x + 8, (await summary.boundingBox())!.y + 8);
         await expect(details).toHaveAttribute("open", "");
+        await summary.evaluate((element) => element.blur());
 
         const dimensions = await page.evaluate(() => ({
           viewport: document.documentElement.clientWidth,
@@ -67,10 +66,19 @@ for (const entrypoint of ENTRYPOINTS) {
         expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
         expect(dimensions.exactWidth).toBeGreaterThan(0);
 
+        const ageBox = await time.locator("time.ops-time__value").boundingBox();
+        const exactBox = await exact.boundingBox();
+        expect(ageBox).not.toBeNull();
+        expect(exactBox).not.toBeNull();
+        expect(exactBox!.y).toBeGreaterThanOrEqual(ageBox!.y + ageBox!.height - 1);
+
         await page.screenshot({
           path: join(captureDir, `phase173-${entrypoint.name}-${width}-${theme}.png`),
           fullPage: true
         });
+
+        await page.getByRole("button", { name: "Refresh search health" }).click();
+        await expect(time).toContainText("2 days ago");
 
         await context.close();
       }
