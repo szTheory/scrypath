@@ -379,13 +379,8 @@ defmodule ScrypathOpsWeb.Layouts do
       role="group"
       aria-label="Theme preference"
     >
-      <div
-        id="theme-toggle-pill"
-        class="ops-theme-toggle__pill absolute top-0 left-0 h-full w-1/3 rounded-full border border-base-200 bg-base-100"
-      />
-
       <button
-        class="ops-theme-toggle__button flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-ops-2"
+        class="ops-theme-toggle__button"
         type="button"
         aria-label="Use system theme"
         aria-pressed="false"
@@ -393,11 +388,12 @@ defmodule ScrypathOpsWeb.Layouts do
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="system"
       >
-        <.icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.icon name="hero-computer-desktop-micro" class="size-4 shrink-0" />
+        <span>System</span>
       </button>
 
       <button
-        class="ops-theme-toggle__button flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-ops-2"
+        class="ops-theme-toggle__button"
         type="button"
         aria-label="Use light theme"
         aria-pressed="false"
@@ -405,11 +401,12 @@ defmodule ScrypathOpsWeb.Layouts do
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="light"
       >
-        <.icon name="hero-sun-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.icon name="hero-sun-micro" class="size-4 shrink-0" />
+        <span>Light</span>
       </button>
 
       <button
-        class="ops-theme-toggle__button flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-ops-2"
+        class="ops-theme-toggle__button"
         type="button"
         aria-label="Use dark theme"
         aria-pressed="false"
@@ -417,7 +414,8 @@ defmodule ScrypathOpsWeb.Layouts do
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="dark"
       >
-        <.icon name="hero-moon-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.icon name="hero-moon-micro" class="size-4 shrink-0" />
+        <span>Dark</span>
       </button>
     </div>
     """

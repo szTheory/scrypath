@@ -25,19 +25,19 @@
   default: false;
   prefersdark: true;
   color-scheme: "dark";
-  --color-base-100: #141923;
-  --color-base-200: #0c0f14;
-  --color-base-300: #2a3446;
-  --color-base-content: #f4f1ea;
-  --color-primary: #6c5ce7;
+  --color-base-100: #191e25;
+  --color-base-200: #111419;
+  --color-base-300: #353d48;
+  --color-base-content: #f1f2f4;
+  --color-primary: #aaa0ff;
   --color-primary-content: #f4f1ea;
   --color-primary-strong: #5b4ad1;
   --color-secondary: #c17a3e;
-  --color-secondary-content: #0c0f14;
-  --color-accent: #5b4ad1;
+  --color-secondary-content: #111419;
+  --color-accent: #aaa0ff;
   --color-accent-content: #f4f1ea;
-  --color-neutral: #2a3446;
-  --color-neutral-content: #f4f1ea;
+  --color-neutral: #353d48;
+  --color-neutral-content: #f1f2f4;
   --color-info: #5ca9e6;
   --color-info-content: #0c0f14;
   --color-success: #4fae74;
@@ -54,10 +54,10 @@
   --border: 1.5px;
   --depth: 1;
   --noise: 0;
-  --ops-bg: #0c0f14;
-  --ops-surface-1: #141923;
-  --ops-surface-2: #1b2230;
-  --ops-text-muted: color-mix(in oklch, var(--color-base-content) 64%, transparent);
+  --ops-bg: #111419;
+  --ops-surface-1: #191e25;
+  --ops-surface-2: #222831;
+  --ops-text-muted: #bec3ca;
 }
 
 @plugin "../vendor/daisyui-theme" {
@@ -65,19 +65,19 @@
   default: true;
   prefersdark: false;
   color-scheme: "light";
-  --color-base-100: #fffdf8;
-  --color-base-200: #faf7f2;
-  --color-base-300: #ded8ce;
-  --color-base-content: #141923;
+  --color-base-100: #ffffff;
+  --color-base-200: #f7f6f3;
+  --color-base-300: #d9d8d2;
+  --color-base-content: #202124;
   --color-primary: #5b4ad1;
   --color-primary-content: #f4f1ea;
   --color-primary-strong: #5b4ad1;
   --color-secondary: #a85d2e;
   --color-secondary-content: #fffdf8;
   --color-accent: #6c5ce7;
-  --color-accent-content: #fffdf8;
-  --color-neutral: #2a3446;
-  --color-neutral-content: #f4f1ea;
+  --color-accent-content: #ffffff;
+  --color-neutral: #353d48;
+  --color-neutral-content: #f1f2f4;
   --color-info: #5ca9e6;
   --color-info-content: #0c0f14;
   --color-success: #4fae74;
@@ -94,10 +94,10 @@
   --border: 1.5px;
   --depth: 1;
   --noise: 0;
-  --ops-bg: #faf7f2;
-  --ops-surface-1: #fffdf8;
-  --ops-surface-2: #faf7f2;
-  --ops-text-muted: color-mix(in oklch, var(--color-base-content) 64%, transparent);
+  --ops-bg: #f7f6f3;
+  --ops-surface-1: #ffffff;
+  --ops-surface-2: #efeee9;
+  --ops-text-muted: #55585e;
 }
 
 /* Add variants based on LiveView classes */
@@ -213,7 +213,7 @@
   }
 
   body {
-    background: var(--color-base-200);
+    background: var(--ops-bg);
   }
 
   :focus-visible {
@@ -440,9 +440,7 @@
   }
 
   .ops-shell {
-    background:
-      radial-gradient(circle at top left, color-mix(in oklch, var(--color-primary) 14%, transparent), transparent 34rem),
-      linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
+    background: var(--ops-bg);
   }
 
   .ops-header .text-base-content\/60 {
@@ -1735,13 +1733,6 @@
       bottom: 1rem;
     }
 
-    /* DK-10: shell radial wash tuned for mobile — 14%→10% alpha, 34rem→28rem extent.
-       Both themes (not dark-scoped). Base .ops-shell at L242 is byte-unchanged. */
-    .ops-shell {
-      background:
-        radial-gradient(circle at top left, color-mix(in oklch, var(--color-primary) 10%, transparent), transparent 28rem),
-        linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-    }
   }
 
   /* Command palette (⌘K) + cheat-sheet overlay. */
@@ -1977,32 +1968,42 @@
   background-color: var(--color-primary-strong);
 }
 
-/* Theme toggle: pill position follows `html[data-theme-effective]` and selected state
-   follows `html[data-theme-preference]` plus the root script's aria/data sync. */
+/* Theme selection follows the stored preference; OS appearance and focus are separate states. */
 .ops-theme-toggle {
   isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--color-base-300);
+  border-radius: 999px;
+  background: var(--ops-surface-2);
 }
 
 .ops-theme-toggle__button {
   position: relative;
   z-index: 1;
-  min-width: var(--control-h-lg);
-  min-height: var(--control-h-lg);
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-inline: 10px;
   border-radius: 999px;
+  color: var(--color-base-content);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
   transition-property: background-color, color, box-shadow;
   transition-duration: var(--duration-ops-fast);
   transition-timing-function: var(--ease-ops-standard);
 }
 
-.ops-theme-toggle__button[data-theme-selected="true"],
-.ops-theme-toggle__button[aria-pressed="true"] {
-  box-shadow: 0 0 0 2px var(--color-primary);
-}
-
-#theme-toggle-pill {
-  transition-property: background-color, border-color, box-shadow;
-  transition-duration: var(--duration-ops-fast);
-  transition-timing-function: var(--ease-ops-standard);
+.ops-theme-toggle__button[data-theme-selected="true"] {
+  background: var(--ops-surface-1);
+  color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
 }
 
 /* One-shot reveals. Opacity/transform only — never animate <details> height (auto
@@ -2100,26 +2101,6 @@
   }
 }
 
-html[data-theme-effective="light"] #theme-toggle-pill {
-  left: 33.333333%;
-}
-
-html[data-theme-effective="dark"] #theme-toggle-pill {
-  left: 66.666667%;
-}
-
-html[data-theme-preference="system"] #theme-toggle [data-phx-theme="system"] {
-  box-shadow: 0 0 0 2px var(--color-primary);
-}
-
-html[data-theme-preference="light"] #theme-toggle [data-phx-theme="light"] {
-  box-shadow: 0 0 0 2px var(--color-primary);
-}
-
-html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
-  box-shadow: 0 0 0 2px var(--color-primary);
-}
-
 /* Helper utility for ops_code_block — --ops-surface-2 is an @plugin token, not @theme, so Tailwind v4 cannot auto-generate bg-ops-surface-2. */
 .bg-ops-surface-2 {
   background: var(--ops-surface-2);
@@ -2166,34 +2147,6 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
   }
 }
 
-[data-theme="dark"] .ops-shell {
-  background:
-    radial-gradient(circle at top left, color-mix(in oklch, var(--color-primary) 10%, transparent), transparent 30rem),
-    linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-}
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .ops-shell {
-    background:
-      radial-gradient(circle at top left, color-mix(in oklch, var(--color-primary) 10%, transparent), transparent 30rem),
-      linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-  }
-}
-
-@media (max-width: 640px) {
-  [data-theme="dark"] .ops-shell {
-    background:
-      radial-gradient(circle at top left, color-mix(in oklch, var(--color-primary) 8%, transparent), transparent 24rem),
-      linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-  }
-}
-@media (prefers-color-scheme: dark) and (max-width: 640px) {
-  html:not([data-theme="light"]) .ops-shell {
-    background:
-      radial-gradient(circle at top left, color-mix(in oklch, var(--color-primary) 8%, transparent), transparent 24rem),
-      linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-  }
-}
-
 [data-theme="dark"] .ops-wordmark .ops-wordmark__light {
   display: none;
 }
@@ -2219,19 +2172,6 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
     border-color: color-mix(in oklch, var(--color-base-content) 14%, transparent);
     background: color-mix(in oklch, var(--ops-surface-2) 72%, transparent);
     box-shadow: var(--shadow-ops-panel-dark);
-  }
-}
-
-[data-theme="dark"] .ops-theme-toggle__pill {
-  border-color: color-mix(in oklch, var(--color-base-content) 16%, transparent);
-  background: color-mix(in oklch, var(--ops-surface-1) 96%, transparent);
-  box-shadow: var(--shadow-ops-surface), var(--shadow-ops-glow);
-}
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .ops-theme-toggle__pill {
-    border-color: color-mix(in oklch, var(--color-base-content) 16%, transparent);
-    background: color-mix(in oklch, var(--ops-surface-1) 96%, transparent);
-    box-shadow: var(--shadow-ops-surface), var(--shadow-ops-glow);
   }
 }
 
