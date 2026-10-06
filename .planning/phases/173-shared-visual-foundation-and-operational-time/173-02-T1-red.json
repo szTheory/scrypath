@@ -1,0 +1,10 @@
+{
+  "command": "SCRYPATH_TAP=1 mix test test/scrypath_ops_web/live/posture_live_test.exs:141 --no-color",
+  "exitCode": 2,
+  "output": "TAP version 13\nnot ok 1 - test renders backend success age from the observation snapshot with exact source evidence\n1..1\n",
+  "targetTest": "test renders backend success age from the observation snapshot with exact source evidence",
+  "targetFile": "scrypath_ops/test/scrypath_ops_web/live/posture_live_test.exs",
+  "expected": "2 days ago and exact source timestamp 2026-10-04T13:02:05.123456-04:00 with UTC equivalent",
+  "actual": "the LiveView renders absolute minute-precision UTC (Oct 04, 2026 at 17:02 UTC), so the planned snapshot-relative age assertion fails",
+  "semanticAssessment": "The selected PostureLive test executed and failed on the assertion for snapshot-relative operational last-success text, the planned behavior."
+}

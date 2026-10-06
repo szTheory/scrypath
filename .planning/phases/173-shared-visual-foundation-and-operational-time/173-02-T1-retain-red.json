@@ -1,0 +1,10 @@
+{
+  "command": "SCRYPATH_TAP=1 mix test test/scrypath_ops_web/live/posture_live_test.exs:167 --no-color",
+  "exitCode": 2,
+  "output": "TAP version 13\nnot ok 1 - test retains the source-local last success when a later fetch fails\n1..1\n",
+  "targetTest": "test retains the source-local last success when a later fetch fails",
+  "targetFile": "scrypath_ops/test/scrypath_ops_web/live/posture_live_test.exs",
+  "expected": "after refresh failure, show Backend observation unavailable and retain the prior 2026-04-16T17:59:00Z success",
+  "actual": "current failed-fetch row omits prior source-local success and retained label",
+  "semanticAssessment": "The selected LiveView test executed the initial successful source observation, forced a later backend fetch failure, and failed on the planned retained-evidence render assertion."
+}

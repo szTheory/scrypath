@@ -251,7 +251,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:rest, :global,
     include:
-      ~w(phx-click disabled data-testid title phx-value-id phx-value-mode phx-value-name phx-value-schema)
+      ~w(phx-click disabled data-testid title phx-value-id phx-value-mode phx-value-name phx-value-schema phx-value-scenario)
   )
 
   def ops_refresh_control(assigns) do
@@ -1200,20 +1200,29 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
-  @doc "Compact timestamp with a human scan value, exact ISO on hover, and optional evidence-copy action."
+  @doc "Operational timestamp with snapshot-relative age and selectable exact source evidence."
   attr(:dt, :any, required: true)
   attr(:label, :string, default: nil)
   attr(:copy, :boolean, default: false)
+  attr(:source_iso, :string, default: nil)
+  attr(:reference, :map, default: nil)
+  attr(:empty, :string, default: "Not observed")
+  attr(:unavailable_reason, :string, default: nil)
   attr(:class, :any, default: nil)
 
   def ops_time(assigns) do
     assigns =
       assigns
-      |> assign(:exact, exact_dt(assigns.dt))
-      |> assign(:human, human_dt(assigns.dt))
+      |> assign(:exact, exact_dt(assigns.dt, assigns.source_iso))
+      |> assign(:human, human_dt(assigns.dt, reference_time(assigns.reference)))
+      |> assign(:utc_exact, utc_exact(assigns.dt))
       |> assign(
         :aria_label,
-        time_aria_label(assigns.label, human_dt(assigns.dt), exact_dt(assigns.dt))
+        time_aria_label(
+          assigns.label,
+          human_dt(assigns.dt, reference_time(assigns.reference)),
+          exact_dt(assigns.dt, assigns.source_iso)
+        )
       )
 
     ~H"""
@@ -1223,11 +1232,15 @@ defmodule ScrypathOpsWeb.OpsUi do
         <time
           class="ops-time__value"
           datetime={@exact}
-          title={@exact}
           aria-label={@aria_label}
         >
           {@human}
         </time>
+        <details class="ops-time__disclosure">
+          <summary>Exact timestamp</summary>
+          <p><code class="ops-time__exact">{@exact}</code></p>
+          <p>UTC equivalent: <code class="ops-time__utc">{@utc_exact}</code></p>
+        </details>
         <button
           :if={@copy}
           type="button"
@@ -1239,7 +1252,8 @@ defmodule ScrypathOpsWeb.OpsUi do
           <ScrypathOpsWeb.CoreComponents.icon name="hero-clipboard-document" class="size-3.5" />
         </button>
       <% else %>
-        <span class="ops-time__value">—</span>
+        <span class="ops-time__value">{@empty}</span>
+        <span :if={@unavailable_reason} class="ops-time__reason">{@unavailable_reason}</span>
       <% end %>
     </span>
     """
@@ -1629,39 +1643,78 @@ defmodule ScrypathOpsWeb.OpsUi do
     |> String.trim("-")
   end
 
-  defp exact_dt(nil), do: nil
+  defp exact_dt(nil, _source_iso), do: nil
 
-  defp exact_dt(%DateTime{} = dt) do
-    dt
-    |> DateTime.truncate(:second)
-    |> DateTime.to_iso8601()
+  defp exact_dt(%DateTime{} = dt, source_iso) when is_binary(source_iso) do
+    case DateTime.from_iso8601(source_iso) do
+      {:ok, source_time, _offset} ->
+        if DateTime.compare(source_time, dt) == :eq, do: source_iso, else: DateTime.to_iso8601(dt)
+
+      _other ->
+        DateTime.to_iso8601(dt)
+    end
   end
 
-  defp human_dt(nil), do: "—"
+  defp exact_dt(%DateTime{} = dt, _source_iso), do: DateTime.to_iso8601(dt)
 
-  defp human_dt(%DateTime{} = dt) do
-    diff = DateTime.diff(DateTime.utc_now(), dt, :second)
+  defp human_dt(nil, _reference), do: "—"
+
+  defp human_dt(%DateTime{} = dt, %DateTime{} = reference) do
+    diff_us = DateTime.diff(reference, dt, :microsecond)
+    diff = div(max(diff_us, 0), 1_000_000)
 
     cond do
-      diff >= 0 and diff < 60 ->
+      diff_us < 0 ->
+        "After this check · #{utc_display(dt)}"
+
+      diff < 60 ->
         "just now"
 
-      diff >= 0 and diff < 3_600 ->
+      diff < 3_600 ->
         minutes = div(diff, 60)
         "#{minutes} #{pluralize(minutes, "min")} ago"
 
-      diff >= 0 and diff < 86_400 ->
+      diff < 86_400 ->
         hours = div(diff, 3_600)
         "#{hours} #{pluralize(hours, "hr")} ago"
 
+      diff < 604_800 ->
+        days = div(diff, 86_400)
+        "#{days} #{pluralize(days, "day")} ago"
+
       true ->
-        Calendar.strftime(dt, "%b %d, %Y at %H:%M UTC")
+        utc_display(dt)
     end
+  end
+
+  defp human_dt(%DateTime{} = dt, _reference), do: utc_display(dt)
+
+  defp reference_time(%{observed_at: %DateTime{} = observed_at}), do: observed_at
+  defp reference_time(_reference), do: nil
+
+  defp utc_exact(%DateTime{} = dt) do
+    dt
+    |> utc_datetime()
+    |> DateTime.to_iso8601()
+  end
+
+  defp utc_exact(_dt), do: nil
+
+  defp utc_display(%DateTime{} = dt) do
+    Calendar.strftime(utc_datetime(dt), "%b %d, %Y at %H:%M UTC")
+  end
+
+  defp utc_datetime(dt) do
+    dt
+    |> DateTime.to_unix(:microsecond)
+    |> DateTime.from_unix!(:microsecond)
   end
 
   defp pluralize(1, unit), do: unit
   defp pluralize(_count, unit), do: "#{unit}s"
 
+  defp time_aria_label(nil, human, nil), do: human
+  defp time_aria_label(label, human, nil), do: "#{label} #{human}"
   defp time_aria_label(nil, human, exact), do: "#{human}; exact timestamp #{exact}"
   defp time_aria_label(label, human, exact), do: "#{label} #{human}; exact timestamp #{exact}"
 
