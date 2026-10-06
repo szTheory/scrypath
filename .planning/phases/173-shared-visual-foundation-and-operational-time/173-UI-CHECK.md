@@ -33,6 +33,20 @@ The user explicitly confirmed the five proposed element classifications and stat
 
 ## Limits and handoff
 
+### Stop-hook triage
+
+The Impeccable Stop hook surfaced three findings in 173-comps.html with attribution unknown. A bounded render/measurement pass confirmed their disposition without changing the intended UI:
+
+| Finding | Disposition | Evidence |
+| --- | --- | --- |
+| cramped-padding, command wrapper | False positive; file-scoped exception | Flex centering inside the 40px target produces at least 11.5px above/below rendered text across all 12 variants. Static CSS padding alone misses this inset. |
+| cramped-padding, specimen action row | False positive; same file-scoped exception | The review-only row's border:0 override computes to zero border width with transparent background; there is no visible boundary against which text is flush. |
+| repeated-container-text, View failed sync work | Intentional fixture; file-scoped exception | The repeated label is the subject of the hover/pressed/focus/disabled/busy comparison, explicitly marked review-only and excluded from shipped controls by UI-SPEC. |
+
+The supported `impeccable hooks ignore-value` command added only cramped-padding=* and repeated-container-text=* for this exact HTML path in the existing local .impeccable/config.json. No whole-file or project-wide rule was disabled; the reasons name agent evidence, not an invented user confirmation. The pre-existing untracked config remains local alongside the retained design baseline rather than being swept into the planning commit. The renderer now asserts these geometry facts and preserves them in 173-comp-evidence.json.
+
+After triage the detector has zero primary findings; eleven design-system color/radius/type advisories remain against the incumbent DESIGN.md/sidecar. Palette revision and inherited component exceptions are already documented in the approved contract. No drift repair or unrelated advisory suppression was performed. All 12 captures still have no page overflow or sampled AA failure; representative refreshed desktop/mobile screenshots were inspected. No visual fix was needed for the three reported findings.
+
 Static design evidence does not establish functioning theme persistence, clipboard outcomes, drawer navigation, LiveView transitions, source timestamp preservation, or delivered OPUX requirements. These are explicit per-requirement executable obligations in UI-SPEC.md. Existing app changes and retained preview were preserved; application tests/hosted source receipts are not claimed.
 
 Next command: `$gsd-plan-phase 173` from `/Users/jon/projects/scrypath`. It creates implementation slices using the approved contract, including the verified source-offset/precision loss at the current timestamp normalization seam. Context can be cleared once this contract/evidence and STATE handoff are committed.

@@ -1,6 +1,6 @@
 {
   "kind": "static-design-comp-only",
-  "capturedAt": "2026-10-06T18:04:30.790Z",
+  "capturedAt": "2026-10-06T18:21:42.774Z",
   "results": [
     {
       "candidate": "warm",
@@ -13,6 +13,12 @@
       "backgroundImage": "none",
       "railVisible": true,
       "brokenImages": 0,
+      "hookTriage": {
+        "commandTextInsetTop": 11.5,
+        "commandTextInsetBottom": 11.5,
+        "specimenBorderTopWidth": "0px",
+        "specimenBackground": "rgba(0, 0, 0, 0)"
+      },
       "colors": {
         "text": "rgb(32, 33, 36)",
         "muted": "rgb(85, 88, 94)",
@@ -58,6 +64,12 @@
       "backgroundImage": "none",
       "railVisible": false,
       "brokenImages": 0,
+      "hookTriage": {
+        "commandTextInsetTop": 11.5,
+        "commandTextInsetBottom": 11.5,
+        "specimenBorderTopWidth": "0px",
+        "specimenBackground": "rgba(0, 0, 0, 0)"
+      },
       "colors": {
         "text": "rgb(32, 33, 36)",
         "muted": "rgb(85, 88, 94)",
@@ -103,6 +115,12 @@
       "backgroundImage": "none",
       "railVisible": false,
       "brokenImages": 0,
+      "hookTriage": {
+        "commandTextInsetTop": 11.5,
+        "commandTextInsetBottom": 11.5,
+        "specimenBorderTopWidth": "0px",
+        "specimenBackground": "rgba(0, 0, 0, 0)"
+      },
       "colors": {
         "text": "rgb(32, 33, 36)",
         "muted": "rgb(85, 88, 94)",
@@ -148,6 +166,12 @@
       "backgroundImage": "none",
       "railVisible": true,
       "brokenImages": 0,
+      "hookTriage": {
+        "commandTextInsetTop": 11.5,
+        "commandTextInsetBottom": 11.5,
+        "specimenBorderTopWidth": "0px",
+        "specimenBackground": "rgba(0, 0, 0, 0)"
+      },
       "colors": {
         "text": "rgb(32, 33, 36)",
         "muted": "rgb(85, 88, 94)",
@@ -193,6 +217,12 @@
       "backgroundImage": "none",
       "railVisible": true,
       "brokenImages": 0,
+      "hookTriage": {
+        "commandTextInsetTop": 11.5,
+        "commandTextInsetBottom": 11.5,
+        "specimenBorderTopWidth": "0px",
+        "specimenBackground": "rgba(0, 0, 0, 0)"
+      },
       "colors": {
         "text": "rgb(241, 242, 244)",
         "muted": "rgb(190, 195, 202)",
@@ -238,6 +268,12 @@
       "backgroundImage": "none",
       "railVisible": false,
       "brokenImages": 0,
+      "hookTriage": {
+        "commandTextInsetTop": 11.5,
+        "commandTextInsetBottom": 11.5,
+        "specimenBorderTopWidth": "0px",
+        "specimenBackground": "rgba(0, 0, 0, 0)"
+      },
       "colors": {
         "text": "rgb(241, 242, 244)",
         "muted": "rgb(190, 195, 202)",
@@ -283,6 +319,12 @@
       "backgroundImage": "none",
       "railVisible": false,
       "brokenImages": 0,
+      "hookTriage": {
+        "commandTextInsetTop": 11.5,
+        "commandTextInsetBottom": 11.5,
+        "specimenBorderTopWidth": "0px",
+        "specimenBackground": "rgba(0, 0, 0, 0)"
+      },
       "colors": {
         "text": "rgb(241, 242, 244)",
         "muted": "rgb(190, 195, 202)",
@@ -328,6 +370,12 @@
       "backgroundImage": "none",
       "railVisible": true,
       "brokenImages": 0,
+      "hookTriage": {
+        "commandTextInsetTop": 11.5,
+        "commandTextInsetBottom": 11.5,
+        "specimenBorderTopWidth": "0px",
+        "specimenBackground": "rgba(0, 0, 0, 0)"
+      },
       "colors": {
         "text": "rgb(241, 242, 244)",
         "muted": "rgb(190, 195, 202)",
@@ -373,6 +421,12 @@
       "backgroundImage": "none",
       "railVisible": true,
       "brokenImages": 0,
+      "hookTriage": {
+        "commandTextInsetTop": 11.5,
+        "commandTextInsetBottom": 11.5,
+        "specimenBorderTopWidth": "0px",
+        "specimenBackground": "rgba(0, 0, 0, 0)"
+      },
       "colors": {
         "text": "rgb(32, 38, 49)",
         "muted": "rgb(80, 91, 105)",
@@ -418,6 +472,12 @@
       "backgroundImage": "none",
       "railVisible": false,
       "brokenImages": 0,
+      "hookTriage": {
+        "commandTextInsetTop": 11.5,
+        "commandTextInsetBottom": 11.5,
+        "specimenBorderTopWidth": "0px",
+        "specimenBackground": "rgba(0, 0, 0, 0)"
+      },
       "colors": {
         "text": "rgb(32, 38, 49)",
         "muted": "rgb(80, 91, 105)",
@@ -463,6 +523,12 @@
       "backgroundImage": "none",
       "railVisible": true,
       "brokenImages": 0,
+      "hookTriage": {
+        "commandTextInsetTop": 11.5,
+        "commandTextInsetBottom": 11.5,
+        "specimenBorderTopWidth": "0px",
+        "specimenBackground": "rgba(0, 0, 0, 0)"
+      },
       "colors": {
         "text": "rgb(239, 243, 248)",
         "muted": "rgb(195, 204, 214)",
@@ -508,6 +574,12 @@
       "backgroundImage": "none",
       "railVisible": false,
       "brokenImages": 0,
+      "hookTriage": {
+        "commandTextInsetTop": 11.5,
+        "commandTextInsetBottom": 11.5,
+        "specimenBorderTopWidth": "0px",
+        "specimenBackground": "rgba(0, 0, 0, 0)"
+      },
       "colors": {
         "text": "rgb(239, 243, 248)",
         "muted": "rgb(195, 204, 214)",

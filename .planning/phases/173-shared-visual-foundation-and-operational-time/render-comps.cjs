@@ -29,6 +29,14 @@ function ratio(a,b) {const x=luminance(a),y=luminance(b);return Number(((Math.ma
         const metrics = await page.evaluate(() => {
           const s = sel => getComputedStyle(document.querySelector(sel));
           const primary=s('.schema'), selected=s('.nav-item.active'), summary=s('.verdict');
+          const command=document.querySelector('.command');
+          const commandText=command.querySelector('span');
+          const commandRange=document.createRange();
+          commandRange.selectNodeContents(commandText);
+          const commandBox=command.getBoundingClientRect();
+          const commandTextBox=commandRange.getBoundingClientRect();
+          const specimen=document.querySelector('.state-specimens .action-row');
+          const specimenStyle=getComputedStyle(specimen);
           return {
             viewport:innerWidth, scrollWidth:document.documentElement.scrollWidth,
             selectedPreferences:document.querySelectorAll('.theme button[aria-pressed="true"]').length,
@@ -36,6 +44,7 @@ function ratio(a,b) {const x=luminance(a),y=luminance(b);return Number(((Math.ma
             backgroundImage:getComputedStyle(document.body).backgroundImage,
             railVisible:getComputedStyle(document.querySelector('.sidebar')).display !== 'none',
             brokenImages:[...document.images].filter(i => !i.complete || i.naturalWidth === 0).length,
+            hookTriage:{commandTextInsetTop:commandTextBox.top-commandBox.top,commandTextInsetBottom:commandBox.bottom-commandTextBox.bottom,specimenBorderTopWidth:specimenStyle.borderTopWidth,specimenBackground:specimenStyle.backgroundColor},
             colors:{text:primary.color,muted:s('.secondary').color,accent:s('.copy').color,warning:s('.state-label').color,error:s('.state-error').color,surface:primary.backgroundColor,selectedText:selected.color,selectedFill:selected.backgroundColor,summaryFill:summary.backgroundColor},
             themeTargets:[...document.querySelectorAll('.theme button')].map(b => ({width:b.getBoundingClientRect().width,height:b.getBoundingClientRect().height}))
           };
@@ -43,6 +52,7 @@ function ratio(a,b) {const x=luminance(a),y=luminance(b);return Number(((Math.ma
         const c = metrics.colors;
         metrics.contrast={text:ratio(c.text,c.surface),muted:ratio(c.muted,c.surface),accent:ratio(c.accent,c.surface),warning:ratio(c.warning,c.surface),error:ratio(c.error,c.surface),selected:ratio(c.selectedText,c.selectedFill)};
         results.push({candidate,mode,width,...metrics});
+        if (metrics.hookTriage.commandTextInsetTop<8 || metrics.hookTriage.commandTextInsetBottom<8 || metrics.hookTriage.specimenBorderTopWidth !== '0px' || metrics.hookTriage.specimenBackground !== 'rgba(0, 0, 0, 0)') throw new Error(`Hook triage geometry changed: ${JSON.stringify(metrics.hookTriage)}`);
         if (metrics.scrollWidth > width || metrics.selectedPreferences !== 1 || metrics.selectedPreference !== 'System' || metrics.brokenImages || Object.values(metrics.contrast).some(r=>r<4.5)) throw new Error(`Mockup check failed: ${JSON.stringify(results.at(-1))}`);
       }
     }
