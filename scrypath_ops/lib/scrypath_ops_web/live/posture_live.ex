@@ -21,6 +21,7 @@ defmodule ScrypathOpsWeb.PostureLive do
       if phase173? and fixture_source?(fixture_source) do
         scenario = Map.get(params, "scenario", "default")
         fixture = fixture_source.scenario(scenario)
+
         {fixture.allowlist, fixture.opts, fixture.observed_at, scenario,
          Map.get(fixture, :refresh_disabled?, false)}
       else
