@@ -91,6 +91,7 @@ defmodule ScrypathOps.Posture do
   def next_checks(:unconfigured, _mount_path) do
     [
       %{
+        label: "Setup guide",
         text:
           "Add schemas to the OPSUI allowlist in :scrypath_ops config or SCRYPATH_OPS_SCHEMAS.",
         href: @readme
@@ -101,6 +102,7 @@ defmodule ScrypathOps.Posture do
   def next_checks(:missing_backend, _mount_path) do
     [
       %{
+        label: "Setup guide",
         text: "Wire :backend and related :scrypath_ops options so sync_status can run.",
         href: @readme
       }
@@ -110,14 +112,17 @@ defmodule ScrypathOps.Posture do
   def next_checks(:degraded, mount_path) do
     [
       %{
+        label: "Failed sync work",
         text: "Open failed sync work to triage fetch and queue errors first.",
         navigate: "#{mount_path}/failed-sync"
       },
       %{
+        label: "Sync and drift",
         text: "Review read-only sync and drift signals before changing indexes.",
         navigate: "#{mount_path}/sync-drift"
       },
       %{
+        label: "Operations guide",
         text: "Walk Meilisearch operations expectations for the search backend.",
         href: @meilisearch_ops_guide
       }
@@ -128,14 +133,17 @@ defmodule ScrypathOps.Posture do
   def next_checks(:ok, mount_path) do
     [
       %{
+        label: "Failed sync work",
         text: "Scan failed sync work periodically, even when search health is green.",
         navigate: "#{mount_path}/failed-sync"
       },
       %{
+        label: "Sync and drift",
         text: "Confirm drift and queue visibility when changing sync modes.",
         navigate: "#{mount_path}/sync-drift"
       },
       %{
+        label: "Search",
         text: "Use search playground only after triage surfaces are quiet.",
         navigate: "#{mount_path}/search"
       }

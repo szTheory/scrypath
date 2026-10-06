@@ -122,6 +122,13 @@ defmodule ScrypathOpsWeb.PostureLive do
     mod |> Atom.to_string() |> String.replace_prefix("Elixir.", "")
   end
 
+  defp module_heading(mod) do
+    mod
+    |> inspect()
+    |> String.split(".")
+    |> Enum.intersperse([".", Phoenix.HTML.raw("<wbr>")])
+  end
+
   defp mod_from_allowlist(str, allowlist) when is_binary(str) do
     name = String.trim(str)
 
@@ -156,77 +163,94 @@ defmodule ScrypathOpsWeb.PostureLive do
 
       <.ops_trail current={:posture} />
 
-      <section
-        :if={match?({:ok, _}, @posture_rows)}
-        aria-labelledby="posture-summary-heading"
-        class="space-y-4"
-      >
-        <h2 id="posture-summary-heading" class="sr-only">Search health summary</h2>
-        <.ops_verdict
-          kind={ScrypathOps.Posture.badge_kind(@posture_state)}
-          label="Can I trust search right now?"
-          headline={@posture_headline}
-        >
-          {@posture_evidence}
-        </.ops_verdict>
-        <.ops_metric_grid cols={4}>
-          <.ops_metric
-            label="Schemas"
-            value={posture_schema_count(@posture_rows)}
-            kind={:neutral}
-          />
-          <.ops_metric
-            label="Schema check errors"
-            value={@aggregate_error_count}
-            kind={metric_tone(@aggregate_error_count)}
-          />
-          <.ops_metric
-            label="Failed backend tasks"
-            value={posture_backend_failed_count(@posture_rows)}
-            kind={metric_tone(posture_backend_failed_count(@posture_rows))}
-          />
-          <.ops_metric
-            label="Queues observed"
-            value={posture_queue_observed_count(@posture_rows)}
-            kind={:neutral}
-          />
-        </.ops_metric_grid>
-      </section>
-
-      <.ops_panel :if={@next_checks != []}>
+      <div class="grid gap-ops-section">
         <section
+          :if={match?({:ok, _}, @posture_rows)}
+          aria-labelledby="posture-summary-heading"
+          class="space-y-4"
+        >
+          <h2 id="posture-summary-heading" class="sr-only">Search health summary</h2>
+          <.ops_verdict
+            kind={ScrypathOps.Posture.badge_kind(@posture_state)}
+            label="Can I trust search right now?"
+            headline={@posture_headline}
+          >
+            {@posture_evidence}
+          </.ops_verdict>
+          <.ops_metric_grid cols={4}>
+            <.ops_metric
+              label="Schemas"
+              value={posture_schema_count(@posture_rows)}
+              kind={:neutral}
+            />
+            <.ops_metric
+              label="Schema check errors"
+              value={@aggregate_error_count}
+              kind={metric_tone(@aggregate_error_count)}
+            />
+            <.ops_metric
+              label="Failed backend tasks"
+              value={posture_backend_failed_count(@posture_rows)}
+              kind={metric_tone(posture_backend_failed_count(@posture_rows))}
+            />
+            <.ops_metric
+              label="Queues observed"
+              value={posture_queue_observed_count(@posture_rows)}
+              kind={:neutral}
+            />
+          </.ops_metric_grid>
+        </section>
+
+        <section
+          :if={@next_checks != []}
           data-testid="posture-next-checks"
           aria-labelledby="posture-jtbd-heading"
-          class="space-y-1"
+          class="space-y-3"
         >
           <.ops_heading level={2} id="posture-jtbd-heading">Next checks</.ops_heading>
-          <p class="text-ops-body text-base-content/80">{@posture_evidence}</p>
-          <ol class="mt-3 list-decimal list-inside space-y-2 text-ops-body text-base-content/90">
-            <li :for={check <- @next_checks} class="pl-1">
-              <span>{check.text}</span>
-              <span :if={check[:navigate]} class="ml-2">
-                <.link navigate={check.navigate} class="link link-primary">Open this check</.link>
-              </span>
-              <span :if={check[:href]} class="ml-2">
-                <a href={check.href} class="link link-primary">Open guide</a>
-              </span>
-              <span :if={check[:mix]} class="mt-1 block font-mono text-ops-sm text-base-content/70">
-                {check.mix}
-              </span>
+          <ul class="ops-next-checks">
+            <li :for={{check, index} <- Enum.with_index(@next_checks)} class="ops-next-checks__item">
+              <.ops_link_button
+                :if={check[:navigate] || check[:href]}
+                navigate={check[:navigate]}
+                href={check[:href]}
+                variant={:ghost}
+                class="justify-self-start gap-2 text-base-content"
+                aria-describedby={"posture-next-check-#{index}"}
+              >
+                {check.label}
+                <.icon
+                  name={if(check[:href], do: "hero-arrow-up-right", else: "hero-arrow-right")}
+                  class="size-4"
+                />
+              </.ops_link_button>
+              <p
+                id={"posture-next-check-#{index}"}
+                class={[
+                  "text-ops-body text-base-content/75",
+                  is_nil(check[:navigate]) && is_nil(check[:href]) && "col-span-full"
+                ]}
+              >
+                {check.text}
+                <code :if={check[:mix]} class="mt-1 block font-mono text-ops-sm">{check.mix}</code>
+              </p>
             </li>
-          </ol>
+          </ul>
         </section>
-      </.ops_panel>
 
-      <p :if={@auto_refresh} class="mt-2 text-ops-body text-base-content/70">
-        Auto-refresh is not enabled by default; only manual refresh runs in this build.
-      </p>
+        <p :if={@auto_refresh} class="mt-2 text-ops-body text-base-content/70">
+          Auto-refresh is not enabled by default; only manual refresh runs in this build.
+        </p>
 
-      <.ops_config_empty :if={@posture_rows == :empty_allowlist} kind={:no_schemas} class="mt-4" />
-      <.ops_config_empty :if={@posture_rows == :missing_backend} kind={:missing_backend} class="mt-4" />
+        <.ops_config_empty :if={@posture_rows == :empty_allowlist} kind={:no_schemas} class="mt-4" />
+        <.ops_config_empty
+          :if={@posture_rows == :missing_backend}
+          kind={:missing_backend}
+          class="mt-4"
+        />
 
-      <.ops_panel :if={match?({:ok, _}, @posture_rows)}>
         <.ops_section
+          :if={match?({:ok, _}, @posture_rows)}
           id="posture-fleet-heading"
           title="Per-schema signals"
           subtitle="Schemas with the most issues appear first. Review backend tasks, queue status, and each schema's last successful sync."
@@ -246,7 +270,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                     <div class="ops-schema-signal-card__header">
                       <div class="min-w-0">
                         <h3 class="font-mono text-ops-h3 font-semibold text-base-content">
-                          {inspect(mod)}
+                          {module_heading(mod)}
                         </h3>
                         <p class="mt-1 text-ops-sm text-base-content/65">
                           Index
@@ -314,18 +338,20 @@ defmodule ScrypathOpsWeb.PostureLive do
                         </p>
                       </section>
                     </div>
-                    <.link
+                    <.ops_link_button
                       navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
-                      class="link link-primary mt-3 inline-flex min-h-[var(--control-h-md)] items-center"
+                      variant={:ghost}
+                      class="justify-self-start gap-2 text-base-content"
+                      aria-label={"View failed sync work for #{module_flat_name(mod)}"}
                       data-testid="posture-failed-sync-link"
                     >
-                      Inspect failed work for {module_flat_name(mod)}
-                    </.link>
+                      View failed sync work <.icon name="hero-arrow-right" class="size-4" />
+                    </.ops_link_button>
                   <% {:error, reason} -> %>
                     <div class="ops-schema-signal-card__header">
                       <div class="min-w-0">
                         <h3 class="font-mono text-ops-h3 font-semibold text-base-content">
-                          {inspect(mod)}
+                          {module_heading(mod)}
                         </h3>
                         <p class="mt-1 text-ops-sm text-error">fetch error: {inspect(reason)}</p>
                       </div>
@@ -333,28 +359,30 @@ defmodule ScrypathOpsWeb.PostureLive do
                         <.ops_badge kind={:error}>fetch error</.ops_badge>
                       </div>
                     </div>
-                    <.link
+                    <.ops_link_button
                       navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
-                      class="link link-primary mt-3 inline-flex min-h-[var(--control-h-md)] items-center"
+                      variant={:ghost}
+                      class="justify-self-start gap-2 text-base-content"
+                      aria-label={"View failed sync work for #{module_flat_name(mod)}"}
                       data-testid="posture-failed-sync-link"
                     >
-                      Inspect failed work for {module_flat_name(mod)}
-                    </.link>
+                      View failed sync work <.icon name="hero-arrow-right" class="size-4" />
+                    </.ops_link_button>
                 <% end %>
               </article>
             <% end %>
           </div>
         </.ops_section>
-      </.ops_panel>
 
-      <.ops_handoff :if={match?({:ok, _}, @posture_rows)}>
-        <:step
-          navigate={"#{@mount_path}/failed-sync"}
-          hint="When you've spotted a failing schema —"
-        >
-          Work the failed-sync queue
-        </:step>
-      </.ops_handoff>
+        <.ops_handoff :if={match?({:ok, _}, @posture_rows)}>
+          <:step
+            navigate={"#{@mount_path}/failed-sync"}
+            hint="When you've spotted a failing schema —"
+          >
+            Work the failed-sync queue
+          </:step>
+        </.ops_handoff>
+      </div>
     </Layouts.app>
     """
   end

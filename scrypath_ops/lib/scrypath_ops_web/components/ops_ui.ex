@@ -970,15 +970,16 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:rest, :global, include: ~w(phx-change))
 
   def ops_schema_select(assigns) do
+    schema_items = schema_picker_items(assigns.schemas, assigns.selected)
+
+    single_schema_item =
+      if length(schema_items) == 1, do: hd(schema_items)
+
     assigns =
       assigns
-      |> assign(:schema_items, schema_picker_items(assigns.schemas, assigns.selected))
-      |> assign(:compact_schema_picker?, length(assigns.schemas) <= 4)
+      |> assign(:schema_items, schema_items)
+      |> assign(:single_schema_item, single_schema_item)
       |> assign(:description_ids, schema_descriptions(assigns))
-      |> assign(
-        :options,
-        Enum.map(assigns.schemas, &{module_flat_name(&1), module_flat_name(&1)})
-      )
 
     ~H"""
     <div :if={@schemas != []} class={["ops-schema-picker", @class]} {@rest}>
@@ -991,13 +992,24 @@ defmodule ScrypathOpsWeb.OpsUi do
           {@error}
         </p>
 
-        <div :if={@compact_schema_picker?} class="ops-schema-picker__cards">
+        <div :if={@single_schema_item} class="ops-schema-picker__single">
+          <input type="hidden" name={@name} value={@single_schema_item.name} />
+          <span class="ops-schema-picker__name">{@single_schema_item.short_name}</span>
+          <span
+            :if={@single_schema_item.name != @single_schema_item.short_name}
+            class="ops-schema-picker__module-name"
+          >
+            {@single_schema_item.name}
+          </span>
+        </div>
+
+        <div :if={length(@schemas) > 1} class="ops-schema-picker__options max-w-xl">
           <label
             :for={item <- @schema_items}
             for={"#{@id}-#{item.dom_id}"}
             class={[
-              "ops-schema-option",
-              item.selected && "ops-schema-option--selected"
+              "ops-schema-picker__option",
+              item.selected && "ops-schema-picker__option--selected"
             ]}
           >
             <input
@@ -1006,27 +1018,17 @@ defmodule ScrypathOpsWeb.OpsUi do
               name={@name}
               value={item.name}
               checked={item.selected}
-              class="sr-only"
+              class="ops-schema-picker__radio"
               aria-describedby={@description_ids}
               aria-invalid={@error && "true"}
             />
-            <span class="ops-schema-option__main">{item.short_name}</span>
-            <span class="ops-schema-option__meta">{item.namespace}</span>
+            <span class="ops-schema-picker__choice-copy">
+              <span class="ops-schema-picker__name">{item.short_name}</span>
+              <span :if={item.name != item.short_name} class="ops-schema-picker__module-name">
+                {item.name}
+              </span>
+            </span>
           </label>
-        </div>
-
-        <div :if={!@compact_schema_picker?} class="max-w-xl">
-          <.ops_select
-            id={@id}
-            name={@name}
-            options={@options}
-            selected={module_flat_name(@selected)}
-            class="font-mono text-ops-body"
-            aria-label={@label}
-            aria-describedby={@description_ids}
-            aria-invalid={@error && "true"}
-            disabled={@disabled}
-          />
         </div>
       </fieldset>
     </div>
@@ -1598,38 +1600,31 @@ defmodule ScrypathOpsWeb.OpsUi do
     mod |> Atom.to_string() |> String.replace_prefix("Elixir.", "")
   end
 
+  defp schema_short_name(nil), do: ""
+
+  defp schema_short_name(name), do: name |> String.split(".") |> List.last()
+
   defp schema_picker_items(schemas, selected) do
     selected_name = module_flat_name(selected)
+    schema_names = Enum.map(schemas, &module_flat_name/1)
+
+    selected_name =
+      if selected_name in schema_names, do: selected_name, else: List.first(schema_names)
 
     Enum.map(schemas, fn schema ->
       name = module_flat_name(schema)
-      {namespace, short_name} = schema_name_parts(name)
 
       %{
         name: name,
-        namespace: namespace,
-        short_name: short_name,
+        short_name: schema_short_name(name),
         dom_id: schema_dom_id(name),
         selected: name == selected_name
       }
     end)
   end
 
-  defp schema_name_parts(nil), do: {"", ""}
-
-  defp schema_name_parts(name) do
-    parts = String.split(name, ".")
-
-    case parts do
-      [] -> {"", ""}
-      [only] -> {"", only}
-      _ -> {parts |> Enum.drop(-1) |> Enum.join("."), List.last(parts)}
-    end
-  end
-
   defp schema_dom_id(name) do
     name
-    |> to_string()
     |> String.replace(~r/[^A-Za-z0-9_-]+/, "-")
     |> String.trim("-")
   end

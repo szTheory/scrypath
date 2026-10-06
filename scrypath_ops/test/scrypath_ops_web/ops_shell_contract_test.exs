@@ -239,17 +239,23 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
   end
 
   test "standalone and mounted LiveSockets share all operator hooks" do
-    assert File.read!(@app_js) =~
-             ~S|import {CommandPalette, OpsNavDrawer, OpsModal} from "./ops_hooks"|
+    for path <- [@app_js, @host_js] do
+      source = File.read!(path)
+      [_, imports] = Regex.run(~r/import\s*\{([^}]+)\}\s*from\s*["'][^"']*ops_hooks["']/, source)
+      [_, hooks] = Regex.run(~r/hooks:\s*\{([^}]+)\}/, source)
+      imported = String.split(imports, ~r/\s*,\s*/, trim: true) |> Enum.map(&String.trim/1)
+      registered = String.split(hooks, ~r/\s*,\s*/, trim: true) |> Enum.map(&String.trim/1)
 
-    assert File.read!(@host_js) =~
-             ~S|import {CommandPalette, OpsNavDrawer, OpsModal} from "../../../../scrypath_ops/assets/js/ops_hooks"|
+      for hook <- ~w(CommandPalette OpsNavDrawer OpsModal OpsRefreshButton OpsToast) do
+        assert hook in imported, "#{path} must import #{hook}"
+        assert hook in registered, "#{path} must register #{hook}"
+      end
+    end
 
-    assert File.read!(@host_js) =~ "hooks: { CommandPalette, OpsNavDrawer, OpsModal }"
     refute File.read!(@host_js) =~ "const CommandPalette ="
   end
 
-  test "flash component exposes durable passive alert chrome" do
+  test "flash distinguishes informational status from persistent error alerts" do
     info =
       render_component(&CoreComponents.flash/1,
         kind: :info,
@@ -262,7 +268,8 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
         flash: %{"error" => "Search sync failed."}
       )
 
-    assert info =~ ~s(role="alert")
+    assert info =~ ~s(role="status")
+    assert info =~ ~s(phx-hook="OpsToast")
     assert info =~ "ops-flash"
     assert info =~ "ops-flash--info"
     assert info =~ "Saved playbook."
@@ -271,6 +278,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert info =~ "hero-information-circle" or Regex.scan(~r/<svg\b/, info) |> length() == 2
 
     assert error =~ ~s(role="alert")
+    refute error =~ ~s(phx-hook="OpsToast")
     assert error =~ "ops-flash"
     assert error =~ "ops-flash--error"
     assert error =~ "Search sync failed."

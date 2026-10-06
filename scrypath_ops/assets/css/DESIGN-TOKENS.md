@@ -121,6 +121,7 @@ inventory names every current export; add new exports here with their role consu
 | `ops_page_header`, `ops_heading` | Page h1 24px, section h2 18px, subsection h3 16px; 600 weight and tight heading leading |
 | `ops_panel`, `ops_section`, `ops_scaffold`, `ops_toolbar`, `ops_table` | Body 14px; named spacing and 24px page gap; panel padding 16px below 640px and 20px from 640px |
 | `ops_command_hint`, `ops_button`, `ops_link_button`, `ops_refresh_button`, `ops_action_group` | Action labels 14px/600; standard targets 40px; prominent and icon-only targets 44px; compact actions retain compact horizontal padding |
+| `ops_refresh_control` | Shared checked-time and manual refresh group for page/section toolbars; composes `ops_time` and the 40px `ops_refresh_button`, with consistent feedback and no routine timestamp-copy action |
 | `ops_fieldset`, `ops_field`, `ops_text_input`, `ops_number_input`, `ops_textarea`, `ops_select`, `ops_schema_select`, `ops_segmented_control`, `ops_checkbox_list`, `ops_upload_box` | Form labels, help, and values use 14px; standard controls are 40px, multiline controls are at least 96px |
 | `ops_notice`, `ops_status`, `ops_verdict`, `ops_tone_chip`, `ops_badge`, `ops_metric`, `ops_metric_grid` | Decision copy and status use body 14px/400; keep named semantic surface/text contrast pairs |
 | `ops_intent_card`, `ops_handoff`, `ops_trail` | Body and next action use 14px; recovery CTA has a 44px target; retain named color and motion roles |
@@ -130,11 +131,27 @@ inventory names every current export; add new exports here with their role consu
 | `ops_modal`, `ops_command_palette` | Body/actions use 14px; dialog icon target is 44px; consume named overlay layer, radius, shadow, and motion roles |
 | `ops_workspace_mode_indicator` | State remains accompanied by text; workspace path is optional technical metadata |
 
+Search health uses the 24px section gap with unframed Next checks and per-schema
+headings. Each schema owns one surface; Backend tasks and Queue jobs share that
+surface as plain diagnostic groups. Navigation actions use concise `ops_link_button`
+labels with supporting prose; explanatory sentences retain normal body styling.
+Ordinary prose links keep their text-link styling. Full module names and last-success
+timestamps must remain readable when the layout narrows.
+
 Primary task weights are 400 for body/value text and 600 for actions, labels, and headings.
 The existing 11px/12px scale remains reserved for short timestamps, badges, eyebrows, and
 optional technical metadata; never use it for an action, form label, failure reason, or
 the only copy needed to choose what to do. Existing radius, shadow, motion, and z-index
 tokens remain the sole authorities for those dimensions.
+
+Schema selection shows one allowed schema as read-only context. For multiple schemas, use
+the same vertically stacked native radio group so every option stays visible and selection
+takes one click. Keep the short schema name prominent and show its complete module name as
+secondary metadata, wrapping long names rather than truncating them. Keep options as simple
+rows rather than nested cards. Revisit this only if real schema lists grow large enough that
+scanning and page length outweigh direct visibility; do not switch controls at an arbitrary
+count. A custom searchable combobox adds interaction and accessibility behavior current
+allowlists do not need.
 
 ## Radius — `--radius-ops-*` → `rounded-ops-*`
 

@@ -8,6 +8,8 @@ Build a conventional, legible operator interface from the existing Phoenix compo
 
 Personas: on-call engineer recovering search; search owner checking an index change; operator inspecting/saving a search; first-run operator configuring the host. Inventory all six existing surfaces and their three job loops before changing shared behavior. Start with the incident-recovery loop and fix demonstrated issues in shared controls and adjacent surfaces. Keep the existing brand and proven behaviors as the baseline.
 
+**Named visual invalidator, 2026-10-06:** Direct maintainer feedback rejects the decorative shell gradient, broad yellow warning treatment, green zero-error metric outlines, theme picker's double visual selection, and quiet-action hover colors. Shared color/surface tokens are open for revision in the next milestone. Establish the treatment with representative light/dark comps, then apply it across the six existing surfaces. The AI-generated brand book and archived visual receipts do not override this direction. See `OPERATOR-UI-REFINEMENT.md` for timestamp/copy behavior and traceable acceptance criteria; the changes are proposed, not shipped.
+
 ## Design rules
 
 | Area | Default |

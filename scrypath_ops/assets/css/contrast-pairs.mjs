@@ -111,15 +111,15 @@ export const MUTED_PAIRS = [
     role: "text",
     note: "uppercase sidebar nav group label"
   },
-  // app.css line 840 — schema option metadata
+  // app.css line 1013 — full schema module name
   {
-    selector: ".ops-schema-option__meta",
+    selector: ".ops-schema-picker__module-name",
     css_var: "ops-text-muted",
     alpha: 0.64,
     fg_token: "base-content",
     bg_token: "base-100",
     role: "text",
-    note: "schema option metadata"
+    note: "full schema module name"
   },
   // app.css line 899 — sidebar nav item text
   {
@@ -129,15 +129,6 @@ export const MUTED_PAIRS = [
     bg_token: "base-100",
     role: "text",
     note: "sidebar nav item text"
-  },
-  // app.css line 1434 — signal group title
-  {
-    selector: ".ops-signal-group__title",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "uppercase signal group title"
   },
   // app.css line 1457 — signal metric term
   {

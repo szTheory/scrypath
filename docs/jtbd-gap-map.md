@@ -2,7 +2,7 @@
 
 **Audience:** maintainers and repeat adopters updating Scrypath docs or planning future milestones.
 
-**Last reviewed:** 2026-05-31
+**Last reviewed:** 2026-05-31 (operator audience direction updated 2026-10-06; other gap rankings not re-audited)
 
 This document answers four questions:
 
@@ -34,8 +34,8 @@ The goal is to keep future doc updates and milestone planning anchored in the cu
 
 - **Terminal-first incident triage**
   Strong. The `mix scrypath.*` tasks and drift docs create a coherent CLI recovery path.
-- **Optional OPSUI inspection**
-  Strong enough for v1. The shell reflects triage priorities honestly and stays secondary to core library adoption.
+- **Browser-based operator UI and ongoing search care**
+  The operator job is a practical production need for most adopters even though ScrypathOps remains optional to mount and is not included in the Hex package. Its UI, CLI, and library APIs serve the ongoing inspect/recover/verify loop; this is a maintainer expectation, not measured adopter evidence. The current UI supports triage and recovery, while service provisioning, capacity, backup, and restore remain host-team work today. Long-term direction is to automate more operational toil from real adopter lessons while keeping manual paths and transparent status. See the 2026-10-06 direction in `.planning/PROJECT.md` and `PRODUCT.md`.
 - **Adopter proof and support contract**
   Strong but not complete. The example app, verify surface, and readiness artifacts support the claim that the current surface is ready for outside adoption attempts. The remaining evidence gap is reviewed outside-adopter usage, not another in-repo feature wedge.
 - **Public website launch surface**
