@@ -2094,7 +2094,7 @@
   padding-inline: 10px;
   border-radius: 999px;
   color: var(--color-base-content);
-  font-size: 0.75rem;
+  font-size: var(--text-ops-body);
   font-weight: 600;
   white-space: nowrap;
   transition-property: background-color, color, box-shadow;

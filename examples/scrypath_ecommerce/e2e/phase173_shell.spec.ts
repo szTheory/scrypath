@@ -32,6 +32,9 @@ async function openEntrypoint(page: Page, entrypoint: (typeof ENTRYPOINTS)[numbe
   await expect(page.getByRole("heading", { name: "Search health", exact: true })).toBeVisible();
   await expect(page.locator(".ops-shell")).toBeVisible();
   await expect(page.locator("#theme-toggle")).toBeVisible();
+  for (const label of ["System", "Light", "Dark"]) {
+    await expect(page.locator("#theme-toggle").getByRole("button", { name: `Use ${label.toLowerCase()} theme`, exact: true })).toHaveCSS("font-size", "14px");
+  }
   for (const row of entrypoint.expectedRows) {
     // Module names contain periods, so use an attribute selector rather than
     // letting CSS interpret each period as a class boundary.
