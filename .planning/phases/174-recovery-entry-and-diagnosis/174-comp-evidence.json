@@ -1,0 +1,913 @@
+{
+  "kind": "static-design-comp-only",
+  "capturedAt": "2026-10-07T02:58:48.913Z",
+  "source": "174-comps.html",
+  "sourceSha256": "f3d0e2afda075067a10cbe39b111ec8a2e34220b48f475e531bf8041af9b5b63",
+  "method": "adapted Phase 173 Playwright renderer; no application server or network",
+  "results": [
+    {
+      "screen": "control-room",
+      "mode": "light",
+      "width": 1440,
+      "filename": "174-control-room-light-1440.png",
+      "scrollWidth": 1440,
+      "activeScreens": 1,
+      "railVisible": true,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "System",
+          "height": 44
+        },
+        {
+          "text": "Light",
+          "height": 44
+        },
+        {
+          "text": "Dark",
+          "height": 44
+        },
+        {
+          "text": "Refresh health",
+          "height": 40
+        },
+        {
+          "text": "Review Search health",
+          "height": 44
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Product"
+      ]
+    },
+    {
+      "screen": "control-room",
+      "mode": "light",
+      "width": 1280,
+      "filename": "174-control-room-light-1280.png",
+      "scrollWidth": 1280,
+      "activeScreens": 1,
+      "railVisible": true,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "System",
+          "height": 44
+        },
+        {
+          "text": "Light",
+          "height": 44
+        },
+        {
+          "text": "Dark",
+          "height": 44
+        },
+        {
+          "text": "Refresh health",
+          "height": 40
+        },
+        {
+          "text": "Review Search health",
+          "height": 44
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Product"
+      ]
+    },
+    {
+      "screen": "control-room",
+      "mode": "light",
+      "width": 1279,
+      "filename": "174-control-room-light-1279.png",
+      "scrollWidth": 1279,
+      "activeScreens": 1,
+      "railVisible": false,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "Refresh health",
+          "height": 40
+        },
+        {
+          "text": "Review Search health",
+          "height": 44
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Product"
+      ]
+    },
+    {
+      "screen": "control-room",
+      "mode": "light",
+      "width": 390,
+      "filename": "174-control-room-light-390.png",
+      "scrollWidth": 390,
+      "activeScreens": 1,
+      "railVisible": false,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "Refresh health",
+          "height": 40
+        },
+        {
+          "text": "Review Search health",
+          "height": 44
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Product"
+      ]
+    },
+    {
+      "screen": "control-room",
+      "mode": "dark",
+      "width": 1440,
+      "filename": "174-control-room-dark-1440.png",
+      "scrollWidth": 1440,
+      "activeScreens": 1,
+      "railVisible": true,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "System",
+          "height": 44
+        },
+        {
+          "text": "Light",
+          "height": 44
+        },
+        {
+          "text": "Dark",
+          "height": 44
+        },
+        {
+          "text": "Refresh health",
+          "height": 40
+        },
+        {
+          "text": "Review Search health",
+          "height": 44
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Product"
+      ]
+    },
+    {
+      "screen": "control-room",
+      "mode": "dark",
+      "width": 1280,
+      "filename": "174-control-room-dark-1280.png",
+      "scrollWidth": 1280,
+      "activeScreens": 1,
+      "railVisible": true,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "System",
+          "height": 44
+        },
+        {
+          "text": "Light",
+          "height": 44
+        },
+        {
+          "text": "Dark",
+          "height": 44
+        },
+        {
+          "text": "Refresh health",
+          "height": 40
+        },
+        {
+          "text": "Review Search health",
+          "height": 44
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Product"
+      ]
+    },
+    {
+      "screen": "control-room",
+      "mode": "dark",
+      "width": 1279,
+      "filename": "174-control-room-dark-1279.png",
+      "scrollWidth": 1279,
+      "activeScreens": 1,
+      "railVisible": false,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "Refresh health",
+          "height": 40
+        },
+        {
+          "text": "Review Search health",
+          "height": 44
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Product"
+      ]
+    },
+    {
+      "screen": "control-room",
+      "mode": "dark",
+      "width": 390,
+      "filename": "174-control-room-dark-390.png",
+      "scrollWidth": 390,
+      "activeScreens": 1,
+      "railVisible": false,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "Refresh health",
+          "height": 40
+        },
+        {
+          "text": "Review Search health",
+          "height": 44
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Product"
+      ]
+    },
+    {
+      "screen": "search-health",
+      "mode": "light",
+      "width": 1440,
+      "filename": "174-search-health-light-1440.png",
+      "scrollWidth": 1440,
+      "activeScreens": 1,
+      "railVisible": true,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "System",
+          "height": 44
+        },
+        {
+          "text": "Light",
+          "height": 44
+        },
+        {
+          "text": "Dark",
+          "height": 44
+        },
+        {
+          "text": "Refresh health",
+          "height": 40
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Product",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "Meilisearch task 501",
+        "Oban queue job 501",
+        "Scrypath.Catalog.Product",
+        "catalog_products"
+      ]
+    },
+    {
+      "screen": "search-health",
+      "mode": "light",
+      "width": 1280,
+      "filename": "174-search-health-light-1280.png",
+      "scrollWidth": 1280,
+      "activeScreens": 1,
+      "railVisible": true,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "System",
+          "height": 44
+        },
+        {
+          "text": "Light",
+          "height": 44
+        },
+        {
+          "text": "Dark",
+          "height": 44
+        },
+        {
+          "text": "Refresh health",
+          "height": 40
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Product",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "Meilisearch task 501",
+        "Oban queue job 501",
+        "Scrypath.Catalog.Product",
+        "catalog_products"
+      ]
+    },
+    {
+      "screen": "search-health",
+      "mode": "light",
+      "width": 1279,
+      "filename": "174-search-health-light-1279.png",
+      "scrollWidth": 1279,
+      "activeScreens": 1,
+      "railVisible": false,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "Refresh health",
+          "height": 40
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Product",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "Meilisearch task 501",
+        "Oban queue job 501",
+        "Scrypath.Catalog.Product",
+        "catalog_products"
+      ]
+    },
+    {
+      "screen": "search-health",
+      "mode": "light",
+      "width": 390,
+      "filename": "174-search-health-light-390.png",
+      "scrollWidth": 390,
+      "activeScreens": 1,
+      "railVisible": false,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "Refresh health",
+          "height": 40
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Product",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "Meilisearch task 501",
+        "Oban queue job 501",
+        "Scrypath.Catalog.Product",
+        "catalog_products"
+      ]
+    },
+    {
+      "screen": "search-health",
+      "mode": "dark",
+      "width": 1440,
+      "filename": "174-search-health-dark-1440.png",
+      "scrollWidth": 1440,
+      "activeScreens": 1,
+      "railVisible": true,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "System",
+          "height": 44
+        },
+        {
+          "text": "Light",
+          "height": 44
+        },
+        {
+          "text": "Dark",
+          "height": 44
+        },
+        {
+          "text": "Refresh health",
+          "height": 40
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Product",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "Meilisearch task 501",
+        "Oban queue job 501",
+        "Scrypath.Catalog.Product",
+        "catalog_products"
+      ]
+    },
+    {
+      "screen": "search-health",
+      "mode": "dark",
+      "width": 1280,
+      "filename": "174-search-health-dark-1280.png",
+      "scrollWidth": 1280,
+      "activeScreens": 1,
+      "railVisible": true,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "System",
+          "height": 44
+        },
+        {
+          "text": "Light",
+          "height": 44
+        },
+        {
+          "text": "Dark",
+          "height": 44
+        },
+        {
+          "text": "Refresh health",
+          "height": 40
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Product",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "Meilisearch task 501",
+        "Oban queue job 501",
+        "Scrypath.Catalog.Product",
+        "catalog_products"
+      ]
+    },
+    {
+      "screen": "search-health",
+      "mode": "dark",
+      "width": 1279,
+      "filename": "174-search-health-dark-1279.png",
+      "scrollWidth": 1279,
+      "activeScreens": 1,
+      "railVisible": false,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "Refresh health",
+          "height": 40
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Product",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "Meilisearch task 501",
+        "Oban queue job 501",
+        "Scrypath.Catalog.Product",
+        "catalog_products"
+      ]
+    },
+    {
+      "screen": "search-health",
+      "mode": "dark",
+      "width": 390,
+      "filename": "174-search-health-dark-390.png",
+      "scrollWidth": 390,
+      "activeScreens": 1,
+      "railVisible": false,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "Refresh health",
+          "height": 40
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Product",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "Meilisearch task 501",
+        "Oban queue job 501",
+        "Scrypath.Catalog.Product",
+        "catalog_products"
+      ]
+    },
+    {
+      "screen": "failed-work",
+      "mode": "light",
+      "width": 1440,
+      "filename": "174-failed-work-light-1440.png",
+      "scrollWidth": 1440,
+      "activeScreens": 1,
+      "railVisible": true,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "System",
+          "height": 44
+        },
+        {
+          "text": "Light",
+          "height": 44
+        },
+        {
+          "text": "Dark",
+          "height": 44
+        },
+        {
+          "text": "Refresh failed work",
+          "height": 40
+        },
+        {
+          "text": "ProductVariant",
+          "height": 40
+        },
+        {
+          "text": "Retry unavailable",
+          "height": 40
+        },
+        {
+          "text": "Retry queue job",
+          "height": 44
+        },
+        {
+          "text": "Cancel delete sync work",
+          "height": 40
+        },
+        {
+          "text": "Retry delete sync work",
+          "height": 40
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Variant",
+        "Meilisearch task 501",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "Oban queue job 501",
+        "Scrypath.Catalog.Variant",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "variant-000000000000000001"
+      ]
+    },
+    {
+      "screen": "failed-work",
+      "mode": "light",
+      "width": 1280,
+      "filename": "174-failed-work-light-1280.png",
+      "scrollWidth": 1280,
+      "activeScreens": 1,
+      "railVisible": true,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "System",
+          "height": 44
+        },
+        {
+          "text": "Light",
+          "height": 44
+        },
+        {
+          "text": "Dark",
+          "height": 44
+        },
+        {
+          "text": "Refresh failed work",
+          "height": 40
+        },
+        {
+          "text": "ProductVariant",
+          "height": 40
+        },
+        {
+          "text": "Retry unavailable",
+          "height": 40
+        },
+        {
+          "text": "Retry queue job",
+          "height": 44
+        },
+        {
+          "text": "Cancel delete sync work",
+          "height": 40
+        },
+        {
+          "text": "Retry delete sync work",
+          "height": 40
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Variant",
+        "Meilisearch task 501",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "Oban queue job 501",
+        "Scrypath.Catalog.Variant",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "variant-000000000000000001"
+      ]
+    },
+    {
+      "screen": "failed-work",
+      "mode": "light",
+      "width": 1279,
+      "filename": "174-failed-work-light-1279.png",
+      "scrollWidth": 1279,
+      "activeScreens": 1,
+      "railVisible": false,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "Refresh failed work",
+          "height": 40
+        },
+        {
+          "text": "ProductVariant",
+          "height": 40
+        },
+        {
+          "text": "Retry unavailable",
+          "height": 40
+        },
+        {
+          "text": "Retry queue job",
+          "height": 44
+        },
+        {
+          "text": "Cancel delete sync work",
+          "height": 40
+        },
+        {
+          "text": "Retry delete sync work",
+          "height": 40
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Variant",
+        "Meilisearch task 501",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "Oban queue job 501",
+        "Scrypath.Catalog.Variant",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "variant-000000000000000001"
+      ]
+    },
+    {
+      "screen": "failed-work",
+      "mode": "light",
+      "width": 390,
+      "filename": "174-failed-work-light-390.png",
+      "scrollWidth": 390,
+      "activeScreens": 1,
+      "railVisible": false,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "Refresh failed work",
+          "height": 40
+        },
+        {
+          "text": "ProductVariant",
+          "height": 40
+        },
+        {
+          "text": "Retry unavailable",
+          "height": 40
+        },
+        {
+          "text": "Retry queue job",
+          "height": 44
+        },
+        {
+          "text": "Cancel delete sync work",
+          "height": 60
+        },
+        {
+          "text": "Retry delete sync work",
+          "height": 60
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Variant",
+        "Meilisearch task 501",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "Oban queue job 501",
+        "Scrypath.Catalog.Variant",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "variant-000000000000000001"
+      ]
+    },
+    {
+      "screen": "failed-work",
+      "mode": "dark",
+      "width": 1440,
+      "filename": "174-failed-work-dark-1440.png",
+      "scrollWidth": 1440,
+      "activeScreens": 1,
+      "railVisible": true,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "System",
+          "height": 44
+        },
+        {
+          "text": "Light",
+          "height": 44
+        },
+        {
+          "text": "Dark",
+          "height": 44
+        },
+        {
+          "text": "Refresh failed work",
+          "height": 40
+        },
+        {
+          "text": "ProductVariant",
+          "height": 40
+        },
+        {
+          "text": "Retry unavailable",
+          "height": 40
+        },
+        {
+          "text": "Retry queue job",
+          "height": 44
+        },
+        {
+          "text": "Cancel delete sync work",
+          "height": 40
+        },
+        {
+          "text": "Retry delete sync work",
+          "height": 40
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Variant",
+        "Meilisearch task 501",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "Oban queue job 501",
+        "Scrypath.Catalog.Variant",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "variant-000000000000000001"
+      ]
+    },
+    {
+      "screen": "failed-work",
+      "mode": "dark",
+      "width": 1280,
+      "filename": "174-failed-work-dark-1280.png",
+      "scrollWidth": 1280,
+      "activeScreens": 1,
+      "railVisible": true,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "System",
+          "height": 44
+        },
+        {
+          "text": "Light",
+          "height": 44
+        },
+        {
+          "text": "Dark",
+          "height": 44
+        },
+        {
+          "text": "Refresh failed work",
+          "height": 40
+        },
+        {
+          "text": "ProductVariant",
+          "height": 40
+        },
+        {
+          "text": "Retry unavailable",
+          "height": 40
+        },
+        {
+          "text": "Retry queue job",
+          "height": 44
+        },
+        {
+          "text": "Cancel delete sync work",
+          "height": 40
+        },
+        {
+          "text": "Retry delete sync work",
+          "height": 40
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Variant",
+        "Meilisearch task 501",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "Oban queue job 501",
+        "Scrypath.Catalog.Variant",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "variant-000000000000000001"
+      ]
+    },
+    {
+      "screen": "failed-work",
+      "mode": "dark",
+      "width": 1279,
+      "filename": "174-failed-work-dark-1279.png",
+      "scrollWidth": 1279,
+      "activeScreens": 1,
+      "railVisible": false,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "Refresh failed work",
+          "height": 40
+        },
+        {
+          "text": "ProductVariant",
+          "height": 40
+        },
+        {
+          "text": "Retry unavailable",
+          "height": 40
+        },
+        {
+          "text": "Retry queue job",
+          "height": 44
+        },
+        {
+          "text": "Cancel delete sync work",
+          "height": 40
+        },
+        {
+          "text": "Retry delete sync work",
+          "height": 40
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Variant",
+        "Meilisearch task 501",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "Oban queue job 501",
+        "Scrypath.Catalog.Variant",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "variant-000000000000000001"
+      ]
+    },
+    {
+      "screen": "failed-work",
+      "mode": "dark",
+      "width": 390,
+      "filename": "174-failed-work-dark-390.png",
+      "scrollWidth": 390,
+      "activeScreens": 1,
+      "railVisible": false,
+      "title": "Control Room",
+      "controls": [
+        {
+          "text": "Refresh failed work",
+          "height": 40
+        },
+        {
+          "text": "ProductVariant",
+          "height": 40
+        },
+        {
+          "text": "Retry unavailable",
+          "height": 40
+        },
+        {
+          "text": "Retry queue job",
+          "height": 44
+        },
+        {
+          "text": "Cancel delete sync work",
+          "height": 60
+        },
+        {
+          "text": "Retry delete sync work",
+          "height": 60
+        }
+      ],
+      "identifiers": [
+        "Scrypath.Catalog.Variant",
+        "Meilisearch task 501",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "Oban queue job 501",
+        "Scrypath.Catalog.Variant",
+        "Scrypath.Catalog.Variant",
+        "catalog_variants",
+        "variant-000000000000000001"
+      ]
+    }
+  ]
+}

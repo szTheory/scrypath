@@ -1,0 +1,40 @@
+[
+  {
+    "id": "E1",
+    "text": "Control Room current-state summary, affected-schema scope, and the single safe read-only recovery entry action.",
+    "elements": [
+      "list-collection",
+      "interactive-control",
+      "static-content"
+    ]
+  },
+  {
+    "id": "E2",
+    "text": "Fleet-wide Search health summary and worst-first per-schema records with source-local Backend and Queue groups, complete identities, times, and schema-specific next checks.",
+    "elements": [
+      "list-collection",
+      "interactive-control",
+      "static-content"
+    ]
+  },
+  {
+    "id": "E3",
+    "text": "Failed sync work list records with source-qualified work identity, reason, eligibility, standard retry control, collapsed Diagnostics, accepted replacement receipt, and exact delete confirmation.",
+    "elements": [
+      "list-collection",
+      "form",
+      "interactive-control",
+      "static-content"
+    ]
+  },
+  {
+    "id": "E4",
+    "text": "Recovery-target selection and its URL-driven continuity through Control Room/Search health links, navigation, command palette patches, refresh/Back, Sync and drift, and authorization return; includes invalid/unavailable no-fallback state.",
+    "elements": [
+      "form",
+      "nav",
+      "interactive-control",
+      "static-content"
+    ]
+  }
+]
