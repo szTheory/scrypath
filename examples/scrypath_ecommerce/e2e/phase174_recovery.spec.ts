@@ -1,13 +1,286 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { prepareRecoveryFixture, seedScenario, waitForLiveConnected } from "./helpers/e2e";
+import { prepareRecoveryFixture, seedScenario, waitForLiveConnected as waitForSocketConnected } from "./helpers/e2e";
 import { assertOperatorGeometry, assertReadableControl } from "./helpers/operator-ui";
 
 const standalone = process.env.PHASE174_OPS_BASE_URL ?? "http://ops:4003/ops/phase174";
 const captureRoot = "test-results/phase174-captures";
 const widths = [1440, 1280, 1279, 390] as const;
 const themes = ["light", "dark"] as const;
+
+async function waitForLiveConnected(page: Page) {
+  await waitForSocketConnected(page);
+  // A connected transport can precede the LiveView join and hook mounting.
+  await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+}
+
+function delayNextLiveViewResponse(page: Page) {
+  let holdNext = false;
+  let heldResolve!: () => void;
+  let releasedResolve!: () => void;
+  const held = new Promise<void>((resolve) => (heldResolve = resolve));
+  const released = new Promise<void>((resolve) => (releasedResolve = resolve));
+
+  page.routeWebSocket(/\/live\/websocket/, (socket) => {
+    const server = socket.connectToServer();
+    socket.onMessage((message) => server.send(message));
+    server.onMessage((message) => {
+      if (!holdNext) {
+        socket.send(message);
+        return;
+      }
+
+      holdNext = false;
+      heldResolve();
+      setTimeout(() => {
+        socket.send(message);
+        releasedResolve();
+      }, 900);
+    });
+  });
+
+  return { arm: () => (holdNext = true), held, released };
+}
+
+test("mounted target selection stays canonical through worse-row navigation and browser history", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/admin/search?schema=ScrypathEcommerce.Catalog.Variant");
+  await waitForLiveConnected(page);
+  await expect(page.getByTestId("shell-recovery-target").first()).toContainText("Catalog.Variant");
+
+  await page.getByRole("link", { name: /Review Search health/ }).click();
+  await waitForLiveConnected(page);
+  const rows = page.getByTestId("posture-row");
+  await expect(rows.first()).toContainText("Catalog.Product");
+  await expect(rows.first()).toContainText("failed");
+  await expect(page.getByTestId("recovery-target")).toContainText("Catalog.Variant");
+
+  const productHandoff = page.getByRole("link", {
+    name: "View failed sync work for ScrypathEcommerce.Catalog.Product",
+    exact: true
+  });
+  await expect(productHandoff).toHaveAttribute("href", /schema=ScrypathEcommerce.Catalog.Product/);
+  await productHandoff.click();
+  await waitForLiveConnected(page);
+  await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Product/);
+
+  await page.locator(".ops-schema-picker__option").filter({ hasText: "Variant" }).click();
+  await waitForLiveConnected(page);
+  await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
+  await expect(page.getByTestId("shell-recovery-target").first()).toContainText("Catalog.Variant");
+  await page.goBack();
+  await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Product/);
+  await expect(page.getByTestId("shell-recovery-target").first()).toContainText("Catalog.Product");
+  await page.goForward();
+  await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
+  await page.reload();
+  await waitForLiveConnected(page);
+  await expect(page.getByTestId("shell-recovery-target").first()).toContainText("Catalog.Variant");
+
+  for (const schema of ["", "ScrypathEcommerce.Catalog.NotAllowlisted"]) {
+    await page.goto(`/admin/search/failed-sync?schema=${encodeURIComponent(schema)}`);
+    await waitForLiveConnected(page);
+    await expect(page.getByText("That schema is unavailable")).toBeVisible();
+    await expect(page.getByTestId("failed-sync-row")).toHaveCount(0);
+    await expect(page.getByTestId("failed-sync-retry")).toHaveCount(0);
+    await expect(page.getByTestId("recovery-target")).toHaveCount(0);
+  }
+
+  await page.goto(`${standalone}/failed-sync?scenario=a-removed&schema=ScrypathOps.Test.OpsPostA`);
+  await waitForLiveConnected(page);
+  await expect(page.getByText("That schema is unavailable")).toBeVisible();
+  await expect(page.getByTestId("failed-sync-row")).toHaveCount(0);
+  await expect(page.getByTestId("failed-sync-retry")).toHaveCount(0);
+});
+
+test("standalone source-collision action eligibility stays with Queue job 501", async ({ page }) => {
+  const schemaA = "ScrypathOps.Test.OpsPostA";
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`${standalone}/failed-sync?scenario=source-collision&schema=${schemaA}`);
+  await waitForLiveConnected(page);
+
+  const rows = page.getByTestId("failed-sync-row");
+  await expect(rows).toHaveCount(2);
+  const backendTask = rows.filter({ hasText: "Backend task 501" });
+  const queueJob = rows.filter({ hasText: "Queue job 501" });
+  await expect(backendTask).toBeVisible();
+  await expect(queueJob).toBeVisible();
+  expect(await backendTask.getAttribute("id")).not.toBe(await queueJob.getAttribute("id"));
+  await expect(backendTask.getByTestId("failed-sync-retry")).toHaveCount(0);
+  const queueRetry = queueJob.getByTestId("failed-sync-retry");
+  await expect(queueRetry).toBeVisible();
+  await queueRetry.click();
+  await expect(page).toHaveURL(/sudo\/confirm/);
+  const returnTo = new URL(page.url()).searchParams.get("return_to");
+  expect(returnTo).toContain(`schema=${schemaA}`);
+  expect(returnTo).not.toContain("schema=ScrypathOps.Test.OpsPostB");
+  await expect(page.getByTestId("recovery-receipt")).toHaveCount(0);
+});
+
+test("real Search health refresh reorders records without moving focus to a different action", async ({ page }) => {
+  const schemaA = "ScrypathOps.Test.OpsPostA";
+  const token = crypto.randomUUID().replaceAll("-", "");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`${standalone}/health?scenario=reorder-${token}&schema=${schemaA}`);
+  await waitForLiveConnected(page);
+  const rows = page.getByTestId("posture-row");
+  await expect(rows.first()).toHaveAttribute("id", "posture-ScrypathOps.Test.OpsPostB");
+
+  const rowA = rows.filter({ hasText: schemaA });
+  const actionA = rowA.getByTestId("posture-failed-sync-link");
+  await actionA.focus();
+  await expect(actionA).toBeFocused();
+  await page.keyboard.press("r");
+  await expect(rows.first()).toHaveAttribute("id", "posture-ScrypathOps.Test.OpsPostA");
+  await expect(actionA).toBeFocused();
+  await expect(page).toHaveURL(new RegExp(`schema=${schemaA.replaceAll(".", "\\.")}`));
+  await expect(actionA).toHaveAttribute("href", /schema=ScrypathOps.Test.OpsPostA/);
+});
+
+test("selected recovery context remains reachable through the mobile drawer and palette keyboard flow", async ({ page }) => {
+  const schemaA = "ScrypathOps.Test.OpsPostA";
+  await page.setViewportSize({ width: 1279, height: 900 });
+  await page.goto(`${standalone}/health?scenario=a-selected-b-worse&schema=${schemaA}`);
+  await waitForLiveConnected(page);
+  const opener = page.getByRole("button", { name: "Open navigation" });
+  await opener.click();
+  const drawer = page.locator("#ops-mobile-nav");
+  await expect(drawer).toBeVisible();
+  await expect(drawer.getByTestId("shell-recovery-target")).toContainText(schemaA);
+  await expect(drawer.getByRole("link", { name: "Failed sync work", exact: true }))
+    .toHaveAttribute("href", new RegExp(`schema=${schemaA.replaceAll(".", "\\.")}`));
+  await page.keyboard.press("Escape");
+  await expect(drawer).toBeHidden();
+  await expect(opener).toBeFocused();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await opener.click();
+  await expect(drawer).toBeVisible();
+  await drawer.getByRole("link", { name: "Failed sync work", exact: true }).click();
+  await waitForLiveConnected(page);
+  await expect(page).toHaveURL(new RegExp(`failed-sync\\?schema=${schemaA.replaceAll(".", "\\.")}`));
+  await expect(drawer).toBeHidden();
+  await expect(page.getByTestId("shell-recovery-target").first()).toContainText(schemaA);
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expect(page.locator(".ops-sidebar")).toBeVisible();
+  await expect(page.locator(".ops-sidebar").getByTestId("shell-recovery-target")).toContainText(schemaA);
+});
+
+test("standalone rendered states preserve unavailable, retained, unknown, empty, and long evidence", async ({ page }) => {
+  const schemaA = "ScrypathOps.Test.OpsPostA";
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  await page.goto(`${standalone}/health?scenario=no-success&schema=${schemaA}`);
+  await waitForLiveConnected(page);
+  const rowA = page.getByTestId("posture-row").filter({ hasText: schemaA });
+  const noSuccess = rowA;
+  await expect(noSuccess).toContainText("No success observed");
+  await expect(noSuccess).toContainText("Retrying");
+
+  await page.goto(`${standalone}/health?scenario=unknown&schema=${schemaA}`);
+  await waitForLiveConnected(page);
+  const unknown = page.getByTestId("posture-row").filter({ hasText: schemaA });
+  await expect(unknown).toContainText("No success observed");
+  await expect(unknown).not.toContainText("terminal failure");
+
+  const retainedToken = crypto.randomUUID().replaceAll("-", "");
+  await page.goto(`${standalone}/health?scenario=retained-${retainedToken}&schema=${schemaA}`);
+  await waitForLiveConnected(page);
+  const refresh = page.getByRole("button", { name: "Refresh search health" });
+  await refresh.click();
+  const retained = page.getByTestId("posture-row").filter({ hasText: schemaA });
+  await expect(retained).toContainText("Backend observation unavailable");
+  await expect(retained).toContainText("last success retained from the previous check");
+
+  await page.goto(`${standalone}/health?scenario=error&schema=${schemaA}`);
+  await waitForLiveConnected(page);
+  const sourceError = page.getByTestId("posture-row").filter({ hasText: schemaA });
+  await expect(sourceError).toContainText("Backend observation unavailable");
+  await expect(sourceError).toContainText("Queue observation unavailable");
+  await expect(sourceError).not.toContainText("No success observed");
+
+  await page.goto(`${standalone}/failed-sync?scenario=empty-history&schema=${schemaA}`);
+  await waitForLiveConnected(page);
+  await expect(page.getByTestId("failed-sync-empty-hero")).toContainText("No failed sync work for this schema");
+  await expect(page.getByTestId("failed-sync-retry")).toHaveCount(0);
+
+  await page.goto(`${standalone}?scenario=empty`);
+  await waitForLiveConnected(page);
+  await expect(page.getByText(/No search schemas configured/i)).toBeVisible();
+  await expect(page.getByTestId("recovery-target")).toHaveCount(0);
+
+  const longPrefix = `phase174_${"long_".repeat(14)}`;
+  const longDocumentId = `phase174:${"fixture-document-".repeat(10)}501`;
+  await page.goto(`${standalone}/failed-sync?scenario=long-value&schema=${schemaA}`);
+  await waitForLiveConnected(page);
+  for (const width of [390, 1279]) {
+    await page.setViewportSize({ width, height: 844 });
+    await assertNoPageOverflow(page, `standalone long failed-work evidence ${width}px`);
+    const row = page.getByTestId("failed-sync-row").filter({ hasText: "Queue job 501" });
+    const reason = await row.getByTestId("failed-sync-reason").textContent();
+    expect(reason?.length).toBeGreaterThan(700);
+    await expect(row).toContainText(longPrefix);
+    await row.getByTestId("failed-sync-retry").click();
+    const modal = page.getByRole("dialog");
+    await expect(modal).toBeVisible();
+    await expect(modal).toContainText(longDocumentId);
+    await expect(modal).toContainText("1");
+    if (width === 390) await page.getByRole("button", { name: /Cancel/i }).click();
+  }
+});
+
+test("refresh keeps its real label, icon, and prior observation while the LiveView response is pending", async ({ page }) => {
+  const schemaA = "ScrypathOps.Test.OpsPostA";
+  const token = crypto.randomUUID().replaceAll("-", "");
+  const response = delayNextLiveViewResponse(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`${standalone}/health?scenario=busy-${token}&schema=${schemaA}`);
+  await waitForLiveConnected(page);
+
+  const rowA = page.getByTestId("posture-row").filter({ hasText: schemaA });
+  const before = await rowA.innerText();
+  const refresh = page.locator("#search-health-refresh");
+  await expect(refresh).toContainText("Refresh");
+  await expect(refresh).toHaveAttribute("aria-label", "Refresh search health");
+  await expect(refresh.locator("svg")).toBeVisible();
+  response.arm();
+  await refresh.click();
+  await response.held;
+  await expect(refresh).toHaveAttribute("aria-busy", "true");
+  await expect(refresh).toContainText("Refresh");
+  await expect(refresh.locator("svg")).toBeVisible();
+  await expect(rowA).toHaveText(before);
+  await response.released;
+  await expect(refresh).not.toHaveAttribute("aria-busy", "true");
+});
+
+test("retry dispatch retains the source row and withholds its receipt until the server response arrives", async ({ page, request }) => {
+  test.setTimeout(120_000);
+  const response = delayNextLiveViewResponse(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const seed = await seedScenario(request, "incident");
+  expect(seed.tenant_id).not.toBeNull();
+  const marker = `phase174-busy-${crypto.randomUUID().replaceAll("-", "")}`;
+  const fixture = await prepareRecoveryFixture(request, { tenantId: seed.tenant_id!, marker });
+  await page.goto(`/admin/search/failed-sync?schema=${fixture.schema.replace(/^Elixir\./, "")}`);
+  await waitForLiveConnected(page);
+
+  const original = page.getByTestId("failed-sync-row").filter({ hasText: `Queue job ${fixture.original_job_id}` });
+  const retry = original.getByTestId("failed-sync-retry");
+  await expect(retry).toBeVisible();
+  response.arm();
+  await retry.click();
+  await response.held;
+  await expect(retry).toHaveClass(/phx-click-loading/);
+  await expect(retry).toContainText("Retry queue job");
+  await expect(original).toContainText(`Queue job ${fixture.original_job_id}`);
+  await expect(original.getByTestId("recovery-receipt")).toHaveCount(0);
+  await response.released;
+  await expect(original.getByTestId("recovery-receipt")).toBeVisible();
+  await expect(original.getByTestId("recovery-receipt")).toContainText("Terminal completion has not been observed");
+});
 
 test("mounted palette recovery destinations follow the selected schema", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -27,6 +300,7 @@ test("mounted palette recovery destinations follow the selected schema", async (
   const failedSyncHref = await page.locator("#ops-cmdk-item-2").getAttribute("href");
   expect(failedSyncHref, "the rendered Failed sync work destination carries the selected Variant target")
     .toContain("schema=ScrypathEcommerce.Catalog.Variant");
+  await assertPaletteFilterClearAndReturn(page, "ScrypathEcommerce.Catalog.Variant");
 });
 
 test("standalone palette manifest follows the validated fixture schema", async ({ page }, info) => {
@@ -53,6 +327,7 @@ test("standalone palette manifest follows the validated fixture schema", async (
     manifestHealthHref: expect.stringContaining(`schema=${schemaB}`),
     paletteHealthHref: expect.stringContaining(`schema=${schemaB}`)
   });
+  await assertPaletteFilterClearAndReturn(page, schemaB);
 });
 
 async function capture(page: Page, info: TestInfo, entry: string, surface: string, width: number, theme: string) {
@@ -60,6 +335,35 @@ async function capture(page: Page, info: TestInfo, entry: string, surface: strin
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: join(captureRoot, `${entry}-${surface}-${width}-${theme}.png`), fullPage: true });
   info.annotations.push({ type: "phase174-capture", description: `${entry}/${surface}/${width}/${theme}` });
+}
+
+async function assertPaletteFilterClearAndReturn(page: Page, selectedSchema: string) {
+  const opener = page.locator("[data-ops-command-open]").first();
+  await opener.focus();
+  await page.keyboard.press("Control+k");
+
+  const input = page.locator("#ops-cmdk [data-cmdk-input]");
+  await expect(input).toBeFocused();
+  await input.fill("failed sync");
+  const visibleItems = page.locator("#ops-cmdk [data-cmdk-item]:visible");
+  await expect(visibleItems).toHaveCount(1);
+  await expect(visibleItems.first()).toHaveAttribute(
+    "href",
+    new RegExp(`schema=${selectedSchema.replaceAll(".", "\\.")}`)
+  );
+
+  await input.fill("");
+  await expect(visibleItems).toHaveCount(6);
+  for (const item of ["1", "2", "3"]) {
+    await expect(page.locator(`#ops-cmdk-item-${item}`)).toHaveAttribute(
+      "href",
+      new RegExp(`schema=${selectedSchema.replaceAll(".", "\\.")}`)
+    );
+  }
+
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#ops-cmdk")).toBeHidden();
+  await expect(opener).toBeFocused();
 }
 
 async function assertNoPageOverflow(page: Page, label: string) {
