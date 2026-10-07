@@ -1,0 +1,40 @@
+{
+  "source_sha": "d3af57fd1f156df2d6e1deec18200ae3b1eef119",
+  "browser": {
+    "command": "/private/tmp/scrypath-phase173-20261006-155750/verify-phase173-all.sh all",
+    "native_report": "173-FINAL-BROWSER.xml",
+    "native_report_sha256": "2be104ebca97b7f1bace8d66231a447150d808217ce1e35ba236ba36d21bbd4e",
+    "tests": 34,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "evidence_directory": "/private/tmp/scrypath-phase173-20261006-155750/evidence/173-final-review"
+  },
+  "core": {
+    "source_sha": "3adccd9a888518dba44c23b83d5162c5fe29d70e",
+    "command": "mix verify.core --exclude integration --exclude docs_contract",
+    "tests": 661,
+    "properties": 4,
+    "failures": 0,
+    "log_sha256": "6c97d86b53d5b2fee716b4af58c1611d6317e7d0b1f4d4657a0bb29bfcfc710f"
+  },
+  "ops": {
+    "source_sha": "bbc8453cd6dbcc2a3f1e406fbbba9180ef674d5d",
+    "command": "cd scrypath_ops && mix precommit",
+    "tests": 247,
+    "doctests": 2,
+    "failures": 0,
+    "log_sha256": "5b535804378d885fcb196fc42c56c4f5b941a5e713a7d7cfce41ecc8138b8155"
+  },
+  "contrast": {
+    "aa_failures": 0,
+    "aaa_advisories": 35
+  },
+  "hosted": {
+    "candidate_sha": "d3af57fd1f156df2d6e1deec18200ae3b1eef119",
+    "candidate_run": 37558615968,
+    "required_jobs_and_attestation": "success",
+    "workflow_completion": "pending_advisory_ecommerce_e2e",
+    "final_sha_closeout": "pending_final_tracking_and_verification_commit"
+  }
+}

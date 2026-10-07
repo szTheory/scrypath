@@ -209,3 +209,9 @@ The post-merge full `mix verify.ops_ui` passed 2 doctests and 240 tests. Ops ass
 ---
 *Phase: 173-shared-visual-foundation-and-operational-time*
 *Completed: 2026-10-06*
+
+## Final Phase Evidence Reconciliation
+
+All four phase specs plus required mounted navigation/recovery specs passed together at `d3af57fd1f156df2d6e1deec18200ae3b1eef119`: 34 cases, zero failures/errors/skips. Verbatim native JUnit is `173-FINAL-BROWSER.xml`; SHA/digest and retained native logs/captures are indexed in `173-FINAL-EVIDENCE.json` and `/private/tmp/scrypath-phase173-20261006-155750/evidence/173-final-review/`. Fresh core after the final core change passed 661 tests/four properties; final Ops precommit passed 247 tests/two doctests. Contrast has zero AA failures and 35 AAA advisories. The isolated fixture stack was fully removed. Independent code re-review reports zero findings on the corrected product source; its source identity remains explicit. The UI audit retains its historical 17/24 score, with two findings fixed and the readable uneven open-disclosure polish item explicitly nonblocking.
+
+Review corrections preserve successful empty queue observations, independent backend/queue outcomes, schema identity on real timeout, both retained source references during whole outages, and an unknown-mode fallback for invalid configuration rendering. The public `Scrypath.sync_status/2` all-or-error contract remains unchanged; the projection is internal. Original local source/design files and preview :4012 are untouched. Missing intentional RED history and original standalone before-images for 173-01 remain documented limits. Hosted candidate run 37558615968 has passed all required jobs, coverage and attestation; full workflow completion and final-SHA attestation remain separate pending closeout steps. The advisory dependency audit's existing Cloak notices are documented in SECURITY.md.

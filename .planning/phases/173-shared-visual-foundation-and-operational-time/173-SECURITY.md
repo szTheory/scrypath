@@ -42,4 +42,10 @@ No accepted risks. No threat flags in execution summaries.
 | Closed | 9 |
 | Open | 0 |
 
-Checked 2026-10-07 against source `185832d6c863b1c84c863e1f5f4e9e2c44dbfc18`, with 28/28 connected browser cases and full Ops evidence. Configured block threshold: high. All threats, including below-threshold items, are closed by implementation evidence.
+Checked 2026-10-07 against source `d3af57fd1f156df2d6e1deec18200ae3b1eef119`, with 34/34 connected browser cases, fresh core proof and final Ops precommit (247 tests/two doctests). Configured block threshold: high. All threats, including below-threshold items, are closed by implementation evidence.
+
+## Separate Dependency Advisory Evidence
+
+The hosted advisory deep-quality lane on [candidate run 37558615968](https://github.com/szTheory/scrypath/actions/runs/37558615968) flags the unchanged Ops lock graph's `cloak 1.1.4` and `cloak_ecto 1.3.0`. The package-level notices are [CVE-2026-95105](https://osv.dev/vulnerability/EEF-CVE-2026-95105) (high, AES-CTR integrity) and [CVE-2026-94206](https://osv.dev/vulnerability/EEF-CVE-2026-94206) (medium, PBKDF2 iteration handling), published 2026-10-06. Root/core and example dependency graphs report clean. No manifest or lockfile changed in Phase 173.
+
+The nine closed items above concern this phase's authored trust-boundary mitigations, including introducing no new dependency; they do not claim the existing dependency graph is advisory-free or assess a host's cipher/hash configuration. Deployment exposure and dependency remediation need a separate follow-up. No exemption, suppression, risk acceptance, release approval, or dependency update is inferred. Per CONTRIBUTING, this lane is advisory and distinct from the required closeout gates.

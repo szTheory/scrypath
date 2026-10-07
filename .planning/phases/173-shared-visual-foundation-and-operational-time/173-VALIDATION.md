@@ -9,7 +9,7 @@ created: "2026-10-06"
 
 # Phase 173 — Validation Strategy
 
-Execution validation: all seven requirements have behavior-targeted automated coverage. The four existing browser specs passed together (28 cases, no failures/errors/skips) on `185832d6c863b1c84c863e1f5f4e9e2c44dbfc18`; full Ops passed 244 tests plus two doctests. Independent phase verification and exact final-SHA hosted closeout are separate required steps.
+Execution validation: all seven requirements have behavior-targeted automated coverage. All four phase specs and the required mounted navigation/recovery specs passed together (34 cases, no failures/errors/skips) on `d3af57fd1f156df2d6e1deec18200ae3b1eef119`; final Ops precommit passed 247 tests plus two doctests. Fresh root core verification passed 661 tests plus four properties after the final core source edit. Independent phase verification and exact final-SHA hosted closeout are separate required steps.
 
 ## Test Infrastructure
 
@@ -93,14 +93,14 @@ No routine human UAT is planned. Executors inspect representative before/after d
 | Requirement | Status | Actual coverage |
 | --- | --- | --- |
 | OPUX-09 | COVERED | Shell spec: computed flat neutral chrome, both routes/themes and responsive widths; palette regression in status spec. |
-| OPUX-10 | COVERED | Status spec: connected production rows across nine failure/partial/unavailable/configuration scenarios; Ops LiveView assertions. |
+| OPUX-10 | COVERED | Status spec: connected production rows across failure/partial/unavailable/configuration scenarios, independent source failures and successful empty queues; Ops LiveView and real timeout assertions. |
 | OPUX-11 | COVERED | Status spec and component tests: zero/nonzero/unavailable distinction and neutral zero counts. |
 | OPUX-12 | COVERED | Shell spec: keyboard, pointer, System OS changes, navigation/reload/patch, cross-tab and denied/invalid storage. |
 | OPUX-13 | COVERED | Status spec: busy icon/label, independent focus and neutral press, actual server eligibility change after refresh. |
 | OPUX-14 | COVERED | Core status tests and Ops tests: precision/boundaries/absence; time spec: exact ISO and retained snapshot age after real failed refresh. |
 | OPUX-15 | COVERED | Copy spec: awaited outcomes, out-of-order writes, failure fallback, repeated timer, keyboard/touch, no Checked copy, composed text contrast and 40px targets in all preferences. |
 
-All 11 planned tasks have their mapped automated commands and executed coverage. The combined proof covers all four specs on one committed source; the earlier required root core gate passed 659 tests plus four properties and no later core source change occurred. Baseline artifact limits and the missing intentional RED history in 173-01 remain honestly recorded in its summary; no retroactive RED history or human approval is inferred. Evidence: `/private/tmp/scrypath-phase173-20261006-155750/evidence/173-final/`; native report `phase173-all.xml`. No validation gap or manual-only acceptance remains.
+All 11 planned tasks have their mapped automated commands and executed coverage. The combined proof covers all four specs on one committed source; the fresh required root core gate passed 661 tests plus four properties on `3adccd9a888518dba44c23b83d5162c5fe29d70e`, with no subsequent core source change. Baseline artifact limits and the missing intentional RED history in 173-01 remain honestly recorded in its summary; no retroactive RED history or human approval is inferred. Evidence: `/private/tmp/scrypath-phase173-20261006-155750/evidence/173-final-review/`; verbatim native report `173-FINAL-BROWSER.xml` and source/digest index `173-FINAL-EVIDENCE.json`. No validation gap or manual-only acceptance remains.
 
 ## Validation Audit 2026-10-07
 

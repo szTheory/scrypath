@@ -1,0 +1,100 @@
+<testsuites id="" name="" tests="34" failures="0" skipped="0" errors="0" time="196.531695">
+<testsuite name="harness.spec.ts" timestamp="2026-10-07T01:46:49.258Z" hostname="chromium" tests="2" failures="0" skipped="0" time="0.826" errors="0">
+<testcase name="harness configuration is discoverable" classname="harness.spec.ts" time="0.004">
+</testcase>
+<testcase name="showcase navigation exposes storefront and operator surfaces" classname="harness.spec.ts" time="0.822">
+</testcase>
+</testsuite>
+<testsuite name="operator.spec.ts" timestamp="2026-10-07T01:46:49.258Z" hostname="chromium" tests="2" failures="0" skipped="0" time="8.553" errors="0">
+<testcase name="operator verifies a rendered recovery for the non-first Variant schema" classname="operator.spec.ts" time="5.264">
+<properties>
+<property name="phase172-operator-evidence" value="{&quot;fixture_marker&quot;:&quot;phase172-f5366c8df65a4175ac539fd4244f0961&quot;,&quot;schema&quot;:&quot;Elixir.ScrypathEcommerce.Catalog.Variant&quot;,&quot;checked_outcome&quot;:&quot;fixture setup started&quot;}">
+</property>
+<property name="phase172-operator-evidence" value="{&quot;fixture_marker&quot;:&quot;phase172-f5366c8df65a4175ac539fd4244f0961&quot;,&quot;schema&quot;:&quot;Elixir.ScrypathEcommerce.Catalog.Variant&quot;,&quot;index&quot;:&quot;ecommerce__variant&quot;,&quot;original_job_id&quot;:29,&quot;original_attempt&quot;:1,&quot;expected_document_id&quot;:27,&quot;expected_value&quot;:&quot;SCRY-RECOVERY-phase172-f5366c8df65a4175ac539fd4244f0961&quot;}">
+</property>
+<property name="phase172-operator-evidence" value="{&quot;original_job_id&quot;:29,&quot;accepted_job_id&quot;:30,&quot;accepted_attempt&quot;:null,&quot;checked_outcome&quot;:&quot;rendered retry acceptance&quot;}">
+</property>
+<property name="phase172-operator-evidence" value="{&quot;index&quot;:&quot;ecommerce__variant&quot;,&quot;document_id&quot;:27,&quot;schema&quot;:&quot;Elixir.ScrypathEcommerce.Catalog.Variant&quot;,&quot;task_uid&quot;:17,&quot;expected_sku&quot;:&quot;SCRY-RECOVERY-phase172-f5366c8df65a4175ac539fd4244f0961&quot;,&quot;marker&quot;:&quot;phase172-f5366c8df65a4175ac539fd4244f0961&quot;,&quot;original_attempt&quot;:1,&quot;original_job_id&quot;:29,&quot;accepted_attempt&quot;:1,&quot;accepted_job_id&quot;:30,&quot;active_document&quot;:true,&quot;task_index&quot;:&quot;ecommerce__variant&quot;,&quot;task_status&quot;:&quot;succeeded&quot;,&quot;task_type&quot;:&quot;documentAdditionOrUpdate&quot;,&quot;checked_outcome&quot;:&quot;Recovery verified&quot;,&quot;elapsed_ms&quot;:4942}">
+</property>
+</properties>
+</testcase>
+<testcase name="operator promotes only this returned task pair and unique target document" classname="operator.spec.ts" time="3.289">
+<properties>
+<property name="phase172-operator-evidence" value="{&quot;fixture_marker&quot;:&quot;phase172-8c14ef37c2e04a3ab1ad14e769905d1c&quot;,&quot;schema&quot;:&quot;Elixir.ScrypathEcommerce.Catalog.Product&quot;,&quot;checked_outcome&quot;:&quot;target setup started&quot;}">
+</property>
+<property name="phase172-operator-evidence" value="{&quot;fixture_marker&quot;:&quot;phase172-8c14ef37c2e04a3ab1ad14e769905d1c&quot;,&quot;schema&quot;:&quot;Elixir.ScrypathEcommerce.Catalog.Product&quot;,&quot;live_index&quot;:&quot;ecommerce__product&quot;,&quot;target_index&quot;:&quot;ecommerce__product__reindex&quot;,&quot;expected_document_id&quot;:28,&quot;expected_value&quot;:&quot;SCRY-SWAP-phase172-8c14ef37c2e04a3ab1ad14e769905d1c&quot;,&quot;task_baseline&quot;:26}">
+</property>
+<property name="phase172-operator-evidence" value="{&quot;document_id&quot;:28,&quot;task_uid&quot;:31,&quot;target_index&quot;:&quot;ecommerce__product__reindex&quot;,&quot;live_index&quot;:&quot;ecommerce__product&quot;,&quot;marker&quot;:&quot;phase172-8c14ef37c2e04a3ab1ad14e769905d1c&quot;,&quot;expected_name&quot;:&quot;SCRY-SWAP-phase172-8c14ef37c2e04a3ab1ad14e769905d1c&quot;,&quot;active_document&quot;:true,&quot;task_status&quot;:&quot;succeeded&quot;,&quot;task_type&quot;:&quot;indexSwap&quot;,&quot;swapped_pair&quot;:[&quot;ecommerce__product&quot;,&quot;ecommerce__product__reindex&quot;],&quot;checked_outcome&quot;:&quot;exact swap verified&quot;,&quot;elapsed_ms&quot;:3256}">
+</property>
+</properties>
+</testcase>
+</testsuite>
+<testsuite name="phase173_copy.spec.ts" timestamp="2026-10-07T01:46:49.258Z" hostname="chromium" tests="14" failures="0" skipped="0" time="15.912" errors="0">
+<testcase name="mounted copies one exact operational timestamp after clipboard resolution" classname="phase173_copy.spec.ts" time="1.974">
+</testcase>
+<testcase name="mounted copy text and feedback meet composed contrast and action targets" classname="phase173_copy.spec.ts" time="3.015">
+</testcase>
+<testcase name="mounted keeps the latest clipboard outcome when writes settle out of order" classname="phase173_copy.spec.ts" time="0.423">
+</testcase>
+<testcase name="mounted keeps rejected and unavailable clipboard feedback persistent and selectable" classname="phase173_copy.spec.ts" time="0.431">
+</testcase>
+<testcase name="mounted supports keyboard and touch and restarts the four-second success timer" classname="phase173_copy.spec.ts" time="0.554">
+</testcase>
+<testcase name="mounted omits copy for Checked, missing, invalid, and unobserved timestamps" classname="phase173_copy.spec.ts" time="1.06">
+</testcase>
+<testcase name="mounted retains copy and snapshot age after a failed refresh server patch" classname="phase173_copy.spec.ts" time="0.483">
+</testcase>
+<testcase name="standalone copies one exact operational timestamp after clipboard resolution" classname="phase173_copy.spec.ts" time="1.981">
+</testcase>
+<testcase name="standalone copy text and feedback meet composed contrast and action targets" classname="phase173_copy.spec.ts" time="3.268">
+</testcase>
+<testcase name="standalone keeps the latest clipboard outcome when writes settle out of order" classname="phase173_copy.spec.ts" time="0.373">
+</testcase>
+<testcase name="standalone keeps rejected and unavailable clipboard feedback persistent and selectable" classname="phase173_copy.spec.ts" time="0.425">
+</testcase>
+<testcase name="standalone supports keyboard and touch and restarts the four-second success timer" classname="phase173_copy.spec.ts" time="0.462">
+</testcase>
+<testcase name="standalone omits copy for Checked, missing, invalid, and unobserved timestamps" classname="phase173_copy.spec.ts" time="1.022">
+</testcase>
+<testcase name="standalone retains copy and snapshot age after a failed refresh server patch" classname="phase173_copy.spec.ts" time="0.441">
+</testcase>
+</testsuite>
+<testsuite name="phase173_shell.spec.ts" timestamp="2026-10-07T01:46:49.258Z" hostname="chromium" tests="4" failures="0" skipped="0" time="12.208" errors="0">
+<testcase name="phase 173 operator shell › mounted PostureLive keeps the preference visible and operational" classname="phase173_shell.spec.ts" time="2.432">
+</testcase>
+<testcase name="phase 173 operator shell › mounted shell fits the approved widths and produces theme captures" classname="phase173_shell.spec.ts" time="3.101">
+</testcase>
+<testcase name="phase 173 operator shell › standalone PostureLive keeps the preference visible and operational" classname="phase173_shell.spec.ts" time="3.702">
+</testcase>
+<testcase name="phase 173 operator shell › standalone shell fits the approved widths and produces theme captures" classname="phase173_shell.spec.ts" time="2.973">
+</testcase>
+</testsuite>
+<testsuite name="phase173_status_actions.spec.ts" timestamp="2026-10-07T01:46:49.258Z" hostname="chromium" tests="10" failures="0" skipped="0" time="139.193" errors="0">
+<testcase name="mounted status sources stay truthful across themes and responsive widths" classname="phase173_status_actions.spec.ts" time="65.548">
+</testcase>
+<testcase name="mounted partial queue failure retains only queue evidence and empty queues stay observed" classname="phase173_status_actions.spec.ts" time="0.98">
+</testcase>
+<testcase name="mounted neutral chrome and metrics preserve the approved palette" classname="phase173_status_actions.spec.ts" time="1.443">
+</testcase>
+<testcase name="mounted refresh keeps server eligibility after a LiveView patch" classname="phase173_status_actions.spec.ts" time="0.351">
+</testcase>
+<testcase name="mounted quiet action exposes independent focus and transient interaction states" classname="phase173_status_actions.spec.ts" time="0.588">
+</testcase>
+<testcase name="standalone status sources stay truthful across themes and responsive widths" classname="phase173_status_actions.spec.ts" time="67.276">
+</testcase>
+<testcase name="standalone partial queue failure retains only queue evidence and empty queues stay observed" classname="phase173_status_actions.spec.ts" time="0.829">
+</testcase>
+<testcase name="standalone neutral chrome and metrics preserve the approved palette" classname="phase173_status_actions.spec.ts" time="1.356">
+</testcase>
+<testcase name="standalone refresh keeps server eligibility after a LiveView patch" classname="phase173_status_actions.spec.ts" time="0.285">
+</testcase>
+<testcase name="standalone quiet action exposes independent focus and transient interaction states" classname="phase173_status_actions.spec.ts" time="0.537">
+</testcase>
+</testsuite>
+<testsuite name="phase173_time.spec.ts" timestamp="2026-10-07T01:46:49.258Z" hostname="chromium" tests="2" failures="0" skipped="0" time="18.087" errors="0">
+<testcase name="mounted renders stable exact operational time without overflow" classname="phase173_time.spec.ts" time="8.205">
+</testcase>
+<testcase name="standalone renders stable exact operational time without overflow" classname="phase173_time.spec.ts" time="9.882">
+</testcase>
+</testsuite>
+</testsuites>

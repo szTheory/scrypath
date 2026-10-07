@@ -132,6 +132,8 @@ All task commits ran through the standard hook-enabled GSD commit helper. The me
 
 6. **Task 3: Keep required mounted recovery proof aligned with accessible labels** — `53b5d37`, `da8df9c` (test)
 
+7. **Task 3: Initialize source-error screenshot capture helper** — `eb05f73`, `d3af57f` (test)
+
 ## Verification
 
 - `mix test test/scrypath_ops_web/live/posture_live_test.exs test/scrypath_ops_web/design_tokens_contract_test.exs test/scrypath_ops_web/ops_shell_contract_test.exs` — **27 tests, 0 failures**.
@@ -217,3 +219,9 @@ Plan 03 is complete and ready for Plan 04. Shared `STATE.md`, `ROADMAP.md`, `sta
 - Disposable regression stacks removed their owned containers, network, and playbook volume. The original retained preview and unrelated Docker resources were left intact.
 
 Additional task commits: `605e5a1` (palette regression) and `336140b` (neutral composition fix). The wave is complete; final phase review, independent verification, and hosted closeout remain.
+
+## Final Phase Evidence Reconciliation
+
+All four phase specs plus required mounted navigation/recovery specs passed together at `d3af57fd1f156df2d6e1deec18200ae3b1eef119`: 34 cases, zero failures/errors/skips. Verbatim native JUnit is `173-FINAL-BROWSER.xml`; SHA/digest and retained native logs/captures are indexed in `173-FINAL-EVIDENCE.json` and `/private/tmp/scrypath-phase173-20261006-155750/evidence/173-final-review/`. Fresh core after the final core change passed 661 tests/four properties; final Ops precommit passed 247 tests/two doctests. Contrast has zero AA failures and 35 AAA advisories. The isolated fixture stack was fully removed. Independent code re-review reports zero findings on the corrected product source; its source identity remains explicit. The UI audit retains its historical 17/24 score, with two findings fixed and the readable uneven open-disclosure polish item explicitly nonblocking.
+
+Review corrections preserve successful empty queue observations, independent backend/queue outcomes, schema identity on real timeout, both retained source references during whole outages, and an unknown-mode fallback for invalid configuration rendering. The public `Scrypath.sync_status/2` all-or-error contract remains unchanged; the projection is internal. Original local source/design files and preview :4012 are untouched. Missing intentional RED history and original standalone before-images for 173-01 remain documented limits. Hosted candidate run 37558615968 has passed all required jobs, coverage and attestation; full workflow completion and final-SHA attestation remain separate pending closeout steps. The advisory dependency audit's existing Cloak notices are documented in SECURITY.md.
