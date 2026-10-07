@@ -261,6 +261,25 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert html =~ "Could not find that failed sync work row"
   end
 
+  test "mixed-source rollups and empty inspection name failed work without implying freshness", %{conn: conn} do
+    {:ok, view, html} = live(conn, ~p"/ops/failed-sync")
+    assert html =~ "2 failed sync work items need triage"
+    assert html =~ "Failed sync work"
+    refute html =~ "2 failed sync jobs"
+
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
+    Application.put_env(:scrypath_ops, :oban_jobs, [])
+    empty_html = view |> element("#failed-sync-refresh") |> render_click()
+    assert empty_html =~ "No failed sync work for this schema"
+    refute empty_html =~ "No failed sync jobs"
+
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, {:error, :backend_unavailable})
+    error_html = view |> element("#failed-sync-refresh") |> render_click()
+    assert error_html =~ "Failed sync work could not load"
+    refute error_html =~ "No failed sync work for this schema"
+    refute error_html =~ ~s(data-testid="failed-sync-empty-hero")
+  end
+
   test "zero failed sync work shows the empty hero", %{conn: conn} do
     Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
     Application.put_env(:scrypath_ops, :oban_jobs, [])
