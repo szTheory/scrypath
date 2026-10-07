@@ -134,4 +134,156 @@ for (const entrypoint of ENTRYPOINTS) {
     await expect(time.locator("details")).toHaveAttribute("open", "");
     await context.close();
   });
+
+  test(`${entrypoint.name} keeps rejected and unavailable clipboard feedback persistent and selectable`, async ({ browser }) => {
+    const { context, page } = await openPage(browser, 390, "light");
+    await page.goto(entrypoint.url);
+    await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+    await page.clock.install();
+    const time = page.locator(`[id="${entrypoint.row}"] .ops-signal-group`).first().locator(".ops-time").first();
+    const copy = time.getByRole("button", { name: "Copy timestamp", exact: true });
+    const feedback = time.locator("[data-ops-time-feedback-text]");
+    await page.evaluate(() => {
+      let readTextCalls = 0;
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: {
+          writeText() { return Promise.reject(new Error("denied")); },
+          readText() { readTextCalls += 1; throw new Error("clipboard reads are forbidden"); }
+        }
+      });
+      Object.defineProperty(window, "__phase173ClipboardReadCount", { get: () => readTextCalls });
+    });
+
+    await copy.click();
+    await expect(feedback).toHaveText("Could not copy timestamp. Select and copy the exact value.");
+    await expect(time.locator("details")).toHaveAttribute("open", "");
+    const exact = time.locator("code.ops-time__exact");
+    await expect(exact).toHaveText(SOURCE_ISO);
+    await expect(exact).toHaveCSS("user-select", "text");
+    await expect(time.locator("[data-ops-time-feedback-dismiss]")).toBeVisible();
+    await page.clock.runFor(10_000);
+    await expect(feedback).toHaveText("Could not copy timestamp. Select and copy the exact value.");
+
+    await page.evaluate(() => Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined }));
+    await copy.click();
+    await expect(feedback).toHaveText("Could not copy timestamp. Select and copy the exact value.");
+    await expect(time.locator("details")).toHaveAttribute("open", "");
+    await expect.poll(() => page.evaluate(() =>
+      (window as typeof window & { __phase173ClipboardReadCount: number }).__phase173ClipboardReadCount
+    )).toBe(0);
+
+    await time.getByRole("button", { name: "Dismiss copy message" }).click();
+    await expect(feedback).toBeEmpty();
+    await expect(time.locator("[data-ops-time-feedback-dismiss]")).toBeHidden();
+    await context.close();
+  });
+
+  test(`${entrypoint.name} supports keyboard and touch and restarts the four-second success timer`, async ({ browser }) => {
+    const { context, page } = await openPage(browser, 390, "light");
+    await page.goto(entrypoint.url);
+    await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+    await page.clock.install();
+    const time = page.locator(`[id="${entrypoint.row}"] .ops-signal-group`).first().locator(".ops-time").first();
+    const copy = time.getByRole("button", { name: "Copy timestamp", exact: true });
+    const feedback = time.locator("[data-ops-time-feedback-text]");
+
+    await copy.focus();
+    await page.keyboard.press("Enter");
+    await expect.poll(() => page.evaluate(() =>
+      (window as typeof window & { __phase173ClipboardWrites: string[] }).__phase173ClipboardWrites
+    )).toEqual([SOURCE_ISO]);
+    await page.evaluate(() =>
+      (window as typeof window & { __phase173ResolveClipboardWrite: (() => void) | null })
+        .__phase173ResolveClipboardWrite?.()
+    );
+    await expect(feedback).toHaveText("Timestamp copied");
+    await expect(copy).toBeFocused();
+    await page.clock.runFor(3000);
+
+    await page.locator(`#theme-toggle [data-phx-theme="dark"]`).click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme-effective", "dark");
+    const box = await copy.boundingBox();
+    expect(box).not.toBeNull();
+    await page.touchscreen.tap(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    await expect.poll(() => page.evaluate(() =>
+      (window as typeof window & { __phase173ClipboardWrites: string[] }).__phase173ClipboardWrites
+    )).toEqual([SOURCE_ISO, SOURCE_ISO]);
+    await page.evaluate(() =>
+      (window as typeof window & { __phase173ResolveClipboardWrite: (() => void) | null })
+        .__phase173ResolveClipboardWrite?.()
+    );
+    await expect(feedback).toHaveText("Timestamp copied");
+    await page.clock.runFor(1500);
+    await expect(feedback).toHaveText("Timestamp copied");
+    await page.clock.runFor(2500);
+    await expect(feedback).toBeEmpty();
+    await expect(time.locator("time.ops-time__value")).toHaveText("2 days ago");
+
+    const dimensions = await page.evaluate(() => ({
+      viewport: document.documentElement.clientWidth,
+      document: document.documentElement.scrollWidth
+    }));
+    expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
+    await page.locator(`#theme-toggle [data-phx-theme="light"]`).click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme-effective", "light");
+    await context.close();
+  });
+
+  test(`${entrypoint.name} omits copy for Checked, missing, invalid, and unobserved timestamps`, async ({ browser }) => {
+    const { context, page } = await openPage(browser, 390, "light");
+    await page.goto(entrypoint.url);
+    await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+    await expect(page.locator("#search-health-refresh").locator("..").locator(".ops-time__copy")).toHaveCount(0);
+    await context.close();
+
+    for (const scenario of ["source-error", "no-success", "missing-time", "manual"] as const) {
+      const { context: scenarioContext, page: scenarioPage } = await openPage(browser, 390, "light");
+      const separator = entrypoint.url.includes("?") ? "&" : "?";
+      await scenarioPage.goto(`${entrypoint.url}${separator}scenario=${scenario}`);
+      await expect(scenarioPage.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+      const row = scenarioPage.locator(`[id="${entrypoint.row}"]`);
+      await expect(row).toBeVisible();
+      const backendTime = row.locator(".ops-signal-group").first().locator(".ops-time").first();
+
+      if (scenario !== "manual") await expect(backendTime.locator(".ops-time__copy")).toHaveCount(0);
+      else await expect(row.locator("[aria-label^='Queue job signals'] .ops-time__copy")).toHaveCount(0);
+
+      await scenarioContext.close();
+    }
+  });
+
+  test(`${entrypoint.name} retains copy and snapshot age after a failed refresh server patch`, async ({ browser }) => {
+    const { context, page } = await openPage(browser, 390, "light");
+    await page.goto(entrypoint.url);
+    await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+    const row = page.locator(`[id="${entrypoint.row}"]`);
+    const refresh = page.getByRole("button", { name: "Refresh search health" });
+    const checked = page.locator("#search-health-refresh").locator("..");
+    const initialTime = row.locator(".ops-signal-group").first().locator(".ops-time").first();
+    await expect(initialTime.locator("time.ops-time__value")).toHaveText("2 days ago");
+    await refresh.click();
+    await expect(initialTime.locator("time.ops-time__value")).toHaveText("2 days ago");
+
+    await refresh.evaluate((button) => button.setAttribute("phx-value-scenario", "source-error"));
+    await refresh.click();
+    await expect(row).toContainText("fetch error: :fixture_unavailable");
+    await expect(row).toContainText("last success retained from the previous check");
+    const retained = row.locator(".ops-time").first();
+    await expect(retained.locator("time.ops-time__value")).toHaveText("2 days ago");
+    await expect(retained.locator(".ops-time__exact")).toHaveText(SOURCE_ISO);
+    await expect(retained.locator(".ops-time__copy")).toBeVisible();
+    await expect(checked.locator("time")).toHaveAttribute("datetime", "2026-10-07T17:18:42.318Z");
+
+    await retained.getByRole("button", { name: "Copy timestamp" }).click();
+    await expect.poll(() => page.evaluate(() =>
+      (window as typeof window & { __phase173ClipboardWrites: string[] }).__phase173ClipboardWrites
+    )).toEqual([SOURCE_ISO]);
+    await page.evaluate(() =>
+      (window as typeof window & { __phase173ResolveClipboardWrite: (() => void) | null })
+        .__phase173ResolveClipboardWrite?.()
+    );
+    await expect(retained.locator("[data-ops-time-feedback-text]")).toHaveText("Timestamp copied");
+    await context.close();
+  });
 }

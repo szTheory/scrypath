@@ -8716,17 +8716,19 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
     async copyTimestamp(event) {
       event.preventDefault();
       this.clearFeedback();
+      const attempt = (this.copyAttempt || 0) + 1;
+      this.copyAttempt = attempt;
       const details = this.el.closest(".ops-time")?.querySelector("details");
       const text = this.el.dataset.opsTimestamp;
       if (!text || typeof navigator.clipboard?.writeText !== "function") {
-        this.showFailure(details);
+        if (attempt === this.copyAttempt) this.showFailure(details);
         return;
       }
       try {
         await navigator.clipboard.writeText(text);
-        this.showSuccess();
+        if (attempt === this.copyAttempt) this.showSuccess();
       } catch (_error) {
-        this.showFailure(details);
+        if (attempt === this.copyAttempt) this.showFailure(details);
       }
     },
     showSuccess() {

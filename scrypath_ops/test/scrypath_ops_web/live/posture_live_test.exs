@@ -193,9 +193,31 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert time =~ "2026-10-04T13:02:05.123456-04:00"
     assert time =~ "UTC equivalent"
 
+    assert has_element?(
+             lv,
+             "[id='ops-time-ScrypathOps.Test.OpsPostA-backend-success'][data-ops-timestamp='2026-10-04T13:02:05.123456-04:00']"
+           )
+
+    refute has_element?(lv, "#search-health-refresh .ops-time__copy")
+
     html = render_patch(lv, ~p"/ops/phase173/health?scenario=default")
     assert html =~ "2 days ago"
     assert html =~ "2026-10-04T13:02:05.123456-04:00"
+  end
+
+  test "does not offer copy when last-success source time is invalid", %{conn: conn} do
+    tasks = Application.get_env(:scrypath_ops, :meilisearch_tasks)
+
+    Application.put_env(
+      :scrypath_ops,
+      :meilisearch_tasks,
+      Enum.map(tasks, &Map.put(&1, "finishedAt", "not-a-time"))
+    )
+
+    {:ok, lv, _html} = live(conn, ~p"/ops/health")
+
+    refute has_element?(lv, "[id='posture-ScrypathOps.Test.OpsPostA'] .ops-time__copy")
+    refute has_element?(lv, "[id='posture-ScrypathOps.Test.OpsPostB'] .ops-time__copy")
   end
 
   test "retains the source-local last success when a later fetch fails", %{conn: conn} do

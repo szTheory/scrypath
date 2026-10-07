@@ -7,7 +7,7 @@
   "expected": "The newest rejected clipboard request remains the visible persistent outcome after an older pending request resolves.",
   "actual": "After the second request rejected and showed the persistent error, resolving the first request replaced the error with Timestamp copied.",
   "reportPath": ".planning/phases/173-shared-visual-foundation-and-operational-time/173-04-T2-red.xml",
-  "runStartedAt": "2026-10-07T00:34:00Z",
+  "runStartedAt": "2026-10-07T00:43:11.966Z",
   "reportModifiedAt": "2026-10-07T00:44:01.662Z",
   "semanticAssessment": "Valid RED: both production LiveViews connected; the exact target scenario reached two awaited writeText calls, observed the later rejection and then the older resolution, and failed because stale success overwrote the latest error. Companion success tests passed. This is a behavioral assertion failure, not setup or fixture failure."
 }
