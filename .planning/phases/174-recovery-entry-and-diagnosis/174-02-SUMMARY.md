@@ -100,10 +100,10 @@ status: complete
 
 ## Task Commits
 
-1. **Task 1 RED:** `00413d6` — shell recovery navigation contract failed on the missing second contextual shell link.
-2. **Task 1 GREEN:** `cb4e618` — validated target drives shared shell navigation.
-3. **Task 2 RED:** `ff4599e` — shared recovery context was absent on Search health.
-4. **Task 2 GREEN:** `63368d2` — target propagated across health, failed-sync, and sync-drift views.
+1. **Task 1: RED** `00413d6` — shell recovery navigation contract failed on the missing second contextual shell link.
+2. **Task 1: GREEN** `cb4e618` — validated target drives shared shell navigation.
+3. **Task 2: RED** `ff4599e` — shared recovery context was absent on Search health.
+4. **Task 2: GREEN** `63368d2` — target propagated across health, failed-sync, and sync-drift views.
 
 ## TDD Gate Compliance
 
