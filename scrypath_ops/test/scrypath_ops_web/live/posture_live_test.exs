@@ -19,13 +19,19 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
       end)
 
       uids = filters[:index_uids] || []
-      boom_index = "postlv_ops_post_a"
+      boom_indexes = ["postlv_ops_post_a", "postlv_ops_post_b"]
 
-      if boom_index in uids do
+      if Enum.any?(boom_indexes, &(&1 in uids)) do
         Process.sleep(Agent.get(:posture_live_test_state, &Map.get(&1, :delay_a, 0)))
       end
 
-      if boom_index in uids and Agent.get(:posture_live_test_state, & &1.fail_a?) do
+      failed_index =
+        Enum.find(boom_indexes, fn index ->
+          key = if index == "postlv_ops_post_a", do: :fail_a?, else: :fail_b?
+          index in uids and Agent.get(:posture_live_test_state, &Map.get(&1, key, false))
+        end)
+
+      if failed_index do
         {:error, :boom}
       else
         results =
@@ -95,7 +101,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     # Keep the fixture alive until on_exit/1 performs deterministic cleanup.
     # A linked Agent can exit with the test process before the callback runs.
     {:ok, _pid} =
-      Agent.start(fn -> %{tasks_calls: 0, swap_called: false, fail_a?: true} end,
+      Agent.start(fn -> %{tasks_calls: 0, swap_called: false, fail_a?: true, fail_b?: false} end,
         name: :posture_live_test_state
       )
 
@@ -160,6 +166,38 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert html =~ "Last success"
     refute html =~ "Posture"
     assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search health']")
+  end
+
+  test "schema action identity stays with its record when refresh changes worst-first order", %{
+    conn: conn
+  } do
+    Agent.update(:posture_live_test_state, fn state ->
+      state |> Map.put(:fail_a?, false) |> Map.put(:fail_b?, true)
+    end)
+
+    {:ok, lv, _html} = live(conn, ~p"/ops/health")
+
+    assert has_element?(lv, "#posture-ScrypathOps\\.Test\\.OpsPostB")
+
+    assert has_element?(
+             lv,
+             "[id='posture-failed-sync-link-ScrypathOps.Test.OpsPostB'][href='/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB']"
+           )
+
+    Agent.update(:posture_live_test_state, fn state ->
+      state |> Map.put(:fail_a?, true) |> Map.put(:fail_b?, false)
+    end)
+
+    render_click(lv, "refresh", %{})
+    html = render(lv)
+
+    assert :binary.match(html, ~s(id="posture-ScrypathOps.Test.OpsPostA")) <
+             :binary.match(html, ~s(id="posture-ScrypathOps.Test.OpsPostB"))
+
+    assert has_element?(
+             lv,
+             "[id='posture-failed-sync-link-ScrypathOps.Test.OpsPostB'][href='/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB']"
+           )
   end
 
   test "phase 173 source-error refresh retains the prior completion", %{conn: conn} do

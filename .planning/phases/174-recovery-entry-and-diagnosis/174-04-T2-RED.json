@@ -1,0 +1,10 @@
+{
+  "command": "ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 HEX_HOME=/private/tmp/scrypath-phase173-20261006-155750/hex-home MIX_TEST_PARTITION=174_wave1 SCRYPATH_TAP=1 mix test test/scrypath_ops_web/live/posture_live_test.exs --no-color -n \"schema action identity stays with its record when refresh changes worst-first order\"",
+  "exitCode": 2,
+  "output": "TAP version 13\nnot ok 1 - test schema action identity stays with its record when refresh changes worst-first order\n# [{:error, %ExUnit.AssertionError{message: \"Expected truthy, got false\", expr: {:assert, [], [{:has_element?, [line: 182], [{:lv, [line: 183], nil}, \"[id='posture-failed-sync-link-ScrypathOps.Test.OpsPostB'][href='/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB']\"]}]}}]\n1..1",
+  "targetTest": "test schema action identity stays with its record when refresh changes worst-first order",
+  "targetFile": "scrypath_ops/test/scrypath_ops_web/live/posture_live_test.exs",
+  "expected": "A schema-specific action remains explicitly named and bound to its schema while the record list reorders after refresh.",
+  "actual": "The backend failure moves OpsPostB to the first record as expected, but its failed-sync action has no stable schema-derived DOM id.",
+  "semanticAssessment": "The selected one-test TAP plan completed and reached the intended assertion. The failure is specifically the missing stable schema-action identity; fixture setup, initial ordering, and schema-bound href context executed beforehand."
+}
