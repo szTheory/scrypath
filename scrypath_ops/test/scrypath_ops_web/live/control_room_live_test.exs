@@ -155,10 +155,45 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     {:ok, _lv, html} = live(conn, ~p"/ops")
 
     assert html =~ "2 schemas checked"
-    assert html =~ "All fetches healthy"
-    assert html =~ "All backends healthy"
+    assert html =~ "No fetch errors observed"
+    refute html =~ "All fetches healthy"
+    refute html =~ "All backends healthy"
     refute html =~ "0 fetch error"
     refute html =~ "0 failed backend"
+  end
+
+  test "healthy Control Room presents one evidence-bounded Search health entry", %{conn: conn} do
+    put_healthy_posture_config!()
+
+    {:ok, lv, html} = live(conn, ~p"/ops")
+
+    assert has_element?(lv, "#control-room-health-link", "Review Search health")
+    refute html =~ "View search health"
+    refute html =~ "All backends healthy"
+    assert html =~ "No fetch errors observed"
+  end
+
+  test "degraded scope stays separate from the selected recovery target", %{conn: conn} do
+    put_healthy_posture_config!()
+
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [
+      %{
+        "uid" => 9,
+        "status" => "failed",
+        "type" => "documentAdditionOrUpdate",
+        "indexUid" => "ctrl_ops_post_b",
+        "error" => %{"message" => "index missing"}
+      }
+    ])
+
+    query = URI.encode_query(%{"schema" => ScrypathOps.OperatorSelection.canonical(OpsPostA)})
+    {:ok, lv, html} = live(conn, "/ops?" <> query)
+
+    assert has_element?(lv, "[data-testid='control-room-affected-scope']", "OpsPostB")
+    assert html =~ "Recovery target:"
+    assert html =~ "ScrypathOps.Test.OpsPostA"
+    refute has_element?(lv, "[data-testid='control-room-affected-scope']", "OpsPostA")
+    assert has_element?(lv, "#control-room-health-link[href='/ops/health?#{query}']")
   end
 
   defp put_degraded_posture_config! do
