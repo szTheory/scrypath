@@ -94,24 +94,21 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     Application.put_env(:scrypath_ops, :oban_inspector, SyncDriftObanInspector)
     Application.put_env(:scrypath_ops, :oban_jobs, [])
 
-    if pid = Process.whereis(:sync_drift_live_test_state) do
-      Agent.stop(pid)
-    end
-
-    {:ok, _pid} =
-      Agent.start_link(fn -> %{tasks_calls: 0, settings_calls: 0, swap_called: false} end,
-        name: :sync_drift_live_test_state
-      )
+    start_supervised!(%{
+      id: :sync_drift_live_test_state,
+      start:
+        {Agent, :start_link,
+         [
+           fn -> %{tasks_calls: 0, settings_calls: 0, swap_called: false} end,
+           [name: :sync_drift_live_test_state]
+         ]}
+    })
 
     on_exit(fn ->
       Enum.each(previous, fn
         {k, nil} -> Application.delete_env(:scrypath_ops, k)
         {k, v} -> Application.put_env(:scrypath_ops, k, v)
       end)
-
-      if pid = Process.whereis(:sync_drift_live_test_state) do
-        Agent.stop(pid)
-      end
     end)
 
     :ok
