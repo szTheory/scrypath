@@ -29,6 +29,11 @@ defmodule ScrypathOpsWeb.Layouts do
   attr(:flash, :map, required: true, doc: "the map of flash messages")
   attr(:page_title, :string, default: nil)
 
+  attr(:recovery_target, :atom,
+    default: nil,
+    doc: "The validated schema context for recovery navigation"
+  )
+
   attr(:shell, :atom,
     default: :default,
     doc: "`:ops` enables maintainer navigation for `/ops` LiveViews"
@@ -57,8 +62,16 @@ defmodule ScrypathOpsWeb.Layouts do
     </a>
 
     <div id="ops-shell-frame" class="ops-shell-frame" phx-hook="OpsNavDrawer">
-      <.ops_sidebar mount_path={@mount_path} page_title={@page_title} />
-      <.ops_mobile_nav mount_path={@mount_path} page_title={@page_title} />
+      <.ops_sidebar
+        mount_path={@mount_path}
+        page_title={@page_title}
+        recovery_target={@recovery_target}
+      />
+      <.ops_mobile_nav
+        mount_path={@mount_path}
+        page_title={@page_title}
+        recovery_target={@recovery_target}
+      />
 
       <div class="ops-shell-content">
         <header class="ops-header px-4 py-2 sm:px-6 lg:px-8">
@@ -152,6 +165,7 @@ defmodule ScrypathOpsWeb.Layouts do
 
   attr(:mount_path, :string, required: true)
   attr(:page_title, :string, default: nil)
+  attr(:recovery_target, :atom, default: nil)
 
   defp ops_sidebar(assigns) do
     ~H"""
@@ -167,13 +181,18 @@ defmodule ScrypathOpsWeb.Layouts do
         </.link>
       </div>
 
-      <.ops_primary_nav mount_path={@mount_path} page_title={@page_title} />
+      <.ops_primary_nav
+        mount_path={@mount_path}
+        page_title={@page_title}
+        recovery_target={@recovery_target}
+      />
     </aside>
     """
   end
 
   attr(:mount_path, :string, required: true)
   attr(:page_title, :string, default: nil)
+  attr(:recovery_target, :atom, default: nil)
 
   defp ops_mobile_nav(assigns) do
     ~H"""
@@ -209,7 +228,11 @@ defmodule ScrypathOpsWeb.Layouts do
           </button>
         </div>
 
-        <.ops_primary_nav mount_path={@mount_path} page_title={@page_title} />
+        <.ops_primary_nav
+          mount_path={@mount_path}
+          page_title={@page_title}
+          recovery_target={@recovery_target}
+        />
       </aside>
     </div>
     """
@@ -217,12 +240,20 @@ defmodule ScrypathOpsWeb.Layouts do
 
   attr(:mount_path, :string, required: true)
   attr(:page_title, :string, default: nil)
+  attr(:recovery_target, :atom, default: nil)
 
   defp ops_primary_nav(assigns) do
-    assigns = assign(assigns, :nav_sections, nav_sections(assigns.mount_path))
+    assigns =
+      assign(assigns, :nav_sections, nav_sections(assigns.mount_path, assigns.recovery_target))
 
     ~H"""
     <nav class="ops-primary-nav" aria-label="Operator primary">
+      <p :if={@recovery_target} class="mb-ops-3 min-w-0 px-ops-3">
+        <span class="ops-nav-group__label block">Recovery target</span>
+        <code class="ops-text-mono block break-all text-base-content" translate="no">
+          {ScrypathOps.OperatorSelection.canonical(@recovery_target)}
+        </code>
+      </p>
       <div class="ops-nav-groups">
         <section :for={section <- @nav_sections} class="ops-nav-group">
           <p class="ops-nav-group__label">{section.label}</p>
@@ -290,7 +321,7 @@ defmodule ScrypathOpsWeb.Layouts do
 
   defp nav_item_active?(item, page_title), do: item.title == page_title
 
-  defp nav_sections(mount_path) do
+  defp nav_sections(mount_path, recovery_target) do
     [
       %{
         label: "Home",
@@ -305,7 +336,7 @@ defmodule ScrypathOpsWeb.Layouts do
         ]
       }
       | mount_path
-        |> ScrypathOpsWeb.Nav.primary()
+        |> ScrypathOpsWeb.Nav.primary(recovery_target)
         |> Enum.map(&Map.put(&1, :icon, nav_item_icon(&1)))
         |> Enum.chunk_by(& &1.group)
         |> Enum.map(fn items -> %{label: nav_group_label(hd(items).group), items: items} end)

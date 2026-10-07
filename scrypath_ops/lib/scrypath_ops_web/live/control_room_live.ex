@@ -76,6 +76,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
       shell={@shell}
       page_title={@page_title}
       ops_main_width={:wide}
+      recovery_target={@selected_schema}
     >
       <div class="space-y-ops-page-gap">
         <.ops_toolbar class="items-end gap-4">

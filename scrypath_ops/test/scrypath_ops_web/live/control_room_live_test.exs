@@ -91,14 +91,15 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
   } do
     put_healthy_posture_config!()
     query = URI.encode_query(%{"schema" => ScrypathOps.OperatorSelection.canonical(OpsPostA)})
-    {:ok, _lv, html} = live(conn, "/ops?" <> query)
+    {:ok, lv, html} = live(conn, "/ops?" <> query)
 
     assert html =~ "Recovery target"
     assert html =~ "ScrypathOps.Test.OpsPostA"
 
     for destination <- ["health", "failed-sync", "sync-drift"] do
-      href = ~s(href="/ops/#{destination}?#{query}")
-      assert html |> then(&Regex.scan(~r/#{Regex.escape(href)}/, &1)) |> length() == 2
+      href = "/ops/#{destination}?#{query}"
+      assert has_element?(lv, ".ops-sidebar a[href='#{href}']")
+      assert has_element?(lv, "#ops-mobile-nav a[href='#{href}']")
     end
 
     assert html =~ ~s(href="/ops/search")

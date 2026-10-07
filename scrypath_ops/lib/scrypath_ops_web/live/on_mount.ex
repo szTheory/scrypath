@@ -7,6 +7,8 @@ defmodule ScrypathOpsWeb.Live.OnMount do
   import Phoenix.Component
   import Phoenix.LiveView, only: [attach_hook: 4]
 
+  alias ScrypathOps.OperatorSelection
+
   @ops_child_route_suffixes %{
     ScrypathOpsWeb.PostureLive => "/health",
     ScrypathOpsWeb.FailedSyncLive => "/failed-sync",
@@ -26,12 +28,34 @@ defmodule ScrypathOpsWeb.Live.OnMount do
       |> assign(:shell, :ops)
       |> assign(:scrypath_repo, repo)
       |> assign(:mount_path, mount_path)
-      |> attach_hook(:scrypath_ops_mount_path, :handle_params, fn _params, uri, socket ->
+      |> attach_hook(:scrypath_ops_mount_path, :handle_params, fn params, uri, socket ->
         mount_path = derive_mount_path(uri, socket.view, socket.assigns.mount_path)
-        {:cont, assign(socket, :mount_path, mount_path)}
+
+        socket =
+          socket
+          |> assign(:mount_path, mount_path)
+          |> assign(:recovery_target, recovery_target(params, socket.view))
+
+        {:cont, socket}
       end)
 
     {:cont, socket}
+  end
+
+  defp recovery_target(params, view) do
+    allowlist = ScrypathOps.Schemas.allowlist()
+
+    case {Map.has_key?(params, "schema"), OperatorSelection.resolve(params, allowlist)} do
+      {true, {:ok, schema}} ->
+        schema
+
+      {false, {:ok, schema}}
+      when view in [ScrypathOpsWeb.FailedSyncLive, ScrypathOpsWeb.SyncDriftLive] ->
+        schema
+
+      _ ->
+        nil
+    end
   end
 
   defp derive_mount_path(uri, view, fallback) do

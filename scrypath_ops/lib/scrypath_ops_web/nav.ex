@@ -11,22 +11,22 @@ defmodule ScrypathOpsWeb.Nav do
 
   Each entry is `%{path: path, label: binary, title: binary, group: atom}`.
   """
-  def primary(mount_path \\ "/ops") do
+  def primary(mount_path \\ "/ops", recovery_target \\ nil) do
     [
       %{
-        path: "#{mount_path}/health",
+        path: recovery_path(mount_path, "health", recovery_target),
         label: "Search health",
         title: "Search health",
         group: :recover
       },
       %{
-        path: "#{mount_path}/failed-sync",
+        path: recovery_path(mount_path, "failed-sync", recovery_target),
         label: "Failed sync work",
         title: "Failed sync work",
         group: :recover
       },
       %{
-        path: "#{mount_path}/sync-drift",
+        path: recovery_path(mount_path, "sync-drift", recovery_target),
         label: "Sync and drift",
         title: "Sync and drift",
         group: :recover
@@ -45,4 +45,11 @@ defmodule ScrypathOpsWeb.Nav do
       }
     ]
   end
+
+  defp recovery_path(mount_path, destination, target)
+       when is_atom(target) and not is_nil(target) do
+    ScrypathOps.OperatorSelection.path(mount_path, destination, target)
+  end
+
+  defp recovery_path(mount_path, destination, _target), do: "#{mount_path}/#{destination}"
 end
