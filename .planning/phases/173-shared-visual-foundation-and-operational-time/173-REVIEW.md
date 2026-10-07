@@ -1,9 +1,9 @@
 ---
 phase: 173-shared-visual-foundation-and-operational-time
-reviewed: 2026-10-07T01:42:00Z
+reviewed: 2026-10-07T01:43:36Z
 depth: standard
-source_head: 41e571a02f6bfa659911a43071e8eb195f40db34
-product_last_changed: 3adccd9a888518dba44c23b83d5162c5fe29d70e
+source_head: 5794fea724585fc255b92b37dff509ab5988ce0e
+product_last_changed: bbc8453cd6dbcc2a3f1e406fbbba9180ef674d5d
 scope_status: resolved
 files_reviewed: 43
 files_reviewed_list:
@@ -52,35 +52,30 @@ files_reviewed_list:
   - test/scrypath/operator/status_test.exs
 findings:
   critical: 0
-  warning: 1
+  warning: 0
   info: 0
-  total: 1
-status: issues_found
+  total: 0
+status: clean
 ---
 
 # Phase 173: Code Review Report
 
-**Reviewed:** 2026-10-07T01:42:00Z  
+**Reviewed:** 2026-10-07T01:43:36Z  
 **Depth:** standard  
 **Files Reviewed:** 43  
-**Status:** issues_found  
-**Source:** `41e571a02f6bfa659911a43071e8eb195f40db34` (product changes last at `3adccd9a888518dba44c23b83d5162c5fe29d70e`)
+**Status:** clean  
+**Source:** `5794fea724585fc255b92b37dff509ab5988ce0e` (product changes last at `bbc8453cd6dbcc2a3f1e406fbbba9180ef674d5d`)
 
 ## Summary
 
-Reviewed all 43 files in the resolved Phase 173 source scope, including the corrected operator projection, per-schema timeout handling, exact time rendering, clipboard behavior, theme shell, fixture routes, and mounted/standalone seams. The original three findings and the interim retained-queue finding are corrected in current source. One remaining configuration-error path can crash while rendering the error row. The separately running full core/Ops suites and combined browser/hosted candidate checks are not treated as completed evidence here.
+Reviewed all 43 files in the resolved Phase 173 source scope, including the corrected operator projection, per-schema timeout handling, exact time rendering, clipboard behavior, theme shell, fixture routes, and mounted/standalone seams. The original findings and both re-review findings are corrected in current source. The guarded queue-mode fallback preserves valid defaults and per-repository settings, and safely presents queue availability as unknown when runtime validation raises. All reviewed files meet quality standards; no issues found. The separately running full browser and hosted candidate checks are not treated as completed evidence here.
 
 ## Narrative Findings (AI reviewer)
 
-### WR-03: Invalid runtime configuration crashes the error-row renderer
-
-**Classification:** WARNING  
-**File:** `scrypath_ops/lib/scrypath_ops_web/live/posture_live.ex:470-477,654`  
-**Issue:** The per-schema error row calls `queue_mode/1` during rendering, and that helper calls `Scrypath.Config.resolve!`. A malformed runtime option (for example, an unsupported `sync_mode`) raises inside the schema task and is converted by `Task.async_stream` into an error row; rendering that row then resolves the same invalid configuration and raises again. The operator page therefore crashes instead of displaying the fetch/configuration error and retained observations.  
-**Fix:** Avoid bang configuration resolution in the render path. Pass a safely determined mode into the row or inspect the raw configured mode with an explicit unknown fallback, rendering queue observation as unavailable when the mode cannot be resolved.
+No issues found.
 
 ---
 
-_Reviewed: 2026-10-07T01:42:00Z_  
+_Reviewed: 2026-10-07T01:43:36Z_  
 _Reviewer: the agent (gsd-code-reviewer)_  
 _Depth: standard_
