@@ -189,3 +189,7 @@ Plan 05 implementation and executable checks are complete. Continue the authoriz
 ---
 *Phase: 174-recovery-entry-and-diagnosis*
 *Completed: 2026-10-07*
+
+## Parent integration correction after plan closeout
+
+The mixed-source status/rollup and empty hero still used generic jobs copy. Parent added an actual classified behavioral RED (174-05-COPY-RED.json, test-only commit5c48f3e), corrected the UI copy and stale adjacent assertions, and retained populated/empty/error checks. Successful empty inspection now says No failed sync work for this schema and error inspection remains distinct. Full Ops passes269tests plus2doctests,0failures after the correction. See174-WAVE4-GATE.md for provenance, initial fixture failure and source-boundary disclosure. Original task counts/history above remain original plan actuals; these are additional integration commits.
