@@ -66,7 +66,7 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   const variantHandoff = page.getByRole("link", { name: "View failed sync work for ScrypathEcommerce.Catalog.Variant", exact: true });
   await expect(variantHandoff).toBeVisible();
   await variantHandoff.click();
-  await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Failed sync work", level: 1 })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
   await waitForLiveConnected(page);
 
@@ -151,11 +151,11 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   expect(wrongDocument.status(), "a different document cannot verify this recovery").toBe(422);
 
   await page.goBack();
-  await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Failed sync work", level: 1 })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
   await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Queue job ${fixture.original_job_id}` }) })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Failed sync work", level: 1 })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
   await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Queue job ${fixture.original_job_id}` }) })).toBeVisible();
 
@@ -163,7 +163,7 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await expect(page.getByText("That schema is unavailable")).toBeVisible();
   await expect(page.getByTestId("failed-sync-retry")).toHaveCount(0);
   await page.goBack();
-  await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Failed sync work", level: 1 })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
   await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Queue job ${fixture.original_job_id}` }) })).toBeVisible();
 });

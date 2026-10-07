@@ -141,7 +141,8 @@ for (const entrypoint of ENTRYPOINTS) {
     await openScenario(page, entrypoint.url, "default", "light", 390);
     const row = page.locator(`[id="${entrypoint.rows[0]}"]`);
     await expect(row.locator(".ops-badge-success")).toHaveCount(0);
-    await expect(row).toContainText("no backend failures observed");
+    await expect(row.locator(".ops-signal-group").first().locator(".ops-signal-metrics"))
+      .toContainText(/Failed\s*0/);
     await page.getByRole("button", { name: "Refresh search health" }).evaluate((button) =>
       button.setAttribute("phx-value-scenario", "queue-error")
     );
