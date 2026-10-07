@@ -144,7 +144,7 @@ No separate refactor commit was needed. The final Ops `mix precommit` passed wit
 
 The contract test's default fake deliberately returns an error for the selected OpsPostA index, which suppresses the inspection-only handoff. The test now uses a successful empty task response and a separate index prefix so it verifies the intended rendered handoff. No production behavior changed for this fixture.
 
-The existing core Dialyzer warning at `scrypath_ops/lib/scrypath/sync.ex:61` appeared during the Ops checks and was not introduced by this plan.
+The existing core compiler type warning at `lib/scrypath/sync.ex:61` appeared during the Ops checks and was not introduced by this plan.
 
 ## User Setup Required
 

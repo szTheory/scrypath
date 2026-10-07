@@ -115,7 +115,7 @@ The plan commit count of 5 is measured from `plan_head_before` to `plan_head_aft
 - `scrypath_ops/test/scrypath_ops_web/live/recovery_journey_live_test.exs` — rendered selected-target, collision, unavailable-target, and stale-selection contracts.
 - `scrypath_ops/test/scrypath_ops_web/live/failed_sync_live_test.exs` — aligned delete-row assertion with source-specific queue copy.
 - `.planning/phases/174-recovery-entry-and-diagnosis/174-01-T1-RED.json` and `174-01-T2-RED.json` — freshly executed and classified TDD RED evidence.
-- `.planning/phases/174-recovery-entry-and-diagnosis/deferred-items.md` — unrelated pre-existing core Dialyzer warning.
+- `.planning/phases/174-recovery-entry-and-diagnosis/deferred-items.md` — unrelated pre-existing core compiler type warning.
 
 ## Decisions Made
 
@@ -164,7 +164,7 @@ The plan commit count of 5 is measured from `plan_head_before` to `plan_head_aft
 
 ## Issues Encountered
 
-- The existing `lib/scrypath/sync.ex:61` Dialyzer incompatible-types warning appeared during test bootstrap. It predates this plan's source changes, so it was recorded in `deferred-items.md` and left untouched.
+- The existing `lib/scrypath/sync.ex:61` compiler type incompatible-types warning appeared during test bootstrap. It predates this plan's source changes, so it was recorded in `deferred-items.md` and left untouched.
 - Running the three LiveView test modules in one `mix test` invocation failed because two define the same fixture module `Oban.Job`; running each module independently passed all focused checks.
 
 ## User Setup Required
