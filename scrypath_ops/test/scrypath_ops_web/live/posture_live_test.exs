@@ -494,7 +494,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
              current.refreshed_at
   end
 
-  test "error-row rendering tolerates invalid runtime mode", %{conn: conn} do
+  test "error-row rendering tolerates invalid runtime configuration", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/ops/health")
 
     assigns =

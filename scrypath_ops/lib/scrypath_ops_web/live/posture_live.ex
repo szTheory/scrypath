@@ -651,7 +651,11 @@ defmodule ScrypathOpsWeb.PostureLive do
     end
   end
 
-  defp queue_mode(opts), do: opts |> Scrypath.Config.resolve!() |> Keyword.fetch!(:sync_mode)
+  defp queue_mode(opts) do
+    opts |> Scrypath.Config.resolve!() |> Keyword.fetch!(:sync_mode)
+  rescue
+    ArgumentError -> :unknown
+  end
 
   defp queue_unused_mode?(mode), do: mode in [:inline, :manual, "inline", "manual"]
 
