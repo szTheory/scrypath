@@ -30,9 +30,9 @@
     }
   ],
   "next": {
-    "command": "$gsd-ui-phase 174",
-    "label": "Create Phase 174 UI contract: Recovery Entry and Diagnosis",
-    "reason": "Phase 174 discussion is complete and adopted context is committed. Resolve recovery compositions in the delivered Phase 173 visual world before implementation planning, using /private/tmp/scrypath-phase173-20261006-155750/next-planning."
+    "command": "$gsd-plan-phase 174 --auto",
+    "label": "Plan and execute Phase 174 under authorized auto-follow",
+    "reason": "Phase 174 UI contract is approved under the maintainer\u2019s instruction to follow recommendations until the working UI is ready for review. All seven checker dimensions PASS; 30 applicable UI state criteria are explicitly resolved, with 24 static renders. Continue $gsd-plan-phase 174 --auto, then $gsd-execute-phase 174 --auto, bounded to Phase 174. The agent handles the prepared checkout and directories. Do not claim implementation or requirement completion before executable verification; do not automatically advance to Phase 175. Global auto_advance remains false."
   },
-  "updated_at": "2026-10-07T02:44:42.910914+00:00"
+  "updated_at": "2026-10-07T03:10:59.812977+00:00"
 }

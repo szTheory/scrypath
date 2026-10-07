@@ -5,11 +5,11 @@ milestone_name: ScrypathOps UI refinement
 current_phase: 174
 current_phase_name: Recovery Entry and Diagnosis
 status: planning
-stopped_at: Phase 174 context gathered; next $gsd-ui-phase 174
-last_updated: "2026-10-07T02:44:01.957Z"
+stopped_at: Phase 174 UI contract approved under maintainer auto-follow; proceeding to planning and execution
+last_updated: "2026-10-07T03:10:59.788Z"
 last_activity: 2026-10-06
-last_activity_desc: Phase 174 discussion complete; adopted context committed; UI contract next
-state_head: 01ae576c0ab690d1d837bf9842a3ee93e6e3f752
+last_activity_desc: Phase 174 UI contract approved; maintainer authorizes recommended choices through Phase 174 implementation and verification
+state_head: b1b5a7358321f8d5b288ee98dbfeead1ab0ee6b2
 progress:
   total_phases: 5
   completed_phases: 1
@@ -29,7 +29,7 @@ See PROJECT.md (updated 2026-10-06). Core value: make search indexing feel nativ
 Phase: 174 — Recovery Entry and Diagnosis
 Plan: Not started
 Status: Planning
-Last activity: 2026-10-06 — Phase 174 discussion complete; adopted context committed; UI contract next
+Last activity: 2026-10-06 — Phase 174 UI contract approved; maintainer authorizes recommended choices through Phase 174 implementation and verification
 Progress: [██░░░░░░░░] 20% (1/5 phases; all 4 Phase 173 plans complete)
 
 ## Delivered Evidence
@@ -82,9 +82,9 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-07T02:44:01.788Z
-Stopped at: Phase 174 context gathered; next $gsd-ui-phase 174
-Resume file: .planning/phases/174-recovery-entry-and-diagnosis/174-CONTEXT.md
+Last session: 2026-10-07T03:10:59.640Z
+Stopped at: Phase 174 UI contract approved under maintainer auto-follow; proceeding to planning and execution
+Resume file: .planning/phases/174-recovery-entry-and-diagnosis/174-UI-SPEC.md
 
 This is a separate planning-only successor on `planning/phase-174-handoff` in `/private/tmp/scrypath-phase173-20261006-155750/next-planning`. It starts from the immutable Phase 173 source `13ea88a9c18a7515f4ec5ae7deea0cdde4c22531`. Its later handoff metadata does not extend the prior exact-SHA receipt. The execution checkout and PR branch `gsd/phase-173-shared-visual-foundation` remain unchanged at that attested source.
 
@@ -94,6 +94,6 @@ This is a separate planning-only successor on `planning/phase-174-handoff` in `/
 
 **Preservation:** The original `/Users/jon/projects/scrypath` checkout remains on `planning/next-milestone-handoff` at `368abcc5f0309cb0e154739c1e52916478283b90`. All fifteen original modified source/design files are byte-identical to the baseline; preview :4012 remains healthy and unmodified. All executor and disposable verification stacks/resources were removed. This next-planning checkout is intentionally retained for the next command. Native logs/captures remain under `/private/tmp/scrypath-phase173-20261006-155750/evidence/173-final-review/`, with final CI logs and the original external collector receipt under the parent directory.
 
-**Next:** Run `$gsd-ui-phase 174`, then `$gsd-plan-phase 174`. Phase 174 discussion is complete: the maintainer adopted the researched recommendations, saved in `phases/174-recovery-entry-and-diagnosis/174-CONTEXT.md`; the discussion log preserves alternatives and approval. The UI contract will resolve recovery composition within the delivered Phase 173 visual foundation before implementation planning. Continue in this prepared next-planning checkout on `planning/phase-174-handoff`; the agent handles directory selection in this conversation. No Phase 174 implementation or requirement completion is claimed. Automatic chaining remains disabled.
+**Next:** Phase 174 UI contract is approved under the maintainer’s instruction to follow recommendations until the working UI is ready for review. All seven checker dimensions PASS; 30 applicable UI state criteria are explicitly resolved, with 24 static renders. Continue $gsd-plan-phase 174 --auto, then $gsd-execute-phase 174 --auto, bounded to Phase 174. The agent handles the prepared checkout and directories. Do not claim implementation or requirement completion before executable verification; do not automatically advance to Phase 175. Global auto_advance remains false.
 
 Automatic chaining is disabled. Preserve adaptive routing and the existing frontend UI/safety gates. Context can be cleared: the committed successor records retain scope, decisions, verification evidence, unresolved items, working directory/branch and exact next command. Phases 172/170 and their archived source-bounded receipts remain historical.
