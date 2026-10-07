@@ -126,8 +126,8 @@ Automatic chaining is disabled. Preserve adaptive routing and the existing front
 - [Phase 174]: Copy only canonical server hrefs into existing ignored palette anchors using a native MutationObserver with teardown cleanup.
 - [Phase 174]: Only the encoded current-schema/source/full-ID key identifies a retry or delete-confirmation action; legacy numeric IDs are not resolved.
 - [Phase 174]: Manual replay availability is described from RecoveryAction data, separately from Oban retry state and subject to existing server/host gates.
-- [Phase 174]: OPUX-18 and OPUX-19 remain pending until dependent Phase 174 evidence is ready.
+- [Phase 174]: OPUX-18 and OPUX-19 remain pending until independent phase verification accepts the Phase 174 evidence.
 - [Phase 174]: Phase174 fixture routes and provider configuration stay restricted to MIX_ENV=test and the :phase174 route action.
 - [Phase 174]: The stale test OperatorContext is assigned only during the Phase174 test-route mount; the real Sigra confirm destination is navigation only and requires a separate explicit return.
-- [Phase 174]: OPUX-16 through OPUX-19 remain pending until Plan 174-08 supplies browser proof.
+- [Phase 174]: OPUX-16 through OPUX-19 remain pending until independent phase verification accepts the final Plan 174-08 browser and canonical Ops proof.
 - [Phase 174]: Use the active validated allowlist for shell recovery targets and the existing prominent control-height token for the Control Room health action.
