@@ -20,8 +20,8 @@ Refine the six existing operator surfaces. Continue the OPUX family after comple
 
 ### Recovery entry and diagnosis
 
-- [x] **OPUX-16**: Operators entering Control Room can identify the current state, affected search scope, and next safe action in a clear reading order without duplicated explanations or competing secondary controls.
-- [x] **OPUX-17**: Operators inspecting Search health can scan worst-first schema records with readable complete identifiers/times, one meaningful surface per schema, and plain Backend/Queue diagnostic groups; section spacing and concise next-check actions remain clear without redundant nested containers.
+- [ ] **OPUX-16**: Operators entering Control Room can identify the current state, affected search scope, and next safe action in a clear reading order without duplicated explanations or competing secondary controls.
+- [ ] **OPUX-17**: Operators inspecting Search health can scan worst-first schema records with readable complete identifiers/times, one meaningful surface per schema, and plain Backend/Queue diagnostic groups; section spacing and concise next-check actions remain clear without redundant nested containers.
 - [ ] **OPUX-18**: Operators inspecting Failed sync work can see the failure reason, source/work identity, and recovery availability before opening verbose evidence; the common supported recovery action is discoverable while retained history, eligibility rules, and safety gates stay explicit.
 - [ ] **OPUX-19**: Operators retain their selected allowed schema across rendered recovery handoffs, refresh, and back navigation after changing selection; invalid/unavailable targets cannot silently become actions on a different schema.
 
@@ -82,8 +82,8 @@ Approved roadmap mapping. Each requirement appears in exactly one phase; every r
 | OPUX-13 | Phase 173 | Complete |
 | OPUX-14 | Phase 173 | Complete |
 | OPUX-15 | Phase 173 | Complete |
-| OPUX-16 | Phase 174 | Complete |
-| OPUX-17 | Phase 174 | Complete |
+| OPUX-16 | Phase 174 | Pending |
+| OPUX-17 | Phase 174 | Pending |
 | OPUX-18 | Phase 174 | Pending |
 | OPUX-19 | Phase 174 | Pending |
 | OPUX-20 | Phase 175 | Pending |

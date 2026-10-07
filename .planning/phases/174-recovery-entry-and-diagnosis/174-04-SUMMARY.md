@@ -37,7 +37,7 @@ key-decisions:
   - "Use the bounded Posture summary rows for affected scope while preserving the URL-selected recovery target independently."
   - "Refresh runtime Scrypath options on each Control Room observation and carry the previous summary for source evidence retention."
   - "Keep existing Posture classification and ranking; stable schema-derived action IDs preserve record identity without changing severity."
-requirements-completed: [OPUX-16, OPUX-17]
+requirements-completed: []
 coverage:
   - id: D1
     description: "Control Room names the current affected scope, preserves a separate selected target, and reports unavailable source reason and retained success time."
@@ -67,8 +67,8 @@ coverage:
   - id: D3
     description: "Rendered geometry, overflow, theme and browser focus behavior at the approved widths."
     verification: []
-    human_judgment: true
-    rationale: "Plan08 owns live-browser geometry and focus proof; this plan did not use static comps as product evidence."
+    human_judgment: false
+    rationale: "Automated Plan08 owns live-browser geometry and focus proof; this is pending execution, not human review."
 duration: 24min
 completed: 2026-10-07
 status: complete
@@ -128,7 +128,7 @@ The summary is committed separately; tracking updates follow in their own commit
 - Isolated SyncDrift failure case: **1 test, 0 failures**.
 - `make -C examples/scrypath_ecommerce contrast`: **PASS**, 0 AA failures (35 AAA advisories).
 - Ops `mix precommit`: compile/format and test execution reached completion, but **2 doctests and 263 tests reported 1 unrelated failure**. `SyncDriftLiveTest`’s linked Agent exits with its test process, then its `on_exit` callback tries to stop that already-dead PID. The test passes alone. This is recorded in `deferred-items.md`; no unrelated SyncDrift source was changed.
-- The existing Dialyzer type warning in `lib/scrypath/sync.ex:61` remains unchanged and is also recorded in the deferred ledger.
+- The existing compiler type warning in `lib/scrypath/sync.ex:61` remains unchanged and is also recorded in the deferred ledger.
 - Actual rendered width, overflow, theme and browser focus proof remains assigned to Plan08. The static comparison pages were not treated as production proof.
 
 ## Deviations from Plan
@@ -172,3 +172,11 @@ Plans 05/06 can build on the evidence-bounded Control Room and source-local Sear
 ## Self-Check: PASSED
 
 All three RED evidence files exist and validate; the six plan commits are ancestors of the current HEAD. The stub scan found no task-introduced placeholders. Its sole match was the pre-existing CSS comment describing the skeleton placeholder utility.
+
+## Parent readiness reconciliation
+
+Actual requirements.ready-ids174-04PLAN OPUX-16,OPUX-17 reportsready=[] andblocked=[OPUX-16,OPUX-17]; plans06/08 still declare theseIDs and have no summaries. Parent restores their requirement tracking toPending. Local04behavior is implemented and tested, while automated browser geometry/theme/focus remains08; human_judgment isfalse. No manual maintainer verification or simulated approval gates phasecompletion. The repeated SyncDrift test-cleanup race is being repaired by parent under ExUnit supervision and full-suite evidence will be recorded separately. Earlier04full-suite failures remain historical, not relabeled as green.
+
+## Parent full-suite cleanup resolution
+
+Parent replaced the SyncDrift fixture’s bare linked Agent and racing manual stop with ExUnit supervision. Actual compile exited0 and full Ops precommit passed263 tests plus2doctests,0failures (17.9s test runtime). See174-MIDWAVE3-CHECK.md and its retained native log; the earlier04full-suite failures above remain accurate historical results. Automated browser proof remains08; the layout is not awaiting human verification.
