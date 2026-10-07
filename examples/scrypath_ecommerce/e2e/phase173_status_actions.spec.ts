@@ -137,7 +137,7 @@ for (const entrypoint of ENTRYPOINTS) {
 
   test(`${entrypoint.name} partial queue failure retains only queue evidence and empty queues stay observed`, async ({ page }) => {
     const captureDir = join(process.cwd(), "test-results", "phase173-status-captures");
-    await mkdir(captureDir, { recursive: true });
+    mkdirSync(captureDir, { recursive: true });
     await openScenario(page, entrypoint.url, "default", "light", 390);
     const row = page.locator(`[id="${entrypoint.rows[0]}"]`);
     await expect(row.locator(".ops-badge-success")).toHaveCount(0);
