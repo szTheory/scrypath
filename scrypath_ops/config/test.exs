@@ -51,6 +51,7 @@ config :phoenix,
 config :scrypath_ops, :validate_opsui_auth_on_start, false
 config :scrypath_ops, standalone: true
 config :scrypath_ops, :phase173_fixture_source, ScrypathOps.Test.Phase173FixtureSource
+config :scrypath_ops, :phase174_fixture_source, ScrypathOps.Test.Phase174FixtureSource
 
 # Default playbook workspace for tests (partitioned for MIX_TEST_PARTITION).
 playbook_test_root =
