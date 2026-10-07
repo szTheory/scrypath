@@ -91,7 +91,14 @@ Plans:
   3. Failed sync work exposes the failure reason, work/source identity, and eligibility of the common supported recovery action before optional verbose evidence; retained failure history and safety gates remain visible.
   4. After changing schema in the rendered UI, operators keep that allowed selection through recovery handoffs, refresh, and back navigation; invalid or unavailable targets never turn into actions on another schema.
 
-**Plans**: TBD
+**Plans**: 6 plans
+Plans:
+- [ ] 174-01-PLAN.md — Tracer: selected target through incident diagnosis and accepted recovery handoff
+- [ ] 174-02-PLAN.md — Canonical recovery target through shell, navigation and patched palette
+- [ ] 174-03-PLAN.md — Safe sudo return and stale-target evidence guards
+- [ ] 174-04-PLAN.md — Evidence-bounded Control Room and worst-first Search health
+- [ ] 174-05-PLAN.md — Source-qualified failed work and readable recovery diagnosis
+- [ ] 174-06-PLAN.md — Disposable dual-entrypoint browser and final-source proof
 **UI hint**: yes
 **Acceptance**: Inspect before/after recovery views in both themes and relevant widths; run focused rendered-navigation, focus/layout, state, and mounted handoff proof in existing lanes, including a changed schema selection.
 
