@@ -1,7 +1,7 @@
 ---
 phase: "174"
 slug: recovery-entry-and-diagnosis
-status: draft
+status: validated
 nyquist_compliant: false
 wave_0_complete: false
 created: "2026-10-06"
@@ -67,3 +67,17 @@ All required phase behaviors have automated verification. Before/after images an
 - [ ] Record measured latency and results; set compliance only after evidence exists.
 
 Approval: pending execution evidence.
+
+## Nyquist follow-up — partial, implementation fixes pending
+
+The expanded browser audit ran 11 cases at source `46d830a` plus test/fixture changes: 8 passed, 2 assertion failures and 1 timeout. Native JUnit contradicts the auditor's G6 pass summary: pending refresh timed out, while pending retry passed. Focused mounted/standalone palette filtering and clearing subsequently passed 2/2. G3 is a confirmed refresh focus defect; G5 fixture error markers were filtered away, and the remaining state assertions did not execute. No failed or unexecuted behavior is counted as passing or moved to human acceptance. Parent is fixing these within the already authorized scope.
+
+The 48 BEFORE images use `54c623e`, immediately before the 44px action correction, not before all Phase174 work. Its scratch harness used the observed legacy 40px minimum only for that baseline. The 48 AFTER images use `46d830a` plus the audited test/fixture diff. Original missing pre-Phase174 baseline frames remain disclosed.
+
+## Validation Audit 2026-10-07
+
+| Metric | Count |
+|---|---|
+| Gaps found | 7 |
+| Resolved | 4 |
+| Escalated | 3 |
