@@ -75,6 +75,11 @@ async function assertEssentialGeometry(page: Page, label: string) {
   await assertReadableControl(page.locator(".text-ops-body").first(), `${label} essential body text`, 14);
   await assertReadableControl(page.locator("[data-ops-command-open]"), `${label} standard command target`, 14, 40);
   await assertReadableControl(page.locator("#theme-toggle button").first(), `${label} standard theme target`, 14, 40);
+  if (label.includes("control room")) {
+    const primaryAction = page.locator("#control-room-health-link");
+    await expect(primaryAction, `${label} prominent health action is rendered`).toBeVisible();
+    await assertReadableControl(primaryAction, `${label} prominent health action`, 14, 44);
+  }
 }
 
 async function assertAssetRequests(page: Page) {

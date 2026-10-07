@@ -6,7 +6,8 @@ services:
       SCRYPATH_OPS_PLAYBOOK_DIR: /app/examples/scrypath_ecommerce/priv/playbooks
     volumes:
       - phase174_playbooks:/app/examples/scrypath_ecommerce/priv/playbooks
-      - phase174_web_build:/app/_build
+      - phase174_web_build:/app/examples/scrypath_ecommerce/_build
+      - phase174_web_ops_build:/app/scrypath_ops/_build
     init: true
 
   ops:
@@ -20,13 +21,14 @@ services:
       PORT: "4003"
       SCRYPATH_OPS_PORT: "4003"
       SCRYPATH_OPS_TEST_HOST: "ops"
+      SCRYPATH_OPS_SCHEMAS: "ScrypathOps.Test.OpsPostA,ScrypathOps.Test.OpsPostB"
       PGHOST: postgres
       PGPORT: "5432"
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
-      - phase174_ops_build:/app/_build
+      - phase174_ops_build:/app/scrypath_ops/_build
     healthcheck:
       test: ["CMD", "curl", "--silent", "--fail", "http://127.0.0.1:4003/ops/phase174/health"]
       interval: 2s
@@ -61,4 +63,5 @@ services:
 volumes:
   phase174_playbooks:
   phase174_web_build:
+  phase174_web_ops_build:
   phase174_ops_build:
