@@ -1,0 +1,4 @@
+TAP version 13
+not ok 1 - test standalone routes mount production views over the A-selected fixture
+# [{:error, %ExUnit.AssertionError{left: :ex_unit_no_meaningful_value, right: :ex_unit_no_meaningful_value, message: "expected test-only Phase174 route /ops/phase174 to mount ScrypathOpsWeb.ControlRoomLive", expr: :ex_unit_no_meaningful_value, args: :ex_unit_no_meaningful_value, doctest: :ex_unit_no_meaningful_value, context: :==}, [{ScrypathOpsWeb.Phase174FixtureLiveTest, :"-test standalone routes mount production views over the A-selected fixture/1-fun-1-", 1, [file: ~c"test/scrypath_ops_web/live/phase174_fixture_live_test.exs", line: 24]}, {Enum, :"-each/2-lists^foreach/1-0-", 2, [file: ~c"lib/enum.ex", line: 961]}, {ScrypathOpsWeb.Phase174FixtureLiveTest, :"test standalone routes mount production views over the A-selected fixture", 1, [file: ~c"test/scrypath_ops_web/live/phase174_fixture_live_test.exs", line: 21]}]}]
+1..1
