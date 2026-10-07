@@ -443,6 +443,21 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
            )
 
     refute html =~ "Backend observation unavailable"
+
+    Agent.update(:posture_live_test_state, &Map.put(&1, :fail_a?, true))
+    render_click(view, "refresh", %{})
+
+    assert has_element?(
+             view,
+             "#ops-time-ScrypathOps-Test-OpsPostA-retained-queue-success .ops-time__exact",
+             "2026-04-16T18:00:00Z"
+           )
+
+    assert has_element?(
+             view,
+             "#posture-ScrypathOps\\.Test\\.OpsPostA .ops-signal-group:nth-child(2)",
+             "queue_unavailable"
+           )
   end
 
   test "timed-out schemas retain their own prior evidence" do
