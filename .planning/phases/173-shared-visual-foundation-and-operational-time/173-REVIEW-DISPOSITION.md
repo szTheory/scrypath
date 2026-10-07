@@ -3,6 +3,10 @@ phase: 173
 review: 173-REVIEW.md
 titles: json
 findings:
+  - id: WR-03
+    severity: warning
+    disposition: fixed
+    title: "Invalid runtime configuration crashes the error-row renderer"
   - id: WR-01
     severity: warning
     disposition: fixed
@@ -16,15 +20,16 @@ findings:
     disposition: fixed
     title: "Timed-out schema scans lose the schema key needed to retain its last success"
 open: 0
-total: 3
-recorded: 2026-10-07T01:39:43.914Z
+total: 4
+recorded: 2026-10-07T01:43:04.145Z
 ---
 
 # Phase 173: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | fixed | 173-REVIEW-FIX.md |
+| WR-03 | warning | fixed | 173-REVIEW-FIX.md |
+| WR-01 | warning | fixed | 173-REVIEW-FIX.iter2.md (not in the current review) |
 | CR-01 | critical | fixed | 173-REVIEW-FIX.iter1.md (not in the current review) |
 | WR-02 | warning | fixed | 173-REVIEW-FIX.iter1.md (not in the current review) |
 
