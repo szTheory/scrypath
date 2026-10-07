@@ -130,6 +130,8 @@ status: complete
 
 All task commits ran through the standard hook-enabled GSD commit helper. The measured plan range contains 17 commits.
 
+6. **Task 3: Keep required mounted recovery proof aligned with accessible labels** — `53b5d37`, `da8df9c` (test)
+
 ## Verification
 
 - `mix test test/scrypath_ops_web/live/posture_live_test.exs test/scrypath_ops_web/design_tokens_contract_test.exs test/scrypath_ops_web/ops_shell_contract_test.exs` — **27 tests, 0 failures**.

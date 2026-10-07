@@ -130,6 +130,10 @@ status: complete
 
 The T1 RED reports are `.planning/phases/173-shared-visual-foundation-and-operational-time/173-02-T1-red.{tap,json}` and `173-02-T1-retain-red.{tap,json}`. T2 RED is `173-02-T2-ops-red.{tap,json}`. T3 RED is `173-02-T3-browser-red.xml` with its companion JSON record. Each planned target failed on its behavior assertion, each report was checked by `gsd-tools.cjs check tdd-red-evidence`, and each returned `RED_EVIDENCE_OK` before implementation. The corresponding GREEN commits and tests passed.
 
+12. **Task 3: Review regressions for empty queues, independent sources and timeouts** — `0981b58`, `bbc358c` (test)
+13. **Task 3: Source-local observations and schema timeout identity** — `ca0232d` (fix)
+14. **Task 3: Preserve the retained observation reference in rendered ages** — `da8df9c` (fix)
+
 ## Verification
 
 - `mix test test/scrypath/operator/status_test.exs` — passed, 5 tests, 0 failures.

@@ -111,6 +111,8 @@ status: complete
 
 **Plan metadata:** committed after this summary was written.
 
+5. **Task 3: Independent audit typography correction** — `4ab6fad` (fix)
+
 ## Files Created/Modified
 
 - `scrypath_ops/assets/css/app.css` and `scrypath_ops/priv/static/assets/css/app.css` - neutral shell palette, responsive shell rules, theme preference controls, and contrast-corrected selected colors.
