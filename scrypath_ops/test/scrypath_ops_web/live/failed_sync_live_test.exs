@@ -170,8 +170,9 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     refute backend_key == queue_key
     assert html =~ ~s(id="failed-detail-#{backend_key}")
     assert html =~ ~s(id="failed-detail-#{queue_key}")
+
     assert view |> element("[data-testid='failed-sync-retry']") |> render() =~
-             ~s(phx-value-key="#{queue_key}")
+             ~s(phx-value-id="#{queue_key}")
   end
 
   test "zero failed sync work shows the empty hero", %{conn: conn} do
@@ -240,6 +241,12 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
   end
 
   test "sigra retry redirects stale sudo and keeps the failed-sync row in place", %{} do
+    {:ok, inspection} =
+      Scrypath.failed_sync_work(
+        OpsPostA,
+        Keyword.put(ScrypathOps.Schemas.scrypath_opts(), :reason_class_counts, true)
+      )
+
     socket = %Phoenix.LiveView.Socket{
       assigns: %{
         __changed__: %{},
@@ -252,6 +259,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
         },
         schema_allowlist: [OpsPostA, OpsPostB],
         selected_schema: OpsPostA,
+        inspection: inspection,
         mount_path: "/ops",
         context_generation: 0,
         selection_error: nil
@@ -295,15 +303,16 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     refute html =~ "Recovery verified"
 
     assigns = :sys.get_state(view.pid).socket.assigns
+    queue_key = expected_work_key("ScrypathOps.Test.OpsPostA", "oban", "501")
     assert assigns.selected_schema == OpsPostA
     assert assigns.last_refresh_at != nil
     assert assigns.load_error == nil
     assert assigns.inspection != nil
-    assert assigns.recovery_receipts["501"].replacement_job == 991
+    assert assigns.recovery_receipts[queue_key].replacement_job == 991
     assert Agent.get(:failed_sync_insert_counter, & &1) == 1
 
     repeated = render_click(view, "retry", %{"id" => "501"})
-    assert repeated =~ "A retry for job 501 is already accepted"
+    assert repeated =~ "A retry for Queue job 501 is already accepted"
     assert Agent.get(:failed_sync_insert_counter, & &1) == 1
   end
 
