@@ -91,13 +91,13 @@ Plans:
   3. Failed sync work exposes the failure reason, work/source identity, and eligibility of the common supported recovery action before optional verbose evidence; retained failure history and safety gates remain visible.
   4. After changing schema in the rendered UI, operators keep that allowed selection through recovery handoffs, refresh, and back navigation; invalid or unavailable targets never turn into actions on another schema.
 
-**Plans**: 1/8 plans executed
+**Plans**: 2/8 plans executed
 Plans:
 **Wave 1**
 - [x] 174-01-PLAN.md — Tracer: selected target through incident diagnosis and accepted recovery handoff
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 174-02-PLAN.md — Canonical recovery target through shell and navigation
+- [x] 174-02-PLAN.md — Canonical recovery target through shell and navigation
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 174-03-PLAN.md — Safe sudo return and stale-target evidence guards
@@ -165,7 +165,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 173. Shared Visual Foundation and Operational Time | 4/4 | Complete    | 2026-10-06 |
-| 174. Recovery Entry and Diagnosis | 1/8 | In Progress | - |
+| 174. Recovery Entry and Diagnosis | 2/8 | In Progress | - |
 | 175. Repair and Verification | 0/TBD | Not started | - |
 | 176. Search and Playbooks | 0/TBD | Not started | - |
 | 177. Shared Patterns and Delivery Proof | 0/TBD | Not started | - |
