@@ -32,7 +32,7 @@
   "next": {
     "command": "$gsd-discuss-phase 174",
     "label": "Discuss Phase 174: Recovery Entry and Diagnosis",
-    "reason": "Phase 173 is complete; gather Phase 174 context before planning in /private/tmp/scrypath-phase173-20261006-155750/execution."
+    "reason": "Phase 173 is complete; gather Phase 174 context before planning in /private/tmp/scrypath-phase173-20261006-155750/next-planning."
   },
-  "updated_at": "2026-10-07T02:05:17.602Z"
+  "updated_at": "2026-10-07T02:21:38.994360+00:00"
 }
