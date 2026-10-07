@@ -93,14 +93,26 @@ Plans:
 
 **Plans**: 8 plans
 Plans:
+**Wave 1**
 - [ ] 174-01-PLAN.md — Tracer: selected target through incident diagnosis and accepted recovery handoff
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 174-02-PLAN.md — Canonical recovery target through shell and navigation
+
+**Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 174-03-PLAN.md — Safe sudo return and stale-target evidence guards
 - [ ] 174-04-PLAN.md — Evidence-bounded Control Room and worst-first Search health
-- [ ] 174-05-PLAN.md — Source-qualified failed work and readable recovery diagnosis
-- [ ] 174-06-PLAN.md — Test-only standalone recovery fixture and real gated return
 - [ ] 174-07-PLAN.md — Patched command-palette destinations and hook lifecycle
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 174-05-PLAN.md — Source-qualified failed work and readable recovery diagnosis
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [ ] 174-06-PLAN.md — Test-only standalone recovery fixture and real gated return
+
+**Wave 6** *(blocked on Wave 5 completion)*
 - [ ] 174-08-PLAN.md — Disposable dual-entrypoint browser and final-source proof
+
 **UI hint**: yes
 **Acceptance**: Inspect before/after recovery views in both themes and relevant widths; run focused rendered-navigation, focus/layout, state, and mounted handoff proof in existing lanes, including a changed schema selection.
 
