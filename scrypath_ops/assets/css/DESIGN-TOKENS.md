@@ -136,7 +136,7 @@ inventory names every current export; add new exports here with their role consu
 | `ops_intent_card`, `ops_handoff`, `ops_trail` | Body and next action use 14px; recovery CTA has a 44px target; retain named color and motion roles |
 | `ops_empty_state`, `ops_empty_hero`, `ops_loading`, `ops_config_empty` | Required instructions and error copy use body 14px; optional metadata may use the small exception |
 | `ops_data_card`, `ops_result_row`, `ops_object_list`, `ops_object_item`, `ops_signal_table` | Record headings use h3 16px; body uses 14px; spacing, radius, shadow, and responsive layout stay token-backed |
-| `ops_time`, `ops_disclosure`, `ops_code_block`, `ops_inline_code` | Required copy uses 14px; exact technical evidence may use monospace; optional timestamps and metadata retain 11px/12px exceptions |
+| `ops_time`, `ops_disclosure`, `ops_code_block`, `ops_inline_code` | Operational age, Copy timestamp and feedback use the 14px body family; copy/dismiss targets are 40px with quiet neutral hover/press and independent focus; copy uses interaction text and feedback uses primary text; exact technical evidence may use monospace, optional metadata retains 11px/12px exceptions |
 | `ops_modal`, `ops_command_palette` | Body/actions use 14px; dialog icon target is 44px; consume named overlay layer, radius, shadow, and motion roles |
 | `ops_workspace_mode_indicator` | State remains accompanied by text; workspace path is optional technical metadata |
 

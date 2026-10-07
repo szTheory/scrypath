@@ -93,15 +93,6 @@ export const MUTED_PAIRS = [
     role: "text",
     note: "timestamp text container"
   },
-  // app.css line 763 — timestamp copy icon button
-  {
-    selector: ".ops-time__copy",
-    alpha: 0.58,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "ui",
-    note: "timestamp copy icon button"
-  },
   // app.css line 877 — sidebar nav group label
   {
     selector: ".ops-nav-group__label",

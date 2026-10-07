@@ -4097,6 +4097,7 @@
     user-select: text;
   }
   .ops-time__copy-group {
+    font-family: var(--font-sans);
     display: inline-flex;
     max-width: 100%;
     min-width: 0;
@@ -4108,19 +4109,17 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 2.5rem;
+    min-height: var(--control-h-md);
     max-width: 100%;
     gap: var(--spacing-ops-2);
     padding: 0 var(--spacing-ops-3);
     flex: none;
     border-radius: var(--radius-ops-control);
-    color: var(--color-base-content);
-    @supports (color: color-mix(in lab, red, red)) {
-      color: color-mix(in oklch, var(--color-base-content) 58%, transparent);
-    }
+    color: var(--color-primary);
+    font-weight: 600;
     font-size: var(--text-ops-body);
     line-height: var(--leading-ops-body);
-    transition: background-color var(--duration-ops-fast) var(--ease-ops-standard), color var(--duration-ops-fast) var(--ease-ops-standard), transform var(--duration-ops-instant) var(--ease-ops-standard);
+    transition: background-color var(--duration-ops-fast) var(--ease-ops-standard), color var(--duration-ops-fast) var(--ease-ops-standard);
   }
   .ops-time__feedback {
     display: inline-flex;
@@ -4133,29 +4132,22 @@
     font-size: var(--text-ops-body);
     line-height: var(--leading-ops-body);
   }
-  .ops-time__feedback [data-state="success"] {
-    color: var(--color-info);
-  }
-  .ops-time__feedback [data-state="error"] {
-    color: var(--color-error);
-  }
   .ops-time__feedback-dismiss {
-    min-height: 2rem;
+    min-height: var(--control-h-md);
     padding: 0 var(--spacing-ops-2);
     border-radius: var(--radius-ops-control);
     color: inherit;
     text-decoration: underline;
     text-underline-offset: 2px;
   }
-  .ops-time__copy:hover {
+  .ops-time__copy:hover, .ops-time__feedback-dismiss:hover {
+    background: var(--ops-surface-2);
+  }
+  .ops-time__copy:active, .ops-time__feedback-dismiss:active {
     background: var(--color-base-content);
     @supports (color: color-mix(in lab, red, red)) {
-      background: color-mix(in oklch, var(--color-base-content) 8%, transparent);
+      background: color-mix(in srgb, var(--color-base-content) 12%, var(--ops-surface-2));
     }
-    color: var(--color-primary);
-  }
-  .ops-time__copy:active {
-    transform: scale(0.96);
   }
   .ops-schema-picker {
     max-width: 100%;
