@@ -134,7 +134,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
            )
            |> length() == 2
 
-    assert html =~ ~s(href="/ops/health")
+    assert html =~ ~r/href="\/ops\/health(?:\?[^\"]*)?"/
     assert html =~ ~s(id="ops-shell-frame")
     assert html =~ ~s(phx-hook="OpsNavDrawer")
     assert html =~ ~s(class="ops-sidebar")
@@ -279,7 +279,9 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert html =~ "Ctrl"
   end
 
-  test "command palette recovery destinations follow the validated schema through patches", %{conn: conn} do
+  test "command palette recovery destinations follow the validated schema through patches", %{
+    conn: conn
+  } do
     schema_a = ScrypathOps.OperatorSelection.canonical(OpsPostA)
     schema_b = ScrypathOps.OperatorSelection.canonical(OpsPostB)
     query_a = URI.encode_query(%{"schema" => schema_a})
@@ -288,18 +290,34 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     {:ok, lv, _html} = live(conn, "/ops/sync-drift?" <> query_a)
 
     assert has_element?(lv, "#ops-command-palette-destinations")
-    assert has_element?(lv, "#ops-palette-destination-health[href='/ops/health?#{query_a}']")
-    assert has_element?(lv, "#ops-cmdk-item-1[href='/ops/health?#{query_a}']")
+
+    for {route, index} <- [{"health", 1}, {"failed-sync", 2}, {"sync-drift", 3}] do
+      assert has_element?(
+               lv,
+               "#ops-palette-destination-#{route}[href='/ops/#{route}?#{query_a}']"
+             )
+
+      assert has_element?(lv, "#ops-cmdk-item-#{index}[href='/ops/#{route}?#{query_a}']")
+    end
 
     lv
     |> form("#sync-drift-schema-form", %{"schema" => schema_b})
     |> render_change()
 
     assert_patch(lv, "/ops/sync-drift?" <> query_b)
-    assert has_element?(lv, "#ops-palette-destination-health[href='/ops/health?#{query_b}']")
-    assert has_element?(lv, "#ops-cmdk-item-1[href='/ops/health?#{query_a}']")
 
-    {:ok, invalid_lv, _invalid_html} = live(conn, "/ops/health?schema=ScrypathOps.Test.NotAllowed")
+    for {route, index} <- [{"health", 1}, {"failed-sync", 2}, {"sync-drift", 3}] do
+      assert has_element?(
+               lv,
+               "#ops-palette-destination-#{route}[href='/ops/#{route}?#{query_b}']"
+             )
+
+      assert has_element?(lv, "#ops-cmdk-item-#{index}[href='/ops/#{route}?#{query_a}']")
+    end
+
+    {:ok, invalid_lv, _invalid_html} =
+      live(conn, "/ops/health?schema=ScrypathOps.Test.NotAllowed")
+
     refute has_element?(invalid_lv, "#ops-palette-destination-health")
     refute has_element?(invalid_lv, "#ops-command-palette-destinations a[href*='schema=']")
   end

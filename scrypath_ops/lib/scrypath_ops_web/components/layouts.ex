@@ -120,7 +120,14 @@ defmodule ScrypathOpsWeb.Layouts do
     </div>
 
     <.flash_group flash={@flash} id="flash-group" />
-    <.ops_command_palette mount_path={@mount_path} />
+    <.ops_command_palette_destinations
+      mount_path={@mount_path}
+      recovery_target={@recovery_target}
+    />
+    <.ops_command_palette
+      mount_path={@mount_path}
+      recovery_target={@recovery_target}
+    />
     """
   end
 

@@ -1479,13 +1479,62 @@ defmodule ScrypathOpsWeb.OpsUi do
   control. Rendered once in the `:ops` shell so it is available on every surface.
   """
   attr(:mount_path, :string, required: true)
+  attr(:recovery_target, :atom, default: nil)
+
+  def ops_command_palette_destinations(assigns) do
+    destinations =
+      if assigns.recovery_target do
+        assigns.mount_path
+        |> ScrypathOpsWeb.Nav.primary(assigns.recovery_target)
+        |> Enum.filter(&(&1.group == :recover))
+        |> Enum.with_index(1)
+        |> Enum.map(fn {item, index} ->
+          route =
+            item.path |> URI.parse() |> Map.fetch!(:path) |> String.split("/") |> List.last()
+
+          %{
+            path: item.path,
+            id: "ops-palette-destination-#{route}",
+            palette_item_id: "ops-cmdk-item-#{index}"
+          }
+        end)
+      else
+        []
+      end
+
+    assigns = assign(assigns, :destinations, destinations)
+
+    ~H"""
+    <div
+      :if={@recovery_target}
+      id="ops-command-palette-destinations"
+      hidden
+      aria-hidden="true"
+      data-recovery-target={ScrypathOps.OperatorSelection.canonical(@recovery_target)}
+    >
+      <a
+        :for={destination <- @destinations}
+        id={destination.id}
+        href={destination.path}
+        tabindex="-1"
+        data-ops-palette-destination="true"
+        data-ops-palette-item={destination.palette_item_id}
+      >
+        {destination.id}
+      </a>
+    </div>
+    """
+  end
+
+  attr(:mount_path, :string, required: true)
+  attr(:recovery_target, :atom, default: nil)
 
   def ops_command_palette(assigns) do
     items =
       [
         %{path: assigns.mount_path, label: "Control Room", hint: "Home · trust verdict"}
         | Enum.map(
-            ScrypathOpsWeb.Nav.primary(assigns.mount_path),
+            ScrypathOpsWeb.Nav.primary(assigns.mount_path, assigns.recovery_target),
             &%{path: &1.path, label: &1.label, hint: "#{nav_group_label(&1.group)} · #{&1.title}"}
           )
       ]
