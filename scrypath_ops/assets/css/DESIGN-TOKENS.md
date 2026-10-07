@@ -456,3 +456,5 @@ only and never affects the exit code.
 - Schema cards and workspace paths wrap long identifiers without expanding the page. Record headings use the 16px h3 role.
 - Code regions expose a name and keyboard focus for contained scrolling. The native schema select has an explicit accessible name. Phoenix upload labels use the generated upload reference.
 - Playbook rows and successor controls have filename-derived identities. Modal return focus waits for the LiveView patch and rejects a connected trigger that has been reused for a different file.
+
+Neutral surface opacity mixes use `color-mix(in srgb, ..., transparent)` so header, metric, and quiet grouping colors retain the approved palette after browser composition. The production browser contract samples rendered colors in Light, Dark, and System preferences.
