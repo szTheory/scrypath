@@ -5,11 +5,11 @@ milestone_name: ScrypathOps UI refinement
 current_phase: 174
 current_phase_name: Recovery Entry and Diagnosis
 status: executing
-stopped_at: Completed 174-05-PLAN.md
-last_updated: "2026-10-07T14:43:09.609Z"
+stopped_at: Recovered server restart; six Phase174 plans complete;174-06 had no edits or commits
+last_updated: "2026-10-07T16:55:41.477Z"
 last_activity: 2026-10-07
 last_activity_desc: Phase 174 execution started
-state_head: 72fffa69a98b7f7caf9eaaf1d2c2d1f29fa794a3
+state_head: 5e64b682c332788b685623f9b0d77627f4e9b672
 progress:
   total_phases: 5
   completed_phases: 1
@@ -82,9 +82,9 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-07T14:43:09.580Z
-Stopped at: Completed 174-05-PLAN.md
-Resume file: None
+Last session: 2026-10-07T16:55:41.418Z
+Stopped at: Recovered server restart; six Phase174 plans complete;174-06 had no edits or commits
+Resume file: .planning/phases/174-recovery-entry-and-diagnosis/174-06-PLAN.md
 
 Phase 174 now executes in a separate regular clone on `gsd/phase-174-recovery-entry-and-diagnosis` in `/private/tmp/scrypath-phase173-20261006-155750/phase174-execution`. The previous planning worktree and its RED artifacts remain preserved; the fresh clone resolves the executor commit guard without bypassing it. It starts from the immutable Phase 173 source `13ea88a9c18a7515f4ec5ae7deea0cdde4c22531`. Its later handoff metadata does not extend the prior exact-SHA receipt. The execution checkout and PR branch `gsd/phase-173-shared-visual-foundation` remain unchanged at that attested source.
 
