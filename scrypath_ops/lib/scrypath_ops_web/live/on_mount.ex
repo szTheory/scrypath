@@ -34,7 +34,7 @@ defmodule ScrypathOpsWeb.Live.OnMount do
         socket =
           socket
           |> assign(:mount_path, mount_path)
-          |> assign(:recovery_target, recovery_target(params, socket.view))
+          |> assign(:recovery_target, recovery_target(params, socket.view, socket.assigns))
 
         {:cont, socket}
       end)
@@ -42,8 +42,8 @@ defmodule ScrypathOpsWeb.Live.OnMount do
     {:cont, socket}
   end
 
-  defp recovery_target(params, view) do
-    allowlist = ScrypathOps.Schemas.allowlist()
+  defp recovery_target(params, view, assigns) do
+    allowlist = Map.get(assigns, :schema_allowlist, ScrypathOps.Schemas.allowlist())
 
     case {Map.has_key?(params, "schema"), OperatorSelection.resolve(params, allowlist)} do
       {true, {:ok, schema}} ->
