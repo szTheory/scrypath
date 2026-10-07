@@ -449,7 +449,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
 
     assert has_element?(
              view,
-             "#ops-time-ScrypathOps-Test-OpsPostA-retained-queue-success .ops-time__exact",
+             "[id=\"ops-time-ScrypathOps.Test.OpsPostA-retained-queue-success\"] .ops-time__exact",
              "2026-04-16T18:00:00Z"
            )
 
