@@ -43,7 +43,7 @@ defmodule ScrypathOpsWeb.Live.OnMount do
   end
 
   defp recovery_target(params, view, assigns) do
-    allowlist = Map.get(assigns, :schema_allowlist, ScrypathOps.Schemas.allowlist())
+    allowlist = current_allowlist(params, assigns)
 
     case {Map.has_key?(params, "schema"), OperatorSelection.resolve(params, allowlist)} do
       {true, {:ok, schema}} ->
@@ -57,6 +57,19 @@ defmodule ScrypathOpsWeb.Live.OnMount do
         nil
     end
   end
+
+  defp current_allowlist(params, %{live_action: :phase174}) do
+    source = Application.get_env(:scrypath_ops, :phase174_fixture_source)
+
+    if Mix.env() == :test and is_atom(source) and Code.ensure_loaded?(source) and
+         function_exported?(source, :scenario, 1) do
+      source.scenario(Map.get(params, "scenario", "a-selected-b-worse")).allowlist
+    else
+      ScrypathOps.Schemas.allowlist()
+    end
+  end
+
+  defp current_allowlist(_params, _assigns), do: ScrypathOps.Schemas.allowlist()
 
   defp derive_mount_path(uri, view, fallback) do
     path = uri |> URI.parse() |> Map.get(:path) |> normalize_path(fallback)

@@ -143,6 +143,32 @@ defmodule ScrypathOps.RecoveryObservationTest do
     assert RecoveryObservation.lookup(server, host, first_handle) == :unknown
   end
 
+  test "same-ID failures from different sources do not supersede each other's handles", %{
+    server: server
+  } do
+    host = %{schema: "Scrypath.Test.Post", host: "ops.example", org: "org-1"}
+
+    first =
+      Map.put(receipt(54, 1, "http://search:7700", :upsert), :source_failure, %{
+        source: :meilisearch,
+        id: 501
+      })
+
+    second =
+      Map.put(receipt(55, 1, "http://search:7700", :upsert), :source_failure, %{
+        source: :oban,
+        id: 501
+      })
+
+    {:ok, first_handle} = RecoveryObservation.register(server, host, first)
+    {:ok, second_handle} = RecoveryObservation.register(server, host, second)
+
+    assert RecoveryObservation.lookup(server, host, first_handle).source_failure.source ==
+             :meilisearch
+
+    assert RecoveryObservation.lookup(server, host, second_handle).source_failure.source == :oban
+  end
+
   test "wrong handle host and allowlist context cannot read a receipt", %{server: server} do
     host = %{schema: "Scrypath.Test.Post", host: "ops.example", org: "org-1"}
 

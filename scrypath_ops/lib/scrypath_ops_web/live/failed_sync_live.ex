@@ -383,6 +383,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       index: index,
       backend: Atom.to_string(recovery.backend),
       source_failure: %{
+        source: row.source,
         id: row.id,
         task_uid: Map.get(row.metadata, :task_uid),
         index: Map.get(row.metadata, :index),

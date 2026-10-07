@@ -686,9 +686,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp read_expected_effects(schema, receipt, opts) do
     source_id = get_in(receipt, [:source_failure, :id])
+    source = get_in(receipt, [:source_failure, :source])
 
     with {:ok, rows} when is_list(rows) <- Scrypath.failed_sync_work(schema, opts),
-         row when not is_nil(row) <- Enum.find(rows, &(to_string(&1.id) == to_string(source_id))),
+         row when not is_nil(row) <-
+           Enum.find(rows, &(&1.source == source and to_string(&1.id) == to_string(source_id))),
          recovery when not is_nil(recovery) <- Scrypath.Operator.FailedWork.recovery_action(row),
          payload when is_map(payload) <- get_in(recovery.reference, [:payload]) do
       if receipt.operation == :delete do

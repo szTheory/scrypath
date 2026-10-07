@@ -484,14 +484,26 @@ defmodule ScrypathOps.RecoveryObservation do
       observations
     else
       Map.reject(observations, fn {_handle, entry} ->
-        entry.context == context and field(entry.receipt.source_failure, :id) == source_id
+        entry.context == context and field(entry.receipt.source_failure, :id) == source_id and
+          field(entry.receipt.source_failure, :source) == field(source_failure, :source)
       end)
     end
   end
 
   defp failure_reference(%{} = source) do
     source
-    |> Map.take([:id, :task_uid, :index, :operation, "id", "task_uid", "index", "operation"])
+    |> Map.take([
+      :source,
+      :id,
+      :task_uid,
+      :index,
+      :operation,
+      "source",
+      "id",
+      "task_uid",
+      "index",
+      "operation"
+    ])
   end
 
   defp failure_reference(source) when is_integer(source) or is_binary(source), do: source

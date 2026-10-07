@@ -24,6 +24,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
       |> assign(:schema_allowlist, ScrypathOps.Schemas.allowlist())
       |> assign(:selected_schema, nil)
       |> assign(:selection_error, nil)
+      |> assign(:selection_params, %{})
       |> assign(:scrypath_opts, ScrypathOps.Schemas.scrypath_opts())
       |> load_summary()
 
@@ -33,7 +34,18 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
   @impl true
   def handle_params(params, _uri, socket) do
     socket = apply_phase174_fixture(socket, params)
-    allowlist = socket.assigns.schema_allowlist
+    socket = assign(socket, :selection_params, Map.take(params, ["schema"]))
+    {:noreply, socket |> resolve_selection() |> load_summary()}
+  end
+
+  defp resolve_selection(socket) do
+    params = socket.assigns.selection_params
+
+    allowlist =
+      if phase174_fixture?(socket),
+        do: socket.assigns.schema_allowlist,
+        else: ScrypathOps.Schemas.allowlist()
+
     resolution = OperatorSelection.resolve(params, allowlist)
 
     {selected_schema, selection_error} =
@@ -43,20 +55,18 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
         :unavailable -> {nil, :unavailable}
       end
 
-    socket =
-      socket
-      |> assign(:schema_allowlist, allowlist)
-      |> assign(:selected_schema, selected_schema)
-      |> assign(:selection_error, selection_error)
-      |> load_summary()
-
-    {:noreply, socket}
+    socket
+    |> assign(:schema_allowlist, allowlist)
+    |> assign(:selected_schema, selected_schema)
+    |> assign(:selection_error, selection_error)
+    |> assign(:recovery_target, if(Map.has_key?(params, "schema"), do: selected_schema))
   end
 
   @impl true
   def handle_event("refresh", _params, socket) do
     socket =
       socket
+      |> resolve_selection()
       |> load_summary()
       |> put_flash(:info, "Search health refreshed.")
 

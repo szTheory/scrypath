@@ -31,7 +31,7 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
 
   defmodule RecordingOban do
     def config do
-      %{repo: ScrypathOpsWeb.RecoveryJourneyLiveTest.JourneyRepo, prefix: "public"}
+      %{repo: ScrypathOpsWeb.RecoveryJourneyLiveTest.JourneyRepo, prefix: nil}
     end
 
     def insert(changeset) do
@@ -41,7 +41,7 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
   end
 
   defmodule JourneyRepo do
-    def get(Oban.Job, 991, prefix: "public") do
+    def get(Oban.Job, 991, prefix: nil) do
       struct(Oban.Job,
         id: 991,
         attempt: 1,
@@ -59,13 +59,14 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
 
   setup do
     keys = ~w(
-      schema_allowlist backend sync_mode index_prefix meilisearch_url meilisearch_client
+      schema_allowlist repo backend sync_mode index_prefix meilisearch_url meilisearch_client
       meilisearch_tasks oban oban_queue oban_inspector oban_jobs sigra
     )a
     previous = Map.new(keys, &{&1, Application.get_env(:scrypath_ops, &1)})
     previous_auth_mode = System.get_env("OPSUI_AUTH_MODE")
 
     Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA, OpsPostB])
+    Application.put_env(:scrypath_ops, :repo, JourneyRepo)
     Application.put_env(:scrypath_ops, :backend, Scrypath.Meilisearch)
     Application.put_env(:scrypath_ops, :sync_mode, :oban)
     Application.put_env(:scrypath_ops, :index_prefix, "journey")
@@ -204,8 +205,6 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
 
     assert :sys.get_state(failed.pid).socket.assigns.recovery_receipts[queue_key].state ==
              :accepted
-
-
   end
 
   test "retry identifies the queue row when a backend task has the same numeric id", %{
@@ -256,7 +255,7 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
       [:oban, :job, :start],
       %{},
       %{
-        job: JourneyRepo.get(Oban.Job, 991, prefix: "public"),
+        job: JourneyRepo.get(Oban.Job, 991, prefix: nil),
         conf: Map.merge(RecordingOban.config(), %{name: RecordingOban})
       },
       %{server: collector}
@@ -268,6 +267,23 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
       %{task_uid: 701, final_status: :processing},
       %{server: collector}
     )
+
+    receipt = :sys.get_state(failed.pid).socket.assigns.recovery_receipts[queue_key]
+
+    observed =
+      collector.observe(
+        %{
+          host: "www.example.com",
+          org: "org_456",
+          schema: "ScrypathOps.Test.OpsPostA",
+          generation: receipt.generation
+        },
+        receipt.handle
+      )
+
+    assert is_map(observed)
+    assert observed.source_failure.source == :oban
+    assert observed.task_uid == 701
 
     href =
       failed
