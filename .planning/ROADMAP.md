@@ -27,7 +27,7 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
 
 **Milestone goal:** Operators can inspect, recover, and verify search across the six existing surfaces with a calmer shared visual language, clear safe actions, and truthful task/index/document evidence.
 
-**Status:** Requirements and roadmap explicitly approved on 2026-10-06. Phase 173 has four plans verified by the independent checker. Phases 174–177 remain unplanned; no implementation or product verification has started.
+**Status:** Requirements and roadmap explicitly approved on 2026-10-06. Phase 173 is complete: four plans, seven requirements and independent verification 58/58. Its hosted candidate passed required gates, coverage and attestation; the final-source receipt is retained externally after final tracking. Phases 174–177 remain unplanned; no implementation has started for those phases.
 
 **Overview:** Establish the shared light/dark visual treatment and operational time behavior first, then refine the recovery entry, diagnosis, repair, and verification journey. Clarify Search and Playbooks within that visual world, and finish by consolidating patterns demonstrated on all six surfaces with source-bounded delivery evidence. Each phase proves its own changed behavior with relevant executable checks and direct before/after visual inspection; Phase 177 does not defer earlier acceptance. Reuse the v1.42 inventories as orientation and recheck touched source, without replaying completed fixes.
 
@@ -37,7 +37,7 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
 
 ## Phases
 
-- [ ] **Phase 173: Shared Visual Foundation and Operational Time** - Operators see one calm, truthful visual language and usable time/copy feedback in the existing shell and representative Search health view.
+- [x] **Phase 173: Shared Visual Foundation and Operational Time** - Operators see one calm, truthful visual language and usable time/copy feedback in the existing shell and representative Search health view. (completed 2026-10-06)
 - [ ] **Phase 174: Recovery Entry and Diagnosis** - Operators can identify affected work and reach the next safe recovery action across Control Room, Search health, and Failed sync work.
 - [ ] **Phase 175: Repair and Verification** - Operators can distinguish observation, repair, and promotion, then verify actual outcomes in Sync and drift.
 - [ ] **Phase 176: Search and Playbooks** - Operators can run searches and saved checks with clear common actions, results, and safe occasional controls.
@@ -57,7 +57,7 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
   4. Operators can read stable human-readable last-success times, inspect the exact timestamp and timezone, and distinguish absent or unobserved success from observed success.
   5. In standalone and mounted Ops, operators can copy the full ISO last-success timestamp by keyboard or pointer and receive brief confirmation only after success; denied/unavailable clipboard access is explained, and routine Checked metadata offers no copy action.
 
-**Plans**: 4/4 plans executed
+**Plans**: 4/4 plans complete
 Plans:
 
 **Wave 1**
@@ -139,11 +139,11 @@ Plans:
 
 ## Progress
 
-**Execution order:** 173 → 174 → 175 → 176 → 177. Phase 173 is ready to execute four checked plans; execution has not started.
+**Execution order:** 173 → 174 → 175 → 176 → 177. Phase 173 completed all four plans; Phase 174 is ready for discussion.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 173. Shared Visual Foundation and Operational Time | 4/4 | In Progress — ready to execute | - |
+| 173. Shared Visual Foundation and Operational Time | 4/4 | Complete    | 2026-10-06 |
 | 174. Recovery Entry and Diagnosis | 0/TBD | Not started | - |
 | 175. Repair and Verification | 0/TBD | Not started | - |
 | 176. Search and Playbooks | 0/TBD | Not started | - |

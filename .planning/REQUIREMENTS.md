@@ -10,13 +10,13 @@ Refine the six existing operator surfaces. Continue the OPUX family after comple
 
 ### Shared visual foundation
 
-- [ ] **OPUX-09**: Operators see a flat neutral page background throughout the operator shell in explicit light/dark, OS-driven System appearance, and responsive layouts; decorative shell gradients are removed without removing functional scroll-edge cues.
-- [ ] **OPUX-10**: Operators can identify degraded, failed, and unknown states through explicit text and restrained local icon/badge cues on neutral summary/schema surfaces, without broad yellow fills or whole-record status outlines.
-- [ ] **OPUX-11**: Operators see zero-error counts as ordinary neutral metrics rather than green success outlines; nonzero and unavailable values remain distinguishable, and zero errors do not imply overall health or document freshness.
-- [ ] **OPUX-12**: Operators see exactly one selected theme preference with matching accessible state. System alone looks selected while appearance follows OS changes; preference survives reload/navigation and remains coherent across tabs.
-- [ ] **OPUX-13**: Operators can recognize and use shared quiet actions with deliberate hover, keyboard focus, pressed, selected, disabled, and busy states in both themes; busy refresh/actions retain meaningful icons and labels across existing usages.
-- [ ] **OPUX-14**: Operators can read operational last-success times in a human-readable form and access the exact timestamp/timezone; the display remains stable between checks, and absent or unobserved success stays distinct from an observed success.
-- [ ] **OPUX-15**: Operators can copy an operational last-success timestamp as full ISO evidence using a discoverable keyboard-accessible control in standalone and mounted Ops. “Timestamp copied” appears briefly only after clipboard success; unavailable/denied access is explained truthfully, and routine Checked metadata has no copy control.
+- [x] **OPUX-09**: Operators see a flat neutral page background throughout the operator shell in explicit light/dark, OS-driven System appearance, and responsive layouts; decorative shell gradients are removed without removing functional scroll-edge cues.
+- [x] **OPUX-10**: Operators can identify degraded, failed, and unknown states through explicit text and restrained local icon/badge cues on neutral summary/schema surfaces, without broad yellow fills or whole-record status outlines.
+- [x] **OPUX-11**: Operators see zero-error counts as ordinary neutral metrics rather than green success outlines; nonzero and unavailable values remain distinguishable, and zero errors do not imply overall health or document freshness.
+- [x] **OPUX-12**: Operators see exactly one selected theme preference with matching accessible state. System alone looks selected while appearance follows OS changes; preference survives reload/navigation and remains coherent across tabs.
+- [x] **OPUX-13**: Operators can recognize and use shared quiet actions with deliberate hover, keyboard focus, pressed, selected, disabled, and busy states in both themes; busy refresh/actions retain meaningful icons and labels across existing usages.
+- [x] **OPUX-14**: Operators can read operational last-success times in a human-readable form and access the exact timestamp/timezone; the display remains stable between checks, and absent or unobserved success stays distinct from an observed success.
+- [x] **OPUX-15**: Operators can copy an operational last-success timestamp as full ISO evidence using a discoverable keyboard-accessible control in standalone and mounted Ops. “Timestamp copied” appears briefly only after clipboard success; unavailable/denied access is explained truthfully, and routine Checked metadata has no copy control.
 
 ### Recovery entry and diagnosis
 
@@ -75,13 +75,13 @@ Approved roadmap mapping. Each requirement appears in exactly one phase; every r
 
 | Requirement | Phase | Status |
 | --- | --- | --- |
-| OPUX-09 | Phase 173 | Pending |
-| OPUX-10 | Phase 173 | Pending |
-| OPUX-11 | Phase 173 | Pending |
-| OPUX-12 | Phase 173 | Pending |
-| OPUX-13 | Phase 173 | Pending |
-| OPUX-14 | Phase 173 | Pending |
-| OPUX-15 | Phase 173 | Pending |
+| OPUX-09 | Phase 173 | Complete |
+| OPUX-10 | Phase 173 | Complete |
+| OPUX-11 | Phase 173 | Complete |
+| OPUX-12 | Phase 173 | Complete |
+| OPUX-13 | Phase 173 | Complete |
+| OPUX-14 | Phase 173 | Complete |
+| OPUX-15 | Phase 173 | Complete |
 | OPUX-16 | Phase 174 | Pending |
 | OPUX-17 | Phase 174 | Pending |
 | OPUX-18 | Phase 174 | Pending |
