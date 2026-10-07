@@ -287,7 +287,11 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     query_a = URI.encode_query(%{"schema" => schema_a})
     query_b = URI.encode_query(%{"schema" => schema_b})
 
-    {:ok, lv, _html} = live(conn, "/ops/sync-drift?" <> query_a)
+    {:ok, lv, html} = live(conn, "/ops/sync-drift?" <> query_a)
+
+    if fixture_path = System.get_env("SCRYPATH_PALETTE_DOM_FIXTURE") do
+      File.write!(fixture_path, html)
+    end
 
     assert has_element?(lv, "#ops-command-palette-destinations")
 
