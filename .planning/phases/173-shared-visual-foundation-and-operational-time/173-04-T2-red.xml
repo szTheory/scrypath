@@ -1,0 +1,104 @@
+<testsuites id="" name="" tests="4" failures="2" skipped="0" errors="0" time="15.951902999999998">
+<testsuite name="phase173_copy.spec.ts" timestamp="2026-10-07T00:43:11.966Z" hostname="chromium" tests="4" failures="2" skipped="0" time="14.717" errors="0">
+<testcase name="mounted copies one exact operational timestamp after clipboard resolution" classname="phase173_copy.spec.ts" time="2.338">
+</testcase>
+<testcase name="mounted keeps the latest clipboard outcome when writes settle out of order" classname="phase173_copy.spec.ts" time="5.428">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|phase173_copy-mounted-keep-8deae--writes-settle-out-of-order-chromium/error-context.md]]
+
+[[ATTACHMENT|phase173_copy-mounted-keep-8deae--writes-settle-out-of-order-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toHaveText(expected) failed" type="expect.toHaveText">
+<![CDATA[  [chromium] › phase173_copy.spec.ts:88:7 › mounted keeps the latest clipboard outcome when writes settle out of order 
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator:  locator('[id="posture-ScrypathEcommerce.Catalog.Product"] .ops-signal-group').first().locator('.ops-time').first().locator('[data-ops-time-feedback-text]')
+    Expected: "Could not copy timestamp. Select and copy the exact value."
+    Received: ""
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveText" with timeout 5000ms
+      - waiting for locator('[id="posture-ScrypathEcommerce.Catalog.Product"] .ops-signal-group').first().locator('.ops-time').first().locator('[data-ops-time-feedback-text]')
+        12 × locator resolved to <span data-state="success" data-ops-time-feedback-text="">Timestamp copied</span>
+           - unexpected value "Timestamp copied"
+        2 × locator resolved to <span data-ops-time-feedback-text=""></span>
+          - unexpected value ""
+
+
+      131 |       }).__phase173QueuedWrites[0].resolve()
+      132 |     );
+    > 133 |     await expect(feedback).toHaveText("Could not copy timestamp. Select and copy the exact value.");
+          |                            ^
+      134 |     await expect(time.locator("details")).toHaveAttribute("open", "");
+      135 |     await context.close();
+      136 |   });
+        at /app/examples/scrypath_ecommerce/e2e/phase173_copy.spec.ts:133:28
+
+    Error Context: ../test-results/phase173_copy-mounted-keep-8deae--writes-settle-out-of-order-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/phase173_copy-mounted-keep-8deae--writes-settle-out-of-order-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../test-results/phase173_copy-mounted-keep-8deae--writes-settle-out-of-order-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="standalone copies one exact operational timestamp after clipboard resolution" classname="phase173_copy.spec.ts" time="1.676">
+</testcase>
+<testcase name="standalone keeps the latest clipboard outcome when writes settle out of order" classname="phase173_copy.spec.ts" time="5.275">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|phase173_copy-standalone-k-6cdd9--writes-settle-out-of-order-chromium/error-context.md]]
+
+[[ATTACHMENT|phase173_copy-standalone-k-6cdd9--writes-settle-out-of-order-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toHaveText(expected) failed" type="expect.toHaveText">
+<![CDATA[  [chromium] › phase173_copy.spec.ts:88:7 › standalone keeps the latest clipboard outcome when writes settle out of order 
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator:  locator('[id="posture-ScrypathOps.Test.OpsPostA"] .ops-signal-group').first().locator('.ops-time').first().locator('[data-ops-time-feedback-text]')
+    Expected: "Could not copy timestamp. Select and copy the exact value."
+    Received: ""
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveText" with timeout 5000ms
+      - waiting for locator('[id="posture-ScrypathOps.Test.OpsPostA"] .ops-signal-group').first().locator('.ops-time').first().locator('[data-ops-time-feedback-text]')
+        12 × locator resolved to <span data-state="success" data-ops-time-feedback-text="">Timestamp copied</span>
+           - unexpected value "Timestamp copied"
+        2 × locator resolved to <span data-ops-time-feedback-text=""></span>
+          - unexpected value ""
+
+
+      131 |       }).__phase173QueuedWrites[0].resolve()
+      132 |     );
+    > 133 |     await expect(feedback).toHaveText("Could not copy timestamp. Select and copy the exact value.");
+          |                            ^
+      134 |     await expect(time.locator("details")).toHaveAttribute("open", "");
+      135 |     await context.close();
+      136 |   });
+        at /app/examples/scrypath_ecommerce/e2e/phase173_copy.spec.ts:133:28
+
+    Error Context: ../test-results/phase173_copy-standalone-k-6cdd9--writes-settle-out-of-order-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/phase173_copy-standalone-k-6cdd9--writes-settle-out-of-order-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../test-results/phase173_copy-standalone-k-6cdd9--writes-settle-out-of-order-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+</testsuite>
+</testsuites>

@@ -84,4 +84,54 @@ for (const entrypoint of ENTRYPOINTS) {
       }
     }
   });
+
+  test(`${entrypoint.name} keeps the latest clipboard outcome when writes settle out of order`, async ({ browser }) => {
+    const { context, page } = await openPage(browser, 390, "light");
+    await page.goto(entrypoint.url);
+    await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+    const time = page.locator(`[id="${entrypoint.row}"] .ops-signal-group`).first().locator(".ops-time").first();
+    const copy = time.getByRole("button", { name: "Copy timestamp", exact: true });
+    const feedback = time.locator("[data-ops-time-feedback-text]");
+    await page.evaluate(() => {
+      const testWindow = window as typeof window & {
+        __phase173QueuedWrites: Array<{ resolve: () => void; reject: (error: Error) => void }>;
+      };
+      testWindow.__phase173QueuedWrites = [];
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: {
+          writeText() {
+            return new Promise<void>((resolve, reject) => {
+              testWindow.__phase173QueuedWrites.push({ resolve, reject });
+            });
+          }
+        }
+      });
+    });
+
+    await copy.click();
+    await expect.poll(() => page.evaluate(() =>
+      (window as typeof window & { __phase173QueuedWrites: unknown[] }).__phase173QueuedWrites.length
+    )).toBe(1);
+    await copy.click();
+    await expect.poll(() => page.evaluate(() =>
+      (window as typeof window & { __phase173QueuedWrites: unknown[] }).__phase173QueuedWrites.length
+    )).toBe(2);
+    await page.evaluate(() =>
+      (window as typeof window & {
+        __phase173QueuedWrites: Array<{ resolve: () => void; reject: (error: Error) => void }>;
+      }).__phase173QueuedWrites[1].reject(new Error("denied"))
+    );
+    await expect(feedback).toHaveText("Could not copy timestamp. Select and copy the exact value.");
+    await expect(time.locator("details")).toHaveAttribute("open", "");
+
+    await page.evaluate(() =>
+      (window as typeof window & {
+        __phase173QueuedWrites: Array<{ resolve: () => void; reject: (error: Error) => void }>;
+      }).__phase173QueuedWrites[0].resolve()
+    );
+    await expect(feedback).toHaveText("Could not copy timestamp. Select and copy the exact value.");
+    await expect(time.locator("details")).toHaveAttribute("open", "");
+    await context.close();
+  });
 }
