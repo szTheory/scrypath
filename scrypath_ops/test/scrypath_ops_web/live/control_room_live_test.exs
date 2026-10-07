@@ -86,6 +86,37 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     |> assert_before("ops-intent-card__icon", "ops-intent-card__markers")
   end
 
+  test "selected recovery target is named in both shell navs and scopes recovery links", %{
+    conn: conn
+  } do
+    put_healthy_posture_config!()
+    query = URI.encode_query(%{"schema" => ScrypathOps.OperatorSelection.canonical(OpsPostA)})
+    {:ok, _lv, html} = live(conn, "/ops?" <> query)
+
+    assert html =~ "Recovery target"
+    assert html =~ "ScrypathOps.Test.OpsPostA"
+
+    for destination <- ["health", "failed-sync", "sync-drift"] do
+      href = ~s(href="/ops/#{destination}?#{query}")
+      assert html |> then(&Regex.scan(~r/#{Regex.escape(href)}/, &1)) |> length() == 2
+    end
+
+    assert html =~ ~s(href="/ops/search")
+    assert html =~ ~s(href="/ops/playbooks")
+  end
+
+  test "invalid explicit recovery target is not propagated into shell navigation", %{conn: conn} do
+    put_healthy_posture_config!()
+    {:ok, _lv, html} = live(conn, "/ops?schema=ScrypathOps.Test.Unknown")
+
+    assert html =~ "That schema is unavailable"
+    refute html =~ "Recovery target"
+
+    for destination <- ["health", "failed-sync", "sync-drift"] do
+      refute html =~ ~s(href="/ops/#{destination}?schema=)
+    end
+  end
+
   test "unconfigured fleet shows the config empty state but keeps the intent cards", %{conn: conn} do
     {:ok, lv, html} = live(conn, ~p"/ops")
 
