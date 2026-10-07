@@ -65,6 +65,11 @@ case "$scope" in
     PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results/phase174-palette.xml \
       exec npx playwright test e2e/phase174_recovery.spec.ts --grep "mounted palette recovery destinations follow the selected schema" --workers=1 --retries=0 --reporter=junit
     ;;
+  phase174-standalone-palette)
+    echo "Running the focused standalone Phase 174 palette manifest proof..."
+    PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results/phase174-standalone-palette.xml \
+      exec npx playwright test e2e/phase174_recovery.spec.ts --grep "standalone palette manifest follows the validated fixture schema" --workers=1 --retries=0 --reporter=junit
+    ;;
   full)
     echo "Running the full advisory ecommerce browser and deterministic visual lane..."
     browser_status=0
@@ -89,7 +94,7 @@ case "$scope" in
     exit 1
     ;;
   *)
-    echo "Unsupported E2E_SCOPE '$scope' (expected focused, phase173-shell, phase173-time, phase173-status, phase173-copy, phase174-palette, phase174-recovery, or full)." >&2
+    echo "Unsupported E2E_SCOPE '$scope' (expected focused, phase173-shell, phase173-time, phase173-status, phase173-copy, phase174-palette, phase174-standalone-palette, phase174-recovery, or full)." >&2
     exit 64
     ;;
 esac

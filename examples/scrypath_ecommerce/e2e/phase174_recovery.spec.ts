@@ -29,6 +29,32 @@ test("mounted palette recovery destinations follow the selected schema", async (
     .toContain("schema=ScrypathEcommerce.Catalog.Variant");
 });
 
+test("standalone palette manifest follows the validated fixture schema", async ({ page }, info) => {
+  const schemaA = "ScrypathOps.Test.OpsPostA";
+  const schemaB = "ScrypathOps.Test.OpsPostB";
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`${standalone}/failed-sync?scenario=a-selected-b-worse&schema=${schemaA}`);
+  await waitForLiveConnected(page);
+  await page.getByRole("radio", { name: /OpsPostB/ }).check();
+  await waitForLiveConnected(page);
+  await expect(page).toHaveURL(new RegExp(`schema=${schemaB.replaceAll(".", "\\.")}`));
+  await expect(page.getByRole("radio", { name: /OpsPostB/ })).toBeChecked();
+
+  const observed = {
+    selectedSchema: new URL(page.url()).searchParams.get("schema"),
+    manifestTarget: await page.locator("#ops-command-palette-destinations").getAttribute("data-recovery-target"),
+    manifestHealthHref: await page.locator("#ops-palette-destination-health").getAttribute("href"),
+    paletteHealthHref: await page.locator("#ops-cmdk-item-1").getAttribute("href")
+  };
+  info.annotations.push({ type: "phase174-standalone-palette-state", description: JSON.stringify(observed) });
+  expect(observed).toEqual({
+    selectedSchema: schemaB,
+    manifestTarget: schemaB,
+    manifestHealthHref: expect.stringContaining(`schema=${schemaB}`),
+    paletteHealthHref: expect.stringContaining(`schema=${schemaB}`)
+  });
+});
+
 async function capture(page: Page, info: TestInfo, entry: string, surface: string, width: number, theme: string) {
   await mkdir(captureRoot, { recursive: true });
   await page.evaluate(() => window.scrollTo(0, 0));
