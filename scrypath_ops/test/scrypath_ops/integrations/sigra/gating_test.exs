@@ -1,17 +1,27 @@
 defmodule ScrypathOps.Integrations.Sigra.GatingTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   alias ScrypathOps.Integrations.Sigra.Gating
   alias ScrypathOps.Integrations.Sigra.OperatorContext
+  alias ScrypathOps.Test.OpsPostA
+  alias ScrypathOps.Test.OpsPostB
 
   setup do
     original_sigra = Application.get_env(:scrypath_ops, :sigra)
+    original_allowlist = Application.get_env(:scrypath_ops, :schema_allowlist)
+    Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA, OpsPostB])
 
     on_exit(fn ->
       if original_sigra == nil do
         Application.delete_env(:scrypath_ops, :sigra)
       else
         Application.put_env(:scrypath_ops, :sigra, original_sigra)
+      end
+
+      if original_allowlist == nil do
+        Application.delete_env(:scrypath_ops, :schema_allowlist)
+      else
+        Application.put_env(:scrypath_ops, :schema_allowlist, original_allowlist)
       end
     end)
 
@@ -54,6 +64,58 @@ defmodule ScrypathOps.Integrations.Sigra.GatingTest do
 
     assert inspect(result.redirected) =~ "/sudo/confirm"
     assert inspect(result.redirected) =~ "return_to=%2Fops%2Fplaybooks%2F42"
+  end
+
+  test "stale sudo preserves only the current allowlisted schema in the local return path" do
+    context = operator_context(sudo_at: DateTime.add(DateTime.utc_now(), -600, :second))
+
+    socket = %{
+      socket(%{
+        operator_context: context,
+        selected_schema: OpsPostA
+      })
+      | host_uri: URI.parse("https://scrypath.example/ops/failed-sync?evil=1&schema=OpsPostB")
+    }
+
+    result =
+      Gating.gate_sensitive_action(socket, :failed_work_retry, fn ->
+        flunk("the interrupted retry must not run")
+      end)
+
+    redirected = inspect(result.redirected)
+    assert redirected =~ "return_to=%2Fops%2Ffailed-sync%3Fschema%3DScrypathOps.Test.OpsPostA"
+    refute redirected =~ "evil"
+    refute redirected =~ "OpsPostB"
+  end
+
+  test "stale sudo omits a selected schema after it leaves the current allowlist" do
+    Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA])
+    context = operator_context(sudo_at: DateTime.add(DateTime.utc_now(), -600, :second))
+    socket = socket(%{operator_context: context, selected_schema: OpsPostB})
+
+    result =
+      Gating.gate_sensitive_action(socket, :failed_work_retry, fn ->
+        flunk("the interrupted retry must not run")
+      end)
+
+    redirected = inspect(result.redirected)
+    assert redirected =~ "return_to=%2Fops%2Fplaybooks%2F42"
+    refute redirected =~ "schema"
+    refute redirected =~ "OpsPostB"
+  end
+
+  test "stale sudo rejects a cross-host explicit return path" do
+    context = operator_context(sudo_at: DateTime.add(DateTime.utc_now(), -600, :second))
+    socket = socket(%{operator_context: context, return_to: "https://evil.example/steal"})
+
+    result =
+      Gating.gate_sensitive_action(socket, :playbook_delete, fn ->
+        flunk("the interrupted action must not run")
+      end)
+
+    redirected = inspect(result.redirected)
+    assert redirected =~ "return_to=%2Fops%2Fplaybooks%2F42"
+    refute redirected =~ "evil.example"
   end
 
   test "fresh sudo executes the closure" do

@@ -2,6 +2,8 @@ if Code.ensure_loaded?(Sigra.Audit) do
   defmodule ScrypathOps.Integrations.Sigra.Gating do
     @moduledoc false
 
+    alias ScrypathOps.OperatorSelection
+
     @action_config %{
       playbook_delete: "scrypath.ops.playbook_delete",
       failed_work_retry: "scrypath.ops.failed_work_retry",
@@ -74,10 +76,74 @@ if Code.ensure_loaded?(Sigra.Audit) do
     end
 
     defp return_to(%{assigns: assigns, host_uri: %URI{path: path}}) do
-      Map.get(assigns, :return_to) || path || "/"
+      assigns
+      |> Map.get(:return_to)
+      |> local_return_path(path || "/")
+      |> append_selected_schema(validated_schema(assigns))
     end
 
-    defp return_to(%{assigns: assigns}), do: Map.get(assigns, :return_to, "/")
+    defp return_to(%{assigns: assigns}) do
+      assigns
+      |> Map.get(:return_to)
+      |> local_return_path("/")
+      |> append_selected_schema(validated_schema(assigns))
+    end
+
+    defp local_return_path(candidate, fallback) do
+      if local_path?(candidate),
+        do: candidate,
+        else: if(local_path?(fallback), do: fallback, else: "/")
+    end
+
+    defp local_path?(path) when is_binary(path) do
+      uri = URI.parse(path)
+
+      uri.path != nil and String.starts_with?(uri.path, "/") and
+        not String.starts_with?(uri.path, "//") and is_nil(uri.scheme) and is_nil(uri.host) and
+        not Regex.match?(~r/%(?:2f|5c)/i, uri.path) and
+        not String.contains?(path, ["\\", "\r", "\n"])
+    rescue
+      ArgumentError -> false
+    end
+
+    defp local_path?(_path), do: false
+
+    defp validated_schema(assigns) do
+      case Map.get(assigns, :selected_schema) do
+        schema when is_atom(schema) and not is_nil(schema) ->
+          canonical = OperatorSelection.canonical(schema)
+
+          case OperatorSelection.resolve(
+                 %{"schema" => canonical},
+                 ScrypathOps.Schemas.allowlist()
+               ) do
+            {:ok, ^schema} -> canonical
+            _ -> nil
+          end
+
+        _ ->
+          nil
+      end
+    end
+
+    defp append_selected_schema(path, schema) do
+      uri = URI.parse(path)
+
+      query =
+        try do
+          uri.query |> decode_query() |> Map.delete("schema")
+        rescue
+          ArgumentError -> %{}
+        end
+
+      query = if schema, do: Map.put(query, "schema", schema), else: query
+      encoded_query = if map_size(query) == 0, do: nil, else: URI.encode_query(query)
+
+      URI.to_string(%{uri | query: encoded_query})
+    end
+
+    defp decode_query(nil), do: %{}
+    defp decode_query(query), do: URI.decode_query(query)
 
     defp sigra_config do
       Application.get_env(:scrypath_ops, :sigra, [])

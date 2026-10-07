@@ -233,14 +233,22 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
         context_generation: 0,
         selection_error: nil
       },
-      host_uri: URI.parse("https://scrypath.example/ops/failed-sync")
+      host_uri:
+        URI.parse(
+          "https://scrypath.example/ops/failed-sync?evil=1&schema=ScrypathOps.Test.OpsPostB"
+        )
     }
 
     {:noreply, socket} =
       ScrypathOpsWeb.FailedSyncLive.handle_event("retry", %{"id" => "501"}, socket)
 
     assert inspect(socket.redirected) =~ "/sudo/confirm"
-    assert inspect(socket.redirected) =~ "return_to=%2Fops%2Ffailed-sync"
+
+    assert inspect(socket.redirected) =~
+             "return_to=%2Fops%2Ffailed-sync%3Fschema%3DScrypathOps.Test.OpsPostA"
+
+    refute inspect(socket.redirected) =~ "evil"
+    assert Agent.get(:failed_sync_insert_counter, & &1) == 0
   end
 
   test "sigra retry refreshes the inspection in place without losing local state", %{conn: conn} do
