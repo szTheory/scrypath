@@ -54,6 +54,15 @@ Mounted and standalone Ops recovery now have an isolated executable browser lane
 - Added a narrow `OnMount` regression fix: the recovery target now resolves against the validated allowlist assigned by the active LiveView, falling back to the configured host allowlist. The standalone fixture modules are exposed only through its Phase174 test-host environment. Gating's canonical validation remains in force.
 - The actual mounted and standalone Control Room primary health action measured 40px before the fix, below the UI-SPEC's 44px prominent target. A focused browser geometry assertion failed on both entrypoints, then the action was moved to the existing medium size and given the existing 44px token through a local selector. Standard command and theme controls remain asserted at 40px.
 
+## Task Commits
+
+1. **Task 1: Isolated browser runner and standalone manifest proof** — `c9f8c23` (already-green runner baseline), `c34c9dd` (standalone manifest RED), `54d8244` (manifest GREEN).
+2. **Task 2: Dual-entrypoint prominent-action proof** — `54c623e` (44px RED), `d197656` (44px GREEN).
+3. **Task 1: Parent integration follow-ups within Phase174** — `e8db6a8` (shared Oban test fixture), `0b09182` (supervised fixture cleanup), `5c48f3e` (mixed-source copy RED), `08f0d07` (mixed-source copy GREEN).
+4. **Task 2: Parent Nyquist follow-up** — `1020ace` (expanded browser/fixture coverage and native focus RED), `d4395f2` (schema-keyed render; native focus GREEN). `024a450` corrects fixture marker preservation, complete success timestamps, long reason fixtures, native LiveView readiness, truthful bounded-reason assertions, and transport-independent pending-refresh proof. The expanded lane passes 11/11 after these corrections.
+
+Original plan task count and five task commits above remain the original executor ledger; additional parent integration and validation follow-ups are named separately and do not assert a new plan or fabricated RED history. Commit labels now use the runtime owner's `**Task N:` grammar so the phase evaluation scope includes the actual source, tests, and harness rather than silently dropping RED/GREEN-labelled rows.
+
 ## Verification
 
 - Final browser command: `PATH=/Users/jon/.asdf/installs/elixir/1.19.5-otp-28/bin:/Users/jon/.asdf/installs/erlang/28.4.1/bin:$PATH HEX_HOME=/private/tmp/scrypath-phase173-20261006-155750/hex-home MIX_ENV=test MIX_TEST_PARTITION=174_wave1 DOCKER_CONFIG=/private/tmp/scrypath-phase173-20261006-155750/docker-config DOCKER_HOST=unix:///Users/jon/.docker/run/docker.sock PHASE174_PROJECT_ID=scrypath_phase174_54c623ee35_recovery_final2 ./scripts/verify-phase174.sh recovery` — **4 Chromium tests passed, 0 failed, 0 skipped** (20.2 seconds). The browser checks include the three hard palette href assertions in each entrypoint, selected-schema updates, real recovery and Gating paths, 14px essential text, standard 40px and prominent 44px targets, no horizontal overflow, keyboard focus, light/dark/System preference, and reduced motion.
@@ -93,3 +102,7 @@ The final focused browser run covers the plan's dual-entrypoint recovery and geo
 ## Self-Check: PASSED
 
 The task commits are present, the summary path exists, the final successful JUnit has four cases with zero failures/skips, the capture directory contains 48 images, and all task-owned Docker resources were removed. Phase-level requirements and independent verification remain pending.
+
+## Parent validation closeout evidence
+
+The expanded final lane passes 11 native Chromium cases, zero failures/errors/skips (40.8s), with 48 actual AFTER captures. `174-FINAL-BROWSER.xml` and `174-FINAL-EVIDENCE.json` preserve the native report and exact local source boundary. Schema-keyed rendering passes the previously failing real refresh/reorder focus assertion. Retained/error/unknown/no-success/empty/long states, exact delete scope, real pending refresh/retry, target/history, drawer, and palette filter/clear assertions execute. Pending refresh uses a deliberately delayed real source observation; pending retry holds the actual WebSocket response. Neither uses fabricated browser DOM or a fake hook. Parent Ops precommit and root `mix verify.ops_ui` each pass272tests+2doctests/0; core regression passes661tests+4properties/0; contrastAA0/AAA35. Full hosted final-source closeout remains pending.

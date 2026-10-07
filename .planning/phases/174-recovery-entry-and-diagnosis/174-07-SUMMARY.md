@@ -94,10 +94,10 @@ status: complete
 
 ## Task Commits
 
-1. **Task 1 RED:** `223ab93` — failing LiveView destination regression with classified evidence.
-2. **Task 1 GREEN:** `65c7044` — render validated contextual palette destinations.
-3. **Task 2 RED:** `d37cd18` — failing native browser href-patch regression with classified evidence.
-4. **Task 2 GREEN:** `c0f51b3` — observe contextual palette destinations.
+1. **Task 1: RED** `223ab93` — failing LiveView destination regression with classified evidence.
+2. **Task 1: GREEN** `65c7044` — render validated contextual palette destinations.
+3. **Task 2: RED** `d37cd18` — failing native browser href-patch regression with classified evidence.
+4. **Task 2: GREEN** `c0f51b3` — observe contextual palette destinations.
 
 The RED records both returned `RED_EVIDENCE_OK` from `gsd_run check tdd-red-evidence`; each named target failed on the planned missing behavior before production edits. Both tests passed after their corresponding implementation commits.
 

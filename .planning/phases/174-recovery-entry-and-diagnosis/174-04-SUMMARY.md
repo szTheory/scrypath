@@ -95,11 +95,11 @@ commits: 6
 
 ## Task Commits
 
-1. **Task 1 RED: evidence-bounded Control Room entry** — `33afdfb` (`test`)
-2. **Task 1 RED: refresh retention** — `d6edf40` (`test`)
-3. **Task 1 GREEN: Control Room recovery entry** — `b6a464d` (`feat`)
-4. **Task 2 RED: Posture Live action identity** — `b1f838a` (`test`)
-5. **Task 2 GREEN: Posture Live record actions** — `09ad490` (`feat`)
+1. **Task 1: RED evidence-bounded Control Room entry** — `33afdfb` (`test`)
+2. **Task 1: RED refresh retention** — `d6edf40` (`test`)
+3. **Task 1: GREEN Control Room recovery entry** — `b6a464d` (`feat`)
+4. **Task 2: RED Posture Live action identity** — `b1f838a` (`test`)
+5. **Task 2: GREEN Posture Live record actions** — `09ad490` (`feat`)
 6. **Deferred full-suite finding** — `029aa14` (`docs`)
 
 The summary is committed separately; tracking updates follow in their own commit.

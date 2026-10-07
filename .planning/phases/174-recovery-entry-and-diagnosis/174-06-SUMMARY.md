@@ -102,8 +102,8 @@ Test-only standalone routes now drive the production Control Room, Search health
 
 Each task used a test-only RED commit followed by its implementation commit:
 
-1. **T1: Expose isolated Phase174 standalone fixture route through real LiveViews** — `e6f4f54` (RED), `e537a2b` (GREEN).
-2. **T2: Drive standalone fixture states and real Sigra safe-return seam** — `f19ec6e` (RED), `00ca41e` (GREEN), `c2706f1` (mount-only stale fixture context refinement).
+1. **Task 1: Expose isolated Phase174 standalone fixture route through real LiveViews** — `e6f4f54` (RED), `e537a2b` (GREEN).
+2. **Task 2: Drive standalone fixture states and real Sigra safe-return seam** — `f19ec6e` (RED), `00ca41e` (GREEN), `c2706f1` (mount-only stale fixture context refinement).
 
 The plan had five commits measured from `plan_head_before`; the SUMMARY is committed separately before state tracking.
 

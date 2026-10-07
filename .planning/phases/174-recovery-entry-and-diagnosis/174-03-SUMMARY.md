@@ -89,8 +89,8 @@ status: complete
 ## Task Commits
 
 1. **Task 1:** `3b515ea` — preserve validated schema through sudo return.
-2. **Task 2 RED:** `699968d` — add removed-schema success and observer-exit regressions with classifier-validated TAP evidence.
-3. **Task 2 GREEN:** `830e83d` — reject recovery results for removed schemas.
+2. **Task 2: RED** `699968d` — add removed-schema success and observer-exit regressions with classifier-validated TAP evidence.
+3. **Task 2: GREEN** `830e83d` — reject recovery results for removed schemas.
 
 ## TDD Test Evidence
 
