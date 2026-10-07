@@ -293,11 +293,13 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
     assert after_selection.recovery_receipts == %{}
     refute has_element?(failed, "[data-testid='recovery-receipt']")
 
-    render_click(failed, "retry", %{
-      "key" => "501",
-      "generation" => to_string(before.context_generation)
-    })
+    stale_html =
+      render_click(failed, "retry", %{
+        "key" => "501",
+        "generation" => to_string(before.context_generation)
+      })
 
+    assert stale_html =~ "earlier inspection"
     assert :sys.get_state(failed.pid).socket.assigns.recovery_receipts == %{}
     assert :sys.get_state(failed.pid).socket.assigns.selected_schema == OpsPostB
 
