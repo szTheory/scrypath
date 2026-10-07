@@ -136,6 +136,8 @@ The T1 RED reports are `.planning/phases/173-shared-visual-foundation-and-operat
 
 15. **Task 3: Whole-schema queue evidence regression and correction** — `08427da`, `a2a5d50`, `3adccd9` (test/fix)
 
+16. **Task 3: Invalid configuration rendering RED and safe fallback GREEN** — `4f193e2`, `bbc8453` (test/fix)
+
 ## Verification
 
 - `mix test test/scrypath/operator/status_test.exs` — passed, 5 tests, 0 failures.
