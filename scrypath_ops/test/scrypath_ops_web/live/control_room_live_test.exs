@@ -65,19 +65,24 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     refute html =~ "data-testid=\"posture-row\""
   end
 
-  test "intent cards route by job to the right surfaces", %{conn: conn} do
-    {:ok, lv, html} = live(conn, ~p"/ops")
+  test "configured recovery entry and intent cards route to the right surfaces", %{conn: conn} do
+    put_healthy_posture_config!()
+    query = URI.encode_query(%{"schema" => ScrypathOps.OperatorSelection.canonical(OpsPostA)})
+    {:ok, lv, html} = live(conn, "/ops?" <> query)
 
-    assert has_element?(lv, "[data-testid='intent-incident'][href$='/ops/health']")
-    assert has_element?(lv, "[data-testid='intent-incident']", "Start recovery")
+    assert has_element?(
+             lv,
+             "[data-testid='control-room-health-link'][href='/ops/health?#{query}']"
+           )
+
+    refute has_element?(lv, "[data-testid='intent-incident']")
     assert has_element?(lv, "[data-testid='intent-change'][href$='/ops/sync-drift']")
     assert has_element?(lv, "[data-testid='intent-explore'][href$='/ops/search']")
-    assert html =~ "Recover search when something looks wrong."
     assert html =~ "Verify a change before promotion."
     assert html =~ "Inspect a search result, then save a useful check."
 
     html
-    |> card_fragment("intent-incident")
+    |> card_fragment("intent-change")
     |> assert_before("ops-intent-card__icon", "ops-intent-card__markers")
   end
 

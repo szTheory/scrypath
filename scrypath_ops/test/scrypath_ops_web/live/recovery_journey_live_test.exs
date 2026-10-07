@@ -26,29 +26,6 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
     end
   end
 
-  defmodule Elixir.Oban.Job do
-    defstruct [:id, :worker, :queue, :state, :attempt, :max_attempts, :args]
-
-    def new(args, opts) do
-      %Ecto.Changeset{
-        data: %__MODULE__{
-          args: args,
-          worker: Keyword.fetch!(opts, :worker),
-          queue: Keyword.fetch!(opts, :queue),
-          max_attempts: Keyword.fetch!(opts, :max_attempts),
-          state: "available",
-          attempt: 0
-        },
-        changes: %{},
-        errors: [],
-        valid?: true,
-        action: nil,
-        types: %{},
-        params: nil
-      }
-    end
-  end
-
   setup do
     keys = ~w(
       schema_allowlist backend sync_mode index_prefix meilisearch_url meilisearch_client
