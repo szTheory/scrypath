@@ -191,6 +191,86 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
     assert :sys.get_state(failed.pid).socket.assigns.recovery_receipts["501"].state == :accepted
   end
 
+  test "retry identifies the queue row when a backend task has the same numeric id", %{
+    conn: conn
+  } do
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [
+      %{
+        "uid" => 501,
+        "status" => "failed",
+        "type" => "documentAdditionOrUpdate",
+        "indexUid" => "journey_ops_post_a",
+        "error" => %{"message" => "Backend task shares the queue job id"}
+      }
+    ])
+
+    {:ok, failed, _html} = live(conn, "/ops/failed-sync?schema=ScrypathOps.Test.OpsPostA")
+
+    assert has_element?(failed, "[data-testid='failed-sync-row']", "Backend task 501")
+    assert has_element?(failed, "[data-testid='failed-sync-row']", "Queue job 501")
+
+    put_live_assigns(failed,
+      current_scope: %{user: %{id: "user_123"}, active_organization: %{id: "org_456"}},
+      operator_context: %ScrypathOps.Integrations.Sigra.OperatorContext{
+        user_id: "user_123",
+        active_org_id: "org_456",
+        impersonator_user_id: nil,
+        sudo_at: DateTime.add(DateTime.utc_now(), -60, :second)
+      }
+    )
+
+    queue_row = element(failed, "[data-testid='failed-sync-row']", "Queue job 501")
+    queue_row |> element("[data-testid='failed-sync-retry']") |> render_click()
+
+    assert render(element(failed, "[data-testid='recovery-receipt']")) =~ "Queue job 991"
+    assert :sys.get_state(failed.pid).socket.assigns.recovery_receipts["oban:501"].state == :accepted
+  end
+
+  test "explicit unavailable and empty schema selections never become a recovery target", %{
+    conn: conn
+  } do
+    for path <- [
+          "/ops?schema=",
+          "/ops?schema=Elixir.NotAllowed",
+          "/ops/health?schema=Elixir.NotAllowed"
+        ] do
+      {:ok, view, html} = live(conn, path)
+      assert html =~ "That schema is unavailable"
+      refute has_element?(view, "a[data-testid='control-room-health-link']")
+      refute has_element?(view, "a[data-testid='posture-failed-sync-link']")
+    end
+
+    Application.put_env(:scrypath_ops, :schema_allowlist, [])
+    {:ok, setup_view, setup_html} = live(conn, "/ops?schema=ScrypathOps.Test.OpsPostA")
+    assert setup_html =~ "No schemas configured"
+    refute has_element?(setup_view, "[data-testid='recovery-target']")
+  end
+
+  test "selection changes invalidate receipts, confirmations, and inspected evidence", %{conn: conn} do
+    {:ok, failed, _html} = live(conn, "/ops/failed-sync?schema=ScrypathOps.Test.OpsPostA")
+    before = :sys.get_state(failed.pid).socket.assigns
+
+    put_live_assigns(failed,
+      delete_confirmation: "501",
+      recovery_receipts: %{
+        "oban:501" => %{
+          handle: "old-handle",
+          generation: before.context_generation,
+          state: :accepted
+        }
+      }
+    )
+
+    render_patch(failed, "/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB")
+    after_selection = :sys.get_state(failed.pid).socket.assigns
+
+    assert after_selection.selected_schema == OpsPostB
+    assert after_selection.context_generation == before.context_generation + 1
+    assert after_selection.delete_confirmation == nil
+    assert after_selection.recovery_receipts == %{}
+    refute has_element?(failed, "[data-testid='recovery-receipt']")
+  end
+
   defp href_from_anchor(html) do
     [_, href] = Regex.run(~r/href="([^"]+)"/, html)
     href

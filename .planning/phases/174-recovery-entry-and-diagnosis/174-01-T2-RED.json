@@ -1,0 +1,10 @@
+{
+  "command": "MIX_TEST_PARTITION=174_01_red SCRYPATH_TAP=1 mix test test/scrypath_ops_web/live/recovery_journey_live_test.exs -n 'retry identifies the queue row when a backend task has the same numeric id' --no-color",
+  "exitCode": 2,
+  "output": "TAP version 13\nnot ok 1 - test retry identifies the queue row when a backend task has the same numeric id\n# RuntimeError: Duplicate id found while testing LiveView: failed-detail-501. Both the backend task and queue job have numeric id 501, so their Diagnostics disclosures render duplicate DOM ids.\n1..1\n",
+  "targetTest": "test retry identifies the queue row when a backend task has the same numeric id",
+  "targetFile": "scrypath_ops/test/scrypath_ops_web/live/recovery_journey_live_test.exs",
+  "expected": "Rows from different work sources with the same public numeric id have distinct internal identities, and clicking the queue row retries that currently selected queue job.",
+  "actual": "The selected schema exposes both backend task 501 and queue job 501, but LiveView rejects the duplicate failed-detail-501 disclosure id before the queue retry can complete.",
+  "semanticAssessment": "The target test ran one test and failed because source-distinct failures share the same internal row identity, producing duplicate DOM ids. This is the intended collision case and a concrete LiveView correctness failure, not collection, setup, or compilation failure."
+}
