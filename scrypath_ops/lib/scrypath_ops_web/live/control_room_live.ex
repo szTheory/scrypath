@@ -11,6 +11,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
   use ScrypathOpsWeb, :live_view
 
   alias ScrypathOps.Posture
+  alias ScrypathOps.OperatorSelection
 
   @orientation_href "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/operator-ia.md"
 
@@ -21,10 +22,34 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
       |> assign(:page_title, "Control Room")
       |> assign(:orientation_href, @orientation_href)
       |> assign(:schema_allowlist, ScrypathOps.Schemas.allowlist())
+      |> assign(:selected_schema, nil)
+      |> assign(:selection_error, nil)
       |> assign(:scrypath_opts, ScrypathOps.Schemas.scrypath_opts())
       |> load_summary()
 
     {:ok, socket}
+  end
+
+  @impl true
+  def handle_params(params, _uri, socket) do
+    allowlist = ScrypathOps.Schemas.allowlist()
+    resolution = OperatorSelection.resolve(params, allowlist)
+
+    {selected_schema, selection_error} =
+      case resolution do
+        {:ok, schema} -> {schema, nil}
+        :setup -> {nil, :no_schemas}
+        :unavailable -> {nil, :unavailable}
+      end
+
+    socket =
+      socket
+      |> assign(:schema_allowlist, allowlist)
+      |> assign(:selected_schema, selected_schema)
+      |> assign(:selection_error, selection_error)
+      |> load_summary()
+
+    {:noreply, socket}
   end
 
   @impl true
@@ -69,6 +94,15 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
         <section aria-labelledby="control-room-health-heading" class="space-y-4">
           <h2 id="control-room-health-heading" class="sr-only">Search health</h2>
 
+          <.ops_status
+            :if={@selection_error == :unavailable}
+            kind={:error}
+            title="That schema is unavailable"
+            role="alert"
+          >
+            Select an allowlisted schema to continue.
+          </.ops_status>
+
           <.ops_config_empty :if={@posture.state == :unconfigured} kind={:no_schemas} />
           <.ops_config_empty :if={@posture.state == :missing_backend} kind={:missing_backend} />
 
@@ -80,11 +114,26 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
             class="ops-verdict--hero"
           >
             <:actions>
-              <.ops_link_button navigate={"#{@mount_path}/health"} variant={:ghost} size={:sm}>
+              <.ops_link_button
+                :if={is_nil(@selection_error)}
+                id="control-room-health-link"
+                data-testid="control-room-health-link"
+                navigate={health_path(@mount_path, @selected_schema)}
+                variant={:ghost}
+                size={:sm}
+              >
                 View search health <span aria-hidden="true">→</span>
               </.ops_link_button>
             </:actions>
             <p>{@posture.evidence}</p>
+            <p
+              :if={@selected_schema}
+              class="mt-2 text-ops-sm text-base-content/75"
+              data-testid="recovery-target"
+            >
+              Recovery target:
+              <.ops_inline_code>{OperatorSelection.canonical(@selected_schema)}</.ops_inline_code>
+            </p>
             <p class="mt-2 text-ops-sm text-base-content/60">
               {schema_health_label(@posture.schema_count)} · {fetch_health_label(@posture.error_count)} · {backend_health_label(
                 @posture.backend_failed_count
@@ -97,18 +146,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
           <.ops_heading level={2} id="control-room-intents-heading">
             What do you need to do?
           </.ops_heading>
-          <div class="grid gap-4 md:grid-cols-3">
-            <.ops_intent_card
-              icon="hero-wrench-screwdriver"
-              kind={intent_tone(@posture)}
-              recommended={@posture.state in [:degraded, :missing_backend]}
-              title="Recover search"
-              summary="Recover search when something looks wrong. Check schema health, work failed syncs, then confirm drift."
-              route_label="Start recovery"
-              navigate={"#{@mount_path}/health"}
-              data-testid="intent-incident"
-            >
-            </.ops_intent_card>
+          <div class="grid gap-4 md:grid-cols-2">
             <.ops_intent_card
               icon="hero-arrow-up-tray"
               title="Verify a change"
@@ -142,9 +180,10 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
     """
   end
 
-  defp intent_tone(%Posture{state: :degraded}), do: :warning
-  defp intent_tone(%Posture{state: :missing_backend}), do: :error
-  defp intent_tone(_), do: :neutral
+  defp health_path(mount_path, schema) when is_atom(schema),
+    do: OperatorSelection.path(mount_path, "health", schema)
+
+  defp health_path(mount_path, _schema), do: "#{String.trim_trailing(mount_path, "/")}/health"
 
   defp schema_health_label(1), do: "1 schema checked"
   defp schema_health_label(count), do: "#{count} schemas checked"

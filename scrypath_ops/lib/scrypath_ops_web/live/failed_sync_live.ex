@@ -616,7 +616,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
           <div :if={@inspection.counts.total > 0} class="mt-3 grid gap-2">
             <.ops_result_row
               :for={row <- sorted_entries(@inspection)}
-              title={"Failed job #{inspect(row.id)}"}
+              title={failed_work_title(row)}
               subtitle={"#{row.operation} · #{row.source} · last attempt #{format_dt(row.last_attempt_at || row.failed_at)}"}
               data-testid="failed-sync-row"
             >
@@ -754,4 +754,8 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp format_dt(%DateTime{} = dt) do
     Calendar.strftime(dt, "%b %d, %Y at %H:%M UTC")
   end
+
+  defp failed_work_title(%{source: :oban, id: id}), do: "Queue job #{inspect(id)}"
+  defp failed_work_title(%{source: :meilisearch, id: id}), do: "Backend task #{inspect(id)}"
+  defp failed_work_title(%{source: source, id: id}), do: "#{source} work #{inspect(id)}"
 end

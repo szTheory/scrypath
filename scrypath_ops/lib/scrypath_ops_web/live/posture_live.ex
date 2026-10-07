@@ -33,6 +33,8 @@ defmodule ScrypathOpsWeb.PostureLive do
       |> assign(:page_title, "Search health")
       |> assign(:schema_allowlist, allowlist)
       |> assign(:scrypath_opts, scrypath_opts)
+      |> assign(:selected_schema, nil)
+      |> assign(:selection_error, nil)
       |> assign(:auto_refresh, false)
       |> assign(:posture_rows, [])
       |> assign(:aggregate_error_count, 0)
@@ -96,8 +98,25 @@ defmodule ScrypathOpsWeb.PostureLive do
     {:noreply, push_navigate(socket, to: "#{mount_path}/health#{query_suffix}")}
   end
 
-  def handle_params(_params, _uri, socket) do
-    {:noreply, refresh_next_checks(socket)}
+  def handle_params(params, _uri, socket) do
+    allowlist = ScrypathOps.Schemas.allowlist()
+    resolution = OperatorSelection.resolve(params, allowlist)
+
+    {selected_schema, selection_error} =
+      case resolution do
+        {:ok, schema} -> {schema, nil}
+        :setup -> {nil, :no_schemas}
+        :unavailable -> {nil, :unavailable}
+      end
+
+    socket =
+      socket
+      |> assign(:schema_allowlist, allowlist)
+      |> assign(:selected_schema, selected_schema)
+      |> assign(:selection_error, selection_error)
+      |> refresh_next_checks()
+
+    {:noreply, socket}
   end
 
   defp load_posture(socket) do
@@ -225,6 +244,23 @@ defmodule ScrypathOpsWeb.PostureLive do
       </.ops_toolbar>
 
       <.ops_trail current={:posture} />
+
+      <.ops_status
+        :if={@selected_schema}
+        kind={:info}
+        title="Recovery target"
+        data-testid="recovery-target"
+      >
+        {OperatorSelection.canonical(@selected_schema)}
+      </.ops_status>
+      <.ops_status
+        :if={@selection_error == :unavailable}
+        kind={:error}
+        title="That schema is unavailable"
+        role="alert"
+      >
+        Select an allowlisted schema to continue.
+      </.ops_status>
 
       <div class="grid gap-ops-section">
         <section
@@ -437,6 +473,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                       </section>
                     </div>
                     <.ops_link_button
+                      :if={is_nil(@selection_error)}
                       navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
                       variant={:ghost}
                       class="justify-self-start gap-2 text-base-content"
@@ -482,6 +519,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                       </section>
                     </div>
                     <.ops_link_button
+                      :if={is_nil(@selection_error)}
                       navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
                       variant={:ghost}
                       class="justify-self-start gap-2 text-base-content"
@@ -496,9 +534,9 @@ defmodule ScrypathOpsWeb.PostureLive do
           </div>
         </.ops_section>
 
-        <.ops_handoff :if={match?({:ok, _}, @posture_rows)}>
+        <.ops_handoff :if={match?({:ok, _}, @posture_rows) && @selection_error == nil}>
           <:step
-            navigate={"#{@mount_path}/failed-sync"}
+            navigate={OperatorSelection.path(@mount_path, "failed-sync", @selected_schema)}
             hint="When you've spotted a failing schema —"
           >
             Work the failed-sync queue

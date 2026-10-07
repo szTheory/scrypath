@@ -63,6 +63,7 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
     Application.put_env(:scrypath_ops, :index_prefix, "journey")
     Application.put_env(:scrypath_ops, :meilisearch_url, "http://localhost:7700")
     Application.put_env(:scrypath_ops, :meilisearch_client, JourneyClient)
+
     Application.put_env(:scrypath_ops, :meilisearch_tasks, [
       %{
         "uid" => 401,
@@ -72,9 +73,11 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
         "error" => %{"message" => "B has a visible backend failure"}
       }
     ])
+
     Application.put_env(:scrypath_ops, :oban, RecordingOban)
     Application.put_env(:scrypath_ops, :oban_queue, :search_sync)
     Application.put_env(:scrypath_ops, :oban_inspector, JourneyQueueInspector)
+
     Application.put_env(:scrypath_ops, :oban_jobs, [
       %{
         id: 501,
@@ -92,7 +95,12 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
         }
       }
     ])
-    Application.put_env(:scrypath_ops, :sigra, sudo_confirm_path: "/sudo/confirm", sudo_window: 300)
+
+    Application.put_env(:scrypath_ops, :sigra,
+      sudo_confirm_path: "/sudo/confirm",
+      sudo_window: 300
+    )
+
     System.put_env("OPSUI_AUTH_MODE", "sigra")
 
     on_exit(fn ->
@@ -129,14 +137,23 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
     assert health_html =~ "Recovery target"
     assert :sys.get_state(health.pid).socket.assigns.selected_schema == OpsPostA
 
-    rows = health |> element("[data-testid='posture-row']") |> render()
-    assert rows =~ schema_b
+    assert has_element?(
+             health,
+             "[data-testid='posture-row'][id='posture-ScrypathOps.Test.OpsPostB']"
+           )
+
     assert health_html =~ "#{schema_b}"
-    assert :sys.get_state(health.pid).socket.assigns.posture_rows |> elem(1) |> hd() |> elem(0) == OpsPostB
+
+    assert has_element?(
+             health,
+             ".ops-schema-signal-list > article:nth-of-type(1)[id='posture-ScrypathOps.Test.OpsPostB']"
+           )
 
     failed_href =
       health
-      |> element("a[data-testid='posture-failed-sync-link'][aria-label='View failed sync work for #{schema_a}']")
+      |> element(
+        "a[data-testid='posture-failed-sync-link'][aria-label='View failed sync work for #{schema_a}']"
+      )
       |> render()
       |> href_from_anchor()
 
@@ -166,6 +183,8 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
       |> element("[data-testid='recovery-receipt'] a", "Check sync status")
       |> render()
       |> href_from_anchor()
+      |> String.replace("&amp;", "&")
+
     handoff = URI.parse(handoff_href)
     assert handoff.path == "/ops/sync-drift"
     assert URI.decode_query(handoff.query)["schema"] == schema_a
@@ -179,7 +198,11 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
 
   defp put_live_assigns(view, assigns) do
     :sys.replace_state(view.pid, fn state ->
-      socket = Enum.reduce(assigns, state.socket, fn {key, value}, socket -> Phoenix.Component.assign(socket, key, value) end)
+      socket =
+        Enum.reduce(assigns, state.socket, fn {key, value}, socket ->
+          Phoenix.Component.assign(socket, key, value)
+        end)
+
       %{state | socket: socket}
     end)
   end
