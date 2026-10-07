@@ -135,6 +135,33 @@ for (const entrypoint of ENTRYPOINTS) {
     }
   });
 
+  test(`${entrypoint.name} neutral chrome and metrics preserve the approved palette`, async ({ page }) => {
+    for (const theme of ["light", "dark", "system"] as const) {
+      await openScenario(page, entrypoint.url, "default", theme, 390);
+      await page.waitForTimeout(250);
+      const colors = await page.evaluate(() => {
+        const canvas = document.createElement("canvas");
+        canvas.width = canvas.height = 1;
+        const context = canvas.getContext("2d")!;
+        const sample = (selector: string) => {
+          context.clearRect(0, 0, 1, 1);
+          context.fillStyle = getComputedStyle(document.querySelector(selector)!).backgroundColor;
+          context.fillRect(0, 0, 1, 1);
+          return Array.from(context.getImageData(0, 0, 1, 1).data).slice(0, 3);
+        };
+        return { header: sample(".ops-header"), metric: sample(".ops-muted-panel") };
+      });
+      const expected = theme === "light"
+        ? { header: [255, 255, 255], metric: [239, 238, 233] }
+        : { header: [25, 30, 37], metric: [34, 40, 49] };
+      for (const role of ["header", "metric"] as const) {
+        colors[role].forEach((channel, index) => {
+          expect(Math.abs(channel - expected[role][index]), `${theme} ${role} channel ${index}`).toBeLessThanOrEqual(2);
+        });
+      }
+    }
+  });
+
   test(`${entrypoint.name} refresh keeps server eligibility after a LiveView patch`, async ({ page }) => {
     await page.goto(entrypoint.url);
     const live = page.locator("[data-phx-main]");
