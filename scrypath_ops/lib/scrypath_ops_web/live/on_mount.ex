@@ -62,8 +62,8 @@ defmodule ScrypathOpsWeb.Live.OnMount do
     source = Application.get_env(:scrypath_ops, :phase174_fixture_source)
 
     if Mix.env() == :test and is_atom(source) and Code.ensure_loaded?(source) and
-         function_exported?(source, :scenario, 1) do
-      source.scenario(Map.get(params, "scenario", "a-selected-b-worse")).allowlist
+         function_exported?(source, :allowlist, 1) do
+      source.allowlist(Map.get(params, "scenario", "a-selected-b-worse"))
     else
       ScrypathOps.Schemas.allowlist()
     end

@@ -36,6 +36,11 @@ defmodule ScrypathOps.Test.Phase174FixtureSource do
 
   def scenario(_invalid), do: scenario("a-selected-b-worse")
 
+  # Shell target resolution reads configuration without consuming an observation.
+  def allowlist("empty"), do: []
+  def allowlist("a-removed"), do: [ScrypathOps.Test.OpsPostB]
+  def allowlist(_name), do: @schemas
+
   defp fixture(name, token \\ nil) do
     {tasks, jobs} = source_records(name)
     index_prefix = index_prefix(name)
@@ -55,12 +60,7 @@ defmodule ScrypathOps.Test.Phase174FixtureSource do
     opts = fixture_markers(opts, name, token)
 
     %{
-      allowlist:
-        cond do
-          name == "empty" -> []
-          name == "a-removed" -> [ScrypathOps.Test.OpsPostB]
-          true -> @schemas
-        end,
+      allowlist: allowlist(name),
       observed_at: @observed_at,
       opts: opts,
       sequence_token: token
