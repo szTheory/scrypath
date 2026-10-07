@@ -5,16 +5,16 @@ milestone_name: ScrypathOps UI refinement
 current_phase: 174
 current_phase_name: Recovery Entry and Diagnosis
 status: executing
-stopped_at: Phase174 implementation resumed in regular isolated clone after commit-guard recovery; executing tracer with no completed tasks
-last_updated: "2026-10-07T11:59:45.927Z"
+stopped_at: Completed 174-01-PLAN.md
+last_updated: "2026-10-07T12:20:34.398Z"
 last_activity: 2026-10-07
 last_activity_desc: Phase 174 execution started
-state_head: aba11eccd43277b3d678d3b4163c97e0726c7791
+state_head: 4225f0722e5c822fb4eda1763d4fbc37718c5d02
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 12
-  completed_plans: 4
+  completed_plans: 5
   percent: 20
 ---
 
@@ -27,8 +27,8 @@ See PROJECT.md (updated 2026-10-06). Core value: make search indexing feel nativ
 ## Current Position
 
 Phase: 174 (Recovery Entry and Diagnosis) — EXECUTING
-Plan: 1 of 8
-Status: Executing Phase 174
+Plan: 2 of 8
+Status: Ready to execute
 Last activity: 2026-10-07 — Phase 174 execution started
 Progress: [██░░░░░░░░] 20% (1/5 phases; all 4 Phase 173 plans complete)
 
@@ -82,9 +82,9 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-07T11:59:45.893Z
-Stopped at: Phase174 implementation resumed in regular isolated clone after commit-guard recovery; executing tracer with no completed tasks
-Resume file: .planning/phases/174-recovery-entry-and-diagnosis/174-01-PLAN.md
+Last session: 2026-10-07T12:20:34.364Z
+Stopped at: Completed 174-01-PLAN.md
+Resume file: None
 
 Phase 174 now executes in a separate regular clone on `gsd/phase-174-recovery-entry-and-diagnosis` in `/private/tmp/scrypath-phase173-20261006-155750/phase174-execution`. The previous planning worktree and its RED artifacts remain preserved; the fresh clone resolves the executor commit guard without bypassing it. It starts from the immutable Phase 173 source `13ea88a9c18a7515f4ec5ae7deea0cdde4c22531`. Its later handoff metadata does not extend the prior exact-SHA receipt. The execution checkout and PR branch `gsd/phase-173-shared-visual-foundation` remain unchanged at that attested source.
 
@@ -97,3 +97,14 @@ Phase 174 now executes in a separate regular clone on `gsd/phase-174-recovery-en
 **Next:** Continue $gsd-execute-phase 174 --auto --no-transition through the eight checked plans and independent executable verification, then prepare the working UI for maintainer review. Sequential execution follows the runtime base-divergence guard; use the regular phase174-execution clone, preserve the previous planning worktree, frozen173 and original preview. Do not advance175.
 
 Automatic chaining is disabled. Preserve adaptive routing and the existing frontend UI/safety gates. Context can be cleared: the committed successor records retain scope, decisions, verification evidence, unresolved items, working directory/branch and exact next command. Phases 172/170 and their archived source-bounded receipts remain historical.
+
+## Performance Metrics
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 174 P01 | 19m | 2 tasks | 8 files |
+
+## Decisions
+
+- [Phase 174]: Canonical allowlist resolution owns the recovery target; fleet ranking remains separate evidence.
+- [Phase 174]: Use schema/source-qualified internal row identity for colliding IDs and include inspection generation in retry events.
