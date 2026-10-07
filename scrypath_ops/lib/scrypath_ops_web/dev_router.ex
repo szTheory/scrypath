@@ -29,6 +29,11 @@ defmodule ScrypathOpsWeb.DevRouter do
   end
 
   if Mix.env() == :test do
+    scope "/", ScrypathOpsWeb do
+      pipe_through(:browser)
+      get("/sudo/confirm", PageController, :home)
+    end
+
     scope "/ops/phase174", alias: false do
       pipe_through(:browser)
       forward("/assets", ScrypathOpsWeb.AssetPlug, path_prefix: "assets")

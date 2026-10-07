@@ -1,0 +1,333 @@
+==> scrypath
+    warning: incompatible types given to decorate_result/2:
+
+        decorate_result(
+          (&Scrypath.Sync.RelatedEnqueue.enqueue(schema_module, records, fan_out_key, &1)).(
+            Scrypath.Config.ensure_oban_ready!(config)
+          ),
+          config
+        )
+
+    given types:
+
+        -none()-, dynamic()
+
+    the 1st argument is empty (often represented as none()), most likely because it is the result of an expression that always fails, such as a `raise` or a previous invalid call. This causes any function called with this value to fail
+
+    where "config" was given the type:
+
+        # type: dynamic()
+        # from: lib/scrypath/sync.ex:54:12
+        config = Scrypath.Config.resolve!(opts)
+
+    where "fan_out_key" was given the type:
+
+        # type: dynamic()
+        # from: lib/scrypath/sync.ex:43:17
+        fan_out_key =
+          case Keyword.get(opts, :fan_out) do
+            x when x === false or x === nil ->
+              :erlang.error(ArgumentError.exception("opts[:fan_out] is required"))
+        
+            x ->
+              x
+          end
+
+    where "records" was given the type:
+
+        # type: dynamic()
+        # from: lib/scrypath/sync.ex:42:35
+        records
+
+    where "schema_module" was given the type:
+
+        # type: dynamic()
+        # from: lib/scrypath/sync.ex:42:20
+        schema_module
+
+    typing violation found at:
+    │
+ 61 │         |> decorate_result(config)
+    │            ~
+    │
+    └─ (scrypath 0.3.15) lib/scrypath/sync.ex:61:12: Scrypath.Sync.sync_related/3
+
+==> scrypath_ops
+Compiling 1 file (.ex)
+Generated scrypath_ops app
+Nav contract OK: operator-ia.md matches Nav.primary/0
+TAP version 13
+ok 1 - test --ops-surface-2 stays #222831 for approved neutral dark raised surfaces
+ok 2 - test .ops-result-row dark fill references --ops-surface-2
+ok 3 - test base shared hover rule stays primary 32% with the neutral mid shadow
+ok 4 - test dark hover-border boost resolves to primary 55% on the paired row/item selector
+ok 5 - test .ops-data-card dark fill references --ops-surface-2
+ok 6 - test .ops-shell uses a flat token surface without decorative background layers
+ok 7 - test theme toggle shell selectors and dark mirrors are present
+ok 8 - test horizontal wordmark variants switch for explicit and system dark themes
+ok 9 - test palette and flash overlay shadows are mirrored in both dark paths
+ok 10 - test design tokens document palette and flash overlay composition
+ok 11 - test active nav keeps the AA primary-strong selected fill and mirrored dark glow
+ok 12 - test .ops-header dark seated separation is mirrored in explicit and system dark
+ok 13 - test operator-ia.md spine: major ## headings appear in JTBD / nav order
+ok 14 - test every live /ops route in router.ex is documented in operator-ia.md
+ok 15 - test resolves the first allowlisted schema only when the query is absent
+ok 16 - test canonical names and paths preserve exact UTF-8 identity and mounted paths
+ok 17 - test hostile values never create atoms or resolve outside the allowlist
+ok 18 - test distinguishes empty setup from an unavailable explicit selection
+ok 19 - test prod requires OPSUI_AUTH_MODE documentation constant
+ok 20 - test contract uses Enum.member? for OPSUI_AUTH_MODE allow-list
+ok 21 - test every live route in live_session :ops appears in Nav.primary/0
+ok 22 - test incident handoffs use exact allowlisted schema identity and expose triage first
+ok 23 - test Nav.primary/0 exposes five ordered ops routes with canonical labels
+ok 24 - test operator-ia.md navigation table keeps a Route column for ops surfaces
+ok 25 - test current same-context reports allow a distinct observed target
+ok 26 - test missing, nil, and malformed reports deny without raising
+ok 27 - test malformed dimension entries remain contract mismatches
+ok 28 - test missing, nil, and malformed [:reconcile, :drift_signals] deny by name
+ok 29 - test missing, nil, and malformed [:reconcile, :failed_work] deny by name
+ok 30 - test missing, nil, and malformed [:reconcile, :status] deny by name
+ok 31 - test __action_config__/0 stays on scrypath.ops.* and avoids reserved prefixes
+ok 32 - test returns running for enqueued or processing tasks without making requests
+ok 33 - test accepts atom keyed task payloads
+ok 34 - test production boot consults OPSUI_AUTH_MODE against Security allow-list
+ok 35 - test build/2 returns an IDs-only struct with exactly four fields
+ok 36 - test from_socket/1 reads assigns and delegates to build/2
+ok 37 - test build/2 returns nil when scope is absent
+ok 38 - test validate_page_size/1 rejects 51 with error mentioning 50
+ok 39 - test adapter/0 defaults to Scrypath adapter module
+ok 40 - doctest ScrypathOps.Playbook.V1.validate/1 (1)
+ok 41 - test search minimal JSON decodes and validates
+ok 42 - test encode after validate round-trips through Jason and decode
+ok 43 - test nested meilisearch_api_key under opts.per_query map is rejected with banned_key tuple
+ok 44 - test page.size 0 and 51 fail with page_size_out_of_range consistent with SearchPlayground
+ok 45 - test search_many with more entries than max_schemas_allowed fails without truncation
+ok 46 - test nested meilisearch_api_key under opts is rejected
+ok 47 - test unknown top-level key fails validation
+ok 48 - doctest ScrypathOps.Playbook.V1.validate/1 (2)
+ok 49 - test search playbook accepts optional title, description, and tags
+ok 50 - test tags list longer than 20 is rejected
+ok 51 - test minimal search playbook unchanged after metadata support
+ok 52 - test oversized title is rejected
+ok 53 - test search_many fixture validates
+ok 54 - test missing, failed, pending, wrong-context, unsupported, or unresolved signals deny by name
+ok 55 - test allowed_opsui_auth_modes includes sigra and stays string-based
+ok 56 - test validate rejects sigra without sudo_confirm_path
+ok 57 - test validate rejects unsupported auth modes
+ok 58 - test validate accepts the supported auth modes
+ok 59 - test missing, nil, and malformed [:reconcile, :status, :backend] deny by name
+ok 60 - test missing, nil, and malformed [:reconcile, :status, :queue] deny by name
+ok 61 - test missing, nil, and malformed [:reconcile, :reindex] deny by name
+ok 62 - test allowlist/0 defaults to [] in test
+ok 63 - test allowlist/0 reads configured list from Application env
+ok 64 - test modules_from_csv/1 parses a single dotted module string
+ok 65 - test on_mount/4 always returns :cont and assigns operator_context
+ok 66 - test safe_basename?/1 accepts json basenames and rejects traversal
+ok 67 - test save and read round-trip
+ok 68 - test rename and duplicate reject unsafe basenames
+ok 69 - test renders 404.html
+ok 70 - test renders 500.html
+ok 71 - test duplicate_workspace_file/3 returns target_exists when destination exists
+ok 72 - test {:config, :no_schema} yields a stable failure payload
+ok 73 - test page size failures expose only allowlisted diagnostic keys
+ok 74 - test rename_workspace_file/3 renames when target is free
+ok 75 - test rename_workspace_file/3 returns target_exists when destination exists
+ok 76 - test duplicate_workspace_file/3 copies payload when target is free
+ok 77 - test delete_workspace_file/2 removes file
+ok 78 - test routine check metadata has no operational disclosure or copy action
+ok 79 - test every *-ops-* utility used in templates resolves to a defined @theme token
+ok 80 - test list_workspace_json/1 lists only direct json children
+ok 81 - test operator modal visibility and layering support focus at mount
+ok 82 - test quiet actions keep hover, press, focus, selected, and disabled states distinct
+ok 83 - test the token catalog lists all current OpsUi exports with component roles
+ok 84 - test shared actions and responsive panels consume the named roles
+ok 85 - test suggest_duplicate_basename/2 returns first free stem-n name
+ok 86 - test renders 404
+ok 87 - test renders 500
+ok 88 - test shell and overlay layers consume the named stacking roles
+ok 89 - test every var(--…) referenced in templates is defined in app.css
+ok 90 - test shows distinct no-success, missing-time, and unavailable meanings without copy controls
+ok 91 - test discloses unchanged source ISO and its UTC equivalent
+ok 92 - test canonical ready report structs remain eligible
+ok 93 - test unknown pending and failure lists remain unavailable instead of reading as empty
+ok 94 - test missing and unknown cutover states require a current reconcile report
+ok 95 - test known task and cutover enums keep their existing outcomes
+ok 96 - test missing and unknown target task states are unobserved
+ok 97 - test missing, nil, and malformed [:drift, :dimensions] deny by name
+ok 98 - test retained failed history blocks promotion while recovery remains independently available
+ok 99 - test uses full-precision boundaries for relative age and absolute UTC
+ok 100 - test initializes and posts Swoosh-owned request options through Req.Test
+ok 101 - test propagates Req transport errors without changing the wrapper shape
+ok 102 - test does not treat index_not_found, unexpected 404s, or a present document as delete proof
+ok 103 - test percent encodes index path segments before observing delete effects
+ok 104 - test marks an exact-field mismatch and missing upsert document as failed
+ok 105 - test permits backend managed fields while comparing every expected projected value
+ok 106 - test distinguishes missing index from missing document for delete proof
+ok 107 - test verifies exact projected JSON, including a configured document id field
+ok 108 - test returns failed for a failed task and unknown for unrecognized status
+ok 109 - test malformed expected documents remain unknown without a backend read
+ok 110 - test invalid task identity and transport failures remain unknown
+ok 111 - test preserves transport options while fixing configured origin, path, and authentication
+ok 112 - test enforces expected count and serialized byte bounds before any request
+ok 113 - test macro expands with valid config
+ok 114 - test macro raises NimbleOptions.ValidationError for invalid config
+ok 115 - test every path-motion block animates only transform/opacity/box-shadow
+ok 116 - test every dark-only path glow end state is mirrored in both dark paths
+ok 117 - test every path-motion transition/animation uses a --duration-ops-* token, no raw literal
+ok 118 - test mix scrypath_ops.playbooks.validate succeeds on examples/playbooks
+ok 119 - test mix scrypath_ops.playbooks.validate fails on invalid playbook json
+ok 120 - test allowed_opsui_auth_modes includes sigra and stays string-based
+ok 121 - test validate!/0 accepts sigra only when sudo_confirm_path is configured
+ok 122 - test validate rejects unsupported auth modes
+ok 123 - test validate!/0 raises when sigra sudo_confirm_path is missing
+ok 124 - test validate/1 accepts the supported auth modes
+ok 125 - test does not start Endpoint, Repo, and DNSCluster when standalone is false
+ok 126 - test __action_config__/0 uses stable scrypath.ops prefixes
+ok 127 - test impersonation blocks the action and adds an error flash
+ok 128 - test fresh sudo executes the closure
+ok 129 - test stale sudo preserves only the current allowlisted schema in the local return path
+ok 130 - test stale sudo omits a selected schema after it leaves the current allowlist
+ok 131 - test stale sudo rejects a cross-host explicit return path
+ok 132 - test stale sudo sends the operator to the confirm path with return_to
+ok 133 - test nil operator_context executes the closure
+ok 134 - test joins task wait evidence to the exact emitting retry process
+ok 135 - test reads Oban runtime configuration from telemetry metadata
+ok 136 - test invalidation, collector restart, and expiry turn prior observations unknown
+ok 137 - test wrong handle host and allowlist context cannot read a receipt
+ok 138 - test does not join across attempts, Oban instances, or backend endpoints
+ok 139 - test new attempts supersede old success and terminate evidence is identity scoped
+ok 140 - test a newer retry receipt for the same source failure supersedes its prior handle
+ok 141 - test retains fast task completion before the LiveView registers the accepted receipt
+ok 142 - test preserves node identity and correlates persisted Oban worker names and config prefix
+ok 143 - test cached receipt drops payloads and credentials
+ok 144 - test receipt status says accepted until authoritative task and document checks happen
+ok 145 - test GET /
+ok 146 - test mount shows non-production strip and primary CTA
+ok 147 - test schema picker keeps labels, names, and control semantics across empty and populated counts
+ok 148 - test merge stub exposes merge trace block
+ok 149 - test page_size above ceiling surfaces 50 in error messaging
+ok 150 - test mode buttons expose the selected mode and invalid entries retain query values
+ok 151 - test mode=multi renders multi toggle test id
+ok 152 - test multi search with stub partial shows L1 partial copy
+ok 153 - test search controls are natively disabled without a configured backend
+ok 154 - test empty schema_allowlist shows OPSUI guard copy and disables targeting
+ok 155 - test multi search_many total failure shows hard error alert, not partial banner
+ok 156 - test successful single search shows validated capture preview
+ok 157 - test mounted layout uses content-sensitive asset URLs
+ok 158 - test matching validators return not modified and traversal remains rejected
+ok 159 - test unversioned and mismatched assets revalidate against the current content
+ok 160 - test renders posture rows with sync_status and surfaces errors first
+ok 161 - test phase 173 source-error refresh retains the prior completion
+ok 162 - test error-row rendering tolerates invalid runtime configuration
+ok 163 - test posture promotion handoff keeps the selected schema and does not swap directly
+ok 164 - test posture shows next checks block with ordered items and failed-sync egress
+ok 165 - test renders backend success age from the observation snapshot with exact source evidence
+ok 166 - test does not offer copy when last-success source time is invalid
+ok 167 - test retains the source-local last success when a later fetch fails
+ok 168 - test phase 173 degraded health keeps zero metrics neutral and localizes failure cues
+ok 169 - test schema action identity stays with its record when refresh changes worst-first order
+ok 170 - test posture promotion handoff performs no mutation before sudo confirmation
+ok 171 - test partial queue errors retain only the failed source and render current backend data
+ok 172 - test timed-out schemas retain their own prior evidence
+ok 173 - test swap live rejects non-allowlisted module strings before gating
+ok 174 - test posture promotion handoff performs no mutation while impersonating
+ok 175 - test mount shows honesty panel
+ok 176 - test upload and paste controls have persistent labels and format help
+ok 177 - test superseded run exit does not override the newer run result
+ok 178 - test search_many paste then run shows multi-schema summary on stub
+ok 179 - test delete confirmation mismatch shows flash and keeps file
+ok 180 - test OPS-PB-05 stub path: paste → save → listed → load → run
+ok 181 - test paste import validates and shows preview marker
+ok 182 - test legacy workspace JSON without title shows Untitled playbook
+ok 183 - test sigra confirm delete clears only the selected playbook state
+ok 184 - test run with stub adapter shows explicit lifecycle transition to success
+ok 185 - test bounded execution contract keeps the stable lifecycle affordances
+ok 186 - test file dialogs expose unique names, contextual Cancel, and a successor target
+ok 187 - test empty workspace shows the empty hero and import anchor
+ok 188 - test forced failure keeps raw run_error before enrichment formatting
+ok 189 - test catalog run_now shows explicit lifecycle and success state
+ok 190 - test loading a new playbook while running cancels and resets the active run
+ok 191 - test playbook run emits telemetry start and stop for a completed run
+ok 192 - test rename collision shows in-use flash
+ok 193 - test forced failure shows anchored doc links and copyable diagnostics
+ok 194 - test sigra confirm delete redirects stale sudo and keeps the workspace file
+ok 195 - test duplicate flow writes suggested copy basename
+ok 196 - test selected A stays the recovery target while worse B is listed first
+ok 197 - test explicit unavailable and empty schema selections never become a recovery target
+ok 198 - test selection changes invalidate receipts, confirmations, and inspected evidence
+ok 199 - test retry identifies the queue row when a backend task has the same numeric id
+ok 200 - test ops shell markers /ops/health
+ok 201 - test ops shell markers /ops/sync-drift
+ok 202 - test command palette hook opens from visible shortcut affordances
+ok 203 - test command palette recovery destinations follow the validated schema through patches
+ok 204 - test shell recovery context follows the selected schema across health, failed work, and drift
+ok 205 - test root theme provider synchronizes selected theme button state
+ok 206 - test shortcut sheet advertises command palette shortcut across platforms
+ok 207 - test ops shell markers /ops/search
+ok 208 - test ops shell markers /ops/failed-sync
+ok 209 - test standalone and mounted LiveSockets share all operator hooks
+ok 210 - test flash distinguishes informational status from persistent error alerts
+ok 211 - test refresh hook overlays loading on server-rendered disabled eligibility
+ok 212 - test test-only routes target production views and deterministic source fixtures
+ok 213 - test standalone fixture renders selected A and returns from the real stale-sudo gate
+ok 214 - test ops DOM semantics /ops/health
+ok 215 - test ops DOM semantics /ops/sync-drift
+ok 216 - test ops DOM semantics /ops/search
+ok 217 - test ops DOM semantics /ops/failed-sync
+ok 218 - test the /ops root renders the Control Room landing, not the posture table
+ok 219 - test selected recovery target is named in both shell navs and scopes recovery links
+ok 220 - test healthy Control Room presents one evidence-bounded Search health entry
+ok 221 - test healthy fleet summary uses positive health language
+ok 222 - test unconfigured fleet shows the config empty state but keeps the intent cards
+ok 223 - test Control Room offers one shortcut hint at the surface jump control
+ok 224 - test degraded fleet names the observed cause without claiming federation
+ok 225 - test invalid explicit recovery target is not propagated into shell navigation
+ok 226 - test configured recovery entry and intent cards route to the right surfaces
+ok 227 - test refresh names unavailable evidence and keeps the previous successful observation
+ok 228 - test degraded scope stays separate from the selected recovery target
+ok 229 - test run_validated search dispatches stub adapter after V1.validate/1
+ok 230 - test rejects {:error, _} tuple
+ok 231 - test runner-library parity matrix multi-search backend/runtime failure matches direct Scrypath.search_many/2
+ok 232 - test runner-library parity matrix multi-search validation_failed edge matches direct Scrypath.search_many/2
+ok 233 - test runner-library parity matrix search_many happy path matches direct Scrypath.search_many/2
+ok 234 - test runner-library parity matrix pre-dispatch config failure stays at the runner boundary
+ok 235 - test runner-library parity matrix backend/runtime failure matches direct Scrypath.search/3
+ok 236 - test runner-library parity matrix search happy path matches direct Scrypath.search/3
+ok 237 - test run_validated search_many maps entries and dispatches
+ok 238 - test rendered schema form changes the selected target
+ok 239 - test every source-qualified work row uses an opaque stable DOM and action key
+ok 240 - test sigra retry refreshes the inspection in place without losing local state
+ok 241 - test one failed job uses singular copy
+ok 242 - test zero failed sync work shows the empty hero
+ok 243 - test a backend task token cannot retry or receive the same-ID queue receipt
+ok 244 - test delete retry requires confirmation and Cancel keeps the failed row
+ok 245 - test a bare numeric ID is not an actionable work identity
+ok 246 - test mixed-source rollups and empty inspection name failed work without implying freshness
+ok 247 - test diagnosis and current recovery availability precede collapsed diagnostics
+ok 248 - test renders triage summary, rollups, and human reason-class columns
+ok 249 - test failed observation is not presented as zero work
+ok 250 - test explicit invalid or removed selections show unavailable and refuse retry
+ok 251 - test sigra retry redirects stale sudo and keeps the failed-sync row in place
+ok 252 - test rendered handoff keeps a non-first schema in the query string
+ok 253 - test empty allowlist shows setup rather than healthy zero work
+ok 254 - test schema selector rejects non-allowlisted module strings without crashing
+ok 255 - test rendered schema form changes the selected target
+ok 256 - test swap live rechecks current prerequisites and refuses a stale contract read
+ok 257 - test swap observer distinguishes terminal outcomes from unconfirmed observations and keeps task identity
+ok 258 - test schema selector rejects non-allowlisted module strings without creating atoms
+ok 259 - test swap live blocks impersonation before any refresh
+ok 260 - test observer exits from a previous schema cannot change the current screen
+ok 261 - test guarded promotion preserves the queue inspector and refuses newly pending work
+ok 262 - test refresh after an unconfirmed promotion checks state without submitting another swap
+ok 263 - test promotion consumes confirmation and refuses duplicate in-flight or replayed events
+ok 264 - test handoff keeps the origin generation separate from this page's async generation
+ok 265 - test promotion retains the backend task UID returned by the real normalization boundary
+ok 266 - test loads reconcile on mount and scopes drift errors separately
+ok 267 - test recovery refresh discards prior verification and stale results cannot restore it
+ok 268 - test recovery success arriving after its selected schema is removed is discarded
+ok 269 - test recovery failure arriving after its selected schema is removed clears pending status
+ok 270 - test recovery results retain exact observed evidence and refresh clears it
+ok 271 - test a stale queued drift check cannot overwrite a newly selected schema
+ok 272 - test swap live stale sudo redirects with return_to only
+ok 273 - test rendered sync drift links preserve the selected schema
+1..273

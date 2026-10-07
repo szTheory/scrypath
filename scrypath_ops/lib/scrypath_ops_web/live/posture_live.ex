@@ -14,12 +14,12 @@ defmodule ScrypathOpsWeb.PostureLive do
   def mount(params, _session, socket) do
     allowlist = ScrypathOps.Schemas.allowlist()
     scrypath_opts = ScrypathOps.Schemas.scrypath_opts()
-    phase173? = socket.assigns.live_action == :phase173
-    fixture_source = Application.get_env(:scrypath_ops, :phase173_fixture_source)
+    fixture_action = socket.assigns.live_action
+    fixture_source = fixture_source_for(fixture_action)
 
     {allowlist, scrypath_opts, observed_at, fixture_scenario, refresh_disabled?} =
-      if phase173? and fixture_source?(fixture_source) do
-        scenario = Map.get(params, "scenario", "default")
+      if fixture_action in [:phase173, :phase174] and fixture_source?(fixture_source) do
+        scenario = Map.get(params, "scenario", default_scenario(fixture_action))
         fixture = fixture_source.scenario(scenario)
 
         {fixture.allowlist, fixture.opts, fixture.observed_at, scenario,
@@ -53,7 +53,7 @@ defmodule ScrypathOpsWeb.PostureLive do
   @impl true
   def handle_event("refresh", params, socket) do
     start_ms = System.monotonic_time(:millisecond)
-    socket = maybe_select_phase173_scenario(socket, params)
+    socket = maybe_select_fixture_scenario(socket, params)
     socket = load_posture(socket)
     duration_ms = System.monotonic_time(:millisecond) - start_ms
 
@@ -99,7 +99,11 @@ defmodule ScrypathOpsWeb.PostureLive do
   end
 
   def handle_params(params, _uri, socket) do
-    allowlist = ScrypathOps.Schemas.allowlist()
+    allowlist =
+      if socket.assigns.live_action == :phase174,
+        do: socket.assigns.schema_allowlist,
+        else: ScrypathOps.Schemas.allowlist()
+
     resolution = OperatorSelection.resolve(params, allowlist)
 
     {selected_schema, selection_error} =
@@ -150,7 +154,7 @@ defmodule ScrypathOpsWeb.PostureLive do
     |> refresh_next_checks()
   end
 
-  defp maybe_select_phase173_scenario(
+  defp maybe_select_fixture_scenario(
          %{assigns: %{live_action: :phase173}} = socket,
          %{"scenario" => scenario}
        ) do
@@ -170,7 +174,40 @@ defmodule ScrypathOpsWeb.PostureLive do
     end
   end
 
-  defp maybe_select_phase173_scenario(socket, _params), do: socket
+  defp maybe_select_fixture_scenario(
+         %{assigns: %{live_action: :phase174}} = socket,
+         %{"scenario" => scenario}
+       ) do
+    source = fixture_source_for(:phase174)
+
+    if fixture_source?(source) do
+      fixture = source.scenario(scenario)
+
+      socket
+      |> assign(:schema_allowlist, fixture.allowlist)
+      |> assign(:scrypath_opts, fixture.opts)
+      |> assign(:phase173_observed_at, fixture.observed_at)
+      |> assign(:phase173_fixture_scenario, scenario)
+    else
+      socket
+    end
+  end
+
+  defp maybe_select_fixture_scenario(socket, _params), do: socket
+
+  defp fixture_source_for(:phase173),
+    do: Application.get_env(:scrypath_ops, :phase173_fixture_source)
+
+  defp fixture_source_for(:phase174) do
+    if Mix.env() == :test,
+      do: Application.get_env(:scrypath_ops, :phase174_fixture_source),
+      else: nil
+  end
+
+  defp fixture_source_for(_action), do: nil
+
+  defp default_scenario(:phase174), do: "a-selected-b-worse"
+  defp default_scenario(_action), do: "default"
 
   defp fixture_source?(source) when is_atom(source) do
     Code.ensure_loaded?(source) and function_exported?(source, :scenario, 1)

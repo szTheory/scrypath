@@ -1,0 +1,12 @@
+TAP version 13
+ok 1 - test stale sudo rejects a cross-host explicit return path
+ok 2 - test fresh sudo executes the closure
+ok 3 - test stale sudo preserves only the current allowlisted schema in the local return path
+ok 4 - test stale sudo omits a selected schema after it leaves the current allowlist
+ok 5 - test stale sudo sends the operator to the confirm path with return_to
+ok 6 - test __action_config__/0 uses stable scrypath.ops prefixes
+ok 7 - test nil operator_context executes the closure
+ok 8 - test impersonation blocks the action and adds an error flash
+ok 9 - test test-only routes target production views and deterministic source fixtures
+ok 10 - test standalone fixture renders selected A and returns from the real stale-sudo gate
+1..10

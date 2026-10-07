@@ -1,0 +1,13 @@
+{
+  "command": "cd scrypath_ops && mix test test/scrypath_ops_web/live/phase174_fixture_live_test.exs test/scrypath_ops/integrations/sigra/gating_test.exs",
+  "exitCode": 0,
+  "output": "TAP version 13\nok 1 - test stale sudo rejects a cross-host explicit return path\nok 2 - test fresh sudo executes the closure\nok 3 - test stale sudo preserves only the current allowlisted schema in the local return path\nok 4 - test stale sudo omits a selected schema after it leaves the current allowlist\nok 5 - test stale sudo sends the operator to the confirm path with return_to\nok 6 - test __action_config__/0 uses stable scrypath.ops prefixes\nok 7 - test nil operator_context executes the closure\nok 8 - test impersonation blocks the action and adds an error flash\nok 9 - test test-only routes target production views and deterministic source fixtures\nok 10 - test standalone fixture renders selected A and returns from the real stale-sudo gate\n1..10\n",
+  "targetTests": [
+    "test test-only routes target production views and deterministic source fixtures",
+    "test standalone fixture renders selected A and returns from the real stale-sudo gate"
+  ],
+  "targetFile": "scrypath_ops/test/scrypath_ops_web/live/phase174_fixture_live_test.exs",
+  "expected": "Only the test-only Phase174 route receives deterministic provider state; selected A and worse B evidence survives refresh, selector patch, and navigation; duplicate-source IDs stay distinct; unavailable schemas stay blocked; real stale Sigra Gating redirects to a safe A return path and explicit return creates no receipt.",
+  "actual": "All 10 focused fixture and Gating tests passed. The runtime normal /ops/health view retained the ordinary action and configuration. Phase174 state rendered A/B evidence, a refresh, a B selector patch, an unavailable-schema state, two source-qualified ID-501 rows, the configured confirmation landing and an explicit return to A with empty receipts.",
+  "semanticAssessment": "Valid native GREEN. Code.ensure_loaded?(Sigra.Audit) is asserted before the stale-sudo event. The test verifies only navigation and fresh read-only state; it simulates neither host authentication nor authorization approval and does not replay the interrupted retry."
+}

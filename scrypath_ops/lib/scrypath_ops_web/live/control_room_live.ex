@@ -32,7 +32,8 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
 
   @impl true
   def handle_params(params, _uri, socket) do
-    allowlist = ScrypathOps.Schemas.allowlist()
+    socket = apply_phase174_fixture(socket, params)
+    allowlist = socket.assigns.schema_allowlist
     resolution = OperatorSelection.resolve(params, allowlist)
 
     {selected_schema, selection_error} =
@@ -64,7 +65,11 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
 
   defp load_summary(socket) do
     previous = Map.get(socket.assigns, :posture)
-    scrypath_opts = ScrypathOps.Schemas.scrypath_opts()
+
+    scrypath_opts =
+      if phase174_fixture?(socket),
+        do: socket.assigns.scrypath_opts,
+        else: ScrypathOps.Schemas.scrypath_opts()
 
     summary =
       Posture.summary(
@@ -78,6 +83,42 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
     |> assign(:scrypath_opts, scrypath_opts)
     |> assign(:posture, summary)
   end
+
+  defp apply_phase174_fixture(%{assigns: %{live_action: :phase174}} = socket, params) do
+    if Mix.env() == :test do
+      source = Application.get_env(:scrypath_ops, :phase174_fixture_source)
+
+      if fixture_source?(source) do
+        scenario = Map.get(params, "scenario", "a-selected-b-worse")
+        fixture = source.scenario(scenario)
+
+        socket
+        |> assign(:schema_allowlist, fixture.allowlist)
+        |> assign(:scrypath_opts, fixture.opts)
+        |> assign(:phase174_fixture_scenario, scenario)
+      else
+        socket
+      end
+    else
+      socket
+    end
+  end
+
+  defp apply_phase174_fixture(socket, _params), do: socket
+
+  defp fixture_source?(source) when is_atom(source) do
+    Code.ensure_loaded?(source) and function_exported?(source, :scenario, 1)
+  end
+
+  defp fixture_source?(_source), do: false
+
+  defp phase174_fixture?(%{
+         assigns: %{live_action: :phase174, phase174_fixture_scenario: scenario}
+       })
+       when is_binary(scenario),
+       do: Mix.env() == :test
+
+  defp phase174_fixture?(_socket), do: false
 
   @impl true
   def render(assigns) do

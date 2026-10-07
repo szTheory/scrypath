@@ -9,10 +9,11 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   alias Scrypath.Operator.FailedWork
   alias Scrypath.Operator.FailedSyncWorkInspection
   alias ScrypathOps.Integrations.Sigra.Gating
+  alias ScrypathOps.Integrations.Sigra.OperatorContext
   alias ScrypathOps.OperatorSelection
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
     allowlist = ScrypathOps.Schemas.allowlist()
     scrypath_opts = ScrypathOps.Schemas.scrypath_opts()
 
@@ -29,12 +30,16 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       |> assign(:last_refresh_at, nil)
       |> assign(:recovery_receipts, %{})
       |> assign(:delete_confirmation, nil)
+      |> apply_phase174_fixture(params)
 
     {:ok, socket}
   end
 
   @impl true
-  def handle_params(params, _uri, socket), do: {:noreply, resolve_selection(socket, params)}
+  def handle_params(params, _uri, socket) do
+    socket = apply_phase174_fixture(socket, params)
+    {:noreply, resolve_selection(socket, params)}
+  end
 
   @impl true
   def handle_event("refresh", _params, socket) do
@@ -81,7 +86,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   end
 
   def handle_event("select_schema", %{"schema" => mod_str}, socket) do
-    case OperatorSelection.resolve(%{"schema" => mod_str}, ScrypathOps.Schemas.allowlist()) do
+    case OperatorSelection.resolve(%{"schema" => mod_str}, active_schema_allowlist(socket)) do
       {:ok, mod} ->
         {:noreply,
          push_patch(socket,
@@ -94,7 +99,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   end
 
   defp resolve_selection(socket, params) do
-    allowlist = ScrypathOps.Schemas.allowlist()
+    allowlist = active_schema_allowlist(socket)
     resolution = OperatorSelection.resolve(params, allowlist)
 
     selected =
@@ -118,6 +123,13 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       |> assign(:schema_allowlist, allowlist)
       |> assign(:selected_schema, selected)
       |> assign(:selection_error, error)
+      |> assign(
+        :return_to,
+        if(selected,
+          do: OperatorSelection.path(socket.assigns.mount_path, "failed-sync", selected),
+          else: nil
+        )
+      )
       |> maybe_advance_generation(changed?)
 
     if selected do
@@ -149,12 +161,57 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp current_selection?(socket) do
     case OperatorSelection.resolve(
            %{"schema" => OperatorSelection.canonical(socket.assigns.selected_schema)},
-           ScrypathOps.Schemas.allowlist()
+           active_schema_allowlist(socket)
          ) do
       {:ok, selected} -> selected == socket.assigns.selected_schema
       _ -> false
     end
   end
+
+  defp apply_phase174_fixture(%{assigns: %{live_action: :phase174}} = socket, params) do
+    if Mix.env() == :test do
+      source = Application.get_env(:scrypath_ops, :phase174_fixture_source)
+
+      if fixture_source?(source) do
+        scenario = Map.get(params, "scenario", "a-selected-b-worse")
+        fixture = source.scenario(scenario)
+
+        socket
+        |> assign(:schema_allowlist, fixture.allowlist)
+        |> assign(:scrypath_opts, fixture.opts)
+        |> assign(:phase174_fixture_scenario, scenario)
+        |> assign(
+          :operator_context,
+          %OperatorContext{
+            user_id: "phase174-fixture-user",
+            active_org_id: "phase174-fixture-org",
+            sudo_at: DateTime.add(DateTime.utc_now(), -600, :second)
+          }
+        )
+      else
+        socket
+      end
+    else
+      socket
+    end
+  end
+
+  defp apply_phase174_fixture(socket, _params), do: socket
+
+  defp fixture_source?(source) when is_atom(source) do
+    Code.ensure_loaded?(source) and function_exported?(source, :scenario, 1)
+  end
+
+  defp fixture_source?(_source), do: false
+
+  defp active_schema_allowlist(%{
+         assigns: %{live_action: :phase174, phase174_fixture_scenario: scenario} = assigns
+       })
+       when is_binary(scenario) do
+    if Mix.env() == :test, do: assigns.schema_allowlist, else: ScrypathOps.Schemas.allowlist()
+  end
+
+  defp active_schema_allowlist(_socket), do: ScrypathOps.Schemas.allowlist()
 
   defp unavailable(socket) do
     Enum.each(Map.values(Map.get(socket.assigns, :recovery_receipts, %{})), fn receipt ->

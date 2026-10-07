@@ -6,6 +6,7 @@ defmodule ScrypathOpsWeb.Phase174FixtureLiveTest do
 
   alias ScrypathOps.Test.OpsPostA
   alias ScrypathOps.Test.OpsPostB
+  alias ScrypathOps.Integrations.Sigra.OperatorContext
   alias ScrypathOpsWeb.ControlRoomLive
   alias ScrypathOpsWeb.DevRouter
   alias ScrypathOpsWeb.FailedSyncLive
@@ -53,6 +54,10 @@ defmodule ScrypathOpsWeb.Phase174FixtureLiveTest do
     assert {PostureLive, nil, _opts, _live_session} =
              normal_health.metadata.phoenix_live_view
 
+    {:ok, normal_health_view, _normal_health_html} = live(conn, "/ops/health")
+    normal_assigns = :sys.get_state(normal_health_view.pid).socket.assigns
+    assert normal_assigns.live_action == nil
+    refute Keyword.get(normal_assigns.scrypath_opts, :index_prefix) == "phase174_"
   end
 
   test "standalone fixture renders selected A and returns from the real stale-sudo gate", %{
@@ -76,11 +81,31 @@ defmodule ScrypathOpsWeb.Phase174FixtureLiveTest do
     assert room_html =~ "Recovery target"
     assert room_html =~ schema_a
     assert room_html =~ "ScrypathOps.Test.OpsPostB"
+    assert room_html =~ "/ops/phase174/health?schema=#{schema_a}"
 
     {:ok, health, health_html} = live(conn, "/ops/phase174/health?#{query}")
     assert has_element?(health, "[id='posture-ScrypathOps.Test.OpsPostB']")
     assert health_html =~ "Recovery target"
     assert health_html =~ schema_a
+    render_click(health, "refresh", %{"scenario" => "a-selected-b-worse"})
+    assert has_element?(health, "[id='posture-ScrypathOps.Test.OpsPostB']")
+
+    {:ok, unavailable, unavailable_html} =
+      live(
+        conn,
+        "/ops/phase174/failed-sync?schema=ScrypathOps.Test.Gone&scenario=source-collision"
+      )
+
+    assert unavailable_html =~ "That schema is unavailable"
+    refute has_element?(unavailable, "[data-testid='failed-sync-row']")
+
+    {:ok, selector, _selector_html} = live(conn, "/ops/phase174/failed-sync?#{query}")
+
+    selector_html =
+      render_change(selector, "select_schema", %{"schema" => "ScrypathOps.Test.OpsPostB"})
+
+    assert :sys.get_state(selector.pid).socket.assigns.selected_schema == OpsPostB
+    assert selector_html =~ "OpsPostB"
 
     collision_query =
       URI.encode_query(%{"schema" => schema_a, "scenario" => "source-collision"})
@@ -101,18 +126,24 @@ defmodule ScrypathOpsWeb.Phase174FixtureLiveTest do
     [_, work_key] = Regex.run(~r/phx-value-id="([^"]+)"/, retry_button)
     [_, generation] = Regex.run(~r/phx-value-generation="([^"]+)"/, retry_button)
 
+    %{operator_context: %OperatorContext{sudo_at: sudo_at}} =
+      :sys.get_state(failed_sync.pid).socket.assigns
+
+    assert DateTime.diff(DateTime.utc_now(), sudo_at, :second) > 300
+
     expected_return = "/ops/phase174/failed-sync?schema=#{schema_a}"
     confirm_path = "/sudo/confirm?" <> URI.encode_query(%{"return_to" => expected_return})
 
     render_click(failed_sync, "retry", %{"id" => work_key, "generation" => generation})
     assert_redirect(failed_sync, confirm_path)
-    refute :sys.get_state(failed_sync.pid).socket.assigns.recovery_receipts != %{}
 
     assert get(conn, confirm_path).status == 200
 
     {:ok, returned, returned_html} = live(conn, expected_return)
     assert :sys.get_state(returned.pid).socket.assigns.selected_schema == OpsPostA
+    assert :sys.get_state(returned.pid).socket.assigns.recovery_receipts == %{}
     assert returned_html =~ schema_a
     assert returned_html =~ "Failed sync work"
+    refute returned_html =~ "Retry accepted"
   end
 end
