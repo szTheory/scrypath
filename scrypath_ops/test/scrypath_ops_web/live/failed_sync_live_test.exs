@@ -151,6 +151,29 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert html =~ "unknown: 2"
   end
 
+  test "every source-qualified work row uses an opaque stable DOM and action key", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [
+      %{
+        "uid" => 501,
+        "status" => "failed",
+        "type" => "documentAdditionOrUpdate",
+        "indexUid" => "fsv_ops_post_a",
+        "error" => %{"message" => "index missing"}
+      }
+    ])
+
+    {:ok, view, html} = live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.OpsPostA")
+
+    backend_key = expected_work_key("ScrypathOps.Test.OpsPostA", "meilisearch", "501")
+    queue_key = expected_work_key("ScrypathOps.Test.OpsPostA", "oban", "501")
+
+    refute backend_key == queue_key
+    assert html =~ ~s(id="failed-detail-#{backend_key}")
+    assert html =~ ~s(id="failed-detail-#{queue_key}")
+    assert view |> element("[data-testid='failed-sync-retry']") |> render() =~
+             ~s(phx-value-key="#{queue_key}")
+  end
+
   test "zero failed sync work shows the empty hero", %{conn: conn} do
     Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
     Application.put_env(:scrypath_ops, :oban_jobs, [])
@@ -338,5 +361,12 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
       %{state | socket: socket}
     end)
+  end
+
+  defp expected_work_key(schema, source, id) do
+    [schema, source, id]
+    |> Enum.map(fn value -> <<byte_size(value)::unsigned-big-32, value::binary>> end)
+    |> IO.iodata_to_binary()
+    |> Base.url_encode64(padding: false)
   end
 end
