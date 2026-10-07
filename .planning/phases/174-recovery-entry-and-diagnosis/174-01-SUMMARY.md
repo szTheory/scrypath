@@ -105,6 +105,8 @@ status: complete
 
 The plan commit count of 5 is measured from `plan_head_before` to `plan_head_after`; the planning metadata commit is recorded separately after this summary.
 
+**Plan metadata:** `e906400` (complete plan summary and state), `aad9c4f` (persist generated state sidecar).
+
 ## Files Created/Modified
 
 - `scrypath_ops/lib/scrypath_ops_web/live/control_room_live.ex` — selected recovery target and scoped Search health entry.
