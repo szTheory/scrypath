@@ -174,7 +174,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
                 data-testid="control-room-health-link"
                 navigate={health_path(@mount_path, @selected_schema)}
                 variant={:ghost}
-                size={:sm}
+                size={:md}
               >
                 Review Search health <span aria-hidden="true">→</span>
               </.ops_link_button>

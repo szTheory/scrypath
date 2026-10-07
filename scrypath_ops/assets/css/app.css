@@ -645,6 +645,10 @@
     height: 0.625rem;
   }
 
+  #control-room-health-link {
+    min-height: var(--control-h-lg);
+  }
+
   .ops-verdict__dot {
     flex: none;
     width: 0.5rem;

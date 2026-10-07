@@ -17,7 +17,7 @@ The initial mounted palette baseline was already green (1/1) because Plan 174-07
 
 The final actual browser matrix exposed a second valid acceptance failure. Both mounted and standalone Control Room views rendered `#control-room-health-link` at 40px, below the UI-SPEC's 44px minimum for prominent actions. The specific browser assertion was added to the existing mounted and standalone geometry matrix. Native JUnit reported 4 tests, 2 passed, 2 failed, 0 skipped; both failing tests were the expected 40px target-height assertions at the first desktop Control Room capture. The target mounted test executed its broader journey before reaching the geometry assertion. The trace and JUnit are under `examples/scrypath_ecommerce/test-results/phase174-recovery-54d8244d5e/`; the machine classifier returned `RED_EVIDENCE_OK` (`target_test_failed`) for the unchanged JUnit.
 
-- Test commit: pending
+- Test commit: `54c623e`
 - Source HEAD used for the run: `54d8244d5ebb89d7fceb6f1a8afaa9ddb02e2393`
 - Command: isolated Phase 174 Compose project `scrypath_phase174_54d8244d5e_recovery_ctared`, full Chromium dual-entrypoint matrix, no retries.
 - Expected: prominent Control Room action height >=44px; actual: 40px on mounted and standalone desktop views.
