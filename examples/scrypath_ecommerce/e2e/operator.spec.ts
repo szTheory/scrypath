@@ -60,7 +60,7 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await page.goto("/admin/search");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Control Room" })).toBeVisible();
-  await page.getByRole("link", { name: "Start recovery" }).click();
+  await page.getByRole("link", { name: "Review Search health" }).click();
   await expect(page.getByRole("heading", { name: "Search health", exact: true })).toBeVisible();
   await waitForLiveConnected(page);
   const variantHandoff = page.getByRole("link", { name: "View failed sync work for ScrypathEcommerce.Catalog.Variant", exact: true });
@@ -76,18 +76,18 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await page.locator(".ops-schema-picker__option").filter({ has: page.getByRole("radio", { name: /Variant/ }) }).click();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
 
-  const failedRow = page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Failed job ${fixture.original_job_id}` }) });
+  const failedRow = page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Queue job ${fixture.original_job_id}` }) });
   await expect(failedRow).toBeVisible();
-  const retry = failedRow.getByRole("button", { name: "Retry sync work" });
+  const retry = failedRow.getByRole("button", { name: "Retry queue job" });
   await expect(retry).toBeVisible();
   await retry.click();
 
   const receipt = failedRow.getByTestId("recovery-receipt");
   await expect(receipt).toBeVisible();
   await scanNonContrastA11y(page, testInfo, "retry-accepted-dark-desktop");
-  await expect(receipt).toContainText(`Original failure #${fixture.original_job_id} retained`);
+  await expect(receipt).toContainText(`Original Queue job ${fixture.original_job_id} failure retained`);
   const receiptText = await receipt.innerText();
-  const acceptedMatch = receiptText.match(/Queue job (\d+)/);
+  const acceptedMatch = receiptText.match(/Replacement accepted — queue job (\d+)/);
   expect(acceptedMatch, "rendered receipt must identify the accepted queue job").not.toBeNull();
   const acceptedJobId = Number(acceptedMatch![1]);
   expect(acceptedJobId).not.toBe(fixture.original_job_id);
@@ -153,11 +153,11 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await page.goBack();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
-  await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Failed job ${fixture.original_job_id}` }) })).toBeVisible();
+  await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Queue job ${fixture.original_job_id}` }) })).toBeVisible();
   await page.reload();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
-  await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Failed job ${fixture.original_job_id}` }) })).toBeVisible();
+  await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Queue job ${fixture.original_job_id}` }) })).toBeVisible();
 
   await page.goto("/admin/search/failed-sync?schema=Elixir.NotAllowlisted");
   await expect(page.getByText("That schema is unavailable")).toBeVisible();
@@ -165,7 +165,7 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await page.goBack();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
-  await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Failed job ${fixture.original_job_id}` }) })).toBeVisible();
+  await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Queue job ${fixture.original_job_id}` }) })).toBeVisible();
 });
 
 test("operator promotes only this returned task pair and unique target document", async ({ page, request }, testInfo) => {
