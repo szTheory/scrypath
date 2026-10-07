@@ -183,7 +183,8 @@ defmodule ScrypathOps.Test.Phase174FixtureSource do
         %{
           "error" =>
             if(scenario == "long-value",
-              do: String.duplicate("Fixture queue failure with a complete diagnostic value. ", 14),
+              do:
+                String.duplicate("Fixture queue failure with a complete diagnostic value. ", 14),
               else: "Phase 174 fixture queue failure"
             )
         }

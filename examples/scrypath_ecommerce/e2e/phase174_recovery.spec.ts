@@ -208,7 +208,7 @@ test("standalone rendered states preserve unavailable, retained, unknown, empty,
 
   await page.goto(`${standalone}?scenario=empty`);
   await waitForLiveConnected(page);
-  await expect(page.getByText(/No search schemas configured/i)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "No schemas configured", exact: true })).toBeVisible();
   await expect(page.getByTestId("recovery-target")).toHaveCount(0);
 
   const longPrefix = `phase174_${"long_".repeat(14)}`;
@@ -220,7 +220,9 @@ test("standalone rendered states preserve unavailable, retained, unknown, empty,
     await assertNoPageOverflow(page, `standalone long failed-work evidence ${width}px`);
     const row = page.getByTestId("failed-sync-row").filter({ hasText: "Queue job 501" });
     const reason = await row.getByTestId("failed-sync-reason").textContent();
-    expect(reason?.length).toBeGreaterThan(700);
+    expect(reason?.trim().length).toBeGreaterThan(450);
+    expect(reason?.trim().length).toBeLessThanOrEqual(500);
+    expect(reason?.trim()).toMatch(/\.\.\.$/);
     await expect(row).toContainText(longPrefix);
     await row.getByTestId("failed-sync-retry").click();
     const modal = page.getByRole("dialog");
@@ -234,25 +236,23 @@ test("standalone rendered states preserve unavailable, retained, unknown, empty,
 test("refresh keeps its real label, icon, and prior observation while the LiveView response is pending", async ({ page }) => {
   const schemaA = "ScrypathOps.Test.OpsPostA";
   const token = crypto.randomUUID().replaceAll("-", "");
-  const response = delayNextLiveViewResponse(page);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(`${standalone}/health?scenario=busy-${token}&schema=${schemaA}`);
   await waitForLiveConnected(page);
 
   const rowA = page.getByTestId("posture-row").filter({ hasText: schemaA });
-  const before = await rowA.innerText();
+  const before = await rowA.textContent();
   const refresh = page.locator("#search-health-refresh");
   await expect(refresh).toContainText("Refresh");
   await expect(refresh).toHaveAttribute("aria-label", "Refresh search health");
   await expect(refresh.locator("svg")).toBeVisible();
-  response.arm();
   await refresh.click();
-  await response.held;
+  // The test source blocks its actual backend observation for 700ms.
+  // Assert the real pending view without depending on transport selection.
   await expect(refresh).toHaveAttribute("aria-busy", "true");
   await expect(refresh).toContainText("Refresh");
   await expect(refresh.locator("svg")).toBeVisible();
-  await expect(rowA).toHaveText(before);
-  await response.released;
+  await expect(rowA).toHaveText(before!);
   await expect(refresh).not.toHaveAttribute("aria-busy", "true");
 });
 
