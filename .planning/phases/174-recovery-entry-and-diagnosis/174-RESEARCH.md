@@ -367,15 +367,17 @@ All 30 criteria below are carried verbatim from the approved UI-SPEC. They are i
 
 ## Open Questions
 
+No open questions remain for Phase 174 planning. The resolutions below record approaches selected under the maintainer's auto-follow direction and plan design; they are not claims that implementation or browser verification has passed.
+
 1. **What exact narrow bridge should update the ignored palette links after selector patches?**
    - What we know: the subtree uses phx-update="ignore" and a client hook; initial href rendering does not establish patch correctness. [VERIFIED: ops_ui.ex:1497-1502; ops_hooks.js]
-   - What's unclear: the least invasive hook/server update mechanism that fits the existing palette lifecycle.
-   - Recommendation: keep this bounded to contextual destination updates and settle it during plan/task design; verify through actual DOM hrefs, keyboard access, Back and reload. No new dependency.
+   - **Resolved for planning (174-07):** Render a server-patched sibling destination manifest outside the ignored subtree, derived from `Nav.primary` and only the current allowlisted `recovery_target`. Give its encoded destinations and existing palette recovery items stable DOM IDs. In the existing `CommandPalette` hook, synchronize those existing items' `href` attributes immediately on mount and through a `MutationObserver` watching manifest destination changes; disconnect the observer on destroy. Preserve the ignored controls, listeners, filtering, keyboard and focus lifecycle. No new dependency.
+   - Evidence boundary: this is the selected implementation, not a verified behavior claim. Plan 174-07 covers server contract tests and the asset build; Plan 174-08 must inspect actual post-patch DOM hrefs, keyboard/focus behavior, Back and reload in disposable browser runs.
 
 2. **How should the disposable standalone Ops entrypoint receive equivalent recovery fixture data?**
    - What we know: the mounted ecommerce Playwright journey is executable; Phase173's dual-entrypoint runner has unrelated scopes and health fixtures. [VERIFIED: operator.spec.ts:43-169; verify-phase173.sh:5-11,67-110]
-   - What's unclear: which existing fixture hooks can supply the same controlled source-qualified rows to the standalone route.
-   - Recommendation: trace the mounted journey first, then add a narrowly scoped disposable runner/fixture for the standalone entrypoint; do not make retained preview or product changes to solve fixture setup.
+   - **Resolved for planning (174-06, 174-08):** Add a Phase174-only fixture source and test-environment-only `/ops/phase174` routes through the existing DevRouter/Endpoint seam. Supply deterministic A/B, source-qualified equal-ID and observation states to production ControlRoomLive, PostureLive and FailedSyncLive through their current data-fetch boundaries, guarded by the route-local test action. The standalone authorization specimen uses real Sigra Gating with stale sudo, a test-only confirm landing, and an explicit safe return that revalidates A; it does not grant host authorization or replay a mutation. Run both entrypoints in the scoped disposable Phase174 browser runner, leaving the retained preview and Phase173 runner untouched.
+   - Evidence boundary: the research verified the existing mounted journey and Phase173 fixture pattern, not the new standalone route. Plan 174-06 requires focused LiveView and Gating tests; Plan 174-08 requires final-source browser proof for both entrypoints, including the safe-return limit.
 
 ## Environment Availability
 
