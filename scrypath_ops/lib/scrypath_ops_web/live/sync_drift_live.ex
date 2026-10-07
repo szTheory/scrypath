@@ -247,36 +247,48 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         {:ok, {generation, handle, result}},
         socket
       ) do
-    if generation == socket.assigns.context_generation and
-         handle == socket.assigns.recovery_handle do
-      {status, evidence} =
-        case result do
-          {status, %{} = evidence} -> {status, evidence}
-          status -> {status, nil}
-        end
+    cond do
+      generation == socket.assigns.context_generation and
+        handle == socket.assigns.recovery_handle and current_selection?(socket) ->
+        {status, evidence} =
+          case result do
+            {status, %{} = evidence} -> {status, evidence}
+            status -> {status, nil}
+          end
 
-      {:noreply,
-       socket
-       |> assign(:recovery_status, status)
-       |> assign(:recovery_evidence, evidence)
-       |> assign(:recovery_checked_at, DateTime.utc_now())
-       |> assign(:recovery_loading, false)}
-    else
-      {:noreply, socket}
+        {:noreply,
+         socket
+         |> assign(:recovery_status, status)
+         |> assign(:recovery_evidence, evidence)
+         |> assign(:recovery_checked_at, DateTime.utc_now())
+         |> assign(:recovery_loading, false)}
+
+      generation == socket.assigns.context_generation and
+          handle == socket.assigns.recovery_handle ->
+        {:noreply, unavailable(socket)}
+
+      true ->
+        {:noreply, socket}
     end
   end
 
   def handle_async({:recovery_observation, generation, handle}, {:exit, _reason}, socket) do
-    if generation == socket.assigns.context_generation and
-         handle == socket.assigns.recovery_handle do
-      {:noreply,
-       socket
-       |> assign(:recovery_status, :unknown)
-       |> assign(:recovery_evidence, nil)
-       |> assign(:recovery_checked_at, DateTime.utc_now())
-       |> assign(:recovery_loading, false)}
-    else
-      {:noreply, socket}
+    cond do
+      generation == socket.assigns.context_generation and
+        handle == socket.assigns.recovery_handle and current_selection?(socket) ->
+        {:noreply,
+         socket
+         |> assign(:recovery_status, :unknown)
+         |> assign(:recovery_evidence, nil)
+         |> assign(:recovery_checked_at, DateTime.utc_now())
+         |> assign(:recovery_loading, false)}
+
+      generation == socket.assigns.context_generation and
+          handle == socket.assigns.recovery_handle ->
+        {:noreply, unavailable(socket)}
+
+      true ->
+        {:noreply, socket}
     end
   end
 
