@@ -372,6 +372,60 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert refreshing.assigns.recovery_evidence == nil
   end
 
+  test "recovery success arriving after its selected schema is removed is discarded" do
+    socket =
+      sync_drift_socket(%{
+        selected_schema: OpsPostA,
+        context_generation: 8,
+        recovery_handle: "removed-target-receipt",
+        recovery_status: :unknown,
+        recovery_loading: true
+      })
+
+    Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostB])
+
+    {:noreply, updated} =
+      SyncDriftLive.handle_async(
+        {:recovery_observation, 8, "removed-target-receipt"},
+        {:ok, {8, "removed-target-receipt", {:verified, %{index: "sdv_ops_post_a"}}}},
+        socket
+      )
+
+    assert updated.assigns.selected_schema == nil
+    assert updated.assigns.selection_error == :unavailable
+    assert updated.assigns.recovery_handle == nil
+    assert updated.assigns.recovery_status == nil
+    assert updated.assigns.recovery_evidence == nil
+    refute updated.assigns.recovery_loading
+  end
+
+  test "recovery failure arriving after its selected schema is removed clears pending status" do
+    socket =
+      sync_drift_socket(%{
+        selected_schema: OpsPostA,
+        context_generation: 9,
+        recovery_handle: "removed-target-receipt",
+        recovery_status: :unknown,
+        recovery_loading: true
+      })
+
+    Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostB])
+
+    {:noreply, updated} =
+      SyncDriftLive.handle_async(
+        {:recovery_observation, 9, "removed-target-receipt"},
+        {:exit, :observer_failed},
+        socket
+      )
+
+    assert updated.assigns.selected_schema == nil
+    assert updated.assigns.selection_error == :unavailable
+    assert updated.assigns.recovery_handle == nil
+    assert updated.assigns.recovery_status == nil
+    assert updated.assigns.recovery_evidence == nil
+    refute updated.assigns.recovery_loading
+  end
+
   test "swap observer distinguishes terminal outcomes from unconfirmed observations and keeps task identity" do
     socket =
       sync_drift_socket(%{
