@@ -23,3 +23,5 @@ OnMount resolves normal routes from current configuration; test-only phase174 ro
 ## Limits
 
 No new dependency, persistent configuration change, Phase 175 work, trust approval, merge or release. Browser/hosted final-source evidence is reconciled separately; this record does not attest them.
+
+Post-fix fixture correction e286962 keeps shell configuration resolution separate from consuming scenario observations. The latest native 11-case browser lane passes, and prior mounted recovery verifies its exact accepted replacement task and document. Earlier failed cached/spec and fixture-sequence runs are retained separately.

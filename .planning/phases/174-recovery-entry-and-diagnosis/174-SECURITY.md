@@ -67,3 +67,7 @@ Evidence: final native browser11/11 in `174-FINAL-BROWSER.xml`; source identitie
 | Threats found | 14 |
 | Closed | 14 |
 | Open | 0 |
+
+## Post-review control verification
+
+CR-01 and WR-01 fixes preserve source-qualified receipt identity and enforce current configured allowlists in normal shell routes and Control Room refresh. Their connected LiveView regressions pass within the final 275-test/2-doctest Ops precommit suite; the rebuilt browser lane passes 11/11. No register threat or risk-acceptance disposition changed. Test-only fixture allowlist lookup is side-effect free; this is not a host trust bypass.

@@ -2,39 +2,41 @@
 gsd_state_version: "1.0"
 milestone: v1.43
 milestone_name: ScrypathOps UI refinement
-current_phase: 174
-current_phase_name: Recovery Entry and Diagnosis
-status: executing
-stopped_at: Completed 174-08-PLAN.md; phase status awaits independent verification
-last_updated: "2026-10-07T20:01:58.162Z"
+current_phase: 175
+current_phase_name: Repair and Verification
+status: planning
+stopped_at: Phase 174 complete, ready to plan Phase 175
+last_updated: "2026-10-07T22:00:39.938Z"
 last_activity: 2026-10-07
-last_activity_desc: Plan 174-08 executed; independent phase verification pending
-state_head: 7a01cecd02f192d99d20a7c7facbe416dc76ed82
+last_activity_desc: Phase 174 complete, transitioned to Phase 175
+state_head: 50b331041ee8fd8dc164724b9e89a50148c866ad
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 12
   completed_plans: 12
-  percent: 20
+  percent: 40
 ---
 
 # Project State
 
 ## Project Reference
 
-See PROJECT.md (updated 2026-10-06). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: v1.43 Phase 174 Recovery Entry and Diagnosis; Phase 173 completed all four plans and seven requirements with independent executable verification.
+See PROJECT.md (updated 2026-10-07). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: v1.43 Phase 175 Repair and Verification, ready to plan; no Phase 175 work started. Phases 173–174 completed 12 plans and 11 requirements with independent executable verification. Phase 174 hosted terminal closeout is recorded separately.
 
 ## Current Position
 
-Phase: 174 (Recovery Entry and Diagnosis) — EXECUTING
-Plan: 8 of 8
-Status: Executed; awaiting independent phase verification
-Last activity: 2026-10-07 — Plan 174-08 browser and canonical Ops proof completed
-Progress: [██░░░░░░░░] 20% (1/5 phases; all 4 Phase 173 plans complete)
+Phase: 175 — Repair and Verification
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-07 — Phase 174 complete, transitioned to Phase 175
+Progress: [████░░░░░░] 40% (2/5 phases; 12/12 currently planned plans complete)
 
 ## Delivered Evidence
 
-- Phase 173: 4/4 plans, OPUX-09–OPUX-15, independent verification 58/58; final production browser proof 34/34, core 661 tests/four properties and Ops 247 tests/two doctests, all zero failures. Accepted candidate [run 37558615968](https://github.com/szTheory/scrypath/actions/runs/37558615968) at `d3af57fd1f156df2d6e1deec18200ae3b1eef119` passed required jobs, coverage and attestation. `phases/173-shared-visual-foundation-and-operational-time/173-CLOSEOUT.md` records retained evidence, tracking warnings, advisory limits and the final-source receipt procedure. Final exact-SHA evidence is retained outside the frozen checkout. No merge, release or Phase 174 execution is claimed.
+- Phase 174: 8/8 plans and OPUX-16–OPUX-19; independent verification 48/48 plan truths and 4/4 roadmap outcomes, all 30 UI criteria, 24 decisions and four source assumptions checked. Native recovery browser 11/11 with 48 AFTER captures; Ops 275 tests + 2 doctests and core 661 tests + 4 properties, zero failures. Prior Phase173 regression has 34 unique cases with passing evidence across truthful 32/34 full and exact 2/2 focused reports. Both code review findings are fixed; ASVS L1 register has 14 closed threats; UI audit 23/24. Maintainer preview localhost:4014 is retained; original localhost:4012, frozen Phase173 and original 15 dirty files are preserved. Hosted two-stage closeout is recorded separately. No Phase175 work, host trust approval, merge or release.
+
+- Phase 173: 4/4 plans, OPUX-09–OPUX-15, independent verification 58/58; final production browser proof 34/34, core 661 tests/four properties and Ops 247 tests/two doctests, all zero failures. Accepted candidate [run 37558615968](https://github.com/szTheory/scrypath/actions/runs/37558615968) at `d3af57fd1f156df2d6e1deec18200ae3b1eef119` passed required jobs, coverage and attestation. `phases/173-shared-visual-foundation-and-operational-time/173-CLOSEOUT.md` records retained evidence, tracking warnings, advisory limits and the final-source receipt procedure. Final exact-SHA evidence is retained outside the frozen checkout. That Phase173 receipt made no merge, release or Phase174 execution claim.
 
 - Phase172:8/8 requirements and plans; independent verification38/38 truths; audit6/6 connections and5/5 flows. Archive: `milestones/v1.42-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and `milestones/v1.42-phases/`.
 - PR91 merged3ad154a33f99cb200b791577aadc5970adc70ca2. Candidate135517b/run37178388184 passed104 browser,4 mounted, required gates, coverage and attestation. Scoped Ops also passed PR37178390800 and main37180290165. Root657tests+4properties0; Ops233+2doctests0.
@@ -83,7 +85,7 @@ Both disposable verification projects and their owned networks/volumes were remo
 ## Session Continuity
 
 Last session: 2026-10-07T20:01:58.130Z
-Stopped at: Completed 174-08-PLAN.md; phase status awaits independent verification
+Stopped at: Phase 174 complete, ready to plan Phase 175
 Resume file: None
 
 Phase 174 now executes in a separate regular clone on `gsd/phase-174-recovery-entry-and-diagnosis` in `/private/tmp/scrypath-phase173-20261006-155750/phase174-execution`. The previous planning worktree and its RED artifacts remain preserved; the fresh clone resolves the executor commit guard without bypassing it. It starts from the immutable Phase 173 source `13ea88a9c18a7515f4ec5ae7deea0cdde4c22531`. Its later handoff metadata does not extend the prior exact-SHA receipt. The execution checkout and PR branch `gsd/phase-173-shared-visual-foundation` remain unchanged at that attested source.

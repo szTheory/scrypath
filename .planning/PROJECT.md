@@ -397,11 +397,13 @@ measured pure hot paths did not justify speculative optimization.
 
 ## Planning window
 
-v1.41 delivered Phase 168 four-graph security and proof, Phase 169 tenant/facet fixes and finite PR/path accounting, and Phase 170 docs/tooling plus published 0.3.14. Phase 171 closed the DOC-03/GATE-05/CLOSE-04 verification traceability gaps. The original issue #86 NOT READY assessment remains unchanged at its cutoff; the fresh 2026-10-02 READY assessment is separately recorded at comment 5955742805. The audit accepts visible, nonblocking Nyquist validation-record debt in Phases 168–170; all nine requirements, four phases, six integration paths, and three end-to-end flows passed. Current tracking records Phase 170 at 8/8 after its authorized post-freeze replacement; original bytes and the attested 17/18 snapshot remain preserved. v1.41 is archived locally. v1.42 completed the cross-screen ScrypathOps recovery journey and shared UI repairs in Phase172. v1.43 now has an approved UI refinement roadmap; Phase 173 is complete with seven requirements and independent verification; Phase 174 is ready for discussion. v1.40 and v1.39 assessments remain immutable historical results.
+v1.41 delivered Phase 168 four-graph security and proof, Phase 169 tenant/facet fixes and finite PR/path accounting, and Phase 170 docs/tooling plus published 0.3.14. Phase 171 closed the DOC-03/GATE-05/CLOSE-04 verification traceability gaps. The original issue #86 NOT READY assessment remains unchanged at its cutoff; the fresh 2026-10-02 READY assessment is separately recorded at comment 5955742805. The audit accepts visible, nonblocking Nyquist validation-record debt in Phases 168–170; all nine requirements, four phases, six integration paths, and three end-to-end flows passed. Current tracking records Phase 170 at 8/8 after its authorized post-freeze replacement; original bytes and the attested 17/18 snapshot remain preserved. v1.41 is archived locally. v1.42 completed the cross-screen ScrypathOps recovery journey and shared UI repairs in Phase172. v1.43 now has an approved UI refinement roadmap; Phase 173 is complete with seven requirements and independent verification; Phase 174 has completed its eight plans and independent goal verification; Phase 175 is ready to plan. v1.40 and v1.39 assessments remain immutable historical results.
 
 ## Requirements
 
 ### Validated
+
+- [x] **v1.43 / Phase 174** (2026-10-07): **OPUX-16–OPUX-19** — connected recovery entry and diagnosis, source-qualified failed-work actions, preserved allowed schema and safe local return; independent verification 48/48 plan truths and all four roadmap outcomes, executable dual-entrypoint evidence. Hosted terminal closeout is recorded separately; no merge or release claim.
 
 - [x] **v1.43 / Phase 173** (2026-10-06): **OPUX-09–OPUX-15** — neutral shared foundation, coherent theme preference, quiet action states and precise operational time/truthful copy feedback; independent verification 58/58 and executable both-entrypoint proof.
 
@@ -486,12 +488,11 @@ v1.41 delivered Phase 168 four-graph security and proof, Phase 169 tenant/facet 
 
 ### Active
 
-- [ ] Recovery entry, diagnosis, failed-work action hierarchy, and preserved schema context (OPUX-16–OPUX-19).
 - [ ] Clear observation, drift, repair/promotion, and evidence/outcome boundaries (OPUX-20–OPUX-22).
 - [ ] Search and Playbooks form/result and action hierarchy (OPUX-23–OPUX-25).
 - [ ] Consolidated shared patterns, representative proof, and reviewed/source-bounded delivery (OPUX-26–OPUX-28).
 
-These are the approved requirements for v1.43, mapped exactly once across Phases 173–177 in REQUIREMENTS.md and ROADMAP.md. Phase 173 implements and verifies OPUX-09–OPUX-15; the remaining thirteen requirements are active.
+These are the approved requirements for v1.43, mapped exactly once across Phases 173–177 in REQUIREMENTS.md and ROADMAP.md. Phases 173–174 implement and verify OPUX-09–OPUX-19; the remaining nine requirements are active.
 
 ### Out of Scope
 
@@ -508,7 +509,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has shipped planning milestones through **`v1.42`** (**`v1.0`**-**`v1.42`**); **`v1.43`** has an approved 20-requirement, five-phase roadmap and has completed Phase 173's four plans and seven requirements; Phase 174 is ready for discussion. Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and `milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` for shipped arcs.
+The repository has shipped planning milestones through **`v1.42`** (**`v1.0`**-**`v1.42`**); **`v1.43`** has an approved 20-requirement, five-phase roadmap and has completed Phases 173–174 (12 plans and 11 requirements); Phase 174 has completed its eight plans and independent goal verification; Phase 175 is ready to plan. Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and `milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` for shipped arcs.
 
 ## Evolution
 
@@ -521,4 +522,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-06 after Phase 173 execution and independent verification; Phase 174 is ready for discussion. v1.42 completion and source receipts remain historical.*
+*Last updated: 2026-10-07 after Phase 174 execution and independent verification; Phase 174 has completed its eight plans and independent goal verification; Phase 175 is ready to plan. v1.42 completion and source receipts remain historical.*

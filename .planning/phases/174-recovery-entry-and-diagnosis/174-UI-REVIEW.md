@@ -79,3 +79,7 @@ The review used the actual final capture matrix plus the native final browser re
 - `scrypath_ops/lib/scrypath_ops_web/live/control_room_live.ex`, `posture_live.ex`, `failed_sync_live.ex`, `scrypath_ops/lib/scrypath_ops_web/components/layouts.ex`, and `scrypath_ops/assets/css/app.css`.
 - Final mounted and standalone capture matrix under `examples/scrypath_ecommerce/test-results/phase174-parent-final/phase174-captures/`; representative desktop light/dark and mobile light/dark images inspected across Control Room, Search health and Failed sync work.
 - `AGENTS.md`, `scrypath_ops/AGENTS.md`, and the native `gsd-ui-auditor` role bundle.
+
+## Post-audit follow-up evidence
+
+Parent source fixes address accepted retry correlation and removed shell targets; no typography, spacing, color or visual-score revision is inferred. The updated native final report passes 11/11 with 48 fresh AFTER captures at product/fixture e286962. The original 23/24 visual judgment remains an agent audit, and the schema wrapping recommendation remains nonblocking. Independent goal verification and hosted exact-SHA closeout are separate.

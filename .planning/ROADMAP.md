@@ -38,7 +38,7 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
 ## Phases
 
 - [x] **Phase 173: Shared Visual Foundation and Operational Time** - Operators see one calm, truthful visual language and usable time/copy feedback in the existing shell and representative Search health view. (completed 2026-10-06)
-- [ ] **Phase 174: Recovery Entry and Diagnosis** - Operators can identify affected work and reach the next safe recovery action across Control Room, Search health, and Failed sync work.
+- [x] **Phase 174: Recovery Entry and Diagnosis** - Operators can identify affected work and reach the next safe recovery action across Control Room, Search health, and Failed sync work. (completed 2026-10-07)
 - [ ] **Phase 175: Repair and Verification** - Operators can distinguish observation, repair, and promotion, then verify actual outcomes in Sync and drift.
 - [ ] **Phase 176: Search and Playbooks** - Operators can run searches and saved checks with clear common actions, results, and safe occasional controls.
 - [ ] **Phase 177: Shared Patterns and Delivery Proof** - Operators encounter the demonstrated patterns consistently on all six surfaces and maintainers can inspect source-bounded delivery evidence.
@@ -91,7 +91,7 @@ Plans:
   3. Failed sync work exposes the failure reason, work/source identity, and eligibility of the common supported recovery action before optional verbose evidence; retained failure history and safety gates remain visible.
   4. After changing schema in the rendered UI, operators keep that allowed selection through recovery handoffs, refresh, and back navigation; invalid or unavailable targets never turn into actions on another schema.
 
-**Plans**: 7/8 plans executed
+**Plans**: 8/8 plans complete
 Plans:
 **Wave 1**
 - [x] 174-01-PLAN.md — Tracer: selected target through incident diagnosis and accepted recovery handoff
@@ -111,7 +111,7 @@ Plans:
 - [x] 174-06-PLAN.md — Test-only standalone recovery fixture and real gated return
 
 **Wave 6** *(blocked on Wave 5 completion)*
-- [ ] 174-08-PLAN.md — Disposable dual-entrypoint browser and final-source proof
+- [x] 174-08-PLAN.md — Disposable dual-entrypoint browser and final-source proof
 
 **UI hint**: yes
 **Acceptance**: Inspect before/after recovery views in both themes and relevant widths; run focused rendered-navigation, focus/layout, state, and mounted handoff proof in existing lanes, including a changed schema selection.
@@ -165,7 +165,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 173. Shared Visual Foundation and Operational Time | 4/4 | Complete    | 2026-10-06 |
-| 174. Recovery Entry and Diagnosis | 7/8 | In Progress | - |
+| 174. Recovery Entry and Diagnosis | 8/8 | Complete    | 2026-10-07 |
 | 175. Repair and Verification | 0/TBD | Not started | - |
 | 176. Search and Playbooks | 0/TBD | Not started | - |
 | 177. Shared Patterns and Delivery Proof | 0/TBD | Not started | - |

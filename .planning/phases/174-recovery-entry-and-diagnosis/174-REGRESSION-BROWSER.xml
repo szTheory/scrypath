@@ -1,0 +1,614 @@
+<testsuites id="" name="" tests="34" failures="2" skipped="0" errors="0" time="176.88863899999998">
+<testsuite name="harness.spec.ts" timestamp="2026-10-07T21:49:46.847Z" hostname="chromium" tests="2" failures="0" skipped="0" time="0.387" errors="0">
+<testcase name="harness configuration is discoverable" classname="harness.spec.ts" time="0.002">
+</testcase>
+<testcase name="showcase navigation exposes storefront and operator surfaces" classname="harness.spec.ts" time="0.385">
+</testcase>
+</testsuite>
+<testsuite name="operator.spec.ts" timestamp="2026-10-07T21:49:46.847Z" hostname="chromium" tests="2" failures="0" skipped="0" time="6.87" errors="0">
+<testcase name="operator verifies a rendered recovery for the non-first Variant schema" classname="operator.spec.ts" time="4.243">
+<properties>
+<property name="phase172-operator-evidence" value="{&quot;fixture_marker&quot;:&quot;phase172-98307db257e44e0fbe3cc8ae66d2135b&quot;,&quot;schema&quot;:&quot;Elixir.ScrypathEcommerce.Catalog.Variant&quot;,&quot;checked_outcome&quot;:&quot;fixture setup started&quot;}">
+</property>
+<property name="phase172-operator-evidence" value="{&quot;fixture_marker&quot;:&quot;phase172-98307db257e44e0fbe3cc8ae66d2135b&quot;,&quot;schema&quot;:&quot;Elixir.ScrypathEcommerce.Catalog.Variant&quot;,&quot;index&quot;:&quot;ecommerce__variant&quot;,&quot;original_job_id&quot;:186,&quot;original_attempt&quot;:1,&quot;expected_document_id&quot;:130,&quot;expected_value&quot;:&quot;SCRY-RECOVERY-phase172-98307db257e44e0fbe3cc8ae66d2135b&quot;}">
+</property>
+<property name="phase172-operator-evidence" value="{&quot;original_job_id&quot;:186,&quot;accepted_job_id&quot;:187,&quot;accepted_attempt&quot;:null,&quot;checked_outcome&quot;:&quot;rendered retry acceptance&quot;}">
+</property>
+<property name="phase172-operator-evidence" value="{&quot;index&quot;:&quot;ecommerce__variant&quot;,&quot;document_id&quot;:130,&quot;schema&quot;:&quot;Elixir.ScrypathEcommerce.Catalog.Variant&quot;,&quot;task_uid&quot;:96,&quot;expected_sku&quot;:&quot;SCRY-RECOVERY-phase172-98307db257e44e0fbe3cc8ae66d2135b&quot;,&quot;marker&quot;:&quot;phase172-98307db257e44e0fbe3cc8ae66d2135b&quot;,&quot;original_attempt&quot;:1,&quot;original_job_id&quot;:186,&quot;accepted_attempt&quot;:1,&quot;accepted_job_id&quot;:187,&quot;active_document&quot;:true,&quot;task_index&quot;:&quot;ecommerce__variant&quot;,&quot;task_status&quot;:&quot;succeeded&quot;,&quot;task_type&quot;:&quot;documentAdditionOrUpdate&quot;,&quot;checked_outcome&quot;:&quot;Recovery verified&quot;,&quot;elapsed_ms&quot;:4040}">
+</property>
+</properties>
+</testcase>
+<testcase name="operator promotes only this returned task pair and unique target document" classname="operator.spec.ts" time="2.627">
+<properties>
+<property name="phase172-operator-evidence" value="{&quot;fixture_marker&quot;:&quot;phase172-71278c16e17d43b080cefd4a78f623b3&quot;,&quot;schema&quot;:&quot;Elixir.ScrypathEcommerce.Catalog.Product&quot;,&quot;checked_outcome&quot;:&quot;target setup started&quot;}">
+</property>
+<property name="phase172-operator-evidence" value="{&quot;fixture_marker&quot;:&quot;phase172-71278c16e17d43b080cefd4a78f623b3&quot;,&quot;schema&quot;:&quot;Elixir.ScrypathEcommerce.Catalog.Product&quot;,&quot;live_index&quot;:&quot;ecommerce__product&quot;,&quot;target_index&quot;:&quot;ecommerce__product__reindex&quot;,&quot;expected_document_id&quot;:105,&quot;expected_value&quot;:&quot;SCRY-SWAP-phase172-71278c16e17d43b080cefd4a78f623b3&quot;,&quot;task_baseline&quot;:108}">
+</property>
+<property name="phase172-operator-evidence" value="{&quot;document_id&quot;:105,&quot;task_uid&quot;:113,&quot;target_index&quot;:&quot;ecommerce__product__reindex&quot;,&quot;live_index&quot;:&quot;ecommerce__product&quot;,&quot;marker&quot;:&quot;phase172-71278c16e17d43b080cefd4a78f623b3&quot;,&quot;expected_name&quot;:&quot;SCRY-SWAP-phase172-71278c16e17d43b080cefd4a78f623b3&quot;,&quot;active_document&quot;:true,&quot;task_status&quot;:&quot;succeeded&quot;,&quot;task_type&quot;:&quot;indexSwap&quot;,&quot;swapped_pair&quot;:[&quot;ecommerce__product&quot;,&quot;ecommerce__product__reindex&quot;],&quot;checked_outcome&quot;:&quot;exact swap verified&quot;,&quot;elapsed_ms&quot;:2606}">
+</property>
+</properties>
+</testcase>
+</testsuite>
+<testsuite name="phase173_copy.spec.ts" timestamp="2026-10-07T21:49:46.847Z" hostname="chromium" tests="14" failures="0" skipped="0" time="13.074" errors="0">
+<testcase name="mounted copies one exact operational timestamp after clipboard resolution" classname="phase173_copy.spec.ts" time="1.072">
+</testcase>
+<testcase name="mounted copy text and feedback meet composed contrast and action targets" classname="phase173_copy.spec.ts" time="2.531">
+</testcase>
+<testcase name="mounted keeps the latest clipboard outcome when writes settle out of order" classname="phase173_copy.spec.ts" time="0.398">
+</testcase>
+<testcase name="mounted keeps rejected and unavailable clipboard feedback persistent and selectable" classname="phase173_copy.spec.ts" time="0.32">
+</testcase>
+<testcase name="mounted supports keyboard and touch and restarts the four-second success timer" classname="phase173_copy.spec.ts" time="0.437">
+</testcase>
+<testcase name="mounted omits copy for Checked, missing, invalid, and unobserved timestamps" classname="phase173_copy.spec.ts" time="0.972">
+</testcase>
+<testcase name="mounted retains copy and snapshot age after a failed refresh server patch" classname="phase173_copy.spec.ts" time="0.8">
+</testcase>
+<testcase name="standalone copies one exact operational timestamp after clipboard resolution" classname="phase173_copy.spec.ts" time="1.316">
+</testcase>
+<testcase name="standalone copy text and feedback meet composed contrast and action targets" classname="phase173_copy.spec.ts" time="2.727">
+</testcase>
+<testcase name="standalone keeps the latest clipboard outcome when writes settle out of order" classname="phase173_copy.spec.ts" time="0.3">
+</testcase>
+<testcase name="standalone keeps rejected and unavailable clipboard feedback persistent and selectable" classname="phase173_copy.spec.ts" time="0.33">
+</testcase>
+<testcase name="standalone supports keyboard and touch and restarts the four-second success timer" classname="phase173_copy.spec.ts" time="0.549">
+</testcase>
+<testcase name="standalone omits copy for Checked, missing, invalid, and unobserved timestamps" classname="phase173_copy.spec.ts" time="0.841">
+</testcase>
+<testcase name="standalone retains copy and snapshot age after a failed refresh server patch" classname="phase173_copy.spec.ts" time="0.481">
+</testcase>
+</testsuite>
+<testsuite name="phase173_shell.spec.ts" timestamp="2026-10-07T21:49:46.847Z" hostname="chromium" tests="4" failures="0" skipped="0" time="8.54" errors="0">
+<testcase name="phase 173 operator shell › mounted PostureLive keeps the preference visible and operational" classname="phase173_shell.spec.ts" time="1.904">
+</testcase>
+<testcase name="phase 173 operator shell › mounted shell fits the approved widths and produces theme captures" classname="phase173_shell.spec.ts" time="1.866">
+</testcase>
+<testcase name="phase 173 operator shell › standalone PostureLive keeps the preference visible and operational" classname="phase173_shell.spec.ts" time="2.163">
+</testcase>
+<testcase name="phase 173 operator shell › standalone shell fits the approved widths and produces theme captures" classname="phase173_shell.spec.ts" time="2.607">
+</testcase>
+</testsuite>
+<testsuite name="phase173_status_actions.spec.ts" timestamp="2026-10-07T21:49:46.847Z" hostname="chromium" tests="10" failures="2" skipped="0" time="130.299" errors="0">
+<testcase name="mounted status sources stay truthful across themes and responsive widths" classname="phase173_status_actions.spec.ts" time="55.279">
+</testcase>
+<testcase name="mounted partial queue failure retains only queue evidence and empty queues stay observed" classname="phase173_status_actions.spec.ts" time="5.992">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|phase173_status_actions-mo-97a16--empty-queues-stay-observed-chromium/error-context.md]]
+
+[[ATTACHMENT|phase173_status_actions-mo-97a16--empty-queues-stay-observed-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toContainText(expected) failed" type="expect.toContainText">
+<![CDATA[  [chromium] › phase173_status_actions.spec.ts:138:7 › mounted partial queue failure retains only queue evidence and empty queues stay observed 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('[id="posture-ScrypathEcommerce.Catalog.Product"]')
+    Timeout: 5000ms
+    - Expected substring  -   1
+    + Received string     + 106
+
+    - queue observed
+    +
+    +           
+    +               
+    +                 
+    +                   
+    +                     ScrypathEcommerce.Catalog.Product
+    +                   
+    +                   
+    +                     Index
+    +                     
+    +   ecommerce__product
+    +
+    +                     · sync mode oban
+    +                   
+    +                 
+    +               
+    +
+    +               
+    +                 
+    +                   Backend tasks
+    +                   
+    +                     
+    +                       Pending
+    +                       0
+    +                     
+    +                     
+    +                       Failed
+    +                       0
+    +                     
+    +                     
+    +                       Last success
+    +                       
+    +                         
+    +   
+    +   
+    +     
+    +       2 days ago
+    +     
+    +     
+    +       Exact timestamp
+    +       2026-10-04T13:02:05.123456-04:00
+    +       UTC equivalent: 2026-10-04T17:02:05.123456Z
+    +     
+    +     
+    +       
+    +         
+    +   
+    +
+    +         Copy timestamp
+    +       
+    +       
+    +         
+    +         
+    +           Dismiss
+    +         
+    +       
+    +     
+    +   
+    +
+    +                       
+    +                     
+    +                   
+    +                   
+    +                 
+    +
+    +                 
+    +                   Queue jobs
+    +                   
+    +                     
+    +                       Pending
+    +                       0
+    +                     
+    +                     
+    +                       Retrying
+    +                       0
+    +                     
+    +                     
+    +                       Failed
+    +                       0
+    +                     
+    +                     
+    +                       Last success
+    +                       
+    +                         
+    +   
+    +   
+    +     No success observed
+    +     
+    +   
+    +
+    +                       
+    +                     
+    +                   
+    +                   
+    +                   
+    +                 
+    +               
+    +               
+    +   
+    +                 View failed sync work 
+    +   
+    +
+    +               
+    +
+    +             
+    +         
+
+    Call log:
+      - Expect "toContainText" with timeout 5000ms
+      - waiting for locator('[id="posture-ScrypathEcommerce.Catalog.Product"]')
+        14 × locator resolved to <article data-testid="posture-row" id="posture-ScrypathEcommerce.Catalog.Product" class="ops-schema-signal-card ops-schema-signal-card--success">…</article>
+           - unexpected value "
+              
+                  
+                    
+                      
+                        ScrypathEcommerce.Catalog.Product
+                      
+                      
+                        Index
+                        
+      ecommerce__product
+    
+                        · sync mode oban
+                      
+                    
+                  
+    
+                  
+                    
+                      Backend tasks
+                      
+                        
+                          Pending
+                          0
+                        
+                        
+                          Failed
+                          0
+                        
+                        
+                          Last success
+                          
+                            
+      
+      
+        
+          2 days ago
+        
+        
+          Exact timestamp
+          2026-10-04T13:02:05.123456-04:00
+          UTC equivalent: 2026-10-04T17:02:05.123456Z
+        
+        
+          
+            
+      
+    
+            Copy timestamp
+          
+          
+            
+            
+              Dismiss
+            
+          
+        
+      
+    
+                          
+                        
+                      
+                      
+                    
+    
+                    
+                      Queue jobs
+                      
+                        
+                          Pending
+                          0
+                        
+                        
+                          Retrying
+                          0
+                        
+                        
+                          Failed
+                          0
+                        
+                        
+                          Last success
+                          
+                            
+      
+      
+        No success observed
+        
+      
+    
+                          
+                        
+                      
+                      
+                      
+                    
+                  
+                  
+      
+                    View failed sync work 
+      
+    
+                  
+    
+                
+            "
+
+
+      173 |
+      174 |     await openScenario(page, entrypoint.url, "empty-queue", "dark", 1440);
+    > 175 |     await expect(row).toContainText("queue observed");
+          |                       ^
+      176 |     await expect(queue.locator(".ops-signal-metrics")).toBeVisible();
+      177 |     await expect(queue).toContainText("No success observed");
+      178 |     await expect(queue).not.toContainText("unavailable");
+        at /app/examples/scrypath_ecommerce/e2e/phase173_status_actions.spec.ts:175:23
+
+    Error Context: ../test-results/phase173_status_actions-mo-97a16--empty-queues-stay-observed-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/phase173_status_actions-mo-97a16--empty-queues-stay-observed-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../test-results/phase173_status_actions-mo-97a16--empty-queues-stay-observed-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="mounted neutral chrome and metrics preserve the approved palette" classname="phase173_status_actions.spec.ts" time="1.654">
+</testcase>
+<testcase name="mounted refresh keeps server eligibility after a LiveView patch" classname="phase173_status_actions.spec.ts" time="0.225">
+</testcase>
+<testcase name="mounted quiet action exposes independent focus and transient interaction states" classname="phase173_status_actions.spec.ts" time="0.386">
+</testcase>
+<testcase name="standalone status sources stay truthful across themes and responsive widths" classname="phase173_status_actions.spec.ts" time="58.217">
+</testcase>
+<testcase name="standalone partial queue failure retains only queue evidence and empty queues stay observed" classname="phase173_status_actions.spec.ts" time="5.956">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|phase173_status_actions-st-b6705--empty-queues-stay-observed-chromium/error-context.md]]
+
+[[ATTACHMENT|phase173_status_actions-st-b6705--empty-queues-stay-observed-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toContainText(expected) failed" type="expect.toContainText">
+<![CDATA[  [chromium] › phase173_status_actions.spec.ts:138:7 › standalone partial queue failure retains only queue evidence and empty queues stay observed 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('[id="posture-ScrypathOps.Test.OpsPostA"]')
+    Timeout: 5000ms
+    - Expected substring  -   1
+    + Received string     + 106
+
+    - queue observed
+    +
+    +           
+    +               
+    +                 
+    +                   
+    +                     ScrypathOps.Test.OpsPostA
+    +                   
+    +                   
+    +                     Index
+    +                     
+    +   phase173__ops_post_a
+    +
+    +                     · sync mode oban
+    +                   
+    +                 
+    +               
+    +
+    +               
+    +                 
+    +                   Backend tasks
+    +                   
+    +                     
+    +                       Pending
+    +                       0
+    +                     
+    +                     
+    +                       Failed
+    +                       0
+    +                     
+    +                     
+    +                       Last success
+    +                       
+    +                         
+    +   
+    +   
+    +     
+    +       2 days ago
+    +     
+    +     
+    +       Exact timestamp
+    +       2026-10-04T13:02:05.123456-04:00
+    +       UTC equivalent: 2026-10-04T17:02:05.123456Z
+    +     
+    +     
+    +       
+    +         
+    +   
+    +
+    +         Copy timestamp
+    +       
+    +       
+    +         
+    +         
+    +           Dismiss
+    +         
+    +       
+    +     
+    +   
+    +
+    +                       
+    +                     
+    +                   
+    +                   
+    +                 
+    +
+    +                 
+    +                   Queue jobs
+    +                   
+    +                     
+    +                       Pending
+    +                       0
+    +                     
+    +                     
+    +                       Retrying
+    +                       0
+    +                     
+    +                     
+    +                       Failed
+    +                       0
+    +                     
+    +                     
+    +                       Last success
+    +                       
+    +                         
+    +   
+    +   
+    +     No success observed
+    +     
+    +   
+    +
+    +                       
+    +                     
+    +                   
+    +                   
+    +                   
+    +                 
+    +               
+    +               
+    +   
+    +                 View failed sync work 
+    +   
+    +
+    +               
+    +
+    +             
+    +         
+
+    Call log:
+      - Expect "toContainText" with timeout 5000ms
+      - waiting for locator('[id="posture-ScrypathOps.Test.OpsPostA"]')
+        14 × locator resolved to <article data-testid="posture-row" id="posture-ScrypathOps.Test.OpsPostA" class="ops-schema-signal-card ops-schema-signal-card--success">…</article>
+           - unexpected value "
+              
+                  
+                    
+                      
+                        ScrypathOps.Test.OpsPostA
+                      
+                      
+                        Index
+                        
+      phase173__ops_post_a
+    
+                        · sync mode oban
+                      
+                    
+                  
+    
+                  
+                    
+                      Backend tasks
+                      
+                        
+                          Pending
+                          0
+                        
+                        
+                          Failed
+                          0
+                        
+                        
+                          Last success
+                          
+                            
+      
+      
+        
+          2 days ago
+        
+        
+          Exact timestamp
+          2026-10-04T13:02:05.123456-04:00
+          UTC equivalent: 2026-10-04T17:02:05.123456Z
+        
+        
+          
+            
+      
+    
+            Copy timestamp
+          
+          
+            
+            
+              Dismiss
+            
+          
+        
+      
+    
+                          
+                        
+                      
+                      
+                    
+    
+                    
+                      Queue jobs
+                      
+                        
+                          Pending
+                          0
+                        
+                        
+                          Retrying
+                          0
+                        
+                        
+                          Failed
+                          0
+                        
+                        
+                          Last success
+                          
+                            
+      
+      
+        No success observed
+        
+      
+    
+                          
+                        
+                      
+                      
+                      
+                    
+                  
+                  
+      
+                    View failed sync work 
+      
+    
+                  
+    
+                
+            "
+
+
+      173 |
+      174 |     await openScenario(page, entrypoint.url, "empty-queue", "dark", 1440);
+    > 175 |     await expect(row).toContainText("queue observed");
+          |                       ^
+      176 |     await expect(queue.locator(".ops-signal-metrics")).toBeVisible();
+      177 |     await expect(queue).toContainText("No success observed");
+      178 |     await expect(queue).not.toContainText("unavailable");
+        at /app/examples/scrypath_ecommerce/e2e/phase173_status_actions.spec.ts:175:23
+
+    Error Context: ../test-results/phase173_status_actions-st-b6705--empty-queues-stay-observed-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/phase173_status_actions-st-b6705--empty-queues-stay-observed-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../test-results/phase173_status_actions-st-b6705--empty-queues-stay-observed-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="standalone neutral chrome and metrics preserve the approved palette" classname="phase173_status_actions.spec.ts" time="1.471">
+</testcase>
+<testcase name="standalone refresh keeps server eligibility after a LiveView patch" classname="phase173_status_actions.spec.ts" time="0.288">
+</testcase>
+<testcase name="standalone quiet action exposes independent focus and transient interaction states" classname="phase173_status_actions.spec.ts" time="0.831">
+</testcase>
+</testsuite>
+<testsuite name="phase173_time.spec.ts" timestamp="2026-10-07T21:49:46.847Z" hostname="chromium" tests="2" failures="0" skipped="0" time="15.167" errors="0">
+<testcase name="mounted renders stable exact operational time without overflow" classname="phase173_time.spec.ts" time="7.428">
+</testcase>
+<testcase name="standalone renders stable exact operational time without overflow" classname="phase173_time.spec.ts" time="7.739">
+</testcase>
+</testsuite>
+</testsuites>

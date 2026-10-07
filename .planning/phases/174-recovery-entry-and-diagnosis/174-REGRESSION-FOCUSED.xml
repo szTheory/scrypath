@@ -1,0 +1,8 @@
+<testsuites id="" name="" tests="2" failures="0" skipped="0" errors="0" time="2.2627539999999997">
+<testsuite name="phase173_status_actions.spec.ts" timestamp="2026-10-07T21:53:38.651Z" hostname="chromium" tests="2" failures="0" skipped="0" time="1.606" errors="0">
+<testcase name="mounted partial queue failure retains only queue evidence and empty queues stay observed" classname="phase173_status_actions.spec.ts" time="0.797">
+</testcase>
+<testcase name="standalone partial queue failure retains only queue evidence and empty queues stay observed" classname="phase173_status_actions.spec.ts" time="0.809">
+</testcase>
+</testsuite>
+</testsuites>
