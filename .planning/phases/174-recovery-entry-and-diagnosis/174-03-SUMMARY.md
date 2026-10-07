@@ -92,7 +92,7 @@ status: complete
 2. **Task 2 RED:** `699968d` — add removed-schema success and observer-exit regressions with classifier-validated TAP evidence.
 3. **Task 2 GREEN:** `830e83d` — reject recovery results for removed schemas.
 
-## TDD Gate Compliance
+## TDD Test Evidence
 
 | Task | RED evidence | GREEN verification | Status |
 | --- | --- | --- | --- |
@@ -119,3 +119,7 @@ OPUX-18 and OPUX-19 are not yet ready to mark complete; the repository readiness
 - Summary and both RED evidence files exist.
 - All three task commits are ancestors of `plan_head_after`.
 - Both RED records return `RED_EVIDENCE_OK`.
+
+## TDD commit-history boundary
+
+Parent reconciliation confirms T1's real failing TAP report/classifier and later passing tests, but its RED test/evidence and implementation were committed together in3b515ea. T1 has no separate pre-implementation RED commit. Therefore the table above describes executed failing/passing test evidence, not a complete separate RED→GREEN Git sequence for T1. T2 has distinct699968d RED and830e83d GREEN commits. History is preserved without rewriting or fabricated retroactive RED. Global workflow.tdd_mode remains false; this process limitation is retained for the phase review, while required behavior is backed by runnable tests. Summary and tracking were also combined in66f0d89 rather than separately committed; that closeout ordering limitation remains disclosed. Future executors receive an explicit separate RED and separate SUMMARY-before-tracking commit requirement.
