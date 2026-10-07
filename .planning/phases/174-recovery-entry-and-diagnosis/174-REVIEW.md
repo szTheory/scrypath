@@ -59,13 +59,17 @@ Reviewed the Phase 174 recovery navigation, failed-work identity and action hand
 
 ## Narrative Findings (AI reviewer)
 
-### CR-01 [BLOCKER]: Collision-safe retry identity is lost during status verification
+### CR-01: Collision-safe retry identity is lost during status verification
+
+**Severity:** BLOCKER
 
 **File:** `scrypath_ops/lib/scrypath_ops_web/live/sync_drift_live.ex:690-693`  
 **Issue:** `read_expected_effects/3` selects an original failure by numeric ID alone. The new failed-work UI distinguishes backend tasks from queue jobs with the same ID, while `Scrypath.Operator.FailedWork.list/3` returns backend rows before queue rows. After retrying a Queue job whose ID collides with a Backend task, verification therefore picks the Backend row, which has no manual recovery action, and reports the accepted replacement as unknown instead of checking its expected document effect.  
 **Fix:** Store the original row's `source` in the accepted receipt, preserve it through `RecoveryObservation.failure_reference/1`, and match by both source and ID when loading expected effects. Add a regression covering the colliding Backend task/Queue job through the Check sync status handoff.
 
-### WR-01 [WARNING]: Shell navigation validates against a stale allowlist snapshot
+### WR-01: Shell navigation validates against a stale allowlist snapshot
+
+**Severity:** WARNING
 
 **File:** `scrypath_ops/lib/scrypath_ops_web/live/on_mount.ex:45-58`  
 **Issue:** `recovery_target/3` prefers `assigns.schema_allowlist`, which is a mount-time snapshot on the production Control Room and the previous handle-params value on other views. If the configured allowlist changes while the LiveView remains connected, the hook can render the removed schema in the recovery-target label and palette/sidebar links even when the view's own `handle_params/3` has rejected it against the current allowlist. This leaves stale destinations in the shell and contradicts the current-allowlist target contract.  
