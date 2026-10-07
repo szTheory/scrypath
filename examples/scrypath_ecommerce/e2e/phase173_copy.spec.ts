@@ -1,4 +1,4 @@
-import { expect, test, type Browser } from "@playwright/test";
+import { expect, test, type Browser, type Locator } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 
@@ -43,6 +43,40 @@ async function openPage(browser: Browser, width: number, theme: "light" | "dark"
   return { context, page };
 }
 
+
+async function textAppearance(locator: Locator) {
+  return locator.evaluate((element) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 1;
+    const context = canvas.getContext("2d")!;
+    const rgba = (color: string) => {
+      context.clearRect(0, 0, 1, 1);
+      context.fillStyle = color;
+      context.fillRect(0, 0, 1, 1);
+      return Array.from(context.getImageData(0, 0, 1, 1).data);
+    };
+    const over = (foreground: number[], background: number[]) =>
+      foreground.slice(0, 3).map((channel, i) => channel * foreground[3] / 255 + background[i] * (1 - foreground[3] / 255));
+    const ancestors: Element[] = [];
+    for (let node: Element | null = element; node; node = node.parentElement) ancestors.unshift(node);
+    let background = [255, 255, 255];
+    for (const node of ancestors) background = over(rgba(getComputedStyle(node).backgroundColor), background);
+    const style = getComputedStyle(element);
+    const foreground = over(rgba(style.color), background);
+    const luminance = (color: number[]) => color.map((channel) => {
+      const value = channel / 255;
+      return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+    }).reduce((sum, channel, i) => sum + channel * [0.2126, 0.7152, 0.0722][i], 0);
+    const a = luminance(foreground), b = luminance(background);
+    return {
+      contrast: (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05),
+      font: style.fontFamily,
+      height: element.getBoundingClientRect().height,
+      size: style.fontSize
+    };
+  });
+}
+
 for (const entrypoint of ENTRYPOINTS) {
   test(`${entrypoint.name} copies one exact operational timestamp after clipboard resolution`, async ({ browser }) => {
     test.setTimeout(90_000);
@@ -81,6 +115,45 @@ for (const entrypoint of ENTRYPOINTS) {
           fullPage: true
         });
         await context.close();
+      }
+    }
+  });
+
+  test(`${entrypoint.name} copy text and feedback meet composed contrast and action targets`, async ({ browser }) => {
+    test.setTimeout(90_000);
+    for (const width of [390, 1440]) {
+      for (const theme of ["light", "dark"] as const) {
+        for (const preference of [theme, "system"]) {
+          const { context, page } = await openPage(browser, width, theme);
+          await page.addInitScript((value) => localStorage.setItem("phx:theme", value), preference);
+          await page.emulateMedia({ reducedMotion: "reduce" });
+          await page.goto(entrypoint.url);
+          await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+          const time = page.locator(`[id="${entrypoint.row}"] .ops-signal-group`).first().locator(".ops-time").first();
+          const copy = time.getByRole("button", { name: "Copy timestamp", exact: true });
+          const appearance = await textAppearance(copy);
+          expect(appearance.contrast, `${preference}/${theme} composed copy text contrast`).toBeGreaterThanOrEqual(4.5);
+          expect(appearance.font).not.toMatch(/mono|courier/i);
+          expect(appearance.size).toBe("14px");
+          expect(appearance.height).toBeGreaterThanOrEqual(40);
+          await copy.click();
+          await page.evaluate(() => (window as typeof window & { __phase173ResolveClipboardWrite: (() => void) | null }).__phase173ResolveClipboardWrite?.());
+          const feedback = time.locator("[data-ops-time-feedback-text]");
+          await expect(feedback).toHaveText("Timestamp copied");
+          const success = await textAppearance(feedback);
+          expect(success.contrast, `${preference}/${theme} composed success text contrast`).toBeGreaterThanOrEqual(4.5);
+          expect(success.font).not.toMatch(/mono|courier/i);
+          await page.evaluate(() => Object.defineProperty(navigator, "clipboard", {
+            configurable: true, value: { writeText: () => Promise.reject(new Error("denied")) }
+          }));
+          await copy.click();
+          await expect(feedback).toHaveText("Could not copy timestamp. Select and copy the exact value.");
+          const failure = await textAppearance(feedback);
+          expect(failure.contrast, `${preference}/${theme} composed failure text contrast`).toBeGreaterThanOrEqual(4.5);
+          const dismiss = time.getByRole("button", { name: "Dismiss copy message" });
+          expect((await textAppearance(dismiss)).height).toBeGreaterThanOrEqual(40);
+          await context.close();
+        }
       }
     }
   });
