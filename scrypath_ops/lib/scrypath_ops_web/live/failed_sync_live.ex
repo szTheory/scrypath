@@ -31,6 +31,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       |> assign(:recovery_receipts, %{})
       |> assign(:delete_confirmation, nil)
       |> apply_phase174_fixture(params)
+      |> assign_phase174_stale_sudo()
 
     {:ok, socket}
   end
@@ -180,14 +181,6 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         |> assign(:schema_allowlist, fixture.allowlist)
         |> assign(:scrypath_opts, fixture.opts)
         |> assign(:phase174_fixture_scenario, scenario)
-        |> assign(
-          :operator_context,
-          %OperatorContext{
-            user_id: "phase174-fixture-user",
-            active_org_id: "phase174-fixture-org",
-            sudo_at: DateTime.add(DateTime.utc_now(), -600, :second)
-          }
-        )
       else
         socket
       end
@@ -197,6 +190,29 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   end
 
   defp apply_phase174_fixture(socket, _params), do: socket
+
+  defp assign_phase174_stale_sudo(
+         %{
+           assigns: %{live_action: :phase174, phase174_fixture_scenario: scenario}
+         } = socket
+       )
+       when is_binary(scenario) do
+    if Mix.env() == :test do
+      assign(
+        socket,
+        :operator_context,
+        %OperatorContext{
+          user_id: "phase174-fixture-user",
+          active_org_id: "phase174-fixture-org",
+          sudo_at: DateTime.add(DateTime.utc_now(), -600, :second)
+        }
+      )
+    else
+      socket
+    end
+  end
+
+  defp assign_phase174_stale_sudo(socket), do: socket
 
   defp fixture_source?(source) when is_atom(source) do
     Code.ensure_loaded?(source) and function_exported?(source, :scenario, 1)
