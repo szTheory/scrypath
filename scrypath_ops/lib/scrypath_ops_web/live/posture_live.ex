@@ -611,7 +611,7 @@ defmodule ScrypathOpsWeb.PostureLive do
       dt={retained_time(@reference && @reference.state)}
       source_iso={state_source_iso(@reference && @reference.state)}
       copy={true}
-      reference={@reference && @reference.observed_at}
+      reference={@reference}
       label="Last success retained"
       empty="Not observed"
       unavailable_reason={inspect(@reason)}
