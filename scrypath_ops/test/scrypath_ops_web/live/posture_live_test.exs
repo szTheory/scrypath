@@ -21,7 +21,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
       uids = filters[:index_uids] || []
       boom_indexes = ["postlv_ops_post_a", "postlv_ops_post_b"]
 
-      if Enum.any?(boom_indexes, &(&1 in uids)) do
+      if "postlv_ops_post_a" in uids do
         Process.sleep(Agent.get(:posture_live_test_state, &Map.get(&1, :delay_a, 0)))
       end
 
@@ -217,7 +217,13 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     {:ok, lv, html} = live(conn, ~p"/ops/phase173/health?scenario=failed")
 
     assert html =~ "Degraded"
-    assert html =~ "backend failed"
+
+    assert has_element?(
+             lv,
+             "#posture-ScrypathOps\\.Test\\.OpsPostA .ops-signal-group[aria-label^='Backend task signals']",
+             "Failed"
+           )
+
     assert html =~ "failed"
     refute html =~ "document freshness"
     refute has_element?(lv, ".ops-metric-success")

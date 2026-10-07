@@ -378,14 +378,6 @@ defmodule ScrypathOpsWeb.PostureLive do
                           · sync mode <strong>{status.mode}</strong>
                         </p>
                       </div>
-                      <div class="ops-schema-signal-card__badges">
-                        <.ops_badge kind={backend_badge_kind(status)}>
-                          {backend_badge_label(status)}
-                        </.ops_badge>
-                        <.ops_badge kind={queue_badge_kind(status)}>
-                          {queue_badge_label(status)}
-                        </.ops_badge>
-                      </div>
                     </div>
 
                     <div class="ops-schema-signal-card__groups">
@@ -479,6 +471,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                       variant={:ghost}
                       class="justify-self-start gap-2 text-base-content"
                       aria-label={"View failed sync work for #{module_flat_name(mod)}"}
+                      id={"posture-failed-sync-link-#{module_flat_name(mod)}"}
                       data-testid="posture-failed-sync-link"
                     >
                       View failed sync work <.icon name="hero-arrow-right" class="size-4" />
@@ -490,9 +483,6 @@ defmodule ScrypathOpsWeb.PostureLive do
                           {module_heading(mod)}
                         </h3>
                         <p class="mt-1 text-ops-sm text-error">fetch error: {inspect(reason)}</p>
-                      </div>
-                      <div class="ops-schema-signal-card__badges">
-                        <.ops_badge kind={:error}>fetch error</.ops_badge>
                       </div>
                     </div>
                     <div class="ops-schema-signal-card__groups">
@@ -525,6 +515,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                       variant={:ghost}
                       class="justify-self-start gap-2 text-base-content"
                       aria-label={"View failed sync work for #{module_flat_name(mod)}"}
+                      id={"posture-failed-sync-link-#{module_flat_name(mod)}"}
                       data-testid="posture-failed-sync-link"
                     >
                       View failed sync work <.icon name="hero-arrow-right" class="size-4" />
@@ -655,39 +646,6 @@ defmodule ScrypathOpsWeb.PostureLive do
       unavailable_reason={inspect(@reason)}
     />
     """
-  end
-
-  defp backend_badge_kind(status) do
-    if source_error?(status, :backend) or length(status.backend.failed) > 0,
-      do: :warning,
-      else: :neutral
-  end
-
-  defp backend_badge_label(status) do
-    cond do
-      source_error?(status, :backend) -> "Backend observation unavailable"
-      length(status.backend.failed) > 0 -> "backend failed"
-      true -> "no backend failures observed"
-    end
-  end
-
-  defp queue_badge_kind(status) do
-    if status.queue.observed? and length(status.queue.failed) == 0 and
-         length(status.queue.retrying) == 0 do
-      :neutral
-    else
-      :warning
-    end
-  end
-
-  defp queue_badge_label(status) do
-    cond do
-      not status.queue.observed? and queue_unused_mode?(status.mode) -> "Queue not used"
-      not status.queue.observed? -> "Queue observations unavailable"
-      length(status.queue.failed) > 0 -> "queue failed"
-      length(status.queue.retrying) > 0 -> "queue retrying"
-      true -> "queue observed"
-    end
   end
 
   defp queue_mode(opts) do

@@ -1704,13 +1704,6 @@
     gap: var(--spacing-ops-3);
   }
 
-  .ops-schema-signal-card__badges {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: var(--spacing-ops-2);
-  }
-
   .ops-schema-signal-card__groups {
     display: grid;
     gap: var(--spacing-ops-4);
@@ -1718,7 +1711,7 @@
     padding-top: var(--spacing-ops-4);
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: 960px) {
     .ops-schema-signal-card__groups {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: var(--spacing-ops-panel);
