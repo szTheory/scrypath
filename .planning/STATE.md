@@ -5,16 +5,16 @@ milestone_name: ScrypathOps UI refinement
 current_phase: 174
 current_phase_name: Recovery Entry and Diagnosis
 status: executing
-stopped_at: Completed 174-02-PLAN.md
-last_updated: "2026-10-07T12:51:43.865Z"
+stopped_at: Completed 174-03-PLAN.md
+last_updated: "2026-10-07T13:10:39.534Z"
 last_activity: 2026-10-07
 last_activity_desc: Phase 174 execution started
-state_head: 3af117f060f3ed0dc8b6e1e1b698bc5756769436
+state_head: 830e83d0fad84f3e8948703aea711f76f8bd2c60
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 12
-  completed_plans: 6
+  completed_plans: 7
   percent: 20
 ---
 
@@ -27,7 +27,7 @@ See PROJECT.md (updated 2026-10-06). Core value: make search indexing feel nativ
 ## Current Position
 
 Phase: 174 (Recovery Entry and Diagnosis) — EXECUTING
-Plan: 3 of 8
+Plan: 4 of 8
 Status: Ready to execute
 Last activity: 2026-10-07 — Phase 174 execution started
 Progress: [██░░░░░░░░] 20% (1/5 phases; all 4 Phase 173 plans complete)
@@ -82,8 +82,8 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-07T12:51:43.836Z
-Stopped at: Completed 174-02-PLAN.md
+Last session: 2026-10-07T13:10:39.505Z
+Stopped at: Completed 174-03-PLAN.md
 Resume file: None
 
 Phase 174 now executes in a separate regular clone on `gsd/phase-174-recovery-entry-and-diagnosis` in `/private/tmp/scrypath-phase173-20261006-155750/phase174-execution`. The previous planning worktree and its RED artifacts remain preserved; the fresh clone resolves the executor commit guard without bypassing it. It starts from the immutable Phase 173 source `13ea88a9c18a7515f4ec5ae7deea0cdde4c22531`. Its later handoff metadata does not extend the prior exact-SHA receipt. The execution checkout and PR branch `gsd/phase-173-shared-visual-foundation` remain unchanged at that attested source.
@@ -104,6 +104,7 @@ Automatic chaining is disabled. Preserve adaptive routing and the existing front
 |------|----------|-------|-------|
 | Phase 174 P01 | 19m | 2 tasks | 8 files |
 | Phase 174 P02 | 20m | 2 tasks | 11 files |
+| Phase 174 P03 | 14m | 2 tasks | 7 files |
 
 ## Decisions
 
@@ -111,3 +112,5 @@ Automatic chaining is disabled. Preserve adaptive routing and the existing front
 - [Phase 174]: Use schema/source-qualified internal row identity for colliding IDs and include inspection generation in retry events.
 - [Phase 174]: The live allowlist and URL own the shared recovery target; absent fleet context stays absent.
 - [Phase 174]: Only recovery destinations inherit shell context; Search and Playbooks retain route ownership.
+- [Phase 174]: A sudo interruption keeps only a local return path and a canonical schema revalidated against the live allowlist.
+- [Phase 174]: Recovery callbacks require current selected-schema validation in addition to generation and opaque-handle equality.
