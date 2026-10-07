@@ -328,7 +328,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     html = render_click(view, "cancel_retry_delete", %{})
     refute html =~ "Confirm delete sync work"
-    assert html =~ "Failed job 502"
+    assert html =~ "Queue job 502"
     refute html =~ "Retry accepted"
   end
 

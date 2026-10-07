@@ -49,8 +49,32 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     {:noreply, socket}
   end
 
+  def handle_event("retry", %{"key" => key, "generation" => generation}, socket) do
+    {:noreply, request_retry(socket, key, generation)}
+  end
+
   def handle_event("retry", %{"id" => id}, socket) do
-    {:noreply, request_retry(socket, id)}
+    rows =
+      case Map.get(socket.assigns, :inspection) do
+        %FailedSyncWorkInspection{entries: entries} ->
+          Enum.filter(entries, &(to_string(&1.id) == to_string(id)))
+
+        _ ->
+          []
+      end
+
+    case rows do
+      [row] ->
+        {:noreply,
+         request_retry(socket, failed_work_key(row), to_string(socket.assigns.context_generation))}
+
+      [] when not is_map_key(socket.assigns, :inspection) ->
+        {:noreply,
+         request_retry(socket, to_string(id), to_string(socket.assigns.context_generation))}
+
+      _ ->
+        {:noreply, put_flash(socket, :error, "Could not identify that failed sync work row.")}
+    end
   end
 
   def handle_event("confirm_retry_delete", _params, socket) do
@@ -215,27 +239,30 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     end
   end
 
-  defp request_retry(socket, id) do
+  defp request_retry(socket, key, generation) do
     cond do
+      generation != to_string(socket.assigns.context_generation) ->
+        put_flash(socket, :info, "That retry action belongs to an earlier inspection.")
+
       not current_selection?(socket) ->
         unavailable(socket)
 
-      Map.has_key?(Map.get(socket.assigns, :recovery_receipts, %{}), to_string(id)) ->
-        put_flash(socket, :info, "A retry for job #{id} is already accepted.")
+      receipt_already_accepted?(socket, key) ->
+        put_flash(socket, :info, "A retry for job #{row_id_from_key(key)} is already accepted.")
 
       true ->
-        case failed_work_row(socket, id) do
+        case failed_work_row(socket, key) do
           nil ->
             Gating.gate_sensitive_action(socket, :failed_work_retry, fn ->
-              put_flash(socket, :error, "Could not find that failed job.")
+              put_flash(socket, :error, "Could not find that failed sync work row.")
             end)
 
           %{operation: :delete, recovery: recovery} when not is_nil(recovery) ->
-            assign(socket, :delete_confirmation, to_string(id))
+            assign(socket, :delete_confirmation, key)
 
           %{recovery: recovery} when not is_nil(recovery) ->
             Gating.gate_sensitive_action(socket, :failed_work_retry, fn ->
-              retry_failed_work(socket, id)
+              retry_failed_work(socket, key)
             end)
 
           _row ->
@@ -244,8 +271,8 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     end
   end
 
-  defp retry_failed_work(socket, id) do
-    case failed_work_row(socket, id) do
+  defp retry_failed_work(socket, key) do
+    case failed_work_row(socket, key) do
       nil ->
         put_flash(socket, :error, "Could not find that failed job.")
 
@@ -260,10 +287,11 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             case Scrypath.retry_sync_work(recovery, runtime_opts) do
               {:ok, result} ->
                 receipt = accepted_receipt(socket, row, recovery, result, runtime_opts)
+                receipt_key = receipt_key(row, socket.assigns.inspection)
 
                 socket
                 |> refresh_inspection()
-                |> update(:recovery_receipts, &Map.put(&1, to_string(id), receipt))
+                |> update(:recovery_receipts, &Map.put(&1, receipt_key, receipt))
                 |> put_flash(:info, "Retry accepted · queue job #{receipt.replacement_job}")
 
               {:error, reason} ->
@@ -377,7 +405,33 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp field(map, key) when is_map(map), do: Map.get(map, key)
   defp field(_, _), do: nil
 
-  defp recovery_receipt(receipts, id), do: Map.get(receipts, to_string(id))
+  defp recovery_receipt(receipts, row, inspection) do
+    Map.get(receipts, receipt_key(row, inspection))
+  end
+
+  defp receipt_key(row, %FailedSyncWorkInspection{entries: entries}) do
+    if Enum.count(entries, &(to_string(&1.id) == to_string(row.id))) > 1 do
+      failed_work_key(row)
+    else
+      to_string(row.id)
+    end
+  end
+
+  defp receipt_key_for_key(socket, key) do
+    case failed_work_row(socket, key) do
+      nil -> key
+      row -> receipt_key(row, socket.assigns.inspection)
+    end
+  end
+
+  defp receipt_already_accepted?(socket, key) do
+    receipts = Map.get(socket.assigns, :recovery_receipts, %{})
+
+    Map.has_key?(receipts, receipt_key_for_key(socket, key)) or
+      Map.has_key?(receipts, row_id_from_key(key))
+  end
+
+  defp row_id_from_key(key), do: key |> String.split(":") |> List.last()
 
   defp recovery_handoff_path(mount_path, schema, receipt) do
     base = String.trim_trailing(mount_path, "/")
@@ -392,10 +446,10 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     "#{base}/sync-drift?#{query}"
   end
 
-  defp delete_confirmation_row(%FailedSyncWorkInspection{entries: entries}, id)
-       when is_binary(id) do
+  defp delete_confirmation_row(%FailedSyncWorkInspection{entries: entries}, key)
+       when is_binary(key) do
     Enum.find(entries, fn row ->
-      to_string(row.id) == id and row.operation == :delete and row.recovery
+      failed_work_key(row) == key and row.operation == :delete and row.recovery
     end)
   end
 
@@ -415,12 +469,16 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     "Retry deletion of #{count} documents for #{module_flat_name(row.schema)} in #{delete_confirmation_index(row)}."
   end
 
-  defp failed_work_row(socket, id) do
+  defp failed_work_row(socket, key) do
     inspection = Map.get(socket.assigns, :inspection)
 
     if inspection do
-      Enum.find(inspection.entries, &(to_string(&1.id) == to_string(id)))
+      Enum.find(inspection.entries, &(failed_work_key(&1) == key))
     end
+  end
+
+  defp failed_work_key(row) do
+    "#{OperatorSelection.canonical(row.schema)}:#{row.source}:#{row.id}"
   end
 
   defp empty_counts(rows) do
@@ -632,13 +690,14 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                 {row.reason}
               </p>
               <.ops_action_group
-                :if={row.recovery && is_nil(recovery_receipt(@recovery_receipts, row.id))}
+                :if={row.recovery && is_nil(recovery_receipt(@recovery_receipts, row, @inspection))}
                 tone={:advanced}
                 class="mt-3 items-start"
               >
                 <.ops_button
                   phx-click="retry"
-                  phx-value-id={row.id}
+                  phx-value-key={failed_work_key(row)}
+                  phx-value-generation={@context_generation}
                   data-testid="failed-sync-retry"
                   variant={:primary}
                   size={:xs}
@@ -647,7 +706,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                 </.ops_button>
               </.ops_action_group>
               <.ops_status
-                :if={receipt = recovery_receipt(@recovery_receipts, row.id)}
+                :if={receipt = recovery_receipt(@recovery_receipts, row, @inspection)}
                 class="mt-3"
                 kind={:info}
                 title="Retry accepted"
@@ -665,7 +724,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                 </.link>
               </.ops_status>
               <.ops_disclosure
-                id={"failed-detail-#{row.id}"}
+                id={"failed-detail-#{failed_work_key(row)}"}
                 summary="Diagnostics"
                 variant={:compact}
                 class="mt-3"

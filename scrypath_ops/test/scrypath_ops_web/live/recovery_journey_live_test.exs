@@ -188,7 +188,10 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
     handoff = URI.parse(handoff_href)
     assert handoff.path == "/ops/sync-drift"
     assert URI.decode_query(handoff.query)["schema"] == schema_a
-    assert :sys.get_state(failed.pid).socket.assigns.recovery_receipts["501"].state == :accepted
+
+    assert :sys.get_state(failed.pid).socket.assigns.recovery_receipts[
+             "501"
+           ].state == :accepted
   end
 
   test "retry identifies the queue row when a backend task has the same numeric id", %{
@@ -219,25 +222,43 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
       }
     )
 
-    queue_row = element(failed, "[data-testid='failed-sync-row']", "Queue job 501")
-    queue_row |> element("[data-testid='failed-sync-retry']") |> render_click()
+    failed
+    |> element(
+      "button[data-testid='failed-sync-retry'][phx-value-key='ScrypathOps.Test.OpsPostA:oban:501']"
+    )
+    |> render_click()
 
     assert render(element(failed, "[data-testid='recovery-receipt']")) =~ "Queue job 991"
-    assert :sys.get_state(failed.pid).socket.assigns.recovery_receipts["oban:501"].state == :accepted
+
+    assert :sys.get_state(failed.pid).socket.assigns.recovery_receipts[
+             "ScrypathOps.Test.OpsPostA:oban:501"
+           ].state == :accepted
   end
 
   test "explicit unavailable and empty schema selections never become a recovery target", %{
     conn: conn
   } do
+    {:ok, default_room, default_room_html} = live(conn, "/ops")
+    assert default_room_html =~ "Recovery target"
+
+    assert has_element?(
+             default_room,
+             "[data-testid='recovery-target']",
+             "ScrypathOps.Test.OpsPostA"
+           )
+
     for path <- [
           "/ops?schema=",
           "/ops?schema=Elixir.NotAllowed",
-          "/ops/health?schema=Elixir.NotAllowed"
+          "/ops?schema=%3Cscript%3Ealert(1)%3C/script%3E",
+          "/ops/health?schema=Elixir.NotAllowed",
+          "/ops/failed-sync?schema=Elixir.NotAllowed"
         ] do
       {:ok, view, html} = live(conn, path)
       assert html =~ "That schema is unavailable"
       refute has_element?(view, "a[data-testid='control-room-health-link']")
       refute has_element?(view, "a[data-testid='posture-failed-sync-link']")
+      refute has_element?(view, "[data-testid='failed-sync-retry']")
     end
 
     Application.put_env(:scrypath_ops, :schema_allowlist, [])
@@ -246,14 +267,16 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
     refute has_element?(setup_view, "[data-testid='recovery-target']")
   end
 
-  test "selection changes invalidate receipts, confirmations, and inspected evidence", %{conn: conn} do
+  test "selection changes invalidate receipts, confirmations, and inspected evidence", %{
+    conn: conn
+  } do
     {:ok, failed, _html} = live(conn, "/ops/failed-sync?schema=ScrypathOps.Test.OpsPostA")
     before = :sys.get_state(failed.pid).socket.assigns
 
     put_live_assigns(failed,
-      delete_confirmation: "501",
+      delete_confirmation: "ScrypathOps.Test.OpsPostA:oban:501",
       recovery_receipts: %{
-        "oban:501" => %{
+        "501" => %{
           handle: "old-handle",
           generation: before.context_generation,
           state: :accepted
@@ -269,6 +292,19 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
     assert after_selection.delete_confirmation == nil
     assert after_selection.recovery_receipts == %{}
     refute has_element?(failed, "[data-testid='recovery-receipt']")
+
+    render_click(failed, "retry", %{
+      "key" => "501",
+      "generation" => to_string(before.context_generation)
+    })
+
+    assert :sys.get_state(failed.pid).socket.assigns.recovery_receipts == %{}
+    assert :sys.get_state(failed.pid).socket.assigns.selected_schema == OpsPostB
+
+    Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA])
+    removed_html = render_patch(failed, "/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB")
+    assert removed_html =~ "That schema is unavailable"
+    assert :sys.get_state(failed.pid).socket.assigns.selected_schema == nil
   end
 
   defp href_from_anchor(html) do
