@@ -29,6 +29,15 @@ defmodule ScrypathOpsWeb.Endpoint do
     raise_on_missing_only: code_reloading?
   )
 
+  if Mix.env() == :test do
+    plug(Plug.Static,
+      at: "/ops/phase173",
+      from: :scrypath_ops,
+      gzip: false,
+      only: ScrypathOpsWeb.static_paths()
+    )
+  end
+
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do

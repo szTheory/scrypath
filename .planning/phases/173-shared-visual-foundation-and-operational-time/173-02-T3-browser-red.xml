@@ -1,0 +1,538 @@
+<testsuites id="" name="" tests="2" failures="2" skipped="0" errors="0" time="12.110095">
+<testsuite name="phase173_time.spec.ts" timestamp="2026-10-06T22:29:45.487Z" hostname="chromium" tests="2" failures="2" skipped="0" time="10.998" errors="0">
+<testcase name="mounted renders stable exact operational time without overflow" classname="phase173_time.spec.ts" time="5.518">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|phase173_time-mounted-rend-763f7-ional-time-without-overflow-chromium/error-context.md]]
+
+[[ATTACHMENT|phase173_time-mounted-rend-763f7-ional-time-without-overflow-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toContainText(expected) failed" type="expect.toContainText">
+<![CDATA[  [chromium] › phase173_time.spec.ts:36:7 › mounted renders stable exact operational time without overflow 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('[id="posture-ScrypathEcommerce.Catalog.Product"]')
+    Timeout: 5000ms
+    - Expected substring  -   1
+    + Received string     + 110
+
+    - last success retained from the previous check
+    +
+    +             
+    +                 
+    +                   
+    +                     
+    +                       ScrypathEcommerce.Catalog.Product
+    +                     
+    +                     
+    +                       Index
+    +                       
+    +   ecommerce__product
+    +
+    +                       · sync mode oban
+    +                     
+    +                   
+    +                   
+    +                     
+    +   
+    +                       backend clear
+    +                     
+    +
+    +                     
+    +   
+    +                       queue observed
+    +                     
+    +
+    +                   
+    +                 
+    +
+    +                 
+    +                   
+    +                     Backend tasks
+    +                     
+    +                       
+    +                         Pending
+    +                         0
+    +                       
+    +                       
+    +                         Failed
+    +                         0
+    +                       
+    +                       
+    +                         Last success
+    +                         
+    +                           
+    +   Last success
+    +   
+    +     
+    +       2 days ago
+    +     
+    +     
+    +       Exact timestamp
+    +       2026-10-04T13:02:05.123456-04:00
+    +       UTC equivalent: 2026-10-04T17:02:05.123456Z
+    +     
+    +     
+    +   
+    +
+    +                         
+    +                       
+    +                     
+    +                   
+    +
+    +                   
+    +                     Queue jobs
+    +                     
+    +                       
+    +                         Pending
+    +                         0
+    +                       
+    +                       
+    +                         Retrying
+    +                         0
+    +                       
+    +                       
+    +                         Failed
+    +                         0
+    +                       
+    +                       
+    +                         Last success
+    +                         
+    +                           
+    +   Last success
+    +   
+    +     
+    +       2 days ago
+    +     
+    +     
+    +       Exact timestamp
+    +       2026-10-04T13:02:05.123456-04:00
+    +       UTC equivalent: 2026-10-04T17:02:05.123456Z
+    +     
+    +     
+    +   
+    +
+    +                         
+    +                       
+    +                     
+    +                     
+    +                   
+    +                 
+    +                 
+    +   
+    +                   View failed sync work 
+    +   
+    +
+    +                 
+    +
+    +               
+    +           
+
+    Call log:
+      - Expect "toContainText" with timeout 5000ms
+      - waiting for locator('[id="posture-ScrypathEcommerce.Catalog.Product"]')
+        14 × locator resolved to <article data-testid="posture-row" id="posture-ScrypathEcommerce.Catalog.Product" class="ops-schema-signal-card ops-schema-signal-card--success">…</article>
+           - unexpected value "
+                
+                    
+                      
+                        
+                          ScrypathEcommerce.Catalog.Product
+                        
+                        
+                          Index
+                          
+      ecommerce__product
+    
+                          · sync mode oban
+                        
+                      
+                      
+                        
+      
+                          backend clear
+                        
+    
+                        
+      
+                          queue observed
+                        
+    
+                      
+                    
+    
+                    
+                      
+                        Backend tasks
+                        
+                          
+                            Pending
+                            0
+                          
+                          
+                            Failed
+                            0
+                          
+                          
+                            Last success
+                            
+                              
+      Last success
+      
+        
+          2 days ago
+        
+        
+          Exact timestamp
+          2026-10-04T13:02:05.123456-04:00
+          UTC equivalent: 2026-10-04T17:02:05.123456Z
+        
+        
+      
+    
+                            
+                          
+                        
+                      
+    
+                      
+                        Queue jobs
+                        
+                          
+                            Pending
+                            0
+                          
+                          
+                            Retrying
+                            0
+                          
+                          
+                            Failed
+                            0
+                          
+                          
+                            Last success
+                            
+                              
+      Last success
+      
+        
+          2 days ago
+        
+        
+          Exact timestamp
+          2026-10-04T13:02:05.123456-04:00
+          UTC equivalent: 2026-10-04T17:02:05.123456Z
+        
+        
+      
+    
+                            
+                          
+                        
+                        
+                      
+                    
+                    
+      
+                      View failed sync work 
+      
+    
+                    
+    
+                  
+              "
+
+
+      79 |         await refreshScenario(page, "source-error");
+      80 |         const retained = row.locator(".ops-time").last();
+    > 81 |         await expect(row).toContainText("last success retained from the previous check");
+         |                           ^
+      82 |         await expect(retained).toContainText("2 days ago");
+      83 |         await expect(retained).toContainText(SOURCE_ISO);
+      84 |
+        at /app/examples/scrypath_ecommerce/e2e/phase173_time.spec.ts:81:27
+
+    Error Context: ../test-results/phase173_time-mounted-rend-763f7-ional-time-without-overflow-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/phase173_time-mounted-rend-763f7-ional-time-without-overflow-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../test-results/phase173_time-mounted-rend-763f7-ional-time-without-overflow-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="standalone renders stable exact operational time without overflow" classname="phase173_time.spec.ts" time="5.48">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|phase173_time-standalone-r-d0161-ional-time-without-overflow-chromium/error-context.md]]
+
+[[ATTACHMENT|phase173_time-standalone-r-d0161-ional-time-without-overflow-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toContainText(expected) failed" type="expect.toContainText">
+<![CDATA[  [chromium] › phase173_time.spec.ts:36:7 › standalone renders stable exact operational time without overflow 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('[id="posture-ScrypathOps.Test.OpsPostA"]')
+    Timeout: 5000ms
+    - Expected substring  -   1
+    + Received string     + 110
+
+    - last success retained from the previous check
+    +
+    +             
+    +                 
+    +                   
+    +                     
+    +                       ScrypathOps.Test.OpsPostA
+    +                     
+    +                     
+    +                       Index
+    +                       
+    +   phase173__ops_post_a
+    +
+    +                       · sync mode oban
+    +                     
+    +                   
+    +                   
+    +                     
+    +   
+    +                       backend clear
+    +                     
+    +
+    +                     
+    +   
+    +                       queue observed
+    +                     
+    +
+    +                   
+    +                 
+    +
+    +                 
+    +                   
+    +                     Backend tasks
+    +                     
+    +                       
+    +                         Pending
+    +                         0
+    +                       
+    +                       
+    +                         Failed
+    +                         0
+    +                       
+    +                       
+    +                         Last success
+    +                         
+    +                           
+    +   Last success
+    +   
+    +     
+    +       2 days ago
+    +     
+    +     
+    +       Exact timestamp
+    +       2026-10-04T13:02:05.123456-04:00
+    +       UTC equivalent: 2026-10-04T17:02:05.123456Z
+    +     
+    +     
+    +   
+    +
+    +                         
+    +                       
+    +                     
+    +                   
+    +
+    +                   
+    +                     Queue jobs
+    +                     
+    +                       
+    +                         Pending
+    +                         0
+    +                       
+    +                       
+    +                         Retrying
+    +                         0
+    +                       
+    +                       
+    +                         Failed
+    +                         0
+    +                       
+    +                       
+    +                         Last success
+    +                         
+    +                           
+    +   Last success
+    +   
+    +     
+    +       2 days ago
+    +     
+    +     
+    +       Exact timestamp
+    +       2026-10-04T13:02:05.123456-04:00
+    +       UTC equivalent: 2026-10-04T17:02:05.123456Z
+    +     
+    +     
+    +   
+    +
+    +                         
+    +                       
+    +                     
+    +                     
+    +                   
+    +                 
+    +                 
+    +   
+    +                   View failed sync work 
+    +   
+    +
+    +                 
+    +
+    +               
+    +           
+
+    Call log:
+      - Expect "toContainText" with timeout 5000ms
+      - waiting for locator('[id="posture-ScrypathOps.Test.OpsPostA"]')
+        14 × locator resolved to <article data-testid="posture-row" id="posture-ScrypathOps.Test.OpsPostA" class="ops-schema-signal-card ops-schema-signal-card--success">…</article>
+           - unexpected value "
+                
+                    
+                      
+                        
+                          ScrypathOps.Test.OpsPostA
+                        
+                        
+                          Index
+                          
+      phase173__ops_post_a
+    
+                          · sync mode oban
+                        
+                      
+                      
+                        
+      
+                          backend clear
+                        
+    
+                        
+      
+                          queue observed
+                        
+    
+                      
+                    
+    
+                    
+                      
+                        Backend tasks
+                        
+                          
+                            Pending
+                            0
+                          
+                          
+                            Failed
+                            0
+                          
+                          
+                            Last success
+                            
+                              
+      Last success
+      
+        
+          2 days ago
+        
+        
+          Exact timestamp
+          2026-10-04T13:02:05.123456-04:00
+          UTC equivalent: 2026-10-04T17:02:05.123456Z
+        
+        
+      
+    
+                            
+                          
+                        
+                      
+    
+                      
+                        Queue jobs
+                        
+                          
+                            Pending
+                            0
+                          
+                          
+                            Retrying
+                            0
+                          
+                          
+                            Failed
+                            0
+                          
+                          
+                            Last success
+                            
+                              
+      Last success
+      
+        
+          2 days ago
+        
+        
+          Exact timestamp
+          2026-10-04T13:02:05.123456-04:00
+          UTC equivalent: 2026-10-04T17:02:05.123456Z
+        
+        
+      
+    
+                            
+                          
+                        
+                        
+                      
+                    
+                    
+      
+                      View failed sync work 
+      
+    
+                    
+    
+                  
+              "
+
+
+      79 |         await refreshScenario(page, "source-error");
+      80 |         const retained = row.locator(".ops-time").last();
+    > 81 |         await expect(row).toContainText("last success retained from the previous check");
+         |                           ^
+      82 |         await expect(retained).toContainText("2 days ago");
+      83 |         await expect(retained).toContainText(SOURCE_ISO);
+      84 |
+        at /app/examples/scrypath_ecommerce/e2e/phase173_time.spec.ts:81:27
+
+    Error Context: ../test-results/phase173_time-standalone-r-d0161-ional-time-without-overflow-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/phase173_time-standalone-r-d0161-ional-time-without-overflow-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../test-results/phase173_time-standalone-r-d0161-ional-time-without-overflow-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+</testsuite>
+</testsuites>

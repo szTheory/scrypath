@@ -8654,6 +8654,107 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
   // js/ops_hooks.js
   var opsModalPendingTrigger = null;
   var activeOpsModal = null;
+  var INFO_FEEDBACK_DURATION = 4e3;
+  var scheduleInfoDismiss = (owner, dismiss) => {
+    window.clearTimeout(owner.dismissTimer);
+    owner.dismissTimer = window.setTimeout(dismiss, INFO_FEEDBACK_DURATION);
+  };
+  var OpsRefreshButton = {
+    mounted() {
+      this.serverDisabled = this.el.disabled;
+      this.syncLoadingState = () => {
+        const loading = this.el.classList.contains("phx-click-loading");
+        this.el.disabled = this.serverDisabled || loading;
+        if (loading) this.el.setAttribute("aria-busy", "true");
+        else this.el.removeAttribute("aria-busy");
+      };
+      this.loadingObserver = new MutationObserver(this.syncLoadingState);
+      this.loadingObserver.observe(this.el, { attributes: true, attributeFilter: ["class"] });
+      this.syncLoadingState();
+    },
+    updated() {
+      this.serverDisabled = this.el.disabled;
+      this.syncLoadingState();
+    },
+    destroyed() {
+      this.loadingObserver.disconnect();
+    }
+  };
+  var OpsToast = {
+    mounted() {
+      this.scheduleDismiss();
+    },
+    updated() {
+      this.scheduleDismiss();
+    },
+    destroyed() {
+      window.clearTimeout(this.dismissTimer);
+    },
+    scheduleDismiss() {
+      window.clearTimeout(this.dismissTimer);
+      if (!this.el.classList.contains("ops-flash--info")) return;
+      scheduleInfoDismiss(this, () => {
+        this.el.querySelector('button[aria-label="Close notification"]')?.click();
+      });
+    }
+  };
+  var OpsTimestampCopy = {
+    mounted() {
+      const time = this.el.closest(".ops-time");
+      this.feedback = time?.querySelector("[data-ops-time-feedback-text]");
+      this.dismissButton = time?.querySelector("[data-ops-time-feedback-dismiss]");
+      this.onCopy = (event) => this.copyTimestamp(event);
+      this.onDismiss = () => this.clearFeedback();
+      this.el.addEventListener("click", this.onCopy);
+      this.dismissButton?.addEventListener("click", this.onDismiss);
+    },
+    destroyed() {
+      window.clearTimeout(this.dismissTimer);
+      this.el.removeEventListener("click", this.onCopy);
+      this.dismissButton?.removeEventListener("click", this.onDismiss);
+    },
+    async copyTimestamp(event) {
+      event.preventDefault();
+      this.clearFeedback();
+      const attempt = (this.copyAttempt || 0) + 1;
+      this.copyAttempt = attempt;
+      const details = this.el.closest(".ops-time")?.querySelector("details");
+      const text = this.el.dataset.opsTimestamp;
+      if (!text || typeof navigator.clipboard?.writeText !== "function") {
+        if (attempt === this.copyAttempt) this.showFailure(details);
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(text);
+        if (attempt === this.copyAttempt) this.showSuccess();
+      } catch (_error) {
+        if (attempt === this.copyAttempt) this.showFailure(details);
+      }
+    },
+    showSuccess() {
+      this.setFeedback("Timestamp copied", "success");
+      scheduleInfoDismiss(this, () => {
+        if (this.feedback?.dataset.state === "success") this.clearFeedback();
+      });
+    },
+    showFailure(details) {
+      if (details) details.open = true;
+      this.setFeedback("Could not copy timestamp. Select and copy the exact value.", "error");
+      if (this.dismissButton) this.dismissButton.hidden = false;
+    },
+    setFeedback(message, state) {
+      if (!this.feedback) return;
+      this.feedback.textContent = message;
+      if (state) this.feedback.dataset.state = state;
+      else delete this.feedback.dataset.state;
+    },
+    clearFeedback() {
+      window.clearTimeout(this.dismissTimer);
+      this.dismissTimer = null;
+      this.setFeedback("", null);
+      if (this.dismissButton) this.dismissButton.hidden = true;
+    }
+  };
   document.addEventListener("click", (e) => {
     const trigger = e.target instanceof Element ? e.target.closest("[data-ops-modal-trigger]") : null;
     if (trigger) opsModalPendingTrigger = trigger;
@@ -8663,6 +8764,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       this.cmdk = this.el.querySelector("#ops-cmdk");
       this.sheet = document.getElementById(this.el.dataset.cheatsheet);
       this.input = this.cmdk.querySelector("[data-cmdk-input]");
+      this.list = this.cmdk.querySelector("#ops-cmdk-list");
       this.empty = this.cmdk.querySelector("[data-cmdk-empty]");
       this.items = Array.from(this.cmdk.querySelectorAll("[data-cmdk-item]"));
       this.visible = this.items.slice();
@@ -8672,6 +8774,11 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       this.onModalOverlayOpen = () => this.closeForModal();
       this.onCmdkKeydown = (e) => this.overlayKeydown(e, this.cmdk);
       this.onSheetKeydown = (e) => this.overlayKeydown(e, this.sheet);
+      this.onCmdkPointerOver = (e) => {
+        const item = e.target instanceof Element ? e.target.closest("[data-cmdk-item]") : null;
+        const index = this.visible.indexOf(item);
+        if (index >= 0 && index !== this.activeIndex) this.setActive(index);
+      };
       this.onCommandOpenClick = (e) => {
         const opener = e.target instanceof Element ? e.target.closest("[data-ops-command-open]") : null;
         if (!opener) return;
@@ -8682,6 +8789,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       document.addEventListener("ops:modal-overlay-open", this.onModalOverlayOpen);
       document.addEventListener("click", this.onCommandOpenClick);
       this.cmdk.addEventListener("keydown", this.onCmdkKeydown);
+      this.list.addEventListener("pointerover", this.onCmdkPointerOver);
       this.sheet.addEventListener("keydown", this.onSheetKeydown);
       this.cmdk.querySelectorAll("[data-cmdk-close]").forEach((el) => el.addEventListener("click", () => this.close()));
       this.sheet.querySelectorAll("[data-cmdk-close]").forEach((el) => el.addEventListener("click", () => this.closeSheet()));
@@ -8693,6 +8801,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       document.removeEventListener("ops:modal-overlay-open", this.onModalOverlayOpen);
       document.removeEventListener("click", this.onCommandOpenClick);
       this.cmdk.removeEventListener("keydown", this.onCmdkKeydown);
+      this.list.removeEventListener("pointerover", this.onCmdkPointerOver);
       this.sheet.removeEventListener("keydown", this.onSheetKeydown);
     },
     isTyping() {
@@ -9154,7 +9263,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
   var liveSocket = new LiveSocket2("/live", Socket, {
     longPollFallbackMs: 2500,
     params: { _csrf_token: csrfToken },
-    hooks: { ...hooks, CommandPalette, OpsNavDrawer, OpsModal }
+    hooks: { ...hooks, CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsTimestampCopy, OpsToast }
   });
   import_topbar.default.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" });
   window.addEventListener("phx:page-loading-start", (_info) => import_topbar.default.show(300));

@@ -34,7 +34,7 @@ import {
   gotoControlRoom,
   gotoFailedSync,
   gotoPlaybooks,
-  gotoPosture,
+  gotoSearchHealth,
   gotoSearch,
   gotoSyncDrift,
   runSearch,
@@ -59,7 +59,7 @@ type ShellSurface = {
 
 const SHELL_SURFACES: ShellSurface[] = [
   { name: "Control Room", prepare: gotoControlRoom, hasPrimaryNavItem: true },
-  { name: "Posture", prepare: gotoPosture, hasPrimaryNavItem: true },
+  { name: "Search health", prepare: gotoSearchHealth, hasPrimaryNavItem: true },
   { name: "Failed Sync", prepare: gotoFailedSync, hasPrimaryNavItem: true },
   { name: "Sync/Drift", prepare: gotoSyncDrift, hasPrimaryNavItem: true },
   { name: "Search", prepare: gotoSearch, hasPrimaryNavItem: true },
@@ -334,8 +334,8 @@ async function expectMobileNavigationDrawer(page: Page): Promise<void> {
 
   await opener.click();
   await expect(drawer).toBeVisible();
-  await drawer.getByRole("link", { name: /Posture/ }).click();
-  await expect(page).toHaveURL(/\/admin\/search\/posture$/);
+  await drawer.getByRole("link", { name: /Search health/ }).click();
+  await expect(page).toHaveURL(/\/admin\/search\/health$/);
   await expect(drawer).toBeHidden();
 }
 
@@ -531,7 +531,7 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
         if (await heading.count()) await assertReadableControl(heading, `${surface.name} record heading`, 16);
         const primary = {
           "Control Room": page.getByTestId("intent-incident"),
-          "Posture": page.getByTestId("posture-failed-sync-link").first(),
+          "Search health": page.getByTestId("posture-failed-sync-link").first(),
           "Failed Sync": page.getByTestId("failed-sync-retry").first(),
           "Sync/Drift": page.getByRole("button", { name: "Refresh sync status", exact: true }),
           "Search": page.getByRole("button", { name: "Run search", exact: true }),
@@ -689,6 +689,25 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
           await page.keyboard.press("ArrowDown");
           const nextActiveId = await expectOneSelectedCommandItem(page);
           expect(nextActiveId, "ArrowDown moves the active command option").not.toBe(initialActiveId);
+
+          const hoveredOption = page.locator("#ops-cmdk-item-2");
+          await hoveredOption.hover();
+          await expect(hoveredOption).toHaveAttribute("aria-selected", "true");
+          await expectOneSelectedCommandItem(page);
+
+          await page.keyboard.press("ArrowDown");
+          await expect(page.locator("#ops-cmdk-item-3")).toHaveAttribute("aria-selected", "true");
+          const hoveredBackground = await hoveredOption.evaluate(
+            el => getComputedStyle(el).backgroundColor
+          );
+          const inactiveBackground = await page
+            .locator("#ops-cmdk-item-0")
+            .evaluate(el => getComputedStyle(el).backgroundColor);
+          expect(
+            hoveredBackground,
+            "the pointer does not keep a second option highlighted during keyboard navigation"
+          ).toBe(inactiveBackground);
+          await expectOneSelectedCommandItem(page);
 
           await input.fill("zzzz-no-match");
           await expect(page.locator("[data-cmdk-empty]")).toBeVisible();

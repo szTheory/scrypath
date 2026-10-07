@@ -59,16 +59,16 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     assert html =~
              "Recover search, verify a change before promotion, or inspect and save a useful search check."
 
-    refute html =~ "Refresh posture"
-    assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search trust status']")
-    # Overview, not the deep per-schema table (that lives on /ops/posture).
+    refute html =~ "Posture"
+    assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search health']")
+    # Overview, not the deep per-schema table (that lives on /ops/health).
     refute html =~ "data-testid=\"posture-row\""
   end
 
   test "intent cards route by job to the right surfaces", %{conn: conn} do
     {:ok, lv, html} = live(conn, ~p"/ops")
 
-    assert has_element?(lv, "[data-testid='intent-incident'][href$='/ops/posture']")
+    assert has_element?(lv, "[data-testid='intent-incident'][href$='/ops/health']")
     assert has_element?(lv, "[data-testid='intent-incident']", "Start recovery")
     assert has_element?(lv, "[data-testid='intent-change'][href$='/ops/sync-drift']")
     assert has_element?(lv, "[data-testid='intent-explore'][href$='/ops/search']")
@@ -85,7 +85,8 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     {:ok, lv, html} = live(conn, ~p"/ops")
 
     assert html =~ "No schemas configured"
-    assert has_element?(lv, ".ops-muted-panel [data-ops-refresh]")
+    assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search health']")
+    refute has_element?(lv, ".ops-muted-panel [data-ops-refresh]")
     assert html =~ "Recover search"
     refute html =~ "If something looks broken"
     refute html =~ "Federated"

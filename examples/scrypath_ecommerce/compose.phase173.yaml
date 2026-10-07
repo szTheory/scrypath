@@ -1,0 +1,58 @@
+services:
+  web:
+    ports: !reset []
+    command: ["sh", "./docker-e2e-entrypoint.sh"]
+    environment:
+      SCRYPATH_OPS_PLAYBOOK_DIR: /app/examples/scrypath_ecommerce/priv/playbooks
+    volumes:
+      - phase173_playbooks:/app/examples/scrypath_ecommerce/priv/playbooks
+    init: true
+
+  ops:
+    build:
+      context: ../..
+      dockerfile: examples/scrypath_ecommerce/Dockerfile
+    command: ["sh", "./scripts/phase173-standalone-entrypoint.sh"]
+    environment:
+      MIX_ENV: test
+      PHX_SERVER: "true"
+      PORT: "4003"
+      SCRYPATH_OPS_PORT: "4003"
+      SCRYPATH_OPS_TEST_HOST: "ops"
+      PGHOST: postgres
+      PGPORT: "5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "http://127.0.0.1:4003/ops/phase173/health"]
+      interval: 2s
+      timeout: 5s
+      start_period: 5m
+      retries: 60
+    init: true
+
+  browser:
+    build:
+      context: ../..
+      dockerfile: examples/scrypath_ecommerce/Dockerfile.e2e
+      args:
+        PLAYWRIGHT_VERSION: ${PLAYWRIGHT_VERSION:-1.60.0}
+    environment:
+      CI: "1"
+      E2E_SCOPE: ${E2E_SCOPE:-phase173-shell}
+      PLAYWRIGHT_BASE_URL: http://web:4002
+      PHASE173_OPS_BASE_URL: http://ops:4003/ops/phase173/health
+      SCRYPATH_SOURCE_SHA: ${SCRYPATH_SOURCE_SHA:-unknown}
+    depends_on:
+      web:
+        condition: service_healthy
+      ops:
+        condition: service_healthy
+    volumes:
+      - phase173_playbooks:/app/examples/scrypath_ecommerce/priv/playbooks
+    init: true
+    ipc: host
+
+volumes:
+  phase173_playbooks:

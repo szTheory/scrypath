@@ -1,0 +1,92 @@
+<testsuites id="" name="" tests="2" failures="2" skipped="0" errors="0" time="11.618016">
+<testsuite name="phase173_copy.spec.ts" timestamp="2026-10-07T00:24:41.828Z" hostname="chromium" tests="2" failures="2" skipped="0" time="10.478" errors="0">
+<testcase name="mounted copies one exact operational timestamp after clipboard resolution" classname="phase173_copy.spec.ts" time="5.272">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|phase173_copy-mounted-copi-722b7--after-clipboard-resolution-chromium/error-context.md]]
+
+[[ATTACHMENT|phase173_copy-mounted-copi-722b7--after-clipboard-resolution-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toBeVisible() failed" type="expect.toBeVisible">
+<![CDATA[  [chromium] › phase173_copy.spec.ts:47:7 › mounted copies one exact operational timestamp after clipboard resolution 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('[id="posture-ScrypathEcommerce.Catalog.Product"]').locator('.ops-signal-group').first().locator('.ops-time').first().getByRole('button', { name: 'Copy timestamp', exact: true })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for locator('[id="posture-ScrypathEcommerce.Catalog.Product"]').locator('.ops-signal-group').first().locator('.ops-time').first().getByRole('button', { name: 'Copy timestamp', exact: true })
+
+
+      61 |
+      62 |         const copy = time.getByRole("button", { name: "Copy timestamp", exact: true });
+    > 63 |         await expect(copy).toBeVisible();
+         |                            ^
+      64 |         await copy.click();
+      65 |         await expect.poll(() => page.evaluate(() =>
+      66 |           (window as typeof window & { __phase173ClipboardWrites: string[] }).__phase173ClipboardWrites
+        at /app/examples/scrypath_ecommerce/e2e/phase173_copy.spec.ts:63:28
+
+    Error Context: ../test-results/phase173_copy-mounted-copi-722b7--after-clipboard-resolution-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/phase173_copy-mounted-copi-722b7--after-clipboard-resolution-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../test-results/phase173_copy-mounted-copi-722b7--after-clipboard-resolution-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="standalone copies one exact operational timestamp after clipboard resolution" classname="phase173_copy.spec.ts" time="5.206">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|phase173_copy-standalone-c-62b6b--after-clipboard-resolution-chromium/error-context.md]]
+
+[[ATTACHMENT|phase173_copy-standalone-c-62b6b--after-clipboard-resolution-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toBeVisible() failed" type="expect.toBeVisible">
+<![CDATA[  [chromium] › phase173_copy.spec.ts:47:7 › standalone copies one exact operational timestamp after clipboard resolution 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('[id="posture-ScrypathOps.Test.OpsPostA"]').locator('.ops-signal-group').first().locator('.ops-time').first().getByRole('button', { name: 'Copy timestamp', exact: true })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for locator('[id="posture-ScrypathOps.Test.OpsPostA"]').locator('.ops-signal-group').first().locator('.ops-time').first().getByRole('button', { name: 'Copy timestamp', exact: true })
+
+
+      61 |
+      62 |         const copy = time.getByRole("button", { name: "Copy timestamp", exact: true });
+    > 63 |         await expect(copy).toBeVisible();
+         |                            ^
+      64 |         await copy.click();
+      65 |         await expect.poll(() => page.evaluate(() =>
+      66 |           (window as typeof window & { __phase173ClipboardWrites: string[] }).__phase173ClipboardWrites
+        at /app/examples/scrypath_ecommerce/e2e/phase173_copy.spec.ts:63:28
+
+    Error Context: ../test-results/phase173_copy-standalone-c-62b6b--after-clipboard-resolution-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/phase173_copy-standalone-c-62b6b--after-clipboard-resolution-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../test-results/phase173_copy-standalone-c-62b6b--after-clipboard-resolution-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+</testsuite>
+</testsuites>

@@ -7,24 +7,40 @@ const csrfToken = document
   ?.getAttribute("content");
 
 // Use the same operator hooks as the standalone app.
-import {CommandPalette, OpsNavDrawer, OpsModal} from "../../../../scrypath_ops/assets/js/ops_hooks";
+import {
+  CommandPalette,
+  OpsNavDrawer,
+  OpsModal,
+  OpsRefreshButton,
+  OpsTimestampCopy,
+  OpsToast
+} from "../../../../scrypath_ops/assets/js/ops_hooks";
 
 const liveSocket = new LiveSocket("/live", Socket, {
   params: { _csrf_token: csrfToken },
-  hooks: { CommandPalette, OpsNavDrawer, OpsModal }
+  hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsTimestampCopy, OpsToast }
 });
 
-const effectiveTheme = () => {
-  const explicit = document.documentElement.getAttribute("data-theme");
-  if (explicit === "dark") return "dark";
-  if (explicit === "light") return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+const normalizeTheme = (theme) => {
+  return theme === "light" || theme === "dark" ? theme : "system";
 };
 
-const preferenceTheme = () => {
-  const stored = localStorage.getItem("phx:theme");
-  if (stored === "light" || stored === "dark") return stored;
-  return "system";
+const readThemePreference = () => {
+  try {
+    return normalizeTheme(localStorage.getItem("phx:theme"));
+  } catch (_error) {
+    return "system";
+  }
+};
+
+let currentThemePreference = readThemePreference();
+
+const preferenceTheme = () => currentThemePreference;
+
+const effectiveTheme = () => {
+  const preference = preferenceTheme();
+  if (preference === "dark" || preference === "light") return preference;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 };
 
 const syncThemeButtons = () => {
@@ -42,18 +58,37 @@ const syncThemeMeta = () => {
   syncThemeButtons();
 };
 
-const setTheme = (theme) => {
-  if (theme === "system") {
-    localStorage.removeItem("phx:theme");
+const setTheme = (theme, persist = true) => {
+  currentThemePreference = normalizeTheme(theme);
+
+  if (persist) {
+    try {
+      if (currentThemePreference === "system") {
+        localStorage.removeItem("phx:theme");
+      } else {
+        localStorage.setItem("phx:theme", currentThemePreference);
+      }
+    } catch (_error) {
+      // The in-memory preference remains usable for this page when persistence is denied.
+    }
+  }
+
+  if (currentThemePreference === "system") {
     document.documentElement.removeAttribute("data-theme");
   } else {
-    localStorage.setItem("phx:theme", theme);
-    document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.setAttribute("data-theme", currentThemePreference);
   }
   syncThemeMeta();
 };
 
-setTheme(localStorage.getItem("phx:theme") || "system");
+setTheme(currentThemePreference, false);
+
+window.addEventListener("storage", (event) => {
+  if (event.key === "phx:theme" || event.key === null) {
+    setTheme(event.key === "phx:theme" ? event.newValue : "system", false);
+  }
+});
+
 window.addEventListener("phx:set-theme", (event) => {
   const button = event.target.closest("[data-phx-theme]");
   if (button) setTheme(button.dataset.phxTheme);

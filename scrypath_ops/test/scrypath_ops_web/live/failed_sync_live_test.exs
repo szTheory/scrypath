@@ -269,8 +269,6 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
   test "sigra retry refreshes the inspection in place without losing local state", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
 
-    render_click(view, "toggle_compact", %{})
-
     put_live_assigns(view,
       current_scope: %{user: %{id: "user_123"}, active_organization: %{id: "org_456"}},
       operator_context: %ScrypathOps.Integrations.Sigra.OperatorContext{
@@ -290,7 +288,6 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     assigns = :sys.get_state(view.pid).socket.assigns
     assert assigns.selected_schema == OpsPostA
-    assert assigns.compact_mode == true
     assert assigns.last_refresh_at != nil
     assert assigns.load_error == nil
     assert assigns.inspection != nil

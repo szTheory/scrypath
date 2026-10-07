@@ -1,0 +1,248 @@
+{
+  "items": [
+    {
+      "requirement_id": "E1",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Navigation and native theme controls retain readable labels, one preference selection, and the current preference during pending navigation or LiveView reconnect.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Denied/unavailable storage retains a functional current-page in-memory preference; invalid stored values select System. Navigation failure retains the existing shell and truthful connection feedback.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "The rail becomes the existing drawer below 1280px; navigation/theme controls reflow without horizontal page overflow, hidden choice labels, or reduced targets.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Long navigation/accessibility labels wrap or reflow within the established rail/drawer/header rather than being clipped or obscuring the selected preference.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "empty",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Zero configured schemas renders the Copywriting Contract configuration-empty guard and setup guidance, not zero-valued health claims.",
+      "reason": null,
+      "probe": "What is shown when there is no data — zero items, an unfilled form, or absent media?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "During refresh, the shared busy control retains its icon and label; retained schema evidence keeps its previous successful snapshot and is not relabelled newly checked.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Check failure renders the Copywriting Contract observation-failure reason/retry path; unknown values never become zero or imply remote terminal failure.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "populated",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Populated health uses existing summary/metric/schema groupings with neutral containers, explicit local states, Backend/Queue groups, and ordinary neutral zero-error counts.",
+      "reason": null,
+      "probe": "What does the normal populated (happy-path) state look like at a typical volume of content?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "partial",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Partial observations keep known values and retained failure history visible; each missing/unavailable source is labelled explicitly with its reason and retained-snapshot boundary.",
+      "reason": null,
+      "probe": "What is shown for partial or incomplete data — some fields or rows present, others missing?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Schema/index/task identifiers wrap in neutral surfaces; at desktop, mobile and changed breakpoints, content cannot create horizontal page overflow or clip essential evidence.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "zero-one-many",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Zero schemas uses the configuration guard; one and many render the same established schema component, correct singular/plural counts, and 24px section/record rhythm without control-type changes.",
+      "reason": null,
+      "probe": "How does the layout read at zero, one, and many items (singular vs plural copy, spacing)?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Full module names, index identifiers and failure reasons remain readable and wrap; required instructions use body size and are not ellipsized into inaccessible metadata.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Busy quiet/refresh actions expose busy state while preserving their meaningful icon and label; hook completion and LiveView patches preserve server-driven eligibility.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "An action failure presents the existing concrete failure/retry path and retains readable eligibility explanations; it cannot show success merely because an event was dispatched.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Quiet-action groups reflow within their container at narrow widths, retaining target sizes, independent focus rings and visible disabled explanations without page overflow.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Long action labels wrap/reflow without clipping the meaningful icon or label; essential explanations retain body sizing and no hover-only access.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Relative age stays tied to the successful evidence snapshot through pending refresh/copy; a pending clipboard write emits no success confirmation and does not re-date evidence.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Denied/unavailable clipboard access renders the Copywriting Contract persistent failure and exposes selectable exact evidence; a failed check retains the previous age reference and labels unavailable observation.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "The native exact-timestamp disclosure and copy control reflow; full ISO precision/offset remains selectable by keyboard, pointer and touch without clipping or horizontal page overflow.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Long exact ISO values and UTC explanations wrap, never truncate fractional precision or source offset, and remain reachable without relying on a title tooltip.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    },
+    {
+      "requirement_id": "E5",
+      "category": "empty",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Without logo/icon artwork, the accessible Scrypath name and accompanying explicit operational state/action labels remain usable; artwork cannot be the sole semantic cue.",
+      "reason": null,
+      "probe": "What is shown when there is no data — zero items, an unfilled form, or absent media?"
+    },
+    {
+      "requirement_id": "E5",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Loading logo/icon assets retain bounded geometry and accompanying names/state labels; a loading asset cannot replace operational state with a spinner-only meaning.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E5",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Failed logo/icon assets leave the accessible product name and explicit operational labels available; missing artwork never turns an unknown/failure state into success.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E5",
+      "category": "populated",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Normal media uses existing theme-appropriate Scrypath wordmarks and Heroicons, with explicit labels; copper remains identity detail and semantic icons stay local.",
+      "reason": null,
+      "probe": "What does the normal populated (happy-path) state look like at a typical volume of content?"
+    },
+    {
+      "requirement_id": "E5",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Wordmarks/icons stay bounded to existing component geometry at every breakpoint and cannot force page overflow or cover nearby controls.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E5",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Long accompanying state/action labels wrap beside local icons without truncation; operational severity remains understandable through text even without color/artwork.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    }
+  ],
+  "coverage": {
+    "applicable": 26,
+    "resolved": 26,
+    "unresolved": 0,
+    "unclassified": 0,
+    "byVerification": {
+      "explicit": 26,
+      "backstop": 0
+    }
+  }
+}

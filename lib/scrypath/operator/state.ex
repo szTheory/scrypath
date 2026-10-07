@@ -39,7 +39,10 @@ defmodule Scrypath.Operator.State do
       id: task.id,
       state: normalize_backend_state(task.state),
       reference: task.reference,
-      metadata: Map.take(task.metadata, [:type]),
+      metadata:
+        task.metadata
+        |> Map.take([:type])
+        |> maybe_put(:source_iso, source_iso(task.raw, task_time(task.raw))),
       at: task_time(task.raw)
     )
   end
@@ -63,7 +66,10 @@ defmodule Scrypath.Operator.State do
         worker: Map.get(job, :worker) || Map.get(job, "worker"),
         queue: Map.get(job, :queue) || Map.get(job, "queue")
       },
-      metadata: queue_metadata(job),
+      metadata:
+        job
+        |> queue_metadata()
+        |> maybe_put(:source_iso, queue_source_iso(job, queue_time(job))),
       at: queue_time(job)
     )
   end
@@ -104,6 +110,27 @@ defmodule Scrypath.Operator.State do
     |> parse_datetime()
   end
 
+  defp queue_source_iso(job, %DateTime{} = at) do
+    case Map.get(job, :completed_at, Map.get(job, "completed_at")) do
+      value when is_binary(value) ->
+        case DateTime.from_iso8601(value) do
+          {:ok, source_time, _offset} ->
+            if DateTime.compare(source_time, at) == :eq, do: value
+
+          _other ->
+            nil
+        end
+
+      %DateTime{} = source_time ->
+        if DateTime.compare(source_time, at) == :eq, do: DateTime.to_iso8601(source_time)
+
+      _other ->
+        nil
+    end
+  end
+
+  defp queue_source_iso(_job, _at), do: nil
+
   defp queue_metadata(job) do
     %{}
     |> maybe_put(:worker, Map.get(job, :worker) || Map.get(job, "worker"))
@@ -122,6 +149,24 @@ defmodule Scrypath.Operator.State do
   end
 
   defp parse_datetime(_value), do: nil
+
+  defp source_iso(raw, %DateTime{} = at) when is_map(raw) do
+    case Map.get(raw, "finishedAt") do
+      value when is_binary(value) ->
+        case DateTime.from_iso8601(value) do
+          {:ok, source_time, _offset} ->
+            if DateTime.compare(source_time, at) == :eq, do: value
+
+          _other ->
+            nil
+        end
+
+      _other ->
+        nil
+    end
+  end
+
+  defp source_iso(_raw, _at), do: nil
 
   defp maybe_put(map, _key, nil), do: map
   defp maybe_put(map, key, value), do: Map.put(map, key, value)

@@ -1,0 +1,131 @@
+defmodule ScrypathEcommerceWeb.Phase173FixtureSource do
+  @moduledoc false
+
+  @observed_at ~U[2026-10-06 17:18:42.318Z]
+  @task_time "2026-10-04T13:02:05.123456-04:00"
+  @schemas [ScrypathEcommerce.Catalog.Product, ScrypathEcommerce.Catalog.Variant]
+
+  def scenario(name)
+      when name in [
+             "default",
+             "failed",
+             "unknown",
+             "empty",
+             "partial",
+             "long-value",
+             "source-error",
+             "missing-time",
+             "manual",
+             "no-success",
+             "eligibility-disabled",
+             "queue-error",
+             "all-source-error",
+             "empty-queue"
+           ] do
+    allowlist =
+      if name == "empty", do: [], else: if(name == "partial", do: [hd(@schemas)], else: @schemas)
+
+    tasks =
+      if name in ["empty", "partial", "source-error"] do
+        []
+      else
+        Enum.map(allowlist, fn schema -> task(schema, name) end)
+      end
+
+    jobs =
+      if name in ["empty", "partial", "manual", "empty-queue"] do
+        []
+      else
+        Enum.map(allowlist, fn schema -> job(schema, name) end)
+      end
+
+    %{
+      allowlist: allowlist,
+      observed_at:
+        if(name in ["source-error", "queue-error", "all-source-error"],
+          do: DateTime.add(@observed_at, 86_400),
+          else: @observed_at
+        ),
+      opts: [
+        backend: Scrypath.Meilisearch,
+        sync_mode: if(name == "manual", do: :manual, else: :oban),
+        oban_queue: :scrypath_sync,
+        index_prefix: "ecommerce_",
+        meilisearch_url: "http://fixture.invalid",
+        meilisearch_client: __MODULE__,
+        meilisearch_tasks:
+          if(name in ["source-error", "all-source-error"],
+            do: [:fixture_source_error],
+            else: tasks
+          ),
+        oban_inspector: __MODULE__,
+        oban_jobs:
+          if(name in ["queue-error", "all-source-error"], do: [:fixture_queue_error], else: jobs)
+      ],
+      refresh_disabled?: name == "eligibility-disabled"
+    }
+  end
+
+  def scenario(_invalid), do: scenario("default")
+
+  def tasks(filters, opts) do
+    if :fixture_source_error in Keyword.get(opts, :meilisearch_tasks, []) do
+      {:error, :fixture_unavailable}
+    else
+      index_uids = Keyword.get(filters, :index_uids, [])
+
+      results =
+        opts
+        |> Keyword.get(:meilisearch_tasks, [])
+        |> Enum.filter(&is_map/1)
+        |> Enum.filter(&(&1["indexUid"] in index_uids))
+
+      {:ok, %{results: results, next: nil}}
+    end
+  end
+
+  def list_jobs(_schema, opts) do
+    case Keyword.get(opts, :oban_jobs, []) do
+      [:fixture_queue_error] -> {:error, :fixture_queue_unavailable}
+      jobs -> {:ok, jobs}
+    end
+  end
+
+  defp task(schema, scenario) do
+    status =
+      cond do
+        scenario == "failed" -> "failed"
+        scenario == "unknown" -> "mystery"
+        scenario == "no-success" -> "processing"
+        true -> "succeeded"
+      end
+
+    title =
+      if scenario == "long-value",
+        do: String.duplicate("Long ecommerce title for phase 173 ", 16),
+        else: nil
+
+    %{
+      "uid" => 173_200 + Enum.find_index(@schemas, &(&1 == schema)),
+      "status" => status,
+      "type" => "documentAdditionOrUpdate",
+      "indexUid" => Scrypath.Meilisearch.index_name(schema, index_prefix: "ecommerce_"),
+      "finishedAt" => if(scenario == "missing-time", do: "not-a-time", else: @task_time),
+      "details" => %{"title" => title}
+    }
+  end
+
+  defp job(schema, scenario) do
+    %{
+      id: 173_300 + Enum.find_index(@schemas, &(&1 == schema)),
+      state: if(scenario == "failed", do: "discarded", else: "completed"),
+      worker:
+        if(scenario == "long-value",
+          do: String.duplicate("ScrypathEcommerce.LongWorker", 8),
+          else: "Scrypath.SyncWorker"
+        ),
+      queue: "scrypath_sync",
+      completed_at: "2026-10-04T13:02:05.123456-04:00"
+    }
+  end
+end

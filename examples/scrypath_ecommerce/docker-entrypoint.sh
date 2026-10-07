@@ -31,7 +31,7 @@ cat <<URLS
 Scrypath e-commerce demo is ready.
   Storefront        ${base_url}
   Control room      ${base_url}/admin/search
-  Posture           ${base_url}/admin/search/posture
+  Search health     ${base_url}/admin/search/health
   Failed sync       ${base_url}/admin/search/failed-sync
   Sync / drift      ${base_url}/admin/search/sync-drift
   Search playground ${base_url}/admin/search/search

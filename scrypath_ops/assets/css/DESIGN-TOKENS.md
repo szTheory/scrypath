@@ -26,19 +26,23 @@ file consume them. This doc is the catalog — change a value here only by chang
 
 ## Brand colors
 
-daisyUI semantic tokens, two themes (light default, dark via `prefers-dark` / explicit
-`data-theme="dark"`). Generate utilities like `bg-primary`, `text-base-content`, `border-base-300`.
+daisyUI semantic tokens, two appearances with three user preferences: System (the default,
+follows `prefers-color-scheme`), Light, and Dark. Explicit preferences use
+`data-theme="light|dark"`; System removes that attribute and lets the OS theme plugin select
+semantic tokens. The selected preference is shown independently from effective appearance
+and keyboard focus. Generate utilities like `bg-primary`, `text-base-content`,
+`border-base-300`.
 
 | Token | Light | Dark | Use |
 | --- | --- | --- | --- |
 | `primary` | `#5b4ad1` | `#6c5ce7` | brand/accent, active nav, primary actions |
-| `--color-primary-strong` | `#5b4ad1` | `#5b4ad1` | text-bearing selected fills only; see Phase 132 floor |
+| `--color-primary-strong` | `#5b4ad1` | `#aaa0ff` | text-bearing selected fills only; see Phase 132 floor |
 | `secondary` | `#a85d2e` | `#c17a3e` | warm accent, eyebrow labels |
 | `accent` | `#6c5ce7` | `#5b4ad1` | gradient partner (route mark) |
-| `base-100` | `#fffdf8` | `#141923` | surfaces |
-| `base-200` | `#faf7f2` | `#0c0f14` | app background, muted panels |
-| `base-300` | `#ded8ce` | `#2a3446` | borders, dividers |
-| `base-content` | `#141923` | `#f4f1ea` | text |
+| `base-100` | `#ffffff` | `#191e25` | surfaces |
+| `base-200` | `#f7f6f3` | `#111419` | app background, muted panels |
+| `base-300` | `#d9d8d2` | `#353d48` | borders, dividers |
+| `base-content` | `#202124` | `#f1f2f4` | text |
 | `info` / `success` / `warning` / `error` | `#5ca9e6` / `#4fae74` / `#d9a441` / `#d96262` | (same hues) | status semantics |
 
 ## A11y contrast floors -- Phase 132
@@ -71,12 +75,17 @@ free. Ramp direction in dark: bg (floor) → surface-1 (resting panel) → surfa
 
 | Token | Light value | Dark value | Use |
 | --- | --- | --- | --- |
-| `--ops-bg` | `#faf7f2` | `#0c0f14` | Page floor / Night — app background |
-| `--ops-surface-1` | `#fffdf8` | `#141923` | Resting panel / Ink — `.ops-panel`, `.ops-surface-flat`, `.ops-preflight__card` |
-| `--ops-surface-2` | `#faf7f2` | `#1b2230` | Raised / muted step — `.ops-muted-panel`, `.ops-disclosure`, `.ops-nav-list`, `.ops-kbd`, `.ops-verdict-neutral`, `.ops-preflight__card--locked` |
+| `--ops-bg` | `#f7f6f3` | `#111419` | Page floor / Night — app background |
+| `--ops-surface-1` | `#ffffff` | `#191e25` | Resting panel / Ink — `.ops-panel`, `.ops-surface-flat`, `.ops-preflight__card` |
+| `--ops-surface-2` | `#efeee9` | `#222831` | Raised / muted step — `.ops-muted-panel`, `.ops-disclosure`, `.ops-nav-list`, `.ops-kbd`, `.ops-verdict-neutral`, `.ops-preflight__card--locked` |
 
-Dark 4-step midnight ramp: `#0C0F14` (bg) → `#141923` (surface-1) → `#1B2230` (surface-2) → `#2A3446` (base-300 / borders).
-Light values are byte-identical to the prior `base-200`/`base-100` references — zero light regression.
+Dark surface ramp: `#111419` (bg) → `#191e25` (surface-1) → `#222831` (surface-2) → `#353d48` (base-300 / borders).
+Light surface ramp: `#f7f6f3` (bg) → `#ffffff` (surface-1) → `#efeee9` (surface-2) → `#d9d8d2` (base-300 / borders).
+
+The three visible System / Light / Dark targets each have a minimum 44px hit area. Exactly
+one target exposes `aria-pressed="true"` and `data-theme-selected="true"`. A System choice
+remains selected when the OS is dark; appearance does not impersonate the saved preference.
+If browser storage is unavailable, the current page still applies a theme choice in memory.
 
 ## Spacing — `--spacing-ops-*` → `p-ops-*` / `gap-ops-*` / `space-y-ops-*`
 
@@ -121,20 +130,45 @@ inventory names every current export; add new exports here with their role consu
 | `ops_page_header`, `ops_heading` | Page h1 24px, section h2 18px, subsection h3 16px; 600 weight and tight heading leading |
 | `ops_panel`, `ops_section`, `ops_scaffold`, `ops_toolbar`, `ops_table` | Body 14px; named spacing and 24px page gap; panel padding 16px below 640px and 20px from 640px |
 | `ops_command_hint`, `ops_button`, `ops_link_button`, `ops_refresh_button`, `ops_action_group` | Action labels 14px/600; standard targets 40px; prominent and icon-only targets 44px; compact actions retain compact horizontal padding |
+| `ops_refresh_control` | Shared checked-time and manual refresh group for page/section toolbars; composes `ops_time` and the 40px `ops_refresh_button`, with consistent feedback and no routine timestamp-copy action |
 | `ops_fieldset`, `ops_field`, `ops_text_input`, `ops_number_input`, `ops_textarea`, `ops_select`, `ops_schema_select`, `ops_segmented_control`, `ops_checkbox_list`, `ops_upload_box` | Form labels, help, and values use 14px; standard controls are 40px, multiline controls are at least 96px |
 | `ops_notice`, `ops_status`, `ops_verdict`, `ops_tone_chip`, `ops_badge`, `ops_metric`, `ops_metric_grid` | Decision copy and status use body 14px/400; keep named semantic surface/text contrast pairs |
 | `ops_intent_card`, `ops_handoff`, `ops_trail` | Body and next action use 14px; recovery CTA has a 44px target; retain named color and motion roles |
 | `ops_empty_state`, `ops_empty_hero`, `ops_loading`, `ops_config_empty` | Required instructions and error copy use body 14px; optional metadata may use the small exception |
 | `ops_data_card`, `ops_result_row`, `ops_object_list`, `ops_object_item`, `ops_signal_table` | Record headings use h3 16px; body uses 14px; spacing, radius, shadow, and responsive layout stay token-backed |
-| `ops_time`, `ops_disclosure`, `ops_code_block`, `ops_inline_code` | Required copy uses 14px; exact technical evidence may use monospace; optional timestamps and metadata retain 11px/12px exceptions |
+| `ops_time`, `ops_disclosure`, `ops_code_block`, `ops_inline_code` | Operational age, Copy timestamp and feedback use the 14px body family; copy/dismiss targets are 40px with quiet neutral hover/press and independent focus; copy uses interaction text and feedback uses primary text; exact technical evidence may use monospace, optional metadata retains 11px/12px exceptions |
 | `ops_modal`, `ops_command_palette` | Body/actions use 14px; dialog icon target is 44px; consume named overlay layer, radius, shadow, and motion roles |
 | `ops_workspace_mode_indicator` | State remains accompanied by text; workspace path is optional technical metadata |
+
+Search health uses the 24px section gap with unframed Next checks and per-schema
+headings. Each schema owns one surface; Backend tasks and Queue jobs share that
+surface as plain diagnostic groups. Navigation actions use concise `ops_link_button`
+labels with supporting prose; explanatory sentences retain normal body styling.
+Ordinary prose links keep their text-link styling. Full module names and last-success
+timestamps must remain readable when the layout narrows.
+
+Search health verdict, metric, and schema containers keep neutral surfaces in every
+status. Severity is carried by explicit state text and a local icon or badge; a zero
+error count stays neutral, while unavailable source observations keep their reason and
+must not be presented as zero. Quiet actions use a neutral hover surface, stronger
+transient pressed surface, separate 2px focus outline with 2px offset, and distinct
+selected, disabled, and busy states. Refresh loading retains its icon and label, then
+reapplies the latest server-rendered disabled eligibility after each LiveView patch.
 
 Primary task weights are 400 for body/value text and 600 for actions, labels, and headings.
 The existing 11px/12px scale remains reserved for short timestamps, badges, eyebrows, and
 optional technical metadata; never use it for an action, form label, failure reason, or
 the only copy needed to choose what to do. Existing radius, shadow, motion, and z-index
 tokens remain the sole authorities for those dimensions.
+
+Schema selection shows one allowed schema as read-only context. For multiple schemas, use
+the same vertically stacked native radio group so every option stays visible and selection
+takes one click. Keep the short schema name prominent and show its complete module name as
+secondary metadata, wrapping long names rather than truncating them. Keep options as simple
+rows rather than nested cards. Revisit this only if real schema lists grow large enough that
+scanning and page length outweigh direct visibility; do not switch controls at an arbitrary
+count. A custom searchable combobox adds interaction and accessibility behavior current
+allowlists do not need.
 
 ## Radius — `--radius-ops-*` → `rounded-ops-*`
 
@@ -205,12 +239,12 @@ is AA-safe in both themes. Do NOT use `var(--color-secondary)` as badge label te
 
 | Pairing | Theme | Ratio | AA verdict |
 | --- | --- | --- | --- |
-| `base-content` (`#f4f1ea`) text on `.ops-copper-badge` tinted bg | Dark | 12.07:1 | PASS |
-| `base-content` (`#141923`) text on `.ops-copper-badge` tinted bg | Light | 14.86:1 | PASS |
-| `.ops-copper-eyebrow` (`--color-secondary` `#c17a3e`) on `--ops-surface-1` `#141923` | Dark | 5.13:1 | PASS |
-| `.ops-copper-eyebrow` (`--color-secondary` `#a85d2e`) on `--ops-surface-1` `#fffdf8` | Light | 4.84:1 | PASS |
-| `--color-secondary-content` (`#0c0f14`) on solid copper `#c17a3e` | Dark | 5.59:1 | PASS |
-| Copper text `#c17a3e` on `--ops-surface-2` `#1b2230` | Dark | 4.64:1 | PASS |
+| `base-content` text on `.ops-copper-badge` tinted bg | Dark | 12.07:1 | PASS |
+| `base-content` text on `.ops-copper-badge` tinted bg | Light | 14.86:1 | PASS |
+| `.ops-copper-eyebrow` (`--color-secondary` `#c17a3e`) on `--ops-surface-1` `#191e25` | Dark | 5.13:1 | PASS |
+| `.ops-copper-eyebrow` (`--color-secondary` `#a85d2e`) on `--ops-surface-1` `#ffffff` | Light | 4.84:1 | PASS |
+| `--color-secondary-content` (`#111419`) on solid copper `#c17a3e` | Dark | 5.59:1 | PASS |
+| Copper text `#c17a3e` on `--ops-surface-2` `#222831` | Dark | 4.64:1 | PASS |
 
 All ratios computed with sRGB relative luminance (D-12 compliant, matching axe-core).
 
@@ -223,7 +257,7 @@ box-shadow ring is, and double-drawing outline + ring reads as muddy.
 
 ## Shell chrome — Phase 135
 
-Shell chrome is the shared operator frame: `.ops-header`, `.ops-shell`, `.ops-brand-mark`,
+Shell chrome is the shared operator frame: `.ops-header`, `.ops-shell`, `.ops-wordmark`,
 `.ops-nav-list`, `.ops-nav-item-active`, `.ops-theme-toggle*`, `.ops-cmdk__panel`, and
 `.ops-flash`. Light remains on the base recipes by default; custom shell depth is dark-only
 and must be authored in both explicit `[data-theme="dark"]` and system-dark
@@ -232,12 +266,12 @@ and must be authored in both explicit `[data-theme="dark"]` and system-dark
 | Selector | Contract |
 | --- | --- |
 | `.ops-header` | In dark, composes `--shadow-ops-surface` with `--shadow-ops-panel-dark` plus a 14% base-content divider so the header reads as a seated operator surface. Light keeps the base `--shadow-ops-surface` lift. |
-| `.ops-shell` | Exactly one top-left `radial-gradient(...)` wash plus one `linear-gradient(...)` page floor per rule. Base/light stays 14% / 34rem; dark is bounded to 10% / 30rem and dark mobile to 8% / 24rem. No extra gradient layers, orbs, bokeh, texture, or loops. |
-| `.ops-brand-mark` | Stable class on the live inline SVG brand mark. Dark paths apply only a quiet primary drop-shadow; proof must not rely only on stale `.ops-route-mark`. |
+| `.ops-shell` | A flat semantic background matching the selected appearance. No decorative background gradients, washes, or texture. Scroll-edge cues may use a small gradient to communicate overflow. |
+| `.ops-wordmark` | Displays the canonical horizontal Scrypath wordmark. Light and inverse SVG assets switch with explicit and system theme; keep the artwork and copper slash unfiltered. |
 | `.ops-nav-item-active` | Text-bearing selected fill stays `--color-primary-strong`; dark paths compose `--shadow-ops-surface` with `--shadow-ops-glow`. |
-| `.ops-theme-toggle`, `.ops-theme-toggle__pill`, `.ops-theme-toggle__button` | Class selectors mirror the existing IDs. Selected state is exposed through `aria-pressed` and `data-theme-selected`; dark paths use `--shadow-ops-panel-dark`, `--shadow-ops-glow`, and `--color-primary-strong`. |
+| `.ops-theme-toggle`, `.ops-theme-toggle__button` | Three visible, minimum 44px System / Light / Dark targets. Exactly one selected preference is exposed through `aria-pressed` and `data-theme-selected`; the indicator is separate from keyboard focus and effective OS appearance. |
 | `.ops-cmdk__panel`, `.ops-flash` | Overlay chrome uses `--shadow-ops-overlay` in light. In explicit dark and system dark, compose overlay first (`--shadow-ops-overlay`) and panel-dark second (`--shadow-ops-panel-dark`) so transient shell surfaces keep depth without glow. |
-| `.ops-flash`, `.ops-flash--info`, `.ops-flash--error` | Durable flash classes live on the passive `role="alert"` wrapper. Kind-specific classes tune non-text border accents while the icon/text pair and close button carry the status semantics. |
+| `.ops-flash`, `.ops-flash--info`, `.ops-flash--error` | Info confirmations use a polite `role="status"` toast and dismiss after 4 seconds; errors use `role="alert"` and stay until dismissed. Status colors tint the active theme's base surface and mark the outer border; text stays on `base-content` for contrast. |
 
 ## Typography — `--text-ops-*` → `text-ops-*`, `--leading-ops-*` → `leading-ops-*`
 
@@ -422,3 +456,5 @@ only and never affects the exit code.
 - Schema cards and workspace paths wrap long identifiers without expanding the page. Record headings use the 16px h3 role.
 - Code regions expose a name and keyboard focus for contained scrolling. The native schema select has an explicit accessible name. Phoenix upload labels use the generated upload reference.
 - Playbook rows and successor controls have filename-derived identities. Modal return focus waits for the LiveView patch and rejects a connected trigger that has been reused for a different file.
+
+Neutral surface opacity mixes use `color-mix(in srgb, ..., transparent)` so header, metric, and quiet grouping colors retain the approved palette after browser composition. The production browser contract samples rendered colors in Light, Dark, and System preferences.

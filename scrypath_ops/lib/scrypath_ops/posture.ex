@@ -27,6 +27,7 @@ defmodule ScrypathOps.Posture do
           backend_failed_count: non_neg_integer(),
           queue_failed_count: non_neg_integer(),
           queue_observed_count: non_neg_integer(),
+          last_success_refs: map(),
           refreshed_at: DateTime.t() | nil,
           headline: String.t(),
           evidence: String.t()
@@ -39,6 +40,7 @@ defmodule ScrypathOps.Posture do
             backend_failed_count: 0,
             queue_failed_count: 0,
             queue_observed_count: 0,
+            last_success_refs: %{},
             refreshed_at: nil,
             headline: "—",
             evidence: ""
@@ -50,17 +52,25 @@ defmodule ScrypathOps.Posture do
   with a coarse `:state`, fleet counts, and a human headline/evidence pair.
   """
   @spec summary([module()], keyword()) :: t()
-  def summary(allowlist, opts) do
+  def summary(allowlist, opts), do: summary(allowlist, opts, DateTime.utc_now(), nil)
+
+  @doc false
+  @spec summary([module()], keyword(), DateTime.t()) :: t()
+  def summary(allowlist, opts, observed_at), do: summary(allowlist, opts, observed_at, nil)
+
+  @doc false
+  @spec summary([module()], keyword(), DateTime.t(), t() | nil) :: t()
+  def summary(allowlist, opts, observed_at, previous) do
     cond do
       allowlist == [] ->
-        classify(%Posture{state: :unconfigured, refreshed_at: DateTime.utc_now()})
+        classify(%Posture{state: :unconfigured, refreshed_at: observed_at})
 
       not Keyword.has_key?(opts, :backend) ->
-        classify(%Posture{state: :missing_backend, refreshed_at: DateTime.utc_now()})
+        classify(%Posture{state: :missing_backend, refreshed_at: observed_at})
 
       true ->
         rows = scan(allowlist, opts)
-        err = Enum.count(rows, fn {_m, r} -> match?({:error, _}, r) end)
+        err = Enum.count(rows, &row_error?/1)
         backend_failed = backend_failed_count(rows)
         queue_failed = queue_failed_count(rows)
 
@@ -79,9 +89,15 @@ defmodule ScrypathOps.Posture do
           backend_failed_count: backend_failed,
           queue_failed_count: queue_failed,
           queue_observed_count: queue_observed_count(rows),
-          refreshed_at: DateTime.utc_now()
+          last_success_refs: last_success_refs(rows, previous, observed_at),
+          refreshed_at: observed_at
         })
     end
+  end
+
+  @doc false
+  def last_success_ref(%Posture{last_success_refs: refs}, schema, source) do
+    get_in(refs, [schema, source])
   end
 
   @doc "Ordered operator next-checks for a summary, given the mount path. Caller decides how many to show."
@@ -91,6 +107,7 @@ defmodule ScrypathOps.Posture do
   def next_checks(:unconfigured, _mount_path) do
     [
       %{
+        label: "Setup guide",
         text:
           "Add schemas to the OPSUI allowlist in :scrypath_ops config or SCRYPATH_OPS_SCHEMAS.",
         href: @readme
@@ -101,6 +118,7 @@ defmodule ScrypathOps.Posture do
   def next_checks(:missing_backend, _mount_path) do
     [
       %{
+        label: "Setup guide",
         text: "Wire :backend and related :scrypath_ops options so sync_status can run.",
         href: @readme
       }
@@ -110,14 +128,17 @@ defmodule ScrypathOps.Posture do
   def next_checks(:degraded, mount_path) do
     [
       %{
+        label: "Failed sync work",
         text: "Open failed sync work to triage fetch and queue errors first.",
         navigate: "#{mount_path}/failed-sync"
       },
       %{
+        label: "Sync and drift",
         text: "Review read-only sync and drift signals before changing indexes.",
         navigate: "#{mount_path}/sync-drift"
       },
       %{
+        label: "Operations guide",
         text: "Walk Meilisearch operations expectations for the search backend.",
         href: @meilisearch_ops_guide
       }
@@ -128,14 +149,17 @@ defmodule ScrypathOps.Posture do
   def next_checks(:ok, mount_path) do
     [
       %{
-        text: "Scan failed sync work periodically even when posture is green.",
+        label: "Failed sync work",
+        text: "Scan failed sync work periodically, even when search health is green.",
         navigate: "#{mount_path}/failed-sync"
       },
       %{
+        label: "Sync and drift",
         text: "Confirm drift and queue visibility when changing sync modes.",
         navigate: "#{mount_path}/sync-drift"
       },
       %{
+        label: "Search",
         text: "Use search playground only after triage surfaces are quiet.",
         navigate: "#{mount_path}/search"
       }
@@ -160,24 +184,28 @@ defmodule ScrypathOps.Posture do
   defp scan(allowlist, opts) do
     allowlist
     |> Task.async_stream(
-      fn mod -> {mod, Scrypath.sync_status(mod, opts)} end,
+      fn mod -> Scrypath.Operator.sync_status_sources(mod, opts) end,
+      ordered: true,
       max_concurrency: 3,
       timeout: 15_000,
       on_timeout: :kill_task
     )
+    |> Enum.zip(allowlist)
     |> Enum.map(fn
-      {:ok, {mod, res}} -> {mod, res}
-      {:exit, reason} -> {:posture_stream, {:error, {:async_stream, reason}}}
+      {{:ok, res}, mod} -> {mod, res}
+      {{:exit, reason}, mod} -> {mod, {:error, {:async_stream, reason}}}
     end)
     |> sort_rows()
   end
 
   defp sort_rows(rows) do
-    Enum.sort_by(rows, fn
-      {_m, {:error, _}} -> 0
-      _ -> 1
-    end)
+    Enum.sort_by(rows, fn row -> if row_error?(row), do: 0, else: 1 end)
   end
+
+  defp row_error?({_schema, {:error, _}}), do: true
+
+  defp row_error?({_schema, {:ok, status}}),
+    do: map_size(Map.get(status, :source_errors, %{})) > 0
 
   defp backend_failed_count(rows) do
     Enum.reduce(rows, 0, fn
@@ -200,12 +228,53 @@ defmodule ScrypathOps.Posture do
     end)
   end
 
+  defp last_success_refs(rows, previous, observed_at) do
+    previous_refs = if match?(%Posture{}, previous), do: previous.last_success_refs, else: %{}
+
+    Enum.reduce(rows, %{}, fn
+      {schema, {:ok, status}}, acc ->
+        prior = Map.get(previous_refs, schema, %{})
+
+        references =
+          Map.new([:backend, :queue], fn source ->
+            case Map.fetch(Map.get(status, :source_errors, %{}), source) do
+              {:ok, reason} ->
+                {source, retain_source(Map.get(prior, source), reason)}
+
+              :error ->
+                {source, source_reference(Map.get(status, source).last_succeeded, observed_at)}
+            end
+          end)
+
+        Map.put(acc, schema, references)
+
+      {schema, {:error, reason}}, acc ->
+        prior = Map.get(previous_refs, schema, %{})
+
+        retained =
+          Map.new([:backend, :queue], fn source ->
+            {source, retain_source(Map.get(prior, source), reason)}
+          end)
+
+        Map.put(acc, schema, retained)
+    end)
+  end
+
+  defp retain_source(reference, reason) do
+    reference = reference || %{state: nil, observed_at: nil}
+    Map.merge(reference, %{retained?: not is_nil(reference.state), unavailable_reason: reason})
+  end
+
+  defp source_reference(state, observed_at) do
+    %{state: state, observed_at: observed_at, retained?: false, unavailable_reason: nil}
+  end
+
   defp classify(%Posture{state: :unconfigured} = summary) do
     %{
       summary
       | headline: "Not configured",
         evidence:
-          "No schemas are allowlisted for posture — configure schema_allowlist or SCRYPATH_OPS_SCHEMAS (see scrypath_ops README)."
+          "No schemas are configured for search health. Add them to the :scrypath_ops allowlist or set SCRYPATH_OPS_SCHEMAS (see the README)."
     }
   end
 
@@ -214,7 +283,7 @@ defmodule ScrypathOps.Posture do
       summary
       | headline: "Broken",
         evidence:
-          "Scrypath runtime is missing :backend under :scrypath_ops — posture cannot query sync status."
+          "The :scrypath_ops configuration is missing :backend, so sync status cannot be checked."
     }
   end
 

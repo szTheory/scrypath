@@ -22,9 +22,17 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
       boom_index = "postlv_ops_post_a"
 
       if boom_index in uids do
+        Process.sleep(Agent.get(:posture_live_test_state, &Map.get(&1, :delay_a, 0)))
+      end
+
+      if boom_index in uids and Agent.get(:posture_live_test_state, & &1.fail_a?) do
         {:error, :boom}
       else
-        {:ok, %{results: Keyword.get(config, :meilisearch_tasks, [])}}
+        results =
+          Keyword.get(config, :meilisearch_tasks, [])
+          |> Enum.filter(&(&1["indexUid"] in uids))
+
+        {:ok, %{results: results}}
       end
     end
 
@@ -40,6 +48,14 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
          "type" => "indexSwap",
          "indexUid" => "postlv_ops_post_a"
        }}
+    end
+  end
+
+  defmodule PartialQueueInspector do
+    def list_jobs(_schema, _config) do
+      if Agent.get(:posture_live_test_state, &Map.get(&1, :fail_queue?, false)),
+        do: {:error, :queue_unavailable},
+        else: {:ok, [%{id: 99, state: "completed", completed_at: ~U[2026-04-16 18:00:00Z]}]}
     end
   end
 
@@ -79,11 +95,18 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     # Keep the fixture alive until on_exit/1 performs deterministic cleanup.
     # A linked Agent can exit with the test process before the callback runs.
     {:ok, _pid} =
-      Agent.start(fn -> %{tasks_calls: 0, swap_called: false} end,
+      Agent.start(fn -> %{tasks_calls: 0, swap_called: false, fail_a?: true} end,
         name: :posture_live_test_state
       )
 
     Application.put_env(:scrypath_ops, :meilisearch_tasks, [
+      %{
+        "uid" => 2,
+        "status" => "succeeded",
+        "type" => "documentAdditionOrUpdate",
+        "indexUid" => "postlv_ops_post_a",
+        "finishedAt" => "2026-04-16T17:59:00Z"
+      },
       %{
         "uid" => 1,
         "status" => "succeeded",
@@ -126,20 +149,107 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
   end
 
   test "renders posture rows with sync_status and surfaces errors first", %{conn: conn} do
-    {:ok, lv, html} = live(conn, ~p"/ops/posture")
+    {:ok, lv, html} = live(conn, ~p"/ops/health")
 
     assert html =~ "data-testid=\"posture-row\""
     assert html =~ "fetch error: :boom"
     assert html =~ "Queue not used"
+    assert html =~ "Not observed"
     assert html =~ "Backend tasks"
     assert html =~ "Queue jobs"
     assert html =~ "Last success"
-    refute html =~ ~r/>\s*Refresh posture\s*</
-    assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh posture checks']")
+    refute html =~ "Posture"
+    assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search health']")
+  end
+
+  test "phase 173 source-error refresh retains the prior completion", %{conn: conn} do
+    {:ok, lv, html} = live(conn, ~p"/ops/phase173/health")
+    assert html =~ "2026-10-04T13:02:05.123456-04:00"
+
+    refreshed = render_click(lv, "refresh", %{"scenario" => "source-error"})
+
+    assert refreshed =~ "Backend observation unavailable"
+    assert refreshed =~ "last success retained from the previous check"
+    assert refreshed =~ "2026-10-04T13:02:05.123456-04:00"
+  end
+
+  test "phase 173 degraded health keeps zero metrics neutral and localizes failure cues", %{
+    conn: conn
+  } do
+    {:ok, lv, html} = live(conn, ~p"/ops/phase173/health?scenario=failed")
+
+    assert html =~ "Degraded"
+    assert html =~ "backend failed"
+    assert html =~ "failed"
+    refute html =~ "document freshness"
+    refute has_element?(lv, ".ops-metric-success")
+    assert has_element?(lv, ".ops-metric-warning")
+    assert has_element?(lv, ".ops-metric__cue[aria-hidden='true']")
+    assert has_element?(lv, ".ops-schema-signal-card--warning")
+    assert has_element?(lv, "a[data-testid='posture-failed-sync-link']")
+  end
+
+  test "renders backend success age from the observation snapshot with exact source evidence", %{
+    conn: conn
+  } do
+    {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health")
+
+    time =
+      lv
+      |> element(
+        "[id='posture-ScrypathOps.Test.OpsPostA'] .ops-signal-group[aria-label^='Backend task signals']"
+      )
+      |> render()
+
+    assert time =~ "2 days ago"
+    assert time =~ "2026-10-04T13:02:05.123456-04:00"
+    assert time =~ "UTC equivalent"
+
+    assert has_element?(
+             lv,
+             "[id='ops-time-ScrypathOps.Test.OpsPostA-backend-success'][data-ops-timestamp='2026-10-04T13:02:05.123456-04:00']"
+           )
+
+    refute has_element?(lv, "#search-health-refresh .ops-time__copy")
+
+    html = render_patch(lv, ~p"/ops/phase173/health?scenario=default")
+    assert html =~ "2 days ago"
+    assert html =~ "2026-10-04T13:02:05.123456-04:00"
+  end
+
+  test "does not offer copy when last-success source time is invalid", %{conn: conn} do
+    tasks = Application.get_env(:scrypath_ops, :meilisearch_tasks)
+
+    Application.put_env(
+      :scrypath_ops,
+      :meilisearch_tasks,
+      Enum.map(tasks, &Map.put(&1, "finishedAt", "not-a-time"))
+    )
+
+    {:ok, lv, _html} = live(conn, ~p"/ops/health")
+
+    refute has_element?(lv, "[id='posture-ScrypathOps.Test.OpsPostA'] .ops-time__copy")
+    refute has_element?(lv, "[id='posture-ScrypathOps.Test.OpsPostB'] .ops-time__copy")
+  end
+
+  test "retains the source-local last success when a later fetch fails", %{conn: conn} do
+    Agent.update(:posture_live_test_state, &Map.put(&1, :fail_a?, false))
+    {:ok, lv, _html} = live(conn, ~p"/ops/health")
+
+    row = lv |> element("[id='posture-ScrypathOps.Test.OpsPostA']") |> render()
+    assert row =~ "Apr 16, 2026 at 17:59 UTC"
+
+    Agent.update(:posture_live_test_state, &Map.put(&1, :fail_a?, true))
+    lv |> element("#search-health-refresh") |> render_click()
+    row = lv |> element("[id='posture-ScrypathOps.Test.OpsPostA']") |> render()
+
+    assert row =~ "Backend observation unavailable"
+    assert row =~ "last success retained from the previous check"
+    assert row =~ "2026-04-16T17:59:00Z"
   end
 
   test "posture shows next checks block with ordered items and failed-sync egress", %{conn: conn} do
-    {:ok, lv, _html} = live(conn, ~p"/ops/posture")
+    {:ok, lv, _html} = live(conn, ~p"/ops/health")
 
     assert has_element?(lv, "[data-testid='posture-next-checks']")
 
@@ -251,7 +361,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     base_assigns = %{
       __changed__: %{},
       flash: %{},
-      page_title: "Posture / health",
+      page_title: "Search health",
       schema_allowlist: [OpsPostA, OpsPostB],
       scrypath_opts: posture_scrypath_opts(),
       auto_refresh: false,
@@ -269,7 +379,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
 
     %Phoenix.LiveView.Socket{
       assigns: Map.merge(base_assigns, overrides),
-      host_uri: URI.parse("https://scrypath.example/ops/posture")
+      host_uri: URI.parse("https://scrypath.example/ops/health")
     }
   end
 
@@ -310,5 +420,94 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
 
   defp flash_value(socket, key) do
     socket.assigns |> Map.get(:flash, %{}) |> Map.get(key)
+  end
+
+  test "partial queue errors retain only the failed source and render current backend data", %{
+    conn: conn
+  } do
+    Agent.update(:posture_live_test_state, &Map.put(&1, :fail_a?, false))
+    Application.put_env(:scrypath_ops, :sync_mode, :oban)
+    Application.put_env(:scrypath_ops, :oban_inspector, PartialQueueInspector)
+    Application.put_env(:scrypath_ops, :oban, PartialQueueInspector)
+    Application.put_env(:scrypath_ops, :oban_queue, :search_sync)
+    {:ok, view, _html} = live(conn, ~p"/ops/health")
+    Agent.update(:posture_live_test_state, &Map.put(&1, :fail_queue?, true))
+    html = render_click(view, "refresh", %{})
+    assert html =~ "queue_unavailable"
+    assert html =~ "Queue observation unavailable"
+    assert html =~ "last success retained"
+
+    assert has_element?(
+             view,
+             "#posture-ScrypathOps\\.Test\\.OpsPostA .ops-signal-group:first-child .ops-signal-metrics"
+           )
+
+    refute html =~ "Backend observation unavailable"
+
+    Agent.update(:posture_live_test_state, &Map.put(&1, :fail_a?, true))
+    render_click(view, "refresh", %{})
+
+    assert has_element?(
+             view,
+             "#posture-ScrypathOps\\.Test\\.OpsPostA .ops-signal-group:nth-child(2) .ops-time__exact",
+             "2026-04-16T18:00:00Z"
+           )
+
+    assert has_element?(
+             view,
+             "#posture-ScrypathOps\\.Test\\.OpsPostA .ops-signal-group:nth-child(2)",
+             "queue_unavailable"
+           )
+  end
+
+  test "timed-out schemas retain their own prior evidence" do
+    Agent.update(:posture_live_test_state, &Map.put(&1, :fail_a?, false))
+
+    opts = [
+      backend: Scrypath.Meilisearch,
+      sync_mode: :manual,
+      index_prefix: "postlv",
+      meilisearch_url: "http://localhost:7700",
+      meilisearch_client: PostureFakeClient,
+      meilisearch_tasks: Application.get_env(:scrypath_ops, :meilisearch_tasks)
+    ]
+
+    prior = ScrypathOps.Posture.summary([OpsPostA, OpsPostB], opts, ~U[2026-04-16 18:01:00Z])
+    Agent.update(:posture_live_test_state, &Map.put(&1, :delay_a, 16_000))
+
+    current =
+      ScrypathOps.Posture.summary(
+        [OpsPostA, OpsPostB],
+        opts,
+        ~U[2026-04-17 18:01:00Z],
+        prior
+      )
+
+    assert {OpsPostA, {:error, {:async_stream, :timeout}}} in current.rows
+    refute Enum.any?(current.rows, fn {mod, _} -> mod == :posture_stream end)
+    assert ScrypathOps.Posture.last_success_ref(current, OpsPostA, :backend).retained?
+
+    assert ScrypathOps.Posture.last_success_ref(current, OpsPostA, :backend).observed_at ==
+             prior.refreshed_at
+
+    assert ScrypathOps.Posture.last_success_ref(current, OpsPostB, :backend).observed_at ==
+             current.refreshed_at
+  end
+
+  test "error-row rendering tolerates invalid runtime configuration", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/ops/health")
+
+    assigns =
+      view.pid
+      |> :sys.get_state()
+      |> Map.fetch!(:socket)
+      |> Map.fetch!(:assigns)
+      |> Map.put(:scrypath_opts, sync_mode: :invalid_mode)
+      |> Map.put(:posture_rows, {:ok, [{OpsPostA, {:error, :invalid_configuration}}]})
+
+    html = render_component(&PostureLive.render/1, assigns)
+    assert html =~ "invalid_configuration"
+    assert html =~ "Backend observation unavailable"
+    assert html =~ "Queue observation unavailable"
   end
 end

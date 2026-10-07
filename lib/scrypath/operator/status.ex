@@ -65,6 +65,32 @@ defmodule Scrypath.Operator.Status do
     end
   end
 
+  @doc false
+  # Internal Ops projection: the public fetch/3 result stays all-or-error.
+  def fetch_sources(schema_module, config, operator_opts) do
+    mode = Keyword.fetch!(config, :sync_mode)
+    index = Config.fetch_backend!(config).index_name(schema_module, config)
+    backend_result = backend_states(config, operator_opts, index)
+    queue_result = queue_states(schema_module, config, operator_opts)
+
+    {backend, backend_errors} = source_section(backend_result, :backend, &summarize_backend/1)
+    {queue, queue_errors} = source_section(queue_result, :queue, &summarize_queue(&1, mode))
+
+    status = new(schema: schema_module, mode: mode, index: index, backend: backend, queue: queue)
+
+    {:ok,
+     status
+     |> Map.from_struct()
+     |> Map.put(:source_errors, Map.merge(backend_errors, queue_errors))}
+  end
+
+  defp source_section({:ok, states}, _source, summarize), do: {summarize.(states), %{}}
+
+  defp source_section({:error, reason}, source, _summarize) do
+    empty = if source == :backend, do: summarize_backend([]), else: summarize_queue([], :manual)
+    {empty, %{source => reason}}
+  end
+
   defp backend_states(config, operator_opts, index) do
     case Config.fetch_backend!(config) do
       Scrypath.Meilisearch ->
@@ -107,7 +133,7 @@ defmodule Scrypath.Operator.Status do
 
   defp summarize_queue(states, :oban) do
     %{
-      observed?: states != [],
+      observed?: true,
       pending: Enum.filter(states, &(&1.state == :queued)),
       retrying: Enum.filter(states, &(&1.state == :retrying)),
       failed: Enum.filter(states, &(&1.state == :failed)),

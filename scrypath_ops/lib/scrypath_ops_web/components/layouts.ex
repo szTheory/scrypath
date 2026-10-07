@@ -74,14 +74,13 @@ defmodule ScrypathOpsWeb.Layouts do
               >
                 <.icon name="hero-bars-3" class="size-5" />
               </button>
-              <.link navigate={@mount_path} class="flex w-fit min-w-0 items-center gap-3">
-                <.brand_mark />
-                <span class="min-w-0">
-                  <span class="block text-ops-body font-semibold leading-4">ScrypathOps</span>
-                  <span class="block truncate text-ops-sm text-base-content/60">
-                    Ecto-native search operations
-                  </span>
-                </span>
+              <.link
+                navigate={@mount_path}
+                class="flex w-fit min-w-0 items-center gap-3"
+                aria-label="Scrypath home"
+                translate="no"
+              >
+                <.brand_mark mount_path={@mount_path} />
               </.link>
             </div>
 
@@ -117,7 +116,7 @@ defmodule ScrypathOpsWeb.Layouts do
     <header class="navbar px-4 sm:px-6 lg:px-8">
       <div class="flex-1">
         <a href={"#{@mount_path}"} class="flex-1 flex w-fit items-center gap-2">
-          <.brand_mark />
+          <.brand_mark mount_path={@mount_path} />
           <span class="text-ops-body font-semibold">v{Application.spec(:phoenix, :vsn)}</span>
         </a>
       </div>
@@ -127,14 +126,14 @@ defmodule ScrypathOpsWeb.Layouts do
             <a href="https://github.com/szTheory/scrypath" class="btn btn-ghost">GitHub</a>
           </li>
           <li>
-            <a href={"#{@mount_path}/posture"} class="btn btn-ghost">Operator UI</a>
+            <a href={"#{@mount_path}/health"} class="btn btn-ghost">Operator UI</a>
           </li>
           <li>
             <.theme_toggle />
           </li>
           <li>
-            <a href={"#{@mount_path}/posture"} class="btn btn-primary">
-              Open Posture <span aria-hidden="true">&rarr;</span>
+            <a href={"#{@mount_path}/health"} class="btn btn-primary">
+              Open Search health <span aria-hidden="true">&rarr;</span>
             </a>
           </li>
         </ul>
@@ -158,14 +157,13 @@ defmodule ScrypathOpsWeb.Layouts do
     ~H"""
     <aside class="ops-sidebar" aria-label="Operator primary">
       <div class="ops-sidebar__brand">
-        <.link navigate={@mount_path} class="flex min-w-0 items-center gap-3">
-          <.brand_mark />
-          <span class="min-w-0">
-            <span class="block text-ops-body font-semibold leading-4">ScrypathOps</span>
-            <span class="block truncate text-ops-sm text-base-content/60">
-              Ecto-native search operations
-            </span>
-          </span>
+        <.link
+          navigate={@mount_path}
+          class="flex min-w-0 items-center gap-3"
+          aria-label="Scrypath home"
+          translate="no"
+        >
+          <.brand_mark mount_path={@mount_path} />
         </.link>
       </div>
 
@@ -191,17 +189,16 @@ defmodule ScrypathOpsWeb.Layouts do
       <div class="ops-mobile-nav__backdrop" data-ops-nav-close aria-hidden="true"></div>
       <aside class="ops-mobile-nav__panel" tabindex="-1" data-ops-nav-panel>
         <div class="ops-mobile-nav__header">
-          <.link navigate={@mount_path} class="flex min-w-0 items-center gap-3" data-ops-nav-link>
-            <.brand_mark />
-            <span class="min-w-0">
-              <span id="ops-mobile-nav-title" class="block text-ops-body font-semibold leading-4">
-                ScrypathOps
-              </span>
-              <span class="block truncate text-ops-sm text-base-content/60">
-                Ecto-native search operations
-              </span>
-            </span>
+          <.link
+            navigate={@mount_path}
+            class="flex min-w-0 items-center gap-3"
+            aria-label="Scrypath home"
+            translate="no"
+            data-ops-nav-link
+          >
+            <.brand_mark mount_path={@mount_path} />
           </.link>
+          <h2 id="ops-mobile-nav-title" class="sr-only" translate="no">Scrypath navigation</h2>
           <button
             type="button"
             class="ops-nav-close"
@@ -251,34 +248,30 @@ defmodule ScrypathOpsWeb.Layouts do
   end
 
   @doc false
-  # Brand mark: the scrypath `s/p` monogram. Inlined (not <img>) so the letters ride
-  # `currentColor` and adapt to light/dark, with the copper "/" as the fixed brand accent —
-  # mirroring the wordmark's "ink letters + copper slash" logic. Decorative; the adjacent
-  # "ScrypathOps" text is the accessible name.
+  # Use the canonical horizontal wordmark from the brand book. The paired SVGs
+  # preserve its ink/paper colors while the copper slash stays consistent in both themes.
+  # Decorative; the enclosing home link supplies the accessible name.
   attr(:class, :string, default: nil)
+  attr(:mount_path, :string, required: true)
 
   defp brand_mark(assigns) do
     ~H"""
-    <svg
-      class={["ops-brand-mark", @class]}
-      width="36"
-      height="36"
-      viewBox="-21 868 205 205"
-      fill="none"
-      aria-hidden="true"
-      focusable="false"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M30 1002Q20 1002 14 998Q8 995 5 990Q2 986 2 981H17Q18 983 20 986Q21 988 24 989Q27 990 31 990Q35 990 38 988Q40 987 40 984Q40 982 38 980Q36 978 31 977L24 975Q19 973 15 971Q10 969 7 965Q5 962 5 956Q5 948 11 943Q17 938 28 938Q36 938 41 941Q47 944 49 948Q52 952 52 957H37Q37 953 34 951Q32 949 28 949Q24 949 22 951Q20 952 20 955Q20 958 22 959Q24 961 28 962L36 965Q41 966 45 968Q49 970 52 974Q55 977 55 983Q55 991 48 996Q42 1002 30 1002Z"
-        fill="currentColor"
+    <span class={["ops-wordmark", @class]} aria-hidden="true">
+      <img
+        class="ops-wordmark__light"
+        src={"#{@mount_path}/images/scrypath-wordmark.svg"}
+        width="120"
+        alt=""
+        decoding="async"
       />
-      <path d="M55 1010V1009L83 920H96V921L68 1010Z" fill="#C17A3E" />
-      <path
-        d="M102 1020V940H117V948H119Q121 944 125 941Q129 939 136 939Q144 939 149 943Q155 947 157 954Q160 961 160 970Q160 979 157 986Q154 993 149 997Q144 1001 136 1001Q130 1001 126 999Q122 997 120 993H118V1020ZM131 990Q137 990 140 985Q143 980 143 970Q143 960 140 955Q137 950 131 950Q125 950 121 956Q118 961 118 970Q118 979 121 984Q125 990 131 990Z"
-        fill="currentColor"
+      <img
+        class="ops-wordmark__dark"
+        src={"#{@mount_path}/images/scrypath-wordmark-inverse.svg"}
+        width="120"
+        alt=""
+        decoding="async"
       />
-    </svg>
+    </span>
     """
   end
 
@@ -323,9 +316,9 @@ defmodule ScrypathOpsWeb.Layouts do
   defp nav_group_label(:explore), do: "Explore"
   defp nav_group_label(group), do: group |> to_string() |> String.capitalize()
 
-  defp nav_item_icon(%{label: "Posture"}), do: "hero-shield-check"
-  defp nav_item_icon(%{label: "Failed Sync"}), do: "hero-exclamation-triangle"
-  defp nav_item_icon(%{label: "Sync Drift"}), do: "hero-arrows-right-left"
+  defp nav_item_icon(%{label: "Search health"}), do: "hero-shield-check"
+  defp nav_item_icon(%{label: "Failed sync work"}), do: "hero-exclamation-triangle"
+  defp nav_item_icon(%{label: "Sync and drift"}), do: "hero-arrows-right-left"
   defp nav_item_icon(%{label: "Search"}), do: "hero-magnifying-glass"
   defp nav_item_icon(%{label: "Playbooks"}), do: "hero-book-open"
   defp nav_item_icon(_item), do: "hero-square-2-stack"
@@ -386,13 +379,8 @@ defmodule ScrypathOpsWeb.Layouts do
       role="group"
       aria-label="Theme preference"
     >
-      <div
-        id="theme-toggle-pill"
-        class="ops-theme-toggle__pill absolute top-0 left-0 h-full w-1/3 rounded-full border border-base-200 bg-base-100"
-      />
-
       <button
-        class="ops-theme-toggle__button flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-ops-2"
+        class="ops-theme-toggle__button"
         type="button"
         aria-label="Use system theme"
         aria-pressed="false"
@@ -400,11 +388,12 @@ defmodule ScrypathOpsWeb.Layouts do
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="system"
       >
-        <.icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.icon name="hero-computer-desktop-micro" class="size-4 shrink-0" />
+        <span>System</span>
       </button>
 
       <button
-        class="ops-theme-toggle__button flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-ops-2"
+        class="ops-theme-toggle__button"
         type="button"
         aria-label="Use light theme"
         aria-pressed="false"
@@ -412,11 +401,12 @@ defmodule ScrypathOpsWeb.Layouts do
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="light"
       >
-        <.icon name="hero-sun-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.icon name="hero-sun-micro" class="size-4 shrink-0" />
+        <span>Light</span>
       </button>
 
       <button
-        class="ops-theme-toggle__button flex min-h-[var(--control-h-md)] min-w-[var(--control-h-md)] cursor-pointer items-center justify-center p-ops-2"
+        class="ops-theme-toggle__button"
         type="button"
         aria-label="Use dark theme"
         aria-pressed="false"
@@ -424,7 +414,8 @@ defmodule ScrypathOpsWeb.Layouts do
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="dark"
       >
-        <.icon name="hero-moon-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.icon name="hero-moon-micro" class="size-4 shrink-0" />
+        <span>Dark</span>
       </button>
     </div>
     """

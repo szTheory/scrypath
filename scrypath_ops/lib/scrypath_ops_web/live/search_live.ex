@@ -48,7 +48,7 @@ defmodule ScrypathOpsWeb.SearchLive do
     socket =
       socket
       |> assign(:guide_href, @guide_href)
-      |> assign(:page_title, "Search & federation")
+      |> assign(:page_title, "Search")
       |> assign(:mode, :single)
       |> assign(:q, "")
       |> assign(:page_size, SearchPlayground.default_page_size())
@@ -773,7 +773,7 @@ defmodule ScrypathOpsWeb.SearchLive do
           />
         </.ops_toolbar>
 
-        <.ops_trail mount_path={@mount_path} current={:search} />
+        <.ops_trail current={:search} />
 
         <.ops_notice
           id="search-honesty-panel"

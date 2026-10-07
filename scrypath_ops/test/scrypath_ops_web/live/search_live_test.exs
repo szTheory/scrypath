@@ -90,12 +90,14 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
         assert html =~ "Schema"
         assert html =~ ~s(name="schema")
 
-        if count <= 4 do
+        if count == 1 do
+          assert html =~ ~s(type="hidden" name="schema" value="PickerSchema1")
+          refute html =~ ~s(type="radio")
+          refute html =~ ~s(<select)
+        else
           assert html =~ ~s(type="radio")
           assert html =~ ~r/for="picker-[^"]+"/
-        else
-          assert html =~ ~s(<select)
-          assert html =~ ~s(id="picker")
+          refute html =~ ~s(<select)
         end
       end
     end

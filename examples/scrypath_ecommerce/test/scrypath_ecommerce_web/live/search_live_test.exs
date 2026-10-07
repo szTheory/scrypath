@@ -130,7 +130,7 @@ defmodule ScrypathEcommerceWeb.SearchLiveTest do
     assert html =~ "Smartphones"
     assert html =~ "2 products"
     assert html =~ "Quantum CyberPhone X"
-    assert html =~ "Operator posture"
+    assert html =~ "Search health"
     assert html =~ ~s(data-testid="storefront-results")
     assert html =~ ~s(data-testid="storefront-result")
     assert html =~ "Category"

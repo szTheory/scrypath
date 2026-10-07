@@ -36,6 +36,25 @@ case "$scope" in
     echo "Running focused mounted integration/browser proof..."
     exec npx playwright test e2e/harness.spec.ts e2e/operator.spec.ts --workers=1 --retries=0
     ;;
+  phase173-shell)
+    echo "Running the shared-shell production LiveView and preference contract proof..."
+    exec npx playwright test e2e/phase173_shell.spec.ts --workers=1 --retries=0
+    ;;
+  phase173-time)
+    echo "Running exact operational time and evidence disclosure proof..."
+    PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results/phase173-time.xml \
+      exec npx playwright test e2e/phase173_time.spec.ts --workers=1 --retries=0 --reporter=junit
+    ;;
+  phase173-status)
+    echo "Running production status and quiet-action proof..."
+    PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results/phase173-status.xml \
+      exec npx playwright test e2e/phase173_status_actions.spec.ts --workers=1 --retries=0 --reporter=junit
+    ;;
+  phase173-copy)
+    echo "Running production timestamp-copy proof..."
+    PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results/phase173-copy.xml \
+      exec npx playwright test e2e/phase173_copy.spec.ts --workers=1 --retries=0 --reporter=junit
+    ;;
   full)
     echo "Running the full advisory ecommerce browser and deterministic visual lane..."
     browser_status=0
@@ -60,7 +79,7 @@ case "$scope" in
     exit 1
     ;;
   *)
-    echo "Unsupported E2E_SCOPE '$scope' (expected focused or full)." >&2
+    echo "Unsupported E2E_SCOPE '$scope' (expected focused, phase173-shell, phase173-time, phase173-status, phase173-copy, or full)." >&2
     exit 64
     ;;
 esac

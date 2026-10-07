@@ -102,7 +102,7 @@ async function gotoControlRoom(page: Page): Promise<void> {
 async function gotoSearch(page: Page): Promise<void> {
   await page.goto("/admin/search/search");
   await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Search & federation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Search" })).toBeVisible();
 }
 
 async function gotoPlaybooks(page: Page): Promise<void> {
@@ -258,7 +258,7 @@ test.describe("admin path motion — DARKMOTION-01", () => {
 
   // 1 + 3: Active-path trace/node glow + reduced-motion neutralization on the Control Room
   // recommended intent card, in dark AND light AND system-dark. The `incident` scenario
-  // drives degraded posture so the recommended card (recommended={state in [:degraded,
+  // drives degraded search health so the recommended card (recommended={state in [:degraded,
   // :missing_backend]}) renders with its dual-dark glow.
   for (const theme of ALL_THEMES) {
     test(`recommended intent card: glow present + reduced-motion-neutralized (${theme})`, async ({

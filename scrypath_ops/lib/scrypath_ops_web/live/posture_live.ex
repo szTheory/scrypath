@@ -11,13 +11,26 @@ defmodule ScrypathOpsWeb.PostureLive do
   alias ScrypathOps.OperatorSelection
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
     allowlist = ScrypathOps.Schemas.allowlist()
     scrypath_opts = ScrypathOps.Schemas.scrypath_opts()
+    phase173? = socket.assigns.live_action == :phase173
+    fixture_source = Application.get_env(:scrypath_ops, :phase173_fixture_source)
+
+    {allowlist, scrypath_opts, observed_at, fixture_scenario, refresh_disabled?} =
+      if phase173? and fixture_source?(fixture_source) do
+        scenario = Map.get(params, "scenario", "default")
+        fixture = fixture_source.scenario(scenario)
+
+        {fixture.allowlist, fixture.opts, fixture.observed_at, scenario,
+         Map.get(fixture, :refresh_disabled?, false)}
+      else
+        {allowlist, scrypath_opts, nil, nil, false}
+      end
 
     socket =
       socket
-      |> assign(:page_title, "Posture / health")
+      |> assign(:page_title, "Search health")
       |> assign(:schema_allowlist, allowlist)
       |> assign(:scrypath_opts, scrypath_opts)
       |> assign(:auto_refresh, false)
@@ -28,13 +41,17 @@ defmodule ScrypathOpsWeb.PostureLive do
       |> assign(:posture_headline, "—")
       |> assign(:posture_evidence, "")
       |> assign(:next_checks, [])
+      |> assign(:phase173_observed_at, observed_at)
+      |> assign(:phase173_fixture_scenario, fixture_scenario)
+      |> assign(:phase173_refresh_disabled?, refresh_disabled?)
 
     {:ok, load_posture(socket)}
   end
 
   @impl true
-  def handle_event("refresh", _params, socket) do
+  def handle_event("refresh", params, socket) do
     start_ms = System.monotonic_time(:millisecond)
+    socket = maybe_select_phase173_scenario(socket, params)
     socket = load_posture(socket)
     duration_ms = System.monotonic_time(:millisecond) - start_ms
 
@@ -45,7 +62,7 @@ defmodule ScrypathOpsWeb.PostureLive do
       %{outcome: if(socket.assigns.aggregate_error_count > 0, do: :degraded, else: :ok)}
     )
 
-    {:noreply, socket}
+    {:noreply, put_flash(socket, :info, "Search health refreshed.")}
   end
 
   def handle_event("swap_live", %{"schema" => mod_str}, socket) do
@@ -62,16 +79,46 @@ defmodule ScrypathOpsWeb.PostureLive do
   end
 
   @impl true
+  def handle_params(_params, uri, %{assigns: %{live_action: :legacy}} = socket) do
+    query_suffix =
+      case URI.parse(uri).query do
+        nil -> ""
+        query -> "?" <> query
+      end
+
+    mount_path =
+      uri
+      |> URI.parse()
+      |> Map.fetch!(:path)
+      |> String.replace_suffix("/posture", "")
+      |> String.trim_trailing("/")
+
+    {:noreply, push_navigate(socket, to: "#{mount_path}/health#{query_suffix}")}
+  end
+
   def handle_params(_params, _uri, socket) do
     {:noreply, refresh_next_checks(socket)}
   end
 
   defp load_posture(socket) do
     summary =
-      ScrypathOps.Posture.summary(
-        socket.assigns.schema_allowlist,
-        socket.assigns.scrypath_opts
-      )
+      case socket.assigns.phase173_observed_at do
+        %DateTime{} = observed_at ->
+          ScrypathOps.Posture.summary(
+            socket.assigns.schema_allowlist,
+            socket.assigns.scrypath_opts,
+            observed_at,
+            Map.get(socket.assigns, :posture_summary)
+          )
+
+        nil ->
+          ScrypathOps.Posture.summary(
+            socket.assigns.schema_allowlist,
+            socket.assigns.scrypath_opts,
+            DateTime.utc_now(),
+            Map.get(socket.assigns, :posture_summary)
+          )
+      end
 
     socket
     |> assign(:posture_rows, posture_rows_assign(summary))
@@ -83,6 +130,34 @@ defmodule ScrypathOpsWeb.PostureLive do
     |> assign(:posture_summary, summary)
     |> refresh_next_checks()
   end
+
+  defp maybe_select_phase173_scenario(
+         %{assigns: %{live_action: :phase173}} = socket,
+         %{"scenario" => scenario}
+       ) do
+    source = Application.get_env(:scrypath_ops, :phase173_fixture_source)
+
+    if fixture_source?(source) do
+      fixture = source.scenario(scenario)
+
+      socket
+      |> assign(:schema_allowlist, fixture.allowlist)
+      |> assign(:scrypath_opts, fixture.opts)
+      |> assign(:phase173_observed_at, fixture.observed_at)
+      |> assign(:phase173_fixture_scenario, scenario)
+      |> assign(:phase173_refresh_disabled?, Map.get(fixture, :refresh_disabled?, false))
+    else
+      socket
+    end
+  end
+
+  defp maybe_select_phase173_scenario(socket, _params), do: socket
+
+  defp fixture_source?(source) when is_atom(source) do
+    Code.ensure_loaded?(source) and function_exported?(source, :scenario, 1)
+  end
+
+  defp fixture_source?(_source), do: false
 
   defp refresh_next_checks(%{assigns: %{posture_summary: summary}} = socket)
        when is_struct(summary, ScrypathOps.Posture) do
@@ -103,6 +178,13 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   defp module_flat_name(mod) when is_atom(mod) do
     mod |> Atom.to_string() |> String.replace_prefix("Elixir.", "")
+  end
+
+  defp module_heading(mod) do
+    mod
+    |> inspect()
+    |> String.split(".")
+    |> Enum.intersperse([".", Phoenix.HTML.raw("<wbr>")])
   end
 
   defp mod_from_allowlist(str, allowlist) when is_binary(str) do
@@ -126,21 +208,31 @@ defmodule ScrypathOpsWeb.PostureLive do
     >
       <.ops_toolbar class="items-end gap-4">
         <.ops_page_header
-          title="Posture"
-          subtitle="The fleet's sync health, schema by schema. Start here when something looks wrong."
+          title="Search health"
+          subtitle="Check sync and backend health for every configured schema. Start here when something looks wrong."
         />
-        <.ops_refresh_button
+        <.ops_refresh_control
+          id="search-health-refresh"
+          checked_at={@last_refresh_at}
           phx-click="refresh"
-          variant={:primary}
-          aria_label="Refresh posture checks"
+          phx-value-scenario={@phase173_fixture_scenario}
+          disabled={@phase173_refresh_disabled?}
+          aria_label="Refresh search health"
         />
+        <p :if={@phase173_refresh_disabled?} class="ops-text-meta" role="status">
+          Refresh is disabled by the phase 173 eligibility fixture.
+        </p>
       </.ops_toolbar>
 
-      <.ops_trail mount_path={@mount_path} current={:posture} />
+      <.ops_trail current={:posture} />
 
-      <.ops_panel :if={match?({:ok, _}, @posture_rows)}>
-        <section aria-labelledby="posture-summary-heading" class="space-y-4">
-          <h2 id="posture-summary-heading" class="sr-only">Fleet posture</h2>
+      <div class="grid gap-ops-section">
+        <section
+          :if={match?({:ok, _}, @posture_rows)}
+          aria-labelledby="posture-summary-heading"
+          class="space-y-4"
+        >
+          <h2 id="posture-summary-heading" class="sr-only">Search health summary</h2>
           <.ops_verdict
             kind={ScrypathOps.Posture.badge_kind(@posture_state)}
             label="Can I trust search right now?"
@@ -155,67 +247,77 @@ defmodule ScrypathOpsWeb.PostureLive do
               kind={:neutral}
             />
             <.ops_metric
-              label="Fetch errors"
+              label="Schema check errors"
               value={@aggregate_error_count}
               kind={metric_tone(@aggregate_error_count)}
             />
             <.ops_metric
-              label="Failed backend"
+              label="Failed backend tasks"
               value={posture_backend_failed_count(@posture_rows)}
               kind={metric_tone(posture_backend_failed_count(@posture_rows))}
             />
             <.ops_metric
-              label="Queue observed"
+              label="Queues observed"
               value={posture_queue_observed_count(@posture_rows)}
               kind={:neutral}
             />
           </.ops_metric_grid>
-          <.ops_time label="Checked" dt={@last_refresh_at} class="mt-3 flex" />
         </section>
-      </.ops_panel>
 
-      <.ops_panel :if={@next_checks != []}>
         <section
+          :if={@next_checks != []}
           data-testid="posture-next-checks"
           aria-labelledby="posture-jtbd-heading"
-          class="space-y-1"
+          class="space-y-3"
         >
           <.ops_heading level={2} id="posture-jtbd-heading">Next checks</.ops_heading>
-          <p class="text-ops-body text-base-content/80">{@posture_evidence}</p>
-          <ol class="mt-3 list-decimal list-inside space-y-2 text-ops-body text-base-content/90">
-            <li :for={check <- @next_checks} class="pl-1">
-              <span>{check.text}</span>
-              <span :if={check[:navigate]} class="ml-2">
-                <.link navigate={check.navigate} class="link link-primary">Open this check</.link>
-              </span>
-              <span :if={check[:href]} class="ml-2">
-                <a href={check.href} class="link link-primary">Open guide</a>
-              </span>
-              <span :if={check[:mix]} class="mt-1 block font-mono text-ops-sm text-base-content/70">
-                {check.mix}
-              </span>
+          <ul class="ops-next-checks">
+            <li :for={{check, index} <- Enum.with_index(@next_checks)} class="ops-next-checks__item">
+              <.ops_link_button
+                :if={check[:navigate] || check[:href]}
+                navigate={check[:navigate]}
+                href={check[:href]}
+                variant={:ghost}
+                class="justify-self-start gap-2 text-base-content"
+                aria-describedby={"posture-next-check-#{index}"}
+              >
+                {check.label}
+                <.icon
+                  name={if(check[:href], do: "hero-arrow-up-right", else: "hero-arrow-right")}
+                  class="size-4"
+                />
+              </.ops_link_button>
+              <p
+                id={"posture-next-check-#{index}"}
+                class={[
+                  "text-ops-body text-base-content/75",
+                  is_nil(check[:navigate]) && is_nil(check[:href]) && "col-span-full"
+                ]}
+              >
+                {check.text}
+                <code :if={check[:mix]} class="mt-1 block font-mono text-ops-sm">{check.mix}</code>
+              </p>
             </li>
-          </ol>
+          </ul>
         </section>
-      </.ops_panel>
 
-      <p :if={@auto_refresh} class="mt-2 text-ops-body text-base-content/70">
-        Auto-refresh is not enabled by default; only manual refresh runs in this build.
-      </p>
+        <p :if={@auto_refresh} class="mt-2 text-ops-body text-base-content/70">
+          Auto-refresh is not enabled by default; only manual refresh runs in this build.
+        </p>
 
-      <.ops_config_empty :if={@posture_rows == :empty_allowlist} kind={:no_schemas} class="mt-4" />
-      <.ops_config_empty :if={@posture_rows == :missing_backend} kind={:missing_backend} class="mt-4" />
+        <.ops_config_empty :if={@posture_rows == :empty_allowlist} kind={:no_schemas} class="mt-4" />
+        <.ops_config_empty
+          :if={@posture_rows == :missing_backend}
+          kind={:missing_backend}
+          class="mt-4"
+        />
 
-      <.ops_panel :if={match?({:ok, _}, @posture_rows)}>
         <.ops_section
+          :if={match?({:ok, _}, @posture_rows)}
           id="posture-fleet-heading"
           title="Per-schema signals"
-          subtitle="Worst-first schema health. Scan backend work, queue posture, and last successful sync without opening row details."
+          subtitle="Schemas with the most issues appear first. Review backend tasks, queue status, and each schema's last successful sync."
         >
-          <:actions>
-            <.ops_time label="Checked" dt={@last_refresh_at} />
-          </:actions>
-
           <div class="ops-schema-signal-list">
             <%= for {mod, row} <- posture_rows_worst_first(elem(@posture_rows, 1)) do %>
               <article
@@ -231,7 +333,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                     <div class="ops-schema-signal-card__header">
                       <div class="min-w-0">
                         <h3 class="font-mono text-ops-h3 font-semibold text-base-content">
-                          {inspect(mod)}
+                          {module_heading(mod)}
                         </h3>
                         <p class="mt-1 text-ops-sm text-base-content/65">
                           Index
@@ -255,7 +357,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                         class="ops-signal-group"
                       >
                         <p class="ops-signal-group__title">Backend tasks</p>
-                        <dl class="ops-signal-metrics">
+                        <dl :if={!source_error?(status, :backend)} class="ops-signal-metrics">
                           <div>
                             <dt>Pending</dt>
                             <dd>{length(status.backend.pending)}</dd>
@@ -266,9 +368,25 @@ defmodule ScrypathOpsWeb.PostureLive do
                           </div>
                           <div class="ops-signal-metrics__wide">
                             <dt>Last success</dt>
-                            <dd>{format_state_ts(status.backend.last_succeeded)}</dd>
+                            <dd>
+                              <.ops_time
+                                id={"ops-time-#{module_flat_name(mod)}-backend-success"}
+                                dt={status.backend.last_succeeded && status.backend.last_succeeded.at}
+                                source_iso={state_source_iso(status.backend.last_succeeded)}
+                                copy={true}
+                                reference={success_reference(@posture_summary, mod, :backend)}
+                                empty={success_time_empty(status.backend.last_succeeded)}
+                              />
+                            </dd>
                           </div>
                         </dl>
+                        <.unavailable_signal
+                          :if={source_error?(status, :backend)}
+                          status={status}
+                          source={:backend}
+                          mod={mod}
+                          summary={@posture_summary}
+                        />
                       </section>
 
                       <section
@@ -291,26 +409,47 @@ defmodule ScrypathOpsWeb.PostureLive do
                           </div>
                           <div class="ops-signal-metrics__wide">
                             <dt>Last success</dt>
-                            <dd>{format_state_ts(status.queue.last_succeeded)}</dd>
+                            <dd>
+                              <.ops_time
+                                id={"ops-time-#{module_flat_name(mod)}-queue-success"}
+                                dt={status.queue.last_succeeded && status.queue.last_succeeded.at}
+                                source_iso={state_source_iso(status.queue.last_succeeded)}
+                                copy={true}
+                                reference={success_reference(@posture_summary, mod, :queue)}
+                                empty={success_time_empty(status.queue.last_succeeded)}
+                              />
+                            </dd>
                           </div>
                         </dl>
-                        <p :if={!status.queue.observed?} class="text-ops-sm text-base-content/75">
+                        <.unavailable_signal
+                          :if={source_error?(status, :queue)}
+                          status={status}
+                          source={:queue}
+                          mod={mod}
+                          summary={@posture_summary}
+                        />
+                        <p
+                          :if={!status.queue.observed? and !source_error?(status, :queue)}
+                          class="text-ops-sm text-base-content/75"
+                        >
                           {queue_unobserved_copy(status)}
                         </p>
                       </section>
                     </div>
-                    <.link
+                    <.ops_link_button
                       navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
-                      class="link link-primary mt-3 inline-flex min-h-[var(--control-h-md)] items-center"
+                      variant={:ghost}
+                      class="justify-self-start gap-2 text-base-content"
+                      aria-label={"View failed sync work for #{module_flat_name(mod)}"}
                       data-testid="posture-failed-sync-link"
                     >
-                      Inspect failed work for {module_flat_name(mod)}
-                    </.link>
+                      View failed sync work <.icon name="hero-arrow-right" class="size-4" />
+                    </.ops_link_button>
                   <% {:error, reason} -> %>
                     <div class="ops-schema-signal-card__header">
                       <div class="min-w-0">
                         <h3 class="font-mono text-ops-h3 font-semibold text-base-content">
-                          {inspect(mod)}
+                          {module_heading(mod)}
                         </h3>
                         <p class="mt-1 text-ops-sm text-error">fetch error: {inspect(reason)}</p>
                       </div>
@@ -318,28 +457,54 @@ defmodule ScrypathOpsWeb.PostureLive do
                         <.ops_badge kind={:error}>fetch error</.ops_badge>
                       </div>
                     </div>
-                    <.link
+                    <div class="ops-schema-signal-card__groups">
+                      <section
+                        :for={source <- [:backend, :queue]}
+                        aria-label={"#{if(source == :backend, do: "Backend task", else: "Queue job")} signals for #{inspect(mod)}"}
+                        class="ops-signal-group"
+                      >
+                        <p class="ops-signal-group__title">
+                          {if(source == :backend, do: "Backend tasks", else: "Queue jobs")}
+                        </p>
+                        <.unavailable_signal
+                          :if={source == :backend or !queue_unused_mode?(queue_mode(@scrypath_opts))}
+                          status={%{source_errors: %{source => reason}}}
+                          source={source}
+                          mod={mod}
+                          summary={@posture_summary}
+                        />
+                        <p
+                          :if={source == :queue and queue_unused_mode?(queue_mode(@scrypath_opts))}
+                          class="text-ops-sm text-base-content/75"
+                        >
+                          Queue not used in {queue_mode(@scrypath_opts)} sync mode.
+                        </p>
+                      </section>
+                    </div>
+                    <.ops_link_button
                       navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
-                      class="link link-primary mt-3 inline-flex min-h-[var(--control-h-md)] items-center"
+                      variant={:ghost}
+                      class="justify-self-start gap-2 text-base-content"
+                      aria-label={"View failed sync work for #{module_flat_name(mod)}"}
                       data-testid="posture-failed-sync-link"
                     >
-                      Inspect failed work for {module_flat_name(mod)}
-                    </.link>
+                      View failed sync work <.icon name="hero-arrow-right" class="size-4" />
+                    </.ops_link_button>
                 <% end %>
               </article>
             <% end %>
           </div>
         </.ops_section>
-      </.ops_panel>
 
-      <.ops_handoff :if={match?({:ok, _}, @posture_rows)}>
-        <:step
-          navigate={"#{@mount_path}/failed-sync"}
-          hint="When you've spotted a failing schema —"
-        >
-          Work the failed-sync queue
-        </:step>
-      </.ops_handoff>
+        <.ops_handoff :if={match?({:ok, _}, @posture_rows)}>
+          <:step
+            navigate={"#{@mount_path}/failed-sync"}
+            hint="When you've spotted a failing schema —"
+          >
+            Work the failed-sync queue
+          </:step>
+        </.ops_handoff>
+      </div>
     </Layouts.app>
     """
   end
@@ -388,16 +553,23 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   defp posture_queue_observed_count(_), do: 0
 
-  defp format_dt(nil), do: "—"
+  defp state_source_iso(%Scrypath.Operator.State{metadata: metadata}),
+    do: Map.get(metadata, :source_iso)
 
-  defp format_dt(%DateTime{} = dt) do
-    Calendar.strftime(dt, "%b %d, %Y at %H:%M UTC")
-  end
+  defp state_source_iso(_state), do: nil
 
-  defp format_state_ts(nil), do: "—"
-  defp format_state_ts(%Scrypath.Operator.State{} = s), do: format_dt(s.at)
+  defp success_time_empty(%Scrypath.Operator.State{state: :completed, at: nil}),
+    do: "Success time not observed"
 
-  defp metric_tone(0), do: :success
+  defp success_time_empty(_state), do: "No success observed"
+
+  defp retained_time(%Scrypath.Operator.State{at: at}), do: at
+  defp retained_time(_state), do: nil
+
+  defp success_reference(summary, schema, source),
+    do: ScrypathOps.Posture.last_success_ref(summary, schema, source)
+
+  defp metric_tone(0), do: :neutral
   defp metric_tone(_), do: :warning
 
   defp posture_card_tone({:error, _reason}), do: "ops-schema-signal-card--error"
@@ -414,18 +586,56 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   defp posture_card_tone(_), do: nil
 
+  defp source_error?(status, source),
+    do: Map.has_key?(Map.get(status, :source_errors, %{}), source)
+
+  defp unavailable_signal(assigns) do
+    assigns =
+      assigns
+      |> assign(
+        :reference,
+        ScrypathOps.Posture.last_success_ref(assigns.summary, assigns.mod, assigns.source)
+      )
+      |> assign(:reason, Map.get(assigns.status.source_errors, assigns.source))
+      |> assign(:source_label, if(assigns.source == :backend, do: "Backend", else: "Queue"))
+
+    ~H"""
+    <p class="text-ops-body text-base-content">
+      {@source_label} observation unavailable;
+      <span :if={@reference && @reference.state}>last success retained from the previous check.</span>
+      fetch error: {inspect(@reason)}
+    </p>
+    <.ops_time
+      id={"ops-time-#{module_flat_name(@mod)}-retained-#{@source}-success"}
+      dt={retained_time(@reference && @reference.state)}
+      source_iso={state_source_iso(@reference && @reference.state)}
+      copy={true}
+      reference={@reference}
+      label="Last success retained"
+      empty="Not observed"
+      unavailable_reason={inspect(@reason)}
+    />
+    """
+  end
+
   defp backend_badge_kind(status) do
-    if length(status.backend.failed) > 0, do: :warning, else: :success
+    if source_error?(status, :backend) or length(status.backend.failed) > 0,
+      do: :warning,
+      else: :neutral
   end
 
   defp backend_badge_label(status) do
-    if length(status.backend.failed) > 0, do: "backend failed", else: "backend clear"
+    cond do
+      source_error?(status, :backend) -> "Backend observation unavailable"
+      length(status.backend.failed) > 0 -> "backend failed"
+      true -> "no backend failures observed"
+    end
   end
 
   defp queue_badge_kind(status) do
     if status.queue.observed? and length(status.queue.failed) == 0 and
          length(status.queue.retrying) == 0 do
-      :success
+      :neutral
     else
       :warning
     end
@@ -439,6 +649,12 @@ defmodule ScrypathOpsWeb.PostureLive do
       length(status.queue.retrying) > 0 -> "queue retrying"
       true -> "queue observed"
     end
+  end
+
+  defp queue_mode(opts) do
+    opts |> Scrypath.Config.resolve!() |> Keyword.fetch!(:sync_mode)
+  rescue
+    ArgumentError -> :unknown
   end
 
   defp queue_unused_mode?(mode), do: mode in [:inline, :manual, "inline", "manual"]

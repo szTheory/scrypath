@@ -61,9 +61,9 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Control Room" })).toBeVisible();
   await page.getByRole("link", { name: "Start recovery" }).click();
-  await expect(page.getByRole("heading", { name: "Posture", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Search health", exact: true })).toBeVisible();
   await waitForLiveConnected(page);
-  const variantHandoff = page.getByTestId("posture-failed-sync-link").filter({ hasText: "Variant" });
+  const variantHandoff = page.getByRole("link", { name: "View failed sync work for ScrypathEcommerce.Catalog.Variant", exact: true });
   await expect(variantHandoff).toBeVisible();
   await variantHandoff.click();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
@@ -71,9 +71,9 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await waitForLiveConnected(page);
 
   // A real selection change advances this page's generation independently of the destination.
-  await page.locator(".ops-schema-option").filter({ has: page.getByRole("radio", { name: /Product/ }) }).click();
+  await page.locator(".ops-schema-picker__option").filter({ has: page.getByRole("radio", { name: /Product/ }) }).click();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Product/);
-  await page.locator(".ops-schema-option").filter({ has: page.getByRole("radio", { name: /Variant/ }) }).click();
+  await page.locator(".ops-schema-picker__option").filter({ has: page.getByRole("radio", { name: /Variant/ }) }).click();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
 
   const failedRow = page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Failed job ${fixture.original_job_id}` }) });

@@ -2,9 +2,9 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
   @moduledoc """
   Intent-first landing for `/ops`.
 
-  Shows a glanceable fleet-posture strip and routes the operator to the surface that
+  Shows a glanceable search-health summary and routes the operator to the surface that
   matches the job they brought: incident triage, change verification, or exploration.
-  The deep per-schema posture table lives on `ScrypathOpsWeb.PostureLive` — this page
+  The deep per-schema health table lives on `ScrypathOpsWeb.PostureLive` — this page
   is the overview, not a duplicate of it.
   """
 
@@ -29,7 +29,12 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
 
   @impl true
   def handle_event("refresh", _params, socket) do
-    {:noreply, load_summary(socket)}
+    socket =
+      socket
+      |> load_summary()
+      |> put_flash(:info, "Search health refreshed.")
+
+    {:noreply, socket}
   end
 
   defp load_summary(socket) do
@@ -53,21 +58,19 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
             title="Control Room"
             subtitle="Recover search, verify a change before promotion, or inspect and save a useful search check."
           />
+          <.ops_refresh_control
+            id="control-room-refresh"
+            checked_at={@posture.refreshed_at}
+            phx-click="refresh"
+            aria_label="Refresh search health"
+          />
         </.ops_toolbar>
 
-        <section aria-labelledby="control-room-posture-heading" class="space-y-4">
-          <h2 id="control-room-posture-heading" class="sr-only">Fleet posture</h2>
+        <section aria-labelledby="control-room-health-heading" class="space-y-4">
+          <h2 id="control-room-health-heading" class="sr-only">Search health</h2>
 
-          <.ops_config_empty :if={@posture.state == :unconfigured} kind={:no_schemas}>
-            <:actions>
-              <.ops_refresh_button phx-click="refresh" aria_label="Refresh search trust status" />
-            </:actions>
-          </.ops_config_empty>
-          <.ops_config_empty :if={@posture.state == :missing_backend} kind={:missing_backend}>
-            <:actions>
-              <.ops_refresh_button phx-click="refresh" aria_label="Refresh search trust status" />
-            </:actions>
-          </.ops_config_empty>
+          <.ops_config_empty :if={@posture.state == :unconfigured} kind={:no_schemas} />
+          <.ops_config_empty :if={@posture.state == :missing_backend} kind={:missing_backend} />
 
           <.ops_verdict
             :if={@posture.state in [:ok, :degraded]}
@@ -77,16 +80,15 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
             class="ops-verdict--hero"
           >
             <:actions>
-              <.ops_refresh_button phx-click="refresh" aria_label="Refresh search trust status" />
-              <.ops_link_button navigate={"#{@mount_path}/posture"} variant={:ghost} size={:sm}>
-                Open full posture <span aria-hidden="true">→</span>
+              <.ops_link_button navigate={"#{@mount_path}/health"} variant={:ghost} size={:sm}>
+                View search health <span aria-hidden="true">→</span>
               </.ops_link_button>
             </:actions>
             <p>{@posture.evidence}</p>
             <p class="mt-2 text-ops-sm text-base-content/60">
               {schema_health_label(@posture.schema_count)} · {fetch_health_label(@posture.error_count)} · {backend_health_label(
                 @posture.backend_failed_count
-              )} · <.ops_time label="Checked" dt={@posture.refreshed_at} />
+              )}
             </p>
           </.ops_verdict>
         </section>
@@ -101,9 +103,9 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
               kind={intent_tone(@posture)}
               recommended={@posture.state in [:degraded, :missing_backend]}
               title="Recover search"
-              summary="Recover search when something looks wrong. Check posture, work failed syncs, then confirm drift."
+              summary="Recover search when something looks wrong. Check schema health, work failed syncs, then confirm drift."
               route_label="Start recovery"
-              navigate={"#{@mount_path}/posture"}
+              navigate={"#{@mount_path}/health"}
               data-testid="intent-incident"
             >
             </.ops_intent_card>

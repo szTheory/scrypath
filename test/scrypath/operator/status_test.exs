@@ -18,6 +18,10 @@ defmodule Scrypath.Operator.StatusTest do
     end
   end
 
+  defmodule UnavailableQueueInspector do
+    def list_jobs(_schema, _config), do: {:error, :queue_unavailable}
+  end
+
   test "Scrypath.sync_status/2 returns a Scrypath-owned status struct without raw backend or queue payloads" do
     assert {:ok, %Status{} = status} =
              Scrypath.sync_status(SearchablePost,
@@ -143,5 +147,131 @@ defmodule Scrypath.Operator.StatusTest do
     assert status.backend.last_succeeded == nil
     assert status.queue.observed? == false
     assert status.queue.last_succeeded == nil
+  end
+
+  test "retains validated backend completion ISO and does not invent time for invalid evidence" do
+    source_iso = "2026-10-04T13:02:05.123456-04:00"
+
+    assert {:ok, %Status{backend: %{last_succeeded: %State{} = state}}} =
+             Scrypath.sync_status(SearchablePost,
+               backend: Scrypath.Meilisearch,
+               sync_mode: :manual,
+               index_prefix: "tenant",
+               meilisearch_url: "http://localhost:7700",
+               meilisearch_client: StatusMeilisearchClient,
+               meilisearch_tasks: [
+                 %{
+                   "uid" => 401,
+                   "status" => "succeeded",
+                   "type" => "documentAdditionOrUpdate",
+                   "indexUid" => "tenant_searchable_post",
+                   "finishedAt" => source_iso
+                 }
+               ]
+             )
+
+    assert state.at == ~U[2026-10-04 17:02:05.123456Z]
+    assert state.metadata.source_iso == source_iso
+
+    assert {:ok, %Status{backend: %{last_succeeded: invalid_state}}} =
+             Scrypath.sync_status(SearchablePost,
+               backend: Scrypath.Meilisearch,
+               sync_mode: :manual,
+               index_prefix: "tenant",
+               meilisearch_url: "http://localhost:7700",
+               meilisearch_client: StatusMeilisearchClient,
+               meilisearch_tasks: [
+                 %{
+                   "uid" => 402,
+                   "status" => "succeeded",
+                   "type" => "documentAdditionOrUpdate",
+                   "indexUid" => "tenant_searchable_post",
+                   "finishedAt" => "not-a-time"
+                 }
+               ]
+             )
+
+    assert invalid_state.state == :completed
+    assert invalid_state.at == nil
+    refute Map.has_key?(invalid_state.metadata, :source_iso)
+  end
+
+  test "preserves Oban completion ISO precision and serializes DateTime-only evidence" do
+    source_iso = "2026-10-04T13:02:05.123456-04:00"
+
+    assert {:ok, %Status{queue: %{last_succeeded: %State{} = state}}} =
+             Scrypath.sync_status(SearchablePost,
+               backend: Scrypath.Meilisearch,
+               sync_mode: :oban,
+               index_prefix: "tenant",
+               meilisearch_url: "http://localhost:7700",
+               meilisearch_client: StatusMeilisearchClient,
+               meilisearch_tasks: [],
+               oban: Scrypath.SyncTest.ReadyOban,
+               oban_queue: :search_sync,
+               oban_inspector: StatusObanInspector,
+               oban_jobs: [
+                 %{id: 403, state: "completed", completed_at: source_iso}
+               ]
+             )
+
+    assert state.at == ~U[2026-10-04 17:02:05.123456Z]
+    assert state.metadata.source_iso == source_iso
+
+    datetime = DateTime.from_naive!(~N[2026-10-04 17:02:05.123456], "Etc/UTC")
+
+    assert {:ok, %Status{queue: %{last_succeeded: %State{} = datetime_state}}} =
+             Scrypath.sync_status(SearchablePost,
+               backend: Scrypath.Meilisearch,
+               sync_mode: :oban,
+               index_prefix: "tenant",
+               meilisearch_url: "http://localhost:7700",
+               meilisearch_client: StatusMeilisearchClient,
+               meilisearch_tasks: [],
+               oban: Scrypath.SyncTest.ReadyOban,
+               oban_queue: :search_sync,
+               oban_inspector: StatusObanInspector,
+               oban_jobs: [%{id: 404, state: "completed", completed_at: datetime}]
+             )
+
+    assert datetime_state.metadata.source_iso == "2026-10-04T17:02:05.123456Z"
+  end
+
+  test "a successful empty Oban observation is observed, not unavailable" do
+    assert {:ok, status} =
+             Scrypath.sync_status(SearchablePost,
+               backend: Scrypath.Meilisearch,
+               sync_mode: :oban,
+               meilisearch_url: "http://localhost:7700",
+               meilisearch_client: StatusMeilisearchClient,
+               meilisearch_tasks: [],
+               oban: Scrypath.SyncTest.ReadyOban,
+               oban_queue: :search_sync,
+               oban_inspector: StatusObanInspector,
+               oban_jobs: []
+             )
+
+    assert status.queue.observed?
+    assert status.queue.pending == []
+    assert status.queue.last_succeeded == nil
+  end
+
+  test "public sync status stays all-or-error while Ops preserves independent observations" do
+    opts = [
+      backend: Scrypath.Meilisearch,
+      sync_mode: :oban,
+      meilisearch_url: "http://localhost:7700",
+      meilisearch_client: StatusMeilisearchClient,
+      meilisearch_tasks: [],
+      oban: Scrypath.SyncTest.ReadyOban,
+      oban_queue: :search_sync,
+      oban_inspector: UnavailableQueueInspector
+    ]
+
+    assert {:error, :queue_unavailable} = Scrypath.sync_status(SearchablePost, opts)
+    assert {:ok, projection} = Scrypath.Operator.sync_status_sources(SearchablePost, opts)
+    assert projection.source_errors == %{queue: :queue_unavailable}
+    assert projection.backend.pending == []
+    refute projection.queue.observed?
   end
 end

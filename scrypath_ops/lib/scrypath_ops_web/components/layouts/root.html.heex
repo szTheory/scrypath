@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
     <link rel="icon" href={"#{@mount_path}/favicon.svg"} type="image/svg+xml" />
-    <.live_title default="ScrypathOps" suffix=" · ScrypathOps">
+    <.live_title default="Scrypath" suffix=" · Scrypath">
       {assigns[:page_title]}
     </.live_title>
     <link
@@ -22,21 +22,30 @@
     </script>
     <script>
       (() => {
+        const normalizeTheme = (theme) => {
+          return theme === "light" || theme === "dark" ? theme : "system";
+        };
+
+        const readThemePreference = () => {
+          try {
+            return normalizeTheme(localStorage.getItem("phx:theme"));
+          } catch (_) {
+            return "system";
+          }
+        };
+
+        let currentThemePreference = readThemePreference();
+
+        const safeThemePreference = () => currentThemePreference;
+
         const effectiveTheme = () => {
-          const explicit = document.documentElement.getAttribute("data-theme");
-          if (explicit === "dark") return "dark";
-          if (explicit === "light") return "light";
+          const preference = safeThemePreference();
+          if (preference === "light" || preference === "dark") return preference;
           return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         };
 
-        const preferenceTheme = () => {
-          const stored = localStorage.getItem("phx:theme");
-          if (stored === "light" || stored === "dark") return stored;
-          return "system";
-        };
-
         const syncThemeButtons = () => {
-          const preference = preferenceTheme();
+          const preference = safeThemePreference();
           document.querySelectorAll("[data-phx-theme]").forEach((button) => {
             const selected = button.dataset.phxTheme === preference;
             button.setAttribute("aria-pressed", selected ? "true" : "false");
@@ -46,30 +55,36 @@
 
         const syncThemeMeta = () => {
           document.documentElement.setAttribute("data-theme-effective", effectiveTheme());
-          document.documentElement.setAttribute("data-theme-preference", preferenceTheme());
+          document.documentElement.setAttribute("data-theme-preference", safeThemePreference());
           syncThemeButtons();
         };
 
-        const setTheme = (theme) => {
-          if (theme === "system") {
-            localStorage.removeItem("phx:theme");
+        const setTheme = (theme, persist = true) => {
+          currentThemePreference = normalizeTheme(theme);
+
+          if (persist) {
+            try {
+              if (currentThemePreference === "system") {
+                localStorage.removeItem("phx:theme");
+              } else {
+                localStorage.setItem("phx:theme", currentThemePreference);
+              }
+            } catch (_) {}
+          }
+
+          if (currentThemePreference === "system") {
             document.documentElement.removeAttribute("data-theme");
           } else {
-            localStorage.setItem("phx:theme", theme);
-            document.documentElement.setAttribute("data-theme", theme);
+            document.documentElement.setAttribute("data-theme", currentThemePreference);
           }
           syncThemeMeta();
         };
 
-        if (!document.documentElement.hasAttribute("data-theme")) {
-          setTheme(localStorage.getItem("phx:theme") || "system");
-        } else {
-          syncThemeMeta();
-        }
+        setTheme(currentThemePreference, false);
 
         window.addEventListener("storage", (e) => {
-          if (e.key === "phx:theme") {
-            setTheme(e.newValue || "system");
+          if (e.key === "phx:theme" || e.key === null) {
+            setTheme(e.key === "phx:theme" ? e.newValue : "system", false);
           }
         });
 

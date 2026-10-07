@@ -23,7 +23,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
     socket =
       socket
-      |> assign(:page_title, "Sync / drift")
+      |> assign(:page_title, "Sync and drift")
       |> assign(:schema_allowlist, allowlist)
       |> assign(:scrypath_opts, scrypath_opts)
       |> assign(:selected_schema, nil)
@@ -133,8 +133,18 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   @impl true
   def handle_event("refresh_reconcile", _params, socket) do
-    {:noreply,
-     if(current_selection?(socket), do: refresh_reconcile(socket), else: unavailable(socket))}
+    if current_selection?(socket) do
+      socket = refresh_reconcile(socket)
+
+      socket =
+        if is_nil(socket.assigns.reconcile_error),
+          do: put_flash(socket, :info, "Sync and queue status refreshed."),
+          else: socket
+
+      {:noreply, socket}
+    else
+      {:noreply, unavailable(socket)}
+    end
   end
 
   def handle_event("refresh_promotion_checks", _params, socket) do
@@ -883,9 +893,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp promotion_reason(:schema_not_allowed), do: "select an available schema"
   defp promotion_reason(:unsupported_backend), do: "Meilisearch is unavailable"
-  defp promotion_reason(:reconcile_failed), do: "refresh sync and queue posture"
+  defp promotion_reason(:reconcile_failed), do: "refresh sync and queue status"
   defp promotion_reason(:contract_failed), do: "refresh the index contract check"
-  defp promotion_reason(:reconcile_not_current), do: "refresh sync and queue posture"
+  defp promotion_reason(:reconcile_not_current), do: "refresh sync and queue status"
   defp promotion_reason(:contract_not_current), do: "run the index contract check"
   defp promotion_reason(:check_in_progress), do: "wait for the current check"
   defp promotion_reason(:context_mismatch), do: "refresh checks for this schema and index"
@@ -982,7 +992,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         subtitle="Check sync status and compare the schema contract with its live index."
       />
 
-      <.ops_trail mount_path={@mount_path} current={:sync_drift} class="mt-4" />
+      <.ops_trail current={:sync_drift} class="mt-4" />
 
       <.ops_panel class="mt-4">
         <.form for={%{}} id="sync-drift-schema-form" phx-change="select_schema">
@@ -1042,19 +1052,17 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       <.ops_panel>
         <.ops_section
           id="sync-reconcile-heading"
-          title="Sync and queue posture"
+          title="Sync and queue status"
           subtitle="Check current backend tasks and queued work for this schema."
-          meta={if @reconcile_loaded_at, do: "last loaded #{format_dt(@reconcile_loaded_at)}"}
         >
           <:actions>
-            <.ops_button
+            <.ops_refresh_control
+              id="sync-drift-refresh"
+              checked_at={@reconcile_loaded_at}
               phx-click="refresh_reconcile"
-              variant={:primary}
-              data-ops-refresh
+              aria_label="Refresh sync and queue status"
               disabled={!@selected_schema}
-            >
-              Refresh sync status
-            </.ops_button>
+            />
           </:actions>
 
           <.ops_signal_table :if={@reconcile_result}>
@@ -1239,14 +1247,14 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           navigate={@mount_path}
           hint="After checking sync —"
         >
-          Recheck search health
+          Return to Control Room
         </:step>
         <:step
           :if={@selected_schema}
-          navigate={OperatorSelection.path(@mount_path, "posture", @selected_schema)}
+          navigate={OperatorSelection.path(@mount_path, "health", @selected_schema)}
           hint="For the selected schema —"
         >
-          Inspect schema posture
+          Inspect search health
         </:step>
       </.ops_handoff>
 

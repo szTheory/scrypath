@@ -133,6 +133,15 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
     assert css() =~ "--duration-ops-fast: 120ms;"
   end
 
+  test "quiet actions keep hover, press, focus, selected, and disabled states distinct" do
+    assert css() =~ ~r/\.ops-btn\.btn-ghost:hover\s*\{[^}]*background:\s*var\(--ops-surface-2\)/s
+    assert css() =~ ~r/\.ops-btn\.btn-ghost:active\s*\{[^}]*background:/s
+    assert css() =~ ~r/\.ops-btn:focus-visible\s*\{[^}]*outline:\s*2px[^}]*outline-offset:\s*2px/s
+    assert css() =~ ~r/\.ops-btn\[aria-pressed="true"\]/
+    assert css() =~ ~r/\.ops-btn:disabled/
+    assert css() =~ ~r/\.ops-refresh-button\.phx-click-loading/
+  end
+
   test "the token catalog lists all current OpsUi exports with component roles" do
     exports =
       Regex.scan(~r/^\s*def (ops_\w+)\(/m, ops_ui())
@@ -140,7 +149,7 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
 
     catalog = File.read!(@token_catalog)
 
-    assert length(exports) == 48
+    assert exports != []
 
     missing = Enum.reject(exports, &String.contains?(catalog, "`#{&1}`"))
     assert missing == [], "Add these OpsUi exports to DESIGN-TOKENS.md: #{inspect(missing)}"

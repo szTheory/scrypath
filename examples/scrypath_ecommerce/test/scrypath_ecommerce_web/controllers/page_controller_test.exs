@@ -6,11 +6,11 @@ defmodule ScrypathEcommerceWeb.PageControllerTest do
     assert html_response(conn, 200) =~ "Tenant-scoped catalog search"
   end
 
-  test "GET /admin/search/posture", %{conn: conn} do
-    conn = get(conn, ~p"/admin/search/posture")
+  test "GET /admin/search/health", %{conn: conn} do
+    conn = get(conn, ~p"/admin/search/health")
     html = html_response(conn, 200)
 
-    assert html =~ "Posture / health"
+    assert html =~ "Search health"
     assert html =~ ~r|href="/admin/search/assets/css/app\.css\?v=[a-f0-9]{64}"|
     assert html =~ ~r/src="\/assets\/js\/app(?:-[^"]+)?\.js(?:\?[^"]*)?"/
     assert html =~ ~s(href="/admin/search/failed-sync")
@@ -32,7 +32,7 @@ defmodule ScrypathEcommerceWeb.PageControllerTest do
              ~s(href="/admin/search" data-phx-link="redirect" data-phx-link-state="push" id="ops-cmdk-item-0")
 
     for path <- ~w(
-           /admin/search/posture
+           /admin/search/health
            /admin/search/failed-sync
            /admin/search/sync-drift
            /admin/search/search

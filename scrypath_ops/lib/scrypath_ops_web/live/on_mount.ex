@@ -8,7 +8,7 @@ defmodule ScrypathOpsWeb.Live.OnMount do
   import Phoenix.LiveView, only: [attach_hook: 4]
 
   @ops_child_route_suffixes %{
-    ScrypathOpsWeb.PostureLive => "/posture",
+    ScrypathOpsWeb.PostureLive => "/health",
     ScrypathOpsWeb.FailedSyncLive => "/failed-sync",
     ScrypathOpsWeb.SyncDriftLive => "/sync-drift",
     ScrypathOpsWeb.SearchLive => "/search",

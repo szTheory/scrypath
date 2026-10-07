@@ -1,0 +1,7 @@
+[
+  {"id":"E1","text":"Navigation/sidebar and native theme preference buttons with visible labels.","elements":["nav","interactive-control","static-content"]},
+  {"id":"E2","text":"Search health summary and metric grid plus per-schema signal cards/list with state text and long identifiers.","elements":["list-collection","static-content"]},
+  {"id":"E3","text":"Shared quiet refresh/link buttons with meaningful labels and state explanations.","elements":["interactive-control","static-content"]},
+  {"id":"E4","text":"Operational time text and native exact-timestamp disclosure/copy control with status feedback.","elements":["interactive-control","static-content"]},
+  {"id":"E5","text":"Existing logo and meaningful status icons with accompanying labels.","elements":["media","static-content"]}
+]
