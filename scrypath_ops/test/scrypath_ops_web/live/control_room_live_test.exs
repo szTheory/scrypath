@@ -212,7 +212,12 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     Application.put_env(:scrypath_ops, :meilisearch_client, ControlRoomErrorClient)
     refreshed = render_click(lv, "refresh")
 
-    assert has_element?(lv, "[data-testid='control-room-observation-error']", "Backend observation unavailable")
+    assert has_element?(
+             lv,
+             "[data-testid='control-room-observation-error']",
+             "Backend observation unavailable"
+           )
+
     assert refreshed =~ "Backend observation unavailable"
     assert refreshed =~ "fixture_timeout"
     assert refreshed =~ "last success retained from the previous check"

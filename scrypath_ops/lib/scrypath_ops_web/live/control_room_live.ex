@@ -63,8 +63,20 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
   end
 
   defp load_summary(socket) do
-    summary = Posture.summary(socket.assigns.schema_allowlist, socket.assigns.scrypath_opts)
-    assign(socket, :posture, summary)
+    previous = Map.get(socket.assigns, :posture)
+    scrypath_opts = ScrypathOps.Schemas.scrypath_opts()
+
+    summary =
+      Posture.summary(
+        socket.assigns.schema_allowlist,
+        scrypath_opts,
+        DateTime.utc_now(),
+        previous
+      )
+
+    socket
+    |> assign(:scrypath_opts, scrypath_opts)
+    |> assign(:posture, summary)
   end
 
   @impl true
@@ -123,10 +135,35 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
                 variant={:ghost}
                 size={:sm}
               >
-                View search health <span aria-hidden="true">→</span>
+                Review Search health <span aria-hidden="true">→</span>
               </.ops_link_button>
             </:actions>
             <p>{@posture.evidence}</p>
+            <div class="mt-3 space-y-ops-2" data-testid="control-room-affected-scope">
+              <p class="text-ops-body text-base-content">
+                {affected_scope_label(@posture)}
+              </p>
+              <ul :if={affected_rows(@posture) != []} class="space-y-ops-2">
+                <li
+                  :for={{schema, reasons} <- affected_rows(@posture)}
+                  class="ops-control-room__scope"
+                >
+                  <.ops_inline_code>{OperatorSelection.canonical(schema)}</.ops_inline_code>
+                  <ul class="ml-4 list-disc space-y-1">
+                    <li
+                      :for={reason <- reasons}
+                      data-testid={
+                        if String.contains?(reason, "observation unavailable"),
+                          do: "control-room-observation-error",
+                          else: nil
+                      }
+                    >
+                      {reason}
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
             <p
               :if={@selected_schema}
               class="mt-2 text-ops-sm text-base-content/75"
@@ -189,11 +226,82 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
   defp schema_health_label(1), do: "1 schema checked"
   defp schema_health_label(count), do: "#{count} schemas checked"
 
-  defp fetch_health_label(0), do: "All fetches healthy"
+  defp fetch_health_label(0), do: "No schema fetch errors observed"
   defp fetch_health_label(1), do: "1 fetch needs attention"
   defp fetch_health_label(count), do: "#{count} fetches need attention"
 
-  defp backend_health_label(0), do: "All backends healthy"
+  defp backend_health_label(0), do: "No failed backend tasks observed"
   defp backend_health_label(1), do: "1 backend needs attention"
   defp backend_health_label(count), do: "#{count} backends need attention"
+
+  defp affected_scope_label(summary) do
+    count = length(affected_rows(summary))
+
+    case count do
+      0 -> "No affected schemas identified on this check."
+      1 -> "1 schema affected on this check:"
+      count -> "#{count} schemas affected on this check:"
+    end
+  end
+
+  defp affected_rows(summary) do
+    Enum.flat_map(summary.rows, fn
+      {schema, {:error, reason}} ->
+        [{schema, ["Search health observation unavailable: #{inspect(reason)}"]}]
+
+      {schema, {:ok, status}} ->
+        reasons =
+          [:backend, :queue]
+          |> Enum.flat_map(&source_findings(status, summary, schema, &1))
+
+        if reasons == [], do: [], else: [{schema, reasons}]
+    end)
+  end
+
+  defp source_findings(status, summary, schema, source) do
+    case Map.fetch(Map.get(status, :source_errors, %{}), source) do
+      {:ok, reason} ->
+        reference = Posture.last_success_ref(summary, schema, source)
+        label = source_label(source)
+
+        retained =
+          if reference && reference.retained?,
+            do: " last success retained from the previous check.",
+            else: ""
+
+        time = retained_time(reference && reference.state)
+
+        timestamp =
+          if time do
+            " Last successful source observation: #{DateTime.to_iso8601(time)}."
+          else
+            ""
+          end
+
+        ["#{label} observation unavailable: #{inspect(reason)}.#{retained}#{timestamp}"]
+
+      :error ->
+        source_failed_findings(status, source)
+    end
+  end
+
+  defp source_failed_findings(status, :backend) do
+    case length(status.backend.failed) do
+      0 -> []
+      count -> ["Backend: #{count} failed task(s) observed on this check."]
+    end
+  end
+
+  defp source_failed_findings(status, :queue) do
+    case length(status.queue.failed) do
+      0 -> []
+      count -> ["Queue: #{count} failed job(s) observed on this check."]
+    end
+  end
+
+  defp source_label(:backend), do: "Backend"
+  defp source_label(:queue), do: "Queue"
+
+  defp retained_time(%Scrypath.Operator.State{at: %DateTime{} = at}), do: at
+  defp retained_time(_), do: nil
 end

@@ -657,6 +657,11 @@
     transition: background-color var(--duration-ops-status) var(--ease-ops-standard);
   }
 
+  .ops-control-room__scope {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
   .ops-verdict.ops-tone-success .ops-verdict__dot {
     background: var(--color-success);
   }
