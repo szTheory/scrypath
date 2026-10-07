@@ -21,14 +21,14 @@ findings:
     title: "Timed-out schema scans lose the schema key needed to retain its last success"
 open: 0
 total: 4
-recorded: 2026-10-07T01:43:04.145Z
+recorded: 2026-10-07T01:43:57.114Z
 ---
 
 # Phase 173: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-03 | warning | fixed | 173-REVIEW-FIX.md |
+| WR-03 | warning | fixed | 173-REVIEW-FIX.md (not in the current review) |
 | WR-01 | warning | fixed | 173-REVIEW-FIX.iter2.md (not in the current review) |
 | CR-01 | critical | fixed | 173-REVIEW-FIX.iter1.md (not in the current review) |
 | WR-02 | warning | fixed | 173-REVIEW-FIX.iter1.md (not in the current review) |
