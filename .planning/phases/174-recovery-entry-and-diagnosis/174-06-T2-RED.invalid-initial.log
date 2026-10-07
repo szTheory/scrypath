@@ -1,0 +1,131 @@
+==> scrypath
+    warning: incompatible types given to decorate_result/2:
+
+        decorate_result(
+          (&Scrypath.Sync.RelatedEnqueue.enqueue(schema_module, records, fan_out_key, &1)).(
+            Scrypath.Config.ensure_oban_ready!(config)
+          ),
+          config
+        )
+
+    given types:
+
+        -none()-, dynamic()
+
+    the 1st argument is empty (often represented as none()), most likely because it is the result of an expression that always fails, such as a `raise` or a previous invalid call. This causes any function called with this value to fail
+
+    where "config" was given the type:
+
+        # type: dynamic()
+        # from: lib/scrypath/sync.ex:54:12
+        config = Scrypath.Config.resolve!(opts)
+
+    where "fan_out_key" was given the type:
+
+        # type: dynamic()
+        # from: lib/scrypath/sync.ex:43:17
+        fan_out_key =
+          case Keyword.get(opts, :fan_out) do
+            x when x === false or x === nil ->
+              :erlang.error(ArgumentError.exception("opts[:fan_out] is required"))
+        
+            x ->
+              x
+          end
+
+    where "records" was given the type:
+
+        # type: dynamic()
+        # from: lib/scrypath/sync.ex:42:35
+        records
+
+    where "schema_module" was given the type:
+
+        # type: dynamic()
+        # from: lib/scrypath/sync.ex:42:20
+        schema_module
+
+    typing violation found at:
+    │
+ 61 │         |> decorate_result(config)
+    │            ~
+    │
+    └─ (scrypath 0.3.15) lib/scrypath/sync.ex:61:12: Scrypath.Sync.sync_related/3
+
+==> scrypath_ops
+Nav contract OK: operator-ia.md matches Nav.primary/0
+TAP version 13
+    warning: variable "room" is unused (if the variable is not meant to be used, prefix it with an underscore)
+    │
+ 73 │     {:ok, room, room_html} = live(conn, "/ops/phase174?#{query}")
+    │           ~~~~
+    │
+    └─ test/scrypath_ops_web/live/phase174_fixture_live_test.exs:73:11: ScrypathOpsWeb.Phase174FixtureLiveTest."test standalone fixture renders selected A and returns from the real stale-sudo gate"/1
+
+     error: undefined function live/2 (expected ScrypathOpsWeb.Phase174FixtureLiveTest to define such a function or for it to be imported, but none are available)
+     │
+ 111 │     {:ok, returned, returned_html} = live(conn, expected_return)
+     │                                      ^^^^
+     │
+     └─ test/scrypath_ops_web/live/phase174_fixture_live_test.exs:111:38: ScrypathOpsWeb.Phase174FixtureLiveTest."test standalone fixture renders selected A and returns from the real stale-sudo gate"/1
+
+     error: undefined function assert_redirect/2 (expected ScrypathOpsWeb.Phase174FixtureLiveTest to define such a function or for it to be imported, but none are available)
+     │
+ 106 │     assert_redirect(failed_sync, confirm_path)
+     │     ^^^^^^^^^^^^^^^
+     │
+     └─ test/scrypath_ops_web/live/phase174_fixture_live_test.exs:106:5: ScrypathOpsWeb.Phase174FixtureLiveTest."test standalone fixture renders selected A and returns from the real stale-sudo gate"/1
+
+     error: undefined function render_click/3 (expected ScrypathOpsWeb.Phase174FixtureLiveTest to define such a function or for it to be imported, but none are available)
+     │
+ 105 │     render_click(failed_sync, "retry", %{"id" => work_key, "generation" => generation})
+     │     ^^^^^^^^^^^^
+     │
+     └─ test/scrypath_ops_web/live/phase174_fixture_live_test.exs:105:5: ScrypathOpsWeb.Phase174FixtureLiveTest."test standalone fixture renders selected A and returns from the real stale-sudo gate"/1
+
+    error: undefined function element/2 (expected ScrypathOpsWeb.Phase174FixtureLiveTest to define such a function or for it to be imported, but none are available)
+    │
+ 96 │       |> element("[data-testid='failed-sync-retry']")
+    │          ^^^^^^^
+    │
+    └─ test/scrypath_ops_web/live/phase174_fixture_live_test.exs:96:10: ScrypathOpsWeb.Phase174FixtureLiveTest."test standalone fixture renders selected A and returns from the real stale-sudo gate"/1
+
+    error: undefined function render/1 (expected ScrypathOpsWeb.Phase174FixtureLiveTest to define such a function or for it to be imported, but none are available)
+    │
+ 97 │       |> render()
+    │          ^^^^^^
+    │
+    └─ test/scrypath_ops_web/live/phase174_fixture_live_test.exs:97:10: ScrypathOpsWeb.Phase174FixtureLiveTest."test standalone fixture renders selected A and returns from the real stale-sudo gate"/1
+
+    error: undefined function live/2 (expected ScrypathOpsWeb.Phase174FixtureLiveTest to define such a function or for it to be imported, but none are available)
+    │
+ 87 │       live(conn, "/ops/phase174/failed-sync?#{collision_query}")
+    │       ^^^^
+    │
+    └─ test/scrypath_ops_web/live/phase174_fixture_live_test.exs:87:7: ScrypathOpsWeb.Phase174FixtureLiveTest."test standalone fixture renders selected A and returns from the real stale-sudo gate"/1
+
+    error: undefined function has_element?/2 (expected ScrypathOpsWeb.Phase174FixtureLiveTest to define such a function or for it to be imported, but none are available)
+    │
+ 79 │     assert has_element?(health, "[id='posture-ScrypathOps.Test.OpsPostB']")
+    │            ^^^^^^^^^^^^
+    │
+    └─ test/scrypath_ops_web/live/phase174_fixture_live_test.exs:79:12: ScrypathOpsWeb.Phase174FixtureLiveTest."test standalone fixture renders selected A and returns from the real stale-sudo gate"/1
+
+    error: undefined function live/2 (expected ScrypathOpsWeb.Phase174FixtureLiveTest to define such a function or for it to be imported, but none are available)
+    │
+ 78 │     {:ok, health, health_html} = live(conn, "/ops/phase174/health?#{query}")
+    │                                  ^^^^
+    │
+    └─ test/scrypath_ops_web/live/phase174_fixture_live_test.exs:78:34: ScrypathOpsWeb.Phase174FixtureLiveTest."test standalone fixture renders selected A and returns from the real stale-sudo gate"/1
+
+    error: undefined function live/2 (expected ScrypathOpsWeb.Phase174FixtureLiveTest to define such a function or for it to be imported, but none are available)
+    │
+ 73 │     {:ok, room, room_html} = live(conn, "/ops/phase174?#{query}")
+    │                              ^^^^
+    │
+    └─ test/scrypath_ops_web/live/phase174_fixture_live_test.exs:73:30: ScrypathOpsWeb.Phase174FixtureLiveTest."test standalone fixture renders selected A and returns from the real stale-sudo gate"/1
+
+
+== Compilation error in file test/scrypath_ops_web/live/phase174_fixture_live_test.exs ==
+** (CompileError) test/scrypath_ops_web/live/phase174_fixture_live_test.exs: cannot compile module ScrypathOpsWeb.Phase174FixtureLiveTest (errors have been logged)
+
