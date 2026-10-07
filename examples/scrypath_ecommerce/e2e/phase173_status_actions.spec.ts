@@ -172,7 +172,8 @@ for (const entrypoint of ENTRYPOINTS) {
     await page.screenshot({ path: join(captureDir, `phase173-${entrypoint.name}-all-source-error-light-390.png`), fullPage: true });
 
     await openScenario(page, entrypoint.url, "empty-queue", "dark", 1440);
-    await expect(row).toContainText("queue observed");
+    await expect(queue.locator(".ops-signal-metrics"))
+      .toContainText(/Pending\s*0[\s\S]*Retrying\s*0[\s\S]*Failed\s*0/);
     await expect(queue.locator(".ops-signal-metrics")).toBeVisible();
     await expect(queue).toContainText("No success observed");
     await expect(queue).not.toContainText("unavailable");
