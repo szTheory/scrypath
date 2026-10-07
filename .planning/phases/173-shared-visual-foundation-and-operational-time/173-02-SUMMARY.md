@@ -134,6 +134,8 @@ The T1 RED reports are `.planning/phases/173-shared-visual-foundation-and-operat
 13. **Task 3: Source-local observations and schema timeout identity** — `ca0232d` (fix)
 14. **Task 3: Preserve the retained observation reference in rendered ages** — `da8df9c` (fix)
 
+15. **Task 3: Whole-schema queue evidence regression and correction** — `08427da`, `a2a5d50`, `3adccd9` (test/fix)
+
 ## Verification
 
 - `mix test test/scrypath/operator/status_test.exs` — passed, 5 tests, 0 failures.

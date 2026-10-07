@@ -1,28 +1,22 @@
 ---
 phase: 173
 source_review: 173-REVIEW.md
-source_reviewed_at: 2026-10-07T01:19:41Z
+source_reviewed_at: 2026-10-07T01:35:36Z
 status: fixes_applied
 ---
 
-# Phase 173 Code Review Fixes
+# Phase 173 Re-review Fix
 
-These are orchestrator-applied corrections to the independent review, not a simulated second review. Full root verification passed on `53b5d37ca8283c35d63a14a669ac1094d25a146e`: four properties and 661 tests, zero failures; full Ops passed two doctests and 246 tests. Final browser regression and re-review remain separate checks.
+The independent 43-file re-review confirms the three initial findings are fixed and reports a new warning under reused ID WR-01. The original review/fix identities remain in git and `173-REVIEW-FIX.iter1.md`; they are not treated as the new finding.
 
 ## Fixed Issues
 
-### CR-01: Empty Oban history is reported as unavailable
+### WR-01: Whole-schema errors hide retained queue evidence
 
-`ca0232d` makes a successful Oban inspection observed even when its returned list is empty. Root regression in `0981b58` failed on the original empty-history assertion and passes after the fix. An empty history has zero counts and no observed success, rather than unavailable counts.
+`3adccd9` preserves both source error reasons in the internal presentation projection, even when both fail. Its public sync_status all-or-error contract remains unchanged. Whole-schema timeouts render separate backend and queue unavailable groups; inline/manual modes retain explicit Queue not used copy. Retained states use the complete previous observation reference, preserving source-local ages and exact timestamps.
 
-### WR-01: Queue inspection failure marks the successful backend observation unavailable
-
-`ca0232d` adds an internal, `@doc false` operator presentation projection that preserves backend and queue outcomes independently. `Scrypath.sync_status/2` retains its all-or-error public contract. The Posture projection retains only the failed source's previous state/reference, reports its reason, and displays current successful-source counts. The partial-error Ops assertion failed before implementation and passes afterward. The expanded browser regression caught a bare DateTime passed into OpsTime; `da8df9c` restores the full observation reference so retained relative ages stay stable.
-
-### WR-02: Timed-out schema scans lose the schema key needed to retain its last success
-
-`ca0232d` explicitly uses ordered async results and pairs each result with its allowlisted input schema. Timeout rows retain that schema's identity and prior evidence, while successful neighbors advance their observations. `bbc358c` exercises the actual 15-second timeout with a 16-second delay; this assertion failed before the correction and the focused/full Ops suites pass afterward. The earlier draft test had an invalid option/setup failure and is not counted as valid RED evidence.
+The focused LiveView regression failed on prior source and then passed after this fix: `review2-ops-red3.log` (one test, one assertion failure for missing queue exact evidence) and `review2-ops-green2.log` (one test, zero failures). Earlier draft selectors targeted a copy button as though it contained exact evidence and are not counted as valid RED. The corrected assertion was rerun against the prior source before restoring the fix. Both fixture providers and the connected browser status case now exercise backend+queue failure together, retaining backend 3-day and queue 2-day evidence independently. Final combined browser and full gates remain separate checks.
 
 ## Evidence
 
-Actual regression logs are preserved outside the source checkout at `/private/tmp/scrypath-phase173-20261006-155750/`: `review-core-red.log`, `review-ops-timeout-red.log`, `review-ops-green2.log`, `phase173-review-core.log`, `phase173-review-ops.log`. The combined browser run at `53b5d37` honestly failed seven cases (27 passed), exposing the retained-age rendering regression and a stale mounted picker selector; its log, native report and traces remain preserved.
+All native logs and source backups are outside the checkout under `/private/tmp/scrypath-phase173-20261006-155750/`. The earlier `da8df9c` browser run honestly passed 32 of 34 cases: the remaining two asserted absence of disclosure across an entire schema row even when its independent queue observation succeeded. The corrected assertions constrain absence to the unavailable backend and also require the valid queue's current 3-day timestamp/ISO, preserving the intended per-source contract.
