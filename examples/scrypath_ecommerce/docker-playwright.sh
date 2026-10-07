@@ -45,6 +45,11 @@ case "$scope" in
     PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results/phase173-time.xml \
       exec npx playwright test e2e/phase173_time.spec.ts --workers=1 --retries=0 --reporter=junit
     ;;
+  phase173-status)
+    echo "Running production status and quiet-action proof..."
+    PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results/phase173-status.xml \
+      exec npx playwright test e2e/phase173_status_actions.spec.ts --workers=1 --retries=0 --reporter=junit
+    ;;
   full)
     echo "Running the full advisory ecommerce browser and deterministic visual lane..."
     browser_status=0
@@ -69,7 +74,7 @@ case "$scope" in
     exit 1
     ;;
   *)
-    echo "Unsupported E2E_SCOPE '$scope' (expected focused, phase173-shell, phase173-time, or full)." >&2
+    echo "Unsupported E2E_SCOPE '$scope' (expected focused, phase173-shell, phase173-time, phase173-status, or full)." >&2
     exit 64
     ;;
 esac

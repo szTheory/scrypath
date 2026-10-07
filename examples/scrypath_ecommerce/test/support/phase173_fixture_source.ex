@@ -16,7 +16,8 @@ defmodule ScrypathEcommerceWeb.Phase173FixtureSource do
              "source-error",
              "missing-time",
              "manual",
-             "no-success"
+             "no-success",
+             "eligibility-disabled"
            ] do
     allowlist =
       if name == "empty", do: [], else: if(name == "partial", do: [hd(@schemas)], else: @schemas)
@@ -48,7 +49,8 @@ defmodule ScrypathEcommerceWeb.Phase173FixtureSource do
         meilisearch_client: __MODULE__,
         meilisearch_tasks: if(name == "source-error", do: [:fixture_source_error], else: tasks),
         oban_jobs: jobs
-      ]
+      ],
+      refresh_disabled?: name == "eligibility-disabled"
     }
   end
 

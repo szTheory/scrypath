@@ -257,7 +257,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_refresh_control(assigns) do
     ~H"""
     <div class={["flex flex-wrap items-center gap-x-3 gap-y-1", @class]}>
-      <span :if={@checked_at} class="ops-text-meta">
+      <span :if={@checked_at} class="text-ops-body text-base-content/75">
         Checked
         <time datetime={DateTime.to_iso8601(@checked_at)} title={utc_display(@checked_at)}>
           {human_dt(@checked_at, DateTime.utc_now())}
@@ -373,7 +373,12 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <div class={["ops-metric ops-muted-panel px-3 py-2", metric_tone_class(@kind)]}>
       <p class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/60">{@label}</p>
-      <p class="mt-1 font-mono text-ops-lg font-semibold tabular-nums">{@value}</p>
+      <p class="ops-metric__value mt-1 font-mono text-ops-lg font-semibold tabular-nums">
+        {@value}
+        <span :if={@kind in [:warning, :error]} class="ops-metric__cue" aria-hidden="true">
+          <ScrypathOpsWeb.CoreComponents.icon name="hero-exclamation-triangle" class="size-4" />
+        </span>
+      </p>
     </div>
     """
   end
@@ -1748,8 +1753,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp tone_chip_class(:neutral), do: "ops-muted-panel"
   defp tone_chip_class(kind), do: tone_class(kind)
 
-  # Metric tiles keep their muted-panel background and only accent the border by tone,
-  # so they route through their own border-only modifiers (not the full tinted surface).
+  # Metric surfaces stay neutral; the warning/error icon provides a local cue.
   defp metric_tone_class(:success), do: "ops-metric-success"
   defp metric_tone_class(:warning), do: "ops-metric-warning"
   defp metric_tone_class(:error), do: "ops-metric-error"
