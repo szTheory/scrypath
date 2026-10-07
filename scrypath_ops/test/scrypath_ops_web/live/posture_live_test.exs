@@ -458,12 +458,12 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     ]
 
     prior = ScrypathOps.Posture.summary([OpsPostA, OpsPostB], opts, ~U[2026-04-16 18:01:00Z])
-    Agent.update(:posture_live_test_state, &Map.put(&1, :delay_a, 100))
+    Agent.update(:posture_live_test_state, &Map.put(&1, :delay_a, 16_000))
 
     current =
       ScrypathOps.Posture.summary(
         [OpsPostA, OpsPostB],
-        Keyword.put(opts, :posture_timeout, 20),
+        opts,
         ~U[2026-04-17 18:01:00Z],
         prior
       )
