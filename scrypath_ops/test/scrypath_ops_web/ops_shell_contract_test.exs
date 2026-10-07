@@ -279,6 +279,31 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert html =~ "Ctrl"
   end
 
+  test "command palette recovery destinations follow the validated schema through patches", %{conn: conn} do
+    schema_a = ScrypathOps.OperatorSelection.canonical(OpsPostA)
+    schema_b = ScrypathOps.OperatorSelection.canonical(OpsPostB)
+    query_a = URI.encode_query(%{"schema" => schema_a})
+    query_b = URI.encode_query(%{"schema" => schema_b})
+
+    {:ok, lv, _html} = live(conn, "/ops/sync-drift?" <> query_a)
+
+    assert has_element?(lv, "#ops-command-palette-destinations")
+    assert has_element?(lv, "#ops-palette-destination-health[href='/ops/health?#{query_a}']")
+    assert has_element?(lv, "#ops-cmdk-item-1[href='/ops/health?#{query_a}']")
+
+    lv
+    |> form("#sync-drift-schema-form", %{"schema" => schema_b})
+    |> render_change()
+
+    assert_patch(lv, "/ops/sync-drift?" <> query_b)
+    assert has_element?(lv, "#ops-palette-destination-health[href='/ops/health?#{query_b}']")
+    assert has_element?(lv, "#ops-cmdk-item-1[href='/ops/health?#{query_a}']")
+
+    {:ok, invalid_lv, _invalid_html} = live(conn, "/ops/health?schema=ScrypathOps.Test.NotAllowed")
+    refute has_element?(invalid_lv, "#ops-palette-destination-health")
+    refute has_element?(invalid_lv, "#ops-command-palette-destinations a[href*='schema=']")
+  end
+
   test "command palette hook opens from visible shortcut affordances" do
     source = File.read!(@ops_hooks)
 
