@@ -30,9 +30,9 @@
     }
   ],
   "next": {
-    "command": "$gsd-discuss-phase 174",
-    "label": "Discuss Phase 174: Recovery Entry and Diagnosis",
-    "reason": "Phase 173 is complete; gather Phase 174 context before planning in /private/tmp/scrypath-phase173-20261006-155750/next-planning."
+    "command": "$gsd-ui-phase 174",
+    "label": "Create Phase 174 UI contract: Recovery Entry and Diagnosis",
+    "reason": "Phase 174 discussion is complete and adopted context is committed. Resolve recovery compositions in the delivered Phase 173 visual world before implementation planning, using /private/tmp/scrypath-phase173-20261006-155750/next-planning."
   },
-  "updated_at": "2026-10-07T02:21:38.994360+00:00"
+  "updated_at": "2026-10-07T02:44:42.910914+00:00"
 }
