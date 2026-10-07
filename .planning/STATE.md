@@ -5,16 +5,16 @@ milestone_name: ScrypathOps UI refinement
 current_phase: 174
 current_phase_name: Recovery Entry and Diagnosis
 status: executing
-stopped_at: Recovered server restart; six Phase174 plans complete;174-06 had no edits or commits
-last_updated: "2026-10-07T16:55:41.477Z"
+stopped_at: Completed 174-06-PLAN.md
+last_updated: "2026-10-07T18:14:23.455Z"
 last_activity: 2026-10-07
 last_activity_desc: Phase 174 execution started
-state_head: 5e64b682c332788b685623f9b0d77627f4e9b672
+state_head: 2674074ad1e17c73b991aae126be0d49bca24179
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 12
-  completed_plans: 10
+  completed_plans: 11
   percent: 20
 ---
 
@@ -27,7 +27,7 @@ See PROJECT.md (updated 2026-10-06). Core value: make search indexing feel nativ
 ## Current Position
 
 Phase: 174 (Recovery Entry and Diagnosis) — EXECUTING
-Plan: 7 of 8
+Plan: 8 of 8
 Status: Ready to execute
 Last activity: 2026-10-07 — Phase 174 execution started
 Progress: [██░░░░░░░░] 20% (1/5 phases; all 4 Phase 173 plans complete)
@@ -82,9 +82,9 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-07T16:55:41.418Z
-Stopped at: Recovered server restart; six Phase174 plans complete;174-06 had no edits or commits
-Resume file: .planning/phases/174-recovery-entry-and-diagnosis/174-06-PLAN.md
+Last session: 2026-10-07T18:14:23.367Z
+Stopped at: Completed 174-06-PLAN.md
+Resume file: None
 
 Phase 174 now executes in a separate regular clone on `gsd/phase-174-recovery-entry-and-diagnosis` in `/private/tmp/scrypath-phase173-20261006-155750/phase174-execution`. The previous planning worktree and its RED artifacts remain preserved; the fresh clone resolves the executor commit guard without bypassing it. It starts from the immutable Phase 173 source `13ea88a9c18a7515f4ec5ae7deea0cdde4c22531`. Its later handoff metadata does not extend the prior exact-SHA receipt. The execution checkout and PR branch `gsd/phase-173-shared-visual-foundation` remain unchanged at that attested source.
 
@@ -108,6 +108,7 @@ Automatic chaining is disabled. Preserve adaptive routing and the existing front
 | Phase 174 P04 | 24m | 2 tasks | 9 files |
 | Phase 174 P07 | 33m | 2 tasks | 10 files |
 | Phase 174 P05 | 21m | 2 tasks | 10 files |
+| Phase 174 P06 | 301min | 2 tasks | 25 files |
 
 ## Decisions
 
@@ -125,3 +126,6 @@ Automatic chaining is disabled. Preserve adaptive routing and the existing front
 - [Phase 174]: Only the encoded current-schema/source/full-ID key identifies a retry or delete-confirmation action; legacy numeric IDs are not resolved.
 - [Phase 174]: Manual replay availability is described from RecoveryAction data, separately from Oban retry state and subject to existing server/host gates.
 - [Phase 174]: OPUX-18 and OPUX-19 remain pending until dependent Phase 174 evidence is ready.
+- [Phase 174]: Phase174 fixture routes and provider configuration stay restricted to MIX_ENV=test and the :phase174 route action.
+- [Phase 174]: The stale test OperatorContext is assigned only during the Phase174 test-route mount; the real Sigra confirm destination is navigation only and requires a separate explicit return.
+- [Phase 174]: OPUX-16 through OPUX-19 remain pending until Plan 174-08 supplies browser proof.
