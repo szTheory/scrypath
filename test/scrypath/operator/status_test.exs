@@ -232,4 +232,23 @@ defmodule Scrypath.Operator.StatusTest do
 
     assert datetime_state.metadata.source_iso == "2026-10-04T17:02:05.123456Z"
   end
+
+  test "a successful empty Oban observation is observed, not unavailable" do
+    assert {:ok, status} =
+             Scrypath.sync_status(SearchablePost,
+               backend: Scrypath.Meilisearch,
+               sync_mode: :oban,
+               meilisearch_url: "http://localhost:7700",
+               meilisearch_client: StatusMeilisearchClient,
+               meilisearch_tasks: [],
+               oban: Scrypath.SyncTest.ReadyOban,
+               oban_queue: :search_sync,
+               oban_inspector: StatusObanInspector,
+               oban_jobs: []
+             )
+
+    assert status.queue.observed?
+    assert status.queue.pending == []
+    assert status.queue.last_succeeded == nil
+  end
 end

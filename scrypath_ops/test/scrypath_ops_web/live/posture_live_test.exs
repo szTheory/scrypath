@@ -21,6 +21,10 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
       uids = filters[:index_uids] || []
       boom_index = "postlv_ops_post_a"
 
+      if boom_index in uids do
+        Process.sleep(Agent.get(:posture_live_test_state, &Map.get(&1, :delay_a, 0)))
+      end
+
       if boom_index in uids and Agent.get(:posture_live_test_state, & &1.fail_a?) do
         {:error, :boom}
       else
@@ -44,6 +48,14 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
          "type" => "indexSwap",
          "indexUid" => "postlv_ops_post_a"
        }}
+    end
+  end
+
+  defmodule PartialQueueInspector do
+    def list_jobs(_schema, _config) do
+      if Agent.get(:posture_live_test_state, &Map.get(&1, :fail_queue?, false)),
+        do: {:error, :queue_unavailable},
+        else: {:ok, [%{id: 99, state: "completed", completed_at: ~U[2026-04-16 18:00:00Z]}]}
     end
   end
 
@@ -408,5 +420,62 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
 
   defp flash_value(socket, key) do
     socket.assigns |> Map.get(:flash, %{}) |> Map.get(key)
+  end
+
+  test "partial queue errors retain only the failed source and render current backend data", %{
+    conn: conn
+  } do
+    Agent.update(:posture_live_test_state, &Map.put(&1, :fail_a?, false))
+    Application.put_env(:scrypath_ops, :sync_mode, :oban)
+    Application.put_env(:scrypath_ops, :oban_inspector, PartialQueueInspector)
+    Application.put_env(:scrypath_ops, :oban, PartialQueueInspector)
+    Application.put_env(:scrypath_ops, :oban_queue, :search_sync)
+    {:ok, view, _html} = live(conn, ~p"/ops/health")
+    Agent.update(:posture_live_test_state, &Map.put(&1, :fail_queue?, true))
+    html = render_click(view, "refresh", %{})
+    assert html =~ "queue_unavailable"
+    assert html =~ "Queue observation unavailable"
+    assert html =~ "last success retained"
+
+    assert has_element?(
+             view,
+             "#posture-ScrypathOps\\.Test\\.OpsPostA .ops-signal-group:first-child .ops-signal-metrics"
+           )
+
+    refute html =~ "Backend observation unavailable"
+  end
+
+  test "timed-out schemas retain their own prior evidence" do
+    Agent.update(:posture_live_test_state, &Map.put(&1, :fail_a?, false))
+
+    opts = [
+      backend: Scrypath.Meilisearch,
+      sync_mode: :manual,
+      index_prefix: "postlv",
+      meilisearch_url: "http://localhost:7700",
+      meilisearch_client: PostureFakeClient,
+      meilisearch_tasks: Application.get_env(:scrypath_ops, :meilisearch_tasks)
+    ]
+
+    prior = ScrypathOps.Posture.summary([OpsPostA, OpsPostB], opts, ~U[2026-04-16 18:01:00Z])
+    Agent.update(:posture_live_test_state, &Map.put(&1, :delay_a, 100))
+
+    current =
+      ScrypathOps.Posture.summary(
+        [OpsPostA, OpsPostB],
+        Keyword.put(opts, :posture_timeout, 20),
+        ~U[2026-04-17 18:01:00Z],
+        prior
+      )
+
+    assert {OpsPostA, {:error, {:async_stream, :timeout}}} in current.rows
+    refute Enum.any?(current.rows, fn {mod, _} -> mod == :posture_stream end)
+    assert ScrypathOps.Posture.last_success_ref(current, OpsPostA, :backend).retained?
+
+    assert ScrypathOps.Posture.last_success_ref(current, OpsPostA, :backend).observed_at ==
+             prior.refreshed_at
+
+    assert ScrypathOps.Posture.last_success_ref(current, OpsPostB, :backend).observed_at ==
+             current.refreshed_at
   end
 end
