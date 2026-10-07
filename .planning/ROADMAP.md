@@ -57,7 +57,7 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
   4. Operators can read stable human-readable last-success times, inspect the exact timestamp and timezone, and distinguish absent or unobserved success from observed success.
   5. In standalone and mounted Ops, operators can copy the full ISO last-success timestamp by keyboard or pointer and receive brief confirmation only after success; denied/unavailable clipboard access is explained, and routine Checked metadata offers no copy action.
 
-**Plans**: 3/4 plans executed
+**Plans**: 4/4 plans executed
 Plans:
 
 **Wave 1**
@@ -74,7 +74,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 173-04-PLAN.md — Truthful timestamp copying and feedback in standalone and mounted Ops
+- [x] 173-04-PLAN.md — Truthful timestamp copying and feedback in standalone and mounted Ops
 
 **UI hint**: yes
 **Canonical refs**: `.planning/research/v1.43/SCOPE.md`, `.planning/reference/OPERATOR-UI-REFINEMENT.md`, `.planning/reference/OPERATOR-UI-QUALITY.md`, `PRODUCT.md`, `DESIGN.md`, `.impeccable/config.json`, `.planning/research/v1.42/UI-SYSTEM.md`, `.planning/research/v1.42/UI-AUTOMATION.md`, `scrypath_ops/assets/css/DESIGN-TOKENS.md`
@@ -143,7 +143,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 173. Shared Visual Foundation and Operational Time | 3/4 | In Progress — ready to execute | - |
+| 173. Shared Visual Foundation and Operational Time | 4/4 | In Progress — ready to execute | - |
 | 174. Recovery Entry and Diagnosis | 0/TBD | Not started | - |
 | 175. Repair and Verification | 0/TBD | Not started | - |
 | 176. Search and Playbooks | 0/TBD | Not started | - |

@@ -37,6 +37,10 @@ key-files:
     - scrypath_ops/lib/scrypath_ops_web/components/ops_ui.ex
     - scrypath_ops/lib/scrypath_ops_web/live/posture_live.ex
     - scrypath_ops/assets/js/ops_hooks.js
+    - scrypath_ops/assets/css/app.css
+    - scrypath_ops/assets/css/contrast-pairs.mjs
+    - scrypath_ops/assets/css/DESIGN-TOKENS.md
+    - scrypath_ops/priv/static/assets/css/app.css
     - scrypath_ops/test/scrypath_ops_web/live/posture_live_test.exs
     - examples/scrypath_ecommerce/docker-playwright.sh
     - examples/scrypath_ecommerce/assets/js/app.js
@@ -92,6 +96,9 @@ Tasks were committed individually, with a RED test commit before each GREEN impl
 3. **Task 2 RED:** `1fec011` (`test(173-04): prove stale clipboard completion race`)
 4. **Task 2 GREEN:** `6b39f9f` (`feat(173-04): preserve latest clipboard outcome`)
 
+5. **Post-merge contrast RED:** `9ffac25` (`test(173-04): enforce readable copy feedback and targets`)
+6. **Post-merge contrast GREEN:** `185832d` (`fix(173-04): restore readable body copy and quiet targets`)
+
 **Plan metadata:** committed separately after self-check.
 
 ## Verification
@@ -125,11 +132,11 @@ The disposable Phase 173 Compose project completed cleanup. Its browser, web, Op
 
 ## Deviations from Plan
 
-None - plan executed as written.
+The named copy control also required the shared CSS authority and generated CSS asset. Post-merge rendered checks found a 4.02:1 label, inherited monospace action text and a 32px dismiss target; the parent corrected these against the approved UI contract, with actual RED evidence and 28/28 combined GREEN browser cases.
 
 ## Issues Encountered
 
-- The referenced `173-UI-SPEC.md`, `173-UI-CHECK.md`, and `173-RESEARCH.md` were absent from this worktree. Execution followed the available approved `173-CONTEXT.md`, `173-PATTERNS.md`, `173-VALIDATION.md`, and prior plan summaries; browser and pixel evidence covered the planned UI contract.
+- The worker incorrectly reported `173-UI-SPEC.md`, `173-UI-CHECK.md`, and `173-RESEARCH.md` absent. The parent confirmed all three were tracked and present, read the approved contract, and reconciled the copy typography, target and composed contrast before closeout. The original presence claim was an execution-reading error, not missing planning material.
 - An initial `mix verify.ops_ui` invocation from inside `scrypath_ops` resolved its project path twice and failed before testing. Running the documented alias from the repository root passed.
 - An initial draft of the added LiveView test used unavailable `Application.update_env/3`; it was corrected to `Application.put_env/3`, then the focused suite passed.
 - Standalone asset compilation reports the existing `Scrypath.Sync.sync_related/3` typing warning. `RelatedEnqueue.enqueue/4` has a compile-time no-Oban fallback that always raises, so the optional Oban branch is inferred as `none()` at `decorate_result/2`. The warning did not block Ops verification or precommit; root core files were unchanged, and the prior required warnings-as-errors core gate passed.
@@ -151,3 +158,7 @@ OPUX-15 is complete with current-source browser, LiveView, contrast, and Ops pre
 ---
 *Phase: 173-shared-visual-foundation-and-operational-time*
 *Completed: 2026-10-06*
+
+## Post-Merge Reconciliation
+
+Committed source `185832d6c863b1c84c863e1f5f4e9e2c44dbfc18` passed all 28 Phase 173 shell/time/status/copy browser cases (0 failures/errors/skips), including 14 copy cases. The external wrapper `/private/tmp/scrypath-phase173-20261006-155750/verify-phase173-all.sh all` runs the four existing specs together in one disposable stack; it adds no product dependency or CI lane. Full native JUnit, traces, source identity, Compose cleanup log and fresh captures are preserved under `/private/tmp/scrypath-phase173-20261006-155750/evidence/173-final/`. Root `mix verify.ops_ui` passed 2 doctests/244 tests after merge; fast contrast reports 0 AA failures and 35 AAA advisories. Existing info/error overlay tokens are unchanged; inline clipboard outcome text uses primary body text, and the copy link uses the approved interaction token.
