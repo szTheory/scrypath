@@ -2749,6 +2749,10 @@
     --tw-leading: calc(var(--spacing) * 10);
     line-height: calc(var(--spacing) * 10);
   }
+  .leading-ops-body {
+    --tw-leading: var(--leading-ops-body);
+    line-height: var(--leading-ops-body);
+  }
   .leading-ops-tight {
     --tw-leading: var(--leading-ops-tight);
     line-height: var(--leading-ops-tight);
@@ -4674,6 +4678,28 @@
     padding: var(--spacing-ops-3);
     transition: transform var(--duration-ops-instant) var(--ease-ops-standard), border-color var(--duration-ops-fast) var(--ease-ops-standard), box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
   }
+  .failed-sync-row__facts {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: minmax(0, 6rem) minmax(0, 1fr);
+    gap: var(--spacing-ops-1) var(--spacing-ops-2);
+    margin-top: var(--spacing-ops-3);
+    font-size: var(--text-ops-body);
+    line-height: var(--leading-ops-body);
+  }
+  .failed-sync-row__facts dt {
+    font-weight: 600;
+  }
+  .failed-sync-row__facts dd {
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+  .failed-sync-row__facts code {
+    font-family: ui-monospace, "Cascadia Code", Menlo, monospace;
+    font-size: inherit;
+    overflow-wrap: anywhere;
+  }
   .ops-result-row:hover, .ops-object-item:hover {
     border-color: var(--color-primary);
     @supports (color: color-mix(in lab, red, red)) {
@@ -5253,6 +5279,11 @@
 }
 .ops-modal.modal-open {
   visibility: visible;
+}
+.failed-sync-delete-modal {
+  max-height: min(90dvh, 48rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 @starting-style {
   .ops-modal.modal-open {

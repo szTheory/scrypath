@@ -151,8 +151,11 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
 
     failed |> element("[data-testid='failed-sync-retry']") |> render_click()
     receipt = element(failed, "[data-testid='recovery-receipt']")
-    assert render(receipt) =~ "Queue job 991"
-    assert render(receipt) =~ "Original failure #501 retained"
+
+    assert render(receipt) =~
+             "Replacement accepted — queue job 991. Terminal completion has not been observed."
+
+    assert render(receipt) =~ "Original Queue job 501 failure retained"
     refute render(receipt) =~ "Recovery verified"
 
     handoff_href =
@@ -166,9 +169,10 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
     assert handoff.path == "/ops/sync-drift"
     assert URI.decode_query(handoff.query)["schema"] == schema_a
 
-    assert :sys.get_state(failed.pid).socket.assigns.recovery_receipts[
-             "501"
-           ].state == :accepted
+    queue_key = expected_work_key("ScrypathOps.Test.OpsPostA", "oban", "501")
+
+    assert :sys.get_state(failed.pid).socket.assigns.recovery_receipts[queue_key].state ==
+             :accepted
   end
 
   test "retry identifies the queue row when a backend task has the same numeric id", %{
@@ -199,17 +203,17 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
       }
     )
 
+    queue_key = expected_work_key("ScrypathOps.Test.OpsPostA", "oban", "501")
+
     failed
-    |> element(
-      "button[data-testid='failed-sync-retry'][phx-value-key='ScrypathOps.Test.OpsPostA:oban:501']"
-    )
+    |> element("button[data-testid='failed-sync-retry'][phx-value-id='#{queue_key}']")
     |> render_click()
 
-    assert render(element(failed, "[data-testid='recovery-receipt']")) =~ "Queue job 991"
+    assert render(element(failed, "[data-testid='recovery-receipt']")) =~
+             "Replacement accepted — queue job 991. Terminal completion has not been observed."
 
-    assert :sys.get_state(failed.pid).socket.assigns.recovery_receipts[
-             "ScrypathOps.Test.OpsPostA:oban:501"
-           ].state == :accepted
+    assert :sys.get_state(failed.pid).socket.assigns.recovery_receipts[queue_key].state ==
+             :accepted
   end
 
   test "explicit unavailable and empty schema selections never become a recovery target", %{
@@ -253,7 +257,7 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
     put_live_assigns(failed,
       delete_confirmation: "ScrypathOps.Test.OpsPostA:oban:501",
       recovery_receipts: %{
-        "501" => %{
+        expected_work_key("ScrypathOps.Test.OpsPostA", "oban", "501") => %{
           handle: "old-handle",
           generation: before.context_generation,
           state: :accepted
@@ -272,7 +276,7 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
 
     stale_html =
       render_click(failed, "retry", %{
-        "key" => "501",
+        "id" => expected_work_key("ScrypathOps.Test.OpsPostA", "oban", "501"),
         "generation" => to_string(before.context_generation)
       })
 
@@ -289,6 +293,13 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
   defp href_from_anchor(html) do
     [_, href] = Regex.run(~r/href="([^"]+)"/, html)
     href
+  end
+
+  defp expected_work_key(schema, source, id) do
+    [schema, source, id]
+    |> Enum.map(fn value -> <<byte_size(value)::unsigned-big-32, value::binary>> end)
+    |> IO.iodata_to_binary()
+    |> Base.url_encode64(padding: false)
   end
 
   defp put_live_assigns(view, assigns) do
