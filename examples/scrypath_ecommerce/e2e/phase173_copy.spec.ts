@@ -66,7 +66,7 @@ for (const entrypoint of ENTRYPOINTS) {
           (window as typeof window & { __phase173ClipboardWrites: string[] }).__phase173ClipboardWrites
         )).toEqual([SOURCE_ISO]);
 
-        const feedback = time.locator("[data-ops-time-feedback]");
+        const feedback = time.locator("[data-ops-time-feedback-text]");
         await expect(feedback).not.toContainText("Timestamp copied");
         await page.evaluate(() =>
           (window as typeof window & { __phase173ResolveClipboardWrite: (() => void) | null })
