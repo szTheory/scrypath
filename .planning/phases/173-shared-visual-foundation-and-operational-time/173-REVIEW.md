@@ -1,9 +1,9 @@
 ---
 phase: 173-shared-visual-foundation-and-operational-time
-reviewed: 2026-10-07T01:35:36Z
+reviewed: 2026-10-07T01:42:00Z
 depth: standard
-source_head: 940fc3d33f43c449ea837e1ac1ebd6382216e8b8
-product_last_changed: da8df9cf5d275614b69f3df6d9e85349bbd27150
+source_head: 41e571a02f6bfa659911a43071e8eb195f40db34
+product_last_changed: 3adccd9a888518dba44c23b83d5162c5fe29d70e
 scope_status: resolved
 files_reviewed: 43
 files_reviewed_list:
@@ -60,27 +60,27 @@ status: issues_found
 
 # Phase 173: Code Review Report
 
-**Reviewed:** 2026-10-07T01:35:36Z  
+**Reviewed:** 2026-10-07T01:42:00Z  
 **Depth:** standard  
 **Files Reviewed:** 43  
 **Status:** issues_found  
-**Source:** `940fc3d33f43c449ea837e1ac1ebd6382216e8b8` (product changes last at `da8df9cf5d275614b69f3df6d9e85349bbd27150`)
+**Source:** `41e571a02f6bfa659911a43071e8eb195f40db34` (product changes last at `3adccd9a888518dba44c23b83d5162c5fe29d70e`)
 
 ## Summary
 
-Reviewed all 43 files in the resolved Phase 173 source scope, including the corrected operator projection, per-schema timeout handling, exact time rendering, clipboard behavior, theme shell, fixture routes, and mounted/standalone seams. The three findings from the earlier report are corrected in current source. One remaining display gap hides retained queue evidence when a whole schema scan errors or times out. The separately running combined browser and hosted candidate checks are not treated as completed evidence here.
+Reviewed all 43 files in the resolved Phase 173 source scope, including the corrected operator projection, per-schema timeout handling, exact time rendering, clipboard behavior, theme shell, fixture routes, and mounted/standalone seams. The original three findings and the interim retained-queue finding are corrected in current source. One remaining configuration-error path can crash while rendering the error row. The separately running full core/Ops suites and combined browser/hosted candidate checks are not treated as completed evidence here.
 
 ## Narrative Findings (AI reviewer)
 
-### WR-01: Whole-schema errors hide retained queue evidence
+### WR-03: Invalid runtime configuration crashes the error-row renderer
 
 **Classification:** WARNING  
-**File:** `scrypath_ops/lib/scrypath_ops_web/live/posture_live.ex:448-477`  
-**Issue:** When `Task.async_stream/3` times out for a schema, or both source inspections fail, `ScrypathOps.Posture` records an error row while retaining the previous references for both `:backend` and `:queue`. The error-row rendering handles only the retained backend reference and omits the queue section entirely. In Oban mode, operators therefore cannot see the last successful queue observation or its snapshot age during a whole-schema outage, even though that evidence remains available in `last_success_refs`.  
-**Fix:** Render unavailable signals for both sources in the error-row branch, using the retained queue reference and the queue-unavailable reason. Keep the explicit “Queue not used” treatment for inline/manual modes.
+**File:** `scrypath_ops/lib/scrypath_ops_web/live/posture_live.ex:470-477,654`  
+**Issue:** The per-schema error row calls `queue_mode/1` during rendering, and that helper calls `Scrypath.Config.resolve!`. A malformed runtime option (for example, an unsupported `sync_mode`) raises inside the schema task and is converted by `Task.async_stream` into an error row; rendering that row then resolves the same invalid configuration and raises again. The operator page therefore crashes instead of displaying the fetch/configuration error and retained observations.  
+**Fix:** Avoid bang configuration resolution in the render path. Pass a safely determined mode into the row or inspect the raw configured mode with an explicit unknown fallback, rendering queue observation as unavailable when the mode cannot be resolved.
 
 ---
 
-_Reviewed: 2026-10-07T01:35:36Z_  
+_Reviewed: 2026-10-07T01:42:00Z_  
 _Reviewer: the agent (gsd-code-reviewer)_  
 _Depth: standard_

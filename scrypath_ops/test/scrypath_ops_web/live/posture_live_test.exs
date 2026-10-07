@@ -493,4 +493,21 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert ScrypathOps.Posture.last_success_ref(current, OpsPostB, :backend).observed_at ==
              current.refreshed_at
   end
+
+  test "error-row rendering tolerates invalid runtime mode", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/ops/health")
+
+    assigns =
+      view.pid
+      |> :sys.get_state()
+      |> Map.fetch!(:socket)
+      |> Map.fetch!(:assigns)
+      |> Map.put(:scrypath_opts, sync_mode: :invalid_mode)
+      |> Map.put(:posture_rows, {:ok, [{OpsPostA, {:error, :invalid_configuration}}]})
+
+    html = render_component(&PostureLive.render/1, assigns)
+    assert html =~ "invalid_configuration"
+    assert html =~ "Backend observation unavailable"
+    assert html =~ "Queue observation unavailable"
+  end
 end
