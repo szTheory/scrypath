@@ -498,13 +498,13 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp failed_sync_status_kind(_inspection), do: :warning
 
   defp failed_sync_status_title(%FailedSyncWorkInspection{counts: %{total: 0}}),
-    do: "No failed sync work visible"
+    do: "No failed sync work for this schema"
 
   defp failed_sync_status_title(%FailedSyncWorkInspection{counts: %{total: 1}}),
-    do: "1 failed sync job needs triage"
+    do: "1 failed sync work item needs triage"
 
   defp failed_sync_status_title(%FailedSyncWorkInspection{counts: %{total: total}}),
-    do: "#{total} failed sync jobs need triage"
+    do: "#{total} failed sync work items need triage"
 
   defp dominant_reason_class(%FailedSyncWorkInspection{counts: %{by_class: by_class}}) do
     by_class
@@ -614,7 +614,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       <.ops_empty_state :if={@load_error == :no_schemas} title="No schemas configured">
         Add allowlisted schema modules with
         <.ops_inline_code>schema_allowlist</.ops_inline_code>
-        in <.ops_inline_code>:scrypath_ops</.ops_inline_code>, then refresh failed sync jobs.
+        in <.ops_inline_code>:scrypath_ops</.ops_inline_code>, then refresh failed sync work.
       </.ops_empty_state>
 
       <.ops_status
@@ -645,7 +645,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         role="alert"
       >
         The selected schema could not be inspected. Check backend and queue configuration, then
-        refresh failed sync jobs. Reason:
+        refresh failed sync work. Reason:
         <.ops_inline_code>{inspect(@load_error)}</.ops_inline_code>
       </.ops_status>
 
@@ -664,7 +664,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
           <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-ops-body text-base-content/80">
             <span>
               <strong>{@inspection.counts.total}</strong>
-              failed sync {if @inspection.counts.total == 1, do: "job", else: "jobs"}
+              failed sync work {if @inspection.counts.total == 1, do: "item", else: "items"}
             </span>
             <span aria-hidden="true">·</span>
             <span>{manual_recovery_label(manual_recovery_count(@inspection))}</span>
@@ -683,16 +683,16 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             id="failed-sync-table-heading"
             class="text-ops-h2 font-semibold leading-ops-tight text-base-content"
           >
-            Failed sync jobs
+            Failed sync work
           </h2>
           <.ops_empty_hero
             :if={@inspection.counts.total == 0}
-            title="No failed sync jobs"
+            title="No failed sync work for this schema"
             icon="hero-shield-check"
             class="mt-3"
             data-testid="failed-sync-empty-hero"
           >
-            Nothing needs retry for this schema. If you are confirming recovery, check sync drift before changing indexes.
+            No failed work was returned by this inspection. To confirm recovery, check sync and drift.
             <:actions>
               <.ops_button phx-click="refresh" variant={:default}>
                 Refresh this view

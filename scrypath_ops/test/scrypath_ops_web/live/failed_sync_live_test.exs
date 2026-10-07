@@ -129,13 +129,13 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
   test "renders triage summary, rollups, and human reason-class columns", %{conn: conn} do
     {:ok, lv, html} = live(conn, ~p"/ops/failed-sync")
 
-    assert html =~ "2 failed sync jobs need triage"
+    assert html =~ "2 failed sync work items need triage"
     assert html =~ "dominant reason"
     assert html =~ "1 Queue job has manual replay data"
-    assert html =~ "2 failed sync jobs"
+    assert html =~ "2 failed sync work items"
     assert html =~ "data-testid=\"failed-sync-row\""
     assert html =~ "data-testid=\"failed-sync-retry\""
-    assert html =~ "Failed sync jobs"
+    assert html =~ "Failed sync work"
     assert html =~ "Refresh failed sync work"
     assert html =~ "Retry queue job"
     assert html =~ "index missing"
@@ -261,20 +261,24 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert html =~ "Could not find that failed sync work row"
   end
 
-  test "mixed-source rollups and empty inspection name failed work without implying freshness", %{conn: conn} do
-    {:ok, view, html} = live(conn, ~p"/ops/failed-sync")
+  test "mixed-source rollups and empty inspection name failed work without implying freshness", %{
+    conn: conn
+  } do
+    {:ok, _view, html} = live(conn, ~p"/ops/failed-sync")
     assert html =~ "2 failed sync work items need triage"
     assert html =~ "Failed sync work"
     refute html =~ "2 failed sync jobs"
 
     Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
     Application.put_env(:scrypath_ops, :oban_jobs, [])
-    empty_html = view |> element("#failed-sync-refresh") |> render_click()
+    {:ok, empty_view, _html} = live(conn, ~p"/ops/failed-sync")
+    empty_html = empty_view |> element("#failed-sync-refresh") |> render_click()
     assert empty_html =~ "No failed sync work for this schema"
     refute empty_html =~ "No failed sync jobs"
 
     Application.put_env(:scrypath_ops, :meilisearch_tasks, {:error, :backend_unavailable})
-    error_html = view |> element("#failed-sync-refresh") |> render_click()
+    {:ok, error_view, _html} = live(conn, ~p"/ops/failed-sync")
+    error_html = error_view |> element("#failed-sync-refresh") |> render_click()
     assert error_html =~ "Failed sync work could not load"
     refute error_html =~ "No failed sync work for this schema"
     refute error_html =~ ~s(data-testid="failed-sync-empty-hero")
@@ -287,7 +291,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     {:ok, _lv, html} = live(conn, ~p"/ops/failed-sync")
 
     assert html =~ ~s(data-testid="failed-sync-empty-hero")
-    assert html =~ "No failed sync jobs"
+    assert html =~ "No failed sync work for this schema"
     assert html =~ "Refresh this view"
     refute html =~ "data-testid=\"failed-sync-row\""
   end
@@ -297,9 +301,9 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     {:ok, _lv, html} = live(conn, ~p"/ops/failed-sync")
 
-    assert html =~ "1 failed sync job needs triage"
+    assert html =~ "1 failed sync work item needs triage"
     assert html =~ "1 Queue job has manual replay data"
-    refute html =~ "1 failed sync jobs need triage"
+    refute html =~ "1 failed sync work items need triage"
   end
 
   test "empty allowlist shows setup rather than healthy zero work", %{conn: conn} do
