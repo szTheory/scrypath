@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { test } from "node:test";
 
 const testName = "actual CommandPalette copies patched destinations into ignored links and disconnects";
@@ -15,7 +15,8 @@ test(testName, async () => {
 
   const fixture = readFileSync(fixturePath, "utf8");
   const html = fixture.replace(/<script\b[^>]*\bsrc="[^"]*"[^>]*><\/script>/g, "");
-  const hookSource = readFileSync(resolve("scrypath_ops/assets/js/ops_hooks.js"), "utf8");
+  const testDirectory = resolve(fileURLToPath(new URL(".", import.meta.url)));
+  const hookSource = readFileSync(resolve(testDirectory, "../assets/js/ops_hooks.js"), "utf8");
   const server = createServer((request, response) => {
     if (request.url === "/fixture.html") {
       response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
@@ -86,7 +87,7 @@ test(testName, async () => {
     await trigger.click();
     const input = page.locator("#ops-command-palette [data-cmdk-input]");
     await assert.equal(await input.evaluate((element) => document.activeElement === element), true);
-    await input.fill("sync drift");
+    await input.fill("sync and drift");
     await assert.equal(await page.locator("#ops-cmdk-item-3").evaluate((element) => !element.parentElement.hidden), true);
     await page.keyboard.press("Escape");
     await page.waitForFunction(() => document.querySelector("#ops-cmdk").hasAttribute("hidden"));

@@ -322,7 +322,8 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     {:ok, invalid_lv, _invalid_html} =
       live(conn, "/ops/health?schema=ScrypathOps.Test.NotAllowed")
 
-    refute has_element?(invalid_lv, "#ops-palette-destination-health")
+    assert has_element?(invalid_lv, "#ops-command-palette-destinations")
+    refute has_element?(invalid_lv, "#ops-command-palette-destinations[data-recovery-target]")
     refute has_element?(invalid_lv, "#ops-command-palette-destinations a[href*='schema=']")
   end
 

@@ -1483,34 +1483,30 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_command_palette_destinations(assigns) do
     destinations =
-      if assigns.recovery_target do
-        assigns.mount_path
-        |> ScrypathOpsWeb.Nav.primary(assigns.recovery_target)
-        |> Enum.filter(&(&1.group == :recover))
-        |> Enum.with_index(1)
-        |> Enum.map(fn {item, index} ->
-          route =
-            item.path |> URI.parse() |> Map.fetch!(:path) |> String.split("/") |> List.last()
+      assigns.mount_path
+      |> ScrypathOpsWeb.Nav.primary(assigns.recovery_target)
+      |> Enum.filter(&(&1.group == :recover))
+      |> Enum.with_index(1)
+      |> Enum.map(fn {item, index} ->
+        route = item.path |> URI.parse() |> Map.fetch!(:path) |> String.split("/") |> List.last()
 
-          %{
-            path: item.path,
-            id: "ops-palette-destination-#{route}",
-            palette_item_id: "ops-cmdk-item-#{index}"
-          }
-        end)
-      else
-        []
-      end
+        %{
+          path: item.path,
+          id: "ops-palette-destination-#{route}",
+          palette_item_id: "ops-cmdk-item-#{index}"
+        }
+      end)
 
     assigns = assign(assigns, :destinations, destinations)
 
     ~H"""
     <div
-      :if={@recovery_target}
       id="ops-command-palette-destinations"
       hidden
       aria-hidden="true"
-      data-recovery-target={ScrypathOps.OperatorSelection.canonical(@recovery_target)}
+      data-recovery-target={
+        if @recovery_target, do: ScrypathOps.OperatorSelection.canonical(@recovery_target)
+      }
     >
       <a
         :for={destination <- @destinations}

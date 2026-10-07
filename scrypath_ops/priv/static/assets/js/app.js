@@ -8770,6 +8770,25 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       this.visible = this.items.slice();
       this.activeIndex = -1;
       this.previousFocus = null;
+      this.destinations = document.getElementById("ops-command-palette-destinations");
+      this.syncDestinations = () => {
+        if (!this.destinations) return;
+        this.destinations.querySelectorAll("[data-ops-palette-destination]").forEach((destination) => {
+          const item = this.items.find((candidate) => candidate.id === destination.dataset.opsPaletteItem);
+          const href = destination.getAttribute("href");
+          if (item && href !== null) item.setAttribute("href", href);
+        });
+      };
+      this.destinationObserver = new MutationObserver(this.syncDestinations);
+      if (this.destinations) {
+        this.destinationObserver.observe(this.destinations, {
+          attributes: true,
+          attributeFilter: ["href", "data-ops-palette-item"],
+          childList: true,
+          subtree: true
+        });
+        this.syncDestinations();
+      }
       this.onKeydown = (e) => this.handleKeydown(e);
       this.onModalOverlayOpen = () => this.closeForModal();
       this.onCmdkKeydown = (e) => this.overlayKeydown(e, this.cmdk);
@@ -8797,6 +8816,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       this.input.addEventListener("keydown", (e) => this.inputKeydown(e));
     },
     destroyed() {
+      this.destinationObserver?.disconnect();
       window.removeEventListener("keydown", this.onKeydown);
       document.removeEventListener("ops:modal-overlay-open", this.onModalOverlayOpen);
       document.removeEventListener("click", this.onCommandOpenClick);
