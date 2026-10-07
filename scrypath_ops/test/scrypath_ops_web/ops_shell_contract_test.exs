@@ -115,6 +115,20 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     :ok
   end
 
+  test "removed targets are rejected by the view and the shell on the same patch", %{conn: conn} do
+    for path <- ["/ops", "/ops/health", "/ops/failed-sync", "/ops/sync-drift"] do
+      Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA, OpsPostB])
+      {:ok, lv, _} = live(conn, path <> "?schema=ScrypathOps.Test.OpsPostA")
+      Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostB])
+      html = render_patch(lv, path <> "?schema=ScrypathOps.Test.OpsPostA&removed=1")
+      assert html =~ "That schema is unavailable"
+      refute has_element?(lv, "#ops-command-palette-destinations[data-recovery-target]")
+      refute has_element?(lv, "#ops-command-palette-destinations a[href*='schema=']")
+      refute has_element?(lv, ".ops-sidebar a[href*='schema=']")
+      refute has_element?(lv, "#ops-mobile-nav a[href*='schema=']")
+    end
+  end
+
   defp assert_ops_shell!(html, title_fragment) do
     assert html =~ "data-phx-session"
     assert html =~ title_fragment

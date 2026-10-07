@@ -55,6 +55,22 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     :ok
   end
 
+  test "refresh revalidates a removed explicit target and excludes its fleet evidence", %{
+    conn: conn
+  } do
+    put_healthy_posture_config!()
+    {:ok, lv, _} = live(conn, "/ops?schema=ScrypathOps.Test.OpsPostA")
+    Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostB])
+    html = render_click(lv, "refresh", %{})
+    assert html =~ "That schema is unavailable"
+    assigns = :sys.get_state(lv.pid).socket.assigns
+    assert assigns.schema_allowlist == [OpsPostB]
+    assert assigns.selected_schema == nil
+    refute has_element?(lv, "#ops-command-palette-destinations[data-recovery-target]")
+    refute has_element?(lv, "[data-testid='control-room-health-link']")
+    refute has_element?(lv, "[data-testid='shell-recovery-target']", "ScrypathOps.Test.OpsPostA")
+  end
+
   test "the /ops root renders the Control Room landing, not the posture table", %{conn: conn} do
     {:ok, lv, html} = live(conn, ~p"/ops")
 

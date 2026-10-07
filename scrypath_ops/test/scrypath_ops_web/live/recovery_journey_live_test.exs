@@ -8,6 +8,16 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
   alias ScrypathOps.Test.OpsPostB
 
   defmodule JourneyClient do
+    def task(701, _config) do
+      {:ok,
+       %{
+         "uid" => 701,
+         "status" => "processing",
+         "type" => "documentAdditionOrUpdate",
+         "indexUid" => "journey_ops_post_a"
+       }}
+    end
+
     def tasks(filters, config) do
       uids = filters[:index_uids] || []
       tasks = Keyword.get(config, :meilisearch_tasks, [])
@@ -20,9 +30,30 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
   end
 
   defmodule RecordingOban do
+    def config do
+      %{repo: ScrypathOpsWeb.RecoveryJourneyLiveTest.JourneyRepo, prefix: "public"}
+    end
+
     def insert(changeset) do
       job = Ecto.Changeset.apply_changes(changeset)
       {:ok, %{job | id: 991, state: "available"}}
+    end
+  end
+
+  defmodule JourneyRepo do
+    def get(Oban.Job, 991, prefix: "public") do
+      struct(Oban.Job,
+        id: 991,
+        attempt: 1,
+        state: "completed",
+        worker: "Scrypath.Oban.UpsertWorker",
+        args: %{
+          "schema" => "Elixir.ScrypathOps.Test.OpsPostA",
+          "index" => "journey_ops_post_a",
+          "backend" => "Elixir.Scrypath.Meilisearch",
+          "meilisearch_url" => "http://localhost:7700"
+        }
+      )
     end
   end
 
@@ -173,6 +204,8 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
 
     assert :sys.get_state(failed.pid).socket.assigns.recovery_receipts[queue_key].state ==
              :accepted
+
+
   end
 
   test "retry identifies the queue row when a backend task has the same numeric id", %{
@@ -214,6 +247,52 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
 
     assert :sys.get_state(failed.pid).socket.assigns.recovery_receipts[queue_key].state ==
              :accepted
+
+    # The accepted receipt and real telemetry collector must preserve source identity
+    # through the rendered status handoff, not only on the retry button.
+    collector = ScrypathOps.RecoveryObservation
+
+    collector.handle_event(
+      [:oban, :job, :start],
+      %{},
+      %{
+        job: JourneyRepo.get(Oban.Job, 991, prefix: "public"),
+        conf: Map.merge(RecordingOban.config(), %{name: RecordingOban})
+      },
+      %{server: collector}
+    )
+
+    collector.handle_event(
+      [:scrypath, :meilisearch, :task_wait, :stop],
+      %{},
+      %{task_uid: 701, final_status: :processing},
+      %{server: collector}
+    )
+
+    href =
+      failed
+      |> element("[data-testid='recovery-receipt'] a", "Check sync status")
+      |> render()
+      |> href_from_anchor()
+      |> String.replace("&amp;", "&")
+
+    {:ok, drift, _html} = live(conn, href)
+    render_async(drift)
+
+    put_live_assigns(drift,
+      current_scope: %{user: %{id: "user_123"}, active_organization: %{id: "org_456"}},
+      operator_context: %ScrypathOps.Integrations.Sigra.OperatorContext{
+        user_id: "user_123",
+        active_org_id: "org_456",
+        impersonator_user_id: nil,
+        sudo_at: DateTime.add(DateTime.utc_now(), -60, :second)
+      }
+    )
+
+    render_click(drift, "refresh_recovery_status", %{})
+    html = render_async(drift)
+    assert html =~ "Retry running"
+    assert :sys.get_state(drift.pid).socket.assigns.recovery_status == :running
   end
 
   test "explicit unavailable and empty schema selections never become a recovery target", %{
