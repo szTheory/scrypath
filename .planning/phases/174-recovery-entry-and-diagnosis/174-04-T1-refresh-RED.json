@@ -1,0 +1,10 @@
+{
+  "command": "ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 HEX_HOME=/private/tmp/scrypath-phase173-20261006-155750/hex-home MIX_TEST_PARTITION=174_wave1 SCRYPATH_TAP=1 mix test test/scrypath_ops_web/live/control_room_live_test.exs --no-color -n \"refresh names unavailable evidence and keeps the previous successful observation\"",
+  "exitCode": 2,
+  "output": "TAP version 13\nnot ok 1 - test refresh names unavailable evidence and keeps the previous successful observation\n# [{:error, %ExUnit.AssertionError{left: :ex_unit_no_meaningful_value, right: :ex_unit_no_meaningful_value, message: \"Expected truthy, got false\", expr: {:assert, [], [{:has_element?, [line: 215], [{:lv, [line: 215], nil}, \"[data-testid='control-room-observation-error']\", \"Backend observation unavailable\"]}]}, args: [#Phoenix.LiveViewTest.View<id: \\\"phx-GNxCBRJRwWR_vSZD\\\", module: ScrypathOpsWeb.ControlRoomLive, pid: #PID<0.491.0>, endpoint: ScrypathOpsWeb.Endpoint, ...>, \"[data-testid='control-room-observation-error']\", \"Backend observation unavailable\"], doctest: :ex_unit_no_meaningful_value, context: :==}, [{ScrypathOpsWeb.ControlRoomLiveTest, :\\\"test refresh names unavailable evidence and keeps the previous successful observation\\\", 1, [file: ~c\\\"test/scrypath_ops_web/live/control_room_live_test.exs\\\", line: 215]}]}]\n1..1\n",
+  "targetTest": "test refresh names unavailable evidence and keeps the previous successful observation",
+  "targetFile": "scrypath_ops/test/scrypath_ops_web/live/control_room_live_test.exs",
+  "expected": "A failed source observation is named with its cause while the last successful source evidence and refresh path remain visible.",
+  "actual": "After refresh switched the client to a timeout response, Control Room rendered no Backend observation unavailable state.",
+  "semanticAssessment": "The target LiveView test executed through the refresh event and failed at the intended assertion that the unavailable Backend observation be rendered. The one-test TAP plan is complete; setup and initial successful observation passed."
+}

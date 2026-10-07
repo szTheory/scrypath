@@ -21,6 +21,11 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     end
   end
 
+  defmodule ControlRoomErrorClient do
+    @moduledoc false
+    def tasks(_filters, _config), do: {:error, :fixture_timeout}
+  end
+
   setup do
     keys = ~w(
       schema_allowlist backend sync_mode index_prefix meilisearch_url meilisearch_client
@@ -194,6 +199,25 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     assert html =~ "ScrypathOps.Test.OpsPostA"
     refute has_element?(lv, "[data-testid='control-room-affected-scope']", "OpsPostA")
     assert has_element?(lv, "#control-room-health-link[href='/ops/health?#{query}']")
+  end
+
+  test "refresh names unavailable evidence and keeps the previous successful observation", %{
+    conn: conn
+  } do
+    put_healthy_posture_config!()
+    {:ok, lv, html} = live(conn, ~p"/ops")
+
+    assert html =~ "No fetch errors observed"
+
+    Application.put_env(:scrypath_ops, :meilisearch_client, ControlRoomErrorClient)
+    refreshed = render_click(lv, "refresh")
+
+    assert has_element?(lv, "[data-testid='control-room-observation-error']", "Backend observation unavailable")
+    assert refreshed =~ "Backend observation unavailable"
+    assert refreshed =~ "fixture_timeout"
+    assert refreshed =~ "last success retained from the previous check"
+    assert refreshed =~ "2026-04-16T18:00:00Z"
+    assert refreshed =~ "Refresh search health"
   end
 
   defp put_degraded_posture_config! do
