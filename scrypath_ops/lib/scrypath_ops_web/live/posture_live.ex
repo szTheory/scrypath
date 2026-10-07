@@ -224,6 +224,7 @@ defmodule ScrypathOpsWeb.PostureLive do
       shell={@shell}
       page_title={@page_title}
       ops_main_width={:wide}
+      recovery_target={@recovery_target}
     >
       <.ops_toolbar class="items-end gap-4">
         <.ops_page_header

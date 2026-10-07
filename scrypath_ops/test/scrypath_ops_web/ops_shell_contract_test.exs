@@ -211,9 +211,10 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     end
   end
 
-  test "shell recovery context follows the selected schema across health, failed work, and drift", %{
-    conn: conn
-  } do
+  test "shell recovery context follows the selected schema across health, failed work, and drift",
+       %{
+         conn: conn
+       } do
     schema_a = ScrypathOps.OperatorSelection.canonical(OpsPostA)
     schema_b = ScrypathOps.OperatorSelection.canonical(OpsPostB)
     query_a = URI.encode_query(%{"schema" => schema_a})
@@ -227,8 +228,14 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
       assert has_element?(health_lv, "#ops-mobile-nav a[href='#{href}']")
     end
 
-    assert has_element?(health_lv, "[data-testid='posture-failed-sync-link'][href$='schema=#{schema_b}']")
+    assert has_element?(
+             health_lv,
+             "[data-testid='posture-failed-sync-link'][href$='schema=#{schema_b}']"
+           )
 
+    Application.put_env(:scrypath_ops, :sync_mode, :oban)
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
+    Application.put_env(:scrypath_ops, :index_prefix, "shell-contract")
     {:ok, failed_lv, _failed_html} = live(conn, "/ops/failed-sync?" <> query_a)
     assert has_element?(failed_lv, "[data-testid='shell-recovery-target']", schema_a)
     assert has_element?(failed_lv, "a[href='/ops/sync-drift?#{query_a}']", "Check sync and drift")

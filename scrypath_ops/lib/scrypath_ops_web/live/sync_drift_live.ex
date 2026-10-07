@@ -986,6 +986,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       shell={@shell}
       page_title={@page_title}
       ops_main_width={:wide}
+      recovery_target={@recovery_target}
     >
       <.ops_page_header
         title="Sync and drift"
