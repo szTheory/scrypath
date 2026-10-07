@@ -30,8 +30,8 @@ Task IDs below map the implementation slices to runnable commands and phase-uniq
 
 | Task ID | Requirement | Threat ref and secure behavior | Test type | Automated command | Exists | Status |
 |---|---|---|---|---|---|---|
-| 174-01-T1 | OPUX-16–19 | T-174-01/02; selected A survives fleet ranking and existing retry gate | LiveView journey | `cd scrypath_ops && mix test test/scrypath_ops_web/live/recovery_journey_live_test.exs` | New test created in task | pending |
-| 174-01-T2 | OPUX-19 | T-174-01/02; invalid/removed query and old receipt cannot act | LiveView journey | `cd scrypath_ops && mix test test/scrypath_ops_web/live/recovery_journey_live_test.exs` | Test exists after T1 | pending |
+| 174-01-T1 | OPUX-16–19 | T-174-01/02; selected A survives fleet ranking and existing retry gate | LiveView journey | `cd scrypath_ops && mix test test/scrypath_ops_web/live/recovery_journey_live_test.exs` | New test created in task | pass — journey4/4; Wave1 Ops251+2/0 |
+| 174-01-T2 | OPUX-19 | T-174-01/02; invalid/removed query and old receipt cannot act | LiveView journey | `cd scrypath_ops && mix test test/scrypath_ops_web/live/recovery_journey_live_test.exs` | Test exists after T1 | pass — journey4/4; Wave1 Ops251+2/0 |
 | 174-02-T1 | OPUX-19 | T-174-03; shell links derive only validated target | shell/LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/ops_shell_contract_test.exs test/scrypath_ops_web/live/control_room_live_test.exs` | yes; extend | pending |
 | 174-02-T2 | OPUX-19 | T-174-03; row change selects explicit row, return remains scoped | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/ops_shell_contract_test.exs test/scrypath_ops_web/live/posture_live_test.exs test/scrypath_ops_web/live/failed_sync_live_test.exs test/scrypath_ops_web/live/sync_drift_live_test.exs` | yes; extend | pending |
 | 174-03-T1 | OPUX-19 | T-174-05; safe local sudo return includes only canonical schema | unit/LiveView | `cd scrypath_ops && mix test test/scrypath_ops/integrations/sigra/gating_test.exs test/scrypath_ops_web/live/failed_sync_live_test.exs` | yes; extend | pending |

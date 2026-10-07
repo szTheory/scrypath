@@ -184,3 +184,7 @@ The selected-schema recovery entry and diagnosis path is in place for the remain
 - Summary, RED evidence, deferred-items record, implementation files, and journey tests exist.
 - All five task commits are ancestors of the current plan branch.
 - Stub scan found no TODO/FIXME/placeholder patterns or empty-value UI stubs in plan-changed source and test files.
+
+## Wave 1 integration follow-up
+
+The parent full-suite check subsequently consolidated the identical optional Oban.Job stub into test/support/oban_job_fixture.ex and updated the stale duplicate incident-card assertion to the configured connected recovery entry. Canonical `mix precommit` now compiles the suites together and passes251 tests plus2 doctests,0 failures. The earlier separate-suite results above remain historical. See174-WAVE1-GATE.md for the local source/evidence boundary and retained failing/green logs.
