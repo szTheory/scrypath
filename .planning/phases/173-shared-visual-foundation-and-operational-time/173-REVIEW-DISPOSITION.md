@@ -3,30 +3,30 @@ phase: 173
 review: 173-REVIEW.md
 titles: json
 findings:
+  - id: WR-01
+    severity: warning
+    disposition: fixed
+    title: "Whole-schema errors hide retained queue evidence"
   - id: CR-01
     severity: critical
     disposition: fixed
     title: "Empty Oban history is reported as unavailable"
-  - id: WR-01
-    severity: warning
-    disposition: fixed
-    title: "Queue inspection failure marks the successful backend observation unavailable"
   - id: WR-02
     severity: warning
     disposition: fixed
     title: "Timed-out schema scans lose the schema key needed to retain its last success"
 open: 0
 total: 3
-recorded: 2026-10-07T01:33:52.118Z
+recorded: 2026-10-07T01:39:43.914Z
 ---
 
 # Phase 173: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| CR-01 | critical | fixed | 173-REVIEW-FIX.md |
 | WR-01 | warning | fixed | 173-REVIEW-FIX.md |
-| WR-02 | warning | fixed | 173-REVIEW-FIX.md |
+| CR-01 | critical | fixed | 173-REVIEW-FIX.iter1.md (not in the current review) |
+| WR-02 | warning | fixed | 173-REVIEW-FIX.iter1.md (not in the current review) |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
