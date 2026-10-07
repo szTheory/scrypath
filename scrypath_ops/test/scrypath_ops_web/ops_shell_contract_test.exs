@@ -254,6 +254,20 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert has_element?(drift_lv, ".ops-sidebar a[href='/ops/health?#{query_b}']")
   end
 
+  test "selected schema destinations are server-owned outside the ignored palette", %{conn: conn} do
+    {:ok, _lv, html} = live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.OpsPostA")
+    [_, manifest] = Regex.run(~r/(<div id="ops-command-palette-destinations".*?<\/div>)/s, html)
+
+    assert manifest =~ ~s(data-recovery-target="ScrypathOps.Test.OpsPostA")
+    assert Regex.scan(~r/data-ops-palette-destination=/, manifest) |> length() == 3
+    assert manifest =~ ~s(id="ops-palette-destination-health")
+    assert manifest =~ ~s(href="/ops/health?schema=ScrypathOps.Test.OpsPostA")
+    assert manifest =~ ~s(id="ops-palette-destination-failed-sync")
+    assert manifest =~ ~s(href="/ops/failed-sync?schema=ScrypathOps.Test.OpsPostA")
+    assert manifest =~ ~s(id="ops-palette-destination-sync-drift")
+    assert manifest =~ ~s(href="/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+  end
+
   test "root theme provider synchronizes selected theme button state" do
     source = File.read!(@root_template)
 
