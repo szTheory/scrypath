@@ -32,7 +32,7 @@
   "next": {
     "command": "$gsd-execute-phase 174 --auto --no-transition",
     "label": "Implement and verify Phase174; working UI review follows",
-    "reason": "Planning passed:8plans16tasks6waves,4requirements24decisions30UIcriteria. Maintainer authorized recommended choices through174. Base divergence guard selects sequential execution on the prepared branch; do not mutate frozen173/original preview or advance175."
+    "reason": "Planning passed:8plans16tasks6waves,4requirements24decisions30UIcriteria. Maintainer authorized recommended choices through174. Base divergence guard selects sequential execution on the prepared branch; do not mutate frozen173/original preview or advance175. Active execution root is /private/tmp/scrypath-phase173-20261006-155750/phase174-execution on gsd/phase-174-recovery-entry-and-diagnosis; no completed tasks, prior expected RED preserved and to be rerun here."
   },
   "updated_at": "2026-10-07T09:26:35.020333+00:00"
 }

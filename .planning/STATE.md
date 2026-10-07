@@ -5,11 +5,11 @@ milestone_name: ScrypathOps UI refinement
 current_phase: 174
 current_phase_name: Recovery Entry and Diagnosis
 status: executing
-stopped_at: Phase174 planning passed; executing selected-schema tracer under authorized auto-follow
-last_updated: "2026-10-07T09:26:34.922Z"
+stopped_at: Phase174 implementation resumed in regular isolated clone after commit-guard recovery; executing tracer with no completed tasks
+last_updated: "2026-10-07T11:59:45.927Z"
 last_activity: 2026-10-07
 last_activity_desc: Phase 174 execution started
-state_head: b791e8c5a4ad953ef915e010ca5dcb298d6c14e2
+state_head: aba11eccd43277b3d678d3b4163c97e0726c7791
 progress:
   total_phases: 5
   completed_phases: 1
@@ -82,11 +82,11 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-07T09:26:34.147Z
-Stopped at: Phase174 planning passed; executing selected-schema tracer under authorized auto-follow
+Last session: 2026-10-07T11:59:45.893Z
+Stopped at: Phase174 implementation resumed in regular isolated clone after commit-guard recovery; executing tracer with no completed tasks
 Resume file: .planning/phases/174-recovery-entry-and-diagnosis/174-01-PLAN.md
 
-This is a separate planning-only successor on `planning/phase-174-handoff` in `/private/tmp/scrypath-phase173-20261006-155750/next-planning`. It starts from the immutable Phase 173 source `13ea88a9c18a7515f4ec5ae7deea0cdde4c22531`. Its later handoff metadata does not extend the prior exact-SHA receipt. The execution checkout and PR branch `gsd/phase-173-shared-visual-foundation` remain unchanged at that attested source.
+Phase 174 now executes in a separate regular clone on `gsd/phase-174-recovery-entry-and-diagnosis` in `/private/tmp/scrypath-phase173-20261006-155750/phase174-execution`. The previous planning worktree and its RED artifacts remain preserved; the fresh clone resolves the executor commit guard without bypassing it. It starts from the immutable Phase 173 source `13ea88a9c18a7515f4ec5ae7deea0cdde4c22531`. Its later handoff metadata does not extend the prior exact-SHA receipt. The execution checkout and PR branch `gsd/phase-173-shared-visual-foundation` remain unchanged at that attested source.
 
 **Completed:** v1.43 Phase 173, four plans and OPUX-09–OPUX-15; independent verification 58/58, native production browser proof 34/34, core 661 tests/four properties and Ops 247 tests/two doctests, all zero failures. Final exact-source [run 37560447817](https://github.com/szTheory/scrypath/actions/runs/37560447817) completed successfully with all five required jobs, coverage and closeout attestation passing. The collector-validated receipt is retained at `reference/v1.43-phase173-final-receipt.json`; archive and member hashes refer to different verified bytes. [Draft PR #94](https://github.com/szTheory/scrypath/pull/94) targets main at the attested source. No merge or release was performed.
 
@@ -94,6 +94,6 @@ This is a separate planning-only successor on `planning/phase-174-handoff` in `/
 
 **Preservation:** The original `/Users/jon/projects/scrypath` checkout remains on `planning/next-milestone-handoff` at `368abcc5f0309cb0e154739c1e52916478283b90`. All fifteen original modified source/design files are byte-identical to the baseline; preview :4012 remains healthy and unmodified. All executor and disposable verification stacks/resources were removed. This next-planning checkout is intentionally retained for the next command. Native logs/captures remain under `/private/tmp/scrypath-phase173-20261006-155750/evidence/173-final-review/`, with final CI logs and the original external collector receipt under the parent directory.
 
-**Next:** Continue $gsd-execute-phase 174 --auto --no-transition through the eight checked plans and independent executable verification, then prepare the working UI for maintainer review. Sequential execution follows the runtime base-divergence guard; use the prepared next-planning checkout, preserve frozen173 and original preview. Do not advance175.
+**Next:** Continue $gsd-execute-phase 174 --auto --no-transition through the eight checked plans and independent executable verification, then prepare the working UI for maintainer review. Sequential execution follows the runtime base-divergence guard; use the regular phase174-execution clone, preserve the previous planning worktree, frozen173 and original preview. Do not advance175.
 
 Automatic chaining is disabled. Preserve adaptive routing and the existing frontend UI/safety gates. Context can be cleared: the committed successor records retain scope, decisions, verification evidence, unresolved items, working directory/branch and exact next command. Phases 172/170 and their archived source-bounded receipts remain historical.
