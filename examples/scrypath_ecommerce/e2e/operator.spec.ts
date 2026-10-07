@@ -63,7 +63,7 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await page.getByRole("link", { name: "Start recovery" }).click();
   await expect(page.getByRole("heading", { name: "Search health", exact: true })).toBeVisible();
   await waitForLiveConnected(page);
-  const variantHandoff = page.getByTestId("posture-failed-sync-link").filter({ hasText: "Variant" });
+  const variantHandoff = page.getByRole("link", { name: "View failed sync work for ScrypathEcommerce.Catalog.Variant", exact: true });
   await expect(variantHandoff).toBeVisible();
   await variantHandoff.click();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
