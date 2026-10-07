@@ -107,6 +107,8 @@ status: complete
 2. **Task 2: Expose disposable standalone Ops and mounted browser targets** - `9bd2141` (feat)
 3. **Task 3: Prove complete shell and preference behavior in both entrypoints** - `a80f979` (feat)
 
+4. **Task 3: Post-merge obsolete contract correction** — `0d99bc5` (test)
+
 **Plan metadata:** committed after this summary was written.
 
 ## Files Created/Modified

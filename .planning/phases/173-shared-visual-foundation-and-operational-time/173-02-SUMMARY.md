@@ -122,8 +122,11 @@ status: complete
 5. **Task 2: Preserve queue time and absent evidence semantics** — `83431fc` (feat)
 6. **Task 3: Rendered browser proof RED** — `33748d1` (test)
 7. **Task 3: Responsive browser evidence** — `77c8338` (feat)
-8. **TAP formatter formatting required by the core gate** — `8f62c98` (style)
-9. **Keep open exact timestamp evidence below its age** — `48fa841` (fix)
+8. **Task 3: TAP formatter formatting required by the core gate** — `8f62c98` (style)
+9. **Task 3: Keep open exact timestamp evidence below its age** — `48fa841` (fix)
+
+10. **Task 3: Connected retention and plain Checked RED** — `7af89c4` (test)
+11. **Task 3: Real failed-refresh proof and readable time metadata GREEN** — `236443e` (fix)
 
 The T1 RED reports are `.planning/phases/173-shared-visual-foundation-and-operational-time/173-02-T1-red.{tap,json}` and `173-02-T1-retain-red.{tap,json}`. T2 RED is `173-02-T2-ops-red.{tap,json}`. T3 RED is `173-02-T3-browser-red.xml` with its companion JSON record. Each planned target failed on its behavior assertion, each report was checked by `gsd-tools.cjs check tdd-red-evidence`, and each returned `RED_EVIDENCE_OK` before implementation. The corresponding GREEN commits and tests passed.
 

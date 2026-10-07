@@ -121,9 +121,12 @@ status: complete
 
 ## Task Commits
 
-1. **T1: Degraded health and neutral metrics** — RED `95d962d`; GREEN `d7c8ddb`.
-2. **T2: Status/action contracts and refresh hook** — RED `9582e9f`; GREEN `b867a38`.
-3. **T3: Production browser proof and fixture seam** — test RED `0c14ae9`, classified evidence `1113f73`, implementation `7894d82`, followed by browser-contract corrections `8fb2856`, `7df4983`, `e6193c1`, `0fc008e`, `9095388`, `ac21d9d`, `d0a38c0`, `94ded5a`, `404d089`, and formatting `9a1e9e6`.
+1. **Task 1: Degraded health and neutral metrics** — RED `95d962d`; GREEN `d7c8ddb`.
+2. **Task 2: Status/action contracts and refresh hook** — RED `9582e9f`; GREEN `b867a38`.
+3. **Task 3: Production browser proof and fixture seam** — test RED `0c14ae9`, classified evidence `1113f73`, implementation `7894d82`, followed by browser-contract corrections `8fb2856`, `7df4983`, `e6193c1`, `0fc008e`, `9095388`, `ac21d9d`, `d0a38c0`, `94ded5a`, `404d089`, and formatting `9a1e9e6`.
+
+4. **Task 3: Post-merge neutral palette RED** — `605e5a1` (test)
+5. **Task 3: Neutral surface opacity GREEN** — `336140b` (fix)
 
 All task commits ran through the standard hook-enabled GSD commit helper. The measured plan range contains 17 commits.
 

@@ -91,13 +91,13 @@ status: complete
 
 Tasks were committed individually, with a RED test commit before each GREEN implementation:
 
-1. **Task 1 RED:** `25a7113` (`test(173-04): add failing timestamp copy browser proof`)
-2. **Task 1 GREEN:** `105038e` (`feat(173-04): copy validated operational timestamps from Ops`)
-3. **Task 2 RED:** `1fec011` (`test(173-04): prove stale clipboard completion race`)
-4. **Task 2 GREEN:** `6b39f9f` (`feat(173-04): preserve latest clipboard outcome`)
+1. **Task 1: Copy behavior RED** `25a7113` (`test(173-04): add failing timestamp copy browser proof`)
+2. **Task 1: Copy behavior GREEN** `105038e` (`feat(173-04): copy validated operational timestamps from Ops`)
+3. **Task 2: Stale completion RED** `1fec011` (`test(173-04): prove stale clipboard completion race`)
+4. **Task 2: Latest outcome GREEN** `6b39f9f` (`feat(173-04): preserve latest clipboard outcome`)
 
-5. **Post-merge contrast RED:** `9ffac25` (`test(173-04): enforce readable copy feedback and targets`)
-6. **Post-merge contrast GREEN:** `185832d` (`fix(173-04): restore readable body copy and quiet targets`)
+5. **Task 2: Post-merge contrast RED** `9ffac25` (`test(173-04): enforce readable copy feedback and targets`)
+6. **Task 2: Post-merge contrast GREEN** `185832d` (`fix(173-04): restore readable body copy and quiet targets`)
 
 **Plan metadata:** committed separately after self-check.
 
