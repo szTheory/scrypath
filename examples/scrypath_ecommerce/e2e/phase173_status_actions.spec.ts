@@ -135,6 +135,35 @@ for (const entrypoint of ENTRYPOINTS) {
     }
   });
 
+  test(`${entrypoint.name} partial queue failure retains only queue evidence and empty queues stay observed`, async ({ page }) => {
+    await openScenario(page, entrypoint.url, "default", "light", 390);
+    const row = page.locator(`[id="${entrypoint.rows[0]}"]`);
+    await expect(row.locator(".ops-badge-success")).toHaveCount(0);
+    await expect(row).toContainText("no backend failures observed");
+    await page.getByRole("button", { name: "Refresh search health" }).evaluate((button) =>
+      button.setAttribute("phx-value-scenario", "queue-error")
+    );
+    await page.getByRole("button", { name: "Refresh search health" }).click();
+    await expect(row).toContainText("fixture_queue_unavailable");
+    const backend = row.locator(".ops-signal-group").first();
+    const queue = row.locator(".ops-signal-group").nth(1);
+    await expect(backend.locator("time.ops-time__value")).toHaveText("3 days ago");
+    await expect(backend.locator(".ops-signal-metrics")).toBeVisible();
+    await expect(backend).not.toContainText("observation unavailable");
+    await expect(queue.locator("time.ops-time__value")).toHaveText("2 days ago");
+    await expect(queue).toContainText("Queue observation unavailable");
+    await expect(queue.locator(".ops-time__exact")).toHaveText("2026-10-04T13:02:05.123456-04:00");
+    await expect(queue.locator(".ops-time__copy")).toBeVisible();
+    await expect(queue.locator(".ops-signal-metrics")).toHaveCount(0);
+    await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+
+    await openScenario(page, entrypoint.url, "empty-queue", "dark", 1440);
+    await expect(row).toContainText("queue observed");
+    await expect(queue.locator(".ops-signal-metrics")).toBeVisible();
+    await expect(queue).toContainText("No success observed");
+    await expect(queue).not.toContainText("unavailable");
+  });
+
   test(`${entrypoint.name} neutral chrome and metrics preserve the approved palette`, async ({ page }) => {
     for (const theme of ["light", "dark", "system"] as const) {
       await openScenario(page, entrypoint.url, "default", theme, 390);

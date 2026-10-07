@@ -33,6 +33,13 @@ defmodule Scrypath.Operator do
     Status.fetch(schema_module, config, operator_opts)
   end
 
+  @doc false
+  def sync_status_sources(schema_module, opts) do
+    {operator_opts, runtime_opts} = Keyword.split(opts, @operator_only_opts)
+    config = Config.resolve!(runtime_opts)
+    Status.fetch_sources(schema_module, config, operator_opts)
+  end
+
   @spec failed_sync_work(module(), keyword()) ::
           {:ok, [FailedWork.t()]}
           | {:ok, FailedSyncWorkInspection.t()}

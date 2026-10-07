@@ -18,6 +18,10 @@ defmodule Scrypath.Operator.StatusTest do
     end
   end
 
+  defmodule UnavailableQueueInspector do
+    def list_jobs(_schema, _config), do: {:error, :queue_unavailable}
+  end
+
   test "Scrypath.sync_status/2 returns a Scrypath-owned status struct without raw backend or queue payloads" do
     assert {:ok, %Status{} = status} =
              Scrypath.sync_status(SearchablePost,
@@ -250,5 +254,24 @@ defmodule Scrypath.Operator.StatusTest do
     assert status.queue.observed?
     assert status.queue.pending == []
     assert status.queue.last_succeeded == nil
+  end
+
+  test "public sync status stays all-or-error while Ops preserves independent observations" do
+    opts = [
+      backend: Scrypath.Meilisearch,
+      sync_mode: :oban,
+      meilisearch_url: "http://localhost:7700",
+      meilisearch_client: StatusMeilisearchClient,
+      meilisearch_tasks: [],
+      oban: Scrypath.SyncTest.ReadyOban,
+      oban_queue: :search_sync,
+      oban_inspector: UnavailableQueueInspector
+    ]
+
+    assert {:error, :queue_unavailable} = Scrypath.sync_status(SearchablePost, opts)
+    assert {:ok, projection} = Scrypath.Operator.sync_status_sources(SearchablePost, opts)
+    assert projection.source_errors == %{queue: :queue_unavailable}
+    assert projection.backend.pending == []
+    refute projection.queue.observed?
   end
 end

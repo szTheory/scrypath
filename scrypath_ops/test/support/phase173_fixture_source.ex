@@ -17,7 +17,9 @@ defmodule ScrypathOps.Test.Phase173FixtureSource do
              "missing-time",
              "manual",
              "no-success",
-             "eligibility-disabled"
+             "eligibility-disabled",
+             "queue-error",
+             "empty-queue"
            ] do
     allowlist =
       if name == "empty", do: [], else: if(name == "partial", do: [hd(@schemas)], else: @schemas)
@@ -30,7 +32,7 @@ defmodule ScrypathOps.Test.Phase173FixtureSource do
       end
 
     jobs =
-      if name in ["empty", "partial", "manual"] do
+      if name in ["empty", "partial", "manual", "empty-queue"] do
         []
       else
         Enum.map(allowlist, fn schema -> job(schema, name) end)
@@ -39,7 +41,10 @@ defmodule ScrypathOps.Test.Phase173FixtureSource do
     %{
       allowlist: allowlist,
       observed_at:
-        if(name == "source-error", do: DateTime.add(@observed_at, 86_400), else: @observed_at),
+        if(name in ["source-error", "queue-error"],
+          do: DateTime.add(@observed_at, 86_400),
+          else: @observed_at
+        ),
       opts: [
         backend: Scrypath.Meilisearch,
         sync_mode: if(name == "manual", do: :manual, else: :oban),
@@ -48,7 +53,8 @@ defmodule ScrypathOps.Test.Phase173FixtureSource do
         meilisearch_url: "http://fixture.invalid",
         meilisearch_client: __MODULE__,
         meilisearch_tasks: if(name == "source-error", do: [:fixture_source_error], else: tasks),
-        oban_jobs: jobs
+        oban_inspector: __MODULE__,
+        oban_jobs: if(name == "queue-error", do: [:fixture_queue_error], else: jobs)
       ],
       refresh_disabled?: name == "eligibility-disabled"
     }
@@ -69,6 +75,13 @@ defmodule ScrypathOps.Test.Phase173FixtureSource do
         |> Enum.filter(&(&1["indexUid"] in index_uids))
 
       {:ok, %{results: results, next: nil}}
+    end
+  end
+
+  def list_jobs(_schema, opts) do
+    case Keyword.get(opts, :oban_jobs, []) do
+      [:fixture_queue_error] -> {:error, :fixture_queue_unavailable}
+      jobs -> {:ok, jobs}
     end
   end
 

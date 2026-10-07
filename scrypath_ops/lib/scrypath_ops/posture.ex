@@ -70,7 +70,7 @@ defmodule ScrypathOps.Posture do
 
       true ->
         rows = scan(allowlist, opts)
-        err = Enum.count(rows, fn {_m, r} -> match?({:error, _}, r) end)
+        err = Enum.count(rows, &row_error?/1)
         backend_failed = backend_failed_count(rows)
         queue_failed = queue_failed_count(rows)
 
@@ -184,24 +184,28 @@ defmodule ScrypathOps.Posture do
   defp scan(allowlist, opts) do
     allowlist
     |> Task.async_stream(
-      fn mod -> {mod, Scrypath.sync_status(mod, opts)} end,
+      fn mod -> Scrypath.Operator.sync_status_sources(mod, opts) end,
+      ordered: true,
       max_concurrency: 3,
       timeout: 15_000,
       on_timeout: :kill_task
     )
+    |> Enum.zip(allowlist)
     |> Enum.map(fn
-      {:ok, {mod, res}} -> {mod, res}
-      {:exit, reason} -> {:posture_stream, {:error, {:async_stream, reason}}}
+      {{:ok, res}, mod} -> {mod, res}
+      {{:exit, reason}, mod} -> {mod, {:error, {:async_stream, reason}}}
     end)
     |> sort_rows()
   end
 
   defp sort_rows(rows) do
-    Enum.sort_by(rows, fn
-      {_m, {:error, _}} -> 0
-      _ -> 1
-    end)
+    Enum.sort_by(rows, fn row -> if row_error?(row), do: 0, else: 1 end)
   end
+
+  defp row_error?({_schema, {:error, _}}), do: true
+
+  defp row_error?({_schema, {:ok, status}}),
+    do: map_size(Map.get(status, :source_errors, %{})) > 0
 
   defp backend_failed_count(rows) do
     Enum.reduce(rows, 0, fn
@@ -229,36 +233,36 @@ defmodule ScrypathOps.Posture do
 
     Enum.reduce(rows, %{}, fn
       {schema, {:ok, status}}, acc ->
-        Map.put(acc, schema, %{
-          backend: source_reference(status.backend.last_succeeded, observed_at),
-          queue:
-            if(status.mode == :oban,
-              do: source_reference(status.queue.last_succeeded, observed_at),
-              else: %{
-                state: nil,
-                observed_at: observed_at,
-                retained?: false,
-                unavailable_reason: nil
-              }
-            )
-        })
+        prior = Map.get(previous_refs, schema, %{})
+
+        references =
+          Map.new([:backend, :queue], fn source ->
+            case Map.fetch(Map.get(status, :source_errors, %{}), source) do
+              {:ok, reason} ->
+                {source, retain_source(Map.get(prior, source), reason)}
+
+              :error ->
+                {source, source_reference(Map.get(status, source).last_succeeded, observed_at)}
+            end
+          end)
+
+        Map.put(acc, schema, references)
 
       {schema, {:error, reason}}, acc ->
         prior = Map.get(previous_refs, schema, %{})
 
         retained =
           Map.new([:backend, :queue], fn source ->
-            reference = Map.get(prior, source, %{state: nil, observed_at: nil})
-
-            {source,
-             Map.merge(reference, %{
-               retained?: not is_nil(Map.get(reference, :state)),
-               unavailable_reason: reason
-             })}
+            {source, retain_source(Map.get(prior, source), reason)}
           end)
 
         Map.put(acc, schema, retained)
     end)
+  end
+
+  defp retain_source(reference, reason) do
+    reference = reference || %{state: nil, observed_at: nil}
+    Map.merge(reference, %{retained?: not is_nil(reference.state), unavailable_reason: reason})
   end
 
   defp source_reference(state, observed_at) do

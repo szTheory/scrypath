@@ -357,7 +357,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                         class="ops-signal-group"
                       >
                         <p class="ops-signal-group__title">Backend tasks</p>
-                        <dl class="ops-signal-metrics">
+                        <dl :if={!source_error?(status, :backend)} class="ops-signal-metrics">
                           <div>
                             <dt>Pending</dt>
                             <dd>{length(status.backend.pending)}</dd>
@@ -380,6 +380,13 @@ defmodule ScrypathOpsWeb.PostureLive do
                             </dd>
                           </div>
                         </dl>
+                        <.unavailable_signal
+                          :if={source_error?(status, :backend)}
+                          status={status}
+                          source={:backend}
+                          mod={mod}
+                          summary={@posture_summary}
+                        />
                       </section>
 
                       <section
@@ -414,7 +421,17 @@ defmodule ScrypathOpsWeb.PostureLive do
                             </dd>
                           </div>
                         </dl>
-                        <p :if={!status.queue.observed?} class="text-ops-sm text-base-content/75">
+                        <.unavailable_signal
+                          :if={source_error?(status, :queue)}
+                          status={status}
+                          source={:queue}
+                          mod={mod}
+                          summary={@posture_summary}
+                        />
+                        <p
+                          :if={!status.queue.observed? and !source_error?(status, :queue)}
+                          class="text-ops-sm text-base-content/75"
+                        >
                           {queue_unobserved_copy(status)}
                         </p>
                       </section>
@@ -570,18 +587,56 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   defp posture_card_tone(_), do: nil
 
+  defp source_error?(status, source),
+    do: Map.has_key?(Map.get(status, :source_errors, %{}), source)
+
+  defp unavailable_signal(assigns) do
+    assigns =
+      assigns
+      |> assign(
+        :reference,
+        ScrypathOps.Posture.last_success_ref(assigns.summary, assigns.mod, assigns.source)
+      )
+      |> assign(:reason, Map.get(assigns.status.source_errors, assigns.source))
+      |> assign(:source_label, if(assigns.source == :backend, do: "Backend", else: "Queue"))
+
+    ~H"""
+    <p class="text-ops-body text-base-content">
+      {@source_label} observation unavailable;
+      <span :if={@reference && @reference.state}>last success retained from the previous check.</span>
+      fetch error: {inspect(@reason)}
+    </p>
+    <.ops_time
+      id={"ops-time-#{module_flat_name(@mod)}-retained-#{@source}-success"}
+      dt={retained_time(@reference && @reference.state)}
+      source_iso={state_source_iso(@reference && @reference.state)}
+      copy={true}
+      reference={@reference && @reference.observed_at}
+      label="Last success retained"
+      empty="Not observed"
+      unavailable_reason={inspect(@reason)}
+    />
+    """
+  end
+
   defp backend_badge_kind(status) do
-    if length(status.backend.failed) > 0, do: :warning, else: :success
+    if source_error?(status, :backend) or length(status.backend.failed) > 0,
+      do: :warning,
+      else: :neutral
   end
 
   defp backend_badge_label(status) do
-    if length(status.backend.failed) > 0, do: "backend failed", else: "backend clear"
+    cond do
+      source_error?(status, :backend) -> "Backend observation unavailable"
+      length(status.backend.failed) > 0 -> "backend failed"
+      true -> "no backend failures observed"
+    end
   end
 
   defp queue_badge_kind(status) do
     if status.queue.observed? and length(status.queue.failed) == 0 and
          length(status.queue.retrying) == 0 do
-      :success
+      :neutral
     else
       :warning
     end
