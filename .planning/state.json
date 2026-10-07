@@ -1,7 +1,7 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v1.43 — ScrypathOps UI refinement",
+  "milestone": "v1.43 \u2014 ScrypathOps UI refinement",
   "phases": [
     {
       "number": "173",
@@ -30,9 +30,9 @@
     }
   ],
   "next": {
-    "command": "/gsd:progress --next",
-    "label": "Advance to the next step (plan phase 174)",
-    "reason": "Phase 174 of 5 — needs a plan"
+    "command": "$gsd-discuss-phase 174",
+    "label": "Discuss Phase 174: Recovery Entry and Diagnosis",
+    "reason": "Phase 173 is complete; gather Phase 174 context before planning in /private/tmp/scrypath-phase173-20261006-155750/execution."
   },
   "updated_at": "2026-10-07T02:05:17.602Z"
 }

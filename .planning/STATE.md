@@ -5,7 +5,7 @@ milestone_name: ScrypathOps UI refinement
 current_phase: 174
 current_phase_name: Recovery Entry and Diagnosis
 status: planning
-stopped_at: Phase 173 complete, ready to plan Phase 174
+stopped_at: Phase 173 complete; Phase 174 ready for discussion
 last_updated: "2026-10-07T02:06:46.583Z"
 last_activity: 2026-10-06
 last_activity_desc: Phase 173 complete, transitioned to Phase 174
