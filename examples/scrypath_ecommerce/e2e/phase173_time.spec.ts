@@ -112,9 +112,13 @@ for (const entrypoint of ENTRYPOINTS) {
 
       if (scenario === "source-error") {
         await expect(row).toContainText("fetch error: :fixture_unavailable");
-        await expect(row.locator(".ops-time__reason")).toHaveText(":fixture_unavailable");
-        await expect(row).toContainText("Not observed");
-        await expect(row.locator("details.ops-time__disclosure")).toHaveCount(0);
+        const backend = row.locator(".ops-signal-group").first();
+        const queue = row.locator(".ops-signal-group").nth(1);
+        await expect(backend.locator(".ops-time__reason")).toHaveText(":fixture_unavailable");
+        await expect(backend).toContainText("Not observed");
+        await expect(backend.locator("details.ops-time__disclosure")).toHaveCount(0);
+        await expect(queue.locator("time.ops-time__value")).toHaveText("3 days ago");
+        await expect(queue.locator("code.ops-time__exact")).toHaveText(SOURCE_ISO);
       } else if (scenario === "no-success") {
         await expect(row.locator(".ops-signal-group").first().locator(".ops-time")).toContainText("No success observed");
       } else if (scenario === "missing-time") {

@@ -157,6 +157,17 @@ for (const entrypoint of ENTRYPOINTS) {
     await expect(queue.locator(".ops-signal-metrics")).toHaveCount(0);
     await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
 
+    await page.getByRole("button", { name: "Refresh search health" }).evaluate((button) =>
+      button.setAttribute("phx-value-scenario", "all-source-error")
+    );
+    await page.getByRole("button", { name: "Refresh search health" }).click();
+    await expect(backend).toContainText("fixture_unavailable");
+    await expect(backend.locator("time.ops-time__value")).toHaveText("3 days ago");
+    await expect(queue).toContainText("fixture_queue_unavailable");
+    await expect(queue.locator("time.ops-time__value")).toHaveText("2 days ago");
+    await expect(queue.locator(".ops-time__exact")).toHaveText("2026-10-04T13:02:05.123456-04:00");
+    await page.screenshot({ path: join(captureDir, `phase173-${entrypoint.name}-all-source-error-light-390.png`), fullPage: true });
+
     await openScenario(page, entrypoint.url, "empty-queue", "dark", 1440);
     await expect(row).toContainText("queue observed");
     await expect(queue.locator(".ops-signal-metrics")).toBeVisible();

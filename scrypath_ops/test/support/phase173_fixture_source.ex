@@ -19,6 +19,7 @@ defmodule ScrypathOps.Test.Phase173FixtureSource do
              "no-success",
              "eligibility-disabled",
              "queue-error",
+             "all-source-error",
              "empty-queue"
            ] do
     allowlist =
@@ -41,7 +42,7 @@ defmodule ScrypathOps.Test.Phase173FixtureSource do
     %{
       allowlist: allowlist,
       observed_at:
-        if(name in ["source-error", "queue-error"],
+        if(name in ["source-error", "queue-error", "all-source-error"],
           do: DateTime.add(@observed_at, 86_400),
           else: @observed_at
         ),
@@ -52,9 +53,14 @@ defmodule ScrypathOps.Test.Phase173FixtureSource do
         index_prefix: "phase173_",
         meilisearch_url: "http://fixture.invalid",
         meilisearch_client: __MODULE__,
-        meilisearch_tasks: if(name == "source-error", do: [:fixture_source_error], else: tasks),
+        meilisearch_tasks:
+          if(name in ["source-error", "all-source-error"],
+            do: [:fixture_source_error],
+            else: tasks
+          ),
         oban_inspector: __MODULE__,
-        oban_jobs: if(name == "queue-error", do: [:fixture_queue_error], else: jobs)
+        oban_jobs:
+          if(name in ["queue-error", "all-source-error"], do: [:fixture_queue_error], else: jobs)
       ],
       refresh_disabled?: name == "eligibility-disabled"
     }

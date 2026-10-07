@@ -457,23 +457,29 @@ defmodule ScrypathOpsWeb.PostureLive do
                         <.ops_badge kind={:error}>fetch error</.ops_badge>
                       </div>
                     </div>
-                    <div class="mt-3">
-                      <p
-                        :if={retained_state(@posture_summary, mod, :backend)}
-                        class="text-ops-sm text-base-content/75"
+                    <div class="ops-schema-signal-card__groups">
+                      <section
+                        :for={source <- [:backend, :queue]}
+                        aria-label={"#{if(source == :backend, do: "Backend task", else: "Queue job")} signals for #{inspect(mod)}"}
+                        class="ops-signal-group"
                       >
-                        Backend observation unavailable; last success retained from the previous check.
-                      </p>
-                      <.ops_time
-                        id={"ops-time-#{module_flat_name(mod)}-retained-backend-success"}
-                        dt={retained_time(retained_state(@posture_summary, mod, :backend))}
-                        source_iso={state_source_iso(retained_state(@posture_summary, mod, :backend))}
-                        copy={true}
-                        reference={success_reference(@posture_summary, mod, :backend)}
-                        label="Last success retained"
-                        empty="Not observed"
-                        unavailable_reason={inspect(reason)}
-                      />
+                        <p class="ops-signal-group__title">
+                          {if(source == :backend, do: "Backend tasks", else: "Queue jobs")}
+                        </p>
+                        <.unavailable_signal
+                          :if={source == :backend or !queue_unused_mode?(queue_mode(@scrypath_opts))}
+                          status={%{source_errors: %{source => reason}}}
+                          source={source}
+                          mod={mod}
+                          summary={@posture_summary}
+                        />
+                        <p
+                          :if={source == :queue and queue_unused_mode?(queue_mode(@scrypath_opts))}
+                          class="text-ops-sm text-base-content/75"
+                        >
+                          Queue not used in {queue_mode(@scrypath_opts)} sync mode.
+                        </p>
+                      </section>
                     </div>
                     <.ops_link_button
                       navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
@@ -563,13 +569,6 @@ defmodule ScrypathOpsWeb.PostureLive do
   defp success_reference(summary, schema, source),
     do: ScrypathOps.Posture.last_success_ref(summary, schema, source)
 
-  defp retained_state(summary, schema, source) do
-    case success_reference(summary, schema, source) do
-      %{retained?: true, state: %Scrypath.Operator.State{} = state} -> state
-      _other -> nil
-    end
-  end
-
   defp metric_tone(0), do: :neutral
   defp metric_tone(_), do: :warning
 
@@ -651,6 +650,8 @@ defmodule ScrypathOpsWeb.PostureLive do
       true -> "queue observed"
     end
   end
+
+  defp queue_mode(opts), do: opts |> Scrypath.Config.resolve!() |> Keyword.fetch!(:sync_mode)
 
   defp queue_unused_mode?(mode), do: mode in [:inline, :manual, "inline", "manual"]
 

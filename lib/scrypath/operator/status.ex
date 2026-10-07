@@ -73,22 +73,15 @@ defmodule Scrypath.Operator.Status do
     backend_result = backend_states(config, operator_opts, index)
     queue_result = queue_states(schema_module, config, operator_opts)
 
-    case {backend_result, queue_result} do
-      {{:error, reason}, {:error, _}} ->
-        {:error, reason}
+    {backend, backend_errors} = source_section(backend_result, :backend, &summarize_backend/1)
+    {queue, queue_errors} = source_section(queue_result, :queue, &summarize_queue(&1, mode))
 
-      _ ->
-        {backend, backend_errors} = source_section(backend_result, :backend, &summarize_backend/1)
-        {queue, queue_errors} = source_section(queue_result, :queue, &summarize_queue(&1, mode))
+    status = new(schema: schema_module, mode: mode, index: index, backend: backend, queue: queue)
 
-        status =
-          new(schema: schema_module, mode: mode, index: index, backend: backend, queue: queue)
-
-        {:ok,
-         status
-         |> Map.from_struct()
-         |> Map.put(:source_errors, Map.merge(backend_errors, queue_errors))}
-    end
+    {:ok,
+     status
+     |> Map.from_struct()
+     |> Map.put(:source_errors, Map.merge(backend_errors, queue_errors))}
   end
 
   defp source_section({:ok, states}, _source, summarize), do: {summarize.(states), %{}}
