@@ -5,16 +5,16 @@ milestone_name: ScrypathOps UI refinement
 current_phase: 173
 current_phase_name: Shared Visual Foundation and Operational Time
 status: executing
-stopped_at: Phase 173 wave 2 complete after connected browser and post-merge gates; executing 173-03 next
-last_updated: "2026-10-06T23:15:20.619Z"
+stopped_at: Phase 173 wave 3 complete; next plan 173-04
+last_updated: "2026-10-07T00:16:52.319Z"
 last_activity: 2026-10-06
 last_activity_desc: Phase 173 execution started
-state_head: 236443e2f67fc5a3f8487ec431557baa9520e2b3
+state_head: 336140bc7be5c5d0c3a5abb0d342a3f00adf034d
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See PROJECT.md (updated 2026-10-06). Core value: make search indexing feel nativ
 ## Current Position
 
 Phase: 173 (Shared Visual Foundation and Operational Time) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-10-06 — Phase 173 execution started
 Progress: [░░░░░░░░░░] 0% (0/5 phases; 0/4 plans complete)
@@ -80,9 +80,9 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-06T23:15:20.603Z
-Stopped at: Phase 173 wave 2 complete after connected browser and post-merge gates; executing 173-03 next
-Resume file: .planning/phases/173-shared-visual-foundation-and-operational-time/173-03-PLAN.md
+Last session: 2026-10-07T00:16:52.292Z
+Stopped at: Phase 173 wave 3 complete; next plan 173-04
+Resume file: .planning/phases/173-shared-visual-foundation-and-operational-time/173-04-PLAN.md
 
 Phase 173 execution is active in `/private/tmp/scrypath-phase173-20261006-155750/execution` on `gsd/phase-173-shared-visual-foundation`. The original `/Users/jon/projects/scrypath` checkout, its uncommitted source/design baseline, and preview :4012 remain preserved. A clean baseline snapshot is commit `1809924`; execution uses the negotiated GSD process/worktree adapter, with per-wave merge and cleanup.
 
@@ -90,7 +90,9 @@ Wave 1 (173-01) is complete: neutral shell/theme controls, production PostureLiv
 
 Wave 2 (173-02) is complete after post-merge reconciliation: source ISO/precision and source-local snapshots, explicit absence states, responsive exact evidence, plain Checked metadata, and readable operational age. Core gate passed 659 tests on `48fa8419`. Final connected browser/retention proof passed 2/2 on `236443e`; the full Ops suite passed 2 doctests/240 tests and contrast has 0 AA failures. Evidence is under `/private/tmp/scrypath-phase173-20261006-155750/evidence/173-02/`. The test-only standalone hostname fix preserves the production origin policy. No final phase verification or hosted receipt is claimed.
 
-Continue `$gsd-execute-phase 173` in the execution checkout to finish 173-03 and 173-04, then independent verification and exact-SHA hosted closeout. Do not redispatch 173-01/02 or replay Phase 172/170.
+Wave 3 (173-03) is complete after reconciliation and neutral-composition correction: 8/8 production browser cases pass on `336140b`, 243 Ops tests plus two doctests pass, and contrast has zero AA failures. Parent pixel inspection corrected a brown shift in translucent neutral surfaces through sRGB opacity mixing. Evidence is under `/private/tmp/scrypath-phase173-20261006-155750/evidence/173-03/post-merge/`. The worker's duplicate parent fixture edits were byte-matched and cleared before manifest merge; original local work/preview remain intact. No final verification or hosted receipt is claimed.
+
+Continue `$gsd-execute-phase 173` in the execution checkout to finish 173-04, then independent verification and exact-SHA hosted closeout. Do not redispatch 173-01/02 or replay Phase 172/170.
 
 Current product/design context, schema-picker, naming/logo, and Search health layout follow-ups remain uncommitted and preserved. The Control Room refresh remains in the page toolbar outside the health verdict. Preserve adaptive routing, the existing UI phase/safety gates, and feedback preview data. Plan from this checkout; execution must preserve the dirty baseline when preparing clean source for the root workspace-clean gate through the authorized GSD isolation workflow.
 

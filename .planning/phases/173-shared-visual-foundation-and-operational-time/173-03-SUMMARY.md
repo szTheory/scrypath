@@ -161,7 +161,7 @@ Inspected mounted mobile-light healthy and standalone mobile-light degraded capt
 ## Decisions Made
 
 - The disabled-eligibility scenario is confined to existing test-only Phase 173 routes and fixture providers; the real refresh event supplies the input and the server patch supplies the disabled state.
-- An unknown Meilisearch status remains an explicit source decode error and is not reported as zero failed backend tasks or as remote terminal failure.
+- An unknown Meilisearch status remains an explicit source decode error. A zero terminal failed-task counter is accompanied by visible unavailable-source evidence; it is not represented as a trusted healthy observation or remote terminal failure.
 
 ## Deviations from Plan
 
@@ -200,3 +200,15 @@ Plan 03 is complete and ready for Plan 04. Shared `STATE.md`, `ROADMAP.md`, `sta
 ---
 *Phase: 173-shared-visual-foundation-and-operational-time*
 *Completed: 2026-10-06*
+
+## Orchestrator Reconciliation
+
+- Reconciled the committed summary, reachable task commits, and clean worker branch after exit 0. The worker also wrote duplicate edits to the two app-local fixture providers in the orchestration checkout. Their bytes matched the committed worker versions exactly; preserved an audit copy outside source, restored only those duplicate parent bytes to the pre-wave base, then merged through the recorded GSD manifest. The original user checkout and retained preview were untouched. The next dispatch has stricter absolute-path guards.
+- The scope advisories are the task RED evidence and paired test-only fixture providers needed for the planned server-patch eligibility proof. No production classification or authorization scope was expanded.
+- Parent pixel inspection found that translucent OKLCH mixes changed neutral header/metric hues despite correct token values. Added a production browser regression in `605e5a1`; actual RED executed 8 tests, with the 6 existing cases passing and both palette cases failing. `173-03-palette-red.json` was classified `RED_EVIDENCE_OK`.
+- Corrected the shared opacity-only neutral surface mixes at their authority to sRGB in `336140b`, rebuilt tracked CSS, and updated the token catalog. On full source SHA `336140bc7be5c5d0c3a5abb0d342a3f00adf034d`, the complete production status/action suite passed **8/8**, with no errors or skips. Palette checks cover both routes and Light/Dark/System; saved 24 fresh application screenshots.
+- Canonical root `mix verify.ops_ui` passed **2 doctests, 243 tests** after merge and again after the CSS correction. `make -C examples/scrypath_ecommerce contrast` still has **0 AA failures, 35 AAA advisory**. Root library source has not changed since the worker's passing 659-test/four-property core gate.
+- Preserved regression RED and GREEN reports, traces, Compose logs, source SHAs, and images under `/private/tmp/scrypath-phase173-20261006-155750/evidence/173-03/post-merge/`. Inspected corrected mounted desktop Dark and standalone mobile degraded Dark images: the brown shift is removed, long names wrap, status meaning remains explicit, and page chrome stays at the top.
+- Disposable regression stacks removed their owned containers, network, and playbook volume. The original retained preview and unrelated Docker resources were left intact.
+
+Additional task commits: `605e5a1` (palette regression) and `336140b` (neutral composition fix). The wave is complete; final phase review, independent verification, and hosted closeout remain.
