@@ -1,6 +1,12 @@
 // Shared hooks for standalone and mounted ScrypathOps LiveSockets.
 let opsModalPendingTrigger = null
 let activeOpsModal = null
+const INFO_FEEDBACK_DURATION = 4000
+
+const scheduleInfoDismiss = (owner, dismiss) => {
+  window.clearTimeout(owner.dismissTimer)
+  owner.dismissTimer = window.setTimeout(dismiss, INFO_FEEDBACK_DURATION)
+}
 
 // Keep rich refresh buttons intact while LiveView marks their click as loading.
 // `phx-disable-with` rewrites textContent, which permanently drops nested icons.
@@ -35,9 +41,69 @@ const OpsToast = {
     window.clearTimeout(this.dismissTimer)
     if (!this.el.classList.contains("ops-flash--info")) return
 
-    this.dismissTimer = window.setTimeout(() => {
+    scheduleInfoDismiss(this, () => {
       this.el.querySelector('button[aria-label="Close notification"]')?.click()
-    }, 4000)
+    })
+  }
+}
+
+const OpsTimestampCopy = {
+  mounted() {
+    const time = this.el.closest(".ops-time")
+    this.feedback = time?.querySelector("[data-ops-time-feedback-text]")
+    this.dismissButton = time?.querySelector("[data-ops-time-feedback-dismiss]")
+    this.onCopy = event => this.copyTimestamp(event)
+    this.onDismiss = () => this.clearFeedback()
+    this.el.addEventListener("click", this.onCopy)
+    this.dismissButton?.addEventListener("click", this.onDismiss)
+  },
+  destroyed() {
+    window.clearTimeout(this.dismissTimer)
+    this.el.removeEventListener("click", this.onCopy)
+    this.dismissButton?.removeEventListener("click", this.onDismiss)
+  },
+  async copyTimestamp(event) {
+    event.preventDefault()
+    this.clearFeedback()
+    const attempt = (this.copyAttempt || 0) + 1
+    this.copyAttempt = attempt
+
+    const details = this.el.closest(".ops-time")?.querySelector("details")
+    const text = this.el.dataset.opsTimestamp
+    if (!text || typeof navigator.clipboard?.writeText !== "function") {
+      if (attempt === this.copyAttempt) this.showFailure(details)
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(text)
+      if (attempt === this.copyAttempt) this.showSuccess()
+    } catch (_error) {
+      if (attempt === this.copyAttempt) this.showFailure(details)
+    }
+  },
+  showSuccess() {
+    this.setFeedback("Timestamp copied", "success")
+    scheduleInfoDismiss(this, () => {
+      if (this.feedback?.dataset.state === "success") this.clearFeedback()
+    })
+  },
+  showFailure(details) {
+    if (details) details.open = true
+    this.setFeedback("Could not copy timestamp. Select and copy the exact value.", "error")
+    if (this.dismissButton) this.dismissButton.hidden = false
+  },
+  setFeedback(message, state) {
+    if (!this.feedback) return
+    this.feedback.textContent = message
+    if (state) this.feedback.dataset.state = state
+    else delete this.feedback.dataset.state
+  },
+  clearFeedback() {
+    window.clearTimeout(this.dismissTimer)
+    this.dismissTimer = null
+    this.setFeedback("", null)
+    if (this.dismissButton) this.dismissButton.hidden = true
   }
 }
 
@@ -580,4 +646,4 @@ const OpsModal = {
   }
 }
 
-export {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast}
+export {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsTimestampCopy, OpsToast}

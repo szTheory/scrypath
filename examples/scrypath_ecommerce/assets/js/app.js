@@ -12,12 +12,13 @@ import {
   OpsNavDrawer,
   OpsModal,
   OpsRefreshButton,
+  OpsTimestampCopy,
   OpsToast
 } from "../../../../scrypath_ops/assets/js/ops_hooks";
 
 const liveSocket = new LiveSocket("/live", Socket, {
   params: { _csrf_token: csrfToken },
-  hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast }
+  hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsTimestampCopy, OpsToast }
 });
 
 const normalizeTheme = (theme) => {

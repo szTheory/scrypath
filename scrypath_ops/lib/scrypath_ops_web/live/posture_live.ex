@@ -370,8 +370,10 @@ defmodule ScrypathOpsWeb.PostureLive do
                             <dt>Last success</dt>
                             <dd>
                               <.ops_time
+                                id={"ops-time-#{module_flat_name(mod)}-backend-success"}
                                 dt={status.backend.last_succeeded && status.backend.last_succeeded.at}
                                 source_iso={state_source_iso(status.backend.last_succeeded)}
+                                copy={true}
                                 reference={success_reference(@posture_summary, mod, :backend)}
                                 empty={success_time_empty(status.backend.last_succeeded)}
                               />
@@ -402,8 +404,10 @@ defmodule ScrypathOpsWeb.PostureLive do
                             <dt>Last success</dt>
                             <dd>
                               <.ops_time
+                                id={"ops-time-#{module_flat_name(mod)}-queue-success"}
                                 dt={status.queue.last_succeeded && status.queue.last_succeeded.at}
                                 source_iso={state_source_iso(status.queue.last_succeeded)}
+                                copy={true}
                                 reference={success_reference(@posture_summary, mod, :queue)}
                                 empty={success_time_empty(status.queue.last_succeeded)}
                               />
@@ -444,8 +448,10 @@ defmodule ScrypathOpsWeb.PostureLive do
                         Backend observation unavailable; last success retained from the previous check.
                       </p>
                       <.ops_time
+                        id={"ops-time-#{module_flat_name(mod)}-retained-backend-success"}
                         dt={retained_time(retained_state(@posture_summary, mod, :backend))}
                         source_iso={state_source_iso(retained_state(@posture_summary, mod, :backend))}
+                        copy={true}
                         reference={success_reference(@posture_summary, mod, :backend)}
                         label="Last success retained"
                         empty="Not observed"

@@ -1214,6 +1214,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:dt, :any, required: true)
   attr(:label, :string, default: nil)
   attr(:copy, :boolean, default: false)
+  attr(:id, :string, default: nil)
   attr(:source_iso, :string, default: nil)
   attr(:reference, :map, default: nil)
   attr(:empty, :string, default: "Not observed")
@@ -1224,6 +1225,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     assigns =
       assigns
       |> assign(:exact, exact_dt(assigns.dt, assigns.source_iso))
+      |> assign(:copy_available?, source_timestamp_matches?(assigns.dt, assigns.source_iso))
       |> assign(:human, human_dt(assigns.dt, reference_time(assigns.reference)))
       |> assign(:utc_exact, utc_exact(assigns.dt))
       |> assign(
@@ -1251,16 +1253,38 @@ defmodule ScrypathOpsWeb.OpsUi do
           <p><code class="ops-time__exact">{@exact}</code></p>
           <p>UTC equivalent: <code class="ops-time__utc">{@utc_exact}</code></p>
         </details>
-        <button
-          :if={@copy}
-          type="button"
-          class="ops-time__copy"
-          phx-click={JS.dispatch("phx:copy_to_clipboard", detail: %{text: @exact})}
-          aria-label={"Copy exact timestamp #{@exact}"}
-          title={"Copy exact timestamp #{@exact}"}
-        >
-          <ScrypathOpsWeb.CoreComponents.icon name="hero-clipboard-document" class="size-3.5" />
-        </button>
+        <span :if={@copy and @copy_available?} class="ops-time__copy-group">
+          <button
+            id={@id}
+            type="button"
+            class="ops-time__copy"
+            phx-hook="OpsTimestampCopy"
+            data-ops-timestamp={@source_iso}
+            aria-label="Copy timestamp"
+            title="Copy timestamp"
+          >
+            <ScrypathOpsWeb.CoreComponents.icon name="hero-clipboard-document" class="size-3.5" />
+            <span>Copy timestamp</span>
+          </button>
+          <span
+            class="ops-time__feedback"
+            data-ops-time-feedback
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            <span data-ops-time-feedback-text></span>
+            <button
+              type="button"
+              class="ops-time__feedback-dismiss"
+              data-ops-time-feedback-dismiss
+              aria-label="Dismiss copy message"
+              hidden
+            >
+              Dismiss
+            </button>
+          </span>
+        </span>
       <% else %>
         <span class="ops-time__value">{@empty}</span>
         <span :if={@unavailable_reason} class="ops-time__reason">{@unavailable_reason}</span>
@@ -1666,6 +1690,15 @@ defmodule ScrypathOpsWeb.OpsUi do
   end
 
   defp exact_dt(%DateTime{} = dt, _source_iso), do: DateTime.to_iso8601(dt)
+
+  defp source_timestamp_matches?(%DateTime{} = dt, source_iso) when is_binary(source_iso) do
+    case DateTime.from_iso8601(source_iso) do
+      {:ok, source_time, _offset} -> DateTime.compare(source_time, dt) == :eq
+      _other -> false
+    end
+  end
+
+  defp source_timestamp_matches?(_dt, _source_iso), do: false
 
   defp human_dt(nil, _reference), do: "—"
 
