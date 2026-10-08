@@ -511,6 +511,8 @@ Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-fi
 
 The repository has shipped planning milestones through **`v1.42`** (**`v1.0`**-**`v1.42`**); **`v1.43`** has an approved 20-requirement, five-phase roadmap and has completed Phases 173–174 (12 plans and 11 requirements); Phase 174 has completed its eight plans and independent goal verification; Phase 175 is ready to plan. Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and `milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` for shipped arcs.
 
+Maintainer feedback on 2026-10-08 authorizes a focused Phase 174 UI follow-up: simpler sync summaries, neutral light surfaces, local “Selected schema” context, aligned per-schema actions, and timestamp click-to-copy with brief feedback. It changes presentation without adding recovery capabilities or dependencies. Phase 174’s original exact-SHA evidence remains historical; the follow-up has separate verification. Phase 175 remains unstarted.
+
 ## Evolution
 
 This document evolves at milestone boundaries.

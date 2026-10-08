@@ -66,8 +66,8 @@
   prefersdark: false;
   color-scheme: "light";
   --color-base-100: #ffffff;
-  --color-base-200: #f7f6f3;
-  --color-base-300: #d9d8d2;
+  --color-base-200: #f5f6f8;
+  --color-base-300: #d7dbe1;
   --color-base-content: #202124;
   --color-primary: #5b4ad1;
   --color-primary-content: #f4f1ea;
@@ -94,9 +94,9 @@
   --border: 1.5px;
   --depth: 1;
   --noise: 0;
-  --ops-bg: #f7f6f3;
+  --ops-bg: #f5f6f8;
   --ops-surface-1: #ffffff;
-  --ops-surface-2: #efeee9;
+  --ops-surface-2: #edeff2;
   --ops-text-muted: color-mix(in oklch, var(--color-base-content) 64%, transparent);
 }
 
@@ -942,6 +942,21 @@
   .ops-text-meta  { font-size: var(--text-ops-xs); line-height: var(--leading-ops-body); color: var(--ops-text-muted); }
   .ops-text-mono  { font-family: ui-monospace, "Cascadia Code", Menlo, monospace; font-size: var(--text-ops-sm); }
 
+  .ops-schema-context {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--spacing-ops-2);
+    font-size: var(--text-ops-body);
+    color: var(--ops-text-muted);
+  }
+
+  .ops-schema-context code {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: var(--color-base-content);
+  }
+
   .ops-time {
     display: flex;
     max-width: 100%;
@@ -990,36 +1005,30 @@
     user-select: text;
   }
 
-  .ops-time__copy-group {
-    font-family: var(--font-sans);
-    display: inline-flex;
-    max-width: 100%;
-    min-width: 0;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--spacing-ops-2);
-  }
-
   .ops-time__copy {
+    font-family: var(--font-sans);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     min-height: var(--control-h-md);
     max-width: 100%;
     gap: var(--spacing-ops-2);
-    padding: 0 var(--spacing-ops-3);
+    padding: 0;
     flex: none;
     border-radius: var(--radius-ops-control);
-    color: var(--color-primary);
-    font-weight: 600;
+    color: var(--color-base-content);
+    font-weight: 400;
     font-size: var(--text-ops-body);
     line-height: var(--leading-ops-body);
+    text-decoration: underline dotted;
+    text-underline-offset: 0.25em;
     transition:
       background-color var(--duration-ops-fast) var(--ease-ops-standard),
       color var(--duration-ops-fast) var(--ease-ops-standard);
   }
 
   .ops-time__feedback {
+    font-family: var(--font-sans);
     display: inline-flex;
     max-width: 100%;
     min-width: 0;
@@ -1029,6 +1038,27 @@
     color: var(--color-base-content);
     font-size: var(--text-ops-body);
     line-height: var(--leading-ops-body);
+  }
+
+  .ops-time__feedback:not(:has([data-state])) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .ops-time__feedback:has([data-state="success"]) {
+    position: fixed;
+    inset-inline-end: var(--spacing-ops-4);
+    bottom: var(--spacing-ops-4);
+    z-index: var(--z-index-ops-flash);
+    max-width: calc(100vw - 2 * var(--spacing-ops-4));
+    padding: var(--spacing-ops-3) var(--spacing-ops-4);
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--radius-ops-control);
+    background: var(--ops-surface-1);
+    box-shadow: var(--shadow-ops-overlay);
   }
 
   .ops-time__feedback-dismiss {
@@ -1734,6 +1764,22 @@
     gap: var(--spacing-ops-3);
   }
 
+  .ops-schema-action {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-h-md);
+    padding: 0;
+    border-radius: var(--radius-ops-control);
+    font-size: var(--text-ops-body);
+    font-weight: 600;
+  }
+
+  .ops-schema-action:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
+
   .ops-schema-signal-card__groups {
     display: grid;
     gap: var(--spacing-ops-4);
@@ -1827,7 +1873,7 @@
 
   #flash-group {
     position: fixed;
-    top: 5.75rem;
+    bottom: 1rem;
     right: 1rem;
     z-index: var(--z-index-ops-flash);
     display: grid;
@@ -1854,15 +1900,6 @@
 
   .ops-flash--error {
     border-color: color-mix(in oklch, var(--color-error) 35%, var(--color-base-content) 14%);
-  }
-
-  @media (max-width: 640px) {
-    #flash-group {
-      top: auto;
-      right: 1rem;
-      bottom: 1rem;
-    }
-
   }
 
   /* Command palette (⌘K) + cheat-sheet overlay. */

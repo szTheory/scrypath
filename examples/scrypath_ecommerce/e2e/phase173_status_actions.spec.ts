@@ -34,13 +34,11 @@ async function openScenario(page: import("@playwright/test").Page, url: string, 
 }
 
 for (const entrypoint of ENTRYPOINTS) {
-  test(`${entrypoint.name} status sources stay truthful across themes and responsive widths`, async ({ page }) => {
-    test.setTimeout(90_000);
-    const captureDir = join(process.cwd(), "test-results", "phase173-status-captures");
-    mkdirSync(captureDir, { recursive: true });
-
-    for (const theme of ["light", "dark", "system"] as const) {
-      for (const width of [390, 1279, 1280, 1440]) {
+  for (const theme of ["light", "dark", "system"] as const) {
+    for (const width of [390, 1279, 1280, 1440]) {
+      test(`${entrypoint.name} status sources stay truthful in ${theme} at ${width}px`, async ({ page }) => {
+        const captureDir = join(process.cwd(), "test-results", "phase173-status-captures");
+        mkdirSync(captureDir, { recursive: true });
         let neutralReference: { verdictBackground: string; verdictBorder: string; rowBackground: string; rowBorder: string } | undefined;
         for (const scenario of scenarios) {
           await openScenario(page, entrypoint.url, scenario, theme, width);
@@ -66,8 +64,8 @@ for (const entrypoint of ENTRYPOINTS) {
           }
 
           if (scenario === "failed") {
-            await expect(page.locator(".ops-verdict")).toContainText("Degraded");
-            await expect(page.locator(".ops-verdict")).toContainText("will not self-heal");
+            await expect(page.locator(".ops-verdict")).toContainText("Sync needs attention");
+            await expect(page.locator(".ops-verdict")).toContainText(/sync failures? needs? review/);
             await expect(page.getByTestId("posture-failed-sync-link").first()).toBeVisible();
             await expect(page.locator(".ops-metric-warning").first()).toBeVisible();
           } else if (scenario === "unknown") {
@@ -79,7 +77,7 @@ for (const entrypoint of ENTRYPOINTS) {
           } else if (scenario === "source-error") {
             await expect(rows.first()).toContainText("fetch error: :fixture_unavailable");
             await expect(rows.first()).toContainText("Not observed");
-            await expect(page.locator(".ops-verdict")).toContainText("Degraded");
+            await expect(page.locator(".ops-verdict")).toContainText("Sync needs attention");
           } else if (scenario === "manual") {
             await expect(rows.first()).toContainText("Queue not used in manual sync mode.");
           } else if (scenario === "no-success") {
@@ -101,39 +99,39 @@ for (const entrypoint of ENTRYPOINTS) {
                 rowBackground: rowStyle.backgroundColor,
                 rowBorder: rowStyle.borderColor
               };
-            });
-            if (scenario === "default") neutralReference = surfaces;
-            if (scenario === "failed") expect(surfaces).toEqual(neutralReference);
-          }
+          });
+          if (scenario === "default") neutralReference = surfaces;
+          if (scenario === "failed") expect(surfaces).toEqual(neutralReference);
+        }
 
-          const dimensions = await page.evaluate(() => ({
-            viewport: document.documentElement.clientWidth,
-            document: document.documentElement.scrollWidth,
-            rowGap: (() => {
-              const list = document.querySelector(".ops-schema-signal-list");
-              return list ? getComputedStyle(list).rowGap : null;
-            })()
-          }));
-          expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
-          if (scenario !== "empty") expect(Number.parseFloat(dimensions.rowGap ?? "0")).toBeGreaterThanOrEqual(24);
+        const dimensions = await page.evaluate(() => ({
+          viewport: document.documentElement.clientWidth,
+          document: document.documentElement.scrollWidth,
+          rowGap: (() => {
+            const list = document.querySelector(".ops-schema-signal-list");
+            return list ? getComputedStyle(list).rowGap : null;
+          })()
+        }));
+        expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
+        if (scenario !== "empty") expect(Number.parseFloat(dimensions.rowGap ?? "0")).toBeGreaterThanOrEqual(24);
 
-          const refresh = page.getByRole("button", { name: "Refresh search health" });
-          const refreshBox = await refresh.boundingBox();
-          expect(refreshBox).not.toBeNull();
-          expect(refreshBox!.height).toBeGreaterThanOrEqual(40);
-          const checked = refresh.locator("..").locator("time");
-          await expect(checked).toBeVisible();
-          await expect(checked).toHaveCSS("font-size", "14px");
-          expect(await checked.evaluate((time) => getComputedStyle(time).fontFamily))
-            .toBe(await page.locator("body").evaluate((body) => getComputedStyle(body).fontFamily));
-          if ([390, 1440].includes(width) && ["default", "failed"].includes(scenario)) {
-            await page.evaluate(() => window.scrollTo(0, 0));
-            await page.screenshot({ path: join(captureDir, `phase173-${entrypoint.name}-${scenario}-${theme}-${width}.png`), fullPage: true });
-          }
+        const refresh = page.getByRole("button", { name: "Refresh search health" });
+        const refreshBox = await refresh.boundingBox();
+        expect(refreshBox).not.toBeNull();
+        expect(refreshBox!.height).toBeGreaterThanOrEqual(40);
+        const checked = refresh.locator("..").locator("time");
+        await expect(checked).toBeVisible();
+        await expect(checked).toHaveCSS("font-size", "14px");
+        expect(await checked.evaluate((time) => getComputedStyle(time).fontFamily))
+          .toBe(await page.locator("body").evaluate((body) => getComputedStyle(body).fontFamily));
+        if ([390, 1440].includes(width) && ["default", "failed"].includes(scenario)) {
+          await page.evaluate(() => window.scrollTo(0, 0));
+          await page.screenshot({ path: join(captureDir, `phase173-${entrypoint.name}-${scenario}-${theme}-${width}.png`), fullPage: true });
         }
       }
+      });
     }
-  });
+  }
 
   test(`${entrypoint.name} partial queue failure retains only queue evidence and empty queues stay observed`, async ({ page }) => {
     const captureDir = join(process.cwd(), "test-results", "phase173-status-captures");
@@ -196,7 +194,7 @@ for (const entrypoint of ENTRYPOINTS) {
         return { header: sample(".ops-header"), metric: sample(".ops-muted-panel") };
       });
       const expected = theme === "light"
-        ? { header: [255, 255, 255], metric: [239, 238, 233] }
+        ? { header: [255, 255, 255], metric: [237, 239, 242] }
         : { header: [25, 30, 37], metric: [34, 40, 49] };
       for (const role of ["header", "metric"] as const) {
         colors[role].forEach((channel, index) => {

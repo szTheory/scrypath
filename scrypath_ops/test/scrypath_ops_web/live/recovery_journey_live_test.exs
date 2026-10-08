@@ -143,7 +143,7 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
 
     {:ok, health, health_html} = live(conn, health_href)
     assert health_html =~ "#{schema_a}"
-    assert health_html =~ "Recovery target"
+    assert health_html =~ "Selected schema"
     assert :sys.get_state(health.pid).socket.assigns.selected_schema == OpsPostA
 
     assert has_element?(
@@ -315,7 +315,7 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
     conn: conn
   } do
     {:ok, default_room, default_room_html} = live(conn, "/ops")
-    assert default_room_html =~ "Recovery target"
+    assert default_room_html =~ "Selected schema"
 
     assert has_element?(
              default_room,

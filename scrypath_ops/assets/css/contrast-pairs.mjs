@@ -34,6 +34,15 @@
 //   note      — human-readable description
 
 export const MUTED_PAIRS = [
+  {
+    selector: ".ops-schema-context",
+    css_var: "ops-text-muted",
+    alpha: 0.64,
+    fg_token: "base-content",
+    bg_token: "base-200",
+    role: "text",
+    note: "Local selected-schema label"
+  },
   // app.css line 252 — header utility override
   {
     selector: ".ops-header .text-base-content\\/60",

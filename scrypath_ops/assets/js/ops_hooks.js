@@ -2,6 +2,7 @@
 let opsModalPendingTrigger = null
 let activeOpsModal = null
 const INFO_FEEDBACK_DURATION = 4000
+let activeTimestampFeedback = null
 
 const scheduleInfoDismiss = (owner, dismiss) => {
   window.clearTimeout(owner.dismissTimer)
@@ -58,12 +59,18 @@ const OpsTimestampCopy = {
     this.dismissButton?.addEventListener("click", this.onDismiss)
   },
   destroyed() {
+    this.copyAttempt = (this.copyAttempt || 0) + 1
+    if (activeTimestampFeedback === this) activeTimestampFeedback = null
     window.clearTimeout(this.dismissTimer)
     this.el.removeEventListener("click", this.onCopy)
     this.dismissButton?.removeEventListener("click", this.onDismiss)
   },
   async copyTimestamp(event) {
     event.preventDefault()
+    if (activeTimestampFeedback && activeTimestampFeedback !== this) {
+      activeTimestampFeedback.clearFeedback()
+    }
+    activeTimestampFeedback = this
     this.clearFeedback()
     const attempt = (this.copyAttempt || 0) + 1
     this.copyAttempt = attempt
@@ -100,6 +107,7 @@ const OpsTimestampCopy = {
     else delete this.feedback.dataset.state
   },
   clearFeedback() {
+    this.copyAttempt = (this.copyAttempt || 0) + 1
     window.clearTimeout(this.dismissTimer)
     this.dismissTimer = null
     this.setFeedback("", null)

@@ -1,0 +1,68 @@
+<testsuites id="" name="" tests="32" failures="0" skipped="0" errors="0" time="332.05318100000005">
+<testsuite name="phase173_status_actions.spec.ts" timestamp="2026-10-08T19:29:27.172Z" hostname="chromium" tests="32" failures="0" skipped="0" time="327.949" errors="0">
+<testcase name="mounted status sources stay truthful in light at 390px" classname="phase173_status_actions.spec.ts" time="12.626">
+</testcase>
+<testcase name="mounted status sources stay truthful in light at 1279px" classname="phase173_status_actions.spec.ts" time="11.308">
+</testcase>
+<testcase name="mounted status sources stay truthful in light at 1280px" classname="phase173_status_actions.spec.ts" time="16.223">
+</testcase>
+<testcase name="mounted status sources stay truthful in light at 1440px" classname="phase173_status_actions.spec.ts" time="14.287">
+</testcase>
+<testcase name="mounted status sources stay truthful in dark at 390px" classname="phase173_status_actions.spec.ts" time="23.964">
+</testcase>
+<testcase name="mounted status sources stay truthful in dark at 1279px" classname="phase173_status_actions.spec.ts" time="11.317">
+</testcase>
+<testcase name="mounted status sources stay truthful in dark at 1280px" classname="phase173_status_actions.spec.ts" time="14.308">
+</testcase>
+<testcase name="mounted status sources stay truthful in dark at 1440px" classname="phase173_status_actions.spec.ts" time="13.812">
+</testcase>
+<testcase name="mounted status sources stay truthful in system at 390px" classname="phase173_status_actions.spec.ts" time="16.008">
+</testcase>
+<testcase name="mounted status sources stay truthful in system at 1279px" classname="phase173_status_actions.spec.ts" time="9.989">
+</testcase>
+<testcase name="mounted status sources stay truthful in system at 1280px" classname="phase173_status_actions.spec.ts" time="9.832">
+</testcase>
+<testcase name="mounted status sources stay truthful in system at 1440px" classname="phase173_status_actions.spec.ts" time="10.981">
+</testcase>
+<testcase name="mounted partial queue failure retains only queue evidence and empty queues stay observed" classname="phase173_status_actions.spec.ts" time="2.14">
+</testcase>
+<testcase name="mounted neutral chrome and metrics preserve the approved palette" classname="phase173_status_actions.spec.ts" time="3.055">
+</testcase>
+<testcase name="mounted refresh keeps server eligibility after a LiveView patch" classname="phase173_status_actions.spec.ts" time="0.822">
+</testcase>
+<testcase name="mounted quiet action exposes independent focus and transient interaction states" classname="phase173_status_actions.spec.ts" time="1.685">
+</testcase>
+<testcase name="standalone status sources stay truthful in light at 390px" classname="phase173_status_actions.spec.ts" time="11.685">
+</testcase>
+<testcase name="standalone status sources stay truthful in light at 1279px" classname="phase173_status_actions.spec.ts" time="12.995">
+</testcase>
+<testcase name="standalone status sources stay truthful in light at 1280px" classname="phase173_status_actions.spec.ts" time="17.356">
+</testcase>
+<testcase name="standalone status sources stay truthful in light at 1440px" classname="phase173_status_actions.spec.ts" time="11.663">
+</testcase>
+<testcase name="standalone status sources stay truthful in dark at 390px" classname="phase173_status_actions.spec.ts" time="10.649">
+</testcase>
+<testcase name="standalone status sources stay truthful in dark at 1279px" classname="phase173_status_actions.spec.ts" time="13.037">
+</testcase>
+<testcase name="standalone status sources stay truthful in dark at 1280px" classname="phase173_status_actions.spec.ts" time="11.8">
+</testcase>
+<testcase name="standalone status sources stay truthful in dark at 1440px" classname="phase173_status_actions.spec.ts" time="11.478">
+</testcase>
+<testcase name="standalone status sources stay truthful in system at 390px" classname="phase173_status_actions.spec.ts" time="10.973">
+</testcase>
+<testcase name="standalone status sources stay truthful in system at 1279px" classname="phase173_status_actions.spec.ts" time="11.566">
+</testcase>
+<testcase name="standalone status sources stay truthful in system at 1280px" classname="phase173_status_actions.spec.ts" time="11.49">
+</testcase>
+<testcase name="standalone status sources stay truthful in system at 1440px" classname="phase173_status_actions.spec.ts" time="12.544">
+</testcase>
+<testcase name="standalone partial queue failure retains only queue evidence and empty queues stay observed" classname="phase173_status_actions.spec.ts" time="3.199">
+</testcase>
+<testcase name="standalone neutral chrome and metrics preserve the approved palette" classname="phase173_status_actions.spec.ts" time="2.878">
+</testcase>
+<testcase name="standalone refresh keeps server eligibility after a LiveView patch" classname="phase173_status_actions.spec.ts" time="0.833">
+</testcase>
+<testcase name="standalone quiet action exposes independent focus and transient interaction states" classname="phase173_status_actions.spec.ts" time="1.446">
+</testcase>
+</testsuite>
+</testsuites>

@@ -22,9 +22,6 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_page_header(assigns) do
     ~H"""
     <div class="space-y-1">
-      <p class="ops-copper-eyebrow">
-        Operator workspace
-      </p>
       <h1
         id={@title_id}
         class="text-ops-h1 font-semibold leading-ops-tight tracking-normal text-base-content"
@@ -34,6 +31,25 @@ defmodule ScrypathOpsWeb.OpsUi do
       <p :if={@subtitle} class="max-w-3xl text-ops-body text-base-content/70">{@subtitle}</p>
     </div>
     """
+  end
+
+  @doc "Local schema selection context, separate from the fleet-wide health verdict."
+  attr(:schema, :atom, required: true)
+
+  def ops_schema_context(assigns) do
+    assigns =
+      assign(assigns, :name, ScrypathOps.OperatorSelection.canonical(assigns.schema))
+
+    ~H"""
+    <p class="ops-schema-context" data-testid="recovery-target">
+      <span>Selected schema</span>
+      <code translate="no">{schema_name_parts(@name)}</code>
+    </p>
+    """
+  end
+
+  defp schema_name_parts(name) do
+    name |> String.split(".") |> Enum.intersperse([".", Phoenix.HTML.raw("<wbr>")])
   end
 
   @doc """
@@ -1241,7 +1257,22 @@ defmodule ScrypathOpsWeb.OpsUi do
     <span class={["ops-time", @class]}>
       <span :if={@label} class="ops-time__label">{@label}</span>
       <%= if @exact do %>
+        <button
+          :if={@copy and @copy_available?}
+          id={@id}
+          type="button"
+          class="ops-time__copy"
+          phx-hook="OpsTimestampCopy"
+          data-ops-timestamp={@source_iso}
+          aria-label="Copy timestamp"
+          title="Copy exact timestamp"
+        >
+          <time class="ops-time__value" datetime={@exact} aria-label={@aria_label}>
+            {@human}
+          </time>
+        </button>
         <time
+          :if={!@copy or !@copy_available?}
           class="ops-time__value"
           datetime={@exact}
           aria-label={@aria_label}
@@ -1253,37 +1284,26 @@ defmodule ScrypathOpsWeb.OpsUi do
           <p><code class="ops-time__exact">{@exact}</code></p>
           <p>UTC equivalent: <code class="ops-time__utc">{@utc_exact}</code></p>
         </details>
-        <span :if={@copy and @copy_available?} class="ops-time__copy-group">
+        <span
+          :if={@copy and @copy_available?}
+          id={"#{@id}-feedback"}
+          phx-update="ignore"
+          class="ops-time__feedback"
+          data-ops-time-feedback
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <span data-ops-time-feedback-text></span>
           <button
-            id={@id}
             type="button"
-            class="ops-time__copy"
-            phx-hook="OpsTimestampCopy"
-            data-ops-timestamp={@source_iso}
-            aria-label="Copy timestamp"
-            title="Copy timestamp"
+            class="ops-time__feedback-dismiss"
+            data-ops-time-feedback-dismiss
+            aria-label="Dismiss copy message"
+            hidden
           >
-            <ScrypathOpsWeb.CoreComponents.icon name="hero-clipboard-document" class="size-3.5" />
-            <span>Copy timestamp</span>
+            Dismiss
           </button>
-          <span
-            class="ops-time__feedback"
-            data-ops-time-feedback
-            role="status"
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            <span data-ops-time-feedback-text></span>
-            <button
-              type="button"
-              class="ops-time__feedback-dismiss"
-              data-ops-time-feedback-dismiss
-              aria-label="Dismiss copy message"
-              hidden
-            >
-              Dismiss
-            </button>
-          </span>
         </span>
       <% else %>
         <span class="ops-time__value">{@empty}</span>

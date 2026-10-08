@@ -145,7 +145,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
         <.ops_toolbar class="items-end gap-4">
           <.ops_page_header
             title="Control Room"
-            subtitle="Recover search, verify a change before promotion, or inspect and save a useful search check."
+            subtitle="Monitor search sync, verify a change, or explore search results."
           />
           <.ops_refresh_control
             id="control-room-refresh"
@@ -154,6 +154,8 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
             aria_label="Refresh search health"
           />
         </.ops_toolbar>
+
+        <.ops_schema_context :if={@selected_schema} schema={@selected_schema} />
 
         <section aria-labelledby="control-room-health-heading" class="space-y-4">
           <h2 id="control-room-health-heading" class="sr-only">Search health</h2>
@@ -173,7 +175,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
           <.ops_verdict
             :if={@posture.state in [:ok, :degraded]}
             kind={Posture.badge_kind(@posture.state)}
-            label="Can I trust search right now?"
+            label="Search sync · all schemas"
             headline={@posture.headline}
             class="ops-verdict--hero"
           >
@@ -189,8 +191,12 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
                 Review Search health <span aria-hidden="true">→</span>
               </.ops_link_button>
             </:actions>
-            <p>{@posture.evidence}</p>
-            <div class="mt-3 space-y-ops-2" data-testid="control-room-affected-scope">
+            <p :if={@posture.evidence != ""}>{@posture.evidence}</p>
+            <div
+              :if={affected_rows(@posture) != []}
+              class="mt-3 space-y-ops-2"
+              data-testid="control-room-affected-scope"
+            >
               <p class="text-ops-body text-base-content">
                 {affected_scope_label(@posture)}
               </p>
@@ -215,19 +221,6 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
                 </li>
               </ul>
             </div>
-            <p
-              :if={@selected_schema}
-              class="mt-2 text-ops-sm text-base-content/75"
-              data-testid="recovery-target"
-            >
-              Recovery target:
-              <.ops_inline_code>{OperatorSelection.canonical(@selected_schema)}</.ops_inline_code>
-            </p>
-            <p class="mt-2 text-ops-sm text-base-content/60">
-              {schema_health_label(@posture.schema_count)} · {fetch_health_label(@posture.error_count)} · {backend_health_label(
-                @posture.backend_failed_count
-              )}
-            </p>
           </.ops_verdict>
         </section>
 
@@ -274,24 +267,12 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
 
   defp health_path(mount_path, _schema), do: "#{String.trim_trailing(mount_path, "/")}/health"
 
-  defp schema_health_label(1), do: "1 schema checked"
-  defp schema_health_label(count), do: "#{count} schemas checked"
-
-  defp fetch_health_label(0), do: "No schema fetch errors observed"
-  defp fetch_health_label(1), do: "1 fetch needs attention"
-  defp fetch_health_label(count), do: "#{count} fetches need attention"
-
-  defp backend_health_label(0), do: "No failed backend tasks observed"
-  defp backend_health_label(1), do: "1 backend needs attention"
-  defp backend_health_label(count), do: "#{count} backends need attention"
-
   defp affected_scope_label(summary) do
     count = length(affected_rows(summary))
 
     case count do
-      0 -> "No affected schemas identified on this check."
-      1 -> "1 schema affected on this check:"
-      count -> "#{count} schemas affected on this check:"
+      1 -> "1 schema needs attention:"
+      count -> "#{count} schemas need attention:"
     end
   end
 

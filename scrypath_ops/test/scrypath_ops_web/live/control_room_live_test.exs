@@ -78,7 +78,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     assert html =~ "What do you need to do?"
 
     assert html =~
-             "Recover search, verify a change before promotion, or inspect and save a useful search check."
+             "Monitor search sync, verify a change, or explore search results."
 
     refute html =~ "Posture"
     assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search health']")
@@ -114,7 +114,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     query = URI.encode_query(%{"schema" => ScrypathOps.OperatorSelection.canonical(OpsPostA)})
     {:ok, lv, html} = live(conn, "/ops?" <> query)
 
-    assert html =~ "Recovery target"
+    assert html =~ "Selected schema"
     assert html =~ "ScrypathOps.Test.OpsPostA"
 
     for destination <- ["health", "failed-sync", "sync-drift"] do
@@ -132,7 +132,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     {:ok, _lv, html} = live(conn, "/ops?schema=ScrypathOps.Test.Unknown")
 
     assert html =~ "That schema is unavailable"
-    refute html =~ "Recovery target"
+    refute html =~ "Selected schema"
 
     for destination <- ["health", "failed-sync", "sync-drift"] do
       refute html =~ ~s(href="/ops/#{destination}?schema=)
@@ -145,7 +145,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     assert html =~ "No schemas configured"
     assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search health']")
     refute has_element?(lv, ".ops-muted-panel [data-ops-refresh]")
-    assert html =~ "Recover search"
+    assert has_element?(lv, "#ops-main", "Monitor search sync")
     refute html =~ "If something looks broken"
     refute html =~ "Federated"
     assert html =~ "Inspect and save a search check"
@@ -166,7 +166,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
 
     {:ok, _lv, html} = live(conn, ~p"/ops")
 
-    assert html =~ "1 sync job(s) failed to apply"
+    assert html =~ "1 sync failure needs review"
     refute html =~ "Federated"
   end
 
@@ -175,8 +175,10 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
 
     {:ok, _lv, html} = live(conn, ~p"/ops")
 
-    assert html =~ "2 schemas checked"
-    assert html =~ "No fetch errors observed"
+    refute html =~ "2 schemas checked"
+    refute html =~ "No affected schemas"
+    refute html =~ "schema fetch errors"
+    assert html =~ "No sync failures found"
     refute html =~ "All fetches healthy"
     refute html =~ "All backends healthy"
     refute html =~ "0 fetch error"
@@ -191,7 +193,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     assert has_element?(lv, "#control-room-health-link", "Review Search health")
     refute html =~ "View search health"
     refute html =~ "All backends healthy"
-    assert html =~ "No fetch errors observed"
+    assert html =~ "No sync failures found"
   end
 
   test "degraded scope stays separate from the selected recovery target", %{conn: conn} do
@@ -211,7 +213,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     {:ok, lv, html} = live(conn, "/ops?" <> query)
 
     assert has_element?(lv, "[data-testid='control-room-affected-scope']", "OpsPostB")
-    assert html =~ "Recovery target:"
+    assert html =~ "Selected schema"
     assert html =~ "ScrypathOps.Test.OpsPostA"
     refute has_element?(lv, "[data-testid='control-room-affected-scope']", "OpsPostA")
     assert has_element?(lv, "#control-room-health-link[href='/ops/health?#{query}']")
@@ -223,7 +225,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     put_healthy_posture_config!()
     {:ok, lv, html} = live(conn, ~p"/ops")
 
-    assert html =~ "No fetch errors observed"
+    assert html =~ "No sync failures found"
 
     Application.put_env(:scrypath_ops, :meilisearch_client, ControlRoomErrorClient)
     refreshed = render_click(lv, "refresh")

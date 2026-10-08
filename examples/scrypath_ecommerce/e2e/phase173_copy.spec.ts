@@ -95,6 +95,7 @@ for (const entrypoint of ENTRYPOINTS) {
 
         const copy = time.getByRole("button", { name: "Copy timestamp", exact: true });
         await expect(copy).toBeVisible();
+        await expect(copy).toHaveText("2 days ago");
         await copy.click();
         await expect.poll(() => page.evaluate(() =>
           (window as typeof window & { __phase173ClipboardWrites: string[] }).__phase173ClipboardWrites
@@ -107,6 +108,7 @@ for (const entrypoint of ENTRYPOINTS) {
             .__phase173ResolveClipboardWrite?.()
         );
         await expect(feedback).toHaveText("Timestamp copied");
+        expect(await time.locator("[data-ops-time-feedback]").evaluate(el => getComputedStyle(el).position)).toBe("fixed");
         await expect(time.locator("time.ops-time__value")).toHaveText("2 days ago");
 
         await page.evaluate(() => window.scrollTo(0, 0));

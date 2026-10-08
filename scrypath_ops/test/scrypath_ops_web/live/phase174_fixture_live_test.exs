@@ -78,14 +78,14 @@ defmodule ScrypathOpsWeb.Phase174FixtureLiveTest do
     query = URI.encode_query(%{"schema" => schema_a, "scenario" => "a-selected-b-worse"})
 
     {:ok, _room, room_html} = live(conn, "/ops/phase174?#{query}")
-    assert room_html =~ "Recovery target"
+    assert room_html =~ "Selected schema"
     assert room_html =~ schema_a
     assert room_html =~ "ScrypathOps.Test.OpsPostB"
     assert room_html =~ "/ops/phase174/health?schema=#{schema_a}"
 
     {:ok, health, health_html} = live(conn, "/ops/phase174/health?#{query}")
     assert has_element?(health, "[id='posture-ScrypathOps.Test.OpsPostB']")
-    assert health_html =~ "Recovery target"
+    assert health_html =~ "Selected schema"
     assert health_html =~ schema_a
     render_click(health, "refresh", %{"scenario" => "a-selected-b-worse"})
     assert has_element?(health, "[id='posture-ScrypathOps.Test.OpsPostB']")

@@ -6,12 +6,12 @@ colors:
   primary-dark: "#6c5ce7"
   copper: "#a85d2e"
   copper-dark: "#c17a3e"
-  page: "#faf7f2"
-  surface: "#fffdf8"
+  page: "#f5f6f8"
+  surface: "#ffffff"
   surface-dark: "#141923"
   text: "#141923"
   text-dark: "#f4f1ea"
-  border: "#ded8ce"
+  border: "#d7dbe1"
   border-dark: "#2a3446"
   info: "#5ca9e6"
   success: "#4fae74"
@@ -84,6 +84,14 @@ components:
 
 # Design System: ScrypathOps
 
+## Maintainer feedback — 2026-10-08
+
+The current refinement uses a neutral gray light page (`#f5f6f8`), white panels, and a cool neutral muted surface (`#edeff2`). Violet interaction, copper brand accents, and dark surfaces retain their existing roles.
+
+- Keep navigation focused on destinations. Show “Selected schema” as neutral local context on Control Room and Search health; workflow schema controls carry the selection elsewhere. Full module names remain readable and wrap at namespace separators.
+- The healthy summary says “No sync failures found” and offers Search health. Detailed counts and source evidence live on that diagnostic page. This does not establish drift-free indexes or promotion readiness. Failures and unavailable observations remain explicit.
+- Click the human-readable operational timestamp to copy its exact source value. Show a brief, accessible toast after clipboard success; keep copy failures and selectable exact evidence visible. Routine checked times remain plain metadata.
+
 ## Maintainer revision direction — 2026-10-06
 
 The tokens above describe the implementation baseline. The following direction is captured for the next UI milestone and has not yet been implemented:
@@ -102,12 +110,12 @@ See [.planning/reference/OPERATOR-UI-REFINEMENT.md](.planning/reference/OPERATOR
 
 ScrypathOps is a task workspace for engineers who need to understand and operate search over time. Its visual language should make the current state easy to read, put the next safe action close to that state, and keep advanced or exploratory work available without making it compete with incident response.
 
-The current system pairs warm paper surfaces with dark, neutral text and a restrained violet action color. Copper adds a small brand accent. System sans-serif keeps the interface familiar; monospace is reserved for exact technical identifiers and values. Aim for calm, legible, and deliberate. The detailed AI-generated brand book is exploratory; product facts and the implemented tokens take precedence.
+The current system pairs neutral surfaces with dark, neutral text and a restrained violet action color. Copper adds a small brand accent. System sans-serif keeps the interface familiar; monospace is reserved for exact technical identifiers and values. Aim for calm, legible, and deliberate. The detailed AI-generated brand book is exploratory; product facts and the implemented tokens take precedence.
 
 **Key Characteristics:**
 - Task-first hierarchy: state, affected object, next action.
 - Compact, scannable operational information with readable instructions.
-- Warm light surfaces and a carefully matched dark theme.
+- Neutral light surfaces and a carefully matched dark theme.
 - Violet for interaction; copper for brand detail; semantic colors for status.
 - Shared controls and language across the operator surfaces.
 
@@ -122,12 +130,12 @@ The palette is mostly neutral, with violet for action and selection, copper for 
 - **Copper** (`#a85d2e`, dark theme `#c17a3e`): small brand accents and eyebrow labels. Copper is never a health or failure status.
 
 ### Neutral
-- **Warm page** (`#faf7f2`): light-theme page background.
-- **Warm surface** (`#fffdf8`): light-theme resting panels and cards.
+- **Neutral page** (`#f5f6f8`): light-theme page background.
+- **White surface** (`#ffffff`): light-theme resting panels and cards.
 - **Dark page** (`#0c0f14`): dark-theme page background.
 - **Dark surface** (`#141923` / `#1b2230`): resting and raised dark-theme surfaces.
 - **Primary text** (`#141923` / `#f4f1ea`): readable content in light and dark themes.
-- **Borders** (`#ded8ce` / `#2a3446`): separation and control boundaries in light and dark themes.
+- **Borders** (`#d7dbe1` / `#2a3446`): separation and control boundaries in light and dark themes.
 - **Status** (`#5ca9e6`, `#4fae74`, `#d9a441`, `#d96262`): info, success, warning, and error respectively; pair each with explicit text and shape cues.
 
 **The Status Is Not Branding Rule.** Violet and copper do not substitute for info, success, warning, or error. Copper is decorative brand detail only.

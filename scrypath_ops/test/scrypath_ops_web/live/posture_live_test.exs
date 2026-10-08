@@ -216,7 +216,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
   } do
     {:ok, lv, html} = live(conn, ~p"/ops/phase173/health?scenario=failed")
 
-    assert html =~ "Degraded"
+    assert html =~ "Sync needs attention"
 
     assert has_element?(
              lv,
@@ -298,7 +298,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert has_element?(lv, "[data-testid='posture-next-checks']")
 
     html = render(lv)
-    assert html =~ "Degraded"
+    assert html =~ "Sync needs attention"
     assert html =~ "/ops/failed-sync"
     assert html =~ "/ops/sync-drift"
     assert has_element?(lv, "a[href='/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB']")

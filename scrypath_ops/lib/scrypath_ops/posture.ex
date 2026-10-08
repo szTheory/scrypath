@@ -290,7 +290,7 @@ defmodule ScrypathOps.Posture do
   defp classify(%Posture{state: :degraded} = summary) do
     %{
       summary
-      | headline: "Degraded",
+      | headline: "Sync needs attention",
         evidence: degraded_evidence(summary)
     }
   end
@@ -298,9 +298,8 @@ defmodule ScrypathOps.Posture do
   defp classify(%Posture{state: :ok} = summary) do
     %{
       summary
-      | headline: "No fetch errors observed",
-        evidence:
-          "This check found no schema fetch errors. Keep failed work and drift checks in the loop before treating the fleet as ready for promotion."
+      | headline: "No sync failures found",
+        evidence: ""
     }
   end
 
@@ -315,15 +314,22 @@ defmodule ScrypathOps.Posture do
 
     parts =
       [
-        err > 0 && "#{err} schema(s) report fetch errors on this check",
+        err > 0 && schema_check_error_label(err),
         stuck > 0 &&
-          "#{stuck} sync job(s) failed to apply and will not self-heal (the live index may be missing documents)"
+          failed_sync_label(stuck)
       ]
       |> Enum.filter(& &1)
 
-    Enum.join(parts, "; ") <>
-      " — treat as incident triage, not green. Work the failed-sync queue first."
+    Enum.join(parts, " ")
   end
+
+  defp schema_check_error_label(1), do: "Could not check sync status for 1 schema."
+  defp schema_check_error_label(count), do: "Could not check sync status for #{count} schemas."
+
+  defp failed_sync_label(1), do: "1 sync failure needs review. Search results may be out of date."
+
+  defp failed_sync_label(count),
+    do: "#{count} sync failures need review. Search results may be out of date."
 
   defp operator_mix_guide_path do
     Path.expand("../../guides/operator-mix-tasks.md", __DIR__)

@@ -283,14 +283,7 @@ defmodule ScrypathOpsWeb.PostureLive do
 
       <.ops_trail current={:posture} />
 
-      <.ops_status
-        :if={@selected_schema}
-        kind={:info}
-        title="Recovery target"
-        data-testid="recovery-target"
-      >
-        {OperatorSelection.canonical(@selected_schema)}
-      </.ops_status>
+      <.ops_schema_context :if={@selected_schema} schema={@selected_schema} />
       <.ops_status
         :if={@selection_error == :unavailable}
         kind={:error}
@@ -309,7 +302,7 @@ defmodule ScrypathOpsWeb.PostureLive do
           <h2 id="posture-summary-heading" class="sr-only">Search health summary</h2>
           <.ops_verdict
             kind={ScrypathOps.Posture.badge_kind(@posture_state)}
-            label="Can I trust search right now?"
+            label="Search sync · all schemas"
             headline={@posture_headline}
           >
             {@posture_evidence}
@@ -339,7 +332,7 @@ defmodule ScrypathOpsWeb.PostureLive do
         </section>
 
         <section
-          :if={@next_checks != []}
+          :if={@next_checks != [] and @posture_state != :ok}
           data-testid="posture-next-checks"
           aria-labelledby="posture-jtbd-heading"
           class="space-y-3"
@@ -503,17 +496,16 @@ defmodule ScrypathOpsWeb.PostureLive do
                       </p>
                     </section>
                   </div>
-                  <.ops_link_button
+                  <.link
                     :if={is_nil(@selection_error)}
                     navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
-                    variant={:ghost}
-                    class="justify-self-start gap-2 text-base-content"
+                    class="ops-schema-action justify-self-start gap-2 text-base-content"
                     aria-label={"View failed sync work for #{module_flat_name(mod)}"}
                     id={"posture-failed-sync-link-#{module_flat_name(mod)}"}
                     data-testid="posture-failed-sync-link"
                   >
                     View failed sync work <.icon name="hero-arrow-right" class="size-4" />
-                  </.ops_link_button>
+                  </.link>
                 <% {:error, reason} -> %>
                   <div class="ops-schema-signal-card__header">
                     <div class="min-w-0">

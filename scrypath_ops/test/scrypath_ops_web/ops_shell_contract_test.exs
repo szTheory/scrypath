@@ -234,7 +234,11 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     query_a = URI.encode_query(%{"schema" => schema_a})
 
     {:ok, health_lv, _health_html} = live(conn, "/ops/health?" <> query_a)
-    assert has_element?(health_lv, "[data-testid='shell-recovery-target']", schema_a)
+
+    assert has_element?(
+             health_lv,
+             "#ops-command-palette-destinations[data-recovery-target='#{schema_a}']"
+           )
 
     for destination <- ["health", "failed-sync", "sync-drift"] do
       href = "/ops/#{destination}?#{query_a}"
@@ -251,11 +255,21 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
     Application.put_env(:scrypath_ops, :index_prefix, "shell-contract")
     {:ok, failed_lv, _failed_html} = live(conn, "/ops/failed-sync?" <> query_a)
-    assert has_element?(failed_lv, "[data-testid='shell-recovery-target']", schema_a)
+
+    assert has_element?(
+             failed_lv,
+             "#ops-command-palette-destinations[data-recovery-target='#{schema_a}']"
+           )
+
     assert has_element?(failed_lv, "a[href='/ops/sync-drift?#{query_a}']", "Check sync and drift")
 
     {:ok, drift_lv, _drift_html} = live(conn, "/ops/sync-drift?" <> query_a)
-    assert has_element?(drift_lv, "[data-testid='shell-recovery-target']", schema_a)
+
+    assert has_element?(
+             drift_lv,
+             "#ops-command-palette-destinations[data-recovery-target='#{schema_a}']"
+           )
+
     assert has_element?(drift_lv, "a[href='/ops/health?#{query_a}']", "Inspect search health")
 
     drift_lv
@@ -264,7 +278,12 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
 
     query_b = URI.encode_query(%{"schema" => schema_b})
     assert_patch(drift_lv, "/ops/sync-drift?" <> query_b)
-    assert has_element?(drift_lv, "[data-testid='shell-recovery-target']", schema_b)
+
+    assert has_element?(
+             drift_lv,
+             "#ops-command-palette-destinations[data-recovery-target='#{schema_b}']"
+           )
+
     assert has_element?(drift_lv, ".ops-sidebar a[href='/ops/health?#{query_b}']")
   end
 

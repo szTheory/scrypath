@@ -47,7 +47,7 @@ test("mounted target selection stays canonical through worse-row navigation and 
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/admin/search?schema=ScrypathEcommerce.Catalog.Variant");
   await waitForLiveConnected(page);
-  await expect(page.getByTestId("shell-recovery-target").first()).toContainText("Catalog.Variant");
+  await expect(page.locator("#ops-command-palette-destinations")).toHaveAttribute("data-recovery-target", "ScrypathEcommerce.Catalog.Variant");
 
   await page.getByRole("link", { name: /Review Search health/ }).click();
   await waitForLiveConnected(page);
@@ -68,15 +68,15 @@ test("mounted target selection stays canonical through worse-row navigation and 
   await page.locator(".ops-schema-picker__option").filter({ hasText: "Variant" }).click();
   await waitForLiveConnected(page);
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
-  await expect(page.getByTestId("shell-recovery-target").first()).toContainText("Catalog.Variant");
+  await expect(page.locator("#ops-command-palette-destinations")).toHaveAttribute("data-recovery-target", "ScrypathEcommerce.Catalog.Variant");
   await page.goBack();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Product/);
-  await expect(page.getByTestId("shell-recovery-target").first()).toContainText("Catalog.Product");
+  await expect(page.locator("#ops-command-palette-destinations")).toHaveAttribute("data-recovery-target", "ScrypathEcommerce.Catalog.Product");
   await page.goForward();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
   await page.reload();
   await waitForLiveConnected(page);
-  await expect(page.getByTestId("shell-recovery-target").first()).toContainText("Catalog.Variant");
+  await expect(page.locator("#ops-command-palette-destinations")).toHaveAttribute("data-recovery-target", "ScrypathEcommerce.Catalog.Variant");
 
   for (const schema of ["", "ScrypathEcommerce.Catalog.NotAllowlisted"]) {
     await page.goto(`/admin/search/failed-sync?schema=${encodeURIComponent(schema)}`);
@@ -147,7 +147,7 @@ test("selected recovery context remains reachable through the mobile drawer and 
   await opener.click();
   const drawer = page.locator("#ops-mobile-nav");
   await expect(drawer).toBeVisible();
-  await expect(drawer.getByTestId("shell-recovery-target")).toContainText(schemaA);
+  await expect(drawer.getByTestId("shell-recovery-target")).toHaveCount(0);
   await expect(drawer.getByRole("link", { name: "Failed sync work", exact: true }))
     .toHaveAttribute("href", new RegExp(`schema=${schemaA.replaceAll(".", "\\.")}`));
   await page.keyboard.press("Escape");
@@ -161,11 +161,11 @@ test("selected recovery context remains reachable through the mobile drawer and 
   await waitForLiveConnected(page);
   await expect(page).toHaveURL(new RegExp(`failed-sync\\?schema=${schemaA.replaceAll(".", "\\.")}`));
   await expect(drawer).toBeHidden();
-  await expect(page.getByTestId("shell-recovery-target").first()).toContainText(schemaA);
+  await expect(page.locator("#ops-command-palette-destinations")).toHaveAttribute("data-recovery-target", schemaA);
 
   await page.setViewportSize({ width: 1280, height: 900 });
   await expect(page.locator(".ops-sidebar")).toBeVisible();
-  await expect(page.locator(".ops-sidebar").getByTestId("shell-recovery-target")).toContainText(schemaA);
+  await expect(page.locator(".ops-sidebar").getByRole("link", { name: "Search health", exact: true })).toHaveAttribute("href", new RegExp(`schema=${schemaA.replaceAll(".", "\\.")}`));
 });
 
 test("standalone rendered states preserve unavailable, retained, unknown, empty, and long evidence", async ({ page }) => {

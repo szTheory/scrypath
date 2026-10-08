@@ -255,16 +255,6 @@ defmodule ScrypathOpsWeb.Layouts do
 
     ~H"""
     <nav class="ops-primary-nav" aria-label="Operator primary">
-      <p
-        :if={@recovery_target}
-        class="mb-ops-3 min-w-0 px-ops-3"
-        data-testid="shell-recovery-target"
-      >
-        <span class="ops-nav-group__label block">Recovery target</span>
-        <code class="ops-text-mono block break-all text-base-content" translate="no">
-          {ScrypathOps.OperatorSelection.canonical(@recovery_target)}
-        </code>
-      </p>
       <div class="ops-nav-groups">
         <section :for={section <- @nav_sections} class="ops-nav-group">
           <p class="ops-nav-group__label">{section.label}</p>
