@@ -302,7 +302,7 @@ defmodule ScrypathOpsWeb.PostureLive do
           <h2 id="posture-summary-heading" class="sr-only">Search health summary</h2>
           <.ops_verdict
             kind={ScrypathOps.Posture.badge_kind(@posture_state)}
-            label="Search sync · all schemas"
+            label="Search health"
             headline={@posture_headline}
           >
             {@posture_evidence}

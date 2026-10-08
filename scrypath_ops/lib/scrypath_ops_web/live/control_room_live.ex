@@ -175,7 +175,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
           <.ops_verdict
             :if={@posture.state in [:ok, :degraded]}
             kind={Posture.badge_kind(@posture.state)}
-            label="Search sync · all schemas"
+            label="Search health"
             headline={@posture.headline}
             class="ops-verdict--hero"
           >
