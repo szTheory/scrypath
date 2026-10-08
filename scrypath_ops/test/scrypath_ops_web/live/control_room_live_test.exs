@@ -196,6 +196,48 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     assert html =~ "No sync failures found"
   end
 
+  test "default Control Room is a fleet overview with no implicit schema or scoped handoff", %{
+    conn: conn
+  } do
+    put_healthy_posture_config!()
+
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [
+      %{
+        "uid" => 9,
+        "status" => "failed",
+        "type" => "documentAdditionOrUpdate",
+        "indexUid" => "ctrl_ops_post_b"
+      }
+    ])
+
+    {:ok, lv, _html} = live(conn, ~p"/ops")
+
+    refute has_element?(lv, "[data-testid='recovery-target']")
+    refute has_element?(lv, "#ops-command-palette-destinations[data-recovery-target]")
+    assert :sys.get_state(lv.pid).socket.assigns.selected_schema == nil
+    assert has_element?(lv, "[data-testid='control-room-affected-scope']", "OpsPostB")
+    refute has_element?(lv, "[data-testid='control-room-affected-scope']", "OpsPostA")
+    assert has_element?(lv, "#control-room-health-link[href='/ops/health']")
+
+    for destination <- ["health", "failed-sync", "sync-drift"] do
+      assert has_element?(lv, ".ops-sidebar a[href='/ops/#{destination}']")
+      assert has_element?(lv, "#ops-mobile-nav a[href='/ops/#{destination}']")
+      assert has_element?(lv, "#ops-command-palette-destinations a[href='/ops/#{destination}']")
+    end
+
+    render_click(lv, "refresh")
+    refute has_element?(lv, "[data-testid='recovery-target']")
+
+    {:ok, health, _} =
+      lv |> element("#control-room-health-link") |> render_click() |> follow_redirect(conn)
+
+    refute has_element?(health, "[data-testid='recovery-target']")
+    assert :sys.get_state(health.pid).socket.assigns.selected_schema == nil
+    assert has_element?(health, "[id='posture-ScrypathOps.Test.OpsPostA']")
+    assert has_element?(health, "[id='posture-ScrypathOps.Test.OpsPostB']")
+    refute has_element?(health, "a[href*='schema=nil']")
+  end
+
   test "degraded scope stays separate from the selected recovery target", %{conn: conn} do
     put_healthy_posture_config!()
 

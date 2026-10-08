@@ -46,7 +46,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
         do: socket.assigns.schema_allowlist,
         else: ScrypathOps.Schemas.allowlist()
 
-    resolution = OperatorSelection.resolve(params, allowlist)
+    resolution = OperatorSelection.resolve_explicit(params, allowlist)
 
     {selected_schema, selection_error} =
       case resolution do
@@ -139,7 +139,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
       shell={@shell}
       page_title={@page_title}
       ops_main_width={:wide}
-      recovery_target={@selected_schema}
+      recovery_target={@recovery_target}
     >
       <div class="space-y-ops-page-gap">
         <.ops_toolbar class="items-end gap-4">
@@ -262,10 +262,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
     """
   end
 
-  defp health_path(mount_path, schema) when is_atom(schema),
-    do: OperatorSelection.path(mount_path, "health", schema)
-
-  defp health_path(mount_path, _schema), do: "#{String.trim_trailing(mount_path, "/")}/health"
+  defp health_path(mount_path, schema), do: OperatorSelection.path(mount_path, "health", schema)
 
   defp affected_scope_label(summary) do
     count = length(affected_rows(summary))

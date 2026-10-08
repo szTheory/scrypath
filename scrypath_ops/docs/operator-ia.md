@@ -11,6 +11,8 @@ Canonical contract for the optional **ScrypathOps** Phoenix shell: who uses it, 
 
 ## Jobs-to-be-done
 
+Control Room is the fleet entry point: its summary checks every configured schema, and its default health link opens the complete Search health view. Neither overview automatically selects the first schema. Operators drill into a schema through its diagnostic row, then use schema controls on Failed sync work or Sync and drift. An explicit validated `schema` query can preserve an existing workflow selection across navigation; it does not narrow the fleet summary.
+
 1. **When** an alert fires that search or sync looks unhealthy, **I need** one place to see search health and sync signals, **so that** I can decide whether to page deeper or recover — **done when** I can tell “healthy / degraded / broken” with explicit next checks (ships fully in phase 45).
 2. **When** sync jobs fail or retry, **I need** a bounded list of failed work with reasons, **so that** I can retry or quarantine safely — **done when** I can open failed-work detail from the same nav priority as health (ships fully in phase 45).
 3. **When** someone asks “is the index in sync?”, **I need** read-only drift and visibility plus links to existing Mix tasks and guides, **so that** I never bypass the library’s public APIs — **done when** I can jump to `mix scrypath.*` docs and drift guides without duplicate prose here (shipped phase 45 — see `/ops/sync-drift` and **`phase 45`** in the nav table below).

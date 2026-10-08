@@ -127,7 +127,7 @@ inventory names every current export; add new exports here with their role consu
 
 | Component exports | Consumed roles |
 | --- | --- |
-| `ops_schema_context` | Local selected-schema label and complete module identifier; neutral inline context outside fleet health summaries. |
+| `ops_schema_context` | Explicit validated URL selection only; complete module identifier as neutral inline context outside fleet health summaries. Default fleet overviews show no schema selection. |
 | `ops_page_header`, `ops_heading` | Page h1 24px, section h2 18px, subsection h3 16px; 600 weight and tight heading leading |
 | `ops_panel`, `ops_section`, `ops_scaffold`, `ops_toolbar`, `ops_table` | Body 14px; named spacing and 24px page gap; panel padding 16px below 640px and 20px from 640px |
 | `ops_command_hint`, `ops_button`, `ops_link_button`, `ops_refresh_button`, `ops_action_group` | Action labels 14px/600; standard targets 40px; prominent and icon-only targets 44px; compact actions retain compact horizontal padding |

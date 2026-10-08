@@ -104,7 +104,7 @@ defmodule ScrypathOpsWeb.PostureLive do
         do: socket.assigns.schema_allowlist,
         else: ScrypathOps.Schemas.allowlist()
 
-    resolution = OperatorSelection.resolve(params, allowlist)
+    resolution = OperatorSelection.resolve_explicit(params, allowlist)
 
     {selected_schema, selection_error} =
       case resolution do

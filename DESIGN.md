@@ -88,7 +88,7 @@ components:
 
 The current refinement uses a neutral gray light page (`#f5f6f8`), white panels, and a cool neutral muted surface (`#edeff2`). Violet interaction, copper brand accents, and dark surfaces retain their existing roles.
 
-- Keep navigation focused on destinations. Show “Selected schema” as neutral local context on Control Room and Search health; workflow schema controls carry the selection elsewhere. Full module names remain readable and wrap at namespace separators.
+- Control Room and Search health open with every configured schema and no automatic schema selection. Their default navigation and health handoff carry no schema query. Show neutral “Selected schema” context only when an explicit validated schema query carries an existing workflow selection; this never filters the fleet summary. Per-schema links open the corresponding workflow, where schema controls own the choice. Full module names remain readable and wrap at namespace separators.
 - The healthy summary says “No sync failures found” and offers Search health. Detailed counts and source evidence live on that diagnostic page. This does not establish drift-free indexes or promotion readiness. Failures and unavailable observations remain explicit.
 - Click the human-readable operational timestamp to copy its exact source value. Show a brief, accessible toast after clipboard success; keep copy failures and selectable exact evidence visible. Routine checked times remain plain metadata.
 

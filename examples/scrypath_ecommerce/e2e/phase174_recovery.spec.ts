@@ -43,6 +43,41 @@ function delayNextLiveViewResponse(page: Page) {
   return { arm: () => (holdNext = true), held, released };
 }
 
+for (const entry of ["mounted", "standalone"] as const) {
+  for (const width of [1440, 390] as const) {
+    test(`${entry} default Control Room opens overall health without an implicit schema at ${width}px`, async ({ page, request }, info) => {
+      const base = entry === "mounted" ? "/admin/search" : standalone;
+      const mountPath = entry === "mounted" ? base : new URL(standalone).pathname;
+      if (entry === "mounted") await seedScenario(request, "incident");
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(base);
+      await waitForLiveConnected(page);
+      await expect(page.getByTestId("recovery-target")).toHaveCount(0);
+      await expect(page.locator("#ops-command-palette-destinations")).not.toHaveAttribute("data-recovery-target");
+      await expect(page.locator("#control-room-health-link")).toHaveAttribute("href", `${mountPath}/health`);
+      for (const destination of ["health", "failed-sync", "sync-drift"]) {
+        await expect(page.locator(`#ops-palette-destination-${destination}`)).toHaveAttribute("href", `${mountPath}/${destination}`);
+      }
+      await page.getByRole("button", { name: "Refresh search health" }).click();
+      await expect(page.getByTestId("recovery-target")).toHaveCount(0);
+      await capture(page, info, entry, "fleet-overview", width, "default");
+
+      await page.locator("#control-room-health-link").click();
+      await waitForLiveConnected(page);
+      expect(new URL(page.url()).searchParams.has("schema")).toBe(false);
+      await expect(page.getByTestId("recovery-target")).toHaveCount(0);
+      await expect(page.getByTestId("posture-row")).toHaveCount(2);
+      const schema = entry === "mounted" ? "ScrypathEcommerce.Catalog.Variant" : "ScrypathOps.Test.OpsPostB";
+      const rowAction = page.getByRole("link", { name: `View failed sync work for ${schema}`, exact: true });
+      await expect(rowAction).toHaveAttribute("href", `${mountPath}/failed-sync?schema=${schema}`);
+      await rowAction.click();
+      await waitForLiveConnected(page);
+      expect(new URL(page.url()).searchParams.get("schema")).toBe(schema);
+      await expect(page.getByRole("radio", { name: new RegExp(schema.split(".").at(-1)!) })).toBeChecked();
+    });
+  }
+}
+
 test("mounted target selection stays canonical through worse-row navigation and browser history", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/admin/search?schema=ScrypathEcommerce.Catalog.Variant");

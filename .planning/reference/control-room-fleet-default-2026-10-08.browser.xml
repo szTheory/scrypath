@@ -1,0 +1,158 @@
+<testsuites id="" name="" tests="15" failures="0" skipped="0" errors="0" time="55.321287">
+<testsuite name="phase174_recovery.spec.ts" timestamp="2026-10-08T23:14:25.668Z" hostname="chromium" tests="15" failures="0" skipped="0" time="52.93" errors="0">
+<testcase name="mounted default Control Room opens overall health without an implicit schema at 1440px" classname="phase174_recovery.spec.ts" time="4.678">
+<properties>
+<property name="phase174-capture" value="mounted/fleet-overview/1440/default">
+</property>
+</properties>
+</testcase>
+<testcase name="mounted default Control Room opens overall health without an implicit schema at 390px" classname="phase174_recovery.spec.ts" time="2.573">
+<properties>
+<property name="phase174-capture" value="mounted/fleet-overview/390/default">
+</property>
+</properties>
+</testcase>
+<testcase name="standalone default Control Room opens overall health without an implicit schema at 1440px" classname="phase174_recovery.spec.ts" time="1.211">
+<properties>
+<property name="phase174-capture" value="standalone/fleet-overview/1440/default">
+</property>
+</properties>
+</testcase>
+<testcase name="standalone default Control Room opens overall health without an implicit schema at 390px" classname="phase174_recovery.spec.ts" time="0.784">
+<properties>
+<property name="phase174-capture" value="standalone/fleet-overview/390/default">
+</property>
+</properties>
+</testcase>
+<testcase name="mounted target selection stays canonical through worse-row navigation and browser history" classname="phase174_recovery.spec.ts" time="1.767">
+</testcase>
+<testcase name="standalone source-collision action eligibility stays with Queue job 501" classname="phase174_recovery.spec.ts" time="0.495">
+</testcase>
+<testcase name="real Search health refresh reorders records without moving focus to a different action" classname="phase174_recovery.spec.ts" time="0.421">
+</testcase>
+<testcase name="selected recovery context remains reachable through the mobile drawer and palette keyboard flow" classname="phase174_recovery.spec.ts" time="1.261">
+</testcase>
+<testcase name="standalone rendered states preserve unavailable, retained, unknown, empty, and long evidence" classname="phase174_recovery.spec.ts" time="2.165">
+</testcase>
+<testcase name="refresh keeps its real label, icon, and prior observation while the LiveView response is pending" classname="phase174_recovery.spec.ts" time="3.114">
+</testcase>
+<testcase name="retry dispatch retains the source row and withholds its receipt until the server response arrives" classname="phase174_recovery.spec.ts" time="4.145">
+</testcase>
+<testcase name="mounted palette recovery destinations follow the selected schema" classname="phase174_recovery.spec.ts" time="1.279">
+</testcase>
+<testcase name="standalone palette manifest follows the validated fixture schema" classname="phase174_recovery.spec.ts" time="0.773">
+<properties>
+<property name="phase174-standalone-palette-state" value="{&quot;selectedSchema&quot;:&quot;ScrypathOps.Test.OpsPostB&quot;,&quot;manifestTarget&quot;:&quot;ScrypathOps.Test.OpsPostB&quot;,&quot;manifestHealthHref&quot;:&quot;/ops/phase174/health?schema=ScrypathOps.Test.OpsPostB&quot;,&quot;paletteHealthHref&quot;:&quot;/ops/phase174/health?schema=ScrypathOps.Test.OpsPostB&quot;}">
+</property>
+</properties>
+</testcase>
+<testcase name="mounted app selects non-first A while Product remains the worse posture and accepts a scoped retry" classname="phase174_recovery.spec.ts" time="16.375">
+<properties>
+<property name="phase174-mounted-receipt" value="{&quot;original&quot;:269,&quot;schema&quot;:&quot;Elixir.ScrypathEcommerce.Catalog.Variant&quot;,&quot;href&quot;:&quot;/admin/search/sync-drift?recovery=dQsOzD5oSHIahLTHlyIqYNnOjeTOD_Ed&amp;recovery_generation=1&amp;schema=ScrypathEcommerce.Catalog.Variant&quot;}">
+</property>
+<property name="phase174-capture" value="mounted/control-room/1440/light">
+</property>
+<property name="phase174-capture" value="mounted/health/1440/light">
+</property>
+<property name="phase174-capture" value="mounted/failed-sync/1440/light">
+</property>
+<property name="phase174-capture" value="mounted/control-room/1440/dark">
+</property>
+<property name="phase174-capture" value="mounted/health/1440/dark">
+</property>
+<property name="phase174-capture" value="mounted/failed-sync/1440/dark">
+</property>
+<property name="phase174-capture" value="mounted/control-room/1280/light">
+</property>
+<property name="phase174-capture" value="mounted/health/1280/light">
+</property>
+<property name="phase174-capture" value="mounted/failed-sync/1280/light">
+</property>
+<property name="phase174-capture" value="mounted/control-room/1280/dark">
+</property>
+<property name="phase174-capture" value="mounted/health/1280/dark">
+</property>
+<property name="phase174-capture" value="mounted/failed-sync/1280/dark">
+</property>
+<property name="phase174-capture" value="mounted/control-room/1279/light">
+</property>
+<property name="phase174-capture" value="mounted/health/1279/light">
+</property>
+<property name="phase174-capture" value="mounted/failed-sync/1279/light">
+</property>
+<property name="phase174-capture" value="mounted/control-room/1279/dark">
+</property>
+<property name="phase174-capture" value="mounted/health/1279/dark">
+</property>
+<property name="phase174-capture" value="mounted/failed-sync/1279/dark">
+</property>
+<property name="phase174-capture" value="mounted/control-room/390/light">
+</property>
+<property name="phase174-capture" value="mounted/health/390/light">
+</property>
+<property name="phase174-capture" value="mounted/failed-sync/390/light">
+</property>
+<property name="phase174-capture" value="mounted/control-room/390/dark">
+</property>
+<property name="phase174-capture" value="mounted/health/390/dark">
+</property>
+<property name="phase174-capture" value="mounted/failed-sync/390/dark">
+</property>
+</properties>
+</testcase>
+<testcase name="standalone Ops routes preserve Gating return state, palette patches, focus and responsive captures" classname="phase174_recovery.spec.ts" time="11.889">
+<properties>
+<property name="phase174-gating" value="Real standalone interruption; return preserved validated schema and did not replay; second explicit click re-entered the gate. No host approval performed.">
+</property>
+<property name="phase174-capture" value="standalone/health/1440/light">
+</property>
+<property name="phase174-capture" value="standalone/failed-sync/1440/light">
+</property>
+<property name="phase174-capture" value="standalone/control-room/1440/light">
+</property>
+<property name="phase174-capture" value="standalone/health/1440/dark">
+</property>
+<property name="phase174-capture" value="standalone/failed-sync/1440/dark">
+</property>
+<property name="phase174-capture" value="standalone/control-room/1440/dark">
+</property>
+<property name="phase174-capture" value="standalone/health/1280/light">
+</property>
+<property name="phase174-capture" value="standalone/failed-sync/1280/light">
+</property>
+<property name="phase174-capture" value="standalone/control-room/1280/light">
+</property>
+<property name="phase174-capture" value="standalone/health/1280/dark">
+</property>
+<property name="phase174-capture" value="standalone/failed-sync/1280/dark">
+</property>
+<property name="phase174-capture" value="standalone/control-room/1280/dark">
+</property>
+<property name="phase174-capture" value="standalone/health/1279/light">
+</property>
+<property name="phase174-capture" value="standalone/failed-sync/1279/light">
+</property>
+<property name="phase174-capture" value="standalone/control-room/1279/light">
+</property>
+<property name="phase174-capture" value="standalone/health/1279/dark">
+</property>
+<property name="phase174-capture" value="standalone/failed-sync/1279/dark">
+</property>
+<property name="phase174-capture" value="standalone/control-room/1279/dark">
+</property>
+<property name="phase174-capture" value="standalone/health/390/light">
+</property>
+<property name="phase174-capture" value="standalone/failed-sync/390/light">
+</property>
+<property name="phase174-capture" value="standalone/control-room/390/light">
+</property>
+<property name="phase174-capture" value="standalone/health/390/dark">
+</property>
+<property name="phase174-capture" value="standalone/failed-sync/390/dark">
+</property>
+<property name="phase174-capture" value="standalone/control-room/390/dark">
+</property>
+</properties>
+</testcase>
+</testsuite>
+</testsuites>

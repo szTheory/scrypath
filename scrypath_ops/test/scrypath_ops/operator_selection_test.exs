@@ -5,6 +5,24 @@ defmodule ScrypathOps.OperatorSelectionTest do
   alias ScrypathOps.Test.OpsPostA
   alias ScrypathOps.Test.OpsPostB
 
+  test "fleet overviews select only an explicitly allowlisted URL schema" do
+    assert OperatorSelection.resolve_explicit(%{}, [OpsPostA, OpsPostB]) == {:ok, nil}
+    assert OperatorSelection.resolve_explicit(%{}, []) == :setup
+
+    assert OperatorSelection.resolve_explicit(%{"schema" => "ScrypathOps.Test.OpsPostB"}, [
+             OpsPostA,
+             OpsPostB
+           ]) == {:ok, OpsPostB}
+
+    assert OperatorSelection.resolve_explicit(%{"schema" => ""}, [OpsPostA]) == :unavailable
+
+    assert OperatorSelection.resolve_explicit(%{"schema" => "ScrypathOps.Test.Removed"}, [
+             OpsPostA
+           ]) == :unavailable
+
+    assert OperatorSelection.path("/mounted/ops/", "health", nil) == "/mounted/ops/health"
+  end
+
   test "resolves the first allowlisted schema only when the query is absent" do
     assert OperatorSelection.resolve(%{}, [OpsPostA, OpsPostB]) == {:ok, OpsPostA}
     assert OperatorSelection.resolve(%{"schema" => ""}, [OpsPostA]) == :unavailable

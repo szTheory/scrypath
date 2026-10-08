@@ -513,6 +513,8 @@ The repository has shipped planning milestones through **`v1.42`** (**`v1.0`**-*
 
 Maintainer feedback on 2026-10-08 authorizes a focused Phase 174 UI follow-up: simpler sync summaries, neutral light surfaces, local “Selected schema” context, aligned per-schema actions, and timestamp click-to-copy with brief feedback. It changes presentation without adding recovery capabilities or dependencies. Phase 174’s original exact-SHA evidence remains historical; the follow-up has separate verification. Phase 175 remains unstarted.
 
+Further feedback clarifies the entry-point contract: Control Room and Search health default to the full fleet, with no implicit first-schema selection or scoped links. Explicit validated schema URLs still preserve an existing workflow selection; per-schema diagnostic links and the workflow’s schema controls provide deliberate drill-in. The default overview must not imply the operator selected a schema.
+
 ## Evolution
 
 This document evolves at milestone boundaries.

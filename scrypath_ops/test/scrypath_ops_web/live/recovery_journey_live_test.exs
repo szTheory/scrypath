@@ -315,13 +315,9 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
     conn: conn
   } do
     {:ok, default_room, default_room_html} = live(conn, "/ops")
-    assert default_room_html =~ "Selected schema"
-
-    assert has_element?(
-             default_room,
-             "[data-testid='recovery-target']",
-             "ScrypathOps.Test.OpsPostA"
-           )
+    refute default_room_html =~ "Selected schema"
+    refute has_element?(default_room, "[data-testid='recovery-target']")
+    assert has_element?(default_room, "#control-room-health-link[href='/ops/health']")
 
     for path <- [
           "/ops?schema=",
