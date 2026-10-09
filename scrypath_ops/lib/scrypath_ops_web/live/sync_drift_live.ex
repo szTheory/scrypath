@@ -1083,7 +1083,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           <.ops_signal_table :if={@reconcile_result}>
             <thead>
               <tr>
-                <th scope="col">Signal</th>
+                <th scope="col">Check</th>
                 <th scope="col">Value</th>
               </tr>
             </thead>
@@ -1099,7 +1099,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
                 <td>{reconcile_signal_label(@reconcile_result.mode)}</td>
               </tr>
               <tr>
-                <th scope="row" class="font-medium align-top">Drift signals</th>
+                <th scope="row" class="font-medium align-top">Sync status</th>
                 <td>
                   <div class="flex flex-wrap gap-1">
                     <.ops_badge

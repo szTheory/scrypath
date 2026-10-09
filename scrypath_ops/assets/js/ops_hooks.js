@@ -717,6 +717,9 @@ const OpsHelp = {
       this.trigger.setAttribute("aria-expanded", String(event.newState === "open"))
       if (event.newState === "closed") this.pinned = false
     }, options)
+    this.el.closest(".ops-schema-health")?.addEventListener("toggle", (event) => {
+      if (!event.currentTarget.open) this.hide()
+    }, options)
     window.addEventListener("resize", () => this.position(), options)
     window.addEventListener("scroll", () => this.position(), {...options, capture: true})
     this.trigger.setAttribute("aria-expanded", "false")

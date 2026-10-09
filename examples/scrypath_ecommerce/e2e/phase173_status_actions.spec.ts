@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { expandHealthDetails } from "./helpers/operator-ui";
 
 const ENTRYPOINTS = [
   {
@@ -58,8 +59,8 @@ for (const entrypoint of ENTRYPOINTS) {
               await expect(row.locator("h3")).toContainText(id.replace("posture-", ""));
               await expect(row.locator("h3")).toHaveCSS("overflow-wrap", "anywhere");
             }
-            await expect(page.locator(".ops-metric").first()).toContainText("Schemas");
-            await expect(page.locator(".ops-metric").nth(1)).toContainText("Incomplete checks");
+            await expect(page.getByTestId("health-schema-count")).toContainText(scenario === "partial" ? "1 schema" : "2 schemas");
+            await expandHealthDetails(page);
             await expect(page.locator(".ops-metric-success")).toHaveCount(0);
           }
 
@@ -73,7 +74,8 @@ for (const entrypoint of ENTRYPOINTS) {
             // it must not be represented as zero or as remote terminal failure.
             await expect(rows.first()).toContainText("fetch error:");
             await expect(rows.first()).not.toContainText("backend failed");
-            await expect(page.locator(".ops-metric").nth(2)).toContainText("0");
+            await expect(page.locator(".ops-metric")).toHaveCount(1);
+            await expect(page.locator(".ops-metric")).toContainText("Incomplete checks");
           } else if (scenario === "source-error") {
             await expect(rows.first()).toContainText("fetch error: :fixture_unavailable");
             await expect(rows.first()).toContainText("Not observed");
@@ -81,10 +83,10 @@ for (const entrypoint of ENTRYPOINTS) {
           } else if (scenario === "manual") {
             await expect(rows.first()).toContainText("Queue not used in manual sync mode.");
           } else if (scenario === "no-success") {
-            await expect(rows.first().locator("[aria-label^='Backend task signals']")).toContainText("No success observed");
+            await expect(rows.first().locator("[aria-label^='Backend task health']")).toContainText("No success observed");
           } else if (scenario === "partial") {
             await expect(rows).toHaveCount(1);
-            await expect(page.locator(".ops-metric").first()).toContainText("1");
+            await expect(page.getByTestId("health-schema-count")).toContainText("1 schema");
           }
 
           if (["default", "failed"].includes(scenario)) {
@@ -139,8 +141,8 @@ for (const entrypoint of ENTRYPOINTS) {
     await openScenario(page, entrypoint.url, "default", "light", 390);
     const row = page.locator(`[id="${entrypoint.rows[0]}"]`);
     await expect(row.locator(".ops-badge-success")).toHaveCount(0);
-    await expect(row.locator(".ops-signal-group").first().locator(".ops-signal-metrics"))
-      .toContainText(/Failed\s*0/);
+    await expandHealthDetails(page);
+    await expect(row.locator(".ops-signal-metrics dt").filter({ hasText: /^(Pending|Failed|Retrying)$/ })).toHaveCount(0);
     await page.getByRole("button", { name: "Refresh search health" }).evaluate((button) =>
       button.setAttribute("phx-value-scenario", "queue-error")
     );
@@ -170,8 +172,8 @@ for (const entrypoint of ENTRYPOINTS) {
     await page.screenshot({ path: join(captureDir, `phase173-${entrypoint.name}-all-source-error-light-390.png`), fullPage: true });
 
     await openScenario(page, entrypoint.url, "empty-queue", "dark", 1440);
-    await expect(queue.locator(".ops-signal-metrics"))
-      .toContainText(/Pending\s*0[\s\S]*Retrying\s*0[\s\S]*Failed\s*0/);
+    await expandHealthDetails(page);
+    await expect(queue.locator(".ops-signal-metrics dt").filter({ hasText: /^(Pending|Failed|Retrying)$/ })).toHaveCount(0);
     await expect(queue.locator(".ops-signal-metrics")).toBeVisible();
     await expect(queue).toContainText("No success observed");
     await expect(queue).not.toContainText("unavailable");
@@ -179,7 +181,7 @@ for (const entrypoint of ENTRYPOINTS) {
 
   test(`${entrypoint.name} neutral chrome and metrics preserve the approved palette`, async ({ page }) => {
     for (const theme of ["light", "dark", "system"] as const) {
-      await openScenario(page, entrypoint.url, "default", theme, 390);
+      await openScenario(page, entrypoint.url, "failed", theme, 390);
       await page.waitForTimeout(250);
       const colors = await page.evaluate(() => {
         const canvas = document.createElement("canvas");

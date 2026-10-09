@@ -15,10 +15,10 @@ for (const entry of ["mounted", "standalone"] as const) {
           await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
           await page.locator(`#theme-toggle [data-phx-theme='${theme}']`).click();
           await expect(page.locator("html")).toHaveAttribute("data-theme-effective", theme);
-          const trigger = page.getByRole("button", { name: "About Failed queue jobs", exact: true });
-          const explanation = page.locator("#health-queue-help-content");
+          const trigger = page.getByRole("button", { name: "About Schemas", exact: true });
+          const explanation = page.locator("#health-schemas-help-content");
           await expect(explanation).toBeHidden();
-          await expect(trigger).toHaveAttribute("aria-describedby", "health-queue-help-content");
+          await expect(trigger).toHaveAttribute("aria-describedby", "health-schemas-help-content");
 
           if (width === 1440) {
             await trigger.hover();
@@ -44,7 +44,7 @@ for (const entry of ["mounted", "standalone"] as const) {
           await trigger.focus();
           await expect(explanation).toBeVisible();
           await expect(trigger).toHaveAttribute("aria-expanded", "true");
-          await expect(explanation).toContainText("stopped retrying");
+          await expect(explanation).toContainText("usually stored in a database");
           const geometry = await explanation.boundingBox();
           expect(geometry).not.toBeNull();
           expect(geometry!.x).toBeGreaterThanOrEqual(0);
@@ -66,6 +66,10 @@ for (const entry of ["mounted", "standalone"] as const) {
           await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
           await trigger.click();
           await expect(explanation).toBeVisible();
+          const firstRow = page.getByTestId("posture-row").first();
+          if (!(await firstRow.locator("details.ops-schema-health").evaluate((node: HTMLDetailsElement) => node.open))) {
+            await firstRow.locator("summary.ops-schema-health__summary").click();
+          }
           await page.getByTestId("posture-failed-sync-link").first().click();
           await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
           await expect(page.locator(".ops-help__content:popover-open")).toHaveCount(0);

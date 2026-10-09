@@ -20,7 +20,8 @@ defmodule ScrypathEcommerceWeb.Phase173FixtureSource do
              "eligibility-disabled",
              "queue-error",
              "all-source-error",
-             "empty-queue"
+             "empty-queue",
+             "retrying"
            ] do
     allowlist =
       if name == "empty", do: [], else: if(name == "partial", do: [hd(@schemas)], else: @schemas)
@@ -118,7 +119,12 @@ defmodule ScrypathEcommerceWeb.Phase173FixtureSource do
   defp job(schema, scenario) do
     %{
       id: 173_300 + Enum.find_index(@schemas, &(&1 == schema)),
-      state: if(scenario == "failed", do: "discarded", else: "completed"),
+      state:
+        cond do
+          scenario == "failed" -> "discarded"
+          scenario == "retrying" -> "retryable"
+          true -> "completed"
+        end,
       worker:
         if(scenario == "long-value",
           do: String.duplicate("ScrypathEcommerce.LongWorker", 8),

@@ -1,3 +1,4 @@
+import { expandHealthDetails } from "./helpers/operator-ui";
 import { expect, test, type Browser, type Locator } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -88,6 +89,7 @@ for (const entrypoint of ENTRYPOINTS) {
         const { context, page } = await openPage(browser, width, theme);
         await page.goto(entrypoint.url);
         await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+        await expandHealthDetails(page);
         const row = page.locator(`[id="${entrypoint.row}"]`);
         await expect(row).toBeVisible();
         const time = row.locator(".ops-signal-group").first().locator(".ops-time").first();
@@ -131,6 +133,7 @@ for (const entrypoint of ENTRYPOINTS) {
           await page.emulateMedia({ reducedMotion: "reduce" });
           await page.goto(entrypoint.url);
           await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+          await expandHealthDetails(page);
           const time = page.locator(`[id="${entrypoint.row}"] .ops-signal-group`).first().locator(".ops-time").first();
           const copy = time.getByRole("button", { name: "Copy timestamp", exact: true });
           const appearance = await textAppearance(copy);
@@ -164,6 +167,7 @@ for (const entrypoint of ENTRYPOINTS) {
     const { context, page } = await openPage(browser, 390, "light");
     await page.goto(entrypoint.url);
     await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+    await expandHealthDetails(page);
     const time = page.locator(`[id="${entrypoint.row}"] .ops-signal-group`).first().locator(".ops-time").first();
     const copy = time.getByRole("button", { name: "Copy timestamp", exact: true });
     const feedback = time.locator("[data-ops-time-feedback-text]");
@@ -214,6 +218,7 @@ for (const entrypoint of ENTRYPOINTS) {
     const { context, page } = await openPage(browser, 390, "light");
     await page.goto(entrypoint.url);
     await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+    await expandHealthDetails(page);
     await page.clock.install();
     const time = page.locator(`[id="${entrypoint.row}"] .ops-signal-group`).first().locator(".ops-time").first();
     const copy = time.getByRole("button", { name: "Copy timestamp", exact: true });
@@ -258,6 +263,7 @@ for (const entrypoint of ENTRYPOINTS) {
     const { context, page } = await openPage(browser, 390, "light");
     await page.goto(entrypoint.url);
     await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+    await expandHealthDetails(page);
     await page.clock.install();
     const time = page.locator(`[id="${entrypoint.row}"] .ops-signal-group`).first().locator(".ops-time").first();
     const copy = time.getByRole("button", { name: "Copy timestamp", exact: true });
@@ -309,6 +315,7 @@ for (const entrypoint of ENTRYPOINTS) {
     const { context, page } = await openPage(browser, 390, "light");
     await page.goto(entrypoint.url);
     await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+    await expandHealthDetails(page);
     await expect(page.locator("#search-health-refresh").locator("..").locator(".ops-time__copy")).toHaveCount(0);
     await context.close();
 
@@ -317,12 +324,13 @@ for (const entrypoint of ENTRYPOINTS) {
       const separator = entrypoint.url.includes("?") ? "&" : "?";
       await scenarioPage.goto(`${entrypoint.url}${separator}scenario=${scenario}`);
       await expect(scenarioPage.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+      await expandHealthDetails(scenarioPage);
       const row = scenarioPage.locator(`[id="${entrypoint.row}"]`);
       await expect(row).toBeVisible();
       const backendTime = row.locator(".ops-signal-group").first().locator(".ops-time").first();
 
       if (scenario !== "manual") await expect(backendTime.locator(".ops-time__copy")).toHaveCount(0);
-      else await expect(row.locator("[aria-label^='Queue job signals'] .ops-time__copy")).toHaveCount(0);
+      else await expect(row.locator("[aria-label^='Queue job health'] .ops-time__copy")).toHaveCount(0);
 
       await scenarioContext.close();
     }
@@ -332,6 +340,7 @@ for (const entrypoint of ENTRYPOINTS) {
     const { context, page } = await openPage(browser, 390, "light");
     await page.goto(entrypoint.url);
     await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+    await expandHealthDetails(page);
     const row = page.locator(`[id="${entrypoint.row}"]`);
     const refresh = page.getByRole("button", { name: "Refresh search health" });
     const checked = page.locator("#search-health-refresh").locator("..");

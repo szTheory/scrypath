@@ -143,7 +143,11 @@ inventory names every current export; add new exports here with their role consu
 | `ops_workspace_mode_indicator` | State remains accompanied by text; workspace path is optional technical metadata |
 
 Search health uses the 24px section gap with unframed Next checks and per-schema
-headings. Each schema owns one surface; Backend tasks and Queue jobs share that
+headings. “Per-schema health” uses compact native disclosures for clear schemas and
+opens pending, retrying, failed, or unavailable checks by default. Only positive issue
+counts earn metric tiles; schema coverage is quiet metadata. Zero work counters are
+omitted from source groups, while last-success evidence remains available in details.
+Each schema owns one surface; Backend tasks and Queue jobs share that
 surface as plain diagnostic groups. Navigation actions use concise `ops_link_button`
 labels with supporting prose; explanatory sentences retain normal body styling.
 Ordinary prose links keep their text-link styling. Full module names and last-success

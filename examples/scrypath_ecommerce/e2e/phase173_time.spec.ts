@@ -1,4 +1,5 @@
-import { expect, test, type Browser, type Page } from "@playwright/test";
+import { expandHealthDetails } from "./helpers/operator-ui";
+import { expect, test, type Browser } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 
@@ -26,15 +27,15 @@ async function openPage(browser: Browser, width: number, theme: "light" | "dark"
 }
 
 for (const entrypoint of ENTRYPOINTS) {
-  test(`${entrypoint.name} renders stable exact operational time without overflow`, async ({ browser }) => {
-    const captureDir = join(process.cwd(), "test-results", "phase173-time-captures");
-    mkdirSync(captureDir, { recursive: true });
-
-    for (const width of [390, 1279, 1280, 1440]) {
-      for (const theme of ["light", "dark"] as const) {
+  for (const width of [390, 1279, 1280, 1440]) {
+    for (const theme of ["light", "dark"] as const) {
+      test(`${entrypoint.name} exact time at ${width}px in ${theme} survives disclosure and refresh`, async ({ browser }) => {
+        const captureDir = join(process.cwd(), "test-results", "phase173-time-captures");
+        mkdirSync(captureDir, { recursive: true });
         const { context, page } = await openPage(browser, width, theme);
         await page.goto(entrypoint.url);
         await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+        await expandHealthDetails(page);
         const row = page.locator(`[id="${entrypoint.row}"]`);
         await expect(row).toBeVisible();
 
@@ -99,14 +100,17 @@ for (const entrypoint of ENTRYPOINTS) {
         await expect(checked.locator("time")).toHaveAttribute("datetime", "2026-10-07T17:18:42.318Z");
 
         await context.close();
-      }
+      });
     }
+  }
 
-    for (const scenario of ["source-error", "no-success", "missing-time", "manual"] as const) {
+  for (const scenario of ["source-error", "no-success", "missing-time", "manual"] as const) {
+    test(`${entrypoint.name} time evidence stays truthful in ${scenario}`, async ({ browser }) => {
       const { context, page } = await openPage(browser, 390, "light");
       const separator = entrypoint.url.includes("?") ? "&" : "?";
       await page.goto(`${entrypoint.url}${separator}scenario=${scenario}`);
       await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+      await expandHealthDetails(page);
       const row = page.locator(`[id="${entrypoint.row}"]`);
       await expect(row).toBeVisible();
 
@@ -128,6 +132,6 @@ for (const entrypoint of ENTRYPOINTS) {
       }
 
       await context.close();
-    }
-  });
+    });
+  }
 }

@@ -1,3 +1,4 @@
+import { expandHealthDetails } from "./helpers/operator-ui";
 /**
  * Admin surface-depth binding gate (SCREEN-DARK-01, Phase 134).
  *
@@ -329,6 +330,7 @@ async function expectNoStatusCopper(page: Page): Promise<void> {
 }
 
 async function expectSearchHealthSignalCardsMeasured(page: Page): Promise<void> {
+  await expandHealthDetails(page);
   const card = ".ops-schema-signal-card";
   await expect(page.locator(card).first()).toBeVisible();
 

@@ -1,0 +1,42 @@
+<testsuites id="" name="" tests="2" failures="0" skipped="0" errors="1" time="177.987469">
+<testsuite name="phase173_time.spec.ts" timestamp="2026-10-09T17:57:32.977Z" hostname="chromium" tests="2" failures="0" skipped="0" time="153.106" errors="1">
+<testcase name="mounted renders stable exact operational time without overflow" classname="phase173_time.spec.ts" time="63.101">
+</testcase>
+<testcase name="standalone renders stable exact operational time without overflow" classname="phase173_time.spec.ts" time="90.005">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-time-browser/phase173_time-standalone-r-d0161-ional-time-without-overflow-chromium/error-context.md]]
+
+[[ATTACHMENT|ui-quiet-health-time-browser/phase173_time-standalone-r-d0161-ional-time-without-overflow-chromium/trace.zip]]
+]]>
+</system-out>
+<error message="Test timeout of 90000ms exceeded." type="Error">
+<![CDATA[  [chromium] › phase173_time.spec.ts:30:7 › standalone renders stable exact operational time without overflow 
+
+    Test timeout of 90000ms exceeded.
+
+    Error: browserContext.close: Target page, context or browser has been closed
+
+      103 |         await expect(checked.locator("time")).toHaveAttribute("datetime", "2026-10-07T17:18:42.318Z");
+      104 |
+    > 105 |         await context.close();
+          |         ^
+      106 |       }
+      107 |     }
+      108 |
+        at /app/examples/scrypath_ecommerce/e2e/phase173_time.spec.ts:105:9
+
+    Error Context: ../../../../evidence/ui-quiet-health-time-browser/phase173_time-standalone-r-d0161-ional-time-without-overflow-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-time-browser/phase173_time-standalone-r-d0161-ional-time-without-overflow-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/ui-quiet-health-time-browser/phase173_time-standalone-r-d0161-ional-time-without-overflow-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+</testsuite>
+</testsuites>

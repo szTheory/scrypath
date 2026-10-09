@@ -640,6 +640,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp reason_counts(%FailedSyncWorkInspection{counts: %{by_class: by_class}}) do
     by_class
     |> maybe_map_from_struct()
+    |> Enum.filter(fn {_class, count} -> count > 0 end)
     |> Enum.map(fn {class, count} -> {reason_class_label(class), count} end)
     |> Enum.sort_by(&elem(&1, 0))
   end
@@ -724,7 +725,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       </.ops_status>
 
       <.ops_panel :if={@inspection}>
-        <section aria-labelledby="failed-sync-rollups-heading">
+        <section :if={@inspection.counts.total > 0} aria-labelledby="failed-sync-rollups-heading">
           <.ops_status
             kind={failed_sync_status_kind(@inspection)}
             title={failed_sync_status_title(@inspection)}
@@ -745,6 +746,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             <span class="sr-only" id="failed-sync-rollups-heading">Failure reasons</span>
             <span
               :for={{label, count} <- reason_counts(@inspection)}
+              data-testid="failed-sync-reason-count"
               class="rounded-full border border-base-300 px-2 py-0.5 text-ops-sm"
             >
               {label}: {count}

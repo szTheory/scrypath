@@ -2,7 +2,7 @@ import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { prepareRecoveryFixture, seedScenario, waitForLiveConnected as waitForSocketConnected } from "./helpers/e2e";
-import { assertOperatorGeometry, assertReadableControl } from "./helpers/operator-ui";
+import { assertOperatorGeometry, assertReadableControl, expandHealthDetails } from "./helpers/operator-ui";
 
 const standalone = process.env.PHASE174_OPS_BASE_URL ?? "http://ops:4003/ops/phase174";
 const captureRoot = "test-results/phase174-captures";
@@ -13,6 +13,7 @@ async function waitForLiveConnected(page: Page) {
   await waitForSocketConnected(page);
   // A connected transport can precede the LiveView join and hook mounting.
   await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+  await expandHealthDetails(page);
 }
 
 function delayNextLiveViewResponse(page: Page) {

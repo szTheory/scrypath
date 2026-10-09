@@ -133,7 +133,7 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
   end
 
   test "incident handoffs use exact allowlisted schema identity and expose triage first" do
-    assert @posture_live =~ "OperatorSelection.path(@mount_path, \"failed-sync\", mod)"
+    assert @posture_live =~ "OperatorSelection.path(@mount_path, \"failed-sync\", @mod)"
     assert @failed_sync_live =~ "def handle_params(params, _uri, socket)"
 
     assert @failed_sync_live =~

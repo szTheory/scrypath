@@ -147,9 +147,9 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     diagnostics_pos = row_html |> :binary.match("Diagnostics") |> elem(0)
     assert retry_pos < diagnostics_pos
     # Reason-class rollup tiles (the single, branded representation of by-class counts).
-    assert html =~ "transport: 0"
-    assert html =~ "validation: 0"
-    assert html =~ "unknown: 2"
+    refute has_element?(lv, "[data-testid='failed-sync-reason-count']", "transport: 0")
+    refute has_element?(lv, "[data-testid='failed-sync-reason-count']", "validation: 0")
+    assert has_element?(lv, "[data-testid='failed-sync-reason-count']", "unknown: 2")
   end
 
   test "every source-qualified work row uses an opaque stable DOM and action key", %{conn: conn} do
@@ -294,6 +294,8 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert html =~ "No failed sync work for this schema"
     assert html =~ "Refresh this view"
     refute html =~ "data-testid=\"failed-sync-row\""
+    refute html =~ "dominant reason"
+    refute html =~ "No Queue jobs have manual replay data"
   end
 
   test "one failed job uses singular copy", %{conn: conn} do

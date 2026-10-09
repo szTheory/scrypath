@@ -1,0 +1,10 @@
+<testsuites id="" name="" tests="3" failures="0" skipped="0" errors="0" time="21.787481">
+<testsuite name="phase174_recovery.spec.ts" timestamp="2026-10-09T17:55:42.248Z" hostname="chromium" tests="3" failures="0" skipped="0" time="17.327" errors="0">
+<testcase name="real Search health refresh reorders records without moving focus to a different action" classname="phase174_recovery.spec.ts" time="3.105">
+</testcase>
+<testcase name="standalone rendered states preserve unavailable, retained, unknown, empty, and long evidence" classname="phase174_recovery.spec.ts" time="8.787">
+</testcase>
+<testcase name="refresh keeps its real label, icon, and prior observation while the LiveView response is pending" classname="phase174_recovery.spec.ts" time="5.435">
+</testcase>
+</testsuite>
+</testsuites>

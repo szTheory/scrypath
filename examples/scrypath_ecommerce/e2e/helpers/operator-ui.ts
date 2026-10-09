@@ -1,6 +1,12 @@
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, type Locator, type Page, type TestInfo } from "@playwright/test";
 
+// Evidence-focused journeys deliberately open the compact schema summaries.
+export async function expandHealthDetails(page: Page): Promise<void> {
+  const closed = page.locator(".ops-schema-health:not([open]) > summary");
+  while (await closed.count()) await closed.first().click();
+}
+
 export async function assertOperatorGeometry(
   page: Page,
   label: string,

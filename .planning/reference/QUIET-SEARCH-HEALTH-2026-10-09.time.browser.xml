@@ -1,0 +1,52 @@
+<testsuites id="" name="" tests="24" failures="0" skipped="0" errors="0" time="139.93874599999998">
+<testsuite name="phase173_time.spec.ts" timestamp="2026-10-09T18:02:10.726Z" hostname="chromium" tests="24" failures="0" skipped="0" time="133.305" errors="0">
+<testcase name="mounted exact time at 390px in light survives disclosure and refresh" classname="phase173_time.spec.ts" time="7.954">
+</testcase>
+<testcase name="mounted exact time at 390px in dark survives disclosure and refresh" classname="phase173_time.spec.ts" time="4.764">
+</testcase>
+<testcase name="mounted exact time at 1279px in light survives disclosure and refresh" classname="phase173_time.spec.ts" time="8.57">
+</testcase>
+<testcase name="mounted exact time at 1279px in dark survives disclosure and refresh" classname="phase173_time.spec.ts" time="5.676">
+</testcase>
+<testcase name="mounted exact time at 1280px in light survives disclosure and refresh" classname="phase173_time.spec.ts" time="5.163">
+</testcase>
+<testcase name="mounted exact time at 1280px in dark survives disclosure and refresh" classname="phase173_time.spec.ts" time="6.362">
+</testcase>
+<testcase name="mounted exact time at 1440px in light survives disclosure and refresh" classname="phase173_time.spec.ts" time="14.531">
+</testcase>
+<testcase name="mounted exact time at 1440px in dark survives disclosure and refresh" classname="phase173_time.spec.ts" time="14.469">
+</testcase>
+<testcase name="mounted time evidence stays truthful in source-error" classname="phase173_time.spec.ts" time="1.743">
+</testcase>
+<testcase name="mounted time evidence stays truthful in no-success" classname="phase173_time.spec.ts" time="1.678">
+</testcase>
+<testcase name="mounted time evidence stays truthful in missing-time" classname="phase173_time.spec.ts" time="1.894">
+</testcase>
+<testcase name="mounted time evidence stays truthful in manual" classname="phase173_time.spec.ts" time="3.24">
+</testcase>
+<testcase name="standalone exact time at 390px in light survives disclosure and refresh" classname="phase173_time.spec.ts" time="8.66">
+</testcase>
+<testcase name="standalone exact time at 390px in dark survives disclosure and refresh" classname="phase173_time.spec.ts" time="5.389">
+</testcase>
+<testcase name="standalone exact time at 1279px in light survives disclosure and refresh" classname="phase173_time.spec.ts" time="5.507">
+</testcase>
+<testcase name="standalone exact time at 1279px in dark survives disclosure and refresh" classname="phase173_time.spec.ts" time="5.181">
+</testcase>
+<testcase name="standalone exact time at 1280px in light survives disclosure and refresh" classname="phase173_time.spec.ts" time="5.549">
+</testcase>
+<testcase name="standalone exact time at 1280px in dark survives disclosure and refresh" classname="phase173_time.spec.ts" time="4.62">
+</testcase>
+<testcase name="standalone exact time at 1440px in light survives disclosure and refresh" classname="phase173_time.spec.ts" time="4.179">
+</testcase>
+<testcase name="standalone exact time at 1440px in dark survives disclosure and refresh" classname="phase173_time.spec.ts" time="6.974">
+</testcase>
+<testcase name="standalone time evidence stays truthful in source-error" classname="phase173_time.spec.ts" time="6.866">
+</testcase>
+<testcase name="standalone time evidence stays truthful in no-success" classname="phase173_time.spec.ts" time="1.12">
+</testcase>
+<testcase name="standalone time evidence stays truthful in missing-time" classname="phase173_time.spec.ts" time="0.822">
+</testcase>
+<testcase name="standalone time evidence stays truthful in manual" classname="phase173_time.spec.ts" time="2.394">
+</testcase>
+</testsuite>
+</testsuites>

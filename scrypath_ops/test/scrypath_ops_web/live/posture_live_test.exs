@@ -203,16 +203,19 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
   test "fleet rollup reports failed jobs rather than the number of visible queues", %{conn: conn} do
     {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=failed")
 
-    assert has_element?(lv, ".ops-metric:nth-child(4) .ops-metric__value", "4")
-    assert has_element?(lv, ".ops-metric:nth-child(4)", "Failed queue jobs")
-    assert has_element?(lv, ".ops-metric:nth-child(4).ops-metric-warning")
+    assert has_element?(lv, ".ops-metric:has(#health-queue-help) .ops-metric__value", "4")
+    assert has_element?(lv, ".ops-metric:has(#health-queue-help)", "Failed queue jobs")
+    assert has_element?(lv, ".ops-metric-warning:has(#health-queue-help)")
+    refute has_element?(lv, "#health-checks-help")
     refute render(lv) =~ "Queues observed"
 
     render_click(lv, "refresh", %{"scenario" => "queue-error"})
-    assert has_element?(lv, ".ops-metric:nth-child(2) .ops-metric__value", "2")
-    assert has_element?(lv, ".ops-metric:nth-child(2)", "Incomplete checks")
+    assert has_element?(lv, ".ops-metric:has(#health-checks-help) .ops-metric__value", "2")
+    assert has_element?(lv, ".ops-metric:has(#health-checks-help)", "Incomplete checks")
+    refute has_element?(lv, "#health-queue-help")
+    refute has_element?(lv, "#health-backend-help")
     assert has_element?(lv, "[data-testid='posture-row']", "Queue observation unavailable")
-    refute has_element?(lv, "[aria-label^='Queue job signals'] .ops-signal-metrics")
+    refute has_element?(lv, "[aria-label^='Queue job health'] .ops-signal-metrics")
   end
 
   test "phase 173 source-error refresh retains the prior completion", %{conn: conn} do
@@ -226,7 +229,52 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert refreshed =~ "2026-10-04T13:02:05.123456-04:00"
   end
 
-  test "phase 173 degraded health keeps zero metrics neutral and localizes failure cues", %{
+  test "healthy schemas start compact with no zero-count cards and errors expand after refresh",
+       %{conn: conn} do
+    {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health")
+    assert has_element?(lv, "#posture-fleet-heading", "Per-schema health")
+    assert has_element?(lv, "[data-testid='health-schema-count']", "2 schemas")
+    refute has_element?(lv, ".ops-metric")
+    refute has_element?(lv, ".ops-schema-health[open]")
+    refute has_element?(lv, ".ops-signal-metrics dt", "Pending")
+    refute has_element?(lv, ".ops-signal-metrics dt", "Failed")
+    refute has_element?(lv, ".ops-signal-metrics dt", "Retrying")
+    assert has_element?(lv, "[data-testid='schema-health-status']", "No pending or failed work")
+    assert has_element?(lv, ".ops-time__exact", "2026-10-04T13:02:05.123456-04:00")
+
+    render_click(lv, "refresh", %{"scenario" => "source-error"})
+    assert has_element?(lv, ".ops-schema-health[open]")
+    assert has_element?(lv, "[data-testid='schema-health-status']", "Backend status unavailable")
+    assert has_element?(lv, ".ops-metric", "Incomplete checks")
+    assert has_element?(lv, ".ops-time__exact", "2026-10-04T13:02:05.123456-04:00")
+
+    render_click(lv, "refresh", %{"scenario" => "default"})
+    refute has_element?(lv, ".ops-metric")
+    refute has_element?(lv, ".ops-schema-health[open]")
+  end
+
+  test "pending and retrying work stay visible without zero failure cards", %{conn: conn} do
+    {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=no-success")
+    refute has_element?(lv, ".ops-metric")
+    assert has_element?(lv, ".ops-schema-health[open] summary", "1 backend task pending")
+    assert has_element?(lv, ".ops-signal-metrics dt", "Pending")
+
+    render_click(lv, "refresh", %{"scenario" => "retrying"})
+    refute has_element?(lv, ".ops-metric")
+    assert has_element?(lv, ".ops-schema-health[open] summary", "2 queue jobs retrying")
+    assert has_element?(lv, ".ops-signal-metrics dt", "Retrying")
+    refute has_element?(lv, ".ops-signal-metrics dt", "Pending")
+  end
+
+  test "manual sync does not turn an unused queue into an unavailable check", %{conn: conn} do
+    {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=manual")
+    refute has_element?(lv, ".ops-metric")
+    refute has_element?(lv, ".ops-schema-health[open]")
+    refute has_element?(lv, "[data-testid='schema-health-status']", "Queue status unavailable")
+    assert has_element?(lv, ".ops-schema-health__details", "Queue not used in manual sync mode")
+  end
+
+  test "phase 173 degraded health hides zero metrics and localizes failure cues", %{
     conn: conn
   } do
     {:ok, lv, html} = live(conn, ~p"/ops/phase173/health?scenario=failed")
@@ -235,7 +283,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
 
     assert has_element?(
              lv,
-             "#posture-ScrypathOps\\.Test\\.OpsPostA .ops-signal-group[aria-label^='Backend task signals']",
+             "#posture-ScrypathOps\\.Test\\.OpsPostA .ops-signal-group[aria-label^='Backend task health']",
              "Failed"
            )
 
@@ -256,7 +304,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     time =
       lv
       |> element(
-        "[id='posture-ScrypathOps.Test.OpsPostA'] .ops-signal-group[aria-label^='Backend task signals']"
+        "[id='posture-ScrypathOps.Test.OpsPostA'] .ops-signal-group[aria-label^='Backend task health']"
       )
       |> render()
 
