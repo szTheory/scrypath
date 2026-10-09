@@ -83,14 +83,15 @@ test("mounted target selection stays canonical through worse-row navigation and 
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/admin/search?schema=ScrypathEcommerce.Catalog.Variant");
   await waitForLiveConnected(page);
-  await expect(page.locator("#ops-command-palette-destinations")).toHaveAttribute("data-recovery-target", "ScrypathEcommerce.Catalog.Variant");
+  await expect(page.locator("#ops-command-palette-destinations")).not.toHaveAttribute("data-recovery-target");
+  expect(new URL(page.url()).searchParams.has("schema")).toBe(false);
 
   await page.getByRole("link", { name: /Review Search health/ }).click();
   await waitForLiveConnected(page);
   const rows = page.getByTestId("posture-row");
   await expect(rows.first()).toContainText("Catalog.Product");
   await expect(rows.first()).toContainText("failed");
-  await expect(page.getByTestId("recovery-target")).toContainText("Catalog.Variant");
+  await expect(page.getByTestId("recovery-target")).toHaveCount(0);
 
   const productHandoff = page.getByRole("link", {
     name: "View failed sync work for ScrypathEcommerce.Catalog.Product",
@@ -158,7 +159,7 @@ test("real Search health refresh reorders records without moving focus to a diff
   const schemaA = "ScrypathOps.Test.OpsPostA";
   const token = crypto.randomUUID().replaceAll("-", "");
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(`${standalone}/health?scenario=reorder-${token}&schema=${schemaA}`);
+  await page.goto(`${standalone}/health?scenario=reorder-${token}`);
   await waitForLiveConnected(page);
   const rows = page.getByTestId("posture-row");
   await expect(rows.first()).toHaveAttribute("id", "posture-ScrypathOps.Test.OpsPostB");
@@ -170,14 +171,15 @@ test("real Search health refresh reorders records without moving focus to a diff
   await page.keyboard.press("r");
   await expect(rows.first()).toHaveAttribute("id", "posture-ScrypathOps.Test.OpsPostA");
   await expect(actionA).toBeFocused();
-  await expect(page).toHaveURL(new RegExp(`schema=${schemaA.replaceAll(".", "\\.")}`));
+  expect(new URL(page.url()).searchParams.has("schema")).toBe(false);
+  expect(new URL(page.url()).searchParams.get("scenario")).toBe(`reorder-${token}`);
   await expect(actionA).toHaveAttribute("href", /schema=ScrypathOps.Test.OpsPostA/);
 });
 
 test("selected recovery context remains reachable through the mobile drawer and palette keyboard flow", async ({ page }) => {
   const schemaA = "ScrypathOps.Test.OpsPostA";
   await page.setViewportSize({ width: 1279, height: 900 });
-  await page.goto(`${standalone}/health?scenario=a-selected-b-worse&schema=${schemaA}`);
+  await page.goto(`${standalone}/failed-sync?scenario=a-selected-b-worse&schema=${schemaA}`);
   await waitForLiveConnected(page);
   const opener = page.getByRole("button", { name: "Open navigation" });
   await opener.click();
@@ -201,28 +203,28 @@ test("selected recovery context remains reachable through the mobile drawer and 
 
   await page.setViewportSize({ width: 1280, height: 900 });
   await expect(page.locator(".ops-sidebar")).toBeVisible();
-  await expect(page.locator(".ops-sidebar").getByRole("link", { name: "Search health", exact: true })).toHaveAttribute("href", new RegExp(`schema=${schemaA.replaceAll(".", "\\.")}`));
+  await expect(page.locator(".ops-sidebar").getByRole("link", { name: "Search health", exact: true })).toHaveAttribute("href", `${new URL(standalone).pathname}/health`);
 });
 
 test("standalone rendered states preserve unavailable, retained, unknown, empty, and long evidence", async ({ page }) => {
   const schemaA = "ScrypathOps.Test.OpsPostA";
   await page.setViewportSize({ width: 390, height: 844 });
 
-  await page.goto(`${standalone}/health?scenario=no-success&schema=${schemaA}`);
+  await page.goto(`${standalone}/health?scenario=no-success`);
   await waitForLiveConnected(page);
   const rowA = page.getByTestId("posture-row").filter({ hasText: schemaA });
   const noSuccess = rowA;
   await expect(noSuccess).toContainText("No success observed");
   await expect(noSuccess).toContainText("Retrying");
 
-  await page.goto(`${standalone}/health?scenario=unknown&schema=${schemaA}`);
+  await page.goto(`${standalone}/health?scenario=unknown`);
   await waitForLiveConnected(page);
   const unknown = page.getByTestId("posture-row").filter({ hasText: schemaA });
   await expect(unknown).toContainText("No success observed");
   await expect(unknown).not.toContainText("terminal failure");
 
   const retainedToken = crypto.randomUUID().replaceAll("-", "");
-  await page.goto(`${standalone}/health?scenario=retained-${retainedToken}&schema=${schemaA}`);
+  await page.goto(`${standalone}/health?scenario=retained-${retainedToken}`);
   await waitForLiveConnected(page);
   const refresh = page.getByRole("button", { name: "Refresh search health" });
   await refresh.click();
@@ -230,7 +232,7 @@ test("standalone rendered states preserve unavailable, retained, unknown, empty,
   await expect(retained).toContainText("Backend observation unavailable");
   await expect(retained).toContainText("last success retained from the previous check");
 
-  await page.goto(`${standalone}/health?scenario=error&schema=${schemaA}`);
+  await page.goto(`${standalone}/health?scenario=error`);
   await waitForLiveConnected(page);
   const sourceError = page.getByTestId("posture-row").filter({ hasText: schemaA });
   await expect(sourceError).toContainText("Backend observation unavailable");
@@ -273,7 +275,7 @@ test("refresh keeps its real label, icon, and prior observation while the LiveVi
   const schemaA = "ScrypathOps.Test.OpsPostA";
   const token = crypto.randomUUID().replaceAll("-", "");
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(`${standalone}/health?scenario=busy-${token}&schema=${schemaA}`);
+  await page.goto(`${standalone}/health?scenario=busy-${token}`);
   await waitForLiveConnected(page);
 
   const rowA = page.getByTestId("posture-row").filter({ hasText: schemaA });
@@ -360,8 +362,8 @@ test("standalone palette manifest follows the validated fixture schema", async (
   expect(observed).toEqual({
     selectedSchema: schemaB,
     manifestTarget: schemaB,
-    manifestHealthHref: expect.stringContaining(`schema=${schemaB}`),
-    paletteHealthHref: expect.stringContaining(`schema=${schemaB}`)
+    manifestHealthHref: `${new URL(standalone).pathname}/health`,
+    paletteHealthHref: `${new URL(standalone).pathname}/health`
   });
   await assertPaletteFilterClearAndReturn(page, schemaB);
 });
@@ -390,7 +392,9 @@ async function assertPaletteFilterClearAndReturn(page: Page, selectedSchema: str
 
   await input.fill("");
   await expect(visibleItems).toHaveCount(6);
-  for (const item of ["1", "2", "3"]) {
+  const healthPath = new URL(page.url()).pathname.replace(/\/(failed-sync|sync-drift)$/, "/health");
+  await expect(page.locator("#ops-cmdk-item-1")).toHaveAttribute("href", healthPath);
+  for (const item of ["2", "3"]) {
     await expect(page.locator(`#ops-cmdk-item-${item}`)).toHaveAttribute(
       "href",
       new RegExp(`schema=${selectedSchema.replaceAll(".", "\\.")}`)
@@ -445,7 +449,9 @@ async function exerciseThemeAndPalette(page: Page, base: string) {
   await page.locator(".ops-schema-picker__option").filter({ hasText: schemaB.split(".").at(-1)! }).click();
   await waitForLiveConnected(page);
   await expect(page).toHaveURL(new RegExp(`schema=${schemaB.replaceAll(".", "\\.")}`));
-  for (const item of ["1", "2", "3"]) {
+  const healthPath = new URL(page.url()).pathname.replace(/\/(failed-sync|sync-drift)$/, "/health");
+  await expect(page.locator("#ops-cmdk-item-1")).toHaveAttribute("href", healthPath);
+  for (const item of ["2", "3"]) {
     const recoveryDestination = page.locator(`#ops-cmdk-item-${item}`);
     await expect(recoveryDestination, `rendered recovery destination ${item} carries the selected ${schemaB} target`)
       .toHaveAttribute("href", new RegExp(`schema=${schemaB.replaceAll(".", "\\.")}`));
@@ -585,7 +591,7 @@ test("standalone Ops routes preserve Gating return state, palette patches, focus
       await page.emulateMedia({ colorScheme: theme, reducedMotion: "reduce" });
       for (const surface of ["health", "failed-sync"] as const) {
         const target = surface === "health"
-          ? `${standalone}/health?scenario=a-selected-b-worse&schema=ScrypathOps.Test.OpsPostA`
+          ? `${standalone}/health?scenario=a-selected-b-worse`
           : `${standalone}/failed-sync?scenario=no-success&schema=ScrypathOps.Test.OpsPostA`;
         await page.goto(target);
         await expect(page.locator(".ops-shell")).toBeVisible();

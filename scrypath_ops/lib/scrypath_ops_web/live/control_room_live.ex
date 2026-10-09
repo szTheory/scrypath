@@ -22,9 +22,6 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
       |> assign(:page_title, "Control Room")
       |> assign(:orientation_href, @orientation_href)
       |> assign(:schema_allowlist, ScrypathOps.Schemas.allowlist())
-      |> assign(:selected_schema, nil)
-      |> assign(:selection_error, nil)
-      |> assign(:selection_params, %{})
       |> assign(:scrypath_opts, ScrypathOps.Schemas.scrypath_opts())
       |> load_summary()
 
@@ -32,41 +29,21 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
   end
 
   @impl true
-  def handle_params(params, _uri, socket) do
-    socket = apply_phase174_fixture(socket, params)
-    socket = assign(socket, :selection_params, Map.take(params, ["schema"]))
-    {:noreply, socket |> resolve_selection() |> load_summary()}
-  end
+  def handle_params(params, uri, socket) do
+    socket = socket |> apply_phase174_fixture(params) |> load_summary()
 
-  defp resolve_selection(socket) do
-    params = socket.assigns.selection_params
+    socket =
+      if Map.has_key?(params, "schema"),
+        do: push_patch(socket, to: OperatorSelection.overview_path(uri), replace: true),
+        else: socket
 
-    allowlist =
-      if phase174_fixture?(socket),
-        do: socket.assigns.schema_allowlist,
-        else: ScrypathOps.Schemas.allowlist()
-
-    resolution = OperatorSelection.resolve_explicit(params, allowlist)
-
-    {selected_schema, selection_error} =
-      case resolution do
-        {:ok, schema} -> {schema, nil}
-        :setup -> {nil, :no_schemas}
-        :unavailable -> {nil, :unavailable}
-      end
-
-    socket
-    |> assign(:schema_allowlist, allowlist)
-    |> assign(:selected_schema, selected_schema)
-    |> assign(:selection_error, selection_error)
-    |> assign(:recovery_target, if(Map.has_key?(params, "schema"), do: selected_schema))
+    {:noreply, socket}
   end
 
   @impl true
   def handle_event("refresh", _params, socket) do
     socket =
       socket
-      |> resolve_selection()
       |> load_summary()
       |> put_flash(:info, "Search health refreshed.")
 
@@ -74,6 +51,12 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
   end
 
   defp load_summary(socket) do
+    allowlist =
+      if phase174_fixture?(socket),
+        do: socket.assigns.schema_allowlist,
+        else: ScrypathOps.Schemas.allowlist()
+
+    socket = assign(socket, :schema_allowlist, allowlist)
     previous = Map.get(socket.assigns, :posture)
 
     scrypath_opts =
@@ -155,19 +138,8 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
           />
         </.ops_toolbar>
 
-        <.ops_schema_context :if={@selected_schema} schema={@selected_schema} />
-
         <section aria-labelledby="control-room-health-heading" class="space-y-4">
           <h2 id="control-room-health-heading" class="sr-only">Search health</h2>
-
-          <.ops_status
-            :if={@selection_error == :unavailable}
-            kind={:error}
-            title="That schema is unavailable"
-            role="alert"
-          >
-            Select an allowlisted schema to continue.
-          </.ops_status>
 
           <.ops_config_empty :if={@posture.state == :unconfigured} kind={:no_schemas} />
           <.ops_config_empty :if={@posture.state == :missing_backend} kind={:missing_backend} />
@@ -181,10 +153,9 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
           >
             <:actions>
               <.ops_link_button
-                :if={is_nil(@selection_error)}
                 id="control-room-health-link"
                 data-testid="control-room-health-link"
-                navigate={health_path(@mount_path, @selected_schema)}
+                navigate={OperatorSelection.path(@mount_path, "health", nil)}
                 variant={:ghost}
                 size={:md}
               >
@@ -261,8 +232,6 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
     </Layouts.app>
     """
   end
-
-  defp health_path(mount_path, schema), do: OperatorSelection.path(mount_path, "health", schema)
 
   defp affected_scope_label(summary) do
     count = length(affected_rows(summary))

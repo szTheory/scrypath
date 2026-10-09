@@ -1266,7 +1266,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         </:step>
         <:step
           :if={@selected_schema}
-          navigate={OperatorSelection.path(@mount_path, "health", @selected_schema)}
+          navigate={OperatorSelection.path(@mount_path, "health", nil)}
           hint="For the selected schema —"
         >
           Inspect search health

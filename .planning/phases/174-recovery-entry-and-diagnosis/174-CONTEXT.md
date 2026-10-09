@@ -159,3 +159,16 @@ Inherited broad advisory browser failures, the unchanged Ops lock's documented C
 *Phase: 174-recovery-entry-and-diagnosis*
 *Next: `$gsd-ui-phase 174`, then `$gsd-plan-phase 174`. Automatic chaining remains disabled.*
 *Working directory: `/private/tmp/scrypath-phase173-20261006-155750/next-planning`, branch `planning/phase-174-handoff`. The agent handles checkout selection; the maintainer does not need to cd or start another session.*
+
+## Maintainer feedback supersession — 2026-10-09
+
+The maintainer rejected selected-schema context on an overview with no selector
+and all schemas visible. D-19’s overview-target provision is superseded: Control
+Room and Search health are unscoped all-schema views; old schema queries normalize
+with history replacement. Choose a schema through its row’s recovery link. Scoped
+selectors, allowlist validation, authorization, and return paths remain. Generic
+diagnostic links that could open the default schema are removed from Search
+health; setup guidance remains. See
+[All-schema Search health](../../reference/ALL-SCHEMA-HEALTH-2026-10-09.md) for the
+current decision and executable evidence. Earlier evidence retains its original
+date and source.

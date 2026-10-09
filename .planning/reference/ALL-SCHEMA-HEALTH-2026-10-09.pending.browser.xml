@@ -1,0 +1,6 @@
+<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="5.370109">
+<testsuite name="phase174_recovery.spec.ts" timestamp="2026-10-09T19:16:54.304Z" hostname="chromium" tests="1" failures="0" skipped="0" time="4.083" errors="0">
+<testcase name="refresh keeps its real label, icon, and prior observation while the LiveView response is pending" classname="phase174_recovery.spec.ts" time="4.083">
+</testcase>
+</testsuite>
+</testsuites>

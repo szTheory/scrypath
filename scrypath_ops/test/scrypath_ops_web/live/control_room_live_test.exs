@@ -55,19 +55,22 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     :ok
   end
 
-  test "refresh revalidates a removed explicit target and excludes its fleet evidence", %{
+  test "refresh checks the current allowlist without retaining an overview selection", %{
     conn: conn
   } do
     put_healthy_posture_config!()
-    {:ok, lv, _} = live(conn, "/ops?schema=ScrypathOps.Test.OpsPostA")
+
+    {:ok, lv, _} =
+      live(conn, "/ops?schema=ScrypathOps.Test.OpsPostA") |> follow_redirect(conn, "/ops")
+
     Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostB])
     html = render_click(lv, "refresh", %{})
-    assert html =~ "That schema is unavailable"
+    refute html =~ "That schema is unavailable"
     assigns = :sys.get_state(lv.pid).socket.assigns
     assert assigns.schema_allowlist == [OpsPostB]
-    assert assigns.selected_schema == nil
+    assert assigns.recovery_target == nil
     refute has_element?(lv, "#ops-command-palette-destinations[data-recovery-target]")
-    refute has_element?(lv, "[data-testid='control-room-health-link']")
+    assert has_element?(lv, "#control-room-health-link[href='/ops/health']")
     refute has_element?(lv, "[data-testid='shell-recovery-target']", "ScrypathOps.Test.OpsPostA")
   end
 
@@ -89,11 +92,11 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
   test "configured recovery entry and intent cards route to the right surfaces", %{conn: conn} do
     put_healthy_posture_config!()
     query = URI.encode_query(%{"schema" => ScrypathOps.OperatorSelection.canonical(OpsPostA)})
-    {:ok, lv, html} = live(conn, "/ops?" <> query)
+    {:ok, lv, html} = live(conn, "/ops?" <> query) |> follow_redirect(conn, "/ops")
 
     assert has_element?(
              lv,
-             "[data-testid='control-room-health-link'][href='/ops/health?#{query}']"
+             "[data-testid='control-room-health-link'][href='/ops/health']"
            )
 
     refute has_element?(lv, "[data-testid='intent-incident']")
@@ -107,18 +110,18 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     |> assert_before("ops-intent-card__icon", "ops-intent-card__markers")
   end
 
-  test "selected recovery target is named in both shell navs and scopes recovery links", %{
+  test "old overview selection is discarded from the URL and both shell navs", %{
     conn: conn
   } do
     put_healthy_posture_config!()
     query = URI.encode_query(%{"schema" => ScrypathOps.OperatorSelection.canonical(OpsPostA)})
-    {:ok, lv, html} = live(conn, "/ops?" <> query)
+    {:ok, lv, html} = live(conn, "/ops?" <> query) |> follow_redirect(conn, "/ops")
 
-    assert html =~ "Selected schema"
-    assert html =~ "ScrypathOps.Test.OpsPostA"
+    refute html =~ "Selected schema"
+    refute has_element?(lv, "[data-testid='recovery-target']")
 
     for destination <- ["health", "failed-sync", "sync-drift"] do
-      href = "/ops/#{destination}?#{query}"
+      href = "/ops/#{destination}"
       assert has_element?(lv, ".ops-sidebar a[href='#{href}']")
       assert has_element?(lv, "#ops-mobile-nav a[href='#{href}']")
     end
@@ -129,9 +132,11 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
 
   test "invalid explicit recovery target is not propagated into shell navigation", %{conn: conn} do
     put_healthy_posture_config!()
-    {:ok, _lv, html} = live(conn, "/ops?schema=ScrypathOps.Test.Unknown")
 
-    assert html =~ "That schema is unavailable"
+    {:ok, _lv, html} =
+      live(conn, "/ops?schema=ScrypathOps.Test.Unknown") |> follow_redirect(conn, "/ops")
+
+    refute html =~ "That schema is unavailable"
     refute html =~ "Selected schema"
 
     for destination <- ["health", "failed-sync", "sync-drift"] do
@@ -214,7 +219,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
 
     refute has_element?(lv, "[data-testid='recovery-target']")
     refute has_element?(lv, "#ops-command-palette-destinations[data-recovery-target]")
-    assert :sys.get_state(lv.pid).socket.assigns.selected_schema == nil
+    assert :sys.get_state(lv.pid).socket.assigns.recovery_target == nil
     assert has_element?(lv, "[data-testid='control-room-affected-scope']", "OpsPostB")
     refute has_element?(lv, "[data-testid='control-room-affected-scope']", "OpsPostA")
     assert has_element?(lv, "#control-room-health-link[href='/ops/health']")
@@ -232,13 +237,13 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
       lv |> element("#control-room-health-link") |> render_click() |> follow_redirect(conn)
 
     refute has_element?(health, "[data-testid='recovery-target']")
-    assert :sys.get_state(health.pid).socket.assigns.selected_schema == nil
+    assert :sys.get_state(health.pid).socket.assigns.recovery_target == nil
     assert has_element?(health, "[id='posture-ScrypathOps.Test.OpsPostA']")
     assert has_element?(health, "[id='posture-ScrypathOps.Test.OpsPostB']")
     refute has_element?(health, "a[href*='schema=nil']")
   end
 
-  test "degraded scope stays separate from the selected recovery target", %{conn: conn} do
+  test "old schema query does not hide a different schema needing attention", %{conn: conn} do
     put_healthy_posture_config!()
 
     Application.put_env(:scrypath_ops, :meilisearch_tasks, [
@@ -252,13 +257,13 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     ])
 
     query = URI.encode_query(%{"schema" => ScrypathOps.OperatorSelection.canonical(OpsPostA)})
-    {:ok, lv, html} = live(conn, "/ops?" <> query)
+    {:ok, lv, html} = live(conn, "/ops?" <> query) |> follow_redirect(conn, "/ops")
 
     assert has_element?(lv, "[data-testid='control-room-affected-scope']", "OpsPostB")
-    assert html =~ "Selected schema"
-    assert html =~ "ScrypathOps.Test.OpsPostA"
+    refute html =~ "Selected schema"
+    refute has_element?(lv, "[data-testid='recovery-target']")
     refute has_element?(lv, "[data-testid='control-room-affected-scope']", "OpsPostA")
-    assert has_element?(lv, "#control-room-health-link[href='/ops/health?#{query}']")
+    assert has_element?(lv, "#control-room-health-link[href='/ops/health']")
   end
 
   test "refresh names unavailable evidence and keeps the previous successful observation", %{

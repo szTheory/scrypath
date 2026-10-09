@@ -142,7 +142,7 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
     assert @sync_drift_live =~ "def handle_params(params, _uri, socket)"
 
     assert @sync_drift_live =~
-             "OperatorSelection.path(@mount_path, \"health\", @selected_schema)"
+             "OperatorSelection.path(@mount_path, \"health\", nil)"
 
     assert @failed_sync_live =~ "Retry queue job"
     assert @failed_sync_live =~ "summary=\"Diagnostics\""

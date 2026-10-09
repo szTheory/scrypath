@@ -8,13 +8,12 @@ defmodule ScrypathOps.OperatorSelection do
 
   def canonical(_module), do: nil
 
-  @doc "Resolves an explicit URL selection, leaving fleet overviews unselected by default."
-  def resolve_explicit(params, allowlist) when is_map(params) and is_list(allowlist) do
-    cond do
-      allowlist == [] -> :setup
-      Map.has_key?(params, "schema") -> resolve(params, allowlist)
-      true -> {:ok, nil}
-    end
+  @doc "Returns the overview's local URL without a misleading schema selection."
+  def overview_path(uri) when is_binary(uri) do
+    parsed = URI.parse(uri)
+    params = URI.decode_query(parsed.query || "") |> Map.delete("schema")
+    query = if map_size(params) == 0, do: nil, else: URI.encode_query(params)
+    URI.to_string(%URI{path: parsed.path, query: query, fragment: parsed.fragment})
   end
 
   @doc "Resolves URL params against the current allowlist without creating atoms."
@@ -38,6 +37,9 @@ defmodule ScrypathOps.OperatorSelection do
   end
 
   @doc "Builds a mounted-path handoff with a safely encoded canonical schema identity."
+  def path(mount_path, "health", _schema) when is_binary(mount_path),
+    do: "#{String.trim_trailing(mount_path, "/")}/health"
+
   def path(mount_path, destination, schema)
       when is_binary(mount_path) and is_binary(destination) and is_atom(schema) and
              not is_nil(schema) do

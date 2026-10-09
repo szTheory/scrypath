@@ -126,12 +126,12 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
     :ok
   end
 
-  test "selected A stays the recovery target while worse B is listed first", %{conn: conn} do
+  test "all-schema diagnosis links explicitly to A even when B is listed first", %{conn: conn} do
     schema_a = "ScrypathOps.Test.OpsPostA"
     schema_b = "ScrypathOps.Test.OpsPostB"
 
-    {:ok, room, _html} = live(conn, "/ops?schema=#{schema_a}")
-    assert has_element?(room, "[data-testid='recovery-target']", schema_a)
+    {:ok, room, _html} = live(conn, "/ops?schema=#{schema_a}") |> follow_redirect(conn, "/ops")
+    refute has_element?(room, "[data-testid='recovery-target']")
 
     health_href =
       room
@@ -139,12 +139,12 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
       |> render()
       |> href_from_anchor()
 
-    assert health_href == "/ops/health?schema=#{schema_a}"
+    assert health_href == "/ops/health"
 
     {:ok, health, health_html} = live(conn, health_href)
     assert health_html =~ "#{schema_a}"
-    assert health_html =~ "Selected schema"
-    assert :sys.get_state(health.pid).socket.assigns.selected_schema == OpsPostA
+    refute health_html =~ "Selected schema"
+    assert :sys.get_state(health.pid).socket.assigns.recovery_target == nil
 
     assert has_element?(
              health,
@@ -319,22 +319,29 @@ defmodule ScrypathOpsWeb.RecoveryJourneyLiveTest do
     refute has_element?(default_room, "[data-testid='recovery-target']")
     assert has_element?(default_room, "#control-room-health-link[href='/ops/health']")
 
-    for path <- [
-          "/ops?schema=",
-          "/ops?schema=Elixir.NotAllowed",
-          "/ops?schema=%3Cscript%3Ealert(1)%3C/script%3E",
-          "/ops/health?schema=Elixir.NotAllowed",
-          "/ops/failed-sync?schema=Elixir.NotAllowed"
-        ] do
-      {:ok, view, html} = live(conn, path)
+    for path <- ["/ops/failed-sync", "/ops/sync-drift"],
+        schema <- ["", "Elixir.NotAllowed", "<script>alert(1)</script>"] do
+      {:ok, view, html} = live(conn, path <> "?" <> URI.encode_query(%{"schema" => schema}))
       assert html =~ "That schema is unavailable"
-      refute has_element?(view, "a[data-testid='control-room-health-link']")
-      refute has_element?(view, "a[data-testid='posture-failed-sync-link']")
       refute has_element?(view, "[data-testid='failed-sync-retry']")
+      refute has_element?(view, "#ops-command-palette-destinations[data-recovery-target]")
+    end
+
+    for path <- ["/ops", "/ops/health"], schema <- ["", "Elixir.NotAllowed"] do
+      {:ok, view, html} =
+        live(conn, path <> "?" <> URI.encode_query(%{"schema" => schema}))
+        |> follow_redirect(conn, path)
+
+      refute html =~ "That schema is unavailable"
+      refute has_element?(view, "[data-testid='recovery-target']")
+      refute has_element?(view, "#ops-command-palette-destinations[data-recovery-target]")
     end
 
     Application.put_env(:scrypath_ops, :schema_allowlist, [])
-    {:ok, setup_view, setup_html} = live(conn, "/ops?schema=ScrypathOps.Test.OpsPostA")
+
+    {:ok, setup_view, setup_html} =
+      live(conn, "/ops?schema=ScrypathOps.Test.OpsPostA") |> follow_redirect(conn, "/ops")
+
     assert setup_html =~ "No schemas configured"
     refute has_element?(setup_view, "[data-testid='recovery-target']")
   end

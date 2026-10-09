@@ -1,0 +1,6 @@
+<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="5.452027">
+<testsuite name="phase174_recovery.spec.ts" timestamp="2026-10-09T19:16:26.987Z" hostname="chromium" tests="1" failures="0" skipped="0" time="3.605" errors="0">
+<testcase name="standalone rendered states preserve unavailable, retained, unknown, empty, and long evidence" classname="phase174_recovery.spec.ts" time="3.605">
+</testcase>
+</testsuite>
+</testsuites>

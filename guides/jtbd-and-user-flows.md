@@ -277,6 +277,8 @@ Sooner or later one of these happens:
 
 Scrypath treats that as a normal operator workflow, not a shameful edge case.
 
+In the optional operator UI, start at Control Room for overall health, then use Search health to identify the schemas that need attention. Open a schema’s recovery link to inspect Failed sync work; its selector makes the scope explicit. Sync and drift keeps that choice for verification. Returning to Search health shows all configured schemas again. See the [operator information architecture](../scrypath_ops/docs/operator-ia.md) for the route map.
+
 The decision tree is blunt:
 
 - use `Scrypath.sync_status/2` when you need posture

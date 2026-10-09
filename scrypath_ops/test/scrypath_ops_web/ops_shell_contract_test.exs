@@ -116,7 +116,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
   end
 
   test "removed targets are rejected by the view and the shell on the same patch", %{conn: conn} do
-    for path <- ["/ops", "/ops/health", "/ops/failed-sync", "/ops/sync-drift"] do
+    for path <- ["/ops/failed-sync", "/ops/sync-drift"] do
       Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA, OpsPostB])
       {:ok, lv, _} = live(conn, path <> "?schema=ScrypathOps.Test.OpsPostA")
       Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostB])
@@ -126,6 +126,17 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
       refute has_element?(lv, "#ops-command-palette-destinations a[href*='schema=']")
       refute has_element?(lv, ".ops-sidebar a[href*='schema=']")
       refute has_element?(lv, "#ops-mobile-nav a[href*='schema=']")
+    end
+  end
+
+  test "connected overview patches discard schema without hiding other schemas", %{conn: conn} do
+    for path <- ["/ops", "/ops/health"] do
+      {:ok, lv, _} = live(conn, path)
+      render_patch(lv, path <> "?schema=ScrypathOps.Test.OpsPostA&note=keep")
+      assert_patch(lv, path <> "?note=keep")
+      refute has_element?(lv, "[data-testid='recovery-target']")
+      refute has_element?(lv, "#ops-command-palette-destinations[data-recovery-target]")
+      assert has_element?(lv, ".ops-sidebar a[href='/ops/health']")
     end
   end
 
@@ -233,15 +244,13 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     schema_b = ScrypathOps.OperatorSelection.canonical(OpsPostB)
     query_a = URI.encode_query(%{"schema" => schema_a})
 
-    {:ok, health_lv, _health_html} = live(conn, "/ops/health?" <> query_a)
+    {:ok, health_lv, _health_html} =
+      live(conn, "/ops/health?" <> query_a) |> follow_redirect(conn, "/ops/health")
 
-    assert has_element?(
-             health_lv,
-             "#ops-command-palette-destinations[data-recovery-target='#{schema_a}']"
-           )
+    refute has_element?(health_lv, "#ops-command-palette-destinations[data-recovery-target]")
 
     for destination <- ["health", "failed-sync", "sync-drift"] do
-      href = "/ops/#{destination}?#{query_a}"
+      href = "/ops/#{destination}"
       assert has_element?(health_lv, ".ops-sidebar a[href='#{href}']")
       assert has_element?(health_lv, "#ops-mobile-nav a[href='#{href}']")
     end
@@ -270,7 +279,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
              "#ops-command-palette-destinations[data-recovery-target='#{schema_a}']"
            )
 
-    assert has_element?(drift_lv, "a[href='/ops/health?#{query_a}']", "Inspect search health")
+    assert has_element?(drift_lv, "a[href='/ops/health']", "Inspect search health")
 
     drift_lv
     |> form("#sync-drift-schema-form", %{"schema" => schema_b})
@@ -284,7 +293,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
              "#ops-command-palette-destinations[data-recovery-target='#{schema_b}']"
            )
 
-    assert has_element?(drift_lv, ".ops-sidebar a[href='/ops/health?#{query_b}']")
+    assert has_element?(drift_lv, ".ops-sidebar a[href='/ops/health']")
   end
 
   test "selected schema destinations are server-owned outside the ignored palette", %{conn: conn} do
@@ -294,7 +303,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert manifest =~ ~s(data-recovery-target="ScrypathOps.Test.OpsPostA")
     assert Regex.scan(~r/data-ops-palette-destination=/, manifest) |> length() == 3
     assert manifest =~ ~s(id="ops-palette-destination-health")
-    assert manifest =~ ~s(href="/ops/health?schema=ScrypathOps.Test.OpsPostA")
+    assert manifest =~ ~s(href="/ops/health")
     assert manifest =~ ~s(id="ops-palette-destination-failed-sync")
     assert manifest =~ ~s(href="/ops/failed-sync?schema=ScrypathOps.Test.OpsPostA")
     assert manifest =~ ~s(id="ops-palette-destination-sync-drift")
@@ -343,12 +352,14 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert has_element?(lv, "#ops-command-palette-destinations")
 
     for {route, index} <- [{"health", 1}, {"failed-sync", 2}, {"sync-drift", 3}] do
+      href_a = if route == "health", do: "/ops/health", else: "/ops/#{route}?#{query_a}"
+
       assert has_element?(
                lv,
-               "#ops-palette-destination-#{route}[href='/ops/#{route}?#{query_a}']"
+               "#ops-palette-destination-#{route}[href='#{href_a}']"
              )
 
-      assert has_element?(lv, "#ops-cmdk-item-#{index}[href='/ops/#{route}?#{query_a}']")
+      assert has_element?(lv, "#ops-cmdk-item-#{index}[href='#{href_a}']")
     end
 
     lv
@@ -358,16 +369,20 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert_patch(lv, "/ops/sync-drift?" <> query_b)
 
     for {route, index} <- [{"health", 1}, {"failed-sync", 2}, {"sync-drift", 3}] do
+      href_a = if route == "health", do: "/ops/health", else: "/ops/#{route}?#{query_a}"
+      href_b = if route == "health", do: "/ops/health", else: "/ops/#{route}?#{query_b}"
+
       assert has_element?(
                lv,
-               "#ops-palette-destination-#{route}[href='/ops/#{route}?#{query_b}']"
+               "#ops-palette-destination-#{route}[href='#{href_b}']"
              )
 
-      assert has_element?(lv, "#ops-cmdk-item-#{index}[href='/ops/#{route}?#{query_a}']")
+      assert has_element?(lv, "#ops-cmdk-item-#{index}[href='#{href_a}']")
     end
 
     {:ok, invalid_lv, _invalid_html} =
       live(conn, "/ops/health?schema=ScrypathOps.Test.NotAllowed")
+      |> follow_redirect(conn, "/ops/health")
 
     assert has_element?(invalid_lv, "#ops-command-palette-destinations")
     refute has_element?(invalid_lv, "#ops-command-palette-destinations[data-recovery-target]")

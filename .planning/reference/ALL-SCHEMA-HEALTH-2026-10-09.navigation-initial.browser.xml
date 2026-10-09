@@ -1,0 +1,186 @@
+<testsuites id="" name="" tests="4" failures="3" skipped="0" errors="1" time="39.637409">
+<testsuite name="phase174_recovery.spec.ts" timestamp="2026-10-09T19:11:13.421Z" hostname="chromium" tests="4" failures="3" skipped="0" time="34.311" errors="1">
+<testcase name="real Search health refresh reorders records without moving focus to a different action" classname="phase174_recovery.spec.ts" time="5.867">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-results/phase174_recovery-real-Sea-2a5a1-focus-to-a-different-action-chromium/error-context.md]]
+
+[[ATTACHMENT|navigation-results/phase174_recovery-real-Sea-2a5a1-focus-to-a-different-action-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toHaveAttribute(expected) failed" type="expect.toHaveAttribute">
+<![CDATA[  [chromium] › phase174_recovery.spec.ts:158:5 › real Search health refresh reorders records without moving focus to a different action 
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  getByTestId('posture-row').first()
+    Expected: "posture-ScrypathOps.Test.OpsPostB"
+    Received: "posture-ScrypathOps.Test.OpsPostA"
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveAttribute" with timeout 5000ms
+      - waiting for getByTestId('posture-row').first()
+        14 × locator resolved to <article data-testid="posture-row" id="posture-ScrypathOps.Test.OpsPostA" data-phx-id="m67-phx-GNzyOB88tZylhwrE" class="ops-schema-signal-card ops-schema-signal-card--warning">…</article>
+           - unexpected value "posture-ScrypathOps.Test.OpsPostA"
+
+
+      163 |   await waitForLiveConnected(page);
+      164 |   const rows = page.getByTestId("posture-row");
+    > 165 |   await expect(rows.first()).toHaveAttribute("id", "posture-ScrypathOps.Test.OpsPostB");
+          |                              ^
+      166 |
+      167 |   const rowA = rows.filter({ hasText: schemaA });
+      168 |   const actionA = rowA.getByTestId("posture-failed-sync-link");
+        at /app/examples/scrypath_ecommerce/e2e/phase174_recovery.spec.ts:165:30
+
+    Error Context: ../../../../evidence/navigation-results/phase174_recovery-real-Sea-2a5a1-focus-to-a-different-action-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/navigation-results/phase174_recovery-real-Sea-2a5a1-focus-to-a-different-action-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/navigation-results/phase174_recovery-real-Sea-2a5a1-focus-to-a-different-action-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="selected recovery context remains reachable through the mobile drawer and palette keyboard flow" classname="phase174_recovery.spec.ts" time="15.219">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-results/phase174_recovery-selected-a2efe-r-and-palette-keyboard-flow-chromium/error-context.md]]
+
+[[ATTACHMENT|navigation-results/phase174_recovery-selected-a2efe-r-and-palette-keyboard-flow-chromium/trace.zip]]
+]]>
+</system-out>
+<error message="page.waitForFunction: Timeout 15000ms exceeded." type="TimeoutError">
+<![CDATA[  [chromium] › phase174_recovery.spec.ts:179:5 › selected recovery context remains reachable through the mobile drawer and palette keyboard flow 
+
+    TimeoutError: page.waitForFunction: Timeout 15000ms exceeded.
+
+       at helpers/e2e.ts:12
+
+      10 |  */
+      11 | export async function waitForLiveConnected(page: Page): Promise<void> {
+    > 12 |   await page.waitForFunction(
+         |              ^
+      13 |     () => {
+      14 |       const ls = (window as unknown as { liveSocket?: { isConnected?: () => boolean } }).liveSocket;
+      15 |       return Boolean(ls && typeof ls.isConnected === "function" && ls.isConnected());
+        at waitForLiveConnected (/app/examples/scrypath_ecommerce/e2e/helpers/e2e.ts:12:14)
+        at waitForLiveConnected (/app/examples/scrypath_ecommerce/e2e/phase174_recovery.spec.ts:13:31)
+        at /app/examples/scrypath_ecommerce/e2e/phase174_recovery.spec.ts:183:9
+
+    Error Context: ../../../../evidence/navigation-results/phase174_recovery-selected-a2efe-r-and-palette-keyboard-flow-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/navigation-results/phase174_recovery-selected-a2efe-r-and-palette-keyboard-flow-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/navigation-results/phase174_recovery-selected-a2efe-r-and-palette-keyboard-flow-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+<testcase name="mounted palette recovery destinations follow the selected schema" classname="phase174_recovery.spec.ts" time="7.034">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-results/phase174_recovery-mounted--8e7e0--follow-the-selected-schema-chromium/error-context.md]]
+
+[[ATTACHMENT|navigation-results/phase174_recovery-mounted--8e7e0--follow-the-selected-schema-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toHaveAttribute(expected) failed" type="expect.toHaveAttribute">
+<![CDATA[  [chromium] › phase174_recovery.spec.ts:323:5 › mounted palette recovery destinations follow the selected schema 
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator: locator('#ops-cmdk-item-1')
+    Expected pattern: /schema=ScrypathEcommerce\.Catalog\.Variant/
+    Received string:  "/admin/search/health"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toHaveAttribute" with timeout 5000ms
+      - waiting for locator('#ops-cmdk-item-1')
+        14 × locator resolved to <a role="option" data-cmdk-item="" id="ops-cmdk-item-1" aria-selected="false" class="ops-cmdk__item" data-phx-link="redirect" data-phx-link-state="push" href="/admin/search/health" data-phx-id="m69-phx-GNzyPYiMw6gLyDOB" data-cmdk-label="search health recover · search health">…</a>
+           - unexpected value "/admin/search/health"
+
+
+      394 |   await expect(visibleItems).toHaveCount(6);
+      395 |   for (const item of ["1", "2", "3"]) {
+    > 396 |     await expect(page.locator(`#ops-cmdk-item-${item}`)).toHaveAttribute(
+          |                                                          ^
+      397 |       "href",
+      398 |       new RegExp(`schema=${selectedSchema.replaceAll(".", "\\.")}`)
+      399 |     );
+        at assertPaletteFilterClearAndReturn (/app/examples/scrypath_ecommerce/e2e/phase174_recovery.spec.ts:396:58)
+        at /app/examples/scrypath_ecommerce/e2e/phase174_recovery.spec.ts:341:3
+
+    Error Context: ../../../../evidence/navigation-results/phase174_recovery-mounted--8e7e0--follow-the-selected-schema-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/navigation-results/phase174_recovery-mounted--8e7e0--follow-the-selected-schema-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/navigation-results/phase174_recovery-mounted--8e7e0--follow-the-selected-schema-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="standalone palette manifest follows the validated fixture schema" classname="phase174_recovery.spec.ts" time="6.191">
+<properties>
+<property name="phase174-standalone-palette-state" value="{&quot;selectedSchema&quot;:&quot;ScrypathOps.Test.OpsPostB&quot;,&quot;manifestTarget&quot;:&quot;ScrypathOps.Test.OpsPostB&quot;,&quot;manifestHealthHref&quot;:&quot;/ops/phase174/health&quot;,&quot;paletteHealthHref&quot;:&quot;/ops/phase174/health&quot;}">
+</property>
+</properties>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-results/phase174_recovery-standalo-bdee4-he-validated-fixture-schema-chromium/error-context.md]]
+
+[[ATTACHMENT|navigation-results/phase174_recovery-standalo-bdee4-he-validated-fixture-schema-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toHaveAttribute(expected) failed" type="expect.toHaveAttribute">
+<![CDATA[  [chromium] › phase174_recovery.spec.ts:344:5 › standalone palette manifest follows the validated fixture schema 
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator: locator('#ops-cmdk-item-1')
+    Expected pattern: /schema=ScrypathOps\.Test\.OpsPostB/
+    Received string:  "/ops/phase174/health"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toHaveAttribute" with timeout 5000ms
+      - waiting for locator('#ops-cmdk-item-1')
+        14 × locator resolved to <a role="option" data-cmdk-item="" id="ops-cmdk-item-1" aria-selected="false" class="ops-cmdk__item" data-phx-link="redirect" data-phx-link-state="push" href="/ops/phase174/health" data-cmdk-label="search health recover · search health">…</a>
+           - unexpected value "/ops/phase174/health"
+
+
+      394 |   await expect(visibleItems).toHaveCount(6);
+      395 |   for (const item of ["1", "2", "3"]) {
+    > 396 |     await expect(page.locator(`#ops-cmdk-item-${item}`)).toHaveAttribute(
+          |                                                          ^
+      397 |       "href",
+      398 |       new RegExp(`schema=${selectedSchema.replaceAll(".", "\\.")}`)
+      399 |     );
+        at assertPaletteFilterClearAndReturn (/app/examples/scrypath_ecommerce/e2e/phase174_recovery.spec.ts:396:58)
+        at /app/examples/scrypath_ecommerce/e2e/phase174_recovery.spec.ts:368:3
+
+    Error Context: ../../../../evidence/navigation-results/phase174_recovery-standalo-bdee4-he-validated-fixture-schema-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/navigation-results/phase174_recovery-standalo-bdee4-he-validated-fixture-schema-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/navigation-results/phase174_recovery-standalo-bdee4-he-validated-fixture-schema-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+</testsuite>
+</testsuites>

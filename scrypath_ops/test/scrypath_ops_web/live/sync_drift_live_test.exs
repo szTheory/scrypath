@@ -585,7 +585,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     assert html =~ "OpsPostB"
     assert has_element?(lv, "a[href='/ops']", "Return to Control Room")
-    assert has_element?(lv, "a[href='/ops/health?schema=ScrypathOps.Test.OpsPostB']")
+    assert has_element?(lv, "a[href='/ops/health']")
     assert :sys.get_state(lv.pid).socket.assigns.selected_schema == OpsPostB
   end
 

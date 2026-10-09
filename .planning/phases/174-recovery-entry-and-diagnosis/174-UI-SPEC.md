@@ -15,6 +15,8 @@ created: "2026-10-06"
 
 > Visual and interaction contract for OPUX-16–OPUX-19. Phase 174 extends the approved Phase 173 ScrypathOps visual system across Control Room, Search health, Failed sync work, and only the existing recovery context seams required to preserve a selected schema. User-adopted decisions in `174-CONTEXT.md` are binding. No new surface, framework, dependency, auth policy, public API, or automated recovery capability is introduced.
 
+> **2026-10-09 feedback supersession:** The maintainer rejected selected-schema context on an all-schema overview. Control Room and Search health now have no selection or filter, normalize old schema queries with history replacement, and use explicit row links to enter scoped recovery. Health destinations are always unscoped. This supersedes D-19 and the older overview-target provisions below; scoped selectors, identity, authorization, and safe return rules remain. See `../../reference/ALL-SCHEMA-HEALTH-2026-10-09.md` and the current `DESIGN.md` / operator IA. Historical comp and closeout evidence remains dated to its original source.
+
 ## Design System
 
 | Property | Value |

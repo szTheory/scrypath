@@ -159,6 +159,9 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
 
     assert html =~ "data-testid=\"posture-row\""
     assert html =~ "fetch error: :boom"
+    refute has_element?(lv, "[data-testid='posture-next-checks']")
+    refute has_element?(lv, "#ops-main a[href='/ops/failed-sync']")
+    assert has_element?(lv, "[data-testid='posture-failed-sync-link']")
     assert html =~ "Queue not used"
     assert html =~ "Not observed"
     assert html =~ "Backend tasks"
@@ -355,21 +358,18 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert row =~ "2026-04-16T17:59:00Z"
   end
 
-  test "posture shows next checks block with ordered items and failed-sync egress", %{conn: conn} do
+  test "diagnosis uses schema-specific recovery and setup still has next-step guidance", %{
+    conn: conn
+  } do
     {:ok, lv, _html} = live(conn, ~p"/ops/health")
-
-    assert has_element?(lv, "[data-testid='posture-next-checks']")
-
-    html = render(lv)
-    assert html =~ "Sync needs attention"
-    assert html =~ "/ops/failed-sync"
-    assert html =~ "/ops/sync-drift"
+    refute has_element?(lv, "[data-testid='posture-next-checks']")
+    assert has_element?(lv, "#ops-main", "Sync needs attention")
     assert has_element?(lv, "a[href='/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB']")
 
-    [_before, rest] = String.split(html, ~s(data-testid="posture-next-checks"), parts: 2)
-    [section | _] = String.split(rest, "</section>", parts: 2)
-    li_opens = Regex.scan(~r/<li[\s>]/, section)
-    assert length(li_opens) <= 5
+    Application.put_env(:scrypath_ops, :schema_allowlist, [])
+    {:ok, setup, _html} = live(conn, ~p"/ops/health")
+    assert has_element?(setup, "[data-testid='posture-next-checks']", "Setup guide")
+    refute has_element?(setup, "[data-testid='posture-row']")
   end
 
   test "posture promotion handoff keeps the selected schema and does not swap directly" do

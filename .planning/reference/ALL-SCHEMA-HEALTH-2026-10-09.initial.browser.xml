@@ -1,0 +1,76 @@
+<testsuites id="" name="" tests="8" failures="0" skipped="0" errors="0" time="62.938968">
+<testsuite name="phase174_overview_scope.spec.ts" timestamp="2026-10-09T18:29:50.677Z" hostname="chromium" tests="8" failures="0" skipped="0" time="60.974" errors="0">
+<testcase name="mounted overall health and explicit recovery at 1440px in light" classname="phase174_overview_scope.spec.ts" time="5.206">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|results/phase174_overview_scope-mo-1ca6b-recovery-at-1440px-in-light-chromium/attachments/control-room-bccf0287cb9e9a9c2fe8989a0d126d025d89843d.png]]
+
+[[ATTACHMENT|results/phase174_overview_scope-mo-1ca6b-recovery-at-1440px-in-light-chromium/attachments/health-a03cb24f18ca6c6f91fea258cf12c48ce337cc64.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted overall health and explicit recovery at 1440px in dark" classname="phase174_overview_scope.spec.ts" time="34.136">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|results/phase174_overview_scope-mo-54c68--recovery-at-1440px-in-dark-chromium/attachments/control-room-2cc848045c444959f88eed904061bf002a3b8d3a.png]]
+
+[[ATTACHMENT|results/phase174_overview_scope-mo-54c68--recovery-at-1440px-in-dark-chromium/attachments/health-c4fa2b4a1576f5a345c936072d355196f27b1345.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted overall health and explicit recovery at 390px in light" classname="phase174_overview_scope.spec.ts" time="7.128">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|results/phase174_overview_scope-mo-ee8f7--recovery-at-390px-in-light-chromium/attachments/control-room-a5781fcba83d027e81275c2d71061de0b81f47e0.png]]
+
+[[ATTACHMENT|results/phase174_overview_scope-mo-ee8f7--recovery-at-390px-in-light-chromium/attachments/health-03ec9bfd119f40b20dae41420f2ba088b77df5f8.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted overall health and explicit recovery at 390px in dark" classname="phase174_overview_scope.spec.ts" time="5.008">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|results/phase174_overview_scope-mo-524d7-t-recovery-at-390px-in-dark-chromium/attachments/control-room-c6916404356a7c7824d6f5373066ee057c90147c.png]]
+
+[[ATTACHMENT|results/phase174_overview_scope-mo-524d7-t-recovery-at-390px-in-dark-chromium/attachments/health-8f8020075a79b545abe01b35ffdbedb20fd0348e.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone overall health and explicit recovery at 1440px in light" classname="phase174_overview_scope.spec.ts" time="2.334">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|results/phase174_overview_scope-st-25444-recovery-at-1440px-in-light-chromium/attachments/control-room-d8a9df88eb0f19761bd62022574fa002ba82a4c8.png]]
+
+[[ATTACHMENT|results/phase174_overview_scope-st-25444-recovery-at-1440px-in-light-chromium/attachments/health-fc893bb227204fb20fe5d4ab96ca88643ec6f8ff.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone overall health and explicit recovery at 1440px in dark" classname="phase174_overview_scope.spec.ts" time="2.316">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|results/phase174_overview_scope-st-cc28e--recovery-at-1440px-in-dark-chromium/attachments/control-room-fe66e3495388e7ca28745b82ba10cf69266c8b0e.png]]
+
+[[ATTACHMENT|results/phase174_overview_scope-st-cc28e--recovery-at-1440px-in-dark-chromium/attachments/health-c41e9cb9b566fa58d5edc0b9ae46a020900aa815.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone overall health and explicit recovery at 390px in light" classname="phase174_overview_scope.spec.ts" time="2.456">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|results/phase174_overview_scope-st-cdadb--recovery-at-390px-in-light-chromium/attachments/control-room-acd634d001765c73f9eade26946b0c154838cb5f.png]]
+
+[[ATTACHMENT|results/phase174_overview_scope-st-cdadb--recovery-at-390px-in-light-chromium/attachments/health-d123a92bd798a9c38069e944116b2a6e52f118b6.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone overall health and explicit recovery at 390px in dark" classname="phase174_overview_scope.spec.ts" time="2.39">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|results/phase174_overview_scope-st-cea82-t-recovery-at-390px-in-dark-chromium/attachments/control-room-7235dfe6a0cfa33d567c51621e423a95ed3e35ab.png]]
+
+[[ATTACHMENT|results/phase174_overview_scope-st-cea82-t-recovery-at-390px-in-dark-chromium/attachments/health-e3d4152f235c340ac377e310ef8d618246e466dd.png]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

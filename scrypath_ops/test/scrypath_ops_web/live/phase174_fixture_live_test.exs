@@ -60,7 +60,7 @@ defmodule ScrypathOpsWeb.Phase174FixtureLiveTest do
     refute Keyword.get(normal_assigns.scrypath_opts, :index_prefix) == "phase174_"
   end
 
-  test "standalone fixture renders selected A and returns from the real stale-sudo gate", %{
+  test "standalone overview normalizes old scope and scoped recovery returns from stale-sudo", %{
     conn: conn
   } do
     assert Code.ensure_loaded?(Sigra.Audit)
@@ -77,15 +77,21 @@ defmodule ScrypathOpsWeb.Phase174FixtureLiveTest do
     schema_a = ScrypathOps.OperatorSelection.canonical(OpsPostA)
     query = URI.encode_query(%{"schema" => schema_a, "scenario" => "a-selected-b-worse"})
 
-    {:ok, _room, room_html} = live(conn, "/ops/phase174?#{query}")
-    assert room_html =~ "Selected schema"
-    assert room_html =~ schema_a
-    assert room_html =~ "ScrypathOps.Test.OpsPostB"
-    assert room_html =~ "/ops/phase174/health?schema=#{schema_a}"
+    {:ok, room, room_html} =
+      live(conn, "/ops/phase174?#{query}")
+      |> follow_redirect(conn, "/ops/phase174?scenario=a-selected-b-worse")
 
-    {:ok, health, health_html} = live(conn, "/ops/phase174/health?#{query}")
+    refute room_html =~ "Selected schema"
+    refute has_element?(room, "[data-testid='recovery-target']")
+    assert room_html =~ "ScrypathOps.Test.OpsPostB"
+    assert has_element?(room, "#control-room-health-link[href='/ops/phase174/health']")
+
+    {:ok, health, health_html} =
+      live(conn, "/ops/phase174/health?#{query}")
+      |> follow_redirect(conn, "/ops/phase174/health?scenario=a-selected-b-worse")
+
     assert has_element?(health, "[id='posture-ScrypathOps.Test.OpsPostB']")
-    assert health_html =~ "Selected schema"
+    refute health_html =~ "Selected schema"
     assert health_html =~ schema_a
     render_click(health, "refresh", %{"scenario" => "a-selected-b-worse"})
     assert has_element?(health, "[id='posture-ScrypathOps.Test.OpsPostB']")

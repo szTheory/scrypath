@@ -42,6 +42,10 @@ defmodule ScrypathOpsWeb.Live.OnMount do
     {:cont, socket}
   end
 
+  defp recovery_target(_params, view, _assigns)
+       when view in [ScrypathOpsWeb.ControlRoomLive, ScrypathOpsWeb.PostureLive],
+       do: nil
+
   defp recovery_target(params, view, assigns) do
     allowlist = current_allowlist(params, assigns)
 

@@ -33,8 +33,6 @@ defmodule ScrypathOpsWeb.PostureLive do
       |> assign(:page_title, "Search health")
       |> assign(:schema_allowlist, allowlist)
       |> assign(:scrypath_opts, scrypath_opts)
-      |> assign(:selected_schema, nil)
-      |> assign(:selection_error, nil)
       |> assign(:auto_refresh, false)
       |> assign(:posture_rows, [])
       |> assign(:aggregate_error_count, 0)
@@ -83,7 +81,7 @@ defmodule ScrypathOpsWeb.PostureLive do
   @impl true
   def handle_params(_params, uri, %{assigns: %{live_action: :legacy}} = socket) do
     query_suffix =
-      case URI.parse(uri).query do
+      case URI.parse(OperatorSelection.overview_path(uri)).query do
         nil -> ""
         query -> "?" <> query
       end
@@ -95,30 +93,16 @@ defmodule ScrypathOpsWeb.PostureLive do
       |> String.replace_suffix("/posture", "")
       |> String.trim_trailing("/")
 
-    {:noreply, push_navigate(socket, to: "#{mount_path}/health#{query_suffix}")}
+    {:noreply, push_navigate(socket, to: "#{mount_path}/health#{query_suffix}", replace: true)}
   end
 
-  def handle_params(params, _uri, socket) do
-    allowlist =
-      if socket.assigns.live_action == :phase174,
-        do: socket.assigns.schema_allowlist,
-        else: ScrypathOps.Schemas.allowlist()
-
-    resolution = OperatorSelection.resolve_explicit(params, allowlist)
-
-    {selected_schema, selection_error} =
-      case resolution do
-        {:ok, schema} -> {schema, nil}
-        :setup -> {nil, :no_schemas}
-        :unavailable -> {nil, :unavailable}
-      end
+  def handle_params(params, uri, socket) do
+    socket = refresh_next_checks(socket)
 
     socket =
-      socket
-      |> assign(:schema_allowlist, allowlist)
-      |> assign(:selected_schema, selected_schema)
-      |> assign(:selection_error, selection_error)
-      |> refresh_next_checks()
+      if Map.has_key?(params, "schema"),
+        do: push_patch(socket, to: OperatorSelection.overview_path(uri), replace: true),
+        else: socket
 
     {:noreply, socket}
   end
@@ -266,7 +250,7 @@ defmodule ScrypathOpsWeb.PostureLive do
       <.ops_toolbar class="items-end gap-4">
         <.ops_page_header
           title="Search health"
-          subtitle="Check sync and backend health for every configured schema. Start here when something looks wrong."
+          subtitle="Health across all configured schemas. Expand a schema to investigate."
         />
         <.ops_refresh_control
           id="search-health-refresh"
@@ -282,16 +266,6 @@ defmodule ScrypathOpsWeb.PostureLive do
       </.ops_toolbar>
 
       <.ops_trail current={:posture} />
-
-      <.ops_schema_context :if={@selected_schema} schema={@selected_schema} />
-      <.ops_status
-        :if={@selection_error == :unavailable}
-        kind={:error}
-        title="That schema is unavailable"
-        role="alert"
-      >
-        Select an allowlisted schema to continue.
-      </.ops_status>
 
       <div class="grid gap-ops-section">
         <section
@@ -336,7 +310,7 @@ defmodule ScrypathOpsWeb.PostureLive do
         </section>
 
         <section
-          :if={@next_checks != [] and @posture_state != :ok}
+          :if={@next_checks != [] and @posture_state in [:unconfigured, :missing_backend]}
           data-testid="posture-next-checks"
           aria-labelledby="posture-jtbd-heading"
           class="space-y-3"
@@ -410,22 +384,12 @@ defmodule ScrypathOpsWeb.PostureLive do
               :for={{mod, row} <- posture_rows_worst_first(elem(@posture_rows, 1))}
               mod={mod}
               row={row}
-              selection_error={@selection_error}
               mount_path={@mount_path}
               summary={@posture_summary}
               opts={@scrypath_opts}
             />
           </div>
         </.ops_section>
-
-        <.ops_handoff :if={@posture_state == :degraded && @selection_error == nil}>
-          <:step
-            navigate={OperatorSelection.path(@mount_path, "failed-sync", @selected_schema)}
-            hint="When you've spotted a failing schema —"
-          >
-            Review failed sync work
-          </:step>
-        </.ops_handoff>
       </div>
     </Layouts.app>
     """
@@ -563,7 +527,6 @@ defmodule ScrypathOpsWeb.PostureLive do
                 </section>
               </div>
               <.link
-                :if={is_nil(@selection_error)}
                 navigate={OperatorSelection.path(@mount_path, "failed-sync", @mod)}
                 class="ops-schema-action justify-self-start gap-2 text-base-content"
                 aria-label={"View failed sync work for #{module_flat_name(@mod)}"}
@@ -601,7 +564,6 @@ defmodule ScrypathOpsWeb.PostureLive do
                 </section>
               </div>
               <.link
-                :if={is_nil(@selection_error)}
                 navigate={OperatorSelection.path(@mount_path, "failed-sync", @mod)}
                 class="ops-schema-action justify-self-start gap-2 text-base-content"
                 aria-label={"View failed sync work for #{module_flat_name(@mod)}"}
