@@ -200,6 +200,21 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
            )
   end
 
+  test "fleet rollup reports failed jobs rather than the number of visible queues", %{conn: conn} do
+    {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=failed")
+
+    assert has_element?(lv, ".ops-metric:nth-child(4) .ops-metric__value", "4")
+    assert has_element?(lv, ".ops-metric:nth-child(4)", "Failed queue jobs")
+    assert has_element?(lv, ".ops-metric:nth-child(4).ops-metric-warning")
+    refute render(lv) =~ "Queues observed"
+
+    render_click(lv, "refresh", %{"scenario" => "queue-error"})
+    assert has_element?(lv, ".ops-metric:nth-child(2) .ops-metric__value", "2")
+    assert has_element?(lv, ".ops-metric:nth-child(2)", "Incomplete checks")
+    assert has_element?(lv, "[data-testid='posture-row']", "Queue observation unavailable")
+    refute has_element?(lv, "[aria-label^='Queue job signals'] .ops-signal-metrics")
+  end
+
   test "phase 173 source-error refresh retains the prior completion", %{conn: conn} do
     {:ok, lv, html} = live(conn, ~p"/ops/phase173/health")
     assert html =~ "2026-10-04T13:02:05.123456-04:00"

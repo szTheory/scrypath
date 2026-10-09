@@ -675,4 +675,78 @@ const OpsModal = {
   }
 }
 
-export {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsTimestampCopy, OpsToast}
+// Native popovers provide Escape, outside-click dismissal, and one open explanation.
+// This hook adds pointer/focus discovery and keeps the explanation inside the viewport.
+const OpsHelp = {
+  mounted() {
+    this.trigger = this.el.querySelector("button")
+    this.content = this.el.querySelector("[popover]")
+    if (!this.content?.showPopover) return
+    this.listeners = new AbortController()
+    const options = {signal: this.listeners.signal}
+    this.hovered = false
+    this.pinned = false
+
+    this.el.addEventListener("pointerenter", (event) => {
+      if (event.pointerType !== "mouse") return
+      this.hovered = true
+      clearTimeout(this.closeTimer)
+      this.show()
+    }, options)
+    this.el.addEventListener("pointerleave", (event) => {
+      if (event.pointerType !== "mouse") return
+      this.hovered = false
+      // Let the pointer cross the small gap into the explanation.
+      this.closeTimer = setTimeout(() => this.closeIfUnused(), 150)
+    }, options)
+    this.trigger.addEventListener("focus", () => this.show(), options)
+    this.trigger.addEventListener("blur", () => {
+      this.pinned = false
+      this.closeIfUnused()
+    }, options)
+    this.trigger.addEventListener("click", (event) => {
+      event.preventDefault()
+      if (this.pinned && this.content.matches(":popover-open")) {
+        this.hide()
+      } else {
+        this.pinned = true
+        this.show()
+      }
+    }, options)
+    this.content.addEventListener("beforetoggle", (event) => {
+      this.trigger.setAttribute("aria-expanded", String(event.newState === "open"))
+      if (event.newState === "closed") this.pinned = false
+    }, options)
+    window.addEventListener("resize", () => this.position(), options)
+    window.addEventListener("scroll", () => this.position(), {...options, capture: true})
+    this.trigger.setAttribute("aria-expanded", "false")
+  },
+  show() {
+    if (!this.content.matches(":popover-open")) this.content.showPopover()
+    this.position()
+  },
+  hide() {
+    if (this.content.matches(":popover-open")) this.content.hidePopover()
+  },
+  closeIfUnused() {
+    if (!this.hovered && !this.pinned && document.activeElement !== this.trigger) this.hide()
+  },
+  position() {
+    if (!this.content.matches(":popover-open")) return
+    const anchor = this.trigger.getBoundingClientRect()
+    const popup = this.content.getBoundingClientRect()
+    const margin = 12
+    const below = anchor.bottom + 4
+    const top = below + popup.height <= window.innerHeight - margin
+      ? below : anchor.top - popup.height - 4
+    this.content.style.left = `${Math.max(margin, Math.min(anchor.right - popup.width, window.innerWidth - popup.width - margin))}px`
+    this.content.style.top = `${Math.max(margin, top)}px`
+  },
+  destroyed() {
+    clearTimeout(this.closeTimer)
+    this.listeners?.abort()
+    if (this.content?.hidePopover) this.hide()
+  }
+}
+
+export {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsTimestampCopy, OpsToast, OpsHelp}

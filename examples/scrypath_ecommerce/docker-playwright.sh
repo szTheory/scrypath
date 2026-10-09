@@ -58,7 +58,7 @@ case "$scope" in
   phase174-recovery)
     echo "Running the Phase 174 dual-entrypoint recovery proof..."
     PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results/phase174-recovery.xml \
-      exec npx playwright test e2e/phase174_recovery.spec.ts --workers=1 --retries=0 --reporter=junit
+      exec npx playwright test e2e/phase174_recovery.spec.ts e2e/phase174_health_help.spec.ts --workers=1 --retries=0 --reporter=junit
     ;;
   phase174-palette)
     echo "Running the focused mounted Phase 174 palette regression proof..."

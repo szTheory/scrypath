@@ -309,24 +309,32 @@ defmodule ScrypathOpsWeb.PostureLive do
           </.ops_verdict>
           <.ops_metric_grid cols={4}>
             <.ops_metric
-              label="Schemas"
+              label="Schemas in scope"
+              help_id="health-schemas-help"
+              help="An Ecto schema is a type of data indexed for search, such as Product. This page checks every schema configured for this operator app."
               value={posture_schema_count(@posture_rows)}
               kind={:neutral}
             />
             <.ops_metric
-              label="Schema check errors"
+              label="Incomplete checks"
+              help_id="health-checks-help"
+              help="Schemas whose sync status could not be fully read. This does not prove indexing has failed. Review the unavailable sources below before trusting their status."
               value={@aggregate_error_count}
               kind={metric_tone(@aggregate_error_count)}
             />
             <.ops_metric
               label="Failed backend tasks"
+              help_id="health-backend-help"
+              help="Indexing work the search engine accepted but could not finish. Search results may be missing recent changes. Review the affected schema's failed sync work. Counts cover the task history returned by this check."
               value={posture_backend_failed_count(@posture_rows)}
               kind={metric_tone(posture_backend_failed_count(@posture_rows))}
             />
             <.ops_metric
-              label="Queues observed"
-              value={posture_queue_observed_count(@posture_rows)}
-              kind={:neutral}
+              label="Failed queue jobs"
+              help_id="health-queue-help"
+              help="Background sync jobs that send changes to the search engine and have stopped retrying. These failures can leave search results out of date. Counts cover the jobs returned by this check; unavailable job status is shown below."
+              value={@posture_summary.queue_failed_count}
+              kind={metric_tone(@posture_summary.queue_failed_count)}
             />
           </.ops_metric_grid>
         </section>
@@ -383,7 +391,7 @@ defmodule ScrypathOpsWeb.PostureLive do
           :if={match?({:ok, _}, @posture_rows)}
           id="posture-fleet-heading"
           title="Per-schema signals"
-          subtitle="Schemas with the most issues appear first. Review backend tasks, queue status, and each schema's last successful sync."
+          subtitle="Schemas with issues appear first. Check where updates are waiting or failing, then open that schema's failed sync work."
         >
           <div class="ops-schema-signal-list">
             <article
@@ -416,7 +424,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                       aria-label={"Backend task signals for #{inspect(mod)}"}
                       class="ops-signal-group"
                     >
-                      <p class="ops-signal-group__title">Backend tasks</p>
+                      <.signal_heading source={:backend} mod={mod} />
                       <dl :if={!source_error?(status, :backend)} class="ops-signal-metrics">
                         <div>
                           <dt>Pending</dt>
@@ -453,7 +461,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                       aria-label={"Queue job signals for #{inspect(mod)}"}
                       class="ops-signal-group"
                     >
-                      <p class="ops-signal-group__title">Queue jobs</p>
+                      <.signal_heading source={:queue} mod={mod} />
                       <dl :if={status.queue.observed?} class="ops-signal-metrics">
                         <div>
                           <dt>Pending</dt>
@@ -521,9 +529,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                       aria-label={"#{if(source == :backend, do: "Backend task", else: "Queue job")} signals for #{inspect(mod)}"}
                       class="ops-signal-group"
                     >
-                      <p class="ops-signal-group__title">
-                        {if(source == :backend, do: "Backend tasks", else: "Queue jobs")}
-                      </p>
+                      <.signal_heading source={source} mod={mod} />
                       <.unavailable_signal
                         :if={source == :backend or !queue_unused_mode?(queue_mode(@scrypath_opts))}
                         status={%{source_errors: %{source => reason}}}
@@ -560,7 +566,7 @@ defmodule ScrypathOpsWeb.PostureLive do
             navigate={OperatorSelection.path(@mount_path, "failed-sync", @selected_schema)}
             hint="When you've spotted a failing schema —"
           >
-            Work the failed-sync queue
+            Review failed sync work
           </:step>
         </.ops_handoff>
       </div>
@@ -603,14 +609,30 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   defp posture_backend_failed_count(_), do: 0
 
-  defp posture_queue_observed_count({:ok, rows}) do
-    Enum.count(rows, fn
-      {_mod, {:ok, status}} -> status.queue.observed?
-      _row -> false
-    end)
-  end
+  defp signal_heading(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :label,
+        if(assigns.source == :backend, do: "Backend tasks", else: "Queue jobs")
+      )
 
-  defp posture_queue_observed_count(_), do: 0
+    ~H"""
+    <div class="ops-signal-group__heading">
+      <p class="ops-signal-group__title">{@label}</p>
+      <.ops_help id={"health-#{module_flat_name(@mod)}-#{@source}-help"} label={@label}>
+        <%= if @source == :backend do %>
+          Indexing work inside the search engine. Pending tasks are still processing;
+          failed tasks need review. Last success is the latest completed task in the returned history.
+        <% else %>
+          A queue holds background sync jobs until Oban runs them. Pending jobs are waiting or
+          running; retrying jobs will try again. Failed jobs have stopped retrying and need review.
+          Job completion alone does not confirm that the search engine has finished indexing.
+        <% end %>
+      </.ops_help>
+    </div>
+    """
+  end
 
   defp state_source_iso(%Scrypath.Operator.State{metadata: metadata}),
     do: Map.get(metadata, :source_iso)

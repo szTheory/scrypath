@@ -596,6 +596,54 @@
     gap: var(--spacing-ops-2);
   }
 
+  .ops-metric__label,
+  .ops-signal-group__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-ops-2);
+  }
+
+  .ops-help {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  .ops-help__trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-ops-control);
+    color: color-mix(in srgb, var(--color-base-content) 72%, transparent);
+    cursor: pointer;
+  }
+
+  .ops-help__trigger:hover {
+    color: var(--color-base-content);
+    background: var(--ops-surface-2);
+  }
+
+  .ops-help__content {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    width: min(320px, calc(100vw - 24px));
+    padding: var(--spacing-ops-3);
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--radius-ops-control);
+    background: var(--ops-surface-1);
+    color: var(--color-base-content);
+    font-family: var(--font-sans);
+    font-size: var(--text-ops-body);
+    font-weight: 400;
+    line-height: var(--leading-ops-body);
+    text-transform: none;
+    letter-spacing: normal;
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--color-base-content) 12%, transparent);
+  }
+
   .ops-metric__cue {
     color: var(--color-warning);
   }

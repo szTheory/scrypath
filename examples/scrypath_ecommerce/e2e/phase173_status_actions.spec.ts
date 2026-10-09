@@ -59,7 +59,7 @@ for (const entrypoint of ENTRYPOINTS) {
               await expect(row.locator("h3")).toHaveCSS("overflow-wrap", "anywhere");
             }
             await expect(page.locator(".ops-metric").first()).toContainText("Schemas");
-            await expect(page.locator(".ops-metric").nth(1)).toContainText("Schema check errors");
+            await expect(page.locator(".ops-metric").nth(1)).toContainText("Incomplete checks");
             await expect(page.locator(".ops-metric-success")).toHaveCount(0);
           }
 

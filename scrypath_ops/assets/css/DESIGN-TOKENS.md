@@ -138,6 +138,7 @@ inventory names every current export; add new exports here with their role consu
 | `ops_empty_state`, `ops_empty_hero`, `ops_loading`, `ops_config_empty` | Required instructions and error copy use body 14px; optional metadata may use the small exception |
 | `ops_data_card`, `ops_result_row`, `ops_object_list`, `ops_object_item`, `ops_signal_table` | Record headings use h3 16px; body uses 14px; spacing, radius, shadow, and responsive layout stay token-backed |
 | `ops_time`, `ops_disclosure`, `ops_code_block`, `ops_inline_code` | Operational age is the copy button; its text and feedback use the 14px body family. Copy/dismiss targets are 40px with neutral hover/press and independent focus; success uses a brief bottom-corner toast and failures keep exact evidence and persistent feedback; exact technical evidence may use monospace, optional metadata retains 11px/12px exceptions |
+| `ops_help` | Optional term explanation with a named 32px information button. Body copy uses 14px and theme surfaces. Hover, keyboard focus, and tap open a native popover; Escape, outside click, or leaving an unpinned explanation closes it. Keep required status and actions outside help. |
 | `ops_modal`, `ops_command_palette`, `ops_command_palette_destinations` | Body/actions use 14px; dialog icon target is 44px; consume named overlay layer, radius, shadow, and motion roles; palette destinations remain server-owned outside the ignored dialog subtree |
 | `ops_workspace_mode_indicator` | State remains accompanied by text; workspace path is optional technical metadata |
 

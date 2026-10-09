@@ -379,6 +379,8 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Small metric tile for rollups and status counts."
   attr(:label, :string, required: true)
   attr(:value, :any, required: true)
+  attr(:help_id, :string, default: nil)
+  attr(:help, :string, default: nil)
 
   attr(:kind, :atom,
     default: :neutral,
@@ -388,7 +390,10 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_metric(assigns) do
     ~H"""
     <div class={["ops-metric ops-muted-panel px-3 py-2", metric_tone_class(@kind)]}>
-      <p class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/60">{@label}</p>
+      <div class="ops-metric__label">
+        <p class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/60">{@label}</p>
+        <.ops_help :if={@help} id={@help_id} label={@label}>{@help}</.ops_help>
+      </div>
       <p class="ops-metric__value mt-1 font-mono text-ops-lg font-semibold tabular-nums">
         {@value}
         <span :if={@kind in [:warning, :error]} class="ops-metric__cue" aria-hidden="true">
@@ -396,6 +401,30 @@ defmodule ScrypathOpsWeb.OpsUi do
         </span>
       </p>
     </div>
+    """
+  end
+
+  @doc "Optional term explanation, available on hover, focus, or tap. Keep actions outside it."
+  attr(:id, :string, required: true)
+  attr(:label, :string, required: true)
+  slot(:inner_block, required: true)
+
+  def ops_help(assigns) do
+    ~H"""
+    <span id={@id} class="ops-help" phx-hook="OpsHelp" phx-update="ignore">
+      <button
+        type="button"
+        class="ops-help__trigger"
+        aria-label={"About #{@label}"}
+        aria-describedby={"#{@id}-content"}
+        popovertarget={"#{@id}-content"}
+      >
+        <ScrypathOpsWeb.CoreComponents.icon name="hero-information-circle" class="size-4" />
+      </button>
+      <span id={"#{@id}-content"} class="ops-help__content" role="tooltip" popover="auto">
+        {render_slot(@inner_block)}
+      </span>
+    </span>
     """
   end
 
