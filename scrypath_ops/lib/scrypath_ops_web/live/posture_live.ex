@@ -309,30 +309,30 @@ defmodule ScrypathOpsWeb.PostureLive do
           </.ops_verdict>
           <.ops_metric_grid cols={4}>
             <.ops_metric
-              label="Schemas in scope"
+              label="Schemas"
               help_id="health-schemas-help"
-              help="An Ecto schema is a type of data indexed for search, such as Product. This page checks every schema configured for this operator app."
+              help="Schemas describe your app's records, usually stored in a database—for example, products. This count shows how many schemas are included in the health check."
               value={posture_schema_count(@posture_rows)}
               kind={:neutral}
             />
             <.ops_metric
               label="Incomplete checks"
               help_id="health-checks-help"
-              help="Schemas whose sync status could not be fully read. This does not prove indexing has failed. Review the unavailable sources below before trusting their status."
+              help="Schemas we couldn't fully check. Some health information is missing; review the details below."
               value={@aggregate_error_count}
               kind={metric_tone(@aggregate_error_count)}
             />
             <.ops_metric
               label="Failed backend tasks"
               help_id="health-backend-help"
-              help="Indexing work the search engine accepted but could not finish. Search results may be missing recent changes. Review the affected schema's failed sync work. Counts cover the task history returned by this check."
+              help="Search engine tasks that failed to update an index. Search results may be out of date. Review failed sync work for the affected schema. Counts reflect the available task history."
               value={posture_backend_failed_count(@posture_rows)}
               kind={metric_tone(posture_backend_failed_count(@posture_rows))}
             />
             <.ops_metric
               label="Failed queue jobs"
               help_id="health-queue-help"
-              help="Background sync jobs that send changes to the search engine and have stopped retrying. These failures can leave search results out of date. Counts cover the jobs returned by this check; unavailable job status is shown below."
+              help="Background jobs that keep search updated and have stopped retrying. Search results may be out of date. Counts reflect the available job history; missing health information is shown below."
               value={@posture_summary.queue_failed_count}
               kind={metric_tone(@posture_summary.queue_failed_count)}
             />
@@ -622,12 +622,12 @@ defmodule ScrypathOpsWeb.PostureLive do
       <p class="ops-signal-group__title">{@label}</p>
       <.ops_help id={"health-#{module_flat_name(@mod)}-#{@source}-help"} label={@label}>
         <%= if @source == :backend do %>
-          Indexing work inside the search engine. Pending tasks are still processing;
-          failed tasks need review. Last success is the latest completed task in the returned history.
+          Tasks the search engine runs to update an index. Pending tasks are waiting or processing;
+          failed tasks need review. Last success is the most recent completed task in the available history.
         <% else %>
-          A queue holds background sync jobs until Oban runs them. Pending jobs are waiting or
-          running; retrying jobs will try again. Failed jobs have stopped retrying and need review.
-          Job completion alone does not confirm that the search engine has finished indexing.
+          A queue holds background jobs that send changes from your app to search. Pending jobs
+          are waiting or running; retrying jobs will try again. Failed jobs need review.
+          A completed job doesn't always mean the search engine has finished indexing.
         <% end %>
       </.ops_help>
     </div>
