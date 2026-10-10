@@ -2,6 +2,8 @@
 
 **Owner direction:** 2026-10-03, v1.42. Applies to later operator UI work unless the maintainer changes it.
 
+**Whole-workflow review, 2026-10-09:** Apply the [operator UX rubric](OPERATOR-UX-RUBRIC.md) before planning and before completing UI changes. It records the maintainer's later corrections: quiet healthy states, concrete consistent language, visible scope, decision-relevant information, and common actions before optional diagnostics or management. Independent critique supplements executable checks; routine user feedback is not an acceptance gate.
+
 ## Product direction
 
 Build a conventional, legible operator interface from the existing Phoenix components and design tokens. Use the principle of least surprise and established patterns from comparable operational tools. Improve the consistency of the system with each change. The maintainer can explore a running preview and give direction while work proceeds; routine acceptance must not require human UAT.

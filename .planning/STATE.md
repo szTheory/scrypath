@@ -5,11 +5,11 @@ milestone_name: ScrypathOps UI refinement
 current_phase: 175
 current_phase_name: Repair and Verification
 status: planning
-stopped_at: Phase 174 complete, ready to plan Phase 175
-last_updated: "2026-10-07T22:00:39.938Z"
-last_activity: 2026-10-07
-last_activity_desc: Phase 174 complete, transitioned to Phase 175
-state_head: 50b331041ee8fd8dc164724b9e89a50148c866ad
+stopped_at: Whole-app UX follow-up implemented; Phase 175 discussion is next
+last_updated: "2026-10-10T04:29:17Z"
+last_activity: 2026-10-10
+last_activity_desc: Maintainer-authorized Impeccable audit and UX fixes; remaining phases stay open
+state_head: 22d5cd016cd8014ea2887615bd66efa093d69e1b
 progress:
   total_phases: 5
   completed_phases: 2
@@ -22,14 +22,14 @@ progress:
 
 ## Project Reference
 
-See PROJECT.md (updated 2026-10-07). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: v1.43 Phase 175 Repair and Verification, ready to plan; no Phase 175 work started. Phases 173–174 completed 12 plans and 11 requirements with independent executable verification. Phase 174 hosted terminal closeout is recorded separately.
+See PROJECT.md (updated 2026-10-07). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: v1.43 Phase 175 Repair and Verification, discussion next using the accepted UX audit; no formal Phase 175 execution started. Phases 173–174 completed 12 plans and 11 requirements with independent executable verification. Phase 174 hosted terminal closeout is recorded separately.
 
 ## Current Position
 
 Phase: 175 — Repair and Verification
 Plan: Not started
-Status: Ready to plan
-Last activity: 2026-10-07 — Phase 174 complete, transitioned to Phase 175
+Status: Ready to discuss using the accepted whole-app audit
+Last activity: 2026-10-10 — Whole-app UX follow-up verified: 57 browser cases, 303 Ops tests and 661 core tests pass
 Progress: [████░░░░░░] 40% (2/5 phases; 12/12 currently planned plans complete)
 
 ## Delivered Evidence
@@ -53,6 +53,14 @@ Progress: [████░░░░░░] 40% (2/5 phases; 12/12 currently plan
 - On 2026-10-06, direct Search health feedback prompted a local layout correction: removed duplicate Impeccable preview wrappers from the shared panel, restored 24px section spacing, replaced sentence-length action links with concise shared controls and supporting prose, removed redundant section/diagnostic panels, and preserved full module names and readable timestamps. The broader recovery → verification → saved-check refinement sequence is captured in `reference/OPERATOR-UI-REFINEMENT.md`; no active phase was created.
 - Local verification for the current changes: Ops `mix precommit` passed 233 tests and 2 doctests with zero failures; token contrast passed with zero AA failures (34 AAA advisory findings). Live desktop and 390px mobile review covered light and dark themes, measured 24px section gaps and 40px action controls, and found no horizontal overflow. Diagnostic subgroups are transparent and full identifiers/timestamps remain readable. The revised browser depth spec parsed/listed 33 tests; the full browser matrix was not executed or the feedback preview reseeded. These local results are not hosted exact-SHA evidence and do not extend the archived Phase172 receipt. The temporary test database was removed after validation; preview data remains intact.
 - Later on 2026-10-06, the maintainer identified shared visual defects: shell gradients, broad yellow warning fills/outlines, green zero-error metrics, double theme selection, quiet-action hover colors, and dense last-success timestamps. The refinement brief now puts shared visual foundations first and records concrete acceptance criteria, including human-readable operational times and truthful clipboard/toast feedback. This follow-up edits planning/design context only; no UI implementation, new test run, commit, or milestone activation is claimed.
+
+## Whole-App UX Follow-Up (2026-10-09)
+
+The maintainer accepted an independent Impeccable audit and concrete fixes across all six operator surfaces. This follow-up strengthens v1.43 and does not complete Phases 175–177. The durable [UX rubric](reference/OPERATOR-UX-RUBRIC.md), [audit and verification record](reference/OPERATOR-UX-AUDIT-2026-10-09.md), root DESIGN.md terminology, and phase inputs in ROADMAP.md carry the conversation forward. Baseline heuristic score is 28/40; it is not an after-fix score or approval. Required diagnostics, exact identifiers, host authority and accepted/terminal/unknown distinctions remain explicit.
+
+Work lives in `/private/tmp/scrypath-phase173-20261006-155750/phase174-execution`, branch `gsd/phase-174-recovery-entry-and-diagnosis`, draft PR95. Retained preview: http://127.0.0.1:4014/admin/search. Original checkout, preview4012, frozen173 and next-planning are preserved. Final local proof: 57 browser cases with retries disabled, 303 Ops tests + 2 doctests, and 661 core tests + 4 properties all pass. The dated audit record and committed machine reports retain scope, source hashes, preservation, prior failures and hosted CI limits; old phase attestations do not cover these changes. The owned test database/browser resources are removed; :4014 stays healthy without reseeding.
+
+**Next command:** `$gsd-discuss-phase 175` in the execution checkout above, using the accepted audit/rubric as binding input and automatically following the maintainer's established preferences. Then create/update the phase UI contract and plan, before formal execution. No new session or manual directory setup is needed in this conversation; the agent selects that working directory. Context can be compacted because these inputs are persisted. No merge, release or simulated human trust approval is authorized.
 
 ## Durable Defaults
 
@@ -82,7 +90,7 @@ Preview http://127.0.0.1:4012/admin/search remains healthy under Compose `scrypa
 
 Both disposable verification projects and their owned networks/volumes were removed after artifact collection. Unrelated services remain untouched. The previous normal-checkout state at11ab1c9 is preserved on `gsd/v1.38-cleanup-merged`, with its existing2026-10-02 stash. On2026-10-04 the clean normal checkout was safely switched to a new branch from final main for this planning-only handoff; the old branch and stash were not reset or applied.
 
-## Session Continuity
+## Historical Phase 174 Session Continuity
 
 Last session: 2026-10-07T20:01:58.130Z
 Stopped at: Phase 174 complete, ready to plan Phase 175
@@ -96,7 +104,7 @@ Phase 174 now executes in a separate regular clone on `gsd/phase-174-recovery-en
 
 **Preservation:** The original `/Users/jon/projects/scrypath` checkout remains on `planning/next-milestone-handoff` at `368abcc5f0309cb0e154739c1e52916478283b90`. All fifteen original modified source/design files are byte-identical to the baseline; preview :4012 remains healthy and unmodified. All executor and disposable verification stacks/resources were removed. This next-planning checkout is intentionally retained for the next command. Native logs/captures remain under `/private/tmp/scrypath-phase173-20261006-155750/evidence/173-final-review/`, with final CI logs and the original external collector receipt under the parent directory.
 
-**Next:** Continue $gsd-execute-phase 174 --auto --no-transition through the eight checked plans and independent executable verification, then prepare the working UI for maintainer review. Sequential execution follows the runtime base-divergence guard; use the regular phase174-execution clone, preserve the previous planning worktree, frozen173 and original preview. Do not advance175.
+**Historical next (superseded by the 2026-10-09 handoff above):** Continue $gsd-execute-phase 174 --auto --no-transition through the eight checked plans and independent executable verification, then prepare the working UI for maintainer review. Sequential execution follows the runtime base-divergence guard; use the regular phase174-execution clone, preserve the previous planning worktree, frozen173 and original preview. Do not advance175.
 
 Automatic chaining is disabled. Preserve adaptive routing and the existing frontend UI/safety gates. Context can be cleared: the committed successor records retain scope, decisions, verification evidence, unresolved items, working directory/branch and exact next command. Phases 172/170 and their archived source-bounded receipts remain historical.
 

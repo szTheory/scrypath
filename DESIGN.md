@@ -84,6 +84,23 @@ components:
 
 # Design System: ScrypathOps
 
+## Whole-workflow review — 2026-10-09
+
+The [operator UX rubric](.planning/reference/OPERATOR-UX-RUBRIC.md) carries the maintainer's feedback into every remaining UI phase. Review all six surfaces as tasks: purpose, scope, state, useful next action, then optional diagnostics. A tooltip does not justify an irrelevant metric. Quiet healthy states must still distinguish missing evidence from success.
+
+Use these terms consistently in interface copy:
+
+| Term | Meaning |
+| --- | --- |
+| Schema | A type of application record indexed for search, such as Product; usually backed by a database. Preserve its full module name in technical evidence. |
+| Index | The search backend's collection of searchable documents for a schema. |
+| Queue job | Work waiting or running in the application's background job queue. |
+| Backend task | Work accepted by Meilisearch; acceptance alone does not establish completion. |
+| Index configuration | Declared fields and search settings compared with the live index. Agreement does not establish document freshness. |
+| Playbook | A saved, repeatable search check. File management is secondary to choosing, previewing, and running it. |
+
+Prefer task language in headings and instructions; keep framework names, raw errors, exact timestamps, and IDs in diagnostic evidence. Keep essential failure and safety facts visible. Native disclosures should hold uncommon options, management controls, and detailed successful checks, without adding dependencies.
+
 ## Maintainer feedback — 2026-10-08
 
 The current refinement uses a neutral gray light page (`#f5f6f8`), white panels, and a cool neutral muted surface (`#edeff2`). Violet interaction, copper brand accents, and dark surfaces retain their existing roles.

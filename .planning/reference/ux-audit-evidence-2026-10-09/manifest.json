@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "production_source_head": "22d5cd016cd8014ea2887615bd66efa093d69e1b",
+  "browser": {
+    "stats": {
+      "startTime": "2026-10-10T04:12:08.326Z",
+      "duration": 52706.604,
+      "expected": 57,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "retries": 0,
+    "workers": 1,
+    "runner_version": "1.60.0",
+    "base_url": "http://web:4002",
+    "standalone_url": "http://ops:4003/ops/phase174",
+    "selection": "32 operator UX + 8 overall-scope + 8 help + 8 quiet-health + 1 focus",
+    "scope_limit": "Read-only and memory-only draft/import fixtures; no retained-preview backend or file mutation. The broader ecommerce suite was not executed."
+  },
+  "external_evidence_root": "/private/tmp/scrypath-phase173-20261006-155750",
+  "external_sha256": {
+    "ux-final-precommit.log": "7cd2009f33c3c8992f4e6c70e3927d0ec821aa2d92d8e1ebc063e712c09ab876",
+    "ux-final-canonical-ops.log": "ab4c6c2ddd7335e7e5d1d0e743101e47d28bd0a3e5fd48489607d3d4632de331",
+    "ux-core-complete.log": "fdff2783fbb9d9ef282588ad37276bac82c5cc796b448257a1036bad2da87636",
+    "ux-playbook-passing.log": "75eeb5266a30decccffe5b101fcf97b6af5924b0ec02a517965d2693acd339cc",
+    "ux-browser-passing.log": "612eec9f0f56bf48d8e6948d3a8c612e979fa3326253d249d139c6e2e5509e83",
+    "ux-browser-focus-final.log": "6a11c257cd4cb707c383fa8f2dc3c01f322c638e03f556944b1f51d5714ee078",
+    "ux-browser-passing/ux.browser.json": "8db4805d313f8999bd6ef5147ae963a91620e3c3478e74e02146570a1bf09bc9"
+  },
+  "committed_machine_reports": {
+    "ux.browser.xml": "e5b1e9f9b73b468d6fa0af8b9ec1736c5f63cc22e6b3270b01a3076b09e1527b",
+    "focus.browser.xml": "e797a52e08a4a05a14ee44ff83336dae06b79fc0a164b9c9eb42b0d9609259b6",
+    "ux-container-source-hashes-final.json": "5817503ecc72ce8504b2efec318b4c6006ffbb288208c9e14b7f7ad45f838019",
+    "ux-preservation-final.json": "1234f8976be462f2818954168e7e24cf2de31bbe61cfb7be400485d84a0473d3"
+  },
+  "gate_scope_note": "Core and Ops checks cover unchanged Elixir implementation; subsequent hook-only fix is verified by rebuilt assets, 1 focused and 57 final browser cases. Documentation/record-only commits do not change those runtime files."
+}
