@@ -1430,9 +1430,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         subtitle="Check sync progress and compare index configuration."
       />
 
-      <.ops_trail current={:sync_drift} class="mt-4" />
+      <.ops_trail current={:sync_drift} />
 
-      <.ops_panel class="mt-4">
+      <.ops_panel>
         <.form for={%{}} id="sync-drift-schema-form" phx-change="select_schema">
           <.ops_schema_select
             id="sync-schema-select"
@@ -1442,7 +1442,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         </.form>
       </.ops_panel>
 
-      <.ops_panel :if={@recovery_handle} class="mt-4" id="recovery-observation">
+      <.ops_panel :if={@recovery_handle} id="recovery-observation">
         <.ops_section
           title="Retry status"
           subtitle="Check whether this retry reached the queue, search backend, and live index."
@@ -1518,6 +1518,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               id="sync-drift-refresh"
               checked_at={@reconcile_loaded_at}
               phx-click="refresh_reconcile"
+              label="Refresh sync and queue status"
               aria_label="Refresh sync and queue status"
               disabled={!@selected_schema}
             />
@@ -1554,17 +1555,17 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               </thead>
               <tbody>
                 <tr>
-                  <th scope="row" class="font-medium align-top">Index</th>
+                  <th scope="row" class="font-semibold align-top">Index</th>
                   <td>
                     <.ops_inline_code>{@reconcile_result.index}</.ops_inline_code>
                   </td>
                 </tr>
                 <tr>
-                  <th scope="row" class="font-medium align-top">Mode</th>
+                  <th scope="row" class="font-semibold align-top">Mode</th>
                   <td>{reconcile_signal_label(@reconcile_result.mode)}</td>
                 </tr>
                 <tr>
-                  <th scope="row" class="font-medium align-top">Work observed</th>
+                  <th scope="row" class="font-semibold align-top">Work observed</th>
                   <td>
                     <div class="flex flex-wrap gap-1">
                       <.ops_badge
@@ -1675,17 +1676,17 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               </thead>
               <tbody>
                 <tr>
-                  <th scope="row" class="font-medium align-top">Summary</th>
+                  <th scope="row" class="font-semibold align-top">Summary</th>
                   <td>Index configuration comparison</td>
                 </tr>
                 <tr>
-                  <th scope="row" class="font-medium align-top">Version · index</th>
+                  <th scope="row" class="font-semibold align-top">Version · index</th>
                   <td class="font-mono text-ops-sm tabular-nums">
                     version {@drift_result.version} · index {@drift_result.index}
                   </td>
                 </tr>
                 <tr>
-                  <th scope="row" class="font-medium align-top">Differences</th>
+                  <th scope="row" class="font-semibold align-top">Differences</th>
                   <td class="font-mono text-ops-sm tabular-nums">
                     {drift_mismatch_count(@drift_result)} of {map_size(@drift_result.dimensions)}
                   </td>
@@ -1709,7 +1710,6 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       <.ops_panel
         :if={@promotion_schema || @promotion_task_id}
         id="promotion-task-status"
-        class="mt-4"
       >
         <.ops_section
           title={promotion_status_title(@promotion_status)}
@@ -1782,7 +1782,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       <details
         :if={@selected_schema}
         id="index-promotion"
-        class="ops-panel mt-4"
+        class="ops-panel"
         phx-hook="OpsHealthDetails"
         phx-mounted={JS.ignore_attributes("open")}
         data-testid="advanced-promotion-disclosure"
@@ -1800,7 +1800,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             documents, primary keys, settings, and task history move as a pair.
           </p>
           <.ops_status
-            kind={if @promotion_eligibility == :eligible, do: :success, else: :warning}
+            kind={if @promotion_eligibility == :eligible, do: :neutral, else: :warning}
             title={promotion_eligibility_title(@promotion_eligibility)}
           >
             {promotion_eligibility_copy(@promotion_eligibility)}

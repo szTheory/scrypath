@@ -255,6 +255,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   @doc "Refresh action paired with the time of the latest check."
   attr(:id, :string, required: true)
+  attr(:label, :string, default: "Refresh")
   attr(:checked_at, :any, default: nil)
   attr(:aria_label, :string, required: true)
 
@@ -282,6 +283,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       </span>
       <.ops_refresh_button
         id={@id}
+        label={@label}
         aria_label={@aria_label}
         variant={@variant}
         size={@size}

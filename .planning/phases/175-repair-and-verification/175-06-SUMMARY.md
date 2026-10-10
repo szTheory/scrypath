@@ -29,6 +29,7 @@ key-files:
     - examples/scrypath_ecommerce/e2e/phase175_ui_matrix.spec.ts
     - .planning/phases/175-repair-and-verification/175-EVIDENCE.md
   modified:
+    - scrypath_ops/lib/scrypath_ops_web/components/ops_ui.ex
     - examples/scrypath_ecommerce/e2e/helpers/e2e.ts
     - examples/scrypath_ecommerce/lib/scrypath_ecommerce/e2e_recovery.ex
     - examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/controllers/e2e_controller.ex
