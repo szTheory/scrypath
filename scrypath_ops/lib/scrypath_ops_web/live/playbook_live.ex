@@ -18,6 +18,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   alias ScrypathOps.Playbook.V1
   alias ScrypathOps.Integrations.Sigra.Gating
   alias ScrypathOps.Schemas
+  alias ScrypathOps.SearchPlayground
   alias Scrypath.MultiSearchResult
   alias Scrypath.SearchResult
 
@@ -52,6 +53,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
       |> assign(:draft_playbook, nil)
       |> assign(:preview_json, nil)
       |> assign(:preview_marker, false)
+      |> assign(:preview_source, nil)
       |> assign(:selected_basename, nil)
       |> assign(:run_result, nil)
       |> assign(:run_error, nil)
@@ -89,23 +91,25 @@ defmodule ScrypathOpsWeb.PlaybookLive do
     consume_uploaded_entries(socket, :playbook_file, fn %{path: path}, _entry ->
       case File.read(path) do
         {:ok, bin} -> {:ok, bin}
-        {:error, _} -> {:error, :read_failed}
+        {:error, _} -> {:ok, {:error, :read_failed}}
       end
     end)
     |> case do
-      {socket, []} ->
+      [] ->
         {:noreply, put_flash(socket, :error, "Choose a JSON file first.")}
 
-      {socket, [bin]} when is_binary(bin) ->
+      [bin] when is_binary(bin) ->
         {:noreply, apply_decoded(socket, bin, :upload)}
 
-      {socket, [{:error, _}]} ->
+      [{:error, _}] ->
         {:noreply, put_flash(socket, :error, "Could not read the uploaded file.")}
 
-      {socket, _} ->
+      _ ->
         {:noreply, put_flash(socket, :error, "Unexpected upload result.")}
     end
   end
+
+  def handle_event("validate_upload", _params, socket), do: {:noreply, socket}
 
   def handle_event("load", %{"name" => name}, socket) do
     socket = maybe_supersede_running_run(socket)
@@ -168,6 +172,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
         |> assign(:draft_playbook, validated)
         |> assign(:preview_json, preview)
         |> assign(:preview_marker, true)
+        |> assign(:preview_source, :load)
         |> put_flash(:info, flash_for_import(:load))
         |> schedule_playbook_run()
 
@@ -230,7 +235,12 @@ defmodule ScrypathOpsWeb.PlaybookLive do
          put_flash(socket, :error, "Saving requires a configured playbook workspace directory.")}
 
       not Store.safe_basename?(basename) ->
-        {:noreply, put_flash(socket, :error, "Filename must match *.json basename rules.")}
+        {:noreply,
+         put_flash(
+           socket,
+           :error,
+           "Filename must end in .json and use only letters, numbers, dots, underscores, or hyphens."
+         )}
 
       socket.assigns.draft_playbook == nil ->
         {:noreply,
@@ -466,15 +476,17 @@ defmodule ScrypathOpsWeb.PlaybookLive do
         |> assign(:draft_playbook, validated)
         |> assign(:preview_json, preview)
         |> assign(:preview_marker, true)
+        |> assign(:preview_source, source)
+        |> assign(:selected_basename, if(source == :load, do: socket.assigns.selected_basename))
+        |> assign(:run_result, nil)
+        |> assign(:run_error, nil)
+        |> assign(:run_ui, %{socket.assigns.run_ui | phase: :idle, started_monotonic: nil})
         |> assign(:run_failure_enriched, nil)
         |> put_flash(:info, flash_for_import(source))
 
       {:error, {:invalid_playbook, reason}} ->
         socket
-        |> assign(:draft_playbook, nil)
-        |> assign(:preview_json, nil)
-        |> assign(:preview_marker, false)
-        |> assign(:run_failure_enriched, nil)
+        |> clear_failed_load(source)
         |> put_flash(
           :error,
           "Playbook failed validation: #{format_validation_reason(reason)}"
@@ -482,10 +494,25 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
       {:error, :invalid_json} ->
         socket
-        |> assign(:run_failure_enriched, nil)
+        |> clear_failed_load(source)
         |> put_flash(:error, "This file is not valid playbook JSON.")
     end
   end
+
+  defp clear_failed_load(socket, :load) do
+    socket
+    |> assign(:selected_basename, nil)
+    |> assign(:draft_playbook, nil)
+    |> assign(:preview_json, nil)
+    |> assign(:preview_marker, false)
+    |> assign(:preview_source, nil)
+    |> assign(:run_result, nil)
+    |> assign(:run_error, nil)
+    |> assign(:run_failure_enriched, nil)
+    |> assign(:run_ui, %{socket.assigns.run_ui | phase: :idle, started_monotonic: nil})
+  end
+
+  defp clear_failed_load(socket, _source), do: socket
 
   defp flash_for_import(:paste), do: "Imported playbook from paste."
   defp flash_for_import(:upload), do: "Imported playbook from file."
@@ -500,7 +527,11 @@ defmodule ScrypathOpsWeb.PlaybookLive do
         {:noreply, file_action_error(socket, "Rename requires a writable workspace.")}
 
       not Store.safe_basename?(new_name) ->
-        {:noreply, file_action_error(socket, "Filename must match *.json basename rules.")}
+        {:noreply,
+         file_action_error(
+           socket,
+           "Filename must end in .json and use only letters, numbers, dots, underscores, or hyphens."
+         )}
 
       true ->
         case Store.rename_workspace_file(root, from, new_name) do
@@ -523,7 +554,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             {:noreply,
              file_action_error(
                socket,
-               "That playbook name is already in use — pick another basename."
+               "That playbook name is already in use — choose another filename."
              )}
 
           {:error, _} ->
@@ -541,7 +572,11 @@ defmodule ScrypathOpsWeb.PlaybookLive do
         {:noreply, file_action_error(socket, "Duplicate requires a writable workspace.")}
 
       not Store.safe_basename?(to_name) ->
-        {:noreply, file_action_error(socket, "Filename must match *.json basename rules.")}
+        {:noreply,
+         file_action_error(
+           socket,
+           "Filename must end in .json and use only letters, numbers, dots, underscores, or hyphens."
+         )}
 
       true ->
         case Store.duplicate_workspace_file(root, from, to_name) do
@@ -556,7 +591,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             {:noreply,
              file_action_error(
                socket,
-               "That playbook name is already in use — pick another basename."
+               "That playbook name is already in use — choose another filename."
              )}
 
           {:error, _} ->
@@ -822,14 +857,72 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
   defp run_result_summary(_), do: "Run finished."
 
-  # Loop the operator back to Search with this playbook's query pre-filled, mapping the
-  # playbook mode (search / search_many) onto the Search UI mode (single / multi). Schema
-  # is left to the Search default to avoid leaking the inspect() module format here.
-  defp search_loopback_path(mount_path, playbook) when is_map(playbook) do
-    mode = if Map.get(playbook, "mode") == "search_many", do: "multi", else: "single"
-    query = playbook |> Map.get("q") |> to_string()
-    "#{mount_path}/search?" <> URI.encode_query(%{"mode" => mode, "q" => query})
+  # Search exposes one trimmed query, schema selection, and a bounded first-page limit.
+  # Offer an exact handoff only when that form can reproduce the executed playbook.
+  defp search_loopback_path(mount_path, playbook, allowlist) do
+    case search_loopback_params(playbook, allowlist) do
+      nil -> nil
+      params -> "#{mount_path}/search?" <> URI.encode_query(params)
+    end
   end
+
+  defp search_loopback_params(
+         %{"mode" => "search", "schema" => schema, "q" => query, "opts" => opts},
+         allowlist
+       ) do
+    with true <- Map.keys(opts) == ["page"],
+         %{"size" => limit} = page <- Map.get(opts, "page"),
+         true <- Map.get(page, "number", 1) == 1,
+         :ok <- SearchPlayground.validate_page_size(limit),
+         true <- representable_search_query?(query),
+         name when is_binary(name) <- search_loopback_schema(schema, allowlist) do
+      %{"mode" => "single", "schema" => name, "q" => query, "page_size" => limit}
+    else
+      _ -> nil
+    end
+  end
+
+  defp search_loopback_params(
+         %{"mode" => "search_many", "entries" => [_ | _] = entries, "opts" => opts},
+         allowlist
+       ) do
+    schemas =
+      Enum.map(entries, fn [schema, _query, _opts] ->
+        search_loopback_schema(schema, allowlist)
+      end)
+
+    queries = Enum.map(entries, fn [_schema, query, _opts] -> query end) |> Enum.uniq()
+    selected_in_form_order = allowlist |> Enum.map(&inspect/1) |> Enum.filter(&(&1 in schemas))
+
+    with true <- Map.keys(opts) -- ~w(federation_limit federation_offset) == [],
+         true <- Map.get(opts, "federation_offset", 0) == 0,
+         :ok <- SearchPlayground.validate_page_size(Map.get(opts, "federation_limit")),
+         true <- length(entries) <= SearchPlayground.max_schemas_allowed(),
+         true <- schemas == selected_in_form_order,
+         true <- Enum.all?(entries, fn [_schema, _query, entry_opts] -> entry_opts == %{} end),
+         [query] <- queries,
+         true <- representable_search_query?(query) do
+      %{
+        "mode" => "multi",
+        "schemas" => Enum.join(schemas, ","),
+        "q" => query,
+        "page_size" => Map.fetch!(opts, "federation_limit")
+      }
+    else
+      _ -> nil
+    end
+  end
+
+  defp search_loopback_params(_playbook, _allowlist), do: nil
+
+  defp search_loopback_schema(name, allowlist) do
+    Enum.find_value(allowlist, fn schema ->
+      if name in [inspect(schema), Atom.to_string(schema)], do: inspect(schema)
+    end)
+  end
+
+  defp representable_search_query?(query) when is_binary(query), do: query == String.trim(query)
+  defp representable_search_query?(_query), do: false
 
   defp playbook_summary(nil), do: []
 
@@ -901,6 +994,13 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
   @impl true
   def render(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :search_handoff_path,
+        search_loopback_path(assigns.mount_path, assigns.draft_playbook, assigns.schema_allowlist)
+      )
+
     ~H"""
     <Layouts.app
       mount_path={@mount_path}
@@ -916,42 +1016,28 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               title={@page_title}
               subtitle="Use saved, repeatable search checks: preview, run, import, or save the next one."
             />
-            <.ops_workspace_mode_indicator
-              mode={if @examples_mode?, do: :examples, else: :workspace}
-              path={@workspace_root}
-            />
+            <.ops_workspace_mode_indicator mode={if @examples_mode?, do: :examples, else: :workspace} />
           </div>
         </.ops_toolbar>
 
         <.ops_trail current={:playbooks} />
 
-        <.ops_notice
+        <p
           id="playbook-honesty-panel"
-          kind={:warning}
-          title="Non-production playbook workspace"
+          class="max-w-prose text-ops-body text-base-content/70"
         >
-          Playbooks repeat saved Search checks. Do not paste production secrets or PII; keep page size and selected indexes within configured caps.
-        </.ops_notice>
+          Keep secrets and personal data out of playbook JSON. Keep page size and selected indexes within configured limits.
+        </p>
 
         <.ops_panel class="space-y-6">
           <.ops_toolbar>
             <.ops_heading level={2} id="playbook-catalog-heading" tabindex={-1}>
-              Workspace files
+              Saved checks
             </.ops_heading>
             <.ops_button phx-click="refresh_list" variant={:ghost}>
               Reload playbooks
             </.ops_button>
           </.ops_toolbar>
-
-          <p :if={@examples_mode?} class="text-ops-body text-base-content/80">
-            Examples (read-only) — set <code class="text-ops-body">SCRYPATH_OPS_PLAYBOOK_DIR</code>
-            to enable saving and deleting under a dedicated directory. See
-            <.link class="link link-hover" navigate={"#{@mount_path}/search"}>
-              Search
-            </.link>
-            to export a playbook JSON, then use <strong>Import playbook JSON</strong>
-            below.
-          </p>
 
           <.ops_empty_hero
             :if={@workspace_files == []}
@@ -961,7 +1047,11 @@ defmodule ScrypathOpsWeb.PlaybookLive do
           >
             Save a useful search check, or import a playbook JSON file below.
             <:actions>
-              <.ops_link_button href="#playbook-import" variant={:primary}>
+              <.ops_link_button
+                href="#playbook-import"
+                phx-click={JS.set_attribute({"open", ""}, to: "#playbook-import")}
+                variant={:primary}
+              >
                 Import JSON
               </.ops_link_button>
               <.ops_link_button navigate={"#{@mount_path}/search"} variant={:default}>
@@ -970,21 +1060,23 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             </:actions>
           </.ops_empty_hero>
 
-          <.ops_object_list :if={@catalog_entries != []} class="max-w-3xl">
+          <.ops_object_list :if={@catalog_entries != []}>
             <.ops_object_item
               :for={row <- @catalog_entries}
               id={"playbook-row-#{playbook_dom_id(row.name)}"}
               active={row.name == @selected_basename}
             >
               <div class="flex min-w-0 flex-col gap-0.5">
-                <span class="text-ops-body font-semibold text-base-content">{row.display_title}</span>
+                <span class="break-words text-ops-body font-semibold text-base-content">
+                  {row.display_title}
+                </span>
                 <span
                   :if={row.description != ""}
-                  class="line-clamp-2 text-ops-sm text-base-content/70"
+                  class="max-w-prose break-words text-ops-body text-base-content/70"
                 >
                   {row.description}
                 </span>
-                <span class="font-mono text-ops-sm text-base-content/65">{row.name}</span>
+                <span class="break-all font-mono text-ops-sm text-base-content/65">{row.name}</span>
               </div>
               <:actions>
                 <.ops_action_group>
@@ -992,125 +1084,101 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                     id={"playbook-primary-#{playbook_dom_id(row.name)}"}
                     phx-click="load"
                     phx-value-name={row.name}
+                    aria-label={"Load preview of #{row.name}"}
                     variant={:default}
                     size={:xs}
                   >
                     Load preview
                   </.ops_button>
                 </.ops_action_group>
-                <.ops_action_group
-                  :if={@schema_allowlist != [] && Keyword.has_key?(@scrypath_opts, :backend)}
-                  tone={:advanced}
+                <.ops_disclosure
+                  :if={
+                    @workspace_writable? or
+                      (@schema_allowlist != [] && Keyword.has_key?(@scrypath_opts, :backend))
+                  }
+                  id={"playbook-actions-#{playbook_dom_id(row.name)}"}
+                  summary="Actions"
+                  summary_label={"Actions for #{row.name}"}
+                  variant={:compact}
+                  phx-mounted={JS.ignore_attributes("open")}
                 >
-                  <.ops_button
-                    :if={@schema_allowlist != [] && Keyword.has_key?(@scrypath_opts, :backend)}
-                    phx-click="run_now"
-                    phx-value-name={row.name}
-                    variant={:default}
-                    size={:xs}
-                    aria-label={"Run #{row.name} without preview"}
-                  >
-                    Run without preview
-                  </.ops_button>
-                </.ops_action_group>
-                <.ops_action_group :if={@workspace_writable?} tone={:secondary}>
-                  <.ops_button
-                    phx-click="dup_open"
-                    phx-value-name={row.name}
-                    data-ops-modal-trigger="duplicate"
-                    variant={:default}
-                    size={:xs}
-                  >
-                    Duplicate
-                  </.ops_button>
-                  <.ops_button
-                    phx-click="rename_open"
-                    phx-value-name={row.name}
-                    data-ops-modal-trigger="rename"
-                    variant={:default}
-                    size={:xs}
-                  >
-                    Rename
-                  </.ops_button>
-                </.ops_action_group>
-                <.ops_action_group :if={@workspace_writable?} tone={:danger}>
-                  <.ops_button
-                    phx-click="request_delete"
-                    phx-value-name={row.name}
-                    data-ops-modal-trigger="delete"
-                    variant={:danger}
-                    size={:xs}
-                  >
-                    Delete
-                  </.ops_button>
-                </.ops_action_group>
+                  <div class="flex flex-col items-start gap-1">
+                    <.ops_button
+                      :if={@schema_allowlist != [] && Keyword.has_key?(@scrypath_opts, :backend)}
+                      id={"playbook-run-now-#{playbook_dom_id(row.name)}"}
+                      phx-click="run_now"
+                      phx-value-name={row.name}
+                      variant={:ghost}
+                      size={:xs}
+                      aria-label={"Run #{row.name} without preview"}
+                    >
+                      Run without preview
+                    </.ops_button>
+                    <.ops_button
+                      :if={@workspace_writable?}
+                      id={"playbook-duplicate-#{playbook_dom_id(row.name)}"}
+                      phx-click="dup_open"
+                      phx-value-name={row.name}
+                      data-ops-modal-trigger="duplicate"
+                      aria-label={"Duplicate #{row.name}"}
+                      variant={:ghost}
+                      size={:xs}
+                    >
+                      Duplicate
+                    </.ops_button>
+                    <.ops_button
+                      :if={@workspace_writable?}
+                      id={"playbook-rename-#{playbook_dom_id(row.name)}"}
+                      phx-click="rename_open"
+                      phx-value-name={row.name}
+                      data-ops-modal-trigger="rename"
+                      aria-label={"Rename #{row.name}"}
+                      variant={:ghost}
+                      size={:xs}
+                    >
+                      Rename
+                    </.ops_button>
+                    <.ops_button
+                      :if={@workspace_writable?}
+                      id={"playbook-delete-#{playbook_dom_id(row.name)}"}
+                      phx-click="request_delete"
+                      phx-value-name={row.name}
+                      data-ops-modal-trigger="delete"
+                      aria-label={"Delete #{row.name}"}
+                      variant={:danger}
+                      size={:xs}
+                    >
+                      Delete
+                    </.ops_button>
+                  </div>
+                </.ops_disclosure>
               </:actions>
             </.ops_object_item>
           </.ops_object_list>
 
-          <div class="divider" />
-
-          <section id="playbook-import" aria-labelledby="playbook-import-heading" class="space-y-4">
-            <.ops_heading level={2} id="playbook-import-heading">Import playbook JSON</.ops_heading>
-            <.ops_upload_box
-              label="Import playbook file"
-              control_id={@uploads.playbook_file.ref}
-              hint={"JSON only, max #{@max_import_bytes} bytes. Preview before running."}
-              class="max-w-xl"
-            >
-              <.form for={%{}} phx-submit="import_upload" class="space-y-3">
-                <.live_file_input
-                  upload={@uploads.playbook_file}
-                  aria-describedby={"#{@uploads.playbook_file.ref}-hint"}
-                  class="file-input file-input-bordered w-full max-w-md"
-                />
-                <.ops_button type="submit" variant={:primary}>
-                  Import playbook JSON
-                </.ops_button>
-              </.form>
-            </.ops_upload_box>
-
-            <details class="max-w-xl">
-              <summary class="cursor-pointer text-ops-body link link-hover">Or paste JSON</summary>
-              <.form for={%{}} phx-submit="import_paste" class="mt-2 space-y-2">
-                <.ops_field
-                  id="playbook-paste-json"
-                  label="Playbook JSON"
-                  hint={"Paste a valid playbook JSON document (max #{@max_import_bytes} bytes)."}
-                >
-                  <.ops_textarea
-                    id="playbook-paste-json"
-                    name="json"
-                    hint={"Paste a valid playbook JSON document (max #{@max_import_bytes} bytes)."}
-                    class="font-mono text-ops-sm"
-                    placeholder="Paste playbook JSON"
-                  />
-                </.ops_field>
-                <.ops_button type="submit" variant={:ghost}>Import from paste</.ops_button>
-              </.form>
-            </details>
-          </section>
-
-          <div :if={@draft_playbook} class="space-y-4">
+          <section
+            :if={@draft_playbook}
+            id="playbook-preview"
+            aria-labelledby="playbook-preview-heading"
+            class="space-y-4"
+          >
             <div class="divider" />
-            <.ops_heading level={2}>Preview</.ops_heading>
+            <.ops_heading level={2} id="playbook-preview-heading">Preview</.ops_heading>
             <p
               :if={@preview_marker}
               class="text-ops-sm text-base-content/70"
               data-testid="playbook-preview-marker"
             >
-              Playbook preview is ready
+              Preview ready
             </p>
-            <.ops_data_card title="Playbook summary" subtitle="Check this before running.">
-              <dl class="grid gap-2 text-ops-body sm:grid-cols-2">
-                <div :for={{label, value} <- playbook_summary(@draft_playbook)}>
-                  <dt class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/60">
-                    {label}
-                  </dt>
-                  <dd class="mt-0.5 font-mono text-ops-sm text-base-content">{value}</dd>
-                </div>
-              </dl>
-            </.ops_data_card>
+            <dl class="grid gap-3 text-ops-body sm:grid-cols-2">
+              <div :for={{label, value} <- playbook_summary(@draft_playbook)}>
+                <dt class="text-ops-body font-medium text-base-content/70">
+                  {label}
+                </dt>
+                <dd class="mt-0.5 break-words text-ops-body text-base-content">{value}</dd>
+              </div>
+            </dl>
             <.ops_disclosure :if={@preview_json} summary="Raw playbook JSON" variant={:compact}>
               <.ops_code_block variant={:compact}>{@preview_json}</.ops_code_block>
             </.ops_disclosure>
@@ -1118,13 +1186,18 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             <div class="flex flex-wrap gap-2 items-end">
               <.ops_button
                 :if={@schema_allowlist != [] && Keyword.has_key?(@scrypath_opts, :backend)}
+                id="playbook-run"
                 phx-click="run"
+                aria-label={"Run playbook: #{playbook_origin_label(@preview_source, @selected_basename)}"}
                 variant={:primary}
                 size={:md}
                 disabled={@run_ui.phase == :running}
               >
-                Run saved playbook
+                Run playbook
               </.ops_button>
+              <p id="playbook-run-origin" class="min-w-0 break-all text-ops-body text-base-content/70">
+                {playbook_origin_label(@preview_source, @selected_basename)}
+              </p>
               <.ops_button
                 :if={@run_ui.phase == :running}
                 phx-click="cancel_run"
@@ -1142,15 +1215,13 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             </div>
 
             <.ops_notice :if={@run_ui.phase == :running} kind={:running} title="Running playbook">
-              <span>
-                Applying results for run <code class="text-ops-sm">{@run_ui.run_id}</code> only.
-              </span>
+              Results will appear here when the search check finishes. You can cancel this run.
             </.ops_notice>
 
             <.ops_notice
               :if={@run_ui.phase == :error && @run_failure_enriched}
               kind={:error}
-              title={to_string(@run_failure_enriched.failure_class)}
+              title="Playbook run failed"
               role="alert"
               data-testid="run-failure-panel"
             >
@@ -1177,6 +1248,11 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   Copy diagnostics
                 </.ops_button>
               </div>
+              <.ops_disclosure summary="Run diagnostics" variant={:compact} class="mt-3">
+                <.ops_code_block variant={:compact}>
+                  {Jason.encode!(diagnostics_payload(@run_failure_enriched), pretty: true)}
+                </.ops_code_block>
+              </.ops_disclosure>
             </.ops_notice>
 
             <.ops_status
@@ -1194,21 +1270,38 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             </.ops_status>
 
             <.ops_link_button
-              :if={@run_ui.phase == :ok && @draft_playbook}
-              navigate={search_loopback_path(@mount_path, @draft_playbook)}
+              :if={@run_ui.phase == :ok && @search_handoff_path}
+              id="playbook-search-handoff"
+              navigate={@search_handoff_path}
               variant={:ghost}
               size={:sm}
             >
               Explore this query in Search <span aria-hidden="true">→</span>
             </.ops_link_button>
 
-            <div :if={@workspace_writable?} class="space-y-2 max-w-md">
-              <.ops_heading level={3}>Save playbook to workspace</.ops_heading>
-              <.form for={%{}} phx-submit="save" class="flex flex-wrap gap-2 items-end">
-                <.ops_field id="save_basename" label="Basename (.json)" class="w-64">
+            <.ops_disclosure
+              :if={@workspace_writable?}
+              id="playbook-save"
+              summary="Save playbook to workspace"
+              variant={:compact}
+              phx-mounted={JS.ignore_attributes("open")}
+            >
+              <.form
+                for={%{}}
+                id="playbook-save-form"
+                phx-submit="save"
+                class="flex flex-wrap gap-2 items-end"
+              >
+                <.ops_field
+                  id="save_basename"
+                  label="Filename (.json)"
+                  hint="Use letters, numbers, dots, underscores, or hyphens, and end with .json."
+                  class="w-64 max-w-full"
+                >
                   <.ops_text_input
                     id="save_basename"
                     name="basename"
+                    hint="Use letters, numbers, dots, underscores, or hyphens, and end with .json."
                     value={@save_basename}
                     class="font-mono text-ops-body"
                     placeholder="my-playbook.json"
@@ -1218,8 +1311,102 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   Save playbook to workspace
                 </.ops_button>
               </.form>
+            </.ops_disclosure>
+          </section>
+
+          <.ops_disclosure
+            id="playbook-import"
+            summary="Import playbook JSON"
+            open={@workspace_files == []}
+            phx-mounted={JS.ignore_attributes("open")}
+          >
+            <div class="space-y-4">
+              <.ops_upload_box
+                label="Import playbook file"
+                control_id={@uploads.playbook_file.ref}
+                hint={"JSON only, max #{@max_import_bytes} bytes. Preview before running."}
+                class="max-w-xl"
+              >
+                <.form
+                  for={%{}}
+                  id="playbook-upload-form"
+                  phx-change="validate_upload"
+                  phx-submit="import_upload"
+                  class="space-y-3"
+                >
+                  <.live_file_input
+                    upload={@uploads.playbook_file}
+                    aria-describedby={"#{@uploads.playbook_file.ref}-hint"}
+                    class="file-input file-input-bordered w-full max-w-md"
+                  />
+                  <div id="playbook-upload-errors" class="space-y-1">
+                    <p
+                      :for={error <- playbook_upload_errors(@uploads.playbook_file)}
+                      role="alert"
+                      class="text-ops-body text-error"
+                    >
+                      {playbook_upload_error_message(error)}
+                    </p>
+                  </div>
+                  <.ops_button type="submit" variant={:primary}>
+                    Import playbook JSON
+                  </.ops_button>
+                </.form>
+              </.ops_upload_box>
+
+              <.ops_disclosure
+                id="playbook-paste"
+                summary="Or paste JSON"
+                variant={:compact}
+                class="max-w-xl"
+                phx-mounted={JS.ignore_attributes("open")}
+              >
+                <.form
+                  for={%{}}
+                  id="playbook-paste-form"
+                  phx-submit="import_paste"
+                  class="mt-2 space-y-2"
+                >
+                  <.ops_field
+                    id="playbook-paste-json"
+                    label="Playbook JSON"
+                    hint={"Paste a valid playbook JSON document (max #{@max_import_bytes} bytes)."}
+                  >
+                    <.ops_textarea
+                      id="playbook-paste-json"
+                      name="json"
+                      hint={"Paste a valid playbook JSON document (max #{@max_import_bytes} bytes)."}
+                      class="font-mono text-ops-sm"
+                      placeholder="Paste playbook JSON"
+                    />
+                  </.ops_field>
+                  <.ops_button type="submit" variant={:ghost}>Import from paste</.ops_button>
+                </.form>
+              </.ops_disclosure>
             </div>
-          </div>
+          </.ops_disclosure>
+
+          <.ops_disclosure
+            id="playbook-workspace-details"
+            summary="Workspace details"
+            variant={:compact}
+            phx-mounted={JS.ignore_attributes("open")}
+          >
+            <p :if={@workspace_root} class="space-y-1">
+              <span class="block">Playbook files are stored in:</span>
+              <code class="block break-all text-ops-body">{@workspace_root}</code>
+            </p>
+            <p :if={@examples_mode?} class="max-w-prose">
+              Examples are read-only. Set <code>SCRYPATH_OPS_PLAYBOOK_DIR</code>
+              to a dedicated directory to save and manage your own files.
+            </p>
+            <p class="mt-2 max-w-prose">
+              Export a useful check from <.link
+                class="link link-hover"
+                navigate={"#{@mount_path}/search"}
+              >Search</.link>, then import its JSON here.
+            </p>
+          </.ops_disclosure>
 
           <.ops_modal
             :if={@delete_pending}
@@ -1235,7 +1422,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               <.ops_field
                 id="delete-confirm-input"
                 error={@file_action_error}
-                label="Type Filename to confirm"
+                label="Type the filename to confirm"
                 hint="Enter the exact filename shown above to confirm this irreversible deletion."
               >
                 <.ops_text_input
@@ -1276,14 +1463,14 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                 id="rename-new-name-input"
                 error={@file_action_error}
                 label="Filename"
-                hint="End the filename with .json."
+                hint="Use letters, numbers, dots, underscores, or hyphens, and end with .json."
               >
                 <.ops_text_input
                   id="rename-new-name-input"
                   error={@file_action_error}
                   name="new_name"
                   value={@rename_modal.new_name}
-                  hint="End the filename with .json."
+                  hint="Use letters, numbers, dots, underscores, or hyphens, and end with .json."
                   class="font-mono text-ops-body"
                   placeholder="new-name.json"
                 />
@@ -1316,14 +1503,14 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                 id="dup-to-name-input"
                 error={@file_action_error}
                 label="Filename"
-                hint="End the filename with .json."
+                hint="Use letters, numbers, dots, underscores, or hyphens, and end with .json."
               >
                 <.ops_text_input
                   id="dup-to-name-input"
                   error={@file_action_error}
                   name="to_name"
                   value={@duplicate_modal.new_name}
-                  hint="End the filename with .json."
+                  hint="Use letters, numbers, dots, underscores, or hyphens, and end with .json."
                   class="font-mono text-ops-body"
                 />
               </.ops_field>
@@ -1376,6 +1563,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                 |> assign(:draft_playbook, nil)
                 |> assign(:preview_json, nil)
                 |> assign(:preview_marker, false)
+                |> assign(:preview_source, nil)
                 |> assign(:run_result, nil)
                 |> assign(:run_error, nil)
               else
@@ -1391,6 +1579,25 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   defp file_action_error(socket, message), do: assign(socket, :file_action_error, message)
+
+  defp playbook_origin_label(:load, name) when is_binary(name), do: "Loaded file: #{name}"
+  defp playbook_origin_label(:paste, _name), do: "Imported from pasted JSON"
+  defp playbook_origin_label(:upload, _name), do: "Imported from uploaded JSON"
+  defp playbook_origin_label(_source, _name), do: "Imported playbook"
+
+  defp playbook_upload_errors(upload) do
+    (upload_errors(upload) ++ Enum.flat_map(upload.entries, &upload_errors(upload, &1)))
+    |> Enum.uniq()
+  end
+
+  defp playbook_upload_error_message(:too_large),
+    do: "Choose a JSON file no larger than #{@max_import_bytes} bytes."
+
+  defp playbook_upload_error_message(:not_accepted), do: "Choose a file ending in .json."
+  defp playbook_upload_error_message(:too_many_files), do: "Choose one JSON file at a time."
+
+  defp playbook_upload_error_message(_),
+    do: "Could not upload this file. Choose a JSON file and try again."
 
   defp delete_description(name) do
     "This permanently deletes #{name} from the playbook workspace. This cannot be undone."

@@ -270,7 +270,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
              "#ops-command-palette-destinations[data-recovery-target='#{schema_a}']"
            )
 
-    assert has_element?(failed_lv, "a[href='/ops/sync-drift?#{query_a}']", "Check sync and drift")
+    assert has_element?(failed_lv, "a[href='/ops/sync-drift?#{query_a}']", "Check sync status")
 
     {:ok, drift_lv, _drift_html} = live(conn, "/ops/sync-drift?" <> query_a)
 
@@ -279,7 +279,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
              "#ops-command-palette-destinations[data-recovery-target='#{schema_a}']"
            )
 
-    assert has_element?(drift_lv, "a[href='/ops/health']", "Inspect search health")
+    assert has_element?(drift_lv, "a[href='/ops/health']", "Review search health")
 
     drift_lv
     |> form("#sync-drift-schema-form", %{"schema" => schema_b})

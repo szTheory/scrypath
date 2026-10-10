@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { expandHealthDetails } from "./helpers/operator-ui";
@@ -18,6 +18,18 @@ const ENTRYPOINTS = [
 
 const scenarios = ["default", "failed", "unknown", "empty", "partial", "long-value", "source-error", "manual", "no-success"] as const;
 type Theme = "light" | "dark" | "system";
+
+async function inspectSourceDiagnostics(group: Locator, source: "Backend" | "Queue", reasons: string[]) {
+  const copy = group.locator(":scope > p");
+  await expect(copy).toBeVisible();
+  await expect(copy).toContainText(`${source} observation unavailable`);
+  const diagnostics = group.locator("details.ops-disclosure");
+  await expect(diagnostics.locator("pre")).not.toBeVisible();
+  await diagnostics.locator("summary").click();
+  await expect(diagnostics.locator("pre")).toBeVisible();
+  for (const reason of reasons) await expect(diagnostics.locator("pre")).toContainText(reason);
+  await diagnostics.locator("summary").click();
+}
 
 async function openScenario(page: import("@playwright/test").Page, url: string, scenario: string, theme: Theme, width: number) {
   await page.setViewportSize({ width, height: 960 });
@@ -72,12 +84,12 @@ for (const entrypoint of ENTRYPOINTS) {
           } else if (scenario === "unknown") {
             // The unknown Meilisearch status fails source decoding explicitly;
             // it must not be represented as zero or as remote terminal failure.
-            await expect(rows.first()).toContainText("fetch error:");
+            await inspectSourceDiagnostics(rows.first().locator(".ops-signal-group").first(), "Backend", ["invalid_task_payload", "mystery", "status: :unknown"]);
             await expect(rows.first()).not.toContainText("backend failed");
             await expect(page.locator(".ops-metric")).toHaveCount(1);
             await expect(page.locator(".ops-metric")).toContainText("Incomplete checks");
           } else if (scenario === "source-error") {
-            await expect(rows.first()).toContainText("fetch error: :fixture_unavailable");
+            await inspectSourceDiagnostics(rows.first().locator(".ops-signal-group").first(), "Backend", [":fixture_unavailable"]);
             await expect(rows.first()).toContainText("Not observed");
             await expect(page.locator(".ops-verdict")).toContainText("Sync needs attention");
           } else if (scenario === "manual") {
@@ -147,9 +159,9 @@ for (const entrypoint of ENTRYPOINTS) {
       button.setAttribute("phx-value-scenario", "queue-error")
     );
     await page.getByRole("button", { name: "Refresh search health" }).click();
-    await expect(row).toContainText("fixture_queue_unavailable");
     const backend = row.locator(".ops-signal-group").first();
     const queue = row.locator(".ops-signal-group").nth(1);
+    await inspectSourceDiagnostics(queue, "Queue", [":fixture_queue_unavailable"]);
     await expect(backend.locator("time.ops-time__value")).toHaveText("3 days ago");
     await expect(backend.locator(".ops-signal-metrics")).toBeVisible();
     await expect(backend).not.toContainText("observation unavailable");
@@ -164,9 +176,9 @@ for (const entrypoint of ENTRYPOINTS) {
       button.setAttribute("phx-value-scenario", "all-source-error")
     );
     await page.getByRole("button", { name: "Refresh search health" }).click();
-    await expect(backend).toContainText("fixture_unavailable");
+    await inspectSourceDiagnostics(backend, "Backend", [":fixture_unavailable"]);
     await expect(backend.locator("time.ops-time__value")).toHaveText("3 days ago");
-    await expect(queue).toContainText("fixture_queue_unavailable");
+    await inspectSourceDiagnostics(queue, "Queue", [":fixture_queue_unavailable"]);
     await expect(queue.locator("time.ops-time__value")).toHaveText("2 days ago");
     await expect(queue.locator(".ops-time__exact")).toHaveText("2026-10-04T13:02:05.123456-04:00");
     await page.screenshot({ path: join(captureDir, `phase173-${entrypoint.name}-all-source-error-light-390.png`), fullPage: true });

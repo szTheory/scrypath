@@ -102,7 +102,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     refute has_element?(lv, "[data-testid='intent-incident']")
     assert has_element?(lv, "[data-testid='intent-change'][href$='/ops/sync-drift']")
     assert has_element?(lv, "[data-testid='intent-explore'][href$='/ops/search']")
-    assert html =~ "Verify a change before promotion."
+    assert html =~ "Check sync status and index configuration before promoting a change."
     assert html =~ "Inspect a search result, then save a useful check."
 
     html

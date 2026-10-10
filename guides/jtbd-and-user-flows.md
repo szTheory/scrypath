@@ -277,7 +277,7 @@ Sooner or later one of these happens:
 
 Scrypath treats that as a normal operator workflow, not a shameful edge case.
 
-In the optional operator UI, start at Control Room for overall health, then use Search health to identify the schemas that need attention. Open a schema’s recovery link to inspect Failed sync work; its selector makes the scope explicit. Sync and drift keeps that choice for verification. Returning to Search health shows all configured schemas again. See the [operator information architecture](../scrypath_ops/docs/operator-ia.md) for the route map.
+In the optional operator UI, start at Control Room for overall health, then use Search health to identify the schemas that need attention. A schema’s next action opens Failed sync work when failures were found, or Sync and drift to check pending work and configuration. Both workflows have a schema selector and preserve that choice between them. Returning to Search health shows all configured schemas again. See the [operator information architecture](https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/operator-ia.md) for the route map.
 
 The decision tree is blunt:
 

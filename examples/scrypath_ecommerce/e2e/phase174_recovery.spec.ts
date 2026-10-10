@@ -1,4 +1,4 @@
-import { expect, test, type Page, type TestInfo } from "@playwright/test";
+import { expect, test, type Locator, type Page, type TestInfo } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { prepareRecoveryFixture, seedScenario, waitForLiveConnected as waitForSocketConnected } from "./helpers/e2e";
@@ -14,6 +14,26 @@ async function waitForLiveConnected(page: Page) {
   // A connected transport can precede the LiveView join and hook mounting.
   await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
   await expandHealthDetails(page);
+}
+
+async function openFailedHistory(row: Locator) {
+  const history = row.locator("details.ops-disclosure").filter({ hasText: "Failed work history" });
+  if (await history.count() && !(await history.evaluate(node => (node as HTMLDetailsElement).open))) {
+    await history.locator("summary").click();
+  }
+}
+
+async function inspectHealthDiagnostics(row: Locator, source: "Backend" | "Queue", reasons: string[]) {
+  const group = row.locator(`.ops-signal-group[aria-label^='${source === "Backend" ? "Backend task" : "Queue job"} health']`);
+  const copy = group.locator(":scope > p");
+  await expect(copy).toBeVisible();
+  await expect(copy).toContainText(`${source} observation unavailable`);
+  const diagnostics = group.locator("details.ops-disclosure");
+  await expect(diagnostics.locator("pre")).not.toBeVisible();
+  await diagnostics.locator("summary").click();
+  await expect(diagnostics.locator("pre")).toBeVisible();
+  for (const reason of reasons) await expect(diagnostics.locator("pre")).toContainText(reason);
+  await diagnostics.locator("summary").click();
 }
 
 function delayNextLiveViewResponse(page: Page) {
@@ -69,6 +89,7 @@ for (const entry of ["mounted", "standalone"] as const) {
       await expect(page.getByTestId("recovery-target")).toHaveCount(0);
       await expect(page.getByTestId("posture-row")).toHaveCount(2);
       const schema = entry === "mounted" ? "ScrypathEcommerce.Catalog.Variant" : "ScrypathOps.Test.OpsPostB";
+      await openFailedHistory(page.getByTestId("posture-row").filter({ hasText: schema }));
       const rowAction = page.getByRole("link", { name: `View failed sync work for ${schema}`, exact: true });
       await expect(rowAction).toHaveAttribute("href", `${mountPath}/failed-sync?schema=${schema}`);
       await rowAction.click();
@@ -97,6 +118,7 @@ test("mounted target selection stays canonical through worse-row navigation and 
     name: "View failed sync work for ScrypathEcommerce.Catalog.Product",
     exact: true
   });
+  await openFailedHistory(rows.filter({ hasText: "ScrypathEcommerce.Catalog.Product" }));
   await expect(productHandoff).toHaveAttribute("href", /schema=ScrypathEcommerce.Catalog.Product/);
   await productHandoff.click();
   await waitForLiveConnected(page);
@@ -159,12 +181,31 @@ test("real Search health refresh reorders records without moving focus to a diff
   const schemaA = "ScrypathOps.Test.OpsPostA";
   const token = crypto.randomUUID().replaceAll("-", "");
   await page.setViewportSize({ width: 1440, height: 900 });
+
+  // A still-clear refresh must preserve both disclosures' browser-owned open state
+  // without briefly hiding the focused history link during the LiveView patch.
+  await page.goto(`${standalone}/health?scenario=a-selected-b-worse`);
+  await waitForLiveConnected(page);
+  const clearRow = page.getByTestId("posture-row").filter({ hasText: schemaA });
+  await openFailedHistory(clearRow);
+  const clearHistory = clearRow.locator('details[id^="posture-failed-history-"]');
+  const clearAction = clearRow.getByTestId("posture-failed-sync-link");
+  await clearAction.focus();
+  await expect(clearAction).toBeFocused();
+  await page.keyboard.press("r");
+  await expect(page.getByText("Search health refreshed.", { exact: true })).toBeVisible();
+  await expect(clearRow.getByTestId("schema-health-status")).toHaveText("No pending or failed work");
+  await expect(clearHistory).toHaveAttribute("open", "");
+  await expect(clearRow.locator("details.ops-schema-health")).toHaveAttribute("open", "");
+  await expect(clearAction).toBeFocused();
+
   await page.goto(`${standalone}/health?scenario=reorder-${token}`);
   await waitForLiveConnected(page);
   const rows = page.getByTestId("posture-row");
   await expect(rows.first()).toHaveAttribute("id", "posture-ScrypathOps.Test.OpsPostB");
 
   const rowA = rows.filter({ hasText: schemaA });
+  await openFailedHistory(rowA);
   const actionA = rowA.getByTestId("posture-failed-sync-link");
   await actionA.focus();
   await expect(actionA).toBeFocused();
@@ -174,6 +215,36 @@ test("real Search health refresh reorders records without moving focus to a diff
   expect(new URL(page.url()).searchParams.has("schema")).toBe(false);
   expect(new URL(page.url()).searchParams.get("scenario")).toBe(`reorder-${token}`);
   await expect(actionA).toHaveAttribute("href", /schema=ScrypathOps.Test.OpsPostA/);
+
+  // Failure visibility is server-required even when the operator never opened history.
+  const closedToken = crypto.randomUUID().replaceAll("-", "");
+  await page.goto(`${standalone}/health?scenario=reorder-${closedToken}`);
+  await waitForLiveConnected(page);
+  const unopenedRow = page.getByTestId("posture-row").filter({ hasText: schemaA });
+  const unopenedHistory = unopenedRow.locator('details[id^="posture-failed-history-"]');
+  await expect(unopenedHistory).not.toHaveAttribute("open", "");
+  await expect(unopenedRow.getByTestId("posture-failed-sync-link")).not.toBeVisible();
+  await page.keyboard.press("r");
+  await expect(unopenedRow.getByTestId("schema-health-status")).toContainText("failed");
+  await expect(unopenedHistory).toHaveAttribute("open", "");
+  await expect(unopenedHistory.locator("summary")).not.toBeVisible();
+  await expect(unopenedRow.getByTestId("posture-failed-sync-link")).toBeVisible();
+  await expect(unopenedRow.getByTestId("posture-failed-sync-link")).toHaveClass(/ops-schema-action/);
+
+  // Automatically expanded history stays open while its focused control survives
+  // recovery, then returns to a quiet state on a refresh with focus elsewhere.
+  const autoAction = unopenedRow.getByTestId("posture-failed-sync-link");
+  const refresh = page.getByRole("button", { name: "Refresh search health", exact: true });
+  await autoAction.focus();
+  await refresh.evaluate(button => button.setAttribute("phx-value-scenario", "empty-history"));
+  await page.keyboard.press("r");
+  await expect(unopenedRow.getByTestId("schema-health-status")).toHaveText("No pending or failed work");
+  await expect(unopenedHistory).toHaveAttribute("open", "");
+  await expect(autoAction).toBeFocused();
+  await refresh.click();
+  await expect(unopenedHistory).not.toHaveAttribute("open", "");
+  const automaticallyOpenedRow = page.getByTestId("posture-row").filter({ hasText: "ScrypathOps.Test.OpsPostB" });
+  await expect(automaticallyOpenedRow.locator("details.ops-schema-health")).not.toHaveAttribute("open", "");
 });
 
 test("selected recovery context remains reachable through the mobile drawer and palette keyboard flow", async ({ page }) => {
@@ -220,6 +291,7 @@ test("standalone rendered states preserve unavailable, retained, unknown, empty,
   await page.goto(`${standalone}/health?scenario=unknown`);
   await waitForLiveConnected(page);
   const unknown = page.getByTestId("posture-row").filter({ hasText: schemaA });
+  await inspectHealthDiagnostics(unknown, "Backend", ["invalid_task_payload", "future-status", "status: :unknown"]);
   await expect(unknown).toContainText("No success observed");
   await expect(unknown).not.toContainText("terminal failure");
 
@@ -231,6 +303,7 @@ test("standalone rendered states preserve unavailable, retained, unknown, empty,
   const retained = page.getByTestId("posture-row").filter({ hasText: schemaA });
   await expect(retained).toContainText("Backend observation unavailable");
   await expect(retained).toContainText("last success retained from the previous check");
+  await inspectHealthDiagnostics(retained, "Backend", [":fixture_backend_unavailable"]);
 
   await page.goto(`${standalone}/health?scenario=error`);
   await waitForLiveConnected(page);
@@ -238,6 +311,8 @@ test("standalone rendered states preserve unavailable, retained, unknown, empty,
   await expect(sourceError).toContainText("Backend observation unavailable");
   await expect(sourceError).toContainText("Queue observation unavailable");
   await expect(sourceError).not.toContainText("No success observed");
+  await inspectHealthDiagnostics(sourceError, "Backend", [":fixture_backend_unavailable"]);
+  await inspectHealthDiagnostics(sourceError, "Queue", [":fixture_queue_unavailable"]);
 
   await page.goto(`${standalone}/failed-sync?scenario=empty-history&schema=${schemaA}`);
   await waitForLiveConnected(page);
@@ -327,6 +402,7 @@ test("mounted palette recovery destinations follow the selected schema", async (
   await expect(page.getByRole("heading", { name: "Control Room" })).toBeVisible();
   await page.getByRole("link", { name: /Review Search health/ }).click();
   await waitForLiveConnected(page);
+  await openFailedHistory(page.getByTestId("posture-row").filter({ hasText: "ScrypathEcommerce.Catalog.Product" }));
   await page.getByRole("link", { name: "View failed sync work for ScrypathEcommerce.Catalog.Product", exact: true }).click();
   await waitForLiveConnected(page);
   await expect(page.locator("#ops-page-title")).toHaveText("Failed sync work");
@@ -493,6 +569,7 @@ test("mounted app selects non-first A while Product remains the worse posture an
   const rows = page.getByTestId("posture-row");
   await expect(rows.first()).toContainText("Product");
   await expect(rows.first()).toContainText("failed");
+  await openFailedHistory(rows.filter({ hasText: "ScrypathEcommerce.Catalog.Variant" }));
   const handoff = page.getByRole("link", { name: "View failed sync work for ScrypathEcommerce.Catalog.Variant", exact: true });
   await expect(handoff).toBeVisible();
   await handoff.click();

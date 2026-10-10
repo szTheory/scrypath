@@ -12,6 +12,7 @@ import {
   OpsNavDrawer,
   OpsModal,
   OpsRefreshButton,
+  OpsHealthDetails,
   OpsTimestampCopy,
   OpsToast,
   OpsHelp
@@ -19,7 +20,7 @@ import {
 
 const liveSocket = new LiveSocket("/live", Socket, {
   params: { _csrf_token: csrfToken },
-  hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsTimestampCopy, OpsToast, OpsHelp }
+  hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsHealthDetails, OpsTimestampCopy, OpsToast, OpsHelp }
 });
 
 const normalizeTheme = (theme) => {

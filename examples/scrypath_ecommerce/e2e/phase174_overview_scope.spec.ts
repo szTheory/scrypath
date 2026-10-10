@@ -53,6 +53,10 @@ for (const entry of entries) {
         if (!(await details.evaluate(node => (node as HTMLDetailsElement).open))) {
           await row.locator("summary.ops-schema-health__summary").click();
         }
+        const failedHistory = row.locator("details.ops-disclosure").filter({ hasText: "Failed work history" });
+        if (await failedHistory.count()) {
+          await failedHistory.locator("summary").click();
+        }
         await row.getByTestId("posture-failed-sync-link").click();
         await connected();
         await expect(page.getByRole("radio", { name: new RegExp(entry.schema.split(".").at(-1)!) })).toBeChecked();

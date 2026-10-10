@@ -133,10 +133,15 @@ async function gotoSyncDrift(page: Page): Promise<void> {
   await page.goto("/admin/search/sync-drift");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
-  await page.getByRole("button", { name: "Check index contract" }).click();
+  await page.getByRole("button", { name: "Check index configuration" }).click();
   // load_drift defers the bounded backend read to a :run_drift message (S3 loading
-  // state), so the dimensions panel appears a render after the click — toBeVisible polls.
-  await expect(page.getByText("Contract dimensions", { exact: true })).toBeVisible();
+  // state), so the comparison details appear a render after the click — toBeVisible polls.
+  const configurationDetails = page.getByTestId("configuration-details");
+  await expect(configurationDetails.getByText("Comparison details", { exact: true })).toBeVisible();
+  if ((await configurationDetails.getAttribute("open")) === null) {
+    await configurationDetails.locator("summary").click();
+  }
+  await expect(configurationDetails.getByText("Index configuration comparison", { exact: true })).toBeVisible();
 }
 
 async function gotoSearch(page: Page): Promise<void> {

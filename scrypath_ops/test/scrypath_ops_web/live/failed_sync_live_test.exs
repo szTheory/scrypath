@@ -284,15 +284,35 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     refute error_html =~ ~s(data-testid="failed-sync-empty-hero")
   end
 
-  test "zero failed sync work shows the empty hero", %{conn: conn} do
+  test "empty failed work leads to exact-schema verification without claiming a clear queue", %{
+    conn: conn
+  } do
     Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
-    Application.put_env(:scrypath_ops, :oban_jobs, [])
+    Application.put_env(:scrypath_ops, :oban_jobs, [%{id: 805, state: "available"}])
 
-    {:ok, _lv, html} = live(conn, ~p"/ops/failed-sync")
+    {:ok, lv, html} = live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB")
 
     assert html =~ ~s(data-testid="failed-sync-empty-hero")
     assert html =~ "No failed sync work for this schema"
     assert html =~ "Refresh this view"
+    assert html =~ "whether work is still pending"
+    assert html =~ "Some failures need a configuration or data fix first"
+
+    assert has_element?(
+             lv,
+             "[data-testid='failed-sync-empty-hero'] a.btn-primary[href='/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB']",
+             "Check sync status"
+           )
+
+    assert has_element?(
+             lv,
+             "[data-testid='failed-sync-empty-hero'] button.btn-ghost",
+             "Refresh this view"
+           )
+
+    refute has_element?(lv, ".ops-handoff")
+    refute html =~ "When the queue&#39;s clear"
+    refute html =~ "failure class and row evidence"
     refute html =~ "data-testid=\"failed-sync-row\""
     refute html =~ "dominant reason"
     refute html =~ "No Queue jobs have manual replay data"
@@ -301,11 +321,18 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
   test "one failed job uses singular copy", %{conn: conn} do
     Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
 
-    {:ok, _lv, html} = live(conn, ~p"/ops/failed-sync")
+    {:ok, lv, html} = live(conn, ~p"/ops/failed-sync")
 
     assert html =~ "1 failed sync work item needs triage"
     assert html =~ "1 Queue job has manual replay data"
     refute html =~ "1 failed sync work items need triage"
+    assert has_element?(lv, ".ops-handoff", "To verify sync")
+
+    assert has_element?(
+             lv,
+             ".ops-handoff a[href='/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA']",
+             "Check sync status"
+           )
   end
 
   test "empty allowlist shows setup rather than healthy zero work", %{conn: conn} do

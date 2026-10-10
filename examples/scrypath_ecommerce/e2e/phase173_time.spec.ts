@@ -92,7 +92,15 @@ for (const entrypoint of ENTRYPOINTS) {
         const refresh = page.getByRole("button", { name: "Refresh search health" });
         await refresh.evaluate((button) => button.setAttribute("phx-value-scenario", "source-error"));
         await refresh.click();
-        await expect(row).toContainText("fetch error: :fixture_unavailable");
+        const backend = row.locator(".ops-signal-group").first();
+        await expect(backend.locator(":scope > p")).toBeVisible();
+        await expect(backend.locator(":scope > p")).toContainText("Backend observation unavailable");
+        const diagnostics = backend.locator("details.ops-disclosure");
+        await expect(diagnostics.locator("pre")).not.toBeVisible();
+        await diagnostics.locator("summary").click();
+        await expect(diagnostics.locator("pre")).toBeVisible();
+        await expect(diagnostics.locator("pre")).toHaveText(":fixture_unavailable");
+        await diagnostics.locator("summary").click();
         await expect(row).toContainText("last success retained from the previous check");
         const retainedTime = row.locator(".ops-time").first();
         await expect(retainedTime).toContainText("2 days ago");
@@ -115,10 +123,17 @@ for (const entrypoint of ENTRYPOINTS) {
       await expect(row).toBeVisible();
 
       if (scenario === "source-error") {
-        await expect(row).toContainText("fetch error: :fixture_unavailable");
         const backend = row.locator(".ops-signal-group").first();
         const queue = row.locator(".ops-signal-group").nth(1);
-        await expect(backend.locator(".ops-time__reason")).toHaveText(":fixture_unavailable");
+        await expect(backend.locator(":scope > p")).toBeVisible();
+        await expect(backend.locator(":scope > p")).toContainText("Backend observation unavailable");
+        await expect(backend.locator(".ops-time__reason")).toHaveCount(0);
+        const diagnostics = backend.locator("details.ops-disclosure");
+        await expect(diagnostics.locator("pre")).not.toBeVisible();
+        await diagnostics.locator("summary").click();
+        await expect(diagnostics.locator("pre")).toBeVisible();
+        await expect(diagnostics.locator("pre")).toHaveText(":fixture_unavailable");
+        await diagnostics.locator("summary").click();
         await expect(backend).toContainText("Not observed");
         await expect(backend.locator("details.ops-time__disclosure")).toHaveCount(0);
         await expect(queue.locator("time.ops-time__value")).toHaveText("3 days ago");

@@ -155,8 +155,12 @@ defmodule ScrypathOps.Playbook.Runner do
     allowed = keys_for_ctx(ctx)
 
     Enum.reduce(map, [], fn {k, v}, acc ->
-      if is_binary(k) and k in allowed do
-        [{String.to_existing_atom(k), coerce_opt(k, v)} | acc]
+      # These literal atoms are available when Runner loads. A permitted key must
+      # not depend on an unrelated backend module having loaded first.
+      key = if is_binary(k), do: Enum.find(allowed, &(Atom.to_string(&1) == k))
+
+      if key do
+        [{key, coerce_opt(k, v)} | acc]
       else
         acc
       end
@@ -167,7 +171,7 @@ defmodule ScrypathOps.Playbook.Runner do
   defp opts_string_map_to_keyword(_, _), do: []
 
   defp keys_for_ctx(:search),
-    do: ~w(facets facet_filter filter sort page per_query)
+    do: ~w(facets facet_filter filter sort page per_query)a
 
   defp keys_for_ctx(:search_many_shared),
     do:
@@ -180,10 +184,10 @@ defmodule ScrypathOps.Playbook.Runner do
           max_schemas
           global_schemas
           otp_app
-        )
+        )a
 
   defp keys_for_ctx(:search_many_entry),
-    do: keys_for_ctx(:search) ++ ~w(federation_weight)
+    do: keys_for_ctx(:search) ++ ~w(federation_weight)a
 
   defp coerce_opt("page", %{} = m) do
     Enum.reduce(m, [], fn

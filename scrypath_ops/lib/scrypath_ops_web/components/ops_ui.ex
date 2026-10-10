@@ -69,7 +69,8 @@ defmodule ScrypathOpsWeb.OpsUi do
       aria-label="Jump to surface"
       aria-keyshortcuts="Meta+K Control+K"
     >
-      <span>Jump to surface</span>
+      <span class="ops-command-hint__full">Jump to surface</span>
+      <span class="ops-command-hint__compact" aria-hidden="true">Jump</span>
       <kbd class="ops-kbd">⌘K</kbd>
     </button>
     """
@@ -524,7 +525,7 @@ defmodule ScrypathOpsWeb.OpsUi do
         <div class="min-w-0 flex-1 space-y-1">
           <p
             :if={@label}
-            class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/55"
+            class="text-ops-body font-medium text-base-content/75"
           >
             {@label}
           </p>
@@ -1376,6 +1377,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   @doc "Disclosure with consistent operator trace/debug styling."
   attr(:summary, :string, required: true)
+  attr(:summary_label, :string, default: nil)
   attr(:id, :string, default: nil)
   attr(:variant, :atom, default: :default, values: [:default, :compact])
   attr(:open, :boolean, default: false)
@@ -1395,7 +1397,10 @@ defmodule ScrypathOpsWeb.OpsUi do
       ]}
       {@rest}
     >
-      <summary class="cursor-pointer text-ops-body font-medium text-base-content">
+      <summary
+        class="cursor-pointer text-ops-body font-medium text-base-content"
+        aria-label={@summary_label}
+      >
         {@summary}
       </summary>
       <div class="ops-disclosure-body mt-2 text-ops-body text-base-content/80">

@@ -203,8 +203,8 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
             <.ops_intent_card
               icon="hero-arrow-up-tray"
               title="Verify a change"
-              summary="Verify a change before promotion. Reconcile, compare contract drift, then use the gated swap."
-              route_label="Pre-flight sync drift"
+              summary="Check sync status and index configuration before promoting a change."
+              route_label="Check sync and drift"
               navigate={"#{@mount_path}/sync-drift"}
               data-testid="intent-change"
             />
@@ -221,7 +221,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
 
         <section
           aria-labelledby="control-room-orient-heading"
-          class="flex flex-wrap items-center justify-end gap-3 pt-ops-2 text-ops-body text-base-content/55"
+          class="flex flex-wrap items-center justify-end gap-3 pt-ops-2 text-ops-body text-base-content/75"
         >
           <h2 id="control-room-orient-heading" class="sr-only">Operator guide</h2>
           <a href={@orientation_href} class="link link-hover">

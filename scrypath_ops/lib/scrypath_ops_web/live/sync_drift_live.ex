@@ -126,7 +126,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             |> assign(:reconcile_generation, nil)
             |> assign(:reconcile_error, reason)
             |> refresh_promotion_eligibility()
-            |> put_flash(:error, "Reconcile failed: #{inspect(reason)}")
+            |> put_flash(:error, "Sync status could not be checked. Refresh to try again.")
         end
     end
   end
@@ -756,7 +756,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           |> assign(:reconcile_generation, nil)
           |> assign(:reconcile_error, reason)
           |> refresh_promotion_eligibility()
-          |> put_flash(:error, "Reconcile failed: #{inspect(reason)}")
+          |> put_flash(:error, "Sync status could not be checked. Refresh to try again.")
       end
     else
       socket
@@ -908,9 +908,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp promotion_reason(:schema_not_allowed), do: "select an available schema"
   defp promotion_reason(:unsupported_backend), do: "Meilisearch is unavailable"
   defp promotion_reason(:reconcile_failed), do: "refresh sync and queue status"
-  defp promotion_reason(:contract_failed), do: "refresh the index contract check"
+  defp promotion_reason(:contract_failed), do: "refresh the index configuration check"
   defp promotion_reason(:reconcile_not_current), do: "refresh sync and queue status"
-  defp promotion_reason(:contract_not_current), do: "run the index contract check"
+  defp promotion_reason(:contract_not_current), do: "check the index configuration"
   defp promotion_reason(:check_in_progress), do: "wait for the current check"
   defp promotion_reason(:context_mismatch), do: "refresh checks for this schema and index"
   defp promotion_reason(:indexes_not_distinct), do: "confirm live and target indexes differ"
@@ -920,7 +920,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp promotion_reason(:reindex_pending), do: "wait for reindex work to finish"
   defp promotion_reason(:cutover_pending), do: "wait for the current cutover to finish"
   defp promotion_reason(:failed_work), do: "resolve failed sync work first"
-  defp promotion_reason(:contract_mismatch), do: "resolve contract differences first"
+  defp promotion_reason(:contract_mismatch), do: "resolve index configuration differences first"
   defp promotion_reason(_), do: "refresh current checks"
 
   defp promotion_eligibility_title(:eligible), do: "Ready for promotion"
@@ -968,11 +968,42 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> assign(:recovery_loading, false)
   end
 
+  defp reconcile_signal_label(:reindex_visibility_available), do: "Reindex task history available"
+  defp reconcile_signal_label(:pending_backend_work), do: "Backend tasks pending"
+  defp reconcile_signal_label(:pending_queue_work), do: "Queue jobs pending"
+  defp reconcile_signal_label(:failed_sync_work), do: "Failed sync work"
+  defp reconcile_signal_label(:reindex_in_progress), do: "Reindex in progress"
+  defp reconcile_signal_label(:reindex_cutover_pending), do: "Index swap pending"
+
   defp reconcile_signal_label(signal) do
     signal
     |> to_string()
     |> String.trim_leading(":")
     |> String.replace("_", " ")
+  end
+
+  defp sync_summary(report) do
+    signals = report.drift_signals
+
+    cond do
+      :failed_sync_work in signals ->
+        {"Sync failures need attention", "Review the failure reason before retrying."}
+
+      :pending_backend_work in signals or :pending_queue_work in signals ->
+        {"Sync work is pending", "Refresh sync status to check progress."}
+
+      :reindex_in_progress in signals or :reindex_cutover_pending in signals ->
+        {"Reindex work is pending", "Refresh sync status to check progress."}
+
+      report.reindex.task_state == :failed ->
+        {"A reindex task failed", "Review the reindex evidence before promoting an index."}
+
+      report.reindex.task_state == :unknown ->
+        {"Reindex status is unknown", "Refresh sync status to check again."}
+
+      true ->
+        {"No pending or failed sync work found", nil}
+    end
   end
 
   defp drift_dimension_label(key) do
@@ -1004,7 +1035,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     >
       <.ops_page_header
         title="Sync and drift"
-        subtitle="Check sync status and compare the schema contract with its live index."
+        subtitle="Check sync progress and compare index configuration."
       />
 
       <.ops_trail current={:sync_drift} class="mt-4" />
@@ -1021,8 +1052,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
       <.ops_panel :if={@recovery_handle} class="mt-4" id="recovery-observation">
         <.ops_section
-          title="Retry observation"
-          subtitle="This read checks the accepted queue job, its exact Meilisearch task, and the active index documents."
+          title="Retry status"
+          subtitle="Check whether this retry reached the queue, search backend, and live index."
           meta={if @recovery_checked_at, do: "checked #{format_dt(@recovery_checked_at)}"}
         >
           <:actions>
@@ -1067,8 +1098,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       <.ops_panel>
         <.ops_section
           id="sync-reconcile-heading"
-          title="Sync and queue status"
-          subtitle="Check current backend tasks and queued work for this schema."
+          title="Sync status"
+          subtitle="Check backend tasks and queued work for this schema."
         >
           <:actions>
             <.ops_refresh_control
@@ -1080,54 +1111,88 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             />
           </:actions>
 
-          <.ops_signal_table :if={@reconcile_result}>
-            <thead>
-              <tr>
-                <th scope="col">Check</th>
-                <th scope="col">Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row" class="font-medium align-top">Index</th>
-                <td>
-                  <.ops_inline_code>{@reconcile_result.index}</.ops_inline_code>
-                </td>
-              </tr>
-              <tr>
-                <th scope="row" class="font-medium align-top">Mode</th>
-                <td>{reconcile_signal_label(@reconcile_result.mode)}</td>
-              </tr>
-              <tr>
-                <th scope="row" class="font-medium align-top">Sync status</th>
-                <td>
-                  <div class="flex flex-wrap gap-1">
-                    <.ops_badge
-                      :for={signal <- @reconcile_result.drift_signals}
-                      kind={:neutral}
-                    >
-                      {reconcile_signal_label(signal)}
-                    </.ops_badge>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </.ops_signal_table>
+          <div :if={@reconcile_result} class="space-y-2" id="sync-work-status" role="status">
+            <p class="font-semibold">{elem(sync_summary(@reconcile_result), 0)}</p>
+            <p :if={elem(sync_summary(@reconcile_result), 1)} class="text-base-content/80">
+              {elem(sync_summary(@reconcile_result), 1)}
+            </p>
+            <.ops_link_button
+              :if={:failed_sync_work in @reconcile_result.drift_signals}
+              navigate={OperatorSelection.path(@mount_path, "failed-sync", @selected_schema)}
+              variant={:ghost}
+            >
+              Review failed sync work <span aria-hidden="true">→</span>
+            </.ops_link_button>
+          </div>
+
+          <.ops_disclosure
+            :if={@reconcile_result}
+            id={"sync-details-#{@context_generation}"}
+            summary="Sync details"
+            variant={:compact}
+            class="mt-3"
+            phx-mounted={JS.ignore_attributes("open")}
+          >
+            <.ops_signal_table>
+              <thead>
+                <tr>
+                  <th scope="col">Check</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row" class="font-medium align-top">Index</th>
+                  <td>
+                    <.ops_inline_code>{@reconcile_result.index}</.ops_inline_code>
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row" class="font-medium align-top">Mode</th>
+                  <td>{reconcile_signal_label(@reconcile_result.mode)}</td>
+                </tr>
+                <tr>
+                  <th scope="row" class="font-medium align-top">Work observed</th>
+                  <td>
+                    <div class="flex flex-wrap gap-1">
+                      <.ops_badge
+                        :for={signal <- @reconcile_result.drift_signals}
+                        kind={:neutral}
+                      >
+                        {reconcile_signal_label(signal)}
+                      </.ops_badge>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </.ops_signal_table>
+          </.ops_disclosure>
 
           <p
-            :if={@reconcile_result == nil && @selected_schema}
+            :if={@reconcile_result == nil && @selected_schema && !@reconcile_error}
             class="text-ops-body text-base-content/70"
           >
             Sync status is not available yet. Refresh sync status to check again.
           </p>
+          <.ops_status
+            :if={@reconcile_error && @selected_schema}
+            kind={:error}
+            title="Sync status is unavailable"
+            role="alert"
+          >
+            Refresh to try again. If the check keeps failing, review the backend and queue configuration.
+            <.ops_disclosure summary="Check diagnostics" variant={:compact} class="mt-2">
+              <.ops_code_block>{inspect(@reconcile_error)}</.ops_code_block>
+            </.ops_disclosure>
+          </.ops_status>
         </.ops_section>
       </.ops_panel>
 
       <.ops_panel>
         <.ops_section
           id="sync-drift-heading"
-          title="Index contract"
-          subtitle="Compare the selected schema contract with its live index."
+          title="Index configuration"
+          subtitle="Compare declared fields and search settings. This does not check document freshness."
           meta={if @drift_loaded_at, do: "last loaded #{format_dt(@drift_loaded_at)}"}
         >
           <:actions>
@@ -1136,7 +1201,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               phx-disable-with="Checking…"
               disabled={@drift_loading || !@selected_schema}
             >
-              {if @drift_result, do: "Refresh contract check", else: "Check index contract"}
+              {if @drift_result, do: "Refresh configuration check", else: "Check index configuration"}
             </.ops_button>
           </:actions>
 
@@ -1144,63 +1209,88 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             :if={@drift_loading}
             class="space-y-3"
             role="status"
-            aria-label="Loading contract drift"
+            aria-label="Checking index configuration"
           >
             <p class="text-ops-body text-base-content/70">
-              Comparing the declared contract against the live index…
+              Comparing index configuration…
             </p>
-            <.ops_loading lines={4} label="Loading contract drift" />
+            <.ops_loading lines={4} label="Checking index configuration" />
           </div>
 
+          <p
+            :if={!@drift_loading && !@drift_result && !@drift_error && @selected_schema}
+            class="text-ops-sm text-base-content/75"
+            data-testid="configuration-not-checked"
+          >
+            Not checked
+          </p>
+
           <.ops_status
-            :if={!@drift_loading}
+            :if={!@drift_loading && @drift_error && @selected_schema}
             kind={drift_status_kind(@drift_result, @drift_error)}
             title={drift_status_title(@drift_result, @drift_error)}
             role={if @drift_error, do: "alert"}
           >
             {drift_status_copy(@drift_result, @drift_error)}
+            <.ops_disclosure summary="Check diagnostics" variant={:compact} class="mt-2">
+              <.ops_code_block>{inspect(@drift_error)}</.ops_code_block>
+            </.ops_disclosure>
           </.ops_status>
 
-          <.ops_signal_table :if={@drift_result && !@drift_loading}>
-            <thead>
-              <tr>
-                <th scope="col">Field</th>
-                <th scope="col">Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row" class="font-medium align-top">Summary</th>
-                <td>Index contract snapshot</td>
-              </tr>
-              <tr>
-                <th scope="row" class="font-medium align-top">Version · index</th>
-                <td class="font-mono text-ops-sm tabular-nums">
-                  version {@drift_result.version} · index {@drift_result.index}
-                </td>
-              </tr>
-              <tr>
-                <th scope="row" class="font-medium align-top">Dimension mismatches</th>
-                <td class="font-mono text-ops-sm tabular-nums">
-                  {drift_mismatch_count(@drift_result)} of {map_size(@drift_result.dimensions)}
-                </td>
-              </tr>
-            </tbody>
-          </.ops_signal_table>
-          <.ops_data_card
+          <div :if={@drift_result && !@drift_loading} class="space-y-2" role="status">
+            <p class="font-semibold">{drift_status_title(@drift_result, nil)}</p>
+            <p :if={drift_mismatch_count(@drift_result) > 0} class="text-base-content/80">
+              {drift_status_copy(@drift_result, nil)}
+            </p>
+          </div>
+
+          <.ops_disclosure
             :if={@drift_result && !@drift_loading}
-            title="Contract dimensions"
+            id={"index-configuration-details-#{@context_generation}-#{drift_mismatch_count(@drift_result) > 0}"}
+            summary="Comparison details"
+            open={drift_mismatch_count(@drift_result) > 0}
+            variant={:compact}
             class="mt-3"
+            data-testid="configuration-details"
+            phx-mounted={JS.ignore_attributes("open")}
           >
-            <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              <.ops_tone_chip
-                :for={{label, match?} <- drift_dimension_rows(@drift_result)}
-                kind={if match?, do: :success, else: :warning}
-                label={label}
-                value={if match?, do: "matches", else: "differs"}
-              />
+            <.ops_signal_table>
+              <thead>
+                <tr>
+                  <th scope="col">Field</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row" class="font-medium align-top">Summary</th>
+                  <td>Index configuration comparison</td>
+                </tr>
+                <tr>
+                  <th scope="row" class="font-medium align-top">Version · index</th>
+                  <td class="font-mono text-ops-sm tabular-nums">
+                    version {@drift_result.version} · index {@drift_result.index}
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row" class="font-medium align-top">Differences</th>
+                  <td class="font-mono text-ops-sm tabular-nums">
+                    {drift_mismatch_count(@drift_result)} of {map_size(@drift_result.dimensions)}
+                  </td>
+                </tr>
+              </tbody>
+            </.ops_signal_table>
+            <div class="mt-3">
+              <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                <.ops_tone_chip
+                  :for={{label, match?} <- drift_dimension_rows(@drift_result)}
+                  kind={if match?, do: :neutral, else: :warning}
+                  label={label}
+                  value={if match?, do: "matches", else: "differs"}
+                />
+              </div>
             </div>
-          </.ops_data_card>
+          </.ops_disclosure>
         </.ops_section>
       </.ops_panel>
 
@@ -1267,9 +1357,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         <:step
           :if={@selected_schema}
           navigate={OperatorSelection.path(@mount_path, "health", nil)}
-          hint="For the selected schema —"
+          hint="Across all configured schemas —"
         >
-          Inspect search health
+          Review search health
         </:step>
       </.ops_handoff>
 
@@ -1318,17 +1408,19 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp drift_status_kind(result, nil),
     do: if(drift_mismatch_count(result) == 0, do: :success, else: :warning)
 
-  defp drift_status_title(_result, error) when not is_nil(error), do: "Drift check failed"
-  defp drift_status_title(nil, nil), do: "Drift not loaded"
+  defp drift_status_title(_result, error) when not is_nil(error),
+    do: "Index configuration could not be checked"
+
+  defp drift_status_title(nil, nil), do: "Not checked"
 
   defp drift_status_title(result, nil) do
     if drift_mismatch_count(result) == 0,
-      do: "No contract drift detected",
-      else: "Contract drift detected"
+      do: "Index configuration matches",
+      else: "Index configuration differs"
   end
 
   defp drift_status_copy(_result, error) when not is_nil(error) do
-    "Reconcile above remains usable. Fix the drift check input or backend state, then reload contract drift. Reason: #{inspect(error)}"
+    "Refresh the configuration check to try again. You can still check sync status above."
   end
 
   defp drift_status_copy(nil, nil) do
@@ -1341,7 +1433,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     if mismatches == 0 do
       "Declared fields, filterable attributes, sortable attributes, faceting, and settings match this snapshot."
     else
-      "#{mismatches} contract #{if mismatches == 1, do: "dimension differs", else: "dimensions differ"} from the live index. Review the differences before promoting a target index."
+      "#{mismatches} configuration #{if mismatches == 1, do: "difference", else: "differences"} found. Review the comparison before promoting an index."
     end
   end
 

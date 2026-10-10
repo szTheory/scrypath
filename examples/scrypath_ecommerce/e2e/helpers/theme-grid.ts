@@ -65,8 +65,13 @@ export async function gotoSyncDrift(page: Page): Promise<void> {
   await page.goto("/admin/search/sync-drift");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
-  await page.getByRole("button", { name: "Check index contract" }).click();
-  await expect(page.getByText("Contract dimensions", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Check index configuration" }).click();
+  const configurationDetails = page.getByTestId("configuration-details");
+  await expect(configurationDetails.getByText("Comparison details", { exact: true })).toBeVisible();
+  if ((await configurationDetails.getAttribute("open")) === null) {
+    await configurationDetails.locator("summary").click();
+  }
+  await expect(configurationDetails.getByText("Index configuration comparison", { exact: true })).toBeVisible();
 }
 
 export async function gotoSearch(page: Page): Promise<void> {

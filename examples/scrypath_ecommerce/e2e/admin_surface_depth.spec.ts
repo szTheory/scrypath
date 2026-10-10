@@ -370,7 +370,7 @@ async function preparePopulatedPlaybooks(page: Page): Promise<void> {
 
   const basename = `surface-depth-${Date.now()}.json`;
   await page.getByRole("button", { name: "Save as playbook" }).click();
-  await page.getByLabel("Basename (.json)").fill(basename);
+  await page.getByLabel("Filename (.json)").fill(basename);
   await page.getByRole("button", { name: "Save playbook" }).click();
   await expect(page.getByText(new RegExp(`Saved playbook ${basename.replace(".", "\\.")}`))).toBeVisible();
 

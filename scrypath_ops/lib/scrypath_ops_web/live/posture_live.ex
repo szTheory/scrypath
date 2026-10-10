@@ -396,6 +396,8 @@ defmodule ScrypathOpsWeb.PostureLive do
   end
 
   defp health_row(assigns) do
+    assigns = assign(assigns, :failed_work?, observed_failed_work?(assigns.row))
+
     ~H"""
     <article
       data-testid="posture-row"
@@ -409,6 +411,9 @@ defmodule ScrypathOpsWeb.PostureLive do
         id={"posture-details-#{module_flat_name(@mod)}"}
         class="ops-schema-health"
         open={posture_details_open?(@row)}
+        phx-hook="OpsHealthDetails"
+        phx-mounted={JS.ignore_attributes("open")}
+        data-ops-required-open={if posture_details_open?(@row), do: "true", else: "false"}
       >
         <summary class="ops-schema-health__summary">
           <h3 class="ops-schema-health__heading">
@@ -526,21 +531,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                   </p>
                 </section>
               </div>
-              <.link
-                navigate={OperatorSelection.path(@mount_path, "failed-sync", @mod)}
-                class="ops-schema-action justify-self-start gap-2 text-base-content"
-                aria-label={"View failed sync work for #{module_flat_name(@mod)}"}
-                id={"posture-failed-sync-link-#{module_flat_name(@mod)}"}
-                data-testid="posture-failed-sync-link"
-              >
-                View failed sync work <.icon name="hero-arrow-right" class="size-4" />
-              </.link>
             <% {:error, reason} -> %>
-              <div class="ops-schema-signal-card__header">
-                <div class="min-w-0">
-                  <p class="mt-1 text-ops-sm text-error">fetch error: {inspect(reason)}</p>
-                </div>
-              </div>
               <div class="ops-schema-signal-card__groups">
                 <section
                   :for={source <- [:backend, :queue]}
@@ -563,21 +554,63 @@ defmodule ScrypathOpsWeb.PostureLive do
                   </p>
                 </section>
               </div>
+          <% end %>
+          <.link
+            :if={!@failed_work?}
+            navigate={OperatorSelection.path(@mount_path, "sync-drift", @mod)}
+            class="ops-schema-action justify-self-start gap-2 text-base-content"
+            aria-label={"Check sync status for #{module_flat_name(@mod)}"}
+            id={"posture-sync-link-#{module_flat_name(@mod)}"}
+            data-testid="posture-sync-link"
+          >
+            Check sync status <.icon name="hero-arrow-right" class="size-4" />
+          </.link>
+          <%!-- Keep the failed-work link under the same keyed parents when a refresh promotes it.
+          Moving it out of history replaces the focused node during a LiveView patch. --%>
+          <details
+            id={"posture-failed-history-#{module_flat_name(@mod)}"}
+            open={@failed_work?}
+            class={!@failed_work? && "ops-disclosure ops-disclosure-compact"}
+            phx-hook="OpsHealthDetails"
+            phx-mounted={JS.ignore_attributes("open")}
+            data-ops-required-open={if @failed_work?, do: "true", else: "false"}
+          >
+            <summary
+              hidden={@failed_work?}
+              class="cursor-pointer text-ops-body font-medium text-base-content"
+            >
+              Failed work history
+            </summary>
+            <div
+              id={"posture-failed-action-#{module_flat_name(@mod)}"}
+              class={!@failed_work? && "ops-disclosure-body mt-2 text-ops-body text-base-content/80"}
+            >
               <.link
                 navigate={OperatorSelection.path(@mount_path, "failed-sync", @mod)}
-                class="ops-schema-action justify-self-start gap-2 text-base-content"
+                class={
+                  if @failed_work?,
+                    do: "ops-schema-action justify-self-start gap-2 text-base-content",
+                    else: "link link-hover"
+                }
                 aria-label={"View failed sync work for #{module_flat_name(@mod)}"}
                 id={"posture-failed-sync-link-#{module_flat_name(@mod)}"}
                 data-testid="posture-failed-sync-link"
               >
-                View failed sync work <.icon name="hero-arrow-right" class="size-4" />
+                View failed sync work
+                <.icon :if={@failed_work?} name="hero-arrow-right" class="size-4" />
               </.link>
-          <% end %>
+            </div>
+          </details>
         </div>
       </details>
     </article>
     """
   end
+
+  defp observed_failed_work?({:ok, status}),
+    do: status.backend.failed != [] or status.queue.failed != []
+
+  defp observed_failed_work?(_row), do: false
 
   # Default-sort the per-schema table worst-first so a red/degraded schema lands at the
   # top of the scan path (B1). Rank: fetch error (0) → backend failures (1) → queue not
@@ -731,9 +764,9 @@ defmodule ScrypathOpsWeb.PostureLive do
 
     ~H"""
     <p class="text-ops-body text-base-content">
-      {@source_label} observation unavailable;
+      {@source_label} observation unavailable.
       <span :if={@reference && @reference.state}>last success retained from the previous check.</span>
-      fetch error: {inspect(@reason)}
+      Check {@source_label |> String.downcase()} configuration and availability, then refresh search health.
     </p>
     <.ops_time
       id={"ops-time-#{module_flat_name(@mod)}-retained-#{@source}-success"}
@@ -741,10 +774,12 @@ defmodule ScrypathOpsWeb.PostureLive do
       source_iso={state_source_iso(@reference && @reference.state)}
       copy={true}
       reference={@reference}
-      label="Last success retained"
+      label={if @reference && @reference.state, do: "Last success retained", else: "Last success"}
       empty="Not observed"
-      unavailable_reason={inspect(@reason)}
     />
+    <.ops_disclosure summary="Diagnostics" variant={:compact} class="mt-2">
+      <.ops_code_block variant={:embedded}>{inspect(@reason)}</.ops_code_block>
+    </.ops_disclosure>
     """
   end
 

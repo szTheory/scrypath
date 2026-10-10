@@ -42,12 +42,14 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       end)
 
       if Agent.get(:sync_drift_live_test_state, &Map.get(&1, :ready, false)) do
+        default_settings = %{
+          "searchableAttributes" => ["*"],
+          "filterableAttributes" => [],
+          "sortableAttributes" => []
+        }
+
         {:ok,
-         %{
-           "searchableAttributes" => ["*"],
-           "filterableAttributes" => [],
-           "sortableAttributes" => []
-         }}
+         Agent.get(:sync_drift_live_test_state, &Map.get(&1, :applied_settings, default_settings))}
       else
         {:error, :settings}
       end
@@ -128,13 +130,15 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   test "loads reconcile on mount and scopes drift errors separately", %{conn: conn} do
     {:ok, lv, html} = live(conn, ~p"/ops/sync-drift")
 
-    assert html =~ "queue status"
+    assert html =~ "Sync status"
 
     assert html =~
-             "Check sync status and compare the schema contract with its live index."
+             "Check sync progress and compare index configuration."
 
-    assert html =~ "Check current backend tasks and queued work for this schema."
-    assert html =~ "Index contract"
+    assert html =~ "Check backend tasks and queued work for this schema."
+    assert html =~ "Index configuration"
+    assert has_element?(lv, "[data-testid=configuration-not-checked]", "Not checked")
+    refute html =~ "Drift not loaded"
     assert html =~ "sdv_ops_post_a"
     refute html =~ ":settings"
 
@@ -143,15 +147,83 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     # again flushes the deferred read and surfaces the drift result.
     loading_html =
       lv
-      |> element("button", "Check index contract")
+      |> element("button", "Check index configuration")
       |> render_click()
 
-    assert loading_html =~ "Loading contract drift"
+    assert loading_html =~ "Checking index configuration"
 
     html2 = render(lv)
 
     assert html2 =~ ":settings"
     assert html2 =~ "sdv_ops_post_a"
+    assert has_element?(lv, "[role=alert]", "Index configuration could not be checked")
+    assert has_element?(lv, "details:not([open]) summary", "Check diagnostics")
+    assert has_element?(lv, "#sync-work-status", "No pending or failed sync work found")
+  end
+
+  test "matching configuration keeps comparison details optional and does not claim freshness", %{
+    conn: conn
+  } do
+    Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
+    {:ok, view, _} = live(conn, ~p"/ops/sync-drift")
+
+    view |> element("button[phx-click=load_drift]") |> render_click()
+    html = render(view)
+
+    assert html =~ "Index configuration matches"
+    assert html =~ "This does not check document freshness"
+    assert has_element?(view, "details[data-testid=configuration-details]:not([open])")
+    assert has_element?(view, "details[data-testid=configuration-details]", "sdv_ops_post_a")
+    refute html =~ "ops-tone-chip ops-tone-success"
+  end
+
+  test "configuration differences open their comparison without declaring document failure", %{
+    conn: conn
+  } do
+    Agent.update(:sync_drift_live_test_state, fn state ->
+      state
+      |> Map.put(:ready, true)
+      |> Map.put(:applied_settings, %{
+        "searchableAttributes" => ["*"],
+        "filterableAttributes" => ["category"],
+        "sortableAttributes" => []
+      })
+    end)
+
+    {:ok, view, _} = live(conn, ~p"/ops/sync-drift")
+    view |> element("button[phx-click=load_drift]") |> render_click()
+    html = render(view)
+
+    assert html =~ "Index configuration differs"
+    assert has_element?(view, "details[data-testid=configuration-details][open]")
+
+    assert has_element?(
+             view,
+             "details[data-testid=configuration-details]",
+             "filterable attributes"
+           )
+
+    refute html =~ "Documents are stale"
+  end
+
+  test "pending work remains visible before optional sync diagnostics and health return is overall",
+       %{conn: conn} do
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [
+      %{
+        "uid" => 7,
+        "status" => "enqueued",
+        "type" => "documentAdditionOrUpdate",
+        "indexUid" => "sdv_ops_post_b"
+      }
+    ])
+
+    {:ok, view, html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
+    assert has_element?(view, "#sync-work-status", "Sync work is pending")
+    assert has_element?(view, "details:not([open]) summary", "Sync details")
+    assert has_element?(view, "a[href='/ops/health']", "Review search health")
+    assert html =~ "Across all configured schemas"
+    refute html =~ "For the selected schema"
+    refute html =~ "No pending or failed sync work found"
   end
 
   test "swap live rechecks current prerequisites and refuses a stale contract read" do

@@ -33,6 +33,33 @@ const OpsRefreshButton = {
   }
 }
 
+// Ignore `open` during patches so a focused descendant is never briefly hidden.
+// Keep manual expansion, while automatic expansion ends when the observation clears
+// unless closing would hide the currently focused control.
+const OpsHealthDetails = {
+  mounted() {
+    this.manuallyOpen = false
+    this.onSummaryClick = event => {
+      const summary = this.el.querySelector(":scope > summary")
+      const activated = event.target instanceof Element ? event.target.closest("summary") : null
+      if (activated === summary && !event.defaultPrevented) {
+        // The native click (including keyboard activation) toggles after this handler.
+        this.manuallyOpen = !this.el.open
+      }
+    }
+    this.el.addEventListener("click", this.onSummaryClick)
+    this.syncOpenState()
+  },
+  updated() { this.syncOpenState() },
+  destroyed() { this.el.removeEventListener("click", this.onSummaryClick) },
+  syncOpenState() {
+    const summary = this.el.querySelector(":scope > summary")
+    const focused = document.activeElement
+    const contentFocused = this.el.contains(focused) && !summary?.contains(focused)
+    this.el.open = this.el.dataset.opsRequiredOpen === "true" || this.manuallyOpen || contentFocused
+  }
+}
+
 // Info flashes are brief confirmations; errors stay visible until dismissed.
 const OpsToast = {
   mounted() { this.scheduleDismiss() },
@@ -752,4 +779,4 @@ const OpsHelp = {
   }
 }
 
-export {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsTimestampCopy, OpsToast, OpsHelp}
+export {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsHealthDetails, OpsTimestampCopy, OpsToast, OpsHelp}

@@ -52,8 +52,8 @@ Primary shell navigation under `/ops` is grouped by the job the operator brought
 
 The surfaces thread into two task groups — **Recover** (health → failed sync → sync drift) and **Explore** (search → playbooks) — and three named loops, each a hub-and-spoke trip from the Control Room. Within a group the steps are sequential; the primary shell nav stays free so a power user is never trapped.
 
-- **Incident-response loop** (on-call): Control Room verdict (degraded) → Search health (which schemas?) → Failed sync work (why? retry) → Sync and drift (did it stick?) → Control Room (verdict green). The loop closes on the verdict flipping green — that round-trip is the success signal.
-- **Ship-a-change preflight loop** (search owner / maintainer): Control Room ("shipping a change") → Sync and drift (refresh sync status → check the index contract) → optionally open **Advanced: index promotion** → re-check Search health.
+- **Incident-response loop** (on-call): Control Room → Search health → the affected schema's next action. Failed work leads to Failed sync work; pending, clear or unavailable observations lead to Sync and drift. Verify recovery against the correlated task and active-index document observation, then return to overall health. A quiet health summary or empty failed-work list alone does not establish that recovery completed.
+- **Ship-a-change preflight loop** (search owner / maintainer): Control Room ("shipping a change") → Sync and drift (refresh sync status → check index configuration) → optionally open **Advanced: index promotion** → re-check Search health.
 - **Explore → capture loop** (search owner): Control Room ("explore") → Search (probe) → capture → Playbooks (save/run) → back to Search.
 
 Two shared components carry this structure so it stays consistent (principle of least surprise):
@@ -63,11 +63,15 @@ Two shared components carry this structure so it stays consistent (principle of 
 
 ### Sync recovery and index promotion
 
-Sync and drift keeps the ordinary recovery checks usable on their own: refresh sync and queue status, then run the index contract check. A prior failed-sync event remains useful incident history and continues to block index promotion until it is resolved; it does not prevent the operator from checking whether newly accepted recovery work reached the backend and active index.
+Sync and drift keeps the ordinary recovery checks usable on their own: refresh sync and queue status, then check index configuration. A prior failed-sync event remains useful incident history and continues to block index promotion until it is resolved; it does not prevent the operator from checking whether newly accepted recovery work reached the backend and active index.
 
 Index promotion is a separate advanced action. Its readiness and server-side guard use the same current, schema-and-index scoped checks. A confirmation names the schema, live index, target index, and alias change. Backend task acceptance is shown as **accepted** with its exact task ID; only that task's terminal success is shown as **Index swap completed**. Timeout or failure keeps the task identity visible and offers check refresh without submitting another swap.
 
-Use **backend task** for Meilisearch work and **queue job** for Oban work. A clean index contract describes declared settings and the live index contract; it does not prove that projected documents are present. Recovery verification is based on the correlated task and active-index document observation described by the incident flow.
+Use **backend task** for Meilisearch work and **queue job** for Oban work. Matching **index configuration** means declared fields and settings match the live index; it does not prove that indexed documents are current. Technical APIs retain their established contract names. Recovery verification is based on the correlated task and active-index document observation described by the incident flow.
+
+### Common-path hierarchy
+
+Search has one Run action. Result limits live in Search options; completed results and saved-check captures identify the executed query and schemas even while the form is edited. Playbooks lead with the catalog and selected preview, identify the exact loaded file or imported input, and keep less frequent file actions under each row's named Actions disclosure. Import and workspace details remain available without competing with a loaded preview. Required errors and next actions stay visible; successful technical comparisons and file history can be disclosed. Apply the shared [operator UX rubric](../../.planning/reference/OPERATOR-UX-RUBRIC.md) when refining these paths.
 
 | Job | Primary persona | Nav label | Route | Scrypath / doc / Mix follow-up |
 | --- | --- | --- | --- | --- |

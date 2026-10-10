@@ -663,7 +663,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       <.ops_toolbar class="items-end gap-4">
         <.ops_page_header
           title={@page_title}
-          subtitle="Inspect failed queue/backend work by newest evidence first. Retry only after the failure class and row evidence make sense."
+          subtitle="Review the failure reason before retrying. Some failures need a configuration or data fix first."
         />
         <.ops_refresh_control
           id="failed-sync-refresh"
@@ -768,9 +768,15 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             class="mt-3"
             data-testid="failed-sync-empty-hero"
           >
-            No failed work was returned by this inspection. To confirm recovery, check sync and drift.
+            No failed work was returned by this inspection. Check sync status to see whether work is still pending.
             <:actions>
-              <.ops_button phx-click="refresh" variant={:default}>
+              <.ops_link_button
+                navigate={OperatorSelection.path(@mount_path, "sync-drift", @selected_schema)}
+                variant={:primary}
+              >
+                Check sync status
+              </.ops_link_button>
+              <.ops_button phx-click="refresh" variant={:ghost}>
                 Refresh this view
               </.ops_button>
             </:actions>
@@ -872,12 +878,12 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         </.ops_disclosure>
       </.ops_panel>
 
-      <.ops_handoff :if={@inspection && @selected_schema}>
+      <.ops_handoff :if={@inspection && @inspection.counts.total > 0 && @selected_schema}>
         <:step
           navigate={OperatorSelection.path(@mount_path, "sync-drift", @selected_schema)}
-          hint="When the queue's clear —"
+          hint="To verify sync —"
         >
-          Check sync and drift
+          Check sync status
         </:step>
       </.ops_handoff>
 

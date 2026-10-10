@@ -351,7 +351,15 @@ for (const entrypoint of ENTRYPOINTS) {
 
     await refresh.evaluate((button) => button.setAttribute("phx-value-scenario", "source-error"));
     await refresh.click();
-    await expect(row).toContainText("fetch error: :fixture_unavailable");
+    const backend = row.locator(".ops-signal-group").first();
+    await expect(backend.locator(":scope > p")).toBeVisible();
+    await expect(backend.locator(":scope > p")).toContainText("Backend observation unavailable");
+    const diagnostics = backend.locator("details.ops-disclosure");
+    await expect(diagnostics.locator("pre")).not.toBeVisible();
+    await diagnostics.locator("summary").click();
+    await expect(diagnostics.locator("pre")).toBeVisible();
+    await expect(diagnostics.locator("pre")).toHaveText(":fixture_unavailable");
+    await diagnostics.locator("summary").click();
     await expect(row).toContainText("last success retained from the previous check");
     const retained = row.locator(".ops-time").first();
     await expect(retained.locator("time.ops-time__value")).toHaveText("2 days ago");

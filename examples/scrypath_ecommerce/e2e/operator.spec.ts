@@ -63,6 +63,13 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await page.getByRole("link", { name: "Review Search health" }).click();
   await expect(page.getByRole("heading", { name: "Search health", exact: true })).toBeVisible();
   await waitForLiveConnected(page);
+  const variantHealth = page.getByTestId("posture-row").filter({ hasText: "ScrypathEcommerce.Catalog.Variant" });
+  const variantDetails = variantHealth.locator("details.ops-schema-health");
+  if (!(await variantDetails.evaluate(node => (node as HTMLDetailsElement).open))) {
+    await variantHealth.locator("summary.ops-schema-health__summary").click();
+  }
+  const failedHistory = variantHealth.locator("details.ops-disclosure").filter({ hasText: "Failed work history" });
+  if (await failedHistory.count()) await failedHistory.locator("summary").click();
   const variantHandoff = page.getByRole("link", { name: "View failed sync work for ScrypathEcommerce.Catalog.Variant", exact: true });
   await expect(variantHandoff).toBeVisible();
   await variantHandoff.click();
@@ -181,11 +188,16 @@ test("operator promotes only this returned task pair and unique target document"
 
   await page.goto("/admin/search");
   await waitForLiveConnected(page);
-  await page.getByRole("link", { name: "Pre-flight sync drift" }).click();
+  await page.getByRole("link", { name: "Check sync and drift" }).click();
   await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
   await waitForLiveConnected(page);
-  await page.getByRole("button", { name: "Check index contract" }).click();
-  await expect(page.getByText("Contract dimensions", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Check index configuration" }).click();
+  const configurationDetails = page.getByTestId("configuration-details");
+  await expect(configurationDetails.getByText("Comparison details", { exact: true })).toBeVisible();
+  if ((await configurationDetails.getAttribute("open")) === null) {
+    await configurationDetails.locator("summary").click();
+  }
+  await expect(configurationDetails.getByText("Index configuration comparison", { exact: true })).toBeVisible();
   const advanced = page.locator("details").filter({ has: page.locator("summary", { hasText: "Advanced: index promotion" }) });
   await advanced.locator("summary").click();
   await expect(advanced.getByRole("button", { name: "Promote target index" })).toBeEnabled();

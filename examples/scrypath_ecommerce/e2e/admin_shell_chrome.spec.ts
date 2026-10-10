@@ -76,6 +76,15 @@ function cleanupShellChromePlaybooks(): void {
   }
 }
 
+async function openPlaybookActions(row: Locator): Promise<void> {
+  const actions = row.locator('details[id^="playbook-actions-"]');
+  await expect(actions).toBeVisible();
+  if ((await actions.getAttribute("open")) === null) {
+    await actions.locator("summary").click();
+  }
+  await expect(actions).toHaveAttribute("open", "");
+}
+
 async function newThemedPage(
   browser: Browser,
   mode: ThemeMode,
@@ -358,7 +367,7 @@ async function triggerSearchSaveFlash(page: Page): Promise<void> {
 
   const basename = `${SHELL_PLAYBOOK_PREFIX}${Date.now()}.json`;
   await page.getByRole("button", { name: "Save as playbook" }).click();
-  await page.getByLabel("Basename (.json)").fill(basename);
+  await page.getByLabel("Filename (.json)").fill(basename);
   await page.getByRole("button", { name: "Save playbook" }).click();
   await expect(page.locator("#flash-group [role='alert']:not([hidden])")).toContainText(
     `Saved playbook ${basename}.`
@@ -397,7 +406,8 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
 
     const row = page.locator(".ops-object-item").filter({ hasText: basename });
     await expect(row).toHaveCount(1);
-    const renameTrigger = row.getByRole("button", { name: "Rename" });
+    await openPlaybookActions(row);
+    const renameTrigger = row.getByRole("button", { name: `Rename ${basename}`, exact: true });
 
     await pressCommandPaletteShortcut(page);
     await expect(page.locator("#ops-cmdk")).toBeVisible();
@@ -430,9 +440,10 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
     await expect(renameTrigger).toBeFocused();
 
     await expect(page.locator(".ops-header")).not.toHaveAttribute("inert", "");
+    await openPlaybookActions(row);
     await page.getByRole("button", { name: "Open navigation" }).click();
     await expect(page.locator("#ops-mobile-nav")).toBeVisible();
-    await row.getByRole("button", { name: "Duplicate" }).evaluate((element: HTMLButtonElement) => element.click());
+    await row.getByRole("button", { name: `Duplicate ${basename}`, exact: true }).evaluate((element: HTMLButtonElement) => element.click());
     const duplicate = page.locator("#duplicate-playbook-modal");
     const duplicateInput = page.locator("#dup-to-name-input");
     await expect(duplicateInput).toBeFocused();
@@ -449,9 +460,10 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
     await expect(duplicateInput).toBeFocused();
     await duplicate.getByRole("button", { name: "Cancel duplicate" }).click();
     await expect(duplicate).toBeHidden();
-    await expect(row.getByRole("button", { name: "Duplicate" })).toBeFocused();
+    await expect(row.getByRole("button", { name: `Duplicate ${basename}`, exact: true })).toBeFocused();
 
-    const deleteTrigger = row.getByRole("button", { name: "Delete" });
+    await openPlaybookActions(row);
+    const deleteTrigger = row.getByRole("button", { name: `Delete ${basename}`, exact: true });
     await openShortcutSheet(page);
     await deleteTrigger.evaluate((element: HTMLButtonElement) => element.click());
     await expect(page.locator("#ops-cheatsheet")).toBeHidden();
@@ -474,7 +486,8 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
     await expect(successor).toBeFocused();
     await page.reload();
     await expect(row).toBeVisible();
-    await row.getByRole("button", { name: "Delete" }).click();
+    await openPlaybookActions(row);
+    await row.getByRole("button", { name: `Delete ${basename}`, exact: true }).click();
     await expect(deleteModal.getByRole("button", { name: "Cancel delete" })).toBeFocused();
     const afterDelete = await deleteModal.getAttribute("data-ops-modal-successor");
     await page.locator("#delete-confirm-input").fill(basename);
@@ -492,7 +505,8 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
     writeFileSync(join(PLAYBOOK_WORKSPACE_DIR, basename), "{}\n");
     await gotoPlaybooks(page);
     const row = page.locator(".ops-object-item").filter({ hasText: basename });
-    await row.getByRole("button", { name: "Rename", exact: true }).click();
+    await openPlaybookActions(row);
+    await row.getByRole("button", { name: `Rename ${basename}`, exact: true }).click();
     const modal = page.locator("#rename-playbook-modal");
     const input = page.locator("#rename-new-name-input");
     await input.fill("invalid/name.json");
@@ -535,7 +549,7 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
           "Failed Sync": page.getByTestId("failed-sync-retry").first(),
           "Sync/Drift": page.getByRole("button", { name: "Refresh sync status", exact: true }),
           "Search": page.getByRole("button", { name: "Run search", exact: true }),
-          "Playbooks": page.getByRole("button", { name: "Load preview", exact: true }).first()
+          "Playbooks": page.getByRole("button", { name: /^Load preview / }).first()
         }[surface.name]!;
         await primary.click({ trial: true });
         await assertReadableControl(primary, `${surface.name} common action`, 14, 40);

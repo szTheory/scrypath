@@ -272,6 +272,8 @@
     gap: var(--spacing-ops-4);
   }
 
+  .ops-command-hint__compact { display: none; }
+
   @media (max-width: 640px) {
     .ops-header__inner {
       display: grid;
@@ -292,6 +294,8 @@
     }
 
     .ops-header .ops-command-hint .ops-kbd { display: none; }
+    .ops-header .ops-command-hint__full { display: none; }
+    .ops-header .ops-command-hint__compact { display: inline; }
   }
 
   .ops-sidebar {
@@ -623,6 +627,10 @@
   .ops-help__trigger:hover {
     color: var(--color-base-content);
     background: var(--ops-surface-2);
+  }
+
+  @media (max-width: 640px) {
+    .ops-help__trigger { width: 44px; height: 44px; }
   }
 
   .ops-help__content {
@@ -1043,6 +1051,9 @@
   .ops-time__disclosure > summary {
     cursor: pointer;
     user-select: none;
+    display: flex;
+    align-items: center;
+    min-height: 24px;
   }
 
   .ops-time__disclosure code {
@@ -2606,6 +2617,17 @@
 }
 
 /* Text links must remain readable above daisyUI's utility-layer primary color. */
+.ops-table-scroll thead th {
+  color: var(--color-base-content);
+}
+
+@media (max-width: 640px) {
+  .ops-segmented-btn,
+  .ops-time__disclosure > summary,
+  .ops-time__copy,
+  .ops-disclosure-compact > summary { min-height: 44px; }
+}
+
 .ops-shell a.link-primary {
   color: var(--color-base-content);
   text-decoration: underline;

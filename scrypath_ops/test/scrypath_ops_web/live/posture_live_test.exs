@@ -65,6 +65,10 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     end
   end
 
+  defmodule StatusQueueInspector do
+    def list_jobs(_schema, config), do: {:ok, Keyword.get(config, :oban_jobs, [])}
+  end
+
   setup do
     prev_allow = Application.get_env(:scrypath_ops, :schema_allowlist)
     prev_backend = Application.get_env(:scrypath_ops, :backend)
@@ -158,7 +162,8 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     {:ok, lv, html} = live(conn, ~p"/ops/health")
 
     assert html =~ "data-testid=\"posture-row\""
-    assert html =~ "fetch error: :boom"
+    assert has_element?(lv, ".ops-disclosure:not([open])", ":boom")
+    refute has_element?(lv, ".ops-signal-group > p", ":boom")
     refute has_element?(lv, "[data-testid='posture-next-checks']")
     refute has_element?(lv, "#ops-main a[href='/ops/failed-sync']")
     assert has_element?(lv, "[data-testid='posture-failed-sync-link']")
@@ -203,6 +208,66 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
            )
   end
 
+  test "failed work promotion keeps the same link parents and requires open details", %{
+    conn: conn
+  } do
+    {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health")
+    schema = "ScrypathOps.Test.OpsPostB"
+    history = "[id='posture-failed-history-#{schema}']"
+    action = "#{history} > [id='posture-failed-action-#{schema}'] > a"
+    schema_details = "[id='posture-details-#{schema}']"
+
+    assert has_element?(
+             lv,
+             "#{history}:not([open]) > summary:not([hidden])",
+             "Failed work history"
+           )
+
+    assert has_element?(lv, "#{action}[id='posture-failed-sync-link-#{schema}']")
+    refute has_element?(lv, "#{action}.ops-schema-action")
+
+    for disclosure <- [history, schema_details] do
+      assert has_element?(
+               lv,
+               "#{disclosure}[phx-hook='OpsHealthDetails'][data-ops-required-open='false']"
+             )
+
+      mounted =
+        lv
+        |> element(disclosure)
+        |> render()
+        |> LazyHTML.from_fragment()
+        |> LazyHTML.query("details")
+        |> LazyHTML.attribute("phx-mounted")
+        |> hd()
+        |> Jason.decode!()
+
+      assert mounted == [["ignore_attrs", %{"attrs" => ["open"]}]]
+    end
+
+    render_click(lv, "refresh", %{"scenario" => "failed"})
+
+    assert has_element?(lv, "#{history}[open][data-ops-required-open='true'] > summary[hidden]")
+    assert has_element?(lv, "#{schema_details}[open][data-ops-required-open='true']")
+
+    assert has_element?(
+             lv,
+             "#{action}.ops-schema-action[id='posture-failed-sync-link-#{schema}']"
+           )
+
+    assert has_element?(lv, "#{action}[href='/ops/phase173/failed-sync?schema=#{schema}']")
+    refute has_element?(lv, "[id='posture-sync-link-#{schema}']")
+
+    links =
+      lv
+      |> render()
+      |> LazyHTML.from_document()
+      |> LazyHTML.query("[id='posture-failed-sync-link-#{schema}']")
+      |> LazyHTML.to_tree()
+
+    assert length(links) == 1
+  end
+
   test "fleet rollup reports failed jobs rather than the number of visible queues", %{conn: conn} do
     {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=failed")
 
@@ -244,6 +309,8 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     refute has_element?(lv, ".ops-signal-metrics dt", "Retrying")
     assert has_element?(lv, "[data-testid='schema-health-status']", "No pending or failed work")
     assert has_element?(lv, ".ops-time__exact", "2026-10-04T13:02:05.123456-04:00")
+    assert has_element?(lv, ".ops-disclosure:not([open]) summary", "Failed work history")
+    refute has_element?(lv, "a.ops-schema-action[href*='/failed-sync']")
 
     render_click(lv, "refresh", %{"scenario" => "source-error"})
     assert has_element?(lv, ".ops-schema-health[open]")
@@ -262,11 +329,147 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert has_element?(lv, ".ops-schema-health[open] summary", "1 backend task pending")
     assert has_element?(lv, ".ops-signal-metrics dt", "Pending")
 
+    assert has_element?(
+             lv,
+             "[id='posture-sync-link-ScrypathOps.Test.OpsPostB'][href='/ops/phase173/sync-drift?schema=ScrypathOps.Test.OpsPostB']",
+             "Check sync status"
+           )
+
     render_click(lv, "refresh", %{"scenario" => "retrying"})
     refute has_element?(lv, ".ops-metric")
     assert has_element?(lv, ".ops-schema-health[open] summary", "2 queue jobs retrying")
     assert has_element?(lv, ".ops-signal-metrics dt", "Retrying")
     refute has_element?(lv, ".ops-signal-metrics dt", "Pending")
+
+    assert has_element?(
+             lv,
+             "[id='posture-sync-link-ScrypathOps.Test.OpsPostB'][href='/ops/phase173/sync-drift?schema=ScrypathOps.Test.OpsPostB']",
+             "Check sync status"
+           )
+  end
+
+  test "pending backend work routes the exact non-first schema to sync verification", %{
+    conn: conn
+  } do
+    Agent.update(:posture_live_test_state, &Map.put(&1, :fail_a?, false))
+
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [
+      %{
+        "uid" => 801,
+        "status" => "processing",
+        "type" => "documentAdditionOrUpdate",
+        "indexUid" => "postlv_ops_post_b"
+      }
+    ])
+
+    {:ok, lv, _html} = live(conn, ~p"/ops/health")
+    row = "[id='posture-ScrypathOps.Test.OpsPostB']"
+
+    assert has_element?(lv, "#{row} summary", "1 backend task pending")
+
+    assert has_element?(
+             lv,
+             "#{row} a.ops-schema-action[href='/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB']",
+             "Check sync status"
+           )
+
+    assert has_element?(
+             lv,
+             "#{row} .ops-disclosure:not([open]) a[href='/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB']"
+           )
+
+    refute has_element?(lv, "#{row} a.ops-schema-action[href*='/failed-sync']")
+  end
+
+  for {state, summary} <- [
+        {"available", "1 queue job pending"},
+        {"retryable", "1 queue job retrying"}
+      ] do
+    test "queue #{state} work uses sync verification while failed history stays optional", %{
+      conn: conn
+    } do
+      Agent.update(:posture_live_test_state, &Map.put(&1, :fail_a?, false))
+      Application.put_env(:scrypath_ops, :sync_mode, :oban)
+      Application.put_env(:scrypath_ops, :oban, StatusQueueInspector)
+      Application.put_env(:scrypath_ops, :oban_inspector, StatusQueueInspector)
+      Application.put_env(:scrypath_ops, :oban_queue, :search_sync)
+      Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
+      Application.put_env(:scrypath_ops, :oban_jobs, [%{id: 802, state: unquote(state)}])
+
+      {:ok, lv, _html} = live(conn, ~p"/ops/health")
+      row = "[id='posture-ScrypathOps.Test.OpsPostB']"
+
+      assert has_element?(lv, "#{row} summary", unquote(summary))
+
+      assert has_element?(
+               lv,
+               "#{row} a.ops-schema-action[href='/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB']",
+               "Check sync status"
+             )
+
+      assert has_element?(lv, "#{row} .ops-disclosure:not([open]) summary", "Failed work history")
+      refute has_element?(lv, "#{row} a.ops-schema-action[href*='/failed-sync']")
+    end
+  end
+
+  test "observed queue failures take precedence over pending backend work", %{conn: conn} do
+    Agent.update(:posture_live_test_state, &Map.put(&1, :fail_a?, false))
+    Application.put_env(:scrypath_ops, :sync_mode, :oban)
+    Application.put_env(:scrypath_ops, :oban, StatusQueueInspector)
+    Application.put_env(:scrypath_ops, :oban_inspector, StatusQueueInspector)
+    Application.put_env(:scrypath_ops, :oban_queue, :search_sync)
+    Application.put_env(:scrypath_ops, :oban_jobs, [%{id: 803, state: "discarded"}])
+
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [
+      %{
+        "uid" => 804,
+        "status" => "processing",
+        "type" => "documentAdditionOrUpdate",
+        "indexUid" => "postlv_ops_post_b"
+      }
+    ])
+
+    {:ok, lv, _html} = live(conn, ~p"/ops/health")
+    row = "[id='posture-ScrypathOps.Test.OpsPostB']"
+
+    assert has_element?(lv, "#{row} summary", "1 queue job failed")
+    assert has_element?(lv, "#{row} summary", "1 backend task pending")
+
+    assert has_element?(
+             lv,
+             "#{row} a.ops-schema-action[href='/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB']",
+             "View failed sync work"
+           )
+
+    refute has_element?(lv, "#{row} [data-testid='posture-sync-link']")
+    refute has_element?(lv, "#{row} .ops-disclosure summary", "Failed work history")
+  end
+
+  test "unavailable health keeps uncertainty visible and diagnostics disclosed at the exact scope",
+       %{
+         conn: conn
+       } do
+    {:ok, lv, _html} = live(conn, ~p"/ops/health")
+    row = "[id='posture-ScrypathOps.Test.OpsPostA']"
+
+    assert has_element?(lv, "#{row} summary", "Backend status unavailable")
+    assert has_element?(lv, "#{row} .ops-signal-group > p", "Backend observation unavailable")
+    assert has_element?(lv, "#{row} .ops-signal-group > p", "then refresh search health")
+    refute has_element?(lv, "#{row} .ops-signal-group > p", ":boom")
+    refute has_element?(lv, "#{row} .ops-time__reason")
+    assert has_element?(lv, "#{row} .ops-disclosure:not([open])", ":boom")
+
+    assert has_element?(
+             lv,
+             "#{row} a.ops-schema-action[href='/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA']",
+             "Check sync status"
+           )
+
+    refute has_element?(
+             lv,
+             "#{row} [data-testid='schema-health-status']",
+             "No pending or failed work"
+           )
   end
 
   test "manual sync does not turn an unused queue into an unavailable check", %{conn: conn} do
@@ -616,5 +819,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert html =~ "invalid_configuration"
     assert html =~ "Backend observation unavailable"
     assert html =~ "Queue observation unavailable"
+    assert html =~ "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA"
+    assert html =~ "Check sync status"
   end
 end

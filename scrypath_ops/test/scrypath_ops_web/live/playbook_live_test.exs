@@ -57,13 +57,10 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     :ok
   end
 
-  test "mount shows honesty panel", %{conn: conn} do
+  test "mount keeps query safety advice visible without assuming the environment", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
-    html = render(view)
-    assert html =~ "Non-production playbook workspace"
-
-    assert html =~
-             "Use saved, repeatable search checks: preview, run, import, or save the next one."
+    assert has_element?(view, "#playbook-honesty-panel", "Keep secrets and personal data")
+    refute has_element?(view, "#playbook-honesty-panel", "Non-production")
   end
 
   test "empty workspace shows the empty hero and import anchor", %{conn: conn} do
@@ -85,11 +82,13 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
         else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_workspace)
     end)
 
-    {:ok, _view, html} = live(conn, ~p"/ops/playbooks")
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
 
-    assert html =~ ~s(data-testid="playbooks-empty-hero")
-    assert html =~ "No playbooks yet"
-    assert html =~ ~s(href="#playbook-import")
+    assert has_element?(view, "[data-testid='playbooks-empty-hero']", "No playbooks yet")
+    assert has_element?(view, "a[href='#playbook-import']")
+    assert has_element?(view, "details#playbook-import[open] #playbook-upload-form")
+    assert has_element?(view, "#playbook-workspace-details", dir)
+    refute has_element?(view, "#playbook-workspace-details[open]")
   end
 
   test "upload and paste controls have persistent labels and format help", %{conn: conn} do
@@ -140,6 +139,27 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert html =~ "one.json"
     assert html =~ "two.json"
 
+    row_id = Base.url_encode64("one.json", padding: false)
+    actions = "#playbook-actions-#{row_id}"
+
+    assert has_element?(
+             view,
+             "#playbook-primary-#{row_id}[aria-label='Load preview of one.json']"
+           )
+
+    assert has_element?(view, "#{actions} > summary[aria-label='Actions for one.json']")
+    refute has_element?(view, "#{actions}[open]")
+    refute has_element?(view, "#{actions} [role='menu']")
+
+    for {event, label} <- [
+          {"run_now", "Run one.json without preview"},
+          {"dup_open", "Duplicate one.json"},
+          {"rename_open", "Rename one.json"},
+          {"request_delete", "Delete one.json"}
+        ] do
+      assert has_element?(view, "#{actions} button[phx-click='#{event}'][aria-label='#{label}']")
+    end
+
     view
     |> element("button[phx-click='rename_open'][phx-value-name='one.json']")
     |> render_click()
@@ -151,6 +171,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert html =~ ~s(aria-label="Cancel rename")
     assert html =~ ~s(for="rename-new-name-input")
     assert html =~ ~s(data-ops-modal-initial-focus="#rename-new-name-input")
+    assert has_element?(view, "#rename-playbook-modal-description", "Rename one.json")
 
     view
     |> form("form[phx-change='rename_change']", %{"new_name" => "invalid/name.json"})
@@ -162,7 +183,12 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     |> form("form[phx-submit='rename_submit']", %{"new_name" => "invalid/name.json"})
     |> render_submit()
 
-    assert has_element?(view, "#rename-playbook-modal [role='alert']", "Filename")
+    assert has_element?(
+             view,
+             "#rename-playbook-modal [role='alert']",
+             "Filename must end in .json"
+           )
+
     assert has_element?(view, "#rename-new-name-input[aria-invalid='true']")
 
     assert has_element?(
@@ -172,6 +198,13 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
 
     render_click(view, "rename_cancel", %{})
     render_click(view, "dup_open", %{"name" => "one.json"})
+
+    assert has_element?(
+             view,
+             "#duplicate-playbook-modal-description",
+             "Create a copy of one.json"
+           )
+
     refute has_element?(view, "#duplicate-playbook-modal [role='alert']")
     view |> form("form[phx-submit='dup_submit']", %{"to_name" => "two.json"}) |> render_submit()
     assert has_element?(view, "#duplicate-playbook-modal [role='alert']", "already in use")
@@ -184,6 +217,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
 
     html = render(view)
     assert html =~ "This cannot be undone."
+    assert has_element?(view, "#delete-playbook-modal-description", "one.json")
     assert html =~ ~s(data-ops-modal-initial-focus="[data-ops-modal-cancel]")
 
     assert html =~
@@ -210,6 +244,353 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
       |> render_submit()
 
     assert html =~ "data-testid=\"playbook-preview-marker\""
+  end
+
+  test "invalid imports retain loaded context and a valid paste replaces its source and results",
+       %{conn: conn} do
+    dir = configure_workspace("import_identity")
+    File.write!(Path.join(dir, "saved.json"), search_playbook_json("saved query"))
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    render_click(view, "load", %{"name" => "saved.json"})
+    assert has_element?(view, "#playbook-run-origin", "Loaded file: saved.json")
+    assert has_element?(view, "#playbook-run[aria-label='Run playbook: Loaded file: saved.json']")
+    assert has_element?(view, "#playbook-preview ~ #playbook-import")
+    refute has_element?(view, "#playbook-import[open]")
+
+    render_click(view, "run", %{})
+    render_async(view)
+    assert has_element?(view, "#playbook-preview", "Run finished")
+
+    for invalid <- [
+          "{",
+          Jason.encode!(%{"playbook_format" => 1, "mode" => "unknown"}),
+          String.duplicate(" ", 256_001)
+        ] do
+      view |> form("#playbook-paste-form", %{json: invalid}) |> render_submit()
+      assert has_element?(view, "#playbook-run-origin", "Loaded file: saved.json")
+      assert has_element?(view, "#playbook-preview", "saved query")
+    end
+
+    view
+    |> form("#playbook-paste-form", %{json: search_playbook_json("new query")})
+    |> render_submit()
+
+    assert has_element?(view, "#playbook-run-origin", "Imported from pasted JSON")
+
+    assert has_element?(
+             view,
+             "#playbook-run[aria-label='Run playbook: Imported from pasted JSON']"
+           )
+
+    assert has_element?(view, "#playbook-preview", "new query")
+    refute has_element?(view, "#playbook-preview", "Run finished")
+    refute has_element?(view, "#playbook-run-origin", "saved.json")
+
+    assigns = :sys.get_state(view.pid).socket.assigns
+    assert assigns.selected_basename == nil
+    assert assigns.preview_source == :paste
+    assert assigns.run_result == nil
+    assert assigns.run_error == nil
+    assert assigns.run_ui.phase == :idle
+  end
+
+  test "rejected paste and upload imports preserve a completed failed run and its diagnostics", %{
+    conn: conn
+  } do
+    dir = configure_workspace("failed_import_identity")
+
+    File.write!(
+      Path.join(dir, "saved.json"),
+      multi_playbook_json([[inspect(OpsPostA), "saved query", %{}]], %{})
+    )
+
+    Application.put_env(:scrypath_ops, :search_stub_variant, :hard_error)
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    render_click(view, "load", %{"name" => "saved.json"})
+    render_click(view, "run", %{})
+    render_async(view)
+    previous = :sys.get_state(view.pid).socket.assigns
+
+    assert_failed_run = fn ->
+      assert has_element?(view, "#playbook-run-origin", "Loaded file: saved.json")
+      assert has_element?(view, "[data-testid='run-failure-panel']", "Playbook run failed")
+
+      assert has_element?(
+               view,
+               "[data-testid='run-failure-panel']",
+               "Search adapter returned a forced hard failure."
+             )
+
+      assert has_element?(view, "[data-testid='run-failure-panel']", "stub_hard_failure")
+      assert has_element?(view, "[data-testid='run-failure-panel']", "saved.json")
+
+      assert has_element?(
+               view,
+               "[data-testid='run-failure-panel'] button[phx-click='copy_run_diagnostics']"
+             )
+
+      assigns = :sys.get_state(view.pid).socket.assigns
+      assert assigns.selected_basename == previous.selected_basename
+      assert assigns.preview_source == previous.preview_source
+      assert assigns.draft_playbook == previous.draft_playbook
+      assert assigns.run_ui == previous.run_ui
+      assert assigns.run_error == previous.run_error
+      assert assigns.run_failure_enriched == previous.run_failure_enriched
+    end
+
+    assert_failed_run.()
+
+    for invalid <- ["{", Jason.encode!(%{"playbook_format" => 1, "mode" => "unknown"})] do
+      view |> form("#playbook-paste-form", %{json: invalid}) |> render_submit()
+      assert_failed_run.()
+    end
+
+    invalid =
+      file_input(view, "#playbook-upload-form", :playbook_file, [
+        %{name: "invalid.json", content: "{", type: "application/json"}
+      ])
+
+    render_upload(invalid, "invalid.json")
+    view |> form("#playbook-upload-form") |> render_submit()
+    assert_failed_run.()
+  end
+
+  test "loading malformed files clears the previous preview and its run context", %{conn: conn} do
+    dir = configure_workspace("invalid_load_identity")
+    File.write!(Path.join(dir, "saved.json"), search_playbook_json("saved query"))
+    File.write!(Path.join(dir, "malformed.json"), "{")
+
+    File.write!(
+      Path.join(dir, "invalid-format.json"),
+      Jason.encode!(%{"playbook_format" => 1, "mode" => "unknown"})
+    )
+
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    for invalid_name <- ["malformed.json", "invalid-format.json"] do
+      render_click(view, "load", %{"name" => "saved.json"})
+      assert has_element?(view, "#playbook-run-origin", "Loaded file: saved.json")
+      assert has_element?(view, "#playbook-preview", "saved query")
+
+      render_click(view, "run", %{})
+      render_async(view)
+      assert has_element?(view, "#playbook-preview", "Run finished")
+
+      render_click(view, "load", %{"name" => invalid_name})
+      refute has_element?(view, "#playbook-preview")
+      refute has_element?(view, "#playbook-run")
+
+      assigns = :sys.get_state(view.pid).socket.assigns
+      assert assigns.selected_basename == nil
+      assert assigns.draft_playbook == nil
+      assert assigns.preview_json == nil
+      assert assigns.preview_marker == false
+      assert assigns.preview_source == nil
+      assert assigns.run_result == nil
+      assert assigns.run_error == nil
+      assert assigns.run_ui.phase == :idle
+
+      render_click(view, "run", %{})
+      assert has_element?(view, "[role='alert']", "Import or load a playbook before running.")
+      refute has_element?(view, "#playbook-preview")
+    end
+
+    render_click(view, "load", %{"name" => "saved.json"})
+    assert has_element?(view, "#playbook-run-origin", "Loaded file: saved.json")
+    assert has_element?(view, "#playbook-preview", "saved query")
+  end
+
+  test "uploaded JSON imports show file origin and invalid JSON retains the loaded preview", %{
+    conn: conn
+  } do
+    dir = configure_workspace("upload_identity")
+    File.write!(Path.join(dir, "saved.json"), search_playbook_json("saved query"))
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+    render_click(view, "load", %{"name" => "saved.json"})
+
+    invalid =
+      file_input(view, "#playbook-upload-form", :playbook_file, [
+        %{name: "invalid.json", content: "{", type: "application/json"}
+      ])
+
+    render_upload(invalid, "invalid.json")
+    view |> form("#playbook-upload-form") |> render_submit()
+    assert has_element?(view, "#playbook-run-origin", "Loaded file: saved.json")
+    assert has_element?(view, "#playbook-preview", "saved query")
+
+    upload =
+      file_input(view, "#playbook-upload-form", :playbook_file, [
+        %{
+          name: "imported.json",
+          content: search_playbook_json("uploaded query"),
+          type: "application/json"
+        }
+      ])
+
+    render_upload(upload, "imported.json")
+    view |> form("#playbook-upload-form") |> render_submit()
+    assert has_element?(view, "#playbook-run-origin", "Imported from uploaded JSON")
+    assert has_element?(view, "#playbook-preview", "uploaded query")
+    refute has_element?(view, "#playbook-run-origin", "saved.json")
+
+    assigns = :sys.get_state(view.pid).socket.assigns
+    assert assigns.selected_basename == nil
+    assert assigns.preview_source == :upload
+  end
+
+  test "upload accepts only JSON files within the import size limit", %{conn: conn} do
+    for {name, content, type, expected_error, expected_copy} <- [
+          {"playbook.txt", search_playbook_json("query"), "text/plain", "not_accepted",
+           "Choose a file ending in .json."},
+          {"playbook.json", String.duplicate(" ", 256_001), "application/json", "too_large",
+           "Choose a JSON file no larger than 256000 bytes."}
+        ] do
+      {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+      upload =
+        file_input(view, "#playbook-upload-form", :playbook_file, [
+          %{name: name, content: content, type: type}
+        ])
+
+      assert {:error, errors} = render_upload(upload, name)
+      assert Enum.any?(errors, fn [_ref, reason] -> to_string(reason) == expected_error end)
+      assert has_element?(view, "#playbook-upload-errors [role='alert']", expected_copy)
+      refute has_element?(view, "#playbook-preview")
+    end
+  end
+
+  test "single-search handoff preserves the second schema, executed query, and bounded limit", %{
+    conn: conn
+  } do
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+    query = "catalog & clearance"
+
+    json =
+      Jason.encode!(%{
+        "playbook_format" => 1,
+        "mode" => "search",
+        "schema" => inspect(OpsPostB),
+        "q" => query,
+        "opts" => %{"page" => %{"size" => 7, "number" => 1}}
+      })
+
+    view |> form("#playbook-paste-form", %{json: json}) |> render_submit()
+    render_click(view, "run", %{})
+    render_async(view)
+    assert has_element?(view, "#playbook-search-handoff")
+    path = search_handoff_path(view)
+
+    assert URI.decode_query(URI.parse(path).query) == %{
+             "mode" => "single",
+             "schema" => inspect(OpsPostB),
+             "q" => query,
+             "page_size" => "7"
+           }
+
+    {:ok, search_view, _html} = live(conn, path)
+    assert has_element?(search_view, "#search_q[value='#{query}']")
+    assert has_element?(search_view, "#search_page_size[value='7']")
+
+    assert has_element?(
+             search_view,
+             "input[name='schema'][value='#{inspect(OpsPostB)}'][checked]"
+           )
+
+    refute has_element?(
+             search_view,
+             "input[name='schema'][value='#{inspect(OpsPostA)}'][checked]"
+           )
+  end
+
+  test "representable multi-search handoff preserves its selected schemas and shared query", %{
+    conn: conn
+  } do
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+    query = "shared & terms"
+
+    for schemas <- [[OpsPostB], [OpsPostA, OpsPostB]] do
+      entries = Enum.map(schemas, &[inspect(&1), query, %{}])
+      json = multi_playbook_json(entries, %{"federation_limit" => 9, "federation_offset" => 0})
+      view |> form("#playbook-paste-form", %{json: json}) |> render_submit()
+      render_click(view, "run", %{})
+      render_async(view)
+      assert has_element?(view, "#playbook-search-handoff")
+      path = search_handoff_path(view)
+
+      assert URI.decode_query(URI.parse(path).query) == %{
+               "mode" => "multi",
+               "schemas" => Enum.map_join(schemas, ",", &inspect/1),
+               "q" => query,
+               "page_size" => "9"
+             }
+
+      {:ok, search_view, _html} = live(conn, path)
+      assert has_element?(search_view, "#search_q[value='#{query}']")
+      assert has_element?(search_view, "#search_page_size[value='9']")
+
+      for schema <- [OpsPostA, OpsPostB] do
+        selector = "input[name='schemas[]'][value='#{inspect(schema)}'][checked]"
+        assert has_element?(search_view, selector) == schema in schemas
+      end
+    end
+  end
+
+  test "multi-search omits the exact-query handoff when Search cannot reproduce its semantics", %{
+    conn: conn
+  } do
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+    first = [inspect(OpsPostA), "shared", %{}]
+    second = [inspect(OpsPostB), "shared", %{}]
+
+    for {entries, opts} <- [
+          {[first, [inspect(OpsPostB), "different", %{}]], %{"federation_limit" => 9}},
+          {[first, [inspect(OpsPostB), "shared", %{"federation_weight" => 2}]],
+           %{"federation_limit" => 9}},
+          {[first, second], %{"federation_limit" => 9, "federation_offset" => 2}},
+          {[first, second], %{}},
+          {[first, second], %{"federation_limit" => 51}},
+          {[first, first], %{"federation_limit" => 9}},
+          {[second, first], %{"federation_limit" => 9}}
+        ] do
+      view
+      |> form("#playbook-paste-form", %{json: multi_playbook_json(entries, opts)})
+      |> render_submit()
+
+      render_click(view, "run", %{})
+      render_async(view)
+      assert has_element?(view, "#playbook-preview", "Run finished")
+      refute has_element?(view, "#playbook-search-handoff")
+    end
+  end
+
+  test "single-search omits the exact-query handoff for unsupported options or unknown limits", %{
+    conn: conn
+  } do
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    for {query, opts} <- [
+          {"query", %{}},
+          {"query", %{"page" => %{"size" => 7, "number" => 2}}},
+          {"query", %{"page" => %{"size" => 7}, "per_query" => %{"show_ranking_score" => true}}},
+          {" query ", %{"page" => %{"size" => 7}}}
+        ] do
+      json =
+        Jason.encode!(%{
+          "playbook_format" => 1,
+          "mode" => "search",
+          "schema" => inspect(OpsPostB),
+          "q" => query,
+          "opts" => opts
+        })
+
+      view |> form("#playbook-paste-form", %{json: json}) |> render_submit()
+      render_click(view, "run", %{})
+      render_async(view)
+      assert has_element?(view, "#playbook-preview", "Run finished")
+      refute has_element?(view, "#playbook-search-handoff")
+    end
   end
 
   test "run with stub adapter shows explicit lifecycle transition to success", %{conn: conn} do
@@ -931,6 +1312,57 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     Regex.scan(~r/href="(https:\/\/github\.com\/szTheory\/scrypath\/blob\/main\/[^"]+)"/, html)
     |> Enum.map(fn [_, href] -> href end)
     |> Enum.uniq()
+  end
+
+  defp configure_workspace(name) do
+    dir =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath_ops_pb_#{name}_#{System.unique_integer([:positive])}"
+      )
+
+    File.mkdir_p!(dir)
+    previous = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
+
+    on_exit(fn ->
+      File.rm_rf(dir)
+
+      if previous == nil,
+        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
+        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, previous)
+    end)
+
+    dir
+  end
+
+  defp search_playbook_json(query) do
+    Jason.encode!(%{
+      "playbook_format" => 1,
+      "mode" => "search",
+      "schema" => "ScrypathOps.Test.OpsPostA",
+      "q" => query,
+      "opts" => %{}
+    })
+  end
+
+  defp multi_playbook_json(entries, opts) do
+    Jason.encode!(%{
+      "playbook_format" => 1,
+      "mode" => "search_many",
+      "entries" => entries,
+      "opts" => opts
+    })
+  end
+
+  defp search_handoff_path(view) do
+    view
+    |> element("#playbook-search-handoff")
+    |> render()
+    |> LazyHTML.from_fragment()
+    |> LazyHTML.query("a")
+    |> LazyHTML.attribute("href")
+    |> hd()
   end
 
   defp put_live_assigns(view, assigns) do
