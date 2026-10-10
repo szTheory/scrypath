@@ -34,6 +34,20 @@ defmodule ScrypathOpsWeb.DevRouter do
       get("/sudo/confirm", PageController, :home)
     end
 
+    scope "/ops/phase175", alias: false do
+      pipe_through(:browser)
+      forward("/assets", ScrypathOpsWeb.AssetPlug, path_prefix: "assets")
+      forward("/images", ScrypathOpsWeb.AssetPlug, path_prefix: "images")
+
+      live_session :phase175_ops_fixture,
+        on_mount: [{ScrypathOpsWeb.Live.OnMount, :default}],
+        session: %{
+          "scrypath_ops_opts" => [repo: ScrypathOps.Repo, mount_path: "/ops/phase175"]
+        } do
+        live("/sync-drift", ScrypathOpsWeb.SyncDriftLive, :phase175)
+      end
+    end
+
     scope "/ops/phase174", alias: false do
       pipe_through(:browser)
       forward("/assets", ScrypathOpsWeb.AssetPlug, path_prefix: "assets")

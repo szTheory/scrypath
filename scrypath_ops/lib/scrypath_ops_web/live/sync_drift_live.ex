@@ -18,14 +18,14 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    allowlist = ScrypathOps.Schemas.allowlist()
-    scrypath_opts = ScrypathOps.Schemas.scrypath_opts()
+    {allowlist, scrypath_opts} = initial_route_config(socket)
 
     socket =
       socket
       |> assign(:page_title, "Sync and drift")
       |> assign(:schema_allowlist, allowlist)
       |> assign(:scrypath_opts, scrypath_opts)
+      |> assign(:fixture_scenario, nil)
       |> assign(:selected_schema, nil)
       |> assign(:selection_error, nil)
       |> assign(:context_generation, 0)
@@ -59,7 +59,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   @impl true
   def handle_params(params, _uri, socket) do
-    allowlist = ScrypathOps.Schemas.allowlist()
+    {allowlist, scrypath_opts, fixture_scenario} =
+      route_config(params, Map.get(socket.assigns, :live_action))
     resolution = OperatorSelection.resolve(params, allowlist)
 
     selected =
@@ -76,11 +77,14 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       end
 
     changed? =
-      selected != socket.assigns.selected_schema or error != socket.assigns.selection_error
+      selected != socket.assigns.selected_schema or error != socket.assigns.selection_error or
+        fixture_scenario != socket.assigns.fixture_scenario
 
     socket =
       socket
       |> assign(:schema_allowlist, allowlist)
+      |> assign(:scrypath_opts, scrypath_opts)
+      |> assign(:fixture_scenario, fixture_scenario)
       |> assign(:selected_schema, selected)
       |> assign(:selection_error, error)
       |> maybe_advance_generation(changed?)
@@ -89,6 +93,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       if selected do
         socket
         |> load_reconcile_on_mount()
+        |> seed_phase175_promotion(fixture_scenario)
         |> maybe_start_recovery(
           Map.get(params, "recovery"),
           Map.get(params, "recovery_generation")
@@ -100,6 +105,92 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       end
 
     {:noreply, socket}
+  end
+
+  defp initial_route_config(%{assigns: %{live_action: :phase175}}) do
+    if Mix.env() == :test do
+      source = phase175_fixture_source()
+      {source.allowlist("accepted-processing"), source.opts("accepted-processing")}
+    else
+      {ScrypathOps.Schemas.allowlist(), ScrypathOps.Schemas.scrypath_opts()}
+    end
+  end
+
+  defp initial_route_config(_socket),
+    do: {ScrypathOps.Schemas.allowlist(), ScrypathOps.Schemas.scrypath_opts()}
+
+  defp route_config(params, :phase175) do
+    if Mix.env() == :test do
+      source = phase175_fixture_source()
+      scenario = Map.get(params, "scenario", "accepted-processing")
+
+      case source.scenario(scenario) do
+        {:ok, fixture} -> {fixture.allowlist, fixture.opts, scenario}
+        {:error, :unknown_scenario} -> {[], source.opts("accepted-processing"), scenario}
+      end
+    else
+      {ScrypathOps.Schemas.allowlist(), ScrypathOps.Schemas.scrypath_opts(), nil}
+    end
+  end
+
+  defp route_config(_params, _action),
+    do: {ScrypathOps.Schemas.allowlist(), ScrypathOps.Schemas.scrypath_opts(), nil}
+
+  defp phase175_fixture_source,
+    do: Module.concat(["ScrypathOps.Test.Phase175FixtureSource"])
+
+  defp seed_phase175_promotion(socket, scenario) when is_binary(scenario) do
+    if Mix.env() == :test and socket.assigns.live_action == :phase175 do
+      source = phase175_fixture_source()
+
+      case source.scenario(scenario) do
+        {:ok, %{task_uid: task_id, indexes: indexes}} ->
+          schema = socket.assigns.selected_schema
+
+          context = %{
+            generation: socket.assigns.context_generation,
+            task_id: task_id,
+            schema: schema,
+            indexes: indexes,
+            runtime:
+              promotion_runtime_identity(
+                schema,
+                ScrypathOps.Schemas.runtime_opts(socket.assigns.scrypath_opts)
+              )
+          }
+
+          socket
+          |> assign(:promotion_task_id, task_id)
+          |> assign(:promotion_status, :accepted)
+          |> assign(:promotion_loading, false)
+          |> assign(:promotion_check_loading, false)
+          |> assign(:promotion_context, context)
+          |> assign(:promotion_schema, schema)
+          |> assign(:promotion_indexes, indexes)
+
+        _ ->
+          socket
+      end
+    else
+      socket
+    end
+  end
+
+  defp seed_phase175_promotion(socket, _scenario), do: socket
+
+  defp active_allowlist(%{assigns: %{live_action: :phase175, fixture_scenario: scenario}})
+       when is_binary(scenario) do
+    if Mix.env() == :test, do: phase175_fixture_source().allowlist(scenario), else: ScrypathOps.Schemas.allowlist()
+  end
+
+  defp active_allowlist(_socket), do: ScrypathOps.Schemas.allowlist()
+
+  defp active_runtime_opts(socket) do
+    if Mix.env() == :test and Map.get(socket.assigns, :live_action) == :phase175 do
+      socket.assigns.scrypath_opts |> ScrypathOps.Schemas.runtime_opts()
+    else
+      ScrypathOps.Schemas.scrypath_opts() |> ScrypathOps.Schemas.runtime_opts()
+    end
   end
 
   defp load_reconcile_on_mount(socket) do
@@ -226,7 +317,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   end
 
   def handle_event("select_schema", %{"schema" => mod_str}, socket) do
-    case OperatorSelection.resolve(%{"schema" => mod_str}, ScrypathOps.Schemas.allowlist()) do
+    case OperatorSelection.resolve(%{"schema" => mod_str}, active_allowlist(socket)) do
       {:ok, mod} ->
         {:noreply,
          push_patch(socket,
@@ -823,7 +914,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp current_selection?(socket) do
     case OperatorSelection.resolve(
            %{"schema" => OperatorSelection.canonical(socket.assigns.selected_schema)},
-           ScrypathOps.Schemas.allowlist()
+           active_allowlist(socket)
          ) do
       {:ok, selected} -> selected == socket.assigns.selected_schema
       _ -> false
@@ -973,7 +1064,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     operator_opts = socket.assigns.scrypath_opts
     opts = ScrypathOps.Schemas.runtime_opts(operator_opts)
 
-    if (mod && mod in ScrypathOps.Schemas.allowlist()) and
+    if (mod && mod in active_allowlist(socket)) and
          Keyword.get(opts, :backend) == Scrypath.Meilisearch do
       reconcile = Scrypath.reconcile_sync(mod, operator_opts)
       drift = Scrypath.index_contract_drift(mod, opts)
@@ -1089,7 +1180,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   end
 
   defp start_promotion_check(socket, context) do
-    opts = ScrypathOps.Schemas.scrypath_opts() |> ScrypathOps.Schemas.runtime_opts()
+    opts = active_runtime_opts(socket)
 
     socket
     |> assign(:promotion_check_loading, true)
@@ -1167,12 +1258,12 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     current_runtime =
       promotion_runtime_identity(
         context.schema,
-        ScrypathOps.Schemas.scrypath_opts() |> ScrypathOps.Schemas.runtime_opts()
+        active_runtime_opts(socket)
       )
 
     same_promotion_task?(socket, context) and
       context.schema == socket.assigns.selected_schema and
-      context.schema in ScrypathOps.Schemas.allowlist() and
+      context.schema in active_allowlist(socket) and
       current_selection?(socket) and
       context == socket.assigns.promotion_context and
       context.runtime == current_runtime

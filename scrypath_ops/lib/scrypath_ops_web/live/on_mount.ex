@@ -62,6 +62,21 @@ defmodule ScrypathOpsWeb.Live.OnMount do
     end
   end
 
+  defp current_allowlist(params, %{live_action: :phase175}) do
+    if Mix.env() == :test do
+      source = Module.concat(["ScrypathOps.Test.Phase175FixtureSource"])
+      scenario = Map.get(params, "scenario", "accepted-processing")
+
+      if Code.ensure_loaded?(source) and function_exported?(source, :allowlist, 1) do
+        source.allowlist(scenario)
+      else
+        []
+      end
+    else
+      ScrypathOps.Schemas.allowlist()
+    end
+  end
+
   defp current_allowlist(params, %{live_action: :phase174}) do
     source = Application.get_env(:scrypath_ops, :phase174_fixture_source)
 
