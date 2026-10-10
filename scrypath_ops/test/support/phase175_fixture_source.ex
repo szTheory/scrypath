@@ -7,7 +7,7 @@ defmodule ScrypathOps.Test.Phase175FixtureSource do
   @scenarios ~w(
     accepted-processing accepted-queued accepted-succeeded accepted-failed
     accepted-cancelled accepted-wrong-uid accepted-malformed accepted-timeout
-    accepted-slow-processing sync-error queue-error config-mismatch config-error
+    accepted-slow-processing auth-return-ready sync-error queue-error config-mismatch config-error
     promotion-blocked removed-schema retry-active retry-expired
   )
 
@@ -87,6 +87,18 @@ defmodule ScrypathOps.Test.Phase175FixtureSource do
         }
 
         {:ok, %{results: if(task["indexUid"] in index_uids, do: [task], else: []), next: nil}}
+
+      "auth-return-ready" ->
+        target_index = indexes(OpsPostB) |> elem(1)
+
+        task = %{
+          "uid" => 17_500,
+          "status" => "succeeded",
+          "type" => "documentAdditionOrUpdate",
+          "indexUid" => target_index
+        }
+
+        {:ok, %{results: if(target_index in index_uids, do: [task], else: []), next: nil}}
 
       _ ->
         {:ok, %{results: [], next: nil}}

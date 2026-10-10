@@ -182,6 +182,33 @@ defmodule ScrypathOpsWeb.Phase175FixtureLiveTest do
     assert Agent.get(Phase175FixtureSource.state_name(), & &1.swap_post_count) == 1
   end
 
+  test "connected stale sudo returns to the current operator route without submitting", %{
+    conn: conn
+  } do
+    path =
+      "/ops/phase175/sync-drift?" <>
+        URI.encode_query(%{
+          "schema" => "ScrypathOps.Test.OpsPostB",
+          "scenario" => "auth-return-ready",
+          "fixture_auth" => "expired"
+        })
+
+    {:ok, view, _html} = live(conn, path)
+    view |> element("button", "Check index configuration") |> render_click()
+    view |> element("button", "Refresh sync and configuration checks") |> render_click()
+    assert has_element?(view, "#index-promotion", "Ready for promotion")
+    view |> element("#index-promotion button", "Promote target index") |> render_click()
+    view |> element("#index-promotion-form") |> render_submit()
+
+    assert_redirect(
+      view,
+      "/sudo/confirm?" <>
+        URI.encode_query(return_to: "/ops/phase175/sync-drift?schema=ScrypathOps.Test.OpsPostB")
+    )
+
+    assert Agent.get(Phase175FixtureSource.state_name(), & &1.swap_post_count) == 1
+  end
+
   test "expired retry observation keeps its last-known exact identity", %{conn: conn} do
     schema = "ScrypathOps.Test.OpsPostB"
 

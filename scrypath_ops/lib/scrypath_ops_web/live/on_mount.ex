@@ -34,6 +34,7 @@ defmodule ScrypathOpsWeb.Live.OnMount do
         socket =
           socket
           |> assign(:mount_path, mount_path)
+          |> assign(:return_to, URI.parse(uri).path)
           |> assign(:recovery_target, recovery_target(params, socket.view, socket.assigns))
 
         {:cont, socket}

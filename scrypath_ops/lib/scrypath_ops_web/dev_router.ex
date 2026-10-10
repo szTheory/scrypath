@@ -38,9 +38,13 @@ defmodule ScrypathOpsWeb.DevRouter do
       pipe_through(:browser)
       forward("/assets", ScrypathOpsWeb.AssetPlug, path_prefix: "assets")
       forward("/images", ScrypathOpsWeb.AssetPlug, path_prefix: "images")
+      get("/fixture-status", ScrypathOpsWeb.Phase175FixtureController, :status)
 
       live_session :phase175_ops_fixture,
-        on_mount: [{ScrypathOpsWeb.Live.OnMount, :default}],
+        on_mount: [
+          {ScrypathOpsWeb.Live.OnMount, :default},
+          {ScrypathOps.Test.Phase175AuthFixtureOnMount, :default}
+        ],
         session: %{
           "scrypath_ops_opts" => [repo: ScrypathOps.Repo, mount_path: "/ops/phase175"]
         } do
