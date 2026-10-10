@@ -11,15 +11,36 @@ defmodule ScrypathOpsWeb.PostureLive do
   alias ScrypathOps.OperatorSelection
 
   @impl true
-  def mount(_params, _session, socket) do
-    allowlist = ScrypathOps.Schemas.allowlist()
-    scrypath_opts = ScrypathOps.Schemas.scrypath_opts()
+  def mount(params, _session, socket) do
+    fixture? = Map.get(socket.assigns, :live_action) == :phase173_fixture
+
+    {allowlist, scrypath_opts, snapshot_at, scenario} =
+      if fixture? do
+        fixture = phase173_fixture(params)
+
+        {
+          fixture.allowlist,
+          fixture.scrypath_opts,
+          fixture.snapshot_at,
+          fixture.scenario
+        }
+      else
+        {
+          ScrypathOps.Schemas.allowlist(),
+          ScrypathOps.Schemas.scrypath_opts(),
+          nil,
+          nil
+        }
+      end
 
     socket =
       socket
       |> assign(:page_title, "Search health")
       |> assign(:schema_allowlist, allowlist)
       |> assign(:scrypath_opts, scrypath_opts)
+      |> assign(:phase173_fixture?, fixture?)
+      |> assign(:phase173_snapshot_at, snapshot_at)
+      |> assign(:phase173_scenario, scenario)
       |> assign(:auto_refresh, false)
       |> assign(:posture_rows, [])
       |> assign(:aggregate_error_count, 0)
@@ -46,6 +67,24 @@ defmodule ScrypathOpsWeb.PostureLive do
     )
 
     {:noreply, put_flash(socket, :info, "Search health refreshed.")}
+  end
+
+  def handle_event(
+        "phase173_scenario",
+        %{"scenario" => scenario},
+        %{assigns: %{live_action: :phase173_fixture}} = socket
+      ) do
+    fixture = phase173_fixture(%{"scenario" => scenario})
+
+    socket =
+      socket
+      |> assign(:schema_allowlist, fixture.allowlist)
+      |> assign(:scrypath_opts, fixture.scrypath_opts)
+      |> assign(:phase173_snapshot_at, fixture.snapshot_at)
+      |> assign(:phase173_scenario, fixture.scenario)
+      |> load_posture()
+
+    {:noreply, socket}
   end
 
   def handle_event("swap_live", %{"schema" => mod_str}, socket) do
@@ -84,11 +123,7 @@ defmodule ScrypathOpsWeb.PostureLive do
   end
 
   defp load_posture(socket) do
-    summary =
-      ScrypathOps.Posture.summary(
-        socket.assigns.schema_allowlist,
-        socket.assigns.scrypath_opts
-      )
+    summary = posture_summary(socket)
 
     socket
     |> assign(:posture_rows, posture_rows_assign(summary))
@@ -99,6 +134,27 @@ defmodule ScrypathOpsWeb.PostureLive do
     |> assign(:posture_evidence, summary.evidence)
     |> assign(:posture_summary, summary)
     |> refresh_next_checks()
+  end
+
+  defp posture_summary(%{assigns: %{phase173_fixture?: true}} = socket) do
+    ScrypathOps.Posture.summary(
+      socket.assigns.schema_allowlist,
+      socket.assigns.scrypath_opts,
+      socket.assigns.phase173_snapshot_at
+    )
+  end
+
+  defp posture_summary(socket) do
+    ScrypathOps.Posture.summary(
+      socket.assigns.schema_allowlist,
+      socket.assigns.scrypath_opts
+    )
+  end
+
+  defp phase173_fixture(params) do
+    :scrypath_ops
+    |> Application.fetch_env!(:phase173_fixture_source)
+    |> apply(:fixture, [params])
   end
 
   defp refresh_next_checks(%{assigns: %{posture_summary: summary}} = socket)
@@ -155,6 +211,31 @@ defmodule ScrypathOpsWeb.PostureLive do
       </.ops_toolbar>
 
       <.ops_trail current={:posture} />
+
+      <form
+        :if={@phase173_fixture?}
+        id="phase173-fixture-controls"
+        phx-change="phase173_scenario"
+        class="mb-4 max-w-sm"
+      >
+        <label for="phase173-fixture-scenario" class="mb-1 block text-ops-sm font-medium">
+          Fixture scenario
+        </label>
+        <select
+          id="phase173-fixture-scenario"
+          name="scenario"
+          data-testid="phase173-fixture-scenario"
+          class="select select-bordered w-full"
+        >
+          <option
+            :for={scenario <- ["healthy", "failed", "unknown", "empty", "partial", "long"]}
+            value={scenario}
+            selected={@phase173_scenario == scenario}
+          >
+            {String.capitalize(scenario)}
+          </option>
+        </select>
+      </form>
 
       <section
         :if={match?({:ok, _}, @posture_rows)}

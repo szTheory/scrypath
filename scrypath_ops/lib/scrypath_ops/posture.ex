@@ -51,12 +51,18 @@ defmodule ScrypathOps.Posture do
   """
   @spec summary([module()], keyword()) :: t()
   def summary(allowlist, opts) do
+    summary(allowlist, opts, DateTime.utc_now())
+  end
+
+  @doc false
+  @spec summary([module()], keyword(), DateTime.t()) :: t()
+  def summary(allowlist, opts, %DateTime{} = snapshot_at) do
     cond do
       allowlist == [] ->
-        classify(%Posture{state: :unconfigured, refreshed_at: DateTime.utc_now()})
+        classify(%Posture{state: :unconfigured, refreshed_at: snapshot_at})
 
       not Keyword.has_key?(opts, :backend) ->
-        classify(%Posture{state: :missing_backend, refreshed_at: DateTime.utc_now()})
+        classify(%Posture{state: :missing_backend, refreshed_at: snapshot_at})
 
       true ->
         rows = scan(allowlist, opts)
@@ -79,7 +85,7 @@ defmodule ScrypathOps.Posture do
           backend_failed_count: backend_failed,
           queue_failed_count: queue_failed,
           queue_observed_count: queue_observed_count(rows),
-          refreshed_at: DateTime.utc_now()
+          refreshed_at: snapshot_at
         })
     end
   end

@@ -10,16 +10,22 @@ config :scrypath_ops, ScrypathOps.Repo,
   password: System.get_env("PGPASSWORD", "postgres"),
   hostname: System.get_env("PGHOST", "localhost"),
   port: String.to_integer(System.get_env("PGPORT", "5432")),
-  database: "scrypath_ops_test#{System.get_env("MIX_TEST_PARTITION")}",
+  database:
+    System.get_env("SCRYPATH_OPS_TEST_DATABASE") ||
+      "scrypath_ops_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online() * 2
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :scrypath_ops, ScrypathOpsWeb.Endpoint,
-  http: [ip: {127, 0, 0, 1}, port: 4002],
+  http: [
+    ip: if(System.get_env("PHX_SERVER") == "true", do: {0, 0, 0, 0}, else: {127, 0, 0, 1}),
+    port: String.to_integer(System.get_env("SCRYPATH_OPS_PORT") || "4002")
+  ],
   secret_key_base: "udY/UcSfO841tewbYep/lb0mGkfNHX6T/WlSadeZNbpfnI1/xfrNHxvvBbaackJB",
-  server: false
+  check_origin: System.get_env("PHX_SERVER") != "true",
+  server: System.get_env("PHX_SERVER") == "true"
 
 # In test we don't send emails
 config :scrypath_ops, ScrypathOps.Mailer, adapter: Swoosh.Adapters.Test
@@ -43,6 +49,7 @@ config :phoenix,
 
 config :scrypath_ops, :validate_opsui_auth_on_start, false
 config :scrypath_ops, standalone: true
+config :scrypath_ops, :phase173_fixture_source, ScrypathOps.Phase173FixtureSource
 
 # Default playbook workspace for tests (partitioned for MIX_TEST_PARTITION).
 playbook_test_root =

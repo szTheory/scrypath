@@ -117,8 +117,8 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
   defp assert_ops_shell!(html, title_fragment) do
     assert html =~ "data-phx-session"
     assert html =~ title_fragment
-    assert html =~ ~r/href="\/ops\/assets\/css\/app(?:-[^"]+)?\.css(?:\?[^"]*)?"/
-    assert html =~ ~r/src="\/ops\/assets\/js\/app(?:-[^"]+)?\.js(?:\?[^"]*)?"/
+    assert html =~ ~r/href="\/assets\/css\/app(?:-[^"]+)?\.css(?:\?[^"]*)?"/
+    assert html =~ ~r/src="\/assets\/js\/app(?:-[^"]+)?\.js(?:\?[^"]*)?"/
     assert html =~ ~s(id="flash-group")
     assert Regex.scan(~r/id=\"flash-group\"/, html) |> length() == 1
     assert html =~ ~s(id="ops-main")

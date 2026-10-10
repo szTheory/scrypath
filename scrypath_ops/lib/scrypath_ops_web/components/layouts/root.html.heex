@@ -4,20 +4,20 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
-    <link rel="icon" href={"#{@mount_path}/favicon.svg"} type="image/svg+xml" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <.live_title default="Scrypath" suffix=" · Scrypath">
       {assigns[:page_title]}
     </.live_title>
     <link
       phx-track-static
       rel="stylesheet"
-      href={"#{@mount_path}/assets/css/app.css?v=#{ScrypathOpsWeb.AssetPlug.asset_version("assets/css/app.css")}"}
+      href={"/assets/css/app.css?v=#{ScrypathOpsWeb.AssetPlug.asset_version("assets/css/app.css")}"}
     />
     <script
       defer
       phx-track-static
       type="text/javascript"
-      src={"#{@mount_path}/assets/js/app.js?v=#{ScrypathOpsWeb.AssetPlug.asset_version("assets/js/app.js")}"}
+      src={"/assets/js/app.js?v=#{ScrypathOpsWeb.AssetPlug.asset_version("assets/js/app.js")}"}
     >
     </script>
     <script>
@@ -85,7 +85,7 @@
         setTheme(currentPreference, false);
 
         window.addEventListener("storage", (e) => {
-          if (e.key === themeKey) {
+          if (e.key === themeKey || e.key === null) {
             setTheme(e.newValue, false);
           }
         });
