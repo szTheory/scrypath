@@ -221,6 +221,14 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert source =~ "phx:page-loading-stop"
   end
 
+  test "theme preference buttons show their choices beside the icons", %{conn: conn} do
+    {:ok, _lv, html} = live(conn, ~p"/ops/health")
+
+    assert html =~ ~s(<span>System</span>)
+    assert html =~ ~s(<span>Light</span>)
+    assert html =~ ~s(<span>Dark</span>)
+  end
+
   test "shortcut sheet advertises command palette shortcut across platforms", %{conn: conn} do
     {:ok, _lv, html} = live(conn, ~p"/ops/health")
 
