@@ -5,16 +5,16 @@ milestone_name: ScrypathOps UI refinement
 current_phase: 175
 current_phase_name: Repair and Verification
 status: executing
-stopped_at: Completed 175-02-PLAN.md
-last_updated: "2026-10-10T13:30:08.253Z"
+stopped_at: Completed 175-03-PLAN.md
+last_updated: "2026-10-10T13:46:47.681Z"
 last_activity: 2026-10-10
 last_activity_desc: Phase 175 execution started
-state_head: 6e67eb177e5a56a8fe12864cfcf5be1d3b0a2ad2
+state_head: d28ae81835953770a90f7c56f49c16daa3cc448c
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 18
-  completed_plans: 14
+  completed_plans: 15
   percent: 40
 ---
 
@@ -27,7 +27,7 @@ See PROJECT.md (updated 2026-10-07). Core value: make search indexing feel nativ
 ## Current Position
 
 Phase: 175 (Repair and Verification) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-10-10 — Phase 175 execution started
 Progress: [████░░░░░░] 40% (2/5 phases; 12/12 currently planned plans complete)
@@ -92,8 +92,8 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Historical Phase 174 Session Continuity
 
-Last session: 2026-10-10T13:30:08.180Z
-Stopped at: Completed 175-02-PLAN.md
+Last session: 2026-10-10T13:46:47.631Z
+Stopped at: Completed 175-03-PLAN.md
 Resume file: None
 
 Phase 174 now executes in a separate regular clone on `gsd/phase-174-recovery-entry-and-diagnosis` in `/private/tmp/scrypath-phase173-20261006-155750/phase174-execution`. The previous planning worktree and its RED artifacts remain preserved; the fresh clone resolves the executor commit guard without bypassing it. It starts from the immutable Phase 173 source `13ea88a9c18a7515f4ec5ae7deea0cdde4c22531`. Its later handoff metadata does not extend the prior exact-SHA receipt. The execution checkout and PR branch `gsd/phase-173-shared-visual-foundation` remain unchanged at that attested source.
@@ -122,6 +122,7 @@ Automatic chaining is disabled. Preserve adaptive routing and the existing front
 | Phase 174 P08 | 126m | 2 tasks | 10 files |
 | Phase 175 P01 | 6 min | 2 tasks | 3 files |
 | Phase 175 P02 | 7min | 2 tasks | 3 files |
+| Phase 175 P03 | 15min | 2 tasks | 2 files |
 
 ## Decisions
 
@@ -147,3 +148,5 @@ Automatic chaining is disabled. Preserve adaptive routing and the existing front
 - [Phase 175]: Missing backend setup and failed required backend/queue reads remain unavailable evidence, never zero work.
 - [Phase 175]: Known source-qualified retry receipt identity remains visible when authority reads are unavailable, while outcome stays unknown.
 - [Phase 175]: Recovery refresh observes the same opaque receipt read-only and never submits work.
+- [Phase 175]: Promotion status reads the accepted task UID through the configured Meilisearch client and keeps read activity distinct from remote status.
+- [Phase 175]: Stale task callbacks must match current schema, allowlist, generation, endpoint, backend, and runtime before publishing a remote claim.

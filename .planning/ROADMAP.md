@@ -127,7 +127,7 @@ Plans:
   2. Operators can distinguish accepted, running, terminal success/failure, and unavailable or unknown observations while retaining exact task identity; an observation failure cannot appear as a failed remote task.
   3. Operators can review and perform only eligible, host-authorized repair or promotion behind existing confirmation gates, and see completion only when the matching task/index/document evidence supports it rather than when work is merely accepted or an unrelated historical task finishes.
 
-**Plans**: 2/6 plans executed across 6 sequential waves; 0 executed
+**Plans**: 3/6 plans executed across 6 sequential waves; 0 executed
 Plans:
 **Wave 1**
 - [x] 175-01-PLAN.md — Scoped ordinary sync and index configuration checks
@@ -136,7 +136,7 @@ Plans:
 - [x] 175-02-PLAN.md — Exact retry task and active-index document evidence
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 175-03-PLAN.md — Read-only exact-UID swap status and stale-context rejection
+- [x] 175-03-PLAN.md — Read-only exact-UID swap status and stale-context rejection
 
 **Wave 4** *(blocked on Wave 3 completion)*
 - [ ] 175-04-PLAN.md — Guarded advanced promotion and persistent disclosure state
@@ -188,6 +188,6 @@ Plans:
 |-------|----------------|--------|-----------|
 | 173. Shared Visual Foundation and Operational Time | 4/4 | Complete    | 2026-10-06 |
 | 174. Recovery Entry and Diagnosis | 8/8 | Complete    | 2026-10-07 |
-| 175. Repair and Verification | 2/6 | In Progress | - |
+| 175. Repair and Verification | 3/6 | In Progress | - |
 | 176. Search and Playbooks | 0/TBD | Not started | - |
 | 177. Shared Patterns and Delivery Proof | 0/TBD | Not started | - |
