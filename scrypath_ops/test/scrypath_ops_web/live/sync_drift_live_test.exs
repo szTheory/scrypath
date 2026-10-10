@@ -160,7 +160,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert has_element?(
              view,
              "[role=alert]",
-             "That schema is unavailable. Choose an available schema to continue."
+             "Choose an available schema to continue."
            )
 
     assert has_element?(view, "a[href='/ops/health']", "Review search health")

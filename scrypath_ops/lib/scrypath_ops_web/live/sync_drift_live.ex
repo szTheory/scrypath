@@ -1092,7 +1092,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         title="That schema is unavailable"
         role="alert"
       >
-        Select an allowlisted schema to continue.
+        Choose an available schema to continue.
       </.ops_status>
 
       <.ops_panel>
@@ -1355,7 +1355,6 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           Return to Control Room
         </:step>
         <:step
-          :if={@selected_schema}
           navigate={OperatorSelection.path(@mount_path, "health", nil)}
           hint="Across all configured schemas —"
         >
