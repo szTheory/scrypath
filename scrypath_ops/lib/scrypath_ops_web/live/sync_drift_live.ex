@@ -61,6 +61,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   def handle_params(params, _uri, socket) do
     {allowlist, scrypath_opts, fixture_scenario} =
       route_config(params, Map.get(socket.assigns, :live_action))
+
     resolution = OperatorSelection.resolve(params, allowlist)
 
     selected =
@@ -144,8 +145,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       source = phase175_fixture_source()
 
       case source.scenario(scenario) do
-        {:ok, %{task_uid: task_id, indexes: indexes}} ->
+        {:ok, %{task_uid: task_id}} ->
           schema = socket.assigns.selected_schema
+          indexes = source.indexes(schema)
 
           context = %{
             generation: socket.assigns.context_generation,
@@ -180,7 +182,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp active_allowlist(%{assigns: %{live_action: :phase175, fixture_scenario: scenario}})
        when is_binary(scenario) do
-    if Mix.env() == :test, do: phase175_fixture_source().allowlist(scenario), else: ScrypathOps.Schemas.allowlist()
+    if Mix.env() == :test do
+      phase175_fixture_source().allowlist(scenario)
+    else
+      ScrypathOps.Schemas.allowlist()
+    end
   end
 
   defp active_allowlist(_socket), do: ScrypathOps.Schemas.allowlist()
@@ -379,8 +385,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         {status, evidence} =
           case result do
             {status, evidence} when is_map(evidence) or is_nil(evidence) -> {status, evidence}
-            status -> {status, nil}
+            status -> {status, socket.assigns.recovery_evidence}
           end
+
+        evidence = evidence || socket.assigns.recovery_evidence
 
         {:noreply,
          socket
@@ -405,7 +413,6 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         {:noreply,
          socket
          |> assign(:recovery_status, :unknown)
-         |> assign(:recovery_evidence, nil)
          |> assign(:recovery_checked_at, DateTime.utc_now())
          |> assign(:recovery_loading, false)}
 
@@ -607,7 +614,6 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       socket
       |> assign(:recovery_handle, handle)
       |> assign(:recovery_status, :unknown)
-      |> assign(:recovery_evidence, nil)
       |> assign(:recovery_loading, true)
 
     start_async(socket, {:recovery_observation, generation, handle}, fn ->

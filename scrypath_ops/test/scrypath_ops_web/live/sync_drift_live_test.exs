@@ -1009,7 +1009,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert stale.assigns.recovery_loading
   end
 
-  test "recovery results retain exact observed evidence and refresh clears it" do
+  test "recovery results retain exact observed evidence while refresh checks the same retry" do
     evidence = %{replacement_job: 45, attempt: 1, task_uid: 780, index: "posts"}
     socket = sync_drift_socket(%{context_generation: 3, recovery_handle: "receipt"})
 
@@ -1023,7 +1023,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert checked.assigns.recovery_status == :verified
     assert checked.assigns.recovery_evidence == evidence
     {:noreply, refreshing} = SyncDriftLive.handle_event("refresh_recovery_status", %{}, checked)
-    assert refreshing.assigns.recovery_evidence == nil
+    assert refreshing.assigns.recovery_evidence == evidence
   end
 
   test "recovery success arriving after its selected schema is removed is discarded" do
