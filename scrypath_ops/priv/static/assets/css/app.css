@@ -4605,7 +4605,7 @@
   }
   .ops-schema-signal-list {
     display: grid;
-    gap: var(--spacing-ops-3);
+    gap: var(--spacing-ops-section);
   }
   .ops-schema-signal-card {
     min-width: 0;

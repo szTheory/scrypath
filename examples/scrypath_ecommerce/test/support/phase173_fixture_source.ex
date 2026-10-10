@@ -11,6 +11,19 @@ defmodule ScrypathEcommerce.Phase173PartialSchema do
   end
 end
 
+defmodule ScrypathEcommerce.Phase173VeryLongSchemaIdentifierForNarrowOperatorDisplays do
+  use Ecto.Schema
+
+  use Scrypath,
+    fields: [:title],
+    filterable: [],
+    sortable: []
+
+  embedded_schema do
+    field(:title, :string)
+  end
+end
+
 defmodule ScrypathEcommerce.Phase173FixtureSource do
   @moduledoc false
 
@@ -79,6 +92,12 @@ defmodule ScrypathEcommerce.Phase173FixtureSource do
   defp allowlist("partial"),
     do: [ScrypathEcommerce.Catalog.Product, ScrypathEcommerce.Phase173PartialSchema]
 
+  defp allowlist("long"),
+    do: [
+      ScrypathEcommerce.Catalog.Product,
+      ScrypathEcommerce.Phase173VeryLongSchemaIdentifierForNarrowOperatorDisplays
+    ]
+
   defp allowlist(_scenario), do: [ScrypathEcommerce.Catalog.Product]
 
   defp scrypath_opts(scenario) do
@@ -114,7 +133,16 @@ defmodule ScrypathEcommerce.Phase173FixtureSource do
   end
 
   defp tasks_for("long") do
-    [task(9_876_543_210, "succeeded", "phase173_product", @task_finished)]
+    long_index =
+      Scrypath.Meilisearch.index_name(
+        ScrypathEcommerce.Phase173VeryLongSchemaIdentifierForNarrowOperatorDisplays,
+        index_prefix: "phase173"
+      )
+
+    [
+      task(9_876_543_210, "succeeded", "phase173_product", @task_finished),
+      task(9_876_543_211, "succeeded", long_index, @task_finished)
+    ]
   end
 
   defp tasks_for("invalid-time") do

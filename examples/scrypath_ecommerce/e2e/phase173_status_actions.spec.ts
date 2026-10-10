@@ -100,10 +100,10 @@ for (const entry of entries) {
     await expect(metric(page, "Schema check errors")).toHaveAttribute("data-ops-metric-tone", "warning");
 
     await chooseScenario(page, "unknown");
-    const unknownQueue = page.getByRole("region", { name: new RegExp(`Queue job signals for ${entry.schema.replaceAll(".", "\\.")}`) });
-    await expect(unknownQueue).toContainText("Queue observations unavailable; no queue counts are reported as zero.");
-    await expect(page.getByTestId("posture-row").first()).toContainText("Queue observations unavailable");
-    await expect(page.getByTestId("posture-row").first()).not.toContainText("queue failed");
+    const unknownQueue = page.getByTestId("posture-row").first();
+    await expect(unknownQueue).toContainText(":phase173_queue_unavailable");
+    await expect(unknownQueue).not.toContainText("queue failed");
+    await expect(unknownQueue.locator(".ops-schema-signal-card__groups")).toHaveCount(0);
 
     await chooseScenario(page, "queue-unused");
     const unusedRow = page.getByTestId("posture-row").first();
@@ -126,36 +126,39 @@ for (const entry of entries) {
     test.info().annotations.push({ type: "source-sha", description: process.env.SCRYPATH_SOURCE_SHA || "unknown" });
     await visit(page, entry, "long");
     await mkdir(screenshotDir, { recursive: true });
+    const longSchema = page.getByTestId("posture-row").filter({ hasText: "VeryLongSchemaIdentifierForNarrowOperatorDisplays" });
+    await expect(longSchema).toHaveCount(1);
 
     for (const theme of ["light", "dark"] as const) {
       await setTheme(page, theme);
       for (const width of [390, 1279, 1280, 1440]) {
         await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
-        await expect(page.getByTestId("posture-row").first()).toContainText(entry.schema);
+        await expect(page.getByTestId("posture-row").filter({ hasText: entry.schema })).toHaveCount(1);
 
         const geometry = await page.evaluate(() => {
           const list = document.querySelector<HTMLElement>(".ops-schema-signal-list")!;
-          const row = document.querySelector<HTMLElement>(".ops-schema-signal-card")!;
+          const rows = Array.from(document.querySelectorAll<HTMLElement>(".ops-schema-signal-card"));
           const refresh = document.querySelector<HTMLElement>("#search-health-refresh")!;
-          const action = document.querySelector<HTMLElement>("[data-testid='posture-failed-sync-link']")!;
+          const actions = Array.from(document.querySelectorAll<HTMLElement>("[data-testid='posture-failed-sync-link']"));
           return {
             viewport: window.innerWidth,
             page: document.documentElement.scrollWidth,
-            rowWidth: row.clientWidth,
-            rowScrollWidth: row.scrollWidth,
+            rows: rows.map((row) => ({ width: row.clientWidth, scrollWidth: row.scrollWidth, overflowWrap: getComputedStyle(row).overflowWrap })),
             rowGap: getComputedStyle(list).rowGap,
             refreshHeight: refresh.getBoundingClientRect().height,
-            inspectHeight: action.getBoundingClientRect().height,
-            overflowWrap: getComputedStyle(row).overflowWrap
+            inspectHeights: actions.map((action) => action.getBoundingClientRect().height)
           };
         });
 
         expect(geometry.page, `${entry.name} page overflow at ${width}px`).toBeLessThanOrEqual(geometry.viewport);
-        expect(geometry.rowScrollWidth, `${entry.name} row overflow at ${width}px`).toBeLessThanOrEqual(geometry.rowWidth + 1);
+        expect(geometry.rows.length).toBe(2);
+        for (const row of geometry.rows) {
+          expect(row.scrollWidth, `${entry.name} row overflow at ${width}px`).toBeLessThanOrEqual(row.width + 1);
+          expect(row.overflowWrap).toBe("anywhere");
+        }
         expect(geometry.rowGap).toBe("24px");
         expect(geometry.refreshHeight).toBeGreaterThanOrEqual(40);
-        expect(geometry.inspectHeight).toBeGreaterThanOrEqual(40);
-        expect(geometry.overflowWrap).toBe("anywhere");
+        for (const height of geometry.inspectHeights) expect(height).toBeGreaterThanOrEqual(40);
 
         await page.evaluate(() => window.scrollTo(0, 0));
         await page.screenshot({
@@ -185,6 +188,9 @@ for (const entry of entries) {
     await page.mouse.up();
 
     await refresh.focus();
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Shift+Tab");
+    await expect(refresh).toBeFocused();
     const focus = await refresh.evaluate((button) => {
       const style = getComputedStyle(button);
       return { width: style.outlineWidth, offset: style.outlineOffset, style: style.outlineStyle };

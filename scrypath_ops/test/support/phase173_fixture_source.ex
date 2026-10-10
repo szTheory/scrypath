@@ -24,6 +24,19 @@ defmodule ScrypathOps.Phase173PartialSchema do
   end
 end
 
+defmodule ScrypathOps.Phase173VeryLongSchemaIdentifierForNarrowOperatorDisplays do
+  use Ecto.Schema
+
+  use Scrypath,
+    fields: [:title],
+    filterable: [],
+    sortable: []
+
+  embedded_schema do
+    field(:title, :string)
+  end
+end
+
 defmodule ScrypathOps.Phase173FixtureSource do
   @moduledoc false
 
@@ -92,6 +105,12 @@ defmodule ScrypathOps.Phase173FixtureSource do
   defp allowlist("partial"),
     do: [ScrypathOps.Phase173FixtureSchema, ScrypathOps.Phase173PartialSchema]
 
+  defp allowlist("long"),
+    do: [
+      ScrypathOps.Phase173FixtureSchema,
+      ScrypathOps.Phase173VeryLongSchemaIdentifierForNarrowOperatorDisplays
+    ]
+
   defp allowlist(_scenario), do: [ScrypathOps.Phase173FixtureSchema]
 
   defp scrypath_opts(scenario) do
@@ -128,7 +147,16 @@ defmodule ScrypathOps.Phase173FixtureSource do
   end
 
   defp tasks_for("long") do
-    [task(9_876_543_210, "succeeded", "phase173_phase173_fixture_schema", @task_finished)]
+    long_index =
+      Scrypath.Meilisearch.index_name(
+        ScrypathOps.Phase173VeryLongSchemaIdentifierForNarrowOperatorDisplays,
+        index_prefix: "phase173"
+      )
+
+    [
+      task(9_876_543_210, "succeeded", "phase173_phase173_fixture_schema", @task_finished),
+      task(9_876_543_211, "succeeded", long_index, @task_finished)
+    ]
   end
 
   defp tasks_for("invalid-time") do
