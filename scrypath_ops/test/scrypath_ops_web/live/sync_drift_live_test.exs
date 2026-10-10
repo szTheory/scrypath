@@ -412,6 +412,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     {:ok, view, _html} = live(conn, path)
     render_async(view)
 
+    assert :sys.get_state(view.pid).socket.assigns.recovery_status == :unknown
     assert has_element?(view, "#recovery-observation", "Recovery unknown")
     assert :sys.get_state(view.pid).socket.assigns.selected_schema == OpsPostB
     assert has_element?(view, "[data-testid=recovery-unavailable]", "queue, task, or document")

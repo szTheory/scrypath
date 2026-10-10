@@ -254,7 +254,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         handle == socket.assigns.recovery_handle and current_selection?(socket) ->
         {status, evidence} =
           case result do
-            {status, %{} = evidence} -> {status, evidence}
+            {status, evidence} when is_map(evidence) or is_nil(evidence) -> {status, evidence}
             status -> {status, nil}
           end
 
@@ -1105,7 +1105,17 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             kind={recovery_status_kind(@recovery_status)}
             title={recovery_status_label(@recovery_status)}
           >
-            A refresh observes this retry and never submits work.
+            <span
+              :if={!@recovery_loading and @recovery_status in [:unknown, :timed_out]}
+              data-testid="recovery-unavailable"
+            >
+              The receipt or one of its queue, task, or document reads is unavailable. The selected
+              schema and any known retry identity remain shown. Refresh checks this same retry; it
+              does not submit work.
+            </span>
+            <span :if={@recovery_loading or @recovery_status not in [:unknown, :timed_out]}>
+              A refresh observes this retry and never submits work.
+            </span>
           </.ops_status>
           <p :if={@recovery_evidence} class="mt-2 text-ops-body" data-testid="recovery-evidence">
             Queue job {@recovery_evidence.replacement_job} · attempt {@recovery_evidence.attempt}
