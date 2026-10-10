@@ -73,7 +73,7 @@ case "$scope" in
   phase175-repair)
     echo "Running only the Phase 175 dual-entrypoint repair and exact-task proof..."
     PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results/phase175-repair.xml \
-      npx playwright test e2e/phase175_repair.spec.ts --workers=1 --retries=0 --reporter=junit
+      npx playwright test e2e/phase175_repair.spec.ts e2e/phase175_ui_matrix.spec.ts --workers=1 --retries=0 --reporter=junit
     node -e 'const fs = require("node:fs"); const report = fs.readFileSync("test-results/phase175-repair.xml", "utf8"); const tests = [...report.matchAll(/<testsuite\b[^>]*\btests="(\d+)"/g)].reduce((sum, match) => sum + Number(match[1]), 0); if (tests < 1) { console.error("Phase 175 browser scope selected zero tests."); process.exit(1); } console.log(`Phase 175 browser scope cases=${tests}`);'
     ;;
   full)

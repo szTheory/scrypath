@@ -126,6 +126,12 @@ test("mounted confirmation submits one exact pair and verifies its returned task
   });
 
   await expect(status).toContainText(String(taskUid));
+  const uidValue = status.getByTestId("promotion-task-identity").locator("code").last();
+  await uidValue.selectText();
+  expect(await page.evaluate(() => window.getSelection()?.toString())).toBe(String(taskUid));
+  await page.keyboard.press("Control+c");
+  expect(await page.evaluate(() => window.getSelection()?.toString())).toBe(String(taskUid));
+  info.annotations.push({ type: "phase175-exact-value-copy", description: JSON.stringify({ task_uid: taskUid, selected_text: String(taskUid), keyboard_copy: "Control+C", clipboard_readback: "unavailable on the HTTP test origin" }) });
   for (const width of widths) {
     await page.setViewportSize({ width, height: 900 });
     for (const theme of themes) {
