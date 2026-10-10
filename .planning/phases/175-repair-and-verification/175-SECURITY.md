@@ -72,3 +72,7 @@ The auditor's source evidence includes SyncDriftLive callbacks/runtime checks an
 - [x] Status verified describes present security controls only.
 
 Exact-final-SHA hosted closeout and independent phase verification remain pending.
+
+## Code-review boundary followup
+
+The code reviewer independently found destructive example E2E endpoints exposed in development. Commit `3417307` separates the UI-only development fixture from the mutation/probe scope, which now compiles only under `Mix.env() == :test`. The reviewer confirmed CR-01 fixed at `9830733` without accepting risk; `175-REVIEW-FIX.md` and `175-REVIEW-DISPOSITION.md` retain the finding and action. Test harness use remains confined to disposable resources. Later UI-only changes do not alter authorization, callback identity, task lookup or mutation guards. Exact-final-SHA hosted enforcement remains pending.

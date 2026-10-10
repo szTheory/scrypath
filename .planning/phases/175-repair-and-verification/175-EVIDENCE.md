@@ -1,6 +1,6 @@
 # Phase 175 Verification Evidence
 
-This record binds the local Phase 175 repair/browser proof to the source and disposable resources used by the executor. It is local evidence only; hosted exact-SHA CI and OPUX requirement closeout remain pending.
+This record preserves successive source-bound execution and audit proofs. The latest local production source is `ce60384aa95235376fae8fe4381005c36ece3725`; earlier sections are historical and their limitations do not describe later runs. Hosted exact-SHA CI and OPUX requirement closeout remain pending.
 
 ## Browser source and run
 
@@ -55,3 +55,13 @@ The expanded run at source `724c5acfddec11494c83d0eef8df4dfb9da416f7` plus the r
 - Retained browser directory: `/private/tmp/scrypath-phase173-20261006-155750/evidence/phase175/security-fix-final`. JUnit: seven tests, zero failures/errors/skips; retries disabled. Cleanup status zero.
 - Same-source canonical Ops: 334 tests + 2 doctests, zero failures; log `security-fix-ops.log`.
 - Security recheck: zero blocking threats; one existing medium host-authorization advisory remains open without risk acceptance. Hosted CI remains pending.
+
+## Final reviewed local implementation
+
+- Source `ce60384aa95235376fae8fe4381005c36ece3725`: seven production browser cases, zero failures/errors/skips/retries; `/private/tmp/scrypath-phase173-20261006-155750/evidence/phase175/final-ui-browser/test-results/phase175-repair.xml`. Exact swap pair/task/document, upsert and delete retry receipt/job/attempt/task/document, double submit, changed prerequisites, authorization return and same-UID read-only recheck are exercised.
+- Final same-source Ops `mix precommit`: 334 tests + 2 doctests, zero failures; `evidence/phase175/final-ui-ops.log` in the external evidence root. Existing unrelated core compiler warnings remain recorded.
+- Final browser captures include 390/768/1440 Light and Dark, System Light and Dark with reduced motion, and dialog confirmation. Keyboard initial focus, tab cycle, Escape and trigger return are executable assertions. The UID remains selectable; OS clipboard readback is unavailable on this HTTP origin. Long-text stress is a DOM layout assertion, not a maximal-value modal screenshot or full state/theme/viewport cross-product.
+- Independent UI recheck: 23/24; neutral eligibility, visible refresh, typography, spacing and cancellation copy corrected. A minor outline-softening recommendation remains; no task-blocking UI defect or human acceptance gate. All 68 listed component-state pairs are mapped with bounded source/test/capture evidence in `175-UI-REVIEW.md`.
+- Independent code review discovered development fixture exposure. `3417307` restricts destructive example E2E routes to test mode; the reviewer confirmed CR-01 fixed in `175-REVIEW-FIX.md`, and the canonical disposition gate records zero open findings. No advisory risk acceptance.
+- Core regression at `209f3cb78e` (same production source plus disposition documentation): 735 tests + 4 properties, zero failures, 11 excluded; bounded gate log `regression-core.log`. Prior UI/browser regression is running separately and is not yet claimed passed.
+- Latest repair runner cleanup: zero owned containers, volumes and networks remain for `scrypath_phase175_ce60384aa9_repair_96003`; `final-ui-browser/cleanup.txt` records status zero. Parent-owned test database remains for closeout checks. Retained previews and original workspaces were not seeded or modified.
