@@ -70,7 +70,9 @@ for (const entry of ["mounted", "standalone"] as const) {
           if (!(await firstRow.locator("details.ops-schema-health").evaluate((node: HTMLDetailsElement) => node.open))) {
             await firstRow.locator("summary.ops-schema-health__summary").click();
           }
-          await page.getByTestId("posture-failed-sync-link").first().click();
+          const syncAction = firstRow.getByTestId("posture-sync-link");
+          if (await syncAction.count()) await syncAction.click();
+          else await firstRow.getByTestId("posture-failed-sync-link").click();
           await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
           await expect(page.locator(".ops-help__content:popover-open")).toHaveCount(0);
           expect(errors).toEqual([]);

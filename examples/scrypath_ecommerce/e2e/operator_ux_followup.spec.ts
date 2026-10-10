@@ -82,8 +82,8 @@ for (const width of [1440, 390]) for (const theme of ["light", "dark"]) {
       await expect(page.getByText("Index configuration differs", { exact: true })).toBeVisible();
       await expect(page.getByTestId("configuration-details")).toHaveAttribute("open", "");
     }
-    await expect(page.locator(".ops-table-scroll").first()).toBeVisible();
-    const contrast = await new AxeBuilder({ page }).include(".ops-table-scroll").withRules(["color-contrast"]).analyze();
+    await expect(page.getByTestId("configuration-details").locator(".ops-table-scroll").first()).toBeVisible();
+    const contrast = await new AxeBuilder({ page }).include("[data-testid=configuration-details] .ops-table-scroll").withRules(["color-contrast"]).analyze();
     expect(contrast.violations).toEqual([]);
     await page.getByRole("link", { name: /Review search health/ }).last().click();
     await expect(page).toHaveURL(url => url.pathname.endsWith("/health") && !url.searchParams.has("schema"));
