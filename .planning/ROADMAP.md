@@ -162,5 +162,5 @@ Plans:
 | 173. Shared Visual Foundation and Operational Time | 0/4 | Planned — ready to execute | - |
 | 174. Recovery Entry and Diagnosis | 0/TBD | Not started | - |
 | 175. Repair and Verification | 0/TBD | Not started | - |
-| 176. Search and Playbooks | 0/TBD | Not started | - |
+| 176. Search and Playbooks | 0/5 | Planned — waiting for Phases 173–175 | - |
 | 177. Shared Patterns and Delivery Proof | 0/TBD | Not started | - |
