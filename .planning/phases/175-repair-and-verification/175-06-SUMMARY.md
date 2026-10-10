@@ -29,6 +29,11 @@ key-files:
     - examples/scrypath_ecommerce/e2e/phase175_ui_matrix.spec.ts
     - .planning/phases/175-repair-and-verification/175-EVIDENCE.md
   modified:
+    - examples/scrypath_ecommerce/e2e/helpers/e2e.ts
+    - examples/scrypath_ecommerce/lib/scrypath_ecommerce/e2e_recovery.ex
+    - examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/controllers/e2e_controller.ex
+    - examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/router.ex
+    - scrypath_ops/test/support/phase175_browser_fixture.ex
     - examples/scrypath_ecommerce/docker-playwright.sh
     - scrypath_ops/lib/scrypath_ops_web/endpoint.ex
 key-decisions:
@@ -168,3 +173,7 @@ Plan 06 local execution is complete. The phase is not independently verified: OP
 ---
 *Phase: 175-repair-and-verification*
 *Completed: 2026-10-10*
+
+## Post-execution validation followup
+
+Outside the original executor ledger, `f571c8a` adds exact upsert/delete handoff, duplicate submission, changed-prerequisite and connected sudo-return browser proof plus guarded fixtures, and preserves the actual route on sudo return. `22089e9` closes stale-runtime recovery success/exit and promotion error guards. Latest browser proof: seven cases, zero failures/skips/retries at committed `22089e9`; canonical Ops 334 tests + 2 doctests, zero failures. System Light and Dark with reduced motion are captured. Earlier three-case proof and failed attempts remain historical evidence; final hosted gate remains pending and machine-verifiable.

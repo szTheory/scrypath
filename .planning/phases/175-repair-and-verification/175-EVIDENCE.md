@@ -47,3 +47,11 @@ The approved UI spec contains 68 applicable element/category pairs in eight grou
 ## Validation gap closeout
 
 The expanded run at source `724c5acfddec11494c83d0eef8df4dfb9da416f7` plus the recorded worktree diff passed seven browser cases with zero failures/skips/retries. Retained receipt: `/private/tmp/scrypath-phase173-20261006-155750/evidence/phase175/post-audit-final/`; its `worktree-diff-sha256.txt` identifies the uncommitted changes used by the run. Exact delete proof also correlates the opaque receipt, source failure, replacement job/attempt and task UID before checking active-index absence. New checks include upsert handoff, double submission, mutation-time prerequisites, connected sudo return, and System Light/reduced motion. Full Ops gate subsequently passed 333 tests and 2 doctests. Failed gap-fill attempts remain in `nyquist-final/`. Hosted evidence and recovery callback current-runtime verification remain pending.
+
+## Current security-fix source proof
+
+- Source SHA: `22089e9513a14d38a252e6dc59530b6d3698ef1d`.
+- Worktree diff digest: `5f37ddf38b99c1db3d33f72cb24a93cd957b47101b5dcad985d34997abb8efa5`. Tracked source was committed; only the execution lock was untracked.
+- Retained browser directory: `/private/tmp/scrypath-phase173-20261006-155750/evidence/phase175/security-fix-final`. JUnit: seven tests, zero failures/errors/skips; retries disabled. Cleanup status zero.
+- Same-source canonical Ops: 334 tests + 2 doctests, zero failures; log `security-fix-ops.log`.
+- Security recheck: zero blocking threats; one existing medium host-authorization advisory remains open without risk acceptance. Hosted CI remains pending.

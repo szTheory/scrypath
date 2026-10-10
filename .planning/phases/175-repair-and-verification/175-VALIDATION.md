@@ -2,14 +2,14 @@
 phase: "175"
 slug: "repair-and-verification"
 status: validated
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
 created: "2026-10-10"
 ---
 
 # Phase 175 — Validation Strategy
 
-Audit of six plans and twelve tasks. Current Ops proof: 333 tests and 2 doctests, zero failures. Expanded browser proof: seven cases, zero failures/skips/retries. Exact-final-SHA hosted closeout remains pending. A potential recovery callback runtime gap is retained below for security verification; compliance stays false until resolved.
+Audit of six plans and twelve tasks. Current Ops proof: 334 tests and 2 doctests, zero failures. Expanded browser proof: seven cases, zero failures/skips/retries. Exact-final-SHA hosted closeout remains pending. The callback runtime gap found during security review is resolved and independently rechecked; the final requirement verdict and hosted closeout remain pending.
 
 ## Test Infrastructure
 
@@ -38,7 +38,7 @@ Select the supported installed Elixir/OTP toolchain before commands; the current
 | 175-01-T1 | 175-01 | 1 | OPUX-20 | T-175-01 | Rendered non-first selector/URL, scoped observations, read-only check | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend | Green |
 | 175-01-T2 | 175-01 | 1 | OPUX-20 | T-175-02 | Complete zero versus partial/error and independent config read | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend | Green |
 | 175-02-T1 | 175-02 | 2 | OPUX-20, OPUX-21, OPUX-22 | T-175-03, T-175-04 | Exact retry job/attempt/task and active-index upsert | LiveView/correlation | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs test/scrypath_ops/recovery_observation_test.exs` | Yes; extend | Green |
-| 175-02-T2 | 175-02 | 2 | OPUX-21, OPUX-22 | T-175-03, T-175-04, T-175-05 | Delete absence, expired/superseded/wrong-runtime unknown | LiveView/correlation | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs test/scrypath_ops/recovery_observation_test.exs test/scrypath_ops/document_observation_test.exs` | Yes | Partial: current-runtime callback check under security review |
+| 175-02-T2 | 175-02 | 2 | OPUX-21, OPUX-22 | T-175-03, T-175-04, T-175-05 | Delete absence, expired/superseded/wrong-runtime unknown | LiveView/correlation | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs test/scrypath_ops/recovery_observation_test.exs test/scrypath_ops/document_observation_test.exs` | Yes | Green: current-runtime success/exit regression passed |
 | 175-03-T1 | 175-03 | 3 | OPUX-21, OPUX-22 | T-175-06, T-175-08 | Same-UID GET, enqueued versus processing, no second POST | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend | Green |
 | 175-03-T2 | 175-03 | 3 | OPUX-21, OPUX-22 | T-175-06, T-175-07, T-175-08 | Terminal/malformed/timeout and stale success/error callbacks | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend | Green |
 | 175-04-T1 | 175-04 | 4 | OPUX-20, OPUX-22 | T-175-09, T-175-10 | Rendered exact-pair confirmation, host gate, fresh prerequisites | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend | Green |
@@ -133,3 +133,15 @@ None required for phase completion. All required behavior, current-context safet
 | Gaps found | 7 |
 | Resolved | 6 |
 | Escalated | 1 |
+
+## Security Followup Validation
+
+Commit `22089e9513a14d38a252e6dc59530b6d3698ef1d` captures recovery runtime identity and rejects callbacks after endpoint, Oban instance, repo, prefix or node changes on success and exit. The intended RED failed on stale endpoint verification; GREEN ran 52 focused tests, zero failures. The security auditor rechecked both T-175-05 and T-175-07 as closed. Canonical Ops: 334 tests + 2 doctests, zero failures (`security-fix-ops.log`). Browser at that exact committed source: seven cases, zero failures/skips/retries, cleanup zero (`security-fix-final/`). The original planning assumption/prohibition descriptors remain review-visible and await independent verifier disposition; no descriptor or human approval is fabricated.
+
+## Validation Audit 2026-10-10
+
+| Metric | Count |
+|---|---|
+| Gaps found | 7 |
+| Resolved | 7 |
+| Escalated | 0 |
