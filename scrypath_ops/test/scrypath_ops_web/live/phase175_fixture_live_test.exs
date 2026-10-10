@@ -32,6 +32,14 @@ defmodule ScrypathOpsWeb.Phase175FixtureLiveTest do
     :ok
   end
 
+  test "fixture scenarios are explicitly named and reject unknown transitions" do
+    assert {:ok, queued} = Phase175FixtureSource.scenario("accepted-queued")
+    assert queued.allowlist == [OpsPostA, OpsPostB]
+    assert queued.task_uid == 17_501
+    assert Phase175FixtureSource.scenario("unexpected-mutation") == {:error, :unknown_scenario}
+    assert Phase175FixtureSource.allowlist("unexpected-mutation") == []
+  end
+
   test "test-only standalone route mounts the production SyncDriftLive", %{conn: conn} do
     route = Enum.find(Phoenix.Router.routes(DevRouter), &(&1.path == "/ops/phase175/sync-drift"))
 
