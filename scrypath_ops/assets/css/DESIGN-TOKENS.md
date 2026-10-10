@@ -120,9 +120,9 @@ inventory names every current export; add new exports here with their role consu
 | --- | --- |
 | `ops_page_header`, `ops_heading` | Page h1 24px, section h2 18px, subsection h3 16px; 600 weight and tight heading leading |
 | `ops_panel`, `ops_section`, `ops_scaffold`, `ops_toolbar`, `ops_table` | Body 14px; named spacing and 24px page gap; panel padding 16px below 640px and 20px from 640px |
-| `ops_command_hint`, `ops_button`, `ops_link_button`, `ops_refresh_button`, `ops_action_group` | Action labels 14px/600; standard targets 40px; prominent and icon-only targets 44px; compact actions retain compact horizontal padding |
+| `ops_command_hint`, `ops_button`, `ops_link_button`, `ops_refresh_button`, `ops_refresh_control`, `ops_action_group` | Action labels 14px/600; standard targets 40px; prominent and icon-only targets 44px; compact actions retain compact horizontal padding |
 | `ops_fieldset`, `ops_field`, `ops_text_input`, `ops_number_input`, `ops_textarea`, `ops_select`, `ops_schema_select`, `ops_segmented_control`, `ops_checkbox_list`, `ops_upload_box` | Form labels, help, and values use 14px; standard controls are 40px, multiline controls are at least 96px |
-| `ops_notice`, `ops_status`, `ops_verdict`, `ops_tone_chip`, `ops_badge`, `ops_metric`, `ops_metric_grid` | Decision copy and status use body 14px/400; keep named semantic surface/text contrast pairs |
+| `ops_notice`, `ops_status`, `ops_verdict`, `ops_tone_chip`, `ops_badge`, `ops_metric`, `ops_metric_grid` | Decision copy and status use body 14px/400; verdict/metric containers stay neutral while local icon/value cues use the theme's AA-safe warning/failure foregrounds |
 | `ops_intent_card`, `ops_handoff`, `ops_trail` | Body and next action use 14px; recovery CTA has a 44px target; retain named color and motion roles |
 | `ops_empty_state`, `ops_empty_hero`, `ops_loading`, `ops_config_empty` | Required instructions and error copy use body 14px; optional metadata may use the small exception |
 | `ops_data_card`, `ops_result_row`, `ops_object_list`, `ops_object_item`, `ops_signal_table` | Record headings use h3 16px; body uses 14px; spacing, radius, shadow, and responsive layout stay token-backed |
@@ -135,6 +135,8 @@ The existing 11px/12px scale remains reserved for short timestamps, badges, eyeb
 optional technical metadata; never use it for an action, form label, failure reason, or
 the only copy needed to choose what to do. Existing radius, shadow, motion, and z-index
 tokens remain the sole authorities for those dimensions.
+
+Shared `.ops-btn` actions use neutral surface-2 hover and a stronger transient neutral press; the existing global 2px focus outline with 2px offset remains independent. Only explicit `aria-pressed="true"` marks a persistent selected action. Disabled native buttons suppress hover/press feedback, and refresh eligibility is re-read from the server-rendered `data-ops-refresh-eligible` value after each LiveView patch.
 
 ## Radius — `--radius-ops-*` → `rounded-ops-*`
 

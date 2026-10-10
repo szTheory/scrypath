@@ -139,6 +139,39 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search health']")
   end
 
+  test "degraded search health uses neutral containers and local failure cues", %{conn: conn} do
+    {:ok, lv, html} = live(conn, ~p"/ops/phase173/health?scenario=failed")
+    row = lv |> element("[id='posture-ScrypathOps.Phase173FixtureSchema']") |> render()
+
+    assert html =~ "Degraded"
+    assert row =~ "backend failed"
+    assert row =~ "queue failed"
+    assert has_element?(lv, "[data-testid='ops-verdict-icon'][data-state='warning']")
+    assert has_element?(lv, ".ops-metric__value--warning")
+    refute html =~ "ops-metric-success"
+    refute row =~ "ops-schema-signal-card--warning"
+    refute row =~ "ops-schema-signal-card--error"
+  end
+
+  test "refresh disabled eligibility follows a server-rendered fixture patch", %{conn: conn} do
+    {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=healthy")
+
+    refresh = "#search-health-refresh"
+    assert has_element?(lv, "#{refresh}[data-ops-refresh-eligible='true']:not([disabled])")
+
+    lv
+    |> element("#phase173-fixture-controls")
+    |> render_change(%{"scenario" => "refresh-disabled"})
+
+    assert has_element?(lv, "#{refresh}[data-ops-refresh-eligible='false'][disabled]")
+
+    lv
+    |> element("#phase173-fixture-controls")
+    |> render_change(%{"scenario" => "healthy"})
+
+    assert has_element?(lv, "#{refresh}[data-ops-refresh-eligible='true']:not([disabled])")
+  end
+
   test "renders production last-success evidence from its successful observation snapshot", %{
     conn: conn
   } do
@@ -176,6 +209,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert failed_row =~ "source-local evidence is retained from check 2026-10-06T17:18:42.318Z"
     assert failed_row =~ "Queue last success"
     refute failed_row =~ "Last success</dt><dd>—"
+    refute render(lv) =~ "Search health refreshed."
   end
 
   test "operational age thresholds use the observation snapshot and full precision" do

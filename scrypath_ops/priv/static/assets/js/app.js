@@ -8656,15 +8656,22 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
   var activeOpsModal = null;
   var OpsRefreshButton = {
     mounted() {
-      this.initiallyDisabled = this.el.disabled;
+      this.readServerEligibility = () => {
+        this.serverDisabled = this.el.dataset.opsRefreshEligible !== "true";
+      };
       this.syncLoadingState = () => {
         const loading = this.el.classList.contains("phx-click-loading");
-        this.el.disabled = this.initiallyDisabled || loading;
+        this.el.disabled = this.serverDisabled || loading;
         if (loading) this.el.setAttribute("aria-busy", "true");
         else this.el.removeAttribute("aria-busy");
       };
+      this.readServerEligibility();
       this.loadingObserver = new MutationObserver(this.syncLoadingState);
       this.loadingObserver.observe(this.el, { attributes: true, attributeFilter: ["class"] });
+      this.syncLoadingState();
+    },
+    updated() {
+      this.readServerEligibility();
       this.syncLoadingState();
     },
     destroyed() {

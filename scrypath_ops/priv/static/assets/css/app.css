@@ -3634,46 +3634,40 @@
     }
   }
   .ops-metric {
-    transition: border-color var(--duration-ops-status) var(--ease-ops-standard);
-  }
-  .ops-metric-success {
-    border-color: var(--color-success);
+    border-color: var(--color-base-content);
     @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-success) 45%, transparent);
+      border-color: color-mix(in oklch, var(--color-base-content) 10%, transparent);
     }
   }
-  .ops-metric-warning {
-    border-color: var(--color-warning);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-warning) 50%, transparent);
-    }
+  .ops-metric__cue {
+    display: inline-flex;
+    margin-right: 0.375rem;
+    vertical-align: -0.125em;
   }
-  .ops-metric-error {
-    border-color: var(--color-error);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-error) 50%, transparent);
-    }
+  .ops-metric__cue--warning, .ops-verdict__icon--warning, .ops-verdict__icon--partial {
+    color: var(--ops-warning-text);
   }
-  .ops-metric-info {
-    border-color: var(--color-info);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-info) 48%, transparent);
-    }
+  .ops-metric__cue--error, .ops-verdict__icon--error, .ops-metric__value--error {
+    color: var(--ops-error-text);
   }
-  .ops-metric-partial {
-    border-color: var(--color-warning);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-warning) 50%, transparent);
-    }
+  .ops-metric__value--warning {
+    color: var(--ops-warning-text);
   }
-  .ops-metric-running {
-    border-color: var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-primary) 48%, transparent);
-    }
+  .ops-verdict__icon--success {
+    color: var(--color-success);
+  }
+  .ops-verdict__icon--running, .ops-verdict__icon--neutral {
+    color: var(--color-base-content);
   }
   .ops-verdict {
-    transition: background-color var(--duration-ops-status) var(--ease-ops-standard), border-color var(--duration-ops-status) var(--ease-ops-standard);
+    border-color: var(--color-base-content);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklch, var(--color-base-content) 14%, transparent);
+    }
+    background: var(--ops-surface-2);
+    @supports (color: color-mix(in lab, red, red)) {
+      background: color-mix(in oklch, var(--ops-surface-2) 64%, transparent);
+    }
   }
   .ops-verdict-neutral {
     border-color: var(--color-base-content);
@@ -3688,35 +3682,9 @@
   .ops-verdict--hero {
     box-shadow: var(--shadow-ops-raised);
   }
-  .ops-verdict--hero .ops-verdict__dot {
-    width: 0.625rem;
-    height: 0.625rem;
-  }
-  .ops-verdict__dot {
+  .ops-verdict__icon {
     flex: none;
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 999px;
-    background: var(--color-base-content);
-    @supports (color: color-mix(in lab, red, red)) {
-      background: color-mix(in oklch, var(--color-base-content) 40%, transparent);
-    }
-    transition: background-color var(--duration-ops-status) var(--ease-ops-standard);
-  }
-  .ops-verdict.ops-tone-success .ops-verdict__dot {
-    background: var(--color-success);
-  }
-  .ops-verdict.ops-tone-warning .ops-verdict__dot, .ops-verdict.ops-tone-partial .ops-verdict__dot {
-    background: var(--color-warning);
-  }
-  .ops-verdict.ops-tone-error .ops-verdict__dot {
-    background: var(--color-error);
-  }
-  .ops-verdict.ops-tone-info .ops-verdict__dot {
-    background: var(--color-info);
-  }
-  .ops-verdict.ops-tone-running .ops-verdict__dot {
-    background: var(--color-primary);
+    display: inline-flex;
   }
   .ops-segmented-btn {
     min-height: var(--control-h-sm);
@@ -3856,7 +3824,41 @@
   }
   .ops-btn {
     min-height: var(--control-h-md);
-    transition: transform var(--duration-ops-instant) var(--ease-ops-standard);
+    transition: transform var(--duration-ops-instant) var(--ease-ops-standard), background-color var(--duration-ops-fast) var(--ease-ops-standard), border-color var(--duration-ops-fast) var(--ease-ops-standard);
+  }
+  .ops-btn:hover:not(:disabled):not(.btn-primary):not(.btn-error) {
+    border-color: var(--color-base-content);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklch, var(--color-base-content) 18%, transparent);
+    }
+    background: var(--ops-surface-2);
+  }
+  .ops-btn:active:not(:disabled):not(.btn-primary):not(.btn-error) {
+    border-color: var(--color-base-content);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklch, var(--color-base-content) 24%, transparent);
+    }
+    background: var(--color-base-content);
+    @supports (color: color-mix(in lab, red, red)) {
+      background: color-mix(in oklch, var(--color-base-content) 12%, var(--ops-surface-2));
+    }
+  }
+  .ops-btn[aria-pressed="true"] {
+    border-color: var(--color-primary);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklch, var(--color-primary) 48%, transparent);
+    }
+    background: var(--ops-selection);
+    color: var(--color-primary);
+  }
+  .ops-btn:disabled {
+    cursor: not-allowed;
+  }
+  .ops-btn:disabled:hover, .ops-btn:disabled:active {
+    transform: none;
+  }
+  .ops-btn:disabled:hover:not(.btn-primary):not(.btn-error), .ops-btn:disabled:active:not(.btn-primary):not(.btn-error) {
+    background: transparent;
   }
   .btn.ops-icon-btn {
     min-width: var(--control-h-lg);
@@ -4622,24 +4624,6 @@
     padding: var(--spacing-ops-4);
     box-shadow: var(--shadow-ops-surface);
     transition: border-color var(--duration-ops-status) var(--ease-ops-standard), box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
-  }
-  .ops-schema-signal-card--success {
-    border-color: var(--color-success);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-success) 28%, var(--color-base-content) 10%);
-    }
-  }
-  .ops-schema-signal-card--warning {
-    border-color: var(--color-warning);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-warning) 42%, var(--color-base-content) 10%);
-    }
-  }
-  .ops-schema-signal-card--error {
-    border-color: var(--color-error);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-error) 48%, var(--color-base-content) 10%);
-    }
   }
   .ops-schema-signal-card__header {
     display: flex;
@@ -5569,6 +5553,8 @@
       @supports (color: color-mix(in lab, red, red)) {
         --ops-text-muted: color-mix(in oklch, var(--color-base-content) 64%, transparent);
       }
+      --ops-warning-text: #f2c66d;
+      --ops-error-text: #ffaaa2;
     }
   }
 }
@@ -5612,6 +5598,8 @@
     @supports (color: color-mix(in lab, red, red)) {
       --ops-text-muted: color-mix(in oklch, var(--color-base-content) 64%, transparent);
     }
+    --ops-warning-text: #f2c66d;
+    --ops-error-text: #ffaaa2;
   }
 }
 @layer base {
@@ -5654,6 +5642,8 @@
     @supports (color: color-mix(in lab, red, red)) {
       --ops-text-muted: color-mix(in oklch, var(--color-base-content) 64%, transparent);
     }
+    --ops-warning-text: #805000;
+    --ops-error-text: #ad2922;
   }
 }
 @property --tw-translate-x {

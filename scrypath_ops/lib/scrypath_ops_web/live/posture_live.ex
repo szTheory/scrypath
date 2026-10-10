@@ -66,7 +66,14 @@ defmodule ScrypathOpsWeb.PostureLive do
       %{outcome: if(socket.assigns.aggregate_error_count > 0, do: :degraded, else: :ok)}
     )
 
-    {:noreply, put_flash(socket, :info, "Search health refreshed.")}
+    socket =
+      if socket.assigns.aggregate_error_count > 0 do
+        socket
+      else
+        put_flash(socket, :info, "Search health refreshed.")
+      end
+
+    {:noreply, socket}
   end
 
   def handle_event(
@@ -220,6 +227,7 @@ defmodule ScrypathOpsWeb.PostureLive do
         <.ops_refresh_control
           id="search-health-refresh"
           checked_at={@last_refresh_at}
+          disabled={@phase173_fixture? and @phase173_scenario == "refresh-disabled"}
           phx-click="refresh"
           aria_label="Refresh search health"
         />
@@ -254,7 +262,8 @@ defmodule ScrypathOpsWeb.PostureLive do
                 "long",
                 "invalid-time",
                 "queue-unused",
-                "refresh-failure"
+                "refresh-failure",
+                "refresh-disabled"
               ]
             }
             value={scenario}
@@ -287,12 +296,12 @@ defmodule ScrypathOpsWeb.PostureLive do
           <.ops_metric
             label="Schema check errors"
             value={@aggregate_error_count}
-            kind={metric_tone(@aggregate_error_count)}
+            kind={ScrypathOps.Posture.metric_tone(@aggregate_error_count)}
           />
           <.ops_metric
             label="Failed backend tasks"
             value={posture_backend_failed_count(@posture_rows)}
-            kind={metric_tone(posture_backend_failed_count(@posture_rows))}
+            kind={ScrypathOps.Posture.metric_tone(posture_backend_failed_count(@posture_rows))}
           />
           <.ops_metric
             label="Queues observed"
@@ -345,10 +354,7 @@ defmodule ScrypathOpsWeb.PostureLive do
               <article
                 data-testid="posture-row"
                 id={"posture-#{inspect(mod)}"}
-                class={[
-                  "ops-schema-signal-card",
-                  posture_card_tone(row)
-                ]}
+                class="ops-schema-signal-card"
               >
                 <%= case row do %>
                   <% {:ok, status} -> %>
@@ -616,25 +622,8 @@ defmodule ScrypathOpsWeb.PostureLive do
     end
   end
 
-  defp metric_tone(0), do: :success
-  defp metric_tone(_), do: :warning
-
-  defp posture_card_tone({:error, _reason}), do: "ops-schema-signal-card--error"
-
-  defp posture_card_tone({:ok, status}) do
-    cond do
-      length(status.backend.failed) > 0 -> "ops-schema-signal-card--warning"
-      length(status.queue.failed) > 0 -> "ops-schema-signal-card--warning"
-      length(status.queue.retrying) > 0 -> "ops-schema-signal-card--warning"
-      not status.queue.observed? -> "ops-schema-signal-card--warning"
-      true -> "ops-schema-signal-card--success"
-    end
-  end
-
-  defp posture_card_tone(_), do: nil
-
   defp backend_badge_kind(status) do
-    if length(status.backend.failed) > 0, do: :warning, else: :success
+    if length(status.backend.failed) > 0, do: :error, else: :success
   end
 
   defp backend_badge_label(status) do
@@ -642,11 +631,12 @@ defmodule ScrypathOpsWeb.PostureLive do
   end
 
   defp queue_badge_kind(status) do
-    if status.queue.observed? and length(status.queue.failed) == 0 and
-         length(status.queue.retrying) == 0 do
-      :success
-    else
-      :warning
+    cond do
+      not status.queue.observed? and queue_unused_mode?(status.mode) -> :neutral
+      not status.queue.observed? -> :warning
+      length(status.queue.failed) > 0 -> :error
+      length(status.queue.retrying) > 0 -> :warning
+      true -> :success
     end
   end
 

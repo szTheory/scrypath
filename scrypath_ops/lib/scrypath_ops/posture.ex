@@ -171,9 +171,9 @@ defmodule ScrypathOps.Posture do
   def badge_kind(:unconfigured), do: :warning
   def badge_kind(:ok), do: :success
 
-  @doc "Metric tone: a zero count is reassuring (`:success`), any nonzero is a `:warning`."
-  @spec metric_tone(integer()) :: :success | :warning
-  def metric_tone(0), do: :success
+  @doc "Metric tone: zero stays neutral; nonzero health failures receive a local warning cue."
+  @spec metric_tone(integer()) :: :neutral | :warning
+  def metric_tone(0), do: :neutral
   def metric_tone(_), do: :warning
 
   # ── internals ──────────────────────────────────────────────────────────────

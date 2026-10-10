@@ -59,6 +59,8 @@
   --ops-surface-2: #222831;
   --ops-selection: #302b4c;
   --ops-text-muted: color-mix(in oklch, var(--color-base-content) 64%, transparent);
+  --ops-warning-text: #f2c66d;
+  --ops-error-text: #ffaaa2;
 }
 
 @plugin "../vendor/daisyui-theme" {
@@ -100,6 +102,8 @@
   --ops-surface-2: #efeee9;
   --ops-selection: #eeebff;
   --ops-text-muted: color-mix(in oklch, var(--color-base-content) 64%, transparent);
+  --ops-warning-text: #805000;
+  --ops-error-text: #ad2922;
 }
 
 /* Add variants based on LiveView classes */
@@ -572,50 +576,47 @@
     background: color-mix(in oklch, var(--color-primary) 10%, transparent);
   }
 
-  /* Metric tiles keep the muted-panel fill; tone only accents the border. The border
-     color settles over --duration-ops-status so a count flipping on Refresh catches the
-     eye without a snap (state, not layout). */
+  /* Metrics and verdicts group information on neutral surfaces. State is localized to
+     readable icon/value cues so a failure never paints an entire container. */
   .ops-metric {
-    transition: border-color var(--duration-ops-status) var(--ease-ops-standard);
+    border-color: color-mix(in oklch, var(--color-base-content) 10%, transparent);
   }
 
-  .ops-metric-success {
-    border-color: color-mix(in oklch, var(--color-success) 45%, transparent);
+  .ops-metric__cue {
+    display: inline-flex;
+    margin-right: 0.375rem;
+    vertical-align: -0.125em;
   }
 
-  .ops-metric-warning {
-    border-color: color-mix(in oklch, var(--color-warning) 50%, transparent);
+  .ops-metric__cue--warning,
+  .ops-verdict__icon--warning,
+  .ops-verdict__icon--partial {
+    color: var(--ops-warning-text);
   }
 
-  .ops-metric-error {
-    border-color: color-mix(in oklch, var(--color-error) 50%, transparent);
+  .ops-metric__cue--error,
+  .ops-verdict__icon--error,
+  .ops-metric__value--error {
+    color: var(--ops-error-text);
   }
 
-  .ops-metric-info {
-    border-color: color-mix(in oklch, var(--color-info) 48%, transparent);
+  .ops-metric__value--warning {
+    color: var(--ops-warning-text);
   }
 
-  /* :partial settles like :warning (shared tone family); :running uses the brand
-     primary so an in-flight count reads as "working", not as a problem. */
-  .ops-metric-partial {
-    border-color: color-mix(in oklch, var(--color-warning) 50%, transparent);
+  .ops-verdict__icon--success {
+    color: var(--color-success);
   }
 
-  .ops-metric-running {
-    border-color: color-mix(in oklch, var(--color-primary) 48%, transparent);
+  .ops-verdict__icon--running,
+  .ops-verdict__icon--neutral {
+    color: var(--color-base-content);
   }
 
-  /* Trust-verdict hero. Tone surface comes from `.ops-tone-*` (or `.ops-verdict-neutral`);
-     the surface color settles over --duration-ops-status when the verdict changes.
-     A2 (signature tone-settle): the verdict surface, its status dot, AND the page's metric
-     borders all transition on the SAME --duration-ops-status + --ease-ops-standard pair, so a
-     Refresh that flips posture reads as ONE coherent beat ("the answer just moved") rather than
-     6 independent flickers. Pure CSS — no JS hook, no stagger; coordination is the shared timing
-     token, which is the restrained move for an ops console. */
+  /* A verdict keeps one neutral surface across all states. Only its icon carries tone. */
   .ops-verdict {
-    transition:
-      background-color var(--duration-ops-status) var(--ease-ops-standard),
-      border-color var(--duration-ops-status) var(--ease-ops-standard);
+    border-color: color-mix(in oklch, var(--color-base-content) 14%, transparent);
+    background: color-mix(in oklch, var(--ops-surface-2) 64%, transparent);
   }
 
   .ops-verdict-neutral {
@@ -623,49 +624,14 @@
     background: color-mix(in oklch, var(--ops-surface-2) 64%, transparent);
   }
 
-  /* Landing hero: the verdict is the single most important answer on the page, so it
-     gets extra presence (lift + a larger dot). Only properties no utility sets on the
-     root are touched here, so it survives Tailwind's utility layer. */
+  /* Landing hero retains its existing hierarchy; status remains localized to the icon. */
   .ops-verdict--hero {
     box-shadow: var(--shadow-ops-raised);
   }
 
-  .ops-verdict--hero .ops-verdict__dot {
-    width: 0.625rem;
-    height: 0.625rem;
-  }
-
-  .ops-verdict__dot {
+  .ops-verdict__icon {
     flex: none;
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 999px;
-    background: color-mix(in oklch, var(--color-base-content) 40%, transparent);
-    /* Settle the dot's tone in lockstep with the surface (same token pair) so the verdict
-       reads as a single beat — the dot is the loudest tone signal, so a snapping dot would
-       break the "one answer moved" coherence A2 is built for. */
-    transition: background-color var(--duration-ops-status) var(--ease-ops-standard);
-  }
-
-  .ops-verdict.ops-tone-success .ops-verdict__dot {
-    background: var(--color-success);
-  }
-
-  .ops-verdict.ops-tone-warning .ops-verdict__dot,
-  .ops-verdict.ops-tone-partial .ops-verdict__dot {
-    background: var(--color-warning);
-  }
-
-  .ops-verdict.ops-tone-error .ops-verdict__dot {
-    background: var(--color-error);
-  }
-
-  .ops-verdict.ops-tone-info .ops-verdict__dot {
-    background: var(--color-info);
-  }
-
-  .ops-verdict.ops-tone-running .ops-verdict__dot {
-    background: var(--color-primary);
+    display: inline-flex;
   }
 
   /* Segmented-control button: shares the control-height authority instead of a raw
@@ -796,7 +762,40 @@
      utility at the call site so it wins over daisyUI's component-layer radius. */
   .ops-btn {
     min-height: var(--control-h-md);
-    transition: transform var(--duration-ops-instant) var(--ease-ops-standard);
+    transition:
+      transform var(--duration-ops-instant) var(--ease-ops-standard),
+      background-color var(--duration-ops-fast) var(--ease-ops-standard),
+      border-color var(--duration-ops-fast) var(--ease-ops-standard);
+  }
+
+  .ops-btn:hover:not(:disabled):not(.btn-primary):not(.btn-error) {
+    border-color: color-mix(in oklch, var(--color-base-content) 18%, transparent);
+    background: var(--ops-surface-2);
+  }
+
+  .ops-btn:active:not(:disabled):not(.btn-primary):not(.btn-error) {
+    border-color: color-mix(in oklch, var(--color-base-content) 24%, transparent);
+    background: color-mix(in oklch, var(--color-base-content) 12%, var(--ops-surface-2));
+  }
+
+  .ops-btn[aria-pressed="true"] {
+    border-color: color-mix(in oklch, var(--color-primary) 48%, transparent);
+    background: var(--ops-selection);
+    color: var(--color-primary);
+  }
+
+  .ops-btn:disabled {
+    cursor: not-allowed;
+  }
+
+  .ops-btn:disabled:hover,
+  .ops-btn:disabled:active {
+    transform: none;
+  }
+
+  .ops-btn:disabled:hover:not(.btn-primary):not(.btn-error),
+  .ops-btn:disabled:active:not(.btn-primary):not(.btn-error) {
+    background: transparent;
   }
 
   .btn.ops-icon-btn {
@@ -1591,18 +1590,6 @@
     transition:
       border-color var(--duration-ops-status) var(--ease-ops-standard),
       box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
-  }
-
-  .ops-schema-signal-card--success {
-    border-color: color-mix(in oklch, var(--color-success) 28%, var(--color-base-content) 10%);
-  }
-
-  .ops-schema-signal-card--warning {
-    border-color: color-mix(in oklch, var(--color-warning) 42%, var(--color-base-content) 10%);
-  }
-
-  .ops-schema-signal-card--error {
-    border-color: color-mix(in oklch, var(--color-error) 48%, var(--color-base-content) 10%);
   }
 
   .ops-schema-signal-card__header {

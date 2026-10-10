@@ -80,7 +80,8 @@ defmodule ScrypathOps.Phase173FixtureSource do
               "long",
               "invalid-time",
               "queue-unused",
-              "refresh-failure"
+              "refresh-failure",
+              "refresh-disabled"
             ],
        do: scenario
 

@@ -183,7 +183,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:rest, :global,
     include:
-      ~w(phx-click phx-hook phx-value-id phx-value-mode phx-value-name phx-value-schema phx-disable-with disabled form data-testid data-ops-refresh data-ops-modal-trigger aria-label aria-controls)
+      ~w(phx-click phx-hook phx-value-id phx-value-mode phx-value-name phx-value-schema phx-disable-with disabled form data-testid data-ops-refresh data-ops-refresh-eligible data-ops-modal-trigger aria-label aria-controls)
   )
 
   slot(:inner_block, required: true)
@@ -204,6 +204,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:label, :string, default: "Refresh")
   attr(:aria_label, :string, required: true)
+  attr(:disabled, :boolean, default: false)
 
   attr(:variant, :atom,
     default: :ghost,
@@ -215,7 +216,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:rest, :global,
     include:
-      ~w(phx-click disabled data-testid title phx-value-id phx-value-mode phx-value-name phx-value-schema)
+      ~w(phx-click data-testid title phx-value-id phx-value-mode phx-value-name phx-value-schema)
   )
 
   def ops_refresh_button(assigns) do
@@ -225,6 +226,8 @@ defmodule ScrypathOpsWeb.OpsUi do
       variant={@variant}
       size={@size}
       class={["gap-1.5 ops-refresh-button", @class]}
+      disabled={@disabled}
+      data-ops-refresh-eligible={if @disabled, do: "false", else: "true"}
       data-ops-refresh
       phx-hook="OpsRefreshButton"
       aria-label={@aria_label}
@@ -240,6 +243,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:id, :string, required: true)
   attr(:checked_at, :any, default: nil)
   attr(:aria_label, :string, required: true)
+  attr(:disabled, :boolean, default: false)
 
   attr(:variant, :atom,
     default: :ghost,
@@ -251,7 +255,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:rest, :global,
     include:
-      ~w(phx-click disabled data-testid title phx-value-id phx-value-mode phx-value-name phx-value-schema)
+      ~w(phx-click data-testid title phx-value-id phx-value-mode phx-value-name phx-value-schema)
   )
 
   def ops_refresh_control(assigns) do
@@ -263,6 +267,7 @@ defmodule ScrypathOpsWeb.OpsUi do
         aria_label={@aria_label}
         variant={@variant}
         size={@size}
+        disabled={@disabled}
         {@rest}
       />
     </div>
@@ -366,9 +371,21 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_metric(assigns) do
     ~H"""
-    <div class={["ops-metric ops-muted-panel px-3 py-2", metric_tone_class(@kind)]}>
+    <div class="ops-metric ops-muted-panel px-3 py-2" data-ops-metric-tone={@kind}>
       <p class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/60">{@label}</p>
-      <p class="mt-1 font-mono text-ops-lg font-semibold tabular-nums">{@value}</p>
+      <p class={[
+        "ops-metric__value mt-1 font-mono text-ops-lg font-semibold tabular-nums",
+        metric_value_class(@kind)
+      ]}>
+        <span
+          :if={metric_cue(@kind)}
+          class={["ops-metric__cue", metric_cue_class(@kind)]}
+          aria-hidden="true"
+        >
+          <ScrypathOpsWeb.CoreComponents.icon name={metric_cue(@kind)} class="size-3.5" />
+        </span>
+        {@value}
+      </p>
     </div>
     """
   end
@@ -474,7 +491,14 @@ defmodule ScrypathOpsWeb.OpsUi do
             {@label}
           </p>
           <p class="flex items-center gap-2 text-ops-h2 font-semibold leading-ops-tight text-base-content">
-            <span class="ops-verdict__dot" aria-hidden="true"></span>
+            <span
+              class={["ops-verdict__icon", verdict_icon_class(@kind)]}
+              data-testid="ops-verdict-icon"
+              data-state={@kind}
+              aria-hidden="true"
+            >
+              <ScrypathOpsWeb.CoreComponents.icon name={verdict_icon(@kind)} class="size-5" />
+            </span>
             {@headline}
           </p>
           <div :if={@inner_block != []} class="text-ops-body text-base-content/75">
@@ -1753,18 +1777,33 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp tone_chip_class(:neutral), do: "ops-muted-panel"
   defp tone_chip_class(kind), do: tone_class(kind)
 
-  # Metric tiles keep their muted-panel background and only accent the border by tone,
-  # so they route through their own border-only modifiers (not the full tinted surface).
-  defp metric_tone_class(:success), do: "ops-metric-success"
-  defp metric_tone_class(:warning), do: "ops-metric-warning"
-  defp metric_tone_class(:error), do: "ops-metric-error"
-  defp metric_tone_class(:info), do: "ops-metric-info"
-  defp metric_tone_class(:partial), do: "ops-metric-partial"
-  defp metric_tone_class(:running), do: "ops-metric-running"
-  defp metric_tone_class(_), do: nil
+  defp metric_cue(:warning), do: "hero-exclamation-triangle"
+  defp metric_cue(:error), do: "hero-x-circle"
+  defp metric_cue(_kind), do: nil
 
-  # The verdict hero uses the full tinted surface for non-neutral states; neutral gets a
-  # quiet muted surface (so "nothing to watch yet" never reads as info-blue).
+  defp metric_cue_class(:warning), do: "ops-metric__cue--warning"
+  defp metric_cue_class(:error), do: "ops-metric__cue--error"
+  defp metric_cue_class(_kind), do: nil
+
+  defp metric_value_class(:warning), do: "ops-metric__value--warning"
+  defp metric_value_class(:error), do: "ops-metric__value--error"
+  defp metric_value_class(_kind), do: nil
+
+  defp verdict_icon(:success), do: "hero-check-circle"
+  defp verdict_icon(:warning), do: "hero-exclamation-triangle"
+  defp verdict_icon(:error), do: "hero-x-circle"
+  defp verdict_icon(:partial), do: "hero-exclamation-circle"
+  defp verdict_icon(:running), do: "hero-arrow-path"
+  defp verdict_icon(_kind), do: "hero-information-circle"
+
+  defp verdict_icon_class(:success), do: "ops-verdict__icon--success"
+  defp verdict_icon_class(:warning), do: "ops-verdict__icon--warning"
+  defp verdict_icon_class(:error), do: "ops-verdict__icon--error"
+  defp verdict_icon_class(:partial), do: "ops-verdict__icon--partial"
+  defp verdict_icon_class(:running), do: "ops-verdict__icon--running"
+  defp verdict_icon_class(_kind), do: "ops-verdict__icon--neutral"
+
+  # The verdict uses a neutral surface for every state; tone is localized to its icon.
   defp verdict_tone_class(:neutral), do: "ops-verdict-neutral"
   defp verdict_tone_class(kind), do: tone_class(kind)
 
