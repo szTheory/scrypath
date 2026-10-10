@@ -1,7 +1,7 @@
 # Phase 175: Repair and Verification - Pattern Map
 
-**Mapped:** 2026-10-10  
-**Files analyzed:** 11 likely touched/added files  
+**Mapped:** 2026-10-10
+**Files analyzed:** 11 likely touched/added files
 **Analogs found:** 11 / 11
 
 ## File Classification
@@ -98,6 +98,6 @@ No new abstraction is needed for task fetching or disclosure behavior. If a Phas
 
 ## Metadata
 
-**Analog search scope:** `scrypath_ops/lib`, `scrypath_ops/test`, `lib/scrypath/meilisearch`, `examples/scrypath_ecommerce/e2e`, `examples/scrypath_ecommerce/scripts`  
-**Tracked-source verification:** all analog paths listed above were checked with `git ls-files`; no runtime mirrors or dependency paths are referenced.  
+**Analog search scope:** `scrypath_ops/lib`, `scrypath_ops/test`, `lib/scrypath/meilisearch`, `examples/scrypath_ecommerce/e2e`, `examples/scrypath_ecommerce/scripts`
+**Tracked-source verification:** all analog paths listed above were checked with `git ls-files`; no runtime mirrors or dependency paths are referenced.
 **Pattern extraction date:** 2026-10-10
