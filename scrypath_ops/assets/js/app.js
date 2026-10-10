@@ -27,7 +27,7 @@ import topbar from "../vendor/topbar"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 
-import {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast} from "./ops_hooks"
+import {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy} from "./ops_hooks"
 
 const createMemoryStorage = () => {
   const entries = new Map()
@@ -53,7 +53,7 @@ const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
   localStorage: safeLocalStorage,
-  hooks: {...colocatedHooks, CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast},
+  hooks: {...colocatedHooks, CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy},
 })
 
 // Show progress bar on live navigation and form submits

@@ -250,19 +250,32 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
 
   test "standalone and mounted LiveSockets share all operator hooks" do
     assert Regex.match?(
-             ~r/import\s+\{\s*CommandPalette,\s*OpsNavDrawer,\s*OpsModal,\s*OpsRefreshButton,\s*OpsToast\s*\}\s+from\s+"\.\/ops_hooks"/,
+             ~r/import\s+\{\s*CommandPalette,\s*OpsNavDrawer,\s*OpsModal,\s*OpsRefreshButton,\s*OpsToast,\s*OpsTimestampCopy\s*\}\s+from\s+"\.\/ops_hooks"/,
              File.read!(@app_js)
            )
 
     assert Regex.match?(
-             ~r/import\s+\{\s*CommandPalette,\s*OpsNavDrawer,\s*OpsModal,\s*OpsRefreshButton,\s*OpsToast\s*\}\s+from\s+"\.\.\/\.\.\/\.\.\/\.\.\/scrypath_ops\/assets\/js\/ops_hooks"/,
+             ~r/import\s+\{\s*CommandPalette,\s*OpsNavDrawer,\s*OpsModal,\s*OpsRefreshButton,\s*OpsToast,\s*OpsTimestampCopy\s*\}\s+from\s+"\.\.\/\.\.\/\.\.\/\.\.\/scrypath_ops\/assets\/js\/ops_hooks"/,
              File.read!(@host_js)
            )
 
     assert File.read!(@host_js) =~
-             "hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast }"
+             "hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy }"
 
     refute File.read!(@host_js) =~ "const CommandPalette ="
+  end
+
+  test "timestamp copy waits for browser outcome and uses shared info timeout" do
+    source = File.read!(@ops_hooks)
+
+    assert source =~ "const OPS_INFO_DISMISS_MS = 4000"
+    assert source =~ "await clipboard.writeText(exact)"
+    assert source =~ "Could not copy timestamp. Select and copy the exact value."
+
+    assert source =~
+             "this.el.querySelector(\"details.ops-time__details\")?.setAttribute(\"open\", \"\")"
+
+    assert source =~ "data-ops-timestamp-copy"
   end
 
   test "flash component exposes persistent, correctly announced feedback" do

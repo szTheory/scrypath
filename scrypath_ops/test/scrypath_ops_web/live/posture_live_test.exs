@@ -189,6 +189,9 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert row =~ iso
     assert row =~ "Oct 4, 2026 at 17:02:05 UTC"
     assert row =~ "Exact timestamp"
+    assert row =~ ~s(data-ops-timestamp-copy="#{iso}")
+    assert row =~ ~s(aria-label="Copy timestamp")
+    assert row =~ ~s(role="status")
   end
 
   test "keeps prior source-local timestamps when a later refresh is unavailable", %{conn: conn} do
@@ -206,6 +209,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert failed_row =~ "Search health could not be checked: :phase173_backend_unavailable"
     assert failed_row =~ "2 days ago"
     assert failed_row =~ iso
+    assert failed_row =~ ~s(data-ops-timestamp-copy="#{iso}")
     assert failed_row =~ "source-local evidence is retained from check 2026-10-06T17:18:42.318Z"
     assert failed_row =~ "Queue last success"
     refute failed_row =~ "Last success</dt><dd>—"
@@ -249,6 +253,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
       assert html =~ state_text
       refute html =~ "<details"
       refute html =~ "Copy timestamp"
+      refute html =~ "data-ops-timestamp-copy"
     end
   end
 

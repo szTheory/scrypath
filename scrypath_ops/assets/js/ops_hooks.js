@@ -1,6 +1,12 @@
 // Shared hooks for standalone and mounted ScrypathOps LiveSockets.
 let opsModalPendingTrigger = null
 let activeOpsModal = null
+const OPS_INFO_DISMISS_MS = 4000
+
+const scheduleInfoDismiss = (owner, dismiss) => {
+  window.clearTimeout(owner.dismissTimer)
+  owner.dismissTimer = window.setTimeout(dismiss, OPS_INFO_DISMISS_MS)
+}
 
 // Keep rich refresh buttons intact while LiveView marks their click as loading.
 // `phx-disable-with` rewrites textContent, which permanently drops nested icons.
@@ -35,12 +41,92 @@ const OpsToast = {
   updated() { this.scheduleDismiss() },
   destroyed() { window.clearTimeout(this.dismissTimer) },
   scheduleDismiss() {
-    window.clearTimeout(this.dismissTimer)
-    if (!this.el.classList.contains("ops-flash--info")) return
+    if (!this.el.classList.contains("ops-flash--info")) {
+      window.clearTimeout(this.dismissTimer)
+      return
+    }
 
-    this.dismissTimer = window.setTimeout(() => {
+    scheduleInfoDismiss(this, () => {
       this.el.querySelector('button[aria-label="Close notification"]')?.click()
-    }, 4000)
+    })
+  }
+}
+
+const OpsTimestampCopy = {
+  mounted() {
+    this.latestAttempt = 0
+    this.onCopyClick = async event => {
+      const trigger = event.target instanceof Element
+        ? event.target.closest("[data-ops-timestamp-copy]")
+        : null
+
+      if (!trigger || !this.el.contains(trigger)) return
+
+      event.preventDefault()
+      const attempt = ++this.latestAttempt
+      this.clearFeedback()
+
+      try {
+        const exact = trigger.dataset.opsTimestampCopy
+        const clipboard = navigator.clipboard
+        if (!exact || typeof clipboard?.writeText !== "function") throw new Error("Clipboard unavailable")
+
+        await clipboard.writeText(exact)
+        if (attempt !== this.latestAttempt || !trigger.isConnected) return
+
+        this.showFeedback("Timestamp copied", "success", false)
+        scheduleInfoDismiss(this, () => {
+          if (attempt === this.latestAttempt) this.clearFeedback()
+        })
+      } catch (_error) {
+        if (attempt !== this.latestAttempt || !trigger.isConnected) return
+
+        this.el.querySelector("details.ops-time__details")?.setAttribute("open", "")
+        this.showFeedback("Could not copy timestamp. Select and copy the exact value.", "error", true)
+      }
+    }
+    this.onDismissClick = event => {
+      const dismiss = event.target instanceof Element
+        ? event.target.closest("[data-ops-timestamp-dismiss]")
+        : null
+      if (!dismiss || !this.el.contains(dismiss)) return
+
+      event.preventDefault()
+      this.latestAttempt += 1
+      this.clearFeedback()
+      this.el.querySelector("[data-ops-timestamp-copy]")?.focus()
+    }
+
+    this.el.addEventListener("click", this.onCopyClick)
+    this.el.addEventListener("click", this.onDismissClick)
+  },
+  destroyed() {
+    window.clearTimeout(this.dismissTimer)
+    this.el.removeEventListener("click", this.onCopyClick)
+    this.el.removeEventListener("click", this.onDismissClick)
+  },
+  clearFeedback() {
+    window.clearTimeout(this.dismissTimer)
+    const feedback = this.el.querySelector("[data-ops-timestamp-feedback]")
+    const message = this.el.querySelector("[data-ops-timestamp-message]")
+    const dismiss = this.el.querySelector("[data-ops-timestamp-dismiss]")
+    if (feedback) {
+      feedback.hidden = true
+      feedback.dataset.state = "neutral"
+    }
+    if (message) message.textContent = ""
+    if (dismiss) dismiss.hidden = true
+  },
+  showFeedback(text, state, dismissible) {
+    const feedback = this.el.querySelector("[data-ops-timestamp-feedback]")
+    const message = this.el.querySelector("[data-ops-timestamp-message]")
+    const dismiss = this.el.querySelector("[data-ops-timestamp-dismiss]")
+    if (!feedback || !message || !dismiss) return
+
+    feedback.dataset.state = state
+    message.textContent = text
+    dismiss.hidden = !dismissible
+    feedback.hidden = false
   }
 }
 
@@ -583,4 +669,4 @@ const OpsModal = {
   }
 }
 
-export {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast}
+export {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy}

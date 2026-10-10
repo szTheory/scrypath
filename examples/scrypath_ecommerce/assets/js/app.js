@@ -12,7 +12,8 @@ import {
   OpsNavDrawer,
   OpsModal,
   OpsRefreshButton,
-  OpsToast
+  OpsToast,
+  OpsTimestampCopy
 } from "../../../../scrypath_ops/assets/js/ops_hooks";
 
 const createMemoryStorage = () => {
@@ -38,7 +39,7 @@ const safeLocalStorage = (() => {
 const liveSocket = new LiveSocket("/live", Socket, {
   params: { _csrf_token: csrfToken },
   localStorage: safeLocalStorage,
-  hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast }
+  hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy }
 });
 
 const themeKey = "phx:theme";

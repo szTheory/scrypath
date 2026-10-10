@@ -1223,6 +1223,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   end
 
   @doc "Compact time metadata or snapshot-relative operational evidence with a native exact-value disclosure."
+  attr(:id, :string, default: nil)
   attr(:dt, :any, default: nil)
   attr(:snapshot_at, :any, default: nil)
   attr(:source_iso, :string, default: nil)
@@ -1246,7 +1247,11 @@ defmodule ScrypathOpsWeb.OpsUi do
       |> assign(:aria_label, time_aria_label(assigns.label, human, assigns.operational))
 
     ~H"""
-    <span class={["ops-time", @operational && "ops-time--operational", @class]}>
+    <span
+      id={@id}
+      class={["ops-time", @operational && "ops-time--operational", @class]}
+      phx-hook={if(@operational && @exact, do: "OpsTimestampCopy")}
+    >
       <span :if={@label} class="ops-time__label">{@label}</span>
       <%= if @exact do %>
         <time
@@ -1258,6 +1263,17 @@ defmodule ScrypathOpsWeb.OpsUi do
           {@human}
         </time>
         <button
+          :if={@operational}
+          type="button"
+          class="ops-time__copy"
+          data-ops-timestamp-copy={@exact}
+          aria-label="Copy timestamp"
+          title="Copy timestamp"
+        >
+          <ScrypathOpsWeb.CoreComponents.icon name="hero-clipboard-document" class="size-4" />
+          <span>Copy timestamp</span>
+        </button>
+        <button
           :if={@copy && !@operational}
           type="button"
           class="ops-time__copy"
@@ -1267,6 +1283,24 @@ defmodule ScrypathOpsWeb.OpsUi do
         >
           <ScrypathOpsWeb.CoreComponents.icon name="hero-clipboard-document" class="size-3.5" />
         </button>
+        <div
+          :if={@operational}
+          class="ops-time__feedback"
+          data-ops-timestamp-feedback
+          data-state="neutral"
+          hidden
+        >
+          <p role="status" aria-live="polite" aria-atomic="true" data-ops-timestamp-message></p>
+          <button
+            type="button"
+            class="ops-time__feedback-dismiss"
+            data-ops-timestamp-dismiss
+            aria-label="Dismiss copy message"
+            hidden
+          >
+            Dismiss
+          </button>
+        </div>
         <p :if={@retained_text && @operational} class="ops-time__retained">{@retained_text}</p>
         <details :if={@operational} class="ops-time__details">
           <summary>Exact timestamp</summary>

@@ -966,12 +966,15 @@
   .ops-time__copy {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
+    min-height: var(--control-h-md);
+    justify-content: flex-start;
+    gap: 0.375rem;
+    padding-inline: 0.5rem;
     flex: none;
     border-radius: var(--radius-ops-control);
-    color: color-mix(in oklch, var(--color-base-content) 58%, transparent);
+    color: var(--color-primary);
+    font-size: var(--text-ops-sm);
+    font-weight: 550;
     transition:
       background-color var(--duration-ops-fast) var(--ease-ops-standard),
       color var(--duration-ops-fast) var(--ease-ops-standard),
@@ -985,6 +988,34 @@
 
   .ops-time__copy:active {
     transform: scale(0.96);
+  }
+
+  .ops-time__feedback {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 100%;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--ops-text-muted);
+    font-size: var(--text-ops-sm);
+    line-height: var(--leading-ops-body);
+    overflow-wrap: anywhere;
+  }
+
+  .ops-time__feedback[hidden] {
+    display: none;
+  }
+
+  .ops-time__feedback[data-state="error"] {
+    color: var(--ops-error-text);
+  }
+
+  .ops-time__feedback-dismiss {
+    min-height: var(--control-h-sm);
+    flex: none;
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
   }
 
   .ops-schema-picker {

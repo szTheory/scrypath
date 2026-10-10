@@ -398,6 +398,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                             <dt>Last success</dt>
                             <dd>
                               <.ops_time
+                                id={"posture-time-backend-#{inspect(mod)}"}
                                 dt={state_at(status.backend.last_succeeded)}
                                 source_iso={state_source_iso(status.backend.last_succeeded)}
                                 snapshot_at={source_ref(@posture_summary, mod, :backend)[:checked_at]}
@@ -431,6 +432,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                             <dt>Last success</dt>
                             <dd>
                               <.ops_time
+                                id={"posture-time-queue-#{inspect(mod)}"}
                                 dt={state_at(status.queue.last_succeeded)}
                                 source_iso={state_source_iso(status.queue.last_succeeded)}
                                 snapshot_at={source_ref(@posture_summary, mod, :queue)[:checked_at]}
@@ -472,6 +474,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                         <dt>{source_last_success_label(source)}</dt>
                         <dd>
                           <.ops_time
+                            id={"posture-time-retained-#{source}-#{inspect(mod)}"}
                             dt={retained_state_at(@posture_summary, mod, source)}
                             source_iso={retained_source_iso(@posture_summary, mod, source)}
                             snapshot_at={retained_snapshot_at(@posture_summary, mod, source)}

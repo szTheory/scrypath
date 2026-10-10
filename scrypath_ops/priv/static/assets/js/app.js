@@ -8654,6 +8654,11 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
   // js/ops_hooks.js
   var opsModalPendingTrigger = null;
   var activeOpsModal = null;
+  var OPS_INFO_DISMISS_MS = 4e3;
+  var scheduleInfoDismiss = (owner, dismiss) => {
+    window.clearTimeout(owner.dismissTimer);
+    owner.dismissTimer = window.setTimeout(dismiss, OPS_INFO_DISMISS_MS);
+  };
   var OpsRefreshButton = {
     mounted() {
       this.readServerEligibility = () => {
@@ -8689,11 +8694,77 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       window.clearTimeout(this.dismissTimer);
     },
     scheduleDismiss() {
-      window.clearTimeout(this.dismissTimer);
-      if (!this.el.classList.contains("ops-flash--info")) return;
-      this.dismissTimer = window.setTimeout(() => {
+      if (!this.el.classList.contains("ops-flash--info")) {
+        window.clearTimeout(this.dismissTimer);
+        return;
+      }
+      scheduleInfoDismiss(this, () => {
         this.el.querySelector('button[aria-label="Close notification"]')?.click();
-      }, 4e3);
+      });
+    }
+  };
+  var OpsTimestampCopy = {
+    mounted() {
+      this.latestAttempt = 0;
+      this.onCopyClick = async (event) => {
+        const trigger = event.target instanceof Element ? event.target.closest("[data-ops-timestamp-copy]") : null;
+        if (!trigger || !this.el.contains(trigger)) return;
+        event.preventDefault();
+        const attempt = ++this.latestAttempt;
+        this.clearFeedback();
+        try {
+          const exact = trigger.dataset.opsTimestampCopy;
+          const clipboard = navigator.clipboard;
+          if (!exact || typeof clipboard?.writeText !== "function") throw new Error("Clipboard unavailable");
+          await clipboard.writeText(exact);
+          if (attempt !== this.latestAttempt || !trigger.isConnected) return;
+          this.showFeedback("Timestamp copied", "success", false);
+          scheduleInfoDismiss(this, () => {
+            if (attempt === this.latestAttempt) this.clearFeedback();
+          });
+        } catch (_error) {
+          if (attempt !== this.latestAttempt || !trigger.isConnected) return;
+          this.el.querySelector("details.ops-time__details")?.setAttribute("open", "");
+          this.showFeedback("Could not copy timestamp. Select and copy the exact value.", "error", true);
+        }
+      };
+      this.onDismissClick = (event) => {
+        const dismiss = event.target instanceof Element ? event.target.closest("[data-ops-timestamp-dismiss]") : null;
+        if (!dismiss || !this.el.contains(dismiss)) return;
+        event.preventDefault();
+        this.latestAttempt += 1;
+        this.clearFeedback();
+        this.el.querySelector("[data-ops-timestamp-copy]")?.focus();
+      };
+      this.el.addEventListener("click", this.onCopyClick);
+      this.el.addEventListener("click", this.onDismissClick);
+    },
+    destroyed() {
+      window.clearTimeout(this.dismissTimer);
+      this.el.removeEventListener("click", this.onCopyClick);
+      this.el.removeEventListener("click", this.onDismissClick);
+    },
+    clearFeedback() {
+      window.clearTimeout(this.dismissTimer);
+      const feedback = this.el.querySelector("[data-ops-timestamp-feedback]");
+      const message = this.el.querySelector("[data-ops-timestamp-message]");
+      const dismiss = this.el.querySelector("[data-ops-timestamp-dismiss]");
+      if (feedback) {
+        feedback.hidden = true;
+        feedback.dataset.state = "neutral";
+      }
+      if (message) message.textContent = "";
+      if (dismiss) dismiss.hidden = true;
+    },
+    showFeedback(text, state, dismissible) {
+      const feedback = this.el.querySelector("[data-ops-timestamp-feedback]");
+      const message = this.el.querySelector("[data-ops-timestamp-message]");
+      const dismiss = this.el.querySelector("[data-ops-timestamp-dismiss]");
+      if (!feedback || !message || !dismiss) return;
+      feedback.dataset.state = state;
+      message.textContent = text;
+      dismiss.hidden = !dismissible;
+      feedback.hidden = false;
     }
   };
   document.addEventListener("click", (e) => {
@@ -9235,7 +9306,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
     longPollFallbackMs: 2500,
     params: { _csrf_token: csrfToken },
     localStorage: safeLocalStorage,
-    hooks: { ...hooks, CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast }
+    hooks: { ...hooks, CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy }
   });
   import_topbar.default.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" });
   window.addEventListener("phx:page-loading-start", (_info) => import_topbar.default.show(300));
