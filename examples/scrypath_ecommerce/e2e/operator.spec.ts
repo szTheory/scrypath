@@ -203,14 +203,19 @@ test("operator promotes only this returned task pair and unique target document"
   await expect(advanced.getByRole("button", { name: "Promote target index" })).toBeEnabled();
   await advanced.getByRole("button", { name: "Promote target index" }).click();
   await expect(page.getByRole("heading", { name: "Confirm index promotion" })).toBeVisible();
-  await page.getByRole("dialog", { name: "Confirm index promotion" }).getByRole("button", { name: "Promote target index", exact: true }).click();
+  const confirmation = page.getByRole("dialog", { name: "Confirm index promotion" });
+  await expect(confirmation).toContainText(fixture.live_index);
+  await expect(confirmation).toContainText(fixture.target_index);
+  await confirmation.getByRole("button", { name: "Promote target index", exact: true }).click();
 
-  const promotionStatus = page.locator("details").filter({ hasText: "Advanced: index promotion" });
+  const promotionStatus = page.locator("#promotion-task-status");
   await expect(promotionStatus.getByText("Index swap completed", { exact: true })).toBeVisible({ timeout: 30_000 });
-  const taskText = await promotionStatus.innerText();
-  const taskMatch = taskText.match(/Task\s+(\d+)/);
-  expect(taskMatch, "completed promotion must retain its returned task UID").not.toBeNull();
-  const taskUid = Number(taskMatch![1]);
+  await advanced.locator("summary").click();
+  await expect(advanced).not.toHaveAttribute("open", "");
+  await expect(promotionStatus.getByText("Index swap completed", { exact: true })).toBeVisible();
+  const uidText = await promotionStatus.getByTestId("promotion-task-identity").locator("code").last().innerText();
+  const taskUid = Number(uidText);
+  expect(Number.isInteger(taskUid), "completed promotion must retain its returned task UID").toBe(true);
   const evidence = await probeSwapEvidence(request, {
     marker: fixture.marker, taskUid, liveIndex: fixture.live_index, targetIndex: fixture.target_index,
     taskBaseline: fixture.task_baseline, documentId: fixture.document_id
