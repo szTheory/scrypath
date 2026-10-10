@@ -124,6 +124,25 @@ defmodule ScrypathOps.DocumentObservationTest do
              )
   end
 
+  test "an unrelated task cannot verify expected delete absence" do
+    stub = stub_name("UnrelatedDeleteTask")
+    owner = self()
+
+    Req.Test.stub(stub, fn conn ->
+      send(owner, :unexpected_document_read)
+      json(conn, 200, %{"id" => "gone"})
+    end)
+
+    assert {:ok, %{state: :unknown, reason: :task_uid_mismatch}} =
+             DocumentObservation.check(
+               receipt(operation: :delete, expected: ["gone"]),
+               task("succeeded", 43),
+               opts(stub)
+             )
+
+    refute_received :unexpected_document_read
+  end
+
   test "percent encodes index path segments before observing delete effects" do
     stub = stub_name("EncodedIndex")
 

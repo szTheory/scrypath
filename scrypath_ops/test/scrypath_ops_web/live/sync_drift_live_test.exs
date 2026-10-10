@@ -400,6 +400,30 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert has_element?(view, "#recovery-observation", "Recovery unknown")
   end
 
+  test "expired recovery handoff remains visible and names unavailable evidence", %{conn: conn} do
+    path =
+      "/ops/sync-drift?" <>
+        URI.encode_query(%{
+          "schema" => "ScrypathOps.Test.OpsPostB",
+          "recovery" => "expired-receipt-handle",
+          "recovery_generation" => "1"
+        })
+
+    {:ok, view, _html} = live(conn, path)
+    render_async(view)
+
+    assert has_element?(view, "#recovery-observation", "Recovery unknown")
+    assert :sys.get_state(view.pid).socket.assigns.selected_schema == OpsPostB
+    assert has_element?(view, "[data-testid=recovery-unavailable]", "queue, task, or document")
+    refute has_element?(view, "#recovery-observation", "Retry queue job")
+
+    before = Agent.get(:sync_drift_live_test_state, & &1.swap_called)
+    view |> element("button", "Refresh recovery status") |> render_click()
+    render_async(view)
+    assert has_element?(view, "[data-testid=recovery-unavailable]")
+    assert Agent.get(:sync_drift_live_test_state, & &1.swap_called) == before
+  end
+
   test "swap live rechecks current prerequisites and refuses a stale contract read" do
     socket =
       sync_drift_socket(%{
