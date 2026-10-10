@@ -1,7 +1,7 @@
 # Requirements: Scrypath — v1.43 ScrypathOps UI refinement
 
 **Defined:** 2026-10-06
-**Status:** Approved by the maintainer on 2026-10-06 together with the five-phase roadmap. Implementation has not started.
+**Status:** Approved by the maintainer on 2026-10-06 together with the five-phase roadmap. Phases 173–175 have completed and independently verified OPUX-09–OPUX-22; six requirements remain for Phases 176–177.
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
 ## v1.43 Requirements
@@ -27,9 +27,9 @@ Refine the six existing operator surfaces. Continue the OPUX family after comple
 
 ### Repair and verification
 
-- [ ] **OPUX-20**: Operators using Sync and drift can distinguish index-contract drift from document freshness and observation from repair or advanced promotion, with a clear next step for ordinary recovery and a separate advanced promotion path.
-- [ ] **OPUX-21**: Operators can distinguish accepted, running, terminal success/failure, and unavailable/unknown observations for repair/promotion work while retaining exact task identity; failed observation cannot masquerade as failed or completed remote work.
-- [ ] **OPUX-22**: Operators can review and perform supported repair/promotion through the existing confirmation, authorization, and eligibility gates; completion remains tied to authoritative task/index/document evidence rather than acceptance, a flash, or historic unrelated work.
+- [x] **OPUX-20**: Operators using Sync and drift can distinguish index-contract drift from document freshness and observation from repair or advanced promotion, with a clear next step for ordinary recovery and a separate advanced promotion path.
+- [x] **OPUX-21**: Operators can distinguish accepted, running, terminal success/failure, and unavailable/unknown observations for repair/promotion work while retaining exact task identity; failed observation cannot masquerade as failed or completed remote work.
+- [x] **OPUX-22**: Operators can review and perform supported repair/promotion through the existing confirmation, authorization, and eligibility gates; completion remains tied to authoritative task/index/document evidence rather than acceptance, a flash, or historic unrelated work.
 
 ### Search and saved checks
 
@@ -86,9 +86,9 @@ Approved roadmap mapping. Each requirement appears in exactly one phase; every r
 | OPUX-17 | Phase 174 | Complete |
 | OPUX-18 | Phase 174 | Complete |
 | OPUX-19 | Phase 174 | Complete |
-| OPUX-20 | Phase 175 | Pending |
-| OPUX-21 | Phase 175 | Pending |
-| OPUX-22 | Phase 175 | Pending |
+| OPUX-20 | Phase 175 | Complete |
+| OPUX-21 | Phase 175 | Complete |
+| OPUX-22 | Phase 175 | Complete |
 | OPUX-23 | Phase 176 | Pending |
 | OPUX-24 | Phase 176 | Pending |
 | OPUX-25 | Phase 176 | Pending |
@@ -101,8 +101,9 @@ Approved roadmap mapping. Each requirement appears in exactly one phase; every r
 - Mapped to exactly one approved phase: 20
 - Unmapped: 0
 - Approved: 20
-- Implemented or verified: 0
+- Implemented and independently verified: 14
+- Remaining: 6
 
 ---
 *Requirements defined: 2026-10-06 from the approved milestone brief.*
-*Last updated: 2026-10-06 after explicit requirements and roadmap approval.*
+*Last updated: 2026-10-10 after Phase 175 completion and independent verification.*

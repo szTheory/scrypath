@@ -26,7 +26,7 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 
 ## Current State
 
-**Current as of 2026-10-09:** Phases 173–174 are complete; Phase 175 remains the next formal v1.43 phase. Maintainer feedback authorized an independent Impeccable whole-workflow audit and concrete follow-up fixes before further UI planning. The [UX rubric](reference/OPERATOR-UX-RUBRIC.md) and [accepted audit inputs](reference/OPERATOR-UX-AUDIT-2026-10-09.md) now guide all six surfaces and Phases 175–177. This refines the existing milestone rather than opening a separate brand milestone; no new dependency or product capability is approved. Work remains isolated at `/private/tmp/scrypath-phase173-20261006-155750/phase174-execution`, draft PR95, preview :4014. The original dirty checkout/preview :4012 and frozen Phase173 source remain preserved. Audit follow-up evidence does not extend older hosted receipts or complete the remaining phases.
+**Current as of 2026-10-10:** Phases 173–175 are complete: 18 plans and 14 of the 20 v1.43 requirements. Phase 175 separates ordinary sync and configuration checks from advanced promotion, retains exact retry/task identities, rejects stale runtime or authorization context, and verifies task/index/document outcomes. Independent verification passed 29/29, the scoped Ops lane passed 334 tests plus 2 doctests, and the owned browser proof passed 7/7. Candidate hosted run 38072905651 passed the required gates, coverage and closeout attestation; final source attestation follows all tracked records and is retained externally as described in `phases/175-repair-and-verification/175-CLOSEOUT.md`. Phase 176 Search and Playbooks is next. Maintainer feedback authorized an independent Impeccable whole-workflow audit and concrete follow-up fixes before further UI planning. The [UX rubric](reference/OPERATOR-UX-RUBRIC.md) and [accepted audit inputs](reference/OPERATOR-UX-AUDIT-2026-10-09.md) now guide all six surfaces and Phases 175–177. This refines the existing milestone rather than opening a separate brand milestone; no new dependency or product capability is approved. Work remains isolated at `/private/tmp/scrypath-phase173-20261006-155750/phase174-execution`, draft PR95, preview :4014. The original dirty checkout/preview :4012 and frozen Phase173 source remain preserved. Audit follow-up evidence does not extend older hosted receipts or complete the remaining phases.
 
 **Current as of 2026-10-06:** v1.43 **ScrypathOps UI refinement** has an approved 20-requirement roadmap across Phases 173–177. Phase 173 completed all four plans and OPUX-09–OPUX-15: neutral shell/status treatment, coherent theme preference, quiet actions and stable precise operational time/copy feedback. Independent verification passed 58/58, production browser proof passed 34/34, and core/Ops gates passed with zero failures. The hosted candidate passed required jobs, coverage and attestation; final tracking precedes a separate final-SHA attestation with an external receipt. This is branch delivery, with no merge or Hex release claimed. Phase 174 Recovery Entry and Diagnosis is ready for discussion; Phases 174–177 remain unplanned. Execution/tracking live in `/private/tmp/scrypath-phase173-20261006-155750/execution`; the original dirty checkout and feedback preview are preserved. v1.42 and its receipts remain archived and source-bounded.
 
@@ -320,7 +320,7 @@ Current planning files: **`.planning/{PROJECT,REQUIREMENTS,ROADMAP,STATE}.md`** 
 
 ## Release Train Posture
 
-- **Active milestone:** v1.43 ScrypathOps UI refinement, requirements and roadmap approved; Phase 173 has an approved UI contract and four independently checked plans ready to execute; no implementation has started. v1.42 ScrypathOps operator/admin UI (Phase172) and v1.41 are complete and archived. The original Phase 170 NOT READY decision is preserved at its historical cutoff; the fresh 2026-10-02 issue #86 decision is READY within its recorded limits.
+- **Active milestone:** v1.43 ScrypathOps UI refinement, requirements and roadmap approved; Phases 173–175 have completed 18 plans and 14 requirements with independent verification. Phase 176 Search and Playbooks is next. v1.42 ScrypathOps operator/admin UI (Phase172) and v1.41 are complete and archived. The original Phase 170 NOT READY decision is preserved at its historical cutoff; the fresh 2026-10-02 issue #86 decision is READY within its recorded limits.
 - **Policy:** Keep `main` green on the lean required gates and prefer PR-first execution for serious milestone or feature-depth work.
 - **Current goals:** Refine the existing six operator surfaces from the concrete 2026-10-06 visual feedback while maintaining green main and the completed recovery contract. Preserve the attested Phase 170 source and do not restart it. The authorized tracking replacement is separate from the frozen source identity.
 - **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, new core APIs, new auth models, new UI surfaces, and unrelated workflow expansion remain out of scope.
@@ -376,6 +376,10 @@ measured pure hot paths did not justify speculative optimization.
 
 | Decision | Outcome |
 |----------|---------|
+| Separate ordinary sync, index configuration checks, and advanced promotion without claiming document freshness from matching configuration. | ✓ Phase 175 — scoped rendered checks preserve independent read results and explicit next steps. |
+| Bind recovery and promotion observations to exact identity and current schema/runtime context. | ✓ Phase 175 — wrong UID, stale callbacks and changed endpoint/Oban/repo/prefix/node remain unknown or rejected. |
+| Keep host authorization and current eligibility on the server, with one confirmed pairwise swap and no replay on return. | ✓ Phase 175 — confirmation, read-only recheck, duplicate submission and stale authorization paths have executable proof. |
+| Reuse existing ExUnit assertions to prove safety prohibitions with in-memory bad subjects and clean controls. | ✓ Phase 175 — six portable checks fail for the intended violation and pass current source, without a new dependency. |
 | Scope v1.43 around the saved UI refinement brief and reuse existing UI inventories; keep research defaults and adaptive model routing intact. | Scope, inventory reuse, all 20 requirements, and Phases 173–177 approved 2026-10-06. |
 | Settle shared light/dark visual direction in Impeccable comps and GSD UI contracts before broad implementation. | ✓ Phase 173 — approved neutral treatment implemented and checked in both entrypoints; later phases reuse it. |
 | Preserve independent backend/queue observations, source-local ages and exact validated ISO evidence during outages. | ✓ Phase 173 — empty queues are observed; failures retain each source's successful history without claiming freshness. |
@@ -399,11 +403,13 @@ measured pure hot paths did not justify speculative optimization.
 
 ## Planning window
 
-v1.41 delivered Phase 168 four-graph security and proof, Phase 169 tenant/facet fixes and finite PR/path accounting, and Phase 170 docs/tooling plus published 0.3.14. Phase 171 closed the DOC-03/GATE-05/CLOSE-04 verification traceability gaps. The original issue #86 NOT READY assessment remains unchanged at its cutoff; the fresh 2026-10-02 READY assessment is separately recorded at comment 5955742805. The audit accepts visible, nonblocking Nyquist validation-record debt in Phases 168–170; all nine requirements, four phases, six integration paths, and three end-to-end flows passed. Current tracking records Phase 170 at 8/8 after its authorized post-freeze replacement; original bytes and the attested 17/18 snapshot remain preserved. v1.41 is archived locally. v1.42 completed the cross-screen ScrypathOps recovery journey and shared UI repairs in Phase172. v1.43 now has an approved UI refinement roadmap; Phase 173 is complete with seven requirements and independent verification; Phase 174 has completed its eight plans and independent goal verification; Phase 175 is ready to plan. v1.40 and v1.39 assessments remain immutable historical results.
+v1.41 delivered Phase 168 four-graph security and proof, Phase 169 tenant/facet fixes and finite PR/path accounting, and Phase 170 docs/tooling plus published 0.3.14. Phase 171 closed the DOC-03/GATE-05/CLOSE-04 verification traceability gaps. The original issue #86 NOT READY assessment remains unchanged at its cutoff; the fresh 2026-10-02 READY assessment is separately recorded at comment 5955742805. The audit accepts visible, nonblocking Nyquist validation-record debt in Phases 168–170; all nine requirements, four phases, six integration paths, and three end-to-end flows passed. Current tracking records Phase 170 at 8/8 after its authorized post-freeze replacement; original bytes and the attested 17/18 snapshot remain preserved. v1.41 is archived locally. v1.42 completed the cross-screen ScrypathOps recovery journey and shared UI repairs in Phase172. v1.43 now has an approved UI refinement roadmap; Phases 173–175 have completed 18 plans and 14 requirements with independent goal verification; Phase 176 Search and Playbooks is ready for discussion. v1.40 and v1.39 assessments remain immutable historical results.
 
 ## Requirements
 
 ### Validated
+
+- [x] **v1.43 / Phase 175** (2026-10-10): **OPUX-20–OPUX-22** — scoped sync/configuration checks, ordinary repair versus advanced promotion, exact task and document outcomes, current eligibility/host gates, and stale-context rejection; independent verification 29/29, owned browser 7/7, six executable safety-prohibition checks, and successful candidate hosted closeout. Final-source receipt is external; no merge or release claim.
 
 - [x] **v1.43 / Phase 174** (2026-10-07): **OPUX-16–OPUX-19** — connected recovery entry and diagnosis, source-qualified failed-work actions, preserved allowed schema and safe local return; independent verification 48/48 plan truths and all four roadmap outcomes, executable dual-entrypoint evidence. Hosted terminal closeout is recorded separately; no merge or release claim.
 
@@ -490,11 +496,10 @@ v1.41 delivered Phase 168 four-graph security and proof, Phase 169 tenant/facet 
 
 ### Active
 
-- [ ] Clear observation, drift, repair/promotion, and evidence/outcome boundaries (OPUX-20–OPUX-22).
 - [ ] Search and Playbooks form/result and action hierarchy (OPUX-23–OPUX-25).
 - [ ] Consolidated shared patterns, representative proof, and reviewed/source-bounded delivery (OPUX-26–OPUX-28).
 
-These are the approved requirements for v1.43, mapped exactly once across Phases 173–177 in REQUIREMENTS.md and ROADMAP.md. Phases 173–174 implement and verify OPUX-09–OPUX-19; the remaining nine requirements are active.
+These are the approved requirements for v1.43, mapped exactly once across Phases 173–177 in REQUIREMENTS.md and ROADMAP.md. Phases 173–175 implement and verify OPUX-09–OPUX-22; the remaining six requirements are active.
 
 ### Out of Scope
 
@@ -511,9 +516,9 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has shipped planning milestones through **`v1.42`** (**`v1.0`**-**`v1.42`**); **`v1.43`** has an approved 20-requirement, five-phase roadmap and has completed Phases 173–174 (12 plans and 11 requirements); Phase 174 has completed its eight plans and independent goal verification; Phase 175 is ready to plan. Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and `milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` for shipped arcs.
+The repository has shipped planning milestones through **`v1.42`** (**`v1.0`**-**`v1.42`**); **`v1.43`** has an approved 20-requirement, five-phase roadmap and has completed Phases 173–175 (18 plans and 14 requirements); Phase 176 Search and Playbooks is ready for discussion. Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and `milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` for shipped arcs.
 
-Maintainer feedback on 2026-10-08 authorizes a focused Phase 174 UI follow-up: simpler sync summaries, neutral light surfaces, local “Selected schema” context, aligned per-schema actions, and timestamp click-to-copy with brief feedback. It changes presentation without adding recovery capabilities or dependencies. Phase 174’s original exact-SHA evidence remains historical; the follow-up has separate verification. Phase 175 remains unstarted.
+Maintainer feedback on 2026-10-08 authorizes a focused Phase 174 UI follow-up: simpler sync summaries, neutral light surfaces, local “Selected schema” context, aligned per-schema actions, and timestamp click-to-copy with brief feedback. It changes presentation without adding recovery capabilities or dependencies. Phase 174’s original exact-SHA evidence remains historical; the follow-up has separate verification. This paragraph describes the Phase 174 follow-up baseline; Phase 175 completion is recorded above.
 
 Further feedback clarifies the entry-point contract: Control Room and Search health always show all configured schemas, with no selected-schema context or filter. Legacy overview schema queries normalize to the unscoped URL. Per-schema recovery links choose that exact schema on Failed sync work or Sync and drift, where visible controls own the selection. Overview navigation remains unscoped.
 
@@ -528,4 +533,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-09 after the authorized whole-workflow UX audit and fixes; Phase 175 discussion is next using the accepted rubric. Phases 175–177 remain unstarted; older completion and source receipts remain historical.*
+*Last updated: 2026-10-10 after Phase 175 independent verification and candidate acceptance. Phase 176 discussion is next; Phases 176–177 remain unstarted. Final attestation is external to the committed tracking records; older receipts remain historical.*

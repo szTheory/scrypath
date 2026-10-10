@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- 📋 **v1.43 ScrypathOps UI refinement** — Phases 173–177 (173–174 complete, 12 completed plans; Phase 175 is next)
+- 📋 **v1.43 ScrypathOps UI refinement** — Phases 173–177 (173–175 complete, 18 completed plans; Phase 176 is next)
 - ✅ **v1.42 ScrypathOps operator/admin UI** — Phase172 (1 phase, 8 plans; archived2026-10-04) — [archive](milestones/v1.42-ROADMAP.md)
 - ✅ **v1.41 Readiness Gate Follow-Through** — Phases 168–171 (4 phases, 19 plans; archived 2026-10-02; `tech_debt` accepted; original Phase 170 decision remains NOT READY at its cutoff; later separate readiness assessment is READY) — [archive](milestones/v1.41-ROADMAP.md)
 - ✅ **v1.40 Readiness Evidence Closure** — Phases 165–167 (archived locally 2026-09-27; no Hex release; assessment remains NOT READY) — [archive](milestones/v1.40-ROADMAP.md)
@@ -15,11 +15,11 @@
 
 ## Current Posture
 
-**v1.43 scope/version, inventory reuse, all 20 requirements, and this five-phase roadmap were explicitly approved on 2026-10-06. Phases 173–174 are complete; Phase 175 is the next formal phase.** The maintainer's 2026-10-09 whole-workflow audit/fix direction strengthens the remaining phases through [accepted UX inputs](reference/OPERATOR-UX-AUDIT-2026-10-09.md) and the [shared rubric](reference/OPERATOR-UX-RUBRIC.md). Those follow-ups do not complete Phases 175–177. v1.42 completed Phase172:8 plans,8 requirements, independent verification38/38 truths,6/6 integration connections and5/5 flows. See the [milestone audit](milestones/v1.42-MILESTONE-AUDIT.md).
+**v1.43 scope/version, inventory reuse, all 20 requirements, and this five-phase roadmap were explicitly approved on 2026-10-06. Phases 173–175 are complete; Phase 176 is the next formal phase.** The maintainer's 2026-10-09 whole-workflow audit/fix direction strengthens the remaining phases through [accepted UX inputs](reference/OPERATOR-UX-AUDIT-2026-10-09.md) and the [shared rubric](reference/OPERATOR-UX-RUBRIC.md). The audit follow-ups were preparation inputs; Phase 175 now has its own independent verification and candidate receipt, while Phases 176–177 remain unstarted. v1.42 completed Phase172:8 plans,8 requirements, independent verification38/38 truths,6/6 integration connections and5/5 flows. See the [milestone audit](milestones/v1.42-MILESTONE-AUDIT.md).
 
 PR91 delivered the operator UI and recovery corrections; ReleasePleasePR92 published Scrypath0.3.15 at `8dd20e8966acd17a4ef5acec653c00dc31faab49`. [Publish run37181522723](https://github.com/szTheory/scrypath/actions/runs/37181522723) passed live Hex/consumer/HexDocs and package/tag parity. Both task-owned verifier stacks are removed; preview4012 is intentionally retained for optional feedback.
 
-All completion and archive records precede their enclosing final exact-source attestation. Their receipts remain source-bound. No completed phase should be replayed. The v1.43 requirements and roadmap are approved; the next formal work is Phase 175 preparation using the accepted whole-workflow audit inputs. See STATE.md for the working checkout and exact next action.
+All completion and archive records precede their enclosing final exact-source attestation. Their receipts remain source-bound. No completed phase should be replayed. The v1.43 requirements and roadmap are approved; the next formal work is Phase 176 discussion using the accepted whole-workflow audit inputs. See STATE.md for the working checkout and exact next action.
 
 The original Phase170 NOT READY decision and frozen17/18 snapshot remain historical; its separately authorized tracking replacement and later READY assessment remain distinct in the v1.41 archive. Nothing in v1.42 rewrites those decisions or resolves inherited assumptions beyond their stated limits.
 
@@ -27,7 +27,7 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
 
 **Milestone goal:** Operators can inspect, recover, and verify search across the six existing surfaces with a calmer shared visual language, clear safe actions, and truthful task/index/document evidence.
 
-**Status:** Requirements and roadmap explicitly approved on 2026-10-06. Phases 173–174 are complete, with 12 plans and 11 requirements. Their verification and source-bound hosted receipts are recorded in STATE.md. Phases 175–177 retain their full remaining lifecycle and evidence responsibilities; the 2026-10-09 authorized audit/fix follow-up is a refined baseline for their preparation.
+**Status:** Requirements and roadmap explicitly approved on 2026-10-06. Phases 173–175 are complete, with 18 plans and 14 requirements. Their verification and source-bound hosted receipts are recorded in STATE.md. Phases 176–177 retain their full remaining lifecycle and evidence responsibilities; the 2026-10-09 authorized audit/fix follow-up is a refined baseline for their preparation.
 
 **Overview:** Establish the shared light/dark visual treatment and operational time behavior first, then refine the recovery entry, diagnosis, repair, and verification journey. Clarify Search and Playbooks within that visual world, and finish by consolidating patterns demonstrated on all six surfaces with source-bounded delivery evidence. Each phase proves its own changed behavior with relevant executable checks and direct before/after visual inspection; Phase 177 does not defer earlier acceptance. Reuse the v1.42 inventories as orientation and recheck touched source, without replaying completed fixes.
 
@@ -39,7 +39,7 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
 
 - [x] **Phase 173: Shared Visual Foundation and Operational Time** - Operators see one calm, truthful visual language and usable time/copy feedback in the existing shell and representative Search health view. (completed 2026-10-06)
 - [x] **Phase 174: Recovery Entry and Diagnosis** - Operators can identify affected work and reach the next safe recovery action across Control Room, Search health, and Failed sync work. (completed 2026-10-07)
-- [ ] **Phase 175: Repair and Verification** - Operators can distinguish observation, repair, and promotion, then verify actual outcomes in Sync and drift.
+- [x] **Phase 175: Repair and Verification** - Operators can distinguish observation, repair, and promotion, then verify actual outcomes in Sync and drift. (completed 2026-10-10)
 - [ ] **Phase 176: Search and Playbooks** - Operators can run searches and saved checks with clear common actions, results, and safe occasional controls.
 - [ ] **Phase 177: Shared Patterns and Delivery Proof** - Operators encounter the demonstrated patterns consistently on all six surfaces and maintainers can inspect source-bounded delivery evidence.
 
@@ -127,7 +127,7 @@ Plans:
   2. Operators can distinguish accepted, running, terminal success/failure, and unavailable or unknown observations while retaining exact task identity; an observation failure cannot appear as a failed remote task.
   3. Operators can review and perform only eligible, host-authorized repair or promotion behind existing confirmation gates, and see completion only when the matching task/index/document evidence supports it rather than when work is merely accepted or an unrelated historical task finishes.
 
-**Plans**: 6/6 plans executed across 6 sequential waves; 0 executed
+**Plans**: 6/6 plans complete across 6 sequential waves
 Plans:
 **Wave 1**
 - [x] 175-01-PLAN.md — Scoped ordinary sync and index configuration checks
@@ -182,12 +182,12 @@ Plans:
 
 ## Progress
 
-**Execution order:** 173 → 174 → 175 → 176 → 177. Phases 173–174 are complete; Phase 175 is next. The authorized whole-workflow audit follow-up informs the remaining phases without changing their completion status.
+**Execution order:** 173 → 174 → 175 → 176 → 177. Phases 173–175 are complete; Phase 176 is next. The authorized whole-workflow audit follow-up informs the remaining phases without changing their completion status.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 173. Shared Visual Foundation and Operational Time | 4/4 | Complete    | 2026-10-06 |
 | 174. Recovery Entry and Diagnosis | 8/8 | Complete    | 2026-10-07 |
-| 175. Repair and Verification | 6/6 | In Progress | - |
+| 175. Repair and Verification | 6/6 | Complete    | 2026-10-10 |
 | 176. Search and Playbooks | 0/TBD | Not started | - |
 | 177. Shared Patterns and Delivery Proof | 0/TBD | Not started | - |
