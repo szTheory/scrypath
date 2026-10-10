@@ -18,22 +18,28 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
         Map.update!(state, :tasks_calls, &(&1 + 1))
       end)
 
-      tasks =
-        if Agent.get(:sync_drift_live_test_state, &Map.get(&1, :ready, false)) and
-             Keyword.get(filters, :index_uids) == ["sdv_ops_post_a__reindex"] do
-          [
-            %{
-              "uid" => 100,
-              "status" => "succeeded",
-              "type" => "indexCreation",
-              "indexUid" => "sdv_ops_post_a__reindex"
-            }
-          ]
-        else
-          Keyword.get(config, :meilisearch_tasks, [])
-        end
+      case Agent.get(:sync_drift_live_test_state, &Map.get(&1, :tasks_error)) do
+        nil ->
+          tasks =
+            if Agent.get(:sync_drift_live_test_state, &Map.get(&1, :ready, false)) and
+                 Keyword.get(filters, :index_uids) == ["sdv_ops_post_a__reindex"] do
+              [
+                %{
+                  "uid" => 100,
+                  "status" => "succeeded",
+                  "type" => "indexCreation",
+                  "indexUid" => "sdv_ops_post_a__reindex"
+                }
+              ]
+            else
+              Keyword.get(config, :meilisearch_tasks, [])
+            end
 
-      {:ok, %{results: tasks}}
+          {:ok, %{results: tasks}}
+
+        reason ->
+          {:error, reason}
+      end
     end
 
     def get_settings(_index, _config) do
@@ -101,7 +107,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       start:
         {Agent, :start_link,
          [
-           fn -> %{tasks_calls: 0, settings_calls: 0, swap_called: false} end,
+           fn -> %{tasks_calls: 0, settings_calls: 0, swap_called: false, tasks_error: nil} end,
            [name: :sync_drift_live_test_state]
          ]}
     })
@@ -165,6 +171,35 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     assert has_element?(view, "a[href='/ops/health']", "Review search health")
     refute html =~ "No pending or failed sync work found"
+  end
+
+  test "missing backend renders an unavailable sync observation", %{conn: conn} do
+    Application.delete_env(:scrypath_ops, :backend)
+    {:ok, view, html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
+
+    assert has_element?(view, "[role=alert]", "Sync status is unavailable")
+    assert html =~ "backend is not configured"
+    refute html =~ "No pending or failed sync work found"
+  end
+
+  test "sync read failure keeps an independent configuration result", %{conn: conn} do
+    Agent.update(:sync_drift_live_test_state, fn state ->
+      state
+      |> Map.put(:ready, true)
+      |> Map.put(:tasks_error, :backend_tasks_unavailable)
+    end)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
+    assert has_element?(view, "[role=alert]", "Sync status is unavailable")
+    assert has_element?(view, "[role=alert]", "backend task read failed")
+    refute has_element?(view, "#sync-work-status", "No pending or failed sync work found")
+
+    view |> element("button", "Check index configuration") |> render_click()
+    html = render(view)
+
+    assert html =~ "Index configuration matches"
+    assert has_element?(view, "[role=alert]", "Sync status is unavailable")
+    assert Agent.get(:sync_drift_live_test_state, & &1.settings_calls) > 0
   end
 
   test "loads reconcile on mount and scopes drift errors separately", %{conn: conn} do
