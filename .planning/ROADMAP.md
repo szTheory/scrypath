@@ -127,7 +127,7 @@ Plans:
   2. Operators can distinguish accepted, running, terminal success/failure, and unavailable or unknown observations while retaining exact task identity; an observation failure cannot appear as a failed remote task.
   3. Operators can review and perform only eligible, host-authorized repair or promotion behind existing confirmation gates, and see completion only when the matching task/index/document evidence supports it rather than when work is merely accepted or an unrelated historical task finishes.
 
-**Plans**: 5/6 plans executed across 6 sequential waves; 0 executed
+**Plans**: 6/6 plans executed across 6 sequential waves; 0 executed
 Plans:
 **Wave 1**
 - [x] 175-01-PLAN.md — Scoped ordinary sync and index configuration checks
@@ -145,7 +145,7 @@ Plans:
 - [x] 175-05-PLAN.md — Standalone rendered fixture and adverse-state proof
 
 **Wave 6** *(blocked on Wave 5 completion)*
-- [ ] 175-06-PLAN.md — Owned mounted/browser, visual and exact-source delivery proof
+- [x] 175-06-PLAN.md — Owned mounted/browser, visual and exact-source delivery proof
 
 **UI hint**: yes
 **Acceptance**: Inspect before/after Sync and drift states in both themes and relevant widths; exercise confirmation/eligibility, rendered controls, exact task and document correlations, and mounted repair/promotion paths in disposable stacks.
@@ -188,6 +188,6 @@ Plans:
 |-------|----------------|--------|-----------|
 | 173. Shared Visual Foundation and Operational Time | 4/4 | Complete    | 2026-10-06 |
 | 174. Recovery Entry and Diagnosis | 8/8 | Complete    | 2026-10-07 |
-| 175. Repair and Verification | 5/6 | In Progress | - |
+| 175. Repair and Verification | 6/6 | In Progress | - |
 | 176. Search and Playbooks | 0/TBD | Not started | - |
 | 177. Shared Patterns and Delivery Proof | 0/TBD | Not started | - |
