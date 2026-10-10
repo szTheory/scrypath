@@ -9,7 +9,7 @@ created: "2026-10-10"
 
 # Phase 175 — Validation Strategy
 
-Planning contract; no Phase 175 execution results are asserted. The planner must replace the provisional requirement rows with the finalized per-task/wave/threat map before plan verification.
+Final planning contract for six plans and twelve tasks; no Phase 175 execution result is asserted. Every row is pending until its named executor command produces source-bound evidence.
 
 ## Test Infrastructure
 
@@ -35,9 +35,60 @@ Select the supported installed Elixir/OTP toolchain before commands; the current
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| Planner assigns | Planner assigns | Planner assigns | OPUX-20 | Planner assigns | Independent sync/config reads; visible validated selection; configuration match cannot claim freshness | LiveView/browser | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes, extend cases | Pending |
-| Planner assigns | Planner assigns | Planner assigns | OPUX-21 | Planner assigns | Exact job/attempt/task/document evidence; unknown remains unknown; busy observer differs from processing | LiveView/unit | Quick run command above | Yes, extend cases | Pending |
-| Planner assigns | Planner assigns | Planner assigns | OPUX-22 | Planner assigns | Current host gate/allowlist/prerequisites and rendered confirmation; readonly timeout recheck cannot submit another swap | LiveView/mounted browser | `mix verify.ops_ui`; owned `mix verify.ecommerce_mounted` | Lanes exist; Phase 175 cases needed | Pending |
+| 175-01-T1 | 175-01 | 1 | OPUX-20 | T-175-01 | Rendered non-first selector/URL, scoped observations, read-only check | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend | Pending |
+| 175-01-T2 | 175-01 | 1 | OPUX-20 | T-175-02 | Complete zero versus partial/error and independent config read | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend | Pending |
+| 175-02-T1 | 175-02 | 2 | OPUX-20, OPUX-21, OPUX-22 | T-175-03, T-175-04 | Exact retry job/attempt/task and active-index upsert | LiveView/correlation | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs test/scrypath_ops/recovery_observation_test.exs` | Yes; extend | Pending |
+| 175-02-T2 | 175-02 | 2 | OPUX-21, OPUX-22 | T-175-03, T-175-04, T-175-05 | Delete absence, expired/superseded/wrong-runtime unknown | LiveView/correlation | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs test/scrypath_ops/recovery_observation_test.exs test/scrypath_ops/document_observation_test.exs` | Yes; extend | Pending |
+| 175-03-T1 | 175-03 | 3 | OPUX-21, OPUX-22 | T-175-06, T-175-08 | Same-UID GET, enqueued versus processing, no second POST | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend | Pending |
+| 175-03-T2 | 175-03 | 3 | OPUX-21, OPUX-22 | T-175-06, T-175-07, T-175-08 | Terminal/malformed/timeout and stale success/error callbacks | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend | Pending |
+| 175-04-T1 | 175-04 | 4 | OPUX-20, OPUX-22 | T-175-09, T-175-10 | Rendered exact-pair confirmation, host gate, fresh prerequisites | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend | Pending |
+| 175-04-T2 | 175-04 | 4 | OPUX-22 | T-175-09, T-175-10, T-175-11 | Retained blocker, double submit, auth/cancel and disclosure | LiveView/eligibility | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs test/scrypath_ops/promotion_eligibility_test.exs` | Yes; extend | Pending |
+| 175-05-T1 | 175-05 | 5 | OPUX-20, OPUX-21, OPUX-22 | T-175-12, T-175-13 | Test-only standalone real view and exact fake task | LiveView fixture | `cd scrypath_ops && mix test test/scrypath_ops_web/live/phase175_fixture_live_test.exs` | New in this task | Pending |
+| 175-05-T2 | 175-05 | 5 | OPUX-20, OPUX-21, OPUX-22 | T-175-12, T-175-13 | Isolated adverse standalone scenarios through rendered controls | LiveView fixture | `cd scrypath_ops && mix test test/scrypath_ops_web/live/phase175_fixture_live_test.exs test/scrypath_ops_web/live/sync_drift_live_test.exs` | New in T1; extend | Pending |
+| 175-06-T1 | 175-06 | 6 | OPUX-20, OPUX-21, OPUX-22 | T-175-14, T-175-16 | Owned mounted swap exact UID/pair/document plus standalone check | Playwright/Compose | `bash examples/scrypath_ecommerce/scripts/verify-phase175.sh repair` | New in this task | Pending |
+| 175-06-T2 | 175-06 | 6 | OPUX-20, OPUX-21, OPUX-22 | T-175-14, T-175-15, T-175-16 | Full state/visual matrix, owned cleanup and exact source | Playwright/Compose/Ops | `bash examples/scrypath_ecommerce/scripts/verify-phase175.sh repair`; `mix verify.ops_ui`; `make -C examples/scrypath_ecommerce contrast` | New in T1; extend | Pending |
+
+Each `<automated>` in the plans is immediately followed by a `<fails_when>` covering nonzero exit and the relevant zero-case or absent artifact. The Plan 06 final task additionally runs `cd scrypath_ops && mix assets.build` and `cd scrypath_ops && mix precommit` with their own failure signals. Commands name existing files or files created by the same preceding task; no test command is run in planning.
+
+## Wave and Security Gate Map
+
+| Wave | Plan | Before advancing | Threat refs |
+|------|------|------------------|-------------|
+| 1 | 175-01 | Rendered selected-schema, complete/partial and config checks green | T-175-01–02 |
+| 2 | 175-02 | Exact recovery upsert/delete and unknown correlation green | T-175-03–05 |
+| 3 | 175-03 | Same-UID read-only task lifecycle and stale-callback cases green | T-175-06–08 |
+| 4 | 175-04 | Rendered host gate, exact-pair confirmation and retained blockers green | T-175-09–11 |
+| 5 | 175-05 | Test-only standalone fixture route and no-leak cases green | T-175-12–13 |
+| 6 | 175-06 | Owned mounted/standalone browser, visual and canonical Ops gates green; exact-SHA hosted evidence then required before closeout | T-175-14–16 |
+
+Every plan includes reserved T-175-SC. No npm/pip/cargo install task exists, so the package-legitimacy install checkpoint does not activate. Security enforcement is ASVS level 1, blocking high-severity threats until their named tests/evidence pass. The runner may mutate only its uniquely named disposable Compose project; previews :4012/:4014, the original dirty checkout, frozen Phase 173 source and unrelated resources remain outside its ownership.
+
+## Multi-Source Coverage Audit
+
+| Source | Items | Plan coverage | Status |
+|--------|-------|---------------|--------|
+| ROADMAP goal and three success criteria | Safe supported repair/promotion; separate config/freshness and observation/mutation; exact accepted/running/terminal/unknown evidence | 175-01–04 behavior, 175-05–06 dual-entrypoint proof | Planned |
+| REQUIREMENTS | OPUX-20 | 175-01, 175-02, 175-04, 175-05, 175-06 | Planned |
+| REQUIREMENTS | OPUX-21 | 175-02, 175-03, 175-05, 175-06 | Planned |
+| REQUIREMENTS | OPUX-22 | 175-02, 175-03, 175-04, 175-05, 175-06 | Planned |
+| CONTEXT | D-01–D-02 accepted audit, current components and design | 175-01, 175-04, 175-06 | Planned |
+| CONTEXT | D-03–D-08 selection, ordinary hierarchy, distinct reads and restrained diagnostics | 175-01, 175-02 | Planned |
+| CONTEXT | D-09–D-11 retry task/document correlation and unknown protection | 175-02, 175-03 | Planned |
+| CONTEXT | D-12 same-UID promotion task lifecycle | 175-03, 175-05, 175-06 | Planned |
+| CONTEXT | D-13–D-16 advanced disclosure, eligibility, confirmation and pinned swap copy | 175-04, 175-06 | Planned |
+| CONTEXT | D-17–D-20 standalone/mounted, visual, exact-source and PR-first boundaries | 175-05, 175-06 | Planned |
+| RESEARCH | Existing configured client/TaskPayload, receipt/document modules, PromotionEligibility/Gating, native details, pinned Meilisearch swap, no new dependency | 175-02–05 | Planned |
+| UI-SPEC | Eight grouped empty/loading/error/populated/partial/overflow/zero-one-many/long-text truths, all 68 E1–E10/category pairs | 175-06 plain `must_haves.truths`, with behavior built in 175-01–05 | Planned |
+
+Deferred broad brand/core/backend/auth work, automatic retry/reindex/backfill, durable receipt service, generalized freshness scan, new required CI service, paid judge, Search/Playbooks phase scope and merge/release authority are excluded by CONTEXT and ROADMAP, rather than missing plan items.
+
+## Spec-Less Probe and Assumption Disposition
+
+No plain 175-SPEC.md supplied `## Edge Coverage` or `## Prohibitions`. The deterministic edge fallback report at `/private/tmp/scrypath-phase173-20261006-155750/phase175-edge-probe.json` has exactly three rows: OPUX-20, OPUX-21 and OPUX-22 are each `unclassified`, `unresolved`, with no verification/resolution. They remain three explicit flagged planner assumptions in Plans 01, 03 and 04, respectively. No row was auto-resolved, dismissed, or converted to a backstop truth. The plans separately author grounded observable acceptance from ROADMAP, CONTEXT, RESEARCH and UI-SPEC.
+
+Prohibition recall asked of each requirement what the feature could silently become against the author's product/safety intent. Stage 1 considered misleading freshness, implicit mutation, scope substitution, queue acceptance as completion, unrelated task evidence, observer error as remote failure, browser-only gate, auth replay, inaccurate swap effect, stale callbacks and routine validation/test hygiene. Precision dropped ordinary correctness items that are covered by the edge/behavior and STRIDE checks. The six surviving bespoke safety/transparency statements are projected via the installed `projectProhibitions` serializer into Plans 01/03/04 as descriptor-less `must_haves.prohibitions`, two per requirement, each `status: unresolved`. Calling the installed `dispositionForProhibition` on these projections returns `{status: unverified, flagged: true}` without enforcement evidence; no `check_*` descriptor is fabricated. Canonical injection, authorization, session and transport threats are instead referred to the per-plan STRIDE register and `$gsd-secure-phase`, not minted as bespoke prohibitions. These flags remain review-visible at verification and are not a runtime pass or human approval.
+
+The assumption-delta detector returned `detected: true` solely for `chosen` term `choose` in the ROADMAP goal. Decision: `no-change`; the primary identity stays the current allowlisted schema plus exact receipt/task and runtime context. “Choose” describes an operator action between existing ordinary and advanced workflows, not a transition from derived identity to user-configurable primary key. The API coverage detector run over ROADMAP Phase 175 plus all six plans returned `detected: false`; this phase consumes an existing Meilisearch client seam and does not add an external API integration, so COVERAGE.md is not required by that detector. The schema-push scan found no modified Payload/Prisma/Drizzle/Supabase/TypeORM schema path; no schema push is planned. These are detector dispositions, not an extension of product scope.
 
 ## Wave 0 Requirements
 

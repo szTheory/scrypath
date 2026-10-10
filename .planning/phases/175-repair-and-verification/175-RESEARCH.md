@@ -241,9 +241,9 @@ Security enforcement is enabled. Current OWASP ASVS v5 categories relevant here:
 - In scrypath_ops use existing Req; no HTTPoison/Tesla/httpc/new dependencies. Follow Phoenix 1.8, CSS/JS hook patterns, native controls and accessible LiveView tests.
 - Use idiomatic Elixir and safe allowlisted selection; never create atoms from user input or bypass server gates. Avoid Process.sleep/Process.alive?; use start_supervised! and focused CONTRIBUTING checks.
 
-## Open Questions
+## Resolved Research Questions
 
-1. The subsequent pattern map resolves the task response seam: configured `meilisearch_client` with `Client` fallback, `Client.task(uid, config)` returns a map, and `TaskPayload.normalize/2` extracts `taskUid`/`uid` while keeping `enqueued` distinct from `processing`. Implementation preflight must still pin tests to the configured client's actual response and reject a normalized UID different from the requested UID. This is a technical check, not an unresolved product decision; see `175-PATTERNS.md`.
+1. **RESOLVED — task response seam.** The subsequent pattern map establishes configured `meilisearch_client` with `Client` fallback, `Client.task(uid, config)` returning a map, and `TaskPayload.normalize/2` extracting `taskUid`/`uid` while keeping `enqueued` distinct from `processing`. Implementation preflight must still pin tests to the configured client's actual response and reject a normalized UID different from the requested UID. This is an execution test criterion, not an unresolved product decision; see `175-PATTERNS.md` and `175-03-PLAN.md`.
 
 ## Sources
 

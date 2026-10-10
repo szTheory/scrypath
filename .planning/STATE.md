@@ -4,16 +4,16 @@ milestone: v1.43
 milestone_name: ScrypathOps UI refinement
 current_phase: 175
 current_phase_name: Repair and Verification
-status: planning
-stopped_at: "Phase 175 UI-SPEC approved; next: $gsd-plan-phase 175"
-last_updated: "2026-10-10T12:07:20.750Z"
+status: executing
+stopped_at: "Phase 175 planned and independently verified; next: $gsd-execute-phase 175"
+last_updated: "2026-10-10T12:50:38.078Z"
 last_activity: 2026-10-10
-last_activity_desc: "Phase 175 UI-SPEC approved: 7/7 design dimensions, 68 explicit state criteria; next $gsd-plan-phase 175; no implementation started"
-state_head: 91984f05f419e4288eafd5b1f608e235d0589d1b
+last_activity_desc: "Phase 175 planned: 6 plans, 6 sequential waves, 12 tasks; independent checker passed; OPUX-20–22 and 20 decisions covered; next $gsd-execute-phase 175; implementation not started"
+state_head: 728c80cdb464342f337d35ccb3876bb8163316c9
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 12
+  total_plans: 18
   completed_plans: 12
   percent: 40
 ---
@@ -26,10 +26,10 @@ See PROJECT.md (updated 2026-10-07). Core value: make search indexing feel nativ
 
 ## Current Position
 
-Phase: 175 — Repair and Verification
+Phase: 175 (Repair and Verification) — READY TO EXECUTE
 Plan: Not started
-Status: planning
-Last activity: 2026-10-10 — Phase 175 UI-SPEC approved: 7/7 design dimensions, 68 explicit state criteria; next $gsd-plan-phase 175; no implementation started
+Status: Ready to execute
+Last activity: 2026-10-10 — Phase 175 planned: 6 plans, 6 sequential waves, 12 tasks; independent checker passed; OPUX-20–22 and 20 decisions covered; next $gsd-execute-phase 175; implementation not started
 Progress: [████░░░░░░] 40% (2/5 phases; 12/12 currently planned plans complete)
 
 ## Delivered Evidence
@@ -92,9 +92,9 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Historical Phase 174 Session Continuity
 
-Last session: 2026-10-10T12:07:20.474Z
-Stopped at: Phase 175 UI-SPEC approved; next: $gsd-plan-phase 175
-Resume file: .planning/phases/175-repair-and-verification/175-UI-SPEC.md
+Last session: 2026-10-10T12:50:37.790Z
+Stopped at: Phase 175 planned and independently verified; next: $gsd-execute-phase 175
+Resume file: .planning/phases/175-repair-and-verification/175-01-PLAN.md
 
 Phase 174 now executes in a separate regular clone on `gsd/phase-174-recovery-entry-and-diagnosis` in `/private/tmp/scrypath-phase173-20261006-155750/phase174-execution`. The previous planning worktree and its RED artifacts remain preserved; the fresh clone resolves the executor commit guard without bypassing it. It starts from the immutable Phase 173 source `13ea88a9c18a7515f4ec5ae7deea0cdde4c22531`. Its later handoff metadata does not extend the prior exact-SHA receipt. The execution checkout and PR branch `gsd/phase-173-shared-visual-foundation` remain unchanged at that attested source.
 
