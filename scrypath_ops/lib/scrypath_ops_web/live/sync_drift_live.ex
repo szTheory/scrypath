@@ -1656,7 +1656,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         <summary class="cursor-pointer p-4 font-semibold">Advanced: index promotion</summary>
         <div class="space-y-3 px-4 pb-4">
           <p class="text-ops-body text-base-content/75">
-            Promotion changes the live alias for <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>.
+            Promotion swaps the live and prepared target indexes for <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>. Their
+            documents, primary keys, settings, and task history move as a pair.
           </p>
           <.ops_status
             kind={if @promotion_eligibility == :eligible, do: :success, else: :warning}
@@ -1695,11 +1696,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         :if={@confirm_swap? && @selected_schema}
         id="confirm-index-promotion"
         title="Confirm index promotion"
-        description="Meilisearch will change the live alias after its swap task completes."
+        description="This swaps the selected indexes' documents, primary keys, settings, and task history so the prepared target becomes live."
         action_label="promote index"
         cancel_event="cancel_swap_live"
       >
-        <.form for={%{}} phx-submit="swap_live" class="space-y-3">
+        <.form for={%{}} id="index-promotion-form" phx-submit="swap_live" class="space-y-3">
           <p>
             Schema:
             <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>
@@ -1712,7 +1713,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             Target index:
             <.ops_inline_code>{promotion_index(@reconcile_result, :target_index)}</.ops_inline_code>
           </p>
-          <p>Effect: replace the live alias with the prepared target index.</p>
+          <p>
+            Effect: Meilisearch swaps this pair atomically. The prepared target's documents,
+            primary key, settings, and task history take the live index's place after the task
+            completes; the other index keeps the prior live data.
+          </p>
           <div class="flex justify-between gap-2">
             <.ops_button
               type="button"

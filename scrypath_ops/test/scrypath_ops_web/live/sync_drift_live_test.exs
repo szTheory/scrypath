@@ -134,7 +134,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
                task_delay_ms: 0,
                task_error: nil,
                swap_called: false,
-              swap_calls: [],
+               swap_calls: [],
                tasks_error: nil
              }
            end,
@@ -495,9 +495,10 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert accepted.assigns.promotion_task_id == 201
   end
 
-  test "rendered promotion confirms the exact pair and submits once without claiming completion", %{
-    conn: conn
-  } do
+  test "rendered promotion confirms the exact pair and submits once without claiming completion",
+       %{
+         conn: conn
+       } do
     Agent.update(:sync_drift_live_test_state, fn state ->
       state
       |> Map.put(:ready, true)
@@ -521,7 +522,12 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert has_element?(view, "#confirm-index-promotion", "sdv_ops_post_a")
     assert has_element?(view, "#confirm-index-promotion", "sdv_ops_post_a__reindex")
 
-    assert has_element?(view, "#confirm-index-promotion", "documents, primary keys, settings, and task history")
+    assert has_element?(
+             view,
+             "#confirm-index-promotion",
+             "documents, primary keys, settings, and task history"
+           )
+
     assert has_element?(view, "#confirm-index-promotion", "prepared target becomes live")
 
     view
