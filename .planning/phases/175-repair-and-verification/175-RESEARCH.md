@@ -51,7 +51,7 @@ No new feature was requested. Preserve the existing boundaries: broad brand rede
 
 ## Summary
 
-SyncDriftLive already retains the returned Meilisearch task UID and handles matching terminal results, but “Refresh checks” refreshes reconcile/configuration/eligibility only. Add a read-only exact-UID task observation; successful nonterminal response means authoritative running, failed reads remain unknown, and check never resubmits swap. Revalidate current schema and host/runtime identity when applying async results, following recovery observation's stronger checks. [VERIFIED: scrypath_ops/lib/scrypath_ops_web/live/sync_drift_live.ex:150-175,244-344,497-510,719-727,738-883]
+SyncDriftLive already retains the returned Meilisearch task UID and handles matching terminal results, but “Refresh checks” refreshes reconcile/configuration/eligibility only. Add a read-only exact-UID task observation: normalized `enqueued` remains accepted/queued; only an exact-UID response normalized to `processing` establishes running. Failed reads remain unknown, and checking never resubmits a swap. Revalidate current schema and host/runtime identity when applying async results, following recovery observation's stronger checks. [VERIFIED: scrypath_ops/lib/scrypath_ops_web/live/sync_drift_live.ex:150-175,244-344,497-510,719-727,738-883; 175-PATTERNS.md task-normalization analog]
 
 Keep retry source-qualified in Failed sync work; checks remain observations; promotion stays fail-closed, confirmed, allowlisted and gated at mutation time. Put status/UID outside native disclosure to preserve manual expansion without hiding active/terminal state. Prior 57 UX cases prove presentation/navigation only. Phase 175 needs rendered events, exact task/document correlation and standalone/mounted mutation paths on owned disposable stacks. [CITED: 175-CONTEXT.md D-05,D-09–D-19; 175-UI-SPEC.md; VERIFIED: sync_drift_live.ex:206-229,295-344,805-883,1297-1387]
 
@@ -243,7 +243,7 @@ Security enforcement is enabled. Current OWASP ASVS v5 categories relevant here:
 
 ## Open Questions
 
-1. Configured task response shape: inspect client behavior/normalizer and pin tests to actual response structs before mapping UI states. This is implementation preflight, not a product decision.
+1. The subsequent pattern map resolves the task response seam: configured `meilisearch_client` with `Client` fallback, `Client.task(uid, config)` returns a map, and `TaskPayload.normalize/2` extracts `taskUid`/`uid` while keeping `enqueued` distinct from `processing`. Implementation preflight must still pin tests to the configured client's actual response and reject a normalized UID different from the requested UID. This is a technical check, not an unresolved product decision; see `175-PATTERNS.md`.
 
 ## Sources
 
