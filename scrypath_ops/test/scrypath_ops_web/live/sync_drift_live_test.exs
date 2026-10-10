@@ -603,6 +603,9 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       fn -> Application.put_env(:scrypath_ops, :meilisearch_url, "http://other:7700") end,
       fn -> Application.put_env(:scrypath_ops, :backend, :other_backend) end,
       fn -> Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostB]) end,
+      fn -> Application.put_env(:scrypath_ops, :index_prefix, "changed") end,
+      fn -> Application.put_env(:scrypath_ops, :meilisearch_client, Client) end,
+      fn -> :selected_schema end,
       fn -> :generation end
     ]
 
@@ -611,13 +614,18 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       context = socket.assigns.promotion_context
 
       changed_socket =
-        if mutate.() == :generation do
-          %{
+        case mutate.() do
+          :generation ->
+            %{
+              socket
+              | assigns: Map.put(socket.assigns, :context_generation, context.generation + 1)
+            }
+
+          :selected_schema ->
+            %{socket | assigns: Map.put(socket.assigns, :selected_schema, OpsPostB)}
+
+          _ ->
             socket
-            | assigns: Map.put(socket.assigns, :context_generation, context.generation + 1)
-          }
-        else
-          socket
         end
 
       {:noreply, success} =
@@ -651,6 +659,8 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA, OpsPostB])
       Application.put_env(:scrypath_ops, :backend, Scrypath.Meilisearch)
       Application.put_env(:scrypath_ops, :meilisearch_url, "http://localhost:7700")
+      Application.put_env(:scrypath_ops, :index_prefix, "sdv")
+      Application.put_env(:scrypath_ops, :meilisearch_client, SyncDriftClient)
     end
   end
 
