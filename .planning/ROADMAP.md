@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- 📋 **v1.43 ScrypathOps UI refinement** — Phases 173–177 (5 approved phases, 4 checked plans; Phase 173 ready to execute)
+- 📋 **v1.43 ScrypathOps UI refinement** — Phases 173–177 (5 approved phases, 9 independently checked plans; Phase 173 remains next to execute)
 - ✅ **v1.42 ScrypathOps operator/admin UI** — Phase172 (1 phase, 8 plans; archived2026-10-04) — [archive](milestones/v1.42-ROADMAP.md)
 - ✅ **v1.41 Readiness Gate Follow-Through** — Phases 168–171 (4 phases, 19 plans; archived 2026-10-02; `tech_debt` accepted; original Phase 170 decision remains NOT READY at its cutoff; later separate readiness assessment is READY) — [archive](milestones/v1.41-ROADMAP.md)
 - ✅ **v1.40 Readiness Evidence Closure** — Phases 165–167 (archived locally 2026-09-27; no Hex release; assessment remains NOT READY) — [archive](milestones/v1.40-ROADMAP.md)
@@ -15,7 +15,7 @@
 
 ## Current Posture
 
-**v1.43 scope/version, inventory reuse, all 20 requirements, and this five-phase roadmap were explicitly approved on 2026-10-06. Phase 173 has an approved UI contract and four independently checked implementation plans; no implementation has started.** Numbering continues at Phase 173. v1.42 completed Phase172:8 plans,8 requirements, independent verification38/38 truths,6/6 integration connections and5/5 flows. See the [milestone audit](milestones/v1.42-MILESTONE-AUDIT.md).
+**v1.43 scope/version, inventory reuse, all 20 requirements, and this five-phase roadmap were explicitly approved on 2026-10-06. Phase 173 has an approved UI contract and four independently checked implementation plans; Phase 176 has five independently checked lookahead plans. Phase 173 remains first in the execution chain; no implementation has started.** Numbering continues at Phase 173. v1.42 completed Phase172:8 plans,8 requirements, independent verification38/38 truths,6/6 integration connections and5/5 flows. See the [milestone audit](milestones/v1.42-MILESTONE-AUDIT.md).
 
 PR91 delivered the operator UI and recovery corrections; ReleasePleasePR92 published Scrypath0.3.15 at `8dd20e8966acd17a4ef5acec653c00dc31faab49`. [Publish run37181522723](https://github.com/szTheory/scrypath/actions/runs/37181522723) passed live Hex/consumer/HexDocs and package/tag parity. Both task-owned verifier stacks are removed; preview4012 is intentionally retained for optional feedback.
 
@@ -27,7 +27,7 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
 
 **Milestone goal:** Operators can inspect, recover, and verify search across the six existing surfaces with a calmer shared visual language, clear safe actions, and truthful task/index/document evidence.
 
-**Status:** Requirements and roadmap explicitly approved on 2026-10-06. Phase 173 has four plans verified by the independent checker. Phases 174–177 remain unplanned; no implementation or product verification has started.
+**Status:** Requirements and roadmap explicitly approved on 2026-10-06. Phase 173 has four plans verified by the independent checker, and Phase 176 has five plans verified by the independent checker. Phases 174–175 and 177 remain unplanned; the required execution order is still 173 → 174 → 175 → 176 → 177. No implementation or product verification has started.
 
 **Overview:** Establish the shared light/dark visual treatment and operational time behavior first, then refine the recovery entry, diagnosis, repair, and verification journey. Clarify Search and Playbooks within that visual world, and finish by consolidating patterns demonstrated on all six surfaces with source-bounded delivery evidence. Each phase proves its own changed behavior with relevant executable checks and direct before/after visual inspection; Phase 177 does not defer earlier acceptance. Reuse the v1.42 inventories as orientation and recheck touched source, without replaying completed fixes.
 
@@ -81,6 +81,7 @@ Plans:
 **Acceptance**: Compare realistic degraded Search health light/dark comps before planning; inspect representative before/after desktop/mobile renders and use existing theme, accessibility, contrast, component, and focused browser checks for changed controls and states.
 
 ### Phase 174: Recovery Entry and Diagnosis
+
 **Goal**: Operators can enter an incident, identify the affected schema/work and next safe action, and carry their chosen allowed schema through diagnosis.
 **Depends on**: Phase 173
 **Requirements**: OPUX-16, OPUX-17, OPUX-18, OPUX-19
@@ -89,17 +90,13 @@ Plans:
   2. Search health presents worst-first schema records with complete readable identifiers and times, one meaningful surface per schema, plain Backend/Queue groups, clear section spacing, and concise next-check actions.
   3. Failed sync work exposes the failure reason, work/source identity, and eligibility of the common supported recovery action before optional verbose evidence; retained failure history and safety gates remain visible.
   4. After changing schema in the rendered UI, operators keep that allowed selection through recovery handoffs, refresh, and back navigation; invalid or unavailable targets never turn into actions on another schema.
-**Plans**: 5 plans
-Plans:
-- [ ] 176-01-PLAN.md — Search submit/results tracer with captured criteria and truthful states
-- [ ] 176-02-PLAN.md — Eligible Search capture and safe workspace save
-- [ ] 176-03-PLAN.md — Playbook catalog, preview provenance and independent save
-- [ ] 176-04-PLAN.md — Playbook run attribution and explicit bounded import
-- [ ] 176-05-PLAN.md — Contextual file management and modal focus through patches
+
+**Plans**: TBD
 **UI hint**: yes
 **Acceptance**: Inspect before/after recovery views in both themes and relevant widths; run focused rendered-navigation, focus/layout, state, and mounted handoff proof in existing lanes, including a changed schema selection.
 
 ### Phase 175: Repair and Verification
+
 **Goal**: Operators can choose a supported repair or advanced promotion safely and tell what actually happened from authoritative evidence.
 **Depends on**: Phase 174
 **Requirements**: OPUX-20, OPUX-21, OPUX-22
@@ -107,11 +104,13 @@ Plans:
   1. Sync and drift separates index-contract drift from document freshness, observation from mutation, and ordinary repair from advanced promotion, with a clear next step for each applicable state.
   2. Operators can distinguish accepted, running, terminal success/failure, and unavailable or unknown observations while retaining exact task identity; an observation failure cannot appear as a failed remote task.
   3. Operators can review and perform only eligible, host-authorized repair or promotion behind existing confirmation gates, and see completion only when the matching task/index/document evidence supports it rather than when work is merely accepted or an unrelated historical task finishes.
+
 **Plans**: TBD
 **UI hint**: yes
 **Acceptance**: Inspect before/after Sync and drift states in both themes and relevant widths; exercise confirmation/eligibility, rendered controls, exact task and document correlations, and mounted repair/promotion paths in disposable stacks.
 
 ### Phase 176: Search and Playbooks
+
 **Goal**: Operators can run searches and saved checks with a clear input-to-result flow and safe, discoverable management controls.
 **Depends on**: Phase 175
 **Requirements**: OPUX-23, OPUX-24, OPUX-25
@@ -119,11 +118,29 @@ Plans:
   1. Search makes target/query controls, one primary run action, and results easy to scan; empty, error, partial, disabled, and optional diagnostic states remain usable without duplicate run actions.
   2. Playbooks clearly distinguishes preview, execution, results, and saving; common run/save actions lead while existing workspace, import, validation, and read-only behavior remains available.
   3. Operators can find rename, duplicate, and delete without those occasional actions competing with common work; destructive confirmation and dialog keyboard, validation, focus containment/return, and LiveView patch behavior remain correct.
-**Plans**: TBD
+
+**Plans**: 5 plans
+Plans:
+**Wave 1**
+- [ ] 176-01-PLAN.md — Search submit/results tracer with captured criteria and truthful states
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 176-02-PLAN.md — Eligible Search capture and safe workspace save
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 176-03-PLAN.md — Playbook catalog, preview provenance and independent save
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 176-04-PLAN.md — Playbook run attribution and explicit bounded import
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [ ] 176-05-PLAN.md — Contextual file management and modal focus through patches
+
 **UI hint**: yes
 **Acceptance**: Inspect before/after Search and Playbooks in both themes and relevant widths; exercise changed forms and dialogs through rendered controls with existing LiveView, focus/layout, and focused browser checks.
 
 ### Phase 177: Shared Patterns and Delivery Proof
+
 **Goal**: Operators receive a consistent six-surface workspace, and maintainers can trace the delivered behavior to bounded, reviewable evidence.
 **Depends on**: Phase 176
 **Requirements**: OPUX-26, OPUX-27, OPUX-28
@@ -131,6 +148,7 @@ Plans:
   1. Across Control Room, Search health, Failed sync work, Sync and drift, Search, and Playbooks, operators encounter the same demonstrated grouping, action, status, and feedback vocabulary; the delivered token/component catalog and `DESIGN.md` describe it without an arbitrary component count or superseded styling.
   2. Operators can use the refined paths in light, dark, and System appearance at narrow and desktop widths, with keyboard/focus and reduced-motion behavior intact; direct before/after inspection and relevant executable layout/state/contrast proof are available for every slice, with mounted evidence for changed recovery seams.
   3. Maintainers can trace all 20 requirements to committed verification and reviewed PR-first source/CI evidence, see the explicit release or no-release decision, and inspect task-owned cleanup or intentional preview retention without extending archived receipts beyond their source.
+
 **Plans**: TBD
 **UI hint**: yes
 **Acceptance**: Check six-surface consistency and shared tokens against demonstrated use; consolidate evidence already produced by each slice and run only the final source-specific checks required by the existing delivery gates. No paid judge or pending routine human UAT.
