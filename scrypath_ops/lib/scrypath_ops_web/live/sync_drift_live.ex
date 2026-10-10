@@ -358,6 +358,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp recovery_status_label(:timed_out), do: "Recovery check timed out"
   defp recovery_status_label(_), do: "Recovery unknown"
 
+  defp recovery_source_label(:oban), do: "Oban"
+  defp recovery_source_label(:meilisearch), do: "Meilisearch"
+  defp recovery_source_label(source) when is_binary(source), do: source
+  defp recovery_source_label(_), do: "Unknown source"
+
   defp recovery_status_kind(:verified), do: :success
   defp recovery_status_kind(:failed), do: :error
 
@@ -461,39 +466,60 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   end
 
   defp observe_recovery_now(context, handle, schema, opts, operator_opts) do
-    with true <- schema in ScrypathOps.Schemas.allowlist(),
-         receipt when is_map(receipt) <- RecoveryObservation.observe(context, handle),
-         true <- receipt.generation == context.generation,
-         true <- current_runtime_matches?(receipt, opts),
-         {:ok, expected_index} <- active_index(schema, opts),
-         true <- receipt.index == expected_index,
-         {:ok, job} <- read_recovery_job(receipt),
-         {:ok, queue_state} <- validate_recovery_job(job, receipt) do
-      status =
-        case receipt.task_uid do
-          task_uid when is_integer(task_uid) ->
-            verify_task_and_documents(task_uid, receipt, schema, opts, operator_opts)
+    observed = RecoveryObservation.observe(context, handle)
+    evidence = if is_map(observed), do: recovery_receipt_evidence(observed), else: nil
 
-          _ when queue_state == :completed ->
-            :queue_only_completed
+    result =
+      with true <- schema in ScrypathOps.Schemas.allowlist(),
+           receipt when is_map(receipt) <- observed,
+           true <- receipt.generation == context.generation,
+           true <- current_runtime_matches?(receipt, opts),
+           {:ok, expected_index} <- active_index(schema, opts),
+           true <- receipt.index == expected_index,
+           {:ok, job} <- read_recovery_job(receipt),
+           {:ok, queue_state} <- validate_recovery_job(job, receipt) do
+        status =
+          case receipt.task_uid do
+            task_uid when is_integer(task_uid) ->
+              verify_task_and_documents(task_uid, receipt, schema, opts, operator_opts)
 
-          _ when queue_state == :running ->
-            :running
+            _ when queue_state == :completed ->
+              :queue_only_completed
 
-          _ ->
-            :accepted
-        end
+            _ when queue_state == :running ->
+              :running
 
-      {status, Map.take(receipt, [:replacement_job, :attempt, :task_uid, :index])}
-    else
-      false -> :unknown
-      :unknown -> :unknown
-      {:error, :job_running} -> :running
-      {:error, :queue_only_completed} -> :queue_only_completed
-      {:error, :job_failed} -> :failed
-      {:error, _} -> :unknown
-      _ -> :unknown
+            _ ->
+              :accepted
+          end
+
+        {status, Map.take(receipt, [:replacement_job, :attempt, :task_uid, :index])}
+      else
+        false -> :unknown
+        :unknown -> :unknown
+        {:error, :job_running} -> :running
+        {:error, :queue_only_completed} -> :queue_only_completed
+        {:error, :job_failed} -> :failed
+        {:error, _} -> :unknown
+        _ -> :unknown
+      end
+
+    case result do
+      {status, _existing_evidence} -> {status, evidence}
+      status -> {status, evidence}
     end
+  end
+
+  defp recovery_receipt_evidence(receipt) do
+    Map.take(receipt, [
+      :replacement_job,
+      :attempt,
+      :task_uid,
+      :operation,
+      :schema,
+      :source_failure,
+      :index
+    ])
   end
 
   defp current_runtime_matches?(receipt, opts) do
@@ -1088,6 +1114,16 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             </span>
             ·
             <.ops_inline_code>{@recovery_evidence.index}</.ops_inline_code>
+          </p>
+          <p
+            :if={is_map(@recovery_evidence) and is_map(@recovery_evidence.source_failure)}
+            class="mt-2 break-words text-ops-body"
+            data-testid="recovery-source"
+          >
+            Original failure: {recovery_source_label(@recovery_evidence.source_failure.source)}
+            {@recovery_evidence.source_failure.id} · operation {@recovery_evidence.operation} ·
+            schema
+            <.ops_inline_code>{@recovery_evidence.schema}</.ops_inline_code>
           </p>
         </.ops_section>
       </.ops_panel>

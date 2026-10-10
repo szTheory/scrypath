@@ -334,7 +334,9 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     refute html =~ "No pending or failed sync work found"
   end
 
-  test "rendered recovery handoff keeps source identity through a read-only refresh", %{conn: conn} do
+  test "rendered recovery handoff keeps source identity through a read-only refresh", %{
+    conn: conn
+  } do
     schema = "ScrypathOps.Test.OpsPostA"
     {:ok, origin, _html} = live(conn, "/ops/sync-drift?schema=#{URI.encode_www_form(schema)}")
     origin_socket = :sys.get_state(origin.pid).socket
