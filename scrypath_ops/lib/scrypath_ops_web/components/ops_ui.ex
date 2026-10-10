@@ -345,7 +345,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Operator status surface for results, failures, and important workflow feedback."
   attr(:kind, :atom,
     default: :info,
-    values: [:info, :success, :warning, :error, :partial, :running]
+    values: [:neutral, :info, :success, :warning, :error, :partial, :running]
   )
 
   attr(:title, :string, required: true)
@@ -360,7 +360,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     <div
       class={[
         "ops-notice-surface ops-notice-surface--raised",
-        tone_class(@kind),
+        @kind != :neutral && tone_class(@kind),
         @class
       ]}
       role={@role}

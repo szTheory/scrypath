@@ -54,7 +54,7 @@ defmodule ScrypathOpsWeb.Phase175FixtureLiveTest do
       {"accepted-processing", "Index swap running"},
       {"accepted-succeeded", "Index swap completed"},
       {"accepted-failed", "Index swap failed"},
-      {"accepted-cancelled", "Index swap cancelled"},
+      {"accepted-cancelled", "Index swap canceled"},
       {"accepted-wrong-uid", "Index swap outcome unconfirmed"},
       {"accepted-malformed", "Index swap outcome unconfirmed"},
       {"accepted-timeout", "Index swap outcome unconfirmed"}

@@ -737,7 +737,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     cases = [
       {%{"uid" => 201, "status" => "succeeded"}, nil, "Index swap completed"},
       {%{"uid" => 201, "status" => "failed"}, nil, "Index swap failed"},
-      {%{"uid" => 201, "status" => "canceled"}, nil, "Index swap cancelled"},
+      {%{"uid" => 201, "status" => "canceled"}, nil, "Index swap canceled"},
       {%{"uid" => 202, "status" => "succeeded"}, nil, "outcome unconfirmed"},
       {%{"uid" => 201}, nil, "outcome unconfirmed"},
       {nil, :task_read_failed, "outcome unconfirmed"}

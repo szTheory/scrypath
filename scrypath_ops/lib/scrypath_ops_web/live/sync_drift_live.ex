@@ -1209,7 +1209,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp promotion_status_title(:accepted), do: "Index swap accepted"
   defp promotion_status_title(:running), do: "Index swap running"
   defp promotion_status_title(:completed), do: "Index swap completed"
-  defp promotion_status_title({:failed, :cancelled}), do: "Index swap cancelled"
+  defp promotion_status_title({:failed, :cancelled}), do: "Index swap canceled"
   defp promotion_status_title({:failed, _}), do: "Index swap failed"
   defp promotion_status_title(:timed_out), do: "Index swap outcome unconfirmed"
   defp promotion_status_title(:unknown), do: "Index swap outcome unconfirmed"
@@ -1739,7 +1739,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             The matching swap task completed. Check current index state separately.
           </p>
           <p :if={match?({:failed, :cancelled}, @promotion_status)} class="text-ops-body">
-            The matching swap task was cancelled. Check current index state separately.
+            The matching swap task was canceled. Check current index state separately.
           </p>
           <p
             :if={
