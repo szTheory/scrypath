@@ -5,16 +5,16 @@ milestone_name: ScrypathOps UI refinement
 current_phase: 175
 current_phase_name: Repair and Verification
 status: executing
-stopped_at: "Phase 175 planned and independently verified; next: $gsd-execute-phase 175"
-last_updated: "2026-10-10T12:50:38.078Z"
+stopped_at: Completed 175-01-PLAN.md
+last_updated: "2026-10-10T13:15:43.449Z"
 last_activity: 2026-10-10
-last_activity_desc: "Phase 175 planned: 6 plans, 6 sequential waves, 12 tasks; independent checker passed; OPUX-20–22 and 20 decisions covered; next $gsd-execute-phase 175; implementation not started"
-state_head: 728c80cdb464342f337d35ccb3876bb8163316c9
+last_activity_desc: Phase 175 execution started
+state_head: 175dcfba115b835340180b4ed80cd7f7412b72be
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 18
-  completed_plans: 12
+  completed_plans: 13
   percent: 40
 ---
 
@@ -26,10 +26,10 @@ See PROJECT.md (updated 2026-10-07). Core value: make search indexing feel nativ
 
 ## Current Position
 
-Phase: 175 (Repair and Verification) — READY TO EXECUTE
-Plan: Not started
+Phase: 175 (Repair and Verification) — EXECUTING
+Plan: 2 of 6
 Status: Ready to execute
-Last activity: 2026-10-10 — Phase 175 planned: 6 plans, 6 sequential waves, 12 tasks; independent checker passed; OPUX-20–22 and 20 decisions covered; next $gsd-execute-phase 175; implementation not started
+Last activity: 2026-10-10 — Phase 175 execution started
 Progress: [████░░░░░░] 40% (2/5 phases; 12/12 currently planned plans complete)
 
 ## Delivered Evidence
@@ -92,9 +92,9 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Historical Phase 174 Session Continuity
 
-Last session: 2026-10-10T12:50:37.790Z
-Stopped at: Phase 175 planned and independently verified; next: $gsd-execute-phase 175
-Resume file: .planning/phases/175-repair-and-verification/175-01-PLAN.md
+Last session: 2026-10-10T13:15:43.361Z
+Stopped at: Completed 175-01-PLAN.md
+Resume file: .planning/phases/175-repair-and-verification/175-02-PLAN.md
 
 Phase 174 now executes in a separate regular clone on `gsd/phase-174-recovery-entry-and-diagnosis` in `/private/tmp/scrypath-phase173-20261006-155750/phase174-execution`. The previous planning worktree and its RED artifacts remain preserved; the fresh clone resolves the executor commit guard without bypassing it. It starts from the immutable Phase 173 source `13ea88a9c18a7515f4ec5ae7deea0cdde4c22531`. Its later handoff metadata does not extend the prior exact-SHA receipt. The execution checkout and PR branch `gsd/phase-173-shared-visual-foundation` remain unchanged at that attested source.
 
@@ -120,6 +120,7 @@ Automatic chaining is disabled. Preserve adaptive routing and the existing front
 | Phase 174 P05 | 21m | 2 tasks | 10 files |
 | Phase 174 P06 | 301min | 2 tasks | 25 files |
 | Phase 174 P08 | 126m | 2 tasks | 10 files |
+| Phase 175 P01 | 6 min | 2 tasks | 3 files |
 
 ## Decisions
 
@@ -141,3 +142,5 @@ Automatic chaining is disabled. Preserve adaptive routing and the existing front
 - [Phase 174]: The stale test OperatorContext is assigned only during the Phase174 test-route mount; the real Sigra confirm destination is navigation only and requires a separate explicit return.
 - [Phase 174]: OPUX-16 through OPUX-19 remain pending until independent phase verification accepts the final Plan 174-08 browser and canonical Ops proof.
 - [Phase 174]: Use the active validated allowlist for shell recovery targets and the existing prominent control-height token for the Control Room health action.
+- [Phase 175]: Keep the all-schema Search health destination available when requested schema context is unavailable.
+- [Phase 175]: Missing backend setup and failed required backend/queue reads remain unavailable evidence, never zero work.
