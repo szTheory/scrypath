@@ -62,17 +62,19 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       end
     end
 
-    def swap_indexes(_indexes, _config) do
+    def swap_indexes(indexes, _config) do
       Agent.update(:sync_drift_live_test_state, fn state ->
-        Map.put(state, :swap_called, true)
+        state
+        |> Map.put(:swap_called, true)
+        |> Map.update!(:swap_calls, &[indexes | &1])
       end)
 
       {:ok,
        %{
          "uid" => 201,
-         "status" => "succeeded",
+         "status" => "enqueued",
          "type" => "indexSwap",
-         "indexUid" => "sdv_ops_post_b"
+         "indexUid" => nil
        }}
     end
 
@@ -132,6 +134,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
                task_delay_ms: 0,
                task_error: nil,
                swap_called: false,
+              swap_calls: [],
                tasks_error: nil
              }
            end,
@@ -490,6 +493,56 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert Agent.get(:sync_drift_live_test_state, & &1.swap_called)
     assert accepted.assigns.promotion_status == :accepted
     assert accepted.assigns.promotion_task_id == 201
+  end
+
+  test "rendered promotion confirms the exact pair and submits once without claiming completion", %{
+    conn: conn
+  } do
+    Agent.update(:sync_drift_live_test_state, fn state ->
+      state
+      |> Map.put(:ready, true)
+      |> Map.put(:task_error, :task_read_failed)
+    end)
+
+    {:ok, view, _html} = live(conn, "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+
+    view
+    |> element("#index-promotion button", "Refresh sync and configuration checks")
+    |> render_click()
+
+    assert has_element?(view, "#index-promotion", "Ready for promotion")
+
+    view
+    |> element("#index-promotion button", "Promote target index")
+    |> render_click()
+
+    assert has_element?(view, "#confirm-index-promotion[role=dialog]")
+    assert has_element?(view, "#confirm-index-promotion", "ScrypathOps.Test.OpsPostA")
+    assert has_element?(view, "#confirm-index-promotion", "sdv_ops_post_a")
+    assert has_element?(view, "#confirm-index-promotion", "sdv_ops_post_a__reindex")
+
+    assert has_element?(view, "#confirm-index-promotion", "documents, primary keys, settings, and task history")
+    assert has_element?(view, "#confirm-index-promotion", "prepared target becomes live")
+
+    view
+    |> form("#confirm-index-promotion form")
+    |> render_submit()
+
+    render_async(view)
+
+    assert Agent.get(:sync_drift_live_test_state, &Enum.reverse(&1.swap_calls)) == [
+             {"sdv_ops_post_a", "sdv_ops_post_a__reindex"}
+           ]
+
+    assert has_element?(view, "#promotion-task-status", "201")
+    assert has_element?(view, "#promotion-task-status", "outcome unconfirmed")
+    refute has_element?(view, "#promotion-task-status", "Index swap completed")
+
+    view
+    |> element("#index-promotion button", "Promote target index")
+    |> render_click()
+
+    refute Agent.get(:sync_drift_live_test_state, &(length(&1.swap_calls) > 1))
   end
 
   test "rendered promotion status check reads only the retained task UID", %{conn: conn} do
