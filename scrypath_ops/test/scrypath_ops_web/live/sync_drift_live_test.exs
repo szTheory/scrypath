@@ -75,6 +75,17 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
          "indexUid" => "sdv_ops_post_b"
        }}
     end
+
+    def task(uid, _config) do
+      Agent.update(:sync_drift_live_test_state, fn state ->
+        Map.update!(state, :task_calls, &[uid | &1])
+      end)
+
+      case Agent.get(:sync_drift_live_test_state, & &1) do
+        %{task_error: reason} when not is_nil(reason) -> {:error, reason}
+        %{task_response: response} -> {:ok, response}
+      end
+    end
   end
 
   defmodule SyncDriftObanInspector do
@@ -108,7 +119,17 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       start:
         {Agent, :start_link,
          [
-           fn -> %{tasks_calls: 0, settings_calls: 0, swap_called: false, tasks_error: nil} end,
+           fn ->
+             %{
+               tasks_calls: 0,
+               settings_calls: 0,
+               task_calls: [],
+               task_response: %{"uid" => 201, "status" => "processing"},
+               task_error: nil,
+               swap_called: false,
+               tasks_error: nil
+             }
+           end,
            [name: :sync_drift_live_test_state]
          ]}
     })
@@ -464,6 +485,47 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert Agent.get(:sync_drift_live_test_state, & &1.swap_called)
     assert accepted.assigns.promotion_status == :accepted
     assert accepted.assigns.promotion_task_id == 201
+  end
+
+  test "rendered promotion status check reads only the retained task UID", %{conn: conn} do
+    {:ok, view, _html} =
+      live(conn, "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+
+    :sys.replace_state(view.pid, fn state ->
+      socket = state.socket
+
+      assigns =
+        Map.merge(socket.assigns, %{
+          promotion_task_id: 201,
+          promotion_status: :accepted,
+          promotion_schema: OpsPostA,
+          promotion_indexes: {"sdv_ops_post_a", "sdv_ops_post_a__reindex"},
+          promotion_runtime: %{
+            schema: OpsPostA,
+            backend: Scrypath.Meilisearch,
+            endpoint: "http://localhost:7700",
+            index_prefix: "sdv",
+            oban: nil,
+            repo: nil,
+            prefix: nil,
+            node: node()
+          }
+        })
+
+      %{state | socket: %{socket | assigns: assigns}}
+    end)
+
+    assert has_element?(view, "#promotion-task-status", "Task 201")
+    assert has_element?(view, "#promotion-task-status", "Index swap accepted")
+
+    view
+    |> element("#promotion-task-status button", "Check swap status")
+    |> render_click()
+    render_async(view)
+
+    assert has_element?(view, "#promotion-task-status", "Index swap running")
+    assert Agent.get(:sync_drift_live_test_state, &Enum.reverse(&1.task_calls)) == [201]
+    refute Agent.get(:sync_drift_live_test_state, & &1.swap_called)
   end
 
   test "guarded promotion preserves the queue inspector and refuses newly pending work" do
