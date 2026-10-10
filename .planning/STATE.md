@@ -5,11 +5,11 @@ milestone_name: ScrypathOps UI refinement
 current_phase: 173
 current_phase_name: Shared Visual Foundation and Operational Time
 status: Ready to execute
-stopped_at: "Phase 176 context gathered; next: $gsd-ui-phase 176; Phase 173 remains ready to execute"
-last_updated: "2026-10-10T19:00:44.333Z"
+stopped_at: "Phase 176 UI-SPEC approved; next: $gsd-plan-phase 176; Phase 173 remains ready to execute"
+last_updated: "2026-10-10T19:45:56.194Z"
 last_activity: 2026-10-06
 last_activity_desc: Phase 173 plans verified after one revision; four sequential waves ready to execute
-state_head: 368abcc5f0309cb0e154739c1e52916478283b90
+state_head: c12ce17b89e54b289d2842c5b736f01fa06867af
 progress:
   total_phases: 5
   completed_phases: 0
@@ -80,9 +80,9 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-10T19:00:44.316Z
-Stopped at: Phase 176 context gathered; next: $gsd-ui-phase 176; Phase 173 remains ready to execute
-Resume file: .planning/phases/176-search-and-playbooks/176-CONTEXT.md
+Last session: 2026-10-10T19:45:56.176Z
+Stopped at: Phase 176 UI-SPEC approved; next: $gsd-plan-phase 176; Phase 173 remains ready to execute
+Resume file: .planning/phases/176-search-and-playbooks/176-UI-SPEC.md
 
 Run `$gsd-execute-phase 173` from `/Users/jon/projects/scrypath` on `planning/next-milestone-handoff`. Phase 173 discussion, approved UI contract, research, pattern mapping, and implementation planning are complete. Four sequential waves deliver (01) neutral shell/theme and a disposable dual-entrypoint browser runner, (02) lossless snapshot-stable operational time, (03) local status/neutral metrics/quiet actions, and (04) truthful timestamp copying. Independent plan review passed after one revision resolved production standalone browser wiring and the missing root core gate. Final deterministic checks passed four frontmatters/structures, 7/7 requirements, 22/22 decisions, 26/26 UI considerations and 11/11 automated failure directions; the post-planning gate covered all 29 requirement/decision items. See 173-PLAN-CHECK.md and 173-VALIDATION.md. Product tests and new browser harness execution remain pending; no Phase 173 implementation or hosted source receipt is claimed. OPUX-09–OPUX-15 remain pending. The last completed implementation phase remains 172 in archived v1.42. Research/validation commit is 7fed9db; the final planning commit follows it.
 
