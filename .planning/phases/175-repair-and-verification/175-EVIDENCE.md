@@ -43,3 +43,7 @@ The contrast report is copied to `/private/tmp/scrypath-phase173-20261006-155750
 ## Limits and remaining closeout
 
 The approved UI spec contains 68 applicable element/category pairs in eight groups. This browser scope supplies executable evidence across all eight groups, while the full Ops test suite supplies the detailed rendered-state, authorization, stale-context, and no-resubmit assertions. It is not a one-test-per-pair 68-case Playwright matrix. System appearance has a Dark/reduced-motion capture; there is no separate Light/System screenshot. Source-diff screenshots are not included. No hosted CI result, reviewer approval, merge, release, or OPUX-20–22 requirement completion is claimed here.
+
+## Validation gap closeout
+
+The expanded run at source `724c5acfddec11494c83d0eef8df4dfb9da416f7` plus the recorded worktree diff passed seven browser cases with zero failures/skips/retries. Retained receipt: `/private/tmp/scrypath-phase173-20261006-155750/evidence/phase175/post-audit-final/`; its `worktree-diff-sha256.txt` identifies the uncommitted changes used by the run. Exact delete proof also correlates the opaque receipt, source failure, replacement job/attempt and task UID before checking active-index absence. New checks include upsert handoff, double submission, mutation-time prerequisites, connected sudo return, and System Light/reduced motion. Full Ops gate subsequently passed 333 tests and 2 doctests. Failed gap-fill attempts remain in `nyquist-final/`. Hosted evidence and recovery callback current-runtime verification remain pending.

@@ -59,8 +59,8 @@ coverage:
   - id: D3
     description: "Final Phase175 source passes PR-first required CI and closes OPUX-20–22."
     verification: []
-    human_judgment: true
-    rationale: "The parent owns exact-final-SHA hosted CI and independent requirement closeout; neither has run yet."
+    human_judgment: false
+    rationale: "Machine-verifiable exact-final-SHA hosted CI and independent requirement closeout remain pending; this is not a human acceptance gate."
 duration: 80min
 completed: 2026-10-10
 status: complete
@@ -153,7 +153,7 @@ None.
 
 | Flag | File | Description |
 |---|---|---|
-| `threat_flag: static-route` | `scrypath_ops/lib/scrypath_ops_web/endpoint.ex` | Adds `/ops/phase175/assets/*` to the endpoint static paths in all environments. It serves the existing compiled Ops assets and no dynamic data, but this route is outside the plan threat register and should be reviewed with the final security/hosted closeout. |
+| `threat_flag: static-route` | `scrypath_ops/lib/scrypath_ops_web/endpoint.ex` | Adds `/ops/phase175/assets/*` inside the existing `Mix.env() == :test` guard. It serves existing compiled Ops assets and no dynamic data; verify that guard in final security review. |
 
 ## Next Phase Readiness
 

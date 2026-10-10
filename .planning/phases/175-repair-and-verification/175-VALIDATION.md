@@ -1,7 +1,7 @@
 ---
 phase: "175"
 slug: "repair-and-verification"
-status: draft
+status: validated
 nyquist_compliant: false
 wave_0_complete: false
 created: "2026-10-10"
@@ -9,7 +9,7 @@ created: "2026-10-10"
 
 # Phase 175 — Validation Strategy
 
-Final planning contract for six plans and twelve tasks; no Phase 175 execution result is asserted. Every row is pending until its named executor command produces source-bound evidence.
+Audit of six plans and twelve tasks. Current Ops proof: 333 tests and 2 doctests, zero failures. Expanded browser proof: seven cases, zero failures/skips/retries. Exact-final-SHA hosted closeout remains pending. A potential recovery callback runtime gap is retained below for security verification; compliance stays false until resolved.
 
 ## Test Infrastructure
 
@@ -35,18 +35,18 @@ Select the supported installed Elixir/OTP toolchain before commands; the current
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 175-01-T1 | 175-01 | 1 | OPUX-20 | T-175-01 | Rendered non-first selector/URL, scoped observations, read-only check | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend | Pending |
-| 175-01-T2 | 175-01 | 1 | OPUX-20 | T-175-02 | Complete zero versus partial/error and independent config read | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend | Pending |
-| 175-02-T1 | 175-02 | 2 | OPUX-20, OPUX-21, OPUX-22 | T-175-03, T-175-04 | Exact retry job/attempt/task and active-index upsert | LiveView/correlation | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs test/scrypath_ops/recovery_observation_test.exs` | Yes; extend | Pending |
-| 175-02-T2 | 175-02 | 2 | OPUX-21, OPUX-22 | T-175-03, T-175-04, T-175-05 | Delete absence, expired/superseded/wrong-runtime unknown | LiveView/correlation | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs test/scrypath_ops/recovery_observation_test.exs test/scrypath_ops/document_observation_test.exs` | Yes; extend | Pending |
-| 175-03-T1 | 175-03 | 3 | OPUX-21, OPUX-22 | T-175-06, T-175-08 | Same-UID GET, enqueued versus processing, no second POST | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend | Pending |
-| 175-03-T2 | 175-03 | 3 | OPUX-21, OPUX-22 | T-175-06, T-175-07, T-175-08 | Terminal/malformed/timeout and stale success/error callbacks | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend | Pending |
-| 175-04-T1 | 175-04 | 4 | OPUX-20, OPUX-22 | T-175-09, T-175-10 | Rendered exact-pair confirmation, host gate, fresh prerequisites | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend | Pending |
-| 175-04-T2 | 175-04 | 4 | OPUX-22 | T-175-09, T-175-10, T-175-11 | Retained blocker, double submit, auth/cancel and disclosure | LiveView/eligibility | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs test/scrypath_ops/promotion_eligibility_test.exs` | Yes; extend | Pending |
-| 175-05-T1 | 175-05 | 5 | OPUX-20, OPUX-21, OPUX-22 | T-175-12, T-175-13 | Test-only standalone real view and exact fake task | LiveView fixture | `cd scrypath_ops && mix test test/scrypath_ops_web/live/phase175_fixture_live_test.exs` | New in this task | Pending |
-| 175-05-T2 | 175-05 | 5 | OPUX-20, OPUX-21, OPUX-22 | T-175-12, T-175-13 | Isolated adverse standalone scenarios through rendered controls | LiveView fixture | `cd scrypath_ops && mix test test/scrypath_ops_web/live/phase175_fixture_live_test.exs test/scrypath_ops_web/live/sync_drift_live_test.exs` | New in T1; extend | Pending |
-| 175-06-T1 | 175-06 | 6 | OPUX-20, OPUX-21, OPUX-22 | T-175-14, T-175-16 | Owned mounted swap exact UID/pair/document plus standalone check | Playwright/Compose | `bash examples/scrypath_ecommerce/scripts/verify-phase175.sh repair` | New in this task | Pending |
-| 175-06-T2 | 175-06 | 6 | OPUX-20, OPUX-21, OPUX-22 | T-175-14, T-175-15, T-175-16 | Full state/visual matrix, owned cleanup and exact source | Playwright/Compose/Ops | `bash examples/scrypath_ecommerce/scripts/verify-phase175.sh repair`; `mix verify.ops_ui`; `make -C examples/scrypath_ecommerce contrast` | New in T1; extend | Pending |
+| 175-01-T1 | 175-01 | 1 | OPUX-20 | T-175-01 | Rendered non-first selector/URL, scoped observations, read-only check | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend | Green |
+| 175-01-T2 | 175-01 | 1 | OPUX-20 | T-175-02 | Complete zero versus partial/error and independent config read | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend | Green |
+| 175-02-T1 | 175-02 | 2 | OPUX-20, OPUX-21, OPUX-22 | T-175-03, T-175-04 | Exact retry job/attempt/task and active-index upsert | LiveView/correlation | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs test/scrypath_ops/recovery_observation_test.exs` | Yes; extend | Green |
+| 175-02-T2 | 175-02 | 2 | OPUX-21, OPUX-22 | T-175-03, T-175-04, T-175-05 | Delete absence, expired/superseded/wrong-runtime unknown | LiveView/correlation | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs test/scrypath_ops/recovery_observation_test.exs test/scrypath_ops/document_observation_test.exs` | Yes | Partial: current-runtime callback check under security review |
+| 175-03-T1 | 175-03 | 3 | OPUX-21, OPUX-22 | T-175-06, T-175-08 | Same-UID GET, enqueued versus processing, no second POST | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend | Green |
+| 175-03-T2 | 175-03 | 3 | OPUX-21, OPUX-22 | T-175-06, T-175-07, T-175-08 | Terminal/malformed/timeout and stale success/error callbacks | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend | Green |
+| 175-04-T1 | 175-04 | 4 | OPUX-20, OPUX-22 | T-175-09, T-175-10 | Rendered exact-pair confirmation, host gate, fresh prerequisites | LiveView | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend | Green |
+| 175-04-T2 | 175-04 | 4 | OPUX-22 | T-175-09, T-175-10, T-175-11 | Retained blocker, double submit, auth/cancel and disclosure | LiveView/eligibility | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs test/scrypath_ops/promotion_eligibility_test.exs` | Yes; extend | Green |
+| 175-05-T1 | 175-05 | 5 | OPUX-20, OPUX-21, OPUX-22 | T-175-12, T-175-13 | Test-only standalone real view and exact fake task | LiveView fixture | `cd scrypath_ops && mix test test/scrypath_ops_web/live/phase175_fixture_live_test.exs` | New in this task | Green |
+| 175-05-T2 | 175-05 | 5 | OPUX-20, OPUX-21, OPUX-22 | T-175-12, T-175-13 | Isolated adverse standalone scenarios through rendered controls | LiveView fixture | `cd scrypath_ops && mix test test/scrypath_ops_web/live/phase175_fixture_live_test.exs test/scrypath_ops_web/live/sync_drift_live_test.exs` | New in T1; extend | Green |
+| 175-06-T1 | 175-06 | 6 | OPUX-20, OPUX-21, OPUX-22 | T-175-14, T-175-16 | Owned mounted swap exact UID/pair/document plus standalone check | Playwright/Compose | `bash examples/scrypath_ecommerce/scripts/verify-phase175.sh repair` | New in this task | Green |
+| 175-06-T2 | 175-06 | 6 | OPUX-20, OPUX-21, OPUX-22 | T-175-14, T-175-15, T-175-16 | Full state/visual matrix, owned cleanup and exact source | Playwright/Compose/Ops | `bash examples/scrypath_ecommerce/scripts/verify-phase175.sh repair`; `mix verify.ops_ui`; `make -C examples/scrypath_ecommerce contrast` | New in T1; extend | Green |
 
 Each `<automated>` in the plans is immediately followed by a `<fails_when>` covering nonzero exit and the relevant zero-case or absent artifact. The Plan 06 final task additionally runs `cd scrypath_ops && mix assets.build` and `cd scrypath_ops && mix precommit` with their own failure signals. Commands name existing files or files created by the same preceding task; no test command is run in planning.
 
@@ -67,18 +67,18 @@ Every plan includes reserved T-175-SC. No npm/pip/cargo install task exists, so 
 
 | Source | Items | Plan coverage | Status |
 |--------|-------|---------------|--------|
-| ROADMAP goal and three success criteria | Safe supported repair/promotion; separate config/freshness and observation/mutation; exact accepted/running/terminal/unknown evidence | 175-01–04 behavior, 175-05–06 dual-entrypoint proof | Planned |
-| REQUIREMENTS | OPUX-20 | 175-01, 175-02, 175-04, 175-05, 175-06 | Planned |
-| REQUIREMENTS | OPUX-21 | 175-02, 175-03, 175-05, 175-06 | Planned |
-| REQUIREMENTS | OPUX-22 | 175-02, 175-03, 175-04, 175-05, 175-06 | Planned |
-| CONTEXT | D-01–D-02 accepted audit, current components and design | 175-01, 175-04, 175-06 | Planned |
-| CONTEXT | D-03–D-08 selection, ordinary hierarchy, distinct reads and restrained diagnostics | 175-01, 175-02 | Planned |
-| CONTEXT | D-09–D-11 retry task/document correlation and unknown protection | 175-02, 175-03 | Planned |
-| CONTEXT | D-12 same-UID promotion task lifecycle | 175-03, 175-05, 175-06 | Planned |
-| CONTEXT | D-13–D-16 advanced disclosure, eligibility, confirmation and pinned swap copy | 175-04, 175-06 | Planned |
-| CONTEXT | D-17–D-20 standalone/mounted, visual, exact-source and PR-first boundaries | 175-05, 175-06 | Planned |
-| RESEARCH | Existing configured client/TaskPayload, receipt/document modules, PromotionEligibility/Gating, native details, pinned Meilisearch swap, no new dependency | 175-02–05 | Planned |
-| UI-SPEC | Eight grouped empty/loading/error/populated/partial/overflow/zero-one-many/long-text truths, all 68 E1–E10/category pairs | 175-06 plain `must_haves.truths`, with behavior built in 175-01–05 | Planned |
+| ROADMAP goal and three success criteria | Safe supported repair/promotion; separate config/freshness and observation/mutation; exact accepted/running/terminal/unknown evidence | 175-01–04 behavior, 175-05–06 dual-entrypoint proof | Executed locally |
+| REQUIREMENTS | OPUX-20 | 175-01, 175-02, 175-04, 175-05, 175-06 | Executed locally |
+| REQUIREMENTS | OPUX-21 | 175-02, 175-03, 175-05, 175-06 | Executed locally |
+| REQUIREMENTS | OPUX-22 | 175-02, 175-03, 175-04, 175-05, 175-06 | Executed locally |
+| CONTEXT | D-01–D-02 accepted audit, current components and design | 175-01, 175-04, 175-06 | Executed locally |
+| CONTEXT | D-03–D-08 selection, ordinary hierarchy, distinct reads and restrained diagnostics | 175-01, 175-02 | Executed locally |
+| CONTEXT | D-09–D-11 retry task/document correlation and unknown protection | 175-02, 175-03 | Executed locally |
+| CONTEXT | D-12 same-UID promotion task lifecycle | 175-03, 175-05, 175-06 | Executed locally |
+| CONTEXT | D-13–D-16 advanced disclosure, eligibility, confirmation and pinned swap copy | 175-04, 175-06 | Executed locally |
+| CONTEXT | D-17–D-20 standalone/mounted, visual, exact-source and PR-first boundaries | 175-05, 175-06 | Executed locally |
+| RESEARCH | Existing configured client/TaskPayload, receipt/document modules, PromotionEligibility/Gating, native details, pinned Meilisearch swap, no new dependency | 175-02–05 | Executed locally |
+| UI-SPEC | Eight grouped empty/loading/error/populated/partial/overflow/zero-one-many/long-text truths, all 68 E1–E10/category pairs | 175-06 plain `must_haves.truths`, with behavior built in 175-01–05 | Executed locally |
 
 Deferred broad brand/core/backend/auth work, automatic retry/reindex/backfill, durable receipt service, generalized freshness scan, new required CI service, paid judge, Search/Playbooks phase scope and merge/release authority are excluded by CONTEXT and ROADMAP, rather than missing plan items.
 
@@ -117,3 +117,19 @@ None required for phase completion. All required behavior, current-context safet
 - [ ] Execution evidence supports `nyquist_compliant: true` and `wave_0_complete: true` before those fields change.
 
 **Approval:** Pending plan verification and execution evidence; no user or runtime approval simulated.
+
+## Execution Audit Evidence
+
+- Focused Nyquist pass: 93 tests, zero failures at `724c5ac`. Expanded browser fixes found and repaired a connected authorization-return path defect; focused regression: 19 tests, zero failures.
+- Current full Ops run: `/private/tmp/scrypath-phase173-20261006-155750/evidence/phase175/post-audit-ops.log` — 333 tests + 2 doctests, zero failures.
+- Expanded browser receipt: `evidence/phase175/post-audit-final/` under the same external parent directory — seven cases, zero failures/skips/retries; exact upsert and delete receipt/job/attempt/task/document probes, double submit, changed prerequisite, standalone sudo return, same-UID recheck, UI states, System Light/Dark and reduced motion. Cleanup status zero. Earlier failed attempts remain retained in `nyquist-final/`.
+- No required manual-only verification was introduced. Source-before/source-after composition screenshots remain absent and nonblocking; interaction screenshots are labeled honestly. The 68 UI pairs receive grouped assertions and source-owned component checks rather than 68 separate browser cases; independent UI/goal verification must assess that coverage.
+- Potential remaining gap: recovery success/error callbacks check generation/handle/allowlist, but the current endpoint/runtime may change after the observation begins. Security must confirm and close this branch before `nyquist_compliant` or `wave_0_complete` changes.
+
+## Validation Audit 2026-10-10
+
+| Metric | Count |
+|---|---|
+| Gaps found | 7 |
+| Resolved | 6 |
+| Escalated | 1 |
