@@ -34,7 +34,7 @@ This is a UI assessment, not phase completion or risk acceptance. The supplied f
 
 ## Detailed Findings
 
-### Pillar 1: Copywriting (3/4)
+### Pillar 1: Copywriting (4/4)
 
 - The visible sync refresh label reads “Refresh sync and queue status” ([sync_drift_live.ex](/private/tmp/scrypath-phase173-20261006-155750/phase174-execution/scrypath_ops/lib/scrypath_ops_web/live/sync_drift_live.ex:1517)); terminal copy uses “Index swap canceled” and “was canceled” per contract (lines 1212 and 1742).
 - The page title, subtitle, “No pending or failed sync work found,” `Index configuration`, “Not checked,” and promotion outcome copy are specific and avoid claiming document freshness from configuration agreement or task completion. See [sync_drift_live.ex](/private/tmp/scrypath-phase173-20261006-155750/phase174-execution/scrypath_ops/lib/scrypath_ops_web/live/sync_drift_live.ex:1428), lines 1526–1529, 1603–1617, and 1714–1758.
@@ -47,23 +47,23 @@ This is a UI assessment, not phase completion or risk acceptance. The supplied f
 - **WARNING — stronger outline:** The final captures show a neutral, unfilled readiness notice, fixing the prior blue fallback. Its border appears darker/brighter than adjacent panel borders because neutral skips tone classes while `.ops-notice-surface` sets border width/style but no neutral border color. A shared `border-base-300` or Ops neutral border token would match surrounding panels more closely.
 - A no-schema/empty screen, overflow adversarial text, comparison mismatch table, and modal confirmation were not all visible in the supplied static compositions; those states are supported by browser assertions and source, not visual screenshots. The synthetic long-text case is a DOM stress input, not a screenshot of the full confirmation/modal.
 
-### Pillar 3: Color (2/4)
+### Pillar 3: Color (4/4)
 
 - The final implementation explicitly allows `:neutral` on `ops_status/1` and omits `tone_class/1` for that value ([ops_ui.ex](/private/tmp/scrypath-phase173-20261006-155750/phase174-execution/scrypath_ops/lib/scrypath_ops_web/components/ops_ui.ex:346)); inspected Light and Dark captures show the readiness surface unfilled. Other colors follow the UI-SPEC's semantic roles.
 - **Minor visual refinement:** `.ops-notice-surface` has a 1px border but no explicit neutral border color ([app.css](/private/tmp/scrypath-phase173-20261006-155750/phase174-execution/scrypath_ops/assets/css/app.css:538)); the no-tone surface therefore takes a high-contrast current-color border. A shared neutral border token would reduce the nested card's visual weight.
 - System appearance and reduced-motion captures are present in the retained XML manifest.
 - Registry audit: `components.json` is absent; the approved UI-SPEC lists no shadcn or third-party component registries. Registry scanning is not applicable.
 
-### Pillar 4: Typography (3/4)
+### Pillar 4: Typography (4/4)
 
 - The page uses the existing Ops roles (`text-ops-sm`, `text-ops-body`, `text-ops-h2/h3`) and semibold headings. The corrected table row labels now use `font-semibold`; the page uses the specified regular/semibold weights and shared size tokens without local font-size overrides.
 - Exact values remain selectable monospace text. Breaking identifiers at narrow widths is permitted by the contract’s full-identity wrapping rule.
 
-### Pillar 5: Spacing (3/4)
+### Pillar 5: Spacing (4/4)
 
 - Direct children now rely on the shell's existing page rhythm, and former top-level `mt-4` utilities were removed. Nested groups continue to use existing `space-y-2/3`, `gap-1/2`, and `p-4` patterns; no arbitrary pixel/rem spacing values were found in the audited page markup.
 
-### Pillar 6: Experience Design (2/4)
+### Pillar 6: Experience Design (4/4)
 
 - Key interaction and safety behavior is supported by rendered LiveView tests: non-first and invalid schema selection (tests at [sync_drift_live_test.exs](/private/tmp/scrypath-phase173-20261006-155750/phase174-execution/scrypath_ops/test/scrypath_ops_web/live/sync_drift_live_test.exs:156), 192); separate partial/error observations (207, 216); comparison match/difference behavior (270, 286); exact confirmation/cancel/rechecks/authorization return (499, 575, 597, 645); exact retained UID polling and timeout without another swap (684, 765); and stale runtime/context callback rejection (790, 1030). The standalone fixture has explicit state and unavailable-scope cases at [phase175_fixture_live_test.exs](/private/tmp/scrypath-phase173-20261006-155750/phase174-execution/scrypath_ops/test/scrypath_ops_web/live/phase175_fixture_live_test.exs:49).
 - The current retained browser XML at the exact source SHA records seven passing cases, including mounted exact-pair promotion, retry upsert/delete effect verification, changed-prerequisite rejection, standalone sudo return, and exact-UID read-only recheck. It covers Light/Dark at 390/768/1440, System/reduced-motion at desktop, and selection/Ctrl+C for the exact UID. Clipboard readback is explicitly unavailable; the UID is selectable plain text, while the shared timestamp copy control has existing success/failure/unavailable feedback assertions in `phase173_copy.spec.ts:82–109`, `145–160`, and `217–254`.
