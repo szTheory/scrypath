@@ -89,7 +89,13 @@ Plans:
   2. Search health presents worst-first schema records with complete readable identifiers and times, one meaningful surface per schema, plain Backend/Queue groups, clear section spacing, and concise next-check actions.
   3. Failed sync work exposes the failure reason, work/source identity, and eligibility of the common supported recovery action before optional verbose evidence; retained failure history and safety gates remain visible.
   4. After changing schema in the rendered UI, operators keep that allowed selection through recovery handoffs, refresh, and back navigation; invalid or unavailable targets never turn into actions on another schema.
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+- [ ] 176-01-PLAN.md — Search submit/results tracer with captured criteria and truthful states
+- [ ] 176-02-PLAN.md — Eligible Search capture and safe workspace save
+- [ ] 176-03-PLAN.md — Playbook catalog, preview provenance and independent save
+- [ ] 176-04-PLAN.md — Playbook run attribution and explicit bounded import
+- [ ] 176-05-PLAN.md — Contextual file management and modal focus through patches
 **UI hint**: yes
 **Acceptance**: Inspect before/after recovery views in both themes and relevant widths; run focused rendered-navigation, focus/layout, state, and mounted handoff proof in existing lanes, including a changed schema selection.
 
