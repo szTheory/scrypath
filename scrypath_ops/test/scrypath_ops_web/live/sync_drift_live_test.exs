@@ -618,6 +618,29 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert Agent.get(:sync_drift_live_test_state, & &1.swap_calls) == []
   end
 
+  test "rendered promotion rechecks the current schema allowlist before submitting", %{conn: conn} do
+    Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
+    {:ok, view, _html} = live(conn, "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+
+    view
+    |> element("#index-promotion button", "Refresh sync and configuration checks")
+    |> render_click()
+
+    view
+    |> element("#index-promotion button", "Promote target index")
+    |> render_click()
+
+    Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostB])
+
+    view
+    |> form("#index-promotion-form")
+    |> render_submit()
+
+    refute has_element?(view, "#confirm-index-promotion")
+    assert has_element?(view, "[role=alert]", "Choose an available schema to continue.")
+    assert Agent.get(:sync_drift_live_test_state, & &1.swap_calls) == []
+  end
+
   test "rendered promotion returns through sudo confirmation without replay", %{conn: conn} do
     Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
     {:ok, view, _html} = live(conn, "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
@@ -639,6 +662,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
           :operator_context,
           operator_context(sudo_at: DateTime.add(DateTime.utc_now(), -600, :second))
         )
+        |> Map.put(:return_to, "/ops/sync-drift")
         |> Map.put(:__changed__, %{operator_context: true})
 
       %{state | socket: %{socket | assigns: assigns}}

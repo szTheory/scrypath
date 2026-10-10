@@ -1652,8 +1652,15 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         class="ops-panel mt-4"
         phx-hook="OpsHealthDetails"
         phx-mounted={JS.ignore_attributes("open")}
+        data-testid="advanced-promotion-disclosure"
+        data-ops-required-open="false"
       >
-        <summary class="cursor-pointer p-4 font-semibold">Advanced: index promotion</summary>
+        <summary
+          class="cursor-pointer p-4 font-semibold"
+          data-testid="advanced-promotion-summary"
+        >
+          Advanced: index promotion
+        </summary>
         <div class="space-y-3 px-4 pb-4">
           <p class="text-ops-body text-base-content/75">
             Promotion swaps the live and prepared target indexes for <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>. Their
