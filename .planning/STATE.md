@@ -5,11 +5,11 @@ milestone_name: ScrypathOps UI refinement
 current_phase: 175
 current_phase_name: Repair and Verification
 status: planning
-stopped_at: Whole-app UX follow-up implemented; Phase 175 discussion is next
-last_updated: "2026-10-10T04:29:17Z"
+stopped_at: "Phase 175 context gathered; next: $gsd-ui-phase 175, then $gsd-plan-phase 175"
+last_updated: "2026-10-10T11:47:06.147Z"
 last_activity: 2026-10-10
-last_activity_desc: Maintainer-authorized Impeccable audit and UX fixes; remaining phases stay open
-state_head: 22d5cd016cd8014ea2887615bd66efa093d69e1b
+last_activity_desc: Phase 175 context gathered from accepted UX decisions; no implementation started
+state_head: eb13f3c437820ae5301a02716a09165c1313695c
 progress:
   total_phases: 5
   completed_phases: 2
@@ -28,8 +28,8 @@ See PROJECT.md (updated 2026-10-07). Core value: make search indexing feel nativ
 
 Phase: 175 — Repair and Verification
 Plan: Not started
-Status: Ready to discuss using the accepted whole-app audit
-Last activity: 2026-10-10 — Whole-app UX follow-up verified: 57 browser cases, 303 Ops tests and 661 core tests pass
+Status: planning
+Last activity: 2026-10-10 — Phase 175 context gathered from accepted UX decisions; no implementation started
 Progress: [████░░░░░░] 40% (2/5 phases; 12/12 currently planned plans complete)
 
 ## Delivered Evidence
@@ -92,9 +92,9 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Historical Phase 174 Session Continuity
 
-Last session: 2026-10-07T20:01:58.130Z
-Stopped at: Phase 174 complete, ready to plan Phase 175
-Resume file: None
+Last session: 2026-10-10T11:46:40.805Z
+Stopped at: Phase 175 context gathered; next: $gsd-ui-phase 175, then $gsd-plan-phase 175
+Resume file: .planning/phases/175-repair-and-verification/175-CONTEXT.md
 
 Phase 174 now executes in a separate regular clone on `gsd/phase-174-recovery-entry-and-diagnosis` in `/private/tmp/scrypath-phase173-20261006-155750/phase174-execution`. The previous planning worktree and its RED artifacts remain preserved; the fresh clone resolves the executor commit guard without bypassing it. It starts from the immutable Phase 173 source `13ea88a9c18a7515f4ec5ae7deea0cdde4c22531`. Its later handoff metadata does not extend the prior exact-SHA receipt. The execution checkout and PR branch `gsd/phase-173-shared-visual-foundation` remain unchanged at that attested source.
 
