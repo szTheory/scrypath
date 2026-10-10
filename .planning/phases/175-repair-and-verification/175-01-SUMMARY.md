@@ -81,10 +81,10 @@ commits: 4
 
 ## Task Commits
 
-1. **Task 1 RED: rendered selected-schema and stale-context assertions** — `5ae0b6a` (test)
-2. **Task 1 GREEN: preserve overview route and unavailable-schema guidance** — `3ab615d` (feat)
-3. **Task 2 RED: missing backend and independent-result assertions** — `3b7a229` (test)
-4. **Task 2 GREEN: render incomplete sync evidence explicitly** — `175dcfb` (feat)
+1. **Task 1: RED: rendered selected-schema and stale-context assertions** — `5ae0b6a` (test)
+2. **Task 1: GREEN: preserve overview route and unavailable-schema guidance** — `3ab615d` (feat)
+3. **Task 2: RED: missing backend and independent-result assertions** — `3b7a229` (test)
+4. **Task 2: GREEN: render incomplete sync evidence explicitly** — `175dcfb` (feat)
 
 ## Files Created/Modified
 
