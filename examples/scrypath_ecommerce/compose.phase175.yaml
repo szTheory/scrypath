@@ -1,0 +1,77 @@
+services:
+  web:
+    ports: !reset []
+    command: ["sh", "./docker-e2e-entrypoint.sh"]
+    environment:
+      SCRYPATH_OPS_PLAYBOOK_DIR: /app/examples/scrypath_ecommerce/priv/playbooks
+    volumes:
+      - phase175_playbooks:/app/examples/scrypath_ecommerce/priv/playbooks
+      - phase175_web_build:/app/examples/scrypath_ecommerce/_build
+      - phase175_web_ops_build:/app/scrypath_ops/_build
+    init: true
+
+  ops:
+    build:
+      context: ../..
+      dockerfile: examples/scrypath_ecommerce/Dockerfile
+    command:
+      - sh
+      - -c
+      - |
+        until pg_isready -h "$${PGHOST:-postgres}" -p "$${PGPORT:-5432}" -U postgres >/dev/null 2>&1; do sleep 1; done
+        cd /app/scrypath_ops
+        mix ecto.create
+        mix ecto.migrate
+        mix assets.setup
+        mix assets.build
+        exec mix run --no-start --no-halt -e 'Agent.start_link(fn -> ScrypathOps.Test.Phase175FixtureSource.initial_state() end, name: ScrypathOps.Test.Phase175FixtureSource.state_name()); endpoint = Application.get_env(:scrypath_ops, ScrypathOpsWeb.Endpoint); Application.put_env(:scrypath_ops, ScrypathOpsWeb.Endpoint, Keyword.put(endpoint, :check_origin, ["http://ops:4003"])); Application.ensure_all_started(:scrypath_ops)'
+    environment:
+      MIX_ENV: test
+      PHX_SERVER: "true"
+      PORT: "4003"
+      SCRYPATH_OPS_PORT: "4003"
+      SCRYPATH_OPS_TEST_HOST: "ops"
+      SCRYPATH_OPS_SCHEMAS: "ScrypathOps.Test.OpsPostA,ScrypathOps.Test.OpsPostB"
+      PGHOST: postgres
+      PGPORT: "5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - phase175_ops_build:/app/scrypath_ops/_build
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "http://127.0.0.1:4003/ops/"]
+      interval: 2s
+      timeout: 5s
+      start_period: 5m
+      retries: 60
+    init: true
+
+  browser:
+    build:
+      context: ../..
+      dockerfile: examples/scrypath_ecommerce/Dockerfile.e2e
+      args:
+        PLAYWRIGHT_VERSION: ${PLAYWRIGHT_VERSION:-1.60.0}
+    environment:
+      CI: "1"
+      E2E_SCOPE: ${E2E_SCOPE:-phase175-repair}
+      PLAYWRIGHT_BASE_URL: http://web:4002
+      PHASE175_OPS_BASE_URL: http://ops:4003/ops/phase175
+      SCRYPATH_SOURCE_SHA: ${SCRYPATH_SOURCE_SHA:-unknown}
+      PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-results/${E2E_SCOPE:-phase175-repair}.xml
+    depends_on:
+      web:
+        condition: service_healthy
+      ops:
+        condition: service_healthy
+    volumes:
+      - phase175_playbooks:/app/examples/scrypath_ecommerce/priv/playbooks
+    init: true
+    ipc: host
+
+volumes:
+  phase175_playbooks:
+  phase175_web_build:
+  phase175_web_ops_build:
+  phase175_ops_build:
