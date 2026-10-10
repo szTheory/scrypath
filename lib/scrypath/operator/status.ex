@@ -107,7 +107,9 @@ defmodule Scrypath.Operator.Status do
 
   defp summarize_queue(states, :oban) do
     %{
-      observed?: states != [],
+      # A successful inspection is still an observation when there are no jobs.
+      # Queue use is determined by sync mode, not by whether history is populated.
+      observed?: true,
       pending: Enum.filter(states, &(&1.state == :queued)),
       retrying: Enum.filter(states, &(&1.state == :retrying)),
       failed: Enum.filter(states, &(&1.state == :failed)),

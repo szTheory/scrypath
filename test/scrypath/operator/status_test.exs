@@ -127,6 +127,28 @@ defmodule Scrypath.Operator.StatusTest do
     assert_received {:oban_jobs, SearchablePost, _config}
   end
 
+  test "an empty successful Oban inspection is observed without implying queue use or success" do
+    assert {:ok, %Status{} = status} =
+             Scrypath.sync_status(SearchablePost,
+               backend: Scrypath.Meilisearch,
+               sync_mode: :oban,
+               index_prefix: "tenant",
+               meilisearch_url: "http://localhost:7700",
+               meilisearch_client: StatusMeilisearchClient,
+               meilisearch_tasks: [],
+               oban: Scrypath.SyncTest.ReadyOban,
+               oban_queue: :search_sync,
+               oban_inspector: StatusObanInspector,
+               oban_jobs: []
+             )
+
+    assert status.queue.observed? == true
+    assert status.queue.last_succeeded == nil
+    assert status.queue.pending == []
+    assert status.queue.retrying == []
+    assert status.queue.failed == []
+  end
+
   test "last success stays nil when Scrypath cannot observe it for the chosen mode" do
     assert {:ok, %Status{} = status} =
              Scrypath.sync_status(SearchablePost,
@@ -143,5 +165,36 @@ defmodule Scrypath.Operator.StatusTest do
     assert status.backend.last_succeeded == nil
     assert status.queue.observed? == false
     assert status.queue.last_succeeded == nil
+  end
+
+  test "completed task state preserves validated source ISO precision and offset" do
+    source_iso = "2026-10-04T13:02:05.123456-04:00"
+
+    assert %State{at: at, metadata: %{source_iso: ^source_iso}} =
+             State.from_backend_task(%{
+               "uid" => 401,
+               "status" => "succeeded",
+               "type" => "documentAdditionOrUpdate",
+               "indexUid" => "tenant_searchable_post",
+               "finishedAt" => source_iso
+             })
+
+    {:ok, parsed_source, _offset} = DateTime.from_iso8601(source_iso)
+    assert DateTime.compare(at, parsed_source) == :eq
+  end
+
+  test "queue completion state serializes its actual DateTime precision and offset" do
+    {:ok, completed_at, _offset} = DateTime.from_iso8601("2026-10-05T11:12:13.456-04:00")
+
+    assert %State{at: ^completed_at, metadata: %{source_iso: source_iso}} =
+             State.from_queue_job(%{
+               id: 402,
+               state: "completed",
+               worker: "Scrypath.Oban.UpsertWorker",
+               queue: "search_sync",
+               completed_at: completed_at
+             })
+
+    assert source_iso == DateTime.to_iso8601(completed_at)
   end
 end

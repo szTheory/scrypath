@@ -36,6 +36,10 @@ case "$scope" in
     echo "Running Phase 173 shell proof against mounted and standalone PostureLive..."
     exec npx playwright test e2e/phase173_shell.spec.ts --workers=1 --retries=0
     ;;
+  phase173_time)
+    echo "Running Phase 173 operational-time proof against mounted and standalone PostureLive..."
+    exec npx playwright test e2e/phase173_time.spec.ts --workers=1 --retries=0
+    ;;
   focused)
     echo "Running focused mounted integration/browser proof..."
     exec npx playwright test e2e/harness.spec.ts e2e/operator.spec.ts --workers=1 --retries=0

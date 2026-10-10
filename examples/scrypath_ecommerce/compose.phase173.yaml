@@ -6,7 +6,7 @@ services:
 
   web:
     environment:
-      E2E_SCOPE: phase173_shell
+      E2E_SCOPE: ${E2E_SCOPE:-phase173_shell}
       PHASE173_STANDALONE_BASE_URL: http://standalone_ops:4003
 
   standalone_ops:
@@ -40,7 +40,7 @@ services:
 
   browser:
     environment:
-      E2E_SCOPE: phase173_shell
+      E2E_SCOPE: ${E2E_SCOPE:-phase173_shell}
       PHASE173_STANDALONE_BASE_URL: http://standalone_ops:4003
     depends_on:
       standalone_ops:

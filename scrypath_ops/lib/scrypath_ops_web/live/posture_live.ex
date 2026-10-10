@@ -56,7 +56,7 @@ defmodule ScrypathOpsWeb.PostureLive do
   @impl true
   def handle_event("refresh", _params, socket) do
     start_ms = System.monotonic_time(:millisecond)
-    socket = load_posture(socket)
+    socket = socket |> fail_phase173_refresh() |> load_posture()
     duration_ms = System.monotonic_time(:millisecond) - start_ms
 
     # Low-cardinality telemetry: no per-schema labels (CONTEXT D-08).
@@ -140,14 +140,17 @@ defmodule ScrypathOpsWeb.PostureLive do
     ScrypathOps.Posture.summary(
       socket.assigns.schema_allowlist,
       socket.assigns.scrypath_opts,
-      socket.assigns.phase173_snapshot_at
+      socket.assigns.phase173_snapshot_at,
+      Map.get(socket.assigns, :posture_summary)
     )
   end
 
   defp posture_summary(socket) do
     ScrypathOps.Posture.summary(
       socket.assigns.schema_allowlist,
-      socket.assigns.scrypath_opts
+      socket.assigns.scrypath_opts,
+      DateTime.utc_now(),
+      Map.get(socket.assigns, :posture_summary)
     )
   end
 
@@ -156,6 +159,18 @@ defmodule ScrypathOpsWeb.PostureLive do
     |> Application.fetch_env!(:phase173_fixture_source)
     |> apply(:fixture, [params])
   end
+
+  defp fail_phase173_refresh(
+         %{
+           assigns: %{phase173_fixture?: true, phase173_scenario: "refresh-failure"}
+         } = socket
+       ) do
+    fixture_source = Application.fetch_env!(:scrypath_ops, :phase173_fixture_source)
+    opts = apply(fixture_source, :fail_refresh, [socket.assigns.scrypath_opts])
+    assign(socket, :scrypath_opts, opts)
+  end
+
+  defp fail_phase173_refresh(socket), do: socket
 
   defp refresh_next_checks(%{assigns: %{posture_summary: summary}} = socket)
        when is_struct(summary, ScrypathOps.Posture) do
@@ -228,7 +243,20 @@ defmodule ScrypathOpsWeb.PostureLive do
           class="select select-bordered w-full"
         >
           <option
-            :for={scenario <- ["healthy", "failed", "unknown", "empty", "partial", "long"]}
+            :for={
+              scenario <- [
+                "healthy",
+                "failed",
+                "unavailable",
+                "unknown",
+                "empty",
+                "partial",
+                "long",
+                "invalid-time",
+                "queue-unused",
+                "refresh-failure"
+              ]
+            }
             value={scenario}
             selected={@phase173_scenario == scenario}
           >
@@ -362,7 +390,15 @@ defmodule ScrypathOpsWeb.PostureLive do
                           </div>
                           <div class="ops-signal-metrics__wide">
                             <dt>Last success</dt>
-                            <dd>{format_state_ts(status.backend.last_succeeded)}</dd>
+                            <dd>
+                              <.ops_time
+                                dt={state_at(status.backend.last_succeeded)}
+                                source_iso={state_source_iso(status.backend.last_succeeded)}
+                                snapshot_at={source_ref(@posture_summary, mod, :backend)[:checked_at]}
+                                state_text={time_state_text(status.backend.last_succeeded)}
+                                operational
+                              />
+                            </dd>
                           </div>
                         </dl>
                       </section>
@@ -387,7 +423,15 @@ defmodule ScrypathOpsWeb.PostureLive do
                           </div>
                           <div class="ops-signal-metrics__wide">
                             <dt>Last success</dt>
-                            <dd>{format_state_ts(status.queue.last_succeeded)}</dd>
+                            <dd>
+                              <.ops_time
+                                dt={state_at(status.queue.last_succeeded)}
+                                source_iso={state_source_iso(status.queue.last_succeeded)}
+                                snapshot_at={source_ref(@posture_summary, mod, :queue)[:checked_at]}
+                                state_text={queue_time_state_text(status)}
+                                operational
+                              />
+                            </dd>
                           </div>
                         </dl>
                         <p :if={!status.queue.observed?} class="text-ops-sm text-base-content/75">
@@ -414,6 +458,24 @@ defmodule ScrypathOpsWeb.PostureLive do
                         <.ops_badge kind={:error}>fetch error</.ops_badge>
                       </div>
                     </div>
+                    <p class="mt-3 text-ops-sm text-error">
+                      Search health could not be checked: {inspect(reason)}. Refresh to try again.
+                    </p>
+                    <dl class="ops-signal-metrics ops-signal-metrics--retained mt-3">
+                      <div :for={source <- [:backend, :queue]}>
+                        <dt>{source_last_success_label(source)}</dt>
+                        <dd>
+                          <.ops_time
+                            dt={retained_state_at(@posture_summary, mod, source)}
+                            source_iso={retained_source_iso(@posture_summary, mod, source)}
+                            snapshot_at={retained_snapshot_at(@posture_summary, mod, source)}
+                            state_text={retained_state_text(@posture_summary, mod, source, reason)}
+                            retained_text={retained_evidence_text(@posture_summary, mod, source)}
+                            operational
+                          />
+                        </dd>
+                      </div>
+                    </dl>
                     <.link
                       navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
                       class="link link-primary mt-3 inline-flex min-h-[var(--control-h-md)] items-center"
@@ -484,14 +546,75 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   defp posture_queue_observed_count(_), do: 0
 
-  defp format_dt(nil), do: "—"
+  defp state_at(%Scrypath.Operator.State{at: at}), do: at
+  defp state_at(_state), do: nil
 
-  defp format_dt(%DateTime{} = dt) do
-    Calendar.strftime(dt, "%b %d, %Y at %H:%M UTC")
+  defp state_source_iso(%Scrypath.Operator.State{metadata: metadata}),
+    do: Map.get(metadata, :source_iso)
+
+  defp state_source_iso(_state), do: nil
+
+  defp time_state_text(nil), do: "No success observed"
+  defp time_state_text(%Scrypath.Operator.State{at: nil}), do: "Success time not observed"
+  defp time_state_text(%Scrypath.Operator.State{}), do: ""
+
+  defp queue_time_state_text(%{queue: %{observed?: false}}), do: "Queue not used"
+  defp queue_time_state_text(%{queue: %{last_succeeded: state}}), do: time_state_text(state)
+
+  defp source_last_success_label(:backend), do: "Backend last success"
+  defp source_last_success_label(:queue), do: "Queue last success"
+
+  defp source_ref(%ScrypathOps.Posture{last_success_refs: refs}, schema, source) do
+    refs
+    |> Map.get(schema, %{})
+    |> Map.get(source)
   end
 
-  defp format_state_ts(nil), do: "—"
-  defp format_state_ts(%Scrypath.Operator.State{} = s), do: format_dt(s.at)
+  defp source_ref(_summary, _schema, _source), do: nil
+
+  defp retained_state_at(summary, schema, source) do
+    case source_ref(summary, schema, source) do
+      %{state: %Scrypath.Operator.State{at: at}} -> at
+      _other -> nil
+    end
+  end
+
+  defp retained_source_iso(summary, schema, source) do
+    case source_ref(summary, schema, source) do
+      %{state: state} -> state_source_iso(state)
+      _other -> nil
+    end
+  end
+
+  defp retained_snapshot_at(summary, schema, source) do
+    case source_ref(summary, schema, source) do
+      %{checked_at: checked_at} -> checked_at
+      _other -> nil
+    end
+  end
+
+  defp retained_state_text(summary, schema, source, reason) do
+    case source_ref(summary, schema, source) do
+      %{unused?: true} -> "Queue not used"
+      %{state: state} -> time_state_text(state)
+      nil -> "Not observed: #{inspect(reason)}"
+    end
+  end
+
+  defp retained_evidence_text(summary, schema, source) do
+    case source_ref(summary, schema, source) do
+      %{unused?: true} ->
+        "Queue not used."
+
+      %{checked_at: %DateTime{} = checked_at} ->
+        checked_iso = checked_at |> DateTime.shift_zone!("Etc/UTC") |> DateTime.to_iso8601()
+
+        "Current observation is unavailable; this source-local evidence is retained from check #{checked_iso}."
+
+      _other ->
+        nil
+    end
+  end
 
   defp metric_tone(0), do: :success
   defp metric_tone(_), do: :warning

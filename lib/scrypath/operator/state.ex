@@ -33,14 +33,16 @@ defmodule Scrypath.Operator.State do
   @doc false
   @spec from_backend_task(map() | Task.t()) :: t()
   def from_backend_task(%Task{} = task) do
+    {at, source_iso} = task_time_details(task.raw)
+
     new(
       source: task.source,
       kind: task.kind,
       id: task.id,
       state: normalize_backend_state(task.state),
       reference: task.reference,
-      metadata: Map.take(task.metadata, [:type]),
-      at: task_time(task.raw)
+      metadata: task.metadata |> Map.take([:type]) |> maybe_put(:source_iso, source_iso),
+      at: at
     )
   end
 
@@ -53,6 +55,8 @@ defmodule Scrypath.Operator.State do
   @doc false
   @spec from_queue_job(map()) :: t()
   def from_queue_job(job) when is_map(job) do
+    {at, source_iso} = queue_time_details(job)
+
     new(
       source: :oban,
       kind: :queue_job,
@@ -63,8 +67,8 @@ defmodule Scrypath.Operator.State do
         worker: Map.get(job, :worker) || Map.get(job, "worker"),
         queue: Map.get(job, :queue) || Map.get(job, "queue")
       },
-      metadata: queue_metadata(job),
-      at: queue_time(job)
+      metadata: queue_metadata(job) |> maybe_put(:source_iso, source_iso),
+      at: at
     )
   end
 
@@ -90,18 +94,18 @@ defmodule Scrypath.Operator.State do
   defp normalize_queue_state(:failed), do: :failed
   defp normalize_queue_state(_state), do: :queued
 
-  defp task_time(raw) when is_map(raw) do
+  defp task_time_details(raw) when is_map(raw) do
     raw
-    |> Map.get("finishedAt")
-    |> parse_datetime()
+    |> Map.get("finishedAt", Map.get(raw, :finishedAt))
+    |> datetime_and_source_iso()
   end
 
-  defp task_time(_raw), do: nil
+  defp task_time_details(_raw), do: {nil, nil}
 
-  defp queue_time(job) do
+  defp queue_time_details(job) do
     job
     |> Map.get(:completed_at, Map.get(job, "completed_at"))
-    |> parse_datetime()
+    |> datetime_and_source_iso()
   end
 
   defp queue_metadata(job) do
@@ -111,17 +115,17 @@ defmodule Scrypath.Operator.State do
     |> maybe_put(:oban_state, Map.get(job, :state) || Map.get(job, "state"))
   end
 
-  defp parse_datetime(%DateTime{} = value), do: value
-  defp parse_datetime(nil), do: nil
+  defp datetime_and_source_iso(%DateTime{} = value), do: {value, DateTime.to_iso8601(value)}
+  defp datetime_and_source_iso(nil), do: {nil, nil}
 
-  defp parse_datetime(value) when is_binary(value) do
+  defp datetime_and_source_iso(value) when is_binary(value) do
     case DateTime.from_iso8601(value) do
-      {:ok, datetime, _offset} -> datetime
-      _other -> nil
+      {:ok, datetime, _offset} -> {datetime, value}
+      _other -> {nil, nil}
     end
   end
 
-  defp parse_datetime(_value), do: nil
+  defp datetime_and_source_iso(_value), do: {nil, nil}
 
   defp maybe_put(map, _key, nil), do: map
   defp maybe_put(map, key, value), do: Map.put(map, key, value)

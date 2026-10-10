@@ -912,6 +912,58 @@
     font-variant-numeric: tabular-nums;
   }
 
+  .ops-time--operational {
+    width: 100%;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.375rem 0.75rem;
+  }
+
+  .ops-time__details {
+    min-width: 0;
+    flex: 1 1 100%;
+    color: var(--color-base-content);
+  }
+
+  .ops-time__details > summary {
+    width: fit-content;
+    min-height: var(--control-h-lg);
+    color: var(--color-primary);
+    cursor: pointer;
+  }
+
+  .ops-time__evidence {
+    min-width: 0;
+    padding-block: 0.375rem;
+  }
+
+  .ops-time__evidence p + p {
+    margin-top: 0.5rem;
+  }
+
+  .ops-time__evidence-label {
+    display: block;
+    color: var(--ops-text-muted);
+    font-size: var(--text-ops-xs);
+  }
+
+  .ops-time__evidence-value {
+    display: block;
+    min-width: 0;
+    user-select: text;
+    overflow-wrap: anywhere;
+    font-family: ui-monospace, "Cascadia Code", Menlo, monospace;
+  }
+
+  .ops-time__retained {
+    min-width: 0;
+    flex: 1 1 100%;
+    color: var(--ops-text-muted);
+    font-size: var(--text-ops-xs);
+    line-height: var(--leading-ops-body);
+    overflow-wrap: anywhere;
+  }
+
   .ops-time__copy {
     display: inline-flex;
     align-items: center;

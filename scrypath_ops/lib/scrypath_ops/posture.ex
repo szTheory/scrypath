@@ -27,6 +27,7 @@ defmodule ScrypathOps.Posture do
           backend_failed_count: non_neg_integer(),
           queue_failed_count: non_neg_integer(),
           queue_observed_count: non_neg_integer(),
+          last_success_refs: map(),
           refreshed_at: DateTime.t() | nil,
           headline: String.t(),
           evidence: String.t()
@@ -39,6 +40,7 @@ defmodule ScrypathOps.Posture do
             backend_failed_count: 0,
             queue_failed_count: 0,
             queue_observed_count: 0,
+            last_success_refs: %{},
             refreshed_at: nil,
             headline: "—",
             evidence: ""
@@ -51,12 +53,18 @@ defmodule ScrypathOps.Posture do
   """
   @spec summary([module()], keyword()) :: t()
   def summary(allowlist, opts) do
-    summary(allowlist, opts, DateTime.utc_now())
+    summary(allowlist, opts, DateTime.utc_now(), nil)
   end
 
   @doc false
   @spec summary([module()], keyword(), DateTime.t()) :: t()
   def summary(allowlist, opts, %DateTime{} = snapshot_at) do
+    summary(allowlist, opts, snapshot_at, nil)
+  end
+
+  @doc false
+  @spec summary([module()], keyword(), DateTime.t(), t() | nil) :: t()
+  def summary(allowlist, opts, %DateTime{} = snapshot_at, previous_summary) do
     cond do
       allowlist == [] ->
         classify(%Posture{state: :unconfigured, refreshed_at: snapshot_at})
@@ -66,6 +74,12 @@ defmodule ScrypathOps.Posture do
 
       true ->
         rows = scan(allowlist, opts)
+
+        previous_refs =
+          if match?(%Posture{}, previous_summary),
+            do: previous_summary.last_success_refs,
+            else: %{}
+
         err = Enum.count(rows, fn {_m, r} -> match?({:error, _}, r) end)
         backend_failed = backend_failed_count(rows)
         queue_failed = queue_failed_count(rows)
@@ -85,6 +99,7 @@ defmodule ScrypathOps.Posture do
           backend_failed_count: backend_failed,
           queue_failed_count: queue_failed,
           queue_observed_count: queue_observed_count(rows),
+          last_success_refs: refresh_success_refs(rows, previous_refs, snapshot_at),
           refreshed_at: snapshot_at
         })
     end
@@ -204,6 +219,32 @@ defmodule ScrypathOps.Posture do
       {_mod, {:ok, status}} -> status.queue.observed?
       _row -> false
     end)
+  end
+
+  defp refresh_success_refs(rows, previous_refs, snapshot_at) do
+    Enum.reduce(rows, previous_refs, fn
+      {schema, {:ok, status}}, refs ->
+        queue_ref =
+          if status.queue.observed? do
+            success_ref(status.queue.last_succeeded, snapshot_at)
+          else
+            %{state: nil, checked_at: snapshot_at, unused?: true}
+          end
+
+        Map.put(refs, schema, %{
+          backend: success_ref(status.backend.last_succeeded, snapshot_at),
+          queue: queue_ref
+        })
+
+      # A fetch error has no new source timestamp. Keep the last successful source-local
+      # references intact so the caller can label them retained instead of re-dating them.
+      {_schema, {:error, _reason}}, refs ->
+        refs
+    end)
+  end
+
+  defp success_ref(state, snapshot_at) do
+    %{state: state, checked_at: snapshot_at}
   end
 
   defp classify(%Posture{state: :unconfigured} = summary) do

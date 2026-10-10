@@ -1198,24 +1198,31 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
-  @doc "Compact timestamp with a human scan value, exact ISO on hover, and optional evidence-copy action."
-  attr(:dt, :any, required: true)
+  @doc "Compact time metadata or snapshot-relative operational evidence with a native exact-value disclosure."
+  attr(:dt, :any, default: nil)
+  attr(:snapshot_at, :any, default: nil)
+  attr(:source_iso, :string, default: nil)
   attr(:label, :string, default: nil)
+  attr(:state_text, :string, default: "No success observed")
+  attr(:retained_text, :string, default: nil)
+  attr(:operational, :boolean, default: false)
   attr(:copy, :boolean, default: false)
   attr(:class, :any, default: nil)
 
   def ops_time(assigns) do
+    exact = exact_dt(assigns.dt, assigns.source_iso)
+    human = if exact, do: human_dt(assigns.dt, assigns.snapshot_at), else: assigns.state_text
+
     assigns =
       assigns
-      |> assign(:exact, exact_dt(assigns.dt))
-      |> assign(:human, human_dt(assigns.dt))
-      |> assign(
-        :aria_label,
-        time_aria_label(assigns.label, human_dt(assigns.dt), exact_dt(assigns.dt))
-      )
+      |> assign(:exact, exact)
+      |> assign(:human, human)
+      |> assign(:utc_iso, utc_iso(assigns.dt))
+      |> assign(:utc_absolute, utc_absolute(assigns.dt))
+      |> assign(:aria_label, time_aria_label(assigns.label, human, assigns.operational))
 
     ~H"""
-    <span class={["ops-time", @class]}>
+    <span class={["ops-time", @operational && "ops-time--operational", @class]}>
       <span :if={@label} class="ops-time__label">{@label}</span>
       <%= if @exact do %>
         <time
@@ -1227,7 +1234,7 @@ defmodule ScrypathOpsWeb.OpsUi do
           {@human}
         </time>
         <button
-          :if={@copy}
+          :if={@copy && !@operational}
           type="button"
           class="ops-time__copy"
           phx-click={JS.dispatch("phx:copy_to_clipboard", detail: %{text: @exact})}
@@ -1236,8 +1243,23 @@ defmodule ScrypathOpsWeb.OpsUi do
         >
           <ScrypathOpsWeb.CoreComponents.icon name="hero-clipboard-document" class="size-3.5" />
         </button>
+        <p :if={@retained_text && @operational} class="ops-time__retained">{@retained_text}</p>
+        <details :if={@operational} class="ops-time__details">
+          <summary>Exact timestamp</summary>
+          <div class="ops-time__evidence">
+            <p>
+              <span class="ops-time__evidence-label">Source ISO</span>
+              <code class="ops-time__evidence-value">{@exact}</code>
+            </p>
+            <p>
+              <span class="ops-time__evidence-label">UTC equivalent</span>
+              <time datetime={@utc_iso}>{@utc_absolute}</time>
+            </p>
+          </div>
+        </details>
       <% else %>
-        <span class="ops-time__value">—</span>
+        <span class="ops-time__value">{@human}</span>
+        <p :if={@retained_text && @operational} class="ops-time__retained">{@retained_text}</p>
       <% end %>
     </span>
     """
@@ -1634,41 +1656,77 @@ defmodule ScrypathOpsWeb.OpsUi do
     |> String.trim("-")
   end
 
-  defp exact_dt(nil), do: nil
+  defp exact_dt(nil, _source_iso), do: nil
 
-  defp exact_dt(%DateTime{} = dt) do
+  defp exact_dt(%DateTime{} = dt, source_iso) when is_binary(source_iso) do
+    case DateTime.from_iso8601(source_iso) do
+      {:ok, parsed, _offset} ->
+        if DateTime.compare(parsed, dt) == :eq, do: source_iso, else: DateTime.to_iso8601(dt)
+
+      _other ->
+        DateTime.to_iso8601(dt)
+    end
+  end
+
+  defp exact_dt(%DateTime{} = dt, _source_iso), do: DateTime.to_iso8601(dt)
+
+  defp utc_iso(nil), do: nil
+
+  defp utc_iso(%DateTime{} = dt) do
     dt
-    |> DateTime.truncate(:second)
+    |> DateTime.shift_zone!("Etc/UTC")
     |> DateTime.to_iso8601()
   end
 
-  defp human_dt(nil), do: "—"
+  defp utc_absolute(nil), do: nil
 
-  defp human_dt(%DateTime{} = dt) do
-    diff = DateTime.diff(DateTime.utc_now(), dt, :second)
+  defp utc_absolute(%DateTime{} = dt) do
+    utc = DateTime.shift_zone!(dt, "Etc/UTC")
 
-    cond do
-      diff >= 0 and diff < 60 ->
-        "just now"
+    "#{Calendar.strftime(utc, "%b")} #{utc.day}, #{utc.year} at #{Calendar.strftime(utc, "%H:%M:%S")} UTC"
+  end
 
-      diff >= 0 and diff < 3_600 ->
-        minutes = div(diff, 60)
-        "#{minutes} #{pluralize(minutes, "min")} ago"
+  defp human_dt(nil, _snapshot_at), do: "—"
 
-      diff >= 0 and diff < 86_400 ->
-        hours = div(diff, 3_600)
-        "#{hours} #{pluralize(hours, "hr")} ago"
+  defp human_dt(%DateTime{} = dt, snapshot_at) do
+    reference = if match?(%DateTime{}, snapshot_at), do: snapshot_at, else: DateTime.utc_now()
 
-      true ->
-        Calendar.strftime(dt, "%b %d, %Y at %H:%M UTC")
+    case DateTime.compare(dt, reference) do
+      :gt -> "After this check · #{utc_absolute(dt)}"
+      _not_future -> relative_age(DateTime.diff(reference, dt, :microsecond), dt)
     end
   end
+
+  defp relative_age(diff_microseconds, _dt) when diff_microseconds < 60 * 1_000_000,
+    do: "just now"
+
+  defp relative_age(diff_microseconds, _dt) when diff_microseconds < 3_600 * 1_000_000 do
+    minutes = div(diff_microseconds, 60 * 1_000_000)
+    "#{minutes} #{pluralize(minutes, "min")} ago"
+  end
+
+  defp relative_age(diff_microseconds, _dt) when diff_microseconds < 86_400 * 1_000_000 do
+    hours = div(diff_microseconds, 3_600 * 1_000_000)
+    "#{hours} #{pluralize(hours, "hr")} ago"
+  end
+
+  defp relative_age(diff_microseconds, _dt) when diff_microseconds < 604_800 * 1_000_000 do
+    days = div(diff_microseconds, 86_400 * 1_000_000)
+    "#{days} #{pluralize(days, "day")} ago"
+  end
+
+  defp relative_age(_diff_microseconds, dt), do: utc_absolute(dt)
 
   defp pluralize(1, unit), do: unit
   defp pluralize(_count, unit), do: "#{unit}s"
 
-  defp time_aria_label(nil, human, exact), do: "#{human}; exact timestamp #{exact}"
-  defp time_aria_label(label, human, exact), do: "#{label} #{human}; exact timestamp #{exact}"
+  defp time_aria_label(label, human, true) do
+    prefix = if label, do: "#{label} ", else: ""
+    "#{prefix}#{human}; open Exact timestamp for source ISO and UTC equivalent"
+  end
+
+  defp time_aria_label(nil, human, false), do: "#{human}"
+  defp time_aria_label(label, human, false), do: "#{label} #{human}"
 
   defp nav_group_label(:recover), do: "Recover"
   defp nav_group_label(:explore), do: "Explore"

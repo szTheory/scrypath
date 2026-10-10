@@ -42,6 +42,10 @@ defmodule ScrypathOps.Phase173FixtureSource do
     }
   end
 
+  def fail_refresh(scrypath_opts) do
+    Keyword.put(scrypath_opts, :meilisearch_tasks, {:error, :phase173_backend_unavailable})
+  end
+
   def tasks(filters, config) do
     case Keyword.get(config, :meilisearch_tasks, []) do
       {:error, _reason} = error ->
@@ -66,7 +70,18 @@ defmodule ScrypathOps.Phase173FixtureSource do
   end
 
   defp normalize_scenario(scenario)
-       when scenario in ["healthy", "failed", "unknown", "empty", "partial", "long"],
+       when scenario in [
+              "healthy",
+              "failed",
+              "unavailable",
+              "unknown",
+              "empty",
+              "partial",
+              "long",
+              "invalid-time",
+              "queue-unused",
+              "refresh-failure"
+            ],
        do: scenario
 
   defp normalize_scenario(_scenario), do: "healthy"
@@ -81,7 +96,7 @@ defmodule ScrypathOps.Phase173FixtureSource do
   defp scrypath_opts(scenario) do
     [
       backend: Scrypath.Meilisearch,
-      sync_mode: :oban,
+      sync_mode: if(scenario == "queue-unused", do: :manual, else: :oban),
       oban: Oban,
       oban_queue: :default,
       index_prefix: "phase173",
@@ -95,20 +110,14 @@ defmodule ScrypathOps.Phase173FixtureSource do
 
   defp tasks_for("empty"), do: []
 
+  defp tasks_for("unavailable"), do: {:error, :phase173_backend_unavailable}
+
   defp tasks_for("failed") do
     [task(841, "failed", "phase173_phase173_fixture_schema", @task_finished)]
   end
 
-  defp tasks_for("unknown") do
-    [
-      %{
-        "uid" => 842,
-        "status" => "waiting_for_review",
-        "type" => "documentAdditionOrUpdate",
-        "indexUid" => "phase173_phase173_fixture_schema"
-      }
-    ]
-  end
+  defp tasks_for("unknown"),
+    do: [task(842, "succeeded", "phase173_phase173_fixture_schema", @task_finished)]
 
   defp tasks_for("partial") do
     [
@@ -119,6 +128,10 @@ defmodule ScrypathOps.Phase173FixtureSource do
 
   defp tasks_for("long") do
     [task(9_876_543_210, "succeeded", "phase173_phase173_fixture_schema", @task_finished)]
+  end
+
+  defp tasks_for("invalid-time") do
+    [task(905, "succeeded", "phase173_phase173_fixture_schema", "not-a-timestamp")]
   end
 
   defp tasks_for(_scenario) do
@@ -160,6 +173,18 @@ defmodule ScrypathOps.Phase173FixtureSource do
         worker: String.duplicate("Phase173FixtureWorker", 12),
         queue: "default",
         completed_at: @queue_completed
+      }
+    ]
+  end
+
+  defp jobs_for("invalid-time") do
+    [
+      %{
+        id: 906,
+        state: "completed",
+        worker: "ScrypathOps.Phase173FixtureWorker",
+        queue: "default",
+        completed_at: "not-a-timestamp"
       }
     ]
   end

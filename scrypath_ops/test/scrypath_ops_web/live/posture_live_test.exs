@@ -10,6 +10,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
   alias ScrypathOps.Test.OpsPostA
   alias ScrypathOps.Test.OpsPostB
   alias ScrypathOps.Integrations.Sigra.OperatorContext
+  alias ScrypathOpsWeb.OpsUi
   alias ScrypathOpsWeb.PostureLive
 
   defmodule PostureFakeClient do
@@ -136,6 +137,101 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert html =~ "Last success"
     refute html =~ "Posture"
     assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search health']")
+  end
+
+  test "renders production last-success evidence from its successful observation snapshot", %{
+    conn: conn
+  } do
+    {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health")
+
+    iso = "2026-10-04T13:02:05.123456-04:00"
+
+    row =
+      lv
+      |> element("[id='posture-ScrypathOps.Phase173FixtureSchema']")
+      |> render()
+
+    assert row =~ "2 days ago"
+    assert row =~ ~s(datetime="#{iso}")
+    assert row =~ iso
+    assert row =~ "Oct 4, 2026 at 17:02:05 UTC"
+    assert row =~ "Exact timestamp"
+  end
+
+  test "keeps prior source-local timestamps when a later refresh is unavailable", %{conn: conn} do
+    {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=refresh-failure")
+    row_selector = "[id='posture-ScrypathOps.Phase173FixtureSchema']"
+    first_row = lv |> element(row_selector) |> render()
+    iso = "2026-10-04T13:02:05.123456-04:00"
+
+    assert first_row =~ "2 days ago"
+    assert first_row =~ iso
+
+    lv |> element("#search-health-refresh") |> render_click()
+    failed_row = lv |> element(row_selector) |> render()
+
+    assert failed_row =~ "Search health could not be checked: :phase173_backend_unavailable"
+    assert failed_row =~ "2 days ago"
+    assert failed_row =~ iso
+    assert failed_row =~ "source-local evidence is retained from check 2026-10-06T17:18:42.318Z"
+    assert failed_row =~ "Queue last success"
+    refute failed_row =~ "Last success</dt><dd>—"
+  end
+
+  test "operational age thresholds use the observation snapshot and full precision" do
+    {:ok, snapshot_at, _offset} = DateTime.from_iso8601("2026-10-06T13:18:42.318-04:00")
+
+    for {seconds, expected} <- [
+          {59, "just now"},
+          {60, "1 min ago"},
+          {3_599, "59 mins ago"},
+          {3_600, "1 hr ago"},
+          {86_399, "23 hrs ago"},
+          {86_400, "1 day ago"},
+          {604_799, "6 days ago"},
+          {604_800, "Sep 29, 2026 at 17:18:42 UTC"}
+        ] do
+      dt = DateTime.add(snapshot_at, -seconds, :second)
+      html = render_time(dt, snapshot_at)
+      assert html =~ expected
+    end
+
+    microsecond_future = DateTime.add(snapshot_at, 1, :microsecond)
+    future_html = render_time(microsecond_future, snapshot_at)
+    assert future_html =~ "After this check"
+    assert future_html =~ "Oct 6, 2026 at 17:18:42 UTC"
+  end
+
+  test "operational no-time and unavailable states remain distinct and have no evidence control" do
+    {:ok, snapshot_at, _offset} = DateTime.from_iso8601("2026-10-06T13:18:42.318-04:00")
+
+    for state_text <- [
+          "No success observed",
+          "Success time not observed",
+          "Not observed: :backend_unavailable",
+          "Queue not used"
+        ] do
+      html = render_time(nil, snapshot_at, state_text)
+      assert html =~ state_text
+      refute html =~ "<details"
+      refute html =~ "Copy timestamp"
+    end
+  end
+
+  test "unmatched source ISO is not used as timestamp evidence" do
+    {:ok, dt, _offset} = DateTime.from_iso8601("2026-10-04T13:02:05.123456-04:00")
+    mismatched_iso = "2026-10-05T11:12:13.456-04:00"
+
+    html =
+      render_component(&OpsUi.ops_time/1, %{
+        dt: dt,
+        snapshot_at: dt,
+        source_iso: mismatched_iso,
+        operational: true
+      })
+
+    assert html =~ DateTime.to_iso8601(dt)
+    refute html =~ mismatched_iso
   end
 
   test "posture shows next checks block with ordered items and failed-sync egress", %{conn: conn} do
@@ -306,6 +402,16 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     }
 
     OperatorContext.build(scope, session)
+  end
+
+  defp render_time(dt, snapshot_at, state_text \\ "No success observed") do
+    render_component(&OpsUi.ops_time/1, %{
+      dt: dt,
+      snapshot_at: snapshot_at,
+      source_iso: if(dt, do: DateTime.to_iso8601(dt)),
+      state_text: state_text,
+      operational: true
+    })
   end
 
   defp flash_value(socket, key) do
