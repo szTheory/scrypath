@@ -9,6 +9,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   alias ScrypathOps.Test.OpsPostA
   alias ScrypathOps.Test.OpsPostB
   alias ScrypathOps.Integrations.Sigra.OperatorContext
+  alias ScrypathOps.RecoveryObservation
   alias ScrypathOpsWeb.SyncDriftLive
   alias Scrypath.Operations.Task, as: OperationTask
 
@@ -331,6 +332,70 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert html =~ "Across all configured schemas"
     refute html =~ "For the selected schema"
     refute html =~ "No pending or failed sync work found"
+  end
+
+  test "rendered recovery handoff keeps source identity through a read-only refresh", %{conn: conn} do
+    schema = "ScrypathOps.Test.OpsPostA"
+    {:ok, origin, _html} = live(conn, "/ops/sync-drift?schema=#{URI.encode_www_form(schema)}")
+    origin_socket = :sys.get_state(origin.pid).socket
+    scope = Map.get(origin_socket.assigns, :current_scope, %{})
+    operator_context = Map.get(origin_socket.assigns, :operator_context)
+
+    org =
+      Map.get(operator_context || %{}, :active_org_id) ||
+        get_in(scope, [:active_organization, :id])
+
+    host_context = %{
+      host: (origin_socket.host_uri && origin_socket.host_uri.host) || "unknown",
+      org: org && to_string(org),
+      schema: schema,
+      generation: origin_socket.assigns.context_generation
+    }
+
+    receipt = %{
+      replacement_job: 845,
+      attempt: 2,
+      task_uid: 780,
+      operation: :upsert,
+      schema: "Elixir." <> schema,
+      index: "sdv_ops_post_a",
+      source_failure: %{source: :oban, id: 501, operation: :upsert},
+      endpoint: "http://localhost:7700",
+      instance: __MODULE__.UnconfiguredOban,
+      repo: ScrypathOps.Repo,
+      prefix: "public",
+      node: node(),
+      generation: origin_socket.assigns.context_generation
+    }
+
+    {:ok, handle} = RecoveryObservation.register(host_context, receipt)
+
+    path =
+      "/ops/sync-drift?" <>
+        URI.encode_query(%{
+          "schema" => schema,
+          "recovery" => handle,
+          "recovery_generation" => to_string(host_context.generation)
+        })
+
+    {:ok, view, _html} = live(conn, path)
+    render_async(view)
+    assert has_element?(view, "#recovery-observation", "Recovery unknown")
+    assert has_element?(view, "[data-testid=recovery-evidence]", "845")
+    assert has_element?(view, "[data-testid=recovery-source]", "Oban")
+    assert has_element?(view, "[data-testid=recovery-source]", "501")
+    assert has_element?(view, "[data-testid=recovery-source]", schema)
+    assert has_element?(view, "[data-testid=recovery-source]", "upsert")
+
+    before = Agent.get(:sync_drift_live_test_state, & &1)
+    view |> element("button", "Refresh recovery status") |> render_click()
+    render_async(view)
+    after_refresh = Agent.get(:sync_drift_live_test_state, & &1)
+
+    assert after_refresh.swap_called == before.swap_called
+    assert after_refresh.tasks_calls == before.tasks_calls
+    assert after_refresh.settings_calls == before.settings_calls
+    assert has_element?(view, "#recovery-observation", "Recovery unknown")
   end
 
   test "swap live rechecks current prerequisites and refuses a stale contract read" do
