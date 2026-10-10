@@ -17,11 +17,11 @@ defmodule ScrypathOpsWeb.AssetPlugTest do
     |> Map.put(:path_info, ["css", "app.css"])
   end
 
-  test "mounted layout uses content-sensitive asset URLs", %{conn: conn} do
+  test "operator layout uses content-sensitive root asset URLs", %{conn: conn} do
     {:ok, _view, html} = live(conn, ~p"/ops/playbooks")
 
-    assert html =~ ~r|href="/ops/assets/css/app\.css\?v=[a-f0-9]{64}"|
-    assert html =~ ~r|src="/ops/assets/js/app\.js\?v=[a-f0-9]{64}"|
+    assert html =~ ~r|href="/assets/css/app\.css\?v=[a-f0-9]{64}"|
+    assert html =~ ~r|src="/assets/js/app\.js\?v=[a-f0-9]{64}"|
   end
 
   test "unversioned and mismatched assets revalidate against the current content" do
